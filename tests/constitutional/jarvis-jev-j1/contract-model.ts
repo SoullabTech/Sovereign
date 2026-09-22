@@ -86,12 +86,18 @@ export interface WorkUnitState {
   /** Host-local correlation only — §2.1 forbids this crossing the boundary. */
   readonly workUnitId: string;
   readonly taskShape: string;
-  readonly containsSensitive: boolean;
-  readonly requiresExternalInfo: boolean;
   readonly fileCount: number;
-  readonly migration: boolean;
-  readonly auth: boolean;
-  readonly production: boolean;
+  /**
+   * ⭐ §5.5 boundary positions are typed `unknown`, NOT `boolean`. F1 typed them
+   * `boolean`, so "a non-boolean in a boolean position must refuse construction"
+   * could never be exercised — the compiler made the error unbuildable and that
+   * was mistaken for enforcement.
+   */
+  readonly containsSensitive: unknown;
+  readonly requiresExternalInfo: unknown;
+  readonly migration: unknown;
+  readonly auth: unknown;
+  readonly production: unknown;
 }
 
 // ───────────────────────────── §5 construction outcome ─────────────────────────────
@@ -112,24 +118,43 @@ export interface ConstructionFailureEffect {
 
 // ───────────────────────────── §6.1 responses vs records ─────────────────────────────
 
+/**
+ * §6.1 — contract VALUES. ⛔ No `kind` tag: a harness discriminator must not become
+ * part of the modeled AdmittedJudgment. Discrimination is STRUCTURAL (below).
+ */
+export interface Scale {
+  readonly min: 0;
+  readonly max: 1;
+}
+export const CONTRACT_SCALE: Scale = { min: 0, max: 1 };
+
 export interface ScoreJudgment {
-  readonly kind: 'Score';
   readonly question_id: QuestionId;
+  readonly scale: Scale; // ⭐ contract-required; F1 omitted it entirely
   readonly score: number;
   readonly confidence: number;
 }
 export interface YesNoJudgment {
-  readonly kind: 'YesNo';
   readonly question_id: QuestionId;
   readonly answer: boolean;
   readonly confidence: number;
 }
 export interface AdmittedAbstain {
-  readonly kind: 'Abstain';
   readonly question_id: QuestionId;
   readonly reason: AdmittedAbstainReason;
 }
 export type AdmittedJudgment = ScoreJudgment | YesNoJudgment | AdmittedAbstain;
+
+const has = (v: unknown, k: string): boolean =>
+  typeof v === 'object' && v !== null && k in v;
+
+/** Structural discrimination over contract values — the harness tags nothing. */
+export const isScoreValue = (v: unknown): v is ScoreJudgment =>
+  has(v, 'question_id') && has(v, 'scale') && has(v, 'score') && has(v, 'confidence');
+export const isYesNoValue = (v: unknown): v is YesNoJudgment =>
+  has(v, 'question_id') && has(v, 'answer') && has(v, 'confidence');
+export const isAbstainValue = (v: unknown): v is AdmittedAbstain =>
+  has(v, 'question_id') && has(v, 'reason');
 
 /**
  * What the host observed about the interaction. §7.2 orders these.
@@ -185,7 +210,7 @@ export const BASE_AUTHORITY: AuthorityState = {
 
 export interface ContractModel {
   /** §2 + §5 — derive the packet, or refuse to construct. */
-  constructPacket(state: WorkUnitState, question: QuestionId): ConstructionResult;
+  constructPacket(state: WorkUnitState, question: QuestionId | string): ConstructionResult;
   /** §4.1 — the representation IS the packet; no wrapper. */
   outboundRepresentation(packet: JudgmentPacket): unknown;
   /** §2 — the exact member set of a packet value. */
@@ -218,33 +243,37 @@ export interface ContractModel {
 const isTaskShape = (v: unknown): v is TaskShape =>
   typeof v === 'string' && (TASK_SHAPES as readonly string[]).includes(v);
 
+const REFUSE = { ok: false, reason: 'UNREPRESENTABLE' } as const;
+
 export const referenceConstructPacket = (
   state: WorkUnitState,
-  question: QuestionId,
+  question: QuestionId | string,
 ): ConstructionResult => {
   // §5 — any value that cannot be expressed exactly refuses construction.
-  if (!isTaskShape(state.taskShape)) return { ok: false, reason: 'UNREPRESENTABLE' };
-  if (!Number.isInteger(state.fileCount)) return { ok: false, reason: 'UNREPRESENTABLE' };
-  if (state.fileCount < 0 || state.fileCount > FILE_COUNT_MAX) {
-    return { ok: false, reason: 'UNREPRESENTABLE' };
-  }
-  if (!(QUESTION_IDS as readonly string[]).includes(question)) {
-    return { ok: false, reason: 'UNREPRESENTABLE' };
-  }
+  if (!isTaskShape(state.taskShape)) return REFUSE;
+  if (!Number.isInteger(state.fileCount)) return REFUSE;
+  if (state.fileCount < 0 || state.fileCount > FILE_COUNT_MAX) return REFUSE;
+  if (!(QUESTION_IDS as readonly string[]).includes(question)) return REFUSE;
+  // §5.5 — a non-boolean in a boolean position refuses construction.
+  const cs = state.containsSensitive;
+  const re = state.requiresExternalInfo;
+  const mg = state.migration;
+  const au = state.auth;
+  const pr = state.production;
+  if (typeof cs !== 'boolean') return REFUSE;
+  if (typeof re !== 'boolean') return REFUSE;
+  if (typeof mg !== 'boolean') return REFUSE;
+  if (typeof au !== 'boolean') return REFUSE;
+  if (typeof pr !== 'boolean') return REFUSE;
   return {
     ok: true,
     packet: {
       packet_version: PACKET_VERSION,
-      question_id: question,
+      question_id: question as QuestionId,
       task_shape: state.taskShape,
-      contains_sensitive: state.containsSensitive,
-      requires_external_info: state.requiresExternalInfo,
-      change_scope: {
-        file_count: state.fileCount,
-        migration: state.migration,
-        auth: state.auth,
-        production: state.production,
-      },
+      contains_sensitive: cs,
+      requires_external_info: re,
+      change_scope: { file_count: state.fileCount, migration: mg, auth: au, production: pr },
     },
   };
 };
@@ -261,12 +290,12 @@ export const referenceHostFailureReason = (obs: HostObservation): HostFailureRea
 };
 
 // Structural shape predicates. §7.2: STRUCTURE, never admissible type.
-export const isAbstainShaped = (v: unknown): boolean =>
-  typeof v === 'object' && v !== null && 'question_id' in v && 'reason' in v;
+export const isAbstainShaped = (v: unknown): boolean => has(v, 'question_id') && has(v, 'reason');
+/** ⭐ §6.1 structure: a Score-shaped response carries question_id + scale + score + confidence. */
 export const isScoreShaped = (v: unknown): boolean =>
-  typeof v === 'object' && v !== null && 'question_id' in v && 'score' in v;
+  has(v, 'question_id') && has(v, 'scale') && has(v, 'score') && has(v, 'confidence');
 export const isYesNoShaped = (v: unknown): boolean =>
-  typeof v === 'object' && v !== null && 'question_id' in v && 'answer' in v;
+  has(v, 'question_id') && has(v, 'answer') && has(v, 'confidence');
 
 const questionOf = (v: unknown): unknown =>
   typeof v === 'object' && v !== null && 'question_id' in v
@@ -279,9 +308,9 @@ export const referenceAdmit = (
 ): AdmittedJudgment => {
   const q = packet.question_id; // §7.1 — from the packet the host SENT, never the response.
 
-  if (obs.timedOut) return { kind: 'Abstain', question_id: q, reason: 'TIMEOUT' };
-  if (obs.empty) return { kind: 'Abstain', question_id: q, reason: 'NO_RESPONSE' };
-  if (!obs.parsed) return { kind: 'Abstain', question_id: q, reason: 'PARSE_FAILURE' };
+  if (obs.timedOut) return { question_id: q, reason: 'TIMEOUT' };
+  if (obs.empty) return { question_id: q, reason: 'NO_RESPONSE' };
+  if (!obs.parsed) return { question_id: q, reason: 'PARSE_FAILURE' };
 
   const raw = obs.raw;
   const scoreShaped = isScoreShaped(raw);
@@ -290,35 +319,38 @@ export const referenceAdmit = (
 
   // 4 — STRUCTURE only.
   if (!scoreShaped && !yesNoShaped && !abstainShaped) {
-    return { kind: 'Abstain', question_id: q, reason: 'UNKNOWN_SHAPE' };
+    return { question_id: q, reason: 'UNKNOWN_SHAPE' };
   }
   // 5 — recognized structure, wrong question.
   if (questionOf(raw) !== q) {
-    return { kind: 'Abstain', question_id: q, reason: 'MISMATCHED_QUESTION' };
+    return { question_id: q, reason: 'MISMATCHED_QUESTION' };
   }
   // 6 — value validity, including a provider-originated HostFailureReason.
   if (abstainShaped) {
     const reason = (raw as { reason: unknown }).reason;
-    if (isModelAbstainReason(reason)) {
-      return { kind: 'Abstain', question_id: q, reason };
-    }
+    if (isModelAbstainReason(reason)) return { question_id: q, reason };
     // ⭐ forged host reason (or any other bad value) → the host's own OUT_OF_RANGE.
-    return { kind: 'Abstain', question_id: q, reason: 'OUT_OF_RANGE' };
+    return { question_id: q, reason: 'OUT_OF_RANGE' };
   }
   if (scoreShaped) {
-    const s = (raw as { score: unknown }).score;
-    const c = (raw as { confidence?: unknown }).confidence;
-    if (typeof s !== 'number' || s < 0 || s > 1 || typeof c !== 'number' || c < 0 || c > 1) {
-      return { kind: 'Abstain', question_id: q, reason: 'OUT_OF_RANGE' };
-    }
-    return { kind: 'Score', question_id: q, score: s, confidence: c };
+    const r = raw as { scale: unknown; score: unknown; confidence: unknown };
+    const sc = r.scale as { min?: unknown; max?: unknown } | null;
+    // ⭐ scale is structurally PRESENT (else UNKNOWN_SHAPE above); here its VALUE is judged.
+    const scaleOk = typeof sc === 'object' && sc !== null && sc.min === 0 && sc.max === 1;
+    const sv = r.score;
+    const cv = r.confidence;
+    if (!scaleOk) return { question_id: q, reason: 'OUT_OF_RANGE' };
+    if (typeof sv !== 'number' || sv < 0 || sv > 1) return { question_id: q, reason: 'OUT_OF_RANGE' };
+    if (typeof cv !== 'number' || cv < 0 || cv > 1) return { question_id: q, reason: 'OUT_OF_RANGE' };
+    // ⭐ the admitted record PRESERVES the contract-required scale.
+    return { question_id: q, scale: CONTRACT_SCALE, score: sv, confidence: cv };
   }
   const a = (raw as { answer: unknown }).answer;
   const c2 = (raw as { confidence?: unknown }).confidence;
   if (typeof a !== 'boolean' || typeof c2 !== 'number' || c2 < 0 || c2 > 1) {
-    return { kind: 'Abstain', question_id: q, reason: 'OUT_OF_RANGE' };
+    return { question_id: q, reason: 'OUT_OF_RANGE' };
   }
-  return { kind: 'YesNo', question_id: q, answer: a, confidence: c2 };
+  return { question_id: q, answer: a, confidence: c2 };
 };
 
 export const referenceProduceAdvice = (
@@ -327,18 +359,18 @@ export const referenceProduceAdvice = (
 ): Advice => {
   let next: Advice = prior;
   for (const j of judgments) {
-    if (j.kind === 'Abstain') continue; // I7 — authority-inert, advice-neutral.
-    if (j.kind === 'Score' && j.question_id === 'Q_DEPTH') {
+    if (isAbstainValue(j)) continue; // I7 — authority-inert, advice-neutral.
+    if (isScoreValue(j) && j.question_id === 'Q_DEPTH') {
       // low depth may never reduce an established floor — advice only raises.
       next = { ...next, depth: Math.max(next.depth ?? 0, j.score) };
     }
-    if (j.kind === 'YesNo' && j.question_id === 'Q_RISK') {
+    if (isYesNoValue(j) && j.question_id === 'Q_RISK') {
       next = { ...next, escalate: next.escalate || j.answer }; // false lowers nothing
     }
-    if (j.kind === 'YesNo' && j.question_id === 'Q_SUFFICIENT') {
+    if (isYesNoValue(j) && j.question_id === 'Q_SUFFICIENT') {
       next = { ...next, clarify: next.clarify || !j.answer }; // true discharges nothing
     }
-    if (j.kind === 'YesNo' && j.question_id === 'Q_LLM_NEEDED') {
+    if (isYesNoValue(j) && j.question_id === 'Q_LLM_NEEDED') {
       next = { ...next, modelNeeded: j.answer === false ? false : next.modelNeeded };
     }
   }
@@ -417,12 +449,24 @@ export const OK_STATE: WorkUnitState = {
 
 export const OVERFLOW_STATE: WorkUnitState = { ...OK_STATE, fileCount: 15_000 };
 export const UNBOUND_SHAPE_STATE: WorkUnitState = { ...OK_STATE, taskShape: 'SEVENTH_SHAPE' };
+/** §5.5 — a non-boolean in a boolean position. Expressible because the field is `unknown`. */
+export const NONBOOLEAN_STATE: WorkUnitState = { ...OK_STATE, migration: 'yes', auth: 1 };
+export const INVALID_QUESTION = 'Q_NOT_A_QUESTION';
 
 export const obs = (raw: unknown, over: Partial<HostObservation> = {}): HostObservation => ({
   timedOut: false,
   empty: false,
   parsed: true,
   raw,
+  ...over,
+});
+
+/** A well-formed provider Score response, §6.1-complete. */
+export const providerScore = (q: QuestionId, over: Record<string, unknown> = {}): unknown => ({
+  question_id: q,
+  scale: { min: 0, max: 1 },
+  score: 0.8,
+  confidence: 0.9,
   ...over,
 });
 

@@ -63,6 +63,10 @@ const verifyPins = (): void => {
 // A declared entry that stops firing FAILS the matrix (stale-collateral check).
 
 const DECLARED_COLLATERAL: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  'DC-PACKET-VERSION-DRIFT': {
+    'DC-FREE-STRING':
+      'A packet_version other than "jev-3" is by construction not a member of the parent class grammar\'s admitted string set, so the free-string law fires. Narrowing would require an off-contract version that is nonetheless class-eligible, i.e. not embodying the drift. IRREDUCIBLE.',
+  },
   'DC-ABSTAIN-REJECTED': {
     'DC-MODEL-REASON-WINS':
       'Rejecting a LAWFUL ProviderAbstain means a well-formed REFUSED is never admitted as itself, which is exactly what MODEL-REASON-WINS checks in its non-malformed leg.',

@@ -12,7 +12,12 @@
  * cannot save the constitution by making the error unbuildable.
  */
 import {
+  CONTRACT_SCALE,
   FILE_COUNT_MAX,
+  PACKET_VERSION,
+  isAbstainValue,
+  isScoreValue,
+  isYesNoValue,
   TASK_SHAPES,
   derive,
   isAbstainShaped,
@@ -81,7 +86,7 @@ const noAdded = (a: AuthorityState, acts: readonly string[]): AuthorityState =>
   ({ ...a, availableActs: acts });
 
 const hasYes = (js: readonly AdmittedJudgment[], q: QuestionId): boolean =>
-  js.some((j) => j.kind === 'YesNo' && j.question_id === q && j.answer);
+  js.some((j) => isYesNoValue(j) && j.question_id === q && j.answer);
 
 export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
   // ── authority invariance ──────────────────────────────────────────────────
@@ -97,8 +102,8 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
   }),
   'DC-ADVICE-FEEDS-AUTHORITY': derive({
     applyAuthority: (prior, js) => {
-      const d = js.find((j) => j.kind === 'Score' && j.question_id === 'Q_DEPTH');
-      return d && d.kind === 'Score' && d.score > 0.9
+      const d = js.find((j) => isScoreValue(j) && j.question_id === 'Q_DEPTH');
+      return d && isScoreValue(d) && d.score > 0.9
         ? { ...prior, deliberationFloor: d.score } // advice VALUE reaches authority
         : prior;
     },
@@ -108,7 +113,7 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
   }),
   'DC-CONFIDENCE-TOUCHES-AUTHORITY': derive({
     applyAuthority: (prior, js) => {
-      const confident = js.some((j) => j.kind !== 'Abstain' && j.confidence > 0.5);
+      const confident = js.some((j) => !isAbstainValue(j) && j.confidence > 0.5);
       return confident ? { ...prior, deliberationFloor: prior.deliberationFloor + 0.1 } : prior;
     },
   }),
@@ -118,23 +123,23 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
   }),
   'DC-AGREEMENT-IS-STANDING': derive({
     applyAuthority: (prior, js) =>
-      js.filter((j) => j.kind === 'YesNo' && j.answer).length >= 2
+      js.filter((j) => isYesNoValue(j) && j.answer).length >= 2
         ? { ...prior, gates: [...prior.gates, 'G_AGREED'] }
         : prior,
   }),
   'DC-AGREEMENT-AS-AUTHORITY': derive({
     applyAuthority: (prior, js) =>
-      js.filter((j) => j.kind === 'YesNo' && j.answer).length >= 2
+      js.filter((j) => isYesNoValue(j) && j.answer).length >= 2
         ? { ...prior, openRequirements: prior.openRequirements.filter((r) => r !== 'INDEPENDENT_REVIEW') }
         : prior,
   }),
   'DC-DISCHARGES-REVIEW': derive({
     applyAuthority: (prior, js) =>
-      js.some((j) => j.kind === 'Score') ? { ...prior, openRequirements: [] } : prior,
+      js.some((j) => isScoreValue(j)) ? { ...prior, openRequirements: [] } : prior,
   }),
   'DC-ABSTAIN-MOVES-AUTHORITY': derive({
     applyAuthority: (prior, js) =>
-      js.length > 0 && js.every((j) => j.kind === 'Abstain')
+      js.length > 0 && js.every((j) => isAbstainValue(j))
         ? noAdded(prior, prior.availableActs.filter((a) => a !== 'PROPOSE'))
         : prior,
   }),
@@ -142,7 +147,7 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
   // ── question asymmetries ──────────────────────────────────────────────────
   'DC-FALSE-LOWERS-GUARD': derive({
     applyAuthority: (prior, js) =>
-      js.some((j) => j.kind === 'YesNo' && j.question_id === 'Q_RISK' && j.answer === false)
+      js.some((j) => isYesNoValue(j) && j.question_id === 'Q_RISK' && j.answer === false)
         ? { ...prior, guardRaised: false }
         : prior,
   }),
@@ -150,7 +155,7 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
     produceAdvice: (prior, js) => {
       let next: Advice = prior;
       for (const j of js) {
-        if (j.kind === 'Score' && j.question_id === 'Q_DEPTH') next = { ...next, depth: j.score };
+        if (isScoreValue(j) && j.question_id === 'Q_DEPTH') next = { ...next, depth: j.score };
       }
       return next;
     },
@@ -247,14 +252,12 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
   // ── admission & provenance ────────────────────────────────────────────────
   'DC-MODEL-FORGES-HOST-REASON': derive(
     forgedReasonCandidate((packet, reason) => ({
-      kind: 'Abstain',
       question_id: packet.question_id,
       reason: reason as never, // trusts the provider's claim about the host interaction
     })),
   ),
   'DC-HOST-REASON-PASSTHROUGH': derive(
     forgedReasonCandidate((packet, reason) => ({
-      kind: 'Abstain',
       question_id: packet.question_id,
       reason: (typeof reason === 'string' ? reason : 'OUT_OF_RANGE') as never,
     })),
@@ -266,14 +269,12 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
   ),
   'DC-FORGERY-AS-UNKNOWN-SHAPE': derive(
     forgedReasonCandidate((packet) => ({
-      kind: 'Abstain',
       question_id: packet.question_id,
       reason: 'UNKNOWN_SHAPE', // reads structural "shape" as admissible TYPE
     })),
   ),
   'DC-UNION-COLLAPSE': derive(
     forgedReasonCandidate((packet) => ({
-      kind: 'Abstain',
       question_id: packet.question_id,
       reason: 'REFUSED', // one union: a host reason becomes a model reason
     })),
@@ -283,7 +284,7 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
       const raw = o.raw as { reason?: unknown } | undefined;
       // consults the model's self-report BEFORE the host's own observations
       if (raw && isModelAbstainReason(raw.reason)) {
-        return { kind: 'Abstain', question_id: packet.question_id, reason: raw.reason };
+        return { question_id: packet.question_id, reason: raw.reason };
       }
       return referenceAdmit(packet, o);
     },
@@ -296,7 +297,7 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
       return 'OUT_OF_RANGE';
     },
     admit: (packet, o): AdmittedJudgment => {
-      if (!o.parsed) return { kind: 'Abstain', question_id: packet.question_id, reason: 'PARSE_FAILURE' };
+      if (!o.parsed) return { question_id: packet.question_id, reason: 'PARSE_FAILURE' };
       return referenceAdmit(packet, o);
     },
   }),
@@ -308,7 +309,6 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
         if (raw && raw.nd === true) {
           n += 1;
           return {
-            kind: 'Abstain',
             question_id: packet.question_id,
             reason: n % 2 === 0 ? 'OUT_OF_RANGE' : 'UNKNOWN_SHAPE',
           };
@@ -321,7 +321,7 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
     admit: (packet, o): AdmittedJudgment => {
       if (o.timedOut) {
         // invents a response identity instead of using the packet's
-        return { kind: 'Abstain', question_id: 'Q_LLM_NEEDED', reason: 'TIMEOUT' };
+        return { question_id: 'Q_LLM_NEEDED', reason: 'TIMEOUT' };
       }
       return referenceAdmit(packet, o);
     },
@@ -331,17 +331,98 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
       const raw = o.raw as { question_id?: unknown } | undefined;
       if (raw && typeof raw.question_id === 'string' && raw.question_id !== packet.question_id) {
         // takes the expected question from the RESPONSE
-        return { kind: 'Abstain', question_id: raw.question_id as QuestionId, reason: 'OUT_OF_RANGE' };
+        return { question_id: raw.question_id as QuestionId, reason: 'OUT_OF_RANGE' };
       }
       return referenceAdmit(packet, o);
     },
   }),
+  // ── F1R1: Score fidelity ──────────────────────────────────────────────────
+  'DC-SCORE-SCALE-OMITTED': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const r = o.raw as Record<string, unknown> | undefined;
+      // treats question_id + score as sufficient — the exact F1 defect
+      if (r && 'question_id' in r && 'score' in r && !('scale' in r)) {
+        return {
+          question_id: packet.question_id,
+          scale: CONTRACT_SCALE,
+          score: r['score'] as number,
+          confidence: (r['confidence'] ?? 0.5) as number,
+        };
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+  'DC-SCORE-SCALE-ALTERED': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const r = o.raw as { scale?: unknown; score?: unknown; confidence?: unknown } | undefined;
+      // accepts any scale object without judging min/max
+      if (r && typeof r.scale === 'object' && r.scale !== null && typeof r.score === 'number') {
+        return {
+          question_id: packet.question_id,
+          scale: CONTRACT_SCALE,
+          score: r.score,
+          confidence: (r.confidence ?? 0.5) as number,
+        };
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+  'DC-SCORE-SCALE-DROPPED': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const a = referenceAdmit(packet, o);
+      if (isScoreValue(a)) {
+        // drops the contract-required scale from the admitted record
+        const bare = { question_id: a.question_id, score: a.score, confidence: a.confidence };
+        return bare as unknown as AdmittedJudgment;
+      }
+      return a;
+    },
+  }),
+
+  // ── F1R1: construction exactness ──────────────────────────────────────────
+  'DC-NONBOOLEAN-CONSTRUCTS': derive({
+    constructPacket: (state, q): ConstructionResult => {
+      const r = referenceConstructPacket(state, q);
+      if (r.ok) return r;
+      // coerces a non-boolean into a boolean position instead of refusing
+      const coerced = {
+        ...state,
+        containsSensitive: Boolean(state.containsSensitive),
+        requiresExternalInfo: Boolean(state.requiresExternalInfo),
+        migration: Boolean(state.migration),
+        auth: Boolean(state.auth),
+        production: Boolean(state.production),
+      };
+      return referenceConstructPacket(coerced, q);
+    },
+  }),
+  'DC-INVALID-QUESTION-CONSTRUCTS': derive({
+    constructPacket: (state, q): ConstructionResult => {
+      const r = referenceConstructPacket(state, q);
+      if (r.ok) return r;
+      // substitutes a default question instead of refusing an invalid selector
+      const rebuilt = referenceConstructPacket(state, 'Q_RISK');
+      if (!rebuilt.ok) return r;
+      return { ok: true, packet: { ...rebuilt.packet, question_id: q as QuestionId } };
+    },
+  }),
+  'DC-PACKET-VERSION-DRIFT': derive({
+    constructPacket: (state, q): ConstructionResult => {
+      const r = referenceConstructPacket(state, q);
+      if (!r.ok) return r;
+      return {
+        ok: true,
+        packet: { ...r.packet, packet_version: 'jev-4' as typeof PACKET_VERSION },
+      };
+    },
+  }),
+
   'DC-ABSTAIN-REJECTED': derive({
     admit: (packet, o): AdmittedJudgment => {
       const raw = o.raw as { reason?: unknown } | undefined;
       // rejects a LAWFUL ProviderAbstain because it is not the question's declared shape
       if (raw && isModelAbstainReason(raw.reason)) {
-        return { kind: 'Abstain', question_id: packet.question_id, reason: 'UNKNOWN_SHAPE' };
+        return { question_id: packet.question_id, reason: 'UNKNOWN_SHAPE' };
       }
       return referenceAdmit(packet, o);
     },

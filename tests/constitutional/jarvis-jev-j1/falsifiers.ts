@@ -6,6 +6,14 @@
  */
 import {
   ADVICE_MEMBERS,
+  CONTRACT_SCALE,
+  INVALID_QUESTION,
+  NONBOOLEAN_STATE,
+  PACKET_VERSION as PV,
+  isAbstainValue,
+  isScoreValue,
+  isYesNoValue,
+  providerScore,
   BASE_AUTHORITY,
   FILE_COUNT_MAX,
   MODEL_ABSTAIN_REASONS,
@@ -34,8 +42,8 @@ const sameAuthority = (a: AuthorityState, b: AuthorityState): boolean =>
   JSON.stringify(a) === JSON.stringify(b);
 
 const scoreAt = (q: 'Q_DEPTH', v: number): AdmittedJudgment => ({
-  kind: 'Score',
   question_id: q,
+  scale: CONTRACT_SCALE,
   score: v,
   confidence: 0.9,
 });
@@ -43,7 +51,8 @@ const yesNo = (
   q: 'Q_RISK' | 'Q_SUFFICIENT' | 'Q_LLM_NEEDED',
   answer: boolean,
   confidence = 0.9,
-): AdmittedJudgment => ({ kind: 'YesNo', question_id: q, answer, confidence });
+): AdmittedJudgment => ({ question_id: q, answer, confidence });
+const abst = (q: 'Q_RISK', reason: 'REFUSED'): AdmittedJudgment => ({ question_id: q, reason });
 
 /** A well-formed opaque identifier — class-shape-legal under R-5. */
 export const WELL_FORMED_OPAQUE_ID = 'b'.repeat(32);
@@ -120,7 +129,7 @@ export const FALSIFIERS: Readonly<Record<string, Falsifier>> = {
     }
   },
   'DC-ABSTAIN-MOVES-AUTHORITY': (m) => {
-    const j: AdmittedJudgment = { kind: 'Abstain', question_id: 'Q_RISK', reason: 'REFUSED' };
+    const j: AdmittedJudgment = abst('Q_RISK', 'REFUSED');
     if (!sameAuthority(m.applyAuthority(BASE_AUTHORITY, [j]), BASE_AUTHORITY)) {
       fail('I7: an abstention changed authority state');
     }
@@ -322,7 +331,7 @@ export const FALSIFIERS: Readonly<Record<string, Falsifier>> = {
     const p = okPacket('Q_RISK');
     const forged = { question_id: 'Q_RISK', reason: 'TIMEOUT' };
     const a = m.admit(p, obs(forged));
-    if (a.kind !== 'Abstain' || a.reason !== 'OUT_OF_RANGE') {
+    if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
       fail(`§7.1: forged host reason admitted as ${JSON.stringify(a)}; required OUT_OF_RANGE`);
     }
   },
@@ -330,7 +339,7 @@ export const FALSIFIERS: Readonly<Record<string, Falsifier>> = {
     const p = okPacket('Q_DEPTH');
     for (const hr of HOST_FAILURE_REASONS) {
       const a = m.admit(p, obs({ question_id: 'Q_DEPTH', reason: hr }));
-      if (a.kind === 'Abstain' && a.reason === hr && hr !== 'OUT_OF_RANGE') {
+      if (isAbstainValue(a) && a.reason === hr && hr !== 'OUT_OF_RANGE') {
         fail(`§7.1: provider-supplied ${hr} recorded verbatim`);
       }
     }
@@ -343,14 +352,14 @@ export const FALSIFIERS: Readonly<Record<string, Falsifier>> = {
     } catch {
       return fail('§7.1: forged host reason discarded (threw) instead of recorded');
     }
-    if (a.kind !== 'Abstain' || a.reason !== 'OUT_OF_RANGE') {
+    if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
       fail('§7.1: forged host reason must be RECORDED as host OUT_OF_RANGE');
     }
   },
   'DC-FORGERY-AS-UNKNOWN-SHAPE': (m) => {
     const p = okPacket('Q_RISK');
     const a = m.admit(p, obs({ question_id: 'Q_RISK', reason: 'TIMEOUT' }));
-    if (a.kind === 'Abstain' && a.reason === 'UNKNOWN_SHAPE') {
+    if (isAbstainValue(a) && a.reason === 'UNKNOWN_SHAPE') {
       fail('§7.2: Abstain-shaped forgery classified UNKNOWN_SHAPE (shape read as type)');
     }
   },
@@ -358,13 +367,13 @@ export const FALSIFIERS: Readonly<Record<string, Falsifier>> = {
     const p = okPacket('Q_SUFFICIENT');
     for (const hr of HOST_FAILURE_REASONS) {
       const a = m.admit(p, obs({ question_id: 'Q_SUFFICIENT', reason: hr }));
-      if (a.kind === 'Abstain' && (MODEL_ABSTAIN_REASONS as readonly string[]).includes(a.reason)) {
+      if (isAbstainValue(a) && (MODEL_ABSTAIN_REASONS as readonly string[]).includes(a.reason)) {
         fail(`§6.1: host reason ${hr} admitted as a model reason — unions collapsed`);
       }
     }
     for (const mr of MODEL_ABSTAIN_REASONS) {
       const a = m.admit(p, obs({ question_id: 'Q_SUFFICIENT', reason: mr }));
-      if (a.kind !== 'Abstain' || a.reason !== mr) {
+      if (!isAbstainValue(a) || a.reason !== mr) {
         fail(`§6.1: lawful ProviderAbstain ${mr} was not admitted as itself`);
       }
     }
@@ -372,14 +381,14 @@ export const FALSIFIERS: Readonly<Record<string, Falsifier>> = {
   'DC-MODEL-REASON-WINS': (m) => {
     const p = okPacket('Q_RISK');
     const a = m.admit(p, obs({ question_id: 'Q_RISK', reason: 'REFUSED' }, { parsed: false }));
-    if (a.kind !== 'Abstain' || a.reason !== 'PARSE_FAILURE') {
+    if (!isAbstainValue(a) || a.reason !== 'PARSE_FAILURE') {
       fail(`§7.2: malformed + self-declared REFUSED must record PARSE_FAILURE, got ${JSON.stringify(a)}`);
     }
   },
   'DC-PRECEDENCE-REORDERED': (m) => {
     const p = okPacket('Q_RISK');
     const a = m.admit(p, obs({ nonsense: 1 }, { timedOut: true, parsed: false }));
-    if (a.kind !== 'Abstain' || a.reason !== 'TIMEOUT') {
+    if (!isAbstainValue(a) || a.reason !== 'TIMEOUT') {
       fail(`§7.2: precedence reordered — expected TIMEOUT, got ${JSON.stringify(a)}`);
     }
     const b = m.hostFailureReason({ timedOut: true, empty: true, parsed: false, raw: null });
@@ -405,15 +414,58 @@ export const FALSIFIERS: Readonly<Record<string, Falsifier>> = {
     const p = okPacket('Q_DEPTH');
     const a = m.admit(p, obs({ question_id: 'Q_RISK', answer: true, confidence: 0.9 }));
     if (a.question_id !== 'Q_DEPTH') fail('§7.1: expected question taken from the response');
-    if (a.kind !== 'Abstain' || a.reason !== 'MISMATCHED_QUESTION') {
+    if (!isAbstainValue(a) || a.reason !== 'MISMATCHED_QUESTION') {
       fail(`§7.2: wrong-question response must record MISMATCHED_QUESTION, got ${JSON.stringify(a)}`);
     }
   },
+  // ── F1R1: Score fidelity (§6.1) ───────────────────────────────────────────
+  'DC-SCORE-SCALE-OMITTED': (m) => {
+    const p = okPacket('Q_DEPTH');
+    // a Score response with NO scale is not §6.1 Score-shaped
+    const a = m.admit(p, obs({ question_id: 'Q_DEPTH', score: 0.8, confidence: 0.9 }));
+    if (isScoreValue(a)) fail('§6.1: a Score missing `scale` was admitted as a Score');
+    if (!isAbstainValue(a) || a.reason !== 'UNKNOWN_SHAPE') {
+      fail(`§IV: missing required Score member must be UNKNOWN_SHAPE, got ${JSON.stringify(a)}`);
+    }
+  },
+  'DC-SCORE-SCALE-ALTERED': (m) => {
+    const p = okPacket('Q_DEPTH');
+    const a = m.admit(p, obs(providerScore('Q_DEPTH', { scale: { min: 0, max: 100 } })));
+    if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
+      fail(`§IV: altered scale must be OUT_OF_RANGE, got ${JSON.stringify(a)}`);
+    }
+  },
+  'DC-SCORE-SCALE-DROPPED': (m) => {
+    const p = okPacket('Q_DEPTH');
+    const a = m.admit(p, obs(providerScore('Q_DEPTH')));
+    if (!isScoreValue(a)) fail(`§6.1: a lawful Score was not admitted: ${JSON.stringify(a)}`);
+    else if (a.scale.min !== 0 || a.scale.max !== 1) {
+      fail('§6.1: admitted Score did not preserve the contract-required scale');
+    }
+  },
+
+  // ── F1R1: construction exactness (§2, §5.5) ───────────────────────────────
+  'DC-NONBOOLEAN-CONSTRUCTS': (m) => {
+    const r = m.constructPacket(NONBOOLEAN_STATE, 'Q_RISK');
+    if (r.ok) fail('§5.5: a non-boolean in a boolean position must refuse construction');
+  },
+  'DC-INVALID-QUESTION-CONSTRUCTS': (m) => {
+    const r = m.constructPacket(OK_STATE, INVALID_QUESTION);
+    if (r.ok) fail('§5.5: a question selector outside QuestionId must refuse construction');
+  },
+  'DC-PACKET-VERSION-DRIFT': (m) => {
+    const r = m.constructPacket(OK_STATE, 'Q_RISK');
+    if (!r.ok) return fail('fixture: OK_STATE must construct');
+    if (r.packet.packet_version !== PV) {
+      fail(`§2: packet_version must be exactly "${PV}", got "${r.packet.packet_version}"`);
+    }
+  },
+
   'DC-ABSTAIN-REJECTED': (m) => {
     for (const q of QUESTION_IDS) {
       const p = okPacket(q);
       const a = m.admit(p, obs({ question_id: q, reason: 'REFUSED' }));
-      if (a.kind !== 'Abstain' || a.reason !== 'REFUSED') {
+      if (!isAbstainValue(a) || a.reason !== 'REFUSED') {
         fail(`§7.1: lawful ProviderAbstain rejected for ${q}: ${JSON.stringify(a)}`);
       }
     }
