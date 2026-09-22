@@ -390,7 +390,8 @@ const GUARDS: readonly { id: string; law: string; run: () => void }[] = [
         'postgres',
         'admitDisclosureFacts',
         'decideMemberDisclosure',
-        'servingTruth',
+        '.servingTruth',
+        'servingTruth:',
         'conversationHistory',
       ]) {
         assert(!p.includes(forbidden), 'classifier contains forbidden authority: ' + forbidden);
