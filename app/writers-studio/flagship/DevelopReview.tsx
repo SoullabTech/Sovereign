@@ -175,6 +175,56 @@ export type LensId = (typeof LENSES)[number]['id'];
  */
 export type LensState = 'not-read' | 'partially-read' | 'read' | 'read-nothing-noticed';
 
+/**
+ * ⭐ THE OPENING — recognition, ⛔ not assessment.
+ *
+ * The first thing the member meets must be THEIRS. Three lawful forms, in
+ * preference order; ⛔ a fourth — MAIA's summary of what the book is about — is
+ * an `author-intent` claim and is barred however beautifully it is written.
+ *
+ *   1. `declared`  the member's own stated purpose, in their words
+ *   2. `passage`   ⭐ a line from their manuscript, at an address. MAIA chooses
+ *                  it and says WHY in one FACTUAL line — ⛔ never "this is
+ *                  beautiful", ⛔ never what it means
+ *   3. `facts`     the Work itself, when nothing has been read yet
+ */
+export type WorkOpening =
+  | { readonly kind: 'declared'; readonly purpose: string; readonly declaredWhen: string }
+  | { readonly kind: 'passage'; readonly text: string; readonly because: string;
+      readonly at: string; readonly sectionId: string }
+  | { readonly kind: 'facts'; readonly written: string };
+
+function Opening({ o, work, kind }: { o: WorkOpening; work: string; kind: string }) {
+  if (o.kind === 'declared') {
+    return (
+      <section className="fs-open" data-opening="declared">
+        <div className="fs-openlabel">What you said this {kind} is for</div>
+        <blockquote className="fs-openq">{o.purpose}</blockquote>
+        <div className="fs-openwho">You, {o.declaredWhen} · <button type="button" className="fs-goto">Revise this</button></div>
+      </section>
+    );
+  }
+  if (o.kind === 'passage') {
+    return (
+      <section className="fs-open" data-opening="passage">
+        <div className="fs-openlabel">From your {kind}</div>
+        <blockquote className="fs-openq">{o.text}</blockquote>
+        {/* ⭐ Why it is here, as a FACT about the text. ⛔ Not a judgment of it. */}
+        <div className="fs-openwho">
+          {o.because} · <button type="button" className="fs-goto" data-return-to={o.sectionId}>{o.at} →</button>
+        </div>
+      </section>
+    );
+  }
+  return (
+    <section className="fs-open" data-opening="facts">
+      <div className="fs-openlabel">Your {kind}</div>
+      <blockquote className="fs-openq">{work}</blockquote>
+      <div className="fs-openwho">{o.written}</div>
+    </section>
+  );
+}
+
 export interface LensStanding {
   readonly id: LensId;
   readonly state: LensState;
@@ -190,6 +240,7 @@ export interface DevelopView {
   readonly observations: readonly Observation[];
   readonly structure: WorkStructure;
   readonly lenses: readonly LensStanding[];
+  readonly opening: WorkOpening;
   readonly coverage: {
     readonly read: number; readonly total: number; readonly depth: string; readonly when: string;
   };
@@ -248,6 +299,10 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided' }: {
                 {readTimeLabel(view.words)}
               </p>
             </div>
+          </div>
+
+          <div style={{ gridColumn: '1 / -1' }}>
+            <Opening o={view.opening} work={view.work} kind={view.kind} />
           </div>
 
           <div className="fs-col">

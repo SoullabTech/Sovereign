@@ -127,6 +127,14 @@ export const DEVELOP: DevelopView = {
   /* ⛔ Undeclared: there is no declaration store, so the map is Sequence and no
      "Name the movements" control is drawn. */
   structure: { declared: false },
+  /* ⭐ The opening is the member's own sentence, at an address. MAIA chose it and
+     says why as a FACT about the text — ⛔ not that it is good. */
+  opening: {
+    kind: 'passage',
+    text: '“Maybe this is what growing feels like,” she whispered. “Not arriving, but learning to stay with the in-between.”',
+    because: 'The only time Clara says “the in-between” aloud',
+    at: 'Ch 6', sectionId: 'ch-6-p4',
+  },
   lenses: [
     { id: 'structure',   state: 'read',                 count: 3 },
     { id: 'development', state: 'partially-read',       count: 2, remaining: 7 },

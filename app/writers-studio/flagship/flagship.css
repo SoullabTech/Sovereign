@@ -232,6 +232,17 @@
 .fs-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);padding-top:8px}
 .fs-legend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
 /* ⭐ Plain question primary, editorial term secondary — V12 by naming. */
+/* ⭐ The opening. Generous, quiet, and the member's own words at the centre of it. */
+.fs-open{background:var(--card);border:1px solid var(--rule);border-radius:9px;
+  padding:26px 30px 22px;position:relative;overflow:hidden}
+.fs-open::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;
+  background:linear-gradient(90deg,var(--goldfill),transparent 70%)}
+.fs-openlabel{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);font-weight:600;margin-bottom:12px}
+.fs-openq{font-family:var(--serif);font-size:23px;line-height:1.55;color:var(--ink);
+  margin:0 0 13px;font-weight:400;letter-spacing:-.005em;max-width:52ch;text-wrap:pretty}
+.fs-openwho{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+@media (max-width:820px){ .fs-open{padding:20px 18px 18px} .fs-openq{font-size:19px} }
 .fs-lenses{display:flex;flex-direction:column}
 .fs-lens{border-top:1px solid var(--rule);padding:11px 0 10px}
 .fs-lens:first-child{border-top:0;padding-top:0}

@@ -837,3 +837,76 @@ invites the declaration instead of making it.
 | *“**What stands out** here”* | importance claim — the `key` family, third appearance |
 | Top nav shows **Develop** active on a surface with editing tools | ⚠️ orientation: the member is writing while the room says they are developing |
 | Coverage · facet control | ⛔ still absent |
+
+---
+
+## §14 · CONTINUITY — the strongest object yet, and a regression
+
+### 14.1 · ⭐⭐ THE CONTINUITY MAP IS THE BEST THING IN THE PROJECT
+
+A 5 × 12 grid: `Clara · The River · Change · Belonging · Uncertainty` against `Ch 1 … Ch 12`, each
+cell shaded **Stronger presence / Moderate / Brief mention**.
+
+⭐ It is the **best answer anyone has produced to the founder's design question**, and it is worth
+saying exactly why:
+
+- ⭐ **It is entirely the member's own book.** Not one interpretive category — five things that are
+  demonstrably in the text, and where.
+- ⭐ **Every cell is an address.** Row × chapter. The *where?* test passes at the granularity of a
+  single cell, which nothing else in the project achieves.
+- ⭐ **It is non-evaluative by construction.** Presence, ⛔ not quality. There is no way to grade a
+  book with a presence grid.
+- ⭐⭐ **It reveals something the member genuinely cannot see from inside their manuscript** — that
+  *Belonging* is absent until Ch 6, that *The River* thins in the middle — **without telling them
+  what it means.** That is *seeing the shape of your Work* with no editorial vocabulary required.
+
+> ⭐ **RECOMMENDATION: promote the Continuity Map to the Overview.** It is doing the job the hero is
+> currently attempting, and doing it with the member's own material instead of MAIA's summary.
+
+### 14.2 · ⛔ “What's Emerging” CAME BACK
+
+It was **removed entirely** in the revised Themes frame (§12.1). Here it returns with four verdicts:
+
+| Rendered | |
+|---|---|
+| *“A **deepening** relationship with place”* | ⛔ verdict |
+| *“Clara's **growing capacity** — she meets uncertainty with **more presence**”* | ⛔ verdict about a character's development, asserted |
+| *“Thresholds appear at **key** turning points”* | ⛔ barred word |
+| *“Even in change, a sense of **hope remains**”* | ⛔ ⭐ this one reads the Work's *meaning*, not its text |
+
+### 14.3 · ⭐⭐ THE PATTERN BEHIND BOTH — corrections are landing PER FRAME, not systemically
+
+| Correction | Themes | Voice | Continuity |
+|---|---|---|---|
+| Cards carry addresses | ✅ fixed | ⛔ no | ⛔ no |
+| *“What's Emerging”* removed | ✅ fixed | ⛔ present | ⛔ **returned** |
+| `key` removed | ⚠️ one left | ⛔ present | ⛔ ×3 |
+| Coverage shown | ⛔ no | ⛔ no | ⛔ no |
+
+⭐ **Each frame is corrected by hand, so each new frame reintroduces what the last one fixed.**
+⛔ That is not a discipline problem; it is an architecture problem.
+
+⭐ **The answer is that these frames should be RENDERED FROM THE SAME COMPONENTS**, where:
+
+- `Observation` declares `evidence` and `returnTo` **non-optional**, so a card with no address
+  **cannot be constructed**;
+- `inspectMemberCopy()` refuses a verdict word stated as a property, at the boundary;
+- `WHERE-every-claim-has-an-address` asserts over rendered DOM on **every surface at every
+  viewport**, so a new frame cannot ship having dropped it.
+
+⭐ All three exist in this build. ⭐ A frame drawn by hand inherits nothing; **a frame rendered from
+the components inherits everything.**
+
+### 14.4 · ⚠️ Remaining on this frame
+
+- ⛔ **`Character Arcs · Key Settings · Important Ideas · Emotional Flow`** — an imported taxonomy,
+  the same defect as Voice's four axes (§11.2), and *“Important Ideas”* carries an importance
+  judgment in its name.
+- ⛔ *“…and where they **might be strengthened**”* — prescriptive; implies a deficiency MAIA has no
+  commission to assert.
+- ⛔ MAIA: *“This passage **strengthens** your story's continuity”* (evaluative) ·
+  *“**builds the emotional throughline** of staying with what is changing”* (author-intent).
+- ⛔ No coverage · ⛔ no facet control.
+
+⭐ Keep: *“A coherent story feels like a river — different at every turn, still itself.”* Attributed,
+true, and about stories rather than about this Work.
