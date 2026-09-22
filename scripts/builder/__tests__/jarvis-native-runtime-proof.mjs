@@ -170,6 +170,104 @@ try {
     assert.equal(readFileSync(path.join(repo, "allowed.txt"), "utf8"), "before\n");
   });
 
+  console.log("\n=== M1 multi-file final-candidate custody ===");
+  const multiRepo = path.join(tmp, "multi-repo");
+  mkdirSync(multiRepo);
+  const multiGit = (args, opts = {}) => execFileSync("git", args, {
+    cwd: multiRepo, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], ...opts,
+  }).trim();
+  multiGit(["init", "-q"]);
+  multiGit(["config", "user.name", "Proof"]);
+  multiGit(["config", "user.email", "proof@local.invalid"]);
+  writeFileSync(path.join(multiRepo, "a.txt"), "before-a\n");
+  writeFileSync(path.join(multiRepo, "b.txt"), "before-b\n");
+  multiGit(["add", "."]);
+  multiGit(["commit", "-qm", "base"]);
+  const multiBase = multiGit(["rev-parse", "HEAD"]);
+  writeFileSync(path.join(multiRepo, "a.txt"), "after-a\n");
+  writeFileSync(path.join(multiRepo, "b.txt"), "after-b\n");
+  multiGit(["add", "a.txt", "b.txt"]);
+  execFileSync("git", [
+    "-c", "user.name=JARVIS",
+    "-c", "user.email=jarvis@local.invalid",
+    "commit", "-qm", "chore(jarvis): native-runtime-multifile-proof",
+  ], { cwd: multiRepo, stdio: ["ignore", "pipe", "pipe"] });
+  const multiHead = multiGit(["rev-parse", "HEAD"]);
+  const multiPacket = {
+    ...packet,
+    work_unit_id: "native-runtime-multifile-proof",
+    objective: "Change two authorized tracked files in one bounded candidate.",
+    canonical_sha: multiBase,
+    branch: "fix/native-runtime-multifile-proof",
+    allowed_files: ["a.txt", "b.txt"],
+    context_selectors: ["a.txt", "b.txt"],
+    verification_commands: ["grep -q '^after-a$' a.txt", "grep -q '^after-b$' b.txt"],
+  };
+  const multiLedger = path.join(home, "native-patch-admission", multiPacket.work_unit_id + ".jsonl");
+  const multiPatchDigest = "sha256:" + "b".repeat(64);
+  writeFileSync(multiLedger, JSON.stringify({
+    event_version: "NPA1.v1",
+    event: "APPLIED",
+    code: "PATCH_APPLIED",
+    applied: true,
+    work_unit_id: multiPacket.work_unit_id,
+    patch_digest: multiPatchDigest,
+    patch_paths: ["a.txt", "b.txt"],
+    changed_paths: ["a.txt", "b.txt"],
+  }) + "\n");
+  const multiResult = {
+    ...result,
+    work_unit_id: multiPacket.work_unit_id,
+    starting_sha: multiBase,
+    ending_sha: multiHead,
+    files_changed: ["b.txt", "a.txt"],
+    patch_admission: {
+      ...result.patch_admission,
+      patch_digest: multiPatchDigest,
+      patch_paths: ["b.txt", "a.txt"],
+      changed_paths: ["a.txt", "b.txt"],
+      evidence_path: multiLedger,
+    },
+  };
+
+  check("two-file JARVIS candidate commit is admitted only when result, ledger, patch and commit path sets agree", () => {
+    const verdict = validateNativePatchResult(multiPacket, multiResult, multiRepo);
+    assert.equal(verdict.ok, true, JSON.stringify(verdict));
+    assert.equal(verdict.commit_sha, multiHead);
+    assert.deepEqual(verdict.changed_paths, ["a.txt", "b.txt"]);
+    assert.equal(verdict.verification.length, 2);
+  });
+
+  check("omitting either file from multi-file result custody is refused", () => {
+    const verdict = validateNativePatchResult(
+      multiPacket,
+      { ...multiResult, files_changed: ["a.txt"] },
+      multiRepo,
+    );
+    assert.equal(verdict.ok, false);
+    assert.equal(verdict.failure_class, "NATIVE_PATH_EVIDENCE_MISMATCH");
+  });
+
+  check("verifier mutation of either member invalidates the whole two-file candidate and rollback restores both files", () => {
+    const mutatingMultiPacket = {
+      ...multiPacket,
+      verification_commands: [
+        "grep -q '^after-a$' a.txt",
+        "printf 'drift\\n' >> b.txt",
+      ],
+    };
+    const verdict = validateNativePatchResult(mutatingMultiPacket, multiResult, multiRepo);
+    assert.equal(verdict.ok, false);
+    assert.equal(verdict.failure_class, "NATIVE_VERIFICATION_MUTATED_CANDIDATE");
+
+    const rollback = rollbackNativeCandidate(multiRepo, multiBase);
+    assert.equal(rollback.ok, true, JSON.stringify(rollback));
+    assert.equal(multiGit(["rev-parse", "HEAD"]), multiBase);
+    assert.equal(multiGit(["status", "--porcelain", "--untracked-files=all"]), "");
+    assert.equal(readFileSync(path.join(multiRepo, "a.txt"), "utf8"), "before-a\n");
+    assert.equal(readFileSync(path.join(multiRepo, "b.txt"), "utf8"), "before-b\n");
+  });
+
   console.log("\n" + passed + " passed · 0 failed");
 } finally {
   rmSync(tmp, { recursive: true, force: true });

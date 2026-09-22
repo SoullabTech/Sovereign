@@ -88,6 +88,16 @@ try {
     assert.match(delegate, /repair_verified_head/);
   });
 
+  await check("bounded repair reuses the exact same Work Unit packet and cannot widen multi-file scope", async () => {
+    const retryStart = delegate.indexOf("REPAIR TURN — ONE BOUNDED RETRY");
+    assert.notEqual(retryStart, -1);
+    const retryTail = delegate.slice(retryStart, retryStart + 7000);
+    assert.match(retryTail, /EDIT_ADMISSION_SCRIPT\" apply \"\$f\" \"\$wt\" \"\$repair_log\"/);
+    assert.match(retryTail, /PATCH_ADMISSION_SCRIPT\" apply \"\$f\" \"\$wt\" \"\$repair_log\"/);
+    assert.doesNotMatch(retryTail, /allowed_files\s*=|\.allowed_files\s*\+=|del\(\.allowed_files\)/);
+    assert.match(retryTail, /reset --hard \"\$starting_sha\"/);
+  });
+
   await check("each native run rotates prior fixed-path logs instead of mixing evidence", async () => {
     assert.match(delegate, /_rotate_run_log/);
     assert.match(delegate, /log\.verify\.repair1/);
