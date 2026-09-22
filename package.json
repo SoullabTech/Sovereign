@@ -215,6 +215,7 @@
     "typecheck:ws-flagship": "tsc -p tsconfig.ws-flagship.json",
     "matrix:ws-flagship": "tsx tests/constitutional/writers-studio/flagship/matrix.ts",
     "matrix:ws-first-arrival": "tsx tests/constitutional/writers-studio/flagship/first-arrival/matrix.ts",
+    "matrix:ws-concurrency": "tsx tests/constitutional/writers-studio/flagship/concurrency/matrix.ts",
     "typecheck:editorial-reading-contract": "tsc -p tsconfig.editorial-reading-contract.json",
     "matrix:editorial-reading-contract": "tsx tests/constitutional/editorial-reading/matrix.ts",
     "matrix:ws-observation-identity-live": "tsx tests/constitutional/writers-studio/liveRunner.ts",
