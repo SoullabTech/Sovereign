@@ -46,6 +46,7 @@
     "matrix:serving-disclosure-f1": "npx tsx tests/constitutional/serving-identity/disclosure-fact-production-contract-matrix.ts",
     "matrix:serving-disclosure-f2-iq": "npx tsx tests/constitutional/serving-identity/explicit-identity-inquiry-contract-matrix.ts",
     "matrix:serving-disclosure-f2-iq-runtime": "npx tsx tests/constitutional/serving-identity/explicit-identity-inquiry-runtime-matrix.ts",
+    "matrix:serving-disclosure-f2-im": "npx tsx tests/constitutional/serving-identity/explicit-identity-mismatch-producer-matrix.ts",
     "check:no-supabase": "npx tsx scripts/check-no-supabase.ts",
     "check:no-direct-anthropic": "npx tsx scripts/check-no-direct-anthropic.ts",
     "check:no-vendor-voices": "npx tsx scripts/check-no-vendor-voices.ts",
