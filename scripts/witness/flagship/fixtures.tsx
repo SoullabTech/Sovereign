@@ -121,7 +121,7 @@ export const S_ARRIVED = drive([{
   type: 'ARRIVE_AT_PASSAGE',
   place: { sectionId: 'ch-6', anchor: 'anchor:ch-6:0' },
   passage: PASSAGE, observation: OBSERVATION,
-  trail: { from: 'your review', backLabel: 'Back to your review' },
+  trail: { from: 'your review', backLabel: 'Back to your review', index: 1, total: 4 },
 }]);
 
 export const MAIA_ARRIVED: MaiaCopy = {
@@ -167,7 +167,15 @@ export const REVIEW: ReviewView = {
   work: 'The River Between',
   kind: 'novel',
   scope: { kind: 'work' },
-  freshness: { kind: 'stale', when: 'on 18 September', changedSince: 3 },
+  freshness: { kind: 'stale', when: 'on 17 September', changedSince: 3 },
+  /* ⭐ The Work moved. Itemised, with the previous reading kept and the decision
+     to re-read left with the member. */
+  changed: {
+    readAt: '17 September, 10:24',
+    updatedAt: '21 September, 15:18',
+    previousLabel: 'Chapter 5 · What Shifts',
+    change: { added: 3, revised: 1, moved: 2, revisedIncludes: ['p. 112'] },
+  },
   coverage: COVERAGE,
   findings: OBSERVATIONS,
   citations: {

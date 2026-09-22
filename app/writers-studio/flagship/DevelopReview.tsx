@@ -19,8 +19,9 @@ import type {
 } from '../../../lib/writersStudio/studio/developObservation';
 import {
   availabilityLine, citationLine, commissionOffer, freshnessLine, scopeLine,
-  type CitationState, type Freshness, type LensAvailability, type ReviewScope,
+  type CitationState, type Freshness, type LensAvailability, type ReviewScope, type WorkChange,
 } from '../../../lib/writersStudio/studio/reading';
+import { OwnObservation, StaleReading } from './ReviewPanels';
 
 /* ══════════════════════════════════════════════════════════════════════════
    OBSERVATIONS — describe, ⛔ never grade
@@ -403,6 +404,11 @@ export interface ReviewView {
   readonly citations?: Readonly<Record<string, CitationState>>;
   readonly lenses: readonly { id: LensId; availability: LensAvailability }[];
   readonly map?: ContinuityMapData;
+  /** ⭐ Set when the Work has moved since the reading. */
+  readonly changed?: {
+    readonly readAt: string; readonly updatedAt: string;
+    readonly change: WorkChange; readonly previousLabel: string;
+  };
 }
 
 function FindingRow({ o, citation }: { o: GovernedObservation; citation?: CitationState }) {
@@ -484,9 +490,14 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
           </div>
 
           {/* ⭐⭐ A READING IS A READING AT A TIME, said before anything it claims. */}
-          <div className="fs-reading" data-freshness={view.freshness.kind}>
-            {freshnessLine(view.freshness)}
-          </div>
+          {view.changed ? (
+            <StaleReading readAt={view.changed.readAt} updatedAt={view.changed.updatedAt}
+              change={view.changed.change} previousLabel={view.changed.previousLabel} />
+          ) : (
+            <div className="fs-reading" data-freshness={view.freshness.kind}>
+              {freshnessLine(view.freshness)}
+            </div>
+          )}
 
           <section className="fs-card">
             <h3>{lens === 'all' ? `Findings · ${shown.length}` : plain}</h3>
@@ -512,6 +523,11 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
               ))
             )}
           </section>
+
+          {/* ⭐ The writer contributes — ⛔ not just consumes. */}
+          <OwnObservation placeLabel={view.scope.kind === 'chapter' ? view.scope.label : 'this work'}
+            draft="The pacing slows here. The longer sentence followed by two shorter ones creates a felt exhale — it mirrors Clara’s shift from holding on to letting go."
+            themes={['Pacing', 'Change', 'Clara']} />
 
           {view.map ? <ContinuityMap d={view.map} title={`Across your ${view.kind}`} /> : null}
         </div>

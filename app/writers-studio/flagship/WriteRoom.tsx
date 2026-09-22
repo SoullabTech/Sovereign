@@ -15,6 +15,7 @@ import type {
 } from '../../../lib/writersStudio/studio/machine';
 import { CrumbBar } from './StudioChrome';
 import type { Facet } from './flagshipTokens';
+import { TrailPosition } from './ReviewPanels';
 
 export interface Paragraph {
   readonly id: string;
@@ -261,6 +262,7 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
           <button type="button" className="fs-trailback" data-event="BACK_ALONG_TRAIL">
             <span aria-hidden="true">←</span> {state.trail.backLabel}
           </button>
+          <TrailPosition index={state.trail.index} total={state.trail.total} />
           <span className="fs-trailfrom">You followed this here from {state.trail.from}.</span>
         </div>
       ) : null}
@@ -268,9 +270,15 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
         work={view.work} chapter={view.chapterTitle} place={place} facet={facet}
         saved={state.history.length > 0 ? `Saved · v${state.version}` : 'Saved 2m ago'}
         actions={<>
-          <button type="button" className="fs-tool">Aa</button>
-          <button type="button" className="fs-tool" aria-label="Voice note">◍</button>
-          <button type="button" className="fs-tool">Comment</button>
+          {/* ⭐ Secondary tools collapse on a phone. Ten controls facing a member
+              on a 390px screen is a console; the audience law is the reason this
+              is a composition change rather than an exemption in the test. */}
+          <span className="fs-toolset">
+            <button type="button" className="fs-tool">Aa</button>
+            <button type="button" className="fs-tool" aria-label="Voice note">◍</button>
+            <button type="button" className="fs-tool">Comment</button>
+          </span>
+          <button type="button" className="fs-tool fs-toolmore" aria-label="More tools">⋯</button>
           <button type="button" className="fs-tool fs-tool--gold" data-event="HOLD_PASSAGE">Ask MAIA</button>
         </>}
       />
@@ -301,7 +309,6 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
         </span>
         <span className="fs-sp" />
         <button type="button" className="fs-tool">Focus</button>
-        <button type="button" className="fs-tool">Aa</button>
       </div>
     </>
   );

@@ -145,10 +145,23 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
          monitor. */
       permanentUtilityControls: q('.fs-content button, .fs-content [role="tab"], .fs-content input, .fs-content select')
         .filter(function(e){
+          /* ⛔ A hidden control does not face the member. The probe counted
+             collapsed mobile tools as standing chrome. */
+          var r = e.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) return false;
           return !e.closest('[data-maia-anchored]') && !e.closest('.fs-drawer')
               && !e.closest('.fs-float') && !e.closest('.fs-modetabs')
               && !e.hasAttribute('data-return-to') && !e.classList.contains('fs-goto')
-              && !e.closest('.fs-viewas');
+              && !e.closest('.fs-viewas')
+              /* ⭐ A region that declares itself contextual is not standing
+                 instrumentation. Third time this metric mis-categorised a
+                 surface; the region declaring its own kind ends that. */
+              && !e.closest('[data-contextual="true"]')
+              /* ⭐ The trail — back, ‹, › — is NAVIGATION, the same class as the
+                 mode tabs and the rail. *Navigation is not instrumentation*
+                 cuts here too; a member moving through their own findings is
+                 not operating an instrument. */
+              && !e.closest('.fs-trail');
         }).map(function(e){ return (e.textContent||'').trim().slice(0,28) || e.getAttribute('aria-label') || '?'; }),
       stageArea: stageBox.width * stageBox.height || 1,
       /* ⭐ AT LEAST one return per finding. The first version divided returns by
@@ -199,6 +212,26 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
         return !e.querySelector('[data-return-to], [data-action], .fs-cell'); }).length,
       /* ⛔ Arriving from a finding must never strand the member. */
       arrived: !!document.querySelector('[data-carried-observation]'),
+      /* ⭐ V13 — visualization truth. Every row of a presence grid declares its
+         kind, so an inference cannot be drawn in the visual language of a count. */
+      gridRows: q('[data-thread]').length,
+      gridRowsWithoutProvenance: q('[data-thread]').filter(function(e){
+        return !e.querySelector('[data-provenance]'); }).length,
+      /* ⭐ V14 — member contribution stays visibly the member's. */
+      ownComposer: !!document.querySelector('[data-own-observation]'),
+      ownKinds: q('[data-own-kind]').map(function(e){ return e.getAttribute('data-own-kind'); }),
+      /* ⭐ V15 — a stale reading is disclosed BEFORE anything it claims, and the
+         member is told the re-read is theirs to ask for. */
+      stale: (function(){
+        var s = document.querySelector('[data-stale-reading]');
+        if (!s) return null;
+        var findings = document.querySelector('[data-finding]');
+        var before = findings ? (s.compareDocumentPosition(findings) & 4) !== 0 : true;
+        return { before: before,
+          trust: !!s.querySelector('[data-trust-line]'),
+          commission: s.querySelectorAll('[data-commission]').length,
+          previous: !!s.querySelector('[data-return-to="previous-reading"]') };
+      })(),
       /* ⭐ ADVENTURE WITHOUT GAMIFICATION. The reward is discovery — ⛔ never a
          score. Nothing that turns a member's Work into a game board. */
       gamification: (function(){
@@ -365,6 +398,25 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
   out.push({ id: 'EVERY-CONTROL-IS-NAMED', ok: (m.unnamedControls as number) === 0,
     detail: (m.unnamedControls as number) === 0 ? 'every control has a name a screen reader can read'
       : `${m.unnamedControls} unnamed control(s)` });
+  out.push({ id: 'V13-visualization-truth', ok: (m.gridRowsWithoutProvenance as number) === 0,
+    detail: (m.gridRowsWithoutProvenance as number) === 0
+      ? `${m.gridRows} grid row(s), each declaring whether it is countable or MAIA's reading`
+      : `${m.gridRowsWithoutProvenance} row(s) drawn in the language of a count without saying what they are` });
+  if (m.ownComposer) {
+    const k = m.ownKinds as string[];
+    const want = ['noticed', 'question', 'possibility'];
+    out.push({ id: 'V14-member-contribution', ok: want.every((w) => k.includes(w)),
+      detail: want.every((w) => k.includes(w))
+        ? 'the member may record what they noticed, a question, or a possibility'
+        : `member can only author: ${k.join(', ') || 'nothing'}` });
+  }
+  if (m.stale) {
+    const st = m.stale as { before: boolean; trust: boolean; commission: number; previous: boolean };
+    const ok = st.before && st.trust && st.commission === 1 && st.previous;
+    out.push({ id: 'V15-reading-freshness', ok,
+      detail: ok ? 'stated before the findings, previous reading kept, re-read is the member\u2019s to ask for'
+        : `before findings ${st.before} · trust line ${st.trust} · commission controls ${st.commission} · previous kept ${st.previous}` });
+  }
   out.push({ id: 'TAB-never-commissions', ok: (m.commissionOnTabs as number) === 0,
     detail: (m.commissionOnTabs as number) === 0
       ? `${m.tabCount} tabs, none of which reads on click`

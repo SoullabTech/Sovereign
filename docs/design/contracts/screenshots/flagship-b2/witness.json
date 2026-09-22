@@ -99,6 +99,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "0 tabs, none of which reads on click"
@@ -121,7 +126,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -240,6 +245,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -262,7 +272,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -386,6 +396,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -408,7 +423,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -532,6 +547,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -554,7 +574,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -678,6 +698,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -700,7 +725,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -829,6 +854,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -851,7 +881,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "8: ← Back to your review | Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -965,6 +995,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "8 tabs, none of which reads on click"
@@ -1071,11 +1106,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "CITATION-moved-is-disclosed-with-frozen-text",
         "ok": true,
         "detail": "1 moved citation(s), each showing what MAIA read"
@@ -1104,6 +1134,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -1212,11 +1257,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
         "detail": "5 analytical object(s), each leading somewhere in the Work"
@@ -1240,6 +1280,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -1348,11 +1403,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
         "detail": "5 analytical object(s), each leading somewhere in the Work"
@@ -1376,6 +1426,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -1509,6 +1574,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "0 tabs, none of which reads on click"
@@ -1531,7 +1601,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -1650,6 +1720,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -1672,7 +1747,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -1796,6 +1871,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -1818,7 +1898,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -1942,6 +2022,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -1964,7 +2049,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -2088,6 +2173,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -2110,7 +2200,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -2239,6 +2329,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -2261,7 +2356,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "8: ← Back to your review | Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -2375,6 +2470,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "8 tabs, none of which reads on click"
@@ -2481,11 +2581,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "CITATION-moved-is-disclosed-with-frozen-text",
         "ok": true,
         "detail": "1 moved citation(s), each showing what MAIA read"
@@ -2514,6 +2609,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -2622,11 +2732,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
         "detail": "5 analytical object(s), each leading somewhere in the Work"
@@ -2650,6 +2755,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -2758,11 +2878,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
         "detail": "5 analytical object(s), each leading somewhere in the Work"
@@ -2786,6 +2901,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -2919,6 +3049,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "0 tabs, none of which reads on click"
@@ -2941,7 +3076,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -3060,6 +3195,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -3082,7 +3222,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -3206,6 +3346,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -3228,7 +3373,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -3352,6 +3497,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -3374,7 +3524,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -3498,6 +3648,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -3520,7 +3675,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -3649,6 +3804,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -3671,7 +3831,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "8: ← Back to your review | Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "6: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -3785,6 +3945,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "8 tabs, none of which reads on click"
@@ -3891,11 +4056,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "CITATION-moved-is-disclosed-with-frozen-text",
         "ok": true,
         "detail": "1 moved citation(s), each showing what MAIA read"
@@ -3924,6 +4084,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -4032,11 +4207,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
         "detail": "5 analytical object(s), each leading somewhere in the Work"
@@ -4060,6 +4230,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -4168,11 +4353,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
         "detail": "5 analytical object(s), each leading somewhere in the Work"
@@ -4196,6 +4376,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -4329,6 +4524,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "0 tabs, none of which reads on click"
@@ -4351,7 +4551,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "3: Guided⌄ | ⋯ | Ask MAIA"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -4465,6 +4665,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -4487,7 +4692,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "3: Guided⌄ | ⋯ | Ask MAIA"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -4606,6 +4811,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -4628,7 +4838,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "3: Guided⌄ | ⋯ | Ask MAIA"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -4747,6 +4957,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -4769,7 +4984,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "3: Guided⌄ | ⋯ | Ask MAIA"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -4888,6 +5103,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -4910,7 +5130,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "7: Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "3: Guided⌄ | ⋯ | Ask MAIA"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -5034,6 +5254,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "0 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "5 tabs, none of which reads on click"
@@ -5056,7 +5281,7 @@
       {
         "id": "F13-permanent-utility-controls",
         "ok": true,
-        "detail": "8: ← Back to your review | Guided⌄ | Aa | ◍ | Comment | Ask MAIA | Focus | Aa"
+        "detail": "3: Guided⌄ | ⋯ | Ask MAIA"
       },
       {
         "id": "TEXT-SIZE-responds-and-does-not-break",
@@ -5170,6 +5395,11 @@
         "detail": "every control has a name a screen reader can read"
       },
       {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
         "id": "TAB-never-commissions",
         "ok": true,
         "detail": "8 tabs, none of which reads on click"
@@ -5276,11 +5506,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "CITATION-moved-is-disclosed-with-frozen-text",
         "ok": true,
         "detail": "1 moved citation(s), each showing what MAIA read"
@@ -5309,6 +5534,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -5417,11 +5657,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
         "detail": "5 analytical object(s), each leading somewhere in the Work"
@@ -5445,6 +5680,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -5553,11 +5803,6 @@
         "detail": "both states not present on this surface"
       },
       {
-        "id": "READING-states-its-own-freshness",
-        "ok": true,
-        "detail": "stale: Read on 18 September. 3 sections have changed since — what’s below is tr…"
-      },
-      {
         "id": "NEXT-MOVE-every-object-leads-into-the-work",
         "ok": true,
         "detail": "5 analytical object(s), each leading somewhere in the Work"
@@ -5581,6 +5826,21 @@
         "id": "EVERY-CONTROL-IS-NAMED",
         "ok": true,
         "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "5 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",

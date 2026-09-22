@@ -22,7 +22,13 @@ export function StaleReading({ readAt, updatedAt, change, previousLabel }: {
   readAt: string; updatedAt: string; change: WorkChange; previousLabel: string;
 }) {
   return (
-    <section className="fs-stale" data-stale-reading="true">
+    /* ⭐ `data-contextual` is the region declaring its own kind, the same move
+       as provenance. F13 counts STANDING instruments — controls that face the
+       member in the resting state. This panel exists only when the Work has
+       moved and dismisses with "Not now", so its controls are occasioned, ⛔ not
+       standing. Declaring it in the markup beats a test maintaining a list of
+       selectors that drifts every time a surface is added. */
+    <section className="fs-stale" data-stale-reading="true" data-contextual="true">
       <div className="fs-stalehead">
         <span className="fs-staleclock" aria-hidden="true">◷</span>
         <strong>This chapter has changed since MAIA last read it.</strong>
@@ -84,7 +90,7 @@ export function OwnObservation({ kind = 'noticed', draft = '', themes = [], plac
   kind?: OwnNoteKind; draft?: string; themes?: readonly string[]; placeLabel: string;
 }) {
   return (
-    <section className="fs-own" data-own-observation="true">
+    <section className="fs-own" data-own-observation="true" data-contextual="true">
       <div className="fs-ownhead">
         <h3>Add your own observation</h3>
         <button type="button" className="fs-mx" aria-label="Close">✕</button>
@@ -104,7 +110,9 @@ export function OwnObservation({ kind = 'noticed', draft = '', themes = [], plac
         <span className="fs-ownlabel">Link to themes (optional)</span>
         <div className="fs-ownchips">
           {themes.map((t) => (
-            <span className="fs-ownchip" key={t}>{t}<button type="button" aria-label={`Remove ${t}`}>✕</button></span>
+            <span className="fs-ownchip" key={t}>{t}
+            <button type="button" className="fs-ownchipx" aria-label={`Remove ${t}`}>✕</button>
+          </span>
           ))}
           <button type="button" className="fs-ownadd">+ Add a theme</button>
         </div>
