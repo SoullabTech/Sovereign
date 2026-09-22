@@ -58,7 +58,34 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-stop() { echo "STOP $1${2:+: $2}" >&2; exit 1; }
+# A ceiling breach is reported by dk() from inside a command substitution, which
+# cannot terminate this shell — so the caller's generic handler would fire too and
+# print a SECOND, vaguer reason. The marker keeps exactly one cause on the record.
+CAUSE_MARKER="$(mktemp)"
+trap 'rm -f "$CAUSE_MARKER"' EXIT
+stop() {
+  if [ -s "$CAUSE_MARKER" ]; then exit 1; fi   # the true cause was already named
+  echo "STOP $1${2:+: $2}" >&2
+  exit 1
+}
+
+# ⭐ Every external call carries a ceiling. Dry run 2 hung indefinitely inside
+# `docker inspect`, which is a HOST CONTROL-PLANE condition — and an instrument
+# that waits forever on it reports nothing, so the operator cannot tell a stalled
+# management plane from a slow one. A timeout turns it into a named STOP.
+: "${I5_CALL_TIMEOUT_S:=15}"
+dk() { # docker, with a ceiling
+  local rc=0
+  timeout "$I5_CALL_TIMEOUT_S" docker "$@" || rc=$?
+  if [ "$rc" = "124" ]; then
+    # Print FIRST, then mark. Marking first would make stop() suppress the very
+    # message the marker exists to preserve — which the ceiling test caught.
+    echo "STOP DOCKER_CONTROL_PLANE_TIMEOUT: docker $1 exceeded ${I5_CALL_TIMEOUT_S}s — the Docker API did not answer. This says NOTHING about whether MAIA is serving traffic; diagnose with scripts/witness/i5-host-plane-probe.sh before touching anything." >&2
+    printf 'docker %s\n' "$1" > "$CAUSE_MARKER"
+    exit 1
+  fi
+  return "$rc"
+}
 refuse() { echo "REFUSED $1${2:+: $2}" >&2; exit 2; }
 
 [ -n "$AUTHORIZATION" ] || refuse MISSING_AUTHORIZATION "name the issued founder record with --authorization"
@@ -94,9 +121,9 @@ step() { printf '  … %s\n' "$*"; }
 say "instrument_dir=$INSTRUMENT_DIR"
 say "instrument blobs verified: seam-identity.mjs + seam-identity-container.mjs"
 step "docker inspect $CONTAINER (image id)"
-IMAGE_BEFORE="$(docker inspect "$CONTAINER" --format '{{.Image}}')" || stop CONTAINER_UNREADABLE
+IMAGE_BEFORE="$(dk inspect "$CONTAINER" --format '{{.Image}}')" || stop CONTAINER_UNREADABLE
 step "docker exec $CONTAINER printenv GIT_COMMIT"
-RUNNING_SHA="$(docker exec "$CONTAINER" printenv GIT_COMMIT)" || stop GIT_COMMIT_UNREADABLE
+RUNNING_SHA="$(dk exec "$CONTAINER" printenv GIT_COMMIT)" || stop GIT_COMMIT_UNREADABLE
 [ "$RUNNING_SHA" != "unknown" ] || stop GIT_COMMIT_UNKNOWN "the running container asserts no provenance"
 say "container=$CONTAINER"
 say "image_before=$IMAGE_BEFORE"
@@ -120,21 +147,21 @@ step "container-side seam witness, streamed in on stdin (36 of 37; the 37th is e
 # rebuild or deploy — so requiring the file inside the image would make the
 # authorization's own §I.3 unsatisfiable. Nothing is written into the container;
 # the bytes MEASURED are the container's own /app/lib and /app/database.
-docker exec -i "$CONTAINER" node --input-type=module - --expect "$EXPECT_IMAGE" \
+dk exec -i "$CONTAINER" node --input-type=module - --expect "$EXPECT_IMAGE" \
   < "$CONTAINER_WITNESS" || stop CONTAINER_SEAM_REFUSED
 
 # ── PHASE 2 — every flag must be OFF ────────────────────────────────────────
 hdr "PHASE 2 · flags"
 step "reading the five activation flags"
 for f in "${FLAGS[@]}"; do
-  v="$(docker exec "$CONTAINER" printenv "$f" 2>/dev/null || true)"
+  v="$(dk exec "$CONTAINER" printenv "$f" 2>/dev/null || true)"
   [ "$v" != "1" ] || stop FLAG_ENABLED "$f is literal 1 — this act may not run against a live shadow"
   say "$f = ${v:-<unset>}  (OFF)"
 done
 
 # ── PHASE 3 — row counts before ─────────────────────────────────────────────
 hdr "PHASE 3 · row counts before"
-q() { docker exec "$PG_CONTAINER" psql -X -At -U soullab maia_consciousness -c "$1"; }
+q() { dk exec "$PG_CONTAINER" psql -X -At -U soullab maia_consciousness -c "$1"; }
 step "row counts via $PG_CONTAINER"
 RESEARCH_BEFORE="$(q 'SELECT count(*) FROM public.maia_relational_field_shadow_runs;')" || stop RESEARCH_COUNT_UNREADABLE
 TELEMETRY_BEFORE="$(q 'SELECT count(*) FROM public.maia_epistemic_join_integration_shadow_runs;')" || stop TELEMETRY_COUNT_UNREADABLE
@@ -152,7 +179,7 @@ fp() { printf '%s' "$1" | sha256sum | cut -c1-12; }
 say "founder_count=1"
 say "founder_fingerprint=$(fp "$FOUNDER_ID")"
 
-CURRENT_IDS="$(docker exec "$CONTAINER" printenv MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS 2>/dev/null || true)"
+CURRENT_IDS="$(dk exec "$CONTAINER" printenv MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS 2>/dev/null || true)"
 CURRENT_COUNT="$(printf '%s' "$CURRENT_IDS" | tr ',' '\n' | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')"
 say "configured_allowlist_count=$CURRENT_COUNT"
 if [ "$CURRENT_COUNT" = "1" ]; then
@@ -205,32 +232,32 @@ if [ "$RELOAD" = "none" ]; then
   say "no reload requested — the new configuration takes effect on the next recreation"
 else
   say "recreating $CONTAINER from its CURRENT image, --no-deps, no build"
-  docker compose -f docker-compose.production.yml up -d --no-deps --no-build maia \
+  timeout 300 docker compose -f docker-compose.production.yml up -d --no-deps --no-build maia \
     || stop RELOAD_FAILED
-  IMAGE_AFTER="$(docker inspect "$CONTAINER" --format '{{.Image}}')"
+  IMAGE_AFTER="$(dk inspect "$CONTAINER" --format '{{.Image}}')"
   [ "$IMAGE_AFTER" = "$IMAGE_BEFORE" ] || stop IMAGE_CHANGED "$IMAGE_BEFORE -> $IMAGE_AFTER"
   say "image_after=$IMAGE_AFTER (unchanged)"
 fi
 
 # ── PHASE 7 — post-witness ──────────────────────────────────────────────────
 hdr "PHASE 7 · post-witness"
-IMAGE_NOW="$(docker inspect "$CONTAINER" --format '{{.Image}}')"
+IMAGE_NOW="$(dk inspect "$CONTAINER" --format '{{.Image}}')"
 [ "$IMAGE_NOW" = "$IMAGE_BEFORE" ] || stop IMAGE_CHANGED "substrate moved under the act"
 
 for f in "${FLAGS[@]}"; do
-  v="$(docker exec "$CONTAINER" printenv "$f" 2>/dev/null || true)"
+  v="$(dk exec "$CONTAINER" printenv "$f" 2>/dev/null || true)"
   [ "$v" != "1" ] || stop FLAG_ENABLED_AFTER "$f"
 done
 say "all five flags still OFF"
 
-IDS_AFTER="$(docker exec "$CONTAINER" printenv MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS 2>/dev/null || true)"
+IDS_AFTER="$(dk exec "$CONTAINER" printenv MAIA_RELATIONAL_FIELD_SHADOW_MEMBER_IDS 2>/dev/null || true)"
 COUNT_AFTER="$(printf '%s' "$IDS_AFTER" | tr ',' '\n' | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')"
-MODELS_AFTER="$(docker exec "$CONTAINER" printenv MAIA_RELATIONAL_FIELD_SHADOW_MODELS 2>/dev/null || true)"
+MODELS_AFTER="$(dk exec "$CONTAINER" printenv MAIA_RELATIONAL_FIELD_SHADOW_MODELS 2>/dev/null || true)"
 MODEL_COUNT="$(printf '%s' "$MODELS_AFTER" | tr ',' '\n' | sed '/^[[:space:]]*$/d' | wc -l | tr -d ' ')"
 say "allowlist_count=$COUNT_AFTER"
 say "allowlist_match=$([ "$(printf '%s' "$IDS_AFTER" | tr -d '[:space:]')" = "$FOUNDER_ID" ] && echo YES || echo NO)"
 say "model_count=$MODEL_COUNT  model=$MODELS_AFTER"
-docker exec "$CONTAINER" sh -c "printenv MAIA_RELATIONAL_FIELD_SHADOW_MODELS" >/dev/null
+dk exec "$CONTAINER" sh -c "printenv MAIA_RELATIONAL_FIELD_SHADOW_MODELS" >/dev/null
 
 RESEARCH_AFTER="$(q 'SELECT count(*) FROM public.maia_relational_field_shadow_runs;')"
 TELEMETRY_AFTER="$(q 'SELECT count(*) FROM public.maia_epistemic_join_integration_shadow_runs;')"
@@ -243,7 +270,7 @@ say "re-binding the substrate after the act:"
 node "$GIT_WITNESS" check \
   --production-sha "$RUNNING_SHA" --canonical-rev origin/clean-main-no-secrets \
   --expect "$EXPECT_FULL" || stop SEAM_BINDING_REFUSED_AFTER
-docker exec -i "$CONTAINER" node --input-type=module - --expect "$EXPECT_IMAGE" \
+dk exec -i "$CONTAINER" node --input-type=module - --expect "$EXPECT_IMAGE" \
   < "$CONTAINER_WITNESS" || stop CONTAINER_SEAM_REFUSED_AFTER
 
 hdr "RESULT"
