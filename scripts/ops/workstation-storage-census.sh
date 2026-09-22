@@ -197,7 +197,7 @@ if [[ -d "$wt_root" ]]; then
   row "~/.claude/worktrees ($n dirs)" "$(gb_of "$wt_root") GB"
   echo "  ten largest worktrees:"
   du -sk "$wt_root"/*/ 2>/dev/null | sort -nr | head -10 \
-    | awk '{printf "    %7.2f GB  %s\n", $1/1048576, $2}'
+    | awk '{gb=$1/1048576; $1=""; printf "    %7.2f GB  %s\n", gb, substr($0,2)}'
   echo "  worktrees by last modification (oldest first, candidates for NAS/archive):"
   for d in "$wt_root"/*/; do
     [[ -d "$d" ]] || continue
@@ -228,7 +228,7 @@ echo "  five largest node_modules:"
 for r in $CENSUS_ROOTS; do
   [[ -d "$r" ]] || continue; is_network_mount "$r" && continue
   find "$r" -maxdepth "$FIND_DEPTH" -type d -name node_modules -prune 2>/dev/null
-done | xargs -I{} du -sk {} 2>/dev/null | sort -nr | head -5 | awk '{printf "    %7.2f GB  %s\n",$1/1048576,$2}'
+done | xargs -I{} du -sk {} 2>/dev/null | sort -nr | head -5 | awk '{gb=$1/1048576; $1=""; printf "    %7.2f GB  %s\n", gb, substr($0,2)}'
 
 for c in "$HOME/.npm" "$HOME/.pnpm-store" "$HOME/Library/pnpm" "$HOME/.local/share/pnpm" \
          "$HOME/.yarn" "$HOME/Library/Caches/Yarn" "$HOME/.cache/yarn" "$HOME/.bun" \
@@ -255,11 +255,11 @@ fi
 # application data (Application Support, Containers, Group Containers).
 if [[ "$OS" == "Darwin" && -d "$HOME/Library" ]]; then
   hdr "LIBRARY BREAKDOWN (largest first)"
-  du -sk "$HOME"/Library/* 2>/dev/null | sort -nr | head -12 | awk '{printf "  %7.2f GB  %s\n",$1/1048576,$2}'
+  du -sk "$HOME"/Library/* 2>/dev/null | sort -nr | head -12 | awk '{gb=$1/1048576; $1=""; printf "  %7.2f GB  %s\n", gb, substr($0,2)}'
   for sub in "Application Support" "Containers" "Group Containers" "Mobile Documents" "CloudStorage"; do
     [[ -d "$HOME/Library/$sub" ]] || continue
     echo "  $sub/ (top 8):"
-    du -sk "$HOME/Library/$sub"/* 2>/dev/null | sort -nr | head -8 | awk '{printf "    %7.2f GB  %s\n",$1/1048576,$2}'
+    du -sk "$HOME/Library/$sub"/* 2>/dev/null | sort -nr | head -8 | awk '{gb=$1/1048576; $1=""; printf "    %7.2f GB  %s\n", gb, substr($0,2)}'
   done
 fi
 
@@ -273,7 +273,7 @@ done
 # --------------------------------------------------------------- summary ----
 hdr "TOP-LEVEL HOME BREAKDOWN (largest first)"
 du -sk "$HOME"/* "$HOME"/.[!.]* 2>/dev/null | sort -nr | head -15 \
-  | awk '{printf "  %7.2f GB  %s\n",$1/1048576,$2}'
+  | awk '{gb=$1/1048576; $1=""; printf "  %7.2f GB  %s\n", gb, substr($0,2)}'
 
 echo
 echo "Census complete. Nothing was modified. Re-run with CENSUS_OUT=<file> to keep a dated record."
