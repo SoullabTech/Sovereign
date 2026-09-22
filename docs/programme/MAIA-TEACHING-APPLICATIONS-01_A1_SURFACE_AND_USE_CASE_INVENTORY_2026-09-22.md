@@ -59,7 +59,7 @@ There is **no parallel teacher, no second act grammar, no second learner model**
 
 ---
 
-## 2 · ⭐⭐ Finding A1-F2 — two live surfaces, two *different* surface-authority mechanisms
+## 2 · ⭐⭐ Finding A1-F2 — two live teaching call-site paths, two different surface-authority mechanisms
 
 This is the census's principal structural finding and the one A2 must resolve.
 
