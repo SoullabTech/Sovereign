@@ -106,8 +106,8 @@ record('F1', 'L1', 'a single changed seam byte is detected', () => {
   const mutated = mutatedSeamCommit();
   const base = seamIdentity('HEAD').digest;
   const after = seamIdentity(mutated).digest;
-  if (base !== EXPECTED_CANONICAL) return { pass: false, note: `baseline digest unexpected: ${base}` };
-  if (after === EXPECTED_CANONICAL) return { pass: false, note: 'digest did NOT move — instrument is blind' };
+  if (base !== EXPECTED_PRODUCTION) return { pass: false, note: `baseline digest unexpected: ${base}` };
+  if (after === EXPECTED_PRODUCTION) return { pass: false, note: 'digest did NOT move — instrument is blind' };
   return { pass: true, note: `moved to ${after.slice(0, 16)}…` };
 });
 
