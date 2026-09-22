@@ -64,9 +64,16 @@ and Serving Identity F1 documentary + test registration.
 
 ### 2a. Seam identity instrument
 
-A digest over the blob hashes of the **34 seam paths** (the two runtime
+A digest over the blob hashes of the **37 seam paths** (the two runtime
 directories, the serving route, and the three relevant migrations), sorted,
 SHA-256:
+
+⚠️ *Corrected 2026-09-22: this read "34 seam paths" as first committed. 34 was
+the count over the two runtime directories and the serving route only; the
+digest was always over all 37, migrations included. The digest value is
+unchanged — the count was wrong, not the measurement — and it is corrected
+here because a reader could not otherwise reproduce the digest from this
+record's own description.*
 
 ```
 bcd4debfe  seam_id=195b16bce1c807477bf97befc3c9b6d64a22e4520d0bdd8e9fcd173e35bb885b

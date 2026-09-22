@@ -207,7 +207,9 @@
     "matrix:migration-prefix-compatibility": "npx tsx tests/constitutional/migration-prefix-compatibility/matrix.ts",
     "typecheck:migration-prefix-compatibility": "tsc -p tsconfig.migration-prefix-compatibility.json",
     "verify:migrate-before-swap-step3": "bash scripts/verify-migrate-before-swap-step3.sh",
-    "verify:migrate-before-swap-ordering": "npx tsx tests/constitutional/migration-compatibility-gate/step3-ordering.ts"
+    "verify:migrate-before-swap-ordering": "npx tsx tests/constitutional/migration-compatibility-gate/step3-ordering.ts",
+    "witness:seam-identity": "node scripts/witness/seam-identity.mjs",
+    "witness:seam-identity:matrix": "node scripts/witness/seam-identity-falsifiers.mjs && node scripts/witness/seam-identity-candidates.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
