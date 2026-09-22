@@ -585,3 +585,84 @@ confident-looking screen in the product is the one that cannot say what it read.
 > there?**
 
 If yes, it is their Work seen whole. ⛔ If no, it is a review of their Work, however warm.
+
+---
+
+## §10 · THE THEMES FRAME — *The River Between*
+
+### 10.1 · ⭐ Three real improvements over §9
+
+- ⭐⭐ **“Themes are not labels. They are ways to notice what matters — and how your story is taking
+  shape.”** A genuinely good constitutional framing, pre-empting *MAIA categorises your book*.
+- ⭐ **“These patterns MAY BE becoming more significant”** — the hedge arrived. §9's version asserted
+  the trajectory flat.
+- ⭐ **“These themes emerge from your manuscript”** — attribution improved.
+
+### 10.2 · ⭐⭐ THE CHART IS THE MODEL FOR THE WHOLE ROOM
+
+**How Themes Evolve** — four lines across `Ch 1 … Ch 8`, with the current chapter marked — is the
+first element in any Develop reference that **passes the *where?* test**.
+
+⭐ It is the member's own book. It shows **presence across their chapters**. A member can point at
+Ch 5 and ask *where?* and the screen can answer. It is evidence rendered as beauty rather than
+interpretation rendered as fact.
+
+> ⭐ **Make the cards look more like the chart — ⛔ not the chart look more like the cards.**
+
+### 10.3 · ⛔ `Themes` still has no lens behind it
+
+The ratified vocabulary is `structure · development · continuity · arc · voice · coherence ·
+reader`. ⛔ **There is no `themes` lens**, so this entire room stands on a destination the reader
+cannot serve.
+
+⚠️ ⭐ **This is not an argument for deleting it.** Themes are genuinely useful to writers, and this
+frame makes a good case. ⛔ But the lawful paths are two, and drawing a tab is neither:
+
+1. **Map it to `development`**, which already asks *which ideas are introduced, abandoned, repeated
+   without advancing* — much of what this room shows.
+2. **Add a `themes` lens by a governed act**, amending the ratified vocabulary with its own
+   `LENS_MEANING` entry.
+
+### 10.4 · ⛔ The hedge is on the wrong line
+
+*“These patterns may be becoming more significant”* is hedged. ⛔ The **items beneath it are not**:
+
+| Rendered | |
+|---|---|
+| *“Your protagonist's inner world is growing **richer**.”* | ⛔ verdict |
+| *“Relationships are opening in new and **interesting** ways.”* | ⛔ verdict |
+| *“Recent chapters suggest **exciting** directions ahead.”* | ⛔ verdict + ⛔ a prediction about an unwritten book |
+
+⭐ A hedge on the heading does not reach the sentences. ⛔ Each item must carry its own shape, or
+its own evidence: *“The protagonist's interior appears in 4 of the first 6 chapters and 9 of the
+last 12.”*
+
+Also: *“**key** themes”* (barred word, again) · *“connects **beautifully**”* (property, not stance).
+
+### 10.5 · ⛔ The theme cards still have no address
+
+Four cards, four *“Explore this theme →”*, ⛔ **not one section reference**. The chart directly
+below them knows which chapters each theme appears in. ⭐ The cards should say it:
+*“Change and Transition — Ch 1, 4, 6, 8”*, returning to the passage.
+
+⭐ **And that is what would make *“Themes are not labels”* true.** A label is a name imposed from
+outside. A theme carrying its own evidence — which the member can open, disagree with and revise —
+is not a label. ⛔ As drawn, the sentence is an assurance; ⭐ with the references, it becomes a fact
+about the object.
+
+### 10.6 · ⚠️ NEW CATEGORY — visual interpretation
+
+Each theme card carries a **generated landscape image**. ⛔ These are MAIA's imagery attached to the
+member's themes — a kind of overreach no prior ruling covers: ⭐ **not MAIA describing the Work, but
+MAIA illustrating it.**
+
+⚠️ **Not ruled, raised.** A member may love it. ⭐ But an image is an interpretation the member
+cannot easily contest, it competes with the Work for the eye, and for a Work whose subject is a
+river, a river image quietly asserts *this is what your book looks like.* ⛔ At minimum it is
+MAIA-authored content rendered without attribution, in a room whose own law is that interpretation
+is visibly secondary.
+
+### 10.7 · Carried, unchanged from §9
+
+⛔ No coverage anywhere · ⛔ no facet control · ⛔ `Development`, `Arc`, `Coherence` still missing
+from the tab set · ⚠️ *“Explore how themes connect →”* must not commission (**L-B**).
