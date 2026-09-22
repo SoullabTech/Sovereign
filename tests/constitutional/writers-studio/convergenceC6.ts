@@ -264,16 +264,34 @@ export function runC6(): readonly Check[] {
   /* ⭐ C5-19 was an opening-packet containment check measured against the C5
      base. C6R2 lawfully modifies the EXISTING adoption route to add a refusal,
      so a descendant cannot keep passing "no editorial route changed since C5".
-     Preserve C5-19 historically; replace it here with the descendant law:
-     existing seams may tighten, but C6 creates no new route/table/substrate. */
+     Preserve C5-19 historically; replace it here with the CLOSED-LINEAGE law:
+     existing seams may tighten, but C6 created no new route/table/substrate.
+
+     ⭐⭐ Do not diff `d519f5165..HEAD` here. Once this programme is composed
+     into a newer canonical, HEAD also contains unrelated canonical history and
+     the check starts accusing C6 of migrations it never authored. The witnessed
+     C6 lineage is closed at `cf51c9f2f`; test THAT proposition. During a
+     reconciliation it may be MERGE_HEAD; after admission it must be an ancestor. */
+  const c6LineageTip = 'cf51c9f2f2e86a0c2273bdab3ec44bfd8aff2713';
+  const mergeHead = execSync('git rev-parse -q --verify MERGE_HEAD 2>/dev/null || true',
+    { encoding: 'utf8' }).trim();
+  let c6LineagePresent = mergeHead === c6LineageTip;
+  if (!c6LineagePresent) {
+    try {
+      execSync(`git merge-base --is-ancestor ${c6LineageTip} HEAD`);
+      c6LineagePresent = true;
+    } catch { c6LineagePresent = false; }
+  }
   const substrateDelta = execSync(
-    'git diff --name-status d519f5165..HEAD -- database/migrations app/api/writers-studio/editorial lib/manuscript/revisionAuthorization lib/manuscript/proposalChain',
+    `git diff --name-status d519f5165..${c6LineageTip} -- database/migrations app/api/writers-studio/editorial lib/manuscript/revisionAuthorization lib/manuscript/proposalChain`,
     { encoding: 'utf8' },
   ).trim().split('\n').filter(Boolean);
   const newSubstrate = substrateDelta.filter((line) => /^(A|C|R)/.test(line));
   add('C6R2-14-no-new-revision-substrate',
-    newSubstrate.length === 0,
-    `new route/table/substrate entries: ${newSubstrate.join(', ') || 'none'}`);
+    c6LineagePresent && newSubstrate.length === 0,
+    !c6LineagePresent
+      ? `closed C6 lineage ${c6LineageTip.slice(0, 10)} is not present in this composition`
+      : `new route/table/substrate entries in closed C6 lineage: ${newSubstrate.join(', ') || 'none'}`);
 
   /* ⭐ A reading lost at the storage boundary is not a reading MAIA could not
      do, and the writer who waited out the read is owed that difference. */
