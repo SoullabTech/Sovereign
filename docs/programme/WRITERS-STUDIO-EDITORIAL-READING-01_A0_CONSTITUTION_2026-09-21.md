@@ -1,6 +1,8 @@
 # WRITERS-STUDIO-EDITORIAL-READING-01 · A0 — EDITORIAL READING CONSTITUTION · 2026-09-21
 
-**Status:** CONSTITUTION CANDIDATE · DOCUMENTARY ONLY · NO RUNTIME / SCHEMA / UI CHANGE
+**Status:** **RATIFIED · 2026-09-22** · DOCUMENTARY ONLY · NO RUNTIME / SCHEMA / UI CHANGE
+**Ratified by:** founder act, 2026-09-22 — record `WRITERS-STUDIO-EDITORIAL-READING-01_A0_FOUNDER_RATIFICATION_2026-09-22.md`
+**Authorizes:** `A1 — Existing-substrate + sibling-law census` may now open on its own act. ⛔ Nothing further.
 
 ## I. Why this programme exists
 
@@ -291,7 +293,7 @@ If A0 is ratified, the bounded sequence is:
 
 ## XV. A0 standing
 
-> **WRITERS-STUDIO-EDITORIAL-READING-01 / A0 — CONSTITUTION READY FOR FOUNDER ADJUDICATION**
+> **WRITERS-STUDIO-EDITORIAL-READING-01 / A0 — CONSTITUTION RATIFIED · 2026-09-22**
 
 The programme's governing sentence is:
 
