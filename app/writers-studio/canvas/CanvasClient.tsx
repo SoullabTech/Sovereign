@@ -676,6 +676,11 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
     >
 
         <StudioShellRail
+          /* ⭐ WS-CONVERGENCE-01 · C4 — the ordinary working surface shows only
+             what can be taken. The map, `shellDestinations()` and
+             `assertStudioMapHonest()` are untouched; the seventeen unavailable
+             destinations simply stop occupying the room the writer works in. */
+          working
           hasManuscript={Boolean(manuscript)}
           counts={railCounts}
           satisfiedInRoom={manuscript ? SATISFIED_IN_ROOM : []}

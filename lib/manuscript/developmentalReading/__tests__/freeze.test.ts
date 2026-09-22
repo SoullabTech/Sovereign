@@ -62,8 +62,14 @@ describe('freezeReading', () => {
   it('observation-only v1: no interpretation, questions, possibilities, uncertainty, severity, priority, score, confidence, rank on any observation', () => {
     const f = freezeReading({ manuscriptId: 'm1', request: request(), result: claims('x'), phenomena: ['movement'], reader: READER, classifier: CLASSIFIER });
     if (!f.ok) throw new Error(f.refusal);
+    /* ⭐ The law this guards is UNCHANGED: no interpretation, questions,
+       possibilities, uncertainty, severity, priority, score, confidence or
+       rank. OBSERVATION-IDENTITY-01 / I1 adds four fields and none of them is
+       any of those — identity, admission order, a basis integrity witness and
+       a manuscript position. The list grew; the prohibition did not move. */
     expect(Object.keys(f.value.observations[0]!).sort()).toEqual(
-      ['doesNotEstablish', 'evidenceRefs', 'key', 'lens', 'observation', 'phenomenon', 'structureDependency']);
+      ['admissionIndex', 'basisFingerprint', 'doesNotEstablish', 'evidenceRefs', 'key', 'lens',
+       'observation', 'observationId', 'phenomenon', 'position', 'structureDependency']);
   });
 
   it('a none result freezes as a complete none reading with full state, coverage and provenance (INV-23/24)', () => {
