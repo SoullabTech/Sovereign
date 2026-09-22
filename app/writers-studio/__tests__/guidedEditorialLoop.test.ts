@@ -90,14 +90,18 @@ test('Guided opens with MAIA reading, coverage and responses without requiring a
 
   const button = (label: string) =>
     Array.from(container.querySelectorAll('button')).find(b => b.textContent === label)!;
+  /* ⭐ C6 convergence: with an exact bound passage and onRevise supplied, a bound
+     response enters the same governed editorial seam as Talk about it. It no longer
+     opens ObservationDialogue. */
   act(() => button('Yes, that’s what I mean').click());
-  expect(container.querySelector('[data-dialogue-question]')?.textContent)
-    .toContain('Do not store it as a Work declaration');
-  expect(onRevise).not.toHaveBeenCalled();
-
-  act(() => button('Try a revision').click());
   expect(onRevise).toHaveBeenCalledTimes(1);
   expect(onRevise.mock.calls[0][0].sectionId).toBe('s20');
+  expect(onRevise.mock.calls[0][1]).toContain('Do not store it as a Work declaration');
+  expect(container.querySelector('[data-dialogue-question]')).toBeNull();
+
+  act(() => button('Try a revision').click());
+  expect(onRevise).toHaveBeenCalledTimes(2);
+  expect(onRevise.mock.calls[1][0].sectionId).toBe('s20');
 });
 
 test('Work direction enters only after explicit member gesture and remains editable/removable', async () => {
