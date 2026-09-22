@@ -8,6 +8,10 @@
 #   ./scripts/ops/workstation-storage-census.sh            # human report
 #   CENSUS_OUT=/path/report.txt ./scripts/ops/...          # also write to file
 #   CENSUS_ROOTS="$HOME/MAIA-SOVEREIGN $HOME/.claude/worktrees" ./scripts/ops/...
+#   CENSUS_SKIP_DOCKER=1 ./scripts/ops/...                # daemon calls skipped
+#
+# Progress lines go to stderr as each section starts, so a long du is
+# visibly alive. The report is written incrementally.
 #
 # Runs on macOS (Mac Studio) and Linux (minisforum). It never deletes, prunes,
 # moves, or writes anything except the optional CENSUS_OUT report. It does not
@@ -53,8 +57,9 @@ gb_sum_stdin() {
   done
   awk -v k="$total" -v n="$n" 'BEGIN{printf "%.2f\t%d", k/1048576, n}'
 }
+progress() { printf '[census] %s\n' "$1" >&2; }
 row() { printf '%-46s %10s  %s\n' "$1" "$2" "${3:-}"; }
-hdr() { printf '\n== %s ==\n' "$1"; }
+hdr() { printf '\n== %s ==\n' "$1"; progress "$1"; }
 is_network_mount() {
   # true if the mount for path $1 is a network filesystem
   local fs
@@ -126,13 +131,19 @@ if [[ "$OS" == "Darwin" ]]; then
 else
   row "/var/lib/docker" "$(gb_of /var/lib/docker) GB" "(unreadable without root is normal)"
 fi
-if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+if [[ "${CENSUS_SKIP_DOCKER:-0}" == "1" ]]; then
+  echo "  docker daemon calls skipped (CENSUS_SKIP_DOCKER=1)"
+elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
   echo "  docker system df:"
   docker system df 2>/dev/null | sed 's/^/    /'
   echo "  largest images:"
   docker images --format '{{.Size}}\t{{.Repository}}:{{.Tag}}' 2>/dev/null | sort -hr | head -10 | sed 's/^/    /'
-  echo "  volumes:"
-  docker system df -v 2>/dev/null | awk '/^VOLUME NAME/{f=1;next} f&&NF{print}' | sort -k3 -hr | head -10 | sed 's/^/    /'
+  if [[ "${CENSUS_DOCKER_VERBOSE:-0}" == "1" ]]; then
+    echo "  volumes:"
+    docker system df -v 2>/dev/null | awk '/^VOLUME NAME/{f=1;next} f&&NF{print}' | sort -k3 -hr | head -10 | sed 's/^/    /'
+  else
+    echo "  volumes: skipped (slow on Docker Desktop; CENSUS_DOCKER_VERBOSE=1 to include)"
+  fi
 else
   echo "  docker daemon not reachable from this shell — image/volume breakdown skipped"
 fi

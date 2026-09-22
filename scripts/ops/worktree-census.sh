@@ -62,8 +62,11 @@ printf 'path\tvolume\tbranch\thead\ttotal_gb\tregen_gb\tsource_gb\tmodified\tunt
 
 # ---- walk registered worktrees (porcelain is stable across git versions) ----
 wt_path=""; wt_head=""; wt_branch=""; wt_detached=0
+WT_TOTAL=$(git -C "$REPO" worktree list --porcelain 2>/dev/null | grep -c "^worktree ")
+WT_N=0
 emit() {
   [[ -n "$wt_path" ]] || return
+  WT_N=$((WT_N + 1)); printf '[worktree-census] %d/%d %s\n' "$WT_N" "$WT_TOTAL" "$wt_path" >&2
   local vol total regen source modified untracked unpushed merged cls n k
   vol=$(vol_of "$wt_path")
   if [[ ! -d "$wt_path" ]]; then
