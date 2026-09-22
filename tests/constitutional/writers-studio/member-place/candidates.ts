@@ -135,6 +135,10 @@ class DS3_MissingPostureWrites extends ReferenceSubstrate {
     return super.admit({ ...input, posture: input.posture ?? { sanctuary: false, resolvedAtIso: 'defaulted' } });
   }
 }
+/* B-IR1 defeat — standard posture persists without member confirmation. */
+class D14_UnconfirmedStandardWrite extends ReferenceSubstrate {
+  override admit(input: AdmitInput): AdmitResult { return super.admit({ ...input, memberConfirmed: true }); }
+}
 /* MA-S5 defeat — the refusal "helpfully" carries what was refused. */
 class DS5_RefusalLeaks extends ReferenceSubstrate {
   override admit(input: AdmitInput): AdmitResult {
@@ -163,6 +167,7 @@ export const DEFEAT_CANDIDATES: Readonly<Record<string, () => MemberPlaceSubstra
   'MA-DS2_CLIENT_ONLY_GUARD': () => new DS2_ClientOnlyGuard(),
   'MA-DS3_MISSING_POSTURE_WRITES': () => new DS3_MissingPostureWrites(),
   'MA-DS5_REFUSAL_LEAKS_CONTENT': () => new DS5_RefusalLeaks(),
+  'MA-D14_UNCONFIRMED_STANDARD_WRITE': () => new D14_UnconfirmedStandardWrite(),
 };
 
 export const NAMED_KILL: Readonly<Record<string, string>> = {
@@ -183,9 +188,13 @@ export const NAMED_KILL: Readonly<Record<string, string>> = {
   'MA-DS2_CLIENT_ONLY_GUARD': 'MA-S2-direct-store-invocation-refuses-in-sanctuary',
   'MA-DS3_MISSING_POSTURE_WRITES': 'MA-S3-unresolved-posture-fails-closed',
   'MA-DS5_REFUSAL_LEAKS_CONTENT': 'MA-S5-refusal-evidence-is-content-free',
+  'MA-D14_UNCONFIRMED_STANDARD_WRITE': 'MA-F16-unconfirmed-is-refused-under-standard-posture',
 };
 
 export const CLASSIFIED: Readonly<Record<string, readonly string[]>> = {
+  /* ⭐ A confirmation override ignores the CHANNEL: a confirmed direct call in
+     Sanctuary writes under it exactly as a client call does. Irreducible. */
+  'MA-DS1_CONFIRMATION_OVERRIDES_SANCTUARY': ['MA-S2-direct-store-invocation-refuses-in-sanctuary'],
   /* ⭐ Trusting "the section exists" as EXACT necessarily also misreads an
      insertion above and an internal edit — every case where the section
      stands and its bytes moved. Irreducible: the error IS not checking. */

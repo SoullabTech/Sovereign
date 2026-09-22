@@ -30,6 +30,11 @@ export class ReferenceSubstrate implements MemberPlaceSubstrate {
     const prefix = createHash('sha256').update(input.memberId).digest('hex').slice(0, 8);
     if (input.posture === undefined) return { ok: false, refusal: { store: 'member_observations', category: 'posture_unresolved', memberIdPrefix: prefix } };
     if (input.posture.sanctuary) return { ok: false, refusal: { store: 'member_observations', category: 'sanctuary', memberIdPrefix: prefix } };
+    /* ⭐ B-IR1 — MA-F16. Sanctuary permission is necessary for persistence but
+       is not member consent; member consent is necessary but does not
+       override Sanctuary. The founder's independent review found this
+       conjunction half-enforced: the field existed and nothing read it. */
+    if (!input.memberConfirmed) return { ok: false, refusal: { store: 'member_observations', category: 'not_confirmed', memberIdPrefix: prefix } };
     const o: MemberObservation = {
       id: mintMemberObservationId(), memberId: input.memberId, workId: input.workId,
       address: input.address, kind: input.kind, text: input.text,

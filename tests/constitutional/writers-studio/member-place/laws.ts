@@ -207,7 +207,9 @@ export function runMemberPlaceLaws(make: () => MemberPlaceSubstrate): readonly L
 
   /* ── MA-S2 · hiding the UI is insufficient — the STORE refuses ──────── */
   run('MA-S2-direct-store-invocation-refuses-in-sanctuary', () => {
-    const s = make(); const r = s.admit(input({ posture: SANCTUARY, channel: 'direct', memberConfirmed: false }));
+    /* ⚠️ confirmation ON. With it off, MA-F16 refuses first and a client-only
+       guard hides behind the confirmation law — DS2 survived exactly that way. */
+    const s = make(); const r = s.admit(input({ posture: SANCTUARY, channel: 'direct', memberConfirmed: true }));
     const stored = s.retrieve(MEMBER, WORK).length;
     const ok = !r.ok && stored === 0;
     return law('MA-S2-direct-store-invocation-refuses-in-sanctuary', ok, ok ? 'the boundary itself refused' : `ok=${r.ok} · rows ${stored}`);
@@ -239,6 +241,17 @@ export function runMemberPlaceLaws(make: () => MemberPlaceSubstrate): readonly L
     const blob = JSON.stringify(r.refusal);
     const leaks = [TEXT, ADDR.markedText, MEMBER].filter((x) => blob.includes(x));
     return law('MA-S5-refusal-evidence-is-content-free', leaks.length === 0, leaks.length === 0 ? `evidence: ${blob}` : `leaked: ${leaks.join(' · ')}`);
+  });
+
+  /* ── MA-F16 · standard posture WITHOUT member confirmation → REFUSE ─────────
+     ⭐ B-IR1. The missing half of the conjunction: an observation the member
+     did not choose to keep must not become durable merely because Sanctuary
+     was not in force. */
+  run('MA-F16-unconfirmed-is-refused-under-standard-posture', () => {
+    const s = make(); const r = s.admit(input({ posture: STANDARD, memberConfirmed: false }));
+    const stored = s.retrieve(MEMBER, WORK).length;
+    const ok = !r.ok && r.refusal.category === 'not_confirmed' && stored === 0;
+    return law('MA-F16-unconfirmed-is-refused-under-standard-posture', ok, ok ? 'refused as not_confirmed; zero rows' : `ok=${r.ok} · rows ${stored}`);
   });
 
   return out;
