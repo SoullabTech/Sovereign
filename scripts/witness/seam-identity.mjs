@@ -27,6 +27,10 @@
  *       A non-fast-forward report in a shallow clone carries zero information
  *       about rewriting. This law exists because that near-miss happened.
  *   L6  Fail-closed: any unrecognised condition exits non-zero.
+ *   L7  Production and canonical full-seam identities are independently bound
+ *       after an explicitly adjudicated canonical-only seam advance. Neither
+ *       side inherits the other's digest, and unexpected movement on either
+ *       side remains a refusal.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -152,18 +156,31 @@ export function ancestry(ancestorRev, descendantRev) {
   return { verdict: 'NOT_ANCESTOR', ancestor: a, descendant: d };
 }
 
-/** The §3a property predicate. */
-export function checkBinding({ productionSha, canonicalRev, expectedDigest }) {
+/** The §3a property predicate, rebound by I5-P0R2R3. */
+export function checkBinding({
+  productionSha,
+  canonicalRev,
+  expectedProductionDigest,
+  expectedCanonicalDigest,
+}) {
   const findings = [];
   const anc = ancestry(productionSha, canonicalRev);
   if (anc.verdict !== 'ANCESTOR') findings.push({ code: anc.verdict, detail: anc.reason ?? 'production SHA is not contained in canonical' });
 
   const prod = seamIdentity(productionSha);
   const canon = seamIdentity(canonicalRev);
-  if (prod.digest !== expectedDigest) findings.push({ code: 'SEAM_MOVED_AT_PRODUCTION', detail: prod.digest });
-  if (canon.digest !== expectedDigest) findings.push({ code: 'SEAM_MOVED_AT_CANONICAL', detail: canon.digest });
+  if (prod.digest !== expectedProductionDigest) findings.push({ code: 'SEAM_MOVED_AT_PRODUCTION', detail: prod.digest });
+  if (canon.digest !== expectedCanonicalDigest) findings.push({ code: 'SEAM_MOVED_AT_CANONICAL', detail: canon.digest });
 
-  return { ok: findings.length === 0, ancestry: anc, production: prod, canonical: canon, expectedDigest, findings };
+  return {
+    ok: findings.length === 0,
+    ancestry: anc,
+    production: prod,
+    canonical: canon,
+    expectedProductionDigest,
+    expectedCanonicalDigest,
+    findings,
+  };
 }
 
 function usage() {
@@ -171,7 +188,7 @@ function usage() {
     'usage:',
     '  seam-identity.mjs compute <rev> [--scope full|image]',
     '  seam-identity.mjs verify <rev> --expect <sha256> [--scope full|image]',
-    '  seam-identity.mjs check --production-sha <sha> --canonical-rev <rev> --expect <sha256>',
+    '  seam-identity.mjs check --production-sha <sha> --canonical-rev <rev> --expect-production <sha256> --expect-canonical <sha256>',
   ].join('\n');
 }
 
@@ -210,17 +227,24 @@ function main(argv) {
   if (cmd === 'check') {
     const productionSha = arg(argv, '--production-sha');
     const canonicalRev = arg(argv, '--canonical-rev');
-    const expectedDigest = arg(argv, '--expect');
-    if (!productionSha || !canonicalRev || !expectedDigest) {
-      throw new Refusal('MISSING_ARGUMENT', '--production-sha --canonical-rev --expect');
+    const expectedProductionDigest = arg(argv, '--expect-production');
+    const expectedCanonicalDigest = arg(argv, '--expect-canonical');
+    if (!productionSha || !canonicalRev || !expectedProductionDigest || !expectedCanonicalDigest) {
+      throw new Refusal('MISSING_ARGUMENT', '--production-sha --canonical-rev --expect-production --expect-canonical');
     }
-    const r = checkBinding({ productionSha, canonicalRev, expectedDigest });
+    const r = checkBinding({
+      productionSha,
+      canonicalRev,
+      expectedProductionDigest,
+      expectedCanonicalDigest,
+    });
     console.log(`ancestry=${r.ancestry.verdict}`);
     console.log(`production=${r.production.commit.slice(0, 9)} seam_id=${r.production.digest}`);
     console.log(`canonical=${r.canonical.commit.slice(0, 9)} seam_id=${r.canonical.digest}`);
-    console.log(`expected=${expectedDigest}`);
+    console.log(`expected_production=${expectedProductionDigest}`);
+    console.log(`expected_canonical=${expectedCanonicalDigest}`);
     if (r.ok) {
-      console.log('BINDING SATISFIED — seam frozen across production and canonical');
+      console.log('BINDING SATISFIED — production and canonical match their adjudicated seam identities');
       return 0;
     }
     for (const f of r.findings) console.log(`REFUSED ${f.code}${f.detail ? ` (${f.detail})` : ''}`);
