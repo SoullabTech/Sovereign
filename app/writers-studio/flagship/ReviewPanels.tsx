@@ -55,39 +55,38 @@ export function StaleReading({ readAt, updatedAt, change, previousLabel, acknowl
        standing. Declaring it in the markup beats a test maintaining a list of
        selectors that drifts every time a surface is added. */
     <section className="fs-stale" data-stale-reading="true" data-contextual="true">
+      {/* ⭐ V10R1 — the same eight facts, in four rows instead of nine blocks.
+          ⛔ Nothing removed, nothing hidden, nothing behind a control: the
+          headline, both dates, the exact change facts, the single re-read
+          commission, Not now, the previous reading and the promise are all
+          here at rest. What changed is the WEIGHT — a status edge instead of a
+          warm fill, dates beside the headline instead of beneath it, and the
+          change facts as one line. *Interrupt false confidence without becoming
+          the subject of Review.* */}
       <div className="fs-stalehead">
         <span className="fs-staleclock" aria-hidden="true">◷</span>
         <strong>This chapter has changed since MAIA last read it.</strong>
-      </div>
-      <dl className="fs-staletimes">
-        <div><dt>MAIA’s last reading</dt><dd>{readAt}</dd></div>
-        <div><dt>This chapter was updated</dt><dd>{updatedAt}</dd></div>
-      </dl>
-
-      <div className="fs-stalewhat">
-        <h4>What changed</h4>
-        <ul>{changeLines(change).map((l) => <li key={l}>{l}</li>)}</ul>
+        <dl className="fs-staletimes">
+          <div><dt>MAIA’s last reading</dt><dd>{readAt}</dd></div>
+          <div><dt>Updated</dt><dd>{updatedAt}</dd></div>
+        </dl>
       </div>
 
-      <p className="fs-stalesay">
-        MAIA’s current findings are based on the earlier version.
-        Would you like her to read this chapter again?
-      </p>
+      <ul className="fs-stalewhat" aria-label="What changed">
+        {changeLines(change).map((l) => <li key={l}>{l}</li>)}
+      </ul>
+
       <div className="fs-staleacts">
+        <span className="fs-stalesay">Her findings are based on the earlier version.</span>
         {/* ⭐ The ONLY control in Review that commissions a reading. */}
         <button type="button" className="fs-btn fs-btn--key" data-commission="reread">
           Read this chapter again
         </button>
         <button type="button" className="fs-btn" data-dismiss="reread">Not now</button>
-      </div>
-
-      {/* ⭐ The earlier reading is KEPT and reachable. ⛔ What MAIA believed
-          before is not deleted by a correction. */}
-      <div className="fs-staleprev">
-        <span className="fs-stalelabel">Previous reading, for reference</span>
-        <span className="fs-staleprevname">{previousLabel}</span>
+        {/* ⭐ The earlier reading is KEPT and reachable. ⛔ What MAIA believed
+            before is not deleted by a correction. */}
         <button type="button" className="fs-goto" data-return-to="previous-reading">
-          View that version →
+          Previous reading · {previousLabel} →
         </button>
       </div>
 

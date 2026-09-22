@@ -505,7 +505,9 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
           <div className="fs-col" style={{ gap: 16 }}>
           <div className="fs-phead">
             <div>
-              <h2>What MAIA found</h2>
+              {/* ⭐ V10R1 — Review is the Work's observations, ⛔ not MAIA's report.
+                  Who noticed each one is carried by its provenance chip. */}
+              <h2>Observations</h2>
               <p>{scopeLine(view.scope, view.kind)}</p>
             </div>
           </div>
