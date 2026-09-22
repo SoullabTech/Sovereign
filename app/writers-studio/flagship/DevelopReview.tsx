@@ -103,14 +103,14 @@ function SpiralMap({ s }: { s: DeclaredStructure }) {
             const rangeDy = above ? -8 : below ? 29 : 11;
             return (
               <g key={m.name}>
-                <circle cx={x} cy={y} r="4.5" fill="var(--gold)" />
-                <text x={x + dx} y={y + nameDy} textAnchor={anchor} fontSize="10.5" fontWeight="600" fill="var(--ink)">{m.name}</text>
-                <text x={x + dx} y={y + rangeDy} textAnchor={anchor} fontSize="9.5" fill="var(--muted)">{m.range}</text>
+                <circle cx={x} cy={y} r="4.5" fill="var(--accent-warm)" />
+                <text x={x + dx} y={y + nameDy} textAnchor={anchor} fontSize="10.5" fontWeight="600" fill="var(--text-primary)">{m.name}</text>
+                <text x={x + dx} y={y + rangeDy} textAnchor={anchor} fontSize="9.5" fill="var(--text-muted)">{m.range}</text>
               </g>
             );
           })}
-          <text x={cx} y={cy - 1} textAnchor="middle" fontSize="12.5" fontFamily="var(--serif)" fill="var(--ink)">{s.centreLabel}</text>
-          <text x={cx} y={cy + 14} textAnchor="middle" fontSize="9" fill="var(--muted)">the movements you named</text>
+          <text x={cx} y={cy - 1} textAnchor="middle" fontSize="12.5" fontFamily="var(--serif)" fill="var(--text-primary)">{s.centreLabel}</text>
+          <text x={cx} y={cy + 14} textAnchor="middle" fontSize="9" fill="var(--text-muted)">the movements you named</text>
         </svg>
       </div>
       {s.elemental ? (
@@ -118,7 +118,7 @@ function SpiralMap({ s }: { s: DeclaredStructure }) {
           {s.elemental.map((e) => (
             <span key={e.name}><i style={{ background: e.color }} aria-hidden="true" />{e.name}</span>
           ))}
-          <span style={{ color: 'var(--quiet)' }}>· elemental themes, as you declared them</span>
+          <span style={{ color: 'var(--text-quiet)' }}>· elemental themes, as you declared them</span>
         </div>
       ) : null}
     </>
@@ -286,7 +286,7 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided' }: {
   return (
     <>
       <CrumbBar work={view.work} place="Develop" facet={facet}
-        actions={<button type="button" className="fs-tool fs-tool--gold">Ask MAIA</button>} />
+        actions={<button type="button" className="fs-tool fs-tool--key">Ask MAIA</button>} />
       {/* ⛔ No Export. ⛔ No Themes — it has no lens. ⛔ No invented destination. */}
       <div className="fs-modetabs" role="tablist">
         <button type="button" role="tab" className="fs-modetab" aria-selected={lens === 'overview'}>
@@ -483,7 +483,7 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
   return (
     <>
       <CrumbBar work={view.work} place="Review" facet={facet}
-        actions={<button type="button" className="fs-tool fs-tool--gold">Ask MAIA</button>} />
+        actions={<button type="button" className="fs-tool fs-tool--key">Ask MAIA</button>} />
 
       {/* ⭐ Tabs FILTER an existing reading. ⛔ None of them commissions one. */}
       <div className="fs-modetabs" role="tablist">

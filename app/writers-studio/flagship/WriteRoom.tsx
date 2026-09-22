@@ -66,7 +66,7 @@ function AlternativeCard({ alt, reading }: { alt: Alternative; reading?: boolean
       {alt.text ? <p className="fs-alttx">{alt.text}</p> : null}
       <p className="fs-altwhy">{alt.rationale}</p>
       {keep ? null : reading ? (
-        <span className="fs-reading">Reading this one in place</span>
+        <span className="fs-altreading">Reading this one in place</span>
       ) : (
         <button type="button" className="fs-readctx" data-event="READ_IN_CONTEXT"
           data-alternative={alt.id}>Read in context</button>
@@ -136,7 +136,7 @@ export function MaiaPanel({ phase, copy, tab, heldEcho }: {
         {copy.noticed && copy.noticed.length > 0 ? (
           <>
             <p className="fs-notice"><strong>What I notice</strong></p>
-            <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--secondary)', fontSize: 12.5, lineHeight: 1.6 }}>
+            <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--text-secondary)', fontSize: '0.78125rem', lineHeight: 1.6 }}>
               {copy.noticed.map((n) => <li key={n}>{n}</li>)}
             </ul>
           </>
@@ -160,7 +160,7 @@ export function MaiaPanel({ phase, copy, tab, heldEcho }: {
 function ReadInContextBar({ name }: { name: string }) {
   return (
     <div className="fs-float fs-float--gate" data-apply-gate="open">
-      <span style={{ color: 'var(--secondary)' }}>
+      <span style={{ color: 'var(--text-secondary)' }}>
         Reading <strong>{name}</strong> in place. Nothing is applied yet.
       </span>
       <button type="button" className="fs-btn fs-btn--key" data-event="APPLY">Use this revision</button>
@@ -279,7 +279,7 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
             <button type="button" className="fs-tool">Comment</button>
           </span>
           <button type="button" className="fs-tool fs-toolmore" aria-label="More tools">⋯</button>
-          <button type="button" className="fs-tool fs-tool--gold" data-event="HOLD_PASSAGE">Ask MAIA</button>
+          <button type="button" className="fs-tool fs-tool--key" data-event="HOLD_PASSAGE">Ask MAIA</button>
         </>}
       />
       <div className="fs-stage" data-stage="write">
