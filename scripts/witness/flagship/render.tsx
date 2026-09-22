@@ -544,16 +544,65 @@ async function main() {
           var held = document.querySelector('[data-held="true"]');
           var stage = document.querySelector('.fs-stage') || document.querySelector('.fs-pane');
           if (!ms || !maia || !stage) return null;
-          var before = { w: ms.getBoundingClientRect().width, held: held ? held.getBoundingClientRect().top : 0, scroll: stage.scrollTop };
-          maia.style.display = 'none';
-          var after = { w: ms.getBoundingClientRect().width, held: held ? held.getBoundingClientRect().top : 0, scroll: stage.scrollTop };
-          maia.style.display = '';
-          return { dw: Math.abs(after.w - before.w), dy: Math.abs(after.held - before.held), ds: Math.abs(after.scroll - before.scroll) };
-        })()`) as { dw: number; dy: number; ds: number } | null;
+          /* ⭐ V10-R5 — a TRUE unmount, ⛔ not a display toggle. The node is
+             removed from the document and re-inserted at its exact position,
+             which is what closing and reopening MAIA does to the tree. Five
+             axes: manuscript width, prose top, prose LEFT, stage scroll, and
+             the stage's scrollHeight (a layer that reflows the column changes
+             the scrollable extent even when the visible box holds). */
+          var measure = function(){ var r = ms.getBoundingClientRect(); var h = held ? held.getBoundingClientRect() : {top:0,left:0};
+            return { w: r.width, x: r.left, held: h.top, heldx: h.left, scroll: stage.scrollTop, extent: stage.scrollHeight }; };
+          var before = measure();
+          var parent = maia.parentNode, next = maia.nextSibling;
+          parent.removeChild(maia);
+          var closed = measure();
+          parent.insertBefore(maia, next);
+          var reopened = measure();
+          var d = function(a,b){ return Math.max(Math.abs(a.w-b.w), Math.abs(a.x-b.x), Math.abs(a.held-b.held), Math.abs(a.heldx-b.heldx), Math.abs(a.scroll-b.scroll), Math.abs(a.extent-b.extent)); };
+          return { dw: Math.abs(closed.w - before.w), dy: Math.abs(closed.held - before.held), ds: Math.abs(closed.scroll - before.scroll),
+                   dclose: d(closed, before), dreopen: d(reopened, before) };
+        })()`) as { dw: number; dy: number; ds: number; dclose: number; dreopen: number } | null;
         if (delta) {
           v2 = { id: 'V2-maia-does-not-move-the-manuscript',
-            ok: delta.dw === 0 && delta.dy === 0 && delta.ds === 0,
-            detail: `Δwidth ${delta.dw}px · Δprose-y ${delta.dy}px · Δscroll ${delta.ds}px` };
+            ok: delta.dclose === 0 && delta.dreopen === 0,
+            detail: `unmount Δmax ${delta.dclose}px · remount Δmax ${delta.dreopen}px (width · x · prose-y · prose-x · scroll · extent)` };
+        }
+      }
+
+      /* ⭐ V10-R3 — the manuscript stays RELATIONALLY PRESENT while the findings
+         scroll. `.fs-context` is sticky inside the scrolling `.fs-pane`, and a
+         screenshot cannot prove sticky: it is a property of motion. Scroll the
+         pane through its range and require the context pane, its highlighted
+         passage and its "Showing where…" line to stay inside the pane's box
+         at every step. ⚠️ Presence across SELECTION CHANGE is not measured
+         here — Review selection is a render prop, not a machine transition
+         (see the note in the report), so there is nothing to drive. */
+      let r3: Check | null = null;
+      if ((st.mode ?? 'write') === 'review' && vp.width > 1180) {
+        const seen = await p.evaluate(`(function(){
+          var pane = document.querySelector('.fs-pane'); var ctx = document.querySelector('.fs-context');
+          if (!pane || !ctx) return null;
+          var hi = ctx.querySelector('[data-highlighted="true"]'); var why = ctx.querySelector('.fs-contextwhy');
+          var steps = [], max = pane.scrollHeight - pane.clientHeight; if (max <= 0) return { steps: [], max: 0, note: 'no scroll range' };
+          [0, .25, .5, .75, 1].forEach(function(f){
+            pane.scrollTop = Math.round(max * f);
+            var P = pane.getBoundingClientRect(), C = ctx.getBoundingClientRect();
+            var H = hi ? hi.getBoundingClientRect() : null, W = why ? why.getBoundingClientRect() : null;
+            var inside = function(R){ return !!R && R.top >= P.top - 1 && R.bottom <= P.bottom + 1 && R.height > 0; };
+            steps.push({ at: pane.scrollTop, ctxTop: Math.round(C.top - P.top), ctxIn: inside(C), hiIn: inside(H), whyIn: inside(W) });
+          });
+          pane.scrollTop = 0;
+          return { steps: steps, max: max };
+        })()`) as { steps: { at: number; ctxTop: number; ctxIn: boolean; hiIn: boolean; whyIn: boolean }[]; max: number; note?: string } | null;
+        if (seen && seen.max > 0) {
+          const bad = seen.steps.filter((x) => !(x.ctxIn && x.hiIn && x.whyIn));
+          r3 = { id: 'V10-R3-manuscript-context-stays-present-while-findings-scroll', ok: bad.length === 0,
+            detail: bad.length === 0
+              ? `${seen.steps.length} scroll positions over ${seen.max}px: context pane, highlighted passage and "Showing where…" all remained in view (pane top ${seen.steps.map((x) => x.ctxTop).join('/')}px)`
+              : `left view at scrollTop ${bad.map((x) => x.at).join(', ')}` };
+        } else if (seen) {
+          r3 = { id: 'V10-R3-manuscript-context-stays-present-while-findings-scroll', ok: true,
+            detail: 'findings fit the pane at this viewport — nothing to scroll, nothing to lose' };
         }
       }
 
@@ -589,6 +638,7 @@ async function main() {
           : textScale.overflow ? `overflows sideways at ${Math.round((textScale.worstAt / 16) * 100)}% browser text`
           : `prose scales ${textScale.before}→${textScale.after}px through 175%, no horizontal overflow` });
       if (v2) checks.push(v2);
+      if (r3) checks.push(r3);
       failures += checks.filter((c) => !c.ok).length;
       results.push({ state: st.id, viewport: vp.id, checks });
 

@@ -302,7 +302,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -463,7 +463,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -624,7 +624,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -785,7 +785,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -951,7 +951,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -1259,6 +1259,11 @@
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
         "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      },
+      {
+        "id": "V10-R3-manuscript-context-stays-present-while-findings-scroll",
+        "ok": true,
+        "detail": "5 scroll positions over 1498px: context pane, highlighted passage and \"Showing where…\" all remained in view (pane top 22/22/22/22/22px)"
       }
     ]
   },
@@ -1420,6 +1425,11 @@
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
         "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      },
+      {
+        "id": "V10-R3-manuscript-context-stays-present-while-findings-scroll",
+        "ok": true,
+        "detail": "5 scroll positions over 1194px: context pane, highlighted passage and \"Showing where…\" all remained in view (pane top 22/22/22/22/22px)"
       }
     ]
   },
@@ -1576,6 +1586,11 @@
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
         "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      },
+      {
+        "id": "V10-R3-manuscript-context-stays-present-while-findings-scroll",
+        "ok": true,
+        "detail": "5 scroll positions over 465px: context pane, highlighted passage and \"Showing where…\" all remained in view (pane top 22/22/22/22/22px)"
       }
     ]
   },
@@ -1732,6 +1747,11 @@
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
         "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      },
+      {
+        "id": "V10-R3-manuscript-context-stays-present-while-findings-scroll",
+        "ok": true,
+        "detail": "5 scroll positions over 457px: context pane, highlighted passage and \"Showing where…\" all remained in view (pane top 22/22/22/22/22px)"
       }
     ]
   },
@@ -2038,7 +2058,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -2199,7 +2219,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -2360,7 +2380,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -2521,7 +2541,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -2687,7 +2707,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -2995,6 +3015,11 @@
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
         "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      },
+      {
+        "id": "V10-R3-manuscript-context-stays-present-while-findings-scroll",
+        "ok": true,
+        "detail": "5 scroll positions over 1871px: context pane, highlighted passage and \"Showing where…\" all remained in view (pane top 22/22/22/22/22px)"
       }
     ]
   },
@@ -3156,6 +3181,11 @@
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
         "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      },
+      {
+        "id": "V10-R3-manuscript-context-stays-present-while-findings-scroll",
+        "ok": true,
+        "detail": "5 scroll positions over 1547px: context pane, highlighted passage and \"Showing where…\" all remained in view (pane top 22/22/22/22/22px)"
       }
     ]
   },
@@ -3312,6 +3342,11 @@
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
         "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      },
+      {
+        "id": "V10-R3-manuscript-context-stays-present-while-findings-scroll",
+        "ok": true,
+        "detail": "5 scroll positions over 802px: context pane, highlighted passage and \"Showing where…\" all remained in view (pane top 22/22/22/22/22px)"
       }
     ]
   },
@@ -3468,6 +3503,11 @@
         "id": "TEXT-SIZE-responds-and-does-not-break",
         "ok": true,
         "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      },
+      {
+        "id": "V10-R3-manuscript-context-stays-present-while-findings-scroll",
+        "ok": true,
+        "detail": "5 scroll positions over 795px: context pane, highlighted passage and \"Showing where…\" all remained in view (pane top 22/22/22/22/22px)"
       }
     ]
   },
@@ -3774,7 +3814,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -3935,7 +3975,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -4096,7 +4136,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -4257,7 +4297,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -4423,7 +4463,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -5505,7 +5545,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -5661,7 +5701,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -5817,7 +5857,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -5973,7 +6013,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
@@ -6134,7 +6174,7 @@
       {
         "id": "V2-maia-does-not-move-the-manuscript",
         "ok": true,
-        "detail": "Δwidth 0px · Δprose-y 0px · Δscroll 0px"
+        "detail": "unmount Δmax 0px · remount Δmax 0px (width · x · prose-y · prose-x · scroll · extent)"
       }
     ]
   },
