@@ -88,23 +88,33 @@ hdr() { printf '\n── %s ─────────────────�
 
 # ── PHASE 1 — bind the substrate ────────────────────────────────────────────
 hdr "PHASE 1 · bind substrate"
+# Each blocking call announces itself FIRST. A run that stops printing then names
+# the exact call it stopped on, so a stall is never mistaken for a silent pass.
+step() { printf '  … %s\n' "$*"; }
+say "instrument_dir=$INSTRUMENT_DIR"
+say "instrument blobs verified: seam-identity.mjs + seam-identity-container.mjs"
+step "docker inspect $CONTAINER (image id)"
 IMAGE_BEFORE="$(docker inspect "$CONTAINER" --format '{{.Image}}')" || stop CONTAINER_UNREADABLE
+step "docker exec $CONTAINER printenv GIT_COMMIT"
 RUNNING_SHA="$(docker exec "$CONTAINER" printenv GIT_COMMIT)" || stop GIT_COMMIT_UNREADABLE
 [ "$RUNNING_SHA" != "unknown" ] || stop GIT_COMMIT_UNKNOWN "the running container asserts no provenance"
 say "container=$CONTAINER"
 say "image_before=$IMAGE_BEFORE"
 say "running_sha=$RUNNING_SHA"
 
-git fetch origin clean-main-no-secrets >/dev/null 2>&1 || stop FETCH_FAILED
+step "git fetch origin clean-main-no-secrets (ancestry input)"
+# --no-tags keeps it small; a credential prompt would otherwise hang here unseen.
+GIT_TERMINAL_PROMPT=0 git fetch --no-tags origin clean-main-no-secrets >/dev/null 2>&1 \
+  || stop FETCH_FAILED "could not fetch canonical (credentials, or no network from this host)"
 say ""
-say "git-side binding check:"
+step "git-side binding check (ancestry + full-scope digest)"
 node "$GIT_WITNESS" check \
   --production-sha "$RUNNING_SHA" \
   --canonical-rev origin/clean-main-no-secrets \
   --expect "$EXPECT_FULL" || stop SEAM_BINDING_REFUSED "see the refusal code above"
 
 say ""
-say "container-side seam witness (36 of 37 files; the 37th is entailed):"
+step "container-side seam witness, streamed in on stdin (36 of 37; the 37th is entailed)"
 # ⭐ The instrument is STREAMED IN on stdin rather than read from /app/scripts.
 # The running image was built before this instrument existed, and §VIII forbids a
 # rebuild or deploy — so requiring the file inside the image would make the
@@ -115,6 +125,7 @@ docker exec -i "$CONTAINER" node --input-type=module - --expect "$EXPECT_IMAGE" 
 
 # ── PHASE 2 — every flag must be OFF ────────────────────────────────────────
 hdr "PHASE 2 · flags"
+step "reading the five activation flags"
 for f in "${FLAGS[@]}"; do
   v="$(docker exec "$CONTAINER" printenv "$f" 2>/dev/null || true)"
   [ "$v" != "1" ] || stop FLAG_ENABLED "$f is literal 1 — this act may not run against a live shadow"
@@ -124,6 +135,7 @@ done
 # ── PHASE 3 — row counts before ─────────────────────────────────────────────
 hdr "PHASE 3 · row counts before"
 q() { docker exec "$PG_CONTAINER" psql -X -At -U soullab maia_consciousness -c "$1"; }
+step "row counts via $PG_CONTAINER"
 RESEARCH_BEFORE="$(q 'SELECT count(*) FROM public.maia_relational_field_shadow_runs;')" || stop RESEARCH_COUNT_UNREADABLE
 TELEMETRY_BEFORE="$(q 'SELECT count(*) FROM public.maia_epistemic_join_integration_shadow_runs;')" || stop TELEMETRY_COUNT_UNREADABLE
 say "relational_field_shadow_runs = $RESEARCH_BEFORE"
@@ -131,6 +143,7 @@ say "epistemic_join_integration_shadow_runs = $TELEMETRY_BEFORE"
 
 # ── PHASE 4 — Founder identity, never printed ───────────────────────────────
 hdr "PHASE 4 · Founder scope"
+step "resolving the unique admin_role = founder identity"
 FOUNDER_COUNT="$(q "SELECT count(*) FROM members WHERE admin_role = 'founder';")"
 [ "$FOUNDER_COUNT" = "1" ] || stop FOUNDER_NOT_UNIQUE "found $FOUNDER_COUNT accounts with admin_role = founder"
 FOUNDER_ID="$(q "SELECT id::text FROM members WHERE admin_role = 'founder';")"
