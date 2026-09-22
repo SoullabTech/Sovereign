@@ -108,3 +108,56 @@ When the founder confirms the disposition, PR #1455 should be closed **without m
 ## VIII. Standing
 
 > **SUPERSESSION CENSUS COMPLETE · LINEAGE MAPPED · ⚠️ ONE AHEAD-OF-CANONICAL PATH RAISED · ⛔ PR #1455 NOT CLOSED · ⛔ NO REPAIR AUTHORIZED · ⛔ A1 NOT OPENED · PRODUCTION UNTOUCHED**
+
+---
+
+## IX. Post-census custody addendum — 2026-09-22
+
+⚠️ **Appended, not merged into the census above.** §I–VIII are a reading taken at a time and are preserved as they were written. This section records what moved afterwards.
+
+### IX.1 Custody vehicle for the canonical-later paths
+
+At census time **PR #1461** was the live custody-repair vehicle.
+
+Subsequent custody reconciliation produced:
+
+`6de25a4518e562a2003efd65d8c588ccde1ccad7` — *R2R1 current-canonical semantic reconciliation*
+
+which is the current exact **R2R1 semantic candidate** for:
+
+- `app/writers-studio/rebuild/RebuildStudioClient.tsx`
+- `tests/constitutional/writers-studio/convergenceC6.ts`
+
+`app/writers-studio/studio/PlaceInWork.tsx`, `app/writers-studio/studio/StudioMovements.tsx` and `app/writers-studio/insight/insight.css` remain satisfied by the already-canonical build-health lineage (`2c43ff1ea`) and are **not re-carried by R2R1**.
+
+⛔ R2R1 is **not admitted** as of this addendum. §V's table names lineage, not admission.
+
+### IX.2 Disposition of the §VI finding
+
+The ahead-of-canonical path `app/writers-studio/__tests__/guidedEditorialLoop.test.ts` has been **adjudicated** by founder act as a **stale-test defect**, not a behavioural ambiguity:
+
+> Canonical runtime behaviour is the existing governed C6 behaviour. The canonical test assertion is stale. No product behaviour change is authorized.
+
+Carried by the bounded act **`WRITERS-STUDIO-CONVERGENCE-01 / TC1`** — PR #1467, branch `fix/ws-convergence-tc1-guided-loop-test-custody-20260922`, candidate `d0ff4f59b`. One test file; four stale assertions in the first test only; `InsightReading.tsx` unmodified; the second test untouched; the #1455 blob **not** copied wholesale.
+
+⛔ **TC1 is not admitted** as of this addendum, and its jest / C5 / C6 / typecheck witness is **owed to a host with dependencies** — the repair's assertions are entailed by a static source read, not witnessed by an executed run.
+
+⚠️ **§VII's closure block is therefore narrowed, not lifted.** Once TC1 is canonically admitted, the reconciliation is no longer stranded on #1455's branch and the §VII blocker is discharged **by TC1, not by this record**. Until then it stands.
+
+### IX.3 Remaining sequence before PR #1455 may be closed
+
+```text
+TC1 admitted            (PR #1467)
+        ↓
+R2R1 admission finished (6de25a451)
+        ↓
+final custody update to this record
+        ↓
+documentary PR for this record
+        ↓
+record admitted canonically
+        ↓
+close PR #1455 WITHOUT MERGE, pointing at the admitted record
+```
+
+⛔ This record is **not** to be opened as a PR before that final custody update: a closure that points at an unadmitted record has pointed at another temporary branch.
