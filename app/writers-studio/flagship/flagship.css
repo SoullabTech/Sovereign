@@ -497,9 +497,16 @@
   border-top:1px solid var(--rule);background:var(--shell);flex:none}
 
 /* Acknowledged staleness — a strip, not a wall. */
-.fs-stalestrip{display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+.fs-stalestrip{display:flex;align-items:center;gap:6px 11px;flex-wrap:wrap;
   background:var(--held);border-left:3px solid var(--held-edge);border-radius:5px;
   padding:8px 13px;font-size:0.78125rem;color:var(--secondary);min-width:0}
+.fs-stalestripsay{min-width:0}
+/* ⭐ The promise reads as the quieter half of one sentence — present on every
+   view, never shouting. ⛔ It is not hidden and it is not behind a control. */
+.fs-stalestriptrust{min-width:0;color:var(--tertiary);font-style:italic}
+.fs-stalestripacts{display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+  margin-left:auto;min-width:0}
+@media (max-width:620px){ .fs-stalestripacts{margin-left:0} }
 
 @media (max-width:1180px){
   .fs-reviewgrid{grid-template-columns:minmax(0,1fr)}

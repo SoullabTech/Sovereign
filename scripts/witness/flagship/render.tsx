@@ -268,8 +268,18 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
         if (!s) return null;
         var findings = document.querySelector('[data-finding]');
         var before = findings ? (s.compareDocumentPosition(findings) & 4) !== 0 : true;
+        /* ⚠️ Presence of the element proved nothing — an empty span would have
+           passed. The law is about what the member is TOLD, so read the text and
+           require it to state that the re-read waits on them asking. */
+        var tl = s.querySelector('[data-trust-line]');
+        var tlText = tl ? (tl.textContent || '').toLowerCase() : '';
         return { before: before,
-          trust: !!s.querySelector('[data-trust-line]'),
+          /* ⚠️ DOUBLED ON PURPOSE. This probe is a TEMPLATE STRING, so a single
+             \b is the BACKSPACE escape, not a word boundary — and the regex then
+             silently matches nothing, failing a conforming page. */
+          trust: !!tl && /\\b(ask|asking|request)\\b/.test(tlText)
+                       && /\\b(not|without)\\b/.test(tlText),
+          trustText: tlText.trim(),
           commission: s.querySelectorAll('[data-commission]').length,
           previous: !!s.querySelector('[data-return-to="previous-reading"]') };
       })(),
@@ -471,11 +481,16 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
         : `member can only author: ${k.join(', ') || 'nothing'}` });
   }
   if (m.stale) {
-    const st = m.stale as { before: boolean; trust: boolean; commission: number; previous: boolean };
+    const st = m.stale as { before: boolean; trust: boolean; trustText: string;
+      commission: number; previous: boolean };
+    /* ⭐⭐ The law does NOT relax after acknowledgment. R2 asked the panel to
+       compact, ⛔ not to drop its disclosure: the qualification, the kept
+       previous reading, the single re-read control and the promise are all
+       still owed on a strip one line tall. */
     const ok = st.before && st.trust && st.commission === 1 && st.previous;
     out.push({ id: 'V15-reading-freshness', ok,
       detail: ok ? 'stated before the findings, previous reading kept, re-read is the member\u2019s to ask for'
-        : `before findings ${st.before} · trust line ${st.trust} · commission controls ${st.commission} · previous kept ${st.previous}` });
+        : `before findings ${st.before} · trust line ${st.trust} ("${st.trustText}") · commission controls ${st.commission} · previous kept ${st.previous}` });
   }
   out.push({ id: 'TAB-never-commissions', ok: (m.commissionOnTabs as number) === 0,
     detail: (m.commissionOnTabs as number) === 0

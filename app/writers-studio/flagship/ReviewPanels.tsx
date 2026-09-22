@@ -6,7 +6,8 @@
 
 import * as React from 'react';
 import {
-  REREAD_IS_THE_MEMBERS_CALL, changeLines, type WorkChange,
+  REREAD_IS_THE_MEMBERS_CALL, REREAD_IS_THE_MEMBERS_CALL_SHORT,
+  changeLines, type WorkChange,
 } from '../../../lib/writersStudio/studio/reading';
 import type { OwnNoteKind } from '../../../lib/writersStudio/studio/machine';
 
@@ -30,9 +31,19 @@ export function StaleReading({ readAt, updatedAt, change, previousLabel, acknowl
       <div className="fs-stalestrip" data-stale-reading="true" data-contextual="true"
         data-acknowledged="true">
         <span className="fs-staleclock" aria-hidden="true">◷</span>
-        <span>MAIA’s findings are based on an earlier version.</span>
-        <button type="button" className="fs-goto" data-return-to="previous-reading">View changes</button>
-        <button type="button" className="fs-goto" data-commission="reread">Read again</button>
+        <span className="fs-stalestripsay">MAIA’s findings are based on an earlier version.</span>
+        {/* ⭐ The promise compacts; it does not disappear. A persistent stale
+            reading WITHOUT it is the exact state in which a member starts to
+            wonder whether she read the new words anyway. */}
+        <span className="fs-stalestriptrust" data-trust-line="true">
+          {REREAD_IS_THE_MEMBERS_CALL_SHORT}
+        </span>
+        <span className="fs-stalestripacts">
+          <button type="button" className="fs-goto" data-return-to="previous-reading">
+            Previous reading
+          </button>
+          <button type="button" className="fs-goto" data-commission="reread">Read again</button>
+        </span>
       </div>
     );
   }

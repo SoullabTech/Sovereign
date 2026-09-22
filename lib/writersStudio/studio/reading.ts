@@ -73,6 +73,29 @@ export function changeLines(c: WorkChange): readonly string[] {
 export const REREAD_IS_THE_MEMBERS_CALL =
   'MAIA will not read the new version without your request. Your work remains in your hands.';
 
+/**
+ * ⭐⭐ THE SHORT FORM IS A SHORTER SENTENCE, ⛔ NOT A WEAKER ONE.
+ *
+ * After "Not now" the disclosure compacts to a strip so the Work gets its room
+ * back — but the one commitment that must never compact away is this one. A
+ * stale reading that persists *without* the assurance is precisely the state in
+ * which a member would start to wonder whether MAIA read the new words anyway.
+ * ⛔ Compaction may drop the timestamps, the change list and the question; it
+ * may never drop the promise.
+ */
+export const REREAD_IS_THE_MEMBERS_CALL_SHORT =
+  'She will not read your new words unless you ask.';
+
+/**
+ * ⭐ The mechanical core of the promise, so a future rewording cannot quietly
+ * turn it into an assurance about something else. Both forms must state that
+ * the re-read waits on the member ASKING.
+ */
+export function statesTheReReadIsAsked(text: string): boolean {
+  const t = text.toLowerCase();
+  return /\b(ask|asking|request)\b/.test(t) && /\b(not|without)\b/.test(t);
+}
+
 export function freshnessLine(f: Freshness): string {
   switch (f.kind) {
     case 'current':

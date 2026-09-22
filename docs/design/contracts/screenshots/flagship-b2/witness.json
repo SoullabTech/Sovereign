@@ -1388,8 +1388,8 @@
       },
       {
         "id": "V15-reading-freshness",
-        "ok": false,
-        "detail": "before findings true · trust line false · commission controls 1 · previous kept true"
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -3124,8 +3124,8 @@
       },
       {
         "id": "V15-reading-freshness",
-        "ok": false,
-        "detail": "before findings true · trust line false · commission controls 1 · previous kept true"
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -4860,8 +4860,8 @@
       },
       {
         "id": "V15-reading-freshness",
-        "ok": false,
-        "detail": "before findings true · trust line false · commission controls 1 · previous kept true"
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
@@ -6571,8 +6571,8 @@
       },
       {
         "id": "V15-reading-freshness",
-        "ok": false,
-        "detail": "before findings true · trust line false · commission controls 1 · previous kept true"
+        "ok": true,
+        "detail": "stated before the findings, previous reading kept, re-read is the member’s to ask for"
       },
       {
         "id": "TAB-never-commissions",
