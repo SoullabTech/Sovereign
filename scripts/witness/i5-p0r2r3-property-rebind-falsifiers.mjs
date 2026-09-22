@@ -176,10 +176,11 @@ try {
 record('F8', 'non-binding remediation executable remainder is byte-identical', () => {
   const baseline = sh(['show', BASELINE + ':' + REMEDIATION]);
   const candidate = readFileSync(REMEDIATION, 'utf8');
-  return requireThat(
+  requireThat(
     normalizedExecutable(baseline) === normalizedExecutable(candidate),
     'unexpected executable change outside the authorized binding loci'
   );
+  return 'normalized executable remainder identical outside authorized binding loci';
 });
 
 const passed = results.filter((r) => r.pass).length;
