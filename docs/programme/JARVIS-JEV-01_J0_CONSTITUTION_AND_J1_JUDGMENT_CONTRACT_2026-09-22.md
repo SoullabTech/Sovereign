@@ -36,6 +36,56 @@ an independent routing jurisdiction.
 **constitutionally placed** and remains **unopened for provider execution** until external-
 provider governance and the standing hold are satisfied.
 
+**R-4 · Q-JEV-6 — RULED: EXTERNAL JEV IS ADVISORY, NOT FAST-PATH.** Founder ruling
+2026-09-22, recorded as given:
+
+> Jev is presently classified as an external hosted provider. Therefore the proposed
+> automatic Jev fast path is **withdrawn**. `J2-R1` remains a sub-lane of
+> `JARVIS-ROUTING-INTELLIGENCE-01` and may define a **bounded external advisory judgment
+> instrument only**. An external Jev judgment: is evidence, never authority; cannot
+> originate or widen a route; cannot grant authority; cannot mutate a Work Unit; cannot
+> execute repository work; cannot merge, deploy, or alter production; cannot bypass
+> deterministic capability; remains subject to the parent lane's evidence-backed
+> task-class eligibility; remains subject to the exact external-disclosure law; remains
+> subject to the applicable human provider-execution grant; **must not be described as a
+> `fast path`, `automatic path`, or equivalent** while those conditions remain.
+> Confidence may constrain, close, refuse, or escalate within its bounded advisory use;
+> confidence may never create authority or open an otherwise unauthorized act. **No
+> sovereign-hosted Jev capability is presumed.** If TypeSafe later supplies an
+> independently verifiable local/on-prem Jev runtime whose inference can occur without
+> external disclosure, provider transport, or provider spend, that fact **may** reopen the
+> automatic judgment question under the existing parent constitution. **It does not
+> automatically authorize that use.** One authority over one decision remains controlling.
+
+⭐⭐ **THE RULING ALSO CORRECTS MY FRAMING OF Q-JEV-6.** I presented it as a fork with two
+branches. **It is not.** The founder's product finding: TypeSafe's public materials
+describe Jev as early-access via its **hosted** service/API, and its customer agreement
+defines the API and web interface as **TypeSafe-hosted**; no published weights, local
+runtime, on-prem package or self-hosting mechanism was found.
+
+⛔ **So the sovereign-host branch is not presently executable, and presenting it as a live
+option would have let the architecture pretend it had a choice it does not have.** That is
+how law gets weakened to accommodate a vendor. ⚠️ *The product facts are **founder-supplied
+and were not independently verified in this session**; the classification is the founder's
+ruling, not my measurement.*
+
+```text
+NOW
+Jev = external hosted intelligence
+        ↓
+bounded advisory instrument
+        ↓
+human-authorized external call
+        ↓
+judgment = evidence only
+
+FUTURE CONDITION
+TypeSafe releases genuinely sovereign/on-prem Jev
+        ↓
+reopen automatic fast-path question
+under the same parent routing constitution
+```
+
 **Founder's constitutional shape, recorded as the lane's operative summary:**
 
 ```text
@@ -107,18 +157,25 @@ capability, authorize a mutation, satisfy a review requirement, or discharge a g
 Provenance is emitted in the **ratified J5 shape**, not a bespoke one.
 ⛔ A record in which `judgment` is the only stated basis for execution is a breach.
 
-### A2 · Confidence may close a path. It may never open one *(NEW)*
-⭐⭐ **The sharpest correction to the proposal as drafted.** The draft's J3 read
-*strong → deterministic policy* — confidence **opens** the fast path. That is authority by
-degree: it does not widen what is *permitted*, but it widens what *happens*.
+### A2 · Confidence may constrain or close. It may never open *(NEW — ruled form, R-4)*
+**Operative text, per R-4:** *confidence may constrain, close, refuse, or escalate within
+its bounded advisory use; confidence may never create authority or open an otherwise
+unauthorized act.*
 
-- The fast path opens **only** by membership in a **predeclared, evidence-backed class**
-  (J5: *model families are eligible only for evidence-backed task classes*);
-- within that class, confidence and abstention may only **close** it and escalate;
-- ⛔ no confidence value, at any magnitude, moves a work unit *into* the class.
+⭐ **R-4 made this article simpler and stronger.** The draft aimed it at one construct —
+*strong → deterministic policy*, confidence opening a fast path. With the fast path
+withdrawn, A2 is no longer about one path: **no confidence value opens any otherwise-
+unauthorized act.** ⛔ It cannot be satisfied by deleting the fast path, because the
+article no longer names it.
 
-⭐ **Falsifiable:** in a conforming candidate the eligible set is **invariant under every
-confidence value**. If raising a threshold changes the set, A2 is violated.
+⭐ **Falsifiable:** in a conforming candidate the set of acts available is **invariant
+under every confidence value**. If raising a threshold changes what may happen, A2 is
+violated.
+
+⚠️ *Superseded draft form, kept rather than deleted:* the article originally read
+*"the fast path opens only by membership in a predeclared, evidence-backed class; within
+that class confidence may only close it."* Eligibility now sits with the parent lane's
+evidence-backed task-class law, ⛔ not with this article.
 
 ### A3 · Abstention is the fail-closed default *(inherited — J5 HOLD-not-substitute)*
 Unparseable, absent, timed-out, malformed, or unrecognised results are **abstentions**, and
@@ -208,7 +265,7 @@ A2's failure mode through a different field.
 
 ---
 
-## 4 · EXTERNAL ⇒ THE FAST PATH IS DEFEATED BY RATIFIED LAW
+## 4 · EXTERNAL ⇒ FAST PATH DEFEATED BY RATIFIED LAW · RULED WITHDRAWN (R-4)
 
 ⭐⭐ **THE DECISIVE FINDING, following directly from R-2.**
 
@@ -230,21 +287,37 @@ what a fast path exists to avoid.** A judgment lane that needs a human authoriza
 judgment cannot reduce deliberation; it adds a step.
 
 ⛔ **This is not the hold delaying JEV. It is ratified routing law defeating the external
-form of JEV's purpose.** Two coherent resolutions, ⛔ neither taken:
+form of JEV's purpose.**
 
-1. **Sovereign-host Jev.** Automaticity becomes lawful because nothing crosses the
-   boundary; A1–A7 and the J5 provenance duty still bind. ⭐ This is the only shape in
-   which the original fast-path proposition survives.
-2. **Keep Jev external and retire the fast path.** Jev becomes the **bounded
-   evaluator/advisory instrument** the founder named in R-1 — used inside explicit,
-   human-authorized evaluation (the E1-class witness of §5), ⛔ never in the automatic
-   routing path.
+⭐⭐ **RULED (R-4): the fast path is WITHDRAWN.** Jev becomes the bounded external advisory
+instrument — used inside explicit, human-authorized evaluation, ⛔ never in the automatic
+routing path, and ⛔ **never described as a fast path or automatic path** while these
+conditions hold. ⛔ The advisory instrument is **not a smaller version of the fast path**;
+it is a different instrument, and renaming it later would be the drift to refuse.
 
-⭐ Option 2 is buildable under existing law once R5B is adjudicated. Option 1 requires no
-new provider law at all. ⛔ Option 2 is **not** a smaller version of option 1 — it is a
-different instrument, and calling it a fast path later would be the drift to refuse.
+### 4.2 · What the ruling does to the constitution — and the one article it makes heavier
 
-### 4.1 · The capability vocabulary still has no class for the packet
+⭐ **A5 and A6 get lighter.** They were carrying the burden of making an *autonomous* Jev
+safe. With no autonomous path, A5 (membrane precedes packet) and A6 (Jev may not judge its
+own standing) reduce to ordinary disclosure and scope hygiene. **J2 is substantially
+smaller**, as the founder observed.
+
+⚠️⚠️ **A7 gets heavier, and this is the part most likely to be lost.** The drift vector has
+changed. It is no longer a *designed* automaticity that a reviewer could see in the code —
+it is **advisory reliance hardening into dependence**: an instrument that is advisory in
+the ledger and load-bearing in practice, because people stop re-deriving what it reliably
+tells them.
+
+⭐ **A7 is the only article that detects that**, because it tests the *system's behaviour*
+rather than the *instrument's wiring*: **delete Jev entirely — does any authority decision
+change?** ⛔ A ledger line saying `judgment: evidence` cannot answer that question. A
+removal test can.
+
+⚠️ Consequently A7 must acquire a **recurring** discharge under advisory use, not a
+one-time design-time check. ⛔ Its cadence and form are **not specified here** — that is
+J2 work, and J2 is not opened.
+
+### 4.3 · The capability vocabulary still has no class for the packet
 
 Independently of the above: the packet is repository-derived, and the governing capability
 vocabulary is `member_data · member_audio · chat · embedding · tts · stt · benchmark`.
@@ -298,29 +371,53 @@ genuinely unnecessary?* — ⛔ a different measurement from agreement.
 - **Q-JEV-3 · Vocabulary.** Does a repository-derived judgment packet need its own
   capability class, and is it `repository_source` or a narrower fourth name? ⛔ Naming it
   here would be the proposal-not-act error the 2026-09-20 ruling warned against.
-- **Q-JEV-4 · Standing within J2.** Is JEV *a* J2 routing-law candidate, or *one input to*
-  the already-ratified law? ⭐ Given §0's correction the answer is now nearly forced —
-  routing law is **ratified**, so JEV can only be an input that conforms. ⛔ Still a
-  founder act.
-- **Q-JEV-5 · Fast-path class.** Which evidence-backed task classes are predeclared
-  eligible under A2? ⛔ Unenumerated; A2 is inert until they exist. **Moot under §4
-  option 2.**
-- **Q-JEV-6 · Resolution (NEW, decisive).** §4 — sovereign-host Jev and keep the fast path,
-  or keep Jev external and retire the fast path in favour of a bounded advisory
-  instrument? ⛔ Not taken.
+- **Q-JEV-4 · Standing within J2 — ✅ CLOSED by R-4.** J2-R1 *"may define a bounded external
+  advisory judgment instrument only"*. JEV is an **input that conforms** to ratified
+  routing law, ⛔ never a candidate for that law.
+- **Q-JEV-5 · Fast-path class — ✅ CLOSED AS MOOT by R-4.** The fast path is withdrawn;
+  eligibility sits with the parent lane's evidence-backed task-class law.
+- **Q-JEV-6 · Resolution — ✅ RULED (R-4).** External advisory; fast path withdrawn.
+
+### ⚠️ Q-JEV-7 · The reopen condition needs its own evidence standard *(NEW — raised, ⛔ not ruled)*
+
+R-4's future condition turns on *"independently verifiable local/on-prem Jev runtime"*.
+⭐ **`independently verifiable` is load-bearing and presently undefined**, and this lane's
+own history shows why that matters: a vendor blog post read in six months could be treated
+as the condition being met.
+
+⛔ **A vendor announcement, a product page, a pricing tier named "self-hosted", or a
+customer-agreement clause is NOT verification.** Consistent with ratified J5 (*model
+agreement remains evidence only*) and this repository's standing law (*a probe is not the
+record*), the reopen trigger should require, at minimum: a runtime that **runs**, observed
+**with network egress denied**, producing a judgment, on infrastructure Soullab controls.
+
+⭐ Until that standard is named, the reopen condition is **narratively satisfiable but not
+mechanically satisfiable** — which is the shape that lets a hold quietly lapse. ⛔ Naming
+the standard is a founder act; it is proposed here, not taken.
 
 ---
 
 ## 7 · Standing
 
-**PLACEMENT ✅ RULED (sub-lane J2-R1) · PROVENANCE ✅ RULED (external) · PLACED, ⛔ NOT
-OPENED FOR PROVIDER EXECUTION · J0 CONSTITUTION AUTHORED (A1–A7; A1/A3/A4 INHERITED FROM
-RATIFIED J5) · J1 CONTRACT AUTHORED AS CANDIDATE · ⛔ NEITHER RATIFIED · ⚠️ FIRST-COMMIT
-FINDING CORRECTED (parent charter status line stale by six gates; routing law is RATIFIED,
-not missing) · ⭐ FAST PATH DEFEATED IN THE EXTERNAL FORM BY RATIFIED J5 + R5B · Q-JEV-6
-BLOCKING · ⛔ 2026-09-20 HOLD UNLIFTED, BOTH CONDITIONS UNDISCHARGED · ⛔ NO PROVIDER ADDED ·
-⛔ NO TIER TABLE EDITED · ⛔ NO ADAPTER · ⛔ NO PACKET CONSTRUCTED · ⛔ NO JUDGMENT PERFORMED ·
-⛔ NO PROVIDER CALLED · ⛔ NO ROUTING CHANGED · ⛔ NO PROVIDER SPEND · ⛔ NO `lib/`, `app/`,
+```text
+J2-R1
+PLACEMENT              CLOSED
+PROVENANCE             CLOSED — EXTERNAL
+PARENT-LAW CONFORMANCE ESTABLISHED
+FAST-PATH PROPOSAL     WITHDRAWN
+EXTERNAL ADVISORY      CONSTITUTIONALLY AVAILABLE
+PROVIDER EXECUTION     NOT OPENED HERE
+ADAPTER                NOT AUTHORIZED
+```
+
+**J0 CONSTITUTION AUTHORED (A1–A7; A1/A3/A4 INHERITED FROM RATIFIED J5; A2 IN RULED FORM;
+⚠️ A7 NOW LOAD-BEARING AND OWED A RECURRING DISCHARGE) · J1 CONTRACT AUTHORED AS CANDIDATE ·
+⛔ NEITHER RATIFIED · ⚠️ FIRST-COMMIT FINDING CORRECTED (routing law is RATIFIED, not
+missing) · Q-JEV-4 ✅ CLOSED · Q-JEV-5 ✅ MOOT · Q-JEV-6 ✅ RULED · ⚠️ Q-JEV-3 OPEN ·
+⚠️ Q-JEV-7 RAISED, ⛔ NOT RULED · ⛔ J2 NOT OPENED · ⛔ 2026-09-20 HOLD UNLIFTED, BOTH
+CONDITIONS UNDISCHARGED · ⛔ NO SOVEREIGN JEV PRESUMED · ⛔ NO PROVIDER ADDED · ⛔ NO TIER
+TABLE EDITED · ⛔ NO ADAPTER · ⛔ NO PACKET CONSTRUCTED · ⛔ NO JUDGMENT PERFORMED · ⛔ NO
+PROVIDER CALLED · ⛔ NO ROUTING CHANGED · ⛔ NO PROVIDER SPEND · ⛔ NO `lib/`, `app/`,
 `scripts/`, `jarvis-desktop/` OR `database/` FILE MODIFIED · ⛔ NO MERGE · ⛔ NO DEPLOY ·
 PRODUCTION UNTOUCHED.**
 
