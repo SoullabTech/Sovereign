@@ -109,7 +109,7 @@ export interface Posture { readonly sanctuary: boolean; readonly resolvedAtIso: 
 /** ⭐ Content-free by type: no text, no passage, no full member id. */
 export interface RefusalEvidence {
   readonly store: 'member_observations';
-  readonly category: 'sanctuary' | 'posture_unresolved' | 'not_confirmed';
+  readonly category: 'sanctuary' | 'posture_unresolved' | 'member_confirmation_required';
   readonly memberIdPrefix: string;
 }
 

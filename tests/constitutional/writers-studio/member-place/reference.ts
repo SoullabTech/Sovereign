@@ -34,7 +34,7 @@ export class ReferenceSubstrate implements MemberPlaceSubstrate {
        is not member consent; member consent is necessary but does not
        override Sanctuary. The founder's independent review found this
        conjunction half-enforced: the field existed and nothing read it. */
-    if (!input.memberConfirmed) return { ok: false, refusal: { store: 'member_observations', category: 'not_confirmed', memberIdPrefix: prefix } };
+    if (!input.memberConfirmed) return { ok: false, refusal: { store: 'member_observations', category: 'member_confirmation_required', memberIdPrefix: prefix } };
     const o: MemberObservation = {
       id: mintMemberObservationId(), memberId: input.memberId, workId: input.workId,
       address: input.address, kind: input.kind, text: input.text,

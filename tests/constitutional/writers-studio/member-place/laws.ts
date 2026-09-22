@@ -250,8 +250,8 @@ export function runMemberPlaceLaws(make: () => MemberPlaceSubstrate): readonly L
   run('MA-F16-unconfirmed-is-refused-under-standard-posture', () => {
     const s = make(); const r = s.admit(input({ posture: STANDARD, memberConfirmed: false }));
     const stored = s.retrieve(MEMBER, WORK).length;
-    const ok = !r.ok && r.refusal.category === 'not_confirmed' && stored === 0;
-    return law('MA-F16-unconfirmed-is-refused-under-standard-posture', ok, ok ? 'refused as not_confirmed; zero rows' : `ok=${r.ok} · rows ${stored}`);
+    const ok = !r.ok && r.refusal.category === 'member_confirmation_required' && stored === 0;
+    return law('MA-F16-unconfirmed-is-refused-under-standard-posture', ok, ok ? 'refused as member_confirmation_required; zero rows' : `ok=${r.ok} · rows ${stored}`);
   });
 
   return out;
