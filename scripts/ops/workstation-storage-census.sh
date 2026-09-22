@@ -249,6 +249,20 @@ if [[ "$OS" == "Darwin" ]]; then
   done
 fi
 
+# --------------------------------------------------------------- library ----
+# ~/Library was 107 GB on 2026-09-22 with only ~14 GB itemized by the sections
+# above, so it is broken down one level, plus the three subtrees that hide
+# application data (Application Support, Containers, Group Containers).
+if [[ "$OS" == "Darwin" && -d "$HOME/Library" ]]; then
+  hdr "LIBRARY BREAKDOWN (largest first)"
+  du -sk "$HOME"/Library/* 2>/dev/null | sort -nr | head -12 | awk '{printf "  %7.2f GB  %s\n",$1/1048576,$2}'
+  for sub in "Application Support" "Containers" "Group Containers" "Mobile Documents" "CloudStorage"; do
+    [[ -d "$HOME/Library/$sub" ]] || continue
+    echo "  $sub/ (top 8):"
+    du -sk "$HOME/Library/$sub"/* 2>/dev/null | sort -nr | head -8 | awk '{printf "    %7.2f GB  %s\n",$1/1048576,$2}'
+  done
+fi
+
 # ------------------------------------------------------------ logs & misc ---
 hdr "LOGS, TRASH, DOWNLOADS"
 for c in "$HOME/MAIA-SOVEREIGN/logs" "$HOME/Library/Logs" /var/log "$HOME/.Trash" "$HOME/Downloads" "$HOME/Desktop" \
