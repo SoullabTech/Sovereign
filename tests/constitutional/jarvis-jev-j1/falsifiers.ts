@@ -5,9 +5,16 @@
  * never merely that "something failed".
  */
 import {
+  ADMITTED_ABSTAIN_MEMBERS,
   ADVICE_MEMBERS,
+  CHANGE_SCOPE_MEMBERS,
   CONTRACT_SCALE,
   DECLARED_SHAPE,
+  SCORE_MEMBERS,
+  YESNO_MEMBERS,
+  exactMembers,
+  providerAbstain,
+  undeclaredMembers,
   providerYesNo,
   INVALID_QUESTION,
   NONBOOLEAN_STATE,
@@ -519,6 +526,85 @@ export const FALSIFIERS: Readonly<Record<string, Falsifier>> = {
     if (!r.ok) return fail('fixture: OK_STATE must construct');
     if (r.packet.packet_version !== PV) {
       fail(`§2: packet_version must be exactly "${PV}", got "${r.packet.packet_version}"`);
+    }
+  },
+
+  // ── F1R3: CLOSED RECORDS (§6.1 / J1R2 "exactly three, closed") ───────────
+  //
+  // ⛔ A parser does not make an illegal response lawful by throwing away the part the
+  // contract forbade. Each law below asserts BOTH that the response is refused as
+  // OUT_OF_RANGE and that the undeclared member never reaches the admitted record.
+  'DC-PROVIDER-ABSTAIN-EXTRA-MEMBER': (m) => {
+    const a = m.admit(okPacket('Q_RISK'), obs(providerAbstain('Q_RISK', { trace_index: 7 })));
+    if (isAbstainValue(a) && a.reason === 'REFUSED') {
+      fail('§6.1: ProviderAbstain carrying an undeclared member admitted as lawful REFUSED');
+    }
+    if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
+      fail(`§II: closed-record violation must be OUT_OF_RANGE, got ${JSON.stringify(a)}`);
+    }
+    if ('trace_index' in (a as object)) fail('§6.1: the undeclared member survived admission');
+  },
+  'DC-SCORE-EXTRA-MEMBER': (m) => {
+    const a = m.admit(okPacket('Q_DEPTH'), obs(providerScore('Q_DEPTH', { note: 'x' })));
+    if (isScoreValue(a)) fail('§6.1: a Score carrying an undeclared member was admitted');
+    if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
+      fail(`§II: Score + undeclared member must be OUT_OF_RANGE, got ${JSON.stringify(a)}`);
+    }
+    if ('note' in (a as object)) fail('§6.1: the undeclared member survived admission');
+  },
+  'DC-YESNO-EXTRA-MEMBER': (m) => {
+    const a = m.admit(okPacket('Q_RISK'), obs(providerYesNo('Q_RISK', { metadata: 7 })));
+    if (isYesNoValue(a)) fail('§6.1: a YesNo carrying an undeclared member was admitted');
+    if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
+      fail(`§II: YesNo + undeclared member must be OUT_OF_RANGE, got ${JSON.stringify(a)}`);
+    }
+    if ('metadata' in (a as object)) fail('§6.1: the undeclared member survived admission');
+  },
+  'DC-SCALE-EXTRA-MEMBER': (m) => {
+    // ⭐ the NESTED closed record: min/max are correct, membership is not.
+    const a = m.admit(
+      okPacket('Q_DEPTH'),
+      obs(providerScore('Q_DEPTH', { scale: { min: 0, max: 1, meaning: '0 to 1' } })),
+    );
+    if (isScoreValue(a)) fail('§6.1: a Score whose `scale` carries an undeclared member was admitted');
+    if (!isAbstainValue(a) || a.reason !== 'OUT_OF_RANGE') {
+      fail(`§II: nested Scale + undeclared member must be OUT_OF_RANGE, got ${JSON.stringify(a)}`);
+    }
+  },
+  'DC-ADMITTED-EXTRA-MEMBER': (m) => {
+    // The admitted RECORD is closed too — the host may not enrich it on the way out.
+    const lawful = m.admit(okPacket('Q_RISK'), obs(providerAbstain('Q_RISK')));
+    const extraA = undeclaredMembers(lawful, ADMITTED_ABSTAIN_MEMBERS);
+    if (extraA.length) fail(`§6.1: admitted abstention carries undeclared member(s) ${extraA.join(',')}`);
+    const hostFail = m.admit(okPacket('Q_RISK'), obs(undefined, { timedOut: true }));
+    const extraH = undeclaredMembers(hostFail, ADMITTED_ABSTAIN_MEMBERS);
+    if (extraH.length) fail(`§6.1: admitted host failure carries undeclared member(s) ${extraH.join(',')}`);
+    const sc = m.admit(okPacket('Q_DEPTH'), obs(providerScore('Q_DEPTH')));
+    if (isScoreValue(sc)) {
+      const extraS = undeclaredMembers(sc, SCORE_MEMBERS);
+      if (extraS.length) fail(`§6.1: admitted Score carries undeclared member(s) ${extraS.join(',')}`);
+    }
+    const yn = m.admit(okPacket('Q_RISK'), obs(providerYesNo('Q_RISK')));
+    if (isYesNoValue(yn)) {
+      const extraY = undeclaredMembers(yn, YESNO_MEMBERS);
+      if (extraY.length) fail(`§6.1: admitted YesNo carries undeclared member(s) ${extraY.join(',')}`);
+    }
+  },
+  'DC-CHANGE-SCOPE-EXTRA-MEMBER': (m) => {
+    // §IV — `change_scope` is a NESTED closed record inside the packet. `DC-EXTRA-MEMBER`
+    // inspects only top-level keys, so this was invisible to F1/F1R1/F1R2.
+    const p = constructOk(m);
+    const cs = (p as unknown as Record<string, unknown>)['change_scope'];
+    const extra = undeclaredMembers(cs, CHANGE_SCOPE_MEMBERS);
+    if (extra.length) fail(`§2: nested change_scope carries undeclared member(s) ${extra.join(',')}`);
+    if (!exactMembers(cs, CHANGE_SCOPE_MEMBERS)) {
+      fail(`§2: change_scope must be exactly ${CHANGE_SCOPE_MEMBERS.join(',')}`);
+    }
+    // and it must not arrive on the wire either
+    const r = m.outboundRepresentation(p) as Record<string, unknown> | null;
+    const wire = r && typeof r === 'object' ? r['change_scope'] : undefined;
+    if (wire !== undefined && !exactMembers(wire, CHANGE_SCOPE_MEMBERS)) {
+      fail('§2/§4.1: nested change_scope on the wire is not the exact four members');
     }
   },
 

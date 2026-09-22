@@ -14,6 +14,11 @@
 import {
   CONTRACT_SCALE,
   DECLARED_SHAPE,
+  PROVIDER_ABSTAIN_MEMBERS,
+  SCALE_MEMBERS,
+  SCORE_MEMBERS,
+  YESNO_MEMBERS,
+  exactMembers,
   inUnitInterval,
   isAbstainShaped,
   isScoreShaped,
@@ -379,8 +384,11 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
     admit: (packet, o): AdmittedJudgment => {
       const r = o.raw as { question_id?: unknown; reason?: unknown } | undefined;
       // accepts the abstention and silently DROPS the inadmissible confidence
+      // ⭐ F1R3 narrowing: perturbs ONLY the confidence path, so the general
+      // closed-record law (DC-PROVIDER-ABSTAIN-EXTRA-MEMBER) is not collaterally tripped.
       if (o.parsed && isAbstainShaped(o.raw) && r && r.question_id === packet.question_id
-          && isModelAbstainReason(r.reason)) {
+          && isModelAbstainReason(r.reason) && 'confidence' in (o.raw as object)
+          && exactMembers(o.raw, [...PROVIDER_ABSTAIN_MEMBERS, 'confidence'])) {
         return { question_id: packet.question_id, reason: r.reason };
       }
       return referenceAdmit(packet, o);
@@ -396,6 +404,7 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
       const scaleOk = typeof sc === 'object' && sc !== null && sc.min === 0 && sc.max === 1;
       if (o.parsed && isScoreShaped(o.raw) && r && r.question_id === packet.question_id
           && DECLARED_SHAPE[packet.question_id] === 'Score' && scaleOk
+          && exactMembers(o.raw, SCORE_MEMBERS) && exactMembers(sc, SCALE_MEMBERS)
           && inUnitInterval(r.confidence)
           // ⭐ the ONLY loosened decision: a bare range comparison lets NaN/Infinity through
           && typeof r.score === 'number' && !(r.score < 0) && !(r.score > 1)) {
@@ -419,14 +428,15 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
       if (o.parsed && r && r.question_id === packet.question_id && looseConf) {
         // the SHARED mechanism reached from BOTH response shapes
         if (isScoreShaped(o.raw) && DECLARED_SHAPE[packet.question_id] === 'Score'
-            && scaleOk && inUnitInterval(r.score)) {
+            && scaleOk && exactMembers(o.raw, SCORE_MEMBERS) && exactMembers(sc, SCALE_MEMBERS)
+            && inUnitInterval(r.score)) {
           return {
             question_id: packet.question_id, scale: CONTRACT_SCALE,
             score: r.score, confidence: r.confidence as number,
           };
         }
         if (isYesNoShaped(o.raw) && DECLARED_SHAPE[packet.question_id] === 'YesNo'
-            && typeof r.answer === 'boolean') {
+            && exactMembers(o.raw, YESNO_MEMBERS) && typeof r.answer === 'boolean') {
           return {
             question_id: packet.question_id,
             answer: r.answer, confidence: r.confidence as number,
@@ -456,10 +466,12 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
   'DC-SCORE-SCALE-ALTERED': derive({
     admit: (packet, o): AdmittedJudgment => {
       const r = o.raw as { question_id?: unknown; scale?: unknown; score?: unknown; confidence?: unknown } | undefined;
-      // ⭐ the ONLY loosened decision: any scale OBJECT is accepted without judging min/max
+      // ⭐ the ONLY loosened decision: an exactly-membered scale record is accepted
+      // without judging min/max. (F1R3 narrowing: membership is still enforced, so the
+      // closed-record laws are not collaterally tripped.)
       if (o.parsed && isScoreShaped(o.raw) && r && r.question_id === packet.question_id
           && DECLARED_SHAPE[packet.question_id] === 'Score'
-          && typeof r.scale === 'object' && r.scale !== null
+          && exactMembers(o.raw, SCORE_MEMBERS) && exactMembers(r.scale, SCALE_MEMBERS)
           && inUnitInterval(r.score) && inUnitInterval(r.confidence)) {
         return {
           question_id: packet.question_id,
@@ -518,6 +530,100 @@ export const CANDIDATES: Readonly<Record<string, ContractModel>> = {
         ok: true,
         packet: { ...r.packet, packet_version: 'jev-4' as typeof PACKET_VERSION },
       };
+    },
+  }),
+
+  // ── F1R3: closed records — each candidate DISCARDS the forbidden part and admits ──
+  'DC-PROVIDER-ABSTAIN-EXTRA-MEMBER': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const r = o.raw as { question_id?: unknown; reason?: unknown } | undefined;
+      // ⭐ the ONLY loosened decision: top-level ProviderAbstain membership.
+      // ⛔ the confidence prohibition is NOT loosened, so this stays distinct from
+      // DC-ABSTAIN-CONFIDENCE-ACCEPTED.
+      if (o.parsed && !o.timedOut && !o.empty && isAbstainShaped(o.raw) && r
+          && r.question_id === packet.question_id && isModelAbstainReason(r.reason)
+          && !exactMembers(o.raw, PROVIDER_ABSTAIN_MEMBERS)
+          && !('confidence' in (o.raw as object))) {
+        return { question_id: packet.question_id, reason: r.reason };
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+  'DC-SCORE-EXTRA-MEMBER': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const r = o.raw as { question_id?: unknown; score?: unknown; confidence?: unknown } | undefined;
+      const sc = (o.raw as { scale?: { min?: unknown; max?: unknown } } | undefined)?.scale;
+      // ⭐ the ONLY loosened decision: top-level Score membership.
+      if (o.parsed && isScoreShaped(o.raw) && r && r.question_id === packet.question_id
+          && DECLARED_SHAPE[packet.question_id] === 'Score'
+          && !exactMembers(o.raw, SCORE_MEMBERS)
+          && exactMembers(sc, SCALE_MEMBERS) && sc?.min === 0 && sc?.max === 1
+          && inUnitInterval(r.score) && inUnitInterval(r.confidence)) {
+        return {
+          question_id: packet.question_id,
+          scale: CONTRACT_SCALE,
+          score: r.score,
+          confidence: r.confidence,
+        };
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+  'DC-YESNO-EXTRA-MEMBER': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const r = o.raw as { question_id?: unknown; answer?: unknown; confidence?: unknown } | undefined;
+      // ⭐ the ONLY loosened decision: top-level YesNo membership.
+      if (o.parsed && isYesNoShaped(o.raw) && r && r.question_id === packet.question_id
+          && DECLARED_SHAPE[packet.question_id] === 'YesNo'
+          && !exactMembers(o.raw, YESNO_MEMBERS)
+          && typeof r.answer === 'boolean' && inUnitInterval(r.confidence)) {
+        return { question_id: packet.question_id, answer: r.answer, confidence: r.confidence };
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+  'DC-SCALE-EXTRA-MEMBER': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const r = o.raw as { question_id?: unknown; score?: unknown; confidence?: unknown } | undefined;
+      const sc = (o.raw as { scale?: { min?: unknown; max?: unknown } } | undefined)?.scale;
+      // ⭐ the ONLY loosened decision: membership of the NESTED Scale record.
+      // min/max are still judged, so this stays distinct from DC-SCORE-SCALE-ALTERED.
+      if (o.parsed && isScoreShaped(o.raw) && r && r.question_id === packet.question_id
+          && DECLARED_SHAPE[packet.question_id] === 'Score'
+          && exactMembers(o.raw, SCORE_MEMBERS)
+          && typeof sc === 'object' && sc !== null && !exactMembers(sc, SCALE_MEMBERS)
+          && sc.min === 0 && sc.max === 1
+          && inUnitInterval(r.score) && inUnitInterval(r.confidence)) {
+        return {
+          question_id: packet.question_id,
+          scale: CONTRACT_SCALE,
+          score: r.score,
+          confidence: r.confidence,
+        };
+      }
+      return referenceAdmit(packet, o);
+    },
+  }),
+  'DC-ADMITTED-EXTRA-MEMBER': derive({
+    admit: (packet, o): AdmittedJudgment => {
+      const a = referenceAdmit(packet, o);
+      // admits correctly, then ENRICHES the closed admitted record on the way out
+      if (isAbstainValue(a)) {
+        return { ...a, source: 'provider' } as unknown as AdmittedJudgment;
+      }
+      return a;
+    },
+  }),
+  'DC-CHANGE-SCOPE-EXTRA-MEMBER': derive({
+    constructPacket: (state, q): ConstructionResult => {
+      const r = referenceConstructPacket(state, q);
+      if (!r.ok) return r;
+      // a class-legal primitive, nested where the top-level member laws cannot see it
+      const packet = {
+        ...r.packet,
+        change_scope: { ...r.packet.change_scope, trace_index: 7 },
+      };
+      return { ok: true, packet: packet as unknown as JudgmentPacket };
     },
   }),
 

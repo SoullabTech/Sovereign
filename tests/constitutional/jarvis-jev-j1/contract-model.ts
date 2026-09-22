@@ -89,6 +89,13 @@ export interface ChangeScope {
   production: boolean;
 }
 
+/**
+ * §2 — `change_scope` is a NESTED closed record. F1R2's `DC-EXTRA-MEMBER` inspects only
+ * top-level packet keys, so an undeclared member nested here was invisible to the suite.
+ * ⛔ A class-legal primitive does not make an undeclared nested member packet-legal.
+ */
+export const CHANGE_SCOPE_MEMBERS = ['file_count', 'migration', 'auth', 'production'] as const;
+
 export interface JudgmentPacket {
   packet_version: typeof PACKET_VERSION;
   question_id: QuestionId;
@@ -164,6 +171,39 @@ export type AdmittedJudgment = ScoreJudgment | YesNoJudgment | AdmittedAbstain;
 
 const has = (v: unknown, k: string): boolean =>
   typeof v === 'object' && v !== null && k in v;
+
+/**
+ * ⭐⭐ F1R3 — CLOSED RECORDS. J1R2 ratified "judgment shapes — exactly three, closed", and
+ * J1R4 never reopened it. F1/F1R1/F1R2 recognized a shape by REQUIRED-MEMBER PRESENCE, so
+ * `{ question_id, reason: 'REFUSED', trace_index: 7 }` was admitted as a lawful REFUSED and
+ * the extra member was silently discarded.
+ *
+ * ⛔ A parser does not make an illegal response lawful by throwing away the part the
+ * contract forbade. That applies to `confidence`, and equally to EVERY undeclared member
+ * of a closed record.
+ *
+ * ⭐ Recognition (required members present) and lawful membership (exactly the declared
+ * members) are DIFFERENT questions: recognition orders §7.2 precedence; exact membership is
+ * an admissibility test applied only AFTER the question has matched.
+ */
+export const SCORE_MEMBERS = ['question_id', 'scale', 'score', 'confidence'] as const;
+export const SCALE_MEMBERS = ['min', 'max'] as const;
+export const YESNO_MEMBERS = ['question_id', 'answer', 'confidence'] as const;
+export const PROVIDER_ABSTAIN_MEMBERS = ['question_id', 'reason'] as const;
+export const ADMITTED_ABSTAIN_MEMBERS = ['question_id', 'reason'] as const;
+
+/** The members of `v` that the closed record does not declare. */
+export const undeclaredMembers = (v: unknown, declared: readonly string[]): readonly string[] =>
+  typeof v === 'object' && v !== null
+    ? Object.keys(v).filter((k) => !declared.includes(k))
+    : [];
+
+/** Exactly the declared members — no more, no fewer. */
+export const exactMembers = (v: unknown, declared: readonly string[]): boolean => {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;
+  const keys = Object.keys(v);
+  return keys.length === declared.length && keys.every((k) => declared.includes(k));
+};
 
 /** Structural discrimination over contract values — the harness tags nothing. */
 export const isScoreValue = (v: unknown): v is ScoreJudgment =>
@@ -345,7 +385,20 @@ export const referenceAdmit = (
   if (questionOf(raw) !== q) {
     return { question_id: q, reason: 'MISMATCHED_QUESTION' };
   }
-  // 6 — value validity, including a provider-originated HostFailureReason.
+  // 6 — value / admissibility, including a provider-originated HostFailureReason.
+  // ⭐⭐ 5b — CLOSED RECORD (§6.1 / J1R2). A recognized shape carrying an undeclared member
+  // is an ILLEGAL response, never a lawful one with the extra discarded. ⛔ This runs AFTER
+  // the question match, so §7.2 precedence is unchanged: an extra member never outranks
+  // MISMATCHED_QUESTION.
+  if (abstainShaped && !exactMembers(raw, PROVIDER_ABSTAIN_MEMBERS)) {
+    return { question_id: q, reason: 'OUT_OF_RANGE' };
+  }
+  if (scoreShaped && !exactMembers(raw, SCORE_MEMBERS)) {
+    return { question_id: q, reason: 'OUT_OF_RANGE' };
+  }
+  if (yesNoShaped && !exactMembers(raw, YESNO_MEMBERS)) {
+    return { question_id: q, reason: 'OUT_OF_RANGE' };
+  }
   // ⭐ 4b — DECLARED SHAPE for this question (§6 / §7.1). Abstain is lawful everywhere.
   if (!abstainShaped) {
     const declared = DECLARED_SHAPE[q];
@@ -365,7 +418,10 @@ export const referenceAdmit = (
     const r = raw as { scale: unknown; score: unknown; confidence: unknown };
     const sc = r.scale as { min?: unknown; max?: unknown } | null;
     // ⭐ scale is structurally PRESENT (else UNKNOWN_SHAPE above); here its VALUE is judged.
-    const scaleOk = typeof sc === 'object' && sc !== null && sc.min === 0 && sc.max === 1;
+    // ⭐ F1R3 — `Scale` is itself a closed record: `{ min, max }` and nothing else.
+    const scaleOk =
+      typeof sc === 'object' && sc !== null &&
+      exactMembers(sc, SCALE_MEMBERS) && sc.min === 0 && sc.max === 1;
     const sv = r.score;
     const cv = r.confidence;
     if (!scaleOk) return { question_id: q, reason: 'OUT_OF_RANGE' };
@@ -504,6 +560,13 @@ export const providerYesNo = (q: QuestionId, over: Record<string, unknown> = {})
   question_id: q,
   answer: true,
   confidence: 0.9,
+  ...over,
+});
+
+/** A well-formed provider abstention, §6.1-exact. */
+export const providerAbstain = (q: QuestionId, over: Record<string, unknown> = {}): unknown => ({
+  question_id: q,
+  reason: 'REFUSED',
   ...over,
 });
 

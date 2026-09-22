@@ -74,10 +74,14 @@ const DECLARED_COLLATERAL: Readonly<Record<string, Readonly<Record<string, strin
       'Rejecting a LAWFUL ProviderAbstain means a well-formed REFUSED is never admitted as itself, which is exactly what MODEL-REASON-WINS checks in its non-malformed leg.',
     'DC-UNION-COLLAPSE':
       'UNION-COLLAPSE requires lawful model reasons to be admitted unchanged; refusing all abstentions necessarily breaks that. Irreducible — the error IS refusing lawful abstentions.',
+    'DC-PROVIDER-ABSTAIN-EXTRA-MEMBER':
+      'The candidate classifies EVERY model-reason abstention UNKNOWN_SHAPE, so an abstention carrying an undeclared member is refused for the wrong reason (UNKNOWN_SHAPE where the closed-record law requires OUT_OF_RANGE). Narrowing would mean admitting lawful abstentions, i.e. ceasing to embody the error. IRREDUCIBLE.',
   },
   'DC-MODEL-REASON-WINS': {
     'DC-ABSTAIN-CONFIDENCE-ACCEPTED':
       'Consulting the model self-report BEFORE the host structural checks is precisely what lets an abstention carrying confidence be accepted as REFUSED. The two laws police the same ordering decision from opposite sides. IRREDUCIBLE.',
+    'DC-PROVIDER-ABSTAIN-EXTRA-MEMBER':
+      'Same single decision: consulting the model self-report BEFORE the host\'s own structural and membership checks is exactly what lets an abstention carrying an undeclared member be accepted as a lawful REFUSED. The closed-record law and the confidence law both police that one ordering. IRREDUCIBLE.',
   },
   'DC-ADDS-AUTHORIZED-ACT': {
     'DC-LLM-TRUE-GRANTS':
