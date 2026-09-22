@@ -385,3 +385,106 @@ test('O4I1-19 — symbol-key request widening is refused', () => {
   assert.equal(result.capability_plan, null);
   assert.deepEqual(result.blockers, ['O4_REQUEST_ENVELOPE_INVALID']);
 });
+
+test('O4I1R1-20 — aggregate operator gate inconsistency is directly observed', () => {
+  const entry = o3Entry('INSPECT', ['repo.read']);
+  entry.operator_required = true;
+
+  const result = planCapability(request(entry));
+  assert.equal(result.ok, true);
+  assert.equal(result.capability_plan.outcome, OUTCOMES.HOLD);
+  assert.deepEqual(result.capability_plan.blockers, [
+    'O3_AGGREGATE_OPERATOR_GATE_INCOHERENT',
+  ]);
+  assert.deepEqual(result.blockers, [
+    'O3_AGGREGATE_OPERATOR_GATE_INCOHERENT',
+  ]);
+});
+
+test('O4I1R1-21 — aggregate decision inconsistency is directly observed', () => {
+  const entry = o3Entry('INSPECT', ['repo.read']);
+  entry.decision = O0.DECISION.NEEDS_OPERATOR_AUTHORITY;
+
+  const result = planCapability(request(entry));
+  assert.equal(result.ok, true);
+  assert.equal(result.capability_plan.outcome, OUTCOMES.HOLD);
+  assert.deepEqual(result.capability_plan.blockers, [
+    'O3_AGGREGATE_DECISION_INCOHERENT',
+  ]);
+  assert.deepEqual(result.blockers, [
+    'O3_AGGREGATE_DECISION_INCOHERENT',
+  ]);
+});
+
+test('O4I1R1-22 — requirement decision identity mismatch is directly observed', () => {
+  const entry = o3Entry('INSPECT', ['repo.read']);
+  entry.requirement_decisions[0].action = 'repo.write:worktree';
+
+  const result = planCapability(request(entry));
+  assert.equal(result.ok, true);
+  assert.equal(result.capability_plan.outcome, OUTCOMES.HOLD);
+  assert.deepEqual(result.capability_plan.blockers, [
+    'O3_REQUIREMENT_DECISION_IDENTITY_MISMATCH',
+  ]);
+  assert.deepEqual(result.blockers, [
+    'O3_REQUIREMENT_DECISION_IDENTITY_MISMATCH',
+  ]);
+});
+
+test('O4I1R1-23 — nested-decision-only aggregate signal reaches HELD_FOR_AUTHORITY', () => {
+  const entry = o3Entry('INSPECT', ['repo.read']);
+  entry.requirement_decisions[0].decision = O0.DECISION.NEEDS_OPERATOR_AUTHORITY;
+  entry.requirement_decisions[0].operatorRequired = true;
+  entry.operator_required = true;
+  entry.decision = O0.DECISION.NEEDS_OPERATOR_AUTHORITY;
+
+  assert.deepEqual(entry.missing_authorities, []);
+
+  const result = planCapability(request(entry));
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.blockers, []);
+  assert.deepEqual(result.capability_plan.blockers, []);
+  assert.equal(result.capability_plan.outcome, OUTCOMES.HELD_FOR_AUTHORITY);
+});
+
+test('O4I1R1-24 — missing-authority-only aggregate signal reaches HELD_FOR_AUTHORITY', () => {
+  const entry = o3Entry('MODIFY', ['repo.read']);
+  entry.requirement_decisions[1].decision = O0.DECISION.CONTINUE;
+  entry.requirement_decisions[1].operatorRequired = false;
+
+  assert.deepEqual(entry.missing_authorities, ['repo.write:worktree']);
+  assert.equal(
+    entry.requirement_decisions.some((decision) => decision.operatorRequired),
+    false,
+  );
+
+  const result = planCapability(request(entry));
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.blockers, []);
+  assert.deepEqual(result.capability_plan.blockers, []);
+  assert.equal(result.capability_plan.outcome, OUTCOMES.HELD_FOR_AUTHORITY);
+});
+
+test('O4I1R1-25 — missing-authorities real-gate term is redundant after validation', () => {
+  const entry = o3Entry('MODIFY', ['repo.read']);
+  entry.requirement_decisions[1].decision = O0.DECISION.CONTINUE;
+  entry.requirement_decisions[1].operatorRequired = false;
+  entry.operator_required = false;
+  entry.decision = O0.DECISION.NEEDS_OPERATOR_AUTHORITY;
+
+  assert.deepEqual(entry.missing_authorities, ['repo.write:worktree']);
+  assert.equal(
+    entry.requirement_decisions.some((decision) => decision.operatorRequired),
+    false,
+  );
+
+  const result = planCapability(request(entry));
+  assert.equal(result.ok, true);
+  assert.equal(result.capability_plan.outcome, OUTCOMES.HOLD);
+  assert.deepEqual(result.capability_plan.blockers, [
+    'O3_AGGREGATE_OPERATOR_GATE_INCOHERENT',
+  ]);
+  assert.deepEqual(result.blockers, [
+    'O3_AGGREGATE_OPERATOR_GATE_INCOHERENT',
+  ]);
+});
