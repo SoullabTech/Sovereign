@@ -714,3 +714,68 @@ would read identically under any manuscript — which is the test for an importe
 
 Plus: *“see how **key** elements shift”* (barred word) · *“Your voice here feels **especially
 present**”* (property; ⭐ *“I find your voice especially present here”* is the lawful stance).
+
+---
+
+## §12 · THEMES, REVISED — most of §10 is discharged
+
+### 12.1 · ⭐ What landed
+
+| §10 finding | Status |
+|---|---|
+| ⛔ Cards carry no address | ✅ **FIXED** — every theme row carries its chapter range (`Ch 1–8`, `Ch 2–7`) and a presence bar |
+| ⛔ *“What's Emerging”* is a verdict generator | ✅ **REMOVED ENTIRELY** |
+| ⛔ *“Key Patterns”* | ✅ → *“Emerging Themes · These themes appear across your manuscript”* — attribution improved |
+| ⚠️ Generated images dominate | ✅ **REDUCED** to small circular thumbnails; ⛔ they no longer compete with the Work |
+
+⭐⭐ **And one addition that is better than anything I asked for: `Key Moments`.**
+
+```text
+Ch 2   Clara notices the river differently.
+Ch 4   A conversation challenges her assumptions.
+Ch 6   The in-between becomes a place to stay.
+Ch 8   A new perspective begins to take shape.
+```
+
+⭐ Each is **a described moment in the member's own book, at an address.** That is the *where?* test
+passing, and it is the single strongest element in any Develop reference.
+
+⭐ MAIA's panel improved in the same direction — *“Clara's observations of the river mirror her
+inner shift — the same place, but not the same”* is **close reading of the actual text**, ⛔ not
+*“connects beautifully.”*
+
+⭐ *“A theme isn't a message you deliver, but a meaning your story discovers.”* — attributed to
+**Soullab** (house voice), ⛔ not to MAIA claiming something about this Work. Correct attribution.
+
+### 12.2 · ⭐ THE REMAINING GAP IS SMALL AND PRECISE — can the member say *no*?
+
+⭐ *“Themes are not labels”* is now nearly true: each theme carries chapters, a presence curve and
+described moments the member can open and check.
+
+⛔ **What is still missing is refusal.** MAIA names the four themes; the member cannot **rename** or
+**reject** one. ⭐ A name the member cannot change **is** a label, however well evidenced.
+
+⭐ One control closes it, on each row:
+
+```text
+Change and Transition                    Ch 1–8   ›
+   Not quite? · Rename · Not a theme in my book
+```
+
+⭐ That single addition converts the whole panel from *MAIA's categorisation of your book* into
+*MAIA's reading, which you govern* — and it is the disagreement law applied where it actually bites.
+
+### 12.3 · ⚠️ Three carried
+
+1. ⛔ **`Themes` still has no lens.** ⭐ **RECOMMENDATION, given how good this frame now is: add it**
+   by a governed act, with its own `LENS_MEANING` entry — *“What recurs, where it recurs, and how
+   its presence changes across the Work”* — rather than mapping it onto `development`, whose
+   ratified question is about ideas being underdeveloped or abandoned and is a different thing.
+   ⛔ Drawing the tab is still not the act.
+2. ⛔ **No coverage on this frame.** Every claim here is bounded by what MAIA read, and the screen
+   does not say what that was.
+3. ⛔ **No facet control.**
+
+Smaller: *“**Key** Moments”* — the barred word, in a place where the meaning is actually factual
+(where the theme is densest). ⭐ *“Where this theme appears most”* says the true thing without the
+importance claim.
