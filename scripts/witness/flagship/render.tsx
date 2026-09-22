@@ -51,6 +51,8 @@ const STATES = [
     node: <DevelopRoom view={DEVELOP} /> },
   { id: '7-review', title: 'REVIEW — everything', mode: 'review' as const,
     node: <ReviewRoom view={REVIEW} /> },
+  { id: '7b-review-acknowledged', title: 'REVIEW — staleness acknowledged', mode: 'review' as const,
+    node: <ReviewRoom view={{ ...REVIEW, changed: REVIEW.changed ? { ...REVIEW.changed, acknowledged: true } : undefined }} /> },
   { id: '8-review-not-read', title: 'REVIEW — a lens never read', mode: 'review' as const,
     node: <ReviewRoom view={REVIEW} lens="arc" /> },
   { id: '9-review-nothing-noticed', title: 'REVIEW — read, nothing noticed', mode: 'review' as const,
@@ -93,13 +95,38 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
     var stageBox = stage ? stage.getBoundingClientRect() : {width:1,height:1};
     return {
       cols: root ? getComputedStyle(root).gridTemplateColumns.split(' ').length : 0,
-      /* ⭐ Scan what the member reads AS CLAIMS ABOUT THEIR WORK. Direction
-         labels on revision alternatives are excluded: "More lyrical" proposes
-         where a change could go and asserts nothing about the current text. */
+      /* ⭐ F1 AMENDED (founder ruling, D2). WRITE keeps exactly one permanent
+         content region. REVIEW may hold two — the intelligence and the Work —
+         because both are views of the SAME Work. ⛔ MAIA never becomes a third
+         permanent pane, which is the line that keeps the legacy three-column
+         workbench from returning through the amendment. */
+      stageKind: document.querySelector('[data-stage]')
+        ? document.querySelector('[data-stage]').getAttribute('data-stage') : 'none',
+      contentRegions: q('[data-manuscript], [data-manuscript-context], [data-stage="develop"] .fs-pgrid').length,
+      maiaIsPermanent: (function(){
+        var m = document.querySelector('[data-maia-anchored]');
+        if (!m) return false;
+        return getComputedStyle(m).position === 'static';
+      })(),
+      /* ⭐⭐ THE GUARD GOVERNS WHAT MAIA SAYS ABOUT THE WORK — ⛔ NEVER WHAT THE
+         WORK SAYS.
+         
+         Once the manuscript appeared beside Review, the scan began reading the
+         member's own fiction and refusing it: "She took a deeper breath and
+         kept walking" tripped the deeper stem. That is the guard grading the
+         novel, which is the precise thing it exists to prevent MAIA doing.
+         
+         A writer may put a strong wind, a beautiful morning or she felt weak on
+         the page; none of it is a claim by the product. Excluded:
+         every rendering of the Work's own text, and direction labels on
+         alternatives, which propose where a change could go and assert nothing
+         about the current text. */
       text: (function(){
         var clone = document.body.cloneNode(true);
-        Array.prototype.forEach.call(clone.querySelectorAll('.fs-altname, .fs-alttx'),
-          function(e){ e.remove(); });
+        var theWork = '[data-manuscript], [data-manuscript-context], .fs-p, .fs-contextp,'
+          + ' .fs-openq, .fs-movedq, .fs-carriedtext, .fs-heldquote, .fs-epi, .fs-epiwho,'
+          + ' .fs-owntext, .fs-altname, .fs-alttx';
+        Array.prototype.forEach.call(clone.querySelectorAll(theWork), function(e){ e.remove(); });
         return clone.innerText || clone.textContent || '';
       })(),
       maiaInFlow: maia ? getComputedStyle(maia).position === 'static' : false,
@@ -301,6 +328,15 @@ async function visualLaws(p: import('playwright').Page, stateId: string): Promis
 
   out.push({ id: 'V9-no-permanent-three-column', ok: m.cols <= 2,
     detail: `root has ${m.cols} permanent column(s) — rail + content` });
+  {
+    const stage = m.stageKind as string;
+    const regions = m.contentRegions as number;
+    const limit = stage === 'review' ? 2 : 1;
+    const ok = regions <= limit && !(m.maiaIsPermanent as boolean);
+    out.push({ id: 'F1-content-regions-by-room', ok,
+      detail: (m.maiaIsPermanent as boolean) ? 'MAIA is a permanent pane — the legacy workbench'
+        : `${stage}: ${regions} content region(s), limit ${limit}` });
+  }
   out.push({ id: 'V9-no-legacy-signatures',
     ok: !m.rebuildPreview && m.studioModeBar === 0 && m.permanentPanels === 0,
     detail: `rebuild-preview=${m.rebuildPreview} modeBar=${m.studioModeBar} permanentPanels=${m.permanentPanels}` });

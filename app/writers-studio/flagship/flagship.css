@@ -14,6 +14,15 @@
   --ink:#26231E; --secondary:#4C473E; --muted:#766E61; --quiet:#9A9185;
   --rule:#CFC7B8; --soft:#DDD6CA;
   --gold:#8A6727; --goldfill:#CDBD91; --goldon:#FBF8F1;
+  /* ⭐⭐ D1 — TWO REGISTERS, RULED.
+     *Warm-literary in ground and typography; cool, lucid product interaction.*
+     ⛔ Neither brown/gold institutionalism nor white/blue SaaS.
+       GOLD  — warmth, threshold, what the member declared, the Work's own marks
+       BLUE  — action, state, selection, navigation: the product speaking
+     An earlier build made everything interactive gold, which is what read as
+     institutional restraint rather than invitation. */
+  --action:#2F5D86; --action-soft:#E8F0F7; --action-line:#B9D0E3; --action-on:#FBFCFE;
+  --focus:#3D7BB0;
   --maia:#6E6596; --maia-tint:#EEECF4; --maia-rule:#CFC9E0;
   --rail:#241F1A; --rail-ink:#B9AF9E; --rail-active:#3B322A; --rail-on:#F2EDE3;
   --held:#F3E7CE; --held-edge:#C9A961;
@@ -30,6 +39,9 @@
   -webkit-font-smoothing:antialiased;
 }
 .fs-root *{box-sizing:border-box}
+/* ⭐ A visible focus ring everywhere. §16 asks whether the focus indicator is
+   visible; the answer must not depend on the browser default. */
+.fs-root :focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:3px}
 .fs-root[data-focus="true"]{--band:0px}
 
 /* ── RAIL · navigation chrome. ⛔ never a content region ─────────────────── */
@@ -144,7 +156,7 @@
   background:var(--maia-tint);overflow-x:auto;min-width:0}
 .fs-tab{font-size:0.75rem;padding:7px 9px 8px;min-height:30px;color:var(--muted);border:0;border-bottom:2px solid transparent;
   background:none;font-family:inherit;cursor:pointer;white-space:nowrap}
-.fs-tab[aria-selected="true"]{color:var(--maia);border-bottom-color:var(--maia);font-weight:600}
+.fs-tab[aria-selected="true"]{color:var(--action);border-bottom-color:var(--action);font-weight:600}
 .fs-mbody{padding:12px;display:flex;flex-direction:column;gap:10px;font-size:0.8125rem;
   max-height:min(52vh,420px);overflow-y:auto}
 .fs-heldquote{display:none;margin:0;padding:7px 10px;border-left:3px solid var(--held-edge);
@@ -167,7 +179,7 @@
 .fs-altname{font-size:0.78125rem;font-weight:600;color:var(--ink)}
 .fs-alttx{font-family:var(--serif);font-size:0.8125rem;line-height:1.55;color:var(--secondary);margin:0}
 .fs-altwhy{font-size:0.71875rem;color:var(--muted);line-height:1.5;margin:0}
-.fs-readctx{align-self:flex-start;border:1px solid var(--gold);color:var(--gold);background:transparent;
+.fs-readctx{align-self:flex-start;border:1px solid var(--action-line);color:var(--action);background:var(--action-soft);
   border-radius:5px;padding:7px 12px;min-height:30px;font-size:0.71875rem;font-weight:600;cursor:pointer;font-family:inherit}
 .fs-minput{display:flex;gap:7px;align-items:center;padding:9px 10px;
   border-top:1px solid var(--maia-rule);background:var(--maia-tint)}
@@ -184,7 +196,7 @@
 .fs-float--receipt{border:1px solid var(--rule);border-radius:10px;padding:10px 12px 10px 14px}
 .fs-btn{border-radius:999px;padding:7px 14px;min-height:30px;font-size:0.75rem;font-weight:600;cursor:pointer;
   font-family:inherit;border:1px solid var(--rule);background:var(--shell);color:var(--secondary)}
-.fs-btn--key{background:var(--gold);border-color:var(--gold);color:var(--goldon)}
+.fs-btn--key{background:var(--action);border-color:var(--action);color:var(--action-on)}
 .fs-ok{width:17px;height:17px;border-radius:50%;background:var(--ins);color:#F4F7F4;
   display:grid;place-items:center;font-size:0.625rem;flex:none}
 .fs-rtitle{font-weight:600;color:var(--ink)}
@@ -214,7 +226,7 @@
   background:var(--shell);overflow-x:auto;min-width:0}
 .fs-modetab{font-size:0.8125rem;padding:11px 12px;min-height:38px;color:var(--muted);border:0;background:none;
   border-bottom:2px solid transparent;font-family:inherit;cursor:pointer;white-space:nowrap}
-.fs-modetab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold);font-weight:600}
+.fs-modetab[aria-selected="true"]{color:var(--action);border-bottom-color:var(--action);font-weight:600}
 .fs-pane{flex:1;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:22px 24px 26px}
 .fs-pgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;
   align-items:start;max-width:1120px;margin:0 auto;min-width:0}
@@ -236,8 +248,9 @@
 .fs-obsh{font-size:0.8125rem;font-weight:600;color:var(--ink)}
 .fs-obsb{font-family:var(--serif);font-size:0.84375rem;line-height:1.6;color:var(--secondary);margin:0}
 .fs-ev{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.fs-chip{font-size:0.65625rem;color:var(--gold);border:1px solid var(--goldfill);border-radius:4px;padding:1px 6px}
-.fs-goto{font-size:0.75rem;color:var(--gold);font-weight:600;background:none;border:0;
+.fs-chip{font-size:0.65625rem;color:var(--action);border:1px solid var(--action-line);
+  background:var(--action-soft);border-radius:4px;padding:2px 7px}
+.fs-goto{font-size:0.75rem;color:var(--action);font-weight:600;background:none;border:0;
   font-family:inherit;cursor:pointer;padding:5px 2px;min-height:26px;
   display:inline-flex;align-items:center}
 .fs-viewas{margin-left:auto;display:flex;gap:4px}
@@ -383,7 +396,7 @@
 /* ── THE TRAIL ──────────────────────────────────────────────────────────── */
 .fs-trail{display:flex;align-items:center;gap:11px;flex:none;flex-wrap:wrap;padding:8px 18px;min-width:0;
   background:var(--panel);border-bottom:1px solid var(--rule);font-size:0.75rem}
-.fs-trailback{border:1px solid var(--gold);background:transparent;color:var(--gold);
+.fs-trailback{border:1px solid var(--action-line);background:var(--action-soft);color:var(--action);
   border-radius:999px;padding:6px 13px;min-height:30px;font-size:0.71875rem;font-weight:600;
   font-family:inherit;cursor:pointer;white-space:nowrap}
 .fs-trailfrom{color:var(--muted)}
@@ -427,8 +440,8 @@
 .fs-ownkind{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--rule);
   background:var(--shell);color:var(--secondary);border-radius:7px;padding:8px 12px;
   font-size:0.78125rem;font-family:inherit;cursor:pointer;min-height:34px}
-.fs-ownkind[aria-checked="true"]{border-color:var(--gold);color:var(--gold);
-  background:var(--card);font-weight:600;box-shadow:inset 0 0 0 1px var(--gold)}
+.fs-ownkind[aria-checked="true"]{border-color:var(--action);color:var(--action);
+  background:var(--action-soft);font-weight:600;box-shadow:inset 0 0 0 1px var(--action)}
 .fs-owntext{border:1px solid var(--rule);border-radius:7px;padding:11px 12px;min-height:76px;
   font-family:var(--serif);font-size:0.875rem;line-height:1.6;color:var(--ink);background:var(--field)}
 .fs-owntext[data-draft="true"]:empty{color:var(--quiet)}
@@ -451,8 +464,48 @@
 /* ── TRAIL POSITION ─────────────────────────────────────────────────────── */
 .fs-trailpos{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--rule);
   border-radius:999px;background:var(--card);padding:1px}
-.fs-trailstep{border:0;background:none;color:var(--secondary);font-family:inherit;
+.fs-trailstep{border:0;background:none;color:var(--action);font-family:inherit;
   cursor:pointer;min-width:28px;min-height:28px;border-radius:999px;font-size:0.875rem}
 .fs-trailstep:disabled{color:var(--quiet);cursor:default;opacity:.55}
 .fs-trailcount{font-size:0.71875rem;color:var(--secondary);padding:0 6px;
   font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ── REVIEW · THE WORK BESIDE THE INTELLIGENCE ──────────────────────────── */
+/* ⭐ Two views of one Work. ⛔ Not two competing utility regions. */
+.fs-reviewgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,0.95fr);
+  gap:22px;align-items:start;max-width:1460px;margin:0 auto;min-width:0}
+.fs-context{position:sticky;top:0;background:var(--card);border:1px solid var(--rule);
+  border-radius:9px;padding:0;overflow:hidden;min-width:0;display:flex;flex-direction:column;
+  max-height:calc(100vh - 190px)}
+.fs-contexthead{display:flex;align-items:flex-start;gap:12px;padding:15px 18px 11px;
+  border-bottom:1px solid var(--rule);background:var(--shell)}
+.fs-contextch{font-size:0.65625rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);font-weight:600}
+.fs-contexttitle{font-family:var(--serif);font-size:1.25rem;color:var(--ink);margin-top:3px;line-height:1.25}
+.fs-contextpage{margin-left:auto;font-size:0.71875rem;color:var(--quiet);white-space:nowrap;padding-top:3px}
+.fs-contextwhy{font-size:0.75rem;color:var(--action);background:var(--action-soft);
+  padding:8px 18px;border-bottom:1px solid var(--action-line)}
+.fs-contextbody{padding:16px 18px 6px;overflow-y:auto;min-height:0}
+.fs-contextp{font-family:var(--serif);font-size:1rem;line-height:1.75;color:var(--ink);
+  margin:0 0 14px}
+/* ⭐ The Work's own marks stay GOLD — the held passage is the member's, not a
+   product state. Cool blue is for what the product is doing. */
+.fs-contextp[data-highlighted="true"]{background:var(--held);border-radius:2px;
+  box-shadow:-9px 0 0 var(--held),9px 0 0 var(--held),inset 3px 0 0 var(--held-edge);
+  padding-left:9px;margin-left:-9px;padding-right:9px;margin-right:-9px}
+.fs-contextfoot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px 14px;
+  border-top:1px solid var(--rule);background:var(--shell);flex:none}
+
+/* Acknowledged staleness — a strip, not a wall. */
+.fs-stalestrip{display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+  background:var(--held);border-left:3px solid var(--held-edge);border-radius:5px;
+  padding:8px 13px;font-size:0.78125rem;color:var(--secondary);min-width:0}
+
+@media (max-width:1180px){
+  .fs-reviewgrid{grid-template-columns:minmax(0,1fr)}
+  .fs-context{position:static;max-height:none}
+}
+/* ⭐ The finding driving the manuscript pane says so — cool register, because
+   this is the product's selection state, not one of the Work's own marks. */
+.fs-find[data-selected="true"]{background:var(--action-soft);border-radius:6px;
+  box-shadow:inset 3px 0 0 var(--action);padding-left:11px;margin-left:-11px}

@@ -9,6 +9,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -148,6 +153,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -306,6 +316,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -460,6 +475,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -618,6 +638,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -772,6 +797,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -935,6 +965,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "develop: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -1074,6 +1109,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -1223,6 +1263,167 @@
     ]
   },
   {
+    "state": "7b-review-acknowledged",
+    "viewport": "desktop-1920",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 8 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "CITATION-moved-is-disclosed-with-frozen-text",
+        "ok": true,
+        "detail": "1 moved citation(s), each showing what MAIA read"
+      },
+      {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "14 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": false,
+        "detail": "before findings true · trust line false · commission controls 1 · previous kept true"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      }
+    ]
+  },
+  {
     "state": "8-review-not-read",
     "viewport": "desktop-1920",
     "checks": [
@@ -1230,6 +1431,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -1381,6 +1587,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -1534,6 +1745,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -1673,6 +1889,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -1831,6 +2052,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -1985,6 +2211,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -2143,6 +2374,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -2297,6 +2533,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -2460,6 +2701,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "develop: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -2599,6 +2845,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -2748,6 +2999,167 @@
     ]
   },
   {
+    "state": "7b-review-acknowledged",
+    "viewport": "desktop-1440",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 8 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "CITATION-moved-is-disclosed-with-frozen-text",
+        "ok": true,
+        "detail": "1 moved citation(s), each showing what MAIA read"
+      },
+      {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "14 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": false,
+        "detail": "before findings true · trust line false · commission controls 1 · previous kept true"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      }
+    ]
+  },
+  {
     "state": "8-review-not-read",
     "viewport": "desktop-1440",
     "checks": [
@@ -2755,6 +3167,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -2906,6 +3323,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -3059,6 +3481,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -3198,6 +3625,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -3356,6 +3788,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -3510,6 +3947,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -3668,6 +4110,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -3822,6 +4269,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -3985,6 +4437,11 @@
         "detail": "root has 2 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "develop: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -4124,6 +4581,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -4273,6 +4735,167 @@
     ]
   },
   {
+    "state": "7b-review-acknowledged",
+    "viewport": "laptop-1180",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 44px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 8 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "CITATION-moved-is-disclosed-with-frozen-text",
+        "ok": true,
+        "detail": "1 moved citation(s), each showing what MAIA read"
+      },
+      {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "14 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": false,
+        "detail": "before findings true · trust line false · commission controls 1 · previous kept true"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      }
+    ]
+  },
+  {
     "state": "8-review-not-read",
     "viewport": "laptop-1180",
     "checks": [
@@ -4280,6 +4903,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -4431,6 +5059,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 2 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -4584,6 +5217,11 @@
         "detail": "root has 1 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -4723,6 +5361,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -4876,6 +5519,11 @@
         "detail": "root has 1 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -5025,6 +5673,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -5178,6 +5831,11 @@
         "detail": "root has 1 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -5327,6 +5985,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "write: 1 content region(s), limit 1"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -5485,6 +6148,11 @@
         "detail": "root has 1 permanent column(s) — rail + content"
       },
       {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "develop: 1 content region(s), limit 1"
+      },
+      {
         "id": "V9-no-legacy-signatures",
         "ok": true,
         "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
@@ -5624,6 +6292,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -5773,6 +6446,167 @@
     ]
   },
   {
+    "state": "7b-review-acknowledged",
+    "viewport": "mobile-390",
+    "checks": [
+      {
+        "id": "V9-no-permanent-three-column",
+        "ok": true,
+        "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
+      },
+      {
+        "id": "V9-no-legacy-signatures",
+        "ok": true,
+        "detail": "rebuild-preview=false modeBar=0 permanentPanels=0"
+      },
+      {
+        "id": "F3-maia-not-in-manuscript-flow",
+        "ok": true,
+        "detail": "MAIA is an overlay layer"
+      },
+      {
+        "id": "RAIL-carries-no-content",
+        "ok": true,
+        "detail": "0 content node(s) in the rail"
+      },
+      {
+        "id": "ATMOSPHERE-zero-information",
+        "ok": true,
+        "detail": "0 text node(s), 36px deep"
+      },
+      {
+        "id": "F5-no-apply-in-alternatives",
+        "ok": true,
+        "detail": "0 Apply control(s) among the alternatives"
+      },
+      {
+        "id": "ALTS-no-ordinals",
+        "ok": true,
+        "detail": "0 ordinal-numbered alternative name(s)"
+      },
+      {
+        "id": "V7-findings-return-to-manuscript",
+        "ok": true,
+        "detail": "all 8 findings return to the manuscript"
+      },
+      {
+        "id": "OBS-carry-evidence",
+        "ok": true,
+        "detail": "every observation cites evidence"
+      },
+      {
+        "id": "RAIL-no-invented-destinations",
+        "ok": true,
+        "detail": "the Work area is identity only"
+      },
+      {
+        "id": "NAV-capability-honest",
+        "ok": true,
+        "detail": "Home · Write · Develop · Review — no invented destinations"
+      },
+      {
+        "id": "FACET-control-present-and-not-a-grade",
+        "ok": true,
+        "detail": "quiet control beside the Work; names the relationship, not the member"
+      },
+      {
+        "id": "WHERE-every-claim-has-an-address",
+        "ok": true,
+        "detail": "every observation and finding returns to the manuscript"
+      },
+      {
+        "id": "LENS-read-nothing-is-not-not-read",
+        "ok": true,
+        "detail": "both states not present on this surface"
+      },
+      {
+        "id": "CITATION-moved-is-disclosed-with-frozen-text",
+        "ok": true,
+        "detail": "1 moved citation(s), each showing what MAIA read"
+      },
+      {
+        "id": "NEXT-MOVE-every-object-leads-into-the-work",
+        "ok": true,
+        "detail": "14 analytical object(s), each leading somewhere in the Work"
+      },
+      {
+        "id": "NO-GAMIFICATION",
+        "ok": true,
+        "detail": "no points, streaks, scores, badges or achievements"
+      },
+      {
+        "id": "TARGETS-are-generous",
+        "ok": true,
+        "detail": "every control clears the 24px floor on its smaller axis"
+      },
+      {
+        "id": "NOTHING-BEHIND-HOVER",
+        "ok": true,
+        "detail": "every action is visible at rest"
+      },
+      {
+        "id": "EVERY-CONTROL-IS-NAMED",
+        "ok": true,
+        "detail": "every control has a name a screen reader can read"
+      },
+      {
+        "id": "PROVENANCE-four-kinds-never-collapse",
+        "ok": true,
+        "detail": "4 kind(s) present, each with its own label"
+      },
+      {
+        "id": "V13-visualization-truth",
+        "ok": true,
+        "detail": "6 grid row(s), each declaring whether it is countable or MAIA's reading"
+      },
+      {
+        "id": "V14-member-contribution",
+        "ok": true,
+        "detail": "the member may record what they noticed, a question, or a possibility"
+      },
+      {
+        "id": "V15-reading-freshness",
+        "ok": false,
+        "detail": "before findings true · trust line false · commission controls 1 · previous kept true"
+      },
+      {
+        "id": "TAB-never-commissions",
+        "ok": true,
+        "detail": "7 tabs, none of which reads on click"
+      },
+      {
+        "id": "MAP-no-clipped-labels",
+        "ok": true,
+        "detail": "every label lies inside its viewBox"
+      },
+      {
+        "id": "LANG-no-verdict-as-fact",
+        "ok": true,
+        "detail": "no grading language, reader effects hypothesis-shaped"
+      },
+      {
+        "id": "F13-no-technical-vocabulary",
+        "ok": true,
+        "detail": "no implementation machinery in member copy"
+      },
+      {
+        "id": "F13-permanent-utility-controls",
+        "ok": true,
+        "detail": "2: Guided⌄ | Ask MAIA"
+      },
+      {
+        "id": "TEXT-SIZE-responds-and-does-not-break",
+        "ok": true,
+        "detail": "prose scales 16→28px through 175%, no horizontal overflow"
+      }
+    ]
+  },
+  {
     "state": "8-review-not-read",
     "viewport": "mobile-390",
     "checks": [
@@ -5780,6 +6614,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",
@@ -5931,6 +6770,11 @@
         "id": "V9-no-permanent-three-column",
         "ok": true,
         "detail": "root has 1 permanent column(s) — rail + content"
+      },
+      {
+        "id": "F1-content-regions-by-room",
+        "ok": true,
+        "detail": "review: 1 content region(s), limit 2"
       },
       {
         "id": "V9-no-legacy-signatures",

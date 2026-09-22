@@ -176,6 +176,16 @@ export const REVIEW: ReviewView = {
     previousLabel: 'Chapter 5 · What Shifts',
     change: { added: 3, revised: 1, moved: 2, revisedIncludes: ['p. 112'] },
   },
+  selectedFindingId: 'o-current',
+  /* ⭐ The Work, beside the intelligence about it. */
+  context: {
+    chapterLabel: 'Chapter 6', chapterTitle: 'The Current Changes', page: 'p. 112',
+    paragraphs: [
+      { id: 'ch-6-p1', text: 'The river had always moved, but that morning it seemed to move differently, as if it, too, had been listening. Clara stood on the bank and watched the water fold over itself, carrying leaves, reflections, and something else she could not name.' },
+      { id: 'ch-6', text: 'She had stopped fighting the current somewhere in the last year, and could not say when. The same water, the same bank, and yet not the same standing there.' },
+      { id: 'ch-6-p3', text: 'A kingfisher flashed blue across the water, and for a moment everything stilled. She took a deeper breath and kept walking.' },
+    ],
+  },
   coverage: COVERAGE,
   findings: OBSERVATIONS,
   citations: {

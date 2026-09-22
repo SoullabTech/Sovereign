@@ -22,7 +22,7 @@ import {
   availabilityLine, citationLine, commissionOffer, freshnessLine, scopeLine,
   type CitationState, type Freshness, type LensAvailability, type ReviewScope, type WorkChange,
 } from '../../../lib/writersStudio/studio/reading';
-import { OwnObservation, StaleReading } from './ReviewPanels';
+import { ManuscriptContext, OwnObservation, StaleReading, type ContextParagraph } from './ReviewPanels';
 
 /* ══════════════════════════════════════════════════════════════════════════
    OBSERVATIONS — describe, ⛔ never grade
@@ -409,14 +409,26 @@ export interface ReviewView {
   readonly changed?: {
     readonly readAt: string; readonly updatedAt: string;
     readonly change: WorkChange; readonly previousLabel: string;
+    /** ⭐ After "Not now" — a strip, ⛔ never hidden. */
+    readonly acknowledged?: boolean;
   };
+  /** ⭐ D2 — the Work itself, beside the intelligence about it. */
+  readonly context: {
+    readonly chapterLabel: string; readonly chapterTitle: string; readonly page: string;
+    readonly paragraphs: readonly ContextParagraph[];
+  };
+  /** The finding currently driving the manuscript pane. */
+  readonly selectedFindingId?: string;
 }
 
-function FindingRow({ o, citation }: { o: GovernedObservation; citation?: CitationState }) {
+function FindingRow({ o, citation, selected }: {
+  o: GovernedObservation; citation?: CitationState; selected?: boolean;
+}) {
   const moved = citation && citation.kind !== 'intact' ? citation : null;
   return (
     <div className="fs-find" data-finding={o.id} data-domain={o.domain}
-      data-provenance={o.provenance.kind} data-citation={citation?.kind ?? 'intact'}>
+      data-provenance={o.provenance.kind} data-citation={citation?.kind ?? 'intact'}
+      data-selected={selected ? 'true' : 'false'}>
       <div className="fs-fbody">
         <div className="fs-obshead">
           <span className="fs-fh">{o.label}</span>
@@ -456,6 +468,14 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
   view: ReviewView; lens?: LensId | 'all'; facet?: Facet;
 }) {
   const shown = lens === 'all' ? view.findings : view.findings.filter((f) => f.domain === lens);
+  const selected = view.selectedFindingId
+    ? view.findings.find((f) => f.id === view.selectedFindingId) ?? shown[0]
+    : shown[0];
+  /* The paragraph the selected finding points at, if this context holds it. */
+  const selectedHighlight = selected
+    ? view.context.paragraphs.find((p) => p.id === selected.returnTo.sectionId)?.id
+      ?? view.context.paragraphs[1]?.id
+    : undefined;
   const active = view.lenses.find((l) => l.id === lens);
   const plain = LENSES.find((l) => l.id === lens)?.plain ?? '';
   const offer = active ? commissionOffer(active.availability, plain) : null;
@@ -481,7 +501,8 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
       </div>
 
       <div className="fs-pane" data-stage="review">
-        <div className="fs-pgrid" style={{ gridTemplateColumns: 'minmax(0,1fr)', maxWidth: 860 }}>
+        <div className="fs-reviewgrid">
+          <div className="fs-col" style={{ gap: 16 }}>
           <div className="fs-phead">
             <div>
               <h2>What MAIA found</h2>
@@ -492,7 +513,8 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
           {/* ⭐⭐ A READING IS A READING AT A TIME, said before anything it claims. */}
           {view.changed ? (
             <StaleReading readAt={view.changed.readAt} updatedAt={view.changed.updatedAt}
-              change={view.changed.change} previousLabel={view.changed.previousLabel} />
+              change={view.changed.change} previousLabel={view.changed.previousLabel}
+              acknowledged={view.changed.acknowledged} />
           ) : (
             <div className="fs-reading" data-freshness={view.freshness.kind}>
               {freshnessLine(view.freshness)}
@@ -519,7 +541,8 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
               </div>
             ) : (
               shown.map((f) => (
-                <FindingRow key={f.id} o={f} citation={view.citations?.[f.id]} />
+                <FindingRow key={f.id} o={f} citation={view.citations?.[f.id]}
+                  selected={f.id === selected?.id} />
               ))
             )}
           </section>
@@ -530,6 +553,16 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
             themes={['Pacing', 'Change', 'Clara']} />
 
           {view.map ? <ContinuityMap d={view.map} title={`Across your ${view.kind}`} /> : null}
+          </div>
+
+          {/* ⭐⭐ THE WORK, BESIDE THE INTELLIGENCE ABOUT IT.
+              Selecting a finding moves this pane to that locus. */}
+          <ManuscriptContext
+            chapterLabel={view.context.chapterLabel} chapterTitle={view.context.chapterTitle}
+            page={view.context.page} paragraphs={view.context.paragraphs}
+            highlightId={selected?.returnTo.sectionId ? view.context.paragraphs.find(
+              (p) => p.id === selectedHighlight)?.id : undefined}
+            findingLabel={selected?.label} />
         </div>
       </div>
     </>

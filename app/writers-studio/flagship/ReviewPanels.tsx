@@ -18,9 +18,24 @@ import type { OwnNoteKind } from '../../../lib/writersStudio/studio/machine';
  * keep the analysis current; ⭐ that would be the system deciding to read the
  * member's new words without being asked.
  */
-export function StaleReading({ readAt, updatedAt, change, previousLabel }: {
+export function StaleReading({ readAt, updatedAt, change, previousLabel, acknowledged = false }: {
   readAt: string; updatedAt: string; change: WorkChange; previousLabel: string;
+  /** ⭐ After "Not now" it becomes a persistent strip. ⛔ Nothing is hidden —
+   *  the claim is still qualified on every view — but the Work gets its space
+   *  back. *Impossible to miss* and *dominating the room* are different asks. */
+  acknowledged?: boolean;
 }) {
+  if (acknowledged) {
+    return (
+      <div className="fs-stalestrip" data-stale-reading="true" data-contextual="true"
+        data-acknowledged="true">
+        <span className="fs-staleclock" aria-hidden="true">◷</span>
+        <span>MAIA’s findings are based on an earlier version.</span>
+        <button type="button" className="fs-goto" data-return-to="previous-reading">View changes</button>
+        <button type="button" className="fs-goto" data-commission="reread">Read again</button>
+      </div>
+    );
+  }
   return (
     /* ⭐ `data-contextual` is the region declaring its own kind, the same move
        as provenance. F13 counts STANDING instruments — controls that face the
@@ -126,6 +141,55 @@ export function OwnObservation({ kind = 'noticed', draft = '', themes = [], plac
         <button type="button" className="fs-btn fs-btn--key">Keep with this passage</button>
       </div>
     </section>
+  );
+}
+
+/**
+ * ⭐⭐ THE MANUSCRIPT PANE IN REVIEW — D2, F1 amended by founder ruling.
+ *
+ * Review may hold TWO content regions because **both are views of the same
+ * Work**: the intelligence about it, and the Work itself. ⛔ That is not the
+ * legacy three-column workbench, where a manuscript competed with two utility
+ * panels. MAIA stays contextual and never becomes a third permanent pane.
+ *
+ * ⭐ Selecting a finding moves this pane to that locus and highlights it, so
+ * the member sees the passage a finding is about **without leaving Review**.
+ */
+export interface ContextParagraph { readonly id: string; readonly text: string }
+
+export function ManuscriptContext({ chapterLabel, chapterTitle, page, paragraphs, highlightId, findingLabel }: {
+  chapterLabel: string; chapterTitle: string; page: string;
+  paragraphs: readonly ContextParagraph[];
+  highlightId?: string; findingLabel?: string;
+}) {
+  return (
+    <aside className="fs-context" data-manuscript-context="true" aria-label="The passage this refers to">
+      <div className="fs-contexthead">
+        <div>
+          <div className="fs-contextch">{chapterLabel}</div>
+          <div className="fs-contexttitle">{chapterTitle}</div>
+        </div>
+        <span className="fs-contextpage">{page}</span>
+      </div>
+      {findingLabel ? (
+        <div className="fs-contextwhy">Showing where <strong>{findingLabel}</strong> appears.</div>
+      ) : null}
+      <div className="fs-contextbody">
+        {paragraphs.map((p) => (
+          <p className="fs-contextp" key={p.id} data-highlighted={p.id === highlightId ? 'true' : 'false'}>
+            {p.text}
+          </p>
+        ))}
+      </div>
+      <div className="fs-contextfoot">
+        <button type="button" className="fs-btn fs-btn--key" data-return-to={highlightId ?? 'context'}>
+          Go to passage
+        </button>
+        <button type="button" className="fs-goto" data-return-to="full-manuscript">
+          Open the full manuscript →
+        </button>
+      </div>
+    </aside>
   );
 }
 
