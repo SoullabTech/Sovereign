@@ -262,6 +262,32 @@
   const createInertSnapshot = makeInertSnapshotter(hostIsProxy);
   const PROXY_DETECTION_AVAILABLE = typeof hostIsProxy === 'function';
 
+  const UNAVAILABLE_CODE = 'O3_UNAVAILABLE_NO_TRAP_FREE_PROXY_PREDICATE';
+  const UNAVAILABLE_REASON = 'O3 requires a trap-free host proxy predicate to establish that authority evidence is inert. This host provides none, so O3 is not a working authority planner here.';
+
+  // Where no predicate exists O3 does not export a planner that quietly refuses
+  // every object. It reports itself unavailable, so no caller can mistake a
+  // fail-closed surface for a functioning one.
+  function unavailablePlanAuthority() {
+    return deepFreeze({
+      ok: false,
+      standing: 'UNAVAILABLE',
+      authority_plan: null,
+      blockers: [blocker(UNAVAILABLE_CODE, UNAVAILABLE_REASON, 'host')],
+    });
+  }
+
+  if (!PROXY_DETECTION_AVAILABLE) {
+    return deepFreeze({
+      VERSION,
+      AVAILABLE: false,
+      PROXY_DETECTION_AVAILABLE: false,
+      UNAVAILABLE_CODE,
+      UNAVAILABLE_REASON,
+      planAuthority: unavailablePlanAuthority,
+    });
+  }
+
   function ownKeyDeepEqual(actual, expected) {
     if (Object.is(actual, expected)) return true;
     if (!actual || !expected || typeof actual !== 'object' || typeof expected !== 'object') return false;
@@ -569,6 +595,7 @@
 
   return {
     VERSION,
+    AVAILABLE: true,
     GRAPH_VERSION,
     GRAPH_KEYS,
     INPUT_KEYS,

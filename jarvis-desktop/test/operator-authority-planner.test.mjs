@@ -603,3 +603,104 @@ test('F48 — the boundary fails closed when no trap-free proxy detector exists'
   // The detector this build actually runs with must be present, not assumed.
   assert.equal(O3.PROXY_DETECTION_AVAILABLE, true);
 });
+
+// --- O3R3a: the detector-less host must report O3 unavailable, not refuse quietly ---
+
+function loadInDetectorlessHost() {
+  const vm = require('node:vm');
+  const fs = require('node:fs');
+  const sandbox = { console };
+  vm.createContext(sandbox);
+  // No module, no exports, no require: the UMD/browser branch, where no
+  // trap-free host proxy predicate can be resolved.
+  assert.equal(vm.runInContext('typeof module', sandbox), 'undefined');
+  assert.equal(vm.runInContext('typeof require', sandbox), 'undefined');
+  for (const file of [
+    'operator-constitution.js',
+    'operator-intent-contract.js',
+    'operator-work-graph.js',
+    'operator-authority-planner.js',
+  ]) {
+    const url = new URL(`../src/${file}`, import.meta.url);
+    vm.runInContext(fs.readFileSync(url, 'utf8'), sandbox, { filename: file });
+  }
+  return (code) => vm.runInContext(`(() => { ${code} })()`, sandbox);
+}
+
+test('F49 — a host without a trap-free proxy predicate reports O3 unavailable', () => {
+  const run = loadInDetectorlessHost();
+  const surface = JSON.parse(run(`
+    const O3 = globalThis.JarvisOperatorAuthorityPlanner;
+    return JSON.stringify({
+      loaded: typeof O3,
+      version: O3.VERSION,
+      available: O3.AVAILABLE,
+      detector: O3.PROXY_DETECTION_AVAILABLE,
+      code: O3.UNAVAILABLE_CODE,
+      reason: typeof O3.UNAVAILABLE_REASON,
+      keys: Object.keys(O3).sort(),
+      frozen: Object.isFrozen(O3),
+    });
+  `));
+  assert.equal(surface.loaded, 'object');
+  assert.equal(surface.version, O3.VERSION);
+  assert.equal(surface.available, false);
+  assert.equal(surface.detector, false);
+  assert.equal(surface.code, 'O3_UNAVAILABLE_NO_TRAP_FREE_PROXY_PREDICATE');
+  assert.equal(surface.reason, 'string');
+  assert.equal(surface.frozen, true);
+  // It must not be presented as a working authority planner.
+  for (const planner of ['createInertSnapshot', 'makeInertSnapshotter', 'REQUIREMENTS',
+    'KNOWN_AUTHORITIES', 'validateO2ConsumptionBoundary', 'validateAuthorityInput',
+    'canonicalReplayGraph', 'requirementsForKind']) {
+    assert.equal(surface.keys.includes(planner), false, `unavailable surface exposes ${planner}`);
+  }
+});
+
+test('F50 — the unavailable host answers valid input with UNAVAILABLE, no traps, no throw', () => {
+  const run = loadInDetectorlessHost();
+  const out = JSON.parse(run(`
+    const O1 = globalThis.JarvisOperatorIntentContract;
+    const O2 = globalThis.JarvisOperatorWorkGraph;
+    const O3 = globalThis.JarvisOperatorAuthorityPlanner;
+    const graph = O2.compileWorkGraph(O1.compileIntent({
+      utterance: 'Fix the passage conversation.', priorIntent: null })).graph;
+    let traps = 0;
+    const bump = (name) => (...args) => { traps += 1; return Reflect[name](...args); };
+    const probe = new Proxy({ heldAuthorities: ['repo.read'] }, {
+      getPrototypeOf: bump('getPrototypeOf'), ownKeys: bump('ownKeys'),
+      getOwnPropertyDescriptor: bump('getOwnPropertyDescriptor'), get: bump('get'),
+    });
+    let threw = null, valid = null, proxied = null;
+    try {
+      valid = O3.planAuthority(graph, { heldAuthorities: ['repo.read'] });
+      proxied = O3.planAuthority(graph, probe);
+    } catch (error) { threw = String(error && error.message); }
+    return JSON.stringify({ threw, traps,
+      valid: valid && { ok: valid.ok, standing: valid.standing, plan: valid.authority_plan,
+                        code: valid.blockers[0] && valid.blockers[0].code, frozen: Object.isFrozen(valid) },
+      proxied: proxied && { ok: proxied.ok, standing: proxied.standing } });
+  `));
+  assert.equal(out.threw, null);
+  assert.equal(out.traps, 0);
+  assert.equal(out.valid.ok, false);
+  assert.equal(out.valid.standing, 'UNAVAILABLE');
+  assert.equal(out.valid.plan, null);
+  assert.equal(out.valid.code, 'O3_UNAVAILABLE_NO_TRAP_FREE_PROXY_PREDICATE');
+  assert.equal(out.valid.frozen, true);
+  // Valid input and hostile input get the same answer: the host is unavailable.
+  assert.equal(out.proxied.standing, 'UNAVAILABLE');
+});
+
+test('F51 — the Node host reports available and carries the full planner surface', () => {
+  assert.equal(O3.AVAILABLE, true);
+  assert.equal(O3.PROXY_DETECTION_AVAILABLE, true);
+  assert.equal(O3.UNAVAILABLE_CODE, undefined);
+  for (const planner of ['createInertSnapshot', 'makeInertSnapshotter', 'REQUIREMENTS',
+    'KNOWN_AUTHORITIES', 'validateO2ConsumptionBoundary', 'planAuthority']) {
+    assert.ok(O3[planner] !== undefined, `available surface is missing ${planner}`);
+  }
+  const result = plan('Investigate the passage conversation.', ['repo.read']);
+  assert.equal(result.ok, true);
+  assert.equal(result.standing, 'READY');
+});

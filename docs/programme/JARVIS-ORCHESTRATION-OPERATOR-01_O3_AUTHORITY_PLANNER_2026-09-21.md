@@ -359,3 +359,91 @@ The O3R2 candidate touched three files, none of which exists at canonical, so re
 ### O3R3 standing
 
 O3R3 is an implementation candidate. It establishes nothing about authority: no grant, no routing, no execution, no integration, no deployment, no production mutation. O4 remains unopened. Canonical closure still requires independent re-witness and Founder adjudication.
+
+## O3R3a — host availability, and three founder rulings
+
+Founder rulings following the O3R3 second witness. Ruling 1 required a candidate change; Rulings 2 and 3 are matters of evidence and of record.
+
+### Ruling 1 — Node-only capability accepted; the detector-less host must say so
+
+Accepted for this stage: O3 is a Node-host capability. What the second witness exposed is that a detector-less host was still handed the full planner surface, which refused every object while looking operational. A fail-closed surface that is indistinguishable from a working one is the defect, not the refusal.
+
+O3 now decides its own export by host capability:
+
+- where a trap-free host proxy predicate resolves, O3 exports the planner surface and reports `AVAILABLE: true`;
+- where none resolves, O3 exports **only** an unavailability record — `VERSION`, `AVAILABLE: false`, `PROXY_DETECTION_AVAILABLE: false`, `UNAVAILABLE_CODE: 'O3_UNAVAILABLE_NO_TRAP_FREE_PROXY_PREDICATE'`, `UNAVAILABLE_REASON`, and a `planAuthority` that answers `standing: 'UNAVAILABLE'`.
+
+`createInertSnapshot`, `makeInertSnapshotter`, `REQUIREMENTS`, `KNOWN_AUTHORITIES` and the validators are **absent** from the unavailable surface. It cannot be mistaken for, or used as, an authority planner. `planAuthority` still returns rather than throws, so the no-exception-escapes law is preserved: valid input and hostile input receive the same answer, which is that the host is unavailable.
+
+The decision is on the predicate, not on the module system, so a Node host that somehow resolved no predicate would also report unavailable rather than silently refuse.
+
+### Recorded capability narrowing (admission fact, not a footnote)
+
+> **O3 is a Node-host capability. Without a trap-free host proxy predicate, O3 does not accept object authority evidence and does not present an authority planner. The browser/UMD path reports `AVAILABLE: false` and plans nothing. This is not a degraded planner; it is the absence of one.**
+
+### Intended execution path — confirmed Node
+
+Established from the desktop wiring rather than assumed:
+
+- `jarvis-desktop/src/main.js` creates windows with `contextIsolation: true` and `nodeIntegration: false`, so a renderer script could never reach `util.types.isProxy`;
+- `src/index.html` loads a fixed script set — `legibility · spiral · capability-form · governance · provenance · operator-flow · operator-work-unit · renderer`. **None of O0, O1, O2 or O3 is loaded in the renderer**;
+- the only loaders of the O-series today are Node: `main.js` requires `operator-work-unit.js`, and the constitutional suites require O0–O3 through CommonJS.
+
+O3 has no renderer consumer, and under the current `webPreferences` it could not acquire the predicate if it gained one. Ruling 1 makes that outcome legible at the boundary instead of latent.
+
+### O3R3a falsifiers
+
+- F49 — a host without a trap-free predicate reports O3 unavailable, the record is frozen, and none of the planner exports is present;
+- F50 — that host answers a fully valid graph and authority envelope with `standing: 'UNAVAILABLE'`, executes zero proxy traps, and throws nothing;
+- F51 — the Node host reports `AVAILABLE: true`, carries the full planner surface, and plans normally.
+
+F49 and F50 load the real UMD branch in a `node:vm` context with no `module`, no `require` and no `process`. The UMD path is therefore witnessed by the **committed suite**, not by an ad-hoc probe.
+
+### O3R3a lethality
+
+| Candidate | Error embodied | Killed by |
+|---|---|---|
+| DC-A | catch-only: contain the throw, detect nothing | F45 F46 F47 F48 |
+| DC-B | detect where possible, fail **open** where absent | F48 |
+| DC-C | gate placed **after** reflective inspection | F45 F46 F47 |
+| DC-D | **pre-ruling behaviour**: full surface everywhere, quiet fail-closed refusal | F49 F50 |
+| DC-E | reports unavailable but still exports the planner surface | F49 F50 |
+
+No unexpected survivors. No collateral outside the declared vector in any candidate. DC-E's F50 kill is the same error seen from the other side — the exported `planAuthority` is still the working one, so it answers `REFUSED` where the law requires `UNAVAILABLE`.
+
+### Ruling 2 — the four scanners, run
+
+The four preflight scanners traverse `git ls-files` repo-wide and admit `.js`/`.mjs`, so these files are inside their population. A token search over the candidate is not a run of the gate and does not discharge it. All four were executed against the reconciled tree from their unmodified sources:
+
+| Gate | Exit | Result |
+|---|---|---|
+| `check:no-supabase` | 0 | No Supabase detected |
+| `check:no-direct-anthropic` | 0 | No direct `@anthropic-ai/sdk` imports outside allowlist |
+| `check:no-vendor-voices` | 0 | No vendor voice names in UI code (1574 files scanned) |
+| `check:no-openai` (`check-provider-governance`) | 0 | No new OpenAI surface |
+
+Method deviation, stated because it is part of the evidence: the container has no root `node_modules`, so the scanners were run under Node's type-stripping loader with `__dirname`/`__filename` supplied by a wrapper — the CJS ambients `tsx` provides. **The scanner sources were not modified.** `typecheck` (no `jarvis-desktop` in `tsconfig.ship.json`, `allowJs` unset), `jest` (`*.test.ts` only) and `check:voice-provenance` (fixed scan root `app/api/_backend/csm`) are genuinely outside this population.
+
+### Ruling 3 — independence correction
+
+The O3R3 second witness was described in session as an independent second witness. It was not. It was an **author's second verification** of the author's own repair — adversarial in method, and useful, but not independent in custody. The record states it plainly:
+
+> **O3R3 and O3R3a were written and verified by the same author. No independent reviewer has yet inspected the repaired candidate. The reproduction, invariant, host-predicate, UMD, lethality and regression evidence in this record is author-produced evidence.**
+
+Independent review remains **OWED** and is a precondition of the admission proposal.
+
+### O3R3a freshness
+
+Reconciled onto current canonical `578e5ee10`. The seven canonical commits since `fa5274fd9` touched four `jarvis-desktop` files — `child-env.js`, `work-unit-control.js`, `canonical-provider-execution-e1.test.mjs`, and a new `opencode-containment-f6.test.mjs` — **none of them O0–O3**. The merge was conflict-free. O0/O1/O2 blobs are unchanged at the new canonical.
+
+### O3R3a witness
+
+- O3 suite: **52 passed · 0 failed**;
+- full `jarvis-desktop` suite on the reconciled tree: **305 tests · 290 passed · 6 failed · 9 skipped**;
+- canonical baseline (`578e5ee10`) with only the three O3 files withheld: **253 · 238 · 6 · 9**;
+- test-name set difference is **exactly the 52 O3 tests**, zero baseline-only names; failure and skip sets identical by name;
+- **0 attributable regressions**.
+
+### O3R3a standing
+
+Candidate. Grants no authority. No routing, capability selection, execution, integration, deployment or production mutation. **Independent review OWED.** Admission proposal is not prepared and is not authorized until that review passes. **O4 follows admission and its own verification, and is not opened.**
