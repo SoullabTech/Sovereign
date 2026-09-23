@@ -231,6 +231,8 @@
     "witness:flagship-r1-1c": "tsx scripts/witness/flagship/r1-1c-live-navigation-walk.ts",
     "typecheck:ws-flagship-r1-2": "node scripts/typecheck-ws-flagship-r1-2.mjs",
     "matrix:ws-flagship-r1-2": "tsx --tsconfig tsconfig.ws-flagship-r1-2.json tests/constitutional/writers-studio/flagship-r1-2/matrix.ts",
+    "typecheck:ws-flagship-r2-0": "node scripts/typecheck-ws-flagship-r2-0.mjs",
+    "matrix:ws-flagship-r2-0": "tsx --tsconfig tsconfig.ws-flagship-r2-0.json tests/constitutional/writers-studio/flagship-r2-0/matrix.ts",
     "witness:flagship-r1-2": "tsx scripts/witness/flagship/r1-2-live-return-walk.ts",
     "matrix:ws-flagship-r1-readonly": "tsx --tsconfig tsconfig.ws-flagship-r1-readonly.json tests/constitutional/writers-studio/flagship-r1-readonly/matrix.ts",
     "typecheck:ws-flagship-r1-readonly": "node scripts/typecheck-ws-flagship-r1-readonly.mjs",
