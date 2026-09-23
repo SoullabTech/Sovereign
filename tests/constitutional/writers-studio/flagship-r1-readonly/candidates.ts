@@ -34,7 +34,7 @@ const D9: Subject = { ...REFERENCE, name: 'R1-D9-member-act-storage', sourceAppe
 const D10: Subject = { ...REFERENCE, name: 'R1-D10-frozen-presentation-mutation', frozenMutationPaths: ['app/writers-studio/flagship/DevelopReview.tsx'] };
 const D11: Subject = { ...REFERENCE, name: 'R1-D11-wrong-work-reading', map: (i) => mapRealReview({ ...i, host: { ...i.host, manuscriptId: (i.payload as any)?.reading?.manuscriptId ?? i.host.manuscriptId } }) };
 const D12: Subject = { ...REFERENCE, name: 'R1-D12-silent-partial-payload', map: (i) => {
-  if ((i.payload as any)?.reading?.scope) return mapRealReview(i);
+  if (i.payload === null || (i.payload as any)?.reading?.scope) return mapRealReview(i);
   return mapRealReview(READY_INPUT);
 } };
 

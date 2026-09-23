@@ -1,8 +1,7 @@
-import type { ReviewHostFacts, RealReviewInput } from '@/lib/writersStudio/studio/realReview';
+import type { ReviewHostFacts, RealReviewInput, StoredReadingPayload, StoredReadingSummary } from '@/lib/writersStudio/studio/realReview';
 import type { DevelopmentalReading } from '@/lib/manuscript/developmentalReading/contract';
 import type { ReadingAssessment } from '@/lib/manuscript/developmentalReading/assess';
 import type { ObservationId, BasisFingerprint } from '@/lib/manuscript/developmentalReading/observationIdentity';
-import type { ReadingPayload, ReadingSummary } from '@/lib/writersStudio/developClient';
 
 const MS = '22222222-2222-2222-2222-222222222222';
 export const RID = '33333333-3333-3333-3333-333333333333';
@@ -59,12 +58,12 @@ export const HOST: ReviewHostFacts = {
   },
 };
 
-export const SUMMARY: ReadingSummary = {
+export const SUMMARY: StoredReadingSummary = {
   id: RID, outcome: 'reading', commissionedLens: 'continuity',
   frozenAt: READING.provenance.frozenAt, observationCount: 2,
 };
 
-export const PAYLOAD: ReadingPayload = { reading: READING, assessment: ASSESSMENT, sections: SECTIONS };
+export const PAYLOAD: StoredReadingPayload = { reading: READING, assessment: ASSESSMENT, sections: SECTIONS };
 
 export const READY_INPUT: RealReviewInput = {
   summaries: [SUMMARY], selectedReadingId: RID, payload: PAYLOAD, host: HOST,

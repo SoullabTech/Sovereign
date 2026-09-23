@@ -44,11 +44,13 @@ export function runR10Laws(s: Subject): LawResult[] {
 
   const noFixture = !/scripts\/witness\/flagship|fixtures\.tsx|developData/.test(src);
   const malformed = s.map(MALFORMED_INPUT);
-  out.push(law('R1-0-L4-no-fixture-fallback', noFixture && malformed.kind === 'unavailable',
-    `fixtureRef=${!noFixture} malformed=${malformed.kind}`));
+  out.push(law('R1-0-L4-no-fixture-fallback', noFixture,
+    `fixtureRef=${!noFixture}`));
 
+  const descriptions = rr?.view.findings.map((f) => f.description) ?? [];
   out.push(law('R1-0-L5-canonical-manuscript-order',
-    !!rr && ids.join(',') === 'dobs_earlier,dobs_later', `order=${ids.join(',')}`));
+    descriptions.join('|') === 'The river appears here before it returns in the next section.|The river changes from named place to remembered place in this section.',
+    `order=${descriptions.join(' → ')}`));
 
   const absent = s.map(NO_READING_INPUT);
   const none = s.map(NONE_INPUT);
@@ -80,7 +82,7 @@ export function runR10Laws(s: Subject): LawResult[] {
   out.push(law('R1-0-L12-partial-payload-refused', malformed.kind === 'unavailable' && malformed.reason === 'malformed_payload',
     `malformed=${malformed.kind === 'unavailable' ? malformed.reason : malformed.kind}`));
 
-  const fullLimits = durable?.limits ?? [];
+  const fullLimits = rr ? Object.values(rr.durable).flatMap((d) => d.limits) : [];
   out.push(law('R1-0-L13-full-reading-limits-preserved-sidecar',
     fullLimits.includes('author-intent') && fullLimits.includes('editorial-consequence'), `limits=${fullLimits.join(',')}`));
 
