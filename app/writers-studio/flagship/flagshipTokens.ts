@@ -134,6 +134,16 @@ export const NAV_LABEL: Readonly<Record<NavDestination, string>> = {
 
 /** ⭐ Same semantic names as the rail. ⛔ Develop is never renamed Explore. */
 export const MOBILE_PRIMARY: readonly NavDestination[] = ['write', 'develop', 'review'];
+
+/**
+ * R1-1C · the lawful action a LIVE host may put behind a destination: a location
+ * (rendered `<a href>`) or an act (rendered `<button>`). ⛔ Never a fetch, a
+ * commission or a write. The current destination carries no action.
+ */
+export type NavAction =
+  | { readonly kind: 'link'; readonly href: string; readonly onSelect?: (e: { preventDefault(): void }) => void }
+  | { readonly kind: 'act'; readonly onAct: () => void };
+export type NavActions = Partial<Record<NavDestination, NavAction>>;
 export const MOBILE_BEHIND_MENU: readonly NavDestination[] = [];
 
 /* ══════════════════════════════════════════════════════════════════════════

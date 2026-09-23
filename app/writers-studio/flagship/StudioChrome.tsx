@@ -13,9 +13,8 @@
 import * as React from 'react';
 import {
   FACET_COPY, MOBILE_PRIMARY, NAV_DESTINATIONS, NAV_LABEL,
-  type Facet, type NavDestination,
+  type Facet, type NavActions, type NavDestination,
 } from './flagshipTokens';
-import type { NavActions } from '../rebuild/reviewNavigation';
 
 const ICON: Readonly<Record<NavDestination, string>> = {
   write: '✎', develop: '◈', review: '◉',

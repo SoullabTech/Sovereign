@@ -18,7 +18,8 @@
  */
 import { READING_PARAM } from './liveReview';
 import type { StoredReadingSummary } from '@/lib/writersStudio/studio/realReview';
-import type { NavDestination } from '../flagship/flagshipTokens';
+import type { NavAction, NavActions } from '../flagship/flagshipTokens';
+export type { NavAction, NavActions };
 
 export type StudioMode = 'write' | 'review-choose' | 'review';
 export interface NavRequest { readonly reading: string | null; readonly chooserOpen: boolean }
@@ -92,10 +93,6 @@ export type ChooserState =
   | { readonly kind: 'choices'; readonly gen: number; readonly readings: readonly StoredReadingSummary[] }
   | { readonly kind: 'unavailable'; readonly gen: number };
 
-export type NavAction =
-  | { readonly kind: 'link'; readonly href: string; readonly onSelect?: (e: { preventDefault(): void }) => void }
-  | { readonly kind: 'act'; readonly onAct: () => void };
-export type NavActions = Partial<Record<NavDestination, NavAction>>;
 export interface NavActs { go(href: string): void; openChooser(): void; closeChooser(): void }
 export interface StudioNav {
   readonly mode: StudioMode;
