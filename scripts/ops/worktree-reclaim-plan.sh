@@ -50,11 +50,21 @@ REPO="$REPO"
 # and exits non-zero at the end naming every skipped path.
 ON_DRIFT="\${RECLAIM_ON_DRIFT:-stop}"; SKIPPED=""
 drift() { echo "DRIFT: \$1" >&2; if [[ "\$ON_DRIFT" == "skip" ]]; then SKIPPED="\$SKIPPED"$'\n'"\$1"; return 1; fi; exit 4; }
+# clean_or_stop <worktree> <censused-head> [require-merged]
+# B-GUARD-R1: an act is authorized against the state the census recorded, so
+# HEAD must still be the exact censused commit; a removal additionally
+# re-proves HEAD is an ancestor of the canonical branch as refreshed at the
+# start of this run. Any difference is drift, and drift is never removed.
 clean_or_stop() {
-  local wt="\$1"
+  local wt="\$1" want="\$2" need_merged="\${3:-}" have
   [[ -d "\$wt" ]] || { drift "\$wt no longer exists"; return; }
+  have=\$(git -C "\$wt" rev-parse --short=9 HEAD 2>/dev/null)
+  [[ -n "\$want" && "\$have" == "\$want" ]] || { drift "\$wt HEAD is \$have, census recorded \$want"; return; }
   [[ -z "\$(git -C "\$wt" status --porcelain 2>/dev/null)" ]] || { drift "\$wt has modified or untracked files"; return; }
   [[ "\$(git -C "\$wt" rev-list --count HEAD --not --remotes 2>/dev/null)" == "0" ]] || { drift "\$wt has commits on no remote"; return; }
+  if [[ -n "\$need_merged" ]]; then
+    git -C "\$wt" merge-base --is-ancestor HEAD "origin/$CANON" 2>/dev/null || { drift "\$wt is no longer an ancestor of origin/$CANON"; return; }
+  fi
 }
 freed_before=\$(df -k "\$HOME" | awk 'NR==2{print \$4}')
 EOG
@@ -71,6 +81,10 @@ guard "ACT A: delete regenerable build state in clean, pushed worktrees on the i
       "delete node_modules/.next/.turbo/coverage/dist directories" > "$A"
 guard "ACT B: remove REMOVABLE worktrees (clean, pushed, merged into $CANON) on the internal disk." \
       "run git worktree remove on merged worktrees" > "$B"
+cat >> "$B" <<EOG
+git -C "\$REPO" fetch origin "$CANON" >/dev/null 2>&1 || { echo "STOP: could not refresh origin/$CANON; merge state cannot be re-proved" >&2; exit 4; }
+echo "origin/$CANON refreshed to \$(git -C "\$REPO" rev-parse --short=9 "origin/$CANON")"
+EOG
 guard "ACT C: push or bundle every worktree holding commits that exist on no remote." \
       "push branches and write git bundles to $ARCHIVE_DIR" > "$C"
 cat >> "$C" <<EOG
@@ -98,15 +112,15 @@ while IFS=$'\t' read -r path vol branch head total regen source mod unt unp merg
   case "$cls" in
     REMOVABLE|RETAIN)
       if [[ "$vol" == "internal" ]] && awk -v r="$regen" 'BEGIN{exit !(r>0)}'; then
-        printf '\n# %s  %s GB regenerable  [%s]\nif clean_or_stop "%s"; then\n' "$path" "$regen" "$cls" "$path" >> "$A"
+        printf '\n# %s  %s GB regenerable  [%s]\nif clean_or_stop "%s" "%s"; then\n' "$path" "$regen" "$cls" "$path" "$head" >> "$A"
         find "$path" -maxdepth 4 -type d \( -name node_modules -o -name .next -o -name .turbo -o -name coverage -o -name dist \) -prune -print 2>/dev/null \
           | while IFS= read -r d; do printf '  rm -rf "%s"\n' "$d" >> "$A"; done
         echo "fi" >> "$A"
         a_gb=$(awk -v x="$a_gb" -v y="$regen" 'BEGIN{print x+y}'); a_n=$((a_n+1))
       fi
       if [[ "$cls" == "REMOVABLE" && "$vol" == "internal" ]]; then
-        printf '\n# %s  %s GB  branch %s  merged into %s\nif clean_or_stop "%s"; then git -C "$REPO" worktree remove "%s"; fi\n' \
-          "$path" "$total" "$branch" "$CANON" "$path" "$path" >> "$B"
+        printf '\n# %s  %s GB  branch %s  merged into %s @ census\nif clean_or_stop "%s" "%s" merged; then git -C "$REPO" worktree remove "%s"; fi\n' \
+          "$path" "$total" "$branch" "$CANON" "$path" "$head" "$path" >> "$B"
         b_gb=$(awk -v x="$b_gb" -v y="$total" 'BEGIN{print x+y}'); b_n=$((b_n+1))
       fi ;;
   esac
