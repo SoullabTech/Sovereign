@@ -18,18 +18,30 @@
  * same callbacks bound to the same `SectionWriting` session.
  *
  * WHAT THIS HOST DELIBERATELY DOES NOT EXPOSE (C1B)
- *   Aa · voice note · Comment · More · facet · Develop · Review · Ask MAIA ·
- *   Pure Canvas · the editorial layer · chapter review. Each keeps its
- *   substrate intact behind its own routes; none is drawn here without a
- *   lawful action behind it. The only navigation asserted is Write, as
- *   non-interactive orientation.
+ *   Aa · voice note · Comment · More · facet · Develop · Review ·
+ *   Pure Canvas · chapter review. Each keeps its substrate intact behind its
+ *   own routes; none is drawn here without a lawful action behind it. The only
+ *   navigation asserted is Write, as non-interactive orientation.
+ *
+ * C1C1 — DISCUSS-ONLY CONTEXTUAL MAIA
+ *   When the server says the editorial layer is enabled (a boolean handed down
+ *   by page.tsx, presentation state only) and a passage is HELD, the host
+ *   exposes ONE affordance, `Ask MAIA`, which opens a one-shot composer. Submit
+ *   is the commissioning act: the member's own text → `discussAct.ts` (posture
+ *   at the gesture · settle the existing writing session · open the passage
+ *   relationship at the exact held range · one discourse turn under the
+ *   withholding scope). The reply is rendered by the pure `DiscussLayer`.
+ *   ⛔ One turn per gesture. ⛔ No proposal. ⛔ No second composer. ⛔ Release
+ *   hides; it never claims to cancel. ⛔ A late result attaches only to the
+ *   gesture that commissioned it. ⛔ Flag off: nothing of this is drawn and no
+ *   editorial route is ever called.
  *
  * TRUTHFUL STATUS
  *   Derived from the writing session's own per-section statuses. The fixture
  *   phrase of the controlled witness never reaches this file.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '../useLivingWorks';
@@ -39,10 +51,14 @@ import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { SectionStatus } from '@/lib/writersStudio/sectionSaveQueue';
 import { locationForSection, replacePlaceAddress, resolveInitialSection, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import { toWriteFoot, toWriteHeading, toWritePlace } from '@/lib/writersStudio/studio/adapters/writeView';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import { openBoundEditorialPassage, sendBoundEditorialTurn } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import { StudioShell } from '../flagship/StudioChrome';
 import { WriteFrame } from '../flagship/WriteFrame';
 import RebuildWritingBoundary from './RebuildWritingBoundary';
 import RebuildAuthoredBody, { type RebuildAuthoredBodyProps } from './RebuildAuthoredBody';
+import { DiscussLayer, discussHighlight, type DiscussState } from './DiscussLayer';
+import { commissionDiscuss, createInFlightGuard, resultAttaches, DISCUSS_COPY, type InFlightGuard } from './discussAct';
 
 export interface ContextReady {
   state: 'section_aware';
@@ -110,10 +126,23 @@ export interface FlagshipWriteViewProps {
   readonly onFocus: (sectionId: string) => void;
   readonly onHold: (sectionId: string, start: number, end: number, text: string) => void;
   readonly epoch?: number;
+  /** C1C1 — server-owned presentation state. ⛔ Never inferred client-side. Default false. */
+  readonly editorialEnabled?: boolean;
+  readonly discuss?: DiscussState | null;
+  readonly onAskMaia?: () => void;
+  readonly onSubmitAsk?: (text: string) => void;
+  readonly onRelease?: () => void;
+  /** C1C1 — the host keeps a ref to the ONE session the boundary created, for settlement. ⛔ Never a second session. */
+  readonly onWriting?: (writing: SectionWriting) => void;
 }
 
+const noAction = () => {};
+
 /** The composition. Renders under react-dom/server; the laws render it directly. */
-export function FlagshipWriteView({ context, workTitle, workForm, focusId, held, onFocus, onHold, epoch = 0 }: FlagshipWriteViewProps) {
+export function FlagshipWriteView({
+  context, workTitle, workForm, focusId, held, onFocus, onHold, epoch = 0,
+  editorialEnabled = false, discuss = null, onAskMaia = noAction, onSubmitAsk = noAction, onRelease = noAction, onWriting,
+}: FlagshipWriteViewProps) {
   const focus = context.sections.find((s) => s.draftSectionId === focusId) ?? null;
   const span = focusId ? chapterSpanFor(context.sections, focusId) : null;
   const sections = span?.sections ?? (focus ? [focus] : []);
@@ -131,21 +160,38 @@ export function FlagshipWriteView({ context, workTitle, workForm, focusId, held,
           epoch={epoch}
         >
           {(writing) => {
+            onWriting?.(writing);
             const bodies = sections.map((s) => writing.bodyOf(s.draftSectionId));
             const statuses = sections.map((s) => writing.statusOf(s.draftSectionId));
             const placeView = toWritePlace({ workTitle: workTitle ?? '', section: focus, span });
             const place = { ...placeView, work: workTitle ?? undefined };
+            /* C1C1 — the ONE affordance, only while enabled + held + no panel open. */
+            const askMaia = editorialEnabled && held && !discuss
+              ? <button type="button" className="fs-btn fs-btn--key" data-event="ASK_MAIA" onClick={onAskMaia}>Ask MAIA</button>
+              : undefined;
+            const contextual = editorialEnabled
+              ? <DiscussLayer discuss={discuss} focusSectionId={focusId} liveBodyOf={writing.bodyOf} onSubmit={onSubmitAsk} onRelease={onRelease} />
+              : null;
+            /* C1C1 — changed-passage law: an answered response whose locus no longer occurs exactly once carries no highlight. */
+            const answeredAt = editorialEnabled ? discussHighlight(discuss, writing.bodyOf) : undefined;
             return (
               <WriteFrame
                 place={place}
                 status={truthfulStatus(statuses, writing.currentRevisionId())}
                 heading={toWriteHeading(span)}
                 foot={toWriteFoot({ span, bodies })}
+                actions={askMaia}
+                contextual={contextual}
               >
                 {sections.map((section) => {
                   const id = section.draftSectionId;
                   const isRoot = span?.root.draftSectionId === id;
-                  const heldHere = held && held.sectionId === id ? { start: held.start, end: held.end } : null;
+                  const selectionHere = held && held.sectionId === id ? { start: held.start, end: held.end } : null;
+                  const heldHere = answeredAt && answeredAt.sectionId === id
+                    && discuss && discuss.kind === 'answered' && held && held.sectionId === id
+                    && held.start === discuss.held.start && held.end === discuss.held.end && held.text === discuss.held.text
+                    ? answeredAt.range
+                    : selectionHere;
                   return (
                     <section key={id} className="fsw-section fsw-body" data-flagship-section={id}
                       data-held-passage-address={heldHere ? `${heldHere.start}:${heldHere.end}` : undefined}>
@@ -163,7 +209,12 @@ export function FlagshipWriteView({ context, workTitle, workForm, focusId, held,
   );
 }
 
-export default function FlagshipWriteHost() {
+export interface FlagshipWriteHostProps {
+  /** C1C1 — read ONCE on the server by page.tsx. Presentation state, never authorization. */
+  readonly editorialEnabled?: boolean;
+}
+
+export default function FlagshipWriteHost({ editorialEnabled = false }: FlagshipWriteHostProps = {}) {
   const params = useSearchParams();
   const requested = params?.get('m') ?? null;
   const requestedSection = params?.get(SECTION_PARAM) ?? null;
@@ -173,6 +224,13 @@ export default function FlagshipWriteHost() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [held, setHeld] = useState<HeldPassageAt | null>(null);
   const { phase: worksPhase, works } = useLivingWorks();
+  /* C1C1 — ephemeral Discuss state. ⛔ Not persisted, not derived from any thread list, not a machine phase. */
+  const [discuss, setDiscuss] = useState<DiscussState | null>(null);
+  const discussGen = useRef(0);
+  const guard = useRef<InFlightGuard | null>(null);
+  const writingRef = useRef<SectionWriting | null>(null);
+  const focusRef = useRef<string | null>(null);
+  focusRef.current = focusId;
 
   const load = useCallback(async () => {
     setPhase('loading'); setMessage(null);
@@ -216,7 +274,14 @@ export default function FlagshipWriteHost() {
     replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, sectionId));
   }, []);
   const onFocus = useCallback((sectionId: string) => {
-    setFocusId((prev) => { if (prev !== sectionId) setHeld(null); return sectionId; });
+    setFocusId((prev) => {
+      if (prev !== sectionId) {
+        setHeld(null);
+        /* C1C1 — moving sections releases the panel; anything in flight stays on its thread and never attaches here. */
+        setDiscuss(null); discussGen.current += 1;
+      }
+      return sectionId;
+    });
     replaceAddress(sectionId);
   }, [replaceAddress]);
   const onHold = useCallback((sectionId: string, start: number, end: number, text: string) => {
@@ -225,6 +290,42 @@ export default function FlagshipWriteHost() {
     setHeld({ sectionId, start, end, text });
     replaceAddress(sectionId);
   }, [replaceAddress]);
+
+  /* C1C1 — the commissioning gesture, in the founder-fixed order. */
+  const onAskMaia = useCallback(() => {
+    if (!editorialEnabled || !held) return;
+    setDiscuss({ kind: 'composing', held });
+  }, [editorialEnabled, held]);
+  const onRelease = useCallback(() => {
+    /* Release, never cancel: hide; a pending act finishes on the server; its result will not attach. */
+    setDiscuss(null); discussGen.current += 1;
+  }, []);
+  const onSubmitAsk = useCallback((text: string) => {
+    if (!editorialEnabled || !discuss || discuss.kind !== 'composing') return;
+    const ask = text.trim();
+    if (!ask) return;
+    const commissioned = discuss.held;
+    const writing = writingRef.current;
+    if (!writing) { setDiscuss({ kind: 'refused', held: commissioned, ask, copy: DISCUSS_COPY.failed }); return; }
+    guard.current ??= createInFlightGuard();
+    if (guard.current.held()) { setDiscuss({ kind: 'refused', held: commissioned, ask, copy: DISCUSS_COPY.busy }); return; }
+    const gen = ++discussGen.current;
+    setDiscuss({ kind: 'pending', held: commissioned, ask, gen });
+    void commissionDiscuss(guard.current, commissioned, ask, {
+      readPosture: () => readCurrentSanctuaryPosture(),
+      session: writing,
+      openPassage: openBoundEditorialPassage,
+      sendTurn: sendBoundEditorialTurn,
+    }).then((outcome) => {
+      /* LATE RESULT — attaches only to the gesture that commissioned it, on the section still in focus. */
+      if (!resultAttaches({ gen, held: commissioned }, { gen: discussGen.current, focusSectionId: focusRef.current })) return;
+      if (outcome.ok) {
+        setDiscuss({ kind: 'answered', held: commissioned, ask, threadId: outcome.threadId, locusText: outcome.locusText, reply: outcome.reply });
+      } else if (outcome.stage !== 'in_flight') {
+        setDiscuss({ kind: 'refused', held: commissioned, ask, copy: outcome.copy });
+      }
+    });
+  }, [editorialEnabled, discuss]);
 
   const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
   const work = currentWork(workContext);
@@ -249,6 +350,12 @@ export default function FlagshipWriteHost() {
       held={held}
       onFocus={onFocus}
       onHold={onHold}
+      editorialEnabled={editorialEnabled}
+      discuss={discuss}
+      onAskMaia={onAskMaia}
+      onSubmitAsk={onSubmitAsk}
+      onRelease={onRelease}
+      onWriting={(writing) => { writingRef.current = writing; }}
     />
   );
 }

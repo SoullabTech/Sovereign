@@ -1,10 +1,13 @@
 ---
 room: Soullab Studio — flagship Write · Develop · Review composition
-human_activity: writing directly in the Work while MAIA stays at the writer's exact place; holding a passage; walking findings back into the manuscript without losing place
+human_activity: writing directly in the Work while MAIA stays at the writer's exact place; holding a passage; asking MAIA one question about the held passage and reading her reply without leaving the manuscript; walking findings back into the manuscript without losing place
 surfaces:
   - app/writers-studio/flagship/**
   - app/writers-studio/rebuild/FlagshipWriteHost.tsx
   - app/writers-studio/rebuild/flagshipWriteHost.css
+  - app/writers-studio/rebuild/DiscussLayer.tsx
+  - app/writers-studio/rebuild/discussAct.ts
+  - app/writers-studio/rebuild/page.tsx
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE — one Studio shell, three member-facing modes, never three products
@@ -18,12 +21,16 @@ reference_surfaces:
   - docs/programme/FLAGSHIP-RUNTIME-CONVERGENCE-01_C1A_PURE_WRITE_FRAME_2026-09-22.md
   - docs/design/contracts/writers-studio-rebuild.md
   - docs/design/contracts/screenshots/flagship-b2/witness.json
+  - docs/design/contracts/screenshots/flagship-c1c1/flag-on__2-answered.png
+  - docs/design/contracts/screenshots/flagship-c1c1/flag-on__3-stale.png
+  - docs/design/contracts/screenshots/flagship-c1c1/flag-on__4-mobile-390.png
 shared_with_house: the `.fs-tokens` semantic token root (ground · text · action · accent-warm · maia · status · measure · provenance · rail · atmosphere) declared once in flagship.css · Press serif for the Work, system sans for the chrome · restrained gold as warm attention only · human-language gestures · the proven authorship substrate (RebuildWritingBoundary → useSectionWriting → makeSectionSave) hosted unchanged
-distinct_to_room: the manuscript is a centred column in normal flow and MAIA is an absolute layer above it, so opening her never shifts the prose; alternatives are unranked peers; the applied receipt always carries Undo; the live Write host exposes Write alone as non-interactive orientation, supplies status only from the writing session's own state, and draws no control that lacks a lawful action
+distinct_to_room: the manuscript is a centred column in normal flow and MAIA is an absolute layer above it, so opening her never shifts the prose; alternatives are unranked peers; the applied receipt always carries Undo; the live Write host exposes Write alone as non-interactive orientation, supplies status only from the writing session's own state, and draws no control that lacks a lawful action; when the server has enabled the editorial layer and a passage is held, ONE action (Ask MAIA) opens a one-shot composer whose Submit is the commissioning act — the member's own words, one passage-bound thread, one MAIA reply, Discuss as the only tab, Release (never cancel), a late result bound to its gesture, and a stale disclosure rather than a re-anchor when the passage has since been edited
 screenshot_desktop: docs/design/contracts/screenshots/flagship-c1b/flagship__1-open.png
 screenshot_mobile: docs/design/contracts/screenshots/flagship-c1b/flagship__5-mobile-390.png
 experience_verification: >-
   CONTROLLED-COMPONENT WITNESS (scripts/witness/flagship/render.tsx): eleven acceptance states at 1920 · 1440 · 1180 · 390, V9 legacy-shape and F13 falsifiers green, 44/44; identical before and after the C1A extraction and the C1B shell affordances (result file and all 44 captures byte-identical). LIVE CANDIDATE WALK (scripts/witness/flagship/c1b-live-write-walk.ts), 2026-09-22, against a disposable full-schema shadow database and a real next dev server at /writers-studio/rebuild with a real authenticated session: manuscript opened by identity; two real authored bodies rendered inside the flagship manuscript geometry; typing did not shift the column; status read "Unsaved" while typing and "Saved · v2" after the existing save path advanced the draft version 1→2 through exactly one section save lane; reload returned the exact saved text; selecting authored text held the exact passage at code-point address 21:29; zero buttons, zero legacy Develop/Review links, no static paragraphs, no fixture status phrase, no invented kind or organisation. 22/22. ⛔ Candidate evidence, not production evidence and not a member walk; V10 remains the founder's.
+  C1C1 DISCUSS WALK (scripts/witness/flagship/c1c1-discuss-walk.ts), 2026-09-23, same shadow discipline, the editorial flag carried only by the witness next dev process, the browser carrying an explicit ordinary Sanctuary posture, and MAIA's reply supplied by a labelled controlled loopback at the structured seam (scripts/witness/flagship/c1c1-loopback-inference.ts — ⛔ not MAIA's cognition): flag off → no Ask MAIA, no panel, no editorial request, zero rows, 6/6; flag on → selection commissions nothing, the composer opens with no request, Submit settled the dirty section through the existing save lane BEFORE the passage opened at the exact held range with the post-settlement revision and the gesture posture, exactly one discourse turn under latitude 1 / no removal / no immediate proposal, one chain · one thread · two turns · zero proposal versions, manuscript bytes unchanged, the panel showing the exact ask and the last admitted MAIA turn under a single Discuss tab, Release with zero vertical movement and no cancellation vocabulary, a slow reply not attaching after a section move, an edited locus rendering the stale disclosure with no highlight and no re-read, two synchronous submits producing one open and one turn, Sanctuary and unresolved posture refused locally with no POST, the phone sheet carrying the held passage, 24/24. C1B walk re-run on the mounted host with the flag off: 22/22. ⛔ Candidate evidence; the crumb bar now holds one 49px height in every state so the action's presence or absence cannot move the Work.
 ---
 
 # Soullab Studio — flagship composition
@@ -38,4 +45,14 @@ The writer is inside the Work. Write is the room; Develop and Review are modes o
 - Status is the session's own state: Unsaved · Saving… · Saved · v{n} · Save unavailable · Needs attention. The controlled witness's fixture phrase never reaches the live runtime.
 - Navigation names only Write, as orientation, until Develop and Review exist in the flagship runtime. No link to the legacy rooms.
 - The Work name and its form appear only when the member declared them; a missing fact is omitted, never invented.
-- Aa · voice note · Comment · More · facet · Ask MAIA · Pure Canvas are not drawn: each keeps its substrate behind its own route and returns to this room only with a lawful action behind it.
+- Aa · voice note · Comment · More · facet · Pure Canvas are not drawn: each keeps its substrate behind its own route and returns to this room only with a lawful action behind it.
+
+## What the live Write host asserts (C1C1 — Discuss-only contextual MAIA)
+
+- The editorial flag is read once on the server by `page.tsx` and handed down as presentation state. Off: nothing of this section is drawn and no editorial route is ever called. The client never infers the flag.
+- Selection is not a commission. Holding a passage only exposes Ask MAIA; opening the composer calls nothing and stores nothing. Submit of the member's own text is the commissioning act.
+- At Submit, in order: a synchronous in-flight guard; the member's current Sanctuary posture read at the gesture (unresolved or Sanctuary → refused locally, nothing sent, and the copy says so); the existing writing session settled through its own flush and status; the revision read only after settlement; the passage relationship opened at the exact held range; exactly one discourse turn under the withholding scope. Never a manufactured ask, never a retry.
+- The panel is the pure contextual seam the controlled witness also renders: the held passage echoed on a phone, the exact ask, the last admitted MAIA turn as speech, one tab (Discuss), Release. No Observation / Reasoning / Teaching is manufactured from a reply; no Apply · Undo · Revise · Reason · Teach · coverage · second composer is drawn.
+- A response attaches only to the gesture that commissioned it, on the section still in focus; moving sections or releasing lets the server act finish on its thread without it ever rendering here.
+- Before an answered response renders as attached, its locus must occur exactly once in the live body; otherwise the panel discloses that the response belongs to the passage before the latest edit, the highlight is withheld, and nothing is re-read or re-anchored.
+- Release hides. It never claims to cancel, because nothing in flight is stopped.
