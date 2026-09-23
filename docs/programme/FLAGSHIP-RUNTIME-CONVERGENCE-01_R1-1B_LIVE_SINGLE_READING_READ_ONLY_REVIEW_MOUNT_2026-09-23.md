@@ -74,3 +74,35 @@ No Review tab, rail or mobile destination, no link, no `/writers-studio/review` 
 ⚠️ Noted for R1-1C, not taken: `liveReview.ts` and `LiveReviewView.tsx` sit under the flagship host directory and passed `check:design-canon` under the existing contract; listing them explicitly in `flagship-studio.md` belongs with the navigation succession act that makes Review a named destination.
 
 **Standing: R1-1B ✅ BUILT · WITNESSED · GATED ON CANDIDATE · STOPPED for founder adjudication · R1-1C NOT OPENED · production untouched.**
+
+## 8. Founder adjudication (2026-09-23) — PASS · CLOSED ON CANDIDATE `1fcf1ad0a`
+
+R1-1B is adjudicated **PASS AND CLOSED ON CANDIDATE `1fcf1ad0a`**. The founder adjudicated the submitted candidate evidence (suite, witness W1–W8, preservation gates) without independently re-executing the repository gates. No authority is conferred for R1-1C.
+
+**Founder adjudication note — facet capability completion.** The `facet` axis discovered during R1-1B live falsification (§0, the *Guided ▾* selector rendering as a dead `<button>` in the first live read-only Review) is accepted as a **bounded completion of the R1-1A capability model**, ⛔ not a reopening and ⛔ not a semantic expansion of R1-1A. Controlled Review retains `facet = true`; read-only Review retains `facet = false`; the controlled goldens are unchanged. **L18 / D16 protect this distinction.** R1-1A's substantive closure remains valid; its capability model received a bounded completion discovered under R1-1B live falsification, not a change to R1-1A's underlying authority. **No `R1-1A-R2` act is required.** Carried here so that a later reader does not see `facet` and mistake it for an ungoverned capability expansion.
+
+**Founder ruling — lens seam.** `onLens` stays exactly where it is. Selecting a lens is **presentation-level filtering of Review material that is already loaded**; it is ⛔ not presently a member act and ⛔ not an independent capability, and an event handler does not by itself make it one — the boundary is behavioural, not syntactic. A future act must govern lens selection **only if** it acquires persistence, a member write, URL/navigation authority, a new retrieval request, a cognition commission, or any analytical state used to alter durable standing. None of that is authorized by R1-1B, and R1-1C should not convert lens selection into a capability unless navigation succession actually changes its semantics.
+
+**Carried forward, not defects of R1-1B**: visible Review product navigation · successor to frozen C1B-L6 · governed re-freeze after that successor · design-contract recognition of `reading=<id>` as legitimate flagship URL state · any future persistence/navigation semantics for lens state.
+
+## 9. R1-1B-A1 — current-canonical lineage reconciliation + this addendum (founder-authorized)
+
+**Authority distinction, explicit**: `1fcf1ad0a` remains the adjudicated R1-1B **semantic/content authority**. The commits below do not replace it. They establish only:
+
+```text
+1fcf1ad0a   R1-1B semantic/content authority (PASS · CLOSED)
+    ↓
+freshness reconciliation with exact canonical b4f73ac4c   (merge commit, no-ff)
+    ↓
+this governance-record addendum (§8 · §9)
+```
+
+**Freshness facts accepted by the authorization**: canonical tip `b4f73ac4c` · merge-base `65aca2460` · 67 canonical commits absent from this lineage · zero Writer's Studio / flagship / navigation / freeze / design-contract / `package.json` overlap · zero files touched by both lineages · dry-run conflicts 0. An earlier probe against `d0261b939` reported three apparent overlaps (provider-governance doc, its proof script, `provider-policy.json`); those were a **tree-comparison artefact** — this lineage never carried `d0261b939` — not branch overlap.
+
+**Reconciliation, as performed**: `git merge --no-ff origin/clean-main-no-secrets` (= `b4f73ac4c`) onto `1fcf1ad0a`. No rewrite, no squash. Every file the merge changed relative to `1fcf1ad0a` is canonical-side (JEV / SVE / AIN-SI / operator-router / provider-governance records, scripts and suites, `CLAUDE.md`, the sovereignty-gate workflow); the set of files this lineage changes relative to canonical is identical before and after the merge.
+
+**Preservation proof on the reconciled head** (blob identity by `git rev-parse <sha>:<path>`, `1fcf1ad0a` vs head): `liveReview.ts` · `LiveReviewView.tsx` · `FlagshipWriteHost.tsx` · `DevelopReview.tsx` (incl. `READ_ONLY_REVIEW_CAPABILITIES`) · `ReviewPanels.tsx` · `DevelopViews.tsx` · `lib/writersStudio/studio/realReview.ts` (R1-0 mapper) · `FLAGSHIP_FREEZE.json` · `verify-flagship-freeze.ts` · `docs/design/contracts/flagship-studio.md` · `package.json` — **all SAME**; `app/api/sovereign/manuscripts/**` (reading APIs), `app/writers-studio/**`, `lib/writersStudio/**`, `tests/constitutional/writers-studio/**`, `scripts/witness/flagship/**` — **empty diff**. Gates on the reconciled head: `verify:flagship-freeze` **57/57 INTACT** · `matrix:ws-flagship-r1-1b` **18/18 · 16/16 dead · LETHAL + DISCRIMINATING** · `-r1-1a` · `-c1a` · `-c1b` (**C1B-L6 PASS**, navs exactly two `write`) · `-c1c1` all LETHAL · `typecheck:ws-flagship-r1-1b` PASS · `check:no-supabase` green. No governed product blob changed, so no new product witness was manufactured, per the authorization. ⚠️ `git diff --check` over the merge reports trailing whitespace only in canonical-side JEV/operator records that already carry it at `b4f73ac4c`; not this act's to repair.
+
+⛔ This act performed no Review navigation, no C1B-L6 succession, no design-contract change beyond this record, no `reading` URL-state law expansion, no new capability, no lens persistence, no routing change, no flag, no deployment, no production mutation, no R1-1C work.
+
+**Standing: R1-1B ✅ PASS · CLOSED @ `1fcf1ad0a` · lineage reconciled with canonical `b4f73ac4c` · R1-1C NOT OPENED · production untouched.**
