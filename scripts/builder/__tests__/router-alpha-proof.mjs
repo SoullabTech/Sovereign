@@ -4,6 +4,10 @@
 // C3 x1 (auto-routed, an already-real qualifying task, not manufactured).
 import { route } from '../router.mjs';
 import { runCapability } from '../deterministic.mjs';
+import {
+  beginGenerationActivity,
+  endGenerationActivity,
+} from '../jarvis-ollama-generation-lease.mjs';
 import { execFileSync } from 'node:child_process';
 
 const cwd = process.cwd();
@@ -49,11 +53,30 @@ console.log('\n==================== C1 — bounded local task ==================
   const decision = route(task);
   report('router selected C1', decision.execution_lane === 'C1', decision.reason);
 
-  const res = await fetch('http://127.0.0.1:11434/api/generate', {
-    method: 'POST',
-    body: JSON.stringify({ model: 'qwen2.5:7b', prompt: task.prompt, stream: false }),
+  const activity = beginGenerationActivity({
+    consumer: 'router-alpha-proof:C1',
+    providerId: 'ollama',
+    modelId: 'qwen2.5:7b',
+    env: process.env,
   });
-  const body = await res.json();
+  if (!activity.ok) {
+    throw new Error(activity.code || 'OLLAMA_DIAGNOSTIC_ISOLATION_REFUSED');
+  }
+  let res;
+  let body;
+  try {
+    res = await fetch('http://127.0.0.1:11434/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({ model: 'qwen2.5:7b', prompt: task.prompt, stream: false }),
+    });
+    body = await res.json();
+  } finally {
+    endGenerationActivity({
+      activityId: activity.activity_id,
+      token: activity.token,
+      env: process.env,
+    });
+  }
   const answer = (body.response || '').trim().toUpperCase();
   console.log('  local model response:', JSON.stringify(body.response));
   console.log('  http status:', res.status, '| ollama model field:', body.model);

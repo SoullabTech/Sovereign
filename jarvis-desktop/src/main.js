@@ -1207,12 +1207,38 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
           + `Cite only lines present in the source above.\n\n${task.prompt}`
         : task.prompt;
 
-      const res = await fetch('http://127.0.0.1:11434/api/generate', {
-        method: 'POST',
-        body: JSON.stringify({ model: 'qwen2.5:7b', prompt, stream: false }),
-        signal: AbortSignal.timeout(30000),
+      const leasePath = path.join(
+        REPO_ROOT, 'scripts', 'builder', 'jarvis-ollama-generation-lease.mjs',
+      );
+      const leaseMod = await import(`${pathToFileURL(leasePath).href}?t=${Date.now()}`);
+      const generationActivity = leaseMod.beginGenerationActivity({
+        consumer: 'jarvis-desktop:C1',
+        providerId: 'ollama',
+        modelId: 'qwen2.5:7b',
+        env: process.env,
       });
-      const body = await res.json();
+      if (!generationActivity.ok) {
+        throw new Error(
+          generationActivity.code || 'OLLAMA_DIAGNOSTIC_ISOLATION_REFUSED',
+        );
+      }
+
+      let res;
+      let body;
+      try {
+        res = await fetch('http://127.0.0.1:11434/api/generate', {
+          method: 'POST',
+          body: JSON.stringify({ model: 'qwen2.5:7b', prompt, stream: false }),
+          signal: AbortSignal.timeout(30000),
+        });
+        body = await res.json();
+      } finally {
+        leaseMod.endGenerationActivity({
+          activityId: generationActivity.activity_id,
+          token: generationActivity.token,
+          env: process.env,
+        });
+      }
       response.result = { response: body.response, model: body.model };
       response.status = 'completed';
 

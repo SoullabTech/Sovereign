@@ -29,6 +29,10 @@
  */
 
 import { readFileSync } from 'node:fs';
+import {
+  beginGenerationActivity,
+  endGenerationActivity,
+} from './jarvis-ollama-generation-lease.mjs';
 
 const LOOPBACK_HOST = 'http://127.0.0.1:11434';
 const DEFAULT_HOST = process.env.JARVIS_OLLAMA_HOST || LOOPBACK_HOST;
@@ -91,51 +95,74 @@ export async function run({
       duration_s: 0, output: '',
     };
   }
+  const activity = beginGenerationActivity({
+    consumer: 'jarvis-local-worker',
+    providerId: 'ollama',
+    modelId: model,
+    env: process.env,
+  });
+  if (!activity.ok) {
+    return {
+      ok: false, transport: 'ollama-native', model, host,
+      failure_class: activity.code || 'OLLAMA_DIAGNOSTIC_LEASE_REFUSED',
+      error: activity.code || 'local generation refused by diagnostic isolation',
+      duration_s: 0, output: '',
+    };
+  }
+
   const t0 = Date.now();
-  let res;
   try {
-    res = await fetch(`${host}/api/generate`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        prompt,
-        stream: false,
-        options: { temperature, num_ctx: Number(process.env.JARVIS_NUM_CTX || 65536) },
-      }),
-      signal: AbortSignal.timeout(timeoutMs),
+    let res;
+    try {
+      res = await fetch(`${host}/api/generate`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt,
+          stream: false,
+          options: { temperature, num_ctx: Number(process.env.JARVIS_NUM_CTX || 65536) },
+        }),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch (e) {
+      return {
+        ok: false, transport: 'ollama-native', model, host,
+        failure_class: e.name === 'TimeoutError' ? 'WORKER_TIMEOUT' : 'TRANSPORT_UNREACHABLE',
+        error: e.message, duration_s: Math.round((Date.now() - t0) / 1000), output: '',
+      };
+    }
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      return {
+        ok: false, transport: 'ollama-native', model, host,
+        failure_class: 'WORKER_EXECUTION_FAILED',
+        error: `HTTP ${res.status}: ${body.slice(0, 400)}`,
+        duration_s: Math.round((Date.now() - t0) / 1000), output: '',
+      };
+    }
+    const j = await res.json();
+    const duration_s = Math.round((Date.now() - t0) / 1000);
+    return {
+      ok: true,
+      transport: 'ollama-native',
+      model: j.model ?? model,
+      host,
+      output: j.response ?? '',
+      duration_s,
+      // Backend-reported counts: the authoritative record of what the model actually saw.
+      prompt_eval_count: j.prompt_eval_count ?? null,
+      eval_count: j.eval_count ?? null,
+      done_reason: j.done_reason ?? null,
+      failure_class: null,
+    };
+  } finally {
+    endGenerationActivity({
+      activityId: activity.activity_id,
+      token: activity.token,
+      env: process.env,
     });
-  } catch (e) {
-    return {
-      ok: false, transport: 'ollama-native', model, host,
-      failure_class: e.name === 'TimeoutError' ? 'WORKER_TIMEOUT' : 'TRANSPORT_UNREACHABLE',
-      error: e.message, duration_s: Math.round((Date.now() - t0) / 1000), output: '',
-    };
   }
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    return {
-      ok: false, transport: 'ollama-native', model, host,
-      failure_class: 'WORKER_EXECUTION_FAILED',
-      error: `HTTP ${res.status}: ${body.slice(0, 400)}`,
-      duration_s: Math.round((Date.now() - t0) / 1000), output: '',
-    };
-  }
-  const j = await res.json();
-  const duration_s = Math.round((Date.now() - t0) / 1000);
-  return {
-    ok: true,
-    transport: 'ollama-native',
-    model: j.model ?? model,
-    host,
-    output: j.response ?? '',
-    duration_s,
-    // Backend-reported counts: the authoritative record of what the model actually saw.
-    prompt_eval_count: j.prompt_eval_count ?? null,
-    eval_count: j.eval_count ?? null,
-    done_reason: j.done_reason ?? null,
-    failure_class: null,
-  };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────

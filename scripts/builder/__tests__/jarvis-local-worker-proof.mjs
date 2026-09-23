@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { health, isPermittedLocalHost, run } from "../jarvis-local-worker.mjs";
+import {
+  acquireDiagnosticLease,
+  releaseDiagnosticLease,
+} from "../jarvis-ollama-generation-lease.mjs";
 
 let passed = 0;
 const check = async (name, fn) => {
@@ -44,9 +50,48 @@ try {
     assert.equal(fetchCalls, 0);
   });
 
+  await check("diagnostic lease refuses local worker before /api/generate fetch", async () => {
+    const tmp = mkdtempSync(path.join(os.tmpdir(), "local-worker-lease-proof-"));
+    const previous = process.env.JARVIS_OLLAMA_GENERATION_LEASE_PATH;
+    process.env.JARVIS_OLLAMA_GENERATION_LEASE_PATH = path.join(tmp, "lease.json");
+    try {
+      const held = acquireDiagnosticLease({
+        actId: "E3R3/S0R1R2-worker-proof",
+        holderPid: process.pid,
+        env: process.env,
+        censusFn: () => [],
+        socketCensusFn: () => [],
+      });
+      assert.equal(held.ok, true);
+      const before = fetchCalls;
+      const result = await run({
+        prompt: "bounded test",
+        model: "qwen3-coder:30b",
+        host: "http://127.0.0.1:11434",
+      });
+      assert.equal(result.ok, false);
+      assert.equal(result.failure_class, "OLLAMA_DIAGNOSTIC_LEASE_HELD");
+      assert.equal(fetchCalls, before);
+      assert.equal(releaseDiagnosticLease({ token: held.token, env: process.env }).ok, true);
+    } finally {
+      if (previous === undefined) delete process.env.JARVIS_OLLAMA_GENERATION_LEASE_PATH;
+      else process.env.JARVIS_OLLAMA_GENERATION_LEASE_PATH = previous;
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   const delegate = readFileSync(new URL("../../ain-delegate.sh", import.meta.url), "utf8");
   await check("delegate pins local-native child to exact loopback Ollama", async () => {
     assert.match(delegate, /JARVIS_OLLAMA_HOST="http:\/\/127\.0\.0\.1:11434"/);
+  });
+
+  await check("delegate diagnostic gate precedes both native worker launches", async () => {
+    const gates = [...delegate.matchAll(/check-consumer/g)].map((m) => m.index);
+    const launches = [...delegate.matchAll(/node "\$LOCAL_WORKER_SCRIPT" run/g)].map((m) => m.index);
+    assert.equal(gates.length >= 2, true);
+    assert.equal(launches.length >= 2, true);
+    assert.equal(gates[0] < launches[0], true);
+    assert.equal(gates[1] < launches[1], true);
   });
 
   await check("candidate commit failure is followed by hard reset and clean", async () => {
