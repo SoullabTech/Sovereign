@@ -17,8 +17,8 @@
 
   "development_boundary": {
     "governance_canon": "docs/canon/DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md",
-    "canon_status": "candidate_not_ratified",
-    "interim_hold": "active",
+    "canon_status": "ratified",
+    "interim_hold": "lifted",
     "held_lab_data_classes": ["repository_source", "constitutional_canon"],
     "repository_data_classes": ["repository_derived_metadata", "repository_source", "constitutional_canon"],
     "unassigned_repository_classes": ["repository_derived_metadata", "repository_source", "constitutional_canon"],

@@ -1,9 +1,19 @@
-# Development Provider Governance — Candidate
+# Development Provider Governance — Ratified
 
-**Status:** CANDIDATE · NOT RATIFIED
+**Status:** ⭐ **RATIFIED** · governing development-lane external-provider canon
+**Ratified:** 2026-09-23 · founder act `JEV-INT-01R3`
 **Programme:** JARVIS-JEV-01 / JEV-INT-01
-**Date:** 2026-09-22
+**Date authored:** 2026-09-22
 **Parent canon:** `PROVIDER_GOVERNANCE.md` · `OPTIMIZATION_TOOLING_GOVERNANCE.md`
+
+⚠️ **The filename still reads `…_CANDIDATE_…` deliberately.** `JEV-INT-01R3` preserves custody
+rather than renaming a document that has already been adjudicated and admitted at a pinned
+path; renaming would break every pin that cites it. The status above is the authority, not the
+filename. A separately justified discoverability repair may rename it later.
+
+⛔ Ratification of this law authorizes **no provider, disclosure, network call, spend,
+transport, inference, deployment, or production mutation.** It establishes the boundary; it
+grants nothing across it.
 
 This candidate governs the **development-time external-provider boundary**: repository-governed
 state, source, or constitutional material leaving a sovereign development environment for a
@@ -212,20 +222,40 @@ Transport may be considered only after:
 The standing hold blocks routing `repository_source` or `constitutional_canon` to a foreign
 Lab-tier provider at development time.
 
-This candidate **authors** the development-lane law but does not ratify itself.
+This law **authors** the development-lane boundary. It could not ratify itself; ratification is
+a founder act, performed separately on 2026-09-23 as `JEV-INT-01R3`.
 
-The capability-table edits in the same candidate make the required vocabulary explicit but
+The capability-table edits admitted alongside it make the required vocabulary explicit but
 assign the new classes to no provider.
 
-Therefore, until Founder ratification and canonical admission:
+⭐ **Both lift conditions of the 2026-09-20 interim hold are therefore discharged:**
 
 ```text
-dev-lane canon       AUTHORED AS CANDIDATE · NOT RATIFIED
-capability classes   PROPOSED IN CANDIDATE
-interim hold         STILL OPERATIVE
+1. dev-lane governance canon authored AND ratified      ✓
+2. explicit repository capability vocabulary canonical  ✓
+```
+
+Standing after ratification:
+
+```text
+dev-lane canon       RATIFIED · CANONICAL
+capability classes   CANONICAL (three repository data classes)
+interim hold         LIFTED — prerequisites satisfied
 provider assignment  NONE
 external execution   NOT AUTHORIZED
 ```
+
+⛔⛔ **The lift means only that the temporary prohibition's prerequisites are satisfied. It
+grants no provider access to any repository data class.** What replaces the hold is not
+permission but a stronger, permanent barrier: every repository-class assignment now requires a
+separate Class A authorization record, founder-adjudicated and **admitted to canonical**,
+which a later provider-assignment candidate cites by path, blob and commit and which the guard
+proves by canonical ancestry. A two-commit branch cannot satisfy it; a same-change
+self-authorization cannot satisfy it.
+
+⚠️ And the epistemic boundary is preserved rather than overstated: **the guard proves canonical
+custody and record identity. It does not prove that a human actually ratified the record.**
+Founder ratification remains a governance fact, not something Git metadata can establish.
 
 ## 9. Non-authorization
 
