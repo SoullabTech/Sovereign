@@ -1,8 +1,8 @@
 # JARVIS-FOUNDER-WORKSPACE-01 / F1 — `programme-state.v1` Projection Contract (CANDIDATE)
 
 **Authorized by:** F0 founder adjudication §VII (D-03): *"F1 is authorized to define `programme-state.v1` — projection contract + recorded fixture only."*
-**Standing:** CANDIDATE CONTRACT · recorded fixture delivered · ⛔ no projector implemented · ⛔ not ratified.
-**Fixture:** `prototypes/jarvis-founder-workspace-f1/programme-state.v1.fixture.json` (generated from `fixtures.js`; 13 programmes; observed against `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f`).
+**Standing:** CANDIDATE CONTRACT · recorded fixture delivered · **amended at F1R1 (population block + PS-9, founder ruling F1-R1)** · ⛔ no projector implemented · ⛔ not ratified.
+**Fixture:** `prototypes/jarvis-founder-workspace-f1/programme-state.v1.fixture.json` (generated from `fixtures.js`; 13 programmes emitted of 26 examined by hand, `complete: false`; observed against `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f`).
 
 ## 1 · What it is, and is not
 - It is a **projection**: a derived, machine-readable view of programme standing that a Today surface can read without paragraph or filename heuristics.
@@ -17,6 +17,18 @@
   "projected_at": "YYYY-MM-DD",
   "observed_against": "<full canonical SHA the projection was read against>",
   "projector": "<who/what produced it; 'manual' until a governed projector exists>",
+  "population": {                       // F1-R1 (founder ruling 2026-09-23): the consumer must be able to determine the population
+    "definition": "<what counts as a programme for this projection>",
+    "source": "<where the population was enumerated from>",
+    "examined": 0,                       // subjects examined
+    "emitted": 0,                        // rows in `programmes`
+    "selection": "<rule that decided examined → emitted>",
+    "not_emitted": [ "<examined subjects deliberately left out, by id>" ],
+    "unreadable": [ "<subjects whose record could not be read>" ],
+    "unclassified": [ "<subjects that could not be classified as a programme or not>" ],
+    "complete": false,                   // true ONLY when a deterministic projector enumerated the population mechanically
+    "why_not_complete": "<required when complete=false>"
+  },
   "programmes": [ {
     "id": "<programme or lane code as the records name it>",
     "name": "<ordinary-language name for the founder>",
@@ -43,6 +55,7 @@
 - **PS-5 External is a boundary, not a gap.** `external: true` rows (e.g. Merge Authority) carry the founder-stated standing and `custody.branch: "outside this repository"`. *Defeat:* rendering an external programme as missing or unknown.
 - **PS-6 Freshness travels with the file.** `observed_against` is mandatory and consumers display it; a projection older than the canonical tip is shown as older, never refreshed by inference. *Defeat:* a consumer that hides `observed_against`.
 - **PS-7 No authority from projection.** Nothing reads a projection row to decide whether an act may run. *Defeat:* any code path where `authority.*` gates execution.
+- **PS-9 Population before totals (F1-R1).** `population` is mandatory. A consumer may state an unqualified total ("N decisions are waiting on you") **only when `population.complete === true`**; otherwise every derived count is scoped ("in this snapshot …", "visible in the programmes included …"). `complete` may be set true only by a deterministic projector that enumerated the population mechanically, never by hand. *Defeat:* a manual projection with `complete: true`; a consumer that renders a bare total when `complete` is false or absent.
 - **PS-8 Reconstructible.** Deleting the projection and re-projecting from the cited sources loses nothing (manual §24 cockpit test). *Defeat:* a field with no source.
 
 ## 4 · What the fixture demonstrates

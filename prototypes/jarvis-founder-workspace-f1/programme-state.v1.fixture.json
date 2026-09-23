@@ -3,6 +3,35 @@
   "projected_at": "2026-09-23",
   "observed_against": "b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f",
   "projector": "manual F1 fixture — the deterministic projector is a later governed act",
+  "population": {
+    "definition": "a programme = a governing question with a charter or founder ruling in docs/programme, or an ops lane with a record in docs/ops, or an externally governed dependency named by founder ruling",
+    "source": "F0 census §2.8 lane index + CLAUDE.md priority thread (bullets dated 2026-09-03…2026-09-23), read manually at b4f73ac4",
+    "examined": 26,
+    "emitted": 13,
+    "selection": "programmes with a LATEST standing in the CLAUDE.md priority thread on or after 2026-09-13, plus the two external/ops dependencies the F0 adjudication named; older or closed lanes were examined and not emitted",
+    "not_emitted": [
+      "JARVIS-KP-01",
+      "JARVIS-GOVERNED-KNOWLEDGE-FLOW-01",
+      "JARVIS-PROVIDER-01",
+      "JARVIS-PROVIDER-02",
+      "JARVIS-NEMOTRON-C3",
+      "JARVIS-CANONICAL-PROVIDER-EXECUTION-01",
+      "JARVIS-DESKTOP-OPERATOR-FLOW-02",
+      "JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01",
+      "JARVIS-PUBLIC-ACCOUNTED-FOR-01",
+      "S3 (closed in production)",
+      "CONTINUITY-REMAINDER-01",
+      "TEMPORAL-MEMORY-RECONCILIATION-01 (closed)",
+      "CMT-01"
+    ],
+    "unreadable": [],
+    "unclassified": [
+      "JOP-05 / JOP-05A (planned, not bound)",
+      "JARVIS-CAPACITY-SENTINEL-01 (named, not opened)"
+    ],
+    "complete": false,
+    "why_not_complete": "the population was assembled by hand from two prose sources; no deterministic projector has enumerated docs/programme, so exhaustiveness is not mechanically established"
+  },
   "programmes": [
     {
       "id": "JARVIS-FOUNDER-WORKSPACE-01",

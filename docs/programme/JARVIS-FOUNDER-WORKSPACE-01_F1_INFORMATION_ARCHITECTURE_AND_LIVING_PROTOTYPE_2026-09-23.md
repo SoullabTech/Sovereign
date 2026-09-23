@@ -1,7 +1,7 @@
 # JARVIS-FOUNDER-WORKSPACE-01 / F1 — Information Architecture + Living Prototype over Recorded Evidence
 
 **Lane:** `JARVIS-FOUNDER-WORKSPACE-01` · **Act:** F1 (opened by F0 founder adjudication §XII, against exact F0 candidate `8b8592d9d69e9181484cb6ac9771a1be0c3b1e84`)
-**Standing:** PROTOTYPE DELIVERED · vocabulary map v1 DELIVERED · `programme-state.v1` contract + fixture DELIVERED (candidate) · ⛔ no runtime change · ⛔ F1 NOT EXITED — **exit is the founder walk** (adjudication §XV)
+**Standing (amended at F1R1):** F1 adjudicated 2026-09-23 as SUBSTANTIVELY PASS with five bounded repairs (`…_F1_FOUNDER_ADJUDICATION_2026-09-23.md`); repairs applied in F1R1 (`…_F1R1_TRUTHFULNESS_REPAIR_2026-09-23.md`). ⚠️ The original text below claimed *no network*; at `8349aa5d` the page requested Google Fonts — a containment contradiction the founder found (F1-R5). Corrected at F1R1; the original claim is preserved below as superseded, not edited. *(Original:)* PROTOTYPE DELIVERED · vocabulary map v1 DELIVERED · `programme-state.v1` contract + fixture DELIVERED (candidate) · ⛔ no runtime change · ⛔ F1 NOT EXITED — **exit is the founder walk** (adjudication §XV)
 **Freshness:** observed against `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f` (unchanged since F0; re-checked at F1 authoring) · fixture recorded 2026-09-23 · candidate = the commit introducing this record.
 
 ## 1 · Deliverables
