@@ -25,7 +25,7 @@ admission authority, contradicting §C4 and the contract's own premise.
 §C7   refusal enumeration narrowed · DIAGNOSTIC channel added
 §G    CLASS_LABEL_CONFLICT removed from the refusal reasons
 §H    D10 → metamorphic pair D10-A / D10-B · D12 → PASS + diagnostic
-      P22 lawful over-declaration · P23 orthogonal frontier · ⚠️ P24 added (see §H)
+      P22 lawful over-declaration · P23 orthogonal frontier · ⭐ P24 Founder-accepted (see §H)
 §I1   M12 redefined · M12a · M12b · M12c · M12d · M22 added
 §I2a  CROSS-CLAUSE COHERENCE — a new falsifier class
 §I3   witness EXECUTED — reference 25/25 · mutants 26/26 dead · 0 survivors
@@ -689,16 +689,14 @@ decision.
 # H. Defeat-candidate matrix
 
 The minimum authorized population is retained and extended by the E2R1 repair. Rows D01–D19 are
-negative or metamorphic defeat candidates; rows P20–P23 are positive controls.
+negative or metamorphic defeat candidates; rows P20–P24 are positive controls.
 
-⚠️⚠️ **P24 EXTENDS THE NAMED REPAIR WITNESS, AND THE REASON IS MECHANICAL, NOT STYLISTIC.**
-The authorized witness named `D10-A · D10-B · D12 · P22 · P23`. The mutation run (§I3) shows
-that set leaves **M12a — *refuse only when the label ranks higher* — ALIVE**: every named
-fixture carries a label at or below `effective_class`, so a rule that refuses only *higher*
-labels never fires on any of them and the suite reports green. ⛔ Since the ruling explicitly
-refuses that halfway repair, a witness that cannot kill it does not establish the ruling.
-**P24 is the state that distinguishes them, and it is `M12a`'s only killer.** ⭐ Founder
-adjudication owed on the addition; it is surfaced rather than folded in silently.
+⭐⭐ **P24 IS FOUNDER-ACCEPTED AS A NECESSARY EXTENSION OF THE E2R1 WITNESS.**
+The originally named witness `D10-A · D10-B · D12 · P22 · P23` left **M12a — *refuse only when
+the label ranks higher* — ALIVE**: every named fixture carried a label at or below
+`effective_class`, so that halfway repair never fired while the suite still reported green.
+**P24 is the state that distinguishes them, and it is `M12a`'s sole killer.** Its inclusion is
+therefore part of the Founder-adjudicated witness, not an unresolved extension.
 
 ⭐ **D10 is now a metamorphic PAIR (D10-A / D10-B), and the pairing is the point.** The two
 fixtures differ in **exactly one mutable label** and must produce the **identical** decision.
@@ -769,6 +767,8 @@ M11 ignore path-derived minimum
 M12 let a divergent label REFUSE admission        (the E2-A defect, as a mutant)
 M12a refuse only when the label ranks HIGHER      (halfway repair 1)
 M12b special-case frontier-dependent vs class-a   (halfway repair 2)
+M12c treat frontier-dependent projection as ordinary class-label divergence against effective_class
+M12d treat frontier-dependent as mutually exclusive with effective class-a
 M13 default missing classification to Class C
 M14 resolver failure defaults PASS
 M15 review API failure defaults PASS
@@ -782,10 +782,18 @@ M22 make label PRESENCE a precondition of admission
 ~~~
 
 ⭐ **M12a and M12b are the two halfway repairs, carried as mutants on purpose.** Each is a
-plausible, competent fix that a reviewer could accept; each leaves mutable metadata with
-admission authority in the cases nobody exempted. They are killed by **P22** and **P23**
-respectively — which is what makes the ruling's refusal of the halfway options *falsifiable*
-rather than a stated preference.
+plausible, competent fix that leaves mutable metadata with admission authority in cases nobody
+exempted. The executed witness establishes the exact killers:
+
+~~~text
+M12a  → P24                    ← sole killer
+M12b  → D12 · P22 · P24
+M12d  → P23                    ← sole killer
+~~~
+
+`M12c` and `M12d` are also formal members of this mutation family because they were executed
+in §I3; `M12d` is the exact negation of the ruling that `frontier-dependent` is not mutually
+exclusive with effective Class A.
 
 ⚠️ **M22 is the mutant the superseded suite could not have carried**, because with only a
 label-absent fixture there was nothing to contradict it.
@@ -1055,7 +1063,7 @@ E2R1 LABEL-AUTHORITY + LAWFUL OVER-DECLARATION COHERENCE REPAIR
      labels diagnostic only — neither authorize nor refuse
      reference 25/25 · mutants 26/26 dead · 0 survivors
      cross-clause coherence added as a falsifier class
-     ⚠️ P24 EXTENDS the named witness — sole killer of M12a — adjudication owed
+     ⭐ P24 Founder-accepted — sole killer of M12a
 
 governing requirement
 self-authored Class A = FAIL CLOSED
