@@ -1,0 +1,5 @@
+# NAS-BACKUP-01/R2 §III.C — scheduled restore witness. Cadence FIXED: weekly, Monday 04:00 UTC
+# (two hours after the nightly backup; never overlaps the 02:00 dump). Restores the newest VERIFIED
+# NAS dump into a port-less disposable container on this host and destroys it. Never touches
+# maia-postgres. Writes restore-reports/ and state/last-restore-witness.env on the NAS.
+0 4 * * 1 root /usr/local/bin/maia-restore-witness >> /var/log/maia-restore-witness.log 2>&1

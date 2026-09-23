@@ -19,7 +19,7 @@ set -euo pipefail
 
 LOG_DIR="${HOME}/maia-logs"
 LOG_FILE="${LOG_DIR}/health.log"
-BACKUP_DIR="${HOME}/maia-backups"
+# BACKUP_DIR (~/maia-backups) retired by NAS-BACKUP-01/R2: no job ever wrote it. See scripts/ops/backup-health.sh.
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 # Core production containers (the ones that matter for member-facing service)
@@ -105,17 +105,20 @@ fi
 
 disk_pct=$(df -h / 2>/dev/null | awk 'NR==2{print $5}' | tr -d '%' || echo "0")
 
-# ─── Check: Last backup ──────────────────────────────────────────────────────
+# ─── Check: Backup health (NAS-BACKUP-01 / R2) ────────────────────────────────
+# The governed backup authority is /usr/local/bin/maia-backup writing to the NAS
+# (BACKUP_ROOT, default /mnt/ds225/maia-backups). Before R2 this section read
+# ~/maia-backups, a path no job has ever written, so LAST_BACKUP=none forever.
+# scripts/ops/backup-health.sh reads the R2 state files and distinguishes
+# verified-current · stale · missing · unreachable, and the restore witness
+# pass-current · stale · failed · absent · unreachable. Never a single "none".
 
-last_backup="none"
-if [ -d "$BACKUP_DIR" ]; then
-  newest_backup=$(ls -t "$BACKUP_DIR"/maia_backup_*.sql.gz 2>/dev/null | head -1 || true)
-  if [ -n "$newest_backup" ]; then
-    # Extract timestamp from filename: maia_backup_YYYYMMDD_HHMMSS.sql.gz
-    backup_ts=$(basename "$newest_backup" | sed 's/maia_backup_//;s/\.sql\.gz//')
-    last_backup=$(echo "$backup_ts" | sed 's/\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)_\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1-\2-\3T\4:\5:\6Z/')
-  fi
+backup_health="BACKUP=unknown BACKUP_AGE_H=? RESTORE_WITNESS=unknown WITNESS_AGE_H=?"
+if [ -x "${SCRIPT_DIR:-$(dirname "$0")}/ops/backup-health.sh" ]; then
+  backup_health=$("${SCRIPT_DIR:-$(dirname "$0")}/ops/backup-health.sh" 2>/dev/null || echo "$backup_health")
 fi
+backup_state=$(echo "$backup_health" | sed -n 's/.*\bBACKUP=\([a-z-]*\).*/\1/p')
+witness_state=$(echo "$backup_health" | sed -n 's/.*RESTORE_WITNESS=\([a-z-]*\).*/\1/p')
 
 # ─── Compute confidence ──────────────────────────────────────────────────────
 
@@ -135,11 +138,13 @@ elif [ "$failed_jobs" -gt 0 ]; then
   confidence="medium"
 elif [ "$disk_pct" -gt 85 ]; then
   confidence="medium"
+elif [ "$backup_state" != "verified-current" ] || [ "$witness_state" = "failed" ]; then
+  confidence="medium"
 fi
 
 # ─── Write to log file ───────────────────────────────────────────────────────
 
-log_line="[${TIMESTAMP}] CONFIDENCE=${confidence} CONTAINERS=${containers_up}/${EXPECTED_COUNT} API=${api_status} DB=${db_status}(${db_latency}ms) COMMS_QUEUE=${comms_queue} SUMMARY_QUEUE=${summary_queue} FAILED_JOBS=${failed_jobs} DISK=${disk_pct}% LAST_BACKUP=${last_backup}"
+log_line="[${TIMESTAMP}] CONFIDENCE=${confidence} CONTAINERS=${containers_up}/${EXPECTED_COUNT} API=${api_status} DB=${db_status}(${db_latency}ms) COMMS_QUEUE=${comms_queue} SUMMARY_QUEUE=${summary_queue} FAILED_JOBS=${failed_jobs} DISK=${disk_pct}% ${backup_health}"
 
 if [ ${#containers_down[@]} -gt 0 ]; then
   log_line="${log_line} DOWN=$(IFS=,; echo "${containers_down[*]}")"

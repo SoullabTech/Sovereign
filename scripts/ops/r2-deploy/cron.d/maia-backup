@@ -1,0 +1,2 @@
+# NAS-BACKUP-01/R2 — unchanged schedule; the AUTHORITY at this path changes to the R2 script.
+0 2 * * * root /usr/local/bin/maia-backup

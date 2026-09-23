@@ -1,0 +1,5 @@
+# NAS-BACKUP-01/R2 §III.E — duplicate local pg_dump: KEPT as independent secondary tier, STAGGERED.
+# Apply with `crontab -e` as soullab on the minisforum. One line changes: 02:00 → 02:30 UTC so the
+# two pg_dumps no longer run in the same minute. Retention (30 d, local disk) unchanged.
+-0 2 * * * cd /home/soullab/MAIA-SOVEREIGN && PATH=/usr/bin:/usr/local/bin:/usr/bin:/bin bash scripts/backup-postgres.sh >> /home/soullab/MAIA-SOVEREIGN/database/backups/backup.log 2>&1
++30 2 * * * cd /home/soullab/MAIA-SOVEREIGN && PATH=/usr/bin:/usr/local/bin:/usr/bin:/bin bash scripts/backup-postgres.sh >> /home/soullab/MAIA-SOVEREIGN/database/backups/backup.log 2>&1
