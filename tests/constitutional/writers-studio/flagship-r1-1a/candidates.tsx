@@ -36,9 +36,9 @@ const D8: Subject = { ...REFERENCE, name: 'R1-1A-D8-controlled-room-output-chang
   Room: ((p: { view: DR.ReviewView; lens?: DR.LensId | 'all' }) => (P && mod.READ_ONLY_REVIEW_CAPABILITIES
     ? <P view={p.view} lens={p.lens} capabilities={mod.READ_ONLY_REVIEW_CAPABILITIES} />
     : <div data-room="rewritten" />)) as typeof DR.ReviewRoom };
-/* D9 · the extraction claims a home inside an FS1-frozen artifact */
+/* D9 · the extraction claims a home inside an FS1-frozen artifact (a golden: pure, so only L9 speaks) */
 const D9: Subject = { ...REFERENCE, name: 'R1-1A-D9-extraction-inside-frozen-artifact',
-  seamFiles: [...SEAM, 'scripts/witness/flagship/render.tsx'] };
+  seamFiles: [...SEAM, 'tests/constitutional/writers-studio/flagship-c1a/golden/1-write-rest.html'] };
 /* D10 · a dead control in place of an omission */
 const D10: Subject = { ...REFERENCE, name: 'R1-1A-D10-fake-disabled-control',
   Presentation: after(<button type="button" className="fs-btn" disabled aria-disabled="true">Unavailable here</button>) };

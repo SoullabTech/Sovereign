@@ -19,13 +19,17 @@ function ProvenanceMark({ p }: { p: Provenance }) {
   return <span className="fs-prov" data-provenance={p.kind}>{provenanceLabel(p)}</span>;
 }
 
-export function CoverageLine({ c, compact = false }: { c: Coverage; compact?: boolean }) {
+export function CoverageLine({ c, compact = false, navigable = true }: {
+  c: Coverage; compact?: boolean;
+  /** R1-1A · false = no navigation authority behind the control, so it is OMITTED, never disabled. */
+  navigable?: boolean;
+}) {
   return (
     <div className="fs-ev" data-coverage="true">
       <span className="fs-chip">{c.read} / {c.total} sections</span>
       <span className="fs-chip">{c.depth}</span>
       {compact ? null : <span className="fs-covwhen">{c.when}</span>}
-      <button type="button" className="fs-goto" data-return-to="coverage">What MAIA read →</button>
+      {navigable ? <button type="button" className="fs-goto" data-return-to="coverage">What MAIA read →</button> : null}
     </div>
   );
 }
@@ -39,7 +43,11 @@ export function CoverageLine({ c, compact = false }: { c: Coverage; compact?: bo
  * Every cell is an address. ⛔ Presence only — there is no way to grade a book
  * with a presence grid.
  */
-export function ContinuityMap({ d, title }: { d: ContinuityMapData; title: string }) {
+export function ContinuityMap({ d, title, navigable = true }: {
+  d: ContinuityMapData; title: string;
+  /** R1-1A · false = cells show presence only; no address is offered without navigation authority. */
+  navigable?: boolean;
+}) {
   return (
     <section className="fs-card" data-continuity-map="true">
       <h3>{title}</h3>
@@ -60,7 +68,7 @@ export function ContinuityMap({ d, title }: { d: ContinuityMapData; title: strin
             </tr>
           </thead>
           <tbody>
-            {d.rows.map((r) => <MapRow key={r.id} r={r} units={d.units} />)}
+            {d.rows.map((r) => <MapRow key={r.id} r={r} units={d.units} navigable={navigable} />)}
           </tbody>
         </table>
       </div>
@@ -69,12 +77,12 @@ export function ContinuityMap({ d, title }: { d: ContinuityMapData; title: strin
           <span key={n}><i data-presence={n} aria-hidden="true" />{PRESENCE_LABEL[n as 1 | 2 | 3]}</span>
         ))}
       </div>
-      <CoverageLine c={d.coverage} />
+      <CoverageLine c={d.coverage} navigable={navigable} />
     </section>
   );
 }
 
-function MapRow({ r, units }: { r: ThreadRow; units: readonly string[] }) {
+function MapRow({ r, units, navigable = true }: { r: ThreadRow; units: readonly string[]; navigable?: boolean }) {
   return (
     <tr data-thread={r.id}>
       <th scope="row" className="fs-maprowhead">
@@ -86,9 +94,14 @@ function MapRow({ r, units }: { r: ThreadRow; units: readonly string[] }) {
         const a = r.addressOf[i];
         return (
           <td key={u}>
-            <button type="button" className="fs-cell" data-presence={p}
-              data-return-to={a?.sectionId ?? ''}
-              aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}. Open ${a?.label ?? u}.`} />
+            {navigable ? (
+              <button type="button" className="fs-cell" data-presence={p}
+                data-return-to={a?.sectionId ?? ''}
+                aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}. Open ${a?.label ?? u}.`} />
+            ) : (
+              <span className="fs-cell" data-presence={p} role="img"
+                aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}.`} />
+            )}
           </td>
         );
       })}

@@ -419,12 +419,90 @@ export interface ReviewView {
   };
   /** The finding currently driving the manuscript pane. */
   readonly selectedFindingId?: string;
+  /**
+   * R1-1A · observations of this reading that EXIST but cannot be attached to the
+   * current prose, each with its durable identity and the truthful reason. ⛔ Never
+   * implies the observation disappeared. Absent in the accepted controlled states.
+   */
+  readonly withheld?: readonly ReviewWithheld[];
 }
 
-function FindingRow({ o, citation, selected }: {
-  o: GovernedObservation; citation?: CitationState; selected?: boolean;
+/* ══════════════════════════════════════════════════════════════════════════
+   R1-1A — THE PURE REVIEW PRESENTATION SEAM
+
+   accepted controlled ReviewRoom = ReviewPresentation + CONTROLLED capabilities
+   future read-only host          = ReviewPresentation + READ-ONLY capabilities
+
+   ⭐ The seam fetches nothing, writes nothing, commissions nothing, persists
+   nothing, invokes no model, mints no identity and owns no Work authority. It
+   renders only what its caller lawfully supplies. ⛔ A capability that is absent
+   is OMITTED — never drawn disabled, never drawn dead.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export interface ReviewCapabilities {
+  /** The crumb-bar Ask MAIA action. */
+  readonly askMaia: boolean;
+  /** Per-finding Discuss. */
+  readonly discuss: boolean;
+  /** Per-finding Explore. */
+  readonly explore: boolean;
+  /** Read for this · Read again · Read this chapter again — the only controls that commission a reading. */
+  readonly commission: boolean;
+  /** "Not now" on a stale reading. */
+  readonly acknowledgeStale: boolean;
+  /** The member's own observation editor (member-write). */
+  readonly ownObservation: boolean;
+  /** Go to passage · previous reading · full manuscript · coverage · map cells — only with a real address behind them. */
+  readonly navigate: boolean;
+}
+/** The accepted controlled room: every capability, as the design witness renders it. */
+export const CONTROLLED_REVIEW_CAPABILITIES: ReviewCapabilities = Object.freeze({
+  askMaia: true, discuss: true, explore: true, commission: true, acknowledgeStale: true, ownObservation: true, navigate: true,
+});
+/** Read-only: nothing whose act is unauthorized. A host with real addresses may grant `navigate` alone. */
+export const READ_ONLY_REVIEW_CAPABILITIES: ReviewCapabilities = Object.freeze({
+  askMaia: false, discuss: false, explore: false, commission: false, acknowledgeStale: false, ownObservation: false, navigate: false,
+});
+
+/** Reasons mirror R1-0's own refusal facts; ⛔ no reason asserts more than those facts establish. */
+export type ReviewWithheldReason = 'frozen_citation_text_unavailable' | 'observation_address_unavailable' | 'lens_not_presentable';
+export interface ReviewWithheld {
+  readonly observationId: string;
+  readonly readingId: string;
+  readonly observationKey: string;
+  readonly reason: ReviewWithheldReason;
+}
+const WITHHELD_REASON_COPY: Record<ReviewWithheldReason, string> = {
+  frozen_citation_text_unavailable: 'MAIA read this at a passage that has since changed, and the passage as she read it isn’t held here, so it can’t be shown at its place.',
+  observation_address_unavailable: 'This observation is about the shape of the Work rather than a particular passage, so it has no place in the prose to return to.',
+  lens_not_presentable: 'This observation belongs to a lens Review can’t yet display. It is kept with the reading.',
+};
+
+function WithheldObservations({ items }: { items: readonly ReviewWithheld[] }) {
+  return (
+    <section className="fs-card" data-withheld-population="true">
+      <h3>Observations not shown at their place · {items.length}</h3>
+      <p className="fs-obsnote">
+        {items.length} observation{items.length === 1 ? '' : 's'} from this reading exist{items.length === 1 ? 's' : ''} but can’t be attached to the current prose. {items.length === 1 ? 'It is' : 'They are'} kept with the reading.
+      </p>
+      {items.map((w) => (
+        <div className="fs-find" key={w.observationId} data-withheld={w.observationId} data-withheld-reason={w.reason}>
+          <p className="fs-fb">{WITHHELD_REASON_COPY[w.reason]}</p>
+          <div className="fs-ev">
+            <span className="fs-chip">reading {w.readingId}</span>
+            <span className="fs-chip">{w.observationKey}</span>
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function FindingRow({ o, citation, selected, caps }: {
+  o: GovernedObservation; citation?: CitationState; selected?: boolean; caps: ReviewCapabilities;
 }) {
   const moved = citation && citation.kind !== 'intact' ? citation : null;
+  const anyAction = caps.navigate || caps.discuss || caps.explore;
   return (
     <div className="fs-find" data-finding={o.id} data-domain={o.domain}
       data-provenance={o.provenance.kind} data-citation={citation?.kind ?? 'intact'}
@@ -455,18 +533,28 @@ function FindingRow({ o, citation, selected }: {
           <p className="fs-limit">A possibility, not a prediction — this doesn’t establish how a reader will respond.</p>
         ) : null}
       </div>
-      <div className="fs-factions">
-        <button type="button" className="fs-btn" data-return-to={o.returnTo.sectionId}>Go to passage</button>
-        <button type="button" className="fs-btn" data-action="discuss" data-return-to={o.returnTo.sectionId}>Discuss</button>
-        <button type="button" className="fs-btn" data-action="explore" data-return-to={o.returnTo.sectionId}>Explore</button>
-      </div>
+      {anyAction ? (
+        <div className="fs-factions">
+          {caps.navigate ? <button type="button" className="fs-btn" data-return-to={o.returnTo.sectionId}>Go to passage</button> : null}
+          {caps.discuss ? <button type="button" className="fs-btn" data-action="discuss" data-return-to={o.returnTo.sectionId}>Discuss</button> : null}
+          {caps.explore ? <button type="button" className="fs-btn" data-action="explore" data-return-to={o.returnTo.sectionId}>Explore</button> : null}
+        </div>
+      ) : null}
     </div>
   );
 }
 
+/** ⭐ The accepted controlled room: the seam with every capability. Output byte-identical to the design witness. */
 export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
   view: ReviewView; lens?: LensId | 'all'; facet?: Facet;
 }) {
+  return <ReviewPresentation view={view} lens={lens} facet={facet} capabilities={CONTROLLED_REVIEW_CAPABILITIES} />;
+}
+
+export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capabilities }: {
+  view: ReviewView; lens?: LensId | 'all'; facet?: Facet; capabilities: ReviewCapabilities;
+}) {
+  const caps = capabilities;
   const shown = lens === 'all' ? view.findings : view.findings.filter((f) => f.domain === lens);
   const selected = view.selectedFindingId
     ? view.findings.find((f) => f.id === view.selectedFindingId) ?? shown[0]
@@ -483,7 +571,7 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
   return (
     <>
       <CrumbBar work={view.work} place="Review" facet={facet}
-        actions={<button type="button" className="fs-tool fs-tool--key">Ask MAIA</button>} />
+        actions={caps.askMaia ? <button type="button" className="fs-tool fs-tool--key">Ask MAIA</button> : undefined} />
 
       {/* ⭐ Tabs FILTER an existing reading. ⛔ None of them commissions one. */}
       <div className="fs-modetabs" role="tablist">
@@ -516,7 +604,8 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
           {view.changed ? (
             <StaleReading readAt={view.changed.readAt} updatedAt={view.changed.updatedAt}
               change={view.changed.change} previousLabel={view.changed.previousLabel}
-              acknowledged={view.changed.acknowledged} />
+              acknowledged={view.changed.acknowledged}
+              capabilities={{ commission: caps.commission, acknowledge: caps.acknowledgeStale, navigate: caps.navigate }} />
           ) : (
             <div className="fs-reading" data-freshness={view.freshness.kind}>
               {freshnessLine(view.freshness)}
@@ -528,14 +617,14 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
             <p className="fs-obsnote">
               In the order they occur in your {view.kind}. Nothing here is ranked, and nothing is hidden.
             </p>
-            <CoverageLine c={view.coverage} />
+            <CoverageLine c={view.coverage} navigable={caps.navigate} />
 
             {/* ⛔ No empty state. Either a reading exists and said nothing, or it
                 does not exist and the surface says which — ⛔ never one list for both. */}
             {active && active.availability.kind === 'not-read' ? (
               <div className="fs-lensbody" style={{ padding: '14px 0 2px' }}>
                 {availabilityLine(active.availability, plain)}{' '}
-                {offer ? <button type="button" className="fs-goto" data-commission={lens}>{offer} →</button> : null}
+                {offer && caps.commission ? <button type="button" className="fs-goto" data-commission={lens}>{offer} →</button> : null}
               </div>
             ) : active && active.availability.kind === 'read-nothing-noticed' ? (
               <div className="fs-lensbody" style={{ padding: '14px 0 2px' }}>
@@ -544,17 +633,22 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
             ) : (
               shown.map((f) => (
                 <FindingRow key={f.id} o={f} citation={view.citations?.[f.id]}
-                  selected={f.id === selected?.id} />
+                  selected={f.id === selected?.id} caps={caps} />
               ))
             )}
           </section>
 
-          {/* ⭐ The writer contributes — ⛔ not just consumes. */}
-          <OwnObservation placeLabel={view.scope.kind === 'chapter' ? view.scope.label : 'this work'}
-            draft="The pacing slows here. The longer sentence followed by two shorter ones creates a felt exhale — it mirrors Clara’s shift from holding on to letting go."
-            themes={['Pacing', 'Change', 'Clara']} />
+          {/* R1-1A · observations that exist but cannot be placed — identity and reason, never silence. */}
+          {view.withheld && view.withheld.length > 0 ? <WithheldObservations items={view.withheld} /> : null}
 
-          {view.map ? <ContinuityMap d={view.map} title={`Across your ${view.kind}`} /> : null}
+          {/* ⭐ The writer contributes — ⛔ not just consumes. */}
+          {caps.ownObservation ? (
+            <OwnObservation placeLabel={view.scope.kind === 'chapter' ? view.scope.label : 'this work'}
+              draft="The pacing slows here. The longer sentence followed by two shorter ones creates a felt exhale — it mirrors Clara’s shift from holding on to letting go."
+              themes={['Pacing', 'Change', 'Clara']} />
+          ) : null}
+
+          {view.map ? <ContinuityMap d={view.map} title={`Across your ${view.kind}`} navigable={caps.navigate} /> : null}
           </div>
 
           {/* ⭐⭐ THE WORK, BESIDE THE INTELLIGENCE ABOUT IT.
@@ -564,7 +658,7 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
             page={view.context.page} paragraphs={view.context.paragraphs}
             highlightId={selected?.returnTo.sectionId ? view.context.paragraphs.find(
               (p) => p.id === selectedHighlight)?.id : undefined}
-            findingLabel={selected?.label} />
+            findingLabel={selected?.label} navigable={caps.navigate} />
         </div>
       </div>
     </>

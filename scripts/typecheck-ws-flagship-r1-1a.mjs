@@ -12,6 +12,8 @@ const CONFIG = 'tsconfig.ws-flagship-r1-1a.json';
 const ALLOWED = [
   { file: 'app/writers-studio/studioTheme.ts', codes: ['TS18048', 'TS2532', 'TS2345'],
     why: 'pre-existing at canonical; reached via flagshipTokens.ts re-export; not written to noUncheckedIndexedAccess' },
+  { file: 'scripts/witness/flagship/fixtures.tsx', codes: ['TS2322'],
+    why: 'pre-existing at the R1-1A base and FS1-FROZEN (blob-pinned): the controlled fixture names a lens outside LensId; ⛔ not editable under FS1, ⛔ not an R1-1A regression' },
 ];
 const blob = (spec) => execFileSync('git', ['rev-parse', spec], { encoding: 'utf8' }).trim();
 const live = (file) => execFileSync('git', ['hash-object', file], { encoding: 'utf8' }).trim();
