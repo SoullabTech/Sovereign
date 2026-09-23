@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "env -u DATABASE_URL next dev -p ${PORT:-3000}",
     "dev:clean": "rm -rf .next && lsof -ti:${PORT:-3000} | xargs kill -9 2>/dev/null || true; env -u DATABASE_URL next dev -p ${PORT:-3000}",
-    "clean": "rm -rf .next && echo '\u2713 .next cache cleared'",
+    "clean": "rm -rf .next && echo '✓ .next cache cleared'",
     "dev:voice": "bash start-voice.sh",
     "dev:https": "node server.mjs",
     "worker": "env -u DATABASE_URL AIN_WORKER=true npx tsx scripts/start-ain-worker.ts",
@@ -125,7 +125,7 @@
     "check:member-id-log:baseline": "npx tsx scripts/guards/member-id-log-gate.ts --update",
     "ci:sovereignty": "npm run check:no-supabase && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-id-log && npm run test -- lib/tts/__tests__/voiceIdentityContract.test.ts --silent",
     "ci:guard": "jest scripts/ci/maia-route-guard.test.ts --testPathPattern='maia-route-guard' --passWithNoTests=false",
-    "preflight": "bash scripts/check-dark-text-opacity.sh && npm run check:no-supabase && npm run check:no-direct-anthropic && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-owned-boundary && npm run ci:guard && bash scripts/preflight-compose-config.sh && echo '\u2705 Preflight passed: opacity + supabase + direct-anthropic + vendor voices + voice-provenance + provider-governance + member-owned-boundary + route-guard + docker checks clean'",
+    "preflight": "bash scripts/check-dark-text-opacity.sh && npm run check:no-supabase && npm run check:no-direct-anthropic && npm run check:no-vendor-voices && npm run check:voice-provenance && npm run check:no-openai && npm run check:member-owned-boundary && npm run ci:guard && bash scripts/preflight-compose-config.sh && echo '✅ Preflight passed: opacity + supabase + direct-anthropic + vendor voices + voice-provenance + provider-governance + member-owned-boundary + route-guard + docker checks clean'",
     "biomarkers:report": "npx tsx scripts/report-biomarker-metrics.ts",
     "biomarkers:verify": "npx tsx scripts/test-biomarker-exports.ts --log artifacts/phase4.2d-barrel-verification.log",
     "pwa:build": "npm run build && npm run pwa:generate-icons",
@@ -259,7 +259,12 @@
     "typecheck:ws-convergence-c5": "tsc -p tsconfig.ws-convergence-c5.json --pretty false",
     "gates:ws-convergence-c5": "npm run typecheck:ws-convergence-c5 && tsx tests/constitutional/writers-studio/convergenceC5Runner.ts",
     "typecheck:ws-convergence-c6": "tsc -p tsconfig.ws-convergence-c6.json --pretty false",
-    "gates:ws-convergence-c6": "npm run typecheck:ws-convergence-c6 && tsx tests/constitutional/writers-studio/convergenceC6Runner.ts"
+    "gates:ws-convergence-c6": "npm run typecheck:ws-convergence-c6 && tsx tests/constitutional/writers-studio/convergenceC6Runner.ts",
+    "typecheck:founder-workspace": "tsc -p tsconfig.founder-workspace.json",
+    "matrix:founder-workspace": "node tests/constitutional/founder-workspace/matrix.mjs && node tests/constitutional/founder-workspace/b2-matrix.mjs && node tests/constitutional/founder-workspace/b3-matrix.mjs && node tests/constitutional/founder-workspace/b4-matrix.mjs",
+    "matrix:voice-doorway": "node tests/constitutional/voice-doorway/matrix.mjs",
+    "project:programme-state": "node scripts/builder/founder-workspace/project-programme-state.mjs --summary",
+    "observe:instruments": "node scripts/builder/founder-workspace/observe-instruments.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
