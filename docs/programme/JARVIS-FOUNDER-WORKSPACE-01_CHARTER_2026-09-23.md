@@ -111,6 +111,9 @@ If any of the five cannot be answered from the record, F0 is not complete.
 
 ## Current act
 
+**2026-09-23 (P0 adjudication §VI):** B1+B2 authorized and DELIVERED — `…_B1B2_VIEWMODEL_AND_READ_ORGANS_EVIDENCE_2026-09-23.md`. FD-1…FD-6 ruled. ⛔ Hard stop after B2; B3/B4/B5 not open; F1 walk still owed before B5. Text below preserved as prior state.
+
+
 **F2 — Surface Composition Contract + Implementation Sequence** (opened 2026-09-23 by founder direction; `…_F2_SURFACE_COMPOSITION_CONTRACT_AND_IMPLEMENTATION_SEQUENCE_2026-09-23.md`; ⚠️ the F1 experiential walk remains owed). *(Superseded, preserved:)* **F1** (opened by the F0 adjudication against exact candidate `8b8592d9`; F1 scope, prohibitions, product requirement, defeat conditions and exit are recorded verbatim in the adjudication record). *(Superseded, preserved:)* **F0 only.** Output: `docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_PRODUCT_CENSUS_AND_FOUNDER_EXPERIENCE_CONSTITUTION_2026-09-23.md`.
 
 ## Exit gate

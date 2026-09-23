@@ -4,6 +4,7 @@
 **Class:** coordinating programme · flow parent · readiness authority.
 **Current act:** **P0 — FULL-FUNCTIONALITY READINESS MAP + DEPENDENCY GRAPH ONLY** (read-only, documentary).
 **Standing at authoring:** P0 DELIVERED · ⛔ STOPPED FOR FOUNDER ADJUDICATION · ⛔ P1–P8 NOT OPEN.
+**Standing after adjudication (2026-09-23):** **P0 PASS** (`…_P0_FOUNDER_ADJUDICATION_2026-09-23.md`) · FD-1…FD-6 + OE-1…OE-8 RULED · `JARVIS-VOICE-DOORWAY-01` opened at V0 (delivered) · WORKSPACE-01 B1+B2 authorized (delivered) · ⛔ P1–P8 still open only by further founder acts.
 
 ---
 
