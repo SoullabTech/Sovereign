@@ -472,28 +472,32 @@ export interface ReviewWithheld {
   readonly observationKey: string;
   readonly reason: ReviewWithheldReason;
 }
+/** ⭐ Only the supported human fact. ⛔ Never the implementation address as the explanation. */
 const WITHHELD_REASON_COPY: Record<ReviewWithheldReason, string> = {
-  frozen_citation_text_unavailable: 'MAIA read this at a passage that has since changed, and the passage as she read it isn’t held here, so it can’t be shown at its place.',
-  observation_address_unavailable: 'This observation is about the shape of the Work rather than a particular passage, so it has no place in the prose to return to.',
-  lens_not_presentable: 'This observation belongs to a lens Review can’t yet display. It is kept with the reading.',
+  frozen_citation_text_unavailable: 'This observation still exists, but the passage it was made against has changed, and the passage text as MAIA read it isn’t available here to show it at that place.',
+  observation_address_unavailable: 'This observation still exists, but it concerns Work structure rather than a particular prose location.',
+  lens_not_presentable: 'This observation still exists, but the current Review presentation cannot yet display that lens.',
 };
 
+/**
+ * R1-1A-R1 · The durable identities (observationId · readingId · observationKey · reason) travel
+ * STRUCTURALLY on each item as data attributes. ⛔ None of them is writer-facing copy: a reading id
+ * and an observation key are machine addresses, and the writer sees only why the observation is
+ * not placeable and that it still belongs to the reading.
+ */
 function WithheldObservations({ items }: { items: readonly ReviewWithheld[] }) {
   return (
     <section className="fs-card" data-withheld-population="true">
       <h3>Observations not shown at their place · {items.length}</h3>
-      <p className="fs-obsnote">
-        {items.length} observation{items.length === 1 ? '' : 's'} from this reading exist{items.length === 1 ? 's' : ''} but can’t be attached to the current prose. {items.length === 1 ? 'It is' : 'They are'} kept with the reading.
-      </p>
       {items.map((w) => (
-        <div className="fs-find" key={w.observationId} data-withheld={w.observationId} data-withheld-reason={w.reason}>
+        <div className="fs-find" key={w.observationId} data-withheld={w.observationId}
+          data-reading-id={w.readingId} data-observation-key={w.observationKey} data-withheld-reason={w.reason}>
           <p className="fs-fb">{WITHHELD_REASON_COPY[w.reason]}</p>
-          <div className="fs-ev">
-            <span className="fs-chip">reading {w.readingId}</span>
-            <span className="fs-chip">{w.observationKey}</span>
-          </div>
         </div>
       ))}
+      <p className="fs-obsnote">
+        {items.length === 1 ? 'This observation still belongs to this reading.' : 'These observations still belong to this reading.'}
+      </p>
     </section>
   );
 }
