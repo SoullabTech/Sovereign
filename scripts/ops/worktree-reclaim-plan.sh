@@ -97,14 +97,14 @@ while IFS=$'\t' read -r path vol branch head total regen source mod unt unp merg
   esac
   if [[ "$unp" != "0" && "$unp" != "?" ]]; then
     c_n=$((c_n+1))
-    safe=$(echo "${branch:-detached}-${head}" | tr '/ ' '__')
+    safe=$(echo "${branch:-detached}-${head}" | sed 's/(detached)/detached/' | tr '/ ' '__')
     case "$branch" in
       main|clean-main-no-secrets|feature/*|fix/*|chore/*)
         printf '\n# %s  %s commit(s) on no remote\ngit -C "%s" push -u origin "%s" || { echo "STOP: push refused for %s; bundle instead" >&2; exit 4; }\n' \
           "$path" "$unp" "$path" "$branch" "$branch" >> "$C" ;;
       *)
-        printf '\n# %s  %s commit(s) on no remote  (branch %s not pushable under branch policy -> bundle)\ngit -C "%s" bundle create "%s/%s.bundle" "origin/%s..HEAD" && git bundle verify "%s/%s.bundle" >/dev/null || { echo "STOP: bundle failed for %s" >&2; exit 4; }\n' \
-          "$path" "$unp" "$branch" "$path" "$ARCHIVE_DIR" "$safe" "$CANON" "$ARCHIVE_DIR" "$safe" "$path" >> "$C" ;;
+        printf '\n# %s  %s commit(s) on no remote  (branch %s not pushable under branch policy -> bundle)\ngit -C "%s" bundle create "%s/%s.bundle" "origin/%s..HEAD" && git -C "%s" bundle verify "%s/%s.bundle" >/dev/null || { echo "STOP: bundle failed for %s" >&2; exit 4; }\n' \
+          "$path" "$unp" "$branch" "$path" "$ARCHIVE_DIR" "$safe" "$CANON" "$path" "$ARCHIVE_DIR" "$safe" "$path" >> "$C" ;;
     esac
   fi
   case "$cls" in
