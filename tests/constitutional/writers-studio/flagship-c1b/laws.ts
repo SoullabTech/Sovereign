@@ -147,11 +147,15 @@ export function runC1BLaws(s: Subject): LawResult[] {
     return must('C1B-L9-not-the-legacy-workbench', root && !legacy, `fs-root=${root} legacyRegions=${legacy}`);
   }));
 
+  /* IR1 (founder ruling, 2026-09-23): `RebuildStudioClient.tsx` is the LEGACY HOST — presentation
+     + client orchestration, not writing authority (C0). E1 lawfully changed it. It is no longer in
+     this standing blob set; the historical record that THIS act did not modify it stands unchanged.
+     Record: docs/programme/FLAGSHIP-RUNTIME-CONVERGENCE-01_IR1_LEGACY_HOST_PIN_RECONCILIATION_2026-09-23.md */
   out.push(law('C1B-L10-authority-files-untouched', () => {
-    const files = ['app/writers-studio/rebuild/RebuildAuthoredBody.tsx', 'app/writers-studio/rebuild/RebuildWritingBoundary.tsx', 'app/writers-studio/rebuild/RebuildStudioClient.tsx', 'lib/writersStudio/useSectionWriting.ts', 'lib/writersStudio/sectionSaveClient.ts'];
+    const files = ['app/writers-studio/rebuild/RebuildAuthoredBody.tsx', 'app/writers-studio/rebuild/RebuildWritingBoundary.tsx', 'lib/writersStudio/useSectionWriting.ts', 'lib/writersStudio/sectionSaveClient.ts'];
     const moved = files.filter((f) => execSync(`git rev-parse b23ae2d7f:${f}`, { cwd: ROOT, encoding: 'utf8' }).trim() !== execSync(`git hash-object ${f}`, { cwd: ROOT, encoding: 'utf8' }).trim());
     const adapters = execSync('git rev-parse 0cdae09a9:lib/writersStudio/studio/adapters/writeView.ts', { cwd: ROOT, encoding: 'utf8' }).trim() === execSync('git hash-object lib/writersStudio/studio/adapters/writeView.ts', { cwd: ROOT, encoding: 'utf8' }).trim();
-    return must('C1B-L10-authority-files-untouched', moved.length === 0 && adapters, moved.length ? `moved: ${moved.join(', ')}` : `5 authority files blob-identical to canonical · adapters identical to C1A`);
+    return must('C1B-L10-authority-files-untouched', moved.length === 0 && adapters, moved.length ? `moved: ${moved.join(', ')}` : `4 authority files blob-identical to canonical · adapters identical to C1A`);
   }));
 
   return out;

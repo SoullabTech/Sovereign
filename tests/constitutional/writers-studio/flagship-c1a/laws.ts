@@ -176,8 +176,12 @@ export function runC1ALaws(s: Subject): LawResult[] {
   }));
 
   // L9 — the authorship substrate is untouched (blob identity vs canonical)
+  /* IR1 (founder ruling, 2026-09-23): `RebuildStudioClient.tsx` is the LEGACY HOST — presentation
+     + client orchestration, not writing authority (C0). E1 lawfully changed it. It is no longer in
+     this standing blob set; the historical record that THIS act did not modify it stands unchanged.
+     Record: docs/programme/FLAGSHIP-RUNTIME-CONVERGENCE-01_IR1_LEGACY_HOST_PIN_RECONCILIATION_2026-09-23.md */
   out.push(law('C1A-L9-authorship-substrate-untouched', () => {
-    const files = ['app/writers-studio/rebuild/RebuildAuthoredBody.tsx', 'app/writers-studio/rebuild/RebuildWritingBoundary.tsx', 'app/writers-studio/rebuild/RebuildStudioClient.tsx', 'lib/writersStudio/useSectionWriting.ts', 'lib/writersStudio/sectionSaveClient.ts'];
+    const files = ['app/writers-studio/rebuild/RebuildAuthoredBody.tsx', 'app/writers-studio/rebuild/RebuildWritingBoundary.tsx', 'lib/writersStudio/useSectionWriting.ts', 'lib/writersStudio/sectionSaveClient.ts'];
     const moved = files.filter((f) => {
       const canon = execSync(`git rev-parse b23ae2d7f:${f}`, { cwd: ROOT, encoding: 'utf8' }).trim();
       const now = execSync(`git hash-object ${f}`, { cwd: ROOT, encoding: 'utf8' }).trim();
