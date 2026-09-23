@@ -78,17 +78,81 @@ check('GOV-03 — three repository classes are explicit in human canon', () => {
 console.log();
 console.log('=== interim hold ===');
 
-check('HOLD-01 — dev-lane canon is explicitly candidate, not ratified', () => {
-  assert.equal(policy.development_boundary.canon_status, 'candidate_not_ratified');
-  assert.match(devCanon, /CANDIDATE · NOT RATIFIED/);
+// JEV-INT-01R3R1 — HOLD-01/HOLD-02 previously asserted the pre-ratification VALUES
+// (canon_status === 'candidate_not_ratified', interim_hold === 'active', and the human
+// canon reading "CANDIDATE · NOT RATIFIED"). Those were state snapshots, correct while the
+// hold stood and unsatisfiable by any lawful founder ratification. They are replaced by the
+// durable invariants they were protecting. The mechanisms are NOT weakened: the guard's own
+// refusal of `lifted` before `ratified`, and the canonical prior-authorization barrier on
+// every repository-class assignment, are unchanged and separately asserted.
+
+/**
+ * The exact permitted (canon_status, interim_hold) pairs over the declared vocabularies.
+ * Enumerated, not expressed as a one-way implication, so an unlisted pair fails loudly.
+ *
+ * ratified + active is lawful and deliberately listed: ratifying the dev-lane canon
+ * discharges the hold's first lift condition without itself lifting the hold, so the
+ * transient state between the two founder acts must not be rejected. The guard permits it
+ * too; a proof stricter than the mechanism it guards would refuse a lawful transition.
+ */
+const COHERENT_BOUNDARY_STATES = [
+  ['candidate_not_ratified', 'active'],
+  ['ratified', 'active'],
+  ['ratified', 'lifted'],
+];
+const INCOHERENT_BOUNDARY_STATE = ['candidate_not_ratified', 'lifted'];
+
+check('HOLD-01 — ratification and hold state are coherent', () => {
+  const { canon_status: status, interim_hold: hold } = policy.development_boundary;
+
+  // the observed pair is one of the enumerated coherent states
+  assert.equal(
+    COHERENT_BOUNDARY_STATES.some(([s, h]) => s === status && h === hold),
+    true,
+    `incoherent development-boundary state: ${status} + ${hold}`,
+  );
+
+  // the incoherent pair is never coherent — a hold may not be lifted before ratification
+  assert.equal(
+    COHERENT_BOUNDARY_STATES.some(
+      ([s, h]) => s === INCOHERENT_BOUNDARY_STATE[0] && h === INCOHERENT_BOUNDARY_STATE[1],
+    ),
+    false,
+  );
+  assert.equal(status === 'candidate_not_ratified' && hold === 'lifted', false);
+
+  // the human canon's status language must agree with the machine-readable status
+  if (status === 'ratified') {
+    assert.match(devCanon, /RATIFIED/);
+    assert.equal(/\*\*Status:\*\*\s*CANDIDATE · NOT RATIFIED/.test(devCanon), false);
+  } else {
+    assert.match(devCanon, /CANDIDATE · NOT RATIFIED/);
+  }
 });
 
-check('HOLD-02 — interim hold is machine-readable and active', () => {
-  assert.equal(policy.development_boundary.interim_hold, 'active');
+check('HOLD-02 — lifting the hold grants nothing', () => {
+  const { interim_hold: hold } = policy.development_boundary;
+  assert.equal(['active', 'lifted'].includes(hold), true);
+
+  // the held-class vocabulary is durable and survives the lift
   assert.deepEqual(
     policy.development_boundary.held_lab_data_classes,
     ['repository_source', 'constitutional_canon'],
   );
+
+  // whatever the hold state, a lift confers no repository or provider capability
+  const assigned = new Set(assignments().map((x) => x.capability));
+  for (const name of requiredRepositoryClasses) {
+    assert.equal(assigned.has(name), false, `${name} assigned while hold is ${hold}`);
+  }
+  assert.deepEqual(
+    policy.development_boundary.repository_assignment_authorizations ?? {},
+    {},
+  );
+  const providerNames = assignments().map((x) => x.provider.toLowerCase());
+  for (const forbidden of ['jev', 'typesafe']) {
+    assert.equal(providerNames.some((p) => p.includes(forbidden)), false);
+  }
 });
 
 check('HOLD-03 — repository classes are assigned to no provider', () => {
