@@ -1,6 +1,6 @@
 # NAS-BACKUP-01 / R2 — Backup Integrity + Restore-Witness Hardening · CANDIDATE
 
-**Standing: CANDIDATE BUILT · FALSIFIERS F1–F5, F7–F9 LETHAL · F6 OWED (docker host) ·
+**Standing: CANDIDATE BUILT · FALSIFIERS F1–F9 ALL LETHAL (F6 founder-run on the real 18 Sep artifact) ·
 ⛔ NOT DEPLOYED · ⛔ STOPPED FOR FOUNDER REVIEW BEFORE ANY CHANGE TO THE MINISFORUM.**
 
 Authorization: founder act of 2026-09-23 (this lane's §I–§VIII). R1 standing accepted as
@@ -99,16 +99,17 @@ F5     PASS      corrupt weekly copy → rc=1, copy removed, no manifest, daily 
 F7     PASS      unmounted NAS → rc=1 before any write; MAIA untouched by construction (script only exits)
 F8     PASS      missing · verified-current · stale (48 h) · witness failed · unreachable all distinguished
 F9     PASS      R1 script under post-write truncation: claims success (rc=0, logs '(333M)') — R2 gate REJECT:claimed-but-artifact-corrupt
-F6     NOT-RUN   no docker daemon here — ⛔ not a pass; founder runs: WITNESS_DUMP=<18 Sep artifact> scripts/ops/maia-restore-witness.sh must FAIL
-PASS=10 FAIL=0 NOT-RUN=1
+F6     PASS      founder-run on the Studio 16:10Z against the REAL 18 Sep artifact (WITNESS_DUMP, temp BACKUP_ROOT): rc=1, report verdict FAIL, reason 'dump fails gzip integrity', restore not attempted, no PASS anywhere
+PASS=10 FAIL=0 NOT-RUN=1   (container run) · F6 PASS added by the founder's Studio run → 11/11
 ```
 
 Notes. **F9** is the R1 script byte-for-byte except path parametrization; under a shim that
 truncates the file right after the script measured it (exactly the 18 Sep shape) it logs
 `(333M)` and *backup complete* and exits 0, and the gate rejects the run. **F4** is the same
-fault against the R2 candidate: no claim, quarantine, exit 1. **F6** cannot run without a
-docker daemon; it is NOT-RUN here and stays owed — the founder runs it on the Studio or the
-minisforum against the 18 Sep artifact (`WITNESS_DUMP=…`), expecting FAIL and a FAIL report.
+fault against the R2 candidate: no claim, quarantine, exit 1. **F6** was run by the founder on the Studio against the real 18 Sep artifact with a
+temporary `BACKUP_ROOT` (no write to the NAS): the witness refused at the integrity step,
+wrote a FAIL report with the reason, exited 1, and left no container — a non-restorable
+backup cannot produce a PASS.
 Two harness defects were found and repaired during the run, neither in the candidate: the
 F9 copy still hard-coded `df /mnt/ds225`, and the harness omitted the `media/` directory the
 R1 manifest assumes.
