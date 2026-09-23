@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.ws-flagship-c1a.json",
+  "include": [
+    "tests/constitutional/writers-studio/flagship-r1-readonly/**/*.ts",
+    "lib/writersStudio/studio/realReview.ts",
+    "lib/writersStudio/studio/developObservation.ts",
+    "lib/writersStudio/studio/reading.ts",
+    "lib/writersStudio/developPresentation.ts",
+    "lib/manuscript/developmentalReading/**/*.ts",
+    "lib/manuscript/development/**/*.ts",
+    "app/writers-studio/flagship/DevelopReview.tsx",
+    "app/writers-studio/flagship/ReviewPanels.tsx"
+  ]
+}

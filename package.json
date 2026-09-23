@@ -221,6 +221,8 @@
     "matrix:ws-flagship-c1b": "tsx --tsconfig tsconfig.ws-flagship-c1b.json tests/constitutional/writers-studio/flagship-c1b/matrix.ts",
     "typecheck:ws-flagship-c1c1": "node scripts/typecheck-ws-flagship-c1a.mjs tsconfig.ws-flagship-c1c1.json",
     "matrix:ws-flagship-c1c1": "tsx --tsconfig tsconfig.ws-flagship-c1c1.json tests/constitutional/writers-studio/flagship-c1c1/matrix.ts",
+    "matrix:ws-flagship-r1-readonly": "tsx --tsconfig tsconfig.ws-flagship-r1-readonly.json tests/constitutional/writers-studio/flagship-r1-readonly/matrix.ts",
+    "typecheck:ws-flagship-r1-readonly": "node scripts/typecheck-ws-flagship-c1a.mjs tsconfig.ws-flagship-r1-readonly.json",
     "witness:flagship-c1c1": "tsx scripts/witness/flagship/c1c1-discuss-walk.ts",
     "matrix:ws-first-arrival": "tsx tests/constitutional/writers-studio/flagship/first-arrival/matrix.ts",
     "matrix:ws-concurrency": "tsx tests/constitutional/writers-studio/flagship/concurrency/matrix.ts",
