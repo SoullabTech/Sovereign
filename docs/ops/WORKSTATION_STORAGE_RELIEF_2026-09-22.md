@@ -73,7 +73,7 @@ baseline reading; the local stack is not in the public traffic path.
 
 ## Defects found in the instruments, all repaired the same day
 
-`docker info` could hang the whole census → bounded probes. Main checkout counted its ~60
+`docker info` could hang the whole census → bounded probes; on 2026-09-23 the CLI sat through a plain TERM bound on macOS → the probe now runs in its own process group and the group gets TERM then KILL. Main checkout counted its ~60
 nested worktrees twice → nearest-enclosing subtraction. `dist` inside `node_modules` counted
 twice → one pruning find. Untracked files admitted to REMOVABLE → INSPECT. `git bundle verify`
 run outside a repository → `-C`. Diverged remote stopped Act C → push-or-bundle. Act guard did
@@ -88,8 +88,10 @@ not pin the censused HEAD → B-GUARD-R1. Path printers split on spaces → fixe
   required services → record Docker ON/OFF explicitly → idle reading → one normal MAIA/JARVIS
   build → post-build reading → judge from that pair. Diverged branches (7) are a lane-owner
   reconciliation, not urgent.
-- Library: separate read-only census, then human decisions (Messages, Voice Memos, Claude
-  VM bundles). Not a worktree operation.
+- Library: census complete 2026-09-23 (`logs/library-2026-09-23.txt`). Messages 44.3 GB ·
+  Voice Memos 20.7 GB · Claude app 11.9 GB (9.5 of it `vm_bundles`) · Chrome 5.7 GB ·
+  MacWhisper 2.0 GB · Descript 1.7 GB · Notes 1.9 GB. iCloud Drive and Google Drive mirrors
+  are ~0 locally. Human decisions only; nothing here is a script's to touch.
 - `JARVIS-CAPACITY-SENTINEL-01`: after the workstation is stable. Two monitors (workstation,
   production), observation authority only, GREEN/AMBER/RED/UNKNOWN with UNKNOWN never
   reading as healthy, every probe bounded. Minisforum is production and is not a build worker.

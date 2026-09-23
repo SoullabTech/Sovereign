@@ -69,8 +69,15 @@ bounded() {
   local secs="$1"; shift
   local out rc pid killer
   out=$(mktemp -t census-bounded.XXXXXX)
+  # The probe runs in its OWN PROCESS GROUP (job control on for the launch),
+  # so the whole group can be signalled: TERM first, then KILL after a short
+  # grace. A CLI blocked on a dead daemon socket can sit through TERM and a
+  # wrapper can leave its real child alive (seen 2026-09-23: docker info
+  # survived a plain TERM bound on macOS); a group KILL ends both.
+  set -m
   ( exec "$@" >"$out" 2>/dev/null ) & pid=$!
-  ( sleep "$secs"; kill "$pid" 2>/dev/null ) 2>/dev/null & killer=$!
+  set +m
+  ( sleep "$secs"; kill -TERM -- "-$pid" 2>/dev/null; sleep 2; kill -KILL -- "-$pid" 2>/dev/null ) 2>/dev/null & killer=$!
   wait "$pid" 2>/dev/null; rc=$?
   kill "$killer" 2>/dev/null; wait "$killer" 2>/dev/null
   cat "$out"; rm -f "$out"
