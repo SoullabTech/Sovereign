@@ -39,6 +39,9 @@ import {
   type ChapterReviewBundle,
 } from '@/lib/writersStudio/rebuild/chapterReview';
 import {
+  commissionReviewDiscuss, REVIEW_DISCUSS_COPY, type ReviewDiscussionState,
+} from '@/lib/writersStudio/rebuild/reviewDiscuss';
+import {
   loadChapterReviewManifest, saveChapterReviewManifest,
 } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { canvasWithEditorialThread, canvasWithoutEditorialThread, CANVAS_EDITORIAL_THREAD_PARAM } from '../canvasIdentity';
@@ -227,7 +230,64 @@ const FAILURE_SENTENCE: Record<string, string> = {
   '': 'The result of this reading could not be confirmed, so nothing from it was kept. Your Work is unchanged.',
 };
 
-export default function RebuildStudioClient() {
+function ReviewFindingDiscussion({
+  state, onSubmit, onClose,
+}: {
+  state: ReviewDiscussionState;
+  onSubmit: (findingId: string, text: string) => void;
+  onClose: () => void;
+}) {
+  if (state.kind === 'composing') {
+    return (
+      <form data-review-discussion="composing" onSubmit={(e) => {
+        e.preventDefault();
+        const data = new FormData(e.currentTarget);
+        onSubmit(state.findingId, String(data.get('ask') ?? ''));
+      }} style={{ marginTop: 10, padding: 10, border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel }}>
+        <textarea name="ask" rows={3} aria-label="Your question about this observation"
+          placeholder="Ask MAIA about this observation…"
+          style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', border: `1px solid ${C.rule}`, borderRadius: 8, background: C.field, color: C.ink, padding: 9, fontFamily: SANS, fontSize: 11.5 }} />
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button type="submit" style={{ border: 0, borderRadius: 7, padding: '7px 10px', background: C.goldFill, color: C.ink, fontWeight: 700, cursor: 'pointer' }}>Ask MAIA</button>
+          <button type="button" onClick={onClose} style={{ border: `1px solid ${C.soft}`, borderRadius: 7, padding: '7px 10px', background: C.field, color: C.secondary, cursor: 'pointer' }}>Close</button>
+        </div>
+      </form>
+    );
+  }
+  if (state.kind === 'pending') {
+    return (
+      <div data-review-discussion="pending" style={{ marginTop: 10, padding: 10, border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel }}>
+        <div style={{ fontSize: 11.5, color: C.secondary }}>{state.ask}</div>
+        <div style={{ marginTop: 7, fontSize: 10.5, color: C.quiet }}>{REVIEW_DISCUSS_COPY.waiting}</div>
+      </div>
+    );
+  }
+  if (state.kind === 'refused') {
+    return (
+      <div data-review-discussion="refused" style={{ marginTop: 10, padding: 10, border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel }}>
+        <div style={{ fontSize: 11.5, color: C.secondary }}>{state.ask}</div>
+        <div style={{ marginTop: 7, fontSize: 10.5, color: C.gold }}>{state.copy}</div>
+        <button type="button" onClick={onClose} style={{ marginTop: 8, border: `1px solid ${C.soft}`, borderRadius: 7, padding: '6px 9px', background: C.field, color: C.secondary, cursor: 'pointer' }}>Close</button>
+      </div>
+    );
+  }
+  return (
+    <div data-review-discussion="answered" data-posture={state.posture}
+      style={{ marginTop: 10, padding: 10, border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel }}>
+      <div style={{ fontSize: 10.5, color: C.quiet, marginBottom: 6 }}>{state.ask}</div>
+      <MaiaListen text={state.reply} />
+      <div style={{ fontSize: 12, lineHeight: 1.55, color: C.secondary, whiteSpace: 'pre-wrap' }}>{state.reply}</div>
+      <div style={{ marginTop: 8, fontSize: 10, color: C.quiet }}>Discussed as MAIA read it · no change to the reading or your Work.</div>
+      <button type="button" onClick={onClose} style={{ marginTop: 8, border: `1px solid ${C.soft}`, borderRadius: 7, padding: '6px 9px', background: C.field, color: C.secondary, cursor: 'pointer' }}>Close</button>
+    </div>
+  );
+}
+
+export interface RebuildStudioClientProps {
+  readonly reviewDiscussEnabled?: boolean;
+}
+
+export default function RebuildStudioClient({ reviewDiscussEnabled = false }: RebuildStudioClientProps) {
   const params = useSearchParams();
   const requested = params?.get('m') ?? null;
   const requestedSection = params?.get(SECTION_PARAM) ?? null;
@@ -280,6 +340,8 @@ export default function RebuildStudioClient() {
   const [reviewContinuityMessage, setReviewContinuityMessage] = useState<string | null>(null);
   const [reviewLens, setReviewLens] = useState<DevelopmentalLens | 'all'>('all');
   const [reviewFindingsOpen, setReviewFindingsOpen] = useState(true);
+  const [reviewDiscussion, setReviewDiscussion] = useState<ReviewDiscussionState | null>(null);
+  const reviewDiscussGen = useRef(0);
   const [maiaAsk, setMaiaAsk] = useState('');
   const [maiaResponse, setMaiaResponse] = useState<string | null>(null);
   const [maiaFailure, setMaiaFailure] = useState<string | null>(null);
@@ -454,6 +516,8 @@ export default function RebuildStudioClient() {
     setReviewProgress(null);
     setReviewNeedsRefresh(false);
     setReviewContinuityMessage(null);
+    reviewDiscussGen.current += 1;
+    setReviewDiscussion(null);
     if (!chapterRootId || !context || !chapter) return () => { cancelled = true; };
 
     void (async () => {
@@ -521,6 +585,8 @@ export default function RebuildStudioClient() {
     if (!chapter || !context || reviewPhase === 'reading') return;
     if (!(await settleWriting())) return;
     const reviewRevision = writingRef.current?.currentRevisionId() ?? context.version;
+    reviewDiscussGen.current += 1;
+    setReviewDiscussion(null);
     setReviewContinuityMessage(null);
     const asked = lenses ?? DEVELOPMENTAL_LENSES;
     const carried = lenses && review
@@ -574,6 +640,53 @@ export default function RebuildStudioClient() {
       setReviewManifestRefusal(null);
     }
   }, [chapter, context, reviewPhase, settleWriting, review]);
+
+  const openReviewDiscussion = useCallback((findingId: string) => {
+    if (!reviewDiscussEnabled || !review || reviewPhase === 'reading') return;
+    if (!review.findings.some((finding) => finding.id === findingId)) return;
+    setReviewDiscussion({ kind: 'composing', findingId });
+  }, [reviewDiscussEnabled, review, reviewPhase]);
+
+  const closeReviewDiscussion = useCallback(() => {
+    reviewDiscussGen.current += 1;
+    setReviewDiscussion(null);
+  }, []);
+
+  const submitReviewDiscussion = useCallback((findingId: string, text: string) => {
+    if (!reviewDiscussEnabled || !review || !context || reviewPhase === 'reading') return;
+    const finding = review.findings.find((candidate) => candidate.id === findingId);
+    const ask = text.trim();
+    if (!finding || ask.length === 0) return;
+
+    const gen = ++reviewDiscussGen.current;
+    setReviewDiscussion({ kind: 'pending', findingId, ask, gen });
+
+    void commissionReviewDiscuss({
+      manuscriptId: context.manuscriptId,
+      readingId: finding.readingId,
+      observationKey: finding.observationKey,
+      question: ask,
+    }, readCurrentSanctuaryPosture()).then((outcome) => {
+      if (gen !== reviewDiscussGen.current) return;
+      if (outcome.ok) {
+        setReviewDiscussion({
+          kind: 'answered',
+          findingId,
+          ask,
+          reply: outcome.reply,
+          threadId: outcome.threadId,
+          posture: outcome.posture,
+        });
+        return;
+      }
+      const copy = outcome.reason === 'posture_unresolved'
+        ? REVIEW_DISCUSS_COPY.posture
+        : outcome.reason === 'sanctuary_unavailable'
+          ? REVIEW_DISCUSS_COPY.sanctuary
+          : REVIEW_DISCUSS_COPY.failed;
+      setReviewDiscussion({ kind: 'refused', findingId, ask, copy });
+    });
+  }, [reviewDiscussEnabled, review, context, reviewPhase]);
 
   const replaceAddress = useCallback((sectionId: string, threadId: string | null) => {
     if (typeof window === 'undefined') return;
@@ -1610,7 +1723,7 @@ export default function RebuildStudioClient() {
                     {workspaceOpen && review && <div className="ws-section-observations" aria-label="Section observations">
                       {findingsForSection(review.findings, section.draftSectionId).map((finding, index) => <button key={finding.id} type="button"
                         disabled={editorialBusy || adoptionBusy || memberVersionBusy}
-                        onClick={() => { focusWritingSection(section.draftSectionId); openWorkspace({ readingId: finding.readingId, key: finding.id.slice(finding.readingId.length + 1) }); }}>
+                        onClick={() => { focusWritingSection(section.draftSectionId); openWorkspace({ readingId: finding.readingId, key: finding.observationKey }); }}>
                         {index + 1} · {reviewLensLabel(finding.lens)}{reviewNeedsRefresh ? ' · earlier reading' : ''}
                       </button>)}
                     </div>}
@@ -1804,14 +1917,30 @@ export default function RebuildStudioClient() {
                                   <span style={{ fontSize: 9.5, color: C.quiet }}>{finding.state}</span>
                                 </div>
                                 <p style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, margin: '4px 0 0' }}>{finding.observation}</p>
-                                <button type="button" onClick={() => openWorkspace({ readingId: finding.readingId, key: finding.id.slice(finding.readingId.length + 1) })}
-                                  data-review-work-on-canvas={finding.id}
-                                  style={{ border: `1px solid ${C.soft}`, borderRadius: 7, padding: '7px 9px', marginTop: 8, color: C.ink, background: C.panel, cursor: 'pointer' }}>Work on canvas</button>
-                                {target && (
-                                  <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
-                                    style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0 0', fontSize: 10.5, cursor: 'pointer' }}>
-                                    Show in manuscript →
-                                  </button>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                                  <button type="button" onClick={() => openWorkspace({ readingId: finding.readingId, key: finding.observationKey })}
+                                    data-review-work-on-canvas={finding.id}
+                                    style={{ border: `1px solid ${C.soft}`, borderRadius: 7, padding: '7px 9px', color: C.ink, background: C.panel, cursor: 'pointer' }}>Work on canvas</button>
+                                  {reviewDiscussEnabled && (
+                                    <button type="button" onClick={() => openReviewDiscussion(finding.id)}
+                                      data-review-discuss-finding={finding.id}
+                                      style={{ border: `1px solid ${C.soft}`, borderRadius: 7, padding: '7px 9px', color: C.ink, background: C.field, cursor: 'pointer' }}>
+                                      Discuss with MAIA
+                                    </button>
+                                  )}
+                                  {target && (
+                                    <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
+                                      style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0', fontSize: 10.5, cursor: 'pointer' }}>
+                                      Show in manuscript →
+                                    </button>
+                                  )}
+                                </div>
+                                {reviewDiscussion?.findingId === finding.id && (
+                                  <ReviewFindingDiscussion
+                                    state={reviewDiscussion}
+                                    onSubmit={submitReviewDiscussion}
+                                    onClose={closeReviewDiscussion}
+                                  />
                                 )}
                               </article>
                             );

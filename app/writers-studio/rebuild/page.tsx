@@ -22,7 +22,9 @@ export const dynamic = 'force-dynamic';
 export default function WriterStudioRebuildPage() {
   return (
     <Suspense fallback={<div style={{ padding: 32 }}>Opening Writer’s Studio…</div>}>
-      <RebuildStudioClient />
+      <RebuildStudioClient
+        reviewDiscussEnabled={process.env.WRITERS_STUDIO_REVIEW_DISCUSS_ENABLED === '1'}
+      />
     </Suspense>
   );
 }
