@@ -108,3 +108,31 @@ not pin the censused HEAD → B-GUARD-R1. Path printers split on spaces → fixe
 - `JARVIS-CAPACITY-SENTINEL-01`: after the workstation is stable. Two monitors (workstation,
   production), observation authority only, GREEN/AMBER/RED/UNKNOWN with UNKNOWN never
   reading as healthy, every probe bounded. Minisforum is production and is not a build worker.
+
+## Addendum — 2026-09-23 · the "restart" was not a reboot; baseline still owed
+
+A reading taken at 14:16Z as the intended post-restart idle baseline
+(`logs/census-2026-09-23-idle.txt`) turned out to be **pre-restart**: `uptime`
+reported 4 days 23 h, `kern.boottime` = 18 Sep 10:49. The 02:00 "restart" was a
+logout or Terminal relaunch. Consequences, all consistent with that:
+
+- swap 10.4 GB used · compressed 21.2 GB · free 0.1 GB (43% "free" by macOS's
+  accounting) — the same pressure picture as 22 Sep, not a fresh boot;
+- `next-server` PID 49714 (one of the six killed on 22 Sep) alive again at
+  5.7 GB, cwd `~/MAIA-SOVEREIGN` — the main checkout's dev server, legitimate;
+- Docker Desktop's socket still dated 18 Sep; the engine had been wedged for
+  days and hung every `docker` client on the machine (dozens queued, from
+  several sessions) until the backend was killed and relaunched today.
+
+Internal free space read **66 GB** against 119 GB after the Messages offload.
+Attributed so far: **13 GB staged macOS update** in `/System/Volumes/Update`
+(installs on restart; last installed 15.7.8 on 29 May). The rest is most
+plausibly APFS purgeable space from the 43 GB Messages deletion, reclaimed on
+restart or under pressure; not measured. `~/Library/Messages` is 15 MB, so the
+sync disconnect held.
+
+**Standing:** ⛔ the 48 GB baseline pair is NOT taken. Next: quit Docker
+Desktop → Apple menu → Restart (the staged OS update will install) → `uptime`
+in minutes → census to the same filename before opening anything → then one
+normal build → second reading. The 14:16Z file is kept as the pre-restart
+reference, ⛔ never as the baseline.
