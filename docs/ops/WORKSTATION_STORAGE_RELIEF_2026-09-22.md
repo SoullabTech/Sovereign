@@ -9,7 +9,7 @@ except the generated act scripts, which refuse without `RECLAIM_AUTHORIZED=1`.
 
 | Measure | Start | After relief |
 |---|---|---|
-| Internal free | 12 GB (98% used) | 76 GB (84% used) |
+| Internal free | 12 GB (98% used) | 119 GB (75% used) |
 | Swap used | 17.8 GB of 18.4 | 10.4 GB of 11.3 |
 | Compressed memory | 21.4 GB | 14.4 GB |
 | System memory free (memory_pressure) | not readable | 58% |
@@ -71,6 +71,19 @@ Docker Desktop reserves 12,544 MiB (12.25 GB) and 10 CPUs for its VM (`settings-
 That is a quarter of unified memory, invisible in the process list, and part of any 48 GB
 baseline reading; the local stack is not in the public traffic path.
 
+## Personal-data offload (founder decision, 2026-09-23)
+
+Decided: Messages leaves the Studio; Voice Memos stays. Sequence as run: both apps quit →
+`cp -a` of `~/Library/Messages` and the Voice Memos group container to
+`/Volumes/T7 Shield/archive-2026-09-23/` → verified by file count (Messages 35,236 = 35,236;
+Voice Memos 647 = 647; a nested duplicate from an interrupted second copy was identified and
+removed from the archive only) → Messages in iCloud disabled **for this device only**
+("Disable This Device", never "Disable All") → iMessage signed out → local library removed with
+Messages quit. Result: internal free 76 → 119 GB. History intact in iCloud and on the phone;
+Voice Memos (21 GB) untouched on the Studio, with a verified T7 copy as a bonus.
+Law applied: archive and verify before any removal; disconnect sync before deleting locally;
+through the owning application's own controls, never `rm` behind a syncing app.
+
 ## Defects found in the instruments, all repaired the same day
 
 `docker info` could hang the whole census → bounded probes; on 2026-09-23 the CLI sat through a plain TERM bound on macOS → the probe now runs in its own process group and the group gets TERM then KILL. Main checkout counted its ~60
@@ -88,7 +101,7 @@ not pin the censused HEAD → B-GUARD-R1. Path printers split on spaces → fixe
   required services → record Docker ON/OFF explicitly → idle reading → one normal MAIA/JARVIS
   build → post-build reading → judge from that pair. Diverged branches (7) are a lane-owner
   reconciliation, not urgent.
-- Library: census complete 2026-09-23 (`logs/library-2026-09-23.txt`). Messages 44.3 GB ·
+- Library: census complete 2026-09-23 (`logs/library-2026-09-23.txt`); Messages offloaded (above). Messages 44.3 GB ·
   Voice Memos 20.7 GB · Claude app 11.9 GB (9.5 of it `vm_bundles`) · Chrome 5.7 GB ·
   MacWhisper 2.0 GB · Descript 1.7 GB · Notes 1.9 GB. iCloud Drive and Google Drive mirrors
   are ~0 locally. Human decisions only; nothing here is a script's to touch.
