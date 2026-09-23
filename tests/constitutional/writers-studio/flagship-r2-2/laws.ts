@@ -69,16 +69,16 @@ export function runR22Laws():LawResult[]{
   'presentation=' + Boolean(presentation) + ' liveView=' + Boolean(liveView)));
 
  out.push(yes('R2-2-L6-route-auth-and-ownership-precede-persistence',(()=>{
-  const auth=route.indexOf('getMemberIdFromRequest');
-  const own=route.indexOf('memberOwnsWork');
-  const open=route.indexOf('openThread');
+  const auth=route.indexOf('const memberId = await getMemberIdFromRequest');
+  const own=route.indexOf('if (!(await memberOwnsWork');
+  const open=route.indexOf('const threadId = await openThread');
   return auth>=0 && own>auth && open>own;
  })(), 'auth < ownership < openThread'));
 
  out.push(yes('R2-2-L7-sanctuary-refuses-before-any-persistence',(()=>{
   const explicit=has(route,/typeof body\.sanctuary\s*!==\s*['"]boolean['"]/);
   const refusal=route.indexOf('sanctuary_unavailable');
-  const open=route.indexOf('openThread');
+  const open=route.indexOf('const threadId = await openThread');
   return explicit && refusal>=0 && open>refusal;
  })(), 'explicit posture + refusal before openThread'));
 
@@ -102,7 +102,7 @@ export function runR22Laws():LawResult[]{
   has(route,/establishDisclosureBoundary/) &&
   has(route,/writers_studio\.review_discuss->maia_cognition/) &&
   has(route,/gesture:\s*['"]discuss_finding['"]/) &&
-  route.indexOf('establishDisclosureBoundary') < route.indexOf('loadRevisionContent'),
+  route.indexOf('const boundary = await establishDisclosureBoundary') < route.indexOf('const revisionContent = await loadRevisionContent'),
   'boundary before historical body read'));
 
  out.push(yes('R2-2-L11-single-use-act-and-atomic-completion',
@@ -140,7 +140,7 @@ export function runR22Laws():LawResult[]{
   has(client,/CurrentPostureRead/) &&
   has(client,/if\s*\(!posture\.resolved\)/) &&
   has(client,/posture_unresolved/) &&
-  client.indexOf('if (!posture.resolved)') < client.indexOf('apiFetch'),
+  client.indexOf('if (!posture.resolved)') < client.indexOf('const res = await apiFetch'),
   'client posture gate'));
 
  const noWorkWrites=Boolean(route) &&

@@ -419,7 +419,7 @@ export async function POST(
   /* The stored identity is a union since 07E. Only a structure identity is the
      `was` of a structure comparison; a developmental one cannot reach here
      (the branch above returned), and narrowing says so rather than casting. */
-  const storedStructure = existing?.reading && existing.reading.kind !== 'developmental'
+  const storedStructure = existing?.reading && existing.reading.kind === 'structure'
     ? existing.reading : null;
 
   const frozenIdentity = frozenSideFor({

@@ -23,6 +23,7 @@ import {
   type CitationState, type Freshness, type LensAvailability, type ReviewScope, type WorkChange,
 } from '../../../lib/writersStudio/studio/reading';
 import { ManuscriptContext, OwnObservation, StaleReading, type ContextParagraph } from './ReviewPanels';
+import type { ReviewDiscussionState } from '../../../lib/writersStudio/rebuild/reviewDiscuss';
 
 /* ══════════════════════════════════════════════════════════════════════════
    OBSERVATIONS — describe, ⛔ never grade
@@ -512,8 +513,44 @@ function WithheldObservations({ items }: { items: readonly ReviewWithheld[] }) {
   );
 }
 
-function FindingRow({ o, citation, selected, caps, navigation }: {
+function FindingDiscussion({ state, onSubmit, onClose }: {
+  state: ReviewDiscussionState;
+  onSubmit?: (findingId: string, text: string) => void;
+  onClose?: () => void;
+}) {
+  if (state.kind === 'composing') {
+    return (
+      <form className="fs-mcompose" data-review-discussion="composing"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const data = new FormData(e.currentTarget);
+          onSubmit?.(state.findingId, String(data.get('ask') ?? ''));
+        }}>
+        <textarea name="ask" className="fs-mtext" rows={3}
+          aria-label="Your question about this observation"
+          placeholder="Ask MAIA about this observation…" />
+        <div className="fs-factions">
+          <button type="submit" className="fs-btn fs-btn--key">Ask</button>
+          <button type="button" className="fs-btn" onClick={onClose}>Close</button>
+        </div>
+      </form>
+    );
+  }
+  if (state.kind === 'pending') {
+    return <div data-review-discussion="pending"><p className="fs-ask">{state.ask}</p><p className="fs-obsnote">MAIA is staying with this observation as it was read…</p></div>;
+  }
+  if (state.kind === 'refused') {
+    return <div data-review-discussion="refused"><p className="fs-ask">{state.ask}</p><p className="fs-obsnote">{state.copy}</p><button type="button" className="fs-btn" onClick={onClose}>Close</button></div>;
+  }
+  return <div data-review-discussion="answered" data-posture={state.posture}><p className="fs-ask">{state.ask}</p><p className="fs-say">{state.reply}</p><p className="fs-obsnote">Discussed as MAIA read it · no change to the reading or your Work.</p><button type="button" className="fs-btn" onClick={onClose}>Close</button></div>;
+}
+
+function FindingRow({ o, citation, selected, caps, navigation, discussion, onDiscuss, onSubmitDiscuss, onCloseDiscuss }: {
   o: GovernedObservation; citation?: CitationState; selected?: boolean; caps: ReviewCapabilities; navigation?: ReviewNavigation;
+  discussion?: ReviewDiscussionState | null;
+  onDiscuss?: (findingId: string) => void;
+  onSubmitDiscuss?: (findingId: string, text: string) => void;
+  onCloseDiscuss?: () => void;
 }) {
   const moved = citation && citation.kind !== 'intact' ? citation : null;
   /* R1-2 · live: a location only for an exact address in the mounted context, else no control. Controlled: unchanged. */
@@ -555,10 +592,14 @@ function FindingRow({ o, citation, selected, caps, navigation }: {
           {navAction ? (navigation && returnHref
             ? <a className="fs-btn" data-return-to={o.returnTo.sectionId} href={returnHref} onClick={(e) => { e.preventDefault(); navigation.onGo(o.returnTo.sectionId, returnHref); }}>Go to passage</a>
             : <button type="button" className="fs-btn" data-return-to={o.returnTo.sectionId}>Go to passage</button>) : null}
-          {caps.discuss ? <button type="button" className="fs-btn" data-action="discuss" data-return-to={o.returnTo.sectionId}>Discuss</button> : null}
+          {caps.discuss ? <button type="button" className="fs-btn" data-action="discuss" data-return-to={o.returnTo.sectionId}
+            onClick={onDiscuss ? () => onDiscuss(o.id) : undefined}>Discuss</button> : null}
           {caps.explore ? <button type="button" className="fs-btn" data-action="explore" data-return-to={o.returnTo.sectionId}>Explore</button> : null}
         </div>
       ) : null}
+      {discussion && discussion.findingId === o.id
+        ? <FindingDiscussion state={discussion} onSubmit={onSubmitDiscuss} onClose={onCloseDiscuss} />
+        : null}
     </div>
   );
 }
@@ -570,12 +611,17 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
   return <ReviewPresentation view={view} lens={lens} facet={facet} capabilities={CONTROLLED_REVIEW_CAPABILITIES} />;
 }
 
-export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capabilities, onLens, navigation }: {
+export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capabilities, onLens, navigation, discussion, onDiscuss, onSubmitDiscuss, onCloseDiscuss }: {
   view: ReviewView; lens?: LensId | 'all'; facet?: Facet; capabilities: ReviewCapabilities;
   /** R1-1B · a live host owns the lens filter; the tabs filter an existing reading and commission nothing. Markup unchanged. */
   onLens?: (lens: LensId | 'all') => void;
   /** R1-2 · a live host's return navigation over exact durable section addresses. Absent → controlled rendering, unchanged. */
   navigation?: ReviewNavigation;
+  /** R2-2 · one history-empty discussion bound to one exact durable finding. */
+  discussion?: ReviewDiscussionState | null;
+  onDiscuss?: (findingId: string) => void;
+  onSubmitDiscuss?: (findingId: string, text: string) => void;
+  onCloseDiscuss?: () => void;
 }) {
   const caps = capabilities;
   /* R1-2 · under a live navigation, controls whose target is NOT a section address (coverage, previous reading,
@@ -667,7 +713,9 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
             ) : (
               shown.map((f) => (
                 <FindingRow key={f.id} o={f} citation={view.citations?.[f.id]} navigation={navigation}
-                  selected={f.id === selected?.id} caps={caps} />
+                  selected={f.id === selected?.id} caps={caps}
+                  discussion={discussion} onDiscuss={onDiscuss}
+                  onSubmitDiscuss={onSubmitDiscuss} onCloseDiscuss={onCloseDiscuss} />
               ))
             )}
           </section>

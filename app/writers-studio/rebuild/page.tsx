@@ -23,7 +23,10 @@ export const dynamic = 'force-dynamic';
 export default function WriterStudioRebuildPage() {
   return (
     <Suspense fallback={<div className="fs-tokens fsw-state">Opening your Writer’s Studio…</div>}>
-      <FlagshipWriteHost editorialEnabled={process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1'} />
+      <FlagshipWriteHost
+        editorialEnabled={process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1'}
+        reviewDiscussEnabled={process.env.WRITERS_STUDIO_REVIEW_DISCUSS_ENABLED === '1'}
+      />
     </Suspense>
   );
 }

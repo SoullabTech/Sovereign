@@ -86,6 +86,7 @@ import { attachChoices, chooseReading, loadReadingChoices, navActionsFor, should
 import { ReviewChooser } from './ReviewChooser';
 import { navigationFor } from './reviewReturn';
 import type { ReviewNavigation } from '../flagship/DevelopReview';
+import { commissionReviewDiscuss, REVIEW_DISCUSS_COPY, type ReviewDiscussionState } from '@/lib/writersStudio/rebuild/reviewDiscuss';
 
 export interface ContextReady {
   state: 'section_aware';
@@ -171,6 +172,11 @@ export interface FlagshipWriteViewProps {
   readonly studioNav?: StudioNav;
   /** R1-2 — the host's return navigation for a mounted reading: exact durable section → location. */
   readonly reviewNavigation?: ReviewNavigation;
+  /** R2-2 — one history-empty Review Discuss act bound to one exact finding. */
+  readonly reviewDiscussion?: ReviewDiscussionState | null;
+  readonly onReviewDiscuss?: (findingId: string) => void;
+  readonly onSubmitReviewDiscuss?: (findingId: string, text: string) => void;
+  readonly onCloseReviewDiscuss?: () => void;
 }
 
 const noAction = () => {};
@@ -180,6 +186,7 @@ export function FlagshipWriteView({
   context, workTitle, workForm, focusId, held, onFocus, onHold, epoch = 0,
   editorialEnabled = false, discuss = null, onAskMaia = noAction, onSubmitAsk = noAction, onRelease = noAction, onWriting,
   review, reviewLens = 'all', onReviewLens = noAction, chooser, studioNav, reviewNavigation,
+  reviewDiscussion = null, onReviewDiscuss, onSubmitReviewDiscuss, onCloseReviewDiscuss,
 }: FlagshipWriteViewProps) {
   const focus = context.sections.find((s) => s.draftSectionId === focusId) ?? null;
   const span = focusId ? chapterSpanFor(context.sections, focusId) : null;
@@ -199,7 +206,9 @@ export function FlagshipWriteView({
     return (
       <div className="fsw-viewport">
         <StudioShell current={current} destinations={['write', 'review']} affordance="orientation" nav={nav} project={project}>
-          <LiveReviewView state={review} lens={reviewLens} onLens={onReviewLens} navigation={reviewNavigation} />
+          <LiveReviewView state={review} lens={reviewLens} onLens={onReviewLens} navigation={reviewNavigation}
+            discussion={reviewDiscussion} onDiscussFinding={onReviewDiscuss}
+            onSubmitDiscuss={onSubmitReviewDiscuss} onCloseDiscuss={onCloseReviewDiscuss} />
         </StudioShell>
       </div>
     );
@@ -279,6 +288,8 @@ export function FlagshipWriteView({
 export interface FlagshipWriteHostProps {
   /** C1C1 — read ONCE on the server by page.tsx. Presentation state, never authorization. */
   readonly editorialEnabled?: boolean;
+  /** R2-2 — independent Review Discuss presentation flag. Server route re-checks it. */
+  readonly reviewDiscussEnabled?: boolean;
 }
 
 /** R1-1B — the two existing member-scoped GET seams, and nothing else. ⛔ No POST exists here. */
@@ -293,7 +304,7 @@ const reviewPorts: ReviewPorts = {
   },
 };
 
-export default function FlagshipWriteHost({ editorialEnabled = false }: FlagshipWriteHostProps = {}) {
+export default function FlagshipWriteHost({ editorialEnabled = false, reviewDiscussEnabled = false }: FlagshipWriteHostProps = {}) {
   const params = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -323,6 +334,8 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
   const [review, setReview] = useState<LiveReviewState>({ kind: 'idle' });
   const [reviewLens, setReviewLens] = useState<LensId | 'all'>('all');
   const reviewGen = useRef(0);
+  const [reviewDiscussion, setReviewDiscussion] = useState<ReviewDiscussionState | null>(null);
+  const reviewDiscussGen = useRef(0);
   const requestedReadingRef = useRef<string | null>(null);
   requestedReadingRef.current = requestedReading;
   const workTitleRef = useRef<string | null>(null);
@@ -436,6 +449,45 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
     });
   }, [editorialEnabled, discuss]);
 
+  const onReviewDiscuss = useCallback((findingId: string) => {
+    if (!reviewDiscussEnabled || review.kind !== 'ready') return;
+    const truth = review.durable[findingId];
+    if (!truth) return;
+    setReviewDiscussion({ kind: 'composing', findingId });
+  }, [reviewDiscussEnabled, review]);
+
+  const onCloseReviewDiscuss = useCallback(() => {
+    setReviewDiscussion(null);
+    reviewDiscussGen.current += 1;
+  }, []);
+
+  const onSubmitReviewDiscuss = useCallback((findingId: string, text: string) => {
+    if (!reviewDiscussEnabled || review.kind !== 'ready' || !context || text.trim().length === 0) return;
+    const truth = review.durable[findingId];
+    if (!truth) return;
+    const ask = text;
+    const gen = ++reviewDiscussGen.current;
+    const readingAtGesture = review.readingId;
+    setReviewDiscussion({ kind: 'pending', findingId, ask, gen });
+    const posture = readCurrentSanctuaryPosture();
+    void commissionReviewDiscuss({
+      manuscriptId: context.manuscriptId,
+      readingId: truth.address.readingId,
+      observationKey: truth.address.observationKey,
+      question: ask,
+    }, posture).then((outcome) => {
+      if (gen !== reviewDiscussGen.current || requestedReadingRef.current !== readingAtGesture) return;
+      if (outcome.ok) {
+        setReviewDiscussion({ kind: 'answered', findingId, ask, reply: outcome.reply, threadId: outcome.threadId, posture: outcome.posture });
+        return;
+      }
+      const copy = outcome.reason === 'posture_unresolved' ? REVIEW_DISCUSS_COPY.posture
+        : outcome.reason === 'sanctuary_unavailable' ? REVIEW_DISCUSS_COPY.sanctuary
+        : REVIEW_DISCUSS_COPY.failed;
+      setReviewDiscussion({ kind: 'refused', findingId, ask, copy });
+    });
+  }, [reviewDiscussEnabled, review, context]);
+
   const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
   const work = currentWork(workContext);
   workTitleRef.current = work?.title ?? context?.title ?? null;
@@ -456,13 +508,17 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
       /* LATE RESULT — attaches only to the exact selection (reading id + generation) that commissioned it. */
       if (!attachReview({ gen, readingId: requestedReading }, { gen: reviewGen.current, readingId: requestedReadingRef.current })) return;
       setReview(r.kind === 'ready'
-        ? { kind: 'ready', readingId: requestedReading, gen, view: r.view }
+        ? { kind: 'ready', readingId: requestedReading, gen, view: r.view, durable: r.durable }
         : { kind: 'unavailable', readingId: requestedReading, gen });
     });
   }, [requestedReading, context]);
 
   /* R1-1C — an explicit reading in the URL closes the selection state: the URL is the authority. */
-  useEffect(() => { if (requestedReading) setChooserOpen(false); }, [requestedReading]);
+  useEffect(() => {
+    if (requestedReading) setChooserOpen(false);
+    setReviewDiscussion(null);
+    reviewDiscussGen.current += 1;
+  }, [requestedReading]);
   /* R1-1C — the ledger is read ONLY in the selection state. ⛔ Never on an ordinary Write open. ⛔ Never a reading GET. */
   useEffect(() => {
     if (!context) return;
@@ -523,6 +579,10 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
       chooser={chooser}
       studioNav={studioNav}
       reviewNavigation={reviewNavigation}
+      reviewDiscussion={reviewDiscussion}
+      onReviewDiscuss={reviewDiscussEnabled && review.kind === 'ready' ? onReviewDiscuss : undefined}
+      onSubmitReviewDiscuss={onSubmitReviewDiscuss}
+      onCloseReviewDiscuss={onCloseReviewDiscuss}
     />
   );
 }

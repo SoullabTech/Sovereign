@@ -15,7 +15,7 @@
  */
 import type { ReviewView, LensId } from '@/app/writers-studio/flagship/DevelopReview';
 import type { ReviewScope } from '@/lib/writersStudio/studio/reading';
-import { mapRealReview, type ReviewHostFacts, type StoredReadingSummary } from '@/lib/writersStudio/studio/realReview';
+import { mapRealReview, type DurableObservationTruth, type ReviewHostFacts, type StoredReadingSummary } from '@/lib/writersStudio/studio/realReview';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { chapterSpanFor } from '@/lib/writersStudio/rebuild/model';
 import { toWriteFoot, toWriteHeading } from '@/lib/writersStudio/studio/adapters/writeView';
@@ -36,13 +36,13 @@ export interface ReviewPorts {
 export type LoadResult =
   | { readonly kind: 'idle' }
   | { readonly kind: 'unavailable' }
-  | { readonly kind: 'ready'; readonly view: ReviewView; readonly sourceReadingId: string };
+  | { readonly kind: 'ready'; readonly view: ReviewView; readonly sourceReadingId: string; readonly durable: Readonly<Record<string, DurableObservationTruth>> };
 
 export type LiveReviewState =
   | { readonly kind: 'idle' }
   | { readonly kind: 'loading'; readonly readingId: string; readonly gen: number }
   | { readonly kind: 'unavailable'; readonly readingId: string; readonly gen: number }
-  | { readonly kind: 'ready'; readonly readingId: string; readonly gen: number; readonly view: ReviewView };
+  | { readonly kind: 'ready'; readonly readingId: string; readonly gen: number; readonly view: ReviewView; readonly durable: Readonly<Record<string, DurableObservationTruth>> };
 
 /** ⭐ One calm sentence for every unavailable reason. ⛔ Never a refusal code, never existence. */
 export const REVIEW_COPY = Object.freeze({
@@ -78,7 +78,7 @@ export async function loadSelectedReading(readingId: string | null, host: Review
   const mapped = mapRealReview({ summaries: listed, selectedReadingId: readingId, payload: one.json, host });
   if (mapped.kind !== 'ready') return { kind: 'unavailable' };
   if (!bindContext(mapped.view).ok) return { kind: 'unavailable' };
-  return { kind: 'ready', view: mapped.view, sourceReadingId: mapped.sourceReadingId };
+  return { kind: 'ready', view: mapped.view, sourceReadingId: mapped.sourceReadingId, durable: mapped.durable };
 }
 export const load = loadSelectedReading;
 
