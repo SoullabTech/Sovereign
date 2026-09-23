@@ -1,8 +1,8 @@
 # JARVIS-JEV-01 · JEV-INT-01
 ## External-Provider Governance Candidate Witness
 
-**Date:** 2026-09-22  
-**Base canonical:** `b23ae2d7fd31ee56841af3930b31658ab286a2a3`  
+**Date:** 2026-09-22
+**Reconciled canonical:** `19be6b6ec7c8b4ddabbbc2a9d3d2ebce48fa2dc8`
 **Disposition:** GOVERNANCE CANDIDATE AUTHORED · HOLD NOT LIFTED · NO PROVIDER ASSIGNED
 
 ## 1. Objective
@@ -31,7 +31,7 @@ scripts/check-provider-governance.ts
 28589396116847c0442ee8459aa7b4f23169f4cd
 
 docs/canon/DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md
-f69c79004edfc1a203caebf4a52898cc53e96840
+2c890d884610ba16e5e9b969cf7ff3147a07dc3c
 
 scripts/builder/__tests__/development-provider-governance-proof.mjs
 9beb811be85fab8c716d0015fc5e4162737e849c

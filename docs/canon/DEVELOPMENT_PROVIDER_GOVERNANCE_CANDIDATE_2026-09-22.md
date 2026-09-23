@@ -1,8 +1,8 @@
 # Development Provider Governance — Candidate
 
-**Status:** CANDIDATE · NOT RATIFIED  
-**Programme:** JARVIS-JEV-01 / JEV-INT-01  
-**Date:** 2026-09-22  
+**Status:** CANDIDATE · NOT RATIFIED
+**Programme:** JARVIS-JEV-01 / JEV-INT-01
+**Date:** 2026-09-22
 **Parent canon:** `PROVIDER_GOVERNANCE.md` · `OPTIMIZATION_TOOLING_GOVERNANCE.md`
 
 This candidate governs the **development-time external-provider boundary**: repository-governed
