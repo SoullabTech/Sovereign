@@ -221,6 +221,8 @@
     "matrix:ws-flagship-c1b": "tsx --tsconfig tsconfig.ws-flagship-c1b.json tests/constitutional/writers-studio/flagship-c1b/matrix.ts",
     "typecheck:ws-flagship-c1c1": "node scripts/typecheck-ws-flagship-c1a.mjs tsconfig.ws-flagship-c1c1.json",
     "matrix:ws-flagship-c1c1": "tsx --tsconfig tsconfig.ws-flagship-c1c1.json tests/constitutional/writers-studio/flagship-c1c1/matrix.ts",
+    "typecheck:ws-flagship-r1-1a": "node scripts/typecheck-ws-flagship-r1-1a.mjs",
+    "matrix:ws-flagship-r1-1a": "tsx --tsconfig tsconfig.ws-flagship-r1-1a.json tests/constitutional/writers-studio/flagship-r1-1a/matrix.ts",
     "matrix:ws-flagship-r1-readonly": "tsx --tsconfig tsconfig.ws-flagship-r1-readonly.json tests/constitutional/writers-studio/flagship-r1-readonly/matrix.ts",
     "typecheck:ws-flagship-r1-readonly": "node scripts/typecheck-ws-flagship-r1-readonly.mjs",
     "witness:flagship-r1-readonly": "jest --config jest.config.js --runInBand --testPathIgnorePatterns=/node_modules/ --runTestsByPath tests/__integration__/flagship-r1-readonly/real-reader-witness.integration.test.ts",
