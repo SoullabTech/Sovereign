@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
 import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
 import { StudioModeBar } from '../studio/StudioModeBar';
@@ -820,14 +821,20 @@ export default function RebuildStudioClient() {
     if (!(await settleWriting())) return null;
     const passage = selectedPassage?.draftSectionId === focusId ? selectedPassage : null;
     const revision = writingRef.current?.currentRevisionId() ?? passage?.revisionNumber ?? context.version;
+    /* E1 — the member's CURRENT Sanctuary posture, read at this gesture. */
+    const posture = readCurrentSanctuaryPosture();
     const opened = passage
       ? await openBoundEditorialPassage(
-          focusId, { start: passage.start, end: passage.end }, revision,
+          focusId, { start: passage.start, end: passage.end }, revision, posture,
         )
-      : await openBoundEditorialThread(focusId);
+      : await openBoundEditorialThread(focusId, posture);
     if (!opened.ok) {
       const refusal = 'refusal' in opened ? opened.refusal : undefined;
-      setEditorialFailure(refusal === 'selection_ambiguous'
+      setEditorialFailure(opened.reason === 'posture_unresolved'
+        ? 'Your Sanctuary setting could not be read on this device, so revision collaboration was not opened. Open MAIA here once, then try again. Nothing was written.'
+        : opened.reason === 'sanctuary_unavailable'
+          ? 'Sanctuary is on. Revision collaboration is durable by construction, so it is unavailable until Sanctuary is off. Nothing was written.'
+          : refusal === 'selection_ambiguous'
         ? 'Those exact words appear more than once in this section. Select a little more context so the Studio can hold the place without guessing.'
         : refusal === 'selection_stale'
           ? 'The Work changed after you selected those words. Reselect the passage you want to work on.'
@@ -923,6 +930,8 @@ export default function RebuildStudioClient() {
         thread.threadId,
         focusId,
         observationContext + 'My question:\n' + exactWords,
+        /* E1 — posture read at THIS gesture, never at mount. */
+        readCurrentSanctuaryPosture(),
         { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately },
       );
       if (!out.ok) {
@@ -931,7 +940,11 @@ export default function RebuildStudioClient() {
            and what she produced went further than the writer allowed. Saying it
            plainly is what lets the writer learn the control. */
         setEditorialFailure(
-          out.reason === 'scope_refused'
+          out.reason === 'posture_unresolved'
+            ? 'Your Sanctuary setting could not be read on this device, so nothing was sent. Open MAIA here once, then try again.'
+            : out.reason === 'sanctuary_unavailable'
+              ? 'Sanctuary is on. This conversation is durable by construction, so it cannot hold your words until Sanctuary is off. Nothing was written.'
+            : out.reason === 'scope_refused'
             ? (out.detail ?? 'That suggestion went beyond your editing latitude. Nothing was changed.')
             : out.reason === 'unavailable'
               ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'

@@ -35,6 +35,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
    left the writer with no way to widen it. */
 import EditingLatitude, { useEditingLatitude } from '../insight/EditingLatitude';
 import { apiFetch } from '@/lib/http/apiBase';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText, typeStyle } from '../studio/StudioType';
 
@@ -261,6 +262,14 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
     const text = draft;
     if (text.trim().length === 0 || busy) return;
     setBusy(true); setFailure(null);
+    /* E1 — the member's CURRENT Sanctuary posture, read at this gesture. An
+       unresolved posture posts nothing: the member's words stay in the draft. */
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved) {
+      setFailure('Your Sanctuary setting could not be read on this device, so nothing was sent. Your words are still here. Open MAIA here once, then try again.');
+      setBusy(false);
+      return;
+    }
     try {
       const res = await apiFetch('/api/writers-studio/editorial/turn', {
         method: 'POST',
@@ -269,6 +278,7 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
            wrote, and a Direction's instruction IS the turn body. */
         body: JSON.stringify({
           threadId, act: { act: actKind, text, refersTo: null },
+          sanctuary: posture.sanctuary,
           /* ⭐ The writer's declared editing latitude for this exchange. */
           scope: { latitude, mayRemoveParagraphs, mayProposeImmediately },
         }),
@@ -284,9 +294,12 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
            answer* — she could, and what she produced went further than the
            writer allowed. Saying which is how the writer learns the control. */
         const why = await res.json().catch(() => null);
-        setFailure(res.status === 409 && typeof why?.detail === 'string'
-          ? `Your words are saved. ${why.detail}`
-          : 'Your words are saved. MAIA could not answer this time.');
+        /* E1 — a Sanctuary refusal wrote NOTHING, and must not claim the words are saved. */
+        setFailure(res.status === 409 && why?.error === 'sanctuary_unavailable'
+          ? 'Sanctuary is on. This conversation is durable by construction, so it cannot hold your words until Sanctuary is off. Nothing was written; your words are still here.'
+          : res.status === 409 && typeof why?.detail === 'string'
+            ? `Your words are saved. ${why.detail}`
+            : 'Your words are saved. MAIA could not answer this time.');
       }
     } catch {
       setFailure('Your words may be saved. MAIA could not answer this time.');

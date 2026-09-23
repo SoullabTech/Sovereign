@@ -26,6 +26,12 @@ surfaces:
   # proposes changes to the writer's words was governed by nothing. It belongs
   # to this room by its own human_activity: MAIA present at the writer's locus.
   - app/writers-studio/canvas/EditorialConversation.tsx
+  # SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1, 2026-09-23. The Canvas's own
+  # editorial-open gesture lives here and was named by NO contract. E1 makes
+  # that gesture read the member's current Sanctuary posture and refuse
+  # honestly when it cannot; the gesture belongs to the same room as the
+  # conversation it opens.
+  - app/writers-studio/canvas/CanvasClient.tsx
   # The mode bar was already named in shared_with_house and was covered by no
   # surface glob, so the room shared a component no contract governed. D1 makes
   # it the bar this room actually renders, which is what surfaced the gap.
