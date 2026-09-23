@@ -127,19 +127,30 @@ export function runR11ALaws(s: Subject): LawResult[] {
 
   out.push(law('R1-1A-L12-withheld-population-keeps-identity-and-reason', () => {
     if (!P || !ro) return unextracted('R1-1A-L12-withheld-population-keeps-identity-and-reason');
+    const RID = 'rd_9f1c2e3a-4b5d-4e6f-8a7b-9c0d1e2f3a4b';
     const view = { ...REVIEW, withheld: [
-      { observationId: 'dobs_w1', readingId: 'rd_9', observationKey: 'o3', reason: 'frozen_citation_text_unavailable' },
-      { observationId: 'dobs_w2', readingId: 'rd_9', observationKey: 'o5', reason: 'observation_address_unavailable' },
-      { observationId: 'dobs_w3', readingId: 'rd_9', observationKey: 'o7', reason: 'lens_not_presentable' },
+      { observationId: 'dobs_w1', readingId: RID, observationKey: 'o3', reason: 'frozen_citation_text_unavailable' },
+      { observationId: 'dobs_w2', readingId: RID, observationKey: 'o5', reason: 'observation_address_unavailable' },
+      { observationId: 'dobs_w3', readingId: RID, observationKey: 'o7', reason: 'lens_not_presentable' },
     ] } as ReviewView;
     const h = render(React.createElement(P, { view, lens: 'all', capabilities: ro }));
-    const ids = ['dobs_w1', 'dobs_w2', 'dobs_w3'].every((id) => new RegExp(`data-withheld="${id}"`).test(h));
-    const addr = /rd_9/.test(h) && /o3/.test(h) && /o5/.test(h) && /o7/.test(h);
-    const reasons = /data-withheld-reason="frozen_citation_text_unavailable"/.test(h) && /data-withheld-reason="observation_address_unavailable"/.test(h) && /data-withheld-reason="lens_not_presentable"/.test(h);
-    const exists = /3 observation/.test(h) && !/disappear|removed|deleted|lost/i.test(h);
+    const section = h.slice(h.indexOf('data-withheld-population="true"'));
+    /* ⭐ Identities STRUCTURALLY — every durable address on the item, as data, never derived. */
+    const structural = ['dobs_w1', 'dobs_w2', 'dobs_w3'].every((id) => new RegExp(`data-withheld="${id}"`).test(section))
+      && (section.match(new RegExp(`data-reading-id="${RID}"`, 'g')) ?? []).length === 3
+      && ['o3', 'o5', 'o7'].every((k) => new RegExp(`data-observation-key="${k}"`).test(section))
+      && /data-withheld-reason="frozen_citation_text_unavailable"/.test(section)
+      && /data-withheld-reason="observation_address_unavailable"/.test(section)
+      && /data-withheld-reason="lens_not_presentable"/.test(section);
+    /* ⛔ Machine addresses NEVER in writer-visible copy: strip tags, then look for the ids. */
+    const visible = section.replace(/<[^>]+>/g, ' ');
+    const leaked = /dobs_|rd_9f1c2e3a|\bo3\b|\bo5\b|\bo7\b|readingId|observationKey|observationId/.test(visible);
+    /* ⭐ The truthful reason IS visible, and the population is counted as existing, never as gone. */
+    const reasons = /passage it was made against has changed/.test(visible) && /Work structure rather than a particular prose location/.test(visible) && /cannot yet display that lens/.test(visible);
+    const exists = /Observations not shown at their place · 3/.test(visible) && /still belong to this reading/.test(visible) && !/disappear|removed|deleted|lost/i.test(visible);
     const goldenClean = !/data-withheld/.test(render(React.createElement(s.Room, { view: REVIEW })));
-    return must('R1-1A-L12-withheld-population-keeps-identity-and-reason', ids && addr && reasons && exists && goldenClean,
-      `identities=${ids} addresses=${addr} reasons=${reasons} countedAsExisting=${exists} controlledUnaffected=${goldenClean}`);
+    return must('R1-1A-L12-withheld-population-keeps-identity-and-reason', structural && !leaked && reasons && exists && goldenClean,
+      `identitiesStructural=${structural} machineIdsVisible=${leaked} reasonsVisible=${reasons} countedAsExisting=${exists} controlledUnaffected=${goldenClean}`);
   }));
 
   return out;

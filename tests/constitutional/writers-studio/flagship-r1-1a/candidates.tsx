@@ -43,7 +43,21 @@ const D9: Subject = { ...REFERENCE, name: 'R1-1A-D9-extraction-inside-frozen-art
 const D10: Subject = { ...REFERENCE, name: 'R1-1A-D10-fake-disabled-control',
   Presentation: after(<button type="button" className="fs-btn" disabled aria-disabled="true">Unavailable here</button>) };
 
-export const DEFEAT_CANDIDATES: readonly Subject[] = [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10];
+/* D11 · the withheld population leaks its machine addresses into writer-visible copy */
+const D11: Subject = { ...REFERENCE, name: 'R1-1A-D11-withheld-leaks-machine-identity',
+  Presentation: (p: PresentationProps) => (
+    <>
+      {P ? <P {...p} /> : null}
+      {p.view.withheld?.map((w) => (
+        <div key={w.observationId} className="fs-find" data-withheld-population="true" data-withheld={w.observationId}
+          data-reading-id={w.readingId} data-observation-key={w.observationKey} data-withheld-reason={w.reason}>
+          <div className="fs-ev"><span className="fs-chip">reading {w.readingId}</span><span className="fs-chip">{w.observationKey}</span><span className="fs-chip">{w.observationId}</span></div>
+        </div>
+      ))}
+    </>
+  ) };
+
+export const DEFEAT_CANDIDATES: readonly Subject[] = [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11];
 export const NAMED_KILL: Record<string, string> = {
   'R1-1A-D1-read-only-renders-ask-maia': 'R1-1A-L1-read-only-omits-ask-maia',
   'R1-1A-D2-read-only-renders-discuss': 'R1-1A-L2-read-only-omits-discuss',
@@ -55,5 +69,6 @@ export const NAMED_KILL: Record<string, string> = {
   'R1-1A-D8-controlled-room-output-changes': 'R1-1A-L8-controlled-review-room-byte-identical',
   'R1-1A-D9-extraction-inside-frozen-artifact': 'R1-1A-L9-no-fs1-frozen-artifact-mutated',
   'R1-1A-D10-fake-disabled-control': 'R1-1A-L10-read-only-omits-not-disables',
+  'R1-1A-D11-withheld-leaks-machine-identity': 'R1-1A-L12-withheld-population-keeps-identity-and-reason',
 };
 export const CLASSIFIED: Record<string, readonly string[]> = {};
