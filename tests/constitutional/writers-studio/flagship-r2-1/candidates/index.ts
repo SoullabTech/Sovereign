@@ -98,4 +98,8 @@ Readonly<Record<string, string>> = {
  * classify only collateral that is structurally irreducible.
  */
 export const CLASSIFIED:
-Readonly<Record<string, readonly string[]>> = {};
+Readonly<Record<string, readonly string[]>> = {
+  'R2-1-D11-historical-evidence-absent': [
+    'R2-1-L13-response-provenance-is-complete',
+  ],
+};

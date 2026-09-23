@@ -1,8 +1,2 @@
 export * from '../contract';
-import * as ref from '../contract';
-export function composeResponseEnvelope(act: any, answer: any): any {
-  return {
-    ...ref.composeResponseEnvelope(act, answer),
-    provenanceAuthority: 'MODEL',
-  };
-}
+export const PROVENANCE_AUTHORITY = 'MODEL' as const;

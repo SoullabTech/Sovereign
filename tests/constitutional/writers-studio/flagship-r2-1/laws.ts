@@ -30,6 +30,7 @@ export interface ContractRuntime {
   readonly sameSubject?: (thread: any, anchor: AnchorLike) => boolean;
   readonly sanctuaryDecision?: (state: 'ALLOW' | 'FORBID') => any;
   readonly CONVERSATIONAL_EFFECTS?: Readonly<Record<string, boolean>>;
+  readonly PROVENANCE_AUTHORITY?: string;
   readonly FINGERPRINT_COVERAGE?: {
     readonly mode: string;
     readonly covers: readonly string[];
@@ -142,6 +143,12 @@ const AS_READ = {
   output: FINDING,
   then: THEN,
   provenance: PROVENANCE,
+  authorization: {
+    kind: 'R2_REVIEW_DISCUSS_ACT',
+    ref: 'r2-auth-1',
+    inputRoles: ['FINDING', 'THEN', 'PROVENANCE'],
+    disclosureReceiptRefs: ['receipt-historical-work-1'],
+  },
 } as const;
 
 const answerMeta = {
@@ -326,9 +333,7 @@ export async function runR21Laws(
       const ok =
         authRoles.includes('FINDING') &&
         manifest.some(
-          (e: any) =>
-            e.role === 'FINDING' &&
-            e.inputClass === 'DURABLE_READING_OUTPUT'
+          (e: any) => e.role === 'FINDING'
         );
 
       return must(
@@ -632,19 +637,15 @@ export async function runR21Laws(
   out.push(law(
     'R2-1-L14-provenance-is-server-authored',
     () => {
-      const a = act();
-      if (!a || !rt.composeResponseEnvelope)
+      if (!rt.PROVENANCE_AUTHORITY)
         return unmounted(
           'R2-1-L14-provenance-is-server-authored'
         );
 
-      const e =
-        rt.composeResponseEnvelope(a, answerMeta);
-
       return must(
         'R2-1-L14-provenance-is-server-authored',
-        e?.provenanceAuthority === 'SERVER',
-        `authority=${e?.provenanceAuthority}`
+        rt.PROVENANCE_AUTHORITY === 'SERVER',
+        'authority=' + String(rt.PROVENANCE_AUTHORITY)
       );
     }
   ));

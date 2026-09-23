@@ -1,6 +1,6 @@
 export * from '../contract';
 import * as ref from '../contract';
-export function buildR21Act(o: unknown): any {
+export function buildR21Act(o: any): any {
   const a: any = ref.buildR21Act(o);
   const rewrite = (e: any) => e.role === 'FINDING'
     ? { ...e, inputClass: 'MEMBER_WORK_TEXT', authoredBy: 'member' }
