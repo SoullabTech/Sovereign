@@ -57,8 +57,9 @@ Informational only: DSM notes the drives are not on Synology's compatibility lis
   is live.**
 - `maia-backups/manifests/` — one manifest per run, same cadence.
 - `maia-backups/media/` — last written 2026-07-08.
-- `maia-backups/restore-reports/` — last written **2026-06-11**. The backups have
-  not been restore-tested in three months. Finding, not an emergency.
+- `maia-backups/restore-reports/` — **empty**, directory dated 2026-06-11. An
+  earlier draft of this record read that date as "restore tests stopped in June";
+  §3a corrects it: **no restore test has ever run.** Finding, not an emergency.
 - `maia_backup_20260214_214015.sql.gz` — a single 238 MB dump from February.
 - 7.8 GB total.
 
@@ -73,6 +74,50 @@ Informational only: DSM notes the drives are not on Synology's compatibility lis
 | `Clients/`, `Knowkledge/` (sic), `Media/` | empty | — |
 
 Nothing in either share was modified, moved or deleted by this lane.
+
+### 3a. The backup job, recovered from the minisforum (read-only, 2026-09-23)
+
+Found by `crontab -l`, `ls /etc/cron.d`, `mount`, `cat /etc/fstab` and `cat` of
+the script over SSH. Nothing on the minisforum was changed.
+
+| Fact | Value |
+|---|---|
+| Mount | `//192.168.0.103/soullab-backups` → `/mnt/ds225`, CIFS 3.0, `fstab` with `_netdev,x-systemd.automount`, credentials file `/etc/cifs-credentials-ds225`, **NAS user `maia-backup`** |
+| Scheduler | `/etc/cron.d/maia-backup` (root): `0 2 * * * root /usr/local/bin/maia-backup` (02:00 UTC) |
+| Script | `/usr/local/bin/maia-backup` — copied verbatim to `scripts/ops/minisforum-maia-backup.sh` |
+| What it does | `pg_dump maia_consciousness \| gzip` → `postgres/maia_<ts>.sql.gz`; `rsync -a --delete` of the `/app/data/media` volume → `media/`; manifest per run; aborts if unmounted or < 10 GB free |
+| Retention | 14 daily · 8 weekly (Sunday copy) · 12 monthly (1st) |
+| Last run | 2026-09-23 02:00:45 UTC, 334 MB dump, media 316 MB, manifest written |
+| Write test after the NAS reset | `WRITE_OK` |
+
+**Findings (none repaired here):**
+
+1. **No restore test has ever run.** `restore-reports/` is empty; the directory
+   was created with the tree on 2026-06-11. The script contains no restore step.
+   Repo has `scripts/restore-db.sh` and `scripts/restore-governed.sh`; neither is
+   scheduled. Until one runs against a disposable database, the nightly dump is a
+   file, not a backup.
+2. **`maia_20260918_020002.sql.gz` is 72 MB** against 320–334 MB for every
+   neighbour. `set -o pipefail` is on, so a failed `pg_dump` would exit non-zero,
+   but `gzip` had already written whatever arrived. Most likely `pg_dump` was cut
+   off at 02:00 UTC on 18 Sep (22:00 local, 17 Sep). Retention deletes it in days;
+   the question of what interrupted it does not expire. Check `/var/log/maia-backup.log`
+   for that run and `gzip -t` the file.
+3. **Two dump jobs fire at the same minute.** The user crontab also runs the
+   repo's `scripts/backup-postgres.sh` at `0 2 * * *` into
+   `~/MAIA-SOVEREIGN/database/backups/` on the minisforum's **own disk**
+   (30-day retention, ~330 MB/night ≈ 10 GB standing). Two concurrent
+   `pg_dump`s of one database, one of them growing production's disk.
+4. **`scripts/health-check.sh` watches a third path**, `~/maia-backups`, which
+   does not exist on the minisforum, so `LAST_BACKUP=none` is reported forever
+   regardless of either job's health.
+5. **`maia-backup` shows "Password pending" in DSM.** The CIFS session survived
+   the reset (write test OK), but the next reconnect (NAS reboot, DSM update,
+   network blip) re-authenticates as this user. If DSM requires a password change,
+   the mount fails and the script exits at its mount check with nothing but a log
+   line on the minisforum. ⛔ **Do not install the pending DSM update until this
+   account's state is confirmed.** The 02:00 UTC run on 2026-09-24 is the first
+   scheduled test after the reset.
 
 ## 4. Mirrors written (copy-only, T7 retained as the working copy)
 
@@ -111,10 +156,14 @@ are the kind of thing that later reads as a mystery:
    and the mirror; it reboots the NAS.
 4. **Data scrubbing**: schedule monthly (Storage Manager → Schedule Data
    Scrubbing). Not run now — it reads every block on both disks.
-5. **Backup restore test**: `restore-reports` stopped 2026-06-11 while the dumps
-   kept landing. Find the job that wrote the reports and why it stopped.
-6. **`maia-backup` account** is "Password pending". Determine whether the
-   minisforum job authenticates as it (rsync/SMB) before touching it.
+5. **Backup restore test**: never run (§3a-1). Schedule `scripts/restore-db.sh`
+   or `restore-governed.sh` against a disposable database and write the report.
+6. **`maia-backup` account** is "Password pending" and IS the minisforum's CIFS
+   identity (§3a-5). Confirm its DSM state; if a change is forced, change it and
+   `/etc/cifs-credentials-ds225` in one act, then `mount -o remount /mnt/ds225`.
+6a. **Consolidate the dump jobs** (§3a-3/4): one job, one destination, one health
+   check reading it. The NAS job is the keeper; the local user-cron job and the
+   `~/maia-backups` path in `health-check.sh` are the debris.
 7. **Ollama model store** (75 GB on the T7, `/Volumes/T7 Shield/...`) has no NAS
    twin; `MAIA/Models` holds a different 63 GB set. Candidate second mirror.
 8. **LaCie** (3.4 TB, mounted) — uninventoried. **Time Machine** target —
