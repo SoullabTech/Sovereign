@@ -136,3 +136,40 @@ Desktop → Apple menu → Restart (the staged OS update will install) → `upti
 in minutes → census to the same filename before opening anything → then one
 normal build → second reading. The 14:16Z file is kept as the pre-restart
 reference, ⛔ never as the baseline.
+
+## Addendum — 2026-09-23 · idle baseline TAKEN (reading 1 of 2)
+
+Real reboot confirmed (`uptime` 2 min, macOS 15.7.8 — the staged update did not
+install and is still on disk). Census `logs/census-2026-09-23-idle.txt`,
+overwritten with the post-reboot run:
+
+| | pre-restart 14:16Z | **idle, boot + 2 min** |
+|---|---|---|
+| swap used | 10.4 GB | **0** |
+| compressed | 21.2 GB | **0** |
+| free / macOS "free %" | 0.1 GB / 43% | 7.6 GB / 91% |
+| active / wired / inactive | 10.3 / 5.5 / 10.3 | 17.9 / 3.9 / 17.4 |
+| `next-server` | 1 (5.7 GB) | **0** |
+| Docker VM resident | 2.1 GB | 7.0 GB (auto-launched at login; left running on purpose — it is part of normal idle) |
+| internal free | 66 GB | **101 GB** (≈35 GB of APFS purgeable space returned on reboot) |
+
+Caveat, kept: the reading was taken inside the boot load spike (1-min load
+310, twenty restored Terminal sessions). For memory this is a floor, not a
+distortion — nothing had loaded — so it stands as **reading 1 (idle)**.
+**Reading 2 (after one normal MAIA build) is still owed**, then the 48 GB
+adjudication.
+
+### Observation — an unrecorded worktree deletion by another session
+
+A restored Terminal window (last login 21 Sep 20:03) showed a command this
+lane did not run: a guarded `rm -rf` sweep over `/private/tmp/*/` git
+directories (skipping any with an active dev server, unpushed commits, or a
+dirty tree) that deleted **eight** worktrees — `ds03-first-live-review-target`,
+`ds03-gate-runtime-r1`, `e3r3-charter-custody-20260921`,
+`jarvis-build-bd91e5bb0`, `jarvis-kp-i4-run`, `jarvis-kp-i4r2`,
+`tcf-2-rgr06-fidelity-20260921`, `ws-editorial-scope-closure-20260921` — at a
+moment when the Data volume read **4.1 GB free (100%)**. Date not recoverable
+from the window; consistent with 21–22 Sep before this lane's census. Guards
+were sound; the act used `rm -rf` rather than `git worktree remove`, leaving
+git's registry to be pruned later, and it left no record. ⛔ Nothing repaired;
+recorded so the reclaim ledger does not silently under-count.
