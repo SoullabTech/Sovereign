@@ -7,8 +7,12 @@ import {
   commissionDiscuss, createInFlightGuard, settleWritingSession, resultAttaches, resolveAttachment, runDiscussAct,
   DISCUSS_SCOPE, DISCUSS_COPY, lastMaiaTurn, type DiscussPorts, type DiscussHeld, type InFlightGuard,
 } from '../../../../app/writers-studio/rebuild/discussAct';
+import * as act from '../../../../app/writers-studio/rebuild/discussAct';
 import { locateUniquePassage } from '../../../../lib/writersStudio/rebuild/editorialCollaboration';
 import type { Subject } from './laws';
+
+/** R1-3 · resolved structurally so the suite typechecks before AND after the repair lands. */
+const discussAfterHold = (act as unknown as { discussAfterHold?: Subject['discussAfterHold'] }).discussAfterHold;
 
 const HOST = [
   'app/writers-studio/rebuild/FlagshipWriteHost.tsx',
@@ -20,7 +24,7 @@ const HOST = [
 export const REFERENCE: Subject = {
   name: 'REFERENCE', View: FlagshipWriteView, Layer: DiscussLayer, Panel: ContextualMaiaPanel,
   commission: commissionDiscuss, createGuard: createInFlightGuard, settle: settleWritingSession,
-  resultAttaches, resolveAttachment, scope: DISCUSS_SCOPE, hostFiles: HOST,
+  resultAttaches, discussAfterHold, resolveAttachment, scope: DISCUSS_SCOPE, hostFiles: HOST,
 };
 const ONE: readonly string[] = ['Discuss'];
 const acted = (t: string) => ({ threadId: 'th-1', locusText: 'far bank', reply: t });
@@ -165,8 +169,27 @@ const D13: Subject = { ...REFERENCE, name: 'C1C1-D13-second-turn-composer',
     );
   } };
 
+/* D14 · trims the member's ask — normalizes the bytes before the act */
+const D14: Subject = { ...REFERENCE, name: 'C1C1-D14-trims-member-ask',
+  commission: (guard, held, ask, ports) => commissionDiscuss(guard, held, ask.trim().replace(/\s+/g, ' '), ports) };
+
+/* D15 · accepts an unexpected proposal — launders the version material and reports success */
+const D15: Subject = { ...REFERENCE, name: 'C1C1-D15-accepts-unexpected-proposal',
+  commission: (guard, held, ask, ports) => commissionDiscuss(guard, held, ask, {
+    ...ports,
+    sendTurn: async (...args) => {
+      const r = await ports.sendTurn(...args);
+      return r.ok ? { ...r, producedVersionId: null, thread: { ...r.thread, versions: [] } } : r;
+    },
+  }) };
+
+/* D16 · section-only result identity — a result attaches to whatever passage is now held in the section */
+const D16: Subject = { ...REFERENCE, name: 'C1C1-D16-section-only-result-identity',
+  resultAttaches: (pending, current) => pending.gen === current.gen && current.focusSectionId === pending.held.sectionId,
+  discussAfterHold: (discuss, next) => (discuss && discuss.held.sectionId === next.sectionId ? discuss : null) };
+
 void runDiscussAct;
-export const DEFEAT_CANDIDATES: readonly Subject[] = [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13];
+export const DEFEAT_CANDIDATES: readonly Subject[] = [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, D16];
 export const NAMED_KILL: Record<string, string> = {
   'C1C1-D1-focus-discuss': 'C1C1-L1-passage-bound-thread-not-focus',
   'C1C1-D2-fabricated-observation': 'C1C1-L2-no-observation-fabrication',
@@ -181,6 +204,9 @@ export const NAMED_KILL: Record<string, string> = {
   'C1C1-D11-async-submit-guard': 'C1C1-L11-duplicate-submit-synchronous',
   'C1C1-D12-open-before-settlement': 'C1C1-L12-settle-before-open',
   'C1C1-D13-second-turn-composer': 'C1C1-L13-one-turn-only',
+  'C1C1-D14-trims-member-ask': 'C1C1-L17-member-bytes-preserved',
+  'C1C1-D15-accepts-unexpected-proposal': 'C1C1-L18-unexpected-proposal-fails-closed',
+  'C1C1-D16-section-only-result-identity': 'C1C1-L19-same-section-passage-change-detaches',
 };
 /** Irreducible collateral, each with the reason removing it would make the candidate stop embodying its error. */
 export const CLASSIFIED: Record<string, readonly string[]> = {

@@ -17,7 +17,7 @@ import type { DiscussLayerProps, DiscussState } from '../../../../app/writers-st
 import type { ContextualMaiaPanelProps } from '../../../../app/writers-studio/flagship/ContextualMaiaPanel';
 import type {
   commissionDiscuss as CommissionFn, createInFlightGuard as GuardFn, settleWritingSession as SettleFn,
-  resultAttaches as AttachesFn, resolveAttachment as ResolveFn, DiscussPorts, DISCUSS_SCOPE as ScopeT,
+  resultAttaches as AttachesFn, resolveAttachment as ResolveFn, DiscussPorts, DISCUSS_SCOPE as ScopeT, DiscussHeld as DiscussHeldT,
 } from '../../../../app/writers-studio/rebuild/discussAct';
 import type { RebuildSection } from '../../../../lib/writersStudio/rebuild/model';
 import type { CurrentPostureRead } from '../../../../lib/sanctuary/currentClientPosture';
@@ -32,6 +32,8 @@ export interface Subject {
   readonly createGuard: typeof GuardFn;
   readonly settle: typeof SettleFn;
   readonly resultAttaches: typeof AttachesFn;
+  /** R1-3 · the host's decision when a NEW passage is held while a Discuss is open. Absent = not enforced. */
+  readonly discussAfterHold?: (discuss: DiscussState | null, next: DiscussHeldT) => DiscussState | null;
   readonly resolveAttachment: typeof ResolveFn;
   readonly scope: typeof ScopeT;
   /** repo-relative host sources the static laws scan (page.tsx is the flag boundary) */
@@ -65,6 +67,10 @@ export const CONTEXT: ContextReady = {
 };
 export const HELD: HeldPassageAt = { sectionId: 'd-2', start: 21, end: 29, text: 'far bank' };
 const ASK = 'Why does this sentence feel flat?';
+/** R1-1 · meaningful edge whitespace — the member's bytes, exactly. */
+const ASK_EDGE = '  Why does this sentence feel flat?  ';
+/** R1-3 · a second passage in the SAME section. */
+export const HELD_B: HeldPassageAt = { sectionId: 'd-2', start: 45, end: 50, text: 'sound' };
 const REPLY = 'The sentence names an absence, and absences read flat unless something is listening for them.';
 const noop = () => {};
 const ANSWERED: DiscussState = { kind: 'answered', held: HELD, ask: ASK, threadId: 'th-1', locusText: 'far bank', reply: REPLY };
@@ -83,6 +89,7 @@ export interface Trace { readonly calls: string[]; readonly postures: CurrentPos
 export function fakePorts(opts: {
   posture?: CurrentPostureRead; unsavedUntilFlush?: boolean; conflict?: boolean;
   slow?: () => Promise<void>; replyTurns?: readonly { speaker: 'author' | 'maia'; body: string }[];
+  producedVersionId?: string | null; versions?: readonly { id: string; author: 'maia' | 'member'; wording: string; supersedes: string | null; rationale: string | null }[];
 } = {}): { ports: DiscussPorts; trace: Trace } {
   const trace: Trace = { calls: [], postures: [], scopes: [], revisions: [], texts: [] };
   let unsaved = opts.unsavedUntilFlush ?? false;
@@ -97,7 +104,7 @@ export function fakePorts(opts: {
   };
   const thread = (turns: readonly { speaker: 'author' | 'maia'; body: string }[]) => ({
     threadId: 'th-1', chainId: 'ch-1', locusText: 'far bank', targetSectionId: 'd-2', sectionLabel: 'The river at dusk', legacyLocus: false,
-    turns: turns.map((t, i) => ({ turnIndex: i, speaker: t.speaker, body: t.body, at: 'now' })), versions: [], headVersionId: null,
+    turns: turns.map((t, i) => ({ turnIndex: i, speaker: t.speaker, body: t.body, at: 'now' })), versions: opts.versions ?? [], headVersionId: null,
   });
   const ports: DiscussPorts = {
     readPosture: () => { trace.calls.push('readPosture'); return posture; },
@@ -110,7 +117,7 @@ export function fakePorts(opts: {
     sendTurn: async (threadId, sectionId, text, p, scope) => {
       trace.calls.push(`sendTurn:${threadId}:${sectionId}`); trace.postures.push(p); trace.scopes.push(scope); trace.texts.push(text);
       if (opts.slow) await opts.slow();
-      return { ok: true, thread: thread(opts.replyTurns ?? [{ speaker: 'author', body: text }, { speaker: 'maia', body: REPLY }]), producedVersionId: null, voice: null };
+      return { ok: true, thread: thread(opts.replyTurns ?? [{ speaker: 'author', body: text }, { speaker: 'maia', body: REPLY }]), producedVersionId: opts.producedVersionId ?? null, voice: null };
     },
     settle: undefined,
   };
@@ -201,10 +208,10 @@ export async function runC1C1Laws(s: Subject): Promise<LawResult[]> {
   }));
 
   out.push(law('C1C1-L8-late-result-bound-to-gesture', () => {
-    const same = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: 'd-2' });
-    const released = s.resultAttaches({ gen: 3, held: HELD }, { gen: 4, focusSectionId: 'd-2' });
-    const moved = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: 'd-root' });
-    const noFocus = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: null });
+    const same = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: 'd-2', held: HELD });
+    const released = s.resultAttaches({ gen: 3, held: HELD }, { gen: 4, focusSectionId: 'd-2', held: HELD });
+    const moved = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: 'd-root', held: HELD });
+    const noFocus = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: null, held: HELD });
     const layerMoved = layer(ANSWERED, { focusSectionId: 'd-root' }) === '';
     const viewMoved = !/fs-maia/.test(enabled({ discuss: ANSWERED, focusId: 'd-root', held: null }));
     return must('C1C1-L8-late-result-bound-to-gesture', same && !released && !moved && !noFocus && layerMoved && viewMoved,
@@ -306,6 +313,48 @@ export async function runC1C1Laws(s: Subject): Promise<LawResult[]> {
     const lay = hostSrc['app/writers-studio/rebuild/DiscussLayer.tsx'] ?? '';
     const impure = /useState|useEffect|useRef|fetch\(|apiFetch|localStorage|editorialCollaboration|process\.env|randomUUID/;
     return must('C1C1-L16-panel-and-layer-pure', !impure.test(panel) && !impure.test(lay), `panelPure=${!impure.test(panel)} layerPure=${!impure.test(lay)}`);
+  }));
+
+  out.push(await alaw('C1C1-L17-member-bytes-preserved', async () => {
+    const { ports, trace } = fakePorts();
+    const r = await s.commission(s.createGuard(), HELD, ASK_EDGE, ports);
+    const exact = trace.texts[0] === ASK_EDGE;
+    const html = layer({ kind: 'answered', held: HELD, ask: ASK_EDGE, threadId: 'th-1', locusText: 'far bank', reply: REPLY });
+    const echoed = html.includes(`<div class="fs-ask">${ASK_EDGE}</div>`);
+    const src = (hostSrc['app/writers-studio/rebuild/FlagshipWriteHost.tsx'] ?? '') + (hostSrc['app/writers-studio/rebuild/discussAct.ts'] ?? '');
+    const trims = (src.match(/\.trim\(\)/g) ?? []).length;
+    const predicateOnly = (src.match(/\.trim\(\)\.length === 0/g) ?? []).length;
+    const noNormalize = trims === predicateOnly;
+    const emptyRefused = !(await s.commission(s.createGuard(), HELD, '   ', fakePorts().ports)).ok;
+    return must('C1C1-L17-member-bytes-preserved', r.ok && exact && echoed && noNormalize && emptyRefused,
+      `sentBytesExact=${exact} echoedExact=${echoed} trimUsedOnlyAsEmptinessPredicate=${noNormalize} (trim=${trims} predicate=${predicateOnly}) emptyRefused=${emptyRefused}`);
+  }));
+
+  out.push(await alaw('C1C1-L18-unexpected-proposal-fails-closed', async () => {
+    const v = fakePorts({ producedVersionId: 'v1' });
+    const rv = await s.commission(s.createGuard(), HELD, ASK, v.ports);
+    const t = fakePorts({ versions: [{ id: 'v1', author: 'maia', wording: 'PROPOSED WORDING', supersedes: null, rationale: null }] });
+    const rt = await s.commission(s.createGuard(), HELD, ASK, t.ports);
+    const closed = !rv.ok && !rt.ok;
+    const calm = !rv.ok && !rt.ok && typeof rv.copy === 'string' && rv.copy.length > 0 && !/PROPOSED WORDING/.test(rv.copy + rt.copy);
+    const noRoutes = ![...v.trace.calls, ...t.trace.calls].some((c) => /version|adoption|undo/.test(c));
+    return must('C1C1-L18-unexpected-proposal-fails-closed', closed && calm && noRoutes,
+      `producedVersionIdRefused=${!rv.ok} versionsRefused=${!rt.ok} calmCopy=${calm} noProposalRoutes=${noRoutes}`);
+  }));
+
+  out.push(law('C1C1-L19-same-section-passage-change-detaches', () => {
+    const a = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: 'd-2', held: HELD_B });
+    const drifted = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: 'd-2', held: { ...HELD, end: HELD.end + 1 } });
+    const retext = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: 'd-2', held: { ...HELD, text: 'far bank.' } });
+    const none = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: 'd-2', held: null });
+    const same = s.resultAttaches({ gen: 3, held: HELD }, { gen: 3, focusSectionId: 'd-2', held: { ...HELD } });
+    const pendingA: DiscussState = { kind: 'pending', held: HELD, ask: ASK, gen: 3 };
+    const after = s.discussAfterHold ? s.discussAfterHold(pendingA, HELD_B) : 'unenforced';
+    const kept = s.discussAfterHold ? s.discussAfterHold(pendingA, { ...HELD }) : 'unenforced';
+    const hostWired = /discussAfterHold\(/.test(hostSrc['app/writers-studio/rebuild/FlagshipWriteHost.tsx'] ?? '');
+    return must('C1C1-L19-same-section-passage-change-detaches',
+      !a && !drifted && !retext && !none && same && after === null && kept === pendingA && hostWired,
+      `otherPassageAttaches=${a} driftedRangeAttaches=${drifted} retextAttaches=${retext} noHeldAttaches=${none} samePassageAttaches=${same} detachOnNewPassage=${after === null ? 'yes' : after === 'unenforced' ? 'UNENFORCED' : 'no'} keptOnSamePassage=${kept === pendingA} hostWired=${hostWired}`);
   }));
 
   return out;
