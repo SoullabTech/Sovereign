@@ -43,10 +43,15 @@ export function CoverageLine({ c, compact = false, navigable = true }: {
  * Every cell is an address. ⛔ Presence only — there is no way to grade a book
  * with a presence grid.
  */
-export function ContinuityMap({ d, title, navigable = true }: {
+/** R1-2 · a live host's return navigation over exact durable section addresses (structurally the presentation's `ReviewNavigation`). */
+export interface CellNavigation { hrefFor(sectionId: string): string | null; onGo(sectionId: string, href: string): void }
+
+export function ContinuityMap({ d, title, navigable = true, navigation }: {
   d: ContinuityMapData; title: string;
   /** R1-1A · false = cells show presence only; no address is offered without navigation authority. */
   navigable?: boolean;
+  /** R1-2 · present = a cell navigates ONLY when its address is exact and in the mounted context; the map's coverage control is absent. */
+  navigation?: CellNavigation;
 }) {
   return (
     <section className="fs-card" data-continuity-map="true">
@@ -68,7 +73,7 @@ export function ContinuityMap({ d, title, navigable = true }: {
             </tr>
           </thead>
           <tbody>
-            {d.rows.map((r) => <MapRow key={r.id} r={r} units={d.units} navigable={navigable} />)}
+            {d.rows.map((r) => <MapRow key={r.id} r={r} units={d.units} navigable={navigable} navigation={navigation} />)}
           </tbody>
         </table>
       </div>
@@ -77,12 +82,12 @@ export function ContinuityMap({ d, title, navigable = true }: {
           <span key={n}><i data-presence={n} aria-hidden="true" />{PRESENCE_LABEL[n as 1 | 2 | 3]}</span>
         ))}
       </div>
-      <CoverageLine c={d.coverage} navigable={navigable} />
+      <CoverageLine c={d.coverage} navigable={navigable && !navigation} />
     </section>
   );
 }
 
-function MapRow({ r, units, navigable = true }: { r: ThreadRow; units: readonly string[]; navigable?: boolean }) {
+function MapRow({ r, units, navigable = true, navigation }: { r: ThreadRow; units: readonly string[]; navigable?: boolean; navigation?: CellNavigation }) {
   return (
     <tr data-thread={r.id}>
       <th scope="row" className="fs-maprowhead">
@@ -92,9 +97,18 @@ function MapRow({ r, units, navigable = true }: { r: ThreadRow; units: readonly 
       {units.map((u, i) => {
         const p = r.presence[i] ?? 0;
         const a = r.addressOf[i];
+        /* R1-2 · live: an exact address in the mounted context → a location; anything else → presence only. */
+        const href = navigation && a?.sectionId ? navigation.hrefFor(a.sectionId) : null;
         return (
           <td key={u}>
-            {navigable ? (
+            {navigation ? (href && a ? (
+              <a className="fs-cell" data-presence={p} data-return-to={a.sectionId} href={href}
+                onClick={(e) => { e.preventDefault(); navigation.onGo(a.sectionId, href); }}
+                aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}. Open ${a.label}.`} />
+            ) : (
+              <span className="fs-cell" data-presence={p} role="img"
+                aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}.`} />
+            )) : navigable ? (
               <button type="button" className="fs-cell" data-presence={p}
                 data-return-to={a?.sectionId ?? ''}
                 aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}. Open ${a?.label ?? u}.`} />

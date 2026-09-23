@@ -79,6 +79,15 @@ Visible navigation names **Write** and **Review** on both orientation surfaces (
 - Ordinary Write makes no reading request. The ledger is read only when the chooser is open; the reading only when `reading` is present.
 - The R1-1A read-only capability set (Ask MAIA · Discuss · Explore · commission · acknowledge · own observation · navigate · facet all withheld) is unchanged by navigation; lens tabs filter already-loaded material and commission nothing.
 
+## Review → manuscript section navigation (R1-2)
+
+A mounted finding returns the writer to the manuscript at exactly its durable section: `reading` removed, `m` kept, `s=<that section>` — the R1-1C composer then the WS2-05A composer, nothing else. Plain Write mounts at that section; no trail, no banner, no held passage, no selection, no highlight, no member state. Browser Back returns to the exact prior Review through ordinary history.
+
+- The address is the finding's durable `returnTo.sectionId`, already proved present in the current context before the reading mounted. Never a displayed position, an index, the nearest section, the section in focus, a heading, the finding's text or any similarity. A control without an exact durable section address is absent, never a guess.
+- `navigate` is the one read-only capability that moved (true); Ask MAIA · Discuss · Explore · commission · acknowledge · own observation · facet stay withheld.
+- Of the controls the shared `navigate` capability governs, three classes carry exact addresses and navigate in the live host: the finding's *Go to passage*, the context pane's *Go to passage* (the selected finding's own section), and continuity-map cells whose address is an exact section of the mounted context. The coverage line's *What MAIA read*, the stale reading's *previous reading* and *Open the full manuscript* name no section and are absent under live navigation. The R1-0 mapper builds no continuity map for real readings, so map cells are presentation-law only until a mapper act supplies addresses.
+- Writer-facing copy never shows an identifier or a parameter name.
+
 ## What the live Write host asserts (C1C1 — Discuss-only contextual MAIA)
 
 - The editorial flag is read once on the server by `page.tsx` and handed down as presentation state. Off: nothing of this section is drawn and no editorial route is ever called. The client never infers the flag.

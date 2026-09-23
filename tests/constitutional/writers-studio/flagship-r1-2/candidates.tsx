@@ -109,6 +109,9 @@ export const CLASSIFIED: Record<string, readonly string[]> = {
   'R1-2-D1-positional-return': ['R1-2-L3-unaddressable-is-absent-never-nearest'],
   'R1-2-D3-current-focus-fallback': ['R1-2-L3-unaddressable-is-absent-never-nearest'],
   'R1-2-D4-semantic-lookup': ['R1-2-L3-unaddressable-is-absent-never-nearest'],
+  /* IRREDUCIBLE. Withholding the capability from the map makes EVERY cell a presence-only span, so the addressed/unaddressed
+     cell count that L10 asserts moves with it; a finding-only candidate cannot keep the cell law intact. */
+  'R1-2-D12-finding-button-only': ['R1-2-L10-map-cells-only-with-an-address'],
   /* IRREDUCIBLE. A new parameter is an extra key, so the exact-keys location law (L6) fails with it. */
   'R1-2-D7-new-url-vocabulary': ['R1-2-L6-return-location-law'],
   /* IRREDUCIBLE. Discuss present is a forbidden non-navigation control (L15). */

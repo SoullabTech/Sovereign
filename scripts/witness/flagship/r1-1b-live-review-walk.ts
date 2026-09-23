@@ -120,7 +120,8 @@ async function memberDigest() {
 }
 const hits = () => (existsSync(HITS) ? readFileSync(HITS, 'utf8').split('\n').filter(Boolean).length : 0);
 
-const FORBIDDEN = /Ask MAIA|data-action="discuss"|data-action="explore"|data-commission=|Read for this|Read again|Read this chapter again|Not now|Add your own observation|Keep with this passage|data-return-to=|fs-facet|data-facet=|\bdisabled\b|aria-disabled/;
+/* R1-2 SUCCESSION (2026-09-23): return controls (data-return-to) are lawful locations under navigate=true; what this walk still refuses is every non-navigation control. */
+const FORBIDDEN = /Ask MAIA|data-action="discuss"|data-action="explore"|data-commission=|Read for this|Read again|Read this chapter again|Not now|Add your own observation|Keep with this passage|fs-facet|data-facet=|\bdisabled\b|aria-disabled/;
 
 async function main() {
   mkdirSync(OUT, { recursive: true });

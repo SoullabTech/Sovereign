@@ -461,10 +461,18 @@ export interface ReviewCapabilities {
 export const CONTROLLED_REVIEW_CAPABILITIES: ReviewCapabilities = Object.freeze({
   askMaia: true, discuss: true, explore: true, commission: true, acknowledgeStale: true, ownObservation: true, navigate: true, facet: true,
 });
-/** Read-only: nothing whose act is unauthorized. A host with real addresses may grant `navigate` alone. */
+/** Read-only: nothing whose act is unauthorized. R1-2 (founder-authorized, 2026-09-23): `navigate` is granted — the ONE
+ *  capability that moved — and it acts only through a host-supplied `ReviewNavigation` over exact durable section addresses. */
 export const READ_ONLY_REVIEW_CAPABILITIES: ReviewCapabilities = Object.freeze({
-  askMaia: false, discuss: false, explore: false, commission: false, acknowledgeStale: false, ownObservation: false, navigate: false, facet: false,
+  askMaia: false, discuss: false, explore: false, commission: false, acknowledgeStale: false, ownObservation: false, navigate: true, facet: false,
 });
+/**
+ * R1-2 · a LIVE host's return navigation. `hrefFor` answers a LOCATION for an exact durable section
+ * address present in the mounted view's context, or null — and a null address renders NO control.
+ * ⛔ Never a fetch, a write, a commission or a held passage. Absent (the controlled witness), the
+ * capability renders the reference `<button data-return-to>` exactly as before.
+ */
+export interface ReviewNavigation { hrefFor(sectionId: string): string | null; onGo(sectionId: string, href: string): void }
 
 /** Reasons mirror R1-0's own refusal facts; ⛔ no reason asserts more than those facts establish. */
 export type ReviewWithheldReason = 'frozen_citation_text_unavailable' | 'observation_address_unavailable' | 'lens_not_presentable';
@@ -504,11 +512,14 @@ function WithheldObservations({ items }: { items: readonly ReviewWithheld[] }) {
   );
 }
 
-function FindingRow({ o, citation, selected, caps }: {
-  o: GovernedObservation; citation?: CitationState; selected?: boolean; caps: ReviewCapabilities;
+function FindingRow({ o, citation, selected, caps, navigation }: {
+  o: GovernedObservation; citation?: CitationState; selected?: boolean; caps: ReviewCapabilities; navigation?: ReviewNavigation;
 }) {
   const moved = citation && citation.kind !== 'intact' ? citation : null;
-  const anyAction = caps.navigate || caps.discuss || caps.explore;
+  /* R1-2 · live: a location only for an exact address in the mounted context, else no control. Controlled: unchanged. */
+  const returnHref = navigation ? navigation.hrefFor(o.returnTo.sectionId) : undefined;
+  const navAction = caps.navigate && (!navigation || !!returnHref);
+  const anyAction = navAction || caps.discuss || caps.explore;
   return (
     <div className="fs-find" data-finding={o.id} data-domain={o.domain}
       data-provenance={o.provenance.kind} data-citation={citation?.kind ?? 'intact'}
@@ -541,7 +552,9 @@ function FindingRow({ o, citation, selected, caps }: {
       </div>
       {anyAction ? (
         <div className="fs-factions">
-          {caps.navigate ? <button type="button" className="fs-btn" data-return-to={o.returnTo.sectionId}>Go to passage</button> : null}
+          {navAction ? (navigation && returnHref
+            ? <a className="fs-btn" data-return-to={o.returnTo.sectionId} href={returnHref} onClick={(e) => { e.preventDefault(); navigation.onGo(o.returnTo.sectionId, returnHref); }}>Go to passage</a>
+            : <button type="button" className="fs-btn" data-return-to={o.returnTo.sectionId}>Go to passage</button>) : null}
           {caps.discuss ? <button type="button" className="fs-btn" data-action="discuss" data-return-to={o.returnTo.sectionId}>Discuss</button> : null}
           {caps.explore ? <button type="button" className="fs-btn" data-action="explore" data-return-to={o.returnTo.sectionId}>Explore</button> : null}
         </div>
@@ -557,12 +570,17 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
   return <ReviewPresentation view={view} lens={lens} facet={facet} capabilities={CONTROLLED_REVIEW_CAPABILITIES} />;
 }
 
-export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capabilities, onLens }: {
+export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capabilities, onLens, navigation }: {
   view: ReviewView; lens?: LensId | 'all'; facet?: Facet; capabilities: ReviewCapabilities;
   /** R1-1B · a live host owns the lens filter; the tabs filter an existing reading and commission nothing. Markup unchanged. */
   onLens?: (lens: LensId | 'all') => void;
+  /** R1-2 · a live host's return navigation over exact durable section addresses. Absent → controlled rendering, unchanged. */
+  navigation?: ReviewNavigation;
 }) {
   const caps = capabilities;
+  /* R1-2 · under a live navigation, controls whose target is NOT a section address (coverage, previous reading,
+     full manuscript, a highlight stand-in) are ABSENT — never a guess. The controlled path is untouched. */
+  const navigableWithoutAddress = caps.navigate && !navigation;
   const shown = lens === 'all' ? view.findings : view.findings.filter((f) => f.domain === lens);
   const selected = view.selectedFindingId
     ? view.findings.find((f) => f.id === view.selectedFindingId) ?? shown[0]
@@ -571,6 +589,12 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
   const selectedHighlight = selected
     ? view.context.paragraphs.find((p) => p.id === selected.returnTo.sectionId)?.id
       ?? view.context.paragraphs[1]?.id
+    : undefined;
+  /* R1-2 · the context pane may return ONLY to the selected finding's exact durable address, present in this context —
+     ⛔ never the highlight stand-in above, which is presentation, not an address. */
+  const contextReturn = selected && view.context.paragraphs.some((p) => p.id === selected.returnTo.sectionId) ? selected.returnTo.sectionId : undefined;
+  const contextNavigation = navigation
+    ? { href: contextReturn ? navigation.hrefFor(contextReturn) : null, onGo: (href: string) => { if (contextReturn) navigation.onGo(contextReturn, href); } }
     : undefined;
   const active = view.lenses.find((l) => l.id === lens);
   const plain = LENSES.find((l) => l.id === lens)?.plain ?? '';
@@ -615,7 +639,7 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
             <StaleReading readAt={view.changed.readAt} updatedAt={view.changed.updatedAt}
               change={view.changed.change} previousLabel={view.changed.previousLabel}
               acknowledged={view.changed.acknowledged}
-              capabilities={{ commission: caps.commission, acknowledge: caps.acknowledgeStale, navigate: caps.navigate }} />
+              capabilities={{ commission: caps.commission, acknowledge: caps.acknowledgeStale, navigate: navigableWithoutAddress }} />
           ) : (
             <div className="fs-reading" data-freshness={view.freshness.kind}>
               {freshnessLine(view.freshness)}
@@ -627,7 +651,7 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
             <p className="fs-obsnote">
               In the order they occur in your {view.kind}. Nothing here is ranked, and nothing is hidden.
             </p>
-            <CoverageLine c={view.coverage} navigable={caps.navigate} />
+            <CoverageLine c={view.coverage} navigable={navigableWithoutAddress} />
 
             {/* ⛔ No empty state. Either a reading exists and said nothing, or it
                 does not exist and the surface says which — ⛔ never one list for both. */}
@@ -642,7 +666,7 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
               </div>
             ) : (
               shown.map((f) => (
-                <FindingRow key={f.id} o={f} citation={view.citations?.[f.id]}
+                <FindingRow key={f.id} o={f} citation={view.citations?.[f.id]} navigation={navigation}
                   selected={f.id === selected?.id} caps={caps} />
               ))
             )}
@@ -658,7 +682,7 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
               themes={['Pacing', 'Change', 'Clara']} />
           ) : null}
 
-          {view.map ? <ContinuityMap d={view.map} title={`Across your ${view.kind}`} navigable={caps.navigate} /> : null}
+          {view.map ? <ContinuityMap d={view.map} title={`Across your ${view.kind}`} navigable={caps.navigate} navigation={navigation} /> : null}
           </div>
 
           {/* ⭐⭐ THE WORK, BESIDE THE INTELLIGENCE ABOUT IT.
@@ -668,7 +692,7 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
             page={view.context.page} paragraphs={view.context.paragraphs}
             highlightId={selected?.returnTo.sectionId ? view.context.paragraphs.find(
               (p) => p.id === selectedHighlight)?.id : undefined}
-            findingLabel={selected?.label} navigable={caps.navigate} />
+            findingLabel={selected?.label} navigable={caps.navigate} navigation={contextNavigation} />
         </div>
       </div>
     </>

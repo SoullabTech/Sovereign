@@ -178,12 +178,15 @@ export function OwnObservation({ kind = 'noticed', draft = '', themes = [], plac
  */
 export interface ContextParagraph { readonly id: string; readonly text: string }
 
-export function ManuscriptContext({ chapterLabel, chapterTitle, page, paragraphs, highlightId, findingLabel, navigable = true }: {
+export function ManuscriptContext({ chapterLabel, chapterTitle, page, paragraphs, highlightId, findingLabel, navigable = true, navigation }: {
   chapterLabel: string; chapterTitle: string; page: string;
   paragraphs: readonly ContextParagraph[];
   highlightId?: string; findingLabel?: string;
   /** R1-1A · false = the return controls are OMITTED (no navigation authority), never disabled. */
   navigable?: boolean;
+  /** R1-2 · a live host's return: a location for the selected finding's EXACT address, or null → no control.
+   *  Under a live navigation "Open the full manuscript" is absent: it names no section. Absent → controlled rendering, unchanged. */
+  navigation?: { readonly href: string | null; onGo(href: string): void };
 }) {
   return (
     <aside className="fs-context" data-manuscript-context="true" aria-label="The passage this refers to">
@@ -204,7 +207,14 @@ export function ManuscriptContext({ chapterLabel, chapterTitle, page, paragraphs
           </p>
         ))}
       </div>
-      {navigable ? (
+      {navigation ? (navigation.href && highlightId ? (
+        <div className="fs-contextfoot">
+          <a className="fs-btn fs-btn--key" data-return-to={highlightId} href={navigation.href}
+            onClick={(e) => { e.preventDefault(); navigation.onGo(navigation.href!); }}>
+            Go to passage
+          </a>
+        </div>
+      ) : null) : navigable ? (
         <div className="fs-contextfoot">
           <button type="button" className="fs-btn fs-btn--key" data-return-to={highlightId ?? 'context'}>
             Go to passage

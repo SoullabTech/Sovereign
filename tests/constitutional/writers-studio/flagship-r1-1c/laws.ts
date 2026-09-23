@@ -104,7 +104,10 @@ const LEDGER: readonly Summary[] = [
   { id: 'rd-none', outcome: 'none', commissionedLens: 'arc', frozenAt: '2026-09-22T11:00:00.000Z', observationCount: 0 },
 ];
 const OBSERVATION_PROSE = /returns here as a place|Observation of rd|far bank is where/;
-const FORBIDDEN_CONTROLS = /Ask MAIA|data-action="discuss"|data-action="explore"|data-commission=|Read for this|Read again|Read this chapter again|Read this Work|Not now|Add your own observation|Keep with this passage|data-return-to=|fs-facet|data-facet=|\bdisabled\b|aria-disabled/;
+/* R1-2 SUCCESSION (founder-authorized, 2026-09-23). PREDECESSOR, verified in L11 at the R1-1C head blob (git show e9f7ffcb5:…):
+   this set also named the return controls, because every read-only capability was false. SUCCESSOR: non-navigation controls stay
+   forbidden; return controls are governed by R1-2 (locations over exact durable section addresses). */
+const FORBIDDEN_CONTROLS = /Ask MAIA|data-action="discuss"|data-action="explore"|data-commission=|Read for this|Read again|Read this chapter again|Read this Work|Not now|Add your own observation|Keep with this passage|fs-facet|data-facet=|\bdisabled\b|aria-disabled/;
 const LEGACY = /\/writers-studio\/(develop|review)(["'?/#]|$)/;
 
 /** Ports over a member-owned ledger, recording every call; the exact reading is never available (404) so any
@@ -254,11 +257,15 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
   }));
   out.push(law('R1-1C-L11-read-only-capabilities-unchanged', () => {
     const r = nav('review', LOC_R); if (!r || !s.capabilities || readyState.kind !== 'ready') return unmounted('R1-1C-L11-read-only-capabilities-unchanged');
-    const expected = ['askMaia', 'discuss', 'explore', 'commission', 'acknowledgeStale', 'ownObservation', 'navigate', 'facet'];
-    const allFalse = expected.every((k) => s.capabilities![k] === false) && Object.values(s.capabilities).every((v) => v === false);
+    /* R1-2 SUCCESSION: PREDECESSOR asserted every read-only capability false (verified below at git show e9f7ffcb5:…). SUCCESSOR:
+       `navigate` is true — the ONE capability R1-2 moved — and every other read-only capability is unchanged (false). */
+    const stillFalse = ['askMaia', 'discuss', 'explore', 'commission', 'acknowledgeStale', 'ownObservation', 'facet'];
+    const caps = s.capabilities;
+    const successor = caps['navigate'] === true && stillFalse.every((k) => caps[k] === false) && Object.keys(caps).every((k) => k === 'navigate' || stillFalse.includes(k));
+    const predecessor = execSync('git show e9f7ffcb5:tests/constitutional/writers-studio/flagship-r1-1c/laws.ts', { cwd: ROOT, encoding: 'utf8' }).includes('expected.every((k) => s.capabilities![k] === false)');
     const html = host({ studioNav: r, review: readyState }) + chooser(choicesState);
     const control = FORBIDDEN_CONTROLS.test(html);
-    return must('R1-1C-L11-read-only-capabilities-unchanged', allFalse && !control, `allFalse=${allFalse} forbiddenControl=${control} caps=${JSON.stringify(s.capabilities)}`);
+    return must('R1-1C-L11-read-only-capabilities-unchanged', successor && predecessor && !control, `navigateTrueOthersFalse=${successor} predecessorWitnessedAtR11C=${predecessor} forbiddenControl=${control} caps=${JSON.stringify(caps)}`);
   }));
   out.push(law('R1-1C-L12-c1b-succession-explicit', () => {
     const current = s.c1bLawsSource ?? (existsSync(join(ROOT, C1B_LAWS)) ? readFileSync(join(ROOT, C1B_LAWS), 'utf8') : '');

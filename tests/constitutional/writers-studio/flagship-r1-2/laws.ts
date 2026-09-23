@@ -141,7 +141,8 @@ export async function runR12Laws(s: Subject): Promise<LawResult[]> {
   out.push(law('R1-2-L7-no-new-url-vocabulary', () => {
     if (!s.locationForReturn) return unmounted('R1-2-L7-no-new-url-vocabulary');
     const href = s.locationForReturn(LOC, 'd-2');
-    const staticVocab = /['"](passage|range|start|end|selection|highlight)['"]\s*[,)]|[?&](passage|range|highlight|selection)=/.test(sources);
+    /* URL-parameter usage only: a `.set('<word>'` or a literal `?<word>=` — never a prose or type word */
+    const staticVocab = /\.set\(\s*['"](passage|range|start|end|selection|highlight)['"]|[?&](passage|range|start|end|highlight|selection)=/.test(sources);
     return must('R1-2-L7-no-new-url-vocabulary', !NEW_VOCAB.test(href) && !staticVocab, `href=${href} staticVocab=${staticVocab}`);
   }));
   out.push(law('R1-2-L8-gesture-is-a-location-only', () => {

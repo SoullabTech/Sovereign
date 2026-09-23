@@ -84,6 +84,8 @@ import { LiveReviewView } from './LiveReviewView';
 import { attachReview, hostFactsFrom, loadSelectedReading, selectedReadingId, type LiveReviewState, type ReviewPorts } from './liveReview';
 import { attachChoices, chooseReading, loadReadingChoices, navActionsFor, shouldLoadChoices, studioMode, type ChooserState, type StudioNav } from './reviewNavigation';
 import { ReviewChooser } from './ReviewChooser';
+import { navigationFor } from './reviewReturn';
+import type { ReviewNavigation } from '../flagship/DevelopReview';
 
 export interface ContextReady {
   state: 'section_aware';
@@ -167,6 +169,8 @@ export interface FlagshipWriteViewProps {
   readonly chooser?: ChooserState;
   /** R1-1C — the mode the URL (and the transient chooser flag) resolve to, and the lawful action behind each destination. */
   readonly studioNav?: StudioNav;
+  /** R1-2 — the host's return navigation for a mounted reading: exact durable section → location. */
+  readonly reviewNavigation?: ReviewNavigation;
 }
 
 const noAction = () => {};
@@ -175,7 +179,7 @@ const noAction = () => {};
 export function FlagshipWriteView({
   context, workTitle, workForm, focusId, held, onFocus, onHold, epoch = 0,
   editorialEnabled = false, discuss = null, onAskMaia = noAction, onSubmitAsk = noAction, onRelease = noAction, onWriting,
-  review, reviewLens = 'all', onReviewLens = noAction, chooser, studioNav,
+  review, reviewLens = 'all', onReviewLens = noAction, chooser, studioNav, reviewNavigation,
 }: FlagshipWriteViewProps) {
   const focus = context.sections.find((s) => s.draftSectionId === focusId) ?? null;
   const span = focusId ? chapterSpanFor(context.sections, focusId) : null;
@@ -195,7 +199,7 @@ export function FlagshipWriteView({
     return (
       <div className="fsw-viewport">
         <StudioShell current={current} destinations={['write', 'review']} affordance="orientation" nav={nav} project={project}>
-          <LiveReviewView state={review} lens={reviewLens} onLens={onReviewLens} />
+          <LiveReviewView state={review} lens={reviewLens} onLens={onReviewLens} navigation={reviewNavigation} />
         </StudioShell>
       </div>
     );
@@ -484,6 +488,8 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
     actions: navActionsFor(mode, loc, { go, openChooser, closeChooser }),
     choose: { hrefFor: (id) => chooseReading(id, loc).href, onChoose: (_id, href) => go(href) },
   };
+  /* R1-2 — return navigation exists only for a mounted reading, over its own context, through the same `go`. */
+  const reviewNavigation = review.kind === 'ready' ? navigationFor(review.view, loc, { go }) : undefined;
 
   if (phase !== 'ready' || !context) {
     return (
@@ -516,6 +522,7 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
       onReviewLens={setReviewLens}
       chooser={chooser}
       studioNav={studioNav}
+      reviewNavigation={reviewNavigation}
     />
   );
 }

@@ -107,7 +107,11 @@ export function ports(opts: { readings?: ReturnType<typeof reading>[]; states?: 
   return p;
 }
 const search = (q: Record<string, string>) => ({ get: (n: string) => (n in q ? q[n]! : null) });
-const FORBIDDEN_CONTROLS = /Ask MAIA|data-action="discuss"|data-action="explore"|data-commission=|Read for this|Read again|Read this chapter again|Not now|Add your own observation|Keep with this passage|data-return-to=|fs-cell"[^>]*data-return-to|fs-facet|data-facet=|\bdisabled\b|aria-disabled/;
+/* R1-2 SUCCESSION (founder-authorized, 2026-09-23). PREDECESSOR, verified in L18 at the R1-1C head blob (git show e9f7ffcb5:…):
+   this set also named `data-return-to=` and `fs-cell"[^>]*data-return-to` — the return controls were forbidden because read-only
+   Review had navigate=false. SUCCESSOR: every NON-navigation control stays forbidden; navigation controls may exist only under
+   navigate=true AND only as locations whose target is an exact durable section present in the mounted context (asserted in L18). */
+const FORBIDDEN_CONTROLS = /Ask MAIA|data-action="discuss"|data-action="explore"|data-commission=|Read for this|Read again|Read this chapter again|Not now|Add your own observation|Keep with this passage|fs-facet|data-facet=|\bdisabled\b|aria-disabled/;
 const FIXTURE_MARKERS = /kingfisher|Clara stood on the bank|carrying leaves, reflections/;
 
 export async function runR11BLaws(s: Subject): Promise<LawResult[]> {
@@ -250,7 +254,11 @@ export async function runR11BLaws(s: Subject): Promise<LawResult[]> {
     if (!ready || !s.LiveView) return unmounted('R1-1B-L18-ready-mounts-read-only-presentation');
     const html = live(ready);
     const findings = (html.match(/data-finding="/g) ?? []).length;
-    return must('R1-1B-L18-ready-mounts-read-only-presentation', findings === 1 && /data-review="ready"/.test(html) && !FORBIDDEN_CONTROLS.test(html) && /role="tab"/.test(html), `findings=${findings} forbiddenControl=${FORBIDDEN_CONTROLS.test(html)}`);
+    /* R1-2 SUCCESSION: the live view is rendered here WITHOUT a host navigation, so it must withhold navigate — no return control at all;
+       with a host navigation (R1-2-L15) every return control is an <a href> to an exact address in the mounted context. */
+    const returnControls = (html.match(/data-return-to=/g) ?? []).length;
+    const predecessor = execSync('git show e9f7ffcb5:tests/constitutional/writers-studio/flagship-r1-1b/laws.ts', { cwd: ROOT, encoding: 'utf8' }).includes('data-return-to=|fs-cell');
+    return must('R1-1B-L18-ready-mounts-read-only-presentation', findings === 1 && /data-review="ready"/.test(html) && !FORBIDDEN_CONTROLS.test(html) && returnControls === 0 && predecessor && /role="tab"/.test(html), `findings=${findings} forbiddenControl=${FORBIDDEN_CONTROLS.test(html)} returnControlsWithoutNavigation=${returnControls} predecessorWitnessedAtR11C=${predecessor}`);
   }));
   return out;
 }
