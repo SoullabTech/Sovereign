@@ -21,8 +21,11 @@ metric on this machine.** That rule goes into the capacity sentinel charter.
 ## What the census found
 
 - Six `next-server` processes were alive, five of them days old and paged out; they were the
-  swap. Stopping all six freed ~7 GB swap and ~5 GB RAM in seconds. **Dev-process liveness**
-  (process, worktree, age, RSS, last activity) is a mandatory sentinel metric.
+  swap. Stopping all six freed ~7 GB swap and ~5 GB RAM in seconds. **Dev-process telemetry**
+  is a mandatory sentinel metric: PID / worktree / port, process age, RSS now, RSS growth rate,
+  restart count, recent activity, stale/active classification. The main checkout's server read
+  5.1 → 5.6 → 6.5 GB across the evening; the cause is not diagnosed here, the visibility is what
+  the sentinel owes.
 - 308 registered git worktrees across nine root locations, 155 GB on the internal disk. Only
   ~16 carried `node_modules`; the cost was 0.39 GB of plain checkout each. A witness worktree
   costs ~400 MB before anything is built. Structural, not a cleanup item.
@@ -79,9 +82,12 @@ not pin the censused HEAD → B-GUARD-R1. Path printers split on spaces → fixe
 ## Standing and next boundary
 
 - Worktree relief: CLOSED (R2 Act C, A, A2 run). Act B has no internal population. Do not run it.
-- Next: restart the Studio, start only the ordinary workload, take the five-line memory reading,
-  run one normal build, read again. That is the fair test of 48 GB. Diverged branches (7) are a
-  lane-owner reconciliation, not urgent.
+- 48 GB adequacy: **OPEN**. Readings taken during the census's disk walk are not a baseline
+  (`Pages free` collapses under file-cache pressure while `du` runs; `memory_pressure` 56% and
+  flat swap are the meaningful signals). Sequence: Library census finishes → restart → start only
+  required services → record Docker ON/OFF explicitly → idle reading → one normal MAIA/JARVIS
+  build → post-build reading → judge from that pair. Diverged branches (7) are a lane-owner
+  reconciliation, not urgent.
 - Library: separate read-only census, then human decisions (Messages, Voice Memos, Claude
   VM bundles). Not a worktree operation.
 - `JARVIS-CAPACITY-SENTINEL-01`: after the workstation is stable. Two monitors (workstation,
