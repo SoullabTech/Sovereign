@@ -3,7 +3,7 @@
 **Opened:** 2026-09-23 — founder direction, same day, explicitly as a **new** JARVIS lane (⛔ not folded into `JARVIS-MERGE-AUTHORITY-01 / M1R1R1`, ⛔ not folded into any governance-infrastructure programme).
 **Governing question:** How does the existing JARVIS machinery become the one coherent, humane, founder-facing workspace in which the founder does, sees, monitors and understands all work — by **composition** of organs that already exist, never by a parallel replacement?
 **Subject:** The founder's daily working environment over JARVIS: the JARVIS operational console (`jarvis-desktop/`), the Builder OS runtime it projects (`scripts/builder/*`), and the ops / health / provenance substrate a monitor surface would compose.
-**Current state:** `F0 — CURRENT-STATE PRODUCT CENSUS + FOUNDER EXPERIENCE CONSTITUTION` · **DISCOVER / CENSUS · READ-ONLY · DOCUMENTARY**.
+**Current state:** ⭐ **F0 PASS (founder adjudication 2026-09-23, `…_F0_FOUNDER_ADJUDICATION_2026-09-23.md`) · F1 OPEN — INFORMATION ARCHITECTURE + LIVING PROTOTYPE OVER RECORDED EVIDENCE ONLY.** HU-1…HU-9 binding for F1; DC-1…DC-8 binding prototype constraints; D-01…D-08 ruled. *(Superseded text, preserved: this field read `F0 — CURRENT-STATE PRODUCT CENSUS + FOUNDER EXPERIENCE CONSTITUTION · DISCOVER / CENSUS · READ-ONLY · DOCUMENTARY`.)*
 **Canonical base observed by F0:** `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f` (`origin/clean-main-no-secrets` tip at the moment the census began; verified equal to the lane branch HEAD at that moment).
 **Branch / custody:** `claude/sharp-cannon-cyrdeb` (remote session branch; ⚠️ `claude/*` is not in `scripts/check-branch-allowed.sh`'s allowlist — see `BRANCH_POLICY_AUTHORITY_FINDING_2026-09-13`; the interim rule *absence of the hook is never evidence of compliance* applies, and this lane records the fact rather than resolving it).
 **Governance class:** Class B for F0 (documentary only, no runtime, no member-facing, no production, no provider, no merge/deploy subject). Later acts re-classify on their own opening.
@@ -111,7 +111,7 @@ If any of the five cannot be answered from the record, F0 is not complete.
 
 ## Current act
 
-**F0 only.** Output: `docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_PRODUCT_CENSUS_AND_FOUNDER_EXPERIENCE_CONSTITUTION_2026-09-23.md`.
+**F1** (opened by the F0 adjudication against exact candidate `8b8592d9`; F1 scope, prohibitions, product requirement, defeat conditions and exit are recorded verbatim in the adjudication record). *(Superseded, preserved:)* **F0 only.** Output: `docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_PRODUCT_CENSUS_AND_FOUNDER_EXPERIENCE_CONSTITUTION_2026-09-23.md`.
 
 ## Exit gate
 
