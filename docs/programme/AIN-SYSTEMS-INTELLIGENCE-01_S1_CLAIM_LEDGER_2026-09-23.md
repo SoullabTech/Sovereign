@@ -7,7 +7,7 @@
 **Canonical base:** `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f` (S1R1 rebind; authored from `cab0a9a8339f8b44ccd6f745add1bef40499d6f0`)
 **Governing constitution:** S0 (blob `1414ec32b26b7679c6e857ce95599782538c5831`)
 
-Every entry retains an epistemic class from S0 §X.1 (`ESTABLISHED_SOURCE · FORMAL_DERIVATION · INTERNAL_EMPIRICAL_RESULT · HYPOTHESIS · ENGINEERING_ANALOGY · PHENOMENOLOGICAL_ORIGIN · SPECULATIVE_CORRESPONDENCE`). No entry may be promoted by prose, and no eighth class may be created implicitly. A falsified entry is marked, never deleted. Support cites the source corpus (S01–S52). "Limit" states what the claim does not establish.
+Every entry retains an epistemic class from S0 §X.1 (`ESTABLISHED_SOURCE · FORMAL_DERIVATION · INTERNAL_EMPIRICAL_RESULT · HYPOTHESIS · ENGINEERING_ANALOGY · PHENOMENOLOGICAL_ORIGIN · SPECULATIVE_CORRESPONDENCE`). No entry may be promoted by prose, and no eighth class may be created implicitly. A falsified entry is marked, never deleted. Support cites the source corpus (S01–S55). "Limit" states what the claim does not establish.
 
 ---
 
