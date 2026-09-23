@@ -154,3 +154,36 @@ Then the next Monday 04:00 UTC run is the first scheduled witness; `backup-healt
 
 **STOP FOR FOUNDER REVIEW BEFORE DEPLOYMENT TO THE MINISFORUM.** The live backup authority is
 unchanged; the next nightly run (02:00 UTC) is still the R1 script.
+
+## 10. Founder standing (2026-09-23) — engineering FROZEN, adjudication OPEN
+
+Ratified: **`NAS-BACKUP-01 / R2` — CANDIDATE COMPLETE · ALL NINE FALSIFIERS LETHAL · HOST
+UNTOUCHED · STOPPED FOR FOUNDER ADJUDICATION.** Four facts, held separately:
+
+1. **Candidate completeness** — hardened backup · restore witness · health authority ·
+   installer/deploy bundle (commit `ce31d719`, records `93d01dda`).
+2. **Falsification standing** — container matrix green (10/10) and F6 lethal on the real
+   18 Sep artifact (founder-run).
+3. **Architectural dispositions** — mount unchanged · local secondary retained, 02:30 UTC ·
+   restore witness Monday 04:00 UTC.
+4. **Production standing** — nothing deployed · no cron changed · no NAS artifact mutated ·
+   18 Sep evidence preserved.
+
+**Next boundary — FOUNDER ADJUDICATION (candidate + deployment authority)**, inspecting: the
+exact candidate tree · this record · the changed-file inventory (§2) · installer and abort
+behaviour (`install.sh` refuses without the token, `cp -n` keeps the R1 script, no deletion
+anywhere) · cron changes (§3) · health-check semantics (§2, `backup-health.sh`) · the real
+F6 evidence (§7) · `HOLD` protection for 18 Sep (§6) · **no runtime path reads from the
+NAS** — verified in-repo 2026-09-23: no reference to `/mnt/ds225`, `192.168.0.103`,
+`SOULLABMAIA` or `soullab-backups` in `app/`, `lib/`, compose files, Dockerfiles, Caddyfile
+or `scripts/` outside `scripts/ops/` · the ten-step post-install witness (§8).
+
+⭐ **The install token is DEPLOYMENT authority, not closure authority.** R2 closes only after
+the ten host witnesses pass against the live minisforum→NAS path.
+
+⏰ **Time-bounded**: `maia_20260918_020002.sql.gz` reaches the R1 retention horizon ~2 Oct.
+Installed R2 protects it via `HOLD`; if deployment slips, copy it aside with its recorded
+SHA-256 (`4ba0b752…c88d1`) before then.
+
+Kept outside R2: post-reset nightly-backup continuity (check the 2026-09-24 02:00 UTC run)
+and the 48 GB workstation baseline (reading 2).
