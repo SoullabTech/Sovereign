@@ -101,15 +101,27 @@ the script over SSH. Nothing on the minisforum was changed.
    `unexpected end of file`** — yet `/var/log/maia-backup.log` for that run reads
    `PostgreSQL backup complete: … (333M)` and the run finished normally with a
    manifest. **The dump was complete when the script measured it and was
-   truncated afterwards, silently.** Mechanism: the mount is
+   truncated afterwards, silently.** The same run's manifest, written at
+   02:01:04, already lists the file at **72M**, so the loss is localized to the
+   NAS write path in the eight seconds between the cached measurement and the
+   manifest — not to PostgreSQL, whose output the local twin proves complete.
+   **Standing: CONFIRMED SILENT NAS-PATH TRUNCATION · EXACT TRANSPORT/STORAGE
+   CAUSE NOT YET ATTRIBUTED.** Candidate mechanism, ⛔ not proven: the mount is
    `cifs … soft,retrans=1,cache=strict`; writes return success into the page
-   cache, `du -sh` measured that cache, and the real flush to the NAS happens on
-   close/writeback where a `soft` mount fails instead of retrying; bash never
-   checks the close of a `>` redirection. ⭐ *The script's success line, the
-   manifest, and any weekly/monthly `cp` of that file all vouch for bytes that
-   never reached the disk.* An earlier draft of this item guessed an interrupted
-   `pg_dump`; the log rules that out. Cause of the hiccup itself (tray slip on
-   the NAS vs LAN) is not established and does not change the finding.
+   cache, `du -sh` measured that cache, and the flush on close/writeback is
+   where a `soft` mount fails instead of retrying, while bash never checks the
+   close of a `>` redirection. Without a kernel/CIFS error line or a NAS-side
+   event log this cannot be distinguished from an SMB disconnect/reconnect or a
+   NAS storage event (the tray slip is undated). ⭐ What is established
+   regardless of cause: *the script's success line, the manifest's `Size:`,
+   and any weekly/monthly `cp` of that file all vouch for bytes that never
+   reached the disk.* An earlier draft guessed an interrupted `pg_dump`; the
+   log rules that out. Commit `a220965c` worded the CIFS mechanism as fact;
+   superseded by this paragraph, not deleted from history.
+   ⛔ **FORENSIC HOLD: the 18 Sep NAS file (75,497,472 B, SHA-256
+   `4ba0b752…c88d1`) is not to be repaired, overwritten, renamed or deleted
+   until R1 closes.** Retention would delete it on ~2 Oct; R1 closes first or
+   the file is copied aside with its hash before then.
    **R1 must integrity-sweep every retained dump** (`gzip -t` + last line
    `PostgreSQL database dump complete`) because the failure class is silent.
    **Exact evidence (read 2026-09-23):** NAS file size **75,497,472 B = 72 × 1 MiB**,
