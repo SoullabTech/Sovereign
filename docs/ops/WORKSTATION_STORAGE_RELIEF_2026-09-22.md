@@ -9,7 +9,7 @@ except the generated act scripts, which refuse without `RECLAIM_AUTHORIZED=1`.
 
 | Measure | Start | After relief |
 |---|---|---|
-| Internal free | 12 GB (98% used) | 56 GB (88% used) |
+| Internal free | 12 GB (98% used) | 76 GB (84% used) |
 | Swap used | 17.8 GB of 18.4 | 10.4 GB of 11.3 |
 | Compressed memory | 21.4 GB | 14.4 GB |
 | System memory free (memory_pressure) | not readable | 58% |
@@ -55,11 +55,18 @@ metric on this machine.** That rule goes into the capacity sentinel charter.
 | C — preserve | push fast-forward or verified bundle to `/Volumes/T7 Shield/worktree-bundles` | 51 worktrees preserved; 7 branches found diverged from remote, local side bundled, no force push |
 | A — regen delete, clean pushed worktrees | 12 worktrees | +16 GB |
 | B — `git worktree remove`, clean pushed merged | 38 worktrees | +14.8 GB, no drift |
+| R2 C — preserve | 17 rows | all already held a verified bundle for their exact HEAD; nothing to do |
+| R2 A — regen delete, clean pushed worktrees | 3 worktrees | +7.2 GB, no drift |
+| R2 A2 — git-ignored regen dirs in unclean worktrees | 14 worktrees | +11.2 GB, no drift, nothing kept back |
 
-Post-preservation census (R2): 269 worktrees, 0 REMOVABLE on the internal disk. Whole-worktree
-automated relief is **closed**. Remaining in the R2 plan: Act A 7.2 GB (3 clean worktrees);
-Act A2 ~18 GB (git-ignored regen dirs inside unclean worktrees; optional); 28 detached, clean,
-merged HOLD checkouts (~11 GB) that need a human answer to "was this witness run finished".
+Post-preservation census (R2): 269 worktrees, 0 REMOVABLE on the internal disk. Worktree relief
+is **closed** at 76 GB free. Remaining and not automated: 28 detached, clean, merged HOLD
+checkouts (~11 GB) that need a human answer to "was this witness run finished"; 90 INSPECT
+worktrees left entirely alone.
+
+Docker Desktop reserves 12,544 MiB (12.25 GB) and 10 CPUs for its VM (`settings-store.json`).
+That is a quarter of unified memory, invisible in the process list, and part of any 48 GB
+baseline reading; the local stack is not in the public traffic path.
 
 ## Defects found in the instruments, all repaired the same day
 
@@ -71,8 +78,7 @@ not pin the censused HEAD → B-GUARD-R1. Path printers split on spaces → fixe
 
 ## Standing and next boundary
 
-- Worktree relief: CLOSED after R2 Act C and Act A. Act B has no internal population. Do not
-  run it.
+- Worktree relief: CLOSED (R2 Act C, A, A2 run). Act B has no internal population. Do not run it.
 - Next: restart the Studio, start only the ordinary workload, take the five-line memory reading,
   run one normal build, read again. That is the fair test of 48 GB. Diverged branches (7) are a
   lane-owner reconciliation, not urgent.
