@@ -4,6 +4,11 @@ human_activity: writing directly in the Work while MAIA stays at the writer's ex
 surfaces:
   - app/writers-studio/flagship/**
   - app/writers-studio/rebuild/FlagshipWriteHost.tsx
+  # EC1, 2026-09-23 — the shared authorship substrate is mounted by the
+  # flagship host. Naming it here gives the live route one current composition
+  # authority while preserving its existing save/authorship law unchanged.
+  - app/writers-studio/rebuild/RebuildWritingBoundary.tsx
+  - app/writers-studio/rebuild/RebuildAuthoredBody.tsx
   - app/writers-studio/rebuild/flagshipWriteHost.css
   - app/writers-studio/rebuild/DiscussLayer.tsx
   - app/writers-studio/rebuild/discussAct.ts
@@ -34,6 +39,14 @@ experience_verification: >-
 ---
 
 # Soullab Studio — flagship composition
+
+## Current route authority — EC1, 2026-09-23
+
+This is the **sole current Experience Contract for the composition mounted at `/writers-studio/rebuild`**.
+
+Its standing composition law is unchanged: the manuscript is primary; MAIA is contextual, anchored, and dismissible; MAIA is **not a permanent pane**. The shared `RebuildWritingBoundary` and `RebuildAuthoredBody` are named in this contract because the live flagship host mounts them as its existing authorship substrate; EC1 changes none of their save or writing authority.
+
+The 2026-09-16 legacy rebuild contract remains historical evidence for the composition it witnessed and for the legacy surfaces it still names. It is not a second current composition authority for this route.
 
 ## What this room is for
 

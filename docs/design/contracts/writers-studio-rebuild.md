@@ -2,7 +2,13 @@
 room: Writer’s Studio — Experience Rebuild
 human_activity: inhabiting a creative work with MAIA present at the same visible movement, section, scene, passage, stanza, lyric, or other authored locus
 surfaces:
-  - app/writers-studio/rebuild/**
+  # EC1, 2026-09-23 — CURRENT JURISDICTION NARROWING.
+  # The broad rebuild/** claim historically covered the mounted 2026-09-16
+  # composition. The current /writers-studio/rebuild route is now flagship-
+  # governed, so this contract retains only the unmounted legacy composition
+  # artifact and its historical stylesheet inside that directory.
+  - app/writers-studio/rebuild/RebuildStudioClient.tsx
+  - app/writers-studio/rebuild/rebuild.css
   - app/writers-studio/develop/**
   - app/writers-studio/insight/**
   # Shared by Write and Develop: one continuous manuscript surface. D5 adds an
@@ -60,11 +66,23 @@ experience_verification: >-
 
 # Writer’s Studio — Experience Rebuild
 
+## Current standing — EC1, 2026-09-23
+
+This contract preserves the **historical legacy witness** and continues to govern only the legacy/unmounted composition and the explicitly named legacy Writer’s Studio surfaces in its frontmatter.
+
+It no longer governs the composition mounted at `/writers-studio/rebuild`. The sole current Experience Contract for that mounted flagship route is:
+
+`docs/design/contracts/flagship-studio.md`
+
+Accordingly, the historical law **“three permanent regions — the Work’s own shape, the authored material, and MAIA”** remains evidence of the composition witnessed on 2026-09-16, but is **superseded for the currently mounted `/writers-studio/rebuild` experience**. Nothing in this reconciliation reinterprets that historical witness as an error or as evidence of the later flagship design.
+
 ## What this room is for
 
 The creator comes here to stay inside the Work while MAIA reads and works beside it. The primary activity is not managing Studio machinery; it is entering deep creative presence, sensing the Work as a living whole, moving directly to the part that calls for attention, and developing exact language without losing place. The room must support the structures of nonfiction, fiction, poetry, memoir, plays, screenplays, songs, lyrics and other authored forms without forcing them into book vocabulary.
 
-## Canonical cutover
+## Historical canonical cutover — witnessed 2026-09-16
+
+The following standing is preserved verbatim as historical evidence of the legacy composition; it is not the current route-authority statement after EC1:
 
 The rebuilt room is the canonical **Write** destination for Writer's Studio navigation and the return destination from MAIA handoffs. The legacy `/writers-studio/canvas` route remains temporarily available only as a rollback surface; ordinary Studio navigation no longer leads there.
 
