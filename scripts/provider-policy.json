@@ -1,46 +1,125 @@
 {
   "_doc": "Provider Governance policy (machine-readable). Enforced by scripts/check-provider-governance.ts (npm run check:no-openai). Human policy + rationale: docs/canon/PROVIDER_GOVERNANCE.md",
   "_invariant": "Providers are replaceable, governable infrastructure BENEATH MAIA's identity — never the identity itself. Production data flows only to sovereign/approved providers; non-approved providers are lab-only or forbidden. The guard prevents NEW non-compliant surfaces; the allowlist below is the enumerated migration debt, tracked toward zero.",
-
   "capability_classes": {
-    "chat": { "kind": "function", "description": "Generative chat/reasoning." },
-    "embedding": { "kind": "function", "description": "Embedding generation." },
-    "tts": { "kind": "function", "description": "Text-to-speech." },
-    "stt": { "kind": "function", "description": "Speech-to-text." },
-    "benchmark": { "kind": "function", "description": "Bounded evaluation/benchmark use." },
-    "member_data": { "kind": "data", "description": "Member-authored or member-derived content permitted by the governing product boundary." },
-    "member_audio": { "kind": "data", "description": "Member audio permitted by the governing voice boundary." },
-    "repository_derived_metadata": { "kind": "data", "description": "Fixed-schema non-content repository state; excludes source, paths, prose, canon, and member content.", "assigned_by_default": false },
-    "repository_source": { "kind": "data", "description": "Repository source or structural/content representations such as excerpts, diffs, filenames, paths, symbols, or commit messages.", "assigned_by_default": false },
-    "constitutional_canon": { "kind": "data", "description": "Canon, constitutional text, ratification records, founder rulings, or other constitutionally authoritative material.", "assigned_by_default": false }
+    "chat": {
+      "kind": "function",
+      "description": "Generative chat/reasoning."
+    },
+    "embedding": {
+      "kind": "function",
+      "description": "Embedding generation."
+    },
+    "tts": {
+      "kind": "function",
+      "description": "Text-to-speech."
+    },
+    "stt": {
+      "kind": "function",
+      "description": "Speech-to-text."
+    },
+    "benchmark": {
+      "kind": "function",
+      "description": "Bounded evaluation/benchmark use."
+    },
+    "member_data": {
+      "kind": "data",
+      "description": "Member-authored or member-derived content permitted by the governing product boundary."
+    },
+    "member_audio": {
+      "kind": "data",
+      "description": "Member audio permitted by the governing voice boundary."
+    },
+    "repository_derived_metadata": {
+      "kind": "data",
+      "description": "Fixed-schema non-content repository state; excludes source, paths, prose, canon, and member content.",
+      "assigned_by_default": false
+    },
+    "repository_source": {
+      "kind": "data",
+      "description": "Repository source or structural/content representations such as excerpts, diffs, filenames, paths, symbols, or commit messages.",
+      "assigned_by_default": false
+    },
+    "constitutional_canon": {
+      "kind": "data",
+      "description": "Canon, constitutional text, ratification records, founder rulings, or other constitutionally authoritative material.",
+      "assigned_by_default": false
+    }
   },
-
   "development_boundary": {
     "governance_canon": "docs/canon/DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md",
     "canon_status": "ratified",
     "interim_hold": "lifted",
-    "held_lab_data_classes": ["repository_source", "constitutional_canon"],
-    "repository_data_classes": ["repository_derived_metadata", "repository_source", "constitutional_canon"],
-    "unassigned_repository_classes": ["repository_derived_metadata", "repository_source", "constitutional_canon"],
+    "held_lab_data_classes": [
+      "repository_source",
+      "constitutional_canon"
+    ],
+    "repository_data_classes": [
+      "repository_derived_metadata",
+      "repository_source",
+      "constitutional_canon"
+    ],
+    "unassigned_repository_classes": [
+      "repository_derived_metadata",
+      "repository_source",
+      "constitutional_canon"
+    ],
     "repository_assignment_authorizations": {}
   },
-
   "tiers": {
     "production": {
       "description": "May run in production and receive member data / synthesized audio.",
       "providers": {
-        "anthropic":   { "capabilities": ["chat", "member_data"], "via": "lib/ai/sovereignRouter" },
-        "ollama":      { "capabilities": ["chat", "embedding", "member_data"], "note": "episodic embeddings live on nomic-embed-text (768d)" },
-        "kokoro":      { "capabilities": ["tts", "member_audio"] },
-        "sesame":      { "capabilities": ["tts"] },
-        "personaplex": { "capabilities": ["tts"], "status": "pending_qualification" },
-        "faster-whisper": { "capabilities": ["stt", "member_audio"], "note": "local maia-whisper container" }
+        "anthropic": {
+          "capabilities": [
+            "chat",
+            "member_data"
+          ],
+          "via": "lib/ai/sovereignRouter"
+        },
+        "ollama": {
+          "capabilities": [
+            "chat",
+            "embedding",
+            "member_data"
+          ],
+          "note": "episodic embeddings live on nomic-embed-text (768d)"
+        },
+        "kokoro": {
+          "capabilities": [
+            "tts",
+            "member_audio"
+          ]
+        },
+        "sesame": {
+          "capabilities": [
+            "tts"
+          ]
+        },
+        "personaplex": {
+          "capabilities": [
+            "tts"
+          ],
+          "status": "pending_qualification"
+        },
+        "faster-whisper": {
+          "capabilities": [
+            "stt",
+            "member_audio"
+          ],
+          "note": "local maia-whisper container"
+        }
       }
     },
     "lab": {
       "description": "Benchmarking / comparison only. MUST NOT be a production default and MUST NOT receive member data outside an explicit, gated evaluation (e.g. an admin Voice Lab).",
       "providers": {
-        "openai": { "capabilities": ["benchmark"], "status": "removal_in_progress" }
+        "openai": {
+          "capabilities": [
+            "benchmark"
+          ],
+          "status": "removal_in_progress"
+        }
       }
     },
     "forbidden": {
@@ -52,10 +131,8 @@
       ]
     }
   },
-
   "openai_removal": {
     "_note": "Every file here is migration debt. A NEW OpenAI surface in a file NOT listed here FAILS the guard. Removal order in docs/canon/PROVIDER_GOVERNANCE.md: browser keys -> TTS -> _backend -> deps -> OPENAI_API_KEY.",
-
     "quarantine_browser_keys": {
       "_priority": "HIGHEST — violates a Forbidden rule; burn first",
       "description": "Files exposing an OpenAI key to the client bundle via NEXT_PUBLIC_*. Target: zero. Do not add to this list.",
@@ -65,7 +142,6 @@
         "lib/utils/modelService.ts"
       ]
     },
-
     "pending_migration": {
       "description": "Live-tree OpenAI clients / imports / endpoints awaiting migration to a production-tier provider (or deletion if dead).",
       "files": [
@@ -100,7 +176,6 @@
         "scripts/generate-chapter-illustrations.ts"
       ]
     },
-
     "governance_scripts": {
       "description": "Guard/audit scripts that reference OpenAI patterns in order to DETECT or BLOCK them. They legitimately contain the strings.",
       "files": [
@@ -108,11 +183,23 @@
         "scripts/check-provider-governance.ts"
       ]
     },
-
     "legacy_backend": {
       "description": "app/api/_backend/** — unreachable legacy Express backend, pending wholesale deletion. Path-prefixed so the ~20 OpenAI files there need not be enumerated.",
       "path_prefixes": [
         "app/api/_backend/"
+      ]
+    },
+    "constitutional_defeat_fixtures": {
+      "description": "Exact constitutional test fixtures that intentionally contain a banned provider literal solely as hostile input to prove the governing law refuses it. This is not migration debt. Exceptions are rule-scoped, require an in-file marker, and may never exempt browser API keys.",
+      "entries": [
+        {
+          "file": "tests/constitutional/voice-doorway/matrix.mjs",
+          "allowed_rules": [
+            "openai REST endpoint"
+          ],
+          "marker": "PROVIDER-GOVERNANCE-DEFEAT-FIXTURE: V-F2 hostile non-loopback STT endpoint",
+          "evidence": "JARVIS-VOICE-DOORWAY-01 / V1 V-F2 + DC-V2: renderer-supplied cloud STT endpoint must be rejected; literal exists only as the hostile input under test."
+        }
       ]
     }
   }

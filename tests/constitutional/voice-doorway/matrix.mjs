@@ -34,6 +34,7 @@ async function laws(make) {
   // V-F1 identity
   { const io = makeIO({ sttText: 'Prepare the next act.' }); const d = make(io, {}); d.pressToTalk(); for (const f of frames(3)) d.frame(f); const r = await d.release(); const t = d.typed('Prepare the next act.'); if (!r.submitted || JSON.stringify(r.seamObject) !== JSON.stringify(t)) broken.add('V-F1'); }
   // V-F2 loopback constant
+  // PROVIDER-GOVERNANCE-DEFEAT-FIXTURE: V-F2 hostile non-loopback STT endpoint
   { const io = makeIO(); const d = make(io, { sttEndpoint: 'https://api.openai.com/v1/audio/transcriptions' }); d.pressToTalk(); for (const f of frames(2)) d.frame(f); await d.release(); if (io.calls.stt.some((/** @type {string} */ ep) => ep !== STT_ENDPOINT) || d.view().stt_endpoint !== STT_ENDPOINT) broken.add('V-F2'); }
   // V-F3 no retention
   { const io = makeIO(); const d = make(io, {}); d.pressToTalk(); for (const f of frames(4)) d.frame(f); await d.release(); if (d.view().frames_held !== 0) broken.add('V-F3'); }
