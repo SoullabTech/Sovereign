@@ -9,6 +9,10 @@
 #   PLAN.txt          GB per act, per class, projected internal free space
 #   act-a-regen.sh    delete node_modules/.next/.turbo/coverage/dist in clean,
 #                     pushed worktrees (REMOVABLE + RETAIN) on the INTERNAL disk
+#   act-a2-regen-unclean.sh
+#                     the same directories inside INSPECT/PRESERVE/HOLD worktrees,
+#                     but only those git check-ignore confirms are ignored, only
+#                     while HEAD is the censused commit, never the main checkout
 #   act-b-remove.sh   git worktree remove for REMOVABLE worktrees on the internal disk
 #   act-c-preserve.sh push (policy-allowed branch names) or bundle (everything
 #                     else) every PRESERVE worktree and every HOLD row with
@@ -29,7 +33,7 @@ ARCHIVE_DIR="${ARCHIVE_DIR:-/Volumes/T7 Shield/worktree-bundles}"
 STAMP="$(basename "$TSV" .tsv | sed 's/^worktrees-//')"
 PLAN_DIR="${PLAN_DIR:-$(dirname "$TSV")/reclaim-plan-$STAMP}"
 mkdir -p "$PLAN_DIR"
-A="$PLAN_DIR/act-a-regen.sh"; B="$PLAN_DIR/act-b-remove.sh"; C="$PLAN_DIR/act-c-preserve.sh"
+A="$PLAN_DIR/act-a-regen.sh"; A2="$PLAN_DIR/act-a2-regen-unclean.sh"; B="$PLAN_DIR/act-b-remove.sh"; C="$PLAN_DIR/act-c-preserve.sh"
 I="$PLAN_DIR/inspect.txt"; P="$PLAN_DIR/PLAN.txt"
 
 guard() {  # common prologue for every generated act script
@@ -79,6 +83,22 @@ EOG
 
 guard "ACT A: delete regenerable build state in clean, pushed worktrees on the internal disk." \
       "delete node_modules/.next/.turbo/coverage/dist directories" > "$A"
+guard "ACT A2: delete IGNORED regenerable build state inside worktrees that are not clean (INSPECT/PRESERVE/HOLD). A tracked or untracked file is never touched; only directories git itself reports as ignored, and only while HEAD is the censused commit. The main checkout is excluded." \
+      "delete git-ignored node_modules/.next/.turbo/coverage/dist directories inside unclean worktrees" > "$A2"
+cat >> "$A2" <<'EOG'
+# head_or_drift <worktree> <censused-head>: the tree may be dirty here by definition,
+# so the only identity check is that HEAD has not moved since the census.
+head_or_drift() {
+  local wt="$1" want="$2" have
+  [[ -d "$wt" ]] || { drift "$wt no longer exists"; return; }
+  have=$(git -C "$wt" rev-parse --short=9 HEAD 2>/dev/null)
+  [[ -n "$want" && "$have" == "$want" ]] || { drift "$wt HEAD is $have, census recorded $want"; return; }
+}
+# rm_ignored <worktree> <dir>: delete only if git reports the directory as ignored.
+rm_ignored() {
+  if git -C "$1" check-ignore -q "$2" 2>/dev/null; then rm -rf "$2"; else echo "kept (not git-ignored): $2" >&2; fi
+}
+EOG
 guard "ACT B: remove REMOVABLE worktrees (clean, pushed, merged into $CANON) on the internal disk." \
       "run git worktree remove on merged worktrees" > "$B"
 cat >> "$B" <<EOG
@@ -105,7 +125,7 @@ push_or_bundle() {
 EOG
 : > "$I"
 
-a_gb=0; a_n=0; b_gb=0; b_n=0; c_n=0
+a_gb=0; a_n=0; b_gb=0; b_n=0; c_n=0; c_done=0; a2_gb=0; a2_n=0
 while IFS=$'\t' read -r path vol branch head total regen source mod unt unp merged cls nest; do
   [[ "$path" == "path" ]] && continue
   [[ "$total" == "-" ]] && { echo "HOLD  $path  (missing or unreadable)" >> "$I"; continue; }
@@ -125,8 +145,15 @@ while IFS=$'\t' read -r path vol branch head total regen source mod unt unp merg
       fi ;;
   esac
   if [[ "$unp" != "0" && "$unp" != "?" ]]; then
-    c_n=$((c_n+1))
     safe=$(echo "${branch:-detached}-${head}" | sed 's/(detached)/detached/' | tr '/ ' '__')
+    if [[ -f "$ARCHIVE_DIR/$safe.bundle" ]]; then
+      printf '\n# %s  already preserved: %s/%s.bundle exists for this exact HEAD (no action)\n' "$path" "$ARCHIVE_DIR" "$safe" >> "$C"
+      c_done=$((c_done+1))
+      unp="0"
+    fi
+  fi
+  if [[ "$unp" != "0" && "$unp" != "?" ]]; then
+    c_n=$((c_n+1))
     case "$branch" in
       main|clean-main-no-secrets|feature/*|fix/*|chore/*) pushable="$branch" ;;
       *) pushable="" ;;
@@ -136,12 +163,22 @@ while IFS=$'\t' read -r path vol branch head total regen source mod unt unp merg
       "$path" "$pushable" "$ARCHIVE_DIR" "$safe" >> "$C"
   fi
   case "$cls" in
+    INSPECT*|HOLD*|PRESERVE)
+      if [[ "$vol" == "internal" && "$path" != "$REPO" ]] && awk -v r="$regen" 'BEGIN{exit !(r>0)}'; then
+        printf '\n# %s  %s GB regenerable  [%s]\nif head_or_drift "%s" "%s"; then\n' "$path" "$regen" "$cls" "$path" "$head" >> "$A2"
+        find "$path" -maxdepth 4 -type d \( -name node_modules -o -name .next -o -name .turbo -o -name coverage -o -name dist \) -prune -print 2>/dev/null \
+          | while IFS= read -r d; do printf '  rm_ignored "%s" "%s"\n' "$path" "$d" >> "$A2"; done
+        echo "fi" >> "$A2"
+        a2_gb=$(awk -v x="$a2_gb" -v y="$regen" 'BEGIN{print x+y}'); a2_n=$((a2_n+1))
+      fi ;;
+  esac
+  case "$cls" in
     INSPECT*|HOLD*) printf '%-10s %6s GB  mod=%s unt=%s unpushed=%s merged=%s  %s  %s\n' "$cls" "$total" "$mod" "$unt" "$unp" "$merged" "$branch" "$path" >> "$I" ;;
   esac
 done < "$TSV"
-epilogue >> "$A"; epilogue >> "$B"
+epilogue >> "$A"; epilogue >> "$A2"; epilogue >> "$B"
 echo 'echo "ACT C complete: every listed worktree now has its commits on origin or in a verified bundle."' >> "$C"
-chmod +x "$A" "$B" "$C"
+chmod +x "$A" "$A2" "$B" "$C"
 
 free_now=$(df -k "$HOME" 2>/dev/null | awk 'NR==2{printf "%.1f", $4/1048576}')
 {
@@ -149,11 +186,13 @@ free_now=$(df -k "$HOME" 2>/dev/null | awk 'NR==2{printf "%.1f", $4/1048576}')
   echo "internal free now: ${free_now:-?} GB"
   echo
   printf 'ACT A  regen delete in %d clean pushed internal worktrees   ~%.1f GB   %s\n' "$a_n" "$a_gb" "$A"
+  printf 'ACT A2 ignored regen delete in %d UNCLEAN internal worktrees ~%.1f GB   %s\n' "$a2_n" "$a2_gb" "$A2"
   printf 'ACT B  worktree remove, %d REMOVABLE internal worktrees      ~%.1f GB   %s\n' "$b_n" "$b_gb" "$B"
   printf 'ACT C  push or bundle %d worktrees with unpushed commits     0 GB freed  %s\n' "$c_n" "$C"
+  [[ $c_done -gt 0 ]] && printf '       (%d more already hold a verified bundle for their exact HEAD; nothing to do)\n' "$c_done"
   printf 'INSPECT/HOLD rows for a person (no commands):                %s\n' "$I"
   echo
-  awk -v a="$a_gb" -v b="$b_gb" -v f="${free_now:-0}" 'BEGIN{printf "projected internal free after A then B: ~%.1f GB (A and B overlap on REMOVABLE regen; B removes it either way)\n", f+a+b}'
+  awk -v a="$a_gb" -v a2="$a2_gb" -v b="$b_gb" -v f="${free_now:-0}" 'BEGIN{printf "projected internal free after A, A2 and B: ~%.1f GB (A and B overlap on REMOVABLE regen; B removes it either way)\n", f+a+a2+b}'
   echo
   echo "Order: C first (nothing is lost if C never runs, but it must precede any removal of a PRESERVE row),"
   echo "       then A (lossless everywhere: npm ci / next build regenerates), then B (merged worktrees only)."
