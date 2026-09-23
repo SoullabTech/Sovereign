@@ -55,6 +55,27 @@ Wired into: **preflight**, **CI**, and the **pre-commit** hook (`scripts/setup-g
 
 Editing tiers or the allowlist is a governance act, reviewed in PR. Adding a file to `pending_migration` is *migration debt* and should draw pushback. Adding to `quarantine_browser_keys` is not allowed — remove the client-side key instead.
 
+**Repository data-class assignment has an additional prior-authorization gate.** A provider may not receive `repository_derived_metadata`, `repository_source`, or `constitutional_canon` merely because the class is removed from an "unassigned" list in the same edit. The assignment must cite a separately ratified, machine-readable authorization record that already existed before the assignment candidate.
+
+The provider policy records that citation as exact:
+
+```text
+authorized_by:
+  record_path
+  record_blob
+  record_commit
+```
+
+The guard verifies that:
+
+1. `record_commit` predates the assignment candidate;
+2. the exact `record_blob` exists at `record_path` in that commit;
+3. the record is `repository-provider-assignment/v1`;
+4. the record status is `ratified`;
+5. its tier, provider, and capability exactly match the assignment.
+
+The authorization record lives under `docs/governance/provider-assignments/*.json`. A same-change "authorization" is refused. Delisting a class is therefore not sufficient to assign it.
+
 ## OpenAI removal — burn order
 
 The allowlist is retired in this sequence (each step verified before the next):

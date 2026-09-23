@@ -22,19 +22,19 @@ amendment. It does not ratify itself.
 
 ```text
 docs/canon/PROVIDER_GOVERNANCE.md
-5fa67175fa6d6347b4a1cc36bfa7c73b8d449105
+ef6c831b30dc23e1bbb25824f7993f3341bade8d
 
 scripts/provider-policy.json
-70160b1041a32c199150eeae73330a306251e411
+baee45fef093b5f582dc090d91962ae0bd3ff767
 
 scripts/check-provider-governance.ts
-8fff860a25082320e59a1ee81808689f9973ca16
+4ac7a5781ff740e705c7b69457399dd6c0321943
 
 docs/canon/DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md
-40f60bd178af6f72ffa530bc097535903865a674
+e93b4e46bfa8f31d5542acc3937c5628680075a6
 
 scripts/builder/__tests__/development-provider-governance-proof.mjs
-699e0f1bc61496544582f781761d790858da9668
+1ad313e1e33435d2e056c206dcf1a93757a76daf
 ```
 ## 3. Capability model
 
@@ -59,10 +59,12 @@ The three repository data classes are present in the candidate vocabulary and as
 The machine-readable development boundary records:
 
 ```text
-canon_status                   candidate_not_ratified
-interim_hold                   active
-held_lab_data_classes          repository_source · constitutional_canon
-unassigned_repository_classes  repository_derived_metadata · repository_source · constitutional_canon
+canon_status                         candidate_not_ratified
+interim_hold                         active
+held_lab_data_classes                repository_source · constitutional_canon
+repository_data_classes              repository_derived_metadata · repository_source · constitutional_canon
+unassigned_repository_classes        repository_derived_metadata · repository_source · constitutional_canon
+repository_assignment_authorizations empty
 ```
 
 ## 4. Candidate proof
@@ -70,18 +72,20 @@ unassigned_repository_classes  repository_derived_metadata · repository_source 
 ```text
 node scripts/builder/__tests__/development-provider-governance-proof.mjs
 
-passes: 11
+passes: 13
 failures: 0
 JEV-INT-01 GOVERNANCE CANDIDATE — PASS
 ```
 
-The proof establishes explicit vocabulary, no provider assignment, active hold standing, and
-separate network/disclosure/spend/provider-execution authority.
+The proof establishes explicit vocabulary, no provider assignment, active hold standing,
+separate network/disclosure/spend/provider-execution authority, the exact three-class
+repository set, and the prior-ratification requirement for every future repository-class
+provider assignment.
 
-## 5. Hostile mutations
+## 5. Hostile mutations and assignment-gate witness
 
-The existing provider-governance guard was then exercised against three temporary policy
-mutations. Each mutation was discarded and the candidate baseline restored.
+The provider-governance guard was exercised against temporary policy mutations. Each mutation
+was discarded and the candidate baseline restored.
 
 ```text
 1. grant repository_source to lab.openai
@@ -99,11 +103,45 @@ mutations. Each mutation was discarded and the candidate baseline restored.
    → PROVIDER POLICY ERROR
    → hold cannot lift before ratification
 
+4. DELIST repository_derived_metadata + ASSIGN it to lab.openai in the same edit
+   → exit 2
+   → PROVIDER POLICY ERROR
+   → no separately ratified prior authorization record
+
+5. introduce an authorization record in the same change as the assignment
+   → exit 2
+   → PROVIDER POLICY ERROR
+   → authorization record cannot be resolved from its pinned prior commit
+
 restored candidate baseline
    → provider governance exit 0
 ```
-The guard therefore treats a malformed or prematurely widened governance policy as an
-instrument/policy error rather than as a lawful provider configuration.
+
+A throwaway two-commit Git fixture then exercised the lawful path:
+
+```text
+commit A
+  machine-readable assignment record
+  instrument = repository-provider-assignment/v1
+  status     = ratified
+  tier       = lab
+  provider   = openai
+  capability = repository_derived_metadata
+
+commit B
+  provider-policy assignment cites A by:
+    record_path
+    record_blob
+    record_commit
+
+guard at commit B
+  → exit 0
+```
+
+The fixture is synthetic proof of mechanism, not a real provider authorization. It establishes
+that the gate is neither a consistency-only check nor an impossible lock: assignment requires
+a separately existing prior ratification object, and that object must match the exact
+tier/provider/capability being assigned.
 
 ## 6. What remains open
 
@@ -114,7 +152,8 @@ It also does not by itself establish canonical capability-table standing because
 has not been adjudicated or admitted.
 
 Even after later ratification/admission, Jev/TypeSafe receives no capability automatically.
-Provider assignment remains a separate act.
+Provider assignment remains a separate later act and must cite its own prior ratified
+`repository-provider-assignment/v1` record by exact path, blob, and commit.
 
 ## 7. Standing
 

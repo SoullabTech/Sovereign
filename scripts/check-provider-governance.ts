@@ -23,7 +23,7 @@
  * @see docs/canon/PROVIDER_GOVERNANCE.md
  * @see scripts/provider-policy.json
  */
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -78,6 +78,104 @@ function validateCapabilityVocabulary(policy: any): void {
   }
 }
 
+function git(args: string[]): string {
+  return execFileSync("git", args, {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
+}
+
+function authorizationBoundaryRef(): string {
+  try {
+    const dirty = git(["status", "--porcelain", "--", "scripts/provider-policy.json"]);
+    if (process.env.GIT_PRE_COMMIT === "1" || dirty.length > 0) return "HEAD";
+    return git(["rev-parse", "HEAD^"]);
+  } catch {
+    return "HEAD";
+  }
+}
+
+function isAncestor(ancestor: string, descendant: string): boolean {
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", ancestor, descendant], {
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+type RepositoryAssignmentAuthorization = {
+  record_path: string;
+  record_blob: string;
+  record_commit: string;
+};
+
+function validateRepositoryAssignmentAuthorization(
+  auth: RepositoryAssignmentAuthorization,
+  assignment: { tier: string; provider: string; capability: string },
+): void {
+  if (!auth || typeof auth !== "object") {
+    policyError(
+      `repository assignment ${assignment.tier}.${assignment.provider}.${assignment.capability} requires authorized_by record.`,
+    );
+  }
+
+  if (typeof auth.record_path !== "string"
+      || !auth.record_path.startsWith("docs/governance/provider-assignments/")
+      || !auth.record_path.endsWith(".json")) {
+    policyError("repository assignment authorization must point to docs/governance/provider-assignments/*.json.");
+  }
+  if (!/^[0-9a-f]{40}$/.test(auth.record_blob || "")) {
+    policyError("repository assignment authorization requires exact 40-hex record_blob.");
+  }
+  if (!/^[0-9a-f]{40}$/.test(auth.record_commit || "")) {
+    policyError("repository assignment authorization requires exact 40-hex record_commit.");
+  }
+
+  const boundaryRef = authorizationBoundaryRef();
+  if (!isAncestor(auth.record_commit, boundaryRef)) {
+    policyError(
+      `repository assignment authorization commit ${auth.record_commit} must predate the assignment candidate (${boundaryRef}).`,
+    );
+  }
+
+  let committedBlob: string;
+  let raw: string;
+  try {
+    committedBlob = git(["rev-parse", auth.record_commit + ":" + auth.record_path]);
+    raw = git(["show", auth.record_commit + ":" + auth.record_path]);
+  } catch {
+    policyError("repository assignment authorization record cannot be resolved from its pinned commit.");
+  }
+
+  if (committedBlob! !== auth.record_blob) {
+    policyError(
+      `repository assignment authorization blob mismatch: expected ${auth.record_blob}, found ${committedBlob!}.`,
+    );
+  }
+
+  let record: any;
+  try {
+    record = JSON.parse(raw!);
+  } catch {
+    policyError("repository assignment authorization record must be valid JSON.");
+  }
+
+  if (record?.instrument !== "repository-provider-assignment/v1") {
+    policyError("repository assignment authorization has wrong instrument.");
+  }
+  if (record?.status !== "ratified") {
+    policyError("repository assignment authorization record is not ratified.");
+  }
+  if (record?.tier !== assignment.tier
+      || record?.provider !== assignment.provider
+      || record?.capability !== assignment.capability) {
+    policyError("repository assignment authorization does not exactly match the provider assignment.");
+  }
+}
+
 function validateDevelopmentBoundary(policy: any): void {
   const boundary = policy?.development_boundary;
   if (!boundary || typeof boundary !== 'object') {
@@ -97,11 +195,27 @@ function validateDevelopmentBoundary(policy: any): void {
   const held = Array.isArray(boundary.held_lab_data_classes)
     ? boundary.held_lab_data_classes
     : policyError('held_lab_data_classes must be an array.');
+  const repositoryClasses = Array.isArray(boundary.repository_data_classes)
+    ? boundary.repository_data_classes
+    : policyError('repository_data_classes must be an array.');
   const unassigned = Array.isArray(boundary.unassigned_repository_classes)
     ? boundary.unassigned_repository_classes
     : policyError('unassigned_repository_classes must be an array.');
+  const authorizations = boundary.repository_assignment_authorizations;
+  if (!authorizations || typeof authorizations !== 'object' || Array.isArray(authorizations)) {
+    policyError('repository_assignment_authorizations must be an object.');
+  }
 
-  for (const name of [...held, ...unassigned]) {
+  const expectedRepositoryClasses = [
+    'repository_derived_metadata',
+    'repository_source',
+    'constitutional_canon',
+  ];
+  if (JSON.stringify(repositoryClasses) !== JSON.stringify(expectedRepositoryClasses)) {
+    policyError('repository_data_classes must be the exact governed three-class set.');
+  }
+
+  for (const name of [...held, ...repositoryClasses, ...unassigned]) {
     if (!classes?.[name] || classes[name].kind !== 'data') {
       policyError(`development boundary references unknown/non-data class ${String(name)}.`);
     }
@@ -121,6 +235,18 @@ function validateDevelopmentBoundary(policy: any): void {
     if (unassigned.includes(assignment.capability)) {
       policyError(`${assignment.capability} is declared unassigned but granted to ${assignment.tier}.${assignment.provider}.`);
     }
+
+    if (repositoryClasses.includes(assignment.capability)) {
+      const key = `${assignment.tier}/${assignment.provider}/${assignment.capability}`;
+      const auth = authorizations[key] as RepositoryAssignmentAuthorization | undefined;
+      if (!auth) {
+        policyError(
+          `repository capability assignment ${key} has no separately ratified prior authorization record.`,
+        );
+      }
+      validateRepositoryAssignmentAuthorization(auth!, assignment);
+    }
+
     if (boundary.interim_hold === 'active'
         && assignment.tier === 'lab'
         && held.includes(assignment.capability)) {

@@ -20,7 +20,9 @@
     "canon_status": "candidate_not_ratified",
     "interim_hold": "active",
     "held_lab_data_classes": ["repository_source", "constitutional_canon"],
-    "unassigned_repository_classes": ["repository_derived_metadata", "repository_source", "constitutional_canon"]
+    "repository_data_classes": ["repository_derived_metadata", "repository_source", "constitutional_canon"],
+    "unassigned_repository_classes": ["repository_derived_metadata", "repository_source", "constitutional_canon"],
+    "repository_assignment_authorizations": {}
   },
 
   "tiers": {

@@ -83,6 +83,51 @@ provider is a separate reviewed governance act.
 Lab-tier providers receive no `repository_derived_metadata`, `repository_source`, or
 `constitutional_canon` merely by holding `benchmark` or another functional capability.
 
+### Repository assignment requires prior ratified authorization
+
+The "unassigned" list is a statement of current posture, not sufficient enforcement by itself.
+A single edit that both removes a class from that list and grants it to a provider must still
+fail.
+
+Every assignment of a repository data class therefore requires a second object: a
+**separately ratified provider-assignment authorization record** that predates the assignment
+candidate.
+
+The record is machine-readable JSON under:
+
+`docs/governance/provider-assignments/*.json`
+
+with exact minimum identity:
+
+```json
+{
+  "instrument": "repository-provider-assignment/v1",
+  "status": "ratified",
+  "tier": "<production|lab>",
+  "provider": "<exact provider id>",
+  "capability": "<exact repository data class>"
+}
+```
+
+The provider policy cites that prior act by `record_path`, `record_blob`, and
+`record_commit`. The guard must prove the pinned commit predates the assignment candidate,
+that the blob exists at that path in the pinned commit, that the record is ratified, and that
+its tier/provider/capability exactly match.
+
+A same-change authorization is self-authorization and is refused.
+
+This makes repository assignment a **two-act sequence**:
+
+```text
+Founder ratifies exact provider/data-class assignment record
+        ↓
+later provider-policy act cites the prior pinned record
+        ↓
+guard admits the assignment shape
+```
+
+Delisting alone is never assignment authority.
+
 ## 4. Development-lane authority
 
 Every external development call involving a repository data class requires pre-existing:

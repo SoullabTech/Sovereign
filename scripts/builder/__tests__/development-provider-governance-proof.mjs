@@ -105,6 +105,29 @@ check('HOLD-05 — naming a class is explicitly not a grant', () => {
   assert.match(providerCanon, /Adding a class to this vocabulary grants it to no provider/);
   assert.match(devCanon, /Adding a class to the vocabulary creates no permission for any provider/);
 });
+
+check('HOLD-06 — repository data-class set is exact and assignment authorization map starts empty', () => {
+  assert.deepEqual(
+    policy.development_boundary.repository_data_classes,
+    requiredRepositoryClasses,
+  );
+  assert.deepEqual(
+    policy.development_boundary.repository_assignment_authorizations,
+    {},
+  );
+});
+
+check('HOLD-07 — assignment requires a prior ratified pinned authorization record', () => {
+  assert.match(providerCanon, /prior-authorization gate/);
+  assert.match(providerCanon, /record_path/);
+  assert.match(providerCanon, /record_blob/);
+  assert.match(providerCanon, /record_commit/);
+  assert.match(providerCanon, /same-change .*authorization.*refused/i);
+  assert.match(devCanon, /separately ratified provider-assignment authorization record/);
+  assert.match(devCanon, /predates the assignment candidate/);
+  assert.match(devCanon, /Delisting alone is never assignment authority/);
+});
+
 console.log();
 console.log('=== authority separation ===');
 
