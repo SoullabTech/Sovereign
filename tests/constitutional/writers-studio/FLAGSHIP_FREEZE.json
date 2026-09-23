@@ -1,11 +1,57 @@
 {
-  "act": "FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS1 \u2014 FLAGSHIP ACCEPTANCE-SUITE FREEZE",
-  "freeze_base": "4dade9a68668e3f2148e481859e85b60b172462c",
+  "act": "FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS2 — FLAGSHIP ACCEPTANCE-SUITE FREEZE (R1-1C REVIEW NAVIGATION SUCCESSION)",
+  "freeze_base": "af3aac0e12b3968d6c314287c4e6305d3877ad75",
   "branch": "fix/flagship-ec1-contract-reconciliation-20260923",
-  "law": "A frozen file may not be edited or deleted. Additive law lives at its own address. Changing any frozen object requires a separately authorized act naming the object, why the standing law must change, the prior acceptance claim affected, and the replacing falsifier or law. A re-freeze updates BOTH this manifest AND the digest pinned in scripts/verify-flagship-freeze.ts.",
+  "law": "A frozen file may not be edited or deleted. Additive law lives at its own address. Changing any frozen object requires a separately authorized act naming the object, why the standing law must change, the prior acceptance claim affected, and the replacing falsifier or law. A re-freeze updates BOTH this manifest AND the digest pinned in scripts/verify-flagship-freeze.ts. FS2 succeeds FS1 under R1-1C: the FS1 manifest is preserved byte-for-byte at FLAGSHIP_FREEZE_FS1.json and pinned by digest in the verifier; every FS1 file is either re-frozen at its FS1 blob or named under supersedes.superseded with its FS1 blob, a successor law and a reason. History is never rewritten so that FS1 appears to have contained Review navigation.",
+  "supersedes": {
+    "act": "FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS1 — FLAGSHIP ACCEPTANCE-SUITE FREEZE",
+    "manifest_sha256": "d1fff27d630968ae5d65ee87186864c8c26c2b555443a99340fa9663cb435a68",
+    "freeze_base": "4dade9a68668e3f2148e481859e85b60b172462c",
+    "preserved_at": "tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS1.json",
+    "superseded": {
+      "tests/constitutional/writers-studio/flagship-c1b/laws.ts": {
+        "fs1_blob": "7c8a1a6f70fbfae88af27df37d1891c03e0c33eb",
+        "fs2_blob": "f54b63041541cdd35e9202ba9f2a6d693ff718e3",
+        "successor": "R1-1C-L1-successor-navigation",
+        "reason": "C1B-L5 (buttons === 0 && anchors === 0) and C1B-L6 (exactly two orientation entries, all data-nav=\"write\") pinned the pre-Review-navigation shell. Both now assert the successor set (Write · Review on two surfaces; every control carries a lawful action) and read their predecessor text from the FS1 base blob every run. The reason each law existed survives; the pre-Review fact is witnessed, not deleted."
+      },
+      "tests/constitutional/writers-studio/flagship-c1b/candidates.tsx": {
+        "fs1_blob": "5f6fcec102ef60943a0851df1d0d8dea3d34e81f",
+        "fs2_blob": "645bc5d04469a503650a7500cb12a7f94d486101",
+        "successor": "R1-1C-L1-successor-navigation",
+        "reason": "D1 (static flagship manuscript) was authored under the predecessor regime and renders the predecessor Write-only shell verbatim; under the successor C1B-L6 it now also fails L6. That collateral is CLASSIFIED as irreducible (rewriting the historical candidate is not done). No candidate, named kill or law changed."
+      },
+      "tests/constitutional/writers-studio/flagship-c1c1/laws.ts": {
+        "fs1_blob": "254232773958abbbc65f6f8e377b47f1ca61483b",
+        "fs2_blob": "697aa8fc5226177d80cb2ba832209d573a1226df",
+        "successor": "R1-1C-L12-c1b-succession-explicit",
+        "reason": "C1C1-L14 (authority-untouched) also pinned app/writers-studio/flagship/StudioChrome.tsx, the shell — composition, not authority (C0). R1-1C lawfully gave the shell navigation actions; StudioChrome leaves the standing pin (IR1 precedent, option B; never re-pinned to a newer blob) and the predecessor pin is witnessed from the FS1 base blob every run. Every authority file stays pinned."
+      }
+    },
+    "historical_witness": {
+      "scripts/witness/flagship/c1b-live-write-walk.ts": "Frozen bytes unchanged (FS1 blob). Its check F-8 asserts the predecessor navigation set (two orientation entries, zero buttons); against the post-R1-1C live host that check reports the predecessor state and is historical evidence of the C1B state, superseded at runtime by R1-1C W1/W7 in r1-1c-live-navigation-walk.ts.",
+      "docs/design/contracts/screenshots/flagship-b2/*__mobile-390.png": "Six controlled mobile captures changed under R1-1C because flagship.css's mobile-nav display rule was reordered to follow its base rule (a pre-existing source-order defect; the mobile orientation surface had never rendered visibly). render.tsx is unchanged and its mechanical checks and witness.json are unchanged."
+    }
+  },
   "frozen": {
     "scripts/typecheck-ws-flagship-c1a.mjs": {
       "blob": "34d5d3b2f7dbb54a8e8e42103e496bc6419fd8ba",
+      "class": "typecheck instrument"
+    },
+    "scripts/typecheck-ws-flagship-r1-1a.mjs": {
+      "blob": "1e3627534b79bae078f9445e3ebf829451af532c",
+      "class": "typecheck instrument"
+    },
+    "scripts/typecheck-ws-flagship-r1-1b.mjs": {
+      "blob": "b03b0da581cadbee81edc20e44f9bfed42225d19",
+      "class": "typecheck instrument"
+    },
+    "scripts/typecheck-ws-flagship-r1-1c.mjs": {
+      "blob": "8576d071a8d00a6324a9b9ae57921dd0c326e4fc",
+      "class": "typecheck instrument"
+    },
+    "scripts/typecheck-ws-flagship-r1-readonly.mjs": {
+      "blob": "062454b5b3e56f696ee395173c30c115599075e5",
       "class": "typecheck instrument"
     },
     "scripts/witness/flagship/c1b-live-write-walk.ts": {
@@ -28,8 +74,24 @@
       "blob": "ff22872df547ddeb8dafd06c361fa7ce7a553ff5",
       "class": "fixture (mechanically required by the golden)"
     },
+    "scripts/witness/flagship/r1-1b-live-review-walk.ts": {
+      "blob": "7cfef32a0f354008e31bec4272616077b2d831d4",
+      "class": "witness implementation"
+    },
+    "scripts/witness/flagship/r1-1b-provider-counter.ts": {
+      "blob": "a29c65bffb5126e3a6394f7a3de08a9ad99b29bf",
+      "class": "witness implementation"
+    },
+    "scripts/witness/flagship/r1-1c-live-navigation-walk.ts": {
+      "blob": "bda474fa0c043f9cb2b4d21e85d77be5f9c9233d",
+      "class": "witness implementation"
+    },
     "scripts/witness/flagship/render.tsx": {
       "blob": "633109da761ce149dadf9a02db7eea29b2f968cb",
+      "class": "witness implementation"
+    },
+    "tests/__integration__/flagship-r1-readonly/real-reader-witness.integration.test.ts": {
+      "blob": "dcc311671708fbad805b558ffbbf5b73f32e74cd",
       "class": "witness implementation"
     },
     "tests/constitutional/writers-studio/flagship-c1a/candidates.tsx": {
@@ -85,7 +147,7 @@
       "class": "acceptance reference (mechanically required)"
     },
     "tests/constitutional/writers-studio/flagship-c1b/candidates.tsx": {
-      "blob": "5f6fcec102ef60943a0851df1d0d8dea3d34e81f",
+      "blob": "645bc5d04469a503650a7500cb12a7f94d486101",
       "class": "defeat candidate registry"
     },
     "tests/constitutional/writers-studio/flagship-c1b/candidates/D2_SecondSessionHost.tsx": {
@@ -93,7 +155,7 @@
       "class": "defeat candidate"
     },
     "tests/constitutional/writers-studio/flagship-c1b/laws.ts": {
-      "blob": "7c8a1a6f70fbfae88af27df37d1891c03e0c33eb",
+      "blob": "f54b63041541cdd35e9202ba9f2a6d693ff718e3",
       "class": "constitutional law"
     },
     "tests/constitutional/writers-studio/flagship-c1b/matrix.ts": {
@@ -113,11 +175,115 @@
       "class": "defeat candidate"
     },
     "tests/constitutional/writers-studio/flagship-c1c1/laws.ts": {
-      "blob": "254232773958abbbc65f6f8e377b47f1ca61483b",
+      "blob": "697aa8fc5226177d80cb2ba832209d573a1226df",
       "class": "constitutional law"
     },
     "tests/constitutional/writers-studio/flagship-c1c1/matrix.ts": {
       "blob": "a75ccaf9a987e544e512b220dd2b108ee2d4e9a9",
+      "class": "matrix runner"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1a/candidates.tsx": {
+      "blob": "fa468655d9ac17c51ff7fd518f002e09f464edcd",
+      "class": "defeat candidate registry"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1a/golden/7-review.html": {
+      "blob": "f5fcad39c6f6126f4dbe423f08cf4d1d5c74f20e",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1a/golden/7b-review-acknowledged.html": {
+      "blob": "e331400bc0330dd86f86a204594daea59fd9827c",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1a/golden/8-review-not-read.html": {
+      "blob": "95347e911e607a45d4e008c4a327a04e1da203e9",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1a/golden/9-review-nothing-noticed.html": {
+      "blob": "311108f5434d077daa41e3dde6258ef100f63742",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1a/laws.ts": {
+      "blob": "5f18ace69786153c6b3119a79fc58dd2d2d145c8",
+      "class": "constitutional law"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1a/matrix.ts": {
+      "blob": "fa202ea36d0a29c231142b32efb2fd863ffc24a3",
+      "class": "matrix runner"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1b/candidates.tsx": {
+      "blob": "d94850cfc74b8e5b464c7005b53e01be06012c13",
+      "class": "defeat candidate registry"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1b/candidates/D14_FixtureFallbackView.tsx": {
+      "blob": "df0a3593a46a03cb2d6578f8bf3126a58b5c4a6d",
+      "class": "defeat candidate"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1b/golden/write-held-editorial.html": {
+      "blob": "0bf8e28671af39a13f140e1967bab4d4bc7f476f",
+      "class": "accepted golden (historical custody — the pre-Review-navigation Write composition; R1-1B-L16 verifies it against 1fcf1ad0a)"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1b/golden/write-plain.html": {
+      "blob": "fde80769a605ebeec9adb5ad62894fd15ef209c3",
+      "class": "accepted golden (historical custody — the pre-Review-navigation Write composition; R1-1B-L16 verifies it against 1fcf1ad0a)"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1b/laws.ts": {
+      "blob": "21c8c0a62b578f431423eb650f96715c986562de",
+      "class": "constitutional law"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1b/matrix.ts": {
+      "blob": "9c48eb7a95dd1439a851f46842964bf091edbebd",
+      "class": "matrix runner"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1c/candidates.tsx": {
+      "blob": "c0df21dbc8974bdbc4a73b47330b220371e1a652",
+      "class": "defeat candidate registry"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1c/golden/nav-review-choose-empty.html": {
+      "blob": "bc164337c60567de87ff3b5384af53114052b8b4",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1c/golden/nav-review-choose.html": {
+      "blob": "ed65458fe14ba488108c4199cc8d595ac32579c6",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1c/golden/nav-write-held-editorial.html": {
+      "blob": "37d531c2a34464c5dc0381928e3bda98f7d1a351",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1c/golden/nav-write-plain.html": {
+      "blob": "9a58fa40026eb0069ab7a7b04a1ab305e8d516ce",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1c/golden/write-held-editorial.html": {
+      "blob": "6b2ce0eb071f3ca4c5449e0eb9d9c4f0fd7e6e45",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1c/golden/write-plain.html": {
+      "blob": "fa46b9e6a07422a4d963284094f69d12e3c18d3f",
+      "class": "accepted golden"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1c/laws.ts": {
+      "blob": "c7f2aef221f6a7e5c79cec2c177241846cf43290",
+      "class": "constitutional law"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-1c/matrix.ts": {
+      "blob": "38328b3b67183924cd8c442f3c60a1cb747042cc",
+      "class": "matrix runner"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-readonly/candidates.ts": {
+      "blob": "c6290a6903999e1e864f68b671d4ac002e31322a",
+      "class": "defeat candidate registry"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-readonly/fixtures.ts": {
+      "blob": "6a2540bdebc4a50900084e6b0cbc2382d70ac2d9",
+      "class": "acceptance reference (mechanically required)"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-readonly/laws.ts": {
+      "blob": "e038aaa0324073ab9c954ab596c20d8cd9dbfd58",
+      "class": "constitutional law"
+    },
+    "tests/constitutional/writers-studio/flagship-r1-readonly/matrix.ts": {
+      "blob": "0d6ff49cce26961ec3913f16aadfe0533095ea25",
       "class": "matrix runner"
     },
     "tests/constitutional/writers-studio/flagship/candidates.ts": {
@@ -228,6 +394,22 @@
       "blob": "2de5fb1d8d8476e61bd9198729321c5ca6c29e02",
       "class": "typecheck instrument"
     },
+    "tsconfig.ws-flagship-r1-1a.json": {
+      "blob": "01dbdd100e674dc645faf7fcb8ca8ca275c4a3c0",
+      "class": "typecheck instrument"
+    },
+    "tsconfig.ws-flagship-r1-1b.json": {
+      "blob": "6415a04f2a05aac9fc72572d784a63a377732dec",
+      "class": "typecheck instrument"
+    },
+    "tsconfig.ws-flagship-r1-1c.json": {
+      "blob": "9ed4fae8b236b767163d84a2d2996667961c0589",
+      "class": "typecheck instrument"
+    },
+    "tsconfig.ws-flagship-r1-readonly.json": {
+      "blob": "b5797f253d26df749a6ea40f2c2f028d046d7ab4",
+      "class": "typecheck instrument"
+    },
     "tsconfig.ws-flagship.json": {
       "blob": "12de839efbdab9b6ebbd85262b818e7af6f7c3ff",
       "class": "typecheck instrument"
@@ -237,6 +419,11 @@
     "tests/constitutional/writers-studio/flagship-c1a/captureGolden.tsx": "golden regeneration tool, not a law; running it rewrites the goldens, which the freeze then reports",
     "docs/design/contracts/screenshots/**": "generated captures and witness result files; byte identity is established by git status against the committed state, not by a law",
     "package.json": "named commands only; the whole file moves for unrelated reasons",
-    "scripts/verify-flagship-freeze.ts": "the verifier itself; it pins this manifest by digest, so manifest and verifier change together only in an authorized re-freeze"
+    "scripts/verify-flagship-freeze.ts": "the verifier itself; it pins this manifest by digest, so manifest and verifier change together only in an authorized re-freeze",
+    "tests/constitutional/writers-studio/flagship-r1-1a/captureGolden.tsx": "golden regeneration tool, not a law",
+    "tests/constitutional/writers-studio/flagship-r1-1b/captureWriteGolden.tsx": "golden regeneration tool, not a law",
+    "tests/constitutional/writers-studio/flagship-r1-1c/captureWriteGolden.tsx": "golden regeneration tool, not a law",
+    "tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS1.json": "the preserved FS1 manifest; pinned by SHA-256 in the verifier (succession custody), not by blob here",
+    "tests/constitutional/writers-studio/flagship-r1-1a/candidates/*.tsx": "the D6/D7 candidate SEAMS: R1-1A-L9 (frozen here) asserts that a subject's seam files lie outside the freeze, so freezing these would make its own candidates die on L9 as collateral; the registry that names them (candidates.tsx) IS frozen"
   }
 }
