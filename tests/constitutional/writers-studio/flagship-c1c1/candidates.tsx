@@ -139,19 +139,26 @@ const D11: Subject = { ...REFERENCE, name: 'C1C1-D11-async-submit-guard',
     };
   } };
 
-/* D12 · dirty-passage open — the revision is read and the passage opened before settlement */
+/* D12 · dirty-passage open — the revision is read and the passage opened before settlement.
+   IR2: mirrors the repaired reference everywhere else (emptiness predicate only; R1-2 backstop),
+   so it embodies ONLY its named defect. */
 const D12: Subject = { ...REFERENCE, name: 'C1C1-D12-open-before-settlement',
   commission: async (guard, held: DiscussHeld, ask, ports: DiscussPorts) => {
+    if (ask.trim().length === 0) return { ok: false, stage: 'reply', copy: DISCUSS_COPY.failed };
     if (!guard.acquire()) return { ok: false, stage: 'in_flight', copy: DISCUSS_COPY.busy };
     try {
       const posture = ports.readPosture();
       if (!posture.resolved) return { ok: false, stage: 'posture', copy: DISCUSS_COPY.postureUnresolved };
       if (posture.sanctuary) return { ok: false, stage: 'sanctuary', copy: DISCUSS_COPY.sanctuary };
+      /* THE DEFECT: no settlement — the revision is read and the passage opened on a possibly dirty section. */
       const revisionNumber = ports.session.currentRevisionId();
       const opened = await ports.openPassage(held.sectionId, { start: held.start, end: held.end }, revisionNumber, posture);
       if (!opened.ok) return { ok: false, stage: 'open', copy: DISCUSS_COPY.failed };
       const sent = await ports.sendTurn(opened.thread.threadId, held.sectionId, ask, posture, DISCUSS_SCOPE);
       if (!sent.ok) return { ok: false, stage: 'turn', copy: DISCUSS_COPY.failed };
+      if (sent.producedVersionId !== null || sent.thread.versions.length > 0) {
+        return { ok: false, stage: 'proposal', copy: DISCUSS_COPY.proposalWithheld };
+      }
       const reply = lastMaiaTurn(sent.thread.turns);
       return reply === null ? { ok: false, stage: 'reply', copy: DISCUSS_COPY.failed } : { ok: true, threadId: sent.thread.threadId, locusText: sent.thread.locusText, reply };
     } finally { guard.release(); }
@@ -225,10 +232,4 @@ export const CLASSIFIED: Record<string, readonly string[]> = {
   /* IRREDUCIBLE. A result identity that ignores the commissioning gesture ignores the passage
      that commissioned it; making D8 honour the exact passage would make it stop migrating. */
   'C1C1-D8-late-result-migrates': ['C1C1-L19-same-section-passage-change-detaches'],
-  /* ⚠️ INHERITED, ⛔ NOT IRREDUCIBLE — RAISED FOR FOUNDER RULING (R1). D12 was written as the
-     pre-R1 reference minus settlement, so it also carries that reference's two R1 defects
-     (no emptiness predicate → L17; no proposal backstop → L18). Narrowing it to embody only
-     its named error is a one-line edit, withheld because R1 forbade rewriting the accepted
-     thirteen. The matrix therefore reports this collateral as classified BY INHERITANCE. */
-  'C1C1-D12-open-before-settlement': ['C1C1-L17-member-bytes-preserved', 'C1C1-L18-unexpected-proposal-fails-closed'],
 };
