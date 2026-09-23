@@ -308,7 +308,7 @@ Each source is tagged with one or more of:
 
 - Class: ESTABLISHED_SOURCE
 - Contribution: stock–flow failure persists in highly educated subjects across presentation formats.
-- Relevance: the human null-fixture result: fluent, educated reasoners fail the simplest dynamics task.
+- Relevance: the human dynamics-misperception baseline: fluent, educated reasoners fail the simplest dynamics task. Not a null-organization experiment (S1R1 correction; see landscape §11.3, finding 2).
 
 ## K · Soft, critical and management systems
 
