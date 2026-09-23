@@ -186,7 +186,7 @@ Founder-run on the Studio against the SMB mount, read-only. Per file:
 |---|---|
 | 16 daily `maia_*` | **15 intact + complete · 1 truncated + incomplete (`maia_20260918_020002`, 75,497,472 B)** |
 | 2 monthly | intact + complete |
-| 7 weekly (`weekly_20260920` covered by the earlier `gzip -t` pass) | intact + complete |
+| 7 weekly (`weekly_20260920` = 348,913,338 B, byte-identical to `maia_20260920`) | intact + complete |
 
 The truncation did not propagate: the 18th was a Friday, so no weekly or monthly
 `cp` was taken from it. Sizes grow monotonically 335 → 349 MB across the
