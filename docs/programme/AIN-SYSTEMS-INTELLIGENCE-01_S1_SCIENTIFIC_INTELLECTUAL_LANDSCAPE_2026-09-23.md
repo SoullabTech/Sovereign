@@ -12,7 +12,7 @@
 
 **Date:** 2026-09-23
 **Status:** CANDIDATE · S1R1 REPAIRED AFTER FOUNDER INDEPENDENT REVIEW · ROUTED INDEPENDENT REVIEW OWED · NOT ADJUDICATED
-**Companion artifacts:** `…_S1_SOURCE_CORPUS_2026-09-23.md` (S01–S52) · `…_S1_CLAIM_LEDGER_2026-09-23.md` (CL-01…CL-31; CL-27 falsified and replaced by CL-27R; CL-30 withdrawn to a structural statement) · `…_S1_WORK_UNIT_2026-09-23.json`
+**Companion artifacts:** `…_S1_SOURCE_CORPUS_2026-09-23.md` (S01–S55) · `…_S1_CLAIM_LEDGER_2026-09-23.md` (CL-01…CL-31; CL-27 falsified and replaced by CL-27R; CL-30 withdrawn to a structural statement) · `…_S1_WORK_UNIT_2026-09-23.json`
 
 ---
 
@@ -54,7 +54,7 @@ Every substantive claim carries a class inherited from S0 §X.1: `ESTABLISHED_SO
 
 ## 1.4 Retrieval and its limits
 
-Bibliographic identity of all 52 sources was verified on 2026-09-23 against publisher, index and repository records. Content characterizations rest on the researcher's prior familiarity with the works, checked against those records and public abstracts. **Full-text re-reading was not performed in this act.** This is stated as a bound on the evidence, not as a formality: any characterization is a legitimate target for the independent review, and a corrected characterization is a repair to this package, never to S0.
+Bibliographic identity of all 55 admitted sources was verified on 2026-09-23 against publisher, index and repository records — S01–S52 during S1 and S53–S55 when admitted at S1R1. Content characterizations rest on the researcher's prior familiarity with the works, checked against those records and public abstracts. **Full-text re-reading was not performed in this act.** This is stated as a bound on the evidence, not as a formality: any characterization is a legitimate target for the independent review, and a corrected characterization is a repair to this package, never to S0.
 
 ## 1.5 What could not be done in this act
 
