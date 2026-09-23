@@ -112,6 +112,17 @@ the script over SSH. Nothing on the minisforum was changed.
    the NAS vs LAN) is not established and does not change the finding.
    **R1 must integrity-sweep every retained dump** (`gzip -t` + last line
    `PostgreSQL database dump complete`) because the failure class is silent.
+   **Exact evidence (read 2026-09-23):** NAS file size **75,497,472 B = 72 × 1 MiB**,
+   the mount's `bsize` — writeback stopped on a block boundary; mtime
+   02:00:57.9, one second after the script logged `(333M)` from the page cache.
+   The local duplicate job's dump from the same minute
+   (`database/backups/maia_backup_20260918_020002.sql.gz`) is 348,249,742 B and
+   `gzip -t` clean — **the day was saved by the job item 3 calls debris.**
+   **Sweep result:** every retained dump on the NAS is gzip-intact except the
+   18th. ⚠️ The sweep's first version reported `tail=INCOMPLETE` for **all**
+   files — the instrument's defect (`tail -1` returned pg_dump's trailing blank
+   line), not the backups'; corrected to `tail -3 | grep`. Recorded because an
+   instrument that fails on the healthy case is the C21 class again.
 3. **Two dump jobs fire at the same minute.** The user crontab also runs the
    repo's `scripts/backup-postgres.sh` at `0 2 * * *` into
    `~/MAIA-SOVEREIGN/database/backups/` on the minisforum's **own disk**
@@ -170,9 +181,12 @@ are the kind of thing that later reads as a mystery:
 6. **`maia-backup` account** is "Password pending" and IS the minisforum's CIFS
    identity (§3a-5). Confirm its DSM state; if a change is forced, change it and
    `/etc/cifs-credentials-ds225` in one act, then `mount -o remount /mnt/ds225`.
-6a. **Consolidate the dump jobs** (§3a-3/4): one job, one destination, one health
-   check reading it. The NAS job is the keeper; the local user-cron job and the
-   `~/maia-backups` path in `health-check.sh` are the debris.
+6a. **Reconcile the dump jobs** (§3a-3/4). Earlier wording called the local
+   user-cron job debris; §3a-2 shows it is the only copy of 18 Sep. The question
+   is now whether it becomes a deliberately staggered second tier (different
+   minute, different medium, its own integrity check) or is retired once the
+   NAS job verifies its own writes. `health-check.sh`'s `~/maia-backups` path is
+   still wrong either way.
 7. **Ollama model store** (75 GB on the T7, `/Volumes/T7 Shield/...`) has no NAS
    twin; `MAIA/Models` holds a different 63 GB set. Candidate second mirror.
 8. **LaCie** (3.4 TB, mounted) — uninventoried. **Time Machine** target —
