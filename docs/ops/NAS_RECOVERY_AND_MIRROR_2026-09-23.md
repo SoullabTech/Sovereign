@@ -198,8 +198,40 @@ line, and on macOS `zcat` reads only `.Z` files and silently produced nothing on
 `.gz`. Each made every healthy file read INCOMPLETE. The version above
 (`gzip -cd … | tail -n 8`, `PIPESTATUS`) is the instrument of record.
 
-**Witness 2 (restore into a disposable, `scripts/ops/nas-restore-witness.sh`)**:
-pending at the time of writing.
+### 3c. NAS-BACKUP-01 / R1 — witness 2: restore into a disposable (2026-09-23)
+
+Founder-run on the Studio, `scripts/ops/nas-restore-witness.sh`, report
+`logs/restore-witness-20260923T141322Z.txt` (Studio-local). The restore went
+through `scripts/restore-governed.sh` (R20 governed lane, `RESTORE_DB_URL`
+against the disposable), ⛔ not a raw `psql`.
+
+| | |
+|---|---|
+| Dump | `maia_20260923_020001.sql.gz`, 349,343,168 B, SHA-256 `32cb5bc6…ce5fed` (NAS and local copy identical) |
+| Target | `pgvector/pgvector:pg16`, fresh container, **no published ports**, destroyed on exit |
+| Restore | exit 0, **29 s**; R20 sweep: 0 rows refused resurrection |
+| Extensions | `pgcrypto`, `plpgsql`, `vector` |
+| Public tables | 668 |
+| Row counts (counts only) | `members` 94 · `maia_turns` 175,035 · `developmental_memories` 2,235 · `schema_migrations` 548 |
+| Verdict | **PASS** |
+
+First restore test in the life of this backup job. Standing after R1:
+**witness 1 PASS (24/25 intact; the 18th is the known truncation) · witness 2
+PASS (latest dump restores and looks like MAIA's schema)**. ⛔ R1 changed
+nothing: no script, cron, retention, mount option, credential, DSM setting or
+duplicate-job decision. Those are R2's questions, each its own act. ⚠️ The
+disposable engine hang before this run was the Studio's Docker Desktop socket
+left stale by the reboot (`~/.docker/run/docker.sock` dated 18 Sep); fixed by
+killing the backend, removing the socket and relaunching — unrelated to the
+NAS or the dump.
+
+**Note on R2 (not opened):** the two silent-failure classes R1 established —
+a write that reports success before it reaches the disk, and a manifest that
+copies that report — are both closed by the same shape: write to a temp name,
+`fsync`, re-read from the NAS (`gzip -t` + closing marker + size), then rename
+into place, and record the *verified* size. That is the repair to propose,
+against the verbatim copy in `scripts/ops/minisforum-maia-backup.sh`, ⛔ after
+a founder act.
 
 ## 5. Open items (none authorized here; each needs its own act)
 
