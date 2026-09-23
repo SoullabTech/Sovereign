@@ -2,7 +2,7 @@
 ## Fail-Closed Canonical Admission — Enforcement Architecture Design
 
 **Date:** 2026-09-23 · **Acts:** founder authorization `CANONICAL-ADMISSION-ENFORCEMENT-01 / E1`
-· founder adjudication + reauthorization `E1R1`
+· founder adjudication + reauthorization `E1R1` · founder adjudication + reauthorization `E1R2`
 **Canonical base:** `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f`
 **Disposition:** ⭐ **ARCHITECTURE B ACCEPTED · SECOND-CUSTODIAN RULING (a) RECORDED** ·
 ⛔ **DESIGN ONLY — NO REPOSITORY SETTING MUTATED · NO WORKFLOW ADDED · NO PROTECTION CHANGED ·
@@ -35,6 +35,33 @@ ruling    §6.3  auto-merge stated as ALL merge requirements
 ruling    §6.4  org-level preferred · entitlement ⛔ not asserted
 ruling    §7.3  custodian record is a governed human assertion
 ```
+
+### E1R2 — what this revision changed
+
+⚠️ **One factual claim in E1R1 was false and is repaired.** `E1R2` is bounded to it.
+
+```text
+repair 5  §1.2  the Class-A classifier EXCLUSIVITY claim is withdrawn
+                auto-labeler.yml also detects Class A and applies
+                class-a · requires-founder · requires-council
+          §1.2  three layers distinguished:
+                detection/labeling → constitutional validation → required admission gate
+          §1.2  the actual finding preserved and sharpened: Class A IS detected today;
+                what is missing is a fail-closed canonical-admission prerequisite
+          §6.1  why LAYER 2 is the layer that becomes required, and why a label
+                is not a conclusion
+```
+
+⭐ The claim was wrong in a way worth recording rather than silently patching: it **understated
+the repository's existing capability** while overstating one workflow's role. The repaired
+finding is stronger, because *“Class A is already detected twice and still does not bind
+admission”* is a sharper statement of the defect than *“nothing determines Class A but one
+unrequired check.”*
+
+⚠️ The defect in my own method is the reportable part: I flagged that sentence as a scope
+caveat in the E1R1 handover **without running the search that would have falsified it**. Naming
+a claim as a risk is not checking it. The exhaustive grep over `.github/**` and `scripts/**`
+took one command and should have preceded the claim, not followed the adjudication.
 
 ---
 
@@ -80,13 +107,50 @@ check-diagrams                        ← .github/workflows/check-diagrams.yml
 build                                 ← .github/workflows/docker-build.yml
 ```
 
-⭐⭐ **FINDING E1-A — the Class A determination is not itself a required context.**
-`covenant-gates` is the only mechanism in the repository that establishes *that a pull request
-is Class A*. It is not in the required set. Neither are the `canonical-pr-quality` jobs
-(TypeScript no-regression gate · JARVIS native patch-admission falsifiers · empty-database
-reconstruction). **An invariant conditioned on Class A cannot be enforced while the fact it is
-conditioned on is advisory.** Any architecture below that gates Class A must make
-`covenant-gates` required first, or the condition is vacuous.
+⭐⭐ **FINDING E1-A — Class A can be detected today, but it is not a fail-closed prerequisite
+of canonical admission.**
+
+⚠️ **Repaired at `E1R2`.** An earlier wording called `covenant-gates` *the only mechanism in the
+repository that establishes that a pull request is Class A*. **That was false**, and the
+repository contradicts it: `.github/workflows/auto-labeler.yml` independently detects Class A
+paths and applies `class-a`, `requires-founder` and `requires-council`. An exhaustive search of
+`.github/**` and `scripts/**` finds **exactly two** Class A determiners, and they occupy
+different layers:
+
+```text
+LAYER 1   DETECTION / LABELING          auto-labeler.yml
+          path match over classAPaths → applies class-a · requires-founder · requires-council
+          writes labels · asserts no conclusion · gates nothing
+          triggers: opened · synchronize
+
+LAYER 2   CONSTITUTIONAL VALIDATION     covenant-gates.yml
+          reads classification from PR-body checkbox OR label
+          validates obligations; fails a sacred-path PR not classified Class A
+          sets a check conclusion · triggers: opened · edited · synchronize ·
+          reopened · ready_for_review · labeled · unlabeled
+
+LAYER 3   REQUIRED ADMISSION GATE       branch protection required contexts
+          ⛔ NEITHER LAYER 1 NOR LAYER 2 IS IN THE REQUIRED SET
+```
+
+⭐ The two layers are coupled, not redundant: Layer 1's label is one of the two inputs Layer 2
+reads, so detection feeds validation. **Neither is admission.**
+
+⛔ Also absent from the required set: the `canonical-pr-quality` jobs (TypeScript no-regression
+gate · JARVIS native patch-admission falsifiers · empty-database reconstruction).
+
+⭐⭐ **The durable finding, stated exactly:** Class A **is detected** in this repository today,
+by two mechanisms, automatically and on every pull request. What does not exist is a
+**fail-closed canonical-admission prerequisite** — nothing in the merge gate is obliged to
+consult either result. **An invariant conditioned on Class A cannot be enforced while the fact
+it is conditioned on reaches admission only advisorily.** Any architecture below that gates
+Class A must make a Class A determination *required* first, or the condition is vacuous.
+
+⚠️ Two observations that follow, ⛔ neither a lane and ⛔ neither repaired here: the Class A
+path list is **duplicated** in both workflows (`classAPaths` / `sacredPaths`) and can drift;
+and Layer 1 does not re-run on `labeled`/`unlabeled`, so a label removed after the fact is not
+re-derived — Layer 2's coherence check is what catches that case, and it is not required
+either.
 
 ### 1.3 Prior art already in the repository
 
@@ -311,9 +375,16 @@ as they are establishable.
 
 ### 6.1 `covenant-gates` becomes required
 
-It already computes the classification. Making it required is what turns "this PR is Class A"
-from an advisory comment into a fact the next gate may depend on. ⛔ No change to the workflow
-itself is proposed here.
+⭐ **Layer 2 is the one that becomes required, and the layer distinction is the reason.**
+`auto-labeler` (Layer 1) *detects* and writes labels; it asserts no conclusion and cannot be a
+required context. `covenant-gates` (Layer 2) already reads that label, validates the
+constitutional obligations and **sets a check conclusion** — so making it required is what
+turns *“this PR is Class A”* from an advisory comment into a fact the next gate may depend on.
+
+⛔ No change to either workflow is proposed here. ⛔ Requiring Layer 2 does not make Layer 1
+authoritative, and `canonical-custody` must resolve the class from the same source Layer 2
+reads rather than trusting a label as such — a label is mutable by hand and is not a
+conclusion.
 
 ### 6.2 `canonical-custody` — the new check implementing invariant 3
 
@@ -565,14 +636,17 @@ E0                          CLOSED · outcome D PRESERVED
                             (no bypass marker on the surfaces available to E0;
                              other historical/audit evidence epistemically open)
 E1                          SUBSTANTIVELY PASS · ⭐ ARCHITECTURE B ACCEPTED
-E1R1                        claim precision + custodian ruling incorporated (this act)
+E1R1                        claim precision + custodian ruling incorporated
+E1R2                        Class-A classification claim repaired (this act)
 
 founder second-key ruling   ⭐ OPTION (a) — genuine second human custodian
 until constituted           self-authored Class A = FAIL CLOSED  (interim (c))
 break-glass                 ⛔ NOT a second key · later separate emergency law only
                             ⛔ bypass_mode: exempt prohibited unless separately adjudicated
 
-finding E1-A                covenant-gates not required — Class A determination advisory
+finding E1-A                Class A IS detected today by TWO mechanisms
+                            (auto-labeler · covenant-gates) — ⛔ neither is a
+                            required context, so admission consults neither
 CODEOWNERS state            Class A → @Soullab only · current-state deadlock NAMED
                             ⛔ not repaired · ⛔ no CODEOWNERS change authorized
 second human custodian      ⛔ DOES NOT EXIST · SoullabCovenant ⛔ NOT ASSUMED to satisfy it
