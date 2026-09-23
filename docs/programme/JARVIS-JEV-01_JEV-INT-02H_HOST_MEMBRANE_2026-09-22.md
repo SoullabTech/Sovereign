@@ -1,8 +1,8 @@
 # JARVIS-JEV-01 · JEV-INT-02H
 ## Host-Side Judgment Membrane Witness
 
-**Date:** 2026-09-22  
-**Base canonical:** `b23ae2d7fd31ee56841af3930b31658ab286a2a3`  
+**Date:** 2026-09-22
+**Reconciled canonical:** `19be6b6ec7c8b4ddabbbc2a9d3d2ebce48fa2dc8`
 **Disposition:** IMPLEMENTED AS HOST-ONLY CANDIDATE · NOT WIRED TO TRANSPORT
 
 ## 1. Objective
