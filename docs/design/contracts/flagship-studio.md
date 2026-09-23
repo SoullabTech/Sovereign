@@ -14,6 +14,9 @@ surfaces:
   - app/writers-studio/rebuild/discussAct.ts
   # R1-1C, 2026-09-23 — Review navigation succession: the pure navigation law and the reading chooser.
   - app/writers-studio/rebuild/reviewNavigation.ts
+  # R1-2, 2026-09-23 — exact Review → manuscript section return as data, and the live read-only Review mount (R1-1B) it navigates from.
+  - app/writers-studio/rebuild/reviewReturn.ts
+  - app/writers-studio/rebuild/LiveReviewView.tsx
   - app/writers-studio/rebuild/ReviewChooser.tsx
   - app/writers-studio/rebuild/page.tsx
 change_class: experiential

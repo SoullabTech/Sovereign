@@ -84,6 +84,9 @@ const FS1_MANIFEST_SHA256 = 'd1fff27d630968ae5d65ee87186864c8c26c2b555443a99340f
 const C1B_LAWS = 'tests/constitutional/writers-studio/flagship-c1b/laws.ts';
 const MANIFEST = 'tests/constitutional/writers-studio/FLAGSHIP_FREEZE.json';
 const FS1_PRESERVED = 'tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS1.json';
+/* R1-2 SUCCESSION — FS3 supersedes FS2; FS2 is preserved at its own address and pinned by its FS2 digest. */
+const FS2_MANIFEST_SHA256 = 'd7421b38c1fdc260feb7d7155819976dbf71f12064c87812efa0e4332715618f';
+const FS2_PRESERVED = 'tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS2.json';
 const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 const law = (id: string, body: () => LawResult): LawResult => { try { return body(); } catch (err) { return { id, ok: false, detail: `threw: ${err instanceof Error ? err.message : String(err)}` }; } };
 const alaw = async (id: string, body: () => Promise<LawResult>): Promise<LawResult> => { try { return await body(); } catch (err) { return { id, ok: false, detail: `threw: ${err instanceof Error ? err.message : String(err)}` }; } };
@@ -296,8 +299,14 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
     return must('R1-1C-L14-direct-link-bypasses-chooser', e.kind === 'review' && e.readingId === 'rd-b' && mode === 'review' && noChooser, `entry=${e.kind} mode=${mode} readyWithoutChooser=${noChooser}`);
   }));
   out.push(law('R1-1C-L15-refreeze-carries-governing-laws', () => {
+    /* R1-2 SUCCESSION (founder-authorized FS2 → FS3 governed re-freeze). PREDECESSOR, verified below at git show e9f7ffcb5:…,
+       pinned the FS2 SHAPE — `supersedes.manifest_sha256 === FS1` and `/FS2/.test(act)` — which, read literally, forbids any
+       successor freeze at all. The reason the law existed survives unchanged: the freeze carries every governing law, and the
+       manifest it succeeds is preserved byte-for-byte and custodied. SUCCESSOR: the manifest is FS3; it supersedes FS2 by the
+       FS2 digest at its preserved address; FS1 stays preserved at its FS1 digest (the chain is not shortened); every FS2 file
+       is re-frozen at its FS2 blob or named superseded with its FS2 blob and a successor law; the R1-2 laws are frozen too. */
     const m = (s.manifest ?? (existsSync(join(ROOT, MANIFEST)) ? JSON.parse(readFileSync(join(ROOT, MANIFEST), 'utf8')) : null)) as
-      { act?: string; frozen?: Record<string, { blob: string }>; supersedes?: { manifest_sha256?: string; preserved_at?: string; superseded?: Record<string, { fs1_blob?: string; successor?: string }> } } | null;
+      { act?: string; frozen?: Record<string, { blob: string }>; supersedes?: { manifest_sha256?: string; preserved_at?: string; superseded?: Record<string, { fs2_blob?: string; successor?: string }> } } | null;
     if (!m || !m.frozen) return must('R1-1C-L15-refreeze-carries-governing-laws', false, 'no freeze manifest');
     const frozen = m.frozen;
     const governing = [
@@ -305,17 +314,21 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
       'tests/constitutional/writers-studio/flagship-r1-1a/laws.ts', 'tests/constitutional/writers-studio/flagship-r1-1a/candidates.tsx', 'tests/constitutional/writers-studio/flagship-r1-1a/matrix.ts',
       'tests/constitutional/writers-studio/flagship-r1-1b/laws.ts', 'tests/constitutional/writers-studio/flagship-r1-1b/candidates.tsx', 'tests/constitutional/writers-studio/flagship-r1-1b/matrix.ts',
       'tests/constitutional/writers-studio/flagship-r1-1c/laws.ts', 'tests/constitutional/writers-studio/flagship-r1-1c/candidates.tsx', 'tests/constitutional/writers-studio/flagship-r1-1c/matrix.ts',
+      'tests/constitutional/writers-studio/flagship-r1-2/laws.ts', 'tests/constitutional/writers-studio/flagship-r1-2/candidates.tsx', 'tests/constitutional/writers-studio/flagship-r1-2/matrix.ts',
       C1B_LAWS,
     ];
     const missing = governing.filter((p) => !frozen[p] || !/^[0-9a-f]{40}$/.test(frozen[p]!.blob));
-    const succession = /FS2/.test(m.act ?? '') && m.supersedes?.manifest_sha256 === FS1_MANIFEST_SHA256 && m.supersedes.preserved_at === FS1_PRESERVED;
+    const succession = /FS3/.test(m.act ?? '') && m.supersedes?.manifest_sha256 === FS2_MANIFEST_SHA256 && m.supersedes.preserved_at === FS2_PRESERVED;
+    const fs2Preserved = existsSync(join(ROOT, FS2_PRESERVED)) && createHash('sha256').update(readFileSync(join(ROOT, FS2_PRESERVED))).digest('hex') === FS2_MANIFEST_SHA256;
     const fs1Preserved = existsSync(join(ROOT, FS1_PRESERVED)) && createHash('sha256').update(readFileSync(join(ROOT, FS1_PRESERVED))).digest('hex') === FS1_MANIFEST_SHA256;
-    const fs1 = fs1Preserved ? (JSON.parse(readFileSync(join(ROOT, FS1_PRESERVED), 'utf8')) as { frozen: Record<string, { blob: string }> }).frozen : {};
-    const custody = Object.entries(fs1).filter(([p, e]) => !(frozen[p]?.blob === e.blob || (m.supersedes?.superseded?.[p]?.fs1_blob === e.blob && !!m.supersedes.superseded[p]?.successor)));
+    const fs2 = fs2Preserved ? (JSON.parse(readFileSync(join(ROOT, FS2_PRESERVED), 'utf8')) as { frozen: Record<string, { blob: string }> }).frozen : {};
+    const custody = Object.entries(fs2).filter(([p, e]) => !(frozen[p]?.blob === e.blob || (m.supersedes?.superseded?.[p]?.fs2_blob === e.blob && !!m.supersedes.superseded[p]?.successor)));
     const verifier = existsSync(join(ROOT, 'scripts/verify-flagship-freeze.ts')) ? readFileSync(join(ROOT, 'scripts/verify-flagship-freeze.ts'), 'utf8') : '';
     const pinned = !s.manifest ? verifier.includes(createHash('sha256').update(readFileSync(join(ROOT, MANIFEST))).digest('hex')) : true;
-    return must('R1-1C-L15-refreeze-carries-governing-laws', missing.length === 0 && succession && fs1Preserved && custody.length === 0 && pinned,
-      `missing=${missing.length ? missing.join(',') : 'none'} succession=${succession} fs1Preserved=${fs1Preserved} unaccountedFS1=${custody.map(([p]) => p).join(',') || 'none'} verifierPinned=${pinned}`);
+    const predecessor = execSync('git show e9f7ffcb5:tests/constitutional/writers-studio/flagship-r1-1c/laws.ts', { cwd: ROOT, encoding: 'utf8' })
+      .includes("const succession = /FS2/.test(m.act ?? '') && m.supersedes?.manifest_sha256 === FS1_MANIFEST_SHA256");
+    return must('R1-1C-L15-refreeze-carries-governing-laws', missing.length === 0 && succession && fs2Preserved && fs1Preserved && custody.length === 0 && pinned && predecessor,
+      `missing=${missing.length ? missing.join(',') : 'none'} succession=${succession} fs2Preserved=${fs2Preserved} fs1Preserved=${fs1Preserved} unaccountedFS2=${custody.map(([p]) => p).join(',') || 'none'} verifierPinned=${pinned} predecessorWitnessedAtR11C=${predecessor}`);
   }));
   out.push(law('R1-1C-L16-successor-write-goldens', () => {
     const w = nav('write'); const c = nav('review-choose'); if (!w || !c) return unmounted('R1-1C-L16-successor-write-goldens');

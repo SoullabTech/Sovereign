@@ -1,50 +1,36 @@
 {
-  "act": "FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS3 — FLAGSHIP ACCEPTANCE-SUITE FREEZE (R1-2 EXACT REVIEW → MANUSCRIPT SECTION NAVIGATION SUCCESSION)",
-  "freeze_base": "464bb5d43fe68bd2eea1e59f19d1b27001c7af31",
+  "act": "FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS2 — FLAGSHIP ACCEPTANCE-SUITE FREEZE (R1-1C REVIEW NAVIGATION SUCCESSION)",
+  "freeze_base": "af3aac0e12b3968d6c314287c4e6305d3877ad75",
   "branch": "fix/flagship-ec1-contract-reconciliation-20260923",
-  "law": "A frozen file may not be edited or deleted. Additive law lives at its own address. Changing any frozen object requires a separately authorized act naming the object, why the standing law must change, the prior acceptance claim affected, and the replacing falsifier or law. A re-freeze updates BOTH this manifest AND the digest pinned in scripts/verify-flagship-freeze.ts. FS2 succeeds FS1 under R1-1C: the FS1 manifest is preserved byte-for-byte at FLAGSHIP_FREEZE_FS1.json and pinned by digest in the verifier; every FS1 file is either re-frozen at its FS1 blob or named under supersedes.superseded with its FS1 blob, a successor law and a reason. History is never rewritten so that FS1 appears to have contained Review navigation. FS3 succeeds FS2 under R1-2: the FS2 manifest is preserved byte-for-byte at FLAGSHIP_FREEZE_FS2.json and pinned by digest in the verifier; every FS2 file is either re-frozen at its FS2 blob or named under supersedes.superseded with its FS2 blob, a successor law and a reason; FS1 stays preserved at its own digest and the chain is never shortened. History is never rewritten so that FS2 appears to have contained Review → section return.",
+  "law": "A frozen file may not be edited or deleted. Additive law lives at its own address. Changing any frozen object requires a separately authorized act naming the object, why the standing law must change, the prior acceptance claim affected, and the replacing falsifier or law. A re-freeze updates BOTH this manifest AND the digest pinned in scripts/verify-flagship-freeze.ts. FS2 succeeds FS1 under R1-1C: the FS1 manifest is preserved byte-for-byte at FLAGSHIP_FREEZE_FS1.json and pinned by digest in the verifier; every FS1 file is either re-frozen at its FS1 blob or named under supersedes.superseded with its FS1 blob, a successor law and a reason. History is never rewritten so that FS1 appears to have contained Review navigation.",
   "supersedes": {
-    "act": "FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS2 — FLAGSHIP ACCEPTANCE-SUITE FREEZE (R1-1C REVIEW NAVIGATION SUCCESSION)",
-    "manifest_sha256": "d7421b38c1fdc260feb7d7155819976dbf71f12064c87812efa0e4332715618f",
-    "freeze_base": "af3aac0e12b3968d6c314287c4e6305d3877ad75",
-    "preserved_at": "tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS2.json",
+    "act": "FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS1 — FLAGSHIP ACCEPTANCE-SUITE FREEZE",
+    "manifest_sha256": "d1fff27d630968ae5d65ee87186864c8c26c2b555443a99340fa9663cb435a68",
+    "freeze_base": "4dade9a68668e3f2148e481859e85b60b172462c",
+    "preserved_at": "tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS1.json",
     "superseded": {
-      "tests/constitutional/writers-studio/flagship-r1-1b/laws.ts": {
-        "fs2_blob": "21c8c0a62b578f431423eb650f96715c986562de",
-        "fs3_blob": "20e02927efb9755ece552d453f1670a4cf4bbd7b",
-        "successor": "R1-2-L1-only-navigate-moved",
-        "reason": "R1-1B-L18 (read-only-review-has-no-controls) pinned the pre-navigation Review: every capability false, so its FORBIDDEN_CONTROLS also named the return controls (data-return-to). SUCCESSOR: non-navigation controls stay forbidden and are re-asserted; return controls are governed by R1-2 (locations over exact durable section addresses), and L18 now asserts returnControls === 0 when no navigation is supplied while reading its predecessor text from the R1-1C head blob (git show e9f7ffcb5:…) every run. The reason the law existed survives; the pre-navigation fact is witnessed, not deleted."
+      "tests/constitutional/writers-studio/flagship-c1b/laws.ts": {
+        "fs1_blob": "7c8a1a6f70fbfae88af27df37d1891c03e0c33eb",
+        "fs2_blob": "f54b63041541cdd35e9202ba9f2a6d693ff718e3",
+        "successor": "R1-1C-L1-successor-navigation",
+        "reason": "C1B-L5 (buttons === 0 && anchors === 0) and C1B-L6 (exactly two orientation entries, all data-nav=\"write\") pinned the pre-Review-navigation shell. Both now assert the successor set (Write · Review on two surfaces; every control carries a lawful action) and read their predecessor text from the FS1 base blob every run. The reason each law existed survives; the pre-Review fact is witnessed, not deleted."
       },
-      "tests/constitutional/writers-studio/flagship-r1-1c/laws.ts": {
-        "fs2_blob": "c7f2aef221f6a7e5c79cec2c177241846cf43290",
-        "fs3_blob": "c6db6f40d65932fab13d16c25e18a1a71dbe95c4",
-        "successor": "R1-2-L1-only-navigate-moved",
-        "reason": "Two laws in this file pinned the predecessor shape. R1-1C-L11 (read-only-capabilities-unchanged) asserted every read-only capability false; it now asserts navigate === true and every other capability false, reading its predecessor from git show e9f7ffcb5:… every run. R1-1C-L15 (refreeze-carries-governing-laws) asserted the FS2 SHAPE literally (supersedes.manifest_sha256 === FS1, /FS2/.test(act)), which read literally forbids any successor freeze; it now asserts FS3 supersedes FS2 by digest at its preserved address, FS1 stays preserved at its digest (chain unshortened), every FS2 file re-frozen or superseded, the R1-2 laws frozen, the verifier pinned — and reads its predecessor text from e9f7ffcb5 every run. FORBIDDEN_CONTROLS drops only the data-return-to token."
+      "tests/constitutional/writers-studio/flagship-c1b/candidates.tsx": {
+        "fs1_blob": "5f6fcec102ef60943a0851df1d0d8dea3d34e81f",
+        "fs2_blob": "645bc5d04469a503650a7500cb12a7f94d486101",
+        "successor": "R1-1C-L1-successor-navigation",
+        "reason": "D1 (static flagship manuscript) was authored under the predecessor regime and renders the predecessor Write-only shell verbatim; under the successor C1B-L6 it now also fails L6. That collateral is CLASSIFIED as irreducible (rewriting the historical candidate is not done). No candidate, named kill or law changed."
       },
-      "scripts/witness/flagship/r1-1b-live-review-walk.ts": {
-        "fs2_blob": "7cfef32a0f354008e31bec4272616077b2d831d4",
-        "fs3_blob": "d6792e2ad3b2224683096be05d8a444d3cbef2b8",
-        "successor": "R1-2 live return walk (scripts/witness/flagship/r1-2-live-return-walk.ts)",
-        "reason": "Its FORBIDDEN line named data-return-to among the controls the live read-only Review must not carry; under R1-2 the exact-address return anchor is lawful. Only that token is removed; every other forbidden control and every check are unchanged. The walk still witnesses the R1-1B mount law."
-      },
-      "scripts/witness/flagship/r1-1c-live-navigation-walk.ts": {
-        "fs2_blob": "bda474fa0c043f9cb2b4d21e85d77be5f9c9233d",
-        "fs3_blob": "4ceb34670b2f27bd4f983b348ad56dccb15d6293",
-        "successor": "R1-2 live return walk (scripts/witness/flagship/r1-2-live-return-walk.ts)",
-        "reason": "Its FORBIDDEN line named data-return-to among the controls the live Review must not carry; under R1-2 the exact-address return anchor is lawful. Only that token is removed; every other forbidden control and every check are unchanged."
-      }
-    },
-    "lineage": {
-      "FS1": {
-        "act": "FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS1 — FLAGSHIP ACCEPTANCE-SUITE FREEZE",
-        "manifest_sha256": "d1fff27d630968ae5d65ee87186864c8c26c2b555443a99340fa9663cb435a68",
-        "preserved_at": "tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS1.json",
-        "named_by": "FS2 (supersedes.manifest_sha256)"
+      "tests/constitutional/writers-studio/flagship-c1c1/laws.ts": {
+        "fs1_blob": "254232773958abbbc65f6f8e377b47f1ca61483b",
+        "fs2_blob": "697aa8fc5226177d80cb2ba832209d573a1226df",
+        "successor": "R1-1C-L12-c1b-succession-explicit",
+        "reason": "C1C1-L14 (authority-untouched) also pinned app/writers-studio/flagship/StudioChrome.tsx, the shell — composition, not authority (C0). R1-1C lawfully gave the shell navigation actions; StudioChrome leaves the standing pin (IR1 precedent, option B; never re-pinned to a newer blob) and the predecessor pin is witnessed from the FS1 base blob every run. Every authority file stays pinned."
       }
     },
     "historical_witness": {
-      "tests/constitutional/writers-studio/flagship-r1-1b/golden/*": "Frozen bytes unchanged (FS2 blobs). The R1-1B Write goldens are the pre-Review-navigation composition and R1-1B-L16 verifies them against 1fcf1ad0a; R1-2 changed no Write composition.",
-      "tests/constitutional/writers-studio/flagship-r1-1a/golden/*": "Frozen bytes unchanged. R1-2-L14 proves the controlled (no-navigation) presentation is byte-identical to the R1-1A goldens: navigate=true changes nothing where no navigation is supplied."
+      "scripts/witness/flagship/c1b-live-write-walk.ts": "Frozen bytes unchanged (FS1 blob). Its check F-8 asserts the predecessor navigation set (two orientation entries, zero buttons); against the post-R1-1C live host that check reports the predecessor state and is historical evidence of the C1B state, superseded at runtime by R1-1C W1/W7 in r1-1c-live-navigation-walk.ts.",
+      "docs/design/contracts/screenshots/flagship-b2/*__mobile-390.png": "Six controlled mobile captures changed under R1-1C because flagship.css's mobile-nav display rule was reordered to follow its base rule (a pre-existing source-order defect; the mobile orientation surface had never rendered visibly). render.tsx is unchanged and its mechanical checks and witness.json are unchanged."
     }
   },
   "frozen": {
@@ -62,10 +48,6 @@
     },
     "scripts/typecheck-ws-flagship-r1-1c.mjs": {
       "blob": "8576d071a8d00a6324a9b9ae57921dd0c326e4fc",
-      "class": "typecheck instrument"
-    },
-    "scripts/typecheck-ws-flagship-r1-2.mjs": {
-      "blob": "24a3070a4574c5a821a17c6cff9a94698cf24d05",
       "class": "typecheck instrument"
     },
     "scripts/typecheck-ws-flagship-r1-readonly.mjs": {
@@ -93,7 +75,7 @@
       "class": "fixture (mechanically required by the golden)"
     },
     "scripts/witness/flagship/r1-1b-live-review-walk.ts": {
-      "blob": "d6792e2ad3b2224683096be05d8a444d3cbef2b8",
+      "blob": "7cfef32a0f354008e31bec4272616077b2d831d4",
       "class": "witness implementation"
     },
     "scripts/witness/flagship/r1-1b-provider-counter.ts": {
@@ -101,11 +83,7 @@
       "class": "witness implementation"
     },
     "scripts/witness/flagship/r1-1c-live-navigation-walk.ts": {
-      "blob": "4ceb34670b2f27bd4f983b348ad56dccb15d6293",
-      "class": "witness implementation"
-    },
-    "scripts/witness/flagship/r1-2-live-return-walk.ts": {
-      "blob": "43a25bf5ef5e430932fad9317f7f6fabde523957",
+      "blob": "bda474fa0c043f9cb2b4d21e85d77be5f9c9233d",
       "class": "witness implementation"
     },
     "scripts/witness/flagship/render.tsx": {
@@ -249,7 +227,7 @@
       "class": "accepted golden (historical custody — the pre-Review-navigation Write composition; R1-1B-L16 verifies it against 1fcf1ad0a)"
     },
     "tests/constitutional/writers-studio/flagship-r1-1b/laws.ts": {
-      "blob": "20e02927efb9755ece552d453f1670a4cf4bbd7b",
+      "blob": "21c8c0a62b578f431423eb650f96715c986562de",
       "class": "constitutional law"
     },
     "tests/constitutional/writers-studio/flagship-r1-1b/matrix.ts": {
@@ -285,27 +263,11 @@
       "class": "accepted golden"
     },
     "tests/constitutional/writers-studio/flagship-r1-1c/laws.ts": {
-      "blob": "c6db6f40d65932fab13d16c25e18a1a71dbe95c4",
+      "blob": "c7f2aef221f6a7e5c79cec2c177241846cf43290",
       "class": "constitutional law"
     },
     "tests/constitutional/writers-studio/flagship-r1-1c/matrix.ts": {
       "blob": "38328b3b67183924cd8c442f3c60a1cb747042cc",
-      "class": "matrix runner"
-    },
-    "tests/constitutional/writers-studio/flagship-r1-2/candidates.tsx": {
-      "blob": "0a58dd918521f4afb78bca6cf16b7ab60863c999",
-      "class": "defeat candidate registry"
-    },
-    "tests/constitutional/writers-studio/flagship-r1-2/golden/review-ready-navigable.html": {
-      "blob": "93a019f46a0be71d2328868e5ccde61357dfe266",
-      "class": "accepted golden"
-    },
-    "tests/constitutional/writers-studio/flagship-r1-2/laws.ts": {
-      "blob": "c21239213f877b7c85d2f698112f9e8155c9b6ae",
-      "class": "constitutional law"
-    },
-    "tests/constitutional/writers-studio/flagship-r1-2/matrix.ts": {
-      "blob": "ba046f49272ff4178f3c57c100dad5e23fc5db65",
       "class": "matrix runner"
     },
     "tests/constitutional/writers-studio/flagship-r1-readonly/candidates.ts": {
@@ -444,10 +406,6 @@
       "blob": "9ed4fae8b236b767163d84a2d2996667961c0589",
       "class": "typecheck instrument"
     },
-    "tsconfig.ws-flagship-r1-2.json": {
-      "blob": "01975d2bf20bc923efd113359e5c2f624ffdb704",
-      "class": "typecheck instrument"
-    },
     "tsconfig.ws-flagship-r1-readonly.json": {
       "blob": "b5797f253d26df749a6ea40f2c2f028d046d7ab4",
       "class": "typecheck instrument"
@@ -461,13 +419,11 @@
     "tests/constitutional/writers-studio/flagship-c1a/captureGolden.tsx": "golden regeneration tool, not a law; running it rewrites the goldens, which the freeze then reports",
     "docs/design/contracts/screenshots/**": "generated captures and witness result files; byte identity is established by git status against the committed state, not by a law",
     "package.json": "named commands only; the whole file moves for unrelated reasons",
-    "scripts/verify-flagship-freeze.ts": "the freeze instrument itself: it pins the manifest by digest and cannot be frozen by the manifest it verifies without circularity; a re-freeze is the only act that edits its pins",
+    "scripts/verify-flagship-freeze.ts": "the verifier itself; it pins this manifest by digest, so manifest and verifier change together only in an authorized re-freeze",
     "tests/constitutional/writers-studio/flagship-r1-1a/captureGolden.tsx": "golden regeneration tool, not a law",
     "tests/constitutional/writers-studio/flagship-r1-1b/captureWriteGolden.tsx": "golden regeneration tool, not a law",
     "tests/constitutional/writers-studio/flagship-r1-1c/captureWriteGolden.tsx": "golden regeneration tool, not a law",
     "tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS1.json": "the preserved FS1 manifest; pinned by SHA-256 in the verifier (succession custody), not by blob here",
-    "tests/constitutional/writers-studio/flagship-r1-1a/candidates/*.tsx": "the D6/D7 candidate SEAMS: R1-1A-L9 (frozen here) asserts that a subject's seam files lie outside the freeze, so freezing these would make its own candidates die on L9 as collateral; the registry that names them (candidates.tsx) IS frozen",
-    "tests/constitutional/writers-studio/flagship-r1-2/captureGolden.tsx": "golden regeneration tool, not a law",
-    "tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS2.json": "the preserved FS2 manifest; pinned by SHA-256 in the verifier (succession custody), not by blob here"
+    "tests/constitutional/writers-studio/flagship-r1-1a/candidates/*.tsx": "the D6/D7 candidate SEAMS: R1-1A-L9 (frozen here) asserts that a subject's seam files lie outside the freeze, so freezing these would make its own candidates die on L9 as collateral; the registry that names them (candidates.tsx) IS frozen"
   }
 }

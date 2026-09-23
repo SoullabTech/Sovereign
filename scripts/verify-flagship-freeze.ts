@@ -2,7 +2,7 @@
 /**
  * FLAGSHIP ACCEPTANCE-SUITE FREEZE — INTEGRITY  (npm run verify:flagship-freeze)
  *
- * FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS2 (successor to FS1 under R1-1C). The accepted flagship
+ * FLAGSHIP-RUNTIME-CONVERGENCE-01 / FS3 (successor to FS2 under R1-2; FS2 succeeded FS1 under R1-1C). The accepted flagship
  * laws, defeat candidates, matrix runners, goldens, witnesses and mechanically-required references
  * are frozen by GIT BLOB IDENTITY in tests/constitutional/writers-studio/FLAGSHIP_FREEZE.json.
  *
@@ -14,12 +14,14 @@
  * ⛔ THE MANIFEST CANNOT BLESS ITSELF. Its SHA-256 is pinned HERE. Editing the
  *    manifest to accept changed bytes fails until this pin is also changed —
  *    and changing both is a re-freeze, an authorized act, never verification.
- * ⭐ SUCCESSION CUSTODY (FS2). The FS1 manifest is PRESERVED byte-for-byte at its
- *    own address and pinned here by digest, so the pre-Review-navigation state
- *    stays reconstructible and identifiable. Every FS1-frozen file must either be
- *    frozen again at the SAME blob, or be named in `supersedes.superseded` with its
- *    FS1 blob, a successor law and a reason. History is never rewritten so that FS1
- *    appears to have contained Review navigation.
+ * ⭐ SUCCESSION CUSTODY (FS3 over FS2; FS2 over FS1). The immediate predecessor
+ *    manifest (FS2) is PRESERVED byte-for-byte at its own address and pinned here by
+ *    digest; every FS2-frozen file must either be frozen again at the SAME blob, or be
+ *    named in `supersedes.superseded` with its FS2 blob, a successor law and a reason.
+ *    The chain is never shortened: every earlier ancestor (FS1) stays preserved at ITS
+ *    digest, and each preserved manifest must itself name the next ancestor by digest.
+ *    History is never rewritten so that FS1 appears to have contained Review navigation,
+ *    or FS2 to have contained Review → section return.
  *
  * Exit 0 intact · 1 drift / manifest altered / custody broken · 2 instrument error.
  */
@@ -28,16 +30,19 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-/** ⭐ Pinned at FS2. A re-freeze (authorized act) updates this constant together with the manifest. */
-const MANIFEST_SHA256 = 'd7421b38c1fdc260feb7d7155819976dbf71f12064c87812efa0e4332715618f';
-/** ⭐ The FS1 manifest, preserved verbatim; its FS1 digest is the pin FS1's verifier carried. */
-const FS1_PRESERVED_SHA256 = 'd1fff27d630968ae5d65ee87186864c8c26c2b555443a99340fa9663cb435a68';
+/** ⭐ Pinned at FS3. A re-freeze (authorized act) updates this constant together with the manifest. */
+const MANIFEST_SHA256 = 'cdc74d8b82af6debd1ce0ffc300c4d8f42bfcfe24d1fd09f8c7e10ae70ee8ee5';
 const MANIFEST = path.resolve(__dirname, '../tests/constitutional/writers-studio/FLAGSHIP_FREEZE.json');
-const FS1_PRESERVED = path.resolve(__dirname, '../tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS1.json');
+/** ⭐ The succession chain, newest predecessor first. Each manifest is preserved verbatim at its own address and pinned by the
+ *  digest ITS verifier carried; `blobKey` names the field a `supersedes.superseded` entry uses for that predecessor's blob. */
+const CHAIN: readonly { name: string; file: string; sha256: string; blobKey: string }[] = [
+  { name: 'FS2', file: path.resolve(__dirname, '../tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS2.json'), sha256: 'd7421b38c1fdc260feb7d7155819976dbf71f12064c87812efa0e4332715618f', blobKey: 'fs2_blob' },
+  { name: 'FS1', file: path.resolve(__dirname, '../tests/constitutional/writers-studio/FLAGSHIP_FREEZE_FS1.json'), sha256: 'd1fff27d630968ae5d65ee87186864c8c26c2b555443a99340fa9663cb435a68', blobKey: 'fs1_blob' },
+];
 const BLOB = /^[0-9a-f]{40}$/;
 
 type Entry = { blob: string; class: string };
-type Superseded = { fs1_blob: string; successor: string; reason: string };
+type Superseded = { successor: string; reason: string } & Record<string, string>;
 type Manifest = {
   act: string; freeze_base: string; branch: string; law: string; frozen: Record<string, Entry>;
   supersedes?: { act: string; manifest_sha256: string; freeze_base: string; preserved_at: string; superseded: Record<string, Superseded> };
@@ -70,28 +75,42 @@ function main(): number {
     else console.log(`  ✓ ${file}`);
   }
   console.log('');
-  /* ── succession custody: FS1 preserved and accounted for ── */
+  /* ── succession custody: the immediate predecessor preserved and accounted for; the whole chain preserved ── */
   const custody: string[] = [];
   if (m.supersedes) {
-    if (!fs.existsSync(FS1_PRESERVED)) { custody.push('FS1 manifest ABSENT at its preserved address'); }
+    const pred = CHAIN[0]!;
+    if (!fs.existsSync(pred.file)) { custody.push(`${pred.name} manifest ABSENT at its preserved address`); }
     else {
-      const fs1raw = fs.readFileSync(FS1_PRESERVED);
-      const fs1digest = createHash('sha256').update(fs1raw).digest('hex');
-      if (fs1digest !== FS1_PRESERVED_SHA256 || m.supersedes.manifest_sha256 !== FS1_PRESERVED_SHA256) custody.push(`FS1 manifest not byte-identical to its FS1 digest (preserved ${fs1digest.slice(0, 12)} · pinned ${FS1_PRESERVED_SHA256.slice(0, 12)} · manifest says ${String(m.supersedes.manifest_sha256).slice(0, 12)})`);
+      const predRaw = fs.readFileSync(pred.file);
+      const predDigest = createHash('sha256').update(predRaw).digest('hex');
+      if (predDigest !== pred.sha256 || m.supersedes.manifest_sha256 !== pred.sha256) custody.push(`${pred.name} manifest not byte-identical to its ${pred.name} digest (preserved ${predDigest.slice(0, 12)} · pinned ${pred.sha256.slice(0, 12)} · manifest says ${String(m.supersedes.manifest_sha256).slice(0, 12)})`);
       else {
-        const fs1 = JSON.parse(fs1raw.toString('utf8')) as { frozen: Record<string, Entry> };
-        for (const [file, entry] of Object.entries(fs1.frozen)) {
+        const predManifest = JSON.parse(predRaw.toString('utf8')) as { frozen: Record<string, Entry> };
+        for (const [file, entry] of Object.entries(predManifest.frozen)) {
           const again = m.frozen[file]?.blob === entry.blob;
           const sup = m.supersedes.superseded?.[file];
-          const accounted = again || (!!sup && sup.fs1_blob === entry.blob && !!sup.successor && !!sup.reason && m.frozen[file] !== undefined);
-          if (!accounted) custody.push(`FS1 file neither re-frozen at its FS1 blob nor explicitly superseded: ${file}`);
+          const accounted = again || (!!sup && sup[pred.blobKey] === entry.blob && !!sup.successor && !!sup.reason && m.frozen[file] !== undefined);
+          if (!accounted) custody.push(`${pred.name} file neither re-frozen at its ${pred.name} blob nor explicitly superseded: ${file}`);
         }
         for (const [file, sup] of Object.entries(m.supersedes.superseded ?? {})) {
-          if (!fs1.frozen[file]) custody.push(`superseded entry names a file FS1 never froze: ${file}`);
-          else if (m.frozen[file]?.blob === sup.fs1_blob) custody.push(`superseded entry for an UNCHANGED file (succession claimed, nothing succeeded): ${file}`);
+          if (!predManifest.frozen[file]) custody.push(`superseded entry names a file ${pred.name} never froze: ${file}`);
+          else if (m.frozen[file]?.blob === sup[pred.blobKey]) custody.push(`superseded entry for an UNCHANGED file (succession claimed, nothing succeeded): ${file}`);
         }
-        console.log(`  ✓ FS1 manifest preserved at ${path.relative(process.cwd(), FS1_PRESERVED)} (sha256 ${fs1digest.slice(0, 12)}) · ${Object.keys(fs1.frozen).length} FS1 files accounted for · ${Object.keys(m.supersedes.superseded ?? {}).length} explicitly superseded`);
+        console.log(`  ✓ ${pred.name} manifest preserved at ${path.relative(process.cwd(), pred.file)} (sha256 ${predDigest.slice(0, 12)}) · ${Object.keys(predManifest.frozen).length} ${pred.name} files accounted for · ${Object.keys(m.supersedes.superseded ?? {}).length} explicitly superseded`);
       }
+    }
+    /* the chain: every earlier ancestor preserved at its own digest, and each preserved manifest names the next by digest */
+    for (let i = 1; i < CHAIN.length; i++) {
+      const anc = CHAIN[i]!; const younger = CHAIN[i - 1]!;
+      if (!fs.existsSync(anc.file)) { custody.push(`${anc.name} manifest ABSENT at its preserved address (chain shortened)`); continue; }
+      const raw = fs.readFileSync(anc.file);
+      const digest = createHash('sha256').update(raw).digest('hex');
+      if (digest !== anc.sha256) { custody.push(`${anc.name} manifest not byte-identical to its ${anc.name} digest (preserved ${digest.slice(0, 12)} · pinned ${anc.sha256.slice(0, 12)})`); continue; }
+      if (fs.existsSync(younger.file)) {
+        const y = JSON.parse(fs.readFileSync(younger.file, 'utf8')) as { supersedes?: { manifest_sha256?: string } };
+        if (y.supersedes?.manifest_sha256 !== anc.sha256) custody.push(`${younger.name} does not name ${anc.name} by digest (chain broken)`);
+      }
+      console.log(`  ✓ ${anc.name} manifest preserved at ${path.relative(process.cwd(), anc.file)} (sha256 ${digest.slice(0, 12)}) · named by ${younger.name}`);
     }
     console.log('');
   }
