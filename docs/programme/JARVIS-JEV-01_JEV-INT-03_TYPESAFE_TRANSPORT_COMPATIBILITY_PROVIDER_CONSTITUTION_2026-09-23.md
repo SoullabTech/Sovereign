@@ -2,8 +2,10 @@
 ## TypeSafe transport compatibility + provider constitution — DESIGN ONLY
 
 **Date:** 2026-09-23
-**Status:** CANDIDATE DESIGN · NOT RATIFIED · TRANSPORT HELD
-**Exact canonical base:** `2703cc3091d200c52b6d70f91f618077214e943a`
+**Status:** CANDIDATE DESIGN · NOT RATIFIED · TRANSPORT HELD · INT-03R1 FIDELITY REPAIR
+**Construction base:** `2703cc3091d200c52b6d70f91f618077214e943a`
+**Reconciled canonical at Founder adjudication:** `bb1142863a3e9d5ba3848eeb6301c78d3cc5bde9`
+**Adjudicated predecessor:** `b240ce1e6efd9d7719862829189990526cec0496`
 **Branch:** `feature/jev-int-03-operational-integration-20260923`
 
 **Authority boundary:** design answers only. This act does not register a provider, assign a
@@ -12,7 +14,7 @@ alter J0/J1, mutate a Work Unit, merge, deploy, or touch production.
 
 ## 1 · Evidence bound into this design
 
-Repository-governed identities at the exact base:
+Repository-governed identities, unchanged across construction and the non-overlap reconciliation:
 
 ```text
 J0 constitution          494cd61973ed02c4453067716657631f3f9143e9
@@ -39,9 +41,11 @@ Observed witnesses on this candidate base:
 J1 freeze integrity      0 FREEZE INTACT
 INT-02H host membrane    26 pass · 0 fail
 J1 frozen matrix         63/63 named kills · 0 survivors
-TypeSafe wire witness    direct_J1_no_wrapper_compatibility = false
+Synthetic wire witness   direct_J1_no_wrapper_compatibility = false
                          wrapper_present = true
-                         fixed_adapter_prose_transmitted = true
+                         fixture included adapter prose
+Live OpenAPI check       state/model/questions required
+                         noul.instructions optional
 ```
 
 ## 2 · Question 1 — can `state/model/questions` be treated as transport only?
@@ -70,10 +74,11 @@ Even when `state` is exactly the six-member `JudgmentPacket`, the full provider-
 application body is not the packet. It is a wrapper around the packet with two additional
 application-level siblings.
 
-The incompatibility is stronger than shape alone: `questions` carries fixed instruction prose.
-J1 deliberately makes `question_id` a closed protocol selector so that question prose does not
-travel. Fixed prose is still prose on the provider-visible representation; being constant does
-not make it non-disclosure.
+The top-level shape is already sufficient to establish incompatibility. The live TypeSafe schema
+requires `questions` as an application-level sibling, but it does not require instruction prose
+for every question shape: `NoulQuestion.instructions` is optional. When instructions, criteria,
+or other question prose are used, they create an additional provider-visible disclosure surface
+that J1 also forbids. That extra prose is not needed to prove the present no-wrapper failure.
 
 Ordinary carrier mechanics such as TLS, HTTP framing, authentication, and content type are not
 being redefined here as J1 application members. But an API's required JSON body is application
@@ -84,8 +89,9 @@ as “transport” to evade the closed representation.
 **The current TypeSafe endpoint is INADMISSIBLE under J1. J1 is not amended by INT-03.**
 
 The vendor interface does not create a constitutional necessity. J1's no-wrapper rule is an
-intentional membrane, and the live wire witness exhibits exactly the failure classes already
-frozen as lethal: wrapper/envelope, question text, and prose in the representation.
+intentional membrane, and the observed request shape exhibits the frozen wrapper/envelope
+failure directly. Question text or prose would be an additional forbidden surface when present,
+but the transport verdict does not depend on prose being mandatory.
 
 A Soullab-controlled proxy does not cure this if the proxy then sends the wrapper, model field,
 or question prose to TypeSafe. The disclosure boundary is what TypeSafe receives, not where the
@@ -167,18 +173,37 @@ record_blob
 record_commit
 ```
 
-The corresponding future policy assignment is exactly one key:
+The corresponding future repository data assignment is exactly one key:
 
 ```text
 lab/typesafe-jev/repository_derived_metadata
 ```
 
-and the provider capability array must contain exactly:
+Canonical development-provider law separately requires standing for the function the provider
+performs. Under the present capability vocabulary, the narrow existing functional capability
+for TypeSafe-hosted Jev's bounded advisory evaluation is:
 
-```json
-["repository_derived_metadata"]
+```text
+benchmark
 ```
-That later assignment must remove only `repository_derived_metadata` from the governed
+
+That functional standing and the repository data assignment are separate acts:
+
+```text
+future provider registration:
+lab.typesafe-jev.capabilities = [benchmark]
+
+separate prior-authorized repository assignment:
+lab/typesafe-jev/repository_derived_metadata
+
+after both separately lawful acts:
+lab.typesafe-jev.capabilities = [benchmark, repository_derived_metadata]
+```
+
+`benchmark` grants no repository data. `repository_derived_metadata` grants no provider
+function, network, disclosure, spend, or execution authority.
+
+The later repository assignment must remove only `repository_derived_metadata` from the governed
 `unassigned_repository_classes` set. It must leave both of these unassigned:
 
 ```text
@@ -186,9 +211,9 @@ repository_source
 constitutional_canon
 ```
 
-It must not add `chat`, `benchmark`, `member_data`, `member_audio`, repository source,
-constitutional text, prose, paths, filenames, symbols, diffs, commit messages, prompts, or any
-other capability.
+It must not add `chat`, `member_data`, `member_audio`, any functional capability beyond
+the separately governed `benchmark` standing, repository source, constitutional text, prose,
+paths, filenames, symbols, diffs, commit messages, prompts, or any other data capability.
 
 Assignment remains distinct from every execution authority. A future lawful call still requires,
 independently:
@@ -211,7 +236,8 @@ The correct standing is:
 
 ```text
 provider identity design        FIXED · typesafe-jev
-future assignment shape         FIXED · one data class only
+future functional standing      FIXED · benchmark
+future data assignment shape    FIXED · repository_derived_metadata only
 current TypeSafe transport      INADMISSIBLE
 provider registration           UNSPENT
 repository capability assignment UNSPENT
@@ -226,7 +252,9 @@ state-changing act must follow evidence, not vendor convenience.
 Two lawful reopen conditions exist:
 
 1. **Compatible hosted transport evidence** — a fresh TypeSafe wire witness shows the exact J1
-   packet can be the sole application judgment representation without wrapper/question prose.
+   packet can be the sole application judgment representation without wrapper/sibling fields;
+   question prose or criteria must not travel as any additional provider-visible application
+   payload.
 2. **Separate constitutional act** — the founder explicitly reopens J1 and adjudicates a changed
    disclosure law. INT-03 neither requests nor presumes that outcome.
 
@@ -240,7 +268,10 @@ This candidate is defeated by any later design that does one of the following:
 - uses a proxy to hide the fact that TypeSafe still receives a wider representation;
 - registers plain `typesafe` and thereby creates vendor-wide execution identity;
 - treats `jev` alone as the external provider identity;
-- grants any repository class other than `repository_derived_metadata`;
+- grants any repository data class other than `repository_derived_metadata`;
+- treats the repository data assignment as functional standing or omits the separately governed
+  `benchmark` functional capability;
+- grants a functional capability broader than `benchmark` without a new governed act;
 - treats capability assignment as network, disclosure, spend, or execution authority;
 - cites an assignment record that was not previously canonically admitted;
 - binds an unverified moving model alias into an authority-bearing execution route.
