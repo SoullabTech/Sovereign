@@ -30,9 +30,24 @@
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+
+/** B4R1: the governed identity/succession map (evidence per entry; RM-1 refuses entries without evidence). */
+export const MAP_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), 'programme-projection-map.v1.json');
+/** @param {string} [file] */
+export function loadMap(file = MAP_PATH) {
+  const m = JSON.parse(readFileSync(file, 'utf8'));
+  if (m.schema !== 'programme-projection-map.v1') throw new Error(`map schema ${m.schema} is not programme-projection-map.v1`);
+  for (const group of ['families', 'ops_lanes', 'aliases', 'classifications']) for (const e of m[group] || []) {
+    if (!Array.isArray(e.evidence) || e.evidence.length === 0 || e.evidence.some((/** @type {unknown} */ x) => typeof x !== 'string' || !x.trim())) throw new Error(`RM-1: map entry without evidence in ${group}: ${JSON.stringify(e).slice(0, 80)}`);
+  }
+  return m;
+}
+const DECLARATION_RE = /^\*\*(?:Programme|Program|Lane)\*\*\s*:?\s*`?([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)`?|^\*\*(?:Programme|Program|Lane):\*\*\s*`?([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)`?/m;
+const SUPERSEDES_RE = /^\*\*(?:Supersedes|Predecessors?|Superseded)[^*\n]*\*\*:?[^\n]*$/gim;
 
 export const SCHEMA = 'programme-state.v1';
-export const PROJECTOR_ID = 'founder-workspace/programme-state-projector@1';
+export const PROJECTOR_ID = 'founder-workspace/programme-state-projector@2-b4r1';
 
 /** Programme id: upper-case tokens joined by hyphens, at least one hyphen (`JARVIS-KP-01`, `S3-O1`, `RGR-05`). */
 const ID_RE = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/;
@@ -47,18 +62,19 @@ const THREAD_START = /^## Current priority thread/m;
 const THREAD_END = /^## Re-entry vow/m;
 
 /**
- * @typedef {{ id: string, kind: 'file'|'thread-bullet', path: string, text: string|null, error: string|null, date: string|null }} Subject
+ * @typedef {{ id: string, kind: 'file'|'thread-bullet', path: string, text: string|null, error: string|null, date: string|null, first_add_ts?: number|null, ops_lane_id?: string }} Subject
  */
 
 // ── gather (fs) ───────────────────────────────────────────────────────────────
 
 /**
  * Read the governed population. The only fs code in this module.
- * @param {{ root: string, programmeDir?: string, claudeMd?: string }} opts
- * @returns {{ subjects: Subject[], root: string }}
+ * @param {{ root: string, programmeDir?: string, claudeMd?: string, map?: any, git?: ((args: string[]) => string)|null, opsSelect?: (map: any, root: string) => {path:string, id:string}[] }} opts
+ * @returns {{ subjects: Subject[], root: string, map: any }}
  */
 export function readTree(opts) {
   const root = opts.root;
+  const map = opts.map || (opts.map === null ? EMPTY_MAP : (existsSync(MAP_PATH) ? loadMap() : EMPTY_MAP));
   const dir = path.join(root, opts.programmeDir || 'docs/programme');
   const claude = path.join(root, opts.claudeMd || 'CLAUDE.md');
   /** @type {Subject[]} */ const subjects = [];
@@ -80,7 +96,28 @@ export function readTree(opts) {
   let claudeText = null;
   try { claudeText = readFileSync(claude, 'utf8'); } catch (e) { subjects.push({ id: 'CLAUDE.md', kind: 'thread-bullet', path: 'CLAUDE.md', text: null, error: `read: ${msg(e)}`, date: null }); }
   if (claudeText !== null) for (const b of threadBullets(claudeText)) subjects.push(b);
-  return { subjects, root };
+  // R-O1: governed docs/ops lanes enter the population ONLY by name (the map), never the whole directory
+  for (const lane of (opts.opsSelect || DECISIONS.opsLanes)(map, root)) {
+    const p = path.join(root, lane.path);
+    let text = null, error = null;
+    try { text = readFileSync(p, 'utf8'); } catch (e) { error = `read: ${msg(e)}`; }
+    subjects.push({ id: lane.path, kind: 'file', path: lane.path, text, error, date: dateOf(path.basename(lane.path)), ops_lane_id: lane.id });
+  }
+  // R-S2: first-add commit time per file, from ONE git call (null when git is unavailable)
+  const firstAdd = firstAddIndex(root, opts.git === undefined ? defaultGit(root) : opts.git);
+  for (const s of subjects) if (s.kind === 'file') s.first_add_ts = firstAdd ? (firstAdd.get(s.path) ?? null) : null;
+  return { subjects, root, map };
+}
+const EMPTY_MAP = Object.freeze({ schema: 'programme-projection-map.v1', families: [], ops_lanes: [], aliases: [], classifications: [], succession: {} });
+/** @param {string} root */
+function defaultGit(root) { return (/** @type {string[]} */ args) => { const cp = /** @type {any} */ (process).getBuiltinModule('node:child_process'); return cp.execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }); }; }
+/** @param {string} _root @param {((args: string[]) => string)|null} git @returns {Map<string, number>|null} */
+function firstAddIndex(_root, git) {
+  if (!git) return null;
+  let out; try { out = git(['log', '--diff-filter=A', '--name-only', '--format=%ct', '--', 'docs/programme', 'docs/ops']); } catch { return null; }
+  /** @type {Map<string, number>} */ const m = new Map(); let ts = null;
+  for (const line of out.split('\n')) { if (/^\d+$/.test(line)) { ts = Number(line); continue; } if (line && ts !== null) m.set(line, ts); } // log is newest-first; last write wins = oldest = first add
+  return m;
 }
 
 /** @param {string} text */
@@ -104,17 +141,64 @@ export function threadBullets(text) {
 // ── decisions (each replaceable; the matrix kills a wrong version of each) ───
 
 export const DECISIONS = Object.freeze({
-  /** R-A1/R-A2/R-A3: associate a subject with a programme id, or null. @param {Subject} s @returns {string|null} */
-  associate(s) {
+  /** R-O1: which docs/ops files enter the population — exactly the lanes the map names, never a directory listing. @param {any} map @param {string} _root @returns {{path:string, id:string}[]} */
+  opsLanes(map, _root) { return (map.ops_lanes || []).map((/** @type {any} */ l) => ({ path: String(l.path), id: String(l.id) })); },
+  /**
+   * Associate a subject with a programme id. Order (B4R1): R-A0 the record's own declaration · R-O1 ops lane by name ·
+   * R-A4 map alias · R-A1/R-A2 filename/evidence dir (then R-F1 family canonical) · R-A3 backticked id in a thread bullet (then family) · null.
+   * @param {Subject} s @param {any} [map] @returns {{ id: string, rule: string, role: 'record'|'supporting' }|null}
+   */
+  associate(s, map = EMPTY_MAP) {
+    const fam = (/** @type {string} */ id) => { for (const f of map.families || []) if (new RegExp(f.member_pattern).test(id)) return { id: f.canonical, via: f.family }; return null; };
     if (s.kind === 'thread-bullet') {
       const m = s.text ? s.text.match(/`([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)(?:[ /`·]|$)/) : null;
-      return m ? m[1] : null;
+      if (m) { const f = fam(m[1]); return f ? { id: f.id, rule: `R-A3+R-F1(${f.via})`, role: 'record' } : { id: m[1], rule: 'R-A3', role: 'record' }; }
+      for (const f of map.families || []) if (f.thread_token && s.text && new RegExp('`' + f.thread_token + '`').test(s.text)) return { id: f.canonical, rule: `R-A3b family token (${f.family})`, role: 'record' };
+      // R-A3c: exactly one well-formed id in PLAIN text inside the bullet's bold title
+      const title = (s.text || '').match(/^- \*\*([^*]*)\*\*/); const plain = title ? [...new Set([...title[1].matchAll(/(?<![\w`-])([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)(?![\w`-])/g)].map((x) => x[1]))] : [];
+      if (plain.length === 1) { const f = fam(plain[0]); return f ? { id: f.id, rule: `R-A3c plain id in title+R-F1(${f.via})`, role: 'record' } : { id: plain[0], rule: 'R-A3c plain id in title', role: 'record' }; }
+      return null;
     }
+    if (s.ops_lane_id) return { id: s.ops_lane_id, rule: 'R-O1 ops lane (map)', role: 'record' };
+    if (s.text) { const d = s.text.match(DECLARATION_RE); const declared = d ? (d[1] || d[2]) : null; if (declared) { const f = fam(declared); return f ? { id: f.id, rule: `R-A0 declaration+R-F1(${f.via})`, role: 'record' } : { id: declared, rule: 'R-A0 declaration', role: 'record' }; } }
+    for (const a of map.aliases || []) if (new RegExp(a.match).test(s.path)) return { id: a.id, rule: 'R-A4 map alias', role: a.role === 'record' ? 'record' : 'supporting' };
     const parts = s.path.split('/');
     const base = parts[parts.length - 1];
-    if (parts.length >= 4 && parts[2] === 'evidence' && ID_RE.test(parts[3])) return parts[3]; // docs/programme/evidence/<ID>/...
-    const m = base.match(FILENAME_ID_RE);
-    return m ? m[1] : null;
+    let id = null, rule = null;
+    if (parts.length >= 4 && parts[2] === 'evidence' && ID_RE.test(parts[3])) { id = parts[3]; rule = 'R-A2'; }
+    else { const m = base.match(FILENAME_ID_RE); if (m) { id = m[1]; rule = 'R-A1'; } }
+    if (!id) return null;
+    const f = fam(id);
+    return f ? { id: f.id, rule: `${rule}+R-F1(${f.via})`, role: 'record' } : { id, rule: /** @type {string} */ (rule), role: 'record' };
+  },
+  /** R-A6: a still-unassociated file whose own text carries exactly one distinct well-formed backticked id → supporting record of it. @param {Subject} s @param {any} [map] */
+  associateBySingleCitation(s, map = EMPTY_MAP) {
+    const ids = [...new Set([...(s.text || '').matchAll(/`([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)(?:[ /`·]|$)/g)].map((m) => /** @type {string} */ (m[1])))];
+    const one = ids[0];
+    if (ids.length !== 1 || one === undefined) return null;
+    /** @type {'supporting'} */ const role = 'supporting';
+    for (const f of map.families || []) if (new RegExp(f.member_pattern).test(one)) return { id: String(f.canonical), rule: `R-A6 single cited id+R-F1(${f.family})`, role };
+    return { id: one, rule: 'R-A6 single cited id', role };
+  },
+  /** R-A5: a still-unassociated file cited by the STANDING-BEARING records of exactly one programme. @param {Subject} s @param {Map<string, Set<string>>} citedBy path → set of ids (tier-1/2 file records only)
+   * @param {{ citedByAll?: Map<string, Set<string>> }} [_ctx] every mention incl. notes/bullets — never consulted by the conforming decision
+   * @returns {Association | { ambiguous: string[] } | null} */
+  associateByCitation(s, citedBy, _ctx) {
+    const ids = citedBy.get(s.path) || (s.path.includes('/') ? [...citedBy.entries()].filter(([k]) => k.endsWith('/') && s.path.startsWith(k)).flatMap(([, v]) => [...v]) : []);
+    const set = new Set(ids);
+    if (set.size === 1) return { id: /** @type {string} */ ([...set][0]), rule: 'R-A5 cited by one programme', role: /** @type {'supporting'} */ ('supporting') };
+    return set.size > 1 ? { ambiguous: [...set].sort() } : null;
+  },
+  /** RM-3: explicit classification (examined, counted, never a programme). @param {Subject} s @param {any} map @param {number} distinctIdsInText */
+  classify(s, map, distinctIdsInText) {
+    for (const c of map.classifications || []) {
+      if (!new RegExp(c.match).test(s.path)) continue;
+      if (c.when === 'no single programme id in the file' && distinctIdsInText === 1) continue;
+      if (c.when && c.when.startsWith('bullet is not a LATEST') && s.kind === 'thread-bullet' && /^- \*\*(LATEST|PRIOR|DIRECTION|NAMING)/.test(s.text || '')) continue;
+      if (c.when && c.when.startsWith('bullet is a LATEST') && s.kind === 'thread-bullet' && !/^- \*\*(LATEST|PRIOR|DIRECTION|NAMING)/.test(s.text || '')) continue;
+      return { category: c.category, rule: 'RM-3 map classification' };
+    }
+    return null;
   },
   /** Tier of a file record: 1 founder act · 2 standing record · 3 supporting. @param {Subject} s */
   tier(s) {
@@ -128,22 +212,46 @@ export const DECISIONS = Object.freeze({
   /**
    * Choose the governing record for a programme. @param {Subject[]} records (files only, associated to this id)
    * @param {(s: Subject) => number} tierOf
-   * @returns {{ governing: Subject|null, tier: number|null, conflict: Subject[]|null, note: string|null }}
+   * @param {{ succeedBySupersedes: (set: Subject[]) => Subject|null, succeedByFirstAdd: (set: Subject[]) => Subject|null }} [D] the effective decision set
+   *        (B4R1: succession is reached THROUGH the injected decisions, so a replaced succession rule is actually exercised — the matrix found
+   *        the first version calling the frozen module object directly, which let three defeat candidates survive unexercised)
+   * @returns {{ governing: Subject|null, tier: number|null, conflict: Subject[]|null, note: string|null, succession: {rule:string, among:string[]}|null }}
    */
-  select(records, tierOf) {
+  select(records, tierOf, D = DECISIONS) {
     for (const tier of [1, 2]) {
       const all = records.filter((r) => tierOf(r) === tier);
       if (all.length === 0) continue;
-      if (all.length === 1) return { governing: all[0], tier, conflict: null, note: null }; // one record needs no ordering
-      if (all.some((r) => r.date === null)) return { governing: null, tier, conflict: null, note: `${all.length} tier-${tier} records and at least one carries no date in its filename; newest-first is undecidable` };
+      if (all.length === 1) return { governing: all[0], tier, conflict: null, note: null, succession: null }; // one record needs no ordering
+      if (all.some((r) => r.date === null)) return { governing: null, tier, conflict: null, note: `${all.length} tier-${tier} records and at least one carries no date in its filename; newest-first is undecidable`, succession: null };
       const cands = all.sort((a, b) => /** @type {string} */ (b.date).localeCompare(/** @type {string} */ (a.date)) || a.path.localeCompare(b.path));
       const top = cands[0];
       const sameDay = cands.filter((r) => r.date === top.date);
       const standings = new Set(sameDay.map((r) => extractStanding(r.text || '') || ''));
-      if (standings.size > 1) return { governing: null, tier, conflict: sameDay, note: `${sameDay.length} tier-${tier} records dated ${top.date} carry different standing lines` };
-      return { governing: top, tier, conflict: null, note: null };
+      if (standings.size <= 1) return { governing: top, tier, conflict: null, note: null, succession: null };
+      // B4R1 succession — R-S1 explicit supersession lines first
+      const s1 = D.succeedBySupersedes(sameDay);
+      if (s1) return { governing: s1, tier, conflict: null, note: null, succession: { rule: 'R-S1 explicit supersession line', among: sameDay.map((r) => r.path) } };
+      // R-S2 git ancestry second
+      const s2 = D.succeedByFirstAdd(sameDay);
+      if (s2) return { governing: s2, tier, conflict: null, note: null, succession: { rule: 'R-S2 git first-add order', among: sameDay.map((r) => r.path) } };
+      // R-S3 remaining ties stay conflicts
+      return { governing: null, tier, conflict: sameDay, note: `${sameDay.length} tier-${tier} records dated ${top.date} carry different standing lines; no supersession line, same or unknown first-add commit`, succession: null };
     }
-    return { governing: null, tier: null, conflict: null, note: 'no standing record' };
+    return { governing: null, tier: null, conflict: null, note: 'no standing record', succession: null };
+  },
+  /** R-S1. @param {Subject[]} set @returns {Subject|null} the unique record superseded by none and superseding at least one other */
+  succeedBySupersedes(set) {
+    const superseded = new Set();
+    for (const a of set) for (const line of (a.text || '').match(SUPERSEDES_RE) || []) for (const b of set) if (b !== a && line.includes(path.basename(b.path))) superseded.add(b.path);
+    if (superseded.size === 0) return null;
+    const rest = set.filter((r) => !superseded.has(r.path));
+    return rest.length === 1 ? rest[0] : null;
+  },
+  /** R-S2. @param {Subject[]} set @returns {Subject|null} the unique latest first-add; null when any is unknown or tied */
+  succeedByFirstAdd(set) {
+    if (set.some((r) => r.first_add_ts == null)) return null;
+    const sorted = [...set].sort((a, b) => /** @type {number} */ (b.first_add_ts) - /** @type {number} */ (a.first_add_ts));
+    return sorted[0].first_add_ts === sorted[1].first_add_ts ? null : sorted[0];
   },
   /** FD-3(3): the thread orients; it never supplies standing. @param {Subject[]} bullets @param {string|null} governingDate */
   orient(bullets, governingDate) {
@@ -176,25 +284,55 @@ export const DECISIONS = Object.freeze({
 // ── project (pure) ────────────────────────────────────────────────────────────
 
 /**
- * @param {{ subjects: Subject[] }} tree
+ * @typedef {{ id: string, rule: string, role: 'record'|'supporting' }} Association
+ * @param {{ subjects: Subject[], map?: any }} tree
  * @param {{ observed_against: string, projected_at?: string, decisions?: Partial<typeof DECISIONS> }} opts
  */
 export function project(tree, opts) {
   const D = { ...DECISIONS, ...(opts.decisions || {}) };
+  const map = tree.map || EMPTY_MAP;
   const projected_at = opts.projected_at || new Date().toISOString();
   const subjects = [...tree.subjects].sort((a, b) => a.path.localeCompare(b.path));
   /** @type {Map<string, Subject[]>} */ const byId = new Map();
+  /** @type {Map<string, { id: string, rule: string, role: 'record'|'supporting' }>} */ const assoc = new Map();
   /** @type {{path:string, kind:string, reason:string}[]} */ const unclassified = [];
   /** @type {{path:string, error:string}[]} */ const unreadable = [];
   /** @type {{path:string, rule:string}[]} */ const excluded = [];
+  /** @type {{path:string, category:string, rule:string}[]} */ const classified = [];
+  /** @type {Subject[]} */ const pending = [];
+  const idsIn = (/** @type {Subject} */ s) => new Set([...(s.text || '').matchAll(/`([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)(?:[ /`·]|$)/g)].map((m) => m[1])).size;
   for (const s of subjects) {
     if (s.error) { unreadable.push({ path: s.path, error: s.error }); continue; }
     const rule = D.excludeByRule(s);
     if (rule) { excluded.push({ path: s.path, rule }); continue; }
-    const id = D.associate(s);
-    if (!id) { unclassified.push({ path: s.path, kind: s.kind, reason: s.kind === 'file' ? 'filename carries no hyphenated programme id (R-A1) and is not under evidence/<ID>/ (R-A2)' : 'thread bullet names no backticked programme id (R-A3)' }); continue; }
-    if (!byId.has(id)) byId.set(id, []);
-    /** @type {Subject[]} */ (byId.get(id)).push(s);
+    const a = D.associate(s, map);
+    if (a) { assoc.set(s.path, a); if (!byId.has(a.id)) byId.set(a.id, []); /** @type {Subject[]} */ (byId.get(a.id)).push(s); continue; }
+    pending.push(s);
+  }
+  // R-A5 citation pass: a pending file cited by subjects of exactly one programme becomes a supporting record of it
+  /** @type {Map<string, Set<string>>} */ const citedBy = new Map();
+  // R-A5 credits only citations from STANDING-BEARING file records (tier 1/2). A docket note, evidence record or thread bullet that
+  // mentions a path — even to say it belongs to nobody — is not a claim of custody. (B4R1: the B4R1 evidence record itself, naming
+  // the one unclassified file in its docket, would otherwise have associated it and flipped the real projection to complete:true.)
+  /** @type {Map<string, Set<string>>} */ const citedByAll = new Map(); // every mention, kept only so a defeat candidate can be built against it
+  for (const [p, a] of assoc) {
+    const s = subjects.find((x) => x.path === p); if (!s) continue;
+    const credit = s.kind === 'file' && a.role !== 'supporting' && D.tier(s) <= 2;
+    for (const m of (s.text || '').matchAll(/docs\/programme\/[A-Za-z0-9_./-]+?(?:\.md|\/)/g)) {
+      const k = m[0];
+      if (!citedByAll.has(k)) citedByAll.set(k, new Set()); /** @type {Set<string>} */ (citedByAll.get(k)).add(a.id);
+      if (!credit) continue;
+      if (!citedBy.has(k)) citedBy.set(k, new Set()); /** @type {Set<string>} */ (citedBy.get(k)).add(a.id);
+    }
+  }
+  for (const s of pending) {
+    const c = D.associateByCitation(s, citedBy, { citedByAll });
+    if (c && 'id' in c) { assoc.set(s.path, c); if (!byId.has(c.id)) byId.set(c.id, []); /** @type {Subject[]} */ (byId.get(c.id)).push(s); continue; }
+    const c6 = s.kind === 'file' ? D.associateBySingleCitation(s, map) : null;
+    if (c6) { assoc.set(s.path, c6); if (!byId.has(c6.id)) byId.set(c6.id, []); /** @type {Subject[]} */ (byId.get(c6.id)).push(s); continue; }
+    const cl = D.classify(s, map, idsIn(s));
+    if (cl) { classified.push({ path: s.path, category: cl.category, rule: cl.rule }); continue; }
+    unclassified.push({ path: s.path, kind: s.kind, reason: c && 'ambiguous' in c ? `cited by ${c.ambiguous.length} programmes (${c.ambiguous.join(', ')})` : s.kind === 'file' ? 'no declaration (R-A0), no map alias (R-A4), no hyphenated filename id (R-A1/R-A2), not cited by the standing records of one programme (R-A5), no single cited id (R-A6), no classification (RM-3)' : 'thread bullet names no backticked programme id or family token (R-A3)' });
   }
   const externals = D.externals(subjects.filter((s) => s.kind === 'file' && !s.error));
   for (const id of externals.keys()) if (!byId.has(id)) byId.set(id, []);
@@ -203,8 +341,9 @@ export function project(tree, opts) {
   const programmes = ids.map((id) => {
     const all = /** @type {Subject[]} */ (byId.get(id));
     const files = all.filter((s) => s.kind === 'file');
+    const records = files.filter((s) => assoc.get(s.path)?.role !== 'supporting'); // supporting records never supply standing
     const bullets = all.filter((s) => s.kind === 'thread-bullet');
-    const sel = D.select(files, D.tier);
+    const sel = D.select(records, D.tier, D);
     const governing = sel.governing;
     const standing = governing && governing.text ? D.standing(governing.text) : null;
     const thread = D.orient(bullets, governing ? governing.date : null);
@@ -226,22 +365,26 @@ export function project(tree, opts) {
       authority: null,
       external: !!externalSource,
       evidence_state,
-      precedence: { tier: sel.tier, note: sel.note, conflict: sel.conflict ? sel.conflict.map((c) => c.path) : null, thread_overrides: false },
+      precedence: { tier: sel.tier, note: sel.note, conflict: sel.conflict ? sel.conflict.map((c) => c.path) : null, thread_overrides: false, succession: sel.succession || null },
       sources: files.map((f) => f.path).sort(),
+      association: files.map((f) => ({ path: f.path, rule: assoc.get(f.path)?.rule, role: assoc.get(f.path)?.role })).sort((a, b) => a.path.localeCompare(b.path)),
       thread_sources: bullets.map((b) => b.path).sort(),
     };
   });
 
   const counts = { examined: ids.length, emitted: programmes.length, excluded: 0, classified: 0, unclassified: unclassified.length, unreadable: unreadable.length };
+  // NOTE: `classified` subjects are documents explicitly categorized as not-a-programme (RM-3); they are reported in the
+  // population and do not enter the programme arithmetic (examined counts programme ids).
   const complete = D.complete(counts);
   const population = {
-    definition: 'a programme = a hyphenated programme id deterministically associated with at least one subject (R-A1 filename prefix · R-A2 evidence/<ID>/ · R-A3 backticked id in a thread bullet) or named external by the D-01 rule',
-    source: 'docs/programme/**/*.md + CLAUDE.md "Current priority thread" bullets, read by the projector',
+    definition: 'a programme = a hyphenated programme id deterministically associated with at least one subject (R-A0 declaration · R-O1 map-named ops lane · R-A4 map alias · R-A1 filename prefix · R-A2 evidence/<ID>/ · R-F1 family canonical · R-A3/R-A3b/R-A3c thread bullet · R-A5/R-A6 citation) or named external by the D-01 rule; map classifications (RM-3) are examined and are never programmes',
+    source: 'docs/programme/**/*.md + CLAUDE.md "Current priority thread" bullets + the docs/ops lanes named by programme-projection-map.v1, read by the projector',
     subjects: { total: subjects.length, files: subjects.filter((s) => s.kind === 'file').length, thread_bullets: subjects.filter((s) => s.kind === 'thread-bullet').length, associated: subjects.length - unclassified.length - unreadable.length - excluded.length },
     examined: counts.examined, emitted: counts.emitted,
-    excluded_by_rule: excluded, classified: [], unclassified, unreadable,
+    excluded_by_rule: excluded, classified, unclassified, unreadable,
+    map: { schema: map.schema, authored: map.authored || null, families: (map.families || []).length, ops_lanes: (map.ops_lanes || []).length, aliases: (map.aliases || []).length, classifications: (map.classifications || []).length },
     complete,
-    why_not_complete: complete ? null : `${unclassified.length} subject(s) could not be deterministically associated with a programme and ${unreadable.length} could not be read; FD-3 forbids complete:true until every subject is emitted, excluded by rule, or classified`,
+    why_not_complete: complete ? null : `${unclassified.length} subject(s) could not be deterministically associated or classified and ${unreadable.length} could not be read; FD-3 forbids complete:true until every subject is emitted, excluded by rule, or classified`,
   };
   const body = { schema: SCHEMA, projector: PROJECTOR_ID, observed_against: opts.observed_against, presentation_only: true, authority_effect: 'none', rules: RULES, population, programmes };
   const content_hash = createHash('sha256').update(JSON.stringify(body)).digest('hex');
@@ -249,6 +392,17 @@ export function project(tree, opts) {
 }
 
 export const RULES = Object.freeze({
+  'R-A0': 'file: an explicit **Programme:** / **Lane:** declaration naming a well-formed id governs association (B4R1)',
+  'R-O1': 'docs/ops: a governed lane enters the population only when the map names its record (B4R1); the directory is never swallowed',
+  'R-A4': 'file: a map alias (path pattern → id) with evidence; role supporting unless the map says record (B4R1)',
+  'R-F1': 'family: an id matching a map family member_pattern resolves to the family canonical id (B4R1)',
+  'R-A5': 'file: a still-unassociated file cited (by docs/programme path) from the standing-bearing records of exactly one programme becomes a supporting record of it; cited by several → unclassified, ambiguity named; a mention by a supporting note, a no-standing record or a thread bullet is not a citation (B4R1)',
+  'R-A6': 'file: a still-unassociated file whose own text carries exactly one distinct backticked programme id becomes a supporting record of it (B4R1)',
+  'R-A3c': 'thread bullet: exactly one well-formed id in plain text inside the bold title associates; several → unclassified, ambiguity named (B4R1)',
+  'RM-3': 'a map classification (path pattern → category, with evidence) marks a subject as examined and explicitly not a programme (B4R1)',
+  'R-S1': 'succession: explicit **Supersedes**/**Predecessor** lines naming another same-day record (B4R1)',
+  'R-S2': 'succession: git first-add commit order across the same-day set; the same commit leaves it tied (B4R1)',
+  'R-S3': 'remaining ties stay UNVERIFIED / CONFLICT; act-number order inside one commit is a founder rule (docket PD-1)',
   'R-A1': 'file: programme id = leading hyphenated upper-case token of the filename (e.g. JARVIS-KP-01_ACT5_… → JARVIS-KP-01)',
   'R-A2': 'file under docs/programme/evidence/<ID>/… → <ID>',
   'R-A3': 'thread bullet: first backticked hyphenated id',

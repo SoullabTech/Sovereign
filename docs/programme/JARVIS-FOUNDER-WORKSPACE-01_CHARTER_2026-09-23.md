@@ -111,6 +111,8 @@ If any of the five cannot be answered from the record, F0 is not complete.
 
 ## Current act
 
+**2026-09-23 (B4R1 act):** B4R1 DELIVERED — `…_B4R1_PROGRAMME_IDENTITY_AND_SUCCESSION_RECONCILIATION_EVIDENCE_2026-09-23.md`; governed `scripts/builder/founder-workspace/programme-projection-map.v1.json` (evidence per entry, RM-1). Real projection 197 → 182 programme ids · 94 → 1 unclassified · 17 → 8 conflicts (all same-commit) · `complete=false` kept honestly. Parallel founder lane: the F1 rendered walk. ⛔ B5 opens only on both + adjudication (docket PD-1, PD-4…PD-7).
+
 **2026-09-23 (continuation act):** B3 + B4 DELIVERED — `…_B3_MONITOR_INSTRUMENT_REGISTRY_EVIDENCE_2026-09-23.md` · `…_B4_PROGRAMME_STATE_PROJECTOR_EVIDENCE_2026-09-23.md`. ⛔ B5 blocked on the F1 walk; B6 closed; STOP for adjudication (docket PD-1…PD-3).
 
 **2026-09-23 (P0 adjudication §VI):** B1+B2 authorized and DELIVERED — `…_B1B2_VIEWMODEL_AND_READ_ORGANS_EVIDENCE_2026-09-23.md`. FD-1…FD-6 ruled. ⛔ Hard stop after B2; B3/B4/B5 not open; F1 walk still owed before B5. Text below preserved as prior state.
