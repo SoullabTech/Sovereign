@@ -47,7 +47,7 @@ const DECLARATION_RE = /^\*\*(?:Programme|Program|Lane)\*\*\s*:?\s*`?([A-Z][A-Z0
 const SUPERSEDES_RE = /^\*\*(?:Supersedes|Predecessors?|Superseded)[^*\n]*\*\*:?[^\n]*$/gim;
 
 export const SCHEMA = 'programme-state.v1';
-export const PROJECTOR_ID = 'founder-workspace/programme-state-projector@2-b4r1';
+export const PROJECTOR_ID = 'founder-workspace/programme-state-projector@3-b4r1r1';
 
 /** Programme id: upper-case tokens joined by hyphens, at least one hyphen (`JARVIS-KP-01`, `S3-O1`, `RGR-05`). */
 const ID_RE = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/;
@@ -189,14 +189,33 @@ export const DECISIONS = Object.freeze({
     if (set.size === 1) return { id: /** @type {string} */ ([...set][0]), rule: 'R-A5 cited by one programme', role: /** @type {'supporting'} */ ('supporting') };
     return set.size > 1 ? { ambiguous: [...set].sort() } : null;
   },
-  /** RM-3: explicit classification (examined, counted, never a programme). @param {Subject} s @param {any} map @param {number} distinctIdsInText */
-  classify(s, map, distinctIdsInText) {
+  /** RM-3: explicit classification (examined, counted, never a programme).
+   * B4R1R1: `phase: pre-association` is the Founder PD-4 escape hatch for act-shaped ids: classify them before filename/citation
+   * heuristics can promote them, unless the record explicitly declares a Programme/Lane or an evidence-backed map alias/family owns it.
+   * @param {Subject} s @param {any} map @param {number} distinctIdsInText @param {'pre-association'|'fallback'|null} [phase]
+   */
+  classify(s, map, distinctIdsInText, phase = null) {
     for (const c of map.classifications || []) {
-      if (!new RegExp(c.match).test(s.path)) continue;
+      if (phase === 'pre-association' && c.phase !== 'pre-association') continue;
+      if (phase === 'fallback' && c.phase === 'pre-association') continue;
+      if (phase === null && c.phase === 'pre-association') continue;
+      if (c.match && !new RegExp(c.match).test(s.path)) continue;
+      if (c.text_match && !new RegExp(c.text_match).test(s.text || '')) continue;
+      if (c.title_match) {
+        const title = s.kind === 'thread-bullet' ? ((s.text || '').match(/^- \*\*([^*]*)\*\*/)?.[1] || '') : '';
+        if (!new RegExp(c.title_match).test(title)) continue;
+      }
+      if (c.phase === 'pre-association') {
+        if (s.ops_lane_id) continue;
+        if (s.text && DECLARATION_RE.test(s.text)) continue;
+        if ((map.aliases || []).some((/** @type {any} */ a) => new RegExp(a.match).test(s.path))) continue;
+        const base = s.path.split('/').pop() || ''; const fm = base.match(FILENAME_ID_RE);
+        if (fm && (map.families || []).some((/** @type {any} */ f) => new RegExp(f.member_pattern).test(fm[1]))) continue;
+      }
       if (c.when === 'no single programme id in the file' && distinctIdsInText === 1) continue;
       if (c.when && c.when.startsWith('bullet is not a LATEST') && s.kind === 'thread-bullet' && /^- \*\*(LATEST|PRIOR|DIRECTION|NAMING)/.test(s.text || '')) continue;
       if (c.when && c.when.startsWith('bullet is a LATEST') && s.kind === 'thread-bullet' && !/^- \*\*(LATEST|PRIOR|DIRECTION|NAMING)/.test(s.text || '')) continue;
-      return { category: c.category, rule: 'RM-3 map classification' };
+      return { category: c.category, rule: c.phase === 'pre-association' ? 'R-PD4 pre-association classification' : 'RM-3 map classification' };
     }
     return null;
   },
@@ -305,6 +324,8 @@ export function project(tree, opts) {
     if (s.error) { unreadable.push({ path: s.path, error: s.error }); continue; }
     const rule = D.excludeByRule(s);
     if (rule) { excluded.push({ path: s.path, rule }); continue; }
+    const pre = D.classify(s, map, idsIn(s), 'pre-association');
+    if (pre) { classified.push({ path: s.path, category: pre.category, rule: pre.rule }); continue; }
     const a = D.associate(s, map);
     if (a) { assoc.set(s.path, a); if (!byId.has(a.id)) byId.set(a.id, []); /** @type {Subject[]} */ (byId.get(a.id)).push(s); continue; }
     pending.push(s);
@@ -330,7 +351,7 @@ export function project(tree, opts) {
     if (c && 'id' in c) { assoc.set(s.path, c); if (!byId.has(c.id)) byId.set(c.id, []); /** @type {Subject[]} */ (byId.get(c.id)).push(s); continue; }
     const c6 = s.kind === 'file' ? D.associateBySingleCitation(s, map) : null;
     if (c6) { assoc.set(s.path, c6); if (!byId.has(c6.id)) byId.set(c6.id, []); /** @type {Subject[]} */ (byId.get(c6.id)).push(s); continue; }
-    const cl = D.classify(s, map, idsIn(s));
+    const cl = D.classify(s, map, idsIn(s), 'fallback');
     if (cl) { classified.push({ path: s.path, category: cl.category, rule: cl.rule }); continue; }
     unclassified.push({ path: s.path, kind: s.kind, reason: c && 'ambiguous' in c ? `cited by ${c.ambiguous.length} programmes (${c.ambiguous.join(', ')})` : s.kind === 'file' ? 'no declaration (R-A0), no map alias (R-A4), no hyphenated filename id (R-A1/R-A2), not cited by the standing records of one programme (R-A5), no single cited id (R-A6), no classification (RM-3)' : 'thread bullet names no backticked programme id or family token (R-A3)' });
   }
@@ -399,6 +420,8 @@ export const RULES = Object.freeze({
   'R-A5': 'file: a still-unassociated file cited (by docs/programme path) from the standing-bearing records of exactly one programme becomes a supporting record of it; cited by several → unclassified, ambiguity named; a mention by a supporting note, a no-standing record or a thread bullet is not a citation (B4R1)',
   'R-A6': 'file: a still-unassociated file whose own text carries exactly one distinct backticked programme id becomes a supporting record of it (B4R1)',
   'R-A3c': 'thread bullet: exactly one well-formed id in plain text inside the bold title associates; several → unclassified, ambiguity named (B4R1)',
+  'R-PD4': 'Founder PD-4: map entries marked phase=pre-association classify act-shaped legacy subjects before filename/citation association; explicit Programme/Lane declarations and evidence-backed aliases/families still win (B4R1R1)',
+  'R-G1': 'Founder PD-6: new governed records should declare Programme, Act, Standing explicitly; projector extracts only formal State|Status|Standing|Disposition lines and never mines prose (B4R1R1)',
   'RM-3': 'a map classification (path pattern → category, with evidence) marks a subject as examined and explicitly not a programme (B4R1)',
   'R-S1': 'succession: explicit **Supersedes**/**Predecessor** lines naming another same-day record (B4R1)',
   'R-S2': 'succession: git first-add commit order across the same-day set; the same commit leaves it tied (B4R1)',

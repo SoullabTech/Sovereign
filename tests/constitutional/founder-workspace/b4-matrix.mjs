@@ -125,7 +125,12 @@ const MAP_R1 = {
   families: [{ family: 'S9', canonical: 'S9-DESIGN-01', member_pattern: '^S9(?:[-_]|$)', thread_token: 'S9', evidence: ['synthetic'] }],
   ops_lanes: [{ path: 'docs/ops/OPS_LANE_2026-09-03.md', id: 'OPS-LANE-01', evidence: ['synthetic'] }],
   aliases: [{ match: '^docs/programme/MAP_ALIASED_', id: 'ALPHA-01', role: 'supporting', evidence: ['synthetic'] }],
-  classifications: [{ match: '^docs/programme/PARKED_', category: 'parked-defect', evidence: ['synthetic'] }],
+  classifications: [
+    { match: '^docs/programme/F5-', phase: 'pre-association', category: 'unregistered-act-series:no-canonical-programme-id', evidence: ['synthetic'] },
+    { match: '^CLAUDE\\.md#thread-bullet-', title_match: '\\b(?:BUILD-07A|DC-C7)\\b', phase: 'pre-association', category: 'legacy-act-series-thread-note:no-canonical-programme-id', evidence: ['synthetic'] },
+    { match: '^CLAUDE\\.md#thread-bullet-', text_match: '`DC-C7(?:[ /`·]|$)', phase: 'pre-association', category: 'legacy-act-series-thread-note:no-canonical-programme-id', evidence: ['synthetic'] },
+    { match: '^docs/programme/PARKED_', category: 'parked-defect', evidence: ['synthetic'] },
+  ],
   succession: { rules: ['R-S1', 'R-S2', 'R-S3'] },
 };
 function makeRepoR1() {
@@ -144,11 +149,14 @@ function makeRepoR1() {
   w('docs/programme/IOTA-09_A_2026-09-08.md', '**Standing:** IOTA A\n');
   w('docs/programme/IOTA-09_B_2026-09-08.md', '**Standing:** IOTA B\n');
   w('docs/programme/LOOSE_ONE_2026-09-09.md', '**Standing:** the one leftover\n');
+  w('docs/programme/F5-A_DEMO_2026-09-11.md', '**Standing:** must be classified, never a programme\n');
+  w('docs/programme/F5-B_DECLARED_2026-09-11.md', '**Programme:** `PARENT-11`\n\n**Standing:** declaration wins over act-series classification\n');
+  w('docs/programme/PROSE-10_NOTE_2026-09-11.md', 'The standing is CLOSED. This is prose, not a declaration.\n');
   // a no-standing evidence note of ALPHA-01 that MENTIONS the loose file's path (to say it is unclassified) — R-A5 must not credit it
   w('docs/programme/ALPHA-01_B4R1_NOTE_2026-09-21.md', '# note\n\nremaining unclassified: `docs/programme/LOOSE_ONE_2026-09-09.md` names no programme.\n');
   w('docs/ops/OPS_LANE_2026-09-03.md', '**Standing:** ops lane standing\n');
   w('docs/ops/OTHER_2026-09-03.md', '**Standing:** must never enter the population\n');
-  w('CLAUDE.md', '## Current priority thread\n\n- **LATEST — 2026-09-10 — `S9` family token bullet.** text\n\n## Re-entry vow\n');
+  w('CLAUDE.md', '## Current priority thread\n\n- **LATEST — 2026-09-10 — `S9` family token bullet.** text\n- **LATEST — 2026-09-11 — `BUILD-07A` legacy act reference.** no owning programme declared\n- **LATEST — 2026-09-12 — provider governance finding without a programme.** long body eventually names `DC-C7` but no owning programme\n\n## Re-entry vow\n');
   return root;
 }
 const rootR1 = makeRepoR1();
@@ -161,6 +169,8 @@ check(!byId(R, 'S9-O1') && byId(R, 'S9-DESIGN-01') && byId(R, 'S9-DESIGN-01').st
 check(byId(R, 'OPS-LANE-01') && byId(R, 'OPS-LANE-01').standing === 'ops lane standing' && opsSources(R).length === 1 && !opsSources(R).some((/** @type {string} */ x) => x.includes('OTHER')), 'R-O1', 'the map-named ops lane is emitted; the sibling ops file never enters the population');
 check(byId(R, 'ALPHA-01').standing === 'charter standing' && byId(R, 'ALPHA-01').association.some((/** @type {any} */ a) => a.rule === 'R-A4 map alias' && a.role === 'supporting') && byId(R, 'ALPHA-01').precedence.tier === 2, 'R-A4s', 'the aliased supporting record is attached and never supplies standing (a tier-1 filename does not help it)');
 check(!byId(R, 'PARKED-DEFECT') && R.population.classified.some((/** @type {any} */ c) => c.path.endsWith('PARKED_DEFECT_2026-09-05.md') && c.category === 'parked-defect') && !R.population.unclassified.some((/** @type {any} */ u) => u.path.includes('PARKED')), 'RM-3', 'a classified subject is examined and is not a programme');
+check(!byId(R, 'F5-A') && R.population.classified.some((/** @type {any} */ c) => c.path.endsWith('F5-A_DEMO_2026-09-11.md') && c.category.startsWith('unregistered-act-series')) && byId(R, 'PARENT-11')?.standing === 'declaration wins over act-series classification' && !byId(R, 'BUILD-07A') && !byId(R, 'DC-C7') && R.population.classified.filter((/** @type {any} */ c) => c.category.startsWith('legacy-act-series-thread-note')).length >= 2, 'R-PD4', 'act-series subjects classify before structural/thread heuristics; an explicit Programme declaration still wins');
+check(byId(R, 'PROSE-10')?.evidence_state === 'UNVERIFIED' && byId(R, 'PROSE-10')?.standing === null, 'R-G1', 'plain prose is never mined for standing; missing formal Standing stays UNVERIFIED');
 check(byId(R, 'ETA-07').standing === 'ETA B' && byId(R, 'ETA-07').precedence.succession?.rule.startsWith('R-S1'), 'R-S1', 'an explicit Supersedes line resolves the same-day set');
 check(byId(R, 'THETA-08').standing === 'THETA B' && byId(R, 'THETA-08').precedence.succession?.rule.startsWith('R-S2'), 'R-S2', 'git first-add order resolves the next same-day set');
 check(byId(R, 'IOTA-09').evidence_state === 'UNVERIFIED / CONFLICT' && byId(R, 'IOTA-09').precedence.conflict.length === 2, 'R-S3', 'a same-commit set stays UNVERIFIED / CONFLICT');
@@ -205,6 +215,8 @@ for (const c of CANDIDATES) {
     case 'R-A4s': dead = byId(p, 'ALPHA-01').standing !== 'charter standing'; why = `ALPHA-01 → "${byId(p, 'ALPHA-01').standing}" tier ${byId(p, 'ALPHA-01').precedence.tier}`; break;
     case 'R-C1': dead = p.population.complete === true; why = `complete=${p.population.complete} with ${p.population.unclassified.length} unclassified`; break;
     case 'R-A5n': dead = byId(p, 'ALPHA-01').sources.some((/** @type {string} */ x) => x.includes('LOOSE_ONE')) || p.population.complete === true; why = `LOOSE_ONE attached=${byId(p, 'ALPHA-01').sources.some((/** @type {string} */ x) => x.includes('LOOSE_ONE'))} complete=${p.population.complete}`; break;
+    case 'R-PD4': dead = !!byId(p, 'F5-A') || !!byId(p, 'BUILD-07A') || !!byId(p, 'DC-C7'); why = `F5-A emitted=${!!byId(p, 'F5-A')} BUILD-07A emitted=${!!byId(p, 'BUILD-07A')} DC-C7 emitted=${!!byId(p, 'DC-C7')}`; break;
+    case 'R-G1': dead = byId(p, 'PROSE-10')?.evidence_state === 'OBSERVED'; why = `PROSE-10 state=${byId(p, 'PROSE-10')?.evidence_state} standing=${byId(p, 'PROSE-10')?.standing}`; break;
   }
   check(dead, c.id, `→ ${c.kills} (${c.belief}) ${dead ? 'DIES' : 'SURVIVES'}: ${why}`);
 }

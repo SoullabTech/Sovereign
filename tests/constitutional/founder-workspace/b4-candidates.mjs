@@ -41,6 +41,13 @@ export const CANDIDATES = Object.freeze([
     decisions: { associateByCitation: (/** @type {any} */ s, /** @type {Map<string, Set<string>>} */ citedBy, /** @type {any} */ ctx) => { const wide = ctx?.citedByAll || citedBy; return DECISIONS.associateByCitation(s, wide); } } },
   { id: 'DC-P15', kills: 'R-C1', belief: 'one leftover unclassified file should not hold the whole board at complete:false',
     decisions: { complete: (/** @type {any} */ n) => n.unclassified <= 1 && n.unreadable === 0 && n.examined === n.emitted + n.excluded + n.classified } },
+  { id: 'DC-P17', kills: 'R-PD4', belief: 'act-shaped ids look official enough to promote before governance identifies their parent',
+    decisions: { classify: (/** @type {any} */ s, /** @type {any} */ map, /** @type {number} */ n, /** @type {any} */ phase) => phase === 'pre-association' ? null : DECISIONS.classify(s, map, n, phase) } },
+  { id: 'DC-P18', kills: 'R-G1', belief: 'plain prose like standing is CLOSED is close enough to a formal standing declaration',
+    decisions: {
+      tier: (/** @type {any} */ s) => { const t = DECISIONS.tier(s); return t === 3 && /\bstanding\s+is\s+[A-Z]/i.test(s.text || '') ? 2 : t; },
+      standing: (/** @type {string} */ text) => DECISIONS.standing(text) || (text.match(/\bstanding\s+is\s+([A-Z][A-Z _-]*)/i)?.[1]?.trim() || null),
+    } },
 ]);
 
 function require_fs() { return /** @type {typeof import('node:fs')} */ (/** @type {any} */ (process).getBuiltinModule('node:fs')); }

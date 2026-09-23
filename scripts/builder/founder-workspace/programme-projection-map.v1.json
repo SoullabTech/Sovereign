@@ -1,7 +1,7 @@
 {
   "schema": "programme-projection-map.v1",
   "authored": "2026-09-23",
-  "act": "JARVIS-FOUNDER-WORKSPACE-01 / B4R1 — PROGRAMME IDENTITY + SUCCESSION RECONCILIATION ONLY",
+  "act": "JARVIS-FOUNDER-WORKSPACE-01 / B4R1R1 — FOUNDER-RULE APPLICATION + CURRENT-CANONICAL REPROJECTION ONLY",
   "law": "Every entry carries evidence naming the record, bullet or ruling that supports it. An entry without evidence is refused by the projector (RM-1). The map resolves identity; it never supplies standing, and it never sets complete:true.",
   "families": [
     {
@@ -82,6 +82,33 @@
       "evidence": [
         "evidence directory named for the programme's Step 3 act; CLAUDE.md thread 2026-09-21 names REVIEW-CUSTODY-01 Step 3"
       ]
+    },
+    {
+      "match": "^docs/programme/LIVING_CONSTELLATION_",
+      "id": "LIVING-CONSTELLATION-01",
+      "role": "record",
+      "evidence": [
+        "Founder adjudication B4R1 PD-5 names LIVING-CONSTELLATION-01 as the canonical programme id for the LC00/LC01/LC01A Living Constellation family",
+        "LIVING_CONSTELLATION_LC00_LC01_R1_RECONCILIATION_2026-09-18.md states its purpose is to carry the Living Constellation candidate constitution and evidence records"
+      ]
+    },
+    {
+      "match": "^docs/programme/(MAIA_JARVIS_MEMORY_ORGANISM_FULL_OPERATIONALIZATION|JARVIS_MEMORY_FIELD_FLOW_v2)\\.md$",
+      "id": "MAIA-JARVIS-MEMORY-ORGANISM-01",
+      "role": "record",
+      "evidence": [
+        "Founder adjudication B4R1 PD-5 normalizes the path-identified programme to MAIA-JARVIS-MEMORY-ORGANISM-01",
+        "JARVIS_MEMORY_FIELD_FLOW_v2.md declares Programme: docs/programme/MAIA_JARVIS_MEMORY_ORGANISM_FULL_OPERATIONALIZATION.md"
+      ]
+    },
+    {
+      "match": "^docs/programme/HOME_REDESIGN_v0\\.2_RELEASE_RULE_SUBSTRATE_2026-09-07\\.md$",
+      "id": "HOME-REDESIGN-01",
+      "role": "record",
+      "evidence": [
+        "Founder adjudication B4R1 PD-5 registers HOME-REDESIGN-01 as the canonical identity where the record explicitly declares it",
+        "HOME_REDESIGN_v0.2_RELEASE_RULE_SUBSTRATE_2026-09-07.md line 3 declares Lane: HOME-REDESIGN-01"
+      ]
     }
   ],
   "classifications": [
@@ -101,6 +128,32 @@
       ]
     },
     {
+      "match": "^CLAUDE\\.md#thread-bullet-",
+      "phase": "pre-association",
+      "category": "legacy-act-series-thread-note:no-canonical-programme-id",
+      "evidence": [
+        "Founder adjudication B4R1 PD-4: BUILD-07A/DC-C7 thread-only first-backtick identity is too weak for long bullets; classify until ownership is explicitly declared"
+      ],
+      "title_match": "\\b(?:BUILD-07A|DC-C7)\\b"
+    },
+    {
+      "match": "^CLAUDE\\.md#thread-bullet-",
+      "text_match": "`DC-C7(?:[ /`·]|$)",
+      "phase": "pre-association",
+      "category": "legacy-act-series-thread-note:no-canonical-programme-id",
+      "evidence": [
+        "Founder adjudication B4R1 PD-4: DC-C7 is a thread-only act-shaped id found by the weak first-backtick heuristic inside a long bullet; classify the bullet until an owning Programme/Lane is explicitly declared"
+      ]
+    },
+    {
+      "match": "^docs/programme/(?:F5-[A-Z0-9]+|ER-R[0-9.]+|GATE-0|W4-[A-Z0-9.-]+|W5-[A-Z0-9.-]+|BUILD-07A|DC-C7)(?:[_-]|\\.)",
+      "phase": "pre-association",
+      "category": "unregistered-act-series:no-canonical-programme-id",
+      "evidence": [
+        "Founder adjudication B4R1 PD-4: act-shaped prefixes are not programmes absent an explicit Programme/Lane declaration or evidence-backed map association"
+      ]
+    },
+    {
       "match": "^docs/programme/J(9|10|11)_",
       "category": "act-series-record (J-series; no programme declared)",
       "evidence": [
@@ -108,24 +161,10 @@
       ]
     },
     {
-      "match": "^docs/programme/LIVING_CONSTELLATION_",
-      "category": "unregistered-lane:LIVING-CONSTELLATION",
-      "evidence": [
-        "four records share the prefix and act labels LC00…LC02; no programme id is declared or named in the thread"
-      ]
-    },
-    {
       "match": "^docs/programme/WRITERS_STUDIO_",
-      "category": "unregistered-lane:WRITERS-STUDIO (brief · board · roadmap · capability census)",
+      "category": "writer-studio-legacy-umbrella-supporting-material",
       "evidence": [
-        "persistent brief/board documents predating the WRITERS-STUDIO-* lane ids; they name several lanes and declare none"
-      ]
-    },
-    {
-      "match": "^docs/programme/(MAIA_JARVIS_MEMORY_ORGANISM_FULL_OPERATIONALIZATION|JARVIS_MEMORY_FIELD_FLOW_v2)\\.md$",
-      "category": "unregistered-programme:MEMORY-ORGANISM (umbrella charter identified by path)",
-      "evidence": [
-        "two records declare **Programme**: `docs/programme/MAIA_JARVIS_MEMORY_ORGANISM_FULL_OPERATIONALIZATION.md` — a programme identified by a path, not an id (docket)"
+        "Founder adjudication B4R1 PD-5: WRITERS_STUDIO_* briefs/boards/roadmaps/censuses predate and span several governed Writer's Studio lanes; they inform the graph but carry no programme standing"
       ]
     },
     {
@@ -136,10 +175,10 @@
       ]
     },
     {
-      "match": "^docs/programme/(WITNESS_METHOD_CROSS_SURFACE_INVARIANT|REFLECTIONS_MAIA_01_IN_PLACE_CANONICAL_CONVERSATION|DEVELOPMENTAL_EDITOR_CAPABILITY|H8_PRODUCTION_SHADOW_PROJECTION|WS_HOME_v0\\.2_CONTRACT_STATE|HOME_REDESIGN_v0\\.2_RELEASE_RULE_SUBSTRATE)_?",
+      "match": "^docs/programme/(WITNESS_METHOD_CROSS_SURFACE_INVARIANT|REFLECTIONS_MAIA_01_IN_PLACE_CANONICAL_CONVERSATION|DEVELOPMENTAL_EDITOR_CAPABILITY|H8_PRODUCTION_SHADOW_PROJECTION|WS_HOME_v0\\.2_CONTRACT_STATE)_?",
       "category": "unassociated-record (named by subject, no programme id declared)",
       "evidence": [
-        "R-A0 finds no declaration; R-A1 finds no hyphenated id; the record names a subject, not a lane (HOME_REDESIGN declares Lane HOME-REDESIGN-01 with no charter or thread record — docket)"
+        "R-A0/R-A1 find no canonical programme declaration for these residual subject-named records; HOME_REDESIGN is removed from this class by Founder adjudication B4R1 PD-5"
       ]
     },
     {
@@ -163,5 +202,9 @@
     "R-S1": "explicit: a same-tier same-date record whose **Supersedes**/**Predecessor(s)** line names another record's filename succeeds it",
     "R-S2": "git ancestry: first-add commit time (one `git log --diff-filter=A` over docs/programme); distinct commits order the set; the same commit leaves it tied",
     "R-S3": "remaining ties stay UNVERIFIED / CONFLICT — act-number order inside one commit is a founder rule, not a projector default (docket PD-1)"
+  },
+  "founder_rulings": {
+    "S3": "canonical remains S3-DESIGN-01; S3 is human shorthand only (B4R1 PD-7)",
+    "standing_preamble": "New governed programme records should carry explicit Programme, Act, Standing fields; legacy prose is never mined for standing (B4R1 PD-6)"
   }
 }
