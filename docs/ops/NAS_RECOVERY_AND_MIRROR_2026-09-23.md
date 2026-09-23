@@ -97,12 +97,21 @@ the script over SSH. Nothing on the minisforum was changed.
    Repo has `scripts/restore-db.sh` and `scripts/restore-governed.sh`; neither is
    scheduled. Until one runs against a disposable database, the nightly dump is a
    file, not a backup.
-2. **`maia_20260918_020002.sql.gz` is 72 MB** against 320–334 MB for every
-   neighbour. `set -o pipefail` is on, so a failed `pg_dump` would exit non-zero,
-   but `gzip` had already written whatever arrived. Most likely `pg_dump` was cut
-   off at 02:00 UTC on 18 Sep (22:00 local, 17 Sep). Retention deletes it in days;
-   the question of what interrupted it does not expire. Check `/var/log/maia-backup.log`
-   for that run and `gzip -t` the file.
+2. **`maia_20260918_020002.sql.gz` is 72 MB and `gzip -t` reports
+   `unexpected end of file`** — yet `/var/log/maia-backup.log` for that run reads
+   `PostgreSQL backup complete: … (333M)` and the run finished normally with a
+   manifest. **The dump was complete when the script measured it and was
+   truncated afterwards, silently.** Mechanism: the mount is
+   `cifs … soft,retrans=1,cache=strict`; writes return success into the page
+   cache, `du -sh` measured that cache, and the real flush to the NAS happens on
+   close/writeback where a `soft` mount fails instead of retrying; bash never
+   checks the close of a `>` redirection. ⭐ *The script's success line, the
+   manifest, and any weekly/monthly `cp` of that file all vouch for bytes that
+   never reached the disk.* An earlier draft of this item guessed an interrupted
+   `pg_dump`; the log rules that out. Cause of the hiccup itself (tray slip on
+   the NAS vs LAN) is not established and does not change the finding.
+   **R1 must integrity-sweep every retained dump** (`gzip -t` + last line
+   `PostgreSQL database dump complete`) because the failure class is silent.
 3. **Two dump jobs fire at the same minute.** The user crontab also runs the
    repo's `scripts/backup-postgres.sh` at `0 2 * * *` into
    `~/MAIA-SOVEREIGN/database/backups/` on the minisforum's **own disk**
