@@ -55,7 +55,7 @@ const unmounted = (id: string) => must(id, false, 'UNMOUNTED — no live Review 
 const MS = 'ms-1'; const D1 = 'd-root'; const D2 = 'd-2';
 const sha = (s: string) => `sha-${s.length}-${s.slice(0, 8)}`;
 const TEXT2 = SECTION.body; const TEXT1 = ROOT_SECTION.body;
-function reading(id: string, over: { manuscriptId?: string; frozen2?: string; outcome?: 'reading' | 'none'; obsSection?: string } = {}) {
+function reading(id: string, over: { manuscriptId?: string; listedUnder?: string; frozen2?: string; outcome?: 'reading' | 'none'; obsSection?: string } = {}) {
   const frozen2 = over.frozen2 ?? TEXT2; const outcome = over.outcome ?? 'reading'; const obsSection = over.obsSection ?? D2;
   const obs = outcome === 'reading' ? [{
     key: 'o1', observationId: `dobs_${id}`, admissionIndex: 0, basisFingerprint: sha(`b:${id}`),
@@ -64,6 +64,8 @@ function reading(id: string, over: { manuscriptId?: string; frozen2?: string; ou
     doesNotEstablish: ['author-intent'], structureDependency: { kind: 'independent' },
   }] : [];
   return {
+    /** Where the ledger lists it (the route's own scoping); the payload's manuscriptId may disagree — the wrong-Work case. */
+    listedUnder: over.listedUnder ?? over.manuscriptId ?? MS,
     id, manuscriptId: over.manuscriptId ?? MS, outcome,
     scope: { commissionedLens: 'continuity', bodyScope: [D1, D2], withStructure: false },
     readState: { draftId: 'dr-1', revisionNumber: 1, revisionDigest: sha(TEXT1 + frozen2), sectionTopology: [D1, D2],
@@ -74,12 +76,13 @@ function reading(id: string, over: { manuscriptId?: string; frozen2?: string; ou
   };
 }
 const summaryOf = (r: ReturnType<typeof reading>) => ({ id: r.id, outcome: r.outcome, commissionedLens: 'continuity', frozenAt: r.provenance.frozenAt, observationCount: r.observations.length });
+const stripListing = ({ listedUnder: _l, ...r }: ReturnType<typeof reading>) => r;
 const assessment = (r: ReturnType<typeof reading>, state: 'current' | 'superseded' | 'unmeasured' = 'current') => ({
   reading: state === 'superseded' ? { state, moved: [D2] } : { state },
   observations: Object.fromEntries(r.observations.map((o) => [o.key, state === 'superseded' ? { state, moved: [D2] } : { state }])),
 });
 const payloadOf = (r: ReturnType<typeof reading>, state: 'current' | 'superseded' | 'unmeasured' = 'current') => ({
-  reading: r, assessment: assessment(r, state), sections: [{ id: D1, heading: ROOT_SECTION.heading }, { id: D2, heading: SECTION.heading }],
+  reading: stripListing(r), assessment: assessment(r, state), sections: [{ id: D1, heading: ROOT_SECTION.heading }, { id: D2, heading: SECTION.heading }],
 });
 export const HOST: ReviewHostFacts = {
   manuscriptId: MS, work: 'The River Between', kind: 'novel', scope: { kind: 'work' },
@@ -91,10 +94,10 @@ export function ports(opts: { readings?: ReturnType<typeof reading>[]; states?: 
   const rs = opts.readings ?? [reading('rd-current')];
   const p: ReviewPorts & { calls: string[]; commission: () => Promise<void>; cognition: () => Promise<void>; write: () => Promise<void> } = {
     calls,
-    listReadings: async (m) => { calls.push(`list:${m}`); return { ok: true, status: 200, json: { readings: rs.filter((r) => r.manuscriptId === m).map(summaryOf) } }; },
+    listReadings: async (m) => { calls.push(`list:${m}`); return { ok: true, status: 200, json: { readings: rs.filter((r) => r.listedUnder === m).map(summaryOf) } }; },
     getReading: async (m, id) => {
       calls.push(`get:${m}:${id}`); if (opts.delay?.[id]) await opts.delay[id]!();
-      const r = rs.find((x) => x.id === id && x.manuscriptId === m);
+      const r = rs.find((x) => x.id === id && x.listedUnder === m);
       return r ? { ok: true, status: 200, json: payloadOf(r, opts.states?.[id] ?? 'current') } : { ok: false, status: 404, json: { refusal: 'not_found' } };
     },
     commission: async () => { calls.push('POST:commission'); },
@@ -163,7 +166,8 @@ export async function runR11BLaws(s: Subject): Promise<LawResult[]> {
   }));
   out.push(await alaw('R1-1B-L8-wrong-work-never-mounts', async () => {
     if (!s.load) return unmounted('R1-1B-L8-wrong-work-never-mounts');
-    const p = ports({ readings: [reading('rd-other', { manuscriptId: 'ms-2' })] });
+    /* Listed under the host Work, but the durable payload names another manuscript. */
+    const p = ports({ readings: [reading('rd-other', { manuscriptId: 'ms-2', listedUnder: MS })] });
     const r = await s.load('rd-other', HOST, p);
     return must('R1-1B-L8-wrong-work-never-mounts', r.kind === 'unavailable', `result=${r.kind}`);
   }));
