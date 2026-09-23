@@ -11,6 +11,7 @@ import {
   EpistemicJoinPersistenceConflict,
   persistEpistemicJoinSnapshot,
 } from '../../lib/ain/epistemic-join/persistence/store';
+import { closePool } from '../../lib/db/postgres';
 
 const memberId = process.env.I3_MEMBER_ID;
 if (!memberId) throw new Error('I3_MEMBER_ID is required');
@@ -79,7 +80,11 @@ console.log(JSON.stringify({
 }));
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+main()
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await closePool();
+  });
