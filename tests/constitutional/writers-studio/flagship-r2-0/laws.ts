@@ -73,7 +73,7 @@ const thenVsNow = () => ({ posture: 'THEN_VS_NOW', finding: A, output: FINDING, 
 const currentTextOnly = () => ({ posture: 'CURRENT_TEXT_ONLY', sectionId: 'd-2', now: NOW });
 
 /* ── the type-level instrument: compile the lawful fixture + every illegal fixture against the subject's contract ── */
-export interface TypeVerdict { readonly contractDiagnostics: number; readonly lawfulDiagnostics: number; readonly illegal: Readonly<Record<string, number>>; readonly raw: string }
+export interface TypeVerdict { readonly contractDiagnostics: number; readonly lawfulDiagnostics: number; readonly illegal: Readonly<Record<string, number>>; readonly globalErrors: number; readonly raw: string }
 const typeCache = new Map<string, TypeVerdict>();
 export function typecheckAgainst(contractFile: string): TypeVerdict {
   const cached = typeCache.get(contractFile); if (cached) return cached;
@@ -85,7 +85,7 @@ export function typecheckAgainst(contractFile: string): TypeVerdict {
   try {
     const cfg = {
       extends: resolve(ROOT, 'tsconfig.ws-flagship.json'),
-      compilerOptions: { noEmit: true, baseUrl: ROOT, paths: { '@/*': ['./*'], '@r2-0/contract': [contract] } },
+      compilerOptions: { noEmit: true, baseUrl: ROOT, typeRoots: [resolve(ROOT, 'node_modules/@types')], paths: { '@/*': ['./*'], '@r2-0/contract': [contract] } },
       files: [contract, lawful, ...illegalFiles], include: [],
     };
     writeFileSync(join(tmp, 'tsconfig.json'), JSON.stringify(cfg));
@@ -95,7 +95,9 @@ export function typecheckAgainst(contractFile: string): TypeVerdict {
     const countFor = (abs: string) => lines.filter((l) => l.startsWith(abs.slice(ROOT.length + 1)) || l.startsWith(abs)).length;
     const illegal: Record<string, number> = {};
     for (const f of illegalFiles) illegal[f.slice(illegalDir.length + 1).replace(/\.ts$/, '')] = countFor(f);
-    const v: TypeVerdict = { contractDiagnostics: countFor(contract), lawfulDiagnostics: countFor(lawful), illegal, raw };
+    /* ⚠️ a diagnostic with no file position (e.g. TS2688 type roots) means tsc never checked anything: an INSTRUMENT failure, never a pass */
+    const globalErrors = raw.split('\n').filter((l) => /^error TS\d+:/.test(l.trim())).length;
+    const v: TypeVerdict = { contractDiagnostics: countFor(contract), lawfulDiagnostics: countFor(lawful), illegal, globalErrors, raw };
     typeCache.set(contractFile, v); return v;
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 }
@@ -107,6 +109,7 @@ export async function runR20Laws(s: Subject): Promise<LawResult[]> {
   const T = present ? typecheckAgainst(s.contractFile) : null;
   const refused = (id: string, fixture: string, extra = true, extraDetail = '') => {
     if (!T) return unmounted(id);
+    if (T.globalErrors > 0) return must(id, false, `INSTRUMENT — tsc reported ${T.globalErrors} global error(s); nothing was checked`);
     const n = T.illegal[fixture]; if (n === undefined) return must(id, false, `illegal fixture ${fixture} is MISSING — the law has nothing to refuse`);
     return must(id, n > 0 && extra, `illegal:${fixture} diagnostics=${n} (must be >0)${extraDetail}`);
   };
@@ -114,7 +117,7 @@ export async function runR20Laws(s: Subject): Promise<LawResult[]> {
 
   out.push(law('R2-0-L0-contract-and-lawful-object-typecheck', () => {
     if (!T) return unmounted('R2-0-L0-contract-and-lawful-object-typecheck');
-    return must('R2-0-L0-contract-and-lawful-object-typecheck', T.contractDiagnostics === 0 && T.lawfulDiagnostics === 0, `contract=${T.contractDiagnostics} lawful=${T.lawfulDiagnostics} (both must be 0)`);
+    return must('R2-0-L0-contract-and-lawful-object-typecheck', T.globalErrors === 0 && T.contractDiagnostics === 0 && T.lawfulDiagnostics === 0, `instrumentErrors=${T.globalErrors} contract=${T.contractDiagnostics} lawful=${T.lawfulDiagnostics} (all must be 0)`);
   }));
   out.push(law('R2-0-L1-posture-required', () => refused('R2-0-L1-posture-required', 'f01-posture-omitted')));
   out.push(law('R2-0-L2-as-read-forbids-current-substitution', () => refused('R2-0-L2-as-read-forbids-current-substitution', 'f02-as-read-current-substitution')));
@@ -125,7 +128,7 @@ export async function runR20Laws(s: Subject): Promise<LawResult[]> {
     if (!rt.declareCrossing) return unmounted('R2-0-L6-then-and-now-are-distinct-roles');
     const d = rt.declareCrossing(thenVsNow());
     const then = d.entries.filter((e) => e.role === 'THEN'); const now = d.entries.filter((e) => e.role === 'NOW');
-    const distinct = then.length === 1 && now.length === 1 && then[0]!.inputClass === 'MEMBER_WORK_TEXT' && now[0]!.inputClass === 'MEMBER_WORK_TEXT';
+    const distinct = then.length === 1 && now.length === 1 && then[0]!.role !== now[0]!.role;
     return refused('R2-0-L6-then-and-now-are-distinct-roles', 'f06-then-now-collapsed', distinct, ` rolesDistinct=${distinct}`);
   }));
   out.push(law('R2-0-L7-current-text-only-is-not-review-discuss', () => {
@@ -198,7 +201,8 @@ export async function runR20Laws(s: Subject): Promise<LawResult[]> {
   out.push(law('R2-0-L16-contract-is-non-executing', () => {
     if (!present) return unmounted('R2-0-L16-contract-is-non-executing');
     const src = strip(readFileSync(join(ROOT, s.contractFile), 'utf8'));
-    const imports = (src.match(/^\s*import\s[^\n]*from\s+['"][^'"]+['"]/gm) ?? []).filter((l) => !/from\s+['"]\.\/contract['"]/.test(l));
+    /* a candidate re-exports the reference contract (`export * from '../contract'`); that is the instrument's shape, not an import of runtime */
+    const imports = (src.match(/^\s*(import|export)\s[^\n]*from\s+['"][^'"]+['"]/gm) ?? []).filter((l) => !/from\s+['"]\.{1,2}\/contract['"]/.test(l));
     const runtimeImporters = execSync(`grep -rlE "flagship-r2-0" app lib components middleware.ts 2>/dev/null || true`, { cwd: ROOT, encoding: 'utf8' }).trim();
     const sideEffects = /fetch\(|process\.env|require\(|readFileSync|query\(|pool\.|router\./.test(src);
     return must('R2-0-L16-contract-is-non-executing', imports.length === 0 && runtimeImporters === '' && !sideEffects, `imports=${imports.length} runtimeImporters=${runtimeImporters || 'none'} sideEffects=${sideEffects}`);

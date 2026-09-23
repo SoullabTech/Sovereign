@@ -36,4 +36,16 @@ export const NAMED_KILL: Readonly<Record<string, string>> = {
   'R2-0-D15-silent-reread': 'R2-0-L15-location-never-escalates-posture',
 };
 /** Irreducible collateral: removing it would require the candidate to stop embodying its error. Filled after the first lethal run. */
-export const CLASSIFIED: Readonly<Record<string, readonly string[]>> = {};
+export const CLASSIFIED: Readonly<Record<string, readonly string[]>> = {
+  /* a collapsed THEN_VS_NOW has no `then`/`now` fields, so the LAWFUL object (which carries both, distinct) cannot even be
+     expressed against it: refusing the lawful object is what collapsing means */
+  'R2-0-D6-then-now-collapsed': ['R2-0-L0-contract-and-lawful-object-typecheck'],
+  /* misclassifying the finding as member Work text leaves the crossing with two classes where three enter: the hidden
+     class IS the misclassification */
+  'R2-0-D10-finding-as-member-work': ['R2-0-L12-crossing-declares-every-class'],
+  /* misclassifying member prose as provenance collapses two classes into one for the same reason */
+  'R2-0-D11-member-text-as-system-provenance': ['R2-0-L12-crossing-declares-every-class'],
+  /* a crossing that declares only `work` necessarily fails to declare the finding (L10), the current prose (L11) and
+     the NOW role (L6): hiding inputs is one error with three observable absences */
+  'R2-0-D12-mixed-input-hidden': ['R2-0-L6-then-and-now-are-distinct-roles', 'R2-0-L10-finding-is-durable-reading-output', 'R2-0-L11-member-text-is-member-work-text'],
+};

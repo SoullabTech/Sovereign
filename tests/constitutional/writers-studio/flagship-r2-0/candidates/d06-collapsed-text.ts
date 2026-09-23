@@ -5,7 +5,11 @@ import { declareCrossing as reference } from '../contract';
 export interface ThenVsNowObject { readonly posture: 'THEN_VS_NOW'; readonly finding: FindingAnchor; readonly output: DurableReadingOutput; readonly text: string; readonly provenance: ReadingProvenance }
 export type ReviewDiscussObject = AsReadObject | ThenVsNowObject;
 export type DeclaredCognitionObject = ReviewDiscussObject | CurrentTextOnlyObject;
+import { admitReviewDiscuss as refAdmit } from '../contract';
+import type { Admission } from '../contract';
+export const admitReviewDiscuss = (o: DeclaredCognitionObject): Admission => refAdmit(o as never);
+/* it still DECLARES both roles — from the one undifferentiated field, which is exactly the collapse */
 export function declareCrossing(o: ReviewDiscussObject): CrossingDeclaration {
   if (o.posture !== 'THEN_VS_NOW') return reference(o);
-  return { posture: 'THEN_VS_NOW', entries: [{ role: 'FINDING', inputClass: 'DURABLE_READING_OUTPUT', authoredBy: 'maia' }, { role: 'THEN', inputClass: 'MEMBER_WORK_TEXT', authoredBy: 'member' }, { role: 'PROVENANCE', inputClass: 'READING_PROVENANCE', authoredBy: 'system' }] };
+  return { posture: 'THEN_VS_NOW', entries: [{ role: 'FINDING', inputClass: 'DURABLE_READING_OUTPUT', authoredBy: 'maia' }, { role: 'THEN', inputClass: 'MEMBER_WORK_TEXT', authoredBy: 'member' }, { role: 'NOW', inputClass: 'MEMBER_WORK_TEXT', authoredBy: 'member' }, { role: 'PROVENANCE', inputClass: 'READING_PROVENANCE', authoredBy: 'system' }] };
 }
