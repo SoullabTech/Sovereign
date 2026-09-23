@@ -2,6 +2,29 @@
   "_doc": "Provider Governance policy (machine-readable). Enforced by scripts/check-provider-governance.ts (npm run check:no-openai). Human policy + rationale: docs/canon/PROVIDER_GOVERNANCE.md",
   "_invariant": "Providers are replaceable, governable infrastructure BENEATH MAIA's identity — never the identity itself. Production data flows only to sovereign/approved providers; non-approved providers are lab-only or forbidden. The guard prevents NEW non-compliant surfaces; the allowlist below is the enumerated migration debt, tracked toward zero.",
 
+  "capability_classes": {
+    "chat": { "kind": "function", "description": "Generative chat/reasoning." },
+    "embedding": { "kind": "function", "description": "Embedding generation." },
+    "tts": { "kind": "function", "description": "Text-to-speech." },
+    "stt": { "kind": "function", "description": "Speech-to-text." },
+    "benchmark": { "kind": "function", "description": "Bounded evaluation/benchmark use." },
+    "member_data": { "kind": "data", "description": "Member-authored or member-derived content permitted by the governing product boundary." },
+    "member_audio": { "kind": "data", "description": "Member audio permitted by the governing voice boundary." },
+    "repository_derived_metadata": { "kind": "data", "description": "Fixed-schema non-content repository state; excludes source, paths, prose, canon, and member content.", "assigned_by_default": false },
+    "repository_source": { "kind": "data", "description": "Repository source or structural/content representations such as excerpts, diffs, filenames, paths, symbols, or commit messages.", "assigned_by_default": false },
+    "constitutional_canon": { "kind": "data", "description": "Canon, constitutional text, ratification records, founder rulings, or other constitutionally authoritative material.", "assigned_by_default": false }
+  },
+
+  "development_boundary": {
+    "governance_canon": "docs/canon/DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md",
+    "canon_status": "candidate_not_ratified",
+    "interim_hold": "active",
+    "held_lab_data_classes": ["repository_source", "constitutional_canon"],
+    "repository_data_classes": ["repository_derived_metadata", "repository_source", "constitutional_canon"],
+    "unassigned_repository_classes": ["repository_derived_metadata", "repository_source", "constitutional_canon"],
+    "repository_assignment_authorizations": {}
+  },
+
   "tiers": {
     "production": {
       "description": "May run in production and receive member data / synthesized audio.",

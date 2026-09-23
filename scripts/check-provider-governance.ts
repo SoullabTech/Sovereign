@@ -23,7 +23,7 @@
  * @see docs/canon/PROVIDER_GOVERNANCE.md
  * @see scripts/provider-policy.json
  */
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -42,12 +42,278 @@ const BANNED: Array<{ rule: string; re: RegExp; forbidden?: boolean }> = [
 const ALLOW_EXT = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const IGNORE_PATH_RE = /(node_modules\/|\.next\/|dist\/|dist-minimal\/|build\/|coverage\/|artifacts\/|backups\/|ios\/|android\/|\.DISABLED\/|\.md$|\.mdx$)/;
 
+function policyError(message: string): never {
+  console.error(`❌ PROVIDER POLICY ERROR: ${message}`);
+  process.exit(2);
+}
+
+function instrumentError(message: string): never {
+  console.error(`⚠️ PROVIDER GOVERNANCE INSTRUMENT ERROR: ${message}`);
+  process.exit(3);
+}
+
+function validateCapabilityVocabulary(policy: any): void {
+  const classes = policy?.capability_classes;
+  if (!classes || typeof classes !== 'object' || Array.isArray(classes)) {
+    policyError('capability_classes must be a non-empty object.');
+  }
+  const names = Object.keys(classes);
+  if (names.length === 0) policyError('capability_classes must not be empty.');
+
+  for (const [name, spec] of Object.entries(classes) as Array<[string, any]>) {
+    if (!spec || typeof spec !== 'object') policyError(`capability ${name} is malformed.`);
+    if (!['function', 'data'].includes(spec.kind)) policyError(`capability ${name} has invalid kind.`);
+    if (typeof spec.description !== 'string' || spec.description.trim() === '') {
+      policyError(`capability ${name} requires a description.`);
+    }
+  }
+
+  for (const tierName of ['production', 'lab']) {
+    const providers = policy?.tiers?.[tierName]?.providers || {};
+    for (const [providerName, provider] of Object.entries(providers) as Array<[string, any]>) {
+      if (!Array.isArray(provider?.capabilities)) {
+        policyError(`${tierName}.${providerName} capabilities must be an array.`);
+      }
+      for (const capability of provider.capabilities) {
+        if (typeof capability !== 'string' || !Object.prototype.hasOwnProperty.call(classes, capability)) {
+          policyError(`${tierName}.${providerName} references unknown capability ${String(capability)}.`);
+        }
+      }
+    }
+  }
+}
+
+function git(args: string[]): string {
+  return execFileSync("git", args, {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
+}
+
+function authorizationBoundaryRef(): string {
+  try {
+    const dirty = git(["status", "--porcelain", "--", "scripts/provider-policy.json"]);
+    if (process.env.GIT_PRE_COMMIT === "1" || dirty.length > 0) return "HEAD";
+    return git(["rev-parse", "HEAD^"]);
+  } catch {
+    return "HEAD";
+  }
+}
+
+function canonicalBoundaryRef(): string {
+  const supplied = process.env.PROVIDER_GOVERNANCE_CANONICAL_SHA?.trim();
+  if (supplied) {
+    if (!/^[0-9a-f]{40}$/.test(supplied)) {
+      instrumentError("PROVIDER_GOVERNANCE_CANONICAL_SHA must be an exact 40-hex commit SHA.");
+    }
+    try {
+      git(["cat-file", "-e", supplied + "^{commit}"]);
+      return supplied;
+    } catch {
+      instrumentError(
+        "canonical base SHA is declared but unavailable in the local commit graph; ancestry evidence is unavailable.",
+      );
+    }
+  }
+
+  try {
+    return git(["rev-parse", "origin/clean-main-no-secrets^{commit}"]);
+  } catch {
+    instrumentError(
+      "origin/clean-main-no-secrets is unavailable; cannot distinguish non-canonical authorization from missing history.",
+    );
+  }
+}
+
+function isAncestor(ancestor: string, descendant: string): boolean {
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", ancestor, descendant], {
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+type RepositoryAssignmentAuthorization = {
+  record_path: string;
+  record_blob: string;
+  record_commit: string;
+};
+
+function validateRepositoryAssignmentAuthorization(
+  auth: RepositoryAssignmentAuthorization,
+  assignment: { tier: string; provider: string; capability: string },
+): void {
+  if (!auth || typeof auth !== "object") {
+    policyError(
+      `repository assignment ${assignment.tier}.${assignment.provider}.${assignment.capability} requires authorized_by record.`,
+    );
+  }
+
+  if (typeof auth.record_path !== "string"
+      || !auth.record_path.startsWith("docs/governance/provider-assignments/")
+      || !auth.record_path.endsWith(".json")) {
+    policyError("repository assignment authorization must point to docs/governance/provider-assignments/*.json.");
+  }
+  if (!/^[0-9a-f]{40}$/.test(auth.record_blob || "")) {
+    policyError("repository assignment authorization requires exact 40-hex record_blob.");
+  }
+  if (!/^[0-9a-f]{40}$/.test(auth.record_commit || "")) {
+    policyError("repository assignment authorization requires exact 40-hex record_commit.");
+  }
+
+  const boundaryRef = authorizationBoundaryRef();
+  if (!isAncestor(auth.record_commit, boundaryRef)) {
+    policyError(
+      `repository assignment authorization commit ${auth.record_commit} must predate the assignment candidate (${boundaryRef}).`,
+    );
+  }
+
+  const canonicalRef = canonicalBoundaryRef();
+  if (!isAncestor(auth.record_commit, canonicalRef)) {
+    policyError(
+      `repository assignment authorization commit ${auth.record_commit} is not admitted to canonical base ${canonicalRef}.`,
+    );
+  }
+
+  let canonicalBlob: string;
+  try {
+    canonicalBlob = git(["rev-parse", canonicalRef + ":" + auth.record_path]);
+  } catch {
+    policyError(
+      `repository assignment authorization record ${auth.record_path} is absent from canonical base ${canonicalRef}.`,
+    );
+  }
+  if (canonicalBlob! !== auth.record_blob) {
+    policyError(
+      `canonical authorization blob mismatch at ${auth.record_path}: expected ${auth.record_blob}, found ${canonicalBlob!}.`,
+    );
+  }
+
+  let committedBlob: string;
+  let raw: string;
+  try {
+    committedBlob = git(["rev-parse", auth.record_commit + ":" + auth.record_path]);
+    raw = git(["show", auth.record_commit + ":" + auth.record_path]);
+  } catch {
+    policyError("repository assignment authorization record cannot be resolved from its pinned commit.");
+  }
+
+  if (committedBlob! !== auth.record_blob) {
+    policyError(
+      `repository assignment authorization blob mismatch: expected ${auth.record_blob}, found ${committedBlob!}.`,
+    );
+  }
+
+  let record: any;
+  try {
+    record = JSON.parse(raw!);
+  } catch {
+    policyError("repository assignment authorization record must be valid JSON.");
+  }
+
+  if (record?.instrument !== "repository-provider-assignment/v1") {
+    policyError("repository assignment authorization has wrong instrument.");
+  }
+  if (record?.status !== "ratified") {
+    policyError("repository assignment authorization record is not ratified.");
+  }
+  if (record?.tier !== assignment.tier
+      || record?.provider !== assignment.provider
+      || record?.capability !== assignment.capability) {
+    policyError("repository assignment authorization does not exactly match the provider assignment.");
+  }
+}
+
+function validateDevelopmentBoundary(policy: any): void {
+  const boundary = policy?.development_boundary;
+  if (!boundary || typeof boundary !== 'object') {
+    policyError('development_boundary must be declared.');
+  }
+  if (!['candidate_not_ratified', 'ratified'].includes(boundary.canon_status)) {
+    policyError('development_boundary.canon_status is invalid.');
+  }
+  if (!['active', 'lifted'].includes(boundary.interim_hold)) {
+    policyError('development_boundary.interim_hold is invalid.');
+  }
+  if (boundary.interim_hold === 'lifted' && boundary.canon_status !== 'ratified') {
+    policyError('development hold cannot be lifted before the dev-lane canon is ratified.');
+  }
+
+  const classes = policy.capability_classes;
+  const held = Array.isArray(boundary.held_lab_data_classes)
+    ? boundary.held_lab_data_classes
+    : policyError('held_lab_data_classes must be an array.');
+  const repositoryClasses = Array.isArray(boundary.repository_data_classes)
+    ? boundary.repository_data_classes
+    : policyError('repository_data_classes must be an array.');
+  const unassigned = Array.isArray(boundary.unassigned_repository_classes)
+    ? boundary.unassigned_repository_classes
+    : policyError('unassigned_repository_classes must be an array.');
+  const authorizations = boundary.repository_assignment_authorizations;
+  if (!authorizations || typeof authorizations !== 'object' || Array.isArray(authorizations)) {
+    policyError('repository_assignment_authorizations must be an object.');
+  }
+
+  const expectedRepositoryClasses = [
+    'repository_derived_metadata',
+    'repository_source',
+    'constitutional_canon',
+  ];
+  if (JSON.stringify(repositoryClasses) !== JSON.stringify(expectedRepositoryClasses)) {
+    policyError('repository_data_classes must be the exact governed three-class set.');
+  }
+
+  for (const name of [...held, ...repositoryClasses, ...unassigned]) {
+    if (!classes?.[name] || classes[name].kind !== 'data') {
+      policyError(`development boundary references unknown/non-data class ${String(name)}.`);
+    }
+  }
+
+  const assignments: Array<{ tier: string; provider: string; capability: string }> = [];
+  for (const tierName of ['production', 'lab']) {
+    const providers = policy?.tiers?.[tierName]?.providers || {};
+    for (const [providerName, provider] of Object.entries(providers) as Array<[string, any]>) {
+      for (const capability of provider.capabilities || []) {
+        assignments.push({ tier: tierName, provider: providerName, capability });
+      }
+    }
+  }
+
+  for (const assignment of assignments) {
+    if (unassigned.includes(assignment.capability)) {
+      policyError(`${assignment.capability} is declared unassigned but granted to ${assignment.tier}.${assignment.provider}.`);
+    }
+
+    if (repositoryClasses.includes(assignment.capability)) {
+      const key = `${assignment.tier}/${assignment.provider}/${assignment.capability}`;
+      const auth = authorizations[key] as RepositoryAssignmentAuthorization | undefined;
+      if (!auth) {
+        policyError(
+          `repository capability assignment ${key} has no separately ratified prior authorization record.`,
+        );
+      }
+      validateRepositoryAssignmentAuthorization(auth!, assignment);
+    }
+
+    if (boundary.interim_hold === 'active'
+        && assignment.tier === 'lab'
+        && held.includes(assignment.capability)) {
+      policyError(`active dev-lane hold forbids ${assignment.capability} on lab provider ${assignment.provider}.`);
+    }
+  }
+}
+
 function loadAllowlist(): { files: Set<string>; prefixes: string[] } {
   if (!fs.existsSync(POLICY_PATH)) {
     console.error(`❌ provider-policy.json not found at ${POLICY_PATH}`);
     process.exit(2);
   }
   const policy = JSON.parse(fs.readFileSync(POLICY_PATH, "utf8"));
+  validateCapabilityVocabulary(policy);
+  validateDevelopmentBoundary(policy);
   const files = new Set<string>();
   const prefixes: string[] = [];
   const groups = policy.openai_removal || {};
