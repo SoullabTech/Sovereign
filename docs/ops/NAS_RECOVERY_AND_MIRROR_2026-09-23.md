@@ -176,6 +176,31 @@ are the kind of thing that later reads as a mystery:
   still existed read `35,884 / 69,694,771,178`; the next clean pass read the exact
   match above. Only the clean pass is the evidence of record.
 
+### 3b. NAS-BACKUP-01 / R1 — witness 1: retained-dump integrity sweep (2026-09-23)
+
+Founder-run on the Studio against the SMB mount, read-only. Per file:
+`gzip -cd` exit status (integrity) and presence of pg_dump's closing marker
+`PostgreSQL database dump complete` in the last 8 lines (completeness).
+
+| Population | Result |
+|---|---|
+| 16 daily `maia_*` | **15 intact + complete · 1 truncated + incomplete (`maia_20260918_020002`, 75,497,472 B)** |
+| 2 monthly | intact + complete |
+| 7 weekly (`weekly_20260920` covered by the earlier `gzip -t` pass) | intact + complete |
+
+The truncation did not propagate: the 18th was a Friday, so no weekly or monthly
+`cp` was taken from it. Sizes grow monotonically 335 → 349 MB across the
+fortnight except the 18th, consistent with one isolated write failure.
+
+⚠️ Two instrument defects surfaced before this table was obtained, both in the
+sweep and neither in the backups: `tail -1` matched pg_dump's trailing blank
+line, and on macOS `zcat` reads only `.Z` files and silently produced nothing on
+`.gz`. Each made every healthy file read INCOMPLETE. The version above
+(`gzip -cd … | tail -n 8`, `PIPESTATUS`) is the instrument of record.
+
+**Witness 2 (restore into a disposable, `scripts/ops/nas-restore-witness.sh`)**:
+pending at the time of writing.
+
 ## 5. Open items (none authorized here; each needs its own act)
 
 1. **DHCP reservation** on the router for the NAS at `.103` and the minisforum at
