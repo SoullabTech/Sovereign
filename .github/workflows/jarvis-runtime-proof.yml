@@ -1,0 +1,65 @@
+# JARVIS RUNTIME PROOF — executable regression surface for Builder/Desktop mechanics.
+#
+# Scope of a green run:
+# - the repository's canonical `npm run jarvis:proof` chain completed with
+#   unguarded exit semantics on this exact head;
+# - every proof named by that script was actually invoked.
+#
+# It does NOT establish production readiness, provider availability, live model
+# quality, deployment safety, or human adjudication. Those remain separate gates.
+#
+# This workflow exists because jarvis:proof previously had no PR caller.
+
+name: JARVIS Runtime Proof
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets]
+    paths:
+      - 'scripts/builder/**'
+      - 'jarvis-desktop/**'
+      - 'scripts/ain-delegate.sh'
+      - 'scripts/ain-worktree-claim.sh'
+      - 'package.json'
+      - '.github/workflows/jarvis-runtime-proof.yml'
+  push:
+    branches: [clean-main-no-secrets]
+    paths:
+      - 'scripts/builder/**'
+      - 'jarvis-desktop/**'
+      - 'scripts/ain-delegate.sh'
+      - 'scripts/ain-worktree-claim.sh'
+      - 'package.json'
+      - '.github/workflows/jarvis-runtime-proof.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-proof:
+    name: Canonical JARVIS proof chain
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+      TZ: UTC
+      LC_ALL: C
+
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run canonical JARVIS proof chain
+        run: npm run jarvis:proof
+
+      - name: Run JARVIS Desktop regression suite
+        run: node --test jarvis-desktop/test/*.test.mjs
