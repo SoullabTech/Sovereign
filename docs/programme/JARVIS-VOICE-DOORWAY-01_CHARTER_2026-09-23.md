@@ -2,7 +2,7 @@
 
 **Opened:** 2026-09-23 by founder ruling OE-1 (`JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_FOUNDER_ADJUDICATION_2026-09-23.md` §IV).
 **Parent (flow):** `JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01` (readiness authority). **Surface parent:** `JARVIS-FOUNDER-WORKSPACE-01` (the doorway lands on its Work surface, after B6).
-**Current act:** V1 DELIVERED (`…_V1_OPERATOR_VOICE_CONTRACT_AND_FALSIFIER_SUITE_2026-09-23.md`) — contract ratified as test contract, matrix lethal; ⛔ V2 closed until WORKSPACE-01 B6 (founder act 2026-09-23). Prior: V0 DELIVERED.
+**Current act:** V1R1 DELIVERED (`…_V1R1_PROVIDER_GOVERNANCE_NEGATIVE_FIXTURE_CONFORMANCE_2026-09-23.md`) — one negative-fixture literal repaired for provider-governance conformance; V1 contract/law unchanged and matrix remains lethal; ⛔ V2 closed until WORKSPACE-01 B6. Prior: V1 DELIVERED · V0 DELIVERED.
 
 ## Mandatory lane preamble
 
