@@ -75,6 +75,12 @@ export function evaluateDependencyAudit(
   if (!policy.dependency_scope || !policy.severity_threshold) {
     return { kind: "POLICY_INPUT_MISSING" };
   }
+  if (policy.dependency_scope !== "prod" && policy.dependency_scope !== "dev" && policy.dependency_scope !== "all") {
+    return { kind: "POLICY_INPUT_MISSING" };
+  }
+  if (policy.severity_threshold !== "low" && policy.severity_threshold !== "moderate" && policy.severity_threshold !== "high" && policy.severity_threshold !== "critical") {
+    return { kind: "POLICY_INPUT_MISSING" };
+  }
 
   // Validate evidence binding against expected
   if (evidence.target_commit !== expected.target_commit ||
