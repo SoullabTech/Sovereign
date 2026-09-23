@@ -1,32 +1,28 @@
-import '../flagship/flagship.css';
-import './flagshipWriteHost.css';
+import './rebuild.css';
 import { Suspense } from 'react';
-import FlagshipWriteHost from './FlagshipWriteHost';
+import RebuildStudioClient from './RebuildStudioClient';
 
 /**
- * /writers-studio/rebuild — the flagship Write host (C1B) with the Discuss-only
- * contextual MAIA (C1C1).
+ * /writers-studio/rebuild — the full manuscript-first Writer's Studio workspace.
  *
- * ⭐ ONE FLAG, ONE AUTHORITY (the canvas route's precedent). The editorial
- * flag is read HERE, once, on the server, and handed down as a boolean. It is
- * presentation state — which surface is drawn — never authorization: every
- * editorial route re-reads the real server flag and refuses independently.
- * ⛔ No `NEXT_PUBLIC_` mirror · ⛔ no client inference from a 404 · ⛔ no
- * feature-status API. `force-dynamic` so a build-time read cannot freeze one
- * deployment's answer into every later one.
+ * RESTORATION 2026-09-23
  *
- * The legacy `RebuildStudioClient` composition is retained in this directory,
- * unmounted, for the later bounded convergence acts.
+ * The C1B FlagshipWriteHost was a bounded constitutional host used to prove the
+ * new Write/Review runtime. Mounting it as the production Studio collapsed the
+ * member-facing workspace to that bounded host and hid the fuller composition
+ * already present in RebuildStudioClient.
+ *
+ * Production therefore mounts the complete workspace here again. The newer
+ * governed backend remains in place: editorial routes, Review Discuss R2-2,
+ * disclosure receipts, durable observation identity and feature flags are not
+ * rolled back by this presentation restoration.
  */
 export const dynamic = 'force-dynamic';
 
 export default function WriterStudioRebuildPage() {
   return (
-    <Suspense fallback={<div className="fs-tokens fsw-state">Opening your Writer’s Studio…</div>}>
-      <FlagshipWriteHost
-        editorialEnabled={process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1'}
-        reviewDiscussEnabled={process.env.WRITERS_STUDIO_REVIEW_DISCUSS_ENABLED === '1'}
-      />
+    <Suspense fallback={<div style={{ padding: 32 }}>Opening Writer’s Studio…</div>}>
+      <RebuildStudioClient />
     </Suspense>
   );
 }
