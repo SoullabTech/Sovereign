@@ -1,0 +1,167 @@
+{
+  "schema": "programme-projection-map.v1",
+  "authored": "2026-09-23",
+  "act": "JARVIS-FOUNDER-WORKSPACE-01 / B4R1 — PROGRAMME IDENTITY + SUCCESSION RECONCILIATION ONLY",
+  "law": "Every entry carries evidence naming the record, bullet or ruling that supports it. An entry without evidence is refused by the projector (RM-1). The map resolves identity; it never supplies standing, and it never sets complete:true.",
+  "families": [
+    {
+      "family": "S3",
+      "canonical": "S3-DESIGN-01",
+      "member_pattern": "^S3(?:[-_]|$)",
+      "thread_token": "S3",
+      "evidence": [
+        "CLAUDE.md priority thread 2026-09-13…2026-09-14: eight LATEST bullets name the lane as `S3` and cite S3-DESIGN-01 / S3-F8-WITNESS-01 / S3-FALSIFIERS-01 records as its acts",
+        "docs/programme/S3-M1-M3_SUBSTRATE_CANDIDATE_2026-09-13.md and S3-B-IV_DESIGN_2026-09-13.md declare **Lane** S3-DESIGN-01 in their own text (R-A0)",
+        "docs/programme/S3_PENDING_ASK_REF_SUBSTRATE_CENSUS_2026-09-13.md: 'step 7 of the P1 pre-implementation sequence' of S3-DESIGN-01 (CLAUDE.md bullet 2026-09-13)"
+      ]
+    },
+    {
+      "family": "RGR",
+      "canonical": "RELATIONAL-GEOMETRY-REASONING",
+      "member_pattern": "^RGR-\\d+$",
+      "evidence": [
+        "ten RGR-0x records declare **Programme:** RELATIONAL-GEOMETRY-REASONING in their own text (R-A0); RGR-00 is that programme's research constitution; docs/programme/evidence/RGR-05 and RGR-06 are its evidence directories"
+      ]
+    }
+  ],
+  "ops_lanes": [
+    {
+      "path": "docs/ops/WORKSTATION_STORAGE_RELIEF_2026-09-22.md",
+      "id": "WORKSTATION-STORAGE-RELIEF",
+      "evidence": [
+        "CLAUDE.md priority thread bullet 2026-09-23 'WORKSTATION STORAGE RELIEF (Mac Studio)' cites this record as its record of standing",
+        "JARVIS-FOUNDER-WORKSPACE-01 F0 fixture (programme-state.v1.fixture.json) emitted it as a programme row; P0 adjudication accepted the population definition 'an ops lane with a record in docs/ops'"
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "match": "^docs/programme/MAIA_WHOLE_ORGANISM_MAP/",
+      "id": "JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01",
+      "role": "supporting",
+      "evidence": [
+        "CLAUDE.md thread bullet 2026-09-06 (JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01): 'read-only census … → docs/programme/MAIA_WHOLE_ORGANISM_MAP/00_RANKED_MAP.md for founder adjudication'"
+      ]
+    },
+    {
+      "match": "^docs/programme/MAIA_CANONICAL_TURN_",
+      "id": "CMT-01",
+      "role": "supporting",
+      "evidence": [
+        "CLAUDE.md thread bullet 2026-09-03 (CMT-01): 'Census (docs/programme/MAIA_CANONICAL_TURN_CURRENT_STATE_CENSUS.md)'; CMT-01 records declare **Lane**: CMT-01 (R-A0)"
+      ]
+    },
+    {
+      "match": "^docs/programme/CIRCLES_INVOCATION_SUBSTRATE_CENSUS\\.md$",
+      "id": "JARVIS-CIRCLES-01",
+      "role": "supporting",
+      "evidence": [
+        "CLAUDE.md thread bullet 2026-09-07 (JARVIS-CIRCLES-01): 'I0 outputs docs/programme/CIRCLES_INVOCATION_SUBSTRATE_CENSUS.md'"
+      ]
+    },
+    {
+      "match": "^docs/programme/CIRCLE_",
+      "id": "JARVIS-CIRCLES-01",
+      "role": "supporting",
+      "evidence": [
+        "both files carry the backticked id JARVIS-CIRCLES-01 in their own text and no other programme id"
+      ]
+    },
+    {
+      "match": "^docs/programme/S3_",
+      "id": "S3-DESIGN-01",
+      "role": "supporting",
+      "evidence": [
+        "family S3 (above); the four S3_*_CENSUS records are the P1 pre-implementation censuses named by the S3-DESIGN-01 sequence"
+      ]
+    },
+    {
+      "match": "^docs/programme/evidence/REVIEW-CUSTODY-01-STEP3R?/",
+      "id": "REVIEW-CUSTODY-01",
+      "role": "supporting",
+      "evidence": [
+        "evidence directory named for the programme's Step 3 act; CLAUDE.md thread 2026-09-21 names REVIEW-CUSTODY-01 Step 3"
+      ]
+    }
+  ],
+  "classifications": [
+    {
+      "match": "^docs/programme/PARKED_",
+      "category": "parked-defect",
+      "evidence": [
+        "filename convention PARKED_… (CLAUDE.md thread 2026-09-06: 'parked, untriaged, in docs/programme/PARKED_DEFECT_…')"
+      ]
+    },
+    {
+      "match": "_FINDING_\\d{4}-\\d{2}-\\d{2}\\.md$",
+      "category": "standalone-finding",
+      "when": "no single programme id in the file",
+      "evidence": [
+        "CLAUDE.md thread 2026-09-13/2026-09-20: findings are recorded 'separately … ⛔ outside <lane>, no lane opened'"
+      ]
+    },
+    {
+      "match": "^docs/programme/J(9|10|11)_",
+      "category": "act-series-record (J-series; no programme declared)",
+      "evidence": [
+        "each file's header names a predecessor act (J9 → J10 → J11) and a governing canon, but no programme id (R-A0 finds none)"
+      ]
+    },
+    {
+      "match": "^docs/programme/LIVING_CONSTELLATION_",
+      "category": "unregistered-lane:LIVING-CONSTELLATION",
+      "evidence": [
+        "four records share the prefix and act labels LC00…LC02; no programme id is declared or named in the thread"
+      ]
+    },
+    {
+      "match": "^docs/programme/WRITERS_STUDIO_",
+      "category": "unregistered-lane:WRITERS-STUDIO (brief · board · roadmap · capability census)",
+      "evidence": [
+        "persistent brief/board documents predating the WRITERS-STUDIO-* lane ids; they name several lanes and declare none"
+      ]
+    },
+    {
+      "match": "^docs/programme/(MAIA_JARVIS_MEMORY_ORGANISM_FULL_OPERATIONALIZATION|JARVIS_MEMORY_FIELD_FLOW_v2)\\.md$",
+      "category": "unregistered-programme:MEMORY-ORGANISM (umbrella charter identified by path)",
+      "evidence": [
+        "two records declare **Programme**: `docs/programme/MAIA_JARVIS_MEMORY_ORGANISM_FULL_OPERATIONALIZATION.md` — a programme identified by a path, not an id (docket)"
+      ]
+    },
+    {
+      "match": "^docs/programme/JARVIS_INSTRUCTIONAL_MANUAL",
+      "category": "operating-manual",
+      "evidence": [
+        "CLAUDE.md Architecture snapshot: 'JARVIS operating manual … canonical operating manual for JARVIS-governed work'"
+      ]
+    },
+    {
+      "match": "^docs/programme/(WITNESS_METHOD_CROSS_SURFACE_INVARIANT|REFLECTIONS_MAIA_01_IN_PLACE_CANONICAL_CONVERSATION|DEVELOPMENTAL_EDITOR_CAPABILITY|H8_PRODUCTION_SHADOW_PROJECTION|WS_HOME_v0\\.2_CONTRACT_STATE|HOME_REDESIGN_v0\\.2_RELEASE_RULE_SUBSTRATE)_?",
+      "category": "unassociated-record (named by subject, no programme id declared)",
+      "evidence": [
+        "R-A0 finds no declaration; R-A1 finds no hyphenated id; the record names a subject, not a lane (HOME_REDESIGN declares Lane HOME-REDESIGN-01 with no charter or thread record — docket)"
+      ]
+    },
+    {
+      "match": "^CLAUDE\\.md#thread-bullet-",
+      "category": "legacy-thread-note (pre-2026-09 milestone block)",
+      "when": "bullet is not a LATEST/PRIOR/DIRECTION/NAMING bullet and names no programme",
+      "evidence": [
+        "CLAUDE.md priority thread: the 2026-05-24 milestone block (Date · Current milestone · Phase 2 commit chain …) predates the lane naming discipline"
+      ]
+    },
+    {
+      "match": "^CLAUDE\\.md#thread-bullet-",
+      "category": "thread-note (dated bullet naming no programme)",
+      "when": "bullet is a LATEST/PRIOR/DIRECTION/NAMING bullet whose title names no programme id",
+      "evidence": [
+        "CLAUDE.md priority thread: dated bullets recording an incident, a direction or a fix without a lane (e.g. 2026-09-07 schema drift, 2026-09-07 voice-mode silence, 2026-09-06 Temporal Memory direction, 2026-07-03 Daily Anchor)"
+      ]
+    }
+  ],
+  "succession": {
+    "R-S1": "explicit: a same-tier same-date record whose **Supersedes**/**Predecessor(s)** line names another record's filename succeeds it",
+    "R-S2": "git ancestry: each record carries its first-add commit identity; a candidate succeeds only when every competing first-add commit is a strict ancestor of its first-add commit; timestamps never establish succession; same-commit, incomparable or unknown ancestry stays tied",
+    "R-S3": "remaining ties stay UNVERIFIED / CONFLICT — act-number order inside one commit is a founder rule, not a projector default (docket PD-1)"
+  }
+}
