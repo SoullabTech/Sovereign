@@ -147,7 +147,10 @@ Jev / TypeSafe                          absent as provider
 
 provider governance                     PASS (exit 0)
 J1 freeze                               0 FREEZE INTACT
-INT-01 governance proof                 15 passes · 0 failures
+INT-01 governance proof                 15 passes · 0 failures  (observed only after
+                                        the JEV-INT-01R3R1 HOLD-01/HOLD-02 repair; at
+                                        R3 it was 13 passes · 2 failures on the two
+                                        superseded pre-ratification state snapshots)
 INT-02H host proof                      26 passes · 0 failures
 frozen F1R3                             63/63 · 0 survivors
 transport in host primitive             0 hits
