@@ -17,11 +17,11 @@
  * `RebuildAuthoredBody`, the same component the legacy host mounts, with the
  * same callbacks bound to the same `SectionWriting` session.
  *
- * WHAT THIS HOST DELIBERATELY DOES NOT EXPOSE (C1B)
- *   Aa · voice note · Comment · More · facet · Develop · Review ·
- *   Pure Canvas · chapter review. Each keeps its substrate intact behind its
- *   own routes; none is drawn here without a lawful action behind it. The only
- *   navigation asserted is Write, as non-interactive orientation.
+ * WHAT THIS HOST DELIBERATELY DOES NOT EXPOSE (C1B, as amended by R1-1C)
+ *   Aa · voice note · Comment · More · facet · Develop · Pure Canvas · chapter
+ *   review. Each keeps its substrate intact behind its own routes; none is
+ *   drawn here without a lawful action behind it. Navigation names Write and
+ *   Review (R1-1C); the current destination is non-interactive orientation.
  *
  * C1C1 — DISCUSS-ONLY CONTEXTUAL MAIA
  *   When the server says the editorial layer is enabled (a boolean handed down
@@ -42,9 +42,19 @@
  *   is read first (member-owned), then the exact reading, then the R1-0 mapper;
  *   only `ready` mounts the R1-1A ReviewPresentation with the read-only
  *   capability set. Anything else is one calm unavailable state. ⛔ No newest,
- *   no first, no aggregation, no commission, no cognition, no write, no visible
- *   Review navigation (the shell stays Write-only orientation). A late result
- *   attaches only to the exact selection that commissioned it.
+ *   no first, no aggregation, no commission, no cognition, no write. A late
+ *   result attaches only to the exact selection that commissioned it.
+ *
+ * R1-1C — REVIEW NAVIGATION SUCCESSION (successor to the frozen C1B-L6 regime)
+ *   Write ↕ Review are visible flagship destinations in the one shell. The URL
+ *   is the single state authority: `reading=<id>` → Review of exactly that
+ *   reading through the unchanged R1-1B runtime. Choosing Review with no
+ *   reading opens the READING CHOOSER — the member-owned ledger's own metadata,
+ *   in the ledger's own order, nothing pre-chosen — and the member's explicit
+ *   choice becomes `reading=<id>`. Write from Review removes only `reading`.
+ *   ⛔ No reading is ever inferred. ⛔ Ordinary Write fetches nothing until the
+ *   member invokes Review. ⛔ A choice is a location, never a mount. ⛔ No
+ *   legacy bridge, no second shell, no second state store.
  *
  * TRUTHFUL STATUS
  *   Derived from the writing session's own per-section statuses. The fixture
@@ -52,7 +62,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '../useLivingWorks';
 import { currentWork, resolveWorkContext } from '../workContext';
@@ -72,6 +82,8 @@ import { commissionDiscuss, createInFlightGuard, discussAfterHold, resultAttache
 import type { LensId } from '../flagship/DevelopReview';
 import { LiveReviewView } from './LiveReviewView';
 import { attachReview, hostFactsFrom, loadSelectedReading, selectedReadingId, type LiveReviewState, type ReviewPorts } from './liveReview';
+import { attachChoices, chooseReading, loadReadingChoices, navActionsFor, shouldLoadChoices, studioMode, type ChooserState, type StudioNav } from './reviewNavigation';
+import { ReviewChooser } from './ReviewChooser';
 
 export interface ContextReady {
   state: 'section_aware';
@@ -151,6 +163,10 @@ export interface FlagshipWriteViewProps {
   readonly review?: LiveReviewState;
   readonly reviewLens?: LensId | 'all';
   readonly onReviewLens?: (lens: LensId | 'all') => void;
+  /** R1-1C — the reading chooser's state (`closed` or absent → not the selection state). */
+  readonly chooser?: ChooserState;
+  /** R1-1C — the mode the URL (and the transient chooser flag) resolve to, and the lawful action behind each destination. */
+  readonly studioNav?: StudioNav;
 }
 
 const noAction = () => {};
@@ -159,20 +175,37 @@ const noAction = () => {};
 export function FlagshipWriteView({
   context, workTitle, workForm, focusId, held, onFocus, onHold, epoch = 0,
   editorialEnabled = false, discuss = null, onAskMaia = noAction, onSubmitAsk = noAction, onRelease = noAction, onWriting,
-  review, reviewLens = 'all', onReviewLens = noAction,
+  review, reviewLens = 'all', onReviewLens = noAction, chooser, studioNav,
 }: FlagshipWriteViewProps) {
   const focus = context.sections.find((s) => s.draftSectionId === focusId) ?? null;
   const span = focusId ? chapterSpanFor(context.sections, focusId) : null;
   const sections = span?.sections ?? (focus ? [focus] : []);
   const project = workTitle ? (workForm ? { workTitle, workKind: workForm } : { workTitle }) : undefined;
+  /* R1-1C — the mode is what the URL resolved to (an explicit reading outranks the chooser flag);
+     absent a host-supplied resolution, it is derived from the same two facts and nothing else. */
+  const reviewing = !!review && review.kind !== 'idle';
+  const choosing = !reviewing && !!chooser && chooser.kind !== 'closed' && !!studioNav?.choose;
+  const mode = studioNav?.mode ?? (reviewing ? 'review' : choosing ? 'review-choose' : 'write');
+  const nav = studioNav?.actions ?? {};
+  const current = mode === 'write' ? 'write' : 'review';
 
   /* R1-1B — an explicit selected reading replaces the Write frame with the live read-only Review.
-     The shell is IDENTICAL (Write-only orientation): Review is a state the URL requested, ⛔ not a destination. */
-  if (review && review.kind !== 'idle') {
+     R1-1C — the shell names Write and Review; Review is current, Write is a link that removes only `reading`. */
+  if (reviewing) {
     return (
       <div className="fsw-viewport">
-        <StudioShell current="write" destinations={['write']} affordance="orientation" project={project}>
+        <StudioShell current={current} destinations={['write', 'review']} affordance="orientation" nav={nav} project={project}>
           <LiveReviewView state={review} lens={reviewLens} onLens={onReviewLens} />
+        </StudioShell>
+      </div>
+    );
+  }
+  /* R1-1C — the selection state: the ledger's own metadata, nothing chosen. Only reachable while no reading is selected. */
+  if (choosing && chooser && studioNav?.choose) {
+    return (
+      <div className="fsw-viewport">
+        <StudioShell current={current} destinations={['write', 'review']} affordance="orientation" nav={nav} project={project}>
+          <ReviewChooser state={chooser} hrefFor={studioNav.choose.hrefFor} onChoose={studioNav.choose.onChoose} />
         </StudioShell>
       </div>
     );
@@ -180,7 +213,7 @@ export function FlagshipWriteView({
 
   return (
     <div className="fsw-viewport">
-      <StudioShell current="write" destinations={['write']} affordance="orientation" project={project}>
+      <StudioShell current={current} destinations={['write', 'review']} affordance="orientation" nav={nav} project={project}>
         <RebuildWritingBoundary
           key={`${context.manuscriptId}:${epoch}`}
           manuscriptId={context.manuscriptId}
@@ -258,6 +291,8 @@ const reviewPorts: ReviewPorts = {
 
 export default function FlagshipWriteHost({ editorialEnabled = false }: FlagshipWriteHostProps = {}) {
   const params = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
   const requested = params?.get('m') ?? null;
   const requestedSection = params?.get(SECTION_PARAM) ?? null;
   /* R1-1B — explicit selection only; empty or absent means Write. */
@@ -288,6 +323,12 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
   requestedReadingRef.current = requestedReading;
   const workTitleRef = useRef<string | null>(null);
   const workFormRef = useRef<string | null>(null);
+  /* R1-1C — the transient selection flag. ⛔ Not a mode store: `studioMode` resolves the URL first. */
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const [chooser, setChooser] = useState<ChooserState>({ kind: 'closed' });
+  const chooserGen = useRef(0);
+  const chooserOpenRef = useRef(false);
+  chooserOpenRef.current = chooserOpen;
 
   const load = useCallback(async () => {
     setPhase('loading'); setMessage(null);
@@ -416,6 +457,34 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
     });
   }, [requestedReading, context]);
 
+  /* R1-1C — an explicit reading in the URL closes the selection state: the URL is the authority. */
+  useEffect(() => { if (requestedReading) setChooserOpen(false); }, [requestedReading]);
+  /* R1-1C — the ledger is read ONLY in the selection state. ⛔ Never on an ordinary Write open. ⛔ Never a reading GET. */
+  useEffect(() => {
+    if (!context) return;
+    if (!shouldLoadChoices({ reading: requestedReading, chooserOpen })) { chooserGen.current += 1; setChooser({ kind: 'closed' }); return; }
+    const gen = ++chooserGen.current;
+    setChooser({ kind: 'loading', gen });
+    void loadReadingChoices(context.manuscriptId, reviewPorts).then((r) => {
+      /* LATE LEDGER — attaches only while the chooser is still open, nothing is selected, and the generation matches. */
+      if (!attachChoices({ gen }, { gen: chooserGen.current, chooserOpen: chooserOpenRef.current, reading: requestedReadingRef.current })) return;
+      setChooser(r.kind === 'choices' ? { kind: 'choices', gen, readings: r.readings } : { kind: 'unavailable', gen });
+    });
+  }, [requestedReading, chooserOpen, context]);
+
+  /* R1-1C — navigation is a location change through the router; leaving the selection state closes it. */
+  const go = useCallback((href: string) => { setChooserOpen(false); router.push(href); }, [router]);
+  const openChooser = useCallback(() => { setChooserOpen(true); }, []);
+  const closeChooser = useCallback(() => { setChooserOpen(false); }, []);
+  const mode = studioMode({ reading: requestedReading, chooserOpen });
+  const search = params && params.toString().length > 0 ? `?${params.toString()}` : '';
+  const loc = { pathname: pathname ?? '/writers-studio/rebuild', search };
+  const studioNav: StudioNav = {
+    mode,
+    actions: navActionsFor(mode, loc, { go, openChooser, closeChooser }),
+    choose: { hrefFor: (id) => chooseReading(id, loc).href, onChoose: (_id, href) => go(href) },
+  };
+
   if (phase !== 'ready' || !context) {
     return (
       <main className="fs-tokens fsw-state" data-phase={phase}>
@@ -445,6 +514,8 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
       review={review}
       reviewLens={reviewLens}
       onReviewLens={setReviewLens}
+      chooser={chooser}
+      studioNav={studioNav}
     />
   );
 }

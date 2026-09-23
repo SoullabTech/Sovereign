@@ -139,13 +139,14 @@ async function main() {
   page.on('request', (r: Request) => { if (/\/api\//.test(r.url())) reqs.push({ t: Date.now(), m: r.method(), u: r.url() }); });
   const readingsSince = (t: number) => reqs.filter((r) => r.t >= t && /\/readings/.test(r.u)).map((r) => `${r.m} ${r.u.replace(/^https?:\/\/[^/]+/, '').replace(A.wk, '<A>').replace(B.wk, '<B>').replace(R.current, '<current>').replace(R.other, '<other>').replace(R.stale, '<stale>').replace(R.b, '<b>').replace(R.c, '<c>').replace(R.unknown, '<unknown>')}`);
   const open = async (query: string, waitFor: string) => { const t = Date.now(); await page.goto(`http://127.0.0.1:${PORT}/writers-studio/rebuild?${query}`, { waitUntil: 'domcontentloaded', timeout: 240_000 }); await page.waitForSelector(waitFor, { timeout: 240_000 }); await page.waitForTimeout(500); return t; };
-  const nav = async () => ({ navs: await page.locator('[data-nav]').count(), write: await page.locator('[data-nav="write"]').count(), review: await page.locator('[data-nav="review"], a[href*="/writers-studio/review"]').count() });
+  /* R1-1C SUCCESSION (2026-09-23): the shell now names Write and Review on both surfaces; what this walk still refuses is a LEGACY bridge. */
+  const nav = async () => ({ navs: await page.locator('[data-nav]').count(), write: await page.locator('[data-nav="write"]').count(), review: await page.locator('[data-nav="review"]').count(), legacy: await page.locator('a[href*="/writers-studio/review"]').count() });
 
   try {
     /* ── W1 · ordinary Write ─────────────────────────────────────────── */
     const t1 = await open(`m=${A.wk}&s=${A.d2}`, `[data-authored-body="${A.d2}"]`);
     const n1 = await nav();
-    check('W1 ordinary Write mounts; no Review; zero reading GETs; orientation unchanged', (await page.locator('[data-authored-body]').count()) === 2 && (await page.locator('[data-review]').count()) === 0 && readingsSince(t1).length === 0 && n1.navs === 2 && n1.write === 2 && n1.review === 0 && (await page.locator('button').count()) === 0,
+    check('W1 ordinary Write mounts; no Review; zero reading GETs; orientation unchanged', (await page.locator('[data-authored-body]').count()) === 2 && (await page.locator('[data-review]').count()) === 0 && readingsSince(t1).length === 0 && n1.navs === 4 && n1.write === 2 && n1.review === 2 && n1.legacy === 0 && (await page.locator('button:not([data-affordance="navigate"])').count()) === 0,
       `bodies=${await page.locator('[data-authored-body]').count()} review=${await page.locator('[data-review]').count()} readingsRequests=${readingsSince(t1).length} nav=${JSON.stringify(n1)}`);
 
     const digest0 = await memberDigest();
@@ -165,7 +166,7 @@ async function main() {
     const pageHtml2 = await page.content();
     check('W2 exact reading mounted read-only: one finding from the selected reading, Discuss/Explore/commission/write/navigate/facet absent', (await page.locator('[data-review="ready"]').getAttribute('data-review-reading')) === R.current && findings === 1 && findingId === `dobs_${R.current}` && !FORBIDDEN.test(html2) && !/fs-facet|data-facet=/.test(pageHtml2) && (await page.locator('button:not([role="tab"])').count()) === 0 && (await page.locator('[data-authored-body]').count()) === 0,
       `reading=${(await page.locator('[data-review="ready"]').getAttribute('data-review-reading')) === R.current} findings=${findings} id=${findingId === `dobs_${R.current}`} forbidden=${FORBIDDEN.test(html2)}`);
-    check('W2 orientation unchanged; tabs filter only; unranked disclosure present', n2.navs === 2 && n2.write === 2 && n2.review === 0 && tabs.length === 2 && tabs[0] === 'Everything' && /Nothing here is ranked/.test(html2), `nav=${JSON.stringify(n2)} tabs=${JSON.stringify(tabs)}`);
+    check('W2 orientation per R1-1C succession (Write · Review, no legacy bridge); tabs filter only; unranked disclosure present', n2.navs === 4 && n2.write === 2 && n2.review === 2 && n2.legacy === 0 && tabs.length === 2 && tabs[0] === 'Everything' && /Nothing here is ranked/.test(html2), `nav=${JSON.stringify(n2)} tabs=${JSON.stringify(tabs)}`);
     check('W2 current manuscript context beside the finding is the finding’s own return section', !!highlighted && highlighted.includes(B2) && (await page.locator('.fs-contextp').count()) === 2, `highlighted=${(highlighted ?? '').slice(0, 30)}…`);
     const tBefore = Date.now();
     await page.locator('[role="tab"]').nth(1).click(); await page.waitForTimeout(300);

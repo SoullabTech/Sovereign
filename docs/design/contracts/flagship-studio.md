@@ -12,6 +12,9 @@ surfaces:
   - app/writers-studio/rebuild/flagshipWriteHost.css
   - app/writers-studio/rebuild/DiscussLayer.tsx
   - app/writers-studio/rebuild/discussAct.ts
+  # R1-1C, 2026-09-23 — Review navigation succession: the pure navigation law and the reading chooser.
+  - app/writers-studio/rebuild/reviewNavigation.ts
+  - app/writers-studio/rebuild/ReviewChooser.tsx
   - app/writers-studio/rebuild/page.tsx
 change_class: experiential
 principles:
@@ -56,9 +59,25 @@ The writer is inside the Work. Write is the room; Develop and Review are modes o
 
 - The manuscript surface is the proven `RebuildAuthoredBody`, bound to the one writing session the boundary creates. Nothing about saving, version concurrency, stale-base refusal or capture-before-unmount is re-implemented in flagship code.
 - Status is the session's own state: Unsaved · Saving… · Saved · v{n} · Save unavailable · Needs attention. The controlled witness's fixture phrase never reaches the live runtime.
-- Navigation names only Write, as orientation, until Develop and Review exist in the flagship runtime. No link to the legacy rooms.
+- Navigation names Write and Review (R1-1C succession, 2026-09-23 — the C1B statement "only Write, as orientation" is the predecessor state, superseded and not deleted). Develop is not named until it exists in the flagship runtime. No link to the legacy rooms.
 - The Work name and its form appear only when the member declared them; a missing fact is omitted, never invented.
 - Aa · voice note · Comment · More · facet · Pure Canvas are not drawn: each keeps its substrate behind its own route and returns to this room only with a lawful action behind it.
+
+## URL state and navigation law (R1-1C — Review navigation succession)
+
+The flagship route carries exactly three kinds of state in its URL, and nothing else decides where the writer is:
+
+- `m=<manuscript/Work identity>` — which Work.
+- `s=<draft-section id>` — the place within the Work (WS2-05A: identity, not position; replaced, never pushed).
+- `reading=<explicitly selected durable reading>` — Review of exactly that reading, through the R1-1B runtime (member-owned ledger → the one reading → the R1-0 mapper → `ready`, or one calm unavailable state).
+
+Visible navigation names **Write** and **Review** on both orientation surfaces (rail and mobile), the current destination as non-interactive orientation, the other with its lawful action behind it. Nothing else is named: no Develop until it exists, no legacy room, no second shell, no second state store.
+
+- **Absence of `reading` is not implicit permission to select a reading.** Choosing Review with no reading selected enters the reading chooser: the member-owned ledger's own metadata (lens, day frozen, observation count), in the ledger's own order, nothing pre-chosen, nothing from inside any reading. The member's explicit choice becomes `reading=<exact id>`; R1-1B takes over. Never newest, first, latest, best, nearest, latest-per-lens or "current". A ledger row that produced no reading is shown as that fact and is not a link. An empty ledger is one sentence, never an offer to commission.
+- A direct `reading=<id>` link never passes through the chooser. An unavailable, foreign, stale or unknown reading is the R1-1B unavailable state; navigation adds no fallback.
+- Choosing Write from Review removes only `reading`; `m` and `s` are preserved. Nothing about the Work or the member changes by moving between Write and Review.
+- Ordinary Write makes no reading request. The ledger is read only when the chooser is open; the reading only when `reading` is present.
+- The R1-1A read-only capability set (Ask MAIA · Discuss · Explore · commission · acknowledge · own observation · navigate · facet all withheld) is unchanged by navigation; lens tabs filter already-loaded material and commission nothing.
 
 ## What the live Write host asserts (C1C1 — Discuss-only contextual MAIA)
 

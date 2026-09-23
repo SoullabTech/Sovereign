@@ -24,3 +24,14 @@
    49 = padding 9 + action 30 + padding 9 + bottom border 1, border-box. */
 .fsw-viewport .fs-bar{min-height:49px}
 .fsw-viewport .fs-bar .fs-btn{height:30px;min-height:30px;line-height:1;padding-top:0;padding-bottom:0}
+/* R1-1C — a destination with a lawful action is a link (a location) or a button (an act),
+   in the same geometry as orientation. ⛔ The current destination stays orientation. */
+.fsw-viewport a.fs-nav,.fsw-viewport a.fs-mn{text-decoration:none;box-sizing:border-box}
+/* R1-1C — the reading chooser: the ledger's own metadata, in the ledger's own order, nothing pre-chosen. */
+.fs-choices{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fs-choice{border:1px solid var(--rule);border-radius:10px}
+.fs-choicelink{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;padding:10px 12px;color:inherit;text-decoration:none}
+.fs-choicelink:hover{background:var(--surface-raised)}
+.fs-choice--none{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;padding:10px 12px;color:var(--text-muted)}
+.fs-choicelens{font-weight:600}
+.fs-choicemeta{color:var(--text-secondary);font-size:0.8125rem}

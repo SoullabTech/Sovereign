@@ -63,7 +63,7 @@ const D9: Subject = { ...REFERENCE, name: 'R1-1B-D9-unowned-reading-disclosed',
   LiveView: (p) => (p.state.kind === 'unavailable'
     ? <div className="fs-pane" data-review="unavailable" data-reason={p.state.detail}><p>{p.state.detail === 'wrong_work' ? 'This reading belongs to another Work.' : 'This reading was not found in your ledger.'}</p></div>
     : V ? <V {...p} /> : null) };
-/* D10 · a visible Review destination */
+/* D10 · a legacy Review bridge (originally "a visible Review destination"; under R1-1C succession the visible destination is lawful and the legacy href is what still kills) */
 const D10: Subject = { ...REFERENCE, name: 'R1-1B-D10-visible-review-nav',
   HostView: (p) => (p.review && p.review.kind !== 'idle'
     ? <><nav aria-label="Studio navigation"><a className="fs-nav" data-nav="review" href="/writers-studio/review">Review</a></nav><FlagshipWriteView {...p} /></>
@@ -103,7 +103,7 @@ export const NAMED_KILL: Record<string, string> = {
   'R1-1B-D7-nonready-mounts-review': 'R1-1B-L7-nonready-never-mounts',
   'R1-1B-D8-wrong-work-reading': 'R1-1B-L8-wrong-work-never-mounts',
   'R1-1B-D9-unowned-reading-disclosed': 'R1-1B-L9-unavailable-discloses-nothing',
-  'R1-1B-D10-visible-review-nav': 'R1-1B-L10-no-visible-review-navigation',
+  'R1-1B-D10-visible-review-nav': 'R1-1B-L10-no-legacy-review-navigation',
   'R1-1B-D11-reading-param-dropped': 'R1-1B-L11-reading-param-survives-place-rewrite',
   'R1-1B-D12-late-reading-migration': 'R1-1B-L12-late-result-cannot-migrate',
   'R1-1B-D13-fake-context-fallback': 'R1-1B-L13-no-fake-context',

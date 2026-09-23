@@ -281,18 +281,23 @@ export async function runC1C1Laws(s: Subject): Promise<LawResult[]> {
     return must('C1C1-L13-one-turn-only', noComposer && composing && sends === 1, `composerAfterTurn=${!noComposer} composerBeforeTurn=${composing} sends=${sends}`);
   }));
 
+  /* R1-1C SUCCESSION (founder-authorized, 2026-09-23; IR1 precedent, option B). PREDECESSOR, verified below at the FS1 base blob
+     (git show 4dade9a68:…): this pin ALSO named `app/writers-studio/flagship/StudioChrome.tsx`. The shell is COMPOSITION, not
+     authority (C0); R1-1C lawfully gave it navigation actions. It leaves this standing set — ⛔ not re-pinned to a newer blob —
+     and the historical claim that C1C1 itself did not modify it stands unchanged. Every authority file stays pinned. */
   out.push(law('C1C1-L14-authority-untouched', () => {
     const PIN = '8edca6c97';
+    const predecessorPinnedShell = execSync('git show 4dade9a68:tests/constitutional/writers-studio/flagship-c1c1/laws.ts', { cwd: ROOT, encoding: 'utf8' }).includes(`'app/writers-studio/flagship/WriteFrame.tsx', 'app/writers-studio/flagship/StudioChrome.tsx',`);
     const files = [
       'app/writers-studio/rebuild/RebuildAuthoredBody.tsx', 'app/writers-studio/rebuild/RebuildWritingBoundary.tsx',
       'app/writers-studio/rebuild/RebuildStudioClient.tsx', 'lib/writersStudio/useSectionWriting.ts', 'lib/writersStudio/sectionSaveClient.ts',
       'lib/writersStudio/rebuild/editorialCollaboration.ts', 'lib/sanctuary/currentClientPosture.ts', 'lib/sanctuary/turnPosture.ts',
-      'lib/writersStudio/studio/machine.ts', 'app/writers-studio/flagship/WriteFrame.tsx', 'app/writers-studio/flagship/StudioChrome.tsx',
+      'lib/writersStudio/studio/machine.ts', 'app/writers-studio/flagship/WriteFrame.tsx',
       'app/api/writers-studio/editorial/turn/route.ts', 'app/api/writers-studio/editorial/thread/route.ts', 'app/api/writers-studio/rebuild/editorial/thread/route.ts',
       'app/api/writers-studio/editorial/version/route.ts', 'app/api/writers-studio/editorial/adoption/route.ts', 'app/api/writers-studio/editorial/undo/route.ts',
     ];
     const moved = files.filter((f) => execSync(`git rev-parse ${PIN}:${f}`, { cwd: ROOT, encoding: 'utf8' }).trim() !== execSync(`git hash-object ${f}`, { cwd: ROOT, encoding: 'utf8' }).trim());
-    return must('C1C1-L14-authority-untouched', moved.length === 0, moved.length ? `moved: ${moved.join(', ')}` : `${files.length} files blob-identical to flagship head ${PIN}`);
+    return must('C1C1-L14-authority-untouched', moved.length === 0 && predecessorPinnedShell, moved.length ? `moved: ${moved.join(', ')}` : `${files.length} files blob-identical to flagship head ${PIN} · predecessor pin (incl. StudioChrome) witnessed at FS1=${predecessorPinnedShell}`);
   }));
 
   out.push(law('C1C1-L15-host-mounts-discuss-layer', () => {

@@ -178,14 +178,19 @@ export async function runR11BLaws(s: Subject): Promise<LawResult[]> {
     const leak = /not_listed|wrong_work|another member|another Work|not found|unowned|malformed|superseded|refus/i.test(a + b) || /rd-x|rd-y/.test(a + b);
     return must('R1-1B-L9-unavailable-discloses-nothing', a === b && !leak && a.length > 0 && /data-review="unavailable"/.test(a), `identicalAcrossReasons=${a === b} leak=${leak}`);
   }));
-  out.push(await alaw('R1-1B-L10-no-visible-review-navigation', async () => {
+  /* R1-1C SUCCESSION (founder-authorized, 2026-09-23). PREDECESSOR, verified below at the R1-1B closure blob (git show 1fcf1ad0a:…):
+     `R1-1B-L10-no-visible-review-navigation` — navs === 2, all write, no data-nav="review" in markup or source — the C1B-L6
+     regime at route scope, under which R1-1B mounted Review as URL state. SUCCESSOR (renamed so the name no longer asserts
+     what R1-1C permits): what R1-1C did not change survives here — a mounted reading is read-only, Review's own entry is the
+     flagship destination (R1-1C-L1), and NO LEGACY Review bridge (/writers-studio/review) exists in markup or source. */
+  out.push(await alaw('R1-1B-L10-no-legacy-review-navigation', async () => {
     const ready = await readyState();
-    if (!ready) return unmounted('R1-1B-L10-no-visible-review-navigation');
+    if (!ready) return unmounted('R1-1B-L10-no-legacy-review-navigation');
     const html = view({}, ready);
-    const navs = (html.match(/data-nav="[^"]*"/g) ?? []); const write = navs.filter((n) => n === 'data-nav="write"').length;
-    const reviewNav = /data-nav="review"|href="\/writers-studio\/review|>Review<\/(a|button)|role="tab"[^>]*>Review</.test(html);
-    const staticNav = /destinations=\{\[[^\]]*review|\/writers-studio\/review|data-nav="review"/.test(sources);
-    return must('R1-1B-L10-no-visible-review-navigation', navs.length === 2 && write === 2 && !reviewNav && !staticNav && /data-review="ready"/.test(html), `navs=${navs.length} write=${write} reviewNav=${reviewNav} staticReviewNav=${staticNav} mounted=${/data-review="ready"/.test(html)}`);
+    const navs = (html.match(/data-nav="[^"]*"/g) ?? []); const write = navs.filter((n) => n === 'data-nav="write"').length; const review = navs.filter((n) => n === 'data-nav="review"').length;
+    const legacy = /href="\/writers-studio\/review/.test(html) || /\/writers-studio\/review(["'?/#]|$)/.test(sources);
+    const predecessor = execSync('git show 1fcf1ad0a:tests/constitutional/writers-studio/flagship-r1-1b/laws.ts', { cwd: ROOT, encoding: 'utf8' }).includes('navs.length === 2 && write === 2 && !reviewNav && !staticNav');
+    return must('R1-1B-L10-no-legacy-review-navigation', navs.length === 4 && write === 2 && review === 2 && !legacy && predecessor && /data-review="ready"/.test(html), `navs=${navs.length} write=${write} review=${review} legacyBridge=${legacy} predecessorWitnessedAt1fcf1ad0a=${predecessor} mounted=${/data-review="ready"/.test(html)}`);
   }));
   out.push(law('R1-1B-L11-reading-param-survives-place-rewrite', () => {
     const next = s.placeAddress('/writers-studio/rebuild', '?m=ms-1&reading=rd-current&s=d-root', 'd-2');
@@ -222,12 +227,18 @@ export async function runR11BLaws(s: Subject): Promise<LawResult[]> {
     const p = ports(); const r = await s.load(null, HOST, p);
     return must('R1-1B-L15-no-reading-gets-without-selection', r.kind === 'idle' && p.calls.length === 0, `calls=${p.calls.join(',') || 'none'}`);
   }));
+  /* R1-1C SUCCESSION (founder-authorized, 2026-09-23). PREDECESSOR: the two R1-1B goldens captured the pre-Review-navigation
+     Write composition; they stay in this directory BYTE-IDENTICAL to their 1fcf1ad0a blobs (verified below) as historical
+     custody — never regenerated, never deleted. SUCCESSOR: ordinary Write is compared to the R1-1C successor goldens of the
+     same two states (flagship-r1-1c/golden/write-plain · write-held-editorial), which differ from the predecessor only by the
+     Review destination the shell now names. */
   out.push(law('R1-1B-L16-ordinary-write-unchanged', () => {
     const plain = view();
     const held = view({ held: { sectionId: 'd-2', start: 21, end: 29, text: 'far bank' }, editorialEnabled: true });
-    const g = (n: string) => readFileSync(join(ROOT, 'tests/constitutional/writers-studio/flagship-r1-1b/golden', `${n}.html`), 'utf8');
-    const same = plain === g('write-plain') && held === g('write-held-editorial');
-    return must('R1-1B-L16-ordinary-write-unchanged', same, same ? 'both base goldens byte-identical' : 'ordinary Write markup moved');
+    const g = (dir: string, n: string) => readFileSync(join(ROOT, `tests/constitutional/writers-studio/${dir}/golden`, `${n}.html`), 'utf8');
+    const custody = ['write-plain', 'write-held-editorial'].every((n) => execSync(`git rev-parse 1fcf1ad0a:tests/constitutional/writers-studio/flagship-r1-1b/golden/${n}.html`, { cwd: ROOT, encoding: 'utf8' }).trim() === execSync(`git hash-object tests/constitutional/writers-studio/flagship-r1-1b/golden/${n}.html`, { cwd: ROOT, encoding: 'utf8' }).trim());
+    const same = plain === g('flagship-r1-1c', 'write-plain') && held === g('flagship-r1-1c', 'write-held-editorial');
+    return must('R1-1B-L16-ordinary-write-unchanged', same && custody, `successorGoldensIdentical=${same} predecessorGoldensCustody=${custody}`);
   }));
   out.push(law('R1-1B-L17-fs1-and-mapper-untouched', () => {
     const r = spawnSync('npx', ['tsx', 'scripts/verify-flagship-freeze.ts'], { cwd: ROOT, encoding: 'utf8' });

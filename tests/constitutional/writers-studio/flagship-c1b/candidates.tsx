@@ -89,7 +89,10 @@ export const NAMED_KILL: Readonly<Record<string, string>> = {
 };
 export const CLASSIFIED: Readonly<Record<string, readonly string[]>> = {
   // A static surface has no passage to hold, so no held address can ever render.
-  'C1B-D1-static-flagship-manuscript': ['C1B-L8-passage-address-exact'],
+  // R1-1C SUCCESSION (2026-09-23): D1 was authored under the predecessor C1B-L6 regime and renders the predecessor
+  // Write-only shell verbatim; under the successor law its navigation set is the predecessor's — IRREDUCIBLE without
+  // rewriting the historical candidate, which is not done. Its named kill (L1) is unchanged.
+  'C1B-D1-static-flagship-manuscript': ['C1B-L6-no-legacy-mode-bridge', 'C1B-L8-passage-address-exact'],
   // A bridge to the legacy rooms IS an anchor on the live page; L5 counts it.
   'C1B-D6-legacy-mode-bridge': ['C1B-L5-no-dead-production-control'],
 };

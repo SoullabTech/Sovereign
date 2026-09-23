@@ -22,7 +22,7 @@ async function main() {
   line(`  candidates dead      ${dead}/${DEFEAT_CANDIDATES.length}`);
   line(`  matrix               ${exit === 0 ? 'LETHAL + DISCRIMINATING' : '⛔ NOT LETHAL'}`);
   line(''); line('  R1-1B mounts ONE explicitly selected durable reading, read-only, behind ?reading=<id>.');
-  line('  ⛔ No aggregation · no cognition · no member write · no visible Review navigation · FS1 untouched.'); line('');
+  line('  ⛔ No aggregation · no cognition · no member write · no legacy Review bridge (visible navigation: R1-1C succession) · freeze intact.'); line('');
   process.exit(exit);
 }
 void main();

@@ -15,6 +15,7 @@ import {
   FACET_COPY, MOBILE_PRIMARY, NAV_DESTINATIONS, NAV_LABEL,
   type Facet, type NavDestination,
 } from './flagshipTokens';
+import type { NavActions } from '../rebuild/reviewNavigation';
 
 const ICON: Readonly<Record<NavDestination, string>> = {
   write: '✎', develop: '◈', review: '◉',
@@ -57,6 +58,11 @@ export interface ProjectIdentity {
  *                   the destination as non-interactive orientation. ⛔ A live
  *                   surface never mounts a button-shaped control that does
  *                   nothing merely because the reference draws one.
+ * R1-1C · `nav` — a LIVE host supplies the lawful action behind a destination
+ *   (a location as `<a href>`, or an act as `<button>`), rendered with
+ *   `data-affordance="navigate"`. A destination WITHOUT an action — the current
+ *   one — still renders as orientation. ⛔ Reference and orientation output are
+ *   byte-identical to C1B when `nav` is absent.
  */
 export type NavAffordance = 'reference' | 'orientation';
 
@@ -68,24 +74,38 @@ export interface MemberIdentity { readonly initials: string; readonly name: stri
  * destination is not. Default = the full approved three-mode reference, so the
  * controlled witness is unchanged. ⛔ Never a link to a legacy room.
  */
-export function StudioRail({ current, project, member, destinations = NAV_DESTINATIONS, affordance = 'reference' }: {
+export function StudioRail({ current, project, member, destinations = NAV_DESTINATIONS, affordance = 'reference', nav }: {
   current: NavDestination; project?: ProjectIdentity; member?: MemberIdentity;
-  destinations?: readonly NavDestination[]; affordance?: NavAffordance;
+  destinations?: readonly NavDestination[]; affordance?: NavAffordance; nav?: NavActions;
 }) {
   return (
     <nav className="fs-rail" aria-label="Studio navigation">
       <div className="fs-mark" aria-hidden="true" />
-      {destinations.map((d) => affordance === 'reference' ? (
-        <button key={d} type="button" className="fs-nav"
-          aria-current={d === current ? 'page' : undefined} data-nav={d}>
-          <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
-        </button>
-      ) : (
-        <span key={d} className="fs-nav" data-nav={d} data-affordance="orientation"
-          aria-current={d === current ? 'page' : undefined}>
-          <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
-        </span>
-      ))}
+      {destinations.map((d) => {
+        const action = affordance === 'reference' ? undefined : nav?.[d];
+        if (affordance === 'reference') return (
+          <button key={d} type="button" className="fs-nav"
+            aria-current={d === current ? 'page' : undefined} data-nav={d}>
+            <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
+          </button>
+        );
+        if (action && action.kind === 'link') return (
+          <a key={d} className="fs-nav" data-nav={d} data-affordance="navigate" href={action.href} onClick={action.onSelect}>
+            <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
+          </a>
+        );
+        if (action && action.kind === 'act') return (
+          <button key={d} type="button" className="fs-nav" data-nav={d} data-affordance="navigate" onClick={action.onAct}>
+            <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
+          </button>
+        );
+        return (
+          <span key={d} className="fs-nav" data-nav={d} data-affordance="orientation"
+            aria-current={d === current ? 'page' : undefined}>
+            <span className="fs-ic" aria-hidden="true">{ICON[d]}</span>{NAV_LABEL[d]}
+          </span>
+        );
+      })}
       {/* C1B · identity blocks render only what the host actually holds. */}
       {project ? (
         <>
@@ -118,38 +138,52 @@ export function AtmosphereBand() {
 }
 
 /** ⭐ Same semantic names as the rail. ⛔ Develop is never renamed to Explore. */
-export function MobileNav({ current, destinations = NAV_DESTINATIONS, affordance = 'reference' }: {
-  current: NavDestination; destinations?: readonly NavDestination[]; affordance?: NavAffordance;
+export function MobileNav({ current, destinations = NAV_DESTINATIONS, affordance = 'reference', nav }: {
+  current: NavDestination; destinations?: readonly NavDestination[]; affordance?: NavAffordance; nav?: NavActions;
 }) {
   return (
     <nav className="fs-mobilenav" aria-label="Studio navigation">
-      {MOBILE_PRIMARY.filter((d) => destinations.includes(d)).map((d) => affordance === 'reference' ? (
-        <button key={d} type="button" className="fs-mn"
-          aria-current={d === current ? 'page' : undefined} data-nav={d}>
-          <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
-        </button>
-      ) : (
-        <span key={d} className="fs-mn" data-nav={d} data-affordance="orientation"
-          aria-current={d === current ? 'page' : undefined}>
-          <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
-        </span>
-      ))}
+      {MOBILE_PRIMARY.filter((d) => destinations.includes(d)).map((d) => {
+        const action = affordance === 'reference' ? undefined : nav?.[d];
+        if (affordance === 'reference') return (
+          <button key={d} type="button" className="fs-mn"
+            aria-current={d === current ? 'page' : undefined} data-nav={d}>
+            <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
+          </button>
+        );
+        if (action && action.kind === 'link') return (
+          <a key={d} className="fs-mn" data-nav={d} data-affordance="navigate" href={action.href} onClick={action.onSelect}>
+            <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
+          </a>
+        );
+        if (action && action.kind === 'act') return (
+          <button key={d} type="button" className="fs-mn" data-nav={d} data-affordance="navigate" onClick={action.onAct}>
+            <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
+          </button>
+        );
+        return (
+          <span key={d} className="fs-mn" data-nav={d} data-affordance="orientation"
+            aria-current={d === current ? 'page' : undefined}>
+            <i aria-hidden="true">{ICON[d]}</i>{NAV_LABEL[d]}
+          </span>
+        );
+      })}
     </nav>
   );
 }
 
-export function StudioShell({ current, project, member, focus = false, destinations = NAV_DESTINATIONS, affordance = 'reference', children }: {
+export function StudioShell({ current, project, member, focus = false, destinations = NAV_DESTINATIONS, affordance = 'reference', nav, children }: {
   current: NavDestination; project?: ProjectIdentity; member?: MemberIdentity;
-  focus?: boolean; destinations?: readonly NavDestination[]; affordance?: NavAffordance; children: React.ReactNode;
+  focus?: boolean; destinations?: readonly NavDestination[]; affordance?: NavAffordance; nav?: NavActions; children: React.ReactNode;
 }) {
   return (
     <div className="fs-root" data-focus={focus ? 'true' : 'false'} data-studio-mode={current}>
-      <StudioRail current={current} project={project} member={member} destinations={destinations} affordance={affordance} />
+      <StudioRail current={current} project={project} member={member} destinations={destinations} affordance={affordance} nav={nav} />
       <div className="fs-content">
         <AtmosphereBand />
         {children}
       </div>
-      <MobileNav current={current} destinations={destinations} affordance={affordance} />
+      <MobileNav current={current} destinations={destinations} affordance={affordance} nav={nav} />
     </div>
   );
 }

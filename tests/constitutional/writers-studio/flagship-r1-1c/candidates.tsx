@@ -115,12 +115,11 @@ export const NAMED_KILL: Record<string, string> = {
   'R1-1C-D15-refreeze-omits-r1-laws': 'R1-1C-L15-refreeze-carries-governing-laws',
 };
 export const CLASSIFIED: Record<string, readonly string[]> = {
-  /* IRREDUCIBLE. Offering a commission control on an empty ledger is a control the ledger does not hold (L17), and it
-     is a forbidden control in the chooser (L11) — a Review that commissions cannot avoid drawing the commission. */
-  'R1-1C-D3-review-commissions': ['R1-1C-L17-chooser-offers-only-what-the-ledger-holds', 'R1-1C-L11-read-only-capabilities-unchanged'],
-  /* IRREDUCIBLE. A chooser that renders merged findings offers what the ledger does not hold (L17), and its legacy-shaped
-     grid cannot be the successor's chooser golden (L16). */
-  'R1-1C-D4-chooser-aggregates': ['R1-1C-L17-chooser-offers-only-what-the-ledger-holds', 'R1-1C-L16-successor-write-goldens'],
+  /* IRREDUCIBLE. Offering a commission control on an empty ledger is a control the ledger does not hold (L17) —
+     a Review that commissions cannot avoid drawing the commission. */
+  'R1-1C-D3-review-commissions': ['R1-1C-L17-chooser-offers-only-what-the-ledger-holds'],
+  /* IRREDUCIBLE. A chooser that renders merged findings offers what the ledger does not hold (L17). */
+  'R1-1C-D4-chooser-aggregates': ['R1-1C-L17-chooser-offers-only-what-the-ledger-holds'],
   /* IRREDUCIBLE. A legacy bridge is an extra navigation entry: it breaks the bounded successor set (L1) and moves the goldens (L16). */
   'R1-1C-D8-legacy-review-bridge': ['R1-1C-L1-successor-navigation', 'R1-1C-L16-successor-write-goldens'],
   /* IRREDUCIBLE. A store that outranks the URL forces an explicit reading through the chooser — the direct-link regression (L14). */

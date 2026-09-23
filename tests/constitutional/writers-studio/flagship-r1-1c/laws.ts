@@ -22,6 +22,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { FlagshipWriteViewProps } from '../../../../app/writers-studio/rebuild/FlagshipWriteHost';
 import type { ReviewView } from '../../../../app/writers-studio/flagship/DevelopReview';
 import { CONTEXT } from '../flagship-c1b/laws';
+import { ports as r11bPorts, HOST as R11B_HOST } from '../flagship-r1-1b/laws';
 
 export interface LawResult { readonly id: string; readonly ok: boolean; readonly detail: string }
 
@@ -94,7 +95,7 @@ const count = (html: string, re: RegExp) => (html.match(re) ?? []).length;
 /* ── fixtures ── */
 const MS = 'ms-1';
 const LOC: Loc = { pathname: '/writers-studio/rebuild', search: '?m=ms-1&s=d-2' };
-const LOC_R: Loc = { pathname: '/writers-studio/rebuild', search: '?m=ms-1&s=d-2&reading=rd-b' };
+const LOC_R: Loc = { pathname: '/writers-studio/rebuild', search: '?m=ms-1&s=d-2&reading=rd-current' };
 /** ledger order as the route returns it (newest first) — but the NEWEST by frozenAt is deliberately NOT index 0 here,
  *  so an auto-newest and an auto-first candidate choose observably different readings and both are seen dying. */
 const LEDGER: readonly Summary[] = [
@@ -131,11 +132,16 @@ function acts() {
   };
   return a;
 }
-const readyView = (): ReviewView => ({
-  work: 'The River Between', kind: 'novel', scope: { kind: 'work' },
-  context: { chapterLabel: 'Chapter 1', chapterTitle: '', page: '', paragraphs: [{ id: 'd-root', text: 'x' }, { id: 'd-2', text: 'y' }] },
-  findings: [], lenses: [], coverage: { read: 2, total: 2 },
-} as unknown as ReviewView);
+/* A REAL ready state, produced by the unchanged R1-1B loader over the R1-1B ledger fixture — never a synthetic view.
+   Resolved structurally so the suite types (and reports UNMOUNTED) before the loader exists. */
+type Loader = { loadSelectedReading?: (id: string | null, host: unknown, ports: unknown) => Promise<{ kind: string; view?: ReviewView }> };
+let loader: Loader = {};
+try { loader = require('../../../../app/writers-studio/rebuild/liveReview') as Loader; } catch { loader = {}; }
+async function realReadyState(): Promise<LiveState | null> {
+  if (!loader.loadSelectedReading) return null;
+  const r = await loader.loadSelectedReading('rd-current', R11B_HOST, r11bPorts());
+  return r.kind === 'ready' && r.view ? { kind: 'ready', readingId: 'rd-current', gen: 1, view: r.view } : null;
+}
 
 export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
   const out: LawResult[] = [];
@@ -157,12 +163,12 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
     develop: count(html, /data-nav="develop"/g),
     rail: count(html, /class="fs-rail"/g), mobile: count(html, /class="fs-mobilenav"/g),
   });
-  const readyState: LiveState = { kind: 'ready', readingId: 'rd-b', gen: 1, view: readyView() };
+  const readyState = (await realReadyState()) ?? ({ kind: 'unavailable', readingId: 'rd-current', gen: 1 } as LiveState);
   const choicesState: ChooserState = { kind: 'choices', gen: 1, readings: LEDGER };
 
   out.push(law('R1-1C-L1-successor-navigation', () => {
     const w = nav('write'); const r = nav('review', LOC_R); const c = nav('review-choose');
-    if (!w || !r || !c) return unmounted('R1-1C-L1-successor-navigation');
+    if (!w || !r || !c || readyState.kind !== 'ready') return unmounted('R1-1C-L1-successor-navigation');
     const write = navsOf(host({ studioNav: w }));
     const review = navsOf(host({ studioNav: r, review: readyState }));
     const choose = navsOf(host({ studioNav: c, chooser: choicesState }));
@@ -208,7 +214,7 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
     if (!s.chooseReading) return unmounted('R1-1C-L6-choice-is-a-location-never-a-mount');
     const c = s.chooseReading('rd-b', LOC) as ChoiceOutcome & { view?: unknown };
     const exact = /(^|[?&])reading=rd-b(&|$)/.test(c.href ?? '') && /(^|[?&])m=ms-1(&|$)/.test(c.href ?? '') && /(^|[?&])s=d-2(&|$)/.test(c.href ?? '');
-    const mountsOutsideLoader = /mapRealReview\(|kind:\s*['"]ready['"][^\n]*view:\s*(?!r\.view)/.test(sources) || /getReading\([^)]*\)[^\n]*(view|findings)/.test(sources);
+    const mountsOutsideLoader = /mapRealReview\(|kind:\s*['"]ready['"][^\n]*view:(?!\s*r\.view)/.test(sources) || /getReading\([^)]*\)[^\n]*(view|findings)/.test(sources);
     return must('R1-1C-L6-choice-is-a-location-never-a-mount', c.kind === 'navigate' && exact && c.view === undefined && !mountsOutsideLoader, `outcome=${c.kind} href=${c.href ?? 'none'} mountsOutsideLoader=${mountsOutsideLoader}`);
   }));
   out.push(law('R1-1C-L7-unavailable-never-substitutes', () => {
@@ -219,7 +225,7 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
     return must('R1-1C-L7-unavailable-never-substitutes', unavailable && !substitute, `unavailable=${unavailable} substitute=${substitute}`);
   }));
   out.push(law('R1-1C-L8-no-legacy-review-bridge', () => {
-    const w = nav('write'); const r = nav('review', LOC_R); if (!w || !r) return unmounted('R1-1C-L8-no-legacy-review-bridge');
+    const w = nav('write'); const r = nav('review', LOC_R); if (!w || !r || readyState.kind !== 'ready') return unmounted('R1-1C-L8-no-legacy-review-bridge');
     const html = host({ studioNav: w }) + host({ studioNav: r, review: readyState }) + chooser(choicesState);
     const bridge = LEGACY.test(html) || LEGACY.test(sources);
     const parallelShell = /RebuildStudioClient|StudioModeBar|wsr-modebar/.test(sources) || /destinations=\{\[[^\]]*['"]develop['"]/.test(sources);
@@ -231,8 +237,9 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
     const c = s.studioMode({ reading: null, chooserOpen: true }); const d = s.studioMode({ reading: null, chooserOpen: false });
     const href = s.locationForWrite(LOC_R.pathname, LOC_R.search);
     const derived = href === '/writers-studio/rebuild?m=ms-1&s=d-2';
+    const scrubbed = s.locationForWrite('/writers-studio/rebuild', '?m=ms-1&reading=rd-current') === '/writers-studio/rebuild?m=ms-1';
     const secondStore = /localStorage|sessionStorage|useState<\s*StudioMode|useState<['"]write['"]/.test(sources);
-    return must('R1-1C-L9-url-is-the-single-state-authority', a === 'review' && b === 'review' && c === 'review-choose' && d === 'write' && derived && !secondStore, `modes=${a},${b},${c},${d} writeHref=${href} secondStore=${secondStore}`);
+    return must('R1-1C-L9-url-is-the-single-state-authority', a === 'review' && b === 'review' && c === 'review-choose' && d === 'write' && derived && scrubbed && !secondStore, `modes=${a},${b},${c},${d} writeHref=${href} secondStore=${secondStore}`);
   }));
   out.push(law('R1-1C-L10-write-return-non-mutating', () => {
     if (!s.navActionsFor) return unmounted('R1-1C-L10-write-return-non-mutating');
@@ -246,7 +253,7 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
     return must('R1-1C-L10-write-return-non-mutating', onlyGo && dropsOnlyReading && !staticMutation, `calls=${a.calls.join(',') || 'none'} href=${w.href} staticMutation=${staticMutation}`);
   }));
   out.push(law('R1-1C-L11-read-only-capabilities-unchanged', () => {
-    const r = nav('review', LOC_R); if (!r || !s.capabilities) return unmounted('R1-1C-L11-read-only-capabilities-unchanged');
+    const r = nav('review', LOC_R); if (!r || !s.capabilities || readyState.kind !== 'ready') return unmounted('R1-1C-L11-read-only-capabilities-unchanged');
     const expected = ['askMaia', 'discuss', 'explore', 'commission', 'acknowledgeStale', 'ownObservation', 'navigate', 'facet'];
     const allFalse = expected.every((k) => s.capabilities![k] === false) && Object.values(s.capabilities).every((v) => v === false);
     const html = host({ studioNav: r, review: readyState }) + chooser(choicesState);
@@ -259,7 +266,10 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
     const predecessorText = predecessor.includes(`navs.every((n) => n === 'data-nav="write"')`) && predecessor.includes('buttons === 0 && anchors === 0');
     const successorMarked = /R1-1C-L1-successor-navigation/.test(current) && current.includes(FS1_BASE.slice(0, 9)) && /C1B-L6-no-legacy-mode-bridge/.test(current) && /C1B-L5-no-dead-production-control/.test(current);
     const predecessorWitnessed = /git show 4dade9a68/.test(current);
-    return must('R1-1C-L12-c1b-succession-explicit', predecessorText && successorMarked && predecessorWitnessed, `predecessorAtFS1=${predecessorText} successorMarked=${successorMarked} predecessorWitnessedInSuccessor=${predecessorWitnessed}`);
+    /* the C1C1 authority pin also named the shell at FS1; its succession must be explicit too (never a silent un-pin) */
+    const c1c1 = existsSync(join(ROOT, 'tests/constitutional/writers-studio/flagship-c1c1/laws.ts')) ? readFileSync(join(ROOT, 'tests/constitutional/writers-studio/flagship-c1c1/laws.ts'), 'utf8') : '';
+    const c1c1Explicit = /R1-1C SUCCESSION/.test(c1c1) && /git show 4dade9a68/.test(c1c1) && !/'app\/writers-studio\/flagship\/StudioChrome\.tsx',\n/.test(c1c1);
+    return must('R1-1C-L12-c1b-succession-explicit', predecessorText && successorMarked && predecessorWitnessed && c1c1Explicit, `predecessorAtFS1=${predecessorText} successorMarked=${successorMarked} predecessorWitnessedInSuccessor=${predecessorWitnessed} c1c1PinSuccessionExplicit=${c1c1Explicit}`);
   }));
   out.push(law('R1-1C-L13-place-navigation-keeps-reading', () => {
     if (!s.locationForReading) return unmounted('R1-1C-L13-place-navigation-keeps-reading');
@@ -270,7 +280,7 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
     return must('R1-1C-L13-place-navigation-keeps-reading', kept && keepsPlace, `moved=${moved} selected=${sel}`);
   }));
   out.push(law('R1-1C-L14-direct-link-bypasses-chooser', () => {
-    if (!s.enterReview || !s.studioMode) return unmounted('R1-1C-L14-direct-link-bypasses-chooser');
+    if (!s.enterReview || !s.studioMode || readyState.kind !== 'ready') return unmounted('R1-1C-L14-direct-link-bypasses-chooser');
     const e = s.enterReview('rd-b', LEDGER);
     const mode = s.studioMode({ reading: 'rd-b', chooserOpen: true });
     const r = nav('review', LOC_R);
@@ -303,11 +313,11 @@ export async function runR11CLaws(s: Subject): Promise<LawResult[]> {
   out.push(law('R1-1C-L16-successor-write-goldens', () => {
     const w = nav('write'); const c = nav('review-choose'); if (!w || !c) return unmounted('R1-1C-L16-successor-write-goldens');
     const g = (n: string) => { const f = join(ROOT, 'tests/constitutional/writers-studio/flagship-r1-1c/golden', `${n}.html`); return existsSync(f) ? readFileSync(f, 'utf8') : null; };
-    const plain = host({ studioNav: w }) === g('write-plain');
-    const held = host({ studioNav: w, held: { sectionId: 'd-2', start: 21, end: 29, text: 'far bank' }, editorialEnabled: true }) === g('write-held-editorial');
-    const choose = host({ studioNav: c, chooser: choicesState }) === g('review-choose');
-    const empty = host({ studioNav: c, chooser: { kind: 'choices', gen: 1, readings: [] } }) === g('review-choose-empty');
-    return must('R1-1C-L16-successor-write-goldens', plain && held && choose && empty, `write-plain=${plain} write-held-editorial=${held} review-choose=${choose} review-choose-empty=${empty}`);
+    const plain = host({ studioNav: w }) === g('nav-write-plain');
+    const held = host({ studioNav: w, held: { sectionId: 'd-2', start: 21, end: 29, text: 'far bank' }, editorialEnabled: true }) === g('nav-write-held-editorial');
+    const choose = host({ studioNav: c, chooser: choicesState }) === g('nav-review-choose');
+    const empty = host({ studioNav: c, chooser: { kind: 'choices', gen: 1, readings: [] } }) === g('nav-review-choose-empty');
+    return must('R1-1C-L16-successor-write-goldens', plain && held && choose && empty, `nav-write-plain=${plain} nav-write-held-editorial=${held} nav-review-choose=${choose} nav-review-choose-empty=${empty}`);
   }));
   out.push(law('R1-1C-L17-chooser-offers-only-what-the-ledger-holds', () => {
     if (!s.Chooser || !s.locationForReading) return unmounted('R1-1C-L17-chooser-offers-only-what-the-ledger-holds');

@@ -107,20 +107,34 @@ export function runC1BLaws(s: Subject): LawResult[] {
     return must('C1B-L4-no-fabricated-presentation-fact', bad.length === 0, bad.length ? bad.join('; ') : 'absence rendered as absence');
   }));
 
+  /* R1-1C SUCCESSION (founder-authorized, 2026-09-23 — record docs/programme/FLAGSHIP-RUNTIME-CONVERGENCE-01_R1-1C_REVIEW_NAVIGATION_SUCCESSION_2026-09-23.md).
+     PREDECESSOR, verified below at the FS1 base blob (git show 4dade9a68:…): `buttons === 0 && anchors === 0` — true only
+     because no lawful navigation action existed in the Write host. SUCCESSOR: the reason survives — a live surface draws no
+     control without a lawful action behind it — so every <button>/<a> in ordinary Write must be a navigation entry that
+     carries one (`data-affordance="navigate"`), and nothing else. Full successor law: R1-1C-L1-successor-navigation. */
   out.push(law('C1B-L5-no-dead-production-control', () => {
     const html = render(baseProps());
     const buttons = (html.match(/<button/g) ?? []).length;
     const anchors = (html.match(/<a /g) ?? []).length;
-    return must('C1B-L5-no-dead-production-control', buttons === 0 && anchors === 0, `buttons=${buttons} anchors=${anchors}`);
+    const withLawfulAction = (html.match(/<(button|a)[^>]*data-nav="[a-z]+"[^>]*data-affordance="navigate"/g) ?? []).length;
+    const predecessor = execSync('git show 4dade9a68:tests/constitutional/writers-studio/flagship-c1b/laws.ts', { cwd: ROOT, encoding: 'utf8' }).includes('buttons === 0 && anchors === 0');
+    return must('C1B-L5-no-dead-production-control', buttons + anchors === withLawfulAction && predecessor, `buttons=${buttons} anchors=${anchors} withLawfulAction=${withLawfulAction} predecessorWitnessedAtFS1=${predecessor}`);
   }));
 
+  /* R1-1C SUCCESSION (founder-authorized, 2026-09-23). PREDECESSOR, verified below at the FS1 base blob (git show 4dade9a68:…):
+     exactly two orientation entries, every one data-nav="write" — the pre-Review flagship state. SUCCESSOR: the reason
+     survives — flagship navigation is explicit, bounded, non-duplicative and revives no legacy mode architecture — and
+     Review is admitted as a flagship destination: exactly two orientation surfaces, each naming Write and Review, no
+     Develop, no legacy room. Full successor law: R1-1C-L1-successor-navigation (flagship-r1-1c). ⛔ Not silently rewritten:
+     the predecessor assertion is read from the frozen FS1 blob every run. */
   out.push(law('C1B-L6-no-legacy-mode-bridge', () => {
     const html = render(baseProps());
     const legacy = /\/writers-studio\/(develop|review)/.test(html) || /\/writers-studio\/(develop|review)/.test(sources);
     const navs = html.match(/data-nav="([a-z]+)"/g) ?? [];
-    const onlyWrite = navs.length === 2 && navs.every((n) => n === 'data-nav="write"');
-    const orientation = (html.match(/data-affordance="orientation"/g) ?? []).length === 2;
-    return must('C1B-L6-no-legacy-mode-bridge', !legacy && onlyWrite && orientation, `legacyBridge=${legacy} navs=${navs.join(',')} orientation=${orientation}`);
+    const successorSet = navs.length === 4 && navs.filter((n) => n === 'data-nav="write"').length === 2 && navs.filter((n) => n === 'data-nav="review"').length === 2;
+    const surfaces = (html.match(/class="fs-rail"/g) ?? []).length === 1 && (html.match(/class="fs-mobilenav"/g) ?? []).length === 1;
+    const predecessor = execSync('git show 4dade9a68:tests/constitutional/writers-studio/flagship-c1b/laws.ts', { cwd: ROOT, encoding: 'utf8' }).includes(`navs.every((n) => n === 'data-nav="write"')`);
+    return must('C1B-L6-no-legacy-mode-bridge', !legacy && successorSet && surfaces && predecessor, `legacyBridge=${legacy} navs=${navs.join(',')} twoSurfaces=${surfaces} predecessorWitnessedAtFS1=${predecessor}`);
   }));
 
   out.push(law('C1B-L7-save-wiring-to-existing-session', () => {
