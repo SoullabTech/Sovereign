@@ -1,0 +1,481 @@
+{
+  "schema": "programme-state.v1",
+  "projected_at": "2026-09-23",
+  "observed_against": "b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f",
+  "projector": "manual F1 fixture — the deterministic projector is a later governed act",
+  "programmes": [
+    {
+      "id": "JARVIS-FOUNDER-WORKSPACE-01",
+      "name": "Founder Workspace",
+      "kind": "programme",
+      "question": "Make JARVIS the place you actually work every day.",
+      "standing": "F0 PASS · F1 OPEN — INFORMATION ARCHITECTURE + LIVING PROTOTYPE OVER RECORDED EVIDENCE ONLY",
+      "stage": {
+        "current_act": "F1",
+        "mode": "PROTOTYPE · no runtime change"
+      },
+      "needs_founder": [
+        {
+          "what": "Walk the F1 prototype and rule each surface KEEP · REVISE · REMOVE · NEW CAPABILITY REQUIRED",
+          "why": "F1 exits only on a founder walk",
+          "source": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_FOUNDER_ADJUDICATION_2026-09-23.md §F1 Exit"
+        }
+      ],
+      "last_change": {
+        "date": "2026-09-23",
+        "authority": "founder adjudication",
+        "source": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_FOUNDER_ADJUDICATION_2026-09-23.md"
+      },
+      "custody": {
+        "branch": "claude/sharp-cannon-cyrdeb",
+        "candidate_sha": "8b8592d9",
+        "observed_against": "b4f73ac4"
+      },
+      "authority": {
+        "merge": "NOT AUTHORIZED",
+        "deploy": "NOT AUTHORIZED",
+        "production_write": "NOT AUTHORIZED",
+        "member_facing": "N/A"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED",
+      "sources": [
+        "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_CHARTER_2026-09-23.md",
+        "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_PRODUCT_CENSUS_AND_FOUNDER_EXPERIENCE_CONSTITUTION_2026-09-23.md"
+      ]
+    },
+    {
+      "id": "JARVIS-MERGE-AUTHORITY-01",
+      "name": "Merge Authority",
+      "kind": "programme",
+      "question": "Who may merge to canonical, and under what credentialed execution.",
+      "standing": "AUTHORIZED · UNSPENT · IDLE PENDING CREDENTIALED EXECUTION CAPACITY",
+      "stage": {
+        "current_act": "M1R1R1",
+        "mode": "Externally governed · execution pending · protected from this lane"
+      },
+      "needs_founder": [],
+      "last_change": {
+        "date": "2026-09-23",
+        "authority": "founder ruling D-01 (reference-level dependency)",
+        "source": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_FOUNDER_ADJUDICATION_2026-09-23.md §D-01"
+      },
+      "custody": {
+        "branch": "outside this repository",
+        "candidate_sha": null,
+        "observed_against": null
+      },
+      "authority": {
+        "merge": "GOVERNED ELSEWHERE",
+        "deploy": "GOVERNED ELSEWHERE",
+        "production_write": "GOVERNED ELSEWHERE",
+        "member_facing": "N/A"
+      },
+      "external": true,
+      "evidence_state": "NOT FOUND (in this checkout) · standing by founder statement",
+      "sources": [
+        "founder adjudication 2026-09-23 §V"
+      ]
+    },
+    {
+      "id": "JARVIS-ORCHESTRATION-OPERATOR-01",
+      "name": "Operator Organs",
+      "kind": "programme",
+      "question": "How JARVIS turns what you say into governed, bounded work without gaining authority.",
+      "standing": "O0–O3 CLOSED · CANONICAL · O4 contract only (runtime standing UNVERIFIED) · O7 Operator Decision Surface NOT OPEN · O10 Desktop Operator Witness NOT OPEN",
+      "stage": {
+        "current_act": "O4 reconciliation owed",
+        "mode": "HOLD"
+      },
+      "needs_founder": [
+        {
+          "what": "Reconcile the O4 router implementation (51890bc0, d2db8896) with its contract, which says NO O4 RUNTIME IMPLEMENTATION",
+          "why": "implementation exists; governed runtime standing unverified",
+          "source": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O4_CAPABILITY_ROUTER_CONTRACT_2026-09-22.md :6 + git log"
+        }
+      ],
+      "last_change": {
+        "date": "2026-09-22",
+        "authority": "commit d2db8896 (no adjudication record found)",
+        "source": "git log -- jarvis-desktop/src/operator-capability-router.mjs"
+      },
+      "custody": {
+        "branch": "clean-main-no-secrets",
+        "candidate_sha": "d2db8896",
+        "observed_against": "b4f73ac4"
+      },
+      "authority": {
+        "merge": "landed",
+        "deploy": "N/A (desktop)",
+        "production_write": "N/A",
+        "member_facing": "N/A"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (docs + git) · runtime UNVERIFIED",
+      "sources": [
+        "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O3_AUTHORITY_PLANNER_2026-09-21.md :250,:253"
+      ]
+    },
+    {
+      "id": "JARVIS-ROUTING-INTELLIGENCE-01",
+      "name": "Routing Intelligence",
+      "kind": "programme",
+      "question": "Which model or capability handles a piece of work, without capability becoming authority.",
+      "standing": "J5 RATIFIED · R4 · R5A founder-accepted · R5B IMPLEMENTED LOCALLY · FALSIFICATION GREEN · AWAITING FOUNDER ADJUDICATION",
+      "stage": {
+        "current_act": "R5B adjudication",
+        "mode": "STOP"
+      },
+      "needs_founder": [
+        {
+          "what": "Adjudicate R5B — one-time human authorization to run an external model",
+          "why": "implemented and falsified locally; no provider execution until ruled",
+          "source": "docs/programme/JARVIS-ROUTING-INTELLIGENCE-01_CHARTER_2026-09-18.md §Status correction 2026-09-22"
+        }
+      ],
+      "last_change": {
+        "date": "2026-09-22",
+        "authority": "charter status correction",
+        "source": "docs/programme/JARVIS-ROUTING-INTELLIGENCE-01_CHARTER_2026-09-18.md"
+      },
+      "custody": {
+        "branch": "clean-main-no-secrets",
+        "candidate_sha": null,
+        "observed_against": "b4f73ac4"
+      },
+      "authority": {
+        "merge": "landed (R1·R4·R5A·R5B)",
+        "deploy": "N/A",
+        "production_write": "NOT AUTHORIZED",
+        "member_facing": "NOT AUTHORIZED"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (docs)",
+      "sources": [
+        "docs/programme/JARVIS-ROUTING-INTELLIGENCE-01_R5B_HUMAN_PROVIDER_EXECUTION_AUTHORIZATION_2026-09-18.md"
+      ]
+    },
+    {
+      "id": "JARVIS-WORK-UNIT-01",
+      "name": "Work Units",
+      "kind": "programme",
+      "question": "One governed shape for a piece of work: identity, scope, authority, routing, evidence, state.",
+      "standing": "W0 RATIFIED · W1–W5 CLOSED · RGR-01 CLOSED",
+      "stage": {
+        "current_act": "none open",
+        "mode": "CLOSED"
+      },
+      "needs_founder": [],
+      "last_change": {
+        "date": "2026-09-18",
+        "authority": "programme closure",
+        "source": "docs/programme/JARVIS-WORK-UNIT-01_W1_W5_PROGRAMME_CLOSURE_2026-09-18.md"
+      },
+      "custody": {
+        "branch": "clean-main-no-secrets",
+        "candidate_sha": "fab09573 (report, not re-verified)",
+        "observed_against": "b4f73ac4"
+      },
+      "authority": {
+        "merge": "landed",
+        "deploy": "N/A",
+        "production_write": "N/A",
+        "member_facing": "N/A"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (docs)",
+      "sources": [
+        "docs/programme/JARVIS-WORK-UNIT-01_W0_CANONICAL_CONTRACT_2026-09-18.md"
+      ]
+    },
+    {
+      "id": "JARVIS-CONTINUITY-BRIDGE-01",
+      "name": "Continuity",
+      "kind": "programme",
+      "question": "Recall prior work locally, without anything leaving the machine.",
+      "standing": "LOCAL CONTINUITY + BRANCH-AWARE RECALL IMPLEMENTED AND PROVEN · merge/deploy unopened",
+      "stage": {
+        "current_act": "none open",
+        "mode": "LOCAL_ONLY"
+      },
+      "needs_founder": [],
+      "last_change": {
+        "date": "2026-09-17",
+        "authority": "lane record",
+        "source": "docs/programme/JARVIS-CONTINUITY-BRIDGE-01_2026-09-17.md"
+      },
+      "custody": {
+        "branch": "bounded branch",
+        "candidate_sha": null,
+        "observed_against": null
+      },
+      "authority": {
+        "merge": "NOT OPENED",
+        "deploy": "NOT OPENED",
+        "production_write": "N/A",
+        "member_facing": "N/A"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (docs)",
+      "sources": [
+        "jarvis-desktop/src/continuity.js",
+        "scripts/builder/jarvis-recall.py"
+      ]
+    },
+    {
+      "id": "JARVIS-SVE-01",
+      "name": "SVE Constitution",
+      "kind": "programme",
+      "question": "A candidate constitution for how JARVIS specifies, verifies and evaluates work.",
+      "standing": "CANDIDATE CONSTITUTION — NOT RATIFIED · STOP for founder adjudication",
+      "stage": {
+        "current_act": "ratification",
+        "mode": "STOP"
+      },
+      "needs_founder": [
+        {
+          "what": "Ratify, amend or hold the SVE constitution",
+          "why": "it wraps other programmes and is unratified",
+          "source": "docs/programme/JARVIS-SVE-01_CONSTITUTION_2026-09-23.md"
+        }
+      ],
+      "last_change": {
+        "date": "2026-09-23",
+        "authority": "lane candidate",
+        "source": "docs/programme/JARVIS-SVE-01_CONSTITUTION_2026-09-23.md"
+      },
+      "custody": {
+        "branch": "clean-main-no-secrets",
+        "candidate_sha": null,
+        "observed_against": "b4f73ac4"
+      },
+      "authority": {
+        "merge": "N/A (doc)",
+        "deploy": "N/A",
+        "production_write": "N/A",
+        "member_facing": "N/A"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (docs)",
+      "sources": []
+    },
+    {
+      "id": "DEPLOYMENT-SAFETY-03 / REVIEW-CUSTODY-01 · R1",
+      "name": "Deployment Safety R1",
+      "kind": "programme",
+      "question": "Bring frozen review-custody law and the deploy ordering (gate → migrate → tags → swap → verify) onto canonical together.",
+      "standing": "FULL-LINEAGE RECONCILIATION PREPARED · ⛔ NOT CANONICAL YET · FOUNDER R1 ADJUDICATION OWED · NO DEPLOY · NO SCHEMA OR PRODUCTION MUTATION",
+      "stage": {
+        "current_act": "R1 adjudication",
+        "mode": "STOP"
+      },
+      "needs_founder": [
+        {
+          "what": "Adjudicate merge candidate 5c12d891 (parents bd91e5bb + 6f447b17)",
+          "why": "conflict-free reconciliation prepared; not canonical until ruled",
+          "source": "docs/programme/DEPLOYMENT-SAFETY-03_R1_CANONICAL_RECONCILIATION_2026-09-21.md"
+        }
+      ],
+      "last_change": {
+        "date": "2026-09-21",
+        "authority": "lane record",
+        "source": "CLAUDE.md priority thread 2026-09-21"
+      },
+      "custody": {
+        "branch": "reconciliation candidate",
+        "candidate_sha": "5c12d891",
+        "observed_against": "bd91e5bb"
+      },
+      "authority": {
+        "merge": "ADJUDICATION OWED",
+        "deploy": "NOT AUTHORIZED",
+        "production_write": "NOT AUTHORIZED",
+        "member_facing": "N/A"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (CLAUDE.md, not re-verified against the record)",
+      "sources": []
+    },
+    {
+      "id": "REVIEW-CUSTODY-01 · DEV-LANE PROVIDER EXPOSURE",
+      "name": "Review Custody",
+      "kind": "programme",
+      "question": "Bind code review to what was actually read, and keep repository text away from lab-tier providers.",
+      "standing": "FINDING VALID · FOUNDER INTERIM HOLD TAKEN · STEP 1 ✅ · FREEZE @ bbb5ff5c · STEP 2 ✅ · ⛔ STEP 3 NOT OPENED · INSTRUMENT UNWIRED",
+      "stage": {
+        "current_act": "Step 3 (founder act naming the first bound surface)",
+        "mode": "NOT OPENED"
+      },
+      "needs_founder": [
+        {
+          "what": "Name the first surface where a bound review is REQUIRED (Step 3)",
+          "why": "the instrument has custody over a record nothing yet requires",
+          "source": "CLAUDE.md priority thread 2026-09-20"
+        }
+      ],
+      "last_change": {
+        "date": "2026-09-20",
+        "authority": "founder acts (freeze + Step 2)",
+        "source": "docs/programme/REVIEW-CUSTODY-01_STEP2_REVIEW_AUTHORING_PROCEDURE_2026-09-20.md"
+      },
+      "custody": {
+        "branch": "claude/optimistic-wozniak-pruzjq",
+        "candidate_sha": "bbb5ff5c",
+        "observed_against": null
+      },
+      "authority": {
+        "merge": "N/A",
+        "deploy": "N/A",
+        "production_write": "N/A",
+        "member_facing": "N/A"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (CLAUDE.md)",
+      "sources": []
+    },
+    {
+      "id": "WRITERS-STUDIO-CONVERGENCE-01",
+      "name": "Writer's Studio Convergence",
+      "kind": "programme",
+      "question": "Converge Writer's Studio around one relationship between the writer, the Work and MAIA.",
+      "standing": "CONVERGENCE LAW FROZEN · FACETS-01 RATIFIED (GUIDED · LEARNING · DIRECT) · OBSERVATION-IDENTITY-01/I1 CLOSED · OBSERVATION-ADDRESS-01 ESTABLISHED, NOT OPENED · STEPS 2–8 NOT STARTED",
+      "stage": {
+        "current_act": "OBSERVATION-ADDRESS-01 (not opened)",
+        "mode": "HOLD"
+      },
+      "needs_founder": [
+        {
+          "what": "Open OBSERVATION-ADDRESS-01 (bridge from observation_id to existing standing, no migration)",
+          "why": "facet work may not create member actions until it closes",
+          "source": "docs/programme/WRITERS-STUDIO-OBSERVATION-ADDRESS-01_CLOSURE_AND_CHARTER_2026-09-21.md"
+        }
+      ],
+      "last_change": {
+        "date": "2026-09-21",
+        "authority": "founder adjudication",
+        "source": "docs/programme/WRITERS-STUDIO-OBSERVATION-ADDRESS-01_CLOSURE_AND_CHARTER_2026-09-21.md"
+      },
+      "custody": {
+        "branch": "lane branch",
+        "candidate_sha": "e8f39cff",
+        "observed_against": "a8a686cd"
+      },
+      "authority": {
+        "merge": "NOT AUTHORIZED",
+        "deploy": "NOT AUTHORIZED",
+        "production_write": "NOT AUTHORIZED",
+        "member_facing": "NOT AUTHORIZED"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (CLAUDE.md)",
+      "sources": []
+    },
+    {
+      "id": "JARVIS-CIRCLES-01",
+      "name": "Circles",
+      "kind": "programme",
+      "question": "Let members find one another around a shared interest, safely.",
+      "standing": "I0.5 CODE deployed · I0.5 SCHEMA deployed (under no recorded authorization) · CANONICAL VERIFY not yet accepted · I1 HOLD · REVERT NOT AUTHORIZED",
+      "stage": {
+        "current_act": "I0.5 acceptance (two witnesses)",
+        "mode": "HOLD"
+      },
+      "needs_founder": [
+        {
+          "what": "Accept I0.5 as current deployed state on two independent witnesses (canonical verifier 63/63 + production schema read)",
+          "why": "schema reached production ahead of its ruling; reconcile forward was ruled",
+          "source": "CLAUDE.md priority thread 2026-09-07 (schema drift)"
+        }
+      ],
+      "last_change": {
+        "date": "2026-09-07",
+        "authority": "founder ruling: reconcile forward",
+        "source": "CLAUDE.md priority thread"
+      },
+      "custody": {
+        "branch": "claude/jarvis-circles-programme-reouzc",
+        "candidate_sha": "3ed98ceab",
+        "observed_against": null
+      },
+      "authority": {
+        "merge": "landed",
+        "deploy": "happened (unattributed)",
+        "production_write": "NOT AUTHORIZED",
+        "member_facing": "founder-only gate"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (CLAUDE.md)",
+      "sources": []
+    },
+    {
+      "id": "WORKSTATION-STORAGE-RELIEF",
+      "name": "Mac Studio Storage",
+      "kind": "ops",
+      "question": "Keep the workstation from treating a full disk as a memory failure.",
+      "standing": "worktree relief CLOSED · Library census + 48 GB baseline NEXT · ⛔ do not run Act B again",
+      "stage": {
+        "current_act": "restart → baseline → read-only ~/Library census",
+        "mode": "NEXT"
+      },
+      "needs_founder": [
+        {
+          "what": "Decide on ~/Library items (Messages 44 GB · Voice Memos 21 GB · Claude vm_bundles 9.5 GB)",
+          "why": "these are human decisions, not reclaim acts",
+          "source": "docs/ops/WORKSTATION_STORAGE_RELIEF_2026-09-22.md"
+        }
+      ],
+      "last_change": {
+        "date": "2026-09-22",
+        "authority": "ops record",
+        "source": "docs/ops/WORKSTATION_STORAGE_RELIEF_2026-09-22.md"
+      },
+      "custody": {
+        "branch": null,
+        "candidate_sha": null,
+        "observed_against": null
+      },
+      "authority": {
+        "merge": "N/A",
+        "deploy": "N/A",
+        "production_write": "N/A",
+        "member_facing": "N/A"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (docs)",
+      "sources": [
+        "scripts/ops/workstation-storage-census.sh"
+      ]
+    },
+    {
+      "id": "TEMPORAL-MEMORY-CUT1-TRACEABILITY-01",
+      "name": "Memory Traceability",
+      "kind": "programme",
+      "question": "Make it knowable, after the fact, which valid memories decay kept out of a turn.",
+      "standing": "✅ CLOSED IN PRODUCTION · behavioural reconciliation ⛔ UNOPENED",
+      "stage": {
+        "current_act": "none open",
+        "mode": "CLOSED"
+      },
+      "needs_founder": [],
+      "last_change": {
+        "date": "2026-09-16",
+        "authority": "production witness + closure",
+        "source": "docs/programme/TEMPORAL-MEMORY-CUT1-TRACEABILITY-01_PRODUCTION_WITNESS_AND_CLOSURE_2026-09-16.md"
+      },
+      "custody": {
+        "branch": "clean-main-no-secrets",
+        "candidate_sha": "98542ff06 (runtime)",
+        "observed_against": null
+      },
+      "authority": {
+        "merge": "landed (PR #1301)",
+        "deploy": "done",
+        "production_write": "done (trace table)",
+        "member_facing": "no visible change"
+      },
+      "external": false,
+      "evidence_state": "OBSERVED (docs)",
+      "sources": []
+    }
+  ]
+}
