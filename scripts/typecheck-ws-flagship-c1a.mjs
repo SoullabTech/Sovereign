@@ -34,6 +34,8 @@ const C1B_HOST_NEIGHBOURS = [
 const ALLOWED_BY_CONFIG = {
   'tsconfig.ws-flagship-c1a.json': [STUDIO_THEME],
   'tsconfig.ws-flagship-c1b.json': [STUDIO_THEME, ...C1B_HOST_NEIGHBOURS],
+  /** C1C1 adds the pure Discuss modules; it reaches no new pre-existing neighbour. */
+  'tsconfig.ws-flagship-c1c1.json': [STUDIO_THEME, ...C1B_HOST_NEIGHBOURS],
 };
 
 /** C1B reuses this runner: `node scripts/typecheck-ws-flagship-c1a.mjs tsconfig.ws-flagship-c1b.json`. */
