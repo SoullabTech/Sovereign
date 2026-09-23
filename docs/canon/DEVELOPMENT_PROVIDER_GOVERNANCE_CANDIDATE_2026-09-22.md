@@ -90,8 +90,8 @@ A single edit that both removes a class from that list and grants it to a provid
 fail.
 
 Every assignment of a repository data class therefore requires a second object: a
-**separately ratified provider-assignment authorization record** that predates the assignment
-candidate.
+**separately ratified provider-assignment authorization record** that is already present in
+canonical **before** the assignment candidate.
 
 The record is machine-readable JSON under:
 
@@ -110,21 +110,36 @@ with exact minimum identity:
 ```
 
 The provider policy cites that prior act by `record_path`, `record_blob`, and
-`record_commit`. The guard must prove the pinned commit predates the assignment candidate,
-that the blob exists at that path in the pinned commit, that the record is ratified, and that
-its tier/provider/capability exactly match.
+`record_commit`. The guard must prove:
 
-A same-change authorization is self-authorization and is refused.
+1. the pinned commit predates the assignment candidate;
+2. the pinned commit is an ancestor of the exact canonical base under adjudication;
+3. that canonical base still contains the exact pinned blob at the governed path;
+4. the record is ratified and exactly matches tier/provider/capability.
 
-This makes repository assignment a **two-act sequence**:
+A same-change authorization is refused. A two-commit sequence on one unmerged branch is also
+refused because its authorization commit has not yet acquired canonical custody.
+
+This makes repository assignment a genuine **two-admission sequence**:
 
 ```text
-Founder ratifies exact provider/data-class assignment record
+Class A authorization record
         ↓
-later provider-policy act cites the prior pinned record
+Founder adjudication + canonical admission
         ↓
-guard admits the assignment shape
+later provider-policy assignment PR cites canonical path + blob + commit
+        ↓
+guard proves prior canonical custody
+        ↓
+separate Founder adjudication of assignment
 ```
+
+The guard proves prior **canonical custody and record identity**, not the truthfulness of a
+human ratification claim. Human ratification remains a governance act outside what Git object
+identity can establish.
+
+If CI cannot resolve the exact canonical base or the needed ancestry, that is **NO EVIDENCE /
+INSTRUMENT ERROR**, not an assignment verdict.
 
 Delisting alone is never assignment authority.
 

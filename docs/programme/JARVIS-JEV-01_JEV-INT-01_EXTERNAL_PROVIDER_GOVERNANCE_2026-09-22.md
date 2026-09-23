@@ -22,19 +22,22 @@ amendment. It does not ratify itself.
 
 ```text
 docs/canon/PROVIDER_GOVERNANCE.md
-ef6c831b30dc23e1bbb25824f7993f3341bade8d
+32295be5d1405a5af084bf47162f539735a0166f
 
 scripts/provider-policy.json
 baee45fef093b5f582dc090d91962ae0bd3ff767
 
 scripts/check-provider-governance.ts
-4ac7a5781ff740e705c7b69457399dd6c0321943
+28589396116847c0442ee8459aa7b4f23169f4cd
 
 docs/canon/DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md
-e93b4e46bfa8f31d5542acc3937c5628680075a6
+f69c79004edfc1a203caebf4a52898cc53e96840
 
 scripts/builder/__tests__/development-provider-governance-proof.mjs
-1ad313e1e33435d2e056c206dcf1a93757a76daf
+9beb811be85fab8c716d0015fc5e4162737e849c
+
+.github/workflows/sovereignty-gate.yml
+14ee58574e4224bae19661fe6f629d0fbd3388b2
 ```
 ## 3. Capability model
 
@@ -72,15 +75,15 @@ repository_assignment_authorizations empty
 ```text
 node scripts/builder/__tests__/development-provider-governance-proof.mjs
 
-passes: 13
+passes: 15
 failures: 0
 JEV-INT-01 GOVERNANCE CANDIDATE — PASS
 ```
 
 The proof establishes explicit vocabulary, no provider assignment, active hold standing,
 separate network/disclosure/spend/provider-execution authority, the exact three-class
-repository set, and the prior-ratification requirement for every future repository-class
-provider assignment.
+repository set, and the prior-canonical-authorization requirement for every future
+repository-class provider assignment.
 
 ## 5. Hostile mutations and assignment-gate witness
 
@@ -117,10 +120,13 @@ restored candidate baseline
    → provider governance exit 0
 ```
 
-A throwaway two-commit Git fixture then exercised the lawful path:
+A throwaway Git fixture then discriminated branch ancestry from canonical admission:
 
 ```text
-commit A
+BASE
+  canonical state before assignment authorization
+
+AUTH_COMMIT
   machine-readable assignment record
   instrument = repository-provider-assignment/v1
   status     = ratified
@@ -128,20 +134,32 @@ commit A
   provider   = openai
   capability = repository_derived_metadata
 
-commit B
-  provider-policy assignment cites A by:
+ASSIGNMENT_COMMIT
+  provider-policy assignment cites AUTH_COMMIT by:
     record_path
     record_blob
     record_commit
 
-guard at commit B
+case C1 — AUTH_COMMIT is earlier on the SAME UNMERGED BRANCH,
+          canonical base remains BASE
+  → exit 2
+  → "authorization commit … is not admitted to canonical base …"
+
+case C2 — exact AUTH_COMMIT is supplied as the canonical base
   → exit 0
+
+case C3 — canonical base SHA is declared but unavailable in local history
+  → exit 3
+  → PROVIDER GOVERNANCE INSTRUMENT ERROR
+  → ancestry evidence unavailable
 ```
 
-The fixture is synthetic proof of mechanism, not a real provider authorization. It establishes
-that the gate is neither a consistency-only check nor an impossible lock: assignment requires
-a separately existing prior ratification object, and that object must match the exact
-tier/provider/capability being assigned.
+The fixture is synthetic proof of mechanism, not a real provider authorization and not evidence
+that a human ratified anything. The guard proves **prior canonical custody, exact blob identity,
+and record shape**. Human Founder/Class-A ratification remains an external governance fact.
+
+The result is a genuine two-admission mechanism: an authorization record must first become
+canonical; only a later assignment candidate based on that canonical state can pass.
 
 ## 6. What remains open
 

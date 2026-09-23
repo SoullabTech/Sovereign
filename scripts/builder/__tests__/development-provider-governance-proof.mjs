@@ -18,6 +18,10 @@ const devCanon = readFileSync(
   new URL('../../../docs/canon/DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md', import.meta.url),
   'utf8',
 );
+const sovereigntyWorkflow = readFileSync(
+  new URL('../../../.github/workflows/sovereignty-gate.yml', import.meta.url),
+  'utf8',
+);
 
 let pass = 0;
 let fail = 0;
@@ -118,14 +122,28 @@ check('HOLD-06 — repository data-class set is exact and assignment authorizati
 });
 
 check('HOLD-07 — assignment requires a prior ratified pinned authorization record', () => {
-  assert.match(providerCanon, /prior-authorization gate/);
+  assert.match(providerCanon, /canonical prior-authorization gate/);
   assert.match(providerCanon, /record_path/);
   assert.match(providerCanon, /record_blob/);
   assert.match(providerCanon, /record_commit/);
-  assert.match(providerCanon, /same-change .*authorization.*refused/i);
   assert.match(devCanon, /separately ratified provider-assignment authorization record/);
   assert.match(devCanon, /predates the assignment candidate/);
   assert.match(devCanon, /Delisting alone is never assignment authority/);
+});
+
+check('HOLD-08 — prior commit must already be admitted to the exact canonical base', () => {
+  assert.match(providerCanon, /ancestor of the exact canonical base under adjudication/);
+  assert.match(providerCanon, /canonical base still resolves/);
+  assert.match(devCanon, /two-commit sequence on one unmerged branch is also/);
+  assert.match(devCanon, /two-admission sequence/);
+  assert.match(devCanon, /canonical custody and record identity/);
+});
+
+check('HOLD-09 — CI supplies exact base SHA and full history for ancestry evidence', () => {
+  assert.match(sovereigntyWorkflow, /PROVIDER_GOVERNANCE_CANONICAL_SHA/);
+  assert.match(sovereigntyWorkflow, /github\.event\.pull_request\.base\.sha/);
+  assert.match(sovereigntyWorkflow, /fetch-depth:\s*0/);
+  assert.match(providerCanon, /instrument error/i);
 });
 
 console.log();

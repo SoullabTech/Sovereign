@@ -47,6 +47,11 @@ function policyError(message: string): never {
   process.exit(2);
 }
 
+function instrumentError(message: string): never {
+  console.error(`⚠️ PROVIDER GOVERNANCE INSTRUMENT ERROR: ${message}`);
+  process.exit(3);
+}
+
 function validateCapabilityVocabulary(policy: any): void {
   const classes = policy?.capability_classes;
   if (!classes || typeof classes !== 'object' || Array.isArray(classes)) {
@@ -95,6 +100,31 @@ function authorizationBoundaryRef(): string {
   }
 }
 
+function canonicalBoundaryRef(): string {
+  const supplied = process.env.PROVIDER_GOVERNANCE_CANONICAL_SHA?.trim();
+  if (supplied) {
+    if (!/^[0-9a-f]{40}$/.test(supplied)) {
+      instrumentError("PROVIDER_GOVERNANCE_CANONICAL_SHA must be an exact 40-hex commit SHA.");
+    }
+    try {
+      git(["cat-file", "-e", supplied + "^{commit}"]);
+      return supplied;
+    } catch {
+      instrumentError(
+        "canonical base SHA is declared but unavailable in the local commit graph; ancestry evidence is unavailable.",
+      );
+    }
+  }
+
+  try {
+    return git(["rev-parse", "origin/clean-main-no-secrets^{commit}"]);
+  } catch {
+    instrumentError(
+      "origin/clean-main-no-secrets is unavailable; cannot distinguish non-canonical authorization from missing history.",
+    );
+  }
+}
+
 function isAncestor(ancestor: string, descendant: string): boolean {
   try {
     execFileSync("git", ["merge-base", "--is-ancestor", ancestor, descendant], {
@@ -138,6 +168,27 @@ function validateRepositoryAssignmentAuthorization(
   if (!isAncestor(auth.record_commit, boundaryRef)) {
     policyError(
       `repository assignment authorization commit ${auth.record_commit} must predate the assignment candidate (${boundaryRef}).`,
+    );
+  }
+
+  const canonicalRef = canonicalBoundaryRef();
+  if (!isAncestor(auth.record_commit, canonicalRef)) {
+    policyError(
+      `repository assignment authorization commit ${auth.record_commit} is not admitted to canonical base ${canonicalRef}.`,
+    );
+  }
+
+  let canonicalBlob: string;
+  try {
+    canonicalBlob = git(["rev-parse", canonicalRef + ":" + auth.record_path]);
+  } catch {
+    policyError(
+      `repository assignment authorization record ${auth.record_path} is absent from canonical base ${canonicalRef}.`,
+    );
+  }
+  if (canonicalBlob! !== auth.record_blob) {
+    policyError(
+      `canonical authorization blob mismatch at ${auth.record_path}: expected ${auth.record_blob}, found ${canonicalBlob!}.`,
     );
   }
 

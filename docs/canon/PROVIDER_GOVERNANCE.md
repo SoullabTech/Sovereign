@@ -55,7 +55,7 @@ Wired into: **preflight**, **CI**, and the **pre-commit** hook (`scripts/setup-g
 
 Editing tiers or the allowlist is a governance act, reviewed in PR. Adding a file to `pending_migration` is *migration debt* and should draw pushback. Adding to `quarantine_browser_keys` is not allowed — remove the client-side key instead.
 
-**Repository data-class assignment has an additional prior-authorization gate.** A provider may not receive `repository_derived_metadata`, `repository_source`, or `constitutional_canon` merely because the class is removed from an "unassigned" list in the same edit. The assignment must cite a separately ratified, machine-readable authorization record that already existed before the assignment candidate.
+**Repository data-class assignment has an additional canonical prior-authorization gate.** A provider may not receive `repository_derived_metadata`, `repository_source`, or `constitutional_canon` merely because the class is removed from an "unassigned" list in the same edit. The assignment must cite a separately ratified, machine-readable authorization record that was already admitted to the canonical base before the assignment candidate.
 
 The provider policy records that citation as exact:
 
@@ -69,12 +69,16 @@ authorized_by:
 The guard verifies that:
 
 1. `record_commit` predates the assignment candidate;
-2. the exact `record_blob` exists at `record_path` in that commit;
-3. the record is `repository-provider-assignment/v1`;
-4. the record status is `ratified`;
-5. its tier, provider, and capability exactly match the assignment.
+2. `record_commit` is an ancestor of the exact canonical base under adjudication;
+3. the canonical base still resolves `record_path` to the exact `record_blob`;
+4. the exact `record_blob` also exists at `record_path` in `record_commit`;
+5. the record is `repository-provider-assignment/v1`;
+6. the record status is `ratified`;
+7. its tier, provider, and capability exactly match the assignment.
 
-The authorization record lives under `docs/governance/provider-assignments/*.json`. A same-change "authorization" is refused. Delisting a class is therefore not sufficient to assign it.
+The authorization record lives under `docs/governance/provider-assignments/*.json`. A same-branch two-commit sequence that has not first admitted the authorization record to canonical is refused. Delisting a class is therefore not sufficient to assign it.
+
+CI supplies the exact PR base SHA as the canonical base and checks out enough history to prove ancestry. If that base or ancestry history is unavailable, the guard returns a distinct **instrument error** rather than mislabelling missing evidence as an authorization failure.
 
 ## OpenAI removal — burn order
 
