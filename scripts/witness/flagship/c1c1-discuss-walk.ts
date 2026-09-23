@@ -44,7 +44,11 @@ const H1 = 'Chapter 1', H2 = 'The river at dusk';
 const B1 = 'The water held the last of the light.';
 const B2 = 'Nothing moved on the far bank. She waited for the sound to come back.';
 const SEL = 'far bank';
-const ASK1 = 'Why does this sentence feel flat?';
+/* R1-1 · meaningful edge whitespace — the stored author turn must carry these exact bytes. */
+const ASK1 = '  Why does this sentence feel flat?  ';
+const ASK_PROPOSAL = 'Controlled: the transport will return proposal material for this turn.';
+const ASK_SLOW_B = 'Answer slowly please: what does the far bank want?';
+const SEL_B = 'sound';
 const ASK_SLOW = 'Answer slowly please: what is the far bank doing here?';
 const ASK2 = 'Second question about the far bank.';
 const ASK3 = 'Third question, submitted twice.';
@@ -184,11 +188,13 @@ async function main() {
       check('ON-9 one chain, one thread, one member turn, one MAIA reply, zero proposal versions', rows1.chains === 1 && rows1.threads === 1 && rows1.turns === 2 && rows1.maia === 1 && rows1.versions === 0, JSON.stringify(rows1));
       const saved = await sectionText(D2);
       check('ON-10 manuscript bytes are exactly the member’s own text', saved === `${H2}\n\n${B2} More.`, `exact=${saved === `${H2}\n\n${B2} More.`}`);
+      const storedAsk = String((await q(`SELECT u.body FROM ask_turns u JOIN ask_threads t ON t.id = u.thread_id JOIN proposal_chains c ON c.id = t.proposal_chain_id WHERE c.work_id = $1 AND u.speaker = 'author' ORDER BY u.turn_index ASC LIMIT 1`, [WK]))[0]?.['body'] ?? '');
+      check('R1-1 the stored author turn preserves the member’s exact bytes, edge whitespace included', storedAsk === ASK1 && JSON.stringify(storedAsk) !== JSON.stringify(ASK1.trim()), `stored=${JSON.stringify(storedAsk)}`);
 
       /* ── 5 presentation: Discuss only, exact ask, last MAIA turn ─────── */
       await page.screenshot({ path: join(OUT, `flag-on__2-answered.png`) });
       const panel = page.locator('[data-discuss="answered"]');
-      const askShown = (await panel.locator('.fs-ask').textContent())?.trim();
+      const askShown = await panel.locator('.fs-ask').textContent();
       const said = (await panel.locator('.fs-say').first().textContent())?.trim() ?? '';
       const lastMaia = String((await q(`SELECT u.body FROM ask_turns u JOIN ask_threads t ON t.id = u.thread_id JOIN proposal_chains c ON c.id = t.proposal_chain_id WHERE c.work_id = $1 AND u.speaker = 'maia' ORDER BY u.turn_index DESC LIMIT 1`, [WK]))[0]?.['body'] ?? '');
       check('ON-11 the panel shows the exact ask and the last admitted MAIA turn (controlled reply, labelled)', askShown === ASK1 && said === lastMaia && said.startsWith(CONTROLLED_REPLY_HEAD), `askExact=${askShown === ASK1} replyIsLastAdmittedTurn=${said === lastMaia} controlled=${said.startsWith(CONTROLLED_REPLY_HEAD)}`);
@@ -225,6 +231,65 @@ async function main() {
       await page.locator(`[data-authored-body="${D2}"]`).click();
       await page.waitForTimeout(300);
       check('ON-16 returning to the section does not resurrect the late result', (await page.locator('.fs-maia').count()) === 0, 'fs-maia=0');
+
+      /* ── 7b R1-2 · a nominally successful turn carrying proposal material ─
+         ⚠️ CONTROLLED RESPONSE MUTATION AT THE WIRE: the real server answered
+         (no version row exists); the browser's view of that one POST response
+         is rewritten to carry `version:{id}` so the HOST's fail-closed backstop
+         is what is exercised. Labelled, one request, then removed. */
+      await page.evaluate(({ id }) => (document.querySelector(`textarea[data-authored-body="${id}"]`) as HTMLTextAreaElement | null)?.blur(), { id: D2 });
+      await selectPassage(page);
+      await ask(page, ASK_PROPOSAL);
+      let mutated = 0;
+      await page.route('**/api/writers-studio/editorial/turn', async (route) => {
+        const res = await route.fetch();
+        const json = await res.json().catch(() => null);
+        if (res.ok() && json && mutated === 0) {
+          mutated += 1;
+          await route.fulfill({ response: res, json: { ...json, version: { id: 'v-controlled-witness' } } });
+          return;
+        }
+        await route.fulfill({ response: res });
+      });
+      const tProp = Date.now();
+      await page.locator('[data-event="SUBMIT_ASK"]').click();
+      await page.waitForSelector('[data-discuss="refused"], [data-discuss="answered"]', { timeout: 60_000 });
+      await page.unroute('**/api/writers-studio/editorial/turn');
+      const propState = await page.locator('.fs-maia').getAttribute('data-discuss');
+      const propHtml = await page.locator('.fs-maia').innerHTML();
+      const propRows = await editorialRows();
+      const propRoutes = since(tProp).filter((r) => /version|adoption|undo/.test(r.u)).length;
+      check('R1-2 a turn that returns proposal material is refused by the host: no reply, no wording, no version route, calm copy', mutated === 1 && propState === 'refused' && /proposed wording, which this conversation doesn’t take/.test(propHtml) && !/Controlled witness reply|v-controlled-witness|APPLY/.test(propHtml) && propRoutes === 0 && propRows.versions === 0, `mutated=${mutated} state=${propState} versionRoutes=${propRoutes} dbVersions=${propRows.versions}`);
+      await page.locator('.fs-maia [data-event="RELEASE"]').click();
+
+      /* ── 7c R1-3 · slow response from passage A, passage B held in the SAME section ── */
+      await selectPassage(page);
+      await ask(page, ASK_SLOW_B);
+      const tSlowB = Date.now();
+      const rowsBefore = await editorialRows();
+      await page.locator('[data-event="SUBMIT_ASK"]').click();
+      await page.waitForSelector('[data-discuss="pending"]', { timeout: 10_000 });
+      await page.locator(`[data-authored-body="${D2}"]`).click();
+      await page.waitForSelector(`textarea[data-authored-body="${D2}"]`, { timeout: 10_000 });
+      const addrB = await page.evaluate(({ id, sel }) => {
+        const el = document.querySelector(`textarea[data-authored-body="${id}"]`) as HTMLTextAreaElement;
+        const start = el.value.indexOf(sel); el.setSelectionRange(start, start + sel.length);
+        el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'Shift' })); el.blur();
+        return `${[...el.value.slice(0, start)].length}:${[...el.value.slice(0, start + sel.length)].length}`;
+      }, { id: D2, sel: SEL_B });
+      await page.waitForTimeout(300);
+      const hiddenOnB = (await page.locator('.fs-maia').count()) === 0;
+      const heldB = await page.locator('[data-held-passage-address]').first().getAttribute('data-held-passage-address');
+      const askOnB = await page.locator('[data-event="ASK_MAIA"]').count();
+      await page.waitForTimeout(5500);
+      const rowsAfter = await editorialRows();
+      const stillHidden = (await page.locator('.fs-maia').count()) === 0;
+      /* re-hold passage A: the finished A response must not be resurrected */
+      await selectPassage(page);
+      await page.waitForTimeout(300);
+      const notResurrected = (await page.locator('.fs-maia').count()) === 0;
+      check('R1-3 passage B held in the same section while A is pending: hidden, generation advanced, A finished on its thread, never attached, never resurrected', hiddenOnB && heldB === addrB && heldB !== '21:29' && askOnB === 1 && stillHidden && rowsAfter.maia === rowsBefore.maia + 1 && since(tSlowB).filter((r) => /\/editorial\/turn/.test(r.u)).length === 1 && notResurrected, `hiddenOnB=${hiddenOnB} heldB=${heldB} (measured ${addrB}) askOnB=${askOnB} stillHidden=${stillHidden} maiaTurns ${rowsBefore.maia}→${rowsAfter.maia} resurrected=${!notResurrected}`);
+      await page.evaluate(({ id }) => (document.querySelector(`textarea[data-authored-body="${id}"]`) as HTMLTextAreaElement | null)?.blur(), { id: D2 });
 
       /* ── 8 changed passage after an answered response ───────────────── */
       await page.evaluate(({ id }) => (document.querySelector(`textarea[data-authored-body="${id}"]`) as HTMLTextAreaElement)?.blur(), { id: D2 });
@@ -275,7 +340,7 @@ async function main() {
       const dupOpens = since(tDup).filter((r) => /rebuild\/editorial\/thread/.test(r.u)).length;
       const dupTurns = since(tDup).filter((r) => /\/editorial\/turn/.test(r.u)).length;
       const rows3 = await editorialRows();
-      check('ON-19 two synchronous submits → one open, one turn, one new chain', dupOpens === 1 && dupTurns === 1 && rows3.chains === 4 && rows3.maia === 4 && addr2.start >= 0, `opens=${dupOpens} turns=${dupTurns} chains=${rows3.chains} maiaTurns=${rows3.maia}`);
+      check('ON-19 two synchronous submits → one open, one turn, one new chain', dupOpens === 1 && dupTurns === 1 && rows3.chains === 6 && rows3.maia === 6 && addr2.start >= 0, `opens=${dupOpens} turns=${dupTurns} chains=${rows3.chains} maiaTurns=${rows3.maia}`);
       await page.locator('.fs-maia [data-event="RELEASE"]').click();
 
       /* ── 10 posture at the gesture: Sanctuary, then unresolved ───────── */
@@ -285,7 +350,7 @@ async function main() {
       await page.locator('[data-event="SUBMIT_ASK"]').click();
       await page.waitForSelector('[data-discuss="refused"]', { timeout: 10_000 });
       const sCopy = (await page.locator('[data-discuss="refused"] .fs-say').textContent())?.trim() ?? '';
-      check('ON-20 Sanctuary at the gesture: refused locally, no POST, copy names what was not stored', /Sanctuary/.test(sCopy) && /nothing was sent/.test(sCopy) && since(tS).filter((r) => /\/editorial\//.test(r.u)).length === 0 && (await editorialRows()).chains === 4, `copy="${sCopy.slice(0, 40)}…" posts=0 chains=4`);
+      check('ON-20 Sanctuary at the gesture: refused locally, no POST, copy names what was not stored', /Sanctuary/.test(sCopy) && /nothing was sent/.test(sCopy) && since(tS).filter((r) => /\/editorial\//.test(r.u)).length === 0 && (await editorialRows()).chains === 6, `copy="${sCopy.slice(0, 40)}…" posts=0 chains=6`);
       await page.locator('.fs-maia [data-event="RELEASE"]').click();
       await page.evaluate(() => localStorage.removeItem('maia_settings'));
       await ask(page, 'A question with no live posture.');
@@ -309,7 +374,7 @@ async function main() {
       const echo = await page.locator('.fs-heldquote').isVisible();
       check('ON-22 on a phone the sheet carries the held passage', echo, `heldEchoVisible=${echo}`);
       const final = await editorialRows();
-      check('ON-23 final: every act one chain · one thread · two turns; zero proposal versions anywhere', final.chains === 5 && final.threads === 5 && final.turns === 10 && final.maia === 5 && final.versions === 0, JSON.stringify(final));
+      check('ON-23 final: every act one chain · one thread · two turns; zero proposal versions anywhere', final.chains === 7 && final.threads === 7 && final.turns === 14 && final.maia === 7 && final.versions === 0, JSON.stringify(final));
       const posts = editorialReqs().filter((r) => r.m === 'POST');
       const gets = editorialReqs().filter((r) => r.m === 'GET');
       check('ON-24 only thread-open and turn were ever POSTed; the only GETs are the helpers’ thread reads', posts.every((r) => /rebuild\/editorial\/thread|\/editorial\/turn/.test(r.u)) && gets.every((r) => /\/editorial\/thread\?threadId=/.test(r.u)) && !editorialReqs().some((r) => /version|adoption|undo|focus/.test(r.u)), `posts=${posts.length} threadReads=${gets.length}`);

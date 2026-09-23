@@ -58,7 +58,7 @@ import { WriteFrame } from '../flagship/WriteFrame';
 import RebuildWritingBoundary from './RebuildWritingBoundary';
 import RebuildAuthoredBody, { type RebuildAuthoredBodyProps } from './RebuildAuthoredBody';
 import { DiscussLayer, discussHighlight, type DiscussState } from './DiscussLayer';
-import { commissionDiscuss, createInFlightGuard, resultAttaches, DISCUSS_COPY, type InFlightGuard } from './discussAct';
+import { commissionDiscuss, createInFlightGuard, discussAfterHold, resultAttaches, DISCUSS_COPY, type InFlightGuard } from './discussAct';
 
 export interface ContextReady {
   state: 'section_aware';
@@ -231,6 +231,11 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
   const writingRef = useRef<SectionWriting | null>(null);
   const focusRef = useRef<string | null>(null);
   focusRef.current = focusId;
+  /* R1-3 — the passage held NOW, for exact late-result identity. */
+  const heldRef = useRef<HeldPassageAt | null>(null);
+  heldRef.current = held;
+  const discussRef = useRef<DiscussState | null>(null);
+  discussRef.current = discuss;
 
   const load = useCallback(async () => {
     setPhase('loading'); setMessage(null);
@@ -285,9 +290,15 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
     replaceAddress(sectionId);
   }, [replaceAddress]);
   const onHold = useCallback((sectionId: string, start: number, end: number, text: string) => {
-    if (!text.trim()) return;
+    if (text.trim().length === 0) return;
+    const next: HeldPassageAt = { sectionId, start, end, text };
+    /* R1-3 — a different passage (same section or not) releases an open Discuss and
+       advances the generation; a pending server act finishes on its thread and its
+       result does not become this passage's response. The same passage keeps it. */
+    const kept = discussAfterHold(discussRef.current, next);
+    if (discussRef.current && !kept) { setDiscuss(null); discussGen.current += 1; }
     setFocusId(sectionId);
-    setHeld({ sectionId, start, end, text });
+    setHeld(next);
     replaceAddress(sectionId);
   }, [replaceAddress]);
 
@@ -302,8 +313,9 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
   }, []);
   const onSubmitAsk = useCallback((text: string) => {
     if (!editorialEnabled || !discuss || discuss.kind !== 'composing') return;
-    const ask = text.trim();
-    if (!ask) return;
+    /* R1-1 — emptiness predicate only; the member's exact bytes go forward. */
+    if (text.trim().length === 0) return;
+    const ask = text;
     const commissioned = discuss.held;
     const writing = writingRef.current;
     if (!writing) { setDiscuss({ kind: 'refused', held: commissioned, ask, copy: DISCUSS_COPY.failed }); return; }
@@ -318,7 +330,7 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
       sendTurn: sendBoundEditorialTurn,
     }).then((outcome) => {
       /* LATE RESULT — attaches only to the gesture that commissioned it, on the section still in focus. */
-      if (!resultAttaches({ gen, held: commissioned }, { gen: discussGen.current, focusSectionId: focusRef.current })) return;
+      if (!resultAttaches({ gen, held: commissioned }, { gen: discussGen.current, focusSectionId: focusRef.current, held: heldRef.current })) return;
       if (outcome.ok) {
         setDiscuss({ kind: 'answered', held: commissioned, ask, threadId: outcome.threadId, locusText: outcome.locusText, reply: outcome.reply });
       } else if (outcome.stage !== 'in_flight') {

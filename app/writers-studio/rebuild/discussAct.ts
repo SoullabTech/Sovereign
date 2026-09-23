@@ -55,6 +55,7 @@ export const DISCUSS_COPY = Object.freeze({
   needsAttention: 'Your latest writing needs attention before MAIA reads this passage. Nothing was sent.',
   notSettled: 'Your latest writing isn’t safely settled yet. MAIA will wait rather than read an older copy. Nothing was sent.',
   busy: 'MAIA is still finishing an earlier request. Nothing new was sent.',
+  proposalWithheld: 'MAIA’s reply arrived with proposed wording, which this conversation doesn’t take. Nothing was applied. Your Work was not changed.',
   waiting: 'Waiting for MAIA.',
 });
 
@@ -126,7 +127,7 @@ export interface DiscussPorts {
 
 export type DiscussOutcome =
   | { ok: true; threadId: string; locusText: string; reply: string }
-  | { ok: false; stage: 'in_flight' | 'posture' | 'sanctuary' | 'settle' | 'open' | 'turn' | 'reply'; copy: string };
+  | { ok: false; stage: 'in_flight' | 'posture' | 'sanctuary' | 'settle' | 'open' | 'turn' | 'reply' | 'proposal'; copy: string };
 
 export function lastMaiaTurn(turns: readonly { speaker: 'author' | 'maia'; body: string }[]): string | null {
   for (let i = turns.length - 1; i >= 0; i -= 1) {
@@ -159,6 +160,13 @@ export async function runDiscussAct(held: DiscussHeld, ask: string, ports: Discu
   if (!sent.ok) {
     return { ok: false, stage: 'turn', copy: sent.reason === 'sanctuary_unavailable' ? DISCUSS_COPY.sanctuary : DISCUSS_COPY.failed };
   }
+  /* R1-2 ⭐ FAIL CLOSED. The server's discuss-first gate is the structural
+     protection; this is the live host's backstop. A Discuss result that carries
+     proposal material is not admitted as a Discuss result: no reply rendered,
+     no wording exposed, no version/adoption/undo route ever called. */
+  if (sent.producedVersionId !== null || sent.thread.versions.length > 0) {
+    return { ok: false, stage: 'proposal', copy: DISCUSS_COPY.proposalWithheld };
+  }
   const reply = lastMaiaTurn(sent.thread.turns);
   if (reply === null) return { ok: false, stage: 'reply', copy: DISCUSS_COPY.failed };
   return { ok: true, threadId: sent.thread.threadId, locusText: sent.thread.locusText, reply };
@@ -172,11 +180,13 @@ export async function runDiscussAct(held: DiscussHeld, ask: string, ports: Discu
 export async function commissionDiscuss(
   guard: InFlightGuard, held: DiscussHeld, ask: string, ports: DiscussPorts,
 ): Promise<DiscussOutcome> {
-  const text = ask.trim();
-  if (!text) return { ok: false, stage: 'reply', copy: DISCUSS_COPY.failed };
+  /* R1-1 ⭐ Trim is an EMPTINESS PREDICATE ONLY. The member's bytes — leading,
+     trailing and internal whitespace, punctuation, capitalization — travel
+     unchanged into the act; the stored author turn is byte-preserved. */
+  if (ask.trim().length === 0) return { ok: false, stage: 'reply', copy: DISCUSS_COPY.failed };
   if (!guard.acquire()) return { ok: false, stage: 'in_flight', copy: DISCUSS_COPY.busy };
   try {
-    return await runDiscussAct(held, text, ports);
+    return await runDiscussAct(held, ask, ports);
   } finally {
     guard.release();
   }
@@ -184,17 +194,38 @@ export async function commissionDiscuss(
 
 /* ── late-result and changed-passage laws ────────────────────────────────── */
 
+/** ⭐ Two held passages are the same passage only when every coordinate and the text agree. */
+export function samePassage(a: DiscussHeld | null, b: DiscussHeld | null): boolean {
+  if (!a || !b) return false;
+  return a.sectionId === b.sectionId && a.start === b.start && a.end === b.end && a.text === b.text;
+}
+
 /**
  * ⭐ A response attaches ONLY to the gesture that commissioned it: same
- * generation (no Release, no new gesture, no section move since) AND the
- * commissioning section still in focus. ⛔ "It completed while a passage was
- * visible" is not a reason.
+ * generation (no Release, no new gesture, no section move, no new passage
+ * since), the commissioning section still in focus, AND the passage now held
+ * EXACTLY the passage that commissioned it — section, start, end, text.
+ * ⛔ "It completed while a passage was visible" is not a reason. ⛔ Neither is
+ * "the same section is still open".
  */
 export function resultAttaches(
-  pending: { readonly gen: number; readonly held: Pick<DiscussHeld, 'sectionId'> },
-  current: { readonly gen: number; readonly focusSectionId: string | null },
+  pending: { readonly gen: number; readonly held: DiscussHeld },
+  current: { readonly gen: number; readonly focusSectionId: string | null; readonly held: DiscussHeld | null },
 ): boolean {
-  return pending.gen === current.gen && current.focusSectionId === pending.held.sectionId;
+  return pending.gen === current.gen
+    && current.focusSectionId === pending.held.sectionId
+    && samePassage(current.held, pending.held);
+}
+
+/**
+ * ⭐ The host's decision when a NEW passage is held while a Discuss is open:
+ * the same passage keeps the presentation; any other passage releases it
+ * (the caller advances the generation). ⛔ The server act is never cancelled;
+ * its result simply does not become the new passage's response.
+ */
+export function discussAfterHold<T extends { readonly held: DiscussHeld }>(discuss: T | null, next: DiscussHeld): T | null {
+  if (!discuss) return null;
+  return samePassage(discuss.held, next) ? discuss : null;
 }
 
 export type Attachment = { kind: 'attached'; start: number; end: number } | { kind: 'stale' };

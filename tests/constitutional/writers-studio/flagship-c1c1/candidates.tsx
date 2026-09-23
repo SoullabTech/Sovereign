@@ -218,5 +218,17 @@ export const CLASSIFIED: Record<string, readonly string[]> = {
   'C1C1-D1-focus-discuss': [
     'C1C1-L5-gesture-posture-carried-to-both-calls', 'C1C1-L6-discuss-cannot-propose',
     'C1C1-L11-duplicate-submit-synchronous', 'C1C1-L12-settle-before-open', 'C1C1-L13-one-turn-only',
+    /* R1: the same reason — no send means no bytes reach sendTurn (L17) and no send result to
+       check for proposal material (L18). */
+    'C1C1-L17-member-bytes-preserved', 'C1C1-L18-unexpected-proposal-fails-closed',
   ],
+  /* IRREDUCIBLE. A result identity that ignores the commissioning gesture ignores the passage
+     that commissioned it; making D8 honour the exact passage would make it stop migrating. */
+  'C1C1-D8-late-result-migrates': ['C1C1-L19-same-section-passage-change-detaches'],
+  /* ⚠️ INHERITED, ⛔ NOT IRREDUCIBLE — RAISED FOR FOUNDER RULING (R1). D12 was written as the
+     pre-R1 reference minus settlement, so it also carries that reference's two R1 defects
+     (no emptiness predicate → L17; no proposal backstop → L18). Narrowing it to embody only
+     its named error is a one-line edit, withheld because R1 forbade rewriting the accepted
+     thirteen. The matrix therefore reports this collateral as classified BY INHERITANCE. */
+  'C1C1-D12-open-before-settlement': ['C1C1-L17-member-bytes-preserved', 'C1C1-L18-unexpected-proposal-fails-closed'],
 };
