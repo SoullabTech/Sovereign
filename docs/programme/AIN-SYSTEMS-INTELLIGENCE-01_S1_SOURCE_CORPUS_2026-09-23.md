@@ -3,8 +3,8 @@
 **Programme:** AIN-SYSTEMS-INTELLIGENCE-01
 **Act:** S1 — SCIENTIFIC + INTELLECTUAL LANDSCAPE
 **Date:** 2026-09-23
-**Status:** WORKING RESEARCH CORPUS · PUBLIC / SCHOLARLY SOURCES ONLY · CANDIDATE, NOT ADJUDICATED
-**Canonical base:** `cab0a9a8339f8b44ccd6f745add1bef40499d6f0`
+**Status:** WORKING RESEARCH CORPUS · PUBLIC / SCHOLARLY SOURCES ONLY · CANDIDATE · S1R1 REPAIRED · NOT ADJUDICATED
+**Canonical base:** `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f` (S1R1 rebind; S1 was authored from `cab0a9a8339f8b44ccd6f745add1bef40499d6f0`)
 **Governing constitution:** S0 (`docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S0_SYSTEMS_INTELLIGENCE_CONSTITUTION_2026-09-23.md`, blob `1414ec32b26b7679c6e857ce95599782538c5831`)
 
 This corpus is governed by S0 §X (inherited RGR-00 claim discipline) and S0 §XIII (S1 scope). Inclusion means "relevant to the intellectual landscape of systems perception," not "supports Systems Intelligence."
@@ -17,6 +17,8 @@ Each source is tagged with one or more of:
 - **SOURCE_OF_HAZARD** — a source whose vocabulary or posture is the one S0 forbids, included so the hazard is named rather than absorbed.
 
 **Retrieval discipline.** Bibliographic identity of every entry (author, title, venue, year, and where available DOI or ISBN) was checked on 2026-09-23 against publisher, index or repository records. Content characterizations rest on the researcher's prior familiarity with the works, checked against those records and public abstracts; **full-text re-reading was not performed in this act.** Any characterization the independent review doubts should be treated as a target, not a given. No member, private, clinical or production data was consulted.
+
+**S1R1 (2026-09-23).** Founder independent review of the S1 candidate falsified one claim (original CL-27) from inside this corpus and corrected several characterizations. Repairs to entries S02, S03, S04, S07, S48, S49, S50, S51 and S52 are made in place below; three sources are admitted in section R. The falsification is recorded, not erased: see the landscape §11.3.
 
 ---
 
@@ -38,7 +40,7 @@ Each source is tagged with one or more of:
 - Class: ESTABLISHED_SOURCE / SOURCE_OF_HAZARD
 - Contribution: feedback as the unifying concept of control and communication in machines and organisms; negative feedback, oscillation, stability.
 - Relevance: the original precise meaning of FEEDBACK that later traditions inherit and dilute.
-- Hazard: the orientation is regulation and control; SI inherits the concept while refusing the posture (S0 §VII).
+- Hazard: the orientation is regulation and control, described from a standpoint outside the description. The regulation described may itself be endogenous to the organism (see S03, S55); the hazard is the design stance over a person, not the location of regulation. SI inherits the concept while refusing the stance (S0 §VII).
 
 ### S03 — Ashby (1956)
 **W. Ross Ashby. _An Introduction to Cybernetics_. Chapman & Hall, London, 1956.**
@@ -46,15 +48,15 @@ Each source is tagged with one or more of:
 - Class: ESTABLISHED_SOURCE / SOURCE_OF_HAZARD
 - Contribution: variety; the Law of Requisite Variety ("only variety can destroy variety"); regulation formalized over state sets.
 - Relevance: the sharpest early formalization of what a regulator must be relative to what it regulates.
-- Hazard: a regulator-centred frame; applied to a person it is the prohibited chain of S0 §VII.1.
+- Hazard: a regulator-centred formalism that Ashby applies to organisms as much as to machines; regulation in Ashby is frequently endogenous and homeostatic (S55). The prohibited chain of S0 §VII.1 arises when the formalism becomes a stance of designing regulation over a person, not from the formalism's description of regulation as such. S1's first draft conflated observer position with regulator location here; S1R1 corrects it.
 
 ### S04 — Shannon (1948)
 **Claude E. Shannon. "A Mathematical Theory of Communication." _Bell System Technical Journal_ 27: 379–423, 623–656 (1948).**
 
 - Class: ESTABLISHED_SOURCE
 - Contribution: information as a measure over a probability distribution; channel, noise, entropy.
-- Relevance: one of the two meanings of INFORMATION that the lineage conflates (the other is Bateson's).
-- Limitation: Shannon information is explicitly indifferent to meaning.
+- Relevance: one of two non-equivalent, non-interchangeable conceptions of INFORMATION in the lineage (the other is Bateson's, S07); they operate at different explanatory levels rather than as logical contradictories.
+- Limitation: Shannon information deliberately brackets semantics from the engineering problem.
 
 ## C · Second-order cybernetics and the ecology of mind
 
@@ -79,7 +81,7 @@ Each source is tagged with one or more of:
 
 - Class: ESTABLISHED_SOURCE / SOURCE_OF_INSPIRATION
 - Contribution: information as "a difference which makes a difference"; mind as a systemic property of circuits; logical types; the double bind; the essay "Conscious Purpose versus Nature" on the pathology of purposive intervention in systems.
-- Relevance: the second meaning of INFORMATION; the earliest explicit warning that purposive control of living systems is itself a systemic pathology, which is the ancestor of S0 §VII.
+- Relevance: the second, system-relative conception of INFORMATION (a difference that makes a difference to a receiving system), non-interchangeable with Shannon's but not its logical contrary; secondary literature cautions against reading the phrase as a complete universal definition. Also the earliest explicit warning that purposive control of living systems is itself a systemic pathology, which is the ancestor of S0 §VII.
 - Limitation: essayistic; concepts are not operationalized and were never intended to be.
 
 ### S08 — Bateson (1979)
@@ -410,7 +412,7 @@ Each source is tagged with one or more of:
 
 - Class: ESTABLISHED_SOURCE / SOURCE_OF_HAZARD
 - Contribution: a proposal that action, perception and learning minimize variational free energy; a unifying claim over organisms as self-evidencing systems.
-- Relevance: the most influential contemporary claim to unify self-organization, regulation and cognition under one principle.
+- Relevance: the most influential contemporary claim to unify self-organization, regulation and cognition under one principle. Its formal foundations have been technically criticized (S53, S54), which is the support for calling its status contested.
 - Hazard: the principle is stated as an optimization; a person modelled under it is, by construction, an optimizer of a single quantity, which is the frame S0 §VII forbids as a stance toward a member even where it is lawful as a scientific hypothesis about organisms.
 
 ## P · Machine detection of systems structure
@@ -419,14 +421,14 @@ Each source is tagged with one or more of:
 **Niyousha Hosseinichimeh, Aritra Majumdar, Ross Williams, Navid Ghaffarzadegan. "From text to map: a system dynamics bot for constructing causal loop diagrams." _System Dynamics Review_ 40(3): e1782 (2024). DOI 10.1002/sdr.1782. Preprint arXiv:2402.11400.**
 
 - Class: ESTABLISHED_SOURCE
-- Contribution: a language-model pipeline that extracts causal loop diagrams from text; identifies roughly 60% of links and feedback loops on the evaluated datasets.
-- Relevance: the first controlled measurement S1 found of a language model detecting feedback structure from prose.
-- Limitation: evaluation is against expert-built diagrams on texts that contain loops; the material S1 read reports no null-organization condition.
+- Contribution: a language-model pipeline that extracts causal loop diagrams from text; identifies roughly 60% of links and feedback loops across two datasets (in the second, 30 vignette responses, 56% of causal relationships and 83% of loops). In that second dataset the modelers found no feedback loop in 25 of the 30 responses, and the bot reported zero loops in 23 of those 25 (two false-positive loops), which the authors describe as a high true-negative rate.
+- Relevance: the first controlled measurement S1 found of a language model detecting feedback structure from prose, and the first machine precedent for a loop-absent negative condition.
+- Limitation: the negative condition is at the feedback-loop level (no loop warranted → report no loop); it is not a whole-faculty null-organization fixture of the kind S0's F-SI8 names. S1's original characterization ("reports no null-organization condition") was falsified at independent review and is withdrawn.
 
-### S50 — Automated CLD generation with curated prompting (2025)
-**"Leveraging Large Language Models for Automated Causal Loop Diagram Generation: Enhancing System Dynamics Modeling through Curated Prompting Techniques." arXiv:2503.21798 (2025); earlier version in _Proceedings of the International System Dynamics Conference_ 2024.**
+### S50 — Liu & Keith (2024 / 2025)
+**Ning-Yuan Georgia Liu, David R. Keith. "Leveraging Large Language Models for Automated Causal Loop Diagram Generation: Enhancing System Dynamics Modeling through Curated Prompting Techniques." SSRN (June 2024); arXiv:2503.21798 (2025); earlier version in _Proceedings of the International System Dynamics Conference_ 2024.**
 
-- Class: ESTABLISHED_SOURCE (preprint; author list not recorded in S1's retrieval)
+- Class: ESTABLISHED_SOURCE (preprint; authorship completed at S1R1)
 - Contribution: for simple model structures, curated prompting yields diagrams of quality comparable to expert-built ones.
 - Limitation: "simple structures"; comparison to experts on positive cases only, as far as S1 read.
 
@@ -436,7 +438,7 @@ Each source is tagged with one or more of:
 - Class: ESTABLISHED_SOURCE (preprint)
 - Contribution: a 53-test CLD-extraction leaderboard and a discussion leaderboard; cloud models pass 77–89%, the best local model 77%.
 - Relevance: the current empirical ceiling for machine extraction of feedback structure from text on positive fixtures.
-- Limitation: as far as S1 read, no null-organization fixture is reported; pass rates on positive tests say nothing about refraining.
+- Limitation: S1 has not verified the composition of the 53-test suite; whether it includes loop-absent or organization-absent tests is unknown to S1. Pass rates on positive tests say nothing about refraining.
 
 ## Q · The popular category
 
@@ -444,9 +446,34 @@ Each source is tagged with one or more of:
 **Ross D. Arnold, Jon P. Wade. "A Definition of Systems Thinking: A Systems Approach." _Procedia Computer Science_ 44: 669–678 (2015). DOI 10.1016/j.procs.2015.03.050.**
 
 - Class: ESTABLISHED_SOURCE / SOURCE_OF_HAZARD
-- Contribution: a synthesized definition of systems thinking as skills for identifying and understanding systems, predicting their behaviours, and devising modifications to produce desired effects.
-- Relevance: documents that the popular category is, by its own consolidated definition, intervention-inclusive.
-- Hazard: "devising modifications to produce desired effects" is the control posture S0 excludes from the faculty; the popular category and the constituted faculty are therefore not the same thing by definition, which is what S0 §III asserted and this source confirms.
+- Contribution: one prominent synthesized definition of systems thinking, as skills for identifying and understanding systems, predicting their behaviours, and devising modifications to produce desired effects.
+- Relevance: systems thinking has no single widely accepted definition; this is one proposal, and it demonstrates that intervention-inclusive formulations are materially present in the literature.
+- Hazard: "devising modifications to produce desired effects" is the control posture S0 excludes from the faculty. This supports S0 §III's decision not to equate SI with generic systems thinking; it does not make one synthesis stand for the whole category, which S1's first draft overstated.
+
+## R · Sources admitted at S1R1
+
+Admitted to support repairs required by independent review. R-sources belong logically to the sections named.
+
+### S53 — Biehl, Pollock & Kanai (2021) · belongs to O
+**Martin Biehl, Felix A. Pollock, Ryota Kanai. "A Technical Critique of Some Parts of the Free Energy Principle." _Entropy_ 23(3): 293 (2021). DOI 10.3390/e23030293.**
+
+- Class: ESTABLISHED_SOURCE / SOURCE_OF_ALTERNATIVE
+- Contribution: the Markov-blanket definitions used across free-energy works are not equivalent, and key steps rewriting equations of motion for systems with Markov blankets are not generally correct without additional, previously unstated assumptions.
+- Relevance: source support for the claim that the free-energy principle's formal status is contested (S48).
+
+### S54 — Bruineberg, Dołęga, Dewhurst & Baltieri (2022) · belongs to O
+**Jelle Bruineberg, Krzysztof Dołęga, Joe Dewhurst, Manuel Baltieri. "The Emperor's New Markov Blankets." _Behavioral and Brain Sciences_ 45: e183 (2022).**
+
+- Class: ESTABLISHED_SOURCE / SOURCE_OF_ALTERNATIVE
+- Contribution: identifies a persistent conflation between Markov blankets as an epistemic tool for inference and their metaphysical use to demarcate an agent's physical boundary in the free-energy framework.
+- Relevance: second independent line of critique; also bears on BOUNDARY (§3.2 of the landscape), since it is a dispute about whether a formal boundary is the system's own.
+
+### S55 — Ashby (1952) · belongs to B
+**W. Ross Ashby. _Design for a Brain_. Chapman & Hall, London, 1952.**
+
+- Class: ESTABLISHED_SOURCE
+- Contribution: the homeostat; ultrastability; the brain modelled as an adaptive system maintaining equilibrium under perturbation.
+- Relevance: establishes that first-order cybernetic regulation is applied by its founders to organisms and is frequently endogenous; observer position and regulator location are distinct questions.
 
 ---
 
@@ -454,9 +481,9 @@ Each source is tagged with one or more of:
 
 | Class | Count of entries carrying the class (a source may carry more than one; counted from the `Class:` lines) |
 |---|---|
-| ESTABLISHED_SOURCE | 49 |
-| SOURCE_OF_ALTERNATIVE | 7 |
+| ESTABLISHED_SOURCE | 52 |
+| SOURCE_OF_ALTERNATIVE | 9 |
 | SOURCE_OF_INSPIRATION | 7 |
 | SOURCE_OF_HAZARD | 6 |
 
-52 sources. No member, private, clinical or production data. No source is cited as supporting Spiralogic, Elemental Alchemy, or the existence of Systems Intelligence as a faculty.
+55 sources (52 at S1, 3 admitted at S1R1). No member, private, clinical or production data. No source is cited as supporting Spiralogic, Elemental Alchemy, or the existence of Systems Intelligence as a faculty.

@@ -3,7 +3,7 @@
 > **Programme:** AIN-SYSTEMS-INTELLIGENCE-01
 > **Act:** S1 — SCIENTIFIC + INTELLECTUAL LANDSCAPE ONLY
 > **Class:** C — documentary research candidate only
-> **Candidate parent (canonical base):** `cab0a9a8339f8b44ccd6f745add1bef40499d6f0`
+> **Candidate parent (canonical base):** `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f` (S1R1 rebind; S1 was authored from `cab0a9a8339f8b44ccd6f745add1bef40499d6f0`, which advanced by four commits with zero path overlap)
 > **Governing constitution:** S0, canonical at blob `1414ec32b26b7679c6e857ce95599782538c5831`
 > **Authorizing act:** Founder authorization of S1 following S0C1 PASS (2026-09-23): *"S1 should be research, not synthesis: map the actual systems lineage, disagreements, incompatible meanings of key terms, evidentiary standing, and what is genuinely useful for SI before we invent any formal vocabulary."*
 > **Evidence subject:** the actual intellectual lineage of systems perception — where its traditions agree, conflict, and use the same words for different things — and the evidentiary standing of each concept the faculty would need
@@ -11,8 +11,8 @@
 > **Stop boundary:** S1 authorizes no formal vocabulary (S2), no hypothesis (S3), no fixture or benchmark (S4), no RGR integration (S5), no Spiralogic correspondence (S6), no architecture (S7), no MAIA contact (S8), no runtime, code, model call for research, schema, deployment or production effect
 
 **Date:** 2026-09-23
-**Status:** CANDIDATE · AWAITING INDEPENDENT REVIEW · NOT ADJUDICATED
-**Companion artifacts:** `…_S1_SOURCE_CORPUS_2026-09-23.md` (S01–S52) · `…_S1_CLAIM_LEDGER_2026-09-23.md` (CL-01…) · `…_S1_WORK_UNIT_2026-09-23.json`
+**Status:** CANDIDATE · S1R1 REPAIRED AFTER FOUNDER INDEPENDENT REVIEW · ROUTED INDEPENDENT REVIEW OWED · NOT ADJUDICATED
+**Companion artifacts:** `…_S1_SOURCE_CORPUS_2026-09-23.md` (S01–S52) · `…_S1_CLAIM_LEDGER_2026-09-23.md` (CL-01…CL-31; CL-27 falsified and replaced by CL-27R; CL-30 withdrawn to a structural statement) · `…_S1_WORK_UNIT_2026-09-23.json`
 
 ---
 
@@ -26,13 +26,13 @@ The strongest defensible statement is:
 
 Four findings shape everything downstream:
 
-1. **The disagreement is not lexical noise; it is the substance.** The traditions split on control versus autonomy, observer-independent versus observer-inclusive description, reduction versus relational causality, and description versus intervention (§4). S0's anti-control law is not an external ethic imposed on the science; it is one side of the field's own oldest argument (Bateson S07, von Foerster S05, Maturana S19 against Wiener S02, Ashby S03, Beer S39).
+1. **The disagreement is not lexical noise; it is the substance.** The traditions split on control versus autonomy, observer-independent versus observer-inclusive description, reduction versus relational causality, and description versus intervention (§4). S0's anti-control law is not an external ethic imposed on the science; it is one side of the field's own oldest argument (Bateson S07, von Foerster S05, Maturana S19 against the design stance in Wiener S02, Ashby S03, Beer S39). The split is over the standpoint of the describer and the stance of the designer, not over where regulation sits: Ashby's own regulation is organismic (S03, S55).
 
-2. **The popular category is intervention-inclusive by its own consolidated definition** (Arnold & Wade S52: "devising modifications to produce desired effects"). S0 §III's claim that SI is not the popular category is therefore confirmed by the category's own literature, not merely asserted.
+2. **A prominent synthesized definition of systems thinking explicitly includes intervention** (Arnold & Wade S52: "devising modifications to produce desired effects"). Systems thinking has no single accepted definition, so this does not define the category; it demonstrates that intervention-inclusive formulations are materially present in the literature, which supports S0 §III's decision not to equate SI with generic systems thinking.
 
 3. **Evidentiary standing is highly uneven across the eight primitive acts** (§5). TRANSFORM has the best-characterized evidence base and the best-characterized limits (S27–S29). EMERGE has a usable operational definition (Bedau S45) and a serious philosophical objection to any causal reading (Kim S47). BOUND has a well-developed normative literature (S36–S38) and no empirical one. REFLECT has an intellectual lineage and, as S0 anticipated, no mechanical evidence base at all.
 
-4. **The one empirical literature on machines perceiving systems structure measures positive cases only.** Language-model extraction of causal loop diagrams from text reaches roughly 60% of links and loops (S49) and 77–89% pass rates on a purpose-built leaderboard (S51), but as far as S1 read, no reported evaluation includes a text with no warranted feedback structure. The human literature does include the null case, and humans fail it (S33, S35). F-SI8's mandatory null fixture therefore has no precedent in the machine literature and a strong precedent in the human one.
+4. **The one empirical literature on machines perceiving systems structure already contains true-negative testing at the feedback-loop level.** Language-model extraction of causal loop diagrams from text reaches roughly 60% of links and loops (S49) and 77–89% pass rates on a purpose-built leaderboard (S51); S49's second dataset includes 25 loop-absent responses, on which the model correctly reported zero loops in 23 (a high true-negative rate). S1's first draft claimed no such negative condition existed; independent review falsified that from inside the corpus (§11.3). The corrected finding is narrower and better: machine research has loop-level negative controls, S1 has not established an existing whole-faculty null-organization benchmark comparable to F-SI8, and the human literature supplies a dynamics-misperception baseline (fluent, educated people fail simple dynamics tasks, S33, S35), not a null fixture. F-SI8 therefore generalizes an existing negative-control discipline rather than inventing one.
 
 S1 establishes none of the following: that the faculty exists, that it is distinct from RGR in practice, that any tradition is "correct," or anything about Spiralogic.
 
@@ -93,7 +93,7 @@ Wiener (S02): feedback, negative feedback, oscillation, stability, control and c
 The precise, original meaning of FEEDBACK (a loop in which output re-enters as input and alters subsequent output), of REGULATION, and of one meaning of INFORMATION. Requisite variety is the first formal constraint linking a perceiver's internal variety to what it can track.
 
 ### Constraint
-The frame is regulation. The observer stands outside the system with a goal; the system is what is regulated. Applied to a person, this is exactly the chain S0 §VII.1 prohibits. The concepts survive the prohibition; the posture does not.
+The frame is regulation, and the description brackets the observer outside it. That is a claim about observer position, not about where the regulator sits: Ashby's regulation is organismic and homeostatic (S03, S55), so first-order cybernetics routinely describes endogenous regulation from an external descriptive standpoint. What S0 §VII.1 prohibits is the stance of designing regulation over a person. The descriptive standpoint and the design stance must not be conflated; S1's first draft conflated them, and S1R1 corrects it here and in §3.6, §3.10 and §4.1. The concepts survive the prohibition; the stance does not.
 
 ### SI standing
 **Highest operational yield for TRACE; the posture is a named hazard.** S0's inheritance of the concept while refusing the stance is the correct relation to this tradition.
@@ -108,7 +108,7 @@ Sources: S02, S03, S04.
 Von Foerster (S05, S06): the cybernetics of observing systems as distinct from observed systems; the observer's description as the observer's responsibility. Bateson (S07, S08): information as a difference that makes a difference; mind as a property of circuits that may extend beyond the skin; the double bind; and, in "Conscious Purpose versus Nature," the argument that purposive intervention in living systems, ignoring the circuits it is part of, is itself pathological.
 
 ### Contribution
-The observer inside the system; REFLECT's lineage. The second meaning of INFORMATION, which is relational and meaning-bearing. And the earliest explicit statement in the lineage that the control posture is a systemic error rather than merely an ethical one.
+The observer inside the system; REFLECT's lineage. The second conception of INFORMATION, system-relative and consequence-bearing, non-interchangeable with Shannon's though not its logical contrary (§3.7). And the earliest explicit statement in the lineage that the control posture is a systemic error rather than merely an ethical one.
 
 ### Constraint
 Programmatic and essayistic. The tradition operationalizes almost nothing and never intended to; its value is a stance and a set of distinctions, not a method. It also has a constructivist wing that, taken strongly, makes every systems claim observer-relative to the point of unfalsifiability, which is in tension with S0 §X.
@@ -234,7 +234,7 @@ Sources: S25, S26, S27, S28, S29.
 Forrester (S30): stocks, flows, delays and feedback loops as a simulation substrate. Meadows (S31, S32): leverage points; the primer that made the vocabulary public. Sterman (S33, S34): experimental evidence of systematic misperception of feedback and delay; the reference text on modelling and validation. Cronin, Gonzalez & Sterman (S35): stock–flow failure persists in highly educated subjects.
 
 ### Contribution
-The operational meanings of STOCK, FLOW, DELAY and LOOP that the causal-loop diagram literature (§2.18) inherits; and, critically, the only rigorous human baseline in the lineage. People who are fluent and educated fail simple dynamics tasks. This is the human analogue of F-SI8: fluency is not perception.
+The operational meanings of STOCK, FLOW, DELAY and LOOP that the causal-loop diagram literature (§2.18) inherits; and, critically, the only rigorous human baseline in the lineage: fluent, educated people systematically misperceive feedback, delay and accumulation (S33, S35). This is a dynamics-misperception baseline, not a null-organization experiment; its bearing on F-SI8 is that fluency is not evidence of perception.
 
 ### Constraint
 The frame is modelling for intervention (S31 is literally a ranking of places to intervene). Model validity depends on the modeller's boundary choices, which Sterman treats seriously and the popular literature does not.
@@ -327,12 +327,12 @@ Friston (S48): the free-energy principle; action, perception and learning as min
 The most influential contemporary attempt to unify self-organization, regulation and cognition under one principle, and therefore the most likely vocabulary a competent implementer would reach for.
 
 ### Constraint
-Two, and they are different in kind. Scientifically, the principle's status (empirical theory, mathematical framework, or tautology) is contested. Constitutionally, the principle is stated as an optimization: a person modelled under it is, by construction, an optimizer of a single quantity. That is lawful as a scientific hypothesis about organisms. As a stance toward a member it is the prohibited chain, arriving with the best credentials in the field.
+Two, and they are different in kind. Scientifically, technical critiques show that the Markov-blanket definitions used across the framework are not equivalent and that key derivational steps require additional unstated assumptions (S53), and that the framework conflates an epistemic tool with a metaphysical boundary (S54); the principle's status is contested in the literature. Constitutionally, the principle is stated as an optimization: a person modelled under it is, by construction, an optimizer of a single quantity. That is lawful as a scientific hypothesis about organisms. As a stance toward a member it is the prohibited chain, arriving with the best credentials in the field.
 
 ### SI standing
 **ENGINEERING_ANALOGY / HYPOTHESIS; a named constitutional hazard for S7 and S8.**
 
-Sources: S48.
+Sources: S48, S53, S54.
 
 ---
 
@@ -345,10 +345,10 @@ Hosseinichimeh et al. (S49): a language-model pipeline extracting causal loop di
 The only empirical measurements S1 found of machines perceiving feedback structure. They establish that extraction of *stated* causal structure from text is partially achievable and improving.
 
 ### Constraint
-Three, all decisive for this programme. First, every reported evaluation S1 read is on positive fixtures: texts that contain loops, scored against diagrams that contain loops. No null-organization condition is reported. Second, the task is extraction of causal claims already present in the text, not perception of dynamics from evidence; the text asserts the loop and the model transcribes it. Third, the scores are for simple structures.
+Three, all decisive for this programme. First, the evaluations are predominantly on positive fixtures, but not exclusively: S49's second dataset includes loop-absent responses and reports a high true-negative rate (23 of 25). That is a feedback-loop-level negative condition (no loop warranted → report no loop); no evaluation S1 read tests refraining across the whole range of systems organization F-SI8 names, and S1 has not verified the composition of S51's suite. Second, the task is extraction of causal claims already present in the text, not perception of dynamics from evidence; the text asserts the loop and the model transcribes it. Third, the scores are for simple structures.
 
 ### SI standing
-**INTERNAL_EMPIRICAL_RESULT of other programmes; establishes an extraction ceiling; establishes nothing about refraining (F-SI8), about dynamics from time-indexed evidence (S0 §VIII.1), or about SI's distinction from transcription (F-SI7).**
+**INTERNAL_EMPIRICAL_RESULT of other programmes; establishes an extraction ceiling and a loop-level true-negative precedent; establishes nothing about whole-faculty null organization (F-SI8 as constituted), about dynamics from time-indexed evidence (S0 §VIII.1), or about SI's distinction from transcription (F-SI7).**
 
 Sources: S49, S50, S51.
 
@@ -360,10 +360,10 @@ Sources: S49, S50, S51.
 Arnold & Wade (S52): a consolidated definition of systems thinking as skills for identifying and understanding systems, predicting their behaviours, and devising modifications to produce desired effects.
 
 ### Contribution
-Documentary: the popular category is intervention-inclusive by definition.
+Documentary: a prominent synthesized definition is intervention-inclusive. The category has no single accepted definition; the source shows such formulations are materially present.
 
 ### SI standing
-**Confirms S0 §III.** The faculty and the category are different objects, and the difference is the control clause.
+**Supports S0 §III.** The faculty is not to be equated with generic systems thinking, and the intervention clause is where prominent formulations diverge from it.
 
 Sources: S52.
 
@@ -450,7 +450,7 @@ S0 §XIII made seven entries mandatory: `system · boundary · feedback · emerg
 
 | Tradition | Meaning |
 |---|---|
-| First-order cybernetics (S02–S03) | outside the system; the regulator's designer |
+| First-order cybernetics (S02–S03, S55) | bracketed outside the description; the description may nonetheless be of endogenous regulation |
 | Second-order cybernetics (S05–S06) | inside; a system that observes; responsible for its descriptions |
 | Autopoiesis (S19) | a living system whose distinctions bring forth the observed |
 | Soft systems (S36–S37) | the inquirer whose purposes define the system |
@@ -468,9 +468,9 @@ S0 §XIII made seven entries mandatory: `system · boundary · feedback · emerg
 | Bateson (S07) | a difference which makes a difference; relational and meaning-bearing |
 | Popular usage | data; content |
 
-**Agreement:** none. **Conflict:** total; the two technical meanings are constructed to exclude each other. **Homonymy:** the classic case.
+**Agreement:** both concern what a signal or difference does for a receiver. **Conflict:** non-equivalent and non-interchangeable conceptions at different explanatory levels: Shannon quantifies uncertainty and transmission while deliberately bracketing semantics; Bateson foregrounds system-relative consequence. They conflict when one is substituted for the other; they are not logically incompatible, and secondary literature cautions against reading Bateson's phrase as a complete definition. **Homonymy:** the classic case.
 
-**Consequence for SI:** any use of "information" in an SI claim must say which. TRACE follows flows of Shannon-type quantities where measurable; REFLECT concerns Bateson-type differences. Conflating them is the single easiest laundering move in the lineage.
+**Consequence for SI:** any use of "information" in an SI claim must say which. TRACE follows flows of Shannon-type quantities where measurable; REFLECT concerns Bateson-type differences. Substituting one for the other unmarked is the single easiest laundering move in the lineage.
 
 ## 3.8 Attractor
 
@@ -505,7 +505,7 @@ S0 §XIII made seven entries mandatory: `system · boundary · feedback · emerg
 | Enactivism (S43) | self-regulation with respect to one's own viability |
 | Rosen (S23) | anticipation via an internal model |
 
-**Conflict:** who regulates whom. In S03 and S31 the regulator is outside; in S43 and S23 the system regulates itself. **Consequence for SI:** this is the constitutional axis of S0 §VII expressed as a scientific disagreement. SI may perceive a system's self-regulation (S43 sense); it may not become the external regulator (S03 sense).
+**Conflict:** two axes S1's first draft conflated. Where regulation sits: endogenous in Ashby's organism (S03, S55), in S43 and in S23; exogenous in Meadows' intervener (S31) and Beer's designer (S39). Where the describer stands: outside the description in S03 and S09; inside in S05 and S07. **Consequence for SI:** SI may perceive and describe a system's self-regulation; it may not adopt the intervener's stance. Observer position is REFLECT's question; regulator location is TRACE's; they are not the same question, and S0 §VII refuses the design stance, not the descriptive standpoint.
 
 ---
 
@@ -514,7 +514,7 @@ S0 §XIII made seven entries mandatory: `system · boundary · feedback · emerg
 The disagreement map shows lexical divergence. Beneath it are five substantive conflicts that any formal vocabulary will have to take a side on or explicitly straddle.
 
 ## 4.1 Control versus autonomy
-First-order cybernetics, system dynamics and management cybernetics (S02, S03, S30, S31, S39) treat a system as something regulated by a designer, modeller or manager. Second-order cybernetics, autopoiesis and enactivism (S05, S07, S19, S43) treat a living system as self-regulating and the observer as a participant. S0 §VII is on the second side. S1's finding is that the second side supplies the constitution and the first side supplies most of the operational vocabulary; S2 must import concepts across this line without importing the posture, and must be able to show it did.
+First-order cybernetics, system dynamics and management cybernetics (S02, S03, S30, S31, S39) describe systems from a standpoint outside the description, and two of them (S31, S39) are explicitly frameworks for intervening. Second-order cybernetics, autopoiesis and enactivism (S05, S07, S19, S43) place the observer inside and treat regulation as the system's own. These are two distinct axes, observer position and regulator location, and S1's first draft ran them together. Ashby's regulation is organismic (S03, S55), so the first group does not hold that regulation is external; it holds that regulation can be described, and in S31 and S39 designed, from outside. S0 §VII refuses the design stance, not the descriptive standpoint, and is on the second side of the stance question. S1's finding is that the second side supplies the constitution and the first side supplies most of the operational vocabulary; S2 must import concepts across this line without importing the posture, and must be able to show it did.
 
 ## 4.2 Observer-independent versus observer-inclusive description
 Dynamical systems, ecology and physics describe systems without an observer in the formalism. Second-order cybernetics and soft systems place the observer inside the description. S0 sides with the latter for the faculty and with the former for evidence (S0 §X). S1 records this as a deliberate two-sidedness rather than an inconsistency: the claim is observer-inclusive; the falsifier is not.
@@ -526,7 +526,7 @@ Anderson (S44), Haken (S12) and Rosen (S24) hold that organization has causal or
 Classical control and much early systems theory assumes return to equilibrium. Prigogine, Haken, Holling and Kauffman treat the interesting organization as far from equilibrium, multi-stable and sometimes critical. Consequence: PATTERN should not assume a single attractor; TRANSFORM should expect multiple basins.
 
 ## 4.5 Description versus intervention
-Meadows (S31) and Arnold & Wade (S52) fold intervention into the definition of systems thinking. Bateson (S07) argues that purposive intervention by a part that ignores the whole is the characteristic pathology of conscious purpose. This is the oldest form of the disagreement S0 §VII settles, and S1 records that S0's position has a lineage as long as the position it refuses.
+Meadows (S31) frames systems thinking around intervention, and a prominent synthesized definition (S52) includes it explicitly, though no single definition governs the category. Bateson (S07) argues that purposive intervention by a part that ignores the whole is the characteristic pathology of conscious purpose. This is the oldest form of the disagreement S0 §VII settles, and S1 records that S0's position has a lineage as long as the position it refuses.
 
 ---
 
@@ -537,7 +537,7 @@ Meadows (S31) and Arnold & Wade (S52) fold intervention into the definition of s
 | BOUND | normative argument (S36–S38); definitional (S19) | a declared purpose | boundary presented as discovered; self-produced boundary conflated with drawn one | **no empirical falsifier exists; conformance is procedural** |
 | RELATE | model-based (S13, S30); formal (S24, contested) | identified entities and relation types | co-occurrence read as relation; asserted relation read as observed | **testable on synthetic fixtures with known relations** |
 | SCALE | structural measurement (S17); regime (S12) | interaction-strength or timescale separation | relabeling one level as two | **testable via near-decomposability on fixtures** |
-| TRACE | experimental (S33, S35); modelling (S30, S34) | time-indexed or causal-structured evidence; loop polarity and delay | lexical loop (S49–S51 homonymy); unmodelled delay | **testable; human baseline exists; machine extraction ceiling ~60–89% on positive cases** |
+| TRACE | experimental (S33, S35); modelling (S30, S34) | time-indexed or causal-structured evidence; loop polarity and delay | lexical loop (S49–S51 homonymy); unmodelled delay | **testable; human misperception baseline exists (S33, S35); machine extraction ~56–89% on positive cases, with a loop-level true-negative precedent (S49)** |
 | PATTERN | mathematical (S09, S13); ecological (S25) | state space and dynamics or adequate series | tendency read as attractor; single-basin assumption | **testable against matched-statistics null** |
 | EMERGE | operational definition (S45); physical (S44) | a derivation procedure and a level choice | aggregation read as emergence; causal reading without answering S47 | **testable in Bedau's sense only** |
 | TRANSFORM | empirical with characterized limits (S27–S29) | long, well-sampled series; error-rate characterization | false alarm; steep-but-continuous read as bifurcation | **best-characterized evidence base in the lineage** |
@@ -559,22 +559,32 @@ Recorded per primitive act as *scopes of usable content*, not as vocabulary.
 - **EMERGE** — Bedau's simulation-relative definition (S45) is usable; Chalmers' distinction (S46) fixes the vocabulary; Kim (S47) fixes what may not be claimed cheaply.
 - **TRANSFORM** — the EWS toolbox (S28) and its limits (S29) are a near-complete template for an S4 fixture: known transition, generic indicators, characterized false-alarm rate.
 - **REFLECT** — von Foerster's responsibility of the observer (S06) and Churchman's "through the eyes of another" (S37) give the content; Rosen's anticipation (S23) and Holland's internal models (S15) give a formal shape for "a system that includes its own model," which is the nearest thing to a mechanizable REFLECT and is recorded here as a scope for S2, not a proposal.
-- **For F-SI8 specifically** — the human literature (S33, S35) is the precedent that fluent reasoners fail null and simple-dynamics cases; the machine literature (S49–S51) has no null case. The mandatory null fixture is therefore not conservative; it is the missing experiment.
+- **For F-SI8 specifically** — the human literature (S33, S35) is a dynamics-misperception baseline showing that fluency is not competence; the machine literature contains loop-level true-negative testing (S49) and, in what S1 read, no whole-faculty null-organization benchmark. F-SI8 generalizes an existing negative-control discipline:
+
+  ```text
+  S33 / S35   humans can fail simple dynamics despite fluency
+        ↓
+  S49         machine CLD extraction includes loop-absent negative cases
+        ↓
+  F-SI8       generalize the negative control to NO WARRANTED SYSTEMS ORGANIZATION
+  ```
+
+  It is a generalization with precedent, not a novelty.
 - **For F-SI7 specifically** — the CLD extraction results (S49–S51) are a warning: transcribing a loop the text asserts is achievable and is *not* systems perception. An SI claim indistinguishable from extraction of stated causal claims has added nothing over RGR's `Relation` + `Trajectory`.
 
 ---
 
 # 7 · WHAT THE CURRENT LITERATURE DOES NOT ESTABLISH
 
-- That "systems thinking" is a single faculty, tradition or skill. It is a family with a shared lexicon and unshared meanings.
+- That "systems thinking" is a single faculty, tradition or skill, or that it has one accepted definition. It is a family with a shared lexicon and unshared meanings.
 - That any tradition's definition of system, boundary, feedback, emergence, self-organization, observer or information is the correct one.
 - That feedback loops, attractors or emergent properties can be perceived from prose without time-indexed evidence. The machine literature shows extraction of *stated* causal structure only.
-- That a language model, or any system, can refrain from asserting organization where none is warranted. No null-fixture evaluation was found.
+- That a language model, or any system, can refrain from asserting systems organization where none is warranted beyond the feedback-loop level. Loop-level true-negative testing exists (S49); no whole-faculty null-organization evaluation was found.
 - That emergent properties have causal powers. This is contested (S44, S12 versus S47).
 - That early-warning signals detect transitions reliably outside well-sampled series with characterized error rates (S29).
 - That autopoiesis transposes to social systems (S21 versus S22).
 - That Rosen's relational biology is formally sound (S24, contested).
-- That the free-energy principle is an empirical theory rather than a framework (S48, contested).
+- That the free-energy principle is an empirical theory rather than a framework (S48; technical critiques S53, S54).
 - Anything about Spiralogic, Elemental Alchemy, or the qualitative interior of dynamics. No source in this corpus addresses them, and S1 did not look for correspondences, which is S6's act.
 - That Systems Intelligence exists, is acquirable, or is distinct from RGR in practice.
 
@@ -585,7 +595,7 @@ Recorded per primitive act as *scopes of usable content*, not as vocabulary.
 Named so they are not absorbed.
 
 1. **The optimizer with credentials.** The free-energy principle (S48) is the most sophisticated frame available and it models the organism as minimizing one quantity. Adopting it as SI's account of a person would satisfy every scientific instinct and violate S0 §VII.1 by construction. It may be studied; it may not be the stance.
-2. **Intervention folded into definition.** Meadows' leverage points (S31), Beer's VSM (S39) and the consolidated definition (S52) make intervention part of what systems thinking *is*. Any S2 vocabulary that imports "leverage," "intervention point" or "regulator" imports the posture with the word.
+2. **Intervention folded into definition.** Meadows' leverage points (S31), Beer's VSM (S39) and a prominent synthesized definition (S52) make intervention part of what systems thinking *is* in their formulations; the category has no single definition, but intervention-inclusive formulations are materially present. Any S2 vocabulary that imports "leverage," "intervention point" or "regulator" imports the posture with the word.
 3. **Homonym laundering.** "Information" (S04 vs S07), "boundary" (S38 vs S19), "self-organization" (S10 vs S19), "attractor" (S09 vs popular). Each pair allows a claim to be made in the weak sense and heard in the strong one.
 4. **The four-phase schema.** Holling's adaptive cycle (S26) has four phases and nested scales. It will look like Spiralogic to anyone who wants it to. S1 records the resemblance as a hazard for S6, not as a finding.
 5. **Conclusions without arguments.** Rosen (S24) and Bateson (S07) are cited far more often for their conclusions than for their arguments. A programme that motivates itself with "living relational system" will be tempted to cite them as established. They are not.
@@ -618,10 +628,12 @@ Three traditions carry an explicit first-person or interior dimension: second-or
 
 ```text
 AIN-SYSTEMS-INTELLIGENCE-01 / S1
-CANDIDATE RESEARCH PACKAGE
-52 SOURCES · 17 TRADITIONS · 10-TERM DISAGREEMENT MAP · 8-ACT EVIDENCE TABLE
-CLAIMS LEDGERED (CL-01…CL-30)
-INDEPENDENT REVIEW: OWED, NOT PERFORMED (see §1.5 and the Work Unit)
+CANDIDATE RESEARCH PACKAGE · S1R1 REPAIRED
+55 SOURCES · 17 TRADITIONS · 10-TERM DISAGREEMENT MAP · 8-ACT EVIDENCE TABLE
+CLAIMS LEDGERED (CL-01…CL-31 · CL-27 NOT_SUPPORTED AS WRITTEN → CL-27R · CL-30 WITHDRAWN TO STRUCTURAL STATEMENT)
+FOUNDER INDEPENDENT REVIEW: PERFORMED · 1 CLAIM FALSIFIED · REPAIRS APPLIED (§11.3)
+ROUTED INDEPENDENT REVIEW (GPT-OSS PRIMARY · QWEN CHALLENGER): OWED, NOT PERFORMED
+WORK UNIT: SUPERSEDED AND REBOUND ON CURRENT CANONICAL b4f73ac4 (W-I3)
 FOUNDER ADJUDICATION: OWED
 S2 NOT OPENED · NO VOCABULARY PROPOSED
 S0 UNTOUCHED · RGR UNTOUCHED · SPIRALOGIC CANON UNTOUCHED · MAIA UNTOUCHED
@@ -630,18 +642,36 @@ NO RUNTIME · NO CODE · NO MODEL CALL · NO MEMBER DATA · PRODUCTION UNTOUCHED
 
 ## 11.1 Research provenance
 
-- Evidence population: S01–S52, public scholarly and public technical sources.
-- Retrieval date: 2026-09-23; bibliographic identity verified against publisher/index/repository records; content characterizations per §1.4.
-- Research-source policy: no member, private, clinical, PHI or production data; no repository source or constitutional text was routed to any external provider (the dev-lane hold of 2026-09-20 is respected; web searches carried bibliographic queries only).
+- Evidence population: S01–S55, public scholarly and public technical sources (S53–S55 admitted at S1R1).
+- Retrieval date: 2026-09-23; bibliographic identity verified against publisher/index/repository records; content characterizations per §1.4; S1R1 verifications the same day.
+- Research-source policy: no member, private, clinical, PHI or production data. The governing development-lane law is the ratified Development Provider Governance (`docs/canon/DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md`, ratified 2026-09-23 by founder act JEV-INT-01R3, which lifted the 2026-09-20 interim hold and replaced it with a durable rule): repository data classes `repository_derived_metadata`, `repository_source` and `constitutional_canon` are defined and all three remain unassigned, and any external-provider assignment requires a prior ratified authorization record plus disclosure authority and a membrane before transport. No repository source or constitutional text was routed to any external provider; web searches carried bibliographic queries only.
 - Claim discipline: every substantive claim typed in the companion ledger; no claim promoted by prose.
 
 ## 11.2 What a reviewer should attack first
 
 - Any content characterization in §2 (per §1.4 these are the weakest link).
-- The claim that no null-organization evaluation exists in S49–S51 (an absence claim bounded by what S1 read).
+- ~~The claim that no null-organization evaluation exists in S49–S51~~ — attacked and falsified at Founder independent review; see §11.3. The replacement absence claim (no *whole-faculty* null-organization benchmark) is the new target.
 - Whether §3.2's two boundary kinds are exhaustive.
 - Whether §5's evidence ranking is fair to BOUND and REFLECT.
 - Whether any hazard in §8 is itself an unfair reading of the source.
+
+## 11.3 S1R1 repair record (Founder independent review, 2026-09-23)
+
+The S1 candidate `220d6c46aa0dcfdbe40be8407e24d79de40e828f` was reviewed independently. Scope custody passed. Evidence claims did not. Repairs, each bounded to the finding:
+
+| # | Finding | Repair |
+|---|---|---|
+| 1 | Original CL-27 (no null condition in S49–S51) falsified by S49 itself: modelers found no loop in 25 of 30 vignette responses; the bot reported zero loops in 23 of those 25. | CL-27 marked NOT_SUPPORTED AS WRITTEN; replaced by CL-27R (loop-level true-negative precedent exists; no whole-faculty null-organization benchmark established). Propagated to §0, §2.16, §5, §6, §7. |
+| 2 | S33/S35 are a dynamics-misperception baseline, not a null fixture. | "human null-fixture" language removed; corrected precedent lineage recorded in §6. |
+| 3 | Observer position conflated with regulator location in the cybernetics map. | §2.2, §3.6, §3.10, §4.1 and CL-02 repaired; S55 (Ashby 1952) admitted. |
+| 4 | Shannon and Bateson overstated as logically incompatible. | §3.7 and CL-05 repaired to non-equivalent, non-interchangeable, different explanatory levels. |
+| 5 | Arnold & Wade treated as defining the whole category. | §0, §2.17, §4.5, §8 and CL-28 narrowed to one prominent synthesized definition. |
+| 6 | S50 authorship missing. | Liu & Keith added. |
+| 7 | CL-22 and CL-30 used non-S0 classes. | CL-22 → PHENOMENOLOGICAL_ORIGIN; CL-30 withdrawn from the ledger to a structural statement. |
+| 8 | "FEP status is contested" unsupported by S48 alone. | S53, S54 admitted; §2.15, §7, CL-25 now cite them. |
+| 9 | Work Unit stale against current canonical and citing the lifted interim hold. | Superseding Work Unit rebound on `b4f73ac4` through the governed seams (W-I3); governance language updated to the ratified law. |
+
+What this record is for: the programme's own falsification discipline found a counterexample inside its own corpus. A compelling narrative ("the null case has no machine precedent") lost standing when the evidence contradicted it, and the corrected finding is narrower and more useful. That is the behaviour S0 exists to build into AIN, exhibited first by the research that constitutes it.
 
 ---
 
@@ -661,3 +691,5 @@ S1 does **not** authorize: S2 or any later stage; any formal vocabulary; any hyp
 | D-S1-04 | Rule whether the free-energy principle (S48) is barred from S7 as a stance or only from S8 as a member-facing frame. | Bar as a stance toward a person at every stage; permit as a studied hypothesis about organisms. |
 | D-S1-05 | Route the independent review of this package. | Route to the same independent local reviewers as RGR-01 from a host that has them; the Work Unit is delivered `ROUTED` awaiting exactly that. |
 | D-S1-06 | Open S2. | Not in the same act as S1 adjudication. |
+
+**Founder dispositions at S1 review (2026-09-23):** D-S1-01 HOLD for S1R1 repair (map structure accepted) · D-S1-02 HOLD for S1R1 repair and routed review (table architecture accepted) · D-S1-03 DEFERRED to S2 as proposed · D-S1-04 RULED: the free-energy principle may be studied as a hypothesis or framework and may not be adopted at any stage as an optimizing stance toward a member or a person's life · D-S1-05 YES, after repair and rebind · D-S1-06 CLOSED. S1R1 discharges the repairs; the routed review remains owed.

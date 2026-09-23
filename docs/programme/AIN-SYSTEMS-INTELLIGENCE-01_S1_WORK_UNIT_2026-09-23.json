@@ -3,10 +3,10 @@
     "work_unit": {
       "work_unit_version": "W0.v2",
       "identity": {
-        "id": "ain-si-01-s1-scientific-intellectual-landscape-20260923",
+        "id": "ain-si-01-s1-scientific-intellectual-landscape-r1-20260923",
         "programme": "AIN-SYSTEMS-INTELLIGENCE-01",
         "parent_work_unit": null,
-        "objective": "Map the actual intellectual lineage of systems perception under S0: traditions, disagreements, incompatible meanings of key terms, evidentiary standing per primitive act, and what is genuinely usable by Systems Intelligence, before any formal vocabulary is invented.",
+        "objective": "Map the actual intellectual lineage of systems perception under S0: traditions, disagreements, incompatible meanings of key terms, evidentiary standing per primitive act, and what is genuinely usable by Systems Intelligence, before any formal vocabulary is invented. S1R1: the same objective, with the evidence-claim repairs required by Founder independent review applied and the unit rebound on current canonical.",
         "work_class": "RESEARCH",
         "task_shape": "EVIDENCE_SYNTHESIS",
         "capability": null
@@ -20,12 +20,15 @@
       },
       "context": {
         "context_refs": [
-          "S0 canonical constitution: blob 1414ec32b26b7679c6e857ce95599782538c5831 at cab0a9a8339f8b44ccd6f745add1bef40499d6f0",
+          "S0 canonical constitution: blob 1414ec32b26b7679c6e857ce95599782538c5831",
           "Founder authorization of S1 following S0C1 PASS (2026-09-23)",
-          "RGR-01 as the precedent research gate shape"
+          "Founder review disposition of S1 candidate 220d6c46 (2026-09-23): scope custody PASS; evidence claims repair required; S1R1 authorized",
+          "Development Provider Governance RATIFIED (docs/canon/DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md, founder act JEV-INT-01R3, 2026-09-23): 2026-09-20 interim hold LIFTED; repository data classes repository_derived_metadata / repository_source / constitutional_canon defined and all three UNASSIGNED; any external-provider assignment requires a prior ratified authorization record, disclosure authority, and a membrane before transport",
+          "RGR-01 as the precedent research gate shape",
+          "Supersedes: ain-si-01-s1-scientific-intellectual-landscape-20260923 (base cab0a9a8339f8b44ccd6f745add1bef40499d6f0, W-I3: base_ref is authorized-core and immutable)"
         ],
         "evidence_refs": [
-          "local-worktree:cab0a9a8339f8b44ccd6f745add1bef40499d6f0",
+          "local-worktree:b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f",
           "public-scholarly-sources-only"
         ],
         "assumptions": [
@@ -35,13 +38,13 @@
         ],
         "unknowns": [
           "Whether the traditions converge on any operational meaning of the key terms.",
-          "Whether any reported machine evaluation includes a null-organization condition.",
+          "Whether any reported machine evaluation includes a WHOLE-FACULTY null-organization condition (loop-level true negatives exist: S49).",
           "Whether BOUND needs one boundary kind or two."
         ]
       },
       "scope": {
         "repository": "SoullabTech/Sovereign",
-        "base_ref": "cab0a9a8339f8b44ccd6f745add1bef40499d6f0",
+        "base_ref": "b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f",
         "allowed_paths": [
           "docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_SCIENTIFIC_INTELLECTUAL_LANDSCAPE_2026-09-23.md",
           "docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_SOURCE_CORPUS_2026-09-23.md",
@@ -55,7 +58,8 @@
           "components",
           "jarvis-desktop",
           "CLAUDE.md",
-          "docs/canon"
+          "docs/canon",
+          "scripts/provider-policy.json"
         ]
       },
       "authority": {
@@ -142,7 +146,7 @@
         },
         "route_digest": "sha256:017e804b32e6d08cbd3b27561de5212d852cee985d3835616ff7332ebb9e612e",
         "route_source": "J5.v1-pure-router",
-        "bound_at_sha": "cab0a9a8339f8b44ccd6f745add1bef40499d6f0",
+        "bound_at_sha": "b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f",
         "execution_connected": false,
         "primary": {
           "participant_id": "primary",
@@ -176,8 +180,9 @@
           "A disagreement map with at least the seven mandatory terms (system, boundary, feedback, emergence, self-organization, observer, information) showing agreement, conflict and homonymy per term.",
           "An evidentiary-standing table for all eight S0 primitive acts.",
           "A WHAT THE LITERATURE DOES NOT ESTABLISH section.",
-          "Every substantive claim typed in a claim ledger under S0 §X.1 classes.",
-          "Public scholarly/technical sources only; bibliographic identity verified.",
+          "Every substantive claim typed in a claim ledger under the seven S0 §X.1 classes only; a falsified claim is marked NOT_SUPPORTED and preserved, never deleted.",
+          "Public scholarly/technical sources only; bibliographic identity verified, including authorship.",
+          "Observer position and regulator location distinguished throughout the cybernetics map.",
           "S2 vocabulary, S3 hypothesis, S4 fixtures, Spiralogic correspondence, MAIA contact and runtime all remain closed."
         ],
         "falsification_conditions": [
@@ -186,21 +191,23 @@
           "The package treats Spiralogic, Elemental Alchemy or a four-phase schema as a correspondence.",
           "The package cites a contested source (Rosen, Friston, Luhmann transposition) as established.",
           "The package omits the control-versus-autonomy disagreement or the human misperception baseline.",
-          "The package counts fluent systems prose in any source as evidence of systems perception."
+          "The package counts fluent systems prose in any source as evidence of systems perception.",
+          "The package asserts an absence in a source that the source itself contradicts.",
+          "The package uses a claim class outside S0 §X.1."
         ],
         "stop_conditions": [
           "Any member, private, clinical, PHI or production data is required.",
           "Any model or provider call beyond bibliographic web search is required for the research itself.",
           "Any change to S0, RGR, Spiralogic canon, MAIA runtime, schema or production is required.",
-          "Any repository source or constitutional text would have to be routed to an external provider (dev-lane hold of 2026-09-20)."
+          "Any repository data class (repository_derived_metadata, repository_source, constitutional_canon) would have to be disclosed to an external provider; under the ratified Development Provider Governance all three are unassigned and no prior ratified authorization record exists."
         ],
         "verifier_results": []
       },
       "provenance": {
-        "creator": "JARVIS/AIN-SYSTEMS-INTELLIGENCE-01/S1",
-        "authorizing_act": "founder:ain-si-01-s1-scientific-intellectual-landscape-20260923",
+        "creator": "JARVIS/AIN-SYSTEMS-INTELLIGENCE-01/S1R1",
+        "authorizing_act": "founder:ain-si-01-s1r1-independent-review-evidence-claim-repair-and-current-canonical-rebind-20260923",
         "source_commits": [
-          "cab0a9a8339f8b44ccd6f745add1bef40499d6f0"
+          "b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f"
         ],
         "model_identity": [],
         "resulting_commits": [],
@@ -209,51 +216,97 @@
       "state": {
         "lifecycle_state": "ROUTED",
         "disposition": "open",
-        "supersedes": null
+        "supersedes": "ain-si-01-s1-scientific-intellectual-landscape-20260923"
       }
     },
     "guard": {
       "lifecycle_version": "W2.v2",
-      "work_unit_id": "ain-si-01-s1-scientific-intellectual-landscape-20260923",
+      "work_unit_id": "ain-si-01-s1-scientific-intellectual-landscape-r1-20260923",
       "current_state": "ROUTED",
-      "authorized_core_snapshot": "{\"identity\":{\"id\":\"ain-si-01-s1-scientific-intellectual-landscape-20260923\",\"programme\":\"AIN-SYSTEMS-INTELLIGENCE-01\",\"parent_work_unit\":null,\"objective\":\"Map the actual intellectual lineage of systems perception under S0: traditions, disagreements, incompatible meanings of key terms, evidentiary standing per primitive act, and what is genuinely usable by Systems Intelligence, before any formal vocabulary is invented.\",\"work_class\":\"RESEARCH\",\"task_shape\":\"EVIDENCE_SYNTHESIS\",\"capability\":null},\"custody\":{\"evidence_class\":\"E1_REPOSITORY_LOCAL\"},\"routing_request\":{\"requested_posture\":\"independent_review\",\"review_pressure\":\"ordinary\"},\"scope\":{\"repository\":\"SoullabTech/Sovereign\",\"base_ref\":\"cab0a9a8339f8b44ccd6f745add1bef40499d6f0\",\"allowed_paths\":[\"docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_SCIENTIFIC_INTELLECTUAL_LANDSCAPE_2026-09-23.md\",\"docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_SOURCE_CORPUS_2026-09-23.md\",\"docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_CLAIM_LEDGER_2026-09-23.md\",\"docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_WORK_UNIT_2026-09-23.json\"],\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\",\"CLAUDE.md\",\"docs/canon\"]},\"authority\":{\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"network_external\":true,\"provider_spend\":false,\"external_disclosure\":\"task_text_only\",\"merge\":false,\"deploy\":false,\"production_read\":false,\"production_write\":false},\"evaluation\":{\"acceptance_conditions\":[\"A lineage map covering every tradition named in S0 §XIII, each with contribution, constraint and SI standing.\",\"A disagreement map with at least the seven mandatory terms (system, boundary, feedback, emergence, self-organization, observer, information) showing agreement, conflict and homonymy per term.\",\"An evidentiary-standing table for all eight S0 primitive acts.\",\"A WHAT THE LITERATURE DOES NOT ESTABLISH section.\",\"Every substantive claim typed in a claim ledger under S0 §X.1 classes.\",\"Public scholarly/technical sources only; bibliographic identity verified.\",\"S2 vocabulary, S3 hypothesis, S4 fixtures, Spiralogic correspondence, MAIA contact and runtime all remain closed.\"],\"falsification_conditions\":[\"The package presents a synthesis where the sources disagree.\",\"The package adopts a formal vocabulary or proposes primitives.\",\"The package treats Spiralogic, Elemental Alchemy or a four-phase schema as a correspondence.\",\"The package cites a contested source (Rosen, Friston, Luhmann transposition) as established.\",\"The package omits the control-versus-autonomy disagreement or the human misperception baseline.\",\"The package counts fluent systems prose in any source as evidence of systems perception.\"],\"stop_conditions\":[\"Any member, private, clinical, PHI or production data is required.\",\"Any model or provider call beyond bibliographic web search is required for the research itself.\",\"Any change to S0, RGR, Spiralogic canon, MAIA runtime, schema or production is required.\",\"Any repository source or constitutional text would have to be routed to an external provider (dev-lane hold of 2026-09-20).\"]}}"
+      "authorized_core_snapshot": "{\"identity\":{\"id\":\"ain-si-01-s1-scientific-intellectual-landscape-r1-20260923\",\"programme\":\"AIN-SYSTEMS-INTELLIGENCE-01\",\"parent_work_unit\":null,\"objective\":\"Map the actual intellectual lineage of systems perception under S0: traditions, disagreements, incompatible meanings of key terms, evidentiary standing per primitive act, and what is genuinely usable by Systems Intelligence, before any formal vocabulary is invented. S1R1: the same objective, with the evidence-claim repairs required by Founder independent review applied and the unit rebound on current canonical.\",\"work_class\":\"RESEARCH\",\"task_shape\":\"EVIDENCE_SYNTHESIS\",\"capability\":null},\"custody\":{\"evidence_class\":\"E1_REPOSITORY_LOCAL\"},\"routing_request\":{\"requested_posture\":\"independent_review\",\"review_pressure\":\"ordinary\"},\"scope\":{\"repository\":\"SoullabTech/Sovereign\",\"base_ref\":\"b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f\",\"allowed_paths\":[\"docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_SCIENTIFIC_INTELLECTUAL_LANDSCAPE_2026-09-23.md\",\"docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_SOURCE_CORPUS_2026-09-23.md\",\"docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_CLAIM_LEDGER_2026-09-23.md\",\"docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S1_WORK_UNIT_2026-09-23.json\"],\"forbidden_paths\":[\"app\",\"lib\",\"database\",\"components\",\"jarvis-desktop\",\"CLAUDE.md\",\"docs/canon\",\"scripts/provider-policy.json\"]},\"authority\":{\"repository_read\":true,\"repository_write\":\"worktree\",\"shell\":\"bounded_write\",\"network_external\":true,\"provider_spend\":false,\"external_disclosure\":\"task_text_only\",\"merge\":false,\"deploy\":false,\"production_read\":false,\"production_write\":false},\"evaluation\":{\"acceptance_conditions\":[\"A lineage map covering every tradition named in S0 §XIII, each with contribution, constraint and SI standing.\",\"A disagreement map with at least the seven mandatory terms (system, boundary, feedback, emergence, self-organization, observer, information) showing agreement, conflict and homonymy per term.\",\"An evidentiary-standing table for all eight S0 primitive acts.\",\"A WHAT THE LITERATURE DOES NOT ESTABLISH section.\",\"Every substantive claim typed in a claim ledger under the seven S0 §X.1 classes only; a falsified claim is marked NOT_SUPPORTED and preserved, never deleted.\",\"Public scholarly/technical sources only; bibliographic identity verified, including authorship.\",\"Observer position and regulator location distinguished throughout the cybernetics map.\",\"S2 vocabulary, S3 hypothesis, S4 fixtures, Spiralogic correspondence, MAIA contact and runtime all remain closed.\"],\"falsification_conditions\":[\"The package presents a synthesis where the sources disagree.\",\"The package adopts a formal vocabulary or proposes primitives.\",\"The package treats Spiralogic, Elemental Alchemy or a four-phase schema as a correspondence.\",\"The package cites a contested source (Rosen, Friston, Luhmann transposition) as established.\",\"The package omits the control-versus-autonomy disagreement or the human misperception baseline.\",\"The package counts fluent systems prose in any source as evidence of systems perception.\",\"The package asserts an absence in a source that the source itself contradicts.\",\"The package uses a claim class outside S0 §X.1.\"],\"stop_conditions\":[\"Any member, private, clinical, PHI or production data is required.\",\"Any model or provider call beyond bibliographic web search is required for the research itself.\",\"Any change to S0, RGR, Spiralogic canon, MAIA runtime, schema or production is required.\",\"Any repository data class (repository_derived_metadata, repository_source, constitutional_canon) would have to be disclosed to an external provider; under the ratified Development Provider Governance all three are unassigned and no prior ratified authorization record exists.\"]}}"
     }
   },
   "lifecycle_transitions": [
     {
       "lifecycle_version": "W2.v2",
-      "work_unit_id": "ain-si-01-s1-scientific-intellectual-landscape-20260923",
+      "work_unit_id": "ain-si-01-s1-scientific-intellectual-landscape-r1-20260923",
       "from": "DRAFT",
       "to": "BOUNDED",
-      "evidence_ref": "ain-si-01-s1:bounded:four-path-scope",
-      "reason_code": "S1_SCOPE_BOUNDED_TO_FOUR_DOCS",
+      "evidence_ref": "ain-si-01-s1r1:bounded:four-path-scope",
+      "reason_code": "S1R1_SCOPE_BOUNDED_TO_FOUR_DOCS",
       "authorization_ref": null,
       "adjudication": null,
       "superseded_by": null
     },
     {
       "lifecycle_version": "W2.v2",
-      "work_unit_id": "ain-si-01-s1-scientific-intellectual-landscape-20260923",
+      "work_unit_id": "ain-si-01-s1-scientific-intellectual-landscape-r1-20260923",
       "from": "BOUNDED",
       "to": "AUTHORIZED",
-      "evidence_ref": "founder:ain-si-01-s1-authorization-20260923",
-      "reason_code": "S1_FOUNDER_AUTHORIZED_AFTER_S0C1_PASS",
-      "authorization_ref": "founder:ain-si-01-s1-scientific-intellectual-landscape-20260923",
+      "evidence_ref": "founder:ain-si-01-s1-review-disposition-20260923:S1R1",
+      "reason_code": "S1R1_FOUNDER_AUTHORIZED_REPAIR_AND_REBIND",
+      "authorization_ref": "founder:ain-si-01-s1r1-independent-review-evidence-claim-repair-and-current-canonical-rebind-20260923",
       "adjudication": null,
       "superseded_by": null
     },
     {
       "lifecycle_version": "W2.v2",
-      "work_unit_id": "ain-si-01-s1-scientific-intellectual-landscape-20260923",
+      "work_unit_id": "ain-si-01-s1-scientific-intellectual-landscape-r1-20260923",
       "from": "AUTHORIZED",
       "to": "ROUTED",
-      "evidence_ref": "w3-route:J5.v1:ain-si-01-s1-scientific-intellectual-landscape-20260923",
+      "evidence_ref": "w3-route:J5.v1:ain-si-01-s1-scientific-intellectual-landscape-r1-20260923",
       "reason_code": "W3_PURE_ROUTE_BOUND",
       "authorization_ref": null,
       "adjudication": null,
       "superseded_by": null
     }
   ],
-  "standing": "ROUTED · RESEARCH PACKAGE AUTHORED · INDEPENDENT REVIEW OWED · NOT ADJUDICATED",
-  "execution_note": "Produced through the governed W0.v2/W2.v2/W3.v2 seams (createWorkUnitDraftV2 → createLifecycleEnvelopeV2 → BOUNDED → AUTHORIZED → bindAuthorizedRouteV2). No transport binding, no attempt, no verifier result and no adjudication is recorded because the routed independent local reviewers are not reachable from the authoring container. The attempt ledger is empty by design: the builder cannot certify itself (W-I6). Execution of the routed independent review, EVIDENCE_READY, ADJUDICATED and CLOSED are owed to a host that has the routed providers and to Founder adjudication respectively."
+  "supersedes": {
+    "work_unit_id": "ain-si-01-s1-scientific-intellectual-landscape-20260923",
+    "base_ref": "cab0a9a8339f8b44ccd6f745add1bef40499d6f0",
+    "work_unit_blob": "f80a8441db89804ef6d72fa2e72fc7ca212a4e0d",
+    "reason": "W-I3: scope.base_ref is part of the immutable authorized core; canonical advanced cab0a9a8 → b4f73ac4 (4 commits, zero S1 path overlap), so the unit is superseded rather than edited."
+  },
+  "route_comparison": {
+    "prior_primary": {
+      "participant_id": "primary",
+      "model_family": "GPT_OSS",
+      "role": "evidence_synthesis_primary",
+      "review_dimension": "primary",
+      "required_for_completion": true,
+      "response_budget_profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER"
+    },
+    "prior_challengers": [
+      {
+        "participant_id": "local-review-1",
+        "model_family": "QWEN",
+        "role": "independent_local_challenger",
+        "review_dimension": "distinct_model_family",
+        "required_for_completion": true,
+        "response_budget_profile_id": "LOCAL_QWEN_EXISTING_ADAPTER"
+      }
+    ],
+    "current_primary": {
+      "participant_id": "primary",
+      "model_family": "GPT_OSS",
+      "role": "evidence_synthesis_primary",
+      "review_dimension": "primary",
+      "required_for_completion": true,
+      "response_budget_profile_id": "LOCAL_GPT_OSS_EXISTING_ADAPTER"
+    },
+    "current_challengers": [
+      {
+        "participant_id": "local-review-1",
+        "model_family": "QWEN",
+        "role": "independent_local_challenger",
+        "review_dimension": "distinct_model_family",
+        "required_for_completion": true,
+        "response_budget_profile_id": "LOCAL_QWEN_EXISTING_ADAPTER"
+      }
+    ],
+    "identical": true,
+    "note": "Regenerated route from current canonical is identical to the S1 route: GPT-OSS evidence-synthesis primary + Qwen independent local challenger. Reported from the router output, not assumed."
+  },
+  "standing": "ROUTED · S1R1 REPAIRS APPLIED · SUPERSEDES S1 UNIT · INDEPENDENT REVIEW OWED · NOT ADJUDICATED",
+  "execution_note": "Produced through the governed W0.v2/W2.v2/W3.v2 seams (createWorkUnitDraftV2 → createLifecycleEnvelopeV2 → BOUNDED → AUTHORIZED → bindAuthorizedRouteV2) on current canonical b4f73ac4. Attempts, transport bindings, verifier results and adjudication are empty by design (W-I6, and by S1R1 instruction 13). Execution of the routed independent review, EVIDENCE_READY, ADJUDICATED and CLOSED are owed to a host that has the routed providers and to Founder adjudication respectively. The 2026-09-20 interim dev-lane hold cited by the superseded unit is LIFTED as a temporary hold and replaced by the ratified Development Provider Governance; the local route is lawful under it because no repository data class is disclosed to any external provider."
 }

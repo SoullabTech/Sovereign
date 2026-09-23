@@ -3,11 +3,11 @@
 **Programme:** AIN-SYSTEMS-INTELLIGENCE-01
 **Act:** S1 — SCIENTIFIC + INTELLECTUAL LANDSCAPE
 **Date:** 2026-09-23
-**Status:** WORKING CLAIM LEDGER · CANDIDATE, NOT ADJUDICATED
-**Canonical base:** `cab0a9a8339f8b44ccd6f745add1bef40499d6f0`
+**Status:** WORKING CLAIM LEDGER · CANDIDATE · S1R1 REPAIRED · NOT ADJUDICATED
+**Canonical base:** `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f` (S1R1 rebind; authored from `cab0a9a8339f8b44ccd6f745add1bef40499d6f0`)
 **Governing constitution:** S0 (blob `1414ec32b26b7679c6e857ce95599782538c5831`)
 
-Every entry retains an epistemic class from S0 §X.1. No entry may be promoted by prose. Support cites the source corpus (S01–S52). "Limit" states what the claim does not establish.
+Every entry retains an epistemic class from S0 §X.1 (`ESTABLISHED_SOURCE · FORMAL_DERIVATION · INTERNAL_EMPIRICAL_RESULT · HYPOTHESIS · ENGINEERING_ANALOGY · PHENOMENOLOGICAL_ORIGIN · SPECULATIVE_CORRESPONDENCE`). No entry may be promoted by prose, and no eighth class may be created implicitly. A falsified entry is marked, never deleted. Support cites the source corpus (S01–S52). "Limit" states what the claim does not establish.
 
 ---
 
@@ -18,10 +18,10 @@ Every entry retains an epistemic class from S0 §X.1. No entry may be promoted b
 - Limit: the cross-kind principle is a programme, not a demonstrated result.
 
 ## CL-02
-**Claim:** Feedback, regulation and requisite variety have precise formal meanings in first-order cybernetics, and those meanings are framed from the standpoint of a regulator outside the regulated system.
+**Claim:** Feedback, regulation and requisite variety have precise formal meanings in first-order cybernetics; the description brackets the observer outside it, while the regulation described may be endogenous to the organism.
 - Class: ESTABLISHED_SOURCE
-- Support: S02, S03
-- Limit: says nothing about whether that standpoint is appropriate to persons; that is S0's ruling, not the source's.
+- Support: S02, S03, S55
+- Limit: observer position is not regulator location; the sources do not hold that regulation is external to the regulated system. Whether the design stance is appropriate to persons is S0's ruling, not the sources'. (S1R1: repaired from a version that conflated the two.)
 
 ## CL-03
 **Claim:** Shannon information is defined as a measure over a probability distribution and is explicitly indifferent to meaning.
@@ -35,9 +35,10 @@ Every entry retains an epistemic class from S0 §X.1. No entry may be promoted b
 - Limit: a stance and a set of distinctions; not an operational method.
 
 ## CL-05
-**Claim:** Bateson defines information as "a difference which makes a difference," a relational meaning constructed independently of, and incompatible with, Shannon's.
+**Claim:** Bateson's "a difference which makes a difference" is a system-relative conception of information, non-equivalent to and non-interchangeable with Shannon's and operating at a different explanatory level; the two conflict when one is substituted for the other, not as logical contradictories.
 - Class: ESTABLISHED_SOURCE
 - Support: S07 (with S04 for the contrast)
+- Limit: secondary literature cautions against reading Bateson's phrase as a complete universal definition. (S1R1: repaired from "constructed independently of, and incompatible with.")
 
 ## CL-06
 **Claim:** Bateson argued that purposive intervention by a part of a system that ignores the circuits it belongs to is a characteristic pathology, which places the refusal of the control posture inside the systems lineage rather than outside it.
@@ -116,7 +117,7 @@ Every entry retains an epistemic class from S0 §X.1. No entry may be promoted b
 **Claim:** Educated human subjects systematically misperceive feedback, delay and accumulation in simple dynamic tasks, and this failure persists across presentation formats.
 - Class: ESTABLISHED_SOURCE
 - Support: S33, S35
-- Limit: laboratory tasks; not a claim about all human systems perception.
+- Limit: laboratory tasks; not a claim about all human systems perception; a dynamics-misperception baseline, not a null-organization experiment.
 
 ## CL-20
 **Claim:** Soft and critical systems traditions hold that a system boundary is a judgement of the inquirer, value-laden, and required to be explicit and contestable.
@@ -131,7 +132,7 @@ Every entry retains an epistemic class from S0 §X.1. No entry may be promoted b
 
 ## CL-22
 **Claim:** Process philosophy offers a relational-process ontology congenial to the phrase "living relational system," with no formal or empirical bridge to systems science.
-- Class: SOURCE_OF_INSPIRATION (PHENOMENOLOGICAL_ORIGIN as it bears on this programme)
+- Class: PHENOMENOLOGICAL_ORIGIN (the corpus tags S40 SOURCE_OF_INSPIRATION; the claim class is the S0 §X.1 class)
 - Support: S40
 
 ## CL-23
@@ -147,47 +148,63 @@ Every entry retains an epistemic class from S0 §X.1. No entry may be promoted b
 
 ## CL-25
 **Claim:** The free-energy principle is a unifying proposal that models organisms as minimizing a single quantity; its scientific status is contested; as a stance toward a person it instantiates the shape S0 §VII.1 prohibits.
-- Class: ESTABLISHED_SOURCE (the proposal and its contested status) / the constitutional consequence is S1's reading under S0, not the source's claim
-- Support: S48
+- Class: ESTABLISHED_SOURCE (the proposal: S48; its contested formal status: S53, S54) / the constitutional consequence is S1's reading under S0, not the sources' claim
+- Support: S48, S53, S54
 
 ## CL-26
-**Claim:** Language models can extract causal loop diagrams from text, identifying roughly 60% of links and loops in one controlled study and passing 77–89% of tests on a purpose-built extraction leaderboard.
+**Claim:** Language models can extract causal loop diagrams from text, identifying roughly 60% of links and loops in one controlled study (56% of causal relationships and 83% of loops on its second dataset) and passing 77–89% of tests on a purpose-built extraction leaderboard.
 - Class: ESTABLISHED_SOURCE (as INTERNAL_EMPIRICAL_RESULT of other programmes)
 - Support: S49, S50, S51
-- Limit: positive fixtures; simple structures; extraction of stated causal claims, not perception of dynamics from evidence.
+- Limit: predominantly positive fixtures (see CL-27R for the negative condition); simple structures; extraction of stated causal claims, not perception of dynamics from evidence.
 
-## CL-27
-**Claim:** In the material S1 read, no reported evaluation of machine causal-loop extraction includes a null-organization condition.
-- Class: HYPOTHESIS (an absence claim bounded by S1's retrieval; falsifiable by a single counterexample)
-- Support: S49, S50, S51 (abstracts and available summaries)
-- Limit: bounded by §1.4 of the landscape; a reviewer who finds a null-fixture evaluation falsifies this entry, and that would strengthen, not weaken, the programme.
+## CL-27 — NOT_SUPPORTED AS WRITTEN (falsified at Founder independent review, 2026-09-23)
+**Original claim (preserved):** In the material S1 read, no reported evaluation of machine causal-loop extraction includes a null-organization condition.
+- Original class: HYPOTHESIS (an absence claim bounded by S1's retrieval; falsifiable by a single counterexample)
+- Falsifier: S49 itself. In its second dataset, system-dynamics modelers found no feedback loop in 25 of 30 vignette responses; the bot reported zero loops in 23 of those 25 (two false-positive loops), which the authors describe as a high true-negative rate.
+- Standing: NOT_SUPPORTED AS WRITTEN. Not "awaiting further search": the counterexample was inside the corpus. Replaced by CL-27R.
+
+## CL-27R
+**Claim:** Machine causal-loop research already contains true-negative testing at the feedback-loop level (S49: no loop warranted → model reports no loop, 23 of 25); S1 has not established an existing whole-faculty null-organization benchmark comparable to S0's F-SI8 (a fixture with no warranted systems organization across the range of the faculty).
+- Class: ESTABLISHED_SOURCE (first clause) / HYPOTHESIS (second clause, an absence claim bounded by S1's retrieval, including that S1 has not verified the composition of S51's suite)
+- Support: S49, S51
+- Limit: the second clause remains falsifiable by a single counterexample; a whole-faculty null benchmark found later would again strengthen the programme.
 
 ## CL-28
-**Claim:** The consolidated definition of "systems thinking" in the educational/engineering literature includes devising modifications to produce desired effects, so the popular category is intervention-inclusive by definition.
+**Claim:** A prominent synthesized definition of "systems thinking" explicitly includes devising modifications to produce desired effects; systems thinking has no single widely accepted definition, so this establishes that intervention-inclusive formulations are materially present in the literature, not that the category is so defined.
 - Class: ESTABLISHED_SOURCE
 - Support: S52
+- Limit: one proposed synthesis; not a category-wide definition. (S1R1: narrowed.)
 
 ## CL-29
 **Claim:** The traditions in this corpus disagree substantively, not merely lexically, on control versus autonomy, observer-independent versus observer-inclusive description, reduction versus relational causality, equilibrium versus far-from-equilibrium, and description versus intervention.
 - Class: HYPOTHESIS (S1's structural reading of the corpus; each axis is supported by cited sources but the five-axis structure is the researcher's)
 - Support: §4 of the landscape; S02/S03/S30/S31/S39 vs S05/S07/S19/S43; S09/S25 vs S05/S36; S44/S12/S24 vs S47; S10/S12/S25/S13; S31/S52 vs S07
 
-## CL-30
-**Claim:** Nothing in this corpus establishes the existence of Systems Intelligence as a faculty, its distinctness from RGR in practice, or any correspondence to Spiralogic.
-- Class: ESTABLISHED (by construction of the corpus); no source addresses these questions
-- Support: the corpus census
-- Limit: absence of evidence in a curated corpus is not evidence of absence; it is the reason S3–S6 exist.
+## CL-30 — WITHDRAWN FROM THE CLAIM LEDGER AT S1R1
+The original entry used a class ("ESTABLISHED by construction") that is not in S0 §X.1. It is not a substantive claim about any source and is retained below as structural statement SC-01, outside the claim ledger.
+
+## CL-31
+**Claim:** First-order cybernetic regulation is applied by its founders to organisms: Ashby's homeostat and ultrastability model the brain as an adaptive system maintaining equilibrium under perturbation, so regulation in this tradition is frequently endogenous.
+- Class: ESTABLISHED_SOURCE
+- Support: S55, S03
+- Limit: establishes that observer position and regulator location are distinct questions; establishes nothing about which stance is appropriate to persons.
 
 ---
 
-## Ledger census
+## Structural corpus statement (not a claim)
+
+**SC-01.** No source in this corpus addresses the existence of Systems Intelligence as a faculty, its distinctness from RGR in practice, or any correspondence to Spiralogic. This is a statement about the corpus's construction, carries no S0 claim class, and is not evidence of absence; it is the reason S3–S6 exist.
+
+## Ledger census (S1R1)
 
 | Class | Entries |
 |---|---|
-| ESTABLISHED_SOURCE | 23 (CL-01…CL-13, CL-16…CL-21, CL-23, CL-24, CL-26, CL-28) |
+| ESTABLISHED_SOURCE | 24 (CL-01…CL-13, CL-16…CL-21, CL-23, CL-24, CL-26, CL-28, CL-31) |
 | ESTABLISHED_SOURCE with a SPECULATIVE or ANALOGY component | 3 (CL-14, CL-15, CL-25) |
-| SOURCE_OF_INSPIRATION / PHENOMENOLOGICAL_ORIGIN | 1 (CL-22) |
-| HYPOTHESIS | 2 (CL-27, CL-29) |
-| Structural (by construction) | 1 (CL-30) |
+| ESTABLISHED_SOURCE / HYPOTHESIS (two clauses) | 1 (CL-27R) |
+| PHENOMENOLOGICAL_ORIGIN | 1 (CL-22) |
+| HYPOTHESIS | 1 (CL-29) |
+| NOT_SUPPORTED AS WRITTEN (preserved, replaced) | 1 (CL-27) |
+| Withdrawn to structural statement | 1 (CL-30 → SC-01) |
 
-No entry is INTERNAL_EMPIRICAL_RESULT of this programme; S1 ran no experiment. No entry is FORMAL_DERIVATION; S1 derived nothing.
+Active substantive entries: 30. No entry is INTERNAL_EMPIRICAL_RESULT of this programme; S1 ran no experiment. No entry is FORMAL_DERIVATION; S1 derived nothing.
