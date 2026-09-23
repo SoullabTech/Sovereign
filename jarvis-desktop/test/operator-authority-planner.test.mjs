@@ -16,7 +16,7 @@ function makeGraph(utterance, priorIntent = null) {
 }
 
 function authorityRequest(graph, authorityInput = { heldAuthorities: [] }) {
-  return JSON.stringify({
+  return O3.encodeCanonicalJson({
     version: O3.REQUEST_VERSION,
     graph,
     authority_input: authorityInput,
@@ -468,23 +468,23 @@ test('F38 — canonical serialized request succeeds and is planned from parsed f
 test('F39 — textual whitespace normalization is refused as non-canonical JSON', () => {
   const graph = makeGraph('Fix the passage conversation.');
   const bytes = authorityRequest(graph, { heldAuthorities: ['repo.read'] });
-  const nonCanonical = bytes.replace('{"version"', '{ "version"');
+  const nonCanonical = '{ ' + bytes.slice(1);
   const result = O3.planAuthority(nonCanonical);
   assert.equal(result.ok, false);
   assert.equal(result.blockers.some((b) => b.code === 'AUTHORITY_REQUEST_NON_CANONICAL_JSON'), true);
 });
 
-test('F40 — duplicate JSON keys are refused by canonical reserialization', () => {
+test('F40 — duplicate JSON keys are refused by the sealed decoder', () => {
   const graph = makeGraph('Fix the passage conversation.');
-  const graphBytes = JSON.stringify(graph);
-  const authorityBytes = JSON.stringify({ heldAuthorities: ['repo.read'] });
-  const duplicate = '{"version":"' + O3.REQUEST_VERSION
-    + '","version":"' + O3.REQUEST_VERSION
-    + '","graph":' + graphBytes
-    + ',"authority_input":' + authorityBytes + '}';
+  const graphBytes = O3.encodeCanonicalJson(graph);
+  const authorityBytes = O3.encodeCanonicalJson({ heldAuthorities: ['repo.read'] });
+  const duplicate = '{"authority_input":' + authorityBytes
+    + ',"graph":' + graphBytes
+    + ',"version":"' + O3.REQUEST_VERSION
+    + '","version":"' + O3.REQUEST_VERSION + '"}';
   const result = O3.planAuthority(duplicate);
   assert.equal(result.ok, false);
-  assert.equal(result.blockers.some((b) => b.code === 'AUTHORITY_REQUEST_NON_CANONICAL_JSON'), true);
+  assert.equal(result.blockers.some((b) => b.code === 'AUTHORITY_REQUEST_DUPLICATE_KEY'), true);
 });
 
 test('F41 — malformed JSON is refused before any authority logic', () => {
@@ -495,7 +495,7 @@ test('F41 — malformed JSON is refused before any authority logic', () => {
 
 test('F42 — request-envelope widening is refused', () => {
   const graph = makeGraph('Fix the passage conversation.');
-  const bytes = JSON.stringify({
+  const bytes = O3.encodeCanonicalJson({
     version: O3.REQUEST_VERSION,
     graph,
     authority_input: { heldAuthorities: ['repo.read'] },
@@ -507,7 +507,7 @@ test('F42 — request-envelope widening is refused', () => {
 });
 
 test('F43 — missing request fields are refused', () => {
-  const bytes = JSON.stringify({
+  const bytes = O3.encodeCanonicalJson({
     version: O3.REQUEST_VERSION,
     authority_input: { heldAuthorities: ['repo.read'] },
   });
@@ -518,7 +518,7 @@ test('F43 — missing request fields are refused', () => {
 
 test('F44 — wrong authority-request version is refused', () => {
   const graph = makeGraph('Fix the passage conversation.');
-  const bytes = JSON.stringify({
+  const bytes = O3.encodeCanonicalJson({
     version: 'o3.authority-request.future',
     graph,
     authority_input: { heldAuthorities: ['repo.read'] },
@@ -672,4 +672,125 @@ test('F53 — every requirement decision agrees with its own O0 decision', () =>
     }
     assert.ok(seen > 0, 'invariant must be exercised, not vacuously satisfied');
   }
+});
+
+
+test('F54 — alternate top-level key order is refused despite identical decoded data', () => {
+  const graph = makeGraph('Fix the passage conversation.');
+  const canonical = authorityRequest(graph, { heldAuthorities: ['repo.read', 'verify.run'] });
+  const reordered = JSON.stringify({
+    version: O3.REQUEST_VERSION,
+    graph,
+    authority_input: { heldAuthorities: ['repo.read', 'verify.run'] },
+  });
+  assert.notEqual(reordered, canonical);
+  const result = O3.planAuthority(reordered);
+  assert.equal(result.ok, false);
+  assert.equal(result.blockers.some((b) => b.code === 'AUTHORITY_REQUEST_NON_CANONICAL_JSON'), true);
+});
+
+test('F55 — alternate nested graph key order is refused by recursive canonical encoding', () => {
+  const graph = makeGraph('Fix the passage conversation.');
+  const reorderedGraph = {
+    constraints: graph.constraints,
+    effects: graph.effects,
+    topological_order: graph.topological_order,
+    edges: graph.edges,
+    work_units: graph.work_units,
+    intent: graph.intent,
+    graph_id: graph.graph_id,
+    standing: graph.standing,
+    version: graph.version,
+  };
+  const reordered = JSON.stringify({
+    authority_input: { heldAuthorities: ['repo.read', 'verify.run'] },
+    graph: reorderedGraph,
+    version: O3.REQUEST_VERSION,
+  });
+  const canonical = authorityRequest(graph, { heldAuthorities: ['repo.read', 'verify.run'] });
+  assert.notEqual(reordered, canonical);
+  const result = O3.planAuthority(reordered);
+  assert.equal(result.ok, false);
+  assert.equal(result.blockers.some((b) => b.code === 'AUTHORITY_REQUEST_NON_CANONICAL_JSON'), true);
+});
+
+test('F56 — post-load JSON.stringify mutation cannot manufacture authority', () => {
+  const graph = makeGraph('Fix the passage conversation.');
+  const bytes = authorityRequest(graph, { heldAuthorities: ['repo.read', 'verify.run'] });
+  const original = JSON.stringify;
+  let calls = 0;
+  try {
+    JSON.stringify = function maliciousStringify(value) {
+      calls += 1;
+      if (value && value.authority_input && Array.isArray(value.authority_input.heldAuthorities)) {
+        value.authority_input.heldAuthorities.push('repo.write:worktree');
+      }
+      return bytes;
+    };
+    const result = O3.planAuthority(bytes);
+    assert.equal(result.ok, true);
+    assert.equal(calls, 0);
+    assert.deepEqual(result.authority_plan.held_authorities, ['repo.read', 'verify.run']);
+    assert.deepEqual(byKind(result, 'MODIFY').missing_authorities, ['repo.write:worktree']);
+  } finally {
+    JSON.stringify = original;
+  }
+});
+
+test('F57 — post-load JSON.parse and JSON.stringify mutation cannot substitute authority evidence', () => {
+  const graph = makeGraph('Fix the passage conversation.');
+  const bytes = authorityRequest(graph, { heldAuthorities: ['repo.read', 'verify.run'] });
+  const originalParse = JSON.parse;
+  const originalStringify = JSON.stringify;
+  let parseCalls = 0;
+  let stringifyCalls = 0;
+  try {
+    JSON.parse = function maliciousParse() {
+      parseCalls += 1;
+      return {
+        version: O3.REQUEST_VERSION,
+        graph,
+        authority_input: {
+          heldAuthorities: ['repo.read', 'repo.write:worktree', 'verify.run'],
+        },
+      };
+    };
+    JSON.stringify = function maliciousStringify() {
+      stringifyCalls += 1;
+      return bytes;
+    };
+    const result = O3.planAuthority(bytes);
+    assert.equal(result.ok, true);
+    assert.equal(parseCalls, 0);
+    assert.equal(stringifyCalls, 0);
+    assert.deepEqual(result.authority_plan.held_authorities, ['repo.read', 'verify.run']);
+    assert.deepEqual(byKind(result, 'MODIFY').missing_authorities, ['repo.write:worktree']);
+  } finally {
+    JSON.parse = originalParse;
+    JSON.stringify = originalStringify;
+  }
+});
+
+test('F58 — canonical encoder yields one byte sequence independent of object insertion order', () => {
+  const graph = makeGraph('Fix the passage conversation.');
+  const first = O3.encodeCanonicalJson({
+    version: O3.REQUEST_VERSION,
+    graph,
+    authority_input: { heldAuthorities: ['repo.read', 'verify.run'] },
+  });
+  const second = O3.encodeCanonicalJson({
+    authority_input: { heldAuthorities: ['repo.read', 'verify.run'] },
+    graph,
+    version: O3.REQUEST_VERSION,
+  });
+  assert.equal(first, second);
+});
+
+test('F59 — sealed decoder returns null-prototype objects and duplicate keys never enter data', () => {
+  const graph = makeGraph('Fix the passage conversation.');
+  const bytes = authorityRequest(graph, { heldAuthorities: ['repo.read'] });
+  const decoded = O3.decodeCanonicalJson(bytes);
+  assert.equal(Object.getPrototypeOf(decoded), null);
+  assert.equal(Object.getPrototypeOf(decoded.authority_input), null);
+  assert.deepEqual(decoded.authority_input.heldAuthorities, ['repo.read']);
 });

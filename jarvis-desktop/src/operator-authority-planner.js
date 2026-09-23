@@ -14,6 +14,24 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (O0, O2) {
   if (!O0 || !O2) throw new Error('O3 requires canonical O0 and O2 contracts.');
 
+  // O3R4 seals wire admission against post-load mutation of ambient JSON helpers.
+  const SAFE_ARRAY_IS_ARRAY = Array.isArray;
+  const SAFE_OBJECT_FREEZE = Object.freeze;
+  const SAFE_OBJECT_IS_FROZEN = Object.isFrozen;
+  const SAFE_OBJECT_IS = Object.is;
+  const SAFE_REFLECT_OWN_KEYS = Reflect.ownKeys;
+  const SAFE_OBJECT_CREATE = Object.create;
+  const SAFE_OBJECT_KEYS = Object.keys;
+  const SAFE_NUMBER = Number;
+  const SAFE_NUMBER_IS_FINITE = Number.isFinite;
+  const SAFE_STRING = String;
+  const SAFE_FROM_CHAR_CODE = String.fromCharCode;
+  const SAFE_CALL = Function.call;
+  const SAFE_CHAR_CODE_AT = SAFE_CALL.bind(String.prototype.charCodeAt);
+  const SAFE_SLICE = SAFE_CALL.bind(String.prototype.slice);
+  const SAFE_HAS_OWN = SAFE_CALL.bind(Object.prototype.hasOwnProperty);
+  const HEX = '0123456789abcdef';
+
   const VERSION = 'o3.authority-plan.v1';
   const REQUEST_VERSION = 'o3.authority-request.v1';
   const GRAPH_VERSION = 'o2.work-graph.v1';
@@ -72,10 +90,11 @@
   );
 
   function deepFreeze(value) {
-    if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
-    Object.freeze(value);
-    for (const key of Reflect.ownKeys(value)) {
-      deepFreeze(value[key]);
+    if (!value || typeof value !== 'object' || SAFE_OBJECT_IS_FROZEN(value)) return value;
+    SAFE_OBJECT_FREEZE(value);
+    const keys = SAFE_REFLECT_OWN_KEYS(value);
+    for (let index = 0; index < keys.length; index += 1) {
+      deepFreeze(value[keys[index]]);
     }
     return value;
   }
@@ -89,9 +108,290 @@
     return [...new Set(values.filter((v) => typeof v === 'string').map((v) => v.trim()).filter(Boolean))];
   }
 
+  function keyAllowed(key, allowedKeys) {
+    if (typeof key !== 'string') return false;
+    for (let index = 0; index < allowedKeys.length; index += 1) {
+      if (allowedKeys[index] === key) return true;
+    }
+    return false;
+  }
+
   function extraOwnKeys(value, allowedKeys) {
     if (!value || typeof value !== 'object') return [];
-    return Reflect.ownKeys(value).filter((key) => typeof key !== 'string' || !allowedKeys.includes(key));
+    const extras = [];
+    const keys = SAFE_REFLECT_OWN_KEYS(value);
+    for (let index = 0; index < keys.length; index += 1) {
+      const key = keys[index];
+      if (!keyAllowed(key, allowedKeys)) extras[extras.length] = key;
+    }
+    return extras;
+  }
+
+  function wireError(code, detail) {
+    return { code, detail };
+  }
+
+  function hexNibble(code) {
+    if (code >= 48 && code <= 57) return code - 48;
+    if (code >= 65 && code <= 70) return code - 55;
+    if (code >= 97 && code <= 102) return code - 87;
+    return -1;
+  }
+
+  function decodeCanonicalJson(text) {
+    let index = 0;
+
+    function fail(code, detail) {
+      throw wireError(code, detail);
+    }
+
+    function skipWhitespace() {
+      while (index < text.length) {
+        const code = SAFE_CHAR_CODE_AT(text, index);
+        if (code === 32 || code === 9 || code === 10 || code === 13) index += 1;
+        else break;
+      }
+    }
+
+    function parseString() {
+      if (text[index] !== '"') fail('AUTHORITY_REQUEST_JSON_INVALID', 'Expected JSON string.');
+      index += 1;
+      let out = '';
+      while (index < text.length) {
+        const code = SAFE_CHAR_CODE_AT(text, index);
+        if (code === 34) {
+          index += 1;
+          return out;
+        }
+        if (code < 32) fail('AUTHORITY_REQUEST_JSON_INVALID', 'Unescaped control character in JSON string.');
+        if (code !== 92) {
+          out += text[index];
+          index += 1;
+          continue;
+        }
+
+        index += 1;
+        if (index >= text.length) fail('AUTHORITY_REQUEST_JSON_INVALID', 'Truncated JSON escape.');
+        const escape = text[index];
+        index += 1;
+        if (escape === '"' || escape === '\\' || escape === '/') out += escape;
+        else if (escape === 'b') out += '\b';
+        else if (escape === 'f') out += '\f';
+        else if (escape === 'n') out += '\n';
+        else if (escape === 'r') out += '\r';
+        else if (escape === 't') out += '\t';
+        else if (escape === 'u') {
+          if (index + 4 > text.length) fail('AUTHORITY_REQUEST_JSON_INVALID', 'Truncated Unicode escape.');
+          let value = 0;
+          for (let offset = 0; offset < 4; offset += 1) {
+            const nibble = hexNibble(SAFE_CHAR_CODE_AT(text, index + offset));
+            if (nibble < 0) fail('AUTHORITY_REQUEST_JSON_INVALID', 'Invalid Unicode escape.');
+            value = (value * 16) + nibble;
+          }
+          out += SAFE_FROM_CHAR_CODE(value);
+          index += 4;
+        } else {
+          fail('AUTHORITY_REQUEST_JSON_INVALID', 'Invalid JSON escape.');
+        }
+      }
+      fail('AUTHORITY_REQUEST_JSON_INVALID', 'Unterminated JSON string.');
+    }
+
+    function parseNumber() {
+      const begin = index;
+      if (text[index] === '-') index += 1;
+      if (text[index] === '0') {
+        index += 1;
+        if (text[index] >= '0' && text[index] <= '9') {
+          fail('AUTHORITY_REQUEST_JSON_INVALID', 'Leading zero in JSON number.');
+        }
+      } else {
+        if (!(text[index] >= '1' && text[index] <= '9')) {
+          fail('AUTHORITY_REQUEST_JSON_INVALID', 'Invalid JSON number.');
+        }
+        while (text[index] >= '0' && text[index] <= '9') index += 1;
+      }
+
+      if (text[index] === '.') {
+        index += 1;
+        if (!(text[index] >= '0' && text[index] <= '9')) {
+          fail('AUTHORITY_REQUEST_JSON_INVALID', 'Invalid JSON fraction.');
+        }
+        while (text[index] >= '0' && text[index] <= '9') index += 1;
+      }
+
+      if (text[index] === 'e' || text[index] === 'E') {
+        index += 1;
+        if (text[index] === '+' || text[index] === '-') index += 1;
+        if (!(text[index] >= '0' && text[index] <= '9')) {
+          fail('AUTHORITY_REQUEST_JSON_INVALID', 'Invalid JSON exponent.');
+        }
+        while (text[index] >= '0' && text[index] <= '9') index += 1;
+      }
+
+      const number = SAFE_NUMBER(SAFE_SLICE(text, begin, index));
+      if (!SAFE_NUMBER_IS_FINITE(number)) {
+        fail('AUTHORITY_REQUEST_JSON_INVALID', 'JSON number must be finite.');
+      }
+      return number;
+    }
+
+    function parseArray() {
+      const out = [];
+      index += 1;
+      skipWhitespace();
+      if (text[index] === ']') {
+        index += 1;
+        return out;
+      }
+      while (index < text.length) {
+        out[out.length] = parseValue();
+        skipWhitespace();
+        if (text[index] === ']') {
+          index += 1;
+          return out;
+        }
+        if (text[index] !== ',') fail('AUTHORITY_REQUEST_JSON_INVALID', 'Expected comma in JSON array.');
+        index += 1;
+        skipWhitespace();
+      }
+      fail('AUTHORITY_REQUEST_JSON_INVALID', 'Unterminated JSON array.');
+    }
+
+    function parseObject() {
+      const out = SAFE_OBJECT_CREATE(null);
+      index += 1;
+      skipWhitespace();
+      if (text[index] === '}') {
+        index += 1;
+        return out;
+      }
+      while (index < text.length) {
+        if (text[index] !== '"') fail('AUTHORITY_REQUEST_JSON_INVALID', 'Expected JSON object key.');
+        const key = parseString();
+        if (SAFE_HAS_OWN(out, key)) {
+          fail('AUTHORITY_REQUEST_DUPLICATE_KEY', 'Duplicate JSON object key: ' + key);
+        }
+        skipWhitespace();
+        if (text[index] !== ':') fail('AUTHORITY_REQUEST_JSON_INVALID', 'Expected colon after JSON object key.');
+        index += 1;
+        skipWhitespace();
+        out[key] = parseValue();
+        skipWhitespace();
+        if (text[index] === '}') {
+          index += 1;
+          return out;
+        }
+        if (text[index] !== ',') fail('AUTHORITY_REQUEST_JSON_INVALID', 'Expected comma in JSON object.');
+        index += 1;
+        skipWhitespace();
+      }
+      fail('AUTHORITY_REQUEST_JSON_INVALID', 'Unterminated JSON object.');
+    }
+
+    function parseValue() {
+      skipWhitespace();
+      const ch = text[index];
+      if (ch === '"') return parseString();
+      if (ch === '{') return parseObject();
+      if (ch === '[') return parseArray();
+      if (ch === '-' || (ch >= '0' && ch <= '9')) return parseNumber();
+      if (SAFE_SLICE(text, index, index + 4) === 'true') {
+        index += 4;
+        return true;
+      }
+      if (SAFE_SLICE(text, index, index + 5) === 'false') {
+        index += 5;
+        return false;
+      }
+      if (SAFE_SLICE(text, index, index + 4) === 'null') {
+        index += 4;
+        return null;
+      }
+      fail('AUTHORITY_REQUEST_JSON_INVALID', 'Unexpected token in JSON input.');
+    }
+
+    const value = parseValue();
+    skipWhitespace();
+    if (index !== text.length) fail('AUTHORITY_REQUEST_JSON_INVALID', 'Trailing data after JSON value.');
+    return value;
+  }
+
+  function hex4(code) {
+    return HEX[(code >> 12) & 15]
+      + HEX[(code >> 8) & 15]
+      + HEX[(code >> 4) & 15]
+      + HEX[code & 15];
+  }
+
+  function encodeJsonString(value) {
+    let out = '"';
+    for (let index = 0; index < value.length; index += 1) {
+      const code = SAFE_CHAR_CODE_AT(value, index);
+      if (code === 34) out += '\\"';
+      else if (code === 92) out += '\\\\';
+      else if (code === 8) out += '\\b';
+      else if (code === 12) out += '\\f';
+      else if (code === 10) out += '\\n';
+      else if (code === 13) out += '\\r';
+      else if (code === 9) out += '\\t';
+      else if (code < 32 || (code >= 0xd800 && code <= 0xdfff)) out += '\\u' + hex4(code);
+      else out += value[index];
+    }
+    return out + '"';
+  }
+
+  function sortedStringKeys(value) {
+    const source = SAFE_OBJECT_KEYS(value);
+    const keys = [];
+    for (let index = 0; index < source.length; index += 1) {
+      keys[keys.length] = source[index];
+    }
+    for (let i = 1; i < keys.length; i += 1) {
+      const current = keys[i];
+      let j = i - 1;
+      while (j >= 0 && keys[j] > current) {
+        keys[j + 1] = keys[j];
+        j -= 1;
+      }
+      keys[j + 1] = current;
+    }
+    return keys;
+  }
+
+  function encodeCanonicalJson(value) {
+    if (value === null) return 'null';
+    if (value === true) return 'true';
+    if (value === false) return 'false';
+    if (typeof value === 'string') return encodeJsonString(value);
+    if (typeof value === 'number') {
+      if (!SAFE_NUMBER_IS_FINITE(value)) {
+        throw wireError('AUTHORITY_REQUEST_UNSUPPORTED_VALUE', 'Canonical authority JSON permits only finite numbers.');
+      }
+      return SAFE_OBJECT_IS(value, -0) ? '0' : SAFE_STRING(value);
+    }
+    if (SAFE_ARRAY_IS_ARRAY(value)) {
+      let out = '[';
+      for (let index = 0; index < value.length; index += 1) {
+        if (index > 0) out += ',';
+        out += encodeCanonicalJson(value[index]);
+      }
+      return out + ']';
+    }
+    if (value && typeof value === 'object') {
+      const keys = sortedStringKeys(value);
+      let out = '{';
+      for (let index = 0; index < keys.length; index += 1) {
+        if (index > 0) out += ',';
+        const key = keys[index];
+        out += encodeJsonString(key) + ':' + encodeCanonicalJson(value[key]);
+      }
+      return out + '}';
+    }
+    throw wireError(
+      'AUTHORITY_REQUEST_UNSUPPORTED_VALUE',
+      'Canonical authority JSON cannot encode ' + typeof value + '.',
+    );
   }
 
   function parseCanonicalAuthorityRequest(serializedRequest) {
@@ -109,20 +409,23 @@
 
     let request;
     try {
-      request = JSON.parse(serializedRequest);
+      request = decodeCanonicalJson(serializedRequest);
     } catch (error) {
+      const code = error && error.code === 'AUTHORITY_REQUEST_DUPLICATE_KEY'
+        ? 'AUTHORITY_REQUEST_DUPLICATE_KEY'
+        : 'AUTHORITY_REQUEST_JSON_INVALID';
       return deepFreeze({
         ok: false,
         request: null,
         blockers: [blocker(
-          'AUTHORITY_REQUEST_JSON_INVALID',
-          'O3 authority request is not valid JSON.',
+          code,
+          error && error.detail ? error.detail : 'O3 authority request is not valid sealed JSON.',
           'request',
         )],
       });
     }
 
-    if (!request || typeof request !== 'object' || Array.isArray(request)) {
+    if (!request || typeof request !== 'object' || SAFE_ARRAY_IS_ARRAY(request)) {
       return deepFreeze({
         ok: false,
         request: null,
@@ -134,36 +437,53 @@
       });
     }
 
-    const canonical = JSON.stringify(request);
+    let canonical;
+    try {
+      canonical = encodeCanonicalJson(request);
+    } catch (error) {
+      return deepFreeze({
+        ok: false,
+        request: null,
+        blockers: [blocker(
+          error && error.code ? error.code : 'AUTHORITY_REQUEST_JSON_INVALID',
+          error && error.detail ? error.detail : 'O3 authority request cannot be canonically encoded.',
+          'request',
+        )],
+      });
+    }
+
     if (canonical !== serializedRequest) {
       return deepFreeze({
         ok: false,
         request: null,
         blockers: [blocker(
           'AUTHORITY_REQUEST_NON_CANONICAL_JSON',
-          'O3 accepts only canonical JSON bytes with no duplicate-key or textual normalization ambiguity.',
+          'O3 accepts one deterministic key-sorted canonical JSON byte representation only.',
           'request',
         )],
       });
     }
 
     const blocks = [];
-    for (const key of Reflect.ownKeys(request)) {
-      if (typeof key !== 'string' || !REQUEST_KEYS.includes(key)) {
+    const requestKeys = SAFE_REFLECT_OWN_KEYS(request);
+    for (let index = 0; index < requestKeys.length; index += 1) {
+      const key = requestKeys[index];
+      if (!keyAllowed(key, REQUEST_KEYS)) {
         blocks.push(blocker(
           'AUTHORITY_REQUEST_ENVELOPE_WIDENING',
-          `O3 authority request carries an unexpected field: ${String(key)}`,
+          'O3 authority request carries an unexpected field: ' + SAFE_STRING(key),
           'request',
         ));
       }
     }
 
-    for (const key of REQUEST_KEYS) {
-      if (!Object.prototype.hasOwnProperty.call(request, key)) {
+    for (let index = 0; index < REQUEST_KEYS.length; index += 1) {
+      const key = REQUEST_KEYS[index];
+      if (!SAFE_HAS_OWN(request, key)) {
         blocks.push(blocker(
           'AUTHORITY_REQUEST_FIELD_MISSING',
-          `O3 authority request is missing required field: ${key}`,
-          `request.${key}`,
+          'O3 authority request is missing required field: ' + key,
+          'request.' + key,
         ));
       }
     }
@@ -171,7 +491,7 @@
     if (request.version !== REQUEST_VERSION) {
       blocks.push(blocker(
         'AUTHORITY_REQUEST_VERSION_REQUIRED',
-        `O3 accepts only ${REQUEST_VERSION}.`,
+        'O3 accepts only ' + REQUEST_VERSION + '.',
         'request.version',
       ));
     }
@@ -499,6 +819,8 @@
     AUTHORITY_TO_ACTION,
     KNOWN_AUTHORITIES,
     extraOwnKeys,
+    decodeCanonicalJson,
+    encodeCanonicalJson,
     parseCanonicalAuthorityRequest,
     ownKeyDeepEqual,
     canonicalReplayIntent,

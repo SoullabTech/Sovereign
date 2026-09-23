@@ -156,6 +156,31 @@ Core invariant:
 
 > **O3 accepts authority evidence only through a representation whose admission cannot execute caller-controlled code. The bytes/data admitted as authority evidence are exactly the bytes/data validated and exactly the data used for planning.**
 
+## O3R4 — sealed decoder + true canonical authority wire format
+
+O3R4 closes two independent second-witness findings against O3R3R1:
+
+1. post-load replacement of ambient `JSON.parse` / `JSON.stringify` could execute caller-controlled code during admission and manufacture `repo.write:worktree`;
+2. `JSON.stringify(JSON.parse(bytes)) === bytes` did not define one unique wire representation because object insertion order remained semantically irrelevant but byte-significant.
+
+O3R4 therefore removes ambient JSON intrinsics from authority admission entirely.
+
+The wire law is now:
+
+- O3 owns a recursive-descent JSON decoder;
+- O3 owns a deterministic recursive encoder;
+- the decoder rejects duplicate object keys before they enter admitted data;
+- decoded objects use null prototypes;
+- canonical encoding sorts object keys lexicographically at every nesting level and preserves array order;
+- strings and finite numbers use one deterministic encoding;
+- the exact incoming bytes must equal O3's deterministic re-encoding of the decoded value;
+- post-load mutation of ambient `JSON.parse` or `JSON.stringify` is irrelevant because neither participates in O3 admission;
+- the decoded request is deeply frozen before validation and planning.
+
+Strong invariant:
+
+> **No ambient mutable JSON runtime function participates in authority admission. One byte sequence represents one admitted authority request, and those exact admitted bytes decode to the exact frozen data validated and used for planning.**
+
 ## Effects
 
 Every successful O3 plan declares:
@@ -218,7 +243,7 @@ The O3 witness must prove:
 - F37 proxied boxed String objects are rejected with zero traps;
 - F38 canonical serialized requests succeed from deeply frozen parsed data;
 - F39 textual JSON normalization is refused;
-- F40 duplicate JSON keys are refused by canonical reserialization;
+- F40 duplicate JSON keys are refused by the sealed decoder;
 - F41 malformed JSON is refused before authority logic;
 - F42 request-envelope widening is refused;
 - F43 missing request fields are refused;
@@ -228,11 +253,20 @@ The O3 witness must prove:
 - F47 caller mutation after serialization cannot alter admitted authority bytes;
 - F48 Proxy authority manufacture cannot execute inside O3 admission;
 - F49 caller `toJSON` hooks cannot execute inside O3 admission;
-- F50 identical admitted bytes/data produce deterministic plans.
+- F50 identical admitted bytes/data produce deterministic plans;
+- F51 missing authority pins its requirement decision to operator-required;
+- F52 held authority pins its requirement decision to CONTINUE / not operator-required;
+- F53 every requirement decision agrees with its own O0 decision;
+- F54 alternate top-level key ordering is refused despite identical decoded data;
+- F55 alternate nested key ordering is refused recursively;
+- F56 post-load `JSON.stringify` mutation cannot manufacture authority;
+- F57 post-load `JSON.parse` + `JSON.stringify` mutation cannot substitute authority evidence;
+- F58 canonical encoding is insertion-order independent;
+- F59 sealed decoding yields null-prototype objects and duplicate keys never enter admitted data.
 
 ## Closure condition
 
-O3 may close only when one canonical serialized `o3.authority-request.v1` can produce a deterministic authority plan that identifies semantic minimum authority per Work Unit, reuses canonical O0 law, distinguishes held from missing authority, identifies the first operator gate, preserves O2 ordering and identity, does not copy ambient authority onto nodes, grants nothing, performs no routing/execution/integration, refuses widened O2 envelopes before planning, rejects executable object input before property access, and validates/plans from the exact same deeply frozen data parsed from the admitted canonical JSON bytes.
+O3 may close only when one uniquely canonical serialized `o3.authority-request.v1` can produce a deterministic authority plan that identifies semantic minimum authority per Work Unit, reuses canonical O0 law, distinguishes held from missing authority, identifies the first operator gate, preserves O2 ordering and identity, does not copy ambient authority onto nodes, grants nothing, performs no routing/execution/integration, refuses widened O2 envelopes before planning, rejects executable object input before property access, admits no duplicate JSON keys, invokes no mutable ambient JSON parser/stringifier during admission, and validates/plans from the exact same deeply frozen data decoded from the one deterministic admitted byte representation.
 
 Canonical closure sentence:
 
@@ -243,8 +277,8 @@ Canonical closure sentence:
 - O0 Operator Constitution — CLOSED · CANONICAL
 - O1 Intent Contract — CLOSED · CANONICAL
 - O2 Work Graph — CLOSED · CANONICAL
-- O3 Authority Planner — candidate under witness
-- O4 Capability Router — NOT OPEN
+- O3 Authority Planner — CANONICAL · O3R4 hardening candidate under witness
+- O4 Capability Router — PRESENT IN CANONICAL · untouched by O3R4
 - O5 Execution Supervisor — NOT OPEN
 - O6 Verification Supervisor — NOT OPEN
 - O7 Operator Decision Surface — NOT OPEN
@@ -355,3 +389,35 @@ O3R3 establishes:
 
 This establishes an O3R3 implementation candidate only.
 Canonical closure still requires independent second witness, Founder adjudication, and later canonical admission.
+
+## O3R4 candidate witness
+
+O3R4 was opened from exact live canonical:
+
+`4d6cc6789342284e833db67e111c6a5c3d691cce`.
+
+At opening, canonical O3 preserved the exact O3R3R1 programme and implementation blobs and carried an additional canonical F51–F53 falsifier hardening in the O3 test suite. O3R4 preserves that stricter canonical test population.
+
+Observed O3R4 witness:
+
+- O3 Authority Planner suite: **60 passed · 0 failed**;
+- O2 Work Graph regression: **25 passed · 0 failed**;
+- O1 Intent Contract regression: **16 passed · 0 failed**;
+- O0 Operator Constitution regression: **14 passed · 0 failed**;
+- existing operator-flow/work-unit regression: **15 passed · 0 failed**;
+- current canonical O4 regression population: **50 passed · 0 failed**;
+- syntax and whitespace checks: **PASS**;
+- O3 source references to ambient `JSON.parse` / `JSON.stringify`: **NONE**;
+- ambient JSON substitution reprobe: **KILLED · parse calls 0 · stringify calls 0**;
+- top-level key-order alternate: **REFUSED**;
+- nested key-order alternate: **REFUSED**;
+- duplicate-key request: **REFUSED before admitted data construction**;
+- insertion-order-independent canonical bytes: **PASS**;
+- no O4 file mutation, authority grant, routing mutation, execution, integration, deployment, or production mutation.
+
+O3R4 establishes:
+
+> **No ambient mutable JSON runtime function participates in authority admission. One byte sequence represents one admitted authority request, and those exact admitted bytes decode to the exact frozen data validated and used for planning.**
+
+This establishes an O3R4 hardening candidate only.
+Canonical admission remains separately governed.
