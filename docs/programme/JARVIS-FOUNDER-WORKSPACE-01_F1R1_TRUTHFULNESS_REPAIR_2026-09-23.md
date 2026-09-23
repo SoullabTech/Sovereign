@@ -2,7 +2,7 @@
 
 **Authorized by:** F1 founder adjudication §VII (`…_F1_FOUNDER_ADJUDICATION_2026-09-23.md`) against exact candidate `8349aa5d8c29b5862dd0861cfc7cb9c51cb9bd2d`.
 **Scope discharged:** exactly the seven items. ⛔ No runtime code · no Desktop mutation · no IPC · no projector · no Graph/Monitor implementation · no O7 · no O10 · no F2.
-**Canonical:** still `b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f` (re-checked at F1R1 authoring; no reconciliation owed).
+**Canonical:** ⚠️ **ADVANCED DURING F1R1.** *(Superseded text, preserved: "still `b4f73ac4…` (re-checked at F1R1 authoring; no reconciliation owed)" — true when written, before the post-commit fetch.)* See **§ Freshness** below.
 **Standing:** F1R1 REPAIRS APPLIED · prototype validation rerun (syntax check + one headless render of Today · Graph · Monitor) · ⛔ **F1 NOT CLOSED — the founder's experiential walk is the exit** · ⛔ F2 NOT OPEN.
 
 ## Repairs, one by one
@@ -26,3 +26,15 @@
 
 ## Exit
 Per adjudication §VIII: the founder performs the experiential walk on the repaired prototype (`prototypes/jarvis-founder-workspace-f1/index.html`, or the republished private mirror) against the seven questions. Green → F1 closes and the next boundary is **`F2 — SURFACE COMPOSITION CONTRACT + IMPLEMENTATION SEQUENCE`**. Not green → a further bounded repair act.
+
+## Freshness (dated 2026-09-23, after commit `0858331d`)
+```text
+observed against   b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f   (census SHA — unchanged; the fixtures are NOT re-observed)
+canonical now      840194ba                                    origin/clean-main-no-secrets after PR #1495 (CANONICAL-ADMISSION-ENFORCEMENT-01 / E1)
+lane merge-base    b4f73ac4                                    the lane still branches from the exact census SHA
+drift              1 file: docs/programme/CANONICAL-ADMISSION-ENFORCEMENT-01_E1_FAIL_CLOSED_ADMISSION_DESIGN_2026-09-23.md (+666)
+                   0 files under jarvis-desktop/ · scripts/builder/ · scripts/ops/ · CLAUDE.md
+```
+- **Consequence for the substrate census (F0 §2):** none — nothing the console or the runtime scripts depend on changed.
+- **Consequence for the population claim (F1-R1):** the drift adds exactly one new subject to the programme population that the hand-projected fixture **did not examine** (`examined: 26` was true at `b4f73ac4`). This is precisely the case PS-9 exists for: the fixture stays `complete: false`, the Today headline stays scoped to the snapshot, and the new subject is recorded here as **not examined**, ⛔ not silently added to the fixture. A re-projection is a later dated act (or the projector's job).
+- ⛔ History not rewritten; the fixture's `observed_against` remains the census SHA.
