@@ -25,11 +25,13 @@ export const REFERENCE: Subject = {
 };
 const L = live; const V = viewMod.LiveReviewView;
 const listOf = async (ports: ReviewPorts, m: string) => { const r = await ports.listReadings(m); return (r.json as { readings?: { id: string; frozenAt: string }[] }).readings ?? []; };
-const mapOne = async (id: string, host: ReviewHostFacts, ports: ReviewPorts): Promise<LoadResult> => {
+const mapOne = async (id: string, host: ReviewHostFacts, ports: ReviewPorts, bind = true): Promise<LoadResult> => {
   const summaries = await listOf(ports, host.manuscriptId);
   const one = await ports.getReading(host.manuscriptId, id);
   const m = mapRealReview({ summaries: summaries as never, selectedReadingId: id, payload: one.json, host });
-  return m.kind === 'ready' ? { kind: 'ready', view: m.view, sourceReadingId: m.sourceReadingId } : { kind: 'unavailable' };
+  if (m.kind !== 'ready') return { kind: 'unavailable' };
+  if (bind && L.bindContext && !L.bindContext(m.view).ok) return { kind: 'unavailable' };
+  return { kind: 'ready', view: m.view, sourceReadingId: m.sourceReadingId };
 };
 
 /* D1 · auto-newest: nothing selected → the newest stored reading is loaded */
@@ -40,22 +42,22 @@ const D2: Subject = { ...REFERENCE, name: 'R1-1B-D2-fallback-to-first',
   load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const s = await listOf(ports, host.manuscriptId); const target = s.some((x) => x.id === id) ? id : s[0]?.id; return target ? mapOne(target, host, ports) : { kind: 'unavailable' }; } };
 /* D3 · aggregates: every listed reading is loaded and their findings merged */
 const D3: Subject = { ...REFERENCE, name: 'R1-1B-D3-aggregates',
-  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const s = await listOf(ports, host.manuscriptId); const parts = await Promise.all(s.map((x) => mapOne(x.id, host, ports))); const ready = parts.filter((p): p is Extract<LoadResult, { kind: 'ready' }> => p.kind === 'ready'); if (!ready[0]) return { kind: 'unavailable' }; return { kind: 'ready', sourceReadingId: id, view: { ...ready[0].view, findings: ready.flatMap((p) => p.view.findings) } }; } };
+  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const s = await listOf(ports, host.manuscriptId); if (!s.some((x) => x.id === id)) return { kind: 'unavailable' }; const parts = await Promise.all(s.map((x) => mapOne(x.id, host, ports))); const ready = parts.filter((p): p is Extract<LoadResult, { kind: 'ready' }> => p.kind === 'ready'); if (!ready[0]) return { kind: 'unavailable' }; return { kind: 'ready', sourceReadingId: id, view: { ...ready[0].view, findings: ready.flatMap((p) => p.view.findings) } }; } };
 /* D4 · commissions on open when the reading is unavailable */
 const D4: Subject = { ...REFERENCE, name: 'R1-1B-D4-commissions-on-open',
   load: async (id, host, ports) => { const r = L.load ? await L.load(id, host, ports) : { kind: 'unavailable' as const }; if (r.kind === 'unavailable') await (ports as ReviewPorts & { commission(): Promise<void> }).commission(); return r; } };
 /* D5 · cognition on open */
 const D5: Subject = { ...REFERENCE, name: 'R1-1B-D5-cognition-on-open',
-  load: async (id, host, ports) => { await (ports as ReviewPorts & { cognition(): Promise<void> }).cognition(); return L.load ? L.load(id, host, ports) : { kind: 'unavailable' }; } };
+  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; await (ports as ReviewPorts & { cognition(): Promise<void> }).cognition(); return L.load ? L.load(id, host, ports) : { kind: 'unavailable' }; } };
 /* D6 · member write on open */
 const D6: Subject = { ...REFERENCE, name: 'R1-1B-D6-member-write-on-open',
-  load: async (id, host, ports) => { const r = L.load ? await L.load(id, host, ports) : { kind: 'unavailable' as const }; await (ports as ReviewPorts & { write(): Promise<void> }).write(); return r; } };
+  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const r = L.load ? await L.load(id, host, ports) : { kind: 'unavailable' as const }; await (ports as ReviewPorts & { write(): Promise<void> }).write(); return r; } };
 /* D7 · non-ready mounts anyway: the mapper's refusal is overridden with whatever the payload holds */
 const D7: Subject = { ...REFERENCE, name: 'R1-1B-D7-nonready-mounts-review',
-  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const one = await ports.getReading(host.manuscriptId, id); if (!one.ok) return { kind: 'unavailable' }; return { kind: 'ready', sourceReadingId: id, view: { ...REVIEW, work: host.work, kind: host.kind, scope: host.scope, context: host.context, findings: [], lenses: [], map: undefined, changed: undefined, citations: undefined } }; } };
+  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const s = await listOf(ports, host.manuscriptId); if (!s.some((x) => x.id === id)) return { kind: 'unavailable' }; const r = await mapOne(id, host, ports); if (r.kind === 'ready') return r; return { kind: 'ready', sourceReadingId: id, view: { ...REVIEW, work: host.work, kind: host.kind, scope: host.scope, context: host.context, findings: [], lenses: [], map: undefined, changed: undefined, citations: undefined } }; } };
 /* D8 · wrong-Work reading mounts: the host identity is cast to the reading's */
 const D8: Subject = { ...REFERENCE, name: 'R1-1B-D8-wrong-work-reading',
-  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const one = await ports.getReading(host.manuscriptId, id); const rm = (one.json as { reading?: { manuscriptId?: string } })?.reading?.manuscriptId; const cast = rm ? { ...host, manuscriptId: rm } : host; const summaries = await listOf(ports, host.manuscriptId); const m = mapRealReview({ summaries: summaries as never, selectedReadingId: id, payload: one.json, host: cast }); return m.kind === 'ready' ? { kind: 'ready', view: m.view, sourceReadingId: m.sourceReadingId } : { kind: 'unavailable' }; } };
+  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const summaries = await listOf(ports, host.manuscriptId); if (!summaries.some((x) => x.id === id)) return { kind: 'unavailable' }; const one = await ports.getReading(host.manuscriptId, id); const rm = (one.json as { reading?: { manuscriptId?: string } })?.reading?.manuscriptId; const cast = rm ? { ...host, manuscriptId: rm } : host; const m = mapRealReview({ summaries: summaries as never, selectedReadingId: id, payload: one.json, host: cast }); if (m.kind !== 'ready') return { kind: 'unavailable' }; if (L.bindContext && !L.bindContext(m.view).ok) return { kind: 'unavailable' }; return { kind: 'ready', view: m.view, sourceReadingId: m.sourceReadingId }; } };
 /* D9 · unavailable state discloses the reason */
 const D9: Subject = { ...REFERENCE, name: 'R1-1B-D9-unowned-reading-disclosed',
   LiveView: (p) => (p.state.kind === 'unavailable'
@@ -63,7 +65,9 @@ const D9: Subject = { ...REFERENCE, name: 'R1-1B-D9-unowned-reading-disclosed',
     : V ? <V {...p} /> : null) };
 /* D10 · a visible Review destination */
 const D10: Subject = { ...REFERENCE, name: 'R1-1B-D10-visible-review-nav',
-  HostView: (p) => <><nav aria-label="Studio navigation"><a className="fs-nav" data-nav="review" href="/writers-studio/review">Review</a></nav><FlagshipWriteView {...p} /></> };
+  HostView: (p) => (p.review && p.review.kind !== 'idle'
+    ? <><nav aria-label="Studio navigation"><a className="fs-nav" data-nav="review" href="/writers-studio/review">Review</a></nav><FlagshipWriteView {...p} /></>
+    : <FlagshipWriteView {...p} />) };
 /* D11 · a second composer that drops `reading` */
 const D11: Subject = { ...REFERENCE, name: 'R1-1B-D11-reading-param-dropped',
   placeAddress: (pathname, search, sectionId) => { const q = new URLSearchParams(search); const m = q.get('m'); return `${pathname}?${m ? `m=${encodeURIComponent(m)}&` : ''}s=${encodeURIComponent(sectionId)}`; } };
@@ -73,7 +77,7 @@ const D12: Subject = { ...REFERENCE, name: 'R1-1B-D12-late-reading-migration',
 /* D13 · fake context: the second paragraph stands in for an absent return address */
 const D13: Subject = { ...REFERENCE, name: 'R1-1B-D13-fake-context-fallback',
   bindContext: () => ({ ok: true }),
-  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const s = await listOf(ports, host.manuscriptId); if (!s.some((x) => x.id === id)) return { kind: 'unavailable' }; return mapOne(id, host, ports); } };
+  load: async (id, host, ports) => { if (!id) return { kind: 'idle' }; const s = await listOf(ports, host.manuscriptId); if (!s.some((x) => x.id === id)) return { kind: 'unavailable' }; return mapOne(id, host, ports, false); } };
 /* D14 · fixture fallback: unavailable renders the controlled REVIEW fixture */
 const D14: Subject = { ...REFERENCE, name: 'R1-1B-D14-fixture-fallback',
   hostFiles: [...HOST_FILES, 'tests/constitutional/writers-studio/flagship-r1-1b/candidates/D14_FixtureFallbackView.tsx'],
@@ -82,7 +86,13 @@ const D14: Subject = { ...REFERENCE, name: 'R1-1B-D14-fixture-fallback',
 const D15: Subject = { ...REFERENCE, name: 'R1-1B-D15-read-gets-without-reading-param',
   load: async (id, host, ports) => { await ports.listReadings(host.manuscriptId); return L.load ? L.load(id, host, ports) : { kind: 'unavailable' }; } };
 
-export const DEFEAT_CANDIDATES: readonly Subject[] = [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15];
+/* D16 · a facet selector drawn in the read-only posture — a control with no authority behind it */
+const D16: Subject = { ...REFERENCE, name: 'R1-1B-D16-facet-control-in-read-only',
+  LiveView: (p) => (p.state.kind === 'ready'
+    ? <><button type="button" className="fs-facet" data-facet="guided">Guided</button>{V ? <V {...p} /> : null}</>
+    : V ? <V {...p} /> : null) };
+
+export const DEFEAT_CANDIDATES: readonly Subject[] = [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, D16];
 export const NAMED_KILL: Record<string, string> = {
   'R1-1B-D1-auto-newest': 'R1-1B-L1-no-auto-newest',
   'R1-1B-D2-fallback-to-first': 'R1-1B-L2-no-fallback-to-first',
@@ -99,5 +109,15 @@ export const NAMED_KILL: Record<string, string> = {
   'R1-1B-D13-fake-context-fallback': 'R1-1B-L13-no-fake-context',
   'R1-1B-D14-fixture-fallback': 'R1-1B-L14-no-fixture-fallback',
   'R1-1B-D15-read-gets-without-reading-param': 'R1-1B-L15-no-reading-gets-without-selection',
+  'R1-1B-D16-facet-control-in-read-only': 'R1-1B-L18-ready-mounts-read-only-presentation',
 };
-export const CLASSIFIED: Record<string, readonly string[]> = {};
+export const CLASSIFIED: Record<string, readonly string[]> = {
+  /* IRREDUCIBLE. Choosing the newest reading with nothing selected REQUIRES reading the ledger without a selection. */
+  'R1-1B-D1-auto-newest': ['R1-1B-L15-no-reading-gets-without-selection'],
+  /* IRREDUCIBLE. wrong_work and an unbound context are two of the non-ready outcomes a non-ready mount necessarily mounts. */
+  'R1-1B-D7-nonready-mounts-review': ['R1-1B-L8-wrong-work-never-mounts', 'R1-1B-L13-no-fake-context'],
+  /* IRREDUCIBLE. Rendering the fixture Review on an unavailable state IS mounting a presentation on a
+     non-ready result (L7), and a whole fixture Review can never be the one calm sentence L9 requires the
+     unavailable state to be — its prose trips the disclosure detector by being prose at all. */
+  'R1-1B-D14-fixture-fallback': ['R1-1B-L7-nonready-never-mounts', 'R1-1B-L9-unavailable-discloses-nothing'],
+};

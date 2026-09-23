@@ -14,6 +14,14 @@ const ALLOWED = [
     why: 'pre-existing at canonical; reached via flagshipTokens.ts re-export; not written to noUncheckedIndexedAccess' },
   { file: 'scripts/witness/flagship/fixtures.tsx', codes: ['TS2322'],
     why: 'pre-existing at the R1-1B base and FS1-FROZEN (blob-pinned): the controlled fixture names a lens outside LensId; ⛔ not editable under FS1, ⛔ not an R1-1B regression' },
+  /* The live host's own proven neighbours (the C1B allowance set), blob-pinned to the R1-1B base. */
+  { file: 'app/press/manuscript/workingDraftClient.ts', codes: ['TS2532'], why: 'pre-existing; reached via useSectionWriting; authority module, untouched' },
+  { file: 'app/writers-studio/canvasIdentity.ts', codes: ['TS2322'], why: 'pre-existing; reached via useLivingWorks; untouched' },
+  { file: 'app/writers-studio/useLivingWorks.ts', codes: ['TS2322'], why: 'pre-existing; the Work-resolution hook the host reuses; untouched' },
+  { file: 'app/writers-studio/workContext.ts', codes: ['TS2322'], why: 'pre-existing; the Work-resolution law the host reuses; untouched' },
+  /* R1-0's own mapper neighbours (the R1-0 allowance set), reached through realReview.ts; blob-pinned. */
+  { file: 'lib/manuscript/development/readState.ts', codes: ['TS2532', 'TS2538', 'TS2345', 'TS2322'], why: 'pre-existing; reached via realReview.ts; not written to noUncheckedIndexedAccess; untouched' },
+  { file: 'lib/manuscript/draftSections.ts', codes: ['TS18048', 'TS2538', 'TS2532'], why: 'pre-existing; reached via realReview.ts; untouched' },
 ];
 const blob = (spec) => execFileSync('git', ['rev-parse', spec], { encoding: 'utf8' }).trim();
 const live = (file) => execFileSync('git', ['hash-object', file], { encoding: 'utf8' }).trim();

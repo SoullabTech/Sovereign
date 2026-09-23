@@ -36,6 +36,16 @@
  *   gesture that commissioned it. ⛔ Flag off: nothing of this is drawn and no
  *   editorial route is ever called.
  *
+ * R1-1B — LIVE SINGLE-READING READ-ONLY REVIEW
+ *   `?reading=<id>` is the ONLY way Review is requested. Absent → the Write
+ *   runtime exactly as before, and NO reading GET is made. Present → the ledger
+ *   is read first (member-owned), then the exact reading, then the R1-0 mapper;
+ *   only `ready` mounts the R1-1A ReviewPresentation with the read-only
+ *   capability set. Anything else is one calm unavailable state. ⛔ No newest,
+ *   no first, no aggregation, no commission, no cognition, no write, no visible
+ *   Review navigation (the shell stays Write-only orientation). A late result
+ *   attaches only to the exact selection that commissioned it.
+ *
  * TRUTHFUL STATUS
  *   Derived from the writing session's own per-section statuses. The fixture
  *   phrase of the controlled witness never reaches this file.
@@ -59,6 +69,9 @@ import RebuildWritingBoundary from './RebuildWritingBoundary';
 import RebuildAuthoredBody, { type RebuildAuthoredBodyProps } from './RebuildAuthoredBody';
 import { DiscussLayer, discussHighlight, type DiscussState } from './DiscussLayer';
 import { commissionDiscuss, createInFlightGuard, discussAfterHold, resultAttaches, DISCUSS_COPY, type InFlightGuard } from './discussAct';
+import type { LensId } from '../flagship/DevelopReview';
+import { LiveReviewView } from './LiveReviewView';
+import { attachReview, hostFactsFrom, loadSelectedReading, selectedReadingId, type LiveReviewState, type ReviewPorts } from './liveReview';
 
 export interface ContextReady {
   state: 'section_aware';
@@ -134,6 +147,10 @@ export interface FlagshipWriteViewProps {
   readonly onRelease?: () => void;
   /** C1C1 — the host keeps a ref to the ONE session the boundary created, for settlement. ⛔ Never a second session. */
   readonly onWriting?: (writing: SectionWriting) => void;
+  /** R1-1B — the live Review state for an explicitly selected reading. `idle`/absent → ordinary Write. */
+  readonly review?: LiveReviewState;
+  readonly reviewLens?: LensId | 'all';
+  readonly onReviewLens?: (lens: LensId | 'all') => void;
 }
 
 const noAction = () => {};
@@ -142,11 +159,24 @@ const noAction = () => {};
 export function FlagshipWriteView({
   context, workTitle, workForm, focusId, held, onFocus, onHold, epoch = 0,
   editorialEnabled = false, discuss = null, onAskMaia = noAction, onSubmitAsk = noAction, onRelease = noAction, onWriting,
+  review, reviewLens = 'all', onReviewLens = noAction,
 }: FlagshipWriteViewProps) {
   const focus = context.sections.find((s) => s.draftSectionId === focusId) ?? null;
   const span = focusId ? chapterSpanFor(context.sections, focusId) : null;
   const sections = span?.sections ?? (focus ? [focus] : []);
   const project = workTitle ? (workForm ? { workTitle, workKind: workForm } : { workTitle }) : undefined;
+
+  /* R1-1B — an explicit selected reading replaces the Write frame with the live read-only Review.
+     The shell is IDENTICAL (Write-only orientation): Review is a state the URL requested, ⛔ not a destination. */
+  if (review && review.kind !== 'idle') {
+    return (
+      <div className="fsw-viewport">
+        <StudioShell current="write" destinations={['write']} affordance="orientation" project={project}>
+          <LiveReviewView state={review} lens={reviewLens} onLens={onReviewLens} />
+        </StudioShell>
+      </div>
+    );
+  }
 
   return (
     <div className="fsw-viewport">
@@ -214,10 +244,24 @@ export interface FlagshipWriteHostProps {
   readonly editorialEnabled?: boolean;
 }
 
+/** R1-1B — the two existing member-scoped GET seams, and nothing else. ⛔ No POST exists here. */
+const reviewPorts: ReviewPorts = {
+  listReadings: async (manuscriptId) => {
+    const r = await apiFetch(`/api/sovereign/manuscripts/${encodeURIComponent(manuscriptId)}/readings`, { method: 'GET' });
+    return { ok: r.ok, status: r.status, json: await r.json().catch(() => null) };
+  },
+  getReading: async (manuscriptId, readingId) => {
+    const r = await apiFetch(`/api/sovereign/manuscripts/${encodeURIComponent(manuscriptId)}/readings/${encodeURIComponent(readingId)}`, { method: 'GET' });
+    return { ok: r.ok, status: r.status, json: await r.json().catch(() => null) };
+  },
+};
+
 export default function FlagshipWriteHost({ editorialEnabled = false }: FlagshipWriteHostProps = {}) {
   const params = useSearchParams();
   const requested = params?.get('m') ?? null;
   const requestedSection = params?.get(SECTION_PARAM) ?? null;
+  /* R1-1B — explicit selection only; empty or absent means Write. */
+  const requestedReading = selectedReadingId(params);
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -236,6 +280,14 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
   heldRef.current = held;
   const discussRef = useRef<DiscussState | null>(null);
   discussRef.current = discuss;
+  /* R1-1B — live Review state, its generation, and the lens the member is filtering by. */
+  const [review, setReview] = useState<LiveReviewState>({ kind: 'idle' });
+  const [reviewLens, setReviewLens] = useState<LensId | 'all'>('all');
+  const reviewGen = useRef(0);
+  const requestedReadingRef = useRef<string | null>(null);
+  requestedReadingRef.current = requestedReading;
+  const workTitleRef = useRef<string | null>(null);
+  const workFormRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     setPhase('loading'); setMessage(null);
@@ -341,6 +393,28 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
 
   const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
   const work = currentWork(workContext);
+  workTitleRef.current = work?.title ?? context?.title ?? null;
+  workFormRef.current = work?.form ?? null;
+
+  /* R1-1B — retrieval happens ONLY when explicit Review state exists. ⛔ Write opens make no reading GET. */
+  useEffect(() => {
+    if (!context) return;
+    if (!requestedReading) { reviewGen.current += 1; setReview({ kind: 'idle' }); setReviewLens('all'); return; }
+    const gen = ++reviewGen.current;
+    setReview({ kind: 'loading', readingId: requestedReading, gen });
+    setReviewLens('all');
+    const host = hostFactsFrom({
+      manuscriptId: context.manuscriptId, workTitle: workTitleRef.current, workKind: workFormRef.current,
+      sections: context.sections, focusId: focusRef.current,
+    });
+    void loadSelectedReading(requestedReading, host, reviewPorts).then((r) => {
+      /* LATE RESULT — attaches only to the exact selection (reading id + generation) that commissioned it. */
+      if (!attachReview({ gen, readingId: requestedReading }, { gen: reviewGen.current, readingId: requestedReadingRef.current })) return;
+      setReview(r.kind === 'ready'
+        ? { kind: 'ready', readingId: requestedReading, gen, view: r.view }
+        : { kind: 'unavailable', readingId: requestedReading, gen });
+    });
+  }, [requestedReading, context]);
 
   if (phase !== 'ready' || !context) {
     return (
@@ -368,6 +442,9 @@ export default function FlagshipWriteHost({ editorialEnabled = false }: Flagship
       onSubmitAsk={onSubmitAsk}
       onRelease={onRelease}
       onWriting={(writing) => { writingRef.current = writing; }}
+      review={review}
+      reviewLens={reviewLens}
+      onReviewLens={setReviewLens}
     />
   );
 }

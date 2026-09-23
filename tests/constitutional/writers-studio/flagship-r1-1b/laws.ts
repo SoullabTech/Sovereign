@@ -107,7 +107,7 @@ export function ports(opts: { readings?: ReturnType<typeof reading>[]; states?: 
   return p;
 }
 const search = (q: Record<string, string>) => ({ get: (n: string) => (n in q ? q[n]! : null) });
-const FORBIDDEN_CONTROLS = /Ask MAIA|data-action="discuss"|data-action="explore"|data-commission=|Read for this|Read again|Read this chapter again|Not now|Add your own observation|Keep with this passage|data-return-to=|fs-cell"[^>]*data-return-to|\bdisabled\b|aria-disabled/;
+const FORBIDDEN_CONTROLS = /Ask MAIA|data-action="discuss"|data-action="explore"|data-commission=|Read for this|Read again|Read this chapter again|Not now|Add your own observation|Keep with this passage|data-return-to=|fs-cell"[^>]*data-return-to|fs-facet|data-facet=|\bdisabled\b|aria-disabled/;
 const FIXTURE_MARKERS = /kingfisher|Clara stood on the bank|carrying leaves, reflections/;
 
 export async function runR11BLaws(s: Subject): Promise<LawResult[]> {

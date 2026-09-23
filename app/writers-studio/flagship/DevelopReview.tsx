@@ -454,14 +454,16 @@ export interface ReviewCapabilities {
   readonly ownObservation: boolean;
   /** Go to passage · previous reading · full manuscript · coverage · map cells — only with a real address behind them. */
   readonly navigate: boolean;
+  /** R1-1B · the crumb-bar facet selector (Guided ▾) — a control; absent until facet selection has real authority. */
+  readonly facet: boolean;
 }
 /** The accepted controlled room: every capability, as the design witness renders it. */
 export const CONTROLLED_REVIEW_CAPABILITIES: ReviewCapabilities = Object.freeze({
-  askMaia: true, discuss: true, explore: true, commission: true, acknowledgeStale: true, ownObservation: true, navigate: true,
+  askMaia: true, discuss: true, explore: true, commission: true, acknowledgeStale: true, ownObservation: true, navigate: true, facet: true,
 });
 /** Read-only: nothing whose act is unauthorized. A host with real addresses may grant `navigate` alone. */
 export const READ_ONLY_REVIEW_CAPABILITIES: ReviewCapabilities = Object.freeze({
-  askMaia: false, discuss: false, explore: false, commission: false, acknowledgeStale: false, ownObservation: false, navigate: false,
+  askMaia: false, discuss: false, explore: false, commission: false, acknowledgeStale: false, ownObservation: false, navigate: false, facet: false,
 });
 
 /** Reasons mirror R1-0's own refusal facts; ⛔ no reason asserts more than those facts establish. */
@@ -555,8 +557,10 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
   return <ReviewPresentation view={view} lens={lens} facet={facet} capabilities={CONTROLLED_REVIEW_CAPABILITIES} />;
 }
 
-export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capabilities }: {
+export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capabilities, onLens }: {
   view: ReviewView; lens?: LensId | 'all'; facet?: Facet; capabilities: ReviewCapabilities;
+  /** R1-1B · a live host owns the lens filter; the tabs filter an existing reading and commission nothing. Markup unchanged. */
+  onLens?: (lens: LensId | 'all') => void;
 }) {
   const caps = capabilities;
   const shown = lens === 'all' ? view.findings : view.findings.filter((f) => f.domain === lens);
@@ -574,18 +578,20 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
 
   return (
     <>
-      <CrumbBar work={view.work} place="Review" facet={facet}
+      <CrumbBar work={view.work} place="Review" facet={caps.facet ? facet : undefined}
         actions={caps.askMaia ? <button type="button" className="fs-tool fs-tool--key">Ask MAIA</button> : undefined} />
 
       {/* ⭐ Tabs FILTER an existing reading. ⛔ None of them commissions one. */}
       <div className="fs-modetabs" role="tablist">
-        <button type="button" role="tab" className="fs-modetab" aria-selected={lens === 'all'}>
+        <button type="button" role="tab" className="fs-modetab" aria-selected={lens === 'all'}
+          onClick={onLens ? () => onLens('all') : undefined}>
           Everything
         </button>
         {view.lenses.map(({ id }) => {
           const meta = LENSES.find((l) => l.id === id);
           return meta ? (
-            <button key={id} type="button" role="tab" className="fs-modetab" aria-selected={lens === id}>
+            <button key={id} type="button" role="tab" className="fs-modetab" aria-selected={lens === id}
+              onClick={onLens ? () => onLens(id) : undefined}>
               {meta.plain}
             </button>
           ) : null;
