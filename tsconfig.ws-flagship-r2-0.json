@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.ws-flagship.json",
+  "compilerOptions": {
+    "paths": { "@/*": ["./*"], "@r2-0/contract": ["./tests/constitutional/writers-studio/flagship-r2-0/contract.ts"] }
+  },
+  "include": ["tests/constitutional/writers-studio/flagship-r2-0/**/*.ts"],
+  "exclude": ["tests/constitutional/writers-studio/flagship-r2-0/fixtures/illegal/**"]
+}

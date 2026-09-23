@@ -44,7 +44,7 @@ describe('revision collaboration binding', () => {
     fetchMock
       .mockResolvedValueOnce(response({ version: { id: 'v1' } }))
       .mockResolvedValueOnce(response(thread()));
-    const out = await sendBoundEditorialTurn('th-1', 'draft-200', exact);
+    const out = await sendBoundEditorialTurn('th-1', 'draft-200', exact, { resolved: true, sanctuary: false });
     expect(out.ok).toBe(true);
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     const body = JSON.parse(String(init.body));

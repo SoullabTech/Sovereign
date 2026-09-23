@@ -76,6 +76,13 @@ function parseClosed(body: unknown): Parsed {
   if (strayTop.length) {
     return { ok: false, error: `unknown field(s): ${strayTop.join(', ')} — these are server facts and carry no standing here` };
   }
+  /* SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1 — posture is REQUIRED, and it is
+     checked before the act is examined. A member turn is durable (ask_turns +
+     editorial_turn_bindings); absence or a malformed value is an UNRESOLVED
+     posture, never ordinary. The route maps this to 400 posture_required. */
+  if (typeof b.sanctuary !== 'boolean') {
+    return { ok: false, error: 'posture_required' };
+  }
   if (typeof b.threadId !== 'string' || b.threadId.length === 0) {
     return { ok: false, error: 'threadId is required' };
   }
@@ -95,9 +102,6 @@ function parseClosed(body: unknown): Parsed {
   if (typeof ao.text !== 'string') return { ok: false, error: 'act.text is required' };
   if (!(ao.refersTo === null || typeof ao.refersTo === 'string')) {
     return { ok: false, error: 'act.refersTo must be a string or null' };
-  }
-  if (!(b.sanctuary === undefined || typeof b.sanctuary === 'boolean')) {
-    return { ok: false, error: 'sanctuary must be a boolean' };
   }
 
   /* ⭐ THE DECLARED LATITUDE. ⛔ Absence is the protective default, never a
@@ -141,7 +145,9 @@ function parseClosed(body: unknown): Parsed {
     threadId: b.threadId,
     /* ⛔ The member's text is carried EXACTLY. No trim, no normalisation. */
     act: { act: ao.act as MemberActKind, text: ao.text, refersTo: ao.refersTo ?? null },
-    sanctuary: b.sanctuary === true,
+    /* ⭐ Validated as a boolean above; minted from the WHOLE body so a
+       contradictory nested affirmative still fails closed to Sanctuary. */
+    sanctuary: TurnPosture.resolve(b).sanctuary,
     scope,
     mayProposeImmediately,
   };
@@ -161,13 +167,19 @@ export async function POST(request: NextRequest) {
   catch { return NextResponse.json({ error: 'invalid JSON' }, { status: 400 }); }
 
   const parsed = parseClosed(raw);
-  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  if (!parsed.ok) {
+    return NextResponse.json(
+      parsed.error === 'posture_required' ? { error: 'posture_required', persisted: false } : { error: parsed.error },
+      { status: 400 },
+    );
+  }
 
   /* ⛔⛔ BEFORE ANY WRITE. */
   const posture = TurnPosture.resolve({ sanctuary: parsed.sanctuary });
   if (posture.sanctuary) {
     return NextResponse.json({
       error: 'sanctuary_unavailable',
+      persisted: false,
       detail: 'Editorial work is durable by construction, and no ephemeral editorial mode has been ruled. '
         + 'Nothing was written.',
     }, { status: 409 });

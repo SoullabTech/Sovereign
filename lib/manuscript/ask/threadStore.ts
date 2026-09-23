@@ -63,7 +63,22 @@ export interface DevelopmentalReadingIdentity {
   readerProvenance: unknown | null;
 }
 
-export type ReadingIdentity = StructureReadingIdentity | DevelopmentalReadingIdentity;
+/** R2-2 — one persisted Review Discuss act, bound to one reading-local finding. */
+export interface ReviewDiscussReadingIdentity {
+  kind: 'review_discuss_r2_1';
+  readingId: string;
+  observationKey: string;
+  draftId: string;
+  revisionNumber: number;
+  inputFingerprint: string;
+  commissionedLens: string;
+  readerProvenance: unknown | null;
+}
+
+export type ReadingIdentity =
+  | StructureReadingIdentity
+  | DevelopmentalReadingIdentity
+  | ReviewDiscussReadingIdentity;
 
 /**
  * Normalise a stored `reading_identity` into the union.
@@ -77,6 +92,7 @@ export function readIdentity(raw: unknown): ReadingIdentity | null {
   if (raw === null || typeof raw !== 'object') return null;
   const o = raw as Record<string, unknown>;
   if (o.kind === 'developmental') return o as unknown as DevelopmentalReadingIdentity;
+  if (o.kind === 'review_discuss_r2_1') return o as unknown as ReviewDiscussReadingIdentity;
   return { ...(o as unknown as StructureReadingIdentity), kind: 'structure' };
 }
 

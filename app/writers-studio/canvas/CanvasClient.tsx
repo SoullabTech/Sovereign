@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { PRESS } from '../pressTheme';
 import {
   BREAKPOINT,
@@ -469,12 +470,27 @@ function CanvasRoom({ editorialEnabled }: { editorialEnabled: boolean }) {
     if (!sectionId) return;
     setEditorialOpening(true);
     setEditorialRefusal(null);
+    /* E1 — the member's CURRENT Sanctuary posture, read at this gesture. An
+       unresolved posture posts nothing and says so; it is never read as ordinary. */
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved) {
+      setEditorialRefusal('Your Sanctuary setting could not be read on this device, so this passage was not opened for conversation. Open MAIA here once, then try again.');
+      setEditorialOpening(false);
+      return;
+    }
     try {
       const res = await apiFetch('/api/writers-studio/editorial/thread', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sectionId }),
+        body: JSON.stringify({ sectionId, sanctuary: posture.sanctuary }),
       });
+      if (res.status === 409) {
+        const why = await res.json().catch(() => null);
+        setEditorialRefusal(why?.error === 'sanctuary_unavailable'
+          ? 'Sanctuary is on. A conversation about your passage is durable by construction, so it is unavailable until Sanctuary is off. Nothing was written.'
+          : 'This passage could not be opened for conversation.');
+        return;
+      }
       if (!res.ok) {
         setEditorialRefusal('This passage could not be opened for conversation.');
         return;

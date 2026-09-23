@@ -77,7 +77,9 @@ export type DisclosureBoundary =
    * boundary its disclosure actually crossed. Mirrors migration
    * `20260913000002`, one value and nothing else.
    */
-  | 'writers_studio.developmental_ask->maia_cognition';
+  | 'writers_studio.developmental_ask->maia_cognition'
+  /** R2-2 · exact historical Work text crossed for one AS_READ Review Discuss act. */
+  | 'writers_studio.review_discuss->maia_cognition';
 
 /** The SHAPE of the selection — never its location. */
 export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';
@@ -96,7 +98,9 @@ export type DisclosureGesture =
    * member's act, never the count of boundaries it caused. Mirrors migration
    * `20260913000003`.
    */
-  | 'authorize_sections';
+  | 'authorize_sections'
+  /** R2-2 · the writer explicitly discusses one exact durable Review finding. */
+  | 'discuss_finding';
 
 export interface ContextDisclosureAttempt {
   /** Unique per attempt; a retry MUST reuse it so evidence cannot be duplicated. */

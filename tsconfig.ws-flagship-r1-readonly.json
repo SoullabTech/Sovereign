@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.ws-flagship-c1a.json",
+  "include": [
+    "tests/constitutional/writers-studio/flagship-r1-readonly/**/*.ts",
+    "lib/writersStudio/studio/realReview.ts"
+  ]
+}
