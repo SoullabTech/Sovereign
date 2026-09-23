@@ -100,3 +100,130 @@ Captures: `docs/design/contracts/screenshots/flagship-r1-2/` (review with return
 No passage/range/selection/highlight addressing · no held passage on arrival · no trail, banner, badge or scroll annotation · no coverage-line or previous-reading return (no lawful address) · no map return witnessed live (no substrate) · no capability other than `navigate` · no reading API, mapper, schema, cognition, member write, C1C1 Discuss, provider routing or deployment change · no repair of the inherited double loader pass (§7.1) · no repair of the 17 inherited diagnostics · no deploy · no flag · production untouched. **R2 — whether Discuss from a Review finding extends the C1C1 seam or is a separate commission — is unanswered and unprototyped.**
 
 **Standing: R1-2 ✅ BUILT · WITNESSED · RE-FROZEN (FS3) · GATED ON CANDIDATE · ⚠️ one succession beyond the two named (R1-1C-L15, §7.2) raised for adjudication · STOPPED for founder adjudication · production untouched.**
+
+---
+
+## 10. Founder adjudication (R1-2A — record addendum only, 2026-09-23)
+
+**Custody note.** Everything above this rule was written at `829a3e225` and ends at "STOPPED for founder adjudication"; it is preserved as written. This section is added by `R1-2A` (*R1-2 FOUNDER ADJUDICATION RECORD ADDENDUM ONLY*) and lands in a later commit that is **documentation custody, ⛔ not semantic or product authority**. The semantic authority of R1-2 is `829a3e225`; the governing freeze is FS3 @ `9682dda96`. R1-2A mutates this one file and nothing else: no product code, no test law, no freeze mutation, no new witness, no R2, production untouched.
+
+### 10.1 Disposition
+
+`FLAGSHIP-RUNTIME-CONVERGENCE-01 / R1-2` — **PASS · CLOSED ON CANDIDATE @ `829a3e225`**. FS3 establishment commit `9682dda96` accepted as the governing post-R1-2 flagship freeze. The adjudication accepts the submitted repository/container evidence; it is not an independent re-execution of the gates.
+
+```text
+FS1        CLOSED · historical pre-Review-navigation freeze
+FS2        CLOSED · historical pre-return-navigation freeze
+FS3        ESTABLISHED · GOVERNING @ 9682dda96
+
+R1-0       CLOSED
+R1-1A      CLOSED
+R1-1B      CLOSED @ 1fcf1ad0a
+R1-1C      CLOSED @ e9f7ffcb5
+R1-2       PASS · CLOSED @ 829a3e225
+
+production UNTOUCHED
+```
+
+### 10.2 Laws established
+
+- **Capability succession**: `READ_ONLY_REVIEW_CAPABILITIES.navigate` `false → true`; `askMaia · discuss · explore · commission · acknowledgeStale · ownObservation · facet` remain `false`. R1-2 spends exactly one capability. No cognition authority and no member-write authority enter with navigation.
+- **Return-address law**: mounted Review → exact durable section identity → remove `reading=<id>` + preserve `m=<work>` + set `s=<exact sectionId>` → plain Write. Section-level only. No `passage= · range= · start= · end= · selection= · highlight=` or equivalent vocabulary. No held passage, no highlight, no member gesture inferred because navigation occurred. The durable section address remains the authority.
+
+### 10.3 Ruling — coverage control without section identity
+
+The coverage condition is lawful and accepted. The census established the coverage control carries the literal `coverage`, not a section identity. **Coverage navigation must remain absent under R1-2.** This is successful enforcement of the address law, not a failure to implement an authorized capability. No nearest, current, first, derived or semantic section may be substituted. The authorization's broader expectation that coverage might participate is superseded by the substrate fact that it has no lawful R1-2 address. No new capability axis is required.
+
+### 10.4 Ruling — continuity map not populated by the real mapper
+
+Accepted. The R1-0 real-reading mapper produces no live continuity-map population, so a live witness cannot truthfully exercise a map cell. The governing law stands: an addressed map cell may navigate only by its exact durable section identity. Presentation-level constitutional proof is sufficient for the presently unpopulated surface. ⛔ Do not manufacture map data to satisfy a witness. ⛔ Do not modify R1-0 to produce a map under R1-2. If a future governed act populates cells from real readings, FS3 already binds the condition they must obey.
+
+```text
+real map population absent   ≠   navigation failure
+fabricated map population    =   forbidden
+```
+
+### 10.5 Live navigation evidence accepted
+
+Finding return uses the durable return section; the context-foot return uses its exact section identity; coverage navigation is absent; map navigation is protected but not fabricated; entering Write removes `reading`, `m` is the same Work, `s` is the exact target, plain Write mounts; browser Back returns naturally to the previous Review; member-state digest byte-identical; provider hits 0. The substance of R1-2: *Review observation → Go to passage → the actual manuscript section*, never *→ the system guesses where it probably belongs*.
+
+### 10.6 Ruling — R1-1C-L15 additional succession
+
+Accepted as a **necessary freeze-custody succession, not an ungoverned product-capability widening**. The predecessor law literally described FS2 as superseding FS1 through the manifest's predecessor field; once FS3 → FS2 → FS1 was authorized, that two-generation assertion could not remain current without making lawful FS3 succession impossible. Accepted pattern: exact predecessor law witnessed → reason recorded → freeze authority generalized to a custody chain. The R1-1C law file was already in the governed succession population; no unrelated file population was opened; no R1-1C product authority changed. **No separate R1-1C repair or reopening is required.** Constitutional maintenance required by the authorized FS2 → FS3 transition.
+
+### 10.7 FS3 accepted
+
+102 frozen artifacts · 4 explicit supersessions · FS3 → FS2 → FS1 with predecessor custody preserved by digest · verifier lethal in four directions. Governing principle: *historical freeze remains reconstructible + successor freeze names what changed + reason is explicit + current law becomes independently frozen* — not permanent immutability of every historical assertion. FS1 and FS2 remain historical authorities; FS3 is the current flagship authority.
+
+### 10.8 Ruling — duplicate R1-1B loader pass on browser Back
+
+Accepted as inherited runtime behaviour and **non-blocking technical debt**. The R1-2 invariants hold: exact Review URL restored, exact reading identity restored, member-scoped reads only, no fallback, no write, no cognition, generation guard intact. The extra GET arises because Back changes both `s` and `reading` and the inherited host/context dependencies run the read-only loader again; it predates R1-2 and is not an R1-2 regression. Correcting the witness from *exactly two GETs* to *only lawful ledger/detail GET shapes for the exact selected reading* is accepted — the former was an instrument overconstraint, not product law.
+
+**Carried technical debt, named**: *Redundant read-only re-fetch on Review restoration via browser Back.* It may later be optimized; ⛔ no future act may silently alter it while spending unrelated authority. It does not block R1-2 closure.
+
+### 10.9 Ruling — branch-scope design-contract coverage
+
+The contract additions for `LiveReviewView.tsx` and `reviewReturn.ts` are accepted as **contract coverage completion, not a new design-law succession**. The branch-scope gate correctly found `LiveReviewView.tsx` had existed since R1-1B without being named in the flagship Experience Contract's `surfaces:`; `reviewReturn.ts` belongs to the same surface. Accepted on the condition that no unrelated Experience Contract semantics changed (none did). This does not reopen R1-1B or R1-1C. Classification: *design-canon coverage debt discovered and closed during R1-2*, not evidence that earlier runtime authority was invalid.
+
+### 10.10 Frozen-law successions accepted
+
+- **R1-1B-L18**: from *navigation control absent because navigate=false* to *navigate=true + navigation controls lawful only where exact durable addresses exist + all other forbidden controls remain absent*.
+- **R1-1C-L11**: from *all read-only capability axes false* to *navigate=true, all other axes false*.
+- **R1-1C-L15**: the freeze-chain succession ruled in §10.6.
+
+No historical law was silently rewritten.
+
+### 10.11 Inherited diagnostics
+
+The 17 C1B/C1C1 strict diagnostics (`readState.ts` 7 · `draftSections.ts` 10) remain **inherited baseline debt**, not R1-2 regressions, outside this act. ⛔ Do not opportunistically repair them under a later unrelated capability act.
+
+### 10.12 Evidence accepted
+
+```text
+R1-2 laws                     18/18
+R1-2 defeat candidates        16/16 dead
+matrix                        LETHAL
+runtime walk                  11/11
+member-state digest           byte-identical
+provider/model hits           0
+unauthorized writes           0
+all nine inherited matrices   LETHAL
+FS3                           INTACT · verifier lethal in four directions
+R1-2 strict typecheck         PASS
+ship typecheck                no regression
+design-canon · ci:sovereignty · no-supabase · no-openai · git diff --check   GREEN
+```
+
+No contradictory evidence reported.
+
+### 10.13 Product standing after R1-2
+
+```text
+WRITE → REVIEW → (explicit durable reading) → FINDING → (exact durable section identity) → WRITE AT SOURCE SECTION
+```
+
+Two orientation questions are now answerable without cognition: *Which reading am I looking at?* (chosen by the writer) · *Where in my manuscript does this belong?* (named by the durable reading address). MAIA decides neither at navigation time. `R1-2` is CLOSED. No further Review capability is implied.
+
+### 10.14 R2 remains unopened — the questions carried
+
+No authority is conferred for Discuss, Ask MAIA, finding-bound or passage-bound cognition, thread creation, commissioning, member observations, Keeps, standing changes, rereading, or a fresh developmental reading.
+
+**Open founder architecture question before any R2 implementation act — the epistemic object of Review Discuss**:
+
+```text
+C1C1:  held manuscript passage                              → passage-bound discussion
+R2 candidate:  durable Review finding + exact manuscript passage → finding-grounded discussion
+```
+
+⛔ Not to be treated silently as the same cognition object. The founder's stated hypothesis (roadmap, same day): *Review Discuss is not merely passage-bound; its epistemic object is the durable Review finding together with the exact manuscript passage to which that finding returns* (Option B). The next clean boundary is a separately named `R2-0 — REVIEW DISCUSS EPISTEMIC-OBJECT CONSTITUTION`, ⛔ not implementation of Discuss.
+
+Substrate inputs raised for R2-0 (raised, ⛔ not answered, ⛔ not ruled):
+
+1. **Time is a third component.** A finding's evidence is frozen at a revision (`readState`: revision number, code-point range, digest) while the passage it returns to may have been edited since; R1-0 separates `recoverEvidence` (historical, digest-verified) from `locateCurrent` (three-state, never fuzzy) and C1C1 already discloses staleness rather than re-anchoring. A discussion turn must say whether it discusses the passage as read or as it now is; collapsing the two is how a discussion silently becomes a reread.
+2. **Address law gates R3.** Observations carry a minted `observation_id` and a read-local `(readingId, observationKey)`; `OBSERVATION-ADDRESS-01` rules that member actions addressed to `observation_id` may not be created until that lane closes, and existing standing custody stays on the older address. R2 threads bound to a finding must name their binding address explicitly; R3 (writer response) is exactly the gated member action.
+3. **The C1C1 seam is disclosure-governed and never writes the Work** (`askRouteEffectFamily`: conversation · authority · posture · crossing only; eleven Work tables asserted disjoint; body reads pass through the S3 authorization-act claim). A finding-grounded Discuss adds a new cognition input class — MAIA's own prior output — and whether that is a disclosure crossing or provenance is a governance question, not plumbing. The sharpest reason R2-0 precedes R2-1.
+4. **R3 has an unratified law waiting**: the disagreement law (*evidence revises the reading, does not delete it, does not automatically win*) is carried in the convergence charter as ⛔ NOT ratified; R3's utterances are exactly the acts it governs.
+
+Founder's recommended sequence after R1-2A, recorded as roadmap and ⛔ not as authorization: R2-0 (epistemic-object constitution) → R2-1 (pure finding-grounded Discuss contract: selected durable finding + exact current passage + reading identity/provenance → one bounded turn; prohibiting reread, fresh assessment, hidden aggregation, mutation of the original finding) → R2-2 (live runtime, `discuss` only) → R3 (writer response / own observation — the first true member-write act) → R4 (Keep / continuity) → R5 (new-reading / reread commissioning) → later, broader Ask MAIA / Explore.
+
+**Standing after R1-2A: R1-2 PASS · CLOSED @ `829a3e225` · FS3 GOVERNING @ `9682dda96` · R2 ⛔ NOT OPEN · production UNTOUCHED · STOPPED.**
