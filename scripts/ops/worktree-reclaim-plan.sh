@@ -73,7 +73,22 @@ guard "ACT B: remove REMOVABLE worktrees (clean, pushed, merged into $CANON) on 
       "run git worktree remove on merged worktrees" > "$B"
 guard "ACT C: push or bundle every worktree holding commits that exist on no remote." \
       "push branches and write git bundles to $ARCHIVE_DIR" > "$C"
-echo "mkdir -p \"$ARCHIVE_DIR\" || { echo 'STOP: archive dir unavailable' >&2; exit 4; }" >> "$C"
+cat >> "$C" <<EOG
+mkdir -p "$ARCHIVE_DIR" || { echo 'STOP: archive dir unavailable' >&2; exit 4; }
+# push_or_bundle <worktree> <branch-or-empty> <bundle-file>
+# A push is attempted only for a policy-allowed branch name and only as a
+# fast-forward; a refusal (diverged remote) is not an error to force through,
+# it is the signal to preserve these commits in a bundle instead.
+push_or_bundle() {
+  local wt="\$1" br="\$2" bf="\$3"
+  if [[ -n "\$br" ]]; then
+    if git -C "\$wt" push -u origin "\$br"; then return 0; fi
+    echo "push refused for \$br (remote diverged or policy); preserving as bundle instead" >&2
+  fi
+  git -C "\$wt" bundle create "\$bf" "origin/$CANON..HEAD" && git -C "\$wt" bundle verify "\$bf" >/dev/null \\
+    || { echo "STOP: bundle failed for \$wt" >&2; exit 4; }
+}
+EOG
 : > "$I"
 
 a_gb=0; a_n=0; b_gb=0; b_n=0; c_n=0
@@ -99,13 +114,12 @@ while IFS=$'\t' read -r path vol branch head total regen source mod unt unp merg
     c_n=$((c_n+1))
     safe=$(echo "${branch:-detached}-${head}" | sed 's/(detached)/detached/' | tr '/ ' '__')
     case "$branch" in
-      main|clean-main-no-secrets|feature/*|fix/*|chore/*)
-        printf '\n# %s  %s commit(s) on no remote\ngit -C "%s" push -u origin "%s" || { echo "STOP: push refused for %s; bundle instead" >&2; exit 4; }\n' \
-          "$path" "$unp" "$path" "$branch" "$branch" >> "$C" ;;
-      *)
-        printf '\n# %s  %s commit(s) on no remote  (branch %s not pushable under branch policy -> bundle)\ngit -C "%s" bundle create "%s/%s.bundle" "origin/%s..HEAD" && git -C "%s" bundle verify "%s/%s.bundle" >/dev/null || { echo "STOP: bundle failed for %s" >&2; exit 4; }\n' \
-          "$path" "$unp" "$branch" "$path" "$ARCHIVE_DIR" "$safe" "$CANON" "$path" "$ARCHIVE_DIR" "$safe" "$path" >> "$C" ;;
+      main|clean-main-no-secrets|feature/*|fix/*|chore/*) pushable="$branch" ;;
+      *) pushable="" ;;
     esac
+    printf '\n# %s  %s commit(s) on no remote  branch=%s  %s\npush_or_bundle "%s" "%s" "%s/%s.bundle"\n' \
+      "$path" "$unp" "$branch" "$([[ -n "$pushable" ]] && echo 'push if fast-forward, else bundle' || echo 'not pushable under branch policy -> bundle')" \
+      "$path" "$pushable" "$ARCHIVE_DIR" "$safe" >> "$C"
   fi
   case "$cls" in
     INSPECT*|HOLD*) printf '%-10s %6s GB  mod=%s unt=%s unpushed=%s merged=%s  %s  %s\n' "$cls" "$total" "$mod" "$unt" "$unp" "$merged" "$branch" "$path" >> "$I" ;;
