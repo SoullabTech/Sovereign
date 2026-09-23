@@ -4,6 +4,7 @@
 **Class:** coordinating programme · flow parent · readiness authority.
 **Current act:** **P0 — FULL-FUNCTIONALITY READINESS MAP + DEPENDENCY GRAPH ONLY** (read-only, documentary).
 **Standing at authoring:** P0 DELIVERED · ⛔ STOPPED FOR FOUNDER ADJUDICATION · ⛔ P1–P8 NOT OPEN.
+**Standing after continuation act (2026-09-23):** B3 · B4 · V1 DELIVERED (see `JARVIS-FOUNDER-WORKSPACE-01_B3_*`, `…_B4_*`, `JARVIS-VOICE-DOORWAY-01_V1_*`) · ⛔ STOP for founder adjudication · B5/B6/V2 CLOSED.
 **Standing after adjudication (2026-09-23):** **P0 PASS** (`…_P0_FOUNDER_ADJUDICATION_2026-09-23.md`) · FD-1…FD-6 + OE-1…OE-8 RULED · `JARVIS-VOICE-DOORWAY-01` opened at V0 (delivered) · WORKSPACE-01 B1+B2 authorized (delivered) · ⛔ P1–P8 still open only by further founder acts.
 
 ---
@@ -87,3 +88,11 @@ All seven outputs exist; every readiness row carries the eleven mandatory fields
 ## §12 · Founder opening act (preserved verbatim, abridged only where it restates this charter)
 
 > Authorize now: `JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 / P0 — FULL-FUNCTIONALITY READINESS MAP + DEPENDENCY GRAPH ONLY`. Read-only, documentary, no runtime mutation. Deliver exactly: 1. CHARTER 2. P0_FULL_FUNCTIONALITY_READINESS_MATRIX 3. P0_DEPENDENCY_GRAPH 4. P0_DAILY_WORK_COVERAGE_MATRIX 5. P0_BLOCKER_REGISTER 6. P0_EXECUTION_SEQUENCE 7. Founder decision docket only for decisions actually required before implementation. The readiness matrix must make visible: *What is stopping Kelly from using JARVIS as her normal working environment today?* For every requirement record: what exists · owning programme · standing · live vs implemented · wired · founder-facing · defects · authority needed · prerequisite · falsifier · exact next lawful act. BUILT ≠ WIRED ≠ LIVE ≠ USABLE ≠ WITNESSED. When P0 is complete: STOP FOR FOUNDER ADJUDICATION. Work at the center of the final system.
+
+## Amendment 1 (2026-09-23) — CROSS-SURFACE REQUIREMENT (founder direction, verbatim)
+
+> **CROSS-SURFACE REQUIREMENT — JARVIS Founder Workspace must ultimately be available through both the native Desktop application and an authenticated browser surface. Both presentations consume the same `founder-workspace-viewmodel.v1` and governed action contracts; neither may independently reimplement programme state, authority, routing, Work Unit semantics, monitoring truth, or provenance. Desktop remains the privileged local sovereign surface. Browser begins as a remote Founder presentation/control surface and gains consequential capabilities only through separately governed authority.**
+
+Founder context (same message): the F1 `file://` page is the architectural prototype on the way there, not the product; Desktop replaces the four-view interface (FD-1) and is the primary voice environment (`Mic → local Whisper → O1 → JARVIS → local Kokoro`); the browser is initially conservative (Today · programme/work state · Graph · Monitor · results · research/context · planning · Founder decisions), every consequential operation passes through the same authority system, and browser voice comes later through a governed secure bridge to the sovereign host, never browser/cloud speech. *One JARVIS, two presentation surfaces, not two products.*
+
+**Effect on the programme (recorded, ⛔ not a build act):** the B1 view-model is already surface-agnostic (pure adapters → validated `founder-workspace-viewmodel.v1`), which is what makes a browser surface a second presentation rather than a second product. A browser surface needs, before any act opens: **OE-9** an authenticated remote transport for the view-model (read-only first) and its authority boundary (what a browser gesture may ever do) — a founder act naming the lane (proposed `JARVIS-BROWSER-SURFACE-01`), sequenced after B5. Readiness row R-18 (browser surface: BUILT ❌ WIRED ❌ LIVE ❌) is added to the P0 matrix by this amendment, ⛔ without editing the adjudicated P0 files.

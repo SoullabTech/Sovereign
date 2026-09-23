@@ -206,6 +206,56 @@ export function adaptResults(results) {
   return out;
 }
 
+// ── instrument observations (B3) → monitor rows ──────────────────────────────
+
+/**
+ * @param {any[]} observations  instrument-observation.v1 rows (live or stored)
+ * @param {{ entries: any[] }} registry
+ * @param {{ latest?: Record<string, { file: string, observation: any }> }} [history]  stored observations for entries not observed now
+ * @param {string} [nowIso]
+ */
+export function adaptObservations(observations, registry, history = {}, nowIso = new Date().toISOString()) {
+  const byId = new Map(observations.map((o) => [o.instrument_id, o]));
+  /** @type {any[]} */ const rows = [];
+  for (const e of registry.entries) {
+    const live = byId.get(e.id);
+    const stored = history.latest && history.latest[e.id] ? history.latest[e.id].observation : null;
+    const o = live || stored;
+    const instrument = `${e.id} (${e.proof ? e.proof.kind : 'refused'}${e.script ? ' · ' + e.script : e.proof?.command ? ' · ' + e.proof.command.join(' ') : e.proof?.url ? ' · ' + e.proof.url : ''})`;
+    if (!e.admitted) { rows.push({ group: e.group, subject: e.subject, axis: 'admission', value: 'refused', plain: `${e.subject}: this instrument was refused (${e.refusal?.why || 'not read-only'}) and is never run.`, level: 'unobserved', instrument, observed_at: null, freshness: 'none', evidence_state: 'DELIBERATELY REFUSED' }); continue; }
+    if (!o) { rows.push({ group: e.group, subject: e.subject, axis: 'observation', value: 'not observed', plain: `${e.subject}: no observation has been made yet.`, level: 'unobserved', instrument, observed_at: null, freshness: 'none', evidence_state: 'UNOBSERVED' }); continue; }
+    const age = (Date.parse(nowIso) - Date.parse(o.observed_at)) / 1000;
+    const freshness = live ? 'current' : (Number.isFinite(age) && e.stale_after_s != null && age <= e.stale_after_s ? 'current' : 'historical');
+    const when = live ? '' : ` (observed ${o.observed_at}${freshness === 'historical' ? ' · present state unknown' : ''})`;
+    switch (o.state) {
+      case 'not_instrumented': rows.push({ group: e.group, subject: e.subject, axis: 'instrument', value: 'not instrumented', plain: `${e.subject}: ${e.group === 'Production' ? 'not observed from this workspace, by law.' : 'no instrument exists yet.'} ${o.requires || ''}`.trim(), level: e.group === 'Production' ? 'unauthorized' : 'unobserved', instrument, observed_at: o.observed_at, freshness: 'none', evidence_state: e.group === 'Production' ? 'DELIBERATELY REFUSED' : 'ABSENT' }); break;
+      case 'refused': rows.push({ group: e.group, subject: e.subject, axis: 'admission', value: 'refused at observation', plain: `${e.subject}: the instrument was refused before running (${o.error}).`, level: 'warn', instrument, observed_at: o.observed_at, freshness: 'current', evidence_state: 'DELIBERATELY REFUSED' }); break;
+      case 'unavailable': rows.push({ group: e.group, subject: e.subject, axis: 'reachability', value: 'unavailable', plain: `${e.subject} could not be observed${when}: ${o.error}.`, level: 'failed', instrument, observed_at: o.observed_at, freshness, evidence_state: 'OBSERVED' }); break;
+      case 'current': rows.push({ group: e.group, subject: e.subject, axis: 'state', value: summarizeResult(e.id, o.result), plain: `${plainResult(e, o.result)}${when}`, level: levelForResult(e.id, o.result), instrument, observed_at: o.observed_at, freshness, evidence_state: 'OBSERVED' }); break;
+      default: rows.push({ group: e.group, subject: e.subject, axis: 'state', value: str(o.state), plain: `${e.subject}: state ${o.state} is not one this workspace recognises.`, level: 'unobserved', instrument, observed_at: o.observed_at, freshness: 'none', evidence_state: 'UNVERIFIED' });
+    }
+  }
+  return rows;
+}
+/** @param {string} id @param {any} r */
+function summarizeResult(id, r) {
+  if (id === 'git.status') return r?.stdout ? 'dirty' : 'clean';
+  if (id === 'git.checkout') return str(r?.stdout) || '?';
+  if (id === 'ollama.tags') return Array.isArray(r?.models) ? `${r.models.length} model(s)` : 'answered';
+  if (r && typeof r === 'object' && 'rows' in r) return `${r.rows.length} row(s)`;
+  if (r && typeof r === 'object' && 'json' in r) return 'report';
+  return 'observed';
+}
+/** @param {any} e @param {any} r */
+function plainResult(e, r) {
+  if (e.id === 'git.status') return r?.stdout ? 'Your working copy has uncommitted changes.' : 'Your working copy is clean.';
+  if (e.id === 'git.checkout') return `You are on ${str(r?.stdout) || 'an unknown branch'}.`;
+  if (e.id === 'ollama.tags') return Array.isArray(r?.models) ? `Ollama is answering with ${r.models.length} local model(s) available.` : 'Ollama answered.';
+  return `${e.subject}: observed.`;
+}
+/** @param {string} id @param {any} r */
+function levelForResult(id, r) { if (id === 'git.status') return r?.stdout ? 'warn' : 'good'; return 'good'; }
+
 // ── composer ─────────────────────────────────────────────────────────────────
 
 /** programme_state when no projector exists (B4 not built). Honest by construction. @param {string} observed_against @param {string} projected_at */
@@ -215,7 +265,7 @@ export function absentProgrammeState(observed_against, projected_at) {
 
 /**
  * Compose a LIVE view-model. Throws on any law violation (AL-1: ILLUSTRATIVE refused at the seam).
- * @param {{ status?: any, organs: Awaited<ReturnType<import('./read-organs.mjs').readAllOrgans>>, observed_against: string, programme_state?: any, graph?: any, vocabularies?: any[], now?: string }} input
+ * @param {{ status?: any, organs: Awaited<ReturnType<import('./read-organs.mjs').readAllOrgans>>, observed_against: string, programme_state?: any, graph?: any, vocabularies?: any[], now?: string, observations?: any[], registry?: { entries: any[] }, observation_history?: any }} input
  */
 export function composeViewModel(input) {
   const now = nonEmpty(input.now) ? /** @type {string} */ (input.now) : new Date().toISOString();
@@ -243,7 +293,7 @@ export function composeViewModel(input) {
       governor: organs.governor.report ? { ...stripCounts(organs.governor.report), instrument: 'session.mjs report --json', observed_at: organs.governor.observed_at } : null,
       adjudication_note: 'Yes is the only governed gesture (W0.v2 requires decision === accepted). A governed No is owed to JARVIS-WORK-UNIT-01 (OE-2); this workspace does not fabricate it.',
     },
-    monitor: [...st.monitor, ...organRows],
+    monitor: [...st.monitor, ...organRows, ...(input.registry ? adaptObservations(input.observations || [], input.registry, input.observation_history || {}, now) : [])],
     graph: input.graph ?? { nodes: [], edges: [] },
     provenance: st.provenance,
     vocabularies: Array.isArray(input.vocabularies) ? input.vocabularies : [],

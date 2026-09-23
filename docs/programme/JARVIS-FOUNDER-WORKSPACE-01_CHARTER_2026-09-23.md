@@ -111,6 +111,8 @@ If any of the five cannot be answered from the record, F0 is not complete.
 
 ## Current act
 
+**2026-09-23 (continuation act):** B3 + B4 DELIVERED — `…_B3_MONITOR_INSTRUMENT_REGISTRY_EVIDENCE_2026-09-23.md` · `…_B4_PROGRAMME_STATE_PROJECTOR_EVIDENCE_2026-09-23.md`. ⛔ B5 blocked on the F1 walk; B6 closed; STOP for adjudication (docket PD-1…PD-3).
+
 **2026-09-23 (P0 adjudication §VI):** B1+B2 authorized and DELIVERED — `…_B1B2_VIEWMODEL_AND_READ_ORGANS_EVIDENCE_2026-09-23.md`. FD-1…FD-6 ruled. ⛔ Hard stop after B2; B3/B4/B5 not open; F1 walk still owed before B5. Text below preserved as prior state.
 
 

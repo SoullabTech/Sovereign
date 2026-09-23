@@ -28,6 +28,11 @@ OS="$(uname -s)"
 HOSTN="$(hostname)"
 NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 CENSUS_OUT="${CENSUS_OUT:-}"
+# FD-4 (JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 P0 adjudication, 2026-09-23): OPTIONAL machine-readable sidecar.
+# CENSUS_JSON=/path/report.jsonl appends one JSON object per section header and per row — the same observations the
+# human report prints, nothing more. Output only: no cleanup, no deletion, no sudo, no new probe. Default behaviour unchanged.
+CENSUS_JSON="${CENSUS_JSON:-}"
+CENSUS_SECTION=""
 DEFAULT_ROOTS="$HOME/MAIA-SOVEREIGN $HOME/.claude/worktrees $HOME/Sovereign $HOME/Projects $HOME/Developer"
 CENSUS_ROOTS="${CENSUS_ROOTS:-$DEFAULT_ROOTS}"
 FIND_DEPTH="${CENSUS_FIND_DEPTH:-6}"
@@ -85,8 +90,10 @@ bounded() {
   return $rc
 }
 progress() { printf '[census] %s\n' "$1" >&2; }
-row() { printf '%-46s %10s  %s\n' "$1" "$2" "${3:-}"; }
-hdr() { printf '\n== %s ==\n' "$1"; progress "$1"; }
+json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+json_line() { [[ -n "$CENSUS_JSON" ]] || return 0; printf '%s\n' "$1" >> "$CENSUS_JSON"; }
+row() { printf '%-46s %10s  %s\n' "$1" "$2" "${3:-}"; json_line "{\"kind\":\"row\",\"section\":\"$(json_str "$CENSUS_SECTION")\",\"label\":\"$(json_str "$1")\",\"value\":\"$(json_str "$2")\",\"note\":\"$(json_str "${3:-}")\"}"; }
+hdr() { printf '\n== %s ==\n' "$1"; progress "$1"; CENSUS_SECTION="$1"; json_line "{\"kind\":\"section\",\"section\":\"$(json_str "$1")\"}"; }
 is_network_mount() {
   # true if the mount for path $1 is a network filesystem
   local fs
@@ -101,6 +108,7 @@ is_network_mount() {
 
 echo "Workstation storage/RAM census — READ ONLY"
 echo "host=$HOSTN os=$OS at=$NOW user=$(id -un)"
+if [[ -n "$CENSUS_JSON" ]]; then mkdir -p "$(dirname "$CENSUS_JSON")"; : > "$CENSUS_JSON"; json_line "{\"kind\":\"meta\",\"instrument\":\"scripts/ops/workstation-storage-census.sh\",\"host\":\"$(json_str "$HOSTN")\",\"os\":\"$(json_str "$OS")\",\"observed_at\":\"$NOW\",\"roots\":\"$(json_str "$CENSUS_ROOTS")\",\"read_only\":true}"; fi
 echo "roots=$CENSUS_ROOTS"
 
 # --------------------------------------------------------------- memory ------

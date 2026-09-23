@@ -2,7 +2,7 @@
 
 **Opened:** 2026-09-23 by founder ruling OE-1 (`JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_FOUNDER_ADJUDICATION_2026-09-23.md` §IV).
 **Parent (flow):** `JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01` (readiness authority). **Surface parent:** `JARVIS-FOUNDER-WORKSPACE-01` (the doorway lands on its Work surface, after B6).
-**Current act:** **V0 — EXISTING SOVEREIGN VOICE SUBSTRATE CENSUS + JARVIS OPERATOR VOICE CONTRACT** (documentary, read-only).
+**Current act:** V1 DELIVERED (`…_V1_OPERATOR_VOICE_CONTRACT_AND_FALSIFIER_SUITE_2026-09-23.md`) — contract ratified as test contract, matrix lethal; ⛔ V2 closed until WORKSPACE-01 B6 (founder act 2026-09-23). Prior: V0 DELIVERED.
 
 ## Mandatory lane preamble
 
@@ -17,6 +17,7 @@ Manual `docs/programme/JARVIS_INSTRUCTIONAL_MANUAL_v1.md` governs. Evidence stat
 1. **One mind, two capture modes.** `microphone → local STT → transcript → SAME O1 intent seam used by typed text → plan / answer / work state → text response → local TTS when speech requested`. ⛔ No parallel "voice commands" authority system. A spoken utterance may never reach a capability that the same words typed could not.
 2. **First mode: push-to-talk.** Also permitted: clickable microphone; keyboard hold-to-talk shortcut.
 3. **STT = local whisper.cpp** (`whisper-server`, `127.0.0.1:8080`, `scripts/start-whisper.sh`). ⛔ Production `maia-whisper` is never used for Founder JARVIS.
+4a. **Speech output is OFF by default** (founder, continuation act 2026-09-23).
 4. **TTS = local Kokoro** (`http://localhost:8880`, `lib/tts/providers/kokoro.ts`). **LOCAL ONLY · FAIL CLOSED.** ⛔ No `ttsRouter` cloud fallback. Kokoro unavailable → say so, keep the text. ⛔ Founder speech never leaves the machine.
 5. **Wake phrase "Jarvis…" is desired and ⛔ NOT AUTHORIZED.** `lib/voice/wakeWord.ts` is not a semantic detector. A later act must bring genuine wake-word recognition · explicit always-listening setting · visible listening state · local processing · false-activation, background-noise and interruption tests · no audio retention beyond declared policy.
 6. Speech output is optional and interruptible; the text response is always the record.
