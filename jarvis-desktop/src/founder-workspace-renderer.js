@@ -1,5 +1,6 @@
-/* JARVIS Founder Workspace B5 renderer.
- * Presentation only. This file intentionally calls no execution IPC.
+/* JARVIS Founder Workspace B6 renderer.
+ * B5 surfaces remain read-first. B6 adds one explicit local-reasoning gesture
+ * through the already-ratified submitTask/C1 path; intent never auto-executes.
  */
 'use strict';
 
@@ -15,6 +16,16 @@ const state = {
   evidence: null,
   error: null,
   loading: false,
+  workRoom: {
+    input: '',
+    intent: null,
+    plan: null,
+    turns: loadJsonSession('jfw:b6:turns') || [],
+    lastClearIntent: loadJsonSession('jfw:b6:last-clear-intent'),
+    running: false,
+    error: null,
+    result: null,
+  },
 };
 
 function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -26,6 +37,12 @@ function loadSession(k) { try { return sessionStorage.getItem(k); } catch { retu
 function loadJsonSession(k) { try { const v = sessionStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } }
 function saveSession(k,v) { try { sessionStorage.setItem(k,v); } catch { /* presentation memory only */ } }
 function saveContext() { try { state.context ? sessionStorage.setItem('jfw:b5:context', JSON.stringify(state.context)) : sessionStorage.removeItem('jfw:b5:context'); } catch {} }
+function saveWorkRoom() {
+  try {
+    sessionStorage.setItem('jfw:b6:turns', JSON.stringify(state.workRoom.turns.slice(-20)));
+    if (state.workRoom.lastClearIntent) sessionStorage.setItem('jfw:b6:last-clear-intent', JSON.stringify(state.workRoom.lastClearIntent));
+  } catch { /* session-only conversation memory */ }
+}
 
 function levelClass(level) { return ['good','warn','failed','unobserved','unauthorized'].includes(level) ? level : 'neutral'; }
 function evidenceButton(ref, label='Open evidence') {
@@ -83,6 +100,83 @@ function technicalDetails(lines) {
   const safe=arr(lines).filter(Boolean);
   if (!safe.length) return '';
   return `<details class="technicalDetails"><summary>Technical details</summary><div>${safe.map(x=>`<div>${esc(x)}</div>`).join('')}</div></details>`;
+}
+
+function b6LevelLabel(level) {
+  return ({UNDERSTAND:'understand',PREPARE:'prepare',CHANGE:'change',RELEASE:'prepare for release'})[level] || 'work on';
+}
+
+function currentFieldOrientation() {
+  const ctx=currentContextObject();
+  if (!state.context || !ctx) return { label:'No field selected', summary:'Kelly is starting from the Work room without a selected field.' };
+  if (state.context.kind==='work') return { label:humanWorkSubject(ctx), summary:humanWorkStatus(ctx) };
+  if (state.context.kind==='programme') return { label:friendlyProgrammeName(ctx), summary:ctx.evidence_state==='UNVERIFIED / CONFLICT'?'Programme records conflict; JARVIS must not guess the current standing.':'Programme context is selected.' };
+  if (state.context.kind==='monitor') return { label:ctx.subject||state.context.label, summary:ctx.plain||'A Monitor observation is selected.' };
+  return { label:state.context.label||'Current field', summary:'A Founder Workspace field is selected.' };
+}
+
+function b6CompileIntent() {
+  const O1=window.JarvisOperatorIntentContract;
+  const O2=window.JarvisOperatorWorkGraph;
+  state.workRoom.error=null; state.workRoom.result=null;
+  if (!O1 || !O2) {
+    state.workRoom.intent=null; state.workRoom.plan=null;
+    state.workRoom.error='The governed O1/O2 planning contracts are not available in this build.';
+    return;
+  }
+  const intent=O1.compileIntent({ utterance:state.workRoom.input, priorIntent:state.workRoom.lastClearIntent });
+  state.workRoom.intent=intent;
+  state.workRoom.plan=intent.standing==='CLEAR' ? O2.compileWorkGraph(intent) : null;
+  if (intent.standing==='CLEAR') {
+    state.workRoom.lastClearIntent=intent;
+    saveWorkRoom();
+  }
+}
+
+function b6LocalPrompt() {
+  const intent=state.workRoom.intent;
+  const plan=state.workRoom.plan?.graph;
+  const field=currentFieldOrientation();
+  const steps=arr(plan?.work_units).map(u=>`${u.ordinal}. ${u.objective} → ${u.produces}`).join('\n');
+  return [
+    'You are JARVIS working with Kelly inside Kelly\'s World.',
+    'This is a local reasoning turn only. Do not claim that repository changes, provider execution, merge, deployment, or production actions occurred.',
+    `CURRENT FIELD: ${field.label}`,
+    `FIELD ORIENTATION: ${field.summary}`,
+    `KELLY\'S EXACT REQUEST: ${intent?.raw_utterance || state.workRoom.input}`,
+    `REQUESTED OUTCOME: ${b6LevelLabel(intent?.requested_level)}`,
+    steps ? `BOUNDED PLAN:\n${steps}` : 'BOUNDED PLAN: unavailable',
+    'Respond in plain language. Help Kelly think and decide. If repository evidence is required but not supplied in this turn, say what should be inspected next instead of inventing facts.',
+  ].join('\n\n');
+}
+
+async function b6RunLocal() {
+  if (state.workRoom.running) return;
+  const intent=state.workRoom.intent;
+  const plan=state.workRoom.plan;
+  if (!intent || intent.standing!=='CLEAR' || !plan?.ok) {
+    state.workRoom.error='JARVIS needs a clear governed intent and bounded plan before local reasoning can run.';
+    render(); return;
+  }
+  if (!window.jarvis || typeof window.jarvis.submitTask!=='function') {
+    state.workRoom.error='This build does not expose the existing local JARVIS reasoning seam.';
+    render(); return;
+  }
+  const prompt=b6LocalPrompt();
+  state.workRoom.running=true; state.workRoom.error=null; state.workRoom.result=null;
+  render();
+  try {
+    const response=await window.jarvis.submitTask({ bounded_for_local:true, input_chars:prompt.length, prompt, operator_posture:'local' });
+    state.workRoom.result=response;
+    state.workRoom.turns.push({ role:'kelly', text:intent.raw_utterance, at:new Date().toISOString() });
+    const answer=response?.result?.response || response?.result?.error || response?.reason || 'JARVIS returned no readable response.';
+    state.workRoom.turns.push({ role:'jarvis', text:String(answer), at:new Date().toISOString(), verification:response?.verification || null, status:response?.status || null });
+    saveWorkRoom();
+  } catch (e) {
+    state.workRoom.error=String(e?.message||e);
+  } finally {
+    state.workRoom.running=false; render();
+  }
 }
 
 async function refresh(opts = {}) {
@@ -251,39 +345,68 @@ function programmeRow(p, origin) {
   return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(label)}</div><div class="rowPlain">${esc(summary)}</div>${technicalDetails([`Programme: ${p.id}`,`Standing: ${p.standing||'not formally projected'}`,`Evidence: ${p.evidence_state}`,source?`Source: ${source}`:null])}<div class="actions">${contextButton('programme',p.id,label,origin,source)}${source?evidenceButton(source):''}<button class="btn subtle" data-action="context-view" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(label))}" data-origin="${attr(enc(origin))}" data-source="${attr(enc(source))}" data-target="system">System</button></div></div>${pill(level==='warn'?'Watching':level==='good'?'Observed':'Not observed',level)}</div></div>`;
 }
 
+function renderB6Turns() {
+  const turns=arr(state.workRoom.turns);
+  if (!turns.length) return `<div class="empty">This working room is ready. Your local JARVIS conversation will stay here for this app session.</div>`;
+  return `<div class="workTurns">${turns.map(t=>{
+    const who=t.role==='kelly'?'Kelly':'JARVIS';
+    const cls=t.role==='kelly'?'kelly':'jarvis';
+    const verification=t.role==='jarvis'&&t.verification
+      ? `<div class="turnVerification">${t.verification.pass===true?'Local execution verified':'Local execution not verified'}${t.verification.correctness?` · answer correctness: ${esc(String(t.verification.correctness).toLowerCase())}`:''}${t.verification.correctness_reason?` · ${esc(t.verification.correctness_reason)}`:''}</div>`:'';
+    return `<div class="turn ${cls}"><div class="turnWho">${who}</div><div class="turnText">${esc(t.text).replace(/\n/g,'<br>')}</div>${verification}</div>`;
+  }).join('')}</div>`;
+}
+
+function renderB6Plan() {
+  const intent=state.workRoom.intent;
+  if (!intent) return '';
+  if (intent.standing==='INVALID') return `<div class="callout bad"><b>I need something to work on.</b><br>${esc(arr(intent.ambiguities)[0]||'The request is empty.')}</div>`;
+  if (intent.standing==='AMBIGUOUS') {
+    return `<div class="callout slate"><b>I need one clearer starting word.</b><br>${esc(arr(intent.ambiguities)[0]||'JARVIS will not guess a stronger intention.')}<div class="actions"><button class="btn" data-action="b6-prefix" data-prefix="Investigate ">Investigate</button><button class="btn" data-action="b6-prefix" data-prefix="Plan ">Plan</button><button class="btn" data-action="b6-prefix" data-prefix="Change ">Change</button><button class="btn" data-action="b6-prefix" data-prefix="Release ">Prepare for release</button></div></div>`;
+  }
+  const plan=state.workRoom.plan;
+  if (!plan?.ok) return `<div class="callout bad"><b>JARVIS could not form a bounded plan.</b><br>${esc(arr(plan?.blockers)[0]?.detail||'The planning contract refused this request.')}</div>`;
+  const steps=arr(plan.graph?.work_units);
+  return `<div class="planCard"><div class="planHead"><b>I understand this as: ${esc(b6LevelLabel(intent.requested_level))}</b><span class="pill neutral">intent only · no authority</span></div><div class="planObjective">${esc(intent.objective)}</div><ol>${steps.map(s=>`<li><b>${esc(s.kind.toLowerCase())}</b> — ${esc(s.objective)} <span class="muted">→ ${esc(s.produces)}</span></li>`).join('')}</ol><div class="actions"><button class="btn primary" data-action="b6-run-local" ${state.workRoom.running?'disabled':''}>${state.workRoom.running?'JARVIS is thinking…':'Work with local JARVIS'}</button></div><div class="rowMeta">Local reasoning only. This does not edit files, create a Work Unit, call an external model, merge, deploy, or touch production.</div></div>`;
+}
+
+function renderB6Room() {
+  const field=currentFieldOrientation();
+  const error=state.workRoom.error?`<div class="callout bad"><b>Working room stopped.</b><br>${esc(state.workRoom.error)}</div>`:'';
+  return `<section class="section"><h2>Work with JARVIS</h2><div class="workField"><span class="label">Current field</span><b>${esc(field.label)}</b><span>${esc(field.summary)}</span></div>${renderB6Turns()}<div class="workComposer card"><label for="b6IntentInput"><b>What do you want to do?</b></label><textarea id="b6IntentInput" maxlength="1200" rows="4" placeholder="Try: Investigate what is blocking Writer's Studio. Plan the next clean step. Change the way Today groups this work.">${esc(state.workRoom.input)}</textarea><div class="rowMeta">JARVIS preserves your words. If your intent is ambiguous, it asks instead of guessing.</div><div class="actions"><button class="btn primary" data-action="b6-interpret">Plan this with JARVIS</button><button class="btn subtle" data-action="b6-clear-room">Clear working room</button></div></div>${error}${renderB6Plan()}</section>`;
+}
+
 function renderWork() {
   const vm=state.vm, ctx=currentContextObject(), units=arr(vm.work?.units), programmes=arr(vm.programme_state?.programmes);
   let conversation;
   if (!state.context) {
-    conversation=`<div class="callout slate"><b>Start by choosing real context.</b><br>Use Today or Monitor, or choose a live Work Unit below. B5 does not repeat the old generic “show me what JARVIS would propose” form.</div>`;
+    conversation=`<div class="callout slate"><b>No field selected.</b><br>You can start working anyway, or choose something from Today or Monitor and its context will follow you here.</div>`;
   } else if (!ctx) {
     conversation=`<div class="callout bad"><b>${esc(state.context.label)}</b> is no longer present in the live read model. Clear the context or refresh from its source.</div>`;
   } else {
     conversation=workConversation(ctx);
   }
-  return `<div class="eyebrow">Work · Kelly + partners</div><h1>Stay inside the work. Let the machinery come to you.</h1><p class="lede">Work is the center of Kelly's operating world. JARVIS carries the governed context now; MAIA, ChatGPT and Claude Code are named partner contexts, but B5 does not pretend a live handoff exists until a governed connection is actually wired.</p>
-    <section class="section"><h2>Current conversation</h2>${conversation}</section>
-    <section class="section"><h2>Your AI partners</h2><div class="grid2"><div class="card"><h3>JARVIS</h3><p>Connected here: local work, evidence, programme state and system observations.</p></div><div class="card"><h3>MAIA · ChatGPT · Claude Code</h3><p>Context-rich partners in Kelly's wider work. Cross-system context handoff is not wired in B5, so this workspace will not claim they are connected when they are not.</p></div></div></section>
-    <section class="section"><h2>Working partners</h2><div class="card"><p>JARVIS is carrying this governed local context. No MAIA, ChatGPT, or Claude Code handoff is connected in B5; those partnerships require their own governed context-handoff act rather than a decorative “connected” badge.</p></div></section>
-    <section class="section"><h2>Free-form intent</h2><div class="card"><h3>Held for B6</h3><p>The live O1 intent seam is not connected in B5. When B6 opens, typed—and later spoken—intent enters this same contextual session instead of a separate command system.</p><div class="actions"><button class="btn" disabled>Plan with JARVIS — B6</button></div></div></section>
-    <section class="section"><h2>Live Work Units</h2><div class="list">${units.length?units.map(u=>workUnitRow(u)).join(''):'<div class="empty">No readable canonical Work Units are present in the local store.</div>'}</div></section>
-    <section class="section"><h2>Choose a programme as context</h2><div class="list">${programmes.slice(0,18).map(p=>programmeRow(p,'Work')).join('')}</div></section>`;
+  return `<div class="eyebrow">Work · Kelly + partners</div><h1>This is where we work.</h1><p class="lede">Tell JARVIS what you want to investigate, prepare, change, or prepare for release. Your words become governed intent and a bounded plan before anything runs. Local reasoning requires a separate explicit gesture.</p>
+    ${renderB6Room()}
+    <section class="section"><h2>Current field context</h2>${conversation}</section>
+    <section class="section"><h2>Your AI partners</h2><div class="grid2"><div class="card"><h3>JARVIS · local</h3><p>Live here now: governed intent, bounded planning, local reasoning, evidence and programme context.</p></div><div class="card"><h3>MAIA · ChatGPT · Claude Code</h3><p>These remain Kelly's wider context-rich partners. B6 defines the bounded handoff contract, but no live cross-system connection is claimed until a governed connector exists.</p></div></div></section>
+    <details class="secondaryDetails"><summary>Existing Work Units and programmes</summary><div class="detailsBody"><section class="section"><h2>Live Work Units</h2><div class="list">${units.length?units.map(u=>workUnitRow(u)).join(''):'<div class="empty">No readable canonical Work Units are present in the local store.</div>'}</div></section><section class="section"><h2>Choose a programme as context</h2><div class="list">${programmes.slice(0,18).map(p=>programmeRow(p,'Work')).join('')}</div></section></div></details>`;
 }
 
 function workConversation(ctx) {
   const c=state.context;
   if (c.kind==='programme') {
     const sources=arr(ctx.sources), label=friendlyProgrammeName(ctx);
-    return `<div class="contextCard"><b>${esc(label)}</b><div class="why">JARVIS is carrying this programme context across every surface. It is not inventing a next act in B5R1.</div><div class="rowPlain" style="margin-top:9px">${ctx.evidence_state==='UNVERIFIED / CONFLICT'?'The current programme record is conflicted; JARVIS will not guess through it.':'The programme context is available for inspection.'}</div>${technicalDetails([`Programme: ${ctx.id}`,`Standing: ${ctx.standing||'not formally projected'}`,`Evidence: ${ctx.evidence_state}`])}<div class="actions">${sources.slice(0,4).map(s=>evidenceButton(s)).join('')}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
+    return `<div class="contextCard"><b>${esc(label)}</b><div class="why">JARVIS is carrying this programme context across every surface. Use the working room above to decide what you want to do with it.</div><div class="rowPlain" style="margin-top:9px">${ctx.evidence_state==='UNVERIFIED / CONFLICT'?'The current programme record is conflicted; JARVIS will not guess through it.':'The programme context is available for inspection.'}</div>${technicalDetails([`Programme: ${ctx.id}`,`Standing: ${ctx.standing||'not formally projected'}`,`Evidence: ${ctx.evidence_state}`])}<div class="actions">${sources.slice(0,4).map(s=>evidenceButton(s)).join('')}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
   }
   if (c.kind==='work') {
     const label=humanWorkSubject(ctx), ask=humanFounderAsk(ctx);
     return `<div class="contextCard"><b>${esc(label)}</b><div class="why">${esc(humanWorkStatus(ctx))}</div>${ask?`<div class="rowPlain" style="margin-top:9px"><b>Needs Kelly:</b> ${esc(ask)}</div>`:''}${technicalDetails([`Work Unit: ${ctx.title}`,`State: ${ctx.state}`,ctx.route?`Route: ${ctx.route}`:null,`Evidence: ${ctx.evidence_state}`,ctx.file?`Source: ${ctx.file}`:null])}<div class="actions">${evidenceButton(ctx.file)}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
   }
   if (c.kind==='monitor') {
-    return `<div class="contextCard"><b>You opened “${esc(ctx.subject)}” from Monitor.</b><div class="why">The observation remains attached as the reason this investigation context exists.</div><div class="rowPlain" style="margin-top:9px">${esc(ctx.plain)}</div><div class="rowMeta">${esc(ctx.value)} · ${esc(ctx.freshness)} · ${esc(ctx.evidence_state)}</div><div class="actions"><button class="btn" data-view-jump="monitor">Back to observation</button><button class="btn" data-action="refresh-monitor">Refresh observation</button><button class="btn" disabled>Plan investigation — B6</button></div></div>`;
+    return `<div class="contextCard"><b>You opened “${esc(ctx.subject)}” from Monitor.</b><div class="why">The observation remains attached as the reason this working context exists. Use the working room above to investigate it.</div><div class="rowPlain" style="margin-top:9px">${esc(ctx.plain)}</div><div class="rowMeta">${esc(ctx.value)} · ${esc(ctx.freshness)} · ${esc(ctx.evidence_state)}</div><div class="actions"><button class="btn" data-view-jump="monitor">Back to observation</button><button class="btn" data-action="refresh-monitor">Refresh observation</button></div></div>`;
   }
-  return `<div class="empty">Context is present but its kind is not recognized by B5.</div>`;
+  return `<div class="empty">Context is present but its kind is not recognized by this working room.</div>`;
 }
 
 function workUnitRow(u) {
@@ -359,6 +482,22 @@ async function handleClick(e) {
   const action=el.dataset.action;
   if(action==='refresh'){ await refresh({force:true}); return; }
   if(action==='refresh-monitor'){ await refresh({force:true,full:true}); return; }
+  if(action==='b6-interpret'){
+    const input=document.getElementById('b6IntentInput');
+    if(input) state.workRoom.input=String(input.value||'');
+    b6CompileIntent(); render(); return;
+  }
+  if(action==='b6-run-local'){ await b6RunLocal(); return; }
+  if(action==='b6-prefix'){
+    const prefix=String(el.dataset.prefix||'');
+    state.workRoom.input=`${prefix}${state.workRoom.input}`.trim();
+    b6CompileIntent(); render(); return;
+  }
+  if(action==='b6-clear-room'){
+    state.workRoom={input:'',intent:null,plan:null,turns:[],lastClearIntent:null,running:false,error:null,result:null};
+    try { sessionStorage.removeItem('jfw:b6:turns'); sessionStorage.removeItem('jfw:b6:last-clear-intent'); } catch {}
+    render(); return;
+  }
   if(action==='clear-context'){ clearContext(); return; }
   if(action==='close-evidence'){ state.evidence=null; renderEvidence(); return; }
   if(action==='reveal-workspace'){ try{await window.jarvis.revealWorkspace();}catch{} return; }
@@ -371,4 +510,7 @@ async function handleClick(e) {
 }
 
 document.addEventListener('click',handleClick);
+document.addEventListener('input',(e)=>{
+  if (e.target && e.target.id==='b6IntentInput') state.workRoom.input=String(e.target.value||'');
+});
 window.addEventListener('DOMContentLoaded',()=>refresh());

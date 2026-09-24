@@ -59,7 +59,7 @@ check(/technicalDetails\(\[/.test(renderer) &&
 
 check(!/fetch\(|runExternalReasoning\(|submitTask\(|workUnitAction\(/.test(
   renderer
-    .slice(renderer.indexOf('function humanWorkSubject'), renderer.indexOf('async function refresh'))
+    .slice(renderer.indexOf('function humanWorkSubject'), renderer.indexOf('function b6CompileIntent'))
 ),
   'B5R1-L7','translation helpers add no model, network, execution, or authority call');
 
@@ -75,7 +75,7 @@ const candidates=[
   ['DC-B5R1-2','B5R1-L3',renderer.replace('<summary>Technical details</summary>','<summary>Machine details removed</summary>'),s=>/<summary>Technical details<\/summary>/.test(s)],
   ['DC-B5R1-3','B5R1-L5',renderer.replace('<summary>System observations</summary>','<summary>System observations first</summary>'),s=>/<summary>System observations<\/summary>/.test(s)],
   ['DC-B5R1-4','B5R1-L7',renderer.replace('function humanWorkSubject(u) {','function humanWorkSubject(u) { fetch("https://example.com");'),s=>{
-    const h=s.slice(s.indexOf('function humanWorkSubject'),s.indexOf('async function refresh'));
+    const h=s.slice(s.indexOf('function humanWorkSubject'),s.indexOf('function b6CompileIntent'));
     return !/fetch\(|runExternalReasoning\(|submitTask\(|workUnitAction\(/.test(h);
   }],
 ];

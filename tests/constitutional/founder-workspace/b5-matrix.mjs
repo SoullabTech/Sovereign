@@ -30,14 +30,21 @@ check(views.every(v=>new RegExp(`data-view=["']${v}["']`).test(index)) && !/data
 check(/Content-Security-Policy/.test(index) && /connect-src 'none'/.test(index) && !/https?:\/\//.test(index), 'B5-L2', 'Desktop HTML has local-only CSP and no external dependency');
 check(/founder-workspace-renderer\.js/.test(index) && !/<script src="renderer\.js"/.test(index), 'B5-L3', 'existing JARVIS app loads the B5 renderer, not a second app and not the legacy renderer');
 
+const b6Start=renderer.indexOf('async function b6RunLocal()');
+const b6End=renderer.indexOf('async function refresh',b6Start);
+const b6ExecutionSlice=b6Start>=0&&b6End>b6Start?renderer.slice(b6Start,b6End):'';
+const rendererOutsideB6=b6Start>=0&&b6End>b6Start?renderer.slice(0,b6Start)+renderer.slice(b6End):renderer;
 const forbiddenRendererCalls=['submitTask','runExternalReasoning','governanceAction','workUnitAction','runWorkUnit','getCapabilities','searchContinuity','chooseRepo','clearRepo'];
-const rendererHits=forbiddenRendererCalls.filter(x=>renderer.includes(`.${x}(`));
-check(rendererHits.length===0 && !/SpeechRecognition|speechSynthesis|getUserMedia|mediaDevices/.test(renderer), 'B5-L4', `B5 renderer carries no execution/provider/governance/voice IPC (${rendererHits.join(', ')||'none'})`);
+const outsideHits=forbiddenRendererCalls.filter(x=>rendererOutsideB6.includes(`.${x}(`));
+const forbiddenB6Calls=['runExternalReasoning','governanceAction','workUnitAction','runWorkUnit','getCapabilities','searchContinuity','chooseRepo','clearRepo'];
+const b6Hits=forbiddenB6Calls.filter(x=>b6ExecutionSlice.includes(`.${x}(`));
+const b6SubmitCount=(b6ExecutionSlice.match(/\.submitTask\(/g)||[]).length;
+check(outsideHits.length===0 && b6Hits.length===0 && b6SubmitCount===1 && !/SpeechRecognition|speechSynthesis|getUserMedia|mediaDevices/.test(renderer), 'B5-L4', `B5 stays read-first; B6 adds exactly one explicit submitTask local-reasoning call and no other execution/provider/governance/voice IPC (outside=${outsideHits.join(', ')||'none'}; b6=${b6Hits.join(', ')||'none'})`);
 check(/getWorkspaceViewModel/.test(preload) && /jarvis:workspace-viewmodel/.test(preload) && /channel: 'jarvis:workspace-viewmodel'/.test(allowlist), 'B5-L5', 'single Founder Workspace read channel is exposed and authority-reviewed');
 check(/async function readStatus\(\)/.test(main) && /ipcMain\.handle\('jarvis:status', readStatus\)/.test(main) && /buildDesktopViewModel/.test(main), 'B5-L6', 'workspace view-model and legacy status share one status observation function');
 check(/kind !== 'script'/.test(composer) && /input\.observeMode === 'full'/.test(composer) && /refresh_instruments/.test(main), 'B5-L7', 'ordinary reads skip heavyweight scripts; explicit Monitor refresh owns full census');
 check(/sessionStorage/.test(renderer) && /jfw:b5:context/.test(renderer) && /data-view-jump/.test(renderer), 'B5-L8', 'selected work context persists across surface changes in presentation memory');
-check(/Held for B6/.test(renderer) && /B7 owns the evidence-backed relationship join/.test(renderer), 'B5-L9', 'B5 names B6/B7 holds instead of impersonating unopened capabilities');
+check(/Work with local JARVIS/.test(renderer) && /B7 owns the evidence-backed relationship join/.test(renderer), 'B5-L9', 'B6 Work is explicitly live while B7 relationship joining remains held rather than impersonated');
 check(/data-action="refresh-monitor"/.test(renderer) && /Work on this/.test(renderer) && /evidence/.test(renderer), 'B5-L10', 'Today/Monitor can enter Work and evidence traversal is present');
 check(/projectCanonicalProgrammeState/.test(composer) && /git.*archive/.test(composer) && /canonicalRef: observedAgainst/.test(main), 'B5-L13', 'programme projection and programme evidence are pinned to the exact canonical commit, never the bound development tree');
 const todaySource = renderer.slice(renderer.indexOf('function renderToday()'), renderer.indexOf('function workspaceCard'));
@@ -46,7 +53,7 @@ check(/function deriveActiveFields/.test(renderer) && /<h2>Needs Kelly/.test(tod
 check(monitorSource.indexOf('<h2>Needs Kelly') >= 0 && monitorSource.indexOf('<h2>Watching') > monitorSource.indexOf('<h2>Needs Kelly') && monitorSource.indexOf('<summary>System observations</summary>') > monitorSource.indexOf('<h2>Watching') && /Needs attention is not the same as broken/.test(monitorSource), 'B5-L15', 'Monitor presents Founder decisions and watching before technical observations without flattening attention into failure');
 check(/data-view-jump=\"today\"/.test(renderer), 'B5-L16', 'Today participates in the same persistent field context loop');
 check(/Current active field · center/.test(renderer) && /B7 owns the evidence-backed relationship join/.test(renderer), 'B5-L17', 'Graph centers the current field while B7 still owns new evidence edges');
-check(/No MAIA, ChatGPT, or Claude Code handoff is connected in B5/.test(renderer), 'B5-L18', 'B5 makes room for AI partners without fabricating a live handoff');
+check(/MAIA · ChatGPT · Claude Code/.test(renderer) && /no live cross-system connection is claimed/.test(renderer), 'B5-L18', 'the workspace names Kelly’s wider AI partners without fabricating a live cross-system handoff');
 check(/exec: input\.governorExec/.test(composer) && /const governorExec = governorNode\.path/.test(main) && /execFileSync\(governorNode\.path/.test(main), 'B5-L19', 'Electron injects the governed Node runtime for governor reads; process.execPath cannot become the Electron interpreter');
 
 // Live view-model contract remains valid.
@@ -96,9 +103,9 @@ const candidates=[
   ['DC-B5-1','B5-L1',index.replace('data-view="today"','data-view="home"'),(s)=>views.every((v)=>new RegExp(`data-view=["']${v}["']`).test(s))&&!/data-view=["'](?:home|spiral)["']/.test(s)],
   ['DC-B5-2','B5-L2',index.replace("connect-src 'none'","connect-src https:"),(s)=>/connect-src 'none'/.test(s)],
   ['DC-B5-3','B5-L3',index.replace('founder-workspace-renderer.js','renderer.js'),(s)=>/founder-workspace-renderer\.js/.test(s)&&!/<script src="renderer\.js"/.test(s)],
-  ['DC-B5-4','B5-L4',renderer+'\nwindow.jarvis.submitTask({});',(s)=>!forbiddenRendererCalls.some((x)=>s.includes(`.${x}(`))],
+  ['DC-B5-4','B5-L4',renderer+'\nwindow.jarvis.submitTask({});',(s)=>{const a=s.indexOf('async function b6RunLocal()'),b=s.indexOf('async function refresh',a);const inside=a>=0&&b>a?s.slice(a,b):'';const outside=a>=0&&b>a?s.slice(0,a)+s.slice(b):s;const outsideBad=forbiddenRendererCalls.some(x=>outside.includes(`.${x}(`));const insideBad=forbiddenB6Calls.some(x=>inside.includes(`.${x}(`));return !outsideBad&&!insideBad&&(inside.match(/\.submitTask\(/g)||[]).length===1;}],
   ['DC-B5-5','B5-L8',renderer.replaceAll('sessionStorage','localOnlyMemory'),(s)=>/sessionStorage/.test(s)&&/jfw:b5:context/.test(s)],
-  ['DC-B5-6','B5-L9',renderer.replace('Held for B6','Available now'),(s)=>/Held for B6/.test(s)],
+  ['DC-B5-6','B5-L9',renderer.replace('Work with local JARVIS','Held for B6'),(s)=>/Work with local JARVIS/.test(s)&&/B7 owns the evidence-backed relationship join/.test(s)],
   ['DC-B5-7','B5-L9',renderer.replace('B7 owns the evidence-backed relationship join','Relationships inferred from names'),(s)=>/B7 owns the evidence-backed relationship join/.test(s)],
   ['DC-B5-8','B5-L7',composer.replace("e.kind !== 'script'","true"),(s)=>/kind !== 'script'/.test(s)],
   ['DC-B5-9','B5-L13',composer.replace('projectCanonicalProgrammeState(root, input.observedAgainst, now)',"project(readTree({ root }), { observed_against: input.observedAgainst, projected_at: now })"),(s)=>/programme_state = projectCanonicalProgrammeState\(root, input\.observedAgainst, now\)/.test(s)],
@@ -106,7 +113,7 @@ const candidates=[
   ['DC-B5-11','B5-L15',renderer.replace('<summary>System observations</summary>','<summary>Machine health first</summary>'),(s)=>{const m=s.slice(s.indexOf('function renderMonitor()'),s.indexOf('function monitorAttentionRow'));return m.indexOf('<h2>Needs Kelly')>=0&&m.indexOf('<h2>Watching')>m.indexOf('<h2>Needs Kelly')&&m.indexOf('<summary>System observations</summary>')>m.indexOf('<h2>Watching');}],
   ['DC-B5-12','B5-L16',renderer.replace('<button class="btn subtle" data-view-jump="today">Today</button>',''),(s)=>/data-view-jump=\"today\"/.test(s)],
   ['DC-B5-13','B5-L17',renderer.replace('Current active field · center','Network'),(s)=>/Current active field · center/.test(s)&&/B7 owns the evidence-backed relationship join/.test(s)],
-  ['DC-B5-14','B5-L18',renderer.replace('No MAIA, ChatGPT, or Claude Code handoff is connected in B5','MAIA, ChatGPT, and Claude Code are connected'),(s)=>/No MAIA, ChatGPT, or Claude Code handoff is connected in B5/.test(s)],
+  ['DC-B5-14','B5-L18',renderer.replace('no live cross-system connection is claimed','MAIA, ChatGPT and Claude Code are connected live'),(s)=>/MAIA · ChatGPT · Claude Code/.test(s)&&/no live cross-system connection is claimed/.test(s)],
   ['DC-B5-15','B5-L19',composer.replace('exec: input.governorExec','exec: undefined'),(s)=>/exec: input\.governorExec/.test(s)],
 ];
 for(const [id,law,source,predicate] of candidates){ const dead=!predicate(source); check(dead,id,`→ ${law} ${dead?'DIES':'SURVIVES'}`); }
