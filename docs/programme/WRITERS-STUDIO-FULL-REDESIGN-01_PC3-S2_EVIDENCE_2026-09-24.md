@@ -1,7 +1,7 @@
 # JARVIS-WRITERS-STUDIO-FULL-REDESIGN-01 · PC3-S2 — Evidence Record
 ## Home / Arrival visual family
 
-**Standing:** CANDIDATE · STOP BEFORE MERGE · FOUNDER VISUAL REVIEW — PC3-S2
+**Standing:** PC3-S2 → founder **REVISE** (`PC3_S2_FOUNDER_ADJUDICATION_2026-09-24.md`) → **PC3-S2R1 CANDIDATE** (§9) · STOP BEFORE MERGE · FOUNDER VISUAL REVIEW — PC3-S2R1
 **Authority:** isolated non-production fixture implementation only
 **Packet:** JARVIS `control-room/writers-studio/PC3_S2_CC_EXECUTION_PACKET.md` (control room `e0a0156119aabab1664e9d3561453b4d19d88565`)
 **Visual base:** founder-accepted S1 `9995c785b3ec417c0906b4ad4bc26bef5d64474b` (PC3-S1 PASS recorded in `PC3_S1_FOUNDER_ADJUDICATION_2026-09-24.md`)
@@ -122,3 +122,54 @@ fidelity, drift, mutant behaviour and screenshot bytes; production untouched.
 first-arrival flows beyond the Home surface; final mobile (PC10).
 
 **STOP: FOUNDER VISUAL REVIEW — PC3-S2.**
+
+---
+
+## 9. PC3-S2R1 — Home field containment + professional framing repair
+
+**Packet:** JARVIS `control-room/writers-studio/PC3_S2R1_HOME_FIELD_CONTAINMENT_REPAIR.md` (control room `0b9e65b2c24611fa5222de248907135cba2b5d41`)
+**Parent:** `c01d1908507c8d31d4e882156867113faea1f5d8` · **Branch:** `feature/ws-full-redesign-pc3-s2r1-home-field-20260924`
+**Founder finding:** Home is clean and truthful but lacks framing, field containment and a professional spatial hierarchy — content floated on the ground as separate cards.
+
+### Cause
+S2 laid every block directly on the shell ground, each with its own panel, border and shadow. With no containing plane and no tonal hierarchy, the eye had no room to be in and no anchor to return to; the current Work was one card among cards. The Many Works metadata carried a separator that, once the facts were stacked, fell onto a line of its own (a `display:block` rule outranked the rule hiding the dot).
+
+### Repair (visual only)
+- **Level 1 · room field** — one `data-field="room"` plane per state: new role `--fr-field` over the unchanged ground, one hairline edge (`--fr-field-line`), 20 px radius, no shadow, max-width 1376 px. H1’s room is centred in the viewport as a threshold, sized to its content, not the viewport.
+- **Level 2 · anchor field** — one `data-field="anchor"` per state, raised on `--fr-panel` with the S1 shadow: H2 welcome + place + Work image and name + Return + kept line + History in ONE field (arrival → recognition → re-entry); H4 a compact return field; H3 the lead writing (dashed edge kept); H1 the threshold (unraised).
+- **Level 3 · regions + band** — Also written / Your Works / Your Writing as `data-field="support"` regions on new role `--fr-recess` holding paper items; Begin / Import / Bring notes as one `data-field="band"` on the room’s edge. The writing space lost its card frame and is room atmosphere.
+- **Alignment** — every block the room lays out starts on the room’s inner edge or on the second column line; the band spans the inner width exactly.
+- **Orphan separator** — stacked facts carry no separator; inline facts, the compact return line and the kept-line caption glue the dot to the words after it (`.fr-home-nowrap`).
+- **Tokens** — three roles added to both appearances (`field`, `fieldLine`, `recess`); no S1 region reads them. Light: ground `#F3F3F3` → field `#F9F8F5` → raised `#FEFEFE`, recess `#F2F1ED`. Night: ground `#0F1422` → field `#131A2A` → raised `#171E30`, recess `#10172A`.
+
+### Gates
+| gate | result |
+|---|---|
+| S1 fidelity · drift ±0.3/±0.6 | ✅ 55/55 · 55/55 each |
+| S1 maia-drop mutant | ✅ 49/55 RED |
+| S1 captures regenerated | ✅ all 12 byte-identical (zero git diff) |
+| Jest `fullRedesignShell` + `fullRedesignHome` | ✅ 34/34 (13 + 21; 5 new R1 containment laws) |
+| Jest R1 laws mutation-tested | ✅ room field removed · dot back in stacked facts · anchor demoted · dot unglued — each killed, file restored byte-identical |
+| S2R1 Home fidelity | ✅ **91/91** (containment checks added, S2 checks kept) |
+| mutants | ✅ resident-maia 87/91 · urgency 87/91 · bar-shift 75/91 · **no-room-field 63/91 · flat-tones 76/91 · heavy-chrome 87/91 · orphan-sep 87/91** — each RED on its intended law |
+| `check:design-canon` · `typecheck` · `check:no-supabase` | ✅ · ✅ no regressions · ✅ |
+| business network | ✅ zero requests, every state |
+
+### New mechanical assertions (packet §16)
+`C-room-field` one room field on its own tone with an edge · `C-two-tone` ΔE ≥ 3 ground→field, field→anchor, field→each region · `C-anchor` one anchor holding the primary; H2/H4 anchor names the Work and Return; H2 anchor outranks every region in area · `C-boundaries` ≤ 2 left alignment lines, rightmost block and band on the room’s inner edge · `C-no-orphan-sep` no metadata line holding only a separator (per-character line measurement, every width) · `C-no-heavy-chrome` no border > 2 px, no shadow blur > 30 px or alpha > .3 · `C-night=light` identical field boxes · plus the S2 no-MAIA, zero-network and no-overflow laws.
+
+### Evidence
+Renders: H1 1536 / 1280 / 1024 / 390 · H2 1536 / 1280 / 1024 / 390 / Night 1536 · H3 1536 · H4 1536 / 1024.
+Before/after boards: `board-s2r1-{home-begin,home-return,home-return-night,home-unclaimed-writing,home-many-works}.jpg` — the parent’s committed render (read with `git show c01d1908`) beside the repaired render, with the containment note. The Visual Canon reference boards `board-home-*.jpg` were regenerated with the new renders.
+
+### Known differences
+1. The writing-space image remains the upscaled #11 crop (now ≈1.23× at H2, ≈1.4× at H1).
+2. H3 and H1 rooms end above the fold at 1536×1024, leaving ground below — the room sizes to its content rather than inventing height.
+3. The H4 shelf at 1024 has uneven title wrapping inside equal-height cards.
+4. Night recess (`#10172A`) sits close to the ground; regions read by their hairline and the paper items inside them.
+
+### Proven / not proven
+**Proven:** one room field, one anchor and tonal regions in every Home state, at every width, in both appearances with identical geometry; the orphan separator cannot recur without failing two instruments; the S1 shell is unchanged in fidelity, drift, mutant behaviour and bytes; zero network; production untouched.
+**Not proven:** whether Home now feels like a professionally composed room that holds the writer, and whether the structure is trusted enough to disappear — founder judgment.
+
+**STOP: FOUNDER VISUAL REVIEW — PC3-S2R1.**

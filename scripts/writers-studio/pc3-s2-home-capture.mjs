@@ -23,12 +23,22 @@ const CORPUS = 'c0f4bca2952a6b6afa2d74e204117b6abdf1915a';
 const CANON = ['docs/design/writers-studio/founder-reference-corpus/original-27/Soullab Writers Studio Visual Canon.png', 'e5a72601548ee0f19e490a0f3c6f99d66694b2333217d6c341e64e9a37c44b25'];
 const AUGUST = ['docs/design/writers-studio/founder-reference-corpus/writer-studio-reference-pack/references/01-work-home.png', '27da50dff5773b89bd4ea0e875b1940f648b2671f35b4c90b64c5dfbed8542b7'];
 
+const PARENT = 'c01d1908507c8d31d4e882156867113faea1f5d8';
 const SHOTS = [
   ['home-begin', 1536, 1024], ['home-begin', 1280, 800], ['home-begin', 1024, 768], ['home-begin', 390, 844, 'mobile'],
   ['home-return', 1536, 1024], ['home-return', 1280, 800], ['home-return', 1024, 768], ['home-return', 390, 844, 'mobile'],
-  ['home-unclaimed-writing', 1536, 1024], ['home-many-works', 1536, 1024],
+  ['home-unclaimed-writing', 1536, 1024], ['home-many-works', 1536, 1024], ['home-many-works', 1024, 768],
   ['home-return', 1536, 1024, 'night'],
 ];
+
+// What changed, per state (PC3-S2R1). The board shows it; this names it.
+const CHANGE = {
+  'home-begin': ['H1 · Begin', 'The empty Studio now sits inside one room field — a warm paper plane with a single hairline edge, centred on the ground — so the open space reads as a held threshold, not a vacant page. “Your writing space” lost its card frame and belongs to the same room. No content added.'],
+  'home-return': ['H2 · Return', 'Welcome, place, the Work’s image and name, Return, the kept line and History are now ONE raised return field — arrival → recognition → re-entry. The writing space is unframed atmosphere beside it; “Also written” became a recessed region beneath it; Begin / Import / Bring notes form one band on the room’s edge. Three tones: ground → room field → raised Work.'],
+  'home-unclaimed-writing': ['H3 · Unclaimed writing', 'The lead writing is the one raised field (dashed page edge kept — provisional, not lesser). The rest of “Your Writing” and “Your Works” are two recessed regions of the same room, side by side, so the Writing / Work distinction is spatial as well as labelled.'],
+  'home-many-works': ['H4 · Many Works', 'The current Work is a compact raised return field; the Works shelf and Your Writing are two recessed regions on one alignment line. Orphan separator fixed: stacked facts carry no dot; inline facts glue the dot to the words after it. One band of quiet acts closes the room.'],
+  'home-return-night': ['H2 · Return · Night', 'Same containment geometry under Night (measured identical): deepest navy ground → one-step field → raised Work surface; action blue and gold stay accents.'],
+};
 
 const NOTES = {
   'home-begin': {
@@ -118,6 +128,36 @@ for (const state of Object.keys(NOTES)) {
     </div></div>
     <div style="padding:0 18px 18px" class="aug"><p class="lab">Supporting history only — NOT the target · August Work Home · ${AUGUST[1].slice(0, 12)}</p><img src="${augustUrl}" style="width:600px"></div>`);
   const out = path.join(OUT, `board-${state}.jpg`);
+  await page.screenshot({ path: out, type: 'jpeg', quality: 86, fullPage: true });
+  written.push(out);
+  await page.close();
+}
+// BEFORE (parent S2, committed) / AFTER (S2R1, this render) boards.
+const parentShot = (name) => {
+  try {
+    return execFileSync('git', ['show', `${PARENT}:${OUT}/${name}`], { maxBuffer: 64 * 1024 * 1024 });
+  } catch {
+    throw new Error(`Parent render ${name} not available. Run: git fetch origin ${PARENT}`);
+  }
+};
+for (const [key, [title, note]] of Object.entries(CHANGE)) {
+  const name = key === 'home-return-night' ? 'home-return-night-1536x1024.png' : `${key}-1536x1024.png`;
+  const before = `data:image/png;base64,${parentShot(name).toString('base64')}`;
+  const after = `data:image/png;base64,${fs.readFileSync(path.join(OUT, name)).toString('base64')}`;
+  const page = await browser.newPage({ viewport: { width: 2140, height: 900 }, deviceScaleFactor: 1 });
+  await page.setContent(`<!doctype html><meta charset="utf-8"><style>
+    body{margin:0;background:#1C1E24;color:#E8EAF0;font:15px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif}
+    .wrap{padding:22px 24px 26px}
+    h1{margin:0 0 6px;font-size:22px;font-weight:600;color:#FFD9A0}
+    .note{margin:0 0 18px;max-width:1600px;color:#D5DAE4}
+    .pair{display:grid;grid-template-columns:1032px 1032px;gap:28px}
+    .lab{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#AAB3C5;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .lab b{color:#FFD9A0;font-weight:600}
+    img{display:block;width:1032px;height:688px;border-radius:4px}
+    </style><div class="wrap"><h1>PC3-S2R1 · ${title} — before / after</h1><p class="note">${note}</p>
+    <div class="pair"><div><p class="lab"><b>Before</b> · parent S2 candidate ${PARENT.slice(0, 8)} · committed render · 1536×1024</p><img src="${before}"></div>
+    <div><p class="lab"><b>After</b> · PC3-S2R1 · browser render · ?state=${key.replace('-night', '')}${key.endsWith('night') ? '&amp;appearance=night' : ''} · 1536×1024 · fixture data</p><img src="${after}"></div></div></div>`);
+  const out = path.join(OUT, `board-s2r1-${key}.jpg`);
   await page.screenshot({ path: out, type: 'jpeg', quality: 86, fullPage: true });
   written.push(out);
   await page.close();

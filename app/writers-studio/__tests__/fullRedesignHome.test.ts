@@ -167,6 +167,66 @@ describe('PC3-S2 · Home / Arrival', () => {
     for (const s of [...FIXTURE_STATES, ...HOME_STATES]) expect(options).toContain(s);
   });
 
+  // ── PC3-S2R1 · field containment ─────────────────────────────────────────
+  test('R1 · every Home state is held by exactly ONE page-level room field', () => {
+    for (const s of HOME_STATES) expect({ s, n: (frame(render(s)).match(/data-field="room"/g) ?? []).length }).toEqual({ s, n: 1 });
+  });
+
+  test('R1 · exactly one anchor field per state, and it holds the one primary act', () => {
+    for (const s of HOME_STATES) {
+      const f = frame(render(s));
+      expect({ s, n: (f.match(/data-field="anchor"/g) ?? []).length }).toEqual({ s, n: 1 });
+      const at = f.indexOf('data-field="anchor"');
+      const open = f.lastIndexOf('<', at);
+      const tag = f.slice(open + 1, f.indexOf(' ', open));
+      // Balanced walk to the anchor's closing tag.
+      let depth = 0;
+      let i = open;
+      const re = new RegExp(`<(/?)${tag}\\b[^>]*>`, 'g');
+      re.lastIndex = open;
+      for (let m = re.exec(f); m; m = re.exec(f)) {
+        depth += m[1] ? -1 : 1;
+        if (depth === 0) {
+          i = m.index + m[0].length;
+          break;
+        }
+      }
+      expect({ s, primaryInAnchor: f.slice(open, i).includes('data-primary-act=""') }).toEqual({ s, primaryInAnchor: true });
+    }
+  });
+
+  test('R1 · the current Work is the return anchor (H2, H4) — not a card among cards', () => {
+    for (const s of ['home-return', 'home-many-works'] as const) {
+      const f = frame(render(s));
+      const anchor = f.slice(f.lastIndexOf('<section', f.indexOf('data-field="anchor"')));
+      const body = anchor.slice(0, anchor.indexOf('</section>', anchor.indexOf('Return to this work')));
+      expect(body).toContain('Welcome back to The River Between.');
+      expect(body).toContain(HOME_COPY.returnAction);
+      expect(body).not.toContain('data-kind="work"');
+    }
+  });
+
+  test('R1 · supporting content sits in named regions and one band of quiet acts', () => {
+    for (const s of ['home-return', 'home-unclaimed-writing', 'home-many-works'] as const) {
+      const f = frame(render(s));
+      expect({ s, regions: (f.match(/data-field="support"/g) ?? []).length > 0, band: (f.match(/data-field="band"/g) ?? []).length }).toEqual({ s, regions: true, band: 1 });
+    }
+  });
+
+  test('R1 · no separator can stand alone: stacked facts carry none, inline ones are glued', () => {
+    const f = frame(render('home-many-works'));
+    const stacked = [...f.matchAll(/<p class="fr-home-facts fr-home-facts-stacked">([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+    expect(stacked.length).toBeGreaterThan(0);
+    for (const b of stacked) expect(b).not.toMatch(/·/);
+    for (const s of HOME_STATES) {
+      const html = frame(render(s));
+      for (const m of html.matchAll(/<span class="fr-home-dot"/g)) {
+        const before = html.slice(Math.max(0, m.index! - 40), m.index);
+        expect({ s, glued: /<span class="fr-home-nowrap">\s*$/.test(before) }).toEqual({ s, glued: true });
+      }
+    }
+  });
+
   test('Home is bound to its governing and supporting references', () => {
     expect(HOME_REFERENCES.family.sha256).toBe('e5a72601548ee0f19e490a0f3c6f99d66694b2333217d6c341e64e9a37c44b25');
     expect(HOME_REFERENCES.supporting.sha256).toBe('27da50dff5773b89bd4ea0e875b1940f648b2671f35b4c90b64c5dfbed8542b7');

@@ -19,6 +19,8 @@ principles:
   - WORK_NAVIGATION_AND_DISCOVERY_CANON_v1 — capability honesty; no activity feed; no ranking by importance
   - Live Home truth (app/writers-studio/HomeView.tsx) — a Work is declared; unclaimed writing is opened as itself; dates remember, durations judge; the conditional search searches titles; remove ≠ delete
   - NEGATIVE_VISUAL_EVIDENCE NV-01…NV-07
+  - PC3-S2R1 founder REVISE — structure trusted enough to disappear: one room field, one anchor field, supporting regions (JARVIS PC3_S2R1_HOME_FIELD_CONTAINMENT_REPAIR.md)
+  - APPEARANCE_DEPTH_LAW_2026-09-24 — two-tone atmospheric depth, one visual world
 
 reference_surfaces:
   - docs/design/writers-studio/founder-reference-corpus/original-27/Soullab Writers Studio Visual Canon.png @ c0f4bca2 · sha256 e5a72601548ee0f19e490a0f3c6f99d66694b2333217d6c341e64e9a37c44b25 — governing family (frame 1 · Home)
@@ -28,12 +30,12 @@ reference_surfaces:
 
 # ── The House / Room split ──────────────────────────────────────────────────
 shared_with_house: the accepted S1 product bar, measured equal element-for-element to the S1 bar; Newsreader for the Work and Inter for labels; the same colour roles, radii and cool action language; restrained gold only for a line the writer kept
-distinct_to_room: Home is one room — no manuscript rail and no resident MAIA; the Work is recognized by its own image and name; unclaimed writing sits on a dashed page edge labelled “Writing”, Works on a solid card labelled “Work”; generous open space so beginning feels possible
+distinct_to_room: Home is one room — no manuscript rail and no resident MAIA; since S2R1 it is composed in three levels of containment (one warm room field on the ground, one raised anchor field for what the writer came for, recessed regions and one band of quiet acts), depth by tone rather than chrome; the Work is recognized by its own image and name; unclaimed writing sits on a dashed page edge labelled “Writing”, Works on a solid card labelled “Work”; generous open space so beginning feels possible
 
 # ── Evidence ────────────────────────────────────────────────────────────────
 screenshot_desktop: docs/design/contracts/screenshots/full-redesign-pc3-s2/home-return-1536x1024.png
 screenshot_mobile: docs/design/contracts/screenshots/full-redesign-pc3-s2/home-return-390x844.png
-experience_verification: rendered all four Home states at 1536×1024 and read each against Visual Canon frame 1 on its founder-review board (board-home-*.jpg), with a derivation note naming what came from the Light Shell, the Home canon and the live Home, and what was intentionally not copied; walked H1 and H2 at 1280, 1024 and 390 for recomposition, and H2 in Night. Mechanical witness: scripts/writers-studio/pc3-s2-home-fidelity.mjs 60/60 GREEN, and RED on each of three known-bad mutants (resident MAIA, urgency copy, bar drift). Whether Home feels like the Studio is founder judgment and is NOT claimed here.
+experience_verification: rendered all four Home states at 1536×1024 and read each against Visual Canon frame 1 on its founder-review board (board-home-*.jpg), with a derivation note naming what came from the Light Shell, the Home canon and the live Home, and what was intentionally not copied; walked H1 and H2 at 1280, 1024 and 390 for recomposition, and H2 in Night. S2R1: every state compared BEFORE (parent c01d1908) / AFTER on board-s2r1-*.jpg, including H2 Night. Mechanical witness: scripts/writers-studio/pc3-s2-home-fidelity.mjs 91/91 GREEN (containment added: one room field, one anchor, region tones, alignment lines, no orphan separator, no heavy chrome, Night = Light geometry), and RED on each of seven known-bad mutants (resident MAIA, urgency copy, bar drift, room field removed, tones flattened, heavy chrome, orphan separator). Whether Home feels like the Studio is founder judgment and is NOT claimed here.
 
 deviation: Home appears in the primary spine although the earlier Home ruling (§2, §4) and the Navigation canon (§NAV 65–68, 375) held Home and Search back until real; the title-only Home search is shown
 authority: PC2 master screen/function contract (ratified 2026-09-24) sets the spine as Home · Write · Develop · Review over a real, existing Home destination; PC3-S2 execution packet §5 H4 requires the existing conditional title-only search with its scope stated
@@ -61,6 +63,15 @@ With no Work: **“Welcome, writer. You are home.”** and one clear act, **Begi
 | find | “Find by title…” · “Searches titles only” | the scope is named, so a missing sentence is not mistaken for a lost one |
 | let go | “Remove Work” / “Delete Work and writing” | two acts, two consequences, the live Studio’s exact copy |
 
+## Containment (PC3-S2R1)
+
+| level | what | tone |
+|---|---|---|
+| room field | the whole Home, one hairline edge | `--fr-field` over the shell ground |
+| anchor | H1 threshold · H2/H4 current Work (arrival → recognition → re-entry) · H3 the writing | raised paper `--fr-panel` (H1 unraised) |
+| regions | Also written · Your Works · Your Writing | `--fr-recess`, paper items inside |
+| band | Begin / Import / Bring notes | the room's own edge, no fill |
+
 ## Forbidden here
 
 - dashboard grids, goals, progress bars, AI insight feeds, templates (the August Work Home)
@@ -68,6 +79,7 @@ With no Work: **“Welcome, writer. You are home.”** and one clear act, **Begi
 - a resident MAIA panel or manuscript rail at Home
 - global Search or a Library room; Explore / Publish
 - unclaimed writing labelled or counted as a Work
+- containment by card proliferation, dashboard panels, thick borders, heavy shadows or glass
 
 ## The two brand tests
 

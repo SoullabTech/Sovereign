@@ -9,7 +9,10 @@ type RoleTokens = Record<
   | 'ground' | 'bar' | 'panel' | 'panelSoft' | 'line' | 'lineSoft'
   | 'ink' | 'ink2' | 'muted' | 'quiet' | 'title'
   | 'action' | 'actionDeep' | 'actionSoft' | 'actionLine'
-  | 'maiaCard' | 'held' | 'heldPassage' | 'gold' | 'shadow',
+  | 'maiaCard' | 'held' | 'heldPassage' | 'gold' | 'shadow'
+  // PC3-S2R1 — two-tone atmospheric depth for rooms that hold their own field
+  // (Home). The S1 regions never read these; they change no S1 pixel.
+  | 'field' | 'fieldLine' | 'recess',
   string
 >;
 
@@ -35,6 +38,9 @@ export const APPEARANCE_TOKENS: Record<Appearance, RoleTokens> = {
     heldPassage: '#EEF3FB',
     gold: '#B8893E',
     shadow: '0 1px 2px rgba(8,20,59,.04), 0 4px 14px rgba(8,20,59,.035)',
+    field: '#F9F8F5',
+    fieldLine: '#E7E5DF',
+    recess: '#F2F1ED',
   },
   // Derived Night proof: same roles, same geometry, lower light.
   night: {
@@ -58,6 +64,9 @@ export const APPEARANCE_TOKENS: Record<Appearance, RoleTokens> = {
     heldPassage: '#1E2A42',
     gold: '#D4A95E',
     shadow: '0 1px 2px rgba(0,0,0,.25), 0 6px 18px rgba(0,0,0,.22)',
+    field: '#131A2A',
+    fieldLine: '#212A3F',
+    recess: '#10172A',
   },
 };
 

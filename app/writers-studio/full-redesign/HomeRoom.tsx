@@ -17,6 +17,15 @@
  *
  * This component renders what it is handed. It fetches nothing, writes
  * nothing, and navigates nowhere: every act is reported through `onAct`.
+ *
+ * PC3-S2R1 — spatial containment. Every state is composed in three levels:
+ *  1. ONE room field (`data-field="room"`) — the page-level plane that holds
+ *     the whole Home on the shell's ground;
+ *  2. ONE anchor field (`data-field="anchor"`) — the thing the writer came for:
+ *     the threshold (H1), the current Work (H2/H4), the writing (H3);
+ *  3. supporting fields (`data-field="support"`) and one quiet band of acts
+ *     (`data-field="band"`) — regions of the room, not free-floating cards.
+ * Depth is tonal (ground → field → raised paper), never heavy chrome.
  */
 import { useMemo, useState, type ReactNode } from 'react';
 import type { HomeStateId } from './types';
@@ -97,6 +106,7 @@ function Quiet({ children, onClick }: { children: ReactNode; onClick?: () => voi
 }
 
 function WritingSpace({ ws }: { ws: HomeRoomData['writingSpace'] }) {
+  // Part of the room's atmosphere, not a promotional card: no frame of its own.
   return (
     <aside className="fr-home-space" aria-label={ws.title}>
       <h2>{ws.title}</h2>
@@ -130,23 +140,63 @@ function BeginActions({ d, primary }: { d: HomeRoomData; primary: boolean }) {
   );
 }
 
-function WorkCard({ w, d, compact }: { w: HomeWork; d: HomeRoomData; compact?: boolean }) {
+/**
+ * Facts on one line keep the separator glued to the words after it, so a dot
+ * can never sit alone on a line. Stacked facts carry no separator at all.
+ */
+function Facts({ a, b, stacked }: { a: string; b: string; stacked?: boolean }) {
+  if (stacked) {
+    return (
+      <p className="fr-home-facts fr-home-facts-stacked">
+        <span>{a}</span>
+        <span>{b}</span>
+      </p>
+    );
+  }
   return (
-    <article className={compact ? 'fr-home-workcard fr-home-workcard-compact' : 'fr-home-workcard'} data-kind="work" aria-label={`${d.copy.workLabel}: ${w.title}`}>
+    <p className="fr-home-facts">
+      <span>{a}</span>{' '}
+      <span className="fr-home-nowrap">
+        <span className="fr-home-dot" aria-hidden="true">·</span> {b}
+      </span>
+    </p>
+  );
+}
+
+function WorkCard({ w, d, stacked }: { w: HomeWork; d: HomeRoomData; stacked?: boolean }) {
+  return (
+    <article className="fr-home-workcard" data-kind="work" aria-label={`${d.copy.workLabel}: ${w.title}`}>
       <img src={d.images[w.image]} alt="" />
       <div>
         <span className="fr-home-chip fr-home-chip-work">{d.copy.workLabel}</span>
         <h3>{w.title}</h3>
         <p className="fr-home-kind">{w.kind}</p>
-        <p className="fr-home-facts">
-          <span>{w.facts}</span>
-          <span className="fr-home-dot" aria-hidden="true">
-            {' · '}
-          </span>
-          <span>{w.written}</span>
-        </p>
+        <Facts a={w.facts} b={w.written} stacked={stacked} />
       </div>
     </article>
+  );
+}
+
+/** A region of the room: named, grouped, sharing the room's alignment lines. */
+function Region({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
+  return (
+    <section className={className ? `fr-home-region ${className}` : 'fr-home-region'} data-field="support" aria-label={label}>
+      <p className="fr-home-eyebrow">{label}</p>
+      {children}
+    </section>
+  );
+}
+
+/** The room's quiet band of secondary acts, set on the room's own edge. */
+function Band({ d, withSources }: { d: HomeRoomData; withSources: boolean }) {
+  return (
+    <div className="fr-home-band" data-field="band">
+      <button type="button" className="fr-home-link" onClick={() => d.onAct?.(d.copy.begin)}>
+        <Icon name="plus" />
+        {d.copy.begin}
+      </button>
+      {withSources ? <BeginActions d={d} primary={false} /> : null}
+    </div>
   );
 }
 
@@ -154,16 +204,19 @@ function WritingItem({ m, d, lead, works }: { m: HomeWriting; d: HomeRoomData; l
   const [choosing, setChoosing] = useState(false);
   const act = (a: string) => () => d.onAct?.(`${a} · ${m.title}`);
   return (
-    <article className={lead ? 'fr-home-writing fr-home-writing-lead' : 'fr-home-writing'} data-kind="writing" aria-label={`${d.copy.writingLabel}: ${m.title}`}>
+    <article
+      className={lead ? 'fr-home-writing fr-home-writing-lead' : 'fr-home-writing'}
+      data-kind="writing"
+      data-field={lead ? 'anchor' : undefined}
+      aria-label={`${d.copy.writingLabel}: ${m.title}`}
+    >
       <span className="fr-home-page" aria-hidden="true">
         <Icon name="page" />
       </span>
       <div className="fr-home-writing-body">
         <span className="fr-home-chip">{d.copy.writingLabel}</span>
         {lead ? <h1 className="fr-home-writing-title">{m.title}</h1> : <h3>{m.title}</h3>}
-        <p className="fr-home-facts">
-          {m.pages} · {m.written}
-        </p>
+        <Facts a={m.pages} b={m.written} />
         <div className="fr-home-actions">
           {lead ? <Primary onClick={act(d.copy.openWriting)}>{d.copy.openWriting}</Primary> : <Quiet onClick={act(d.copy.openWriting)}>{d.copy.openWriting}</Quiet>}
           <Quiet onClick={act(d.copy.makeWork)}>{d.copy.makeWork}</Quiet>
@@ -216,21 +269,26 @@ function RemoveOrDelete({ d, title }: { d: HomeRoomData; title: string }) {
   );
 }
 
-function ReturnBlock({ d, w, compact }: { d: HomeRoomData; w: HomeWork; compact?: boolean }) {
+/**
+ * The current Work as ONE held return field: arrival (welcome, place) →
+ * recognition (its image and name, the line kept from it, its history) →
+ * re-entry (Return). Nothing here is a separate card.
+ */
+function ReturnField({ d, w }: { d: HomeRoomData; w: HomeWork }) {
   const place = w.returnPlace;
   return (
-    <section className={compact ? 'fr-home-return fr-home-return-compact' : 'fr-home-return'} data-landmark="return">
-      <p className="fr-home-eyebrow">{d.copy.returnEyebrow}</p>
-      <h1 className="fr-home-greeting">{d.copy.returnWelcome(w.title)}</h1>
-      {place ? <p className="fr-home-place">{d.copy.returnPlace(place.chapter, place.title)}</p> : null}
-      <div className="fr-home-work-hero">
+    <section className="fr-home-anchor fr-home-return" data-field="anchor" data-landmark="return" aria-label={w.title}>
+      <header className="fr-home-arrive">
+        <p className="fr-home-eyebrow">{d.copy.returnEyebrow}</p>
+        <h1 className="fr-home-greeting">{d.copy.returnWelcome(w.title)}</h1>
+        {place ? <p className="fr-home-place">{d.copy.returnPlace(place.chapter, place.title)}</p> : null}
+      </header>
+      <div className="fr-home-recognize">
         <img src={d.images[w.image]} alt={`${w.title} — the image this Work carries`} />
         <div>
           <h2>{w.title}</h2>
           <p className="fr-home-kind">{w.kind}</p>
-          <p className="fr-home-facts">
-            {w.facts} · {w.written}
-          </p>
+          <Facts a={w.facts} b={w.written} />
           <div className="fr-home-actions">
             {place ? (
               <Primary onClick={() => d.onAct?.(`${d.copy.returnAction} · ${place.chapter}`)}>
@@ -242,6 +300,65 @@ function ReturnBlock({ d, w, compact }: { d: HomeRoomData; w: HomeWork; compact?
           </div>
         </div>
       </div>
+      {d.keptLine || (d.history && d.history.length > 0) ? (
+        <div className="fr-home-context">
+          {d.keptLine ? (
+            <figure className="fr-home-kept">
+              <p className="fr-home-eyebrow">{d.copy.keptEyebrow}</p>
+              <blockquote>{d.keptLine.text}</blockquote>
+              <figcaption>
+                {d.keptLine.address}{' '}
+                <span className="fr-home-nowrap">
+                  <span className="fr-home-dot" aria-hidden="true">·</span> {d.keptLine.reason}
+                </span>
+              </figcaption>
+            </figure>
+          ) : null}
+          {d.history && d.history.length > 0 ? (
+            <div className="fr-home-history" role="group" aria-label={d.copy.historyEyebrow}>
+              <p className="fr-home-eyebrow">{d.copy.historyEyebrow}</p>
+              <ol>
+                {d.history.map(([date, act]) => (
+                  <li key={date + act}>
+                    <time>{date}</time>
+                    <span>{act}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/** Compact return field for a Studio with many Works: one band, same anchor. */
+function ReturnFieldCompact({ d, w }: { d: HomeRoomData; w: HomeWork }) {
+  const place = w.returnPlace;
+  return (
+    <section className="fr-home-anchor fr-home-return fr-home-return-compact" data-field="anchor" data-landmark="return" aria-label={w.title}>
+      <img src={d.images[w.image]} alt={`${w.title} — the image this Work carries`} />
+      <div className="fr-home-arrive">
+        <p className="fr-home-eyebrow">{d.copy.returnEyebrow}</p>
+        <h1 className="fr-home-greeting">{d.copy.returnWelcome(w.title)}</h1>
+        {place ? <p className="fr-home-place">{d.copy.returnPlace(place.chapter, place.title)}</p> : null}
+        <p className="fr-home-kind">
+          {w.kind}{' '}
+          <span className="fr-home-nowrap">
+            <span className="fr-home-dot" aria-hidden="true">·</span> {w.facts}
+          </span>
+        </p>
+      </div>
+      <div className="fr-home-actions">
+        {place ? (
+          <Primary onClick={() => d.onAct?.(`${d.copy.returnAction} · ${place.chapter}`)}>
+            {d.copy.returnAction}
+            <Icon name="arrow" />
+          </Primary>
+        ) : null}
+        <RemoveOrDelete d={d} title={w.title} />
+      </div>
     </section>
   );
 }
@@ -250,12 +367,14 @@ function ReturnBlock({ d, w, compact }: { d: HomeRoomData; w: HomeWork; compact?
 function HomeBegin(d: HomeRoomData) {
   return (
     <div className="fr-home fr-home-begin" data-home-state={d.state}>
-      <section className="fr-home-main">
-        <h1 className="fr-home-welcome">{d.copy.beginWelcome}</h1>
-        <BeginActions d={d} primary />
-        <p className="fr-home-trust">{d.copy.trust}</p>
-      </section>
-      <WritingSpace ws={d.writingSpace} />
+      <div className="fr-home-field" data-field="room">
+        <section className="fr-home-anchor fr-home-threshold" data-field="anchor">
+          <h1 className="fr-home-welcome">{d.copy.beginWelcome}</h1>
+          <BeginActions d={d} primary />
+          <p className="fr-home-trust">{d.copy.trust}</p>
+        </section>
+        <WritingSpace ws={d.writingSpace} />
+      </div>
     </div>
   );
 }
@@ -265,50 +384,21 @@ function HomeReturn(d: HomeRoomData) {
   const w = d.work!;
   return (
     <div className="fr-home fr-home-returning" data-home-state={d.state}>
-      <div className="fr-home-main">
-        <ReturnBlock d={d} w={w} />
-        {d.keptLine ? (
-          <figure className="fr-home-kept">
-            <p className="fr-home-eyebrow">{d.copy.keptEyebrow}</p>
-            <blockquote>{d.keptLine.text}</blockquote>
-            <figcaption>
-              {d.keptLine.address} · {d.keptLine.reason}
-            </figcaption>
-          </figure>
-        ) : null}
-        {d.otherWorks && d.otherWorks.length > 0 ? (
-          <section>
-            <p className="fr-home-eyebrow">{d.copy.alsoWritten}</p>
-            <div className="fr-home-shelf fr-home-shelf-2">
-              {d.otherWorks.map((o) => (
-                <WorkCard key={o.id} w={o} d={d} compact />
-              ))}
-            </div>
-          </section>
-        ) : null}
-        <div className="fr-home-begin-quiet">
-          <BeginActions d={d} primary={false} />
-          <button type="button" className="fr-home-link" onClick={() => d.onAct?.(d.copy.begin)}>
-            <Icon name="plus" />
-            {d.copy.begin}
-          </button>
+      <div className="fr-home-field" data-field="room">
+        <ReturnField d={d} w={w} />
+        <div className="fr-home-col fr-home-col-side">
+          <WritingSpace ws={d.writingSpace} />
+          {d.otherWorks && d.otherWorks.length > 0 ? (
+            <Region label={d.copy.alsoWritten}>
+              <div className="fr-home-shelf">
+                {d.otherWorks.map((o) => (
+                  <WorkCard key={o.id} w={o} d={d} />
+                ))}
+              </div>
+            </Region>
+          ) : null}
         </div>
-      </div>
-      <div className="fr-home-side">
-        <WritingSpace ws={d.writingSpace} />
-        {d.history && d.history.length > 0 ? (
-          <section className="fr-home-history" aria-label={d.copy.historyEyebrow}>
-            <p className="fr-home-eyebrow">{d.copy.historyEyebrow}</p>
-            <ol>
-              {d.history.map(([date, act]) => (
-                <li key={date + act}>
-                  <time>{date}</time>
-                  <span>{act}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
+        <Band d={d} withSources />
       </div>
     </div>
   );
@@ -320,35 +410,30 @@ function HomeUnclaimed(d: HomeRoomData) {
   const works = d.allWorks ?? [];
   return (
     <div className="fr-home fr-home-unclaimed" data-home-state={d.state}>
-      <div className="fr-home-main">
+      <div className="fr-home-field" data-field="room">
         <p className="fr-home-here">{d.copy.writingHere}</p>
-        {lead ? <WritingItem m={lead} d={d} lead works={works} /> : null}
-        {rest.length > 0 ? (
-          <section>
-            <p className="fr-home-eyebrow">{d.copy.yourWriting}</p>
-            {rest.map((m) => (
-              <WritingItem key={m.id} m={m} d={d} works={works} />
-            ))}
-          </section>
-        ) : null}
-        <div className="fr-home-begin-quiet">
-          <button type="button" className="fr-home-link" onClick={() => d.onAct?.(d.copy.begin)}>
-            <Icon name="plus" />
-            {d.copy.begin}
-          </button>
+        <div className="fr-home-col">
+          {lead ? <WritingItem m={lead} d={d} lead works={works} /> : null}
+          {rest.length > 0 ? (
+            <Region label={d.copy.yourWriting}>
+              <div className="fr-home-writing-list">
+                {rest.map((m) => (
+                  <WritingItem key={m.id} m={m} d={d} works={works} />
+                ))}
+              </div>
+            </Region>
+          ) : null}
         </div>
-      </div>
-      <div className="fr-home-side">
         {works.length > 0 ? (
-          <section>
-            <p className="fr-home-eyebrow">{d.copy.yourWorks}</p>
+          <Region label={d.copy.yourWorks} className="fr-home-region-side">
             <div className="fr-home-shelf">
               {works.map((w) => (
-                <WorkCard key={w.id} w={w} d={d} compact />
+                <WorkCard key={w.id} w={w} d={d} />
               ))}
             </div>
-          </section>
+          </Region>
         ) : null}
+        <Band d={d} withSources={false} />
       </div>
     </div>
   );
@@ -365,8 +450,8 @@ function HomeMany(d: HomeRoomData) {
   const matchWritings = useMemo(() => (query ? writings.filter((m) => m.title.toLowerCase().includes(query)) : writings), [query, writings]);
   return (
     <div className="fr-home fr-home-many" data-home-state={d.state}>
-      <div className="fr-home-main fr-home-main-wide">
-        {d.work ? <ReturnBlock d={d} w={d.work} compact /> : null}
+      <div className="fr-home-field" data-field="room">
+        {d.work ? <ReturnFieldCompact d={d} w={d.work} /> : null}
         <div className="fr-home-search" role="search">
           <label>
             <Icon name="search" />
@@ -389,31 +474,23 @@ function HomeMany(d: HomeRoomData) {
             </span>
           ) : null}
         </div>
-        <section>
-          <p className="fr-home-eyebrow">{d.copy.yourWorks}</p>
+        <Region label={d.copy.yourWorks}>
           <div className="fr-home-shelf fr-home-shelf-4">
             {matchWorks.map((w) => (
-              <WorkCard key={w.id} w={w} d={d} compact />
+              <WorkCard key={w.id} w={w} d={d} stacked />
             ))}
           </div>
-        </section>
+        </Region>
         {matchWritings.length > 0 ? (
-          <section>
-            <p className="fr-home-eyebrow">{d.copy.yourWriting}</p>
+          <Region label={d.copy.yourWriting}>
             <div className="fr-home-writing-row">
               {matchWritings.map((m) => (
                 <WritingItem key={m.id} m={m} d={d} works={works} />
               ))}
             </div>
-          </section>
+          </Region>
         ) : null}
-        <div className="fr-home-begin-quiet">
-          <BeginActions d={d} primary={false} />
-          <button type="button" className="fr-home-link" onClick={() => d.onAct?.(d.copy.begin)}>
-            <Icon name="plus" />
-            {d.copy.begin}
-          </button>
-        </div>
+        <Band d={d} withSources />
       </div>
     </div>
   );
