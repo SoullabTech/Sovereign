@@ -1,0 +1,21 @@
+
+PRIOR CANDIDATE (published 2026-09-23) — falsifier
+  PASS  G1         h=56
+  PASS  G2         14/314/68/1010
+  FAIL  G3         1186/1522/68/1010
+  PASS  G4         328/1172
+  FAIL  G5         347/1153/207/428
+  FAIL  G6         504/578
+  FAIL  G7         pitch=82
+  FAIL  G8         t=838
+  PASS  P1.ground  rgb(243, 245, 248) ΔE=5.4
+  PASS  P1.panel   rgb(255, 255, 255) ΔE=1.7
+  FAIL  P1.ink     rgb(29, 40, 66) ΔE=29.8
+  PASS  G9         mojibake sequences=0
+  PASS  G10        wrapped chapter ranges=0
+  PASS  R1@1536    maia l=1186 t=68 · work r=1172 t=68
+  PASS  R1@1440    maia l=1090 t=68 · work r=1076 t=68
+  PASS  R1@1280    maia l=930 t=68 · work r=916 t=68
+  FAIL  R1@1100    maia l=14 t=504 · work r=1086 t=68
+  FAIL  R1@1024    maia l=14 t=504 · work r=1010 t=68
+  → 10/18 RED

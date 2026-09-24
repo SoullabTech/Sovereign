@@ -1,0 +1,21 @@
+
+CANDIDATE S1b
+  PASS  G1         h=56
+  PASS  G2         13/311/63/1011
+  PASS  G3         1193/1524/63/1011
+  PASS  G4         333/1175
+  PASS  G5         333/1175/208/440
+  PASS  G6         507/572
+  PASS  G7         pitch=68
+  PASS  G8         t=787
+  PASS  P1.ground  rgb(243, 243, 243) ΔE=0.0
+  PASS  P1.panel   rgb(254, 254, 254) ΔE=0.0
+  PASS  P1.ink     rgb(8, 20, 59) ΔE=0.0
+  PASS  G9         mojibake sequences=0
+  PASS  G10        wrapped chapter ranges=0
+  PASS  R1@1536    maia l=1193 t=63 · work r=1175 t=63
+  PASS  R1@1440    maia l=1097 t=63 · work r=1079 t=63
+  PASS  R1@1280    maia l=980 t=63 · work r=962 t=63
+  PASS  R1@1100    maia l=800 t=63 · work r=782 t=63
+  PASS  R1@1024    maia l=724 t=63 · work r=706 t=63
+  → 18/18 GREEN

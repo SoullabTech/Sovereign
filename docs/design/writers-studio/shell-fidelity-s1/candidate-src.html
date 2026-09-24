@@ -1,0 +1,337 @@
+<meta charset="utf-8">
+<title>The River Between</title>
+<style>
+__FONTS__
+:root{
+  color-scheme:light;
+  --ground:#F3F3F3; --bar:#F8F8F8; --panel:#FEFEFE;
+  --line:#E6E7EA; --line-soft:#EEEFF1; --shadow:0 1px 2px rgba(8,20,59,.04),0 4px 14px rgba(8,20,59,.035);
+  --ink:#08143B; --ink-2:#3A4257; --muted:#697084; --quiet:#9AA0AE;
+  --title:#08143B;
+  --blue:#1F6FC4; --blue-deep:#1560A1; --blue-soft:#F2F8FD; --blue-line:#B9D3F0;
+  --maia-card:#F0F4F7; --held:#FAF2E7; --gold:#B8893E;
+  --serif:'Newsreader','Source Serif 4',Georgia,'Times New Roman',serif;
+  --sans:'Inter','Helvetica Neue',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  --ms-w:298px; --maia-w:331px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
+svg{flex:none}
+
+/* ── top bar ─────────────────────────────── */
+header.top{height:56px;display:flex;align-items:center;padding:0 22px 0 32px;background:var(--bar);border-bottom:1px solid #E9E9EB;box-shadow:0 2px 6px rgba(8,20,59,.035);position:relative;z-index:3}
+.brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:25.2px;font-weight:500;color:var(--title);letter-spacing:-.005em;margin-right:52px}
+.brand svg{width:25px;height:25px;color:var(--title)}
+.nav{display:flex;height:100%;gap:0}
+.nav button{position:relative;height:100%;padding:0 26px;font-size:15.5px;color:#24324D;letter-spacing:.005em}
+.nav button:first-child{padding-left:6px}
+.nav button[aria-current="page"]{color:var(--title);font-weight:600}
+.nav button[aria-current="page"]::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--blue);border-radius:2px}
+.workpick{margin-left:auto;display:flex;align-items:center;gap:10px;height:32px;padding:0 14px 0 12px;border:1px solid var(--line);border-radius:8px;background:#F4F5F7;font-size:14px;color:#24324D}
+.avatar{margin-left:50px;width:32px;height:32px;border-radius:50%;background:#8299B1;color:#fff;display:grid;place-items:center;font-size:14px;font-weight:600;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.more{margin-left:22px;color:#46506A;font-size:18px;letter-spacing:1px}
+
+/* ── room ─────────────────────────────── */
+.room{display:grid;grid-template-columns:var(--ms-w) minmax(0,1fr) var(--maia-w);height:calc(100% - 56px);padding:7px 12px 13px 13px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);min-height:0;display:flex;flex-direction:column;overflow:hidden}
+
+/* manuscript */
+.ms-head{display:flex;align-items:center;height:64px;padding:0 18px 0 21px;flex:none}
+.ms-head h2{margin:0;flex:1;font-family:var(--serif);font-size:18px;font-weight:500;color:var(--title);display:flex;align-items:center;gap:8px}
+.ms-head .ic{width:32px;height:32px;display:grid;place-items:center;color:#2B3552;border-radius:8px}
+.ms-head .ic:hover,.ms-foot button:hover{background:#F3F5F9}
+.ms-body{flex:1;overflow-y:auto;padding:14px 21px 8px;scrollbar-width:thin;scrollbar-color:#D9DCE2 transparent}
+.ch-no{margin:0;font-family:var(--serif);font-size:18.5px;font-weight:600;color:var(--title);line-height:1.2}
+.ch-title{margin:3px 0 25px;font-family:var(--serif);font-size:17.4px;color:var(--ink-2);line-height:1.3}
+.ms-body p.para{margin:0 0 20px;font-family:var(--serif);font-size:17.5px;font-weight:400;line-height:24.7px;color:#1D2640}
+.ms-body p.held{background:var(--held);border-radius:8px;padding:12px 14px;margin-inline:0}
+.ms-foot{flex:none;display:flex;justify-content:space-between;align-items:center;height:62px;padding:0 14px 0 16px}
+.ms-foot button{display:flex;align-items:center;gap:6px;padding:6px;border-radius:6px;font-size:13.5px;color:#23508B}
+.ms-foot button:disabled{color:var(--quiet);cursor:default;background:none}
+
+/* work column: sits on the ground, not in a box */
+main{margin:0 18px 0 22px;min-height:0;overflow-y:auto;scrollbar-width:none;padding-bottom:10px}
+main::-webkit-scrollbar{display:none}
+.head{display:grid;grid-template-columns:42px 1fr;column-gap:15px;align-items:center;padding:17px 0 0 2px}
+.mark{width:42px;height:42px;border-radius:50%;border:1.6px solid var(--title);display:grid;place-items:center;color:var(--title)}
+.head h1{margin:0;font-family:var(--serif);font-size:34px;font-weight:600;line-height:40px;color:var(--title);letter-spacing:-.02em}
+.head p{grid-column:1/-1;margin:6px 0 0 23px;font-family:var(--serif);font-style:italic;font-size:21.5px;line-height:26px;color:#4D5368}
+.tabs{display:flex;align-items:flex-end;height:44px;margin-top:10px;padding-left:12px}
+.tabs button{position:relative;height:39px;padding:0 22px;font-size:14.5px;color:#5E6679;border-radius:9px 9px 0 0;white-space:nowrap}
+.tabs button:hover{color:var(--title)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--title);font-weight:600;padding:0 28px;box-shadow:0 -1px 3px rgba(8,20,59,.04)}
+.tabs button[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--blue)}
+.hero{position:relative;height:232px;border-radius:9px;overflow:hidden;background:#243041;box-shadow:0 2px 10px rgba(8,20,59,.12)}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.sec-h{display:flex;align-items:center;gap:14px;height:67px;padding:0 6px 0 13px}
+.sec-h h3{margin:0;font-family:var(--serif);font-size:19.8px;font-weight:500;line-height:24px;color:var(--title)}
+.sec-h p{margin:2px 0 0;font-family:var(--serif);font-size:15.5px;line-height:20px;color:var(--ink-2)}
+.sel{margin-left:auto;display:flex;align-items:center;gap:9px;height:32px;padding:0 12px 0 11px;border:1px solid var(--line);border-radius:7px;background:var(--panel);font-size:13px;color:#24324D;box-shadow:0 1px 2px rgba(8,20,59,.04)}
+.sel select{appearance:none;border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding-right:14px}
+.themes{display:flex;flex-direction:column;gap:3px}
+.theme{display:grid;grid-template-columns:54px minmax(0,1fr) auto 50px 18px;align-items:center;column-gap:24px;height:65px;padding:0 24px 0 17px;border:1px solid var(--line-soft);border-radius:8px;background:var(--panel);text-align:left;transition:border-color .15s,background .15s,box-shadow .15s}
+.theme:hover{border-color:var(--blue-line)}
+.theme[aria-pressed="true"]{background:var(--blue-soft);border-color:#8DB7E6;box-shadow:inset 3px 0 0 var(--blue)}
+.theme img{width:54px;height:54px;border-radius:50%;object-fit:cover}
+.theme b{display:block;font-family:var(--serif);font-size:17.1px;font-weight:500;line-height:22px;color:#0B2466}
+.theme span.d{display:block;margin-top:2px;font-family:var(--serif);font-size:13.8px;line-height:19px;color:#4F566A}
+.bars{display:flex;gap:2px;align-items:flex-end;height:20px}
+.bars i{width:4px;border-radius:1px;background:#C7D9EF}
+.bars i.on{background:#3E7CC2}
+.range{font-size:12.5px;color:#3B4458;white-space:nowrap}
+.chev{color:#23508B;width:18px;height:18px}
+.lower{display:grid;grid-template-columns:minmax(0,463fr) minmax(0,368fr);gap:9px;margin-top:11px}
+.card{background:var(--panel);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px 12px 14px;box-shadow:0 1px 2px rgba(8,20,59,.03)}
+.card h4{margin:0;font-family:var(--serif);font-size:16.4px;font-weight:500;line-height:20px;color:var(--title)}
+.card .sub{margin:2px 0 6px;font-family:var(--serif);font-size:13.5px;color:#4F566A}
+.card-top{display:flex;align-items:flex-start;gap:10px}
+.card-top .sel{height:28px;font-size:12px;margin-top:0}
+.chart{width:100%;height:auto;display:block}
+.moments{list-style:none;margin:8px 0 0;padding:0}
+.moments li{display:grid;grid-template-columns:52px 1fr;padding:5px 0;font-size:13px;line-height:18px;color:#24324D}
+.moments li b{font-weight:500}
+.moments li button{text-align:left}
+.moments li button:hover{color:var(--blue)}
+.plain-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.mini{background:var(--panel);border:1px solid var(--line-soft);border-radius:8px;padding:14px 16px}
+.mini b{display:block;font-family:var(--serif);font-size:17.5px;font-weight:500;color:#0B2466}
+.mini span{font-family:var(--serif);font-size:15px;color:#4F566A}
+.mini .go{display:block;margin-top:8px;font-size:13px;color:#23508B;font-weight:500}
+.quote{margin:18px 13px;font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.45;color:#3A4257;border-left:2px solid var(--blue-line);padding:2px 0 2px 16px}
+.cmap{display:grid;grid-template-columns:96px repeat(12,1fr);gap:4px;align-items:center;font-size:12px;color:var(--muted);margin-top:10px}
+.cmap i{height:17px;border-radius:2px;background:#E9EEF6}
+.cmap i.s1{background:#C9D8F0}.cmap i.s2{background:#8FB0E3}.cmap i.s3{background:#2F6DC0}
+.cmap .lbl{color:var(--ink);font-size:13px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+/* MAIA */
+.maia-head{display:flex;align-items:center;gap:13px;height:66px;padding:0 20px 0 17px;flex:none}
+.orb{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 34% 28%,#FFFFFF 0%,#E3ECF8 24%,#A9C0E8 58%,#6F86C4 88%);box-shadow:0 2px 7px rgba(31,111,196,.28),inset 0 -3px 6px rgba(60,80,160,.25)}
+.maia-head h2{margin:0;flex:1;font-family:var(--serif);font-size:19.5px;font-weight:500;color:var(--title)}
+.maia-head .dots{color:#46506A;font-size:15px;letter-spacing:1px}
+.mtabs{flex:none;display:grid;grid-template-columns:1fr 1fr;margin:0 9px;height:38px;background:#F2F3F5;border-radius:8px 8px 0 0}
+.mtabs button{font-size:14px;color:#5E6679;border-radius:8px 8px 0 0;position:relative}
+.mtabs button[aria-selected="true"]{background:var(--panel);color:var(--title);font-weight:600;box-shadow:0 -1px 2px rgba(8,20,59,.04)}
+.mtabs button[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--blue)}
+.mbody{flex:1;overflow-y:auto;padding:22px 18px 10px 19px;scrollbar-width:thin;scrollbar-color:#D9DCE2 transparent}
+.say{background:var(--maia-card);border-radius:10px;padding:14px 16px 13px 18px;font-family:var(--serif);font-size:19.7px;line-height:24.8px;color:var(--ink)}
+.say p{margin:0 0 11px}.say p:last-child{margin:0}
+.me{background:var(--blue-soft);border:1px solid #D7E6F7;margin-left:30px;font-size:16.5px;line-height:22px}
+.also{margin:28px 0 10px 1px;font-family:var(--serif);font-size:16.4px;color:var(--ink-2)}
+.sugg{display:flex;flex-direction:column;gap:8px}
+.sugg button{display:flex;align-items:center;gap:15px;min-height:44px;padding:9px 12px 9px 15px;border:1px solid var(--line);border-radius:8px;background:var(--panel);text-align:left;font-size:14px;line-height:20px;color:#1F2C4C}
+.sugg button:hover{border-color:var(--blue-line);background:#FAFCFF}
+.sugg svg{width:24px;height:24px;color:#18254A}
+.thread{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.compose{flex:none;margin:0 5px 0 5px;height:96px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:13px 12px 10px 15px;display:flex;align-items:flex-end;gap:8px;box-shadow:0 2px 8px rgba(8,20,59,.05)}
+.compose textarea{flex:1;align-self:stretch;border:0;resize:none;background:none;font:inherit;font-size:14.5px;color:var(--ink)}
+.compose textarea::placeholder{color:#7C8394}
+.compose textarea:focus{outline:none}
+.send{width:32px;height:32px;border-radius:50%;background:#C4C8D0;color:#fff;display:grid;place-items:center}
+.send.ready{background:var(--blue)}
+.foot{flex:none;text-align:center;font-size:12px;color:#4F566A;height:38px;line-height:38px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(8,20,59,.88);color:#fff;font-size:12.5px;padding:7px 15px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .2s}
+.toast.show{opacity:1}
+.ms-toggle{display:none}
+
+/* desktop narrows proportionally — MAIA never leaves the right */
+@media (max-width:1400px){:root{--ms-w:clamp(236px,19.4vw,298px);--maia-w:clamp(288px,21.6vw,331px)}.theme{column-gap:16px}.nav button{padding:0 18px}.brand{margin-right:28px}.avatar{margin-left:22px}}
+/* tablet: manuscript becomes a drawer; MAIA still holds the right */
+@media (max-width:1023px){
+  .room{grid-template-columns:minmax(0,1fr) var(--maia-w)}
+  .ms{position:fixed;left:12px;top:64px;bottom:13px;width:300px;z-index:4;transform:translateX(-110%);transition:transform .2s}
+  .ms.open{transform:none}
+  main{margin-left:0}
+  .ms-toggle{display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;color:#23508B;margin:12px 0 0}
+  .theme{grid-template-columns:48px minmax(0,1fr) 18px}.theme .bars,.theme .range{display:none}.theme img{width:48px;height:48px}
+}
+/* phone: one column; MAIA follows the work */
+@media (max-width:720px){
+  body{overflow:auto}
+  header.top{padding:0 16px}.brand{margin-right:14px;font-size:21px}.nav button{padding:0 9px;font-size:14px}.workpick,.more,.avatar{display:none}
+  .room{display:flex;flex-direction:column;height:auto;padding:10px 16px 16px;gap:14px}
+  main{margin:0;overflow:visible}.maia{min-height:560px}
+  .lower,.plain-grid{grid-template-columns:1fr}.hero{height:180px}
+  .head h1{font-size:32px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="brand"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"><circle cx="13" cy="13" r="2.6"/><path d="M13 3.2c1.6 2 1.6 4.2 0 6.2-1.6-2-1.6-4.2 0-6.2zM13 16.6c1.6 2 1.6 4.2 0 6.2-1.6-2-1.6-4.2 0-6.2zM3.2 13c2-1.6 4.2-1.6 6.2 0-2 1.6-4.2 1.6-6.2 0zM16.6 13c2-1.6 4.2-1.6 6.2 0-2 1.6-4.2 1.6-6.2 0zM6.1 6.1c2.5.3 4 1.8 4.3 4.3-2.5-.3-4-1.8-4.3-4.3zM15.6 15.6c2.5.3 4 1.8 4.3 4.3-2.5-.3-4-1.8-4.3-4.3zM19.9 6.1c-.3 2.5-1.8 4-4.3 4.3.3-2.5 1.8-4 4.3-4.3zM10.4 15.6c-.3 2.5-1.8 4-4.3 4.3.3-2.5 1.8-4 4.3-4.3z"/></svg>Soullab</div>
+  <nav class="nav" aria-label="Studio">
+    <button data-mode="Home">Home</button><button data-mode="Write">Write</button><button aria-current="page">Develop</button><button data-mode="Review">Review</button>
+  </nav>
+  <div class="workpick"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3.5 1.5h6l3 3v10h-9z"/><path d="M5.5 7h5M5.5 9.5h5M5.5 12h3"/></svg>The River Between<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 4.5l3 3 3-3"/></svg></div>
+  <div class="avatar">J</div>
+  <div class="more">•••</div>
+</header>
+
+<div class="room">
+  <section class="panel ms" aria-label="Manuscript" id="msPanel">
+    <div class="ms-head"><h2>Manuscript <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 4.5l3 3 3-3"/></svg></h2>
+      <button class="ic" aria-label="Search the manuscript"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="7.8" cy="7.8" r="5.3"/><path d="M11.8 11.8l4 4"/></svg></button>
+      <button class="ic" aria-label="Chapter outline"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.5" y="2.5" width="13" height="13" rx="1.5"/><path d="M6 6h6M6 9h6M6 12h3.5"/></svg></button></div>
+    <div class="ms-body" id="ms"></div>
+    <div class="ms-foot"><button id="prev"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 7H2M6 3L2 7l4 4"/></svg>Go to previous</button><button id="next">Go to next<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 7h10M8 3l4 4-4 4"/></svg></button></div>
+  </section>
+
+  <main aria-label="Develop">
+    <button class="ms-toggle" id="msToggle">Manuscript</button>
+    <div class="head">
+      <div class="mark"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M11 20v-9"/><path d="M11 12c-.4-3.6-2.8-5.8-6-6 .2 3.4 2.6 5.8 6 6z"/><path d="M11 12c.4-3.6 2.8-5.8 6-6-.2 3.4-2.6 5.8-6 6z"/><path d="M11 9.5c-1.6-1.8-1.6-4.2 0-6 1.6 1.8 1.6 4.2 0 6z"/></svg></div>
+      <h1 id="devTitle">Themes</h1>
+      <p id="devSub">See the larger patterns in your story, and how they evolve.</p>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div id="view"></div>
+  </main>
+
+  <aside class="panel maia" aria-label="MAIA">
+    <div class="maia-head"><div class="orb" aria-hidden="true"></div><h2>MAIA</h2><button class="dots" aria-label="MAIA options">••• •••</button></div>
+    <div class="mtabs" role="tablist"><button role="tab" aria-selected="true" data-m="passage">This Passage</button><button role="tab" aria-selected="false" data-m="larger">Larger Patterns</button></div>
+    <div class="mbody" id="mbody"></div>
+    <form class="compose" id="compose"><textarea id="thought" placeholder="Share your thoughts…" aria-label="Share your thoughts with MAIA"></textarea><button class="send" id="send" aria-label="Send to MAIA"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 12V2M3 6l4-4 4 4"/></svg></button></form>
+    <div class="foot">MAIA reads with you, not ahead of you.</div>
+  </aside>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const IMG = __ASSETS__;
+const CH = {
+  5:{no:'Chapter 5',title:'What Shifts',paras:['She finally saw what had been true all along, and the air between them changed.','The river moved slower here, widening just enough to hold the reflection of the sky. She stood at the edge, feeling the old pattern loosen its hold.','It wasn’t that everything was different — it was that she was finally willing to see what had always been there.','For the first time, she did not rush to fix it. She let the moment be what it was.'],held:1},
+  6:{no:'Chapter 6',title:'The Current Changes',paras:['The river had always moved, but that morning it seemed to move differently, as if it, too, had been listening. Clara stood on the bank and watched the water fold over itself, carrying leaves, reflections, and something else she couldn’t name.','She thought about how much had changed in a single year — not just around her, but within her. The same place, and yet not the same. What had felt certain before now felt porous, like the edge of a map in fog.','“Maybe this is what growing feels like,” she whispered. “Not arriving, but learning to stay with the in-between.”','A kingfisher flashed blue across the water, and for a moment everything stilled. She took a deeper breath and kept walking.'],held:2},
+  7:{no:'Chapter 7',title:'A Wider View',paras:['The path bent toward the old bridge, half hidden by willows. Clara hesitated, then smiled — not because she knew what came next, but because she no longer needed to.','From the middle of the bridge the river looked smaller, and the town looked closer than she remembered.','The river would keep moving, and so would she.'],held:2}
+};
+const THEMES = {
+  change:{name:'Change and Transition',desc:'Movement, uncertainty, and what it means to live in the in-between.',range:'Ch 1–8',bars:5,img:'CHANGE',pts:[1.2,2.4,2.6,2.2,3.1,3.8,4.3,4.6],
+    moments:[[2,'Clara notices the river differently.'],[4,'A conversation challenges her assumptions.'],[6,'The in-between becomes a place to stay.'],[8,'A new perspective begins to take shape.']],
+    maia:['This passage brings forward your theme of change and transition.','Clara’s observations of the river mirror her inner shift — the same place, but not the same. The in-between becomes a space of possibility rather than loss.']},
+  belonging:{name:'Belonging',desc:'Connection, place, and finding where you fit.',range:'Ch 2–7',bars:3,img:'BELONGING',pts:[0.4,1.3,1.8,1.6,2.1,2.8,3.0,2.3],
+    moments:[[2,'The town feels distant from the bank.'],[5,'A turning toward honesty changes the air between them.'],[7,'From the bridge, the town looks closer.']],
+    maia:['Belonging is quieter here than change, but it is present.','Clara is standing apart from the town, at the river. The passage holds the question of where she fits without answering it.']},
+  perception:{name:'Perception and Reality',desc:'What is seen, what is hidden, and how understanding shifts.',range:'Ch 1–8',bars:5,img:'PERCEPTION',pts:[2.2,2.5,2.0,2.9,3.4,3.6,3.1,3.5],
+    moments:[[1,'The river is described only by what it carries.'],[3,'The mirror scene: she sees herself watching.'],[6,'“Like the edge of a map in fog.”']],
+    maia:['This passage is about seeing differently.','The river has not changed; how Clara sees it has. The fog image lets certainty soften without being lost.']},
+  growth:{name:'Inner Growth',desc:'Becoming, letting go, and what emerges.',range:'Ch 1–8',bars:4,img:'GROWTH',pts:[1.0,1.4,1.9,2.5,3.0,3.6,3.9,4.5],
+    moments:[[3,'She names what she has been avoiding.'],[5,'For the first time, she does not rush to fix it.'],[6,'“Not arriving, but learning to stay.”'],[8,'She keeps walking.']],
+    maia:['Inner growth runs underneath this whole passage.','She is not solving anything here. She is learning to stay, which is its own kind of growth.']}
+};
+const LARGER = ['Across the manuscript, change and transition gathers strength from Chapter 5 onward.','Belonging begins to surface in Chapter 6 and may carry more weight in Part III.'];
+const TABS = ['Overview','Structure','Themes','Voice','Continuity','Reader Perspective'];
+const SUBS = {Overview:'See the shape of your story, and where it wants to go deeper.',Structure:'See the shape of your story — and how this chapter moves within it.',Themes:'See the larger patterns in your story, and how they evolve.',Voice:'Explore the distinctive voice of your story.',Continuity:'See how your story holds together, and where its flow can deepen.','Reader Perspective':'Possible reader effects, offered as questions, not predictions.'};
+let st = {chapter:6, theme:'change', tab:'Themes', mtab:'passage', thread:[]};
+const $ = (s) => document.querySelector(s);
+const esc = (s) => s.replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ICON = {
+  chev:'<svg class="chev" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 4l5 5-5 5"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 5.5c3-.8 6-.5 9 1.2 3-1.7 6-2 9-1.2v13c-3-.8-6-.5-9 1.2-3-1.7-6-2-9-1.2z"/><path d="M12 6.7v13.2"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5l5 5"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" fill="none" stroke="#B8893E" stroke-width="1.4" stroke-linejoin="round"><path d="M12 2.5l2 7.5 7.5 2-7.5 2-2 7.5-2-7.5-7.5-2 7.5-2z"/></svg>'
+};
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('show'),2400); }
+function renderMs(){
+  const c = CH[st.chapter];
+  $('#ms').innerHTML = `<p class="ch-no">${c.no}</p><p class="ch-title">${c.title}</p>` + c.paras.map((p,i)=>`<p class="para${i===c.held?' held':''}">${esc(p)}</p>`).join('');
+  $('#prev').disabled = !CH[st.chapter-1]; $('#next').disabled = !CH[st.chapter+1];
+}
+const bars = (n)=>`<span class="bars" aria-label="Presence ${n} of 5">${[6,9,12,15,18].map((h,i)=>`<i class="${i<n?'on':''}" style="height:${h}px"></i>`).join('')}</span>`;
+function chart(t){
+  const W=440,H=172,L=100,R=16,T=12,B=30,n=t.pts.length;
+  const x=(i)=>L+i*(W-L-R)/(n-1), y=(v)=>T+(H-T-B)*(1-v/5);
+  const line=t.pts.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t.name)} across chapters 1 to 8">
+    <text x="0" y="${T+10}" font-size="11" fill="#4F566A" font-family="Inter,sans-serif">Stronger presence</text>
+    <text x="0" y="${H-B-2}" font-size="11" fill="#4F566A" font-family="Inter,sans-serif">Weaker presence</text>
+    <line x1="${L-6}" x2="${L-6}" y1="${T}" y2="${H-B}" stroke="#D5D9E0"/><line x1="${L-6}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="#D5D9E0"/>
+    <path d="${line}" fill="none" stroke="#2F74C0" stroke-width="1.6"/>
+    ${t.pts.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="3.6" fill="#1F6FC4"/>`).join('')}
+    ${t.pts.map((_,i)=>`<text x="${x(i)}" y="${H-10}" font-size="11" text-anchor="middle" fill="#4F566A" font-family="Inter,sans-serif">Ch ${i+1}</text>`).join('')}
+  </svg>`;
+}
+function themesView(){
+  const t=THEMES[st.theme];
+  return `<div class="hero"><img src="${IMG.HERO}" alt="Themes are how your story finds its shape. They run through moments, characters, and choices — revealing what your story is really about."></div>
+  <div class="sec-h"><div><h3>Emerging Themes</h3><p>These themes appear across your manuscript. Select one to explore.</p></div>
+    <label class="sel">${ICON.book.replace('<svg','<svg width="17" height="17"')}<select aria-label="Chapters"><option>All Chapters</option><option>Part I · Foundations</option><option>Part II · Deepening</option><option>Part III · Belonging</option></select></label></div>
+  <div class="themes">${Object.entries(THEMES).map(([k,v])=>`<button class="theme" data-theme="${k}" aria-pressed="${k===st.theme}"><img src="${IMG[v.img]}" alt=""><span><b>${v.name}</b><span class="d">${v.desc}</span></span>${bars(v.bars)}<span class="range">${v.range}</span>${ICON.chev}</button>`).join('')}</div>
+  <div class="lower">
+    <div class="card"><h4>Theme Across Your Manuscript</h4><p class="sub">See how this theme appears and evolves.</p>${chart(t)}</div>
+    <div class="card"><div class="card-top"><span style="flex:1"></span><label class="sel">View by: <select aria-label="View by"><option>Chapters</option><option>Parts</option></select></label></div>
+      <h4 style="margin-top:4px">Key Moments</h4><p class="sub">Passages where this theme is especially present.</p>
+      <ul class="moments">${t.moments.map(([c,s])=>`<li><b>Ch ${c}</b><button data-goto="${c}">${esc(s)}</button></li>`).join('')}</ul></div>
+  </div>`;
+}
+function overviewView(){
+  return `<p class="quote">“Your story moves with real emotional truth. There are rich connections here to explore further.” — MAIA</p>
+  <div class="plain-grid">${Object.entries(THEMES).map(([k,v])=>`<div class="mini"><b>${v.name}</b><span>${v.desc}</span><button class="go" data-open="${k}">Explore this theme →</button></div>`).join('')}</div>`;
+}
+function structureView(){
+  const mv=[['I. Home','What is known'],['II. Descent','Stepping into change'],['III. Threshold','The in-between'],['IV. Transformation','What shifts'],['V. Integration','A wider view'],['VI. Belonging','A new relationship'],['VII. Contribution','What you carry forward'],['VIII. Renewal','The next unfolding']];
+  return `<div class="card" style="margin-top:4px"><h4>Your Story at a Glance</h4><p class="sub">A member-declared map of your story’s movement. You can rename, reorder, or revise it anytime.</p>
+    <div class="plain-grid" style="margin-top:10px">${mv.map(([a,b])=>`<div class="mini" ${a.startsWith('III')?'style="background:#F2F8FD;border-color:#8DB7E6"':''}><b>${a}</b><span>${b}</span></div>`).join('')}</div></div>
+  <p class="quote">Chapter 6 sits in the Threshold, where old ways loosen and new patterns begin to emerge.</p>`;
+}
+function voiceView(){
+  const a=[['Tone','The emotional texture that runs through your story.'],['Perspective','The lens through which your story is experienced.'],['Language','Your distinctive word choices, rhythms, and patterns.'],['Character Voice','How each character speaks, thinks, and feels on the page.']];
+  return `<div class="plain-grid" style="margin-top:4px">${a.map(([x,y])=>`<div class="mini"><b>${x}</b><span>${y}</span><button class="go">Explore ${x.toLowerCase()} →</button></div>`).join('')}</div>
+  <p class="quote">Not a style to replicate, but a voice to deepen.</p>`;
+}
+function continuityView(){
+  const rows=[['Clara',[3,3,3,2,3,3,2,3,3,3,2,3]],['The River',[3,2,2,1,0,3,1,0,1,2,1,2]],['Change',[0,1,0,2,3,3,2,1,1,2,0,1]],['Belonging',[0,0,0,0,0,1,1,2,2,3,3,3]],['Uncertainty',[1,0,2,2,3,3,2,1,0,0,0,0]]];
+  return `<div class="card" style="margin-top:4px"><h4>Continuity Map</h4><p class="sub">This map shows where something appears. It doesn’t say what that means.</p>
+    <div class="cmap"><span></span>${Array.from({length:12},(_,i)=>`<span style="text-align:center">${i+1}</span>`).join('')}${rows.map(([n,r])=>`<span class="lbl">${n}</span>${r.map(v=>`<i class="s${v}"></i>`).join('')}`).join('')}</div>
+    <div class="legend"><span><i style="background:#2F6DC0"></i>Often appears</span><span><i style="background:#8FB0E3"></i>Sometimes</span><span><i style="background:#C9D8F0"></i>Once or twice</span><span><i style="background:#E9EEF6"></i>Not present</span></div></div>`;
+}
+function readerView(){
+  return `<div class="plain-grid" style="margin-top:4px"><div class="mini"><b>Emotional resonance</b><span>Moments of beauty and quiet power.</span></div><div class="mini"><b>Clarity</b><span>Generally clear, with a few places a reader may need orienting.</span></div><div class="mini"><b>Engagement</b><span>A reader may lean in at the opening and the close.</span></div><div class="mini"><b>Takeaway</b><span>A reflective, hopeful, deeply human journey.</span></div></div>
+  <p class="quote">These are possible reader effects. Only real readers can tell you what lands.</p>`;
+}
+const VIEWS={Overview:overviewView,Structure:structureView,Themes:themesView,Voice:voiceView,Continuity:continuityView,'Reader Perspective':readerView};
+function renderDev(){
+  $('#devTitle').textContent=st.tab; $('#devSub').textContent=SUBS[st.tab];
+  $('#tabs').innerHTML=TABS.map((t)=>`<button role="tab" aria-selected="${t===st.tab}" data-tab="${t}">${t}</button>`).join('');
+  $('#view').innerHTML=VIEWS[st.tab]();
+}
+function renderMaia(){
+  document.querySelectorAll('.mtabs button').forEach((b)=>b.setAttribute('aria-selected',String(b.dataset.m===st.mtab)));
+  const t=THEMES[st.theme], lead=st.mtab==='passage'?t.maia:LARGER;
+  $('#mbody').innerHTML=`<div class="say">${lead.map((p)=>`<p>${esc(p)}</p>`).join('')}</div>
+    <p class="also">You might also explore:</p>
+    <div class="sugg">
+      <button data-ask="earlier">${ICON.book}How does this moment relate to earlier chapters?</button>
+      <button data-ask="where">${ICON.search}Where else does this theme appear?</button>
+      <button data-ask="develop">${ICON.spark}What might develop from here?</button>
+    </div>
+    <div class="thread">${st.thread.map((m)=>`<div class="say ${m.me?'me':''}"><p>${esc(m.t)}</p></div>`).join('')}</div>`;
+  $('#mbody').scrollTop=$('#mbody').scrollHeight;
+}
+const ANSWERS={
+  earlier:(t)=>`In Chapter 2, Clara notices the river without yet noticing herself. Here the two begin to move together — that is where ${t.name.toLowerCase()} lives in this passage.`,
+  where:(t)=>`${t.name} is most present in ${t.moments.map(([c])=>'Chapter '+c).join(', ')}. Key Moments will take you to each passage.`,
+  develop:()=>`What would happen if the in-between stayed open a little longer before Chapter 7 crosses the bridge? What do you want your reader to feel at that threshold?`
+};
+document.addEventListener('click',(e)=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.tab){st.tab=b.dataset.tab;renderDev();return;}
+  if(b.dataset.theme){st.theme=b.dataset.theme;st.mtab='passage';renderDev();renderMaia();return;}
+  if(b.dataset.open){st.theme=b.dataset.open;st.tab='Themes';renderDev();renderMaia();return;}
+  if(b.dataset.goto){const c=+b.dataset.goto; if(CH[c]){st.chapter=c;renderMs();} else toast(`Chapter ${c} opens in Write`); return;}
+  if(b.dataset.m){st.mtab=b.dataset.m;renderMaia();return;}
+  if(b.dataset.ask){st.thread.push({me:true,t:b.textContent.trim()},{t:ANSWERS[b.dataset.ask](THEMES[st.theme])});renderMaia();return;}
+  if(b.dataset.mode){toast(`${b.dataset.mode} is the next screen we build`);return;}
+  if(b.id==='msToggle'){$('#msPanel').classList.toggle('open');return;}
+  if(b.id==='prev'&&CH[st.chapter-1]){st.chapter--;renderMs();}
+  if(b.id==='next'&&CH[st.chapter+1]){st.chapter++;renderMs();}
+});
+$('#thought').addEventListener('input',(e)=>$('#send').classList.toggle('ready',e.target.value.trim().length>0));
+$('#compose').addEventListener('submit',(e)=>{e.preventDefault();const v=$('#thought').value.trim();if(!v)return;
+  st.thread.push({me:true,t:v},{t:'I’m holding that beside this passage. In the live Studio I answer only from what I have actually read of your manuscript.'});
+  $('#thought').value='';$('#send').classList.remove('ready');renderMaia();});
+renderMs();renderDev();renderMaia();
+</script>
