@@ -67,6 +67,8 @@ Authority proportions (tolerance ±0.03 of width — composite generation noise 
 1. "manuscript primary" at derived desktop widths first required the rail to be right of or below the editor, which is wrong for the authority layout (rail on the left). Now: side by side, the page is ≥2× the rail; stacked, the page comes first.
 2. the tuple's `Work` read the whole breadcrumb because its separator is an icon, not `›`. It now reads the breadcrumb's own segments.
 
+**The clean-worktree witness caught a defect in the capture instrument (not the product):** re-capturing from the committed tree reproduced every render byte-for-byte but one board (`board-s3-c`) differed by 87 pixels inside the downscaled crop of the authority — Chromium had shot its interim low-quality scale of the 1536px PNG. The capture script now waits until every image is decoded and painted before shooting a board; two consecutive runs are then byte-identical across all 15 files, and boards A/C/D were regenerated in the follow-up commit.
+
 **And it caught one real defect in the build:** at derived widths in Full Canvas the breadcrumb overlapped the Return control (the first grid column collapsed to 32px), so Return could not be clicked. Repaired by sizing that column to its content; the round-trip check now passes at 1280/1024/390.
 
 ## 5. Mandatory known-bad mutants (packet §13) — **all RED**

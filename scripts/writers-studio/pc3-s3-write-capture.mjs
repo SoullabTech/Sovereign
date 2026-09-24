@@ -68,6 +68,17 @@ const BOARDS = [
     'Identical geometry and controls to S3-B (measured: 11 landmark boxes equal). Deepest ground, one raised page, action blue and gold as accents only.'],
 ];
 
+/** Boards embed a 1536px authority scaled down: wait until every image is fully
+ *  decoded and painted, or Chromium may shoot its interim low-quality scale and
+ *  two runs of the same board would differ by a few pixels. */
+async function settle(page) {
+  await page.evaluate(async () => {
+    await Promise.all([...document.images].map((i) => (i.complete ? i.decode().catch(() => {}) : new Promise((r) => { i.onload = i.onerror = r; }))));
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  });
+  await page.waitForTimeout(600);
+}
+
 fs.mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 const written = [];
@@ -107,6 +118,7 @@ for (const [out, title, region, render, note] of BOARDS) {
   await page.setContent(`${style}<div class="wrap"><h1>PC3-S3 · ${title}</h1><p class="note">${note}</p>
     <div class="pair"><div><p class="lab"><b>Founder authority</b> · region ${region.toUpperCase()} of the custodied PNG · ${custodyLine}</p>${crop(REGION[region], 1000)}</div>
     <div><p class="lab"><b>PC3-S3 candidate</b> · browser render · ${render.replace('.png', '')} · fixture data</p><img class="r" src="${r}"></div></div></div>`);
+  await settle(page);
   const file = path.join(OUT, out);
   await page.screenshot({ path: file, type: 'jpeg', quality: 86, fullPage: true });
   written.push(file);
@@ -156,6 +168,7 @@ for (const [out, title, region, render, note] of BOARDS) {
     <p class="note">One live browser session. The editor node is marked before entry; the mark is read back at every step. Entry by pointer, return by the visible control; entry by keyboard, return by Escape. The measured tuple is identical in all four columns. This is behaviour, not a drawn screen.</p>
     <p class="lab"><b>Founder authority</b> · region E of the custodied PNG · ${custodyLine}</p>${crop(REGION.e, 2028)}
     <div style="display:grid;grid-template-columns:repeat(4,490px);gap:22px;margin-top:18px">${frames.map(cell).join('')}</div></div>`);
+  await settle(bp);
   const file = path.join(OUT, 'board-s3-e-transition-return.jpg');
   await bp.screenshot({ path: file, type: 'jpeg', quality: 86, fullPage: true });
   written.push(file);
