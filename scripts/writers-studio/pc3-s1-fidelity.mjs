@@ -12,6 +12,9 @@
  * business network traffic from the review harness.
  * Does NOT prove: atmosphere, elegance, relational quality, founder acceptance.
  *
+ * --drift <px> (e.g. -0.3px, 0.6px) re-runs the whole contract with every glyph advance
+ * shifted, standing in for another platform's text shaping; the contract must still hold.
+ *
  * --mutant maia-drop re-creates the rejected 2026-09-23 preview's defect (MAIA
  * stacks beneath the Work below 1180 px) on the live candidate. The instrument
  * must go RED on it; a run where it stays green means the instrument is blind.
@@ -21,6 +24,9 @@ import { chromium } from 'playwright';
 const args = process.argv.slice(2);
 const base = (args.find((a) => /^https?:/.test(a)) ?? 'http://localhost:3100').replace(/\/$/, '');
 const mutant = args.includes('--mutant') ? args[args.indexOf('--mutant') + 1] : null;
+// --drift <px>: shift every glyph advance by <px> to stand in for another platform's
+// text shaping. Landmark extents must not move when a line break does (PC3-S1R2).
+const drift = args.includes('--drift') ? args[args.indexOf('--drift') + 1] : null;
 const ROUTE = '/dev/writers-studio-full-redesign-review';
 const TOL = 6;
 const WIDTHS = [1536, 1440, 1280, 1100, 1024];
@@ -73,6 +79,7 @@ async function open(browser, state, w, h) {
   });
   await page.goto(`${base}${ROUTE}?state=${state}`, { waitUntil: 'networkidle', timeout: 180000 });
   if (mutant) await page.addStyleTag({ content: MUTANTS[mutant] });
+  if (drift) await page.addStyleTag({ content: `.fr-shell *{letter-spacing:${drift}!important}` });
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(400);
   return { page, traffic };
@@ -140,7 +147,7 @@ for (const [state, c] of Object.entries(CONTRACT)) {
 await browser.close();
 
 const fail = results.filter((r) => !r.ok);
-console.log(`\nPC3-S1 fidelity · ${base}${ROUTE}${mutant ? ` · MUTANT ${mutant}` : ''}`);
+console.log(`\nPC3-S1 fidelity · ${base}${ROUTE}${mutant ? ` · MUTANT ${mutant}` : ''}${drift ? ` · DRIFT ${drift}` : ''}`);
 let last = '';
 for (const r of results) {
   if (r.state !== last) console.log(`\n  ${r.state} — ref ${CONTRACT[r.state].ref}`), (last = r.state);

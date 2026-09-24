@@ -1,7 +1,7 @@
 # JARVIS-WRITERS-STUDIO-FULL-REDESIGN-01 · PC3-S1 — Evidence Record
 ## Canonical Light Shell + Appearance Architecture (as amended by PC3-S1R1)
 
-**Standing:** CANDIDATE · STOP BEFORE MERGE · FOUNDER VISUAL REVIEW — PC3-S1
+**Standing:** CANDIDATE (repaired under PC3-S1R2 — see §10) · STOP BEFORE MERGE · FOUNDER VISUAL REVIEW — PC3-S1
 **Authority:** isolated non-production implementation only
 **Packet:** JARVIS `control-room/writers-studio/PC3_S1_CC_EXECUTION_PACKET.md` as amended by `PC3_S1R1_PACKET_AMENDMENT.md` (control room `ee4fbcc77678d9f3a0f2c4e8a0e09ec6df358259`)
 **Base:** `origin/clean-main-no-secrets` = `e886888416062c7fcbcf899040e3827bc8013835` (freshness verified = packet expectation)
@@ -101,6 +101,10 @@ requests** (fetch/XHR/EventSource/WebSocket other than the dev HMR socket), and 
    a strip above the Work while MAIA keeps the right — not covered by any S1 original. **Phone:** Develop tabs scroll
    horizontally; manuscript context is capped at 260 px. S1 proves recomposition only, not PC10 mobile acceptance.
 9. **Member initial** is “J” in every state (#23 shows “K”).
+10. **#11 MAIA card (R2):** its words sit centred inside the original’s extent; in this environment the lead breaks into
+    two lines where the original shows three, because a card filled edge-to-edge like the original has no slack for a
+    line break and cannot lay out identically across platforms.
+11. **#23 findings (R2):** every quote reserves two lines and is clamped at two; titles and the subtitle are single-line.
 
 ## 7. Negative visual evidence — falsifier answers (NV required use)
 
@@ -131,3 +135,51 @@ Develop or Review intelligence, Themes cognition, persistence, authorship or mut
 
 No merge. No deploy. No production route replaced. No schema, API, flag, access-matrix, Jest-config or design-canon-config
 change. **STOP: FOUNDER VISUAL REVIEW — PC3-S1.**
+
+---
+
+## 10. PC3-S1R2 — clean-build reproducibility repair
+
+**Packet:** JARVIS `control-room/writers-studio/PC3_S1R2_REPRODUCIBILITY_REPAIR.md` (control room `ce345c5b75e0b9d17ad035863a3dbc54ef97b26d`).
+**Parent:** `b8a3656a22db65d72e70a8165e0666aa1f22e3c3`. **Contract numbers and tolerance: unchanged.**
+
+### Witnessed failure
+An independent clean worktree of the parent measured **53/55**: #11 MAIA card `1145/1508/182/404` (contract bottom 423)
+and #23 findings `275/770/443/953` (contract bottom 944).
+
+### Cause — established, not guessed
+1. **Not stale build state.** A fresh detached worktree of the exact parent bytes, clean `.next`, clean compile in this
+   container measured **55/55** — the parent’s evidence was true here and false on the witness platform.
+2. **Line-break knife-edges.** Both landmark extents were sized by wrapped text sitting on a wrap threshold. Shifting every
+   glyph advance by a fraction of a pixel — the size of the difference between two platforms’ text shaping — reproduces the
+   witness exactly: at **+0.1 px** the second finding’s quote (“She took a deeper breath and kept walking.”) wraps to a
+   second line and the findings card ends at **953**, the witnessed number; MAIA’s card sat at **429**, the exact +6 px
+   tolerance edge, and moves in whole 24.5 px lines (the witnessed 404 is one body line shorter).
+3. **A third edge the witness did not hit.** The new drift mode found #11’s held passage moving up 33 px under narrowing,
+   because a paragraph above it lost a line.
+4. **Why the earlier session reported 55/55:** it measured one platform’s line breaks. The instrument had no way to see that
+   the same bytes lay out differently elsewhere.
+
+### Repair (presentation only; allowed paths)
+- `full-redesign-review.css`: the three text-flow-sized landmarks now reserve their lines or hold the original’s extent
+  (findings rows reserve title + two quote lines, card pinned to 439–944 with the observation card at its foot; MAIA card
+  holds 181–423 with its words centred and a full line of slack either way; the paragraphs above the held passage reserve
+  the original’s 4 and 3 lines). The R2 rules are consolidated in one commented block; consolidation re-rendered
+  byte-identical.
+- `pc3-s1-fidelity.mjs`: new **`--drift <px>`** mode re-runs the whole unchanged contract with every glyph advance
+  shifted, standing in for another platform’s text shaping.
+
+### Proof
+| run | result |
+|---|---|
+| parent `b8a3656a` · drift −0.6 px | **53/55 RED** (held passage, MAIA card) — the drift mode discriminates |
+| parent `b8a3656a` · drift +0.3 px | **54/55 RED** (findings) |
+| repaired · clean start · no drift | **55/55 GREEN** |
+| repaired · drift −0.6 / −0.3 / +0.3 / +0.6 px | **55/55 GREEN** at each |
+| repaired · `--mutant maia-drop` | **49/55 RED** — only `R-maia-right@1100` and `@1024`, all three states |
+| post-commit clean detached worktree | recorded in the stop report (a record cannot contain the hash of the commit it lives in) |
+
+All 12 screenshots were regenerated from the repaired bytes after a clean server start; 8 came out byte-identical to the
+parent’s (unaffected states), 4 changed (the two repaired states and their side-by-sides).
+
+**Standing: REPAIRED · REPRODUCIBILITY PROVEN ACROSS SIMULATED PLATFORM DRIFT · STOP BEFORE MERGE · FOUNDER VISUAL REVIEW — PC3-S1.**
