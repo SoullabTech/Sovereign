@@ -40,6 +40,51 @@ function inspectButton(kind,id,label,origin,source='') {
 }
 function pill(text, level='neutral') { return `<span class="pill ${levelClass(level)}">${esc(text)}</span>`; }
 
+function humanWorkSubject(u) {
+  const t=String(u?.title||'').toLowerCase();
+  if (t.includes("writer's studio") || t.includes('writers studio') || t.includes('writer studio')) return "Writer's Studio";
+  if (t.includes('model mode') || (t.includes('qwen') && t.includes('gpt-oss'))) return 'JARVIS model routing';
+  if (t.includes('canonical-confirm-execute') || t.includes('one-shot e1') || t.includes('execution grant')) return 'JARVIS execution safety';
+  if (t.includes('provider-execution') || t.includes('ollama-direct')) return 'Local AI execution';
+  if (t.includes('voice') || t.includes('whisper') || t.includes('kokoro')) return 'JARVIS voice';
+  if (t.includes('storage') || t.includes('disk')) return 'Mac Studio storage';
+  if (t.includes('backup') || t.includes('restore')) return 'Backup and recovery';
+  return 'JARVIS governed work';
+}
+
+function humanWorkStatus(u) {
+  const state=String(u?.state||'').toUpperCase();
+  if (state==='EVIDENCE_READY') return 'A completed JARVIS check is ready for your review.';
+  if (state==='EXECUTING') return 'JARVIS is checking this now under an authority already granted.';
+  if (state==='ROUTED') return 'JARVIS has prepared this work. Nothing has run yet.';
+  if (state==='AUTHORIZED') return 'This work is authorized but has not run yet.';
+  if (state==='BOUNDED') return 'The scope is fixed. Execution is not yet authorized.';
+  if (state==='DRAFT') return 'This work has been captured but not started.';
+  if (state==='CLOSED' || state==='ADJUDICATED') return 'This work is closed.';
+  return u?.state_plain || u?.plain || 'JARVIS has recorded this work.';
+}
+
+function humanFounderAsk(u) {
+  const need=arr(u?.needs_founder)[0];
+  if (!need) return null;
+  if (need.action==='canonical-adjudicate') return 'Review the evidence and decide whether this work passes.';
+  return `A decision is waiting for you: ${need.what || need.action || 'review this work'}.`;
+}
+
+function friendlyProgrammeName(p) {
+  const id=String(p?.name||p?.id||'Programme');
+  if (id==='JOP-04') return 'JARVIS Desktop rules';
+  const acronyms=new Set(['MAIA','JARVIS','AIN','JEV','SVE','RGR','UI','UX','API','NAS','AI']);
+  const parts=id.replace(/[-_]0?\d+$/,'').split(/[-_]+/).filter(Boolean);
+  return parts.map(x=>acronyms.has(x)?x:(x.length<=3&&/^[A-Z0-9]+$/.test(x)?x:x.charAt(0).toUpperCase()+x.slice(1).toLowerCase())).join(' ') || id;
+}
+
+function technicalDetails(lines) {
+  const safe=arr(lines).filter(Boolean);
+  if (!safe.length) return '';
+  return `<details class="technicalDetails"><summary>Technical details</summary><div>${safe.map(x=>`<div>${esc(x)}</div>`).join('')}</div></details>`;
+}
+
 async function refresh(opts = {}) {
   const o = typeof opts === 'string' ? { evidenceRef: opts } : (opts || {});
   const evidenceRef = typeof o.evidenceRef === 'string' ? o.evidenceRef : null;
@@ -133,44 +178,60 @@ function deriveActiveFields() {
   const fields=[];
   for (const u of arr(vm.work?.units)) {
     if (['CLOSED','ADJUDICATED'].includes(u.state)) continue;
-    const need=arr(u.needs_founder)[0];
-    fields.push({kind:'work',id:u.id,label:u.title,source:u.file,what:u.plain,moving:u.state_plain||u.state,needs:need?.what||null,changed:u.last_event||null,level:need?'warn':'neutral',type:'Live work'});
+    const ask=humanFounderAsk(u);
+    fields.push({
+      bucket: ask?'needs':'motion', kind:'work', id:u.id, label:humanWorkSubject(u), source:u.file,
+      what:humanWorkStatus(u), moving:u.state_plain||u.state, needs:ask, changed:u.last_event||null,
+      level:ask?'warn':'neutral', type:ask?'Needs Kelly':'In motion',
+      technical:[`Work Unit: ${u.title}`, `State: ${u.state}`, u.route?`Route: ${u.route}`:null, `Evidence: ${u.evidence_state}`, u.file?`Source: ${u.file}`:null],
+    });
   }
   for (const pr of arr(vm.programme_state?.programmes)) {
     if (pr.evidence_state!=='UNVERIFIED / CONFLICT') continue;
-    fields.push({kind:'programme',id:pr.id,label:pr.name||pr.id,source:arr(pr.sources)[0]||pr.last_change?.source||'',what:'Programme standing is conflicted.',moving:pr.standing||'UNVERIFIED / CONFLICT',needs:'Do not guess through the conflict; enter the field to inspect its evidence and current work.',changed:pr.last_change?.date||null,level:'warn',type:'Programme uncertainty'});
+    const source=arr(pr.sources)[0]||pr.last_change?.source||'';
+    fields.push({
+      bucket:'watching', kind:'programme', id:pr.id, label:friendlyProgrammeName(pr), source,
+      what:'JARVIS has conflicting records for this programme. It will not guess which standing is current.',
+      moving:'The conflict is still unresolved.', needs:null, changed:pr.last_change?.date||null, level:'warn', type:'Watching',
+      technical:[`Programme: ${pr.id}`, `Standing: ${pr.standing||'UNVERIFIED / CONFLICT'}`, `Evidence: ${pr.evidence_state}`, source?`Source: ${source}`:null],
+    });
   }
   for (const m of arr(vm.monitor)) {
     if (!['warn','failed'].includes(m.level)) continue;
-    fields.push({kind:'monitor',id:monitorKey(m),label:m.subject,source:'',what:m.plain,moving:m.value,needs:m.level==='failed'?'An observed failure needs investigation.':'An observed condition needs attention.',changed:m.observed_at||null,level:m.level,type:m.level==='failed'?'Observed failure':'Observed condition'});
+    fields.push({
+      bucket:'watching', kind:'monitor', id:monitorKey(m), label:m.subject, source:'', what:m.plain,
+      moving:m.level==='failed'?'An observed failure is present.':'An observed condition needs watching.', needs:null,
+      changed:m.observed_at||null, level:m.level, type:'Watching',
+      technical:[`Value: ${m.value}`, `Freshness: ${m.freshness}`, `Instrument: ${m.instrument}`, `Evidence: ${m.evidence_state}`],
+    });
   }
   return fields;
 }
 
 function activeFieldRow(f, origin='Today') {
-  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowMeta">${esc(f.type)}</div><div class="rowPlain" style="margin-top:6px"><b>What this is:</b> ${esc(f.what||'Observed field')}</div><div class="rowPlain"><b>What is moving:</b> ${esc(f.moving||'No movement observed')}</div>${f.needs?`<div class="rowPlain"><b>Needs you:</b> ${esc(f.needs)}</div>`:''}${f.changed?`<div class="rowPlain"><b>What changed:</b> ${esc(f.changed)}</div>`:''}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
+  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowPlain">${esc(f.what||'Observed field')}</div>${f.needs?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(f.needs)}</div>`:''}${f.changed?`<div class="rowMeta">Changed: ${esc(f.changed)}</div>`:''}${technicalDetails(f.technical)}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
 }
 
 function renderToday() {
-  const vm=state.vm, units=arr(vm.work?.units), programmes=arr(vm.programme_state?.programmes), events=arr(vm.events);
-  const needs=units.filter(u=>arr(u.needs_founder).length);
-  const conflicts=programmes.filter(p=>p.evidence_state==='UNVERIFIED / CONFLICT');
-  const fields=deriveActiveFields();
+  const vm=state.vm, events=arr(vm.events), fields=deriveActiveFields();
   const pop=vm.programme_state?.population || {};
   const unreadable=arr(pop.unreadable).length, unclassified=arr(pop.unclassified).length;
-  const headline = fields.length
-    ? `${fields.length} active field${fields.length===1?' is':'s are'} alive in your world right now.`
-    : 'No active field is currently evidenced strongly enough to place here.';
-  const needsHtml = needs.length ? needs.map(u=>{
-    const action=arr(u.needs_founder)[0];
-    return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(u.title)}</div><div class="rowPlain">${esc(action?.what || u.plain)}</div><div class="rowMeta">${esc(u.state_plain || u.state)} · ${esc(u.evidence_state)}</div><div class="actions">${contextButton('work',u.id,u.title,'Today',u.file,'Enter field')}${evidenceButton(u.file)}</div></div>${pill('Needs you','warn')}</div></div>`;
-  }).join('') : `<div class="empty">Nothing in the live Work Unit store is asking for a Founder action. This does not claim there are no programme-level decisions elsewhere.</div>`;
-  return `<div class="eyebrow">Today · active fields</div><h1>${headline}</h1>
-    <p class="lede">Today answers <b>what is alive, what needs you, and where to enter.</b> Fields are derived only from observed Work Units, programme conflicts, and Monitor conditions that need attention—never from invented strategic or psychological insight. ${conflicts.length} programme conflict${conflicts.length===1?'':'s'} remain visible; ${unclassified} source subject${unclassified===1?'':'s'} are unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
-    <section class="section"><h2>Active fields <span class="muted">your working world, from observed evidence</span></h2><div class="list">${fields.length?fields.slice(0,18).map(f=>activeFieldRow(f)).join(''):'<div class="empty">No evidence-backed active fields are projected right now.</div>'}</div></section>
-    <section class="section"><h2>Needs a Founder decision</h2><div class="list">${needsHtml}</div></section>
-    <section class="section"><h2>Changed recently</h2>${events.length?`<div class="card"><div class="timeline">${events.slice(0,14).map(e=>`<div class="date">${esc(String(e.at||'').slice(0,16)||'—')}</div><div>${esc(e.text||e.kind)} <span class="muted mono">· ${esc(e.source||'')}</span>${e.source?` ${evidenceButton(e.source,'Open')}`:''}</div>`).join('')}</div></div>`:`<div class="empty">No events were recorded in the live local event organ.</div>`}</section>
-    ${workspaceCard()}`;
+  const needs=fields.filter(f=>f.bucket==='needs');
+  const motion=fields.filter(f=>f.bucket==='motion');
+  const watching=fields.filter(f=>f.bucket==='watching');
+  const headline = needs.length
+    ? `${needs.length} thing${needs.length===1?' needs':'s need'} you. ${motion.length} ${motion.length===1?'is':'are'} moving.`
+    : motion.length
+      ? `Nothing needs a decision from you right now. ${motion.length} field${motion.length===1?' is':'s are'} moving.`
+      : 'Nothing is asking for your attention right now.';
+  const listOrEmpty=(xs,msg)=>xs.length?xs.map(f=>activeFieldRow(f)).join(''):`<div class="empty">${esc(msg)}</div>`;
+  const recent=events.length?`<div class="card"><div class="timeline">${events.slice(0,14).map(e=>`<div class="date">${esc(String(e.at||'').slice(0,16)||'—')}</div><div>${esc(e.text||e.kind)} <span class="muted mono">· ${esc(e.source||'')}</span>${e.source?` ${evidenceButton(e.source,'Open')}`:''}</div>`).join('')}</div></div>`:`<div class="empty">No recent events are recorded in the local event organ.</div>`;
+  return `<div class="eyebrow">Today · Kelly's world</div><h1>${headline}</h1>
+    <p class="lede">Start with what requires you, then what is already moving, then what only needs watching. Technical truth is still here, one layer down. ${unclassified} source subject${unclassified===1?' is':'s are'} unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
+    <section class="section"><h2>Needs Kelly <span class="muted">decisions waiting for you</span></h2><div class="list">${listOrEmpty(needs,'Nothing is waiting for a decision from you.')}</div></section>
+    <section class="section"><h2>In motion <span class="muted">work already moving</span></h2><div class="list">${listOrEmpty(motion,'No governed work is currently moving.')}</div></section>
+    <section class="section"><h2>Watching <span class="muted">uncertainty and observed conditions</span></h2><div class="list">${listOrEmpty(watching,'Nothing currently needs watching.')}</div></section>
+    <details class="secondaryDetails"><summary>Everything else</summary><div class="detailsBody"><h2>Changed recently</h2>${recent}${workspaceCard()}</div></details>`;
 }
 
 function workspaceCard() {
@@ -181,7 +242,13 @@ function workspaceCard() {
 function programmeRow(p, origin) {
   const source=arr(p.sources)[0] || p.last_change?.source || '';
   const level=p.evidence_state==='UNVERIFIED / CONFLICT'?'warn':p.evidence_state==='OBSERVED'?'good':'unobserved';
-  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(p.name||p.id)}</div><div class="rowPlain">${esc(p.standing || 'No formal standing line is projected.')}</div><div class="rowMeta">${esc(p.id)} · ${esc(p.evidence_state)}${p.last_change?.date?` · ${esc(p.last_change.date)}`:''}</div><div class="actions">${contextButton('programme',p.id,p.name||p.id,origin,source)}${source?evidenceButton(source):''}<button class="btn subtle" data-action="context-view" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(p.name||p.id))}" data-origin="${attr(enc(origin))}" data-source="${attr(enc(source))}" data-target="system">System</button></div></div>${pill(p.evidence_state,level)}</div></div>`;
+  const label=friendlyProgrammeName(p);
+  const summary=p.evidence_state==='UNVERIFIED / CONFLICT'
+    ? 'JARVIS has conflicting records here and will not guess which standing is current.'
+    : p.evidence_state==='OBSERVED'
+      ? 'JARVIS has an observed programme record for this field.'
+      : 'This programme is present, but its current standing is not fully observed.';
+  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(label)}</div><div class="rowPlain">${esc(summary)}</div>${technicalDetails([`Programme: ${p.id}`,`Standing: ${p.standing||'not formally projected'}`,`Evidence: ${p.evidence_state}`,source?`Source: ${source}`:null])}<div class="actions">${contextButton('programme',p.id,label,origin,source)}${source?evidenceButton(source):''}<button class="btn subtle" data-action="context-view" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(label))}" data-origin="${attr(enc(origin))}" data-source="${attr(enc(source))}" data-target="system">System</button></div></div>${pill(level==='warn'?'Watching':level==='good'?'Observed':'Not observed',level)}</div></div>`;
 }
 
 function renderWork() {
@@ -206,12 +273,12 @@ function renderWork() {
 function workConversation(ctx) {
   const c=state.context;
   if (c.kind==='programme') {
-    const sources=arr(ctx.sources);
-    return `<div class="contextCard"><b>You opened ${esc(ctx.name||ctx.id)} from ${esc(c.origin)}.</b><div class="why">JARVIS is carrying the programme identity and its projected standing across every surface. It is not inventing a next act in B5.</div><div class="rowPlain" style="margin-top:9px">${esc(ctx.standing || 'No formal standing is currently projected.')}</div><div class="rowMeta">${esc(ctx.evidence_state)} · ${sources.length} source${sources.length===1?'':'s'}</div><div class="actions">${sources.slice(0,4).map(s=>evidenceButton(s)).join('')}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
+    const sources=arr(ctx.sources), label=friendlyProgrammeName(ctx);
+    return `<div class="contextCard"><b>${esc(label)}</b><div class="why">JARVIS is carrying this programme context across every surface. It is not inventing a next act in B5R1.</div><div class="rowPlain" style="margin-top:9px">${ctx.evidence_state==='UNVERIFIED / CONFLICT'?'The current programme record is conflicted; JARVIS will not guess through it.':'The programme context is available for inspection.'}</div>${technicalDetails([`Programme: ${ctx.id}`,`Standing: ${ctx.standing||'not formally projected'}`,`Evidence: ${ctx.evidence_state}`])}<div class="actions">${sources.slice(0,4).map(s=>evidenceButton(s)).join('')}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
   }
   if (c.kind==='work') {
-    const action=arr(ctx.needs_founder)[0];
-    return `<div class="contextCard"><b>You opened the live Work Unit “${esc(ctx.title)}” from ${esc(c.origin)}.</b><div class="why">${esc(ctx.plain)}</div><div class="rowPlain" style="margin-top:9px">State: <b>${esc(ctx.state_plain||ctx.state)}</b>${action?` · Founder action: ${esc(action.what)}`:''}</div><div class="rowMeta">route ${esc(ctx.route||'not routed')} · evidence ${esc(ctx.evidence_state)}</div><div class="actions">${evidenceButton(ctx.file)}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
+    const label=humanWorkSubject(ctx), ask=humanFounderAsk(ctx);
+    return `<div class="contextCard"><b>${esc(label)}</b><div class="why">${esc(humanWorkStatus(ctx))}</div>${ask?`<div class="rowPlain" style="margin-top:9px"><b>Needs Kelly:</b> ${esc(ask)}</div>`:''}${technicalDetails([`Work Unit: ${ctx.title}`,`State: ${ctx.state}`,ctx.route?`Route: ${ctx.route}`:null,`Evidence: ${ctx.evidence_state}`,ctx.file?`Source: ${ctx.file}`:null])}<div class="actions">${evidenceButton(ctx.file)}<button class="btn" data-view-jump="graph">Graph</button><button class="btn" data-view-jump="monitor">Monitor</button><button class="btn" data-view-jump="system">System</button></div></div>`;
   }
   if (c.kind==='monitor') {
     return `<div class="contextCard"><b>You opened “${esc(ctx.subject)}” from Monitor.</b><div class="why">The observation remains attached as the reason this investigation context exists.</div><div class="rowPlain" style="margin-top:9px">${esc(ctx.plain)}</div><div class="rowMeta">${esc(ctx.value)} · ${esc(ctx.freshness)} · ${esc(ctx.evidence_state)}</div><div class="actions"><button class="btn" data-view-jump="monitor">Back to observation</button><button class="btn" data-action="refresh-monitor">Refresh observation</button><button class="btn" disabled>Plan investigation — B6</button></div></div>`;
@@ -220,8 +287,9 @@ function workConversation(ctx) {
 }
 
 function workUnitRow(u) {
-  const level=arr(u.needs_founder).length?'warn':u.state==='CLOSED'?'good':'neutral';
-  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(u.title)}</div><div class="rowPlain">${esc(u.plain)}</div><div class="rowMeta">${esc(u.state_plain||u.state)} · ${esc(u.route||'')} · ${esc(u.evidence_state)}</div><div class="actions">${contextButton('work',u.id,u.title,'Work',u.file)}${evidenceButton(u.file)}</div></div>${pill(u.state_plain||u.state,level)}</div></div>`;
+  const ask=humanFounderAsk(u), level=ask?'warn':u.state==='CLOSED'?'good':'neutral';
+  const label=humanWorkSubject(u);
+  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(label)}</div><div class="rowPlain">${esc(humanWorkStatus(u))}</div>${ask?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(ask)}</div>`:''}${technicalDetails([`Work Unit: ${u.title}`,`State: ${u.state}`,u.route?`Route: ${u.route}`:null,`Evidence: ${u.evidence_state}`,u.file?`Source: ${u.file}`:null])}<div class="actions">${contextButton('work',u.id,label,'Work',u.file)}${evidenceButton(u.file)}</div></div>${pill(ask?'Needs Kelly':u.state_plain||u.state,level)}</div></div>`;
 }
 
 function renderGraph() {
@@ -236,36 +304,35 @@ function renderGraph() {
   return `<div class="eyebrow">Graph · how your world connects</div><h1>See the current field in relation to the rest of your world.</h1><p class="lede">Graph is not a decorative network. Every visible relationship must be evidenced. It carries the same active field as Today and Work, so Kelly can move from a relationship to its source and back without reconstructing what “this” means. The live relation join remains held for B7; B5 will not invent edges.</p>
     <section class="section"><h2>Current active field · center</h2>${state.context?`<div class="contextCard"><b>${esc(state.context.label)}</b><div class="why">from ${esc(state.context.origin)}</div><div class="actions">${contextEvidence.slice(0,6).map(s=>evidenceButton(s)).join('')}<button class="btn" data-view-jump="work">Back to Work</button></div></div>`:'<div class="empty">Choose a programme, Work Unit, or Monitor observation first. Graph will keep that subject in focus.</div>'}</section>
     <section class="section"><h2>Evidence-backed relationships</h2>${live}</section>
-    <section class="section"><h2>Choose a programme focus</h2><div class="focusList">${arr(state.vm.programme_state?.programmes).slice(0,30).map(p=>`<button class="focusChip ${state.context?.kind==='programme'&&state.context.id===p.id?'active':''}" data-action="context-only" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(p.name||p.id))}" data-origin="${attr(enc('Graph'))}" data-source="${attr(enc(arr(p.sources)[0]||''))}">${esc(p.name||p.id)}</button>`).join('')}</div></section>`;
+    <section class="section"><h2>Choose a programme focus</h2><div class="focusList">${arr(state.vm.programme_state?.programmes).slice(0,30).map(p=>{const label=friendlyProgrammeName(p);return `<button class="focusChip ${state.context?.kind==='programme'&&state.context.id===p.id?'active':''}" data-action="context-only" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(label))}" data-origin="${attr(enc('Graph'))}" data-source="${attr(enc(arr(p.sources)[0]||''))}">${esc(label)}</button>`}).join('')}</div></section>`;
 }
 function nodeLabel(g,id){return arr(g.nodes).find(n=>n.id===id)?.label||id;}
 
 function renderMonitor() {
   const rows=arr(state.vm.monitor), groups=[...new Set(rows.map(r=>r.group))];
-  const counts={}; rows.forEach(r=>counts[r.level]=(counts[r.level]||0)+1);
-  const units=arr(state.vm.work?.units).filter(u=>arr(u.needs_founder).length);
+  const founderNeeds=arr(state.vm.work?.units).filter(u=>arr(u.needs_founder).length);
   const conflicts=arr(state.vm.programme_state?.programmes).filter(p=>p.evidence_state==='UNVERIFIED / CONFLICT');
   const observedAttention=rows.filter(m=>['warn','failed'].includes(m.level));
-  const attentionCount=units.length+conflicts.length+observedAttention.length;
-  const founderAttention=[
-    ...units.map(u=>`<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(u.title)}</div><div class="rowMeta">Founder decision · live Work Unit</div><div class="rowPlain">${esc(arr(u.needs_founder)[0]?.what||u.plain)}</div><div class="actions">${contextButton('work',u.id,u.title,'Monitor',u.file,'Enter field')}${evidenceButton(u.file)}</div></div>${pill('Decision','warn')}</div></div>`),
-    ...conflicts.map(p=>`<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(p.name||p.id)}</div><div class="rowMeta">Programme uncertainty</div><div class="rowPlain">${esc(p.standing||'UNVERIFIED / CONFLICT')}</div><div class="actions">${contextButton('programme',p.id,p.name||p.id,'Monitor',arr(p.sources)[0]||p.last_change?.source||'','Enter field')}</div></div>${pill('Conflict','warn')}</div></div>`),
-    ...observedAttention.map(m=>monitorAttentionRow(m)),
-  ];
-  return `<div class="eyebrow">Monitor · founder attention</div><h1>${attentionCount} thing${attentionCount===1?'':'s'} need attention. ${counts.failed||0} ${counts.failed===1?'is an observed machine failure':'are observed machine failures'}.</h1><p class="lede"><b>Needs attention is not the same as broken.</b> A Founder decision, programme conflict, stale or missing observation, product defect, and machine failure keep their own meanings. Monitor brings them into one attention field without flattening them.</p>
-    <section class="section"><h2>Founder attention <span class="muted">decisions · uncertainty · observed conditions</span></h2><div class="list">${founderAttention.length?founderAttention.join(''):'<div class="empty">No current decision, programme conflict, or observed warning/failure is asking for attention.</div>'}</div></section>
-    <section class="section"><h2>System observations <span class="muted">technical truth underneath the attention field</span></h2><div class="actions"><button class="btn primary" data-action="refresh-monitor">Refresh observations</button></div></section>
-    ${groups.map(g=>`<section class="section"><h2>${esc(g)}</h2><div class="list">${rows.filter(r=>r.group===g).map(m=>monitorRow(m)).join('')}</div></section>`).join('')}`;
+  const needsHtml=founderNeeds.length?founderNeeds.map(u=>{
+    const label=humanWorkSubject(u), ask=humanFounderAsk(u);
+    return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(label)}</div><div class="rowPlain">${esc(humanWorkStatus(u))}</div><div class="rowPlain"><b>Needs Kelly:</b> ${esc(ask)}</div>${technicalDetails([`Work Unit: ${u.title}`,`State: ${u.state}`,u.route?`Route: ${u.route}`:null,`Evidence: ${u.evidence_state}`])}<div class="actions">${contextButton('work',u.id,label,'Monitor',u.file,'Enter field')}${evidenceButton(u.file)}</div></div>${pill('Needs Kelly','warn')}</div></div>`;
+  }).join(''):'<div class="empty">Nothing is waiting for a decision from you.</div>';
+  const watching=[...conflicts.map(p=>programmeRow(p,'Monitor')),...observedAttention.map(m=>monitorAttentionRow(m))];
+  const systemHtml=groups.map(g=>`<section class="section"><h2>${esc(g)}</h2><div class="list">${rows.filter(r=>r.group===g).map(m=>monitorRow(m)).join('')}</div></section>`).join('');
+  return `<div class="eyebrow">Monitor · what needs watching</div><h1>${founderNeeds.length} need${founderNeeds.length===1?'s':''} you · ${watching.length} ${watching.length===1?'thing needs':'things need'} watching.</h1><p class="lede"><b>Needs attention is not the same as broken.</b> Decisions come first. Uncertainty and observed conditions come next. The full technical observation field stays available underneath.</p>
+    <section class="section"><h2>Needs Kelly <span class="muted">explicit decisions</span></h2><div class="list">${needsHtml}</div></section>
+    <section class="section"><h2>Watching <span class="muted">uncertainty and observed conditions</span></h2><div class="list">${watching.length?watching.join(''):'<div class="empty">Nothing currently needs watching.</div>'}</div></section>
+    <details class="secondaryDetails"><summary>System observations</summary><div class="detailsBody"><div class="actions"><button class="btn primary" data-action="refresh-monitor">Refresh observations</button></div>${systemHtml}</div></details>`;
 }
 function monitorAttentionRow(m) {
   const id=monitorKey(m);
   const type=m.level==='failed'?'Observed failure':'Observed condition';
-  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(m.subject)}</div><div class="rowMeta">${esc(type)}</div><div class="rowPlain">${esc(m.plain)}</div><div class="rowMeta">${esc(m.value)} · ${esc(m.freshness)}</div><div class="actions">${contextButton('monitor',id,m.subject,'Monitor','', 'Investigate')}${m.level==='failed'?'<button class="btn" data-action="refresh-monitor">Refresh observation</button>':''}</div></div>${pill(type,m.level)}</div></div>`;
+  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(m.subject)}</div><div class="rowPlain">${esc(m.plain)}</div>${technicalDetails([`Value: ${m.value}`,`Freshness: ${m.freshness}`,m.observed_at?`Observed: ${m.observed_at}`:null,`Instrument: ${m.instrument}`,`Evidence: ${m.evidence_state}`])}<div class="actions">${contextButton('monitor',id,m.subject,'Monitor','', 'Investigate')}${m.level==='failed'?'<button class="btn" data-action="refresh-monitor">Refresh observation</button>':''}</div></div>${pill(type,m.level)}</div></div>`;
 }
 
 function monitorRow(m) {
   const id=monitorKey(m); const label=m.subject;
-  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(m.subject)}</div><div class="rowPlain">${esc(m.plain)}</div><div class="rowMeta">${esc(m.value)} · ${esc(m.freshness)}${m.observed_at?` · ${esc(m.observed_at)}`:''}<br><span class="mono">${esc(m.instrument)}</span></div><div class="actions">${contextButton('monitor',id,label,'Monitor','')}<button class="btn" data-action="refresh-monitor">Refresh observations</button></div></div>${pill(levelLabel(m.level),m.level)}</div></div>`;
+  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(m.subject)}</div><div class="rowPlain">${esc(m.plain)}</div>${technicalDetails([`Value: ${m.value}`,`Freshness: ${m.freshness}`,m.observed_at?`Observed: ${m.observed_at}`:null,`Instrument: ${m.instrument}`,`Evidence: ${m.evidence_state}`])}<div class="actions">${contextButton('monitor',id,label,'Monitor','')}<button class="btn" data-action="refresh-monitor">Refresh observations</button></div></div>${pill(levelLabel(m.level),m.level)}</div></div>`;
 }
 
 function renderSystem() {
