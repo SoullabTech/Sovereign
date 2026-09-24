@@ -18,6 +18,8 @@ export interface ReviewFailure {
 export interface ReviewFinding {
   id: string;
   readingId: string;
+  /** Durable reading-local address. Never recover this by parsing `id`. */
+  observationKey: string;
   lens: DevelopmentalLens;
   observation: string;
   summary: string;
@@ -64,6 +66,7 @@ export function findingsFromPayloads(payloads: readonly ReadingPayload[]): Revie
       out.push({
         id: `${reading.id}:${o.key}`,
         readingId: reading.id,
+        observationKey: o.key,
         lens: o.lens,
         observation: o.observation,
         summary: oneLine(o.observation),
