@@ -3,28 +3,27 @@ import { join } from 'node:path';
 
 const read = (...parts: string[]) => readFileSync(join(process.cwd(), ...parts), 'utf8');
 const page = read('app', 'writers-studio', 'rebuild', 'page.tsx');
-const host = read('app', 'writers-studio', 'rebuild', 'FlagshipWriteHost.tsx');
 const client = read('app', 'writers-studio', 'rebuild', 'RebuildStudioClient.tsx');
 const chapterReview = read('lib', 'writersStudio', 'rebuild', 'chapterReview.ts');
 
-/* 2026-09-24 founder direction: /writers-studio/rebuild mounts the founder-accepted
- * flagship Studio (V10 PASS at f9fbb828b), not the legacy RebuildStudioClient. */
 describe('Writer’s Studio production workspace mount', () => {
-  it('mounts the founder-accepted flagship Studio at /writers-studio/rebuild', () => {
-    expect(page).toContain("import FlagshipWriteHost from './FlagshipWriteHost'");
-    expect(page).toContain('<FlagshipWriteHost');
-    expect(page).toContain("import '../flagship/flagship.css'");
-    expect(page).toContain("import './flagshipWriteHost.css'");
+  it('mounts the full manuscript-first workspace at /writers-studio/rebuild', () => {
+    expect(page).toContain("import RebuildStudioClient from './RebuildStudioClient'");
+    expect(page).toContain('<RebuildStudioClient');
+    expect(page).toContain("import './rebuild.css'");
   });
 
-  it('does not mount the legacy workspace as the member-facing surface', () => {
-    expect(page).not.toContain('<RebuildStudioClient');
+  it('does not replace the member-facing workspace with the bounded flagship proof host', () => {
+    expect(page).not.toContain('<FlagshipWriteHost');
+    expect(page).not.toContain("import './flagshipWriteHost.css'");
   });
 
-  it('threads both server flags into the flagship host', () => {
-    expect(page).toContain("editorialEnabled={process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1'}");
-    expect(page).toContain("reviewDiscussEnabled={process.env.WRITERS_STUDIO_REVIEW_DISCUSS_ENABLED === '1'}");
-    expect(host).toContain('reviewDiscussEnabled = false');
+  it('threads the independent Review Discuss flag into the full workspace', () => {
+    expect(page).toContain('WRITERS_STUDIO_REVIEW_DISCUSS_ENABLED');
+    expect(page).toContain('reviewDiscussEnabled={');
+    expect(client).toContain('commissionReviewDiscuss({');
+    expect(client).toContain('data-review-discuss-finding={finding.id}');
+    expect(client).toContain('observationKey: finding.observationKey');
   });
 
   it('carries the durable observation key structurally rather than parsing a display id', () => {
