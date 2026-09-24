@@ -24,6 +24,8 @@ const CWUV2 = require('./canonical-work-unit-v2.js');
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
 const { decideCorrectness } = require('./correctness');
+const PRECISION_CONTEXT = require('./founder-precision-context.js');
+const PARTNER_CONTEXT = require('./partner-context.js');
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -1255,8 +1257,8 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       let fragments = [];
       let materialization_error = null;
       if (selectors.length) {
-        // Fail closed: an unresolvable selector must not silently degrade into
-        // "no evidence required". materializeOne throws on any invalid selector.
+        // Legacy C1 selectors remain supported. Fail closed: an unresolvable selector
+        // must not silently degrade into "no evidence required".
         try {
           fragments = materializePacket({ context_selectors: selectors }, root);
         } catch (e) {
@@ -1264,17 +1266,70 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         }
       }
 
+      // B6R1 precision context. The renderer never supplies repository paths.
+      // It supplies only the current field identity + Kelly's objective. Main
+      // resolves that identity against the already-validated Founder view-model,
+      // then materializes evidence from the exact canonical git object named by
+      // vm.meta.observed_against. Dirty development-tree bytes cannot enter here.
+      let precision = { status: 'NOT_REQUESTED', field: { id: null, label: null, resolution: 'none' }, fragments: [], refusals: [] };
+      if (task.founder_workspace_context_request === true) {
+        const cachedVm = founderWorkspaceCache.root === root ? founderWorkspaceCache.vm : null;
+        if (cachedVm) {
+          precision = PRECISION_CONTEXT.buildPrecisionContext({
+            repo: root,
+            vm: cachedVm,
+            explicitContext: task.founder_workspace_context || null,
+            objective: task.founder_workspace_objective || task.prompt || '',
+          });
+          if (Array.isArray(precision.fragments) && precision.fragments.length) {
+            fragments = [...fragments, ...precision.fragments];
+          } else if (precision.status === 'REFUSED') {
+            materialization_error = precision.reason || 'PRECISION_CONTEXT_REFUSED';
+          }
+        } else {
+          precision = { status: 'REFUSED', reason: 'FOUNDER_VIEWMODEL_NOT_CACHED', field: { id: null, label: null, resolution: 'none' }, fragments: [], refusals: [] };
+          materialization_error = 'FOUNDER_VIEWMODEL_NOT_CACHED';
+        }
+      }
+
+      // AI partner handoff is a separate epistemic lane. Handoffs live only in
+      // ~/.jarvis/context-handoffs, pass a strict schema, and are matched to the
+      // current field/objective. They orient JARVIS but are NEVER passed to the
+      // canonical evidence verifier and NEVER grant authority.
+      const partner = task.founder_workspace_context_request === true
+        ? PARTNER_CONTEXT.listPartnerHandoffs({
+            objective: task.founder_workspace_objective || task.prompt || '',
+            fieldLabel: precision?.field?.label || task.founder_workspace_context?.label || '',
+          })
+        : { status: 'NOT_REQUESTED', items: [], refused: [] };
+      const partnerBlock = PARTNER_CONTEXT.renderPartnerOrientation(partner.items || []);
+
       // The citation syntax is stated because the verifier enforces an exact
-      // machine-readable form. Asking for "citations" in prose and then scoring
-      // path.ext:NN produces false refusals of correct answers — the defect
-      // recorded as D8 in docs/ops/JARVIS_PLANNER_ROUTER_ALPHA.md.
-      const prompt = fragments.length
-        ? `${renderFragments(fragments)}\n\nAnswer using ONLY the numbered source above. `
-          + `Cite every claim inline in the exact form path/to/file.ext:LINE `
-          + `(colon, no space) — for example scripts/builder/router.mjs:42. `
-          + `Prose such as "on line 42" does not count as a citation. `
-          + `Cite only lines present in the source above.\n\n${task.prompt}`
-        : task.prompt;
+      // machine-readable form. Partner context may orient the answer but cannot
+      // satisfy repository evidence. Only numbered canonical fragments can.
+      const evidenceBlock = fragments.length ? renderFragments(fragments) : '';
+      const contextRules = fragments.length
+        ? `For repository or system claims, use ONLY the numbered canonical evidence and cite every such claim inline as path/to/file.ext:LINE. Partner orientation is not repository evidence.`
+        : partnerBlock
+          ? `No canonical repository evidence was attached. Partner orientation may help you understand Kelly's context, but state clearly when a claim would require repository evidence.`
+          : '';
+      const prompt = [evidenceBlock, partnerBlock, contextRules, task.prompt].filter(Boolean).join('\n\n');
+
+      response.context = {
+        precision: {
+          status: precision.status,
+          canonical_sha: precision.canonical_sha || null,
+          field: precision.field || null,
+          fragment_count: Array.isArray(precision.fragments) ? precision.fragments.length : 0,
+          refusals: Array.isArray(precision.refusals) ? precision.refusals : [],
+        },
+        partners: {
+          status: partner.status,
+          sources: (partner.items || []).map((item) => item.source),
+          handoff_ids: (partner.items || []).map((item) => item.handoff_id),
+          refused: partner.refused || [],
+        },
+      };
 
       const res = await fetch('http://127.0.0.1:11434/api/generate', {
         method: 'POST',

@@ -166,11 +166,19 @@ async function b6RunLocal() {
   state.workRoom.running=true; state.workRoom.error=null; state.workRoom.result=null;
   render();
   try {
-    const response=await window.jarvis.submitTask({ bounded_for_local:true, input_chars:prompt.length, prompt, operator_posture:'local' });
+    const response=await window.jarvis.submitTask({
+      bounded_for_local:true,
+      input_chars:prompt.length,
+      prompt,
+      operator_posture:'local',
+      founder_workspace_context_request:true,
+      founder_workspace_objective:intent.raw_utterance,
+      founder_workspace_context:state.context ? { kind:state.context.kind, id:state.context.id, label:state.context.label } : null,
+    });
     state.workRoom.result=response;
     state.workRoom.turns.push({ role:'kelly', text:intent.raw_utterance, at:new Date().toISOString() });
     const answer=response?.result?.response || response?.result?.error || response?.reason || 'JARVIS returned no readable response.';
-    state.workRoom.turns.push({ role:'jarvis', text:String(answer), at:new Date().toISOString(), verification:response?.verification || null, status:response?.status || null });
+    state.workRoom.turns.push({ role:'jarvis', text:String(answer), at:new Date().toISOString(), verification:response?.verification || null, context:response?.context || null, status:response?.status || null });
     saveWorkRoom();
   } catch (e) {
     state.workRoom.error=String(e?.message||e);
@@ -345,6 +353,17 @@ function programmeRow(p, origin) {
   return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(label)}</div><div class="rowPlain">${esc(summary)}</div>${technicalDetails([`Programme: ${p.id}`,`Standing: ${p.standing||'not formally projected'}`,`Evidence: ${p.evidence_state}`,source?`Source: ${source}`:null])}<div class="actions">${contextButton('programme',p.id,label,origin,source)}${source?evidenceButton(source):''}<button class="btn subtle" data-action="context-view" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(label))}" data-origin="${attr(enc(origin))}" data-source="${attr(enc(source))}" data-target="system">System</button></div></div>${pill(level==='warn'?'Watching':level==='good'?'Observed':'Not observed',level)}</div></div>`;
 }
 
+function renderTurnContext(t) {
+  if (t.role!=='jarvis' || !t.context) return '';
+  const p=t.context.precision||{};
+  const partners=t.context.partners||{};
+  const bits=[];
+  if (p.fragment_count>0) bits.push(`Canonical context: ${p.field?.label||'current field'} · ${p.fragment_count} evidence fragment${p.fragment_count===1?'':'s'} · @${String(p.canonical_sha||'').slice(0,10)}`);
+  else if (p.status && p.status!=='NOT_REQUESTED') bits.push(`Canonical context: ${String(p.status).toLowerCase().replaceAll('_',' ')}`);
+  if (arr(partners.sources).length) bits.push(`Partner orientation: ${[...new Set(partners.sources)].map(x=>x==='claude-code'?'Claude Code':x==='chatgpt'?'ChatGPT':'MAIA').join(' + ')}`);
+  return bits.length?`<div class="turnContext">${bits.map(x=>`<div>${esc(x)}</div>`).join('')}</div>`:'';
+}
+
 function renderB6Turns() {
   const turns=arr(state.workRoom.turns);
   if (!turns.length) return `<div class="empty">This working room is ready. Your local JARVIS conversation will stay here for this app session.</div>`;
@@ -353,7 +372,7 @@ function renderB6Turns() {
     const cls=t.role==='kelly'?'kelly':'jarvis';
     const verification=t.role==='jarvis'&&t.verification
       ? `<div class="turnVerification">${t.verification.pass===true?'Local execution verified':'Local execution not verified'}${t.verification.correctness?` · answer correctness: ${esc(String(t.verification.correctness).toLowerCase())}`:''}${t.verification.correctness_reason?` · ${esc(t.verification.correctness_reason)}`:''}</div>`:'';
-    return `<div class="turn ${cls}"><div class="turnWho">${who}</div><div class="turnText">${esc(t.text).replace(/\n/g,'<br>')}</div>${verification}</div>`;
+    return `<div class="turn ${cls}"><div class="turnWho">${who}</div><div class="turnText">${esc(t.text).replace(/\n/g,'<br>')}</div>${renderTurnContext(t)}${verification}</div>`;
   }).join('')}</div>`;
 }
 
@@ -389,7 +408,7 @@ function renderWork() {
   return `<div class="eyebrow">Work · Kelly + partners</div><h1>This is where we work.</h1><p class="lede">Tell JARVIS what you want to investigate, prepare, change, or prepare for release. Your words become governed intent and a bounded plan before anything runs. Local reasoning requires a separate explicit gesture.</p>
     ${renderB6Room()}
     <section class="section"><h2>Current field context</h2>${conversation}</section>
-    <section class="section"><h2>Your AI partners</h2><div class="grid2"><div class="card"><h3>JARVIS · local</h3><p>Live here now: governed intent, bounded planning, local reasoning, evidence and programme context.</p></div><div class="card"><h3>MAIA · ChatGPT · Claude Code</h3><p>These remain Kelly's wider context-rich partners. B6 defines the bounded handoff contract, but no live cross-system connection is claimed until a governed connector exists.</p></div></div></section>
+    <section class="section"><h2>Your AI partners</h2><div class="grid2"><div class="card"><h3>JARVIS · local</h3><p>Live here now: governed intent, bounded planning, local reasoning, evidence and programme context.</p></div><div class="card"><h3>MAIA · ChatGPT · Claude Code</h3><p>B6R1 can now accept bounded local handoff receipts from these partners when one exists for the current field. A handoff is orientation only: it does not become repository evidence and grants no authority.</p></div></div></section>
     <details class="secondaryDetails"><summary>Existing Work Units and programmes</summary><div class="detailsBody"><section class="section"><h2>Live Work Units</h2><div class="list">${units.length?units.map(u=>workUnitRow(u)).join(''):'<div class="empty">No readable canonical Work Units are present in the local store.</div>'}</div></section><section class="section"><h2>Choose a programme as context</h2><div class="list">${programmes.slice(0,18).map(p=>programmeRow(p,'Work')).join('')}</div></section></div></details>`;
 }
 

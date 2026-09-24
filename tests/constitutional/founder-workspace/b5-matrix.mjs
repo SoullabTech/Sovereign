@@ -53,7 +53,7 @@ check(/function deriveActiveFields/.test(renderer) && /<h2>Needs Kelly/.test(tod
 check(monitorSource.indexOf('<h2>Needs Kelly') >= 0 && monitorSource.indexOf('<h2>Watching') > monitorSource.indexOf('<h2>Needs Kelly') && monitorSource.indexOf('<summary>System observations</summary>') > monitorSource.indexOf('<h2>Watching') && /Needs attention is not the same as broken/.test(monitorSource), 'B5-L15', 'Monitor presents Founder decisions and watching before technical observations without flattening attention into failure');
 check(/data-view-jump=\"today\"/.test(renderer), 'B5-L16', 'Today participates in the same persistent field context loop');
 check(/Current active field · center/.test(renderer) && /B7 owns the evidence-backed relationship join/.test(renderer), 'B5-L17', 'Graph centers the current field while B7 still owns new evidence edges');
-check(/MAIA · ChatGPT · Claude Code/.test(renderer) && /no live cross-system connection is claimed/.test(renderer), 'B5-L18', 'the workspace names Kelly’s wider AI partners without fabricating a live cross-system handoff');
+check(/MAIA · ChatGPT · Claude Code/.test(renderer) && /bounded local handoff receipts/.test(renderer) && /when one exists for the current field/.test(renderer) && !/connected live/i.test(renderer), 'B5-L18', 'the workspace names Kelly’s wider AI partners and admits only real bounded handoff receipts, never a fabricated live connection');
 check(/exec: input\.governorExec/.test(composer) && /const governorExec = governorNode\.path/.test(main) && /execFileSync\(governorNode\.path/.test(main), 'B5-L19', 'Electron injects the governed Node runtime for governor reads; process.execPath cannot become the Electron interpreter');
 
 // Live view-model contract remains valid.
@@ -113,7 +113,7 @@ const candidates=[
   ['DC-B5-11','B5-L15',renderer.replace('<summary>System observations</summary>','<summary>Machine health first</summary>'),(s)=>{const m=s.slice(s.indexOf('function renderMonitor()'),s.indexOf('function monitorAttentionRow'));return m.indexOf('<h2>Needs Kelly')>=0&&m.indexOf('<h2>Watching')>m.indexOf('<h2>Needs Kelly')&&m.indexOf('<summary>System observations</summary>')>m.indexOf('<h2>Watching');}],
   ['DC-B5-12','B5-L16',renderer.replace('<button class="btn subtle" data-view-jump="today">Today</button>',''),(s)=>/data-view-jump=\"today\"/.test(s)],
   ['DC-B5-13','B5-L17',renderer.replace('Current active field · center','Network'),(s)=>/Current active field · center/.test(s)&&/B7 owns the evidence-backed relationship join/.test(s)],
-  ['DC-B5-14','B5-L18',renderer.replace('no live cross-system connection is claimed','MAIA, ChatGPT and Claude Code are connected live'),(s)=>/MAIA · ChatGPT · Claude Code/.test(s)&&/no live cross-system connection is claimed/.test(s)],
+  ['DC-B5-14','B5-L18',renderer.replace('when one exists for the current field','because all three are connected live'),(s)=>/MAIA · ChatGPT · Claude Code/.test(s)&&/bounded local handoff receipts/.test(s)&&/when one exists for the current field/.test(s)&&!/connected live/i.test(s)],
   ['DC-B5-15','B5-L19',composer.replace('exec: input.governorExec','exec: undefined'),(s)=>/exec: input\.governorExec/.test(s)],
 ];
 for(const [id,law,source,predicate] of candidates){ const dead=!predicate(source); check(dead,id,`→ ${law} ${dead?'DIES':'SURVIVES'}`); }

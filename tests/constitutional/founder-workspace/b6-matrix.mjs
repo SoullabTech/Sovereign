@@ -114,9 +114,10 @@ check(
 
 check(
   /MAIA · ChatGPT · Claude Code/.test(renderer) &&
-  /no live cross-system connection is claimed/.test(renderer) &&
+  /bounded local handoff receipts/.test(renderer) &&
+  /when one exists for the current field/.test(renderer) &&
   !/MAIA.*connected live|ChatGPT.*connected live|Claude Code.*connected live/i.test(renderer),
-  'B6-L11','AI partners are named without fabricating a live handoff'
+  'B6-L11','AI partners are named and bounded handoffs are conditional on real receipts, never fabricated as live connections'
 );
 
 check(
@@ -171,8 +172,8 @@ const candidates=[
     renderer.replace('answer correctness:','answer verified:'),
     (s)=>/answer correctness:/.test(s)&&/Local execution verified/.test(s)&&/Local execution not verified/.test(s)],
   ['DC-B6-5','B6-L11',
-    renderer.replace('no live cross-system connection is claimed','MAIA, ChatGPT and Claude Code are connected live'),
-    (s)=>/MAIA · ChatGPT · Claude Code/.test(s)&&/no live cross-system connection is claimed/.test(s)],
+    renderer.replace('when one exists for the current field','because all three are connected live'),
+    (s)=>/MAIA · ChatGPT · Claude Code/.test(s)&&/bounded local handoff receipts/.test(s)&&/when one exists for the current field/.test(s)&&!/connected live/i.test(s)],
   ['DC-B6-6','B6-L12',
     renderer.replaceAll('sessionStorage','localStorage'),
     (s)=>/jfw:b6:turns/.test(s)&&/sessionStorage/.test(s)&&!/localStorage/.test(s)],
