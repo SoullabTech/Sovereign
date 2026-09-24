@@ -1584,7 +1584,7 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
   // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
   // atoms the member chose to keep, plus witnessed practitioner observations rendered
   // with epistemic framing ("a practitioner observed…"). Built by the route via
-  // lib/maia/memoryAtomsLoader.ts → formatAtomsForPrompt; consent gate (return_preference)
+  // lib/maia/memoryAtomsLoader.ts → formatAtomsForPrompt; consent gate (return_preference + return_authority)
   // enforced at the loader's SQL. Higher authority than system-retrieved conversational
   // recall, so interpolated AFTER it in the prompt (see ordering note above).
   const atomsAddendum = (meta as any)?.atomsAddendum as string | undefined;

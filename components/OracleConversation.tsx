@@ -4645,11 +4645,11 @@ I'm not sure what I'm feeling yet.`;
     console.log('✨ [Capsule] handleCaptureSpirit called', { userId, messageCount: messages.length });
 
     // 🛡️ SANCTUARY ABSOLUTE BOUNDARY — guard at the source, not at the button.
-    // Opening this panel is NOT a neutral, reversible act: the flow POSTs the
-    // last 16 turns to /api/capsules/from-chat-window, which distills them and
-    // calls createCapsule() — an INSERT INTO reflection_capsules that lands
-    // BEFORE the member confirms anything in the panel. So "the panel opens for
-    // the member to choose" is true of the UI and false of the substrate.
+    // This is the qualified Reflection/Capture flow. It POSTs the last 16 turns
+    // to /api/capsules/from-chat-window for an EPHEMERAL distillation preview;
+    // that route has no write authority. Persistence begins only at the member's
+    // later confirmation. Sanctuary still refuses before the model call because
+    // Sanctuary material may not be carried out for interpretation at all.
     //
     // The `!isSanctuary` render guard on the persistent bookmark hid the
     // BUTTON, but four other callers reach this handler and none of them
@@ -4773,10 +4773,24 @@ I'm not sure what I'm feeling yet.`;
         router.push('/journal');
         break;
       case 'open_reflection':
-        // Use existing capture spirit flow
+        // Qualified Reflection action: interpretive distillation is allowed here
+        // because the member chose the Reflection/Capture doorway, not generic Keep.
         if (handleCaptureSpiritRef.current) {
           handleCaptureSpiritRef.current();
         }
+        break;
+      case 'open_keep_home':
+        // Generic Keep opens the member's Keep room. It never chooses recent
+        // conversation material or invokes Reflection Capsule distillation.
+        router.push('/maia/keep-capture');
+        break;
+      case 'clarify_keep_referent':
+        // R9: FACILITATE only. Until an exact referent is selected, there is
+        // nothing to persist and nothing for MAIA to interpret on the member's behalf.
+        toast('Choose the exact words in one of your messages and use “Keep this moment.” MAIA-authored words are not selectable in this cut.', {
+          duration: 6500,
+          position: 'bottom-center',
+        });
         break;
       case 'open_ideas':
         router.push('/maia/ideas');
@@ -6297,48 +6311,42 @@ I'm not sure what I'm feeling yet.`;
         suggestedActions: responseData.suggestedActions || responseData.spiralogic?.suggestedActions || undefined,
       };
 
-      // 🔖 KEEP-INTENT-01 — the member asked to keep something, or asked for Keep
-      // itself. Recognized HERE, after the reply exists, and deliberately not in
-      // handleTextMessage next to detectJournalCommand(): that detector returns
-      // before the message is sent, so MAIA goes silent. "Can we keep this?" is
-      // relational speech addressed to her; the interface must not make her mute
-      // because it recognized an affordance. The turn is untouched by this block.
+      // 🔖 KEEP-INTENT-01 — recognition is UNDERSTAND/FACILITATE only.
       //
-      // Three layers, held apart (Kelly ruling 2026-08-28):
-      //   UNDERSTAND — detectKeepIntent(), pure, writes nothing
-      //   FACILITATE — surface or open the member-controlled Keep gesture
-      //   COMMIT     — only the member's confirmation in the panel persists
-      // Opening Keep is now a zero-persistence act (KEEP-OPEN-NONPERSISTENT-01),
-      // which is what makes the explicit-command branch below safe to wire.
+      // R9 (2026-09-17): generic Keep does not mean Reflection Capsule and an
+      // unresolved deictic ("keep this") is not an exact referent. The system
+      // therefore either opens the Keep room or asks the member to select exact
+      // words. It never substitutes a recent-turn window or model distillation.
       const keepIntent = detectKeepIntent(cleanedText);
       if (keepIntent.kind) {
         if (isSanctuary) {
-          // No doorway, no panel, no capsule. MAIA answers in words — the
-          // platform map tells her Keep is unavailable in Sanctuary and that
-          // this absence is the boundary working, not a fault.
+          // Sanctuary remains ENCOUNTER ONLY: no doorway, no Keep room, no capture.
           console.log('🛡️ [Keep] intent recognized but refused · Sanctuary', {
             kind: keepIntent.kind,
           });
         } else if (keepIntent.kind === 'open_keep') {
-          // Explicit House command. MAIA operates the interface; she does not
-          // exercise the member's consent authority by doing so — the panel
-          // opens holding an unsaved preview and nothing is written until the
-          // member confirms.
-          console.log('🔖 [Keep] explicit open command', { matched: keepIntent.matched });
-          handleCaptureSpiritRef.current?.();
-        } else if (!oracleMessage.uiAction || oracleMessage.uiAction.type === 'none') {
-          // The member wants to hold onto this material. Surface the existing
-          // member-controlled doorway rather than opening anything: they decide.
-          const action = buildUiAction(getIntentRoute('reflection_mark'), 1);
-          if (action.type !== 'none') {
-            oracleMessage.intent = 'reflection_mark';
-            // Override the ambient lead-in. The pooled ones ("Something
-            // important just happened.") are MAIA asserting significance she
-            // detected; here the member said it themselves, and echoing their
-            // ask back as her own observation would misreport who noticed.
-            oracleMessage.uiAction = { ...action, leadIn: 'You asked to keep this.' };
-            console.log('🔖 [Keep] doorway attached', { matched: keepIntent.matched });
-          }
+          // Explicit House command: open the generic Keep room, not a qualified
+          // Reflection/Capture workflow. Navigation carries no persistence.
+          oracleMessage.intent = undefined;
+          oracleMessage.uiAction = {
+            type: 'open_keep_home',
+            label: 'Open Keep',
+            leadIn: 'You asked to open Keep.',
+            confidence: 1,
+          };
+          console.log('🔖 [Keep] room doorway attached', { matched: keepIntent.matched });
+        } else {
+          // "This" is unresolved. Do not choose the previous turn, last N turns,
+          // or anything a model judged meaningful. The existing per-message
+          // member-authored gesture is the exact-selection mechanism in this cut.
+          oracleMessage.intent = undefined;
+          oracleMessage.uiAction = {
+            type: 'clarify_keep_referent',
+            label: 'How to choose exact words',
+            leadIn: 'Which exact words do you want to keep? I won’t choose for you.',
+            confidence: 1,
+          };
+          console.log('🔖 [Keep] exact referent required', { matched: keepIntent.matched });
         }
       }
 
@@ -8438,17 +8446,11 @@ I'm not sure what I'm feeling yet.`;
       {/* ⏰ Start Session Button - Moved to header banner */}
 
       {/* 🔖 KEEP — always-visible, conversation-level action flanking the jewel.
-          Keep is a primary MAIA verb; the per-message "Keep this moment"
-          affordance is hover-only and therefore undiscoverable on mobile, where
-          hover does not exist. This persistent bookmark opens the EXISTING Keep
-          capture flow (handleCaptureSpirit → /api/capsules/from-chat-window →
-          CaptureSpiritPanel) — NO second persistence model, and nothing is saved
-          on tap (the panel opens for the member to choose). Placed in the top
-          "identity + global utilities" zone, not above/inside the composer.
-          Hidden in Sanctuary: handleCaptureSpirit does not itself guard
-          isSanctuary, so we refuse to even OFFER Keep during a Sanctuary session
-          (defense-in-depth, mirroring the inline keep and the CLAUDE.md Sanctuary
-          absolute boundary). 44x44 touch target; visible glyph is smaller.
+          R9: generic Keep opens the Keep room. It does NOT invoke the qualified
+          Reflection Capsule distiller or choose a recent conversation window.
+          Exact conversational formation remains the per-message member-authored
+          "Keep this moment" gesture in this cut. Hidden in Sanctuary as
+          defense-in-depth. 44x44 touch target; visible glyph is smaller.
 
           Rendered as the exact COMPLEMENT of the arrival/greeting block above
           (same shouldRenderArrival / !hasActivated condition): that composition
@@ -8469,10 +8471,10 @@ I'm not sure what I'm feeling yet.`;
         >
           <button
             type="button"
-            onClick={handleCaptureSpirit}
+            onClick={() => router.push('/maia/keep-capture')}
             className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-maia-spice-400/60 backdrop-blur-sm transition-colors hover:bg-white/5 hover:text-maia-spice-400"
-            title="Keep something from this conversation"
-            aria-label="Keep something from this conversation"
+            title="Open Keep"
+            aria-label="Open Keep"
           >
             <Bookmark className="h-5 w-5" strokeWidth={2} />
           </button>

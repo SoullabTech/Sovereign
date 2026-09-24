@@ -31,7 +31,7 @@ function atom(over: Partial<MemoryAtomSnapshot>): MemoryAtomSnapshot {
   return {
     id: 'a1', title: 'A title', body: null, primaryRegister: null, registers: [],
     elementalLenses: [], status: 'active', keptAt: new Date('2026-09-01T00:00:00Z'),
-    returnPreference: 'contextual_doorway', sourceType: 'spontaneous', isBreakthrough: false,
+    returnPreference: 'contextual_doorway', returnAuthority: 'member_explicit', sourceType: 'spontaneous', isBreakthrough: false,
     markedBreakthroughAt: null, epistemologicalStatus: null, facilitatorId: null,
     ...over,
   } as MemoryAtomSnapshot;
@@ -85,8 +85,8 @@ describe('registry identity', () => {
     expect(spec.authoredBy).toBe('practitioner');
     expect(spec.authority).toBe('situate');
     // `placed` would make MIPA assert admittedReason 'member_placed'. No member act
-    // places these: return_preference defaults to contextual_doorway and
-    // member_response_status is an opt-out verdict with no runtime writer for
+    // places these: practitioner observation creation is not a member REOPEN act,
+    // and member_response_status is an opt-out verdict with no runtime writer for
     // 'confirmed'. Claiming placement would be a false consent claim.
     expect(spec.participationClass).not.toBe('placed');
     expect(spec.participationClass).toBe('authored');

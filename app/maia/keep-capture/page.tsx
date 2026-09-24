@@ -283,6 +283,11 @@ function KeptItem({
   const isStillAlive = atom.status === 'still_alive';
   const isSetAside = atom.status === 'set_aside';
   const isProtected = atom.status === 'protected';
+  const hasExplicitReturnAuthority = atom.returnAuthority === 'member_explicit';
+  const mayReturn =
+    hasExplicitReturnAuthority && atom.returnPreference !== 'member_pulled';
+  const returnNeedsConfirmation =
+    !hasExplicitReturnAuthority && atom.returnPreference !== 'member_pulled';
 
   // Witness-as-gesture feedback. Brief morph after "Still here" tap.
   // Resets after 800ms — long enough to register, short enough not to linger.
@@ -370,21 +375,30 @@ function KeptItem({
 
       <div className="mt-3 pt-3 border-t border-stone-100 flex items-center gap-3 text-xs">
         <span className="text-stone-400">
-          {atom.returnPreference === 'member_pulled' ? 'Sealed' : 'May return'}
+          {mayReturn
+            ? 'May return'
+            : returnNeedsConfirmation
+              ? 'Return permission unconfirmed'
+              : 'Sealed'}
         </span>
         <button
           onClick={() =>
             onGesture({
               kind: 'set_return_preference',
-              preference:
-                atom.returnPreference === 'member_pulled'
-                  ? 'contextual_doorway'
-                  : 'member_pulled',
+              preference: mayReturn
+                ? 'member_pulled'
+                : returnNeedsConfirmation
+                  ? atom.returnPreference
+                  : 'contextual_doorway',
             })
           }
           className="text-stone-500 hover:text-stone-800"
         >
-          {atom.returnPreference === 'member_pulled' ? 'Allow return' : 'Reseal'}
+          {mayReturn
+            ? 'Reseal'
+            : returnNeedsConfirmation
+              ? 'Confirm return'
+              : 'Allow return'}
         </button>
       </div>
     </li>

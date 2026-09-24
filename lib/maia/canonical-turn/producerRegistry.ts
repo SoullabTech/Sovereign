@@ -107,7 +107,7 @@ export const PRODUCER_REGISTRY = {
   },
   'member.atoms': {
     authoredBy: 'member', participationClass: 'placed', authority: 'situate',
-    provenance: 'lib/maia/memoryAtomsLoader projectAtomSections().memberSection', consentBasis: 'atoms.return_preference',
+    provenance: 'lib/maia/memoryAtomsLoader projectAtomSections().memberSection', consentBasis: 'atoms.return_preference + atoms.return_authority',
     requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'now_what', 'vision_studio', 'writers_studio'], mandatory: false, scope: 'route',
     ...CMT,
     // MEMORY-PRODUCER-PARTITION-01 (2026-09-04): the practitioner observations this
