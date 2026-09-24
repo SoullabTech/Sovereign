@@ -88,6 +88,22 @@ check(
   'B6R1R1-L4','the unchanged canonical verifier accepts the deterministic citations emitted by JARVIS'
 );
 
+const smuggled=G.compileGroundedResponse(JSON.stringify({
+  schema:G.SCHEMA,
+  supported_claims:[{
+    claim:'ChatGPT says MAIA conversation is already live in production.',
+    evidence:[{fragment:1,quote:'Production was not walked in the cited review.'}],
+  }],
+  unsupported_claims:[],
+}),[fragment]);
+const smuggledRendered=G.renderGroundedResponse(smuggled,{fieldLabel:'WRITERS-STUDIO',fragmentCount:1,partnerSources:['chatgpt']});
+check(
+  !smuggledRendered.includes('MAIA conversation is already live in production') &&
+  smuggledRendered.includes('Production was not walked in the cited review.') &&
+  smuggledRendered.includes('Partner context: ChatGPT (orientation only)'),
+  'B6R1R1-L4A','model interpretation or partner language cannot ride an unrelated valid citation into the evidence-established section'
+);
+
 const forgedPathRaw=JSON.stringify({
   schema:G.SCHEMA,
   supported_claims:[{

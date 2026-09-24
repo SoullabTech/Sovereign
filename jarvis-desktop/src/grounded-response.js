@@ -96,6 +96,18 @@ function fragmentLine(fragment, line) {
   return rows[idx] === undefined ? null : rows[idx];
 }
 
+function sourceExcerpt(fragment, startLine, endLine) {
+  const rows = String(fragment.content || '').split('\n');
+  const start = Math.max(0, Number(startLine) - fragment.start_line);
+  const end = Math.min(rows.length - 1, Number(endLine) - fragment.start_line);
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start) return null;
+  const raw = rows.slice(start, end + 1).join(' ');
+  return normalizeWhitespace(raw
+    .replace(/[⛔⭐⚠️☀]/g, '')
+    .replace(/[*_`#]+/g, '')
+    .replace(/^\s*(?:[-+]|\d+\.)\s*/, '')) || null;
+}
+
 function findQuoteRange(fragment, quote) {
   const normalizedQuote = normalizeEvidenceText(quote);
   const meaningfulChars = (normalizedQuote.match(/[a-z0-9]/g) || []).length;
@@ -149,6 +161,7 @@ function validateEvidenceRef(ref, fragments) {
     start_line: located.start_line,
     end_line: located.end_line,
     quote,
+    source_excerpt: sourceExcerpt(fragment, located.start_line, located.end_line),
     source_file: fragment.source_file,
     source_sha: fragment.source_sha,
     citation,
@@ -241,9 +254,16 @@ function renderGroundedResponse(compiled, {
   lines.push('', 'What the evidence establishes:');
 
   if (compiled.supported.length) {
+    const shown = new Set();
     for (const row of compiled.supported) {
-      lines.push(`• ${row.claim}`);
-      for (const citation of row.citations) lines.push(`  ${citation}`);
+      for (const ref of row.evidence) {
+        const excerpt = ref.source_excerpt || ref.quote;
+        const key = `${excerpt}::${ref.citation}`;
+        if (shown.has(key)) continue;
+        shown.add(key);
+        lines.push(`• ${excerpt}`);
+        lines.push(`  ${ref.citation}`);
+      }
     }
   } else {
     lines.push('• Nothing citation-safe was established by this turn.');

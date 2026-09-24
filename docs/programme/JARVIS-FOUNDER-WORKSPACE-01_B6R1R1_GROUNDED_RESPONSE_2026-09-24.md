@@ -61,6 +61,8 @@ source/path.md:START-END
 
 Markdown markers and warning icons may be omitted from the worker's quote, but the underlying source-word sequence may not be changed. The model cannot invent either the path or line used in the final citation.
 
+The evidence-established section does not display the model's paraphrase as the grounded fact. Once a quote is validated, JARVIS renders the corresponding canonical source excerpt itself. This prevents a model interpretation—or partner-orientation language—from riding an unrelated valid citation into the evidence-established section.
+
 ## 2 · Fail-closed claim handling
 
 A model claim is admitted under **What the evidence establishes** only when every evidence reference attached to that claim passes:
