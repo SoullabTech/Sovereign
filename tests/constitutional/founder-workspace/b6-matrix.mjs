@@ -11,6 +11,7 @@ const ROOT=path.resolve(here,'../../..');
 const renderer=readFileSync(path.join(ROOT,'jarvis-desktop/src/founder-workspace-renderer.js'),'utf8');
 const index=readFileSync(path.join(ROOT,'jarvis-desktop/src/index.html'),'utf8');
 const preload=readFileSync(path.join(ROOT,'jarvis-desktop/src/preload.js'),'utf8');
+const main=readFileSync(path.join(ROOT,'jarvis-desktop/src/main.js'),'utf8');
 const require=createRequire(import.meta.url);
 const O1=require(path.join(ROOT,'jarvis-desktop/src/operator-intent-contract.js'));
 const O2=require(path.join(ROOT,'jarvis-desktop/src/operator-work-graph.js'));
@@ -136,6 +137,19 @@ check(
   'B6-L14','voice remains unopened in B6 V1'
 );
 
+const submitHandler=main.slice(
+  main.indexOf("ipcMain.handle('jarvis:submit-task'"),
+  main.indexOf("ipcMain.handle('jarvis:run-external-reasoning'")
+);
+check(
+  /const root = currentRoot\(\);/.test(submitHandler) &&
+  /path\.join\(root, 'scripts', 'builder', 'router\.mjs'\)/.test(submitHandler) &&
+  /path\.join\(root, 'scripts', 'builder', 'jarvis-context\.mjs'\)/.test(submitHandler) &&
+  /materializePacket\(\{ context_selectors: selectors \}, root\)/.test(submitHandler) &&
+  !/\bREPO_ROOT\b/.test(submitHandler),
+  'B6-L15','submit-task snapshots the validated currentRoot and never references an undefined REPO_ROOT'
+);
+
 /** @type {Array<[string,string,string,(source:string)=>boolean]>} */
 const candidates=[
   ['DC-B6-1','B6-L6',
@@ -156,6 +170,9 @@ const candidates=[
   ['DC-B6-6','B6-L12',
     renderer.replaceAll('sessionStorage','localStorage'),
     (s)=>/jfw:b6:turns/.test(s)&&/sessionStorage/.test(s)&&!/localStorage/.test(s)],
+  ['DC-B6-7','B6-L15',
+    main.replace("path.join(root, 'scripts', 'builder', 'jarvis-context.mjs')","path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs')"),
+    (s)=>{const h=s.slice(s.indexOf("ipcMain.handle('jarvis:submit-task'"),s.indexOf("ipcMain.handle('jarvis:run-external-reasoning'"));return /const root = currentRoot\(\);/.test(h)&&!/\bREPO_ROOT\b/.test(h);}],
 ];
 for(const [id,law,source,predicate] of candidates){
   const dead=!predicate(source);

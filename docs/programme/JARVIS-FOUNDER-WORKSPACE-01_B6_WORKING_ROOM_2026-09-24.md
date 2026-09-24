@@ -137,3 +137,35 @@ B7 graph relationship join          NO
 PR / merge / deploy                 NO
 production                          NO
 ```
+
+## 7 · Installed Founder-walk repair — C1 root binding
+
+The first installed B6 walk established that O1 intent and O2 planning rendered correctly, then the explicit **Work with local JARVIS** gesture failed with:
+
+```text
+REPO_ROOT is not defined
+```
+
+This was a real runtime defect, not a Founder-use error.
+
+The Desktop repository resolver had already migrated to the mutable `currentRoot()` authority, but the C1 branch of `jarvis:submit-task` still contained stale references to an old `REPO_ROOT` symbol when locating the canonical context/verifier modules.
+
+The bounded repair is:
+
+```text
+submit-task entry
+    ↓
+snapshot validated currentRoot() as local root
+    ↓
+router / deterministic paths use that root
+    ↓
+C1 jarvis-context / verifier paths use that root
+    ↓
+context materialization uses that root
+```
+
+C0 retains its existing proved `runCapability(..., currentRoot())` call.
+
+B6-L15 now kills any reintroduction of `REPO_ROOT` inside the submit-task handler.
+
+No new authority, IPC channel, model, provider, repository mutation, deployment path, or production access is introduced by this repair.

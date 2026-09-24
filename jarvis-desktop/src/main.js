@@ -1193,9 +1193,10 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
 // not overlap, and neither is a route into the other.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
-  if (!currentRoot()) return { status: 'error', reason: 'repo root not found — cannot route' };
-  const routerPath = path.join(currentRoot(), 'scripts', 'builder', 'router.mjs');
-  const detPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
+  const root = currentRoot();
+  if (!root) return { status: 'error', reason: 'repo root not found — cannot route' };
+  const routerPath = path.join(root, 'scripts', 'builder', 'router.mjs');
+  const detPath = path.join(root, 'scripts', 'builder', 'deterministic.mjs');
 
   const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
   const decision = route(task);
@@ -1245,8 +1246,8 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // the planner, the orchestrator and the queue are NEVER invoked from
       // here; jarvis-runtime-pipeline.mjs has no top-level side effects, so
       // importing it for verifyEvidence() does not wake the delegate path.
-      const ctxPath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs');
-      const pipePath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
+      const ctxPath = path.join(root, 'scripts', 'builder', 'jarvis-context.mjs');
+      const pipePath = path.join(root, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
       const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
       const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
 
@@ -1257,7 +1258,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         // Fail closed: an unresolvable selector must not silently degrade into
         // "no evidence required". materializeOne throws on any invalid selector.
         try {
-          fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT);
+          fragments = materializePacket({ context_selectors: selectors }, root);
         } catch (e) {
           materialization_error = e.message;
         }
