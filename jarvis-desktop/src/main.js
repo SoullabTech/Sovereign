@@ -475,7 +475,7 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) creat
 // observation or explicitly UNKNOWN. Nothing is inferred from intended
 // architecture.
 // ---------------------------------------------------------------------------
-ipcMain.handle('jarvis:status', async () => {
+async function readStatus() {
   const result = {
     observed_at: new Date().toISOString(),
     repo_root: currentRoot() || `UNKNOWN (${REPO_ROOT_MODE} mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers`,
@@ -648,6 +648,74 @@ ipcMain.handle('jarvis:status', async () => {
   }
 
   return result;
+}
+ipcMain.handle('jarvis:status', readStatus);
+
+// ---------------------------------------------------------------------------
+// B5 Founder Workspace — ONE new read IPC. The renderer receives only the
+// validated founder-workspace-viewmodel.v1 composed from governed organs. An
+// optional evidence_ref is admitted only if that exact ref is already present
+// in the freshly composed view-model; main never accepts an arbitrary path.
+// This channel is presentation_only / authority_effect:none and exposes no
+// execution, O1 planning, provider, voice, merge, deploy, or production act.
+//
+// Ordinary workspace reads are deliberately QUICK. The two heavyweight B3
+// census scripts have 10-minute ceilings and run only when the founder presses
+// Monitor → Refresh observations (`refresh_instruments:true`). Stored census
+// observations remain visible through the B3 history reader between refreshes.
+// Evidence preview normally reuses a short-lived cached view-model so opening a
+// source never becomes an accidental workstation census.
+// ---------------------------------------------------------------------------
+let founderWorkspaceCache = { root: null, observed_against: null, at: 0, vm: null };
+ipcMain.handle('jarvis:workspace-viewmodel', async (_evt, req) => {
+  const root = currentRoot();
+  if (!root) {
+    return {
+      ok: false,
+      status: 'NO_SUBSTRATE',
+      reason: 'No bound workspace. Choose a repository before opening the Founder Workspace.',
+    };
+  }
+  try {
+    const request = req && typeof req === 'object' ? req : {};
+    const evidenceRef = typeof request.evidence_ref === 'string' ? request.evidence_ref : null;
+    const forceRefresh = request.force_refresh === true || request.refresh_instruments === true;
+    const fullRefresh = request.refresh_instruments === true;
+
+    const status = await readStatus();
+    let observedAgainst = status?.workspace?.head || 'unobserved';
+    try {
+      observedAgainst = execFileSync('git', ['rev-parse', 'origin/clean-main-no-secrets^{commit}'], {
+        cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env,
+      }).trim();
+    } catch { /* local remote-tracking ref unavailable; exact bound HEAD remains visible */ }
+
+    const modulePath = path.join(root, 'scripts', 'builder', 'founder-workspace', 'desktop-viewmodel.mjs');
+    if (!fs.existsSync(modulePath)) {
+      return { ok: false, status: 'B5_MODULE_ABSENT', reason: `Founder Workspace live composer absent at ${modulePath}` };
+    }
+    const mod = await import(`${pathToFileURL(modulePath).href}?b5=${Date.now()}`);
+    const env = childEnv(process.env).env;
+    const cacheUsable = !forceRefresh
+      && founderWorkspaceCache.vm
+      && founderWorkspaceCache.root === root
+      && founderWorkspaceCache.observed_against === observedAgainst
+      && (Date.now() - founderWorkspaceCache.at) < 15000;
+    const governorNode = resolveNodeBinary();
+    const governorExec = governorNode.path
+      ? (_file, args, opts) => execFileSync(governorNode.path, args, opts)
+      : undefined;
+    const vm = cacheUsable
+      ? founderWorkspaceCache.vm
+      : await mod.buildDesktopViewModel({
+          root, status, observedAgainst, env, observeMode: fullRefresh ? 'full' : 'quick', governorExec,
+        });
+    if (!cacheUsable) founderWorkspaceCache = { root, observed_against: observedAgainst, at: Date.now(), vm };
+    if (!evidenceRef) return vm;
+    return { ...vm, evidence_preview: mod.readEvidencePreview(vm, evidenceRef, { root, env, canonicalRef: observedAgainst }) };
+  } catch (e) {
+    return { ok: false, status: 'WORKSPACE_VIEWMODEL_REFUSED', reason: String(e?.message || e).slice(0, 1200) };
+  }
 });
 
 // ---------------------------------------------------------------------------
