@@ -139,8 +139,9 @@ check(
 check(
   /PARTNER_CONTEXT\.listPartnerHandoffs/.test(c1Slice) &&
   /PARTNER_CONTEXT\.renderPartnerOrientation/.test(c1Slice) &&
-  /verifyEvidence\(body\.response \|\| '', fragments\)/.test(c1Slice),
-  'B6R1-L9','partner orientation and canonical evidence remain separate lanes; verifier receives fragments only'
+  /verifyEvidence\(renderedResponse, fragments\)/.test(c1Slice) &&
+  !/verifyEvidence\([^,]+,\s*partner/.test(c1Slice),
+  'B6R1-L9','partner orientation and canonical evidence remain separate lanes; verifier receives canonical fragments only'
 );
 
 check(
@@ -178,8 +179,8 @@ const candidates=[
     PARTNER.renderPartnerOrientation([{source:'chatgpt',field:"Writer\'s Studio",handoff_id:'x',created_at:'t',summary:'s'}]).replace('NOT REPOSITORY EVIDENCE','REPOSITORY EVIDENCE'),
     (s)=>/NOT REPOSITORY EVIDENCE/.test(s)&&/GRANTS NO AUTHORITY/.test(s)],
   ['DC-B6R1-3','B6R1-L9',
-    c1Slice.replace("verifyEvidence(body.response || '', fragments)","verifyEvidence(body.response || '', partner.items)"),
-    (s)=>/verifyEvidence\(body\.response \|\| '', fragments\)/.test(s)],
+    c1Slice.replace('verifyEvidence(renderedResponse, fragments)','verifyEvidence(renderedResponse, partner.items)'),
+    (s)=>/verifyEvidence\(renderedResponse, fragments\)/.test(s)&&!/verifyEvidence\([^,]+,\s*partner/.test(s)],
   ['DC-B6R1-4','B6R1-L10',
     renderer.replace("founder_workspace_context:state.context ? { kind:state.context.kind, id:state.context.id, label:state.context.label } : null","founder_workspace_context:{path:state.context?.source}"),
     (s)=>!/founder_workspace_context[^\n]*(?:file|source|path)/.test(s)],

@@ -26,6 +26,7 @@ const CWUV2 = require('./canonical-work-unit-v2.js');
 const { decideCorrectness } = require('./correctness');
 const PRECISION_CONTEXT = require('./founder-precision-context.js');
 const PARTNER_CONTEXT = require('./partner-context.js');
+const GROUNDED_RESPONSE = require('./grounded-response.js');
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -1304,12 +1305,15 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         : { status: 'NOT_REQUESTED', items: [], refused: [] };
       const partnerBlock = PARTNER_CONTEXT.renderPartnerOrientation(partner.items || []);
 
-      // The citation syntax is stated because the verifier enforces an exact
-      // machine-readable form. Partner context may orient the answer but cannot
-      // satisfy repository evidence. Only numbered canonical fragments can.
+      // B6R1R1: evidence-bearing turns use a structured worker contract. The
+      // worker names fragment + absolute line + an exact quote; main validates
+      // that reference against the fragment bytes, then derives path:LINE itself.
+      // The canonical verifier remains unchanged and sees only the deterministic
+      // rendered answer, never raw model-authored citation text.
       const evidenceBlock = fragments.length ? renderFragments(fragments) : '';
-      const contextRules = fragments.length
-        ? `For repository or system claims, use ONLY the numbered canonical evidence and cite every such claim inline as path/to/file.ext:LINE. Partner orientation is not repository evidence.`
+      const structuredEvidence = fragments.length > 0;
+      const contextRules = structuredEvidence
+        ? GROUNDED_RESPONSE.workerInstruction(fragments)
         : partnerBlock
           ? `No canonical repository evidence was attached. Partner orientation may help you understand Kelly's context, but state clearly when a claim would require repository evidence.`
           : '';
@@ -1320,6 +1324,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
           status: precision.status,
           canonical_sha: precision.canonical_sha || null,
           field: precision.field || null,
+          resolved_label: GROUNDED_RESPONSE.humanFieldLabel(precision?.field?.label || task.founder_workspace_context?.label || null),
           fragment_count: Array.isArray(precision.fragments) ? precision.fragments.length : 0,
           refusals: Array.isArray(precision.refusals) ? precision.refusals : [],
         },
@@ -1331,16 +1336,40 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         },
       };
 
+      const workerRequest = { model: 'qwen2.5:7b', prompt, stream: false };
+      if (structuredEvidence) workerRequest.format = 'json';
       const res = await fetch('http://127.0.0.1:11434/api/generate', {
         method: 'POST',
-        body: JSON.stringify({ model: 'qwen2.5:7b', prompt, stream: false }),
+        body: JSON.stringify(workerRequest),
         signal: AbortSignal.timeout(30000),
       });
       const body = await res.json();
-      response.result = { response: body.response, model: body.model };
+
+      let renderedResponse = body.response || '';
+      let grounding = null;
+      if (structuredEvidence) {
+        grounding = GROUNDED_RESPONSE.compileGroundedResponse(body.response || '', fragments);
+        renderedResponse = GROUNDED_RESPONSE.renderGroundedResponse(grounding, {
+          fieldLabel: response.context.precision.resolved_label || response.context.precision.field?.label || null,
+          canonicalSha: response.context.precision.canonical_sha,
+          fragmentCount: fragments.length,
+          partnerSources: response.context.partners.sources,
+        });
+      }
+
+      response.result = {
+        response: renderedResponse,
+        model: body.model,
+        grounding: grounding ? {
+          status: grounding.status,
+          supported_count: grounding.supported.length,
+          unsupported_count: grounding.unsupported.length,
+          rejected_count: grounding.rejected.length,
+        } : null,
+      };
       response.status = 'completed';
 
-      const evidence = fragments.length ? verifyEvidence(body.response || '', fragments) : null;
+      const evidence = fragments.length ? verifyEvidence(renderedResponse, fragments) : null;
 
       // Correctness is decided by the canonical verifier alone. Execution
       // success never implies it — that collapse is what let a fabricated

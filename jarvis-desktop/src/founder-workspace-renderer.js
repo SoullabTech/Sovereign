@@ -178,7 +178,7 @@ async function b6RunLocal() {
     state.workRoom.result=response;
     state.workRoom.turns.push({ role:'kelly', text:intent.raw_utterance, at:new Date().toISOString() });
     const answer=response?.result?.response || response?.result?.error || response?.reason || 'JARVIS returned no readable response.';
-    state.workRoom.turns.push({ role:'jarvis', text:String(answer), at:new Date().toISOString(), verification:response?.verification || null, context:response?.context || null, status:response?.status || null });
+    state.workRoom.turns.push({ role:'jarvis', text:String(answer), at:new Date().toISOString(), verification:response?.verification || null, context:response?.context || null, grounding:response?.result?.grounding || null, status:response?.status || null });
     saveWorkRoom();
   } catch (e) {
     state.workRoom.error=String(e?.message||e);
@@ -354,7 +354,7 @@ function programmeRow(p, origin) {
 }
 
 function renderTurnContext(t) {
-  if (t.role!=='jarvis' || !t.context) return '';
+  if (t.role!=='jarvis' || !t.context || t.grounding) return '';
   const p=t.context.precision||{};
   const partners=t.context.partners||{};
   const bits=[];
@@ -370,8 +370,9 @@ function renderB6Turns() {
   return `<div class="workTurns">${turns.map(t=>{
     const who=t.role==='kelly'?'Kelly':'JARVIS';
     const cls=t.role==='kelly'?'kelly':'jarvis';
+    const correctnessLabel=t.grounding?'evidence grounding':'answer correctness';
     const verification=t.role==='jarvis'&&t.verification
-      ? `<div class="turnVerification">${t.verification.pass===true?'Local execution verified':'Local execution not verified'}${t.verification.correctness?` · answer correctness: ${esc(String(t.verification.correctness).toLowerCase())}`:''}${t.verification.correctness_reason?` · ${esc(t.verification.correctness_reason)}`:''}</div>`:'';
+      ? `<div class="turnVerification">${t.verification.pass===true?'Local execution verified':'Local execution not verified'}${t.verification.correctness?` · ${correctnessLabel}: ${esc(String(t.verification.correctness).toLowerCase())}`:''}${t.verification.correctness_reason?` · ${esc(t.verification.correctness_reason)}`:''}</div>`:'';
     return `<div class="turn ${cls}"><div class="turnWho">${who}</div><div class="turnText">${esc(t.text).replace(/\n/g,'<br>')}</div>${renderTurnContext(t)}${verification}</div>`;
   }).join('')}</div>`;
 }
@@ -389,17 +390,32 @@ function renderB6Plan() {
   return `<div class="planCard"><div class="planHead"><b>I understand this as: ${esc(b6LevelLabel(intent.requested_level))}</b><span class="pill neutral">intent only · no authority</span></div><div class="planObjective">${esc(intent.objective)}</div><ol>${steps.map(s=>`<li><b>${esc(s.kind.toLowerCase())}</b> — ${esc(s.objective)} <span class="muted">→ ${esc(s.produces)}</span></li>`).join('')}</ol><div class="actions"><button class="btn primary" data-action="b6-run-local" ${state.workRoom.running?'disabled':''}>${state.workRoom.running?'JARVIS is thinking…':'Work with local JARVIS'}</button></div><div class="rowMeta">Local reasoning only. This does not edit files, create a Work Unit, call an external model, merge, deploy, or touch production.</div></div>`;
 }
 
+function lastResolvedTurnContext() {
+  if (state.context) return null;
+  const last=[...arr(state.workRoom.turns)].reverse().find(t=>t.role==='jarvis' && t.context?.precision?.resolved_label && t.context?.precision?.fragment_count>0);
+  if (!last) return null;
+  return {
+    label:last.context.precision.resolved_label,
+    summary:'Resolved safely from your request for the last JARVIS turn. This is not a persistent field selection.',
+  };
+}
+
 function renderB6Room() {
-  const field=currentFieldOrientation();
+  const resolved=lastResolvedTurnContext();
+  const field=resolved || currentFieldOrientation();
+  const fieldKind=resolved ? 'Turn context' : 'Current field';
   const error=state.workRoom.error?`<div class="callout bad"><b>Working room stopped.</b><br>${esc(state.workRoom.error)}</div>`:'';
-  return `<section class="section"><h2>Work with JARVIS</h2><div class="workField"><span class="label">Current field</span><b>${esc(field.label)}</b><span>${esc(field.summary)}</span></div>${renderB6Turns()}<div class="workComposer card"><label for="b6IntentInput"><b>What do you want to do?</b></label><textarea id="b6IntentInput" maxlength="1200" rows="4" placeholder="Try: Investigate what is blocking Writer's Studio. Plan the next clean step. Change the way Today groups this work.">${esc(state.workRoom.input)}</textarea><div class="rowMeta">JARVIS preserves your words. If your intent is ambiguous, it asks instead of guessing.</div><div class="actions"><button class="btn primary" data-action="b6-interpret">Plan this with JARVIS</button><button class="btn subtle" data-action="b6-clear-room">Clear working room</button></div></div>${error}${renderB6Plan()}</section>`;
+  return `<section class="section"><h2>Work with JARVIS</h2><div class="workField"><span class="label">${fieldKind}</span><b>${esc(field.label)}</b><span>${esc(field.summary)}</span></div>${renderB6Turns()}<div class="workComposer card"><label for="b6IntentInput"><b>What do you want to do?</b></label><textarea id="b6IntentInput" maxlength="1200" rows="4" placeholder="Try: Investigate what is blocking Writer's Studio. Plan the next clean step. Change the way Today groups this work.">${esc(state.workRoom.input)}</textarea><div class="rowMeta">JARVIS preserves your words. If your intent is ambiguous, it asks instead of guessing.</div><div class="actions"><button class="btn primary" data-action="b6-interpret">Plan this with JARVIS</button><button class="btn subtle" data-action="b6-clear-room">Clear working room</button></div></div>${error}${renderB6Plan()}</section>`;
 }
 
 function renderWork() {
   const vm=state.vm, ctx=currentContextObject(), units=arr(vm.work?.units), programmes=arr(vm.programme_state?.programmes);
   let conversation;
   if (!state.context) {
-    conversation=`<div class="callout slate"><b>No field selected.</b><br>You can start working anyway, or choose something from Today or Monitor and its context will follow you here.</div>`;
+    const resolved=lastResolvedTurnContext();
+    conversation=resolved
+      ? `<div class="callout slate"><b>${esc(resolved.label)} was resolved for the last turn.</b><br>JARVIS inferred that context safely from your request. It has not silently turned that inference into a persistent field selection.</div>`
+      : `<div class="callout slate"><b>No persistent field selected.</b><br>You can start working anyway, or choose something from Today or Monitor and its context will follow you here.</div>`;
   } else if (!ctx) {
     conversation=`<div class="callout bad"><b>${esc(state.context.label)}</b> is no longer present in the live read model. Clear the context or refresh from its source.</div>`;
   } else {

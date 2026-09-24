@@ -106,10 +106,10 @@ check(
 );
 
 check(
-  /answer correctness:/.test(renderer) &&
+  /const correctnessLabel=t\.grounding\?'evidence grounding':'answer correctness'/.test(renderer) &&
   /Local execution verified/.test(renderer) &&
   /Local execution not verified/.test(renderer),
-  'B6-L10','local execution verification stays distinct from answer correctness'
+  'B6-L10','local execution verification stays distinct from evidence grounding / answer correctness'
 );
 
 check(
@@ -169,8 +169,8 @@ const candidates=[
     renderer.replace('data-action="b6-interpret"','data-action="b6-run-local"'),
     (s)=>{const h=s.slice(s.indexOf('async function handleClick'),s.indexOf("document.addEventListener('click'"));return /data-action=\"b6-interpret\"/.test(s)&&/data-action=\"b6-run-local\"/.test(s)&&/action==='b6-interpret'[\s\S]*b6CompileIntent\(\)/.test(h)&&/action==='b6-run-local'[\s\S]*b6RunLocal\(\)/.test(h);}],
   ['DC-B6-4','B6-L10',
-    renderer.replace('answer correctness:','answer verified:'),
-    (s)=>/answer correctness:/.test(s)&&/Local execution verified/.test(s)&&/Local execution not verified/.test(s)],
+    renderer.replace("const correctnessLabel=t.grounding?'evidence grounding':'answer correctness'","const correctnessLabel='verified'"),
+    (s)=>/const correctnessLabel=t\.grounding\?'evidence grounding':'answer correctness'/.test(s)&&/Local execution verified/.test(s)&&/Local execution not verified/.test(s)],
   ['DC-B6-5','B6-L11',
     renderer.replace('when one exists for the current field','because all three are connected live'),
     (s)=>/MAIA · ChatGPT · Claude Code/.test(s)&&/bounded local handoff receipts/.test(s)&&/when one exists for the current field/.test(s)&&!/connected live/i.test(s)],
