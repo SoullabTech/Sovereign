@@ -1,0 +1,110 @@
+{
+  "experiment": "H7j-ACQUISITION-RULE-01",
+  "title": "Current-Act Relation Acquisition — Frozen Rule",
+  "status": "FROZEN_BEFORE_HELDOUT_CORPUS_DISCOVERY",
+  "scope": "offline R&D only; no production changes",
+  "inputs_allowed": [
+    "current member act text",
+    "candidate evidence text",
+    "candidate provenance/standing",
+    "candidate ordinary structural relation type"
+  ],
+  "inputs_forbidden": [
+    "gold current-act relation label",
+    "gold materiality label",
+    "gold feature membership",
+    "hand-authored direct-to-current-act edge"
+  ],
+  "ordinary_relation_enum": [
+    "DEFINITION",
+    "STATUS",
+    "AUTHORIZATION",
+    "PROHIBITION",
+    "REQUIREMENT",
+    "CORRECTION",
+    "CAUSAL",
+    "QUALIFIER",
+    "IMPLEMENTATION_DETAIL",
+    "PARALLEL_STATUS",
+    "HISTORY"
+  ],
+  "semantic_relevance": {
+    "method": "TF-IDF cosine similarity over the current act and all candidate texts within one case",
+    "entity_overlap": "Jaccard overlap over lowercase alphanumeric tokens after English stopword removal",
+    "relevant_if": "cosine >= 0.035 OR entity_overlap >= 0.08"
+  },
+  "acquisition_rule": {
+    "PROHIBITION": "if relevant -> ANSWERS; else BACKGROUND",
+    "AUTHORIZATION": "if relevant -> ANSWERS; else BACKGROUND",
+    "DEFINITION": "if relevant -> ANSWERS; else BACKGROUND",
+    "STATUS": "if relevant -> GOVERNS_CURRENT_ACT; else BACKGROUND",
+    "REQUIREMENT": "if relevant -> REQUIRES_FOR_CURRENT_ACT; else BACKGROUND",
+    "CORRECTION": "if relevant -> CORRECTS_CURRENT_ACT; else BACKGROUND",
+    "CAUSAL": "if relevant -> CAUSES_CURRENT_ACT; else BACKGROUND",
+    "QUALIFIER": "if relevant -> QUALIFIES_CURRENT_ACT; else BACKGROUND",
+    "IMPLEMENTATION_DETAIL": "BACKGROUND",
+    "PARALLEL_STATUS": "BACKGROUND",
+    "HISTORY": "BACKGROUND"
+  },
+  "anchor_rule": {
+    "eligible_relations": [
+      "ANSWERS",
+      "CORRECTS_CURRENT_ACT",
+      "GOVERNS_CURRENT_ACT"
+    ],
+    "priority": {
+      "ANSWERS": 1.0,
+      "CORRECTS_CURRENT_ACT": 0.98,
+      "GOVERNS_CURRENT_ACT": 0.95
+    },
+    "tie_break": "higher baseline B score, then stable candidate id"
+  },
+  "materiality_mapping": {
+    "ANSWERS": [
+      "GOVERNS",
+      1.0
+    ],
+    "CORRECTS_CURRENT_ACT": [
+      "CORRECTS",
+      1.0
+    ],
+    "GOVERNS_CURRENT_ACT": [
+      "GOVERNS",
+      0.9
+    ],
+    "REQUIRES_FOR_CURRENT_ACT": [
+      "REQUIRED_FOR_VALIDITY",
+      1.0
+    ],
+    "CAUSES_CURRENT_ACT": [
+      "CAUSALLY_MATERIAL",
+      0.85
+    ],
+    "QUALIFIES_CURRENT_ACT": [
+      "QUALIFIES",
+      0.75
+    ],
+    "BACKGROUND": [
+      "NON_MATERIAL",
+      0.0
+    ]
+  },
+  "projector": {
+    "unchanged_from_H7i_R1": true,
+    "projection_size": 3,
+    "baseline_score": "TF-IDF similarity + 0.20 * standing",
+    "materiality_score": "baseline + 0.35 * acquired materiality strength",
+    "slot_1": "reserved for highest-priority acquired direct anchor",
+    "slots_2_3": "highest materiality scores among remaining candidates"
+  },
+  "frozen_promotion_checks": [
+    "Acquired current-act relation exact accuracy >= 30/36",
+    "Material/non-material accuracy induced by acquired relations >= 32/36",
+    "Primary anchor correct = 6/6",
+    "Final projector gold recall >= baseline gold recall",
+    "Final projector materially-governing target recall >= 5/6",
+    "At most 1 newly selected non-gold item relative to baseline",
+    "At least one case where acquired anchor changes ordering or membership relative to the unanchored acquired-materiality projection"
+  ],
+  "exclusion_note": "Examples discovered before this executable freeze are development material and excluded from H7j held-out scoring."
+}
