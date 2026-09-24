@@ -22,6 +22,13 @@ export const DEFAULT_APPEARANCE: Appearance = 'light';
 /** The controlled founder-review fixture states PC3-S1 renders. */
 export type FixtureStateId = 'develop-themes' | 'develop-manuscript' | 'review-chapter';
 
+/** PC3-S2 Home / Arrival fixture states. Kept apart from the S1 states so the
+ *  accepted S1 laws (three regions, MAIA in relation) keep their exact scope. */
+export type HomeStateId = 'home-begin' | 'home-return' | 'home-unclaimed-writing' | 'home-many-works';
+
+/** Every state the founder-review harness can show. */
+export type ReviewStateId = FixtureStateId | HomeStateId;
+
 /** Region order is part of the shell's meaning and must not vary by appearance. */
 export type ShellRegion = 'topbar' | 'manuscript' | 'work' | 'maia';
 export const REGION_ORDER: ReadonlyArray<ShellRegion> = ['topbar', 'manuscript', 'work', 'maia'];

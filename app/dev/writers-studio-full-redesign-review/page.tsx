@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Newsreader } from 'next/font/google';
 import { FullRedesignReviewClient } from './FullRedesignReviewClient';
-import { isFixtureState } from '@/app/writers-studio/full-redesign/fixtures';
+import { isReviewState } from '@/app/writers-studio/full-redesign/fixtures';
 import './full-redesign-review.css';
 
 /**
@@ -18,7 +18,7 @@ const serif = Newsreader({ subsets: ['latin'], style: ['normal', 'italic'], vari
 const sans = Inter({ subsets: ['latin'], variable: '--fr-sans', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Founder review · fixture data — Writer’s Studio shell (PC3-S1)',
+  title: 'Founder review · fixture data — Writer’s Studio shell (PC3-S1 · PC3-S2)',
   robots: { index: false, follow: false },
 };
 
@@ -28,7 +28,7 @@ export default async function FullRedesignReviewPage({ searchParams }: { searchP
   const params = await searchParams;
   const requested = Array.isArray(params.state) ? params.state[0] : params.state;
   const appearance = (Array.isArray(params.appearance) ? params.appearance[0] : params.appearance) === 'night' ? 'night' : 'light';
-  const state = isFixtureState(requested) ? requested : 'develop-themes';
+  const state = isReviewState(requested) ? requested : 'develop-themes';
 
   return (
     <div className={`${serif.variable} ${sans.variable} fr-root`}>

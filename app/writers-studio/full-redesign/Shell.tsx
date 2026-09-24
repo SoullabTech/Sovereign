@@ -16,12 +16,18 @@ export type ShellProps = {
   mode: StudioMode;
   appearance: Appearance;
   geometry: ShellGeometry;
-  workTitle: string;
+  /** The current Work, when there is one. Home-at-begin has none, and no picker pretends otherwise. */
+  workTitle?: string;
   memberInitial: string;
   onSelectMode?: (mode: StudioMode) => void;
-  manuscript: ReactNode;
+  /**
+   * The manuscript context and MAIA regions. Develop and Review pass both.
+   * Home passes neither: it is one room, with no manuscript rail and no resident
+   * MAIA (PC3-S2 §6) — the accepted bar and family, not the Develop geometry.
+   */
+  manuscript?: ReactNode;
   work: ReactNode;
-  maia: ReactNode;
+  maia?: ReactNode;
   /** Optional line beneath the regions (#23 carries one). */
   footer?: ReactNode;
   /** Optional words set above the MAIA region (#23). */
@@ -30,6 +36,7 @@ export type ShellProps = {
 
 export function Shell(props: ShellProps) {
   const { mode, appearance, geometry } = props;
+  const oneRoom = props.manuscript === undefined && props.maia === undefined;
   const style = { ...appearanceVars(appearance), ...geometryVars(geometry) } as React.CSSProperties;
 
   return (
@@ -59,11 +66,15 @@ export function Shell(props: ShellProps) {
             </button>
           ))}
         </nav>
-        <div className="fr-workpick" aria-label="Current Work">
-          <DocIcon />
-          <span>{props.workTitle}</span>
-          <ChevronDown />
-        </div>
+        {props.workTitle !== undefined ? (
+          <div className="fr-workpick" aria-label="Current Work">
+            <DocIcon />
+            <span>{props.workTitle}</span>
+            <ChevronDown />
+          </div>
+        ) : (
+          <span className="fr-bar-spacer" aria-hidden="true" />
+        )}
         <div className="fr-avatar" aria-hidden="true">
           {props.memberInitial}
         </div>
@@ -72,17 +83,21 @@ export function Shell(props: ShellProps) {
         </div>
       </header>
 
-      <div className="fr-room">
-        <aside className="fr-region fr-panel fr-manuscript" data-region="manuscript" aria-label="Manuscript">
-          {props.manuscript}
-        </aside>
+      <div className={oneRoom ? 'fr-room fr-room-single' : 'fr-room'}>
+        {oneRoom ? null : (
+          <aside className="fr-region fr-panel fr-manuscript" data-region="manuscript" aria-label="Manuscript">
+            {props.manuscript}
+          </aside>
+        )}
         <main className="fr-region fr-work" data-region="work" aria-label="The Work">
           {props.work}
         </main>
-        <aside className="fr-region fr-panel fr-maia" data-region="maia" aria-label="MAIA">
-          {props.maiaAbove ? <div className="fr-maia-above">{props.maiaAbove}</div> : null}
-          {props.maia}
-        </aside>
+        {oneRoom ? null : (
+          <aside className="fr-region fr-panel fr-maia" data-region="maia" aria-label="MAIA">
+            {props.maiaAbove ? <div className="fr-maia-above">{props.maiaAbove}</div> : null}
+            {props.maia}
+          </aside>
+        )}
       </div>
       {props.footer ? <div className="fr-footline">{props.footer}</div> : null}
     </div>

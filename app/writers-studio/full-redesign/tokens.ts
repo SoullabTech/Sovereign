@@ -87,6 +87,15 @@ export const STATE_GEOMETRY: Record<FixtureStateId, ShellGeometry> = {
   },
 };
 
+/**
+ * Home is one room, not three regions (PC3-S2 §6): no manuscript rail and no
+ * resident MAIA. It keeps the accepted bar and the S1 edge measures.
+ */
+export const HOME_GEOMETRY: ShellGeometry = {
+  padLeft: 13, padRight: 12, manuscriptWidth: 0, manuscriptFloor: 0,
+  maiaWidth: 0, maiaFloor: 0, gapLeft: 0, gapRight: 0, top: 7, bottom: 13, workPanel: false,
+};
+
 export const REFERENCE_WIDTH = 1536;
 
 /** CSS custom properties that place the regions; narrower desktops scale toward the floors. */

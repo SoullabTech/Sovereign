@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PC3-S1 founder-review client.
+ * PC3-S1 / PC3-S2 founder-review client.
  *
  * ⛔ Fixture only. This client makes no network request, reads no member data,
  * writes nothing, and commissions no cognition. Every word MAIA "says" here is
@@ -10,24 +10,27 @@
  */
 import { useState } from 'react';
 import { Shell, ChevronDown } from '@/app/writers-studio/full-redesign/Shell';
-import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
+import { HOME_GEOMETRY, STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
+import { HomeRoom } from '@/app/writers-studio/full-redesign/HomeRoom';
 import {
   CHAPTER_6, CHAPTER_LIST, CONTINUITY_ROWS, DEVELOP_TABS, FIXTURE_STATES, IMAGES, MAIA_SUGGESTIONS,
   MANUSCRIPT_MAIA, RAIL_QUOTE, REFERENCES, REVIEW_COVERAGE, REVIEW_CURRENT_CHAPTER, REVIEW_FILTERS,
   REVIEW_FINDINGS, REVIEW_MAIA, REVIEW_PARTS, REVIEW_TABS, REVIEW_TILES, STATE_MODE, STORY_MAP_MOVEMENTS,
   THEMES, WHERE_CHAPTER_LIVES, WORK, type ThemeFixture,
+  HISTORY, HOME_COPY, HOME_REFERENCES, HOME_STATES, KEPT_LINE, MANY_WORKS, OTHER_WORKS, REMOVE_OR_DELETE,
+  RIVER_WORK, UNCLAIMED_WRITING, WRITING_SPACE, isHomeState,
 } from '@/app/writers-studio/full-redesign/fixtures';
-import { DEFAULT_APPEARANCE, type Appearance, type FixtureStateId, type StudioMode } from '@/app/writers-studio/full-redesign/types';
+import { DEFAULT_APPEARANCE, type Appearance, type HomeStateId, type ReviewStateId, type StudioMode } from '@/app/writers-studio/full-redesign/types';
 
 export type FullRedesignReviewClientProps = {
-  initialState: FixtureStateId;
+  initialState: ReviewStateId;
   initialAppearance?: Appearance;
 };
 
-const MODE_STATE: Partial<Record<StudioMode, FixtureStateId>> = { develop: 'develop-themes', review: 'review-chapter' };
+const MODE_STATE: Partial<Record<StudioMode, ReviewStateId>> = { home: 'home-return', develop: 'develop-themes', review: 'review-chapter' };
 
 export function FullRedesignReviewClient({ initialState, initialAppearance = DEFAULT_APPEARANCE }: FullRedesignReviewClientProps) {
-  const [state, setState] = useState<FixtureStateId>(initialState);
+  const [state, setState] = useState<ReviewStateId>(initialState);
   const [appearance, setAppearance] = useState<Appearance>(initialAppearance);
   const [note, setNote] = useState<string>('');
   const [themeId, setThemeId] = useState<string>(THEMES[0].id);
@@ -37,7 +40,8 @@ export function FullRedesignReviewClient({ initialState, initialAppearance = DEF
   const [reviewTab, setReviewTab] = useState<string>('Overview');
 
   const theme = THEMES.find((t) => t.id === themeId) ?? THEMES[0];
-  const mode = STATE_MODE[state];
+  const home = isHomeState(state);
+  const mode: StudioMode = isHomeState(state) ? 'home' : STATE_MODE[state];
 
   function selectMode(next: StudioMode) {
     const target = MODE_STATE[next];
@@ -45,12 +49,13 @@ export function FullRedesignReviewClient({ initialState, initialAppearance = DEF
       setState(target);
       setNote('');
     } else {
-      setNote(`${next === 'home' ? 'Home' : 'Write'} is a later PC3 state family. It is not part of the S1 shell review.`);
+      setNote('Write is a later PC3 state family. It is not part of this review.');
     }
   }
 
-  const body =
-    state === 'develop-themes'
+  const body = isHomeState(state)
+    ? { work: <HomeState state={state} onAct={(a) => setNote(`Fixture — \u201C${a}\u201D would act in the live Studio. Nothing happens here.`)} /> }
+    : state === 'develop-themes'
       ? {
           manuscript: <ManuscriptPassage />,
           work: <DevelopThemes theme={theme} tab={devTab} onTab={setDevTab} onTheme={setThemeId} />,
@@ -70,13 +75,13 @@ export function FullRedesignReviewClient({ initialState, initialAppearance = DEF
         <Shell
           mode={mode}
           appearance={appearance}
-          geometry={STATE_GEOMETRY[state]}
-          workTitle={WORK.title}
+          geometry={isHomeState(state) ? HOME_GEOMETRY : STATE_GEOMETRY[state]}
+          workTitle={state === 'home-begin' ? undefined : WORK.title}
           memberInitial={WORK.memberInitial}
           onSelectMode={selectMode}
-          manuscript={body.manuscript}
+          manuscript={'manuscript' in body ? body.manuscript : undefined}
           work={body.work}
-          maia={body.maia}
+          maia={'maia' in body ? body.maia : undefined}
           maiaAbove={state === 'review-chapter' ? <span className="fr-matters">Your story matters. ✦</span> : undefined}
           footer={state === 'review-chapter' ? <span>A deeper you. A more human world.</span> : undefined}
         />
@@ -85,13 +90,23 @@ export function FullRedesignReviewClient({ initialState, initialAppearance = DEF
       <section className="fr-review-strip" data-founder-review-marker="" aria-label="Founder review controls">
         <strong>Founder review · fixture data</strong>
         <span>
-          PC3-S1 shell candidate. Nothing on this page is live: no member data, no reading, no MAIA call, no save. Reference:{' '}
-          {REFERENCES[state].label} · <code>{REFERENCES[state].sha256.slice(0, 12)}…</code>
+          {home ? 'PC3-S2 Home candidate' : 'PC3-S1 shell candidate'}. Nothing on this page is live: no member data, no reading, no MAIA
+          call, no save. Reference:{' '}
+          {isHomeState(state) ? (
+            <>
+              {HOME_REFERENCES.family.label} · <code>{HOME_REFERENCES.family.sha256.slice(0, 12)}…</code> (supporting:{' '}
+              {HOME_REFERENCES.supporting.label})
+            </>
+          ) : (
+            <>
+              {REFERENCES[state].label} · <code>{REFERENCES[state].sha256.slice(0, 12)}…</code>
+            </>
+          )}
         </span>
         <label>
           State{' '}
-          <select value={state} onChange={(e) => setState(e.target.value as FixtureStateId)}>
-            {FIXTURE_STATES.map((s) => (
+          <select value={state} onChange={(e) => setState(e.target.value as ReviewStateId)}>
+            {[...FIXTURE_STATES, ...HOME_STATES].map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>
@@ -109,6 +124,27 @@ export function FullRedesignReviewClient({ initialState, initialAppearance = DEF
       </section>
     </div>
   );
+}
+
+/** PC3-S2 · the four Home fixture states, composed from fixture data only. */
+function HomeState({ state, onAct }: { state: HomeStateId; onAct: (act: string) => void }) {
+  const common = {
+    images: IMAGES as Record<string, string>,
+    copy: HOME_COPY,
+    removeOrDelete: REMOVE_OR_DELETE,
+    writingSpace: { ...WRITING_SPACE, image: IMAGES.railMist },
+    onAct,
+  };
+  switch (state) {
+    case 'home-begin':
+      return <HomeRoom state={state} {...common} />;
+    case 'home-return':
+      return <HomeRoom state={state} {...common} work={RIVER_WORK} otherWorks={OTHER_WORKS} keptLine={KEPT_LINE} history={HISTORY} />;
+    case 'home-unclaimed-writing':
+      return <HomeRoom state={state} {...common} writings={UNCLAIMED_WRITING} allWorks={[RIVER_WORK, ...OTHER_WORKS]} />;
+    case 'home-many-works':
+      return <HomeRoom state={state} {...common} work={RIVER_WORK} allWorks={[RIVER_WORK, ...MANY_WORKS]} writings={UNCLAIMED_WRITING} />;
+  }
 }
 
 const LARGER = [
