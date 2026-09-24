@@ -22,6 +22,8 @@
  *   - Does NOT compute themes / patterns / clusters across episodes.
  *   - Does NOT inject the block when the member has opted out
  *     (gate: members.episodic_recall_enabled).
+ *   - Receives only rows with per-Moment contextual_doorway + member_explicit
+ *     authority; the global preference is a kill switch, never the grant.
  *   - Does NOT inject the block during Sanctuary Mode (defense-in-depth).
  *   - Does NOT inject the block when there is nothing to surface, or when
  *     every candidate is stale (see non-recent rule below).

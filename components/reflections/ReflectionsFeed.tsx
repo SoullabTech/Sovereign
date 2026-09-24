@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * ReflectionsFeed — the member's kept reflections.
+ * ReflectionsFeed — the member's Reflection Capsules.
  *
  * WHY THIS LIVES AT /reflections (founder ruling 2026-09-04): reflections are
  * MEMBER-OWNED content — /api/capsules is requireMemberId()-scoped and every
- * capsule is the member's own Keep. The feed used to live only under
+ * capsule is the member's own Reflection Capsule. The feed used to live only under
  * app/labtools/, whose layout calls requireFounder(), so members pushed there
  * met a 403 screen. Journal had the same shape and was resolved the same way:
  * the House points at /journal, not /labtools/journal.

@@ -111,9 +111,9 @@ export const FEATURE_TOOLTIPS: Record<string, FeatureTooltipContent> = {
 
   // ── Action Buttons ────────────────────────────────────
   'capture': {
-    label: 'Keep',
-    description: 'Save the essence of what just happened.',
-    howToUse: 'Tap after a meaningful moment. MAIA distills the key threads.',
+    label: 'Reflect',
+    description: 'Create a Reflection Capsule from what just happened.',
+    howToUse: 'Tap after a meaningful exchange. MAIA prepares an interpretive reflection for you to review.',
     gesture: 'Tap',
   },
   'session-start': {

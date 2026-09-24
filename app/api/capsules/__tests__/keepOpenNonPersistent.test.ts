@@ -1,9 +1,9 @@
 /**
- * KEEP AUTHORITY CONTRACT — opening Keep must write nothing.
+ * REFLECTION SAVE AUTHORITY CONTRACT — opening a Reflection must write nothing.
  *
- *   OPEN KEEP     = UI/navigation act        = zero persistence
- *   PREPARE KEEP  = distill for preview      = ephemeral only, zero durable write
- *   CONFIRM KEEP  = explicit member action   = persistence permitted
+ *   OPEN REFLECTION     = UI/navigation act        = zero persistence
+ *   PREPARE REFLECTION  = distill for preview      = ephemeral only, zero durable write
+ *   CONFIRM REFLECTION SAVE  = explicit member action   = persistence permitted
  *
  * Kelly ruling 2026-08-28: "MAIA may operate the House. The member governs
  * memory." Until this repair, /api/capsules/from-chat-window distilled the
@@ -75,7 +75,7 @@ describe('PREPARE — /api/capsules/from-chat-window writes nothing', () => {
   });
 
   it('the contract is stated in the file, so the next editor sees it', () => {
-    expect(PREPARE_RAW).toContain('KEEP AUTHORITY CONTRACT');
+    expect(PREPARE_RAW).toContain('REFLECTION SAVE AUTHORITY CONTRACT');
     expect(PREPARE_RAW).toContain('zero persistence');
   });
 });
@@ -109,7 +109,7 @@ describe('the client opens without persisting', () => {
   });
 
   it('tracks the open as an open — not as a capture that did not happen', () => {
-    expect(OC).toContain("trackEvent('keep_panel_opened'");
+    expect(OC).toContain("trackEvent('reflection_panel_opened'");
     expect(OC).not.toContain("trackEvent('spirit_captured'");
   });
 
@@ -144,8 +144,8 @@ describe('the client opens without persisting', () => {
     expect(confirm).toMatch(/if \(isSanctuary\) \{/);
   });
 
-  it('promotion and Lab navigation require a confirmed Keep', () => {
-    expect(OC).toContain('Keep this first, then bring it into the Lab');
-    expect(OC).toContain('Keep this first, then you can view it in the Lab');
+  it('promotion and Lab navigation require a saved Reflection', () => {
+    expect(OC).toContain('Save this reflection first, then bring it into the Lab');
+    expect(OC).toContain('Save this reflection first, then you can view it in the Lab');
   });
 });

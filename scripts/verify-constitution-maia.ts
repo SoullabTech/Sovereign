@@ -223,28 +223,46 @@ async function checkNoAttachmentCaptureSignals() {
   }
 }
 
-async function checkMemoryConsentDefaultOn() {
-  // Default doctrine: contextual_return (Keep = contextual return by default).
-  // Verify that existing atoms do not have return_preference = 'member_pulled'
-  // set as the *default* — member_pulled is an explicit opt-down, not the default.
-  const r = await q<{ pref: string; n: number }>(
-    `SELECT return_preference AS pref, COUNT(*)::int AS n
-     FROM member_memory_atoms
-     GROUP BY return_preference ORDER BY n DESC`
+async function checkMemoryConsentDefaultPrivate() {
+  // R10 (2026-09-17): KEEP does not grant REOPEN. New atoms must be private by
+  // default; ambient return requires an explicit member authority record.
+  const defaults = await qOne<{ pref: string | null; authority: string | null }>(
+    `SELECT
+       pg_get_expr(d_pref.adbin, d_pref.adrelid) AS pref,
+       pg_get_expr(d_auth.adbin, d_auth.adrelid) AS authority
+     FROM pg_attribute a_pref
+     JOIN pg_class c ON c.oid = a_pref.attrelid
+     JOIN pg_namespace n ON n.oid = c.relnamespace
+     JOIN pg_attrdef d_pref ON d_pref.adrelid = c.oid AND d_pref.adnum = a_pref.attnum
+     JOIN pg_attribute a_auth ON a_auth.attrelid = c.oid AND a_auth.attname = 'return_authority'
+     JOIN pg_attrdef d_auth ON d_auth.adrelid = c.oid AND d_auth.adnum = a_auth.attnum
+     WHERE n.nspname = current_schema()
+       AND c.relname = 'member_memory_atoms'
+       AND a_pref.attname = 'return_preference'`
   );
-  const total = r.reduce((s, x) => s + x.n, 0);
-  const memberPulled = r.find(x => x.pref === 'member_pulled')?.n ?? 0;
-  const ambient = total - memberPulled;
-  if (total === 0) {
-    pass(`[LIVE] No memory atoms recorded yet`);
+  const prefPrivate = defaults?.pref?.includes('member_pulled') ?? false;
+  const authorityPrivate = defaults?.authority?.includes('default_private') ?? false;
+  if (prefPrivate && authorityPrivate) {
+    pass(`[LIVE] New memory atoms default private: member_pulled + default_private`);
   } else {
-    const pct = Math.round((memberPulled / total) * 100);
-    pass(
-      `[LIVE] Return preference distribution: ${ambient} ambient-eligible, ${memberPulled} member-pulled (${pct}% opted down)`,
-      `contextual_return is the default per commit 0fa544bc4`
+    fail(
+      `[LIVE] Memory atom defaults do not encode KEEP ≠ REOPEN`,
+      `return_preference=${defaults?.pref ?? 'missing'}; return_authority=${defaults?.authority ?? 'missing'}`
     );
   }
+
+  const unauthorizedAmbient = await qOne<{ n: number }>(
+    `SELECT COUNT(*)::int AS n FROM member_memory_atoms
+     WHERE status IN ('active', 'still_alive')
+       AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+       AND return_authority <> 'member_explicit'`
+  );
+  pass(
+    `[LIVE] ${unauthorizedAmbient?.n ?? 0} return-enabled value(s) lack explicit authority and therefore fail closed`,
+    `the loader admits only return_authority='member_explicit'`
+  );
 }
+
 
 // ── Section 4: Pending constitutional commitments ────────────────────────────
 
@@ -306,7 +324,7 @@ async function main() {
 
   section('3. Relational Safety');
   await checkNoAttachmentCaptureSignals();
-  await checkMemoryConsentDefaultOn();
+  await checkMemoryConsentDefaultPrivate();
 
   section('4. Pending Constitutional Commitments [WARN — behavioral, not yet verifiable]');
   await checkVoiceConstitutionRuntimePending();
