@@ -32,11 +32,19 @@ export type ShellProps = {
   footer?: ReactNode;
   /** Optional words set above the MAIA region (#23). */
   maiaAbove?: ReactNode;
+  /**
+   * PC3-S3 Full Canvas. A presentation state of the SAME room: the product bar
+   * and the manuscript context recede; the Work region — and whatever editor it
+   * holds — stays exactly where it is in the tree, so nothing inside it remounts.
+   * Omitted by every S1/S2 state, whose output is unchanged.
+   */
+  canvas?: boolean;
 };
 
 export function Shell(props: ShellProps) {
   const { mode, appearance, geometry } = props;
   const oneRoom = props.manuscript === undefined && props.maia === undefined;
+  const canvas = props.canvas === true;
   const style = { ...appearanceVars(appearance), ...geometryVars(geometry) } as React.CSSProperties;
 
   return (
@@ -45,46 +53,49 @@ export function Shell(props: ShellProps) {
       data-appearance={appearance}
       data-mode={mode}
       data-work-panel={geometry.workPanel ? 'framed' : 'ground'}
+      data-canvas={props.canvas === undefined ? undefined : canvas ? 'full' : 'resting'}
       style={style}
     >
-      <header className="fr-bar" data-region="topbar">
-        <div className="fr-brand">
-          <SoullabMark />
-          <span>Soullab</span>
-        </div>
-        <nav className="fr-nav" aria-label="Studio">
-          {PRIMARY_MODES.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              className="fr-nav-item"
-              aria-current={m.id === mode ? 'page' : undefined}
-              data-mode={m.id}
-              onClick={() => props.onSelectMode?.(m.id)}
-            >
-              {m.label}
-            </button>
-          ))}
-        </nav>
-        {props.workTitle !== undefined ? (
-          <div className="fr-workpick" aria-label="Current Work">
-            <DocIcon />
-            <span>{props.workTitle}</span>
-            <ChevronDown />
+      {canvas ? null : (
+        <header className="fr-bar" data-region="topbar">
+          <div className="fr-brand">
+            <SoullabMark />
+            <span>Soullab</span>
           </div>
-        ) : (
-          <span className="fr-bar-spacer" aria-hidden="true" />
-        )}
-        <div className="fr-avatar" aria-hidden="true">
-          {props.memberInitial}
-        </div>
-        <div className="fr-more" aria-hidden="true">
-          •••
-        </div>
-      </header>
+          <nav className="fr-nav" aria-label="Studio">
+            {PRIMARY_MODES.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className="fr-nav-item"
+                aria-current={m.id === mode ? 'page' : undefined}
+                data-mode={m.id}
+                onClick={() => props.onSelectMode?.(m.id)}
+              >
+                {m.label}
+              </button>
+            ))}
+          </nav>
+          {props.workTitle !== undefined ? (
+            <div className="fr-workpick" aria-label="Current Work">
+              <DocIcon />
+              <span>{props.workTitle}</span>
+              <ChevronDown />
+            </div>
+          ) : (
+            <span className="fr-bar-spacer" aria-hidden="true" />
+          )}
+          <div className="fr-avatar" aria-hidden="true">
+            {props.memberInitial}
+          </div>
+          <div className="fr-more" aria-hidden="true">
+            •••
+          </div>
+        </header>
+      )}
 
       <div className={oneRoom ? 'fr-room fr-room-single' : 'fr-room'}>
-        {oneRoom ? null : (
+        {oneRoom || canvas ? null : (
           <aside className="fr-region fr-panel fr-manuscript" data-region="manuscript" aria-label="Manuscript">
             {props.manuscript}
           </aside>
@@ -92,7 +103,7 @@ export function Shell(props: ShellProps) {
         <main className="fr-region fr-work" data-region="work" aria-label="The Work">
           {props.work}
         </main>
-        {oneRoom ? null : (
+        {oneRoom || props.maia === undefined ? null : (
           <aside className="fr-region fr-panel fr-maia" data-region="maia" aria-label="MAIA">
             {props.maiaAbove ? <div className="fr-maia-above">{props.maiaAbove}</div> : null}
             {props.maia}

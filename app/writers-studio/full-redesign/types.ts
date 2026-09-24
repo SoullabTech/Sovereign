@@ -26,8 +26,13 @@ export type FixtureStateId = 'develop-themes' | 'develop-manuscript' | 'review-c
  *  accepted S1 laws (three regions, MAIA in relation) keep their exact scope. */
 export type HomeStateId = 'home-begin' | 'home-return' | 'home-unclaimed-writing' | 'home-many-works';
 
+/** PC3-S3 Write fixture states. Full Canvas is a presentation state of the SAME
+ *  Write room, reached in place; the second id exists only so the harness can
+ *  open directly in it for capture. */
+export type WriteStateId = 'write-resting' | 'write-full-canvas';
+
 /** Every state the founder-review harness can show. */
-export type ReviewStateId = FixtureStateId | HomeStateId;
+export type ReviewStateId = FixtureStateId | HomeStateId | WriteStateId;
 
 /** Region order is part of the shell's meaning and must not vary by appearance. */
 export type ShellRegion = 'topbar' | 'manuscript' | 'work' | 'maia';

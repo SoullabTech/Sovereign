@@ -18,7 +18,7 @@ const serif = Newsreader({ subsets: ['latin'], style: ['normal', 'italic'], vari
 const sans = Inter({ subsets: ['latin'], variable: '--fr-sans', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Founder review · fixture data — Writer’s Studio shell (PC3-S1 · PC3-S2)',
+  title: 'Founder review · fixture data — Writer’s Studio shell (PC3-S1 · PC3-S2 · PC3-S3)',
   robots: { index: false, follow: false },
 };
 

@@ -11,7 +11,7 @@
  * (both heroes), the lettering is part of the image — a known difference: real
  * hero photography with live text is owed by a later asset act.
  */
-import type { FixtureStateId, FounderReference, HomeStateId, ReviewStateId, StudioMode } from './types';
+import type { FixtureStateId, FounderReference, HomeStateId, ReviewStateId, StudioMode, WriteStateId } from './types';
 
 const CORPUS = 'c0f4bca2952a6b6afa2d74e204117b6abdf1915a';
 const ORIGINALS = 'docs/design/writers-studio/founder-reference-corpus/original-27/';
@@ -231,8 +231,68 @@ export function isHomeState(v: unknown): v is HomeStateId {
   return typeof v === 'string' && (HOME_STATES as ReadonlyArray<string>).includes(v);
 }
 export function isReviewState(v: unknown): v is ReviewStateId {
-  return isFixtureState(v) || isHomeState(v);
+  return isFixtureState(v) || isHomeState(v) || isWriteState(v);
 }
+
+// ── PC3-S3 · Write Resting + Full Canvas ─────────────────────────────────────
+/** The five labelled regions of this ONE custodied PNG are S3-A … S3-E. */
+export const WRITE_REFERENCE = {
+  corpusCommit: 'fa151298997380fd5e4c76beef22b0afb6dc5662',
+  path: 'docs/design/writers-studio/founder-reference-corpus/s3-visual-authority/a_clean_multi_panel_ui_ux_design_composite_with_fi.png',
+  sha256: '982b363b158a47d229c3efcb634be0ee09e722a7810df33a500a51de8058b5d9',
+  bytes: 1855655,
+  label: 'S3 Visual Authority · S3-A…S3-E (founder PASS, CR1)',
+} as const;
+
+export const WRITE_STATES: ReadonlyArray<WriteStateId> = ['write-resting', 'write-full-canvas'];
+
+export function isWriteState(v: unknown): v is WriteStateId {
+  return typeof v === 'string' && (WRITE_STATES as ReadonlyArray<string>).includes(v);
+}
+
+/**
+ * The Write fixture — transcribed from S3-A. Chapters 6–12 in both appearances
+ * (founder adjudication: the generated Night omission has no authority).
+ * Nothing here is a save engine: `version` and `saveState` are fixture truth,
+ * and the room reports an edit as unsaved rather than pretending to save it.
+ */
+export const WRITE_FIXTURE = {
+  work: 'The River Between',
+  heading: 'Manuscript',
+  chapters: [
+    { id: 'ch-6', label: 'Chapter 6', title: 'The Current Changes' },
+    { id: 'ch-7', label: 'Chapter 7', title: 'A Wider View' },
+    { id: 'ch-8', label: 'Chapter 8', title: 'What Remains' },
+    { id: 'ch-9', label: 'Chapter 9', title: 'The Other Bank' },
+    { id: 'ch-10', label: 'Chapter 10', title: 'Learning to Stay' },
+    { id: 'ch-11', label: 'Chapter 11', title: 'Roots and Rivals' },
+    { id: 'ch-12', label: 'Chapter 12', title: 'The Shape Ahead' },
+  ],
+  currentChapterId: 'ch-6',
+  place: 'Chapter 6',
+  title: 'The Current Changes',
+  paragraphs: [
+    'The river had always moved, but that morning it seemed to move differently, as if it, too, had been listening. Clara stood on the bank and watched the water fold over itself, carrying leaves, reflections, and something else she couldn\u2019t name.',
+    'She thought about how much had changed in a single year \u2014 not just around her, but within her. The same place, and yet not the same. What had felt certain before now felt porous, like the edge of a map in fog.',
+    '\u201CMaybe this is what growing feels like,\u201D she whispered. \u201CNot arriving, but learning to stay with the in-between.\u201D',
+    'A kingfisher flashed blue across the water, and for a moment everything stilled. She took a deeper breath and kept walking.',
+  ],
+  /** The held / selected passage: the whole third paragraph (S3-A…S3-E). */
+  heldParagraph: 2,
+  version: 'Draft v12',
+  saveState: 'Saved',
+  unsaved: 'Unsaved',
+} as const;
+
+export const WRITE_COPY = {
+  fullCanvas: 'Full Canvas',
+  fullCanvasLabel: 'Open Full Canvas \u2014 the same page, with more room',
+  ret: 'Return',
+  returnLabel: 'Return to the Write room',
+  previous: 'Previous',
+  next: 'Next',
+  editorLabel: 'Chapter 6 \u2014 The Current Changes',
+} as const;
 
 /** A Work the member has DECLARED. `returnPlace` exists only where durable place evidence does. */
 export type HomeWork = {

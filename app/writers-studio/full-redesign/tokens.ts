@@ -12,7 +12,9 @@ type RoleTokens = Record<
   | 'maiaCard' | 'held' | 'heldPassage' | 'gold' | 'shadow'
   // PC3-S2R1 — two-tone atmospheric depth for rooms that hold their own field
   // (Home). The S1 regions never read these; they change no S1 pixel.
-  | 'field' | 'fieldLine' | 'recess',
+  | 'field' | 'fieldLine' | 'recess'
+  // PC3-S3 — the quiet "saved" dot. Read by the Write room only.
+  | 'saved',
   string
 >;
 
@@ -41,6 +43,7 @@ export const APPEARANCE_TOKENS: Record<Appearance, RoleTokens> = {
     field: '#F9F8F5',
     fieldLine: '#E7E5DF',
     recess: '#F2F1ED',
+    saved: '#2E9B6C',
   },
   // Derived Night proof: same roles, same geometry, lower light.
   night: {
@@ -67,6 +70,7 @@ export const APPEARANCE_TOKENS: Record<Appearance, RoleTokens> = {
     field: '#131A2A',
     fieldLine: '#212A3F',
     recess: '#10172A',
+    saved: '#4DBF8C',
   },
 };
 
@@ -103,6 +107,17 @@ export const STATE_GEOMETRY: Record<FixtureStateId, ShellGeometry> = {
 export const HOME_GEOMETRY: ShellGeometry = {
   padLeft: 13, padRight: 12, manuscriptWidth: 0, manuscriptFloor: 0,
   maiaWidth: 0, maiaFloor: 0, gapLeft: 0, gapRight: 0, top: 7, bottom: 13, workPanel: false,
+};
+
+/**
+ * PC3-S3 Write geometry. The manuscript context sits flush beneath the product
+ * bar (S3-A/S3-C: a rail, not an inset card) at ≈0.236 of the 1536 authority
+ * width; there is no MAIA region. Full Canvas uses the same geometry with the
+ * bar and rail receded, so the Work region is the whole field.
+ */
+export const WRITE_GEOMETRY: ShellGeometry = {
+  padLeft: 0, padRight: 0, manuscriptWidth: 360, manuscriptFloor: 232,
+  maiaWidth: 0, maiaFloor: 0, gapLeft: 0, gapRight: 0, top: 0, bottom: 0, workPanel: false,
 };
 
 export const REFERENCE_WIDTH = 1536;
