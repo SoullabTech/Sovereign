@@ -137,6 +137,12 @@ check(
   'B6-L14','voice remains unopened in B6 V1'
 );
 
+check(
+  /\.stage\{[^}]*min-height:0/.test(index) &&
+  /main\{[^}]*min-height:0[^}]*overflow-y:auto[^}]*overflow-x:hidden/.test(index),
+  'B6-L16','the right-hand Work stage remains vertically scrollable when conversation content exceeds the window'
+);
+
 const submitHandler=main.slice(
   main.indexOf("ipcMain.handle('jarvis:submit-task'"),
   main.indexOf("ipcMain.handle('jarvis:run-external-reasoning'")
@@ -173,6 +179,9 @@ const candidates=[
   ['DC-B6-7','B6-L15',
     main.replace("path.join(root, 'scripts', 'builder', 'jarvis-context.mjs')","path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs')"),
     (s)=>{const h=s.slice(s.indexOf("ipcMain.handle('jarvis:submit-task'"),s.indexOf("ipcMain.handle('jarvis:run-external-reasoning'"));return /const root = currentRoot\(\);/.test(h)&&!/\bREPO_ROOT\b/.test(h);}],
+  ['DC-B6-8','B6-L16',
+    index.replace('min-height:0;overflow-y:auto;overflow-x:hidden','overflow:auto'),
+    (s)=>/\.stage\{[^}]*min-height:0/.test(s)&&/main\{[^}]*min-height:0[^}]*overflow-y:auto[^}]*overflow-x:hidden/.test(s)],
 ];
 for(const [id,law,source,predicate] of candidates){
   const dead=!predicate(source);
