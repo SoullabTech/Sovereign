@@ -1,0 +1,98 @@
+{
+  "label": "M-A3-rail-marker-hidden",
+  "only": [
+    "A3"
+  ],
+  "startedAt": "2026-09-25T15:34:01.799Z",
+  "laws": {
+    "A3": {
+      "outcome": "RED",
+      "failedChecks": [
+        "conflictMarkedAtSection",
+        "conflictPersistsAfterUnrelatedSave"
+      ],
+      "checks": {
+        "differentSectionSaves": true,
+        "sameSectionConflicts": true,
+        "conflictVisibleWholeDraft": true,
+        "conflictMarkedAtSection": false,
+        "unrelatedSavesWhileConflicted": true,
+        "conflictPersistsAfterUnrelatedSave": false,
+        "noResolutionUi": true,
+        "missingDigestFallsBackToVersionRule": true,
+        "invalidDigestFallsBackToVersionRule": true,
+        "lockedComparisonSingleWinner": true,
+        "comparisonUnderLockRefusesChangedBody": true,
+        "digestOverExactDeliveredBytes": true,
+        "latestAcknowledgedDigestWins": true
+      },
+      "obs": {
+        "t1A": 200,
+        "t2B": 200,
+        "t2A": 409,
+        "t2C": 200,
+        "afterConflict": {
+          "state": "Needs attention",
+          "section": true,
+          "rail": false,
+          "interactiveInMarkers": false,
+          "resolutionButtons": false
+        },
+        "afterUnrelated": {
+          "state": "Needs attention",
+          "section": true,
+          "rail": false,
+          "interactiveInMarkers": false,
+          "resolutionButtons": false
+        },
+        "noDigest": 409,
+        "badDigest": 409,
+        "raceWinnersPerRound": [
+          1,
+          1,
+          1
+        ],
+        "controlledLock": [
+          {
+            "waitingOnLock": true,
+            "status": 409,
+            "competingStatePreserved": true,
+            "saveMarkPersisted": false,
+            "competingDigest": "9804e01dbff272f1",
+            "persistedDigest": "9804e01dbff272f1"
+          },
+          {
+            "waitingOnLock": true,
+            "status": 409,
+            "competingStatePreserved": true,
+            "saveMarkPersisted": false,
+            "competingDigest": "b5b265878aa37c73",
+            "persistedDigest": "b5b265878aa37c73"
+          },
+          {
+            "waitingOnLock": true,
+            "status": 409,
+            "competingStatePreserved": true,
+            "saveMarkPersisted": false,
+            "competingDigest": "3fd3e4789354ef94",
+            "persistedDigest": "3fd3e4789354ef94"
+          }
+        ],
+        "exactBytes": {
+          "setRaw": 200,
+          "deliveredExact": true,
+          "normalizedAttempt": 409,
+          "exactAttempt": 200
+        },
+        "orderingSaves": [
+          200,
+          200,
+          200
+        ],
+        "orderingS3Persisted": true
+      },
+      "ms": 46297
+    }
+  },
+  "finishedAt": "2026-09-25T15:34:55.413Z"
+}

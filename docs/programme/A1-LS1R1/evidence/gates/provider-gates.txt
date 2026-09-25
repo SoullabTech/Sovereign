@@ -1,0 +1,21 @@
+# provider governance / direct-anthropic over the same delta
+
+> spiralogic-oracle-system@1.2.0 check:no-openai
+> npx tsx scripts/check-provider-governance.ts
+
+🛡️  Provider governance check (OpenAI enforcement)…
+
+✅ No new OpenAI surface. Migration debt on allowlist: 53 file(s) tracked toward zero.
+   (Policy: docs/canon/PROVIDER_GOVERNANCE.md — burn order: browser keys → TTS → _backend → deps → key.)
+
+exit=0
+
+> spiralogic-oracle-system@1.2.0 check:no-direct-anthropic
+> npx tsx scripts/check-no-direct-anthropic.ts
+
+🔒 Checking for direct @anthropic-ai/sdk imports outside allowlist...
+✅ No direct @anthropic-ai/sdk imports outside allowlist.
+   approved:      2 file(s) — canonical provider-adapter layer
+   operational:   1 file(s) — non-cognitive (health checks, probes)
+   grandfathered: 55 file(s) — legacy, to be migrated
+exit=0

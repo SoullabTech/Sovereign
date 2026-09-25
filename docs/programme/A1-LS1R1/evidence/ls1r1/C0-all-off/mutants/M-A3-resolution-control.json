@@ -1,0 +1,97 @@
+{
+  "label": "M-A3-resolution-control",
+  "only": [
+    "A3"
+  ],
+  "startedAt": "2026-09-25T15:35:59.043Z",
+  "laws": {
+    "A3": {
+      "outcome": "RED",
+      "failedChecks": [
+        "noResolutionUi"
+      ],
+      "checks": {
+        "differentSectionSaves": true,
+        "sameSectionConflicts": true,
+        "conflictVisibleWholeDraft": true,
+        "conflictMarkedAtSection": true,
+        "unrelatedSavesWhileConflicted": true,
+        "conflictPersistsAfterUnrelatedSave": true,
+        "noResolutionUi": false,
+        "missingDigestFallsBackToVersionRule": true,
+        "invalidDigestFallsBackToVersionRule": true,
+        "lockedComparisonSingleWinner": true,
+        "comparisonUnderLockRefusesChangedBody": true,
+        "digestOverExactDeliveredBytes": true,
+        "latestAcknowledgedDigestWins": true
+      },
+      "obs": {
+        "t1A": 200,
+        "t2B": 200,
+        "t2A": 409,
+        "t2C": 200,
+        "afterConflict": {
+          "state": "Needs attention",
+          "section": true,
+          "rail": true,
+          "interactiveInMarkers": true,
+          "resolutionButtons": true
+        },
+        "afterUnrelated": {
+          "state": "Needs attention",
+          "section": true,
+          "rail": true,
+          "interactiveInMarkers": true,
+          "resolutionButtons": true
+        },
+        "noDigest": 409,
+        "badDigest": 409,
+        "raceWinnersPerRound": [
+          1,
+          1,
+          1
+        ],
+        "controlledLock": [
+          {
+            "waitingOnLock": true,
+            "status": 409,
+            "competingStatePreserved": true,
+            "saveMarkPersisted": false,
+            "competingDigest": "286e1eb2f7c6801b",
+            "persistedDigest": "286e1eb2f7c6801b"
+          },
+          {
+            "waitingOnLock": true,
+            "status": 409,
+            "competingStatePreserved": true,
+            "saveMarkPersisted": false,
+            "competingDigest": "a74bcfa1a5186b73",
+            "persistedDigest": "a74bcfa1a5186b73"
+          },
+          {
+            "waitingOnLock": true,
+            "status": 409,
+            "competingStatePreserved": true,
+            "saveMarkPersisted": false,
+            "competingDigest": "eea88bf535b221e6",
+            "persistedDigest": "eea88bf535b221e6"
+          }
+        ],
+        "exactBytes": {
+          "setRaw": 200,
+          "deliveredExact": true,
+          "normalizedAttempt": 409,
+          "exactAttempt": 200
+        },
+        "orderingSaves": [
+          200,
+          200,
+          200
+        ],
+        "orderingS3Persisted": true
+      },
+      "ms": 59785
+    }
+  },
+  "finishedAt": "2026-09-25T15:37:03.569Z"
+}

@@ -1,0 +1,73 @@
+{
+  "label": "M-A1-chapter10-restored",
+  "only": [
+    "A1"
+  ],
+  "startedAt": "2026-09-25T15:14:11.303Z",
+  "laws": {
+    "A1": {
+      "outcome": "RED",
+      "failedChecks": [
+        "absentResolvesToFirstSection",
+        "staleResolvesToFirstSection",
+        "invalidResolvesToFirstSection",
+        "absentAddressRepairedToResolved",
+        "staleAddressRepairedToResolved",
+        "invalidAddressRepairedToResolved",
+        "noChapter10Heuristic"
+      ],
+      "checks": {
+        "validExplicitPlaceHonoured": true,
+        "absentResolvesToFirstSection": false,
+        "staleResolvesToFirstSection": false,
+        "invalidResolvesToFirstSection": false,
+        "absentAddressRepairedToResolved": false,
+        "staleAddressRepairedToResolved": false,
+        "invalidAddressRepairedToResolved": false,
+        "noChapter10Heuristic": false,
+        "zeroArrivalScroll": true,
+        "zeroArrivalScrollCalls": true
+      },
+      "obs": {
+        "valid": {
+          "focus": "Scene 2.1",
+          "addr": "Scene 2.1",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "absent": {
+          "focus": "Chapter 10 root",
+          "addr": "Chapter 10 root",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "stale": {
+          "focus": "Chapter 10 root",
+          "addr": "Chapter 10 root",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "invalid": {
+          "focus": "Chapter 10 root",
+          "addr": "Chapter 10 root",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        }
+      },
+      "ms": 23999
+    }
+  },
+  "finishedAt": "2026-09-25T15:14:43.609Z"
+}

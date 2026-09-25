@@ -1,0 +1,8 @@
+# check:design-canon over the candidate delta (base e8868884 + diff to c723dc8 applied as working-tree changes)
+
+> spiralogic-oracle-system@1.2.0 check:design-canon
+> npx tsx scripts/check-design-canon.ts
+
+🏛  Design canon gate — 3 member-facing surface(s) in working-tree changes
+✅ Design canon: 2 Experience Contract(s) cover this change.
+exit=0

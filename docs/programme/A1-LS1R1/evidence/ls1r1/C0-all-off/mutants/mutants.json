@@ -1,0 +1,341 @@
+[
+  {
+    "id": "M-A1-stale-address-retained",
+    "law": "A1",
+    "wrong": "arrival resolves correctly but leaves the absent/stale/invalid address in the bar",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "absentAddressRepairedToResolved",
+      "staleAddressRepairedToResolved",
+      "invalidAddressRepairedToResolved"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A1-chapter10-restored",
+    "law": "A1",
+    "wrong": "the hard-coded Chapter-10 heuristic returns",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "absentResolvesToFirstSection",
+      "staleResolvesToFirstSection",
+      "invalidResolvesToFirstSection",
+      "absentAddressRepairedToResolved",
+      "staleAddressRepairedToResolved",
+      "invalidAddressRepairedToResolved",
+      "noChapter10Heuristic"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A1-repair-coupled-to-scroll",
+    "law": "A1",
+    "wrong": "address repair also scrolls the manuscript to the resolved section",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "zeroArrivalScroll",
+      "zeroArrivalScrollCalls"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A2-chapter-scoped-status",
+    "law": "A2",
+    "wrong": "status computed over the chapter on screen only",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "offChapterErrorVisible",
+      "offChapterConflictVisible"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A2-saved-never-shown",
+    "law": "A2",
+    "wrong": "acknowledged clean state shows nothing instead of Saved",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "savedAfterInitialLoad",
+      "savedAfterAcknowledgement"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A2-false-saved-despite-failure",
+    "law": "A2",
+    "wrong": "a conflict or unknown outcome is reported as Saved",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "offChapterErrorVisible",
+      "offChapterConflictVisible"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A2-draft-counter-restored",
+    "law": "A2",
+    "wrong": "the draft-v save counter returns to the surface",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "draftCounterAbsent"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A4-silent-leave",
+    "law": "A4",
+    "wrong": "leaving with unacknowledged text is not guarded",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "unconfirmedEligibleDepartureGuarded",
+      "dirtyDepartureGuarded",
+      "textSurvivesRefusedDeparture",
+      "eligibleDeparturePersistsAfterLeave",
+      "unconfirmedDepartureGuarded"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A4-saved-on-keepalive-attempt",
+    "law": "A4",
+    "wrong": "a keepalive attempt is treated as acknowledged persistence",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "unconfirmedEligibleNeverClaimsSaved",
+      "unconfirmedEligibleDepartureGuarded"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A4-local-prose-backup",
+    "law": "A4",
+    "wrong": "a browser-side copy of the writer's prose is kept",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "noLocalStorageProse"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A4-keepalive-dropped",
+    "law": "A4",
+    "wrong": "departure saves are not sent with keepalive",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "unconfirmedEligibleNeverClaimsSaved",
+      "eligibleDepartureUsesKeepalive",
+      "eligibleDeparturePersistsAfterLeave"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A5-entry-loses-focus",
+    "law": "A5",
+    "wrong": "pointer entry takes focus from the editor",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "pointerPathSameEditorNode"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A5-return-loses-focus",
+    "law": "A5",
+    "wrong": "pointer Return takes focus from the editor",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "pointerPathSameEditorNode"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A5-escape-broken",
+    "law": "A5",
+    "wrong": "Escape no longer returns from Full Canvas",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "escapeReturnsFromFullCanvas",
+      "escapeReturnPreservesTuple"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A5-editor-remounted",
+    "law": "A5",
+    "wrong": "the editor is remounted (substituted) across the transition",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "pointerEntryPreservesTuple",
+      "pointerReturnPreservesTuple",
+      "pointerPathSameEditorNode",
+      "sectionNeverRemounted"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A5-keyboard-restore-dropped",
+    "law": "A5",
+    "wrong": "keyboard activation leaves the editor's place unrestored",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "keyboardEnterEntryRestoresTuple",
+      "escapeReturnPreservesTuple",
+      "keyboardSpaceEntryRestoresTuple"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-draft-wide-only",
+    "law": "A3",
+    "wrong": "observed-body digest ignored; any draft-version change refuses every section",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "differentSectionSaves",
+      "unrelatedSavesWhileConflicted",
+      "lockedComparisonSingleWinner",
+      "digestOverExactDeliveredBytes",
+      "latestAcknowledgedDigestWins"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-same-section-overwrite",
+    "law": "A3",
+    "wrong": "stale same-section save accepted despite digest mismatch",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "sameSectionConflicts",
+      "conflictVisibleWholeDraft",
+      "conflictMarkedAtSection",
+      "conflictPersistsAfterUnrelatedSave",
+      "lockedComparisonSingleWinner",
+      "comparisonUnderLockRefusesChangedBody",
+      "digestOverExactDeliveredBytes"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-outside-lock-check",
+    "law": "A3",
+    "wrong": "authoritative digest comparison made against a section body read before the draft row lock",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "lockedComparisonSingleWinner",
+      "comparisonUnderLockRefusesChangedBody"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-missing-digest-bypass",
+    "law": "A3",
+    "wrong": "absent or invalid digest lets a stale-version save through",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "missingDigestFallsBackToVersionRule",
+      "invalidDigestFallsBackToVersionRule"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-conflict-disappears",
+    "law": "A3",
+    "wrong": "a later successful save elsewhere clears the unresolved conflict (and its held text)",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "conflictPersistsAfterUnrelatedSave"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-unrelated-blocked",
+    "law": "A3",
+    "wrong": "one section's conflict still stops every other section from saving",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "unrelatedSavesWhileConflicted"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-rail-marker-hidden",
+    "law": "A3",
+    "wrong": "the conflicted section carries no marker on its rail node",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "conflictMarkedAtSection",
+      "conflictPersistsAfterUnrelatedSave"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-section-marker-hidden",
+    "law": "A3",
+    "wrong": "the conflicted section carries no marker where the writer is",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "conflictMarkedAtSection",
+      "conflictPersistsAfterUnrelatedSave"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-resolution-control",
+    "law": "A3",
+    "wrong": "a conflict-resolution control is offered",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "noResolutionUi"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-late-digest-overwrite",
+    "law": "A3",
+    "wrong": "a late-resolving digest of an older body overwrites the digest of the latest acknowledged body",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "latestAcknowledgedDigestWins"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-version-adopted-after-digest-acceptance",
+    "law": "A3",
+    "wrong": "client adopts a draft version reached through changes elsewhere, so a later save of a changed section passes on version alone",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "sameSectionConflicts",
+      "conflictVisibleWholeDraft",
+      "conflictMarkedAtSection",
+      "conflictPersistsAfterUnrelatedSave"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-accepted-by-misreported",
+    "law": "A3",
+    "wrong": "server reports a digest-path acceptance as a version-path one",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "sameSectionConflicts",
+      "conflictVisibleWholeDraft",
+      "conflictMarkedAtSection",
+      "conflictPersistsAfterUnrelatedSave"
+    ],
+    "basis": null
+  },
+  {
+    "id": "M-A3-digest-normalized",
+    "law": "A3",
+    "wrong": "server normalizes the stored body (NFC + trim) before comparing",
+    "verdict": "KILLED",
+    "failedChecks": [
+      "differentSectionSaves",
+      "unrelatedSavesWhileConflicted",
+      "lockedComparisonSingleWinner",
+      "digestOverExactDeliveredBytes",
+      "latestAcknowledgedDigestWins"
+    ],
+    "basis": null
+  }
+]

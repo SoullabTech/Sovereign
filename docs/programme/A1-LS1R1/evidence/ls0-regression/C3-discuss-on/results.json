@@ -1,0 +1,229 @@
+{
+  "config": "C3-discuss-on",
+  "startedAt": "2026-09-25T14:17:31.665Z",
+  "scenarios": {
+    "S1": {
+      "outcome": "CANONICAL_PREVENTS_IT",
+      "basis": "predicted fallback did not occur as a whole",
+      "obs": {
+        "memberPlaceEstablished": true,
+        "memberSavedSection": "Scene 1.1",
+        "a_headingPresent_noS_resolved": "first section",
+        "b_headingAbsent_noS_resolved": "first section",
+        "c_validS_resolved": "requested section",
+        "d_staleS_resolved": "first section",
+        "d_staleS_retainedInAddress": false,
+        "d_staleS_carriedIntoDevelopLink": false
+      },
+      "ms": 29751
+    },
+    "S2": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "reload recovered the section identity but did not bring it into view",
+      "obs": {
+        "afterClick": {
+          "focusIsTarget": true,
+          "addressIsTarget": true,
+          "contextRefetchOnClick": 0
+        },
+        "afterReload": {
+          "focusIsTarget": true,
+          "addressIsTarget": true,
+          "targetInView": false
+        }
+      },
+      "ms": 15884
+    },
+    "S3": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "reopen landed on the last-saved section (Scene 2.1) though the member last stood in Scene 3.1; an equal-updated_at tie carried no place",
+      "obs": {
+        "a_beforeWriting": {
+          "returnHeroPresent": false
+        },
+        "b_uniqueLastSaved": {
+          "saveAcknowledged": true,
+          "lastPlaceBeforeLeaving": "Scene 3.1",
+          "heroPresent": true,
+          "heroS": "Scene 2.1",
+          "arrival": "Scene 2.1"
+        },
+        "c_explicitTie": {
+          "heroPresent": true,
+          "heroCarriesS": false,
+          "arrival": "Chapter 1: Synthetic One"
+        },
+        "locusResponseStatuses": [
+          200,
+          200
+        ]
+      },
+      "ms": 50953
+    },
+    "S4": {
+      "outcome": "INSTRUMENT_FAILURE",
+      "basis": "precondition not established",
+      "obs": {
+        "a": {
+          "saveAcknowledged": true,
+          "persisted": true,
+          "footerLabelsSeen": [],
+          "savedLabelEverShown": false
+        },
+        "b": {
+          "editRefusedStatus": 200
+        }
+      },
+      "ms": 17024
+    },
+    "S5": {
+      "outcome": "INSTRUMENT_FAILURE",
+      "basis": "conflict precondition not established",
+      "obs": {
+        "sessionBAck": 200,
+        "sessionAFirstRefusal": 200,
+        "sessionAPutsAfterLaterEdit": [
+          {
+            "section": "Scene 2.1",
+            "status": 200
+          }
+        ],
+        "laterSectionPersisted": true
+      },
+      "ms": 24544
+    },
+    "S6": {
+      "outcome": "CANONICAL_PREVENTS_IT",
+      "basis": "no early trial lost text",
+      "obs": {
+        "trials": [
+          {
+            "kind": "reload",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "reload",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "reload",
+            "waitMs": 300,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "reload",
+            "waitMs": 300,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "close",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "close",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "navigate",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "reload",
+            "waitMs": 3000,
+            "persisted": true,
+            "beforeunloadDialog": false
+          }
+        ]
+      },
+      "ms": 792847
+    },
+    "S7": {
+      "outcome": "CANONICAL_PREVENTS_IT",
+      "basis": "predicted pointer-vs-Escape asymmetry did not occur",
+      "obs": {
+        "preEntry": {
+          "tag": "TEXTAREA",
+          "section": "687aadd2-ada3-46c9-a761-64d89687de2c",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "inCanvasAfterEntry": {
+          "tag": "TEXTAREA",
+          "section": "687aadd2-ada3-46c9-a761-64d89687de2c",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "entryPreserved": true,
+        "preReturnPointer": {
+          "tag": "TEXTAREA",
+          "section": "687aadd2-ada3-46c9-a761-64d89687de2c",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "afterPointer": {
+          "tag": "TEXTAREA",
+          "section": "687aadd2-ada3-46c9-a761-64d89687de2c",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "pointerPreserved": true,
+        "preReturnEscape": {
+          "tag": "TEXTAREA",
+          "section": "687aadd2-ada3-46c9-a761-64d89687de2c",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "afterEscape": {
+          "tag": "TEXTAREA",
+          "section": "687aadd2-ada3-46c9-a761-64d89687de2c",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "escapePreserved": true
+      },
+      "ms": 6208
+    },
+    "S8": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "after a Write save, the real readings capture refused revision_not_current before any model boundary",
+      "obs": {
+        "writeSaveAck": 200,
+        "draftVersion": 2,
+        "revisionCount": 1,
+        "latestRevision": 1,
+        "latestRevisionEqualsDraft": false,
+        "readingsStatus": 409,
+        "refusal": "revision_not_current",
+        "modelBoundaryReached": 0
+      },
+      "ms": 9292
+    },
+    "S9": {
+      "outcome": "GREEN_CONTROL_ESTABLISHED",
+      "basis": "after the existing checkpoint, capture no longer refused revision_not_current; the request reached the structured-model boundary, where the local stub refused it (no inference)",
+      "obs": {
+        "checkpointStatus": 200,
+        "revisionCountAfter": 2,
+        "latestRevisionEqualsDraft": true,
+        "readingsStatus": 422,
+        "refusal": "provider_unavailable",
+        "modelBoundaryReached": 1,
+        "stubDesign": "loopback stub refuses every request with HTTP 400; no inference"
+      },
+      "ms": 3847
+    }
+  },
+  "finishedAt": "2026-09-25T14:33:50.154Z"
+}

@@ -1,0 +1,60 @@
+{
+  "label": "M-A4-keepalive-dropped",
+  "only": [
+    "A4"
+  ],
+  "startedAt": "2026-09-25T15:23:42.117Z",
+  "laws": {
+    "A4": {
+      "outcome": "RED",
+      "failedChecks": [
+        "unconfirmedEligibleNeverClaimsSaved",
+        "eligibleDepartureUsesKeepalive",
+        "eligibleDeparturePersistsAfterLeave"
+      ],
+      "checks": {
+        "unconfirmedEligibleNeverClaimsSaved": false,
+        "unconfirmedEligibleDepartureGuarded": true,
+        "dirtyDepartureGuarded": true,
+        "textSurvivesRefusedDeparture": true,
+        "eligibleDepartureUsesKeepalive": false,
+        "eligibleDeparturePersistsAfterLeave": false,
+        "acknowledgedDepartureNotGuarded": true,
+        "oversizedSaveNotKeepalive": true,
+        "unconfirmedNeverClaimsSaved": true,
+        "unconfirmedDepartureGuarded": true,
+        "noLocalStorageProse": true,
+        "noSessionStorageProse": true,
+        "noIndexedDbProse": true
+      },
+      "obs": {
+        "dialogA": "beforeunload",
+        "dialogB": "beforeunload",
+        "dialogC": null,
+        "dialogD": "beforeunload",
+        "smallPut": {
+          "keepalive": false,
+          "bytes": 445
+        },
+        "bigPut": {
+          "keepalive": false,
+          "overBudget": true
+        },
+        "statesWhileUnconfirmed": [
+          "Saving…"
+        ],
+        "statesWhileEligibleUnconfirmed": [
+          "Saving…"
+        ],
+        "dialogF": "beforeunload",
+        "storage": {
+          "local": false,
+          "session": false,
+          "indexedDB": false
+        }
+      },
+      "ms": 59000
+    }
+  },
+  "finishedAt": "2026-09-25T15:24:49.381Z"
+}

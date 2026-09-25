@@ -1,0 +1,89 @@
+{
+  "label": "M-A5-escape-broken",
+  "only": [
+    "A5"
+  ],
+  "startedAt": "2026-09-25T15:26:19.985Z",
+  "laws": {
+    "A5": {
+      "outcome": "RED",
+      "failedChecks": [
+        "escapeReturnsFromFullCanvas",
+        "escapeReturnPreservesTuple"
+      ],
+      "checks": {
+        "pointerEntryPreservesTuple": true,
+        "pointerReturnPreservesTuple": true,
+        "pointerPathSameEditorNode": true,
+        "sectionNeverRemounted": true,
+        "keyboardEnterEntryRestoresTuple": true,
+        "escapeReturnsFromFullCanvas": false,
+        "escapeReturnPreservesTuple": false,
+        "keyboardSpaceEntryRestoresTuple": true,
+        "noNewKeyboardShortcut": true
+      },
+      "obs": {
+        "pointer": [
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          }
+        ],
+        "keyboardEnter": [
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          }
+        ],
+        "keyboardSpace": [
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          }
+        ],
+        "shiftTabsToToggle": {
+          "enter": 2,
+          "space": 2
+        }
+      },
+      "ms": 18109
+    }
+  },
+  "finishedAt": "2026-09-25T15:26:43.505Z"
+}

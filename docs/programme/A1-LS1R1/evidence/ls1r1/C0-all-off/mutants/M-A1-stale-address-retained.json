@@ -1,0 +1,69 @@
+{
+  "label": "M-A1-stale-address-retained",
+  "only": [
+    "A1"
+  ],
+  "startedAt": "2026-09-25T15:12:52.454Z",
+  "laws": {
+    "A1": {
+      "outcome": "RED",
+      "failedChecks": [
+        "absentAddressRepairedToResolved",
+        "staleAddressRepairedToResolved",
+        "invalidAddressRepairedToResolved"
+      ],
+      "checks": {
+        "validExplicitPlaceHonoured": true,
+        "absentResolvesToFirstSection": true,
+        "staleResolvesToFirstSection": true,
+        "invalidResolvesToFirstSection": true,
+        "absentAddressRepairedToResolved": false,
+        "staleAddressRepairedToResolved": false,
+        "invalidAddressRepairedToResolved": false,
+        "noChapter10Heuristic": true,
+        "zeroArrivalScroll": true,
+        "zeroArrivalScrollCalls": true
+      },
+      "obs": {
+        "valid": {
+          "focus": "Scene 2.1",
+          "addr": "Scene 2.1",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "absent": {
+          "focus": "first section",
+          "addr": null,
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "stale": {
+          "focus": "first section",
+          "addr": "0b69399b-f9fb-4f09-9747-b7894afe425e",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "invalid": {
+          "focus": "first section",
+          "addr": "not-a-section-id",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        }
+      },
+      "ms": 25969
+    }
+  },
+  "finishedAt": "2026-09-25T15:14:06.890Z"
+}

@@ -1,0 +1,58 @@
+{
+  "label": "M-A4-local-prose-backup",
+  "only": [
+    "A4"
+  ],
+  "startedAt": "2026-09-25T15:21:49.307Z",
+  "laws": {
+    "A4": {
+      "outcome": "RED",
+      "failedChecks": [
+        "noLocalStorageProse"
+      ],
+      "checks": {
+        "unconfirmedEligibleNeverClaimsSaved": true,
+        "unconfirmedEligibleDepartureGuarded": true,
+        "dirtyDepartureGuarded": true,
+        "textSurvivesRefusedDeparture": true,
+        "eligibleDepartureUsesKeepalive": true,
+        "eligibleDeparturePersistsAfterLeave": true,
+        "acknowledgedDepartureNotGuarded": true,
+        "oversizedSaveNotKeepalive": true,
+        "unconfirmedNeverClaimsSaved": true,
+        "unconfirmedDepartureGuarded": true,
+        "noLocalStorageProse": false,
+        "noSessionStorageProse": true,
+        "noIndexedDbProse": true
+      },
+      "obs": {
+        "dialogA": "beforeunload",
+        "dialogB": "beforeunload",
+        "dialogC": null,
+        "dialogD": "beforeunload",
+        "smallPut": {
+          "keepalive": true,
+          "bytes": 462
+        },
+        "bigPut": {
+          "keepalive": false,
+          "overBudget": true
+        },
+        "statesWhileUnconfirmed": [
+          "Saving…"
+        ],
+        "statesWhileEligibleUnconfirmed": [
+          "Saving…"
+        ],
+        "dialogF": "beforeunload",
+        "storage": {
+          "local": true,
+          "session": false,
+          "indexedDB": false
+        }
+      },
+      "ms": 52282
+    }
+  },
+  "finishedAt": "2026-09-25T15:22:47.309Z"
+}

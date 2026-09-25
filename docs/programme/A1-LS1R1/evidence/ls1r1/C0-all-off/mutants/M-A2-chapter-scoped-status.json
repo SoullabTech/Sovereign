@@ -1,0 +1,40 @@
+{
+  "label": "M-A2-chapter-scoped-status",
+  "only": [
+    "A2"
+  ],
+  "startedAt": "2026-09-25T15:15:23.642Z",
+  "laws": {
+    "A2": {
+      "outcome": "RED",
+      "failedChecks": [
+        "offChapterErrorVisible",
+        "offChapterConflictVisible"
+      ],
+      "checks": {
+        "savedAfterInitialLoad": true,
+        "unsavedWhileStaged": true,
+        "savingWhileInFlight": true,
+        "savedAfterAcknowledgement": true,
+        "offChapterErrorVisible": false,
+        "offChapterConflictVisible": false,
+        "draftCounterAbsent": true
+      },
+      "obs": {
+        "afterLoad": "Saved",
+        "statesSeen": [
+          "Unsaved",
+          "Saving…"
+        ],
+        "settled": "Saved",
+        "errorElsewhere": "Saved",
+        "conflictElsewhere": null,
+        "putStatuses": [
+          200
+        ]
+      },
+      "ms": 31346
+    }
+  },
+  "finishedAt": "2026-09-25T15:15:59.558Z"
+}

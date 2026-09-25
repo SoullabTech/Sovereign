@@ -1,0 +1,359 @@
+{
+  "configs": [
+    "C0-all-off",
+    "C1-editorial-on",
+    "C2-focus-on",
+    "C3-discuss-on",
+    "C4-standing-on",
+    "C5-all-on"
+  ],
+  "scenarios": {
+    "S1": {
+      "outcome": "CANONICAL_PREVENTS_IT",
+      "perConfig": {
+        "C0-all-off": "CANONICAL_PREVENTS_IT",
+        "C1-editorial-on": "CANONICAL_PREVENTS_IT",
+        "C2-focus-on": "CANONICAL_PREVENTS_IT",
+        "C3-discuss-on": "CANONICAL_PREVENTS_IT",
+        "C4-standing-on": "CANONICAL_PREVENTS_IT",
+        "C5-all-on": "CANONICAL_PREVENTS_IT"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "predicted fallback did not occur as a whole",
+      "obsAllOff": {
+        "memberPlaceEstablished": true,
+        "memberSavedSection": "Scene 1.1",
+        "a_headingPresent_noS_resolved": "first section",
+        "b_headingAbsent_noS_resolved": "first section",
+        "c_validS_resolved": "requested section",
+        "d_staleS_resolved": "first section",
+        "d_staleS_retainedInAddress": false,
+        "d_staleS_carriedIntoDevelopLink": false
+      }
+    },
+    "S2": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "reload recovered the section identity but did not bring it into view",
+      "obsAllOff": {
+        "afterClick": {
+          "focusIsTarget": true,
+          "addressIsTarget": true,
+          "contextRefetchOnClick": 0
+        },
+        "afterReload": {
+          "focusIsTarget": true,
+          "addressIsTarget": true,
+          "targetInView": false
+        }
+      }
+    },
+    "S3": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "reopen landed on the last-saved section (Scene 2.1) though the member last stood in Scene 3.1; an equal-updated_at tie carried no place",
+      "obsAllOff": {
+        "a_beforeWriting": {
+          "returnHeroPresent": false
+        },
+        "b_uniqueLastSaved": {
+          "saveAcknowledged": true,
+          "lastPlaceBeforeLeaving": "Scene 3.1",
+          "heroPresent": true,
+          "heroS": "Scene 2.1",
+          "arrival": "Scene 2.1"
+        },
+        "c_explicitTie": {
+          "heroPresent": true,
+          "heroCarriesS": false,
+          "arrival": "Chapter 1: Synthetic One"
+        },
+        "locusResponseStatuses": [
+          200,
+          200
+        ]
+      }
+    },
+    "S4": {
+      "outcome": "INSTRUMENT_FAILURE",
+      "perConfig": {
+        "C0-all-off": "INSTRUMENT_FAILURE",
+        "C1-editorial-on": "INSTRUMENT_FAILURE",
+        "C2-focus-on": "INSTRUMENT_FAILURE",
+        "C3-discuss-on": "INSTRUMENT_FAILURE",
+        "C4-standing-on": "INSTRUMENT_FAILURE",
+        "C5-all-on": "INSTRUMENT_FAILURE"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "precondition not established",
+      "obsAllOff": {
+        "a": {
+          "saveAcknowledged": true,
+          "persisted": true,
+          "footerLabelsSeen": [],
+          "savedLabelEverShown": false
+        },
+        "b": {
+          "editRefusedStatus": 200
+        }
+      }
+    },
+    "S5": {
+      "outcome": "INSTRUMENT_FAILURE",
+      "perConfig": {
+        "C0-all-off": "INSTRUMENT_FAILURE",
+        "C1-editorial-on": "INSTRUMENT_FAILURE",
+        "C2-focus-on": "INSTRUMENT_FAILURE",
+        "C3-discuss-on": "INSTRUMENT_FAILURE",
+        "C4-standing-on": "INSTRUMENT_FAILURE",
+        "C5-all-on": "INSTRUMENT_FAILURE"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "conflict precondition not established",
+      "obsAllOff": {
+        "sessionBAck": 200,
+        "sessionAFirstRefusal": 200,
+        "sessionAPutsAfterLaterEdit": [
+          {
+            "section": "Scene 2.1",
+            "status": 200
+          }
+        ],
+        "laterSectionPersisted": true
+      }
+    },
+    "S6": {
+      "outcome": "CANONICAL_PREVENTS_IT",
+      "perConfig": {
+        "C0-all-off": "CANONICAL_PREVENTS_IT",
+        "C1-editorial-on": "CANONICAL_PREVENTS_IT",
+        "C2-focus-on": "CANONICAL_PREVENTS_IT",
+        "C3-discuss-on": "CANONICAL_PREVENTS_IT",
+        "C4-standing-on": "CANONICAL_PREVENTS_IT",
+        "C5-all-on": "CANONICAL_PREVENTS_IT"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "no early trial lost text",
+      "obsAllOff": {
+        "trials": [
+          {
+            "kind": "reload",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "reload",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "reload",
+            "waitMs": 300,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "reload",
+            "waitMs": 300,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "close",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "close",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "navigate",
+            "waitMs": 0,
+            "persisted": true,
+            "beforeunloadDialog": true
+          },
+          {
+            "kind": "reload",
+            "waitMs": 3000,
+            "persisted": true,
+            "beforeunloadDialog": false
+          }
+        ]
+      }
+    },
+    "S7": {
+      "outcome": "CANONICAL_PREVENTS_IT",
+      "perConfig": {
+        "C0-all-off": "CANONICAL_PREVENTS_IT",
+        "C1-editorial-on": "CANONICAL_PREVENTS_IT",
+        "C2-focus-on": "CANONICAL_PREVENTS_IT",
+        "C3-discuss-on": "CANONICAL_PREVENTS_IT",
+        "C4-standing-on": "CANONICAL_PREVENTS_IT",
+        "C5-all-on": "CANONICAL_PREVENTS_IT"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "predicted pointer-vs-Escape asymmetry did not occur",
+      "obsAllOff": {
+        "preEntry": {
+          "tag": "TEXTAREA",
+          "section": "ed010685-d5b8-437b-9b3d-0363b80e7d8f",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "inCanvasAfterEntry": {
+          "tag": "TEXTAREA",
+          "section": "ed010685-d5b8-437b-9b3d-0363b80e7d8f",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "entryPreserved": true,
+        "preReturnPointer": {
+          "tag": "TEXTAREA",
+          "section": "ed010685-d5b8-437b-9b3d-0363b80e7d8f",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "afterPointer": {
+          "tag": "TEXTAREA",
+          "section": "ed010685-d5b8-437b-9b3d-0363b80e7d8f",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "pointerPreserved": true,
+        "preReturnEscape": {
+          "tag": "TEXTAREA",
+          "section": "ed010685-d5b8-437b-9b3d-0363b80e7d8f",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "afterEscape": {
+          "tag": "TEXTAREA",
+          "section": "ed010685-d5b8-437b-9b3d-0363b80e7d8f",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "escapePreserved": true
+      }
+    },
+    "S8": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "after a Write save, the real readings capture refused revision_not_current before any model boundary",
+      "obsAllOff": {
+        "writeSaveAck": 200,
+        "draftVersion": 2,
+        "revisionCount": 1,
+        "latestRevision": 1,
+        "latestRevisionEqualsDraft": false,
+        "readingsStatus": 409,
+        "refusal": "revision_not_current",
+        "modelBoundaryReached": 0
+      }
+    },
+    "S9": {
+      "outcome": "GREEN_CONTROL_ESTABLISHED",
+      "perConfig": {
+        "C0-all-off": "GREEN_CONTROL_ESTABLISHED",
+        "C1-editorial-on": "GREEN_CONTROL_ESTABLISHED",
+        "C2-focus-on": "GREEN_CONTROL_ESTABLISHED",
+        "C3-discuss-on": "GREEN_CONTROL_ESTABLISHED",
+        "C4-standing-on": "GREEN_CONTROL_ESTABLISHED",
+        "C5-all-on": "GREEN_CONTROL_ESTABLISHED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "after the existing checkpoint, capture no longer refused revision_not_current; the request reached the structured-model boundary, where the local stub refused it (no inference)",
+      "obsAllOff": {
+        "checkpointStatus": 200,
+        "revisionCountAfter": 2,
+        "latestRevisionEqualsDraft": true,
+        "readingsStatus": 422,
+        "refusal": "provider_unavailable",
+        "modelBoundaryReached": 1,
+        "stubDesign": "loopback stub refuses every request with HTTP 400; no inference"
+      }
+    }
+  },
+  "migrationSufficiency": {
+    "C0-all-off": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C1-editorial-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C2-focus-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C3-discuss-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C4-standing-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C5-all-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    }
+  }
+}

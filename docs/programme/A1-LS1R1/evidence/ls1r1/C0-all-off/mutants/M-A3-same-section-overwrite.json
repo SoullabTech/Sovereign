@@ -1,0 +1,103 @@
+{
+  "label": "M-A3-same-section-overwrite",
+  "only": [
+    "A3"
+  ],
+  "startedAt": "2026-09-25T15:28:21.485Z",
+  "laws": {
+    "A3": {
+      "outcome": "RED",
+      "failedChecks": [
+        "sameSectionConflicts",
+        "conflictVisibleWholeDraft",
+        "conflictMarkedAtSection",
+        "conflictPersistsAfterUnrelatedSave",
+        "lockedComparisonSingleWinner",
+        "comparisonUnderLockRefusesChangedBody",
+        "digestOverExactDeliveredBytes"
+      ],
+      "checks": {
+        "differentSectionSaves": true,
+        "sameSectionConflicts": false,
+        "conflictVisibleWholeDraft": false,
+        "conflictMarkedAtSection": false,
+        "unrelatedSavesWhileConflicted": true,
+        "conflictPersistsAfterUnrelatedSave": false,
+        "noResolutionUi": true,
+        "missingDigestFallsBackToVersionRule": true,
+        "invalidDigestFallsBackToVersionRule": true,
+        "lockedComparisonSingleWinner": false,
+        "comparisonUnderLockRefusesChangedBody": false,
+        "digestOverExactDeliveredBytes": false,
+        "latestAcknowledgedDigestWins": true
+      },
+      "obs": {
+        "t1A": 200,
+        "t2B": 200,
+        "t2A": 200,
+        "t2C": 200,
+        "afterConflict": {
+          "state": "Saved",
+          "section": false,
+          "rail": false,
+          "interactiveInMarkers": false,
+          "resolutionButtons": false
+        },
+        "afterUnrelated": {
+          "state": "Saved",
+          "section": false,
+          "rail": false,
+          "interactiveInMarkers": false,
+          "resolutionButtons": false
+        },
+        "noDigest": 409,
+        "badDigest": 409,
+        "raceWinnersPerRound": [
+          8,
+          8,
+          8
+        ],
+        "controlledLock": [
+          {
+            "waitingOnLock": true,
+            "status": 200,
+            "competingStatePreserved": false,
+            "saveMarkPersisted": true,
+            "competingDigest": "1f55006ad9f342d5",
+            "persistedDigest": "8a6bec039ad47668"
+          },
+          {
+            "waitingOnLock": true,
+            "status": 200,
+            "competingStatePreserved": false,
+            "saveMarkPersisted": true,
+            "competingDigest": "d7ceab2e366dfaba",
+            "persistedDigest": "61cd51e87894de22"
+          },
+          {
+            "waitingOnLock": true,
+            "status": 200,
+            "competingStatePreserved": false,
+            "saveMarkPersisted": true,
+            "competingDigest": "b54830d5530f4e38",
+            "persistedDigest": "703fe4c6a7a8a49c"
+          }
+        ],
+        "exactBytes": {
+          "setRaw": 200,
+          "deliveredExact": true,
+          "normalizedAttempt": 200,
+          "exactAttempt": 200
+        },
+        "orderingSaves": [
+          200,
+          200,
+          200
+        ],
+        "orderingS3Persisted": true
+      },
+      "ms": 62091
+    }
+  },
+  "finishedAt": "2026-09-25T15:29:28.426Z"
+}

@@ -1,0 +1,88 @@
+{
+  "label": "M-A5-return-loses-focus",
+  "only": [
+    "A5"
+  ],
+  "startedAt": "2026-09-25T15:26:03.311Z",
+  "laws": {
+    "A5": {
+      "outcome": "RED",
+      "failedChecks": [
+        "pointerPathSameEditorNode"
+      ],
+      "checks": {
+        "pointerEntryPreservesTuple": true,
+        "pointerReturnPreservesTuple": true,
+        "pointerPathSameEditorNode": false,
+        "sectionNeverRemounted": true,
+        "keyboardEnterEntryRestoresTuple": true,
+        "escapeReturnsFromFullCanvas": true,
+        "escapeReturnPreservesTuple": true,
+        "keyboardSpaceEntryRestoresTuple": true,
+        "noNewKeyboardShortcut": true
+      },
+      "obs": {
+        "pointer": [
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          }
+        ],
+        "keyboardEnter": [
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          }
+        ],
+        "keyboardSpace": [
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          }
+        ],
+        "shiftTabsToToggle": {
+          "enter": 2,
+          "space": 2
+        }
+      },
+      "ms": 7647
+    }
+  },
+  "finishedAt": "2026-09-25T15:26:15.641Z"
+}

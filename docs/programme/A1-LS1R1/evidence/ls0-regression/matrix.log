@@ -1,0 +1,15 @@
+S1: CANONICAL_PREVENTS_IT  governing=[]  obsVariance=[]
+S2: RED_REPRODUCED  governing=[]  obsVariance=[]
+S3: RED_REPRODUCED  governing=[]  obsVariance=[]
+S4: INSTRUMENT_FAILURE  governing=[]  obsVariance=[]
+S5: INSTRUMENT_FAILURE  governing=[]  obsVariance=[]
+S6: CANONICAL_PREVENTS_IT  governing=[]  obsVariance=[]
+S7: CANONICAL_PREVENTS_IT  governing=[]  obsVariance=[]
+S8: RED_REPRODUCED  governing=[]  obsVariance=[]
+S9: GREEN_CONTROL_ESTABLISHED  governing=[]  obsVariance=[]
+C0-all-off: migrations INDEPENDENT · pgErrors=0
+C1-editorial-on: migrations INDEPENDENT · pgErrors=0
+C2-focus-on: migrations INDEPENDENT · pgErrors=0
+C3-discuss-on: migrations INDEPENDENT · pgErrors=0
+C4-standing-on: migrations INDEPENDENT · pgErrors=0
+C5-all-on: migrations INDEPENDENT · pgErrors=0
