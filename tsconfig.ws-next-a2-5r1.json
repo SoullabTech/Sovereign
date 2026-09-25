@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.json","compilerOptions":{"noEmit":true,"strict":true,"noUncheckedIndexedAccess":true},"include":["tests/constitutional/writers-studio/a2-5r1-scope-identity/**/*.ts"],"exclude":[]}
