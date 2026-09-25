@@ -1,0 +1,6 @@
+{
+  "extends":"./tsconfig.json",
+  "compilerOptions":{"noEmit":true,"strict":true,"noUncheckedIndexedAccess":true},
+  "include":["tests/constitutional/writers-studio/a2-2-relationship-custody/**/*.ts"],
+  "exclude":[]
+}
