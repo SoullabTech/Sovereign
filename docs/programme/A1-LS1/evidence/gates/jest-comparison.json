@@ -1,0 +1,47 @@
+{
+  "pattern": "(writers|Writers|manuscript|workbench|rebuild)",
+  "base": {
+    "sha": "e886888416062c7fcbcf899040e3827bc8013835",
+    "tests": 2900,
+    "passed": 2876,
+    "failed": 24,
+    "failedSuites": 11,
+    "suites": 176
+  },
+  "candidate": {
+    "sha": "c723dc8cc9599e68b61f95d6be012ed53988e571",
+    "tests": 2900,
+    "passed": 2876,
+    "failed": 24,
+    "failedSuites": 11,
+    "suites": 176
+  },
+  "newFailures": [],
+  "fixed": [],
+  "preExistingFailures": [
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: GET — load draft returns the draft for its owner",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: POST — create from source initializes the draft verbatim from source sections and writes revision 1",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: PUT — autosave and checkpoint autosave updates content without writing a revision",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: PUT — autosave and checkpoint checkpoint increments revision_count and appends a revision with the note",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: PUT — autosave and checkpoint rejects a non-string content with 400",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: PUT — retries, through the handler refuses the same key carrying different content",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: PUT — retries, through the handler replays the first result instead of writing twice",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: PUT — the stale-write path, through the handler carries the base version in the UPDATE predicate",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: PUT — the stale-write path, through the handler records idempotency in the SAME statement as the content write",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: PUT — the stale-write path, through the handler refuses a stale base and writes nothing",
+    "app/api/sovereign/manuscripts/[id]/draft/__tests__/route.test.ts :: PUT — the stale-write path, through the handler refuses when the guarded UPDATE loses a race the pre-check could not see",
+    "app/api/sovereign/manuscripts/[id]/draft/revisions/__tests__/route.test.ts :: POST — restore refuses a stale base rather than discarding newer work",
+    "app/api/sovereign/manuscripts/[id]/draft/revisions/__tests__/route.test.ts :: POST — restore restores by writing a NEW revision — never UPDATE/DELETE on revisions",
+    "app/api/sovereign/manuscripts/[id]/draft/revisions/__tests__/route.test.ts :: POST — restore returns 404 when the revision does not exist",
+    "app/api/sovereign/manuscripts/[id]/readings/__tests__/route.test.ts :: POST /readings — one member gesture, one lens a refusal at any stage comes back typed with its stage and a status by stage; the response never carries a reading",
+    "app/writers-studio/__tests__/guidedEditorialLoop.test.ts :: Work direction enters only after explicit member gesture and remains editable/removable",
+    "app/writers-studio/__tests__/workbenchUsability.test.ts :: Writer workbench usability repair a long review exposes progressive lens state instead of one blocking spinner",
+    "app/writers-studio/__tests__/workbenchUsability.test.ts :: Writer workbench usability repair failed lenses remain distinct from a completed zero-observation lens",
+    "lib/manuscript/__tests__/developmentalSemanticContract.test.ts :: the reader boundary — mechanical measurement is not a claim (WS2-07-F1 requirement 6) the rule survives renumbering: the system prompt still carries all seven rules, in order",
+    "lib/manuscript/ask/__tests__/askSourceCloseout.test.ts :: defect 3 · reviewMoved compares the thread against now, not now against now a developmental thread never reaches the structure frozen side",
+    "lib/manuscript/development/__tests__/evidenceCannotAct.test.ts :: the developmental-evidence substrate cannot act adds no migration — the evidence object needs no schema of its own",
+    "lib/manuscript/developmentalReader/__tests__/reader05.test.ts :: gates 4 and 5 · the reader is a different reader now READER_VERSION is DEVELOPMENTAL-READER-05",
+    "lib/manuscript/developmentalReader/__tests__/reader05.test.ts :: gates 4 and 5 · the reader is a different reader now a reading made now is stamped with the new identity",
+    "lib/manuscript/developmentalReading/__tests__/readingBoundaries.test.ts :: developmental reading — module boundaries every module imports only what its role allows"
+  ]
+}

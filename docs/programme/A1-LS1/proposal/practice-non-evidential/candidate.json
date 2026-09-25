@@ -1,0 +1,27 @@
+{
+  "outcome": "GREEN",
+  "preconditionHeld": true,
+  "checks": {
+    "comparisonUnderLockRefusesChangedBody": true
+  },
+  "rounds": [
+    {
+      "saveWaitedOnLock": true,
+      "status": 409,
+      "markPersisted": false,
+      "elsewherePreserved": true
+    },
+    {
+      "saveWaitedOnLock": true,
+      "status": 409,
+      "markPersisted": false,
+      "elsewherePreserved": true
+    },
+    {
+      "saveWaitedOnLock": true,
+      "status": 409,
+      "markPersisted": false,
+      "elsewherePreserved": true
+    }
+  ]
+}

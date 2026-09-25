@@ -1,0 +1,68 @@
+{
+  "label": "M-A1-repair-coupled-to-scroll",
+  "only": [
+    "A1"
+  ],
+  "startedAt": "2026-09-25T06:20:54.677Z",
+  "laws": {
+    "A1": {
+      "outcome": "RED",
+      "failedChecks": [
+        "zeroArrivalScroll",
+        "zeroArrivalScrollCalls"
+      ],
+      "checks": {
+        "validExplicitPlaceHonoured": true,
+        "absentResolvesToFirstSection": true,
+        "staleResolvesToFirstSection": true,
+        "invalidResolvesToFirstSection": true,
+        "absentAddressRepairedToResolved": true,
+        "staleAddressRepairedToResolved": true,
+        "invalidAddressRepairedToResolved": true,
+        "noChapter10Heuristic": true,
+        "zeroArrivalScroll": false,
+        "zeroArrivalScrollCalls": false
+      },
+      "obs": {
+        "valid": {
+          "focus": "Scene 2.1",
+          "addr": "Scene 2.1",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "absent": {
+          "focus": "first section",
+          "addr": "first section",
+          "scroll": {
+            "manuscript": 269,
+            "window": 0
+          },
+          "scrollCalls": 1
+        },
+        "stale": {
+          "focus": "first section",
+          "addr": "first section",
+          "scroll": {
+            "manuscript": 269,
+            "window": 0
+          },
+          "scrollCalls": 1
+        },
+        "invalid": {
+          "focus": "first section",
+          "addr": "first section",
+          "scroll": {
+            "manuscript": 269,
+            "window": 0
+          },
+          "scrollCalls": 1
+        }
+      },
+      "ms": 25896
+    }
+  },
+  "finishedAt": "2026-09-25T06:21:25.161Z"
+}

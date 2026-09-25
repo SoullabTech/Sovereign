@@ -1,0 +1,271 @@
+{
+  "label": "C4-standing-on",
+  "only": "all",
+  "startedAt": "2026-09-25T07:01:11.614Z",
+  "laws": {
+    "A1": {
+      "outcome": "GREEN",
+      "failedChecks": [],
+      "checks": {
+        "validExplicitPlaceHonoured": true,
+        "absentResolvesToFirstSection": true,
+        "staleResolvesToFirstSection": true,
+        "invalidResolvesToFirstSection": true,
+        "absentAddressRepairedToResolved": true,
+        "staleAddressRepairedToResolved": true,
+        "invalidAddressRepairedToResolved": true,
+        "noChapter10Heuristic": true,
+        "zeroArrivalScroll": true,
+        "zeroArrivalScrollCalls": true
+      },
+      "obs": {
+        "valid": {
+          "focus": "Scene 2.1",
+          "addr": "Scene 2.1",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "absent": {
+          "focus": "first section",
+          "addr": "first section",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "stale": {
+          "focus": "first section",
+          "addr": "first section",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        },
+        "invalid": {
+          "focus": "first section",
+          "addr": "first section",
+          "scroll": {
+            "manuscript": 0,
+            "window": 0
+          },
+          "scrollCalls": 0
+        }
+      },
+      "ms": 24140
+    },
+    "A2": {
+      "outcome": "GREEN",
+      "failedChecks": [],
+      "checks": {
+        "savedAfterInitialLoad": true,
+        "unsavedWhileStaged": true,
+        "savingWhileInFlight": true,
+        "savedAfterAcknowledgement": true,
+        "offChapterErrorVisible": true,
+        "offChapterConflictVisible": true,
+        "draftCounterAbsent": true
+      },
+      "obs": {
+        "afterLoad": "Saved",
+        "statesSeen": [
+          "Unsaved",
+          "Saving…",
+          "Saved"
+        ],
+        "settled": "Saved",
+        "errorElsewhere": "Save unavailable",
+        "conflictElsewhere": "Needs attention",
+        "putStatuses": [
+          200
+        ]
+      },
+      "ms": 20929
+    },
+    "A3": {
+      "outcome": "GREEN",
+      "failedChecks": [],
+      "checks": {
+        "differentSectionSaves": true,
+        "sameSectionConflicts": true,
+        "conflictVisibleWholeDraft": true,
+        "conflictMarkedAtSection": true,
+        "unrelatedSavesWhileConflicted": true,
+        "conflictPersistsAfterUnrelatedSave": true,
+        "noResolutionUi": true,
+        "missingDigestFallsBackToVersionRule": true,
+        "invalidDigestFallsBackToVersionRule": true,
+        "lockedComparisonSingleWinner": true,
+        "digestOverExactDeliveredBytes": true,
+        "latestAcknowledgedDigestWins": true
+      },
+      "obs": {
+        "t1A": 200,
+        "t2B": 200,
+        "t2A": 409,
+        "t2C": 200,
+        "afterConflict": {
+          "state": "Needs attention",
+          "section": true,
+          "rail": true,
+          "interactiveInMarkers": false,
+          "resolutionButtons": false
+        },
+        "afterUnrelated": {
+          "state": "Needs attention",
+          "section": true,
+          "rail": true,
+          "interactiveInMarkers": false,
+          "resolutionButtons": false
+        },
+        "noDigest": 409,
+        "badDigest": 409,
+        "raceWinnersPerRound": [
+          1,
+          1,
+          1
+        ],
+        "exactBytes": {
+          "setRaw": 200,
+          "deliveredExact": true,
+          "normalizedAttempt": 409,
+          "exactAttempt": 200
+        },
+        "orderingSaves": [
+          200,
+          200,
+          200
+        ],
+        "orderingS3Persisted": true
+      },
+      "ms": 49529
+    },
+    "A4": {
+      "outcome": "GREEN",
+      "failedChecks": [],
+      "checks": {
+        "unconfirmedEligibleNeverClaimsSaved": true,
+        "unconfirmedEligibleDepartureGuarded": true,
+        "dirtyDepartureGuarded": true,
+        "textSurvivesRefusedDeparture": true,
+        "eligibleDepartureUsesKeepalive": true,
+        "eligibleDeparturePersistsAfterLeave": true,
+        "acknowledgedDepartureNotGuarded": true,
+        "oversizedSaveNotKeepalive": true,
+        "unconfirmedNeverClaimsSaved": true,
+        "unconfirmedDepartureGuarded": true,
+        "noLocalStorageProse": true,
+        "noSessionStorageProse": true,
+        "noIndexedDbProse": true
+      },
+      "obs": {
+        "dialogA": "beforeunload",
+        "dialogB": "beforeunload",
+        "dialogC": null,
+        "dialogD": "beforeunload",
+        "smallPut": {
+          "keepalive": true,
+          "bytes": 462
+        },
+        "bigPut": {
+          "keepalive": false,
+          "overBudget": true
+        },
+        "statesWhileUnconfirmed": [
+          "Saving…"
+        ],
+        "statesWhileEligibleUnconfirmed": [
+          "Saving…"
+        ],
+        "dialogF": "beforeunload",
+        "storage": {
+          "local": false,
+          "session": false,
+          "indexedDB": false
+        }
+      },
+      "ms": 49307
+    },
+    "A5": {
+      "outcome": "GREEN",
+      "failedChecks": [],
+      "checks": {
+        "pointerEntryPreservesTuple": true,
+        "pointerReturnPreservesTuple": true,
+        "pointerPathSameEditorNode": true,
+        "sectionNeverRemounted": true,
+        "keyboardEnterEntryRestoresTuple": true,
+        "escapeReturnsFromFullCanvas": true,
+        "escapeReturnPreservesTuple": true,
+        "keyboardSpaceEntryRestoresTuple": true,
+        "noNewKeyboardShortcut": true
+      },
+      "obs": {
+        "pointer": [
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          }
+        ],
+        "keyboardEnter": [
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          }
+        ],
+        "keyboardSpace": [
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          },
+          {
+            "tag": "TEXTAREA",
+            "sameSection": true,
+            "start": 5,
+            "end": 12
+          }
+        ],
+        "shiftTabsToToggle": {
+          "enter": 2,
+          "space": 2
+        }
+      },
+      "ms": 6262
+    }
+  },
+  "finishedAt": "2026-09-25T07:03:55.747Z"
+}

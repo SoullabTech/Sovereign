@@ -1,0 +1,33 @@
+head=c723dc8cc9599e68b61f95d6be012ed53988e571
+dirty_paths=0
+ok 6cd5bc32cafac3c6ead456c62f7d90754c1bfe1c app/writers-studio/rebuild/page.tsx
+ok afb2ed5e2a6554325bf064e71c70f070c3411533 app/writers-studio/rebuild/RebuildStudioClient.tsx
+ok f2a740f4f35524a39951ad3f1e343d10497cce48 app/writers-studio/rebuild/RebuildAuthoredBody.tsx
+ok 452006fd254eb9a451c952f375017c197bcfdccd app/writers-studio/rebuild/RebuildWritingBoundary.tsx
+ok 404da9a49826d58d202331c0486520b78c7016d8 app/writers-studio/HomeView.tsx
+ok 3b9e13a10dabf4aabd4d6fbd6660087613ef66d5 app/writers-studio/homeState.ts
+ok 065147e44b8e79d9e0f99a001ab10c6f4748bb5f app/writers-studio/studio/StudioModeBar.tsx
+ok 6b01169f5c0fc151243eca33e60182060dc4f536 app/api/writers-studio/rebuild/context/route.ts
+ok 66e02b533b817f012a70277f62608b67ac2166c0 app/api/sovereign/manuscripts/route.ts
+ok 07ef4b16e3f7713d529630b1b5a57c7bac3c92fd app/api/sovereign/manuscripts/[id]/draft/route.ts
+ok eb8512ee62733fc4a48115fb1f5964500620afda app/api/sovereign/manuscripts/[id]/draft/checkpoint/route.ts
+ok 47d8cd3c0b45abe958cc493513c7e8164bada4f2 app/api/sovereign/manuscripts/[id]/sections/[sectionId]/route.ts
+ok 41ede25fafad11f4435bf97f094c5adeb7740ab3 app/api/sovereign/manuscripts/[id]/readings/route.ts
+ok dbd708f9dc7a67713b85594fcba24813b27380e2 app/api/sovereign/manuscripts/[id]/locus/route.ts
+ok 4a43940af57b317618af10eb277c8263cf7fa0b6 app/api/sovereign/living-works/route.ts
+ok 186619e353be4dd57baa6ba87712046a29b021a4 app/api/sovereign/living-works/[id]/expressions/route.ts
+ok 701e1fbeb15337e9ccecd1a1e051274f5dd40e31 lib/writersStudio/useSectionWriting.ts
+ok ef91506a0c85d810c07ddf25e95ea6ed829046b1 lib/writersStudio/sectionSaveQueue.ts
+ok 75b761d22075aedbdf71b04f2494b14c7c043ae8 lib/writersStudio/sectionSaveClient.ts
+ok 5a2b3175875602f2d15bb93483da93138392c4a3 lib/writersStudio/placeInWork.ts
+ok f072e0d7ad14b09399e1a989e894ed8626939b61 lib/writersStudio/sectionActivity.ts
+ok 8325f74be64f29ec8256927f200663c812c66864 lib/writersStudio/rebuild/model.ts
+ok 3a85fa0f5f95087b063b14350ace6cbe1640d941 lib/manuscript/sections/saveSection.ts
+ok 30b83b0c0dade84bfd724e225de213de3834e213 lib/manuscript/development/capture.ts
+ok 3da54b97dcbb37aa88f1ad3c7bd0b0da25fc4b57 lib/manuscript/development/readState.ts
+ok 31a91d30712da335cd0cc225fc6e63457924194b lib/manuscript/developmentalReading/commission.ts
+ok 0c5a40d4a7d88aa493fe4222fc34fe12f90a0d0b lib/auth/getMemberFromRequest.ts
+ok 36a4fe488ad024b95c435062c09082fc18a9c27c next-env.d.ts
+ok b1033866765a586e4b54496425f0e1663a7a744b package.json
+ok 21215156749cb8ffd2b6a827dfa8d83c1d1e0c74 package-lock.json
+exercised_paths=30 mismatches=0

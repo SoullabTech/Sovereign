@@ -1,0 +1,301 @@
+[
+ {
+  "id": "M-A1-stale-address-retained",
+  "law": "A1",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "        replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, initial.draftSectionId));\n",
+  "replace": "        void 0;\n",
+  "wrong": "arrival resolves correctly but leaves the absent/stale/invalid address in the bar"
+ },
+ {
+  "id": "M-A1-chapter10-restored",
+  "law": "A1",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "      const initial = requestedRow ?? body.sections[0] ?? null;\n",
+  "replace": "      const chapter10 = body.sections.find((s) => /^Chapter 10\\b/i.test(s.heading ?? ''));\n      const initial = requestedRow ?? chapter10 ?? body.sections[0] ?? null;\n",
+  "wrong": "the hard-coded Chapter-10 heuristic returns"
+ },
+ {
+  "id": "M-A1-repair-coupled-to-scroll",
+  "law": "A1",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "        replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, initial.draftSectionId));\n",
+  "replace": "        replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, initial.draftSectionId));\n        setTimeout(() => document.querySelector(`[data-rebuild-section=\"${initial.draftSectionId}\"]`)?.scrollIntoView(), 50);\n",
+  "wrong": "address repair also scrolls the manuscript to the resolved section"
+ },
+ {
+  "id": "M-A2-chapter-scoped-status",
+  "law": "A2",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "        const statuses = context.sections.map((section) => writing.statusOf(section.draftSectionId));\n",
+  "replace": "        const statuses = liveChapterSections.map((section) => writing.statusOf(section.draftSectionId));\n",
+  "wrong": "status computed over the chapter on screen only"
+ },
+ {
+  "id": "M-A2-saved-never-shown",
+  "law": "A2",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "              : statuses.includes('saving') ? 'Saving…' : 'Saved';\n",
+  "replace": "              : statuses.includes('saving') ? 'Saving…' : '';\n",
+  "wrong": "acknowledged clean state shows nothing instead of Saved"
+ },
+ {
+  "id": "M-A2-false-saved-despite-failure",
+  "law": "A2",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "        const saveState = statuses.includes('conflict') ? 'Needs attention'\n          : statuses.includes('error') ? 'Save unavailable'\n            : statuses.includes('dirty') ? 'Unsaved'\n",
+  "replace": "        const saveState = statuses.includes('dirty') ? 'Unsaved'\n",
+  "wrong": "a conflict or unknown outcome is reported as Saved"
+ },
+ {
+  "id": "M-A2-draft-counter-restored",
+  "law": "A2",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "{liveChapterWords.toLocaleString()} words · <span data-save-state",
+  "replace": "{liveChapterWords.toLocaleString()} words · draft v{writing.currentRevisionId()} · <span data-save-state",
+  "wrong": "the draft-v save counter returns to the surface"
+ },
+ {
+  "id": "M-A4-silent-leave",
+  "law": "A4",
+  "file": "app/writers-studio/rebuild/RebuildWritingBoundary.tsx",
+  "find": "      if (!writingRef.current.hasUnsavedWork()) return;\n",
+  "replace": "      return;\n",
+  "wrong": "leaving with unacknowledged text is not guarded"
+ },
+ {
+  "id": "M-A4-saved-on-keepalive-attempt",
+  "law": "A4",
+  "file": "lib/writersStudio/sectionSaveClient.ts",
+  "find": "    const res = await apiFetch(\n",
+  "replace": "    if (keepalive) { void apiFetch(`/api/sovereign/manuscripts/${manuscriptId}/sections/${sectionId}${q}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }); return { ok: true, version: baseVersion + 1 }; }\n    const res = await apiFetch(\n",
+  "wrong": "a keepalive attempt is treated as acknowledged persistence"
+ },
+ {
+  "id": "M-A4-local-prose-backup",
+  "law": "A4",
+  "file": "app/writers-studio/rebuild/RebuildAuthoredBody.tsx",
+  "find": "          engaged.current = true;\n          if (!began.current) { began.current = true; onEditingBegan(); }\n",
+  "replace": "          engaged.current = true;\n          try { localStorage.setItem(`ls1-backup-${section.draftSectionId}`, e.target.value); } catch { /* mutant */ }\n          if (!began.current) { began.current = true; onEditingBegan(); }\n",
+  "wrong": "a browser-side copy of the writer's prose is kept"
+ },
+ {
+  "id": "M-A4-keepalive-dropped",
+  "law": "A4",
+  "file": "app/writers-studio/rebuild/RebuildWritingBoundary.tsx",
+  "find": "makeSectionSave(manuscriptId, undefined, { keepalive: true })",
+  "replace": "makeSectionSave(manuscriptId, undefined, { keepalive: false })",
+  "wrong": "departure saves are not sent with keepalive"
+ },
+ {
+  "id": "M-A5-entry-loses-focus",
+  "law": "A5",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "data-pure-canvas-toggle aria-label=\"Open Pure Canvas\" title=\"Pure Canvas\" onMouseDown={holdEditorFocus} ",
+  "replace": "data-pure-canvas-toggle aria-label=\"Open Pure Canvas\" title=\"Pure Canvas\" ",
+  "wrong": "pointer entry takes focus from the editor"
+ },
+ {
+  "id": "M-A5-return-loses-focus",
+  "law": "A5",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "className=\"wsr-return-workspace\" onMouseDown={holdEditorFocus} ",
+  "replace": "className=\"wsr-return-workspace\" ",
+  "wrong": "pointer Return takes focus from the editor"
+ },
+ {
+  "id": "M-A5-escape-broken",
+  "law": "A5",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "      if (event.key === 'Escape') setCanvasExpanded(false);\n",
+  "replace": "      if (event.key === 'Escape') { /* mutant: Escape no longer returns */ }\n",
+  "wrong": "Escape no longer returns from Full Canvas"
+ },
+ {
+  "id": "M-A5-editor-remounted",
+  "law": "A5",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "                  <section key={section.draftSectionId}\n",
+  "replace": "                  <section key={`${section.draftSectionId}:${canvasExpanded}`}\n",
+  "wrong": "the editor is remounted (substituted) across the transition"
+ },
+ {
+  "id": "M-A5-keyboard-restore-dropped",
+  "law": "A5",
+  "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+  "find": "    if (blur && trigger && typeof document !== 'undefined' && document.activeElement === trigger) {\n",
+  "replace": "    if (false && blur && trigger && typeof document !== 'undefined' && document.activeElement === trigger) {\n",
+  "wrong": "keyboard activation leaves the editor's place unrestored"
+ },
+ {
+  "id": "M-A3-draft-wide-only",
+  "law": "A3",
+  "wrong": "observed-body digest ignored; any draft-version change refuses every section",
+  "edits": [
+   {
+    "file": "lib/manuscript/sections/saveSection.ts",
+    "find": "    if (!versionMatches && observed === null) {\n",
+    "replace": "    if (!versionMatches) {\n"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-same-section-overwrite",
+  "law": "A3",
+  "wrong": "stale same-section save accepted despite digest mismatch",
+  "edits": [
+   {
+    "file": "lib/manuscript/sections/saveSection.ts",
+    "find": "    if (!versionMatches && sectionBodySha256(split.body) !== observed) {\n",
+    "replace": "    if (false && !versionMatches && sectionBodySha256(split.body) !== observed) {\n"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-outside-lock-check",
+  "law": "A3",
+  "wrong": "authoritative digest comparison made against a section body read before the draft row lock",
+  "edits": [
+   {
+    "file": "lib/manuscript/sections/saveSection.ts",
+    "find": "  {\n    const draftRes = await tx.query<{\n",
+    "replace": "  {\n    const preRead = await tx.query<{ text: string; heading: string | null }>(\n      `SELECT s.text, ms.heading FROM manuscript_draft_sections s LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id WHERE s.id = $1`, [draftSectionId]);\n    const preSplit = preRead.rows[0] ? splitStoredSection(preRead.rows[0].text, preRead.rows[0].heading) : null;\n    const draftRes = await tx.query<{\n"
+   },
+   {
+    "file": "lib/manuscript/sections/saveSection.ts",
+    "find": "    if (!versionMatches && sectionBodySha256(split.body) !== observed) {\n",
+    "replace": "    if (!versionMatches && sectionBodySha256(preSplit?.body ?? '') !== observed) {\n"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-missing-digest-bypass",
+  "law": "A3",
+  "wrong": "absent or invalid digest lets a stale-version save through",
+  "edits": [
+   {
+    "file": "lib/manuscript/sections/saveSection.ts",
+    "find": "    if (!versionMatches && observed === null) {\n",
+    "replace": "    if (false && !versionMatches && observed === null) {\n"
+   },
+   {
+    "file": "lib/manuscript/sections/saveSection.ts",
+    "find": "    if (!versionMatches && sectionBodySha256(split.body) !== observed) {\n",
+    "replace": "    if (!versionMatches && observed !== null && sectionBodySha256(split.body) !== observed) {\n"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-conflict-disappears",
+  "law": "A3",
+  "wrong": "a later successful save elsewhere clears the unresolved conflict (and its held text)",
+  "edits": [
+   {
+    "file": "lib/writersStudio/sectionSaveQueue.ts",
+    "find": "          if (outcome.advancesVersion !== false) this.version = outcome.version;\n",
+    "replace": "          if (outcome.advancesVersion !== false) this.version = outcome.version;\n          for (const id of [...this.conflicted]) { this.conflicted.delete(id); this.pending.delete(id); }\n"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-unrelated-blocked",
+  "law": "A3",
+  "wrong": "one section's conflict still stops every other section from saving",
+  "edits": [
+   {
+    "file": "lib/writersStudio/sectionSaveQueue.ts",
+    "find": "        const next = [...this.pending.values()]\n          .filter((entry) => !this.conflicted.has(entry.sectionId))\n          .sort((a, b) => a.sequence - b.sequence)[0];\n",
+    "replace": "        const next = [...this.pending.values()].sort((a, b) => a.sequence - b.sequence)[0];\n"
+   },
+   {
+    "file": "lib/writersStudio/sectionSaveQueue.ts",
+    "find": "            this.conflicted.add(next.sectionId);\n            this.emit();\n            continue;\n",
+    "replace": "            this.conflicted.add(next.sectionId);\n            this.emit();\n            return;\n"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-rail-marker-hidden",
+  "law": "A3",
+  "wrong": "the conflicted section carries no marker on its rail node",
+  "edits": [
+   {
+    "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+    "find": "{conflicted.has(node.draftSectionId) && <span data-conflict-marker",
+    "replace": "{false && <span data-conflict-marker"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-section-marker-hidden",
+  "law": "A3",
+  "wrong": "the conflicted section carries no marker where the writer is",
+  "edits": [
+   {
+    "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+    "find": "                    {conflictedIds.has(section.draftSectionId) && (\n                      <p data-conflict-marker-section",
+    "replace": "                    {false && (\n                      <p data-conflict-marker-section"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-resolution-control",
+  "law": "A3",
+  "wrong": "a conflict-resolution control is offered",
+  "edits": [
+   {
+    "file": "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+    "find": "                        Needs attention — this section was changed elsewhere. What you wrote here is kept on this page and has not been saved.\n",
+    "replace": "                        Needs attention — this section was changed elsewhere. What you wrote here is kept on this page and has not been saved.\n                        <button type=\"button\" onClick={() => undefined}>Keep mine</button>\n"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-late-digest-overwrite",
+  "law": "A3",
+  "wrong": "a late-resolving digest of an older body overwrites the digest of the latest acknowledged body",
+  "edits": [
+   {
+    "file": "app/writers-studio/rebuild/RebuildWritingBoundary.tsx",
+    "find": "if (!cancelled && digest && !advanced.current.has(s.draftSectionId)) map.set",
+    "replace": "if (!cancelled && digest) map.set"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-version-adopted-after-digest-acceptance",
+  "law": "A3",
+  "wrong": "client adopts a draft version reached through changes elsewhere, so a later save of a changed section passes on version alone",
+  "edits": [
+   {
+    "file": "lib/writersStudio/sectionSaveQueue.ts",
+    "find": "          if (outcome.advancesVersion !== false) this.version = outcome.version;\n",
+    "replace": "          this.version = outcome.version;\n"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-accepted-by-misreported",
+  "law": "A3",
+  "wrong": "server reports a digest-path acceptance as a version-path one",
+  "edits": [
+   {
+    "file": "lib/manuscript/sections/saveSection.ts",
+    "find": "      acceptedBy: versionMatches ? 'version' : 'observed_body',\n",
+    "replace": "      acceptedBy: 'version' as const,\n"
+   }
+  ]
+ },
+ {
+  "id": "M-A3-digest-normalized",
+  "law": "A3",
+  "wrong": "server normalizes the stored body (NFC + trim) before comparing",
+  "edits": [
+   {
+    "file": "lib/manuscript/sections/saveSection.ts",
+    "find": "    if (!versionMatches && sectionBodySha256(split.body) !== observed) {\n",
+    "replace": "    if (!versionMatches && sectionBodySha256(split.body.normalize('NFC').trim()) !== observed) {\n"
+   }
+  ]
+ }
+]

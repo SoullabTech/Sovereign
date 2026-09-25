@@ -1,0 +1,73 @@
+{
+  "label": "M-A3-version-adopted-after-digest-acceptance",
+  "only": [
+    "A3"
+  ],
+  "startedAt": "2026-09-25T06:44:13.634Z",
+  "laws": {
+    "A3": {
+      "outcome": "RED",
+      "failedChecks": [
+        "sameSectionConflicts",
+        "conflictVisibleWholeDraft",
+        "conflictMarkedAtSection",
+        "conflictPersistsAfterUnrelatedSave"
+      ],
+      "checks": {
+        "differentSectionSaves": true,
+        "sameSectionConflicts": false,
+        "conflictVisibleWholeDraft": false,
+        "conflictMarkedAtSection": false,
+        "unrelatedSavesWhileConflicted": true,
+        "conflictPersistsAfterUnrelatedSave": false,
+        "noResolutionUi": true,
+        "missingDigestFallsBackToVersionRule": true,
+        "invalidDigestFallsBackToVersionRule": true,
+        "lockedComparisonSingleWinner": true,
+        "digestOverExactDeliveredBytes": true,
+        "latestAcknowledgedDigestWins": true
+      },
+      "obs": {
+        "t1A": 200,
+        "t2B": 200,
+        "t2A": 200,
+        "t2C": 200,
+        "afterConflict": {
+          "state": "Saved",
+          "section": false,
+          "rail": false,
+          "interactiveInMarkers": false,
+          "resolutionButtons": false
+        },
+        "afterUnrelated": {
+          "state": "Saved",
+          "section": false,
+          "rail": false,
+          "interactiveInMarkers": false,
+          "resolutionButtons": false
+        },
+        "noDigest": 409,
+        "badDigest": 409,
+        "raceWinnersPerRound": [
+          1,
+          1,
+          1
+        ],
+        "exactBytes": {
+          "setRaw": 200,
+          "deliveredExact": true,
+          "normalizedAttempt": 409,
+          "exactAttempt": 200
+        },
+        "orderingSaves": [
+          200,
+          200,
+          200
+        ],
+        "orderingS3Persisted": true
+      },
+      "ms": 47936
+    }
+  },
+  "finishedAt": "2026-09-25T06:45:06.993Z"
+}

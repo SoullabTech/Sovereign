@@ -1,0 +1,9 @@
+
+> spiralogic-oracle-system@1.2.0 check:no-supabase
+> npx tsx scripts/check-no-supabase.ts
+
+🔍 Checking for Supabase violations...
+
+✅ No Supabase detected.
+
+exit=0

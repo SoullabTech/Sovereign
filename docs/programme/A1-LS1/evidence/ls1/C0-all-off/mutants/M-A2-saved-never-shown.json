@@ -1,0 +1,40 @@
+{
+  "label": "M-A2-saved-never-shown",
+  "only": [
+    "A2"
+  ],
+  "startedAt": "2026-09-25T06:22:12.718Z",
+  "laws": {
+    "A2": {
+      "outcome": "RED",
+      "failedChecks": [
+        "savedAfterInitialLoad",
+        "savedAfterAcknowledgement"
+      ],
+      "checks": {
+        "savedAfterInitialLoad": false,
+        "unsavedWhileStaged": true,
+        "savingWhileInFlight": true,
+        "savedAfterAcknowledgement": false,
+        "offChapterErrorVisible": true,
+        "offChapterConflictVisible": true,
+        "draftCounterAbsent": true
+      },
+      "obs": {
+        "afterLoad": null,
+        "statesSeen": [
+          "Unsaved",
+          "Saving…"
+        ],
+        "settled": null,
+        "errorElsewhere": "Save unavailable",
+        "conflictElsewhere": "Needs attention",
+        "putStatuses": [
+          200
+        ]
+      },
+      "ms": 38920
+    }
+  },
+  "finishedAt": "2026-09-25T06:22:56.237Z"
+}

@@ -1,0 +1,40 @@
+{
+  "label": "M-A2-draft-counter-restored",
+  "only": [
+    "A2"
+  ],
+  "startedAt": "2026-09-25T06:23:39.082Z",
+  "laws": {
+    "A2": {
+      "outcome": "RED",
+      "failedChecks": [
+        "draftCounterAbsent"
+      ],
+      "checks": {
+        "savedAfterInitialLoad": true,
+        "unsavedWhileStaged": true,
+        "savingWhileInFlight": true,
+        "savedAfterAcknowledgement": true,
+        "offChapterErrorVisible": true,
+        "offChapterConflictVisible": true,
+        "draftCounterAbsent": false
+      },
+      "obs": {
+        "afterLoad": "Saved",
+        "statesSeen": [
+          "Unsaved",
+          "Saving…",
+          "Saved"
+        ],
+        "settled": "Saved",
+        "errorElsewhere": "Save unavailable",
+        "conflictElsewhere": "Needs attention",
+        "putStatuses": [
+          200
+        ]
+      },
+      "ms": 19940
+    }
+  },
+  "finishedAt": "2026-09-25T06:24:06.011Z"
+}
