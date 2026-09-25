@@ -120,11 +120,17 @@ function selectionFromThread(
   } : null;
 }
 
+/* A1-LS1 · R3 — the sections holding an unresolved conflict. A marker on the
+   rail node lets the writer find the section from any chapter. It states the
+   condition only; it is not a control and offers no resolution. */
+const NO_CONFLICTS: ReadonlySet<string> = new Set();
+
 function ImportedStructureBranch({
-  node, focusId, onSelect, level = 0,
+  node, focusId, onSelect, level = 0, conflicted = NO_CONFLICTS,
 }: {
   node: OutlineNode; focusId: string | null;
   onSelect: (id: string, role: OutlineNode['role']) => void; level?: number;
+  conflicted?: ReadonlySet<string>;
 }) {
   const containsFocus = node.draftSectionId === focusId || node.children.some((child) => child.draftSectionId === focusId || child.children.some((grand) => grand.draftSectionId === focusId));
   const [expanded, setExpanded] = useState(level === 0 || containsFocus);
@@ -142,13 +148,13 @@ function ImportedStructureBranch({
         <button type="button" onClick={() => onSelect(node.draftSectionId, node.role)}
           style={{ width: '100%', textAlign: 'left', border: 0, borderLeft: node.draftSectionId === focusId ? `3px solid ${C.gold}` : '3px solid transparent', borderRadius: 7, background: node.draftSectionId === focusId ? C.active : 'transparent', color: C.secondary, padding: `7px 8px 7px ${7 + level * 11}px`, cursor: 'pointer' }}>
           <span style={{ display: 'block', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: node.role === 'chapter' ? C.gold : C.quiet, marginBottom: 2 }}>{roleLabel}</span>
-          <span style={{ display: 'block', fontSize: node.role === 'chapter' ? 12.5 : 11.5, fontWeight: node.role === 'chapter' ? 700 : 500, lineHeight: 1.3 }}>{label}</span>
+          <span style={{ display: 'block', fontSize: node.role === 'chapter' ? 12.5 : 11.5, fontWeight: node.role === 'chapter' ? 700 : 500, lineHeight: 1.3 }}>{label}{conflicted.has(node.draftSectionId) && <span data-conflict-marker role="img" aria-label="Needs attention: changed elsewhere" title="Needs attention" style={{ marginLeft: 6, fontSize: 9, color: C.muted, verticalAlign: 'middle' }}>●</span>}</span>
         </button>
       </div>
       {expanded && node.children.length > 0 && (
         <div style={{ marginLeft: 8 }}>
           {node.children.map((child) => (
-            <ImportedStructureBranch key={child.draftSectionId} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} />
+            <ImportedStructureBranch key={child.draftSectionId} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} conflicted={conflicted} />
           ))}
         </div>
       )}
@@ -157,10 +163,11 @@ function ImportedStructureBranch({
 }
 
 function AuthoredStructureBranch({
-  node, focusId, onSelect, level = 0,
+  node, focusId, onSelect, level = 0, conflicted = NO_CONFLICTS,
 }: {
   node: StructureNodeDTO; focusId: string | null;
   onSelect: (sectionId: string) => void; level?: number;
+  conflicted?: ReadonlySet<string>;
 }) {
   const containsFocus = focusId ? node.derivedSectionIds.includes(focusId) : false;
   const firstSection = node.derivedSectionIds[0] ?? node.sectionIds[0] ?? null;
@@ -170,7 +177,7 @@ function AuthoredStructureBranch({
       <span style={{ fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase', color: C.quiet, display: 'block', marginBottom: 2 }}>
         {node.kind ?? 'Division'}
       </span>
-      <span>{label}</span>
+      <span>{label}{node.derivedSectionIds.some((id) => conflicted.has(id)) && <span data-conflict-marker role="img" aria-label="Needs attention: changed elsewhere" title="Needs attention" style={{ marginLeft: 6, fontSize: 9, color: C.muted, verticalAlign: 'middle' }}>●</span>}</span>
     </>
   );
   if (node.children.length === 0) {
@@ -189,7 +196,7 @@ function AuthoredStructureBranch({
       </summary>
       <div style={{ marginLeft: 4 }}>
         {node.children.map((child) => (
-          <AuthoredStructureBranch key={child.id} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} />
+          <AuthoredStructureBranch key={child.id} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} conflicted={conflicted} />
         ))}
       </div>
     </details>
@@ -287,6 +294,10 @@ export interface RebuildStudioClientProps {
   readonly reviewDiscussEnabled?: boolean;
 }
 
+/* A1-LS1 · R5 — a pointer on a Full Canvas control must not take focus from
+   the editor: the field changes, the writing stays exactly where it was. */
+const holdEditorFocus = (event: React.MouseEvent) => { event.preventDefault(); };
+
 export default function RebuildStudioClient({ reviewDiscussEnabled = false }: RebuildStudioClientProps) {
   const params = useSearchParams();
   const requested = params?.get('m') ?? null;
@@ -298,6 +309,35 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
   const [focusId, setFocusId] = useState<string | null>(null);
   const [maiaMode, setMaiaMode] = useState<MaiaMode>('chapter');
   const [canvasExpanded, setCanvasExpanded] = useState(false);
+  /* A1-LS1 · R5 — FULL CANVAS CONTINUITY. Entering or leaving Full Canvas
+     changes the field, not the writing: the same editor keeps its focus, caret
+     and selection. A pointer on the toggle never takes focus from the editor
+     (see `holdEditorFocus`). Keyboard activation must move focus to the button
+     first, so the editor's exact state at that moment is remembered and put
+     back once the field has changed. */
+  const lastEditorBlur = useRef<{ sectionId: string; start: number; end: number } | null>(null);
+  const [editorRestore, setEditorRestore] = useState<{ sectionId: string; start: number; end: number; nonce: number } | null>(null);
+  const changeCanvas = useCallback((expanded: boolean, trigger: EventTarget | null) => {
+    /* Focus sitting on the control itself means it was activated from the
+       keyboard (a pointer never takes focus from the editor). Only then was the
+       writer's place displaced, and only then is it put back. */
+    const blur = lastEditorBlur.current;
+    if (blur && trigger && typeof document !== 'undefined' && document.activeElement === trigger) {
+      setEditorRestore({ sectionId: blur.sectionId, start: blur.start, end: blur.end, nonce: Date.now() });
+    }
+    setCanvasExpanded(expanded);
+  }, []);
+  /* A pointer landing anywhere other than an editor or a Full Canvas control
+     means the writer has deliberately gone elsewhere: forget the place. */
+  useEffect(() => {
+    const forget = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (target?.closest?.('[data-authored-body], [data-pure-canvas-toggle], .wsr-return-workspace')) return;
+      lastEditorBlur.current = null;
+    };
+    document.addEventListener('pointerdown', forget, true);
+    return () => document.removeEventListener('pointerdown', forget, true);
+  }, []);
   const [writingEpoch, setWritingEpoch] = useState(0);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [editorialAnchor, setEditorialAnchor] = useState<HTMLElement | null>(null);
@@ -411,12 +451,22 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
         return;
       }
       setContext(body);
+      /* A1-LS1 · R1 — ARRIVAL. A valid explicit place wins. Without one, the
+         Work opens at its first authored section: the least interpretive
+         answer available until durable member place exists. There is no
+         heuristic here — no heading is ever guessed at as a destination.
+         An absent, stale or foreign `?s` is REPAIRED in the address to the
+         section actually opened, so the bar never names a place the room is
+         not showing. The repair writes the address only: it does not scroll,
+         focus or otherwise move the manuscript. */
       const requestedRow = requestedSection
         ? body.sections.find((s) => s.draftSectionId === requestedSection) ?? null
         : null;
-      const chapter10 = body.sections.find((s) => /^Chapter 10\b/i.test(s.heading ?? ''));
-      const initial = requestedRow ?? chapter10 ?? body.sections[0] ?? null;
+      const initial = requestedRow ?? body.sections[0] ?? null;
       setFocusId(initial?.draftSectionId ?? null);
+      if (!requestedRow && initial && typeof window !== 'undefined') {
+        replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, initial.draftSectionId));
+      }
       setMaiaMode(isConfirmedChapterRoot(initial) ? 'chapter' : 'passage');
       setPhase('ready');
     } catch {
@@ -1480,11 +1530,19 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
           ...section, body: writing.bodyOf(section.draftSectionId),
         }));
         const liveChapterWords = wordCount(liveChapterSections);
-        const statuses = liveChapterSections.map((section) => writing.statusOf(section.draftSectionId));
+        /* A1-LS1 · R2 — SAVE TRUTH OVER THE WHOLE DRAFT. `Saved` means the
+           presented draft holds no known local change that its persistence
+           boundary has not acknowledged. It is true on a successful load and
+           after every acknowledged save — and it is computed over EVERY
+           section, not the chapter on screen, so a refusal elsewhere can never
+           sit behind a clean-looking chapter. */
+        const statuses = context.sections.map((section) => writing.statusOf(section.draftSectionId));
+        const conflictedIds: ReadonlySet<string> = new Set(context.sections
+          .filter((_, i) => statuses[i] === 'conflict').map((section) => section.draftSectionId));
         const saveState = statuses.includes('conflict') ? 'Needs attention'
           : statuses.includes('error') ? 'Save unavailable'
             : statuses.includes('dirty') ? 'Unsaved'
-              : statuses.includes('saving') ? 'Saving…' : null;
+              : statuses.includes('saving') ? 'Saving…' : 'Saved';
         return (
     <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} style={{ height: '100vh', overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
       {!canvasExpanded && (<header className="wsr-header" style={{ height: 58, display: 'grid', gridTemplateColumns: '300px 1fr 300px', alignItems: 'center', padding: '0 20px', borderBottom: `1px solid ${C.soft}`, background: C.field }}>
@@ -1516,7 +1574,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       </header>)}
       {canvasExpanded && (
         <div className="wsr-pure-exit">
-          <button type="button" className="wsr-return-workspace" onClick={() => setCanvasExpanded(false)} aria-label="Return to Writer’s Studio workspace">
+          <button type="button" className="wsr-return-workspace" onMouseDown={holdEditorFocus} onClick={(event) => changeCanvas(false, event.currentTarget)} aria-label="Return to Writer’s Studio workspace">
             <span aria-hidden="true">←</span> Workspace
           </button>
           <Link className="wsr-return-workbench" href="/writers-studio" aria-label="Return to Writer’s Studio workbench">
@@ -1560,7 +1618,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
                 <div style={{ fontSize: 10, color: C.quiet, padding: '0 6px 7px' }}>Member-authored structure</div>
                 {authoredStructure.roots.map((node) => (
                   <AuthoredStructureBranch key={node.id} node={node} focusId={focusId}
-                    onSelect={(id) => selectSection(id, 'section')} />
+                    onSelect={(id) => selectSection(id, 'section')} conflicted={conflictedIds} />
                 ))}
                 {authoredStructure.unplacedSectionIds.length > 0 && (
                   <details data-unplaced-structure style={{ marginTop: 8 }}>
@@ -1574,7 +1632,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
                         return (
                           <button key={id} type="button" onClick={() => selectSection(id, 'section')}
                             style={{ width: '100%', textAlign: 'left', border: 0, borderLeft: focusId === id ? `3px solid ${C.gold}` : '3px solid transparent', borderRadius: 6, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>
-                            {section.heading ?? `Section ${section.position + 1}`}
+                            {section.heading ?? `Section ${section.position + 1}`}{conflictedIds.has(id) && <span data-conflict-marker role="img" aria-label="Needs attention: changed elsewhere" title="Needs attention" style={{ marginLeft: 6, fontSize: 9, color: C.muted, verticalAlign: 'middle' }}>●</span>}
                           </button>
                         );
                       })}
@@ -1586,7 +1644,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
               <div data-imported-structure style={{ display: 'grid', gap: 2 }}>
                 <div style={{ fontSize: 10, lineHeight: 1.35, color: C.quiet, padding: '0 6px 7px' }}>Structure carried by the manuscript source</div>
                 {importedStructureTree.map((node) => (
-                  <ImportedStructureBranch key={node.draftSectionId} node={node} focusId={focusId} onSelect={selectSection} />
+                  <ImportedStructureBranch key={node.draftSectionId} node={node} focusId={focusId} onSelect={selectSection} conflicted={conflictedIds} />
                 ))}
               </div>
             ) : (
@@ -1599,7 +1657,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
                       {authoredStructure.unplacedSectionIds.map((id) => {
                         const section = context.sections.find((candidate) => candidate.draftSectionId === id);
                         if (!section) return null;
-                        return <button key={id} type="button" onClick={() => selectSection(id, 'section')} style={{ width: '100%', textAlign: 'left', border: 0, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>{section.heading ?? `Section ${section.position + 1}`}</button>;
+                        return <button key={id} type="button" onClick={() => selectSection(id, 'section')} style={{ width: '100%', textAlign: 'left', border: 0, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>{section.heading ?? `Section ${section.position + 1}`}{conflictedIds.has(id) && <span data-conflict-marker role="img" aria-label="Needs attention: changed elsewhere" title="Needs attention" style={{ marginLeft: 6, fontSize: 9, color: C.muted, verticalAlign: 'middle' }}>●</span>}</button>;
                       })}
                     </div>
                   </details>
@@ -1668,7 +1726,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
                 style={{ border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: '8px 12px', color: C.secondary, fontSize: 11.5, cursor: chapter ? 'pointer' : 'default', opacity: chapter ? 1 : .72 }}>
                 {maiaMode === 'chapter' ? `▣ Reviewing entire chapter` : selectedPassage ? `◎ Focused passage · ${focusName}` : `◎ Focused section · ${focusName}`}{chapter ? ' ⌄' : ''}
               </button>
-              <button type="button" data-pure-canvas-toggle aria-label="Open Pure Canvas" title="Pure Canvas" onClick={() => setCanvasExpanded(true)}
+              <button type="button" data-pure-canvas-toggle aria-label="Open Pure Canvas" title="Pure Canvas" onMouseDown={holdEditorFocus} onClick={(event) => changeCanvas(true, event.currentTarget)}
                 style={{ border: 0, background: 'transparent', color: C.quiet, padding: '7px 5px', fontSize: 16, lineHeight: 1, cursor: 'pointer', opacity: .58 }}>
                 ↗
               </button>
@@ -1720,6 +1778,15 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
                         <h3 data-canvas-heading-level="unconfirmed" style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.3, fontWeight: 650, letterSpacing: '.025em', margin: '26px 0 11px', color: C.muted }}>{section.heading}</h3>
                       )
                     )}
+                    {/* A1-LS1 · R3 — the conflict belongs to THIS section and is said
+                        here, where the writer is. It states the condition only:
+                        no control, no resolution, nothing to press. */}
+                    {conflictedIds.has(section.draftSectionId) && (
+                      <p data-conflict-marker-section role="note"
+                        style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: C.muted, margin: '0 0 10px', paddingLeft: 10, borderLeft: `2px solid ${C.rule}` }}>
+                        Needs attention — this section was changed elsewhere. What you wrote here is kept on this page and has not been saved.
+                      </p>
+                    )}
                     {workspaceOpen && review && <div className="ws-section-observations" aria-label="Section observations">
                       {findingsForSection(review.findings, section.draftSectionId).map((finding, index) => <button key={finding.id} type="button"
                         disabled={editorialBusy || adoptionBusy || memberVersionBusy}
@@ -1736,6 +1803,8 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
                       onFocusPlace={() => focusWritingSection(section.draftSectionId)}
                       onCaptureBeforeBlur={(body) => writing.captureForUnmount(section.draftSectionId, body)}
                       onSelectPassage={(start, end, text) => holdPassage(section, start, end, text)}
+                      onEditorBlur={(start, end) => { lastEditorBlur.current = { sectionId: section.draftSectionId, start, end }; }}
+                      restore={editorRestore?.sectionId === section.draftSectionId ? editorRestore : null}
                     /></div>
                     {section.draftSectionId === focusId && <div hidden={!workspaceOpen}>
                       <ManuscriptPassage body={liveBody} range={held}
@@ -1768,12 +1837,15 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
           </div>
           {!canvasExpanded ? (
             <footer style={{ height: 44, borderTop: `1px solid ${C.soft}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', fontSize: 11.5, color: C.muted }}>
-              <span>{liveChapterWords.toLocaleString()} words · draft v{writing.currentRevisionId()}{saveState ? ` · ${saveState}` : ''}</span>
+              {/* A1-LS1 · R2 — the draft counter is gone from the surface: it
+                  counts acknowledged writes, not versions a writer kept, and no
+                  other version label takes its place here. */}
+              <span>{liveChapterWords.toLocaleString()} words · <span data-save-state role="status" aria-live="polite">{saveState}</span></span>
               <span>✦ Ask MAIA &nbsp;&nbsp; Aa⌄ &nbsp;&nbsp; ☷</span>
             </footer>
-          ) : saveState ? (
-            <div className="wsr-pure-save-state" role="status">{saveState}</div>
-          ) : null}
+          ) : (
+            <div className="wsr-pure-save-state" data-save-state role="status" aria-live="polite">{saveState}</div>
+          )}
         </section>
 
         {!canvasExpanded && !workspaceOpen && (<aside className={`wsr-maia ${mobilePane !== 'maia' ? 'wsr-mobile-hidden' : ''}`} style={{ borderLeft: `1px solid ${C.soft}`, background: C.panel, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
