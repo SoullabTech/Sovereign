@@ -1,0 +1,42 @@
+import type { A23Design } from './model';
+import { referenceDesign } from './design';
+const clone=():A23Design=>structuredClone(referenceDesign());
+
+export const defeatCandidates = [
+ ['D1','L1',(d:any)=>{d.parent.singletonUnique=true;d.parent.pluralityRepresentable=false}],
+ ['D2','L2',(d:any)=>{d.parent.storesCurrentScope=true;d.parent.columns.push('current_scope')}],
+ ['D3','L3',(d:any)=>{d.parent.storesLastEpisode=true;d.parent.storesPlace=true;d.parent.columns.push('last_episode')}],
+ ['D4','L4',(d:any)=>{d.parent.creationExpressionFk='RESTRICT'}],
+ ['D5','L4',(d:any)=>{d.parent.creationExpressionFk='CASCADE'}],
+ ['D6','L4',(d:any)=>{d.parent.creationExpressionFk='SET_NULL'}],
+ ['D7','L5',(d:any)=>{d.parent.workDelete='RESTRICT'}],
+ ['D8','L6',(d:any)=>{d.parent.manuscriptDelete='RESTRICT'}],
+ ['D9','L7',(d:any)=>{d.episode.parentDeleteCascadesChildObjects=true}],
+ ['D10','L8',(d:any)=>{d.episode.childRefPolicy='FK_RESTRICT'}],
+ ['D11','L8',(d:any)=>{d.episode.childRefPolicy='FK_CASCADE'}],
+ ['D12','L8',(d:any)=>{d.episode.childRefPolicy='FK_SET_NULL'}],
+ ['D13','L9',(d:any)=>{d.episode.xorClosed=false;d.episode.zeroKindRepresentable=true}],
+ ['D14','L9',(d:any)=>{d.episode.zeroKindRepresentable=true}],
+ ['D15','L9',(d:any)=>{d.episode.twoKindsRepresentable=true}],
+ ['D16','L10',(d:any)=>{d.episode.focusAdmitted=true;d.episode.v1ChildKinds.push('FOCUS_ACT')}],
+ ['D17','L11',(d:any)=>{d.episode.requestedExecutedEqual=false}],
+ ['D18','L12',(d:any)=>{d.episode.allowedScopes.push('chapter')}],
+ ['D19','L13',(d:any)=>{d.episode.editorialSpeakerRolesValidated=false}],
+ ['D20','L14',(d:any)=>{d.episode.reviewReadingLocal=false}],
+ ['D21','L15',(d:any)=>{d.episode.reviewCompletionValidated=false}],
+ ['D22','L16',(d:any)=>{d.append.focusCrossedReceiptTreatedAsCompletion=true;d.episode.focusAdmitted=true}],
+ ['D23','L19',(d:any)=>{d.append.parentForUpdate=false;d.append.nextSequenceInsideParentLock=false}],
+ ['D24','L19',(d:any)=>{d.append.orderAuthority='CREATED_AT'}],
+ ['D25','L20',(d:any)=>{d.episode.childActUnique=false}],
+ ['D26','L21',(d:any)=>{d.append.retryIdempotentByChildIdentity=false}],
+ ['D27','L22',(d:any)=>{d.episode.updatePolicy='MUTABLE'}],
+ ['D28','L23',(d:any)=>{d.parent.updatePolicy='MUTABLE'}],
+ ['D29','L24',(d:any)=>{d.append.serverDerivedIdentity=false;d.append.clientMemberWorkTrusted=true}],
+ ['D30','L25',(d:any)=>{d.append.currentDeclarationReverified=false;d.append.creationDeclarationTreatedAsPermanentPermission=true}],
+ ['D31','L26',(d:any)=>{d.migration.declarationRemovalRepointsParent=true}],
+ ['D32','L27',(d:any)=>{d.episode.storesChildProse=true;d.migration.childDeletionLeavesCopiedProse=true}],
+ ['D33','L28',(d:any)=>{d.migration.noBackfill=false}],
+ ['D34','L29',(d:any)=>{d.migration.rollbackPolicy='DROP_ALWAYS'}],
+ ['D35','L37',(d:any)=>{d.append.episodeAtomicWithChildCompletion=false}],
+] as const;
+export function mutant(fn:(d:any)=>void):A23Design{const d:any=clone();fn(d);return d;}
