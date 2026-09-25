@@ -1,0 +1,236 @@
+{
+  "config": "C2-focus-on",
+  "startedAt": "2026-09-24T23:44:49.602Z",
+  "scenarios": {
+    "S1": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "no-?s arrival and stale-?s arrival both resolved to the \"Chapter 10\" heading while the member had saved in Scene 1.1; stale ?s retained in address",
+      "obs": {
+        "memberPlaceEstablished": true,
+        "memberSavedSection": "Scene 1.1",
+        "a_headingPresent_noS_resolved": "Chapter 10 root",
+        "b_headingAbsent_noS_resolved": "first section",
+        "c_validS_resolved": "requested section",
+        "d_staleS_resolved": "Chapter 10 root",
+        "d_staleS_retainedInAddress": true,
+        "d_staleS_carriedIntoDevelopLink": false
+      },
+      "ms": 21227
+    },
+    "S2": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "reload recovered the section identity but did not bring it into view",
+      "obs": {
+        "afterClick": {
+          "focusIsTarget": true,
+          "addressIsTarget": true,
+          "contextRefetchOnClick": 0
+        },
+        "afterReload": {
+          "focusIsTarget": true,
+          "addressIsTarget": true,
+          "targetInView": false
+        }
+      },
+      "ms": 10766
+    },
+    "S3": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "reopen landed on the last-saved section (Scene 2.1) though the member last stood in Scene 3.1; an equal-updated_at tie carried no place",
+      "obs": {
+        "a_beforeWriting": {
+          "returnHeroPresent": false
+        },
+        "b_uniqueLastSaved": {
+          "saveAcknowledged": true,
+          "lastPlaceBeforeLeaving": "Scene 3.1",
+          "heroPresent": true,
+          "heroS": "Scene 2.1",
+          "arrival": "Scene 2.1"
+        },
+        "c_explicitTie": {
+          "heroPresent": true,
+          "heroCarriesS": false,
+          "arrival": "Chapter 1: Synthetic One"
+        },
+        "locusResponseStatuses": [
+          200,
+          200
+        ]
+      },
+      "ms": 41819
+    },
+    "S4": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "\"Saved\" never shown after acknowledged persistence; a refused save in chapter 1 showed nothing from chapter 2 and \"Needs attention\" only on return",
+      "obs": {
+        "a": {
+          "saveAcknowledged": true,
+          "persisted": true,
+          "footerLabelsSeen": [
+            "Unsaved",
+            "Saving…",
+            "(none)"
+          ],
+          "savedLabelEverShown": false
+        },
+        "b": {
+          "editRefusedStatus": 409,
+          "footerInOtherChapter": null,
+          "footerBackInFailingChapter": "Needs attention"
+        }
+      },
+      "ms": 15918
+    },
+    "S5": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "after one stale-base refusal, a later edit to a different section was never persisted in that session",
+      "obs": {
+        "sessionBAck": 200,
+        "sessionAFirstRefusal": 409,
+        "sessionAPutsAfterLaterEdit": [
+          {
+            "section": "Chapter 1 root",
+            "status": 409
+          }
+        ],
+        "laterSectionPersisted": false,
+        "footerSessionA": "Needs attention"
+      },
+      "ms": 17188
+    },
+    "S6": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "7 of 7 early reload/close/navigate trials lost the unsaved text with no warning",
+      "obs": {
+        "trials": [
+          {
+            "kind": "reload",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "reload",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "reload",
+            "waitMs": 300,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "reload",
+            "waitMs": 300,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "close",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "close",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "navigate",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "reload",
+            "waitMs": 3000,
+            "persisted": true,
+            "beforeunloadDialog": false
+          }
+        ]
+      },
+      "ms": 69848
+    },
+    "S7": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "pointer Return lost focus/selection; Escape preserved it",
+      "obs": {
+        "preEntry": {
+          "tag": "TEXTAREA",
+          "section": "97b80d06-1c6a-4369-9433-caff203016a0",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "inCanvasAfterEntry": {
+          "tag": "BODY",
+          "section": null,
+          "selStart": null,
+          "selEnd": null
+        },
+        "entryPreserved": false,
+        "preReturnPointer": {
+          "tag": "TEXTAREA",
+          "section": "97b80d06-1c6a-4369-9433-caff203016a0",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "afterPointer": {
+          "tag": "BODY",
+          "section": null,
+          "selStart": null,
+          "selEnd": null
+        },
+        "pointerPreserved": false,
+        "preReturnEscape": {
+          "tag": "TEXTAREA",
+          "section": "97b80d06-1c6a-4369-9433-caff203016a0",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "afterEscape": {
+          "tag": "TEXTAREA",
+          "section": "97b80d06-1c6a-4369-9433-caff203016a0",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "escapePreserved": true
+      },
+      "ms": 4612
+    },
+    "S8": {
+      "outcome": "RED_REPRODUCED",
+      "basis": "after a Write save, the real readings capture refused revision_not_current before any model boundary",
+      "obs": {
+        "writeSaveAck": 200,
+        "draftVersion": 2,
+        "revisionCount": 1,
+        "latestRevision": 1,
+        "latestRevisionEqualsDraft": false,
+        "readingsStatus": 409,
+        "refusal": "revision_not_current",
+        "modelBoundaryReached": 0
+      },
+      "ms": 6230
+    },
+    "S9": {
+      "outcome": "GREEN_CONTROL_ESTABLISHED",
+      "basis": "after the existing checkpoint, capture no longer refused revision_not_current; the request reached the structured-model boundary, where the local stub refused it (no inference)",
+      "obs": {
+        "checkpointStatus": 200,
+        "revisionCountAfter": 2,
+        "latestRevisionEqualsDraft": true,
+        "readingsStatus": 422,
+        "refusal": "provider_unavailable",
+        "modelBoundaryReached": 1,
+        "stubDesign": "loopback stub refuses every request with HTTP 400; no inference"
+      },
+      "ms": 4989
+    }
+  },
+  "finishedAt": "2026-09-24T23:48:24.032Z"
+}

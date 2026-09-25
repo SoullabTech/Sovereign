@@ -1,0 +1,366 @@
+{
+  "configs": [
+    "C0-all-off",
+    "C1-editorial-on",
+    "C2-focus-on",
+    "C3-discuss-on",
+    "C4-standing-on",
+    "C5-all-on"
+  ],
+  "scenarios": {
+    "S1": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "no-?s arrival and stale-?s arrival both resolved to the \"Chapter 10\" heading while the member had saved in Scene 1.1; stale ?s retained in address",
+      "obsAllOff": {
+        "memberPlaceEstablished": true,
+        "memberSavedSection": "Scene 1.1",
+        "a_headingPresent_noS_resolved": "Chapter 10 root",
+        "b_headingAbsent_noS_resolved": "first section",
+        "c_validS_resolved": "requested section",
+        "d_staleS_resolved": "Chapter 10 root",
+        "d_staleS_retainedInAddress": true,
+        "d_staleS_carriedIntoDevelopLink": false
+      }
+    },
+    "S2": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "reload recovered the section identity but did not bring it into view",
+      "obsAllOff": {
+        "afterClick": {
+          "focusIsTarget": true,
+          "addressIsTarget": true,
+          "contextRefetchOnClick": 0
+        },
+        "afterReload": {
+          "focusIsTarget": true,
+          "addressIsTarget": true,
+          "targetInView": false
+        }
+      }
+    },
+    "S3": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "reopen landed on the last-saved section (Scene 2.1) though the member last stood in Scene 3.1; an equal-updated_at tie carried no place",
+      "obsAllOff": {
+        "a_beforeWriting": {
+          "returnHeroPresent": false
+        },
+        "b_uniqueLastSaved": {
+          "saveAcknowledged": true,
+          "lastPlaceBeforeLeaving": "Scene 3.1",
+          "heroPresent": true,
+          "heroS": "Scene 2.1",
+          "arrival": "Scene 2.1"
+        },
+        "c_explicitTie": {
+          "heroPresent": true,
+          "heroCarriesS": false,
+          "arrival": "Chapter 1: Synthetic One"
+        },
+        "locusResponseStatuses": [
+          200,
+          200
+        ]
+      }
+    },
+    "S4": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "\"Saved\" never shown after acknowledged persistence; a refused save in chapter 1 showed nothing from chapter 2 and \"Needs attention\" only on return",
+      "obsAllOff": {
+        "a": {
+          "saveAcknowledged": true,
+          "persisted": true,
+          "footerLabelsSeen": [
+            "Unsaved",
+            "Saving…",
+            "(none)"
+          ],
+          "savedLabelEverShown": false
+        },
+        "b": {
+          "editRefusedStatus": 409,
+          "footerInOtherChapter": null,
+          "footerBackInFailingChapter": "Needs attention"
+        }
+      }
+    },
+    "S5": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "after one stale-base refusal, a later edit to a different section was never persisted in that session",
+      "obsAllOff": {
+        "sessionBAck": 200,
+        "sessionAFirstRefusal": 409,
+        "sessionAPutsAfterLaterEdit": [
+          {
+            "section": "Chapter 1 root",
+            "status": 409
+          }
+        ],
+        "laterSectionPersisted": false,
+        "footerSessionA": "Needs attention"
+      }
+    },
+    "S6": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "7 of 7 early reload/close/navigate trials lost the unsaved text with no warning",
+      "obsAllOff": {
+        "trials": [
+          {
+            "kind": "reload",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "reload",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "reload",
+            "waitMs": 300,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "reload",
+            "waitMs": 300,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "close",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "close",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "navigate",
+            "waitMs": 0,
+            "persisted": false,
+            "beforeunloadDialog": false
+          },
+          {
+            "kind": "reload",
+            "waitMs": 3000,
+            "persisted": true,
+            "beforeunloadDialog": false
+          }
+        ]
+      }
+    },
+    "S7": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "pointer Return lost focus/selection; Escape preserved it",
+      "obsAllOff": {
+        "preEntry": {
+          "tag": "TEXTAREA",
+          "section": "fe0fca5d-52d2-484b-946a-49ca91bd76fe",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "inCanvasAfterEntry": {
+          "tag": "BODY",
+          "section": null,
+          "selStart": null,
+          "selEnd": null
+        },
+        "entryPreserved": false,
+        "preReturnPointer": {
+          "tag": "TEXTAREA",
+          "section": "fe0fca5d-52d2-484b-946a-49ca91bd76fe",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "afterPointer": {
+          "tag": "BODY",
+          "section": null,
+          "selStart": null,
+          "selEnd": null
+        },
+        "pointerPreserved": false,
+        "preReturnEscape": {
+          "tag": "TEXTAREA",
+          "section": "fe0fca5d-52d2-484b-946a-49ca91bd76fe",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "afterEscape": {
+          "tag": "TEXTAREA",
+          "section": "fe0fca5d-52d2-484b-946a-49ca91bd76fe",
+          "selStart": 5,
+          "selEnd": 12
+        },
+        "escapePreserved": true
+      }
+    },
+    "S8": {
+      "outcome": "RED_REPRODUCED",
+      "perConfig": {
+        "C0-all-off": "RED_REPRODUCED",
+        "C1-editorial-on": "RED_REPRODUCED",
+        "C2-focus-on": "RED_REPRODUCED",
+        "C3-discuss-on": "RED_REPRODUCED",
+        "C4-standing-on": "RED_REPRODUCED",
+        "C5-all-on": "RED_REPRODUCED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "after a Write save, the real readings capture refused revision_not_current before any model boundary",
+      "obsAllOff": {
+        "writeSaveAck": 200,
+        "draftVersion": 2,
+        "revisionCount": 1,
+        "latestRevision": 1,
+        "latestRevisionEqualsDraft": false,
+        "readingsStatus": 409,
+        "refusal": "revision_not_current",
+        "modelBoundaryReached": 0
+      }
+    },
+    "S9": {
+      "outcome": "GREEN_CONTROL_ESTABLISHED",
+      "perConfig": {
+        "C0-all-off": "GREEN_CONTROL_ESTABLISHED",
+        "C1-editorial-on": "GREEN_CONTROL_ESTABLISHED",
+        "C2-focus-on": "GREEN_CONTROL_ESTABLISHED",
+        "C3-discuss-on": "GREEN_CONTROL_ESTABLISHED",
+        "C4-standing-on": "GREEN_CONTROL_ESTABLISHED",
+        "C5-all-on": "GREEN_CONTROL_ESTABLISHED"
+      },
+      "flagsGoverningOutcome": [],
+      "observationVarianceVsAllOff": [],
+      "basisAllOff": "after the existing checkpoint, capture no longer refused revision_not_current; the request reached the structured-model boundary, where the local stub refused it (no inference)",
+      "obsAllOff": {
+        "checkpointStatus": 200,
+        "revisionCountAfter": 2,
+        "latestRevisionEqualsDraft": true,
+        "readingsStatus": 422,
+        "refusal": "provider_unavailable",
+        "modelBoundaryReached": 1,
+        "stubDesign": "loopback stub refuses every request with HTTP 400; no inference"
+      }
+    }
+  },
+  "migrationSufficiency": {
+    "C0-all-off": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C1-editorial-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C2-focus-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C3-discuss-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C4-standing-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    },
+    "C5-all-on": {
+      "applied": 455,
+      "refused": 43,
+      "verdict": "INDEPENDENT",
+      "runtimeDependent": [],
+      "pgErrorsDuringRun": 0
+    }
+  }
+}

@@ -1,0 +1,974 @@
+{
+  "appliedCount": 455,
+  "refusedCount": 43,
+  "manifest": {
+    "touchedTables": [
+      {
+        "name": "auth_sessions",
+        "createdBy": [
+          "20260119000001_auth_sessions.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "living_work_expressions",
+        "createdBy": [
+          "20260801000001_living_works.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "living_work_materials",
+        "createdBy": [
+          "20260805000001_living_work_materials.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "living_work_visuals",
+        "createdBy": [
+          "20260907000004_living_work_visual.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "living_works",
+        "createdBy": [
+          "20260801000001_living_works.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "manuscript_draft_sections",
+        "createdBy": [
+          "20260830000001_manuscript_draft_sections.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "manuscript_keeps",
+        "createdBy": [
+          "20260721000003_press_manuscript_room.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "manuscript_sections",
+        "createdBy": [
+          "20260721000003_press_manuscript_room.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "manuscript_source_arrivals",
+        "createdBy": [
+          "20260824000001_manuscript_source_custody.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "manuscript_structure_units",
+        "createdBy": [
+          "20260830000002_manuscript_structure.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "manuscript_working_drafts",
+        "createdBy": [
+          "20260727000001_manuscript_working_drafts.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "member_manuscripts",
+        "createdBy": [
+          "20260721000003_press_manuscript_room.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "member_studio_atmosphere",
+        "createdBy": [
+          "20260907000003_studio_atmosphere.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "members",
+        "createdBy": [
+          "20260103000001_members.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "schema_migrations",
+        "createdBy": [],
+        "createdByApplied": false
+      },
+      {
+        "name": "workbench_uploads",
+        "createdBy": [
+          "20260522000003_workbench_v0.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "working_draft_revisions",
+        "createdBy": [
+          "20260727000001_manuscript_working_drafts.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "writer_studio_chapter_review_runs",
+        "createdBy": [
+          "20260916000001_writer_studio_chapter_review_runs.sql"
+        ],
+        "createdByApplied": true
+      }
+    ],
+    "touchedFunctions": [
+      {
+        "name": "manuscript_draft_sections_round_trip",
+        "createdBy": [
+          "20260830000001_manuscript_draft_sections.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "manuscript_working_drafts_round_trip",
+        "createdBy": [
+          "20260830000001_manuscript_draft_sections.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "working_draft_revision_partition_check",
+        "createdBy": [
+          "20260902000002_working_draft_revision_partition.sql",
+          "20260902000003_section_partition_codepoint_semantics.sql"
+        ],
+        "createdByApplied": true
+      }
+    ],
+    "triggersOnTouchedTables": [
+      {
+        "table": "members",
+        "trigger": "members_updated_at",
+        "function": "update_members_updated_at"
+      },
+      {
+        "table": "members",
+        "trigger": "compute_tier_on_birth_date",
+        "function": "update_developmental_tier"
+      },
+      {
+        "table": "working_draft_revisions",
+        "trigger": "working_draft_revisions_no_update",
+        "function": "working_draft_revisions_immutable"
+      },
+      {
+        "table": "living_work_materials",
+        "trigger": "living_work_materials_no_consideration",
+        "function": "refuse_material_relationship_conflict"
+      },
+      {
+        "table": "manuscript_draft_sections",
+        "trigger": "manuscript_draft_sections_round_trip_check",
+        "function": "manuscript_draft_sections_round_trip"
+      },
+      {
+        "table": "manuscript_working_drafts",
+        "trigger": "manuscript_working_drafts_round_trip_check",
+        "function": "manuscript_working_drafts_round_trip"
+      },
+      {
+        "table": "manuscript_structure_units",
+        "trigger": "manuscript_structure_units_contiguity",
+        "function": "manuscript_structure_contiguity"
+      },
+      {
+        "table": "working_draft_revisions",
+        "trigger": "working_draft_revision_partition_valid",
+        "function": "working_draft_revision_partition_check"
+      }
+    ],
+    "triggerFunctions": [
+      {
+        "name": "manuscript_draft_sections_round_trip",
+        "createdBy": [
+          "20260830000001_manuscript_draft_sections.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "manuscript_structure_contiguity",
+        "createdBy": [
+          "20260830000003_manuscript_structure_contiguity.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "manuscript_working_drafts_round_trip",
+        "createdBy": [
+          "20260830000001_manuscript_draft_sections.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "refuse_material_relationship_conflict",
+        "createdBy": [
+          "20260828000001_living_work_material_considerations.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "update_developmental_tier",
+        "createdBy": [
+          "20260209000001_youth_developmental_tier.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "update_members_updated_at",
+        "createdBy": [
+          "20260103000001_members.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "working_draft_revision_partition_check",
+        "createdBy": [
+          "20260902000002_working_draft_revision_partition.sql",
+          "20260902000003_section_partition_codepoint_semantics.sql"
+        ],
+        "createdByApplied": true
+      },
+      {
+        "name": "working_draft_revisions_immutable",
+        "createdBy": [
+          "20260727000001_manuscript_working_drafts.sql"
+        ],
+        "createdByApplied": true
+      }
+    ]
+  },
+  "refused": [
+    {
+      "file": "20241202000001_create_session_memory_tables.sql",
+      "reason": "extension \"vector\" is not available",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251229000001_create_selflet_chain_tables.sql",
+      "reason": "pgvector extension is not available on this Postgres instance (required by selflet schema).",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251229000002_selflet_embedding_dim_768.sql",
+      "reason": "relation \"selflet_nodes\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251229000003_create_selflet_boundaries.sql",
+      "reason": "relation \"selflet_nodes\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251229000004_selflet_indexes.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251229000005_selflet_reinterpretations_origin.sql",
+      "reason": "relation \"selflet_reinterpretations\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251229000006_selflet_message_join_index.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251229000007_selflet_delivery_context.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251229000008_selflet_snooze_archive.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251229000009_selflet_redelivery_tracking.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251230000001_bardic_embeddings.sql",
+      "reason": "extension \"vector\" is not available",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20251231_memory_architecture_enhancements.sql",
+      "reason": "relation \"developmental_memories\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260107000001_practitioner_caseload.sql",
+      "reason": "type \"vector\" does not exist",
+      "overlapsTouchedObjects": [
+        "members"
+      ],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260107000002_case_memory_embeddings.sql",
+      "reason": "extension \"vector\" is not available",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260107000004_ain_knowledge_base.sql",
+      "reason": "extension \"vector\" is not available",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260112000001_corpus_environment.sql",
+      "reason": "extension \"vector\" is not available",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260112000010_add_origin_route_and_processing_profile.sql",
+      "reason": "relation \"public.agent_runs\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260118_portal_services_tables.sql",
+      "reason": "relation \"lead_magnets\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260121_comms_maia_feedback.sql",
+      "reason": "relation \"comms_messages\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260121_comms_reply_suggestions.sql",
+      "reason": "relation \"comms_threads\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260121_comms_suggestion_sent_tracking.sql",
+      "reason": "relation \"comms_messages\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260121_phi_encryption_phase2b_triggers.sql",
+      "reason": "relation \"maia_consultations\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260121_phi_encryption_wave2_maia_consultations.sql",
+      "reason": "relation \"maia_consultations\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260122_comms_analysis_queue.sql",
+      "reason": "relation \"comms_messages\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260122_comms_delivery_infrastructure.sql",
+      "reason": "relation \"comms_messages\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260122_comms_worker_identity.sql",
+      "reason": "relation \"comms_analysis_queue\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260130000001_library_intelligence.sql",
+      "reason": "type \"vector\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260204000001_engine_comparisons.sql",
+      "reason": "relation \"maia_misattunements\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260205000001_labtools_business_ops.sql",
+      "reason": "relation \"v_rl_venture_dashboard\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260209000001_session_summary_pipeline.sql",
+      "reason": "relation \"maia_sessions\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260211212847_member_videos.sql",
+      "reason": "column \"sort_order\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260314000002_pending_review_candidates.sql",
+      "reason": "relation \"case_memories\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260315120000_pattern_ledger.sql",
+      "reason": "column \"last_seen_at\" does not exist",
+      "overlapsTouchedObjects": [
+        "schema_migrations"
+      ],
+      "referencesOnly": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260626000002_case_memories_crossing_check.sql",
+      "reason": "relation \"case_memories\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260629000001_encounters.sql",
+      "reason": "relation \"studio_meetings\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260629000002_encounter_type.sql",
+      "reason": "relation \"encounters\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260630000001_studio_people_team_scope.sql",
+      "reason": "relation \"studio_people\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260630000004_sessions_encounters_team_scope.sql",
+      "reason": "relation \"encounters\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260630000005_memory_atoms_scope.sql",
+      "reason": "relation \"studio_people\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260630000006_practitioner_files_team_scope.sql",
+      "reason": "relation \"studio_people\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260704000001_soul_portrait_subject_person.sql",
+      "reason": "Stage 1: FK target \"studio_people\" missing; apply 20260627000001 first",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260705000001_encounter_streams_and_consent.sql",
+      "reason": "relation \"encounters\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    },
+    {
+      "file": "20260705000002_encounter_stream_lifecycle.sql",
+      "reason": "relation \"encounter_media_streams\" does not exist",
+      "overlapsTouchedObjects": [],
+      "referencesOnly": []
+    }
+  ],
+  "touchedObjectsNotCreatedByAnAppliedMigration": [
+    "schema_migrations"
+  ],
+  "refusedMigrationsOverlappingTouchedObjects": [
+    {
+      "file": "20260107000001_practitioner_caseload.sql",
+      "objects": [
+        "members"
+      ]
+    },
+    {
+      "file": "20260315120000_pattern_ledger.sql",
+      "objects": [
+        "schema_migrations"
+      ]
+    }
+  ],
+  "staticVerdict": "OVERLAP_REQUIRES_RUNTIME_CHECK",
+  "runtimeRefused": [
+    {
+      "file": "20241202000001_create_session_memory_tables.sql",
+      "reason": "extension \"vector\" is not available",
+      "supplied": 11,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "function:update_updated_at_column"
+      ]
+    },
+    {
+      "file": "20251229000001_create_selflet_chain_tables.sql",
+      "reason": "pgvector extension is not available on this Postgres instance (required by selflet schema).",
+      "supplied": 7,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251229000002_selflet_embedding_dim_768.sql",
+      "reason": "relation \"selflet_nodes\" does not exist",
+      "supplied": 1,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251229000003_create_selflet_boundaries.sql",
+      "reason": "relation \"selflet_nodes\" does not exist",
+      "supplied": 1,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251229000004_selflet_indexes.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "supplied": 0,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251229000005_selflet_reinterpretations_origin.sql",
+      "reason": "relation \"selflet_reinterpretations\" does not exist",
+      "supplied": 1,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251229000006_selflet_message_join_index.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "supplied": 0,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251229000007_selflet_delivery_context.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "supplied": 2,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251229000008_selflet_snooze_archive.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "supplied": 3,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251229000009_selflet_redelivery_tracking.sql",
+      "reason": "relation \"selflet_messages\" does not exist",
+      "supplied": 4,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251230000001_bardic_embeddings.sql",
+      "reason": "extension \"vector\" is not available",
+      "supplied": 2,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20251231_memory_architecture_enhancements.sql",
+      "reason": "relation \"developmental_memories\" does not exist",
+      "supplied": 12,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:conversation_memory_uses",
+        "table:memory_links",
+        "column:conversation_turns.visibility"
+      ]
+    },
+    {
+      "file": "20260107000001_practitioner_caseload.sql",
+      "reason": "type \"vector\" does not exist",
+      "supplied": 9,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:practitioner_cases",
+        "table:case_notes",
+        "column:members.is_practitioner",
+        "column:members.practitioner_license_type",
+        "column:members.practitioner_since"
+      ]
+    },
+    {
+      "file": "20260107000002_case_memory_embeddings.sql",
+      "reason": "extension \"vector\" is not available",
+      "supplied": 2,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260107000004_ain_knowledge_base.sql",
+      "reason": "extension \"vector\" is not available",
+      "supplied": 2,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260112000001_corpus_environment.sql",
+      "reason": "extension \"vector\" is not available",
+      "supplied": 6,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260112000010_add_origin_route_and_processing_profile.sql",
+      "reason": "relation \"public.agent_runs\" does not exist",
+      "supplied": 4,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260118_portal_services_tables.sql",
+      "reason": "relation \"lead_magnets\" does not exist",
+      "supplied": 23,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:services",
+        "table:testimonials",
+        "table:practitioner_availability",
+        "table:sessions",
+        "column:practitioner_clients.phone",
+        "column:practitioners.photo_url",
+        "column:practitioners.specialties",
+        "column:practitioners.certifications",
+        "column:practitioners.years_experience",
+        "column:practitioners.location",
+        "column:practitioners.long_bio",
+        "column:practitioners.approach",
+        "column:practitioners.values",
+        "column:practitioners.social_links",
+        "column:practitioners.settings"
+      ]
+    },
+    {
+      "file": "20260121_comms_maia_feedback.sql",
+      "reason": "relation \"comms_messages\" does not exist",
+      "supplied": 1,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260121_comms_reply_suggestions.sql",
+      "reason": "relation \"comms_threads\" does not exist",
+      "supplied": 2,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260121_comms_suggestion_sent_tracking.sql",
+      "reason": "relation \"comms_messages\" does not exist",
+      "supplied": 3,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260121_phi_encryption_phase2b_triggers.sql",
+      "reason": "relation \"maia_consultations\" does not exist",
+      "supplied": 1,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "function:enforce_phi_encryption"
+      ]
+    },
+    {
+      "file": "20260121_phi_encryption_wave2_maia_consultations.sql",
+      "reason": "relation \"maia_consultations\" does not exist",
+      "supplied": 8,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260122_comms_analysis_queue.sql",
+      "reason": "relation \"comms_messages\" does not exist",
+      "supplied": 4,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260122_comms_delivery_infrastructure.sql",
+      "reason": "relation \"comms_messages\" does not exist",
+      "supplied": 5,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:practitioner_comms_credentials",
+        "table:practitioner_comms_settings"
+      ]
+    },
+    {
+      "file": "20260122_comms_worker_identity.sql",
+      "reason": "relation \"comms_analysis_queue\" does not exist",
+      "supplied": 3,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260130000001_library_intelligence.sql",
+      "reason": "type \"vector\" does not exist",
+      "supplied": 6,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:library_sources"
+      ]
+    },
+    {
+      "file": "20260204000001_engine_comparisons.sql",
+      "reason": "relation \"maia_misattunements\" does not exist",
+      "supplied": 2,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:maia_engine_comparisons"
+      ]
+    },
+    {
+      "file": "20260205000001_labtools_business_ops.sql",
+      "reason": "relation \"v_rl_venture_dashboard\" does not exist",
+      "supplied": 10,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:rl_ventures",
+        "table:rl_opportunities",
+        "table:rl_meetings",
+        "table:rl_meeting_attendees",
+        "column:rl_tasks.venture_id",
+        "column:rl_tasks.opportunity_id",
+        "column:rl_tasks.meeting_id",
+        "column:rl_people.company",
+        "column:rl_people.role",
+        "column:rl_people.relationship_type"
+      ]
+    },
+    {
+      "file": "20260209000001_session_summary_pipeline.sql",
+      "reason": "relation \"maia_sessions\" does not exist",
+      "supplied": 8,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:session_summary_queue",
+        "function:fn_requeue_stale_summary_jobs",
+        "column:maia_sessions.member_id",
+        "column:maia_sessions.mode",
+        "column:maia_sessions.status",
+        "column:maia_sessions.completed_at",
+        "column:maia_sessions.summary",
+        "column:maia_sessions.themes"
+      ]
+    },
+    {
+      "file": "20260211212847_member_videos.sql",
+      "reason": "column \"sort_order\" does not exist",
+      "supplied": 2,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:member_videos"
+      ]
+    },
+    {
+      "file": "20260314000002_pending_review_candidates.sql",
+      "reason": "relation \"case_memories\" does not exist",
+      "supplied": 5,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:pending_review_candidates"
+      ]
+    },
+    {
+      "file": "20260315120000_pattern_ledger.sql",
+      "reason": "column \"last_seen_at\" does not exist",
+      "supplied": 1,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "table:pattern_ledger"
+      ]
+    },
+    {
+      "file": "20260626000002_case_memories_crossing_check.sql",
+      "reason": "relation \"case_memories\" does not exist",
+      "supplied": 2,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260629000001_encounters.sql",
+      "reason": "relation \"studio_meetings\" does not exist",
+      "supplied": 8,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260629000002_encounter_type.sql",
+      "reason": "relation \"encounters\" does not exist",
+      "supplied": 1,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260630000001_studio_people_team_scope.sql",
+      "reason": "relation \"studio_people\" does not exist",
+      "supplied": 1,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260630000004_sessions_encounters_team_scope.sql",
+      "reason": "relation \"encounters\" does not exist",
+      "supplied": 2,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260630000005_memory_atoms_scope.sql",
+      "reason": "relation \"studio_people\" does not exist",
+      "supplied": 4,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "column:member_memory_atoms.memory_scope",
+        "column:member_memory_atoms.team_id"
+      ]
+    },
+    {
+      "file": "20260630000006_practitioner_files_team_scope.sql",
+      "reason": "relation \"studio_people\" does not exist",
+      "supplied": 6,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": [
+        "column:practitioner_files.file_scope",
+        "column:practitioner_files.team_id"
+      ]
+    },
+    {
+      "file": "20260704000001_soul_portrait_subject_person.sql",
+      "reason": "Stage 1: FK target \"studio_people\" missing; apply 20260627000001 first",
+      "supplied": 1,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260705000001_encounter_streams_and_consent.sql",
+      "reason": "relation \"encounters\" does not exist",
+      "supplied": 6,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    },
+    {
+      "file": "20260705000002_encounter_stream_lifecycle.sql",
+      "reason": "relation \"encounter_media_streams\" does not exist",
+      "supplied": 3,
+      "presentAndReferenced": [],
+      "referencedButAbsent": [],
+      "presentButUnused": []
+    }
+  ],
+  "runtimeDependentRefusedMigrations": [],
+  "verdict": "INDEPENDENT"
+}
