@@ -35,3 +35,51 @@
 .fs-choice--none{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;padding:10px 12px;color:var(--text-muted)}
 .fs-choicelens{font-weight:600}
 .fs-choicemeta{color:var(--text-secondary);font-size:0.8125rem}
+
+/* V10 recovery live-only controls.
+   These states never alter the controlled V10 fixture render. */
+.fsw-facet-menu{
+  position:absolute;z-index:9;top:44px;left:18px;
+  display:flex;gap:6px;align-items:center;padding:8px;
+  border:1px solid var(--rule);border-radius:10px;
+  background:var(--surface-raised);box-shadow:var(--shadow-float)
+}
+.fsw-facet-menu p{
+  margin:0 0 0 4px;max-width:230px;color:var(--text-muted);
+  font-size:.6875rem;line-height:1.35
+}
+.fsw-relationship,.fsw-carry{
+  display:flex;flex-direction:column;gap:7px;padding:9px 10px;
+  border:1px solid var(--maia-rule);border-radius:8px;
+  background:color-mix(in srgb,var(--maia-tint) 58%,var(--surface-raised))
+}
+.fsw-rel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;font-size:.75rem
+}
+.fsw-rel-actions,.fsw-rel-choices{
+  display:flex;flex-wrap:wrap;gap:6px
+}
+.fsw-rel-choices{flex-direction:column}
+.fsw-rel-choices .fs-btn{text-align:left;justify-content:flex-start}
+.fsw-carry-selected{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:8px
+}
+.fsw-carry-selected strong{font-size:.75rem}
+.fsw-carry-selected p{
+  margin:4px 0 0;color:var(--text-secondary);
+  font-size:.75rem;line-height:1.45
+}
+.fsw-carry-list{display:flex;flex-direction:column;gap:7px}
+.fsw-carry-card{
+  display:flex;flex-direction:column;gap:4px;text-align:left;
+  border:1px solid var(--rule);border-radius:8px;
+  background:var(--surface-raised);padding:8px 9px;
+  color:var(--text-primary);font:inherit;cursor:pointer
+}
+.fsw-carry-card small{color:var(--text-muted);font-size:.65625rem}
+.fsw-carry-card span{font-size:.75rem;line-height:1.45}
+@media(max-width:600px){
+  .fsw-facet-menu{left:8px;right:8px;top:76px;flex-wrap:wrap}
+  .fsw-facet-menu p{flex-basis:100%;max-width:none}
+}

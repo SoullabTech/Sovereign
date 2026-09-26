@@ -61,25 +61,33 @@
  *   phrase of the controlled witness never reaches this file.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '../useLivingWorks';
+import { useMemberIdentity } from '../useMemberIdentity';
 import { currentWork, resolveWorkContext } from '../workContext';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { SectionStatus } from '@/lib/writersStudio/sectionSaveQueue';
 import { locationForSection, replacePlaceAddress, resolveInitialSection, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
+import { canvasWithRelationship, canvasWithoutRelationship, relationshipIdFrom } from '../canvasIdentity';
 import { toWriteFoot, toWriteHeading, toWritePlace } from '@/lib/writersStudio/studio/adapters/writeView';
+import { liveManuscriptView } from '@/lib/writersStudio/studio/adapters/liveV10Manuscript';
+import type { StudioState } from '@/lib/writersStudio/studio/machine';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { openBoundEditorialPassage, sendBoundEditorialTurn } from '@/lib/writersStudio/rebuild/editorialCollaboration';
-import { StudioShell } from '../flagship/StudioChrome';
-import { WriteFrame } from '../flagship/WriteFrame';
+import { StudioShell, type MemberIdentity } from '../flagship/StudioChrome';
+import {
+  WriteRoom, type MaiaCopy, type MaiaTab, type VersionEntry,
+  type WritePresentationPhase, type WriteRoomPorts,
+} from '../flagship/WriteRoom';
 import RebuildWritingBoundary from './RebuildWritingBoundary';
 import RebuildAuthoredBody, { type RebuildAuthoredBodyProps } from './RebuildAuthoredBody';
 import { DiscussLayer, discussHighlight, type DiscussState } from './DiscussLayer';
 import { commissionDiscuss, createInFlightGuard, discussAfterHold, resultAttaches, DISCUSS_COPY, type InFlightGuard } from './discussAct';
 import type { LensId } from '../flagship/DevelopReview';
+import type { Facet } from '../flagship/flagshipTokens';
 import { LiveReviewView } from './LiveReviewView';
 import { attachReview, hostFactsFrom, loadSelectedReading, selectedReadingId, type LiveReviewState, type ReviewPorts } from './liveReview';
 import { attachChoices, chooseReading, loadReadingChoices, navActionsFor, shouldLoadChoices, studioMode, type ChooserState, type StudioNav } from './reviewNavigation';
@@ -87,6 +95,12 @@ import { ReviewChooser } from './ReviewChooser';
 import { navigationFor } from './reviewReturn';
 import type { ReviewNavigation } from '../flagship/DevelopReview';
 import { commissionReviewDiscuss, REVIEW_DISCUSS_COPY, type ReviewDiscussionState } from '@/lib/writersStudio/rebuild/reviewDiscuss';
+import { useExactV10Editorial } from './useExactV10Editorial';
+import { useExactV10Relationship } from './useExactV10Relationship';
+import {
+  ExactV10CarryControls, ExactV10EditorialComposer,
+  ExactV10FacetMenu, ExactV10RelationshipControls,
+} from './ExactV10LiveControls';
 
 export interface ContextReady {
   state: 'section_aware';
@@ -143,12 +157,23 @@ export function authoredBodyProps(
   };
 }
 
+export interface LiveV10WriteBinding {
+  readonly phase: WritePresentationPhase;
+  readonly copy: MaiaCopy;
+  readonly facet?: Facet;
+  readonly tab?: MaiaTab;
+  readonly history?: readonly VersionEntry[];
+  readonly historyOpen?: boolean;
+  readonly ports?: WriteRoomPorts;
+}
+
 export interface FlagshipWriteViewProps {
   readonly context: ContextReady;
   /** The Work's own name, else the manuscript's own title, else null. ⛔ Never invented. */
   readonly workTitle: string | null;
   /** The member's own word for what the Work is becoming, or null. */
   readonly workForm: string | null;
+  readonly member?: MemberIdentity;
   readonly focusId: string | null;
   readonly held: HeldPassageAt | null;
   readonly onFocus: (sectionId: string) => void;
@@ -162,6 +187,8 @@ export interface FlagshipWriteViewProps {
   readonly onRelease?: () => void;
   /** C1C1 — the host keeps a ref to the ONE session the boundary created, for settlement. ⛔ Never a second session. */
   readonly onWriting?: (writing: SectionWriting) => void;
+  /** Full Editorial/A2 state projected into exact V10 presentation. */
+  readonly v10Write?: LiveV10WriteBinding;
   /** R1-1B — the live Review state for an explicitly selected reading. `idle`/absent → ordinary Write. */
   readonly review?: LiveReviewState;
   readonly reviewLens?: LensId | 'all';
@@ -183,8 +210,8 @@ const noAction = () => {};
 
 /** The composition. Renders under react-dom/server; the laws render it directly. */
 export function FlagshipWriteView({
-  context, workTitle, workForm, focusId, held, onFocus, onHold, epoch = 0,
-  editorialEnabled = false, discuss = null, onAskMaia = noAction, onSubmitAsk = noAction, onRelease = noAction, onWriting,
+  context, workTitle, workForm, member, focusId, held, onFocus, onHold, epoch = 0,
+  editorialEnabled = false, discuss = null, onAskMaia = noAction, onSubmitAsk = noAction, onRelease = noAction, onWriting, v10Write,
   review, reviewLens = 'all', onReviewLens = noAction, chooser, studioNav, reviewNavigation,
   reviewDiscussion = null, onReviewDiscuss, onSubmitReviewDiscuss, onCloseReviewDiscuss,
 }: FlagshipWriteViewProps) {
@@ -197,7 +224,13 @@ export function FlagshipWriteView({
   const reviewing = !!review && review.kind !== 'idle';
   const choosing = !reviewing && !!chooser && chooser.kind !== 'closed' && !!studioNav?.choose;
   const mode = studioNav?.mode ?? (reviewing ? 'review' : choosing ? 'review-choose' : 'write');
-  const nav = studioNav?.actions ?? {};
+  const developQuery = new URLSearchParams({ m: context.manuscriptId });
+  if (focusId) developQuery.set('s', focusId);
+  const developHref = `/writers-studio/develop?${developQuery.toString()}`;
+  const nav = {
+    ...(studioNav?.actions ?? {}),
+    develop: studioNav?.actions.develop ?? { kind: 'link' as const, href: developHref },
+  };
   const current = mode === 'write' ? 'write' : 'review';
 
   /* R1-1B — an explicit selected reading replaces the Write frame with the live read-only Review.
@@ -205,7 +238,7 @@ export function FlagshipWriteView({
   if (reviewing) {
     return (
       <div className="fsw-viewport">
-        <StudioShell current={current} destinations={['write', 'review']} affordance="orientation" nav={nav} project={project}>
+        <StudioShell current={current} destinations={['write', 'develop', 'review']} affordance="orientation" nav={nav} project={project} member={member}>
           <LiveReviewView state={review} lens={reviewLens} onLens={onReviewLens} navigation={reviewNavigation}
             discussion={reviewDiscussion} onDiscussFinding={onReviewDiscuss}
             onSubmitDiscuss={onSubmitReviewDiscuss} onCloseDiscuss={onCloseReviewDiscuss} />
@@ -217,7 +250,7 @@ export function FlagshipWriteView({
   if (choosing && chooser && studioNav?.choose) {
     return (
       <div className="fsw-viewport">
-        <StudioShell current={current} destinations={['write', 'review']} affordance="orientation" nav={nav} project={project}>
+        <StudioShell current={current} destinations={['write', 'develop', 'review']} affordance="orientation" nav={nav} project={project} member={member}>
           <ReviewChooser state={chooser} hrefFor={studioNav.choose.hrefFor} onChoose={studioNav.choose.onChoose} />
         </StudioShell>
       </div>
@@ -226,7 +259,7 @@ export function FlagshipWriteView({
 
   return (
     <div className="fsw-viewport">
-      <StudioShell current={current} destinations={['write', 'review']} affordance="orientation" nav={nav} project={project}>
+      <StudioShell current={current} destinations={['write', 'develop', 'review']} affordance="orientation" nav={nav} project={project} member={member}>
         <RebuildWritingBoundary
           key={`${context.manuscriptId}:${epoch}`}
           manuscriptId={context.manuscriptId}
@@ -237,46 +270,116 @@ export function FlagshipWriteView({
         >
           {(writing) => {
             onWriting?.(writing);
-            const bodies = sections.map((s) => writing.bodyOf(s.draftSectionId));
-            const statuses = sections.map((s) => writing.statusOf(s.draftSectionId));
-            const placeView = toWritePlace({ workTitle: workTitle ?? '', section: focus, span });
-            const place = { ...placeView, work: workTitle ?? undefined };
-            /* C1C1 — the ONE affordance, only while enabled + held + no panel open. */
-            const askMaia = editorialEnabled && held && !discuss
-              ? <button type="button" className="fs-btn fs-btn--key" data-event="ASK_MAIA" onClick={onAskMaia}>Ask MAIA</button>
+            const bodies = sections.map((section) => writing.bodyOf(section.draftSectionId));
+            const statuses = sections.map((section) => writing.statusOf(section.draftSectionId));
+            const place = toWritePlace({ workTitle: workTitle ?? '', section: focus, span });
+            const heading = toWriteHeading(span);
+            const foot = toWriteFoot({ span, bodies });
+            const bodyMap = new Map(sections.map((section) => [
+              section.draftSectionId, writing.bodyOf(section.draftSectionId),
+            ] as const));
+            const view = liveManuscriptView({
+              workTitle, manuscriptTitle: context.title, focus, span, bodies: bodyMap, held,
+            });
+
+            /* The old Discuss controller remains a lawful fallback until the full
+               Editorial controller is bound. It now projects into V10 rather than
+               rendering a second visual system. */
+            const fallbackPhase: WritePresentationPhase = discuss ? { name: 'conversation' } : { name: 'writing' };
+            const fallbackCopy: MaiaCopy = discuss?.kind === 'answered'
+              ? { memberAsk: discuss.ask, opening: discuss.reply }
+              : discuss?.kind === 'pending'
+                ? { memberAsk: discuss.ask, opening: DISCUSS_COPY.waiting }
+                : discuss?.kind === 'refused'
+                  ? { memberAsk: discuss.ask, opening: discuss.copy }
+                  : { opening: '' };
+            const presentation: LiveV10WriteBinding = v10Write ?? {
+              phase: fallbackPhase, copy: fallbackCopy, tab: 'Discuss',
+            };
+
+            const state: StudioState = {
+              phase: { name: 'writing' },
+              place: { sectionId: focusId ?? '', anchor: null },
+              overlay: presentation.historyOpen ? 'history' : null,
+              version: writing.currentRevisionId(),
+              history: [],
+              coverage: 0,
+            };
+            const selectionHere = held && focus && held.sectionId === focus.draftSectionId
+              ? { start: held.start, end: held.end } : null;
+            const answeredAt = !v10Write && editorialEnabled
+              ? discussHighlight(discuss, writing.bodyOf) : undefined;
+            const visuallyHeld = v10Write
+              ? selectionHere
+              : answeredAt && focus && answeredAt.sectionId === focus.draftSectionId
+                ? answeredAt.range
+                : selectionHere;
+            const manuscript = focus ? (
+              <div className="fs-p" data-held={visuallyHeld ? 'true' : 'false'}
+                data-flagship-section={focus.draftSectionId}
+                data-held-passage-address={visuallyHeld ? `${visuallyHeld.start}:${visuallyHeld.end}` : undefined}>
+                <RebuildAuthoredBody
+                  {...authoredBodyProps(writing, focus, null, { onFocus, onHold })}
+                  inheritTypography
+                />
+              </div>
+            ) : null;
+
+            const fallbackComposer = discuss?.kind === 'composing' ? (
+              <form className="fs-mcompose" onSubmit={(event) => {
+                event.preventDefault();
+                const data = new FormData(event.currentTarget);
+                onSubmitAsk(String(data.get('ask') ?? ''));
+              }}>
+                <textarea name="ask" className="fs-mtext" rows={3}
+                  aria-label="Your question about this passage" placeholder="Ask MAIA about this passage…" />
+                <button type="submit" className="fs-btn fs-btn--key">Ask</button>
+              </form>
+            ) : null;
+            const fallbackMessage = discuss?.kind === 'pending'
+              ? { text: DISCUSS_COPY.waiting, speaker: 'studio' as const }
+              : discuss?.kind === 'refused'
+                ? { text: discuss.copy, speaker: 'studio' as const }
+                : discuss?.kind === 'answered'
+                  ? { text: discuss.reply, speaker: 'maia' as const }
+                  : null;
+            const staleTrail = !v10Write && discuss?.kind === 'answered' && answeredAt?.range === null
+              ? <p className="fs-say" data-notice="true" data-stale-context="true">{DISCUSS_COPY.stale}</p>
               : undefined;
-            const contextual = editorialEnabled
-              ? <DiscussLayer discuss={discuss} focusSectionId={focusId} liveBodyOf={writing.bodyOf} onSubmit={onSubmitAsk} onRelease={onRelease} />
+            const askMaia = editorialEnabled && held && !discuss
+              ? <button type="button" className="fs-btn fs-btn--key"
+                  data-event="ASK_MAIA" onClick={onAskMaia}>Ask MAIA</button>
               : null;
-            /* C1C1 — changed-passage law: an answered response whose locus no longer occurs exactly once carries no highlight. */
-            const answeredAt = editorialEnabled ? discussHighlight(discuss, writing.bodyOf) : undefined;
+            const suppliedPorts = presentation.ports ?? {};
+            const ports: WriteRoomPorts = {
+              ...suppliedPorts,
+              presentationPhase: presentation.phase,
+              place: suppliedPorts.place ?? place,
+              heading: suppliedPorts.heading ?? heading,
+              foot: suppliedPorts.foot ?? { ...foot, actions: suppliedPorts.footActions },
+              status: suppliedPorts.status ?? truthfulStatus(statuses, writing.currentRevisionId()),
+              manuscript,
+              actions: Object.prototype.hasOwnProperty.call(suppliedPorts, 'actions')
+                ? suppliedPorts.actions : askMaia,
+              ...(v10Write ? {} : {
+                maiaTabs: ['Discuss'] as const,
+                maiaComposer: fallbackComposer,
+                maiaMessage: fallbackMessage,
+                maiaTrail: staleTrail,
+                onReleaseMaia: onRelease,
+              }),
+            };
+
             return (
-              <WriteFrame
-                place={place}
-                status={truthfulStatus(statuses, writing.currentRevisionId())}
-                heading={toWriteHeading(span)}
-                foot={toWriteFoot({ span, bodies })}
-                actions={askMaia}
-                contextual={contextual}
-              >
-                {sections.map((section) => {
-                  const id = section.draftSectionId;
-                  const isRoot = span?.root.draftSectionId === id;
-                  const selectionHere = held && held.sectionId === id ? { start: held.start, end: held.end } : null;
-                  const heldHere = answeredAt && answeredAt.sectionId === id
-                    && discuss && discuss.kind === 'answered' && held && held.sectionId === id
-                    && held.start === discuss.held.start && held.end === discuss.held.end && held.text === discuss.held.text
-                    ? answeredAt.range
-                    : selectionHere;
-                  return (
-                    <section key={id} className="fsw-section fsw-body" data-flagship-section={id}
-                      data-held-passage-address={heldHere ? `${heldHere.start}:${heldHere.end}` : undefined}>
-                      {!isRoot && section.heading ? <h2 className="fsw-h2">{section.heading}</h2> : null}
-                      <RebuildAuthoredBody {...authoredBodyProps(writing, section, heldHere, { onFocus, onHold })} />
-                    </section>
-                  );
-                })}
-              </WriteFrame>
+              <WriteRoom
+                state={state}
+                view={view}
+                copy={presentation.copy}
+                tab={presentation.tab ?? 'Discuss'}
+                history={presentation.history}
+                facet={presentation.facet ?? 'guided'}
+                ports={ports}
+              />
             );
           }}
         </RebuildWritingBoundary>
@@ -318,7 +421,24 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
   const [focusId, setFocusId] = useState<string | null>(null);
   const [held, setHeld] = useState<HeldPassageAt | null>(null);
   const { phase: worksPhase, works } = useLivingWorks();
-  /* C1C1 — ephemeral Discuss state. ⛔ Not persisted, not derived from any thread list, not a machine phase. */
+  const memberIdentity = useMemberIdentity();
+  const shellMember = useMemo<MemberIdentity | undefined>(() => {
+    if (memberIdentity.phase !== 'ready' || !memberIdentity.name?.trim()) return undefined;
+    const name = memberIdentity.name.trim();
+    const initials = name.split(/\s+/).filter(Boolean).slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '').join('');
+    return { name, initials: initials || name.slice(0, 2).toUpperCase() };
+  }, [memberIdentity]);
+  const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
+  const work = currentWork(workContext);
+  const requestedRelationship = params ? relationshipIdFrom(params) : null;
+  const validSectionIds = useMemo(
+    () => context?.sections.map((section) => section.draftSectionId) ?? [],
+    [context?.sections],
+  );
+  const [receiverThreadId, setReceiverThreadId] = useState<string | null>(null);
+  const [writingEpoch, setWritingEpoch] = useState(0);
+  /* C1C1 — ephemeral Discuss state remains only as a temporary fallback controller. */
   const [discuss, setDiscuss] = useState<DiscussState | null>(null);
   const discussGen = useRef(0);
   const guard = useRef<InFlightGuard | null>(null);
@@ -412,6 +532,161 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
     replaceAddress(sectionId);
   }, [replaceAddress]);
 
+  const replaceRelationshipAddress = useCallback((relationshipId: string | null) => {
+    if (typeof window === 'undefined') return;
+    const next = relationshipId
+      ? canvasWithRelationship(window.location.pathname, window.location.search, relationshipId)
+      : canvasWithoutRelationship(window.location.pathname, window.location.search);
+    replacePlaceAddress(next);
+  }, []);
+
+  const restoreReturnedPlace = useCallback((sectionId: string) => {
+    setFocusId(sectionId);
+    setHeld(null);
+    replaceAddress(sectionId);
+  }, [replaceAddress]);
+
+  const refreshContext = useCallback(async (): Promise<void> => {
+    const manuscriptId = context?.manuscriptId;
+    if (!manuscriptId) return;
+    try {
+      const res = await apiFetch(`/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(manuscriptId)}`);
+      if (!res.ok) return;
+      const body = await res.json() as ContextPayload;
+      if (body.state !== 'section_aware') return;
+      setContext(body);
+      setWritingEpoch((epoch) => epoch + 1);
+    } catch {
+      /* The durable mutation receipt remains authoritative. A failed refresh
+         never turns an applied/undone act into a false failure. */
+    }
+  }, [context?.manuscriptId]);
+
+  const relationship = useExactV10Relationship({
+    livingWorkId: work?.id ?? null,
+    manuscriptId: context?.manuscriptId ?? requested ?? '',
+    requestedRelationshipId: requestedRelationship,
+    requestedSectionId: requestedSection,
+    currentSectionId: focusId,
+    receiverThreadId,
+    validSectionIds,
+    onRelationshipAddress: replaceRelationshipAddress,
+    onRestorePlace: restoreReturnedPlace,
+  });
+
+  const editorial = useExactV10Editorial({
+    enabled: editorialEnabled,
+    manuscriptId: context?.manuscriptId ?? requested ?? '',
+    focusId,
+    held,
+    writingRef,
+    contextVersion: context?.version ?? 0,
+    relationshipId: relationship.relationship?.id,
+    carry: relationship.carrySelector,
+    consumeCarry: relationship.consumeCarry,
+    refreshAfterMutation: refreshContext,
+  });
+
+  useEffect(() => {
+    setReceiverThreadId(editorial.thread?.threadId ?? null);
+  }, [editorial.thread?.threadId]);
+
+  useEffect(() => {
+    if (focusId) relationship.rememberPlace(focusId);
+  }, [focusId, relationship.rememberPlace]);
+
+  const [facetOpen, setFacetOpen] = useState(false);
+  useEffect(() => { setFacetOpen(false); }, [focusId, relationship.relationship?.id]);
+
+  const liveTab: MaiaTab = editorial.tab === 'Revise' ? 'Revise' : 'Discuss';
+  const v10Write = useMemo<LiveV10WriteBinding>(() => {
+    const relationshipLead = (
+      <ExactV10RelationshipControls
+        relationship={relationship.relationship}
+        choices={relationship.choices}
+        busy={relationship.busy}
+        message={relationship.message}
+        chooserOpen={relationship.chooserOpen}
+        onToggleChooser={() => relationship.setChooserOpen(!relationship.chooserOpen)}
+        onBegin={() => { void relationship.begin(); }}
+        onChoose={(id) => { void relationship.choose(id); }}
+        onLeave={() => { void relationship.leave(); }}
+      />
+    );
+    const carryTrail = (
+      <ExactV10CarryControls
+        relationshipSelected={Boolean(relationship.relationship)}
+        receiverThreadId={receiverThreadId}
+        chooser={relationship.carryChooser}
+        selected={relationship.selectedCarry}
+        onOpen={relationship.openCarryChooser}
+        onClose={relationship.closeCarryChooser}
+        onSelect={relationship.selectCarry}
+        onRemove={relationship.removeCarry}
+      />
+    );
+    const composer = editorial.panelOpen ? (
+      <ExactV10EditorialComposer
+        value={editorial.draft}
+        busy={editorial.busy}
+        tab={liveTab === 'Revise' ? 'Revise' : 'Discuss'}
+        onChange={editorial.setDraft}
+        onSend={() => { void editorial.send(); }}
+      />
+    ) : null;
+    const ports: WriteRoomPorts = {
+      actions: editorialEnabled ? (
+        <button type="button" className="fs-tool fs-tool--key"
+          data-event="HOLD_PASSAGE" disabled={!held || editorial.panelOpen}
+          title={!held ? 'Select a passage first' : undefined}
+          onClick={editorial.open}>Ask MAIA</button>
+      ) : null,
+      onFacet: () => setFacetOpen((open) => !open),
+      facetMenu: facetOpen ? (
+        <ExactV10FacetMenu current={editorial.depth}
+          onChoose={editorial.setDepth} onClose={() => setFacetOpen(false)} />
+      ) : undefined,
+      maiaComposer: composer,
+      maiaTabs: ['Discuss', 'Revise'],
+      maiaLead: relationshipLead,
+      maiaTrail: carryTrail,
+      onReleaseMaia: editorial.close,
+      onMaiaTab: (tab) => {
+        if (tab === 'Discuss' || tab === 'Revise') editorial.setTab(tab);
+      },
+      onReadInContext: editorial.readInContext,
+      onApply: () => { void editorial.apply(); },
+      onBackToAlternatives: editorial.backToAlternatives,
+      onUndo: () => { void editorial.undo(); },
+      onOpenHistory: editorial.openHistory,
+      onCloseHistory: editorial.closeHistory,
+      showCompareHistory: false,
+      ...(editorial.message ? { maiaMessage: editorial.message } : {}),
+    };
+    return {
+      phase: editorial.phase,
+      copy: editorial.copy,
+      facet: editorial.depth,
+      tab: liveTab,
+      history: editorial.history,
+      historyOpen: editorial.historyOpen,
+      ports,
+    };
+  }, [
+    editorial.panelOpen, editorial.draft, editorial.busy, editorial.depth,
+    editorial.phase, editorial.copy, editorial.history, editorial.historyOpen,
+    editorial.message, editorial.open, editorial.close, editorial.setDraft,
+    editorial.setDepth, editorial.setTab, editorial.send, editorial.readInContext,
+    editorial.apply, editorial.backToAlternatives, editorial.undo,
+    editorial.openHistory, editorial.closeHistory,
+    relationship.relationship, relationship.choices, relationship.busy,
+    relationship.message, relationship.chooserOpen, relationship.carryChooser,
+    relationship.selectedCarry, relationship.setChooserOpen, relationship.begin,
+    relationship.choose, relationship.leave, relationship.openCarryChooser,
+    relationship.closeCarryChooser, relationship.selectCarry,
+    relationship.removeCarry, receiverThreadId, editorialEnabled, held, facetOpen, liveTab,
+  ]);
+
   /* C1C1 — the commissioning gesture, in the founder-fixed order. */
   const onAskMaia = useCallback(() => {
     if (!editorialEnabled || !held) return;
@@ -488,8 +763,6 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
     });
   }, [reviewDiscussEnabled, review, context]);
 
-  const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
-  const work = currentWork(workContext);
   workTitleRef.current = work?.title ?? context?.title ?? null;
   workFormRef.current = work?.form ?? null;
 
@@ -563,16 +836,19 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
       context={context}
       workTitle={work?.title ?? context.title ?? null}
       workForm={work?.form ?? null}
+      member={shellMember}
       focusId={focusId}
       held={held}
       onFocus={onFocus}
       onHold={onHold}
+      epoch={writingEpoch}
       editorialEnabled={editorialEnabled}
       discuss={discuss}
       onAskMaia={onAskMaia}
       onSubmitAsk={onSubmitAsk}
       onRelease={onRelease}
       onWriting={(writing) => { writingRef.current = writing; }}
+      v10Write={v10Write}
       review={review}
       reviewLens={reviewLens}
       onReviewLens={setReviewLens}

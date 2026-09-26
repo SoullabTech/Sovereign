@@ -25,9 +25,9 @@ const ICON: Readonly<Record<NavDestination, string>> = {
  * selector in a settings page and ⛔ never a question about the member.
  * It names **the relationship the member wants of MAIA**, ⛔ not their level.
  */
-export function FacetControl({ facet }: { facet: Facet }) {
+export function FacetControl({ facet, onOpen }: { facet: Facet; onOpen?: () => void }) {
   return (
-    <button type="button" className="fs-facet" data-facet={facet}
+    <button type="button" className="fs-facet" data-facet={facet} onClick={onOpen}
       aria-label={`How MAIA works with you: ${FACET_COPY[facet].label}. ${FACET_COPY[facet].line}`}>
       {FACET_COPY[facet].label}<span className="fs-caret" aria-hidden="true">⌄</span>
     </button>
@@ -65,7 +65,7 @@ export interface ProjectIdentity {
  */
 export type NavAffordance = 'reference' | 'orientation';
 
-export interface MemberIdentity { readonly initials: string; readonly name: string; readonly org: string }
+export interface MemberIdentity { readonly initials: string; readonly name: string; readonly org?: string }
 
 /**
  * C1A · ⭐ `destinations` lets a LIVE host render only the modes that genuinely
@@ -119,7 +119,7 @@ export function StudioRail({ current, project, member, destinations = NAV_DESTIN
       {member ? (
         <div className="fs-railfoot">
           <div className="fs-av" aria-hidden="true">{member.initials}</div>
-          <div className="fs-who">{member.name}<small>{member.org}</small></div>
+          <div className="fs-who">{member.name}{member.org ? <small>{member.org}</small> : null}</div>
         </div>
       ) : null}
     </nav>
@@ -187,16 +187,16 @@ export function StudioShell({ current, project, member, focus = false, destinati
   );
 }
 
-export function CrumbBar({ work, chapter, place, saved, actions, facet }: {
+export function CrumbBar({ work, chapter, place, saved, actions, facet, onFacet, facetMenu }: {
   /** C1B: optional — a host with no Work name and no manuscript title omits it. */
   work?: string; chapter?: string; place?: string; saved?: string;
-  actions?: React.ReactNode; facet?: Facet;
+  actions?: React.ReactNode; facet?: Facet; onFacet?: () => void; facetMenu?: React.ReactNode;
 }) {
   return (
     <div className="fs-bar">
       <div className="fs-crumb">
         {work ? <b>{work}</b> : null}
-        {facet ? <FacetControl facet={facet} /> : null}
+        {facet ? <><FacetControl facet={facet} onOpen={onFacet} />{facetMenu}</> : null}
         {chapter ? <><span className="sl" aria-hidden="true">/</span><span>{chapter}</span></> : null}
         {place ? <><span className="sl" aria-hidden="true">/</span><span className="now">{place}</span></> : null}
       </div>

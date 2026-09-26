@@ -17,7 +17,7 @@ import * as React from 'react';
 import type {
   Alternative, AlternativeSet, Phase, RevisionEvent, StudioState,
 } from '../../../lib/writersStudio/studio/machine';
-import { WriteFrame } from './WriteFrame';
+import { WriteFrame, type WriteFoot, type WriteHeading, type WritePlace } from './WriteFrame';
 import { ContextualMaiaPanel } from './ContextualMaiaPanel';
 import type { Facet } from './flagshipTokens';
 import { TrailPosition } from './ReviewPanels';
@@ -93,8 +93,8 @@ function Alternatives({ set, reading, onReadInContext }: { set: AlternativeSet; 
    ══════════════════════════════════════════════════════════════════════════ */
 
 export function MaiaPanel({ phase, copy, tab, heldEcho, ports }: {
-  phase: Phase; copy: MaiaCopy; tab: MaiaTab;
-  ports?: Pick<WriteRoomPorts, 'maiaComposer' | 'maiaLead' | 'maiaTrail' | 'onReleaseMaia' | 'onMaiaTab' | 'onReadInContext'>;
+  phase: WritePresentationPhase; copy: MaiaCopy; tab: MaiaTab;
+  ports?: Pick<WriteRoomPorts, 'maiaComposer' | 'maiaMessage' | 'maiaTabs' | 'maiaLead' | 'maiaTrail' | 'onReleaseMaia' | 'onMaiaTab' | 'onReadInContext'>;
   /** ⭐ The held sentence, echoed at the head of the sheet.
    *  On a phone the contextual layer is a sheet over the page, so the passage it
    *  discusses would sit behind it. ⛔ Scrolling the prose out from under the
@@ -142,12 +142,15 @@ export function MaiaPanel({ phase, copy, tab, heldEcho, ports }: {
   const composer = ports && Object.prototype.hasOwnProperty.call(ports, 'maiaComposer')
     ? ports.maiaComposer ?? undefined
     : defaultComposer;
+  const message = ports && Object.prototype.hasOwnProperty.call(ports, 'maiaMessage')
+    ? ports.maiaMessage ?? undefined
+    : { text: copy.opening, speaker: 'maia' as const };
   return (
     <ContextualMaiaPanel
       heldEcho={heldEcho}
       memberAsk={copy.memberAsk}
-      message={{ text: copy.opening, speaker: 'maia' }}
-      tabs={TABS}
+      message={message}
+      tabs={ports?.maiaTabs ?? TABS}
       activeTab={tab}
       composer={composer}
       onRelease={ports?.onReleaseMaia}
@@ -191,7 +194,7 @@ export interface VersionEntry {
   readonly when: string; readonly time: string; readonly what: string; readonly current?: boolean;
 }
 
-export function VersionHistoryDrawer({ entries, onClose, onCompare }: { entries: readonly VersionEntry[]; onClose?: () => void; onCompare?: () => void }) {
+export function VersionHistoryDrawer({ entries, onClose, onCompare, showCompare = true }: { entries: readonly VersionEntry[]; onClose?: () => void; onCompare?: () => void; showCompare?: boolean }) {
   return (
     <aside className="fs-drawer" data-overlay="history" aria-label="Version history">
       <div className="fs-dhead">
@@ -210,15 +213,28 @@ export function VersionHistoryDrawer({ entries, onClose, onCompare }: { entries:
             </div>
           </div>
         ))}
-        <button type="button" className="fs-btn" style={{ marginTop: 14, alignSelf: 'flex-start' }} onClick={onCompare}>
+        {showCompare ? <button type="button" className="fs-btn" style={{ marginTop: 14, alignSelf: 'flex-start' }} onClick={onCompare}>
           Compare versions
-        </button>
+        </button> : null}
       </div>
     </aside>
   );
 }
 
+export type WritePresentationPhase =
+  | { readonly name: 'writing' | 'passage-held' | 'conversation' | 'reasoning' | 'challenge' | 'teaching' }
+  | { readonly name: 'alternatives'; readonly candidates: AlternativeSet; readonly selected: string | null }
+  | { readonly name: 'context-review'; readonly candidates: AlternativeSet; readonly selected: string }
+  | { readonly name: 'applied'; readonly candidates: AlternativeSet; readonly applied: RevisionEvent }
+  | { readonly name: 'undone'; readonly candidates: AlternativeSet; readonly selected: string };
+
 export interface WriteRoomPorts {
+  /** Live visual phase. Carries no fabricated observation/reading identity. */
+  readonly presentationPhase?: WritePresentationPhase;
+  /** Real Work/place projection. Undefined preserves exact V10 fixture strings. */
+  readonly place?: WritePlace;
+  readonly heading?: WriteHeading;
+  readonly foot?: WriteFoot;
   /** Truthful live save/status copy. Undefined preserves the accepted witness fixture status. */
   readonly status?: string;
   /** Live manuscript/editor surface. Undefined preserves the exact controlled paragraph rendering. */
@@ -226,8 +242,14 @@ export interface WriteRoomPorts {
   /** Live controls. Undefined preserves the exact controlled witness controls. */
   readonly actions?: React.ReactNode;
   readonly footActions?: React.ReactNode;
+  /** Live facet interaction. Omitted in controlled V10, preserving its exact render. */
+  readonly onFacet?: () => void;
+  readonly facetMenu?: React.ReactNode;
   /** Live MAIA composition. Presence with null intentionally removes the fixture composer. */
   readonly maiaComposer?: React.ReactNode | null;
+  /** Live message/tabs. Omitted preserves exact controlled V10 copy/tabs. */
+  readonly maiaMessage?: import('./ContextualMaiaPanel').ContextualMessage | null;
+  readonly maiaTabs?: readonly MaiaTab[];
   readonly maiaLead?: React.ReactNode;
   readonly maiaTrail?: React.ReactNode;
   readonly onAskMaia?: () => void;
@@ -240,6 +262,7 @@ export interface WriteRoomPorts {
   readonly onOpenHistory?: () => void;
   readonly onCloseHistory?: () => void;
   readonly onCompareHistory?: () => void;
+  readonly showCompareHistory?: boolean;
   readonly onBackAlongTrail?: () => void;
   readonly onFocus?: () => void;
 }
@@ -273,7 +296,7 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
   const heldEcho = heldPara?.target
     ? `…${heldPara.target}.`
     : heldPara ? `${heldPara.text.slice(0, 120)}…` : undefined;
-  const phase = state.phase;
+  const phase: WritePresentationPhase = ports?.presentationPhase ?? state.phase;
   const maiaOpen = phase.name !== 'writing';
   const selectedId = phase.name === 'context-review' ? phase.selected
     : phase.name === 'applied' ? phase.applied.alternativeId : null;
@@ -296,11 +319,13 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
           <span className="fs-trailfrom">You followed this here from {state.trail.from}.</span>
         </div>
       ) : null}
-      place={{ work: view.work, chapter: view.chapterTitle, place, facet }}
+      place={ports?.place ?? { work: view.work, chapter: view.chapterTitle, place, facet }}
       /* ⚠️ Witness fixture status. The FRAME composes no status; this room does,
          because it is the controlled candidate. A live host passes its truth. */
       status={ports?.status ?? (state.history.length > 0 ? `Saved · v${state.version}` : 'Saved 2m ago')}
-      actions={ports?.actions ?? <>
+      onFacet={ports?.onFacet}
+      facetMenu={ports?.facetMenu}
+      actions={ports && Object.prototype.hasOwnProperty.call(ports, 'actions') ? ports.actions : <>
         {/* ⭐ Secondary tools collapse on a phone. Ten controls facing a member
             on a 390px screen is a console; the audience law is the reason this
             is a composition change rather than an exemption in the test.
@@ -314,14 +339,14 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
         <button type="button" className="fs-tool fs-toolmore" aria-label="More tools">⋯</button>
         <button type="button" className="fs-tool fs-tool--key" data-event="HOLD_PASSAGE" onClick={ports?.onAskMaia}>Ask MAIA</button>
       </>}
-      heading={{ chapterLabel: view.chapterLabel, chapterTitle: view.chapterTitle, epigraph: view.epigraph }}
+      heading={ports?.heading ?? { chapterLabel: view.chapterLabel, chapterTitle: view.chapterTitle, epigraph: view.epigraph }}
       contextual={<>
         {maiaOpen ? <MaiaPanel phase={phase} copy={copy} tab={tab} heldEcho={heldEcho} ports={ports} /> : null}
         {phase.name === 'context-review' && selected ? <ReadInContextBar name={selected.name} onApply={ports?.onApply} onBack={ports?.onBackToAlternatives} /> : null}
         {phase.name === 'applied' ? <AppliedReceipt applied={phase.applied} place={place} onUndo={ports?.onUndo} onHistory={ports?.onOpenHistory} /> : null}
-        {state.overlay === 'history' && history ? <VersionHistoryDrawer entries={history} onClose={ports?.onCloseHistory} onCompare={ports?.onCompareHistory} /> : null}
+        {state.overlay === 'history' && history ? <VersionHistoryDrawer entries={history} onClose={ports?.onCloseHistory} onCompare={ports?.onCompareHistory} showCompare={ports?.showCompareHistory ?? true} /> : null}
       </>}
-      foot={{
+      foot={ports?.foot ?? {
         chapterLabel: view.chapterLabel, words: view.words, wordDelta: view.wordDelta,
         actions: ports?.footActions ?? <button type="button" className="fs-tool" onClick={ports?.onFocus}>Focus</button>,
       }}

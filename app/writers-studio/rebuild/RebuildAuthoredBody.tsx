@@ -24,13 +24,15 @@ export interface RebuildAuthoredBodyProps {
   onEditorBlur?: (start: number, end: number) => void;
   /** A1-LS1 · R5 — reopen this editor with exactly this selection. */
   restore?: { start: number; end: number; nonce: number } | null;
+  /** V10 adapter mode: typography comes from the accepted manuscript wrapper. */
+  inheritTypography?: boolean;
 }
 
 const cp = (text: string, unitOffset: number) => [...text.slice(0, unitOffset)].length;
 
 export default function RebuildAuthoredBody({
   section, body, held, onEdit, onEditingBegan, onFocusPlace,
-  onCaptureBeforeBlur, onSelectPassage, onEditorBlur, restore,
+  onCaptureBeforeBlur, onSelectPassage, onEditorBlur, restore, inheritTypography = false,
 }: RebuildAuthoredBodyProps) {
   const [editing, setEditing] = useState(false);
   const field = useRef<HTMLTextAreaElement | null>(null);
@@ -81,7 +83,7 @@ export default function RebuildAuthoredBody({
   if (!section.editable) {
     return (
       <div data-authored-body={section.draftSectionId}
-        style={{ fontSize: 17.5, lineHeight: 1.74, whiteSpace: 'pre-wrap' }}>
+        style={{ fontSize: inheritTypography ? 'inherit' : 17.5, lineHeight: inheritTypography ? 'inherit' : 1.74, whiteSpace: 'pre-wrap' }}>
         {body}
       </div>
     );
@@ -117,8 +119,8 @@ export default function RebuildAuthoredBody({
         rows={1}
         style={{
           width: '100%', resize: 'none', overflow: 'hidden', border: 'none', outline: 'none',
-          background: 'transparent', color: 'inherit', font: 'inherit', fontSize: 17.5,
-          lineHeight: 1.74, padding: 0, margin: 0, whiteSpace: 'pre-wrap',
+          background: 'transparent', color: 'inherit', font: 'inherit', fontSize: inheritTypography ? 'inherit' : 17.5,
+          lineHeight: inheritTypography ? 'inherit' : 1.74, padding: 0, margin: 0, whiteSpace: 'pre-wrap',
         }}
       />
     );
@@ -142,7 +144,7 @@ export default function RebuildAuthoredBody({
         setEditing(true);
       }}
       style={{
-        fontSize: 17.5, lineHeight: 1.74, whiteSpace: 'pre-wrap', cursor: 'text',
+        fontSize: inheritTypography ? 'inherit' : 17.5, lineHeight: inheritTypography ? 'inherit' : 1.74, whiteSpace: 'pre-wrap', cursor: 'text',
         minHeight: '1.74em',
       }}
     >

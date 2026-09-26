@@ -54,6 +54,9 @@ export interface WriteFrameProps {
   readonly status?: string;
   /** Host-supplied bar actions. Omit any that lack real substrate. */
   readonly actions?: React.ReactNode;
+  /** Live-only facet interaction; omitted in the controlled V10 witness. */
+  readonly onFacet?: () => void;
+  readonly facetMenu?: React.ReactNode;
   /** The trail out, when the host has one to offer. */
   readonly trail?: React.ReactNode;
   readonly heading?: WriteHeading;
@@ -64,13 +67,13 @@ export interface WriteFrameProps {
   readonly foot?: WriteFoot;
 }
 
-export function WriteFrame({ place, status, actions, trail, heading, children, contextual, foot }: WriteFrameProps) {
+export function WriteFrame({ place, status, actions, onFacet, facetMenu, trail, heading, children, contextual, foot }: WriteFrameProps) {
   return (
     <>
       {trail}
       <CrumbBar
         work={place.work} chapter={place.chapter} place={place.place} facet={place.facet}
-        saved={status} actions={actions}
+        saved={status} actions={actions} onFacet={onFacet} facetMenu={facetMenu}
       />
       <div className="fs-stage" data-stage="write">
         <article className="fs-ms" data-manuscript="true">

@@ -4,6 +4,9 @@ human_activity: writing directly in the Work while MAIA stays at the writer's ex
 surfaces:
   - app/writers-studio/flagship/**
   - app/writers-studio/rebuild/FlagshipWriteHost.tsx
+  # V10 exact-recovery live controls: presentation-only facet, relationship,
+  # carry and composer controls inside the same flagship Write room.
+  - app/writers-studio/rebuild/ExactV10LiveControls.tsx
   # EC1, 2026-09-23 — the shared authorship substrate is mounted by the
   # flagship host. Naming it here gives the live route one current composition
   # authority while preserving its existing save/authorship law unchanged.
