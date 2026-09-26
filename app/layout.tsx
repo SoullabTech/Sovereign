@@ -181,12 +181,21 @@ export default function RootLayout({
                 console.warn('⚠️ [GLOBAL] AudioContext error:', e);
               }
 
-              // Show confirmation
-              var toast = document.createElement('div');
-              toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;';
-              toast.textContent = '🔊 Audio enabled';
-              document.body.appendChild(toast);
-              setTimeout(function(){ toast.remove(); }, 2000);
+              // Show confirmation — suppressed on Journal (founder ruling,
+              // 2026-08-11): a saturated green system toast intruding on a
+              // contemplative writing surface breaks the room. This is a HOUSE
+              // correction, scoped by pathname at the point of injection —
+              // the audio unlock above is untouched everywhere, including
+              // Journal, because MAIA's voice must still work there.
+              // Do not widen this scope without a separate ruling; do not
+              // touch the unlock mechanism itself.
+              if (window.location.pathname.indexOf('/journal') !== 0) {
+                var toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;';
+                toast.textContent = '🔊 Audio enabled';
+                document.body.appendChild(toast);
+                setTimeout(function(){ toast.remove(); }, 2000);
+              }
 
               // Remove listeners after first attempt
               document.removeEventListener('click', unlockAudio, true);
