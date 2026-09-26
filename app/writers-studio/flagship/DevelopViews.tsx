@@ -19,17 +19,13 @@ function ProvenanceMark({ p }: { p: Provenance }) {
   return <span className="fs-prov" data-provenance={p.kind}>{provenanceLabel(p)}</span>;
 }
 
-export function CoverageLine({ c, compact = false, navigable = true }: {
-  c: Coverage; compact?: boolean;
-  /** R1-1A · false = no navigation authority behind the control, so it is OMITTED, never disabled. */
-  navigable?: boolean;
-}) {
+export function CoverageLine({ c, compact = false }: { c: Coverage; compact?: boolean }) {
   return (
     <div className="fs-ev" data-coverage="true">
       <span className="fs-chip">{c.read} / {c.total} sections</span>
       <span className="fs-chip">{c.depth}</span>
       {compact ? null : <span className="fs-covwhen">{c.when}</span>}
-      {navigable ? <button type="button" className="fs-goto" data-return-to="coverage">What MAIA read →</button> : null}
+      <button type="button" className="fs-goto" data-return-to="coverage">What MAIA read →</button>
     </div>
   );
 }
@@ -43,16 +39,7 @@ export function CoverageLine({ c, compact = false, navigable = true }: {
  * Every cell is an address. ⛔ Presence only — there is no way to grade a book
  * with a presence grid.
  */
-/** R1-2 · a live host's return navigation over exact durable section addresses (structurally the presentation's `ReviewNavigation`). */
-export interface CellNavigation { hrefFor(sectionId: string): string | null; onGo(sectionId: string, href: string): void }
-
-export function ContinuityMap({ d, title, navigable = true, navigation }: {
-  d: ContinuityMapData; title: string;
-  /** R1-1A · false = cells show presence only; no address is offered without navigation authority. */
-  navigable?: boolean;
-  /** R1-2 · present = a cell navigates ONLY when its address is exact and in the mounted context; the map's coverage control is absent. */
-  navigation?: CellNavigation;
-}) {
+export function ContinuityMap({ d, title }: { d: ContinuityMapData; title: string }) {
   return (
     <section className="fs-card" data-continuity-map="true">
       <h3>{title}</h3>
@@ -73,7 +60,7 @@ export function ContinuityMap({ d, title, navigable = true, navigation }: {
             </tr>
           </thead>
           <tbody>
-            {d.rows.map((r) => <MapRow key={r.id} r={r} units={d.units} navigable={navigable} navigation={navigation} />)}
+            {d.rows.map((r) => <MapRow key={r.id} r={r} units={d.units} />)}
           </tbody>
         </table>
       </div>
@@ -82,12 +69,12 @@ export function ContinuityMap({ d, title, navigable = true, navigation }: {
           <span key={n}><i data-presence={n} aria-hidden="true" />{PRESENCE_LABEL[n as 1 | 2 | 3]}</span>
         ))}
       </div>
-      <CoverageLine c={d.coverage} navigable={navigable && !navigation} />
+      <CoverageLine c={d.coverage} />
     </section>
   );
 }
 
-function MapRow({ r, units, navigable = true, navigation }: { r: ThreadRow; units: readonly string[]; navigable?: boolean; navigation?: CellNavigation }) {
+function MapRow({ r, units }: { r: ThreadRow; units: readonly string[] }) {
   return (
     <tr data-thread={r.id}>
       <th scope="row" className="fs-maprowhead">
@@ -97,25 +84,11 @@ function MapRow({ r, units, navigable = true, navigation }: { r: ThreadRow; unit
       {units.map((u, i) => {
         const p = r.presence[i] ?? 0;
         const a = r.addressOf[i];
-        /* R1-2 · live: an exact address in the mounted context → a location; anything else → presence only. */
-        const href = navigation && a?.sectionId ? navigation.hrefFor(a.sectionId) : null;
         return (
           <td key={u}>
-            {navigation ? (href && a ? (
-              <a className="fs-cell" data-presence={p} data-return-to={a.sectionId} href={href}
-                onClick={(e) => { e.preventDefault(); navigation.onGo(a.sectionId, href); }}
-                aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}. Open ${a.label}.`} />
-            ) : (
-              <span className="fs-cell" data-presence={p} role="img"
-                aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}.`} />
-            )) : navigable ? (
-              <button type="button" className="fs-cell" data-presence={p}
-                data-return-to={a?.sectionId ?? ''}
-                aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}. Open ${a?.label ?? u}.`} />
-            ) : (
-              <span className="fs-cell" data-presence={p} role="img"
-                aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}.`} />
-            )}
+            <button type="button" className="fs-cell" data-presence={p}
+              data-return-to={a?.sectionId ?? ''}
+              aria-label={`${r.label} in ${u}: ${PRESENCE_LABEL[p]}. Open ${a?.label ?? u}.`} />
           </td>
         );
       })}

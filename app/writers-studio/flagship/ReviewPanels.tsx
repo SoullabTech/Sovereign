@@ -19,16 +19,13 @@ import type { OwnNoteKind } from '../../../lib/writersStudio/studio/machine';
  * keep the analysis current; ⭐ that would be the system deciding to read the
  * member's new words without being asked.
  */
-export function StaleReading({ readAt, updatedAt, change, previousLabel, acknowledged = false, capabilities }: {
+export function StaleReading({ readAt, updatedAt, change, previousLabel, acknowledged = false }: {
   readAt: string; updatedAt: string; change: WorkChange; previousLabel: string;
-  /** R1-1A · which occasioned controls have real authority behind them. Absent = all (the accepted controlled room). */
-  capabilities?: { readonly commission: boolean; readonly acknowledge: boolean; readonly navigate: boolean };
   /** ⭐ After "Not now" it becomes a persistent strip. ⛔ Nothing is hidden —
    *  the claim is still qualified on every view — but the Work gets its space
    *  back. *Impossible to miss* and *dominating the room* are different asks. */
   acknowledged?: boolean;
 }) {
-  const can = capabilities ?? { commission: true, acknowledge: true, navigate: true };
   if (acknowledged) {
     return (
       <div className="fs-stalestrip" data-stale-reading="true" data-contextual="true"
@@ -41,16 +38,12 @@ export function StaleReading({ readAt, updatedAt, change, previousLabel, acknowl
         <span className="fs-stalestriptrust" data-trust-line="true">
           {REREAD_IS_THE_MEMBERS_CALL_SHORT}
         </span>
-        {can.navigate || can.commission ? (
-          <span className="fs-stalestripacts">
-            {can.navigate ? (
-              <button type="button" className="fs-goto" data-return-to="previous-reading">
-                Previous reading
-              </button>
-            ) : null}
-            {can.commission ? <button type="button" className="fs-goto" data-commission="reread">Read again</button> : null}
-          </span>
-        ) : null}
+        <span className="fs-stalestripacts">
+          <button type="button" className="fs-goto" data-return-to="previous-reading">
+            Previous reading
+          </button>
+          <button type="button" className="fs-goto" data-commission="reread">Read again</button>
+        </span>
       </div>
     );
   }
@@ -86,19 +79,15 @@ export function StaleReading({ readAt, updatedAt, change, previousLabel, acknowl
       <div className="fs-staleacts">
         <span className="fs-stalesay">Her findings are based on the earlier version.</span>
         {/* ⭐ The ONLY control in Review that commissions a reading. */}
-        {can.commission ? (
-          <button type="button" className="fs-btn fs-btn--key" data-commission="reread">
-            Read this chapter again
-          </button>
-        ) : null}
-        {can.acknowledge ? <button type="button" className="fs-btn" data-dismiss="reread">Not now</button> : null}
+        <button type="button" className="fs-btn fs-btn--key" data-commission="reread">
+          Read this chapter again
+        </button>
+        <button type="button" className="fs-btn" data-dismiss="reread">Not now</button>
         {/* ⭐ The earlier reading is KEPT and reachable. ⛔ What MAIA believed
             before is not deleted by a correction. */}
-        {can.navigate ? (
-          <button type="button" className="fs-goto" data-return-to="previous-reading">
-            Previous reading · {previousLabel} →
-          </button>
-        ) : null}
+        <button type="button" className="fs-goto" data-return-to="previous-reading">
+          Previous reading · {previousLabel} →
+        </button>
       </div>
 
       <p className="fs-staletrust" data-trust-line="true">{REREAD_IS_THE_MEMBERS_CALL}</p>
@@ -178,15 +167,10 @@ export function OwnObservation({ kind = 'noticed', draft = '', themes = [], plac
  */
 export interface ContextParagraph { readonly id: string; readonly text: string }
 
-export function ManuscriptContext({ chapterLabel, chapterTitle, page, paragraphs, highlightId, findingLabel, navigable = true, navigation }: {
+export function ManuscriptContext({ chapterLabel, chapterTitle, page, paragraphs, highlightId, findingLabel }: {
   chapterLabel: string; chapterTitle: string; page: string;
   paragraphs: readonly ContextParagraph[];
   highlightId?: string; findingLabel?: string;
-  /** R1-1A · false = the return controls are OMITTED (no navigation authority), never disabled. */
-  navigable?: boolean;
-  /** R1-2 · a live host's return: a location for the selected finding's EXACT address, or null → no control.
-   *  Under a live navigation "Open the full manuscript" is absent: it names no section. Absent → controlled rendering, unchanged. */
-  navigation?: { readonly href: string | null; onGo(href: string): void };
 }) {
   return (
     <aside className="fs-context" data-manuscript-context="true" aria-label="The passage this refers to">
@@ -207,23 +191,14 @@ export function ManuscriptContext({ chapterLabel, chapterTitle, page, paragraphs
           </p>
         ))}
       </div>
-      {navigation ? (navigation.href && highlightId ? (
-        <div className="fs-contextfoot">
-          <a className="fs-btn fs-btn--key" data-return-to={highlightId} href={navigation.href}
-            onClick={(e) => { e.preventDefault(); navigation.onGo(navigation.href!); }}>
-            Go to passage
-          </a>
-        </div>
-      ) : null) : navigable ? (
-        <div className="fs-contextfoot">
-          <button type="button" className="fs-btn fs-btn--key" data-return-to={highlightId ?? 'context'}>
-            Go to passage
-          </button>
-          <button type="button" className="fs-goto" data-return-to="full-manuscript">
-            Open the full manuscript →
-          </button>
-        </div>
-      ) : null}
+      <div className="fs-contextfoot">
+        <button type="button" className="fs-btn fs-btn--key" data-return-to={highlightId ?? 'context'}>
+          Go to passage
+        </button>
+        <button type="button" className="fs-goto" data-return-to="full-manuscript">
+          Open the full manuscript →
+        </button>
+      </div>
     </aside>
   );
 }

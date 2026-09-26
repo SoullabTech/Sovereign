@@ -7,18 +7,13 @@
  * lose the passage. F3/V2 hold by construction.
  *
  * ⭐ Pure function of `StudioState`. ⛔ No hooks, no fetch, no local state.
- *
- * C1A: the room COMPOSES `WriteFrame` (the pure geometry) with fixture
- * paragraphs and the contextual layer. It is the controlled witness; a live
- * host composes the same frame around the proven authorship substrate.
  */
 
 import * as React from 'react';
 import type {
   Alternative, AlternativeSet, Phase, RevisionEvent, StudioState,
 } from '../../../lib/writersStudio/studio/machine';
-import { WriteFrame } from './WriteFrame';
-import { ContextualMaiaPanel } from './ContextualMaiaPanel';
+import { CrumbBar } from './StudioChrome';
 import type { Facet } from './flagshipTokens';
 import { TrailPosition } from './ReviewPanels';
 
@@ -110,42 +105,51 @@ export function MaiaPanel({ phase, copy, tab, heldEcho }: {
   const showAlts = phase.name === 'alternatives' || phase.name === 'undone'
     || phase.name === 'context-review';
   const reading = phase.name === 'context-review' ? phase.selected : null;
-  /* C1C1: the controlled witness COMPOSES the pure contextual panel. The markup
-     below is byte-identical to the accepted golden; only the seam moved. */
-  const lead = copy.carriedFrom ? (
-    /* ⭐ The observation the member clicked, arriving WITH them.
-       ⛔ Not regenerated — re-reading on arrival would be a commission
-       inferred from navigation. */
-    <div className="fs-carried" data-carried-observation="true">
-      <span className="fs-carriedlabel">What you followed here</span>
-      <p className="fs-carriedtext">{copy.carriedFrom}</p>
-    </div>
-  ) : undefined;
-  const trail = (
-    <>
-      {copy.noticed && copy.noticed.length > 0 ? (
-        <>
-          <p className="fs-notice"><strong>What I notice</strong></p>
-          <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--text-secondary)', fontSize: '0.78125rem', lineHeight: 1.6 }}>
-            {copy.noticed.map((n) => <li key={n}>{n}</li>)}
-          </ul>
-        </>
-      ) : null}
-      {showAlts && 'candidates' in phase ? <Alternatives set={phase.candidates} reading={reading} /> : null}
-      {copy.coverage ? <p className="fs-notice" data-coverage="true">{copy.coverage}</p> : null}
-      {copy.limits ? <p className="fs-limit" data-non-conclusions="permanent">{copy.limits}</p> : null}
-    </>
-  );
   return (
-    <ContextualMaiaPanel
-      heldEcho={heldEcho}
-      memberAsk={copy.memberAsk}
-      message={{ text: copy.opening, speaker: 'maia' }}
-      tabs={TABS}
-      activeTab={tab}
-      composer={<><div className="f">Tell MAIA what you’d like to explore…</div><div className="fs-send" aria-hidden="true">→</div></>}
-      supplemental={{ lead, trail }}
-    />
+    <aside className="fs-maia" data-maia-anchored="true" aria-label="MAIA, at this passage">
+      <div className="fs-mhead">
+        <div className="fs-mdot" aria-hidden="true" />
+        <div className="fs-mname">MAIA</div>
+        <button type="button" className="fs-mx" data-event="RELEASE" aria-label="Close MAIA">✕</button>
+      </div>
+      <div className="fs-tabs" role="tablist">
+        {TABS.map((t) => (
+          <button key={t} type="button" role="tab" className="fs-tab"
+            aria-selected={t === tab} data-tab={t}>{t}</button>
+        ))}
+      </div>
+      <div className="fs-mbody">
+        {heldEcho ? (
+          <blockquote className="fs-heldquote" data-held-echo="true">{heldEcho}</blockquote>
+        ) : null}
+        {copy.carriedFrom ? (
+          /* ⭐ The observation the member clicked, arriving WITH them.
+             ⛔ Not regenerated — re-reading on arrival would be a commission
+             inferred from navigation. */
+          <div className="fs-carried" data-carried-observation="true">
+            <span className="fs-carriedlabel">What you followed here</span>
+            <p className="fs-carriedtext">{copy.carriedFrom}</p>
+          </div>
+        ) : null}
+        {copy.memberAsk ? <div className="fs-ask">{copy.memberAsk}</div> : null}
+        <p className="fs-say">{copy.opening}</p>
+        {copy.noticed && copy.noticed.length > 0 ? (
+          <>
+            <p className="fs-notice"><strong>What I notice</strong></p>
+            <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--text-secondary)', fontSize: '0.78125rem', lineHeight: 1.6 }}>
+              {copy.noticed.map((n) => <li key={n}>{n}</li>)}
+            </ul>
+          </>
+        ) : null}
+        {showAlts && 'candidates' in phase ? <Alternatives set={phase.candidates} reading={reading} /> : null}
+        {copy.coverage ? <p className="fs-notice" data-coverage="true">{copy.coverage}</p> : null}
+        {copy.limits ? <p className="fs-limit" data-non-conclusions="permanent">{copy.limits}</p> : null}
+      </div>
+      <div className="fs-minput">
+        <div className="f">Tell MAIA what you’d like to explore…</div>
+        <div className="fs-send" aria-hidden="true">→</div>
+      </div>
+    </aside>
   );
 }
 
@@ -250,10 +254,10 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
   const place = `§ ${view.chapterLabel.replace(/^Chapter\s*/i, '')}`;
 
   return (
-    <WriteFrame
-      /* ⭐ The trail out. ⛔ A finding that leads into the Work and strands the
-         member there has replaced a dashboard with a trapdoor. */
-      trail={state.trail ? (
+    <>
+      {/* ⭐ The trail out. ⛔ A finding that leads into the Work and strands the
+          member there has replaced a dashboard with a trapdoor. */}
+      {state.trail ? (
         <div className="fs-trail" data-trail="true">
           <button type="button" className="fs-trailback" data-event="BACK_ALONG_TRAIL">
             <span aria-hidden="true">←</span> {state.trail.backLabel}
@@ -262,37 +266,50 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
           <span className="fs-trailfrom">You followed this here from {state.trail.from}.</span>
         </div>
       ) : null}
-      place={{ work: view.work, chapter: view.chapterTitle, place, facet }}
-      /* ⚠️ Witness fixture status. The FRAME composes no status; this room does,
-         because it is the controlled candidate. A live host passes its truth. */
-      status={state.history.length > 0 ? `Saved · v${state.version}` : 'Saved 2m ago'}
-      actions={<>
-        {/* ⭐ Secondary tools collapse on a phone. Ten controls facing a member
-            on a 390px screen is a console; the audience law is the reason this
-            is a composition change rather than an exemption in the test.
-            ⚠️ CONTROLLED-WITNESS CONTROLS. C1A confers no runtime authority
-            for Aa · voice note · Comment · More; a live host omits them. */}
-        <span className="fs-toolset">
-          <button type="button" className="fs-tool">Aa</button>
-          <button type="button" className="fs-tool" aria-label="Voice note">◍</button>
-          <button type="button" className="fs-tool">Comment</button>
-        </span>
-        <button type="button" className="fs-tool fs-toolmore" aria-label="More tools">⋯</button>
-        <button type="button" className="fs-tool fs-tool--key" data-event="HOLD_PASSAGE">Ask MAIA</button>
-      </>}
-      heading={{ chapterLabel: view.chapterLabel, chapterTitle: view.chapterTitle, epigraph: view.epigraph }}
-      contextual={<>
+      <CrumbBar
+        work={view.work} chapter={view.chapterTitle} place={place} facet={facet}
+        saved={state.history.length > 0 ? `Saved · v${state.version}` : 'Saved 2m ago'}
+        actions={<>
+          {/* ⭐ Secondary tools collapse on a phone. Ten controls facing a member
+              on a 390px screen is a console; the audience law is the reason this
+              is a composition change rather than an exemption in the test. */}
+          <span className="fs-toolset">
+            <button type="button" className="fs-tool">Aa</button>
+            <button type="button" className="fs-tool" aria-label="Voice note">◍</button>
+            <button type="button" className="fs-tool">Comment</button>
+          </span>
+          <button type="button" className="fs-tool fs-toolmore" aria-label="More tools">⋯</button>
+          <button type="button" className="fs-tool fs-tool--key" data-event="HOLD_PASSAGE">Ask MAIA</button>
+        </>}
+      />
+      <div className="fs-stage" data-stage="write">
+        <article className="fs-ms" data-manuscript="true">
+          <div className="fs-chlabel">{view.chapterLabel}</div>
+          <h1 className="fs-chtitle">{view.chapterTitle}</h1>
+          {view.epigraph ? (
+            <>
+              <p className="fs-epi">{view.epigraph.text}</p>
+              <p className="fs-epiwho">— {view.epigraph.attribution}</p>
+            </>
+          ) : null}
+          {view.paragraphs.map((p) => renderParagraph(p, view, state, candidateText))}
+        </article>
+
         {maiaOpen ? <MaiaPanel phase={phase} copy={copy} tab={tab} heldEcho={heldEcho} /> : null}
         {phase.name === 'context-review' && selected ? <ReadInContextBar name={selected.name} /> : null}
         {phase.name === 'applied' ? <AppliedReceipt applied={phase.applied} place={place} /> : null}
         {state.overlay === 'history' && history ? <VersionHistoryDrawer entries={history} /> : null}
-      </>}
-      foot={{
-        chapterLabel: view.chapterLabel, words: view.words, wordDelta: view.wordDelta,
-        actions: <button type="button" className="fs-tool">Focus</button>,
-      }}
-    >
-      {view.paragraphs.map((p) => renderParagraph(p, view, state, candidateText))}
-    </WriteFrame>
+      </div>
+      <div className="fs-foot">
+        <span>{view.chapterLabel}</span>
+        <span>·</span>
+        <span>
+          {view.words.toLocaleString('en-US')} words
+          {view.wordDelta ? <span className="fs-delta"> (+{view.wordDelta})</span> : null}
+        </span>
+        <span className="fs-sp" />
+        <button type="button" className="fs-tool">Focus</button>
+      </div>
+    </>
   );
 }
