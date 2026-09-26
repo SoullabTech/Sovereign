@@ -28,7 +28,7 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { persistMemberEditorialAct } from '@/lib/manuscript/editorialRuntime/memberAct';
 import { runEditorialTurn } from '@/lib/manuscript/editorialRuntime/turn';
 import { MEMBER_ACT_KINDS, type MemberActKind } from '@/lib/manuscript/editorialDiscourse/contract';
-import { preflightEditorialRelationshipCarriage } from '@/lib/writers-studio/relationshipCarriage';
+import { preflightEditorialRelationshipCarriage, resolvePriorMaiaEditorialCarry, type ResolvedPriorMaiaEditorialCarry } from '@/lib/writers-studio/relationshipCarriage';
 import {
   DEFAULT_SCOPE_DECLARATION, isEditorialLatitude,
   type EditorialScopeDeclaration,
@@ -47,7 +47,10 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * person to read their code would believe it too. The refusal names the keys so
  * the mistake is legible rather than mysterious.
  */
-const TOP_KEYS = ['threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId'] as const;
+const TOP_KEYS = [
+  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry',
+] as const;
+const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
 /**
  * ⭐⭐ THE AUTHOR'S TWO CONTROLS, AND THEY ARE SEPARATE KEYS ON PURPOSE.
@@ -65,6 +68,7 @@ type Parsed =
       sanctuary: boolean;
       scope: EditorialScopeDeclaration;
       relationshipId: string | null;
+      carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null;
       /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
       mayProposeImmediately: boolean;
       /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
@@ -94,6 +98,26 @@ function parseClosed(body: unknown): Parsed {
   if (!(b.relationshipId === undefined
       || (typeof b.relationshipId === 'string' && b.relationshipId.length > 0))) {
     return { ok: false, error: 'relationshipId must be a non-empty string when provided' };
+  }
+
+  let carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null = null;
+  if (b.carry !== undefined) {
+    if (typeof b.relationshipId !== 'string' || b.relationshipId.length === 0) {
+      return { ok: false, error: 'relationship_required' };
+    }
+    if (typeof b.carry !== 'object' || b.carry === null || Array.isArray(b.carry)) {
+      return { ok: false, error: 'carry must be an object' };
+    }
+    const co = b.carry as Record<string, unknown>;
+    const strayCarry = Object.keys(co).filter((k) => !(CARRY_KEYS as readonly string[]).includes(k));
+    if (strayCarry.length) return { ok: false, error: `unknown carry field(s): ${strayCarry.join(', ')}` };
+    if (co.kind !== 'prior_maia_editorial_turn') {
+      return { ok: false, error: 'carry.kind must be prior_maia_editorial_turn' };
+    }
+    if (!Number.isInteger(co.sourceEpisodeSequence) || Number(co.sourceEpisodeSequence) < 1) {
+      return { ok: false, error: 'carry.sourceEpisodeSequence must be a positive integer' };
+    }
+    carry = { kind: 'prior_maia_editorial_turn', sourceEpisodeSequence: Number(co.sourceEpisodeSequence) };
   }
   const a = b.act;
   if (typeof a !== 'object' || a === null || Array.isArray(a)) {
@@ -166,6 +190,7 @@ function parseClosed(body: unknown): Parsed {
     sanctuary: TurnPosture.resolve(b).sanctuary,
     scope,
     relationshipId: typeof b.relationshipId === 'string' ? b.relationshipId : null,
+    carry,
     mayProposeImmediately,
     proposalPolicy,
   };
@@ -217,6 +242,24 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  let resolvedCarry: ResolvedPriorMaiaEditorialCarry | undefined;
+  if (parsed.carry !== null) {
+    const carry = await resolvePriorMaiaEditorialCarry({
+      memberId,
+      relationshipId: parsed.relationshipId!,
+      receiverThreadId: parsed.threadId,
+      sourceEpisodeSequence: parsed.carry.sourceEpisodeSequence,
+    });
+    if (!carry.ok) {
+      const notFound = carry.reason === 'relationship_not_found'
+        || carry.reason === 'source_episode_not_found'
+        || carry.reason === 'source_thread_invalid'
+        || carry.reason === 'source_turn_not_found';
+      return NextResponse.json({ error: carry.reason, persisted: false }, { status: notFound ? 404 : 409 });
+    }
+    resolvedCarry = carry.carry;
+  }
+
   const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act });
   if (!act.ok) {
     const status = act.reason === 'thread_not_found' ? 404 : 400;
@@ -228,6 +271,7 @@ export async function POST(request: NextRequest) {
     identity,
     threadId: parsed.threadId,
     ...(parsed.relationshipId !== null ? { relationshipId: parsed.relationshipId } : {}),
+    ...(resolvedCarry ? { carry: resolvedCarry } : {}),
     currentTurnIndex: act.turnIndex,
     declaredAct: parsed.act.act,
     currentDirectionId: act.direction?.id ?? null,
