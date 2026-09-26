@@ -314,12 +314,30 @@ export function FlagshipWriteView({
               : answeredAt && focus && answeredAt.sectionId === focus.draftSectionId
                 ? answeredAt.range
                 : selectionHere;
+            /* D3R1 — the exact-V10 context review must be visible IN the live
+               authored body before Apply. This is a projection only: the
+               controller's separate Apply gesture remains the sole mutation
+               authority. The candidate is accepted only for the exact held
+               section/range that opened this relationship. */
+            const contextPreview = (() => {
+              if (presentation.phase.name !== 'context-review'
+                  || !held || !focus || held.sectionId !== focus.draftSectionId) return null;
+              const candidate = presentation.phase.candidates.items.find(
+                (item) => item.id === presentation.phase.selected);
+              if (!candidate || candidate.text === null) return null;
+              return {
+                start: held.start,
+                end: held.end,
+                replacementText: candidate.text,
+              };
+            })();
             const manuscript = focus ? (
               <div className="fs-p" data-held={visuallyHeld ? 'true' : 'false'}
                 data-flagship-section={focus.draftSectionId}
                 data-held-passage-address={visuallyHeld ? `${visuallyHeld.start}:${visuallyHeld.end}` : undefined}>
                 <RebuildAuthoredBody
                   {...authoredBodyProps(writing, focus, null, { onFocus, onHold })}
+                  preview={contextPreview}
                   inheritTypography
                 />
               </div>

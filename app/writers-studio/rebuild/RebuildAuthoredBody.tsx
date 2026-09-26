@@ -8,6 +8,15 @@ export interface HeldPassage {
   end: number;
 }
 
+/**
+ * Exact V10 read-in-context projection.
+ * It is presentation only: the authored body remains the one value passed in
+ * through `body`; Apply is still the only act that may mutate it.
+ */
+export interface AuthoredBodyPreview extends HeldPassage {
+  replacementText: string;
+}
+
 export interface RebuildAuthoredBodyProps {
   section: RebuildSection;
   body: string;
@@ -26,13 +35,19 @@ export interface RebuildAuthoredBodyProps {
   restore?: { start: number; end: number; nonce: number } | null;
   /** V10 adapter mode: typography comes from the accepted manuscript wrapper. */
   inheritTypography?: boolean;
+  /**
+   * V10 context-review only. Renders an in-place before/after comparison over
+   * the exact held code-point range. It never writes `body`.
+   */
+  preview?: AuthoredBodyPreview | null;
 }
 
 const cp = (text: string, unitOffset: number) => [...text.slice(0, unitOffset)].length;
 
 export default function RebuildAuthoredBody({
   section, body, held, onEdit, onEditingBegan, onFocusPlace,
-  onCaptureBeforeBlur, onSelectPassage, onEditorBlur, restore, inheritTypography = false,
+  onCaptureBeforeBlur, onSelectPassage, onEditorBlur, restore,
+  inheritTypography = false, preview = null,
 }: RebuildAuthoredBodyProps) {
   const [editing, setEditing] = useState(false);
   const field = useRef<HTMLTextAreaElement | null>(null);
@@ -89,6 +104,37 @@ export default function RebuildAuthoredBody({
     );
   }
 
+  const points = [...body];
+  const previewValid = preview !== null
+    && Number.isInteger(preview.start) && Number.isInteger(preview.end)
+    && preview.start >= 0 && preview.end >= preview.start
+    && preview.end <= points.length;
+
+  /* Exact V10 context-review: show the proposed wording in the authored place
+     without making the proposal the authored body. The mutation remains behind
+     the separate Apply gesture. Invalid/stale coordinates fail closed to the
+     ordinary authored body instead of guessing at a locus. */
+  if (previewValid && preview) {
+    return (
+      <div
+        role="textbox"
+        aria-readonly="true"
+        data-authored-body={section.draftSectionId}
+        data-preview-in-context="true"
+        style={{
+          fontSize: inheritTypography ? 'inherit' : 17.5,
+          lineHeight: inheritTypography ? 'inherit' : 1.74,
+          whiteSpace: 'pre-wrap',
+        }}
+      >
+        {points.slice(0, preview.start).join('')}
+        <span className="fs-del">{points.slice(preview.start, preview.end).join('')}</span>{' '}
+        <span className="fs-ins">{preview.replacementText}</span>
+        {points.slice(preview.end).join('')}
+      </div>
+    );
+  }
+
   if (editing) {
     return (
       <textarea
@@ -126,7 +172,6 @@ export default function RebuildAuthoredBody({
     );
   }
 
-  const points = [...body];
   return (
     <div
       role="textbox"
