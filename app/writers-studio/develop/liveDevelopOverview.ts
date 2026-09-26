@@ -43,5 +43,11 @@ export function factsOnlyDevelopOverview(facts: DevelopOverviewFacts): DevelopVi
       written: `${sections.length} sections · ${words.toLocaleString('en-US')} words in the current manuscript`,
     },
     readingAttached: false,
+    structure: sections.map((section, index) => ({
+      sectionId: section.draftSectionId,
+      label: section.heading?.trim() || `Untitled — ${index + 1}`,
+      position: index + 1,
+      depth: section.headingDepth ?? null,
+    })),
   };
 }

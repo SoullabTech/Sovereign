@@ -59,7 +59,7 @@ experience_verification: >-
 
 This is the **sole current Experience Contract for the flagship compositions mounted at `/writers-studio/rebuild` and `/writers-studio/develop`**.
 
-D5A mounts Develop through the same flagship shell. Its first live slice is deliberately facts-only: manuscript/Work facts may render immediately, while readings, observations, cross-Work maps, MAIA actions, facets and lens controls appear only when their exact runtime authority is bound.
+D5A mounts Develop through the same flagship shell. Its first live slice is deliberately facts-only: manuscript/Work facts may render immediately, while readings, observations, cross-Work maps, MAIA actions, facets and lens controls appear only when their exact runtime authority is bound. D5B binds Structure as the first live Develop lens using only authored section identity, order, headings and heading depth; every section has an exact route back into Write, and MAIA does not name or infer a manuscript shape.
 
 Its standing composition law is unchanged: the manuscript is primary; MAIA is contextual, anchored, and dismissible; MAIA is **not a permanent pane**. The shared `RebuildWritingBoundary` and `RebuildAuthoredBody` are named in this contract because the live flagship host mounts them as its existing authorship substrate; EC1 changes none of their save or writing authority.
 

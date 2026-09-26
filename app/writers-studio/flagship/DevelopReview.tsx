@@ -244,6 +244,14 @@ export interface LensStanding {
   readonly remaining?: number;
 }
 
+export interface DevelopStructureUnit {
+  readonly sectionId: string;
+  readonly label: string;
+  readonly position: number;
+  /** Authored heading depth when present; null means no structural depth was asserted. */
+  readonly depth: number | null;
+}
+
 export interface DevelopView {
   readonly work: string;
   readonly kind: string;
@@ -258,6 +266,8 @@ export interface DevelopView {
   readonly opening: WorkOpening;
   /** False means this Overview is manuscript/Work facts only; it says nothing about whether readings exist elsewhere. */
   readonly readingAttached?: boolean;
+  /** Authored manuscript structure only; no inferred movements or archetypal shape. */
+  readonly structure?: readonly DevelopStructureUnit[];
   /** Set when the member has declared a shape; ⛔ absent renders Sequence. */
   readonly structureDeclaredLabel?: string;
 }
@@ -280,6 +290,12 @@ export const OVERVIEW_ONLY_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.fr
   facet: false,
   overview: false,
   lenses: [],
+});
+export const STRUCTURE_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.freeze({
+  askMaia: false,
+  facet: false,
+  overview: true,
+  lenses: ['structure'],
 });
 
 /** ⭐ No empty state. Either a reading exists and said nothing, or it does not exist. */
@@ -304,9 +320,15 @@ function LensRow({ l, canCommission = true, readingAttached = true }: { l: LensS
   );
 }
 
-export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabilities = CONTROLLED_DEVELOP_CAPABILITIES, onLens }: {
+export interface DevelopStructureNavigation {
+  hrefFor(sectionId: string): string;
+  onGo?(sectionId: string, href: string): void;
+}
+
+export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabilities = CONTROLLED_DEVELOP_CAPABILITIES, onLens, structureNavigation }: {
   view: DevelopView; lens?: LensId | 'overview'; facet?: Facet;
   capabilities?: DevelopCapabilities; onLens?: (lens: LensId | 'overview') => void;
+  structureNavigation?: DevelopStructureNavigation;
 }) {
   const cov = view.coverage;
   return (
@@ -329,6 +351,9 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabil
         ))}
       </div>
 
+      {lens === 'structure' ? (
+        <StructureDevelopPanel view={view} navigation={structureNavigation} />
+      ) : (
       <div className="fs-pane" data-stage="develop">
         <div className="fs-pgrid">
           <div className="fs-phead">
@@ -397,7 +422,47 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabil
           </div>
         </div>
       </div>
+      )}
     </>
+  );
+}
+
+function StructureDevelopPanel({ view, navigation }: { view: DevelopView; navigation?: DevelopStructureNavigation }) {
+  const units = view.structure ?? [];
+  return (
+    <div className="fs-pane" data-stage="develop" data-develop-view="structure">
+      <div className="fs-pgrid">
+        <div className="fs-phead" style={{ gridColumn: '1 / -1' }}>
+          <div>
+            <h2>How your {view.kind} is put together</h2>
+            <p>{units.length} authored {units.length === 1 ? 'section' : 'sections'}, in manuscript order.</p>
+          </div>
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <section className="fs-card" data-authored-structure="true">
+            <h3>Your manuscript structure</h3>
+            <p className="fs-obsnote">These are headings and sections already present in your manuscript. MAIA has not named or inferred a shape here.</p>
+            <div className="fs-lenses" style={{ marginTop: 14 }}>
+              {units.map((unit) => {
+                const href = navigation?.hrefFor(unit.sectionId) ?? null;
+                return (
+                  <div key={unit.sectionId} className="fs-lens" data-structure-section={unit.sectionId}
+                    style={{ paddingLeft: unit.depth && unit.depth > 1 ? Math.min(unit.depth - 1, 4) * 16 : undefined }}>
+                    <div className="fs-lensq">{unit.label}</div>
+                    <div className="fs-lensterm">Section {unit.position}</div>
+                    <div className="fs-lensbody">
+                      {href ? <a className="fs-goto" data-return-to={unit.sectionId} href={href}
+                        onClick={navigation?.onGo ? (event) => { event.preventDefault(); navigation.onGo?.(unit.sectionId, href); } : undefined}>Open in Write →</a> : null}
+                    </div>
+                  </div>
+                );
+              })}
+              {units.length === 0 ? <p className="fs-obsnote">No section structure is available to show here.</p> : null}
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
   );
 }
 

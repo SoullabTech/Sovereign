@@ -31,6 +31,10 @@ describe('D5A facts-only Develop Overview', () => {
     expect(view.map).toBeUndefined();
     expect(view.observations).toEqual([]);
     expect(view.readingAttached).toBe(false);
+    expect(view.structure).toEqual([
+      { sectionId: 'd1', label: 'First', position: 1, depth: 1 },
+      { sectionId: 'd2', label: 'Second', position: 2, depth: 2 },
+    ]);
     expect(view.coverage.read).toBe(0);
     expect(view.lenses).toHaveLength(7);
     expect(view.lenses.every((lens) => lens.state === 'not-read' && lens.count === 0)).toBe(true);

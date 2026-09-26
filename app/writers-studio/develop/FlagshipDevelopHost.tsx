@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { useLivingWorks } from '../useLivingWorks';
 import { useMemberIdentity } from '../useMemberIdentity';
 import { currentWork, resolveWorkContext } from '../workContext';
-import { DevelopRoom, OVERVIEW_ONLY_DEVELOP_CAPABILITIES } from '../flagship/DevelopReview';
+import { DevelopRoom, STRUCTURE_DEVELOP_CAPABILITIES, type LensId } from '../flagship/DevelopReview';
 import { StudioShell, type MemberIdentity, type ProjectIdentity } from '../flagship/StudioChrome';
 import type { NavActions } from '../flagship/flagshipTokens';
 import { factsOnlyDevelopOverview } from './liveDevelopOverview';
@@ -34,8 +34,12 @@ function memberForShell(identity: ReturnType<typeof useMemberIdentity>): MemberI
 
 export default function FlagshipDevelopHost() {
   const params = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
   const manuscriptId = params?.get('m') ?? null;
   const sectionId = params?.get(SECTION_PARAM) ?? null;
+  const requestedLens = params?.get('lens') ?? 'overview';
+  const lens: LensId | 'overview' = requestedLens === 'structure' ? 'structure' : 'overview';
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
   const { phase: worksPhase, works } = useLivingWorks();
@@ -105,6 +109,21 @@ export default function FlagshipDevelopHost() {
   const project: ProjectIdentity | undefined = view.work === 'This work'
     ? undefined
     : { workTitle: view.work, ...(work?.form ? { workKind: work.form } : {}) };
+  const onLens = (nextLens: LensId | 'overview') => {
+    if (nextLens !== 'overview' && nextLens !== 'structure') return;
+    const next = new URLSearchParams(params?.toString() ?? '');
+    if (nextLens === 'overview') next.delete('lens');
+    else next.set('lens', nextLens);
+    const q = next.toString();
+    router.push(`${pathname ?? '/writers-studio/develop'}${q ? `?${q}` : ''}`);
+  };
+  const structureNavigation = {
+    hrefFor: (targetSectionId: string) => {
+      const target = new URLSearchParams({ m: context.manuscriptId, [SECTION_PARAM]: targetSectionId });
+      return `/writers-studio/rebuild?${target.toString()}`;
+    },
+    onGo: (_targetSectionId: string, href: string) => router.push(href),
+  };
 
   return (
     <StudioShell
@@ -117,8 +136,10 @@ export default function FlagshipDevelopHost() {
     >
       <DevelopRoom
         view={view}
-        lens="overview"
-        capabilities={OVERVIEW_ONLY_DEVELOP_CAPABILITIES}
+        lens={lens}
+        capabilities={STRUCTURE_DEVELOP_CAPABILITIES}
+        onLens={onLens}
+        structureNavigation={structureNavigation}
       />
     </StudioShell>
   );
