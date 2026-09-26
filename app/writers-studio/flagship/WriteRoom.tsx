@@ -62,7 +62,7 @@ export interface MaiaCopy {
    ⭐ Every card's action is `Read in context`; ⛔ `Apply` is not reachable here.
    ══════════════════════════════════════════════════════════════════════════ */
 
-function AlternativeCard({ alt, reading }: { alt: Alternative; reading?: boolean }) {
+function AlternativeCard({ alt, reading, onReadInContext }: { alt: Alternative; reading?: boolean; onReadInContext?: (alternativeId: string) => void }) {
   const keep = alt.text === null;
   return (
     <div className="fs-alt" data-alternative={alt.id} data-keep={keep ? 'true' : 'false'}
@@ -74,16 +74,16 @@ function AlternativeCard({ alt, reading }: { alt: Alternative; reading?: boolean
         <span className="fs-altreading">Reading this one in place</span>
       ) : (
         <button type="button" className="fs-readctx" data-event="READ_IN_CONTEXT"
-          data-alternative={alt.id}>Read in context</button>
+          data-alternative={alt.id} onClick={onReadInContext ? () => onReadInContext(alt.id) : undefined}>Read in context</button>
       )}
     </div>
   );
 }
 
-function Alternatives({ set, reading }: { set: AlternativeSet; reading?: string | null }) {
+function Alternatives({ set, reading, onReadInContext }: { set: AlternativeSet; reading?: string | null; onReadInContext?: (alternativeId: string) => void }) {
   return (
     <div className="fs-alts" data-alternatives="peer" data-ranked="false">
-      {set.items.map((a) => <AlternativeCard key={a.id} alt={a} reading={a.id === reading} />)}
+      {set.items.map((a) => <AlternativeCard key={a.id} alt={a} reading={a.id === reading} onReadInContext={onReadInContext} />)}
     </div>
   );
 }
@@ -92,8 +92,9 @@ function Alternatives({ set, reading }: { set: AlternativeSet; reading?: string 
    MAIA — anchored, dismissible, locus-bound
    ══════════════════════════════════════════════════════════════════════════ */
 
-export function MaiaPanel({ phase, copy, tab, heldEcho }: {
+export function MaiaPanel({ phase, copy, tab, heldEcho, ports }: {
   phase: Phase; copy: MaiaCopy; tab: MaiaTab;
+  ports?: Pick<WriteRoomPorts, 'maiaComposer' | 'maiaLead' | 'maiaTrail' | 'onReleaseMaia' | 'onMaiaTab' | 'onReadInContext'>;
   /** ⭐ The held sentence, echoed at the head of the sheet.
    *  On a phone the contextual layer is a sheet over the page, so the passage it
    *  discusses would sit behind it. ⛔ Scrolling the prose out from under the
@@ -131,11 +132,16 @@ export function MaiaPanel({ phase, copy, tab, heldEcho }: {
           </ul>
         </>
       ) : null}
-      {showAlts && 'candidates' in phase ? <Alternatives set={phase.candidates} reading={reading} /> : null}
+      {showAlts && 'candidates' in phase ? <Alternatives set={phase.candidates} reading={reading} onReadInContext={ports?.onReadInContext} /> : null}
       {copy.coverage ? <p className="fs-notice" data-coverage="true">{copy.coverage}</p> : null}
       {copy.limits ? <p className="fs-limit" data-non-conclusions="permanent">{copy.limits}</p> : null}
+      {ports?.maiaTrail}
     </>
   );
+  const defaultComposer = <><div className="f">Tell MAIA what you’d like to explore…</div><div className="fs-send" aria-hidden="true">→</div></>;
+  const composer = ports && Object.prototype.hasOwnProperty.call(ports, 'maiaComposer')
+    ? ports.maiaComposer ?? undefined
+    : defaultComposer;
   return (
     <ContextualMaiaPanel
       heldEcho={heldEcho}
@@ -143,8 +149,10 @@ export function MaiaPanel({ phase, copy, tab, heldEcho }: {
       message={{ text: copy.opening, speaker: 'maia' }}
       tabs={TABS}
       activeTab={tab}
-      composer={<><div className="f">Tell MAIA what you’d like to explore…</div><div className="fs-send" aria-hidden="true">→</div></>}
-      supplemental={{ lead, trail }}
+      composer={composer}
+      onRelease={ports?.onReleaseMaia}
+      onTab={ports?.onMaiaTab}
+      supplemental={{ lead: <>{lead}{ports?.maiaLead}</>, trail }}
     />
   );
 }
@@ -153,19 +161,19 @@ export function MaiaPanel({ phase, copy, tab, heldEcho }: {
    CONTEXTUAL BARS
    ══════════════════════════════════════════════════════════════════════════ */
 
-function ReadInContextBar({ name }: { name: string }) {
+function ReadInContextBar({ name, onApply, onBack }: { name: string; onApply?: () => void; onBack?: () => void }) {
   return (
     <div className="fs-float fs-float--gate" data-apply-gate="open">
       <span style={{ color: 'var(--text-secondary)' }}>
         Reading <strong>{name}</strong> in place. Nothing is applied yet.
       </span>
-      <button type="button" className="fs-btn fs-btn--key" data-event="APPLY">Use this revision</button>
-      <button type="button" className="fs-btn" data-event="BACK_TO_ALTERNATIVES">Back to the options</button>
+      <button type="button" className="fs-btn fs-btn--key" data-event="APPLY" onClick={onApply}>Use this revision</button>
+      <button type="button" className="fs-btn" data-event="BACK_TO_ALTERNATIVES" onClick={onBack}>Back to the options</button>
     </div>
   );
 }
 
-function AppliedReceipt({ applied, place }: { applied: RevisionEvent; place: string }) {
+function AppliedReceipt({ applied, place, onUndo, onHistory }: { applied: RevisionEvent; place: string; onUndo?: () => void; onHistory?: () => void }) {
   return (
     <div className="fs-float fs-float--receipt" data-receipt="applied">
       <div className="fs-ok" aria-hidden="true">✓</div>
@@ -173,8 +181,8 @@ function AppliedReceipt({ applied, place }: { applied: RevisionEvent; place: str
         <div className="fs-rtitle">Revision applied — “{applied.alternativeName}”</div>
         <div className="fs-rsub">One sentence, in {place}. You can undo this, or see what changed.</div>
       </div>
-      <button type="button" className="fs-btn" data-event="UNDO">Undo</button>
-      <button type="button" className="fs-btn" data-event="OPEN_OVERLAY" data-overlay="history">View history</button>
+      <button type="button" className="fs-btn" data-event="UNDO" onClick={onUndo}>Undo</button>
+      <button type="button" className="fs-btn" data-event="OPEN_OVERLAY" data-overlay="history" onClick={onHistory}>View history</button>
     </div>
   );
 }
@@ -183,13 +191,13 @@ export interface VersionEntry {
   readonly when: string; readonly time: string; readonly what: string; readonly current?: boolean;
 }
 
-export function VersionHistoryDrawer({ entries }: { entries: readonly VersionEntry[] }) {
+export function VersionHistoryDrawer({ entries, onClose, onCompare }: { entries: readonly VersionEntry[]; onClose?: () => void; onCompare?: () => void }) {
   return (
     <aside className="fs-drawer" data-overlay="history" aria-label="Version history">
       <div className="fs-dhead">
         <h3>Version history</h3>
         <button type="button" className="fs-mx" style={{ marginLeft: 'auto' }}
-          data-event="CLOSE_OVERLAY" aria-label="Close version history">✕</button>
+          data-event="CLOSE_OVERLAY" aria-label="Close version history" onClick={onClose}>✕</button>
       </div>
       <div className="fs-dbody">
         {entries.map((e) => (
@@ -202,12 +210,38 @@ export function VersionHistoryDrawer({ entries }: { entries: readonly VersionEnt
             </div>
           </div>
         ))}
-        <button type="button" className="fs-btn" style={{ marginTop: 14, alignSelf: 'flex-start' }}>
+        <button type="button" className="fs-btn" style={{ marginTop: 14, alignSelf: 'flex-start' }} onClick={onCompare}>
           Compare versions
         </button>
       </div>
     </aside>
   );
+}
+
+export interface WriteRoomPorts {
+  /** Truthful live save/status copy. Undefined preserves the accepted witness fixture status. */
+  readonly status?: string;
+  /** Live manuscript/editor surface. Undefined preserves the exact controlled paragraph rendering. */
+  readonly manuscript?: React.ReactNode;
+  /** Live controls. Undefined preserves the exact controlled witness controls. */
+  readonly actions?: React.ReactNode;
+  readonly footActions?: React.ReactNode;
+  /** Live MAIA composition. Presence with null intentionally removes the fixture composer. */
+  readonly maiaComposer?: React.ReactNode | null;
+  readonly maiaLead?: React.ReactNode;
+  readonly maiaTrail?: React.ReactNode;
+  readonly onAskMaia?: () => void;
+  readonly onReleaseMaia?: () => void;
+  readonly onMaiaTab?: (tab: string) => void;
+  readonly onReadInContext?: (alternativeId: string) => void;
+  readonly onApply?: () => void;
+  readonly onBackToAlternatives?: () => void;
+  readonly onUndo?: () => void;
+  readonly onOpenHistory?: () => void;
+  readonly onCloseHistory?: () => void;
+  readonly onCompareHistory?: () => void;
+  readonly onBackAlongTrail?: () => void;
+  readonly onFocus?: () => void;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -231,9 +265,9 @@ function renderParagraph(p: Paragraph, view: ManuscriptView, state: StudioState,
   );
 }
 
-export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 'guided' }: {
+export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 'guided', ports }: {
   state: StudioState; view: ManuscriptView; copy: MaiaCopy;
-  tab?: MaiaTab; history?: readonly VersionEntry[]; facet?: Facet;
+  tab?: MaiaTab; history?: readonly VersionEntry[]; facet?: Facet; ports?: WriteRoomPorts;
 }) {
   const heldPara = view.paragraphs.find((p) => p.id === view.heldParagraphId);
   const heldEcho = heldPara?.target
@@ -255,7 +289,7 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
          member there has replaced a dashboard with a trapdoor. */
       trail={state.trail ? (
         <div className="fs-trail" data-trail="true">
-          <button type="button" className="fs-trailback" data-event="BACK_ALONG_TRAIL">
+          <button type="button" className="fs-trailback" data-event="BACK_ALONG_TRAIL" onClick={ports?.onBackAlongTrail}>
             <span aria-hidden="true">←</span> {state.trail.backLabel}
           </button>
           <TrailPosition index={state.trail.index} total={state.trail.total} />
@@ -265,8 +299,8 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
       place={{ work: view.work, chapter: view.chapterTitle, place, facet }}
       /* ⚠️ Witness fixture status. The FRAME composes no status; this room does,
          because it is the controlled candidate. A live host passes its truth. */
-      status={state.history.length > 0 ? `Saved · v${state.version}` : 'Saved 2m ago'}
-      actions={<>
+      status={ports?.status ?? (state.history.length > 0 ? `Saved · v${state.version}` : 'Saved 2m ago')}
+      actions={ports?.actions ?? <>
         {/* ⭐ Secondary tools collapse on a phone. Ten controls facing a member
             on a 390px screen is a console; the audience law is the reason this
             is a composition change rather than an exemption in the test.
@@ -278,21 +312,21 @@ export function WriteRoom({ state, view, copy, tab = 'Revise', history, facet = 
           <button type="button" className="fs-tool">Comment</button>
         </span>
         <button type="button" className="fs-tool fs-toolmore" aria-label="More tools">⋯</button>
-        <button type="button" className="fs-tool fs-tool--key" data-event="HOLD_PASSAGE">Ask MAIA</button>
+        <button type="button" className="fs-tool fs-tool--key" data-event="HOLD_PASSAGE" onClick={ports?.onAskMaia}>Ask MAIA</button>
       </>}
       heading={{ chapterLabel: view.chapterLabel, chapterTitle: view.chapterTitle, epigraph: view.epigraph }}
       contextual={<>
-        {maiaOpen ? <MaiaPanel phase={phase} copy={copy} tab={tab} heldEcho={heldEcho} /> : null}
-        {phase.name === 'context-review' && selected ? <ReadInContextBar name={selected.name} /> : null}
-        {phase.name === 'applied' ? <AppliedReceipt applied={phase.applied} place={place} /> : null}
-        {state.overlay === 'history' && history ? <VersionHistoryDrawer entries={history} /> : null}
+        {maiaOpen ? <MaiaPanel phase={phase} copy={copy} tab={tab} heldEcho={heldEcho} ports={ports} /> : null}
+        {phase.name === 'context-review' && selected ? <ReadInContextBar name={selected.name} onApply={ports?.onApply} onBack={ports?.onBackToAlternatives} /> : null}
+        {phase.name === 'applied' ? <AppliedReceipt applied={phase.applied} place={place} onUndo={ports?.onUndo} onHistory={ports?.onOpenHistory} /> : null}
+        {state.overlay === 'history' && history ? <VersionHistoryDrawer entries={history} onClose={ports?.onCloseHistory} onCompare={ports?.onCompareHistory} /> : null}
       </>}
       foot={{
         chapterLabel: view.chapterLabel, words: view.words, wordDelta: view.wordDelta,
-        actions: <button type="button" className="fs-tool">Focus</button>,
+        actions: ports?.footActions ?? <button type="button" className="fs-tool" onClick={ports?.onFocus}>Focus</button>,
       }}
     >
-      {view.paragraphs.map((p) => renderParagraph(p, view, state, candidateText))}
+      {ports && Object.prototype.hasOwnProperty.call(ports, 'manuscript') ? ports.manuscript : view.paragraphs.map((p) => renderParagraph(p, view, state, candidateText))}
     </WriteFrame>
   );
 }

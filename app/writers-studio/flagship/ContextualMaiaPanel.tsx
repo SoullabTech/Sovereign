@@ -34,12 +34,14 @@ export interface ContextualMaiaPanelProps {
   readonly onRelease?: () => void;
   /** Host-supplied extras: `lead` renders before the ask, `trail` after the message. */
   readonly supplemental?: { readonly lead?: React.ReactNode; readonly trail?: React.ReactNode };
+  /** Optional live filter action. Absent in the controlled V10 witness, so output is unchanged. */
+  readonly onTab?: (tab: string) => void;
   /** A presentation label the host may stamp (e.g. the Discuss state). Never read back. */
   readonly state?: string;
 }
 
 export function ContextualMaiaPanel({
-  heldEcho, memberAsk, message, tabs, activeTab, composer, onRelease, supplemental, state,
+  heldEcho, memberAsk, message, tabs, activeTab, composer, onRelease, supplemental, onTab, state,
 }: ContextualMaiaPanelProps) {
   return (
     <aside className="fs-maia" data-maia-anchored="true" aria-label="MAIA, at this passage" data-discuss={state}>
@@ -51,7 +53,8 @@ export function ContextualMaiaPanel({
       <div className="fs-tabs" role="tablist">
         {tabs.map((t) => (
           <button key={t} type="button" role="tab" className="fs-tab"
-            aria-selected={t === activeTab} data-tab={t}>{t}</button>
+            aria-selected={t === activeTab} data-tab={t}
+            onClick={onTab ? () => onTab(t) : undefined}>{t}</button>
         ))}
       </div>
       <div className="fs-mbody">
