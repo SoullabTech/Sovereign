@@ -1,0 +1,23 @@
+import type { A212ExperienceDesign } from './model';
+export function referenceDesign():A212ExperienceDesign{return {
+  actionLabel:'Bring an earlier MAIA response',
+  chooserHeading:'Earlier in this relationship',
+  helperText:'Choose one earlier response from MAIA to bring into this turn. Nothing is added unless you choose it.',
+  selectedLabel:'Earlier MAIA response',
+  location:'EDITORIAL_COMPOSER',
+  requiresSelectedRelationship:true,
+  requiresActiveEditorialThread:true,
+  unavailableInSanctuary:true,
+  ordering:'CHRONOLOGICAL',
+  orderingHasAuthority:false,
+  cards:{exactExcerpt:true,generatedTitle:false,generatedSummary:false,showsMemberTurn:false,showsWholeTranscript:false,showsScopeLabel:true,showsDateLabel:true,recommendationLabel:false},
+  eligibility:{separateNarrowReadSeam:true,relationshipApiRemainsContentFree:true,provesSameRelationship:true,provesEditorialSourceKind:true,excludesSameThread:true,excludesUnavailable:true,excludesScopeIneligible:true,excludesReviewAndFocus:true,sourceBodyExact:true,failureFallsBackToEpisodeMetadata:false},
+  selection:{visibleChip:true,removable:true,maxSelected:1,preselected:false,selectionBasis:'EXPLICIT',mergedIntoTextarea:false,persistsAcrossTurns:false,persistsAcrossRelationshipChange:false,persistsAcrossThreadChange:false,persistsAcrossPlaceChange:false,storedInPlace:false,storedInRelationshipReturn:false,unavailableAutoReplacement:false,consumedAfterSend:true},
+  manuscriptRemainsPrimary:true,
+  modalByDefault:false,
+  persistentSideRail:false,
+  relationshipTimeline:false,
+  opensOldThreadOnSelect:false,
+  broadensCarryClasses:false,
+  productImplementation:false,
+};}
