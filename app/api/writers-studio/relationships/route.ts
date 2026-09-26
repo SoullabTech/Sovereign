@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { createEditorialRelationshipCustody } from '@/lib/writers-studio/relationshipCustody';
+import { createEditorialRelationshipCustody, listEditorialRelationshipCustody } from '@/lib/writers-studio/relationshipCustody';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,4 +44,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: created.reason }, { status });
   }
   return NextResponse.json({ relationship: created.relationship }, { status: 201 });
+}
+
+
+export async function GET(req: NextRequest) {
+  if (!enabled()) return new NextResponse(null, { status: 404 });
+  const memberId = await getMemberIdFromRequest(req);
+  if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+
+  const livingWorkId = req.nextUrl.searchParams.get('livingWorkId');
+  const manuscriptId = req.nextUrl.searchParams.get('manuscriptId');
+  if (!livingWorkId || !manuscriptId) {
+    return NextResponse.json({ error: 'malformed' }, { status: 400 });
+  }
+
+  const relationships = await listEditorialRelationshipCustody({
+    memberId, livingWorkId, manuscriptId,
+  });
+  return NextResponse.json({ relationships });
 }
