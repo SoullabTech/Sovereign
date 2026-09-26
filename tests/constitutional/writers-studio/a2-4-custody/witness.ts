@@ -38,12 +38,15 @@ async function makeWorkManuscript(memberId: string, label: string) {
   )).rows[0]!.id;
   return { work, manuscript, expression };
 }
-async function seedEditorialChild(memberId: string, manuscriptId: string, withTurns = true) {
+async function seedEditorialChild(
+  memberId: string, manuscriptId: string, withTurns = true,
+  locusScopeKind: 'section' | 'passage' = 'passage',
+) {
   const chain = randomUUID();
   const thread = randomUUID();
   await query(
-    "INSERT INTO proposal_chains (id,member_id,work_id,draft_id,base_version,target_section_id,expected_text) VALUES ($1,$2,$3,$4,0,$5,'Witness text')",
-    [chain,memberId,manuscriptId,randomUUID(),randomUUID()],
+    "INSERT INTO proposal_chains (id,member_id,work_id,draft_id,base_version,target_section_id,expected_text,locus_scope_kind) VALUES ($1,$2,$3,$4,0,$5,'Witness text',$6)",
+    [chain,memberId,manuscriptId,randomUUID(),randomUUID(),locusScopeKind],
   );
   await query(
     "INSERT INTO ask_threads (id,manuscript_id,member_id,anchor,reading_identity,canonical_at_open,initiated_by,proposal_chain_id) VALUES ($1,$2,$3,NULL,NULL,'witness:0','author',$4)",
@@ -55,7 +58,7 @@ async function seedEditorialChild(memberId: string, manuscriptId: string, withTu
       [thread],
     );
   }
-  return { chain, thread, memberTurnIndex: 0, maiaTurnIndex: 1 };
+  return { chain, thread, memberTurnIndex: 0, maiaTurnIndex: 1, locusScopeKind };
 }
 
 async function seedReviewChild(memberId: string, manuscriptId: string) {
@@ -108,7 +111,7 @@ async function attachEditorial(
       proposalChainId: child.chain,
       memberTurnIndex: child.memberTurnIndex,
       maiaTurnIndex: child.maiaTurnIndex,
-      scope: 'passage',
+      manuscriptLocusScope: child.locusScopeKind,
     });
   });
 }
@@ -128,7 +131,6 @@ async function attachReview(
       authorizationId: child.authorization,
       readingId: child.reading,
       observationKey: child.observationKey,
-      scope: 'passage',
     });
   });
 }
@@ -229,7 +231,7 @@ async function main() {
         proposalChainId: rollbackChild.chain,
         memberTurnIndex: 0,
         maiaTurnIndex: 1,
-        scope: 'passage',
+        manuscriptLocusScope: rollbackChild.locusScopeKind,
       });
       throw new Error('A2_WITNESS_FORCE_ROLLBACK');
     });
@@ -260,7 +262,7 @@ async function main() {
       proposalChainId: rollbackChild.chain,
       memberTurnIndex: 0,
       maiaTurnIndex: 1,
-      scope: 'passage',
+      manuscriptLocusScope: rollbackChild.locusScopeKind,
     });
   });
   const committedTurns = await query<{n:string}>(

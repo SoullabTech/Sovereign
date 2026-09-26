@@ -147,6 +147,7 @@ async function openEditorialRelationshipResolved(
           draftId: row.draft_id,
           baseVersion: Number(row.revision_count),
           targetSectionId: input.sectionId,
+          locusScopeKind: selection === null ? 'section' : 'passage',
           expectedText,
         },
       });
