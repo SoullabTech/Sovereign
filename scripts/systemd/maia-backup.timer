@@ -1,0 +1,11 @@
+# MAIA Postgres backup — daily timer (pairs with maia-backup.service).
+# See maia-backup.service header for install instructions.
+[Unit]
+Description=Daily MAIA Postgres backup at 02:00
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
