@@ -12,7 +12,6 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Home } from 'lucide-react';
 import { MaiaTopBar } from './MaiaTopBar';
-import { MaiaLeftRail } from './MaiaLeftRail';
 import { MaiaRightPanelHost } from './MaiaRightPanelHost';
 import { MaiaHouseSheet } from './MaiaHouseSheet';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
