@@ -87,6 +87,22 @@ describe('A2-6 relationship carriage', () => {
     expect(body.relationshipId).toBe('relationship-1');
   });
 
+  it('Editorial carry sends only kind and relationship-local episode sequence', async () => {
+    mockedApiFetch
+      .mockResolvedValueOnce(response(200, { response: 'Reply.', version: null, voice: null }))
+      .mockResolvedValueOnce(response(200, THREAD));
+
+    await sendBoundEditorialTurn(
+      'thread-1', 'section-1', 'My question', posture,
+      { latitude: 1, mayRemoveParagraphs: false }, 'relationship-1',
+      { kind: 'prior_maia_editorial_turn', sourceEpisodeSequence: 7 },
+    );
+
+    const body = JSON.parse(String(mockedApiFetch.mock.calls[0]![1]?.body));
+    expect(body.carry).toEqual({ kind: 'prior_maia_editorial_turn', sourceEpisodeSequence: 7 });
+    expect(Object.keys(body.carry).sort()).toEqual(['kind', 'sourceEpisodeSequence']);
+  });
+
   it('Editorial omits relationshipId when no parent is selected', async () => {
     mockedApiFetch
       .mockResolvedValueOnce(response(200, { response: 'Reply.', version: null, voice: null }))

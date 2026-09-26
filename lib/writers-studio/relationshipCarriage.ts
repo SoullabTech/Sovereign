@@ -251,3 +251,123 @@ export async function resolvePriorMaiaEditorialCarry(input: {
   };
 }
 
+export interface EligiblePriorMaiaEditorialCarrySource {
+  readonly kind: 'prior_maia_editorial_turn';
+  readonly sourceEpisodeSequence: number;
+  readonly sourceScope: ManuscriptLocusScope;
+  readonly admittedAt: string;
+  readonly excerpt: string;
+  readonly excerptTruncated: boolean;
+}
+
+export type EligiblePriorMaiaEditorialCarrySourceListResult =
+  | {
+      readonly ok: true;
+      readonly relationshipId: string;
+      readonly receiverThreadId: string;
+      readonly sources: readonly EligiblePriorMaiaEditorialCarrySource[];
+    }
+  | {
+      readonly ok: false;
+      readonly reason:
+        | 'relationship_not_found'
+        | 'current_declaration_unavailable'
+        | 'receiver_thread_invalid'
+        | 'receiver_scope_unmeasured';
+    };
+
+const CARRY_EXCERPT_CODEPOINTS = 320;
+
+function exactCarryExcerpt(body: string): { excerpt: string; excerptTruncated: boolean } {
+  const points = Array.from(body);
+  if (points.length <= CARRY_EXCERPT_CODEPOINTS) {
+    return { excerpt: body, excerptTruncated: false };
+  }
+  return {
+    excerpt: points.slice(0, CARRY_EXCERPT_CODEPOINTS).join(''),
+    excerptTruncated: true,
+  };
+}
+
+/**
+ * A2-14 — list only sources that are already eligible under the A2-11 carry law.
+ * This is a read surface for member selection, not a weaker carry resolver.
+ * Full source text and internal source identity stay server-side.
+ */
+export async function listEligiblePriorMaiaEditorialCarrySources(input: {
+  memberId: string;
+  relationshipId: string;
+  receiverThreadId: string;
+}): Promise<EligiblePriorMaiaEditorialCarrySourceListResult> {
+  const relationship = await ownedRelationship(input.memberId, input.relationshipId);
+  if (!relationship) return { ok: false, reason: 'relationship_not_found' };
+  if (!(await hasCurrentDeclaration(relationship))) {
+    return { ok: false, reason: 'current_declaration_unavailable' };
+  }
+
+  const receiver = await query<{
+    manuscript_id: string;
+    proposal_chain_id: string | null;
+    locus_scope_kind: ManuscriptLocusScope | null;
+  }>(
+    `SELECT th.manuscript_id, th.proposal_chain_id, pc.locus_scope_kind
+       FROM ask_threads th
+       LEFT JOIN proposal_chains pc ON pc.id = th.proposal_chain_id
+      WHERE th.id = $1 AND th.member_id = $2`,
+    [input.receiverThreadId, input.memberId],
+  );
+  if (receiver.rows.length !== 1) return { ok: false, reason: 'receiver_thread_invalid' };
+  const current = receiver.rows[0]!;
+  if (current.manuscript_id !== relationship.manuscript_id || current.proposal_chain_id === null) {
+    return { ok: false, reason: 'receiver_thread_invalid' };
+  }
+  if (current.locus_scope_kind === null) {
+    return { ok: false, reason: 'receiver_scope_unmeasured' };
+  }
+
+  const rows = await query<{
+    sequence: number;
+    manuscript_scope_requested: ManuscriptLocusScope;
+    admitted_at: Date;
+    body: string;
+  }>(
+    `SELECT e.sequence, e.manuscript_scope_requested, e.admitted_at, t.body
+       FROM writer_editorial_relationship_episodes e
+       JOIN ask_threads source_thread
+         ON source_thread.id = e.editorial_thread_id
+        AND source_thread.member_id = $2
+        AND source_thread.manuscript_id = $3
+        AND source_thread.proposal_chain_id IS NOT NULL
+       JOIN ask_turns t
+         ON t.thread_id = e.editorial_thread_id
+        AND t.turn_index = e.editorial_maia_turn_index
+        AND t.speaker = 'maia'
+      WHERE e.relationship_id = $1
+        AND e.child_kind = 'EDITORIAL_TURN'
+        AND e.temporal_posture = 'CURRENT_FROZEN_LOCUS'
+        AND e.manuscript_scope_requested IN ('passage', 'section')
+        AND e.manuscript_scope_executed = e.manuscript_scope_requested
+        AND e.editorial_thread_id IS NOT NULL
+        AND e.editorial_thread_id <> $4
+        AND e.editorial_maia_turn_index IS NOT NULL
+        AND t.body IS NOT NULL
+        AND NOT (e.manuscript_scope_requested = 'passage' AND $5::text = 'section')
+      ORDER BY e.admitted_at ASC, e.sequence ASC`,
+    [input.relationshipId, input.memberId, relationship.manuscript_id,
+     input.receiverThreadId, current.locus_scope_kind],
+  );
+
+  return {
+    ok: true,
+    relationshipId: relationship.id,
+    receiverThreadId: input.receiverThreadId,
+    sources: rows.rows.map((row) => ({
+      kind: 'prior_maia_editorial_turn' as const,
+      sourceEpisodeSequence: Number(row.sequence),
+      sourceScope: row.manuscript_scope_requested,
+      admittedAt: row.admitted_at.toISOString(),
+      ...exactCarryExcerpt(row.body),
+    })),
+  };
+}
+

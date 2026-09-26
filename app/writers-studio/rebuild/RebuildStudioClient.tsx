@@ -56,8 +56,8 @@ import {
   type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread,
 } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import {
-  createA2Relationship, listA2Relationships, readA2Relationship,
-  type A2RelationshipSummary,
+  createA2Relationship, listA2Relationships, readA2Relationship, readEligibleCarrySources,
+  type A2RelationshipSummary, type EligibleCarrySource,
 } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import {
   clearRelationshipReturnClient, persistPlaceReturnOrdered,
@@ -78,6 +78,17 @@ type MaiaMode = 'chapter' | 'passage';
 type PassageTab = 'interpret' | 'suggest' | 'explore' | 'ask';
 interface PassageSelection {
   draftSectionId: string; start: number; end: number; text: string; revisionNumber: number;
+}
+
+type CarryChooserState =
+  | { readonly kind: 'closed' }
+  | { readonly kind: 'loading'; readonly relationshipId: string; readonly receiverThreadId: string; readonly generation: number }
+  | { readonly kind: 'ready'; readonly relationshipId: string; readonly receiverThreadId: string; readonly generation: number; readonly sources: readonly EligibleCarrySource[] }
+  | { readonly kind: 'unavailable'; readonly relationshipId: string; readonly receiverThreadId: string; readonly generation: number };
+
+interface SelectedCarrySource extends EligibleCarrySource {
+  readonly relationshipId: string;
+  readonly receiverThreadId: string;
 }
 
 const REBUILD_LAYOUT_NOTIONAL = 100000;
@@ -416,6 +427,14 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
   const [maiaFailure, setMaiaFailure] = useState<string | null>(null);
   const [maiaBusy, setMaiaBusy] = useState(false);
   const [editorialThread, setEditorialThread] = useState<RebuildEditorialThread | null>(null);
+  const carryChooserGen = useRef(0);
+  const [carryChooser, setCarryChooser] = useState<CarryChooserState>({ kind: 'closed' });
+  const [selectedCarrySource, setSelectedCarrySource] = useState<SelectedCarrySource | null>(null);
+  const [carryPostureAvailable, setCarryPostureAvailable] = useState(false);
+  const a2RelationshipIdRef = useRef<string | null>(null);
+  const editorialThreadIdRef = useRef<string | null>(null);
+  a2RelationshipIdRef.current = a2Relationship?.id ?? null;
+  editorialThreadIdRef.current = editorialThread?.threadId ?? null;
   const [editorialDraft, setEditorialDraft] = useState('');
   const editorialDrafts = useRef(new Map<string, string>());
   const editorialScope = JSON.stringify([context?.manuscriptId, focusId,
@@ -431,6 +450,39 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     previousEditorialScope.current = editorialScope;
     setEditorialDraft(editorialDrafts.current.get(editorialScope) ?? '');
   }, [editorialScope, editorialDraft]);
+
+  useEffect(() => {
+    carryChooserGen.current += 1;
+    setCarryChooser({ kind: 'closed' });
+    setSelectedCarrySource(null);
+  }, [a2Relationship?.id, editorialThread?.threadId, focusId, context?.manuscriptId, workspaceOpen]);
+
+  useEffect(() => {
+    const sync = () => {
+      if (!workspaceOpen || !a2Relationship || !editorialThread) {
+        setCarryPostureAvailable(false);
+        carryChooserGen.current += 1;
+        setCarryChooser({ kind: 'closed' });
+        return;
+      }
+      const posture = readCurrentSanctuaryPosture();
+      const allowed = posture.resolved && !posture.sanctuary;
+      setCarryPostureAvailable(allowed);
+      if (!allowed) {
+        carryChooserGen.current += 1;
+        setCarryChooser({ kind: 'closed' });
+      }
+    };
+    sync();
+    window.addEventListener('maia-settings-changed', sync as EventListener);
+    window.addEventListener('storage', sync);
+    window.addEventListener('focus', sync);
+    return () => {
+      window.removeEventListener('maia-settings-changed', sync as EventListener);
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('focus', sync);
+    };
+  }, [workspaceOpen, a2Relationship?.id, editorialThread?.threadId]);
   const [editorialBusy, setEditorialBusy] = useState(false);
   const [editorialFailure, setEditorialFailure] = useState<string | null>(null);
   const [suggestedVersionId, setSuggestedVersionId] = useState<string | null>(null);
@@ -1283,8 +1335,62 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
   /** ⭐ What the latest suggestion brought in that is not the writer's. */
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
 
+  const openCarryChooser = useCallback(() => {
+    if (!workspaceOpen || !a2Relationship || !editorialThread || editorialBusy) return;
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved || posture.sanctuary) {
+      setCarryPostureAvailable(false);
+      carryChooserGen.current += 1;
+      setCarryChooser({ kind: 'closed' });
+      return;
+    }
+    const relationshipId = a2Relationship.id;
+    const receiverThreadId = editorialThread.threadId;
+    const generation = ++carryChooserGen.current;
+    setCarryChooser({ kind: 'loading', relationshipId, receiverThreadId, generation });
+    void readEligibleCarrySources(relationshipId, receiverThreadId).then((out) => {
+      if (
+        generation !== carryChooserGen.current
+        || a2RelationshipIdRef.current !== relationshipId
+        || editorialThreadIdRef.current !== receiverThreadId
+      ) return;
+      if (!out.ok) {
+        setCarryChooser({ kind: 'unavailable', relationshipId, receiverThreadId, generation });
+        return;
+      }
+      setCarryChooser({ kind: 'ready', relationshipId, receiverThreadId, generation, sources: out.sources });
+    });
+  }, [workspaceOpen, a2Relationship, editorialThread, editorialBusy]);
+
+  const closeCarryChooser = useCallback(() => {
+    carryChooserGen.current += 1;
+    setCarryChooser({ kind: 'closed' });
+  }, []);
+
+  const selectCarrySource = useCallback((source: EligibleCarrySource) => {
+    if (carryChooser.kind !== 'ready') return;
+    const relationshipId = a2Relationship?.id ?? null;
+    const receiverThreadId = editorialThread?.threadId ?? null;
+    if (
+      !relationshipId || !receiverThreadId
+      || carryChooser.relationshipId !== relationshipId
+      || carryChooser.receiverThreadId !== receiverThreadId
+      || !carryChooser.sources.some((candidate) => candidate.sourceEpisodeSequence === source.sourceEpisodeSequence)
+    ) return;
+    setSelectedCarrySource({ ...source, relationshipId, receiverThreadId });
+    carryChooserGen.current += 1;
+    setCarryChooser({ kind: 'closed' });
+  }, [carryChooser, a2Relationship?.id, editorialThread?.threadId]);
+
+  const removeCarrySource = useCallback(() => setSelectedCarrySource(null), []);
+
   const sendEditorial = useCallback(async (requestText?: string) => {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved) {
+      setEditorialFailure('Your Sanctuary setting could not be read on this device, so nothing was sent. Open MAIA here once, then try again.');
+      return;
+    }
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
     setVoiceNotice(null);
     /* ⭐⭐ C6R4 — ONE PLACE, SO NO TURN ESCAPES IT. Threading the directive
@@ -1304,6 +1410,16 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
         ? 'Developmental observation being discussed (an interpretation, not an instruction):\n'
           + arrivalInsight.observation.observation + '\n\n'
         : '';
+      const carry = selectedCarrySource
+        && a2Relationship
+        && selectedCarrySource.relationshipId === a2Relationship.id
+        && selectedCarrySource.receiverThreadId === thread.threadId
+        ? {
+            kind: 'prior_maia_editorial_turn' as const,
+            sourceEpisodeSequence: selectedCarrySource.sourceEpisodeSequence,
+          }
+        : undefined;
+      if (selectedCarrySource && !carry) setSelectedCarrySource(null);
       /* ⭐⭐ R2R1 — THE WRITER'S SCOPE TRAVELS WITH THE TURN.
          The build-health repair resolved the duplicated call by keeping the
          observation context and dropping the `scope` argument. It compiles, and
@@ -1314,14 +1430,16 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
          carrying them. ⛔ A control the writer moves that changes nothing is a
          false control, and WS-EDITORIAL-SCOPE-01 exists so these settings
          govern what MAIA may propose. */
+      if (carry) setSelectedCarrySource(null);
       const out = await sendBoundEditorialTurn(
         thread.threadId,
         focusId,
         observationContext + 'My question:\n' + exactWords,
         /* E1 — posture read at THIS gesture, never at mount. */
-        readCurrentSanctuaryPosture(),
+        posture,
         { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately },
         a2Relationship?.id,
+        carry,
       );
       if (!out.ok) {
         /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
@@ -1354,7 +1472,8 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     }
   }, [editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct,
       bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight,
-      editLatitude, mayRemoveParagraphs, mayProposeImmediately]);
+      editLatitude, mayRemoveParagraphs, mayProposeImmediately, a2Relationship?.id,
+      selectedCarrySource]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -2545,6 +2664,15 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
           response={lastMaiaEditorialTurn?.body ?? null}
           message={editorialFailure ?? (adoptionOutcome && appliedVersionId === suggestedVersion?.id ? adoptionOutcome.kind === 'applied'
             ? null : 'The Work could not accept this revision. Nothing was changed.' : null)}
+          carrySourceAvailable={carryPostureAvailable && Boolean(a2Relationship) && Boolean(editorialThread)}
+          carryChooser={carryChooser.kind === 'ready'
+            ? { kind: 'ready', sources: carryChooser.sources }
+            : { kind: carryChooser.kind }}
+          selectedCarrySource={selectedCarrySource}
+          onOpenCarryChooser={openCarryChooser}
+          onCloseCarryChooser={closeCarryChooser}
+          onSelectCarrySource={selectCarrySource}
+          onRemoveCarrySource={removeCarrySource}
           onKeep={() => { setSuggestedVersionId(null); setAdoptionOutcome(null); setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.'); }} />
         {workspaceInsight && <details className="wsi-related" open={!suggestedVersionId}>
           {/* ⭐ C6R1 — forced open, this was the second live workspace under the

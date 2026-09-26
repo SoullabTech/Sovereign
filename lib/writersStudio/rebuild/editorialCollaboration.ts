@@ -134,6 +134,11 @@ export interface VoiceNotice {
   note: string; unfamiliar: string[]; sampleWords: number;
 }
 
+export interface EditorialCarrySelection {
+  readonly kind: 'prior_maia_editorial_turn';
+  readonly sourceEpisodeSequence: number;
+}
+
 export type EditorialTurnOutcome =
   | {
       ok: true; thread: RebuildEditorialThread; producedVersionId: string | null;
@@ -174,6 +179,7 @@ export async function sendBoundEditorialTurn(
     mayProposeImmediately?: boolean;
   },
   relationshipId?: string,
+  carry?: EditorialCarrySelection,
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
   try {
@@ -185,6 +191,7 @@ export async function sendBoundEditorialTurn(
         sanctuary: posture.sanctuary,
         ...(scope ? { scope } : {}),
         ...(relationshipId ? { relationshipId } : {}),
+        ...(carry ? { carry } : {}),
       }),
     });
     const body = await res.json().catch(() => null);
