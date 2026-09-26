@@ -158,9 +158,21 @@ interface MobileRouteGuardProps {
   children: React.ReactNode;
 }
 
+// Public, static routes that MUST appear in the initial server-rendered HTML —
+// not only after client hydration — so no-JS consumers can read them. The
+// driving case: SMS/A2P 10DLC campaign vetting bots (and SEO crawlers) fetch
+// /privacy and /terms without executing JS; if the SMS consent language only
+// renders client-side, the carrier reviewer sees an empty shell and rejects the
+// campaign (Twilio error 30907). These routes are never mobile-gated, so the
+// guard always resolves them to 'allow' anyway — starting there changes no
+// client-visible behavior; it only adds them to the server response.
+const PUBLIC_SSR_ROUTES = ['/privacy', '/terms'];
+
 export function MobileRouteGuard({ children }: MobileRouteGuardProps) {
   const pathname = usePathname();
-  const [state, setState] = useState<GuardState>('checking');
+  const [state, setState] = useState<GuardState>(
+    PUBLIC_SSR_ROUTES.includes(pathname) ? 'allow' : 'checking',
+  );
   const currentPath = useRef(pathname);
 
   const router = useRouter();
