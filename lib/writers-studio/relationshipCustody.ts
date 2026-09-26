@@ -11,7 +11,7 @@
 import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 
 export const A2_RELATIONSHIP_CONTRACT_VERSION = 'A2-1' as const;
-export type RelationshipScope = 'passage' | 'section';
+export type ManuscriptLocusScope = 'passage' | 'section';
 export type RelationshipChildKind = 'EDITORIAL_TURN' | 'REVIEW_DISCUSS';
 
 export type RelationshipCustodyRefusal =
@@ -46,7 +46,7 @@ export type EditorialRelationshipEpisode =
       readonly id: string;
       readonly sequence: number;
       readonly childKind: 'EDITORIAL_TURN';
-      readonly scope: RelationshipScope;
+      readonly manuscriptLocusScope: ManuscriptLocusScope;
       readonly temporalPosture: 'CURRENT_FROZEN_LOCUS';
       readonly historyPolicy: 'CHILD_LOCAL_MULTI_TURN';
       readonly continuationAuthorized: true;
@@ -62,7 +62,6 @@ export type EditorialRelationshipEpisode =
       readonly id: string;
       readonly sequence: number;
       readonly childKind: 'REVIEW_DISCUSS';
-      readonly scope: RelationshipScope;
       readonly temporalPosture: 'AS_READ';
       readonly historyPolicy: 'NONE';
       readonly continuationAuthorized: false;
@@ -94,8 +93,8 @@ interface EpisodeRow {
   id: string;
   sequence: number;
   child_kind: RelationshipChildKind;
-  requested_scope: RelationshipScope;
-  executed_scope: RelationshipScope;
+  manuscript_scope_requested: ManuscriptLocusScope | null;
+  manuscript_scope_executed: ManuscriptLocusScope | null;
   temporal_posture: string;
   history_policy: string;
   continuation_authorized: boolean;
@@ -136,7 +135,7 @@ function mapEpisode(r: EpisodeRow): EditorialRelationshipEpisode {
   if (r.child_kind === 'EDITORIAL_TURN') {
     return {
       id: r.id, sequence: Number(r.sequence), childKind: 'EDITORIAL_TURN',
-      scope: r.requested_scope, temporalPosture: 'CURRENT_FROZEN_LOCUS',
+      manuscriptLocusScope: r.manuscript_scope_requested!, temporalPosture: 'CURRENT_FROZEN_LOCUS',
       historyPolicy: 'CHILD_LOCAL_MULTI_TURN', continuationAuthorized: true,
       authorityClass: 'EDITORIAL_CHAIN', carryPolicy: 'PRESENTATION_ONLY',
       admittedAt: r.admitted_at,
@@ -147,7 +146,7 @@ function mapEpisode(r: EpisodeRow): EditorialRelationshipEpisode {
   }
   return {
     id: r.id, sequence: Number(r.sequence), childKind: 'REVIEW_DISCUSS',
-    scope: r.requested_scope, temporalPosture: 'AS_READ',
+    temporalPosture: 'AS_READ',
     historyPolicy: 'NONE', continuationAuthorized: false,
     authorityClass: 'R2_DISCLOSURE', carryPolicy: 'PRESENTATION_ONLY',
     admittedAt: r.admitted_at,
@@ -353,6 +352,7 @@ async function validateEditorialChild(
   input: {
     threadId: string; proposalChainId: string;
     memberTurnIndex: number; maiaTurnIndex: number;
+    manuscriptLocusScope: ManuscriptLocusScope;
   },
 ): Promise<void> {
   const subject = await tx.query(
@@ -365,8 +365,10 @@ async function validateEditorialChild(
         AND th.proposal_chain_id = $4
         AND pc.id = $4
         AND pc.member_id = $2
-        AND pc.work_id = $3`,
-    [input.threadId, prepared.memberId, prepared.manuscriptId, input.proposalChainId],
+        AND pc.work_id = $3
+        AND pc.locus_scope_kind = $5`,
+    [input.threadId, prepared.memberId, prepared.manuscriptId, input.proposalChainId,
+     input.manuscriptLocusScope],
   );
   if (subject.rows.length !== 1) throw new RelationshipCustodyRefused('editorial_child_invalid');
 
@@ -450,7 +452,7 @@ export async function appendEditorialEpisodeWithClient(
     proposalChainId: string;
     memberTurnIndex: number;
     maiaTurnIndex: number;
-    scope: RelationshipScope;
+    manuscriptLocusScope: ManuscriptLocusScope;
   },
 ): Promise<{ readonly id: string; readonly sequence: number; readonly existing: boolean }> {
   const before = await existingEditorialEpisode(tx, input.threadId, input.maiaTurnIndex);
@@ -465,7 +467,7 @@ export async function appendEditorialEpisodeWithClient(
   const sequence = await nextSequence(tx, prepared.relationshipId);
   const inserted = await tx.query<{ id: string; sequence: number }>(
     `INSERT INTO writer_editorial_relationship_episodes
-       (relationship_id, sequence, child_kind, requested_scope, executed_scope,
+       (relationship_id, sequence, child_kind, manuscript_scope_requested, manuscript_scope_executed,
         temporal_posture, history_policy, continuation_authorized,
         authority_class, carry_policy,
         editorial_thread_id, editorial_proposal_chain_id,
@@ -477,7 +479,7 @@ export async function appendEditorialEpisodeWithClient(
         $4, $5, $6, $7)
      ON CONFLICT DO NOTHING
      RETURNING id, sequence`,
-    [prepared.relationshipId, sequence, input.scope, input.threadId,
+    [prepared.relationshipId, sequence, input.manuscriptLocusScope, input.threadId,
      input.proposalChainId, input.memberTurnIndex, input.maiaTurnIndex],
   );
   if (inserted.rows.length === 1) {
@@ -497,7 +499,6 @@ export async function appendReviewDiscussEpisodeWithClient(
     authorizationId: string;
     readingId: string;
     observationKey: string;
-    scope: RelationshipScope;
   },
 ): Promise<{ readonly id: string; readonly sequence: number; readonly existing: boolean }> {
   const before = await existingReviewEpisode(tx, input.authorizationId);
@@ -512,19 +513,19 @@ export async function appendReviewDiscussEpisodeWithClient(
   const sequence = await nextSequence(tx, prepared.relationshipId);
   const inserted = await tx.query<{ id: string; sequence: number }>(
     `INSERT INTO writer_editorial_relationship_episodes
-       (relationship_id, sequence, child_kind, requested_scope, executed_scope,
+       (relationship_id, sequence, child_kind, manuscript_scope_requested, manuscript_scope_executed,
         temporal_posture, history_policy, continuation_authorized,
         authority_class, carry_policy,
         review_thread_id, review_maia_turn_index, review_authorization_id,
         review_reading_id, review_observation_key)
      VALUES
-       ($1, $2, 'REVIEW_DISCUSS', $3, $3,
+       ($1, $2, 'REVIEW_DISCUSS', NULL, NULL,
         'AS_READ', 'NONE', FALSE,
         'R2_DISCLOSURE', 'PRESENTATION_ONLY',
-        $4, $5, $6, $7, $8)
+        $3, $4, $5, $6, $7)
      ON CONFLICT DO NOTHING
      RETURNING id, sequence`,
-    [prepared.relationshipId, sequence, input.scope, input.threadId,
+    [prepared.relationshipId, sequence, input.threadId,
      input.maiaTurnIndex, input.authorizationId, input.readingId, input.observationKey],
   );
   if (inserted.rows.length === 1) {
@@ -545,7 +546,7 @@ export async function appendExistingEditorialEpisodeWithClient(
   tx: TransactionClient,
   input: {
     memberId: string; relationshipId: string; threadId: string; proposalChainId: string;
-    memberTurnIndex: number; maiaTurnIndex: number; scope: RelationshipScope;
+    memberTurnIndex: number; maiaTurnIndex: number; manuscriptLocusScope: ManuscriptLocusScope;
   },
 ) {
   const existing = await existingEditorialEpisode(tx, input.threadId, input.maiaTurnIndex);
@@ -562,7 +563,7 @@ export async function appendExistingReviewDiscussEpisodeWithClient(
   tx: TransactionClient,
   input: {
     memberId: string; relationshipId: string; threadId: string; maiaTurnIndex: number;
-    authorizationId: string; readingId: string; observationKey: string; scope: RelationshipScope;
+    authorizationId: string; readingId: string; observationKey: string;
   },
 ) {
   const existing = await existingReviewEpisode(tx, input.authorizationId);
