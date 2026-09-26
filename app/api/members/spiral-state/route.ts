@@ -24,7 +24,6 @@ export async function GET() {
         currentElement: spiralState.dominant_element,
         phase: spiralState.phase,
         motion: spiralState.motion ?? null,
-        relationalPhase: spiralState.relational_phase,
         autonomyStreak: spiralState.autonomy_streak,
         updatedAt: spiralState.updated_at,
       },
