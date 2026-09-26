@@ -98,3 +98,79 @@ export async function readA2Relationship(
     return { ok: false, reason: 'unavailable' };
   }
 }
+
+
+export interface EligibleCarrySource {
+  readonly kind: 'prior_maia_editorial_turn';
+  readonly sourceEpisodeSequence: number;
+  readonly sourceScope: 'passage' | 'section';
+  readonly admittedAt: string;
+  readonly excerpt: string;
+  readonly excerptTruncated: boolean;
+}
+
+export type CarrySourceReadOutcome =
+  | { readonly ok: true; readonly sources: readonly EligibleCarrySource[] }
+  | { readonly ok: false; readonly reason: 'unavailable' | 'unreadable' | 'receiver_refused' };
+
+const LIST_KEYS = ['relationshipId', 'receiverThreadId', 'sources'] as const;
+const SOURCE_KEYS = [
+  'kind', 'sourceEpisodeSequence', 'sourceScope', 'admittedAt', 'excerpt', 'excerptTruncated',
+] as const;
+
+function exactKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+}
+
+function parseEligibleCarrySource(raw: unknown): EligibleCarrySource | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const source = raw as Record<string, unknown>;
+  if (!exactKeys(source, SOURCE_KEYS)) return null;
+  if (source.kind !== 'prior_maia_editorial_turn') return null;
+  if (!Number.isInteger(source.sourceEpisodeSequence) || Number(source.sourceEpisodeSequence) < 1) return null;
+  if (!(source.sourceScope === 'passage' || source.sourceScope === 'section')) return null;
+  if (typeof source.admittedAt !== 'string' || !Number.isFinite(Date.parse(source.admittedAt))) return null;
+  if (typeof source.excerpt !== 'string' || Array.from(source.excerpt).length > 320) return null;
+  if (typeof source.excerptTruncated !== 'boolean') return null;
+  return {
+    kind: 'prior_maia_editorial_turn',
+    sourceEpisodeSequence: Number(source.sourceEpisodeSequence),
+    sourceScope: source.sourceScope,
+    admittedAt: source.admittedAt,
+    excerpt: source.excerpt,
+    excerptTruncated: source.excerptTruncated,
+  };
+}
+
+export async function readEligibleCarrySources(
+  relationshipId: string,
+  receiverThreadId: string,
+): Promise<CarrySourceReadOutcome> {
+  try {
+    const query = new URLSearchParams({ receiverThreadId });
+    const res = await apiFetch(
+      `/api/writers-studio/relationships/${encodeURIComponent(relationshipId)}/carry-sources?${query.toString()}`,
+      { method: 'GET' },
+    );
+    if (!res.ok) {
+      return { ok: false, reason: res.status === 409 ? 'receiver_refused' : 'unavailable' };
+    }
+    const body = await res.json().catch(() => null);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return { ok: false, reason: 'unreadable' };
+    }
+    const record = body as Record<string, unknown>;
+    if (!exactKeys(record, LIST_KEYS)) return { ok: false, reason: 'unreadable' };
+    if (record.relationshipId !== relationshipId || record.receiverThreadId !== receiverThreadId) {
+      return { ok: false, reason: 'unreadable' };
+    }
+    if (!Array.isArray(record.sources)) return { ok: false, reason: 'unreadable' };
+    const sources = record.sources.map(parseEligibleCarrySource);
+    if (sources.some((source) => source === null)) return { ok: false, reason: 'unreadable' };
+    return { ok: true, sources: sources as readonly EligibleCarrySource[] };
+  } catch {
+    return { ok: false, reason: 'unavailable' };
+  }
+}
