@@ -98,4 +98,3 @@ export async function readA2Relationship(
     return { ok: false, reason: 'unavailable' };
   }
 }
-
