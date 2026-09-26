@@ -1,9 +1,9 @@
 # WRITERS-STUDIO-NEXT-01 / A2-7
 ## DURABLE RELATIONSHIP RETURN + CROSS-SESSION PLACE INTEGRATION
 
-**Date:** 2026-09-26  
-**Parent:** `7e62ccc4ab7c48d2054b87314aef17766b47ccad`  
-**Branch:** `feature/ws-next-a2-7-durable-return-place-20260926`  
+**Date:** 2026-09-26
+**Parent:** `7e62ccc4ab7c48d2054b87314aef17766b47ccad`
+**Branch:** `feature/ws-next-a2-7-durable-return-place-20260926`
 **Execution packet SHA-256:** `e144c81b5be4c9801a45b91d59a0c70ab2f601819875b0fd378e67af99838ac9`
 
 ## I. Result
@@ -209,30 +209,30 @@ No claim is made that this obsolete standalone command passed.
 The repository's operational `ci:sovereignty` path passed completely.
 ## XI. Exact implementation identities
 
-`app/writers-studio/rebuild/RebuildStudioClient.tsx`  
+`app/writers-studio/rebuild/RebuildStudioClient.tsx`
 `83be0a2a0ea3514b84db8f1ce094c2ba565379e742648605c957d6bef141ebac`
 
-`app/api/writers-studio/return/relationship/route.ts`  
+`app/api/writers-studio/return/relationship/route.ts`
 `7fde1dcc3ec93e6e1685790bf273a54a1b8b9b86a9210ec70fb3673bdee06f85`
 
-`app/api/writers-studio/return/place/route.ts`  
+`app/api/writers-studio/return/place/route.ts`
 `5c57282e12bc1c61477e37f66ff8af7da5076706d70d48bf18cf86822f4b4fbd`
 
-`database/migrations/20260926000001_writer_studio_return_state.sql`  
+`database/migrations/20260926000001_writer_studio_return_state.sql`
 `be3d512e8342060e4056a8643aa77fd78dd576467804b6ee55483ef20f06d616`
 
-`lib/writers-studio/returnState.ts`  
+`lib/writers-studio/returnState.ts`
 `566e169e27fa7af831a88b88c682217d2f8aed29688d8802817785a0269326e0`
-`lib/writersStudio/rebuild/returnStateClient.ts`  
+`lib/writersStudio/rebuild/returnStateClient.ts`
 `9de86515bff43d1db2ae7a7200e807e8629c8e6d7baaf2c63c6bae047ae6ec43`
 
-`lib/writersStudio/rebuild/__tests__/a2ReturnStateClient.test.ts`  
+`lib/writersStudio/rebuild/__tests__/a2ReturnStateClient.test.ts`
 `53c9ade93a5e932f74946aa54ff908ed2773ad7f469c065b0293a96c6e3755f4`
 
-`tests/constitutional/writers-studio/a2-7-return-place/live-witness.ts`  
+`tests/constitutional/writers-studio/a2-7-return-place/live-witness.ts`
 `f63fae7eb2ec7bb2e9687941320c61be0f3bc9d8528e26d892b27872da2e96ad`
 
-`tests/constitutional/writers-studio/a2-7-return-place/a2-6-regression-witness.ts`  
+`tests/constitutional/writers-studio/a2-7-return-place/a2-6-regression-witness.ts`
 `94cb8f8de4b96ace74d0b174669e7847de61681186398876b23555ac981b0d19`
 
 ## XII. Explicit exclusions
