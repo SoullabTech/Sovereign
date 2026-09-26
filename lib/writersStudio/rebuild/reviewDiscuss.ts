@@ -12,6 +12,7 @@ export interface ReviewDiscussInput {
   readonly readingId: string;
   readonly observationKey: string;
   readonly question: string;
+  readonly relationshipId?: string;
 }
 
 export type ReviewDiscussOutcome =
@@ -41,6 +42,7 @@ export async function commissionReviewDiscuss(
           observationKey: input.observationKey,
           question: input.question,
           sanctuary: posture.sanctuary,
+          ...(input.relationshipId ? { relationshipId: input.relationshipId } : {}),
         }),
       },
     );

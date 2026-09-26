@@ -177,9 +177,13 @@ export async function sendBoundEditorialTurn(
   options?: {
     /** Exploratory turns may close the outcome vocabulary to reply_only. */
     proposalPolicy?: ProposalPolicy;
-  },
+    /** Selected durable Work-level editorial relationship, when carrying one. */
+    relationshipId?: string;
+  } | string,
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
+  const proposalPolicy = typeof options === 'string' ? undefined : options?.proposalPolicy;
+  const relationshipId = typeof options === 'string' ? options : options?.relationshipId;
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
       method: 'POST',
@@ -188,7 +192,8 @@ export async function sendBoundEditorialTurn(
         threadId, act: { act: 'discourse', text, refersTo: null },
         sanctuary: posture.sanctuary,
         ...(scope ? { scope } : {}),
-        ...(options?.proposalPolicy ? { proposalPolicy: options.proposalPolicy } : {}),
+        ...(proposalPolicy ? { proposalPolicy } : {}),
+        ...(relationshipId ? { relationshipId } : {}),
       }),
     });
     const body = await res.json().catch(() => null);

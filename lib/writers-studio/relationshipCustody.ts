@@ -212,6 +212,47 @@ export async function createEditorialRelationshipCustody(input: {
     throw error;
   }
 }
+export interface EditorialRelationshipSummary {
+  readonly id: string;
+  readonly livingWorkId: string;
+  readonly manuscriptId: string;
+  readonly createdAt: Date;
+  readonly episodeCount: number;
+}
+
+export async function listEditorialRelationshipCustody(input: {
+  memberId: string;
+  livingWorkId: string;
+  manuscriptId: string;
+}): Promise<readonly EditorialRelationshipSummary[]> {
+  const rows = await query<{
+    id: string;
+    living_work_id: string;
+    manuscript_id: string;
+    created_at: Date;
+    episode_count: string | number;
+  }>(
+    `SELECT r.id, r.living_work_id, r.manuscript_id, r.created_at,
+            count(e.id)::text AS episode_count
+       FROM writer_editorial_relationships r
+       LEFT JOIN writer_editorial_relationship_episodes e
+         ON e.relationship_id = r.id
+      WHERE r.member_id = $1
+        AND r.living_work_id = $2
+        AND r.manuscript_id = $3
+      GROUP BY r.id, r.living_work_id, r.manuscript_id, r.created_at
+      ORDER BY r.created_at ASC, r.id ASC`,
+    [input.memberId, input.livingWorkId, input.manuscriptId],
+  );
+  return rows.rows.map((r) => ({
+    id: r.id,
+    livingWorkId: r.living_work_id,
+    manuscriptId: r.manuscript_id,
+    createdAt: r.created_at,
+    episodeCount: Number(r.episode_count),
+  }));
+}
+
 export async function readEditorialRelationshipCustody(
   memberId: string,
   relationshipId: string,

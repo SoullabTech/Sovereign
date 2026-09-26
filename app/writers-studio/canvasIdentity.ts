@@ -265,3 +265,41 @@ export function canvasWithoutEditorialThread(
   const q = next.toString();
   return q ? `${pathname}?${q}` : pathname;
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WRITERS-STUDIO-NEXT-01 / A2-6 · THE A2 PARENT RELATIONSHIP ADDRESS
+
+   This address names exactly one member-selected A2 parent relationship.
+   It is not authority, not durable place, and not a latest/current selector.
+   Existing Canvas helpers preserve unknown parameters, so section movement and
+   Editorial child-thread changes carry this exact choice without reminting it.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export const CANVAS_RELATIONSHIP_PARAM = 'relationship';
+
+export function relationshipIdFrom(
+  params: { get(name: string): string | null },
+): string | null {
+  return params.get(CANVAS_RELATIONSHIP_PARAM);
+}
+
+export function canvasWithRelationship(
+  pathname: string,
+  search: string,
+  relationshipId: string,
+): string {
+  const next = new URLSearchParams(search);
+  next.set(CANVAS_RELATIONSHIP_PARAM, relationshipId);
+  return `${pathname}?${next.toString()}`;
+}
+
+export function canvasWithoutRelationship(
+  pathname: string,
+  search: string,
+): string {
+  const next = new URLSearchParams(search);
+  next.delete(CANVAS_RELATIONSHIP_PARAM);
+  const q = next.toString();
+  return q ? `${pathname}?${q}` : pathname;
+}
