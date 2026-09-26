@@ -146,7 +146,7 @@ function OAuthSuccessContent() {
         className="mb-6"
       >
         {status === 'processing' && (
-          <div className="w-12 h-12 mx-auto border-4 border-emerald-300 border-t-emerald-600 rounded-full" />
+          <div className="w-12 h-12 mx-auto border-4 border-maia-navy-700 border-t-slate-300 rounded-full" />
         )}
         {status === 'success' && (
           <div className="w-12 h-12 mx-auto bg-emerald-500 rounded-full flex items-center justify-center">
@@ -156,7 +156,7 @@ function OAuthSuccessContent() {
           </div>
         )}
         {status === 'error' && (
-          <div className="w-12 h-12 mx-auto bg-red-500 rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 mx-auto bg-amber-600 rounded-full flex items-center justify-center">
             <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -165,22 +165,22 @@ function OAuthSuccessContent() {
       </motion.div>
 
       {/* Message */}
-      <p className="text-xl font-light text-teal-800">{message}</p>
+      <p className="text-xl font-light text-slate-200">{message}</p>
 
       {/* Debug info for errors */}
       {status === 'error' && errorCode && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-left max-w-md mx-auto">
-          <p className="text-sm font-mono text-red-800">
+        <div className="mt-6 p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl text-left max-w-md mx-auto">
+          <p className="text-sm font-mono text-amber-300/90">
             <strong>Error Code:</strong> {errorCode}
           </p>
           {errorDetail && (
-            <p className="text-sm font-mono text-red-700 mt-1">
+            <p className="text-sm font-mono text-amber-300/70 mt-1">
               <strong>Detail:</strong> {errorDetail}
             </p>
           )}
           <button
             onClick={() => router.push('/signin')}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
+            className="mt-4 px-4 py-2 bg-maia-navy-700 hover:bg-maia-navy-600 text-white rounded-xl text-sm transition-all"
           >
             Return to Sign In
           </button>
@@ -202,9 +202,9 @@ function LoadingFallback() {
         </div>
       </div>
       <div className="mb-6">
-        <div className="w-12 h-12 mx-auto border-4 border-emerald-300 border-t-emerald-600 rounded-full animate-spin" />
+        <div className="w-12 h-12 mx-auto border-4 border-maia-navy-700 border-t-slate-300 rounded-full animate-spin" />
       </div>
-      <p className="text-xl font-light text-teal-800">Completing sign in...</p>
+      <p className="text-xl font-light text-slate-200">Completing sign in...</p>
     </div>
   );
 }
@@ -217,15 +217,7 @@ function LoadingFallback() {
  */
 export default function OAuthSuccessPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden flex items-center justify-center">
-      {/* Background gradient */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          background:
-            'linear-gradient(145deg, #f0fdf4 0%, #dcfce7 30%, #d1fae5 50%, #ccfbf1 70%, #cffafe 100%)',
-        }}
-      />
+    <main className="relative min-h-[100dvh] overflow-hidden flex items-center justify-center bg-soullab-core">
       <Suspense fallback={<LoadingFallback />}>
         <OAuthSuccessContent />
       </Suspense>
