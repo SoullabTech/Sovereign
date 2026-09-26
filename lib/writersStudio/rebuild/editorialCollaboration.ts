@@ -173,6 +173,7 @@ export async function sendBoundEditorialTurn(
     /** ⭐ The per-Work release of the discuss-first order. ⛔ Default false. */
     mayProposeImmediately?: boolean;
   },
+  relationshipId?: string,
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
   try {
@@ -183,6 +184,7 @@ export async function sendBoundEditorialTurn(
         threadId, act: { act: 'discourse', text, refersTo: null },
         sanctuary: posture.sanctuary,
         ...(scope ? { scope } : {}),
+        ...(relationshipId ? { relationshipId } : {}),
       }),
     });
     const body = await res.json().catch(() => null);

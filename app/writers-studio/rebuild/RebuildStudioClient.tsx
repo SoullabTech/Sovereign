@@ -44,7 +44,10 @@ import {
 import {
   loadChapterReviewManifest, saveChapterReviewManifest,
 } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
-import { canvasWithEditorialThread, canvasWithoutEditorialThread, CANVAS_EDITORIAL_THREAD_PARAM } from '../canvasIdentity';
+import {
+  canvasWithEditorialThread, canvasWithoutEditorialThread, CANVAS_EDITORIAL_THREAD_PARAM,
+  canvasWithRelationship, canvasWithoutRelationship, relationshipIdFrom,
+} from '../canvasIdentity';
 import { locationForSection, replacePlaceAddress, SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import {
   adoptBoundEditorialVersion, changedSpan, discoverEditorialRelationships, exactVersion,
@@ -52,6 +55,10 @@ import {
   readBoundEditorialThread, sendBoundEditorialTurn,
   type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread,
 } from '@/lib/writersStudio/rebuild/editorialCollaboration';
+import {
+  createA2Relationship, listA2Relationships, readA2Relationship,
+  type A2RelationshipSummary,
+} from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 
 interface ContextReady {
   state: 'section_aware';
@@ -106,6 +113,14 @@ const C = {
 function labelWithoutPrefix(h: string | null): string {
   if (!h) return 'Untitled section';
   return h.replace(/^Chapter\s+\d+\s*:\s*/i, '').trim() || h;
+}
+
+function relationshipStartedLabel(createdAt: string): string {
+  const when = new Date(createdAt);
+  if (!Number.isFinite(when.getTime())) return 'Saved relationship';
+  return 'Started ' + when.toLocaleString(undefined, {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  });
 }
 
 function selectionFromThread(
@@ -303,11 +318,18 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
   const requested = params?.get('m') ?? null;
   const requestedSection = params?.get(SECTION_PARAM) ?? null;
   const requestedEditorialThread = params?.get(CANVAS_EDITORIAL_THREAD_PARAM) ?? null;
+  const requestedRelationship = params ? relationshipIdFrom(params) : null;
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [maiaMode, setMaiaMode] = useState<MaiaMode>('chapter');
+  const [a2Relationship, setA2Relationship] = useState<A2RelationshipSummary | null>(null);
+  const [a2RelationshipChoices, setA2RelationshipChoices] = useState<readonly A2RelationshipSummary[]>([]);
+  const [a2RelationshipPhase, setA2RelationshipPhase] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
+  const [a2RelationshipBusy, setA2RelationshipBusy] = useState(false);
+  const [a2RelationshipChooserOpen, setA2RelationshipChooserOpen] = useState(false);
+  const [a2RelationshipMessage, setA2RelationshipMessage] = useState<string | null>(null);
   const [canvasExpanded, setCanvasExpanded] = useState(false);
   /* A1-LS1 · R5 — FULL CANVAS CONTINUITY. Entering or leaving Full Canvas
      changes the field, not the writing: the same editor keeps its focus, caret
@@ -524,6 +546,115 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
           ? 'The Studio could not establish this manuscript’s Work context just now.'
           : 'Finding this manuscript’s Work context…';
 
+  const replaceRelationshipAddress = useCallback((relationshipId: string | null) => {
+    if (typeof window === 'undefined') return;
+    const next = relationshipId
+      ? canvasWithRelationship(window.location.pathname, window.location.search, relationshipId)
+      : canvasWithoutRelationship(window.location.pathname, window.location.search);
+    replacePlaceAddress(next);
+  }, []);
+
+  useEffect(() => {
+    if (workContext.kind === 'unknown' || !context) {
+      setA2RelationshipPhase('loading');
+      return;
+    }
+    if (workContext.kind !== 'work' || !work) {
+      setA2Relationship(null);
+      setA2RelationshipChoices([]);
+      setA2RelationshipPhase('ready');
+      setA2RelationshipMessage(null);
+      if (requestedRelationship) replaceRelationshipAddress(null);
+      return;
+    }
+
+    let cancelled = false;
+    setA2RelationshipPhase('loading');
+    setA2RelationshipMessage(null);
+
+    void Promise.all([
+      listA2Relationships(work.id, context.manuscriptId),
+      requestedRelationship ? readA2Relationship(requestedRelationship) : Promise.resolve(null),
+    ]).then(([listed, addressed]) => {
+      if (cancelled) return;
+      if (!listed.ok) {
+        setA2Relationship(null);
+        setA2RelationshipChoices([]);
+        setA2RelationshipPhase('unavailable');
+        setA2RelationshipMessage('Your MAIA relationships could not be read just now. Nothing was changed.');
+        return;
+      }
+      setA2RelationshipChoices(listed.relationships);
+
+      if (!requestedRelationship) {
+        setA2Relationship(null);
+        setA2RelationshipPhase('ready');
+        return;
+      }
+      if (
+        !addressed || !addressed.ok
+        || addressed.relationship.livingWorkId !== work.id
+        || addressed.relationship.manuscriptId !== context.manuscriptId
+      ) {
+        setA2Relationship(null);
+        setA2RelationshipPhase('ready');
+        setA2RelationshipMessage('That MAIA relationship does not belong to this Work and manuscript, so it was not opened here.');
+        replaceRelationshipAddress(null);
+        return;
+      }
+      setA2Relationship(addressed.relationship);
+      setA2RelationshipPhase('ready');
+    });
+    return () => { cancelled = true; };
+  }, [
+    context?.manuscriptId, requestedRelationship, replaceRelationshipAddress,
+    work?.id, workContext.kind,
+  ]);
+
+  const beginA2Relationship = useCallback(async () => {
+    if (!context || !work || workContext.kind !== 'work' || a2RelationshipBusy) return;
+    setA2RelationshipBusy(true);
+    setA2RelationshipMessage(null);
+    const out = await createA2Relationship(work.id, context.manuscriptId);
+    if (!out.ok) {
+      setA2RelationshipMessage('The Studio could not begin that MAIA relationship just now. Nothing else changed.');
+      setA2RelationshipBusy(false);
+      return;
+    }
+    setA2Relationship(out.relationship);
+    setA2RelationshipChooserOpen(false);
+    setA2RelationshipChoices((choices) => [...choices, out.relationship]);
+    replaceRelationshipAddress(out.relationship.id);
+    setA2RelationshipBusy(false);
+  }, [a2RelationshipBusy, context, replaceRelationshipAddress, work, workContext.kind]);
+
+  const chooseA2Relationship = useCallback(async (relationshipId: string) => {
+    if (!context || !work || workContext.kind !== 'work' || a2RelationshipBusy) return;
+    setA2RelationshipBusy(true);
+    setA2RelationshipMessage(null);
+    const out = await readA2Relationship(relationshipId);
+    if (
+      !out.ok
+      || out.relationship.livingWorkId !== work.id
+      || out.relationship.manuscriptId !== context.manuscriptId
+    ) {
+      setA2RelationshipMessage('That MAIA relationship is not available for this Work.');
+      setA2RelationshipBusy(false);
+      return;
+    }
+    setA2Relationship(out.relationship);
+    setA2RelationshipChooserOpen(false);
+    replaceRelationshipAddress(out.relationship.id);
+    setA2RelationshipBusy(false);
+  }, [a2RelationshipBusy, context, replaceRelationshipAddress, work, workContext.kind]);
+
+  const leaveA2Relationship = useCallback(() => {
+    setA2Relationship(null);
+    setA2RelationshipChooserOpen(false);
+    setA2RelationshipMessage(null);
+    replaceRelationshipAddress(null);
+  }, [replaceRelationshipAddress]);
+
   const makeThisAWork = useCallback(async () => {
     if (!context || workContext.kind !== 'none' || workDeclarationBusy) return;
     setWorkDeclarationBusy(true);
@@ -716,6 +847,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       readingId: finding.readingId,
       observationKey: finding.observationKey,
       question: ask,
+      ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
     }, readCurrentSanctuaryPosture()).then((outcome) => {
       if (gen !== reviewDiscussGen.current) return;
       if (outcome.ok) {
@@ -736,7 +868,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
           : REVIEW_DISCUSS_COPY.failed;
       setReviewDiscussion({ kind: 'refused', findingId, ask, copy });
     });
-  }, [reviewDiscussEnabled, review, context, reviewPhase]);
+  }, [reviewDiscussEnabled, review, context, reviewPhase, a2Relationship]);
 
   const replaceAddress = useCallback((sectionId: string, threadId: string | null) => {
     if (typeof window === 'undefined') return;
@@ -1096,6 +1228,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
         /* E1 — posture read at THIS gesture, never at mount. */
         readCurrentSanctuaryPosture(),
         { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately },
+        a2Relationship?.id,
       );
       if (!out.ok) {
         /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
@@ -1858,6 +1991,92 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
                 </div>
               </div>
               <span style={{ color: C.quiet }}>•••</span>
+            </div>
+            <div data-a2-relationship-shell
+              style={{ border: `1px solid ${C.soft}`, borderRadius: 11, background: C.field, padding: 11, marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontSize: 9.5, letterSpacing: '.11em', fontWeight: 750, color: C.gold }}>RELATIONSHIP WITH MAIA</div>
+                  {workContext.kind === 'work' ? (
+                    a2Relationship ? (
+                      <div data-a2-relationship-selected style={{ fontSize: 11.5, lineHeight: 1.45, color: C.secondary, marginTop: 5 }}>
+                        Continuing one relationship across Editorial and Review.
+                        <div style={{ color: C.quiet, fontSize: 10, marginTop: 3 }}>{relationshipStartedLabel(a2Relationship.createdAt)}</div>
+                      </div>
+                    ) : (
+                      <div data-a2-relationship-unselected style={{ fontSize: 11.5, lineHeight: 1.45, color: C.muted, marginTop: 5 }}>
+                        No MAIA relationship is selected. Choose one only if you want these Editorial and Review acts carried together.
+                      </div>
+                    )
+                  ) : (
+                    <div data-a2-relationship-blocked style={{ fontSize: 11.5, lineHeight: 1.45, color: C.muted, marginTop: 5 }}>
+                      {workContext.kind === 'ambiguous'
+                        ? 'Choose which Work this manuscript belongs to before beginning a MAIA relationship.'
+                        : workContext.kind === 'none'
+                          ? 'Declare this manuscript as one Work before beginning a MAIA relationship.'
+                          : 'The Studio is still establishing this manuscript’s Work context.'}
+                    </div>
+                  )}
+                </div>
+                {a2Relationship && (
+                  <button type="button" onClick={() => setA2RelationshipChooserOpen((open) => !open)}
+                    style={{ border: 0, background: 'transparent', color: C.gold, fontSize: 10.5, cursor: 'pointer', padding: 0 }}>
+                    {a2RelationshipChooserOpen ? 'Close' : 'Change'}
+                  </button>
+                )}
+              </div>
+
+              {workContext.kind === 'work' && a2RelationshipPhase === 'loading' && (
+                <div style={{ fontSize: 10.5, color: C.quiet, marginTop: 8 }}>Reading your MAIA relationships…</div>
+              )}
+
+              {workContext.kind === 'work' && !a2Relationship && a2RelationshipPhase === 'ready' && (
+                <div style={{ marginTop: 9 }}>
+                  <button type="button" data-a2-begin-relationship onClick={() => void beginA2Relationship()}
+                    disabled={a2RelationshipBusy}
+                    style={{ width: '100%', border: 0, borderRadius: 8, padding: '8px 10px', background: C.goldFill, color: C.ink, fontWeight: 700, fontSize: 11, cursor: a2RelationshipBusy ? 'wait' : 'pointer', opacity: a2RelationshipBusy ? .6 : 1 }}>
+                    {a2RelationshipBusy ? 'Beginning…' : 'Begin relationship with MAIA'}
+                  </button>
+                  {a2RelationshipChoices.length > 0 && (
+                    <div data-a2-existing-relationships style={{ marginTop: 9 }}>
+                      <div style={{ fontSize: 10, color: C.quiet, marginBottom: 6 }}>Or continue an existing relationship:</div>
+                      {a2RelationshipChoices.map((choice) => (
+                        <button key={choice.id} type="button" onClick={() => void chooseA2Relationship(choice.id)}
+                          disabled={a2RelationshipBusy}
+                          style={{ width: '100%', textAlign: 'left', border: `1px solid ${C.soft}`, borderRadius: 8, background: C.panel, color: C.secondary, padding: '8px 9px', marginTop: 5, cursor: a2RelationshipBusy ? 'wait' : 'pointer' }}>
+                          <span style={{ fontSize: 10.5 }}>{relationshipStartedLabel(choice.createdAt)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {workContext.kind === 'work' && a2Relationship && a2RelationshipChooserOpen && (
+                <div data-a2-relationship-chooser style={{ marginTop: 9, borderTop: `1px solid ${C.soft}`, paddingTop: 8 }}>
+                  {a2RelationshipChoices.filter((choice) => choice.id !== a2Relationship.id).map((choice) => (
+                    <button key={choice.id} type="button" onClick={() => void chooseA2Relationship(choice.id)}
+                      disabled={a2RelationshipBusy}
+                      style={{ width: '100%', textAlign: 'left', border: `1px solid ${C.soft}`, borderRadius: 8, background: C.panel, color: C.secondary, padding: '8px 9px', marginBottom: 6, cursor: a2RelationshipBusy ? 'wait' : 'pointer' }}>
+                      <span style={{ fontSize: 10.5 }}>{relationshipStartedLabel(choice.createdAt)}</span>
+                    </button>
+                  ))}
+                  <button type="button" onClick={() => void beginA2Relationship()} disabled={a2RelationshipBusy}
+                    style={{ border: 0, background: 'transparent', color: C.gold, padding: '4px 0', fontSize: 10.5, cursor: 'pointer' }}>
+                    Begin another relationship
+                  </button>
+                  <button type="button" onClick={leaveA2Relationship}
+                    style={{ border: 0, background: 'transparent', color: C.quiet, padding: '4px 0', fontSize: 10.5, cursor: 'pointer', display: 'block' }}>
+                    Leave this relationship · nothing is deleted
+                  </button>
+                </div>
+              )}
+
+              {a2RelationshipMessage && (
+                <div role="status" style={{ fontSize: 10.5, lineHeight: 1.4, color: C.gold, marginTop: 7 }}>
+                  {a2RelationshipMessage}
+                </div>
+              )}
             </div>
             <GoldLine manuscriptId={context.manuscriptId} />
             <button type="button" data-write-work-on-canvas onClick={() => openWorkspace()}
