@@ -543,3 +543,33 @@ Founder ruling:
 - merge and deployment remain closed.
 
 Next boundary: `O8R8 — DRAFT PULL REQUEST CREATION ONLY`.
+## O8R8 — draft pull request creation
+
+- `O8R8_DRAFT_PULL_REQUEST_CREATION_EVIDENCE_v0.1.md`
+
+Result:
+- draft PR #1504 opened against `clean-main-no-secrets`;
+- base SHA `03cb0f1c69825f7b0d51988cf4f31ef77273733f`;
+- head SHA `220068063e7d996e6fc7b201797039064075f4da`;
+- PR remains open, draft, unmerged;
+- 82 changed files: 58 programme docs + 6 MAIA + 16 constitutional tests + 2 route paths;
+- forbidden unrelated paths: 0;
+- no reviewers requested;
+- no ready-for-review transition;
+- no auto-merge, merge, or deployment.
+
+Next boundary: `FOUNDER ADJUDICATION — O8R8 DRAFT PULL REQUEST CREATION`.
+## O8R8 founder adjudication
+
+- `O8R8_DRAFT_PULL_REQUEST_CREATION_EVIDENCE_v0.1.md`
+- `O8R8_FOUNDER_ADJUDICATION_v0.1.md`
+
+Founder ruling:
+- draft PR #1504 accepted as the review vessel;
+- exact base/head accepted;
+- forbidden unrelated PR paths remain 0;
+- no reviewers requested;
+- read-only PR readiness census may open next;
+- ready-for-review, merge, and deployment remain closed.
+
+Next boundary: `O8R8R1 — PR DOCUMENTARY CLOSURE + READ-ONLY REVIEW-READINESS CENSUS ONLY`.
