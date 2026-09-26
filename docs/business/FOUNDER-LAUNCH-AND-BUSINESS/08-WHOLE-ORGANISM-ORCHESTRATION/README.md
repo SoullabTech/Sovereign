@@ -501,3 +501,31 @@ Result:
 - no push, PR, merge, or deployment.
 
 Next boundary: `O8R4R6 — SUCCESSOR DOCUMENTARY HISTORY SOURCE-CONTROL ADMISSION ONLY`.
+## O8R7 — push-only remote successor publication
+
+- `O8R7_PUSH_ONLY_REMOTE_SUCCESSOR_PUBLICATION_EVIDENCE_v0.1.md`
+
+Result:
+- remote branch `chore/whole-organism-o8-successor-20260926` published at exact SHA `8c7aa14d26f3875e3b7e60220685497976cff792`;
+- canonical remained `03cb0f1c69825f7b0d51988cf4f31ef77273733f`;
+- no force push;
+- no pull request created;
+- GitHub query found 0 PRs for the successor head branch;
+- no merge;
+- no deployment;
+- active checkout untouched.
+
+Next boundary: `FOUNDER ADJUDICATION — O8R7 PUSH-ONLY REMOTE SUCCESSOR BRANCH PUBLICATION`.
+## O8R7 founder adjudication
+
+- `O8R7_FOUNDER_ADJUDICATION_v0.1.md`
+
+Founder ruling:
+- push-only remote branch publication accepted;
+- remote head `8c7aa14d26f3875e3b7e60220685497976cff792` matches accepted local head;
+- canonical remains `03cb0f1c69825f7b0d51988cf4f31ef77273733f`;
+- pull-request count for the successor head remains 0;
+- no merge or deployment occurred;
+- documentary-only fast-forward may proceed next.
+
+Next boundary: `O8R7R1 — REMOTE-PUBLICATION DOCUMENTARY COMMIT + FAST-FORWARD ONLY`.
