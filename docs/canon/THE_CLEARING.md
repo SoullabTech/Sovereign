@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # The Clearing
 
 **What the architecture is answerable to.**

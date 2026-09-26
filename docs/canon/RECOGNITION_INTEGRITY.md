@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # Recognition Integrity
 
 **Status: Canon — placed in `MAIA_SOVEREIGNTY_INVARIANTS.md` as Invariant 16 (load-bearing, 2026-07-01)**

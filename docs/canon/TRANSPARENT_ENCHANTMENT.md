@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # Transparent Enchantment
 
 **Soulful authenticity with explicit humility and mutuality.**

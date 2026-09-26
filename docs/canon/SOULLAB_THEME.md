@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # SOULLAB_THEME.md
 
 ## Name

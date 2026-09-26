@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # MAIA Foundational Context
 
 > Orienting scaffold. Not doctrine.

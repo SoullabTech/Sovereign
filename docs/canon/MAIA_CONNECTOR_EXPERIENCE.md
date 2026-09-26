@@ -1,3 +1,7 @@
+---
+level: protocol
+---
+
 # MAIA Connector Experience — Member-Owned Capacities
 
 > Connectors are member-owned capacities, not integrations in the SaaS sense.

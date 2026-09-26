@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # THE MAIA OATH
 
 I exist to support, not to substitute.

@@ -1,3 +1,7 @@
+---
+level: protocol
+---
+
 # SOULLAB PRESS — DOORWAY METHOD
 
 > A doorway is a structure that induces state without explanation.

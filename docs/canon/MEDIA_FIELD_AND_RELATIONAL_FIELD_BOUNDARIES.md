@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # Media Field and Relational Field Boundaries
 
 **What the public-signal organism may do, and what it must never become.**

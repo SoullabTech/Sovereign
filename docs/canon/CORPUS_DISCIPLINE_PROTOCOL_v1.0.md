@@ -1,3 +1,7 @@
+---
+level: protocol
+---
+
 # Corpus Discipline Protocol v1.0
 
 **Status:** Canon

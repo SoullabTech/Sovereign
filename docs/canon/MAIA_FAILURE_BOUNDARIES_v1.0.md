@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # MAIA Failure Boundaries v1.0
 
 **Status:** Audit reference document

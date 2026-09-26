@@ -1,3 +1,7 @@
+---
+level: protocol
+---
+
 # Next Signal Loop — Specification
 
 **Status:** Draft specification. Not implemented.

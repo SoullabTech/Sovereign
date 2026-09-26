@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # MAIA WIRING AUDIT v1.0
 
 **Status:** Diagnostic companion to `MAIA_CURRENT_STATE_v1.0.md`
