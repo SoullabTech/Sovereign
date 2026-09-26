@@ -28,6 +28,7 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { persistMemberEditorialAct } from '@/lib/manuscript/editorialRuntime/memberAct';
 import { runEditorialTurn } from '@/lib/manuscript/editorialRuntime/turn';
 import { MEMBER_ACT_KINDS, type MemberActKind } from '@/lib/manuscript/editorialDiscourse/contract';
+import { preflightEditorialRelationshipCarriage } from '@/lib/writers-studio/relationshipCarriage';
 import {
   DEFAULT_SCOPE_DECLARATION, isEditorialLatitude,
   type EditorialScopeDeclaration,
@@ -46,7 +47,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * person to read their code would believe it too. The refusal names the keys so
  * the mistake is legible rather than mysterious.
  */
-const TOP_KEYS = ['threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy'] as const;
+const TOP_KEYS = ['threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
 /**
  * ⭐⭐ THE AUTHOR'S TWO CONTROLS, AND THEY ARE SEPARATE KEYS ON PURPOSE.
@@ -63,6 +64,7 @@ type Parsed =
       act: { act: MemberActKind; text: string; refersTo: string | null };
       sanctuary: boolean;
       scope: EditorialScopeDeclaration;
+      relationshipId: string | null;
       /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
       mayProposeImmediately: boolean;
       /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
@@ -88,6 +90,10 @@ function parseClosed(body: unknown): Parsed {
   }
   if (typeof b.threadId !== 'string' || b.threadId.length === 0) {
     return { ok: false, error: 'threadId is required' };
+  }
+  if (!(b.relationshipId === undefined
+      || (typeof b.relationshipId === 'string' && b.relationshipId.length > 0))) {
+    return { ok: false, error: 'relationshipId must be a non-empty string when provided' };
   }
   const a = b.act;
   if (typeof a !== 'object' || a === null || Array.isArray(a)) {
@@ -159,6 +165,7 @@ function parseClosed(body: unknown): Parsed {
        contradictory nested affirmative still fails closed to Sanctuary. */
     sanctuary: TurnPosture.resolve(b).sanctuary,
     scope,
+    relationshipId: typeof b.relationshipId === 'string' ? b.relationshipId : null,
     mayProposeImmediately,
     proposalPolicy,
   };
@@ -198,6 +205,18 @@ export async function POST(request: NextRequest) {
 
   const memberId = identity.memberId;
 
+  if (parsed.relationshipId !== null) {
+    const relationship = await preflightEditorialRelationshipCarriage({
+      memberId,
+      relationshipId: parsed.relationshipId,
+      threadId: parsed.threadId,
+    });
+    if (!relationship.ok) {
+      const status = relationship.reason === 'relationship_not_found' ? 404 : 409;
+      return NextResponse.json({ error: relationship.reason, persisted: false }, { status });
+    }
+  }
+
   const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act });
   if (!act.ok) {
     const status = act.reason === 'thread_not_found' ? 404 : 400;
@@ -208,6 +227,7 @@ export async function POST(request: NextRequest) {
     /* ⭐ THE SAME MINTED OBJECT. ⛔ No second identity crosses this boundary. */
     identity,
     threadId: parsed.threadId,
+    ...(parsed.relationshipId !== null ? { relationshipId: parsed.relationshipId } : {}),
     currentTurnIndex: act.turnIndex,
     declaredAct: parsed.act.act,
     currentDirectionId: act.direction?.id ?? null,
@@ -241,7 +261,9 @@ export async function POST(request: NextRequest) {
        line and the system held it. ⛔ None of them is a server fault. */
     const scopeRefused = turn.scope !== undefined || turn.voice !== undefined
       || turn.reason === 'sequence_discussion_first'
-      || turn.reason === 'proposal_policy_reply_only';
+      || turn.reason === 'proposal_policy_reply_only'
+      || turn.reason === 'relationship_scope_unmeasured'
+      || turn.reason === 'relationship_refused';
     return NextResponse.json({
       threadId: parsed.threadId,
       memberTurnIndex: act.turnIndex,

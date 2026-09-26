@@ -33,6 +33,10 @@ import { appendTurnWithClient } from '../ask/threadStore';
 import { UNMEASURED } from '../ask/staleness';
 import { createMaiaDirectionWithExecutor } from '../editorialWorkspace/store';
 import { appendAuthoredVersionWithExecutor } from '../proposalChain/store';
+import {
+  appendEditorialEpisodeWithClient, prepareRelationshipForAppendWithClient,
+  RelationshipCustodyRefused, type ManuscriptLocusScope,
+} from '@/lib/writers-studio/relationshipCustody';
 import type {
   EditorialInvocation, EditorialOutcome,
 } from '../editorialDiscourse/contract';
@@ -54,6 +58,11 @@ export interface MaiaOutcomeInput {
    * those two different facts.
    */
   readonly answerProvenance?: unknown;
+  readonly relationshipAdmission?: {
+    readonly relationshipId: string;
+    readonly memberTurnIndex: number;
+    readonly manuscriptLocusScope: ManuscriptLocusScope;
+  };
 }
 
 export type MaiaOutcomeRefusal =
@@ -63,7 +72,8 @@ export type MaiaOutcomeRefusal =
   | 'direction_refused'
   /** ⭐⭐ The chain moved while MAIA was thinking. ⛔ Never rebased, never retried. */
   | 'not_successor_of_head'
-  | 'version_refused';
+  | 'version_refused'
+  | 'relationship_refused';
 
 export type MaiaOutcomeResult =
   | {
@@ -126,6 +136,13 @@ export async function persistMaiaEditorialOutcome(
     return await transaction(async (tx) => {
       await proveInvocation(tx, invocation, memberId);
 
+      const preparedRelationship = input.relationshipAdmission
+        ? await prepareRelationshipForAppendWithClient(tx, {
+            memberId,
+            relationshipId: input.relationshipAdmission.relationshipId,
+          })
+        : null;
+
       const turnIndex = await appendTurnWithClient(tx, {
         threadId: invocation.threadId, memberId, speaker: 'maia',
         body: outcome.reply, staleness: UNMEASURED,
@@ -134,6 +151,15 @@ export async function persistMaiaEditorialOutcome(
 
       /* ⭐ THE ONLY THING CONSULTED IS `outcome.kind`. */
       if (outcome.kind === 'reply_only') {
+        if (preparedRelationship && input.relationshipAdmission) {
+          await appendEditorialEpisodeWithClient(tx, preparedRelationship, {
+            threadId: invocation.threadId,
+            proposalChainId: invocation.chainId,
+            memberTurnIndex: input.relationshipAdmission.memberTurnIndex,
+            maiaTurnIndex: turnIndex,
+            manuscriptLocusScope: input.relationshipAdmission.manuscriptLocusScope,
+          });
+        }
         return { ok: true as const, turnIndex, reply: outcome.reply, direction: null, version: null };
       }
 
@@ -146,6 +172,15 @@ export async function persistMaiaEditorialOutcome(
            MAIA's turn while its declared adjunct did not exist. */
         if (!d.ok) throw new OutcomeRefused('direction_refused', d.reason);
         await bind(tx, invocation, turnIndex, { directionId: d.direction.id });
+        if (preparedRelationship && input.relationshipAdmission) {
+          await appendEditorialEpisodeWithClient(tx, preparedRelationship, {
+            threadId: invocation.threadId,
+            proposalChainId: invocation.chainId,
+            memberTurnIndex: input.relationshipAdmission.memberTurnIndex,
+            maiaTurnIndex: turnIndex,
+            manuscriptLocusScope: input.relationshipAdmission.manuscriptLocusScope,
+          });
+        }
         return { ok: true as const, turnIndex, reply: outcome.reply, direction: d.direction, version: null };
       }
 
@@ -165,11 +200,23 @@ export async function persistMaiaEditorialOutcome(
           a.reason);
       }
       await bind(tx, invocation, turnIndex, { versionId: a.version.id });
+      if (preparedRelationship && input.relationshipAdmission) {
+        await appendEditorialEpisodeWithClient(tx, preparedRelationship, {
+          threadId: invocation.threadId,
+          proposalChainId: invocation.chainId,
+          memberTurnIndex: input.relationshipAdmission.memberTurnIndex,
+          maiaTurnIndex: turnIndex,
+          manuscriptLocusScope: input.relationshipAdmission.manuscriptLocusScope,
+        });
+      }
       return { ok: true as const, turnIndex, reply: outcome.reply, direction: null, version: a.version };
     });
   } catch (e) {
     /* ⛔ Caught OUTSIDE the transaction, so the abort has already happened. */
     if (e instanceof OutcomeRefused) return { ok: false, reason: e.reason, detail: e.detail };
+    if (e instanceof RelationshipCustodyRefused) {
+      return { ok: false, reason: 'relationship_refused', detail: e.reason };
+    }
     throw e;
   }
 }

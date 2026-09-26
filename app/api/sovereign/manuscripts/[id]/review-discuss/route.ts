@@ -17,6 +17,11 @@ import { confirmDisclosureCrossedWithClient } from '@/lib/disclosure/contextDisc
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { transaction } from '@/lib/db/postgres';
 import { runReviewDiscuss, REVIEW_DISCUSS_READER_VERSION } from '@/lib/manuscript/ask/reviewDiscussReader';
+import { preflightRelationshipForManuscript } from '@/lib/writers-studio/relationshipCarriage';
+import {
+  appendReviewDiscussEpisodeWithClient, prepareRelationshipForAppendWithClient,
+  RelationshipCustodyRefused,
+} from '@/lib/writers-studio/relationshipCustody';
 
 export const dynamic = 'force-dynamic';
 const MAX_QUESTION = 4000;
@@ -50,14 +55,21 @@ export async function POST(
   }
   const body = raw as Record<string, unknown>;
   const keys = Object.keys(body).sort().join(',');
-  if (keys !== 'observationKey,question,readingId,sanctuary') {
+  if (
+    keys !== 'observationKey,question,readingId,sanctuary'
+    && keys !== 'observationKey,question,readingId,relationshipId,sanctuary'
+  ) {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
 
   const readingId = typeof body.readingId === 'string' && body.readingId.length > 0 ? body.readingId : null;
   const observationKey = typeof body.observationKey === 'string' && body.observationKey.length > 0 ? body.observationKey : null;
   const question = typeof body.question === 'string' ? body.question.trim() : '';
-  if (!readingId || !observationKey || !question) {
+  const relationshipId = body.relationshipId === undefined
+    ? null
+    : (typeof body.relationshipId === 'string' && body.relationshipId.length > 0
+      ? body.relationshipId : null);
+  if (!readingId || !observationKey || !question || (body.relationshipId !== undefined && relationshipId === null)) {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
   if (question.length > MAX_QUESTION) {
@@ -72,6 +84,19 @@ export async function POST(
     return NextResponse.json({ refusal: 'sanctuary_unavailable' }, { status: 409 });
   }
   const posture = TurnPosture.resolve({ sanctuary: body.sanctuary });
+
+  if (relationshipId !== null) {
+    const relationship = await preflightRelationshipForManuscript({
+      memberId, relationshipId, manuscriptId,
+    });
+    if (!relationship.ok) {
+      const status = relationship.reason === 'relationship_not_found' ? 404 : 409;
+      return NextResponse.json(
+        { refusal: relationship.reason, persisted: false },
+        { status },
+      );
+    }
+  }
 
   const reading = await loadFrozenDevelopmentalReading(manuscriptId, readingId, memberId);
   const anchor = { on: 'observation' as const, readingId, observationKey };
@@ -277,6 +302,10 @@ export async function POST(
   let turnIndex: number;
   try {
     turnIndex = await transaction(async (client) => {
+      const preparedRelationship = relationshipId !== null
+        ? await prepareRelationshipForAppendWithClient(client, { memberId, relationshipId })
+        : null;
+
       const index = await appendTurnWithClient(client, {
         threadId,
         memberId,
@@ -289,9 +318,24 @@ export async function POST(
         await confirmDisclosureCrossedWithClient(client, crossing.disclosureId);
       }
       await recordCompletionWithClient(client, authorizationRef, `${threadId}:${index}`);
+      if (preparedRelationship && relationshipId !== null) {
+        await appendReviewDiscussEpisodeWithClient(client, preparedRelationship, {
+          threadId,
+          maiaTurnIndex: index,
+          authorizationId: authorizationRef,
+          readingId,
+          observationKey,
+        });
+      }
       return index;
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof RelationshipCustodyRefused) {
+      return NextResponse.json(
+        { refusal: 'relationship_unavailable', detail: error.reason, threadId },
+        { status: 409 },
+      );
+    }
     console.error('[R2-2] Review Discuss post-cognition tail rolled back');
     return NextResponse.json(
       { refusal: 'answer_not_recorded', threadId },
