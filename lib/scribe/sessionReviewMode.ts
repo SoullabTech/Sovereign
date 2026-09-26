@@ -11,6 +11,7 @@ import {
   SINGLE_SPEAKER_ATTRIBUTION_GUARD,
 } from './attributionGuard';
 import { getAssembledTranscript, type AssembledTurn } from '@/lib/supervision/transcriptAssembler';
+import { COUNCIL_LENS_INSTRUCTIONS } from '@/lib/council/councilPreamble';
 
 // ============================================================================
 // Types
@@ -20,7 +21,7 @@ export interface SessionReviewContext {
   reviewedSessionId: string;
   currentSessionId: string;
   questionNumber: number;
-  lens?: 'core' | 'spiralogic' | 'mentor';
+  lens?: 'core' | 'spiralogic' | 'mentor' | 'council';
   clientName?: string; // entered by practitioner in the review UI
 }
 
@@ -168,6 +169,9 @@ Your register is sober and craft-honest: direct enough to be useful, humble enou
 Your phrasings carry the developmental register — *"you might consider…"*, *"one possible reading of the intervention at 14:22 is…"*, *"another way to see this…"*, *"did this match your own sense of what was happening?"*. The questions are not weakness performing humility; they are the structure of supervision.
 
 When the transcript does not show enough of the practitioner's work to comment meaningfully, say so. That is a faithful output.`;
+
+    case 'council':
+      return COUNCIL_LENS_INSTRUCTIONS;
 
     default: // 'core'
       return `You are MAIA in Session Review through the Core lens.
