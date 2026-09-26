@@ -467,3 +467,37 @@ Result:
 - authoritative byte-transfer manifest frozen; no programme files transferred yet.
 
 Next boundary: `O8R4R2 — EXACT OWNED-SET BYTE TRANSFER TO ISOLATED WORKTREE + PRE-COMMIT CONFORMANCE ONLY`.
+## O8R4R3 founder adjudication + O8R4R4 current-canonical reconciliation
+
+- `O8R4R3_FOUNDER_ADJUDICATION_v0.1.md`
+- `O8R4R4_CURRENT_CANONICAL_RECONCILIATION_MERGE_READINESS_v0.1.md`
+
+Result:
+- isolated scoped commit `623bc92eabf529524304060953635d5be23bae30` accepted;
+- current canonical refreshed as `03cb0f1c69825f7b0d51988cf4f31ef77273733f`;
+- common base `e886888416062c7fcbcf899040e3827bc8013835`;
+- canonical changed 7 net paths; O8 commit changed 72;
+- path overlap: 0;
+- canonical MAIA `/list` route blob unchanged from O8 base;
+- non-mutating merge-tree simulation clean;
+- synthetic merged tree preserves 72/72 O8 blobs and 7/7 canonical-only blobs;
+- successor replay is eligible;
+- no replay, push, PR, merge, or deployment performed.
+
+Next boundary: `O8R4R5 — CURRENT-CANONICAL SUCCESSOR REPLAY + POST-REPLAY CONFORMANCE ONLY`.
+## O8R4R5 current-canonical successor replay
+
+- `O8R4R5_CURRENT_CANONICAL_SUCCESSOR_REPLAY_EVIDENCE_v0.1.md`
+- `O8R4R5_FOUNDER_ADJUDICATION_v0.1.md`
+
+Result:
+- successor `1f94049494e549fa8b715b4868f27ca17ae17b00` accepted on canonical parent `03cb0f1c69825f7b0d51988cf4f31ef77273733f`;
+- successor tree matches synthetic merge tree `a16159ee07211375426207c7f0ece63c71c2ed10`;
+- 72/72 O8 blobs preserved;
+- 7/7 canonical-only blobs preserved;
+- post-replay conformance stack green;
+- sovereignty governance pass;
+- historical O8R2R1 route-witness drift retained as expected evidence;
+- no push, PR, merge, or deployment.
+
+Next boundary: `O8R4R6 — SUCCESSOR DOCUMENTARY HISTORY SOURCE-CONTROL ADMISSION ONLY`.
