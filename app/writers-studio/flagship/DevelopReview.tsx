@@ -247,29 +247,53 @@ export interface LensStanding {
 export interface DevelopView {
   readonly work: string;
   readonly kind: string;
-  readonly pages: number; readonly sections: number; readonly words: number;
+  /** Page count is shown only when the runtime actually holds that fact. */
+  readonly pages?: number;
+  readonly sections: number; readonly words: number;
   readonly observations: readonly GovernedObservation[];
-  readonly map: ContinuityMapData;
+  /** Cross-Work presence requires governed evidence. Absence is rendered as absence, never as an empty inferred map. */
+  readonly map?: ContinuityMapData;
   readonly lenses: readonly LensStanding[];
   readonly coverage: Coverage;
   readonly opening: WorkOpening;
+  /** False means this Overview is manuscript/Work facts only; it says nothing about whether readings exist elsewhere. */
+  readonly readingAttached?: boolean;
   /** Set when the member has declared a shape; ⛔ absent renders Sequence. */
   readonly structureDeclaredLabel?: string;
 }
 
+export interface DevelopCapabilities {
+  readonly askMaia: boolean;
+  readonly facet: boolean;
+  readonly overview: boolean;
+  /** A lens is interactive only after its live projection exists. Unlisted lenses remain orientation, not dead controls. */
+  readonly lenses: readonly LensId[];
+}
+export const CONTROLLED_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.freeze({
+  askMaia: true,
+  facet: true,
+  overview: true,
+  lenses: LENSES.map((lens) => lens.id),
+});
+export const OVERVIEW_ONLY_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.freeze({
+  askMaia: false,
+  facet: false,
+  overview: false,
+  lenses: [],
+});
+
 /** ⭐ No empty state. Either a reading exists and said nothing, or it does not exist. */
-function LensRow({ l }: { l: LensStanding }) {
+function LensRow({ l, canCommission = true, readingAttached = true }: { l: LensStanding; canCommission?: boolean; readingAttached?: boolean }) {
   const meta = LENSES.find((x) => x.id === l.id);
   if (!meta) return null;
-  const body =
-    l.state === 'not-read'
-      ? <>MAIA hasn’t read your Work for this yet.{' '}
-          <button type="button" className="fs-goto" data-commission={l.id}>Read for this →</button></>
+  const body = !readingAttached
+    ? <>No reading is attached to this Overview for this lens.</>
+    : l.state === 'not-read'
+      ? <>MAIA hasn’t read your Work for this yet.{canCommission ? <>{' '}<button type="button" className="fs-goto" data-commission={l.id}>Read for this →</button></> : null}</>
       : l.state === 'read-nothing-noticed'
         ? <>MAIA read the whole Work for this and found nothing to bring you.</>
         : l.state === 'partially-read'
-          ? <>{l.count} {l.count === 1 ? 'thing' : 'things'} so far · {l.remaining} sections not read yet{' '}
-              <button type="button" className="fs-goto" data-commission={l.id}>Read the rest →</button></>
+          ? <>{l.count} {l.count === 1 ? 'thing' : 'things'} so far · {l.remaining} sections not read yet{canCommission ? <>{' '}<button type="button" className="fs-goto" data-commission={l.id}>Read the rest →</button></> : null}</>
           : <>{l.count} {l.count === 1 ? 'thing' : 'things'} to look at</>;
   return (
     <div className="fs-lens" data-lens={l.id} data-lens-state={l.state}>
@@ -280,23 +304,28 @@ function LensRow({ l }: { l: LensStanding }) {
   );
 }
 
-export function DevelopRoom({ view, lens = 'overview', facet = 'guided' }: {
+export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabilities = CONTROLLED_DEVELOP_CAPABILITIES, onLens }: {
   view: DevelopView; lens?: LensId | 'overview'; facet?: Facet;
+  capabilities?: DevelopCapabilities; onLens?: (lens: LensId | 'overview') => void;
 }) {
   const cov = view.coverage;
   return (
     <>
-      <CrumbBar work={view.work} place="Develop" facet={facet}
-        actions={<button type="button" className="fs-tool fs-tool--key">Ask MAIA</button>} />
-      {/* ⛔ No Export. ⛔ No Themes — it has no lens. ⛔ No invented destination. */}
+      <CrumbBar work={view.work} place="Develop" facet={capabilities.facet ? facet : undefined}
+        actions={capabilities.askMaia ? <button type="button" className="fs-tool fs-tool--key">Ask MAIA</button> : undefined} />
+      {/* ⛔ No Export. Themes is a governed presentation domain, not a commissioned developmental lens. */}
       <div className="fs-modetabs" role="tablist">
-        <button type="button" role="tab" className="fs-modetab" aria-selected={lens === 'overview'}>
-          Overview
-        </button>
-        {LENSES.map((l) => (
-          <button key={l.id} type="button" role="tab" className="fs-modetab" aria-selected={lens === l.id}>
+        {capabilities.overview ? (
+          <button type="button" role="tab" className="fs-modetab" aria-selected={lens === 'overview'} onClick={() => onLens?.('overview')}>
+            Overview
+          </button>
+        ) : <span role="tab" className="fs-modetab" aria-selected={lens === 'overview'} aria-disabled="true">Overview</span>}
+        {LENSES.map((l) => capabilities.lenses.includes(l.id) ? (
+          <button key={l.id} type="button" role="tab" className="fs-modetab" aria-selected={lens === l.id} onClick={() => onLens?.(l.id)}>
             {l.plain}
           </button>
+        ) : (
+          <span key={l.id} role="tab" className="fs-modetab" aria-selected="false" aria-disabled="true">{l.plain}</span>
         ))}
       </div>
 
@@ -306,7 +335,7 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided' }: {
             <div>
               <h2>Your {view.kind}, seen whole</h2>
               <p>
-                {view.pages} pages · {view.sections} sections · {view.words.toLocaleString('en-US')} words ·{' '}
+                {view.pages !== undefined ? <>{view.pages} pages · </> : null}{view.sections} sections · {view.words.toLocaleString('en-US')} words ·{' '}
                 {readTimeLabel(view.words)}
               </p>
             </div>
@@ -321,11 +350,21 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided' }: {
               member's own Work, addressable at every cell, non-ranking, and it
               exposes what is hard to perceive while drafting. */}
           <div style={{ gridColumn: '1 / -1' }}>
-            <ContinuityMap d={view.map} title={`Across your ${view.kind}`} />
+            {view.map ? <ContinuityMap d={view.map} title={`Across your ${view.kind}`} /> : (
+              <section className="fs-card" data-continuity-map="unavailable">
+                <h3>Across your {view.kind}</h3>
+                <p className="fs-obsnote">{view.readingAttached === false ? 'No continuity reading is attached to this Overview. No pattern is inferred from the manuscript.' : 'MAIA hasn’t read across this Work for continuity yet. No pattern is inferred from unread material.'}</p>
+              </section>
+            )}
           </div>
 
           <div className="fs-col">
-            <Observations items={view.observations.slice(0, 4)} />
+            {view.readingAttached === false ? (
+              <section className="fs-card" data-observations="unattached">
+                <h3>What MAIA noticed</h3>
+                <p className="fs-obsnote">No reading is attached to this Overview, so no MAIA observations are shown.</p>
+              </section>
+            ) : <Observations items={view.observations.slice(0, 4)} />}
           </div>
 
           <div className="fs-col">
@@ -339,16 +378,20 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided' }: {
             <section className="fs-card" data-coverage="true">
               <h3>What MAIA read</h3>
               <p className="fs-obsb" style={{ margin: '0 0 9px' }}>
-                {view.coverage.read} of {view.coverage.total} sections, {view.coverage.depth},{' '}
-                {view.coverage.when}. Everything here cites something she read.
+                {view.coverage.read > 0 ? <>
+                  {view.coverage.read} of {view.coverage.total} sections, {view.coverage.depth},{' '}
+                  {view.coverage.when}. Everything here cites something she read.
+                </> : view.readingAttached === false
+                  ? <>No reading is attached to this Overview. It uses only manuscript and Work facts already present.</>
+                  : <>MAIA hasn’t read this Work developmentally yet. The overview below uses only manuscript and Work facts already present.</>}
               </p>
-              <CoverageLine c={view.coverage} compact />
+              {view.coverage.read > 0 ? <CoverageLine c={view.coverage} compact /> : null}
             </section>
 
             <section className="fs-card">
               <h3>Ways to look</h3>
               <div className="fs-lenses">
-                {view.lenses.map((l) => <LensRow key={l.id} l={l} />)}
+                {view.lenses.map((l) => <LensRow key={l.id} l={l} canCommission={capabilities.askMaia} readingAttached={view.readingAttached !== false} />)}
               </div>
             </section>
           </div>

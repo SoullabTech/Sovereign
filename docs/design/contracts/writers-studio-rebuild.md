@@ -9,7 +9,8 @@ surfaces:
   # artifact and its historical stylesheet inside that directory.
   - app/writers-studio/rebuild/RebuildStudioClient.tsx
   - app/writers-studio/rebuild/rebuild.css
-  - app/writers-studio/develop/**
+  # D5A, 2026-09-26 — /writers-studio/develop is now mounted by the flagship contract.
+  # The legacy DevelopRoom remains unmounted substrate and is not route authority.
   - app/writers-studio/insight/**
   # Shared by Write and Develop: one continuous manuscript surface. D5 adds an
   # optional read-only evidence highlight; editing behavior remains unchanged.
@@ -70,11 +71,11 @@ experience_verification: >-
 
 This contract preserves the **historical legacy witness** and continues to govern only the legacy/unmounted composition and the explicitly named legacy Writer’s Studio surfaces in its frontmatter.
 
-It no longer governs the composition mounted at `/writers-studio/rebuild`. The sole current Experience Contract for that mounted flagship route is:
+It no longer governs the compositions mounted at `/writers-studio/rebuild` or `/writers-studio/develop`. The sole current Experience Contract for those mounted flagship routes is:
 
 `docs/design/contracts/flagship-studio.md`
 
-Accordingly, the historical law **“three permanent regions — the Work’s own shape, the authored material, and MAIA”** remains evidence of the composition witnessed on 2026-09-16, but is **superseded for the currently mounted `/writers-studio/rebuild` experience**. Nothing in this reconciliation reinterprets that historical witness as an error or as evidence of the later flagship design.
+Accordingly, the historical law **“three permanent regions — the Work’s own shape, the authored material, and MAIA”** remains evidence of the composition witnessed on 2026-09-16, but is **superseded for the currently mounted `/writers-studio/rebuild` and `/writers-studio/develop` experiences**. Nothing in this reconciliation reinterprets that historical witness as an error or as evidence of the later flagship design.
 
 ## What this room is for
 

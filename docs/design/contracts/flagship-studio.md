@@ -24,6 +24,10 @@ surfaces:
   - app/writers-studio/rebuild/WholeReviewView.tsx
   - app/writers-studio/rebuild/ReviewChooser.tsx
   - app/writers-studio/rebuild/page.tsx
+  # D5A, 2026-09-26 — mounted flagship Develop Overview; facts-only until a reading is explicitly attached.
+  - app/writers-studio/develop/page.tsx
+  - app/writers-studio/develop/FlagshipDevelopHost.tsx
+  - app/writers-studio/develop/liveDevelopOverview.ts
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE — one Studio shell, three member-facing modes, never three products
@@ -53,7 +57,9 @@ experience_verification: >-
 
 ## Current route authority — EC1, 2026-09-23
 
-This is the **sole current Experience Contract for the composition mounted at `/writers-studio/rebuild`**.
+This is the **sole current Experience Contract for the flagship compositions mounted at `/writers-studio/rebuild` and `/writers-studio/develop`**.
+
+D5A mounts Develop through the same flagship shell. Its first live slice is deliberately facts-only: manuscript/Work facts may render immediately, while readings, observations, cross-Work maps, MAIA actions, facets and lens controls appear only when their exact runtime authority is bound.
 
 Its standing composition law is unchanged: the manuscript is primary; MAIA is contextual, anchored, and dismissible; MAIA is **not a permanent pane**. The shared `RebuildWritingBoundary` and `RebuildAuthoredBody` are named in this contract because the live flagship host mounts them as its existing authorship substrate; EC1 changes none of their save or writing authority.
 

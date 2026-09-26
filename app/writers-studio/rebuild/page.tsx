@@ -1,10 +1,12 @@
 import './rebuild.css';
+import '../flagship/flagship.css';
+import './flagshipWriteHost.css';
 import { Suspense } from 'react';
 import FlagshipWriteHost from './FlagshipWriteHost';
 
 export const dynamic = 'force-dynamic';
 
-/** D4R1 witness mount only. Restored immediately after the isolated live walk. */
+/** Roadmap candidate mount: the recovered exact flagship presentation with bounded live ports. */
 export default function WriterStudioRebuildPage() {
   return (
     <Suspense fallback={<div style={{ padding: 32 }}>Opening Writer’s Studio…</div>}>
