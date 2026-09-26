@@ -1,8 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Phone, Send, Plus, X, Loader2, Check } from 'lucide-react';
+import {
+  MessageSquare,
+  Phone,
+  Send,
+  Plus,
+  X,
+  Loader2,
+  Check,
+  AlertTriangle,
+  Clock,
+} from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 
 /**
@@ -14,20 +24,94 @@ import { apiFetch } from '@/lib/http/apiBase';
  * state rather than fabricated message history, and keep the verified Compose SMS.
  * Sent messages are NOT shown as persisted history — content isn't stored
  * (sovereignty); we surface a transient "sent" confirmation instead.
+ *
+ * Delivery truth: a synchronous send only means Twilio ACCEPTED the message. The
+ * carrier can still reject it (e.g. A2P 10DLC error 30034) and Twilio reports
+ * that asynchronously via the StatusCallback webhook. So after a send we poll
+ * /api/notifications/sms/delivery and surface the real outcome — delivered /
+ * undelivered / failed + error code — instead of a permanently green "SMS sent".
  */
+
+type DeliveryState = {
+  status: string;
+  errorCode: string | null;
+  errorMessage: string | null;
+};
+
+const TERMINAL = ['delivered', 'undelivered', 'failed'];
+
 export default function CommsPage() {
   const [showSmsModal, setShowSmsModal] = useState(false);
   const [smsTo, setSmsTo] = useState('');
   const [smsMessage, setSmsMessage] = useState('');
   const [sendingSms, setSendingSms] = useState(false);
   const [smsError, setSmsError] = useState<string | null>(null);
+
+  // Outcome surface (transient, session-only).
   const [sentOk, setSentOk] = useState(false);
+  const [deliverySid, setDeliverySid] = useState<string | null>(null);
+  const [delivery, setDelivery] = useState<DeliveryState | null>(null);
+  const [deliveryTimedOut, setDeliveryTimedOut] = useState(false);
+
+  const resetOutcome = () => {
+    setSentOk(false);
+    setDeliverySid(null);
+    setDelivery(null);
+    setDeliveryTimedOut(false);
+  };
 
   const openCompose = () => {
-    setSentOk(false);
+    resetOutcome();
     setSmsError(null);
     setShowSmsModal(true);
   };
+
+  // Poll the delivery-status read endpoint until a terminal state or timeout.
+  // The webhook writes the terminal state async, so the first checks usually see
+  // an in-flight ("accepted"/"queued") row or none yet.
+  useEffect(() => {
+    if (!deliverySid) return;
+
+    const token = { cancelled: false };
+    let attempts = 0;
+    const maxAttempts = 12; // ~30s at 2.5s spacing
+    const intervalMs = 2500;
+
+    const poll = async () => {
+      if (token.cancelled) return;
+      attempts += 1;
+      try {
+        const res = await apiFetch(
+          `/api/notifications/sms/delivery?sid=${encodeURIComponent(deliverySid)}`,
+        );
+        const data = await res.json();
+        if (token.cancelled) return;
+        if (data.found && data.status) {
+          setDelivery({
+            status: data.status,
+            errorCode: data.errorCode ?? null,
+            errorMessage: data.errorMessage ?? null,
+          });
+          if (data.terminal) return; // settled — stop polling
+        }
+      } catch {
+        // transient (network / auth blip) — keep polling
+      }
+      if (attempts >= maxAttempts) {
+        if (!token.cancelled) setDeliveryTimedOut(true);
+        return;
+      }
+      if (!token.cancelled) setTimeout(poll, intervalMs);
+    };
+
+    // Small initial delay so the StatusCallback has a moment to land.
+    const starter = setTimeout(poll, 1500);
+
+    return () => {
+      token.cancelled = true;
+      clearTimeout(starter);
+    };
+  }, [deliverySid]);
 
   const sendSms = async () => {
     if (!smsTo.trim() || !smsMessage.trim()) {
@@ -54,7 +138,11 @@ export default function CommsPage() {
         setShowSmsModal(false);
         setSmsTo('');
         setSmsMessage('');
+        resetOutcome();
         setSentOk(true);
+        // data.id is the Twilio message SID — present for real sends, absent in
+        // dev mode. Only then can we track delivery.
+        if (data.id) setDeliverySid(data.id);
       } else {
         setSmsError(data.error || 'Failed to send SMS');
       }
@@ -64,6 +152,8 @@ export default function CommsPage() {
       setSendingSms(false);
     }
   };
+
+  const outcome = describeOutcome(deliverySid, delivery, deliveryTimedOut);
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
@@ -82,15 +172,18 @@ export default function CommsPage() {
         </button>
       </div>
 
-      {/* Transient sent confirmation — session-only, not persisted history */}
+      {/* Transient outcome — reflects the REAL delivery state, not just "accepted" */}
       {sentOk && (
-        <div className="mx-4 mt-3 flex items-center justify-between gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-300 text-sm">
+        <div
+          className={`mx-4 mt-3 flex items-start justify-between gap-2 px-3 py-2 rounded-lg border text-sm ${outcome.className}`}
+        >
           <span className="flex items-center gap-2">
-            <Check className="w-4 h-4" /> SMS sent.
+            <outcome.Icon className={`w-4 h-4 shrink-0 ${outcome.iconClassName ?? ''}`} />
+            <span>{outcome.text}</span>
           </span>
           <button
-            onClick={() => setSentOk(false)}
-            className="text-emerald-400/70 hover:text-emerald-300"
+            onClick={resetOutcome}
+            className="opacity-70 hover:opacity-100 shrink-0"
             aria-label="Dismiss"
           >
             <X className="w-4 h-4" />
@@ -213,4 +306,62 @@ export default function CommsPage() {
       </AnimatePresence>
     </div>
   );
+}
+
+/**
+ * Map the (sid, delivery, timeout) triple to a banner. The whole point is to
+ * stop claiming success when the carrier rejected the message.
+ */
+function describeOutcome(
+  deliverySid: string | null,
+  delivery: DeliveryState | null,
+  timedOut: boolean,
+): { text: string; className: string; Icon: typeof Check; iconClassName?: string } {
+  const status = delivery?.status;
+
+  if (status === 'delivered') {
+    return {
+      text: 'Delivered.',
+      className: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+      Icon: Check,
+    };
+  }
+
+  if (status === 'undelivered' || status === 'failed') {
+    const code = delivery?.errorCode;
+    const hint =
+      code === '30034'
+        ? 'The carrier rejected it — this account’s A2P 10DLC campaign isn’t registered. No SMS will reach real phones until that’s fixed in Twilio.'
+        : `The carrier did not deliver it${code ? ` (error ${code})` : ''}.`;
+    return {
+      text: `Not delivered. ${hint}`,
+      className: 'bg-red-500/10 border-red-500/30 text-red-300',
+      Icon: AlertTriangle,
+    };
+  }
+
+  if (timedOut) {
+    return {
+      text: 'Twilio accepted it, but delivery isn’t confirmed yet. Check back shortly.',
+      className: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+      Icon: Clock,
+    };
+  }
+
+  // No SID means dev mode (no provider id) — nothing to track.
+  if (!deliverySid) {
+    return {
+      text: 'SMS sent (delivery not tracked in this environment).',
+      className: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
+      Icon: Check,
+    };
+  }
+
+  // Real send, awaiting the carrier's verdict.
+  return {
+    text: 'Sent — confirming delivery…',
+    className: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+    Icon: Loader2,
+    iconClassName: 'animate-spin',
+  };
 }
