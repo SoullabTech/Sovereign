@@ -92,6 +92,7 @@ export interface EditorialTurnInput {
    */
   readonly identity: VerifiedIdentity;
   readonly threadId: string;
+  readonly relationshipId?: string;
   /** The turn ER-R1 just persisted. ⛔ Its BODY is read from the database, not passed. */
   readonly currentTurnIndex: number;
   readonly declaredAct: MemberActKind;
@@ -116,6 +117,7 @@ export interface EditorialTurnInput {
 
 export type EditorialTurnRefusal =
   | AssemblyRefusal
+  | 'relationship_scope_unmeasured'
   | 'current_turn_not_found'
   /** ⛔ A supplied candidate did not survive MIPA or the renderer. */
   | 'handoff_unproven'
@@ -198,6 +200,9 @@ export async function runEditorialTurn(
     declaredAct: input.declaredAct, currentDirectionId: input.currentDirectionId,
   });
   if (!assembly.ok) return { ok: false, reason: assembly.reason };
+  if (input.relationshipId !== undefined && assembly.locusScopeKind === null) {
+    return { ok: false, reason: 'relationship_scope_unmeasured' };
+  }
 
   // 🎓 T8A — teaching is a named, governed participant in the existing Writer cognition seam.
   // It is computed only from this durable current utterance and expires with this turn.
@@ -385,6 +390,13 @@ export async function runEditorialTurn(
   /* 7 · persist, with the provenance of the answer that ACTUALLY came back */
   const persisted = await persistMaiaEditorialOutcome({
     memberId, invocation, outcome: admission.outcome,
+    ...(input.relationshipId !== undefined
+      ? { relationshipAdmission: {
+          relationshipId: input.relationshipId,
+          memberTurnIndex: input.currentTurnIndex,
+          manuscriptLocusScope: assembly.locusScopeKind!,
+        } }
+      : {}),
     /* ⭐ ALL THREE FACTS, and `model` keeps its governed meaning:
        requested and SENT. ⛔ It is not redefined to mean "what answered" — that
        is `reportedModel`, and their relation is `modelAgreement`. */
