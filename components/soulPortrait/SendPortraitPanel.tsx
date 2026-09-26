@@ -59,6 +59,15 @@ export function SendPortraitPanel({
       });
       const data = await res.json();
       if (!res.ok) {
+        // The minor → guardian refusal (403) is correct and stays; point the
+        // practitioner at the correction notice in case the flag was a mistake.
+        if (res.status === 403 && typeof data.error === 'string' && data.error.toLowerCase().includes('minor')) {
+          setError(
+            'This draft is marked as a minor’s portrait, so sending is refused — delivery for minors waits on a guardian consent flow. ' +
+              'If the marking was ticked by mistake, correct it via the notice at the top of this preview, then send again.',
+          );
+          return;
+        }
         setError(data.message || data.error || 'Send failed.');
         return;
       }
