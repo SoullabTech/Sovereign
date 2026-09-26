@@ -529,3 +529,17 @@ Founder ruling:
 - documentary-only fast-forward may proceed next.
 
 Next boundary: `O8R7R1 — REMOTE-PUBLICATION DOCUMENTARY COMMIT + FAST-FORWARD ONLY`.
+## O8R7R1 founder adjudication
+
+- `O8R7R1_REMOTE_PUBLICATION_DOCUMENTARY_FAST_FORWARD_EVIDENCE_v0.1.md`
+- `O8R7R1_FOUNDER_ADJUDICATION_v0.1.md`
+
+Founder ruling:
+- remote documentary fast-forward accepted;
+- remote head `edac706e0edb5d95be2dad2fbe3d02df34b68bff` exact;
+- canonical `03cb0f1c69825f7b0d51988cf4f31ef77273733f` unmoved;
+- PR count remained 0 at adjudication;
+- draft PR creation may open next;
+- merge and deployment remain closed.
+
+Next boundary: `O8R8 — DRAFT PULL REQUEST CREATION ONLY`.
