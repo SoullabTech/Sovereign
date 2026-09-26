@@ -1,28 +1,15 @@
 import './rebuild.css';
 import { Suspense } from 'react';
-import RebuildStudioClient from './RebuildStudioClient';
+import FlagshipWriteHost from './FlagshipWriteHost';
 
-/**
- * /writers-studio/rebuild — the full manuscript-first Writer's Studio workspace.
- *
- * RESTORATION 2026-09-23
- *
- * The C1B FlagshipWriteHost was a bounded constitutional host used to prove the
- * new Write/Review runtime. Mounting it as the production Studio collapsed the
- * member-facing workspace to that bounded host and hid the fuller composition
- * already present in RebuildStudioClient.
- *
- * Production therefore mounts the complete workspace here again. The newer
- * governed backend remains in place: editorial routes, Review Discuss R2-2,
- * disclosure receipts, durable observation identity and feature flags are not
- * rolled back by this presentation restoration.
- */
 export const dynamic = 'force-dynamic';
 
+/** D4R1 witness mount only. Restored immediately after the isolated live walk. */
 export default function WriterStudioRebuildPage() {
   return (
     <Suspense fallback={<div style={{ padding: 32 }}>Opening Writer’s Studio…</div>}>
-      <RebuildStudioClient
+      <FlagshipWriteHost
+        editorialEnabled={process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1'}
         reviewDiscussEnabled={process.env.WRITERS_STUDIO_REVIEW_DISCUSS_ENABLED === '1'}
       />
     </Suspense>

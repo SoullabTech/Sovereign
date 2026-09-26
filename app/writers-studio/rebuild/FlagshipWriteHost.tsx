@@ -89,7 +89,12 @@ import { commissionDiscuss, createInFlightGuard, discussAfterHold, resultAttache
 import type { LensId } from '../flagship/DevelopReview';
 import type { Facet } from '../flagship/flagshipTokens';
 import { LiveReviewView } from './LiveReviewView';
+import { WholeReviewView } from './WholeReviewView';
 import { attachReview, hostFactsFrom, loadSelectedReading, selectedReadingId, type LiveReviewState, type ReviewPorts } from './liveReview';
+import {
+  REVIEW_FINDING_PARAM, REVIEW_RUN_PARAM, attachWholeReview, loadWholeReview,
+  selectedReviewFindingId, selectedReviewRunId, type WholeReviewState,
+} from './wholeReview';
 import { attachChoices, chooseReading, loadReadingChoices, navActionsFor, shouldLoadChoices, studioMode, type ChooserState, type StudioNav } from './reviewNavigation';
 import { ReviewChooser } from './ReviewChooser';
 import { navigationFor } from './reviewReturn';
@@ -191,6 +196,8 @@ export interface FlagshipWriteViewProps {
   readonly v10Write?: LiveV10WriteBinding;
   /** R1-1B — the live Review state for an explicitly selected reading. `idle`/absent → ordinary Write. */
   readonly review?: LiveReviewState;
+  /** D4R1 — one explicit saved multi-reading Review run. */
+  readonly wholeReview?: WholeReviewState;
   readonly reviewLens?: LensId | 'all';
   readonly onReviewLens?: (lens: LensId | 'all') => void;
   /** R1-1C — the reading chooser's state (`closed` or absent → not the selection state). */
@@ -212,7 +219,7 @@ const noAction = () => {};
 export function FlagshipWriteView({
   context, workTitle, workForm, member, focusId, held, onFocus, onHold, epoch = 0,
   editorialEnabled = false, discuss = null, onAskMaia = noAction, onSubmitAsk = noAction, onRelease = noAction, onWriting, v10Write,
-  review, reviewLens = 'all', onReviewLens = noAction, chooser, studioNav, reviewNavigation,
+  review, wholeReview, reviewLens = 'all', onReviewLens = noAction, chooser, studioNav, reviewNavigation,
   reviewDiscussion = null, onReviewDiscuss, onSubmitReviewDiscuss, onCloseReviewDiscuss,
 }: FlagshipWriteViewProps) {
   const focus = context.sections.find((s) => s.draftSectionId === focusId) ?? null;
@@ -221,7 +228,8 @@ export function FlagshipWriteView({
   const project = workTitle ? (workForm ? { workTitle, workKind: workForm } : { workTitle }) : undefined;
   /* R1-1C — the mode is what the URL resolved to (an explicit reading outranks the chooser flag);
      absent a host-supplied resolution, it is derived from the same two facts and nothing else. */
-  const reviewing = !!review && review.kind !== 'idle';
+  const reviewingWhole = !!wholeReview && wholeReview.kind !== 'idle';
+  const reviewing = reviewingWhole || (!!review && review.kind !== 'idle');
   const choosing = !reviewing && !!chooser && chooser.kind !== 'closed' && !!studioNav?.choose;
   const mode = studioNav?.mode ?? (reviewing ? 'review' : choosing ? 'review-choose' : 'write');
   const developQuery = new URLSearchParams({ m: context.manuscriptId });
@@ -233,9 +241,20 @@ export function FlagshipWriteView({
   };
   const current = mode === 'write' ? 'write' : 'review';
 
-  /* R1-1B — an explicit selected reading replaces the Write frame with the live read-only Review.
-     R1-1C — the shell names Write and Review; Review is current, Write is a link that removes only `reading`. */
-  if (reviewing) {
+  /* D4R1 — an exact saved Review run outranks the single-reading projection when explicitly addressed. */
+  if (reviewingWhole && wholeReview) {
+    return (
+      <div className="fsw-viewport">
+        <StudioShell current={current} destinations={['write', 'develop', 'review']} affordance="orientation" nav={nav} project={project} member={member}>
+          <WholeReviewView state={wholeReview} lens={reviewLens} onLens={onReviewLens} navigation={reviewNavigation}
+            discussion={reviewDiscussion} onDiscussFinding={onReviewDiscuss}
+            onSubmitDiscuss={onSubmitReviewDiscuss} onCloseDiscuss={onCloseReviewDiscuss} />
+        </StudioShell>
+      </div>
+    );
+  }
+  /* R1-1B — an explicit selected reading remains available unchanged. */
+  if (reviewing && review) {
     return (
       <div className="fsw-viewport">
         <StudioShell current={current} destinations={['write', 'develop', 'review']} affordance="orientation" nav={nav} project={project} member={member}>
@@ -431,8 +450,10 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
   const router = useRouter();
   const requested = params?.get('m') ?? null;
   const requestedSection = params?.get(SECTION_PARAM) ?? null;
-  /* R1-1B — explicit selection only; empty or absent means Write. */
+  /* R1-1B — explicit single-reading selection; D4R1 adds explicit saved Review-run identity. */
   const requestedReading = selectedReadingId(params);
+  const requestedReviewRun = selectedReviewRunId(params);
+  const requestedReviewFinding = selectedReviewFindingId(params);
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -470,12 +491,22 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
   discussRef.current = discuss;
   /* R1-1B — live Review state, its generation, and the lens the member is filtering by. */
   const [review, setReview] = useState<LiveReviewState>({ kind: 'idle' });
+  const [wholeReview, setWholeReview] = useState<WholeReviewState>({ kind: 'idle' });
   const [reviewLens, setReviewLens] = useState<LensId | 'all'>('all');
   const reviewGen = useRef(0);
   const [reviewDiscussion, setReviewDiscussion] = useState<ReviewDiscussionState | null>(null);
   const reviewDiscussGen = useRef(0);
   const requestedReadingRef = useRef<string | null>(null);
   requestedReadingRef.current = requestedReading;
+  const requestedReviewRunRef = useRef<string | null>(null);
+  requestedReviewRunRef.current = requestedReviewRun;
+  const wholeReviewGen = useRef(0);
+  const reviewSourceRef = useRef<string | null>(null);
+  reviewSourceRef.current = requestedReading
+    ? `reading:${requestedReading}`
+    : requestedReviewRun
+      ? `run:${requestedReviewRun}`
+      : null;
   const workTitleRef = useRef<string | null>(null);
   const workFormRef = useRef<string | null>(null);
   /* R1-1C — the transient selection flag. ⛔ Not a mode store: `studioMode` resolves the URL first. */
@@ -742,12 +773,24 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
     });
   }, [editorialEnabled, discuss]);
 
+  const reviewReady = wholeReview.kind === 'ready'
+    ? wholeReview
+    : review.kind === 'ready'
+      ? review
+      : null;
+
+  const durableTruthFor = useCallback((findingId: string) => {
+    if (review.kind === 'ready') return review.durable[findingId] ?? null;
+    if (wholeReview.kind === 'ready') return wholeReview.durable[findingId] ?? null;
+    return null;
+  }, [review, wholeReview]);
+
   const onReviewDiscuss = useCallback((findingId: string) => {
-    if (!reviewDiscussEnabled || review.kind !== 'ready') return;
-    const truth = review.durable[findingId];
+    if (!reviewDiscussEnabled) return;
+    const truth = durableTruthFor(findingId);
     if (!truth) return;
     setReviewDiscussion({ kind: 'composing', findingId });
-  }, [reviewDiscussEnabled, review]);
+  }, [reviewDiscussEnabled, durableTruthFor]);
 
   const onCloseReviewDiscuss = useCallback(() => {
     setReviewDiscussion(null);
@@ -755,12 +798,12 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
   }, []);
 
   const onSubmitReviewDiscuss = useCallback((findingId: string, text: string) => {
-    if (!reviewDiscussEnabled || review.kind !== 'ready' || !context || text.trim().length === 0) return;
-    const truth = review.durable[findingId];
+    if (!reviewDiscussEnabled || !context || text.trim().length === 0) return;
+    const truth = durableTruthFor(findingId);
     if (!truth) return;
     const ask = text;
     const gen = ++reviewDiscussGen.current;
-    const readingAtGesture = review.readingId;
+    const sourceAtGesture = reviewSourceRef.current;
     setReviewDiscussion({ kind: 'pending', findingId, ask, gen });
     const posture = readCurrentSanctuaryPosture();
     void commissionReviewDiscuss({
@@ -769,7 +812,7 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
       observationKey: truth.address.observationKey,
       question: ask,
     }, posture).then((outcome) => {
-      if (gen !== reviewDiscussGen.current || requestedReadingRef.current !== readingAtGesture) return;
+      if (gen !== reviewDiscussGen.current || reviewSourceRef.current !== sourceAtGesture) return;
       if (outcome.ok) {
         setReviewDiscussion({ kind: 'answered', findingId, ask, reply: outcome.reply, threadId: outcome.threadId, posture: outcome.posture });
         return;
@@ -779,15 +822,20 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
         : REVIEW_DISCUSS_COPY.failed;
       setReviewDiscussion({ kind: 'refused', findingId, ask, copy });
     });
-  }, [reviewDiscussEnabled, review, context]);
+  }, [reviewDiscussEnabled, durableTruthFor, context]);
 
   workTitleRef.current = work?.title ?? context?.title ?? null;
   workFormRef.current = work?.form ?? null;
 
-  /* R1-1B — retrieval happens ONLY when explicit Review state exists. ⛔ Write opens make no reading GET. */
+  /* R1-1B — retrieval happens ONLY when explicit single-reading state exists. */
   useEffect(() => {
     if (!context) return;
-    if (!requestedReading) { reviewGen.current += 1; setReview({ kind: 'idle' }); setReviewLens('all'); return; }
+    if (!requestedReading || requestedReviewRun) {
+      reviewGen.current += 1;
+      setReview({ kind: 'idle' });
+      if (!requestedReviewRun) setReviewLens('all');
+      return;
+    }
     const gen = ++reviewGen.current;
     setReview({ kind: 'loading', readingId: requestedReading, gen });
     setReviewLens('all');
@@ -796,24 +844,57 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
       sections: context.sections, focusId: focusRef.current,
     });
     void loadSelectedReading(requestedReading, host, reviewPorts).then((r) => {
-      /* LATE RESULT — attaches only to the exact selection (reading id + generation) that commissioned it. */
       if (!attachReview({ gen, readingId: requestedReading }, { gen: reviewGen.current, readingId: requestedReadingRef.current })) return;
       setReview(r.kind === 'ready'
         ? { kind: 'ready', readingId: requestedReading, gen, view: r.view, durable: r.durable }
         : { kind: 'unavailable', readingId: requestedReading, gen });
     });
-  }, [requestedReading, context]);
+  }, [requestedReading, requestedReviewRun, context]);
 
-  /* R1-1C — an explicit reading in the URL closes the selection state: the URL is the authority. */
+  /* D4R1 — exact saved Review-run identity. No ledger choice and no commission. */
   useEffect(() => {
-    if (requestedReading) setChooserOpen(false);
+    if (!context) return;
+    if (!requestedReviewRun || requestedReading) {
+      wholeReviewGen.current += 1;
+      setWholeReview({ kind: 'idle' });
+      return;
+    }
+    const gen = ++wholeReviewGen.current;
+    setWholeReview({ kind: 'loading', reviewRunId: requestedReviewRun, gen });
+    setReviewLens('all');
+    const host = hostFactsFrom({
+      manuscriptId: context.manuscriptId, workTitle: workTitleRef.current, workKind: workFormRef.current,
+      sections: context.sections, focusId: focusRef.current,
+    });
+    void loadWholeReview(requestedReviewRun, host, context.version).then((r) => {
+      if (!attachWholeReview(
+        { gen, reviewRunId: requestedReviewRun },
+        { gen: wholeReviewGen.current, reviewRunId: requestedReviewRunRef.current },
+      )) return;
+      const view = r.kind === 'ready' && requestedReviewFinding
+        && r.view.findings.some((finding) => finding.id === requestedReviewFinding)
+        ? { ...r.view, selectedFindingId: requestedReviewFinding }
+        : r.kind === 'ready' ? r.view : null;
+      setWholeReview(r.kind === 'ready' && view
+        ? { kind: 'ready', reviewRunId: requestedReviewRun, gen, view, durable: r.durable }
+        : { kind: 'unavailable', reviewRunId: requestedReviewRun, gen });
+    });
+  }, [requestedReviewRun, requestedReviewFinding, requestedReading, context]);
+
+  /* Any explicit Review identity closes the transient chooser; URL identity is authoritative. */
+  useEffect(() => {
+    if (requestedReading || requestedReviewRun) setChooserOpen(false);
     setReviewDiscussion(null);
     reviewDiscussGen.current += 1;
-  }, [requestedReading]);
+  }, [requestedReading, requestedReviewRun]);
   /* R1-1C — the ledger is read ONLY in the selection state. ⛔ Never on an ordinary Write open. ⛔ Never a reading GET. */
   useEffect(() => {
     if (!context) return;
-    if (!shouldLoadChoices({ reading: requestedReading, chooserOpen })) { chooserGen.current += 1; setChooser({ kind: 'closed' }); return; }
+    if (requestedReviewRun || !shouldLoadChoices({ reading: requestedReading, chooserOpen })) {
+      chooserGen.current += 1;
+      setChooser({ kind: 'closed' });
+      return;
+    }
     const gen = ++chooserGen.current;
     setChooser({ kind: 'loading', gen });
     void loadReadingChoices(context.manuscriptId, reviewPorts).then((r) => {
@@ -821,22 +902,58 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
       if (!attachChoices({ gen }, { gen: chooserGen.current, chooserOpen: chooserOpenRef.current, reading: requestedReadingRef.current })) return;
       setChooser(r.kind === 'choices' ? { kind: 'choices', gen, readings: r.readings } : { kind: 'unavailable', gen });
     });
-  }, [requestedReading, chooserOpen, context]);
+  }, [requestedReading, requestedReviewRun, chooserOpen, context]);
 
   /* R1-1C — navigation is a location change through the router; leaving the selection state closes it. */
   const go = useCallback((href: string) => { setChooserOpen(false); router.push(href); }, [router]);
   const openChooser = useCallback(() => { setChooserOpen(true); }, []);
   const closeChooser = useCallback(() => { setChooserOpen(false); }, []);
-  const mode = studioMode({ reading: requestedReading, chooserOpen });
+  const mode = requestedReviewRun ? 'review' : studioMode({ reading: requestedReading, chooserOpen });
   const search = params && params.toString().length > 0 ? `?${params.toString()}` : '';
   const loc = { pathname: pathname ?? '/writers-studio/rebuild', search };
-  const studioNav: StudioNav = {
-    mode,
-    actions: navActionsFor(mode, loc, { go, openChooser, closeChooser }),
-    choose: { hrefFor: (id) => chooseReading(id, loc).href, onChoose: (_id, href) => go(href) },
-  };
-  /* R1-2 — return navigation exists only for a mounted reading, over its own context, through the same `go`. */
-  const reviewNavigation = review.kind === 'ready' ? navigationFor(review.view, loc, { go }) : undefined;
+  const runWriteHref = (() => {
+    const next = new URLSearchParams(loc.search);
+    next.delete(REVIEW_RUN_PARAM);
+    next.delete(REVIEW_FINDING_PARAM);
+    next.delete('reading');
+    const q = next.toString();
+    return q ? `${loc.pathname}?${q}` : loc.pathname;
+  })();
+  const studioNav: StudioNav = requestedReviewRun
+    ? {
+        mode: 'review',
+        actions: {
+          write: {
+            kind: 'link',
+            href: runWriteHref,
+            onSelect: (event) => { event.preventDefault(); go(runWriteHref); },
+          },
+        },
+      }
+    : {
+        mode,
+        actions: navActionsFor(mode, loc, { go, openChooser, closeChooser }),
+        choose: { hrefFor: (id) => chooseReading(id, loc).href, onChoose: (_id, href) => go(href) },
+      };
+  /* D4R1: a whole-Review passage move carries the explicitly selected finding identity.
+     The predecessor single-reading return remains the unchanged R1-2 composer. */
+  const reviewNavigation: ReviewNavigation | undefined = wholeReview.kind === 'ready' && requestedReviewRun
+    ? {
+        hrefFor: (sectionId, findingId) => {
+          const finding = findingId ? wholeReview.view.findings.find((f) => f.id === findingId) : null;
+          if (!finding || finding.returnTo.sectionId !== sectionId
+              || !wholeReview.view.context.paragraphs.some((p) => p.id === sectionId)) return null;
+          const next = new URLSearchParams(loc.search);
+          next.set('s', sectionId);
+          next.set(REVIEW_RUN_PARAM, requestedReviewRun);
+          next.set(REVIEW_FINDING_PARAM, finding.id);
+          return `${loc.pathname}?${next.toString()}`;
+        },
+        onGo: (_sectionId, href) => go(href),
+      }
+    : review.kind === 'ready'
+      ? navigationFor(review.view, loc, { go })
+      : undefined;
 
   if (phase !== 'ready' || !context) {
     return (
@@ -868,13 +985,14 @@ export default function FlagshipWriteHost({ editorialEnabled = false, reviewDisc
       onWriting={(writing) => { writingRef.current = writing; }}
       v10Write={v10Write}
       review={review}
+      wholeReview={wholeReview}
       reviewLens={reviewLens}
       onReviewLens={setReviewLens}
       chooser={chooser}
       studioNav={studioNav}
       reviewNavigation={reviewNavigation}
       reviewDiscussion={reviewDiscussion}
-      onReviewDiscuss={reviewDiscussEnabled && review.kind === 'ready' ? onReviewDiscuss : undefined}
+      onReviewDiscuss={reviewDiscussEnabled && !!reviewReady ? onReviewDiscuss : undefined}
       onSubmitReviewDiscuss={onSubmitReviewDiscuss}
       onCloseReviewDiscuss={onCloseReviewDiscuss}
     />

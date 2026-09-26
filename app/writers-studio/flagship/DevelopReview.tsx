@@ -473,7 +473,10 @@ export const READ_ONLY_REVIEW_CAPABILITIES: ReviewCapabilities = Object.freeze({
  * ⛔ Never a fetch, a write, a commission or a held passage. Absent (the controlled witness), the
  * capability renders the reference `<button data-return-to>` exactly as before.
  */
-export interface ReviewNavigation { hrefFor(sectionId: string): string | null; onGo(sectionId: string, href: string): void }
+export interface ReviewNavigation {
+  hrefFor(sectionId: string, findingId?: string): string | null;
+  onGo(sectionId: string, href: string, findingId?: string): void;
+}
 
 /** Reasons mirror R1-0's own refusal facts; ⛔ no reason asserts more than those facts establish. */
 export type ReviewWithheldReason = 'frozen_citation_text_unavailable' | 'observation_address_unavailable' | 'lens_not_presentable';
@@ -554,7 +557,7 @@ function FindingRow({ o, citation, selected, caps, navigation, discussion, onDis
 }) {
   const moved = citation && citation.kind !== 'intact' ? citation : null;
   /* R1-2 · live: a location only for an exact address in the mounted context, else no control. Controlled: unchanged. */
-  const returnHref = navigation ? navigation.hrefFor(o.returnTo.sectionId) : undefined;
+  const returnHref = navigation ? navigation.hrefFor(o.returnTo.sectionId, o.id) : undefined;
   const navAction = caps.navigate && (!navigation || !!returnHref);
   const anyAction = navAction || caps.discuss || caps.explore;
   return (
@@ -590,7 +593,7 @@ function FindingRow({ o, citation, selected, caps, navigation, discussion, onDis
       {anyAction ? (
         <div className="fs-factions">
           {navAction ? (navigation && returnHref
-            ? <a className="fs-btn" data-return-to={o.returnTo.sectionId} href={returnHref} onClick={(e) => { e.preventDefault(); navigation.onGo(o.returnTo.sectionId, returnHref); }}>Go to passage</a>
+            ? <a className="fs-btn" data-return-to={o.returnTo.sectionId} href={returnHref} onClick={(e) => { e.preventDefault(); navigation.onGo(o.returnTo.sectionId, returnHref, o.id); }}>Go to passage</a>
             : <button type="button" className="fs-btn" data-return-to={o.returnTo.sectionId}>Go to passage</button>) : null}
           {caps.discuss ? <button type="button" className="fs-btn" data-action="discuss" data-return-to={o.returnTo.sectionId}
             onClick={onDiscuss ? () => onDiscuss(o.id) : undefined}>Discuss</button> : null}
@@ -640,7 +643,10 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
      ⛔ never the highlight stand-in above, which is presentation, not an address. */
   const contextReturn = selected && view.context.paragraphs.some((p) => p.id === selected.returnTo.sectionId) ? selected.returnTo.sectionId : undefined;
   const contextNavigation = navigation
-    ? { href: contextReturn ? navigation.hrefFor(contextReturn) : null, onGo: (href: string) => { if (contextReturn) navigation.onGo(contextReturn, href); } }
+    ? {
+        href: contextReturn ? navigation.hrefFor(contextReturn, selected?.id) : null,
+        onGo: (href: string) => { if (contextReturn) navigation.onGo(contextReturn, href, selected?.id); },
+      }
     : undefined;
   const active = view.lenses.find((l) => l.id === lens);
   const plain = LENSES.find((l) => l.id === lens)?.plain ?? '';

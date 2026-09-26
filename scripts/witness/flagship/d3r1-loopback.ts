@@ -30,18 +30,21 @@ createServer((req, res) => {
           },
         }
       : { kind: 'reply_only', reply: DISCUSS };
+    const content = tool
+      ? [{
+          type: 'tool_use',
+          id: 'toolu_d3r1_witness',
+          name: tool.name ?? 'editorial_outcome',
+          input,
+        }]
+      : [{ type: 'text', text: DISCUSS }];
     const payload = JSON.stringify({
       id: 'msg_d3r1_witness',
       type: 'message',
       role: 'assistant',
       model: body?.model ?? 'claude-opus-5',
-      content: [{
-        type: 'tool_use',
-        id: 'toolu_d3r1_witness',
-        name: tool?.name ?? 'editorial_outcome',
-        input,
-      }],
-      stop_reason: 'tool_use',
+      content,
+      stop_reason: tool ? 'tool_use' : 'end_turn',
       stop_sequence: null,
       usage: { input_tokens: 1, output_tokens: 1 },
     });

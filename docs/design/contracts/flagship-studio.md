@@ -20,6 +20,8 @@ surfaces:
   # R1-2, 2026-09-23 — exact Review → manuscript section return as data, and the live read-only Review mount (R1-1B) it navigates from.
   - app/writers-studio/rebuild/reviewReturn.ts
   - app/writers-studio/rebuild/LiveReviewView.tsx
+  # D4, 2026-09-26 — one saved whole-Review run projected through the exact flagship Review composition.
+  - app/writers-studio/rebuild/WholeReviewView.tsx
   - app/writers-studio/rebuild/ReviewChooser.tsx
   - app/writers-studio/rebuild/page.tsx
 change_class: experiential
