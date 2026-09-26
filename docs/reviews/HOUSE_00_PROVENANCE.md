@@ -57,9 +57,14 @@ the extraction's list. It does establish that the count **as relayed** was unver
 
 **Replacement claim, verified: two documents are absent — ADR-005 and ADR-013.**
 
-`THE_HOUSE.md` exists but is untracked, which is a *durability* finding, not an
-*existence* finding. The two must not be merged into one number — that conflation is
-what produced the inflated count.
+`THE_HOUSE.md` exists. At the time of this review it was **untracked**, which was a
+*durability* finding, not an *existence* finding. The two must not be merged into one
+number — that conflation is what produced the inflated count.
+
+**Updated 2026-07-29:** it is now preserved on `clean-main-no-secrets` via merge `d531974e2`
+(PR #814) and **relocated** to `docs/governance/candidates/THE_HOUSE_CANDIDATE.md`.
+Its standing is unchanged — **candidate**. ⛔ Path is not status: neither the relocation
+nor the merge promotes it. The durability finding is discharged; nothing else about it is.
 
 ## 4. Standing rule for the remaining nine reviews
 
