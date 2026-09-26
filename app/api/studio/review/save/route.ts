@@ -22,6 +22,12 @@ export const maxDuration = 30;
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
+import {
+  deriveAuthorship,
+  representationRefusal,
+  consentSnapshot,
+  type PrivacyMode,
+} from '@/lib/governance/clientRepresentationGuards';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -105,9 +111,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Verify case ownership
-    const caseResult = await query<{ id: string }>(
-      `SELECT id FROM practitioner_cases
+    // 3. Verify case ownership + load its consent posture (Client Representation Governance)
+    const caseResult = await query<{
+      id: string;
+      privacy_mode: PrivacyMode | null;
+      consent_captured_at: Date | null;
+    }>(
+      `SELECT id, privacy_mode, consent_captured_at FROM practitioner_cases
        WHERE id = $1 AND practitioner_id = $2 AND case_status != 'closed'`,
       [caseId, practitionerId],
     );
@@ -118,6 +128,19 @@ export async function POST(request: NextRequest) {
         { status: 404 },
       );
     }
+
+    // 3b. PERSIST GATE (Client Representation Governance §2). A `consent_based` case
+    // requires a captured client consent before any representation may be stored.
+    const privacyMode: PrivacyMode = caseResult.rows[0].privacy_mode ?? 'private';
+    const consentCapturedAt = caseResult.rows[0].consent_captured_at ?? null;
+    const persistRefusal = representationRefusal(privacyMode, consentCapturedAt);
+    if (persistRefusal) {
+      return NextResponse.json(
+        { error: persistRefusal.message, code: persistRefusal.code },
+        { status: 403 },
+      );
+    }
+    const consent = consentSnapshot(privacyMode, consentCapturedAt);
 
     // 4. Load pending candidates (only non-expired, owned by this practitioner)
     const candidateResult = await query<PendingCandidate>(
@@ -183,12 +206,23 @@ export async function POST(request: NextRequest) {
           ? JSON.stringify({ textRef: candidate.evidence_ref })
           : null;
 
+        // Provenance + governance stamp. Promoted review candidates are MAIA-inferred.
+        // disposition='accepted' (the practitioner approved this candidate) is ORTHOGONAL
+        // to crossing_allowed=FALSE (held — the steward/consent boundary has not allowed
+        // it to surface). Accepted ≠ surfaceable.
+        const authorship = deriveAuthorship({
+          sourceCandidateId: candidateId,
+          reviewLensId: candidate.lens_id,
+        });
+
         const insertResult = await query<{ id: string }>(
           `INSERT INTO case_memories
              (case_id, practitioner_id, memory_type, content, significance,
               facet_code, element_tags, source_session_id, review_lens_id,
-              evidence_refs, source_candidate_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11)
+              evidence_refs, source_candidate_id,
+              authorship, disposition, crossing_allowed, consent_basis, consent_at_write, source_route)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11,
+                   $12, 'accepted', FALSE, $13, $14, 'studio/review/save')
            RETURNING id`,
           [
             caseId,
@@ -202,6 +236,9 @@ export async function POST(request: NextRequest) {
             candidate.lens_id,
             evidenceRefs,
             candidateId,
+            authorship,
+            consent.consent_basis,
+            consent.consent_at_write,
           ],
         );
 
