@@ -8,7 +8,7 @@
 export interface SpiralogicFacetReport {
   house: number;
   element: string;
-  stage: string; // vector | circle | spiral
+  stage: string; // phase display name from PHASE_DISPLAY_NAMES (lib/spiralogic/interpretation, Finding 6 ruling)
   label: string;
   planets: string[]; // planets present in this house
   planetSigns: Record<string, string>; // planet name -> sign
@@ -42,8 +42,13 @@ export interface CurrentPhaseInsight {
 }
 
 export interface ElementalBalanceInsight {
-  dominant: string;
-  underactive: string;
+  /**
+   * From the single versioned dominance rule (lib/spiralogic/interpretation).
+   * Null = no stable dominance / no unique quietest element — a valid
+   * verdict; renderers must say balanced/none, never invent a crown.
+   */
+  dominant: string | null;
+  underactive: string | null;
   percentages: { fire: number; water: number; earth: number; air: number };
   integrationPractices: string[];
   narrative: string; // AI-generated
