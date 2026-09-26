@@ -59,6 +59,10 @@ import {
   createA2Relationship, listA2Relationships, readA2Relationship,
   type A2RelationshipSummary,
 } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
+import {
+  clearRelationshipReturnClient, persistPlaceReturnOrdered,
+  readPlaceReturnClient, readRelationshipReturnClient, writeRelationshipReturnClient,
+} from '@/lib/writersStudio/rebuild/returnStateClient';
 
 interface ContextReady {
   state: 'section_aware';
@@ -330,6 +334,9 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
   const [a2RelationshipBusy, setA2RelationshipBusy] = useState(false);
   const [a2RelationshipChooserOpen, setA2RelationshipChooserOpen] = useState(false);
   const [a2RelationshipMessage, setA2RelationshipMessage] = useState<string | null>(null);
+  const [placeReturnMessage, setPlaceReturnMessage] = useState<string | null>(null);
+  const placeTouchedRef = useRef(false);
+  const placeReturnKeyRef = useRef<string | null>(null);
   const [canvasExpanded, setCanvasExpanded] = useState(false);
   /* A1-LS1 · R5 — FULL CANVAS CONTINUITY. Entering or leaving Full Canvas
      changes the field, not the writing: the same editor keeps its focus, caret
@@ -569,13 +576,12 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     }
 
     let cancelled = false;
+    const scope = { livingWorkId: work.id, manuscriptId: context.manuscriptId };
     setA2RelationshipPhase('loading');
     setA2RelationshipMessage(null);
 
-    void Promise.all([
-      listA2Relationships(work.id, context.manuscriptId),
-      requestedRelationship ? readA2Relationship(requestedRelationship) : Promise.resolve(null),
-    ]).then(([listed, addressed]) => {
+    void (async () => {
+      const listed = await listA2Relationships(work.id, context.manuscriptId);
       if (cancelled) return;
       if (!listed.ok) {
         setA2Relationship(null);
@@ -586,30 +592,85 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       }
       setA2RelationshipChoices(listed.relationships);
 
-      if (!requestedRelationship) {
+      let candidateId: string | null = requestedRelationship;
+      let fromDurableReturn = false;
+      if (!candidateId) {
+        const remembered = await readRelationshipReturnClient(scope);
+        if (cancelled) return;
+        if (!remembered.ok) {
+          setA2Relationship(null);
+          setA2RelationshipPhase('ready');
+          setA2RelationshipMessage('Your saved MAIA relationship could not be recalled just now. Nothing was changed.');
+          return;
+        }
+        candidateId = remembered.relationshipId;
+        fromDurableReturn = candidateId !== null;
+      }
+
+      if (!candidateId) {
         setA2Relationship(null);
         setA2RelationshipPhase('ready');
         return;
       }
+
+      const addressed = await readA2Relationship(candidateId);
+      if (cancelled) return;
       if (
-        !addressed || !addressed.ok
+        !addressed.ok
         || addressed.relationship.livingWorkId !== work.id
         || addressed.relationship.manuscriptId !== context.manuscriptId
       ) {
         setA2Relationship(null);
         setA2RelationshipPhase('ready');
-        setA2RelationshipMessage('That MAIA relationship does not belong to this Work and manuscript, so it was not opened here.');
-        replaceRelationshipAddress(null);
+        if (requestedRelationship) {
+          setA2RelationshipMessage('That MAIA relationship does not belong to this Work and manuscript, so it was not opened here.');
+          replaceRelationshipAddress(null);
+        } else if (fromDurableReturn) {
+          void clearRelationshipReturnClient(scope);
+          setA2RelationshipMessage('Your previously selected MAIA relationship is no longer available for this Work, so it was not reopened.');
+        }
         return;
       }
       setA2Relationship(addressed.relationship);
       setA2RelationshipPhase('ready');
-    });
+      if (!requestedRelationship && fromDurableReturn) replaceRelationshipAddress(addressed.relationship.id);
+    })();
     return () => { cancelled = true; };
   }, [
     context?.manuscriptId, requestedRelationship, replaceRelationshipAddress,
     work?.id, workContext.kind,
   ]);
+
+  useEffect(() => {
+    if (!context || workContext.kind !== 'work' || !work || requestedSection) return;
+    const key = `${work.id}:${context.manuscriptId}`;
+    if (placeReturnKeyRef.current === key) return;
+    placeReturnKeyRef.current = key;
+    let cancelled = false;
+    const scope = { livingWorkId: work.id, manuscriptId: context.manuscriptId };
+    void readPlaceReturnClient(scope).then((remembered) => {
+      if (cancelled || placeTouchedRef.current || !remembered.ok || !remembered.sectionId) return;
+      const section = context.sections.find((candidate) => candidate.draftSectionId === remembered.sectionId);
+      if (!section) return;
+      setFocusId(section.draftSectionId);
+      setMaiaMode(isConfirmedChapterRoot(section) ? 'chapter' : 'passage');
+      if (typeof window !== 'undefined') {
+        replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, section.draftSectionId));
+      }
+    });
+    return () => { cancelled = true; };
+  }, [context, requestedSection, work?.id, workContext.kind]);
+
+  const rememberPlace = useCallback((sectionId: string) => {
+    placeTouchedRef.current = true;
+    if (!context || !work || workContext.kind !== 'work') return;
+    setPlaceReturnMessage(null);
+    void persistPlaceReturnOrdered(
+      { livingWorkId: work.id, manuscriptId: context.manuscriptId }, sectionId,
+    ).then((ok) => {
+      if (!ok) setPlaceReturnMessage('Your place changed here, but the Studio could not remember it for your next visit just now.');
+    });
+  }, [context, work, workContext.kind]);
 
   const beginA2Relationship = useCallback(async () => {
     if (!context || !work || workContext.kind !== 'work' || a2RelationshipBusy) return;
@@ -621,9 +682,17 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       setA2RelationshipBusy(false);
       return;
     }
+    setA2RelationshipChoices((choices) => [...choices, out.relationship]);
+    const remembered = await writeRelationshipReturnClient(
+      { livingWorkId: work.id, manuscriptId: context.manuscriptId }, out.relationship.id,
+    );
+    if (!remembered) {
+      setA2RelationshipMessage('The relationship was created, but the Studio could not safely remember it as your return relationship, so it was not selected.');
+      setA2RelationshipBusy(false);
+      return;
+    }
     setA2Relationship(out.relationship);
     setA2RelationshipChooserOpen(false);
-    setA2RelationshipChoices((choices) => [...choices, out.relationship]);
     replaceRelationshipAddress(out.relationship.id);
     setA2RelationshipBusy(false);
   }, [a2RelationshipBusy, context, replaceRelationshipAddress, work, workContext.kind]);
@@ -642,18 +711,37 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       setA2RelationshipBusy(false);
       return;
     }
+    const remembered = await writeRelationshipReturnClient(
+      { livingWorkId: work.id, manuscriptId: context.manuscriptId }, out.relationship.id,
+    );
+    if (!remembered) {
+      setA2RelationshipMessage('The Studio could not safely remember that relationship for return, so your current selection was left unchanged.');
+      setA2RelationshipBusy(false);
+      return;
+    }
     setA2Relationship(out.relationship);
     setA2RelationshipChooserOpen(false);
     replaceRelationshipAddress(out.relationship.id);
     setA2RelationshipBusy(false);
   }, [a2RelationshipBusy, context, replaceRelationshipAddress, work, workContext.kind]);
 
-  const leaveA2Relationship = useCallback(() => {
+  const leaveA2Relationship = useCallback(async () => {
+    if (!context || !work || workContext.kind !== 'work' || a2RelationshipBusy) return;
+    setA2RelationshipBusy(true);
+    setA2RelationshipMessage(null);
+    const forgotten = await clearRelationshipReturnClient({
+      livingWorkId: work.id, manuscriptId: context.manuscriptId,
+    });
+    if (!forgotten) {
+      setA2RelationshipMessage('The Studio could not safely forget this return relationship just now, so it remains selected.');
+      setA2RelationshipBusy(false);
+      return;
+    }
     setA2Relationship(null);
     setA2RelationshipChooserOpen(false);
-    setA2RelationshipMessage(null);
     replaceRelationshipAddress(null);
-  }, [replaceRelationshipAddress]);
+    setA2RelationshipBusy(false);
+  }, [a2RelationshipBusy, context, replaceRelationshipAddress, work, workContext.kind]);
 
   const makeThisAWork = useCallback(async () => {
     if (!context || workContext.kind !== 'none' || workDeclarationBusy) return;
@@ -927,7 +1015,8 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     });
     setMaiaMode('passage');
     replaceAddress(section.draftSectionId, sameThread ? editorialThread?.threadId ?? null : null);
-  }, [context, editorialThread, clearEditorial, replaceAddress]);
+    rememberPlace(section.draftSectionId);
+  }, [context, editorialThread, clearEditorial, replaceAddress, rememberPlace]);
 
   const focusWritingSection = useCallback((sectionId: string) => {
     const moved = sectionId !== focusId;
@@ -935,7 +1024,8 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     setFocusId(sectionId);
     setMaiaMode('passage');
     replaceAddress(sectionId, moved ? null : editorialThread?.threadId ?? null);
-  }, [focusId, clearEditorial, replaceAddress, editorialThread?.threadId]);
+    rememberPlace(sectionId);
+  }, [focusId, clearEditorial, replaceAddress, editorialThread?.threadId, rememberPlace]);
 
   const beginWriting = useCallback((sectionId: string) => {
     clearEditorial();
@@ -944,7 +1034,8 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     setMaiaMode('passage');
     if (review) setReviewNeedsRefresh(true);
     replaceAddress(sectionId, null);
-  }, [clearEditorial, review, replaceAddress]);
+    rememberPlace(sectionId);
+  }, [clearEditorial, review, replaceAddress, rememberPlace]);
 
   const selectSection = useCallback((id: string, role: OutlineNode['role']) => {
     const moved = id !== focusId;
@@ -956,8 +1047,9 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     setPassageTab('ask');
     setMobilePane('manuscript');
     replaceAddress(id, moved || changedGrain ? null : editorialThread?.threadId ?? null);
+    rememberPlace(id);
     requestAnimationFrame(() => sectionRefs.current.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-  }, [focusId, selectedPassage, clearEditorial, replaceAddress, editorialThread?.threadId]);
+  }, [focusId, selectedPassage, clearEditorial, replaceAddress, editorialThread?.threadId, rememberPlace]);
 
   /* Every frozen review finding must have a member-facing door even when its
      evidence is whole-chapter or structural rather than attached to one of the
@@ -975,8 +1067,9 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
     setFocusId(target);
     setMobilePane('manuscript');
     replaceAddress(target, moved ? null : editorialThread?.threadId ?? null);
+    rememberPlace(target);
     requestAnimationFrame(() => sectionRefs.current.get(target)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-  }, [context, focusId, clearEditorial, replaceAddress, editorialThread?.threadId]);
+  }, [context, focusId, clearEditorial, replaceAddress, editorialThread?.threadId, rememberPlace]);
 
   const title = context?.title ?? 'Writer’s Studio';
   const chapterTitle = chapter?.root.heading ?? focusSection?.heading ?? 'Manuscript';
@@ -2416,6 +2509,7 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
         <button type="button" onClick={() => { setWorkspaceOpen(false); setMobilePane('maia'); }} data-active={mobilePane === 'maia'}>MAIA</button>
       </div>)}
       {writingMessage && <div className="wsr-writing-alert" role="status">{writingMessage}</div>}
+      {placeReturnMessage && <div className="wsr-writing-alert" role="status">{placeReturnMessage}</div>}
 
     </main>
         );
