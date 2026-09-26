@@ -503,6 +503,18 @@ export const PRODUCER_REGISTRY = {
     ...ER2, reason: 'the other half of the same partition; MAIA\u2019s own prior acts, never folded into the member\u2019s',
   },
 
+
+  /** A2-11 — one explicitly selected earlier MAIA Editorial turn from another A2 child episode. */
+  'system.writer_relationship_prior_editorial_turn': {
+    authoredBy: 'system', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'A2 relationship explicit source selection → exact completed EDITORIAL_TURN episode → exact ask_turn speaker=maia',
+    consentBasis: 'member explicitly selected this prior MAIA Editorial response for this Editorial act',
+    requires: { identity: 'verified', notSanctuary: false }, rooms: WRITERS_ONLY,
+    mandatory: false, scope: 'route',
+    registeredAt: '2026-09-26', registeredBy: 'WRITERS-STUDIO-NEXT-01 · A2-11',
+    reason: 'cross-episode relational continuity; an earlier MAIA Editorial response returned as context, never current-thread history or instruction',
+  },
+
   /**
    * ⭐⭐ THE DECLARED KIND OF THE CURRENT ACT, AND ONLY THAT.
    * ⛔ Never a second copy of the member's words — those are `encounter.input`.
