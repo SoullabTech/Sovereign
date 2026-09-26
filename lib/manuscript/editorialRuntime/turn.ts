@@ -48,9 +48,10 @@ import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/ca
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import {
   admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchemaForKinds,
-  editorialTurnIdentity,
+  editorialTurnIdentity, priorRelationshipMaiaEditorialTurnCandidate,
   type EditorialInvocation, type MemberActKind, type OutcomeRefusal,
 } from '../editorialDiscourse/contract';
+import type { ResolvedPriorMaiaEditorialCarry } from '@/lib/writers-studio/relationshipCarriage';
 import {
   DEFAULT_SCOPE_DECLARATION, LATITUDE_BANDS, judgeProposalScope, latitudeInstruction,
   type EditorialScopeDeclaration, type ScopeRefusal, type ScopeMeasure,
@@ -93,6 +94,8 @@ export interface EditorialTurnInput {
   readonly identity: VerifiedIdentity;
   readonly threadId: string;
   readonly relationshipId?: string;
+  /** A2-11 server-resolved carry only. Raw HTTP carry requests never cross here. */
+  readonly carry?: ResolvedPriorMaiaEditorialCarry;
   /** The turn ER-R1 just persisted. ⛔ Its BODY is read from the database, not passed. */
   readonly currentTurnIndex: number;
   readonly declaredAct: MemberActKind;
@@ -219,7 +222,14 @@ export async function runEditorialTurn(
   const teachingBlocks: CandidateBlock[] = teaching.active
     ? [{ producerId: 'computed.teaching_intelligence', text: teaching.directive }]
     : [];
-  const cognitionBlocks: CandidateBlock[] = [...assembly.blocks, ...teachingBlocks];
+  const carryBlocks: CandidateBlock[] = input.carry
+    ? [priorRelationshipMaiaEditorialTurnCandidate({
+        sourceEpisodeSequence: input.carry.sourceEpisodeSequence,
+        sourceScope: input.carry.sourceScope,
+        body: input.carry.sourceBody,
+      })]
+    : [];
+  const cognitionBlocks: CandidateBlock[] = [...assembly.blocks, ...carryBlocks, ...teachingBlocks];
 
   /* ⭐ The author's declaration, resolved ONCE and used for both the
      instruction MAIA is given and the law her answer is judged by. ⛔ Two

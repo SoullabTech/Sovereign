@@ -75,6 +75,7 @@ const AMBIENT: Partial<Record<ProducerId, MembraneEntry>> = {
   'retrieved.writer_editorial_surround': { cls: 'ambient', because: 'the section around the locus is the same primary evidence; it is read for context and no proposal may replace it' },
   'member.writer_editorial_history': { cls: 'ambient', because: 'the member\'s own prior editorial acts in this thread, authorship-preserved' },
   'system.writer_editorial_history': { cls: 'ambient', because: 'MAIA\'s prior editorial acts in this thread, kept separate from member authorship' },
+  'system.writer_relationship_prior_editorial_turn': { cls: 'ambient', because: 'one earlier MAIA Editorial response explicitly brought forward by the writer; relational continuity without hidden strategy' },
   'member.writer_editorial_act': { cls: 'ambient', because: 'the writer-declared kind of the current act; no inferred motive or profile' },
 };
 
