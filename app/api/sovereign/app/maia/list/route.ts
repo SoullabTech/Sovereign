@@ -16,6 +16,11 @@ import { formatRelationalContextForPrompt } from '@/lib/relationships/formatRela
 import { emitSignal } from '@/lib/observation/observationService';
 import { computeInterruptionMetadata } from '@/lib/consciousness/interruptionLedger';
 import { classifyExplicitIdentityInquiry } from '@/lib/consciousness/explicitIdentityInquiryClassifier';
+import {
+  composeResolvedInquiry,
+  renderPilotDescription,
+  resolveExplicitCapabilityInquiry,
+} from '@/lib/maia/explicitCapabilityInquiry';
 import { validatePlaceContext, buildPlaceAddendum } from '@/lib/maia/presence/place';
 import { logAgentRun } from '@/lib/services/corpusCallosumService';
 
@@ -438,6 +443,106 @@ export async function POST(req: NextRequest) {
         console.error(
           `❌ [MAIA/durability] member turn NOT durable exchange=${exchangeId.slice(0, 8)}:`,
           durabilityErr?.message ?? durabilityErr
+        );
+      }
+    }
+
+    // O8R4 — EXPLICIT CAPABILITY INQUIRY: text-only, post-F1 / pre-F2.
+    //
+    // This is deliberately not intent routing. Only the inert O8 resolver may
+    // recognize the three exact founder-approved definitional inquiries.
+    // ABSTAIN contributes nothing and falls through byte-semantically to F2.
+    // Audio-requested turns bypass this pilot completely.
+    if (includeAudio !== true) {
+      let capabilityDescriptionText: string | null = null;
+
+      try {
+        const capabilityInquiry = resolveExplicitCapabilityInquiry(message);
+        const capabilityDescription = composeResolvedInquiry(capabilityInquiry);
+        capabilityDescriptionText = capabilityDescription
+          ? renderPilotDescription(capabilityDescription)
+          : null;
+      } catch {
+        // Resolver/composer failure makes O8 disappear for this turn.
+        capabilityDescriptionText = null;
+      }
+
+      if (capabilityDescriptionText) {
+        // Session infrastructure only. Failure is intentionally NOT caught here:
+        // the route's existing infrastructure error channel remains dominant.
+        await withTimeoutLabeled(
+          'initializeSessionTable:capabilityDescription',
+          initializeSessionTable(),
+          5000,
+          start,
+        );
+        const capabilityDescriptionSession = await withTimeoutLabeled(
+          'ensureSession:capabilityDescription',
+          ensureSession(sessionId),
+          5000,
+          start,
+        );
+
+        // The deterministic description is the assistant half of the already
+        // accepted exchange. Never create an orphan assistant row.
+        if (memberTurnDurable && isRecognizedUser && !isSanctuary) {
+          try {
+            await withTimeoutLabeled(
+              'durableCapabilityDescriptionTurn',
+              TurnsStore.addExchangeTurn(turnPosture, {
+                userId: userId!,
+                sessionId: acceptedSessionId,
+                role: 'assistant',
+                content: capabilityDescriptionText,
+                exchangeId,
+              }),
+              5000,
+              start,
+            );
+          } catch (durabilityErr: any) {
+            // Mirror F1 assistant-turn asymmetry: serve the deterministic words,
+            // keep the durable member half, and do not fall into model generation.
+            console.error(
+              `❌ [MAIA/durability] capability description NOT durable exchange=${exchangeId.slice(0, 8)}:`,
+              durabilityErr?.message ?? durabilityErr,
+            );
+          }
+        }
+
+        const capabilityDescriptionCanonHeaders = makeCanonHeaders({
+          requestId,
+          pipeline: 'direct',
+          source: 'direct',
+          mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
+          validation: null,
+          repaired: false,
+        });
+
+        return jsonWithCors(
+          req,
+          {
+            message: capabilityDescriptionText,
+            route: {
+              endpoint: '/api/sovereign/app/maia',
+              type: 'Sovereign Consciousness Interface',
+              operational: true,
+              mode: 'capability-description',
+              safeMode: SAFE_MODE,
+              voiceEnabled: false,
+            },
+            session: {
+              id: capabilityDescriptionSession.id,
+              turns: capabilityDescriptionSession.turn_count,
+            },
+            metadata: {
+              processingProfile: 'DETERMINISTIC_DESCRIPTION',
+              processingTimeMs: Date.now() - start,
+              tierProcessing: false,
+              voiceRequested: false,
+            },
+          },
+          200,
+          capabilityDescriptionCanonHeaders,
         );
       }
     }
