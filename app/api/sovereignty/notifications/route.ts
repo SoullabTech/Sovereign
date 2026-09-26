@@ -1,17 +1,42 @@
 export const dynamic = 'force-dynamic' // Changed for Capacitor build compatibility;
 
 /**
- * System Notifications API
+ * System Notifications API — OPERATOR SURFACE, NOT A MEMBER SURFACE.
  *
  * GET  - Get unread notifications
  * POST - Mark notification as read
+ *
+ * SCOPING (verified 2026-07-28): `system_notifications` has NO member column
+ * (see database/migrations/20260119000001_tts_sovereignty_monitor.sql:33-42).
+ * It holds system/ops alerts — currently TTS sovereignty reports written by
+ * lib/sovereignty/TTSSovereigntyMonitor.ts. There is therefore nothing to scope
+ * per-member here, and adding a member filter would be wrong: these rows do not
+ * belong to a member.
+ *
+ * SECURITY: both handlers previously ran with no guard at all. GET exposed
+ * internal ops state to anonymous callers, and POST was an unauthenticated
+ * global write — any caller could send `{ markAllRead: true }` and silently
+ * clear every operator-facing sovereignty alert, suppressing the very signal
+ * the monitor exists to raise. Guarded with the established admin contract
+ * (isAdminRequest), which fails closed when LABTOOLS_ADMIN_PASSWORD is unset.
+ *
+ * Deliberately NOT guarded via middleware roles: `x-maia-roles` is
+ * client-settable and is not a trustworthy authorization input.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
+import { isAdminRequest } from '@/lib/admin/requireAdmin';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!isAdminRequest(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized', notifications: [] },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
     const unreadOnly = searchParams.get('unread') !== 'false';
@@ -54,6 +79,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isAdminRequest(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, markAllRead } = body;
 
