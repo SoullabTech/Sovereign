@@ -372,6 +372,13 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Journal — the member's Journal room. A real member route (2026-07-28), no
   // longer a redirect into founder-gated /labtools/journal.
+  // HOUSE-PREFERENCES-01: member presentation only; ownership is resolved again in the reader.
+  { exact: '/house', minTier: 'free', notes: 'Member House orientation' },
+  { exact: '/api/house/preferences', minTier: 'free', notes: 'Verified member-owned House presentation preferences' },
+  { exact: '/decisions', minTier: 'free', notes: 'Personal Decision Council — member-owned reflection' },
+  { prefix: '/decisions/', minTier: 'free', notes: 'Personal Decision Council detail/new routes' },
+  { exact: '/practices', minTier: 'free', notes: 'Member Practices room — member-ready embodied practices only; Lab Tools remains internal' },
+  { prefix: '/api/studio/decisions', minTier: 'free', notes: 'Decision Council API — ownership membrane enforced in route' },
   { exact: '/journal', minTier: 'free', notes: 'Member Journal — depth (journals always saved)' },
 
   // ─────────────────────────────────────────────────────────────────

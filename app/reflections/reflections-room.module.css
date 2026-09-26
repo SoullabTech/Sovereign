@@ -1,0 +1,25 @@
+.room {
+  min-height: 100svh;
+  padding: clamp(14px, 2.2vw, 28px) clamp(12px, 2.5vw, 32px) 0;
+  background:
+    radial-gradient(circle at 18% 4%, rgba(125, 151, 137, .10), transparent 24rem),
+    radial-gradient(circle at 82% 0%, rgba(184, 139, 84, .08), transparent 27rem),
+    linear-gradient(180deg, #15110d 0%, #0e0b09 100%);
+}
+
+.content {
+  overflow: hidden;
+  border: 1px solid rgba(206, 175, 129, .18);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 24px 70px rgba(0,0,0,.22);
+}
+
+.content > :global(.min-h-screen) {
+  min-height: calc(100svh - 84px) !important;
+}
+
+@media (max-width: 700px) {
+  .room { padding: 0; }
+  .content { border: 0; border-radius: 0; box-shadow: none; }
+}

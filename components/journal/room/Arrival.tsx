@@ -16,7 +16,6 @@
 
 import { type, color, space, focus, motion, hit, hitStack, quiet, spine, roomMaterial } from './tokens';
 import { Return, type ReturnPiece } from './Return';
-import { ReturnToMaia } from '@/components/navigation/ReturnToMaia';
 
 export interface ArrivalProps {
   onBeginWriting: () => void;
@@ -43,21 +42,11 @@ export function Arrival({
       style={roomMaterial as React.CSSProperties}
       aria-labelledby="journal-question"
     >
-      {/* Room marker and the way out, on one line at the top of the spine.
-          Both hang from the same composition axis, so the doorway does not
-          introduce a third left edge (the defect the spine token exists to fix).
-
-          On the MUST NOT list above: "MAIA" there names MAIA's RELATIONAL
-          PRESENCE — the noticed/asked reflection that the contract admits only
-          after the member has kept something (see Reflection.tsx). This is not
-          that. It is the room's threshold, and it is here under the same
-          "navigation necessity" clause that admits Browse. A member who can
-          enter Journal from the House must be able to leave it: the House
-          registry has declared `returnBehavior: 'back-to-maia'` for this route
-          all along, and until now nothing in the room honoured it. */}
-      <div className={`${spine} pt-8 sm:pt-10 flex items-center justify-between gap-4`}>
+      {/* The House threshold above this room owns the way home.
+          Keep only the room marker here so the writing composition has one
+          clear navigation layer rather than a second, competing return path. */}
+      <div className={`${spine} pt-8 sm:pt-10`}>
         <span className={`${type.marker} ${color.muted}`}>Journal</span>
-        <ReturnToMaia className={`${type.marker} ${color.muted}`} />
       </div>
 
       {/* The question is the largest thing in the room, and most of the

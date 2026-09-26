@@ -101,7 +101,7 @@ export async function loadLibrary(
     fetchJson('/api/capsules?archived=false'),
     fetchJson('/api/scribe/sessions'),
     fetchJson('/api/changes'),
-    fetchJson('/api/studio/decisions'),
+    fetchJson('/api/studio/decisions?scope=personal'),
   ]);
 
   const items: LibraryItem[] = journalEntries.map((e) => ({
@@ -171,7 +171,7 @@ export async function loadLibrary(
         line: d.title,
         detail: d.context || undefined,
         at: d.createdAt || d.created_at,
-        href: '/studio/decisions',
+        href: '/decisions',
       });
     }
   }

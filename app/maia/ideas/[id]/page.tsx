@@ -26,7 +26,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useMaiaPlace } from '@/components/maia/presence/MaiaPresence';
 import { motion } from 'framer-motion';
 import {
@@ -42,6 +42,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
 
 // --- types -------------------------------------------------------------------
 
@@ -155,6 +156,8 @@ const BLOCK_STYLES: Record<
 export default function IdeaWorkspacePage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const returnToHouse = searchParams?.get('from') === 'house';
   const ideaId = params?.id as string;
   // 🚪 House Presence: declarative place facts (id only — never contents).
   useMaiaPlace({
@@ -600,7 +603,7 @@ export default function IdeaWorkspacePage() {
     return (
       <div className="min-h-screen bg-[#0b0f1c] text-white p-6">
         <button
-          onClick={() => router.push('/maia/ideas')}
+          onClick={() => router.push(returnToHouse ? '/maia/ideas?from=house' : '/maia/ideas')}
           className="text-white/30 hover:text-white/60 flex items-center gap-2 text-sm"
         >
           <ArrowLeft size={16} /> <span>Ideas</span>
@@ -620,16 +623,22 @@ export default function IdeaWorkspacePage() {
       className="min-h-screen bg-[#0b0f1c] text-white"
     >
       {/* Return threshold */}
-      <div className="p-6">
-        <button
-          onClick={() => router.push('/maia/ideas')}
-          className="text-white/30 hover:text-white/60 transition-colors duration-200 flex items-center gap-2 text-sm"
-          aria-label="Back to Ideas"
-        >
-          <ArrowLeft size={16} />
-          <span>Ideas</span>
-        </button>
-      </div>
+      {returnToHouse ? (
+        <div className="px-6 pt-4">
+          <HouseRoomThreshold room="IDEAS" />
+        </div>
+      ) : (
+        <div className="p-6">
+          <button
+            onClick={() => router.push('/maia/ideas')}
+            className="text-white/30 hover:text-white/60 transition-colors duration-200 flex items-center gap-2 text-sm"
+            aria-label="Back to Ideas"
+          >
+            <ArrowLeft size={16} />
+            <span>Ideas</span>
+          </button>
+        </div>
+      )}
 
       <div className="max-w-2xl mx-auto px-6 pb-20">
         {/* Header — title + framing, inline editable */}

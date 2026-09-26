@@ -40,9 +40,13 @@ export interface DecisionContext {
   situationType?: string;
 }
 
+export type DecisionScope = 'personal' | 'practice';
+
 export interface DecisionRecord {
   id: string;
-  practitionerId: string;
+  scope: DecisionScope;
+  practitionerId: string | null;
+  personalMemberId?: string | null;
   clientId: string | null;
   clientName?: string;
   teamId: string | null;

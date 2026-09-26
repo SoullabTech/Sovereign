@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { ReturnToMaia } from '@/components/navigation/ReturnToMaia';
 import { todayISODate } from '@/lib/maia/dailyAnchor';
@@ -34,6 +34,8 @@ interface YesterdayAnchor {
 
 export default function AnchorPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromHouse = searchParams?.get('from') === 'house';
   const [date, setDate] = useState<string>('');
   const [prompt, setPrompt] = useState<string>('');
   const [response, setResponse] = useState<string>('');
@@ -122,7 +124,17 @@ export default function AnchorPage() {
               Anchor was a no-op exactly when the member most needed it — and an
               unlabelled arrow never said where it went. This names the
               destination the House already declared for this route. */}
-          <ReturnToMaia className="-ml-1 text-stone-700 hover:text-stone-900 text-sm" />
+          {fromHouse ? (
+            <button
+              type="button"
+              onClick={() => router.push('/house')}
+              className="-ml-1 text-stone-700 hover:text-stone-900 text-sm"
+            >
+              ← House
+            </button>
+          ) : (
+            <ReturnToMaia className="-ml-1 text-stone-700 hover:text-stone-900 text-sm" />
+          )}
           <div className="h-4 w-px bg-stone-300/60" />
           <h1 className="text-sm font-medium tracking-wide text-stone-600 uppercase">
             Anchor

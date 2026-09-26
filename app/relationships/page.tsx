@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowUpRight, Plus } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import CreateRelationshipModal from '@/components/relationships/CreateRelationshipModal';
@@ -121,6 +121,8 @@ function RelationshipPresence({
 
 export default function RelationshipFieldPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnToHouse = searchParams?.get('from') === 'house';
   const reduceMotion = useReducedMotion();
   const [relationships, setRelationships] = useState<RelationshipSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -196,11 +198,11 @@ export default function RelationshipFieldPage() {
       <div className="relative mx-auto max-w-6xl px-5 pb-20 pt-8 sm:px-7 md:pt-10 lg:px-10">
         <button
           type="button"
-          onClick={() => router.push('/maia')}
+          onClick={() => router.push(returnToHouse ? '/house' : '/maia')}
           className="mb-14 inline-flex items-center gap-2 text-xs font-medium tracking-[0.04em] text-[#716d64] transition-colors hover:text-[#465a49]"
         >
           <span aria-hidden="true">←</span>
-          Back to MAIA
+          {returnToHouse ? 'Back to House' : 'Back to MAIA'}
         </button>
 
         <section className="grid items-end gap-10 lg:grid-cols-[1.3fr_0.7fr] lg:gap-16">

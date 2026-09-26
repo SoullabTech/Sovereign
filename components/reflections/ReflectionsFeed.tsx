@@ -24,7 +24,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Search, Sparkles, Archive, Pin } from 'lucide-react';
 import CapsuleCard from '@/components/capsules/CapsuleCard';
@@ -44,6 +44,8 @@ type FilterTab = 'all' | 'pinned' | 'drafts' | 'archived';
 
 export default function ReflectionsFeed() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnToHouse = searchParams?.get('from') === 'house';
   const [capsules, setCapsules] = useState<CapsuleDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -144,7 +146,7 @@ export default function ReflectionsFeed() {
     >
       <div className="max-w-2xl mx-auto px-6 py-12">
         {/* Header */}
-        <div className="mb-8">
+        {!returnToHouse && <div className="mb-8">
           <button
             onClick={() => router.push('/maia')}
             className="flex items-center gap-2 text-stone-400 hover:text-stone-600 transition-colors text-[13px] tracking-wide"
@@ -152,7 +154,7 @@ export default function ReflectionsFeed() {
             <ArrowLeft className="h-4 w-4" />
             <span>Back to MAIA</span>
           </button>
-        </div>
+        </div>}
 
         {/* Title Section */}
         <div className="text-center mb-10">
