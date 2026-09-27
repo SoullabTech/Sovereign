@@ -218,10 +218,10 @@ The next implementation programme should not be “connect everything.”
 
 1. **Registry reconciliation:** Relationships → MAIA is now canonically registered without changing behavior.
 2. **Ontology reconciliation:** Dream is now settled as a first-class House facet through DREAM-03; Practices still requires navigation/ontology adjudication before cross-facet implementation.
-3. **Daily continuity:** Change / Personal Decision / Reflection → Daily Anchor is now live. Each source enters as read-only provenance; the Anchor remains blank until the member authors and keeps today's thread.
+3. **Daily continuity:** Change / Personal Decision / Reflection → Daily Anchor is now live. Each source enters as read-only provenance; the Anchor remains blank until the member authors and keeps today's thread. Dream → Daily Anchor now extends the same law into symbolic continuity while carrying only the canonical remembered Dream, not interpretation.
 4. **Relational continuity:** Relationship → Journal / Change / Decision is now live with strict provenance and no inferred relational meaning; any further relational crossings require a distinct human need and receiving substrate.
 5. **Creative continuity:** Idea → Writer's Studio, then only separately Idea → Change / Decision where the member has authored an explicit shift/decision block.
-6. **Symbolic continuity:** Astrology / Divination / Dream → Journal or Anchor only through separately governed crossings after the distinction between source fact, symbol, synthesis, and lived meaning is visible in the receiving surface.
+6. **Symbolic continuity:** Dream → Daily Anchor is now live as a raw-source provenance crossing only. Astrology / Divination → Journal or Anchor remain unimplemented until source fact, symbol, synthesis, and lived meaning are visibly distinguishable in the receiving surface.
 7. **Living Field:** project only relations made durable elsewhere.
 
 Each implementation act must stop again before expansion to the next family.
@@ -240,15 +240,16 @@ This design act is complete when:
 - candidate journeys specify receiving authorship and source preservation;
 - no runtime, schema, route, or persistence behavior has been changed.
 
-## 13. Exact stop
+## 13. Current standing and next boundary
 
-> **FACET-FLOW-02 is a map, not permission to build the map's edges.**
+> **FACET-FLOW-02 MAP ACCEPTED · FIRST CROSSING FAMILIES IMPLEMENTED · MEMBER AUTHORSHIP LAW HOLDING**
 
-The next act requires founder adjudication of this census, especially:
+Since the original census stop, Dream has become a first-class House facet, Relationships → MAIA has been registered, Journal / Reflection / Idea / Relationship crossings have been made durable, and Change / Personal Decision / Reflection → Daily Anchor has been witnessed. Dream → Daily Anchor now proves the first symbolic-continuity edge without importing interpretation.
 
-1. whether **Dream** becomes a first-class House facet;
-2. whether **Practices** returns to / enters the current House navigation grammar;
-3. whether the already-live **Relationships → MAIA** handoff should be canonically registered;
-4. which missing-journey family should be implemented first.
+FACET-FLOW-03 is now complete as an epistemic readiness contract. It found Dream ready, Divination partially ready, and Astrology not ready for Journal/Anchor carry. FACET-FLOW-04 then built and locally witnessed a typed Divination source packet plus a non-persisting Journal/Anchor receiver prototype.
 
-Until that adjudication: **no new crossing implementation.**
+The current boundary is:
+
+> **FOUNDER ADJUDICATION — FACET-FLOW-04 READ-ONLY SYMBOLIC RECEIVER**
+
+The prototype visibly separates source fact, symbolic tradition, system synthesis, and member meaning; both receiving authorship fields remain blank; exact return works; and the witness left zero persistence residue. Durable Divination → Journal / Daily Anchor remains closed until that distinction is accepted experientially. Astrology remains closed until its own typed chart-context packet exists. Practices remains a separate ontology/navigation decision.

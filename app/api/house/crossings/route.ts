@@ -10,7 +10,7 @@ import {
 } from '@/lib/house/facetCrossing.server';
 
 const TARGETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'journal', 'anchor', 'reflections']);
-const SOURCES = new Set<RelationSourceFacet>(['journal', 'reflections', 'ideas', 'relationships', 'changes', 'decisions', 'divination']);
+const SOURCES = new Set<RelationSourceFacet>(['journal', 'dream', 'reflections', 'ideas', 'relationships', 'changes', 'decisions', 'divination']);
 
 export async function GET(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);

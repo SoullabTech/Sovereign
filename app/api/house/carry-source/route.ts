@@ -9,7 +9,7 @@ import {
   type CarryTargetFacet,
 } from '@/lib/house/facetCrossing.server';
 
-const SOURCE_FACETS = new Set(['journal', 'reflections', 'ideas', 'relationships', 'changes', 'decisions']);
+const SOURCE_FACETS = new Set(['journal', 'dream', 'reflections', 'ideas', 'relationships', 'changes', 'decisions']);
 const TARGET_FACETS = new Set(['changes', 'decisions', 'journal', 'anchor']);
 
 export async function GET(request: NextRequest) {
