@@ -63,3 +63,6 @@
 
 .reading-elemental{margin:28px 0;padding:22px 0;border-top:1px solid #bdaa8e;border-bottom:1px solid #bdaa8e}
 .read-element{padding:12px 0}.read-element h3{margin:0 0 5px;text-transform:capitalize}
+.temporal-maia{margin:34px 0;padding:26px;border:1px solid #bdaa8e;border-radius:10px;background:rgba(255,250,240,.38)}
+.temporal-maia h2{margin:4px 0 12px}.temporal-maia .intro{margin-bottom:14px}
+@media(max-width:650px){.temporal-maia{padding:22px 18px}}

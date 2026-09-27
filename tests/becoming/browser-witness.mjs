@@ -172,7 +172,20 @@ try {
     .fill('Generosity and automatic availability may not be the same thing.');
   await page.getByLabel('And what does not fit?')
     .fill('Some invitations feel joyful rather than burdensome.');
-  await page.screenshot({ path: output + '/screenshots/ux01r1-across-time-desktop.png', fullPage: true });
+  await page.getByRole('button', { name: 'Ask MAIA what it notices', exact: true }).click();
+  await page.getByRole('heading', { name: 'What might connect?' }).waitFor();
+  assert.equal(maiaRequests.length,3);
+  assert.match(maiaRequests[2].message,/has_been · present_self_report/);
+  assert.match(maiaRequests[2].message,/is_being · present_self_report/);
+  assert.match(maiaRequests[2].message,/is_becoming · imagined_possibility/);
+  assert.match(maiaRequests[2].message,/Do not infer a thread, memory, relationship profile/);
+  await page.getByLabel('What fits—or does not?').fill('That does not fit anymore. The invitations I accept now are chosen and joyful.');
+  await page.getByRole('button', { name: 'This doesn’t fit', exact: true }).click();
+  assert.equal(maiaRequests.length,4);
+  assert.match(maiaRequests[3].message,/member correction outranks the prior hypothesis/i);
+  assert.match(maiaRequests[3].message,/Release any unsupported claim/);
+  await page.screenshot({ path: output + '/screenshots/ux02r4-across-time-maia-desktop.png', fullPage: true });
+  pass('J13M', 'Across Time can explicitly hand only selected temporal material to MAIA, and a member correction invokes the repair contract rather than becoming hidden confirmation.');
 
   await page.getByRole('button', { name: 'Your journeys', exact: true }).click();
   await page.getByRole('dialog', { name: 'Leave these Across Time notes?' }).waitFor();
