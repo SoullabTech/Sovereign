@@ -1,0 +1,14 @@
+{
+  "act": "PC3-LIVE-02",
+  "runtime_ports_closed": {"3210": true, "3211": true, "3299": true, "55432": true},
+  "postgres_data_removed": true,
+  "raw_synthetic_run_removed": true,
+  "witness_worktree_removed": true,
+  "mutant_worktree_removed": true,
+  "rewitness_transport_worktree_removed": true,
+  "product_branch_sha": "53e70459fb6c36fe1343abd4d9f2ca5d58041128",
+  "evidence_branch_pre_teardown_sha": "ec9c227974e2306753c687bbc2c81ad23a8275cf",
+  "concurrent_review_wip_preserved": true,
+  "merge_performed": false,
+  "deploy_performed": false
+}
