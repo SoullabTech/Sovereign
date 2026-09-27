@@ -1,10 +1,10 @@
 # JARVIS-BECOMING-01 — Programme cockpit
 
-## Latest standing — journey-first founder candidate, 27 September 2026
+## Latest standing — post-Return relational candidate, 27 September 2026
 
-`BECOMING-UX-01R1` corrected the local candidate so a member enters a guided Future Self journey before encountering any temporal-analysis surface. Exact tested source: `05372009ed598299ae56d6a2ebffe56991a1db3c`. Read `BECOMING_UX_01R1_WITNESS_2026-09-27.md` first. Strict typecheck passes, the logical core passes 31/31, and the post-commit visible journey witness passes 21/21. The candidate is available on local port 3797; it is not account-connected, live MAIA, or production.
+`BECOMING-UX-01R2` responds to the founder's completed journey: the journey itself worked, but the ending deadened because there was no supportive synthesis or ongoing MAIA relationship. Exact code source: `1bc5e70c8488d608be82161e6e98a7b8b232d65e`. Read `BECOMING_UX_01R2_RELATIONAL_INTEGRATION_WITNESS_2026-09-27.md` first. Strict typecheck passes, Becoming core/handoff tests pass 32/32, and the visible journey + in-field MAIA witness passes 23/23 with MAIA mocked so automation creates no real provider turn.
 
-The immediate boundary is the founder's human walk of threshold → arrival → time opening → encounter → optional dialogue → discernment → return → optional carry. `Across Time` is now secondary and hidden until a journey is kept. If that journey is accepted, the next implementation boundary is `BECOMING-MAIA-01 — CANONICAL MAIA GUIDED JOURNEY + MEMBER-AUTHORED FUTURE VOICE ONLY`. The native review unit `becoming-local-human-walk-20260927` remains blocked pending the human judgment. Earlier planning units remain unchanged. The constitutional source is unchanged.
+After Return, one explicit gesture now gives the whole member-authored journey to MAIA for supportive synthesis and continuing conversation **inside Becoming**. The member does not navigate to `/maia` and does not need to repeat the journey. The optional `Continue in full MAIA` doorway is a valid later choice, but it is deliberately unwired here until the integrated House can preserve exact conversation continuity rather than opening a blank MAIA surface. Earlier planning units remain historical evidence; the constitutional source remains unchanged.
 
 ### Earlier establishment record
 

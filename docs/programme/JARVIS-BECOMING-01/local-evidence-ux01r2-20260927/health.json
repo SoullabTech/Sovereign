@@ -1,0 +1,9 @@
+{
+  "scope": "isolated-local-preview",
+  "sourceHead": "1bc5e70c8488d608be82161e6e98a7b8b232d65e",
+  "bundleHash": "7d09e3e83e5ce6d4bd3f5b65cd8e82beee09129ef2490ed6a55ea3e5c8d141c2",
+  "accountConnected": false,
+  "providerCalls": "explicit-member-handoff-only",
+  "storage": "browser-indexeddb-explicit-keep",
+  "maiaHandoff": "fixed-localhost-canonical-route"
+}

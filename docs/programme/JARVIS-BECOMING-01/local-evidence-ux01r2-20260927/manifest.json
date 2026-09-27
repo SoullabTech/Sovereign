@@ -1,0 +1,16 @@
+{
+  "source_commit": "1bc5e70c8488d608be82161e6e98a7b8b232d65e",
+  "bundle_sha256": "7d09e3e83e5ce6d4bd3f5b65cd8e82beee09129ef2490ed6a55ea3e5c8d141c2",
+  "browser_maia": "mocked_only",
+  "real_provider_call_in_automation": false,
+  "files": {
+    "browser-witness.json": "d8a5e218d5fe4eed0ed5237a1e95938789dc1fcbd570c9ae663de971e634cf76",
+    "browser-witness.log": "e5059e8b17f9806f3aa0c8aa048bf82cdf352cefa1eec55d840a367667bbd004",
+    "core-tests.log": "89c9b6c77745e1332e32235919e71cf0ba9c284d2d1e9acb2b43430210c22fed",
+    "health.json": "0be5a8899f7c001efff982e1a17fd9fbeba7da0d298877dc3b890918196d5e48",
+    "refuse-malformed.json": "8468a587856a4774c8a2e3be58d42e5abb53e73073804c71705a3b6131e47a5d",
+    "refuse-noheader.json": "8990070dd241dbb47f4bb2b038add1ec9c53ec3f59669d9030bf25ae59861be7",
+    "typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ux01r2-maia-synthesis-desktop.png": "998f069dd48953779a7be321f02109165aa82cac79bf46bfae8c6cba009c164b"
+  }
+}
