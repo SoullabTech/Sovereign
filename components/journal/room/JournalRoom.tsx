@@ -37,15 +37,31 @@ import {
   type LibraryKind,
 } from './library';
 import { type, color, space, focus, hit, quiet, quietGroup, hitBlock, srOnly, spine, roomMaterial } from './tokens';
+import type { FacetCarryRef } from '@/components/house/FacetCarryNotice';
 
 type RoomState =
   | { name: 'arrival' }
-  | { name: 'writing'; variant: 'writing' | 'note'; fromQuestion?: string }
+  | {
+      name: 'writing';
+      variant: 'writing' | 'note';
+      fromQuestion?: string;
+      carrySourceRef?: FacetCarryRef | null;
+    }
   | { name: 'reading'; entry: JournalEntry; reflecting: boolean }
   | { name: 'browsing' };
 
-export function JournalRoom({ initialEntryId = null }: { initialEntryId?: string | null }) {
-  const [state, setState] = useState<RoomState>({ name: 'arrival' });
+export function JournalRoom({
+  initialEntryId = null,
+  initialCarrySourceRef = null,
+}: {
+  initialEntryId?: string | null;
+  initialCarrySourceRef?: FacetCarryRef | null;
+}) {
+  const [state, setState] = useState<RoomState>(() =>
+    initialCarrySourceRef && !initialEntryId
+      ? { name: 'writing', variant: 'writing', carrySourceRef: initialCarrySourceRef }
+      : { name: 'arrival' },
+  );
   const openedInitialEntry = useRef(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [ready, setReady] = useState(false);
@@ -79,11 +95,18 @@ export function JournalRoom({ initialEntryId = null }: { initialEntryId?: string
       content: string,
       entryType: EntryType,
       meta?: { place?: string; fromQuestion?: string },
+      sourceRef?: FacetCarryRef | null,
     ) => {
       const res = await apiFetch('/api/journal/quick/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entryType, content, source: 'journal_room', meta: meta ?? null }),
+        body: JSON.stringify({
+          entryType,
+          content,
+          source: 'journal_room',
+          meta: meta ?? null,
+          sourceRef: sourceRef ?? undefined,
+        }),
       });
       const json = await res.json().catch(() => null);
       if (!json?.success || !json.entryId) throw new Error('keep failed');
@@ -128,6 +151,7 @@ export function JournalRoom({ initialEntryId = null }: { initialEntryId?: string
         <WritingSurface
           variant={state.variant}
           fromQuestion={state.fromQuestion}
+          carrySourceRef={state.carrySourceRef}
           onKeep={keep}
           onLeave={() => setState({ name: 'arrival' })}
         />

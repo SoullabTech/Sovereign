@@ -3,7 +3,7 @@ import { query } from '@/lib/db/postgres';
 import { getCapsuleById } from '@/lib/capsules';
 
 export type CarrySourceFacet = 'journal' | 'reflections' | 'ideas' | 'relationships';
-export type CarryTargetFacet = 'changes' | 'decisions';
+export type CarryTargetFacet = 'changes' | 'decisions' | 'journal';
 export type RelationSourceFacet = CarrySourceFacet | 'divination';
 export type RelationTargetFacet = CarryTargetFacet | 'reflections';
 export type FlowFacet = RelationSourceFacet | RelationTargetFacet;
@@ -70,6 +70,7 @@ const ALLOWED_CROSSINGS: Record<
   'idea-decision-to-decisions': { source: 'ideas', target: 'decisions', ideaBlockType: 'decision' },
   'relationship-name-change': { source: 'relationships', target: 'changes' },
   'relationship-consider-decision': { source: 'relationships', target: 'decisions' },
+  'relationship-write-journal': { source: 'relationships', target: 'journal' },
 };
 
 function excerpt(text: string, max = 900): string {
@@ -433,9 +434,9 @@ export async function recordFacetCrossing(
 }
 
 const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'reflections', 'ideas', 'relationships']);
-const CARRY_TARGET_FACETS = new Set<CarryTargetFacet>(['changes', 'decisions']);
+const CARRY_TARGET_FACETS = new Set<CarryTargetFacet>(['changes', 'decisions', 'journal']);
 const FLOW_SOURCE_FACETS = new Set<RelationSourceFacet>(['journal', 'reflections', 'ideas', 'relationships', 'divination']);
-const FLOW_TARGET_FACETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'reflections']);
+const FLOW_TARGET_FACETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'journal', 'reflections']);
 
 function isCarrySourceFacet(value: string): value is CarrySourceFacet {
   return CARRY_SOURCE_FACETS.has(value as CarrySourceFacet);
@@ -501,6 +502,26 @@ export async function resolveFacetTarget(
       : null;
   }
 
+  if (targetFacet === 'journal') {
+    const result = await query<{ id: string; content: string }>(
+      `SELECT id::text AS id, content
+         FROM quick_journal_entries
+        WHERE id::text = $1
+          AND user_id = $2::text
+        LIMIT 1`,
+      [targetRefId, memberId],
+    );
+    const row = result.rows[0];
+    return row
+      ? {
+          facet: 'journal',
+          refId: row.id,
+          label: journalLabel(row.content),
+          href: '/journal?entry=' + encodeURIComponent(row.id),
+        }
+      : null;
+  }
+
   const capsule = await getCapsuleById({
     userId: memberId,
     capsuleId: targetRefId,
@@ -559,6 +580,27 @@ async function resolveFacetTargetEvidence(
           label: row.title,
           excerpt: excerpt(row.context),
           href: '/decisions/' + encodeURIComponent(row.id),
+        }
+      : null;
+  }
+
+  if (targetFacet === 'journal') {
+    const result = await query<{ id: string; content: string }>(
+      `SELECT id::text AS id, content
+         FROM quick_journal_entries
+        WHERE id::text = $1
+          AND user_id = $2::text
+        LIMIT 1`,
+      [targetRefId, memberId],
+    );
+    const row = result.rows[0];
+    return row
+      ? {
+          facet: 'journal',
+          refId: row.id,
+          label: journalLabel(row.content),
+          excerpt: excerpt(row.content),
+          href: '/journal?entry=' + encodeURIComponent(row.id),
         }
       : null;
   }

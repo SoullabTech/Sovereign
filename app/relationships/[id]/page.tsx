@@ -450,6 +450,12 @@ export default function RelationshipDetailPage() {
                               >
                                 There is a choice here →
                               </a>
+                              <a
+                                href={`/journal?sourceFacet=relationships&sourceRefId=${encodeURIComponent(id)}&crossingId=relationship-write-journal`}
+                                className="text-[#716d64]/58 transition-colors hover:text-[#5e745d]"
+                              >
+                                Write about this →
+                              </a>
                             </div>
                           </div>
 

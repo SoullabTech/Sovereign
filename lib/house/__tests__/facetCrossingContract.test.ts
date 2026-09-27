@@ -25,6 +25,8 @@ const decisionDetail = read('app/studio/decisions/[id]/page.tsx');
 const changeDetail = read('components/maia/changes/ChangeJourney.tsx');
 const ideaWorkspace = read('app/maia/ideas/[id]/page.tsx');
 const relationshipDetail = read('app/relationships/[id]/page.tsx');
+const journalWriting = read('components/journal/room/WritingSurface.tsx');
+const journalRoute = read('app/api/journal/quick/list/route.ts');
 
 const foundationalIds = [
   'journal-name-as-change',
@@ -41,6 +43,7 @@ const ideaIds = [
 const relationshipIds = [
   'relationship-name-change',
   'relationship-consider-decision',
+  'relationship-write-journal',
 ] as const;
 
 const ids = [...foundationalIds, ...ideaIds, ...relationshipIds] as const;
@@ -71,7 +74,7 @@ describe('House facet crossing contract', () => {
   it('fails closed to an explicit crossing allowlist instead of becoming a generic transfer API', () => {
     for (const id of ids) expect(carrier).toContain(`'${id}'`);
     expect(carrier).toContain("type CarrySourceFacet = 'journal' | 'reflections' | 'ideas' | 'relationships'");
-    expect(carrier).toContain("type CarryTargetFacet = 'changes' | 'decisions'");
+    expect(carrier).toContain("type CarryTargetFacet = 'changes' | 'decisions' | 'journal'");
     expect(carryRoute).toContain('Crossing not admitted');
     expect(carryRoute).toContain('getMemberIdFromRequest');
     expect(carryRoute).toContain('validateFacetCrossingSource');
@@ -105,12 +108,15 @@ describe('House facet crossing contract', () => {
   it('keeps Relationship crossings explicit and excludes inferred relationship field state', () => {
     expect(carrier).toContain("'relationship-name-change': { source: 'relationships', target: 'changes' }");
     expect(carrier).toContain("'relationship-consider-decision': { source: 'relationships', target: 'decisions' }");
+    expect(carrier).toContain("'relationship-write-journal': { source: 'relationships', target: 'journal' }");
     expect(carrier).toContain('FROM member_relationships');
     expect(carrier).toContain('AND archived_at IS NULL');
     expect(carrier).not.toContain('relationship_field_state');
     expect(carrier).not.toMatch(/member_relationships[\s\S]{0,240}\bnote\b/);
     expect(relationshipDetail).toContain('Something is changing here →');
     expect(relationshipDetail).toContain('There is a choice here →');
+    expect(relationshipDetail).toContain('Write about this →');
+    expect(relationshipDetail).toContain('crossingId=relationship-write-journal');
     expect(relationshipDetail).toContain('sourceFacet=relationships&sourceRefId=');
   });
 
@@ -125,12 +131,16 @@ describe('House facet crossing contract', () => {
     expect(decisionForm).toContain('value={context}');
     expect(decisionForm).not.toContain('setTitle(source');
     expect(decisionForm).not.toContain('setContext(source');
+    expect(journalWriting).toContain('targetFacet="journal"');
+    expect(journalWriting).toContain('value={text}');
+    expect(journalWriting).not.toContain('setText(source');
   });
 
   it('requires source resolution before target submit can become actionable', () => {
     expect(changesForm).toContain('(!carrySourceRef || carrySourceReady)');
     expect(changesSheet).toContain('carrySourceReady={carrySourceValid === true}');
     expect(decisionForm).toContain('(!carrySourceRef || carrySourceValid === true)');
+    expect(journalWriting).toContain('(carrySourceRef && carrySourceReady !== true)');
     expect(carryNotice).toContain('Source unavailable');
     expect(carryNotice).toContain('Nothing has crossed.');
   });
@@ -146,6 +156,11 @@ describe('House facet crossing contract', () => {
     expect(decisionRoute).toContain('db.transaction(async (client)');
     expect(decisionRoute).toContain('recordFacetCrossing(client');
     expect(decisionRoute).toContain('Facet carry currently enters personal Decisions only.');
+
+    expect(journalRoute).toContain("targetFacet: 'journal'");
+    expect(journalRoute).toContain('validateFacetCrossingSource');
+    expect(journalRoute).toContain('transaction(async (client)');
+    expect(journalRoute).toContain('recordFacetCrossing(client');
   });
 
   it('keeps durable target provenance visible and provides a return doorway', () => {
@@ -155,11 +170,15 @@ describe('House facet crossing contract', () => {
     expect(originTrail).toContain('Return to source →');
     expect(changeDetail).toContain('<FacetOriginTrail');
     expect(decisionDetail).toContain('<FacetOriginTrail');
+    expect(journalReader).toContain('targetFacet="journal"');
+    expect(journalReader).toContain('<FacetOriginTrail');
   });
 
   it('reopens an exact Journal source from identity alone', () => {
     expect(journalPage).toContain("searchParams?.get('entry')");
-    expect(journalPage).toContain('<JournalRoom initialEntryId={entryId} />');
+    expect(journalPage).toContain('initialEntryId={entryId}');
+    expect(journalPage).toContain('initialCarrySourceRef={carrySourceRef}');
+    expect(journalPage).toContain("sourceFacet === 'relationships'");
     expect(journalRoom).toContain('entries.find((item) => item.id === initialEntryId)');
     expect(journalRoom).toContain("setState({ name: 'reading', entry, reflecting: false })");
     expect(journalRoom).not.toContain('content: initialEntryId');

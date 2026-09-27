@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-type TargetFacet = 'changes' | 'decisions' | 'reflections';
+type TargetFacet = 'changes' | 'decisions' | 'journal' | 'reflections';
 
 type Origin = {
   crossingId: string;

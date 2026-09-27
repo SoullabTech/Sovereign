@@ -9,7 +9,7 @@ import {
   type RelationTargetFacet,
 } from '@/lib/house/facetCrossing.server';
 
-const TARGETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'reflections']);
+const TARGETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'journal', 'reflections']);
 const SOURCES = new Set<RelationSourceFacet>(['journal', 'reflections', 'ideas', 'relationships', 'divination']);
 
 export async function GET(request: NextRequest) {

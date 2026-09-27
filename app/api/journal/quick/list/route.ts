@@ -11,8 +11,13 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import {
+  recordFacetCrossing,
+  validateFacetCrossingSource,
+  type FacetCrossingRef,
+} from '@/lib/house/facetCrossing.server';
 // Journal entries remain Journal unless the member explicitly carries them
 // across a governed facet boundary. Historical code wrote every sufficiently
 // long entry into episodic_memories and invented title/significance/intensity
@@ -119,7 +124,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { entryType, content, tags = [], source = 'quick_sheet', meta = null } = body;
+    const {
+      entryType,
+      content,
+      tags = [],
+      source = 'quick_sheet',
+      meta = null,
+      sourceRef,
+    } = body as {
+      entryType?: string;
+      content?: string;
+      tags?: string[];
+      source?: string;
+      meta?: QuickJournalEntry['meta'] | null;
+      sourceRef?: FacetCrossingRef;
+    };
 
     if (!entryType || !['dream', 'day', 'handwriting'].includes(entryType)) {
       return NextResponse.json(
@@ -135,17 +154,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure table exists
+    // Ensure table exists before opening the atomic member act.
     await ensureTableExists();
 
-    // Insert entry (with optional meta for handwriting OCR data)
-    const result = await query<QuickJournalEntry>(`
-      INSERT INTO quick_journal_entries (user_id, entry_type, content, tags, source, meta)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `, [userId, entryType, content.trim(), tags, source, meta ? JSON.stringify(meta) : null]);
+    if (sourceRef) {
+      const carried = await validateFacetCrossingSource({
+        memberId: userId,
+        targetFacet: 'journal',
+        sourceRef,
+      });
+      if (!carried) {
+        return NextResponse.json(
+          { success: false, error: 'Source not available for this crossing' },
+          { status: 400 },
+        );
+      }
+    }
 
-    const entry = result.rows[0];
+    // Keeping the Journal entry is the authorship act. If the member arrived
+    // through a governed facet crossing, the entry and the relational fact are
+    // committed together. No copied relationship prose is stored here.
+    const entry = await transaction(async (client) => {
+      const result = await client.query<QuickJournalEntry>(`
+        INSERT INTO quick_journal_entries (user_id, entry_type, content, tags, source, meta)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *
+      `, [userId, entryType, content.trim(), tags, source, meta ? JSON.stringify(meta) : null]);
+
+      const kept = result.rows[0];
+
+      if (sourceRef) {
+        await recordFacetCrossing(client, {
+          memberId: userId,
+          crossingId: sourceRef.crossingId,
+          sourceFacet: sourceRef.sourceFacet,
+          sourceRefId: sourceRef.sourceRefId,
+          targetFacet: 'journal',
+          targetRefId: kept.id,
+        });
+      }
+
+      return kept;
+    });
 
     console.log(`✅ [QuickJournal] ${entryType} entry saved for user ${userId.substring(0, 8)}...`);
 

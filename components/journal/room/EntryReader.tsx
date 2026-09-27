@@ -18,6 +18,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { type, color, space, focus, hit, quiet, srOnly, spine, roomMaterial } from './tokens';
+import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
 
 export interface JournalEntry {
   id: string;
@@ -155,6 +156,13 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
             <p className={`${type.meta} ${color.muted} italic`}>{entry.meta.fromQuestion}</p>
           </div>
         ) : null}
+
+        <FacetOriginTrail
+          targetFacet="journal"
+          targetRefId={entry.id}
+          tone="light"
+          className="mt-7"
+        />
 
         {!reflecting && (
           <div className="mt-12 flex flex-wrap items-center gap-x-7 gap-y-2">

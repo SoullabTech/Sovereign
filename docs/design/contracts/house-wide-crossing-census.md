@@ -74,6 +74,7 @@ Already governed in lib/house/livingOrientation.ts:
 | Reflections | Consider a decision | Decisions | live |
 | Relationships | Something is changing here | Changes | live |
 | Relationships | There is a choice here | Decisions | live |
+| Relationships | Write about this | Journal | live |
 | Idea Shift | Name this shift as a change | Changes | live |
 | Idea Decision | Take this decision forward | Decisions | live |
 | Writer's Studio | Discuss with MAIA | MAIA-in-Studio | partial |
@@ -135,7 +136,6 @@ These are candidate journeys, not implementation authority.
 | Change → Daily Anchor | **Carry this into today** | explicit carry | lets a long change become one chosen daily thread |
 | Decision → Daily Anchor | **Hold this choice today** | explicit carry | supports fidelity after choosing without turning Anchor into task management |
 | Change → Practices | **Choose a practice for this** | explicit carry | lets embodiment support transition without automatic prescription |
-| Relationship → Journal | **Write from this relationship** | explicit navigation/carry | preserves the relationship as context while leaving the page blank |
 | Idea → Writing | **Develop this in Writer's Studio** | explicit carry | lets an idea become material without declaring it a manuscript |
 | Wisdom / Library → Writing | **Bring this source into the work** | explicit source carry | source citation/provenance travels; source text does not become authorship |
 | Astrology → Journal | **Write with this in view** | explicit contextual carry | calculated/symbolic context may accompany a blank page |
@@ -219,7 +219,7 @@ The next implementation programme should not be “connect everything.”
 1. **Registry reconciliation:** name the already-existing Relationships → MAIA crossing without changing behavior.
 2. **Ontology adjudication:** settle Practices and Dream as House facets before crossing work.
 3. **Daily continuity:** prototype Change / Decision / Reflection → Daily Anchor because the receiving act can remain extremely small and member-authored.
-4. **Relational continuity:** design Relationship → Journal / Change / Decision with strict provenance and no inferred relational meaning.
+4. **Relational continuity:** Relationship → Journal / Change / Decision is now live with strict provenance and no inferred relational meaning; any further relational crossings require a distinct human need and receiving substrate.
 5. **Creative continuity:** Idea → Writer's Studio, then only separately Idea → Change / Decision where the member has authored an explicit shift/decision block.
 6. **Symbolic continuity:** Astrology / Divination / future Dream → Journal or Anchor only after the distinction between source fact, symbol, synthesis, and lived meaning is visible in the receiving surface.
 7. **Living Field:** project only relations made durable elsewhere.

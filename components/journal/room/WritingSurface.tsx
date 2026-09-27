@@ -22,6 +22,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { type, color, space, focus, hit, hitTight, quiet, srOnly, spine, roomMaterial } from './tokens';
+import { FacetCarryNotice, type FacetCarryRef } from '@/components/house/FacetCarryNotice';
 
 export type EntryType = 'day' | 'dream';
 
@@ -39,20 +40,31 @@ export interface WritingSurfaceProps {
    * writes *from*, never text they are handed.
    */
   fromQuestion?: string;
+  carrySourceRef?: FacetCarryRef | null;
   onKeep: (
     content: string,
     entryType: EntryType,
     meta?: { place?: string; fromQuestion?: string },
+    sourceRef?: FacetCarryRef | null,
   ) => Promise<void>;
   onLeave: () => void;
 }
 
-export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: WritingSurfaceProps) {
+export function WritingSurface({
+  variant,
+  fromQuestion,
+  carrySourceRef = null,
+  onKeep,
+  onLeave,
+}: WritingSurfaceProps) {
   const [text, setText] = useState('');
   const [entryType, setEntryType] = useState<EntryType>('day');
   const [place, setPlace] = useState('');
   const [showPlace, setShowPlace] = useState(false);
   const [keeping, setKeeping] = useState(false);
+  const [carrySourceReady, setCarrySourceReady] = useState<boolean | null>(
+    carrySourceRef ? null : true,
+  );
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
   const restored = useRef(false);
@@ -95,7 +107,7 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
   const hasText = text.trim().length > 0;
 
   async function keep() {
-    if (!hasText || keeping) return;
+    if (!hasText || keeping || (carrySourceRef && carrySourceReady !== true)) return;
     setKeeping(true);
     setError(null);
     try {
@@ -107,6 +119,7 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
         text.trim(),
         entryType,
         Object.keys(meta).length > 0 ? meta : undefined,
+        carrySourceRef,
       );
       try {
         window.localStorage.removeItem(DRAFT_KEY);
@@ -223,6 +236,17 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
           </div>
         ) : null}
 
+        {carrySourceRef ? (
+          <div className="mb-9">
+            <FacetCarryNotice
+              targetFacet="journal"
+              sourceRef={carrySourceRef}
+              tone="light"
+              onResolved={(source) => setCarrySourceReady(Boolean(source))}
+            />
+          </div>
+        ) : null}
+
         {/* What MAIA asked, carried as provenance — never as the member's text. */}
         {fromQuestion && (
           <div className="mb-8">
@@ -248,7 +272,7 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
             <button
               type="button"
               onClick={keep}
-              disabled={keeping}
+              disabled={keeping || (carrySourceRef ? carrySourceReady !== true : false)}
               className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}
                 disabled:opacity-40`}
             >

@@ -39,9 +39,23 @@
 
 import { useSearchParams } from 'next/navigation';
 import { JournalRoom } from '@/components/journal/room/JournalRoom';
+import type { FacetCarryRef } from '@/components/house/FacetCarryNotice';
 
 export default function JournalPage() {
   const searchParams = useSearchParams();
   const entryId = searchParams?.get('entry') || null;
-  return <JournalRoom initialEntryId={entryId} />;
+  const sourceFacet = searchParams?.get('sourceFacet');
+  const sourceRefId = searchParams?.get('sourceRefId');
+  const crossingId = searchParams?.get('crossingId');
+  const carrySourceRef: FacetCarryRef | null =
+    sourceFacet === 'relationships' && sourceRefId && crossingId
+      ? { sourceFacet, sourceRefId, crossingId }
+      : null;
+
+  return (
+    <JournalRoom
+      initialEntryId={entryId}
+      initialCarrySourceRef={carrySourceRef}
+    />
+  );
 }

@@ -5,6 +5,11 @@ surfaces:
   - app/relationships/[id]/page.tsx
   - app/maia/ideas/[id]/page.tsx
   - app/changes/page.tsx
+  - app/journal/page.tsx
+  - app/api/journal/quick/list/route.ts
+  - components/journal/room/JournalRoom.tsx
+  - components/journal/room/WritingSurface.tsx
+  - components/journal/room/EntryReader.tsx
   - app/studio/decisions/[id]/page.tsx
   - app/studio/decisions/new/page.tsx
   - components/maia/changes/ChangeJourney.tsx
@@ -25,8 +30,8 @@ reference_surfaces:
   - docs/design/contracts/daily-anchor.md
 shared_with_house: visible provenance, member-explicit authority, quiet return doorways, and continuity without turning the House into a dashboard or universal graph
 distinct_to_room: this contract governs the seam between rooms rather than the composition of any one room. The source remains a source, the receiving facet requires its own authorship act, and the durable relation stores identities only.
-screenshot_desktop: docs/design/contracts/screenshots/facet-crossing-changes-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/facet-crossing-decision-mobile.png
+screenshot_desktop: docs/design/contracts/screenshots/facet-crossing-relationship-journal-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/facet-crossing-relationship-journal-mobile.png
 experience_verification: >
   2026-09-27 authenticated local witness on localhost:3597. Four read-only crossings were walked:
   Journal→Changes, Journal→Personal Decisions, Reflection→Changes, Reflection→Personal Decisions.
@@ -36,7 +41,7 @@ experience_verification: >
   member_facet_crossings row, storing only member id, crossing id, source facet/id, target facet/id, and time.
   The target detail surfaces then displayed Where this began with a Return to source doorway. Journal's
   return URL reopened the exact source entry by id. All temporary witness targets and crossing rows were deleted;
-  residue verified at zero. Production was not touched. A second authenticated local witness extended the same law to Ideas using one temporary Idea explicitly labelled SAFE TO DELETE, with one member-authored Shift block and one member-authored Decision block. Shift→Changes and Decision→Personal Decisions both displayed Ideas provenance while target meaning fields remained blank. The inverse subtype probes were refused with 404 Source not available, proving that a Decision block cannot enter the Shift crossing and a Shift block cannot enter the Decision crossing. The temporary Idea and both blocks were then deleted; residue verified at zero. A third authenticated local witness then exercised Relationships→Changes and Relationships→Personal Decisions using an existing non-sensitive member-owned relationship. The relationship source resolved with an empty excerpt: only neutral relationship identity crossed, while relationship notes and field-state inference remained withheld. Both receiving forms remained blank. A bounded persistence witness created one temporary Change and one temporary Personal Decision; each received exactly one relationship-sourced crossing row and both target detail surfaces showed Where this began → Relationship → Return to source. The temporary targets and crossing rows were deleted; residue verified at zero.
+  residue verified at zero. Production was not touched. A second authenticated local witness extended the same law to Ideas using one temporary Idea explicitly labelled SAFE TO DELETE, with one member-authored Shift block and one member-authored Decision block. Shift→Changes and Decision→Personal Decisions both displayed Ideas provenance while target meaning fields remained blank. The inverse subtype probes were refused with 404 Source not available, proving that a Decision block cannot enter the Shift crossing and a Shift block cannot enter the Decision crossing. The temporary Idea and both blocks were then deleted; residue verified at zero. A third authenticated local witness then exercised Relationships→Changes and Relationships→Personal Decisions using an existing non-sensitive member-owned relationship. The relationship source resolved with an empty excerpt: only neutral relationship identity crossed, while relationship notes and field-state inference remained withheld. Both receiving forms remained blank. A bounded persistence witness created one temporary Change and one temporary Personal Decision; each received exactly one relationship-sourced crossing row and both target detail surfaces showed Where this began → Relationship → Return to source. The temporary targets and crossing rows were deleted; residue verified at zero. A fourth authenticated local witness then exercised Relationships→Journal from the actual Relationship UI doorway. Journal opened directly into its writing state with Relationship provenance visible and an empty textarea. A temporary Journal entry explicitly labelled SAFE TO DELETE was kept through the governed Journal API; the Journal row and exactly one relationship-write-journal crossing row were created atomically. Reopening that exact entry displayed Where this began → Relationship → Return to source. Desktop and mobile evidence were captured. The temporary Journal entry and crossing row were deleted; residue verified at zero.
 ---
 
 # Facet Crossings — Experience Contract
@@ -70,6 +75,7 @@ The durable crossing slice remains deliberately narrow:
 | Idea Decision block | **Take this decision forward** | Personal Decisions |
 | Relationship | **Something is changing here** | Changes |
 | Relationship | **There is a choice here** | Personal Decisions |
+| Relationship | **Write about this** | Journal |
 
 These are member-explicit crossings only.
 
@@ -104,6 +110,15 @@ The following remain for the member to author in the receiving room:
 - what is at stake;
 - state and time pressure.
 
+### Journal
+
+- every word of the entry;
+- whether the entry is Day or Dream;
+- optional place;
+- whether anything is kept at all.
+
+A Relationship may accompany the blank page as provenance. It does not seed, summarize, or author the Journal text.
+
 A source may have inspired those things. It is not evidence that the system knows them.
 
 ## The receiving gesture
@@ -115,6 +130,10 @@ The receiver says, quietly:
 or
 
 > **Came with you from Reflections**
+
+or
+
+> **Came with you from Relationships**
 
 and then:
 
@@ -188,7 +207,7 @@ Technical readability between subsystems is not crossing authority.
 
 For Ideas, the doorway is available only on the member-authored structural block that already names the relevant kind of movement: a Shift may offer Changes; a Decision may offer Personal Decisions. Notes and MAIA reflections do not receive these gestures.
 
-For Relationships, only the member-owned relationship identity may accompany the crossing. Relationship notes are withheld because the current schema does not prove their authorship. Field-tone analysis, inferred pattern labels, unresolved-thread analysis, observer-generated material, and claims about the other person's interiority do not cross.
+For Relationships, only the member-owned relationship identity may accompany the crossing. Relationship notes are withheld because the current schema does not prove their authorship. Field-tone analysis, inferred pattern labels, unresolved-thread analysis, observer-generated material, and claims about the other person's interiority do not cross. In Journal, the page remains blank until the member writes; keeping the entry and recording the Relationship → Journal relation are one transaction.
 
 ## Failure modes
 
@@ -253,7 +272,6 @@ This slice does not automatically connect:
 - Changes → Decisions;
 - Decisions → Daily Anchor;
 - Changes → Practices;
-- Relationships → Journal;
 - Writing → Reflections;
 - any facet → Living Field projection;
 - cross-facet elemental or Spiralogic interpretation.
