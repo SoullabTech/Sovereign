@@ -45,3 +45,8 @@ Member experience and source evidence inform adjudication. Adjudicated contracts
 ## Resume command
 
 “Continue JARVIS-BECOMING-01. Read the cockpit and latest receipts, recheck canonical and local source identities, inspect the registered next Work Unit, and execute only the next authorized act. Do not infer authorization from this programme's existence.”
+
+
+## Founder direction added during programme establishment
+
+Read `TEMPORAL_FIELD_OF_BEING_ADDENDUM_2026-09-27.md` alongside the reconciliation docket. Kelly has defined Becoming as a synaptic field across has-been, is-being, and possible becoming, supporting MAIA's understanding of intentions and patterns across fractal facets and options. This requires distinguishing useful interpretive conversation from automatic memory or identity authorship. The constitution is unchanged; the expanded whole-House direction is recorded, not implemented. BECOMING-02R1 now includes reconciliation of this distinction, and BECOMING-06 must not be reduced to a visualization script. Existing registered planning packets and blockers are unchanged.
