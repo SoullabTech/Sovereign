@@ -26,18 +26,50 @@
  * that would move the member (chapters, Previous/Next) are reported via `onAct`.
  */
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { WRITE_COPY, WRITE_FIXTURE } from './fixtures';
+import type { WRITE_COPY } from './fixtures';
 
-type Fixture = typeof WRITE_FIXTURE;
 type Copy = typeof WRITE_COPY;
 
+export type WriteChapterView = {
+  id: string;
+  label: string;
+  title?: string;
+  status?: 'conflict' | 'error';
+};
+
+export type WriteRoomData = {
+  work: string;
+  heading: string;
+  chapters: ReadonlyArray<WriteChapterView>;
+  currentChapterId: string;
+  place: string;
+  title: string;
+  paragraphs: ReadonlyArray<string>;
+  heldParagraph?: number;
+  activeStatus?: 'conflict' | 'error';
+  /** Fixture may name a version; live A1 must omit the internal draft counter. */
+  version?: string;
+  saveState: string;
+  unsaved: string;
+};
+
+export type WriteRoomLivePorts = {
+  /** A1 is the authority when supplied; fixture mode leaves this absent. */
+  saveState?: string;
+  onEditBody?: (body: string) => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  onOpenChapter?: (chapterId: string) => void;
+};
+
 export type WriteRoomProps = {
-  fixture: Fixture;
+  fixture: WriteRoomData;
   copy: Copy;
   /** Full Canvas is owned by the room's host so the Shell can recede with it. */
   canvas: boolean;
   onCanvasChange: (canvas: boolean) => void;
   onAct?: (act: string) => void;
+  live?: WriteRoomLivePorts;
 };
 
 /** A saved selection, as live DOM positions inside the editor. */
@@ -48,11 +80,14 @@ function countWords(text: string): number {
   return t ? t.split(/\s+/).length : 0;
 }
 
-export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct }: WriteRoomProps) {
+export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }: WriteRoomProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const held = useRef<Held | null>(null);
-  const [saveState, setSaveState] = useState<string>(fixture.saveState);
+  const liveRef = useRef<WriteRoomLivePorts | undefined>(live);
+  liveRef.current = live;
+  const [localSaveState, setLocalSaveState] = useState<string>(fixture.saveState);
   const [words, setWords] = useState<number>(() => countWords(fixture.paragraphs.join(' ')));
+  const saveState = live?.saveState ?? localSaveState;
 
   // The editor's selection is remembered whenever it changes inside the editor.
   useEffect(() => {
@@ -84,9 +119,13 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct }: Writ
   // Opening state: the held passage is selected, the cursor at its end, focus in the editor.
   useLayoutEffect(() => {
     const ed = editorRef.current;
-    const p = ed?.querySelector<HTMLElement>('[data-held]');
+    if (!ed) return;
+    const p = ed.querySelector<HTMLElement>('[data-held]');
     const text = p?.firstChild;
-    if (!ed || !p || !text) return;
+    if (!p || !text) {
+      ed.focus({ preventScroll: true });
+      return;
+    }
     held.current = { anchorNode: text, anchorOffset: 0, focusNode: text, focusOffset: (text.textContent ?? '').length };
     restore();
   }, [restore]);
@@ -117,8 +156,10 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct }: Writ
   }, [canvas, leave]);
 
   const onEdited = useCallback(() => {
-    setSaveState(fixture.unsaved);
-    setWords(countWords(editorRef.current?.innerText ?? ''));
+    const body = editorRef.current?.innerText ?? '';
+    if (liveRef.current?.onEditBody) liveRef.current.onEditBody(body);
+    else setLocalSaveState(fixture.unsaved);
+    setWords(countWords(body));
   }, [fixture.unsaved]);
 
   // Keep the editor's focus when a control is pressed with the pointer.
@@ -143,12 +184,14 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct }: Writ
         <div className="fr-write-right">
           <div className="fr-write-state" data-write-state="" role="status" aria-live="polite">
             <span className="fr-write-saved" data-save-state="">
-              <i aria-hidden="true" data-dirty={saveState === fixture.saveState ? undefined : ''} />
+              <i aria-hidden="true" data-dirty={saveState === 'Saved' ? undefined : ''} />
               {saveState}
             </span>
-            <span className="fr-write-version" data-version="">
-              {fixture.version}
-            </span>
+            {fixture.version ? (
+              <span className="fr-write-version" data-version="">
+                {fixture.version}
+              </span>
+            ) : null}
           </div>
           <div className="fr-write-trail">
             {canvas ? null : (
@@ -164,7 +207,20 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct }: Writ
       <div className="fr-write-scroll">
         <div className="fr-write-page">
           <h1 className="fr-write-title">{fixture.title}</h1>
-          <Editor editorRef={editorRef} fixture={fixture} label={copy.editorLabel} onEdited={onEdited} />
+          {fixture.activeStatus === 'conflict' ? (
+            <p className="fr-write-ch-title" data-conflict-marker-section role="note">
+              Needs attention — this section was changed elsewhere. What you wrote here is kept on this page and has not been saved.
+            </p>
+          ) : null}
+          <Editor
+            key={fixture.currentChapterId}
+            editorRef={editorRef}
+            sectionId={fixture.currentChapterId}
+            paragraphs={fixture.paragraphs}
+            heldParagraph={fixture.heldParagraph}
+            label={copy.editorLabel}
+            onEdited={onEdited}
+          />
         </div>
       </div>
 
@@ -174,12 +230,22 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct }: Writ
         </span>
         {canvas ? null : (
           <nav className="fr-write-move" aria-label="Move through the manuscript">
-            <button type="button" data-move="previous" onMouseDown={keepFocus} onClick={() => onAct?.(`${copy.previous} section`)}>
+            <button
+              type="button"
+              data-move="previous"
+              onMouseDown={keepFocus}
+              onClick={() => liveRef.current?.onPrevious ? liveRef.current.onPrevious() : onAct?.(`${copy.previous} section`)}
+            >
               <Arrow dir="left" />
               {copy.previous}
             </button>
             <span aria-hidden="true" className="fr-write-move-sep" />
-            <button type="button" data-move="next" onMouseDown={keepFocus} onClick={() => onAct?.(`${copy.next} section`)}>
+            <button
+              type="button"
+              data-move="next"
+              onMouseDown={keepFocus}
+              onClick={() => liveRef.current?.onNext ? liveRef.current.onNext() : onAct?.(`${copy.next} section`)}
+            >
               {copy.next}
               <Arrow dir="right" />
             </button>
@@ -197,20 +263,30 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct }: Writ
  */
 const Editor = memo(function Editor({
   editorRef,
-  fixture,
+  sectionId,
+  paragraphs,
+  heldParagraph,
   label,
   onEdited,
 }: {
   editorRef: React.RefObject<HTMLDivElement>;
-  fixture: Fixture;
+  sectionId: string;
+  paragraphs: ReadonlyArray<string>;
+  heldParagraph?: number;
   label: string;
   onEdited: () => void;
 }) {
+  /* The editor owns the visible DOM for the lifetime of one section. Parent
+     rerenders from A1 status changes must never rewrite text under the cursor.
+     A section change remounts this component via its key and receives that
+     section's newest A1 body as the new initial snapshot. */
+  const initial = useRef({ paragraphs, heldParagraph }).current;
   return (
     <div
       ref={editorRef}
       className="fr-write-editor"
       data-write-editor=""
+      data-section-id={sectionId}
       role="textbox"
       aria-multiline="true"
       aria-label={label}
@@ -220,8 +296,8 @@ const Editor = memo(function Editor({
       spellCheck
       onInput={onEdited}
     >
-      {fixture.paragraphs.map((text, i) => (
-        <p key={i} data-held={i === fixture.heldParagraph ? '' : undefined}>
+      {initial.paragraphs.map((text, i) => (
+        <p key={i} data-held={i === initial.heldParagraph ? '' : undefined}>
           {text}
         </p>
       ))}
@@ -230,7 +306,15 @@ const Editor = memo(function Editor({
 });
 
 /** The manuscript context at rest: the Work's chapters, the current one marked. */
-export function WriteManuscriptRail({ fixture, onAct }: { fixture: Fixture; onAct?: (act: string) => void }) {
+export function WriteManuscriptRail({
+  fixture,
+  onAct,
+  onOpenChapter,
+}: {
+  fixture: WriteRoomData;
+  onAct?: (act: string) => void;
+  onOpenChapter?: (chapterId: string) => void;
+}) {
   return (
     <div className="fr-write-rail">
       <p className="fr-write-rail-head">{fixture.heading}</p>
@@ -242,12 +326,20 @@ export function WriteManuscriptRail({ fixture, onAct }: { fixture: Fixture; onAc
               <button
                 type="button"
                 data-chapter={c.id}
+                data-section-status={c.status}
                 aria-current={current ? 'true' : undefined}
+                aria-label={c.status === 'conflict' ? `${c.label} — Needs attention: changed elsewhere` : c.status === 'error' ? `${c.label} — Save unavailable` : undefined}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => (current ? undefined : onAct?.(`Open ${c.label} — ${c.title}`))}
+                onClick={() => {
+                  if (current) return;
+                  if (onOpenChapter) onOpenChapter(c.id);
+                  else onAct?.(`Open ${c.label}${c.title ? ` — ${c.title}` : ''}`);
+                }}
               >
                 <span className="fr-write-ch-no">{c.label}</span>
-                <span className="fr-write-ch-title">{c.title}</span>
+                {c.title ? <span className="fr-write-ch-title">{c.title}</span> : null}
+                {c.status === 'conflict' ? <span className="fr-write-ch-title" data-conflict-marker>Needs attention</span> : null}
+                {c.status === 'error' ? <span className="fr-write-ch-title" data-error-marker>Save unavailable</span> : null}
               </button>
             </li>
           );
