@@ -8,13 +8,15 @@ import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { useLivingWorks } from '../useLivingWorks';
 import { useMemberIdentity } from '../useMemberIdentity';
 import { currentWork, resolveWorkContext } from '../workContext';
-import { DevelopRoom, THEMES_DEVELOP_CAPABILITIES, type LensId } from '../flagship/DevelopReview';
+import { DevelopRoom, LIVE_DEVELOP_CAPABILITIES, type LensId } from '../flagship/DevelopReview';
+import type { DevelopLensLiveState } from '../flagship/DevelopLensReading';
 import { StudioShell, type MemberIdentity, type ProjectIdentity } from '../flagship/StudioChrome';
 import type { NavActions } from '../flagship/flagshipTokens';
 import { factsOnlyDevelopOverview } from './liveDevelopOverview';
 import { fetchLiveThemes, mutateTheme } from '@/lib/writersStudio/themes/client';
 import type { LiveThemesPayload, ThemeMutation } from '@/lib/writersStudio/themes/liveTypes';
-import { requestDevelopmentalReading } from '@/lib/writersStudio/developClient';
+import { fetchReading, fetchReadingSummaries, requestDevelopmentalReading } from '@/lib/writersStudio/developClient';
+import { isLiveReadingLens, lensReadingChoices, projectLiveDevelopReading, type LiveReadingLens } from '@/lib/writersStudio/develop/liveLens';
 
 interface ContextReady {
   state: 'section_aware';
@@ -26,6 +28,14 @@ interface ContextReady {
 }
 type ContextPayload = ContextReady | { state: 'no_draft' | 'continuous'; manuscriptId: string; title: string | null };
 type Phase = 'loading' | 'ready' | 'unauthorized' | 'unavailable';
+
+const DEVELOP_LENS_IDS: readonly LensId[] = [
+  'structure', 'development', 'arc', 'continuity', 'themes', 'coherence', 'voice', 'reader',
+];
+
+function requestedDevelopLens(value: string): LensId | 'overview' {
+  return (DEVELOP_LENS_IDS as readonly string[]).includes(value) ? value as LensId : 'overview';
+}
 
 function memberForShell(identity: ReturnType<typeof useMemberIdentity>): MemberIdentity | undefined {
   if (identity.phase !== 'ready' || !identity.name?.trim()) return undefined;
@@ -41,13 +51,18 @@ export default function FlagshipDevelopHost() {
   const router = useRouter();
   const manuscriptId = params?.get('m') ?? null;
   const sectionId = params?.get(SECTION_PARAM) ?? null;
+  const selectedReadingId = params?.get('reading') ?? null;
   const requestedLens = params?.get('lens') ?? 'overview';
-  const lens: LensId | 'overview' = requestedLens === 'structure' || requestedLens === 'themes' ? requestedLens : 'overview';
+  const lens = requestedDevelopLens(requestedLens);
+  const readingLens: LiveReadingLens | null = lens !== 'overview' && isLiveReadingLens(lens) ? lens : null;
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
   const [themes, setThemes] = useState<LiveThemesPayload | null | undefined>(undefined);
   const [themeBusy, setThemeBusy] = useState(false);
   const [themeError, setThemeError] = useState<string | null>(null);
+  const [readingState, setReadingState] = useState<DevelopLensLiveState>({ kind: 'idle' });
+  const [readingBusy, setReadingBusy] = useState(false);
+  const [readingError, setReadingError] = useState<string | null>(null);
   const { phase: worksPhase, works } = useLivingWorks();
   const identity = useMemberIdentity();
 
@@ -67,6 +82,40 @@ export default function FlagshipDevelopHost() {
   useEffect(() => {
     if (lens === 'themes' && manuscriptId) void loadThemes();
   }, [lens, manuscriptId, loadThemes]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!manuscriptId || !readingLens) {
+      setReadingState({ kind: 'idle' });
+      setReadingError(null);
+      return () => { cancelled = true; };
+    }
+    setReadingState({ kind: 'loading' });
+    setReadingError(null);
+    void (async () => {
+      const listed = await fetchReadingSummaries(manuscriptId);
+      if (cancelled) return;
+      if (!listed.ok) { setReadingState({ kind: 'unavailable' }); return; }
+      const choices = lensReadingChoices(listed.readings, readingLens);
+      if (!selectedReadingId) { setReadingState({ kind: 'choices', readings: choices }); return; }
+      const summary = choices.find((item) => item.id === selectedReadingId);
+      if (!summary) { setReadingState({ kind: 'unavailable' }); return; }
+      const fetched = await fetchReading(manuscriptId, selectedReadingId);
+      if (cancelled) return;
+      if (!fetched.ok) { setReadingState({ kind: 'unavailable' }); return; }
+      const projected = projectLiveDevelopReading(readingLens, fetched.payload);
+      if (!projected.ok
+        || projected.reading.id !== summary.id
+        || projected.reading.outcome !== summary.outcome
+        || projected.reading.frozenAt !== summary.frozenAt
+        || projected.reading.observations.length !== summary.observationCount) {
+        setReadingState({ kind: 'unavailable' });
+        return;
+      }
+      setReadingState({ kind: 'ready', reading: projected.reading });
+    })();
+    return () => { cancelled = true; };
+  }, [manuscriptId, readingLens, selectedReadingId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,8 +182,8 @@ export default function FlagshipDevelopHost() {
     ? undefined
     : { workTitle: view.work, ...(work?.form ? { workKind: work.form } : {}) };
   const onLens = (nextLens: LensId | 'overview') => {
-    if (nextLens !== 'overview' && nextLens !== 'structure' && nextLens !== 'themes') return;
     const next = new URLSearchParams(params?.toString() ?? '');
+    next.delete('reading');
     if (nextLens === 'overview') next.delete('lens');
     else next.set('lens', nextLens);
     const q = next.toString();
@@ -198,6 +247,33 @@ export default function FlagshipDevelopHost() {
       void runThemeMutation({ action: 'restore-theme', themeId: theme.id }),
   };
 
+  const selectReading = (readingId: string | null) => {
+    const next = new URLSearchParams(params?.toString() ?? '');
+    if (readingId) next.set('reading', readingId);
+    else next.delete('reading');
+    router.push(`${pathname ?? '/writers-studio/develop'}?${next.toString()}`);
+  };
+  const commissionReading = async () => {
+    if (!readingLens || readingBusy) return;
+    setReadingBusy(true);
+    setReadingError(null);
+    const out = await requestDevelopmentalReading(context.manuscriptId, readingLens);
+    if (!out.ok) {
+      setReadingError(`MAIA did not create this reading (${out.refusal}).`);
+      setReadingBusy(false);
+      return;
+    }
+    setReadingBusy(false);
+    selectReading(out.readingId);
+  };
+  const readingActions = readingLens ? {
+    busy: readingBusy,
+    error: readingError,
+    onChoose: (readingId: string) => selectReading(readingId),
+    onChooseAnother: () => selectReading(null),
+    onCommission: () => void commissionReading(),
+  } : undefined;
+
   return (
     <StudioShell
       current="develop"
@@ -210,12 +286,15 @@ export default function FlagshipDevelopHost() {
       <DevelopRoom
         view={view}
         lens={lens}
-        capabilities={THEMES_DEVELOP_CAPABILITIES}
+        capabilities={LIVE_DEVELOP_CAPABILITIES}
         onLens={onLens}
         structureNavigation={structureNavigation}
         themes={themes}
         themeActions={themeActions}
         themeNavigation={themeNavigation}
+        readingState={readingState}
+        readingActions={readingActions}
+        readingNavigation={themeNavigation}
       />
     </StudioShell>
   );

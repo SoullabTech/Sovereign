@@ -640,3 +640,21 @@ a.fs-themecell:hover{background:var(--surface-active)}
   .fs-themedetails input{min-width:0;width:100%}
   .fs-themeacts>.fs-btn,.fs-themeintroacts>.fs-btn{width:100%}
 }
+
+/* ── DEVELOP · SAVED READING LENSES (D5D–D5H) ─────────────────────── */
+.fs-readingpage{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:18px;min-width:0}
+.fs-readingchoices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px;margin-top:12px}
+.fs-readingchoice{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;
+  border:1px solid var(--rule);border-radius:7px;background:var(--ground-work);color:var(--text-primary);
+  font:inherit;padding:12px 14px;cursor:pointer;min-height:58px}
+.fs-readingchoice:hover{background:var(--surface-active);border-color:var(--action-line)}
+.fs-readingchoice span{font-family:var(--serif);font-size:.875rem}
+.fs-readingchoice small{font-size:.6875rem;color:var(--text-muted)}
+.fs-readingmeta{display:flex;flex-direction:column;gap:10px}
+.fs-readingobs{display:flex;flex-direction:column;gap:10px}
+.fs-readinglimits{display:flex;flex-direction:column;gap:4px}
+.fs-readinglimits .fs-limit{margin:0}
+@media (max-width:620px){
+  .fs-readingchoices{grid-template-columns:1fr}
+  .fs-readingchoice{width:100%}
+}

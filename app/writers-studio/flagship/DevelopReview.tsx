@@ -26,6 +26,8 @@ import {
   type CitationState, type Freshness, type LensAvailability, type ReviewScope, type WorkChange,
 } from '../../../lib/writersStudio/studio/reading';
 import { ManuscriptContext, OwnObservation, StaleReading, type ContextParagraph } from './ReviewPanels';
+import { DevelopLensReadingPanel, type DevelopLensLiveState, type DevelopLensReadingActions, type DevelopLensReadingNavigation } from './DevelopLensReading';
+import { isLiveReadingLens } from '../../../lib/writersStudio/develop/liveLens';
 import type { ReviewDiscussionState } from '../../../lib/writersStudio/rebuild/reviewDiscuss';
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -306,6 +308,12 @@ export const THEMES_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.freeze({
   overview: true,
   lenses: ['structure', 'themes'] as const,
 });
+export const LIVE_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.freeze({
+  askMaia: false,
+  facet: false,
+  overview: true,
+  lenses: DEVELOP_LENS_META.map((lens) => lens.id),
+});
 
 /** ⭐ No empty state. Either a reading exists and said nothing, or it does not exist. */
 function LensRow({ l, canCommission = true, readingAttached = true }: { l: LensStanding; canCommission?: boolean; readingAttached?: boolean }) {
@@ -352,13 +360,16 @@ export interface DevelopThemeNavigation {
   onGo?(sectionId: string, href: string): void;
 }
 
-export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabilities = CONTROLLED_DEVELOP_CAPABILITIES, onLens, structureNavigation, themes, themeActions, themeNavigation }: {
+export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabilities = CONTROLLED_DEVELOP_CAPABILITIES, onLens, structureNavigation, themes, themeActions, themeNavigation, readingState, readingActions, readingNavigation }: {
   view: DevelopView; lens?: LensId | 'overview'; facet?: Facet;
   capabilities?: DevelopCapabilities; onLens?: (lens: LensId | 'overview') => void;
   structureNavigation?: DevelopStructureNavigation;
   themes?: LiveThemesPayload | null;
   themeActions?: DevelopThemesActions;
   themeNavigation?: DevelopThemeNavigation;
+  readingState?: DevelopLensLiveState;
+  readingActions?: DevelopLensReadingActions;
+  readingNavigation?: DevelopLensReadingNavigation;
 }) {
   const cov = view.coverage;
   const tabMeta: readonly { readonly id: LensId; readonly plain: string; readonly term: string }[] =
@@ -394,6 +405,16 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabil
           themes={themes}
           actions={themeActions}
           navigation={themeNavigation}
+        />
+      ) : lens !== 'overview' && isLiveReadingLens(lens) ? (
+        <DevelopLensReadingPanel
+          kind={view.kind}
+          lens={lens}
+          plain={DEVELOP_LENS_META.find((item) => item.id === lens)?.plain ?? lens}
+          term={DEVELOP_LENS_META.find((item) => item.id === lens)?.term ?? lens}
+          state={readingState ?? { kind: 'idle' }}
+          actions={readingActions}
+          navigation={readingNavigation}
         />
       ) : (
       <div className="fs-pane" data-stage="develop">

@@ -163,11 +163,10 @@ function lensId(lens: DevelopmentalLens): LensId {
   }
 }
 
-function developDomain(lens: DevelopmentalLens): DevelopDomain | null {
+function developDomain(lens: DevelopmentalLens): DevelopDomain {
   switch (lens) {
     case 'development': case 'structure': case 'continuity': case 'arc':
-    case 'themes': case 'voice': case 'reader': return lens;
-    case 'coherence': return null;
+    case 'themes': case 'voice': case 'coherence': case 'reader': return lens;
   }
 }
 
@@ -223,9 +222,6 @@ function buildFinding(
   if (!sectionId) return { ok: false, reason: 'malformed_payload', detail: `${o.observationId} position is outside the frozen topology` };
 
   const domain = developDomain(o.lens);
-  if (domain === null) {
-    return { ok: false, reason: 'presentation_refused', detail: `${o.observationId}: coherence is not representable in frozen DevelopDomain` };
-  }
   const ids = new Set(o.evidenceRefs.flatMap(sectionIds));
   const crossWork = ids.size > 1 || o.evidenceRefs.some((r) => r.kind.startsWith('structure'));
   const evidence = o.evidenceRefs.map((r) => describeRef(r, reading.readState, sections));
