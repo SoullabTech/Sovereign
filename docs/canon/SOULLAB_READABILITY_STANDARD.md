@@ -109,4 +109,4 @@ The shared code tokens live at:
 
 `lib/house/readability.ts`
 
-Saved Readings is the first House surface explicitly conformed to this standard after founder review on 2026-09-27.
+Saved Readings was the first House surface explicitly conformed to this standard after founder review on 2026-09-27. Divination then adopted a shared semantic type map at `lib/oracle/divinationTypography.ts`, governing equivalent I Ching, Tarot, Runes, and embedded MAIA fields without flattening their distinct visual identities.
