@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
+import ChangeRoom from '@/components/maia/changes/ChangeRoom';
 import type { FacetCarryRef } from '@/components/house/FacetCarryNotice';
 
 export default function ChangesThresholdPage() {
@@ -32,6 +33,10 @@ export default function ChangesThresholdPage() {
   }, [searchParams]);
 
   if (!memberId) return <main style={{minHeight:'100vh',background:'#15120f',color:'#b9aa98',display:'grid',placeItems:'center'}}><Link href="/signin" style={{color:'inherit'}}>Sign in to enter Changes →</Link></main>;
+
+  if (initialChangeId && !carrySourceRef) {
+    return <ChangeRoom changeId={initialChangeId} />;
+  }
 
   return (
     <ChangesSheet
