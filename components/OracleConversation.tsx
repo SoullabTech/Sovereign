@@ -6722,7 +6722,17 @@ I'm not sure what I'm feeling yet.`;
           setTimeout(() => {
             console.log('✅ [NON-STREAM] Cooldown complete - NOW releasing mic');
 
-            // NOW unpause mic - this allows ContinuousConversation to restart
+            // A completed VOICE turn carries durable hands-free intent unless
+            // the member explicitly exited voice. Child capture recovery is not
+            // allowed to silently downgrade that intent to PUSH_TO_TALK.
+            if (lastSendWasVoiceRef.current) {
+              setIsHandsFreeMode(true);
+              voiceMicRef.current?.setHandsFree(true);
+            }
+
+            // NOW unpause mic - this allows ContinuousConversation to restart.
+            // Hands-free authority is restored synchronously ABOVE before the
+            // speaking->idle transition can trigger the child's restart effect.
             setIsMicrophonePaused(false);
             setIsMuted(false); // Ensure mic is unmuted
             console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
@@ -8776,7 +8786,7 @@ I'm not sure what I'm feeling yet.`;
                   // Stop listening - user explicitly exiting voice mode
                   console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
                   setIsMuted(true);
-                  // Note: isHandsFreeMode stays true (default) — ContinuousConversation refs reinitialize on remount
+                  lastSendWasVoiceRef.current = false;
                   voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
                   console.log('✅ Voice stopped successfully (user exit mode)');
                 }
@@ -10811,6 +10821,7 @@ I'm not sure what I'm feeling yet.`;
             if (!isMuted) {
               // Turn mic OFF - user explicitly toggling off
               setIsMuted(true);
+              lastSendWasVoiceRef.current = false;
               voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
               console.log('🔇 Microphone OFF (user toggle)');
             } else {

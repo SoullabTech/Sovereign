@@ -18,17 +18,38 @@ describe('non-streaming hands-free resume after MAIA speech', () => {
     expect(block).not.toContain("voiceSession.state.phase === 'listening'");
   });
 
-  it('releases turn-complete latches and requests restart under hands-free authority', () => {
+  it('restores durable voice intent before releasing the mic, then requests restart', () => {
     const start = source.indexOf("console.log('✅ [NON-STREAM] Cooldown complete - NOW releasing mic')");
     const end = source.indexOf('}, cooldownMs); // Wait for echo suppression cooldown', start);
     const block = source.slice(start, end);
 
+    expect(block).toContain('if (lastSendWasVoiceRef.current)');
+    expect(block).toContain('setIsHandsFreeMode(true)');
+    expect(block).toContain('voiceMicRef.current?.setHandsFree(true)');
     expect(block).toContain('isProcessingRef.current = false');
     expect(block).toContain('isRespondingRef.current = false');
     expect(block).toContain('isAudioPlayingRef.current = false');
     expect(block).toContain('isMicrophonePausedRef.current = false');
-    expect(block).toContain('voiceMicRef.current?.isHandsFree ?? true');
     expect(block).toContain("voiceSession.methods.startListening('non_stream_restart_attempt')");
+
+    const restore = block.indexOf('voiceMicRef.current?.setHandsFree(true)');
+    const release = block.indexOf('setIsMicrophonePaused(false)');
+    expect(restore).toBeGreaterThan(-1);
+    expect(release).toBeGreaterThan(restore);
+  });
+});
+
+describe('explicit voice exit revokes durable auto-listen intent', () => {
+  it('clears voice intent on holoflower exit and mic-off toggle', () => {
+    const holoflowerStart = source.indexOf("console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...')");
+    const holoflowerBlock = source.slice(holoflowerStart, holoflowerStart + 420);
+    expect(holoflowerStart).toBeGreaterThan(-1);
+    expect(holoflowerBlock).toContain('lastSendWasVoiceRef.current = false');
+
+    const micOffStart = source.indexOf('// Turn mic OFF - user explicitly toggling off');
+    const micOffBlock = source.slice(micOffStart, micOffStart + 320);
+    expect(micOffStart).toBeGreaterThan(-1);
+    expect(micOffBlock).toContain('lastSendWasVoiceRef.current = false');
   });
 });
 
