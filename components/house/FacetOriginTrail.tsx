@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { SymbolicCarryNotice } from '@/components/house/SymbolicCarryNotice';
+import { readability } from '@/lib/house/readability';
 
 type TargetFacet = 'changes' | 'decisions' | 'journal' | 'anchor' | 'reflections';
 
@@ -57,7 +58,7 @@ export function FacetOriginTrail({
 
   return (
     <section className={className} aria-label="Where this began">
-      <p className={`text-[10px] uppercase tracking-[0.18em] mb-2 ${headingTone}`}>
+      <p className={`${readability.marker} mb-2 ${headingTone}`}>
         Where this began
       </p>
       <div className="space-y-3">
@@ -74,7 +75,7 @@ export function FacetOriginTrail({
                 />
               ) : (
               <>
-                <p className={`text-xs ${sourceTone}`}>
+                <p className={`${readability.metadata} ${sourceTone}`}>
                   {origin.source.facet === 'journal'
                     ? 'Journal'
                     : origin.source.facet === 'divination'
@@ -89,17 +90,17 @@ export function FacetOriginTrail({
                               ? 'Decision'
                               : 'Reflection'}
                 </p>
-                <p className={`text-sm mt-1 ${labelTone}`}>{origin.source.label}</p>
+                <p className={`${readability.itemTitle} mt-1 ${labelTone}`}>{origin.source.label}</p>
                 <a
                   href={origin.source.returnHref}
-                  className="inline-block mt-1 text-[11px] text-amber-500/65 hover:text-amber-400"
+                  className={`${readability.action} inline-flex min-h-11 items-center mt-1 text-amber-500/70 hover:text-amber-400`}
                 >
                   Return to source →
                 </a>
               </>
               )
             ) : (
-              <p className={`text-xs ${missingTone}`}>
+              <p className={`${readability.body} ${missingTone}`}>
                 The original source is no longer available. This {
                   targetFacet === 'changes' ? 'Change' : targetFacet === 'decisions' ? 'Decision' : targetFacet === 'anchor' ? 'Daily Anchor' : 'Reflection'
                 } remains.

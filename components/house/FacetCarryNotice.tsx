@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { readability } from '@/lib/house/readability';
 
 type SourceFacet = 'journal' | 'dream' | 'reflections' | 'ideas' | 'relationships' | 'changes' | 'decisions' | 'divination';
 type TargetFacet = 'changes' | 'decisions' | 'journal' | 'anchor';
@@ -80,8 +81,8 @@ export function FacetCarryNotice({
   if (failed) {
     return (
       <div className={`border-l pl-4 py-1 ${paper ? 'border-[#b7aa95]/45' : 'border-stone-600/60'}`}>
-        <p className={`text-[11px] uppercase tracking-[0.18em] ${quiet}`}>Source unavailable</p>
-        <p className={`text-xs mt-1 ${quiet}`}>
+        <p className={`${readability.marker} ${quiet}`}>Source unavailable</p>
+        <p className={`${readability.body} mt-1 ${quiet}`}>
           Nothing has crossed. Return to the source and try again.
         </p>
       </div>
@@ -91,27 +92,27 @@ export function FacetCarryNotice({
   if (!source) {
     return (
       <div className={`border-l pl-4 py-1 ${paper ? 'border-[#c7bba6]/40' : 'border-stone-700/60'}`} aria-label="Loading carried source">
-        <p className={`text-xs ${quiet}`}>Carrying the source with you…</p>
+        <p className={`${readability.body} ${quiet}`}>Carrying the source with you…</p>
       </div>
     );
   }
 
   return (
     <aside className={`border-l pl-4 py-1 ${border}`} aria-label="Carried source">
-      <p className={`text-[10px] uppercase tracking-[0.18em] ${heading}`}>
+      <p className={`${readability.marker} ${heading}`}>
         Came with you from {source.facet === 'journal' ? 'Journal' : source.facet === 'dream' ? 'Dream' : source.facet === 'divination' ? 'Divination' : source.facet === 'reflections' ? 'Reflections' : source.facet === 'relationships' ? 'Relationships' : source.facet === 'changes' ? 'Changes' : source.facet === 'decisions' ? 'Decisions' : 'Ideas'}
       </p>
-      <p className={`text-sm mt-1 ${label}`}>{source.label}</p>
+      <p className={`${readability.itemTitle} mt-1 ${label}`}>{source.label}</p>
       {source.excerpt ? (
-        <p className={`text-xs leading-relaxed mt-2 line-clamp-3 ${quiet}`}>{source.excerpt}</p>
+        <p className={`${readability.reading} mt-2 line-clamp-3 ${quiet}`}>{source.excerpt}</p>
       ) : null}
       <a
         href={source.returnHref}
-        className={`inline-block mt-2 text-[11px] ${returnTone}`}
+        className={`${readability.action} inline-flex min-h-11 items-center mt-2 ${returnTone}`}
       >
         Return to source →
       </a>
-      <p className={`text-[11px] mt-3 ${paper ? 'text-[#8b8173]' : 'text-stone-600'}`}>
+      <p className={`${readability.metadata} mt-3 ${paper ? 'text-[#8b8173]' : 'text-stone-500'}`}>
         The source stays where it is. You decide what belongs here.
       </p>
     </aside>

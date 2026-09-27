@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { readability } from '@/lib/house/readability';
 
 type EpistemicClass =
   | 'source_fact'
@@ -84,8 +85,8 @@ export function SymbolicCarryNotice({
   if (failed) {
     return (
       <div className="border-l border-stone-400/35 pl-4 py-1">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-stone-500">Source unavailable</p>
-        <p className="mt-1 text-xs text-stone-500">Nothing has crossed. Return to the saved reading and try again.</p>
+        <p className={`${readability.marker} text-stone-500`}>Source unavailable</p>
+        <p className={`${readability.body} mt-1 text-stone-500`}>Nothing has crossed. Return to the saved reading and try again.</p>
       </div>
     );
   }
@@ -93,7 +94,7 @@ export function SymbolicCarryNotice({
   if (!source) {
     return (
       <div className="border-l border-stone-300/35 pl-4 py-1" aria-label="Loading symbolic source">
-        <p className="text-xs text-stone-500">Bringing the saved reading into view…</p>
+        <p className={`${readability.body} text-stone-500`}>Bringing the saved reading into view…</p>
       </div>
     );
   }
@@ -108,43 +109,70 @@ export function SymbolicCarryNotice({
 
   return (
     <aside className="border-l border-[#b9aa8f]/45 pl-4 py-1" aria-label="Symbolic source">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-[#8d7350]">
+      <p className={`${readability.marker} text-[#8d7350]`}>
         {mode === 'carry' ? 'Came with you from Divination' : 'Divination'}
       </p>
-      <p className="mt-1 text-sm text-[#4f493f]">{source.label}</p>
+      <p className={`${readability.itemTitle} mt-1 text-[#4f493f]`}>{source.label}</p>
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-4 space-y-3">
         {ordered.map((kind) => {
           const fields = source.fields.filter((field) => field.epistemicClass === kind);
           if (fields.length === 0) return null;
+
+          const content = (
+            <div className="mt-2 space-y-3">
+              {fields.map((field, index) => (
+                <div key={field.label + index}>
+                  <p className={`${readability.metadata} text-[#8b8173]`}>{field.label}</p>
+                  <p className={`${readability.reading} mt-0.5 whitespace-pre-line text-[#625a4f]`}>
+                    {field.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          );
+
+          if (kind === 'source_fact') {
+            return (
+              <section key={kind}>
+                <p className={`${readability.marker} text-[#8d7350]/80`}>
+                  {CLASS_LABEL[kind]}
+                </p>
+                {content}
+              </section>
+            );
+          }
+
           return (
-            <section key={kind}>
-              <p className="text-[9px] uppercase tracking-[0.16em] text-[#8d7350]/80">
-                {CLASS_LABEL[kind]}
-              </p>
-              <div className="mt-1 space-y-2">
-                {fields.map((field, index) => (
-                  <div key={field.label + index}>
-                    <p className="text-[10px] text-[#8b8173]">{field.label}</p>
-                    <p className="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-[#625a4f]">
-                      {field.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
+            <details
+              key={kind}
+              className="group border-t border-[#b9aa8f]/25 pt-3"
+            >
+              <summary
+                className={`${readability.metadata} flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-[#7c6d5c] marker:content-none`}
+              >
+                <span>{CLASS_LABEL[kind]}</span>
+                <span
+                  aria-hidden="true"
+                  className="text-[#9a856b] transition-transform group-open:rotate-45"
+                >
+                  +
+                </span>
+              </summary>
+              {content}
+            </details>
           );
         })}
       </div>
       <a
         href={source.returnHref}
-        className="mt-4 inline-block text-[11px] text-[#8d7350] hover:text-[#6f5638]"
+        className={`${readability.action} mt-4 inline-flex min-h-11 items-center text-[#8d7350] hover:text-[#6f5638]`}
       >
         Return to exact reading →
       </a>
 
       {mode === 'carry' ? (
-        <p className="mt-3 text-[11px] text-[#8b8173]">
+        <p className={`${readability.metadata} mt-3 text-[#8b8173]`}>
           The reading stays where it is. These are different kinds of context; your writing remains yours.
         </p>
       ) : null}

@@ -14,9 +14,11 @@ principles:
   - SOULLAB_THEME §3 — accent is never decorative (ember marks one gesture per state)
   - SOULLAB_THEME §4 — variation by function; the field stays continuous
   - MAIA_OATH — no guru stance; MAIA offers reflection, never authority
+  - SOULLAB_READABILITY_STANDARD — literary quiet is carried by space, contrast and weight rather than undersized meaningful text
 reference_surfaces:
   - docs/design/references/JOURNAL_EXPERIENTIAL_REFERENCE_2026-08-10.md
   - docs/design/references/JOURNAL_SLICE1_IMPLEMENTATION_CONTRACT.md
+  - docs/canon/SOULLAB_READABILITY_STANDARD.md
 shared_with_house: House token layer (--sl-* field/surface/signal hierarchy) · provenance voice · gesture language in human verbs · quiet ember accent · the Journal marker as room orientation
 distinct_to_room: writing is the destination, not a control surface — the room opens on a question rather than an inventory, holds one long readable measure for both composing and reading, and lets MAIA appear only after the member has kept something
 screenshot_desktop: docs/design/contracts/screenshots/journal-room-desktop.png

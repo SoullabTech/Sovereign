@@ -8,8 +8,10 @@ principles:
   - SOULLAB_LIVING_ORIENTATION_SYSTEM — source identity survives every crossing and return is part of the crossing
   - MAIA_OATH — symbolic material may deepen recognition without becoming determination or hidden memory
   - INHABITABLE_ARCHITECTURE_STANDARD — returning from another facet must reopen the actual source object, not a generic archive
+  - SOULLAB_READABILITY_STANDARD — meaningful reading, metadata, and actions remain comfortable at normal zoom; quietness is not achieved by tiny text
 reference_surfaces:
   - docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md
+  - docs/canon/SOULLAB_READABILITY_STANDARD.md
   - docs/design/contracts/facet-crossings.md
   - components/reflections/ReflectionDetail.tsx
 shared_with_house: explicit provenance, source custody, reversible movement between facets, and member-visible crossing gestures

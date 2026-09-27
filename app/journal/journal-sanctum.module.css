@@ -83,6 +83,13 @@
   animation: journalWatermarkBreath 18s ease-in-out infinite;
 }
 .book :global(main) {
+  /* Journal is bounded by the physical book, not the viewport. A global
+     landscape rule sets main to 100vw; without this local correction the
+     writing spine drifts right and is progressively clipped as the browser
+     widens beyond the 980px book. */
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
   min-height: calc(100svh - clamp(36px, 6vw, 96px)) !important;
   background:
     linear-gradient(90deg, rgba(102,72,42,.035), transparent 8%, transparent 94%, rgba(102,72,42,.025)),

@@ -26,12 +26,12 @@ export const type = {
   /** The member's own writing — reading and composing share one measure. */
   writing: 'font-serif text-[clamp(1.0625rem,1.6vw,1.1875rem)] leading-[1.75]',
   /** Room marker. Quiet, small, never competing. */
-  marker: 'font-sans text-[0.6875rem] tracking-[0.18em] uppercase',
+  marker: 'font-sans text-[0.75rem] tracking-[0.16em] uppercase',
   /** Provenance and time. Beneath the writing, never above it. */
-  meta: 'font-sans text-[0.8125rem] leading-relaxed',
+  meta: 'font-sans text-[0.875rem] sm:text-[0.9375rem] leading-[1.55]',
   /** MAIA's two labelled statements. */
-  maiaLabel: 'font-sans text-[0.625rem] tracking-[0.18em] uppercase',
-  maiaBody: 'font-serif text-[clamp(1rem,1.5vw,1.0625rem)] leading-[1.7]',
+  maiaLabel: 'font-sans text-[0.75rem] tracking-[0.16em] uppercase',
+  maiaBody: 'font-serif text-[clamp(1.0625rem,1.5vw,1.125rem)] leading-[1.7]',
 } as const;
 
 /**

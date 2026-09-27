@@ -26,8 +26,10 @@ principles:
   - SOULLAB_LIVING_ORIENTATION_SYSTEM — crossings are as important as rooms; source identity survives the crossing
   - MAIA_OATH — no hidden propagation, no accidental authorship, no system substitution for member meaning
   - INHABITABLE_ARCHITECTURE_STANDARD — the member must know where they came from, what is moving, and how to return
+  - SOULLAB_READABILITY_STANDARD — provenance and return controls are meaningful orientation and must remain readable without zoom
 reference_surfaces:
   - docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md
+  - docs/canon/SOULLAB_READABILITY_STANDARD.md
   - docs/design/contracts/journal-room.md
   - docs/design/contracts/reflections-room.md
   - docs/design/contracts/daily-anchor.md
