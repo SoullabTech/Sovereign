@@ -15,6 +15,7 @@ interface ChangesSheetProps {
   memberId: string;
   memberName?: string;
   carrySourceRef?: FacetCarryRef | null;
+  initialChangeId?: string | null;
 }
 
 type ViewState =
@@ -28,6 +29,7 @@ export function ChangesSheet({
   memberId,
   memberName,
   carrySourceRef = null,
+  initialChangeId = null,
 }: ChangesSheetProps) {
   const [view, setView] = useState<ViewState>({ type: 'list' });
   const [createData, setCreateData] = useState<{
@@ -40,12 +42,17 @@ export function ChangesSheet({
   );
 
   useEffect(() => {
-    if (isOpen && carrySourceRef) {
+    if (!isOpen) return;
+    if (carrySourceRef) {
       setView({ type: 'create', step: 'name' });
       setCreateData(null);
       setCarrySourceValid(null);
+      return;
     }
-  }, [isOpen, carrySourceRef]);
+    if (initialChangeId) {
+      setView({ type: 'journey', changeId: initialChangeId });
+    }
+  }, [isOpen, carrySourceRef, initialChangeId]);
 
   // Reset to list view when sheet closes
   useEffect(() => {

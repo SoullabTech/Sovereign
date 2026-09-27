@@ -15,6 +15,8 @@ export default function ChangesThresholdPage() {
     setMemberId(id.replace(/^"|"$/g, ''));
   }, []);
 
+  const initialChangeId = searchParams?.get('change') || null;
+
   const carrySourceRef = useMemo<FacetCarryRef | null>(() => {
     const sourceFacet = searchParams?.get('sourceFacet');
     const sourceRefId = searchParams?.get('sourceRefId');
@@ -37,6 +39,7 @@ export default function ChangesThresholdPage() {
       onClose={() => { window.location.href = '/house'; }}
       memberId={memberId}
       carrySourceRef={carrySourceRef}
+      initialChangeId={initialChangeId}
     />
   );
 }

@@ -20,6 +20,21 @@ export type FacetCrossingRef = {
   sourceRefId: string;
 };
 
+export type FacetFlowEndpoint = {
+  facet: CarrySourceFacet | CarryTargetFacet;
+  refId: string;
+  label: string;
+  href: string;
+};
+
+export type FacetFlowProjection = {
+  id: string;
+  crossingId: string;
+  source: FacetFlowEndpoint | null;
+  target: FacetFlowEndpoint | null;
+  createdAt: string;
+};
+
 const ALLOWED_CROSSINGS: Record<
   string,
   { source: CarrySourceFacet; target: CarryTargetFacet }
@@ -143,5 +158,113 @@ export async function recordFacetCrossing(
       args.targetFacet,
       args.targetRefId,
     ],
+  );
+}
+
+const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'reflections']);
+const CARRY_TARGET_FACETS = new Set<CarryTargetFacet>(['changes', 'decisions']);
+
+function isCarrySourceFacet(value: string): value is CarrySourceFacet {
+  return CARRY_SOURCE_FACETS.has(value as CarrySourceFacet);
+}
+
+function isCarryTargetFacet(value: string): value is CarryTargetFacet {
+  return CARRY_TARGET_FACETS.has(value as CarryTargetFacet);
+}
+
+export async function resolveFacetTarget(
+  memberId: string,
+  targetFacet: CarryTargetFacet,
+  targetRefId: string,
+): Promise<FacetFlowEndpoint | null> {
+  if (!targetRefId) return null;
+
+  if (targetFacet === 'changes') {
+    const result = await query<{ id: string; title: string }>(
+      `SELECT id::text AS id, title
+         FROM studio_changes
+        WHERE id::text = $1
+          AND member_id = $2::uuid
+        LIMIT 1`,
+      [targetRefId, memberId],
+    );
+    const row = result.rows[0];
+    return row
+      ? {
+          facet: 'changes',
+          refId: row.id,
+          label: row.title,
+          href: '/changes?change=' + encodeURIComponent(row.id),
+        }
+      : null;
+  }
+
+  const result = await query<{ id: string; title: string }>(
+    `SELECT id::text AS id, title
+       FROM studio_decisions
+      WHERE id::text = $1
+        AND decision_scope = 'personal'
+        AND personal_member_id = $2::uuid
+      LIMIT 1`,
+    [targetRefId, memberId],
+  );
+  const row = result.rows[0];
+  return row
+    ? {
+        facet: 'decisions',
+        refId: row.id,
+        label: row.title,
+        href: '/decisions/' + encodeURIComponent(row.id),
+      }
+    : null;
+}
+
+export async function loadRecentFacetFlows(
+  memberId: string,
+  limit = 8,
+): Promise<FacetFlowProjection[]> {
+  const boundedLimit = Math.min(Math.max(limit, 1), 20);
+  const result = await query<{
+    id: string;
+    crossing_id: string;
+    source_facet: string;
+    source_ref_id: string;
+    target_facet: string;
+    target_ref_id: string;
+    created_at: string;
+  }>(
+    `SELECT id::text AS id, crossing_id, source_facet, source_ref_id,
+            target_facet, target_ref_id, created_at::text AS created_at
+       FROM member_facet_crossings
+      WHERE member_id = $1::uuid
+      ORDER BY created_at DESC
+      LIMIT $2`,
+    [memberId, boundedLimit],
+  );
+
+  return Promise.all(
+    result.rows.map(async (row) => {
+      const source = isCarrySourceFacet(row.source_facet)
+        ? await resolveFacetCarrySource(memberId, row.source_facet, row.source_ref_id)
+        : null;
+      const target = isCarryTargetFacet(row.target_facet)
+        ? await resolveFacetTarget(memberId, row.target_facet, row.target_ref_id)
+        : null;
+
+      return {
+        id: row.id,
+        crossingId: row.crossing_id,
+        source: source
+          ? {
+              facet: source.facet,
+              refId: source.refId,
+              label: source.label,
+              href: source.returnHref,
+            }
+          : null,
+        target,
+        createdAt: row.created_at,
+      };
+    }),
   );
 }

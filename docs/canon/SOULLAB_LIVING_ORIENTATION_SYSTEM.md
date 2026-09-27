@@ -355,7 +355,28 @@ The target later shows **Where this began** and a **Return to source** doorway.
 
 > **Durable relationship does not require semantic merger.**
 
-This is not a universal graph and grants no automatic Living Field projection authority.
+This is not a universal graph.
+
+### First Living Field projection of explicit facet flow
+
+LOF-01 now gives Living Field read-only visibility into the durable crossings the member explicitly created.
+
+The first projected flows are the same four admitted relations:
+
+- Journal → Change;
+- Reflection → Change;
+- Journal → Personal Decision;
+- Reflection → Personal Decision.
+
+The projection does not infer new edges. It reads `member_facet_crossings`, resolves each endpoint through its own member-ownership boundary, and shows a literal source → target path under **Threads across your life**.
+
+That authored flow appears before Active Spirals, Emotional Weather, and Living Field Dimensions.
+
+> **Member-authored movement is stronger evidence than system-inferred pattern.**
+
+The line means only that the member carried one object into relation with another. It does not authorize psychological, causal, elemental, Spiralogic, developmental, or symbolic interpretation.
+
+No graph-editing or Field mutation authority is granted.
 
 ---
 
