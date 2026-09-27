@@ -339,10 +339,11 @@ export function FlagshipWriteView({
                authority. The candidate is accepted only for the exact held
                section/range that opened this relationship. */
             const contextPreview = (() => {
-              if (presentation.phase.name !== 'context-review'
+              const phase = presentation.phase;
+              if (phase.name !== 'context-review'
                   || !held || !focus || held.sectionId !== focus.draftSectionId) return null;
-              const candidate = presentation.phase.candidates.items.find(
-                (item) => item.id === presentation.phase.selected);
+              const candidate = phase.candidates.items.find(
+                (item) => item.id === phase.selected);
               if (!candidate || candidate.text === null) return null;
               return {
                 start: held.start,

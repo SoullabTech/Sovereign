@@ -295,7 +295,7 @@ export const STRUCTURE_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.freeze
   askMaia: false,
   facet: false,
   overview: true,
-  lenses: ['structure'],
+  lenses: ['structure'] as const,
 });
 
 /** ⭐ No empty state. Either a reading exists and said nothing, or it does not exist. */
