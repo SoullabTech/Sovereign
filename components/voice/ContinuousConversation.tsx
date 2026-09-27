@@ -14,6 +14,7 @@ import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 import {
   assessCaptureLiveness,
+  assessVoicedRecognitionStall,
   shouldActOnCaptureLiveness,
   shouldAttemptAutomaticCaptureRecovery,
   describeCaptureLoss,
@@ -486,6 +487,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const analyserLastTickAtRef = useRef<number>(0);
   /** When the analysed level last crossed the VAD threshold. */
   const analyserLastVoiceAtRef = useRef<number>(0);
+  /**
+   * First local voice sample after the last recognition result. If this keeps
+   * advancing while recognition emits nothing, the member is speaking into a
+   * live microphone but a dead recognizer — the most direct form of "not heard."
+   */
+  const analyserVoiceWithoutRecognitionSinceRef = useRef<number>(0);
   /** Ticks since the loop started. Distinguishes "never ran" from "ran then stopped". */
   const analyserTicksRef = useRef<number>(0);
   /**
@@ -848,6 +855,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       captureArmedAtRef.current = Date.now();
       lastOnStartAtRef.current = captureArmedAtRef.current; // 🔬 forensics
       captureAudioOpenedRef.current = false;
+      analyserVoiceWithoutRecognitionSinceRef.current = 0;
       markCaptureActivity();
       recognitionActiveRef.current = true; // Confirmed live (defensive: start paths also set this)
       setIsRecording(true);
@@ -906,6 +914,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     recognition.onresult = session.guard(gen, (event: any) => {
       markCaptureActivity(true); // 🩺 results are arriving — capture is unambiguously alive
+      analyserVoiceWithoutRecognitionSinceRef.current = 0;
       // TURN-02: a real recognition result is the only proof strong enough to
       // replenish the one-shot silent-death recovery budget.
       selfHealAttemptedRef.current = false;
@@ -1753,6 +1762,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     );
     console.warn('🔬 [forensics]', forensics);
     logVoiceEvent('voice_capture_lost', { cause, reasonCode, ...forensics });
+    const memberVoiceWasArriving =
+      forensics.witness === 'analyser_hearing_voice';
 
     const preserved = salvageTranscript(cause);
 
@@ -1768,6 +1779,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     captureArmedAtRef.current = 0;
     captureAudioOpenedRef.current = false;
     lastCaptureActivityAtRef.current = 0;
+    analyserVoiceWithoutRecognitionSinceRef.current = 0;
     isRestartingRef.current = false;
     restartInFlightRef.current = false;
 
@@ -1788,6 +1800,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // through onstart / audio start / speech start. Only onresult clears it.
       selfHealAttemptedRef.current = true;
       console.warn('🩺 [liveness] One-shot HANDS_FREE capture recovery requested');
+      if (memberVoiceWasArriving) {
+        reportVoiceStatus({
+          level: 'warning',
+          cause: 'VOICE_RECONNECTING_AFTER_GAP',
+          userMessage: preserved
+            ? 'I briefly stopped receiving your voice while you were speaking. I kept what I heard and I’m reconnecting now — please repeat the last few words.'
+            : 'I briefly stopped receiving your voice while you were speaking. I’m reconnecting now — please repeat the last few words.',
+          recoverable: true,
+        });
+      }
       void requestRestartFnRef.current?.('capture_recovery');
       return;
     }
@@ -1889,13 +1911,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         !isRestartingRef.current &&
         recognitionActiveRef.current;
 
-      const verdict = assessCaptureLiveness({
+      const silenceVerdict = assessCaptureLiveness({
         now,
         lastActivityAt: lastCaptureActivityAtRef.current,
         armedAt: captureArmedAtRef.current,
         audioOpened: captureAudioOpenedRef.current,
         applicable,
       });
+      const voicedStallVerdict = assessVoicedRecognitionStall({
+        now,
+        voiceWithoutRecognitionSinceAt: analyserVoiceWithoutRecognitionSinceRef.current,
+        analyserLastVoiceAt: analyserLastVoiceAtRef.current,
+        applicable,
+      });
+      // Positive local voice is stronger evidence than generic event silence:
+      // if the microphone is demonstrably hearing the member while recognition
+      // emits no result, fail fast rather than making them speak into a dead
+      // recognizer for the full 15-second silence window.
+      const verdict = voicedStallVerdict.dead ? voicedStallVerdict : silenceVerdict;
 
       if (!verdict.dead || !verdict.cause) return;
 
@@ -2503,7 +2536,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // below reads these — see lib/voice/captureForensics.ts.
       analyserLastTickAtRef.current = now;
       analyserTicksRef.current++;
-      if (normalizedLevel > vadSensitivity) analyserLastVoiceAtRef.current = now;
+      if (normalizedLevel > vadSensitivity) {
+        analyserLastVoiceAtRef.current = now;
+        if (
+          analyserVoiceWithoutRecognitionSinceRef.current === 0 &&
+          recognitionActiveRef.current &&
+          !isSpeakingRef.current &&
+          !isProcessingRef.current
+        ) {
+          analyserVoiceWithoutRecognitionSinceRef.current = now;
+        }
+      }
       {
         const w = analyserPeakRef.current;
         if (w.startedAt === 0) w.startedAt = now;
