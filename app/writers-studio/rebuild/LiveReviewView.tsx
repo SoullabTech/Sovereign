@@ -33,7 +33,7 @@ export function LiveReviewView({ state, lens, onLens, navigation, discussion, on
   }
   return (
     <div data-review="ready" data-review-reading={state.readingId}>
-      <ReviewPresentation view={state.view} lens={lens} onLens={onLens} navigation={navigation}
+      <ReviewPresentation view={state.view} lens={lens} themesEnabled={state.view.lenses.some((entry) => entry.id === 'themes')} onLens={onLens} navigation={navigation}
         discussion={discussion} onDiscuss={onDiscussFinding} onSubmitDiscuss={onSubmitDiscuss} onCloseDiscuss={onCloseDiscuss}
         capabilities={{ ...READ_ONLY_REVIEW_CAPABILITIES, discuss: true && !!onDiscussFinding,
           navigate: !!navigation && READ_ONLY_REVIEW_CAPABILITIES.navigate }} />

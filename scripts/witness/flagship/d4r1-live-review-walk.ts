@@ -126,7 +126,7 @@ async function main(){
     check('D4-02 one saved run yields exactly two durable findings',await page.locator('[data-finding]').count()===2,
       `findings=${await page.locator('[data-finding]').count()}`);
     const tabs=await page.locator('.fs-modetab').allTextContents();
-    check('D4-03 all seven canonical lenses are filters',tabs.length===8,`tabs=${tabs.length}`);
+    check('D4-03 all eight governed lenses are filters',tabs.length===9,`tabs=${tabs.length}`);
     const before=readingPosts;
     await page.getByRole('tab',{name:'How it sounds'}).click();
     await page.waitForTimeout(150);

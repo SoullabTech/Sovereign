@@ -6,6 +6,8 @@
 > witnessed against. It authorizes **no reader, no model call, no prompt or tool contract, no
 > route, no surface, no persistence, no TypeScript file, and no BUILD-07C+**. Whether BUILD-07B
 > implementation opens is a separate ruling, taken on this exact document.
+>
+> **2026-09-26 amendment — D5C1 Themes.** This document remains the historical A1–A7 record. `WRITERS-STUDIO-FLAGSHIP-ROADMAP-01 / D5C1` subsequently adds **Themes** as an eighth governed developmental lens and adds a Themes-only `themeLabel` candidate field. All evidence, non-conclusion, no-ranking, no-retry, frozen-state, and authority laws below remain in force. Current runtime authority is `lib/manuscript/developmentalReader/contract.ts` plus the D5C1 contract.
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01

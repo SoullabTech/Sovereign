@@ -155,13 +155,11 @@ function UndeclaredMap() {
  * separate deliberate gesture. ⭐ No inferred commission from navigation (A2).
  */
 /**
- * ⭐ THE SEVEN REAL LENSES, and the plain question each one answers.
+ * ⭐ THE ORIGINAL V10 SEVEN-LENS VISUAL SET, and the plain question each one answers.
  *
- * `themes` was never a lens — the ratified vocabulary in
- * `lib/manuscript/developmentalReader/contract.ts` is exactly
- * structure · development · continuity · arc · voice · coherence · reader.
- * Drawing a `Themes` tab invents a destination, the same defect as
- * `Notes · Research · Goals`.
+ * D5C1 (2026-09-26) adds Themes as the eighth governed developmental lens.
+ * It is intentionally additive here: the frozen controlled V10 witness keeps
+ * these seven tabs unless a live caller explicitly grants the Themes capability.
  *
  * ⭐ THE PLAIN QUESTION IS THE LABEL. A person who is not an editor does not want
  * *Continuity*; they want to know whether the thread holds. The editorial term is
@@ -177,7 +175,9 @@ export const LENSES = [
   { id: 'voice',       plain: 'How it sounds',                    term: 'Voice' },
   { id: 'reader',      plain: 'How it might land',                term: 'Reader perspective' },
 ] as const;
-export type LensId = (typeof LENSES)[number]['id'];
+export const THEMES_LENS = { id: 'themes', plain: 'What keeps returning', term: 'Themes' } as const;
+export const DEVELOP_LENS_META = [...LENSES, THEMES_LENS] as const;
+export type LensId = (typeof DEVELOP_LENS_META)[number]['id'];
 
 /**
  * ⭐ Derived from positive facts. ⛔ Never stored, ⛔ never inferred from a click.
@@ -300,7 +300,7 @@ export const STRUCTURE_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.freeze
 
 /** ⭐ No empty state. Either a reading exists and said nothing, or it does not exist. */
 function LensRow({ l, canCommission = true, readingAttached = true }: { l: LensStanding; canCommission?: boolean; readingAttached?: boolean }) {
-  const meta = LENSES.find((x) => x.id === l.id);
+  const meta = DEVELOP_LENS_META.find((x) => x.id === l.id);
   if (!meta) return null;
   const body = !readingAttached
     ? <>No reading is attached to this Overview for this lens.</>
@@ -331,18 +331,22 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabil
   structureNavigation?: DevelopStructureNavigation;
 }) {
   const cov = view.coverage;
+  const tabMeta: readonly { readonly id: LensId; readonly plain: string; readonly term: string }[] =
+    capabilities.lenses.includes('themes')
+      ? [LENSES[0], LENSES[1], LENSES[2], LENSES[3], THEMES_LENS, LENSES[4], LENSES[5], LENSES[6]]
+      : LENSES;
   return (
     <>
       <CrumbBar work={view.work} place="Develop" facet={capabilities.facet ? facet : undefined}
         actions={capabilities.askMaia ? <button type="button" className="fs-tool fs-tool--key">Ask MAIA</button> : undefined} />
-      {/* ⛔ No Export. Themes is a governed presentation domain, not a commissioned developmental lens. */}
+      {/* ⛔ No Export. Themes appears only when the live capability explicitly admits the eighth governed lens. */}
       <div className="fs-modetabs" role="tablist">
         {capabilities.overview ? (
           <button type="button" role="tab" className="fs-modetab" aria-selected={lens === 'overview'} onClick={() => onLens?.('overview')}>
             Overview
           </button>
         ) : <span role="tab" className="fs-modetab" aria-selected={lens === 'overview'} aria-disabled="true">Overview</span>}
-        {LENSES.map((l) => capabilities.lenses.includes(l.id) ? (
+        {tabMeta.map((l) => capabilities.lenses.includes(l.id) ? (
           <button key={l.id} type="button" role="tab" className="fs-modetab" aria-selected={lens === l.id} onClick={() => onLens?.(l.id)}>
             {l.plain}
           </button>
@@ -722,8 +726,10 @@ export function ReviewRoom({ view, lens = 'all', facet = 'guided' }: {
   return <ReviewPresentation view={view} lens={lens} facet={facet} capabilities={CONTROLLED_REVIEW_CAPABILITIES} />;
 }
 
-export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capabilities, onLens, navigation, discussion, onDiscuss, onSubmitDiscuss, onCloseDiscuss }: {
+export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capabilities, themesEnabled = false, onLens, navigation, discussion, onDiscuss, onSubmitDiscuss, onCloseDiscuss }: {
   view: ReviewView; lens?: LensId | 'all'; facet?: Facet; capabilities: ReviewCapabilities;
+  /** D5C1 · additive live capability. Controlled V10 defaults false and remains byte-identical. */
+  themesEnabled?: boolean;
   /** R1-1B · a live host owns the lens filter; the tabs filter an existing reading and commission nothing. Markup unchanged. */
   onLens?: (lens: LensId | 'all') => void;
   /** R1-2 · a live host's return navigation over exact durable section addresses. Absent → controlled rendering, unchanged. */
@@ -735,6 +741,7 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
   onCloseDiscuss?: () => void;
 }) {
   const caps = capabilities;
+  const visibleLenses = themesEnabled ? view.lenses : view.lenses.filter((entry) => entry.id !== 'themes');
   /* R1-2 · under a live navigation, controls whose target is NOT a section address (coverage, previous reading,
      full manuscript, a highlight stand-in) are ABSENT — never a guess. The controlled path is untouched. */
   const navigableWithoutAddress = caps.navigate && !navigation;
@@ -756,8 +763,8 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
         onGo: (href: string) => { if (contextReturn) navigation.onGo(contextReturn, href, selected?.id); },
       }
     : undefined;
-  const active = view.lenses.find((l) => l.id === lens);
-  const plain = LENSES.find((l) => l.id === lens)?.plain ?? '';
+  const active = visibleLenses.find((l) => l.id === lens);
+  const plain = DEVELOP_LENS_META.find((l) => l.id === lens)?.plain ?? '';
   const offer = active ? commissionOffer(active.availability, plain) : null;
 
   return (
@@ -771,8 +778,8 @@ export function ReviewPresentation({ view, lens = 'all', facet = 'guided', capab
           onClick={onLens ? () => onLens('all') : undefined}>
           Everything
         </button>
-        {view.lenses.map(({ id }) => {
-          const meta = LENSES.find((l) => l.id === id);
+        {visibleLenses.map(({ id }) => {
+          const meta = DEVELOP_LENS_META.find((l) => l.id === id);
           return meta ? (
             <button key={id} type="button" role="tab" className="fs-modetab" aria-selected={lens === id}
               onClick={onLens ? () => onLens(id) : undefined}>

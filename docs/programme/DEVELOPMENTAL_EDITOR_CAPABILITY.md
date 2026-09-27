@@ -23,7 +23,7 @@ Every arrow may stop.
 
 ## The lenses
 
-Seven, not forty commands.
+Eight governed lenses, not forty commands. Themes was added by `WRITERS-STUDIO-FLAGSHIP-ROADMAP-01 / D5C1` on 2026-09-26 because recurrence/presence is a distinct editorial question and the approved Themes experience requires its own lawful reader authority.
 
 | Lens | Asks |
 |---|---|
@@ -31,6 +31,7 @@ Seven, not forty commands.
 | **Development** | Which ideas are underdeveloped · sufficiently developed · overexplained · introduced too late · **abandoned** · repeated without advancing? |
 | **Continuity** | Prospective language where *later* has already happened. Requires chronology across the Work, not phrase search. |
 | **Arc** | What journey does this chapter take the reader through, and what journey has the whole book taken? |
+| **Themes** | What recurs, where does it recur, and how does its presence change across the Work? Theme names proposed by MAIA remain candidates until the member accepts or renames them. |
 | **Voice** | Where does this depart from the established voice *of this Work* — the manuscript itself is the reference, never an external standard. |
 | **Coherence** | Internally consistent? Has a term changed meaning? Does this contradict an earlier chapter? |
 | **Reader** | What does the reader already know here? Where might they lose orientation? |
@@ -79,7 +80,7 @@ STARTER CONCEPT → IDEA → SCRAPS → FRAGMENTS → PILES OF NOTES → TRANSCR
 | **DISCOVER** | meets a starter concept or an idea; asks what is alive in it, what it is circling | nothing beyond the material |
 | **GATHER** | meets scraps, fragments, notes, transcripts, research; notices recurrence, heat, what keeps returning | nothing beyond the material |
 | **SHAPE** | proposes relationships among materials — adjacency, grouping, sequence | **may suggest relationships; may not declare structure** |
-| **DEVELOP** | the seven lenses against an emerging or structured Work | structure-aware lenses require Work Structure |
+| **DEVELOP** | the eight governed lenses against an emerging or structured Work | structure-aware lenses require Work Structure |
 | **REVISE** | continuity, sequencing, reader knowledge, compare, restore | authoritative Work Structure + recoverable history |
 
 ## What each stance is allowed to assert

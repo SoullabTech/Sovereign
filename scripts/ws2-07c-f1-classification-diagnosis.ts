@@ -96,7 +96,7 @@ async function main() {
   const { DEVELOPMENTAL_PHENOMENA } = await import('@/lib/manuscript/developmentalReading/contract');
   const { runStructured } = await import('@/lib/ai/structured/router');
 
-  if (!isDevelopmentalLens(lensArg)) { console.error(`--lens ${lensArg} is not one of the seven`); process.exit(2); }
+  if (!isDevelopmentalLens(lensArg)) { console.error(`--lens ${lensArg} is not one of the eight`); process.exit(2); }
   const lens = lensArg;
 
   console.log(`\nWS2-07C-F1 · PHENOMENON CLASSIFICATION COVERAGE · diagnosis only · checkout ${head}`);

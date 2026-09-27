@@ -60,7 +60,7 @@ const SECTIONS: { id: string; text: string }[] = [
   { id: 'w6', text: 'Six\n\nAfter. The river settled into its new bed. The shed was gone. Tomas\'s plan, it turned out, had been to sell the land, and the land was now mostly river. Mara kept the lantern on the windowsill where anyone could see it.\n' },
 ];
 
-type Lens = 'structure' | 'development' | 'continuity' | 'arc' | 'voice' | 'coherence' | 'reader';
+type Lens = 'structure' | 'development' | 'continuity' | 'arc' | 'themes' | 'voice' | 'coherence' | 'reader';
 
 function arg(name: string, fallback: string): string {
   const i = process.argv.indexOf(`--${name}`);

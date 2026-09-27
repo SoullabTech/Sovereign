@@ -51,7 +51,7 @@ function renderedRequest(lens: (typeof DEVELOPMENTAL_LENSES)[number]): string {
 }
 
 describe('the lens meanings are the capability spec\'s, and they reach the reader', () => {
-  it('every one of the seven is quoted from DEVELOPMENTAL_EDITOR_CAPABILITY, not authored here', () => {
+  it('every one of the eight is quoted from DEVELOPMENTAL_EDITOR_CAPABILITY, not authored here', () => {
     const spec = norm(readFileSync(join(ROOT, 'docs', 'programme', 'DEVELOPMENTAL_EDITOR_CAPABILITY.md'), 'utf8'));
     for (const lens of DEVELOPMENTAL_LENSES) {
       expect(`${lens} in the capability spec: ${spec.includes(norm(LENS_MEANING[lens]))}`)
@@ -72,11 +72,13 @@ describe('the lens meanings are the capability spec\'s, and they reach the reade
     }
   });
 
-  it('the two riders ride: development may not infer abandonment; arc is scope-sensitive', () => {
+  it('the riders ride: development, arc, and Themes keep their distinct epistemic limits', () => {
     expect(LENS_RIDER.development).toMatch(/abandoned.*INTERPRETATION/s);
     expect(renderedRequest('development')).toContain(LENS_RIDER.development!);
     expect(LENS_RIDER.arc).toMatch(/scope-sensitive/);
     expect(renderedRequest('arc')).toContain(LENS_RIDER.arc!);
+    expect(LENS_RIDER.themes).toMatch(/repeated-presence.*never importance/s);
+    expect(renderedRequest('themes')).toContain(LENS_RIDER.themes!);
     /* A lens with no rider gets no Note line at all — no empty ceremony. */
     expect(renderedRequest('voice')).not.toMatch(/COMMISSIONED LENS: voice[\s\S]{0,400}?\n  Note:/);
   });
@@ -93,9 +95,9 @@ describe('the reader boundary — mechanical measurement is not a claim (WS2-07-
     expect(rule).toMatch(/may SUPPORT a noticing; they may not BE the noticing/);
   });
 
-  it('the rule survives renumbering: the system prompt still carries all seven rules, in order', () => {
+  it('the rules remain explicitly numbered after the D5C1 Themes amendment', () => {
     const numbers = READER_SYSTEM.split('\n').filter((l) => /^\d+\./.test(l)).map((l) => l.split('.')[0]);
-    expect(numbers).toEqual(['1', '2', '3', '4', '5', '6', '7']);
+    expect(numbers).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
   });
 });
 
@@ -175,7 +177,7 @@ describe('provenance moved because the semantic contract moved', () => {
        not move — the phenomenon family is untouched, and the two versions are
        pinned apart precisely so a reader repair cannot drift the classifier. */
     expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-04');
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-06');
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-07');
     expect(promptContractHash()).toHaveLength(64);
   });
 

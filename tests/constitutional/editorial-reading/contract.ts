@@ -70,7 +70,7 @@ export const PERMANENT_NON_CONCLUSIONS: readonly NonConclusion[] = [
 ];
 
 export type DevelopmentalLens =
-  | 'structure' | 'development' | 'continuity' | 'arc' | 'voice' | 'coherence' | 'reader';
+  | 'structure' | 'development' | 'continuity' | 'arc' | 'themes' | 'voice' | 'coherence' | 'reader';
 
 /** `lib/manuscript/development/readState.ts:119`. */
 export type ReadDepth = 'position' | 'body';

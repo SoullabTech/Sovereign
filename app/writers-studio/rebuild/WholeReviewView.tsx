@@ -40,6 +40,7 @@ export function WholeReviewView({
       <ReviewPresentation
         view={state.view}
         lens={lens}
+        themesEnabled={state.view.lenses.some((entry) => entry.id === 'themes')}
         onLens={onLens}
         navigation={navigation}
         discussion={discussion}

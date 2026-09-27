@@ -442,8 +442,8 @@ export function runC6(): readonly Check[] {
      ⭐ The version is not inside READER_SYSTEM, so bumping it leaves the hash
      untouched — which is the proof that they are separate facts rather than
      one fact spelled twice. */
-  add('C6R5A-1-reader-version-is-06',
-    /export const READER_VERSION = 'DEVELOPMENTAL-READER-06';/.test(render),
+  add('C6R5A-1-reader-version-is-07',
+    /export const READER_VERSION = 'DEVELOPMENTAL-READER-07';/.test(render),
     'the human-readable contract generation tells the truth at a glance');
 
   add('C6R5A-2-version-is-not-part-of-the-hashed-prompt',

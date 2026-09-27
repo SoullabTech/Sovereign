@@ -32,7 +32,7 @@ import { createHash } from 'crypto';
 /* ── vocabulary borrowed, never redeclared ──────────────────────────────── */
 
 export type DevelopmentalLens =
-  | 'structure' | 'development' | 'continuity' | 'arc' | 'voice' | 'coherence' | 'reader';
+  | 'structure' | 'development' | 'continuity' | 'arc' | 'themes' | 'voice' | 'coherence' | 'reader';
 
 export type NonConclusion =
   | 'outside-coverage' | 'across-unread-span' | 'whole-work-pattern'
