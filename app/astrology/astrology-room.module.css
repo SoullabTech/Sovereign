@@ -1,0 +1,346 @@
+@font-face{font-family:'Astrology Crimson';src:url('/fonts/crimson-pro/crimson-pro-300-normal-latin.woff2') format('woff2');font-weight:300;font-display:swap}
+@font-face{font-family:'Astrology Crimson';src:url('/fonts/crimson-pro/crimson-pro-400-normal-latin.woff2') format('woff2');font-weight:400;font-display:swap}
+
+.room{
+  --astro-ink:#efe6d9;
+  --astro-muted:#b8aa98;
+  --astro-gold:#c9a56d;
+  --astro-blue:#849ab3;
+  --astro-rule:rgba(218,184,137,.16);
+  position:relative;
+  isolation:isolate;
+  min-height:100svh;
+  overflow-x:hidden;
+  color:var(--astro-ink);
+  font-family:'Astrology Crimson',Georgia,serif;
+  background:#0c0a08;
+}
+.room::before{
+  content:'';
+  position:fixed;
+  z-index:-2;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(9,8,7,.14),rgba(9,8,7,.52) 45%,#0c0a08 100%),
+    url('/house/house-architecture-7a638061.webp') center top/cover no-repeat;
+  opacity:.60;
+}
+.room::after{
+  content:'';
+  position:fixed;
+  z-index:-1;
+  inset:-8%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 62% 25%,rgba(118,143,171,.10),transparent 29%),
+    radial-gradient(circle at 38% 42%,rgba(194,146,79,.08),transparent 31%),
+    linear-gradient(107deg,transparent 0 42%,rgba(214,179,126,.035) 49%,transparent 58%);
+  filter:blur(10px);
+}
+.threshold{
+  position:sticky;
+  top:0;
+  z-index:50;
+  min-height:68px;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  padding:10px clamp(18px,3vw,42px);
+  border-bottom:1px solid var(--astro-rule);
+  background:rgba(12,9,7,.86);
+  backdrop-filter:blur(16px);
+}
+.brand{
+  display:inline-flex;
+  align-items:center;
+  gap:11px;
+  width:fit-content;
+  color:#eadfce;
+  text-decoration:none;
+  font:600 12px/1 Arial,sans-serif;
+  letter-spacing:.20em;
+}
+.brand img{width:32px;height:32px;object-fit:contain}
+.roomName{display:flex;align-items:baseline;gap:12px;color:#d8c7aa;white-space:nowrap}
+.roomName span{font:12px/1.4 Arial,sans-serif;letter-spacing:.14em}
+.roomName b{color:#f0dfc4;font:400 18px/1.2 'Astrology Crimson',Georgia,serif}
+.return{
+  justify-self:end;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  color:#d6ba8e;
+  text-decoration:none;
+  font:16px/1.35 Arial,sans-serif;
+}
+.content{position:relative;z-index:2}
+.arrival{
+  max-width:1180px;
+  margin:0 auto;
+  padding:60px 34px 34px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(280px,.44fr);
+  gap:52px;
+  align-items:end;
+}
+.kicker{
+  margin:0;
+  color:var(--astro-gold);
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.arrival h1{
+  max-width:780px;
+  margin:14px 0 12px;
+  color:#f2e9dc;
+  font-size:clamp(48px,5vw,72px);
+  line-height:.98;
+  font-weight:300;
+  letter-spacing:-.025em;
+}
+.lead{
+  max-width:700px;
+  margin:0;
+  color:#c5b6a3;
+  font-size:20px;
+  line-height:1.55;
+}
+.boundary{
+  padding:18px 0 2px 20px;
+  border-left:1px solid rgba(132,154,179,.30);
+}
+.boundary small{
+  color:#91a5bb;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.14em;
+}
+.boundary p{
+  margin:10px 0 0;
+  color:#ad9f8e;
+  font-size:16px;
+  line-height:1.6;
+  font-style:italic;
+}
+.atlas{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 34px 36px;
+}
+.atlasPaper{
+  padding:34px 38px 30px;
+  border:1px solid rgba(152,118,76,.24);
+  border-radius:12px;
+  color:#342c24;
+  background:
+    linear-gradient(90deg,rgba(122,91,55,.035),transparent 12%,transparent 88%,rgba(122,91,55,.025)),
+    linear-gradient(145deg,#f3eadb,#e9ddca);
+  box-shadow:0 24px 64px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.48);
+}
+.atlasHead{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:28px;
+  padding-bottom:18px;
+  border-bottom:1px solid rgba(93,72,49,.14);
+}
+.atlasHead small{
+  color:#75654f;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.14em;
+}
+.atlasHead h2{
+  margin:7px 0 0;
+  color:#42372d;
+  font-size:32px;
+  line-height:1.05;
+  font-weight:300;
+}
+.atlasHead p{
+  max-width:420px;
+  margin:0;
+  color:#716453;
+  font:15px/1.55 Arial,sans-serif;
+  text-align:right;
+}
+.factGrid{
+  margin-top:24px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+}
+.fact{
+  min-height:155px;
+  padding:8px 24px 8px 0;
+}
+.fact+.fact{
+  padding-left:24px;
+  border-left:1px solid rgba(93,72,49,.14);
+}
+.fact small{
+  color:#786851;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.fact h3{
+  margin:12px 0 4px;
+  color:#40342a;
+  font-size:27px;
+  line-height:1.1;
+  font-weight:400;
+}
+.fact p{
+  margin:5px 0 0;
+  color:#675a4b;
+  font-size:16px;
+  line-height:1.5;
+}
+.elemental{
+  margin-top:24px;
+  padding-top:20px;
+  border-top:1px solid rgba(93,72,49,.14);
+}
+.elementalHead{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:baseline;
+}
+.elementalHead span{
+  color:#75654f;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.elementalHead em{
+  color:#756b5e;
+  font-size:15px;
+}
+.elementGrid{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.elementGrid div{
+  padding:12px 14px;
+  border:1px solid rgba(93,72,49,.12);
+  border-radius:8px;
+  background:rgba(255,255,255,.10);
+}
+.elementGrid span{
+  display:block;
+  color:#746550;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+.elementGrid b{
+  display:block;
+  margin-top:4px;
+  color:#46392d;
+  font-size:19px;
+  font-weight:400;
+}
+.lensBar{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 34px 30px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:20px;
+  align-items:center;
+}
+.lensCopy small{
+  color:#8da3ba;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.14em;
+}
+.lensCopy h2{
+  margin:6px 0 5px;
+  color:#e8dccd;
+  font-size:26px;
+  line-height:1.2;
+  font-weight:300;
+}
+.lensCopy p{
+  margin:0;
+  color:#9f9181;
+  font-size:16px;
+  line-height:1.5;
+}
+.reportLink{
+  min-height:48px;
+  display:inline-flex;
+  align-items:center;
+  padding:0 18px;
+  border:1px solid rgba(201,165,109,.28);
+  border-radius:9px;
+  color:#d8b77f;
+  text-decoration:none;
+  font:16px/1.35 Arial,sans-serif;
+  background:rgba(201,165,109,.06);
+}
+.detailWrap{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 34px 90px;
+}
+/* Existing dense chart detail remains available in this first slice, but its
+   old navy/starfield dashboard material is neutralized into the House field. */
+.detailWrap :global(.bg-black\/40),
+.detailWrap :global(.bg-black\/30),
+.detailWrap :global(.bg-black\/20),
+.detailWrap :global(.bg-black\/50){
+  background-color:rgba(11,10,9,.46)!important;
+}
+.detailWrap :global(.text-xs){font-size:14px!important;line-height:1.5!important}
+.detailWrap :global(.text-sm){font-size:16px!important;line-height:1.55!important}
+.detailWrap :global(button),
+.detailWrap :global(a){font-size:max(16px,1em)}
+.detailWrap :global(.text-\[10px\]){font-size:14px!important;line-height:1.45!important}
+.loadingRoom,.emptyRoom{
+  min-height:100svh;
+  display:grid;
+  place-items:center;
+  background:#0c0a08;
+  color:#d8cbb9;
+  font-family:'Astrology Crimson',Georgia,serif;
+}
+.emptyInner{max-width:660px;padding:42px 24px;text-align:center}
+.emptyInner h1{margin:14px 0 10px;font-size:38px;font-weight:300;color:#f0e5d6}
+.emptyInner p{margin:0 auto 24px;max-width:560px;font-size:17px;line-height:1.6;color:#b6a894}
+@media(max-width:900px){
+  .arrival{grid-template-columns:1fr;gap:24px}
+  .lensBar{grid-template-columns:1fr}
+  .factGrid{grid-template-columns:1fr}
+  .fact{padding:18px 0}
+  .fact+.fact{padding-left:0;border-left:0;border-top:1px solid rgba(93,72,49,.14)}
+}
+@media(max-width:640px){
+  .threshold{min-height:58px;grid-template-columns:1fr auto;padding:8px 14px}
+  .roomName{display:none}
+  .brand img{width:28px;height:28px}
+  .return{font-size:16px}
+  .arrival{padding:34px 16px 24px}
+  .arrival h1{font-size:44px}
+  .lead{font-size:18px}
+  .atlas,.lensBar,.detailWrap{padding-left:16px;padding-right:16px}
+  .atlasPaper{padding:24px 22px}
+  .atlasHead{display:block}
+  .atlasHead p{margin-top:8px;text-align:left}
+  .elementGrid{grid-template-columns:1fr 1fr}
+}
+.fact a{
+  margin-top:16px;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  color:#765a36;
+  text-decoration:none;
+  font:16px/1.35 Arial,sans-serif;
+}
+.fact a:hover{color:#4e3821}
