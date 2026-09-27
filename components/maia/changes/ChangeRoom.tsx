@@ -69,6 +69,9 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
   const [maiaInjection, setMaiaInjection] = useState<{ text: string; nonce: number } | null>(null);
   const [changeContextShared, setChangeContextShared] = useState(false);
   const [patternOpen, setPatternOpen] = useState(false);
+  const [meaningText, setMeaningText] = useState('');
+  const [meaningSaving, setMeaningSaving] = useState(false);
+  const [meaningError, setMeaningError] = useState<string | null>(null);
 
   async function loadChange() {
     const response = await apiFetch('/api/changes/' + encodeURIComponent(changeId));
@@ -195,6 +198,53 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
     return { repeatedWords, repeatedTypes };
   }, [experiences]);
 
+
+  function askMaiaAboutRecurrence() {
+    if (!change || experiences.length === 0) return;
+    const words = recurrenceEvidence.repeatedWords.map((item) => item.word + ' ×' + item.count).join(', ');
+    const kinds = recurrenceEvidence.repeatedTypes.map((item) => item.label + ' ' + item.count).join(', ');
+    const evidence = experiences.map((exp) =>
+      '- ' + formatDate(exp.occurredAt || exp.createdAt) + ' · ' +
+      (EXPERIENCE_LABELS[exp.experienceType] || 'Moment') + ': ' + exp.content
+    );
+    const text = [
+      'I am explicitly bringing the temporal evidence from my Living Change into this conversation.',
+      'Change: ' + change.title,
+      words ? 'Exact words that reappear across distinct moments: ' + words : 'No repeated words are being surfaced.',
+      kinds ? 'Kinds of moments that recur: ' + kinds : 'No repeated experience kinds are being surfaced.',
+      'The moments themselves:',
+      ...evidence,
+      'Please offer at most one tentative hypothesis about what may be recurring. Name it clearly as a possibility, distinguish it from the evidence above, and ask me what I make of it. Do not treat your hypothesis as established meaning.',
+    ].join('\n\n');
+    setMaiaInjection({ text, nonce: Date.now() });
+    setPatternOpen(false);
+    setMaiaOpen(true);
+  }
+
+  async function keepMemberMeaning() {
+    const content = meaningText.trim();
+    if (!content || meaningSaving) return;
+    setMeaningSaving(true);
+    setMeaningError(null);
+    try {
+      const response = await apiFetch('/api/changes/' + encodeURIComponent(changeId) + '/experiences', {
+        method: 'POST',
+        body: JSON.stringify({
+          experienceType: 'reflection',
+          content,
+          occurredAt: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error('Could not keep your meaning');
+      setMeaningText('');
+      await loadChange();
+    } catch (err) {
+      setMeaningError(err instanceof Error ? err.message : 'Could not keep your meaning');
+    } finally {
+      setMeaningSaving(false);
+    }
+  }
+
   function bringChangeContextToMaia() {
     if (!change) return;
     const parts = [
@@ -317,9 +367,31 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
                     ) : <p>No experience type repeats yet.</p>}
                   </section>
 
+                  <section className={styles.maiaHypothesisDoor}>
+                    <small>MAIA MAY OFFER A HYPOTHESIS</small>
+                    <p>She can look at the same evidence and offer one possibility. It stays a hypothesis unless you make something of it.</p>
+                    <button type="button" onClick={askMaiaAboutRecurrence}>Ask MAIA what she notices →</button>
+                  </section>
+
+                  <section className={styles.memberMeaning}>
+                    <small>YOUR MEANING</small>
+                    <p>If something has become clear to you, put it in your own words. Only your words are kept as part of this Change.</p>
+                    <textarea
+                      value={meaningText}
+                      onChange={(event) => setMeaningText(event.target.value)}
+                      placeholder="What do you make of what has been recurring?"
+                      aria-label="What this recurrence means to me"
+                    />
+                    {meaningError ? <p className={styles.noticeError} role="alert">{meaningError}</p> : null}
+                    <button type="button" onClick={keepMemberMeaning} disabled={!meaningText.trim() || meaningSaving}>
+                      {meaningSaving ? <Loader2 className={styles.spinner} aria-hidden="true" /> : null}
+                      Keep my meaning
+                    </button>
+                  </section>
+
                   <section className={styles.hypothesisBoundary}>
                     <small>MEANING IS STILL OPEN</small>
-                    <p>A recurrence is evidence that something appeared more than once. It is not yet an explanation of why.</p>
+                    <p>A recurrence is evidence that something appeared more than once. MAIA's hypothesis is not your meaning, and neither becomes part of this Change unless you choose your own words to keep.</p>
                   </section>
                 </aside>
               </div>
