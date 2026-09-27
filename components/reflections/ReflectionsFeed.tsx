@@ -29,6 +29,7 @@ function sourceLabel(source: CapsuleDTO['sourceType']) {
   if (source === 'voice') return 'Voice';
   if (source === 'journal') return 'Journal';
   if (source === 'transcript') return 'Transcript';
+  if (source === 'astrology') return 'Astrology';
   return 'Note';
 }
 

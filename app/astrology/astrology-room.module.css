@@ -745,3 +745,140 @@
   .chartFactList>div{display:block}
   .chartFactList strong{display:block;margin-top:4px;text-align:left}
 }
+
+.memberMeaning{
+  max-width:1180px;
+  margin:0 auto 34px;
+  padding:0 34px;
+}
+.memberMeaningIntro{
+  display:grid;
+  grid-template-columns:minmax(0,.75fr) minmax(300px,1.25fr);
+  gap:34px;
+  align-items:end;
+  padding:24px 0 18px;
+  border-top:1px solid var(--astro-rule);
+}
+.memberMeaningIntro small,.keptMeaning>small,.memberMeaningKeep small{
+  color:#c4a06a;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.13em;
+}
+.memberMeaningIntro h2{
+  margin:7px 0 0;
+  color:#ede2d3;
+  font-size:32px;
+  line-height:1.12;
+  font-weight:300;
+}
+.memberMeaningIntro p{
+  margin:0;
+  color:#ad9f8e;
+  font-size:17px;
+  line-height:1.6;
+}
+.memberMeaningWrite{
+  padding:24px 26px 20px;
+  border:1px solid rgba(152,118,76,.22);
+  border-radius:12px;
+  background:linear-gradient(145deg,#f2e8d8,#e9ddc9);
+  color:#3e3329;
+  box-shadow:0 20px 54px rgba(0,0,0,.16);
+}
+.memberMeaningWrite textarea{
+  width:100%;
+  min-height:170px;
+  padding:6px 0 14px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(93,72,49,.16)!important;
+  outline:0;
+  resize:vertical;
+  background:transparent!important;
+  color:#43372c!important;
+  font:18px/1.7 'Astrology Crimson',Georgia,serif!important;
+  box-shadow:none!important;
+}
+.memberMeaningWrite textarea::placeholder{
+  color:#756755!important;
+  opacity:.82;
+}
+.memberMeaningWrite textarea:focus{
+  box-shadow:inset 0 -2px 0 rgba(151,111,62,.44)!important;
+}
+.memberMeaningKeep{
+  margin-top:18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:28px;
+}
+.memberMeaningKeep p{
+  max-width:610px;
+  margin:6px 0 0;
+  color:#695c4d;
+  font-size:16px;
+  line-height:1.52;
+}
+.memberMeaningKeep button{
+  min-width:210px;
+  min-height:48px;
+  padding:0 18px;
+  border:1px solid rgba(118,90,53,.28);
+  border-radius:9px;
+  background:rgba(118,90,53,.06);
+  color:#6b4f2c;
+  font:16px/1.35 Arial,sans-serif;
+}
+.memberMeaningKeep button:disabled{
+  opacity:.36;
+  cursor:not-allowed;
+}
+.memberMeaningError{
+  margin:14px 0 0;
+  color:#8d493f;
+  font-size:16px;
+  line-height:1.5;
+}
+.keptMeaning{
+  padding:24px 26px;
+  border:1px solid rgba(201,165,109,.24);
+  border-radius:12px;
+  background:rgba(201,165,109,.055);
+}
+.keptMeaning blockquote{
+  margin:14px 0 0;
+  padding:0;
+  color:#ddd0bf;
+  font-size:20px;
+  line-height:1.6;
+  font-style:italic;
+}
+.keptMeaning>div{
+  margin-top:18px;
+  padding-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  border-top:1px solid rgba(218,184,137,.12);
+}
+.keptMeaning a,.keptMeaning button{
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  border:0;
+  background:transparent;
+  color:#d0b487;
+  text-decoration:none;
+  font:16px/1.35 Arial,sans-serif;
+}
+.keptMeaning button{color:#a99b8a}
+@media(max-width:760px){
+  .memberMeaning{padding:0 16px}
+  .memberMeaningIntro{grid-template-columns:1fr;gap:10px}
+  .memberMeaningIntro h2{font-size:28px}
+  .memberMeaningWrite{padding:22px}
+  .memberMeaningKeep{align-items:flex-start;flex-direction:column}
+  .memberMeaningKeep button{width:100%}
+  .keptMeaning>div{align-items:flex-start;flex-direction:column}
+}

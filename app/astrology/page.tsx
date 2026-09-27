@@ -178,6 +178,10 @@ export default function AstrologyPage() {
   const [maiaOpen, setMaiaOpen] = useState(false);
   const [chartContextShared, setChartContextShared] = useState(false);
   const [maiaInjection, setMaiaInjection] = useState<{ text: string; nonce: number } | null>(null);
+  const [recognitionText, setRecognitionText] = useState('');
+  const [recognitionSaving, setRecognitionSaving] = useState(false);
+  const [recognitionError, setRecognitionError] = useState<string | null>(null);
+  const [keptReflectionId, setKeptReflectionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasBirthData, setHasBirthData] = useState(false);
   // Distinct from !hasBirthData: the server could not name the authenticated
@@ -747,6 +751,37 @@ export default function AstrologyPage() {
     setMaiaInjection(null);
   }
 
+  async function keepRecognitionAsReflection() {
+    const text = recognitionText.trim();
+    if (!text || recognitionSaving || keptReflectionId) return;
+    setRecognitionSaving(true);
+    setRecognitionError(null);
+    try {
+      const response = await apiFetch('/api/astrology/reflection', {
+        method: 'POST',
+        body: JSON.stringify({
+          text,
+          zodiacMode,
+          houseSystem,
+          ayanamsa: zodiacMode === 'sidereal' ? ayanamsa : undefined,
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || 'Could not keep this reflection');
+      setKeptReflectionId(body?.reflection?.id || null);
+    } catch (err) {
+      setRecognitionError(err instanceof Error ? err.message : 'Could not keep this reflection');
+    } finally {
+      setRecognitionSaving(false);
+    }
+  }
+
+  function beginAnotherRecognition() {
+    setRecognitionText('');
+    setRecognitionError(null);
+    setKeptReflectionId(null);
+  }
+
   function bringChartFactsToMaia() {
     if (!chartData) return;
     const aspectFacts = primaryAspectReadings.slice(0, 4).map((aspect) =>
@@ -1022,6 +1057,56 @@ export default function AstrologyPage() {
             </div>
           </section>
         ) : null}
+
+        <section className={styles.memberMeaning} aria-label="Your meaning">
+          <div className={styles.memberMeaningIntro}>
+            <small>YOUR MEANING</small>
+            <h2>What do you recognize here?</h2>
+            <p>
+              Keep only what becomes true in your own experience. The chart can suggest a pattern and MAIA can reflect with you,
+              but neither gets to author what it means for your life.
+            </p>
+          </div>
+
+          {keptReflectionId ? (
+            <div className={styles.keptMeaning}>
+              <small>KEPT AS YOUR REFLECTION</small>
+              <blockquote>{recognitionText}</blockquote>
+              <div>
+                <Link href={'/reflections/' + encodeURIComponent(keptReflectionId)}>Open this Reflection →</Link>
+                <button type="button" onClick={beginAnotherRecognition}>Write another recognition</button>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.memberMeaningWrite}>
+              <textarea
+                value={recognitionText}
+                onChange={(event) => setRecognitionText(event.target.value)}
+                placeholder="Write what you recognize — including what does not fit, what remains uncertain, or what becomes clearer in your own words."
+                aria-label="What do you recognize here"
+                rows={6}
+              />
+              <div className={styles.memberMeaningKeep}>
+                <div>
+                  <small>{recognitionText.trim() ? 'YOUR WORDS ONLY' : 'NOTHING IS KEPT YET'}</small>
+                  <p>
+                    {recognitionText.trim()
+                      ? 'Keeping creates a Reflection from these exact words. MAIA’s interpretation is not copied.'
+                      : 'Write first. Nothing from the chart or conversation is saved as your meaning automatically.'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={!recognitionText.trim() || recognitionSaving}
+                  onClick={keepRecognitionAsReflection}
+                >
+                  {recognitionSaving ? 'Keeping…' : 'Keep this as a Reflection'}
+                </button>
+              </div>
+              {recognitionError ? <p className={styles.memberMeaningError} role="alert">{recognitionError}</p> : null}
+            </div>
+          )}
+        </section>
 
         <div className={styles.detailWrap}>
           {/* House Wheel & Planetary Positions */}

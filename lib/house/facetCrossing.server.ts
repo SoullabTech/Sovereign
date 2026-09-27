@@ -5,7 +5,7 @@ import { resolveDivinationSymbolicSourcePacket } from '@/lib/house/symbolicSourc
 
 export type CarrySourceFacet = 'journal' | 'dream' | 'reflections' | 'ideas' | 'relationships' | 'changes' | 'decisions' | 'divination';
 export type CarryTargetFacet = 'changes' | 'decisions' | 'journal' | 'anchor';
-export type RelationSourceFacet = CarrySourceFacet;
+export type RelationSourceFacet = CarrySourceFacet | 'astrology';
 export type RelationTargetFacet = CarryTargetFacet | 'reflections';
 export type FlowFacet = RelationSourceFacet | RelationTargetFacet;
 
@@ -320,6 +320,63 @@ export async function resolveFacetCarrySource(
   };
 }
 
+type AstrologySourceRef = {
+  zodiacMode: 'tropical' | 'sidereal';
+  houseSystem: 'porphyry' | 'placidus' | 'whole-sign' | 'equal' | 'koch';
+  ayanamsa: string | null;
+};
+
+function parseAstrologyRef(value: string): AstrologySourceRef | null {
+  const [kind, zodiacMode, houseSystem, ayanamsa] = value.split(':');
+  if (kind !== 'natal') return null;
+  if (zodiacMode !== 'tropical' && zodiacMode !== 'sidereal') return null;
+  if (!['porphyry', 'placidus', 'whole-sign', 'equal', 'koch'].includes(houseSystem)) return null;
+  if (ayanamsa && !/^[a-z0-9_-]{1,40}$/i.test(ayanamsa)) return null;
+  return {
+    zodiacMode,
+    houseSystem: houseSystem as AstrologySourceRef['houseSystem'],
+    ayanamsa: ayanamsa || null,
+  };
+}
+
+function titleCaseLens(value: string): string {
+  return value
+    .split(/[-_]/)
+    .map((part) => part ? part.charAt(0).toUpperCase() + part.slice(1) : part)
+    .join(' ');
+}
+
+async function resolveAstrologySource(
+  memberId: string,
+  sourceRefId: string,
+): Promise<FacetFlowEvidence['source'] | null> {
+  const parsed = parseAstrologyRef(sourceRefId);
+  if (!parsed) return null;
+
+  const owner = await query<{ id: string }>(
+    `SELECT id::text AS id
+       FROM members
+      WHERE id = $1::uuid
+        AND birth_date IS NOT NULL
+      LIMIT 1`,
+    [memberId],
+  );
+  if (!owner.rows[0]) return null;
+
+  const zodiacLabel = parsed.zodiacMode === 'tropical'
+    ? 'Tropical'
+    : `Sidereal${parsed.ayanamsa ? ' · ' + titleCaseLens(parsed.ayanamsa) : ''}`;
+  const houseLabel = titleCaseLens(parsed.houseSystem);
+
+  return {
+    facet: 'astrology',
+    refId: sourceRefId,
+    label: `Natal chart · ${zodiacLabel} · ${houseLabel}`,
+    excerpt: `Member-owned natal chart viewed through the ${zodiacLabel} zodiac and ${houseLabel} house lens.`,
+    href: '/astrology',
+  };
+}
+
 type DivinationKind = 'iching' | 'tarot' | 'runes';
 
 function parseDivinationRef(value: string): { kind: DivinationKind; id: string } | null {
@@ -465,6 +522,9 @@ export async function resolveFacetFlowSource(
   sourceFacet: RelationSourceFacet,
   sourceRefId: string,
 ): Promise<FacetFlowEvidence['source'] | null> {
+  if (sourceFacet === 'astrology') {
+    return resolveAstrologySource(memberId, sourceRefId);
+  }
   if (sourceFacet === 'divination') {
     return resolveDivinationSource(memberId, sourceRefId);
   }
@@ -543,7 +603,7 @@ export async function recordFacetCrossing(
 
 const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'dream', 'reflections', 'ideas', 'relationships', 'changes', 'decisions', 'divination']);
 const CARRY_TARGET_FACETS = new Set<CarryTargetFacet>(['changes', 'decisions', 'journal', 'anchor']);
-const FLOW_SOURCE_FACETS = new Set<RelationSourceFacet>(['journal', 'dream', 'reflections', 'ideas', 'relationships', 'changes', 'decisions', 'divination']);
+const FLOW_SOURCE_FACETS = new Set<RelationSourceFacet>(['journal', 'dream', 'reflections', 'ideas', 'relationships', 'changes', 'decisions', 'divination', 'astrology']);
 const FLOW_TARGET_FACETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'journal', 'anchor', 'reflections']);
 
 function isCarrySourceFacet(value: string): value is CarrySourceFacet {
