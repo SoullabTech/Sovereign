@@ -6,6 +6,8 @@ import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
 import { apiFetch } from '@/lib/http/apiBase';
 import { todayISODate } from '@/lib/maia/dailyAnchor';
 import styles from './anchor-room.module.css';
+import { FacetCarryNotice, type FacetCarryRef } from '@/components/house/FacetCarryNotice';
+import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
 
 function dayLabel(iso: string): string {
   if (!iso) return '';
@@ -65,14 +67,26 @@ export default function AnchorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromHouse = searchParams?.get('from') === 'house';
+  const sourceFacet = searchParams?.get('sourceFacet');
+  const sourceRefId = searchParams?.get('sourceRefId');
+  const crossingId = searchParams?.get('crossingId');
+  const carrySourceRef: FacetCarryRef | null =
+    (sourceFacet === 'changes' || sourceFacet === 'decisions') && sourceRefId && crossingId
+      ? { sourceFacet, sourceRefId, crossingId }
+      : null;
   const [arrivedAt] = useState(() => new Date());
   const [date, setDate] = useState('');
   const [prompt, setPrompt] = useState('');
+  const [anchorId, setAnchorId] = useState<string | null>(null);
   const [response, setResponse] = useState('');
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [carrySourceReady, setCarrySourceReady] = useState<boolean | null>(
+    carrySourceRef ? null : true,
+  );
+  const [carryApplied, setCarryApplied] = useState(false);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showYesterday, setShowYesterday] = useState(false);
@@ -88,6 +102,7 @@ export default function AnchorPage() {
         if (!res.ok) throw new Error('anchor');
         const data = await res.json();
         setPrompt(data.prompt || '');
+        setAnchorId(typeof data.anchorId === 'string' ? data.anchorId : null);
         setCreatedAt(typeof data.createdAt === 'string' ? data.createdAt : null);
         setUpdatedAt(typeof data.updatedAt === 'string' ? data.updatedAt : null);
         if (typeof data.response === 'string' && data.response.length > 0) {
@@ -116,27 +131,33 @@ export default function AnchorPage() {
 
   const onHold = useCallback(async () => {
     const trimmed = response.trim();
-    if (!trimmed || busy) return;
+    if (!trimmed || busy || (carrySourceRef && carrySourceReady !== true)) return;
     setBusy(true);
     setError(null);
     try {
       const res = await apiFetch('/api/anchor/today', {
         method: 'POST',
-        body: JSON.stringify({ date, response: trimmed }),
+        body: JSON.stringify({
+          date,
+          response: trimmed,
+          sourceRef: carrySourceRef ?? undefined,
+        }),
       });
       if (!res.ok) throw new Error('anchor');
       const data = await res.json().catch(() => ({}));
       setResponse(trimmed);
+      setAnchorId(typeof data.anchorId === 'string' ? data.anchorId : anchorId);
       setCreatedAt(typeof data.createdAt === 'string' ? data.createdAt : createdAt);
       setUpdatedAt(typeof data.updatedAt === 'string' ? data.updatedAt : updatedAt);
       setSaved(true);
       setEditing(false);
+      if (carrySourceRef) setCarryApplied(true);
     } catch {
       setError('That did not save. Your words are still here.');
     } finally {
       setBusy(false);
     }
-  }, [date, response, busy, createdAt, updatedAt]);
+  }, [date, response, busy, createdAt, updatedAt, anchorId, carrySourceRef, carrySourceReady]);
 
   const onToggleYesterday = useCallback(async () => {
     if (yesterday !== null) {
@@ -199,6 +220,16 @@ export default function AnchorPage() {
             <p className={styles.daypart}>{daypart(arrivedAt)}</p>
             <h1 id="daily-anchor-heading">{prompt}</h1>
 
+            {carrySourceRef ? (
+              <div className="mt-9 mb-2 max-w-2xl">
+                <FacetCarryNotice
+                  targetFacet="anchor"
+                  sourceRef={carrySourceRef}
+                  onResolved={(source) => setCarrySourceReady(Boolean(source))}
+                />
+              </div>
+            ) : null}
+
             <textarea
               ref={textareaRef}
               value={response}
@@ -212,7 +243,11 @@ export default function AnchorPage() {
               <button
                 type="button"
                 className={styles.keep}
-                disabled={busy || response.trim().length === 0}
+                disabled={
+                  busy ||
+                  response.trim().length === 0 ||
+                  (carrySourceRef ? carrySourceReady !== true : false)
+                }
                 onClick={() => void onHold()}
               >
                 {busy ? 'Keeping…' : 'Keep this with me today'}
@@ -231,6 +266,25 @@ export default function AnchorPage() {
             <p className={styles.heldLabel}>YOUR ANCHOR TODAY</p>
             <p className={styles.heldPrompt}>{prompt}</p>
             <blockquote>{response}</blockquote>
+
+            {carrySourceRef && !carryApplied ? (
+              <div className="mt-8 max-w-2xl">
+                <FacetCarryNotice
+                  targetFacet="anchor"
+                  sourceRef={carrySourceRef}
+                  onResolved={(source) => setCarrySourceReady(Boolean(source))}
+                />
+              </div>
+            ) : null}
+
+            {anchorId ? (
+              <FacetOriginTrail
+                targetFacet="anchor"
+                targetRefId={anchorId}
+                className="mt-8 max-w-2xl"
+              />
+            ) : null}
+
             <div className={styles.heldMeta}>
               <span>{heldPhrase(createdAt)}</span>
               {revisited && updatedAt ? <span>Revisited · {clockLabel(updatedAt)}</span> : null}

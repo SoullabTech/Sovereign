@@ -2,8 +2,8 @@ import type { TransactionClient } from '@/lib/db/postgres';
 import { query } from '@/lib/db/postgres';
 import { getCapsuleById } from '@/lib/capsules';
 
-export type CarrySourceFacet = 'journal' | 'reflections' | 'ideas' | 'relationships';
-export type CarryTargetFacet = 'changes' | 'decisions' | 'journal';
+export type CarrySourceFacet = 'journal' | 'reflections' | 'ideas' | 'relationships' | 'changes' | 'decisions';
+export type CarryTargetFacet = 'changes' | 'decisions' | 'journal' | 'anchor';
 export type RelationSourceFacet = CarrySourceFacet | 'divination';
 export type RelationTargetFacet = CarryTargetFacet | 'reflections';
 export type FlowFacet = RelationSourceFacet | RelationTargetFacet;
@@ -71,6 +71,8 @@ const ALLOWED_CROSSINGS: Record<
   'relationship-name-change': { source: 'relationships', target: 'changes' },
   'relationship-consider-decision': { source: 'relationships', target: 'decisions' },
   'relationship-write-journal': { source: 'relationships', target: 'journal' },
+  'change-carry-to-anchor': { source: 'changes', target: 'anchor' },
+  'decision-hold-today': { source: 'decisions', target: 'anchor' },
 };
 
 function excerpt(text: string, max = 900): string {
@@ -126,6 +128,61 @@ export async function resolveFacetCarrySource(
       excerpt: excerpt(row.content),
       createdAt: row.created_at,
       returnHref: '/journal?entry=' + encodeURIComponent(row.id),
+    };
+  }
+
+  if (sourceFacet === 'changes') {
+    const result = await query<{
+      id: string;
+      title: string;
+      description: string;
+      created_at: string;
+    }>(
+      `SELECT id::text AS id, title, description, created_at::text AS created_at
+         FROM studio_changes
+        WHERE id::text = $1
+          AND member_id = $2::uuid
+          AND status <> 'archived'
+        LIMIT 1`,
+      [sourceRefId, memberId],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    return {
+      facet: 'changes',
+      refId: row.id,
+      label: row.title,
+      excerpt: excerpt(row.description),
+      createdAt: row.created_at,
+      returnHref: '/changes?change=' + encodeURIComponent(row.id),
+    };
+  }
+
+  if (sourceFacet === 'decisions') {
+    const result = await query<{
+      id: string;
+      title: string;
+      context: string;
+      created_at: string;
+    }>(
+      `SELECT id::text AS id, title, context, created_at::text AS created_at
+         FROM studio_decisions
+        WHERE id::text = $1
+          AND decision_scope = 'personal'
+          AND personal_member_id = $2::uuid
+          AND status <> 'archived'
+        LIMIT 1`,
+      [sourceRefId, memberId],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    return {
+      facet: 'decisions',
+      refId: row.id,
+      label: row.title,
+      excerpt: excerpt(row.context),
+      createdAt: row.created_at,
+      returnHref: '/decisions/' + encodeURIComponent(row.id),
     };
   }
 
@@ -433,10 +490,10 @@ export async function recordFacetCrossing(
   );
 }
 
-const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'reflections', 'ideas', 'relationships']);
-const CARRY_TARGET_FACETS = new Set<CarryTargetFacet>(['changes', 'decisions', 'journal']);
-const FLOW_SOURCE_FACETS = new Set<RelationSourceFacet>(['journal', 'reflections', 'ideas', 'relationships', 'divination']);
-const FLOW_TARGET_FACETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'journal', 'reflections']);
+const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'reflections', 'ideas', 'relationships', 'changes', 'decisions']);
+const CARRY_TARGET_FACETS = new Set<CarryTargetFacet>(['changes', 'decisions', 'journal', 'anchor']);
+const FLOW_SOURCE_FACETS = new Set<RelationSourceFacet>(['journal', 'reflections', 'ideas', 'relationships', 'changes', 'decisions', 'divination']);
+const FLOW_TARGET_FACETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'journal', 'anchor', 'reflections']);
 
 function isCarrySourceFacet(value: string): value is CarrySourceFacet {
   return CARRY_SOURCE_FACETS.has(value as CarrySourceFacet);
@@ -460,6 +517,26 @@ export async function resolveFacetTarget(
   targetRefId: string,
 ): Promise<FacetFlowEndpoint | null> {
   if (!targetRefId) return null;
+
+  if (targetFacet === 'anchor') {
+    const result = await query<{ id: string; anchor_date: string }>(
+      `SELECT id::text AS id, anchor_date::text AS anchor_date
+         FROM member_daily_anchors
+        WHERE id::text = $1
+          AND member_id = $2::uuid
+        LIMIT 1`,
+      [targetRefId, memberId],
+    );
+    const row = result.rows[0];
+    return row
+      ? {
+          facet: 'anchor',
+          refId: row.id,
+          label: 'Daily Anchor · ' + row.anchor_date,
+          href: '/maia/anchor?from=house',
+        }
+      : null;
+  }
 
   if (targetFacet === 'changes') {
     const result = await query<{ id: string; title: string }>(
@@ -541,6 +618,27 @@ async function resolveFacetTargetEvidence(
   targetFacet: RelationTargetFacet,
   targetRefId: string,
 ): Promise<FacetFlowEvidence['target'] | null> {
+  if (targetFacet === 'anchor') {
+    const result = await query<{ id: string; anchor_date: string; response: string }>(
+      `SELECT id::text AS id, anchor_date::text AS anchor_date, response
+         FROM member_daily_anchors
+        WHERE id::text = $1
+          AND member_id = $2::uuid
+        LIMIT 1`,
+      [targetRefId, memberId],
+    );
+    const row = result.rows[0];
+    return row
+      ? {
+          facet: 'anchor',
+          refId: row.id,
+          label: 'Daily Anchor · ' + row.anchor_date,
+          excerpt: excerpt(row.response),
+          href: '/maia/anchor?from=house',
+        }
+      : null;
+  }
+
   if (targetFacet === 'changes') {
     const result = await query<{ id: string; title: string; description: string }>(
       `SELECT id::text AS id, title, description

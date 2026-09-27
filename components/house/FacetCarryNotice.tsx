@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-type SourceFacet = 'journal' | 'reflections' | 'ideas' | 'relationships';
-type TargetFacet = 'changes' | 'decisions' | 'journal';
+type SourceFacet = 'journal' | 'reflections' | 'ideas' | 'relationships' | 'changes' | 'decisions';
+type TargetFacet = 'changes' | 'decisions' | 'journal' | 'anchor';
 
 export type FacetCarryRef = {
   crossingId: string;
@@ -99,7 +99,7 @@ export function FacetCarryNotice({
   return (
     <aside className={`border-l pl-4 py-1 ${border}`} aria-label="Carried source">
       <p className={`text-[10px] uppercase tracking-[0.18em] ${heading}`}>
-        Came with you from {source.facet === 'journal' ? 'Journal' : source.facet === 'reflections' ? 'Reflections' : source.facet === 'relationships' ? 'Relationships' : 'Ideas'}
+        Came with you from {source.facet === 'journal' ? 'Journal' : source.facet === 'reflections' ? 'Reflections' : source.facet === 'relationships' ? 'Relationships' : source.facet === 'changes' ? 'Changes' : source.facet === 'decisions' ? 'Decisions' : 'Ideas'}
       </p>
       <p className={`text-sm mt-1 ${label}`}>{source.label}</p>
       {source.excerpt ? (

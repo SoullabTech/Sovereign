@@ -267,6 +267,12 @@ export default function ChangeJourney({
           targetRefId={changeId}
           className="mt-4"
         />
+        <a
+          href={`/maia/anchor?from=house&sourceFacet=changes&sourceRefId=${encodeURIComponent(changeId)}&crossingId=change-carry-to-anchor`}
+          className="inline-block mt-4 text-xs text-amber-400/65 hover:text-amber-300 transition-colors"
+        >
+          Carry this into today →
+        </a>
       </div>
 
       {/* Hexagram Casting */}

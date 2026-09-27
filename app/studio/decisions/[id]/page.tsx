@@ -724,11 +724,18 @@ export default function DecisionDetailPage() {
         </div>
 
         {personalLens ? (
-          <FacetOriginTrail
-            targetFacet="decisions"
-            targetRefId={decisionId}
-            className="mb-5"
-          />
+          <div className="mb-5">
+            <FacetOriginTrail
+              targetFacet="decisions"
+              targetRefId={decisionId}
+            />
+            <a
+              href={`/maia/anchor?from=house&sourceFacet=decisions&sourceRefId=${encodeURIComponent(decisionId)}&crossingId=decision-hold-today`}
+              className="inline-block mt-3 text-xs text-amber-400/65 hover:text-amber-300 transition-colors"
+            >
+              Hold this choice today →
+            </a>
+          </div>
         ) : null}
 
         {/* Practice-only evidence loop. Personal Decisions do not assume practitioner identity. */}

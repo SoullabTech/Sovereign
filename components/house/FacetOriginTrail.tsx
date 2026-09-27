@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 
-type TargetFacet = 'changes' | 'decisions' | 'journal' | 'reflections';
+type TargetFacet = 'changes' | 'decisions' | 'journal' | 'anchor' | 'reflections';
 
 type Origin = {
   crossingId: string;
   crossedAt: string;
   source: {
-    facet: 'journal' | 'reflections' | 'ideas' | 'relationships' | 'divination';
+    facet: 'journal' | 'reflections' | 'ideas' | 'relationships' | 'changes' | 'decisions' | 'divination';
     refId: string;
     label: string;
     excerpt: string;
@@ -76,7 +76,11 @@ export function FacetOriginTrail({
                         ? 'Idea'
                         : origin.source.facet === 'relationships'
                           ? 'Relationship'
-                          : 'Reflection'}
+                          : origin.source.facet === 'changes'
+                            ? 'Change'
+                            : origin.source.facet === 'decisions'
+                              ? 'Decision'
+                              : 'Reflection'}
                 </p>
                 <p className={`text-sm mt-1 ${labelTone}`}>{origin.source.label}</p>
                 <a
@@ -89,7 +93,7 @@ export function FacetOriginTrail({
             ) : (
               <p className={`text-xs ${missingTone}`}>
                 The original source is no longer available. This {
-                  targetFacet === 'changes' ? 'Change' : targetFacet === 'decisions' ? 'Decision' : 'Reflection'
+                  targetFacet === 'changes' ? 'Change' : targetFacet === 'decisions' ? 'Decision' : targetFacet === 'anchor' ? 'Daily Anchor' : 'Reflection'
                 } remains.
               </p>
             )}
