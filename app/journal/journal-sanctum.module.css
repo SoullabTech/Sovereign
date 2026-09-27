@@ -79,6 +79,8 @@
   -webkit-mask: url('/holoflower.svg') center / contain no-repeat;
   mask: url('/holoflower.svg') center / contain no-repeat;
   filter: drop-shadow(0 1px 0 rgba(255,255,255,.28));
+  opacity: .66;
+  animation: journalWatermarkBreath 18s ease-in-out infinite;
 }
 .book :global(main) {
   min-height: calc(100svh - clamp(36px, 6vw, 96px)) !important;
@@ -92,15 +94,19 @@
   content: '';
   position: absolute;
   z-index: 0;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
   pointer-events: none;
-  background:
-    linear-gradient(90deg,
-      transparent 0 49.2%,
-      rgba(100,72,44,.10) 49.55%,
-      rgba(255,255,255,.30) 50%,
-      rgba(86,60,38,.09) 50.45%,
-      transparent 50.8% 100%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(91, 64, 41, .055) 8%,
+    rgba(91, 64, 41, .10) 48%,
+    rgba(91, 64, 41, .065) 90%,
+    transparent 100%
+  );
 }
 .book :global(main > *) {
   position: relative;
@@ -183,6 +189,12 @@
   font-size: clamp(1.12rem, 1.5vw, 1.28rem) !important;
   line-height: 1.78 !important;
   letter-spacing: .002em;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.book :global(main[aria-labelledby='journal-writing-heading'] > div:nth-of-type(2):has(textarea:focus-visible)) {
+  border-left-color: rgba(127,67,31,.28);
 }
 .book :global(main[aria-labelledby='journal-writing-heading'] > div:first-of-type),
 .book :global(main[aria-labelledby='journal-reading-heading'] > div:first-of-type),
@@ -283,7 +295,40 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .sanctum *, .sanctum *::before, .sanctum *::after {
+    animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+.book :global([aria-label='Journal entry type']) {
+  padding-left: .2rem;
+  border-left: 1px solid rgba(168,138,85,.16);
+}
+
+.book :global([aria-label='Journal entry type'] button) {
+  position: relative;
+  letter-spacing: .17em !important;
+}
+
+.book :global([aria-label='Journal entry type'] button[aria-pressed='true'])::after {
+  content: '';
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 7px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(127,67,31,.72), transparent);
+}
+
+.book :global(#journal-place) {
+  color: var(--journal-ink) !important;
+  font-family: 'Journal Crimson', Georgia, serif !important;
+  font-size: .95rem !important;
+  letter-spacing: .01em;
+}
+
+@keyframes journalWatermarkBreath {
+  0%, 100% { opacity: .56; }
+  50% { opacity: .74; }
 }

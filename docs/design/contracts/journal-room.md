@@ -3,6 +3,8 @@ room: Journal
 human_activity: writing — the member putting their own experience into words, and returning to it
 surfaces:
   - app/journal/page.tsx
+  - app/journal/layout.tsx
+  - app/journal/journal-sanctum.module.css
   - app/journal/room/**
   - components/journal/room/**
 change_class: experiential
@@ -19,7 +21,7 @@ shared_with_house: House token layer (--sl-* field/surface/signal hierarchy) · 
 distinct_to_room: writing is the destination, not a control surface — the room opens on a question rather than an inventory, holds one long readable measure for both composing and reading, and lets MAIA appear only after the member has kept something
 screenshot_desktop: docs/design/contracts/screenshots/journal-room-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/journal-room-mobile.png
-experience_verification: CUTOVER (2026-08-11) — walked at /journal from a clean worktree branched off trunk, after the room replaced UnifiedJournalView on the canonical member route. Confirmed the paper arrival renders with no old-surface markers; wrote and kept an entry and verified the row persisted; left and returned and found it still present; opened Browse and reached entries, Captures, Sessions and Changes, with Decisions correctly not offered when its source answers 401; confirmed exact literal search; confirmed Reflect returns 200 for an owned entry and 401 without a session; confirmed Return fires a calendar rule and discloses a factual account. Accessibility re-measured on the paper material across all states: zero room-level failures (lowest contrast 5.16, targets >=44px, named heading per state, zero reduced-motion offenders, no overflow at 1280/400/200% text). EARLIER (2026-08-10) — walked all five approved states in a browser at 1280x800 and 375x812 against a live dev server with an authenticated dev session — arrival, writing (typed, kept), reading, MAIA reflection (live /api/journal/reflect response), and return. Verified the anniversary selection rule fired, that `Why this?` discloses the literal rule, that `Write from here` carries MAIA's question as context without seeding the member's text, and that a failed keep preserves the writing. Unauthorized House chrome observed and reported, not silently suppressed.
+experience_verification: 2026-09-26 founder refinement — live localhost:3597 writing-state walk accepted the Journal as traditional + quietly magical, retained paper/book architecture, simplified the center gutter to one faint crease, moved DAY / DREAM beside lived date/time, added optional member-authored place with no automatic location capture, preserved real MAIA-origin question provenance, and kept Dream interpretation post-writing only. Founder explicitly ruled the flow between facets as load-bearing and authorized full implementation. Focused Journal suite 37/37 PASS; type-health 222 vs baseline 239 with no regressions. CUTOVER (2026-08-11) — walked at /journal from a clean worktree branched off trunk, after the room replaced UnifiedJournalView on the canonical member route. Confirmed the paper arrival renders with no old-surface markers; wrote and kept an entry and verified the row persisted; left and returned and found it still present; opened Browse and reached entries, Captures, Sessions and Changes, with Decisions correctly not offered when its source answers 401; confirmed exact literal search; confirmed Reflect returns 200 for an owned entry and 401 without a session; confirmed Return fires a calendar rule and discloses a factual account. Accessibility re-measured on the paper material across all states: zero room-level failures (lowest contrast 5.16, targets >=44px, named heading per state, zero reduced-motion offenders, no overflow at 1280/400/200% text). EARLIER (2026-08-10) — walked all five approved states in a browser at 1280x800 and 375x812 against a live dev server with an authenticated dev session — arrival, writing (typed, kept), reading, MAIA reflection (live /api/journal/reflect response), and return. Verified the anniversary selection rule fired, that `Why this?` discloses the literal rule, that `Write from here` carries MAIA's question as context without seeding the member's text, and that a failed keep preserves the writing. Unauthorized House chrome observed and reported, not silently suppressed.
 ---
 
 # Journal — Experience Contract
@@ -74,10 +76,26 @@ tertiary. Nothing counts, filters, or summarises the member back to themselves.
 
 - dashboard, card grid, or any listing-as-arrival
 - search, filters, category tabs, entry counts, streaks, stats
-- title ceremony before writing; classification before writing
+- title ceremony before writing; required taxonomy or evaluative classification before writing
 - chat input, message bubbles, avatars, "MAIA is thinking", regenerate
 - persisted reflection history
 - carousels, "Recommended for you", relevance scores
+
+## 2026-09-26 founder refinement — lived entry context + enchanted traditional register
+
+Founder review retained the Journal's approved paper/book architecture and added a narrower ruling about traditional journaling conventions:
+
+- lived date and actual time stay visible at the top of the writing page;
+- time-of-day language may accompany the stamp because it situates the entry in lived experience;
+- `DAY / DREAM` belongs beside that temporal context before writing begins;
+- this does **not** reintroduce classification ceremony: Day is the quiet default and Dream is a traditional notebook convention, not a system taxonomy;
+- an optional **Add a place** gesture may record member-authored place provenance in the existing entry metadata; location is never inferred or captured automatically;
+- when the member enters through `Write from here`, the page may say **Written from a question with MAIA** and preserve that question as provenance without seeding it into the member's text;
+- after a kept Dream, the relational doorway may read **Reflect on this dream with MAIA**;
+- the page keeps one faint central crease rather than a double-rule gutter;
+- the material register may feel magical as well as traditional — vellum/paper depth, warm brass/ember, restrained watermark, subtle ambient life — but must not become fantasy-themed interface decoration.
+
+This refinement supersedes the earlier reference's placement of Day/Dream classification below the writing. The load-bearing law remains unchanged: **writing is still the destination; no title ceremony, mood picker, tags-before-writing, word count, streak, score, generated interpretation, or productivity framing may stand between the member and the page.**
 
 ## The two brand tests
 

@@ -39,13 +39,19 @@ export interface WritingSurfaceProps {
    * writes *from*, never text they are handed.
    */
   fromQuestion?: string;
-  onKeep: (content: string, entryType: EntryType) => Promise<void>;
+  onKeep: (
+    content: string,
+    entryType: EntryType,
+    meta?: { place?: string; fromQuestion?: string },
+  ) => Promise<void>;
   onLeave: () => void;
 }
 
 export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: WritingSurfaceProps) {
   const [text, setText] = useState('');
   const [entryType, setEntryType] = useState<EntryType>('day');
+  const [place, setPlace] = useState('');
+  const [showPlace, setShowPlace] = useState(false);
   const [keeping, setKeeping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -93,7 +99,15 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
     setKeeping(true);
     setError(null);
     try {
-      await onKeep(text.trim(), entryType);
+      const meta = {
+        ...(place.trim() ? { place: place.trim().slice(0, 120) } : {}),
+        ...(fromQuestion ? { fromQuestion: fromQuestion.slice(0, 500) } : {}),
+      };
+      await onKeep(
+        text.trim(),
+        entryType,
+        Object.keys(meta).length > 0 ? meta : undefined,
+      );
       try {
         window.localStorage.removeItem(DRAFT_KEY);
       } catch {
@@ -118,6 +132,12 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
     hour: 'numeric',
     minute: '2-digit',
   });
+  const period =
+    startedAt.getHours() < 5 ? 'Late tonight' :
+    startedAt.getHours() < 12 ? 'This morning' :
+    startedAt.getHours() < 17 ? 'This afternoon' :
+    startedAt.getHours() < 22 ? 'Tonight' :
+    'Late tonight';
 
   return (
     <main
@@ -149,13 +169,66 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
             about what they are making, not decorating the field. Rendered from
             the client's own clock at mount, and never sent — the row's
             authoritative created_at is set server-side on keep. */}
-        <p className={`mb-8 ${type.meta} ${color.muted}`}>
-          <time dateTime={startedAt.toISOString()}>{stamp}</time>
-        </p>
+        <div className="mb-8 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <p className={`${type.meta} ${color.muted}`}>
+            <time dateTime={startedAt.toISOString()}>{stamp}</time>
+          </p>
+          <span className={`${type.meta} ${color.muted} italic`}>{period}</span>
 
-        {/* What MAIA asked, carried as context — not as the member's text. */}
+          {variant === 'writing' && (
+            <div className="flex items-center gap-1" role="group" aria-label="Journal entry type">
+              {(['day', 'dream'] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setEntryType(t)}
+                  aria-pressed={entryType === t}
+                  className={`${type.marker} ${focus} ${hitTight} ${quiet} px-1 ${
+                    entryType === t
+                      ? color.accent
+                      : `${color.muted} opacity-55`
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!showPlace && !place ? (
+            <button
+              type="button"
+              onClick={() => setShowPlace(true)}
+              className={`${type.meta} ${color.muted} ${focus} ${hit} ${quiet}`}
+            >
+              Add a place
+            </button>
+          ) : null}
+        </div>
+
+        {showPlace || place ? (
+          <div className="mb-8">
+            <label htmlFor="journal-place" className={srOnly}>Place for this entry</label>
+            <input
+              id="journal-place"
+              type="text"
+              value={place}
+              onChange={(e) => setPlace(e.target.value.slice(0, 120))}
+              placeholder="Home, the garden, New Haven…"
+              autoComplete="off"
+              className={`w-full max-w-[18rem] bg-transparent border-0 border-b pb-1 outline-none
+                ${type.meta} ${color.secondary} ${color.hairline}
+                placeholder:opacity-45 focus:border-[var(--sl-accent-primary)]`}
+            />
+          </div>
+        ) : null}
+
+        {/* What MAIA asked, carried as provenance — never as the member's text. */}
         {fromQuestion && (
-          <p className={`mb-8 ${type.meta} ${color.muted}`}>{fromQuestion}</p>
+          <div className="mb-8">
+            <p className={`${type.marker} ${color.muted} mb-2`}>Written from a question with MAIA</p>
+            <p className={`${type.meta} ${color.muted} italic`}>{fromQuestion}</p>
+          </div>
         )}
 
         {/* No title field. The first line becomes the title when kept. */}
@@ -170,10 +243,8 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
           placeholder={variant === 'note' ? 'Note something…' : ''}
         />
 
-        {/* Classification sits BELOW the writing and appears only once there is
-            writing to classify. It is never a step before writing. */}
         {hasText && (
-          <div className="mt-10 flex items-center gap-5">
+          <div className="mt-10">
             <button
               type="button"
               onClick={keep}
@@ -183,24 +254,6 @@ export function WritingSurface({ variant, fromQuestion, onKeep, onLeave }: Writi
             >
               {keeping ? 'Keeping…' : 'Keep this'}
             </button>
-
-            <div className="flex items-center gap-3" role="group" aria-label="What kind of writing">
-              {(['day', 'dream'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setEntryType(t)}
-                  aria-pressed={entryType === t}
-                  /* hitTight, not hit: "day" measured 22px wide — under the
-                     24px target-size floor. Widens the hit area only. */
-                  className={`${type.meta} ${focus} ${hitTight} ${quiet} ${
-                    entryType === t ? color.secondary : `${color.muted} opacity-60`
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
           </div>
         )}
 

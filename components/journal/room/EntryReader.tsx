@@ -22,6 +22,11 @@ export interface JournalEntry {
   id: string;
   content: string;
   created_at: string;
+  entry_type?: 'day' | 'dream' | 'handwriting';
+  meta?: {
+    place?: string;
+    fromQuestion?: string;
+  } | null;
 }
 
 /**
@@ -85,8 +90,21 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
           {entry.content}
         </article>
 
-        {/* Metadata beneath, quiet and singular — a date, not a record header. */}
-        <p className={`mt-8 ${type.meta} ${color.muted}`}>{livedDate(entry.created_at)}</p>
+        {/* Provenance remains beneath the member's words: lived time, entry
+            convention, optional member-authored place, and a real MAIA crossing
+            only when this entry actually began from one. */}
+        <div className={`mt-8 flex flex-wrap items-center gap-x-4 gap-y-1 ${type.meta} ${color.muted}`}>
+          <span>{livedDate(entry.created_at)}</span>
+          {entry.entry_type === 'dream' ? <span>DREAM</span> : null}
+          {entry.meta?.place ? <span>{entry.meta.place}</span> : null}
+        </div>
+
+        {entry.meta?.fromQuestion ? (
+          <div className="mt-5">
+            <p className={`${type.marker} ${color.muted} mb-1`}>Written from a question with MAIA</p>
+            <p className={`${type.meta} ${color.muted} italic`}>{entry.meta.fromQuestion}</p>
+          </div>
+        ) : null}
 
         {!reflecting && (
           <div className="mt-12">
@@ -95,7 +113,7 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
               onClick={onReflect}
               className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
             >
-              Reflect with MAIA
+              {entry.entry_type === 'dream' ? 'Reflect on this dream with MAIA' : 'Reflect with MAIA'}
             </button>
           </div>
         )}

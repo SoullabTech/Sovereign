@@ -74,11 +74,15 @@ export function JournalRoom() {
   }, [load]);
 
   const keep = useCallback(
-    async (content: string, entryType: EntryType) => {
+    async (
+      content: string,
+      entryType: EntryType,
+      meta?: { place?: string; fromQuestion?: string },
+    ) => {
       const res = await apiFetch('/api/journal/quick/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entryType, content, source: 'journal_room' }),
+        body: JSON.stringify({ entryType, content, source: 'journal_room', meta: meta ?? null }),
       });
       const json = await res.json().catch(() => null);
       if (!json?.success || !json.entryId) throw new Error('keep failed');
@@ -89,6 +93,8 @@ export function JournalRoom() {
         id: json.entryId,
         content,
         created_at: json.createdAt ?? new Date().toISOString(),
+        entry_type: entryType,
+        meta: json.meta ?? meta ?? null,
       };
       setState({ name: 'reading', entry, reflecting: false });
       void load();

@@ -123,12 +123,16 @@ interface QuickJournalEntry {
   audio_duration_ms?: number;
   transcript_source?: string;
   transcript_confidence?: number;
-  // OCR metadata (optional - present for handwriting entries)
+  // Entry provenance/context. Handwriting OCR and Journal-room context share
+  // one existing JSONB envelope; every field is optional and member-visible
+  // context must remain member-authored (place is never inferred from GPS).
   meta?: {
     ocrProvider?: string;
     ocrConfidence?: number;
     hasImage?: boolean;
     imageSize?: number;
+    place?: string;
+    fromQuestion?: string;
   };
 }
 
@@ -247,7 +251,8 @@ export async function POST(request: NextRequest) {
       success: true,
       entryId: entry.id,
       entryType: entry.entry_type,
-      createdAt: entry.created_at
+      createdAt: entry.created_at,
+      meta: entry.meta ?? null
     });
 
   } catch (error) {
