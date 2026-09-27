@@ -14,6 +14,8 @@
 .panel input { accent-color:#c5a06b; width:18px; height:18px; flex-shrink:0; }
 .symbol { width:18px; text-align:center; color:#cdb793; }
 .symbol[data-place='astrology'] { color:#7f9cbe; }
+.quickMark{height:18px;flex:0 0 18px;position:relative;font-size:0}
+.quickMark::before{content:'';position:absolute;inset:0;background:currentColor;-webkit-mask:url('/holoflower.svg') center/contain no-repeat;mask:url('/holoflower.svg') center/contain no-repeat;filter:drop-shadow(0 0 6px color-mix(in srgb,currentColor 24%,transparent));opacity:.95}
 .reorder { display:flex; gap:3px; }
 .panel button { font:inherit; color:inherit; border:1px solid rgba(221,188,142,.27); border-radius:6px;
   background:rgba(200,159,100,.055); padding:7px 11px; min-height:44px; cursor:pointer; }
