@@ -6678,68 +6678,32 @@ I'm not sure what I'm feeling yet.`;
             setIsMuted(false); // Ensure mic is unmuted
             console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
 
-            // 🔥 FIX: Force React to flush state updates before attempting mic restart
-            // Using requestAnimationFrame ensures we're after the React render cycle
+            // Turn-complete truth belongs in refs as well as React state. The
+            // delayed restart runs from an older render, so reading
+            // voiceSession.state.capabilities/phase here can strand hands-free
+            // on a stale snapshot even though playback has finished.
+            setIsProcessing(false);
+            setIsResponding(false);
+            setIsAudioPlaying(false);
+            isProcessingRef.current = false;
+            isRespondingRef.current = false;
+            isAudioPlayingRef.current = false;
+            isMicrophonePausedRef.current = false;
+
+            // Ask the canonical restart authority directly. It re-reads the live
+            // lifecycle refs and applies HANDS_FREE policy; presentation state is
+            // not allowed to decide whether the next turn can begin.
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
-                // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
-                const attemptMicRestart = (attempt: number) => {
-                  if (attempt > 8) {
-                    console.log('⚠️ [NON-STREAM] Mic restart failed after 8 attempts - forcing state reset');
-                    // 🔥 RECOVERY: Force reset all blocking states and try one more time
-                    setIsProcessing(false);
-                    setIsResponding(false);
-                    setIsAudioPlaying(false);
-                    setIsMicrophonePaused(false);
-                    isProcessingRef.current = false;
-                    isRespondingRef.current = false;
-                    isAudioPlayingRef.current = false;
-                    isMicrophonePausedRef.current = false;
-                    // Final attempt after forced reset
-                    setTimeout(() => {
-                      if (voiceSession.state.capabilities.canStartListening) {
-                        console.log('🎤 [NON-STREAM] Final attempt after state reset...');
-                        setIsMuted(false);
-                        if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_final_reset');
-                      }
-                    }, 500);
-                    return;
-                  }
-
-                  if (voiceSession.state.capabilities.canStartListening) {
-                    // Check ALL blocking conditions including mic pause and audio states
-                    const canRestart = !isProcessingRef.current &&
-                                       !isRespondingRef.current &&
-                                       !isAudioPlayingRef.current &&
-                                       !isMicrophonePausedRef.current;
-
-                    console.log(`🔍 [NON-STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
-
-                    if (canRestart) {
-                      console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_restart_attempt');
-                      // Verify mic actually started after a brief delay
-                      setTimeout(() => {
-                        if (voiceSession.state.phase === 'listening') {
-                          console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
-                        } else {
-                          console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
-                          if (attempt < 8) {
-                            setTimeout(() => attemptMicRestart(attempt + 1), 400);
-                          }
-                        }
-                      }, 150);
-                    } else {
-                      console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
-                      setTimeout(() => attemptMicRestart(attempt + 1), 300);
-                    }
-                  } else {
-                    console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
-                  }
-                };
-
-                // Start first attempt immediately after React render cycle
-                attemptMicRestart(1);
+                if (!lastSendWasVoiceRef.current) return;
+                const isHandsFree = voiceMicRef.current?.isHandsFree ?? true;
+                if (!isHandsFree) {
+                  console.log('🎤 [NON-STREAM] Push-to-talk mode - mic idle after playback');
+                  return;
+                }
+                console.log('🎤 [NON-STREAM] Playback cooldown complete - requesting hands-free restart');
+                setIsMuted(false);
+                voiceSession.methods.startListening('non_stream_restart_attempt');
               });
             });
           }, cooldownMs); // Wait for echo suppression cooldown
