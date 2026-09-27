@@ -23,3 +23,9 @@ Source-control commit, push, and review standing must be read from the actual br
 `BECOMING-02R1 — EXISTING-CONCEPT RECONCILIATION + EXPERIENCE/FACILITATION CONFORMANCE ADJUDICATION ONLY`.
 
 The proposed ruling is in `RECONCILIATION_DOCKET.md`. It preserves the constitution, distinguishes the old gathering proposal, removes the future-voice loophole, applies blank-receiver crossing law, and makes immediate exit and truthful interrupted status explicit. Builder execution remains closed.
+
+## Publication preparation checks
+
+The first `git diff --cached --check` rejected four Markdown hard-break trailing-space lines. The outer shell did not stop that first commit command; the actual revision-local pre-commit and commit-message hooks nevertheless ran and passed before commit `0f55af605`. This precursor is preserved rather than hidden. A bounded follow-up removed those spaces in README and the docket, updated their hashes, and reruns the full candidate whitespace check under fail-fast shell control. The constitution bytes are unchanged.
+
+The hooks used an existing dependency tree whose package-lock matched this exact base. They ran on the sparse documentary checkout: their result is not a full-repository regression assertion. Warnings about missing allowlisted source paths in this sparse checkout are not a mandate to modify that allowlist.

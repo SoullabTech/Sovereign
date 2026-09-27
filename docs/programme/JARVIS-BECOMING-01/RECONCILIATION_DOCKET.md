@@ -1,6 +1,6 @@
 # BECOMING-02R1 — Reconciliation and founder decision docket
 
-**Standing:** Findings and proposed dispositions, not invented founder rulings.  
+**Standing:** Findings and proposed dispositions, not invented founder rulings.
 **Boundary:** Meaning, experience, and contract reconciliation only. No runtime or historical-source mutation.
 
 ## D-01 — Two different subjects currently share the word Becoming

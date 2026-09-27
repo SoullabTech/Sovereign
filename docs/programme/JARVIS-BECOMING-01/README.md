@@ -1,8 +1,8 @@
 # JARVIS-BECOMING-01 — Programme cockpit
 
-**Opened:** 27 September 2026, following Kelly's instruction, “lets Jarvis this fully!”  
-**Subject:** Becoming — Future Self Field.  
-**Change class:** Documentary programme establishment; no product implementation.  
+**Opened:** 27 September 2026, following Kelly's instruction, “lets Jarvis this fully!”
+**Subject:** Becoming — Future Self Field.
+**Change class:** Documentary programme establishment; no product implementation.
 **Governing question:** How can Soullab support a member's relationship with possible futures while preserving present agency, member authorship, uncertainty, privacy, and the identity of every facet?
 
 ## Current standing
