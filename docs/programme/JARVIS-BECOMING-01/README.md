@@ -1,10 +1,12 @@
 # JARVIS-BECOMING-01 — Programme cockpit
 
-## Latest standing — post-Return relational candidate, 27 September 2026
+## Latest standing — live in-journey MAIA guide founder candidate, 27 September 2026
 
-`BECOMING-UX-01R2` responds to the founder's completed journey: the journey itself worked, but the ending deadened because there was no supportive synthesis or ongoing MAIA relationship. Exact code source: `1bc5e70c8488d608be82161e6e98a7b8b232d65e`. Read `BECOMING_UX_01R2_RELATIONAL_INTEGRATION_WITNESS_2026-09-27.md` first. Strict typecheck passes, Becoming core/handoff tests pass 32/32, and the visible journey + in-field MAIA witness passes 23/23 with MAIA mocked so automation creates no real provider turn.
+`BECOMING-MAIA-01R1` now gives MAIA a bounded guide role inside the accepted Future Self journey without redesigning the chamber. Exact founder candidate: `abb2fca3aa39e378ec62a4352c52d20f5451c943` on `feature/becoming-maia-guide-20260927`. Read `BECOMING_MAIA_01R1_LIVE_GUIDE_FOUNDER_CANDIDATE_2026-09-27.md` first. Strict typecheck passes; the full Becoming/unit contract suite passes 46/46; the dedicated live-guide browser witness passes 6/6; and the complete Becoming browser regression passes 23/23.
 
-After Return, one explicit gesture now gives the whole member-authored journey to MAIA for supportive synthesis and continuing conversation **inside Becoming**. The member does not navigate to `/maia` and does not need to repeat the journey. The optional `Continue in full MAIA` doorway is a valid later choice, but it is deliberately unwired here until the integrated House can preserve exact conversation continuity rather than opening a blank MAIA surface. Earlier planning units remain historical evidence; the constitutional source remains unchanged.
+The in-journey guide is opt-in and server-forced to sanctuary + ephemeral mode with empty conversation history. It receives only the current journey, offers one invitation at a time, follows the active element without imposing a fixed elemental sequence, and ends at explicit Return. Post-Return MAIA remains the separate continuity-enabled conversation already accepted by the founder. Automated witnesses make no real provider call.
+
+**Immediate gate:** founder live provider walk on `http://localhost:3798/becoming`. If accepted, reconcile this exact guide candidate with the concurrent Across-Time lane. Do not silently merge either lane, change canonical, or deploy. The constitutional source is unchanged.
 
 ### Earlier establishment record
 

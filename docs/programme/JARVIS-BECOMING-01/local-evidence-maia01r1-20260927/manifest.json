@@ -1,0 +1,16 @@
+{
+  "source_commit": "abb2fca3aa39e378ec62a4352c52d20f5451c943",
+  "bundle_sha256": "0951cb6c4435a459529871e745c28e9e83e1cf3a79e1b41a5955e4aa5adb184c",
+  "real_provider_calls_in_automation": 0,
+  "files": {
+    "browser-witness.json": "6dab80705e502c49997b0b8eb7c37acc7ef24773c17061d89e181c08bc69ea68",
+    "guide-browser.log": "cd47d023809a8218b337a4e98fb5a007acc08981f2c5903f54ab5feed9f9a92e",
+    "guide-proxy.log": "9950dcda002e9d355f4b86aae263613fae0ad4f4167d6c324f632cc2794dc07f",
+    "health.json": "9f81fcddf27aa69983980ee401a9a1eed524a124a0de0567ed6433f8c122ddcc",
+    "live-guide-aether.png": "ad07e7eb99100c95ca50ae71a638c389aa396048ec3246f702c3fb5cca518a46",
+    "proxy-witness.json": "9950dcda002e9d355f4b86aae263613fae0ad4f4167d6c324f632cc2794dc07f",
+    "regression.log": "f1dbfa78dae21d23bacae61a92b438757d0c4858219bff6cb3eb036fb4bd356b",
+    "typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "unit.log": "39c0b32410d0cce06283a7808afd8905a300337a99e4f8bbfe0eda878f29613a"
+  }
+}
