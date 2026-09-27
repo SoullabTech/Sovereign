@@ -1,5 +1,5 @@
 /**
- * D5C2 — durable Work Theme identity and member governance.
+ * D5C2–D5C3 — durable Work Theme identity, governance, and frozen evidence occurrences.
  *
  * A frozen Themes reading is MAIA's immutable observation. A Work Theme is a
  * separate governable identity. We mint that identity only when the member
@@ -8,6 +8,7 @@
 import { query, transaction } from '@/lib/db/postgres';
 import { loadReading } from '@/lib/manuscript/developmentalReading/store';
 import { validateThemeClaim } from '@/lib/manuscript/developmentalReader/themes';
+import { deriveMaiaThemeOccurrences } from './occurrences';
 
 export type WorkThemeProvenance =
   | 'member-declared'
@@ -28,6 +29,19 @@ export interface WorkTheme {
   sourceReadingId: string | null;
   sourceObservationId: string | null;
   templateName: string | null;
+  createdAt: string;
+}
+
+export interface WorkThemeOccurrence {
+  id: string;
+  themeId: string;
+  manuscriptId: string;
+  sectionId: string;
+  range: { start: number; end: number } | null;
+  sourceReadingId: string;
+  sourceObservationId: string;
+  sourceRevisionNumber: number;
+  provenance: 'maia-observation';
   createdAt: string;
 }
 
@@ -104,6 +118,52 @@ export async function listWorkThemes(memberId: string, manuscriptId: string): Pr
   return rows.rows.map(asTheme);
 }
 
+interface ThemeOccurrenceRow {
+  id: string;
+  theme_id: string;
+  manuscript_id: string;
+  section_id: string;
+  code_point_start: number | null;
+  code_point_end: number | null;
+  source_reading_id: string;
+  source_observation_id: string;
+  source_revision_number: number;
+  provenance_kind: 'maia-observation';
+  created_at: Date | string;
+}
+
+export async function listWorkThemeOccurrences(
+  memberId: string,
+  manuscriptId: string,
+  themeId?: string,
+): Promise<WorkThemeOccurrence[]> {
+  const rows = await query<ThemeOccurrenceRow>(
+    `SELECT o.id, o.theme_id, o.manuscript_id, o.section_id,
+            o.code_point_start, o.code_point_end,
+            o.source_reading_id, o.source_observation_id,
+            o.source_revision_number, o.provenance_kind, o.created_at
+       FROM writer_studio_work_theme_occurrences o
+      WHERE o.member_id = $1 AND o.manuscript_id = $2
+        AND ($3::uuid IS NULL OR o.theme_id = $3::uuid)
+      ORDER BY o.created_at ASC, o.id ASC`,
+    [memberId, manuscriptId, themeId ?? null],
+  );
+  return rows.rows.map((row) => ({
+    id: row.id,
+    themeId: row.theme_id,
+    manuscriptId: row.manuscript_id,
+    sectionId: row.section_id,
+    range: row.code_point_start === null || row.code_point_end === null
+      ? null
+      : { start: Number(row.code_point_start), end: Number(row.code_point_end) },
+    sourceReadingId: row.source_reading_id,
+    sourceObservationId: row.source_observation_id,
+    sourceRevisionNumber: Number(row.source_revision_number),
+    provenance: row.provenance_kind,
+    createdAt: new Date(row.created_at).toISOString(),
+  }));
+}
+
 export async function declareMemberTheme(input: {
   memberId: string;
   manuscriptId: string;
@@ -151,6 +211,10 @@ export async function governMaiaThemeCandidate(input: {
   if (!lawfulTheme.ok) {
     return { ok: false, refusal: 'not_theme_candidate' };
   }
+  const occurrenceProjection = deriveMaiaThemeOccurrences(reading, observation);
+  if (!occurrenceProjection.ok) {
+    return { ok: false, refusal: 'not_theme_candidate' };
+  }
 
   const renameLabel = input.action === 'rename' ? cleanLabel(input.label ?? '') : null;
   if (input.action === 'rename' && !renameLabel) {
@@ -182,6 +246,26 @@ export async function governMaiaThemeCandidate(input: {
       themeId = existing.rows[0]?.id;
     }
     if (!themeId) throw new Error('theme identity admission failed');
+
+    /* D5C3 — materialize only exact frozen evidence addresses. Repeated
+       governance of the same source is idempotent at the occurrence key. */
+    for (const occurrence of occurrenceProjection.occurrences) {
+      await client.query(
+        `INSERT INTO writer_studio_work_theme_occurrences
+           (theme_id, member_id, manuscript_id, section_id,
+            code_point_start, code_point_end,
+            source_reading_id, source_observation_id,
+            source_revision_number, provenance_kind)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'maia-observation')
+         ON CONFLICT DO NOTHING`,
+        [
+          themeId, input.memberId, input.manuscriptId, occurrence.sectionId,
+          occurrence.range?.start ?? null, occurrence.range?.end ?? null,
+          occurrence.sourceReadingId, occurrence.sourceObservationId,
+          occurrence.sourceRevisionNumber,
+        ],
+      );
+    }
 
     await client.query(
       `INSERT INTO writer_studio_work_theme_events
