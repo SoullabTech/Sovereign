@@ -448,3 +448,195 @@ linear-gradient(145deg,rgba(65,43,22,.32),rgba(17,14,11,.60));color:inherit;text
   .legacyActions{grid-template-columns:1fr}
   .resolutionChamber{padding:18px}
 }
+
+/* DECISIONS-UX-10 — naming field readability + material authority.
+   Soullab readability law: quiet is not the same as small. Meaningful text
+   stays at 16px+, metadata at 14px+, and only decorative markers may sit at 12px. */
+.namingBack{
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  font-size:16px;
+  line-height:1.35;
+}
+.namingDecisionIntro .decisionKicker{
+  font-size:12px;
+  line-height:1.4;
+  letter-spacing:.14em;
+}
+.namingDecisionIntro>p:last-child{
+  font-size:18px;
+  line-height:1.6;
+}
+.decisionPaper{
+  position:relative;
+  margin-top:32px;
+  padding:8px 38px 20px;
+  overflow:hidden;
+  border:1px solid rgba(153,119,75,.24);
+  border-radius:12px;
+  color:#342c24;
+  background:
+    linear-gradient(90deg,rgba(122,91,55,.035),transparent 12%,transparent 88%,rgba(122,91,55,.025)),
+    linear-gradient(145deg,#f4ead8,#eadcc6);
+  box-shadow:
+    0 24px 64px rgba(0,0,0,.23),
+    inset 0 1px 0 rgba(255,255,255,.5);
+}
+.decisionPaper::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:radial-gradient(circle at 12% 7%,rgba(255,255,255,.28),transparent 23%);
+  opacity:.65;
+}
+.decisionWriteField{
+  position:relative;
+  z-index:1;
+  padding:26px 0 30px;
+  border-bottom:1px solid rgba(96,72,49,.16);
+}
+.decisionWriteField:last-of-type{
+  border-bottom:0;
+  padding-bottom:22px;
+}
+.decisionWriteField>header{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:26px;
+  margin-bottom:13px;
+}
+.decisionWriteField label{
+  margin:0;
+  color:#665847;
+  font:600 14px/1.45 Arial,sans-serif;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.decisionWriteField header>p{
+  max-width:340px;
+  margin:0;
+  color:#6f6150;
+  font:400 16px/1.5 Arial,sans-serif;
+  text-align:right;
+}
+.content .decisionPaper input,
+.content .decisionPaper textarea{
+  width:100%;
+  margin:0;
+  padding:8px 0 10px;
+  border:0!important;
+  border-radius:0!important;
+  outline:0;
+  background:transparent!important;
+  color:#3c3229!important;
+  box-shadow:none!important;
+  font-family:'Decision Crimson',Georgia,serif;
+}
+.content .decisionPaper input{
+  min-height:56px;
+  font-size:24px!important;
+  line-height:1.4!important;
+}
+.content .decisionPaper textarea{
+  min-height:190px;
+  resize:vertical;
+  font-size:18px!important;
+  line-height:1.7!important;
+}
+.content .decisionPaper input::placeholder,
+.content .decisionPaper textarea::placeholder{
+  color:#726451!important;
+  opacity:1;
+}
+.content .decisionPaper input:focus,
+.content .decisionPaper textarea:focus{
+  box-shadow:inset 0 -2px 0 rgba(151,111,62,.48)!important;
+}
+.decisionPaperNote{
+  position:relative;
+  z-index:1;
+  margin:8px 0 0!important;
+  color:#6d6051!important;
+  font:italic 17px/1.55 'Decision Crimson',Georgia,serif!important;
+}
+.decisionContextThreshold[data-open='false']>p{
+  margin:0;
+  color:#a99b89;
+  font-size:16px;
+  line-height:1.55;
+}
+.decisionContextThreshold header small{
+  font-size:12px;
+  line-height:1.4;
+  letter-spacing:.14em;
+}
+.decisionContextThreshold header>p{
+  max-width:310px;
+  color:#9d9080;
+  font-size:16px;
+  line-height:1.5;
+}
+.decisionContextGrid span{
+  color:#b5a694;
+  font-size:16px;
+  line-height:1.45;
+}
+.decisionContextGrid input,
+.decisionContextGrid textarea,
+.decisionContextGrid select{
+  font-size:17px!important;
+  line-height:1.55!important;
+}
+.decisionKeep small{
+  font-size:12px;
+  line-height:1.4;
+  letter-spacing:.14em;
+}
+.decisionKeep p{
+  margin-top:6px;
+  color:#a99b89;
+  font-size:16px;
+  line-height:1.5;
+}
+.decisionKeep button{
+  min-height:48px;
+  font-size:16px;
+}
+.decisionCreateError{
+  font-size:16px;
+  line-height:1.5;
+}
+.return{
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  font-size:16px;
+  line-height:1.35;
+}
+.roomName span{
+  font-size:12px;
+  letter-spacing:.14em;
+}
+@media(max-width:720px){
+  .decisionPaper{
+    padding:6px 22px 18px;
+  }
+  .decisionWriteField>header{
+    display:block;
+  }
+  .decisionWriteField header>p{
+    margin-top:6px;
+    max-width:none;
+    text-align:left;
+  }
+  .content .decisionPaper input{
+    font-size:22px!important;
+  }
+  .content .decisionPaper textarea{
+    min-height:180px;
+    font-size:18px!important;
+  }
+}

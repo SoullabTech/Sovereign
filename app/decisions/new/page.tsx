@@ -123,24 +123,35 @@ export default function NewPersonalDecisionPage() {
       ) : null}
 
       <div className={styles.decisionPaper}>
-        <label htmlFor="decision-title">The choice</label>
-        <input
-          ref={titleRef}
-          id="decision-title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder="Do I stay, leave, begin, decline, ask, wait…?"
-        />
+        <section className={styles.decisionWriteField}>
+          <header>
+            <label htmlFor="decision-title">The choice</label>
+            <p>Say the choice as plainly as you can.</p>
+          </header>
+          <input
+            ref={titleRef}
+            id="decision-title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Do I stay, leave, begin, decline, ask, wait…?"
+          />
+        </section>
 
-        <label htmlFor="decision-context">What makes this a real choice now?</label>
-        <textarea
-          id="decision-context"
-          value={context}
-          onChange={(event) => setContext(event.target.value)}
-          placeholder="What is happening around this choice? What do you know, and what is still uncertain?"
-          rows={7}
-        />
-        <p>Clarity is not required before the Decision can be held.</p>
+        <section className={styles.decisionWriteField}>
+          <header>
+            <label htmlFor="decision-context">What makes this a real choice now?</label>
+            <p>Write what you actually know. Uncertainty can stay visible.</p>
+          </header>
+          <textarea
+            id="decision-context"
+            value={context}
+            onChange={(event) => setContext(event.target.value)}
+            placeholder="What is happening around this choice? What do you know, and what is still uncertain?"
+            rows={7}
+          />
+        </section>
+
+        <p className={styles.decisionPaperNote}>Clarity is not required before the Decision can be held.</p>
       </div>
 
       <section className={styles.decisionContextThreshold} data-open={wordsExist ? 'true' : 'false'}>
