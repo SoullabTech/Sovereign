@@ -29,3 +29,19 @@
   .journey-progress{gap:4px}.journey-progress span{font-size:14px;padding-inline:2px}.journey-actions,.journey-actions.split{flex-direction:column;align-items:stretch}
   .journey-actions button{text-align:left}.carry-choices{grid-template-columns:1fr}.journey-title{font-size:29px}
 }
+
+/* BECOMING-UX-01R2 — post-journey relational integration with live MAIA. */
+.maia-integration{margin:34px 0 8px;padding:28px;border:1px solid #bdaa8e;border-radius:10px;background:rgba(255,250,240,.38)}
+.maia-integration h2{margin:4px 0 12px}.maia-integration .intro{margin-bottom:14px}.maia-consent-note{font:15px/1.6 var(--sans);color:#6b5d49}
+.handoff-preview{white-space:pre-wrap;max-height:360px;overflow:auto;padding:18px;border:1px solid #b8a588;border-radius:8px;background:#fffaf0;color:#453a2d;font:15px/1.55 var(--sans)}
+.maia-conversation{display:flex;flex-direction:column;gap:18px}.maia-conversation-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.maia-turns{display:flex;flex-direction:column;gap:14px}.maia-turn{padding:18px 20px;border-radius:10px}.maia-turn p{white-space:pre-wrap;margin:6px 0 0;font:18px/1.7 var(--serif)}
+.maia-turn.maia{background:#2c2b25;color:#f3eadb}.maia-turn.maia .metadata{color:#d6c5aa}.maia-turn.member{background:#e5d7bd;color:#3f3528;margin-left:8%}
+.maia-thinking{font:18px/1.6 var(--serif);color:#6b5d49}.maia-followup{padding-top:8px;border-top:1px solid #bdaa8e}.maia-followup label{display:block;font:18px/1.5 var(--serif);margin-bottom:8px}
+
+@media(max-width:650px){
+  .maia-integration{padding:22px 18px;margin-top:28px}.maia-conversation-head{flex-direction:column;gap:4px}
+  .maia-turn.member{margin-left:0}.maia-turn p{font-size:18px}.handoff-preview{font-size:14px;max-height:300px}
+}
+
+.maia-continuity-note{margin:0 0 16px;padding:14px 16px;border-left:2px solid #9d855c;background:rgba(173,148,105,.08);font:16px/1.6 var(--serif);color:#655843}

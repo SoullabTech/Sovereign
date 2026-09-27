@@ -28,6 +28,17 @@ try {
   });
   const page = await context.newPage();
   observe(page);
+  const maiaRequests = [];
+  let maiaMockCount = 0;
+  await page.route('**/api/maia', async route => {
+    const payload = JSON.parse(route.request().postData() || '{}');
+    maiaRequests.push(payload);
+    maiaMockCount += 1;
+    const message = maiaMockCount === 1
+      ? 'Synthetic MAIA synthesis: I hear a movement from urgency toward spacious contribution. Does that distinction feel alive to you?'
+      : 'Synthetic MAIA continuation: yes — we can stay with that without turning it into a conclusion.';
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ message }) });
+  });
 
   await page.goto(base + '/becoming');
   await page.getByRole('heading', { level: 1, name: 'Becoming' }).waitFor();
@@ -89,17 +100,42 @@ try {
   await page.getByRole('button', { name: 'Keep this journey', exact: true }).waitFor();
   pass('J08', 'Return is completed before initial Keep becomes available.');
 
+  await page.getByRole('button', { name: 'Talk with MAIA about this journey', exact: true }).click();
+  await page.getByRole('heading', { name: 'Stay with what opened.' }).waitFor();
+  await page.getByText(/conversation stays in Becoming/).waitFor();
+  assert.equal(new URL(page.url()).pathname, '/becoming');
+  await page.getByText(/Synthetic MAIA synthesis:/).waitFor();
+  assert.equal(maiaRequests.length, 1);
+  const firstHandoff = maiaRequests[0];
+  assert.match(firstHandoff.message, /Please do not ask me to repeat/);
+  assert.match(firstHandoff.message, /An ordinary morning with enough time to walk before work/);
+  assert.match(firstHandoff.message, /I stopped treating urgency as proof of care/);
+  assert.match(firstHandoff.message, /WHAT I BROUGHT BACK\nPause before saying yes/);
+  assert.match(firstHandoff.message, /imaginal possibilities, not predictions/);
+  await page.screenshot({ path: output + '/screenshots/ux01r2-maia-synthesis-desktop.png', fullPage: true });
+  pass('J09', 'One explicit gesture hands the whole returned journey to MAIA with imaginal provenance and no retyping.');
+
+  await page.getByLabel('Continue with MAIA').fill('Yes. The spaciousness feels important.');
+  await page.getByRole('button', { name: 'Send to MAIA', exact: true }).click();
+  await page.getByText(/Synthetic MAIA continuation:/).waitFor();
+  assert.equal(new URL(page.url()).pathname, '/becoming');
+  assert.equal(maiaRequests.length, 2);
+  assert.equal(maiaRequests[1].message, 'Yes. The spaciousness feels important.');
+  assert.ok(Array.isArray(maiaRequests[1].conversationHistory));
+  assert.match(maiaRequests[1].conversationHistory[0].content, /Soullab Becoming/);
+  pass('J10', 'The synthesis becomes a continuing MAIA conversation without resending the journey manually.');
+
   await page.getByRole('button', { name: 'Carry something into present life', exact: true }).click();
   await page.getByRole('button', { name: 'Nothing yet', exact: true }).click();
   await page.getByText('Nothing needs to become an action. The encounter can remain open.', { exact: true }).waitFor();
-  pass('J09', 'Carry is optional and Nothing yet is a complete choice.');
+  pass('J11', 'Carry is optional and Nothing yet is a complete choice.');
   await page.getByRole('button', { name: 'Keep this journey', exact: true }).click();
   await page.getByRole('status').filter({ hasText: 'revision 1' }).waitFor();
   await page.getByRole('button', { name: 'Your journeys', exact: true }).click();
   await page.getByRole('heading', { name: 'Your journeys', exact: true }).waitFor();
   await page.getByRole('button').filter({ has: page.getByRole('heading', { name: 'Spacious contribution', exact: true }) }).waitFor();
   await page.getByRole('button', { name: 'Across time', exact: true }).waitFor();
-  pass('J10', 'Across Time appears only after a journey has actually been kept.');
+  pass('J12', 'Across Time appears only after a journey has actually been kept.');
 
   await page.getByRole('button', { name: 'Across time', exact: true }).click();
   await page.getByRole('heading', { name: 'What does this journey touch?' }).waitFor();
@@ -109,7 +145,7 @@ try {
   await page.getByRole('heading', { name: 'What brought you here' }).waitFor();
   await page.getByRole('heading', { name: 'What is true now' }).waitFor();
   await page.getByRole('heading', { name: 'What is opening' }).waitFor();
-  pass('J11', 'Across Time uses human language while the temporal architecture remains underneath.');
+  pass('J13', 'Across Time uses human language while the temporal architecture remains underneath.');
   const sourceChoice = page.locator('.source-check').filter({ hasText: 'Spacious contribution' });
   await sourceChoice.locator('input').check();
   await page.getByLabel('What feels true in your life today?')
@@ -127,31 +163,32 @@ try {
     await page.getByLabel('A connection I notice').inputValue(),
     'Generosity and automatic availability may not be the same thing.',
   );
-  pass('J12', 'Across Time notes are not silently discarded on navigation.');
+  pass('J14', 'Across Time notes are not silently discarded on navigation.');
   await page.getByRole('button', { name: 'Take this into a new Becoming journey →', exact: true }).click();
   await page.getByRole('heading', { name: 'Begin with what brought you here.' }).waitFor();
   await page.getByRole('heading', { name: 'What you chose to bring' }).waitFor();
   await page.getByText('Spacious contribution', { exact: true }).waitFor();
   await page.getByText('earlier imagined possibility', { exact: false }).waitFor();
-  pass('J13', 'Across Time opens a new journey with exact-source identity and explicit epistemic framing.');
+  pass('J15', 'Across Time opens a new journey with exact-source identity and explicit epistemic framing.');
 
   await page.getByRole('button', { name: 'Pause and leave', exact: true }).click();
   await page.getByRole('dialog', { name: 'Leave this journey?' }).waitFor();
   await page.getByRole('button', { name: 'Leave without keeping', exact: true }).click();
   await page.getByRole('heading', { name: 'Becoming', exact: true }).waitFor();
-  pass('J14', 'An unfinished journey may be explicitly discarded without inventing Return.');
+  pass('J16', 'An unfinished journey may be explicitly discarded without inventing Return.');
   await page.getByRole('button', { name: 'Your journeys', exact: true }).click();
   const card = page.getByRole('button').filter({ has: page.getByRole('heading', { name: 'Spacious contribution', exact: true }) });
   await card.click();
   await page.getByText('I stopped treating urgency as proof of care.', { exact: true }).waitFor();
   await page.getByText('IMAGINED POSSIBILITY · NOT A PREDICTION', { exact: true }).waitFor();
-  pass('J15', 'The kept journey preserves member-authored dialogue and imagined-future provenance.');
+  await page.getByRole('button', { name: 'Talk with MAIA about this journey', exact: true }).waitFor();
+  pass('J17', 'The kept journey preserves member-authored dialogue, imagined-future provenance, and a no-repeat MAIA doorway.');
 
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await page.getByRole('button', { name: 'Delete journey and revisions', exact: true }).click();
   await page.getByRole('heading', { name: 'Nothing has been kept here yet.' }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Across time', exact: true }).count(), 0);
-  pass('J16', 'Deleting the only kept journey returns Across Time to unavailable.');
+  pass('J18', 'Deleting the only kept journey returns Across Time to unavailable.');
   const mobile = await browser.newContext({
     viewport: { width: 390, height: 844 },
     isMobile: true,
@@ -164,13 +201,13 @@ try {
   await mp.getByRole('button', { name: 'Begin the journey', exact: true }).click();
   await mp.screenshot({ path: output + '/screenshots/ux01r1-threshold-mobile.png', fullPage: true });
   assert.ok(await mp.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
-  pass('J17', 'The Future Self threshold fits a 390px mobile viewport without horizontal overflow.');
+  pass('J19', 'The Future Self threshold fits a 390px mobile viewport without horizontal overflow.');
 
   await mp.getByRole('button', { name: /Let something emerge/ }).click();
   await mp.getByLabel('What feels most present right now?').fill('Synthetic mobile journey.');
   await mp.getByRole('button', { name: 'Let some time pass →', exact: true }).click();
   assert.ok(await mp.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
-  pass('J18', 'The guided journey remains width-safe after entering the experience.');
+  pass('J20', 'The guided journey remains width-safe after entering the experience.');
   const visibleButtons = await mp.getByRole('button').evaluateAll(buttons =>
     buttons.filter(button => button.getBoundingClientRect().height > 0).map(button => ({
       label: button.textContent,
@@ -179,28 +216,29 @@ try {
     })),
   );
   assert.ok(visibleButtons.every(button => button.size >= 16 && button.height >= 44), JSON.stringify(visibleButtons));
-  pass('J19', 'Visible mobile actions meet the 16px type and 44px target floors.');
+  pass('J21', 'Visible mobile actions meet the 16px type and 44px target floors.');
   await mobile.close();
 
   assert.equal(errors.length, 0, errors.join('\n'));
   assert.ok(requests.every(url => new URL(url).origin === base));
-  pass('J20', 'The bounded witness produced no page errors or off-origin browser requests.');
+  pass('J22', 'The bounded witness produced no page errors or off-origin browser requests.');
 
   const healthResponse = await fetch(base + '/health');
   const health = await healthResponse.json();
   assert.equal(health.scope, 'isolated-local-preview');
-  assert.equal(health.providerCalls, false);
-  await writeFile(output + '/ux01r1-health.json', JSON.stringify(health, null, 2));
-  pass('J21', 'The preview still declares isolated local scope with provider calls disabled.');
+  assert.equal(health.providerCalls, 'explicit-member-handoff-only');
+  assert.equal(health.maiaHandoff, 'fixed-localhost-canonical-route');
+  await writeFile(output + '/ux01r2-health.json', JSON.stringify(health, null, 2));
+  pass('J23', 'The preview keeps provider access behind the explicit MAIA handoff seam.');
 } catch (error) {
   failure = error;
-  console.error('UX01R1_WITNESS_FAILED', error.message);
+  console.error('UX01R2_WITNESS_FAILED', error.message);
 } finally {
   await browser.close();
   await writeFile(
-    output + '/ux01r1-browser-witness.json',
+    output + '/ux01r2-browser-witness.json',
     JSON.stringify({
-      scope: 'Fresh synthetic browser contexts; visible journey UI only; no account, model, production, or direct database audit.',
+      scope: 'Fresh synthetic browser contexts; visible journey UI with mocked MAIA responses; no provider call, production write, or direct database audit.',
       recordedAt: new Date().toISOString(),
       results,
       errors,
