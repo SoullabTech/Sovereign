@@ -279,7 +279,7 @@ Anchors remain private by default. `MAIA may remember this with me` grants bound
 
 ### Divination → Reflections
 
-`Save Reading` turns a chosen reading into a kept object only through explicit member action.
+`Save Reading` turns a chosen reading into a kept Reflection only through explicit member action. The source reading, Reflection, and crossing relation are committed as one act; the Reflection is created from the already-authored reading without LLM re-distillation. The reading remains the symbolic source object, the Reflection remains the keep, and `Where this began → Return to source` reopens the exact saved reading by identity.
 
 ### Wisdom → MAIA
 

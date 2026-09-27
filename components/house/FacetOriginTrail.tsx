@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 
-type TargetFacet = 'changes' | 'decisions';
+type TargetFacet = 'changes' | 'decisions' | 'reflections';
 
 type Origin = {
   crossingId: string;
   crossedAt: string;
   source: {
-    facet: 'journal' | 'reflections';
+    facet: 'journal' | 'reflections' | 'divination';
     refId: string;
     label: string;
     excerpt: string;
@@ -21,10 +21,12 @@ export function FacetOriginTrail({
   targetFacet,
   targetRefId,
   className = '',
+  tone = 'dark',
 }: {
   targetFacet: TargetFacet;
   targetRefId: string;
   className?: string;
+  tone?: 'dark' | 'light';
 }) {
   const [origins, setOrigins] = useState<Origin[]>([]);
 
@@ -47,9 +49,14 @@ export function FacetOriginTrail({
 
   if (origins.length === 0) return null;
 
+  const headingTone = tone === 'light' ? 'text-stone-500' : 'text-stone-500';
+  const sourceTone = tone === 'light' ? 'text-stone-500' : 'text-stone-500';
+  const labelTone = tone === 'light' ? 'text-stone-700' : 'text-stone-300';
+  const missingTone = tone === 'light' ? 'text-stone-500' : 'text-stone-500';
+
   return (
     <section className={className} aria-label="Where this began">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-stone-500 mb-2">
+      <p className={`text-[10px] uppercase tracking-[0.18em] mb-2 ${headingTone}`}>
         Where this began
       </p>
       <div className="space-y-3">
@@ -60,10 +67,14 @@ export function FacetOriginTrail({
           >
             {origin.source ? (
               <>
-                <p className="text-xs text-stone-500">
-                  {origin.source.facet === 'journal' ? 'Journal' : 'Reflection'}
+                <p className={`text-xs ${sourceTone}`}>
+                  {origin.source.facet === 'journal'
+                    ? 'Journal'
+                    : origin.source.facet === 'divination'
+                      ? 'Divination'
+                      : 'Reflection'}
                 </p>
-                <p className="text-sm text-stone-300 mt-1">{origin.source.label}</p>
+                <p className={`text-sm mt-1 ${labelTone}`}>{origin.source.label}</p>
                 <a
                   href={origin.source.returnHref}
                   className="inline-block mt-1 text-[11px] text-amber-500/65 hover:text-amber-400"
@@ -72,8 +83,10 @@ export function FacetOriginTrail({
                 </a>
               </>
             ) : (
-              <p className="text-xs text-stone-500">
-                The original source is no longer available. This {targetFacet === 'changes' ? 'Change' : 'Decision'} remains.
+              <p className={`text-xs ${missingTone}`}>
+                The original source is no longer available. This {
+                  targetFacet === 'changes' ? 'Change' : targetFacet === 'decisions' ? 'Decision' : 'Reflection'
+                } remains.
               </p>
             )}
           </div>

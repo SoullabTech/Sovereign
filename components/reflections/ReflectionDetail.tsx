@@ -42,6 +42,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { CapsuleDTO, Element } from '@/lib/capsules/types';
 import DiscussWithMaia from './DiscussWithMaia';
+import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
 import { useMaiaPlace } from '@/components/maia/presence/MaiaPresence';
 
 // Element icons mapping.
@@ -487,6 +488,13 @@ export default function ReflectionDetail({ id }: ReflectionDetailProps) {
             </div>
           )}
         </motion.div>
+
+        <FacetOriginTrail
+          targetFacet="reflections"
+          targetRefId={capsule.id}
+          className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
+          tone="light"
+        />
 
         {/* Source Excerpt (if available) */}
         {capsule.sourceExcerpt && (

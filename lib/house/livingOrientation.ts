@@ -297,10 +297,15 @@ export const FACET_CROSSINGS = [
     authority: 'member_explicit',
     standing: 'live',
     evidence: [
+      'app/oracle/iching/page.tsx',
       'app/oracle/tarot/page.tsx',
       'app/oracle/runes/page.tsx',
+      'app/api/divination/save/route.ts',
+      'components/reflections/ReflectionDetail.tsx',
+      'lib/house/facetCrossing.server.ts',
+      'database/migrations/20260926000001_member_facet_crossings.sql',
     ],
-    law: 'A reading becomes a kept object only through the member’s explicit save gesture.',
+    law: 'Save Reading atomically preserves the member-chosen divination reading, creates its kept Reflection without LLM re-distillation, and records a returnable relation between the two.',
   },
   {
     id: 'wisdom-reflect-with-maia',

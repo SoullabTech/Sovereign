@@ -8,7 +8,7 @@
  * MAIA witnesses experience and remembers what mattered.
  */
 
-import { query, queryOne, insertOne } from '@/lib/db/postgres';
+import { query, queryOne, insertOne, type TransactionClient } from '@/lib/db/postgres';
 import type {
   CapsuleRow,
   CapsuleDTO,
@@ -43,6 +43,7 @@ export interface CreateCapsuleParams {
   tags?: string[];
   sourceExcerpt?: string | null;
   draft?: boolean;
+  client?: TransactionClient;
 }
 
 /**
@@ -64,6 +65,7 @@ export async function createCapsule(params: CreateCapsuleParams): Promise<Capsul
     tags = [],
     sourceExcerpt = null,
     draft = true,
+    client,
   } = params;
 
   const sql = `
@@ -86,7 +88,7 @@ export async function createCapsule(params: CreateCapsuleParams): Promise<Capsul
     RETURNING *
   `;
 
-  const row = await queryOne<CapsuleRow>(sql, [
+  const values = [
     userId,
     sourceType,
     sourceId,
@@ -101,7 +103,11 @@ export async function createCapsule(params: CreateCapsuleParams): Promise<Capsul
     JSON.stringify(tags),
     sourceExcerpt,
     draft,
-  ]);
+  ];
+
+  const row = client
+    ? (await client.query<CapsuleRow>(sql, values)).rows[0] ?? null
+    : await queryOne<CapsuleRow>(sql, values);
 
   if (!row) {
     throw new Error('Failed to create capsule');

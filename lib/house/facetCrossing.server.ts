@@ -4,6 +4,9 @@ import { getCapsuleById } from '@/lib/capsules';
 
 export type CarrySourceFacet = 'journal' | 'reflections';
 export type CarryTargetFacet = 'changes' | 'decisions';
+export type RelationSourceFacet = CarrySourceFacet | 'divination';
+export type RelationTargetFacet = CarryTargetFacet | 'reflections';
+export type FlowFacet = RelationSourceFacet | RelationTargetFacet;
 
 export type FacetCarrySource = {
   facet: CarrySourceFacet;
@@ -21,7 +24,7 @@ export type FacetCrossingRef = {
 };
 
 export type FacetFlowEndpoint = {
-  facet: CarrySourceFacet | CarryTargetFacet;
+  facet: FlowFacet;
   refId: string;
   label: string;
   href: string;
@@ -39,14 +42,14 @@ export type FacetFlowEvidence = {
   flowId: string;
   crossingId: string;
   source: {
-    facet: CarrySourceFacet;
+    facet: RelationSourceFacet;
     refId: string;
     label: string;
     excerpt: string;
     href: string;
   };
   target: {
-    facet: CarryTargetFacet;
+    facet: RelationTargetFacet;
     refId: string;
     label: string;
     excerpt: string;
@@ -137,6 +140,166 @@ export async function resolveFacetCarrySource(
   };
 }
 
+type DivinationKind = 'iching' | 'tarot' | 'runes';
+
+function parseDivinationRef(value: string): { kind: DivinationKind; id: string } | null {
+  const split = value.indexOf(':');
+  if (split <= 0) return null;
+  const kind = value.slice(0, split);
+  const id = value.slice(split + 1);
+  if ((kind !== 'iching' && kind !== 'tarot' && kind !== 'runes') || !id) return null;
+  return { kind, id };
+}
+
+function divinationLabel(kind: DivinationKind, fallback: string, question?: string | null): string {
+  const q = question?.trim();
+  if (q) {
+    const short = q.length <= 82 ? q : q.slice(0, 82).trimEnd() + '…';
+    return `${kind === 'iching' ? 'I Ching' : kind === 'tarot' ? 'Tarot' : 'Runes'} · ${short}`;
+  }
+  return fallback;
+}
+
+export async function resolveDivinationSource(
+  memberId: string,
+  sourceRefId: string,
+): Promise<FacetFlowEvidence['source'] | null> {
+  const parsed = parseDivinationRef(sourceRefId);
+  if (!parsed) return null;
+
+  if (parsed.kind === 'iching') {
+    const result = await query<{
+      id: string;
+      question: string | null;
+      primary_hex: number;
+      primary_hex_name: string;
+      interpretation_text: string | null;
+      guidance_text: string | null;
+    }>(
+      `SELECT id::text AS id, question, primary_hex, primary_hex_name,
+              interpretation_text, guidance_text
+         FROM divination_iching_readings
+        WHERE id::text = $1 AND user_id = $2
+        LIMIT 1`,
+      [parsed.id, memberId],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    const detail = [
+      row.question ? 'Question: ' + row.question : '',
+      `Hexagram ${row.primary_hex}: ${row.primary_hex_name}`,
+      row.interpretation_text || '',
+      row.guidance_text ? 'Guidance: ' + row.guidance_text : '',
+    ].filter(Boolean).join('\n\n');
+    return {
+      facet: 'divination',
+      refId: sourceRefId,
+      label: divinationLabel('iching', `I Ching · Hexagram ${row.primary_hex}: ${row.primary_hex_name}`, row.question),
+      excerpt: excerpt(detail),
+      href: '/oracle/reflections?reading=' + encodeURIComponent(sourceRefId),
+    };
+  }
+
+  if (parsed.kind === 'tarot') {
+    const result = await query<{
+      id: string;
+      question: string | null;
+      spread_type: string;
+      cards_json: Array<{ card?: string; position?: string; reversed?: boolean }> | string;
+      interpretation_text: string | null;
+      guidance_text: string | null;
+    }>(
+      `SELECT id::text AS id, question, spread_type, cards_json,
+              interpretation_text, guidance_text
+         FROM divination_tarot_readings
+        WHERE id::text = $1 AND user_id = $2
+        LIMIT 1`,
+      [parsed.id, memberId],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    const cards = typeof row.cards_json === 'string' ? JSON.parse(row.cards_json) : row.cards_json;
+    const cardLine = Array.isArray(cards)
+      ? cards.slice(0, 6).map((card) =>
+          `${card.card || 'Card'}${card.reversed ? ' (reversed)' : ''}${card.position ? ' — ' + card.position : ''}`
+        ).join('; ')
+      : '';
+    const detail = [
+      row.question ? 'Question: ' + row.question : '',
+      cardLine ? 'Cards: ' + cardLine : '',
+      row.interpretation_text || '',
+      row.guidance_text ? 'Guidance: ' + row.guidance_text : '',
+    ].filter(Boolean).join('\n\n');
+    const spread = row.spread_type.replace(/_/g, ' ');
+    return {
+      facet: 'divination',
+      refId: sourceRefId,
+      label: divinationLabel('tarot', 'Tarot · ' + spread, row.question),
+      excerpt: excerpt(detail),
+      href: '/oracle/reflections?reading=' + encodeURIComponent(sourceRefId),
+    };
+  }
+
+  const result = await query<{
+    id: string;
+    question: string | null;
+    cast_type: string;
+    runes_json: Array<{ rune?: string; position?: string; reversed?: boolean }> | string;
+    wyrd_message: string | null;
+    interpretation_text: string | null;
+    guidance_text: string | null;
+  }>(
+    `SELECT id::text AS id, question, cast_type, runes_json, wyrd_message,
+            interpretation_text, guidance_text
+       FROM divination_runes_readings
+      WHERE id::text = $1 AND user_id = $2
+      LIMIT 1`,
+    [parsed.id, memberId],
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  const runes = typeof row.runes_json === 'string' ? JSON.parse(row.runes_json) : row.runes_json;
+  const runeLine = Array.isArray(runes)
+    ? runes.slice(0, 6).map((rune) =>
+        `${rune.rune || 'Rune'}${rune.reversed ? ' (merkstave)' : ''}${rune.position ? ' — ' + rune.position : ''}`
+      ).join('; ')
+    : '';
+  const detail = [
+    row.question ? 'Question: ' + row.question : '',
+    runeLine ? 'Runes: ' + runeLine : '',
+    row.wyrd_message ? 'Wyrd: ' + row.wyrd_message : '',
+    row.interpretation_text || '',
+    row.guidance_text ? 'Guidance: ' + row.guidance_text : '',
+  ].filter(Boolean).join('\n\n');
+  return {
+    facet: 'divination',
+    refId: sourceRefId,
+    label: divinationLabel('runes', 'Runes · ' + row.cast_type.replace(/_/g, ' '), row.question),
+    excerpt: excerpt(detail),
+    href: '/oracle/reflections?reading=' + encodeURIComponent(sourceRefId),
+  };
+}
+
+export async function resolveFacetFlowSource(
+  memberId: string,
+  sourceFacet: RelationSourceFacet,
+  sourceRefId: string,
+): Promise<FacetFlowEvidence['source'] | null> {
+  if (sourceFacet === 'divination') {
+    return resolveDivinationSource(memberId, sourceRefId);
+  }
+  const source = await resolveFacetCarrySource(memberId, sourceFacet, sourceRefId);
+  return source
+    ? {
+        facet: source.facet,
+        refId: source.refId,
+        label: source.label,
+        excerpt: source.excerpt,
+        href: source.returnHref,
+      }
+    : null;
+}
+
 export async function validateFacetCrossingSource(args: {
   memberId: string;
   targetFacet: CarryTargetFacet;
@@ -157,9 +320,9 @@ export async function recordFacetCrossing(
   args: {
     memberId: string;
     crossingId: string;
-    sourceFacet: CarrySourceFacet;
+    sourceFacet: RelationSourceFacet;
     sourceRefId: string;
-    targetFacet: CarryTargetFacet;
+    targetFacet: RelationTargetFacet;
     targetRefId: string;
   },
 ): Promise<void> {
@@ -183,6 +346,8 @@ export async function recordFacetCrossing(
 
 const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'reflections']);
 const CARRY_TARGET_FACETS = new Set<CarryTargetFacet>(['changes', 'decisions']);
+const FLOW_SOURCE_FACETS = new Set<RelationSourceFacet>(['journal', 'reflections', 'divination']);
+const FLOW_TARGET_FACETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'reflections']);
 
 function isCarrySourceFacet(value: string): value is CarrySourceFacet {
   return CARRY_SOURCE_FACETS.has(value as CarrySourceFacet);
@@ -192,9 +357,17 @@ function isCarryTargetFacet(value: string): value is CarryTargetFacet {
   return CARRY_TARGET_FACETS.has(value as CarryTargetFacet);
 }
 
+function isFlowSourceFacet(value: string): value is RelationSourceFacet {
+  return FLOW_SOURCE_FACETS.has(value as RelationSourceFacet);
+}
+
+function isFlowTargetFacet(value: string): value is RelationTargetFacet {
+  return FLOW_TARGET_FACETS.has(value as RelationTargetFacet);
+}
+
 export async function resolveFacetTarget(
   memberId: string,
-  targetFacet: CarryTargetFacet,
+  targetFacet: RelationTargetFacet,
   targetRefId: string,
 ): Promise<FacetFlowEndpoint | null> {
   if (!targetRefId) return null;
@@ -219,29 +392,44 @@ export async function resolveFacetTarget(
       : null;
   }
 
-  const result = await query<{ id: string; title: string }>(
-    `SELECT id::text AS id, title
-       FROM studio_decisions
-      WHERE id::text = $1
-        AND decision_scope = 'personal'
-        AND personal_member_id = $2::uuid
-      LIMIT 1`,
-    [targetRefId, memberId],
-  );
-  const row = result.rows[0];
-  return row
+  if (targetFacet === 'decisions') {
+    const result = await query<{ id: string; title: string }>(
+      `SELECT id::text AS id, title
+         FROM studio_decisions
+        WHERE id::text = $1
+          AND decision_scope = 'personal'
+          AND personal_member_id = $2::uuid
+        LIMIT 1`,
+      [targetRefId, memberId],
+    );
+    const row = result.rows[0];
+    return row
+      ? {
+          facet: 'decisions',
+          refId: row.id,
+          label: row.title,
+          href: '/decisions/' + encodeURIComponent(row.id),
+        }
+      : null;
+  }
+
+  const capsule = await getCapsuleById({
+    userId: memberId,
+    capsuleId: targetRefId,
+  });
+  return capsule
     ? {
-        facet: 'decisions',
-        refId: row.id,
-        label: row.title,
-        href: '/decisions/' + encodeURIComponent(row.id),
+        facet: 'reflections',
+        refId: capsule.id,
+        label: capsule.title,
+        href: '/reflections/' + encodeURIComponent(capsule.id),
       }
     : null;
 }
 
 async function resolveFacetTargetEvidence(
   memberId: string,
-  targetFacet: CarryTargetFacet,
+  targetFacet: RelationTargetFacet,
   targetRefId: string,
 ): Promise<FacetFlowEvidence['target'] | null> {
   if (targetFacet === 'changes') {
@@ -265,23 +453,39 @@ async function resolveFacetTargetEvidence(
       : null;
   }
 
-  const result = await query<{ id: string; title: string; context: string }>(
-    `SELECT id::text AS id, title, context
-       FROM studio_decisions
-      WHERE id::text = $1
-        AND decision_scope = 'personal'
-        AND personal_member_id = $2::uuid
-      LIMIT 1`,
-    [targetRefId, memberId],
-  );
-  const row = result.rows[0];
-  return row
+  if (targetFacet === 'decisions') {
+    const result = await query<{ id: string; title: string; context: string }>(
+      `SELECT id::text AS id, title, context
+         FROM studio_decisions
+        WHERE id::text = $1
+          AND decision_scope = 'personal'
+          AND personal_member_id = $2::uuid
+        LIMIT 1`,
+      [targetRefId, memberId],
+    );
+    const row = result.rows[0];
+    return row
+      ? {
+          facet: 'decisions',
+          refId: row.id,
+          label: row.title,
+          excerpt: excerpt(row.context),
+          href: '/decisions/' + encodeURIComponent(row.id),
+        }
+      : null;
+  }
+
+  const capsule = await getCapsuleById({
+    userId: memberId,
+    capsuleId: targetRefId,
+  });
+  return capsule
     ? {
-        facet: 'decisions',
-        refId: row.id,
-        label: row.title,
-        excerpt: excerpt(row.context),
-        href: '/decisions/' + encodeURIComponent(row.id),
+        facet: 'reflections',
+        refId: capsule.id,
+        label: capsule.title,
+        excerpt: excerpt(capsule.summary || capsule.sourceExcerpt || ''),
+        href: '/reflections/' + encodeURIComponent(capsule.id),
       }
     : null;
 }
@@ -308,12 +512,12 @@ export async function loadFacetFlowEvidence(
     [flowId, memberId],
   );
   const row = result.rows[0];
-  if (!row || !isCarrySourceFacet(row.source_facet) || !isCarryTargetFacet(row.target_facet)) {
+  if (!row || !isFlowSourceFacet(row.source_facet) || !isFlowTargetFacet(row.target_facet)) {
     return null;
   }
 
   const [source, target] = await Promise.all([
-    resolveFacetCarrySource(memberId, row.source_facet, row.source_ref_id),
+    resolveFacetFlowSource(memberId, row.source_facet, row.source_ref_id),
     resolveFacetTargetEvidence(memberId, row.target_facet, row.target_ref_id),
   ]);
   if (!source || !target) return null;
@@ -321,13 +525,7 @@ export async function loadFacetFlowEvidence(
   return {
     flowId: row.id,
     crossingId: row.crossing_id,
-    source: {
-      facet: source.facet,
-      refId: source.refId,
-      label: source.label,
-      excerpt: source.excerpt,
-      href: source.returnHref,
-    },
+    source,
     target,
     createdAt: row.created_at,
   };
@@ -358,10 +556,10 @@ export async function loadRecentFacetFlows(
 
   return Promise.all(
     result.rows.map(async (row) => {
-      const source = isCarrySourceFacet(row.source_facet)
-        ? await resolveFacetCarrySource(memberId, row.source_facet, row.source_ref_id)
+      const source = isFlowSourceFacet(row.source_facet)
+        ? await resolveFacetFlowSource(memberId, row.source_facet, row.source_ref_id)
         : null;
-      const target = isCarryTargetFacet(row.target_facet)
+      const target = isFlowTargetFacet(row.target_facet)
         ? await resolveFacetTarget(memberId, row.target_facet, row.target_ref_id)
         : null;
 
@@ -373,7 +571,7 @@ export async function loadRecentFacetFlows(
               facet: source.facet,
               refId: source.refId,
               label: source.label,
-              href: source.returnHref,
+              href: source.href,
             }
           : null,
         target,

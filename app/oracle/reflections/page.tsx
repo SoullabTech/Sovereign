@@ -7,8 +7,9 @@
  * Clean matte dark design
  */
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { apiFetch } from '@/lib/http/apiBase';
 import {
   ArrowLeft,
   Star,
@@ -69,11 +70,24 @@ interface RunesReading extends BaseReading {
 
 type DivinationReading = IChingReading | TarotReading | RunesReading;
 
+function parseReadingTarget(value: string | null): { type: Exclude<DivinationType, 'all'>; id: string } | null {
+  if (!value) return null;
+  const split = value.indexOf(':');
+  if (split <= 0) return null;
+  const type = value.slice(0, split);
+  const id = value.slice(split + 1);
+  if ((type !== 'iching' && type !== 'tarot' && type !== 'runes') || !id) return null;
+  return { type, id };
+}
+
 export default function DivinationReflectionsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTarget = parseReadingTarget(searchParams?.get('reading') || null);
+  const openedReturnTarget = useRef(false);
   const [readings, setReadings] = useState<DivinationReading[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<DivinationType>('all');
+  const [filter, setFilter] = useState<DivinationType>(returnTarget?.type || 'all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [expandedReading, setExpandedReading] = useState<string | null>(null);
 
@@ -97,6 +111,21 @@ export default function DivinationReflectionsPage() {
 
       if (data.success) {
         setReadings(data.readings);
+        if (returnTarget && !openedReturnTarget.current) {
+          const target = (data.readings as DivinationReading[]).find(
+            (item) => item.type === returnTarget.type && item.id === returnTarget.id,
+          );
+          if (target) {
+            openedReturnTarget.current = true;
+            setExpandedReading(target.id);
+            setTimeout(() => {
+              document.getElementById(`reading-${target.type}-${target.id}`)?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+              });
+            }, 80);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to fetch readings:', error);
@@ -310,6 +339,7 @@ export default function DivinationReflectionsPage() {
             {readings.map((reading) => (
               <div
                 key={reading.id}
+                id={`reading-${reading.type}-${reading.id}`}
                 className="rounded-lg border border-stone-800 bg-stone-900/30 overflow-hidden"
               >
                 {/* Reading Header */}

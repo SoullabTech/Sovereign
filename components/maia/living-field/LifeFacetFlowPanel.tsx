@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
 import { useMaiaPresence } from '@/components/maia/presence/MaiaPresence';
 
-type FlowFacet = 'journal' | 'reflections' | 'changes' | 'decisions';
+type FlowFacet = 'journal' | 'reflections' | 'changes' | 'decisions' | 'divination';
 type LensId = 'elemental' | 'spiralogic' | 'developmental' | 'relational' | 'temporal' | 'symbolic';
 
 type FlowEndpoint = {
@@ -37,6 +37,7 @@ const FACET_LABEL: Record<FlowFacet, string> = {
   reflections: 'Reflections',
   changes: 'Change',
   decisions: 'Decision',
+  divination: 'Divination',
 };
 
 const LENSES: Array<{ id: LensId; label: string; question: string }> = [

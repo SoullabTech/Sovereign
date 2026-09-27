@@ -4,12 +4,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import {
-  resolveFacetCarrySource,
-  type CarrySourceFacet,
-  type CarryTargetFacet,
+  resolveFacetFlowSource,
+  type RelationSourceFacet,
+  type RelationTargetFacet,
 } from '@/lib/house/facetCrossing.server';
 
-const TARGETS = new Set(['changes', 'decisions']);
+const TARGETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'reflections']);
+const SOURCES = new Set<RelationSourceFacet>(['journal', 'reflections', 'divination']);
 
 export async function GET(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
@@ -18,13 +19,13 @@ export async function GET(request: NextRequest) {
   const targetFacet = request.nextUrl.searchParams.get('targetFacet') || '';
   const targetRefId = request.nextUrl.searchParams.get('targetRefId') || '';
 
-  if (!TARGETS.has(targetFacet) || !targetRefId) {
+  if (!TARGETS.has(targetFacet as RelationTargetFacet) || !targetRefId) {
     return NextResponse.json({ error: 'Invalid target' }, { status: 400 });
   }
 
   const result = await query<{
     crossing_id: string;
-    source_facet: CarrySourceFacet;
+    source_facet: string;
     source_ref_id: string;
     created_at: string;
   }>(
@@ -38,15 +39,32 @@ export async function GET(request: NextRequest) {
   );
 
   const crossings = await Promise.all(
-    result.rows.map(async (row) => ({
-      crossingId: row.crossing_id,
-      crossedAt: row.created_at,
-      source: await resolveFacetCarrySource(memberId, row.source_facet, row.source_ref_id),
-    })),
+    result.rows.map(async (row) => {
+      const sourceFacet = SOURCES.has(row.source_facet as RelationSourceFacet)
+        ? row.source_facet as RelationSourceFacet
+        : null;
+      const source = sourceFacet
+        ? await resolveFacetFlowSource(memberId, sourceFacet, row.source_ref_id)
+        : null;
+
+      return {
+        crossingId: row.crossing_id,
+        crossedAt: row.created_at,
+        source: source
+          ? {
+              facet: source.facet,
+              refId: source.refId,
+              label: source.label,
+              excerpt: source.excerpt,
+              returnHref: source.href,
+            }
+          : null,
+      };
+    }),
   );
 
   return NextResponse.json({
-    targetFacet: targetFacet as CarryTargetFacet,
+    targetFacet: targetFacet as RelationTargetFacet,
     targetRefId,
     crossings,
   });
