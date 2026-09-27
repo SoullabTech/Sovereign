@@ -640,3 +640,205 @@ linear-gradient(145deg,rgba(65,43,22,.32),rgba(17,14,11,.60));color:inherit;text
     font-size:18px!important;
   }
 }
+
+/* DECISIONS-UX-11 — living room readability conformance.
+   Founder acceptance: composition holds; increase meaningful type only.
+   Quiet is achieved through spacing/contrast, never by shrinking content. */
+.personalDecisionRoom .decisionRoomDate{
+  font-size:15px;
+  line-height:1.45;
+}
+.personalDecisionRoom .decisionRoomArrival>aside small,
+.personalDecisionRoom .gatherPerspective small,
+.personalDecisionRoom .perspectivesHeld small,
+.personalDecisionRoom .decisionMoments>small,
+.personalDecisionRoom .councilField header small,
+.personalDecisionRoom .earlierPerspective>small,
+.personalDecisionRoom .possibleDirection small,
+.personalDecisionRoom .resolutionChamber>small,
+.personalDecisionRoom .choiceForm small,
+.personalDecisionRoom .decisionNoticeForm header small,
+.personalDecisionRoom .revisitPerspective>small,
+.personalDecisionRoom .revisitForm small,
+.personalDecisionRoom .recentEvidence small,
+.personalDecisionRoom .choiceHistory>small{
+  font-size:12px;
+  line-height:1.4;
+  letter-spacing:.14em;
+}
+.personalDecisionRoom .decisionRoomArrival>aside p{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .choicePaperMeta{
+  font:600 14px/1.45 Arial,sans-serif;
+  letter-spacing:.07em;
+}
+.personalDecisionRoom .choiceContext small{
+  font-size:14px;
+  line-height:1.45;
+  letter-spacing:.07em;
+}
+.personalDecisionRoom .choiceContext p{
+  font-size:17px;
+  line-height:1.6;
+}
+.personalDecisionRoom .holdToday{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .resolutionChamber>h3{
+  font-size:25px;
+  line-height:1.2;
+}
+.personalDecisionRoom .resolutionChamber>p{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .resolutionExcerpt{
+  font-size:18px!important;
+  line-height:1.6!important;
+}
+.personalDecisionRoom .resolutionChamber>span{
+  font-size:14px;
+  line-height:1.5;
+}
+.personalDecisionRoom .resolutionChamber>button,
+.personalDecisionRoom .legacyActions button,
+.personalDecisionRoom .choiceForm>button,
+.personalDecisionRoom .keepChoice{
+  min-height:44px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .choiceForm>label{
+  font-size:14px;
+  line-height:1.45;
+}
+.personalDecisionRoom .choiceForm header h3{
+  font-size:25px;
+  line-height:1.2;
+}
+.personalDecisionRoom .choiceForm textarea{
+  font-size:18px!important;
+  line-height:1.65!important;
+}
+.personalDecisionRoom .choiceForm>p{
+  font-size:16px;
+  line-height:1.55;
+}
+.personalDecisionRoom .decisionNoticeDoor{
+  min-height:52px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .decisionNoticeForm header h3{
+  font-size:24px;
+  line-height:1.2;
+}
+.personalDecisionRoom .decisionNoticeForm>textarea{
+  font-size:18px!important;
+  line-height:1.65!important;
+}
+.personalDecisionRoom .decisionNoticeKinds>span{
+  font-size:16px;
+  line-height:1.45;
+}
+.personalDecisionRoom .decisionNoticeKinds button,
+.personalDecisionRoom .keepDecisionNotice{
+  min-height:44px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .gatherPerspective h3,
+.personalDecisionRoom .perspectivesHeld h3{
+  font-size:26px;
+  line-height:1.2;
+}
+.personalDecisionRoom .gatherPerspective p,
+.personalDecisionRoom .perspectivesHeld p{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .gatherPerspective button{
+  min-height:48px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .decisionMoments time{
+  font-size:14px;
+  line-height:1.45;
+}
+.personalDecisionRoom .decisionMoments p{
+  font-size:17px;
+  line-height:1.6;
+}
+.personalDecisionRoom .councilField>header>p{
+  font-size:16px;
+  line-height:1.5;
+}
+.personalDecisionRoom .councilSection h3{
+  font-size:22px;
+  line-height:1.25;
+}
+.personalDecisionRoom .perspectiveCards p,
+.personalDecisionRoom .tensionList p{
+  font-size:17px;
+  line-height:1.62;
+}
+.personalDecisionRoom .councilSection li{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .possibleDirection p{
+  font-size:18px;
+  line-height:1.65;
+}
+.personalDecisionRoom .possibleDirection span{
+  font-size:14px;
+  line-height:1.5;
+}
+.personalDecisionRoom .revisitPerspective>h3,
+.personalDecisionRoom .revisitForm header h3{
+  font-size:24px;
+  line-height:1.2;
+}
+.personalDecisionRoom .revisitPerspective>p{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .revisitPerspective>button,
+.personalDecisionRoom .revisitSubmit{
+  min-height:44px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .recentEvidence p{
+  font-size:16px;
+  line-height:1.55;
+}
+.personalDecisionRoom .revisitForm>textarea,
+.personalDecisionRoom .revisitForm>input{
+  font-size:17px!important;
+  line-height:1.6!important;
+}
+.personalDecisionRoom .earlierPerspective time,
+.personalDecisionRoom .choiceHistory time{
+  font-size:14px;
+  line-height:1.45;
+}
+.personalDecisionRoom .earlierPerspective p{
+  font-size:16px;
+  line-height:1.55;
+}
+.personalDecisionRoom .choiceHistory p{
+  font-size:17px;
+  line-height:1.6;
+}
+.personalDecisionRoom .choiceHistory span{
+  font-size:14px;
+  line-height:1.5;
+}
