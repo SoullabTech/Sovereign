@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Plus, X } from 'lucide-react';
+import { ArrowLeft, Loader2, MessageCircle, Plus, X } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import HexagramGlyph from '@/components/iching/HexagramGlyph';
 import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
+import { OracleConversation } from '@/components/OracleConversation';
 import type { ChangeExperienceType, ChangeRecord } from '@/lib/studio/changes/types';
 import styles from './change-room.module.css';
 
@@ -64,6 +65,9 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
   const [castMethod, setCastMethod] = useState<'coin' | 'yarrow'>('coin');
   const [casting, setCasting] = useState(false);
   const [castError, setCastError] = useState<string | null>(null);
+  const [maiaOpen, setMaiaOpen] = useState(false);
+  const [maiaInjection, setMaiaInjection] = useState<{ text: string; nonce: number } | null>(null);
+  const [changeContextShared, setChangeContextShared] = useState(false);
 
   async function loadChange() {
     const response = await apiFetch('/api/changes/' + encodeURIComponent(changeId));
@@ -145,6 +149,23 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
     [change?.experiences],
   );
 
+
+  function bringChangeContextToMaia() {
+    if (!change) return;
+    const parts = [
+      'Context I am explicitly bringing from my Living Change:',
+      'Title: ' + change.title,
+      'What I wrote about what is changing: ' + (change.description || '(no description yet)'),
+    ];
+    if (change.followUpIntention) parts.push('What I am carrying now: ' + change.followUpIntention);
+    else if (change.emotionalState) parts.push('What feels current now: ' + change.emotionalState);
+    const recent = experiences.slice(-1)[0];
+    if (recent) parts.push('Most recent moment I kept: ' + recent.content);
+    parts.push('Please stay close to what I have actually written here. Help me explore it without deciding what this Change means for me.');
+    setMaiaInjection({ text: parts.join('\n\n'), nonce: Date.now() });
+    setChangeContextShared(true);
+  }
+
   if (loading) {
     return <main className={styles.loading}><Loader2 className={styles.spinner} /> <span>Gathering this Change.</span></main>;
   }
@@ -190,6 +211,76 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
 
           <FacetOriginTrail targetFacet="changes" targetRefId={changeId} className={styles.origin} />
 
+          {!maiaOpen ? (
+            <button type="button" className={styles.mobileMaiaDoor} onClick={() => setMaiaOpen(true)}>
+              <MessageCircle aria-hidden="true" />
+              <span>Explore with MAIA</span>
+            </button>
+          ) : null}
+
+          {maiaOpen ? (
+            <section className={styles.encounter} aria-label="Explore this Change with MAIA">
+              <article className={styles.changeAnchor}>
+                <div className={styles.paperMeta}>
+                  <span>THE CHANGE REMAINS IN VIEW</span>
+                  <span>{formatDate(change.createdAt)}</span>
+                </div>
+                <h2>{change.title}</h2>
+                <p>{change.description || 'This Change has been named, but no description has been added yet.'}</p>
+                {experiences.length > 0 ? (
+                  <div className={styles.encounterMoment}>
+                    <small>MOST RECENT MOMENT</small>
+                    <p>{experiences[experiences.length - 1].content}</p>
+                  </div>
+                ) : null}
+                <div className={styles.contextConsent}>
+                  <small>CONTEXT STAYS WITH YOU UNTIL YOU SEND IT</small>
+                  <p>MAIA knows only that you are in Changes until you explicitly bring this Change into the conversation.</p>
+                  <button type="button" onClick={bringChangeContextToMaia}>
+                    {changeContextShared ? 'Bring the current context again' : 'Bring this Change to MAIA'} <span>→</span>
+                  </button>
+                </div>
+              </article>
+
+              <div className={styles.maiaChamber}>
+                <div className={styles.maiaChamberHead}>
+                  <div className={styles.maiaChamberIdentity}>
+                    <span className={styles.orb} aria-hidden="true" />
+                    <div>
+                      <small>MAIA · LIVING CHANGE</small>
+                      <strong>Stay with what is moving</strong>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => setMaiaOpen(false)} aria-label="Return to Change">
+                    <X aria-hidden="true" />
+                  </button>
+                </div>
+                <div className={styles.maiaConversation}>
+                  <OracleConversation
+                    userId={change.memberId || undefined}
+                    sessionId={'living-change-' + changeId}
+                    presentationMode="contained"
+                    initialShowChatInterface
+                    voiceEnabled
+                    showAnalytics={false}
+                    shouldRenderArrival={false}
+                    surface="maia"
+                    placeContext={{
+                      placeId: 'changes',
+                      placeName: 'Changes',
+                      route: '/changes',
+                      purpose: 'A room for noticing and reflecting on transitions over time.',
+                      objectType: 'change',
+                      objectId: changeId,
+                    }}
+                    injectedMessage={maiaInjection}
+                    onSessionEnd={() => setMaiaOpen(false)}
+                  />
+                </div>
+              </div>
+            </section>
+          ) : (
+            <>
           <div className={styles.field}>
             <article className={styles.changePaper}>
               <div className={styles.paperMeta}>
@@ -332,7 +423,7 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
 
               <section className={styles.quiet}>
                 <small>DEEPER PRACTICES REMAIN QUIET</small>
-                <p>MAIA encounter and pattern work are not opened in this act.</p>
+                <p>Pattern work remains unopened in this act.</p>
               </section>
             </aside>
           </div>
@@ -363,15 +454,30 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
               </div>
             )}
           </section>
+
+            </>
+          )}
         </div>
       </section>
 
       <aside className={styles.rightMembrane}>
         <span className={styles.orb} aria-hidden="true" />
         <strong>MAIA</strong>
-        <p>Present when invited.</p>
+        <p>{maiaOpen ? 'Here with this Change.' : 'Present when invited.'}</p>
+        {!maiaOpen ? (
+          <button type="button" className={styles.maiaDoor} onClick={() => setMaiaOpen(true)}>
+            <MessageCircle aria-hidden="true" />
+            <span>Explore with MAIA</span>
+          </button>
+        ) : (
+          <button type="button" className={styles.maiaReturn} onClick={() => setMaiaOpen(false)}>
+            Return to the Change
+          </button>
+        )}
         <div className={styles.maiaBoundary}>
-          This first live shell does not open a conversation. The Change is allowed to exist before anyone interprets it.
+          {maiaOpen
+            ? 'Opening the chamber does not send the Change to MAIA. You choose whether to bring its context into the conversation.'
+            : 'The Change is allowed to exist before anyone interprets it.'}
         </div>
       </aside>
 
