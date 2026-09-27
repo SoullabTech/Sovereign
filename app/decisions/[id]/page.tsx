@@ -34,6 +34,11 @@ export default function PersonalDecisionRoom() {
   const [noticeType, setNoticeType] = useState<ExperienceType>('field_event');
   const [noticeSaving, setNoticeSaving] = useState(false);
   const [noticeError, setNoticeError] = useState<string | null>(null);
+  const [revisitOpen, setRevisitOpen] = useState(false);
+  const [revisitNotes, setRevisitNotes] = useState('');
+  const [revisitState, setRevisitState] = useState('');
+  const [revisiting, setRevisiting] = useState(false);
+  const [revisitError, setRevisitError] = useState<string | null>(null);
 
   async function loadDecision() {
     const response = await apiFetch('/api/studio/decisions/' + encodeURIComponent(decisionId) + '?scope=personal');
@@ -102,6 +107,31 @@ export default function PersonalDecisionRoom() {
       setNoticeError(err instanceof Error ? err.message : 'Could not keep this moment');
     } finally {
       setNoticeSaving(false);
+    }
+  }
+
+  async function revisitPerspective() {
+    const sessionNotes = revisitNotes.trim();
+    if (!sessionNotes || revisiting) return;
+    setRevisiting(true);
+    setRevisitError(null);
+    try {
+      const response = await apiFetch('/api/studio/decisions/' + encodeURIComponent(decisionId) + '/consult?scope=personal', {
+        method: 'POST',
+        body: JSON.stringify({
+          sessionNotes,
+          emotionalState: revisitState.trim() || undefined,
+        }),
+      });
+      if (!response.ok) throw new Error('Perspective could not be revisited');
+      setRevisitNotes('');
+      setRevisitState('');
+      setRevisitOpen(false);
+      await loadDecision();
+    } catch (err) {
+      setRevisitError(err instanceof Error ? err.message : 'Perspective could not be revisited');
+    } finally {
+      setRevisiting(false);
     }
   }
 
@@ -286,6 +316,56 @@ export default function PersonalDecisionRoom() {
               <p>{council.recommendation}</p>
               <span>A council suggestion, not a verdict.</span>
             </div>
+          ) : null}
+
+          {!resolved ? (
+            <section className={styles.revisitPerspective}>
+              {!revisitOpen ? (
+                <>
+                  <small>WHEN REALITY CHANGES</small>
+                  <h3>Look again with what has happened since</h3>
+                  <p>A new round should begin from new lived evidence, not from the assumption that the earlier direction was right.</p>
+                  <button type="button" onClick={() => setRevisitOpen(true)}>Revisit perspective →</button>
+                </>
+              ) : (
+                <div className={styles.revisitForm}>
+                  <header>
+                    <div>
+                      <small>NEW EVIDENCE</small>
+                      <h3>What is different now?</h3>
+                    </div>
+                    <button type="button" onClick={() => setRevisitOpen(false)} aria-label="Close revisit">
+                      <X aria-hidden="true" />
+                    </button>
+                  </header>
+                  {experiences.length ? (
+                    <div className={styles.recentEvidence}>
+                      <small>RECENTLY KEPT</small>
+                      {experiences.slice(0,3).map((experience) => (
+                        <p key={experience.id}>{experience.content}</p>
+                      ))}
+                    </div>
+                  ) : null}
+                  <textarea
+                    value={revisitNotes}
+                    onChange={(event) => setRevisitNotes(event.target.value)}
+                    placeholder="What has actually changed since the last perspective?"
+                    aria-label="What is different now"
+                  />
+                  <input
+                    value={revisitState}
+                    onChange={(event) => setRevisitState(event.target.value)}
+                    placeholder="Optional: what do you notice in yourself now?"
+                    aria-label="What do you notice in yourself now"
+                  />
+                  {revisitError ? <p className={styles.decisionCreateError} role="alert">{revisitError}</p> : null}
+                  <button type="button" className={styles.revisitSubmit} onClick={revisitPerspective} disabled={!revisitNotes.trim() || revisiting}>
+                    {revisiting ? <Loader2 className={styles.decisionSpinner} aria-hidden="true" /> : null}
+                    Gather perspective again
+                  </button>
+                </div>
+              )}
+            </section>
           ) : null}
         </section>
       ) : null}
