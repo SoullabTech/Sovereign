@@ -1,0 +1,117 @@
+{
+  "scope": "Fresh synthetic contexts; visible UI only, no direct database audit, no account or production testing",
+  "recordedAt": "2026-09-27T21:02:23.397Z",
+  "results": [
+    {
+      "id": "B01",
+      "status": "PASS",
+      "detail": "Fresh local browser begins without seeded reflections."
+    },
+    {
+      "id": "B02",
+      "status": "PASS",
+      "detail": "Keep succeeds without mandatory Return or action."
+    },
+    {
+      "id": "B03",
+      "status": "PASS",
+      "detail": "Both possibilities and member-entered dialogue survive reload."
+    },
+    {
+      "id": "B04",
+      "status": "PASS",
+      "detail": "A stale-tab save is refused and the unsaved words remain visible."
+    },
+    {
+      "id": "B05",
+      "status": "PASS",
+      "detail": "Exact historical revision is not silently replaced by latest."
+    },
+    {
+      "id": "B06",
+      "status": "PASS",
+      "detail": "An unavailable revision does not fall back to another."
+    },
+    {
+      "id": "B07",
+      "status": "PASS",
+      "detail": "Temporal notes have an explicit departure warning and remain on cancel."
+    },
+    {
+      "id": "B08",
+      "status": "PASS",
+      "detail": "A member-selected connection and its counterexample are retained."
+    },
+    {
+      "id": "B09",
+      "status": "PASS",
+      "detail": "The relationship returns to the exact source version."
+    },
+    {
+      "id": "B10",
+      "status": "PASS",
+      "detail": "Deleting a source leaves a truthful unavailable relation."
+    },
+    {
+      "id": "B11",
+      "status": "PASS",
+      "detail": "Deleting both synthetic reflections returns the visible library to empty."
+    },
+    {
+      "id": "B12",
+      "status": "PASS",
+      "detail": "No-image/no-action session can return; Keep and leave preserves the explicit return."
+    },
+    {
+      "id": "B13",
+      "status": "PASS",
+      "detail": "Feared possibility offers distance without compulsory dialogue."
+    },
+    {
+      "id": "B14",
+      "status": "PASS",
+      "detail": "Keyboard cancellation preserves the unfinished encounter."
+    },
+    {
+      "id": "B15",
+      "status": "PASS",
+      "detail": "Explicit discard does not leave a visible saved reflection."
+    },
+    {
+      "id": "B16",
+      "status": "PASS",
+      "detail": "Arrival and encounter fit a 390px viewport without horizontal scrolling."
+    },
+    {
+      "id": "B17",
+      "status": "PASS",
+      "detail": "Visible mobile buttons meet the 16px type and 44px height floors."
+    },
+    {
+      "id": "B18",
+      "status": "PASS",
+      "detail": "Return remains directly reachable on mobile without filling earlier movements."
+    },
+    {
+      "id": "B19",
+      "status": "PASS",
+      "detail": "No JavaScript page errors or off-origin browser requests occurred during this walk."
+    },
+    {
+      "id": "B20",
+      "status": "PASS",
+      "detail": "Loopback preview identifies its bundle and emits the no-connect content policy."
+    }
+  ],
+  "errors": [],
+  "requests": [
+    "http://localhost:3797/becoming",
+    "http://localhost:3797/assets/app.css",
+    "http://localhost:3797/assets/app.js",
+    "http://localhost:3797/assets/house-field.webp",
+    "http://localhost:3797/becoming?reflection=d2884c74-d493-4205-97d1-36a1602348df&revision=2",
+    "http://localhost:3797/becoming?reflection=d2884c74-d493-4205-97d1-36a1602348df&revision=1",
+    "http://localhost:3797/becoming?reflection=d2884c74-d493-4205-97d1-36a1602348df&revision=999"
+  ],
+  "failure": null
+}

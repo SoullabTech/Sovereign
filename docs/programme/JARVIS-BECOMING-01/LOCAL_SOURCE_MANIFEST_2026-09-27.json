@@ -1,0 +1,30 @@
+{
+  "source_commit": "4e2950620a0e73142fd9ae5d5b82a646fd00caf3",
+  "bundle_sha256": "c0d131422222e78a23c4904e97dd3afc0319fb0ec9d69c008534dfa5e6902d12",
+  "recorded_at": "2026-09-27T21:06:23.958956+00:00",
+  "files": {
+    "lib/becoming/core.ts": "2b26f66dbf6f5fb22d06c1f175355ca5a738a111e25d445edd372b165d155f4c",
+    "prototypes/becoming/App.tsx": "fafe091e607de2a223e9e8f96f7c52731c84607f9ee9b1a6286f36ce5a75e4a0",
+    "prototypes/becoming/index.html": "df2b696b194cbf71d4fd791efbfa4b6a7ca88117adaf841642ea2c8853cbd494",
+    "prototypes/becoming/README.md": "cdd7148dd869618b3a5b865f8c36f02201eb0a479a847b79baa0737e4a84ec85",
+    "prototypes/becoming/style.css": "f440facfa3ed9ae6d71f00f4b2914c4604d2460cd0f14c06d351f7e8c4cb0e0d",
+    "prototypes/becoming/store.ts": "99af64616dc901fa8be89964389e8ed4b8de15bda8c6792b0b5effa4c838782e",
+    "scripts/becoming/preview.mjs": "25ec0cc1da2737523680de0613236596c550d1799db58d9fb6408c1913cc0dd8",
+    "tests/becoming/core.test.ts": "66980c7a61b7a1c0e98cd34b3c448eb0d5f1f7f0b8ec8f4041a1a368087bb6fa",
+    "tests/becoming/browser-witness.mjs": "b469bbcea2e693ab3bc8b01eb8407499d66585bcbf9b8f3d5999677ebbac758d",
+    "tests/becoming/tsconfig.json": "37c8520d08b9b8b39fa8f6b1d8688500bb4d471bc6614a66df90529ad03b9400"
+  },
+  "evidence": {
+    "encounter-mobile.png": "ee3b2189daf206dca4e80d893bdbd34c72d3b46380f7218a16e0108260fe179e",
+    "dialogue-desktop.png": "aca235de9cfee28395786b4a2ac34fcc94a515113900637db25ee6d6997c722e",
+    "browser-witness.log": "a3cba0b0df130ec4e4642caa23484931b92ccd086f371b42d25e2f80ba53171a",
+    "arrival-mobile.png": "31c61fb57bc0bc2d85c03ddfd4a9c93bafcc5c077c04b19752eecdda2eb487bb",
+    "return-mobile.png": "016183eca5f24dae68b05b33243c8fa450e770a177062534bca4e831ff55d644",
+    "temporal-desktop.png": "ba6534912151dd75da1242e7c89b017cd085c09c33f921c49e39b681212a9f84",
+    "witness-health.json": "0cf22c1b67995c4d7e790162fbcb23ab6d2850331fffafd39702021cb0bd6400",
+    "browser-witness.json": "7b23fc71ebf14d0b054ac4c19af47b5354313440651bd3e317a8ab43665705e6",
+    "encounter-desktop.png": "842edd42cae27cdbfdfc52df1f31934d16c1d1bb6619b2dfaecd2a09c49e7d48",
+    "arrival-desktop.png": "8297f29376d4858cd3bc054f10a541471ac033ba86b3c4bf2e10b5fa6a908cc4",
+    "core-tests.log": "76544d1f2b546adffeefad8a4f5724ee1a94ab2264e788451bc62472c799adb6"
+  }
+}

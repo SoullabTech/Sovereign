@@ -1,5 +1,15 @@
 # JARVIS-BECOMING-01 — Programme cockpit
 
+## Latest standing — local candidate, 27 September 2026
+
+The founder's subsequent full-build continuation produced an isolated functional candidate at `4e2950620a0e73142fd9ae5d5b82a646fd00caf3`. Read `LOCAL_BUILD_SCOPE_2026-09-27.md` and `LOCAL_CANDIDATE_WITNESS_2026-09-27.md` before resuming. Strict typecheck passes, core tests pass 31/31, and the visible Chromium witness passes 20/20. The candidate is available on local port 3797; it is not account-connected, live MAIA, or production.
+
+The next human boundary is the local room/temporal-field walk, followed by the exact account/MAIA integration contract. The native review unit is `becoming-local-human-walk-20260927`, read back blocked pending that walk. Earlier planning units remain unchanged. The constitutional source is unchanged.
+
+### Earlier establishment record
+
+The documentary-only descriptions below record the earlier programme establishment and its then-current boundary. The witness above supersedes only that implementation standing; it does not confer unrecorded rulings or release authority.
+
 **Opened:** 27 September 2026, following Kelly's instruction, “lets Jarvis this fully!”
 **Subject:** Becoming — Future Self Field.
 **Change class:** Documentary programme establishment; no product implementation.

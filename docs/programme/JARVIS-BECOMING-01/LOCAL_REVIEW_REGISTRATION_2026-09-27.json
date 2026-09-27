@@ -1,0 +1,116 @@
+{
+  "recordedAt": "2026-09-27T21:03:31.551Z",
+  "created": {
+    "ok": true,
+    "code": "CREATED",
+    "errors": [],
+    "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-local-human-walk-20260927.json",
+    "work_unit_id": "becoming-local-human-walk-20260927"
+  },
+  "status": {
+    "work_unit_id": "becoming-local-human-walk-20260927",
+    "exists": true,
+    "identity": {
+      "project": "Prospective Reflection Programme",
+      "capability": "local-review-surface",
+      "title": "Local Becoming candidate review"
+    },
+    "intent": {
+      "objective": "Review the implemented local temporal-reflection candidate and record the human experience findings without opening account, cognitive, or release authority.",
+      "task_class": "verification",
+      "risk_class": "high",
+      "priority": null
+    },
+    "authority": {
+      "governing_authority": "Current founder full-build continuation and the local candidate scope record. The prospective constitution remains unchanged.",
+      "authorized_acts": [
+        "repo.read",
+        "tests.run"
+      ],
+      "not_authorized_acts": [
+        "repo.write:worktree",
+        "authority.change",
+        "merge",
+        "deploy",
+        "production.read",
+        "production.write",
+        "network.external",
+        "provider.spend",
+        "repo.disclose:external-readonly"
+      ],
+      "integration_actor": "founder",
+      "autonomy_ceiling": "LEVEL_0_READONLY"
+    },
+    "dependencies": {
+      "dependencies": [
+        "becoming-02r1-reconcile-20260927"
+      ],
+      "blockers": [
+        "FOUNDER_LOCAL_EXPERIENCE_WALK_PENDING",
+        "NO_AUTOMATED_DISPATCH_AUTHORIZED"
+      ]
+    },
+    "workspace": {
+      "canonical_sha": "4e2950620a0e73142fd9ae5d5b82a646fd00caf3",
+      "branch": "feature/becoming-local-candidate-20260927",
+      "worktree": null
+    },
+    "proof_spec": {
+      "acceptance_criteria": [
+        "Inspect the exact candidate and its recorded limitations.",
+        "Record founder judgments as human evidence, not inferred approval.",
+        "Return one bounded next integration contract, not an automatic activation."
+      ],
+      "verification_commands": [
+        "git diff --check",
+        "node_modules/.bin/tsc -p tests/becoming/tsconfig.json --pretty false",
+        "node_modules/.bin/tsx --test tests/becoming/core.test.ts"
+      ],
+      "max_attempts": 1
+    },
+    "active_execution": null,
+    "latest_result": null,
+    "attempt_count": 0,
+    "lifecycle_state": "blocked",
+    "lifecycle_vocabulary": [
+      "proposed",
+      "ready",
+      "blocked",
+      "needs_founder",
+      "claimed",
+      "running",
+      "verifying",
+      "review_required",
+      "ready_to_integrate",
+      "integrated",
+      "deployment_required",
+      "deployed",
+      "live_verification_required",
+      "closed",
+      "failed",
+      "superseded",
+      "contended"
+    ],
+    "permission_envelope": {
+      "repo_read": true,
+      "repo_write_scope": "none",
+      "execute_checks": true,
+      "integration_actor": "founder",
+      "production_read": false,
+      "production_write": false,
+      "deploy": false,
+      "authority_change": false,
+      "external_network": false,
+      "external_repo_disclosure": false,
+      "provider_spend": false
+    },
+    "compatibility": {
+      "defaults_applied_for": [
+        "priority"
+      ],
+      "note": "this Work Unit predates the Unit 5 schema extension — all missing fields defaulted, nothing migrated"
+    }
+  },
+  "workerDispatches": 0,
+  "scope": "Native blocked review record; prior ten planning packets unchanged."
+}
