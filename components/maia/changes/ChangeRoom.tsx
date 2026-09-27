@@ -68,6 +68,7 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
   const [maiaOpen, setMaiaOpen] = useState(false);
   const [maiaInjection, setMaiaInjection] = useState<{ text: string; nonce: number } | null>(null);
   const [changeContextShared, setChangeContextShared] = useState(false);
+  const [patternOpen, setPatternOpen] = useState(false);
 
   async function loadChange() {
     const response = await apiFetch('/api/changes/' + encodeURIComponent(changeId));
@@ -150,6 +151,50 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
   );
 
 
+
+  const recurrenceEvidence = useMemo(() => {
+    const STOP = new Set([
+      'about','after','again','against','because','before','being','between','could','didnt','doesnt',
+      'from','have','into','just','more','much','only','other','really','that','their','there','these',
+      'they','this','through','very','what','when','where','which','while','with','would','your',
+      'felt','feel','feels','something','thing','things','today','still','than','then','them','were',
+    ]);
+    const byWord = new Map<string, Set<string>>();
+    const byType = new Map<string, number>();
+
+    for (const exp of experiences) {
+      byType.set(exp.experienceType, (byType.get(exp.experienceType) || 0) + 1);
+      const words = new Set(
+        exp.content.toLowerCase()
+          .replace(/[^a-z0-9'\s-]/g, ' ')
+          .split(/\s+/)
+          .map((word) => word.replace(/^'+|'+$/g, ''))
+          .filter((word) => word.length >= 5 && !STOP.has(word)),
+      );
+      for (const word of words) {
+        const ids = byWord.get(word) || new Set<string>();
+        ids.add(exp.id);
+        byWord.set(word, ids);
+      }
+    }
+
+    const repeatedWords = [...byWord.entries()]
+      .filter(([, ids]) => ids.size >= 2)
+      .sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0]))
+      .slice(0, 8)
+      .map(([word, ids]) => ({ word, count: ids.size }));
+
+    const repeatedTypes = [...byType.entries()]
+      .filter(([, count]) => count >= 2)
+      .sort((a, b) => b[1] - a[1])
+      .map(([type, count]) => ({
+        label: EXPERIENCE_LABELS[type] || type,
+        count,
+      }));
+
+    return { repeatedWords, repeatedTypes };
+  }, [experiences]);
+
   function bringChangeContextToMaia() {
     if (!change) return;
     const parts = [
@@ -211,14 +256,75 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
 
           <FacetOriginTrail targetFacet="changes" targetRefId={changeId} className={styles.origin} />
 
-          {!maiaOpen ? (
+          {!maiaOpen && !patternOpen ? (
             <button type="button" className={styles.mobileMaiaDoor} onClick={() => setMaiaOpen(true)}>
               <MessageCircle aria-hidden="true" />
               <span>Explore with MAIA</span>
             </button>
           ) : null}
 
-          {maiaOpen ? (
+          {patternOpen ? (
+            <section className={styles.patternView} aria-label="Temporal pattern view">
+              <div className={styles.patternTop}>
+                <div>
+                  <p className={styles.kicker}>Member-grounded evidence</p>
+                  <h2>What has been recurring?</h2>
+                  <p>These are observable recurrences in what you have kept here. No meaning is assigned to them.</p>
+                </div>
+                <button type="button" onClick={() => setPatternOpen(false)}>Return to the Change</button>
+              </div>
+
+              <div className={styles.patternField}>
+                <section className={styles.patternTimeline}>
+                  <div className={styles.patternTimelineHead}>
+                    <span>YOUR MOMENTS, IN TIME</span>
+                    <em>Each point is something you actually kept.</em>
+                  </div>
+                  <div className={styles.patternLine}>
+                    {experiences.length === 0 ? (
+                      <p className={styles.patternEmpty}>There are not enough kept moments yet to show recurrence.</p>
+                    ) : experiences.map((exp, index) => (
+                      <article className={styles.patternNode} key={exp.id}>
+                        <span className={styles.patternPoint} data-now={index === experiences.length - 1 ? 'true' : 'false'} />
+                        <small>{formatDate(exp.occurredAt || exp.createdAt)}</small>
+                        <strong>{EXPERIENCE_LABELS[exp.experienceType] || 'Moment'}</strong>
+                        <p>{exp.content}</p>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+
+                <aside className={styles.evidenceRail}>
+                  <section>
+                    <small>WORDS THAT REAPPEAR</small>
+                    {recurrenceEvidence.repeatedWords.length ? (
+                      <div className={styles.evidenceChips}>
+                        {recurrenceEvidence.repeatedWords.map((item) => (
+                          <span key={item.word}>{item.word} <b>×{item.count}</b></span>
+                        ))}
+                      </div>
+                    ) : <p>No exact word recurrence is strong enough to show yet.</p>}
+                  </section>
+
+                  <section>
+                    <small>KINDS OF MOMENTS THAT RECUR</small>
+                    {recurrenceEvidence.repeatedTypes.length ? (
+                      <div className={styles.evidenceList}>
+                        {recurrenceEvidence.repeatedTypes.map((item) => (
+                          <div key={item.label}><span>{item.label}</span><b>{item.count}</b></div>
+                        ))}
+                      </div>
+                    ) : <p>No experience type repeats yet.</p>}
+                  </section>
+
+                  <section className={styles.hypothesisBoundary}>
+                    <small>MEANING IS STILL OPEN</small>
+                    <p>A recurrence is evidence that something appeared more than once. It is not yet an explanation of why.</p>
+                  </section>
+                </aside>
+              </div>
+            </section>
+          ) : maiaOpen ? (
             <section className={styles.encounter} aria-label="Explore this Change with MAIA">
               <article className={styles.changeAnchor}>
                 <div className={styles.paperMeta}>
@@ -430,8 +536,13 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
 
           <section className={styles.trace} aria-label="The movement so far">
             <div className={styles.traceHead}>
-              <span>THE MOVEMENT SO FAR</span>
-              <em>Not progress. Just what has happened.</em>
+              <div>
+                <span>THE MOVEMENT SO FAR</span>
+                <em>Not progress. Just what has happened.</em>
+              </div>
+              <button type="button" onClick={() => setPatternOpen(true)} disabled={experiences.length === 0}>
+                See what has been recurring →
+              </button>
             </div>
 
             {experiences.length > 0 ? (
@@ -463,8 +574,8 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
       <aside className={styles.rightMembrane}>
         <span className={styles.orb} aria-hidden="true" />
         <strong>MAIA</strong>
-        <p>{maiaOpen ? 'Here with this Change.' : 'Present when invited.'}</p>
-        {!maiaOpen ? (
+        <p>{maiaOpen ? 'Here with this Change.' : patternOpen ? 'Quiet while you look across time.' : 'Present when invited.'}</p>
+        {!maiaOpen && !patternOpen ? (
           <button type="button" className={styles.maiaDoor} onClick={() => setMaiaOpen(true)}>
             <MessageCircle aria-hidden="true" />
             <span>Explore with MAIA</span>
