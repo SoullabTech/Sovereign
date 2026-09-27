@@ -289,6 +289,9 @@
 .fs-modetab{font-size:0.8125rem;padding:11px 12px;min-height:38px;color:var(--text-muted);border:0;background:none;
   border-bottom:2px solid transparent;font-family:inherit;cursor:pointer;white-space:nowrap}
 .fs-modetab[aria-selected="true"]{color:var(--action);border-bottom-color:var(--action);font-weight:600}
+/* Eight live lenses need slightly tighter breathing room at desktop width.
+   The accepted seven-lens V10 states do not match this selector. */
+.fs-modetabs[data-themes-enabled="true"] .fs-modetab{padding-left:8px;padding-right:8px;font-size:.79rem}
 .fs-pane{flex:1;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:22px 24px 26px}
 .fs-pgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;
   align-items:start;max-width:1120px;margin:0 auto;min-width:0}
@@ -583,3 +586,57 @@
    this is the product's selection state, not one of the Work's own marks. */
 .fs-find[data-selected="true"]{background:var(--action-soft);border-radius:6px;
   box-shadow:inset 3px 0 0 var(--action);padding-left:11px;margin-left:-11px}
+
+/* ── DEVELOP · THEMES (D5C5) ───────────────────────────────────────────── */
+/* Additive only: the accepted V10 states do not render these selectors. */
+.fs-themepage{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px;min-width:0}
+.fs-themeintro{display:flex;flex-direction:column;gap:9px}
+.fs-themeintro .fs-obsnote{margin:0;max-width:760px}
+.fs-themeintroacts,.fs-themeacts{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.fs-themesection{display:flex;flex-direction:column;gap:10px;min-width:0}
+.fs-themegrouphead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 2px}
+.fs-themegrouphead h3{margin:0;font-family:var(--serif);font-size:1rem;font-weight:400;color:var(--text-primary)}
+.fs-themegrouphead span{font-size:.71875rem;color:var(--text-muted)}
+.fs-themelist{display:flex;flex-direction:column;gap:12px}
+.fs-themecard{display:flex;flex-direction:column;gap:12px}
+.fs-themecandidate{border-style:dashed}
+.fs-themehead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fs-card .fs-themetitle{margin:0;font-family:var(--serif);font-size:1.125rem;font-weight:400;
+  letter-spacing:0;text-transform:none;color:var(--text-primary)}
+.fs-themeprov{margin:4px 0 0;font-size:.71875rem;color:var(--text-muted)}
+.fs-themefacts{display:flex;gap:8px 16px;flex-wrap:wrap;font-size:.71875rem;color:var(--text-muted)}
+.fs-themetrackwrap{min-width:0}
+.fs-themetrack{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(58px,1fr);gap:5px;
+  align-items:end;overflow-x:auto;padding:8px 1px 3px}
+.fs-themecell{min-width:58px;min-height:88px;display:grid;grid-template-rows:54px auto;align-items:end;
+  text-decoration:none;color:inherit;border-radius:6px;padding:4px}
+a.fs-themecell:hover{background:var(--surface-active)}
+.fs-themecellbar{display:block;width:100%;align-self:end;border-radius:3px 3px 1px 1px;
+  background:var(--action-soft);border:1px solid var(--action-line);min-height:3px}
+.fs-themecellbar[data-presence="0"]{height:3px;background:transparent}
+.fs-themecellbar[data-presence="1"]{height:18px}
+.fs-themecellbar[data-presence="2"]{height:34px}
+.fs-themecellbar[data-presence="3"]{height:50px}
+.fs-themecellbar[data-presence-state="unknown"]{height:3px;background:transparent;border-style:dashed;opacity:.65}
+.fs-themecelllabel{font-size:.625rem;line-height:1.25;color:var(--text-muted);overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:5px}
+.fs-themetracknote{margin:7px 0 0}
+.fs-themechip{text-decoration:none}
+.fs-themequiet{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.fs-themequiet .fs-obsnote{margin:0}
+.fs-themedetails{font-size:.75rem;color:var(--action)}
+.fs-themedetails summary{cursor:pointer;list-style:none;padding:7px 0;user-select:none}
+.fs-themedetails summary::-webkit-details-marker{display:none}
+.fs-themedetails form{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:4px 0 2px}
+.fs-themedetails input{min-width:220px;border:1px solid var(--rule);border-radius:6px;background:var(--ground-work);
+  color:var(--text-primary);font:inherit;padding:8px 10px}
+.fs-themeerror{margin:0;font-size:.75rem;color:var(--status-stale);line-height:1.45}
+@media (max-width:620px){
+  .fs-themehead{display:block}
+  .fs-themehead>.fs-chip{margin-top:8px}
+  .fs-themeintroacts,.fs-themeacts{align-items:stretch}
+  .fs-themedetails{width:100%}
+  .fs-themedetails form{align-items:stretch}
+  .fs-themedetails input{min-width:0;width:100%}
+  .fs-themeacts>.fs-btn,.fs-themeintroacts>.fs-btn{width:100%}
+}

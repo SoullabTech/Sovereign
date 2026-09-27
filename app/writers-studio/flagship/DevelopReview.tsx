@@ -15,9 +15,12 @@ import { CrumbBar } from './StudioChrome';
 import { readTimeLabel, type Facet } from './flagshipTokens';
 import { ContinuityMap, CoverageLine, Observations } from './DevelopViews';
 import {
-  provenanceLabel,
+  PRESENCE_LABEL, provenanceLabel,
   type ContinuityMapData, type Coverage, type DevelopObservation as GovernedObservation,
 } from '../../../lib/writersStudio/studio/developObservation';
+import type {
+  LiveGovernedTheme, LiveThemeCandidate, LiveThemesPayload,
+} from '../../../lib/writersStudio/themes/liveTypes';
 import {
   availabilityLine, citationLine, commissionOffer, freshnessLine, scopeLine,
   type CitationState, type Freshness, type LensAvailability, type ReviewScope, type WorkChange,
@@ -297,6 +300,12 @@ export const STRUCTURE_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.freeze
   overview: true,
   lenses: ['structure'] as const,
 });
+export const THEMES_DEVELOP_CAPABILITIES: DevelopCapabilities = Object.freeze({
+  askMaia: false,
+  facet: false,
+  overview: true,
+  lenses: ['structure', 'themes'] as const,
+});
 
 /** ⭐ No empty state. Either a reading exists and said nothing, or it does not exist. */
 function LensRow({ l, canCommission = true, readingAttached = true }: { l: LensStanding; canCommission?: boolean; readingAttached?: boolean }) {
@@ -325,10 +334,31 @@ export interface DevelopStructureNavigation {
   onGo?(sectionId: string, href: string): void;
 }
 
-export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabilities = CONTROLLED_DEVELOP_CAPABILITIES, onLens, structureNavigation }: {
+export interface DevelopThemesActions {
+  readonly busy?: boolean;
+  readonly error?: string | null;
+  readonly onCommission?: () => void;
+  readonly onDeclare?: (label: string) => void;
+  readonly onAcceptCandidate?: (candidate: LiveThemeCandidate) => void;
+  readonly onRenameCandidate?: (candidate: LiveThemeCandidate, label: string) => void;
+  readonly onRejectCandidate?: (candidate: LiveThemeCandidate) => void;
+  readonly onRenameTheme?: (theme: LiveGovernedTheme, label: string) => void;
+  readonly onRejectTheme?: (theme: LiveGovernedTheme) => void;
+  readonly onRestoreTheme?: (theme: LiveGovernedTheme) => void;
+}
+
+export interface DevelopThemeNavigation {
+  hrefFor(sectionId: string): string | null;
+  onGo?(sectionId: string, href: string): void;
+}
+
+export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabilities = CONTROLLED_DEVELOP_CAPABILITIES, onLens, structureNavigation, themes, themeActions, themeNavigation }: {
   view: DevelopView; lens?: LensId | 'overview'; facet?: Facet;
   capabilities?: DevelopCapabilities; onLens?: (lens: LensId | 'overview') => void;
   structureNavigation?: DevelopStructureNavigation;
+  themes?: LiveThemesPayload | null;
+  themeActions?: DevelopThemesActions;
+  themeNavigation?: DevelopThemeNavigation;
 }) {
   const cov = view.coverage;
   const tabMeta: readonly { readonly id: LensId; readonly plain: string; readonly term: string }[] =
@@ -340,7 +370,8 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabil
       <CrumbBar work={view.work} place="Develop" facet={capabilities.facet ? facet : undefined}
         actions={capabilities.askMaia ? <button type="button" className="fs-tool fs-tool--key">Ask MAIA</button> : undefined} />
       {/* ⛔ No Export. Themes appears only when the live capability explicitly admits the eighth governed lens. */}
-      <div className="fs-modetabs" role="tablist">
+      <div className="fs-modetabs" role="tablist"
+        data-themes-enabled={capabilities.lenses.includes('themes') ? 'true' : undefined}>
         {capabilities.overview ? (
           <button type="button" role="tab" className="fs-modetab" aria-selected={lens === 'overview'} onClick={() => onLens?.('overview')}>
             Overview
@@ -357,6 +388,13 @@ export function DevelopRoom({ view, lens = 'overview', facet = 'guided', capabil
 
       {lens === 'structure' ? (
         <StructureDevelopPanel view={view} navigation={structureNavigation} />
+      ) : lens === 'themes' ? (
+        <ThemesDevelopPanel
+          view={view}
+          themes={themes}
+          actions={themeActions}
+          navigation={themeNavigation}
+        />
       ) : (
       <div className="fs-pane" data-stage="develop">
         <div className="fs-pgrid">
@@ -465,6 +503,300 @@ function StructureDevelopPanel({ view, navigation }: { view: DevelopView; naviga
             </div>
           </section>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function themeProvenanceLabel(theme: LiveGovernedTheme): string {
+  switch (theme.provenance) {
+    case 'member-declared': return 'You named this';
+    case 'template-selected': return 'You chose this';
+    case 'textual-entity': return 'In your text';
+    case 'maia-observation': return 'MAIA noticed this';
+  }
+}
+
+function submitThemeLabel(
+  event: React.FormEvent<HTMLFormElement>,
+  onSubmit?: (label: string) => void,
+) {
+  event.preventDefault();
+  const label = String(new FormData(event.currentTarget).get('label') ?? '').trim();
+  if (label) onSubmit?.(label);
+}
+
+function ThemeEvidenceLink({ sectionId, label, navigation }: {
+  sectionId: string;
+  label: string;
+  navigation?: DevelopThemeNavigation;
+}) {
+  const href = navigation?.hrefFor(sectionId) ?? null;
+  if (!href) return <span className="fs-chip">{label}</span>;
+  return (
+    <a className="fs-chip fs-themechip" data-return-to={sectionId} href={href}
+      onClick={navigation?.onGo ? (event) => {
+        event.preventDefault();
+        navigation.onGo?.(sectionId, href);
+      } : undefined}>
+      {label} →
+    </a>
+  );
+}
+
+function ThemePresenceTrack({ theme, navigation }: {
+  theme: LiveGovernedTheme;
+  navigation?: DevelopThemeNavigation;
+}) {
+  const projection = theme.projection;
+  if (!projection) return null;
+  return (
+    <div className="fs-themetrackwrap">
+      <div className="fs-themetrack" role="list"
+        aria-label={`Where ${theme.label} appears, in manuscript order`}>
+        {projection.cells.map((cell) => {
+          const href = navigation?.hrefFor(cell.sectionId) ?? null;
+          const known = cell.state === 'known' && cell.presence !== null;
+          const body = (
+            <>
+              <span className="fs-themecellbar"
+                data-presence={known ? cell.presence : undefined}
+                data-presence-state={known ? 'known' : 'unknown'} aria-hidden="true" />
+              <span className="fs-themecelllabel">{cell.label}</span>
+            </>
+          );
+          const aria = known
+            ? `${cell.label}: ${PRESENCE_LABEL[cell.presence!]}`
+            : `${cell.label}: not read for this theme`;
+          return href && known ? (
+            <a key={cell.sectionId} className="fs-themecell" role="listitem"
+              data-return-to={cell.sectionId} href={href} aria-label={aria}
+              onClick={navigation?.onGo ? (event) => {
+                event.preventDefault();
+                navigation.onGo?.(cell.sectionId, href);
+              } : undefined}>
+              {body}
+            </a>
+          ) : (
+            <span key={cell.sectionId} className="fs-themecell" role="listitem" aria-label={aria}>
+              {body}
+            </span>
+          );
+        })}
+      </div>
+      <p className="fs-obsnote fs-themetracknote">
+        Manuscript order · frequency only · {projection.coverage.read} of {projection.coverage.total} current sections known.
+      </p>
+    </div>
+  );
+}
+
+function GovernedThemeCard({ theme, actions, navigation }: {
+  theme: LiveGovernedTheme;
+  actions?: DevelopThemesActions;
+  navigation?: DevelopThemeNavigation;
+}) {
+  const stale = theme.sourceState === 'superseded';
+  const unmeasured = theme.sourceState === 'unmeasured';
+  return (
+    <section className="fs-card fs-themecard" data-work-theme={theme.id}
+      data-theme-standing={theme.standing} data-theme-source-state={theme.sourceState}>
+      <div className="fs-themehead">
+        <div>
+          <h3 className="fs-themetitle">{theme.label}</h3>
+          <p className="fs-themeprov">{themeProvenanceLabel(theme)}</p>
+        </div>
+        <span className="fs-chip">{theme.standing === 'rejected' ? 'not in my book' : 'kept'}</span>
+      </div>
+
+      {theme.standing === 'rejected' ? (
+        <div className="fs-themequiet">
+          <p className="fs-obsnote">Kept in history, but not shown as a current theme of this Work.</p>
+          {actions?.onRestoreTheme ? (
+            <button type="button" className="fs-btn" disabled={actions.busy}
+              onClick={() => actions.onRestoreTheme?.(theme)}>Restore theme</button>
+          ) : null}
+        </div>
+      ) : theme.projection ? (
+        <>
+          <ThemePresenceTrack theme={theme} navigation={navigation} />
+          {theme.projection.trajectory.length > 0 ? (
+            <div className="fs-themefacts">
+              <span>{theme.projection.trajectory.length} {theme.projection.trajectory.length === 1 ? 'section' : 'sections'} with exact occurrence evidence</span>
+              {theme.projection.historicalUnmappedOccurrenceCount > 0
+                ? <span>{theme.projection.historicalUnmappedOccurrenceCount} earlier occurrence {theme.projection.historicalUnmappedOccurrenceCount === 1 ? 'address is' : 'addresses are'} no longer in the current section set</span>
+                : null}
+            </div>
+          ) : <p className="fs-obsnote">This reading found no admitted occurrence for the current sections it read.</p>}
+        </>
+      ) : theme.sourceState === 'not-evidenced' ? (
+        <p className="fs-obsnote">You named this theme. It has no admitted occurrence evidence yet, so no presence bars are drawn.</p>
+      ) : stale ? (
+        <p className="fs-obsnote">The Work has changed since this theme was read. Its historical evidence is kept, but no current presence bars are shown.</p>
+      ) : unmeasured ? (
+        <p className="fs-obsnote">The current location of this theme’s evidence could not be measured. No current presence bars are shown.</p>
+      ) : null}
+
+      {theme.standing !== 'rejected' ? (
+        <div className="fs-themeacts">
+          {actions?.onRenameTheme ? (
+            <details className="fs-themedetails">
+              <summary>Rename</summary>
+              <form onSubmit={(event) => submitThemeLabel(event, (label) => actions.onRenameTheme?.(theme, label))}>
+                <input name="label" defaultValue={theme.label} maxLength={120} aria-label="Theme name" />
+                <button type="submit" className="fs-btn" disabled={actions.busy}>Save name</button>
+              </form>
+            </details>
+          ) : null}
+          {actions?.onRejectTheme ? (
+            <button type="button" className="fs-btn" disabled={actions.busy}
+              onClick={() => actions.onRejectTheme?.(theme)}>Not a theme in my book</button>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function ThemeCandidateCard({ candidate, actions, navigation }: {
+  candidate: LiveThemeCandidate;
+  actions?: DevelopThemesActions;
+  navigation?: DevelopThemeNavigation;
+}) {
+  return (
+    <section className="fs-card fs-themecard fs-themecandidate"
+      data-theme-candidate={candidate.observationId} data-theme-source-state={candidate.sourceState}>
+      <div className="fs-themehead">
+        <div>
+          <h3 className="fs-themetitle">{candidate.label}</h3>
+          <p className="fs-themeprov">MAIA noticed this · not yet named as a theme of your Work</p>
+        </div>
+        <span className="fs-chip">{candidate.coverage.read} / {candidate.coverage.total} sections read</span>
+      </div>
+      <p className="fs-obsb">{candidate.observation}</p>
+      <div className="fs-ev">
+        {candidate.evidence.map((evidence, index) =>
+          evidence.currentAddress ? (
+            <ThemeEvidenceLink key={`${evidence.sectionId}:${index}`}
+              sectionId={evidence.sectionId} label={evidence.label} navigation={navigation} />
+          ) : (
+            <span className="fs-chip" key={`${evidence.sectionId}:${index}`}>{evidence.label} · as read</span>
+          ))}
+      </div>
+      {candidate.sourceState !== 'current' ? (
+        <p className="fs-obsnote">This observation is {candidate.sourceState}. Its frozen evidence remains, but it is not presented as current manuscript presence.</p>
+      ) : null}
+      <div className="fs-themeacts">
+        {actions?.onAcceptCandidate ? (
+          <button type="button" className="fs-btn fs-btn--key" disabled={actions.busy}
+            onClick={() => actions.onAcceptCandidate?.(candidate)}>Keep as a theme</button>
+        ) : null}
+        {actions?.onRenameCandidate ? (
+          <details className="fs-themedetails">
+            <summary>Rename & keep</summary>
+            <form onSubmit={(event) => submitThemeLabel(event, (label) => actions.onRenameCandidate?.(candidate, label))}>
+              <input name="label" defaultValue={candidate.label} maxLength={120} aria-label="Theme name" />
+              <button type="submit" className="fs-btn" disabled={actions.busy}>Keep with this name</button>
+            </form>
+          </details>
+        ) : null}
+        {actions?.onRejectCandidate ? (
+          <button type="button" className="fs-btn" disabled={actions.busy}
+            onClick={() => actions.onRejectCandidate?.(candidate)}>Not a theme in my book</button>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function ThemesDevelopPanel({ view, themes, actions, navigation }: {
+  view: DevelopView;
+  themes?: LiveThemesPayload | null;
+  actions?: DevelopThemesActions;
+  navigation?: DevelopThemeNavigation;
+}) {
+  const active = themes?.themes.filter((theme) => theme.standing !== 'rejected') ?? [];
+  const rejected = themes?.themes.filter((theme) => theme.standing === 'rejected') ?? [];
+  return (
+    <div className="fs-pane" data-stage="develop" data-develop-view="themes">
+      <div className="fs-themepage">
+        <div className="fs-phead">
+          <div>
+            <h2>What keeps returning</h2>
+            <p>Themes in your {view.kind}, grounded in repeated textual evidence or named by you.</p>
+          </div>
+        </div>
+        <section className="fs-card fs-themeintro">
+          <h3>Themes are not grades</h3>
+          <p className="fs-obsnote">Presence shows where something appears and how often in the sections actually read. It does not say how important the theme is or what it means.</p>
+          <div className="fs-themeintroacts">
+            {actions?.onDeclare ? (
+              <details className="fs-themedetails">
+                <summary>Name a theme yourself</summary>
+                <form onSubmit={(event) => submitThemeLabel(event, actions.onDeclare)}>
+                  <input name="label" maxLength={120} placeholder="Theme name" aria-label="Theme name" />
+                  <button type="submit" className="fs-btn" disabled={actions.busy}>Keep theme</button>
+                </form>
+              </details>
+            ) : null}
+            {actions?.onCommission ? (
+              <button type="button" className="fs-btn" disabled={actions.busy}
+                onClick={actions.onCommission}>{actions.busy ? 'Working…' : 'Read for themes'}</button>
+            ) : null}
+          </div>
+          {actions?.error ? <p className="fs-themeerror" role="status">{actions.error}</p> : null}
+        </section>
+
+        {themes === undefined ? (
+          <section className="fs-card"><p className="fs-obsnote">Opening Themes…</p></section>
+        ) : themes === null ? (
+          <section className="fs-card"><p className="fs-obsnote">Themes could not be loaded. Nothing about your Work has changed.</p></section>
+        ) : null}
+
+        {active.length > 0 ? (
+          <section className="fs-themesection" aria-label="Your themes">
+            <div className="fs-themegrouphead">
+              <h3>Your themes</h3>
+              <span>{active.length}</span>
+            </div>
+            <div className="fs-themelist">
+              {active.map((theme) => <GovernedThemeCard key={theme.id} theme={theme} actions={actions} navigation={navigation} />)}
+            </div>
+          </section>
+        ) : null}
+
+        {themes && themes.candidates.length > 0 ? (
+          <section className="fs-themesection" aria-label="MAIA theme candidates">
+            <div className="fs-themegrouphead">
+              <h3>MAIA noticed</h3>
+              <span>{themes.candidates.length} for you to decide</span>
+            </div>
+            <div className="fs-themelist">
+              {themes.candidates.map((candidate) => (
+                <ThemeCandidateCard key={`${candidate.readingId}:${candidate.observationId}`}
+                  candidate={candidate} actions={actions} navigation={navigation} />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {themes && active.length === 0 && themes.candidates.length === 0 ? (
+          <section className="fs-card">
+            <h3>No themes named yet</h3>
+            <p className="fs-obsnote">You can name one yourself, or deliberately ask MAIA to read the Work for repeated textual evidence.</p>
+          </section>
+        ) : null}
+        {rejected.length > 0 ? (
+          <section className="fs-themesection" aria-label="Themes you set aside">
+            <div className="fs-themegrouphead">
+              <h3>Set aside</h3>
+              <span>kept in history</span>
+            </div>
+            <div className="fs-themelist">
+              {rejected.map((theme) => <GovernedThemeCard key={theme.id} theme={theme} actions={actions} navigation={navigation} />)}
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
@@ -8,10 +8,13 @@ import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { useLivingWorks } from '../useLivingWorks';
 import { useMemberIdentity } from '../useMemberIdentity';
 import { currentWork, resolveWorkContext } from '../workContext';
-import { DevelopRoom, STRUCTURE_DEVELOP_CAPABILITIES, type LensId } from '../flagship/DevelopReview';
+import { DevelopRoom, THEMES_DEVELOP_CAPABILITIES, type LensId } from '../flagship/DevelopReview';
 import { StudioShell, type MemberIdentity, type ProjectIdentity } from '../flagship/StudioChrome';
 import type { NavActions } from '../flagship/flagshipTokens';
 import { factsOnlyDevelopOverview } from './liveDevelopOverview';
+import { fetchLiveThemes, mutateTheme } from '@/lib/writersStudio/themes/client';
+import type { LiveThemesPayload, ThemeMutation } from '@/lib/writersStudio/themes/liveTypes';
+import { requestDevelopmentalReading } from '@/lib/writersStudio/developClient';
 
 interface ContextReady {
   state: 'section_aware';
@@ -39,11 +42,31 @@ export default function FlagshipDevelopHost() {
   const manuscriptId = params?.get('m') ?? null;
   const sectionId = params?.get(SECTION_PARAM) ?? null;
   const requestedLens = params?.get('lens') ?? 'overview';
-  const lens: LensId | 'overview' = requestedLens === 'structure' ? 'structure' : 'overview';
+  const lens: LensId | 'overview' = requestedLens === 'structure' || requestedLens === 'themes' ? requestedLens : 'overview';
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
+  const [themes, setThemes] = useState<LiveThemesPayload | null | undefined>(undefined);
+  const [themeBusy, setThemeBusy] = useState(false);
+  const [themeError, setThemeError] = useState<string | null>(null);
   const { phase: worksPhase, works } = useLivingWorks();
   const identity = useMemberIdentity();
+
+  const loadThemes = useCallback(async () => {
+    if (!manuscriptId) return;
+    setThemes(undefined);
+    const out = await fetchLiveThemes(manuscriptId);
+    if (out.ok) {
+      setThemes(out.payload);
+      setThemeError(null);
+    } else {
+      setThemes(null);
+      setThemeError(`Themes could not be loaded (${out.refusal}).`);
+    }
+  }, [manuscriptId]);
+
+  useEffect(() => {
+    if (lens === 'themes' && manuscriptId) void loadThemes();
+  }, [lens, manuscriptId, loadThemes]);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,7 +133,7 @@ export default function FlagshipDevelopHost() {
     ? undefined
     : { workTitle: view.work, ...(work?.form ? { workKind: work.form } : {}) };
   const onLens = (nextLens: LensId | 'overview') => {
-    if (nextLens !== 'overview' && nextLens !== 'structure') return;
+    if (nextLens !== 'overview' && nextLens !== 'structure' && nextLens !== 'themes') return;
     const next = new URLSearchParams(params?.toString() ?? '');
     if (nextLens === 'overview') next.delete('lens');
     else next.set('lens', nextLens);
@@ -123,6 +146,56 @@ export default function FlagshipDevelopHost() {
       return `/writers-studio/rebuild?${target.toString()}`;
     },
     onGo: (_targetSectionId: string, href: string) => router.push(href),
+  };
+  const themeNavigation = {
+    hrefFor: (targetSectionId: string) => {
+      if (!context.sections.some((section) => section.draftSectionId === targetSectionId)) return null;
+      const target = new URLSearchParams({ m: context.manuscriptId, [SECTION_PARAM]: targetSectionId });
+      return `/writers-studio/rebuild?${target.toString()}`;
+    },
+    onGo: (_targetSectionId: string, href: string) => router.push(href),
+  };
+
+  const runThemeMutation = async (mutation: ThemeMutation) => {
+    if (themeBusy) return;
+    setThemeBusy(true);
+    setThemeError(null);
+    const out = await mutateTheme(context.manuscriptId, mutation);
+    if (!out.ok) setThemeError(`That theme change was not saved (${out.refusal}).`);
+    else await loadThemes();
+    setThemeBusy(false);
+  };
+
+  const commissionThemes = async () => {
+    if (themeBusy) return;
+    setThemeBusy(true);
+    setThemeError(null);
+    const out = await requestDevelopmentalReading(context.manuscriptId, 'themes');
+    if (!out.ok) {
+      setThemeError(`MAIA did not create a Themes reading (${out.refusal}).`);
+    } else {
+      await loadThemes();
+    }
+    setThemeBusy(false);
+  };
+
+  const themeActions = {
+    busy: themeBusy,
+    error: themeError,
+    onCommission: commissionThemes,
+    onDeclare: (label: string) => void runThemeMutation({ action: 'declare', label }),
+    onAcceptCandidate: (candidate: { readingId: string; observationId: string }) =>
+      void runThemeMutation({ action: 'accept-candidate', readingId: candidate.readingId, observationId: candidate.observationId }),
+    onRenameCandidate: (candidate: { readingId: string; observationId: string }, label: string) =>
+      void runThemeMutation({ action: 'rename-candidate', readingId: candidate.readingId, observationId: candidate.observationId, label }),
+    onRejectCandidate: (candidate: { readingId: string; observationId: string }) =>
+      void runThemeMutation({ action: 'reject-candidate', readingId: candidate.readingId, observationId: candidate.observationId }),
+    onRenameTheme: (theme: { id: string }, label: string) =>
+      void runThemeMutation({ action: 'rename-theme', themeId: theme.id, label }),
+    onRejectTheme: (theme: { id: string }) =>
+      void runThemeMutation({ action: 'reject-theme', themeId: theme.id }),
+    onRestoreTheme: (theme: { id: string }) =>
+      void runThemeMutation({ action: 'restore-theme', themeId: theme.id }),
   };
 
   return (
@@ -137,9 +210,12 @@ export default function FlagshipDevelopHost() {
       <DevelopRoom
         view={view}
         lens={lens}
-        capabilities={STRUCTURE_DEVELOP_CAPABILITIES}
+        capabilities={THEMES_DEVELOP_CAPABILITIES}
         onLens={onLens}
         structureNavigation={structureNavigation}
+        themes={themes}
+        themeActions={themeActions}
+        themeNavigation={themeNavigation}
       />
     </StudioShell>
   );

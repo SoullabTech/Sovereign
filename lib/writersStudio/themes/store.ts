@@ -215,6 +215,7 @@ export async function governMaiaThemeCandidate(input: {
   if (!occurrenceProjection.ok) {
     return { ok: false, refusal: 'not_theme_candidate' };
   }
+  const candidateLabel = observation.themeLabel.trim();
 
   const renameLabel = input.action === 'rename' ? cleanLabel(input.label ?? '') : null;
   if (input.action === 'rename' && !renameLabel) {
@@ -231,7 +232,7 @@ export async function governMaiaThemeCandidate(input: {
          WHERE provenance_kind = 'maia-observation'
        DO NOTHING
        RETURNING id`,
-      [input.memberId, input.manuscriptId, observation.themeLabel.trim(), input.readingId, input.observationId],
+      [input.memberId, input.manuscriptId, candidateLabel, input.readingId, input.observationId],
     );
 
     let themeId = created.rows[0]?.id;
