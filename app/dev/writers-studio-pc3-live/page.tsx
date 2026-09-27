@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Inter, Newsreader } from 'next/font/google';
-import Pc3LiveWriteHost from './Pc3LiveWriteHost';
+import Pc3LiveStudioHost from './Pc3LiveStudioHost';
 import '../writers-studio-full-redesign-review/full-redesign-review.css';
 
 const serif = Newsreader({
@@ -28,7 +28,7 @@ export default function Pc3LiveWriterStudioPage() {
       <div className="fr-page">
         <div className="fr-capture-frame" data-capture-frame="">
           <Suspense fallback={<div style={{ padding: 32 }}>Opening your Writer’s Studio…</div>}>
-            <Pc3LiveWriteHost />
+            <Pc3LiveStudioHost />
           </Suspense>
         </div>
       </div>
