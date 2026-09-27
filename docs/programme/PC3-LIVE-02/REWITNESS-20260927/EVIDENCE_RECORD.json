@@ -1,0 +1,218 @@
+{
+  "acceptance": {
+    "A1": "GREEN",
+    "A2": "GREEN",
+    "A3": "GREEN",
+    "A4": "GREEN",
+    "A5": "GREEN"
+  },
+  "acceptance_all_green": true,
+  "act": "PC3-LIVE-02",
+  "authority": {
+    "acceptance_instrument_sha256": "be80180b8f46b52f5cf12d4f94709d6bcde8d45e2c5ee93e605f5d0564fd1dfe",
+    "execution_packet_20260927_sha256": "f224dc1cd21ad1d3632f683e967833fb979d1c55d2042e4b2b6691d74826bcb4",
+    "mutant_runner_sha256": "965b15e225777d4f3fb3ef7588e30cb2c670bd96bf7b360c827a174701d75b91",
+    "mutant_spec_sha256": "27fadfb5fca3f69f38cc5dcf7bdc415d825f75071769a12b8daa55282f815fcb",
+    "rebind_amendment_sha256": "bc444d41349ef89d2eabba7da92442da35415f4b630e23b20230bc4dfa098b9c"
+  },
+  "candidate": {
+    "canonical_base": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+    "canonical_stable_through_act": true,
+    "clean_witness_tree": true,
+    "parent": "5d729c2959de415896ebe248ef04539c8c686489",
+    "pc3_visual_authority": "976dd1b5e0476fad8e71d4abce788ee17b5fe43d",
+    "remote_identity_match": true,
+    "sha": "53e70459fb6c36fe1343abd4d9f2ca5d58041128"
+  },
+  "concurrent_review_wip_preserved": true,
+  "e1": {
+    "bash32_compat_wrapper_sha256": "57cb7437b85daf66df9cef5d8389f15a49234f7589a073409fa9a55ac77b83ce",
+    "migration_applied": 473,
+    "migration_refused": 25,
+    "migration_total": 498,
+    "synthetic_only": true
+  },
+  "gates": {
+    "design_canon": true,
+    "focused_typecheck": true,
+    "git_diff_check": true,
+    "no_direct_anthropic": true,
+    "no_supabase": true,
+    "phi_gate": true,
+    "provider_governance": true
+  },
+  "mutants": {
+    "inconclusive": 0,
+    "instrument_failure": 0,
+    "killed": 29,
+    "survived": 0,
+    "total": 29
+  },
+  "no_deploy": true,
+  "no_merge": true,
+  "no_schema_admission": true,
+  "pc3_write_fidelity": {
+    "green": true,
+    "passed": 65,
+    "total": 65
+  },
+  "raw_evidence": {
+    "evidence/acceptance.json": {
+      "bytes": 7888,
+      "sha256": "b9e61e622221b9624723a341f47817ec10f5019342cf42f9f7a98848fb5a29a4"
+    },
+    "evidence/focused-typecheck.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/mutant-server.log": {
+      "bytes": 186010,
+      "sha256": "28286bfd116c75a4d14cf8e48e51819603d2a7d1d686dd048d89843e548c7221"
+    },
+    "evidence/mutants/M-A1-chapter10-restored.json": {
+      "bytes": 1911,
+      "sha256": "f3c5f25a636f1e44db01bfac15b4c6582f7b6102ed86bf72681d5456dc240d2a"
+    },
+    "evidence/mutants/M-A1-repair-coupled-to-scroll.json": {
+      "bytes": 1652,
+      "sha256": "fde45f44d89988a7645b34a2fea7fa4dfa8d532b5bf47a8f9bde918f2c3d7da8"
+    },
+    "evidence/mutants/M-A1-stale-address-retained.json": {
+      "bytes": 1762,
+      "sha256": "b45b62041c184e87937d394c82fb59b8ca93a1140436eaad69b064c8076cafa4"
+    },
+    "evidence/mutants/M-A2-chapter-scoped-status.json": {
+      "bytes": 911,
+      "sha256": "943c5589abc280f930c124139b039dafc2e312acf20a885369d2ba2d81640fba"
+    },
+    "evidence/mutants/M-A2-draft-counter-restored.json": {
+      "bytes": 919,
+      "sha256": "2d01c95524ff6b9db4f2735b916ffd9573088249c778d87eaa3bf5e94440de87"
+    },
+    "evidence/mutants/M-A2-false-saved-despite-failure.json": {
+      "bytes": 942,
+      "sha256": "f6dc74c09e025ac7a533a6a5aa41228d31c8662786dde9b8b7877d466917d595"
+    },
+    "evidence/mutants/M-A2-saved-never-shown.json": {
+      "bytes": 930,
+      "sha256": "c64ef7f32c09b04ded3c90668f69cc00d62da02ce1a3be34cb956c39cab53198"
+    },
+    "evidence/mutants/M-A3-accepted-by-misreported.json": {
+      "bytes": 2806,
+      "sha256": "aa25f28cd0c3a919787369608c5d99bb6fe4236ac833bba511c1feaa52d45c46"
+    },
+    "evidence/mutants/M-A3-conflict-disappears.json": {
+      "bytes": 2703,
+      "sha256": "1314f1b58f20238177b067f0229bb7bd60cf2433ad2d1d9a34fb0cc555e0eea0"
+    },
+    "evidence/mutants/M-A3-digest-normalized.json": {
+      "bytes": 2821,
+      "sha256": "070d9920ec30aa0e4e26441a81b15243fed79c4f5a3035cae60bb49bc055c85b"
+    },
+    "evidence/mutants/M-A3-draft-wide-only.json": {
+      "bytes": 2861,
+      "sha256": "1f2db207603c6d981b9ba3794c4512ebd2d74576a90e61c7c15d078be254fcc5"
+    },
+    "evidence/mutants/M-A3-late-digest-overwrite.json": {
+      "bytes": 2708,
+      "sha256": "347b1a63af251cd0c51a730aef38e7ca928ba3d38bcd77f9f9a0bb58a756c928"
+    },
+    "evidence/mutants/M-A3-missing-digest-bypass.json": {
+      "bytes": 2762,
+      "sha256": "9249080cc95a05188797782f0017eae33ffa7ed3918ecae79e5eba4c6f22044a"
+    },
+    "evidence/mutants/M-A3-outside-lock-check.json": {
+      "bytes": 2754,
+      "sha256": "8c957bba838170d3a7e91112dfdaf2b29859ae41fa1d4109df4ac09fdc17681e"
+    },
+    "evidence/mutants/M-A3-rail-marker-hidden.json": {
+      "bytes": 2748,
+      "sha256": "604ca5f3f71d459ae0833f909ee50d0595cb62e6919ee0f6dcbba5e7e4c79bb3"
+    },
+    "evidence/mutants/M-A3-resolution-control.json": {
+      "bytes": 2686,
+      "sha256": "37d2fab9127cceaeb25b5c7a8b063db0f5c238591b5349f0ed53ea4e0d1eaa7b"
+    },
+    "evidence/mutants/M-A3-same-section-overwrite.json": {
+      "bytes": 2938,
+      "sha256": "e9303a1070a2486e7f9e84faa598e250095fae7c2fb6181af52098d93a7c6548"
+    },
+    "evidence/mutants/M-A3-section-marker-hidden.json": {
+      "bytes": 2751,
+      "sha256": "765f898b3027da7a5ed4742442d599f818e443b324668c449390aa65b620584f"
+    },
+    "evidence/mutants/M-A3-unrelated-blocked.json": {
+      "bytes": 2705,
+      "sha256": "58421513810370387edee2b48e24cfff75dfcf648a6cec77a7e45f325d6d32d0"
+    },
+    "evidence/mutants/M-A3-version-adopted-after-digest-acceptance.json": {
+      "bytes": 2822,
+      "sha256": "e765c45694ee0f47b3ac938fe2b298cca79a848fa237900df63f0565c1647634"
+    },
+    "evidence/mutants/M-A4-keepalive-dropped.json": {
+      "bytes": 1635,
+      "sha256": "c9addabf62676298f1a4132957e84f04e0cc5238af3a534be8da8ed1929b5f15"
+    },
+    "evidence/mutants/M-A4-local-prose-backup.json": {
+      "bytes": 1527,
+      "sha256": "d3b50afe7097d3152a4e3827d322d2aeccf5dc7c665d0d98168f539fbf7eba9e"
+    },
+    "evidence/mutants/M-A4-saved-on-keepalive-attempt.json": {
+      "bytes": 1586,
+      "sha256": "366e28b1993d143ed4e7526f166242b8ea5c75eca52dfd386e28ddcc541fc80f"
+    },
+    "evidence/mutants/M-A4-silent-leave.json": {
+      "bytes": 1620,
+      "sha256": "db32044ae4968512ecb0aa0cf585452977f51956c114e4555e82df60649a600f"
+    },
+    "evidence/mutants/M-A5-editor-remounted.json": {
+      "bytes": 2174,
+      "sha256": "cb5ed20c30177758ed6e1ec30865e162b03f603b85d6a083d35638f55dfbaa71"
+    },
+    "evidence/mutants/M-A5-entry-loses-focus.json": {
+      "bytes": 2072,
+      "sha256": "5ccfcd8138cd58d6258486a8ebb6e4b0c5463f59c76e9fb54dfef4ea37ebeed5"
+    },
+    "evidence/mutants/M-A5-escape-broken.json": {
+      "bytes": 2012,
+      "sha256": "0598bcd05cfa0b63f9c1615ff83cd4a4db54e4ce0b0efa25807255802e4fe75f"
+    },
+    "evidence/mutants/M-A5-keyboard-restore-dropped.json": {
+      "bytes": 2073,
+      "sha256": "83efae8b02a7841bd48b6ae486b5e2e50652e5ed2f35799fd0fc1a50d3938aff"
+    },
+    "evidence/mutants/M-A5-return-loses-focus.json": {
+      "bytes": 2022,
+      "sha256": "70377cb3a66efbf9e4dcbd30d0c4386427569e88d4fd3d9b8f26cfdfc67ad6f7"
+    },
+    "evidence/mutants/mutants.json": {
+      "bytes": 9232,
+      "sha256": "3f9477833f393ce6feee5d64f6122cd60a426a703e24f20853f65ede6f98d1c7"
+    },
+    "evidence/pc3-s3-fidelity.log": {
+      "bytes": 5758,
+      "sha256": "9d21ba4b23951076c752c1b2bc6c93b94585c7e928ca3d1a820e897976f294f0"
+    },
+    "evidence/provider-stub.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/server.log": {
+      "bytes": 27655,
+      "sha256": "af83bf56f74f1809a84fa8155f8e0d4f126fea4a1d8e438112c317b20b8af6bd"
+    },
+    "provision/migrations/applied.tsv": {
+      "bytes": 52027,
+      "sha256": "083e34c88e65c630b29db326c1e45cfd7ce7ce03e28a75bc613dcd18854dd2ff"
+    },
+    "provision/migrations/refused.tsv": {
+      "bytes": 4001,
+      "sha256": "0151755b84cf2dd675c8c0901f1591e24121e79c2fdf71b6e04ad103763d82af"
+    },
+    "provision/migrations/summary.txt": {
+      "bytes": 44,
+      "sha256": "c3e58e742f50a5a33d077fc2287c37d32ca3901a78c956aa4fda9ba066e11591"
+    }
+  },
+  "standing": "PASS"
+}
