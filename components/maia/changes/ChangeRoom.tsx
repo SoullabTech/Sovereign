@@ -60,6 +60,10 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
   const [noticeType, setNoticeType] = useState<ChangeExperienceType>('field_event');
   const [noticeSaving, setNoticeSaving] = useState(false);
   const [noticeError, setNoticeError] = useState<string | null>(null);
+  const [consultOpen, setConsultOpen] = useState(false);
+  const [castMethod, setCastMethod] = useState<'coin' | 'yarrow'>('coin');
+  const [casting, setCasting] = useState(false);
+  const [castError, setCastError] = useState<string | null>(null);
 
   async function loadChange() {
     const response = await apiFetch('/api/changes/' + encodeURIComponent(changeId));
@@ -112,6 +116,26 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
       setNoticeError(err instanceof Error ? err.message : 'Could not keep this moment');
     } finally {
       setNoticeSaving(false);
+    }
+  }
+
+
+  async function castIChing() {
+    if (casting || change?.hexagramNumber) return;
+    setCasting(true);
+    setCastError(null);
+    try {
+      const response = await apiFetch('/api/changes/' + encodeURIComponent(changeId) + '/cast', {
+        method: 'POST',
+        body: JSON.stringify({ method: castMethod }),
+      });
+      if (!response.ok) throw new Error('The cast could not be kept');
+      await loadChange();
+      setConsultOpen(false);
+    } catch (err) {
+      setCastError(err instanceof Error ? err.message : 'The cast could not be kept');
+    } finally {
+      setCasting(false);
     }
   }
 
@@ -266,15 +290,49 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
                   />
                 </section>
               ) : (
-                <section className={styles.quiet}>
-                  <small>NO SYMBOLIC LENS ADDED</small>
-                  <p>This Change stands on its own without a consultation.</p>
+                <section className={styles.consult}>
+                  {!consultOpen ? (
+                    <>
+                      <small>AN OPTIONAL SYMBOLIC PRACTICE</small>
+                      <p>This Change does not need a reading. If you want another lens, you can bring it to the Book of Changes.</p>
+                      <button type="button" className={styles.consultDoor} onClick={() => setConsultOpen(true)}>
+                        Consult the I Ching <span>→</span>
+                      </button>
+                    </>
+                  ) : (
+                    <div className={styles.consultForm}>
+                      <div className={styles.consultHead}>
+                        <div>
+                          <small>THE BOOK OF CHANGES</small>
+                          <h3>How would you like to ask?</h3>
+                        </div>
+                        <button type="button" className={styles.closeNotice} onClick={() => setConsultOpen(false)} aria-label="Close I Ching consultation">
+                          <X aria-hidden="true" />
+                        </button>
+                      </div>
+                      <p className={styles.consultLead}>The cast is a symbolic mirror for this Change. It does not decide what the Change means or what you should do.</p>
+                      <div className={styles.castMethods}>
+                        <button type="button" data-active={castMethod === 'coin'} onClick={() => setCastMethod('coin')}>
+                          <strong>Three Coins</strong>
+                          <span>Six tosses of three coins.</span>
+                        </button>
+                        <button type="button" data-active={castMethod === 'yarrow'} onClick={() => setCastMethod('yarrow')}>
+                          <strong>Yarrow Stalks</strong>
+                          <span>A slower contemplative method.</span>
+                        </button>
+                      </div>
+                      {castError ? <p className={styles.noticeError} role="alert">{castError}</p> : null}
+                      <button type="button" className={styles.castButton} disabled={casting} onClick={castIChing}>
+                        {casting ? <><Loader2 className={styles.spinner} aria-hidden="true" /> Casting…</> : 'Cast the hexagram'}
+                      </button>
+                    </div>
+                  )}
                 </section>
               )}
 
               <section className={styles.quiet}>
                 <small>DEEPER PRACTICES REMAIN QUIET</small>
-                <p>I Ching consultation, MAIA encounter, and pattern work are not opened in this act.</p>
+                <p>MAIA encounter and pattern work are not opened in this act.</p>
               </section>
             </aside>
           </div>
