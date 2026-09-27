@@ -45,6 +45,7 @@ export default function ChangesThresholdPage() {
       memberId={memberId}
       carrySourceRef={carrySourceRef}
       initialChangeId={initialChangeId}
+      presentationMode="room"
     />
   );
 }
