@@ -2408,27 +2408,61 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         await new Promise<void>((resolve, reject) => {
           let hasStarted = false;
+          let settled = false;
           let startTimeoutId: NodeJS.Timeout | null = null;
           let playbackTimeoutId: NodeJS.Timeout | null = null;
+          let completionProbeId: NodeJS.Timeout | null = null;
+
+          const cleanupPlayback = () => {
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
+            if (completionProbeId) clearInterval(completionProbeId);
+            audio.onended = null;
+            audio.ontimeupdate = null;
+            audio.onerror = null;
+            stopAudioAnalysis();
+            URL.revokeObjectURL(audioUrl);
+          };
+
+          const resolvePlayback = (reason: 'ended' | 'timeupdate' | 'probe') => {
+            if (settled) return;
+            settled = true;
+            console.log(`🔇 MAIA playback complete (${reason}) - ${audio.currentTime.toFixed(1)}s of ${Number.isFinite(audio.duration) ? audio.duration.toFixed(1) : '?'}s`);
+            cleanupPlayback();
+            resolve();
+          };
+
+          const rejectPlayback = (error: Error) => {
+            if (settled) return;
+            settled = true;
+            cleanupPlayback();
+            reject(error);
+          };
+
+          const isAtPlaybackEnd = () =>
+            hasStarted &&
+            Number.isFinite(audio.duration) &&
+            audio.duration > 0 &&
+            audio.currentTime >= Math.max(0, audio.duration - 0.12);
 
           startTimeoutId = setTimeout(() => {
             if (!hasStarted) {
               audio.pause();
-              stopAudioAnalysis();
-              URL.revokeObjectURL(audioUrl);
-              reject(new Error('Audio failed to start within 5s'));
+              rejectPlayback(new Error('Audio failed to start within 5s'));
             }
           }, 5000);
 
           audio.onloadedmetadata = () => {
             console.log('✅ Audio metadata loaded, duration:', audio.duration, 'seconds');
-            const playbackTimeout = (audio.duration + 30) * 1000;
+            const playbackTimeout = (audio.duration + 12) * 1000;
             playbackTimeoutId = setTimeout(() => {
+              if (isAtPlaybackEnd() || audio.ended) {
+                resolvePlayback('probe');
+                return;
+              }
               console.error(`❌ [AUDIO] Playback timeout! Audio at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
               audio.pause();
-              stopAudioAnalysis();
-              URL.revokeObjectURL(audioUrl);
-              reject(new Error(`Audio playback timeout after ${playbackTimeout/1000}s`));
+              rejectPlayback(new Error(`Audio playback timeout after ${playbackTimeout/1000}s`));
             }, playbackTimeout);
           };
 
@@ -2438,41 +2472,38 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             if (startTimeoutId) clearTimeout(startTimeoutId);
             setIsAudioPlaying(true);
             startAudioAnalysis(audio);
+
+            // Safari occasionally fails to deliver `ended` after several voice
+            // turns. Poll actual playback position so completion remains a fact,
+            // not an event-delivery assumption.
+            completionProbeId = setInterval(() => {
+              if (audio.ended || isAtPlaybackEnd()) resolvePlayback('probe');
+            }, 250);
+          };
+
+          audio.ontimeupdate = () => {
+            if (isAtPlaybackEnd()) resolvePlayback('timeupdate');
           };
 
           audio.onpause = () => {
-            if (!audio.ended) {
-              console.warn(`⚠️ [AUDIO] Paused at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+            if (!audio.ended && !settled) {
+              console.warn(`⚠️ [AUDIO] Paused at ${audio.currentTime.toFixed(1)}s of ${Number.isFinite(audio.duration) ? audio.duration.toFixed(1) : '?'}s`);
             }
           };
 
-          audio.onended = () => {
-            console.log(`🔇 MAIA finished speaking - ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
-            stopAudioAnalysis();
-            URL.revokeObjectURL(audioUrl);
-            if (startTimeoutId) clearTimeout(startTimeoutId);
-            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-            resolve();
-          };
+          audio.onended = () => resolvePlayback('ended');
 
           audio.onerror = (e) => {
             console.error('❌ Audio playback error:', e);
-            stopAudioAnalysis();
             setIsResponding(false);
             setIsAudioPlaying(false);
             setIsMicrophonePaused(false);
-            URL.revokeObjectURL(audioUrl);
-            if (startTimeoutId) clearTimeout(startTimeoutId);
-            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-            reject(new Error('Audio playback failed'));
+            rejectPlayback(new Error('Audio playback failed'));
           };
 
           audio.play().catch(err => {
             console.error('❌ Audio.play() failed:', err);
-            stopAudioAnalysis();
-            if (startTimeoutId) clearTimeout(startTimeoutId);
-            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-            reject(err);
+            rejectPlayback(err instanceof Error ? err : new Error(String(err)));
           });
         });
       }
@@ -10583,8 +10614,22 @@ I'm not sure what I'm feeling yet.`;
               // which is why a dead mic used to look exactly like a live one.
               console.warn(`🎙️ [voice-status] ${level} ${cause} (recoverable=${recoverable})`);
               if (level === 'info') return; // expected stand-down: don't interrupt
-              // Truthful UI: listening is over, so stop showing it as running.
+
+              // A bounded automatic reconnect is NOT a user decision to leave
+              // hands-free. The old generic warning handler silently flipped
+              // hands-free OFF here; recovery could then succeed for one turn,
+              // but the next MAIA response had no authority to auto-listen.
+              if (cause === 'VOICE_RECONNECTING_AFTER_GAP' && recoverable) {
+                setIsListening(false);
+                setIsActivating(true);
+                toast(userMessage, { duration: 5000, icon: '🎙️' });
+                return;
+              }
+
+              // Terminal/unrecovered voice failure: stop claiming LISTENING and
+              // fall back to an explicit user-controlled continuation.
               setIsHandsFreeMode(false);
+              setIsActivating(false);
               setIsListening(false);
               toast(userMessage, { duration: 9000, icon: '🎙️' });
             }}
