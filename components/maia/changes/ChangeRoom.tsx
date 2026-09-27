@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, X } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import HexagramGlyph from '@/components/iching/HexagramGlyph';
 import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
-import type { ChangeRecord } from '@/lib/studio/changes/types';
+import type { ChangeExperienceType, ChangeRecord } from '@/lib/studio/changes/types';
 import styles from './change-room.module.css';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -55,6 +55,18 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
   const [change, setChange] = useState<ChangeRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const [noticeText, setNoticeText] = useState('');
+  const [noticeType, setNoticeType] = useState<ChangeExperienceType>('field_event');
+  const [noticeSaving, setNoticeSaving] = useState(false);
+  const [noticeError, setNoticeError] = useState<string | null>(null);
+
+  async function loadChange() {
+    const response = await apiFetch('/api/changes/' + encodeURIComponent(changeId));
+    if (!response.ok) throw new Error(response.status === 404 ? 'Change not found' : 'Could not load this Change');
+    const json = await response.json();
+    setChange(json.change ?? null);
+  }
 
   useEffect(() => {
     let live = true;
@@ -76,6 +88,32 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
 
     return () => { live = false; };
   }, [changeId]);
+
+  async function keepNotice() {
+    const content = noticeText.trim();
+    if (!content || noticeSaving) return;
+    setNoticeSaving(true);
+    setNoticeError(null);
+    try {
+      const response = await apiFetch('/api/changes/' + encodeURIComponent(changeId) + '/experiences', {
+        method: 'POST',
+        body: JSON.stringify({
+          experienceType: noticeType,
+          content,
+          occurredAt: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error('Could not keep this moment');
+      setNoticeText('');
+      setNoticeType('field_event');
+      setNoticeOpen(false);
+      await loadChange();
+    } catch (err) {
+      setNoticeError(err instanceof Error ? err.message : 'Could not keep this moment');
+    } finally {
+      setNoticeSaving(false);
+    }
+  }
 
   const experiences = useMemo(
     () => [...(change?.experiences ?? [])].sort((a, b) =>
@@ -159,6 +197,61 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
                 </section>
               ))}
 
+              <section className={styles.notice}>
+                {!noticeOpen ? (
+                  <button type="button" className={styles.noticeDoor} onClick={() => setNoticeOpen(true)}>
+                    <span><Plus aria-hidden="true" /> Notice what happened</span>
+                    <span>→</span>
+                  </button>
+                ) : (
+                  <div className={styles.noticeForm}>
+                    <div className={styles.noticeHead}>
+                      <div>
+                        <small>NOTICE</small>
+                        <h3>What happened?</h3>
+                      </div>
+                      <button type="button" className={styles.closeNotice} onClick={() => setNoticeOpen(false)} aria-label="Close notice">
+                        <X aria-hidden="true" />
+                      </button>
+                    </div>
+                    <textarea
+                      value={noticeText}
+                      onChange={(event) => setNoticeText(event.target.value)}
+                      placeholder="Write what happened before you decide what kind of moment it was."
+                      aria-label="What happened"
+                      autoFocus
+                    />
+                    {noticeText.trim() ? (
+                      <div className={styles.noticeKinds}>
+                        <span>This was more like…</span>
+                        {[
+                          ['field_event', 'a moment'],
+                          ['reflection', 'a reflection'],
+                          ['dream', 'a dream'],
+                          ['breakthrough', 'a breakthrough'],
+                          ['setback', 'a setback'],
+                          ['synchronicity', 'a synchronicity'],
+                        ].map(([value, label]) => (
+                          <button
+                            type="button"
+                            key={value}
+                            data-active={noticeType === value}
+                            onClick={() => setNoticeType(value as ChangeExperienceType)}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                    {noticeError ? <p className={styles.noticeError} role="alert">{noticeError}</p> : null}
+                    <button type="button" className={styles.keepNotice} disabled={!noticeText.trim() || noticeSaving} onClick={keepNotice}>
+                      {noticeSaving ? <Loader2 className={styles.spinner} aria-hidden="true" /> : null}
+                      Keep this moment
+                    </button>
+                  </div>
+                )}
+              </section>
+
               {change.hexagramNumber ? (
                 <section className={styles.symbolic}>
                   <div>
@@ -180,8 +273,8 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
               )}
 
               <section className={styles.quiet}>
-                <small>THIS ROOM IS READ-ONLY IN THIS WITNESS</small>
-                <p>Notice, I Ching consultation, MAIA encounter, and pattern work remain deliberately unbound.</p>
+                <small>DEEPER PRACTICES REMAIN QUIET</small>
+                <p>I Ching consultation, MAIA encounter, and pattern work are not opened in this act.</p>
               </section>
             </aside>
           </div>
