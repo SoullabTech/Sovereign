@@ -16,6 +16,7 @@ import {
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { GitBranch } from 'lucide-react';
+import { FacetCarryNotice, type FacetCarryRef } from '@/components/house/FacetCarryNotice';
 import {
   SITUATION_TYPE_LIST,
   SITUATION_CONFIGS,
@@ -47,6 +48,16 @@ export default function NewDecisionPage() {
   const basePath = personalLens ? '/decisions' : '/studio/decisions';
   const searchParams = useSearchParams();
   const parentId = searchParams?.get('parent') || null;
+  const sourceFacet = searchParams?.get('sourceFacet');
+  const sourceRefId = searchParams?.get('sourceRefId');
+  const crossingId = searchParams?.get('crossingId');
+  const carrySourceRef: FacetCarryRef | null =
+    (sourceFacet === 'journal' || sourceFacet === 'reflections') && sourceRefId && crossingId
+      ? { sourceFacet, sourceRefId, crossingId }
+      : null;
+  const [carrySourceValid, setCarrySourceValid] = useState<boolean | null>(
+    carrySourceRef ? null : true,
+  );
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [consulting, setConsulting] = useState(false);
@@ -112,6 +123,7 @@ export default function NewDecisionPage() {
 
   async function handleSave(andConsult: boolean) {
     if (!title.trim() || !context.trim()) return;
+    if (carrySourceRef && carrySourceValid !== true) return;
 
     if (andConsult) {
       setConsulting(true);
@@ -138,6 +150,7 @@ export default function NewDecisionPage() {
           emotionalState: emotionalState.trim() || null,
           situationType,
           parentDecisionId: parentId || undefined,
+          sourceRef: carrySourceRef || undefined,
         }),
       });
 
@@ -173,7 +186,10 @@ export default function NewDecisionPage() {
     return aLeader - bLeader || a.name.localeCompare(b.name);
   });
 
-  const isValid = title.trim() && context.trim();
+  const isValid =
+    title.trim().length > 0 &&
+    context.trim().length > 0 &&
+    (!carrySourceRef || carrySourceValid === true);
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -199,6 +215,14 @@ export default function NewDecisionPage() {
               </p>
             </div>
           )}
+
+          {personalLens && carrySourceRef ? (
+            <FacetCarryNotice
+              targetFacet="decisions"
+              sourceRef={carrySourceRef}
+              onResolved={(source) => setCarrySourceValid(Boolean(source))}
+            />
+          ) : null}
 
           {/* Personal begins with one human reflection council; practice exposes professional situation lenses. */}
           {personalLens ? (

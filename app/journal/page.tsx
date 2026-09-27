@@ -37,8 +37,11 @@
  * @see docs/design/contracts/journal-room.md
  */
 
+import { useSearchParams } from 'next/navigation';
 import { JournalRoom } from '@/components/journal/room/JournalRoom';
 
 export default function JournalPage() {
-  return <JournalRoom />;
+  const searchParams = useSearchParams();
+  const entryId = searchParams?.get('entry') || null;
+  return <JournalRoom initialEntryId={entryId} />;
 }

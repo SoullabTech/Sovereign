@@ -20,7 +20,7 @@
  * @see docs/design/references/JOURNAL_SLICE1_IMPLEMENTATION_CONTRACT.md
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { Arrival } from './Arrival';
 import { WritingSurface, type EntryType } from './WritingSurface';
@@ -44,8 +44,9 @@ type RoomState =
   | { name: 'reading'; entry: JournalEntry; reflecting: boolean }
   | { name: 'browsing' };
 
-export function JournalRoom() {
+export function JournalRoom({ initialEntryId = null }: { initialEntryId?: string | null }) {
   const [state, setState] = useState<RoomState>({ name: 'arrival' });
+  const openedInitialEntry = useRef(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [ready, setReady] = useState(false);
   const [returnPiece, setReturnPiece] = useState<ReturnPiece | null>(null);
@@ -109,6 +110,17 @@ export function JournalRoom() {
     },
     [entries],
   );
+
+  // A cross-facet return carries identity only. Once the member's own Journal
+  // rows are loaded, reopen that exact entry a single time. Missing/stale ids
+  // simply leave Journal at its ordinary arrival; no content is accepted from
+  // the URL and no entry is synthesized.
+  useEffect(() => {
+    if (!initialEntryId || !ready || openedInitialEntry.current) return;
+    openedInitialEntry.current = true;
+    const entry = entries.find((item) => item.id === initialEntryId);
+    if (entry) setState({ name: 'reading', entry, reflecting: false });
+  }, [entries, initialEntryId, ready]);
 
   switch (state.name) {
     case 'writing':

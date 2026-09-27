@@ -30,7 +30,7 @@ export const HOUSE_PLACES = [
   { id:'divination', label:'Divination', purpose:'Meet a question through symbolic practice', href:'/oracle', mark:'✧', tone:'violet', group:'reflect', aliases:['oracle','cards','symbols'], centerEligible:true },
   { id:'living-field', label:'Living Field', purpose:'See the larger whole and its relationships', href:'/maia/living-field?from=house', mark:'∞', tone:'blue', group:'reflect', aliases:['field','whole','patterns'], centerEligible:true },
   { id:'co-lab', label:'Co-lab', purpose:'Shared work and conversation', href:'/team/for-you', mark:'◎', tone:'blue', group:'practice', aliases:['collaboration','team','network'], centerEligible:true },
-  { id:'anchor', label:'Anchor', purpose:'A quiet place to return', href:'/maia/anchor?from=house', mark:'●', tone:'green', group:'practice', aliases:['daily anchor','center','return'], centerEligible:true },
+  { id:'anchor', label:'Daily Anchor', purpose:'Stay connected to one thread in today', href:'/maia/anchor?from=house', mark:'●', tone:'green', group:'practice', aliases:['daily anchor','center','return'], centerEligible:true },
 ] as const satisfies readonly HousePlace[];
 
 export type HousePlaceId = typeof HOUSE_PLACES[number]['id'];

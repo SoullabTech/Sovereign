@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, Droplets, Sprout, DoorOpen, Merge, Zap, Sun } from 'lucide-react';
+import { FacetCarryNotice, type FacetCarryRef } from '@/components/house/FacetCarryNotice';
 
 interface NameYourChangeProps {
   onNext: (title: string, description: string, changeType: string) => void;
@@ -10,6 +11,9 @@ interface NameYourChangeProps {
   initialTitle?: string;
   initialDescription?: string;
   initialChangeType?: string;
+  carrySourceRef?: FacetCarryRef | null;
+  carrySourceReady?: boolean;
+  onCarryResolved?: (source: unknown | null) => void;
 }
 
 const CHANGE_TYPES = [
@@ -81,6 +85,9 @@ export default function NameYourChange({
   initialTitle = '',
   initialDescription = '',
   initialChangeType = '',
+  carrySourceRef = null,
+  carrySourceReady = true,
+  onCarryResolved,
 }: NameYourChangeProps) {
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
@@ -97,7 +104,11 @@ export default function NameYourChange({
     }
   };
 
-  const canContinue = title.trim().length > 0 && description.trim().length > 0 && changeType.length > 0;
+  const canContinue =
+    title.trim().length > 0 &&
+    description.trim().length > 0 &&
+    changeType.length > 0 &&
+    (!carrySourceRef || carrySourceReady);
 
   return (
     <div className="p-6 space-y-6">
@@ -110,6 +121,14 @@ export default function NameYourChange({
           Name this transition. Not what you want it to be — what's actually moving.
         </p>
       </div>
+
+      {carrySourceRef ? (
+        <FacetCarryNotice
+          targetFacet="changes"
+          sourceRef={carrySourceRef}
+          onResolved={onCarryResolved}
+        />
+      ) : null}
 
       {/* Form */}
       <div className="space-y-4">

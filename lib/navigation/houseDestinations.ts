@@ -213,7 +213,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
   },
   {
     id: 'anchor',
-    label: 'Anchor',
+    label: 'Daily Anchor',
     icon: Compass,
     tooltip: 'A quiet place to return',
     kind: 'route',

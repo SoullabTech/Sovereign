@@ -7,12 +7,14 @@ import ChangeListView from './ChangeListView';
 import NameYourChange from './NameYourChange';
 import ChangeJourney from './ChangeJourney';
 import { apiFetch } from '@/lib/http/apiBase';
+import { type FacetCarryRef } from '@/components/house/FacetCarryNotice';
 
 interface ChangesSheetProps {
   isOpen: boolean;
   onClose: () => void;
   memberId: string;
   memberName?: string;
+  carrySourceRef?: FacetCarryRef | null;
 }
 
 type ViewState =
@@ -25,6 +27,7 @@ export function ChangesSheet({
   onClose,
   memberId,
   memberName,
+  carrySourceRef = null,
 }: ChangesSheetProps) {
   const [view, setView] = useState<ViewState>({ type: 'list' });
   const [createData, setCreateData] = useState<{
@@ -32,6 +35,17 @@ export function ChangesSheet({
     description: string;
     changeType: string;
   } | null>(null);
+  const [carrySourceValid, setCarrySourceValid] = useState<boolean | null>(
+    carrySourceRef ? null : true,
+  );
+
+  useEffect(() => {
+    if (isOpen && carrySourceRef) {
+      setView({ type: 'create', step: 'name' });
+      setCreateData(null);
+      setCarrySourceValid(null);
+    }
+  }, [isOpen, carrySourceRef]);
 
   // Reset to list view when sheet closes
   useEffect(() => {
@@ -49,6 +63,7 @@ export function ChangesSheet({
   };
 
   const handleNameNext = async (title: string, description: string, changeType: string) => {
+    if (carrySourceRef && carrySourceValid !== true) return;
     setCreateData({ title, description, changeType });
 
     try {
@@ -59,6 +74,7 @@ export function ChangesSheet({
           description,
           changeType,
           urgency: 'none',
+          sourceRef: carrySourceRef || undefined,
         }),
       });
 
@@ -146,7 +162,6 @@ export function ChangesSheet({
 
             {/* Content Area */}
             <div className="flex-1 overflow-y-auto">
-              <AnimatePresence mode="wait">
                 {view.type === 'list' && (
                   <motion.div
                     key="list"
@@ -177,6 +192,9 @@ export function ChangesSheet({
                       initialTitle={createData?.title}
                       initialDescription={createData?.description}
                       initialChangeType={createData?.changeType}
+                      carrySourceRef={carrySourceRef}
+                      carrySourceReady={carrySourceValid === true}
+                      onCarryResolved={(source) => setCarrySourceValid(Boolean(source))}
                     />
                   </motion.div>
                 )}
@@ -196,7 +214,6 @@ export function ChangesSheet({
                     />
                   </motion.div>
                 )}
-              </AnimatePresence>
             </div>
           </motion.div>
         </>

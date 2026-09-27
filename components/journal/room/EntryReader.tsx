@@ -185,6 +185,20 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
             >
               {entry.entry_type === 'dream' ? 'Reflect on this dream with MAIA' : 'Reflect with MAIA'}
             </button>
+
+            <a
+              href={`/changes?sourceFacet=journal&sourceRefId=${encodeURIComponent(entry.id)}&crossingId=journal-name-as-change`}
+              className={`${type.meta} ${color.muted} ${focus} ${hit} ${quiet}`}
+            >
+              Name this as a change →
+            </a>
+
+            <a
+              href={`/decisions/new?sourceFacet=journal&sourceRefId=${encodeURIComponent(entry.id)}&crossingId=journal-consider-decision`}
+              className={`${type.meta} ${color.muted} ${focus} ${hit} ${quiet}`}
+            >
+              Consider a decision →
+            </a>
           </div>
         )}
 

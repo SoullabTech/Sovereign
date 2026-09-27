@@ -505,6 +505,22 @@ export default function ReflectionDetail({ id }: ReflectionDetailProps) {
           </motion.div>
         )}
 
+        <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px]">
+          <span className="text-stone-400 uppercase tracking-[0.16em] text-[10px]">Carry this forward</span>
+          <a
+            href={`/changes?sourceFacet=reflections&sourceRefId=${encodeURIComponent(capsule.id)}&crossingId=reflection-name-as-change`}
+            className="text-stone-500 hover:text-[#5a7a6f] transition-colors"
+          >
+            Name a change →
+          </a>
+          <a
+            href={`/decisions/new?sourceFacet=reflections&sourceRefId=${encodeURIComponent(capsule.id)}&crossingId=reflection-consider-decision`}
+            className="text-stone-500 hover:text-[#5a7a6f] transition-colors"
+          >
+            Consider a decision →
+          </a>
+        </div>
+
         {/* Bring it back into conversation — member act, nothing written */}
         <DiscussWithMaia capsule={capsule} />
       </div>

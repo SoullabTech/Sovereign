@@ -6,6 +6,11 @@ import db from '@/lib/db/postgres';
 import { randomUUID } from 'crypto';
 import { getTeamRole } from '@/lib/auth/teamPermissions';
 import { chooseDecisionScope, resolveDecisionActor } from '@/lib/studio/decisions/access';
+import {
+  recordFacetCrossing,
+  validateFacetCrossingSource,
+  type FacetCrossingRef,
+} from '@/lib/house/facetCrossing.server';
 
 const VALID_STATUSES = ['draft', 'consulting', 'active', 'complete', 'archived'] as const;
 const VALID_TIME_PRESSURES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
@@ -106,8 +111,20 @@ export async function POST(request: NextRequest) {
     const {
       title, context, clientId, teamId, stakes, timePressure = 'none',
       emotionalState, situationType = scope === 'personal' ? 'self' : 'individual',
-      parentDecisionId,
-    } = body;
+      parentDecisionId, sourceRef,
+    } = body as {
+      title?: string;
+      context?: string;
+      clientId?: string;
+      teamId?: string;
+      stakes?: string;
+      timePressure?: string;
+      emotionalState?: string;
+      situationType?: string;
+      parentDecisionId?: string;
+      sourceRef?: FacetCrossingRef;
+      scope?: string;
+    };
 
     if (!title?.trim()) return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     if (!context?.trim()) return NextResponse.json({ error: 'Context is required' }, { status: 400 });
@@ -157,27 +174,58 @@ export async function POST(request: NextRequest) {
       rootDecisionId = parentResult.rows[0].root_decision_id || parentDecisionId;
     }
 
-    const id = randomUUID();
-    const result = await db.query(
-      `INSERT INTO studio_decisions
-        (id, decision_scope, personal_member_id, practitioner_id, captured_by_member_id,
-         client_id, team_id, title, context, stakes, time_pressure, emotional_state,
-         situation_type, parent_decision_id, root_decision_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-       RETURNING *`,
-      [
-        id, scope,
-        scope === 'personal' ? actor.memberId : null,
-        scope === 'practice' ? actor.practitionerId : null,
-        actor.memberId,
-        scope === 'practice' ? clientId || null : null,
-        scope === 'practice' ? teamId || null : null,
-        title.trim(), context.trim(), stakes?.trim() || null, timePressure,
-        emotionalState?.trim() || null, situationType, parentDecisionId || null, rootDecisionId,
-      ],
-    );
+    if (sourceRef) {
+      if (scope !== 'personal') {
+        return NextResponse.json(
+          { error: 'Facet carry currently enters personal Decisions only.' },
+          { status: 400 },
+        );
+      }
+      const source = await validateFacetCrossingSource({
+        memberId: actor.memberId,
+        targetFacet: 'decisions',
+        sourceRef,
+      });
+      if (!source) {
+        return NextResponse.json({ error: 'Source not available for this crossing' }, { status: 400 });
+      }
+    }
 
-    const row = result.rows[0];
+    const id = randomUUID();
+    const insertSql = `INSERT INTO studio_decisions
+      (id, decision_scope, personal_member_id, practitioner_id, captured_by_member_id,
+       client_id, team_id, title, context, stakes, time_pressure, emotional_state,
+       situation_type, parent_decision_id, root_decision_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+     RETURNING *`;
+    const insertParams = [
+      id, scope,
+      scope === 'personal' ? actor.memberId : null,
+      scope === 'practice' ? actor.practitionerId : null,
+      actor.memberId,
+      scope === 'practice' ? clientId || null : null,
+      scope === 'practice' ? teamId || null : null,
+      title.trim(), context.trim(), stakes?.trim() || null, timePressure,
+      emotionalState?.trim() || null, situationType, parentDecisionId || null, rootDecisionId,
+    ];
+
+    // Preserve the established create path when there is no crossing. The
+    // transaction is introduced only when the member is binding provenance to
+    // a newly authored Personal Decision.
+    const row = sourceRef
+      ? await db.transaction(async (client) => {
+          const result = await client.query(insertSql, insertParams);
+          await recordFacetCrossing(client, {
+            memberId: actor.memberId,
+            crossingId: sourceRef.crossingId,
+            sourceFacet: sourceRef.sourceFacet,
+            sourceRefId: sourceRef.sourceRefId,
+            targetFacet: 'decisions',
+            targetRefId: id,
+          });
+          return result.rows[0];
+        })
+      : (await db.query(insertSql, insertParams)).rows[0];
     return NextResponse.json({
       decision: {
         id: row.id,

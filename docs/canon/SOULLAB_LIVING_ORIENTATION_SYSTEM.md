@@ -289,6 +289,18 @@ Anchors remain private by default. `MAIA may remember this with me` grants bound
 
 `Ask MAIA` remains in the Idea thread. Member draft text is saved as the member's block before MAIA responds, and MAIA's response remains a distinct block.
 
+### Journal / Reflections → Changes
+
+A kept Journal entry or Reflection may offer **Name this as a change** / **Name a change**.
+
+The source crosses as authenticated provenance only. The member still authors the Change name, description, and type. The source remains where it was.
+
+### Journal / Reflections → Decisions
+
+A kept Journal entry or Reflection may offer **Consider a decision**.
+
+The receiving Personal Decision shows where the source came from while leaving Decision Title, Context, stakes, state, and time pressure for the member. A durable crossing exists only when the member creates the Decision.
+
 ---
 
 ## 12. Crossing debt and first repair
@@ -321,6 +333,29 @@ That bridge is now **retired**.
 The governing distinction is now explicit:
 
 > **Writing something in Journal is not consent to convert it into MAIA memory.**
+
+### First durable facet-relation substrate
+
+The first non-MAIA member-explicit cross-facet relations are now live:
+
+- Journal → Changes;
+- Reflection → Changes;
+- Journal → Personal Decisions;
+- Reflection → Personal Decisions.
+
+They are held by `member_facet_crossings`.
+
+That table deliberately stores **relationship identity, not life content**: member id, crossing id, source facet/id, target facet/id, and time. It contains no copied prose, semantic vector, importance score, inferred meaning, or system-authored summary.
+
+The receiving object and its crossing relation are created atomically only after the source resolves as member-owned and the crossing id is admitted by the explicit runtime allowlist.
+
+The receiving room shows the source as provenance while leaving target meaning blank for the member to author.
+
+The target later shows **Where this began** and a **Return to source** doorway.
+
+> **Durable relationship does not require semantic merger.**
+
+This is not a universal graph and grants no automatic Living Field projection authority.
 
 ---
 

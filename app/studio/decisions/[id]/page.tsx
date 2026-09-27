@@ -44,6 +44,7 @@ import ClientInquiryPanel from '@/components/studio/practitioner/ClientInquiryPa
 import OccupancyRatingWidget from '@/components/studio/practitioner/OccupancyRatingWidget';
 import ProtocolSelector from '@/components/studio/practitioner/ProtocolSelector';
 import type { PractitionerLoopState } from '@/lib/studio/practitioner/types';
+import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
 
 const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label: string }> = {
   'leadership-power': { icon: Flame, color: 'text-red-400', label: 'Power Dynamics' },
@@ -721,6 +722,14 @@ export default function DecisionDetailPage() {
             )}
           </div>
         </div>
+
+        {personalLens ? (
+          <FacetOriginTrail
+            targetFacet="decisions"
+            targetRefId={decisionId}
+            className="mb-5"
+          />
+        ) : null}
 
         {/* Practice-only evidence loop. Personal Decisions do not assume practitioner identity. */}
         {!personalLens && (
