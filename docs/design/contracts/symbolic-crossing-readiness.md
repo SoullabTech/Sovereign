@@ -58,7 +58,7 @@ It may not prefill the Journal or Anchor with interpretation, synthesis, advice,
 | Source | Durable identity | Exact return | Epistemic separation | Journal/Anchor readiness |
 |---|---|---|---|---|
 | Dream | yes — canonical owned Dream UUID | yes | primary remembered dream is distinct from later interpretation | **READY / Dream→Anchor live** |
-| Divination | yes — saved reading identity (iching:, tarot:, runes:) | yes | source page preserves the reading, but current resolved detail can combine question, cast material, interpretation, and guidance | **PARTIAL / blocked for Journal+Anchor** |
+| Divination | yes — saved reading identity (iching:, tarot:, runes:) | yes | typed source packet now separates source fact, symbolic tradition, system synthesis, possible expression, and member meaning | **JOURNAL LIVE / ANCHOR CLOSED** |
 | Astrology | member chart identity exists | room navigation exists | no single governed handoff packet yet separates calculated facts from symbolic tradition, synthesis, possible expression, and member meaning | **NOT READY** |
 
 ## Divination finding
@@ -133,14 +133,12 @@ This act is complete when:
 - Astrology and Divination → Journal/Anchor remain fail-closed;
 - the next implementation act can name one concrete typed source packet rather than “connect symbolism.”
 
-## Exact next boundary
+## Current boundary
 
-> **FACET-FLOW-04 DELIVERED · READ-ONLY PROTOTYPE PASS · AWAITING FOUNDER EXPERIENCE ADJUDICATION**
+FACET-FLOW-04 proved the typed source packet. FACET-FLOW-05 then proved the durable Journal crossing without widening that authority to Daily Anchor.
 
-Divination now has a typed source packet separating source fact, symbolic tradition, system synthesis, possible expression, and member meaning. An authenticated local prototype rendered that packet beside blank Journal and Daily Anchor writing fields, proved exact return to the saved reading, and left zero persistence residue.
+> **FOUNDER ADJUDICATION — FACET-FLOW-05 REAL JOURNAL EXPERIENCE**
 
-The governing stop is now recorded in `divination-symbolic-receiving-prototype.md`:
-
-> **NO DURABLE DIVINATION → JOURNAL · NO DURABLE DIVINATION → DAILY ANCHOR until the epistemic distinction is founder-accepted as experientially clear.**
+Divination → Journal is locally proven with typed provenance, blank receiving authorship, atomic keep, and exact return. Divination → Daily Anchor remains closed pending founder adjudication of that real Journal experience.
 
 Astrology remains closed until its own typed chart-context packet exists.

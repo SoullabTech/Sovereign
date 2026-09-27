@@ -23,6 +23,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { type, color, space, focus, hit, hitTight, quiet, srOnly, spine, roomMaterial } from './tokens';
 import { FacetCarryNotice, type FacetCarryRef } from '@/components/house/FacetCarryNotice';
+import { SymbolicCarryNotice } from '@/components/house/SymbolicCarryNotice';
 
 export type EntryType = 'day' | 'dream';
 
@@ -238,12 +239,19 @@ export function WritingSurface({
 
         {carrySourceRef ? (
           <div className="mb-9">
-            <FacetCarryNotice
-              targetFacet="journal"
-              sourceRef={carrySourceRef}
-              tone="light"
-              onResolved={(source) => setCarrySourceReady(Boolean(source))}
-            />
+            {carrySourceRef.sourceFacet === 'divination' ? (
+              <SymbolicCarryNotice
+                sourceRefId={carrySourceRef.sourceRefId}
+                onResolved={(source) => setCarrySourceReady(Boolean(source))}
+              />
+            ) : (
+              <FacetCarryNotice
+                targetFacet="journal"
+                sourceRef={carrySourceRef}
+                tone="light"
+                onResolved={(source) => setCarrySourceReady(Boolean(source))}
+              />
+            )}
           </div>
         ) : null}
 
