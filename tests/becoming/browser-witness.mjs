@@ -199,8 +199,11 @@ try {
   await card.click();
   await page.getByText('I stopped treating urgency as proof of care.', { exact: true }).waitFor();
   await page.getByText('IMAGINED POSSIBILITY · NOT A PREDICTION', { exact: true }).waitFor();
+  await page.getByText('ELEMENTAL IMMERSION · MEMBER-ENTERED', { exact: true }).waitFor();
+  await page.getByText('Cool floorboards, morning light, coffee, and room to breathe.', { exact: true }).waitFor();
+  await page.getByText('Contribution remains when urgency falls away.', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Talk with MAIA about this journey', exact: true }).waitFor();
-  pass('J17', 'The kept journey preserves member-authored dialogue, imagined-future provenance, and a no-repeat MAIA doorway.');
+  pass('J17', 'The kept journey visibly preserves member-authored elemental immersion, dialogue, imaginal provenance, and a no-repeat MAIA doorway.');
 
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await page.getByRole('button', { name: 'Delete journey and revisions', exact: true }).click();
