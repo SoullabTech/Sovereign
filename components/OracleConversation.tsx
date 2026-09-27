@@ -2424,7 +2424,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             URL.revokeObjectURL(audioUrl);
           };
 
-          const resolvePlayback = (reason: 'ended' | 'timeupdate' | 'probe') => {
+          const resolvePlayback = (reason: 'ended' | 'timeupdate' | 'probe' | 'pause') => {
             if (settled) return;
             settled = true;
             console.log(`🔇 MAIA playback complete (${reason}) - ${audio.currentTime.toFixed(1)}s of ${Number.isFinite(audio.duration) ? audio.duration.toFixed(1) : '?'}s`);
@@ -2452,18 +2452,29 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             }
           }, 5000);
 
-          audio.onloadedmetadata = () => {
-            console.log('✅ Audio metadata loaded, duration:', audio.duration, 'seconds');
-            const playbackTimeout = (audio.duration + 12) * 1000;
+          const estimatedMp3Seconds = Math.max(2, (audioBlob.size * 8) / 128000);
+          const armPlaybackCeiling = () => {
+            if (playbackTimeoutId) return;
+            const reportedSeconds = Number.isFinite(audio.duration) && audio.duration > 0
+              ? audio.duration
+              : estimatedMp3Seconds;
+            const ceilingMs = (reportedSeconds + 12) * 1000;
             playbackTimeoutId = setTimeout(() => {
-              if (isAtPlaybackEnd() || audio.ended) {
+              // Safari can play the file but never deliver ended, and may report
+              // duration=Infinity. Never strand the conversational floor.
+              if (audio.ended || audio.paused || isAtPlaybackEnd()) {
                 resolvePlayback('probe');
                 return;
               }
-              console.error(`❌ [AUDIO] Playback timeout! Audio at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+              console.error(`❌ [AUDIO] Playback ceiling reached at ${audio.currentTime.toFixed(1)}s; reported=${Number.isFinite(audio.duration) ? audio.duration.toFixed(1) : 'non-finite'}s estimated=${estimatedMp3Seconds.toFixed(1)}s`);
               audio.pause();
-              rejectPlayback(new Error(`Audio playback timeout after ${playbackTimeout/1000}s`));
-            }, playbackTimeout);
+              rejectPlayback(new Error('Audio playback exceeded finite safety ceiling'));
+            }, ceilingMs);
+          };
+
+          audio.onloadedmetadata = () => {
+            console.log('✅ Audio metadata loaded, duration:', audio.duration, 'seconds');
+            armPlaybackCeiling();
           };
 
           audio.onplay = () => {
@@ -2472,6 +2483,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             if (startTimeoutId) clearTimeout(startTimeoutId);
             setIsAudioPlaying(true);
             startAudioAnalysis(audio);
+            // Metadata can be late or Safari can report duration=Infinity.
+            // Arm a finite byte-derived ceiling as soon as playback begins.
+            armPlaybackCeiling();
 
             // Safari occasionally fails to deliver `ended` after several voice
             // turns. Poll actual playback position so completion remains a fact,
@@ -2486,9 +2500,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           };
 
           audio.onpause = () => {
-            if (!audio.ended && !settled) {
-              console.warn(`⚠️ [AUDIO] Paused at ${audio.currentTime.toFixed(1)}s of ${Number.isFinite(audio.duration) ? audio.duration.toFixed(1) : '?'}s`);
+            if (settled) return;
+            if (hasStarted && audio.currentTime > 0.25) {
+              console.warn(`⚠️ [AUDIO] Playback stopped/paused at ${audio.currentTime.toFixed(1)}s; treating floor as released`);
+              resolvePlayback('pause');
+              return;
             }
+            console.warn(`⚠️ [AUDIO] Paused before meaningful playback at ${audio.currentTime.toFixed(1)}s`);
           };
 
           audio.onended = () => resolvePlayback('ended');

@@ -34,7 +34,7 @@ describe('non-streaming hands-free resume after MAIA speech', () => {
 
 describe('desktop Safari playback completion authority', () => {
   it('does not depend only on HTMLAudioElement.onended', () => {
-    const start = source.indexOf("const resolvePlayback = (reason: 'ended' | 'timeupdate' | 'probe')");
+    const start = source.indexOf("const resolvePlayback = (reason: 'ended' | 'timeupdate' | 'probe' | 'pause')");
     const end = source.indexOf('// 🔥 CRITICAL: Reset states after successful audio playback', start);
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
@@ -43,7 +43,11 @@ describe('desktop Safari playback completion authority', () => {
     expect(block).toContain('audio.ontimeupdate');
     expect(block).toContain('completionProbeId = setInterval');
     expect(block).toContain("resolvePlayback('probe')");
+    expect(block).toContain("resolvePlayback('pause')");
     expect(block).toContain("audio.onended = () => resolvePlayback('ended')");
+    expect(block).toContain('estimatedMp3Seconds');
+    expect(block).toContain('Number.isFinite(audio.duration)');
+    expect(block).toContain('armPlaybackCeiling()');
     expect(block).toContain('if (settled) return');
   });
 });
