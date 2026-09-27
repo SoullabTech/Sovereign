@@ -1,10 +1,10 @@
 # JARVIS-BECOMING-01 — Programme cockpit
 
-## Latest standing — local candidate, 27 September 2026
+## Latest standing — journey-first founder candidate, 27 September 2026
 
-The founder's subsequent full-build continuation produced an isolated functional candidate at `4e2950620a0e73142fd9ae5d5b82a646fd00caf3`. Read `LOCAL_BUILD_SCOPE_2026-09-27.md` and `LOCAL_CANDIDATE_WITNESS_2026-09-27.md` before resuming. Strict typecheck passes, core tests pass 31/31, and the visible Chromium witness passes 20/20. The candidate is available on local port 3797; it is not account-connected, live MAIA, or production.
+`BECOMING-UX-01R1` corrected the local candidate so a member enters a guided Future Self journey before encountering any temporal-analysis surface. Exact tested source: `05372009ed598299ae56d6a2ebffe56991a1db3c`. Read `BECOMING_UX_01R1_WITNESS_2026-09-27.md` first. Strict typecheck passes, the logical core passes 31/31, and the post-commit visible journey witness passes 21/21. The candidate is available on local port 3797; it is not account-connected, live MAIA, or production.
 
-The next human boundary is the local room/temporal-field walk, followed by the exact account/MAIA integration contract. The native review unit is `becoming-local-human-walk-20260927`, read back blocked pending that walk. Earlier planning units remain unchanged. The constitutional source is unchanged.
+The immediate boundary is the founder's human walk of threshold → arrival → time opening → encounter → optional dialogue → discernment → return → optional carry. `Across Time` is now secondary and hidden until a journey is kept. If that journey is accepted, the next implementation boundary is `BECOMING-MAIA-01 — CANONICAL MAIA GUIDED JOURNEY + MEMBER-AUTHORED FUTURE VOICE ONLY`. The native review unit `becoming-local-human-walk-20260927` remains blocked pending the human judgment. Earlier planning units remain unchanged. The constitutional source is unchanged.
 
 ### Earlier establishment record
 

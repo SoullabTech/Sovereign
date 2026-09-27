@@ -1,0 +1,16 @@
+{
+  "source_commit": "05372009ed598299ae56d6a2ebffe56991a1db3c",
+  "bundle_sha256": "baf6e80f4a203dabc28fd3df0c56786685987d53429d9535ec9303fac9eee76a",
+  "files": {
+    "browser-witness.json": "e5e64ed919b1bc33499cee6cf909f9f9e5af987875cdd72e364601dc9268d588",
+    "browser-witness.log": "bb7bfd20e091ddf63614884fb31e2ea375789f2fda36ba8afc7283f94791cf67",
+    "core-tests.log": "d02239f6d054e59c08e1c3ce0e2e33316346996423a189dfc96c3fe1d2711993",
+    "health.json": "99bf9178aa25dd22959a7d0bd9929532ca7efa4b7aae6b8f03826f9798687525",
+    "typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ux01r1-across-time-desktop.png": "38eb41fb40c1e9b88432a4a427393d038eb439ba251dbf46872f2b2ed1eac0a4",
+    "ux01r1-arrival-desktop.png": "5b6e54822eaf28b82033830846c86b018639d9bf1a797e56ab6b7c1e05071932",
+    "ux01r1-encounter-desktop.png": "27839c003fc8787f34e5536df969a1bfc8859dbb9d6850b06357b9440a034c5e",
+    "ux01r1-threshold-desktop.png": "5a346feddc772b5967f2f791e77decc9e87c0304030d5d5dd309fb7c043610a5",
+    "ux01r1-threshold-mobile.png": "0f747e0543df02d7ce7ac1debead4d7e2244ac99260c12dac90f6cddde91b8b2"
+  }
+}

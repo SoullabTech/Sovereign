@@ -1,0 +1,8 @@
+{
+  "scope": "isolated-local-preview",
+  "sourceHead": "05372009ed598299ae56d6a2ebffe56991a1db3c",
+  "bundleHash": "baf6e80f4a203dabc28fd3df0c56786685987d53429d9535ec9303fac9eee76a",
+  "accountConnected": false,
+  "providerCalls": false,
+  "storage": "browser-indexeddb-explicit-keep"
+}
