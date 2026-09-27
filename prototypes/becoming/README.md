@@ -14,11 +14,13 @@ The existing House illustration is read from the local current-review asset when
 
 ## Holding words
 
-Unkept drafts remain in memory. Keep writes to IndexedDB on this browser and origin. This is not encrypted or account-protected storage. Use synthetic test material. Other browsers, devices, or ports have separate stores. Clearing browser storage removes reflections. Exports are independent files outside deletion control.
+Unkept drafts remain in memory. Keep writes to IndexedDB on this browser and origin. This is not encrypted or account-protected storage. Use synthetic test material. Other browsers, devices, or ports have separate stores. Clearing browser storage removes journeys. Exports are independent files outside deletion control.
 
-Saved revisions are retained until the whole reflection is deleted. Save and delete use revision checks within the browser transaction. A stale tab cannot overwrite the current revision. Exact source/version links retain identity, not copied source prose. Deleted sources remain unavailable.
+Saved revisions are retained until the whole journey is deleted. Save and delete use revision checks within the browser transaction. A stale tab cannot overwrite the current revision. Exact source/version links retain identity, not copied source prose. Deleted sources remain unavailable.
 
-The UI's invitations are authored prompts, not live MAIA responses. Future dialogue is entered by the person. The temporal view only compares selected local reflections; it does not search the person's account or infer a pattern.
+The UI's invitations are authored prompts, not live MAIA responses. Future dialogue is entered by the person. Across Time only compares journeys the member explicitly selects; it does not search the person's account or infer a pattern.
+
+BECOMING-UX-01R1 makes the Future Self journey primary: threshold → present-life arrival → time opening → encounter → optional dialogue → discernment → return → optional carry. The internal seven-movement model remains in the logical core but is not exposed as seven operator tabs. Across Time appears only after at least one journey has been kept.
 
 ## Verification
 

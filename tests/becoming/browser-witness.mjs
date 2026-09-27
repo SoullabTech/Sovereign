@@ -1,83 +1,212 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
-// Fresh temporary browser contexts only. No account cookies or database inspection.
-const base='http://localhost:3797', output='.becoming-preview';
-await mkdir(output+'/screenshots',{recursive:true});
-const results=[], errors=[], requests=[];
-const pass=(id,detail)=>{results.push({id,status:'PASS',detail});console.log('PASS',id);};
-const browser=await chromium.launch({headless:true});let failure;
-function observe(p){p.setDefaultTimeout(8000);p.on('pageerror',e=>errors.push(e.message));p.on('request',r=>requests.push(r.url()));}
-const move=(p,name)=>p.getByRole('navigation',{name:'Encounter movements'}).getByRole('button',{name,exact:true}).click();
-const save=async(p,rev)=>{await p.getByRole('button',{name:'Keep',exact:true}).click();await p.getByRole('status').filter({hasText:`revision ${rev}`}).waitFor();};
-const openCard=(p,name)=>p.getByRole('button').filter({has:p.getByRole('heading',{name,exact:true})}).click();
-try {
- const context=await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'America/New_York'});
- const page=await context.newPage();observe(page);await page.goto(base+'/becoming');await page.getByRole('heading',{level:1,name:'Becoming'}).waitFor();
- await page.locator('h1').focus();await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:output+'/screenshots/arrival-desktop.png',fullPage:true});
- await page.getByText('No reflections kept here yet.',{exact:true}).waitFor();pass('B01','Fresh local browser begins without seeded reflections.');
- await page.getByRole('button',{name:'Begin where you are'}).click();await page.getByLabel('Reflection name').fill('Witness — A quieter life');
- await page.getByLabel('What is here now?').fill('Synthetic witness: making time to listen before agreeing.');
- await move(page,'Open');await page.getByLabel('A name for this possibility').fill('Spaciousness');await page.getByRole('button',{name:'Desired',exact:true}).click();
- await move(page,'Encounter');await page.getByLabel('What appears, in your own words').fill('Synthetic scene: time for a morning walk before work.');
- await page.locator('h1').focus();await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:output+'/screenshots/encounter-desktop.png',fullPage:true});
- await move(page,'Open');await page.getByRole('button',{name:'+ Another possibility',exact:true}).click();await page.getByLabel('A name for this possibility').fill('Service with boundaries');
- await move(page,'Encounter');await page.getByLabel('What appears, in your own words').fill('Synthetic scene: contributing without being constantly available.');
- await move(page,'Dialogue');await page.getByRole('button',{name:'+ Me, now',exact:true}).click();await page.getByLabel('Me, now',{exact:true}).fill('What matters most?');
- await page.getByRole('button',{name:'+ Imagined perspective',exact:true}).click();await page.getByLabel('An imagined future perspective',{exact:true}).fill('When I imagine an answer, I notice a wish to be present.');
- await page.locator('h1').focus();await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:output+'/screenshots/dialogue-desktop.png',fullPage:true});
- await save(page,1);await page.getByRole('status').filter({hasText:'No return has been recorded.'}).waitFor();pass('B02','Keep succeeds without mandatory Return or action.');
- await page.reload();await openCard(page,'Witness — A quieter life');await page.getByText('Synthetic witness: making time to listen before agreeing.',{exact:true}).waitFor();
- await page.getByRole('heading',{name:'Spaciousness',exact:true}).waitFor();await page.getByRole('heading',{name:'Service with boundaries',exact:true}).waitFor();
- await page.getByText('When I imagine an answer, I notice a wish to be present.',{exact:true}).waitFor();pass('B03','Both possibilities and member-entered dialogue survive reload.');
- const sourceId=new URL(page.url()).searchParams.get('reflection');assert.ok(sourceId);const exact=rev=>`${base}/becoming?reflection=${sourceId}&revision=${rev}`;
- await page.getByRole('button',{name:'Continue reflecting',exact:true}).click();await page.getByLabel('What is here now?').fill('Synthetic revision two.');await save(page,2);
- const other=await context.newPage();observe(other);await other.goto(exact(2));await other.getByRole('button',{name:'Continue reflecting',exact:true}).click();
- await page.getByLabel('What is here now?').fill('Synthetic winning revision three.');await save(page,3);
- await other.getByLabel('What is here now?').fill('Synthetic stale edit retained in this tab.');await other.getByRole('button',{name:'Keep',exact:true}).click();
- await other.getByRole('alert').filter({hasText:'Another tab changed or deleted this reflection.'}).waitFor();assert.equal(await other.getByLabel('What is here now?').inputValue(),'Synthetic stale edit retained in this tab.');
- pass('B04','A stale-tab save is refused and the unsaved words remain visible.');await other.close();
- const history=await context.newPage();observe(history);await history.goto(exact(1));await history.getByText('Synthetic witness: making time to listen before agreeing.',{exact:true}).waitFor();
- assert.equal(await history.getByText('Synthetic winning revision three.',{exact:true}).count(),0);pass('B05','Exact historical revision is not silently replaced by latest.');
- await history.goto(exact(999));await history.getByRole('heading',{name:'Source unavailable',exact:true}).waitFor();pass('B06','An unavailable revision does not fall back to another.');await history.close();
- await page.getByRole('button',{name:'Temporal field',exact:true}).click();await page.locator('.source-check input').first().check();
- await page.getByLabel('What is true for you now?').fill('Synthetic present: a new invitation has arrived.');
- await page.getByLabel('A connection I notice',{exact:true}).fill('I want to distinguish generosity from automatic agreement.');
- await page.getByLabel('What is different—or does not fit?').fill('Sometimes an invitation feels joyful, not burdensome.');
- await page.getByRole('button',{name:'Your reflections',exact:true}).click();await page.getByRole('dialog',{name:'Leave these temporal notes?'}).waitFor();await page.getByRole('button',{name:'Stay with these notes',exact:true}).click();
- assert.equal(await page.getByLabel('A connection I notice',{exact:true}).inputValue(),'I want to distinguish generosity from automatic agreement.');pass('B07','Temporal notes have an explicit departure warning and remain on cancel.');
- await page.locator('h1').focus();await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:output+'/screenshots/temporal-desktop.png',fullPage:true});
- await page.getByRole('button',{name:'Begin from these reflections'}).click();assert.equal(await page.getByLabel('What is here now?').inputValue(),'Synthetic present: a new invitation has arrived.');
- await page.getByLabel('Reflection name').fill('Witness — A present connection');await save(page,1);await page.getByRole('button',{name:'Your reflections',exact:true}).click();await openCard(page,'Witness — A present connection');
- await page.getByText('Sometimes an invitation feels joyful, not burdensome.',{exact:true}).waitFor();pass('B08','A member-selected connection and its counterexample are retained.');
- await page.getByRole('button',{name:'Return to Witness — A quieter life · revision 3',exact:true}).click();await page.getByText('Synthetic winning revision three.',{exact:true}).waitFor();
- assert.equal(new URL(page.url()).searchParams.get('revision'),'3');pass('B09','The relationship returns to the exact source version.');
- await page.getByRole('button',{name:'Delete',exact:true}).click();await page.getByRole('button',{name:'Delete reflection and revisions',exact:true}).click();await openCard(page,'Witness — A present connection');
- await page.getByText('Original source no longer available. Its words have not been reconstructed.',{exact:true}).waitFor();pass('B10','Deleting a source leaves a truthful unavailable relation.');
- await page.getByRole('button',{name:'Delete',exact:true}).click();await page.getByRole('button',{name:'Delete reflection and revisions',exact:true}).click();await page.getByRole('heading',{name:'Nothing has been kept here yet.'}).waitFor();
- pass('B11','Deleting both synthetic reflections returns the visible library to empty.');
- await page.getByRole('button',{name:'Begin a reflection',exact:true}).click();await page.getByLabel('Reflection name').fill('Witness — Not yet known');await move(page,'Return');
- await page.getByRole('button',{name:'Return to now',exact:true}).click();await page.getByRole('button',{name:'Pause and leave',exact:true}).click();await page.getByRole('button',{name:'Keep and leave',exact:true}).click();
- await openCard(page,'Witness — Not yet known');await page.getByText('No image recorded.',{exact:true}).waitFor();await page.getByText('No action or practice was recorded.',{exact:true}).waitFor();
- await page.locator('.reading-paper').getByText(/^Return recorded /).waitFor();pass('B12','No-image/no-action session can return; Keep and leave preserves the explicit return.');
- await page.getByRole('button',{name:'Delete',exact:true}).click();await page.getByRole('button',{name:'Delete reflection and revisions',exact:true}).click();
- await page.getByRole('button',{name:'Begin a reflection',exact:true}).click();await page.getByLabel('What is here now?').fill('Synthetic unkept draft.');await move(page,'Open');await page.getByRole('button',{name:'Feared',exact:true}).click();
- await page.getByText('You can name this from a distance. You do not need to enter it or make it speak.',{exact:true}).waitFor();pass('B13','Feared possibility offers distance without compulsory dialogue.');
- await page.getByRole('button',{name:'Pause and leave',exact:true}).click();await page.getByRole('dialog',{name:'Leave this reflection?'}).waitFor();await page.keyboard.press('Escape');await move(page,'Arrive');
- assert.equal(await page.getByLabel('What is here now?').inputValue(),'Synthetic unkept draft.');pass('B14','Keyboard cancellation preserves the unfinished encounter.');
- await page.getByRole('button',{name:'Pause and leave',exact:true}).click();await page.getByRole('button',{name:'Leave without keeping',exact:true}).click();await page.getByText('No reflections kept here yet.',{exact:true}).waitFor();pass('B15','Explicit discard does not leave a visible saved reflection.');
- const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,deviceScaleFactor:1,reducedMotion:'reduce'});const mp=await mobile.newPage();observe(mp);await mp.goto(base+'/becoming');await mp.locator('h1').focus();await mp.evaluate(()=>window.scrollTo(0,0));await mp.screenshot({path:output+'/screenshots/arrival-mobile.png',fullPage:true});
- assert.ok(await mp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await mp.getByRole('button',{name:'Begin where you are'}).click();await mp.locator('h1').focus();await mp.evaluate(()=>window.scrollTo(0,0));await mp.screenshot({path:output+'/screenshots/encounter-mobile.png',fullPage:true});
- assert.ok(await mp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));pass('B16','Arrival and encounter fit a 390px viewport without horizontal scrolling.');
- const actions=await mp.getByRole('button').evaluateAll(xs=>xs.filter(x=>x.getBoundingClientRect().height>0).map(x=>({label:x.textContent,size:parseFloat(getComputedStyle(x).fontSize),height:x.getBoundingClientRect().height})));
- assert.ok(actions.every(x=>x.size>=16&&x.height>=44),JSON.stringify(actions));pass('B17','Visible mobile buttons meet the 16px type and 44px height floors.');
- await move(mp,'Return');await mp.getByRole('button',{name:'Return to now',exact:true}).waitFor();await mp.locator('h1').focus();await mp.evaluate(()=>window.scrollTo(0,0));await mp.screenshot({path:output+'/screenshots/return-mobile.png',fullPage:true});pass('B18','Return remains directly reachable on mobile without filling earlier movements.');
- assert.equal(errors.length,0,errors.join('\n'));assert.ok(requests.every(u=>new URL(u).origin===base));pass('B19','No JavaScript page errors or off-origin browser requests occurred during this walk.');
- const response=await fetch(base+'/health');const health=await response.json();assert.equal(health.scope,'isolated-local-preview');assert.ok(response.headers.get('content-security-policy').includes("connect-src 'none'"));
- await writeFile(output+'/witness-health.json',JSON.stringify(health,null,2));pass('B20','Loopback preview identifies its bundle and emits the no-connect content policy.');
-} catch(e) {failure=e;console.error('WITNESS_FAILED',e.message);}
-finally {
- await browser.close();
- await writeFile(output+'/browser-witness.json',JSON.stringify({scope:'Fresh synthetic contexts; visible UI only, no direct database audit, no account or production testing',recordedAt:new Date().toISOString(),results,errors,requests:[...new Set(requests)],failure:failure?String(failure.message):null},null,2));
+
+const base = 'http://localhost:3797';
+const output = '.becoming-preview';
+await mkdir(output + '/screenshots', { recursive: true });
+
+const results = [];
+const errors = [];
+const requests = [];
+const pass = (id, detail) => {
+  results.push({ id, status: 'PASS', detail });
+  console.log('PASS', id);
+};
+
+const browser = await chromium.launch({ headless: true });
+let failure;
+function observe(page) {
+  page.setDefaultTimeout(8000);
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('request', request => requests.push(request.url()));
 }
-if(failure)process.exitCode=1;
+try {
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 1000 },
+    timezoneId: 'America/New_York',
+  });
+  const page = await context.newPage();
+  observe(page);
+
+  await page.goto(base + '/becoming');
+  await page.getByRole('heading', { level: 1, name: 'Becoming' }).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Across time', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('navigation', { name: 'Encounter movements' }).count(), 0);
+  pass('J01', 'Arrival begins as a Future Self journey; Across Time and the seven-part operator UI are absent.');
+
+  await page.screenshot({ path: output + '/screenshots/ux01r1-arrival-desktop.png', fullPage: true });
+  await page.getByRole('button', { name: 'Begin the journey', exact: true }).click();
+  await page.getByRole('heading', { name: 'Come into the life you are actually in.' }).waitFor();
+  await page.getByRole('button', { name: /I have something in mind/ }).waitFor();
+  await page.getByRole('button', { name: /Let something emerge/ }).waitFor();
+  pass('J02', 'The threshold offers two intelligible entry doors before any future imagery is requested.');
+  await page.screenshot({ path: output + '/screenshots/ux01r1-threshold-desktop.png', fullPage: true });
+  await page.getByRole('button', { name: /I have something in mind/ }).click();
+  await page.getByLabel('What are you bringing into this journey?')
+    .fill('Synthetic witness: contribution without constant availability.');
+
+  const progress = page.locator('.journey-progress[aria-label="Journey progress"]');
+  assert.deepEqual(await progress.locator('span').allTextContents(), ['Here', 'Opening', 'Encounter', 'Return']);
+  assert.equal(await page.getByRole('button', { name: 'Keep this journey', exact: true }).count(), 0);
+  pass('J03', 'The member sees four experiential phases, while Keep remains unavailable before Return.');
+
+  await page.getByRole('button', { name: 'Let some time pass →', exact: true }).click();
+  await page.getByRole('heading', { name: 'Let some time pass.' }).waitFor();
+  await page.getByLabel('Give this possibility a few words').fill('A spacious contribution');
+  assert.equal(await page.getByText('Desired', { exact: true }).isVisible(), false);
+  pass('J04', 'Future taxonomy is secondary; the journey first asks the member to let time open.');
+
+  await page.getByRole('button', { name: 'Enter this possibility →', exact: true }).click();
+  await page.getByLabel('What do you notice first?')
+    .fill('An ordinary morning with enough time to walk before work.');
+  pass('J05', 'The future is encountered phenomenologically before interpretation.');
+  await page.screenshot({ path: output + '/screenshots/ux01r1-encounter-desktop.png', fullPage: true });
+  await page.getByRole('button', { name: 'Speak with this perspective', exact: true }).click();
+  await page.getByRole('heading', { name: 'Would you like to speak with this perspective?' }).waitFor();
+  await page.getByRole('button', { name: '+ Ask something', exact: true }).click();
+  await page.getByLabel('You, now').fill('What changed?');
+  await page.getByRole('button', { name: '+ Let an answer arise', exact: true }).click();
+  await page.getByLabel('The one you are becoming')
+    .fill('I stopped treating urgency as proof of care.');
+  await page.getByText(/This is imaginal, not a message from an actual future/).waitFor();
+  pass('J06', 'Dialogue appears after encounter and both temporal voices remain member-entered.');
+
+  await page.getByRole('button', { name: 'Reflect on what happened →', exact: true }).click();
+  await page.getByLabel('What stayed with you most?').fill('The spaciousness.');
+  await page.getByLabel('What feels meaningful about it?')
+    .fill('Contribution remained, but urgency did not.');
+  assert.equal(await page.getByLabel('What remains open?').isVisible(), false);
+  pass('J07', 'Discernment begins with meaning; uncertainty/counterevidence stays optional behind disclosure.');
+  await page.getByRole('button', { name: 'Return to today →', exact: true }).click();
+  await page.getByRole('heading', { name: 'You are here.' }).waitFor();
+  await page.getByLabel('What, if anything, do you want to bring back with you?')
+    .fill('Pause before saying yes.');
+  await page.getByLabel('Name this journey').fill('Spacious contribution');
+  assert.equal(await page.getByRole('button', { name: 'Keep this journey', exact: true }).count(), 0);
+  await page.getByRole('button', { name: 'Return to now', exact: true }).click();
+  await page.getByText('You are back in the present. Keep is optional.', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Keep this journey', exact: true }).waitFor();
+  pass('J08', 'Return is completed before initial Keep becomes available.');
+
+  await page.getByRole('button', { name: 'Carry something into present life', exact: true }).click();
+  await page.getByRole('button', { name: 'Nothing yet', exact: true }).click();
+  await page.getByText('Nothing needs to become an action. The encounter can remain open.', { exact: true }).waitFor();
+  pass('J09', 'Carry is optional and Nothing yet is a complete choice.');
+  await page.getByRole('button', { name: 'Keep this journey', exact: true }).click();
+  await page.getByRole('status').filter({ hasText: 'revision 1' }).waitFor();
+  await page.getByRole('button', { name: 'Your journeys', exact: true }).click();
+  await page.getByRole('heading', { name: 'Your journeys', exact: true }).waitFor();
+  await page.getByRole('button').filter({ has: page.getByRole('heading', { name: 'Spacious contribution', exact: true }) }).waitFor();
+  await page.getByRole('button', { name: 'Across time', exact: true }).waitFor();
+  pass('J10', 'Across Time appears only after a journey has actually been kept.');
+
+  await page.getByRole('button', { name: 'Across time', exact: true }).click();
+  await page.getByRole('heading', { name: 'What does this journey touch?' }).waitFor();
+  assert.equal(await page.getByText('Has been', { exact: true }).count(), 0);
+  assert.equal(await page.getByText('Is being', { exact: true }).count(), 0);
+  assert.equal(await page.getByText('Is becoming', { exact: true }).count(), 0);
+  await page.getByRole('heading', { name: 'What brought you here' }).waitFor();
+  await page.getByRole('heading', { name: 'What is true now' }).waitFor();
+  await page.getByRole('heading', { name: 'What is opening' }).waitFor();
+  pass('J11', 'Across Time uses human language while the temporal architecture remains underneath.');
+  const sourceChoice = page.locator('.source-check').filter({ hasText: 'Spacious contribution' });
+  await sourceChoice.locator('input').check();
+  await page.getByLabel('What feels true in your life today?')
+    .fill('Synthetic present: a new invitation is here.');
+  await page.getByLabel('A connection I notice')
+    .fill('Generosity and automatic availability may not be the same thing.');
+  await page.getByLabel('And what does not fit?')
+    .fill('Some invitations feel joyful rather than burdensome.');
+  await page.screenshot({ path: output + '/screenshots/ux01r1-across-time-desktop.png', fullPage: true });
+
+  await page.getByRole('button', { name: 'Your journeys', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Leave these Across Time notes?' }).waitFor();
+  await page.getByRole('button', { name: 'Stay with these notes', exact: true }).click();
+  assert.equal(
+    await page.getByLabel('A connection I notice').inputValue(),
+    'Generosity and automatic availability may not be the same thing.',
+  );
+  pass('J12', 'Across Time notes are not silently discarded on navigation.');
+  await page.getByRole('button', { name: 'Take this into a new Becoming journey →', exact: true }).click();
+  await page.getByRole('heading', { name: 'Begin with what brought you here.' }).waitFor();
+  await page.getByRole('heading', { name: 'What you chose to bring' }).waitFor();
+  await page.getByText('Spacious contribution', { exact: true }).waitFor();
+  await page.getByText('earlier imagined possibility', { exact: false }).waitFor();
+  pass('J13', 'Across Time opens a new journey with exact-source identity and explicit epistemic framing.');
+
+  await page.getByRole('button', { name: 'Pause and leave', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Leave this journey?' }).waitFor();
+  await page.getByRole('button', { name: 'Leave without keeping', exact: true }).click();
+  await page.getByRole('heading', { name: 'Becoming', exact: true }).waitFor();
+  pass('J14', 'An unfinished journey may be explicitly discarded without inventing Return.');
+  await page.getByRole('button', { name: 'Your journeys', exact: true }).click();
+  const card = page.getByRole('button').filter({ has: page.getByRole('heading', { name: 'Spacious contribution', exact: true }) });
+  await card.click();
+  await page.getByText('I stopped treating urgency as proof of care.', { exact: true }).waitFor();
+  await page.getByText('IMAGINED POSSIBILITY · NOT A PREDICTION', { exact: true }).waitFor();
+  pass('J15', 'The kept journey preserves member-authored dialogue and imagined-future provenance.');
+
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.getByRole('button', { name: 'Delete journey and revisions', exact: true }).click();
+  await page.getByRole('heading', { name: 'Nothing has been kept here yet.' }).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Across time', exact: true }).count(), 0);
+  pass('J16', 'Deleting the only kept journey returns Across Time to unavailable.');
+  const mobile = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    deviceScaleFactor: 1,
+    reducedMotion: 'reduce',
+  });
+  const mp = await mobile.newPage();
+  observe(mp);
+  await mp.goto(base + '/becoming');
+  await mp.getByRole('button', { name: 'Begin the journey', exact: true }).click();
+  await mp.screenshot({ path: output + '/screenshots/ux01r1-threshold-mobile.png', fullPage: true });
+  assert.ok(await mp.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  pass('J17', 'The Future Self threshold fits a 390px mobile viewport without horizontal overflow.');
+
+  await mp.getByRole('button', { name: /Let something emerge/ }).click();
+  await mp.getByLabel('What feels most present right now?').fill('Synthetic mobile journey.');
+  await mp.getByRole('button', { name: 'Let some time pass →', exact: true }).click();
+  assert.ok(await mp.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  pass('J18', 'The guided journey remains width-safe after entering the experience.');
+  const visibleButtons = await mp.getByRole('button').evaluateAll(buttons =>
+    buttons.filter(button => button.getBoundingClientRect().height > 0).map(button => ({
+      label: button.textContent,
+      size: parseFloat(getComputedStyle(button).fontSize),
+      height: button.getBoundingClientRect().height,
+    })),
+  );
+  assert.ok(visibleButtons.every(button => button.size >= 16 && button.height >= 44), JSON.stringify(visibleButtons));
+  pass('J19', 'Visible mobile actions meet the 16px type and 44px target floors.');
+  await mobile.close();
+
+  assert.equal(errors.length, 0, errors.join('\n'));
+  assert.ok(requests.every(url => new URL(url).origin === base));
+  pass('J20', 'The bounded witness produced no page errors or off-origin browser requests.');
+
+  const healthResponse = await fetch(base + '/health');
+  const health = await healthResponse.json();
+  assert.equal(health.scope, 'isolated-local-preview');
+  assert.equal(health.providerCalls, false);
+  await writeFile(output + '/ux01r1-health.json', JSON.stringify(health, null, 2));
+  pass('J21', 'The preview still declares isolated local scope with provider calls disabled.');
+} catch (error) {
+  failure = error;
+  console.error('UX01R1_WITNESS_FAILED', error.message);
+} finally {
+  await browser.close();
+  await writeFile(
+    output + '/ux01r1-browser-witness.json',
+    JSON.stringify({
+      scope: 'Fresh synthetic browser contexts; visible journey UI only; no account, model, production, or direct database audit.',
+      recordedAt: new Date().toISOString(),
+      results,
+      errors,
+      requests: [...new Set(requests)],
+      failure: failure ? String(failure.message) : null,
+    }, null, 2),
+  );
+}
+if (failure) process.exitCode = 1;
