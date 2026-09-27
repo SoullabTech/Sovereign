@@ -101,6 +101,39 @@ export async function GET(
       createdAt: r.created_at?.toISOString(),
     }));
 
+    const choiceHistory = row.decision_scope === 'personal'
+      ? (await db.query(
+          `SELECT id::text AS id, event_type, choice_text, recorded_at
+             FROM personal_decision_choice_events
+            WHERE decision_id = $1::uuid
+            ORDER BY event_order ASC`,
+          [id],
+        )).rows.map((event) => ({
+          id: event.id,
+          eventType: event.event_type,
+          choiceText: event.choice_text,
+          recordedAt: event.recorded_at?.toISOString(),
+        }))
+      : [];
+
+    const latestChoiceEvent = choiceHistory.length ? choiceHistory[choiceHistory.length - 1] : null;
+    const currentChoice =
+      latestChoiceEvent?.eventType === 'choice_recorded'
+        ? {
+            id: latestChoiceEvent.id,
+            choiceText: latestChoiceEvent.choiceText,
+            recordedAt: latestChoiceEvent.recordedAt,
+          }
+        : null;
+    const resolutionStanding =
+      row.decision_scope !== 'personal'
+        ? undefined
+        : currentChoice
+          ? 'choice_recorded'
+          : !choiceHistory.length && row.status === 'complete'
+            ? 'legacy_complete_without_choice'
+            : 'open';
+
     return NextResponse.json({
       decision: {
         id: row.id,
@@ -133,6 +166,9 @@ export async function GET(
         mentorReflection: row.mentor_reflection,
         followUpIntention: row.follow_up_intention,
         experiences,
+        ...(row.decision_scope === 'personal'
+          ? { choiceHistory, currentChoice, resolutionStanding }
+          : {}),
       },
     });
   } catch (error) {
@@ -158,6 +194,16 @@ export async function PUT(
       return NextResponse.json({ error: 'Decision not found' }, { status: 404 });
     }
     const body = await request.json();
+
+    if (ownerCheck.rows[0].decision_scope === 'personal' && body.status !== undefined) {
+      return NextResponse.json(
+        {
+          error: 'Personal Decision status changes must use their governed member action.',
+          code: 'PERSONAL_STATUS_REQUIRES_GOVERNED_ACTION',
+        },
+        { status: 409 },
+      );
+    }
 
     const updateFields: string[] = [];
     const queryParams: (string | string[] | null)[] = [id, actor.memberId, actor.practitionerId];
