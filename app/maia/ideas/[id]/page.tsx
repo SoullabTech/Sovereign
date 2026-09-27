@@ -536,6 +536,15 @@ export default function IdeaWorkspacePage() {
     }
   }, []);
 
+  // Cross-facet returns carry only the block identity. Once this Idea is loaded,
+  // reopen that exact member-authored block and let the thread keep its own custody.
+  useEffect(() => {
+    const blockId = searchParams?.get('block');
+    if (!blockId || loading || blocks.length === 0) return;
+    if (!blocks.some((block) => block.id === blockId)) return;
+    window.setTimeout(() => scrollToBlock(blockId), 80);
+  }, [blocks, loading, scrollToBlock, searchParams]);
+
   // Return to this — touch ping + focus the persistent composer. No type
   // selection: the composer is always a freeform note; structuring happens
   // post-hoc via Convert actions on the saved block.
@@ -845,6 +854,26 @@ export default function IdeaWorkspacePage() {
                       <p className="text-sm text-stone-200 font-light leading-relaxed whitespace-pre-wrap">
                         {block.content}
                       </p>
+
+                      {block.block_type === 'change' ? (
+                        <div className="mt-3 pt-3 border-t border-cyan-500/10">
+                          <a
+                            href={`/changes?sourceFacet=ideas&sourceRefId=${encodeURIComponent(block.id)}&crossingId=idea-shift-to-changes`}
+                            className="text-xs text-cyan-300/75 hover:text-cyan-200 transition-colors"
+                          >
+                            Name this shift as a change →
+                          </a>
+                        </div>
+                      ) : block.block_type === 'decision' ? (
+                        <div className="mt-3 pt-3 border-t border-emerald-500/10">
+                          <a
+                            href={`/decisions/new?sourceFacet=ideas&sourceRefId=${encodeURIComponent(block.id)}&crossingId=idea-decision-to-decisions`}
+                            className="text-xs text-emerald-300/75 hover:text-emerald-200 transition-colors"
+                          >
+                            Take this decision forward →
+                          </a>
+                        </div>
+                      ) : null}
 
                       {/* MAIA-mediated invitation affordance — appears only
                           when detection offered invitation AND the member has

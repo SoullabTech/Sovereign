@@ -289,6 +289,12 @@ Anchors remain private by default. `MAIA may remember this with me` grants bound
 
 `Ask MAIA` remains in the Idea thread. Member draft text is saved as the member's block before MAIA responds, and MAIA's response remains a distinct block.
 
+### Ideas → Changes / Decisions
+
+A member-authored **Shift** block may offer **Name this shift as a change**. A member-authored **Decision** block may offer **Take this decision forward**.
+
+Those gestures are type-bound: ordinary Reflection/Note blocks and MAIA reflection blocks do not receive them. The receiving facet resolves the source under the authenticated member, displays Ideas provenance, and leaves all target meaning-bearing fields blank. A mismatched block type fails closed before provenance is shown. Durable target provenance returns to the exact Idea block by identity.
+
 ### Journal / Reflections → Changes
 
 A kept Journal entry or Reflection may offer **Name this as a change** / **Name a change**.

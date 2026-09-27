@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-type SourceFacet = 'journal' | 'reflections';
+type SourceFacet = 'journal' | 'reflections' | 'ideas';
 type TargetFacet = 'changes' | 'decisions';
 
 export type FacetCarryRef = {
@@ -90,7 +90,7 @@ export function FacetCarryNotice({
   return (
     <aside className="border-l border-amber-700/35 pl-4 py-1" aria-label="Carried source">
       <p className="text-[10px] uppercase tracking-[0.18em] text-amber-500/65">
-        Came with you from {source.facet === 'journal' ? 'Journal' : 'Reflections'}
+        Came with you from {source.facet === 'journal' ? 'Journal' : source.facet === 'reflections' ? 'Reflections' : 'Ideas'}
       </p>
       <p className="text-sm text-stone-300 mt-1">{source.label}</p>
       {source.excerpt ? (

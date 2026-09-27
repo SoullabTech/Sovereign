@@ -72,6 +72,8 @@ Already governed in lib/house/livingOrientation.ts:
 | Reflections | Name a change | Changes | live |
 | Journal | Consider a decision | Decisions | live |
 | Reflections | Consider a decision | Decisions | live |
+| Idea Shift | Name this shift as a change | Changes | live |
+| Idea Decision | Take this decision forward | Decisions | live |
 | Writer's Studio | Discuss with MAIA | MAIA-in-Studio | partial |
 | Astrology | Discuss with MAIA | MAIA | partial |
 
@@ -135,8 +137,6 @@ These are candidate journeys, not implementation authority.
 | Relationship → Change | **Something is changing here** | explicit persistence | member names the change; relationship is provenance only |
 | Relationship → Decision | **There is a choice here** | explicit persistence | member authors the choice; MAIA cannot infer it |
 | Idea → Writing | **Develop this in Writer's Studio** | explicit carry | lets an idea become material without declaring it a manuscript |
-| Idea → Change | **Name this shift as a change** | explicit persistence | only if the member's own Idea block explicitly represents a shift |
-| Idea → Decision | **Take this decision forward** | explicit persistence | only from a member-authored decision block |
 | Wisdom / Library → Writing | **Bring this source into the work** | explicit source carry | source citation/provenance travels; source text does not become authorship |
 | Astrology → Journal | **Write with this in view** | explicit contextual carry | calculated/symbolic context may accompany a blank page |
 | Astrology → Daily Anchor | **Keep this timing in view today** | explicit carry | only member-selected transit/cycle context; never a prescription |

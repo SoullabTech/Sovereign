@@ -22,7 +22,7 @@ export default function ChangesThresholdPage() {
     const sourceRefId = searchParams?.get('sourceRefId');
     const crossingId = searchParams?.get('crossingId');
     if (
-      (sourceFacet === 'journal' || sourceFacet === 'reflections') &&
+      (sourceFacet === 'journal' || sourceFacet === 'reflections' || sourceFacet === 'ideas') &&
       sourceRefId &&
       crossingId
     ) {

@@ -2,6 +2,7 @@
 room: Facet Crossings
 human_activity: carrying something from one part of my life into another without losing its origin or letting the system decide what it means
 surfaces:
+  - app/maia/ideas/[id]/page.tsx
   - app/changes/page.tsx
   - app/studio/decisions/[id]/page.tsx
   - app/studio/decisions/new/page.tsx
@@ -34,7 +35,7 @@ experience_verification: >
   member_facet_crossings row, storing only member id, crossing id, source facet/id, target facet/id, and time.
   The target detail surfaces then displayed Where this began with a Return to source doorway. Journal's
   return URL reopened the exact source entry by id. All temporary witness targets and crossing rows were deleted;
-  residue verified at zero. Production was not touched.
+  residue verified at zero. Production was not touched. A second authenticated local witness extended the same law to Ideas using one temporary Idea explicitly labelled SAFE TO DELETE, with one member-authored Shift block and one member-authored Decision block. Shift→Changes and Decision→Personal Decisions both displayed Ideas provenance while target meaning fields remained blank. The inverse subtype probes were refused with 404 Source not available, proving that a Decision block cannot enter the Shift crossing and a Shift block cannot enter the Decision crossing. The temporary Idea and both blocks were then deleted; residue verified at zero.
 ---
 
 # Facet Crossings — Experience Contract
@@ -54,9 +55,9 @@ Soullab therefore needs movement between facets without collapsing them.
 
 This contract governs that movement.
 
-## First live crossing set
+## Current live crossing set
 
-The first durable crossing slice is deliberately narrow:
+The durable crossing slice remains deliberately narrow:
 
 | From | Gesture | To |
 |---|---|---|
@@ -64,6 +65,8 @@ The first durable crossing slice is deliberately narrow:
 | Reflection | **Name a change** | Changes |
 | Journal | **Consider a decision** | Personal Decisions |
 | Reflection | **Consider a decision** | Personal Decisions |
+| Idea Shift block | **Name this shift as a change** | Changes |
+| Idea Decision block | **Take this decision forward** | Personal Decisions |
 
 These are member-explicit crossings only.
 
@@ -77,7 +80,7 @@ Only enough identity to resolve the source under the authenticated member:
 - source facet;
 - source object id.
 
-The URL does **not** carry Journal prose, Reflection prose, inferred meaning, title suggestions, emotional labels, or semantic analysis.
+The URL does **not** carry Journal prose, Reflection prose, Idea block prose, inferred meaning, title suggestions, emotional labels, or semantic analysis.
 
 The receiving room resolves the source server-side and may display a bounded read-only excerpt as provenance.
 
@@ -160,6 +163,10 @@ A Journal entry remains a Journal entry.
 
 A Reflection remains a Reflection.
 
+An Idea Shift remains an Idea Shift.
+
+An Idea Decision remains an Idea Decision.
+
 A Change is not a promoted Journal entry.
 
 A Decision is not an extracted conclusion.
@@ -175,6 +182,8 @@ Merely opening Changes or Decisions from a source does not write anything.
 Merely viewing a source does not imply permission to propagate it.
 
 Technical readability between subsystems is not crossing authority.
+
+For Ideas, the doorway is available only on the member-authored structural block that already names the relevant kind of movement: a Shift may offer Changes; a Decision may offer Personal Decisions. Notes and MAIA reflections do not receive these gestures.
 
 ## Failure modes
 

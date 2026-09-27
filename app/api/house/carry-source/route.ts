@@ -4,12 +4,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   crossingIsAllowed,
-  resolveFacetCarrySource,
+  validateFacetCrossingSource,
   type CarrySourceFacet,
   type CarryTargetFacet,
 } from '@/lib/house/facetCrossing.server';
 
-const SOURCE_FACETS = new Set(['journal', 'reflections']);
+const SOURCE_FACETS = new Set(['journal', 'reflections', 'ideas']);
 const TARGET_FACETS = new Set(['changes', 'decisions']);
 
 export async function GET(request: NextRequest) {
@@ -31,11 +31,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Crossing not admitted' }, { status: 400 });
   }
 
-  const source = await resolveFacetCarrySource(
+  const source = await validateFacetCrossingSource({
     memberId,
-    sourceFacet as CarrySourceFacet,
-    sourceRefId,
-  );
+    targetFacet: targetFacet as CarryTargetFacet,
+    sourceRef: {
+      crossingId,
+      sourceFacet: sourceFacet as CarrySourceFacet,
+      sourceRefId,
+    },
+  });
 
   if (!source) {
     return NextResponse.json({ error: 'Source not available' }, { status: 404 });
