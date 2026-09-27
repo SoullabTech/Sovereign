@@ -234,28 +234,39 @@ Every substantial Dream exploration should keep these distinguishable:
 
 No layer may masquerade as another.
 
-## 8. What must be removed from authority
+## 8. Computational sensitivity without reductive display
 
-Legacy dream substrate contains fields and surfaces that may be technically useful but cannot be granted canonical interpretive authority as presently framed.
+The legacy dream substrate contains potentially useful computational signals:
 
-Examples include:
+- archetypal salience;
+- relative archetype strength;
+- possible shadow dynamics;
+- integration movement;
+- processing movement;
+- spiritual or numinous salience;
+- unusual dream-type hypotheses;
+- elemental balance;
+- Spiralogic movement;
+- suggested questions or next explorations;
+- sleep / timing context.
 
-- automatic “dominant archetype” assignment;
-- archetype strength scores;
-- “shadow aspects” classification;
-- “integration level” scores;
-- “processing stage” labels;
-- “spiritual significance” as a system-authored field;
-- prophetic / precognitive / telepathic / astral classification as system fact;
-- automatic elemental balance scores;
-- spiral-phase assignment;
-- AI “guidance” and action items;
-- simulated sleep/dream analytics;
-- claims that a dream has been “integrated.”
+These signals do **not** need to become explicit labels, scores, dashboards, or declarations in the Dream room.
 
-These may not define the world-class Dream room.
+They may instead operate as a quiet **background sensitivity layer** that helps MAIA notice where to inquire, what to remember across a dream series, which amplifications may be relevant, when to slow down, and what kinds of questions might deepen the conversation.
 
-Some could later re-enter as **member-authored tags**, explicit lenses, or clearly labeled hypotheses, but never as hidden system truth.
+The governing distinction is not visible versus hidden. It is **informing versus defining**.
+
+A computational signal may inform MAIA's attention without becoming a claim such as:
+
+- “your dominant archetype is…”
+- “your integration level is…”
+- “this is a prophetic dream”
+- “you are in the dissolution stage”
+- “the dream means…”
+
+The best use of computational memory is therefore often implicit: it makes MAIA more perceptive, more continuous, and more capable of recognizing movement across time while leaving the conversation human, plural, and open.
+
+When a computational pattern matters enough to surface, MAIA should ordinarily translate it into observation or inquiry rather than expose the machinery behind it.
 
 ## 9. Journal and Dream
 
