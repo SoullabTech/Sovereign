@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { toAudioResponsePayload } from '@/lib/voice/audioResponsePayload';
+import { detectMaiaCommands } from '@/lib/voice/VoiceCommandDetector';
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
@@ -315,7 +316,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
-    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, ...meta } = body as {
+    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, commandOnly, ...meta } = body as {
       sessionId?: string;
       message?: string;
       includeAudio?: boolean;
@@ -328,6 +329,9 @@ export async function POST(req: NextRequest) {
       // client's own later pair write — which then dedupes instead of doubling.
       // Destructured out of `meta` deliberately: it is plumbing, not prompt context.
       exchangeId?: string;
+      // TII-03: client-classified pure interface command. F1 still accepts the
+      // exact authored turn; the route then exits before O8/F2/cognition.
+      commandOnly?: boolean;
       [key: string]: unknown;
     };
 
@@ -445,6 +449,51 @@ export async function POST(req: NextRequest) {
           durabilityErr?.message ?? durabilityErr
         );
       }
+    }
+
+    // TII-03 — PURE COMMAND ACCEPTANCE: post-F1, pre-O8/F2/cognition.
+    // The client owns command-intent classification and local state mutation.
+    // This seam exists only so a pure command remains an exact durable member
+    // turn without paying for or fabricating an ordinary MAIA response.
+    const commandOnlyClassification =
+      commandOnly === true ? detectMaiaCommands(message) : null;
+    const isValidatedCommandOnly =
+      commandOnlyClassification?.disposition === 'EXECUTE' &&
+      commandOnlyClassification.onlyCommands === true;
+
+    if (isValidatedCommandOnly) {
+      const commandAcceptanceCanonHeaders = makeCanonHeaders({
+        requestId,
+        pipeline: 'direct',
+        source: 'direct',
+        mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
+        validation: null,
+        repaired: false,
+      });
+
+      return jsonWithCors(
+        req,
+        {
+          commandOnly: true,
+          route: {
+            endpoint: '/api/sovereign/app/maia/list',
+            type: 'Sovereign Consciousness Interface',
+            operational: true,
+            mode: 'command-only-acceptance',
+            safeMode: SAFE_MODE,
+            voiceEnabled: false,
+          },
+          metadata: {
+            processingProfile: 'COMMAND_ONLY_ACCEPTANCE',
+            processingTimeMs: Date.now() - start,
+            tierProcessing: false,
+            voiceRequested: false,
+            memberTurnDurable,
+          },
+        },
+        200,
+        commandAcceptanceCanonHeaders,
+      );
     }
 
     // O8R4 — EXPLICIT CAPABILITY INQUIRY: text-only, post-F1 / pre-F2.
