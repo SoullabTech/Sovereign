@@ -262,10 +262,12 @@ try {
   const healthResponse = await fetch(base + '/health');
   const health = await healthResponse.json();
   assert.equal(health.scope, 'isolated-local-preview');
-  assert.equal(health.providerCalls, 'explicit-member-handoff-only');
+  assert.equal(health.providerCalls, 'explicit-member-acts-only');
+  assert.equal(health.journeyGuide, 'sanctuary-ephemeral-current-journey-only');
+  assert.equal(health.postReturnMaia, 'continuity-explicit-only');
   assert.equal(health.maiaHandoff, 'fixed-localhost-canonical-route');
   await writeFile(output + '/ux01r2-health.json', JSON.stringify(health, null, 2));
-  pass('J23', 'The preview keeps provider access behind the explicit MAIA handoff seam.');
+  pass('J23', 'The preview keeps both MAIA lanes behind explicit member acts and preserves the guide/continuity boundary.');
 } catch (error) {
   failure = error;
   console.error('UX01R2_WITNESS_FAILED', error.message);
