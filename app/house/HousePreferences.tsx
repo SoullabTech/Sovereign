@@ -334,7 +334,10 @@ export function HouseQuickAccess() {
   const { active } = useHousePreferences();
   return <div className={house.quick}><p>HERE · NOW</p>
     {active ? visibleHouseShortcuts(active.preferences, active.eligibleIds).map(place =>
-      <Link href={place.href} key={place.id} data-place={place.id} aria-label={place.label}><span>{place.label}</span></Link>)
+      <Link href={place.href} key={place.id} data-place={place.id} aria-label={place.label}>
+        <span className={styles.symbol + ' ' + styles.quickMark} data-place={place.id} aria-hidden="true">{place.mark}</span>
+        <span>{place.label}</span>
+      </Link>)
       : <span className={styles.notice}>Reload House to confirm your choices.</span>}
     {active && <DecisionAccessNotice available={active.eligibleIds.includes('decisions')} />}
   </div>;

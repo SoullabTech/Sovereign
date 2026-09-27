@@ -275,23 +275,9 @@
     );
   }
 
-  /* HERE · NOW is an instrument strip, not a text menu. */
-  .quick a::before {
-    width: 18px;
-    flex: 0 0 18px;
-    color: #cdb793;
-    font: 400 14px/1 Arial, sans-serif;
-    text-align: center;
-    opacity: .82;
-  }
-  .quick a[data-place='journal']::before { content: '▯'; }  /* Journal */
-  .quick a[data-place='ideas']::before { content: '◉'; }  /* Ideas */
-  .quick a[data-place='reflections']::before { content: '◇'; }  /* Reflections */
-  .quick a[data-place='changes']::before { content: '↻'; }  /* Changes */
-  .quick a[data-place='decisions']::before { content: '⧉'; }  /* Decisions */
-  .quick a[data-place='relationships']::before { content: '◎'; }  /* Relationships */
-  .quick a[data-place='writing']::before { content: '✎'; }  /* Writing */
-  .quick a[data-place='community']::before { content: '◌'; }  /* Community */
+  /* HERE · NOW uses the same canonical colored holoflower family as Center.
+     The icon is rendered by HousePreferences.quickMark so member-chosen places
+     keep their catalog tone instead of falling back to generic glyphs. */
 
   /* Left membrane gets quiet illustrated wayfinding while keeping the same links. */
   .rail nav > a::before,
@@ -356,17 +342,5 @@
   .grounds {
     background-image:
       linear-gradient(90deg, rgba(255,255,255,.012), transparent 24%, transparent 76%, rgba(255,255,255,.008));
-  }
-}
-
-/* Founder: Astrology is immediate in HERE / NOW; its home remains Explore / Wisdom. */
-@media (min-width: 901px) {
-  .quick a[data-place='astrology']::before {
-    content: '';
-    display: block;
-    height: 18px;
-    background: #6f94bd;
-    -webkit-mask: url('/holoflower.svg') center / contain no-repeat;
-    mask: url('/holoflower.svg') center / contain no-repeat;
   }
 }
