@@ -21,10 +21,17 @@ export async function GET(request: NextRequest) {
 
   const prompt = promptForDate(date);
 
-  const result = await query<{ response: string }>(
-    `SELECT response FROM member_daily_anchors
-     WHERE member_id = $1 AND anchor_date = $2
-     LIMIT 1`,
+  const result = await query<{
+    response: string;
+    created_at: string;
+    updated_at: string;
+  }>(
+    `SELECT response,
+            created_at::text AS created_at,
+            updated_at::text AS updated_at
+       FROM member_daily_anchors
+      WHERE member_id = $1 AND anchor_date = $2
+      LIMIT 1`,
     [member.id, date]
   );
 
@@ -32,6 +39,8 @@ export async function GET(request: NextRequest) {
     date,
     prompt,
     response: result.rows[0]?.response ?? null,
+    createdAt: result.rows[0]?.created_at ?? null,
+    updatedAt: result.rows[0]?.updated_at ?? null,
   });
 }
 
@@ -57,13 +66,21 @@ export async function POST(request: NextRequest) {
   const trimmed = response.trim().slice(0, 4000);
   const prompt = promptForDate(date);
 
-  await query(
+  const result = await query<{
+    created_at: string;
+    updated_at: string;
+  }>(
     `INSERT INTO member_daily_anchors (member_id, anchor_date, prompt_shown, response)
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (member_id, anchor_date)
-     DO UPDATE SET response = EXCLUDED.response, updated_at = NOW()`,
+     DO UPDATE SET response = EXCLUDED.response, updated_at = NOW()
+     RETURNING created_at::text AS created_at, updated_at::text AS updated_at`,
     [member.id, date, prompt, trimmed]
   );
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    createdAt: result.rows[0]?.created_at ?? null,
+    updatedAt: result.rows[0]?.updated_at ?? null,
+  });
 }
