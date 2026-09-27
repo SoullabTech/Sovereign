@@ -61,3 +61,23 @@ export async function loadChapterReviewManifest(
     return { ok: false, refusal: 'unreachable' };
   }
 }
+
+
+/** Load one exact saved Review run by durable identity. Never selects newest/latest. */
+export async function loadChapterReviewManifestById(
+  manuscriptId: string,
+  runId: string,
+): Promise<ManifestLoadOutcome> {
+  try {
+    const q = encodeURIComponent(runId);
+    const res = await apiFetch(
+      `/api/sovereign/manuscripts/${manuscriptId}/chapter-reviews?runId=${q}`,
+      { method: 'GET' },
+    );
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, refusal: String(body?.refusal ?? `http_${res.status}`) };
+    return { ok: true, run: (body?.run ?? null) as ChapterReviewManifest | null };
+  } catch {
+    return { ok: false, refusal: 'unreachable' };
+  }
+}
