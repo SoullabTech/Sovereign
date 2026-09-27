@@ -1,10 +1,11 @@
 import type { TransactionClient } from '@/lib/db/postgres';
 import { query } from '@/lib/db/postgres';
 import { getCapsuleById } from '@/lib/capsules';
+import { resolveDivinationSymbolicSourcePacket } from '@/lib/house/symbolicSource.server';
 
-export type CarrySourceFacet = 'journal' | 'dream' | 'reflections' | 'ideas' | 'relationships' | 'changes' | 'decisions';
+export type CarrySourceFacet = 'journal' | 'dream' | 'reflections' | 'ideas' | 'relationships' | 'changes' | 'decisions' | 'divination';
 export type CarryTargetFacet = 'changes' | 'decisions' | 'journal' | 'anchor';
-export type RelationSourceFacet = CarrySourceFacet | 'divination';
+export type RelationSourceFacet = CarrySourceFacet;
 export type RelationTargetFacet = CarryTargetFacet | 'reflections';
 export type FlowFacet = RelationSourceFacet | RelationTargetFacet;
 
@@ -75,6 +76,7 @@ const ALLOWED_CROSSINGS: Record<
   'decision-hold-today': { source: 'decisions', target: 'anchor' },
   'reflection-carry-today': { source: 'reflections', target: 'anchor' },
   'dream-carry-today': { source: 'dream', target: 'anchor' },
+  'divination-write-journal': { source: 'divination', target: 'journal' },
 };
 
 function excerpt(text: string, max = 900): string {
@@ -160,6 +162,23 @@ export async function resolveFacetCarrySource(
       excerpt: excerpt(row.content),
       createdAt: row.created_at,
       returnHref: '/dream?dream=' + encodeURIComponent(row.id) + '&from=anchor',
+    };
+  }
+
+  if (sourceFacet === 'divination') {
+    const packet = await resolveDivinationSymbolicSourcePacket(memberId, sourceRefId);
+    if (!packet) return null;
+    const sourceFacts = packet.fields
+      .filter((field) => field.epistemicClass === 'source_fact')
+      .map((field) => field.label + ': ' + field.value)
+      .join('\n');
+    return {
+      facet: 'divination',
+      refId: packet.sourceRefId,
+      label: packet.label,
+      excerpt: excerpt(sourceFacts),
+      createdAt: null,
+      returnHref: packet.returnHref,
     };
   }
 
@@ -522,7 +541,7 @@ export async function recordFacetCrossing(
   );
 }
 
-const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'dream', 'reflections', 'ideas', 'relationships', 'changes', 'decisions']);
+const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'dream', 'reflections', 'ideas', 'relationships', 'changes', 'decisions', 'divination']);
 const CARRY_TARGET_FACETS = new Set<CarryTargetFacet>(['changes', 'decisions', 'journal', 'anchor']);
 const FLOW_SOURCE_FACETS = new Set<RelationSourceFacet>(['journal', 'dream', 'reflections', 'ideas', 'relationships', 'changes', 'decisions', 'divination']);
 const FLOW_TARGET_FACETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'journal', 'anchor', 'reflections']);

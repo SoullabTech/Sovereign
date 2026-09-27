@@ -453,7 +453,18 @@ export default function DivinationReflectionsPage() {
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const sourceRefId = `${reading.type}:${reading.id}`;
+                          router.push(`/journal?sourceFacet=divination&sourceRefId=${encodeURIComponent(sourceRefId)}&crossingId=divination-write-journal`);
+                        }}
+                        className="flex-1 min-w-[12rem] px-3 py-2 bg-stone-800 hover:bg-stone-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <BookOpen className="w-4 h-4 text-amber-400" />
+                        Write with this in Journal
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

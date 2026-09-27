@@ -48,7 +48,7 @@ export default function JournalPage() {
   const sourceRefId = searchParams?.get('sourceRefId');
   const crossingId = searchParams?.get('crossingId');
   const carrySourceRef: FacetCarryRef | null =
-    sourceFacet === 'relationships' && sourceRefId && crossingId
+    (sourceFacet === 'relationships' || sourceFacet === 'divination') && sourceRefId && crossingId
       ? { sourceFacet, sourceRefId, crossingId }
       : null;
 

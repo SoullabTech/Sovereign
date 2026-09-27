@@ -141,7 +141,7 @@ These are candidate journeys, not implementation authority.
 | Wisdom / Library → Writing | **Bring this source into the work** | explicit source carry | source citation/provenance travels; source text does not become authorship |
 | Astrology → Journal | **Write with this in view** | explicit contextual carry | calculated/symbolic context may accompany a blank page |
 | Astrology → Daily Anchor | **Keep this timing in view today** | explicit carry | only member-selected transit/cycle context; never a prescription |
-| Divination → Journal | **Write from this question** | explicit contextual carry | symbolic reading remains source; journal remains member-authored |
+| Divination → Journal | **Write with this in Journal** | **live** | typed symbolic provenance accompanies a blank Journal page; member-authored keep atomically records an identity-only relation |
 | MAIA → facet doorway | **Go there / open that room** | suggested doorway | MAIA may suggest a relevant room but never create its object |
 | Any durable crossing → Living Field | none | read-only projection | Field reveals established relation, never authors one |
 
@@ -248,8 +248,10 @@ Since the original census stop, Dream has become a first-class House facet, Rela
 
 FACET-FLOW-03 is now complete as an epistemic readiness contract. It found Dream ready, Divination partially ready, and Astrology not ready for Journal/Anchor carry. FACET-FLOW-04 then built and locally witnessed a typed Divination source packet plus a non-persisting Journal/Anchor receiver prototype.
 
+FACET-FLOW-05 then promoted only the Journal side into one durable crossing. The real Saved Readings doorway, blank Journal arrival, atomic keep, durable typed provenance, exact return, and zero-residue cleanup all passed locally.
+
 The current boundary is:
 
-> **FOUNDER ADJUDICATION — FACET-FLOW-04 READ-ONLY SYMBOLIC RECEIVER**
+> **FOUNDER ADJUDICATION — FACET-FLOW-05 REAL JOURNAL EXPERIENCE**
 
-The prototype visibly separates source fact, symbolic tradition, system synthesis, and member meaning; both receiving authorship fields remain blank; exact return works; and the witness left zero persistence residue. Durable Divination → Journal / Daily Anchor remains closed until that distinction is accepted experientially. Astrology remains closed until its own typed chart-context packet exists. Practices remains a separate ontology/navigation decision.
+Divination → Journal is locally proven. Divination → Daily Anchor remains closed until the real Journal experience is accepted as keeping symbolic context sufficiently secondary to member authorship. Astrology remains closed until its own typed chart-context packet exists. Practices remains a separate ontology/navigation decision.

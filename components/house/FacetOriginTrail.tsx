@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { SymbolicCarryNotice } from '@/components/house/SymbolicCarryNotice';
 
 type TargetFacet = 'changes' | 'decisions' | 'journal' | 'anchor' | 'reflections';
 
@@ -66,6 +67,12 @@ export function FacetOriginTrail({
             className="border-l border-amber-700/30 pl-4"
           >
             {origin.source ? (
+              origin.source.facet === 'divination' && targetFacet === 'journal' ? (
+                <SymbolicCarryNotice
+                  sourceRefId={origin.source.refId}
+                  mode="origin"
+                />
+              ) : (
               <>
                 <p className={`text-xs ${sourceTone}`}>
                   {origin.source.facet === 'journal'
@@ -90,6 +97,7 @@ export function FacetOriginTrail({
                   Return to source →
                 </a>
               </>
+              )
             ) : (
               <p className={`text-xs ${missingTone}`}>
                 The original source is no longer available. This {

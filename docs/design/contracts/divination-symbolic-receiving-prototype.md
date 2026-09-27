@@ -105,14 +105,10 @@ FACET-FLOW-04 passes when:
 
 All conditions passed locally on 2026-09-27.
 
-## Exact stop
+## Supersession
 
-> **FOUNDER ADJUDICATION — FACET-FLOW-04 READ-ONLY SYMBOLIC RECEIVER**
+FACET-FLOW-04 remains the visual/epistemic prototype authority. Its Journal question was answered by FACET-FLOW-05, which locally proved the durable Journal crossing.
 
-The decisive question is experiential:
+> **SUPERSEDED FOR JOURNAL BY FACET-FLOW-05 · NO DURABLE DIVINATION → DAILY ANCHOR**
 
-> **Is the distinction between what happened, what the symbolic tradition says, what the system synthesized, and what the member themselves means clear enough that this material can safely accompany real Journal or Daily Anchor writing?**
-
-Until that is accepted:
-
-> **NO DURABLE DIVINATION → JOURNAL · NO DURABLE DIVINATION → DAILY ANCHOR**
+The current adjudication lives in `divination-journal-crossing.md`.

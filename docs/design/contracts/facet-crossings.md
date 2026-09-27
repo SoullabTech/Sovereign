@@ -83,6 +83,7 @@ The durable crossing slice remains deliberately narrow:
 | Personal Decision | **Hold this choice today** | Daily Anchor |
 | Reflection | **Carry this with me today** | Daily Anchor |
 | Dream | **Carry this dream into today** | Daily Anchor |
+| Divination | **Write with this in Journal** | Journal |
 
 These are member-explicit crossings only.
 
@@ -130,7 +131,7 @@ The following remain for the member to author in the receiving room:
 - whether anything is held at all;
 - whether an existing Anchor is revisited.
 
-A Relationship may accompany the blank Journal page as provenance. A Change, Personal Decision, Reflection, or Dream may accompany Daily Anchor as provenance. None seeds, summarizes, interprets, or authors the member's text.
+A Relationship may accompany the blank Journal page as provenance. A saved Divination reading may accompany Journal only as typed symbolic provenance that keeps source fact, symbolic tradition, system synthesis, and member meaning distinct. A Change, Personal Decision, Reflection, or Dream may accompany Daily Anchor as provenance. None seeds, summarizes, interprets, or authors the member's text.
 
 A source may have inspired those things. It is not evidence that the system knows them.
 
