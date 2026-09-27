@@ -2,7 +2,7 @@
 
 **Programme:** SOULLAB-LIVING-ORIENTATION / DREAM-01  
 **Date:** 2026-09-27  
-**Status:** founder-adjudicated design authority; runtime implementation not yet authorized by this document alone.
+**Status:** founder-adjudicated Dream constitution. DREAM-01R1, DREAM-02, DREAM-02R1, DREAM-02R2, and DREAM-03 are now closed; the canonical live room has real read/capture and exact Journal identity continuity, while Dream cognition remains unopened. Next boundary: DREAM-04 Encounter conversation contract + cognitive runtime only.
 
 ## 1. Founder adjudication
 

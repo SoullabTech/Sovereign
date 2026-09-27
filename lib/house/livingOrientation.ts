@@ -106,6 +106,12 @@ export const ORIENTATION_FACETS = {
     activity: 'Putting lived experience into the member’s own words and returning to it later.',
     relationToWhole: 'Preserves authored experience as evidence before interpretation.',
   },
+  dream: {
+    label: 'Dream',
+    question: 'What has visited me in sleep, and what becomes more alive when I stay with it?',
+    activity: 'Remembering and encountering a dream without reducing it to a single interpretation.',
+    relationToWhole: 'Keeps the dream as a primary member-owned image-field while allowing careful exploration around it.',
+  },
   reflections: {
     label: 'Reflections',
     question: 'What mattered enough to keep?',

@@ -42,8 +42,10 @@ describe('Journal lived-context conventions', () => {
     expect(route).toContain('fromQuestion?: string');
   });
 
-  it('keeps Dream writing-first and offers dream reflection only after keep', () => {
-    expect(reader).toContain("'Reflect on this dream with MAIA'");
+  it('keeps Dream writing-first and hands the exact kept identity to the Dream room', () => {
+    expect(reader).toContain('Explore this dream →');
+    expect(reader).toContain('/dream?dream=');
+    expect(reader).toContain('&from=journal');
     expect(writing).not.toContain('Interpret this dream');
     expect(writing).not.toContain('dream symbols');
   });

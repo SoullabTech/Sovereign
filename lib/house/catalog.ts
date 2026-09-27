@@ -22,6 +22,7 @@ export const HOUSE_PLACES = [
   { id:'decisions', label:'Decisions', purpose:'Think through a choice with perspective', href:'/decisions', mark:'⧉', tone:'gold', group:'reflect', aliases:['decision council','choice','choose'], centerEligible:true },
   { id:'astrology', label:'Astrology', purpose:'Meet pattern, timing and symbolic ecology', href:'/astrology?from=house', mark:'◉', tone:'blue', group:'reflect', aliases:['transits','chart','cycles'], centerEligible:true },
   { id:'journal', label:'Journal', purpose:'Write what you have lived', href:'/journal?from=house', mark:'▯', tone:'slate', group:'reflect', aliases:['journaling','notes','diary'], centerEligible:true },
+  { id:'dream', label:'Dream', purpose:'Remember and explore what visits in sleep', href:'/dream?from=house', mark:'◌', tone:'violet', group:'reflect', aliases:['dreams','dreamwork','sleep','unconscious'], centerEligible:true },
   { id:'reflections', label:'Reflections', purpose:'Return to what you have lived, written and kept', href:'/reflections?from=house', mark:'◇', tone:'violet', group:'reflect', aliases:['keeps','review','remember'], centerEligible:true },
   { id:'ideas', label:'Ideas', purpose:'Develop what is beginning to take form', href:'/maia/ideas?from=house', mark:'◉', tone:'amber', group:'create', aliases:['idea','imagine','inspiration'], centerEligible:true },
   { id:'changes', label:'Changes', purpose:'Name and walk a change', href:'/changes', mark:'↻', tone:'green', group:'reflect', aliases:['change','transition','evolve'], centerEligible:true },

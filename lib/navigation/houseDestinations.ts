@@ -42,6 +42,7 @@ import {
   DoorOpen,
   BookMarked,
   Sparkles,
+  Moon,
   Settings as SettingsIcon,
 } from 'lucide-react';
 
@@ -170,6 +171,20 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     nativePolicy: 'native',
     nativeReady: true, // reference implementation
     returnBehavior: 'back-to-maia',
+    group: 'life',
+  },
+  {
+    id: 'dream',
+    label: 'Dream',
+    icon: Moon,
+    tooltip: 'Remember and explore dreams without reducing them',
+    kind: 'route',
+    route: '/dream',
+    audience: 'all',
+    // DREAM-03 is web-live first. Native remains an honest bridge until the
+    // route is deliberately reconciled into the Capacitor bundle.
+    nativePolicy: 'web',
+    returnBehavior: 'web-bridge',
     group: 'life',
   },
   {

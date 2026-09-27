@@ -178,13 +178,22 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
               )
             )}
 
-            <button
-              type="button"
-              onClick={onReflect}
-              className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
-            >
-              {entry.entry_type === 'dream' ? 'Reflect on this dream with MAIA' : 'Reflect with MAIA'}
-            </button>
+            {entry.entry_type === 'dream' ? (
+              <a
+                href={`/dream?dream=${encodeURIComponent(entry.id)}&from=journal`}
+                className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
+              >
+                Explore this dream →
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={onReflect}
+                className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
+              >
+                Reflect with MAIA
+              </button>
+            )}
 
             <a
               href={`/changes?sourceFacet=journal&sourceRefId=${encodeURIComponent(entry.id)}&crossingId=journal-name-as-change`}

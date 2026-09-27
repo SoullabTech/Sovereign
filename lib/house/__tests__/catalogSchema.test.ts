@@ -3,9 +3,9 @@ import path from 'node:path';
 import { HOUSE_PLACES } from '../catalog';
 
 describe('House catalog persistence contract', () => {
-  test('shortcut catalog migration admits every canonical place id', () => {
+  test('current House catalog migration admits every canonical place id', () => {
     const sql = fs.readFileSync(
-      path.join(process.cwd(), 'database/migrations/20260925000003_house_shortcut_catalog.sql'),
+      path.join(process.cwd(), 'database/migrations/20260927000001_house_dream_catalog.sql'),
       'utf8',
     );
     for (const place of HOUSE_PLACES) expect(sql).toContain(`'${place.id}'`);

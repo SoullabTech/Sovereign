@@ -155,6 +155,18 @@ export async function POST(request: NextRequest) {
     }
 
     const entry = result.rows[0];
+
+    // DREAM-03: a Dream remains writable in Journal, but Dream conversation is
+    // now governed by the first-class Dream facet. Do not leave a hidden
+    // Journal API path that can invoke MAIA on Dream content before the
+    // Dream → MAIA crossing is separately authorized.
+    if (entry.entry_type === 'dream') {
+      return NextResponse.json(
+        { success: false, error: 'Dream exploration belongs in the Dream room.' },
+        { status: 409 },
+      );
+    }
+
     const content = (entry.content || '').trim();
     if (content.length < 20) {
       return NextResponse.json(
