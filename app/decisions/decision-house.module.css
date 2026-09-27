@@ -341,3 +341,45 @@ linear-gradient(145deg,rgba(65,43,22,.32),rgba(17,14,11,.60));color:inherit;text
 .decisionCreateError{margin:12px 0 0;color:#d3a99f;font-size:14px}
 
 @media(max-width:720px){.namingDecision{padding:34px 16px 70px}.namingDecisionIntro h1{font-size:42px}.decisionPaper{padding:26px 22px}.decisionContextThreshold header{display:block}.decisionContextThreshold header>p{margin-top:8px;text-align:left}.decisionContextGrid{grid-template-columns:1fr}.decisionContextGrid label:first-child{grid-row:auto}.decisionKeep{align-items:flex-start;flex-direction:column}.decisionKeep button{width:100%}}
+
+.personalDecisionRoom{max-width:1120px;margin:0 auto;padding:48px 30px 96px}
+.decisionRoomArrival{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.44fr);gap:48px;align-items:end}
+.decisionRoomArrival h1{max-width:760px;margin:12px 0 8px;color:#f1e8d9;font-size:clamp(44px,4.8vw,68px);font-weight:300;line-height:.98;letter-spacing:-.025em}
+.decisionRoomDate{margin:0;color:#968978;font-size:14px}
+.decisionRoomArrival>aside{padding:18px 0 2px 20px;border-left:1px solid rgba(111,148,189,.26)}
+.decisionRoomArrival>aside small{color:#8aa1ba;font:8px/1.4 Arial,sans-serif;letter-spacing:.19em}
+.decisionRoomArrival>aside p{margin:10px 0 0;color:#a99c8a;font-size:14px;line-height:1.48;font-style:italic}
+.decisionOrigin{margin-top:22px;max-width:680px}.decisionOrigin :global(a){color:#d0ad75!important}
+
+.decisionRoomGrid{margin-top:30px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:18px}
+.choicePaper{min-height:470px;padding:34px 38px 30px;border:1px solid rgba(255,255,255,.26);border-radius:10px;color:#342c24;background:linear-gradient(145deg,#f2e7d4,#e7d7bf);box-shadow:0 20px 58px rgba(0,0,0,.22);display:flex;flex-direction:column}
+.choicePaperMeta{display:flex;align-items:center;justify-content:space-between;gap:16px;color:#776a59;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.choicePaper h2{margin:34px 0 12px;color:#40352b!important;font-size:38px;font-weight:300}
+.choicePaper>p{margin:0;color:#5f5245;font-size:20px;line-height:1.55}
+.choiceContext{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.choiceContext section{padding-top:14px;border-top:1px solid rgba(91,71,50,.15)}.choiceContext section:first-child{grid-column:1/-1}
+.choiceContext small{color:#816f59;font:8px/1.4 Arial,sans-serif;letter-spacing:.17em}
+.choiceContext p{margin:6px 0 0;color:#5e5144;font-size:15px;line-height:1.45}
+.holdToday{margin-top:auto;padding-top:20px;border-top:1px solid rgba(91,71,50,.16);color:#715a3e;text-decoration:none;font-size:15px}
+
+.perspectiveRail{display:flex;flex-direction:column;gap:12px}
+.gatherPerspective,.perspectivesHeld,.decisionMoments{padding:20px;border:1px solid rgba(215,181,132,.13);border-radius:10px;background:rgba(10,10,9,.42)}
+.gatherPerspective small,.perspectivesHeld small,.decisionMoments>small,.councilField header small,.earlierPerspective>small,.possibleDirection small{color:#8da3bb;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em}
+.gatherPerspective h3,.perspectivesHeld h3{margin:12px 0 8px;font-size:24px;font-weight:300}
+.gatherPerspective p,.perspectivesHeld p{margin:0;color:#a99c8c;font-size:14px;line-height:1.48}
+.gatherPerspective button{width:100%;min-height:46px;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(111,148,189,.30);border-radius:9px;background:rgba(111,148,189,.08);color:#bfd0df;font:15px/1 'Decision Crimson',Georgia,serif}
+.gatherPerspective button:disabled{opacity:.45}
+.decisionMoments>div{padding:12px 0;border-top:1px solid rgba(215,181,132,.08)}.decisionMoments>div:first-of-type{margin-top:10px}.decisionMoments time{color:#776f65;font-size:11px}.decisionMoments p{margin:5px 0 0;color:#b3a695;font-size:14px;line-height:1.4}
+
+.councilField{margin-top:42px;padding-top:26px;border-top:1px solid rgba(215,181,132,.15)}
+.councilField>header{display:flex;align-items:end;justify-content:space-between;gap:24px}.councilField>header h2{margin:8px 0 0;font-size:34px;font-weight:300}.councilField>header>p{margin:0;color:#8f8375;font-size:14px;font-style:italic}
+.councilSection{margin-top:26px}.councilSection h3{margin:0 0 12px;color:#d9cbb8;font-size:20px;font-weight:300}
+.perspectiveCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.perspectiveCards p,.tensionList p{margin:0;padding:16px;border:1px solid rgba(215,181,132,.11);border-radius:9px;background:rgba(10,10,9,.34);color:#b6a895;font-size:15px;line-height:1.5}
+.tensionList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.councilSection ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}.councilSection li{padding-left:18px;position:relative;color:#aa9d8d;font-size:14px;line-height:1.45}.councilSection li::before{content:'·';position:absolute;left:4px;color:#c49f68}
+.possibleDirection{margin-top:28px;padding:22px;border:1px solid rgba(215,179,111,.18);border-radius:10px;background:rgba(92,61,28,.11)}.possibleDirection small{color:#c6a069}.possibleDirection p{margin:10px 0 6px;color:#d3c2aa;font-size:17px;line-height:1.5}.possibleDirection span{color:#8d8173;font-size:13px;font-style:italic}
+.earlierPerspective{margin-top:36px;padding-top:22px;border-top:1px solid rgba(215,181,132,.12)}.earlierPerspective>div{margin-top:12px;display:grid;gap:8px}.earlierPerspective article{padding:13px 0;border-top:1px solid rgba(215,181,132,.08)}.earlierPerspective time{color:#7c7368;font-size:11px}.earlierPerspective p{margin:4px 0 0;color:#a99d8d;font-size:14px}
+.decisionRoomLoading{min-height:calc(100svh - 68px);display:grid;place-items:center;align-content:center;gap:12px;color:#ad9e8b}.decisionRoomLoading a{color:#d0ad75}
+
+@media(max-width:900px){.decisionRoomArrival,.decisionRoomGrid{grid-template-columns:1fr}.perspectiveCards,.tensionList{grid-template-columns:1fr}}
+@media(max-width:640px){.personalDecisionRoom{padding:34px 16px 76px}.decisionRoomArrival h1{font-size:42px}.choicePaper{min-height:0;padding:26px 22px}.choicePaper h2{font-size:32px}.choicePaper>p{font-size:18px}.choiceContext{grid-template-columns:1fr}.choiceContext section:first-child{grid-column:auto}.councilField>header{display:block}.councilField>header>p{margin-top:7px}}
