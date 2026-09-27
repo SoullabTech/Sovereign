@@ -55,7 +55,6 @@ describe('Soullab Living Orientation System', () => {
       (crossing) => crossing.authority === 'system_automatic',
     );
 
-    expect(automatic.length).toBeGreaterThan(0);
     for (const crossing of automatic) {
       expect(crossing.standing).toBe('needs_adjudication');
     }
@@ -63,6 +62,9 @@ describe('Soullab Living Orientation System', () => {
     for (const crossing of liveCrossings()) {
       expect(crossing.authority).not.toBe('system_automatic');
     }
+
+    expect(FACET_CROSSINGS.some((crossing) => crossing.id === 'journal-automatic-episodic-memory'))
+      .toBe(false);
   });
 
   it('keeps crossing lookup directional instead of collapsing relation into membership', () => {

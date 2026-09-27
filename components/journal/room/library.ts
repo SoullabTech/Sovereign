@@ -26,13 +26,12 @@
  *
  * ONE ENTRY, SHOWN ONCE
  *
- * Keeping a journal entry also writes a bridge capsule (`sourceId` = the entry
- * id) so the oracle context layer holds the raw record. That is a plumbing
- * artifact of the same writing, not a second thing the member made — and
- * measured on the walk it made every entry appear TWICE in Browse, once as
- * itself and once as "Journal: …". A journal that shows your words doubled is
- * not preserving your material, it is misrepresenting it. Captures whose
- * `sourceId` is a journal entry the member already has are therefore dropped.
+ * Historical Journal builds automatically created a Reflection/Capture capsule
+ * for sufficiently long entries. That automatic crossing is retired: new
+ * Journal entries remain Journal unless the member explicitly chooses
+ * "Keep as a reflection." Browse still suppresses a capsule whose `sourceId`
+ * points at a Journal entry already present here so historical bridge artifacts
+ * cannot make one piece of writing appear twice.
  *
  * NAVIGATION HONESTY
  *

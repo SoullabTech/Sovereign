@@ -308,11 +308,19 @@ The crossing has now been repaired:
 - no LLM re-distillation occurs between the member gesture and the Reflection object;
 - historical automatically-created capsules are not silently deleted or rewritten.
 
-The separate automatic Journal → episodic-memory bridge still exists for resonance search. It is now classified independently as:
+The second crossing audit found a separate legacy Journal → episodic-memory bridge. It silently created system-authored episodic rows, including invented title, significance, emotional intensity, and semantic vector metadata.
 
-> **NEEDS ADJUDICATION · SYSTEM AUTOMATIC**
+That bridge is now **retired**.
 
-That memory seam must be reviewed on its own authority and consent terms rather than being conflated with Reflection custody.
+- Journal save no longer writes `episodic_memories`;
+- member-marked episodic moments remain a separate explicit memory act;
+- episodic recall remains independently governed by `members.episodic_recall_enabled`;
+- the member-facing Memory & Consent surface exposes that recall choice;
+- historical system-authored episodic rows are not silently deleted or rewritten.
+
+The governing distinction is now explicit:
+
+> **Writing something in Journal is not consent to convert it into MAIA memory.**
 
 ---
 

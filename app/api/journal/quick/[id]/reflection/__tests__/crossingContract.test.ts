@@ -49,7 +49,7 @@ describe('Journal → Reflections crossing authority', () => {
     expect(reader).toContain('Kept as a reflection →');
   });
 
-  it('records the repaired crossing as live/member-explicit while keeping automatic memory unresolved', () => {
+  it('records the repaired crossing as live/member-explicit and retires hidden Journal memory propagation', () => {
     const reflection = FACET_CROSSINGS.find(
       (crossing) => crossing.id === 'journal-keep-as-reflection',
     );
@@ -60,14 +60,10 @@ describe('Journal → Reflections crossing authority', () => {
       standing: 'live',
     });
 
-    const memory = FACET_CROSSINGS.find(
-      (crossing) => crossing.id === 'journal-automatic-episodic-memory',
-    );
-    expect(memory).toMatchObject({
-      from: 'journal',
-      to: 'maia',
-      authority: 'system_automatic',
-      standing: 'needs_adjudication',
-    });
+    expect(
+      FACET_CROSSINGS.some((crossing) => crossing.id === 'journal-automatic-episodic-memory'),
+    ).toBe(false);
+    expect(quickList).not.toContain('bridgeToEpisodicMemory');
+    expect(quickList).not.toContain('INSERT INTO episodic_memories');
   });
 });

@@ -347,21 +347,6 @@ export const FACET_CROSSINGS = [
     law: 'A Journal entry remains Journal unless the member explicitly carries that kept entry into Reflections.',
   },
   {
-    id: 'journal-automatic-episodic-memory',
-    from: 'journal',
-    to: 'maia',
-    gesture: null,
-    carries: ['kept journal entry', 'semantic resonance vector'],
-    mode: 'contextual_memory',
-    authority: 'system_automatic',
-    standing: 'needs_adjudication',
-    evidence: [
-      'app/api/journal/quick/list/route.ts',
-      'lib/vector-embeddings.ts',
-    ],
-    law: 'Automatic resonance memory is a separate authority question from Reflection custody and must be adjudicated on its own terms.',
-  },
-  {
     id: 'writers-studio-discuss-with-maia',
     from: 'writing',
     to: 'maia',
