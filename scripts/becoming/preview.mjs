@@ -22,7 +22,7 @@ const js=await readFile(join(out,'app.js')),css=await readFile(join(out,'app.css
 const sha=execFileSync('git',['rev-parse','HEAD'],{cwd:ROOT,encoding:'utf8'}).trim();
 const bundleHash=createHash('sha256').update(js).update(css).digest('hex');
 let art=null;try{art=await readFile('/private/tmp/changes-current3597/public/house/house-architecture-7a638061.webp');}catch{}
-const health={scope:'isolated-local-preview',sourceHead:sha,bundleHash,accountConnected:false,providerCalls:'explicit-member-handoff-only',storage:'browser-indexeddb-explicit-keep',maiaHandoff:'fixed-localhost-canonical-route'};
+const health={scope:'isolated-local-preview',sourceHead:sha,bundleHash,accountConnected:false,providerCalls:'explicit-member-acts-only',storage:'browser-indexeddb-explicit-keep',journeyGuide:'sanctuary-ephemeral-current-journey-only',postReturnMaia:'continuity-explicit-only',maiaHandoff:'fixed-localhost-canonical-route'};
 const assets=new Map([
   ['/',[html,'text/html; charset=utf-8']],
   ['/becoming',[html,'text/html; charset=utf-8']],
@@ -55,17 +55,20 @@ function validHistory(value){
     typeof turn.content==='string'&&turn.content.length<=120000
   );
 }
-async function proxyMaia(req,res){
-  if(req.headers['x-becoming-explicit-handoff']!=='1'){
-    res.writeHead(403,{'Content-Type':'application/json'});res.end(JSON.stringify({error:'Explicit Becoming handoff required.'}));return;
+async function proxyMaia(req,res,kind='conversation'){
+  const isGuide=kind==='guide';
+  const explicit=isGuide?req.headers['x-becoming-guide']==='1':req.headers['x-becoming-explicit-handoff']==='1';
+  if(!explicit){
+    res.writeHead(403,{'Content-Type':'application/json'});res.end(JSON.stringify({error:isGuide?'Explicit Becoming guide act required.':'Explicit Becoming handoff required.'}));return;
   }
   const input=await readJson(req);
   const message=typeof input.message==='string'?input.message.trim():'';
   const sessionId=typeof input.sessionId==='string'?input.sessionId.trim():'';
   const journeyId=typeof input.journeyId==='string'?input.journeyId.trim():'';
   const history=input.conversationHistory??[];
-  if(!message||message.length>120000||!/^becoming-[A-Za-z0-9-]{20,200}$/.test(sessionId)||journeyId.length>100||!validHistory(history)){
-    res.writeHead(400,{'Content-Type':'application/json'});res.end(JSON.stringify({error:'Invalid Becoming MAIA handoff.'}));return;
+  const sessionPattern=isGuide?/^becoming-guide-[A-Za-z0-9-]{20,220}$/:/^becoming-[A-Za-z0-9-]{20,200}$/;
+  if(!message||message.length>120000||!sessionPattern.test(sessionId)||journeyId.length>100||!validHistory(history)||(isGuide&&history.length!==0)){
+    res.writeHead(400,{'Content-Type':'application/json'});res.end(JSON.stringify({error:isGuide?'Invalid Becoming guide act.':'Invalid Becoming MAIA handoff.'}));return;
   }
   const body={
     message,
@@ -74,9 +77,9 @@ async function proxyMaia(req,res){
     sessionId,
     localHour:new Date().getHours(),
     mode:'dialogue',
-    meta:{sessionId,memoryMode:'continuity'},
-    sanctuary:input.sanctuary===true,
-    conversationHistory:history,
+    meta:{sessionId,memoryMode:isGuide?'ephemeral':'continuity'},
+    sanctuary:isGuide?true:input.sanctuary===true,
+    conversationHistory:isGuide?[]:history,
     surface:'maia',
     isVoiceMode:false,
     fieldState:{active:true,depth:0.7,quality:'present'},
@@ -95,9 +98,9 @@ const server=createServer(async(req,res)=>{
   baseHeaders(res);
   if(![`localhost:${PORT}`,`127.0.0.1:${PORT}`].includes(req.headers.host??'')){res.writeHead(403);res.end('Local preview only');return;}
   let path;try{path=new URL(req.url??'/',`http://127.0.0.1:${PORT}`).pathname;}catch{res.writeHead(400);res.end();return;}
-  if(path==='/api/maia'){
+  if(path==='/api/maia'||path==='/api/maia-guide'){
     if(req.method!=='POST'){res.writeHead(405,{'Allow':'POST'});res.end();return;}
-    try{await proxyMaia(req,res);}catch(err){
+    try{await proxyMaia(req,res,path==='/api/maia-guide'?'guide':'conversation');}catch(err){
       const status=Number(err?.status)||502;
       res.writeHead(status,{'Content-Type':'application/json'});
       res.end(JSON.stringify({error:status===502?'The local MAIA service is unavailable.':String(err?.message||'Handoff failed.')}));
@@ -109,5 +112,5 @@ const server=createServer(async(req,res)=>{
   const asset=assets.get(path);if(!asset){res.writeHead(404);res.end('Not found');return;}
   res.writeHead(200,{'Content-Type':asset[1]});res.end(req.method==='HEAD'?undefined:asset[0]);
 });
-server.listen(PORT,'127.0.0.1',()=>console.log(JSON.stringify({localPreview:`http://localhost:${PORT}/becoming`,pid:process.pid,sourceHead:sha,bundleHash,maiaHandoff:'explicit-only'})));
+server.listen(PORT,'127.0.0.1',()=>console.log(JSON.stringify({localPreview:`http://localhost:${PORT}/becoming`,pid:process.pid,sourceHead:sha,bundleHash,journeyGuide:'sanctuary-ephemeral',maiaHandoff:'explicit-only'})));
 for(const event of ['SIGTERM','SIGINT'])process.on(event,()=>server.close(()=>process.exit(0)));
