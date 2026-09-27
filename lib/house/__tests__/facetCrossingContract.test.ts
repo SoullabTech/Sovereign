@@ -26,6 +26,7 @@ const changeDetail = read('components/maia/changes/ChangeJourney.tsx');
 const ideaWorkspace = read('app/maia/ideas/[id]/page.tsx');
 const relationshipDetail = read('app/relationships/[id]/page.tsx');
 const anchorPage = read('app/maia/anchor/page.tsx');
+const dreamRoom = read('app/dream/DreamRoom.tsx');
 const anchorRoute = read('app/api/anchor/today/route.ts');
 const journalWriting = read('components/journal/room/WritingSurface.tsx');
 const journalRoute = read('app/api/journal/quick/list/route.ts');
@@ -52,6 +53,7 @@ const anchorIds = [
   'change-carry-to-anchor',
   'decision-hold-today',
   'reflection-carry-today',
+  'dream-carry-today',
 ] as const;
 
 const ids = [...foundationalIds, ...ideaIds, ...relationshipIds, ...anchorIds] as const;
@@ -81,7 +83,7 @@ describe('House facet crossing contract', () => {
 
   it('fails closed to an explicit crossing allowlist instead of becoming a generic transfer API', () => {
     for (const id of ids) expect(carrier).toContain(`'${id}'`);
-    expect(carrier).toContain("type CarrySourceFacet = 'journal' | 'reflections' | 'ideas' | 'relationships' | 'changes' | 'decisions'");
+    expect(carrier).toContain("type CarrySourceFacet = 'journal' | 'dream' | 'reflections' | 'ideas' | 'relationships' | 'changes' | 'decisions'");
     expect(carrier).toContain("type CarryTargetFacet = 'changes' | 'decisions' | 'journal' | 'anchor'");
     expect(carryRoute).toContain('Crossing not admitted');
     expect(carryRoute).toContain('getMemberIdFromRequest');
@@ -103,10 +105,12 @@ describe('House facet crossing contract', () => {
     expect(ideaWorkspace).not.toContain('encodeURIComponent(block.content)');
   });
 
-  it('carries Change, Personal Decision, and Reflection into Daily Anchor without pre-authoring today', () => {
+  it('carries Change, Personal Decision, Reflection, and Dream into Daily Anchor without pre-authoring today', () => {
     expect(carrier).toContain("'change-carry-to-anchor': { source: 'changes', target: 'anchor' }");
     expect(carrier).toContain("'decision-hold-today': { source: 'decisions', target: 'anchor' }");
     expect(carrier).toContain("'reflection-carry-today': { source: 'reflections', target: 'anchor' }");
+    expect(carrier).toContain("'dream-carry-today': { source: 'dream', target: 'anchor' }");
+    expect(carrier).toContain("q.entry_type = 'dream'");
     expect(carrier).toContain("decision_scope = 'personal'");
     expect(changeDetail).toContain('Carry this into today →');
     expect(changeDetail).toContain('crossingId=change-carry-to-anchor');
@@ -114,7 +118,10 @@ describe('House facet crossing contract', () => {
     expect(decisionDetail).toContain('crossingId=decision-hold-today');
     expect(reflectionDetail).toContain('Carry this with me today →');
     expect(reflectionDetail).toContain('crossingId=reflection-carry-today');
-    expect(anchorPage).toContain("sourceFacet === 'changes' || sourceFacet === 'decisions' || sourceFacet === 'reflections'");
+    expect(dreamRoom).toContain('Carry this dream into today');
+    expect(dreamRoom).toContain('crossingId=dream-carry-today');
+    expect(dreamRoom).not.toContain('encodeURIComponent(dream.content)');
+    expect(anchorPage).toContain("sourceFacet === 'changes' || sourceFacet === 'decisions' || sourceFacet === 'reflections' || sourceFacet === 'dream'");
     expect(anchorPage).toContain('value={response}');
     expect(anchorPage).not.toContain('setResponse(source');
   });

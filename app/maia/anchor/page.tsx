@@ -71,7 +71,7 @@ export default function AnchorPage() {
   const sourceRefId = searchParams?.get('sourceRefId');
   const crossingId = searchParams?.get('crossingId');
   const carrySourceRef: FacetCarryRef | null =
-    (sourceFacet === 'changes' || sourceFacet === 'decisions' || sourceFacet === 'reflections') && sourceRefId && crossingId
+    (sourceFacet === 'changes' || sourceFacet === 'decisions' || sourceFacet === 'reflections' || sourceFacet === 'dream') && sourceRefId && crossingId
       ? { sourceFacet, sourceRefId, crossingId }
       : null;
   const [arrivedAt] = useState(() => new Date());

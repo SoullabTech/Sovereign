@@ -323,6 +323,11 @@ function DreamPage({
         <button type="button" disabled title="Dream conversation is opened in the next governed act">
           Explore with MAIA <span>—</span>
         </button>
+        <Link
+          href={'/maia/anchor?from=house&sourceFacet=dream&sourceRefId=' + encodeURIComponent(dream.id) + '&crossingId=dream-carry-today'}
+        >
+          Carry this dream into today <span>→</span>
+        </Link>
         <Link href={'/journal?entry=' + encodeURIComponent(dream.id)}>
           Open this dream in Journal <span>→</span>
         </Link>
