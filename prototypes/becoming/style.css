@@ -51,18 +51,32 @@
 .elemental-invitation h2{margin:6px 0 10px}.elemental-invitation>p:not(.eyebrow):not(.field-help){font:18px/1.7 var(--serif);color:#5f5342;max-width:62ch}
 .elemental-immersion{position:relative;margin-top:10px;padding:28px;border:1px solid #bdaa8e;border-radius:12px;background:rgba(255,251,244,.45)}
 .elemental-trace{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:0 0 26px}
-.elemental-trace span{padding:9px 6px;border-bottom:1px solid #b9aa91;text-align:center;font:14px/1.35 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:#8a7b65}
-.elemental-trace span[aria-current=step]{color:#3c3429;border-bottom:3px solid #6f614e}
+.elemental-trace button{padding:9px 6px;border:0;border-bottom:1px solid #b9aa91;border-radius:0;background:transparent!important;color:#8a7b65!important;text-align:center;font:14px/1.35 var(--sans);letter-spacing:.08em;text-transform:uppercase;min-height:44px}
+.elemental-trace button[aria-current=step]{color:#3c3429!important;border-bottom:3px solid #6f614e;background:rgba(173,148,105,.08)!important}
 .scene-thread{margin:0 0 26px;padding:15px 17px;border-left:2px solid #9d855c;background:rgba(173,148,105,.07)}
 .scene-thread p{margin:5px 0 0;font:17px/1.65 var(--serif);color:#5c503f}
 .elemental-earth{box-shadow:inset 0 4px 0 rgba(111,97,78,.18)}.elemental-water{box-shadow:inset 0 4px 0 rgba(89,111,124,.16)}
 .elemental-air{box-shadow:inset 0 4px 0 rgba(149,139,117,.14)}.elemental-fire{box-shadow:inset 0 4px 0 rgba(142,96,65,.16)}
 .elemental-aether{box-shadow:inset 0 4px 0 rgba(103,91,120,.15)}
 .maia-conversation-end{height:1px}
-@media(max-width:650px){.elemental-invitation,.elemental-immersion{padding:22px 18px}.elemental-trace{grid-template-columns:1fr;gap:0}.elemental-trace span{text-align:left;padding:7px 4px}.elemental-trace span[aria-current=step]{border-bottom-width:2px;font-weight:600}}
+@media(max-width:650px){.elemental-invitation,.elemental-immersion{padding:22px 18px}.elemental-trace{grid-template-columns:1fr;gap:0}.elemental-trace button{text-align:left;padding:7px 4px}.elemental-trace button[aria-current=step]{border-bottom-width:2px;font-weight:600}}
 
 .reading-elemental{margin:28px 0;padding:22px 0;border-top:1px solid #bdaa8e;border-bottom:1px solid #bdaa8e}
 .read-element{padding:12px 0}.read-element h3{margin:0 0 5px;text-transform:capitalize}
 .temporal-maia{margin:34px 0;padding:26px;border:1px solid #bdaa8e;border-radius:10px;background:rgba(255,250,240,.38)}
 .temporal-maia h2{margin:4px 0 12px}.temporal-maia .intro{margin-bottom:14px}
 @media(max-width:650px){.temporal-maia{padding:22px 18px}}
+
+
+
+/* BECOMING-MAIA-01R1 — live current-journey guide only. */
+.elemental-entry-choices{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+.elemental-entry-choices button{background:transparent!important;color:#443827!important;border-color:#b3a181!important}
+.elemental-entry-choices button:hover{background:#e5d7bd!important}
+.live-guide{border-color:rgba(221,193,152,.5);box-shadow:0 14px 50px rgba(0,0,0,.12)}
+.live-guide .guide-invitation,.live-guide .guide-wait{font:22px/1.65 var(--serif);color:#eadcc5;margin:22px 0}
+.live-guide .guide-wait{font-style:italic;color:#d8c8af}
+.guide-actions{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-top:12px}
+.guide-actions button{font-size:16px;text-align:left}
+.guide-enable{width:100%;margin-top:14px;background:rgba(214,183,135,.14);border-color:#9f835b;color:#f0dfc3}
+.guide-error{font:15px/1.55 var(--sans)!important;color:#f1b9a5!important;padding:10px 0}
