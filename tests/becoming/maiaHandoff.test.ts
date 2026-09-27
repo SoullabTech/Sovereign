@@ -16,6 +16,9 @@ test('handoff carries the full journey without converting imaginal material into
   s.arrival='I want to explore contribution without constant availability.';
   s.possibilities[0]!.label='A spacious future';
   s.possibilities[0]!.encounter='An ordinary morning with room to walk.';
+  s.possibilities[0]!.elemental!.earth='Cool floorboards and morning light.';
+  s.possibilities[0]!.elemental!.water='Relief, and affection without urgency.';
+  s.possibilities[0]!.elemental!.aether='Contribution can remain without constant availability.';
   s.possibilities[0]!.dialogue=[{id:did,perspective:'imagined_future',author:'member',kind:'imaginal_dialogue',text:'I stopped treating urgency as proof of care.'}];
   s.discernment.noticed='The spaciousness.';
   s.discernment.meaning='Contribution remained, but urgency did not.';
@@ -30,6 +33,9 @@ test('handoff carries the full journey without converting imaginal material into
   assert.match(text,/imaginal possibilities, not predictions/);
   assert.match(text,/Member, imagined future perspective:/);
   assert.match(text,/I stopped treating urgency as proof of care/);
+  assert.match(text,/ELEMENTAL IMMERSION — MEMBER-AUTHORED/);
+  assert.match(text,/EARTH:\nCool floorboards and morning light/);
+  assert.match(text,/AETHER:\nContribution can remain without constant availability/);
   assert.match(text,/WHAT I BROUGHT BACK\nPause before saying yes/);
   assert.match(text,/Way of being: Available without being constantly available/);
   assert.match(text,/patterns.*hypotheses/i);

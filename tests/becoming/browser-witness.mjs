@@ -37,6 +37,7 @@ try {
     const message = maiaMockCount === 1
       ? 'Synthetic MAIA synthesis: I hear a movement from urgency toward spacious contribution. Does that distinction feel alive to you?'
       : 'Synthetic MAIA continuation: yes — we can stay with that without turning it into a conclusion.';
+    if (maiaMockCount > 1) await new Promise(resolve => setTimeout(resolve, 250));
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ message }) });
   });
 
@@ -73,6 +74,19 @@ try {
     .fill('An ordinary morning with enough time to walk before work.');
   pass('J05', 'The future is encountered phenomenologically before interpretation.');
   await page.screenshot({ path: output + '/screenshots/ux01r1-encounter-desktop.png', fullPage: true });
+  await page.getByRole('button', { name: 'Enter through the elements →', exact: true }).click();
+  await page.getByLabel('What is physically here?').fill('Cool floorboards, morning light, coffee, and room to breathe.');
+  await page.getByRole('button', { name: 'Continue into Water →', exact: true }).click();
+  await page.getByLabel('What is moving through you here?').fill('Relief, warmth, and affection without urgency.');
+  await page.getByRole('button', { name: 'Continue into Air →', exact: true }).click();
+  await page.getByLabel('What do you understand from inside this life?').fill('Availability and care are not the same thing.');
+  await page.getByRole('button', { name: 'Continue into Fire →', exact: true }).click();
+  await page.getByLabel('What is alive in you here?').fill('Teaching, making, and giving from desire rather than compulsion.');
+  await page.getByRole('button', { name: 'Continue into Aether →', exact: true }).click();
+  await page.getByLabel('When you stop explaining it, what seems quietly true here?').fill('Contribution remains when urgency falls away.');
+  assert.deepEqual(await page.locator('.elemental-trace span').allTextContents(), ['Earth', 'Water', 'Air', 'Fire', 'Aether']);
+  await page.screenshot({ path: output + '/screenshots/ux01r3-elemental-aether-desktop.png', fullPage: true });
+  pass('J05E', 'The member can inhabit the same future through Earth, Water, Air, Fire, and Aether without any element claiming authority over meaning.');
   await page.getByRole('button', { name: 'Speak with this perspective', exact: true }).click();
   await page.getByRole('heading', { name: 'Would you like to speak with this perspective?' }).waitFor();
   await page.getByRole('button', { name: '+ Ask something', exact: true }).click();
@@ -117,13 +131,17 @@ try {
 
   await page.getByLabel('Continue with MAIA').fill('Yes. The spaciousness feels important.');
   await page.getByRole('button', { name: 'Send to MAIA', exact: true }).click();
+  await page.getByRole('status', { name: '' }).filter({ hasText: 'MAIA is reflecting…' }).waitFor();
   await page.getByText(/Synthetic MAIA continuation:/).waitFor();
+  const latestMaia = page.locator('.maia-turn.maia').last();
+  const latestBox = await latestMaia.boundingBox();
+  assert.ok(latestBox && latestBox.y < 1000 && latestBox.y + Math.min(latestBox.height, 120) > 0);
   assert.equal(new URL(page.url()).pathname, '/becoming');
   assert.equal(maiaRequests.length, 2);
   assert.equal(maiaRequests[1].message, 'Yes. The spaciousness feels important.');
   assert.ok(Array.isArray(maiaRequests[1].conversationHistory));
   assert.match(maiaRequests[1].conversationHistory[0].content, /Soullab Becoming/);
-  pass('J10', 'The synthesis becomes a continuing MAIA conversation without resending the journey manually.');
+  pass('J10', 'The synthesis becomes a continuing MAIA conversation; waiting is labeled reflecting and the arriving response is brought into view.');
 
   await page.getByRole('button', { name: 'Carry something into present life', exact: true }).click();
   await page.getByRole('button', { name: 'Nothing yet', exact: true }).click();

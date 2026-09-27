@@ -1,4 +1,4 @@
-import { validateSession, titleOf, type Session } from './core';
+import { ELEMENTS, elementalOf, validateSession, titleOf, type Session } from './core';
 
 function clean(value: string): string {
   return value.trim();
@@ -21,6 +21,7 @@ export function buildBecomingMaiaHandoff(session: Session): string {
     '',
     'Begin with a supportive synthesis of the journey as a whole.',
     'Reflect the arc between where I began, what I encountered, what I made of it, and what I brought back.',
+    'If elemental immersion is present, notice possible convergence or tension among sensing, feeling, knowing, vitality, and whole-field recognition without scoring, balancing, or treating Aether as revelation.',
     'If you notice patterns, tensions, continuities, intentions, or possible shadow material, offer them only as hypotheses and distinguish them from what I actually wrote.',
     'Do not impersonate my future self, declare destiny, or turn an imagined future into a fact about me.',
     'Then stay in conversation with me and ask one natural question that helps deepen or expand what is here.',
@@ -37,6 +38,14 @@ export function buildBecomingMaiaHandoff(session: Session): string {
     if (clean(possibility.horizon)) lines.push(`Felt horizon: ${clean(possibility.horizon)}`);
     if (possibility.qualities.length) lines.push(`Member-selected qualities: ${possibility.qualities.join(', ')}`);
     if (clean(possibility.encounter)) lines.push('', 'WHAT APPEARED', clean(possibility.encounter));
+    const elemental = elementalOf(possibility);
+    const enteredElements = ELEMENTS.filter(element => clean(elemental[element]));
+    if (enteredElements.length) {
+      lines.push('', 'ELEMENTAL IMMERSION — MEMBER-AUTHORED');
+      for (const element of enteredElements) {
+        lines.push(`${element.toUpperCase()}:`, clean(elemental[element]));
+      }
+    }
     if (possibility.dialogue.length) {
       lines.push('', 'IMAGINAL DIALOGUE — BOTH VOICES ENTERED BY THE MEMBER');
       for (const turn of possibility.dialogue) {

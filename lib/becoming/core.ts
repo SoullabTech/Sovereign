@@ -6,7 +6,10 @@ export type Quality = typeof QUALITIES[number];
 export type Perspective = 'present' | 'imagined_future';
 export type SourceRef = { sessionId: string; revision: number };
 export type DialogueTurn = { id: string; perspective: Perspective; author: 'member'; kind: 'imaginal_dialogue'; text: string };
-export type Possibility = { id: string; label: string; qualities: Quality[]; horizon: string; encounter: string; dialogue: DialogueTurn[] };
+export const ELEMENTS = ['earth', 'water', 'air', 'fire', 'aether'] as const;
+export type Element = typeof ELEMENTS[number];
+export type ElementalImmersion = Record<Element, string>;
+export type Possibility = { id: string; label: string; qualities: Quality[]; horizon: string; encounter: string; dialogue: DialogueTurn[]; elemental?: ElementalImmersion };
 export type Session = {
   schemaVersion: 1; id: string; revision: number; createdAt: string; updatedAt: string;
   title: string; status: 'open' | 'paused' | 'returned'; returnedAt: string | null; returnActId: string | null;
@@ -29,7 +32,10 @@ function shape(v: unknown, keys: string[]): asserts v is Record<string, unknown>
 }
 function textFields(v: unknown, keys: string[]): void { shape(v, keys); for (const k of keys) text(v[k]); }
 export function newPossibility(possibilityId: string): Possibility {
-  id(possibilityId); return { id: possibilityId, label: '', qualities: [], horizon: '', encounter: '', dialogue: [] };
+  id(possibilityId); return { id: possibilityId, label: '', qualities: [], horizon: '', encounter: '', dialogue: [], elemental: { earth: '', water: '', air: '', fire: '', aether: '' } };
+}
+export function elementalOf(possibility: Possibility): ElementalImmersion {
+  return possibility.elemental ?? { earth: '', water: '', air: '', fire: '', aether: '' };
 }
 export function newSession(sessionId: string, possibilityId: string, now: string): Session {
   id(sessionId); date(now);
@@ -51,8 +57,13 @@ export function validateSession(v: unknown): asserts v is Session {
   if (!Array.isArray(v.possibilities) || v.possibilities.length < 1 || v.possibilities.length > 8) fail('INVALID_POSSIBILITIES');
   const seen = new Set<string>();
   for (const p of v.possibilities) {
-    shape(p, ['id','label','qualities','horizon','encounter','dialogue']); id(p.id); if (seen.has(p.id)) fail('DUPLICATE_ID'); seen.add(p.id);
+    const possibilityKeys = Object.keys(p as object);
+    const oldShape = ['id','label','qualities','horizon','encounter','dialogue'];
+    const elementalShape = [...oldShape,'elemental'];
+    if (!isObject(p) || ![oldShape,elementalShape].some(keys => keys.length === possibilityKeys.length && possibilityKeys.every(k => keys.includes(k)))) fail('INVALID_SHAPE');
+    id(p.id); if (seen.has(p.id)) fail('DUPLICATE_ID'); seen.add(p.id);
     text(p.label, 200); text(p.horizon, 200); text(p.encounter);
+    if (p.elemental !== undefined) textFields(p.elemental, ['earth','water','air','fire','aether']);
     if (!Array.isArray(p.qualities) || p.qualities.some(q => !QUALITIES.includes(q as Quality)) || new Set(p.qualities).size !== p.qualities.length) fail('INVALID_QUALITY');
     if (!Array.isArray(p.dialogue) || p.dialogue.length > 64) fail('INVALID_DIALOGUE');
     for (const turn of p.dialogue) {

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { buildBecomingMaiaHandoff } from '../../lib/becoming/maiaHandoff';
 import type { Session } from '../../lib/becoming/core';
 
@@ -17,6 +17,21 @@ export function MaiaJourneyConversation({ session }: { session: Session }) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const latestTurnRef = useRef<HTMLElement>(null);
+  const waitingRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (!opened) return;
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const frame = requestAnimationFrame(() => {
+      const target = busy ? waitingRef.current : latestTurnRef.current;
+      target?.scrollIntoView({
+        behavior: reduceMotion ? 'auto' : 'smooth',
+        block: 'center',
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [opened, busy, turns.length]);
   async function send(message: string, initial = false) {
     const text = message.trim();
     if (!text || busy) return;
@@ -93,7 +108,7 @@ export function MaiaJourneyConversation({ session }: { session: Session }) {
           </button>
         </>
       ) : (
-        <div className="maia-conversation">
+        <div className="maia-conversation" aria-busy={busy}>
           <div className="maia-conversation-head">
             <div>
               <p className="eyebrow paper-eyebrow">WITH MAIA</p>
@@ -101,17 +116,23 @@ export function MaiaJourneyConversation({ session }: { session: Session }) {
             </div>
             <span className="metadata">Journey shared by you · conversation stays in Becoming</span>
           </div>
-          {turns.length === 0 && busy && (
-            <p className="maia-thinking" role="status">MAIA is taking in the whole journey…</p>
-          )}
           <div className="maia-turns" aria-live="polite">
-            {turns.map(turn => (
-              <article className={'maia-turn ' + turn.role} key={turn.id}>
+            {turns.map((turn, index) => (
+              <article
+                className={'maia-turn ' + turn.role}
+                key={turn.id}
+                ref={index === turns.length - 1 ? latestTurnRef : undefined}
+              >
                 <span className="metadata">{turn.role === 'maia' ? 'MAIA' : 'You'}</span>
                 <p>{turn.text}</p>
               </article>
             ))}
           </div>
+          {busy && (
+            <p ref={waitingRef} className="maia-thinking" role="status">
+              {turns.length === 0 ? 'MAIA is taking in the whole journey…' : 'MAIA is reflecting…'}
+            </p>
+          )}
           {error && <p className="error" role="alert">{error}</p>}
           {shared && (
             <div className="maia-followup">
@@ -123,6 +144,7 @@ export function MaiaJourneyConversation({ session }: { session: Session }) {
                 value={input}
                 onChange={event => setInput(event.target.value)}
                 placeholder="Respond to what feels alive…"
+                disabled={busy}
               />
               <div className="journey-actions">
                 <button
@@ -130,7 +152,7 @@ export function MaiaJourneyConversation({ session }: { session: Session }) {
                   disabled={busy || !input.trim()}
                   onClick={() => void send(input)}
                 >
-                  {busy ? 'Listening…' : 'Send to MAIA'}
+                  {busy ? 'MAIA is reflecting…' : 'Send to MAIA'}
                 </button>
               </div>
             </div>
