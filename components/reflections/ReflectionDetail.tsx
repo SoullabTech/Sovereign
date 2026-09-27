@@ -527,6 +527,12 @@ export default function ReflectionDetail({ id }: ReflectionDetailProps) {
           >
             Consider a decision →
           </a>
+          <a
+            href={`/maia/anchor?from=house&sourceFacet=reflections&sourceRefId=${encodeURIComponent(capsule.id)}&crossingId=reflection-carry-today`}
+            className="text-stone-500 hover:text-[#5a7a6f] transition-colors"
+          >
+            Carry this with me today →
+          </a>
         </div>
 
         {/* Bring it back into conversation — member act, nothing written */}

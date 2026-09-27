@@ -77,6 +77,9 @@ Already governed in lib/house/livingOrientation.ts:
 | Relationships | Write about this | Journal | live |
 | Idea Shift | Name this shift as a change | Changes | live |
 | Idea Decision | Take this decision forward | Decisions | live |
+| Change | Carry this into today | Daily Anchor | live |
+| Personal Decision | Hold this choice today | Daily Anchor | live |
+| Reflection | Carry this with me today | Daily Anchor | live |
 | Writer's Studio | Discuss with MAIA | MAIA-in-Studio | partial |
 | Astrology | Discuss with MAIA | MAIA | partial |
 
@@ -99,16 +102,15 @@ This is a documentation/registry reconciliation candidate, not a new experience 
 
 ### Dream
 
-Dream substrate exists (/api/dreams, Dream interfaces, older archive/lab surfaces), but Dream is not presently an admitted House facet in either canonical House registry.
+**This census finding has been superseded by the DREAM-01 → DREAM-03 programme.**
 
-The existing dashboard surface also contains simulated/example metrics and interpretive classifications, so it cannot be treated as canonical member substrate merely because files exist.
+Dream is now a first-class House facet with a canonical member-owned Dream room, real read/capture, and exact Journal ↔ Dream identity continuity. The remembered dream remains the primary object and is not duplicated merely to cross rooms.
 
-**Classification:** ontology adjudication required before crossing design.  
-**Do not yet authorize:** Dream → MAIA, Dream → Journal, Dream → Reflection, Dream → Astrology, or Dream → Divination.
+Dream cognition remains separately governed and unopened at DREAM-03. The next Dream boundary is the Encounter conversation contract/runtime; this census does not authorize that cognitive act or any additional symbolic crossing.
 
-If Dream becomes a House facet, the likely first law is:
+Current governing law:
 
-> the remembered dream is the member-authored primary object; symbols, astrology, divination, and MAIA may enter as optional lenses, never as authoritative explanations of what the dream means.
+> the remembered dream is the member-authored primary object; symbols, astrology, divination, and MAIA may enter only through separately governed optional lenses, never as authoritative explanations of what the dream means.
 
 ### Practices
 
@@ -133,15 +135,12 @@ These are candidate journeys, not implementation authority.
 
 | Human movement | Candidate gesture | Classification | Why |
 | --- | --- | --- | --- |
-| Change → Daily Anchor | **Carry this into today** | explicit carry | lets a long change become one chosen daily thread |
-| Decision → Daily Anchor | **Hold this choice today** | explicit carry | supports fidelity after choosing without turning Anchor into task management |
 | Change → Practices | **Choose a practice for this** | explicit carry | lets embodiment support transition without automatic prescription |
 | Idea → Writing | **Develop this in Writer's Studio** | explicit carry | lets an idea become material without declaring it a manuscript |
 | Wisdom / Library → Writing | **Bring this source into the work** | explicit source carry | source citation/provenance travels; source text does not become authorship |
 | Astrology → Journal | **Write with this in view** | explicit contextual carry | calculated/symbolic context may accompany a blank page |
 | Astrology → Daily Anchor | **Keep this timing in view today** | explicit carry | only member-selected transit/cycle context; never a prescription |
 | Divination → Journal | **Write from this question** | explicit contextual carry | symbolic reading remains source; journal remains member-authored |
-| Reflection → Daily Anchor | **Carry this with me today** | explicit carry | allows a kept recognition to become today's chosen thread |
 | MAIA → facet doorway | **Go there / open that room** | suggested doorway | MAIA may suggest a relevant room but never create its object |
 | Any durable crossing → Living Field | none | read-only projection | Field reveals established relation, never authors one |
 
@@ -217,11 +216,11 @@ MAIA accompanies; MAIA does not absorb the object model of the House.
 The next implementation programme should not be “connect everything.”
 
 1. **Registry reconciliation:** name the already-existing Relationships → MAIA crossing without changing behavior.
-2. **Ontology adjudication:** settle Practices and Dream as House facets before crossing work.
-3. **Daily continuity:** prototype Change / Decision / Reflection → Daily Anchor because the receiving act can remain extremely small and member-authored.
+2. **Ontology reconciliation:** Dream is now settled as a first-class House facet through DREAM-03; Practices still requires navigation/ontology adjudication before cross-facet implementation.
+3. **Daily continuity:** Change / Personal Decision / Reflection → Daily Anchor is now live. Each source enters as read-only provenance; the Anchor remains blank until the member authors and keeps today's thread.
 4. **Relational continuity:** Relationship → Journal / Change / Decision is now live with strict provenance and no inferred relational meaning; any further relational crossings require a distinct human need and receiving substrate.
 5. **Creative continuity:** Idea → Writer's Studio, then only separately Idea → Change / Decision where the member has authored an explicit shift/decision block.
-6. **Symbolic continuity:** Astrology / Divination / future Dream → Journal or Anchor only after the distinction between source fact, symbol, synthesis, and lived meaning is visible in the receiving surface.
+6. **Symbolic continuity:** Astrology / Divination / Dream → Journal or Anchor only through separately governed crossings after the distinction between source fact, symbol, synthesis, and lived meaning is visible in the receiving surface.
 7. **Living Field:** project only relations made durable elsewhere.
 
 Each implementation act must stop again before expansion to the next family.

@@ -73,6 +73,7 @@ const ALLOWED_CROSSINGS: Record<
   'relationship-write-journal': { source: 'relationships', target: 'journal' },
   'change-carry-to-anchor': { source: 'changes', target: 'anchor' },
   'decision-hold-today': { source: 'decisions', target: 'anchor' },
+  'reflection-carry-today': { source: 'reflections', target: 'anchor' },
 };
 
 function excerpt(text: string, max = 900): string {

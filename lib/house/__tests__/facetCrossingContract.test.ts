@@ -51,6 +51,7 @@ const relationshipIds = [
 const anchorIds = [
   'change-carry-to-anchor',
   'decision-hold-today',
+  'reflection-carry-today',
 ] as const;
 
 const ids = [...foundationalIds, ...ideaIds, ...relationshipIds, ...anchorIds] as const;
@@ -102,15 +103,18 @@ describe('House facet crossing contract', () => {
     expect(ideaWorkspace).not.toContain('encodeURIComponent(block.content)');
   });
 
-  it('carries Change and Personal Decision into Daily Anchor without pre-authoring today', () => {
+  it('carries Change, Personal Decision, and Reflection into Daily Anchor without pre-authoring today', () => {
     expect(carrier).toContain("'change-carry-to-anchor': { source: 'changes', target: 'anchor' }");
     expect(carrier).toContain("'decision-hold-today': { source: 'decisions', target: 'anchor' }");
+    expect(carrier).toContain("'reflection-carry-today': { source: 'reflections', target: 'anchor' }");
     expect(carrier).toContain("decision_scope = 'personal'");
     expect(changeDetail).toContain('Carry this into today →');
     expect(changeDetail).toContain('crossingId=change-carry-to-anchor');
     expect(decisionDetail).toContain('Hold this choice today →');
     expect(decisionDetail).toContain('crossingId=decision-hold-today');
-    expect(anchorPage).toContain("sourceFacet === 'changes' || sourceFacet === 'decisions'");
+    expect(reflectionDetail).toContain('Carry this with me today →');
+    expect(reflectionDetail).toContain('crossingId=reflection-carry-today');
+    expect(anchorPage).toContain("sourceFacet === 'changes' || sourceFacet === 'decisions' || sourceFacet === 'reflections'");
     expect(anchorPage).toContain('value={response}');
     expect(anchorPage).not.toContain('setResponse(source');
   });

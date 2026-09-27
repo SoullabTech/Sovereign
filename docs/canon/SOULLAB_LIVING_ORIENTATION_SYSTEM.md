@@ -315,6 +315,12 @@ A kept Journal entry or Reflection may offer **Consider a decision**.
 
 The receiving Personal Decision shows where the source came from while leaving Decision Title, Context, stakes, state, and time pressure for the member. A durable crossing exists only when the member creates the Decision.
 
+### Change / Personal Decision / Reflection → Daily Anchor
+
+A member-owned Change may offer **Carry this into today**. A Personal Decision may offer **Hold this choice today**. A Reflection may offer **Carry this with me today**.
+
+Daily Anchor resolves the source as read-only provenance and leaves today's writing field blank. Merely entering Anchor creates nothing. The source becomes durably related to today's Anchor only when the member authors and keeps the Anchor (or explicitly revisits and keeps a revision). Anchor therefore remains a tiny thread of return rather than a copied task, decision, or reflection.
+
 ---
 
 ## 12. Crossing debt and first repair

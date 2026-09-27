@@ -16,6 +16,8 @@ surfaces:
   - components/maia/changes/ChangesSheet.tsx
   - components/maia/changes/NameYourChange.tsx
   - components/reflections/ReflectionDetail.tsx
+  - app/maia/anchor/page.tsx
+  - app/api/anchor/today/route.ts
   - components/house/FacetCarryNotice.tsx
   - components/house/FacetOriginTrail.tsx
 change_class: experiential
@@ -41,7 +43,7 @@ experience_verification: >
   member_facet_crossings row, storing only member id, crossing id, source facet/id, target facet/id, and time.
   The target detail surfaces then displayed Where this began with a Return to source doorway. Journal's
   return URL reopened the exact source entry by id. All temporary witness targets and crossing rows were deleted;
-  residue verified at zero. Production was not touched. A second authenticated local witness extended the same law to Ideas using one temporary Idea explicitly labelled SAFE TO DELETE, with one member-authored Shift block and one member-authored Decision block. Shift→Changes and Decision→Personal Decisions both displayed Ideas provenance while target meaning fields remained blank. The inverse subtype probes were refused with 404 Source not available, proving that a Decision block cannot enter the Shift crossing and a Shift block cannot enter the Decision crossing. The temporary Idea and both blocks were then deleted; residue verified at zero. A third authenticated local witness then exercised Relationships→Changes and Relationships→Personal Decisions using an existing non-sensitive member-owned relationship. The relationship source resolved with an empty excerpt: only neutral relationship identity crossed, while relationship notes and field-state inference remained withheld. Both receiving forms remained blank. A bounded persistence witness created one temporary Change and one temporary Personal Decision; each received exactly one relationship-sourced crossing row and both target detail surfaces showed Where this began → Relationship → Return to source. The temporary targets and crossing rows were deleted; residue verified at zero. A fourth authenticated local witness then exercised Relationships→Journal from the actual Relationship UI doorway. Journal opened directly into its writing state with Relationship provenance visible and an empty textarea. A temporary Journal entry explicitly labelled SAFE TO DELETE was kept through the governed Journal API; the Journal row and exactly one relationship-write-journal crossing row were created atomically. Reopening that exact entry displayed Where this began → Relationship → Return to source. Desktop and mobile evidence were captured. The temporary Journal entry and crossing row were deleted; residue verified at zero.
+  residue verified at zero. Production was not touched. A second authenticated local witness extended the same law to Ideas using one temporary Idea explicitly labelled SAFE TO DELETE, with one member-authored Shift block and one member-authored Decision block. Shift→Changes and Decision→Personal Decisions both displayed Ideas provenance while target meaning fields remained blank. The inverse subtype probes were refused with 404 Source not available, proving that a Decision block cannot enter the Shift crossing and a Shift block cannot enter the Decision crossing. The temporary Idea and both blocks were then deleted; residue verified at zero. A third authenticated local witness then exercised Relationships→Changes and Relationships→Personal Decisions using an existing non-sensitive member-owned relationship. The relationship source resolved with an empty excerpt: only neutral relationship identity crossed, while relationship notes and field-state inference remained withheld. Both receiving forms remained blank. A bounded persistence witness created one temporary Change and one temporary Personal Decision; each received exactly one relationship-sourced crossing row and both target detail surfaces showed Where this began → Relationship → Return to source. The temporary targets and crossing rows were deleted; residue verified at zero. A fourth authenticated local witness then exercised Relationships→Journal from the actual Relationship UI doorway. Journal opened directly into its writing state with Relationship provenance visible and an empty textarea. A temporary Journal entry explicitly labelled SAFE TO DELETE was kept through the governed Journal API; the Journal row and exactly one relationship-write-journal crossing row were created atomically. Reopening that exact entry displayed Where this began → Relationship → Return to source. Desktop and mobile evidence were captured. The temporary Journal entry and crossing row were deleted; residue verified at zero. A fifth authenticated local witness exercised the Daily continuity family on localhost:3597: Change→Daily Anchor, Personal Decision→Daily Anchor, and Reflection→Daily Anchor each displayed authenticated source provenance while leaving the Anchor textarea empty. Read-only entry created neither an Anchor nor a crossing row; database witness returned anchor_today=0 and crossings=0. All temporary SAFE TO DELETE sources were removed after witness, with zero residue. A durable Anchor relation is created only if the member authors and keeps their own Anchor words.
 ---
 
 # Facet Crossings — Experience Contract
@@ -76,6 +78,9 @@ The durable crossing slice remains deliberately narrow:
 | Relationship | **Something is changing here** | Changes |
 | Relationship | **There is a choice here** | Personal Decisions |
 | Relationship | **Write about this** | Journal |
+| Change | **Carry this into today** | Daily Anchor |
+| Personal Decision | **Hold this choice today** | Daily Anchor |
+| Reflection | **Carry this with me today** | Daily Anchor |
 
 These are member-explicit crossings only.
 
@@ -117,7 +122,13 @@ The following remain for the member to author in the receiving room:
 - optional place;
 - whether anything is kept at all.
 
-A Relationship may accompany the blank page as provenance. It does not seed, summarize, or author the Journal text.
+### Daily Anchor
+
+- the words of today's Anchor;
+- whether anything is held at all;
+- whether an existing Anchor is revisited.
+
+A Relationship may accompany the blank Journal page as provenance. A Change, Personal Decision, or Reflection may accompany Daily Anchor as provenance. None seeds, summarizes, or authors the member's text.
 
 A source may have inspired those things. It is not evidence that the system knows them.
 
@@ -135,6 +146,10 @@ or
 
 > **Came with you from Relationships**
 
+or
+
+> **Came with you from Changes / Decisions**
+
 and then:
 
 > **The source stays where it is. You decide what belongs here.**
@@ -151,7 +166,7 @@ The target action does not become available until the source has resolved.
 
 ## Durable relation
 
-When the member actually creates the Change or Decision, the target object and crossing relation are written in one transaction.
+When the member actually creates the Change or Decision, keeps the Journal entry, or keeps/revisits the Daily Anchor, the receiving object and crossing relation are written in one transaction.
 
 The crossing ledger stores only:
 
@@ -192,6 +207,8 @@ An Idea Decision remains an Idea Decision.
 A Change is not a promoted Journal entry.
 
 A Decision is not an extracted conclusion.
+
+A Daily Anchor is not a copied Change, Decision, or Reflection.
 
 The crossing records relationship without merger.
 
