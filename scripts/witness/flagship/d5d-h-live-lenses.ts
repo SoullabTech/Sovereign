@@ -172,6 +172,50 @@ async function main(){
     });
     check('D5DH-05 flagship visual system remains live across shared lens surface',
       visual.display==='grid'&&visual.columns.split(' ').length>=2,JSON.stringify(visual));
+
+    const voiceUrl=page.url();
+    await page.reload({waitUntil:'domcontentloaded',timeout:240000});
+    await page.waitForSelector(`[data-source-reading="${readingIds.get('voice')}"]`,{timeout:240000});
+    check('D6-01 refresh restores exact Develop lens and explicit reading identity',
+      page.url()===voiceUrl);
+
+    const returnLink=page.locator('[data-develop-view="voice"] a[data-return-to]').first();
+    const returnSection=await returnLink.getAttribute('data-return-to');
+    await returnLink.click();
+    await page.waitForURL(/\/writers-studio\/rebuild\?/,{timeout:240000});
+    const writeUrl=new URL(page.url());
+    check('D6-02 exact evidence return opens Write at the same manuscript section',
+      writeUrl.searchParams.get('m')===WK&&writeUrl.searchParams.get('s')===returnSection,
+      page.url());
+    await page.goBack({waitUntil:'domcontentloaded'});
+    await page.waitForSelector(`[data-source-reading="${readingIds.get('voice')}"]`,{timeout:240000});
+    check('D6-03 browser Back restores the exact Develop reading, not merely the room',
+      page.url()===voiceUrl);
+
+    await page.setViewportSize({width:1180,height:820});
+    const laptop=await page.evaluate(()=>({w:innerWidth,sw:document.documentElement.scrollWidth,
+      tabs:(document.querySelector('.fs-modetabs') as HTMLElement | null)?.scrollWidth??0,
+      tabClient:(document.querySelector('.fs-modetabs') as HTMLElement | null)?.clientWidth??0}));
+    check('D6-04 laptop has no page-level horizontal overflow',laptop.sw<=laptop.w+1,JSON.stringify(laptop));
+
+    await page.setViewportSize({width:390,height:844});
+    await page.waitForTimeout(100);
+    const mobile=await page.evaluate(()=>({w:innerWidth,sw:document.documentElement.scrollWidth,
+      rail:getComputedStyle(document.querySelector('.fs-rail')!).display,
+      mobileNav:getComputedStyle(document.querySelector('.fs-mobilenav')!).display}));
+    check('D6-05 mobile collapses the rail into mobile navigation without page overflow',
+      mobile.rail==='none'&&mobile.mobileNav==='flex'&&mobile.sw<=mobile.w+1,JSON.stringify(mobile));
+    await page.screenshot({path:join(OUT,'02-voice-mobile.png'),fullPage:false});
+
+    const chooseAnother=page.getByRole('button',{name:'Choose another reading'});
+    await chooseAnother.focus(); await page.keyboard.press('Enter');
+    await page.waitForFunction(()=>!new URL(location.href).searchParams.has('reading'));
+    await page.waitForSelector('[data-develop-view="voice"] .fs-readingchoice');
+    const choice=page.locator('[data-develop-view="voice"] .fs-readingchoice').first();
+    await choice.focus(); await page.keyboard.press('Enter');
+    await page.waitForSelector(`[data-source-reading="${readingIds.get('voice')}"]`);
+    check('D6-06 saved-reading chooser is operable by keyboard alone',
+      new URL(page.url()).searchParams.get('reading')===readingIds.get('voice'));
   }finally{
     await browser.close(); await pg.end();
   }
