@@ -60,3 +60,6 @@
 .elemental-aether{box-shadow:inset 0 4px 0 rgba(103,91,120,.15)}
 .maia-conversation-end{height:1px}
 @media(max-width:650px){.elemental-invitation,.elemental-immersion{padding:22px 18px}.elemental-trace{grid-template-columns:1fr;gap:0}.elemental-trace span{text-align:left;padding:7px 4px}.elemental-trace span[aria-current=step]{border-bottom-width:2px;font-weight:600}}
+
+.reading-elemental{margin:28px 0;padding:22px 0;border-top:1px solid #bdaa8e;border-bottom:1px solid #bdaa8e}
+.read-element{padding:12px 0}.read-element h3{margin:0 0 5px;text-transform:capitalize}
