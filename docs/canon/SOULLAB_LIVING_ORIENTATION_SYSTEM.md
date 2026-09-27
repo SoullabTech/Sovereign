@@ -295,6 +295,12 @@ A member-authored **Shift** block may offer **Name this shift as a change**. A m
 
 Those gestures are type-bound: ordinary Reflection/Note blocks and MAIA reflection blocks do not receive them. The receiving facet resolves the source under the authenticated member, displays Ideas provenance, and leaves all target meaning-bearing fields blank. A mismatched block type fails closed before provenance is shown. Durable target provenance returns to the exact Idea block by identity.
 
+### Relationships → Changes / Decisions
+
+A member-owned Relationship may offer **Something is changing here** or **There is a choice here**.
+
+Only neutral relationship identity crosses at present. Relationship notes are withheld because their current schema does not prove authorship; field-tone analysis, inferred patterns, unresolved-thread analysis, observer-generated material, and claims about the other person's interiority do not cross. The member still authors what is changing or what the decision is in the receiving room.
+
 ### Journal / Reflections → Changes
 
 A kept Journal entry or Reflection may offer **Name this as a change** / **Name a change**.

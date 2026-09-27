@@ -72,6 +72,8 @@ Already governed in lib/house/livingOrientation.ts:
 | Reflections | Name a change | Changes | live |
 | Journal | Consider a decision | Decisions | live |
 | Reflections | Consider a decision | Decisions | live |
+| Relationships | Something is changing here | Changes | live |
+| Relationships | There is a choice here | Decisions | live |
 | Idea Shift | Name this shift as a change | Changes | live |
 | Idea Decision | Take this decision forward | Decisions | live |
 | Writer's Studio | Discuss with MAIA | MAIA-in-Studio | partial |
@@ -134,8 +136,6 @@ These are candidate journeys, not implementation authority.
 | Decision → Daily Anchor | **Hold this choice today** | explicit carry | supports fidelity after choosing without turning Anchor into task management |
 | Change → Practices | **Choose a practice for this** | explicit carry | lets embodiment support transition without automatic prescription |
 | Relationship → Journal | **Write from this relationship** | explicit navigation/carry | preserves the relationship as context while leaving the page blank |
-| Relationship → Change | **Something is changing here** | explicit persistence | member names the change; relationship is provenance only |
-| Relationship → Decision | **There is a choice here** | explicit persistence | member authors the choice; MAIA cannot infer it |
 | Idea → Writing | **Develop this in Writer's Studio** | explicit carry | lets an idea become material without declaring it a manuscript |
 | Wisdom / Library → Writing | **Bring this source into the work** | explicit source carry | source citation/provenance travels; source text does not become authorship |
 | Astrology → Journal | **Write with this in view** | explicit contextual carry | calculated/symbolic context may accompany a blank page |

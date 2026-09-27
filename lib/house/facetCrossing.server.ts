@@ -2,7 +2,7 @@ import type { TransactionClient } from '@/lib/db/postgres';
 import { query } from '@/lib/db/postgres';
 import { getCapsuleById } from '@/lib/capsules';
 
-export type CarrySourceFacet = 'journal' | 'reflections' | 'ideas';
+export type CarrySourceFacet = 'journal' | 'reflections' | 'ideas' | 'relationships';
 export type CarryTargetFacet = 'changes' | 'decisions';
 export type RelationSourceFacet = CarrySourceFacet | 'divination';
 export type RelationTargetFacet = CarryTargetFacet | 'reflections';
@@ -68,6 +68,8 @@ const ALLOWED_CROSSINGS: Record<
   'reflection-consider-decision': { source: 'reflections', target: 'decisions' },
   'idea-shift-to-changes': { source: 'ideas', target: 'changes', ideaBlockType: 'change' },
   'idea-decision-to-decisions': { source: 'ideas', target: 'decisions', ideaBlockType: 'decision' },
+  'relationship-name-change': { source: 'relationships', target: 'changes' },
+  'relationship-consider-decision': { source: 'relationships', target: 'decisions' },
 };
 
 function excerpt(text: string, max = 900): string {
@@ -123,6 +125,36 @@ export async function resolveFacetCarrySource(
       excerpt: excerpt(row.content),
       createdAt: row.created_at,
       returnHref: '/journal?entry=' + encodeURIComponent(row.id),
+    };
+  }
+
+  if (sourceFacet === 'relationships') {
+    const result = await query<{
+      id: string;
+      name: string;
+      realm: string;
+      bond_type: string | null;
+      created_at: string;
+    }>(
+      `SELECT id::text AS id, name, realm, bond_type,
+              created_at::text AS created_at
+         FROM member_relationships
+        WHERE id::text = $1
+          AND member_id = $2::uuid
+          AND archived_at IS NULL
+        LIMIT 1`,
+      [sourceRefId, memberId],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+    const descriptor = [row.realm, row.bond_type].filter(Boolean).join(' · ');
+    return {
+      facet: 'relationships',
+      refId: row.id,
+      label: descriptor ? `${row.name} · ${descriptor}` : row.name,
+      excerpt: '',
+      createdAt: row.created_at,
+      returnHref: '/relationships/' + encodeURIComponent(row.id),
     };
   }
 
@@ -400,9 +432,9 @@ export async function recordFacetCrossing(
   );
 }
 
-const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'reflections', 'ideas']);
+const CARRY_SOURCE_FACETS = new Set<CarrySourceFacet>(['journal', 'reflections', 'ideas', 'relationships']);
 const CARRY_TARGET_FACETS = new Set<CarryTargetFacet>(['changes', 'decisions']);
-const FLOW_SOURCE_FACETS = new Set<RelationSourceFacet>(['journal', 'reflections', 'ideas', 'divination']);
+const FLOW_SOURCE_FACETS = new Set<RelationSourceFacet>(['journal', 'reflections', 'ideas', 'relationships', 'divination']);
 const FLOW_TARGET_FACETS = new Set<RelationTargetFacet>(['changes', 'decisions', 'reflections']);
 
 function isCarrySourceFacet(value: string): value is CarrySourceFacet {

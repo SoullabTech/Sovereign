@@ -52,7 +52,7 @@ export default function NewDecisionPage() {
   const sourceRefId = searchParams?.get('sourceRefId');
   const crossingId = searchParams?.get('crossingId');
   const carrySourceRef: FacetCarryRef | null =
-    (sourceFacet === 'journal' || sourceFacet === 'reflections' || sourceFacet === 'ideas') && sourceRefId && crossingId
+    (sourceFacet === 'journal' || sourceFacet === 'reflections' || sourceFacet === 'ideas' || sourceFacet === 'relationships') && sourceRefId && crossingId
       ? { sourceFacet, sourceRefId, crossingId }
       : null;
   const [carrySourceValid, setCarrySourceValid] = useState<boolean | null>(

@@ -2,6 +2,7 @@
 room: Facet Crossings
 human_activity: carrying something from one part of my life into another without losing its origin or letting the system decide what it means
 surfaces:
+  - app/relationships/[id]/page.tsx
   - app/maia/ideas/[id]/page.tsx
   - app/changes/page.tsx
   - app/studio/decisions/[id]/page.tsx
@@ -35,7 +36,7 @@ experience_verification: >
   member_facet_crossings row, storing only member id, crossing id, source facet/id, target facet/id, and time.
   The target detail surfaces then displayed Where this began with a Return to source doorway. Journal's
   return URL reopened the exact source entry by id. All temporary witness targets and crossing rows were deleted;
-  residue verified at zero. Production was not touched. A second authenticated local witness extended the same law to Ideas using one temporary Idea explicitly labelled SAFE TO DELETE, with one member-authored Shift block and one member-authored Decision block. Shift→Changes and Decision→Personal Decisions both displayed Ideas provenance while target meaning fields remained blank. The inverse subtype probes were refused with 404 Source not available, proving that a Decision block cannot enter the Shift crossing and a Shift block cannot enter the Decision crossing. The temporary Idea and both blocks were then deleted; residue verified at zero.
+  residue verified at zero. Production was not touched. A second authenticated local witness extended the same law to Ideas using one temporary Idea explicitly labelled SAFE TO DELETE, with one member-authored Shift block and one member-authored Decision block. Shift→Changes and Decision→Personal Decisions both displayed Ideas provenance while target meaning fields remained blank. The inverse subtype probes were refused with 404 Source not available, proving that a Decision block cannot enter the Shift crossing and a Shift block cannot enter the Decision crossing. The temporary Idea and both blocks were then deleted; residue verified at zero. A third authenticated local witness then exercised Relationships→Changes and Relationships→Personal Decisions using an existing non-sensitive member-owned relationship. The relationship source resolved with an empty excerpt: only neutral relationship identity crossed, while relationship notes and field-state inference remained withheld. Both receiving forms remained blank. A bounded persistence witness created one temporary Change and one temporary Personal Decision; each received exactly one relationship-sourced crossing row and both target detail surfaces showed Where this began → Relationship → Return to source. The temporary targets and crossing rows were deleted; residue verified at zero.
 ---
 
 # Facet Crossings — Experience Contract
@@ -67,6 +68,8 @@ The durable crossing slice remains deliberately narrow:
 | Reflection | **Consider a decision** | Personal Decisions |
 | Idea Shift block | **Name this shift as a change** | Changes |
 | Idea Decision block | **Take this decision forward** | Personal Decisions |
+| Relationship | **Something is changing here** | Changes |
+| Relationship | **There is a choice here** | Personal Decisions |
 
 These are member-explicit crossings only.
 
@@ -184,6 +187,8 @@ Merely viewing a source does not imply permission to propagate it.
 Technical readability between subsystems is not crossing authority.
 
 For Ideas, the doorway is available only on the member-authored structural block that already names the relevant kind of movement: a Shift may offer Changes; a Decision may offer Personal Decisions. Notes and MAIA reflections do not receive these gestures.
+
+For Relationships, only the member-owned relationship identity may accompany the crossing. Relationship notes are withheld because the current schema does not prove their authorship. Field-tone analysis, inferred pattern labels, unresolved-thread analysis, observer-generated material, and claims about the other person's interiority do not cross.
 
 ## Failure modes
 

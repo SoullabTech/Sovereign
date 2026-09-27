@@ -8,7 +8,7 @@ type Origin = {
   crossingId: string;
   crossedAt: string;
   source: {
-    facet: 'journal' | 'reflections' | 'ideas' | 'divination';
+    facet: 'journal' | 'reflections' | 'ideas' | 'relationships' | 'divination';
     refId: string;
     label: string;
     excerpt: string;
@@ -74,7 +74,9 @@ export function FacetOriginTrail({
                       ? 'Divination'
                       : origin.source.facet === 'ideas'
                         ? 'Idea'
-                        : 'Reflection'}
+                        : origin.source.facet === 'relationships'
+                          ? 'Relationship'
+                          : 'Reflection'}
                 </p>
                 <p className={`text-sm mt-1 ${labelTone}`}>{origin.source.label}</p>
                 <a
