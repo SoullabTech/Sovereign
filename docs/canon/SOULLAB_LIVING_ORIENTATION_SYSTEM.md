@@ -378,6 +378,54 @@ The line means only that the member carried one object into relation with anothe
 
 No graph-editing or Field mutation authority is granted.
 
+### Member-chosen lenses over explicit flow
+
+LOF-02 adds a second, separate act:
+
+> **The member may choose a lens through which to explore an explicit path they already made.**
+
+The six current cross-cutting lenses are:
+
+- Elemental;
+- Spiralogic;
+- Developmental;
+- Relational;
+- Temporal;
+- Symbolic.
+
+The lens is never selected automatically.
+
+Selecting a lens:
+
+1. does not classify the member;
+2. does not classify the crossing;
+3. does not write a new relation;
+4. does not persist a lens preference;
+5. does not run cognition on its own.
+
+Only after the member chooses a lens does Living Field fetch the exact source and target evidence through their existing member-ownership boundaries.
+
+Before any material reaches MAIA, the member sees an editable **What MAIA will receive** preview containing the source, target, chosen lens, and explicit epistemic restraint.
+
+The actual handoff uses the canonical in-place MAIA presence layer.
+
+The prompt requires MAIA to distinguish:
+
+- what is directly present in the source and target;
+- what the chosen lens merely suggests;
+- what remains for the member to determine from lived meaning.
+
+> **A lens is a perspective over evidence, not authority over the person.**
+
+Elemental language therefore cannot become fixed elemental identity.
+Spiralogic cannot become a stage assignment.
+Developmental language cannot become rank or diagnosis.
+Temporal sequence cannot become causation.
+Symbolic possibility cannot become fact or prediction.
+Relational language cannot erase the distinct realities being related.
+
+LOF-02 creates no durable interpretation artifact. If a future member chooses to keep an interpretation, that is a separate crossing requiring its own explicit custody law.
+
 ---
 
 ## 13. Product design test

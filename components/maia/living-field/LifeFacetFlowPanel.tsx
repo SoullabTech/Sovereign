@@ -1,9 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
+import { useMaiaPresence } from '@/components/maia/presence/MaiaPresence';
 
 type FlowFacet = 'journal' | 'reflections' | 'changes' | 'decisions';
+type LensId = 'elemental' | 'spiralogic' | 'developmental' | 'relational' | 'temporal' | 'symbolic';
 
 type FlowEndpoint = {
   facet: FlowFacet;
@@ -20,12 +24,59 @@ type FacetFlow = {
   createdAt: string;
 };
 
+type FlowEvidence = {
+  flowId: string;
+  crossingId: string;
+  source: FlowEndpoint & { excerpt: string };
+  target: FlowEndpoint & { excerpt: string };
+  createdAt: string;
+};
+
 const FACET_LABEL: Record<FlowFacet, string> = {
   journal: 'Journal',
   reflections: 'Reflections',
   changes: 'Change',
   decisions: 'Decision',
 };
+
+const LENSES: Array<{ id: LensId; label: string; question: string }> = [
+  {
+    id: 'elemental',
+    label: 'Elemental',
+    question:
+      'What modes of participation — Fire, Water, Earth, Air, or the larger Fifth — might this movement invite me to notice? Do not turn an element into a fixed identity.',
+  },
+  {
+    id: 'spiralogic',
+    label: 'Spiralogic',
+    question:
+      'What movement, differentiation, integration, return, or threshold might this path invite me to notice? Do not assign me a fixed stage.',
+  },
+  {
+    id: 'developmental',
+    label: 'Developmental',
+    question:
+      'What trajectory, tension, threshold, or developing capacity might this path invite me to consider? Keep any developmental reading provisional and member-correctable.',
+  },
+  {
+    id: 'relational',
+    label: 'Relational',
+    question:
+      'What might become visible if we attend to the relationship between these two moments rather than reducing the relation to either one?',
+  },
+  {
+    id: 'temporal',
+    label: 'Temporal',
+    question:
+      'What changes when this movement is understood in its actual sequence and lived time, without treating sequence as causation?',
+  },
+  {
+    id: 'symbolic',
+    label: 'Symbolic',
+    question:
+      'What possibilities become visible symbolically here? Keep symbol as an opening for meaning, never as fact, diagnosis, or prediction.',
+  },
+];
 
 function when(iso: string): string {
   const date = new Date(iso);
@@ -64,6 +115,187 @@ function Endpoint({
         {endpoint.label}
       </p>
     </a>
+  );
+}
+
+function buildLensPrompt(evidence: FlowEvidence, lens: LensId): string {
+  const lensConfig = LENSES.find((item) => item.id === lens)!;
+  const sourceFacet = FACET_LABEL[evidence.source.facet];
+  const targetFacet = FACET_LABEL[evidence.target.facet];
+
+  return [
+    'I want to explore a path I explicitly made in Soullab.',
+    '',
+    `SOURCE — ${sourceFacet}: "${evidence.source.label}"`,
+    evidence.source.excerpt,
+    '',
+    `TARGET — ${targetFacet}: "${evidence.target.label}"`,
+    evidence.target.excerpt,
+    '',
+    `I want to look at this through ${lensConfig.id === 'elemental' ? 'an' : 'a'} ${lensConfig.label} lens.`,
+    lensConfig.question,
+    '',
+    'Please distinguish what is directly present in the source and target from what this lens merely suggests. Treat the lens as a perspective, not a verdict. Ask me about my lived meaning rather than deciding it for me.',
+  ].join('\n');
+}
+
+function ThreadLensExplorer({
+  flow,
+}: {
+  flow: FacetFlow;
+}) {
+  const router = useRouter();
+  const presence = useMaiaPresence();
+  const [open, setOpen] = useState(false);
+  const [lens, setLens] = useState<LensId | null>(null);
+  const [evidence, setEvidence] = useState<FlowEvidence | null>(null);
+  const [message, setMessage] = useState('');
+  const [loadingEvidence, setLoadingEvidence] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  const selected = useMemo(() => LENSES.find((item) => item.id === lens) ?? null, [lens]);
+
+  async function chooseLens(next: LensId) {
+    setLens(next);
+    setFailed(false);
+    setLoadingEvidence(true);
+    try {
+      const response = await apiFetch(
+        '/api/house/facet-flow-evidence?flowId=' + encodeURIComponent(flow.id),
+      );
+      if (!response.ok) throw new Error('flow evidence unavailable');
+      const data = await response.json();
+      const nextEvidence = data?.evidence as FlowEvidence | undefined;
+      if (!nextEvidence?.source || !nextEvidence?.target) {
+        throw new Error('flow evidence incomplete');
+      }
+      setEvidence(nextEvidence);
+      setMessage(buildLensPrompt(nextEvidence, next));
+    } catch {
+      setEvidence(null);
+      setMessage('');
+      setFailed(true);
+    } finally {
+      setLoadingEvidence(false);
+    }
+  }
+
+  function explore() {
+    const prompt = message.trim();
+    if (!prompt || !evidence || !lens) return;
+
+    if (presence?.canHost) {
+      presence.openMaiaWith(prompt);
+      return;
+    }
+
+    seedMaiaPrompt({
+      prompt,
+      source: 'living-field:facet-flow',
+      sourceLabel: selected ? selected.label + ' lens' : 'Life thread',
+      returnTo: '/maia/living-field',
+      contextId: evidence.flowId,
+      tone: 'exploratory',
+    });
+    router.push('/maia');
+    router.refresh();
+  }
+
+  if (!flow.source || !flow.target) return null;
+
+  return (
+    <div className="mt-4 border-t border-stone-900 pt-3">
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-[11px] text-stone-600 transition-colors hover:text-stone-400"
+        >
+          Explore this thread →
+        </button>
+      ) : (
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-stone-600">
+              Look through a lens
+            </p>
+            <p className="mt-1 max-w-lg text-[11px] leading-relaxed text-stone-700">
+              Choose a perspective. Nothing is classified or saved by choosing one.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-x-4 gap-y-2" role="group" aria-label="Choose a lens for this thread">
+            {LENSES.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => void chooseLens(item.id)}
+                aria-pressed={lens === item.id}
+                className={
+                  'text-[11px] transition-colors ' +
+                  (lens === item.id
+                    ? 'text-amber-300'
+                    : 'text-stone-600 hover:text-stone-400')
+                }
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {loadingEvidence ? (
+            <p className="text-[11px] text-stone-700">Gathering only this thread’s source and target…</p>
+          ) : failed ? (
+            <p className="text-[11px] text-stone-600">
+              This thread’s evidence is not available right now. Nothing has been sent.
+            </p>
+          ) : evidence && lens ? (
+            <div className="space-y-3">
+              <label
+                htmlFor={'facet-flow-message-' + flow.id}
+                className="block text-[10px] uppercase tracking-[0.18em] text-stone-600"
+              >
+                What MAIA will receive
+              </label>
+              <textarea
+                id={'facet-flow-message-' + flow.id}
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                rows={10}
+                className="w-full resize-y rounded-xl border border-stone-800 bg-black/20 px-4 py-3 text-xs leading-relaxed text-stone-300 outline-none focus:border-amber-800/50"
+              />
+              <p className="max-w-lg text-[10px] leading-relaxed text-stone-700">
+                Edit or clear this first. The lens is named as a perspective, and MAIA receives
+                only the evidence shown here.
+              </p>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <button
+                  type="button"
+                  onClick={explore}
+                  disabled={!message.trim()}
+                  className="text-xs text-amber-400/80 transition-colors hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  Explore with MAIA →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    setLens(null);
+                    setEvidence(null);
+                    setMessage('');
+                    setFailed(false);
+                  }}
+                  className="text-[11px] text-stone-700 hover:text-stone-500"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -158,6 +390,8 @@ export function LifeFacetFlowPanel() {
               <p className="mt-3 text-[10px] text-stone-700">
                 You carried this path{when(flow.createdAt) ? ' · ' + when(flow.createdAt) : ''}
               </p>
+
+              <ThreadLensExplorer flow={flow} />
             </article>
           ))}
         </div>
