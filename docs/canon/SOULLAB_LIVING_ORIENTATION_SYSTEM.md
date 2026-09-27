@@ -295,6 +295,10 @@ A member-authored **Shift** block may offer **Name this shift as a change**. A m
 
 Those gestures are type-bound: ordinary Reflection/Note blocks and MAIA reflection blocks do not receive them. The receiving facet resolves the source under the authenticated member, displays Ideas provenance, and leaves all target meaning-bearing fields blank. A mismatched block type fails closed before provenance is shown. Durable target provenance returns to the exact Idea block by identity.
 
+### Relationships → MAIA
+
+**Talk with MAIA here** / **Write with MAIA** opens canonical MAIA inside Relationship Space only after the member's explicit gesture. The handoff carries exact relationship identity plus bounded relational context while preserving the distinction between member-authored history and system inference. Present member report outranks stale or inferred context; MAIA does not diagnose the relationship or characterize the other person's interiority.
+
 ### Relationships → Changes / Decisions / Journal
 
 A member-owned Relationship may offer **Something is changing here**, **There is a choice here**, or **Write about this**.

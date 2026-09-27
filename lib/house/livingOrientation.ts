@@ -466,6 +466,23 @@ export const FACET_CROSSINGS = [
     law: 'Only a member-authored Decision block may cross. The Idea decision remains source material; Personal Decisions receives provenance, not a pre-authored decision object.',
   },
   {
+    id: 'relationship-maia-in-place',
+    from: 'relationships',
+    to: 'maia',
+    gesture: 'Talk / Write with MAIA here',
+    carries: ['exact relationship identity', 'bounded relationship-space context with authorship/inference distinctions'],
+    mode: 'contained_presence',
+    authority: 'member_explicit',
+    standing: 'live',
+    evidence: [
+      'app/relationships/[id]/page.tsx',
+      'lib/relationships/relationshipContextService.ts',
+      'lib/relationships/formatRelationalContextForPrompt.ts',
+      'app/relationships/__tests__/relationshipsUxArchitecture.test.ts',
+    ],
+    law: 'MAIA enters only after an explicit member gesture and remains inside Relationship Space. Prior member-authored history and system inference stay distinguishable; present member report outranks stale/inferred context, and MAIA may not diagnose the relationship or characterize the other person.',
+  },
+  {
     id: 'relationship-name-change',
     from: 'relationships',
     to: 'changes',

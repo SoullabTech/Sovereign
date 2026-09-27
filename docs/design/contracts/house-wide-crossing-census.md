@@ -1,7 +1,7 @@
 # House-Wide Crossing Census + Missing-Journey Design
 
-**Programme:** SOULLAB-LIVING-ORIENTATION / FACET-FLOW-02  
-**Date:** 2026-09-27  
+**Programme:** SOULLAB-LIVING-ORIENTATION / FACET-FLOW-02
+**Date:** 2026-09-27
 **Scope:** census and design only — no runtime mutation, route mutation, schema change, or new crossing authority.
 
 ## 1. Purpose
@@ -72,6 +72,7 @@ Already governed in lib/house/livingOrientation.ts:
 | Reflections | Name a change | Changes | live |
 | Journal | Consider a decision | Decisions | live |
 | Reflections | Consider a decision | Decisions | live |
+| Relationships | Talk / Write with MAIA here | MAIA-in-Relationship Space | live |
 | Relationships | Something is changing here | Changes | live |
 | Relationships | There is a choice here | Decisions | live |
 | Relationships | Write about this | Journal | live |
@@ -85,20 +86,20 @@ Already governed in lib/house/livingOrientation.ts:
 
 Living Field may project the durable relations above but may not invent additional edges.
 
-## 5. Census finding: real crossings not yet represented canonically
+## 5. Census findings and reconciliation status
 
 ### Relationships → MAIA
 
-The Relationship Space already supports explicit in-place MAIA gestures: **Talk with MAIA here**, **Write with MAIA**, and relationship check-ins that explicitly request MAIA reflection.
+**Registry reconciliation is now complete.**
 
-The substrate is real and member-triggered. The Living Orientation registry simply does not yet name it.
+Relationship Space already supported explicit in-place MAIA gestures: **Talk with MAIA here** and **Write with MAIA**. The Living Orientation registry now names that existing runtime as `relationship-maia-in-place`; no new MAIA route, context loader, or UI behavior was introduced by the reconciliation.
 
-**Classification:** existing-runtime / registry-debt.  
-**Proposed authority:** member explicit.  
-**Carrier:** exact relationship identity plus bounded relationship-space context selected by the existing surface.  
+**Classification:** live existing-runtime / registry reconciled.
+**Authority:** member explicit.
+**Carrier:** exact relationship identity plus bounded relationship-space context under the existing authorship/inference discipline.
 **Never carry automatically:** inferred bond meaning, diagnosis, motive, attachment label, or a claim about the other person's interiority.
 
-This is a documentation/registry reconciliation candidate, not a new experience invention.
+The current member report outranks stale or inferred context. MAIA remains inside Relationship Space rather than absorbing the relationship into a generic chat destination.
 
 ### Dream
 
@@ -126,7 +127,7 @@ Potential future crossing: **Choose a practice for this** — member explicit, w
 
 Personal Decisions has real receiving substrate and is already reached from Journal and Reflections, while older House navigation commentary contains a superseded/practitioner-only distinction.
 
-**Classification:** substrate is real; navigation naming and audience history require care.  
+**Classification:** substrate is real; navigation naming and audience history require care.
 FACET-FLOW-02 treats Personal Decisions as a receiving facet where already proven, not as authority to expose or merge practitioner decision systems.
 
 ## 6. Missing journeys worth designing
@@ -215,7 +216,7 @@ MAIA accompanies; MAIA does not absorb the object model of the House.
 
 The next implementation programme should not be “connect everything.”
 
-1. **Registry reconciliation:** name the already-existing Relationships → MAIA crossing without changing behavior.
+1. **Registry reconciliation:** Relationships → MAIA is now canonically registered without changing behavior.
 2. **Ontology reconciliation:** Dream is now settled as a first-class House facet through DREAM-03; Practices still requires navigation/ontology adjudication before cross-facet implementation.
 3. **Daily continuity:** Change / Personal Decision / Reflection → Daily Anchor is now live. Each source enters as read-only provenance; the Anchor remains blank until the member authors and keeps today's thread.
 4. **Relational continuity:** Relationship → Journal / Change / Decision is now live with strict provenance and no inferred relational meaning; any further relational crossings require a distinct human need and receiving substrate.

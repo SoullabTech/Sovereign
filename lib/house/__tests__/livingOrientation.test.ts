@@ -91,6 +91,22 @@ describe('Soullab Living Orientation System', () => {
     }
   });
 
+  it('registers Relationship Space MAIA as member-explicit contained presence', () => {
+    const crossing = FACET_CROSSINGS.find(
+      (item) => item.id === 'relationship-maia-in-place',
+    );
+
+    expect(crossing).toMatchObject({
+      from: 'relationships',
+      to: 'maia',
+      authority: 'member_explicit',
+      mode: 'contained_presence',
+      standing: 'live',
+    });
+    expect(crossing?.law).toContain('present member report outranks stale/inferred context');
+    expect(crossing?.law).toContain('may not diagnose the relationship');
+  });
+
   it('names Anchor according to its accepted lived-time role', () => {
     expect(ORIENTATION_FACETS.anchor.label).toBe('Daily Anchor');
     expect(ORIENTATION_FACETS.anchor.question).toBe(
