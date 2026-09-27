@@ -425,6 +425,7 @@ interface OracleConversationProps {
   userId?: string;
   userName?: string;
   userBirthDate?: string; // Birth date for age calculation and teen support
+  includeStoredBirthData?: boolean; // Whether legacy stored birthData may accompany turns (default true). Hosts with explicit context custody can disable it.
   userAge?: number; // Pre-calculated age (optional, will calculate from birthDate if not provided)
   sessionId: string;
   apiEndpoint?: string; // API endpoint to use for conversation (defaults to /api/between/chat)
@@ -649,6 +650,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   userId,
   userName,
   userBirthDate,
+  includeStoredBirthData = true,
   userAge: propUserAge,
   sessionId,
   apiEndpoint = '/api/between/chat', // Default to current behavior
@@ -5607,7 +5609,7 @@ I'm not sure what I'm feeling yet.`;
           } : undefined,
 
           // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
-          birthData: (() => {
+          birthData: includeStoredBirthData ? (() => {
             if (typeof window === 'undefined') return undefined;
             try {
               const stored = localStorage.getItem('beta_user');
@@ -5617,7 +5619,7 @@ I'm not sure what I'm feeling yet.`;
             } catch {
               return undefined;
             }
-          })(),
+          })() : undefined,
 
           // 📝 SCRIBE SESSION DISCUSSION: Context for scoped session discussions
           // When discussing a past Scribe/Witness session, MAIA has access to the summary and themes
@@ -6857,7 +6859,7 @@ I'm not sure what I'm feeling yet.`;
 
       setCurrentMotionState('idle');
     }
-  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent, isSanctuary]);
+  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent, isSanctuary, includeStoredBirthData]);
 
   // 🔁 RECOVERY SEAM (Pattern A) — guarded resend of a not-delivered turn.
   // Reuses the member's existing bubble (retryOf); never creates a second turn.
