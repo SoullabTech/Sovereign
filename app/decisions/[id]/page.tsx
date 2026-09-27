@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, X } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
-import type { DecisionRecord } from '@/lib/studio/leadership/types';
+import type { DecisionRecord, ExperienceType } from '@/lib/studio/leadership/types';
 import styles from '../decision-house.module.css';
 
 function dateLabel(value?: string | null) {
@@ -29,6 +29,11 @@ export default function PersonalDecisionRoom() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [consulting, setConsulting] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const [noticeText, setNoticeText] = useState('');
+  const [noticeType, setNoticeType] = useState<ExperienceType>('field_event');
+  const [noticeSaving, setNoticeSaving] = useState(false);
+  const [noticeError, setNoticeError] = useState<string | null>(null);
 
   async function loadDecision() {
     const response = await apiFetch('/api/studio/decisions/' + encodeURIComponent(decisionId) + '?scope=personal');
@@ -73,6 +78,32 @@ export default function PersonalDecisionRoom() {
     () => [...(decision?.experiences || [])].sort((a,b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime()),
     [decision?.experiences],
   );
+
+  async function keepNotice() {
+    const content = noticeText.trim();
+    if (!content || noticeSaving) return;
+    setNoticeSaving(true);
+    setNoticeError(null);
+    try {
+      const response = await apiFetch('/api/studio/decisions/' + encodeURIComponent(decisionId) + '/experiences?scope=personal', {
+        method: 'POST',
+        body: JSON.stringify({
+          experienceType: noticeType,
+          content,
+          occurredAt: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error('Could not keep this moment');
+      setNoticeText('');
+      setNoticeType('field_event');
+      setNoticeOpen(false);
+      await loadDecision();
+    } catch (err) {
+      setNoticeError(err instanceof Error ? err.message : 'Could not keep this moment');
+    } finally {
+      setNoticeSaving(false);
+    }
+  }
 
   if (loading) return <div className={styles.decisionRoomLoading}><Loader2 className={styles.decisionSpinner} aria-hidden="true" /></div>;
   if (error && !decision) return <div className={styles.decisionRoomLoading}><p>{error}</p><Link href="/decisions">Return to Decisions →</Link></div>;
@@ -123,6 +154,64 @@ export default function PersonalDecisionRoom() {
         </article>
 
         <aside className={styles.perspectiveRail}>
+          <section className={styles.decisionNotice}>
+            {!noticeOpen ? (
+              <button type="button" className={styles.decisionNoticeDoor} onClick={() => setNoticeOpen(true)}>
+                <span><Plus aria-hidden="true" /> Notice what changed</span>
+                <span>→</span>
+              </button>
+            ) : (
+              <div className={styles.decisionNoticeForm}>
+                <header>
+                  <div>
+                    <small>NOTICE</small>
+                    <h3>What happened around this choice?</h3>
+                  </div>
+                  <button type="button" onClick={() => setNoticeOpen(false)} aria-label="Close notice">
+                    <X aria-hidden="true" />
+                  </button>
+                </header>
+                <textarea
+                  value={noticeText}
+                  onChange={(event) => setNoticeText(event.target.value)}
+                  placeholder="Write what actually happened before deciding what it means."
+                  aria-label="What changed around this choice"
+                  autoFocus
+                />
+                {noticeText.trim() ? (
+                  <div className={styles.decisionNoticeKinds}>
+                    <span>This was more like…</span>
+                    {[
+                      ['field_event', 'a moment'],
+                      ['reflection', 'a reflection'],
+                      ['breakthrough', 'a breakthrough'],
+                      ['setback', 'a setback'],
+                    ].map(([value,label]) => (
+                      <button
+                        type="button"
+                        key={value}
+                        data-active={noticeType === value ? 'true' : 'false'}
+                        onClick={() => setNoticeType(value as ExperienceType)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                {noticeError ? <p className={styles.decisionCreateError} role="alert">{noticeError}</p> : null}
+                <button
+                  type="button"
+                  className={styles.keepDecisionNotice}
+                  disabled={!noticeText.trim() || noticeSaving}
+                  onClick={keepNotice}
+                >
+                  {noticeSaving ? <Loader2 className={styles.decisionSpinner} aria-hidden="true" /> : null}
+                  Keep this moment
+                </button>
+              </div>
+            )}
+          </section>
+
           {!council ? (
             <section className={styles.gatherPerspective}>
               <small>OPTIONAL</small>
