@@ -647,16 +647,16 @@ export default function ChangeRoom({ changeId }: { changeId: string }) {
         <span className={styles.orb} aria-hidden="true" />
         <strong>MAIA</strong>
         <p>{maiaOpen ? 'Here with this Change.' : patternOpen ? 'Quiet while you look across time.' : 'Present when invited.'}</p>
-        {!maiaOpen && !patternOpen ? (
+        {maiaOpen ? (
+          <button type="button" className={styles.maiaReturn} onClick={() => setMaiaOpen(false)}>
+            Return to the Change
+          </button>
+        ) : !patternOpen ? (
           <button type="button" className={styles.maiaDoor} onClick={() => setMaiaOpen(true)}>
             <MessageCircle aria-hidden="true" />
             <span>Explore with MAIA</span>
           </button>
-        ) : (
-          <button type="button" className={styles.maiaReturn} onClick={() => setMaiaOpen(false)}>
-            Return to the Change
-          </button>
-        )}
+        ) : null}
         <div className={styles.maiaBoundary}>
           {maiaOpen
             ? 'Opening the chamber does not send the Change to MAIA. You choose whether to bring its context into the conversation.'
