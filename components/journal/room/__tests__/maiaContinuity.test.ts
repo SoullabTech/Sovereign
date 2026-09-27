@@ -8,6 +8,8 @@ const reflection = read('components/journal/room/Reflection.tsx');
 const route = read('app/api/journal/reflect/route.ts');
 const contract = read('docs/design/contracts/journal-room.md');
 const place = read('lib/maia/presence/place.ts');
+const maiaService = read('lib/sovereign/maiaService.ts');
+const consciousnessWrapper = read('lib/consciousness/consciousness-layer-wrapper.ts');
 
 describe('Journal MAIA continuity', () => {
   it('allows a transient multi-turn conversation after explicit invitation', () => {
@@ -17,6 +19,7 @@ describe('Journal MAIA continuity', () => {
     expect(reflection).toContain('history');
     expect(reflection).toContain('message');
     expect(reflection).toContain('Let it rest');
+    expect(reflection).toContain('encounterId.current');
     expect(reflection).not.toContain('MAIA noticed');
     expect(reflection).not.toContain('MAIA asked');
   });
@@ -28,20 +31,37 @@ describe('Journal MAIA continuity', () => {
     expect(route).not.toContain('body?.content');
   });
 
-  it('carries bounded conversation history without making it durable', () => {
+  it('uses canonical sovereign MAIA under Sanctuary rather than a Journal-specific model call', () => {
+    expect(route).toContain("getMaiaResponse");
+    expect(route).toContain("ensureSession");
+    expect(route).toContain("sanctuary: true");
+    expect(route).toContain("originRoute: '/api/journal/reflect'");
+    expect(route).not.toContain('generateWithClaude');
+  });
+
+  it('carries bounded conversation history without making Journal content durable', () => {
     expect(route).toContain('MAX_HISTORY_TURNS = 24');
     expect(route).toContain('sanitizeHistory');
-    expect(route).toContain('CONVERSATION SO FAR');
+    expect(route).toContain('TRANSIENT CONVERSATION SO FAR');
+    expect(route).toContain('journal-transient-');
     expect(route).not.toContain('/api/conversation/turns');
     expect(route).not.toContain('INSERT INTO');
     expect(route).not.toContain('saveConversationMemory');
     expect(route).not.toContain('createCapsule');
   });
+  it('carries Journal context through sovereign MAIA across FAST, CORE, and DEEP seams', () => {
+    expect(route).toContain('journalContextAddendum');
+    expect(maiaService).toContain('journalContextAddendum');
+    expect(maiaService).toContain('journalCurrent');
+    expect(consciousnessWrapper).toContain('journalContextAddendum?: string');
+    expect(consciousnessWrapper).toContain('journalContextBlock(context)');
+  });
+
   it('keeps MAIA relational without granting authority over meaning', () => {
-    expect(route).toContain('beside their writing, not above it');
-    expect(route).toContain('claim certainty about what their experience means');
+    expect(route).toContain('The kept entry remains primary');
+    expect(route).toContain('claim certainty about meaning');
     expect(route).toContain('preserving the distinction between lived meaning and factual certainty');
-    expect(route).toContain('The conversation remains open until the member chooses to end it');
+    expect(route).toContain('Stay in the relationship rather than restarting the reflection');
   });
 
   it('records the founder supersession in canon and keeps ambient MAIA suppressed', () => {

@@ -111,13 +111,18 @@ The earlier `never a thread / no follow-up turns` rule is superseded. Journal no
 - the kept Journal entry remains visually and semantically primary;
 - MAIA enters only after the member explicitly chooses `Reflect with MAIA`;
 - the conversation may continue for as many turns as the member wants;
-- Journal does not persist its own MAIA transcript or create memory merely because the conversation occurred;
+- Journal routes those turns through MAIA's canonical sovereign cognition (`getMaiaResponse`), not a Journal-specific assistant/provider prompt;
+- the current kept entry is re-resolved server-side and enters MAIA through the canonical `journalContextAddendum` seam;
+- each open encounter receives an ephemeral encounter identity and runs under Sanctuary posture: content is not written to `conversation_turns`, session history, memory, patterns, or Journal-owned transcript storage merely because the conversation occurred;
+- content-free operational metadata (ephemeral session row/turn count and consent posture) may exist so the serving boundary remains auditable;
 - MAIA stays attributed and separate from the member's writing;
 - `Write from here` is optional and carries only an offered question back into a blank writing surface;
 - `Let it rest` ends the transient encounter without altering the kept Journal entry;
 - generic chat-room chrome must not displace the paper room.
 
 The relational standard is now: **continuous while together; transient unless the member explicitly carries something out.**
+
+A second distinction is now explicit: **MAIA identity/cognition and persistence posture are separate axes.** Journal may host the same sovereign MAIA while lawfully choosing a transient, Sanctuary-governed encounter rather than a durable conversation thread.
 
 ## The two brand tests
 

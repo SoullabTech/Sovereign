@@ -28,6 +28,11 @@ export interface ReflectionProps {
 export function Reflection({ entryId, onWriteFromHere, onLetItGo }: ReflectionProps) {
   const [turns, setTurns] = useState<ReflectionTurn[]>([]);
   const [input, setInput] = useState('');
+  const encounterId = useRef(
+    typeof globalThis.crypto?.randomUUID === 'function'
+      ? globalThis.crypto.randomUUID()
+      : 'encounter-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2),
+  );
   const [waiting, setWaiting] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
@@ -48,7 +53,7 @@ export function Reflection({ entryId, onWriteFromHere, onLetItGo }: ReflectionPr
     void apiFetch('/api/journal/reflect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ entryId }),
+      body: JSON.stringify({ entryId, encounterId: encounterId.current }),
     })
       .then(async (res) => {
         const json = await res.json().catch(() => null);
@@ -98,7 +103,12 @@ export function Reflection({ entryId, onWriteFromHere, onLetItGo }: ReflectionPr
       const res = await apiFetch('/api/journal/reflect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entryId, message, history }),
+        body: JSON.stringify({
+          entryId,
+          encounterId: encounterId.current,
+          message,
+          history,
+        }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.success || typeof json.response !== 'string') {
