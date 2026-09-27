@@ -69,6 +69,7 @@ tertiary. Nothing counts, filters, or summarises the member back to themselves.
 | secondary | `Or note something` | lower ceremony, same room — not a separate product |
 | keep | `Keep this` | the member decides what becomes an entry; not `Save` |
 | reflect | `Reflect with MAIA` | a gesture toward relationship, offered only on kept writing |
+| carry | `Keep as a reflection` | explicitly carries this kept Journal entry into Reflections; Journal does not auto-promote itself |
 | release | `Let it go` | the reflection is transient and says so |
 | disclose | `Why this?` | the room can account for itself without a settings page |
 

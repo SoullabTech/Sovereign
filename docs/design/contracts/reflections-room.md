@@ -54,6 +54,8 @@ The room opens as a private collection rather than a feed. Search and filtering 
 
 The collection may vary in visual height because the member's actual material varies in length. That variation must never imply importance, ranking, quality, or system judgment. Elemental color is a quiet provenance/signature cue, not an evaluative score.
 
+**Crossing law:** Journal entries do not automatically become Reflection gems. A kept Journal entry enters this room through the member's explicit `Keep as a reflection` gesture. Historical auto-captured Journal capsules are preserved as existing custody; the repair is forward-looking and does not silently rewrite the member's archive.
+
 ## Forbidden here
 
 - white SaaS page nested inside the House

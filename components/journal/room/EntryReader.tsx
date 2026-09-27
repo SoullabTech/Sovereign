@@ -15,7 +15,8 @@
  * "Entry #12" · metadata table · export · share · related-entries rail.
  */
 
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { apiFetch } from '@/lib/http/apiBase';
 import { type, color, space, focus, hit, quiet, srOnly, spine, roomMaterial } from './tokens';
 
 export interface JournalEntry {
@@ -61,6 +62,55 @@ export interface EntryReaderProps {
 }
 
 export function EntryReader({ entry, onReflect, onLeave, reflecting, children }: EntryReaderProps) {
+  const [reflectionId, setReflectionId] = useState<string | null>(null);
+  const [checkingReflection, setCheckingReflection] = useState(true);
+  const [keepingReflection, setKeepingReflection] = useState(false);
+  const [reflectionError, setReflectionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    setCheckingReflection(true);
+    setReflectionError(null);
+
+    void apiFetch(`/api/journal/quick/${entry.id}/reflection`, { method: 'GET' })
+      .then(async (res) => {
+        if (!live || !res.ok) return;
+        const data = await res.json().catch(() => null);
+        if (live && data?.kept && typeof data.capsuleId === 'string') {
+          setReflectionId(data.capsuleId);
+        }
+      })
+      .catch(() => {
+        // Reflection availability is optional. The Journal entry remains whole.
+      })
+      .finally(() => {
+        if (live) setCheckingReflection(false);
+      });
+
+    return () => {
+      live = false;
+    };
+  }, [entry.id]);
+
+  async function keepAsReflection() {
+    if (keepingReflection || reflectionId) return;
+    setKeepingReflection(true);
+    setReflectionError(null);
+    try {
+      const res = await apiFetch(`/api/journal/quick/${entry.id}/reflection`, {
+        method: 'POST',
+      });
+      if (!res.ok) throw new Error('reflection keep failed');
+      const data = await res.json().catch(() => null);
+      if (typeof data?.capsuleId !== 'string') throw new Error('missing reflection id');
+      setReflectionId(data.capsuleId);
+    } catch {
+      setReflectionError('That did not carry over. Your Journal entry is unchanged.');
+    } finally {
+      setKeepingReflection(false);
+    }
+  }
+
   return (
     <main
       className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}
@@ -107,7 +157,27 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
         ) : null}
 
         {!reflecting && (
-          <div className="mt-12">
+          <div className="mt-12 flex flex-wrap items-center gap-x-7 gap-y-2">
+            {!checkingReflection && (
+              reflectionId ? (
+                <a
+                  href={`/reflections/${reflectionId}`}
+                  className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
+                >
+                  Kept as a reflection →
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void keepAsReflection()}
+                  disabled={keepingReflection}
+                  className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet} disabled:opacity-40`}
+                >
+                  {keepingReflection ? 'Keeping as a reflection…' : 'Keep as a reflection'}
+                </button>
+              )
+            )}
+
             <button
               type="button"
               onClick={onReflect}
@@ -117,6 +187,10 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
             </button>
           </div>
         )}
+
+        {reflectionError ? (
+          <p className={`mt-3 ${type.meta} ${color.muted}`} role="alert">{reflectionError}</p>
+        ) : null}
 
         {children}
       </div>

@@ -291,17 +291,28 @@ Anchors remain private by default. `MAIA may remember this with me` grants bound
 
 ---
 
-## 12. Known crossing debt
+## 12. Crossing debt and first repair
 
-The current quick-Journal API automatically bridges kept Journal content into the capsule/Reflections substrate when the content is long enough.
+The first crossing audit found that the quick-Journal API automatically created a Reflection capsule for every sufficiently long kept Journal entry.
 
-This is now explicitly classified:
+That violated the newly explicit distinction:
+
+> **Journal is what I wrote. Reflections are what I chose to keep as personal gems.**
+
+The crossing has now been repaired:
+
+- Journal save no longer auto-creates a Reflection capsule;
+- a kept Journal entry offers **Keep as a reflection**;
+- that gesture is ownership-scoped and idempotent;
+- the exact kept entry crosses through the existing governed capsule Keep substrate;
+- no LLM re-distillation occurs between the member gesture and the Reflection object;
+- historical automatically-created capsules are not silently deleted or rewritten.
+
+The separate automatic Journal → episodic-memory bridge still exists for resonance search. It is now classified independently as:
 
 > **NEEDS ADJUDICATION · SYSTEM AUTOMATIC**
 
-The existence of the bridge does not settle whether every kept Journal entry should become a Reflection object without a visible member gesture.
-
-This is the first concrete debt discovered by the Living Orientation crossing audit.
+That memory seam must be reviewed on its own authority and consent terms rather than being conflated with Reflection custody.
 
 ---
 
