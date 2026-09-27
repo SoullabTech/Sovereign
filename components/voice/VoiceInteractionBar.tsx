@@ -297,7 +297,11 @@ export function VoiceInteractionBar({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <StateDot state={voiceState} />
           <span className={`text-sm font-light truncate transition-colors duration-200 ${stateLabelClass(voiceState)}`}>
-            {voiceState === 'listening' && explicitYield ? 'holding your floor' : stateLabel(voiceState)}
+            {voiceState === 'listening' && interimTranscript.trim().length > 0
+              ? 'hearing you'
+              : voiceState === 'listening' && explicitYield
+                ? 'holding your floor'
+                : stateLabel(voiceState)}
           </span>
         </div>
 
