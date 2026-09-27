@@ -1,0 +1,43 @@
+{
+  "observed_at": "2026-09-27T20:15:12.744527+00:00",
+  "canonical_remote_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+  "documentation_checkout": "/Users/soullab/JARVIS-CAPSULES/JARVIS-BECOMING-01/20260927/programme-checkout",
+  "branch": "chore/jarvis-becoming-01-20260927",
+  "evidence": [
+    {
+      "root": "/Users/soullab/MAIA-SOVEREIGN-CURRENT-REVIEW",
+      "path": "docs/architecture/BECOMING_IMPLEMENTATION_GATE.md",
+      "head": "129efc0652b327a755e75d60e8c17d5ad13a7f47",
+      "sha256": "7ae8e37d8ed064f651f1e7e0a338197d4cebe0e9e2bf9de284ec05603dcb227d",
+      "status": ""
+    },
+    {
+      "root": "/Users/soullab/MAIA-SOVEREIGN-CURRENT-REVIEW",
+      "path": "docs/design/contracts/facet-crossings.md",
+      "head": "129efc0652b327a755e75d60e8c17d5ad13a7f47",
+      "sha256": "3cf77ae962c35cad979dbae5780624f34ca3756831a4c9a2385ab50c23c93208",
+      "status": ""
+    },
+    {
+      "root": "/Users/soullab/MAIA-SOVEREIGN-CURRENT-REVIEW",
+      "path": "docs/design/contracts/divination-journal-crossing.md",
+      "head": "129efc0652b327a755e75d60e8c17d5ad13a7f47",
+      "sha256": "dee39314adb4ab1462df0ae6bf6d0d100d9a74a6234073a84585a1e179c5de63",
+      "status": ""
+    },
+    {
+      "root": "/private/tmp/changes-current3597",
+      "path": "scripts/builder/work-unit-create.mjs",
+      "head": "bc84194ef215a9b0ae85cebbcf00ba10ec169a2a",
+      "sha256": "d0f5d9089a3165d1721bdcc738cc82bb64b4d5c08184bb4dceaa467810e23ddc",
+      "status": ""
+    },
+    {
+      "root": "/private/tmp/changes-current3597",
+      "path": "scripts/builder/work-unit.mjs",
+      "head": "bc84194ef215a9b0ae85cebbcf00ba10ec169a2a",
+      "sha256": "25103a9eb4aa6019b6a7617558433b9aca756d4015dc03ce6f18550597d111b9",
+      "status": ""
+    }
+  ]
+}

@@ -1,0 +1,1244 @@
+{
+  "observed_at": "2026-09-27T20:23:56.368Z",
+  "interface": "native legacy packet creation/status (not a simulated W0.v2 lifecycle)",
+  "count": 10,
+  "worker_dispatches": 0,
+  "checks": {
+    "all_packets_valid": true,
+    "all_read_back_blocked": true,
+    "all_write_spend_production_permissions_denied": true,
+    "duplicate_creation_refused": true,
+    "invalid_identifier_refused": true,
+    "pure_blocker_removal_mutant_changes_status": true
+  },
+  "receipts": [
+    {
+      "work_unit_id": "becoming-02r1-reconcile-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-02r1-reconcile-20260927.json",
+        "work_unit_id": "becoming-02r1-reconcile-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-02r1-reconcile-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 02r1-reconcile"
+        },
+        "intent": {
+          "objective": "Reconcile the prior gathering concept with the prospective field and prepare the exact founder conformance decision.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [],
+          "blockers": [
+            "WAIT_FOR_FOUNDER_02R1_DISPOSITION",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    },
+    {
+      "work_unit_id": "becoming-03-state-boards-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-03-state-boards-20260927.json",
+        "work_unit_id": "becoming-03-state-boards-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-03-state-boards-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 03-state-boards"
+        },
+        "intent": {
+          "objective": "Plan spatial experience boards for the accepted states without creating a route or changing the House.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [
+            "becoming-02r1-reconcile-20260927"
+          ],
+          "blockers": [
+            "WAIT_FOR_02R1_AND_VISUAL_DESIGN_AUTHORITY",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    },
+    {
+      "work_unit_id": "becoming-04-contract-proof-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-04-contract-proof-20260927.json",
+        "work_unit_id": "becoming-04-contract-proof-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-04-contract-proof-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 04-contract-proof"
+        },
+        "intent": {
+          "objective": "Plan pure logical contracts and adversarial fixtures for authorship, consent, interruption, and storage choices.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [
+            "becoming-03-state-boards-20260927"
+          ],
+          "blockers": [
+            "WAIT_FOR_EXPERIENCE_CONTRACT_ACCEPTANCE",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    },
+    {
+      "work_unit_id": "becoming-05-local-core-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-05-local-core-20260927.json",
+        "work_unit_id": "becoming-05-local-core-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-05-local-core-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 05-local-core"
+        },
+        "intent": {
+          "objective": "Plan the exact bounded local read capture keep revisit revise delete implementation and its witness.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [
+            "becoming-04-contract-proof-20260927"
+          ],
+          "blockers": [
+            "WAIT_FOR_CORE_BUILD_CONTRACT_AND_EXACT_PATHS",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    },
+    {
+      "work_unit_id": "becoming-06-maia-facilitation-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-06-maia-facilitation-20260927.json",
+        "work_unit_id": "becoming-06-maia-facilitation-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-06-maia-facilitation-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 06-maia-facilitation"
+        },
+        "intent": {
+          "objective": "Plan in-place facilitation with member-authored dialogue and truthful text voice silence stop behavior.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [
+            "becoming-05-local-core-20260927"
+          ],
+          "blockers": [
+            "WAIT_FOR_COGNITIVE_ACT_AUTHORIZATION",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    },
+    {
+      "work_unit_id": "becoming-07-journal-crossing-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-07-journal-crossing-20260927.json",
+        "work_unit_id": "becoming-07-journal-crossing-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-07-journal-crossing-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 07-journal-crossing"
+        },
+        "intent": {
+          "objective": "Plan the first individually admitted Journal crossing with blank receiver, atomic save and exact source return.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [
+            "becoming-06-maia-facilitation-20260927"
+          ],
+          "blockers": [
+            "WAIT_FOR_RECEIVER_CENSUS_AND_CROSSING_ADMISSION",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    },
+    {
+      "work_unit_id": "becoming-08-adversarial-review-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-08-adversarial-review-20260927.json",
+        "work_unit_id": "becoming-08-adversarial-review-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-08-adversarial-review-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 08-adversarial-review"
+        },
+        "intent": {
+          "objective": "Plan independent acceptance against the named privacy authorship safety accessibility and failure obligations.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [
+            "becoming-07-journal-crossing-20260927"
+          ],
+          "blockers": [
+            "WAIT_FOR_REVIEWABLE_IMMUTABLE_LOCAL_CANDIDATE",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    },
+    {
+      "work_unit_id": "becoming-09-founder-witness-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-09-founder-witness-20260927.json",
+        "work_unit_id": "becoming-09-founder-witness-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-09-founder-witness-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 09-founder-witness"
+        },
+        "intent": {
+          "objective": "Prepare the real founder journey docket and separately bounded tester plan without enrolling anyone.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [
+            "becoming-08-adversarial-review-20260927"
+          ],
+          "blockers": [
+            "WAIT_FOR_LOCAL_EVIDENCE_AND_HUMAN_WALK_AUTHORIZATION",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    },
+    {
+      "work_unit_id": "becoming-10-release-candidate-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-10-release-candidate-20260927.json",
+        "work_unit_id": "becoming-10-release-candidate-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-10-release-candidate-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 10-release-candidate"
+        },
+        "intent": {
+          "objective": "Prepare candidate reconciliation, rollback and release decision evidence without merging or deploying.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [
+            "becoming-09-founder-witness-20260927"
+          ],
+          "blockers": [
+            "WAIT_FOR_HUMAN_ACCEPTANCE_AND_RELEASE_SCOPE",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    },
+    {
+      "work_unit_id": "becoming-11-live-witness-20260927",
+      "creation": {
+        "ok": true,
+        "code": "CREATED",
+        "errors": [],
+        "path": "/Users/soullab/.claude/ain-delegation/packets/becoming-11-live-witness-20260927.json",
+        "work_unit_id": "becoming-11-live-witness-20260927"
+      },
+      "status": {
+        "work_unit_id": "becoming-11-live-witness-20260927",
+        "exists": true,
+        "identity": {
+          "project": "Prospective Reflection Programme",
+          "capability": "future-oriented-member-reflection",
+          "title": "Becoming 11-live-witness"
+        },
+        "intent": {
+          "objective": "Prepare the signed-in production witness protocol without accessing production.",
+          "task_class": "architecture",
+          "risk_class": "high",
+          "priority": 1
+        },
+        "authority": {
+          "governing_authority": "Current founder request to establish this programme; the unchanged prospective constitution; the canonical JARVIS manual; existing House source and member-authorship law. Registration is not execution permission.",
+          "authorized_acts": [
+            "repo.read",
+            "tests.run"
+          ],
+          "not_authorized_acts": [
+            "repo.write:worktree",
+            "authority.change",
+            "merge",
+            "deploy",
+            "production.read",
+            "production.write",
+            "network.external",
+            "provider.spend",
+            "repo.disclose:external-readonly"
+          ],
+          "integration_actor": "founder",
+          "autonomy_ceiling": "LEVEL_0_READONLY"
+        },
+        "dependencies": {
+          "dependencies": [
+            "becoming-10-release-candidate-20260927"
+          ],
+          "blockers": [
+            "WAIT_FOR_EXPLICIT_PRODUCTION_AUTHORITY_AND_DEPLOYED_SHA",
+            "DISPATCH_NOT_ADMITTED_BY_REGISTRATION"
+          ]
+        },
+        "workspace": {
+          "canonical_sha": "47dc7f7edc177965f9b8b6db5be2c3775ae37762",
+          "branch": "chore/jarvis-becoming-01-20260927",
+          "worktree": null
+        },
+        "proof_spec": {
+          "acceptance_criteria": [
+            "Read the programme records and latest evidence before proposing any act.",
+            "Preserve member authorship and the distinction between imagined material and factual events.",
+            "Name the exact candidate, next required ruling, and remaining unknowns without upgrading their standing."
+          ],
+          "verification_commands": [
+            "git diff --check"
+          ],
+          "max_attempts": 1
+        },
+        "active_execution": null,
+        "latest_result": null,
+        "attempt_count": 0,
+        "lifecycle_state": "blocked",
+        "lifecycle_vocabulary": [
+          "proposed",
+          "ready",
+          "blocked",
+          "needs_founder",
+          "claimed",
+          "running",
+          "verifying",
+          "review_required",
+          "ready_to_integrate",
+          "integrated",
+          "deployment_required",
+          "deployed",
+          "live_verification_required",
+          "closed",
+          "failed",
+          "superseded",
+          "contended"
+        ],
+        "permission_envelope": {
+          "repo_read": true,
+          "repo_write_scope": "none",
+          "execute_checks": true,
+          "integration_actor": "founder",
+          "production_read": false,
+          "production_write": false,
+          "deploy": false,
+          "authority_change": false,
+          "external_network": false,
+          "external_repo_disclosure": false,
+          "provider_spend": false
+        },
+        "compatibility": {
+          "defaults_applied_for": [],
+          "note": "all Work-Unit-level fields present explicitly"
+        }
+      },
+      "envelope": {
+        "repo_read": true,
+        "repo_write_scope": "none",
+        "execute_checks": true,
+        "integration_actor": "founder",
+        "production_read": false,
+        "production_write": false,
+        "deploy": false,
+        "authority_change": false,
+        "external_network": false,
+        "external_repo_disclosure": false,
+        "provider_spend": false
+      }
+    }
+  ]
+}
