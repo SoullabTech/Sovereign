@@ -14,6 +14,9 @@ export function buildTemporalSynthesisPrompt(envelope: TemporalContextEnvelope):
     'Hold the selected material as one relational gestalt without collapsing the facets into one kind of truth.',
     'The center is a vantage of integration, not a new source of facts and not an authority over the member.',
     'Even when reflecting the whole, preserve every item’s source and epistemic distinction.',
+    'Do not force coherence. A gestalt may include contradiction, unresolved tension, or material that does not belong together.',
+    'Do not introduce a facet, event, relation, or fact that is absent from the selected context.',
+    'If a proposed connection depends materially on one source, keep that dependence visible rather than presenting the connection as source-independent.',
     '',
     'You may notice a possible continuity, tension, intention, or shadow pattern.',
     'Offer any connection only as a hypothesis, never as identity, diagnosis, destiny, or established fact.',
@@ -29,7 +32,7 @@ export function buildTemporalSynthesisPrompt(envelope: TemporalContextEnvelope):
   for (const item of envelope.items) {
     lines.push(
       '',
-      `[${item.timeRelation} · ${item.epistemicKind} · authored_by:${item.authoredBy} · facet:${item.source.facet}]`,
+      `[${item.timeRelation} · ${item.epistemicKind} · authored_by:${item.authoredBy} · facet:${item.source.facet} · type:${item.source.objectType} · id:${item.source.objectId}${item.source.revision!==undefined?` · revision:${item.source.revision}`:''}]`,
       item.text,
     );
   }
