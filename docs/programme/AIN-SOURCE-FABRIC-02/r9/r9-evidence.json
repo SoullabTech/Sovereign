@@ -1,0 +1,230 @@
+{
+  "generatedAt": "2026-09-28T18:05:44.726Z",
+  "parentR8": "bb3f99aad04660b64f261136e89a6cdd5abc5b95",
+  "positiveConstellations": [
+    {
+      "ref": "R9-governance",
+      "refs": [
+        "authority-law",
+        "source-fabric",
+        "direction-authority",
+        "teaching-constitution",
+        "writers-studio"
+      ],
+      "candidatePresent": true,
+      "quality": {
+        "valid": true,
+        "reasons": [],
+        "effectiveSupportRefs": [
+          "authority-law",
+          "direction-authority",
+          "source-fabric",
+          "teaching-constitution",
+          "writers-studio"
+        ],
+        "contextualOnlyRefs": [],
+        "bridgeRelationRefs": [
+          "graph:authorship_sovereignty:direction-authority:writers-studio",
+          "graph:authorship_sovereignty:teaching-constitution:writers-studio",
+          "graph:constitutional_kin:authority-law:direction-authority",
+          "graph:constitutional_kin:direction-authority:teaching-constitution",
+          "graph:governance_lineage:authority-law:source-fabric"
+        ],
+        "nontrivialSignature": [
+          "constraint:absence",
+          "relation:graph:authorship_sovereignty:direction-authority:writers-studio",
+          "relation:graph:authorship_sovereignty:teaching-constitution:writers-studio",
+          "relation:graph:constitutional_kin:authority-law:direction-authority",
+          "relation:graph:constitutional_kin:direction-authority:teaching-constitution",
+          "relation:graph:governance_lineage:authority-law:source-fabric"
+        ],
+        "trivialRestatement": false
+      }
+    },
+    {
+      "ref": "R9-relational",
+      "refs": [
+        "rgr-note",
+        "rgr-constitution",
+        "indra-grammar",
+        "indra-permeability",
+        "indra-composer",
+        "indra-validation"
+      ],
+      "candidatePresent": true,
+      "quality": {
+        "valid": true,
+        "reasons": [],
+        "effectiveSupportRefs": [
+          "indra-composer",
+          "indra-grammar",
+          "indra-permeability",
+          "indra-validation",
+          "rgr-constitution",
+          "rgr-note"
+        ],
+        "contextualOnlyRefs": [],
+        "bridgeRelationRefs": [
+          "graph:evidence_lineage:indra-composer:indra-validation",
+          "graph:evidence_lineage:rgr-note:rgr-constitution",
+          "graph:governance_lineage:indra-grammar:indra-permeability",
+          "graph:relational_bridge:indra-grammar:indra-composer",
+          "graph:relational_bridge:rgr-constitution:indra-grammar",
+          "graph:relational_bridge:rgr-note:indra-grammar",
+          "temporal:evidence_successor:indra-validation:indra-composer"
+        ],
+        "nontrivialSignature": [
+          "constraint:absence",
+          "relation:graph:evidence_lineage:indra-composer:indra-validation",
+          "relation:graph:evidence_lineage:rgr-note:rgr-constitution",
+          "relation:graph:governance_lineage:indra-grammar:indra-permeability",
+          "relation:graph:relational_bridge:indra-grammar:indra-composer",
+          "relation:graph:relational_bridge:rgr-constitution:indra-grammar",
+          "relation:graph:relational_bridge:rgr-note:indra-grammar",
+          "relation:temporal:evidence_successor:indra-validation:indra-composer"
+        ],
+        "trivialRestatement": false
+      }
+    },
+    {
+      "ref": "R9-retrieval",
+      "refs": [
+        "source-fabric",
+        "library-adr",
+        "source-fabric-census",
+        "benchmark-contract",
+        "j11-reconciliation"
+      ],
+      "candidatePresent": true,
+      "quality": {
+        "valid": true,
+        "reasons": [],
+        "effectiveSupportRefs": [
+          "benchmark-contract",
+          "j11-reconciliation",
+          "library-adr",
+          "source-fabric",
+          "source-fabric-census"
+        ],
+        "contextualOnlyRefs": [],
+        "bridgeRelationRefs": [
+          "graph:retrieval_lineage:j11-reconciliation:library-adr",
+          "graph:retrieval_lineage:library-adr:source-fabric-census",
+          "graph:retrieval_lineage:source-fabric:benchmark-contract",
+          "graph:retrieval_lineage:source-fabric:library-adr",
+          "graph:retrieval_lineage:source-fabric:source-fabric-census",
+          "temporal:evidence_successor:source-fabric-census:library-adr"
+        ],
+        "nontrivialSignature": [
+          "constraint:absence",
+          "constraint:contradiction",
+          "constraint:temporal",
+          "relation:graph:retrieval_lineage:j11-reconciliation:library-adr",
+          "relation:graph:retrieval_lineage:library-adr:source-fabric-census",
+          "relation:graph:retrieval_lineage:source-fabric:benchmark-contract",
+          "relation:graph:retrieval_lineage:source-fabric:library-adr",
+          "relation:graph:retrieval_lineage:source-fabric:source-fabric-census",
+          "relation:temporal:evidence_successor:source-fabric-census:library-adr"
+        ],
+        "trivialRestatement": false
+      }
+    }
+  ],
+  "distractor": {
+    "quality": {
+      "valid": true,
+      "reasons": [],
+      "effectiveSupportRefs": [
+        "indra-grammar",
+        "rgr-constitution",
+        "rgr-note"
+      ],
+      "contextualOnlyRefs": [
+        "ea-manuscript"
+      ],
+      "bridgeRelationRefs": [
+        "graph:evidence_lineage:rgr-note:rgr-constitution",
+        "graph:relational_bridge:rgr-constitution:indra-grammar",
+        "graph:relational_bridge:rgr-note:indra-grammar"
+      ],
+      "nontrivialSignature": [
+        "constraint:absence",
+        "relation:graph:evidence_lineage:rgr-note:rgr-constitution",
+        "relation:graph:relational_bridge:rgr-constitution:indra-grammar",
+        "relation:graph:relational_bridge:rgr-note:indra-grammar"
+      ],
+      "trivialRestatement": false
+    },
+    "invariant": {
+      "valid": true,
+      "reason": null
+    }
+  },
+  "sparse": {
+    "ref": "R9-sparse",
+    "refs": [
+      "ea-manuscript",
+      "library-adr"
+    ],
+    "candidatePresent": false,
+    "quality": {
+      "valid": false,
+      "reasons": [
+        "candidate_absent",
+        "insufficient_effective_cross_pathway_support",
+        "no_bridge_relation",
+        "signature_too_trivial",
+        "trivial_pathway_restatement"
+      ],
+      "effectiveSupportRefs": [],
+      "contextualOnlyRefs": [
+        "ea-manuscript",
+        "library-adr"
+      ],
+      "bridgeRelationRefs": [],
+      "nontrivialSignature": [
+        "constraint:absence"
+      ],
+      "trivialRestatement": true
+    }
+  },
+  "bridge": {
+    "before": {
+      "valid": true,
+      "reasons": [],
+      "effectiveSupportRefs": [
+        "indra-grammar",
+        "rgr-note"
+      ],
+      "contextualOnlyRefs": [],
+      "bridgeRelationRefs": [
+        "graph:relational_bridge:rgr-note:indra-grammar"
+      ],
+      "nontrivialSignature": [
+        "constraint:absence",
+        "relation:graph:relational_bridge:rgr-note:indra-grammar"
+      ],
+      "trivialRestatement": false
+    },
+    "candidateAfter": false,
+    "after": {
+      "valid": false,
+      "reasons": [
+        "candidate_absent"
+      ],
+      "effectiveSupportRefs": [
+        "indra-grammar",
+        "rgr-note"
+      ],
+      "contextualOnlyRefs": [],
+      "bridgeRelationRefs": [
+        "graph:relational_bridge:rgr-note:indra-grammar"
+      ],
+      "nontrivialSignature": [
+        "constraint:absence",
+        "relation:graph:relational_bridge:rgr-note:indra-grammar"
+      ],
+      "trivialRestatement": false
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-09-28T18:05:44.726Z",
+  "parentR8": "bb3f99aad04660b64f261136e89a6cdd5abc5b95",
+  "positiveConstellationsPassed": 3,
+  "positiveConstellationsTotal": 3,
+  "distractorExcludedFromEffectiveSupport": true,
+  "distractorInvariant": true,
+  "sparseCandidatePresent": false,
+  "sparseValid": false,
+  "bridgeBeforeValid": true,
+  "bridgeCandidateAfterRemoval": false,
+  "bridgeAfterValid": false
+}
