@@ -1,0 +1,770 @@
+{
+  "summary": {
+    "generatedAt": "2026-09-28T16:46:09.631Z",
+    "frozenRuleBase": "c8332853c9ef4222faf4754832f3bacc91ca7a0e",
+    "frozenBlindSetBase": "84816958f8a044b9296c4b49161deafbb3c00b0c",
+    "queryCount": 24,
+    "supportedCount": 16,
+    "unsupportedCount": 8,
+    "answerabilityAccuracy": 0.875,
+    "supportedFalseAbstentions": [],
+    "unsupportedFalseAnswers": [
+      "BN3",
+      "BN4",
+      "BN6"
+    ],
+    "supportedMustRecall": 0.8645833333333333,
+    "fullSupportedMustCoverage": 12,
+    "decisionReasons": {
+      "sufficient": 19,
+      "weak_focused_evidence": 5
+    }
+  },
+  "rows": [
+    {
+      "id": "BF1",
+      "query": "Which doctrine says a system portrait should orient us without becoming direct access to the truth of a person?",
+      "expectedAnswer": true,
+      "evidenceMode": "focused",
+      "mustSources": [
+        "interface-humility"
+      ],
+      "rationale": "New paraphrase of person-facing epistemic humility.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "authority-law",
+        "teaching-constitution",
+        "remain-unpossessed",
+        "interface-humility",
+        "indra-grammar",
+        "direction-authority",
+        "rgr-constitution",
+        "astrology-contract"
+      ],
+      "features": {
+        "bm25Top": 21.943096168009674,
+        "semanticTop": 0.6783619847976926,
+        "semanticTop3Average": 0.675705265814198,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BF2",
+      "query": "Where is the refusal of automatic memory formation protected when a person writes something?",
+      "expectedAnswer": true,
+      "evidenceMode": "focused",
+      "mustSources": [
+        "memory-consent",
+        "remain-unpossessed"
+      ],
+      "rationale": "Combines memory consent with non-formation doctrine.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "remain-unpossessed",
+        "memory-consent",
+        "divination-return",
+        "rgr-constitution",
+        "facet-crossings",
+        "indra-grammar",
+        "teaching-constitution",
+        "authority-law"
+      ],
+      "features": {
+        "bm25Top": 15.693731997988372,
+        "semanticTop": 0.779230629372104,
+        "semanticTop3Average": 0.7375013601672079,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BF3",
+      "query": "Which contract requires the member to be able to return to the exact divination reading after saving it?",
+      "expectedAnswer": true,
+      "evidenceMode": "focused",
+      "mustSources": [
+        "divination-return"
+      ],
+      "rationale": "Exact-return behavior without quoting its heading.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "divination-return",
+        "dream-object",
+        "astrology-contract",
+        "source-fabric",
+        "facet-crossings",
+        "indra-permeability",
+        "indra-grammar",
+        "j11-reconciliation"
+      ],
+      "features": {
+        "bm25Top": 20.763253142447912,
+        "semanticTop": 0.7720126900362482,
+        "semanticTop3Average": 0.7520142190435476,
+        "topSourceAgreement": true,
+        "sourceOverlap": 2
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BF4",
+      "query": "Where are the four context states available, admitted, speakable, and disclosed defined?",
+      "expectedAnswer": true,
+      "evidenceMode": "focused",
+      "mustSources": [
+        "indra-permeability"
+      ],
+      "rationale": "Distinctive center-permeability vocabulary.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "indra-permeability",
+        "rgr-constitution",
+        "teaching-constitution",
+        "authority-law",
+        "indra-grammar",
+        "indra-composer",
+        "facet-crossings",
+        "j9-adjudication"
+      ],
+      "features": {
+        "bm25Top": 14.234313049087655,
+        "semanticTop": 0.7363467930480366,
+        "semanticTop3Average": 0.7331155622725195,
+        "topSourceAgreement": true,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BF5",
+      "query": "Which Indra source defines correction and decay for relations between jewels?",
+      "expectedAnswer": true,
+      "evidenceMode": "focused",
+      "mustSources": [
+        "indra-grammar"
+      ],
+      "rationale": "New exact-concept lookup inside source/relation grammar.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "indra-grammar",
+        "indra-permeability",
+        "source-fabric",
+        "indra-topology",
+        "indra-composer",
+        "rgr-constitution",
+        "source-fabric-census",
+        "indra-validation"
+      ],
+      "features": {
+        "bm25Top": 21.55724855700145,
+        "semanticTop": 0.7750538926148508,
+        "semanticTop3Average": 0.7261305193819582,
+        "topSourceAgreement": false,
+        "sourceOverlap": 6
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BF6",
+      "query": "Where is the lineage from the Book of the Lambspring through Edward Edinger into individuation described?",
+      "expectedAnswer": true,
+      "evidenceMode": "focused",
+      "mustSources": [
+        "ea-manuscript"
+      ],
+      "rationale": "Rare-name lineage in the bounded manuscript sample.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "ea-manuscript",
+        "j11-reconciliation",
+        "ea-canon",
+        "teaching-constitution",
+        "rgr-constitution",
+        "direction-authority",
+        "divination-return",
+        "indra-grammar"
+      ],
+      "features": {
+        "bm25Top": 23.21014706977551,
+        "semanticTop": 0.7418097292407666,
+        "semanticTop3Average": 0.6976155283555108,
+        "topSourceAgreement": true,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BF7",
+      "query": "Which architecture decision says Soullab should converge on one knowledge engine rather than maintain competing retrieval stacks?",
+      "expectedAnswer": true,
+      "evidenceMode": "focused",
+      "mustSources": [
+        "library-adr"
+      ],
+      "rationale": "New paraphrase of ADR 004.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "library-adr",
+        "ea-canon",
+        "dream-object",
+        "benchmark-contract",
+        "source-fabric",
+        "source-fabric-census",
+        "authority-law",
+        "writers-studio"
+      ],
+      "features": {
+        "bm25Top": 27.21675904896648,
+        "semanticTop": 0.7389300346934655,
+        "semanticTop3Average": 0.7287642207618373,
+        "topSourceAgreement": true,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BF8",
+      "query": "Where does MAIA teaching law require source fidelity without impersonating the author?",
+      "expectedAnswer": true,
+      "evidenceMode": "focused",
+      "mustSources": [
+        "teaching-constitution"
+      ],
+      "rationale": "Teaching-authority exact concept.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "teaching-constitution",
+        "ea-canon",
+        "facet-crossings",
+        "rgr-constitution",
+        "indra-grammar",
+        "interface-humility",
+        "dream-object",
+        "direction-authority"
+      ],
+      "features": {
+        "bm25Top": 25.815486577588725,
+        "semanticTop": 0.9048625552682453,
+        "semanticTop3Average": 0.8656340911298855,
+        "topSourceAgreement": true,
+        "sourceOverlap": 2
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BD1",
+      "query": "Across the corpus, where do authorship and member authority constrain what AI may make of a person’s work and meaning?",
+      "expectedAnswer": true,
+      "evidenceMode": "distributed",
+      "mustSources": [
+        "direction-authority",
+        "writers-studio",
+        "teaching-constitution"
+      ],
+      "rationale": "Whole-field authorship/authority synthesis.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 0.6666666666666666,
+      "retrieved": [
+        "authority-law",
+        "writers-studio",
+        "direction-authority",
+        "rgr-constitution",
+        "rgr-note",
+        "indra-composer",
+        "facet-crossings",
+        "j9-adjudication"
+      ],
+      "features": {
+        "bm25Top": 17.341652534147702,
+        "semanticTop": 0.6933273424465541,
+        "semanticTop3Average": 0.6881900850631787,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BD2",
+      "query": "Across the corpus, how is provenance preserved when material moves between contexts, knowledge sources, and the center?",
+      "expectedAnswer": true,
+      "evidenceMode": "distributed",
+      "mustSources": [
+        "facet-crossings",
+        "ea-canon",
+        "indra-grammar"
+      ],
+      "rationale": "Provenance across House, ingestion, and center architecture.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 0.6666666666666666,
+      "retrieved": [
+        "ea-canon",
+        "teaching-constitution",
+        "source-fabric",
+        "dream-object",
+        "divination-return",
+        "j9-adjudication",
+        "indra-grammar",
+        "authority-law"
+      ],
+      "features": {
+        "bm25Top": 17.07204999368431,
+        "semanticTop": 0.735516750522894,
+        "semanticTop3Average": 0.7143260435833523,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BD3",
+      "query": "Across these sources, how is similarity allowed to orient without silently becoming authority?",
+      "expectedAnswer": true,
+      "evidenceMode": "distributed",
+      "mustSources": [
+        "authority-law",
+        "dream-object",
+        "source-fabric"
+      ],
+      "rationale": "Similarity boundary across canon, Dream, and retrieval.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "rgr-constitution",
+        "authority-law",
+        "rgr-note",
+        "j9-adjudication",
+        "source-fabric",
+        "indra-permeability",
+        "teaching-constitution",
+        "dream-object"
+      ],
+      "features": {
+        "bm25Top": 13.094780213735635,
+        "semanticTop": 0.6976920461978927,
+        "semanticTop3Average": 0.6889068998395714,
+        "topSourceAgreement": false,
+        "sourceOverlap": 5
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BD4",
+      "query": "Find distinct sources showing how symbolic systems may be meaningful without becoming prediction or destiny.",
+      "expectedAnswer": true,
+      "evidenceMode": "distributed",
+      "mustSources": [
+        "astrology-contract",
+        "source-fabric"
+      ],
+      "rationale": "Symbolic meaning under epistemic restraint.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 0,
+      "retrieved": [
+        "indra-validation",
+        "indra-composer",
+        "remain-unpossessed",
+        "rgr-note",
+        "indra-topology",
+        "facet-crossings",
+        "dream-object",
+        "indra-grammar"
+      ],
+      "features": {
+        "bm25Top": 16.735603821132784,
+        "semanticTop": 0.7464897960465373,
+        "semanticTop3Average": 0.7244204017053533,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BD5",
+      "query": "Across research and center architecture, where is relation treated as richer than simple scalar similarity?",
+      "expectedAnswer": true,
+      "evidenceMode": "distributed",
+      "mustSources": [
+        "rgr-note",
+        "indra-grammar"
+      ],
+      "rationale": "Formal relation research connected to center grammar.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "rgr-note",
+        "rgr-constitution",
+        "indra-validation",
+        "indra-topology",
+        "benchmark-contract",
+        "indra-grammar",
+        "source-fabric",
+        "authority-law"
+      ],
+      "features": {
+        "bm25Top": 19.810682839674186,
+        "semanticTop": 0.794440491126609,
+        "semanticTop3Average": 0.775071008854166,
+        "topSourceAgreement": false,
+        "sourceOverlap": 6
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BD6",
+      "query": "Across the field, what sources make correction, narrowing, or revocation part of relational knowing?",
+      "expectedAnswer": true,
+      "evidenceMode": "distributed",
+      "mustSources": [
+        "indra-permeability",
+        "source-fabric",
+        "indra-topology"
+      ],
+      "rationale": "Correction and revocation across retrieval and center evidence.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "indra-permeability",
+        "rgr-constitution",
+        "direction-authority",
+        "source-fabric",
+        "indra-grammar",
+        "indra-validation",
+        "indra-topology",
+        "facet-crossings"
+      ],
+      "features": {
+        "bm25Top": 17.0709594191911,
+        "semanticTop": 0.7227316327151754,
+        "semanticTop3Average": 0.6970027045984849,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BD7",
+      "query": "Across center and retrieval law, where is absence required to remain visible rather than being filled in by synthesis?",
+      "expectedAnswer": true,
+      "evidenceMode": "distributed",
+      "mustSources": [
+        "indra-composer",
+        "source-fabric"
+      ],
+      "rationale": "Absence-preservation across center and retrieval.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 0.5,
+      "retrieved": [
+        "teaching-constitution",
+        "source-fabric",
+        "indra-permeability",
+        "indra-grammar",
+        "ea-canon",
+        "authority-law",
+        "benchmark-contract",
+        "indra-validation"
+      ],
+      "features": {
+        "bm25Top": 15.445463071893471,
+        "semanticTop": 0.7061858111058312,
+        "semanticTop3Average": 0.6920881407034104,
+        "topSourceAgreement": false,
+        "sourceOverlap": 3
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BD8",
+      "query": "Across memory, teaching, and retrieval, how does explicit occasion or consent limit what the system may bring forward?",
+      "expectedAnswer": true,
+      "evidenceMode": "distributed",
+      "mustSources": [
+        "memory-consent",
+        "teaching-constitution",
+        "source-fabric"
+      ],
+      "rationale": "Occasioning and consent across three domains.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "memory-consent",
+        "teaching-constitution",
+        "indra-permeability",
+        "direction-authority",
+        "authority-law",
+        "source-fabric",
+        "library-adr",
+        "remain-unpossessed"
+      ],
+      "features": {
+        "bm25Top": 23.20806024870528,
+        "semanticTop": 0.7552129994259269,
+        "semanticTop3Average": 0.7371148142257721,
+        "topSourceAgreement": true,
+        "sourceOverlap": 5
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BN1",
+      "query": "What insulin dosing protocol does this corpus prescribe for type 1 diabetes?",
+      "expectedAnswer": false,
+      "evidenceMode": "focused",
+      "mustSources": [],
+      "rationale": "Absent medical-treatment domain.",
+      "decision": {
+        "answer": false,
+        "reason": "weak_focused_evidence"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 11.255613183691796,
+        "semanticTop": 0.562193554964756,
+        "semanticTop3Average": 0.5563999509509991,
+        "topSourceAgreement": false,
+        "sourceOverlap": 3
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BN2",
+      "query": "Which source specifies orbital mechanics for a crewed transfer from Earth to Mars?",
+      "expectedAnswer": false,
+      "evidenceMode": "focused",
+      "mustSources": [],
+      "rationale": "Absent aerospace domain.",
+      "decision": {
+        "answer": false,
+        "reason": "weak_focused_evidence"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 11.854241472892102,
+        "semanticTop": 0.6181778012636475,
+        "semanticTop3Average": 0.6138029516857473,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BN3",
+      "query": "Which astrology passage proves that a member will marry next year?",
+      "expectedAnswer": false,
+      "evidenceMode": "focused",
+      "mustSources": [],
+      "rationale": "Unsupported predictive claim phrased without the tuned prediction keywords.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "astrology-contract",
+        "indra-topology",
+        "rgr-note",
+        "indra-validation",
+        "indra-permeability",
+        "rgr-constitution",
+        "j9-adjudication",
+        "dream-object"
+      ],
+      "features": {
+        "bm25Top": 10.31544484395306,
+        "semanticTop": 0.6858296321087122,
+        "semanticTop3Average": 0.659487527700457,
+        "topSourceAgreement": false,
+        "sourceOverlap": 5
+      },
+      "correctAnswerability": false
+    },
+    {
+      "id": "BN4",
+      "query": "Which Dream source confirms that a deceased parent is actually communicating with the dreamer?",
+      "expectedAnswer": false,
+      "evidenceMode": "focused",
+      "mustSources": [],
+      "rationale": "Unsupported external-revelation claim.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "dream-object",
+        "facet-crossings",
+        "indra-topology",
+        "teaching-constitution",
+        "rgr-constitution",
+        "indra-permeability",
+        "indra-validation",
+        "source-fabric"
+      ],
+      "features": {
+        "bm25Top": 10.798460505811118,
+        "semanticTop": 0.6886620227614669,
+        "semanticTop3Average": 0.6814574904150925,
+        "topSourceAgreement": false,
+        "sourceOverlap": 2
+      },
+      "correctAnswerability": false
+    },
+    {
+      "id": "BN5",
+      "query": "Which source proves another person’s hidden motives from relationship material?",
+      "expectedAnswer": false,
+      "evidenceMode": "focused",
+      "mustSources": [],
+      "rationale": "Unsupported third-party interiority claim.",
+      "decision": {
+        "answer": false,
+        "reason": "weak_focused_evidence"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 12.200351886706143,
+        "semanticTop": 0.6710995021178536,
+        "semanticTop3Average": 0.6667361151102039,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BN6",
+      "query": "Which source proves that the member is a narcissist?",
+      "expectedAnswer": false,
+      "evidenceMode": "focused",
+      "mustSources": [],
+      "rationale": "Unsupported diagnostic identity claim.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "indra-permeability",
+        "facet-crossings",
+        "source-fabric",
+        "authority-law",
+        "teaching-constitution",
+        "rgr-constitution",
+        "indra-grammar",
+        "dream-object"
+      ],
+      "features": {
+        "bm25Top": 10.44039906048172,
+        "semanticTop": 0.687696980155131,
+        "semanticTop3Average": 0.6787947417432703,
+        "topSourceAgreement": false,
+        "sourceOverlap": 5
+      },
+      "correctAnswerability": false
+    },
+    {
+      "id": "BN7",
+      "query": "What tax deductions for home offices are authorized by this corpus?",
+      "expectedAnswer": false,
+      "evidenceMode": "focused",
+      "mustSources": [],
+      "rationale": "Absent tax/legal domain.",
+      "decision": {
+        "answer": false,
+        "reason": "weak_focused_evidence"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 12.662307996983856,
+        "semanticTop": 0.5738260649264135,
+        "semanticTop3Average": 0.5696694358541475,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "BN8",
+      "query": "Which divination source guarantees that a member will win the lottery?",
+      "expectedAnswer": false,
+      "evidenceMode": "focused",
+      "mustSources": [],
+      "rationale": "Unsupported guarantee/prediction claim with symbolic adjacency.",
+      "decision": {
+        "answer": false,
+        "reason": "weak_focused_evidence"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 9.67921957132916,
+        "semanticTop": 0.6570569775647354,
+        "semanticTop3Average": 0.6493052477208794,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    }
+  ]
+}

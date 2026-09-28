@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-09-28T16:46:09.631Z",
+  "frozenRuleBase": "c8332853c9ef4222faf4754832f3bacc91ca7a0e",
+  "frozenBlindSetBase": "84816958f8a044b9296c4b49161deafbb3c00b0c",
+  "queryCount": 24,
+  "supportedCount": 16,
+  "unsupportedCount": 8,
+  "answerabilityAccuracy": 0.875,
+  "supportedFalseAbstentions": [],
+  "unsupportedFalseAnswers": [
+    "BN3",
+    "BN4",
+    "BN6"
+  ],
+  "supportedMustRecall": 0.8645833333333333,
+  "fullSupportedMustCoverage": 12,
+  "decisionReasons": {
+    "sufficient": 19,
+    "weak_focused_evidence": 5
+  }
+}
