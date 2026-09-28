@@ -82,14 +82,10 @@ export const getFeatureFlags = (): FeatureFlags => {
     const stored = localStorage.getItem('spiralogic-feature-flags');
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Migrate: if spatialMaiaShell was never explicitly set (or was set to false
-      // before it became the default), upgrade it. Users who manually disabled it
-      // after it became default will have _spatialShellExplicit = true.
-      if (!parsed._spatialShellExplicit && parsed.spatialMaiaShell === false) {
-        parsed.spatialMaiaShell = true;
-      }
-      // Merge with defaults to ensure all flags are present
-      return { ...DEFAULT_FLAGS, ...parsed };
+      // The spatial MAIA shell is now canonical product authority.
+      // Origin-local feature flags from earlier preview periods must never
+      // resurrect the retired legacy shell on soullab.life.
+      return { ...DEFAULT_FLAGS, ...parsed, spatialMaiaShell: true };
     }
   } catch (error) {
     console.warn('Failed to load feature flags from localStorage:', error);
