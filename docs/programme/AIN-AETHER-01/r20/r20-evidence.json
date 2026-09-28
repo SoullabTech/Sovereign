@@ -1,0 +1,86 @@
+{
+  "generatedAt": "2026-09-28T19:54:29.875Z",
+  "parentR19": "420e250383409f17ff33b43c25938330ecef43a4",
+  "responses": {
+    "ambiguous": {
+      "kind": "clarification",
+      "text": "Do you mean when the system recorded it, the date attached to a document or journal entry, when you remember it happening, the broader period it belonged to, or where it falls in the sequence?",
+      "selectedEvidenceRef": null,
+      "question": "unspecified_when",
+      "mentionsConflict": true,
+      "exposesInternalTaxonomy": false,
+      "universalWinner": false
+    },
+    "system": {
+      "kind": "answer",
+      "text": "The system record puts it at 2026-09-28T14:17:00-04:00. Other records place it differently, so I would treat this specifically as the system-record time rather than the one definitive time.",
+      "selectedEvidenceRef": "clock:1",
+      "question": "system_record_time",
+      "mentionsConflict": true,
+      "exposesInternalTaxonomy": false,
+      "universalWinner": false
+    },
+    "document": {
+      "kind": "answer",
+      "text": "The document or journal date is 2026-09-27. Other records place it differently, so this is best understood as the document date, not a universal event time.",
+      "selectedEvidenceRef": "journal:1",
+      "question": "document_date",
+      "mentionsConflict": true,
+      "exposesInternalTaxonomy": false,
+      "universalWinner": false
+    },
+    "remembered": {
+      "kind": "answer",
+      "text": "Your remembered time is 2026-09-27. Other records place it differently, so I would keep your remembered time distinct from the system or document time.",
+      "selectedEvidenceRef": "memory:1",
+      "question": "remembered_time",
+      "mentionsConflict": true,
+      "exposesInternalTaxonomy": false,
+      "universalWinner": false
+    },
+    "period": {
+      "kind": "answer",
+      "text": "The broader period recorded for it is late September 2026. Other time records differ, so I would keep this answer scoped to the kind of time you asked about.",
+      "selectedEvidenceRef": "period:1",
+      "question": "interpretive_period",
+      "mentionsConflict": true,
+      "exposesInternalTaxonomy": false,
+      "universalWinner": false
+    },
+    "sequence": {
+      "kind": "answer",
+      "text": "In the recorded sequence, it falls after repair:v0 and before repair:v2. Other time records differ, so I would keep this answer scoped to the kind of time you asked about.",
+      "selectedEvidenceRef": "sequence:1",
+      "question": "relative_sequence",
+      "mentionsConflict": true,
+      "exposesInternalTaxonomy": false,
+      "universalWinner": false
+    }
+  },
+  "validations": {
+    "ambiguous": {
+      "valid": true,
+      "errors": []
+    },
+    "system": {
+      "valid": true,
+      "errors": []
+    },
+    "document": {
+      "valid": true,
+      "errors": []
+    },
+    "remembered": {
+      "valid": true,
+      "errors": []
+    },
+    "period": {
+      "valid": true,
+      "errors": []
+    },
+    "sequence": {
+      "valid": true,
+      "errors": []
+    }
+  }
+}

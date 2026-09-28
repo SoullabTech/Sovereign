@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-09-28T19:54:29.875Z",
+  "parentR19": "420e250383409f17ff33b43c25938330ecef43a4",
+  "ambiguityKind": "clarification",
+  "ambiguityText": "Do you mean when the system recorded it, the date attached to a document or journal entry, when you remember it happening, the broader period it belonged to, or where it falls in the sequence?",
+  "systemSelected": "clock:1",
+  "rememberedSelected": "memory:1",
+  "documentSelected": "journal:1",
+  "periodSelected": "period:1",
+  "sequenceSelected": "sequence:1",
+  "allNaturalLanguage": true,
+  "noUniversalWinner": true,
+  "allValid": true
+}
