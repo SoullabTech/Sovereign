@@ -634,18 +634,13 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                 Email me a sign-in code instead
               </button>
 
-              {/* The way out for someone who landed here without an account. /signin
-                  opens straight onto a password form, so without this a new person
-                  faces three doors they cannot open and no exit — the mirror of the
-                  "Already a member?" link /signup carries.
-
-                  Destination is /begin, not /signup: the onboarding invariant is a
-                  single entry point for new members (/begin → intro → induction →
-                  /maia). /signup is the email door for someone already headed in. */}
+              {/* A first-time visitor leaves the returning-member door for
+                  the joining door. Both preserve the intended post-auth destination,
+                  whose ordinary default is canonical Soullab Home. */}
               {mode === 'signin' && (
                 <p className="mt-6 text-xs text-slate-400/80 text-center">
                   New to Soullab?{' '}
-                  <a href="/begin" className="text-amber-300/90 hover:text-amber-200 transition-colors">Begin Journey</a>
+                  <a href={`/signup?next=${encodeURIComponent(afterAuth)}`} className="text-amber-300/90 hover:text-amber-200 transition-colors">Join Soullab</a>
                 </p>
               )}
             </motion.div>
@@ -658,7 +653,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               {errorBlock}
               <form onSubmit={completeSignup} className="space-y-3">
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoFocus className={inputCls} />
-                <button type="submit" disabled={isLoading} className={primaryBtn}>{isLoading ? 'Entering…' : 'Enter MAIA'}</button>
+                <button type="submit" disabled={isLoading} className={primaryBtn}>{isLoading ? 'Entering…' : 'Enter Soullab'}</button>
               </form>
               {/* Was: "an emailed code{bioAvailable ? ` or ${biometricLabel}`}". That
                   promised biometric return from device CAPABILITY, but the passkey
@@ -757,7 +752,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               {mode === 'signup' && (
                 <p className="mt-6 text-xs text-slate-400/80 text-center">
                   Already a member?{' '}
-                  <a href="/signin" className="text-amber-300/90 hover:text-amber-200 transition-colors">Sign in</a>
+                  <a href={`/signin?next=${encodeURIComponent(afterAuth)}`} className="text-amber-300/90 hover:text-amber-200 transition-colors">Sign in</a>
                 </p>
               )}
             </motion.div>
