@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-09-28T18:09:07.772Z",
+  "parentR9": "990fe23d91d9dec8b4f913cd5f98cd783a54095d",
+  "valid": true,
+  "sourceCount": 4,
+  "counterfactualCount": 4,
+  "humanReviewRequired": true,
+  "coreAblationsRemove": true,
+  "historicalAblationPreservesCore": true,
+  "contradictionVisible": true,
+  "absenceVisible": true,
+  "uncertaintyVisible": true
+}
