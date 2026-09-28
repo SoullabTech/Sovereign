@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-28T20:36:35.568Z",
+  "parentRuntimeR6": "deabeaf103c8436fcb8546e19e19d078398f7336",
+  "simulated": true,
+  "receiptCreated": true,
+  "tokenRef": "synthetic-handoff:human-auth:r7:witness",
+  "candidateRef": "synthetic-reflection:aether-pattern:a-shared-movement-toward-greater-openness-",
+  "simulationKind": "no_op_sink",
+  "memberFacingContacted": false,
+  "deliveryExecuted": false,
+  "notificationSent": false,
+  "persisted": false,
+  "maiaPromptMutated": false,
+  "networkSideEffect": false,
+  "productionAuthority": false
+}
