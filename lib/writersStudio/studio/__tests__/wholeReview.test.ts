@@ -1,6 +1,6 @@
-import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
+import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import type { ChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
-import { mapWholeReview } from '../wholeReview';
+import { mapWholeReview, REVIEW_DEVELOPMENTAL_LENSES } from '../wholeReview';
 import {
   ASSESSMENT, HOST, READING, SECTIONS,
 } from '../../../../tests/constitutional/writers-studio/flagship-r1-readonly/fixtures';
@@ -24,7 +24,7 @@ function payloadFor(lens: DevelopmentalLens, index: number) {
   };
 }
 
-const payloads = DEVELOPMENTAL_LENSES.map(payloadFor);
+const payloads = REVIEW_DEVELOPMENTAL_LENSES.map(payloadFor);
 const manifest: ChapterReviewManifest = {
   id: '11111111-1111-4111-8111-111111111111',
   manuscriptId: READING.manuscriptId,  chapterRootSectionId: 's1',
@@ -43,7 +43,7 @@ describe('D4R1 whole Review aggregate', () => {
 
     expect(out.reviewRunId).toBe(manifest.id);
     expect(out.view.findings.map((f) => f.id)).toEqual(['dobs_earlier', 'dobs_later']);
-    expect(out.view.lenses).toHaveLength(DEVELOPMENTAL_LENSES.length);
+    expect(out.view.lenses).toHaveLength(REVIEW_DEVELOPMENTAL_LENSES.length);
     expect(out.view.lenses.find((l) => l.id === 'continuity')?.availability)
       .toEqual({ kind: 'read', found: 2 });
     expect(out.view.lenses.find((l) => l.id === 'coherence')?.availability)

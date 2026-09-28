@@ -19,6 +19,11 @@ import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/d
 import type { ChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import type { LensAvailability } from './reading';
 
+type ReviewDevelopmentalLens = Exclude<DevelopmentalLens, 'themes'>;
+export const REVIEW_DEVELOPMENTAL_LENSES: readonly ReviewDevelopmentalLens[] = DEVELOPMENTAL_LENSES.filter(
+  (lens): lens is ReviewDevelopmentalLens => lens !== 'themes',
+);
+
 export interface WholeReviewInput {
   readonly manifest: ChapterReviewManifest;
   readonly payloads: readonly StoredReadingPayload[];
@@ -78,9 +83,9 @@ function whenRange(payloads: readonly StoredReadingPayload[]): string {
 }
 
 function availabilityFor(
-  lens: DevelopmentalLens,
-  mappedByLens: ReadonlyMap<DevelopmentalLens, ReviewView>,
-  payloadByLens: ReadonlyMap<DevelopmentalLens, StoredReadingPayload>,
+  lens: ReviewDevelopmentalLens,
+  mappedByLens: ReadonlyMap<ReviewDevelopmentalLens, ReviewView>,
+  payloadByLens: ReadonlyMap<ReviewDevelopmentalLens, StoredReadingPayload>,
 ): LensAvailability {
   const payload = payloadByLens.get(lens);
   if (!payload) return { kind: 'not-read' };
@@ -117,8 +122,8 @@ export function mapWholeReview(input: WholeReviewInput): WholeReviewOutcome {
     return { kind: 'unavailable', reason: 'reading_mismatch', detail: 'a manifest reading is absent' };
   }
 
-  const mappedByLens = new Map<DevelopmentalLens, ReviewView>();
-  const payloadByLens = new Map<DevelopmentalLens, StoredReadingPayload>();
+  const mappedByLens = new Map<ReviewDevelopmentalLens, ReviewView>();
+  const payloadByLens = new Map<ReviewDevelopmentalLens, StoredReadingPayload>();
   const durable: Record<string, DurableObservationTruth> = {};
   const allFindings: ReviewView['findings'][number][] = [];
   let base: ReviewView | null = null;
@@ -128,6 +133,9 @@ export function mapWholeReview(input: WholeReviewInput): WholeReviewOutcome {
     const payload = byId.get(readingId)!;
     const reading = payload.reading;
     const lens = reading.scope.commissionedLens;
+    if (lens === 'themes') {
+      return { kind: 'unavailable', reason: 'reading_unpresentable', detail: 'Themes belongs to Develop, not Review' };
+    }
     if (payloadByLens.has(lens)) {
       return { kind: 'unavailable', reason: 'duplicate_lens', detail: `duplicate completed lens: ${lens}` };
     }
@@ -169,21 +177,24 @@ export function mapWholeReview(input: WholeReviewInput): WholeReviewOutcome {
     }    Object.assign(durable, mapped.durable);
   }
 
-  const failed = new Set<DevelopmentalLens>();
+  const failed = new Set<ReviewDevelopmentalLens>();
   for (const failure of manifest.failures) {
+    if (failure.lens === 'themes') {
+      return { kind: 'unavailable', reason: 'reading_mismatch', detail: 'Themes is not a Review lens' };
+    }
     if (payloadByLens.has(failure.lens) || failed.has(failure.lens)) {
       return { kind: 'unavailable', reason: 'duplicate_lens', detail: `lens accounted more than once: ${failure.lens}` };
     }
     failed.add(failure.lens);
   }
-  const accounted = new Set<DevelopmentalLens>([...payloadByLens.keys(), ...failed]);
-  if (DEVELOPMENTAL_LENSES.some((lens) => !accounted.has(lens))) {
+  const accounted = new Set<ReviewDevelopmentalLens>([...payloadByLens.keys(), ...failed]);
+  if (REVIEW_DEVELOPMENTAL_LENSES.some((lens) => !accounted.has(lens))) {
     return { kind: 'unavailable', reason: 'incomplete_lens_accounting', detail: 'saved review does not account for every canonical lens' };
   }
   if (!base) return { kind: 'unavailable', reason: 'no_completed_readings' };
 
   const sectionOrder = new Map(manifest.sectionIds.map((id, i) => [id, i] as const));
-  const lensOrder = new Map(DEVELOPMENTAL_LENSES.map((lens, i) => [lens, i] as const));
+  const lensOrder = new Map(REVIEW_DEVELOPMENTAL_LENSES.map((lens, i) => [lens, i] as const));
   allFindings.sort((a, b) => {
     const aSection = sectionOrder.get(a.returnTo.sectionId) ?? Number.MAX_SAFE_INTEGER;
     const bSection = sectionOrder.get(b.returnTo.sectionId) ?? Number.MAX_SAFE_INTEGER;
@@ -191,11 +202,13 @@ export function mapWholeReview(input: WholeReviewInput): WholeReviewOutcome {
     const aPos = durable[a.id]?.address.codePointStart ?? Number.MAX_SAFE_INTEGER;
     const bPos = durable[b.id]?.address.codePointStart ?? Number.MAX_SAFE_INTEGER;
     if (aPos !== bPos) return aPos - bPos;
-    const aLens = a.provenance.kind === 'maia-observation' ? a.provenance.lens as DevelopmentalLens : null;
-    const bLens = b.provenance.kind === 'maia-observation' ? b.provenance.lens as DevelopmentalLens : null;
+    const aLensRaw = a.provenance.kind === 'maia-observation' ? a.provenance.lens as DevelopmentalLens : null;
+    const bLensRaw = b.provenance.kind === 'maia-observation' ? b.provenance.lens as DevelopmentalLens : null;
+    const aLens: ReviewDevelopmentalLens | null = aLensRaw && aLensRaw !== 'themes' ? aLensRaw : null;
+    const bLens: ReviewDevelopmentalLens | null = bLensRaw && bLensRaw !== 'themes' ? bLensRaw : null;
     return (aLens ? lensOrder.get(aLens) ?? 99 : 99) - (bLens ? lensOrder.get(bLens) ?? 99 : 99);
   });  const when = whenRange(payloads);
-  const lenses = DEVELOPMENTAL_LENSES.map((id) => ({
+  const lenses = REVIEW_DEVELOPMENTAL_LENSES.map((id) => ({
     id,
     availability: availabilityFor(id, mappedByLens, payloadByLens),
   }));

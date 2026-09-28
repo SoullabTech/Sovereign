@@ -74,7 +74,7 @@ const REGISTRY: Readonly<Record<CapabilityId, Capability>> = {
   },
   'observation.read': {
     id: 'observation.read', standing: 'live',
-    because: 'developmentalTurn() over the seven lenses; freezeReading() admits the observation.',
+    because: 'developmentalTurn() over the eight governed lenses; freezeReading() admits the observation.',
   },
   'observation.reasoning': {
     id: 'observation.reasoning', standing: 'live',
