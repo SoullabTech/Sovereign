@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-09-28T19:03:20.815Z",
+  "parentR10": "b8b26c319fbcf578455c03e4f3669401c87d4017",
+  "frozenCaseCount": 5,
+  "machineExpectationPassCount": 5,
+  "allMachineExpectationsMet": true,
+  "unsupportedTemptationRefused": true,
+  "unsupportedTemptationHasNoProvenance": true,
+  "admittedCasesHaveProvenance": true,
+  "allHumanReviewsPending": true,
+  "humanAdjudicationOptions": [
+    "semantically_faithful",
+    "useful_but_incomplete",
+    "technically_grounded_but_lifeless",
+    "overinterpreted",
+    "beautiful_but_unsupported",
+    "wrong_relation",
+    "appropriate_refusal"
+  ]
+}
