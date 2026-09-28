@@ -4,6 +4,10 @@ ALTER TABLE house_member_preferences
   DROP CONSTRAINT IF EXISTS house_member_preferences_shortcut_ids_check;
 ALTER TABLE house_member_preferences
   DROP CONSTRAINT IF EXISTS house_member_preferences_shortcut_ids_check3;
+ALTER TABLE house_member_preferences
+  DROP CONSTRAINT IF EXISTS house_member_preferences_shortcut_ids_cardinality_check;
+ALTER TABLE house_member_preferences
+  DROP CONSTRAINT IF EXISTS house_member_preferences_shortcut_ids_catalog_check;
 
 ALTER TABLE house_member_preferences
   ADD CONSTRAINT house_member_preferences_shortcut_ids_cardinality_check
