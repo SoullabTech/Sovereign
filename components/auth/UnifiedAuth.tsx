@@ -501,11 +501,16 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     try {
       const res = await apiFetch('/api/members/signin', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.toLowerCase().trim(), password }),
+        body: JSON.stringify({ username: username.trim(), password }),
       });
       const text = await res.text();
-      if (!res.ok) { setError(text || `Sign in failed (${res.status})`); setIsLoading(false); return; }
-      const data = text ? JSON.parse(text) : {};
+      let data: any = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+      if (!res.ok) {
+        setError(data?.error || `Sign in failed (${res.status})`);
+        setIsLoading(false);
+        return;
+      }
       const memberId = data?.memberId || data?.member?.id || data?.id;
       if (!memberId) { setError('Sign in succeeded but memberId missing.'); setIsLoading(false); return; }
       storeSession({
@@ -597,11 +602,11 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                 {usernameParam ? `Welcome back, ${usernameParam.charAt(0).toUpperCase() + usernameParam.slice(1).toLowerCase()}.` : 'Welcome'}
               </h1>
               <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
-                {usernameParam ? 'Return to Soullab.' : 'Sign in with your username and password.'}
+                {usernameParam ? 'Return to Soullab.' : 'Sign in with your email or username and password.'}
               </p>
               {errorBlock}
               <form onSubmit={signInWithPassword} className="space-y-3">
-                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" autoComplete="username" className={inputCls} />
+                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Email or username" autoComplete="username" className={inputCls} />
                 <div className="relative">
                   <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPasswordText ? 'text' : 'password'} placeholder="Password" autoComplete="current-password" className={`${inputCls} pr-12`} />
                   <button type="button" onClick={() => setShowPasswordText(!showPasswordText)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-300" tabIndex={-1}>{showPasswordText ? 'Hide' : 'Show'}</button>
