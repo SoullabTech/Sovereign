@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-09-28T20:05:16.338Z",
+  "parentR22": "ecd5f3d4f03383fac5eefaa16af511714269e4c9",
+  "invariantCount": 13,
+  "passingInvariants": 13,
+  "allPass": true,
+  "contradictionRefs": [],
+  "programmeStanding": "closed_for_benchmark_scope",
+  "runtimeAuthority": false,
+  "personDefinitionAuthority": false,
+  "soulRepresentationAuthority": false,
+  "finalMeaningAuthority": "member"
+}

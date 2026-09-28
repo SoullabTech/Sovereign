@@ -1,0 +1,123 @@
+{
+  "generatedAt": "2026-09-28T20:05:16.338Z",
+  "closure": {
+    "parentR22": "ecd5f3d4f03383fac5eefaa16af511714269e4c9",
+    "invariants": [
+      {
+        "invariantRef": "AINV-01",
+        "description": "Member meaning remains sovereign and no person-level predictive/destiny authority is granted.",
+        "pass": true,
+        "evidence": [
+          "R4 multi-spiral field",
+          "member final-meaning authority"
+        ]
+      },
+      {
+        "invariantRef": "AINV-02",
+        "description": "Multiple life spirals remain differentiated rather than collapsed into one master stage.",
+        "pass": true,
+        "evidence": [
+          "R4 differentiated domain spirals"
+        ]
+      },
+      {
+        "invariantRef": "AINV-03",
+        "description": "Aetheric gestalt remains partial and non-totalizing.",
+        "pass": true,
+        "evidence": [
+          "R6 partial gestalt"
+        ]
+      },
+      {
+        "invariantRef": "AINV-04",
+        "description": "Member correction can reject the active gestalt without erasing source-field history.",
+        "pass": true,
+        "evidence": [
+          "R7 gestalt corrigibility"
+        ]
+      },
+      {
+        "invariantRef": "AINV-05",
+        "description": "Dialogue remains reflective and corrigible rather than declarative about the person.",
+        "pass": true,
+        "evidence": [
+          "R8 dialogue law",
+          "R9 overreach/underreach falsification"
+        ]
+      },
+      {
+        "invariantRef": "AINV-06",
+        "description": "Spoken reflection must be semantically supported by the represented field.",
+        "pass": true,
+        "evidence": [
+          "R10 evidence-bound dialogue"
+        ]
+      },
+      {
+        "invariantRef": "AINV-07",
+        "description": "Human semantic review is genuine new evidence and never rewrites the machine witness.",
+        "pass": true,
+        "evidence": [
+          "R12 human semantic adjudication"
+        ]
+      },
+      {
+        "invariantRef": "AINV-08",
+        "description": "Human repair may improve the active reflection but must still pass evidence and posture gates.",
+        "pass": true,
+        "evidence": [
+          "R13 governed human repair"
+        ]
+      },
+      {
+        "invariantRef": "AINV-09",
+        "description": "Interpretive lineage is append-only with exactly one active head.",
+        "pass": true,
+        "evidence": [
+          "R14 repair lineage"
+        ]
+      },
+      {
+        "invariantRef": "AINV-10",
+        "description": "Memory explanation refuses to invent missing reasons.",
+        "pass": true,
+        "evidence": [
+          "R15 non-reconstructive lineage explanation"
+        ]
+      },
+      {
+        "invariantRef": "AINV-11",
+        "description": "Plural temporal evidence remains question-scoped with no universal winner.",
+        "pass": true,
+        "evidence": [
+          "R18 temporal plurality",
+          "R19 question-scoped authority",
+          "R20 natural clarification"
+        ]
+      },
+      {
+        "invariantRef": "AINV-12",
+        "description": "Temporal sub-programme is internally closed for benchmark scope only.",
+        "pass": true,
+        "evidence": [
+          "R22 temporal programme closure"
+        ]
+      },
+      {
+        "invariantRef": "AINV-13",
+        "description": "Soul remains outside computational representation authority across the programme.",
+        "pass": true,
+        "evidence": [
+          "R1-R23 Soul-Service boundary"
+        ]
+      }
+    ],
+    "allPass": true,
+    "contradictionRefs": [],
+    "programmeStanding": "closed_for_benchmark_scope",
+    "runtimeAuthority": false,
+    "personDefinitionAuthority": false,
+    "soulRepresentationAuthority": false,
+    "finalMeaningAuthority": "member"
+  }
+}
