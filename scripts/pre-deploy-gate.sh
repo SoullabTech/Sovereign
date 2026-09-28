@@ -210,6 +210,42 @@ gate_all() {
     echo "$sha"
 }
 
+# Quick reader-only deployment is lawful only when the target adds no production
+# schema work. If migrations are pending, the full deploy lane must own the
+# migrate-before-swap review/custody boundary.
+gate_quick_lane_no_pending_migrations() {
+    local raw pending
+
+    if ! raw="$(deploy_ctx_compose --profile migrate run --rm -T migrate sh -c '
+        set -eu
+        ledger="$(mktemp)"
+        trap '"'"'rm -f "$ledger"'"'"' EXIT
+        psql "$DATABASE_URL" -Atc "SELECT filename FROM schema_migrations WHERE filename IS NOT NULL ORDER BY 1" > "$ledger"
+        for f in /app/database/migrations/*.sql; do
+            [ -e "$f" ] || continue
+            b="${f##*/}"
+            if ! grep -Fxq "$b" "$ledger"; then
+                printf "database/migrations/%s\n" "$b"
+            fi
+        done
+    ')"; then
+        log_block "Could not derive production-pending migrations for the quick lane."
+        log_block "Refusing reader swap rather than guessing schema compatibility."
+        return 1
+    fi
+
+    pending="$(printf '%s\n' "$raw" | grep -E '^database/migrations/[^/]+\.sql$' || true)"
+    if [ -n "$pending" ]; then
+        log_block "Target has production-pending migrations; quick deploy-maia may not swap the reader first."
+        printf '%s\n' "$pending" | sed 's/^/[gate:BLOCK]   pending: /' >&2
+        log_block "Use scripts/deploy-production.sh deploy <SHA> so review custody and migrate-before-swap govern the transition."
+        return 1
+    fi
+
+    log_ok "Quick lane migration check: no production-pending migrations."
+    return 0
+}
+
 # deploy-maia <SHA> — the mechanized replacement for the quick maia-only command.
 # Takes an EXPLICITLY NAMED commit, materializes it into an isolated build context
 # (so the build is a commit, not whatever branch is checked out — 2026-07-27
@@ -241,6 +277,7 @@ cmd_deploy_maia() {
     # Remaining pre-build gates (provenance is now covered by materialize above).
     gate_disk
     gate_colab
+    gate_quick_lane_no_pending_migrations
 
     # Build AND swap use the SNAPSHOT's compose file (deploy_ctx_compose): the
     # deployment structure is the authorized commit's, never the checkout's
