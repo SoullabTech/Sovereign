@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-09-28T18:49:55.073Z",
+  "parentR7": "e845d796a59ef2467ee9d6a5d18f19f6c6d64d8c",
+  "dialogueValid": true,
+  "rejectedDialogueValid": true,
+  "turnCount": 4,
+  "correctionInvited": true,
+  "nonfitNamed": true,
+  "rejectionHonored": true,
+  "forbiddenRefused": true,
+  "allowedAccepted": true,
+  "memberOwnsFinalMeaning": true
+}
