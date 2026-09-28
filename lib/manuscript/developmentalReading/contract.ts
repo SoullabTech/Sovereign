@@ -201,6 +201,12 @@ export interface DevelopmentalObservation {
   evidenceRefs: NonEmptyArray<EvidenceRef>;
   /** Required. The reader's claim text, VERBATIM — 07C does not rewrite (founder ruling). */
   observation: string;
+  /**
+   * D5C1 — present only for observations commissioned under the Themes lens.
+   * MAIA's short candidate name is frozen separately from her observation so
+   * member Rename/Reject acts never rewrite historical reading text.
+   */
+  themeLabel?: string;
   /** Carried from the reader: what this noticing does not establish (07B A7). */
   doesNotEstablish: NonEmptyArray<DevelopmentalNonConclusion>;
   structureDependency: StructureDependency;
@@ -230,8 +236,10 @@ export interface ClassifierIdentity {
  *       ⛔ NEVER BACKFILLED — a v1/v2 row's missing identity IS the evidence
  *       that it was admitted under a contract that had none, and minting one
  *       now would fabricate an admission event that never happened.
+ *   v4  D5C1 Themes: observations commissioned under `themes` carry a frozen
+ *       MAIA-authored `themeLabel` candidate distinct from observation prose.
  */
-export const READING_CONTRACT_VERSION = 'DEVELOPMENTAL-READING-CONTRACT-03';
+export const READING_CONTRACT_VERSION = 'DEVELOPMENTAL-READING-CONTRACT-04';
 
 /**
  * INV-25 (WS2-07-F1 replacement) — `classifier === null` iff classification was

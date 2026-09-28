@@ -29,6 +29,7 @@ import {
   Check
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { divinationType } from '@/lib/oracle/divinationTypography';
 
 type ReadingPhase = 'question' | 'spread-select' | 'casting' | 'reveal' | 'interpretation';
 
@@ -300,7 +301,7 @@ export default function RunesOraclePage() {
               className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm">Back to Oracle</span>
+              <span className={divinationType.action}>Back to Oracle</span>
             </button>
 
             <div className="flex items-center gap-2">
@@ -345,7 +346,7 @@ export default function RunesOraclePage() {
                   <h2 className="text-4xl font-bold text-white mb-4">
                     Consult the Elder Futhark
                   </h2>
-                  <p className="text-[#D4B896]/70 text-lg">
+                  <p className={`${divinationType.support} text-[#D4B896]/80`}>
                     The ancient Norse runes hold the secrets of wyrd and orlog
                   </p>
                 </div>
@@ -355,20 +356,20 @@ export default function RunesOraclePage() {
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What guidance do you seek from the runes?"
-                    className="w-full h-32 px-4 py-3 bg-white/[0.08] border border-[#D4B896]/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4B896]/50 focus:border-[#D4B896] transition-all resize-none"
+                    className={`${divinationType.fieldBody} divination-reading-field w-full h-32 px-4 py-3 bg-white/[0.08] border border-[#D4B896]/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4B896]/50 focus:border-[#D4B896] transition-all resize-none`}
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] disabled:from-[#D4B896]/30 disabled:to-[#B49876]/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className={`${divinationType.action} w-full min-h-12 mt-6 px-6 py-4 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] disabled:from-[#D4B896]/30 disabled:to-[#B49876]/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2`}
                   >
                     <Sparkles className="w-5 h-5" />
                     Reach Into the Rune Bag
                   </button>
 
-                  <p className="text-[#D4B896]/40 text-xs text-center mt-4">
+                  <p className={`${divinationType.metadata} text-[#D4B896]/55 text-center mt-4`}>
                     Drawing from the 24 runes of the Elder Futhark
                   </p>
                 </div>
@@ -388,7 +389,7 @@ export default function RunesOraclePage() {
                   <h2 className="text-3xl font-bold text-white mb-4">
                     Choose Your Spread
                   </h2>
-                  <p className="text-[#D4B896]/70">
+                  <p className={`${divinationType.support} text-[#D4B896]/80`}>
                     Select how many runes to draw for your reading
                   </p>
                 </div>
@@ -407,10 +408,10 @@ export default function RunesOraclePage() {
                           {spread.runeCount}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-white mb-1 group-hover:text-white">
+                          <h3 className={`${divinationType.itemTitle} font-semibold text-white mb-1 group-hover:text-white`}>
                             {spread.name}
                           </h3>
-                          <p className="text-[#D4B896]/70 text-sm">
+                          <p className={`${divinationType.support} text-[#D4B896]/80`}>
                             {spread.description}
                           </p>
                         </div>
@@ -421,7 +422,7 @@ export default function RunesOraclePage() {
 
                 <button
                   onClick={() => setPhase('question')}
-                  className="mt-6 mx-auto block text-[#D4B896]/70 hover:text-white text-sm transition-colors"
+                  className={`${divinationType.action} mt-6 mx-auto min-h-11 text-[#D4B896]/80 hover:text-white transition-colors`}
                 >
                   Back to question
                 </button>
@@ -444,7 +445,7 @@ export default function RunesOraclePage() {
                   <p className="text-[#D4B896]/70">
                     Drawing rune {currentRuneIndex + 1} of {selectedSpread.runeCount}...
                   </p>
-                  <p className="text-[#D4B896]/40 text-sm mt-2">
+                  <p className={`${divinationType.metadata} text-[#D4B896]/55 mt-2`}>
                     {selectedSpread.positions[currentRuneIndex]}
                   </p>
                 </div>
@@ -487,7 +488,7 @@ export default function RunesOraclePage() {
                             {rune.symbol || '?'}
                           </span>
                         </div>
-                        <p className="text-[#D4B896]/70 text-xs mt-2">
+                        <p className={`${divinationType.metadata} text-[#D4B896]/70 mt-2`}>
                           {selectedSpread.positions[index]}
                         </p>
                       </motion.div>
@@ -532,17 +533,17 @@ export default function RunesOraclePage() {
                           </span>
                           {rune.isReversed && (
                             <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-900/60 rounded-full flex items-center justify-center">
-                              <span className="text-xs text-red-300">R</span>
+                              <span className={`${divinationType.marker} text-red-300`}>R</span>
                             </div>
                           )}
                         </div>
                         <p className="text-white font-semibold mt-3">
                           {rune.name}
                         </p>
-                        <p className="text-[#D4B896]/50 text-xs">
+                        <p className={`${divinationType.metadata} text-[#D4B896]/65`}>
                           {rune.position}
                         </p>
-                        <p className="text-[#D4B896]/60 text-xs mt-1">
+                        <p className={`${divinationType.support} text-[#D4B896]/75 mt-1`}>
                           {rune.meaning}
                         </p>
                       </motion.div>
@@ -568,21 +569,21 @@ export default function RunesOraclePage() {
                           <div className="flex items-center gap-3 mb-3">
                             <span className="text-2xl">{rune.symbol}</span>
                             <div>
-                              <h4 className="text-lg font-semibold text-white">
+                              <h4 className={`${divinationType.itemTitle} font-semibold text-white`}>
                                 {rune.name}
-                                {rune.isReversed && <span className="text-red-400 text-sm ml-2">(Merkstave)</span>}
+                                {rune.isReversed && <span className={`${divinationType.metadata} text-red-300 ml-2`}>(Merkstave)</span>}
                               </h4>
-                              <p className="text-[#D4B896]/50 text-xs">{rune.position}</p>
+                              <p className={`${divinationType.metadata} text-[#D4B896]/65`}>{rune.position}</p>
                             </div>
                           </div>
-                          <p className="text-[#D4B896]/70 text-sm leading-relaxed">
+                          <p className={`${divinationType.fieldBody} text-[#D4B896]/80`}>
                             {rune.interpretation}
                           </p>
                           <div className="flex gap-2 mt-3">
-                            <span className="px-2 py-1 bg-[#D4B896]/20 rounded text-xs text-[#D4B896]">
+                            <span className={`${divinationType.metadata} px-2 py-1 bg-[#D4B896]/20 rounded text-[#D4B896]`}>
                               {rune.element}
                             </span>
-                            <span className="px-2 py-1 bg-[#D4B896]/20 rounded text-xs text-[#D4B896]">
+                            <span className={`${divinationType.metadata} px-2 py-1 bg-[#D4B896]/20 rounded text-[#D4B896]`}>
                               {rune.aett} Aett
                             </span>
                           </div>
@@ -594,31 +595,31 @@ export default function RunesOraclePage() {
                     <div className="bg-white/[0.03] backdrop-blur-xl border border-[#D4B896]/20 rounded-2xl p-8 shadow-2xl">
                       <div className="flex items-center gap-3 mb-6">
                         <BookOpen className="w-6 h-6 text-[#D4B896]" />
-                        <h3 className="text-2xl font-bold text-white">The Runes Speak</h3>
+                        <h3 className={`${divinationType.sectionTitle} font-bold text-white`}>The Runes Speak</h3>
                       </div>
 
                       <div className="space-y-6">
                         <div>
-                          <h4 className="text-[#D4B896]/80 font-semibold mb-3">Insight:</h4>
-                          <p className="text-white/70 leading-relaxed">
+                          <h4 className={`${divinationType.fieldLabel} text-[#D4B896]/90 mb-3`}>Insight:</h4>
+                          <p className={`${divinationType.fieldBody} text-white/80`}>
                             {reading.insight}
                           </p>
                         </div>
 
                         <div>
-                          <h4 className="text-[#D4B896]/80 font-semibold mb-3">Soul Guidance:</h4>
-                          <p className="text-white/70 leading-relaxed">
+                          <h4 className={`${divinationType.fieldLabel} text-[#D4B896]/90 mb-3`}>Soul Guidance:</h4>
+                          <p className={`${divinationType.fieldBody} text-white/80`}>
                             {reading.soulGuidance}
                           </p>
                         </div>
 
                         {reading.wyrdMessage && (
                           <div>
-                            <h4 className="text-[#D4B896]/80 font-semibold mb-3 flex items-center gap-2">
+                            <h4 className={`${divinationType.fieldLabel} text-[#D4B896]/90 mb-3 flex items-center gap-2`}>
                               <Flame className="w-4 h-4 text-orange-400" />
                               Message from Wyrd:
                             </h4>
-                            <p className="text-white/70 leading-relaxed italic">
+                            <p className={`${divinationType.fieldBody} text-white/80 italic`}>
                               {reading.wyrdMessage}
                             </p>
                           </div>
@@ -629,11 +630,11 @@ export default function RunesOraclePage() {
                     {/* Ritual Suggestion */}
                     {reading.ritual && (
                       <div className="bg-[#D4B896]/10 backdrop-blur-xl border border-[#D4B896]/15 rounded-xl p-6">
-                        <h4 className="text-[#D4B896]/80 font-semibold mb-3 flex items-center gap-2">
+                        <h4 className={`${divinationType.fieldLabel} text-[#D4B896]/90 mb-3 flex items-center gap-2`}>
                           <Sparkles className="w-5 h-5" />
                           Integration Ritual
                         </h4>
-                        <p className="text-white/60 text-sm leading-relaxed">
+                        <p className={`${divinationType.fieldBody} text-white/70`}>
                           {reading.ritual}
                         </p>
                       </div>
@@ -643,9 +644,9 @@ export default function RunesOraclePage() {
                     <div className="bg-gradient-to-br from-violet-900/30 via-purple-800/20 to-indigo-900/30 backdrop-blur-xl border border-violet-500/30 rounded-xl p-6">
                       <div className="flex items-center gap-3 mb-4">
                         <MessageSquare className="w-6 h-6 text-violet-400" />
-                        <h4 className="text-xl font-semibold text-violet-200">Explore with MAIA</h4>
+                        <h4 className={`${divinationType.itemTitle} font-semibold text-violet-100`}>Explore with MAIA</h4>
                       </div>
-                      <p className="text-violet-300/70 text-sm mb-4">
+                      <p className={`${divinationType.support} text-violet-200/80 mb-4`}>
                         Bring this reading into conversation with MAIA to explore its meaning for your specific situation and integrate its wisdom.
                       </p>
                       <button
@@ -664,7 +665,7 @@ export default function RunesOraclePage() {
                           );
                           router.push(`/maia?context=${context}`);
                         }}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                        className={`${divinationType.action} w-full min-h-12 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2`}
                       >
                         <MessageSquare className="w-5 h-5" />
                         Consult with MAIA

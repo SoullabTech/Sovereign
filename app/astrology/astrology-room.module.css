@@ -1,0 +1,884 @@
+@font-face{font-family:'Astrology Crimson';src:url('/fonts/crimson-pro/crimson-pro-300-normal-latin.woff2') format('woff2');font-weight:300;font-display:swap}
+@font-face{font-family:'Astrology Crimson';src:url('/fonts/crimson-pro/crimson-pro-400-normal-latin.woff2') format('woff2');font-weight:400;font-display:swap}
+
+.room{
+  --astro-ink:#efe6d9;
+  --astro-muted:#b8aa98;
+  --astro-gold:#c9a56d;
+  --astro-blue:#849ab3;
+  --astro-rule:rgba(218,184,137,.16);
+  position:relative;
+  isolation:isolate;
+  min-height:100svh;
+  overflow-x:hidden;
+  color:var(--astro-ink);
+  font-family:'Astrology Crimson',Georgia,serif;
+  background:#0c0a08;
+}
+.room::before{
+  content:'';
+  position:fixed;
+  z-index:-2;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(9,8,7,.14),rgba(9,8,7,.52) 45%,#0c0a08 100%),
+    url('/house/house-architecture-7a638061.webp') center top/cover no-repeat;
+  opacity:.60;
+}
+.room::after{
+  content:'';
+  position:fixed;
+  z-index:-1;
+  inset:-8%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 62% 25%,rgba(118,143,171,.10),transparent 29%),
+    radial-gradient(circle at 38% 42%,rgba(194,146,79,.08),transparent 31%),
+    linear-gradient(107deg,transparent 0 42%,rgba(214,179,126,.035) 49%,transparent 58%);
+  filter:blur(10px);
+}
+.threshold{
+  position:sticky;
+  top:0;
+  z-index:50;
+  min-height:68px;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  padding:10px clamp(18px,3vw,42px);
+  border-bottom:1px solid var(--astro-rule);
+  background:rgba(12,9,7,.86);
+  backdrop-filter:blur(16px);
+}
+.brand{
+  display:inline-flex;
+  align-items:center;
+  gap:11px;
+  width:fit-content;
+  color:#eadfce;
+  text-decoration:none;
+  font:600 12px/1 Arial,sans-serif;
+  letter-spacing:.20em;
+}
+.brand img{width:32px;height:32px;object-fit:contain}
+.roomName{display:flex;align-items:baseline;gap:12px;color:#d8c7aa;white-space:nowrap}
+.roomName span{font:12px/1.4 Arial,sans-serif;letter-spacing:.14em}
+.roomName b{color:#f0dfc4;font:400 18px/1.2 'Astrology Crimson',Georgia,serif}
+.return{
+  justify-self:end;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  color:#d6ba8e;
+  text-decoration:none;
+  font:16px/1.35 Arial,sans-serif;
+}
+.content{position:relative;z-index:2}
+.arrival{
+  max-width:1180px;
+  margin:0 auto;
+  padding:60px 34px 34px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(280px,.44fr);
+  gap:52px;
+  align-items:end;
+}
+.kicker{
+  margin:0;
+  color:var(--astro-gold);
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.arrival h1{
+  max-width:780px;
+  margin:14px 0 12px;
+  color:#f2e9dc;
+  font-size:clamp(48px,5vw,72px);
+  line-height:.98;
+  font-weight:300;
+  letter-spacing:-.025em;
+}
+.lead{
+  max-width:700px;
+  margin:0;
+  color:#c5b6a3;
+  font-size:20px;
+  line-height:1.55;
+}
+.boundary{
+  padding:18px 0 2px 20px;
+  border-left:1px solid rgba(132,154,179,.30);
+}
+.boundary small{
+  color:#91a5bb;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.14em;
+}
+.boundary p{
+  margin:10px 0 0;
+  color:#ad9f8e;
+  font-size:16px;
+  line-height:1.6;
+  font-style:italic;
+}
+.atlas{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 34px 36px;
+}
+.atlasPaper{
+  padding:34px 38px 30px;
+  border:1px solid rgba(152,118,76,.24);
+  border-radius:12px;
+  color:#342c24;
+  background:
+    linear-gradient(90deg,rgba(122,91,55,.035),transparent 12%,transparent 88%,rgba(122,91,55,.025)),
+    linear-gradient(145deg,#f3eadb,#e9ddca);
+  box-shadow:0 24px 64px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.48);
+}
+.atlasHead{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:28px;
+  padding-bottom:18px;
+  border-bottom:1px solid rgba(93,72,49,.14);
+}
+.atlasHead small{
+  color:#75654f;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.14em;
+}
+.atlasHead h2{
+  margin:7px 0 0;
+  color:#42372d;
+  font-size:32px;
+  line-height:1.05;
+  font-weight:300;
+}
+.atlasHead p{
+  max-width:420px;
+  margin:0;
+  color:#716453;
+  font:15px/1.55 Arial,sans-serif;
+  text-align:right;
+}
+.factGrid{
+  margin-top:24px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+}
+.fact{
+  min-height:155px;
+  padding:8px 24px 8px 0;
+}
+.fact+.fact{
+  padding-left:24px;
+  border-left:1px solid rgba(93,72,49,.14);
+}
+.fact small{
+  color:#786851;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.fact h3{
+  margin:12px 0 4px;
+  color:#40342a;
+  font-size:27px;
+  line-height:1.1;
+  font-weight:400;
+}
+.fact p{
+  margin:5px 0 0;
+  color:#675a4b;
+  font-size:16px;
+  line-height:1.5;
+}
+.elemental{
+  margin-top:24px;
+  padding-top:20px;
+  border-top:1px solid rgba(93,72,49,.14);
+}
+.elementalHead{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:baseline;
+}
+.elementalHead span{
+  color:#75654f;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.elementalHead em{
+  color:#756b5e;
+  font-size:15px;
+}
+.elementGrid{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.elementGrid div{
+  padding:12px 14px;
+  border:1px solid rgba(93,72,49,.12);
+  border-radius:8px;
+  background:rgba(255,255,255,.10);
+}
+.elementGrid span{
+  display:block;
+  color:#746550;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+.elementGrid b{
+  display:block;
+  margin-top:4px;
+  color:#46392d;
+  font-size:19px;
+  font-weight:400;
+}
+.lensBar{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 34px 30px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:20px;
+  align-items:center;
+}
+.lensCopy small{
+  color:#8da3ba;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.14em;
+}
+.lensCopy h2{
+  margin:6px 0 5px;
+  color:#e8dccd;
+  font-size:26px;
+  line-height:1.2;
+  font-weight:300;
+}
+.lensCopy p{
+  margin:0;
+  color:#9f9181;
+  font-size:16px;
+  line-height:1.5;
+}
+.reportLink{
+  min-height:48px;
+  display:inline-flex;
+  align-items:center;
+  padding:0 18px;
+  border:1px solid rgba(201,165,109,.28);
+  border-radius:9px;
+  color:#d8b77f;
+  text-decoration:none;
+  font:16px/1.35 Arial,sans-serif;
+  background:rgba(201,165,109,.06);
+}
+.detailWrap{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 34px 90px;
+}
+/* Existing dense chart detail remains available in this first slice, but its
+   old navy/starfield dashboard material is neutralized into the House field. */
+.detailWrap :global(.bg-black\/40),
+.detailWrap :global(.bg-black\/30),
+.detailWrap :global(.bg-black\/20),
+.detailWrap :global(.bg-black\/50){
+  background-color:rgba(11,10,9,.46)!important;
+}
+.detailWrap :global(.text-xs){font-size:14px!important;line-height:1.5!important}
+.detailWrap :global(.text-sm){font-size:16px!important;line-height:1.55!important}
+.detailWrap :global(button),
+.detailWrap :global(a){font-size:max(16px,1em)}
+.detailWrap :global(.text-\[10px\]){font-size:14px!important;line-height:1.45!important}
+.loadingRoom,.emptyRoom{
+  min-height:100svh;
+  display:grid;
+  place-items:center;
+  background:#0c0a08;
+  color:#d8cbb9;
+  font-family:'Astrology Crimson',Georgia,serif;
+}
+.emptyInner{max-width:660px;padding:42px 24px;text-align:center}
+.emptyInner h1{margin:14px 0 10px;font-size:38px;font-weight:300;color:#f0e5d6}
+.emptyInner p{margin:0 auto 24px;max-width:560px;font-size:17px;line-height:1.6;color:#b6a894}
+@media(max-width:900px){
+  .arrival{grid-template-columns:1fr;gap:24px}
+  .lensBar{grid-template-columns:1fr}
+  .factGrid{grid-template-columns:1fr}
+  .fact{padding:18px 0}
+  .fact+.fact{padding-left:0;border-left:0;border-top:1px solid rgba(93,72,49,.14)}
+}
+@media(max-width:640px){
+  .threshold{min-height:58px;grid-template-columns:1fr auto;padding:8px 14px}
+  .roomName{display:none}
+  .brand img{width:28px;height:28px}
+  .return{font-size:16px}
+  .arrival{padding:34px 16px 24px}
+  .arrival h1{font-size:44px}
+  .lead{font-size:18px}
+  .atlas,.lensBar,.detailWrap{padding-left:16px;padding-right:16px}
+  .atlasPaper{padding:24px 22px}
+  .atlasHead{display:block}
+  .atlasHead p{margin-top:8px;text-align:left}
+  .elementGrid{grid-template-columns:1fr 1fr}
+}
+.fact a{
+  margin-top:16px;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  color:#765a36;
+  text-decoration:none;
+  font:16px/1.35 Arial,sans-serif;
+}
+.fact a:hover{color:#4e3821}
+
+.interpretiveField,.nodeField,.currentSky{
+  margin:0 0 34px;
+  padding:26px;
+  border:1px solid var(--astro-rule);
+  border-radius:12px;
+  background:rgba(11,10,9,.46);
+  box-shadow:0 18px 48px rgba(0,0,0,.15);
+}
+.interpretiveHead,.nodeField>header,.currentSky>header{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:28px;
+  padding-bottom:18px;
+  border-bottom:1px solid rgba(218,184,137,.11);
+}
+.interpretiveHead small,.nodeField>header small,.currentSky>header small,
+.layer small,.memberQuestion small,.nodeGrid article>small,.nodeGrid article div>span{
+  color:#91a5bb;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.13em;
+}
+.interpretiveHead h2,.nodeField>header h2,.currentSky>header h2{
+  margin:7px 0 0;
+  color:#eadfce;
+  font-size:28px;
+  line-height:1.15;
+  font-weight:300;
+}
+.interpretiveHead>p,.nodeField>header>p,.currentSky>header>p{
+  max-width:470px;
+  margin:0;
+  color:#a99b8a;
+  font-size:16px;
+  line-height:1.6;
+}
+.aspectReadingGrid{
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.aspectReading{
+  padding:20px;
+  border:1px solid rgba(218,184,137,.12);
+  border-radius:10px;
+  background:rgba(255,255,255,.012);
+}
+.layer{
+  padding:13px 0;
+  border-top:1px solid rgba(218,184,137,.08);
+}
+.layer:first-child{padding-top:0;border-top:0}
+.layer h3{
+  margin:7px 0 3px;
+  color:#e4d7c5;
+  font-size:23px;
+  line-height:1.15;
+  font-weight:400;
+}
+.layer p{
+  margin:5px 0 0;
+  color:#b8aa98;
+  font-size:16px;
+  line-height:1.6;
+}
+.memberQuestion{
+  margin-top:10px;
+  padding:14px 16px;
+  border-left:2px solid rgba(201,165,109,.36);
+  background:rgba(201,165,109,.05);
+}
+.memberQuestion small{color:#c4a06a}
+.memberQuestion p{
+  margin:6px 0 0;
+  color:#d8cab7;
+  font-size:18px;
+  line-height:1.5;
+  font-style:italic;
+}
+.aspectReading>a{
+  min-height:44px;
+  margin-top:12px;
+  display:inline-flex;
+  align-items:center;
+  color:#c7ab80;
+  text-decoration:none;
+  font:16px/1.35 Arial,sans-serif;
+}
+.noInterpretation{
+  grid-column:1/-1;
+  margin:0;
+  color:#a99b8a;
+  font-size:16px;
+  line-height:1.55;
+}
+.nodeGrid{
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.nodeGrid article{
+  padding:20px;
+  border:1px solid rgba(218,184,137,.12);
+  border-radius:10px;
+  background:rgba(255,255,255,.012);
+}
+.nodeGrid article h3{
+  margin:8px 0 4px;
+  color:#e5d8c6;
+  font-size:24px;
+  line-height:1.15;
+  font-weight:400;
+}
+.nodeGrid article>p{
+  margin:0;
+  color:#9f9181;
+  font-size:16px;
+  line-height:1.5;
+}
+.nodeGrid article>div{
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid rgba(218,184,137,.09);
+}
+.nodeGrid article div>span{color:#c4a06a}
+.nodeGrid article div>p{
+  margin:6px 0 0;
+  color:#b5a795;
+  font-size:16px;
+  line-height:1.6;
+}
+.currentSky>button{
+  min-height:46px;
+  margin-top:18px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#c8ad84;
+  font:16px/1.35 Arial,sans-serif;
+}
+.skyGrid{
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+}
+.skyGrid div{
+  padding:14px;
+  border:1px solid rgba(132,154,179,.14);
+  border-radius:9px;
+  background:rgba(132,154,179,.035);
+}
+.skyGrid small{
+  display:block;
+  color:#8fa5bd;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.skyGrid strong{
+  display:block;
+  margin-top:5px;
+  color:#d7ccbd;
+  font-size:17px;
+  font-weight:400;
+}
+.skyBoundary,.skyStatus{
+  margin:16px 0 0;
+  color:#9f9384;
+  font-size:16px;
+  line-height:1.55;
+  font-style:italic;
+}
+@media(max-width:900px){
+  .aspectReadingGrid,.nodeGrid{grid-template-columns:1fr}
+  .skyGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  .interpretiveField,.nodeField,.currentSky{padding:20px}
+  .interpretiveHead,.nodeField>header,.currentSky>header{display:block}
+  .interpretiveHead>p,.nodeField>header>p,.currentSky>header>p{margin-top:9px}
+  .skyGrid{grid-template-columns:1fr 1fr}
+}
+
+.traditionQuote{
+  margin-top:10px;
+  padding:14px 16px;
+  border-left:2px solid rgba(201,165,109,.30);
+  background:rgba(201,165,109,.04);
+}
+.traditionQuote small{
+  color:#c4a06a;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.12em;
+}
+.traditionQuote p{
+  margin:6px 0 0;
+  color:#b7aa98;
+  font-size:16px;
+  line-height:1.6;
+}
+
+.lensActions{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:stretch;
+}
+.maiaDoor{
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  padding:0 18px;
+  border:1px solid rgba(132,154,179,.28);
+  border-radius:9px;
+  background:rgba(132,154,179,.055);
+  color:#c5d1dd;
+  font:16px/1.35 Arial,sans-serif;
+}
+.maiaDoor svg{width:17px;height:17px;color:#94abc1}
+
+.maiaEncounter{
+  max-width:1180px;
+  margin:0 auto 34px;
+  padding:0 34px;
+  display:grid;
+  grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);
+  gap:14px;
+}
+.chartAnchor{
+  padding:26px;
+  border:1px solid rgba(152,118,76,.24);
+  border-radius:12px;
+  color:#342c24;
+  background:linear-gradient(145deg,#f3eadb,#e9ddca);
+  box-shadow:0 20px 52px rgba(0,0,0,.18);
+}
+.chartAnchorHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+}
+.chartAnchorHead small,.chartAspectFacts>small,.contextConsent small{
+  color:#75654f;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.12em;
+}
+.chartAnchorHead h2{
+  margin:7px 0 0;
+  color:#41352b;
+  font-size:28px;
+  line-height:1.15;
+  font-weight:300;
+}
+.chartAnchorHead>button{
+  width:36px;
+  height:36px;
+  display:grid;
+  place-items:center;
+  border:0;
+  background:transparent;
+  color:#766b5f;
+}
+.chartAnchorHead>button svg{width:17px;height:17px}
+.chartFactList{
+  margin-top:22px;
+  border-top:1px solid rgba(93,72,49,.14);
+}
+.chartFactList>div{
+  padding:13px 0;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:16px;
+  border-bottom:1px solid rgba(93,72,49,.10);
+}
+.chartFactList span{
+  color:#75654f;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+.chartFactList strong{
+  color:#46392d;
+  font-size:17px;
+  font-weight:400;
+  text-align:right;
+}
+.chartAspectFacts{
+  margin-top:20px;
+  padding-top:16px;
+  border-top:1px solid rgba(93,72,49,.14);
+}
+.chartAspectFacts p{
+  margin:8px 0 0;
+  color:#5f5143;
+  font-size:16px;
+  line-height:1.5;
+}
+.contextConsent{
+  margin-top:22px;
+  padding-top:18px;
+  border-top:1px solid rgba(93,72,49,.14);
+}
+.contextConsent p{
+  margin:7px 0 0;
+  color:#695c4d;
+  font-size:16px;
+  line-height:1.55;
+}
+.contextConsent button{
+  width:100%;
+  min-height:46px;
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 14px;
+  border:1px solid rgba(118,90,53,.24);
+  border-radius:8px;
+  background:rgba(118,90,53,.05);
+  color:#6b4f2c;
+  font:16px/1.35 Arial,sans-serif;
+}
+
+.maiaChamber{
+  min-height:620px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid rgba(132,154,179,.20);
+  border-radius:12px;
+  background:rgba(9,10,10,.76);
+  box-shadow:0 20px 54px rgba(0,0,0,.24);
+}
+.maiaChamberHead{
+  min-height:68px;
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  border-bottom:1px solid rgba(132,154,179,.12);
+}
+.maiaChamberHead>div{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.orb{
+  width:34px;
+  height:34px;
+  flex:none;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#e4ece8 0 7%,#a3b9b4 22%,#485856 52%,#151918 78%,#090a09 100%);
+  box-shadow:0 0 20px rgba(132,169,163,.18);
+}
+.maiaChamberHead small{
+  display:block;
+  color:#91a5bb;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.12em;
+}
+.maiaChamberHead strong{
+  display:block;
+  margin-top:3px;
+  color:#ddd1c0;
+  font-size:17px;
+  font-weight:400;
+}
+.maiaChamberHead>button{
+  width:36px;
+  height:36px;
+  display:grid;
+  place-items:center;
+  border:0;
+  background:transparent;
+  color:#8f8579;
+}
+.maiaChamberHead>button svg{width:17px;height:17px}
+.maiaConversation{
+  position:relative;
+  flex:1;
+  min-height:0;
+}
+@media(max-width:900px){
+  .maiaEncounter{grid-template-columns:1fr}
+  .maiaChamber{min-height:560px}
+}
+@media(max-width:640px){
+  .maiaEncounter{padding:0 16px}
+  .chartAnchor{padding:22px}
+  .chartFactList>div{display:block}
+  .chartFactList strong{display:block;margin-top:4px;text-align:left}
+}
+
+.memberMeaning{
+  max-width:1180px;
+  margin:0 auto 34px;
+  padding:0 34px;
+}
+.memberMeaningIntro{
+  display:grid;
+  grid-template-columns:minmax(0,.75fr) minmax(300px,1.25fr);
+  gap:34px;
+  align-items:end;
+  padding:24px 0 18px;
+  border-top:1px solid var(--astro-rule);
+}
+.memberMeaningIntro small,.keptMeaning>small,.memberMeaningKeep small{
+  color:#c4a06a;
+  font:12px/1.4 Arial,sans-serif;
+  letter-spacing:.13em;
+}
+.memberMeaningIntro h2{
+  margin:7px 0 0;
+  color:#ede2d3;
+  font-size:32px;
+  line-height:1.12;
+  font-weight:300;
+}
+.memberMeaningIntro p{
+  margin:0;
+  color:#ad9f8e;
+  font-size:17px;
+  line-height:1.6;
+}
+.memberMeaningWrite{
+  padding:24px 26px 20px;
+  border:1px solid rgba(152,118,76,.22);
+  border-radius:12px;
+  background:linear-gradient(145deg,#f2e8d8,#e9ddc9);
+  color:#3e3329;
+  box-shadow:0 20px 54px rgba(0,0,0,.16);
+}
+.memberMeaningWrite textarea{
+  width:100%;
+  min-height:170px;
+  padding:6px 0 14px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(93,72,49,.16)!important;
+  outline:0;
+  resize:vertical;
+  background:transparent!important;
+  color:#43372c!important;
+  font:18px/1.7 'Astrology Crimson',Georgia,serif!important;
+  box-shadow:none!important;
+}
+.memberMeaningWrite textarea::placeholder{
+  color:#756755!important;
+  opacity:.82;
+}
+.memberMeaningWrite textarea:focus{
+  box-shadow:inset 0 -2px 0 rgba(151,111,62,.44)!important;
+}
+.memberMeaningKeep{
+  margin-top:18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:28px;
+}
+.memberMeaningKeep p{
+  max-width:610px;
+  margin:6px 0 0;
+  color:#695c4d;
+  font-size:16px;
+  line-height:1.52;
+}
+.memberMeaningKeep button{
+  min-width:210px;
+  min-height:48px;
+  padding:0 18px;
+  border:1px solid rgba(118,90,53,.28);
+  border-radius:9px;
+  background:rgba(118,90,53,.06);
+  color:#6b4f2c;
+  font:16px/1.35 Arial,sans-serif;
+}
+.memberMeaningKeep button:disabled{
+  opacity:.36;
+  cursor:not-allowed;
+}
+.memberMeaningError{
+  margin:14px 0 0;
+  color:#8d493f;
+  font-size:16px;
+  line-height:1.5;
+}
+.keptMeaning{
+  padding:24px 26px;
+  border:1px solid rgba(201,165,109,.24);
+  border-radius:12px;
+  background:rgba(201,165,109,.055);
+}
+.keptMeaning blockquote{
+  margin:14px 0 0;
+  padding:0;
+  color:#ddd0bf;
+  font-size:20px;
+  line-height:1.6;
+  font-style:italic;
+}
+.keptMeaning>div{
+  margin-top:18px;
+  padding-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  border-top:1px solid rgba(218,184,137,.12);
+}
+.keptMeaning a,.keptMeaning button{
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  border:0;
+  background:transparent;
+  color:#d0b487;
+  text-decoration:none;
+  font:16px/1.35 Arial,sans-serif;
+}
+.keptMeaning button{color:#a99b8a}
+@media(max-width:760px){
+  .memberMeaning{padding:0 16px}
+  .memberMeaningIntro{grid-template-columns:1fr;gap:10px}
+  .memberMeaningIntro h2{font-size:28px}
+  .memberMeaningWrite{padding:22px}
+  .memberMeaningKeep{align-items:flex-start;flex-direction:column}
+  .memberMeaningKeep button{width:100%}
+  .keptMeaning>div{align-items:flex-start;flex-direction:column}
+}

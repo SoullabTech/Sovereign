@@ -26,6 +26,7 @@ import { TOOL_NAME } from './render';
 /** A claim as the model returned it, before its refs are proven. */
 export interface RawClaim {
   text: string;
+  themeLabel?: string;
   refs: readonly unknown[];
   doesNotEstablish: NonEmptyArray<DevelopmentalNonConclusion>;
 }
@@ -40,7 +41,7 @@ const refuse = (
 ): ParsedOutput => ({ ok: false, refusal, detail, index });
 
 const TOP_FIELDS = new Set(['outcome', 'claims']);
-const CLAIM_FIELDS = new Set(['text', 'refs', 'doesNotEstablish']);
+const CLAIM_FIELDS = new Set(['text', 'themeLabel', 'refs', 'doesNotEstablish']);
 
 /** A tool the reader does not have. Naming one is asking for something the contract refuses. */
 function looksLikeReadRequest(name: string): boolean {
@@ -103,6 +104,10 @@ export function parseReaderBlocks(blocks: readonly StructuredBlock[]): ParsedOut
     if (typeof c.text !== 'string' || c.text.trim() === '') {
       return refuse('empty_claim_text', `claims[${i}] has no text`, i);
     }
+    if (c.themeLabel !== undefined
+      && (typeof c.themeLabel !== 'string' || c.themeLabel.trim() === '' || c.themeLabel.trim().length > 120)) {
+      return refuse('malformed_output', `claims[${i}].themeLabel must be 1–120 characters when present`, i);
+    }
     if (!Array.isArray(c.refs)) {
       return refuse('malformed_output', `claims[${i}].refs is not an array`, i);
     }
@@ -117,6 +122,7 @@ export function parseReaderBlocks(blocks: readonly StructuredBlock[]): ParsedOut
     }
     claims.push({
       text: c.text,
+      ...(typeof c.themeLabel === 'string' ? { themeLabel: c.themeLabel.trim() } : {}),
       refs: c.refs as readonly unknown[],
       doesNotEstablish: c.doesNotEstablish as unknown as NonEmptyArray<DevelopmentalNonConclusion>,
     });

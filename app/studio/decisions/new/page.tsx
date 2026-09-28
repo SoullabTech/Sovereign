@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Scale,
   ArrowLeft,
@@ -16,6 +16,7 @@ import {
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { GitBranch } from 'lucide-react';
+import { FacetCarryNotice, type FacetCarryRef } from '@/components/house/FacetCarryNotice';
 import {
   SITUATION_TYPE_LIST,
   SITUATION_CONFIGS,
@@ -42,14 +43,27 @@ const SITUATION_ICONS: Record<string, typeof User> = {
 
 export default function NewDecisionPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const personalLens = pathname?.startsWith('/decisions') ?? false;
+  const basePath = personalLens ? '/decisions' : '/studio/decisions';
   const searchParams = useSearchParams();
   const parentId = searchParams?.get('parent') || null;
+  const sourceFacet = searchParams?.get('sourceFacet');
+  const sourceRefId = searchParams?.get('sourceRefId');
+  const crossingId = searchParams?.get('crossingId');
+  const carrySourceRef: FacetCarryRef | null =
+    (sourceFacet === 'journal' || sourceFacet === 'reflections' || sourceFacet === 'ideas' || sourceFacet === 'relationships') && sourceRefId && crossingId
+      ? { sourceFacet, sourceRefId, crossingId }
+      : null;
+  const [carrySourceValid, setCarrySourceValid] = useState<boolean | null>(
+    carrySourceRef ? null : true,
+  );
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [consulting, setConsulting] = useState(false);
   const [parentTitle, setParentTitle] = useState<string | null>(null);
 
-  const [situationType, setSituationType] = useState<SituationType>('individual');
+  const [situationType, setSituationType] = useState<SituationType>(personalLens ? 'self' : 'individual');
   const [title, setTitle] = useState('');
   const [context, setContext] = useState('');
   const [clientId, setClientId] = useState('');
@@ -60,13 +74,13 @@ export default function NewDecisionPage() {
   const config = SITUATION_CONFIGS[situationType];
 
   useEffect(() => {
-    loadClients();
+    if (!personalLens) loadClients();
     if (parentId) loadParent(parentId);
   }, []);
 
   async function loadParent(pid: string) {
     try {
-      const res = await apiFetch(`/api/studio/decisions/${pid}`);
+      const res = await apiFetch(`/api/studio/decisions/${pid}${personalLens ? '?scope=personal' : ''}`);
       if (res.ok) {
         const { decision } = await res.json();
         setParentTitle(decision.title);
@@ -85,7 +99,7 @@ export default function NewDecisionPage() {
 
   // Auto-set situation type when a leadership client is selected
   useEffect(() => {
-    if (clientId) {
+    if (!personalLens && clientId) {
       const client = clients.find(c => c.id === clientId);
       if (client?.clientTypes.includes('leadership') && situationType === 'individual') {
         setSituationType('leadership');
@@ -109,6 +123,7 @@ export default function NewDecisionPage() {
 
   async function handleSave(andConsult: boolean) {
     if (!title.trim() || !context.trim()) return;
+    if (carrySourceRef && carrySourceValid !== true) return;
 
     if (andConsult) {
       setConsulting(true);
@@ -117,22 +132,25 @@ export default function NewDecisionPage() {
     }
 
     try {
-      // Scope new decisions to the active co-lab (Cut A). Source = TeamContextProvider's
-      // 'studio_team_context' localStorage key; null = personal scope.
+      // Practice can bind an active Co-lab; personal Decisions never inherit team context.
       let teamId: string | null = null;
-      try { teamId = JSON.parse(localStorage.getItem('studio_team_context') || '{}')?.teamId ?? null; } catch {}
+      if (!personalLens) {
+        try { teamId = JSON.parse(localStorage.getItem('studio_team_context') || '{}')?.teamId ?? null; } catch {}
+      }
       const createRes = await apiFetch('/api/studio/decisions', {
         method: 'POST',
         body: JSON.stringify({
+          scope: personalLens ? 'personal' : 'practice',
           title: title.trim(),
           context: context.trim(),
-          clientId: clientId || null,
-          teamId,
+          clientId: personalLens ? null : clientId || null,
+          teamId: personalLens ? null : teamId,
           stakes: stakes.trim() || null,
           timePressure,
           emotionalState: emotionalState.trim() || null,
           situationType,
           parentDecisionId: parentId || undefined,
+          sourceRef: carrySourceRef || undefined,
         }),
       });
 
@@ -145,17 +163,17 @@ export default function NewDecisionPage() {
       const { decision } = await createRes.json();
 
       if (andConsult) {
-        const consultRes = await apiFetch(`/api/studio/decisions/${decision.id}/consult`, {
+        const consultRes = await apiFetch(`/api/studio/decisions/${decision.id}/consult${personalLens ? '?scope=personal' : ''}`, {
           method: 'POST',
         });
 
         if (!consultRes.ok) {
-          router.push(`/studio/decisions/${decision.id}`);
+          router.push(`${basePath}/${decision.id}`);
           return;
         }
       }
 
-      router.push(`/studio/decisions/${decision.id}`);
+      router.push(`${basePath}/${decision.id}`);
     } finally {
       setSaving(false);
       setConsulting(false);
@@ -168,14 +186,17 @@ export default function NewDecisionPage() {
     return aLeader - bLeader || a.name.localeCompare(b.name);
   });
 
-  const isValid = title.trim() && context.trim();
+  const isValid =
+    title.trim().length > 0 &&
+    context.trim().length > 0 &&
+    (!carrySourceRef || carrySourceValid === true);
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <Link href="/studio/decisions" className="text-slate-400 hover:text-white transition-colors">
+          <Link href={basePath} className="text-slate-400 hover:text-white transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <h1 className="text-xl font-light text-white flex items-center gap-2">
@@ -190,58 +211,77 @@ export default function NewDecisionPage() {
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-amber-800/30 bg-amber-950/10">
               <GitBranch className="w-4 h-4 text-amber-400/70 flex-shrink-0" />
               <p className="text-sm text-amber-200/70">
-                Continuing from: <Link href={`/studio/decisions/${parentId}`} className="text-amber-300 hover:underline underline-offset-2">{parentTitle}</Link>
+                Continuing from: <Link href={`${basePath}/${parentId}`} className="text-amber-300 hover:underline underline-offset-2">{parentTitle}</Link>
               </p>
             </div>
           )}
 
-          {/* Situation Type — The Quiet Decision Point */}
-          <div>
-            <label className="block text-sm text-slate-300 mb-3">What are you working with?</label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {SITUATION_TYPE_LIST.map(type => {
-                const cfg = SITUATION_CONFIGS[type];
-                const Icon = SITUATION_ICONS[cfg.icon] || User;
-                const selected = situationType === type;
-                return (
-                  <button
-                    key={type}
-                    onClick={() => setSituationType(type)}
-                    className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-colors ${
-                      selected
-                        ? 'border-amber-500/50 bg-amber-900/20 text-amber-100'
-                        : 'border-slate-800/60 bg-slate-900/30 text-slate-400 hover:border-slate-700 hover:text-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <Icon className={`w-3.5 h-3.5 ${selected ? 'text-amber-400' : 'text-slate-500'}`} />
-                      <span className="text-xs font-medium">{cfg.label}</span>
-                    </div>
-                    <span className="text-[10px] leading-tight text-slate-500">{cfg.description}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-[11px] text-slate-600 mt-2">This tunes the council&apos;s language and default lenses. You still decide what to keep.</p>
-          </div>
+          {personalLens && carrySourceRef ? (
+            <FacetCarryNotice
+              targetFacet="decisions"
+              sourceRef={carrySourceRef}
+              onResolved={(source) => setCarrySourceValid(Boolean(source))}
+            />
+          ) : null}
 
-          {/* Client */}
-          <div>
-            <label className="block text-sm text-slate-300 mb-1.5">Client (optional)</label>
-            <select
-              value={clientId}
-              onChange={e => setClientId(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-amber-500/50 focus:outline-none"
-            >
-              <option value="">No client</option>
-              {sortedClients.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                  {c.clientTypes.includes('leadership') ? ' (leadership)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Personal begins with one human reflection council; practice exposes professional situation lenses. */}
+          {personalLens ? (
+            <div className="rounded-lg border border-amber-900/30 bg-amber-950/10 p-4">
+              <p className="text-sm text-amber-200">Personal reflection</p>
+              <p className="text-xs text-slate-400 mt-1">
+                A multi-perspective council for your own decision. It may surface tensions, assumptions and possibilities; you decide what to keep.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm text-slate-300 mb-3">What are you working with?</label>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {SITUATION_TYPE_LIST.map(type => {
+                  const cfg = SITUATION_CONFIGS[type];
+                  const Icon = SITUATION_ICONS[cfg.icon] || User;
+                  const selected = situationType === type;
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setSituationType(type)}
+                      className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-colors ${
+                        selected
+                          ? 'border-amber-500/50 bg-amber-900/20 text-amber-100'
+                          : 'border-slate-800/60 bg-slate-900/30 text-slate-400 hover:border-slate-700 hover:text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Icon className={`w-3.5 h-3.5 ${selected ? 'text-amber-400' : 'text-slate-500'}`} />
+                        <span className="text-xs font-medium">{cfg.label}</span>
+                      </div>
+                      <span className="text-[10px] leading-tight text-slate-500">{cfg.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-slate-600 mt-2">This tunes the council&apos;s language and default lenses. You still decide what to keep.</p>
+            </div>
+          )}
+
+          {/* Client context belongs only to the practice membrane. */}
+          {!personalLens && (
+            <div>
+              <label className="block text-sm text-slate-300 mb-1.5">Client (optional)</label>
+              <select
+                value={clientId}
+                onChange={e => setClientId(e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-amber-500/50 focus:outline-none"
+              >
+                <option value="">No client</option>
+                {sortedClients.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.clientTypes.includes('leadership') ? ' (leadership)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Title */}
           <div>

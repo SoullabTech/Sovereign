@@ -7,12 +7,17 @@ import ChangeListView from './ChangeListView';
 import NameYourChange from './NameYourChange';
 import ChangeJourney from './ChangeJourney';
 import { apiFetch } from '@/lib/http/apiBase';
+import { type FacetCarryRef } from '@/components/house/FacetCarryNotice';
+import thresholdStyles from './changes-threshold.module.css';
 
 interface ChangesSheetProps {
   isOpen: boolean;
   onClose: () => void;
   memberId: string;
   memberName?: string;
+  carrySourceRef?: FacetCarryRef | null;
+  initialChangeId?: string | null;
+  presentationMode?: 'sheet' | 'room';
 }
 
 type ViewState =
@@ -25,6 +30,9 @@ export function ChangesSheet({
   onClose,
   memberId,
   memberName,
+  carrySourceRef = null,
+  initialChangeId = null,
+  presentationMode = 'sheet',
 }: ChangesSheetProps) {
   const [view, setView] = useState<ViewState>({ type: 'list' });
   const [createData, setCreateData] = useState<{
@@ -32,6 +40,22 @@ export function ChangesSheet({
     description: string;
     changeType: string;
   } | null>(null);
+  const [carrySourceValid, setCarrySourceValid] = useState<boolean | null>(
+    carrySourceRef ? null : true,
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (carrySourceRef) {
+      setView({ type: 'create', step: 'name' });
+      setCreateData(null);
+      setCarrySourceValid(null);
+      return;
+    }
+    if (initialChangeId) {
+      setView({ type: 'journey', changeId: initialChangeId });
+    }
+  }, [isOpen, carrySourceRef, initialChangeId]);
 
   // Reset to list view when sheet closes
   useEffect(() => {
@@ -49,6 +73,7 @@ export function ChangesSheet({
   };
 
   const handleNameNext = async (title: string, description: string, changeType: string) => {
+    if (carrySourceRef && carrySourceValid !== true) return;
     setCreateData({ title, description, changeType });
 
     try {
@@ -59,6 +84,7 @@ export function ChangesSheet({
           description,
           changeType,
           urgency: 'none',
+          sourceRef: carrySourceRef || undefined,
         }),
       });
 
@@ -67,6 +93,10 @@ export function ChangesSheet({
       }
 
       const result = await response.json();
+      if (presentationMode === 'room') {
+        window.location.href = '/changes?change=' + encodeURIComponent(result.change.id);
+        return;
+      }
       setView({ type: 'journey', changeId: result.change.id });
     } catch (error) {
       console.error('[ChangesSheet] Failed to create change:', error);
@@ -75,6 +105,10 @@ export function ChangesSheet({
   };
 
   const handleSelectChange = (changeId: string) => {
+    if (presentationMode === 'room') {
+      window.location.href = '/changes?change=' + encodeURIComponent(changeId);
+      return;
+    }
     setView({ type: 'journey', changeId });
   };
 
@@ -94,6 +128,79 @@ export function ChangesSheet({
   };
 
   const showBack = view.type !== 'list';
+
+  if (presentationMode === 'room') {
+    return (
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className={thresholdStyles.roomBackdrop}
+            />
+            <motion.main
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className={thresholdStyles.roomShell}
+            >
+              <header className={thresholdStyles.roomHeader}>
+                <div className={thresholdStyles.roomIdentity}>
+                  {showBack ? (
+                    <button type="button" onClick={handleBack} className={thresholdStyles.iconButton} aria-label="Back">
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                  ) : null}
+                  <div>
+                    <small>SOULLAB HOUSE</small>
+                    <h2>{getTitle()}</h2>
+                  </div>
+                </div>
+                <button type="button" onClick={onClose} className={thresholdStyles.iconButton} aria-label="Leave Changes">
+                  <X className="w-5 h-5" />
+                </button>
+              </header>
+
+              <div className={thresholdStyles.roomContent}>
+                {view.type === 'list' ? (
+                  <ChangeListView
+                    memberId={memberId}
+                    onSelect={handleSelectChange}
+                    onCreate={handleStartCreate}
+                  />
+                ) : null}
+
+                {view.type === 'create' && view.step === 'name' ? (
+                  <div className={thresholdStyles.createWrap}>
+                    <NameYourChange
+                      onNext={handleNameNext}
+                      onBack={handleBack}
+                      initialTitle={createData?.title}
+                      initialDescription={createData?.description}
+                      initialChangeType={createData?.changeType}
+                      carrySourceRef={carrySourceRef}
+                      carrySourceReady={carrySourceValid === true}
+                      onCarryResolved={(source) => setCarrySourceValid(Boolean(source))}
+                    />
+                  </div>
+                ) : null}
+
+                {view.type === 'journey' ? (
+                  <ChangeJourney
+                    changeId={view.changeId}
+                    memberId={memberId}
+                    onBack={handleBack}
+                  />
+                ) : null}
+              </div>
+            </motion.main>
+          </>
+        )}
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -146,7 +253,6 @@ export function ChangesSheet({
 
             {/* Content Area */}
             <div className="flex-1 overflow-y-auto">
-              <AnimatePresence mode="wait">
                 {view.type === 'list' && (
                   <motion.div
                     key="list"
@@ -177,6 +283,9 @@ export function ChangesSheet({
                       initialTitle={createData?.title}
                       initialDescription={createData?.description}
                       initialChangeType={createData?.changeType}
+                      carrySourceRef={carrySourceRef}
+                      carrySourceReady={carrySourceValid === true}
+                      onCarryResolved={(source) => setCarrySourceValid(Boolean(source))}
                     />
                   </motion.div>
                 )}
@@ -196,7 +305,6 @@ export function ChangesSheet({
                     />
                   </motion.div>
                 )}
-              </AnimatePresence>
             </div>
           </motion.div>
         </>

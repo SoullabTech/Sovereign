@@ -7,8 +7,10 @@
  * Clean matte dark design
  */
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { apiFetch } from '@/lib/http/apiBase';
+import { readability } from '@/lib/house/readability';
 import {
   ArrowLeft,
   Star,
@@ -69,11 +71,24 @@ interface RunesReading extends BaseReading {
 
 type DivinationReading = IChingReading | TarotReading | RunesReading;
 
+function parseReadingTarget(value: string | null): { type: Exclude<DivinationType, 'all'>; id: string } | null {
+  if (!value) return null;
+  const split = value.indexOf(':');
+  if (split <= 0) return null;
+  const type = value.slice(0, split);
+  const id = value.slice(split + 1);
+  if ((type !== 'iching' && type !== 'tarot' && type !== 'runes') || !id) return null;
+  return { type, id };
+}
+
 export default function DivinationReflectionsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTarget = parseReadingTarget(searchParams?.get('reading') || null);
+  const openedReturnTarget = useRef(false);
   const [readings, setReadings] = useState<DivinationReading[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<DivinationType>('all');
+  const [filter, setFilter] = useState<DivinationType>(returnTarget?.type || 'all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [expandedReading, setExpandedReading] = useState<string | null>(null);
 
@@ -97,6 +112,21 @@ export default function DivinationReflectionsPage() {
 
       if (data.success) {
         setReadings(data.readings);
+        if (returnTarget && !openedReturnTarget.current) {
+          const target = (data.readings as DivinationReading[]).find(
+            (item) => item.type === returnTarget.type && item.id === returnTarget.id,
+          );
+          if (target) {
+            openedReturnTarget.current = true;
+            setExpandedReading(target.id);
+            setTimeout(() => {
+              document.getElementById(`reading-${target.type}-${target.id}`)?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+              });
+            }, 80);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to fetch readings:', error);
@@ -155,13 +185,13 @@ export default function DivinationReflectionsPage() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'iching':
-        return <Hexagon className="w-4 h-4 text-amber-400" />;
+        return <Hexagon className="w-5 h-5 text-amber-400" />;
       case 'tarot':
-        return <Star className="w-4 h-4 text-amber-400" />;
+        return <Star className="w-5 h-5 text-amber-400" />;
       case 'runes':
-        return <Moon className="w-4 h-4 text-amber-400" />;
+        return <Moon className="w-5 h-5 text-amber-400" />;
       default:
-        return <BookOpen className="w-4 h-4 text-amber-400" />;
+        return <BookOpen className="w-5 h-5 text-amber-400" />;
     }
   };
 
@@ -241,18 +271,18 @@ export default function DivinationReflectionsPage() {
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] text-white">
-      <div className="mx-auto w-full max-w-4xl px-6 pb-20 pt-8">
+      <div className="mx-auto w-full max-w-5xl px-6 sm:px-8 pb-24 pt-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-10">
           <button
             onClick={() => router.push('/oracle')}
-            className="flex items-center gap-2 text-stone-400 hover:text-white transition-colors text-sm"
+            className={`${readability.action} flex items-center gap-2.5 text-stone-300 hover:text-white transition-colors min-h-11`}
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
             Back to Oracle
           </button>
 
-          <h1 className="text-xl font-medium text-white">Saved Readings</h1>
+          <h1 className={`${readability.roomTitle} font-medium text-white`}>Saved Readings</h1>
 
           <div className="w-24" />
         </div>
@@ -263,7 +293,7 @@ export default function DivinationReflectionsPage() {
             <button
               key={type}
               onClick={() => setFilter(type)}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              className={`${readability.action} px-4 py-2 rounded-lg transition-colors min-h-11 ${
                 filter === type
                   ? 'bg-amber-500/20 text-amber-400'
                   : 'bg-stone-800/50 text-stone-400 hover:bg-stone-800'
@@ -275,13 +305,13 @@ export default function DivinationReflectionsPage() {
 
           <button
             onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+            className={`${readability.action} flex items-center gap-2 px-4 py-2 rounded-lg transition-colors min-h-11 ${
               showFavoritesOnly
                 ? 'bg-pink-500/20 text-pink-400'
                 : 'bg-stone-800/50 text-stone-400 hover:bg-stone-800'
             }`}
           >
-            <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+            <Heart className={`w-4.5 h-4.5 ${showFavoritesOnly ? 'fill-current' : ''}`} />
             Favorites
           </button>
         </div>
@@ -294,63 +324,64 @@ export default function DivinationReflectionsPage() {
         ) : readings.length === 0 ? (
           <div className="text-center py-20">
             <BookOpen className="w-12 h-12 text-stone-600 mx-auto mb-4" />
-            <h3 className="text-lg text-stone-300 mb-2">No readings saved yet</h3>
-            <p className="text-stone-500 mb-6 text-sm">
+            <h3 className={`${readability.sectionTitle} text-stone-300 mb-3`}>No readings saved yet</h3>
+            <p className={`${readability.body} text-stone-400 mb-7`}>
               Visit the Oracle to receive a reading and save it for reflection
             </p>
             <button
               onClick={() => router.push('/oracle')}
-              className="px-5 py-2.5 bg-stone-800 hover:bg-stone-700 text-white rounded-lg transition-colors text-sm"
+              className={`${readability.action} px-6 py-3 bg-stone-800 hover:bg-stone-700 text-white rounded-lg transition-colors min-h-12`}
             >
               Consult the Oracle
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {readings.map((reading) => (
               <div
                 key={reading.id}
-                className="rounded-lg border border-stone-800 bg-stone-900/30 overflow-hidden"
+                id={`reading-${reading.type}-${reading.id}`}
+                className="rounded-xl border border-stone-800 bg-stone-900/30 overflow-hidden"
               >
                 {/* Reading Header */}
                 <div
-                  className="p-4 cursor-pointer hover:bg-stone-800/30 transition-colors"
+                  className="p-5 sm:p-6 cursor-pointer hover:bg-stone-800/30 transition-colors"
                   onClick={() => setExpandedReading(
                     expandedReading === reading.id ? null : reading.id
                   )}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-4 min-w-0">
                       <div className="mt-0.5">
                         {getTypeIcon(reading.type)}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-stone-500 uppercase tracking-wider">
+                          <span className={`${readability.marker} text-stone-400`}>
                             {getTypeLabel(reading.type)}
                           </span>
                           {reading.is_favorite && (
-                            <Heart className="w-3 h-3 text-pink-400 fill-current" />
+                            <Heart className="w-4 h-4 text-pink-400 fill-current" />
                           )}
                         </div>
-                        <h3 className="text-sm font-medium text-white">
+                        <h3 className={`${readability.itemTitle} font-medium text-white`}>
                           {getReadingSummary(reading)}
                         </h3>
                         {reading.question && (
-                          <p className="text-stone-500 text-xs mt-1 line-clamp-1">
+                          <p className={`${readability.reading} text-stone-300 mt-2 line-clamp-2`}>
                             Q: {reading.question}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-stone-500 text-xs">
+                      <div className={`${readability.metadata} text-stone-400 text-right`}>
                         {formatDate(reading.created_at)}
                       </div>
                       {expandedReading === reading.id ? (
-                        <ChevronUp className="w-4 h-4 text-stone-500" />
+                        <ChevronUp className="w-5 h-5 text-stone-400" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-stone-500" />
+                        <ChevronDown className="w-5 h-5 text-stone-400" />
                       )}
                     </div>
                   </div>
@@ -358,12 +389,12 @@ export default function DivinationReflectionsPage() {
 
                 {/* Expanded Content */}
                 {expandedReading === reading.id && (
-                  <div className="px-4 pb-4 border-t border-stone-800 pt-4">
+                  <div className="px-5 sm:px-6 pb-6 border-t border-stone-800 pt-6">
                     {/* Interpretation */}
                     {reading.interpretation_text && (
-                      <div className="mb-4">
-                        <h4 className="text-stone-400 text-xs font-medium mb-2">Interpretation</h4>
-                        <p className="text-stone-300 text-sm leading-relaxed">
+                      <div className="mb-6">
+                        <h4 className={`${readability.metadata} text-stone-300 font-medium mb-2.5`}>Interpretation</h4>
+                        <p className={`${readability.reading} text-stone-200`}>
                           {reading.interpretation_text}
                         </p>
                       </div>
@@ -371,9 +402,9 @@ export default function DivinationReflectionsPage() {
 
                     {/* Guidance */}
                     {reading.guidance_text && (
-                      <div className="mb-4">
-                        <h4 className="text-stone-400 text-xs font-medium mb-2">Guidance</h4>
-                        <p className="text-stone-300 text-sm leading-relaxed">
+                      <div className="mb-6">
+                        <h4 className={`${readability.metadata} text-stone-300 font-medium mb-2.5`}>Guidance</h4>
+                        <p className={`${readability.reading} text-stone-200`}>
                           {reading.guidance_text}
                         </p>
                       </div>
@@ -382,12 +413,12 @@ export default function DivinationReflectionsPage() {
                     {/* Type-specific details */}
                     {reading.type === 'tarot' && (
                       <div className="mb-4">
-                        <h4 className="text-stone-400 text-xs font-medium mb-2">Cards</h4>
+                        <h4 className={`${readability.metadata} text-stone-300 font-medium mb-2.5`}>Cards</h4>
                         <div className="flex flex-wrap gap-2">
                           {(reading as TarotReading).cards_json.map((card, i) => (
                             <span
                               key={i}
-                              className="px-2 py-1 bg-stone-800/60 rounded text-xs text-stone-300"
+                              className={`${readability.metadata} px-3 py-1.5 bg-stone-800/60 rounded-md text-stone-200`}
                             >
                               {card.card}{card.reversed ? ' (R)' : ''} — {card.position}
                             </span>
@@ -399,12 +430,12 @@ export default function DivinationReflectionsPage() {
                     {reading.type === 'runes' && (
                       <>
                         <div className="mb-4">
-                          <h4 className="text-stone-400 text-xs font-medium mb-2">Runes</h4>
+                          <h4 className={`${readability.metadata} text-stone-300 font-medium mb-2.5`}>Runes</h4>
                           <div className="flex flex-wrap gap-2">
                             {(reading as RunesReading).runes_json.map((rune, i) => (
                               <span
                                 key={i}
-                                className="px-2 py-1 bg-stone-800/60 rounded text-xs text-stone-300"
+                                className={`${readability.metadata} px-3 py-1.5 bg-stone-800/60 rounded-md text-stone-200`}
                               >
                                 {rune.rune}{rune.reversed ? ' (M)' : ''} — {rune.position}
                               </span>
@@ -413,8 +444,8 @@ export default function DivinationReflectionsPage() {
                         </div>
                         {(reading as RunesReading).wyrd_message && (
                           <div className="mb-4">
-                            <h4 className="text-stone-400 text-xs font-medium mb-2">Message from Wyrd</h4>
-                            <p className="text-stone-300 text-sm italic">
+                            <h4 className={`${readability.metadata} text-stone-300 font-medium mb-2.5`}>Message from Wyrd</h4>
+                            <p className={`${readability.reading} text-stone-200 italic`}>
                               {(reading as RunesReading).wyrd_message}
                             </p>
                           </div>
@@ -423,15 +454,26 @@ export default function DivinationReflectionsPage() {
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const sourceRefId = `${reading.type}:${reading.id}`;
+                          router.push(`/journal?sourceFacet=divination&sourceRefId=${encodeURIComponent(sourceRefId)}&crossingId=divination-write-journal`);
+                        }}
+                        className={`${readability.action} flex-1 min-w-[13rem] min-h-12 px-4 py-3 bg-stone-800 hover:bg-stone-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2.5`}
+                      >
+                        <BookOpen className="w-5 h-5 text-amber-400" />
+                        Write with this in Journal
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           consultWithMaia(reading);
                         }}
-                        className="flex-1 px-3 py-2 bg-stone-800 hover:bg-stone-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+                        className={`${readability.action} flex-1 min-w-[12rem] min-h-12 px-4 py-3 bg-stone-800 hover:bg-stone-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2.5`}
                       >
-                        <MessageSquare className="w-4 h-4 text-amber-400" />
+                        <MessageSquare className="w-5 h-5 text-amber-400" />
                         Explore with MAIA
                       </button>
                       <button
@@ -439,13 +481,13 @@ export default function DivinationReflectionsPage() {
                           e.stopPropagation();
                           toggleFavorite(reading);
                         }}
-                        className={`px-3 py-2 rounded-lg transition-colors ${
+                        className={`min-w-12 min-h-12 px-3 py-2 rounded-lg transition-colors flex items-center justify-center ${
                           reading.is_favorite
                             ? 'bg-pink-500/20 text-pink-400'
                             : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
                         }`}
                       >
-                        <Heart className={`w-4 h-4 ${reading.is_favorite ? 'fill-current' : ''}`} />
+                        <Heart className={`w-5 h-5 ${reading.is_favorite ? 'fill-current' : ''}`} />
                       </button>
                       <button
                         onClick={(e) => {
@@ -454,9 +496,9 @@ export default function DivinationReflectionsPage() {
                             archiveReading(reading);
                           }
                         }}
-                        className="px-3 py-2 bg-stone-800 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors"
+                        className="min-w-12 min-h-12 px-3 py-2 bg-stone-800 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors flex items-center justify-center"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>

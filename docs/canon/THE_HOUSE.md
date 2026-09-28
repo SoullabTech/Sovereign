@@ -12,6 +12,20 @@ Those are means. The rooms are destinations.
 
 ---
 
+## 2026-09-26 integration — Living Orientation System
+
+The House is now governed together with [`SOULLAB_LIVING_ORIENTATION_SYSTEM.md`](./SOULLAB_LIVING_ORIENTATION_SYSTEM.md).
+
+That canon extends this original room-based direction in three ways:
+
+- current House places are treated as **facets of attention on one life**, not application silos;
+- **crossings between facets are load-bearing architecture** and must name carrier, provenance, authority, and return;
+- Elemental, Spiralogic, developmental, relational, temporal, and symbolic perspectives are **cross-cutting lenses**, not rooms and not totalizing identities.
+
+The member remains the irreducible center of orientation. MAIA remains host and relational continuity, not the owner of the rooms or the member's meaning.
+
+---
+
 ## The Rooms
 
 ### Journal — *What happened?*

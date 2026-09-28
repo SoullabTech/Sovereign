@@ -17,6 +17,7 @@ interface DecisionChainProps {
   decisionTitle: string;
   parentDecision: DecisionChainNode | null;
   childDecisions: DecisionChainNode[];
+  basePath?: string;
 }
 
 const STATUS_DOTS: Record<DecisionStatus, string> = {
@@ -27,7 +28,11 @@ const STATUS_DOTS: Record<DecisionStatus, string> = {
   archived: 'bg-slate-600',
 };
 
-function ChainNode({ node, isCurrent = false }: { node: { id: string; title: string; status?: DecisionStatus }; isCurrent?: boolean }) {
+function ChainNode({ node, basePath, isCurrent = false }: {
+  node: { id: string; title: string; status?: DecisionStatus };
+  basePath: string;
+  isCurrent?: boolean;
+}) {
   if (isCurrent) {
     return (
       <span className="text-sm font-medium text-white">
@@ -37,7 +42,7 @@ function ChainNode({ node, isCurrent = false }: { node: { id: string; title: str
   }
   return (
     <Link
-      href={`/studio/decisions/${node.id}`}
+      href={`${basePath}/${node.id}`}
       className="text-sm text-amber-300/70 hover:text-amber-200 transition-colors"
     >
       {node.title}
@@ -50,6 +55,7 @@ export default function DecisionChain({
   decisionTitle,
   parentDecision,
   childDecisions,
+  basePath = '/studio/decisions',
 }: DecisionChainProps) {
   const router = useRouter();
   const hasChain = parentDecision || childDecisions.length > 0;
@@ -59,7 +65,7 @@ export default function DecisionChain({
     return (
       <div className="flex items-center gap-2">
         <button
-          onClick={() => router.push(`/studio/decisions/new?parent=${decisionId}`)}
+          onClick={() => router.push(`${basePath}/new?parent=${decisionId}`)}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-amber-300 border border-slate-700/50 hover:border-amber-700/50 rounded-lg transition-colors"
         >
           <GitBranch className="w-3.5 h-3.5" />
@@ -80,11 +86,11 @@ export default function DecisionChain({
       <div className="flex items-center gap-1.5 flex-wrap">
         {parentDecision && (
           <>
-            <ChainNode node={parentDecision} />
+            <ChainNode node={parentDecision} basePath={basePath} />
             <ChevronRight className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
           </>
         )}
-        <ChainNode node={{ id: decisionId, title: decisionTitle }} isCurrent />
+        <ChainNode node={{ id: decisionId, title: decisionTitle }} basePath={basePath} isCurrent />
       </div>
 
       {/* Children */}
@@ -94,7 +100,7 @@ export default function DecisionChain({
           {childDecisions.map(child => (
             <Link
               key={child.id}
-              href={`/studio/decisions/${child.id}`}
+              href={`${basePath}/${child.id}`}
               className="flex items-center gap-2 text-sm text-slate-300 hover:text-amber-200 transition-colors group"
             >
               <div className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_DOTS[child.status] || 'bg-slate-500'}`} />
@@ -112,7 +118,7 @@ export default function DecisionChain({
 
       {/* Spawn button */}
       <button
-        onClick={() => router.push(`/studio/decisions/new?parent=${decisionId}`)}
+        onClick={() => router.push(`${basePath}/new?parent=${decisionId}`)}
         className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-amber-300/70 hover:text-amber-200 border border-amber-800/30 hover:border-amber-700/50 rounded-lg transition-colors"
       >
         <Plus className="w-3.5 h-3.5" />

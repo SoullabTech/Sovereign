@@ -177,23 +177,23 @@ const TEMPLATES: Record<string, MentorTemplate> = {
   'self:avoidant': {
     posture: 'avoidant',
     reflections: [
-      'The shadow you are avoiding may hold the exact medicine this situation needs.',
-      'What part of yourself are you trying not to see in this client or situation?',
-      'Countertransference is not failure. It is information. What is it telling you?',
+      'What part of this situation are you least willing to look at directly?',
+      'What possibility becomes visible if you stop protecting your preferred answer for a moment?',
+      'Is there a feeling, desire, fear, or loyalty you have treated as irrelevant that may actually matter?',
     ],
-    microPractice: 'Journal for 5 minutes: "The part of me I do not want to bring to this work is..."',
-    sovereigntyCheck: 'Your avoidance is yours. Your client deserves a practitioner who has looked.',
+    microPractice: 'Journal for 5 minutes: "The part of this decision I least want to face is..."',
+    sovereigntyCheck: 'What would become possible if you could look directly without forcing yourself toward any particular answer?',
   },
 
   'self:stuck': {
     posture: 'stuck',
     reflections: [
-      'When the practitioner is stuck, the work is often stuck too. Where is the parallel?',
-      'What would your own mentor say to you right now about this?',
-      'Name the thing you are not willing to risk in your own practice.',
+      'What question have you been answering repeatedly that may no longer be the real question?',
+      'What would a wise, trusted witness ask you right now?',
+      'What information would genuinely change your mind, rather than simply delay the decision?',
     ],
-    microPractice: 'Imagine you have already made this decision. How does next week feel?',
-    sovereigntyCheck: 'Are you thinking yourself in circles, or is this a genuine need for more supervision?',
+    microPractice: 'Imagine you have already made this decision. Notice what becomes easier, harder, quieter, or more alive next week.',
+    sovereigntyCheck: 'Are you circling because more information is truly needed, or because choosing would close an option you are not ready to release?',
   },
 
   'leadership:high_stakes': {
