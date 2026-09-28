@@ -59,7 +59,7 @@ export type HouseAudience = 'all' | 'founder';
 
 export type HouseGroup = 'center' | 'life' | 'work' | 'rooms' | 'utility';
 
-export type ReturnBehavior = 'back-to-maia' | 'sheet-close' | 'web-bridge';
+export type ReturnBehavior = 'back-to-home' | 'sheet-close' | 'web-bridge';
 
 export interface HouseDestination {
   id: string;
@@ -121,7 +121,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     audience: 'all',
     nativePolicy: 'native',
     nativeReady: true,
-    returnBehavior: 'back-to-maia',
+    returnBehavior: 'back-to-home',
     group: 'center',
   },
 
@@ -136,7 +136,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     audience: 'all',
     nativePolicy: 'native',
     nativeReady: false, // PR 2
-    returnBehavior: 'back-to-maia',
+    returnBehavior: 'back-to-home',
     group: 'life',
   },
   {
@@ -170,7 +170,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     audience: 'all',
     nativePolicy: 'native',
     nativeReady: true, // reference implementation
-    returnBehavior: 'back-to-maia',
+    returnBehavior: 'back-to-home',
     group: 'life',
   },
   {
@@ -236,7 +236,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     audience: 'all',
     nativePolicy: 'native',
     nativeReady: false, // PR 2
-    returnBehavior: 'back-to-maia',
+    returnBehavior: 'back-to-home',
     group: 'life',
   },
 
@@ -251,7 +251,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     audience: 'all',
     nativePolicy: 'native',
     nativeReady: false, // PR 2
-    returnBehavior: 'back-to-maia',
+    returnBehavior: 'back-to-home',
     group: 'work',
   },
   {
@@ -264,7 +264,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     audience: 'all',
     nativePolicy: 'native',
     nativeReady: false, // PR 2
-    returnBehavior: 'back-to-maia',
+    returnBehavior: 'back-to-home',
     group: 'work',
   },
   // Existing member sheets — opened in place on /maia, never a new route/page.
@@ -380,7 +380,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     // account birth data. Same product surface on PWA and iOS.
     nativePolicy: 'native',
     nativeReady: true,
-    returnBehavior: 'back-to-maia',
+    returnBehavior: 'back-to-home',
     group: 'rooms',
   },
   // Community Library REMOVED from the House (founder direction 2026-08-04).
@@ -476,7 +476,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     audience: 'all',
     nativePolicy: 'native',
     nativeReady: true, // reference implementation
-    returnBehavior: 'back-to-maia',
+    returnBehavior: 'back-to-home',
     group: 'utility',
   },
 ];

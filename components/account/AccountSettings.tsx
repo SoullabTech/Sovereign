@@ -2783,7 +2783,7 @@ export function AccountSettings() {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 1.5rem)' }}
       >
         <button
-          onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
+          onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/home'}
           className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
         >
           <ArrowLeft size={20} className="text-amber-400" />

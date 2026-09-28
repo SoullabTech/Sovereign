@@ -12,7 +12,7 @@ import { LibrarySearch } from '@/components/community/LibrarySearch';
 import { ArticleViewer } from '@/components/community/ArticleViewer';
 import type { ArticleIndex } from '@/lib/library/types';
 import { ChevronLeft, Plus, X, BookOpen, Mail, Github, MessageCircle, CheckCircle } from 'lucide-react';
-import { ReturnToMaia } from '@/components/navigation/ReturnToMaia';
+import { ReturnHome } from '@/components/navigation/ReturnHome';
 import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
 
 export default function LibraryPage() {
@@ -35,7 +35,7 @@ export default function LibraryPage() {
           <div className="flex items-center justify-between mb-8">
             {fromHouse
               ? <span aria-hidden="true" />
-              : <ReturnToMaia className="text-white/50 hover:text-white group" />}
+              : <ReturnHome className="text-white/50 hover:text-white group" />}
 
             <button
               onClick={() => setShowContributeModal(true)}

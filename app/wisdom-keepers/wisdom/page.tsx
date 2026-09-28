@@ -40,7 +40,7 @@ import { WISDOM_QUOTES, type WisdomQuote } from '@/lib/wisdom/WisdomQuotes';
 import { WISDOM_FACETS } from '@/lib/wisdom/WisdomFacets';
 import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
 import WisdomSubmissionForm from '@/components/wisdom/WisdomSubmissionForm';
-import { ReturnToMaia } from '@/components/navigation/ReturnToMaia';
+import { ReturnHome } from '@/components/navigation/ReturnHome';
 import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
 
 // ---------------------------------------------------------------------------
@@ -228,7 +228,7 @@ export default function WisdomPage() {
         <div className="mb-8">
           {fromHouse
             ? <HouseRoomThreshold room="WISDOM" />
-            : <ReturnToMaia className="text-sm text-[#D4B896]" />}
+            : <ReturnHome className="text-sm text-[#D4B896]" />}
         </div>
 
         {/* ── Layer 1: Orientation ── */}
