@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-09-28T23:29:27.717Z",
+  "parentExecutorR1": "ead4b3325e56c24f45b3a5a6e4f4aa1b49e1bfea",
+  "fixtureExecuted": true,
+  "fixtureRecordRef": "fixture-record:r2:witness",
+  "adapted": true,
+  "shadowAdmitted": true,
+  "memberRefPreserved": true,
+  "domainPreserved": true,
+  "observationPreserved": true,
+  "sourceStandingPreserved": true,
+  "temporalStandingPreserved": true,
+  "confidencePreserved": true,
+  "consentRefPreserved": true,
+  "persisted": false,
+  "memberFacingDelivery": false,
+  "maiaPromptMutated": false,
+  "productionAuthority": false
+}

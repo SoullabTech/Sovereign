@@ -1,0 +1,106 @@
+{
+  "generatedAt": "2026-09-28T23:29:27.717Z",
+  "parentExecutorR1": "ead4b3325e56c24f45b3a5a6e4f4aa1b49e1bfea",
+  "execution": {
+    "executed": true,
+    "errors": [],
+    "record": {
+      "recordRef": "fixture-record:r2:witness",
+      "memberRef": "member:fixture",
+      "text": "A local fixture observation.",
+      "createdAt": "2026-09-28T12:00:00-04:00",
+      "domain": "work"
+    },
+    "consumedToken": {
+      "tokenRef": "aether-exec-token:exec-auth:executor:r2:witness",
+      "queryRef": "query:executor:r2:witness",
+      "fingerprint": {
+        "algorithm": "sha256",
+        "canonicalVersion": "aether-query-plan-v1",
+        "digest": "6d0c18d434e8390ced86a3d9685ca517c6408c77813d855d0076d24c13afd8e9"
+      },
+      "authorizationRef": "exec-auth:executor:r2:witness",
+      "authorizedBy": "human",
+      "issuedAt": "2026-09-28T18:00:00-04:00",
+      "expiresAt": "2026-09-28T20:00:00-04:00",
+      "oneShot": true,
+      "consumed": true,
+      "executionEligible": false,
+      "connectorExecutionImplemented": false,
+      "executionOccurred": false,
+      "recordReadExecuted": false,
+      "recordCountRead": 0,
+      "persistenceAuthorized": false,
+      "memberFacingDeliveryAuthorized": false,
+      "maiaPromptMutationAuthorized": false,
+      "productionAuthority": false
+    },
+    "receipt": {
+      "receiptRef": "aether-local-fixture-read:aether-exec-token:exec-auth:executor:r2:witness",
+      "tokenRef": "aether-exec-token:exec-auth:executor:r2:witness",
+      "queryRef": "query:executor:r2:witness",
+      "transportRef": "transport:executor:r2:witness",
+      "transportKind": "local_fixture_only",
+      "recordCountRead": 1,
+      "connectorIoAttempted": true,
+      "externalNetworkCall": false,
+      "productionReachable": false,
+      "persisted": false,
+      "memberFacingDelivery": false,
+      "maiaPromptMutated": false,
+      "productionAuthority": false
+    }
+  },
+  "binding": {
+    "bindingRef": "binding:executor:r2:witness",
+    "consentRef": "consent:executor:r2:witness",
+    "source": "member_authored",
+    "temporalStanding": "has_been",
+    "confidence": 0.8
+  },
+  "adapted": {
+    "adapted": true,
+    "errors": [],
+    "admission": {
+      "admitted": true,
+      "errors": [],
+      "shadow": {
+        "inputRef": "executor-record:fixture-record:r2:witness",
+        "memberRef": "member:fixture",
+        "source": "member_authored",
+        "domain": "work",
+        "observation": "A local fixture observation.",
+        "temporalStanding": "has_been",
+        "confidence": 0.8,
+        "consentRef": "consent:executor:r2:witness",
+        "readOnly": true,
+        "persisted": false,
+        "delivered": false,
+        "maiaPromptMutated": false,
+        "productionAuthority": false,
+        "identityAuthority": false,
+        "diagnosticAuthority": false,
+        "predictiveAuthority": false,
+        "destinyAuthority": false,
+        "soulRepresentationAuthority": false,
+        "finalMeaningAuthority": "member"
+      },
+      "persistenceAuthorized": false,
+      "memberFacingDeliveryAuthorized": false,
+      "maiaPromptMutationAuthorized": false,
+      "productionAuthority": false
+    },
+    "sourceRecordRef": "fixture-record:r2:witness",
+    "memberRefPreserved": true,
+    "domainPreserved": true,
+    "observationPreserved": true,
+    "sourceStandingPreserved": true,
+    "temporalStandingPreserved": true,
+    "confidencePreserved": true,
+    "consentRefPreserved": true,
+    "persisted": false,
+    "memberFacingDelivery": false,
+    "maiaPromptMutated": false,
+    "productionAuthority": false
+  }
+}
