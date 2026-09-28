@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-09-28T22:13:03.109Z",
+  "parentConnectorR5": "8e7826314e2d21f96561f5e388693c26b7ba5f48",
+  "rehearsed": true,
+  "tokenConsumed": true,
+  "receiptFingerprint": "dbed7ac73243b8d7bd9ca8083bc1150614cbc971bf7e9f2cb3afceeadea4e64d",
+  "tokenFingerprint": "dbed7ac73243b8d7bd9ca8083bc1150614cbc971bf7e9f2cb3afceeadea4e64d",
+  "connectorIoAttempted": false,
+  "externalNetworkCall": false,
+  "executionOccurred": false,
+  "recordReadExecuted": false,
+  "recordCountRead": 0,
+  "persisted": false,
+  "memberFacingDelivery": false,
+  "maiaPromptMutated": false,
+  "productionAuthority": false,
+  "expiredRehearsed": false,
+  "expiredErrors": [
+    "token_expired"
+  ],
+  "driftedRehearsed": false,
+  "driftedErrors": [
+    "token_fingerprint_mismatch"
+  ]
+}

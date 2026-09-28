@@ -1,0 +1,122 @@
+{
+  "generatedAt": "2026-09-28T22:13:03.109Z",
+  "parentConnectorR5": "8e7826314e2d21f96561f5e388693c26b7ba5f48",
+  "plan": {
+    "queryRef": "query:r6:witness",
+    "connectorRef": "connector:r6:witness",
+    "manifestRef": "manifest:r6:witness",
+    "memberRef": "member:fixture",
+    "consentRef": "consent:r6:witness",
+    "sourceClass": "member_authored_text",
+    "fields": [
+      "recordRef",
+      "memberRef",
+      "text",
+      "createdAt",
+      "domain"
+    ],
+    "startTime": "2026-09-01T00:00:00-04:00",
+    "endTime": "2026-09-29T00:00:00-04:00",
+    "maxRecords": 25,
+    "wildcard": false,
+    "paginationAllowed": false,
+    "execute": false
+  },
+  "issued": {
+    "issued": true,
+    "errors": [],
+    "token": {
+      "tokenRef": "aether-exec-token:exec-auth:r6:witness",
+      "queryRef": "query:r6:witness",
+      "fingerprint": {
+        "algorithm": "sha256",
+        "canonicalVersion": "aether-query-plan-v1",
+        "digest": "dbed7ac73243b8d7bd9ca8083bc1150614cbc971bf7e9f2cb3afceeadea4e64d"
+      },
+      "authorizationRef": "exec-auth:r6:witness",
+      "authorizedBy": "human",
+      "issuedAt": "2026-09-28T17:00:00-04:00",
+      "expiresAt": "2026-09-28T18:00:00-04:00",
+      "oneShot": true,
+      "consumed": false,
+      "executionEligible": true,
+      "connectorExecutionImplemented": false,
+      "executionOccurred": false,
+      "recordReadExecuted": false,
+      "recordCountRead": 0,
+      "persistenceAuthorized": false,
+      "memberFacingDeliveryAuthorized": false,
+      "maiaPromptMutationAuthorized": false,
+      "productionAuthority": false
+    },
+    "executionAuthorized": false,
+    "recordReadExecuted": false,
+    "recordCountRead": 0,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  },
+  "rehearsal": {
+    "rehearsed": true,
+    "errors": [],
+    "consumedToken": {
+      "tokenRef": "aether-exec-token:exec-auth:r6:witness",
+      "queryRef": "query:r6:witness",
+      "fingerprint": {
+        "algorithm": "sha256",
+        "canonicalVersion": "aether-query-plan-v1",
+        "digest": "dbed7ac73243b8d7bd9ca8083bc1150614cbc971bf7e9f2cb3afceeadea4e64d"
+      },
+      "authorizationRef": "exec-auth:r6:witness",
+      "authorizedBy": "human",
+      "issuedAt": "2026-09-28T17:00:00-04:00",
+      "expiresAt": "2026-09-28T18:00:00-04:00",
+      "oneShot": true,
+      "consumed": true,
+      "executionEligible": false,
+      "connectorExecutionImplemented": false,
+      "executionOccurred": false,
+      "recordReadExecuted": false,
+      "recordCountRead": 0,
+      "persistenceAuthorized": false,
+      "memberFacingDeliveryAuthorized": false,
+      "maiaPromptMutationAuthorized": false,
+      "productionAuthority": false
+    },
+    "receipt": {
+      "receiptRef": "aether-exec-rehearsal:aether-exec-token:exec-auth:r6:witness",
+      "tokenRef": "aether-exec-token:exec-auth:r6:witness",
+      "queryRef": "query:r6:witness",
+      "fingerprintDigest": "dbed7ac73243b8d7bd9ca8083bc1150614cbc971bf7e9f2cb3afceeadea4e64d",
+      "tokenConsumed": true,
+      "sink": "zero_io_rehearsal",
+      "connectorIoAttempted": false,
+      "externalNetworkCall": false,
+      "executionOccurred": false,
+      "recordReadExecuted": false,
+      "recordCountRead": 0,
+      "persisted": false,
+      "memberFacingDelivery": false,
+      "maiaPromptMutated": false,
+      "productionAuthority": false,
+      "auditNote": "One-shot execution token consumed by inert rehearsal sink; no connector I/O or record read occurred."
+    }
+  },
+  "expired": {
+    "rehearsed": false,
+    "errors": [
+      "token_expired"
+    ],
+    "consumedToken": null,
+    "receipt": null
+  },
+  "drifted": {
+    "rehearsed": false,
+    "errors": [
+      "token_fingerprint_mismatch"
+    ],
+    "consumedToken": null,
+    "receipt": null
+  }
+}
