@@ -42,7 +42,7 @@ export function ContactSection() {
             <span className="tracking-wider uppercase text-xs">Soullab</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="/enter" className="hover:text-white/50 transition-colors">MAIA</a>
+            <a href="/home" className="hover:text-white/50 transition-colors">Soullab Home</a>
             <a href="/maia/privacy" className="hover:text-white/50 transition-colors">Privacy</a>
             <a href="/maia/stewardship" className="hover:text-white/50 transition-colors">Stewardship</a>
           </div>

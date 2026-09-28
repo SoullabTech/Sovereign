@@ -47,9 +47,8 @@ export function MaiaSection() {
               A relational intelligence for human flourishing
             </h2>
             <p className="mt-4 text-base text-white/50 leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-              MAIA supports personal growth, creativity, meaningful work, relationships,
-              communities, and collective experiences by helping people remain connected to
-              what matters most across time.
+              MAIA is Soullab’s relational intelligence — present across the platform to support
+              reflection, creativity, meaningful work, relationships, and continuity across time.
             </p>
             <p
               className="mt-5 text-base sm:text-lg font-extralight italic leading-relaxed text-white/60"
@@ -79,7 +78,7 @@ export function MaiaSection() {
 
               <div className="space-y-3.5 border-l border-white/10 pl-5 mb-8">
                 {[
-                  ['A host who knows the house', 'Soullab is a house of rooms — journal, changes, decisions, ideas, astrology, a next step when you\'re unsure. Conversation is the hallway: MAIA knows every room and helps you find your way, without ever taking over your path.'],
+                  ['Present throughout Soullab', 'MAIA can accompany you across Home, Journal, Dream, Writing, Relationships, Astrology, Divination, Becoming, and other facets without turning those places into a chatbot interface.'],
                   ['Speaks in modes', 'Talk for dialogue, Care for counsel, Note for capturing what matters — so the relationship fits the moment.'],
                   ['Memory with consent', 'What you choose to keep becomes continuity; reflection builds instead of starting over. Sanctuary Mode lets you speak freely with nothing retained. There is no stealth memory.'],
                   ['Oriented to your sovereignty', 'Not built to capture attention or create dependence. Built to return your life outward into the world — never deeper into the app.'],
@@ -101,10 +100,10 @@ export function MaiaSection() {
 
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <Link
-                  href="/signin"
+                  href="/home"
                   className="inline-flex items-center text-maia-spice-400 font-medium transition-colors group"
                 >
-                  Meet MAIA
+                  Enter Soullab
                   <span className="ml-2 group-hover:translate-x-1 transition-transform">&rarr;</span>
                 </Link>
                 <button

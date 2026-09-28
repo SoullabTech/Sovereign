@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 
 const navLinks = [
-  { label: 'AIN + MAIA', href: '#maia' },
-  { label: 'Innovations', href: '#research' },
-  { label: 'Portfolio', href: '#portfolio' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Platform', href: '#platform' },
+  { label: 'MAIA', href: '#maia' },
+  { label: 'What makes it different', href: '#research' },
+  { label: 'Work with us', href: '#contact' },
 ];
 
 const showBetaChip = process.env.NEXT_PUBLIC_SHOW_BETA_BADGE === 'true';
@@ -16,7 +16,7 @@ const showBetaChip = process.env.NEXT_PUBLIC_SHOW_BETA_BADGE === 'true';
 /**
  * Small beta indicator rendered inside the nav chrome. On the landing page
  * this replaces the global BetaBanner (which yields here — its fixed top-right
- * position would overlap the Enter MAIA control; see components/BetaBanner.tsx).
+ * position would overlap the Enter Soullab control; see components/BetaBanner.tsx).
  */
 function BetaChip() {
   if (!showBetaChip) return null;
@@ -101,10 +101,10 @@ export function LandingNav() {
           <div className="hidden md:flex items-center gap-3">
             <BetaChip />
             <Link
-              href="/enter"
+              href="/home"
               className="inline-flex items-center rounded-lg px-5 py-2 bg-maia-spice-500/10 text-maia-spice-400 hover:bg-maia-spice-500/20 text-sm font-medium transition-colors"
             >
-              Enter MAIA
+              Enter Soullab
             </Link>
           </div>
 
@@ -112,10 +112,10 @@ export function LandingNav() {
           <div className="flex md:hidden items-center gap-2.5">
             <BetaChip />
             <Link
-              href="/enter"
+              href="/home"
               className="inline-flex items-center rounded-lg px-4 py-2 bg-maia-spice-500/10 text-maia-spice-400 text-sm font-medium"
             >
-              MAIA
+              Soullab
             </Link>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -140,11 +140,11 @@ export function LandingNav() {
             </button>
           ))}
           <Link
-            href="/enter"
+            href="/home"
             onClick={() => setMobileOpen(false)}
             className="mt-4 inline-flex items-center rounded-xl px-6 py-3 bg-maia-spice-500 text-black font-semibold text-base"
           >
-            Enter MAIA
+            Enter Soullab
           </Link>
         </div>
       )}

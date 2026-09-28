@@ -43,10 +43,10 @@ export function CovenantSection() {
               we&apos;d be honored to welcome you.
             </p>
             <a
-              href="/enter"
+              href="/home"
               className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 bg-maia-spice-500 hover:bg-maia-spice-400 text-black font-semibold text-base transition-colors shadow-lg shadow-maia-spice-500/20"
             >
-              Begin a conversation
+              Enter Soullab
             </a>
           </div>
         </SectionReveal>

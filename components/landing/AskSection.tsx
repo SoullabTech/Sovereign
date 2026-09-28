@@ -123,7 +123,7 @@ export function AskSection() {
                     { label: 'View Portfolio', href: '#portfolio' },
                     { label: 'Start a Project', href: '#contact' },
                     { label: 'Book a Conversation', href: 'mailto:hello@soullab.life?subject=Conversation%20with%20Soullab' },
-                    { label: 'Enter MAIA', href: '/enter' },
+                    { label: 'Enter Soullab', href: '/home' },
                   ].map(cta => (
                     <a
                       key={cta.label}

@@ -102,10 +102,10 @@ export function ResearchSection() {
             className="text-3xl sm:text-4xl lg:text-5xl font-extralight tracking-wide text-white text-center mb-4"
             style={{ fontFamily: "'Crimson Pro', serif" }}
           >
-            Why MAIA feels different
+            What makes Soullab different
           </h2>
           <p className="text-white/40 text-center text-sm max-w-xl mx-auto mb-16" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-            These are not settings or preferences. They are the operating conditions built into MAIA by design.
+            These are not surface features. They are operating commitments and capabilities being built across Soullab, MAIA, and AIN OS.
           </p>
         </SectionReveal>
 

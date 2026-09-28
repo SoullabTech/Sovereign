@@ -2,6 +2,7 @@
 
 import { LandingNav } from './LandingNav';
 import { HeroSection } from './HeroSection';
+import { PlatformSection } from './PlatformSection';
 import { MaiaSection } from './MaiaSection';
 import { ResearchSection } from './ResearchSection';
 import { PortfolioSection } from './PortfolioSection';
@@ -20,6 +21,7 @@ export function SoullabLanding() {
       <LandingNav />
       <main>
         <HeroSection />
+        <PlatformSection />
         <MaiaSection />
         <ResearchSection />
         <NarrativeSection />

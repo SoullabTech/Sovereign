@@ -6,8 +6,10 @@ const HOUSE = fs.readFileSync(path.resolve(process.cwd(), 'app/house/page.tsx'),
 const THRESHOLD = fs.readFileSync(path.resolve(process.cwd(), 'app/house/MaiaThresholdLink.tsx'), 'utf8');
 
 describe('Soullab home route authority', () => {
-  it('/home renders the House experience as Home', () => {
+  it('/home is the canonical Soullab entrance: threshold when signed out, House when signed in', () => {
     expect(HOME).toContain("import { HouseExperience } from '@/app/house/page';");
+    expect(HOME).toContain("import { HomeThreshold } from './HomeThreshold';");
+    expect(HOME).toContain("if (!(await hasAuthenticatedMember())) return <HomeThreshold />;");
     expect(HOME).toContain('<HouseExperience current="home" />');
   });
 

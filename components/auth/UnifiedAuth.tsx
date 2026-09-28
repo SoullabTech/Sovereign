@@ -184,6 +184,8 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   const preVerified = searchParams?.get('verified') === 'true';
   const emailParam = searchParams?.get('email') || '';
   const usernameParam = searchParams?.get('u') || '';
+  const requestedNext = searchParams?.get('next') || '';
+  const afterAuth = requestedNext.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : '/home';
 
   // `?verified=` and `?u=` still win — they name a specific person mid-flow.
   // Otherwise the arrival intent decides. A returning member opens on password;
@@ -305,9 +307,9 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     const t = setTimeout(() => controller.abort(), 3000);
     fetch('/api/auth/whoami', { credentials: 'include', signal: controller.signal })
       .then((r) => r.json())
-      .then((d) => { clearTimeout(t); if (d?.authed) window.location.replace('/maia'); })
+      .then((d) => { clearTimeout(t); if (d?.authed) window.location.replace(afterAuth); })
       .catch(() => clearTimeout(t));
-  }, [preVerified]);
+  }, [afterAuth, preVerified]);
 
   function storeSession(
     user: { id: string; username: string; name: string; preferredName?: string; onboarded: boolean },
@@ -331,8 +333,8 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     try { await deviceTrust.trustDevice(undefined, 'standard'); } catch { /* non-blocking */ }
   }
 
-  function enterMaia() {
-    window.location.assign(`/maia?ts=${Date.now()}`);
+  function enterSoullab() {
+    window.location.assign(afterAuth);
   }
 
   // ── Email → request a code ───────────────────────────────────────────────
@@ -385,7 +387,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
           preferredName: data.member.name, onboarded: !!data.member.onboarded,
         });
         await trustThisDevice();
-        enterMaia();
+        enterSoullab();
         return;
       }
       setPhase('name');
@@ -429,7 +431,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       });
       await trustThisDevice();
       if (bioAvailable && bioPlatformAvailable) { try { await biometricAuth.register(); markLocalPasskeyEvidence(); } catch { /* optional */ } }
-      window.location.assign(data.member.onboarded ? `/maia?ts=${Date.now()}` : '/onboarding');
+      window.location.assign(data.member.onboarded ? afterAuth : `/onboarding?next=${encodeURIComponent(afterAuth)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not complete signup. Please try again.');
       setIsLoading(false);
@@ -480,7 +482,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
           preferredName: res.member.preferredName, onboarded: res.member.onboarded,
         }, res.session?.token);
         await trustThisDevice();
-        enterMaia();
+        enterSoullab();
         return;
       }
       setIsLoading(false);
@@ -514,7 +516,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         onboarded: !!data.member?.onboarded,
       }, data.session?.token);
       await trustThisDevice();
-      enterMaia();
+      enterSoullab();
     } catch (err: any) {
       setError(err?.message || 'Sign in failed.');
       setIsLoading(false);
@@ -540,7 +542,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Google sign-in failed');
-        if (data.member) { storeSession(data.member); await trustThisDevice(); enterMaia(); }
+        if (data.member) { storeSession(data.member); await trustThisDevice(); enterSoullab(); }
         return;
       }
       window.location.href = '/api/auth/google/list';
@@ -566,7 +568,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Apple sign-in failed');
-        if (data.member) { storeSession(data.member); await trustThisDevice(); enterMaia(); }
+        if (data.member) { storeSession(data.member); await trustThisDevice(); enterSoullab(); }
         return;
       }
       window.location.href = '/api/auth/apple/list';

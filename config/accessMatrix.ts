@@ -40,6 +40,7 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Landing & Marketing
   { exact: '/', public: true, notes: 'Studio landing page' },
+  { exact: '/home', public: true, notes: 'Soullab canonical entry — signed-out visitors see the Soullab threshold; authenticated members enter Home' },
   { exact: '/enter', public: true, notes: 'Smart routing entry point (MAIA/onboarding)' },
   { exact: '/faq', public: true, notes: 'Public FAQ' },
   { exact: '/downloads', public: true, notes: 'Downloads page' },
