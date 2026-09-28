@@ -1,0 +1,170 @@
+{
+  "generatedAt": "2026-09-28T17:51:29.025Z",
+  "parentR7": "1b8a468f51f95f5fec1a6dffc76722c4cd5f2c44",
+  "sourceRefs": [
+    "library-adr",
+    "source-fabric-census",
+    "source-fabric",
+    "facet-crossings",
+    "j9-adjudication",
+    "j11-reconciliation",
+    "rgr-note",
+    "rgr-constitution"
+  ],
+  "analytic": {
+    "facetCount": 12,
+    "signalCount": 12,
+    "independentCandidateCount": 0
+  },
+  "associative": {
+    "facetCount": 18,
+    "signalCount": 18,
+    "independentCandidateCount": 7
+  },
+  "exchange": {
+    "exchangeRef": "callosal:analytic_pathway:associative_pathway",
+    "analyticSignalRefs": [
+      "signal:analytic_pathway:analytic:library-adr",
+      "signal:analytic_pathway:analytic:source-fabric-census",
+      "signal:analytic_pathway:analytic:source-fabric",
+      "signal:analytic_pathway:analytic:facet-crossings",
+      "signal:analytic_pathway:analytic:j9-adjudication",
+      "signal:analytic_pathway:temporal:j9-adjudication",
+      "signal:analytic_pathway:analytic:j11-reconciliation",
+      "signal:analytic_pathway:temporal:j11-reconciliation",
+      "signal:analytic_pathway:analytic:rgr-note",
+      "signal:analytic_pathway:analytic:rgr-constitution",
+      "signal:analytic_pathway:contradiction:contradiction-library-runtime-standing",
+      "signal:analytic_pathway:absence:r8:member-owned-final-meaning"
+    ],
+    "associativeSignalRefs": [
+      "signal:associative_pathway:associative:graph:retrieval_lineage:source-fabric:source-fabric-census",
+      "signal:associative_pathway:associative:graph:retrieval_lineage:source-fabric:library-adr",
+      "signal:associative_pathway:associative:graph:retrieval_lineage:library-adr:source-fabric-census",
+      "signal:associative_pathway:associative:graph:evidence_lineage:rgr-note:rgr-constitution",
+      "signal:associative_pathway:associative:graph:retrieval_lineage:j11-reconciliation:library-adr",
+      "signal:associative_pathway:associative:temporal:corrects:j11-reconciliation:j9-adjudication",
+      "signal:associative_pathway:associative:temporal:evidence_successor:source-fabric-census:library-adr",
+      "signal:associative_pathway:uncertainty:uncertainty:graph:retrieval_lineage:source-fabric:source-fabric-census",
+      "signal:associative_pathway:uncertainty:uncertainty:graph:retrieval_lineage:source-fabric:library-adr",
+      "signal:associative_pathway:uncertainty:uncertainty:graph:retrieval_lineage:library-adr:source-fabric-census",
+      "signal:associative_pathway:uncertainty:uncertainty:graph:retrieval_lineage:j11-reconciliation:library-adr",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:retrieval_lineage:source-fabric:source-fabric-census",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:retrieval_lineage:source-fabric:library-adr",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:retrieval_lineage:library-adr:source-fabric-census",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:evidence_lineage:rgr-note:rgr-constitution",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:retrieval_lineage:j11-reconciliation:library-adr",
+      "signal:associative_pathway:imaginal:aether-synthesis:temporal:corrects:j11-reconciliation:j9-adjudication",
+      "signal:associative_pathway:imaginal:aether-synthesis:temporal:evidence_successor:source-fabric-census:library-adr"
+    ],
+    "bounded": true,
+    "rawContextExchange": false
+  },
+  "candidate": {
+    "candidateRef": "fifth-element:R8-COMPOSITE:cross-pathway",
+    "proposition": "A provisional cross-pathway relation may become visible when evidential/temporal constraints and associative/imaginal possibilities are held together without collapsing either register.",
+    "analyticContributionRefs": [
+      "signal:analytic_pathway:analytic:library-adr",
+      "signal:analytic_pathway:analytic:source-fabric-census",
+      "signal:analytic_pathway:analytic:source-fabric",
+      "signal:analytic_pathway:analytic:facet-crossings",
+      "signal:analytic_pathway:analytic:j9-adjudication",
+      "signal:analytic_pathway:temporal:j9-adjudication",
+      "signal:analytic_pathway:analytic:j11-reconciliation",
+      "signal:analytic_pathway:temporal:j11-reconciliation",
+      "signal:analytic_pathway:analytic:rgr-note",
+      "signal:analytic_pathway:analytic:rgr-constitution",
+      "signal:analytic_pathway:contradiction:contradiction-library-runtime-standing",
+      "signal:analytic_pathway:absence:r8:member-owned-final-meaning"
+    ],
+    "associativeContributionRefs": [
+      "signal:associative_pathway:associative:graph:retrieval_lineage:source-fabric:source-fabric-census",
+      "signal:associative_pathway:associative:graph:retrieval_lineage:source-fabric:library-adr",
+      "signal:associative_pathway:associative:graph:retrieval_lineage:library-adr:source-fabric-census",
+      "signal:associative_pathway:associative:graph:evidence_lineage:rgr-note:rgr-constitution",
+      "signal:associative_pathway:associative:graph:retrieval_lineage:j11-reconciliation:library-adr",
+      "signal:associative_pathway:associative:temporal:corrects:j11-reconciliation:j9-adjudication",
+      "signal:associative_pathway:associative:temporal:evidence_successor:source-fabric-census:library-adr",
+      "signal:associative_pathway:uncertainty:uncertainty:graph:retrieval_lineage:source-fabric:source-fabric-census",
+      "signal:associative_pathway:uncertainty:uncertainty:graph:retrieval_lineage:source-fabric:library-adr",
+      "signal:associative_pathway:uncertainty:uncertainty:graph:retrieval_lineage:library-adr:source-fabric-census",
+      "signal:associative_pathway:uncertainty:uncertainty:graph:retrieval_lineage:j11-reconciliation:library-adr",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:retrieval_lineage:source-fabric:source-fabric-census",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:retrieval_lineage:source-fabric:library-adr",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:retrieval_lineage:library-adr:source-fabric-census",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:evidence_lineage:rgr-note:rgr-constitution",
+      "signal:associative_pathway:imaginal:aether-synthesis:graph:retrieval_lineage:j11-reconciliation:library-adr",
+      "signal:associative_pathway:imaginal:aether-synthesis:temporal:corrects:j11-reconciliation:j9-adjudication",
+      "signal:associative_pathway:imaginal:aether-synthesis:temporal:evidence_successor:source-fabric-census:library-adr"
+    ],
+    "sourceRefs": [
+      "library-adr",
+      "source-fabric-census",
+      "source-fabric",
+      "facet-crossings",
+      "j9-adjudication",
+      "j11-reconciliation",
+      "rgr-note",
+      "rgr-constitution"
+    ],
+    "relationRefs": [
+      "graph:retrieval_lineage:source-fabric:source-fabric-census",
+      "graph:retrieval_lineage:source-fabric:library-adr",
+      "graph:retrieval_lineage:library-adr:source-fabric-census",
+      "graph:evidence_lineage:rgr-note:rgr-constitution",
+      "graph:retrieval_lineage:j11-reconciliation:library-adr",
+      "temporal:corrects:j11-reconciliation:j9-adjudication",
+      "temporal:evidence_successor:source-fabric-census:library-adr"
+    ],
+    "preservedContradictionFacetRefs": [
+      "contradiction:contradiction-library-runtime-standing"
+    ],
+    "preservedAbsenceFacetRefs": [
+      "absence:r8:member-owned-final-meaning"
+    ],
+    "novelRelativeToIndependentPaths": true,
+    "combinationSignature": [
+      "mode:absence",
+      "mode:analytic",
+      "mode:associative",
+      "mode:contradiction",
+      "mode:imaginal",
+      "mode:temporal",
+      "mode:uncertainty"
+    ],
+    "analyticIndependentSignature": [
+      "mode:absence",
+      "mode:analytic",
+      "mode:contradiction",
+      "mode:temporal"
+    ],
+    "associativeIndependentSignature": [
+      "mode:associative",
+      "mode:imaginal",
+      "mode:uncertainty"
+    ],
+    "provisional": true,
+    "persistenceAuthority": false,
+    "wholePersonAuthority": false
+  },
+  "validation": {
+    "valid": true,
+    "errors": []
+  },
+  "ablations": [
+    {
+      "removedPathway": "analytic_pathway",
+      "candidateBefore": "present",
+      "candidateAfter": "absent",
+      "survivingPathway": "associative_pathway",
+      "substituted": false
+    },
+    {
+      "removedPathway": "associative_pathway",
+      "candidateBefore": "present",
+      "candidateAfter": "absent",
+      "survivingPathway": "analytic_pathway",
+      "substituted": false
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-09-28T17:51:29.025Z",
+  "parentR7": "1b8a468f51f95f5fec1a6dffc76722c4cd5f2c44",
+  "analyticSignalCount": 12,
+  "associativeSignalCount": 18,
+  "boundedExchange": true,
+  "rawContextExchange": false,
+  "candidatePresent": true,
+  "candidateNovel": true,
+  "candidateProvisional": true,
+  "persistenceAuthority": false,
+  "wholePersonAuthority": false,
+  "contradictionPreserved": true,
+  "absencePreserved": true,
+  "analyticAblationRemoves": true,
+  "associativeAblationRemoves": true,
+  "valid": true
+}
