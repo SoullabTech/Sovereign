@@ -1,0 +1,42 @@
+{
+  "generatedAt": "2026-09-28T20:34:02.750Z",
+  "parentRuntimeR5": "9aedafed3762e98b12f48b811cb37beb12cfb793",
+  "noAuthorization": {
+    "gatePassed": false,
+    "errors": [
+      "explicit_human_authorization_required"
+    ],
+    "token": null,
+    "candidateValiditySelfAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "deliveryExecuted": false,
+    "persistenceAuthorized": false,
+    "productionAuthority": false
+  },
+  "humanAuthorization": {
+    "gatePassed": true,
+    "errors": [],
+    "token": {
+      "tokenRef": "synthetic-handoff:human-auth:r6:witness",
+      "candidateRef": "synthetic-reflection:aether-pattern:a-shared-movement-toward-greater-openness-",
+      "authorizationRef": "human-auth:r6:witness",
+      "authorizedBy": "human",
+      "scope": "synthetic_handoff_only",
+      "handoffEligible": true,
+      "candidateText": "I notice Work and Creative share a pattern in the reflected synthetic field right now. Does that connection feel meaningful, or should these areas stay separate?",
+      "candidateProvenanceRef": "aether-pattern:a-shared-movement-toward-greater-openness-",
+      "syntheticOnly": true,
+      "memberFacingDeliveryAuthorized": false,
+      "deliveryExecuted": false,
+      "persisted": false,
+      "maiaPromptMutated": false,
+      "productionAuthority": false,
+      "expiresWithProgrammeBoundary": true
+    },
+    "candidateValiditySelfAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "deliveryExecuted": false,
+    "persistenceAuthorized": false,
+    "productionAuthority": false
+  }
+}

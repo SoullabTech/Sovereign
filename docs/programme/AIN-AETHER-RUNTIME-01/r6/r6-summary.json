@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-28T20:34:02.750Z",
+  "parentRuntimeR5": "9aedafed3762e98b12f48b811cb37beb12cfb793",
+  "noAuthorizationPassed": false,
+  "noAuthorizationErrors": [
+    "explicit_human_authorization_required"
+  ],
+  "humanAuthorizationPassed": true,
+  "tokenCreated": true,
+  "tokenScope": "synthetic_handoff_only",
+  "candidateValiditySelfAuthorized": false,
+  "memberFacingDeliveryAuthorized": false,
+  "deliveryExecuted": false,
+  "persistenceAuthorized": false,
+  "productionAuthority": false
+}
