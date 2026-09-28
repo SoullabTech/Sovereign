@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-09-28T17:06:46.315Z",
+  "parentBlindPass": "566a358c7826a3df4038e0e27f79e8269ce6a076",
+  "parameters": {
+    "seedLimit": 6,
+    "neighborsPerSeed": 3,
+    "metadataWeight": 0.003,
+    "dualLaneBonus": 0.001,
+    "acceptedGraphBonus": 0,
+    "acceptedCommunityBonus": 0.002,
+    "communityFamilies": [
+      "global",
+      "diversity"
+    ],
+    "directGraphFalsifierBonus": 0.002
+  },
+  "methods": {
+    "graph_shadow_community": {
+      "mustRecall": 0.9675925925925924,
+      "helpfulRecall": 0.8541666666666666,
+      "bridgeRecall": 0.9861111111111112,
+      "counterevidenceRecall": 1,
+      "irrelevantRate": 0.6875,
+      "sourceClassDiversity": 1.6666666666666667,
+      "usefulPerThousandTokens": 8.120557644639321,
+      "globalMustRecall": 0.8888888888888888,
+      "diversityMustRecall": 0.8888888888888888,
+      "abstainedQueries": 0,
+      "positiveFalseAbstentions": 0,
+      "negativeFalsePositiveQueries": 6,
+      "hardFailQueries": 0,
+      "avgExpandedNeighbors": 7.083333333333333,
+      "queriesWithActiveCommunities": 12
+    },
+    "direct_graph_falsifier": {
+      "mustRecall": 0.9328703703703702,
+      "helpfulRecall": 0.8402777777777778,
+      "bridgeRecall": 0.9861111111111112,
+      "counterevidenceRecall": 1,
+      "irrelevantRate": 0.6996527777777778,
+      "sourceClassDiversity": 1.6111111111111112,
+      "usefulPerThousandTokens": 7.839443900184613,
+      "globalMustRecall": 0.7222222222222222,
+      "diversityMustRecall": 0.7222222222222222,
+      "abstainedQueries": 0,
+      "positiveFalseAbstentions": 0,
+      "negativeFalsePositiveQueries": 6,
+      "hardFailQueries": 0,
+      "avgExpandedNeighbors": 7.083333333333333,
+      "queriesWithActiveCommunities": 12
+    },
+    "final_with_abstention": {
+      "mustRecall": 0.9675925925925924,
+      "helpfulRecall": 0.8541666666666666,
+      "bridgeRecall": 0.9861111111111112,
+      "counterevidenceRecall": 1,
+      "irrelevantRate": 0.6041666666666666,
+      "sourceClassDiversity": 1.6666666666666667,
+      "usefulPerThousandTokens": 8.120557644639321,
+      "globalMustRecall": 0.8888888888888888,
+      "diversityMustRecall": 0.8888888888888888,
+      "abstainedQueries": 6,
+      "positiveFalseAbstentions": 0,
+      "negativeFalsePositiveQueries": 0,
+      "hardFailQueries": 0,
+      "avgExpandedNeighbors": 7.083333333333333,
+      "queriesWithActiveCommunities": 12
+    }
+  }
+}
