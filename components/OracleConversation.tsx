@@ -2410,28 +2410,73 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         await new Promise<void>((resolve, reject) => {
           let hasStarted = false;
+          let settled = false;
           let startTimeoutId: NodeJS.Timeout | null = null;
           let playbackTimeoutId: NodeJS.Timeout | null = null;
+          let completionProbeId: NodeJS.Timeout | null = null;
+
+          const cleanupPlayback = () => {
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
+            if (completionProbeId) clearInterval(completionProbeId);
+            audio.onended = null;
+            audio.ontimeupdate = null;
+            audio.onerror = null;
+            stopAudioAnalysis();
+            URL.revokeObjectURL(audioUrl);
+          };
+
+          const resolvePlayback = (reason: 'ended' | 'timeupdate' | 'probe' | 'pause') => {
+            if (settled) return;
+            settled = true;
+            console.log(`🔇 MAIA playback complete (${reason}) - ${audio.currentTime.toFixed(1)}s of ${Number.isFinite(audio.duration) ? audio.duration.toFixed(1) : '?'}s`);
+            cleanupPlayback();
+            resolve();
+          };
+
+          const rejectPlayback = (error: Error) => {
+            if (settled) return;
+            settled = true;
+            cleanupPlayback();
+            reject(error);
+          };
+
+          const isAtPlaybackEnd = () =>
+            hasStarted &&
+            Number.isFinite(audio.duration) &&
+            audio.duration > 0 &&
+            audio.currentTime >= Math.max(0, audio.duration - 0.12);
 
           startTimeoutId = setTimeout(() => {
             if (!hasStarted) {
               audio.pause();
-              stopAudioAnalysis();
-              URL.revokeObjectURL(audioUrl);
-              reject(new Error('Audio failed to start within 5s'));
+              rejectPlayback(new Error('Audio failed to start within 5s'));
             }
           }, 5000);
 
+          const estimatedMp3Seconds = Math.max(2, (audioBlob.size * 8) / 128000);
+          const armPlaybackCeiling = () => {
+            if (playbackTimeoutId) return;
+            const reportedSeconds = Number.isFinite(audio.duration) && audio.duration > 0
+              ? audio.duration
+              : estimatedMp3Seconds;
+            const ceilingMs = (reportedSeconds + 12) * 1000;
+            playbackTimeoutId = setTimeout(() => {
+              // Safari can play the file but never deliver ended, and may report
+              // duration=Infinity. Never strand the conversational floor.
+              if (audio.ended || audio.paused || isAtPlaybackEnd()) {
+                resolvePlayback('probe');
+                return;
+              }
+              console.error(`❌ [AUDIO] Playback ceiling reached at ${audio.currentTime.toFixed(1)}s; reported=${Number.isFinite(audio.duration) ? audio.duration.toFixed(1) : 'non-finite'}s estimated=${estimatedMp3Seconds.toFixed(1)}s`);
+              audio.pause();
+              rejectPlayback(new Error('Audio playback exceeded finite safety ceiling'));
+            }, ceilingMs);
+          };
+
           audio.onloadedmetadata = () => {
             console.log('✅ Audio metadata loaded, duration:', audio.duration, 'seconds');
-            const playbackTimeout = (audio.duration + 30) * 1000;
-            playbackTimeoutId = setTimeout(() => {
-              console.error(`❌ [AUDIO] Playback timeout! Audio at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
-              audio.pause();
-              stopAudioAnalysis();
-              URL.revokeObjectURL(audioUrl);
-              reject(new Error(`Audio playback timeout after ${playbackTimeout/1000}s`));
-            }, playbackTimeout);
+            armPlaybackCeiling();
           };
 
           audio.onplay = () => {
@@ -2440,41 +2485,45 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             if (startTimeoutId) clearTimeout(startTimeoutId);
             setIsAudioPlaying(true);
             startAudioAnalysis(audio);
+            // Metadata can be late or Safari can report duration=Infinity.
+            // Arm a finite byte-derived ceiling as soon as playback begins.
+            armPlaybackCeiling();
+
+            // Safari occasionally fails to deliver `ended` after several voice
+            // turns. Poll actual playback position so completion remains a fact,
+            // not an event-delivery assumption.
+            completionProbeId = setInterval(() => {
+              if (audio.ended || isAtPlaybackEnd()) resolvePlayback('probe');
+            }, 250);
+          };
+
+          audio.ontimeupdate = () => {
+            if (isAtPlaybackEnd()) resolvePlayback('timeupdate');
           };
 
           audio.onpause = () => {
-            if (!audio.ended) {
-              console.warn(`⚠️ [AUDIO] Paused at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+            if (settled) return;
+            if (hasStarted && audio.currentTime > 0.25) {
+              console.warn(`⚠️ [AUDIO] Playback stopped/paused at ${audio.currentTime.toFixed(1)}s; treating floor as released`);
+              resolvePlayback('pause');
+              return;
             }
+            console.warn(`⚠️ [AUDIO] Paused before meaningful playback at ${audio.currentTime.toFixed(1)}s`);
           };
 
-          audio.onended = () => {
-            console.log(`🔇 MAIA finished speaking - ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
-            stopAudioAnalysis();
-            URL.revokeObjectURL(audioUrl);
-            if (startTimeoutId) clearTimeout(startTimeoutId);
-            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-            resolve();
-          };
+          audio.onended = () => resolvePlayback('ended');
 
           audio.onerror = (e) => {
             console.error('❌ Audio playback error:', e);
-            stopAudioAnalysis();
             setIsResponding(false);
             setIsAudioPlaying(false);
             setIsMicrophonePaused(false);
-            URL.revokeObjectURL(audioUrl);
-            if (startTimeoutId) clearTimeout(startTimeoutId);
-            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-            reject(new Error('Audio playback failed'));
+            rejectPlayback(new Error('Audio playback failed'));
           };
 
           audio.play().catch(err => {
             console.error('❌ Audio.play() failed:', err);
-            stopAudioAnalysis();
-            if (startTimeoutId) clearTimeout(startTimeoutId);
-            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-            reject(err);
+            rejectPlayback(err instanceof Error ? err : new Error(String(err)));
           });
         });
       }
@@ -6675,73 +6724,47 @@ I'm not sure what I'm feeling yet.`;
           setTimeout(() => {
             console.log('✅ [NON-STREAM] Cooldown complete - NOW releasing mic');
 
-            // NOW unpause mic - this allows ContinuousConversation to restart
+            // A completed VOICE turn carries durable hands-free intent unless
+            // the member explicitly exited voice. Child capture recovery is not
+            // allowed to silently downgrade that intent to PUSH_TO_TALK.
+            if (lastSendWasVoiceRef.current) {
+              setIsHandsFreeMode(true);
+              voiceMicRef.current?.setHandsFree(true);
+            }
+
+            // NOW unpause mic - this allows ContinuousConversation to restart.
+            // Hands-free authority is restored synchronously ABOVE before the
+            // speaking->idle transition can trigger the child's restart effect.
             setIsMicrophonePaused(false);
             setIsMuted(false); // Ensure mic is unmuted
             console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
 
-            // 🔥 FIX: Force React to flush state updates before attempting mic restart
-            // Using requestAnimationFrame ensures we're after the React render cycle
+            // Turn-complete truth belongs in refs as well as React state. The
+            // delayed restart runs from an older render, so reading
+            // voiceSession.state.capabilities/phase here can strand hands-free
+            // on a stale snapshot even though playback has finished.
+            setIsProcessing(false);
+            setIsResponding(false);
+            setIsAudioPlaying(false);
+            isProcessingRef.current = false;
+            isRespondingRef.current = false;
+            isAudioPlayingRef.current = false;
+            isMicrophonePausedRef.current = false;
+
+            // Ask the canonical restart authority directly. It re-reads the live
+            // lifecycle refs and applies HANDS_FREE policy; presentation state is
+            // not allowed to decide whether the next turn can begin.
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
-                // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
-                const attemptMicRestart = (attempt: number) => {
-                  if (attempt > 8) {
-                    console.log('⚠️ [NON-STREAM] Mic restart failed after 8 attempts - forcing state reset');
-                    // 🔥 RECOVERY: Force reset all blocking states and try one more time
-                    setIsProcessing(false);
-                    setIsResponding(false);
-                    setIsAudioPlaying(false);
-                    setIsMicrophonePaused(false);
-                    isProcessingRef.current = false;
-                    isRespondingRef.current = false;
-                    isAudioPlayingRef.current = false;
-                    isMicrophonePausedRef.current = false;
-                    // Final attempt after forced reset
-                    setTimeout(() => {
-                      if (voiceSession.state.capabilities.canStartListening) {
-                        console.log('🎤 [NON-STREAM] Final attempt after state reset...');
-                        setIsMuted(false);
-                        if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_final_reset');
-                      }
-                    }, 500);
-                    return;
-                  }
-
-                  if (voiceSession.state.capabilities.canStartListening) {
-                    // Check ALL blocking conditions including mic pause and audio states
-                    const canRestart = !isProcessingRef.current &&
-                                       !isRespondingRef.current &&
-                                       !isAudioPlayingRef.current &&
-                                       !isMicrophonePausedRef.current;
-
-                    console.log(`🔍 [NON-STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
-
-                    if (canRestart) {
-                      console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_restart_attempt');
-                      // Verify mic actually started after a brief delay
-                      setTimeout(() => {
-                        if (voiceSession.state.phase === 'listening') {
-                          console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
-                        } else {
-                          console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
-                          if (attempt < 8) {
-                            setTimeout(() => attemptMicRestart(attempt + 1), 400);
-                          }
-                        }
-                      }, 150);
-                    } else {
-                      console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
-                      setTimeout(() => attemptMicRestart(attempt + 1), 300);
-                    }
-                  } else {
-                    console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
-                  }
-                };
-
-                // Start first attempt immediately after React render cycle
-                attemptMicRestart(1);
+                if (!lastSendWasVoiceRef.current) return;
+                const isHandsFree = voiceMicRef.current?.isHandsFree ?? true;
+                if (!isHandsFree) {
+                  console.log('🎤 [NON-STREAM] Push-to-talk mode - mic idle after playback');
+                  return;
+                }
+                console.log('🎤 [NON-STREAM] Playback cooldown complete - requesting hands-free restart');
+                setIsMuted(false);
+                voiceSession.methods.startListening('non_stream_restart_attempt');
               });
             });
           }, cooldownMs); // Wait for echo suppression cooldown
@@ -8765,7 +8788,7 @@ I'm not sure what I'm feeling yet.`;
                   // Stop listening - user explicitly exiting voice mode
                   console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
                   setIsMuted(true);
-                  // Note: isHandsFreeMode stays true (default) — ContinuousConversation refs reinitialize on remount
+                  lastSendWasVoiceRef.current = false;
                   voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
                   console.log('✅ Voice stopped successfully (user exit mode)');
                 }
@@ -10621,8 +10644,22 @@ I'm not sure what I'm feeling yet.`;
               // which is why a dead mic used to look exactly like a live one.
               console.warn(`🎙️ [voice-status] ${level} ${cause} (recoverable=${recoverable})`);
               if (level === 'info') return; // expected stand-down: don't interrupt
-              // Truthful UI: listening is over, so stop showing it as running.
+
+              // A bounded automatic reconnect is NOT a user decision to leave
+              // hands-free. The old generic warning handler silently flipped
+              // hands-free OFF here; recovery could then succeed for one turn,
+              // but the next MAIA response had no authority to auto-listen.
+              if (cause === 'VOICE_RECONNECTING_AFTER_GAP' && recoverable) {
+                setIsListening(false);
+                setIsActivating(true);
+                toast(userMessage, { duration: 5000, icon: '🎙️' });
+                return;
+              }
+
+              // Terminal/unrecovered voice failure: stop claiming LISTENING and
+              // fall back to an explicit user-controlled continuation.
               setIsHandsFreeMode(false);
+              setIsActivating(false);
               setIsListening(false);
               toast(userMessage, { duration: 9000, icon: '🎙️' });
             }}
@@ -10786,6 +10823,7 @@ I'm not sure what I'm feeling yet.`;
             if (!isMuted) {
               // Turn mic OFF - user explicitly toggling off
               setIsMuted(true);
+              lastSendWasVoiceRef.current = false;
               voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
               console.log('🔇 Microphone OFF (user toggle)');
             } else {

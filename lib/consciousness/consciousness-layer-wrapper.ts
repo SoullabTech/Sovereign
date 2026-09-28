@@ -29,6 +29,8 @@ export type ConsciousnessContext = {
   observerLevel: number; // 1-7 (recursive observer deepening)
   temporalWindow: 'present' | 'past_integration' | 'future_sensing' | 'eternal';
   metaAwareness: boolean; // Phase 3: Meta-consciousness evolution
+  /** Current-session continuity material assembled by the bounded thread-spine seam. */
+  sessionContinuityAddendum?: string;
   /** Exact-source published material retrieved by the canonical governed-knowledge seam. */
   governedKnowledgeAddendum?: string;
   /** T8 current-turn teaching authority. Server-authored; expires with this turn. */

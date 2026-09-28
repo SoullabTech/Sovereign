@@ -78,6 +78,18 @@ export const CAPTURE_HEARTBEAT_MS = 1_000;
 export const CAPTURE_ARMING_SILENT_MS = 5_000;
 
 /**
+ * When the local analyser is actively hearing the member but the recognition
+ * layer emits no result for this long, the recognizer is no longer allowed to
+ * keep claiming "listening." This is deliberately much shorter than the
+ * silence-only death window because local voice is positive evidence: audio is
+ * arriving while transcription is not.
+ */
+export const VOICED_RECOGNITION_STALL_MS = 3_500;
+
+/** Local voice must still be recent when the voiced-stall verdict is read. */
+export const VOICED_RECOGNITION_RECENT_MS = 1_200;
+
+/**
  * A `mute` on the audio track is not instantly fatal — browsers emit brief,
  * self-correcting mutes around device negotiation. A mute that persists past
  * this window is another process holding the input (the Zoom case).
@@ -150,6 +162,45 @@ export interface CaptureLivenessVerdict {
   cause?: CaptureLossCause;
   /** How long capture had been silent when the verdict was reached. */
   silentForMs: number;
+}
+
+export interface VoicedRecognitionStallInput {
+  now: number;
+  /** First local-analyser voice sample after the last recognition result. */
+  voiceWithoutRecognitionSinceAt: number;
+  /** Most recent local-analyser voice sample. */
+  analyserLastVoiceAt: number;
+  applicable: boolean;
+}
+
+/**
+ * Positive-evidence fast lane for the exact failure members describe as
+ * "MAIA stopped hearing me." Silence alone is ambiguous; local voice without
+ * recognition is not. This never classifies quiet thinking as failure.
+ */
+export function assessVoicedRecognitionStall(
+  input: VoicedRecognitionStallInput,
+): CaptureLivenessVerdict {
+  const {
+    now,
+    voiceWithoutRecognitionSinceAt,
+    analyserLastVoiceAt,
+    applicable,
+  } = input;
+  if (!applicable || voiceWithoutRecognitionSinceAt <= 0 || analyserLastVoiceAt <= 0) {
+    return { dead: false, silentForMs: 0 };
+  }
+
+  const gapMs = Math.max(0, now - voiceWithoutRecognitionSinceAt);
+  const voiceAgeMs = Math.max(0, now - analyserLastVoiceAt);
+  if (
+    gapMs >= VOICED_RECOGNITION_STALL_MS &&
+    voiceAgeMs <= VOICED_RECOGNITION_RECENT_MS
+  ) {
+    return { dead: true, cause: 'silent_death', silentForMs: gapMs };
+  }
+
+  return { dead: false, silentForMs: gapMs };
 }
 
 /**

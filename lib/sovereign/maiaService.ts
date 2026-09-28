@@ -13,6 +13,11 @@ import {
   deriveSessionContinuity,
   formatSessionContinuityForPrompt,
 } from '@/lib/maia/continuity/sessionContinuity';
+import {
+  buildSessionThreadSpine,
+  continuityExcerpt,
+  formatSessionThreadSpine,
+} from '@/lib/maia/continuity/sessionThreadSpine';
 
 /**
  * AIN-CONTEXT-01 · A6 — the DEEP consultation's FINAL history aperture, in exchanges.
@@ -929,7 +934,7 @@ async function fastPathResponse(
       const fastAperture = conversationHistory.slice(-3);
       representedCurrentSessionExchanges = fastAperture.length;
       recentContext = fastAperture.map(ex =>
-        `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
+        `User: ${continuityExcerpt(ex.userMessage, 480)}\nMAIA: ${continuityExcerpt(ex.maiaResponse, 480)}`
       ).join('\n');
     }
   } else if (conversationHistory.length > 0) {
@@ -937,7 +942,7 @@ async function fastPathResponse(
     const fastAperture = conversationHistory.slice(-3);
     representedCurrentSessionExchanges = fastAperture.length;
     recentContext = fastAperture.map(ex =>
-      `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
+      `User: ${continuityExcerpt(ex.userMessage, 480)}\nMAIA: ${continuityExcerpt(ex.maiaResponse, 480)}`
     ).join('\n');
   } else if (effectiveUserId) {
     // New session - load cross-session turns for continuity
@@ -1164,8 +1169,17 @@ ${ainKnowledgeContext}\n`
     allSessionExchanges,
     apertureCount: representedCurrentSessionExchanges,
   });
+  const fastSpine = buildSessionThreadSpine({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: representedCurrentSessionExchanges,
+    excludeKeys: new Set(fastRecovery.recovered.map((e) => e.exchangeKey)),
+  });
+  const fastSpineBlock = formatSessionThreadSpine(fastSpine);
   const fastRepresentedTotal =
-    representedCurrentSessionExchanges + fastRecovery.recovered.length;
+    representedCurrentSessionExchanges +
+    fastRecovery.recovered.length +
+    fastSpine.length;
 
   const fastContinuity = deriveSessionContinuity({
     durableCompletedExchanges,
@@ -1173,9 +1187,10 @@ ${ainKnowledgeContext}\n`
   });
   const fastContinuityBlock = formatSessionContinuityForPrompt(fastContinuity);
   const fastRecoveredPrefix = fastRecovery.block ? `${fastRecovery.block}\n\n` : '';
+  const fastSpinePrefix = fastSpineBlock ? `${fastSpineBlock}\n\n` : '';
   const fastContinuityPrefix = fastContinuityBlock
-    ? `${fastContinuityBlock}\n\n${fastRecoveredPrefix}`
-    : fastRecoveredPrefix;
+    ? `${fastContinuityBlock}\n\n${fastRecoveredPrefix}${fastSpinePrefix}`
+    : `${fastRecoveredPrefix}${fastSpinePrefix}`;
   if (fastRecovery.recovered.length > 0) {
     console.log('🧵 [L1/FAST] recovered displaced exchanges', {
       count: fastRecovery.recovered.length,
@@ -1945,19 +1960,25 @@ async function corePathResponse(
     allSessionExchanges,
     apertureCount: coreRepresentedCurrentSession,
   });
+  const coreSpine = buildSessionThreadSpine({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: coreRepresentedCurrentSession,
+    excludeKeys: new Set(coreRecovery.recovered.map((e) => e.exchangeKey)),
+  });
+  const coreSpineBlock = formatSessionThreadSpine(coreSpine);
   const coreRepresentedTotal =
-    coreRepresentedCurrentSession + coreRecovery.recovered.length;
+    coreRepresentedCurrentSession +
+    coreRecovery.recovered.length +
+    coreSpine.length;
 
   const coreContinuity = deriveSessionContinuity({
     durableCompletedExchanges,
     representedExchanges: coreRepresentedTotal,
   });
   const coreContinuityBlockBase = formatSessionContinuityForPrompt(coreContinuity);
-  const coreContinuityBlock = coreRecovery.block
-    ? (coreContinuityBlockBase
-        ? `${coreContinuityBlockBase}\n\n${coreRecovery.block}`
-        : coreRecovery.block)
-    : coreContinuityBlockBase;
+  const coreContinuityParts = [coreContinuityBlockBase, coreRecovery.block, coreSpineBlock].filter(Boolean);
+  const coreContinuityBlock = coreContinuityParts.join('\n\n');
   if (coreRecovery.recovered.length > 0) {
     console.log('🧵 [L1/CORE] recovered displaced exchanges', {
       count: coreRecovery.recovered.length,
@@ -2293,6 +2314,7 @@ async function deepPathResponse(
   // AIN-CONTEXT-01 · A6 — completed exchanges durably on record for THIS session,
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
+  allSessionExchanges: readonly DisplacedExchange[] = [],
 ): Promise<{
   response: string;
   consciousnessData?: any;
@@ -2563,22 +2585,44 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
   const deepRepresentedCurrentSession = conversationHistory.length > 0
     ? Math.min(DEEP_CONSULTATION_APERTURE, effectiveHistory.length)
     : 0;
+  const deepRecovery = recoverForTier({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: deepRepresentedCurrentSession,
+  });
+  const deepSpine = buildSessionThreadSpine({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: deepRepresentedCurrentSession,
+    excludeKeys: new Set(deepRecovery.recovered.map((e) => e.exchangeKey)),
+  });
+  const deepSpineBlock = formatSessionThreadSpine(deepSpine);
+  const deepRepresentedTotal =
+    deepRepresentedCurrentSession +
+    deepRecovery.recovered.length +
+    deepSpine.length;
   const deepContinuity = deriveSessionContinuity({
     durableCompletedExchanges,
-    representedExchanges: deepRepresentedCurrentSession,
+    representedExchanges: deepRepresentedTotal,
   });
-  const deepContinuityBlock = formatSessionContinuityForPrompt(deepContinuity);
+  const deepContinuityBlockBase = formatSessionContinuityForPrompt(deepContinuity);
+  const deepContinuityBlock = [deepContinuityBlockBase, deepRecovery.block, deepSpineBlock]
+    .filter(Boolean)
+    .join('\n\n');
   console.log('🧭 [A6/DEEP] session continuity', {
     depth: deepContinuity.depth,
     represented: deepContinuity.represented,
     absent: deepContinuity.absent,
     unit: deepContinuity.unit,
+    recovered: deepRecovery.recovered.length,
+    spine: deepSpine.length,
   });
 
   // Build enhanced consciousness context
   const consciousnessContext: ConsciousnessContext = {
     sessionId,
     userId: userId ?? sessionId,  // prefer real userId, fallback to sessionId only if absent
+    sessionContinuityAddendum: deepContinuityBlock || undefined,
     conversationHistory: effectiveHistory,
     currentDepth: depthFromRelationship(conversationContext.profile.relationshipDepth),
     elementalResonance: elementalTrendToResonance(conversationContext.profile.elementalTrend),
@@ -3749,7 +3793,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'DEEP': {
-        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
+        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
         provider = deepResult.provider; // May be undefined for DEEP path
