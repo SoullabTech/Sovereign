@@ -47,6 +47,7 @@ describe('getHouseDestinations — audience filtering', () => {
     expect(member).not.toContain('vision-studio');
     expect(member).toContain('ideas');
     expect(member).toContain('studio');
+    expect(member).toContain('becoming');
   });
 
   // Founder direction 2026-08-16 (beta): Pro Studio's door is open to every
@@ -263,6 +264,21 @@ describe('Dream — first-class member room', () => {
     const h = harness(true);
     dispatchHouseDestination(find('dream'), h.ctx);
     expect(h.pushed).toEqual([webBridgePath('/dream')]);
+  });
+});
+
+describe('Becoming — prospective member room', () => {
+  it('is offered to every member and points at the canonical Becoming room', () => {
+    expect(getHouseDestinations(false).map((d) => d.id)).toContain('becoming');
+    expect(find('becoming').route).toBe('/becoming');
+    expect(find('becoming').group).toBe('life');
+  });
+
+  it('uses an honest web bridge on native until Becoming is deliberately bundled', () => {
+    expect(classifyReachability(find('becoming'), true)).toBe('web');
+    const h = harness(true);
+    dispatchHouseDestination(find('becoming'), h.ctx);
+    expect(h.pushed).toEqual([webBridgePath('/becoming')]);
   });
 });
 

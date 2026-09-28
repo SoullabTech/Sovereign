@@ -83,6 +83,10 @@ export const GOVERNED_ROOMS: readonly GoverendRoom[] = [
   // before Keep and create a second relationship grammar after Keep. Suppressed
   // throughout /journal, not merely on arrival (founder rulings 2026-09-06 + 09-27).
   { placeId: 'journal', placeName: 'Journal', routePrefix: '/journal', purpose: 'A private room for writing and reflection.', handleVisibility: 'none' },
+  // Becoming owns two explicit MAIA thresholds inside the room: the ephemeral
+  // in-journey guide and the post-Return reflective conversation. The ambient
+  // House handle would compete with those contracts, so it stays suppressed.
+  { placeId: 'becoming', placeName: 'Becoming', routePrefix: '/becoming', purpose: 'A prospective room for encountering possible futures and returning to the present.', handleVisibility: 'none' },
   { placeId: 'ideas', placeName: 'Ideas', routePrefix: '/maia/ideas', purpose: 'A room for capturing and developing emerging thoughts.' },
   { placeId: 'moments', placeName: 'Marked Moments', routePrefix: '/maia/moments', purpose: 'The moments this member chose to keep from conversation.' },
   { placeId: 'anchor-history', placeName: 'Daily Anchors', routePrefix: '/maia/anchor', purpose: 'The member\'s daily anchors and their history.' },

@@ -27,9 +27,12 @@ describe('Soullab Living Orientation System', () => {
     }
   });
 
-  it('keeps MAIA as host/relational intelligence rather than the center of the member', () => {
+  it('keeps MAIA at the relational center without making MAIA an owning facet', () => {
     expect(MAIA_ORIENTATION.label).toBe('MAIA');
-    expect(MAIA_ORIENTATION.relationToWhole).toContain('not the center');
+    expect(MAIA_ORIENTATION.relationToWhole).toContain('relational center of the crystal');
+    expect(MAIA_ORIENTATION.relationToWhole).toContain('without owning the facets');
+    expect(MAIA_ORIENTATION.relationToWhole).toContain('source');
+    expect(MAIA_ORIENTATION.relationToWhole).toContain('epistemic kind');
   });
 
   it('keeps the person out of the graph as a possessable endpoint', () => {
@@ -105,6 +108,12 @@ describe('Soullab Living Orientation System', () => {
     });
     expect(crossing?.law).toContain('present member report outranks stale/inferred context');
     expect(crossing?.law).toContain('may not diagnose the relationship');
+  });
+
+  it('registers Becoming as prospective experience rather than prediction', () => {
+    expect(ORIENTATION_FACETS.becoming.label).toBe('Becoming');
+    expect(ORIENTATION_FACETS.becoming.question).toContain('possible');
+    expect(ORIENTATION_FACETS.becoming.relationToWhole).toContain('without turning imagination into prediction');
   });
 
   it('names Anchor according to its accepted lived-time role', () => {

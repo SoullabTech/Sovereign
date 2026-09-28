@@ -5,7 +5,7 @@ import { HOUSE_PLACES } from '../catalog';
 describe('House catalog persistence contract', () => {
   test('current House catalog migration admits every canonical place id', () => {
     const sql = fs.readFileSync(
-      path.join(process.cwd(), 'database/migrations/20260927000001_house_dream_catalog.sql'),
+      path.join(process.cwd(), 'database/migrations/20260927000002_house_becoming_catalog.sql'),
       'utf8',
     );
     for (const place of HOUSE_PLACES) expect(sql).toContain(`'${place.id}'`);

@@ -218,6 +218,8 @@ export const DESTINATION_EXCEPTIONS: Record<string, string> = {
   journal: 'MAIA_WORLDS member world.',
   dream:
     'First-class member-owned Dream facet. The canonical Dream object is the member\'s own Journal Dream identity; the House door changes how that object is encountered without creating a second content authority.',
+  becoming:
+    'First-class prospective member facet. Becoming is a House room with its own governed MAIA thresholds; it is not a legacy MAIA rail boundary and does not imply automatic access to other facets.',
   reflections:
     'Member-owned reflection capsules (/api/capsules, requireMemberId-scoped). Never a ' +
     'rail boundary: the feed only ever existed inside /labtools, which is why members ' +

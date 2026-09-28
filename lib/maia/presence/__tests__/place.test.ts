@@ -36,6 +36,7 @@ describe('governed-room registry (Phase 8 inventory)', () => {
     expect(resolveGovernedRoom('/maia/moments')?.placeId).toBe('moments');
     expect(resolveGovernedRoom('/maia/anchor/history')?.placeId).toBe('anchor-history');
     expect(resolveGovernedRoom('/journal')?.placeId).toBe('journal');
+    expect(resolveGovernedRoom('/becoming')?.placeId).toBe('becoming');
     // Reflections: the feed and one kept reflection are the same governed room.
     // The room is governed so "Discuss this with MAIA" can open OVER the
     // reflection instead of navigating the member to /maia.
@@ -198,6 +199,15 @@ describe('isMaiaHandleVisible (affordance, not eligibility)', () => {
     // An open object does not buy a handle here, unlike an 'object' room.
     expect(isMaiaHandleVisible('/journal', {
       ...placeFromPathname('/journal')!, objectType: 'journal_entry', objectId: 'entry-1',
+    })).toBe(false);
+  });
+
+  it('Becoming owns its MAIA thresholds while remaining a governed room', () => {
+    expect(resolveGovernedRoom('/becoming')?.placeId).toBe('becoming');
+    expect(placeFromPathname('/becoming')?.placeName).toBe('Becoming');
+    expect(isMaiaHandleVisible('/becoming', placeFromPathname('/becoming'))).toBe(false);
+    expect(isMaiaHandleVisible('/becoming', {
+      ...placeFromPathname('/becoming')!, objectType: 'becoming_journey', objectId: 'journey-1',
     })).toBe(false);
   });
 

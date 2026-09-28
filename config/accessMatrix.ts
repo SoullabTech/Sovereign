@@ -375,6 +375,11 @@ export const ACCESS_RULES: AccessRule[] = [
   // HOUSE-PREFERENCES-01: member presentation only; ownership is resolved again in the reader.
   { exact: '/house', minTier: 'free', notes: 'Member House orientation' },
   { exact: '/api/house/preferences', minTier: 'free', notes: 'Verified member-owned House presentation preferences' },
+  { exact: '/becoming', minTier: 'free', notes: 'Member Becoming — prospective Future Self field' },
+  { exact: '/api/becoming/guide', minTier: 'free', notes: 'Becoming in-journey MAIA — server-forced sanctuary/ephemeral' },
+  { exact: '/api/becoming/temporal', minTier: 'free', notes: 'Becoming Across Time MAIA — selected context, server-forced sanctuary/ephemeral' },
+  { exact: '/api/becoming/conversation', minTier: 'free', notes: 'Becoming post-Return MAIA — explicit continuity-enabled conversation' },
+  { exact: '/api/becoming/source-port', minTier: 'free', notes: 'Becoming explicit read-only facet source port — exact member-owned source only' },
   { exact: '/decisions', minTier: 'free', notes: 'Personal Decision Council — member-owned reflection' },
   { prefix: '/decisions/', minTier: 'free', notes: 'Personal Decision Council detail/new routes' },
   { exact: '/practices', minTier: 'free', notes: 'Member Practices room — member-ready embodied practices only; Lab Tools remains internal' },

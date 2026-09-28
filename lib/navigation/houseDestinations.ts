@@ -188,6 +188,18 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     group: 'life',
   },
   {
+    id: 'becoming',
+    label: 'Becoming',
+    icon: Sprout,
+    tooltip: 'Meet possible futures without turning them into predictions',
+    kind: 'route',
+    route: '/becoming',
+    audience: 'all',
+    nativePolicy: 'web',
+    returnBehavior: 'web-bridge',
+    group: 'life',
+  },
+  {
     id: 'reflections',
     label: 'Reflections',
     icon: Sparkles,

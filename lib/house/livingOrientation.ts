@@ -112,6 +112,12 @@ export const ORIENTATION_FACETS = {
     activity: 'Remembering and encountering a dream without reducing it to a single interpretation.',
     relationToWhole: 'Keeps the dream as a primary member-owned image-field while allowing careful exploration around it.',
   },
+  becoming: {
+    label: 'Becoming',
+    question: 'What becomes possible when I meet the life I may be becoming?',
+    activity: 'Encountering possible futures through imaginal, elemental, relational, and temporal experience before returning to the present.',
+    relationToWhole: 'Adds prospective experience without turning imagination into prediction, identity, or destiny.',
+  },
   reflections: {
     label: 'Reflections',
     question: 'What mattered enough to keep?',
@@ -170,9 +176,9 @@ export const ORIENTATION_FACETS = {
 
 export const MAIA_ORIENTATION = {
   label: 'MAIA',
-  question: 'What wants to be met in relationship across all of this?',
-  activity: 'Accompanying the member across facets while preserving provenance, consent, and authorship.',
-  relationToWhole: 'MAIA is the host and relational intelligence, not the center and not a room that owns the others.',
+  question: 'What becomes visible when these facets are held together without losing their difference?',
+  activity: 'Meeting the member at a facet, reflecting it faithfully, relating permitted facets, and inviting movement toward a contemplative center when the member is willing.',
+  relationToWhole: 'MAIA holds the relational center of the crystal without owning the facets: one gestalt, with source, authorship, epistemic kind, time, consent, uncertainty, and lineage intact.',
 } as const satisfies OrientationFacet;
 
 /**
