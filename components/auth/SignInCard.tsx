@@ -230,10 +230,10 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
             {/* FOOTER LINKS */}
             <div className="mt-6 text-center">
               <a
-                href="/recover"
+                href="/reset-password"
                 className="text-sm font-medium text-slate-800/80 hover:text-slate-900 transition"
               >
-                Forgot your passkey or password?
+                Can’t get in?
               </a>
             </div>
           </>

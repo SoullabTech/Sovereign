@@ -639,6 +639,41 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                 Email me a sign-in code instead
               </button>
 
+              {/* MEMBER-ACCESS-RECOVERY-01
+                  One plain recovery door. A member should not need to remember
+                  whether they originally entered by password, email code, beta
+                  invitation, or another credential mechanism in order to find
+                  their way back into Soullab. Every option below is a real,
+                  already-supported path; this panel introduces no new auth
+                  mechanism and makes no promise the backend cannot keep. */}
+              <details className="mt-4 rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm text-slate-300/85">
+                <summary className="cursor-pointer select-none text-center text-slate-300 hover:text-white transition-colors">
+                  Can’t get in?
+                </summary>
+                <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setPhase('email'); setError(''); }}
+                    disabled={isLoading}
+                    className="block w-full text-left text-amber-300/90 hover:text-amber-200 transition-colors disabled:opacity-50"
+                  >
+                    Email me a sign-in code
+                  </button>
+                  <a
+                    href="/reset-password"
+                    className="block text-amber-300/90 hover:text-amber-200 transition-colors"
+                  >
+                    Reset my password
+                  </a>
+                  <a
+                    href="mailto:support@soullab.life?subject=I%20can%E2%80%99t%20get%20into%20Soullab"
+                    className="block text-amber-300/90 hover:text-amber-200 transition-colors"
+                  >
+                    I still can’t get in — contact support
+                  </a>
+                </div>
+              </details>
+
               {/* A first-time visitor leaves the returning-member door for
                   the joining door. Both preserve the intended post-auth destination,
                   whose ordinary default is canonical Soullab Home. */}

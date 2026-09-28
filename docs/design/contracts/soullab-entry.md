@@ -6,6 +6,7 @@ surfaces:
   - app/home/**
   - components/landing/**
   - components/auth/UnifiedAuth.tsx
+  - components/auth/SignInCard.tsx
   - app/onboarding/page.tsx
   - app/oauth-success/page.tsx
   - app/enter/page.tsx
