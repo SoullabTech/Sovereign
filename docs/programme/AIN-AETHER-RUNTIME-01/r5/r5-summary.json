@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-09-28T20:31:00.020Z",
+  "parentRuntimeR4": "b05465b40d852dc2f947152ffbc86a9fa0820e5a",
+  "generated": true,
+  "candidateText": "I notice Work and Creative share a pattern in the reflected synthetic field right now. Does that connection feel meaningful, or should these areas stay separate?",
+  "referencedFacetRefs": [
+    "work",
+    "creative"
+  ],
+  "referencedObservationRefs": [
+    "r5:o:work",
+    "r5:o:creative"
+  ],
+  "uncertainty": 0.35,
+  "correctionInvited": true,
+  "provisional": true,
+  "finalMeaningAuthority": "member",
+  "identityAuthority": false,
+  "diagnosticAuthority": false,
+  "predictiveAuthority": false,
+  "destinyAuthority": false,
+  "soulRepresentationAuthority": false,
+  "deliverable": false,
+  "memberFacingDelivered": false,
+  "maiaPromptMutated": false,
+  "persisted": false,
+  "productionAuthority": false
+}

@@ -1,0 +1,151 @@
+{
+  "generatedAt": "2026-09-28T20:31:00.020Z",
+  "parentRuntimeR4": "b05465b40d852dc2f947152ffbc86a9fa0820e5a",
+  "field": {
+    "fieldRef": "synthetic:r5:field",
+    "observations": [
+      {
+        "observationRef": "r5:o:work",
+        "facetRef": "work",
+        "motif": "A shared movement toward greater openness.",
+        "temporalStanding": "is_being",
+        "standing": "member_named",
+        "qualities": [],
+        "note": "Work feels more open."
+      },
+      {
+        "observationRef": "r5:o:creative",
+        "facetRef": "creative",
+        "motif": "A shared movement toward greater openness.",
+        "temporalStanding": "is_being",
+        "standing": "source_observed",
+        "qualities": [],
+        "note": "Creative activity also looks more open."
+      },
+      {
+        "observationRef": "r5:o:relationship",
+        "facetRef": "relationship",
+        "motif": "Relationship feels unsettled but present.",
+        "temporalStanding": "is_being",
+        "standing": "member_named",
+        "qualities": [],
+        "note": "Relationship feels unsettled."
+      }
+    ],
+    "patterns": [
+      {
+        "patternRef": "aether-pattern:a-shared-movement-toward-greater-openness-",
+        "motif": "A shared movement toward greater openness.",
+        "contributingObservationRefs": [
+          "r5:o:work",
+          "r5:o:creative"
+        ],
+        "contributingFacetRefs": [
+          "work",
+          "creative"
+        ],
+        "temporalStandings": [
+          "is_being"
+        ],
+        "movements": [
+          "converging"
+        ],
+        "qualities": [],
+        "contradictionRefs": [],
+        "uncertainty": 0.35,
+        "memberRecognition": "unreviewed",
+        "provisional": true,
+        "identityAuthority": false,
+        "diagnosticAuthority": false,
+        "predictiveAuthority": false,
+        "soulRepresentationAuthority": false
+      },
+      {
+        "patternRef": "aether-pattern:relationship-feels-unsettled-but-present-",
+        "motif": "Relationship feels unsettled but present.",
+        "contributingObservationRefs": [
+          "r5:o:relationship"
+        ],
+        "contributingFacetRefs": [
+          "relationship"
+        ],
+        "temporalStandings": [
+          "is_being"
+        ],
+        "movements": [
+          "unresolved"
+        ],
+        "qualities": [],
+        "contradictionRefs": [],
+        "uncertainty": 0.15,
+        "memberRecognition": "unreviewed",
+        "provisional": true,
+        "identityAuthority": false,
+        "diagnosticAuthority": false,
+        "predictiveAuthority": false,
+        "soulRepresentationAuthority": false
+      }
+    ],
+    "contradictions": [],
+    "absences": [],
+    "fieldStatus": "changing",
+    "finalMeaningAuthority": "member",
+    "persistenceAuthority": false
+  },
+  "result": {
+    "generated": true,
+    "errors": [],
+    "candidate": {
+      "candidateRef": "synthetic-reflection:aether-pattern:a-shared-movement-toward-greater-openness-",
+      "text": "I notice Work and Creative share a pattern in the reflected synthetic field right now. Does that connection feel meaningful, or should these areas stay separate?",
+      "patternRef": "aether-pattern:a-shared-movement-toward-greater-openness-",
+      "referencedFacetRefs": [
+        "work",
+        "creative"
+      ],
+      "referencedObservationRefs": [
+        "r5:o:work",
+        "r5:o:creative"
+      ],
+      "provenance": {
+        "patternRef": "aether-pattern:a-shared-movement-toward-greater-openness-",
+        "motif": "A shared movement toward greater openness.",
+        "contributingObservationRefs": [
+          "r5:o:work",
+          "r5:o:creative"
+        ],
+        "contributingFacetRefs": [
+          "work",
+          "creative"
+        ],
+        "sourceObservationNotes": [
+          {
+            "observationRef": "r5:o:work",
+            "facetRef": "work",
+            "note": "Work feels more open."
+          },
+          {
+            "observationRef": "r5:o:creative",
+            "facetRef": "creative",
+            "note": "Creative activity also looks more open."
+          }
+        ],
+        "uncertainty": 0.35,
+        "memberRecognition": "unreviewed"
+      },
+      "correctionInvited": true,
+      "provisional": true,
+      "finalMeaningAuthority": "member",
+      "identityAuthority": false,
+      "diagnosticAuthority": false,
+      "predictiveAuthority": false,
+      "destinyAuthority": false,
+      "soulRepresentationAuthority": false,
+      "deliverable": false,
+      "memberFacingDelivered": false,
+      "maiaPromptMutated": false,
+      "persisted": false,
+      "productionAuthority": false
+    }
+  }
+}
