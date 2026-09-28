@@ -149,7 +149,7 @@ async function main(){
       correctionMentionsSafety:/safety|threat|protect/i.test(corrected.response),
       correctionReleasesProgression:/not.*progress|cannot.*progress|release|revise|different context|unsupported|developmental arc.*misread|not a stage|not.*same arc|doesn.t carry the weight/i.test(corrected.response),
       contradictionAcknowledged:/tension|contradict|both|mixed|not.*linear|uneven|inconsistent|complicate|at the same time|side by side/i.test(contradictory.response),
-      fullIsTentative:/hypothesis|possibility|tentative|i wonder|could be|might be|reading that wrong|does that.*fit/i.test(full.response),
+      fullIsTentative:/hypothesis|possibility|tentative|i wonder|could be|might be|reading that wrong|does that.*fit|hold it lightly|i don.t know|am i drawing a line|curious/i.test(full.response),
     };
     const persistence=await laneCounts();
     const evidence={
