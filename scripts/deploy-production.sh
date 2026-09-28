@@ -951,30 +951,49 @@ cmd_rollback() {
     log_info "Current deployment: $CURRENT_SHA"
     log_info "Rolling back to: $PREVIOUS_SHA"
 
-    # Swap images
-    log_info "Swapping image tags..."
-    docker tag maia-sovereign:current maia-sovereign:broken 2>/dev/null || true
-    docker tag maia-sovereign:previous maia-sovereign:current
+    # Resolve image identities before moving any role tags.
+    local current_id previous_id
+    current_id="$(docker image inspect maia-sovereign:current --format '{{.Id}}')"
+    previous_id="$(docker image inspect maia-sovereign:previous --format '{{.Id}}')"
+    if [ -z "$current_id" ] || [ -z "$previous_id" ]; then
+        log_error "Rollback image identity is incomplete; refusing to move role tags."
+        exit 1
+    fi
 
-    # Restart with the swapped image
+    # Compose launches maia-sovereign:prod, not :current. Therefore rollback must
+    # move the previous image onto BOTH role tags before recreating the reader.
+    log_info "Swapping image tags..."
+    docker tag maia-sovereign:current maia-sovereign:broken
+    docker tag maia-sovereign:previous maia-sovereign:current
+    docker tag maia-sovereign:previous maia-sovereign:prod
+
+    # Restart only the application reader. A reader rollback must not restart
+    # Postgres or any other dependency.
     log_info "Restarting MAIA with previous image..."
-    docker compose -f "$COMPOSE_FILE" up -d maia
+    docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-deps maia
 
     # Wait for health
     log_info "Waiting for service to be healthy..."
     sleep 10
 
-    # Verify health
-    if docker compose -f "$COMPOSE_FILE" ps | grep -q "healthy"; then
-        log_success "Rollback complete! Now running: $PREVIOUS_SHA"
+    # Verify both health and that Compose actually launched the previous image.
+    local running_id running_git
+    running_id="$(docker inspect maia-sovereign --format '{{.Image}}' 2>/dev/null || true)"
+    running_git="$(docker exec maia-sovereign printenv GIT_COMMIT 2>/dev/null || true)"
+    if docker compose -f "$COMPOSE_FILE" ps | grep -q "healthy" \
+       && [ "$running_id" = "$previous_id" ]; then
+        log_success "Rollback complete! Now running: ${running_git:-$PREVIOUS_SHA}"
 
-        # Move broken to previous so we can roll forward if needed
-        docker tag maia-sovereign:broken maia-sovereign:previous 2>/dev/null || true
+        # Move the former reader to :previous so an explicit roll-forward remains possible.
+        docker tag maia-sovereign:broken maia-sovereign:previous
 
-        send_alert "warning" "Rollback executed" "{\"from\": \"$CURRENT_SHA\", \"to\": \"$PREVIOUS_SHA\"}"
+        send_alert "warning" "Rollback executed" "{\"from\": \"$CURRENT_SHA\", \"to\": \"${running_git:-$PREVIOUS_SHA}\"}"
     else
-        log_error "Rollback may have failed. Check container health."
+        log_error "Rollback verification FAILED."
+        log_error "Expected running image: $previous_id"
+        log_error "Observed running image: ${running_id:-<missing>}"
         cmd_status
+        exit 1
     fi
 }
 
