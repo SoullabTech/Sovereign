@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-09-28T20:47:19.747Z",
+  "parentLiveR1": "73a59e9dec61173ee735ebaa134d2cc0fdfa0bc8",
+  "readOnceInitiallyValid": true,
+  "readOnceConsumeOnUse": true,
+  "readOnceReusable": false,
+  "readOnceAfterState": "consumed",
+  "sessionValid": true,
+  "sessionReusable": true,
+  "wrongSessionRefused": true,
+  "expiredState": "expired",
+  "revokedState": "revoked"
+}

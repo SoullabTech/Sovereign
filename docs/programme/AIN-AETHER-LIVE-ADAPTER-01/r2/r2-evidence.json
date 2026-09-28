@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-09-28T20:47:19.747Z",
+  "parentLiveR1": "73a59e9dec61173ee735ebaa134d2cc0fdfa0bc8",
+  "readOnceBefore": {
+    "valid": true,
+    "state": "valid",
+    "errors": [],
+    "reusable": false,
+    "consumeOnUse": true,
+    "validUntil": "2026-09-28T17:00:00-04:00"
+  },
+  "readOnceAfter": {
+    "valid": false,
+    "state": "consumed",
+    "errors": [
+      "consent_already_consumed"
+    ],
+    "reusable": false,
+    "consumeOnUse": true,
+    "validUntil": "2026-09-28T17:00:00-04:00"
+  },
+  "sessionValid": {
+    "valid": true,
+    "state": "valid",
+    "errors": [],
+    "reusable": true,
+    "consumeOnUse": false,
+    "validUntil": "2026-09-28T17:00:00-04:00"
+  },
+  "sessionWrong": {
+    "valid": false,
+    "state": "invalid",
+    "errors": [
+      "session_ref_mismatch"
+    ],
+    "reusable": false,
+    "consumeOnUse": false,
+    "validUntil": "2026-09-28T17:00:00-04:00"
+  },
+  "expired": {
+    "valid": false,
+    "state": "expired",
+    "errors": [
+      "consent_expired"
+    ],
+    "reusable": false,
+    "consumeOnUse": true,
+    "validUntil": "2026-09-28T17:00:00-04:00"
+  },
+  "revoked": {
+    "valid": false,
+    "state": "revoked",
+    "errors": [
+      "consent_revoked"
+    ],
+    "reusable": false,
+    "consumeOnUse": false,
+    "validUntil": "2026-09-28T16:20:00-04:00"
+  }
+}
