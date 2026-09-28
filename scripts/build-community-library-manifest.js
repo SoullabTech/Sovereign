@@ -64,15 +64,16 @@ const OUT_PATH = path.join(REPO_ROOT, 'lib', 'community-library', 'manifest.gene
 //     are noted in the audit worksheet but not actioned in this pass.
 //
 // What survives is the public reading shelf:
-//   F (foundations, 5)        — calibration-grade, authored, structural
+//   F (foundations, 6)        — calibration-grade, authored, structural
 //   A (archetypal maps, 11)   — Hillman/Jungian lineage, framed as map
 //   P (principles, 1)         — system transparency
 //
 // Do not re-add anything cut here without re-running the field-coherence
 // pass. The shelf's job is to be small enough to actually mean something.
 const ALLOWLIST = {
-  // --- philosophical-foundations (F + F + A + F) ---
+  // --- philosophical-foundations (F + F + F + A + F) ---
   'the-relational-field': 'Community-Commons/library/the-relational-field.md',
+  'one-maia-many-fields': 'Community-Commons/library/one-maia-many-fields.md',
   'presence-continuity': 'docs/papers/presence-continuity.md',
   'jungian-alchemy-framework': 'docs/community-library/JUNGIAN_ALCHEMY_FRAMEWORK.md',
   'disposable-pixel-philosophy': 'docs/community-library/DISPOSABLE_PIXEL_PHILOSOPHY.md',
