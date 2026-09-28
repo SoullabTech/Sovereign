@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-09-28T20:55:59.459Z",
+  "parentLiveR3": "24706ae0d7e693c41ce3a9ae5218a1e96b7a4982",
+  "projected": true,
+  "runtimeSource": "synthetic_member_authored",
+  "runtimeConfidence": 0.81,
+  "runtimeTemporalStanding": "is_being",
+  "fixtureOnly": true,
+  "liveDataProjected": false,
+  "confidenceIncreased": false,
+  "temporalStandingStrengthened": false,
+  "authorityEscalated": false,
+  "persistenceAuthority": false,
+  "deliveryAuthority": false,
+  "promptMutationAuthority": false,
+  "productionAuthority": false,
+  "genuineLiveProjectionRefused": true,
+  "genuineLiveProjectionErrors": [
+    "fixture_attestation_required"
+  ]
+}

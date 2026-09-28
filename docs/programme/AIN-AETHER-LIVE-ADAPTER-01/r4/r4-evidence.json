@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-09-28T20:55:59.459Z",
+  "parentLiveR3": "24706ae0d7e693c41ce3a9ae5218a1e96b7a4982",
+  "projected": {
+    "projected": true,
+    "errors": [],
+    "runtimeEvent": {
+      "eventRef": "fixture-shadow:live-fixture:r4",
+      "synthetic": true,
+      "source": "synthetic_member_authored",
+      "domain": "work",
+      "observation": "Work feels more open this week.",
+      "temporalStanding": "is_being",
+      "confidence": 0.81,
+      "consent": "explicit_synthetic_consent",
+      "identityAuthority": false,
+      "diagnosticAuthority": false,
+      "predictiveAuthority": false,
+      "destinyAuthority": false,
+      "soulRepresentationAuthority": false,
+      "persistenceAuthority": false,
+      "finalMeaningAuthority": "member"
+    },
+    "provenance": {
+      "fixtureRef": "fixture-attestation:r4:witness",
+      "originalInputRef": "live-fixture:r4",
+      "originalMemberRef": "member:fixture",
+      "originalConsentRef": "consent:r4:witness",
+      "originalSource": "member_authored",
+      "originalDomain": "work",
+      "originalTemporalStanding": "is_being",
+      "originalConfidence": 0.81,
+      "fixtureOnly": true,
+      "liveDataProjected": false,
+      "confidenceIncreased": false,
+      "temporalStandingStrengthened": false,
+      "authorityEscalated": false,
+      "persistenceAuthority": false,
+      "deliveryAuthority": false,
+      "promptMutationAuthority": false,
+      "productionAuthority": false
+    }
+  },
+  "refusedWithoutAttestation": {
+    "projected": false,
+    "errors": [
+      "fixture_attestation_required"
+    ],
+    "runtimeEvent": null,
+    "provenance": null
+  }
+}
