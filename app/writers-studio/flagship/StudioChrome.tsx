@@ -79,7 +79,7 @@ export function StudioRail({ current, project, member, destinations = NAV_DESTIN
 }) {
   return (
     <nav className="fs-rail" aria-label="Studio navigation">
-      <div className="fs-mark" aria-hidden="true" />
+      <a className="fs-mark" href="/home" aria-label="Return to Soullab Home" />
       {destinations.map((d) => {
         const action = affordance === 'reference' ? undefined : nav?.[d];
         if (affordance === 'reference') return (

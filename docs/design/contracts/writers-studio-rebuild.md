@@ -20,6 +20,9 @@ surfaces:
   - app/writers-studio/sources/**
   - app/writers-studio/studioMap.ts
   - app/writers-studio/studio/StudioModeBar.tsx
+  # Shared Writer's Studio shell. HOME-02 adds only the larger Soullab Home
+  # return while preserving the Studio's own internal Home and mode composition.
+  - app/writers-studio/studio/WriterStudioShell.tsx
   # Shared orientation chrome used by the rebuild room. B0 repairs existing
   # token references only; these surfaces already serve this room's place and
   # movement awareness and acquire no new interaction or visual language here.

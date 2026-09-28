@@ -124,11 +124,15 @@ export function WriterStudioShell({
           background: GROUND.raised, flexShrink: 0,
         }}
       >
-        <Link href="/writers-studio" style={{ textDecoration: 'none' }}>
-          <StudioText role="bandLabel" tone="muted">
-            Soullab · Writer’s Studio
-          </StudioText>
-        </Link>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          <Link href="/home" aria-label="Return to Soullab Home" style={{ textDecoration: 'none' }}>
+            <StudioText role="bandLabel" tone="muted">Soullab</StudioText>
+          </Link>
+          <StudioText role="bandLabel" tone="muted">·</StudioText>
+          <Link href="/writers-studio" aria-label="Return to Writer’s Studio Home" style={{ textDecoration: 'none' }}>
+            <StudioText role="bandLabel" tone="muted">Writer’s Studio</StudioText>
+          </Link>
+        </div>
         <div style={{ minWidth: 0 }}>
           <StudioText role="workIdentity" style={{ opacity: workNamed ? 1 : 0.7 }}>
             {workName}

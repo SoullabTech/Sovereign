@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { FilePlus2, FolderInput, Loader2, NotebookPen, Trash2 } from 'lucide-react';
 import { PRESS, SERIF } from './pressTheme';
 import { REBUILD_HREF, IMPORT_HREF, SOURCE_INTAKE_HREF } from './studioMap';
@@ -783,21 +782,20 @@ export default function HomeView({
   const VISIBLE = 4;
   const shelfCards = showAll ? shelf : shelf.slice(0, VISIBLE);
 
-  const searchParams = useSearchParams();
-  const returnToHouse = searchParams?.get('from') === 'house';
-
   return (
     <main
       className="min-h-screen px-6 md:px-10 py-10 md:py-16"
       style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
     >
-      {returnToHouse ? (
-        <div className="max-w-4xl mx-auto mb-6">
-          <Link href="/house" className="text-[12px] opacity-45 hover:opacity-75 transition-opacity">
-            ← House
-          </Link>
-        </div>
-      ) : null}
+      <div className="max-w-4xl mx-auto mb-6">
+        <Link
+          href="/home"
+          aria-label="Return to Soullab Home"
+          className="text-[12px] opacity-45 hover:opacity-75 transition-opacity"
+        >
+          ← Soullab Home
+        </Link>
+      </div>
       {!loading ? <Hero /> : null}
 
       <div className="max-w-4xl mx-auto">
