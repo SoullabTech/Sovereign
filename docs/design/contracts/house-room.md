@@ -2,6 +2,7 @@
 room: House
 human_activity: arriving home to orient across the member's life, choose a place to enter, and encounter MAIA without turning the House into a dashboard or forcing any room to speak.
 surfaces:
+  - app/home/page.tsx
   - app/house/page.tsx
   - app/house/DecisionAccessNotice.tsx
   - app/house/MaiaThresholdLink.tsx
