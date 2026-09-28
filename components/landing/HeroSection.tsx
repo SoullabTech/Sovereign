@@ -8,8 +8,8 @@ import { useId } from 'react';
 export function HeroSection() {
   const auraId = useId().replace(/:/g, '');
 
-  const scrollToContact = () => {
-    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToPlatform = () => {
+    document.getElementById('platform')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -52,7 +52,7 @@ export function HeroSection() {
           className="mt-3 text-base sm:text-lg md:text-xl font-extralight italic text-white/50"
           style={{ fontFamily: "'Crimson Pro', serif" }}
         >
-          We study what carries transformation forward.
+          A living platform for inner life, relationship, creativity, and becoming.
         </motion.p>
 
         {/* Luminous holoflower — focal centerpiece */}
@@ -117,16 +117,16 @@ export function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link
-            href="/enter"
+            href="/home"
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 bg-maia-spice-500 hover:bg-maia-spice-400 text-black font-semibold text-base transition-colors shadow-lg shadow-maia-spice-500/20"
           >
-            Enter MAIA
+            Enter Soullab
           </Link>
           <button
-            onClick={scrollToContact}
+            onClick={scrollToPlatform}
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 border border-white/15 hover:border-white/30 text-white/60 hover:text-white font-medium text-base transition-colors"
           >
-            Work with Soullab
+            See what&rsquo;s inside
           </button>
         </motion.div>
 

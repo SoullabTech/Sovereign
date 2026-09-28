@@ -40,6 +40,7 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Landing & Marketing
   { exact: '/', public: true, notes: 'Studio landing page' },
+  { exact: '/home', public: true, notes: 'Soullab canonical entry — signed-out visitors see the Soullab threshold; authenticated members enter Home' },
   { exact: '/enter', public: true, notes: 'Smart routing entry point (MAIA/onboarding)' },
   { exact: '/faq', public: true, notes: 'Public FAQ' },
   { exact: '/downloads', public: true, notes: 'Downloads page' },
@@ -245,7 +246,8 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/field', minTier: 'free', notes: 'Field routes — all authenticated members' },
 
   // MAIA Interface (core) — all depth, open to all
-  { exact: '/maia', minTier: 'free', notes: 'MAIA main interface' },
+  { exact: '/maia', public: true, notes: 'Legacy MAIA threshold — routes people into canonical Soullab Home or explicit MAIA encounter' },
+  { exact: '/maia/encounter', minTier: 'free', notes: 'Direct MAIA encounter — authenticated member destination inside Soullab' },
   { exact: '/maia/reflection', minTier: 'free', notes: 'Developmental reflection — member-only (beta v0)' },
   { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },

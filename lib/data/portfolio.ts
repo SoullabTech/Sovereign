@@ -227,6 +227,48 @@ export const INNOVATIONS: Innovation[] = [
     category: 'knowledge-modality',
     publicBucket: 'architected_for_release',
   },
+  {
+    title: 'Living House / Home',
+    description: 'Soullab’s Home is the orienting field for the whole platform — a place to see what is alive, move between facets, and return without losing context.',
+    category: 'developmental-continuity',
+    publicBucket: 'available_today',
+  },
+  {
+    title: 'Cross-Facet Continuity',
+    description: 'Journal, Dream, Writing, Relationships, Astrology, Divination, and Becoming are being designed as one connected field rather than isolated apps, so meaning can travel without collapsing boundaries.',
+    category: 'developmental-continuity',
+    publicBucket: 'architected_for_release',
+  },
+  {
+    title: "Writer's Studio",
+    description: 'A manuscript-first environment for developmental reading, structure, continuity, voice, evidence-grounded editorial dialogue, alternatives, revision, and safe apply/undo while authorship remains with the writer.',
+    category: 'knowledge-modality',
+    publicBucket: 'architected_for_release',
+  },
+  {
+    title: 'Teaching Intelligence',
+    description: 'A governed teaching architecture helps MAIA orient, explain, illustrate, contrast, inquire, offer practice, and repair misunderstanding while preserving source and epistemic boundaries.',
+    category: 'knowledge-modality',
+    publicBucket: 'architected_for_release',
+  },
+  {
+    title: 'Governed Source Fabric',
+    description: 'A retrieval and provenance layer is being built to join canonical sources, research, counterevidence, and context without treating similarity as truth.',
+    category: 'knowledge-modality',
+    publicBucket: 'architected_for_release',
+  },
+  {
+    title: 'Relational Geometry Reasoning',
+    description: 'Research into representing perspective, relation, transformation, context, compatibility, and obstruction as a formal reasoning field rather than a flat list of facts.',
+    category: 'core-intelligence',
+    publicBucket: 'research',
+  },
+  {
+    title: 'Becoming / Possible Futures',
+    description: 'Research into holding past, present, intention, shadow, and multiple possible futures as one living field — without turning possibility into prediction.',
+    category: 'developmental-continuity',
+    publicBucket: 'research',
+  },
   // — Infrastructure —
   {
     title: 'Sovereign Infrastructure',

@@ -9,16 +9,28 @@ import { SectionReveal } from './SectionReveal';
 
 const PRINCIPLES = [
   {
+    title: 'One life, not feature silos',
+    body: 'Journal, Dream, Writing, Relationships, Astrology, Divination, Becoming, and MAIA are designed as distinct places in one field — not disconnected apps.',
+  },
+  {
     title: 'Continuity without surveillance',
-    body: 'MAIA remembers what matters across time — not everything. The goal is coherence, not capture.',
+    body: 'Soullab carries what you choose across time without treating total capture as the price of coherence.',
   },
   {
-    title: 'Informed, not authoritative',
-    body: 'Grounded in psychology, philosophy, and wisdom traditions from across cultures and generations — without claiming authority over your meaning.',
+    title: 'Human authority stays human',
+    body: 'MAIA can reflect, teach, research, and propose. Meaning, authorship, judgment, and decision remain with the member.',
   },
   {
-    title: 'Honest about what\'s built',
-    body: 'We distinguish what is live in production from what is architected for release, and from what is still research. That distinction matters.',
+    title: 'Sources stay visible',
+    body: 'Research, memory, symbolic traditions, and inference should remain distinguishable rather than being blended into one voice of certainty.',
+  },
+  {
+    title: 'Built to return you to life',
+    body: 'The platform is not designed to maximize time inside it. Its value is measured by what becomes more possible outside it.',
+  },
+  {
+    title: 'Honest about what is built',
+    body: 'We distinguish what is live in production, what is architected for release, and what remains research.',
   },
 ];
 
@@ -64,12 +76,20 @@ function InnovationCard({ innovation }: { innovation: Innovation }) {
   const title = innovation.statusLabel
     ? `${innovation.title} (${innovation.statusLabel})`
     : innovation.title;
+  const standing = innovation.publicBucket === 'available_today'
+    ? 'Live'
+    : innovation.publicBucket === 'architected_for_release'
+      ? 'In build'
+      : 'Research';
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-7 hover:border-white/20 hover:bg-white/[0.05] transition-all duration-300 h-full flex flex-col">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] tracking-wide uppercase text-white/25 border border-white/8">
           {categoryLabels[innovation.category]}
+        </span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] tracking-wide uppercase text-maia-spice-400/70 border border-maia-spice-500/15">
+          {standing}
         </span>
       </div>
       <h3 className="text-base font-semibold text-white mb-3 leading-tight">
@@ -88,6 +108,15 @@ const liveCount = INNOVATIONS.filter(i => i.publicBucket === 'available_today').
 const architectedCount = INNOVATIONS.filter(i => i.publicBucket === 'architected_for_release').length;
 const researchCount = INNOVATIONS.filter(i => i.publicBucket === 'research').length;
 
+const FEATURED_TITLES = [
+  'Living House / Home',
+  'Cross-Facet Continuity',
+  "Writer's Studio",
+  'Teaching Intelligence',
+  'Governed Source Fabric',
+  'Relational Geometry Reasoning',
+];
+
 export function ResearchSection() {
   const [capabilitiesOpen, setCapabilitiesOpen] = useState(false);
   const byBucket = (key: PublicBucket) => INNOVATIONS.filter(i => i.publicBucket === key);
@@ -102,31 +131,48 @@ export function ResearchSection() {
             className="text-3xl sm:text-4xl lg:text-5xl font-extralight tracking-wide text-white text-center mb-4"
             style={{ fontFamily: "'Crimson Pro', serif" }}
           >
-            Why MAIA feels different
+            What makes Soullab different
           </h2>
           <p className="text-white/40 text-center text-sm max-w-xl mx-auto mb-16" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-            These are not settings or preferences. They are the operating conditions built into MAIA by design.
+            These are not surface features. They are operating commitments and capabilities being built across Soullab, MAIA, and AIN OS.
           </p>
         </SectionReveal>
 
-        {/* Principles grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
+        {/* Principles — open field, not feature cards */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 mb-20 border-t border-white/10">
           {PRINCIPLES.map((p, i) => (
-            <SectionReveal key={p.title} delay={0.06 * i}>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-7 h-full flex flex-col">
+            <SectionReveal key={p.title} delay={0.05 * i}>
+              <div className="py-7 border-b border-white/10 h-full">
                 <h3
-                  className="text-base font-semibold text-white mb-3 leading-tight"
+                  className="text-base font-medium text-white/85 mb-3 leading-tight"
                   style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
                 >
                   {p.title}
                 </h3>
-                <p className="text-white/40 text-sm leading-relaxed flex-1" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
+                <p className="text-white/40 text-sm leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
                   {p.body}
                 </p>
               </div>
             </SectionReveal>
           ))}
         </div>
+
+        {/* Recent frontier — surfaced, not buried in the full capability ledger */}
+        <SectionReveal delay={0.08}>
+          <div className="mb-16">
+            <div className="mb-7 text-center">
+              <p className="text-[11px] tracking-[0.3em] uppercase text-white/30 mb-3">Recent work</p>
+              <h3 className="text-2xl sm:text-3xl font-extralight text-white/90" style={{ fontFamily: "'Crimson Pro', serif" }}>
+                The field is becoming more connected.
+              </h3>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {FEATURED_TITLES.map(title => INNOVATIONS.find(i => i.title === title)).filter((i): i is Innovation => !!i).map(innovation => (
+                <InnovationCard key={innovation.title} innovation={innovation} />
+              ))}
+            </div>
+          </div>
+        </SectionReveal>
 
         {/* Expandable capabilities */}
         <SectionReveal delay={0.1}>

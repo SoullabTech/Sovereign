@@ -35,8 +35,8 @@ function WelcomeBackContent() {
     const sessionState = betaSession.restoreSession();
 
     if (sessionState.isAuthenticated && sessionState.user) {
-      // User is already authenticated - redirect to /maia immediately
-      router.push('/maia');
+      // User is already authenticated - return to canonical Soullab Home
+      router.push('/home');
       return;
     }
 
@@ -112,8 +112,8 @@ function WelcomeBackContent() {
   const handleSignIn = () => {
     // Preserve partner context through sign-in
     const signInUrl = isPartnerEntry
-      ? `/signin?institution=${institution}&context=${context}`
-      : '/signin';
+      ? `/signin?institution=${institution}&context=${context}&next=${encodeURIComponent('/home')}`
+      : '/signin?next=/home';
     router.push(signInUrl);
   };
 

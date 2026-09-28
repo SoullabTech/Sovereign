@@ -184,6 +184,8 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   const preVerified = searchParams?.get('verified') === 'true';
   const emailParam = searchParams?.get('email') || '';
   const usernameParam = searchParams?.get('u') || '';
+  const requestedNext = searchParams?.get('next') || '';
+  const afterAuth = requestedNext.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : '/home';
 
   // `?verified=` and `?u=` still win — they name a specific person mid-flow.
   // Otherwise the arrival intent decides. A returning member opens on password;
@@ -305,9 +307,9 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     const t = setTimeout(() => controller.abort(), 3000);
     fetch('/api/auth/whoami', { credentials: 'include', signal: controller.signal })
       .then((r) => r.json())
-      .then((d) => { clearTimeout(t); if (d?.authed) window.location.replace('/maia'); })
+      .then((d) => { clearTimeout(t); if (d?.authed) window.location.replace(afterAuth); })
       .catch(() => clearTimeout(t));
-  }, [preVerified]);
+  }, [afterAuth, preVerified]);
 
   function storeSession(
     user: { id: string; username: string; name: string; preferredName?: string; onboarded: boolean },
@@ -331,8 +333,8 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     try { await deviceTrust.trustDevice(undefined, 'standard'); } catch { /* non-blocking */ }
   }
 
-  function enterMaia() {
-    window.location.assign(`/maia?ts=${Date.now()}`);
+  function enterSoullab() {
+    window.location.assign(afterAuth);
   }
 
   // ── Email → request a code ───────────────────────────────────────────────
@@ -385,7 +387,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
           preferredName: data.member.name, onboarded: !!data.member.onboarded,
         });
         await trustThisDevice();
-        enterMaia();
+        enterSoullab();
         return;
       }
       setPhase('name');
@@ -429,7 +431,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       });
       await trustThisDevice();
       if (bioAvailable && bioPlatformAvailable) { try { await biometricAuth.register(); markLocalPasskeyEvidence(); } catch { /* optional */ } }
-      window.location.assign(data.member.onboarded ? `/maia?ts=${Date.now()}` : '/onboarding');
+      window.location.assign(data.member.onboarded ? afterAuth : `/onboarding?next=${encodeURIComponent(afterAuth)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not complete signup. Please try again.');
       setIsLoading(false);
@@ -480,7 +482,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
           preferredName: res.member.preferredName, onboarded: res.member.onboarded,
         }, res.session?.token);
         await trustThisDevice();
-        enterMaia();
+        enterSoullab();
         return;
       }
       setIsLoading(false);
@@ -514,7 +516,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         onboarded: !!data.member?.onboarded,
       }, data.session?.token);
       await trustThisDevice();
-      enterMaia();
+      enterSoullab();
     } catch (err: any) {
       setError(err?.message || 'Sign in failed.');
       setIsLoading(false);
@@ -540,7 +542,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Google sign-in failed');
-        if (data.member) { storeSession(data.member); await trustThisDevice(); enterMaia(); }
+        if (data.member) { storeSession(data.member); await trustThisDevice(); enterSoullab(); }
         return;
       }
       window.location.href = '/api/auth/google/list';
@@ -566,7 +568,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Apple sign-in failed');
-        if (data.member) { storeSession(data.member); await trustThisDevice(); enterMaia(); }
+        if (data.member) { storeSession(data.member); await trustThisDevice(); enterSoullab(); }
         return;
       }
       window.location.href = '/api/auth/apple/list';
@@ -595,7 +597,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                 {usernameParam ? `Welcome back, ${usernameParam.charAt(0).toUpperCase() + usernameParam.slice(1).toLowerCase()}.` : 'Welcome'}
               </h1>
               <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
-                {usernameParam ? 'Continue your conversation with MAIA.' : 'Sign in with your username and password.'}
+                {usernameParam ? 'Return to Soullab.' : 'Sign in with your username and password.'}
               </p>
               {errorBlock}
               <form onSubmit={signInWithPassword} className="space-y-3">
@@ -632,18 +634,13 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                 Email me a sign-in code instead
               </button>
 
-              {/* The way out for someone who landed here without an account. /signin
-                  opens straight onto a password form, so without this a new person
-                  faces three doors they cannot open and no exit — the mirror of the
-                  "Already a member?" link /signup carries.
-
-                  Destination is /begin, not /signup: the onboarding invariant is a
-                  single entry point for new members (/begin → intro → induction →
-                  /maia). /signup is the email door for someone already headed in. */}
+              {/* A first-time visitor leaves the returning-member door for
+                  the joining door. Both preserve the intended post-auth destination,
+                  whose ordinary default is canonical Soullab Home. */}
               {mode === 'signin' && (
                 <p className="mt-6 text-xs text-slate-400/80 text-center">
                   New to Soullab?{' '}
-                  <a href="/begin" className="text-amber-300/90 hover:text-amber-200 transition-colors">Begin Journey</a>
+                  <a href={`/signup?next=${encodeURIComponent(afterAuth)}`} className="text-amber-300/90 hover:text-amber-200 transition-colors">Join Soullab</a>
                 </p>
               )}
             </motion.div>
@@ -656,7 +653,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               {errorBlock}
               <form onSubmit={completeSignup} className="space-y-3">
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoFocus className={inputCls} />
-                <button type="submit" disabled={isLoading} className={primaryBtn}>{isLoading ? 'Entering…' : 'Enter MAIA'}</button>
+                <button type="submit" disabled={isLoading} className={primaryBtn}>{isLoading ? 'Entering…' : 'Enter Soullab'}</button>
               </form>
               {/* Was: "an emailed code{bioAvailable ? ` or ${biometricLabel}`}". That
                   promised biometric return from device CAPABILITY, but the passkey
@@ -755,7 +752,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               {mode === 'signup' && (
                 <p className="mt-6 text-xs text-slate-400/80 text-center">
                   Already a member?{' '}
-                  <a href="/signin" className="text-amber-300/90 hover:text-amber-200 transition-colors">Sign in</a>
+                  <a href={`/signin?next=${encodeURIComponent(afterAuth)}`} className="text-amber-300/90 hover:text-amber-200 transition-colors">Sign in</a>
                 </p>
               )}
             </motion.div>
