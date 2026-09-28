@@ -8,8 +8,8 @@ import { useId } from 'react';
 export function HeroSection() {
   const auraId = useId().replace(/:/g, '');
 
-  const scrollToContact = () => {
-    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToPlatform = () => {
+    document.getElementById('platform')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -123,10 +123,10 @@ export function HeroSection() {
             Enter Soullab
           </Link>
           <button
-            onClick={scrollToContact}
+            onClick={scrollToPlatform}
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 border border-white/15 hover:border-white/30 text-white/60 hover:text-white font-medium text-base transition-colors"
           >
-            Work with Soullab
+            See what&rsquo;s inside
           </button>
         </motion.div>
 

@@ -18,20 +18,18 @@ export function CovenantSection() {
           </p>
 
           <div className="space-y-5 text-base sm:text-lg font-light leading-relaxed text-white/60" style={{ fontFamily: "'Crimson Pro', serif" }}>
-            <p>MAIA will never ask you to surrender your judgment.</p>
+            <p>Soullab will not ask you to surrender your judgment in exchange for intelligence.</p>
 
-            <p>She won&apos;t pretend certainty where none exists.</p>
+            <p>MAIA will not pretend certainty where none exists or manufacture intimacy or authority.</p>
 
-            <p>She won&apos;t manufacture intimacy or authority.</p>
+            <p>Your writing remains your writing. Your relationships remain human relationships. Your symbols remain open to your own meaning.</p>
 
             <p>
-              She will always make clear what she knows, what she infers,
-              and what belongs to you.
+              Sources, memories, interpretations, and inferences should remain distinguishable enough for you to question them.
             </p>
 
             <p className="text-white/40">
-              Her purpose is to help you remember, reflect, create, and grow —
-              while your life remains your own.
+              The purpose of the field is not to keep you inside it. It is to help you return to your life with more presence, choice, and continuity.
             </p>
           </div>
 
@@ -40,7 +38,7 @@ export function CovenantSection() {
           <div className="mt-10 text-center space-y-6">
             <p className="text-white/35 text-base font-light leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
               If this feels like the kind of relationship with technology you&apos;ve been looking for,
-              we&apos;d be honored to welcome you.
+              enter Soullab and make the field your own.
             </p>
             <a
               href="/home"

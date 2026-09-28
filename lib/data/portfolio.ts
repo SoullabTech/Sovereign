@@ -240,6 +240,12 @@ export const INNOVATIONS: Innovation[] = [
     publicBucket: 'architected_for_release',
   },
   {
+    title: "Writer's Studio",
+    description: 'A manuscript-first environment for developmental reading, structure, continuity, voice, evidence-grounded editorial dialogue, alternatives, revision, and safe apply/undo while authorship remains with the writer.',
+    category: 'knowledge-modality',
+    publicBucket: 'architected_for_release',
+  },
+  {
     title: 'Teaching Intelligence',
     description: 'A governed teaching architecture helps MAIA orient, explain, illustrate, contrast, inquire, offer practice, and repair misunderstanding while preserving source and epistemic boundaries.',
     category: 'knowledge-modality',

@@ -23,9 +23,9 @@ reference_surfaces:
 shared_with_house: deep navy field, Soullab identity, quiet spatial hierarchy, human language, and the sense of arriving somewhere rather than opening a dashboard
 distinct_to_room: signed-out visitors receive orientation and invitation only; personal data, living works, and active rooms remain behind authenticated Home
 
-screenshot_desktop: docs/design/contracts/screenshots/soullab-home-threshold-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/soullab-home-threshold-mobile.png
-experience_verification: Headless Chromium walked /home with no session at 1440x1100 and 390x844. Both rendered the Soullab threshold, the eight current field destinations, Join Soullab and Sign in; neither entered /maia or exposed member data.
+screenshot_desktop: docs/design/contracts/screenshots/soullab-landing-reconciled-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/soullab-landing-reconciled-mobile.png
+experience_verification: Headless Chromium walked the reconciled public landing at desktop and mobile and verified the simplified section order, Enter Soullab → /home, and the surfaced capability standing. Separate threshold witnesses at docs/design/contracts/screenshots/soullab-home-threshold-desktop.png and soullab-home-threshold-mobile.png verified signed-out /home shows the Soullab threshold, the eight current field destinations, Join Soullab and Sign in; neither entered /maia or exposed member data.
 ---
 
 # Soullab Entry — Experience Contract
