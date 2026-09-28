@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-09-28T16:58:28.120Z",
+  "frozenRuleBase": "46af35445407ec2afac5c9d198c3ee41a8441ce7",
+  "frozenBlindSetBase": "b64a501fadd3a0219db6630365bbe4b236109e2e",
+  "queryCount": 16,
+  "supportedCount": 8,
+  "unsupportedCount": 8,
+  "answerabilityAccuracy": 1,
+  "supportedFalseAbstentions": [],
+  "unsupportedFalseAnswers": [],
+  "supportedMustRecall": 1,
+  "fullSupportedMustCoverage": 8,
+  "decisionReasons": {
+    "sufficient": 8,
+    "unsupported_claim": 8
+  }
+}

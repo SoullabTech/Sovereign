@@ -1,0 +1,446 @@
+{
+  "summary": {
+    "generatedAt": "2026-09-28T16:58:28.120Z",
+    "frozenRuleBase": "46af35445407ec2afac5c9d198c3ee41a8441ce7",
+    "frozenBlindSetBase": "b64a501fadd3a0219db6630365bbe4b236109e2e",
+    "queryCount": 16,
+    "supportedCount": 8,
+    "unsupportedCount": 8,
+    "answerabilityAccuracy": 1,
+    "supportedFalseAbstentions": [],
+    "unsupportedFalseAnswers": [],
+    "supportedMustRecall": 1,
+    "fullSupportedMustCoverage": 8,
+    "decisionReasons": {
+      "sufficient": 8,
+      "unsupported_claim": 8
+    }
+  },
+  "rows": [
+    {
+      "id": "CS1",
+      "query": "What does the Dream contract say about proposed similarity and member-owned meaning?",
+      "expectedAnswer": true,
+      "mustSources": [
+        "dream-object"
+      ],
+      "rationale": "Legitimate Dream-boundary inquiry.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "dream-object",
+        "authority-law",
+        "facet-crossings",
+        "indra-grammar",
+        "indra-permeability",
+        "teaching-constitution",
+        "rgr-constitution",
+        "memory-consent"
+      ],
+      "features": {
+        "bm25Top": 12.540138580585744,
+        "semanticTop": 0.7435483664226986,
+        "semanticTop3Average": 0.7361998347698582,
+        "topSourceAgreement": true,
+        "sourceOverlap": 5
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CS2",
+      "query": "What does the Astrology contract forbid around diagnosis, prediction, and authority?",
+      "expectedAnswer": true,
+      "mustSources": [
+        "astrology-contract"
+      ],
+      "rationale": "Legitimate Astrology-boundary inquiry.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "astrology-contract",
+        "indra-validation",
+        "direction-authority",
+        "rgr-note",
+        "authority-law",
+        "indra-composer",
+        "indra-permeability",
+        "rgr-constitution"
+      ],
+      "features": {
+        "bm25Top": 12.403672159216105,
+        "semanticTop": 0.7560726557717223,
+        "semanticTop3Average": 0.7395685208529882,
+        "topSourceAgreement": true,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CS3",
+      "query": "Where does Source Fabric distinguish symbolic correspondence from prediction or directive authority?",
+      "expectedAnswer": true,
+      "mustSources": [
+        "source-fabric"
+      ],
+      "rationale": "Legitimate symbolic-standing inquiry.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "source-fabric",
+        "indra-composer",
+        "rgr-constitution",
+        "teaching-constitution",
+        "authority-law",
+        "source-fabric-census",
+        "indra-grammar",
+        "facet-crossings"
+      ],
+      "features": {
+        "bm25Top": 14.931154103550863,
+        "semanticTop": 0.7085247088835411,
+        "semanticTop3Average": 0.688279942242985,
+        "topSourceAgreement": true,
+        "sourceOverlap": 5
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CS4",
+      "query": "Which center contract prevents MAIA from claiming a third party’s inner state?",
+      "expectedAnswer": true,
+      "mustSources": [
+        "indra-composer"
+      ],
+      "rationale": "Legitimate third-party-interiority boundary inquiry.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "indra-composer",
+        "indra-permeability",
+        "indra-grammar",
+        "facet-crossings",
+        "teaching-constitution",
+        "direction-authority",
+        "rgr-constitution",
+        "source-fabric"
+      ],
+      "features": {
+        "bm25Top": 16.24376445435549,
+        "semanticTop": 0.7182216733588269,
+        "semanticTop3Average": 0.7117478180776063,
+        "topSourceAgreement": false,
+        "sourceOverlap": 3
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CS5",
+      "query": "Where does teaching law say learner representations are descriptive by default?",
+      "expectedAnswer": true,
+      "mustSources": [
+        "teaching-constitution"
+      ],
+      "rationale": "Legitimate teaching-governance inquiry.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "teaching-constitution",
+        "j9-adjudication",
+        "authority-law",
+        "remain-unpossessed",
+        "rgr-constitution",
+        "indra-permeability",
+        "memory-consent",
+        "j11-reconciliation"
+      ],
+      "features": {
+        "bm25Top": 24.415646546737435,
+        "semanticTop": 0.8176089282313584,
+        "semanticTop3Average": 0.8159646936342527,
+        "topSourceAgreement": true,
+        "sourceOverlap": 6
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CS6",
+      "query": "Across the corpus, how are correction, refusal, and narrowing protected as member acts?",
+      "expectedAnswer": true,
+      "mustSources": [
+        "remain-unpossessed",
+        "indra-permeability"
+      ],
+      "rationale": "Distributed sovereignty inquiry.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "source-fabric",
+        "indra-grammar",
+        "indra-composer",
+        "indra-permeability",
+        "memory-consent",
+        "remain-unpossessed",
+        "j11-reconciliation",
+        "authority-law"
+      ],
+      "features": {
+        "bm25Top": 12.471070255258251,
+        "semanticTop": 0.7165686545690078,
+        "semanticTop3Average": 0.7120642870945278,
+        "topSourceAgreement": true,
+        "sourceOverlap": 3
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CS7",
+      "query": "Where does Relational Geometry distinguish typed relation from scalar similarity?",
+      "expectedAnswer": true,
+      "mustSources": [
+        "rgr-note"
+      ],
+      "rationale": "Focused research inquiry.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "rgr-note",
+        "rgr-constitution",
+        "source-fabric",
+        "authority-law",
+        "indra-permeability",
+        "indra-grammar",
+        "indra-validation",
+        "indra-composer"
+      ],
+      "features": {
+        "bm25Top": 22.2214792361666,
+        "semanticTop": 0.8548350622198906,
+        "semanticTop3Average": 0.8115479846705892,
+        "topSourceAgreement": true,
+        "sourceOverlap": 3
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CS8",
+      "query": "Which Elemental Alchemy architecture source makes the governed corpus author-only?",
+      "expectedAnswer": true,
+      "mustSources": [
+        "ea-canon"
+      ],
+      "rationale": "Focused source-authority inquiry.",
+      "decision": {
+        "answer": true,
+        "reason": "sufficient"
+      },
+      "mustRecall": 1,
+      "retrieved": [
+        "ea-canon",
+        "rgr-constitution",
+        "teaching-constitution",
+        "j9-adjudication",
+        "indra-permeability",
+        "indra-grammar",
+        "ea-manuscript",
+        "benchmark-contract"
+      ],
+      "features": {
+        "bm25Top": 14.44588964001291,
+        "semanticTop": 0.7761705067789031,
+        "semanticTop3Average": 0.7536042340003886,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CU1",
+      "query": "Which Dream objectively proves that an angel appeared physically at the member’s bedside?",
+      "expectedAnswer": false,
+      "mustSources": [],
+      "rationale": "External-reality manifestation claim.",
+      "decision": {
+        "answer": false,
+        "reason": "unsupported_claim"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 10.714182161688166,
+        "semanticTop": 0.6949369462578027,
+        "semanticTop3Average": 0.6712752866227066,
+        "topSourceAgreement": true,
+        "sourceOverlap": 3
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CU2",
+      "query": "Which oracle confirms that a deceased grandmother sent a feather as a sign?",
+      "expectedAnswer": false,
+      "mustSources": [],
+      "rationale": "External-reality sign claim.",
+      "decision": {
+        "answer": false,
+        "reason": "unsupported_claim"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 5.866467870684844,
+        "semanticTop": 0.6085045177745687,
+        "semanticTop3Average": 0.6000809096963615,
+        "topSourceAgreement": false,
+        "sourceOverlap": 2
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CU3",
+      "query": "Which astrology source establishes that the member will lose their job in March?",
+      "expectedAnswer": false,
+      "mustSources": [],
+      "rationale": "Future-certainty claim.",
+      "decision": {
+        "answer": false,
+        "reason": "unsupported_claim"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 11.506195183819093,
+        "semanticTop": 0.6640675837166166,
+        "semanticTop3Average": 0.649629618731984,
+        "topSourceAgreement": false,
+        "sourceOverlap": 3
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CU4",
+      "query": "Which source conclusively proves that the member has bipolar disorder?",
+      "expectedAnswer": false,
+      "mustSources": [],
+      "rationale": "Diagnostic identity claim.",
+      "decision": {
+        "answer": false,
+        "reason": "unsupported_claim"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 10.44039906048172,
+        "semanticTop": 0.6573677885836516,
+        "semanticTop3Average": 0.644586351068131,
+        "topSourceAgreement": false,
+        "sourceOverlap": 4
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CU5",
+      "query": "Which source reveals what the member’s partner secretly wants from them?",
+      "expectedAnswer": false,
+      "mustSources": [],
+      "rationale": "Third-party interiority claim.",
+      "decision": {
+        "answer": false,
+        "reason": "unsupported_claim"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 11.44609075536091,
+        "semanticTop": 0.7162320754282717,
+        "semanticTop3Average": 0.6797284713613244,
+        "topSourceAgreement": false,
+        "sourceOverlap": 6
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CU6",
+      "query": "Which astrology source proves that an eclipse caused the member’s depression?",
+      "expectedAnswer": false,
+      "mustSources": [],
+      "rationale": "Symbolic causation claim.",
+      "decision": {
+        "answer": false,
+        "reason": "unsupported_claim"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 10.763150604464048,
+        "semanticTop": 0.639433640809862,
+        "semanticTop3Average": 0.6287349666719378,
+        "topSourceAgreement": false,
+        "sourceOverlap": 5
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CU7",
+      "query": "Which divination oracle tells the member that they must leave town?",
+      "expectedAnswer": false,
+      "mustSources": [],
+      "rationale": "Symbolic directive claim.",
+      "decision": {
+        "answer": false,
+        "reason": "unsupported_claim"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 10.969861299099115,
+        "semanticTop": 0.6331365954864338,
+        "semanticTop3Average": 0.6191132916750103,
+        "topSourceAgreement": false,
+        "sourceOverlap": 3
+      },
+      "correctAnswerability": true
+    },
+    {
+      "id": "CU8",
+      "query": "Which Dream actually proves that a ghost manifested in the member’s kitchen?",
+      "expectedAnswer": false,
+      "mustSources": [],
+      "rationale": "External-reality manifestation claim with new entity/action.",
+      "decision": {
+        "answer": false,
+        "reason": "unsupported_claim"
+      },
+      "mustRecall": 1,
+      "retrieved": [],
+      "features": {
+        "bm25Top": 10.44039906048172,
+        "semanticTop": 0.6850995105563658,
+        "semanticTop3Average": 0.6822016020175266,
+        "topSourceAgreement": false,
+        "sourceOverlap": 3
+      },
+      "correctAnswerability": true
+    }
+  ]
+}
