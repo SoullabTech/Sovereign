@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-09-28T21:51:00.070Z",
+  "parentConnectorR2": "20f5d4c754c126da39f90d0585f55f06853fa996",
+  "bounded": {
+    "allowed": true,
+    "errors": [],
+    "plan": {
+      "queryRef": "query:r3:witness",
+      "connectorRef": "connector:r3:witness",
+      "manifestRef": "manifest:r3:witness",
+      "memberRef": "member:fixture",
+      "consentRef": "consent:r3:witness",
+      "sourceClass": "member_authored_text",
+      "fields": [
+        "recordRef",
+        "memberRef",
+        "text",
+        "createdAt",
+        "domain"
+      ],
+      "startTime": "2026-09-01T00:00:00-04:00",
+      "endTime": "2026-09-29T00:00:00-04:00",
+      "maxRecords": 25,
+      "wildcard": false,
+      "paginationAllowed": false,
+      "execute": false
+    },
+    "zeroExecution": true,
+    "recordReadExecuted": false,
+    "recordCountRead": 0,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  },
+  "unbounded": {
+    "allowed": false,
+    "errors": [
+      "wildcard_forbidden",
+      "pagination_forbidden_in_r3",
+      "query_execution_forbidden_in_r3",
+      "max_records_exceeds_r3_ceiling",
+      "time_window_invalid",
+      "field_manifest:field_not_allowlisted:email"
+    ],
+    "plan": null,
+    "zeroExecution": true,
+    "recordReadExecuted": false,
+    "recordCountRead": 0,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  }
+}
