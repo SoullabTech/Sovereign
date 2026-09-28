@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-28T20:44:03.826Z",
+  "parentSyntheticClosure": "170c0b00a1467423a1f426a7ca0e23ea68929ba9",
+  "admitted": true,
+  "readOnly": true,
+  "persisted": false,
+  "delivered": false,
+  "maiaPromptMutated": false,
+  "finalMeaningAuthority": "member",
+  "noConsentRefused": true,
+  "authoritySmuggleRefused": true,
+  "persistenceAuthorized": false,
+  "memberFacingDeliveryAuthorized": false,
+  "maiaPromptMutationAuthorized": false,
+  "productionAuthority": false
+}

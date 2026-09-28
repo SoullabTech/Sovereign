@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-09-28T20:44:03.826Z",
+  "parentSyntheticClosure": "170c0b00a1467423a1f426a7ca0e23ea68929ba9",
+  "admitted": {
+    "admitted": true,
+    "errors": [],
+    "shadow": {
+      "inputRef": "live-fixture:r1",
+      "memberRef": "member:fixture",
+      "source": "member_authored",
+      "domain": "work",
+      "observation": "Work feels more open this week.",
+      "temporalStanding": "is_being",
+      "confidence": 0.81,
+      "consentRef": "consent:r1:fixture",
+      "readOnly": true,
+      "persisted": false,
+      "delivered": false,
+      "maiaPromptMutated": false,
+      "productionAuthority": false,
+      "identityAuthority": false,
+      "diagnosticAuthority": false,
+      "predictiveAuthority": false,
+      "destinyAuthority": false,
+      "soulRepresentationAuthority": false,
+      "finalMeaningAuthority": "member"
+    },
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  },
+  "noConsent": {
+    "admitted": false,
+    "errors": [
+      "live_consent_required"
+    ],
+    "shadow": null,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  },
+  "authoritySmuggle": {
+    "admitted": false,
+    "errors": [
+      "predictive_authority_forbidden",
+      "destiny_authority_forbidden",
+      "soul_representation_authority_forbidden",
+      "persistence_authority_forbidden",
+      "delivery_authority_forbidden",
+      "prompt_mutation_authority_forbidden",
+      "production_authority_forbidden",
+      "final_meaning_must_remain_member_owned",
+      "destiny_language_forbidden",
+      "soul_language_forbidden"
+    ],
+    "shadow": null,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  }
+}
