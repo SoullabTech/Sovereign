@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-09-28T20:15:00.696Z",
+  "parentAetherClosure": "297edbade3d1deab9311b93023852961797e23b2",
+  "constitutionSourceCommit": "297edbade3d1deab9311b93023852961797e23b2",
+  "readOnlyAllowed": true,
+  "forbiddenRefused": true,
+  "liveBindingAuthorized": false,
+  "benchmarkMutationAuthorized": false,
+  "productionAuthority": false,
+  "finalMeaningAuthority": "member",
+  "runtimeAuthority": false
+}

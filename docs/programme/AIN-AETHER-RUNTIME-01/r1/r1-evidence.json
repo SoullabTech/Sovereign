@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-09-28T20:15:00.696Z",
+  "parentAetherClosure": "297edbade3d1deab9311b93023852961797e23b2",
+  "constitution": {
+    "programme": "AIN-AETHER-01",
+    "sourceCommit": "297edbade3d1deab9311b93023852961797e23b2",
+    "standing": "closed_for_benchmark_scope",
+    "runtimeAuthority": false,
+    "personDefinitionAuthority": false,
+    "soulRepresentationAuthority": false,
+    "finalMeaningAuthority": "member",
+    "laws": [
+      "The system serves the dance; it does not become the dancer.",
+      "Aether reflects the member-in-field; it does not define the member.",
+      "Member correction has priority over field interpretation.",
+      "Aetheric gestalt is a partial field pattern, never the whole person.",
+      "Relation may reveal where to look; relation does not itself establish causation.",
+      "Humility is not vagueness. Depth is not authority.",
+      "Interpretation may change; lineage may only grow.",
+      "Memory may remain uncertain rather than become reconstructed fiction.",
+      "Temporal precision does not equal temporal authority.",
+      "Final meaning authority remains with the member.",
+      "Soul remains outside computational representation authority."
+    ]
+  },
+  "readOnly": {
+    "intentRef": "runtime-r1:read-only",
+    "allowed": true,
+    "allowedCapabilities": [
+      "read_constitution",
+      "read_benchmark_contracts",
+      "evaluate_candidate_against_constitution"
+    ],
+    "refusedCapabilities": [],
+    "reasons": [],
+    "liveBindingAuthorized": false,
+    "benchmarkMutationAuthorized": false,
+    "productionAuthority": false
+  },
+  "forbidden": {
+    "intentRef": "runtime-r1:forbidden",
+    "allowed": false,
+    "allowedCapabilities": [],
+    "refusedCapabilities": [
+      "bind_live_member_data",
+      "persist_member_field",
+      "mutate_maia_prompt",
+      "activate_production_route",
+      "write_back_to_benchmark_corpus"
+    ],
+    "reasons": [
+      "live_member_binding_not_authorized",
+      "member_field_persistence_not_authorized",
+      "maia_prompt_mutation_not_authorized",
+      "production_route_activation_not_authorized",
+      "benchmark_corpus_is_frozen"
+    ],
+    "liveBindingAuthorized": false,
+    "benchmarkMutationAuthorized": false,
+    "productionAuthority": false
+  }
+}
