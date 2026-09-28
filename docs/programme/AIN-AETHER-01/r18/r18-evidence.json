@@ -1,0 +1,189 @@
+{
+  "generatedAt": "2026-09-28T19:39:20.853Z",
+  "parentR17": "cd4faae325db6abeadfe5edd9851459bcd4c7a34",
+  "openConflict": {
+    "nodeRef": "repair:v1",
+    "evidence": [
+      {
+        "evidenceRef": "clock:1",
+        "nodeRef": "repair:v1",
+        "standing": "instrument_record",
+        "sourceRef": "runtime-clock",
+        "exactTimestamp": "2026-09-28T14:17:00-04:00"
+      },
+      {
+        "evidenceRef": "journal:1",
+        "nodeRef": "repair:v1",
+        "standing": "document_record",
+        "sourceRef": "journal-entry",
+        "calendarDate": "2026-09-27"
+      },
+      {
+        "evidenceRef": "memory:1",
+        "nodeRef": "repair:v1",
+        "standing": "human_memory",
+        "sourceRef": "member-memory",
+        "calendarDate": "2026-09-27"
+      },
+      {
+        "evidenceRef": "legacy:1",
+        "nodeRef": "repair:v1",
+        "standing": "coarse_import",
+        "sourceRef": "legacy-import",
+        "coarsePeriod": "late September 2026"
+      }
+    ],
+    "conflicts": [
+      {
+        "conflictRef": "temporal-conflict:clock:1:journal:1",
+        "nodeRef": "repair:v1",
+        "evidenceRefs": [
+          "clock:1",
+          "journal:1"
+        ],
+        "conflictKind": "exact_vs_date",
+        "status": "held_open"
+      },
+      {
+        "conflictRef": "temporal-conflict:clock:1:memory:1",
+        "nodeRef": "repair:v1",
+        "evidenceRefs": [
+          "clock:1",
+          "memory:1"
+        ],
+        "conflictKind": "calendar_vs_memory",
+        "status": "held_open"
+      }
+    ],
+    "selectedEvidenceRef": null,
+    "selectionReason": null,
+    "unresolvedConflict": true,
+    "forcedCollapse": false
+  },
+  "openConflictValidation": {
+    "valid": true,
+    "errors": []
+  },
+  "openConflictExplanation": {
+    "answer": "The temporal sources disagree, so the record keeps the conflict open rather than selecting one time as definitive.",
+    "evidenceRefs": [
+      "clock:1",
+      "journal:1",
+      "memory:1",
+      "legacy:1"
+    ],
+    "conflictRefs": [
+      "temporal-conflict:clock:1:journal:1",
+      "temporal-conflict:clock:1:memory:1"
+    ],
+    "selectedEvidenceRef": null,
+    "falseConsensus": false
+  },
+  "explicitRule": {
+    "nodeRef": "repair:v1",
+    "evidence": [
+      {
+        "evidenceRef": "clock:1",
+        "nodeRef": "repair:v1",
+        "standing": "instrument_record",
+        "sourceRef": "runtime-clock",
+        "exactTimestamp": "2026-09-28T14:17:00-04:00"
+      },
+      {
+        "evidenceRef": "journal:1",
+        "nodeRef": "repair:v1",
+        "standing": "document_record",
+        "sourceRef": "journal-entry",
+        "calendarDate": "2026-09-27"
+      },
+      {
+        "evidenceRef": "memory:1",
+        "nodeRef": "repair:v1",
+        "standing": "human_memory",
+        "sourceRef": "member-memory",
+        "calendarDate": "2026-09-27"
+      },
+      {
+        "evidenceRef": "legacy:1",
+        "nodeRef": "repair:v1",
+        "standing": "coarse_import",
+        "sourceRef": "legacy-import",
+        "coarsePeriod": "late September 2026"
+      }
+    ],
+    "conflicts": [
+      {
+        "conflictRef": "temporal-conflict:clock:1:journal:1",
+        "nodeRef": "repair:v1",
+        "evidenceRefs": [
+          "clock:1",
+          "journal:1"
+        ],
+        "conflictKind": "exact_vs_date",
+        "status": "resolved_by_explicit_rule",
+        "resolution": {
+          "selectedEvidenceRef": "clock:1",
+          "rule": "prefer_instrument_exact_timestamp"
+        }
+      },
+      {
+        "conflictRef": "temporal-conflict:clock:1:memory:1",
+        "nodeRef": "repair:v1",
+        "evidenceRefs": [
+          "clock:1",
+          "memory:1"
+        ],
+        "conflictKind": "calendar_vs_memory",
+        "status": "resolved_by_explicit_rule",
+        "resolution": {
+          "selectedEvidenceRef": "clock:1",
+          "rule": "prefer_instrument_exact_timestamp"
+        }
+      }
+    ],
+    "selectedEvidenceRef": "clock:1",
+    "selectionReason": "explicit_rule_prefer_instrument_exact_timestamp",
+    "unresolvedConflict": false,
+    "forcedCollapse": false
+  },
+  "explicitRuleValidation": {
+    "valid": true,
+    "errors": []
+  },
+  "explicitRuleExplanation": {
+    "answer": "The record selected one temporal source only because an explicit reconciliation rule was applied.",
+    "evidenceRefs": [
+      "clock:1",
+      "journal:1",
+      "memory:1",
+      "legacy:1"
+    ],
+    "conflictRefs": [
+      "temporal-conflict:clock:1:journal:1",
+      "temporal-conflict:clock:1:memory:1"
+    ],
+    "selectedEvidenceRef": "clock:1",
+    "falseConsensus": false
+  },
+  "uncontested": {
+    "nodeRef": "repair:v2",
+    "evidence": [
+      {
+        "evidenceRef": "journal:2",
+        "nodeRef": "repair:v2",
+        "standing": "document_record",
+        "sourceRef": "journal-entry",
+        "calendarDate": "2026-09-28"
+      }
+    ],
+    "conflicts": [],
+    "selectedEvidenceRef": "journal:2",
+    "selectionReason": "single_uncontested_temporal_evidence",
+    "unresolvedConflict": false,
+    "forcedCollapse": false
+  },
+  "uncontestedValidation": {
+    "valid": true,
+    "errors": []
+  }
+}

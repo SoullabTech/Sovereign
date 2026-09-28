@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-28T19:39:20.853Z",
+  "parentR17": "cd4faae325db6abeadfe5edd9851459bcd4c7a34",
+  "openConflict": true,
+  "openConflictCount": 2,
+  "openConflictSelected": null,
+  "humanMemoryPreserved": true,
+  "instrumentRecordPreserved": true,
+  "falseConsensus": false,
+  "explicitRuleSelected": "clock:1",
+  "explicitRuleReason": "explicit_rule_prefer_instrument_exact_timestamp",
+  "conflictHistoryPreservedAfterRule": true,
+  "forcedCollapse": false,
+  "uncontestedSelected": "journal:2",
+  "allValid": true
+}
