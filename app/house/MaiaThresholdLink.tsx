@@ -15,14 +15,14 @@ export function MaiaThresholdLink({ variant = 'mark' }: MaiaThresholdLinkProps =
 
   useEffect(() => {
     if (!crossing) return;
-    const id = window.setTimeout(() => router.push('/maia?from=house'), 760);
+    const id = window.setTimeout(() => router.push('/maia/encounter?from=home'), 760);
     return () => window.clearTimeout(id);
   }, [crossing, router]);
 
   // A navigation invitation, not a microphone or an in-House composer.
   const enterMaia = () => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      router.push('/maia?from=house');
+      router.push('/maia/encounter?from=home');
       return;
     }
     setCrossing(true);

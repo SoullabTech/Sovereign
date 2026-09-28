@@ -86,4 +86,4 @@ export function getStudioNavByCategory(): Record<StudioCategory, StudioNavItem[]
 }
 
 /** Return-to-MAIA route (used in Studio header) */
-export const RETURN_TO_MAIA_ROUTE = '/maia';
+export const RETURN_TO_MAIA_ROUTE = '/maia/encounter';

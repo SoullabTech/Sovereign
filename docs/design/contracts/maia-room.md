@@ -4,6 +4,7 @@ human_activity: entering direct relationship with MAIA while remaining oriented 
 
 surfaces:
   - app/maia/page.tsx
+  - app/maia/encounter/page.tsx
   - components/maia/MaiaShell.tsx
 
 change_class: experiential
@@ -23,14 +24,14 @@ distinct_to_room: MAIA is a direct relational encounter; the conversation remain
 
 screenshot_desktop: docs/design/contracts/screenshots/maia-room-home-return-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/maia-room-home-return-mobile.png
-experience_verification: Presentation fixture witness at desktop 1440x960 and mobile 390x844 verified that the MAIA room carries a single Home return, keeps MAIA centered as the destination, and does not render the old House sheet. Runtime route assertions separately verified /maia retains the canonical MAIA conversation surface and both spatial and legacy paths return to /home.
+experience_verification: Presentation fixture witness at desktop 1440x960 and mobile 390x844 verified that the MAIA encounter carries a single Home return, keeps MAIA centered as the destination, and does not render the old House sheet. Separate live local browser witnesses at docs/design/contracts/screenshots/maia-legacy-threshold-desktop.png and maia-legacy-threshold-mobile.png verified bare /maia now renders the compatibility threshold with Go to Soullab → /home. Runtime route assertions verify /maia/encounter hosts the canonical MAIA conversation and remains member-gated.
 ---
 
 # MAIA — Experience Contract
 
 ## What this room is for
 
-MAIA is the place for direct encounter with Soullab's relational intelligence. It is not Soullab's home page and it does not own the platform map. The member may remain in conversation or return to Home to reorient across the larger field.
+`/maia/encounter` is the place for direct encounter with Soullab's relational intelligence. Bare `/maia` is only a compatibility threshold that returns old bookmarks and direct visitors to Soullab. MAIA does not own the platform map; the member may remain in conversation or return to Home to reorient across the larger field.
 
 ## Arrival
 

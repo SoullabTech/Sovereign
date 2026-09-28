@@ -17,8 +17,8 @@ describe('Soullab home route authority', () => {
     expect(HOUSE).toContain('<HouseExperience current="house" />');
   });
 
-  it('House still opens the existing MAIA conversation route', () => {
-    expect(THRESHOLD).toContain("router.push('/maia?from=house')");
-    expect(THRESHOLD).not.toContain('/maia/encounter');
+  it('Home opens the explicit MAIA encounter route, never bare /maia', () => {
+    expect(THRESHOLD).toContain("router.push('/maia/encounter?from=home')");
+    expect(THRESHOLD).not.toContain("router.push('/maia?from=house')");
   });
 });

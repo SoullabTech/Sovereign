@@ -117,7 +117,7 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     icon: Flame,
     tooltip: 'Return to center field',
     kind: 'route',
-    route: '/maia',
+    route: '/maia/encounter',
     audience: 'all',
     nativePolicy: 'native',
     nativeReady: true,

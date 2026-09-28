@@ -22,11 +22,11 @@ The public website may invite a visitor to **Enter Soullab**.
 
 That action enters canonical **`/home`**. It does not deep-link a visitor into the MAIA conversation room.
 
-`/maia` remains a valid direct encounter route for MAIA, bookmarks, internal invitations, and compatibility. Its presentation must belong to the current Soullab field rather than preserve an obsolete House as a competing platform shell.
+Bare `/maia` is a compatibility threshold, not the live encounter. It orients old bookmarks and direct visitors back into Soullab Home. The live direct MAIA relationship surface is `/maia/encounter`, entered deliberately from Home or another explicit member gesture.
 
 The experience law is:
 
-> **Enter Soullab → arrive Home → move through facets → encounter MAIA anywhere she is useful → return Home without losing the field.**
+> **Enter Soullab → arrive Home → move through facets → deliberately enter `/maia/encounter` when MAIA is wanted → return Home without losing the field.**
 
 Old MAIA runtime substrate may remain where technically useful. Old MAIA/House presentation does not retain product-identity authority.
 

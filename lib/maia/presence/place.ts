@@ -103,7 +103,7 @@ export const GOVERNED_ROOMS: readonly GoverendRoom[] = [
 ] as const;
 
 /** Full conversation surfaces — the handle/sheet is suppressed here (the page IS the relationship surface). */
-export const FULL_CONVERSATION_ROUTES = ['/maia', '/studio/maia', '/field/talk'] as const;
+export const FULL_CONVERSATION_ROUTES = ['/maia', '/maia/encounter', '/studio/maia', '/field/talk'] as const;
 
 /** Resolve the governed room for a pathname, or null when the route is not governed. Longest prefix wins. */
 export function resolveGovernedRoom(pathname: string): GoverendRoom | null {
