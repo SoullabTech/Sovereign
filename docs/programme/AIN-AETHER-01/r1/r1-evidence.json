@@ -1,0 +1,241 @@
+{
+  "generatedAt": "2026-09-28T18:16:03.804Z",
+  "parentSourceFabric": "f4fa850243fbd7c19fb2186b9ecb34b3d447cde2",
+  "field": {
+    "fieldRef": "member-field:r1-witness",
+    "observations": [
+      {
+        "observationRef": "journal:courage",
+        "facetRef": "journal",
+        "motif": "Courage",
+        "temporalStanding": "has_been",
+        "standing": "member_named",
+        "qualities": [
+          "resonance"
+        ],
+        "note": "Earlier member-authored reflection named courage."
+      },
+      {
+        "observationRef": "work:courage",
+        "facetRef": "work",
+        "motif": "Courage",
+        "temporalStanding": "is_being",
+        "standing": "source_observed",
+        "qualities": [
+          "directionality",
+          "threshold"
+        ],
+        "note": "Current work material carries a courage motif."
+      },
+      {
+        "observationRef": "dream:courage",
+        "facetRef": "dream",
+        "motif": "Courage",
+        "temporalStanding": "may_become",
+        "standing": "maia_hypothesis",
+        "qualities": [
+          "latency",
+          "resonance"
+        ],
+        "note": "Dream material may resonate with the motif."
+      },
+      {
+        "observationRef": "relationship:solitude",
+        "facetRef": "relationship",
+        "motif": "Solitude",
+        "temporalStanding": "is_being",
+        "standing": "member_named",
+        "qualities": [
+          "tension"
+        ],
+        "note": "The member names a current need for solitude."
+      },
+      {
+        "observationRef": "relationship:intimacy",
+        "facetRef": "relationship",
+        "motif": "Intimacy",
+        "temporalStanding": "is_being",
+        "standing": "member_named",
+        "qualities": [
+          "resonance"
+        ],
+        "note": "The member also names longing for intimacy."
+      }
+    ],
+    "patterns": [
+      {
+        "patternRef": "aether-pattern:courage",
+        "motif": "Courage",
+        "contributingObservationRefs": [
+          "journal:courage",
+          "work:courage",
+          "dream:courage"
+        ],
+        "contributingFacetRefs": [
+          "journal",
+          "work",
+          "dream"
+        ],
+        "temporalStandings": [
+          "has_been",
+          "is_being",
+          "may_become"
+        ],
+        "movements": [
+          "converging",
+          "recurring",
+          "latent",
+          "threshold"
+        ],
+        "qualities": [
+          "resonance",
+          "directionality",
+          "threshold",
+          "latency"
+        ],
+        "contradictionRefs": [],
+        "uncertainty": 0.35,
+        "memberRecognition": "unreviewed",
+        "provisional": true,
+        "identityAuthority": false,
+        "diagnosticAuthority": false,
+        "predictiveAuthority": false,
+        "soulRepresentationAuthority": false
+      },
+      {
+        "patternRef": "aether-pattern:solitude",
+        "motif": "Solitude",
+        "contributingObservationRefs": [
+          "relationship:solitude"
+        ],
+        "contributingFacetRefs": [
+          "relationship"
+        ],
+        "temporalStandings": [
+          "is_being"
+        ],
+        "movements": [
+          "diverging"
+        ],
+        "qualities": [
+          "tension"
+        ],
+        "contradictionRefs": [
+          "relationship:solitude-intimacy"
+        ],
+        "uncertainty": 0.15,
+        "memberRecognition": "unreviewed",
+        "provisional": true,
+        "identityAuthority": false,
+        "diagnosticAuthority": false,
+        "predictiveAuthority": false,
+        "soulRepresentationAuthority": false
+      },
+      {
+        "patternRef": "aether-pattern:intimacy",
+        "motif": "Intimacy",
+        "contributingObservationRefs": [
+          "relationship:intimacy"
+        ],
+        "contributingFacetRefs": [
+          "relationship"
+        ],
+        "temporalStandings": [
+          "is_being"
+        ],
+        "movements": [
+          "diverging"
+        ],
+        "qualities": [
+          "resonance"
+        ],
+        "contradictionRefs": [
+          "relationship:solitude-intimacy"
+        ],
+        "uncertainty": 0.15,
+        "memberRecognition": "unreviewed",
+        "provisional": true,
+        "identityAuthority": false,
+        "diagnosticAuthority": false,
+        "predictiveAuthority": false,
+        "soulRepresentationAuthority": false
+      }
+    ],
+    "contradictions": [
+      {
+        "contradictionRef": "relationship:solitude-intimacy",
+        "observationRefs": [
+          "relationship:solitude",
+          "relationship:intimacy"
+        ],
+        "note": "Solitude and intimacy are both presently meaningful.",
+        "status": "held_open"
+      }
+    ],
+    "absences": [
+      {
+        "absenceRef": "work-next-form",
+        "subject": "the exact next form of work",
+        "status": "latent",
+        "note": "Direction may be present while concrete form remains unknown."
+      }
+    ],
+    "fieldStatus": "changing",
+    "finalMeaningAuthority": "member",
+    "persistenceAuthority": false
+  },
+  "validation": {
+    "valid": true,
+    "errors": []
+  },
+  "couragePattern": {
+    "patternRef": "aether-pattern:courage",
+    "motif": "Courage",
+    "contributingObservationRefs": [
+      "journal:courage",
+      "work:courage",
+      "dream:courage"
+    ],
+    "contributingFacetRefs": [
+      "journal",
+      "work",
+      "dream"
+    ],
+    "temporalStandings": [
+      "has_been",
+      "is_being",
+      "may_become"
+    ],
+    "movements": [
+      "converging",
+      "recurring",
+      "latent",
+      "threshold"
+    ],
+    "qualities": [
+      "resonance",
+      "directionality",
+      "threshold",
+      "latency"
+    ],
+    "contradictionRefs": [],
+    "uncertainty": 0.35,
+    "memberRecognition": "unreviewed",
+    "provisional": true,
+    "identityAuthority": false,
+    "diagnosticAuthority": false,
+    "predictiveAuthority": false,
+    "soulRepresentationAuthority": false
+  },
+  "correctionWitness": {
+    "rejectedRecognition": "rejected",
+    "rejectionPreservedObservationCount": 5,
+    "temporalStandingAfter": "has_been",
+    "temporalPatternStandings": [
+      "has_been",
+      "is_being"
+    ],
+    "exclusionRemovedObservation": true,
+    "exclusionRemovedFacet": true
+  }
+}

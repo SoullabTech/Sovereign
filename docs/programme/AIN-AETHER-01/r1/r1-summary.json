@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-09-28T18:16:03.804Z",
+  "parentSourceFabric": "f4fa850243fbd7c19fb2186b9ecb34b3d447cde2",
+  "valid": true,
+  "patternCount": 3,
+  "contradictionCount": 1,
+  "absenceCount": 1,
+  "courageFacets": [
+    "journal",
+    "work",
+    "dream"
+  ],
+  "courageTemporalStandings": [
+    "has_been",
+    "is_being",
+    "may_become"
+  ],
+  "courageMovements": [
+    "converging",
+    "recurring",
+    "latent",
+    "threshold"
+  ],
+  "memberOwnsFinalMeaning": true,
+  "persistenceAuthority": false,
+  "rejectionPreservesSources": true,
+  "temporalCorrectionRecomputes": true,
+  "exclusionRecomputes": true
+}
