@@ -1,0 +1,123 @@
+{
+  "generatedAt": "2026-09-28T19:41:56.499Z",
+  "parentR18": "05ae99fcc6578f51cc9430bb8a548947804c7215",
+  "decisions": {
+    "system": {
+      "nodeRef": "repair:v1",
+      "question": "system_record_time",
+      "selectedEvidenceRef": "clock:1",
+      "selectedStanding": "instrument_record",
+      "answer": "For system-record time, the relevant source is clock:1: 2026-09-28T14:17:00-04:00.",
+      "alternatives": [
+        "journal:1",
+        "memory:1",
+        "period:1",
+        "sequence:1"
+      ],
+      "ambiguityRequiresClarification": false,
+      "universalWinner": false
+    },
+    "document": {
+      "nodeRef": "repair:v1",
+      "question": "document_date",
+      "selectedEvidenceRef": "journal:1",
+      "selectedStanding": "document_record",
+      "answer": "For document date, the relevant source is journal:1: 2026-09-27.",
+      "alternatives": [
+        "clock:1",
+        "memory:1",
+        "period:1",
+        "sequence:1"
+      ],
+      "ambiguityRequiresClarification": false,
+      "universalWinner": false
+    },
+    "remembered": {
+      "nodeRef": "repair:v1",
+      "question": "remembered_time",
+      "selectedEvidenceRef": "memory:1",
+      "selectedStanding": "human_memory",
+      "answer": "For remembered time, the relevant source is memory:1: 2026-09-27.",
+      "alternatives": [
+        "clock:1",
+        "journal:1",
+        "period:1",
+        "sequence:1"
+      ],
+      "ambiguityRequiresClarification": false,
+      "universalWinner": false
+    },
+    "period": {
+      "nodeRef": "repair:v1",
+      "question": "interpretive_period",
+      "selectedEvidenceRef": "period:1",
+      "selectedStanding": "coarse_import",
+      "answer": "For interpretive period, the relevant source is period:1: late September 2026.",
+      "alternatives": [
+        "clock:1",
+        "journal:1",
+        "memory:1",
+        "sequence:1"
+      ],
+      "ambiguityRequiresClarification": false,
+      "universalWinner": false
+    },
+    "sequence": {
+      "nodeRef": "repair:v1",
+      "question": "relative_sequence",
+      "selectedEvidenceRef": "sequence:1",
+      "selectedStanding": "sequence_constraint",
+      "answer": "For relative sequence, the relevant source is sequence:1: after repair:v0 and before repair:v2.",
+      "alternatives": [
+        "clock:1",
+        "journal:1",
+        "memory:1",
+        "period:1"
+      ],
+      "ambiguityRequiresClarification": false,
+      "universalWinner": false
+    },
+    "ambiguous": {
+      "nodeRef": "repair:v1",
+      "question": "unspecified_when",
+      "selectedEvidenceRef": null,
+      "selectedStanding": null,
+      "answer": "There are multiple kinds of temporal evidence here. Which time do you mean: system-record time, document date, remembered time, interpretive period, or relative sequence?",
+      "alternatives": [
+        "clock:1",
+        "journal:1",
+        "memory:1",
+        "period:1",
+        "sequence:1"
+      ],
+      "ambiguityRequiresClarification": true,
+      "universalWinner": false
+    }
+  },
+  "validations": {
+    "system": {
+      "valid": true,
+      "errors": []
+    },
+    "document": {
+      "valid": true,
+      "errors": []
+    },
+    "remembered": {
+      "valid": true,
+      "errors": []
+    },
+    "period": {
+      "valid": true,
+      "errors": []
+    },
+    "sequence": {
+      "valid": true,
+      "errors": []
+    },
+    "ambiguous": {
+      "valid": true,
+      "errors": []
+    }
+  }
+}
