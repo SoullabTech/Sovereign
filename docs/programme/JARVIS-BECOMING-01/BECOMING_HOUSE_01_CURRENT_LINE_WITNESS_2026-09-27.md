@@ -168,10 +168,10 @@ Fresh current-line screenshots were captured on `3802`; the 390×844 mobile rend
 
 ## Standing
 
-**BECOMING-HOUSE-01 — CURRENT HOUSE-LINE LOCAL INTEGRATION PASS · GOVERNED READ-ONLY SOURCE PORT LIVE · FOUNDER HOUSE WALK OUTSTANDING · NO CANONICAL MERGE · NO 3597 / PRODUCTION MUTATION.**
+**BECOMING-HOUSE-01 — FOUNDER ACCEPTED · CURRENT HOUSE-LINE LOCAL INTEGRATION PASS · GOVERNED READ-ONLY SOURCE PORT LIVE · NO CANONICAL MERGE · NO 3597 / PRODUCTION MUTATION.**
 
-The next act is human:
+Founder witness, 27 September 2026: the complete House-integrated Becoming experience was walked from the real House and accepted as **perfect**.
 
-> Open the current-line candidate, enter Becoming from the real House, and confirm that the accepted room still feels like itself now that it is actually one of the House facets.
+The House-integration human gate is therefore closed.
 
-Only after that founder witness should merge / promotion be adjudicated.
+This acceptance authorizes no canonical merge or production promotion by itself. The next engineering boundary is governed facet-by-facet connection to the existing Indra's Web field, preserving explicit source authority and the rule that native interconnectedness never becomes silent access.
