@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-09-28T16:31:34.898Z",
+  "model": "nomic-embed-text",
+  "corpus": {
+    "sources": 26,
+    "chunks": 1735
+  },
+  "referenceParameters": {
+    "rrfK": 60,
+    "candidatePoolPerLane": 26,
+    "finalLimit": 8,
+    "metadataWeight": 0.003,
+    "dualLaneBonus": 0.001,
+    "abstention": {
+      "focused": {
+        "semanticTop": 0.68,
+        "bm25Top": 13,
+        "sourceOverlap": 4
+      },
+      "distributed": {
+        "semanticTop3Average": 0.64
+      },
+      "predictionSupported": false
+    }
+  },
+  "methods": {
+    "rrf": {
+      "mustRecall": 0.9513888888888888,
+      "helpfulRecall": 0.8402777777777778,
+      "bridgeRecall": 0.9861111111111112,
+      "counterevidenceRecall": 1,
+      "irrelevantRate": 0.6979166666666666,
+      "sourceClassDiversity": 1.625,
+      "usefulPerThousandTokens": 7.9807457540873195,
+      "hardFailQueries": 0,
+      "abstainedQueries": 0,
+      "positiveFalseAbstentions": 0,
+      "negativeFalsePositiveQueries": 6,
+      "abstentionReasons": {}
+    },
+    "callosal": {
+      "mustRecall": 0.9513888888888888,
+      "helpfulRecall": 0.8472222222222222,
+      "bridgeRecall": 0.9861111111111112,
+      "counterevidenceRecall": 1,
+      "irrelevantRate": 0.6944444444444444,
+      "sourceClassDiversity": 1.6388888888888888,
+      "usefulPerThousandTokens": 8.001273105229352,
+      "hardFailQueries": 0,
+      "abstainedQueries": 0,
+      "positiveFalseAbstentions": 0,
+      "negativeFalsePositiveQueries": 6,
+      "abstentionReasons": {}
+    },
+    "callosal_abstention": {
+      "mustRecall": 0.9513888888888888,
+      "helpfulRecall": 0.8472222222222222,
+      "bridgeRecall": 0.9861111111111112,
+      "counterevidenceRecall": 1,
+      "irrelevantRate": 0.6111111111111112,
+      "sourceClassDiversity": 1.6388888888888888,
+      "usefulPerThousandTokens": 8.001273105229352,
+      "hardFailQueries": 0,
+      "abstainedQueries": 6,
+      "positiveFalseAbstentions": 0,
+      "negativeFalsePositiveQueries": 0,
+      "abstentionReasons": {
+        "weak_distributed_evidence": 2,
+        "weak_focused_evidence": 3,
+        "unsupported_claim": 1
+      }
+    }
+  }
+}
