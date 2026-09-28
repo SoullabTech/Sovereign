@@ -152,18 +152,11 @@ review_migration_custody_or_abort() {
     local record="${REVIEW_CUSTODY_RECORD:-}"
     local review="${REVIEW_CUSTODY_REVIEW:-}"
     local trace="${REVIEW_CUSTODY_TRACE:-}"
-    local custody_mode="${MIGRATION_CUSTODY_MODE:-single}"
-
-    if [ "$custody_mode" != "single" ] && [ "$custody_mode" != "two-layer" ]; then
-        log_error "⛔ $phase aborted before migration: unknown MIGRATION_CUSTODY_MODE=$custody_mode"
-        return 1
-    fi
-
     if [ -z "$record" ] || [ -z "$review" ] || [ -z "$trace" ]; then
         log_error "════════════════════════════════════════════════════════════════"
         log_error "⛔ DATABASE MIGRATION REVIEW REQUIRED — $phase REFUSED"
         log_error "════════════════════════════════════════════════════════════════"
-        log_error "Pending migrations exist, but the base custody triplet is incomplete."
+        log_error "Pending migrations exist, but the bound evidence triplet is incomplete."
         log_error "Set REVIEW_CUSTODY_RECORD, REVIEW_CUSTODY_REVIEW, REVIEW_CUSTODY_TRACE."
         log_error "Self-reported coverage is not accepted."
         printf '%s\n' "$pending" | sed 's/^/  pending: /' >&2
@@ -171,12 +164,20 @@ review_migration_custody_or_abort() {
     fi
 
     local gate_root="${MAIA_BUILD_CONTEXT:-$PROJECT_DIR}"
+    local gate="$gate_root/scripts/review-custody-migration-gate.ts"
+    if [ ! -f "$gate" ]; then
+        log_error "⛔ Migration review gate is absent from target context: $gate"
+        return 1
+    fi
     local tsx_bin="$PROJECT_DIR/node_modules/.bin/tsx"
     if [ ! -x "$tsx_bin" ]; then
         log_error "⛔ Migration review gate cannot execute: host tsx unavailable at $tsx_bin"
         return 1
     fi
 
+    # DEPLOYMENT-SAFETY-03 / STEP 2B: compatibility is relational to
+    # the reader that is actually live before any swap. Missing/unresolvable
+    # identity refuses; a guessed old reader would make compatibility meaningless.
     local old_stamp old_reader
     old_stamp="$(docker exec maia-sovereign printenv GIT_COMMIT 2>/dev/null || true)"
     if [ -z "$old_stamp" ]; then
@@ -189,54 +190,20 @@ review_migration_custody_or_abort() {
         return 1
     fi
 
+    local args=(--record "$record" --review "$review" --trace "$trace"
+                --repo "$PROJECT_DIR" --target "$target" --old-reader "$old_reader")
     local m
-    if [ "$custody_mode" = "single" ]; then
-        local gate="$gate_root/scripts/review-custody-migration-gate.ts"
-        if [ ! -f "$gate" ]; then
-            log_error "⛔ Migration review gate is absent from target context: $gate"
-            return 1
-        fi
-        local args=(--record "$record" --review "$review" --trace "$trace"
-                    --repo "$PROJECT_DIR" --target "$target" --old-reader "$old_reader")
-        while IFS= read -r m; do
-            [ -n "$m" ] && args+=(--migration "$m")
-        done <<< "$pending"
+    while IFS= read -r m; do
+        [ -n "$m" ] && args+=(--migration "$m")
+    done <<< "$pending"
 
-        log_info "REVIEW-CUSTODY + MIGRATION-COMPATIBILITY: checking exact pending relation..."
-        if ! "$tsx_bin" "$gate" "${args[@]}"; then
-            log_error "⛔ $phase aborted before migration: review/compatibility gate does not apply."
-            return 1
-        fi
-    else
-        local delta_review="${MIGRATION_DELTA_REVIEW:-}"
-        local delta_projection="${MIGRATION_DELTA_PROJECTION:-}"
-        if [ -z "$delta_review" ] || [ -z "$delta_projection" ]; then
-            log_error "⛔ $phase aborted before migration: two-layer custody evidence is incomplete."
-            log_error "   Set MIGRATION_DELTA_REVIEW and MIGRATION_DELTA_PROJECTION."
-            return 1
-        fi
-        local composite_gate="$gate_root/scripts/migration-custody-composition-gate.ts"
-        if [ ! -f "$composite_gate" ]; then
-            log_error "⛔ Two-layer migration custody gate is absent from target context: $composite_gate"
-            return 1
-        fi
-        local composite_args=(--repo "$PROJECT_DIR"
-            --base-record "$record" --base-review "$review"
-            --delta-review "$delta_review" --projection "$delta_projection"
-            --live-reader "$old_reader" --target "$target")
-        while IFS= read -r m; do
-            [ -n "$m" ] && composite_args+=(--migration "$m")
-        done <<< "$pending"
-
-        log_info "TWO-LAYER REVIEW-CUSTODY: checking base migration review + exact reader delta..."
-        if ! "$tsx_bin" "$composite_gate" "${composite_args[@]}"; then
-            log_error "⛔ $phase aborted before migration: two-layer custody composition does not apply."
-            return 1
-        fi
+    log_info "REVIEW-CUSTODY + MIGRATION-COMPATIBILITY: checking exact pending relation..."
+    if ! "$tsx_bin" "$gate" "${args[@]}"; then
+        log_error "⛔ $phase aborted before migration: review/compatibility gate does not apply."
+        return 1
     fi
-
     MIGRATION_COMPAT_EXPECTED_OLD_READER="$old_reader"
-    log_success "Migration custody + old-reader compatibility apply to the exact pending set"
+    log_success "Migration review custody + old-reader compatibility apply to the exact pending set"
 }
 
 rewitness_migration_relation_or_abort() {
@@ -862,7 +829,6 @@ cmd_migrate() {
     cd "$PROJECT_DIR"
 
     # Migration-only production acts are governed by the same bound review.
-    # Step 3 migrate-before-swap ordering remains scoped to deploy/update.
     review_migration_custody_or_abort "Migration-only run"
 
     docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate
