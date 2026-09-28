@@ -24,5 +24,7 @@
     "journeyGuide": "sanctuary-ephemeral-current-journey-only",
     "postReturnMaia": "continuity-explicit-only",
     "maiaHandoff": "fixed-localhost-canonical-route"
-  }
+  },
+  "candidate_behavior_source": "d896f22ebf8a1c86b2ffc683de2c3fa20ad0d718",
+  "preview_repository_head": "965abd31f5416c35248573c35f3d4d33613025a4"
 }

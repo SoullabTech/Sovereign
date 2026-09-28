@@ -1,0 +1,17 @@
+{
+  "guideNoHeaderStatus": 403,
+  "guideStatus": 200,
+  "guideUpstream": {
+    "sanctuary": true,
+    "memoryMode": "ephemeral",
+    "conversationHistory": [],
+    "cookieForwarded": true
+  },
+  "historySmuggleStatus": 400,
+  "postReturn": {
+    "status": 200,
+    "sanctuary": false,
+    "memoryMode": "continuity",
+    "conversationHistoryCount": 1
+  }
+}

@@ -1,0 +1,328 @@
+TAP version 13
+# Subtest: all seven movements available; no enforced staircase
+ok 1 - all seven movements available; no enforced staircase
+  ---
+  duration_ms: 0.47525
+  type: 'test'
+  ...
+# Subtest: empty and unknown encounter are first-class saveable records
+ok 2 - empty and unknown encounter are first-class saveable records
+  ---
+  duration_ms: 1.106417
+  type: 'test'
+  ...
+# Subtest: arrival creates no storage record or side effect
+ok 3 - arrival creates no storage record or side effect
+  ---
+  duration_ms: 0.069167
+  type: 'test'
+  ...
+# Subtest: return requires a distinct explicit act and does not require action
+ok 4 - return requires a distinct explicit act and does not require action
+  ---
+  duration_ms: 0.156542
+  type: 'test'
+  ...
+# Subtest: unperformed return remains unrecorded through keep
+ok 5 - unperformed return remains unrecorded through keep
+  ---
+  duration_ms: 0.201542
+  type: 'test'
+  ...
+# Subtest: reopening does not carry old completion into a new encounter
+ok 6 - reopening does not carry old completion into a new encounter
+  ---
+  duration_ms: 0.102875
+  type: 'test'
+  ...
+# Subtest: member-entered imagined dialogue retains both provenance axes
+ok 7 - member-entered imagined dialogue retains both provenance axes
+  ---
+  duration_ms: 0.205667
+  type: 'test'
+  ...
+# Subtest: elemental immersion is optional, member-authored, and revision-preserved
+ok 8 - elemental immersion is optional, member-authored, and revision-preserved
+  ---
+  duration_ms: 0.105916
+  type: 'test'
+  ...
+# Subtest: legacy possibilities without elemental immersion remain valid
+ok 9 - legacy possibilities without elemental immersion remain valid
+  ---
+  duration_ms: 0.195041
+  type: 'test'
+  ...
+# Subtest: generated authors cannot silently occupy the member future role
+ok 10 - generated authors cannot silently occupy the member future role
+  ---
+  duration_ms: 0.445791
+  type: 'test'
+  ...
+# Subtest: imaginal provenance cannot be relabeled as fact
+ok 11 - imaginal provenance cannot be relabeled as fact
+  ---
+  duration_ms: 0.092541
+  type: 'test'
+  ...
+# Subtest: distinct futures retain identities even with identical descriptions
+ok 12 - distinct futures retain identities even with identical descriptions
+  ---
+  duration_ms: 0.110583
+  type: 'test'
+  ...
+# Subtest: unknown status fields and hidden identity scores are rejected
+ok 13 - unknown status fields and hidden identity scores are rejected
+  ---
+  duration_ms: 0.050333
+  type: 'test'
+  ...
+# Subtest: no positive future, fixed horizon, or bridge required
+ok 14 - no positive future, fixed horizon, or bridge required
+  ---
+  duration_ms: 0.083833
+  type: 'test'
+  ...
+# Subtest: keep requires explicit consent
+ok 15 - keep requires explicit consent
+  ---
+  duration_ms: 0.039667
+  type: 'test'
+  ...
+# Subtest: first keep assigns revision once
+ok 16 - first keep assigns revision once
+  ---
+  duration_ms: 0.419917
+  type: 'test'
+  ...
+# Subtest: identical first-save retry cannot create a second record revision
+ok 17 - identical first-save retry cannot create a second record revision
+  ---
+  duration_ms: 0.12325
+  type: 'test'
+  ...
+# Subtest: stale writer is refused without overwriting current words
+ok 18 - stale writer is refused without overwriting current words
+  ---
+  duration_ms: 0.204084
+  type: 'test'
+  ...
+# Subtest: revisions preserve original words; current correction can differ
+ok 19 - revisions preserve original words; current correction can differ
+  ---
+  duration_ms: 0.085208
+  type: 'test'
+  ...
+# Subtest: save snapshots are not mutated by later draft edits
+ok 20 - save snapshots are not mutated by later draft edits
+  ---
+  duration_ms: 0.044041
+  type: 'test'
+  ...
+# Subtest: exact selected source/version resolves; most-recent is not substituted
+ok 21 - exact selected source/version resolves; most-recent is not substituted
+  ---
+  duration_ms: 0.1145
+  type: 'test'
+  ...
+# Subtest: deletion removes source availability without reconstructing it
+ok 22 - deletion removes source availability without reconstructing it
+  ---
+  duration_ms: 0.047542
+  type: 'test'
+  ...
+# Subtest: temporal selection includes only explicit references, no similarity joins
+ok 23 - temporal selection includes only explicit references, no similarity joins
+  ---
+  duration_ms: 0.085667
+  type: 'test'
+  ...
+# Subtest: old future image stays imagined at a past time
+ok 24 - old future image stays imagined at a past time
+  ---
+  duration_ms: 0.046958
+  type: 'test'
+  ...
+# Subtest: content and references remain distinct; relation cannot contain a source copy
+ok 25 - content and references remain distinct; relation cannot contain a source copy
+  ---
+  duration_ms: 0.061375
+  type: 'test'
+  ...
+# Subtest: export preserves historical provenance and warns no account sync
+ok 26 - export preserves historical provenance and warns no account sync
+  ---
+  duration_ms: 0.05725
+  type: 'test'
+  ...
+# Subtest: source notes remain literal text, not commands
+ok 27 - source notes remain literal text, not commands
+  ---
+  duration_ms: 0.04125
+  type: 'test'
+  ...
+# Subtest: invalid ids, duplicate ids, invalid dates and false return fail closed
+ok 28 - invalid ids, duplicate ids, invalid dates and false return fail closed
+  ---
+  duration_ms: 0.138208
+  type: 'test'
+  ...
+# Subtest: oversize content is refused, never silently truncated
+ok 29 - oversize content is refused, never silently truncated
+  ---
+  duration_ms: 0.037541
+  type: 'test'
+  ...
+# Subtest: mutant: overwritten stale revision is detected
+ok 30 - mutant: overwritten stale revision is detected
+  ---
+  duration_ms: 1.14775
+  type: 'test'
+  ...
+# Subtest: mutant: auto-return on save is detected
+ok 31 - mutant: auto-return on save is detected
+  ---
+  duration_ms: 0.286417
+  type: 'test'
+  ...
+# Subtest: mutant: latest version substituted for exact return is detected
+ok 32 - mutant: latest version substituted for exact return is detected
+  ---
+  duration_ms: 0.190416
+  type: 'test'
+  ...
+# Subtest: mutant: unselected source inclusion is detected
+ok 33 - mutant: unselected source inclusion is detected
+  ---
+  duration_ms: 0.44575
+  type: 'test'
+  ...
+# Subtest: crystal center preserves complete source identity for every selected facet
+ok 34 - crystal center preserves complete source identity for every selected facet
+  ---
+  duration_ms: 0.502083
+  type: 'test'
+  ...
+# Subtest: gestalt explicitly permits contradiction instead of manufacturing coherence
+ok 35 - gestalt explicitly permits contradiction instead of manufacturing coherence
+  ---
+  duration_ms: 0.158583
+  type: 'test'
+  ...
+# Subtest: source ablation removes only that jewel from the center field
+ok 36 - source ablation removes only that jewel from the center field
+  ---
+  duration_ms: 0.123875
+  type: 'test'
+  ...
+# Subtest: center does not invent unseen facets or become a facet itself
+ok 37 - center does not invent unseen facets or become a facet itself
+  ---
+  duration_ms: 0.05225
+  type: 'test'
+  ...
+# Subtest: permuting facet order preserves the same provenance set
+ok 38 - permuting facet order preserves the same provenance set
+  ---
+  duration_ms: 0.310541
+  type: 'test'
+  ...
+# Subtest: member correction can dismantle a center hypothesis rather than becoming confirmation
+ok 39 - member correction can dismantle a center hypothesis rather than becoming confirmation
+  ---
+  duration_ms: 0.125458
+  type: 'test'
+  ...
+# Subtest: source dependence must remain visible in any center-level connection
+ok 40 - source dependence must remain visible in any center-level connection
+  ---
+  duration_ms: 0.100042
+  type: 'test'
+  ...
+# Subtest: guide envelope is current-journey-only and forbids ambient memory
+ok 41 - guide envelope is current-journey-only and forbids ambient memory
+  ---
+  duration_ms: 1.309208
+  type: 'test'
+  ...
+# Subtest: guide can follow emergence without assigning an element
+ok 42 - guide can follow emergence without assigning an element
+  ---
+  duration_ms: 0.179541
+  type: 'test'
+  ...
+# Subtest: aether is gathering, never revelation
+ok 43 - aether is gathering, never revelation
+  ---
+  duration_ms: 0.096834
+  type: 'test'
+  ...
+# Subtest: handoff carries the full journey without converting imaginal material into fact
+ok 44 - handoff carries the full journey without converting imaginal material into fact
+  ---
+  duration_ms: 1.696125
+  type: 'test'
+  ...
+# Subtest: selected past, present, and possible future can coexist without flattening source kinds
+ok 45 - selected past, present, and possible future can coexist without flattening source kinds
+  ---
+  duration_ms: 0.65575
+  type: 'test'
+  ...
+# Subtest: unselected context is refused
+ok 46 - unselected context is refused
+  ---
+  duration_ms: 0.186083
+  type: 'test'
+  ...
+# Subtest: imagined possibility cannot be relabeled as past or present fact
+ok 47 - imagined possibility cannot be relabeled as past or present fact
+  ---
+  duration_ms: 0.055375
+  type: 'test'
+  ...
+# Subtest: MAIA-authored material can enter only as hypothesis
+ok 48 - MAIA-authored material can enter only as hypothesis
+  ---
+  duration_ms: 0.061542
+  type: 'test'
+  ...
+# Subtest: context never silently authorizes memory or receiver creation
+ok 49 - context never silently authorizes memory or receiver creation
+  ---
+  duration_ms: 0.118083
+  type: 'test'
+  ...
+# Subtest: temporal synthesis preserves temporal and epistemic distinctions in the prompt
+ok 50 - temporal synthesis preserves temporal and epistemic distinctions in the prompt
+  ---
+  duration_ms: 0.484208
+  type: 'test'
+  ...
+# Subtest: synthesis explicitly refuses hidden persistence and inferred identity
+ok 51 - synthesis explicitly refuses hidden persistence and inferred identity
+  ---
+  duration_ms: 0.183084
+  type: 'test'
+  ...
+# Subtest: repair contract releases unsupported hypotheses instead of protecting them
+ok 52 - repair contract releases unsupported hypotheses instead of protecting them
+  ---
+  duration_ms: 0.14525
+  type: 'test'
+  ...
+# Subtest: repair preserves a possibility for narrower uncertainty without overriding the member
+ok 53 - repair preserves a possibility for narrower uncertainty without overriding the member
+  ---
+  duration_ms: 0.045667
+  type: 'test'
+  ...
+1..53
+# tests 53
+# suites 0
+# pass 53
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 226.849417

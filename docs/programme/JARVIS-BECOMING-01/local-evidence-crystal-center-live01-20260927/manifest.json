@@ -14,7 +14,7 @@
     "fixed-source-guide-browser.log": "cd47d023809a8218b337a4e98fb5a007acc08981f2c5903f54ab5feed9f9a92e",
     "fixed-source-guide-proxy.log": "9950dcda002e9d355f4b86aae263613fae0ad4f4167d6c324f632cc2794dc07f",
     "fixed-source-health.json": "f0972760b15068c8141c55aaafa41acd69000ebbb1cf8764cfe989e4e5d43ea9",
-    "fixed-source-regression.json": "3149ef309b54d4b92e3657ed02fdc80a12d140fe3104e1daca312e334d709d52",
+    "fixed-source-regression.json": "8a9a8b6c2cd048da16f3d78a1ff0ae1fd8fbc10d0d646e39463246b164df8fca",
     "fixed-source-unit.log": "4a598bb5c540aa97ed645a7e4e1394b594e00112346fa2ae3d6b902b2794807b",
     "run-01-pre-repair.json": "9662601d6a884ebc5e0208f1bfd1bc955c3ba9f3a5a14071052cd02b0d8af145",
     "run-02-intermediate.json": "ff150a545e7feb5a1d71babb5416c07a756ab83b6e869958e0a3c01358d29ad3",
@@ -35,5 +35,7 @@
   "product_code_source": "d896f22ebf8a1c86b2ffc683de2c3fa20ad0d718",
   "running_repository_head": "965abd31f5416c35248573c35f3d4d33613025a4",
   "running_head_delta_from_product_code": "documentation-and-evidence-only",
-  "source_code_delta_verified_empty": true
+  "source_code_delta_verified_empty": true,
+  "current_preview_repository_head": "965abd31f5416c35248573c35f3d4d33613025a4",
+  "candidate_behavior_source": "d896f22ebf8a1c86b2ffc683de2c3fa20ad0d718"
 }
