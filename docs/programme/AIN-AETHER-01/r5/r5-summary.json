@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2026-09-28T18:34:17.418Z",
+  "parentR4": "a2fbafb88c7e33af0082895266d95b1bfa40608c",
+  "newlyRelatedPairs": [
+    "creative::work",
+    "relationship::work",
+    "creative::relationship"
+  ],
+  "newlyIndependentPairs": [
+    "family::relationship"
+  ],
+  "changedRelationPairs": [
+    "creative::work",
+    "relationship::work",
+    "spiritual::work",
+    "creative::relationship",
+    "creative::spiritual",
+    "family::relationship"
+  ],
+  "candidateCount": 4,
+  "causalAuthority": false,
+  "predictiveAuthority": false,
+  "destinyAuthority": false,
+  "memberOwnsFinalMeaning": true,
+  "valid": true
+}
