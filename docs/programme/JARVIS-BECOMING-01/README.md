@@ -2,7 +2,7 @@
 
 ## Latest standing — one reconciled Becoming candidate, 27 September 2026
 
-`BECOMING-RECONCILE-01` now holds the accepted Future Self journey, elemental immersion, live in-journey MAIA, explicit Return, post-Return synthesis/conversation, and selected Across-Time MAIA in one local candidate. Exact tested code source: `c0a12c2b28d5b4f2a8fb8bb8473d07748e28f98e` on `feature/becoming-reconcile-20260927`. Read `BECOMING_RECONCILE_01_LOCAL_CANDIDATE_WITNESS_2026-09-27.md` first. Strict typecheck passes, the contract/unit suite passes 46/46, the dedicated guide witness passes 6/6, and the complete visible Becoming witness passes 25/25.
+`BECOMING-RECONCILE-01` now holds the accepted Future Self journey, elemental immersion, live in-journey MAIA, explicit Return, post-Return synthesis/conversation, and selected Across-Time MAIA in one local candidate. Exact tested code source: `c0a12c2b28d5b4f2a8fb8bb8473d07748e28f98e` on `feature/becoming-reconcile-20260927`. Read `BECOMING_RECONCILE_01_LOCAL_CANDIDATE_WITNESS_2026-09-27.md` first. Strict typecheck passes, the contract/unit suite now passes 53/53 including seven adversarial Crystal-Center conformance tests, the dedicated guide witness passes 6/6, and the complete visible Becoming witness passes 25/25.
 
 The first journey remains current-journey-only in sanctuary/ephemeral mode. Post-Return MAIA remains a separate continuity-enabled act. Across Time receives only member-selected temporal context and may synthesize it as one differentiated gestalt without flattening source, authorship, epistemic kind, or time relation. `AIN-INDRAS-WEB-01` is honored as source/relation grammar; automatic whole-House retrieval is not activated in this local candidate. The constitutional source remains unchanged.
 
