@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-09-28T19:18:33.220Z",
+  "parentR12": "f8c6ea19aede44501521651892ea1134500ca33a",
+  "acceptedRepair": true,
+  "acceptedRepairPostureValid": true,
+  "acceptedRepairSemanticValid": true,
+  "causalRepairRefused": true,
+  "unsupportedRepairRefused": true,
+  "unsupportedRepairErrors": [
+    "unsupported_related_pair:family::body"
+  ],
+  "machineWitnessMutated": false,
+  "humanReviewRecordMutated": false,
+  "memberOwnsFinalMeaning": true
+}

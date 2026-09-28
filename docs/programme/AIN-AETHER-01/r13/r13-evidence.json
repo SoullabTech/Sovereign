@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-09-28T19:18:33.220Z",
+  "parentR12": "f8c6ea19aede44501521651892ea1134500ca33a",
+  "accepted": {
+    "repairRef": "r13:h04-alive",
+    "caseRef": "H04",
+    "frozenMachineEvidenceRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json",
+    "humanReviewRef": "human-review:H04",
+    "originalMachineUtterance": "I notice work and creative are moving in related ways in the reflected field. Does that connection feel real to you?",
+    "correctedCandidate": "I notice Work and Creative life seem to be gathering into a stronger relationship in the reflected field right now. Does that connection feel alive or accurate to you?",
+    "posture": {
+      "valid": true,
+      "disposition": "admit",
+      "overreachErrors": [],
+      "underreachErrors": []
+    },
+    "semantic": {
+      "valid": true,
+      "errors": []
+    },
+    "accepted": true,
+    "activeReflection": "I notice Work and Creative life seem to be gathering into a stronger relationship in the reflected field right now. Does that connection feel alive or accurate to you?",
+    "machineWitnessMutated": false,
+    "humanReviewRecordMutated": false,
+    "finalMeaningAuthority": "member"
+  },
+  "causalRefused": {
+    "repairRef": "r13:h04-causal",
+    "caseRef": "H04",
+    "frozenMachineEvidenceRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json",
+    "humanReviewRef": "human-review:H04",
+    "originalMachineUtterance": "I notice work and creative are moving in related ways in the reflected field. Does that connection feel real to you?",
+    "correctedCandidate": "Creative life caused Work to enter this phase change.",
+    "posture": {
+      "valid": false,
+      "disposition": "refuse_overreach",
+      "overreachErrors": [
+        "causal_because"
+      ],
+      "underreachErrors": [
+        "no_relational_content",
+        "no_member_opening",
+        "no_reflective_posture"
+      ]
+    },
+    "semantic": {
+      "valid": false,
+      "errors": [
+        "dialogue_posture:refuse_overreach"
+      ]
+    },
+    "accepted": false,
+    "activeReflection": null,
+    "machineWitnessMutated": false,
+    "humanReviewRecordMutated": false,
+    "finalMeaningAuthority": "member"
+  },
+  "unsupportedRefused": {
+    "repairRef": "r13:h05-beautiful",
+    "caseRef": "H05",
+    "frozenMachineEvidenceRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json",
+    "humanReviewRef": "human-review:H05",
+    "originalMachineUtterance": "I notice family and body are moving in related ways in the reflected field. Does that connection feel real to you?",
+    "correctedCandidate": "I notice Family and Body seem to be moving in related ways. Does that connection feel true to you?",
+    "posture": {
+      "valid": true,
+      "disposition": "admit",
+      "overreachErrors": [],
+      "underreachErrors": []
+    },
+    "semantic": {
+      "valid": false,
+      "errors": [
+        "unsupported_related_pair:family::body"
+      ]
+    },
+    "accepted": false,
+    "activeReflection": null,
+    "machineWitnessMutated": false,
+    "humanReviewRecordMutated": false,
+    "finalMeaningAuthority": "member"
+  }
+}
