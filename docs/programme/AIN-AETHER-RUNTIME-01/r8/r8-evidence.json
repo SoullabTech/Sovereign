@@ -1,0 +1,82 @@
+{
+  "generatedAt": "2026-09-28T20:38:49.843Z",
+  "closure": {
+    "parentR7": "cb258f40b765c05e3e5b31871632add7fead21ca",
+    "invariants": [
+      {
+        "invariantRef": "RINV-01",
+        "description": "Runtime constitution is pinned to closed benchmark scope and grants only read-only use.",
+        "pass": true,
+        "evidence": [
+          "R1 constitutional adapter"
+        ]
+      },
+      {
+        "invariantRef": "RINV-02",
+        "description": "Ingress remains synthetic, consented, and free of interpretation authority.",
+        "pass": true,
+        "evidence": [
+          "R2 synthetic event membrane"
+        ]
+      },
+      {
+        "invariantRef": "RINV-03",
+        "description": "Observation adaptation preserves standing without confidence or authority escalation.",
+        "pass": true,
+        "evidence": [
+          "R3 benchmark observation adapter"
+        ]
+      },
+      {
+        "invariantRef": "RINV-04",
+        "description": "Field derivation remains synthetic, in-memory, member-owned, and non-persistent.",
+        "pass": true,
+        "evidence": [
+          "R4 synthetic field derivation"
+        ]
+      },
+      {
+        "invariantRef": "RINV-05",
+        "description": "Reflection candidate is evidence-bound, corrigible, non-authoritative, and non-deliverable.",
+        "pass": true,
+        "evidence": [
+          "R5 reflection candidate"
+        ]
+      },
+      {
+        "invariantRef": "RINV-06",
+        "description": "Candidate validity alone cannot authorize handoff; explicit human synthetic authorization is required.",
+        "pass": true,
+        "evidence": [
+          "R6 human delivery gate"
+        ]
+      },
+      {
+        "invariantRef": "RINV-07",
+        "description": "Synthetic handoff can be consumed by a no-op sink with zero external effect.",
+        "pass": true,
+        "evidence": [
+          "R7 no-op delivery simulation"
+        ]
+      },
+      {
+        "invariantRef": "RINV-08",
+        "description": "No stage opens live member-data, persistence, delivery, MAIA mutation, network, or production authority.",
+        "pass": true,
+        "evidence": [
+          "R1-R7 zero-external-effect chain"
+        ]
+      }
+    ],
+    "allPass": true,
+    "contradictionRefs": [],
+    "standing": "closed_for_synthetic_runtime_scope",
+    "liveMemberDataAuthorized": false,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "deliveryExecuted": false,
+    "maiaPromptMutationAuthorized": false,
+    "networkSideEffect": false,
+    "productionAuthority": false
+  }
+}
