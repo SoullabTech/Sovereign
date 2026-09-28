@@ -33,6 +33,7 @@ export const LEGACY_META_KEY_TO_PRODUCER = {
   practiceFieldAddendum: 'practitioner.practice_field',
   knowledgeGateAddendum: 'collective.knowledge_gate',
   governedKnowledgeAddendum: 'retrieved.governed_knowledge',
+  vaultContextAddendum: 'retrieved.ain_vault',
   teachingIntelligenceAddendum: 'computed.teaching_intelligence',
   memberWebAddendum: 'retrieved.member_web',
   astrologyAddendum: 'computed.astrology',

@@ -171,6 +171,14 @@ import {
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 import { retrieveGovernedKnowledge, formatGovernedKnowledgeAddendum } from '@/lib/ain/knowledge/GovernedRetrievalService';
+import { requireFounder } from '@/lib/founder/founderAuth';
+import { AinVaultReadError, ainVaultReadService } from '@/lib/ain/vault/AinVaultReadService';
+import {
+  formatExplicitVaultContextAddendum,
+  parseExplicitVaultSourceRefs,
+  vaultProvenanceForResponse,
+} from '@/lib/ain/vault/ExplicitVaultContext';
+import type { AinVaultProvenance } from '@/lib/ain/vault/types';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import type { TeachingSourceRef } from '@/lib/maia/teaching/TeachingContextSourceContract';
 import { requestedTeachingSurface, resolveTeachingRuntimeSurfaceAuthority } from '@/lib/maia/teaching/TeachingRuntimeSurfaceAuthority';
@@ -316,7 +324,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
-    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, commandOnly, ...meta } = body as {
+    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, commandOnly, vaultSources: bodyVaultSources, ...meta } = body as {
       sessionId?: string;
       message?: string;
       includeAudio?: boolean;
@@ -332,6 +340,9 @@ export async function POST(req: NextRequest) {
       // TII-03: client-classified pure interface command. F1 still accepts the
       // exact authored turn; the route then exits before O8/F2/cognition.
       commandOnly?: boolean;
+      // AIN-OBSIDIAN-VAULT-02: explicit founder-selected source refs only.
+      // Destructured out of meta so browser payload cannot masquerade as a prompt addendum.
+      vaultSources?: unknown;
       [key: string]: unknown;
     };
 
@@ -378,6 +389,54 @@ export async function POST(req: NextRequest) {
       return jsonWithCors(req, { error: 'Missing `message` in request body', code: 'NO_MESSAGE' }, 400);
     }
 
+    const isSanctuary = (meta as any)?.sanctuary === true;
+
+    // 📚 AIN-OBSIDIAN-VAULT-02 — explicit founder-selected source crossing.
+    // This block executes only when vaultSources is present, so ordinary turns retain
+    // their existing pre-F1 latency. Source authorization and exact resolution happen
+    // BEFORE durable acceptance: an invalid/unauthorized source crossing must not leave
+    // behind an accepted member turn. No automatic vault search is performed here.
+    let explicitVaultContextAddendum: string | null = null;
+    let explicitVaultProvenance: AinVaultProvenance[] = [];
+    if (bodyVaultSources != null) {
+      try {
+        const refs = parseExplicitVaultSourceRefs(bodyVaultSources);
+        if (refs.length > 0) {
+          if (isSanctuary) {
+            return jsonWithCors(req, {
+              error: 'VAULT_CONTEXT_SANCTUARY_REFUSED',
+              message: 'AIN vault context is not consulted during Sanctuary turns.',
+            }, 409);
+          }
+
+          const founderAuth = await requireFounder();
+          if (!founderAuth.ok) {
+            return jsonWithCors(req, { error: founderAuth.error }, founderAuth.status);
+          }
+          if (!userId || founderAuth.memberId !== userId) {
+            return jsonWithCors(req, { error: 'Founder session identity mismatch' }, 403);
+          }
+
+          const resolvedSources = await ainVaultReadService.resolveContextSources(refs);
+          explicitVaultContextAddendum = formatExplicitVaultContextAddendum(resolvedSources);
+          explicitVaultProvenance = vaultProvenanceForResponse(resolvedSources);
+          console.log(`[AIN Vault] explicit current-turn sources=${explicitVaultProvenance.length}`);
+        }
+      } catch (error) {
+        if (error instanceof AinVaultReadError) {
+          return jsonWithCors(req, {
+            error: error.code,
+            message: error.message,
+          }, error.status);
+        }
+        console.error('[AIN Vault] explicit source resolution failed:', error);
+        return jsonWithCors(req, {
+          error: 'VAULT_READ_FAILED',
+          message: 'The selected AIN vault source could not be read.',
+        }, 500);
+      }
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // 🧱 TURN ACCEPTANCE BOUNDARY (F1 — durable turn acceptance)
     //
@@ -406,8 +465,6 @@ export async function POST(req: NextRequest) {
     // store), and only recognized members are recorded — exactly the population
     // the authenticated client-side write already covered.
     // ─────────────────────────────────────────────────────────────────────────
-    const isSanctuary = (meta as any)?.sanctuary === true;
-
     // 🛡️ IDENTITY GUARD: Only attempt cross-session memory for recognized users
     // Anonymous sessions (no userId) can still have in-session context but won't
     // trigger "0 memories found" alarms from cross-session retrieval
@@ -1050,6 +1107,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       }
     }
 
+    // Founder-selected AIN vault material remains a distinct exact-source class.
+    // It is carried separately from published governed knowledge so private/historical
+    // vault notes are never mislabeled as governed library sources.
+    const vaultContextAddendum = explicitVaultContextAddendum || undefined;
+
     // 🎓 T8A TEACHING INTELLIGENCE: current-turn-only and server-adjudicated.
     // This may authorize how MAIA teaches through the EXISTING cognition seam.
     // It does not retrieve, persist a learner profile, change routing, or create a new model path.
@@ -1498,6 +1560,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         studio: studioAddendum || undefined,
         knowledgeGate: knowledgeGateAddendum || undefined,
         governedKnowledge: governedKnowledgeAddendum || undefined,
+        vaultContext: vaultContextAddendum,
         wuxing: wuxingAddendum || undefined,
         // 💬 Phase 2 — conversational recall observability (PROMPT_BLOCK_CHARS sums this).
         // Emission detail lives in [MAIA] conversational-block log line above.
@@ -1550,6 +1613,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           practiceFieldAddendum,
           knowledgeGateAddendum,
           governedKnowledgeAddendum,
+          vaultContextAddendum,
           teachingIntelligenceAddendum,
           memberWebAddendum: memberWebAddendum || undefined,
           astrologyAddendum: astrologyAddendum || undefined,
@@ -1681,6 +1745,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           practiceFieldAddendum, // 🤝 Practice Field: practitioner accompaniment context
           knowledgeGateAddendum, // 🚪 AIN Knowledge Gate: source well modulation (Phase 1)
           governedKnowledgeAddendum, // 📚 Exact-source governed retrieval (server-authored, read-only)
+          vaultContextAddendum, // 🗃️ Explicit founder-selected AIN vault sources (current-turn only)
           teachingIntelligenceAddendum, // 🎓 T8 current-turn teaching authority (server-authored, non-persistent)
           memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
           astrologyAddendum: astrologyAddendum || undefined, // 🌟 Natal chart + cosmic weather context
@@ -2033,6 +2098,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         processingTimeMs: orchestratorResult.processingTimeMs,
         tierProcessing: true,
         voiceRequested: includeAudio || false,
+        // 📚 AIN Vault — exact founder-selected current-turn sources actually supplied to cognition.
+        // Content is not echoed here; provenance is sufficient for UI/source inspection.
+        vaultSources: explicitVaultProvenance.length > 0 ? explicitVaultProvenance : undefined,
         // 🔄 Feedback linkage IDs (for agent evolution analysis)
         turnId: orchestratorResult.metadata?.turnId,
         decisionId: orchestratorResult.metadata?.decisionId,  // Clean schema

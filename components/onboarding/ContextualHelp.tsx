@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, X, BookOpen, Mic, TrendingUp, Search, Settings } from 'lucide-react';
+import { HelpCircle, X, BookOpen, Mic, TrendingUp, Search } from 'lucide-react';
 
 interface HelpTopic {
   id: string;
@@ -93,23 +93,6 @@ Ask MAIA questions like:
 
 MAIA searches by meaning, not just keywords—finding thematic connections across your entire journey.`
   },
-  {
-    id: 'obsidian-export',
-    title: 'Export to Obsidian',
-    icon: <Settings className="w-5 h-5" />,
-    content: `All your journal entries automatically export to Obsidian as markdown files.
-
-Location: Journals/YYYY-MM/
-Format: Markdown with frontmatter
-
-Each entry includes:
-• Full text
-• Symbols, archetypes, emotions
-• MAIA's reflection
-• Searchable metadata
-
-Your data is always yours.`
-  }
 ];
 
 export default function ContextualHelp() {

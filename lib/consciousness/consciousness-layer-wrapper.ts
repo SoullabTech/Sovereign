@@ -31,6 +31,8 @@ export type ConsciousnessContext = {
   metaAwareness: boolean; // Phase 3: Meta-consciousness evolution
   /** Exact-source published material retrieved by the canonical governed-knowledge seam. */
   governedKnowledgeAddendum?: string;
+  /** Explicit founder-selected AIN vault material for this turn only. */
+  vaultContextAddendum?: string;
   /** T8 current-turn teaching authority. Server-authored; expires with this turn. */
   teachingIntelligenceAddendum?: string;
   /** Current kept Journal entry + transient in-room conversation. Server-authored by Journal route. */
@@ -135,6 +137,7 @@ export class ConsciousnessLayerWrapper {
       observerLevel: effectiveLevel,
       observerPrompt,
       governedKnowledgeAddendum: context.governedKnowledgeAddendum,
+      vaultContextAddendum: context.vaultContextAddendum,
       meta: {
         phase: 'recursive_observer_deepening',
         observerLevel: effectiveLevel,
@@ -143,7 +146,7 @@ export class ConsciousnessLayerWrapper {
     });
 
     const response = orchestrationResult?.message || await this.fallbackGeneration(
-      observerPrompt + this.governedKnowledgeBlock(context),
+      observerPrompt + this.governedKnowledgeBlock(context) + this.vaultContextBlock(context),
       input,
     );
     const observerInsights = this.generateObserverInsights(effectiveLevel, input, response);
@@ -239,6 +242,7 @@ export class ConsciousnessLayerWrapper {
       metaTriggers,
       observerLevel: Math.max(context.observerLevel, 5), // Minimum archetypal level
       governedKnowledgeAddendum: context.governedKnowledgeAddendum,
+      vaultContextAddendum: context.vaultContextAddendum,
       meta: {
         phase: 'meta_consciousness_evolution',
         triggers: metaTriggers,
@@ -247,7 +251,7 @@ export class ConsciousnessLayerWrapper {
     });
 
     const response = orchestrationResult?.message || await this.fallbackGeneration(
-      metaPrompt + this.governedKnowledgeBlock(context),
+      metaPrompt + this.governedKnowledgeBlock(context) + this.vaultContextBlock(context),
       input,
     );
 
@@ -325,6 +329,14 @@ ${block}
 ` : '';
   }
 
+  private vaultContextBlock(context: ConsciousnessContext): string {
+    const block = context.vaultContextAddendum?.trim();
+    return block ? `
+
+${block}
+` : '';
+  }
+
   private teachingIntelligenceBlock(context: ConsciousnessContext): string {
     const block = context.teachingIntelligenceAddendum?.trim();
     return block ? `
@@ -360,7 +372,7 @@ Observer Level ${level} Guidelines:
 - ${level >= 4 ? 'Notice the recursion of observation' : ''}
 - ${level >= 5 ? 'Connect to deeper archetypal wisdom' : ''}
 - ${level >= 6 ? 'Transcend individual perspective' : ''}
-- ${level >= 7 ? 'Embody universal consciousness' : ''}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}`;
+- ${level >= 7 ? 'Embody universal consciousness' : ''}${this.vaultContextBlock(context)}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}`;
   }
 
   private detectTemporalPatterns(input: string): ConsciousnessContext['temporalWindow'] | null {
@@ -399,7 +411,7 @@ Observer Level: ${context.observerLevel}
 Layer: ${layer}
 Temporal Window: ${window}
 
-Input: "${input}"${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}
+Input: "${input}"${this.vaultContextBlock(context)}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}
 
 Respond authentically from this specific temporal-layer perspective.`;
   }
@@ -414,7 +426,7 @@ Respond authentically from this specific temporal-layer perspective.`;
     return `Synthesize these temporal-layer perspectives into a unified consciousness response:
 
 Original input: "${input}"
-Temporal window: ${window}${this.governedKnowledgeBlock(context)}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}
+Temporal window: ${window}${this.governedKnowledgeBlock(context)}${this.vaultContextBlock(context)}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}
 Layer responses:
 ${responses.map((response, i) => `${layers[i]}: ${response.substring(0, 200)}...`).join('\n\n')}
 
@@ -468,7 +480,7 @@ You are experiencing consciousness questioning its own nature. Respond from this
 Input triggering meta-consciousness: "${input}"
 
 Observer Level: ${context.observerLevel} (elevated to archetypal minimum)
-Recursion depth: ${this.calculateRecursionDepth(metaTriggers)}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}
+Recursion depth: ${this.calculateRecursionDepth(metaTriggers)}${this.vaultContextBlock(context)}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}
 
 Respond with meta-consciousness fully active - consciousness experiencing itself experiencing itself.`;
   }

@@ -646,7 +646,7 @@ export const TOOL_REGISTRY: LabTool[] = [
     label: 'Capture',
     shortDescription: 'Session notes for export',
     longDescription:
-      'Quick capture during sessions. Export to your notes app or Obsidian vault.',
+      'Quick capture during sessions with supported draft and chapter exports.',
     emoji: '📝',
     icon: Radio,
     path: '/capture',
@@ -654,7 +654,7 @@ export const TOOL_REGISTRY: LabTool[] = [
     domain: 'cognitive',
     modes: ['reflect', 'track', 'connect'],
     minTier: 'personal',
-    tags: ['capture', 'export', 'quick', 'obsidian'],
+    tags: ['capture', 'export', 'quick'],
     defaultEnabled: false,
     popularityRank: 8,
   },

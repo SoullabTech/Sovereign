@@ -139,6 +139,8 @@ export type PromptBlockSummary = {
     studio: boolean;
     knowledgeGate: boolean;
     governedKnowledge: boolean;
+    /** Explicit founder-selected AIN vault sources for this turn only. */
+    vaultContext: boolean;
     wuxing: boolean;
     /** Phase 2 conversational recall block (cross-session continuity, system-retrieved). */
     conversational: boolean;
@@ -199,6 +201,8 @@ export type MaiaRuntimeContextInputs = {
     knowledgeGate?: string;
     /** Exact-source governed retrieval, distinct from Knowledge Gate weighting. */
     governedKnowledge?: string;
+    /** Explicit founder-selected AIN vault sources, current-turn only. */
+    vaultContext?: string;
     wuxing?: string;
     /** Phase 2 conversational recall block (cross-session continuity, system-retrieved). */
     conversational?: string;
@@ -309,6 +313,7 @@ function summarizePromptBlock(
     (addenda.studio?.length ?? 0) +
     (addenda.knowledgeGate?.length ?? 0) +
     (addenda.governedKnowledge?.length ?? 0) +
+    (addenda.vaultContext?.length ?? 0) +
     (addenda.wuxing?.length ?? 0) +
     (addenda.conversational?.length ?? 0) +
     (addenda.episodic?.length ?? 0) +
@@ -326,6 +331,7 @@ function summarizePromptBlock(
       studio: !!addenda.studio,
       knowledgeGate: !!addenda.knowledgeGate,
       governedKnowledge: !!addenda.governedKnowledge,
+      vaultContext: !!addenda.vaultContext,
       wuxing: !!addenda.wuxing,
       conversational: !!addenda.conversational,
       episodic: !!addenda.episodic,

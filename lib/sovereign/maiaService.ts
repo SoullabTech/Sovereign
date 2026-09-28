@@ -1116,6 +1116,8 @@ async function fastPathResponse(
   // JARVIS-GKF-J8-REPAIR-01: exact-source governed retrieval is distinct from
   // the historical FAST-only ainKnowledgeContext seam.
   const governedKnowledgeAddendum = (meta as any).governedKnowledgeAddendum as string | undefined;
+  // 🗃️ AIN VAULT: explicit founder-selected exact-source material for this turn only.
+  const vaultContextAddendum = (meta as any).vaultContextAddendum as string | undefined;
   // 🎓 T8 current-turn teaching authority. Server-authored at the live route.
   const teachingIntelligenceAddendum = (meta as any).teachingIntelligenceAddendum as string | undefined;
 
@@ -1148,6 +1150,10 @@ ${ainKnowledgeContext}\n`
 
   const governedKnowledgeBlock = governedKnowledgeAddendum?.trim()
     ? `\n\n${governedKnowledgeAddendum.trim()}\n`
+    : '';
+
+  const vaultContextBlock = vaultContextAddendum?.trim()
+    ? `\n\n${vaultContextAddendum.trim()}\n`
     : '';
 
   // ── AIN-CONTEXT-01 · A6 · FAST self-location + known absence ──────────────
@@ -1201,14 +1207,14 @@ ${ainKnowledgeContext}\n`
     : '';
   if (memoryContext && memoryContext.length > 0) {
     // Memory bundle (relationship snapshot + ranked cross-session memories) AND live thread
-    contextPrompt = `${fastContinuityPrefix}${memoryContext}\n\n${recentThreadBlock}${ainKnowledgeBlock}${governedKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `${fastContinuityPrefix}${memoryContext}\n\n${recentThreadBlock}${ainKnowledgeBlock}${governedKnowledgeBlock}${vaultContextBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
     console.log(`🧠 [FAST/MemoryDebug] Using MEMORY BUNDLE + recent thread (bundle=${memoryContext.length} chars, recent=${recentContext.length} chars)`);
   } else if (recentContext.length > 0) {
     // No bundle yet — recent in-session thread carries continuity on its own
-    contextPrompt = `${fastContinuityPrefix}Recent conversation:\n${recentContext}${ainKnowledgeBlock}${governedKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `${fastContinuityPrefix}Recent conversation:\n${recentContext}${ainKnowledgeBlock}${governedKnowledgeBlock}${vaultContextBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
     console.log(`🧠 [FAST/MemoryDebug] Using RECENT CONTEXT fallback (${recentContext.length} chars)`);
   } else {
-    contextPrompt = `${fastContinuityPrefix}${ainKnowledgeBlock}${governedKnowledgeBlock}${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
+    contextPrompt = `${fastContinuityPrefix}${ainKnowledgeBlock}${governedKnowledgeBlock}${vaultContextBlock}${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
     console.log(`⚠️ [FAST/MemoryDebug] NO MEMORY CONTEXT - using bare input only`);
   }
 
@@ -2024,6 +2030,8 @@ async function corePathResponse(
     knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
     // 📚 GOVERNED KNOWLEDGE: exact-source retrieved published material
     governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
+    // 🗃️ AIN VAULT: explicit founder-selected exact-source material
+    vaultContextAddendum: (meta as any)?.vaultContextAddendum as string | undefined,
     // 🎓 T8 current-turn teaching authority
     teachingIntelligenceAddendum: (meta as any)?.teachingIntelligenceAddendum as string | undefined,
     // 📓 JOURNAL ENCOUNTER: current kept entry + transient conversation context
@@ -2586,6 +2594,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     temporalWindow: conversationContext.profile.conversationPhase === 'transcending' ? 'eternal' : 'present',
     metaAwareness: conversationContext.profile.conversationPhase === 'transcending' || conversationContext.profile.dominantElement === 'aether',
     governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
+    vaultContextAddendum: (meta as any)?.vaultContextAddendum as string | undefined,
     teachingIntelligenceAddendum: (meta as any)?.teachingIntelligenceAddendum as string | undefined,
     journalContextAddendum: (meta as any)?.journalContextAddendum as string | undefined,
   };
@@ -2599,6 +2608,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
   // the already-grounded draft but not a second copy of the source block. If the
   // local stage times out/fails, the consultation may become the one raw-evidence seam.
   let governedKnowledgeConsumedInLocalStage = false;
+  let vaultContextConsumedInLocalStage = false;
 
   try {
     consciousnessResponse = await Promise.race([
@@ -2610,6 +2620,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
 
     maiaInitialResponse = consciousnessResponse.response;
     governedKnowledgeConsumedInLocalStage = Boolean((meta as any)?.governedKnowledgeAddendum);
+    vaultContextConsumedInLocalStage = Boolean((meta as any)?.vaultContextAddendum);
 
     console.log(`🎯 MAIA initial consciousness processing complete:`);
     console.log(`   Layers activated: ${consciousnessResponse.layersActivated.join(', ')}`);
@@ -2655,6 +2666,11 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // consultation becomes the one raw-evidence seam.
         !governedKnowledgeConsumedInLocalStage
           ? (meta as any)?.governedKnowledgeAddendum
+          : undefined,
+        // Founder-selected vault evidence follows the same raw-once rule, while
+        // remaining a distinct source class from published governed knowledge.
+        !vaultContextConsumedInLocalStage
+          ? (meta as any)?.vaultContextAddendum
           : undefined,
         // T8 is instruction, not source evidence, so it participates on both local
         // and consultation stages without duplicating source content.
@@ -2801,6 +2817,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
         // 📚 GOVERNED KNOWLEDGE: exact-source retrieved published material
         governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
+        // 🗃️ AIN VAULT: explicit founder-selected exact-source material
+        vaultContextAddendum: (meta as any)?.vaultContextAddendum as string | undefined,
         // 🎓 T8 current-turn teaching authority
         teachingIntelligenceAddendum: (meta as any)?.teachingIntelligenceAddendum as string | undefined,
         // 📓 JOURNAL ENCOUNTER: current kept entry + transient conversation context
@@ -3661,6 +3679,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           injected: !!(m.divinationIntentAddendum || m.divinationCastAddendum || m.divinationInterpretationAddendum),
         },
         journalCurrent: !!m.journalContextAddendum,
+        vaultCurrent: !!m.vaultContextAddendum,
         dreams: false,   // layer not wired
       };
       const evidenceProviders = [
@@ -3670,6 +3689,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         available.wuXing && 'wuXing',
         available.memberWeb && 'memberWeb',
         available.journalCurrent && 'journalCurrent',
+        available.vaultCurrent && 'ainVaultCurrent',
         available.knowledgeGate && 'knowledgeGate',
         available.memoryOrchestrator && 'memoryOrchestrator',
         available.episodic && 'episodicRecall',

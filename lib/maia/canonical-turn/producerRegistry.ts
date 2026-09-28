@@ -200,6 +200,16 @@ export const PRODUCER_REGISTRY = {
     registeredAt: '2026-09-17', registeredBy: 'JARVIS-GKF-J8-REPAIR-01',
     reason: 'system-retrieved excerpts from exact governed source identities; source authorship/rights are preserved separately',
   },
+  'retrieved.ain_vault': {
+    // `authoredBy: system` names the exact-source READ act. The note's own authorship
+    // may be founder, collaborator, imported source, or historical system material and
+    // remains explicitly unresolved unless the note itself establishes it.
+    authoredBy: 'system', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'lib/ain/vault/AinVaultReadService ← explicit founder-selected admitted vault source', consentBasis: 'explicit current-turn vault selection',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat'], mandatory: false, scope: 'route',
+    registeredAt: '2026-09-27', registeredBy: 'AIN-OBSIDIAN-VAULT-02',
+    reason: 'exact founder-selected AIN vault source material with alias/path/hash provenance; never automatic retrieval',
+  },
   'computed.teaching_intelligence': {
     authoredBy: 'system', participationClass: 'computed', authority: 'compute',
     provenance: 'lib/maia/teaching/TeachingRuntimeBridge ← T1–T8 canonical teaching contracts', consentBasis: null,

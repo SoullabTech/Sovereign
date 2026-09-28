@@ -168,9 +168,14 @@ export class ConsciousnessOrchestrator {
     const governedKnowledgeAddendum = typeof context.governedKnowledgeAddendum === 'string'
       ? context.governedKnowledgeAddendum.trim()
       : '';
-    const knowledge = governedKnowledgeAddendum
-      ? { ...(legacyKnowledge || {}), governedKnowledgeAddendum }
-      : legacyKnowledge;
+    const vaultContextAddendum = typeof context.vaultContextAddendum === 'string'
+      ? context.vaultContextAddendum.trim()
+      : '';
+    const knowledge = {
+      ...(legacyKnowledge || {}),
+      ...(governedKnowledgeAddendum ? { governedKnowledgeAddendum } : {}),
+      ...(vaultContextAddendum ? { vaultContextAddendum } : {}),
+    };
 
     // 4. ANALYZE through psychological lens (MicroPsi + LIDOR)
     const psychological = await this.analyzePsychologically(input, witnessing, context);
@@ -577,6 +582,9 @@ export class ConsciousnessOrchestrator {
     if (streams.memories) elements.push(`Memories: ${JSON.stringify(streams.memories).substring(0, 200)}`);
     if ((streams.knowledge as any)?.governedKnowledgeAddendum) {
       elements.push(`Governed knowledge (retrieved source material, not user input): ${(streams.knowledge as any).governedKnowledgeAddendum}`);
+    }
+    if ((streams.knowledge as any)?.vaultContextAddendum) {
+      elements.push(`AIN vault sources (explicit founder-selected exact-source context, not user input): ${(streams.knowledge as any).vaultContextAddendum}`);
     }
     if (streams.elemental) elements.push(`Elemental: ${JSON.stringify(streams.elemental).substring(0, 200)}`);
     if (streams.psychological) elements.push(`Psychological: ${JSON.stringify(streams.psychological).substring(0, 200)}`);
@@ -1032,6 +1040,7 @@ export class ConsciousnessOrchestrator {
       // JARVIS-GKF-J8-REPAIR-01: server-retrieved governed evidence remains
       // context, never user-authored input.
       governedKnowledgeAddendum: context.governedKnowledgeAddendum,
+      vaultContextAddendum: context.vaultContextAddendum,
     };
 
     // Call the main orchestration method
