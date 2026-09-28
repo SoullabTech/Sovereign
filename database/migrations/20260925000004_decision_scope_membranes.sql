@@ -1,6 +1,12 @@
 -- HOUSE-DECISIONS-01 — one decision store, explicit personal/practice/team membranes.
 BEGIN;
 
+-- Fail fast under live-reader contention rather than queueing an ACCESS EXCLUSIVE
+-- lock ahead of production traffic. Current production cardinality is small, but
+-- these bounds make the operational contract explicit and retryable.
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '60s';
+
 ALTER TABLE studio_decisions
   ADD COLUMN IF NOT EXISTS decision_scope text,
   ADD COLUMN IF NOT EXISTS personal_member_id uuid REFERENCES members(id) ON DELETE CASCADE;
