@@ -1,0 +1,19 @@
+{
+  "final_semantic_contract_commit": "0d2c4edda4f5e89788b87d7c7b7c33bdda36fdd3",
+  "final_harness_metric_commit": "d896f22ebf8a1c86b2ffc683de2c3fa20ad0d718",
+  "provider_calls_total": 15,
+  "final_run_provider_calls": 5,
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-6",
+  "synthetic_only": true,
+  "sanctuary_ephemeral": true,
+  "final_cleanup_zero": true,
+  "files": {
+    "cleanup-audit.json": "a3e36e9fcc328a9006da0252dfd023991d182842b888166eaead6a0304263342",
+    "run-01-pre-repair.json": "9662601d6a884ebc5e0208f1bfd1bc955c3ba9f3a5a14071052cd02b0d8af145",
+    "run-02-intermediate.json": "ff150a545e7feb5a1d71babb5416c07a756ab83b6e869958e0a3c01358d29ad3",
+    "run-03-final-adjudicated.json": "767f794d4893fdd4580cd64f1ea413fcdd38b9dfc948a21cdbc414109302ef33",
+    "run-03-final-raw.json": "a612d80fa9dbced8d7b66b36858d2f68515624a5961ad5148aa3c7371b1834fc",
+    "run-03-final.log": "e0eb8cf94c030c957eab026ba3ec9f604f769cb28fec9cf44151551e17def200"
+  }
+}

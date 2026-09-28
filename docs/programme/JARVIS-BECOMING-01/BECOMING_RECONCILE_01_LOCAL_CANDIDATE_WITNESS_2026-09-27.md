@@ -52,9 +52,9 @@ However, automatic whole-House Indra's Web retrieval is **not active in this loc
 
 That restraint is intentional: `AIN-INDRAS-WEB-01` established house-wide relation law without authorizing silent cross-facet retrieval. Future House integration must bind real facet sources through their own consent and provenance contracts.
 
-## Fixed-source verification
+## Original reconciliation fixed-source verification
 
-Against exact source `c0a12c2b28d5b4f2a8fb8bb8473d07748e28f98e`:
+The following evidence records the first unified reconciliation at exact source `c0a12c2b28d5b4f2a8fb8bb8473d07748e28f98e`. Later Crystal-Center conformance and live semantic evidence supersede these counts for current standing without changing this historical result:
 
 - strict TypeScript: **PASS**
 - Becoming contract/unit suite: **46/46 PASS**
@@ -71,17 +71,10 @@ The real House on port 3597 was not modified by this reconciliation act.
 
 ## Standing and next gate
 
-**ONE RECONCILED LOCAL BECOMING CANDIDATE · AUTOMATED CONFORMANCE PASS · FOUNDER COMPLETE-FLOW WITNESS OUTSTANDING · NO CANONICAL MERGE · NO PRODUCTION CHANGE.**
+**ONE RECONCILED LOCAL BECOMING CANDIDATE · AUTOMATED CONFORMANCE PASS · FOUNDER COMPLETE-FLOW WITNESS ACCEPTED · CRYSTAL-CENTER LIVE DIFFERENTIAL PASS AFTER SEMANTIC REPAIR · NO CANONICAL MERGE · NO PRODUCTION CHANGE.**
 
-The next human walk is:
+The founder completed the full walk — **Journey → Elements → MAIA → Return → Synthesis → Across Time** — and accepted the experience as wonderful.
 
-> **Journey → Elements → MAIA → Return → Synthesis → Across Time**
+The later Crystal-Center deterministic battery and live differential semantic battery tested the center more technically. See `CRYSTAL_CENTER_CONFORMANCE_2026-09-27.md` and `CRYSTAL_CENTER_LIVE_01_WITNESS_2026-09-27.md`.
 
-The decisive questions are:
-
-1. Does the first journey remain free of historical theory and feel like direct encounter?
-2. Does post-Return MAIA hold the whole journey without making the member repeat it?
-3. Does Across Time feel like MAIA holding the center of the crystal—one gestalt—while the selected facets remain recognizably distinct?
-4. Can the member disagree and actually change the working synthesis?
-
-If accepted, the next boundary is House integration of this exact reconciled behavior, not another Becoming redesign.
+This human gate is closed. The next boundary is House integration of the reconciled behavior, not another Becoming redesign.

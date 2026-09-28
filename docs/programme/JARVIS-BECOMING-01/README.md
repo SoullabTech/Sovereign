@@ -2,7 +2,7 @@
 
 ## Latest standing — one reconciled Becoming candidate, 27 September 2026
 
-`BECOMING-RECONCILE-01` now holds the accepted Future Self journey, elemental immersion, live in-journey MAIA, explicit Return, post-Return synthesis/conversation, and selected Across-Time MAIA in one local candidate. Exact tested code source: `c0a12c2b28d5b4f2a8fb8bb8473d07748e28f98e` on `feature/becoming-reconcile-20260927`. Read `BECOMING_RECONCILE_01_LOCAL_CANDIDATE_WITNESS_2026-09-27.md` first. Strict typecheck passes, the contract/unit suite now passes 53/53 including seven adversarial Crystal-Center conformance tests, the dedicated guide witness passes 6/6, and the complete visible Becoming witness passes 25/25.
+`BECOMING-RECONCILE-01` now holds the accepted Future Self journey, elemental immersion, live in-journey MAIA, explicit Return, post-Return synthesis/conversation, and selected Across-Time MAIA in one local candidate. The founder completed the full flow and accepted the experience as wonderful. `CRYSTAL-CENTER-LIVE-01` then exercised live MAIA against full, ablated, contradictory, permuted, and corrected synthetic multi-facet fields; after two semantic repairs the final differential battery passed. Read `BECOMING_RECONCILE_01_LOCAL_CANDIDATE_WITNESS_2026-09-27.md`, `CRYSTAL_CENTER_CONFORMANCE_2026-09-27.md`, and `CRYSTAL_CENTER_LIVE_01_WITNESS_2026-09-27.md`. The deterministic contract/unit suite passes 53/53, the dedicated guide witness passes 6/6, and the complete visible Becoming witness passes 25/25.
 
 The first journey remains current-journey-only in sanctuary/ephemeral mode. Post-Return MAIA remains a separate continuity-enabled act. Across Time receives only member-selected temporal context and may synthesize it as one differentiated gestalt without flattening source, authorship, epistemic kind, or time relation. `AIN-INDRAS-WEB-01` is honored as source/relation grammar; automatic whole-House retrieval is not activated in this local candidate. The constitutional source remains unchanged.
 
@@ -36,7 +36,7 @@ Programme documentation and native Work Unit registration are the work of this a
 
 **Current act:** `BECOMING-RECONCILE-01` — one local candidate only. The live-guide and Across-Time lanes have been reconciled without enabling silent cross-facet retrieval, canonical merge, or production deployment.
 
-**Next gate:** founder complete-flow witness at `http://localhost:3800/becoming`: **Journey → Elements → MAIA → Return → Synthesis → Across Time**. If accepted, the next engineering boundary is House integration of this exact behavior rather than further Becoming redesign.
+**Next gate:** House integration of this exact reconciled behavior rather than further Becoming redesign. Whole-House Indra's Web retrieval remains separately governed: native interconnectedness does not authorize silent cross-facet access.
 
 The decision is not “shall an AI build everything now?” It is whether to adopt the prospective field under the name Becoming, explicitly distinguish it from the earlier deferred gathering-room proposal, and adopt the conformance repairs identified in the docket. The older records remain historical evidence. Their build stops are not silently lifted.
 
