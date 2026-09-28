@@ -1,0 +1,1353 @@
+{
+  "generatedAt": "2026-09-28T18:25:49.726Z",
+  "parentR2": "23c83ccc895af27037a43d405ce80a32db0649a6",
+  "trajectory": {
+    "trajectoryRef": "r3:phase-witness",
+    "moments": [
+      {
+        "index": 0,
+        "fieldRef": "r3:t1",
+        "motifRefs": [
+          "aether-pattern:grief",
+          "aether-pattern:fear",
+          "aether-pattern:isolation"
+        ],
+        "relationRefs": [
+          "aether-pattern:fear::aether-pattern:grief::shared_facet",
+          "aether-pattern:fear::aether-pattern:grief::shared_quality",
+          "aether-pattern:fear::aether-pattern:grief::shared_temporal",
+          "aether-pattern:grief::aether-pattern:isolation::shared_quality",
+          "aether-pattern:grief::aether-pattern:isolation::shared_temporal",
+          "aether-pattern:fear::aether-pattern:isolation::shared_quality",
+          "aether-pattern:fear::aether-pattern:isolation::shared_temporal"
+        ]
+      },
+      {
+        "index": 1,
+        "fieldRef": "r3:t2",
+        "motifRefs": [
+          "aether-pattern:grief",
+          "aether-pattern:fear",
+          "aether-pattern:memory"
+        ],
+        "relationRefs": [
+          "aether-pattern:fear::aether-pattern:grief::shared_quality",
+          "aether-pattern:fear::aether-pattern:grief::shared_temporal",
+          "aether-pattern:grief::aether-pattern:memory::shared_facet",
+          "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+          "aether-pattern:fear::aether-pattern:memory::shared_temporal"
+        ]
+      },
+      {
+        "index": 2,
+        "fieldRef": "r3:t3",
+        "motifRefs": [
+          "aether-pattern:grief",
+          "aether-pattern:memory",
+          "aether-pattern:love"
+        ],
+        "relationRefs": [
+          "aether-pattern:grief::aether-pattern:memory::shared_facet",
+          "aether-pattern:grief::aether-pattern:memory::shared_quality",
+          "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+          "aether-pattern:grief::aether-pattern:love::shared_quality",
+          "aether-pattern:grief::aether-pattern:love::shared_temporal",
+          "aether-pattern:love::aether-pattern:memory::shared_quality",
+          "aether-pattern:love::aether-pattern:memory::shared_temporal"
+        ]
+      },
+      {
+        "index": 3,
+        "fieldRef": "r3:t4",
+        "motifRefs": [
+          "aether-pattern:grief",
+          "aether-pattern:memory",
+          "aether-pattern:love",
+          "aether-pattern:creativity"
+        ],
+        "relationRefs": [
+          "aether-pattern:grief::aether-pattern:memory::shared_facet",
+          "aether-pattern:grief::aether-pattern:memory::shared_quality",
+          "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+          "aether-pattern:grief::aether-pattern:love::shared_quality",
+          "aether-pattern:grief::aether-pattern:love::shared_temporal",
+          "aether-pattern:creativity::aether-pattern:grief::shared_facet",
+          "aether-pattern:creativity::aether-pattern:grief::shared_quality",
+          "aether-pattern:creativity::aether-pattern:grief::shared_temporal",
+          "aether-pattern:love::aether-pattern:memory::shared_quality",
+          "aether-pattern:love::aether-pattern:memory::shared_temporal",
+          "aether-pattern:creativity::aether-pattern:memory::shared_quality",
+          "aether-pattern:creativity::aether-pattern:memory::shared_temporal",
+          "aether-pattern:creativity::aether-pattern:love::shared_quality",
+          "aether-pattern:creativity::aether-pattern:love::shared_temporal"
+        ]
+      }
+    ],
+    "deltas": [
+      {
+        "fromFieldRef": "r3:t1",
+        "toFieldRef": "r3:t2",
+        "patternDeltas": [
+          {
+            "patternRef": "aether-pattern:grief",
+            "motif": "Grief",
+            "kind": "unchanged",
+            "beforeFacetRefs": [
+              "journal"
+            ],
+            "afterFacetRefs": [
+              "journal"
+            ],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [
+              "tension"
+            ],
+            "afterQualities": [
+              "tension"
+            ],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": "unreviewed"
+          },
+          {
+            "patternRef": "aether-pattern:fear",
+            "motif": "Fear",
+            "kind": "reconfigured",
+            "beforeFacetRefs": [
+              "journal"
+            ],
+            "afterFacetRefs": [
+              "relationship"
+            ],
+            "addedFacetRefs": [
+              "relationship"
+            ],
+            "removedFacetRefs": [
+              "journal"
+            ],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [
+              "tension"
+            ],
+            "afterQualities": [
+              "tension"
+            ],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": "unreviewed"
+          },
+          {
+            "patternRef": "aether-pattern:isolation",
+            "motif": "Isolation",
+            "kind": "disappeared",
+            "beforeFacetRefs": [
+              "relationship"
+            ],
+            "afterFacetRefs": [],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [
+              "relationship"
+            ],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [],
+            "beforeQualities": [
+              "tension"
+            ],
+            "afterQualities": [],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": null
+          },
+          {
+            "patternRef": "aether-pattern:memory",
+            "motif": "Memory",
+            "kind": "appeared",
+            "beforeFacetRefs": [],
+            "afterFacetRefs": [
+              "journal"
+            ],
+            "addedFacetRefs": [
+              "journal"
+            ],
+            "removedFacetRefs": [],
+            "beforeTemporal": [],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": null,
+            "afterRecognition": "unreviewed"
+          }
+        ],
+        "geometryBefore": {
+          "fieldRef": "r3:t1",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:isolation::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:isolation",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:isolation::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:isolation",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:isolation::shared_quality",
+              "aPatternRef": "aether-pattern:fear",
+              "bPatternRef": "aether-pattern:isolation",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:isolation::shared_temporal",
+              "aPatternRef": "aether-pattern:fear",
+              "bPatternRef": "aether-pattern:isolation",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryAfter": {
+          "fieldRef": "r3:t2",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:fear",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryDelta": {
+          "addedRelations": [
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:fear",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ],
+          "removedRelations": [
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:isolation::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:isolation",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:isolation::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:isolation",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:isolation::shared_quality",
+              "aPatternRef": "aether-pattern:fear",
+              "bPatternRef": "aether-pattern:isolation",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:isolation::shared_temporal",
+              "aPatternRef": "aether-pattern:fear",
+              "bPatternRef": "aether-pattern:isolation",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ],
+          "strengthenedRelations": [],
+          "weakenedRelations": []
+        },
+        "changed": true,
+        "finalMeaningAuthority": "member",
+        "provisional": true
+      },
+      {
+        "fromFieldRef": "r3:t2",
+        "toFieldRef": "r3:t3",
+        "patternDeltas": [
+          {
+            "patternRef": "aether-pattern:grief",
+            "motif": "Grief",
+            "kind": "intensified",
+            "beforeFacetRefs": [
+              "journal"
+            ],
+            "afterFacetRefs": [
+              "journal",
+              "creative"
+            ],
+            "addedFacetRefs": [
+              "creative"
+            ],
+            "removedFacetRefs": [],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [
+              "tension"
+            ],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": "unreviewed"
+          },
+          {
+            "patternRef": "aether-pattern:fear",
+            "motif": "Fear",
+            "kind": "disappeared",
+            "beforeFacetRefs": [
+              "relationship"
+            ],
+            "afterFacetRefs": [],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [
+              "relationship"
+            ],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [],
+            "beforeQualities": [
+              "tension"
+            ],
+            "afterQualities": [],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": null
+          },
+          {
+            "patternRef": "aether-pattern:memory",
+            "motif": "Memory",
+            "kind": "unchanged",
+            "beforeFacetRefs": [
+              "journal"
+            ],
+            "afterFacetRefs": [
+              "journal"
+            ],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [
+              "resonance"
+            ],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": "unreviewed"
+          },
+          {
+            "patternRef": "aether-pattern:love",
+            "motif": "Love",
+            "kind": "appeared",
+            "beforeFacetRefs": [],
+            "afterFacetRefs": [
+              "relationship"
+            ],
+            "addedFacetRefs": [
+              "relationship"
+            ],
+            "removedFacetRefs": [],
+            "beforeTemporal": [],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": null,
+            "afterRecognition": "unreviewed"
+          }
+        ],
+        "geometryBefore": {
+          "fieldRef": "r3:t2",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:fear",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryAfter": {
+          "fieldRef": "r3:t3",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:love::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:love::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryDelta": {
+          "addedRelations": [
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:love::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:love::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ],
+          "removedRelations": [
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:grief::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:fear",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:fear::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:fear",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ],
+          "strengthenedRelations": [],
+          "weakenedRelations": []
+        },
+        "changed": true,
+        "finalMeaningAuthority": "member",
+        "provisional": true
+      },
+      {
+        "fromFieldRef": "r3:t3",
+        "toFieldRef": "r3:t4",
+        "patternDeltas": [
+          {
+            "patternRef": "aether-pattern:grief",
+            "motif": "Grief",
+            "kind": "unchanged",
+            "beforeFacetRefs": [
+              "journal",
+              "creative"
+            ],
+            "afterFacetRefs": [
+              "journal",
+              "creative"
+            ],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [
+              "resonance"
+            ],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": "unreviewed"
+          },
+          {
+            "patternRef": "aether-pattern:memory",
+            "motif": "Memory",
+            "kind": "unchanged",
+            "beforeFacetRefs": [
+              "journal"
+            ],
+            "afterFacetRefs": [
+              "journal"
+            ],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [
+              "resonance"
+            ],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": "unreviewed"
+          },
+          {
+            "patternRef": "aether-pattern:love",
+            "motif": "Love",
+            "kind": "unchanged",
+            "beforeFacetRefs": [
+              "relationship"
+            ],
+            "afterFacetRefs": [
+              "relationship"
+            ],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [
+              "resonance"
+            ],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": "unreviewed"
+          },
+          {
+            "patternRef": "aether-pattern:creativity",
+            "motif": "Creativity",
+            "kind": "appeared",
+            "beforeFacetRefs": [],
+            "afterFacetRefs": [
+              "creative"
+            ],
+            "addedFacetRefs": [
+              "creative"
+            ],
+            "removedFacetRefs": [],
+            "beforeTemporal": [],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": null,
+            "afterRecognition": "unreviewed"
+          }
+        ],
+        "geometryBefore": {
+          "fieldRef": "r3:t3",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:love::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:love::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryAfter": {
+          "fieldRef": "r3:t4",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:love::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:love::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:grief::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:grief::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:grief::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:love",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:love::shared_quality",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:love::shared_temporal",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryDelta": {
+          "addedRelations": [
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:grief::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:grief::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:grief::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:memory",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:love::shared_quality",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:creativity::aether-pattern:love::shared_temporal",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:creativity",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ],
+          "removedRelations": [],
+          "strengthenedRelations": [],
+          "weakenedRelations": []
+        },
+        "changed": true,
+        "finalMeaningAuthority": "member",
+        "provisional": true
+      }
+    ],
+    "classification": "sustained_convergence",
+    "supportingSignals": [
+      "repeated_intensification_or_reconfiguration",
+      "cross_facet_convergence"
+    ],
+    "confidence": 0.7,
+    "predictiveAuthority": false,
+    "destinyAuthority": false,
+    "developmentalRankAuthority": false,
+    "finalMeaningAuthority": "member",
+    "provisional": true
+  },
+  "validation": {
+    "valid": true,
+    "errors": []
+  },
+  "recurrence": {
+    "trajectoryRef": "r3:recurrence",
+    "moments": [
+      {
+        "index": 0,
+        "fieldRef": "rr1",
+        "motifRefs": [
+          "aether-pattern:grief",
+          "aether-pattern:memory"
+        ],
+        "relationRefs": [
+          "aether-pattern:grief::aether-pattern:memory::shared_facet",
+          "aether-pattern:grief::aether-pattern:memory::shared_quality",
+          "aether-pattern:grief::aether-pattern:memory::shared_temporal"
+        ]
+      },
+      {
+        "index": 1,
+        "fieldRef": "rr2",
+        "motifRefs": [
+          "aether-pattern:love",
+          "aether-pattern:memory"
+        ],
+        "relationRefs": [
+          "aether-pattern:love::aether-pattern:memory::shared_quality",
+          "aether-pattern:love::aether-pattern:memory::shared_temporal"
+        ]
+      },
+      {
+        "index": 2,
+        "fieldRef": "rr3",
+        "motifRefs": [
+          "aether-pattern:grief",
+          "aether-pattern:memory"
+        ],
+        "relationRefs": [
+          "aether-pattern:grief::aether-pattern:memory::shared_quality",
+          "aether-pattern:grief::aether-pattern:memory::shared_temporal"
+        ]
+      }
+    ],
+    "deltas": [
+      {
+        "fromFieldRef": "rr1",
+        "toFieldRef": "rr2",
+        "patternDeltas": [
+          {
+            "patternRef": "aether-pattern:grief",
+            "motif": "Grief",
+            "kind": "disappeared",
+            "beforeFacetRefs": [
+              "journal"
+            ],
+            "afterFacetRefs": [],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [
+              "journal"
+            ],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [],
+            "beforeQualities": [
+              "resonance"
+            ],
+            "afterQualities": [],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": null
+          },
+          {
+            "patternRef": "aether-pattern:memory",
+            "motif": "Memory",
+            "kind": "unchanged",
+            "beforeFacetRefs": [
+              "journal"
+            ],
+            "afterFacetRefs": [
+              "journal"
+            ],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [
+              "resonance"
+            ],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": "unreviewed"
+          },
+          {
+            "patternRef": "aether-pattern:love",
+            "motif": "Love",
+            "kind": "appeared",
+            "beforeFacetRefs": [],
+            "afterFacetRefs": [
+              "relationship"
+            ],
+            "addedFacetRefs": [
+              "relationship"
+            ],
+            "removedFacetRefs": [],
+            "beforeTemporal": [],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": null,
+            "afterRecognition": "unreviewed"
+          }
+        ],
+        "geometryBefore": {
+          "fieldRef": "rr1",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryAfter": {
+          "fieldRef": "rr2",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryDelta": {
+          "addedRelations": [
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ],
+          "removedRelations": [
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_facet",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_facet",
+              "strength": 0.4
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ],
+          "strengthenedRelations": [],
+          "weakenedRelations": []
+        },
+        "changed": true,
+        "finalMeaningAuthority": "member",
+        "provisional": true
+      },
+      {
+        "fromFieldRef": "rr2",
+        "toFieldRef": "rr3",
+        "patternDeltas": [
+          {
+            "patternRef": "aether-pattern:love",
+            "motif": "Love",
+            "kind": "disappeared",
+            "beforeFacetRefs": [
+              "relationship"
+            ],
+            "afterFacetRefs": [],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [
+              "relationship"
+            ],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [],
+            "beforeQualities": [
+              "resonance"
+            ],
+            "afterQualities": [],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": null
+          },
+          {
+            "patternRef": "aether-pattern:memory",
+            "motif": "Memory",
+            "kind": "unchanged",
+            "beforeFacetRefs": [
+              "journal"
+            ],
+            "afterFacetRefs": [
+              "journal"
+            ],
+            "addedFacetRefs": [],
+            "removedFacetRefs": [],
+            "beforeTemporal": [
+              "is_being"
+            ],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [
+              "resonance"
+            ],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": "unreviewed",
+            "afterRecognition": "unreviewed"
+          },
+          {
+            "patternRef": "aether-pattern:grief",
+            "motif": "Grief",
+            "kind": "appeared",
+            "beforeFacetRefs": [],
+            "afterFacetRefs": [
+              "creative"
+            ],
+            "addedFacetRefs": [
+              "creative"
+            ],
+            "removedFacetRefs": [],
+            "beforeTemporal": [],
+            "afterTemporal": [
+              "is_being"
+            ],
+            "beforeQualities": [],
+            "afterQualities": [
+              "resonance"
+            ],
+            "beforeRecognition": null,
+            "afterRecognition": "unreviewed"
+          }
+        ],
+        "geometryBefore": {
+          "fieldRef": "rr2",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryAfter": {
+          "fieldRef": "rr3",
+          "relations": [
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ]
+        },
+        "geometryDelta": {
+          "addedRelations": [
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:grief::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:grief",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ],
+          "removedRelations": [
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_quality",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_quality",
+              "strength": 0.32
+            },
+            {
+              "relationRef": "aether-pattern:love::aether-pattern:memory::shared_temporal",
+              "aPatternRef": "aether-pattern:love",
+              "bPatternRef": "aether-pattern:memory",
+              "basis": "shared_temporal",
+              "strength": 0.25
+            }
+          ],
+          "strengthenedRelations": [],
+          "weakenedRelations": []
+        },
+        "changed": true,
+        "finalMeaningAuthority": "member",
+        "provisional": true
+      }
+    ],
+    "classification": "recurrence",
+    "supportingSignals": [
+      "motif_returns_after_absence"
+    ],
+    "confidence": 0.75,
+    "predictiveAuthority": false,
+    "destinyAuthority": false,
+    "developmentalRankAuthority": false,
+    "finalMeaningAuthority": "member",
+    "provisional": true
+  }
+}

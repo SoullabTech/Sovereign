@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-09-28T18:25:49.726Z",
+  "parentR2": "23c83ccc895af27037a43d405ce80a32db0649a6",
+  "momentCount": 4,
+  "classification": "sustained_convergence",
+  "supportingSignals": [
+    "repeated_intensification_or_reconfiguration",
+    "cross_facet_convergence"
+  ],
+  "confidence": 0.7,
+  "recurrenceClassification": "recurrence",
+  "predictiveAuthority": false,
+  "destinyAuthority": false,
+  "developmentalRankAuthority": false,
+  "memberOwnsFinalMeaning": true,
+  "valid": true
+}
