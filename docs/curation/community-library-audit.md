@@ -67,7 +67,7 @@ _Collection id: `philosophical-foundations` — 5 articles_
 
 - **id:** `one-maia-many-fields`
 - **source:** `Community-Commons/library/one-maia-many-fields.md`
-- **length:** 1,103 words
+- **length:** 1,107 words
 - **dek:** Why MAIA may feel different in Journal, Dream, Divination, Relationships, Writing and other rooms without becoming a different intelligence.
 
 > *How one relational intelligence changes posture without becoming someone else* There is a simple idea underneath much of Soullab: > **There is one MAIA. The field changes how she meets you.** This matters because a Journal is not a Dream, a Dream is not a Decision, and a Decisio…

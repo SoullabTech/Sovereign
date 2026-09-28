@@ -320,15 +320,7 @@ It is discipline.
 
 To design systems that can enter the field of human experience without collapsing it.
 `,
-  "one-maia-many-fields": `---
-title: One MAIA, Many Fields
-subtitle: How one relational intelligence changes posture without becoming someone else
-category: foundation
-status: canonical
-author: Kelly Nezat
----
-
-# One MAIA, Many Fields
+  "one-maia-many-fields": `# One MAIA, Many Fields
 
 *How one relational intelligence changes posture without becoming someone else*
 
@@ -395,6 +387,7 @@ In **Dream**, she may stay with one image, phrase, feeling, or gap for a long ti
 In **Divination**, she can meet symbolic material as symbolic material: a source of possibility, resonance, and inquiry rather than a verdict about your future.
 
 In **Relationships**, she can attend to what exists between people while resisting the temptation to declare what another person secretly thinks or feels.
+
 In **Decisions**, she can help expose tensions, assumptions, risks, and possibilities without becoming the one who chooses.
 
 In **Changes**, she can stay with movement across time: what has shifted, what has repeated, what contradicts itself, and what is still becoming visible.
@@ -462,6 +455,7 @@ So:
 MAIA can be fully present without everything becoming durable.
 
 The field and your consent help determine what is carried forward.
+
 This is especially important in intimate work.
 
 A private reflection should not become memory merely because MAIA was invited to sit with it.
@@ -510,6 +504,7 @@ Field attunement attempts to hold both:
 - **difference without fragmentation**
 - **intelligence without takeover**
 - **presence without possession**
+
 The result should feel less like moving between tools and more like moving through different rooms of one life.
 
 The room changes.
