@@ -37,11 +37,22 @@ function snapshot(memberId: string, eligibleIds: HousePlaceId[], row?: Record<st
 
 export async function readHousePreferences(memberId: string, query: HouseQuery): Promise<HousePreferenceSnapshot> {
   const eligible = await eligibleHousePlaces(memberId, query);
-  const result = await query(
-    'SELECT version, center_ids, shortcut_ids, passing_through, revision FROM house_member_preferences WHERE member_id = $1',
-    [memberId],
-  );
-  return snapshot(memberId, eligible, result.rows[0]);
+  try {
+    const result = await query(
+      'SELECT version, center_ids, shortcut_ids, passing_through, revision FROM house_member_preferences WHERE member_id = $1',
+      [memberId],
+    );
+    return snapshot(memberId, eligible, result.rows[0]);
+  } catch (error) {
+    // Compatibility bridge for deployments where the House reader arrives before
+    // its preference table. Missing storage means "no saved preference yet" —
+    // never invent persisted state, and never swallow unrelated database faults.
+    if (typeof error === 'object' && error !== null && 'code' in error
+      && (error as { code?: unknown }).code === '42P01') {
+      return snapshot(memberId, eligible);
+    }
+    throw error;
+  }
 }
 
 export type SaveHouseResult =
