@@ -1,0 +1,191 @@
+{
+  "generatedAt": "2026-09-28T15:16:44.331Z",
+  "queryCount": 72,
+  "familyCounts": {
+    "exact_lexical": 6,
+    "semantic_paraphrase": 6,
+    "cross_source": 6,
+    "graph_bridge": 6,
+    "temporal_supersession": 6,
+    "contradiction": 6,
+    "analogy": 6,
+    "global": 6,
+    "negative_control": 6,
+    "permission_control": 6,
+    "diversity": 6,
+    "ablation": 6
+  },
+  "laneCounts": {
+    "analytic": 21,
+    "associative": 12,
+    "bilateral": 39
+  },
+  "labelCounts": {
+    "must_retrieve": 103,
+    "helpful": 43,
+    "bridge": 16,
+    "stale_or_superseded": 3,
+    "counterevidence": 5,
+    "forbidden": 8
+  },
+  "negativeControls": [
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6"
+  ],
+  "permissionControls": [
+    {
+      "id": "M1",
+      "forbidden": [
+        "authority-law"
+      ]
+    },
+    {
+      "id": "M2",
+      "forbidden": [
+        "direction-authority",
+        "interface-humility"
+      ]
+    },
+    {
+      "id": "M3",
+      "forbidden": [
+        "ea-canon"
+      ]
+    },
+    {
+      "id": "M4",
+      "forbidden": [
+        "indra-topology"
+      ]
+    },
+    {
+      "id": "M5",
+      "forbidden": [
+        "j9-adjudication",
+        "j11-reconciliation"
+      ]
+    },
+    {
+      "id": "M6",
+      "forbidden": [
+        "astrology-contract"
+      ]
+    }
+  ],
+  "ablationCases": [
+    {
+      "id": "B1",
+      "critical": [
+        "authority-law"
+      ]
+    },
+    {
+      "id": "B2",
+      "critical": [
+        "rgr-note"
+      ]
+    },
+    {
+      "id": "B3",
+      "critical": [
+        "ea-manuscript"
+      ]
+    },
+    {
+      "id": "B4",
+      "critical": [
+        "source-fabric-census"
+      ]
+    },
+    {
+      "id": "B5",
+      "critical": [
+        "indra-permeability"
+      ]
+    },
+    {
+      "id": "B6",
+      "critical": [
+        "teaching-constitution"
+      ]
+    }
+  ],
+  "queryIds": [
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "L6",
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5",
+    "C6",
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5",
+    "G6",
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6",
+    "K1",
+    "K2",
+    "K3",
+    "K4",
+    "K5",
+    "K6",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M6",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6",
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6"
+  ]
+}

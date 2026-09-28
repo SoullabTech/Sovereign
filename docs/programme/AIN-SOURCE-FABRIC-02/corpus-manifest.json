@@ -1,0 +1,475 @@
+{
+  "generatedAt": "2026-09-28T15:16:44.315Z",
+  "baseCommit": "f4016184a95c6dfe6de1130cbe9622073c09e7b7",
+  "sourceCount": 26,
+  "siblingSnapshotCount": 5,
+  "sources": [
+    {
+      "sourceRef": "authority-law",
+      "path": "docs/canon/REPRESENTATION_AUTHORITY_LAW.md",
+      "sourceClass": "canon",
+      "domain": "authority",
+      "epistemicRole": "governing_law",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "authority",
+        "representation",
+        "selection",
+        "grant",
+        "attestation",
+        "similarity"
+      ],
+      "sha256": "b2bc6c86277163b5117d9e1f5a45ce5ba1cb43e0cd6cfbadbcae459814ab8daf"
+    },
+    {
+      "sourceRef": "interface-humility",
+      "path": "docs/canon/INTERFACE_HUMILITY.md",
+      "sourceClass": "canon",
+      "domain": "epistemic-posture",
+      "epistemicRole": "governing_law",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "humility",
+        "representation",
+        "person",
+        "orientation",
+        "non-possession"
+      ],
+      "sha256": "ca09db67eda8f32a1c77ba13b0f4dd4514043d07b254e78c5a0303325f971d20"
+    },
+    {
+      "sourceRef": "remain-unpossessed",
+      "path": "docs/canon/RIGHT_TO_REMAIN_UNPOSSESSED.md",
+      "sourceClass": "canon",
+      "domain": "memory-sovereignty",
+      "epistemicRole": "governing_law",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "memory",
+        "non-formation",
+        "opacity",
+        "refusal",
+        "temporal-sovereignty"
+      ],
+      "sha256": "767d82eb852bb265679d464459e2a9ec747f24c73b0c8728e9c7cfd6c4da791a"
+    },
+    {
+      "sourceRef": "direction-authority",
+      "path": "docs/canon/CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md",
+      "sourceClass": "canon",
+      "domain": "authority",
+      "epistemicRole": "governing_law",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "authority",
+        "member",
+        "development",
+        "constitutional",
+        "maia-role"
+      ],
+      "sha256": "859ae3e09dfb0895da9b8177a3a05eef5ea54844b4b65bc135bda323c89b6199"
+    },
+    {
+      "sourceRef": "memory-consent",
+      "path": "docs/design/contracts/memory-consent.md",
+      "sourceClass": "design_contract",
+      "domain": "memory",
+      "epistemicRole": "experience_contract",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "memory",
+        "consent",
+        "writing",
+        "recall",
+        "member-control"
+      ],
+      "sha256": "8416c5f7bc00c3930fb80a975561378e7d76343545639a3c9b936979891fba20"
+    },
+    {
+      "sourceRef": "facet-crossings",
+      "path": "docs/design/contracts/facet-crossings.md",
+      "sourceClass": "design_contract",
+      "domain": "house-relations",
+      "epistemicRole": "experience_contract",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "crossing",
+        "provenance",
+        "source-identity",
+        "return",
+        "authorship",
+        "relation"
+      ],
+      "sha256": "a67eb9e0e4ec9663c4de10c07614c108ca92d69f517688580822fd8a0aab904a"
+    },
+    {
+      "sourceRef": "dream-object",
+      "path": "docs/design/contracts/dream-canonical-object.md",
+      "sourceClass": "design_contract",
+      "domain": "dream",
+      "epistemicRole": "experience_contract",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "dream",
+        "imaginal",
+        "similarity",
+        "member-owned",
+        "canonical-object",
+        "prospective"
+      ],
+      "sha256": "b092e9174bea44cd3d79e08c71389c72e073a90d2bb0efdc462f7080d08503ea"
+    },
+    {
+      "sourceRef": "astrology-contract",
+      "path": "docs/design/contracts/astrology.md",
+      "sourceClass": "design_contract",
+      "domain": "astrology",
+      "epistemicRole": "experience_contract",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "astrology",
+        "symbolic",
+        "prediction",
+        "identity",
+        "orientation",
+        "birth-chart"
+      ],
+      "sha256": "50a6e650f797c660d02ed3a1be8439327965b2499b95171586e4f19dfeb213fb"
+    },
+    {
+      "sourceRef": "divination-return",
+      "path": "docs/design/contracts/divination-saved-readings.md",
+      "sourceClass": "design_contract",
+      "domain": "divination",
+      "epistemicRole": "experience_contract",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "divination",
+        "returnability",
+        "exact-return",
+        "symbolic",
+        "provenance"
+      ],
+      "sha256": "98af4d891e73edb5580db1ebd2259dba51dca668d9c39b5982e087d61f02b1a3"
+    },
+    {
+      "sourceRef": "writers-studio",
+      "path": "docs/design/contracts/writers-studio-rebuild.md",
+      "sourceClass": "design_contract",
+      "domain": "writing",
+      "epistemicRole": "experience_contract",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "writing",
+        "voice",
+        "authorship",
+        "editorial",
+        "manuscript",
+        "guide"
+      ],
+      "sha256": "980af53235d2b1c9678427a826759538f783a781956ea4e67f0bf59eb6d26e47"
+    },
+    {
+      "sourceRef": "rgr-note",
+      "path": "docs/research/relational-geometry/RELATIONAL_GEOMETRY_PRELIMINARY_NOTE_2026-09-15.md",
+      "sourceClass": "research",
+      "domain": "relational-geometry",
+      "epistemicRole": "research_hypothesis",
+      "temporalStanding": "current",
+      "authorityRole": "descriptive",
+      "tags": [
+        "relation",
+        "typed-relation",
+        "similarity",
+        "geometry",
+        "astrology",
+        "grammar"
+      ],
+      "sha256": "1dfa6c16fda5953797791708bc9401d2ed9487d8f93c7498090d94f5cca5f194"
+    },
+    {
+      "sourceRef": "rgr-constitution",
+      "path": "docs/programme/RGR-00_RELATIONAL_GEOMETRY_RESEARCH_CONSTITUTION_2026-09-18.md",
+      "sourceClass": "programme_constitution",
+      "domain": "relational-geometry",
+      "epistemicRole": "research_landscape",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "relation",
+        "meaning",
+        "model",
+        "hypothesis",
+        "prediction",
+        "geometry",
+        "provenance"
+      ],
+      "sha256": "3f1d51f0ab495985c26e1c8839eccfd45637a47a4bc9f93796cf362131682905"
+    },
+    {
+      "sourceRef": "teaching-constitution",
+      "path": "docs/programme/MAIA-TEACHING-INTELLIGENCE-01_T0_TEACHING_CONSTITUTION_2026-09-18.md",
+      "sourceClass": "programme_constitution",
+      "domain": "teaching",
+      "epistemicRole": "governing_law",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "teaching",
+        "learner-sovereignty",
+        "presence",
+        "source-fidelity",
+        "assessment"
+      ],
+      "sha256": "8fa8ed45c40d16398f78037ea8c15af413f1dadba3dcf32109a9d064b80bd9ce"
+    },
+    {
+      "sourceRef": "ea-canon",
+      "path": "docs/specs/ELEMENTAL_ALCHEMY_FOUNDER_CANON_SPEC_2026-07-27.md",
+      "sourceClass": "architecture",
+      "domain": "elemental-alchemy",
+      "epistemicRole": "implementation_architecture",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "elemental-alchemy",
+        "provenance",
+        "author-only",
+        "similarity-threshold",
+        "retrieval"
+      ],
+      "sha256": "2fea44016359d083734aef651a67eaa4c4a4213cadb6af024acc7b6908515503"
+    },
+    {
+      "sourceRef": "ea-manuscript",
+      "path": "docs/book-studio/ELEMENTAL_ALCHEMY_MANUSCRIPT.md",
+      "sourceClass": "manuscript",
+      "domain": "elemental-alchemy",
+      "epistemicRole": "author_source",
+      "temporalStanding": "current",
+      "authorityRole": "author_source",
+      "tags": [
+        "elemental-alchemy",
+        "lambspring",
+        "edinger",
+        "jung",
+        "individuation",
+        "alchemy"
+      ],
+      "sha256": "1215c09aca09e8162d705a762bdd631862c81fb3ac39baa3d4e19e379464d1da"
+    },
+    {
+      "sourceRef": "j9-adjudication",
+      "path": "docs/programme/J9_REPRESENTATION_AUTHORITY_ADJUDICATION_2026-09-17.md",
+      "sourceClass": "programme_witness",
+      "domain": "authority",
+      "epistemicRole": "technical_witness",
+      "temporalStanding": "historical_context",
+      "authorityRole": "evidence",
+      "tags": [
+        "authority",
+        "representation",
+        "adjudication",
+        "historical"
+      ],
+      "sha256": "575eeb02e86372b3d8111fda49b54b0060d3fbddb8fed1576a6f0a87d5672d92"
+    },
+    {
+      "sourceRef": "j11-reconciliation",
+      "path": "docs/programme/J11_CANONICAL_TRANSFER_RECONCILIATION_2026-09-17.md",
+      "sourceClass": "programme_witness",
+      "domain": "authority",
+      "epistemicRole": "technical_witness",
+      "temporalStanding": "supersession_record",
+      "authorityRole": "evidence",
+      "tags": [
+        "authority",
+        "reconciliation",
+        "supersession",
+        "retrieval",
+        "historical"
+      ],
+      "sha256": "75083460d2e0c411658d304e74dd6394fa5d4295c6d98c129ebbd7952598c318"
+    },
+    {
+      "sourceRef": "library-adr",
+      "path": "docs/adr/004-converge-on-single-knowledge-engine.md",
+      "sourceClass": "architecture",
+      "domain": "retrieval",
+      "epistemicRole": "implementation_architecture",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "library",
+        "retrieval",
+        "one-engine",
+        "pgvector",
+        "full-text",
+        "consent"
+      ],
+      "sha256": "f1d7d5ab14bc0e713636f4d35030831bc32da0cfbed0a41f1349c088eae215e4"
+    },
+    {
+      "sourceRef": "source-fabric",
+      "path": "docs/programme/AIN-SOURCE-FABRIC-01/SOURCE_FABRIC_CONTRACT_2026-09-28.md",
+      "sourceClass": "programme_constitution",
+      "domain": "retrieval-governance",
+      "epistemicRole": "governing_law",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "permission",
+        "retrieval",
+        "epistemic-standing",
+        "temporal",
+        "graph",
+        "counterevidence"
+      ],
+      "sha256": "7e91812bd8e2e250b1487ebbb1568b1f30ddcb952415a40315410a1fb3bc7929"
+    },
+    {
+      "sourceRef": "source-fabric-census",
+      "path": "docs/programme/AIN-SOURCE-FABRIC-01/SUBSTRATE_CENSUS_2026-09-28.md",
+      "sourceClass": "programme_witness",
+      "domain": "retrieval",
+      "epistemicRole": "technical_witness",
+      "temporalStanding": "current",
+      "authorityRole": "evidence",
+      "tags": [
+        "library",
+        "semantic",
+        "full-text",
+        "hybrid",
+        "census",
+        "current-state"
+      ],
+      "sha256": "289a2d2e103d1ab1abec47ace03a816c99b4d10ffa2cb7a6062095e98692fddc"
+    },
+    {
+      "sourceRef": "benchmark-contract",
+      "path": "docs/programme/AIN-SOURCE-FABRIC-02/BENCHMARK_CONTRACT_2026-09-28.md",
+      "sourceClass": "benchmark_contract",
+      "domain": "retrieval-benchmark",
+      "epistemicRole": "benchmark_governance",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "analytic",
+        "associative",
+        "corpus-callosum",
+        "aether",
+        "benchmark",
+        "diversity"
+      ],
+      "sha256": "980ce8343506ea6ab4d2b1ce9d836fc255131652e7ec8873ad9f0bd39596a46c"
+    },
+    {
+      "sourceRef": "indra-grammar",
+      "path": "docs/programme/AIN-SOURCE-FABRIC-02/corpus-snapshots/indras-web/SOURCE_RELATION_GRAMMAR_2026-09-27.md",
+      "sourceClass": "programme_constitution",
+      "domain": "indras-web",
+      "epistemicRole": "governing_law",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "source",
+        "relation",
+        "jewel",
+        "gestalt",
+        "permeability",
+        "correction"
+      ],
+      "snapshotOrigin": "AIN-INDRAS-WEB-01/SOURCE_RELATION_GRAMMAR_2026-09-27.md",
+      "expectedSha256": "b5a2ebd5f9ce9ec13d4bbaec9babd934e4475478d385951feaa63d1abe59ff14",
+      "sha256": "b5a2ebd5f9ce9ec13d4bbaec9babd934e4475478d385951feaa63d1abe59ff14"
+    },
+    {
+      "sourceRef": "indra-permeability",
+      "path": "docs/programme/AIN-SOURCE-FABRIC-02/corpus-snapshots/indras-web/FACET_CENTER_PERMEABILITY_CONTEXT_DISCLOSURE_2026-09-27.md",
+      "sourceClass": "programme_constitution",
+      "domain": "indras-web",
+      "epistemicRole": "governing_law",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "permission",
+        "admission",
+        "speakable",
+        "disclosed",
+        "facet-open",
+        "revocation"
+      ],
+      "snapshotOrigin": "AIN-INDRAS-WEB-01/FACET_CENTER_PERMEABILITY_CONTEXT_DISCLOSURE_2026-09-27.md",
+      "expectedSha256": "412fe23021f31ebbd6e93c2b796659d8e76e1ac4f762b2d4830688d5aef48e71",
+      "sha256": "412fe23021f31ebbd6e93c2b796659d8e76e1ac4f762b2d4830688d5aef48e71"
+    },
+    {
+      "sourceRef": "indra-composer",
+      "path": "docs/programme/AIN-SOURCE-FABRIC-02/corpus-snapshots/indras-web/PURE_CENTER_COMPOSER_CONTRACT_2026-09-27.md",
+      "sourceClass": "programme_constitution",
+      "domain": "indras-web",
+      "epistemicRole": "governing_law",
+      "temporalStanding": "current",
+      "authorityRole": "governing",
+      "tags": [
+        "center",
+        "composer",
+        "gestalt",
+        "member-authority",
+        "provenance"
+      ],
+      "snapshotOrigin": "AIN-INDRAS-WEB-01/PURE_CENTER_COMPOSER_CONTRACT_2026-09-27.md",
+      "expectedSha256": "9aff9ac384d9990b01d998059ef5301005a84ae7b27297175a6aa3c6b3f94087",
+      "sha256": "9aff9ac384d9990b01d998059ef5301005a84ae7b27297175a6aa3c6b3f94087"
+    },
+    {
+      "sourceRef": "indra-validation",
+      "path": "docs/programme/AIN-SOURCE-FABRIC-02/corpus-snapshots/indras-web/WB16_TECHNICAL_RELATIONAL_VALIDATION_2026-09-27.md",
+      "sourceClass": "programme_witness",
+      "domain": "indras-web",
+      "epistemicRole": "technical_witness",
+      "temporalStanding": "current",
+      "authorityRole": "evidence",
+      "tags": [
+        "ablation",
+        "permutation",
+        "counterfactual",
+        "relation-type",
+        "symbolic-standing"
+      ],
+      "snapshotOrigin": "AIN-INDRAS-WEB-01/WB16_TECHNICAL_RELATIONAL_VALIDATION_2026-09-27.md",
+      "expectedSha256": "d620a57f842d5cab430ffcd9b8d4e3f613c41f0133beb9c49f0144bc3905f71e",
+      "sha256": "d620a57f842d5cab430ffcd9b8d4e3f613c41f0133beb9c49f0144bc3905f71e"
+    },
+    {
+      "sourceRef": "indra-topology",
+      "path": "docs/programme/AIN-SOURCE-FABRIC-02/corpus-snapshots/indras-web/WB19_LIVE_TOPOLOGY_AWARE_RENDER_WITNESS_2026-09-28.md",
+      "sourceClass": "programme_witness",
+      "domain": "indras-web",
+      "epistemicRole": "technical_witness",
+      "temporalStanding": "current",
+      "authorityRole": "evidence",
+      "tags": [
+        "topology",
+        "weighting",
+        "revocation",
+        "gestalt",
+        "semantic-leak",
+        "hierarchy"
+      ],
+      "snapshotOrigin": "AIN-INDRAS-WEB-01/WB19_LIVE_TOPOLOGY_AWARE_RENDER_WITNESS_2026-09-28.md",
+      "expectedSha256": "a0ad13484324661417b178544e95fd226923ff212323e956dd9364c3ca977551",
+      "sha256": "a0ad13484324661417b178544e95fd226923ff212323e956dd9364c3ca977551"
+    }
+  ]
+}
