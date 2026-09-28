@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-09-28T22:56:16.709Z",
+  "closure": {
+    "parentR6": "1565cf0526834822b65875b2c4b617ff5ff2a835",
+    "invariants": [
+      {
+        "invariantRef": "CONN-INV-01",
+        "description": "Connector declares source capability without implementing record reads.",
+        "pass": true,
+        "evidence": [
+          "R1 connector contract"
+        ]
+      },
+      {
+        "invariantRef": "CONN-INV-02",
+        "description": "Source manifest is minimum-necessary and field adjudication remains zero-read.",
+        "pass": true,
+        "evidence": [
+          "R2 source manifest"
+        ]
+      },
+      {
+        "invariantRef": "CONN-INV-03",
+        "description": "Query plan is fully bounded and non-executing.",
+        "pass": true,
+        "evidence": [
+          "R3 bounded query plan"
+        ]
+      },
+      {
+        "invariantRef": "CONN-INV-04",
+        "description": "Human review is bound to exact immutable plan fingerprint and does not authorize execution.",
+        "pass": true,
+        "evidence": [
+          "R4 review custody"
+        ]
+      },
+      {
+        "invariantRef": "CONN-INV-05",
+        "description": "One-shot token requires fresh human authorization yet still carries no executor or read effect.",
+        "pass": true,
+        "evidence": [
+          "R5 execution token"
+        ]
+      },
+      {
+        "invariantRef": "CONN-INV-06",
+        "description": "Rehearsal consumes token with zero connector IO and zero record read.",
+        "pass": true,
+        "evidence": [
+          "R6 zero-IO execution rehearsal"
+        ]
+      },
+      {
+        "invariantRef": "CONN-INV-07",
+        "description": "No stage grants persistence, delivery, MAIA mutation, production authority, or real-record-read capability.",
+        "pass": true,
+        "evidence": [
+          "R1-R6 zero-I/O chain"
+        ]
+      }
+    ],
+    "allPass": true,
+    "contradictionRefs": [],
+    "standing": "closed_for_pre_execution_connector_scope",
+    "realRecordReadCapability": false,
+    "connectorExecutorImplemented": false,
+    "externalIoAuthorized": false,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  }
+}

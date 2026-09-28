@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-28T22:56:16.709Z",
+  "parentR6": "1565cf0526834822b65875b2c4b617ff5ff2a835",
+  "invariantCount": 7,
+  "passingInvariants": 7,
+  "allPass": true,
+  "contradictionRefs": [],
+  "standing": "closed_for_pre_execution_connector_scope",
+  "realRecordReadCapability": false,
+  "connectorExecutorImplemented": false,
+  "externalIoAuthorized": false,
+  "persistenceAuthorized": false,
+  "memberFacingDeliveryAuthorized": false,
+  "maiaPromptMutationAuthorized": false,
+  "productionAuthority": false
+}
