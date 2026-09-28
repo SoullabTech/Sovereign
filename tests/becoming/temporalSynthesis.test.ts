@@ -31,6 +31,11 @@ test('temporal synthesis preserves temporal and epistemic distinctions in the pr
   assert.match(prompt,/hypothesis, never as identity/);
   assert.match(prompt,/Counterevidence and member correction outrank/);
   assert.match(prompt,/Imagined future material remains imagined possibility/);
+  assert.match(prompt,/Do not upgrade a member-described contrast into an established pattern/);
+  assert.match(prompt,/rather than declaring an old pattern or saying an imagined future has become real/);
+  assert.match(prompt,/one relational gestalt without collapsing the facets/);
+  assert.match(prompt,/center is a vantage of integration, not a new source of facts/);
+  assert.match(prompt,/preserve every item’s source and epistemic distinction/);
 });
 
 test('synthesis explicitly refuses hidden persistence and inferred identity',()=>{

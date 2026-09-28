@@ -181,13 +181,16 @@ try {
   assert.match(maiaRequests[2].message,/is_being · present_self_report/);
   assert.match(maiaRequests[2].message,/is_becoming · imagined_possibility/);
   assert.match(maiaRequests[2].message,/Do not infer a thread, memory, relationship profile/);
+  assert.match(maiaRequests[2].message,/one relational gestalt without collapsing the facets/);
+  assert.match(maiaRequests[2].message,/center is a vantage of integration, not a new source of facts/);
+  assert.match(maiaRequests[2].message,/preserve every item’s source and epistemic distinction/);
   await page.getByLabel('What fits—or does not?').fill('That does not fit anymore. The invitations I accept now are chosen and joyful.');
   await page.getByRole('button', { name: 'This doesn’t fit', exact: true }).click();
   assert.equal(maiaRequests.length,4);
   assert.match(maiaRequests[3].message,/member correction outranks the prior hypothesis/i);
   assert.match(maiaRequests[3].message,/Release any unsupported claim/);
   await page.screenshot({ path: output + '/screenshots/ux02r4-across-time-maia-desktop.png', fullPage: true });
-  pass('J13M', 'Across Time can explicitly hand only selected temporal material to MAIA, and a member correction invokes the repair contract rather than becoming hidden confirmation.');
+  pass('J13M', 'Across Time can hand only selected temporal material to MAIA, hold it as a differentiated gestalt at center, and release a hypothesis when the member corrects it.');
 
   await page.getByRole('button', { name: 'Your journeys', exact: true }).click();
   await page.getByRole('dialog', { name: 'Leave these Across Time notes?' }).waitFor();
