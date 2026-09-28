@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-28T20:53:27.609Z",
+  "parentLiveR2": "07c666b980923c6b783d6b62041feb9d300b3182",
+  "successCommitted": true,
+  "successShadowCreated": true,
+  "successConsentConsumed": true,
+  "successConsumedAt": "2026-09-28T16:30:00-04:00",
+  "failureCommitted": false,
+  "failureShadowCreated": false,
+  "failureConsentConsumed": false,
+  "failureLifecycleUnchanged": true,
+  "persistenceAuthorized": false,
+  "memberFacingDeliveryAuthorized": false,
+  "maiaPromptMutationAuthorized": false,
+  "productionAuthority": false
+}
