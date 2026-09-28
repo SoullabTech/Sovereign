@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-09-28T17:47:57.469Z",
+  "parentR6": "de6d5bb5e39391fb1f7df342f3a2e9c49d7c6fb1",
+  "p4Modes": [
+    "absence",
+    "analytic",
+    "associative",
+    "imaginal",
+    "uncertainty"
+  ],
+  "p4Valid": true,
+  "p4Contradictions": 0,
+  "p4Absences": 1,
+  "p4Imaginal": 4,
+  "t5Modes": [
+    "absence",
+    "analytic",
+    "associative",
+    "imaginal",
+    "temporal",
+    "uncertainty"
+  ],
+  "t5Valid": true,
+  "t5Contradictions": 0,
+  "t5Absences": 1,
+  "t5Imaginal": 6,
+  "compositeModes": [
+    "absence",
+    "analytic",
+    "associative",
+    "contradiction",
+    "imaginal",
+    "temporal",
+    "uncertainty"
+  ],
+  "compositeValid": true,
+  "compositeModeAblationsValid": true,
+  "compositeContradictions": 1,
+  "compositeAbsences": 1,
+  "compositeTemporal": 2,
+  "compositeImaginal": 7,
+  "permissions": {
+    "allowCrossModeRelation": true,
+    "allowModeCollapse": false,
+    "allowContradictionErasure": false,
+    "allowAbsenceFilling": false,
+    "allowImaginalPromotion": false,
+    "allowWholePersonConclusion": false,
+    "allowPersistence": false
+  }
+}

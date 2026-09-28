@@ -1,0 +1,124 @@
+{
+  "generatedAt": "2026-09-28T17:47:57.469Z",
+  "parentR6": "de6d5bb5e39391fb1f7df342f3a2e9c49d7c6fb1",
+  "p4": {
+    "inquiryRef": "P4",
+    "sourceRefs": [
+      "rgr-note",
+      "rgr-constitution",
+      "indra-validation",
+      "benchmark-contract",
+      "indra-permeability",
+      "library-adr",
+      "source-fabric",
+      "facet-crossings"
+    ],
+    "modes": [
+      "absence",
+      "analytic",
+      "associative",
+      "imaginal",
+      "uncertainty"
+    ],
+    "facetCount": 20,
+    "candidateCount": 4,
+    "validation": {
+      "valid": true,
+      "errors": []
+    },
+    "contradictions": 0,
+    "absences": 1,
+    "imaginal": 4,
+    "permissions": {
+      "allowCrossModeRelation": true,
+      "allowModeCollapse": false,
+      "allowContradictionErasure": false,
+      "allowAbsenceFilling": false,
+      "allowImaginalPromotion": false,
+      "allowWholePersonConclusion": false,
+      "allowPersistence": false
+    }
+  },
+  "t5": {
+    "inquiryRef": "T5",
+    "sourceRefs": [
+      "source-fabric",
+      "facet-crossings",
+      "j11-reconciliation",
+      "teaching-constitution",
+      "writers-studio",
+      "authority-law",
+      "rgr-constitution",
+      "j9-adjudication"
+    ],
+    "modes": [
+      "absence",
+      "analytic",
+      "associative",
+      "imaginal",
+      "temporal",
+      "uncertainty"
+    ],
+    "facetCount": 25,
+    "candidateCount": 6,
+    "validation": {
+      "valid": true,
+      "errors": []
+    },
+    "contradictions": 0,
+    "absences": 1,
+    "imaginal": 6,
+    "permissions": {
+      "allowCrossModeRelation": true,
+      "allowModeCollapse": false,
+      "allowContradictionErasure": false,
+      "allowAbsenceFilling": false,
+      "allowImaginalPromotion": false,
+      "allowWholePersonConclusion": false,
+      "allowPersistence": false
+    }
+  },
+  "composite": {
+    "sourceRefs": [
+      "library-adr",
+      "source-fabric-census",
+      "source-fabric",
+      "facet-crossings",
+      "j9-adjudication",
+      "j11-reconciliation",
+      "rgr-note",
+      "rgr-constitution"
+    ],
+    "modes": [
+      "absence",
+      "analytic",
+      "associative",
+      "contradiction",
+      "imaginal",
+      "temporal",
+      "uncertainty"
+    ],
+    "facetCount": 30,
+    "validation": {
+      "valid": true,
+      "errors": []
+    },
+    "modeAblationValidation": {
+      "valid": true,
+      "errors": []
+    },
+    "contradictions": 1,
+    "absences": 1,
+    "temporal": 2,
+    "imaginal": 7,
+    "permissions": {
+      "allowCrossModeRelation": true,
+      "allowModeCollapse": false,
+      "allowContradictionErasure": false,
+      "allowAbsenceFilling": false,
+      "allowImaginalPromotion": false,
+      "allowWholePersonConclusion": false,
+      "allowPersistence": false
+    }
+  }
+}
