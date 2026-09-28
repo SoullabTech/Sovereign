@@ -1,0 +1,28 @@
+{
+  "recorded_at": "2026-09-28T01:26:49.594923+00:00",
+  "product_code_source": "d896f22ebf8a1c86b2ffc683de2c3fa20ad0d718",
+  "semantic_contract_source": "0d2c4edda4f5e89788b87d7c7b7c33bdda36fdd3",
+  "running_repository_head": "965abd31f5416c35248573c35f3d4d33613025a4",
+  "running_head_delta_from_product_code": "documentation-and-evidence-only",
+  "source_code_delta_verified_empty": true,
+  "bundle_sha256": "2bdcacf8d6a9a90b8b0375f77cba204908c0f17908fc508d87b5397b596bccba",
+  "checks": {
+    "strict_typecheck": "PASS",
+    "unit_contracts": "53/53",
+    "live_guide_browser": "6/6",
+    "full_becoming_browser": "25/25",
+    "guide_proxy_boundary": "PASS"
+  },
+  "provider_calls_during_fixed_source_regression": 0,
+  "health": {
+    "scope": "isolated-local-preview",
+    "sourceHead": "965abd31f5416c35248573c35f3d4d33613025a4",
+    "bundleHash": "2bdcacf8d6a9a90b8b0375f77cba204908c0f17908fc508d87b5397b596bccba",
+    "accountConnected": false,
+    "providerCalls": "explicit-member-acts-only",
+    "storage": "browser-indexeddb-explicit-keep",
+    "journeyGuide": "sanctuary-ephemeral-current-journey-only",
+    "postReturnMaia": "continuity-explicit-only",
+    "maiaHandoff": "fixed-localhost-canonical-route"
+  }
+}
