@@ -68,6 +68,22 @@ describe('P1 owner-scoped SQL', () => {
     const q:HouseQuery=async sql=>({rows:sql.includes('EXISTS')?[{studio:true}]:[{...row,shortcut_ids:['unknown']}]});
     await expect(readHousePreferences('A',q)).rejects.toThrow();
   });
+  test('missing House preference table falls back to canonical defaults without inventing persistence', async () => {
+    const q:HouseQuery=async sql=>{
+      if(sql.includes('EXISTS')) return {rows:[{studio:true}]};
+      throw Object.assign(new Error('missing relation'), {code:'42P01'});
+    };
+    const state=await readHousePreferences('A',q);
+    expect(state.revision).toBe(0);
+    expect(state.preferences).toEqual(prefs);
+  });
+  test('unrelated database failures still refuse rather than degrading silently', async () => {
+    const q:HouseQuery=async sql=>{
+      if(sql.includes('EXISTS')) return {rows:[{studio:true}]};
+      throw Object.assign(new Error('database unavailable'), {code:'08006'});
+    };
+    await expect(readHousePreferences('A',q)).rejects.toThrow('database unavailable');
+  });
   test('first-save SQL is conditional insert, not read-then-unconditional-write', async () => {
     const q=jest.fn(async (sql:string, values:unknown[])=>{
       if(sql.includes('AS studio'))return {rows:[{studio:true}]};
