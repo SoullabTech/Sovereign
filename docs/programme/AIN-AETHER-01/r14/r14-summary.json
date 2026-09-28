@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-09-28T19:21:52.795Z",
+  "parentR13": "6140432bf829c4c1c83a2adfacee4da74215b9a3",
+  "nodeCount": 5,
+  "activeHeadRef": "repair:v2",
+  "activeHeadCount": 1,
+  "appendOnly": true,
+  "v1Preserved": true,
+  "v2Active": true,
+  "rollbackHead": "repair:v3-return-to-v1",
+  "rollbackPreservedOriginal": true,
+  "valid": true,
+  "rollbackValid": true
+}

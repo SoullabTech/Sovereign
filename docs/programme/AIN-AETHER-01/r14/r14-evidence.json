@@ -1,0 +1,125 @@
+{
+  "generatedAt": "2026-09-28T19:21:52.795Z",
+  "parentR13": "6140432bf829c4c1c83a2adfacee4da74215b9a3",
+  "lineage": {
+    "lineageRef": "lineage:H04",
+    "nodes": [
+      {
+        "nodeRef": "machine:v0",
+        "kind": "machine",
+        "parentRef": null,
+        "text": "I notice work and creative are moving in related ways in the reflected field. Does that connection feel real to you?",
+        "accepted": true,
+        "supersededByRef": "repair:v1",
+        "active": false
+      },
+      {
+        "nodeRef": "human-review:H04:1",
+        "kind": "human_review",
+        "parentRef": "machine:v0",
+        "text": null,
+        "accepted": true,
+        "supersededByRef": null,
+        "active": false
+      },
+      {
+        "nodeRef": "repair:v1",
+        "kind": "repair",
+        "parentRef": "machine:v0",
+        "text": "I notice Work and Creative life seem to be gathering into a stronger relationship in the reflected field right now. Does that connection feel accurate to you?",
+        "accepted": true,
+        "supersededByRef": "repair:v2",
+        "active": false
+      },
+      {
+        "nodeRef": "human-review:H04:2",
+        "kind": "human_review",
+        "parentRef": "repair:v1",
+        "text": null,
+        "accepted": true,
+        "supersededByRef": null,
+        "active": false
+      },
+      {
+        "nodeRef": "repair:v2",
+        "kind": "repair",
+        "parentRef": "repair:v1",
+        "text": "Work and Creative life appear more closely related in the reflected field now. Is that useful to notice, or does it feel overstated?",
+        "accepted": true,
+        "supersededByRef": null,
+        "active": true
+      }
+    ],
+    "activeHeadRef": "repair:v2",
+    "appendOnly": true
+  },
+  "validation": {
+    "valid": true,
+    "errors": []
+  },
+  "rollback": {
+    "lineageRef": "lineage:H04",
+    "nodes": [
+      {
+        "nodeRef": "machine:v0",
+        "kind": "machine",
+        "parentRef": null,
+        "text": "I notice work and creative are moving in related ways in the reflected field. Does that connection feel real to you?",
+        "accepted": true,
+        "supersededByRef": "repair:v1",
+        "active": false
+      },
+      {
+        "nodeRef": "human-review:H04:1",
+        "kind": "human_review",
+        "parentRef": "machine:v0",
+        "text": null,
+        "accepted": true,
+        "supersededByRef": null,
+        "active": false
+      },
+      {
+        "nodeRef": "repair:v1",
+        "kind": "repair",
+        "parentRef": "machine:v0",
+        "text": "I notice Work and Creative life seem to be gathering into a stronger relationship in the reflected field right now. Does that connection feel accurate to you?",
+        "accepted": true,
+        "supersededByRef": "repair:v2",
+        "active": false
+      },
+      {
+        "nodeRef": "human-review:H04:2",
+        "kind": "human_review",
+        "parentRef": "repair:v1",
+        "text": null,
+        "accepted": true,
+        "supersededByRef": null,
+        "active": false
+      },
+      {
+        "nodeRef": "repair:v2",
+        "kind": "repair",
+        "parentRef": "repair:v1",
+        "text": "Work and Creative life appear more closely related in the reflected field now. Is that useful to notice, or does it feel overstated?",
+        "accepted": true,
+        "supersededByRef": "repair:v3-return-to-v1",
+        "active": false
+      },
+      {
+        "nodeRef": "repair:v3-return-to-v1",
+        "kind": "repair",
+        "parentRef": "repair:v2",
+        "text": "I notice Work and Creative life seem to be gathering into a stronger relationship in the reflected field right now. Does that connection feel accurate to you?",
+        "accepted": true,
+        "supersededByRef": null,
+        "active": true
+      }
+    ],
+    "activeHeadRef": "repair:v3-return-to-v1",
+    "appendOnly": true
+  },
+  "rollbackValidation": {
+    "valid": true,
+    "errors": []
+  }
+}
