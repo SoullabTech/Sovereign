@@ -134,3 +134,20 @@ The four prior low findings remain reviewable hardening debt unless a fresh
 review promotes any of them to material standing. No prior review is reused as
 authority. A fresh independent review and fresh custody record are required for
 the exact final target containing these bytes.
+
+## 2026-09-28 second material-finding disposition
+
+A fresh review of combined target `95f757a3d6f6820265c50e6ea42815c61f92375d`
+again confirmed the migration relation as compatible, but returned `REVISE`
+because migration 9 independently takes ACCESS EXCLUSIVE on live
+`studio_decisions` while creating its composite unique key, without the
+lock/statement bounds already added to migration 4.
+
+That finding is now dispositioned in the candidate containing this plan:
+
+- `20260927000002_personal_decision_choice_events.sql` sets transaction-local
+  `lock_timeout = '5s'` and `statement_timeout = '60s'` immediately after
+  `BEGIN`, matching migration 4's fail-fast production posture.
+
+The review of `95f757a3d...` is not reused as authority. A fresh independent
+review remains required for the exact candidate containing these bytes.
