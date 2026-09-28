@@ -241,3 +241,66 @@ custody safety**. Custody safety says reclamation would lose nothing; liveness s
 someone is still working here. Reclaiming on custody safety alone destroys
 convenience the person was relying on, silently, at the moment they did the right
 thing.
+
+### A census is only as wide as the root it was pointed at
+
+Measured 2026-09-28. This repository has **two worktree roots**, and they are
+different directories:
+
+- `~/.claude/worktrees` — the home root, which `scripts/ain-worktree-claim.sh`
+  reads and which the 2026-09-22/23 workstation relief run censused
+- `~/MAIA-SOVEREIGN/.claude/worktrees` — a **repo-local root**, holding 51
+  worktrees totalling 21 GB
+
+The relief run reported `0 REMOVABLE left internally` while those 21 GB sat
+inside the repository. That report was not wrong; it was pointed at the other
+root. The standing note *do not run Act B again* therefore does not cover the
+repo-local root, because no act ever reached it.
+
+**The rule this establishes:** a storage census must state which roots it
+enumerated, and `0 REMOVABLE` means *nothing removable under the roots
+examined* — never *nothing removable on the machine*. An instrument that does
+not name its own scope will eventually be read as having measured everything.
+
+### `dirty > 0` is not by itself a custody claim
+
+The same census found 40 of 51 trees at exactly `dirty=1`. Aggregating every
+porcelain entry across all trees (`status --porcelain | awk '{print $1,$2}' |
+sort | uniq -c`) identified the cause immediately:
+
+| entry | trees | what it is |
+|---|---|---|
+| `?? .jarvis/` | 11 | JARVIS scratch directory |
+| `?? tsx-501/` | 9 | tsx compile cache, uid-suffixed |
+| `?? jest_dx/` | 5 | jest cache |
+| `?? maia-jest-cache/` | 3 | jest cache |
+
+Twenty-eight trees were dirty solely because a tool wrote a cache directory into
+the checkout. Discounting those four paths and re-classifying moved 18 trees
+(≈7.7 GB by `du`) from HOLD to SAFE, including two at 1.2 GB and 749 MB that a
+naive `dirty > 0` rule would have preserved indefinitely.
+
+**Two boundaries this must not be allowed to cross.** The discount list is
+enumerated explicitly, never a pattern like `?? *cache*`: a glob would sooner or
+later absorb a real directory whose name happens to contain the word. And the
+discount applies only to *untracked* entries — a modified or deleted tracked
+file is working state regardless of what it is named.
+
+**The act revalidates; it does not trust the census.** Removal recomputed
+`unpushed` and residual-dirty per tree immediately before acting, and removed
+only what still classified SAFE at that moment. `git worktree remove --force` is
+licensed by that revalidation one line earlier — not by convenience. `--force`
+is required because SAFE trees still hold the discounted cache directories, and
+that is precisely why the flag must never be reached for without the recompute.
+
+Removal goes through `git worktree remove` from the main checkout so the
+`.git/worktrees/` admin entries go with each tree. A bare `rm -rf` leaves the
+registry asserting the existence of trees that are gone — the failure mode that
+silently "succeeded" during the 2026-09-04 `PROJECT_DIR` defect.
+
+**Outcome, recorded honestly:** 18 of 51 trees removed, 0 refused, inodes
+7.5M → 7.2M — so the trees are demonstrably gone — while `df` still read 25 GiB
+free immediately afterward. Either APFS delayed block reclamation (documented
+above) or the removed trees shared extents with the main checkout, which would
+mean the 7.7 GB `du` figure was again counting clones. Both are consistent with
+the evidence in hand; which one applies was not established.
