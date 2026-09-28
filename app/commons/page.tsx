@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   BookOpen,
@@ -65,6 +65,8 @@ interface CommunityStats {
 
 export default function CommonsPortalPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnToHouse = searchParams?.get('from') === 'house';
   const [stats, setStats] = useState<CommunityStats>({
     totalMembers: 0,
     totalPosts: 0,
@@ -422,10 +424,10 @@ export default function CommonsPortalPage() {
             Where wisdom is shared and seekers gather
           </p>
           <button
-            onClick={() => router.push('/maia')}
+            onClick={() => router.push(returnToHouse ? '/house' : '/maia')}
             className="mt-4 text-sm text-amber-400/60 hover:text-amber-400 transition-colors"
           >
-            Return to MAIA
+            {returnToHouse ? 'Return to House' : 'Return to MAIA'}
           </button>
         </footer>
       </div>

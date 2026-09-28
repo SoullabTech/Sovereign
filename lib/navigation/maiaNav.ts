@@ -77,7 +77,7 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
   },
   {
     id: 'anchor',
-    label: 'Anchor',
+    label: 'Daily Anchor',
     icon: Compass,
     route: '/maia/anchor',
     classification: 'world',

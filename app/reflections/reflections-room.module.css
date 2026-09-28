@@ -1,0 +1,618 @@
+@font-face {
+  font-family: 'Reflections Crimson';
+  src: url('/fonts/crimson-pro/crimson-pro-300-normal-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Reflections Crimson';
+  src: url('/fonts/crimson-pro/crimson-pro-400-normal-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+.room {
+  --ground: #100d0a;
+  --ink: #efe7d9;
+  --muted: #baa991;
+  --dim: #8e7f6b;
+  --gold: #d2b078;
+  --rule: rgba(217, 187, 142, .20);
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  padding: clamp(16px, 2.2vw, 30px) clamp(14px, 2.8vw, 42px) 0;
+  overflow-x: hidden;
+  color: var(--ink);
+  background: var(--ground);
+  font-family: 'Reflections Crimson', Georgia, serif;
+}
+
+.room::before {
+  content: '';
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(13, 10, 7, .35) 0%, rgba(13, 10, 7, .72) 48%, #100d0a 100%),
+    url('/house/house-architecture-7a638061.webp') center 22% / cover no-repeat;
+  opacity: .48;
+  filter: saturate(.72) contrast(.94);
+}
+
+.room::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(192, 128, 56, .10), transparent 32rem),
+    radial-gradient(circle at 78% 12%, rgba(143, 112, 77, .08), transparent 28rem),
+    linear-gradient(90deg, rgba(8, 7, 6, .34), transparent 18%, transparent 82%, rgba(8, 7, 6, .42));
+}
+
+.content {
+  position: relative;
+  width: min(1180px, 100%);
+  min-height: calc(100svh - 78px);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(217, 187, 142, .16);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background:
+    linear-gradient(180deg, rgba(15, 12, 9, .70), rgba(14, 11, 8, .90)),
+    rgba(14, 11, 8, .74);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .30);
+}
+
+.content > :global(.min-h-screen) {
+  min-height: calc(100svh - 84px) !important;
+  background: transparent !important;
+}
+
+.reflections {
+  min-height: calc(100svh - 84px);
+  padding: clamp(44px, 5vw, 76px) clamp(28px, 5.2vw, 72px) 70px;
+}
+
+.roomIntro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, .78fr);
+  gap: clamp(42px, 7vw, 92px);
+  align-items: end;
+  padding-bottom: 42px;
+}
+
+.introTitle > p {
+  margin: 14px 0 15px;
+  color: #c9b18e;
+  font: 8px/1.5 Arial, sans-serif;
+  letter-spacing: .33em;
+}
+
+.introTitle h1 {
+  max-width: 650px;
+  margin: 0;
+  color: #f2e9da;
+  font-size: clamp(48px, 6.2vw, 86px);
+  font-weight: 300;
+  line-height: .88;
+  letter-spacing: -.035em;
+}
+
+.introTitle h1 em {
+  color: #d6b786;
+  font-weight: 300;
+}
+
+.roomSigil,
+.reflectionMark,
+.emptyMark {
+  display: block;
+  background: currentColor;
+  -webkit-mask: url('/holoflower.svg') center / contain no-repeat;
+  mask: url('/holoflower.svg') center / contain no-repeat;
+}
+
+.roomSigil {
+  width: 38px;
+  height: 38px;
+  color: #d2b078;
+  opacity: .88;
+  filter: drop-shadow(0 0 12px rgba(210, 176, 120, .18));
+}
+
+.introText {
+  max-width: 370px;
+  padding: 0 0 5px 25px;
+  border-left: 1px solid rgba(222, 195, 154, .28);
+}
+
+.introText p {
+  margin: 0 0 18px;
+  color: #d9cbb6;
+  font-size: clamp(18px, 1.8vw, 23px);
+  font-weight: 300;
+  line-height: 1.38;
+}
+
+.introText span {
+  color: #9f8e78;
+  font: italic 13px/1.5 Georgia, serif;
+}
+
+.tools {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 28px;
+  align-items: end;
+  padding: 24px 0 20px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid rgba(217, 187, 142, .13);
+}
+
+.search {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.search > span,
+.filters > span {
+  color: #9f8b70;
+  font: 8px/1.4 Arial, sans-serif;
+  letter-spacing: .28em;
+}
+
+.search input {
+  width: 100%;
+  max-width: 560px;
+  padding: 4px 0 10px;
+  border: 0;
+  border-bottom: 1px solid rgba(222, 195, 154, .28);
+  border-radius: 0;
+  outline: none;
+  color: #eee4d4;
+  background: transparent;
+  font: 300 20px/1.3 'Reflections Crimson', Georgia, serif;
+}
+
+.search input::placeholder {
+  color: #796d5d;
+}
+
+.search input:focus {
+  border-bottom-color: #d2b078;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filters > span {
+  margin-right: 4px;
+}
+
+.filters button {
+  position: relative;
+  padding: 5px 0;
+  border: 0;
+  color: #aa9b86;
+  background: transparent;
+  font: 12px/1.4 Arial, sans-serif;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+
+.filters button:hover,
+.filters button[aria-current='page'] {
+  color: #ead6b7;
+}
+
+.filters button[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: #c9a66f;
+}
+
+.collectionMeta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 25px 0 18px;
+  color: #8f806c;
+  font: 9px/1.4 Arial, sans-serif;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.collectionMeta i {
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, rgba(213, 183, 136, .18), transparent);
+}
+
+.gemField {
+  column-count: 2;
+  column-gap: clamp(18px, 2.2vw, 28px);
+}
+
+.gem {
+  --gem-tone: #d2b078;
+  position: relative;
+  break-inside: avoid;
+  margin: 0 0 clamp(18px, 2.2vw, 28px);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gem-tone) 22%, rgba(224, 205, 176, .15));
+  border-radius: 4px 17px 6px 11px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--gem-tone) 5%, transparent), transparent 34%),
+    linear-gradient(180deg, rgba(33, 27, 21, .78), rgba(19, 16, 13, .88));
+  box-shadow:
+    0 17px 45px rgba(0, 0, 0, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .018);
+  transition: transform .22s ease, border-color .22s ease, background .22s ease;
+}
+
+.gem::before,
+.gem::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.gem::before {
+  inset: 0;
+  background:
+    linear-gradient(126deg, transparent 0 68%, color-mix(in srgb, var(--gem-tone) 6%, transparent) 68.2% 83%, transparent 83.2%),
+    linear-gradient(45deg, color-mix(in srgb, var(--gem-tone) 4%, transparent), transparent 31%);
+  opacity: .75;
+}
+
+.gem::after {
+  top: 0;
+  left: 28px;
+  width: 72px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gem-tone), transparent);
+  opacity: .58;
+}
+
+.gem:hover,
+.gem:focus-within {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--gem-tone) 42%, rgba(224, 205, 176, .16));
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--gem-tone) 7%, transparent), transparent 36%),
+    linear-gradient(180deg, rgba(36, 29, 22, .84), rgba(20, 16, 13, .92));
+}
+
+.gem[data-pinned='true'] {
+  border-color: color-mix(in srgb, var(--gem-tone) 45%, rgba(224, 205, 176, .18));
+  box-shadow:
+    0 19px 48px rgba(0, 0, 0, .22),
+    inset 0 0 36px color-mix(in srgb, var(--gem-tone) 4%, transparent);
+}
+
+.gem[data-draft='true'] {
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--gem-tone) 4%, transparent), transparent 36%),
+    linear-gradient(180deg, rgba(30, 25, 20, .68), rgba(18, 15, 12, .82));
+}
+
+.gemOpen {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  padding: clamp(24px, 3vw, 34px) clamp(24px, 3vw, 34px) 21px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gemOpen:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--gem-tone) 65%, white);
+  outline-offset: -5px;
+}
+
+.gemTopline {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.reflectionMark {
+  width: 25px;
+  height: 25px;
+  color: var(--gem-tone);
+  opacity: .92;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--gem-tone) 22%, transparent));
+}
+
+.gemProvenance {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #9d8d78;
+  font: 8px/1.4 Arial, sans-serif;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.gemProvenance i {
+  opacity: .55;
+}
+
+.draftMark {
+  color: #b9a17c;
+  font: italic 11px/1.4 Georgia, serif;
+}
+
+.gem h2 {
+  margin: 0 0 15px;
+  color: #efe5d6;
+  font-size: clamp(24px, 2.45vw, 33px);
+  font-weight: 300;
+  line-height: 1.02;
+  letter-spacing: -.015em;
+}
+
+.gemSummary {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #c9bba7;
+  font-size: 16px;
+  line-height: 1.58;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+
+.goldLine {
+  margin: 23px 0 0;
+  padding: 15px 0 2px 18px;
+  border-left: 1px solid color-mix(in srgb, var(--gem-tone) 62%, transparent);
+}
+
+.goldLine p {
+  margin: 0;
+  color: #d9c9b2;
+  font: italic 16px/1.48 Georgia, serif;
+}
+
+.goldLine cite {
+  display: block;
+  margin-top: 8px;
+  color: #8f806d;
+  font: 8px/1.4 Arial, sans-serif;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.gemReturn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 25px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(218, 189, 147, .10);
+  color: #ba9d72;
+  font: 12px/1.4 Arial, sans-serif;
+  letter-spacing: .035em;
+}
+
+.gemReturn b {
+  font-size: 18px;
+  font-weight: 300;
+}
+
+.gemActions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 clamp(24px, 3vw, 34px) 20px;
+  color: #6f6354;
+  font: 10px/1.4 Arial, sans-serif;
+}
+
+.gemActions button {
+  padding: 3px 0;
+  border: 0;
+  color: #8e7e69;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gemActions button:hover,
+.gemActions button[aria-pressed='true'] {
+  color: #d2b078;
+}
+
+.loading,
+.empty {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  padding: 50px 20px;
+  text-align: center;
+}
+
+.loading > span {
+  width: 29px;
+  height: 29px;
+  border: 1px solid rgba(210, 176, 120, .24);
+  border-top-color: #d2b078;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading p,
+.empty p {
+  max-width: 470px;
+  margin: 0;
+  color: #a8957c;
+  font: italic 15px/1.55 Georgia, serif;
+}
+
+.empty h2 {
+  margin: 4px 0 0;
+  color: #e4d8c5;
+  font-size: 28px;
+  font-weight: 300;
+}
+
+.empty button,
+.roomFoot button {
+  padding: 6px 0;
+  border: 0;
+  color: #d2b078;
+  background: transparent;
+  font: 14px/1.4 'Reflections Crimson', Georgia, serif;
+  cursor: pointer;
+}
+
+.emptyMark {
+  width: 42px;
+  height: 42px;
+  color: #b89562;
+  opacity: .72;
+}
+
+.roomFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 28px;
+  margin-top: 50px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+
+.roomFoot span {
+  color: #9d8c75;
+  font: italic 14px/1.5 Georgia, serif;
+}
+
+.room :where(button, input):focus-visible {
+  outline: 2px solid #dec096;
+  outline-offset: 4px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 820px) {
+  .roomIntro {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .introText {
+    max-width: 620px;
+  }
+
+  .tools {
+    grid-template-columns: 1fr;
+  }
+
+  .filters {
+    justify-content: flex-start;
+  }
+
+  .gemField {
+    column-count: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .room {
+    padding: 0;
+  }
+
+  .content {
+    min-height: 100svh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .reflections {
+    padding: 38px 20px 50px;
+  }
+
+  .roomIntro {
+    padding-bottom: 30px;
+  }
+
+  .introTitle h1 {
+    font-size: clamp(48px, 16vw, 68px);
+  }
+
+  .introText {
+    padding-left: 18px;
+  }
+
+  .filters {
+    gap: 13px;
+  }
+
+  .filters > span {
+    width: 100%;
+  }
+
+  .gem {
+    border-radius: 3px 14px 4px 9px;
+  }
+
+  .gemOpen {
+    padding: 24px 22px 18px;
+  }
+
+  .gemActions {
+    padding-inline: 22px;
+  }
+
+  .roomFoot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room *,
+  .room *::before,
+  .room *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .gem:hover {
+    transform: none;
+  }
+}

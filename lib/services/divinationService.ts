@@ -4,7 +4,16 @@
  * All readings are optionally saved at the member's discretion
  */
 
-import { query } from '@/lib/db/postgres';
+import { query, type TransactionClient } from '@/lib/db/postgres';
+import type { QueryResultRow } from 'pg';
+
+async function runQuery<T extends QueryResultRow>(
+  client: TransactionClient | undefined,
+  sql: string,
+  params: any[],
+) {
+  return client ? client.query<T>(sql, params) : query<T>(sql, params);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPE DEFINITIONS
@@ -151,10 +160,11 @@ export class DivinationService {
    */
   async saveIChingReading(
     input: SaveIChingInput,
-    userId: string
+    userId: string,
+    client?: TransactionClient,
   ): Promise<IChingReading | null> {
     try {
-      const result = await query<IChingReading>(`
+      const result = await runQuery<IChingReading>(client, `
         INSERT INTO divination_iching_readings (
           user_id,
           cast_method,
@@ -234,10 +244,11 @@ export class DivinationService {
    */
   async saveTarotReading(
     input: SaveTarotInput,
-    userId: string
+    userId: string,
+    client?: TransactionClient,
   ): Promise<TarotReading | null> {
     try {
-      const result = await query<TarotReading>(`
+      const result = await runQuery<TarotReading>(client, `
         INSERT INTO divination_tarot_readings (
           user_id,
           question,
@@ -310,10 +321,11 @@ export class DivinationService {
    */
   async saveRunesReading(
     input: SaveRunesInput,
-    userId: string
+    userId: string,
+    client?: TransactionClient,
   ): Promise<RunesReading | null> {
     try {
-      const result = await query<RunesReading>(`
+      const result = await runQuery<RunesReading>(client, `
         INSERT INTO divination_runes_readings (
           user_id,
           question,

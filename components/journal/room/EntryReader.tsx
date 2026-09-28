@@ -15,13 +15,20 @@
  * "Entry #12" · metadata table · export · share · related-entries rail.
  */
 
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { apiFetch } from '@/lib/http/apiBase';
 import { type, color, space, focus, hit, quiet, srOnly, spine, roomMaterial } from './tokens';
+import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
 
 export interface JournalEntry {
   id: string;
   content: string;
   created_at: string;
+  entry_type?: 'day' | 'dream' | 'handwriting';
+  meta?: {
+    place?: string;
+    fromQuestion?: string;
+  } | null;
 }
 
 /**
@@ -56,6 +63,55 @@ export interface EntryReaderProps {
 }
 
 export function EntryReader({ entry, onReflect, onLeave, reflecting, children }: EntryReaderProps) {
+  const [reflectionId, setReflectionId] = useState<string | null>(null);
+  const [checkingReflection, setCheckingReflection] = useState(true);
+  const [keepingReflection, setKeepingReflection] = useState(false);
+  const [reflectionError, setReflectionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    setCheckingReflection(true);
+    setReflectionError(null);
+
+    void apiFetch(`/api/journal/quick/${entry.id}/reflection`, { method: 'GET' })
+      .then(async (res) => {
+        if (!live || !res.ok) return;
+        const data = await res.json().catch(() => null);
+        if (live && data?.kept && typeof data.capsuleId === 'string') {
+          setReflectionId(data.capsuleId);
+        }
+      })
+      .catch(() => {
+        // Reflection availability is optional. The Journal entry remains whole.
+      })
+      .finally(() => {
+        if (live) setCheckingReflection(false);
+      });
+
+    return () => {
+      live = false;
+    };
+  }, [entry.id]);
+
+  async function keepAsReflection() {
+    if (keepingReflection || reflectionId) return;
+    setKeepingReflection(true);
+    setReflectionError(null);
+    try {
+      const res = await apiFetch(`/api/journal/quick/${entry.id}/reflection`, {
+        method: 'POST',
+      });
+      if (!res.ok) throw new Error('reflection keep failed');
+      const data = await res.json().catch(() => null);
+      if (typeof data?.capsuleId !== 'string') throw new Error('missing reflection id');
+      setReflectionId(data.capsuleId);
+    } catch {
+      setReflectionError('That did not carry over. Your Journal entry is unchanged.');
+    } finally {
+      setKeepingReflection(false);
+    }
+  }
+
   return (
     <main
       className={`min-h-[100dvh] ${color.field} ${space.room} flex flex-col`}
@@ -85,20 +141,87 @@ export function EntryReader({ entry, onReflect, onLeave, reflecting, children }:
           {entry.content}
         </article>
 
-        {/* Metadata beneath, quiet and singular — a date, not a record header. */}
-        <p className={`mt-8 ${type.meta} ${color.muted}`}>{livedDate(entry.created_at)}</p>
+        {/* Provenance remains beneath the member's words: lived time, entry
+            convention, optional member-authored place, and a real MAIA crossing
+            only when this entry actually began from one. */}
+        <div className={`mt-8 flex flex-wrap items-center gap-x-4 gap-y-1 ${type.meta} ${color.muted}`}>
+          <span>{livedDate(entry.created_at)}</span>
+          {entry.entry_type === 'dream' ? <span>DREAM</span> : null}
+          {entry.meta?.place ? <span>{entry.meta.place}</span> : null}
+        </div>
+
+        {entry.meta?.fromQuestion ? (
+          <div className="mt-5">
+            <p className={`${type.marker} ${color.muted} mb-1`}>Written from a question with MAIA</p>
+            <p className={`${type.meta} ${color.muted} italic`}>{entry.meta.fromQuestion}</p>
+          </div>
+        ) : null}
+
+        <FacetOriginTrail
+          targetFacet="journal"
+          targetRefId={entry.id}
+          tone="light"
+          className="mt-7"
+        />
 
         {!reflecting && (
-          <div className="mt-12">
-            <button
-              type="button"
-              onClick={onReflect}
-              className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
+          <div className="mt-12 flex flex-wrap items-center gap-x-7 gap-y-2">
+            {!checkingReflection && (
+              reflectionId ? (
+                <a
+                  href={`/reflections/${reflectionId}`}
+                  className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
+                >
+                  Kept as a reflection →
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void keepAsReflection()}
+                  disabled={keepingReflection}
+                  className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet} disabled:opacity-40`}
+                >
+                  {keepingReflection ? 'Keeping as a reflection…' : 'Keep as a reflection'}
+                </button>
+              )
+            )}
+
+            {entry.entry_type === 'dream' ? (
+              <a
+                href={`/dream?dream=${encodeURIComponent(entry.id)}&from=journal`}
+                className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
+              >
+                Explore this dream →
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={onReflect}
+                className={`${type.meta} ${color.accent} ${focus} ${hit} ${quiet}`}
+              >
+                Reflect with MAIA
+              </button>
+            )}
+
+            <a
+              href={`/changes?sourceFacet=journal&sourceRefId=${encodeURIComponent(entry.id)}&crossingId=journal-name-as-change`}
+              className={`${type.meta} ${color.muted} ${focus} ${hit} ${quiet}`}
             >
-              Reflect with MAIA
-            </button>
+              Name this as a change →
+            </a>
+
+            <a
+              href={`/decisions/new?sourceFacet=journal&sourceRefId=${encodeURIComponent(entry.id)}&crossingId=journal-consider-decision`}
+              className={`${type.meta} ${color.muted} ${focus} ${hit} ${quiet}`}
+            >
+              Consider a decision →
+            </a>
           </div>
         )}
+
+        {reflectionError ? (
+          <p className={`mt-3 ${type.meta} ${color.muted}`} role="alert">{reflectionError}</p>
+        ) : null}
 
         {children}
       </div>

@@ -442,6 +442,20 @@
     font-size: var(--writing-size, 19px) !important;
   }
 
+  /* Divination question fields are meaning-bearing reading surfaces, not
+     compact utility inputs. Keep them above the 16px iOS zoom floor while
+     allowing the House reading scale to remain visible at normal zoom. */
+  textarea.divination-reading-field {
+    font-size: 17px !important;
+    line-height: 1.65 !important;
+  }
+
+  @media (min-width: 640px) {
+    textarea.divination-reading-field {
+      font-size: 18px !important;
+    }
+  }
+
   /* ── A field that holds the member's own words is not a form field ──────
      The same measurement, taken on the import threshold 2026-08-01: the title
      input and the paste box both computed to rgb(17,24,39) on the espresso

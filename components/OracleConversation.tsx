@@ -28,7 +28,7 @@ import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/Conversat
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
 import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation, detectMaiaCommands, getMaiaCommandConfirmation } from '@/lib/voice/VoiceCommandDetector';
-import type { MaiaCommand } from '@/lib/voice/VoiceCommandDetector';
+import type { MaiaCommand, CommandParseResult } from '@/lib/voice/VoiceCommandDetector';
 import {
   matchVoiceCommand,
   applySettingsDelta,
@@ -425,6 +425,7 @@ interface OracleConversationProps {
   userId?: string;
   userName?: string;
   userBirthDate?: string; // Birth date for age calculation and teen support
+  includeStoredBirthData?: boolean; // Whether legacy stored birthData may accompany turns (default true). Hosts with explicit context custody can disable it.
   userAge?: number; // Pre-calculated age (optional, will calculate from birthDate if not provided)
   sessionId: string;
   apiEndpoint?: string; // API endpoint to use for conversation (defaults to /api/between/chat)
@@ -649,6 +650,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   userId,
   userName,
   userBirthDate,
+  includeStoredBirthData = true,
   userAge: propUserAge,
   sessionId,
   apiEndpoint = '/api/between/chat', // Default to current behavior
@@ -4951,71 +4953,86 @@ I'm not sure what I'm feeling yet.`;
   }, [messages, userName]);
 
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
-  const handleTextMessage = useCallback(async (text: string, attachments?: File[], retryOf?: string) => {
-    console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
+  const handleTextMessage = useCallback(async (
+    text: string,
+    attachments?: File[],
+    retryOf?: string,
+    commandContext?: {
+      parseResult?: CommandParseResult;
+      commandsAlreadyApplied?: boolean;
+      confirmationHandled?: boolean;
+    },
+  ) => {
+    const authoredText = text;
+    console.log('📝 Text message received:', { text: authoredText, isProcessing, isAudioPlaying, isResponding });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
     setHasActivated(true);
 
     // 🎙️ CONSENT BOUNDARY (fix/typed-turn-no-mic-rearm): typed turn — the mic must NOT
-    // auto-re-arm after MAIA's response. Typed input is not voice re-consent.
+    // auto-re-arm after MAIA's response. TII-03 intentionally preserves this
+    // pre-existing behavior; voice liveness is a separate governed lane.
     lastSendWasVoiceRef.current = false;
 
-    if (detectJournalCommand(text)) {
+    if (detectJournalCommand(authoredText)) {
       await handleCaptureSpirit();
       return;
     }
 
-    // 🎯 MAIA COMMAND DETECTION: mode/lens/style switching
-    // Commands change state BEFORE the message is processed.
-    // Command phrases are stripped from the text so they don't become therapeutic content.
-    const { commands: maiaCommands, cleanedText: commandCleanedText, onlyCommands } = detectMaiaCommands(text);
+    // TII-03 — command intent is DERIVED from member authorship; it is never
+    // allowed to replace the authored utterance. Voice may pre-parse the same
+    // turn so it can preserve its existing command acknowledgement behavior.
+    const commandResult = commandContext?.parseResult ?? detectMaiaCommands(authoredText);
+    const { commands: maiaCommands, onlyCommands } = commandResult;
+    const modeCommand = maiaCommands.find(
+      (cmd): cmd is Extract<MaiaCommand, { type: 'mode' }> => cmd.type === 'mode',
+    );
+    const effectiveSanctuary =
+      commandResult.disposition === 'EXECUTE' && modeCommand
+        ? modeCommand.mode === 'sanctuary'
+        : isSanctuary;
 
-    if (maiaCommands.length > 0) {
-      for (const cmd of maiaCommands) {
-        if (cmd.type === 'mode') {
-          // Map MaiaMode → ListeningMode
-          const newListeningMode =
-            cmd.mode === 'talk' ? 'normal' as const :
-            cmd.mode === 'care' ? 'patient' as const :
-            cmd.mode === 'scribe' ? 'session' as const :
-            cmd.mode === 'sanctuary' ? 'normal' as const : // Sanctuary uses talk mode + sanctuary flag
-            'normal' as const;
-          setListeningMode(newListeningMode);
+    if (commandResult.disposition === 'EXECUTE' && maiaCommands.length > 0) {
+      if (!retryOf && !commandContext?.commandsAlreadyApplied) {
+        for (const cmd of maiaCommands) {
+          if (cmd.type === 'mode') {
+            // Map MaiaMode → ListeningMode
+            const newListeningMode =
+              cmd.mode === 'talk' ? 'normal' as const :
+              cmd.mode === 'care' ? 'patient' as const :
+              cmd.mode === 'scribe' ? 'session' as const :
+              cmd.mode === 'sanctuary' ? 'normal' as const :
+              'normal' as const;
+            setListeningMode(newListeningMode);
 
-          // Sanctuary flag
-          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-          else setIsSanctuary(false);
+            // Sanctuary flag
+            if (cmd.mode === 'sanctuary') setIsSanctuary(true);
+            else setIsSanctuary(false);
 
-          console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
-        }
+            console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
+          }
 
-        if (cmd.type === 'lens') {
-          setCounselFramework(cmd.lens);
-          console.log(`🔄 [Command] Lens → ${cmd.lens}`);
-        }
+          if (cmd.type === 'lens') {
+            setCounselFramework(cmd.lens);
+            console.log(`🔄 [Command] Lens → ${cmd.lens}`);
+          }
 
-        if (cmd.type === 'style') {
-          localStorage.setItem('conversation_mode', cmd.style);
-          window.dispatchEvent(new Event('conversationStyleChanged'));
-          console.log(`🔄 [Command] Style → ${cmd.style}`);
+          if (cmd.type === 'style') {
+            localStorage.setItem('conversation_mode', cmd.style);
+            window.dispatchEvent(new Event('conversationStyleChanged'));
+            console.log(`🔄 [Command] Style → ${cmd.style}`);
+          }
         }
       }
 
-      // Show confirmation toast
-      const confirmation = getMaiaCommandConfirmation(maiaCommands);
-      if (confirmation) {
-        toast.success(confirmation);
+      // Command acknowledgement is presentation, not authorship. Voice callers
+      // may already have spoken/toasted it before converging here.
+      if (!retryOf && !commandContext?.confirmationHandled) {
+        const confirmation = getMaiaCommandConfirmation(maiaCommands);
+        if (confirmation) {
+          toast.success(confirmation);
+        }
       }
-
-      // If the message was ONLY commands, acknowledge and return — don't send to API
-      if (onlyCommands) {
-        console.log('✅ [Command] Command-only message, no content to process');
-        return;
-      }
-
-      // Otherwise, continue with the cleaned text (commands stripped)
-      text = commandCleanedText;
     }
 
     // IMMEDIATELY stop microphone to prevent Maia from hearing herself
@@ -5037,13 +5054,14 @@ I'm not sure what I'm feeling yet.`;
       // Don't return - continue processing the text
     }
 
-    // Process attachments first if any
-    let messageText = text;
+    // Process attachments first if any. The member-authored utterance remains
+    // separate from this derived processing payload.
+    let messageText = authoredText;
     let fileContents: string[] = [];
 
     if (attachments && attachments.length > 0) {
       const fileNames = attachments.map(f => f.name).join(', ');
-      messageText = `${text}\n\n[Files attached: ${fileNames}]`;
+      messageText = `${authoredText}\n\n[Files attached: ${fileNames}]`;
 
       // Read text-based file contents
       for (const file of attachments) {
@@ -5073,6 +5091,9 @@ I'm not sure what I'm feeling yet.`;
 
     const startTime = Date.now();
     const cleanedText = cleanMessage(messageText);
+    // For ordinary text/voice turns, this is the exact submitted utterance.
+    // Attachment turns retain their existing derived payload semantics.
+    const canonicalMemberText = attachments?.length ? cleanedText : authoredText;
 
     // Validate message is not empty after cleaning
     if (!cleanedText || cleanedText.trim().length === 0) {
@@ -5112,12 +5133,12 @@ I'm not sure what I'm feeling yet.`;
       // ✅ CRITICAL FIX: Check if message already exists before adding (prevents duplicates)
       const isDuplicate = messages.some(msg =>
         msg.role === 'user' &&
-        msg.text === cleanedText &&
+        msg.text === canonicalMemberText &&
         (Date.now() - new Date(msg.timestamp).getTime()) < 2000
       );
 
       if (isDuplicate) {
-        console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', cleanedText);
+        console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', canonicalMemberText);
         // Still continue processing - we just don't add it to UI again
         // But we shouldn't call the API either, so return here
         return;
@@ -5127,7 +5148,7 @@ I'm not sure what I'm feeling yet.`;
       userMessage = {
         id: targetMessageId,
         role: 'user',
-        text: cleanedText,
+        text: canonicalMemberText,
         timestamp: new Date(),
         source: 'user',
         // Carried so the later pair write can reuse the same exchange (see above).
@@ -5137,6 +5158,63 @@ I'm not sure what I'm feeling yet.`;
       onMessageAddedRef.current?.(userMessage);
       // The member has spoken. Typed turns and non-streaming voice turns both land here.
       onMemberExpressionRef.current?.();
+    }
+
+    // TII-03 — a pure interface command is still a member-authored turn.
+    // Preserve it in the transcript and, on the live sovereign route, ask F1 to
+    // accept it durably without invoking O8, F2, or ordinary cognition.
+    if (onlyCommands) {
+      if (apiEndpoint === '/api/sovereign/app/maia/list') {
+        const commandSanctuary = effectiveSanctuary;
+
+        setIsProcessing(true);
+        try {
+          const commandAcceptance = await apiFetch(apiEndpoint, {
+            method: 'POST',
+            body: JSON.stringify({
+              message: canonicalMemberText,
+              userId: userId || 'anonymous',
+              userName: userName || 'Friend',
+              sessionId,
+              exchangeId: turnExchangeId,
+              commandOnly: true,
+              sanctuary: commandSanctuary,
+            }),
+          });
+
+          const commandAcceptanceData = await commandAcceptance.json().catch(() => null);
+          const durabilityExpected = !commandSanctuary;
+          const durabilityConfirmed =
+            commandAcceptanceData?.metadata?.memberTurnDurable === true;
+
+          if (!commandAcceptance.ok || (durabilityExpected && !durabilityConfirmed)) {
+            setMessages(prev => markFailed(
+              prev,
+              targetMessageId,
+              commandAcceptance.status === 401 ? 'auth' : 'server',
+            ));
+            setInputSubmitError(
+              'The command changed locally, but the turn was not durably accepted. You can resend.',
+            );
+          }
+        } catch (commandAcceptanceError) {
+          console.error('[TII-03] command-only F1 acceptance failed:', commandAcceptanceError);
+          setMessages(prev => markFailed(prev, targetMessageId, 'network'));
+          setInputSubmitError(
+            'The command changed locally, but the turn could not be durably accepted. You can resend.',
+          );
+        } finally {
+          setIsProcessing(false);
+          setIsResponding(false);
+        }
+      } else {
+        console.warn(
+          '[TII-03] command-only turn preserved locally; this surface is not on the sovereign F1 route',
+          { apiEndpoint },
+        );
+      }
+
+      return;
     }
 
     // On a resend these once-per-turn side-effects already fired on the first
@@ -5159,10 +5237,10 @@ I'm not sure what I'm feeling yet.`;
       }
 
       // Save user message to long-term memory (dual-save to memories + Akashic Records)
-      if (oracleAgentId) {
+      if (oracleAgentId && !effectiveSanctuary) {
         saveConversationMemory({
           oracleAgentId,
-          content: text,
+          content: authoredText,
           memoryType: 'conversation',
           sourceType: 'text',
           sessionId,
@@ -5446,7 +5524,8 @@ I'm not sure what I'm feeling yet.`;
         response = await apiFetch(apiEndpoint, {
           method: 'POST',
           body: JSON.stringify({
-          message: cleanedText,
+          // TII-03: F1/O8 receive the member-authored utterance, not a command-stripped derivative.
+          message: canonicalMemberText,
           userId: userId || 'anonymous',
           userName: userName || 'Friend',
           sessionId,
@@ -5466,7 +5545,7 @@ I'm not sure what I'm feeling yet.`;
           },
 
           // 🛡️ SANCTUARY MODE: Speaks freely - no memory retention
-          sanctuary: isSanctuary,
+          sanctuary: effectiveSanctuary,
 
           // 🎭 MAIA RELATIONAL MODE: Talk/Care/Scribe with sub-modes
           // This shapes MAIA's system prompt for relational attunement
@@ -5530,7 +5609,7 @@ I'm not sure what I'm feeling yet.`;
           } : undefined,
 
           // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
-          birthData: (() => {
+          birthData: includeStoredBirthData ? (() => {
             if (typeof window === 'undefined') return undefined;
             try {
               const stored = localStorage.getItem('beta_user');
@@ -5540,7 +5619,7 @@ I'm not sure what I'm feeling yet.`;
             } catch {
               return undefined;
             }
-          })(),
+          })() : undefined,
 
           // 📝 SCRIBE SESSION DISCUSSION: Context for scoped session discussions
           // When discussing a past Scribe/Witness session, MAIA has access to the summary and themes
@@ -6780,7 +6859,7 @@ I'm not sure what I'm feeling yet.`;
 
       setCurrentMotionState('idle');
     }
-  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent, isSanctuary]);
+  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent, isSanctuary, includeStoredBirthData]);
 
   // 🔁 RECOVERY SEAM (Pattern A) — guarded resend of a not-delivered turn.
   // Reuses the member's existing bubble (retryOf); never creates a second turn.
@@ -7258,9 +7337,11 @@ I'm not sure what I'm feeling yet.`;
     }
 
     // 🎯 MAIA COMMAND DETECTION: mode/lens/style switching (voice path)
-    // Uses the same unified detector as the text path.
+    // TII-03 keeps the spoken transcript authoritative. Command intent may
+    // change interface state, but it never replaces the words that proceed to
+    // the canonical conversation turn.
     const voiceMaiaResult = detectMaiaCommands(t);
-    if (voiceMaiaResult.commands.length > 0) {
+    if (voiceMaiaResult.disposition === 'EXECUTE' && voiceMaiaResult.commands.length > 0) {
       for (const cmd of voiceMaiaResult.commands) {
         if (cmd.type === 'mode') {
           const newListeningMode =
@@ -7287,19 +7368,13 @@ I'm not sure what I'm feeling yet.`;
 
       const confirmation = getMaiaCommandConfirmation(voiceMaiaResult.commands);
 
-      // Command-only: acknowledge and return
       if (voiceMaiaResult.onlyCommands) {
-        console.log('✅ [Voice Command] Command-only, no content to process');
+        console.log('✅ [Voice Command] Command-only; preserving authored turn for F1 acceptance');
         if (confirmation && maiaReady && maiaSpeak && !isMuted) {
           await maiaSpeak(confirmation);
         }
-        if (confirmation) toast.success(confirmation);
-        return;
       }
-
-      // Command + content: show confirmation, continue with cleaned text
       if (confirmation) toast.success(confirmation);
-      transcript = voiceMaiaResult.cleanedText;
     }
 
     // FILTER: Ignore empty or punctuation-only transcripts
@@ -7405,8 +7480,10 @@ I'm not sure what I'm feeling yet.`;
     const trackingUserId = userId || `anon_${sessionId}`;
     userTracker.trackActivity(trackingUserId, 'voice');
 
-    // Save user message to long-term memory (dual-save to memories + Akashic Records)
-    if (oracleAgentId) {
+    // Save user message to long-term memory (dual-save to memories + Akashic Records).
+    // Pure interface commands are retained as turns by F1, but are not promoted
+    // into autobiographical/relational memory merely because they changed UI state.
+    if (oracleAgentId && !voiceMaiaResult.onlyCommands) {
       saveConversationMemory({
         oracleAgentId,
         content: cleanedText,
@@ -7477,9 +7554,16 @@ I'm not sure what I'm feeling yet.`;
       // `move_outcome`; both are cognition decisions a transport layer cannot
       // author.
 
-      // ✅ STANDARD FLOW: Browser STT → /api/between/chat → Browser TTS
+      // ✅ STANDARD FLOW: Browser STT → canonical conversation path.
+      // TII-03 carries the exact accepted transcript and the already-applied
+      // command classification so handleTextMessage neither rewrites nor
+      // executes the same command twice.
       console.log('🌀 Routing voice through THE BETWEEN...');
-      await handleTextMessage(cleanedText);
+      await handleTextMessage(t, undefined, undefined, {
+        parseResult: voiceMaiaResult,
+        commandsAlreadyApplied: voiceMaiaResult.disposition === 'EXECUTE',
+        confirmationHandled: voiceMaiaResult.disposition === 'EXECUTE',
+      });
 
       const duration = Date.now() - voiceStartTime;
       trackEvent.voiceResult(userId || 'anonymous', transcript, duration);

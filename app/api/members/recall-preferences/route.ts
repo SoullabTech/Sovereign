@@ -14,10 +14,10 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
  * orthogonal walls; this endpoint exposes the fourth wall to members).
  *
  * Currently exposes:
- *   - conversational_recall_enabled (Phase 2 conversational layer)
+ *   - conversational_recall_enabled (prior conversational exchanges)
+ *   - episodic_recall_enabled       (member-marked moments)
  *
  * Future layers attach here as additional Boolean fields without route churn:
- *   - episodic_recall_enabled        (when episodic Phase 2 lands)
  *   - developmental_recall_enabled   (when developmental Phase 2 lands)
  *   - somatic_recall_enabled         (when/if somatic Phase 2 lands; default FALSE)
  *
@@ -42,6 +42,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 // source of truth for which gates exist lives in this constant.
 const RECALL_PREFERENCE_COLUMNS = [
   'conversational_recall_enabled',
+  'episodic_recall_enabled',
 ] as const;
 
 type RecallPreferenceKey = (typeof RECALL_PREFERENCE_COLUMNS)[number];
