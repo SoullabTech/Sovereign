@@ -3,6 +3,7 @@ room: Astrology
 human_activity: Orienting through a calculated birth chart as a symbolic map, then choosing how deeply to explore its patterns without treating the chart as diagnosis, destiny, or authority over the member.
 surfaces:
   - app/astrology/page.tsx
+  - app/astrology/layout.tsx
   - components/astrology/BirthChartCalculator.tsx
 change_class: experiential
 principles:

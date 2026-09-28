@@ -3,6 +3,7 @@ room: Reflections
 human_activity: returning to personally meaningful moments, words, recognitions, and keeps without reducing them to a content list
 surfaces:
   - components/reflections/ReflectionsFeed.tsx
+  - app/reflections/layout.tsx
   - app/reflections/reflections-room.module.css
 change_class: experiential
 principles:

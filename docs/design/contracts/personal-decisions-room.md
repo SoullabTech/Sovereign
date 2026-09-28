@@ -3,6 +3,7 @@ room: Personal Decisions
 human_activity: Holding a real choice in view, gathering perspective, noticing what changes, and choosing without surrendering authorship of the decision.
 surfaces:
   - app/decisions/page.tsx
+  - app/decisions/layout.tsx
   - app/decisions/new/page.tsx
   - app/decisions/[id]/page.tsx
   - app/decisions/decision-house.module.css
