@@ -1,0 +1,123 @@
+{
+  "generatedAt": "2026-09-28T21:44:37.740Z",
+  "parentConnectorR1": "9abb694d4bd0d6c26e2acca46b0187fa5cb42868",
+  "manifest": {
+    "manifestRef": "manifest:r2:witness",
+    "entries": [
+      {
+        "sourceClass": "member_authored_text",
+        "fields": [
+          {
+            "field": "recordRef",
+            "purpose": "identify_source",
+            "required": true
+          },
+          {
+            "field": "memberRef",
+            "purpose": "bind_member_scope",
+            "required": true
+          },
+          {
+            "field": "text",
+            "purpose": "represent_observation",
+            "required": true
+          },
+          {
+            "field": "createdAt",
+            "purpose": "represent_time",
+            "required": true
+          },
+          {
+            "field": "domain",
+            "purpose": "represent_domain",
+            "required": true
+          }
+        ]
+      },
+      {
+        "sourceClass": "system_observed_event",
+        "fields": [
+          {
+            "field": "eventRef",
+            "purpose": "identify_source",
+            "required": true
+          },
+          {
+            "field": "memberRef",
+            "purpose": "bind_member_scope",
+            "required": true
+          },
+          {
+            "field": "summary",
+            "purpose": "represent_observation",
+            "required": true
+          },
+          {
+            "field": "observedAt",
+            "purpose": "represent_time",
+            "required": true
+          },
+          {
+            "field": "domain",
+            "purpose": "represent_domain",
+            "required": true
+          },
+          {
+            "field": "sourceStanding",
+            "purpose": "represent_source_standing",
+            "required": true
+          }
+        ]
+      }
+    ],
+    "minimumNecessary": true,
+    "zeroRecordRead": true
+  },
+  "allowed": {
+    "allowed": true,
+    "errors": [],
+    "sourceClass": "member_authored_text",
+    "allowedFields": [
+      "recordRef",
+      "memberRef",
+      "text",
+      "createdAt",
+      "domain"
+    ],
+    "requestedFields": [
+      "recordRef",
+      "memberRef",
+      "text",
+      "createdAt",
+      "domain"
+    ],
+    "zeroRecordRead": true,
+    "recordReadExecuted": false,
+    "recordCountRead": 0
+  },
+  "undeclared": {
+    "allowed": false,
+    "errors": [
+      "field_not_allowlisted:email"
+    ],
+    "sourceClass": "member_authored_text",
+    "allowedFields": [
+      "recordRef",
+      "memberRef",
+      "text",
+      "createdAt",
+      "domain"
+    ],
+    "requestedFields": [
+      "recordRef",
+      "memberRef",
+      "text",
+      "createdAt",
+      "domain",
+      "email"
+    ],
+    "zeroRecordRead": true,
+    "recordReadExecuted": false,
+    "recordCountRead": 0
+  }
+}

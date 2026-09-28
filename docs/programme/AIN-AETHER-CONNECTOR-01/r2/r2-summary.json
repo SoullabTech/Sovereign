@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-09-28T21:44:37.740Z",
+  "parentConnectorR1": "9abb694d4bd0d6c26e2acca46b0187fa5cb42868",
+  "manifestRef": "manifest:r2:witness",
+  "sourceClassCount": 2,
+  "minimumNecessary": true,
+  "zeroRecordRead": true,
+  "allowedDryRun": true,
+  "allowedFields": [
+    "recordRef",
+    "memberRef",
+    "text",
+    "createdAt",
+    "domain"
+  ],
+  "undeclaredAllowed": false,
+  "undeclaredErrors": [
+    "field_not_allowlisted:email"
+  ],
+  "recordReadExecuted": false,
+  "recordCountRead": 0
+}
