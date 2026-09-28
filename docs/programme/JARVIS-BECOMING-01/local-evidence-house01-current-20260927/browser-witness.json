@@ -1,0 +1,50 @@
+{
+  "observedAt": "2026-09-28T02:32:18.188Z",
+  "base": "http://localhost:3802",
+  "syntheticMember": true,
+  "providerCalls": 0,
+  "results": [
+    {
+      "id": "H01",
+      "status": "PASS",
+      "detail": "Becoming is discoverable in the authenticated House directory."
+    },
+    {
+      "id": "H02",
+      "status": "PASS",
+      "detail": "Local preference schema accepts Becoming in Here · Now and survives reload."
+    },
+    {
+      "id": "H03",
+      "status": "PASS",
+      "detail": "House opens /becoming in-app and the ambient House MAIA handle is suppressed."
+    },
+    {
+      "id": "H04",
+      "status": "PASS",
+      "detail": "In-journey MAIA receives only current journey/element context through its explicit guide act."
+    },
+    {
+      "id": "H05",
+      "status": "PASS",
+      "detail": "Post-Return MAIA receives the whole journey and conversation remains inside Becoming."
+    },
+    {
+      "id": "H06",
+      "status": "PASS",
+      "detail": "Across Time uses the dedicated selected-context MAIA lane and carries the differentiated-gestalt law."
+    },
+    {
+      "id": "H07",
+      "status": "PASS",
+      "detail": "Across Time protects unsaved notes, then returns cleanly to the House after explicit discard."
+    }
+  ],
+  "errors": [],
+  "calls": {
+    "guide": 4,
+    "continuity": 1,
+    "temporal": 1
+  },
+  "failure": null
+}

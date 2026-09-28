@@ -1,0 +1,22 @@
+{
+  "recorded_at": "2026-09-28T02:34:21.937438+00:00",
+  "served_house_base": "1d2f1d889a4985a8cd2953ca429c82aba0996677",
+  "becoming_integration_commit": "e27b274bfe9410143376253b73d04b9273348bd2",
+  "base_url": "http://localhost:3802",
+  "browser_checks": "H01-H07 PASS",
+  "targeted_contract_tests": "134/138 with 4 inherited House-return reds",
+  "becoming_specific_targeted_tests": "PASS",
+  "source_port_live": "PASS",
+  "live_guide_proxy": "PASS",
+  "provider_calls_in_browser_witness": 0,
+  "live_proxy_calls": 1,
+  "production_mutation": false,
+  "files": {
+    "across-time-desktop.png": "3d662112f417e1541efe0136f39ebd643aec16f821cdc0760f5f7ecaeb7fbb2b",
+    "becoming-mobile.png": "fc7bf4a870b558954f8c7ba429fd4f9b4ba7bd729481b220ce2c8aa20386703b",
+    "browser-witness.json": "01895a463c230371ca5d4a8c34a5d4a878df9eaf3a9e1a2ec49aad7d951c614e",
+    "inherited-house-return-baseline.json": "1bba07c90a89a1f6e55c65fc6dd2172ff68cb51e70edfb5aaf3634f24397d4be",
+    "live-proxy-witness.json": "b8875b66e38c05a3ac9d4fb0c0815439120e5690c70d26ccd0d03b68e6565f9c",
+    "source-port-witness.json": "bb846ad684e3ee32188a72a6603362f5ac0a8484b08e030b0567b11b1a3eca33"
+  }
+}

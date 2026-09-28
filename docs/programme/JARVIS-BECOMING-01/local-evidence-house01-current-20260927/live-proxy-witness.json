@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-09-28T02:32:42.717Z",
+  "base": "http://localhost:3802",
+  "syntheticOnly": true,
+  "unauthenticatedStatus": 401,
+  "missingExplicitActStatus": 403,
+  "liveStatus": 200,
+  "latencyMs": 5290,
+  "providerUsed": "anthropic",
+  "model": "claude-sonnet-4-6",
+  "response": "Something is being built here — not rushed, just shaped. What wants to be made.",
+  "persistence": {
+    "turns": 0,
+    "history": 0,
+    "agentRuns": 0,
+    "integrationPasses": 0
+  },
+  "cleanup": {
+    "remainingMember": 0,
+    "remainingSession": 0
+  }
+}

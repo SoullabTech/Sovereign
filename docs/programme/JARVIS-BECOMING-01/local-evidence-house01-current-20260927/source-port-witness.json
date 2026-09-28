@@ -1,0 +1,30 @@
+{
+  "observedAt": "2026-09-28T02:31:48.687Z",
+  "base": "http://localhost:3802",
+  "syntheticOnly": true,
+  "statuses": {
+    "unauthenticated": 401,
+    "missingExplicitAct": 403,
+    "exactSource": 200,
+    "unsupportedFacet": 400,
+    "missingSource": 404
+  },
+  "source": {
+    "facet": "journal",
+    "objectType": "journal_entry",
+    "objectId": "e386e1eb-522b-4626-a7a2-81d2bbd5e027",
+    "memberSelected": true,
+    "returnHref": "/journal?entry=e386e1eb-522b-4626-a7a2-81d2bbd5e027",
+    "persistence": "none"
+  },
+  "crossings": {
+    "before": 0,
+    "after": 0
+  },
+  "cleanup": {
+    "journal": 0,
+    "crossings": 0,
+    "auth": 0,
+    "member": 0
+  }
+}

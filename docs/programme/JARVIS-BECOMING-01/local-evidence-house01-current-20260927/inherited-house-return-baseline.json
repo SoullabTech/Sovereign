@@ -1,0 +1,12 @@
+{
+  "served_house_commit": "1d2f1d889a4985a8cd2953ca429c82aba0996677",
+  "candidate_commit": "e27b274bfe9410143376253b73d04b9273348bd2",
+  "verified_same_failures_on_served_house": true,
+  "failures": [
+    "Journal (/journal) carries a return to MAIA",
+    "Journal (/journal) does not rely on router.back() alone",
+    "Daily Anchor (/maia/anchor) carries a return to MAIA",
+    "Daily Anchor (/maia/anchor) does not rely on router.back() alone"
+  ],
+  "becoming_related": false
+}
