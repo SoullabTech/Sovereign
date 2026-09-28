@@ -263,13 +263,31 @@ CREATE TABLE IF NOT EXISTS writer_studio_work_theme_events (
 CREATE INDEX IF NOT EXISTS idx_writer_studio_work_theme_events_theme
   ON writer_studio_work_theme_events(theme_id, created_at, id);
 
--- Events are historical acts. They are append-only.
+-- Events are historical acts. UPDATE is always refused. Direct/pruning
+-- DELETE is refused while both of the event's custody parents still exist.
+-- A lawful FK cascade is distinguishable because at least one parent is already
+-- absent when the child BEFORE DELETE trigger runs.
 CREATE OR REPLACE FUNCTION writer_studio_work_theme_events_immutable()
 RETURNS TRIGGER AS $$
 BEGIN
-  RAISE EXCEPTION
-    'writer studio theme event % is immutable; append a successor event',
-    OLD.id;
+  IF TG_OP = 'UPDATE' THEN
+    RAISE EXCEPTION
+      'writer studio theme event % is immutable; append a successor event',
+      OLD.id;
+  END IF;
+
+  IF TG_OP = 'DELETE'
+     AND EXISTS (
+       SELECT 1 FROM writer_studio_work_themes
+       WHERE id = OLD.theme_id AND member_id = OLD.member_id
+     )
+     AND EXISTS (SELECT 1 FROM members WHERE id = OLD.member_id) THEN
+    RAISE EXCEPTION
+      'writer studio theme event % may be deleted only by lawful parent custody cascade',
+      OLD.id;
+  END IF;
+
+  RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -279,5 +297,19 @@ DROP TRIGGER IF EXISTS writer_studio_work_theme_events_immutable_check
 CREATE TRIGGER writer_studio_work_theme_events_immutable_check
   BEFORE UPDATE OR DELETE ON writer_studio_work_theme_events
   FOR EACH ROW EXECUTE FUNCTION writer_studio_work_theme_events_immutable();
+
+CREATE OR REPLACE FUNCTION writer_studio_work_theme_events_refuse_truncate()
+RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION
+    'TRUNCATE refused on writer_studio_work_theme_events; events leave custody only with their parent';
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS writer_studio_work_theme_events_no_truncate
+  ON writer_studio_work_theme_events;
+CREATE TRIGGER writer_studio_work_theme_events_no_truncate
+  BEFORE TRUNCATE ON writer_studio_work_theme_events
+  FOR EACH STATEMENT EXECUTE FUNCTION writer_studio_work_theme_events_refuse_truncate();
 
 COMMIT;
