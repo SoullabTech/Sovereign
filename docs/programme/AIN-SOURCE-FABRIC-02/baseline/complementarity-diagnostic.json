@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-09-28T15:29:23.874Z",
+  "bm25UniqueMustWins": [
+    "G6",
+    "A3",
+    "D5"
+  ],
+  "semanticUniqueMustWins": [
+    "S5",
+    "C2",
+    "T5",
+    "P4",
+    "P5",
+    "D6",
+    "B2"
+  ],
+  "tiedQueries": 62,
+  "oracleUnionMustRecall": 0.9629629629629629,
+  "fullMustCoverageQueries": 66,
+  "queriesImprovedBeyondBestSingle": 2,
+  "familyOracleUnion": {
+    "exact_lexical": 1,
+    "semantic_paraphrase": 1,
+    "cross_source": 1,
+    "graph_bridge": 1,
+    "temporal_supersession": 1,
+    "contradiction": 0.9166666666666666,
+    "analogy": 1,
+    "global": 0.861111111111111,
+    "negative_control": 1,
+    "permission_control": 1,
+    "diversity": 0.7777777777777777,
+    "ablation": 1
+  },
+  "note": "Oracle union is a coverage diagnostic over two governed top-8 lists, not a production hybrid ranker."
+}

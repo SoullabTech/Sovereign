@@ -1,0 +1,546 @@
+{
+  "generatedAt": "2026-09-28T15:27:40.425Z",
+  "model": "nomic-embed-text",
+  "corpus": {
+    "sources": 26,
+    "chunks": 1735
+  },
+  "methods": {
+    "bm25-raw": {
+      "overall": {
+        "mustRecall": 0.8773148148148149,
+        "helpfulRecall": 0.7986111111111112,
+        "counterevidenceRecall": 1,
+        "bridgeRecall": 0.9722222222222222,
+        "forbiddenLeakage": 0.06944444444444445,
+        "irrelevantRate": 0.7864583333333334,
+        "staleCurrentRate": 0.001736111111111111,
+        "sourceClassDiversity": 1.4583333333333333,
+        "redundancyRate": 0,
+        "usefulPerThousandTokens": 4.36712202469583,
+        "hardFailQueries": 4,
+        "negativeFalsePositiveQueries": 6
+      },
+      "families": {
+        "exact_lexical": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8333333333333334,
+          "forbiddenLeakage": 0
+        },
+        "semantic_paraphrase": {
+          "count": 6,
+          "mustRecall": 0.8333333333333334,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8333333333333334,
+          "forbiddenLeakage": 0
+        },
+        "cross_source": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 0.8333333333333334,
+          "irrelevantRate": 0.7291666666666666,
+          "forbiddenLeakage": 0
+        },
+        "graph_bridge": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6875,
+          "forbiddenLeakage": 0
+        },
+        "temporal_supersession": {
+          "count": 6,
+          "mustRecall": 0.75,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8125,
+          "forbiddenLeakage": 0
+        },
+        "contradiction": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8125,
+          "forbiddenLeakage": 0
+        },
+        "analogy": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 0.8333333333333334,
+          "irrelevantRate": 0.75,
+          "forbiddenLeakage": 0
+        },
+        "global": {
+          "count": 6,
+          "mustRecall": 0.5277777777777778,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.75,
+          "forbiddenLeakage": 0
+        },
+        "negative_control": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 1,
+          "forbiddenLeakage": 0
+        },
+        "permission_control": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7708333333333334,
+          "forbiddenLeakage": 5
+        },
+        "diversity": {
+          "count": 6,
+          "mustRecall": 0.6666666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6875,
+          "forbiddenLeakage": 0
+        },
+        "ablation": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7708333333333334,
+          "forbiddenLeakage": 0
+        }
+      },
+      "lanes": {
+        "analytic": {
+          "count": 21,
+          "mustRecall": 0.9523809523809523,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8690476190476191
+        },
+        "associative": {
+          "count": 12,
+          "mustRecall": 1,
+          "bridgeRecall": 0.9166666666666666,
+          "irrelevantRate": 0.7708333333333334
+        },
+        "bilateral": {
+          "count": 39,
+          "mustRecall": 0.7991452991452991,
+          "bridgeRecall": 0.9743589743589743,
+          "irrelevantRate": 0.7467948717948718
+        }
+      }
+    },
+    "bm25-governed": {
+      "overall": {
+        "mustRecall": 0.8773148148148149,
+        "helpfulRecall": 0.7986111111111112,
+        "counterevidenceRecall": 1,
+        "bridgeRecall": 0.9722222222222222,
+        "forbiddenLeakage": 0,
+        "irrelevantRate": 0.7222222222222222,
+        "staleCurrentRate": 0.001736111111111111,
+        "sourceClassDiversity": 1.4583333333333333,
+        "redundancyRate": 0,
+        "usefulPerThousandTokens": 5.954724776618879,
+        "hardFailQueries": 0,
+        "negativeFalsePositiveQueries": 6
+      },
+      "families": {
+        "exact_lexical": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8333333333333334,
+          "forbiddenLeakage": 0
+        },
+        "semantic_paraphrase": {
+          "count": 6,
+          "mustRecall": 0.8333333333333334,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8333333333333334,
+          "forbiddenLeakage": 0
+        },
+        "cross_source": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 0.8333333333333334,
+          "irrelevantRate": 0.7291666666666666,
+          "forbiddenLeakage": 0
+        },
+        "graph_bridge": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6875,
+          "forbiddenLeakage": 0
+        },
+        "temporal_supersession": {
+          "count": 6,
+          "mustRecall": 0.75,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8125,
+          "forbiddenLeakage": 0
+        },
+        "contradiction": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8125,
+          "forbiddenLeakage": 0
+        },
+        "analogy": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 0.8333333333333334,
+          "irrelevantRate": 0.75,
+          "forbiddenLeakage": 0
+        },
+        "global": {
+          "count": 6,
+          "mustRecall": 0.5277777777777778,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.75,
+          "forbiddenLeakage": 0
+        },
+        "negative_control": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 1,
+          "forbiddenLeakage": 0
+        },
+        "permission_control": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0,
+          "forbiddenLeakage": 0
+        },
+        "diversity": {
+          "count": 6,
+          "mustRecall": 0.6666666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6875,
+          "forbiddenLeakage": 0
+        },
+        "ablation": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7708333333333334,
+          "forbiddenLeakage": 0
+        }
+      },
+      "lanes": {
+        "analytic": {
+          "count": 21,
+          "mustRecall": 0.9523809523809523,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6488095238095238
+        },
+        "associative": {
+          "count": 12,
+          "mustRecall": 1,
+          "bridgeRecall": 0.9166666666666666,
+          "irrelevantRate": 0.7708333333333334
+        },
+        "bilateral": {
+          "count": 39,
+          "mustRecall": 0.7991452991452991,
+          "bridgeRecall": 0.9743589743589743,
+          "irrelevantRate": 0.7467948717948718
+        }
+      }
+    },
+    "semantic-raw": {
+      "overall": {
+        "mustRecall": 0.9259259259259258,
+        "helpfulRecall": 0.8159722222222222,
+        "counterevidenceRecall": 1,
+        "bridgeRecall": 1,
+        "forbiddenLeakage": 0.08333333333333333,
+        "irrelevantRate": 0.7638888888888888,
+        "staleCurrentRate": 0.005208333333333333,
+        "sourceClassDiversity": 1.5833333333333333,
+        "redundancyRate": 0,
+        "usefulPerThousandTokens": 3.5474782117601134,
+        "hardFailQueries": 6,
+        "negativeFalsePositiveQueries": 6
+      },
+      "families": {
+        "exact_lexical": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8333333333333334,
+          "forbiddenLeakage": 0
+        },
+        "semantic_paraphrase": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8333333333333334,
+          "forbiddenLeakage": 0
+        },
+        "cross_source": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6875,
+          "forbiddenLeakage": 0
+        },
+        "graph_bridge": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7291666666666666,
+          "forbiddenLeakage": 0
+        },
+        "temporal_supersession": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7291666666666666,
+          "forbiddenLeakage": 0
+        },
+        "contradiction": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7916666666666666,
+          "forbiddenLeakage": 0
+        },
+        "analogy": {
+          "count": 6,
+          "mustRecall": 0.8333333333333334,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.75,
+          "forbiddenLeakage": 0
+        },
+        "global": {
+          "count": 6,
+          "mustRecall": 0.8055555555555555,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6666666666666666,
+          "forbiddenLeakage": 0
+        },
+        "negative_control": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 1,
+          "forbiddenLeakage": 0
+        },
+        "permission_control": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.75,
+          "forbiddenLeakage": 6
+        },
+        "diversity": {
+          "count": 6,
+          "mustRecall": 0.7222222222222222,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6458333333333334,
+          "forbiddenLeakage": 0
+        },
+        "ablation": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.75,
+          "forbiddenLeakage": 0
+        }
+      },
+      "lanes": {
+        "analytic": {
+          "count": 21,
+          "mustRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8452380952380952
+        },
+        "associative": {
+          "count": 12,
+          "mustRecall": 0.9166666666666666,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7708333333333334
+        },
+        "bilateral": {
+          "count": 39,
+          "mustRecall": 0.8888888888888891,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.717948717948718
+        }
+      }
+    },
+    "semantic-governed": {
+      "overall": {
+        "mustRecall": 0.9259259259259258,
+        "helpfulRecall": 0.8159722222222222,
+        "counterevidenceRecall": 1,
+        "bridgeRecall": 1,
+        "forbiddenLeakage": 0,
+        "irrelevantRate": 0.7013888888888888,
+        "staleCurrentRate": 0.005208333333333333,
+        "sourceClassDiversity": 1.5833333333333333,
+        "redundancyRate": 0,
+        "usefulPerThousandTokens": 5.4572864989154395,
+        "hardFailQueries": 0,
+        "negativeFalsePositiveQueries": 6
+      },
+      "families": {
+        "exact_lexical": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8333333333333334,
+          "forbiddenLeakage": 0
+        },
+        "semantic_paraphrase": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.8333333333333334,
+          "forbiddenLeakage": 0
+        },
+        "cross_source": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6875,
+          "forbiddenLeakage": 0
+        },
+        "graph_bridge": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7291666666666666,
+          "forbiddenLeakage": 0
+        },
+        "temporal_supersession": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7291666666666666,
+          "forbiddenLeakage": 0
+        },
+        "contradiction": {
+          "count": 6,
+          "mustRecall": 0.9166666666666666,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7916666666666666,
+          "forbiddenLeakage": 0
+        },
+        "analogy": {
+          "count": 6,
+          "mustRecall": 0.8333333333333334,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.75,
+          "forbiddenLeakage": 0
+        },
+        "global": {
+          "count": 6,
+          "mustRecall": 0.8055555555555555,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6666666666666666,
+          "forbiddenLeakage": 0
+        },
+        "negative_control": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 1,
+          "forbiddenLeakage": 0
+        },
+        "permission_control": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0,
+          "forbiddenLeakage": 0
+        },
+        "diversity": {
+          "count": 6,
+          "mustRecall": 0.7222222222222222,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6458333333333334,
+          "forbiddenLeakage": 0
+        },
+        "ablation": {
+          "count": 6,
+          "mustRecall": 1,
+          "counterevidenceRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.75,
+          "forbiddenLeakage": 0
+        }
+      },
+      "lanes": {
+        "analytic": {
+          "count": 21,
+          "mustRecall": 1,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.6309523809523809
+        },
+        "associative": {
+          "count": 12,
+          "mustRecall": 0.9166666666666666,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.7708333333333334
+        },
+        "bilateral": {
+          "count": 39,
+          "mustRecall": 0.8888888888888891,
+          "bridgeRecall": 1,
+          "irrelevantRate": 0.717948717948718
+        }
+      }
+    }
+  }
+}
