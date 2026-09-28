@@ -249,6 +249,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia', public: true, notes: 'Legacy MAIA threshold — routes people into canonical Soullab Home or explicit MAIA encounter' },
   { exact: '/maia/encounter', minTier: 'free', notes: 'Direct MAIA encounter — authenticated member destination inside Soullab' },
   { exact: '/maia/reflection', minTier: 'free', notes: 'Developmental reflection — member-only (beta v0)' },
+  { exact: '/maia/vision-studio', minTier: 'free', notes: 'Vision Studio — authenticated member creative room inside Soullab' },
   { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },
   { exact: '/maia/field-dashboard', minTier: 'free', notes: 'Field dashboard' },

@@ -92,6 +92,12 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
           <p className={styles.whole}>Different places.<br />A more whole you.</p>
         </aside>
 
+        <section className={styles.centerIntro} aria-labelledby="home-spaces-title">
+          <p>YOUR SPACES</p>
+          <h3 id="home-spaces-title">Choose where you want to work.</h3>
+          <span>Each space holds a different kind of attention. Open one to enter it.</span>
+        </section>
+
         <HouseCenter />
 
         <section className={styles.alive} aria-label="What's alive">

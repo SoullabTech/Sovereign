@@ -14,11 +14,11 @@ export interface HousePlace {
 }
 
 export const HOUSE_PLACES = [
-  { id:'writing', label:'Writing', purpose:'Give form to what wants to be written', href:'/writers-studio?from=house', mark:'✎', tone:'amber', group:'create', aliases:['writer','work','manuscript'], centerEligible:true },
-  { id:'relationships', label:'Relationships', purpose:'Attend to what lives between', href:'/relationships?from=house', mark:'◎', tone:'rose', group:'practice', aliases:['people','connection','relating'], centerEligible:true },
-  { id:'practices', label:'Practices', purpose:'Come back to body, breath and attention', href:'/practices', mark:'◌', tone:'green', group:'practice', aliases:['practice','meditate','breath','body'], centerEligible:true },
-  { id:'community', label:'Community', purpose:'Participate in what we hold together', href:'/commons?from=house', mark:'◉', tone:'blue', group:'practice', aliases:['commons','circles','gatherings','network'], centerEligible:true },
-  { id:'studio', label:'Studio', purpose:'Tend personal life and steward contribution', href:'/studio', mark:'◇', tone:'gold', group:'create', aliases:['personal studio','pro studio','portal'], centerEligible:true, studioRequired:true },
+  { id:'writing', label:'Writing', purpose:'Write, revise, and develop a living work.', href:'/writers-studio?from=house', mark:'✎', tone:'amber', group:'create', aliases:['writer','work','manuscript'], centerEligible:true },
+  { id:'relationships', label:'Relationships', purpose:'Explore the relationships and patterns shaping your life.', href:'/relationships?from=house', mark:'◎', tone:'rose', group:'practice', aliases:['people','connection','relating'], centerEligible:true },
+  { id:'practices', label:'Practices', purpose:'Return to body, breath, attention, and daily practice.', href:'/practices', mark:'◌', tone:'green', group:'practice', aliases:['practice','meditate','breath','body'], centerEligible:true },
+  { id:'community', label:'Community', purpose:'Find shared spaces, circles, and people you are connected with.', href:'/commons?from=house', mark:'◉', tone:'blue', group:'practice', aliases:['commons','circles','gatherings','network'], centerEligible:true },
+  { id:'studio', label:'Vision Studio', purpose:'Turn an emerging possibility into a vision you can work with.', href:'/maia/vision-studio?from=house', mark:'◇', tone:'gold', group:'create', aliases:['vision','future','possibility','imagine'], centerEligible:true },
   { id:'decisions', label:'Decisions', purpose:'Think through a choice with perspective', href:'/decisions', mark:'⧉', tone:'gold', group:'reflect', aliases:['decision council','choice','choose'], centerEligible:true },
   { id:'astrology', label:'Astrology', purpose:'Meet pattern, timing and symbolic ecology', href:'/astrology?from=house', mark:'◉', tone:'blue', group:'reflect', aliases:['transits','chart','cycles'], centerEligible:true },
   { id:'journal', label:'Journal', purpose:'Write what you have lived', href:'/journal?from=house', mark:'▯', tone:'slate', group:'reflect', aliases:['journaling','notes','diary'], centerEligible:true },

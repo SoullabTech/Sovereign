@@ -99,14 +99,20 @@
 .quick a:first-of-type { border-top: 0; }
 .quick a:hover { color: #ffe5bb; }
 .whole { margin: 19px 0 0; padding: 18px 0 14px 18px; border-left: 1px solid var(--rule); color: #cfc0a9; font: italic 15px/1.4 Georgia, serif; }
-.worlds { position: relative; z-index: 1; margin-top: clamp(98px, 7.9vw, 148px); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(17px, 2vw, 32px); }
-.world { display: flex; min-width: 0; flex-direction: column; align-items: center; padding: 0 0 10px; text-align: center; color: inherit; text-decoration: none; transition: transform .2s ease; }
-.world::after { content: ''; width: 30px; height: 1px; margin-top: 19px; background: rgba(233, 213, 179, .58); }
-.world:hover { transform: translateY(-2px); }
-.worldMark { display: grid; place-items: center; width: 55px; height: 55px; }
-.worldMark img { display: block; width: 54px; height: 54px; object-fit: contain; filter: none; opacity: .96; }
-.world strong { display: block; margin: 11px 0 10px; color: #eee5d6; font-size: 24px; font-weight: 400; line-height: 1.1; }
-.world small { display: block; max-width: 155px; color: #d3c1a9; font: 8px/1.55 Arial, sans-serif; letter-spacing: .18em; text-transform: uppercase; }
+.centerIntro { position: relative; z-index: 1; margin-top: clamp(78px, 6.5vw, 118px); max-width: 720px; }
+.centerIntro p { margin: 0 0 8px; color: #d6bf9b; font: 8px/1.4 Arial, sans-serif; letter-spacing: .3em; }
+.centerIntro h3 { margin: 0; color: #f0e6d8; font: 400 clamp(24px, 2vw, 32px)/1.1 'House Crimson', Georgia, serif; }
+.centerIntro span { display: block; margin-top: 8px; color: #c9b9a2; font: 14px/1.5 Arial, sans-serif; }
+
+.worlds { position: relative; z-index: 1; margin-top: 24px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(14px, 1.6vw, 24px); }
+.world { position: relative; display: flex; min-width: 0; min-height: 238px; flex-direction: column; align-items: flex-start; padding: 22px 20px 18px; border: 1px solid rgba(225, 196, 153, .16); border-radius: 10px; background: linear-gradient(155deg, rgba(255,242,218,.045), rgba(0,0,0,.08)); text-align: left; color: inherit; text-decoration: none; cursor: pointer; transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+.world::after { content: 'Enter  →'; display: block; margin-top: auto; padding-top: 20px; color: #dfc397; font: 11px/1 Arial, sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+.world:hover, .world:focus-visible { transform: translateY(-3px); border-color: rgba(232, 202, 158, .48); background: linear-gradient(155deg, rgba(255,242,218,.085), rgba(0,0,0,.05)); box-shadow: 0 16px 32px rgba(0,0,0,.18); outline: none; }
+.worldMark { display: grid; place-items: center; width: 50px; height: 50px; }
+.worldMark img { display: block; width: 48px; height: 48px; object-fit: contain; filter: none; opacity: .96; }
+.world strong { display: block; margin: 14px 0 9px; color: #f0e7da; font: 400 21px/1.15 'House Crimson', Georgia, serif; }
+.world small { display: block; max-width: 190px; color: #cdbda7; font: 12px/1.48 Arial, sans-serif; letter-spacing: .01em; text-transform: none; }
+.world[data-place='studio'] { border-color: rgba(216,179,111,.34); background: radial-gradient(circle at 82% 18%, rgba(216,179,111,.12), transparent 36%), linear-gradient(155deg, rgba(255,242,218,.06), rgba(0,0,0,.08)); }
 .alive { position: relative; z-index: 1; margin-top: 43px; padding-top: 22px; border-top: 1px solid rgba(225, 193, 147, .2); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 22px; row-gap: 24px; }
 .alive > p { grid-column: 1 / -1; margin: 0; color: #e3d8c7; font: 9px/1.4 Arial, sans-serif; letter-spacing: .32em; }
 .alive > div { display: flex; min-width: 0; min-height: 63px; flex-direction: column; justify-content: center; gap: 8px; padding-left: 19px; border-left: 1px solid rgba(222, 195, 154, .3); color: #d5c6b0; font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
@@ -160,7 +166,8 @@
   .member { position: static; margin-left: auto; }
   .presence { position: relative; top: auto; right: auto; width: auto; padding: 0; margin: 45px 0 0; display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
   .presence blockquote, .whole { display: none; }
-  .worlds { margin-top: 55px; }
+  .centerIntro { margin-top: 55px; }
+  .worlds { margin-top: 20px; }
   .world strong { font-size: 22px; }
   .chambers, .grounds { grid-template-columns: 1fr; }
 }
@@ -196,9 +203,11 @@
   .quick > p { grid-column: 1 / -1; }
   .quick a { min-height: 44px; font-size: 19px; }
   .quick a:nth-of-type(2) { border-top: 0; }
-  .worlds { margin-top: 48px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 24px; }
-  .world strong { font-size: 25px; }
-  .world small { font-size: 9px; }
+  .centerIntro { margin-top: 48px; }
+  .worlds { margin-top: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .world { min-height: 220px; padding: 20px 17px 16px; }
+  .world strong { font-size: 22px; }
+  .world small { font-size: 12px; }
   .worldMark, .worldMark img { width: 48px; height: 48px; }
   .world:last-child { grid-column: 1 / -1; }
   .alive { margin-top: 45px; grid-template-columns: 1fr 1fr; gap: 22px; }
