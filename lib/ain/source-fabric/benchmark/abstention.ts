@@ -50,10 +50,10 @@ export function inferClaimNeed(query:string):ClaimNeed{
   ) return 'diagnostic_identity';
 
   if(
-    certainty.test(text)&&(
-      /\b(?:deceased|dead|ancestor|spirit|ghost)\b.*\b(?:communicat\w*|message\w*|contact\w*|speaking|speaks?)\b/.test(text)||
-      /\b(?:communicat\w*|message\w*|contact\w*)\b.*\b(?:deceased|dead|ancestor|spirit|ghost)\b/.test(text)
-    )
+    certainty.test(text)&&
+    /\b(?:dream|divination|oracle|i ching|astrology|astrological)\b/.test(text)&&
+    /\b(?:deceased|dead|ancestor|spirit|ghost|angel|entity)\b/.test(text)&&
+    /\b(?:communicat\w*|message\w*|contact\w*|visit\w*|send|sends|sent|warning|appear\w*|manifest\w*|speaking|speaks?|signs?)\b/.test(text)
   ) return 'external_revelation';
 
   if(
