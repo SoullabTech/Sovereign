@@ -1891,12 +1891,12 @@ function MAIAPageContent() {
                 <button
                   onClick={() => {
                     setShowAccountMenu(false);
-                    router.push('/house?from=maia');
+                    router.push('/home');
                   }}
                   className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
                 >
                   <Home className="w-5 h-5" />
-                  <span className="text-base">Return to House</span>
+                  <span className="text-base">Home</span>
                 </button>
 
                 {/* Commons */}
