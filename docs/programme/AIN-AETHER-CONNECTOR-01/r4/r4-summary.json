@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-09-28T22:03:56.571Z",
+  "parentConnectorR3": "6ed9c1e998485f819bd35f9b33ac9f1aaa0fe326",
+  "fingerprintAlgorithm": "sha256",
+  "canonicalVersion": "aether-query-plan-v1",
+  "fingerprintDigest": "90c8c151398d7afb6c5b793e8d760287b250cf583cc991d05b0bf380e8543bad",
+  "reviewBound": true,
+  "approvedForFutureExecutionDesign": true,
+  "executionAuthorized": false,
+  "recordReadExecuted": false,
+  "recordCountRead": 0,
+  "driftedReviewBound": false,
+  "driftedErrors": [
+    "query_plan_fingerprint_mismatch"
+  ],
+  "persistenceAuthorized": false,
+  "memberFacingDeliveryAuthorized": false,
+  "maiaPromptMutationAuthorized": false,
+  "productionAuthority": false
+}

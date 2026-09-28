@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-09-28T22:03:56.571Z",
+  "parentConnectorR3": "6ed9c1e998485f819bd35f9b33ac9f1aaa0fe326",
+  "plan": {
+    "queryRef": "query:r4:witness",
+    "connectorRef": "connector:r4:witness",
+    "manifestRef": "manifest:r4:witness",
+    "memberRef": "member:fixture",
+    "consentRef": "consent:r4:witness",
+    "sourceClass": "member_authored_text",
+    "fields": [
+      "recordRef",
+      "memberRef",
+      "text",
+      "createdAt",
+      "domain"
+    ],
+    "startTime": "2026-09-01T00:00:00-04:00",
+    "endTime": "2026-09-29T00:00:00-04:00",
+    "maxRecords": 25,
+    "wildcard": false,
+    "paginationAllowed": false,
+    "execute": false
+  },
+  "fingerprint": {
+    "algorithm": "sha256",
+    "canonicalVersion": "aether-query-plan-v1",
+    "digest": "90c8c151398d7afb6c5b793e8d760287b250cf583cc991d05b0bf380e8543bad"
+  },
+  "review": {
+    "reviewRef": "review:r4:witness",
+    "reviewer": "human",
+    "reviewedQueryRef": "query:r4:witness",
+    "reviewedFingerprint": {
+      "algorithm": "sha256",
+      "canonicalVersion": "aether-query-plan-v1",
+      "digest": "90c8c151398d7afb6c5b793e8d760287b250cf583cc991d05b0bf380e8543bad"
+    },
+    "approved": true,
+    "note": "Approve this exact bounded query plan for future execution design review only."
+  },
+  "exact": {
+    "reviewBound": true,
+    "errors": [],
+    "currentFingerprint": {
+      "algorithm": "sha256",
+      "canonicalVersion": "aether-query-plan-v1",
+      "digest": "90c8c151398d7afb6c5b793e8d760287b250cf583cc991d05b0bf380e8543bad"
+    },
+    "reviewedFingerprint": {
+      "algorithm": "sha256",
+      "canonicalVersion": "aether-query-plan-v1",
+      "digest": "90c8c151398d7afb6c5b793e8d760287b250cf583cc991d05b0bf380e8543bad"
+    },
+    "approvedForFutureExecutionDesign": true,
+    "executionAuthorized": false,
+    "recordReadExecuted": false,
+    "recordCountRead": 0,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  },
+  "drifted": {
+    "reviewBound": false,
+    "errors": [
+      "query_plan_fingerprint_mismatch"
+    ],
+    "currentFingerprint": {
+      "algorithm": "sha256",
+      "canonicalVersion": "aether-query-plan-v1",
+      "digest": "833a57ed4c93382d8b91ecd333e429b9bf5d1193256cbbdc9507b5790c3b9255"
+    },
+    "reviewedFingerprint": {
+      "algorithm": "sha256",
+      "canonicalVersion": "aether-query-plan-v1",
+      "digest": "90c8c151398d7afb6c5b793e8d760287b250cf583cc991d05b0bf380e8543bad"
+    },
+    "approvedForFutureExecutionDesign": false,
+    "executionAuthorized": false,
+    "recordReadExecuted": false,
+    "recordCountRead": 0,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  }
+}
