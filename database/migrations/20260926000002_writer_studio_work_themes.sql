@@ -12,6 +12,11 @@
 
 BEGIN;
 
+-- Bound lock acquisition and execution while the compatibility-reviewed old reader
+-- continues serving this already-live table. Contention aborts cleanly pre-swap.
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '60s';
+
 -- ── 1. Eight-lens developmental-reading vocabulary ──────────────────────────
 ALTER TABLE developmental_readings
   DROP CONSTRAINT IF EXISTS developmental_readings_commissioned_lens_check;
