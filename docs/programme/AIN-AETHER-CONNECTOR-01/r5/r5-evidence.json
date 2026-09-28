@@ -1,0 +1,211 @@
+{
+  "generatedAt": "2026-09-28T22:08:31.546Z",
+  "parentConnectorR4": "11432108863db88231dfb036166a51057988b9d1",
+  "plan": {
+    "queryRef": "query:r5:witness",
+    "connectorRef": "connector:r5:witness",
+    "manifestRef": "manifest:r5:witness",
+    "memberRef": "member:fixture",
+    "consentRef": "consent:r5:witness",
+    "sourceClass": "member_authored_text",
+    "fields": [
+      "recordRef",
+      "memberRef",
+      "text",
+      "createdAt",
+      "domain"
+    ],
+    "startTime": "2026-09-01T00:00:00-04:00",
+    "endTime": "2026-09-29T00:00:00-04:00",
+    "maxRecords": 25,
+    "wildcard": false,
+    "paginationAllowed": false,
+    "execute": false
+  },
+  "review": {
+    "reviewRef": "review:r5:witness",
+    "reviewer": "human",
+    "reviewedQueryRef": "query:r5:witness",
+    "reviewedFingerprint": {
+      "algorithm": "sha256",
+      "canonicalVersion": "aether-query-plan-v1",
+      "digest": "b182fdbf467307937e8b9190f20fb8be80d4e80528b59fcdbe90fea1326b5eba"
+    },
+    "approved": true,
+    "note": "Exact bounded plan approved for execution-token design only."
+  },
+  "authorization": {
+    "authorizationRef": "exec-auth:r5:witness",
+    "actor": "human",
+    "queryRef": "query:r5:witness",
+    "fingerprint": {
+      "algorithm": "sha256",
+      "canonicalVersion": "aether-query-plan-v1",
+      "digest": "b182fdbf467307937e8b9190f20fb8be80d4e80528b59fcdbe90fea1326b5eba"
+    },
+    "authorized": true,
+    "issuedAt": "2026-09-28T17:00:00-04:00",
+    "expiresAt": "2026-09-28T18:00:00-04:00",
+    "note": "Authorize this exact reviewed plan to cross the next design gate once."
+  },
+  "issued": {
+    "issued": true,
+    "errors": [],
+    "token": {
+      "tokenRef": "aether-exec-token:exec-auth:r5:witness",
+      "queryRef": "query:r5:witness",
+      "fingerprint": {
+        "algorithm": "sha256",
+        "canonicalVersion": "aether-query-plan-v1",
+        "digest": "b182fdbf467307937e8b9190f20fb8be80d4e80528b59fcdbe90fea1326b5eba"
+      },
+      "authorizationRef": "exec-auth:r5:witness",
+      "authorizedBy": "human",
+      "issuedAt": "2026-09-28T17:00:00-04:00",
+      "expiresAt": "2026-09-28T18:00:00-04:00",
+      "oneShot": true,
+      "consumed": false,
+      "executionEligible": true,
+      "connectorExecutionImplemented": false,
+      "executionOccurred": false,
+      "recordReadExecuted": false,
+      "recordCountRead": 0,
+      "persistenceAuthorized": false,
+      "memberFacingDeliveryAuthorized": false,
+      "maiaPromptMutationAuthorized": false,
+      "productionAuthority": false
+    },
+    "executionAuthorized": false,
+    "recordReadExecuted": false,
+    "recordCountRead": 0,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  },
+  "preExpiry": {
+    "usable": true,
+    "errors": [],
+    "token": {
+      "tokenRef": "aether-exec-token:exec-auth:r5:witness",
+      "queryRef": "query:r5:witness",
+      "fingerprint": {
+        "algorithm": "sha256",
+        "canonicalVersion": "aether-query-plan-v1",
+        "digest": "b182fdbf467307937e8b9190f20fb8be80d4e80528b59fcdbe90fea1326b5eba"
+      },
+      "authorizationRef": "exec-auth:r5:witness",
+      "authorizedBy": "human",
+      "issuedAt": "2026-09-28T17:00:00-04:00",
+      "expiresAt": "2026-09-28T18:00:00-04:00",
+      "oneShot": true,
+      "consumed": false,
+      "executionEligible": true,
+      "connectorExecutionImplemented": false,
+      "executionOccurred": false,
+      "recordReadExecuted": false,
+      "recordCountRead": 0,
+      "persistenceAuthorized": false,
+      "memberFacingDeliveryAuthorized": false,
+      "maiaPromptMutationAuthorized": false,
+      "productionAuthority": false
+    },
+    "executorPresent": false,
+    "executionOccurred": false,
+    "recordReadExecuted": false,
+    "recordCountRead": 0
+  },
+  "expired": {
+    "usable": false,
+    "errors": [
+      "token_expired"
+    ],
+    "token": {
+      "tokenRef": "aether-exec-token:exec-auth:r5:witness",
+      "queryRef": "query:r5:witness",
+      "fingerprint": {
+        "algorithm": "sha256",
+        "canonicalVersion": "aether-query-plan-v1",
+        "digest": "b182fdbf467307937e8b9190f20fb8be80d4e80528b59fcdbe90fea1326b5eba"
+      },
+      "authorizationRef": "exec-auth:r5:witness",
+      "authorizedBy": "human",
+      "issuedAt": "2026-09-28T17:00:00-04:00",
+      "expiresAt": "2026-09-28T18:00:00-04:00",
+      "oneShot": true,
+      "consumed": false,
+      "executionEligible": true,
+      "connectorExecutionImplemented": false,
+      "executionOccurred": false,
+      "recordReadExecuted": false,
+      "recordCountRead": 0,
+      "persistenceAuthorized": false,
+      "memberFacingDeliveryAuthorized": false,
+      "maiaPromptMutationAuthorized": false,
+      "productionAuthority": false
+    },
+    "executorPresent": false,
+    "executionOccurred": false,
+    "recordReadExecuted": false,
+    "recordCountRead": 0
+  },
+  "consumedToken": {
+    "tokenRef": "aether-exec-token:exec-auth:r5:witness",
+    "queryRef": "query:r5:witness",
+    "fingerprint": {
+      "algorithm": "sha256",
+      "canonicalVersion": "aether-query-plan-v1",
+      "digest": "b182fdbf467307937e8b9190f20fb8be80d4e80528b59fcdbe90fea1326b5eba"
+    },
+    "authorizationRef": "exec-auth:r5:witness",
+    "authorizedBy": "human",
+    "issuedAt": "2026-09-28T17:00:00-04:00",
+    "expiresAt": "2026-09-28T18:00:00-04:00",
+    "oneShot": true,
+    "consumed": true,
+    "executionEligible": false,
+    "connectorExecutionImplemented": false,
+    "executionOccurred": false,
+    "recordReadExecuted": false,
+    "recordCountRead": 0,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  },
+  "afterConsume": {
+    "usable": false,
+    "errors": [
+      "token_already_consumed",
+      "token_not_execution_eligible"
+    ],
+    "token": {
+      "tokenRef": "aether-exec-token:exec-auth:r5:witness",
+      "queryRef": "query:r5:witness",
+      "fingerprint": {
+        "algorithm": "sha256",
+        "canonicalVersion": "aether-query-plan-v1",
+        "digest": "b182fdbf467307937e8b9190f20fb8be80d4e80528b59fcdbe90fea1326b5eba"
+      },
+      "authorizationRef": "exec-auth:r5:witness",
+      "authorizedBy": "human",
+      "issuedAt": "2026-09-28T17:00:00-04:00",
+      "expiresAt": "2026-09-28T18:00:00-04:00",
+      "oneShot": true,
+      "consumed": true,
+      "executionEligible": false,
+      "connectorExecutionImplemented": false,
+      "executionOccurred": false,
+      "recordReadExecuted": false,
+      "recordCountRead": 0,
+      "persistenceAuthorized": false,
+      "memberFacingDeliveryAuthorized": false,
+      "maiaPromptMutationAuthorized": false,
+      "productionAuthority": false
+    },
+    "executorPresent": false,
+    "executionOccurred": false,
+    "recordReadExecuted": false,
+    "recordCountRead": 0
+  }
+}

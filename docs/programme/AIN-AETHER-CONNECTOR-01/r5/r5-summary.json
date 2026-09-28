@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-09-28T22:08:31.546Z",
+  "parentConnectorR4": "11432108863db88231dfb036166a51057988b9d1",
+  "tokenIssued": true,
+  "tokenRef": "aether-exec-token:exec-auth:r5:witness",
+  "tokenQueryRef": "query:r5:witness",
+  "tokenFingerprint": "b182fdbf467307937e8b9190f20fb8be80d4e80528b59fcdbe90fea1326b5eba",
+  "tokenOneShot": true,
+  "tokenConsumedInitially": false,
+  "tokenExecutionEligibleInitially": true,
+  "preExpiryUsable": true,
+  "expiredUsable": false,
+  "expiredErrors": [
+    "token_expired"
+  ],
+  "consumed": true,
+  "executionEligibleAfterConsume": false,
+  "afterConsumeUsable": false,
+  "afterConsumeErrors": [
+    "token_already_consumed",
+    "token_not_execution_eligible"
+  ],
+  "executionAuthorized": false,
+  "recordReadExecuted": false,
+  "recordCountRead": 0,
+  "persistenceAuthorized": false,
+  "memberFacingDeliveryAuthorized": false,
+  "maiaPromptMutationAuthorized": false,
+  "productionAuthority": false
+}
