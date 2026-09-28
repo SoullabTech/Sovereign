@@ -1,0 +1,75 @@
+{
+  "generatedAt": "2026-09-28T23:12:13.653Z",
+  "parentConnectorClosure": "ec65dc2ccd93a2d031a8168c7891c4624b06dd7d",
+  "plan": {
+    "queryRef": "query:executor:r1:witness",
+    "connectorRef": "connector:executor:r1:witness",
+    "manifestRef": "manifest:executor:r1:witness",
+    "memberRef": "member:fixture",
+    "consentRef": "consent:executor:r1:witness",
+    "sourceClass": "member_authored_text",
+    "fields": [
+      "recordRef",
+      "memberRef",
+      "text",
+      "createdAt",
+      "domain"
+    ],
+    "startTime": "2026-09-01T00:00:00-04:00",
+    "endTime": "2026-09-29T00:00:00-04:00",
+    "maxRecords": 1,
+    "wildcard": false,
+    "paginationAllowed": false,
+    "execute": false
+  },
+  "result": {
+    "executed": true,
+    "errors": [],
+    "record": {
+      "recordRef": "fixture-record:r1:witness",
+      "memberRef": "member:fixture",
+      "text": "A local fixture observation.",
+      "createdAt": "2026-09-28T12:00:00-04:00",
+      "domain": "work"
+    },
+    "consumedToken": {
+      "tokenRef": "aether-exec-token:exec-auth:executor:r1:witness",
+      "queryRef": "query:executor:r1:witness",
+      "fingerprint": {
+        "algorithm": "sha256",
+        "canonicalVersion": "aether-query-plan-v1",
+        "digest": "ded7b133a5bb0165f169df32d2893119ef4937c7e9d5bf81c3b64f13530a25bd"
+      },
+      "authorizationRef": "exec-auth:executor:r1:witness",
+      "authorizedBy": "human",
+      "issuedAt": "2026-09-28T18:00:00-04:00",
+      "expiresAt": "2026-09-28T19:00:00-04:00",
+      "oneShot": true,
+      "consumed": true,
+      "executionEligible": false,
+      "connectorExecutionImplemented": false,
+      "executionOccurred": false,
+      "recordReadExecuted": false,
+      "recordCountRead": 0,
+      "persistenceAuthorized": false,
+      "memberFacingDeliveryAuthorized": false,
+      "maiaPromptMutationAuthorized": false,
+      "productionAuthority": false
+    },
+    "receipt": {
+      "receiptRef": "aether-local-fixture-read:aether-exec-token:exec-auth:executor:r1:witness",
+      "tokenRef": "aether-exec-token:exec-auth:executor:r1:witness",
+      "queryRef": "query:executor:r1:witness",
+      "transportRef": "transport:executor:r1:witness",
+      "transportKind": "local_fixture_only",
+      "recordCountRead": 1,
+      "connectorIoAttempted": true,
+      "externalNetworkCall": false,
+      "productionReachable": false,
+      "persisted": false,
+      "memberFacingDelivery": false,
+      "maiaPromptMutated": false,
+      "productionAuthority": false
+    }
+  }
+}

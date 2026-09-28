@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-09-28T23:12:13.653Z",
+  "parentConnectorClosure": "ec65dc2ccd93a2d031a8168c7891c4624b06dd7d",
+  "executed": true,
+  "recordRef": "fixture-record:r1:witness",
+  "recordCountRead": 1,
+  "tokenConsumed": true,
+  "externalNetworkCall": false,
+  "productionReachable": false,
+  "persisted": false,
+  "memberFacingDelivery": false,
+  "maiaPromptMutated": false,
+  "productionAuthority": false
+}
