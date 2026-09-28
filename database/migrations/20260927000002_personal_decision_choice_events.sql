@@ -11,6 +11,11 @@
 -- truthfully "complete without recorded choice" until the member acts.
 BEGIN;
 
+-- Fail fast under live-reader contention rather than queueing an ACCESS EXCLUSIVE
+-- lock ahead of production traffic while the compatibility-reviewed old reader serves.
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '60s';
+
 DO $$
 BEGIN
   IF NOT EXISTS (
