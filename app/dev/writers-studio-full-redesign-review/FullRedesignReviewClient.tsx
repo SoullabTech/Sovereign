@@ -33,6 +33,11 @@ export type FullRedesignReviewClientProps = {
 
 const MODE_STATE: Record<StudioMode, ReviewStateId> = { home: 'home-return', write: 'write-resting', develop: 'develop-themes', review: 'review-chapter' };
 
+const LARGER = [
+  'Across the manuscript, change and transition gathers strength from Chapter 5 onward.',
+  'Belonging begins to surface in Chapter 6 and may carry more weight in Part III.',
+] as const;
+
 export function FullRedesignReviewClient({ initialState, initialAppearance = DEFAULT_APPEARANCE }: FullRedesignReviewClientProps) {
   const [state, setState] = useState<ReviewStateId>(initialState);
   const [appearance, setAppearance] = useState<Appearance>(initialAppearance);
