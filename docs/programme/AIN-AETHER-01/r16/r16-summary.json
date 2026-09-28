@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-09-28T19:29:23.632Z",
+  "parentR15": "34094c8f78dffab768126eddd7c6cc2588f0dcb9",
+  "valid": true,
+  "exactPrecision": "exact_timestamp",
+  "exactAnswer": "This reflection was recorded at 2026-09-28T14:00:00-04:00.",
+  "datePrecision": "calendar_date",
+  "dateUnknowns": [
+    "clock_time_not_recorded"
+  ],
+  "coarsePrecision": "coarse_period",
+  "sequencePrecision": "sequence_only",
+  "unknownPrecision": "unknown",
+  "orderAnswer": "repair:v1 is recorded before repair:v3.",
+  "orderPrecision": "sequence_only",
+  "missingUnknowns": [
+    "temporal_metadata_not_recorded"
+  ],
+  "noFalsePrecision": true
+}

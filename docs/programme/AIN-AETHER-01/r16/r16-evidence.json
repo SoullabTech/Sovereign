@@ -1,0 +1,87 @@
+{
+  "generatedAt": "2026-09-28T19:29:23.632Z",
+  "parentR15": "34094c8f78dffab768126eddd7c6cc2588f0dcb9",
+  "validation": {
+    "valid": true,
+    "errors": []
+  },
+  "exact": {
+    "nodeRef": "machine:v0",
+    "answer": "This reflection was recorded at 2026-09-28T14:00:00-04:00.",
+    "precision": "exact_timestamp",
+    "evidenceTemporalRefs": [
+      "t:v0"
+    ],
+    "unknowns": [],
+    "falsePrecisionIntroduced": false
+  },
+  "dateOnly": {
+    "nodeRef": "repair:v1",
+    "answer": "This reflection was recorded on 2026-09-28; no more precise time is preserved.",
+    "precision": "calendar_date",
+    "evidenceTemporalRefs": [
+      "t:v1"
+    ],
+    "unknowns": [
+      "clock_time_not_recorded"
+    ],
+    "falsePrecisionIntroduced": false
+  },
+  "coarse": {
+    "nodeRef": "repair:v2",
+    "answer": "This reflection is recorded only as occurring during late September 2026.",
+    "precision": "coarse_period",
+    "evidenceTemporalRefs": [
+      "t:v2"
+    ],
+    "unknowns": [
+      "exact_date_and_time_not_recorded"
+    ],
+    "falsePrecisionIntroduced": false
+  },
+  "sequenceOnly": {
+    "nodeRef": "repair:v3",
+    "answer": "This reflection is preserved as sequence position 3, but no calendar time was recorded.",
+    "precision": "sequence_only",
+    "evidenceTemporalRefs": [
+      "t:v3"
+    ],
+    "unknowns": [
+      "calendar_time_not_recorded"
+    ],
+    "falsePrecisionIntroduced": false
+  },
+  "unknown": {
+    "nodeRef": "repair:v4",
+    "answer": "The record preserves the reflection but does not preserve when it occurred.",
+    "precision": "unknown",
+    "evidenceTemporalRefs": [
+      "t:v4"
+    ],
+    "unknowns": [
+      "time_unknown"
+    ],
+    "falsePrecisionIntroduced": false
+  },
+  "order": {
+    "nodeRef": "repair:v3",
+    "answer": "repair:v1 is recorded before repair:v3.",
+    "precision": "sequence_only",
+    "evidenceTemporalRefs": [
+      "t:v1",
+      "t:v3"
+    ],
+    "unknowns": [],
+    "falsePrecisionIntroduced": false
+  },
+  "missing": {
+    "nodeRef": "repair:v2",
+    "answer": "The lineage preserves this reflection, but no temporal metadata was recorded for it.",
+    "precision": "unknown",
+    "evidenceTemporalRefs": [],
+    "unknowns": [
+      "temporal_metadata_not_recorded"
+    ],
+    "falsePrecisionIntroduced": false
+  }
+}
