@@ -1,0 +1,140 @@
+{
+  "scope": "Fresh synthetic browser contexts; visible journey UI with mocked MAIA responses; no provider call, production write, or direct database audit.",
+  "recordedAt": "2026-09-28T00:38:21.962Z",
+  "results": [
+    {
+      "id": "J01",
+      "status": "PASS",
+      "detail": "Arrival begins as a Future Self journey; Across Time and the seven-part operator UI are absent."
+    },
+    {
+      "id": "J02",
+      "status": "PASS",
+      "detail": "The threshold offers two intelligible entry doors before any future imagery is requested."
+    },
+    {
+      "id": "J03",
+      "status": "PASS",
+      "detail": "The member sees four experiential phases, while Keep remains unavailable before Return."
+    },
+    {
+      "id": "J04",
+      "status": "PASS",
+      "detail": "Future taxonomy is secondary; the journey first asks the member to let time open."
+    },
+    {
+      "id": "J05",
+      "status": "PASS",
+      "detail": "The future is encountered phenomenologically before interpretation."
+    },
+    {
+      "id": "J05E",
+      "status": "PASS",
+      "detail": "The member can enter the elemental field non-linearly and inhabit Earth, Water, Air, Fire, and Aether without any element claiming authority over meaning."
+    },
+    {
+      "id": "J06",
+      "status": "PASS",
+      "detail": "Dialogue appears after encounter and both temporal voices remain member-entered."
+    },
+    {
+      "id": "J07",
+      "status": "PASS",
+      "detail": "Discernment begins with meaning; uncertainty/counterevidence stays optional behind disclosure."
+    },
+    {
+      "id": "J08",
+      "status": "PASS",
+      "detail": "Return is completed before initial Keep becomes available."
+    },
+    {
+      "id": "J09",
+      "status": "PASS",
+      "detail": "One explicit gesture hands the whole returned journey to MAIA with imaginal provenance and no retyping."
+    },
+    {
+      "id": "J10",
+      "status": "PASS",
+      "detail": "The synthesis becomes a continuing MAIA conversation; waiting is labeled reflecting and the arriving response is brought into view."
+    },
+    {
+      "id": "J11",
+      "status": "PASS",
+      "detail": "Carry is optional and Nothing yet is a complete choice."
+    },
+    {
+      "id": "J12",
+      "status": "PASS",
+      "detail": "Across Time appears only after a journey has actually been kept."
+    },
+    {
+      "id": "J13",
+      "status": "PASS",
+      "detail": "Across Time uses human language while the temporal architecture remains underneath."
+    },
+    {
+      "id": "J13M",
+      "status": "PASS",
+      "detail": "Across Time can hand only selected temporal material to MAIA, hold it as a differentiated gestalt at center, and release a hypothesis when the member corrects it."
+    },
+    {
+      "id": "J14",
+      "status": "PASS",
+      "detail": "Across Time notes are not silently discarded on navigation."
+    },
+    {
+      "id": "J15",
+      "status": "PASS",
+      "detail": "Across Time opens a new journey with exact-source identity and explicit epistemic framing."
+    },
+    {
+      "id": "J16",
+      "status": "PASS",
+      "detail": "An unfinished journey may be explicitly discarded without inventing Return."
+    },
+    {
+      "id": "J17",
+      "status": "PASS",
+      "detail": "The kept journey visibly preserves member-authored elemental immersion, dialogue, imaginal provenance, and a no-repeat MAIA doorway."
+    },
+    {
+      "id": "J18",
+      "status": "PASS",
+      "detail": "Deleting the only kept journey returns Across Time to unavailable."
+    },
+    {
+      "id": "J19",
+      "status": "PASS",
+      "detail": "The Future Self threshold fits a 390px mobile viewport without horizontal overflow."
+    },
+    {
+      "id": "J20",
+      "status": "PASS",
+      "detail": "The guided journey remains width-safe after entering the experience."
+    },
+    {
+      "id": "J21",
+      "status": "PASS",
+      "detail": "Visible mobile actions meet the 16px type and 44px target floors."
+    },
+    {
+      "id": "J22",
+      "status": "PASS",
+      "detail": "The bounded witness produced no page errors or off-origin browser requests."
+    },
+    {
+      "id": "J23",
+      "status": "PASS",
+      "detail": "The preview keeps both MAIA lanes behind explicit member acts and preserves the guide/continuity boundary."
+    }
+  ],
+  "errors": [],
+  "requests": [
+    "http://localhost:3800/becoming",
+    "http://localhost:3800/assets/app.css",
+    "http://localhost:3800/assets/app.js",
+    "http://localhost:3800/assets/house-field.webp",
+    "http://localhost:3800/api/maia"
+  ],
+  "failure": null
+}

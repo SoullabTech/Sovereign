@@ -1,0 +1,23 @@
+{
+  "source_commit": "c0a12c2b28d5b4f2a8fb8bb8473d07748e28f98e",
+  "bundle_sha256": "c702f2cdf436965db12f62cd426f7c5bc5e7c5aeff779bb87bd1d8e114347949",
+  "unit_pass": 46,
+  "guide_browser_pass": 6,
+  "full_browser_pass": 25,
+  "real_provider_calls_in_automation": 0,
+  "whole_house_indras_web_retrieval_active": false,
+  "files": {
+    "full-browser-witness.json": "83fec9e159df218a29a06f0dd688ac50546f4b4eab6381edce4cdee6c5faddee",
+    "full-browser.log": "4add1f87d207a08d2b35114e4067a87598466913310dbb0da0932048d0a284d7",
+    "guide-browser-witness.json": "c6b36a1dc06ac5ea9cbd1289856d5d8aa3be315c53187fdaa64b226ecb3b2b13",
+    "guide-browser.log": "cd47d023809a8218b337a4e98fb5a007acc08981f2c5903f54ab5feed9f9a92e",
+    "guide-proxy-witness.json": "9950dcda002e9d355f4b86aae263613fae0ad4f4167d6c324f632cc2794dc07f",
+    "guide-proxy.log": "9950dcda002e9d355f4b86aae263613fae0ad4f4167d6c324f632cc2794dc07f",
+    "health.json": "0c7df2eca787273eaf2ac0141d8f5232e21ff59b4a5c929685999bd9c21f1106",
+    "live-guide-aether.png": "9acef5268fce557da2254e1d48319bf618b31e7dc5889206879d1fbe8d2310e2",
+    "typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "unit.log": "77ca2041f42e2fc4af4093a792acff4947e25f3c4e4ed3ca18dd9820ec54a138",
+    "ux01r3-elemental-aether-desktop.png": "4ec2788fe48672f44c9df28fa9dcef6177d8dcd265027871434370efd74a1d52",
+    "ux02r4-across-time-maia-desktop.png": "b471ec67d8650b5b08fb22f3316fd1ef5ff1ac059759387055f38e8c2d45f1c7"
+  }
+}
