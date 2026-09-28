@@ -151,3 +151,23 @@ That finding is now dispositioned in the candidate containing this plan:
 
 The review of `95f757a3d...` is not reused as authority. A fresh independent
 review remains required for the exact candidate containing these bytes.
+
+## 2026-09-28 live-table lock policy completion
+
+Before opening the next review, the pending set was scanned for every migration
+that mutates a table already present in production. That scan found migration 6
+also alters the live `developmental_readings` table while replacing its lens
+CHECK constraint.
+
+Although the preceding review did not classify migration 6 as a material finding,
+the candidate now applies the same fail-fast production posture consistently:
+
+- migration 4: `lock_timeout = '5s'`, `statement_timeout = '60s'`;
+- migration 6: `lock_timeout = '5s'`, `statement_timeout = '60s'`;
+- migration 9: `lock_timeout = '5s'`, `statement_timeout = '60s'`.
+
+Migrations 1–3, 5, 7, and 8 operate only on relations created inside this same
+pending sequence or create new relations, so they do not contend for pre-existing
+production-table locks in the same way.
+
+A fresh review remains required for the exact candidate containing these bytes.
