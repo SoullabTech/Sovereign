@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-09-28T23:55:51.157Z",
+  "parentExecutorR2": "6d4787355ba3a60ad0b841bf9e3fc401ac32d976",
+  "replayed": true,
+  "executorOriginCount": 2,
+  "projectedCount": 2,
+  "adaptedCount": 2,
+  "fieldDerived": true,
+  "reflectionGenerated": true,
+  "humanGatePassed": true,
+  "noOpSimulationPassed": true,
+  "originRecordsPreserved": [
+    "record:r3:work",
+    "record:r3:creative"
+  ],
+  "originReceiptsPreserved": [
+    "receipt:r3:work",
+    "receipt:r3:creative"
+  ],
+  "originTransportsPreserved": [
+    "transport:work",
+    "transport:creative"
+  ],
+  "externalNetworkCall": false,
+  "persisted": false,
+  "memberFacingContacted": false,
+  "deliveryExecuted": false,
+  "maiaPromptMutated": false,
+  "productionAuthority": false
+}
