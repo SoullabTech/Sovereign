@@ -1,0 +1,73 @@
+{
+  "generatedAt": "2026-09-28T20:24:15.841Z",
+  "parentRuntimeR2": "8a6286cce0953b60af9689ad755212b57c1c5463",
+  "memberAdaptation": {
+    "adapted": true,
+    "errors": [],
+    "result": {
+      "observation": {
+        "observationRef": "synthetic:event:r3:member",
+        "facetRef": "work",
+        "motif": "Work feels more open and experimental this week.",
+        "temporalStanding": "is_being",
+        "standing": "member_named",
+        "qualities": [],
+        "note": "Work feels more open and experimental this week."
+      },
+      "provenance": {
+        "eventRef": "synthetic:event:r3:member",
+        "source": "synthetic_member_authored",
+        "sourceConfidence": 0.8,
+        "consent": "explicit_synthetic_consent",
+        "synthetic": true,
+        "originalDomain": "work",
+        "originalObservation": "Work feels more open and experimental this week.",
+        "originalTemporalStanding": "is_being",
+        "finalMeaningAuthority": "member",
+        "persistenceAuthority": false
+      },
+      "authorityEscalated": false,
+      "confidenceIncreased": false,
+      "temporalStandingStrengthened": false,
+      "persistenceAuthority": false
+    }
+  },
+  "importedAdaptation": {
+    "adapted": true,
+    "errors": [],
+    "result": {
+      "observation": {
+        "observationRef": "synthetic:event:r3:imported",
+        "facetRef": "creative",
+        "motif": "Creative activity recurred across several synthetic notes.",
+        "temporalStanding": "has_been",
+        "standing": "source_observed",
+        "qualities": [],
+        "note": "Creative activity recurred across several synthetic notes."
+      },
+      "provenance": {
+        "eventRef": "synthetic:event:r3:imported",
+        "source": "synthetic_imported",
+        "sourceConfidence": 0.61,
+        "consent": "explicit_synthetic_consent",
+        "synthetic": true,
+        "originalDomain": "creative",
+        "originalObservation": "Creative activity recurred across several synthetic notes.",
+        "originalTemporalStanding": "has_been",
+        "finalMeaningAuthority": "member",
+        "persistenceAuthority": false
+      },
+      "authorityEscalated": false,
+      "confidenceIncreased": false,
+      "temporalStandingStrengthened": false,
+      "persistenceAuthority": false
+    }
+  },
+  "unknownAdaptation": {
+    "adapted": false,
+    "errors": [
+      "target_cannot_losslessly_represent_unknown_temporal_standing"
+    ],
+    "result": null
+  }
+}
