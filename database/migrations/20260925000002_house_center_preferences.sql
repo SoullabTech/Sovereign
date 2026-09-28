@@ -1,4 +1,4 @@
--- HOUSE-NAVIGATION-01 — add member-chosen Center without rewriting existing quick access.
+-- HOUSE-NAVIGATION-01 — idempotently assert member-chosen Center on the full current House catalog.
 BEGIN;
 ALTER TABLE house_member_preferences
   ADD COLUMN IF NOT EXISTS center_ids text[];
@@ -13,10 +13,11 @@ ALTER TABLE house_member_preferences
       AND array_position(center_ids, NULL) IS NULL
       AND center_ids <@ ARRAY[
         'writing','relationships','practices','community','studio','decisions','astrology',
-        'journal','reflections','ideas','changes','wisdom','library','divination','living-field','co-lab','anchor'
+        'journal','dream','reflections','ideas','changes','wisdom','library','divination',
+        'living-field','co-lab','anchor'
       ]::text[]
     )
   );
 COMMENT ON COLUMN house_member_preferences.center_ids IS
-  'Optional explicit Center placement. NULL means use the current House default; it is not a member-authored choice.';
+  'Optional explicit Center placement. NULL means use the current House default; it is not a member-authored choice. Dream is a first-class House facet.';
 COMMIT;
