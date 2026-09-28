@@ -280,8 +280,4 @@ CREATE TRIGGER writer_studio_work_theme_events_immutable_check
   BEFORE UPDATE OR DELETE ON writer_studio_work_theme_events
   FOR EACH ROW EXECUTE FUNCTION writer_studio_work_theme_events_immutable();
 
-INSERT INTO schema_migrations (filename, applied_at)
-VALUES ('20260926000002_writer_studio_work_themes.sql', NOW())
-ON CONFLICT (filename) DO NOTHING;
-
 COMMIT;

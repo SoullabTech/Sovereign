@@ -91,8 +91,4 @@ CREATE TRIGGER writer_studio_work_theme_occurrence_no_update_check
   BEFORE UPDATE ON writer_studio_work_theme_occurrences
   FOR EACH ROW EXECUTE FUNCTION writer_studio_work_theme_occurrence_no_update();
 
-INSERT INTO schema_migrations (filename, applied_at)
-VALUES ('20260926000003_writer_studio_theme_occurrences.sql', NOW())
-ON CONFLICT (filename) DO NOTHING;
-
 COMMIT;
