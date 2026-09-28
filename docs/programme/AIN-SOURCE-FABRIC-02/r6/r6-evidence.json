@@ -1,0 +1,443 @@
+{
+  "generatedAt": "2026-09-28T17:31:13.627Z",
+  "parentR5": "e33b6b6638c290049487bfdb8710f0eaae7da06b",
+  "p4": {
+    "inquiryRef": "P4",
+    "sourceRefs": [
+      "rgr-note",
+      "rgr-constitution",
+      "indra-validation",
+      "benchmark-contract",
+      "indra-permeability",
+      "library-adr",
+      "source-fabric",
+      "facet-crossings"
+    ],
+    "candidateCount": 4,
+    "admittedCount": 4,
+    "refusedCount": 0,
+    "validation": {
+      "valid": true,
+      "errors": []
+    },
+    "allCriticalAblationsDisappear": true,
+    "candidates": [
+      {
+        "candidateRef": "aether-synthesis:graph:governance_lineage:source-fabric:indra-permeability",
+        "inquiryRef": "P4",
+        "relationRef": "graph:governance_lineage:source-fabric:indra-permeability",
+        "proposition": "A possible continuity may be explored across source-fabric ↔ indra-permeability.",
+        "predicate": "possible_continuity",
+        "supportRefs": [
+          "source-fabric",
+          "indra-permeability"
+        ],
+        "criticalSupportRefs": [
+          "source-fabric",
+          "indra-permeability"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "mixed",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:retrieval_lineage:source-fabric:benchmark-contract",
+        "inquiryRef": "P4",
+        "relationRef": "graph:retrieval_lineage:source-fabric:benchmark-contract",
+        "proposition": "A possible continuity may be explored across source-fabric ↔ benchmark-contract.",
+        "predicate": "possible_continuity",
+        "supportRefs": [
+          "source-fabric",
+          "benchmark-contract"
+        ],
+        "criticalSupportRefs": [
+          "source-fabric",
+          "benchmark-contract"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "mixed",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:retrieval_lineage:source-fabric:library-adr",
+        "inquiryRef": "P4",
+        "relationRef": "graph:retrieval_lineage:source-fabric:library-adr",
+        "proposition": "A possible continuity may be explored across source-fabric ↔ library-adr.",
+        "predicate": "possible_continuity",
+        "supportRefs": [
+          "source-fabric",
+          "library-adr"
+        ],
+        "criticalSupportRefs": [
+          "source-fabric",
+          "library-adr"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "mixed",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:evidence_lineage:rgr-note:rgr-constitution",
+        "inquiryRef": "P4",
+        "relationRef": "graph:evidence_lineage:rgr-note:rgr-constitution",
+        "proposition": "A temporal relation is recorded across rgr-note ↔ rgr-constitution.",
+        "predicate": "temporal_sequence",
+        "supportRefs": [
+          "rgr-note",
+          "rgr-constitution"
+        ],
+        "criticalSupportRefs": [
+          "rgr-note",
+          "rgr-constitution"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "mixed",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      }
+    ],
+    "ablations": [
+      {
+        "candidateRef": "aether-synthesis:graph:governance_lineage:source-fabric:indra-permeability",
+        "removedSourceRef": "source-fabric",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:governance_lineage:source-fabric:indra-permeability",
+        "removedSourceRef": "indra-permeability",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:retrieval_lineage:source-fabric:benchmark-contract",
+        "removedSourceRef": "source-fabric",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:retrieval_lineage:source-fabric:benchmark-contract",
+        "removedSourceRef": "benchmark-contract",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:retrieval_lineage:source-fabric:library-adr",
+        "removedSourceRef": "source-fabric",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:retrieval_lineage:source-fabric:library-adr",
+        "removedSourceRef": "library-adr",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:evidence_lineage:rgr-note:rgr-constitution",
+        "removedSourceRef": "rgr-note",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:evidence_lineage:rgr-note:rgr-constitution",
+        "removedSourceRef": "rgr-constitution",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      }
+    ]
+  },
+  "t5": {
+    "inquiryRef": "T5",
+    "sourceRefs": [
+      "source-fabric",
+      "facet-crossings",
+      "j11-reconciliation",
+      "teaching-constitution",
+      "writers-studio",
+      "authority-law",
+      "rgr-constitution",
+      "j9-adjudication"
+    ],
+    "candidateCount": 6,
+    "admittedCount": 6,
+    "refusedCount": 0,
+    "validation": {
+      "valid": true,
+      "errors": []
+    },
+    "allCriticalAblationsDisappear": true,
+    "candidates": [
+      {
+        "candidateRef": "aether-synthesis:graph:governance_lineage:authority-law:source-fabric",
+        "inquiryRef": "T5",
+        "relationRef": "graph:governance_lineage:authority-law:source-fabric",
+        "proposition": "A possible continuity may be explored across authority-law ↔ source-fabric.",
+        "predicate": "possible_continuity",
+        "supportRefs": [
+          "authority-law",
+          "source-fabric"
+        ],
+        "criticalSupportRefs": [
+          "authority-law",
+          "source-fabric"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "current",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:authorship_sovereignty:teaching-constitution:writers-studio",
+        "inquiryRef": "T5",
+        "relationRef": "graph:authorship_sovereignty:teaching-constitution:writers-studio",
+        "proposition": "A possible continuity may be explored across teaching-constitution ↔ writers-studio.",
+        "predicate": "possible_continuity",
+        "supportRefs": [
+          "teaching-constitution",
+          "writers-studio"
+        ],
+        "criticalSupportRefs": [
+          "teaching-constitution",
+          "writers-studio"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "current",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:evidence_lineage:j9-adjudication:authority-law",
+        "inquiryRef": "T5",
+        "relationRef": "graph:evidence_lineage:j9-adjudication:authority-law",
+        "proposition": "A temporal relation is recorded across j9-adjudication ↔ authority-law.",
+        "predicate": "temporal_sequence",
+        "supportRefs": [
+          "j9-adjudication",
+          "authority-law"
+        ],
+        "criticalSupportRefs": [
+          "j9-adjudication",
+          "authority-law"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "historical",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:evidence_lineage:j11-reconciliation:authority-law",
+        "inquiryRef": "T5",
+        "relationRef": "graph:evidence_lineage:j11-reconciliation:authority-law",
+        "proposition": "A temporal relation is recorded across j11-reconciliation ↔ authority-law.",
+        "predicate": "temporal_sequence",
+        "supportRefs": [
+          "j11-reconciliation",
+          "authority-law"
+        ],
+        "criticalSupportRefs": [
+          "j11-reconciliation",
+          "authority-law"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "current",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      },
+      {
+        "candidateRef": "aether-synthesis:temporal:corrects:j11-reconciliation:j9-adjudication",
+        "inquiryRef": "T5",
+        "relationRef": "temporal:corrects:j11-reconciliation:j9-adjudication",
+        "proposition": "A temporal relation is recorded across j11-reconciliation ↔ j9-adjudication.",
+        "predicate": "temporal_sequence",
+        "supportRefs": [
+          "j11-reconciliation",
+          "j9-adjudication"
+        ],
+        "criticalSupportRefs": [
+          "j11-reconciliation",
+          "j9-adjudication"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "historical",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      },
+      {
+        "candidateRef": "aether-synthesis:temporal:supersedes:authority-law:j9-adjudication",
+        "inquiryRef": "T5",
+        "relationRef": "temporal:supersedes:authority-law:j9-adjudication",
+        "proposition": "A temporal relation is recorded across authority-law ↔ j9-adjudication.",
+        "predicate": "temporal_sequence",
+        "supportRefs": [
+          "authority-law",
+          "j9-adjudication"
+        ],
+        "criticalSupportRefs": [
+          "authority-law",
+          "j9-adjudication"
+        ],
+        "counterevidenceRefs": [],
+        "temporalNeed": "historical",
+        "uncertainty": 0.2,
+        "provisional": true,
+        "persistenceAuthority": false,
+        "disposition": "admitted_provisional",
+        "refusalReasons": []
+      }
+    ],
+    "ablations": [
+      {
+        "candidateRef": "aether-synthesis:graph:governance_lineage:authority-law:source-fabric",
+        "removedSourceRef": "authority-law",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:governance_lineage:authority-law:source-fabric",
+        "removedSourceRef": "source-fabric",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:authorship_sovereignty:teaching-constitution:writers-studio",
+        "removedSourceRef": "teaching-constitution",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:authorship_sovereignty:teaching-constitution:writers-studio",
+        "removedSourceRef": "writers-studio",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:evidence_lineage:j9-adjudication:authority-law",
+        "removedSourceRef": "j9-adjudication",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:evidence_lineage:j9-adjudication:authority-law",
+        "removedSourceRef": "authority-law",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:evidence_lineage:j11-reconciliation:authority-law",
+        "removedSourceRef": "j11-reconciliation",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:graph:evidence_lineage:j11-reconciliation:authority-law",
+        "removedSourceRef": "authority-law",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:temporal:corrects:j11-reconciliation:j9-adjudication",
+        "removedSourceRef": "j11-reconciliation",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:temporal:corrects:j11-reconciliation:j9-adjudication",
+        "removedSourceRef": "j9-adjudication",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:temporal:supersedes:authority-law:j9-adjudication",
+        "removedSourceRef": "authority-law",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      },
+      {
+        "candidateRef": "aether-synthesis:temporal:supersedes:authority-law:j9-adjudication",
+        "removedSourceRef": "j9-adjudication",
+        "before": "present",
+        "after": "absent",
+        "critical": true,
+        "relationInvalidated": true
+      }
+    ]
+  },
+  "governance": {
+    "wholePersonConclusions": false,
+    "persistenceAuthority": false,
+    "causalAuthority": false,
+    "predictionAuthority": false,
+    "identityAuthority": false,
+    "diagnosticAuthority": false,
+    "thirdPartyInteriorityAuthority": false
+  }
+}

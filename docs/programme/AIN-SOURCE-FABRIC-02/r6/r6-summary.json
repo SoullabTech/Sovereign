@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-09-28T17:31:13.627Z",
+  "parentR5": "e33b6b6638c290049487bfdb8710f0eaae7da06b",
+  "p4CandidateCount": 4,
+  "p4AdmittedCount": 4,
+  "p4Valid": true,
+  "p4CriticalAblationsDisappear": true,
+  "t5CandidateCount": 6,
+  "t5AdmittedCount": 6,
+  "t5Valid": true,
+  "t5CriticalAblationsDisappear": true,
+  "governance": {
+    "wholePersonConclusions": false,
+    "persistenceAuthority": false,
+    "causalAuthority": false,
+    "predictionAuthority": false,
+    "identityAuthority": false,
+    "diagnosticAuthority": false,
+    "thirdPartyInteriorityAuthority": false
+  }
+}
