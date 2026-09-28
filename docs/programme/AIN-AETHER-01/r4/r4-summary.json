@@ -1,0 +1,46 @@
+{
+  "generatedAt": "2026-09-28T18:31:07.318Z",
+  "parentR3": "499fc344b9cccb8d96757a4497e1a9407adf5deb",
+  "spiralCount": 6,
+  "domainStates": [
+    {
+      "domain": "relationship",
+      "classification": "oscillation",
+      "confidence": 0.7
+    },
+    {
+      "domain": "work",
+      "classification": "phase_change",
+      "confidence": 0.7
+    },
+    {
+      "domain": "family",
+      "classification": "recurrence",
+      "confidence": 0.7
+    },
+    {
+      "domain": "creative",
+      "classification": "sustained_convergence",
+      "confidence": 0.7
+    },
+    {
+      "domain": "body",
+      "classification": "ordinary_fluctuation",
+      "confidence": 0.7
+    },
+    {
+      "domain": "spiritual",
+      "classification": "dissolution",
+      "confidence": 0.7
+    }
+  ],
+  "relationCount": 15,
+  "coConvergenceCount": 1,
+  "timingMismatchCount": 2,
+  "independentMovementCount": 8,
+  "singleStageAuthority": false,
+  "developmentalRankAuthority": false,
+  "predictiveAuthority": false,
+  "memberOwnsFinalMeaning": true,
+  "valid": true
+}
