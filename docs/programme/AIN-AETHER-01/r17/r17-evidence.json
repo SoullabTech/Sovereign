@@ -1,0 +1,78 @@
+{
+  "generatedAt": "2026-09-28T19:35:49.289Z",
+  "parentR16": "adf888699013bfbe73825a10503d049ec20ea60b",
+  "validation": {
+    "valid": true,
+    "errors": []
+  },
+  "exact": {
+    "nodeRef": "repair:v1",
+    "answer": "This reflection is recorded as occurring sometime between 2026-09-28T14:00:00-04:00 and 2026-09-28T16:00:00-04:00; the record does not identify one exact moment within that interval.",
+    "precision": "exact_range",
+    "evidenceRangeRefs": [
+      "r:exact"
+    ],
+    "unknowns": [
+      "exact_event_time_within_range_unknown"
+    ],
+    "midpointPromoted": false
+  },
+  "date": {
+    "nodeRef": "repair:v2",
+    "answer": "This reflection is recorded between 2026-09-24 and 2026-09-28, with no more precise time preserved.",
+    "precision": "date_range",
+    "evidenceRangeRefs": [
+      "r:date"
+    ],
+    "unknowns": [
+      "clock_time_within_date_range_unknown"
+    ],
+    "midpointPromoted": false
+  },
+  "coarse": {
+    "nodeRef": "repair:v3",
+    "answer": "This reflection is recorded only as occurring around late September 2026.",
+    "precision": "coarse_range",
+    "evidenceRangeRefs": [
+      "r:coarse"
+    ],
+    "unknowns": [
+      "exact_range_bounds_unknown"
+    ],
+    "midpointPromoted": false
+  },
+  "sequence": {
+    "nodeRef": "repair:v4",
+    "answer": "This reflection is only bounded in sequence: after repair:v2 and before repair:v5. No calendar time is preserved.",
+    "precision": "sequence_bounded",
+    "evidenceRangeRefs": [
+      "r:seq"
+    ],
+    "unknowns": [
+      "calendar_range_unknown"
+    ],
+    "midpointPromoted": false
+  },
+  "unknown": {
+    "nodeRef": "repair:v6",
+    "answer": "The record preserves no usable temporal range for this reflection.",
+    "precision": "unknown",
+    "evidenceRangeRefs": [
+      "r:unknown"
+    ],
+    "unknowns": [
+      "temporal_range_unknown"
+    ],
+    "midpointPromoted": false
+  },
+  "missing": {
+    "nodeRef": "repair:missing",
+    "answer": "No temporal range was recorded for this reflection.",
+    "precision": "unknown",
+    "evidenceRangeRefs": [],
+    "unknowns": [
+      "temporal_range_not_recorded"
+    ],
+    "midpointPromoted": false
+  }
+}

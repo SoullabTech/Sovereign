@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-09-28T19:35:49.289Z",
+  "parentR16": "adf888699013bfbe73825a10503d049ec20ea60b",
+  "valid": true,
+  "exactPrecision": "exact_range",
+  "exactUnknowns": [
+    "exact_event_time_within_range_unknown"
+  ],
+  "datePrecision": "date_range",
+  "dateUnknowns": [
+    "clock_time_within_date_range_unknown"
+  ],
+  "coarsePrecision": "coarse_range",
+  "sequencePrecision": "sequence_bounded",
+  "sequenceAnswer": "This reflection is only bounded in sequence: after repair:v2 and before repair:v5. No calendar time is preserved.",
+  "unknownPrecision": "unknown",
+  "missingUnknowns": [
+    "temporal_range_not_recorded"
+  ],
+  "noMidpointPromotion": true
+}
