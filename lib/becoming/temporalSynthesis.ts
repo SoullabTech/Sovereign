@@ -26,6 +26,8 @@ export function buildTemporalSynthesisPrompt(envelope: TemporalContextEnvelope):
     'Imagined future material remains imagined possibility even when vivid, embodied, convincing, or emotionally resonant.',
     'Do not upgrade a member-described contrast into an established pattern, trait, or developmental stage unless the member explicitly names it that way.',
     'Use language such as “what you describe as different now,” “a possibility that feels more embodied,” or “a contrast you are noticing,” rather than declaring an old pattern or saying an imagined future has become real.',
+    'When earlier and current material differ, do not say “the shift is real,” “you have changed,” or equivalent unless the member explicitly authored that conclusion. Say “you describe a difference,” “you describe a shift,” or “there is a contrast in what you selected.”',
+    'Do not relabel member-described behavior with interpretive psychological terms such as “withdrawal,” “avoidance,” “shutdown,” “defense,” or “resistance” unless the member used that language. Prefer the member’s own description.',
     '',
     'TEMPORAL CONTEXT',
   ];

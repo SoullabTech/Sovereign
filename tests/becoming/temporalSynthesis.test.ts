@@ -33,6 +33,8 @@ test('temporal synthesis preserves temporal and epistemic distinctions in the pr
   assert.match(prompt,/Imagined future material remains imagined possibility/);
   assert.match(prompt,/Do not upgrade a member-described contrast into an established pattern/);
   assert.match(prompt,/rather than declaring an old pattern or saying an imagined future has become real/);
+  assert.match(prompt,/do not say “the shift is real,” “you have changed,” or equivalent/);
+  assert.match(prompt,/Do not relabel member-described behavior with interpretive psychological terms/);
   assert.match(prompt,/one relational gestalt without collapsing the facets/);
   assert.match(prompt,/center is a vantage of integration, not a new source of facts/);
   assert.match(prompt,/preserve every item’s source and epistemic distinction/);
