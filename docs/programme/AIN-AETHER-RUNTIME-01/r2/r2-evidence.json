@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-09-28T20:20:22.319Z",
+  "parentRuntimeR1": "34827027cc3db4247eea3be720a48149ac282349",
+  "admitted": {
+    "admitted": true,
+    "errors": [],
+    "event": {
+      "eventRef": "synthetic:event:1",
+      "synthetic": true,
+      "source": "synthetic_member_authored",
+      "domain": "work",
+      "observation": "Work feels more open and experimental this week.",
+      "temporalStanding": "is_being",
+      "confidence": 0.8,
+      "consent": "explicit_synthetic_consent",
+      "identityAuthority": false,
+      "diagnosticAuthority": false,
+      "predictiveAuthority": false,
+      "destinyAuthority": false,
+      "soulRepresentationAuthority": false,
+      "persistenceAuthority": false,
+      "finalMeaningAuthority": "member"
+    },
+    "liveMemberDataAuthorized": false,
+    "persistenceAuthorized": false,
+    "productionAuthority": false
+  },
+  "nonSynthetic": {
+    "admitted": false,
+    "errors": [
+      "live_or_non_synthetic_event_not_authorized",
+      "consent_absent"
+    ],
+    "event": null,
+    "liveMemberDataAuthorized": false,
+    "persistenceAuthorized": false,
+    "productionAuthority": false
+  },
+  "authoritySmuggle": {
+    "admitted": false,
+    "errors": [
+      "predictive_authority_forbidden",
+      "destiny_authority_forbidden",
+      "soul_representation_authority_forbidden",
+      "persistence_authority_forbidden",
+      "final_meaning_must_remain_member_owned",
+      "destiny_language_forbidden",
+      "soul_authority_language_forbidden"
+    ],
+    "event": null,
+    "liveMemberDataAuthorized": false,
+    "persistenceAuthorized": false,
+    "productionAuthority": false
+  }
+}

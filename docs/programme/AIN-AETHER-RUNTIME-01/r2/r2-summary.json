@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-09-28T20:20:22.319Z",
+  "parentRuntimeR1": "34827027cc3db4247eea3be720a48149ac282349",
+  "admittedSyntheticObservation": true,
+  "admittedFinalMeaningAuthority": "member",
+  "liveMemberDataAuthorized": false,
+  "persistenceAuthorized": false,
+  "nonSyntheticRefused": true,
+  "absentConsentRefused": true,
+  "authoritySmuggleRefused": true,
+  "authoritySmuggleErrors": [
+    "predictive_authority_forbidden",
+    "destiny_authority_forbidden",
+    "soul_representation_authority_forbidden",
+    "persistence_authority_forbidden",
+    "final_meaning_must_remain_member_owned",
+    "destiny_language_forbidden",
+    "soul_authority_language_forbidden"
+  ],
+  "productionAuthority": false
+}
