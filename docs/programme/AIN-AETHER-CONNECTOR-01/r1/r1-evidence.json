@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-09-28T21:06:39.585Z",
+  "parentFixtureClosure": "e775aed82695fc11fa7928071b6a89d5e6f87221",
+  "connector": {
+    "connectorRef": "connector:r1:witness",
+    "connectorKind": "real_source_connector",
+    "sourceClasses": [
+      "member_authored_text",
+      "system_observed_event"
+    ],
+    "readCapabilityDeclared": true,
+    "recordReadImplemented": false,
+    "persistenceImplemented": false,
+    "deliveryImplemented": false,
+    "promptMutationImplemented": false,
+    "productionRouteImplemented": false
+  },
+  "dryRun": {
+    "allowed": true,
+    "errors": [],
+    "connectorRef": "connector:r1:witness",
+    "consentRef": "consent:connector:r1:witness",
+    "declaredSourceClasses": [
+      "member_authored_text",
+      "system_observed_event"
+    ],
+    "requestedSourceClasses": [
+      "member_authored_text"
+    ],
+    "dryRunOnly": true,
+    "recordReadExecuted": false,
+    "recordCountRead": 0,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  },
+  "forbiddenRead": {
+    "allowed": false,
+    "errors": [
+      "record_read_execution_forbidden_in_r1"
+    ],
+    "connectorRef": "connector:r1:witness",
+    "consentRef": "consent:connector:r1:witness",
+    "declaredSourceClasses": [
+      "member_authored_text",
+      "system_observed_event"
+    ],
+    "requestedSourceClasses": [
+      "member_authored_text"
+    ],
+    "dryRunOnly": true,
+    "recordReadExecuted": false,
+    "recordCountRead": 0,
+    "persistenceAuthorized": false,
+    "memberFacingDeliveryAuthorized": false,
+    "maiaPromptMutationAuthorized": false,
+    "productionAuthority": false
+  }
+}
