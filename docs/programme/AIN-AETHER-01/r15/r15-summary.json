@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-09-28T19:25:55.176Z",
+  "parentR14": "770cca7a04c5cc87dabe9bcd01b1f820402f4312",
+  "activeAnswer": "The active reflection is repair:v2: Work and Creative life appear more closely related in the reflected field now. Is that useful to notice, or does it feel overstated?",
+  "changeAnswer": "The reflection changed from “I notice Work and Creative life seem more closely related in the reflected field. Does that feel accurate to you?” to “Work and Creative life appear more closely related in the reflected field now. Is that useful to notice, or does it feel overstated?”.",
+  "whyAnswer": "The recorded reason for this revision was: The member wanted a clearer opening to disagree with the strength of the relation.",
+  "missingWhyAnswer": "The preserved lineage shows that the reflection changed, but it does not record why.",
+  "missingWhyUnknowns": [
+    "change_reason_not_recorded"
+  ],
+  "memberSaidAnswer": "The preserved human correction note says: The original wording was grounded but too mechanical.",
+  "supersededAnswer": "That reflection stopped being active when repair:v2 became its recorded successor.",
+  "rollbackActiveAnswer": "The active reflection is repair:v3-return-to-v1: I notice Work and Creative life seem more closely related in the reflected field. Does that feel accurate to you?",
+  "allNonReconstructive": true
+}

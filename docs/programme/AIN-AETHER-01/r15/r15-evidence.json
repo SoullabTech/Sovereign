@@ -1,0 +1,82 @@
+{
+  "generatedAt": "2026-09-28T19:25:55.176Z",
+  "parentR14": "770cca7a04c5cc87dabe9bcd01b1f820402f4312",
+  "active": {
+    "query": "active_now",
+    "answer": "The active reflection is repair:v2: Work and Creative life appear more closely related in the reflected field now. Is that useful to notice, or does it feel overstated?",
+    "evidenceNodeRefs": [
+      "repair:v2"
+    ],
+    "evidenceReasonRefs": [],
+    "unknowns": [],
+    "reconstructed": false
+  },
+  "changed": {
+    "query": "what_changed",
+    "answer": "The reflection changed from “I notice Work and Creative life seem more closely related in the reflected field. Does that feel accurate to you?” to “Work and Creative life appear more closely related in the reflected field now. Is that useful to notice, or does it feel overstated?”.",
+    "evidenceNodeRefs": [
+      "repair:v1",
+      "repair:v2"
+    ],
+    "evidenceReasonRefs": [],
+    "unknowns": [],
+    "reconstructed": false
+  },
+  "why": {
+    "query": "why_changed",
+    "answer": "The recorded reason for this revision was: The member wanted a clearer opening to disagree with the strength of the relation.",
+    "evidenceNodeRefs": [
+      "repair:v2"
+    ],
+    "evidenceReasonRefs": [
+      "reason:v2:human"
+    ],
+    "unknowns": [],
+    "reconstructed": false
+  },
+  "whyMissing": {
+    "query": "why_changed",
+    "answer": "The preserved lineage shows that the reflection changed, but it does not record why.",
+    "evidenceNodeRefs": [
+      "repair:v2"
+    ],
+    "evidenceReasonRefs": [],
+    "unknowns": [
+      "change_reason_not_recorded"
+    ],
+    "reconstructed": false
+  },
+  "memberSaid": {
+    "query": "what_did_i_say",
+    "answer": "The preserved human correction note says: The original wording was grounded but too mechanical.",
+    "evidenceNodeRefs": [
+      "repair:v1"
+    ],
+    "evidenceReasonRefs": [
+      "reason:v1:human"
+    ],
+    "unknowns": [],
+    "reconstructed": false
+  },
+  "superseded": {
+    "query": "when_superseded",
+    "answer": "That reflection stopped being active when repair:v2 became its recorded successor.",
+    "evidenceNodeRefs": [
+      "repair:v1",
+      "repair:v2"
+    ],
+    "evidenceReasonRefs": [],
+    "unknowns": [],
+    "reconstructed": false
+  },
+  "rollbackActive": {
+    "query": "active_now",
+    "answer": "The active reflection is repair:v3-return-to-v1: I notice Work and Creative life seem more closely related in the reflected field. Does that feel accurate to you?",
+    "evidenceNodeRefs": [
+      "repair:v3-return-to-v1"
+    ],
+    "evidenceReasonRefs": [],
+    "unknowns": [],
+    "reconstructed": false
+  }
+}
