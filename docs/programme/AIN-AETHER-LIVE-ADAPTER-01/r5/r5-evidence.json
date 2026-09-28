@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-09-28T20:58:44.840Z",
+  "parentLiveR4": "3f07a8c40aee030fd354157a5cc3385d52da0d1a",
+  "replay": {
+    "replayed": true,
+    "errors": [],
+    "shadowCount": 2,
+    "projectedCount": 2,
+    "adaptedCount": 2,
+    "fieldDerived": true,
+    "reflectionGenerated": true,
+    "humanGatePassed": true,
+    "noOpSimulationPassed": true,
+    "consentLifecycleBefore": {
+      "consentRef": "consent:r5:witness",
+      "grantedAt": "2026-09-28T16:00:00-04:00",
+      "expiresAt": "2026-09-28T17:00:00-04:00",
+      "sessionRef": "session:r5:witness"
+    },
+    "consentLifecycleAfter": {
+      "consentRef": "consent:r5:witness",
+      "grantedAt": "2026-09-28T16:00:00-04:00",
+      "expiresAt": "2026-09-28T17:00:00-04:00",
+      "sessionRef": "session:r5:witness"
+    },
+    "liveSourceConnected": false,
+    "realMemberDataRead": false,
+    "persisted": false,
+    "memberFacingContacted": false,
+    "deliveryExecuted": false,
+    "maiaPromptMutated": false,
+    "networkSideEffect": false,
+    "productionAuthority": false
+  }
+}
