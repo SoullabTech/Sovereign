@@ -33,7 +33,7 @@ async function livingWorksForHouse(memberId: string) {
 
 export const dynamic = 'force-dynamic';
 
-export default async function HousePage() {
+export async function HouseExperience({ current = 'house' }: { current?: 'home' | 'house' } = {}) {
   const member = await memberForHouse();
   if (!member) redirect('/signin');
   const firstName = member.name?.trim().split(/\s+/)[0] || 'there';
@@ -51,8 +51,8 @@ export default async function HousePage() {
           <small>BEING<br />BECOMING<br />TOGETHER</small>
         </Link>
         <nav aria-label="Soul Lab">
-          <Link href="/home">Home</Link>
-          <span aria-current="page">House</span>
+          {current === 'home' ? <span aria-current="page">Home</span> : <Link href="/home">Home</Link>}
+          {current === 'house' ? <span aria-current="page">House</span> : <Link href="/house">House</Link>}
           <MaiaThresholdLink />
         </nav>
         <nav className={styles.railFoot} aria-label="Member">
@@ -149,4 +149,7 @@ export default async function HousePage() {
     </main>
     </HousePreferencesProvider>
   );
+}
+export default async function HousePage() {
+  return <HouseExperience current="house" />;
 }
