@@ -1,0 +1,15 @@
+/* A quiet public-context alcove, separate from private continuity and navigation. */
+.slot { min-width:0; margin:4px 0 0; padding:20px 2px 0; border-top:1px solid rgba(213,186,145,.2); }
+.marker { display:flex; align-items:center; gap:10px; margin:0; color:#d5c0a0; font:400 8px/1.5 Arial,sans-serif; letter-spacing:.28em; text-transform:uppercase; }
+.marker::before { content:''; width:10px; height:10px; border:1px solid #bdac82; border-radius:50%; background:linear-gradient(120deg,rgba(165,185,143,.25),transparent); }
+.kind { margin:12px 0 7px; color:#b7a890; font:400 11px/1.5 Arial,sans-serif; }
+.slot .quotation { display:block; position:static; margin:0; padding:0; border:0; color:#e5d7c0; font:400 23px/1.2 'House Crimson',Georgia,serif; }
+.attribution { display:block; margin-top:9px; font-style:normal; }
+.attribution a { display:inline-flex; min-height:44px; flex-direction:column; justify-content:center; color:#ccb996; text-decoration:none; font:400 11px/1.5 Arial,sans-serif; }
+.attribution a span:last-child { color:#b2a28a; font-size:10px; }
+.controls { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0 10px; margin-top:4px; }
+.controls > span { color:#b2a38e; font:400 9px/1.5 Arial,sans-serif; }
+.quietControl { appearance:none; display:inline-flex; align-items:center; min-height:44px; padding:3px 0; border:0; background:transparent; color:#c5b69c; font:400 11px/1.4 Arial,sans-serif; cursor:pointer; text-align:left; }
+.quietControl:hover,.attribution a:hover { color:#f0d4aa; }
+.slot :where(a,button):focus-visible { outline:2px solid #e2caa4; outline-offset:4px; border-radius:2px; }
+@media(max-width:900px) { .slot { margin-top:10px; padding-top:18px; } .slot .quotation { max-width:35ch; font-size:24px; } }

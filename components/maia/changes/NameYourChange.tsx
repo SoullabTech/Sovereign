@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronRight, Droplets, Sprout, DoorOpen, Merge, Zap, Sun } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { FacetCarryNotice, type FacetCarryRef } from '@/components/house/FacetCarryNotice';
+import styles from './changes-threshold.module.css';
 
 interface NameYourChangeProps {
   onNext: (title: string, description: string, changeType: string) => void;
@@ -10,201 +11,134 @@ interface NameYourChangeProps {
   initialTitle?: string;
   initialDescription?: string;
   initialChangeType?: string;
+  carrySourceRef?: FacetCarryRef | null;
+  carrySourceReady?: boolean;
+  onCarryResolved?: (source: unknown | null) => void;
 }
 
 const CHANGE_TYPES = [
-  {
-    type: 'dissolution',
-    icon: Droplets,
-    label: 'Dissolution',
-    description: 'Something is dissolving or ending',
-    color: 'from-blue-500/20 to-blue-600/20',
-    borderColor: 'border-blue-500/40',
-    iconColor: 'text-blue-400',
-    selectedRing: 'ring-blue-500/60',
-  },
-  {
-    type: 'emergence',
-    icon: Sprout,
-    label: 'Emergence',
-    description: 'Something new is rising',
-    color: 'from-cyan-500/20 to-cyan-600/20',
-    borderColor: 'border-cyan-500/40',
-    iconColor: 'text-cyan-400',
-    selectedRing: 'ring-cyan-500/60',
-  },
-  {
-    type: 'threshold',
-    icon: DoorOpen,
-    label: 'Threshold',
-    description: "You're at a crossing point",
-    color: 'from-purple-500/20 to-purple-600/20',
-    borderColor: 'border-purple-500/40',
-    iconColor: 'text-purple-400',
-    selectedRing: 'ring-purple-500/60',
-  },
-  {
-    type: 'integration',
-    icon: Merge,
-    label: 'Integration',
-    description: 'Things coming together',
-    color: 'from-emerald-500/20 to-emerald-600/20',
-    borderColor: 'border-emerald-500/40',
-    iconColor: 'text-emerald-400',
-    selectedRing: 'ring-emerald-500/60',
-  },
-  {
-    type: 'upheaval',
-    icon: Zap,
-    label: 'Upheaval',
-    description: 'Ground is shaking',
-    color: 'from-red-500/20 to-red-600/20',
-    borderColor: 'border-red-500/40',
-    iconColor: 'text-red-400',
-    selectedRing: 'ring-red-500/60',
-  },
-  {
-    type: 'ripening',
-    icon: Sun,
-    label: 'Ripening',
-    description: 'Something reaching fullness',
-    color: 'from-amber-500/20 to-amber-600/20',
-    borderColor: 'border-amber-500/40',
-    iconColor: 'text-amber-400',
-    selectedRing: 'ring-amber-500/60',
-  },
-];
+  ['dissolution', 'Dissolution', 'Something is ending, loosening, or falling away.'],
+  ['emergence', 'Emergence', 'Something new is beginning to take form.'],
+  ['threshold', 'Threshold', 'You are at a crossing and the next side is not yet clear.'],
+  ['integration', 'Integration', 'Pieces of experience are beginning to come together.'],
+  ['upheaval', 'Upheaval', 'The ground itself feels disrupted or reorganized.'],
+  ['ripening', 'Ripening', 'Something has been developing and is reaching fullness.'],
+] as const;
 
 export default function NameYourChange({
   onNext,
-  onBack,
   initialTitle = '',
   initialDescription = '',
   initialChangeType = '',
+  carrySourceRef = null,
+  carrySourceReady = true,
+  onCarryResolved,
 }: NameYourChangeProps) {
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
   const [changeType, setChangeType] = useState(initialChangeType);
+  const [submitting, setSubmitting] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setTimeout(() => titleRef.current?.focus(), 100);
+    const timer = window.setTimeout(() => titleRef.current?.focus(), 100);
+    return () => window.clearTimeout(timer);
   }, []);
 
-  const handleContinue = () => {
-    if (title.trim() && description.trim() && changeType) {
-      onNext(title.trim(), description.trim(), changeType);
-    }
-  };
+  const wordsExist = title.trim().length > 0 && description.trim().length > 0;
+  const canContinue = wordsExist && changeType.length > 0 && (!carrySourceRef || carrySourceReady) && !submitting;
 
-  const canContinue = title.trim().length > 0 && description.trim().length > 0 && changeType.length > 0;
+  function handleContinue() {
+    if (!canContinue) return;
+    setSubmitting(true);
+    onNext(title.trim(), description.trim(), changeType);
+  }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h3 className="text-xl font-medium text-white">
-          What is changing?
-        </h3>
-        <p className="text-stone-400 text-sm">
-          Name this transition. Not what you want it to be — what's actually moving.
+    <section className={styles.naming} aria-label="Name a Change">
+      <div className={styles.namingIntro}>
+        <p className={styles.kicker}>BEGIN WITH WHAT YOU KNOW</p>
+        <h1>What is changing?</h1>
+        <p>
+          You do not need the right interpretation. Start with the movement itself — what you can actually feel, see, or name.
         </p>
       </div>
 
-      {/* Form */}
-      <div className="space-y-4">
-        {/* Title */}
-        <div className="space-y-2">
-          <label htmlFor="change-title" className="text-sm font-medium text-stone-300">
-            In a few words
-          </label>
-          <input
-            ref={titleRef}
-            id="change-title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Leaving my job, Relationship ending, Moving cities..."
-            className="w-full px-4 py-3 bg-stone-800/50 border border-cyan-500/30 rounded-xl text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all"
-            maxLength={100}
+      {carrySourceRef ? (
+        <div className={styles.carryWrap}>
+          <FacetCarryNotice
+            targetFacet="changes"
+            sourceRef={carrySourceRef}
+            onResolved={onCarryResolved}
           />
         </div>
+      ) : null}
 
-        {/* Description */}
-        <div className="space-y-2">
-          <label htmlFor="change-description" className="text-sm font-medium text-stone-300">
-            What's happening?
-          </label>
-          <textarea
-            id="change-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe what's changing. What are you feeling? What questions are alive? Let it flow without editing..."
-            rows={4}
-            className="w-full px-4 py-3 bg-stone-800/50 border border-cyan-500/30 rounded-xl text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 resize-none transition-all"
-          />
-          {description.length > 200 && (
-            <div className="text-right text-xs text-stone-500">
-              {description.length} characters
+      <div className={styles.namingPaper}>
+        <label className={styles.fieldLabel} htmlFor="change-title">In a few words</label>
+        <input
+          ref={titleRef}
+          id="change-title"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder="Something in my work is changing…"
+          maxLength={100}
+        />
+
+        <label className={styles.fieldLabel} htmlFor="change-description">What is actually happening?</label>
+        <textarea
+          id="change-description"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Describe what you notice. You can be uncertain, incomplete, contradictory, or still finding the words."
+          rows={7}
+        />
+
+        <p className={styles.namingHelp}>
+          Nothing here needs to be resolved before it belongs.
+        </p>
+      </div>
+
+      <div className={styles.kindThreshold} data-open={wordsExist ? 'true' : 'false'}>
+        {!wordsExist ? (
+          <p>Once you have named the movement in your own words, you can choose a loose orientation for it.</p>
+        ) : (
+          <>
+            <div className={styles.kindHead}>
+              <div>
+                <small>ONLY IF IT HELPS</small>
+                <h2>What kind of movement does this feel closest to?</h2>
+              </div>
+              <p>This is an orientation, not a diagnosis.</p>
             </div>
-          )}
-        </div>
+
+            <div className={styles.kindGrid}>
+              {CHANGE_TYPES.map(([type, label, line]) => (
+                <button
+                  type="button"
+                  key={type}
+                  data-active={changeType === type ? 'true' : 'false'}
+                  onClick={() => setChangeType(type)}
+                >
+                  <strong>{label}</strong>
+                  <span>{line}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Change Type Selection */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-stone-300">
-          What kind of change is this?
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          {CHANGE_TYPES.map((ct, index) => {
-            const Icon = ct.icon;
-            const isSelected = changeType === ct.type;
-
-            return (
-              <motion.button
-                key={ct.type}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04 }}
-                onClick={() => setChangeType(ct.type)}
-                className={`p-3 bg-gradient-to-r ${ct.color} border ${ct.borderColor} rounded-xl text-left transition-all ${
-                  isSelected ? `ring-2 ${ct.selectedRing} scale-[1.02]` : 'hover:scale-[1.01]'
-                }`}
-                whileTap={{ scale: 0.97 }}
-              >
-                <div className="flex items-center gap-2">
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${ct.iconColor}`} />
-                  <div className="min-w-0">
-                    <div className="text-white text-sm font-medium leading-tight">{ct.label}</div>
-                    <div className="text-stone-400 text-xs leading-tight mt-0.5 truncate">{ct.description}</div>
-                  </div>
-                </div>
-              </motion.button>
-            );
-          })}
+      <div className={styles.namingAction}>
+        <div>
+          <small>{changeType ? 'READY TO KEEP' : 'NOTHING IS KEPT YET'}</small>
+          <p>{changeType ? 'This creates a Change you can return to over time.' : 'Your words stay here until you choose an orientation and keep them.'}</p>
         </div>
+        <button type="button" disabled={!canContinue} onClick={handleContinue}>
+          {submitting ? <Loader2 className={styles.spinner} aria-hidden="true" /> : null}
+          Keep this Change
+        </button>
       </div>
-
-      {/* Continue Button */}
-      <motion.button
-        onClick={handleContinue}
-        disabled={!canContinue}
-        className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${
-          canContinue
-            ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-500/40 text-cyan-300'
-            : 'bg-stone-800/50 border border-stone-700/50 text-stone-500 cursor-not-allowed'
-        }`}
-        whileTap={canContinue ? { scale: 0.98 } : {}}
-      >
-        <span>Continue</span>
-        <ChevronRight className="w-4 h-4" />
-      </motion.button>
-
-      {/* Helper Text */}
-      <p className="text-center text-xs text-stone-500 leading-relaxed">
-        You're not committing to anything. This is just naming what's already here.
-      </p>
-    </div>
+    </section>
   );
 }

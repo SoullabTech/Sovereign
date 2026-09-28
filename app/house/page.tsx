@@ -1,0 +1,152 @@
+import Link from 'next/link';
+import { requireMemberId } from '@/lib/auth/session';
+import { readHousePreferences } from '@/lib/house/preferencesStore';
+import { redirect } from 'next/navigation';
+import { query } from '@/lib/db/postgres';
+import styles from './house.module.css';
+import { MaiaThresholdLink } from './MaiaThresholdLink';
+import { HousePreferencesProvider, HouseMemberControls, HouseCenter, HouseQuickAccess, HouseDirectory, HousePassingThrough } from './HousePreferences';
+import { selectPassingQuote } from './passingContext';
+import { PASSING_QUOTES } from './passingQuotes';
+
+async function memberForHouse() {
+  let memberId: string;
+  try { memberId = await requireMemberId(); }
+  catch (error) {
+    if (error instanceof Error && error.message === 'AUTH_REQUIRED') return null;
+    throw error;
+  }
+  const result = await query('SELECT id, name FROM members WHERE id = $1', [memberId]);
+  return (result.rows[0] as { id: string; name: string } | undefined) ?? null;
+}
+
+async function livingWorksForHouse(memberId: string) {
+  const r = await query(
+    `SELECT id, title FROM living_works
+     WHERE member_id = $1
+     ORDER BY updated_at DESC
+     LIMIT 2`,
+    [memberId],
+  );
+  return r.rows as { id: string; title: string | null }[];
+}
+
+export const dynamic = 'force-dynamic';
+
+export default async function HousePage() {
+  const member = await memberForHouse();
+  if (!member) redirect('/signin');
+  const firstName = member.name?.trim().split(/\s+/)[0] || 'there';
+  const livingWorks = await livingWorksForHouse(member.id);
+  const housePreferences = await readHousePreferences(member.id, query);
+  const passingQuote = selectPassingQuote(PASSING_QUOTES, new Date());
+
+  return (
+    <HousePreferencesProvider initial={housePreferences} key={housePreferences.tag.split('-')[1]}>
+    <main className={styles.house}>
+      <aside className={styles.rail}>
+        <Link href="/" className={styles.brand} aria-label="Soul Lab public home">
+          <img className={styles.brandFlower} src="/holoflower-studio-transparent.png" alt="" />
+          <b>SOULLAB</b>
+          <small>BEING<br />BECOMING<br />TOGETHER</small>
+        </Link>
+        <nav aria-label="Soul Lab">
+          <Link href="/home">Home</Link>
+          <span aria-current="page">House</span>
+          <MaiaThresholdLink />
+        </nav>
+        <nav className={styles.railFoot} aria-label="Member">
+          <Link href="/search">Search</Link>
+          <Link href="/profile">You</Link>
+        </nav>
+      </aside>
+
+      <section className={styles.field}>
+        <div className={styles.ambient} aria-hidden="true">
+          <i /><i /><i />
+          <span className={styles.planeA} />
+          <span className={styles.planeB} />
+          <span className={styles.planeC} />
+          <span className={styles.horizon} />
+        </div>
+        <header className={styles.topline}>
+          <span>A SPACE TO REFLECT, CREATE, EXPLORE AND RETURN</span>
+          <HouseMemberControls name={firstName} />
+        </header>
+
+        <div className={styles.welcome}>
+          <p>THE HOUSE</p>
+          <h1>Welcome home,<br />{firstName}.</h1>
+          <h2>Many paths. A deeper you.</h2>
+        </div>
+
+        <aside className={styles.presence} aria-label="House presence">
+          <blockquote>Not a place<br />to escape life,<br />but a way to meet it<br />more fully.</blockquote>
+          <div className={styles.maiaPresence}>
+            <MaiaThresholdLink />
+            <p>Always here<br />when you are ready.</p>
+            <MaiaThresholdLink variant="invitation" />
+          </div>
+          <HouseQuickAccess />
+          <HousePassingThrough quote={passingQuote} />
+          <p className={styles.whole}>Different places.<br />A more whole you.</p>
+        </aside>
+
+        <HouseCenter />
+
+        <section className={styles.alive} aria-label="What's alive">
+          <p>WHAT'S ALIVE</p>
+          {livingWorks.length > 0 ? livingWorks.map((work) => (
+            <div key={work.id}>
+              <span>{work.title || 'An unnamed living work'}</span>
+              <Link href="/writers-studio">Writing →</Link>
+            </div>
+          )) : (
+            <div>
+              <span>No living Work is asking for space here.</span>
+              <Link href="/writers-studio">Writing →</Link>
+            </div>
+          )}
+          <div>
+            <span>Meet what is here</span>
+            <MaiaThresholdLink />
+          </div>
+          <div>
+            <span>See the larger whole</span>
+            <Link href="/maia/living-field?from=house">Living Field →</Link>
+          </div>
+        </section>
+
+        <HouseDirectory />
+
+        <section className={styles.lifeCompass} aria-label="Life compass">
+          <p>THE HOUSE IS NOT THE JOURNEY</p>
+          <div>
+            <span>Meet yourself.</span>
+            <span>Meet others.</span>
+            <span>Meet the world.</span>
+            <strong>Make something of the meeting.</strong>
+          </div>
+        </section>
+
+        <section className={styles.grounds} aria-label="Grounds">
+          <div className={styles.groundsHead}>
+            <p>GROUNDS</p>
+            <h3>What is asking for your participation?</h3>
+            <span>The House returns to life.</span>
+          </div>
+          <div className={styles.groundsWays}>
+            <Link href="/relationships"><strong>People</strong><small>Return to the relationships you are tending</small></Link>
+            <Link href="/commons/circles"><strong>Gatherings</strong><small>Meet the communities and circles you belong to</small></Link>
+            <Link href="/offerings"><strong>Offerings</strong><small>Bring something of value into the world</small></Link>
+          </div>
+          <div className={styles.goLive}>
+            <span>Nothing here needs to keep you here.</span>
+            <Link href="/">Go live →</Link>
+          </div>
+        </section>
+      </section>
+    </main>
+    </HousePreferencesProvider>
+  );
+}

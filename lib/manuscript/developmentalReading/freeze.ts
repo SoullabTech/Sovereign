@@ -43,6 +43,7 @@ import {
 } from './observationIdentity';
 import { isStructural, type EvidenceRef, type NonEmptyArray } from '../development/evidenceRef';
 import type { DevelopmentalReaderRequest, DevelopmentalReaderResult } from '../developmentalReader/contract';
+import { validateThemeClaim } from '../developmentalReader/themes';
 import type { ReaderIdentity } from '../structure/readerProvenance';
 import {
   READING_CONTRACT_VERSION,
@@ -88,7 +89,8 @@ export type FreezeRefusal =
   | 'claim_unbindable'
   /** The bound proof names a different evidence object than the request. */
   | 'fingerprint_mismatch'
-  | 'empty_observation';
+  | 'empty_observation'
+  | 'theme_label_mismatch';
 
 export type FreezeOutcome =
   | { ok: true; value: ReadingToFreeze }
@@ -146,11 +148,23 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
     if (typeof claim.text !== 'string' || claim.text.trim() === '') {
       return refuse('empty_observation', `claims[${i}] has no text`, i);
     }
+    if (request.commissionedLens === 'themes' && !claim.themeLabel?.trim()) {
+      return refuse('theme_label_mismatch', `claims[${i}] under Themes has no themeLabel`, i);
+    }
+    if (request.commissionedLens !== 'themes' && claim.themeLabel !== undefined) {
+      return refuse('theme_label_mismatch', `claims[${i}] carries themeLabel outside Themes`, i);
+    }
     /* Re-bound HERE, against the evidence this reading freezes — the reader's
        proof is not trusted across the seam, it is repeated. */
     const bound = bindEvidence(claim.refs, evidence);
     if (!bound.ok) {
       return refuse('claim_unbindable', `claims[${i}] ${bound.refusal}: ${bound.detail}`, i);
+    }
+    if (request.commissionedLens === 'themes') {
+      const theme = validateThemeClaim(claim.themeLabel, bound.value.refs);
+      if (!theme.ok) {
+        return refuse('claim_unbindable', `claims[${i}] Themes ${theme.refusal}`, i);
+      }
     }
     if (bound.value.inputFingerprint !== evidence.readState.inputFingerprint) {
       return refuse('fingerprint_mismatch',
@@ -178,6 +192,7 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
       ...(phenomenon !== undefined ? { phenomenon } : {}),
       evidenceRefs: bound.value.refs,
       observation: claim.text,
+      ...(claim.themeLabel ? { themeLabel: claim.themeLabel.trim() } : {}),
       doesNotEstablish: claim.doesNotEstablish,
       structureDependency: structureDependencyOf(bound.value.refs),
     });

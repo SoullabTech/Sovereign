@@ -1,0 +1,101 @@
+.room {
+  min-height: 100svh;
+  padding: clamp(18px, 3vw, 42px);
+  color: #ece3d5;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(121,137,82,.12), transparent 28rem),
+    radial-gradient(circle at 82% 18%, rgba(164,112,53,.10), transparent 30rem),
+    linear-gradient(160deg, #120f0b 0%, #17140e 48%, #0c0a08 100%);
+}
+
+.inner {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: clamp(54px, 8vw, 96px) 0 48px;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: #9eaa72;
+  font: 10px/1.4 Arial, sans-serif;
+  letter-spacing: .28em;
+}
+
+.inner h1 {
+  max-width: 12ch;
+  margin: 0;
+  color: #eee2cf;
+  font: 300 clamp(2.7rem, 6vw, 5.2rem)/.98 Georgia, serif;
+  letter-spacing: -.035em;
+}
+
+.lede {
+  max-width: 560px;
+  margin: 24px 0 48px;
+  color: #b9ad9a;
+  font: 400 18px/1.65 Georgia, serif;
+}
+
+.grid {
+  border-top: 1px solid rgba(204,177,134,.17);
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 2px;
+  border-bottom: 1px solid rgba(204,177,134,.14);
+  color: inherit;
+  text-decoration: none;
+}
+
+.card:hover { background: rgba(255,255,255,.018); }
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #a9b478;
+  border: 1px solid rgba(169,180,120,.55);
+  border-radius: 50%;
+  font: 13px/1 Arial, sans-serif;
+}
+
+.card strong {
+  display: block;
+  color: #e6d8c4;
+  font: 400 22px/1.2 Georgia, serif;
+}
+
+.card small {
+  display: block;
+  margin-top: 5px;
+  color: #a99c88;
+  font: 12px/1.55 Arial, sans-serif;
+}
+
+.card i {
+  color: #aa9473;
+  font: normal 16px/1 Arial, sans-serif;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 34px;
+  color: #897c69;
+  font: 11px/1.5 Arial, sans-serif;
+}
+
+.footer a { color: #c6ab82; text-decoration: none; }
+.footer a:hover { color: #efd4a9; }
+
+@media (max-width: 700px) {
+  .room { padding: 0; }
+  .inner { padding: 48px 18px 36px; }
+  .footer { flex-direction: column; }
+}

@@ -30,6 +30,7 @@ interface ExperienceTimelineProps {
   decisionId: string;
   experiences: DecisionExperience[];
   onExperienceAdded: (experience: DecisionExperience) => void;
+  scope?: 'personal' | 'practice';
 }
 
 const TYPE_CONFIG: Record<ExperienceType, { icon: typeof Compass; color: string; label: string }> = {
@@ -60,9 +61,11 @@ function formatTime(iso: string): string {
 function AddExperienceForm({
   decisionId,
   onAdded,
+  scope = 'practice',
 }: {
   decisionId: string;
   onAdded: (experience: DecisionExperience) => void;
+  scope?: 'personal' | 'practice';
 }) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<ExperienceType>('field_event');
@@ -74,7 +77,7 @@ function AddExperienceForm({
     if (!content.trim()) return;
     setSaving(true);
     try {
-      const res = await apiFetch(`/api/studio/decisions/${decisionId}/experiences`, {
+      const res = await apiFetch(`/api/studio/decisions/${decisionId}/experiences${scope === 'personal' ? '?scope=personal' : ''}`, {
         method: 'POST',
         body: JSON.stringify({
           experienceType: type,
@@ -193,6 +196,7 @@ export default function ExperienceTimeline({
   decisionId,
   experiences,
   onExperienceAdded,
+  scope = 'practice',
 }: ExperienceTimelineProps) {
   const [expanded, setExpanded] = useState(experiences.length <= 3);
 
@@ -205,18 +209,20 @@ export default function ExperienceTimeline({
         <div className="flex items-center gap-2">
           <Compass className="w-4 h-4 text-slate-500" />
           <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wider">
-            Field Experiences
+            {scope === 'personal' ? 'Lived Experiences' : 'Field Experiences'}
           </h3>
           {experiences.length > 0 && (
             <span className="text-xs text-slate-500">({experiences.length})</span>
           )}
         </div>
-        <AddExperienceForm decisionId={decisionId} onAdded={onExperienceAdded} />
+        <AddExperienceForm decisionId={decisionId} onAdded={onExperienceAdded} scope={scope} />
       </div>
 
       {experiences.length === 0 ? (
         <p className="text-xs text-slate-500 italic">
-          No experiences logged yet. What happened in the field since the last council?
+          {scope === 'personal'
+            ? 'No experiences logged yet. What happened since the last council?'
+            : 'No experiences logged yet. What happened in the field since the last council?'}
         </p>
       ) : (
         <div className="space-y-2">

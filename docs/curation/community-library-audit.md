@@ -40,13 +40,43 @@ Cut if **any** of:
 
 If it weakens — cut or move internal.
 
-Total articles: **17** (17 file-backed, 0 inline)
+Total articles: **19** (19 file-backed, 0 inline)
 
 ---
 
 ## Philosophical Foundations
 
-_Collection id: `philosophical-foundations` — 3 articles_
+_Collection id: `philosophical-foundations` — 5 articles_
+
+### ★ The Relational Field
+
+- **id:** `the-relational-field`
+- **source:** `Community-Commons/library/the-relational-field.md`
+- **length:** 1,200 words
+- **dek:** Most systems collapse experience by explaining it. This one is built not to.
+
+> *Designing AI That Does Not Collapse Human Experience* --- ## 1. The Problem: Collapse Most systems that engage human experience move too quickly. They interpret. They explain. They organize what is not yet formed. In doing so, they convert something living into something known. …
+
+**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
+
+**notes:**
+
+---
+
+### ★ One MAIA, Many Fields
+
+- **id:** `one-maia-many-fields`
+- **source:** `Community-Commons/library/one-maia-many-fields.md`
+- **length:** 1,107 words
+- **dek:** Why MAIA may feel different in Journal, Dream, Divination, Relationships, Writing and other rooms without becoming a different intelligence.
+
+> *How one relational intelligence changes posture without becoming someone else* There is a simple idea underneath much of Soullab: > **There is one MAIA. The field changes how she meets you.** This matters because a Journal is not a Dream, a Dream is not a Decision, and a Decisio…
+
+**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
+
+**notes:**
+
+---
 
 ### ★ Presence Continuity and Personal Sovereignty
 

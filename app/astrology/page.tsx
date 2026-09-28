@@ -16,7 +16,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, Settings2, ChevronDown, ChevronUp, Info, Lock } from 'lucide-react';
+import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, Settings2, ChevronDown, ChevronUp, Info, Lock, MessageCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch, apiUrl } from '@/lib/http/apiBase';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
@@ -38,6 +38,8 @@ import { BirthChartCalculator } from '@/components/astrology/BirthChartCalculato
 import { BirthDataForm } from '@/components/astrology/BirthDataForm';
 import { useBirthChart } from '@/lib/hooks/useBirthChart';
 import type { AlienPattern } from '@/lib/astrology/alienPatterns';
+import { OracleConversation } from '@/components/OracleConversation';
+import styles from './astrology-room.module.css';
 
 // Elemental colors for planet insights
 const elementalColors = {
@@ -172,6 +174,14 @@ export default function AstrologyPage() {
   // Beta: all users have full access
   const isPersonal = true;
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
+  const [memberId, setMemberId] = useState<string | null>(null);
+  const [maiaOpen, setMaiaOpen] = useState(false);
+  const [chartContextShared, setChartContextShared] = useState(false);
+  const [maiaInjection, setMaiaInjection] = useState<{ text: string; nonce: number } | null>(null);
+  const [recognitionText, setRecognitionText] = useState('');
+  const [recognitionSaving, setRecognitionSaving] = useState(false);
+  const [recognitionError, setRecognitionError] = useState<string | null>(null);
+  const [keptReflectionId, setKeptReflectionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasBirthData, setHasBirthData] = useState(false);
   // Distinct from !hasBirthData: the server could not name the authenticated
@@ -255,6 +265,22 @@ export default function AstrologyPage() {
     };
     return [...savedSynastry].sort((a, b) => ts(b.savedAt) - ts(a.savedAt));
   }, [savedSynastry]);
+
+  const primaryAspectReadings = useMemo(() => {
+    if (!chartData?.aspects?.length) return [];
+    return [...chartData.aspects]
+      .sort((a, b) => a.orb - b.orb)
+      .map((aspect) => ({
+        ...aspect,
+        synthesis: synthesizeAspect(
+          aspect.planet1,
+          aspect.planet2,
+          aspect.type as AspectType,
+        ),
+      }))
+      .filter((aspect) => aspect.synthesis)
+      .slice(0, 4);
+  }, [chartData]);
 
   // Calculate current ayanamsa value (memoized)
   const ayanamsaValue = useMemo(() => {
@@ -410,6 +436,7 @@ export default function AstrologyPage() {
             }
             if (profileRes.ok) {
               const profile = await profileRes.json();
+              setMemberId(typeof profile.id === 'string' ? profile.id : null);
               // The server has now named the authenticated member. Whatever it
               // says about birthData — present or absent — is AUTHORITATIVE for
               // this member, and outranks any cache.
@@ -717,328 +744,371 @@ export default function AstrologyPage() {
     }
   }, [showTransits, transitPositions.length]);
 
+  function closeMaiaEncounter() {
+    setMaiaOpen(false);
+    // A context injection is a one-time member gesture. Clearing the carrier on
+    // close prevents a remounted canonical conversation from re-sending it.
+    setMaiaInjection(null);
+  }
+
+  async function keepRecognitionAsReflection() {
+    const text = recognitionText.trim();
+    if (!text || recognitionSaving || keptReflectionId) return;
+    setRecognitionSaving(true);
+    setRecognitionError(null);
+    try {
+      const response = await apiFetch('/api/astrology/reflection', {
+        method: 'POST',
+        body: JSON.stringify({
+          text,
+          zodiacMode,
+          houseSystem,
+          ayanamsa: zodiacMode === 'sidereal' ? ayanamsa : undefined,
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || 'Could not keep this reflection');
+      setKeptReflectionId(body?.reflection?.id || null);
+    } catch (err) {
+      setRecognitionError(err instanceof Error ? err.message : 'Could not keep this reflection');
+    } finally {
+      setRecognitionSaving(false);
+    }
+  }
+
+  function beginAnotherRecognition() {
+    setRecognitionText('');
+    setRecognitionError(null);
+    setKeptReflectionId(null);
+  }
+
+  function bringChartFactsToMaia() {
+    if (!chartData) return;
+    const aspectFacts = primaryAspectReadings.slice(0, 4).map((aspect) =>
+      aspect.planet1 + ' ' + aspect.type + ' ' + aspect.planet2 + ' (' + aspect.orb.toFixed(1) + '° orb)'
+    );
+    const parts = [
+      'I am explicitly bringing selected calculated facts from my natal chart into this conversation.',
+      'Current lens: ' + (zodiacMode === 'tropical' ? 'Tropical' : zodiacMode) + ' · ' + (HOUSE_SYSTEMS.find((item) => item.value === houseSystem)?.label || houseSystem),
+      'Sun: ' + chartData.sun.sign + ' ' + chartData.sun.degree.toFixed(1) + '° · House ' + chartData.sun.house,
+      'Moon: ' + chartData.moon.sign + ' ' + chartData.moon.degree.toFixed(1) + '° · House ' + chartData.moon.house,
+      'Ascendant: ' + chartData.ascendant.sign + ' ' + chartData.ascendant.degree.toFixed(1) + '°',
+    ];
+    if (aspectFacts.length) {
+      parts.push('Selected chart relationships: ' + aspectFacts.join('; '));
+    }
+    parts.push(
+      'Please keep calculated facts distinct from symbolic interpretation. Offer possibilities rather than identity claims or predictions, and ask what I recognize in lived experience. Do not treat chart symbolism as established truth about me.'
+    );
+    setMaiaInjection({ text: parts.join('\n\n'), nonce: Date.now() });
+    setChartContextShared(true);
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
-        {/* Soft spiral unfurling */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          transition={{ duration: 2, ease: 'easeOut' }}
-          className="relative z-10"
-        >
-          <Sparkle
-            className={`w-12 h-12 ${isDayMode ? 'text-amber-600' : 'text-amber-400'} animate-pulse`}
-          />
-        </motion.div>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 1 }}
-          className={`absolute mt-24 text-sm ${isDayMode ? 'text-amber-300' : 'text-amber-200'} font-serif italic`}
-        >
-          The cosmos remembers you...
-        </motion.p>
-      </div>
+      <main className={styles.loadingRoom}>
+        <div className={styles.emptyInner}>
+          <MiniHoloflower size={72} isDayMode={false} animated={true} />
+          <h1>Gathering your chart</h1>
+          <p>Calculating the sky you were born into.</p>
+        </div>
+      </main>
     );
   }
 
   if (!chartData || !hasBirthData) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
-        {/* Starfield background */}
-        <div className="absolute inset-0 opacity-30">
-          {[...Array(100)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 3}s`,
-              }}
-            />
-          ))}
-        </div>
-        <div className="text-center relative z-10">
-          <div className="mx-auto mb-6 flex justify-center">
-            <MiniHoloflower size={80} isDayMode={false} animated={true} />
+      <main className={styles.room}>
+        <header className={styles.threshold} aria-label="Astrology room navigation">
+          <Link href="/house" className={styles.brand} aria-label="Return to the House">
+            <img src="/holoflower-studio-transparent.png" alt="" />
+            <span>SOULLAB</span>
+          </Link>
+          <div className={styles.roomName}>
+            <span>THE HOUSE</span>
+            <b>ASTROLOGY</b>
           </div>
-          {unresolvedReason ? (
-            <>
-              {/* UNAVAILABLE ≠ ABSENT. We could not establish the authenticated
-                  member, so we do not know whether birth data exists. Saying
-                  "enter your birth details" here would assert an absence we have
-                  NOT established, and would invite someone who already has a
-                  chart to re-enter it — the exact confusion that started this
-                  investigation.
-                  The two reasons are told apart because the honest remedy
-                  differs: signing in vs waiting. Offering "try again" to a
-                  signed-out person makes a permanent state look transient. */}
-              <h2 className="text-2xl font-bold text-dune-amber mb-2">
-                {unresolvedReason === 'signed-out'
-                  ? 'Sign in to see your chart'
-                  : 'We couldn’t reach your chart'}
-              </h2>
-              <p className="text-amber-200/90 mb-6 max-w-md mx-auto">
-                {unresolvedReason === 'signed-out'
-                  ? 'Your chart is tied to your account, so we need to know who you are before we can show it.'
-                  : 'We couldn’t confirm your account just now, so we’re not showing a chart rather than risk showing the wrong one.'}
-              </p>
-              {unresolvedReason === 'signed-out' ? (
-                <Link
-                  href="/signin"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  Sign in
-                </Link>
-              ) : (
-                <button
-                  onClick={() => window.location.reload()}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  Try again
-                </button>
-              )}
-            </>
-          ) : (
-            <>
-              {/* Genuine absence: the server named the member and said they have
-                  no birth data. Entry happens HERE. The earlier note left the
-                  destination open as a separate product ruling; that ruling is
-                  now made — /journey is a different room, not an onboarding
-                  funnel for astrology, and bouncing the member there is what
-                  made this page a dead end. The form writes through
-                  useBirthChart.save(), so the chart is calculated only after the
-                  member profile has actually accepted the birth data. */}
-              <h2 className="text-2xl font-bold text-dune-amber mb-2">Your birth chart</h2>
-              <p className="text-amber-200/90 mb-6 max-w-md mx-auto">
-                Add your birth date, time, and place to see your chart.
-              </p>
-              <div className="w-full max-w-xl mx-auto text-left">
-                <BirthDataForm
-                  onSubmit={handleBirthDataSubmit}
-                  loading={loading}
-                  isDayMode={false}
-                  title={null}
-                  subtitle={null}
-                />
-                {birthSaveError && (
-                  <p role="alert" className="mt-4 text-center text-sm font-serif text-amber-300/90">
-                    {birthSaveError}
-                  </p>
+          <Link href="/house" className={styles.return}>Return to House →</Link>
+        </header>
+        <section className={styles.emptyRoom}>
+          <div className={styles.emptyInner}>
+            <MiniHoloflower size={72} isDayMode={false} animated={true} />
+            {unresolvedReason ? (
+              <>
+                <h1>{unresolvedReason === 'signed-out' ? 'Sign in to see your chart' : 'We couldn’t reach your chart'}</h1>
+                <p>
+                  {unresolvedReason === 'signed-out'
+                    ? 'Your chart belongs to your account, so Soullab needs to know who you are before showing it.'
+                    : 'We could not confirm your account just now, so no chart is shown rather than risk showing the wrong one.'}
+                </p>
+                {unresolvedReason === 'signed-out' ? (
+                  <Link href="/signin" className={styles.reportLink}>Sign in</Link>
+                ) : (
+                  <button type="button" onClick={() => window.location.reload()} className={styles.reportLink}>Try again</button>
                 )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+              </>
+            ) : (
+              <>
+                <h1>Your birth chart</h1>
+                <p>Add your birth date, time, and place. These details are used to calculate your chart; they do not determine who you are.</p>
+                <div className="w-full max-w-xl mx-auto text-left">
+                  <BirthDataForm
+                    onSubmit={handleBirthDataSubmit}
+                    loading={loading}
+                    isDayMode={false}
+                    title={null}
+                    subtitle={null}
+                  />
+                  {birthSaveError && (
+                    <p role="alert" className="mt-4 text-center text-base font-serif text-amber-200">
+                      {birthSaveError}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
-
-      {/* Birth Chart Calculator - Upper Right Corner */}
+    <main className={styles.room}>
       <BirthChartCalculator isDayMode={isDayMode} />
 
-      {/* Arrakis Night Sky - Starfield */}
-      <div className="absolute inset-0 opacity-40">
-        {[...Array(150)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute bg-white rounded-full"
-            style={{
-              width: Math.random() > 0.8 ? '2px' : '1px',
-              height: Math.random() > 0.8 ? '2px' : '1px',
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animation: `pulse ${2 + Math.random() * 3}s infinite`,
-              animationDelay: `${Math.random() * 3}s`,
-              opacity: 0.3 + Math.random() * 0.7,
-            }}
-          />
-        ))}
-      </div>
+      <header className={styles.threshold} aria-label="Astrology room navigation">
+        <Link href="/house" className={styles.brand} aria-label="Return to the House">
+          <img src="/holoflower-studio-transparent.png" alt="" />
+          <span>SOULLAB</span>
+        </Link>
+        <div className={styles.roomName}>
+          <span>THE HOUSE</span>
+          <b>ASTROLOGY</b>
+        </div>
+        <Link href="/house" className={styles.return}>Return to House →</Link>
+      </header>
 
-      {/* Distant moons glow */}
-      <div className="absolute top-20 right-20 w-32 h-32 bg-spice-orange/10 rounded-full blur-3xl" />
-      <div className="absolute top-40 left-32 w-24 h-24 bg-fremen-azure/10 rounded-full blur-3xl" />
+      <div className={styles.content}>
+        <section className={styles.arrival}>
+          <div>
+            <p className={styles.kicker}>ASTROLOGY · NATAL CHART</p>
+            <h1>A symbolic map of your sky at birth.</h1>
+            <p className={styles.lead}>
+              Your chart begins with calculated positions. Symbolic traditions can help us think with those patterns,
+              but they do not tell you who you are.
+            </p>
+          </div>
+          <aside className={styles.boundary}>
+            <small>THE CHART IS A LENS</small>
+            <p>Facts can be calculated. Interpretation remains provisional. Lived meaning belongs to you.</p>
+          </aside>
+        </section>
 
-      {/* Content */}
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-light tracking-wide !text-dune-amber mb-2">Your Cosmic Blueprint</h1>
-            <p className="!text-amber-200 text-sm tracking-wider">Spiralogic Astrology: Elemental Pathways of Consciousness</p>
+        <section className={styles.atlas} aria-label="Whole-chart orientation">
+          <div className={styles.atlasPaper}>
+            <div className={styles.atlasHead}>
+              <div>
+                <small>CALCULATED CHART FACTS</small>
+                <h2>Your chart at first glance</h2>
+              </div>
+              <p>Three familiar entry points, held as coordinates within the whole chart rather than definitions of the person.</p>
+            </div>
 
-            {/* Zodiac System Toggle */}
-            <div className="mt-6 flex flex-col items-center gap-2">
+            <div className={styles.factGrid}>
+              <article className={styles.fact}>
+                <small>SUN</small>
+                <h3>{chartData.sun.sign} · {chartData.sun.degree.toFixed(1)}°</h3>
+                <p>House {chartData.sun.house}</p>
+                <Link href="/astrology/placements/sun" prefetch={false}>Explore this placement →</Link>
+              </article>
+              <article className={styles.fact}>
+                <small>MOON</small>
+                <h3>{chartData.moon.sign} · {chartData.moon.degree.toFixed(1)}°</h3>
+                <p>House {chartData.moon.house}</p>
+                <Link href="/astrology/placements/moon" prefetch={false}>Explore this placement →</Link>
+              </article>
+              <article className={styles.fact}>
+                <small>ASCENDANT</small>
+                <h3>{chartData.ascendant.sign} · {chartData.ascendant.degree.toFixed(1)}°</h3>
+                <p>The eastern horizon at birth.</p>
+                <Link href="/astrology/placements/ascendant" prefetch={false}>Explore this placement →</Link>
+              </article>
+            </div>
+
+            <div className={styles.elemental}>
+              <div className={styles.elementalHead}>
+                <span>ELEMENTAL EMPHASIS</span>
+                <em>Derived from the chart’s inner planets; not a personality score.</em>
+              </div>
+              <div className={styles.elementGrid}>
+                <div><span>Fire</span><b>{Math.round(elementalBalance.fire * 100)}%</b></div>
+                <div><span>Water</span><b>{Math.round(elementalBalance.water * 100)}%</b></div>
+                <div><span>Earth</span><b>{Math.round(elementalBalance.earth * 100)}%</b></div>
+                <div><span>Air</span><b>{Math.round(elementalBalance.air * 100)}%</b></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.lensBar}>
+          <div className={styles.lensCopy}>
+            <small>CURRENT LENS</small>
+            <h2>Tropical · {HOUSE_SYSTEMS.find(s => s.value === houseSystem)?.label || 'Porphyry'}</h2>
+            <p>Change the lens when the question changes. The underlying birth chart remains the same member-owned source.</p>
+            <div className="mt-4">
               <ZodiacToggle
                 value={zodiacMode}
                 onChange={setZodiacModeAndPersist}
                 ayanamsa={ayanamsa}
                 onAyanamsaChange={setAyanamsaAndPersist}
               />
-              {zodiacMode === 'sidereal' && (
-                <p className="text-xs text-amber-200/70 mt-1">
-                  Showing sidereal positions in Planetary Positions.{' '}
-                  <Link href="/astrology/vedic" className="text-dune-amber hover:text-spice-glow underline">
-                    Full Vedic Dashboard →
-                  </Link>
-                </p>
-              )}
             </div>
           </div>
-
-          {/* Spiralogic Evolutionary Report CTA */}
-          <div className="mb-8">
-            <Link
-              href="/astrology/report"
-              className="flex items-center justify-between w-full p-5 border transition-colors group"
-              style={{ borderColor: '#D88A2D60', backgroundColor: 'rgba(216,138,45,0.06)' }}
-            >
-              <div>
-                <p className="text-xs tracking-widest uppercase mb-1" style={{ color: '#9B6B3C', fontWeight: 300 }}>
-                  Full Report
-                </p>
-                <p className="text-base font-serif" style={{ color: '#D88A2D', fontWeight: 300 }}>
-                  Your Spiralogic Evolutionary Report
-                </p>
-                <p className="text-xs mt-1" style={{ color: '#8B7355', fontWeight: 300 }}>
-                  All 12 facets · Karmic insights · Current transits · Integration practices
-                </p>
-              </div>
-              <span className="text-lg ml-4 opacity-60 group-hover:opacity-100 transition-opacity" style={{ color: '#D88A2D' }}>→</span>
-            </Link>
+          <div className={styles.lensActions}>
+            <Link href="/astrology/report" className={styles.reportLink}>Open the full chart report →</Link>
+            {memberId ? (
+              <button type="button" className={styles.maiaDoor} onClick={() => setMaiaOpen(true)}>
+                <MessageCircle aria-hidden="true" />
+                Explore this chart with MAIA
+              </button>
+            ) : null}
           </div>
+        </section>
 
-          {/* Archetypal Profile */}
-          <div className="bg-black/40 backdrop-blur-md border border-bene-gesserit-gold/40 rounded-lg p-6 mb-12 shadow-xl text-amber-200">
-            <h2 className="text-xl font-medium tracking-wide !text-dune-amber mb-4">Your Archetypal Profile</h2>
-            <p className="!text-amber-200/80 mb-6 text-sm tracking-wide">
-              The core archetypal energies shaping your soul's journey
+        {maiaOpen && memberId ? (
+          <section className={styles.maiaEncounter} aria-label="Explore this chart with MAIA">
+            <article className={styles.chartAnchor}>
+              <div className={styles.chartAnchorHead}>
+                <div>
+                  <small>THE CHART REMAINS IN VIEW</small>
+                  <h2>Selected calculated facts</h2>
+                </div>
+                <button type="button" onClick={closeMaiaEncounter} aria-label="Close MAIA conversation">
+                  <X aria-hidden="true" />
+                </button>
+              </div>
+
+              <div className={styles.chartFactList}>
+                <div><span>Sun</span><strong>{chartData.sun.sign} · {chartData.sun.degree.toFixed(1)}° · House {chartData.sun.house}</strong></div>
+                <div><span>Moon</span><strong>{chartData.moon.sign} · {chartData.moon.degree.toFixed(1)}° · House {chartData.moon.house}</strong></div>
+                <div><span>Ascendant</span><strong>{chartData.ascendant.sign} · {chartData.ascendant.degree.toFixed(1)}°</strong></div>
+              </div>
+
+              {primaryAspectReadings.length ? (
+                <div className={styles.chartAspectFacts}>
+                  <small>SELECTED RELATIONSHIPS</small>
+                  {primaryAspectReadings.slice(0,4).map((aspect,index) => (
+                    <p key={aspect.planet1 + '-' + aspect.type + '-' + aspect.planet2 + '-' + index}>
+                      {aspect.planet1} {aspect.type} {aspect.planet2} · {aspect.orb.toFixed(1)}° orb
+                    </p>
+                  ))}
+                </div>
+              ) : null}
+
+              <div className={styles.contextConsent}>
+                <small>CONTEXT STAYS WITH YOU UNTIL YOU SEND IT</small>
+                <p>
+                  Opening MAIA does not send your chart. The conversation knows only that you are in Astrology
+                  until you explicitly bring these selected chart facts into it.
+                </p>
+                <button type="button" onClick={bringChartFactsToMaia}>
+                  {chartContextShared ? 'Bring the current chart facts again' : 'Bring these chart facts to MAIA'} <span>→</span>
+                </button>
+              </div>
+            </article>
+
+            <div className={styles.maiaChamber}>
+              <div className={styles.maiaChamberHead}>
+                <div>
+                  <span className={styles.orb} aria-hidden="true" />
+                  <div>
+                    <small>MAIA · ASTROLOGY</small>
+                    <strong>Think with the chart, not from above it</strong>
+                  </div>
+                </div>
+                <button type="button" onClick={closeMaiaEncounter} aria-label="Return to Astrology">
+                  <X aria-hidden="true" />
+                </button>
+              </div>
+              <div className={styles.maiaConversation}>
+                <OracleConversation
+                  userId={memberId}
+                  sessionId={'astrology-natal-' + memberId}
+                  presentationMode="contained"
+                  initialShowChatInterface
+                  voiceEnabled
+                  includeStoredBirthData={false}
+                  showAnalytics={false}
+                  shouldRenderArrival={false}
+                  surface="maia"
+                  placeContext={{
+                    placeId: 'astrology',
+                    placeName: 'Astrology',
+                    route: '/astrology',
+                    purpose: 'A room for reflective orientation through a member-owned birth chart.',
+                    objectType: 'natal_chart',
+                    objectId: memberId,
+                  }}
+                  injectedMessage={maiaInjection}
+                  onSessionEnd={closeMaiaEncounter}
+                />
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        <section className={styles.memberMeaning} aria-label="Your meaning">
+          <div className={styles.memberMeaningIntro}>
+            <small>YOUR MEANING</small>
+            <h2>What do you recognize here?</h2>
+            <p>
+              Keep only what becomes true in your own experience. The chart can suggest a pattern and MAIA can reflect with you,
+              but neither gets to author what it means for your life.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-black/30 border border-spice-orange/30 rounded-lg p-4 text-amber-200">
-                <h3 className="!text-spice-glow font-semibold mb-2">
-                  {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.facetName || 'The Explorer'}
-                </h3>
-                <p className="!text-amber-200/80 text-sm">
-                  {chartData.sun.sign} Sun · {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.archetypes?.jungian?.[0] || 'archetypal core identity'}
-                </p>
-              </div>
-              <div className="bg-black/30 border border-fremen-azure/30 rounded-lg p-4 text-amber-200">
-                <h3 className="!text-sky-300 font-semibold mb-2">
-                  {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.facetName || 'The Mystic'}
-                </h3>
-                <p className="!text-amber-200/80 text-sm">
-                  {chartData.moon.sign} Moon · {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.archetypes?.jungian?.[0] || 'inner emotional landscape'}
-                </p>
-              </div>
-            </div>
           </div>
 
-          {/* Big Three */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {/* Sun */}
-            <div className="bg-black/40 backdrop-blur-md border border-spice-orange/40 rounded-lg p-6 shadow-xl text-amber-200">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-spice-orange to-spice-deep flex items-center justify-center shadow-lg shadow-spice-orange/30">
-                  <span className="text-2xl">☉</span>
-                </div>
-                <div>
-                  <h3 className="!text-dune-amber font-semibold">Sun · Core Identity</h3>
-                  <p className="text-sm !text-amber-200/80">Conscious Expression</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-2xl font-bold !text-spice-glow">
-                  {chartData.sun.sign} · {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.facetName || 'The Explorer'}
-                </p>
-                <p className="text-sm !text-amber-200/70">
-                  {chartData.sun.degree.toFixed(1)}° · House {chartData.sun.house}
-                </p>
-                <p className="text-sm !text-amber-200/90 italic mt-2">
-                  {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Archetypal essence'}
-                </p>
-                <Link
-                  href={`/astrology/placements/sun`}
-                  prefetch={false}
-                  className="text-sm !text-orange-400 hover:!text-orange-300 hover:underline inline-flex items-center gap-1"
-                >
-                  Explore deeper <Sparkles className="w-3 h-3" />
-                </Link>
+          {keptReflectionId ? (
+            <div className={styles.keptMeaning}>
+              <small>KEPT AS YOUR REFLECTION</small>
+              <blockquote>{recognitionText}</blockquote>
+              <div>
+                <Link href={'/reflections/' + encodeURIComponent(keptReflectionId)}>Open this Reflection →</Link>
+                <button type="button" onClick={beginAnotherRecognition}>Write another recognition</button>
               </div>
             </div>
-
-            {/* Moon */}
-            <div className="bg-black/40 backdrop-blur-md border border-fremen-azure/50 rounded-lg p-6 shadow-xl text-amber-200">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fremen-azure to-dune-ibad-blue flex items-center justify-center shadow-lg shadow-fremen-azure/30">
-                  <span className="text-2xl text-amber-200">☽</span>
-                </div>
+          ) : (
+            <div className={styles.memberMeaningWrite}>
+              <textarea
+                value={recognitionText}
+                onChange={(event) => setRecognitionText(event.target.value)}
+                placeholder="Write what you recognize — including what does not fit, what remains uncertain, or what becomes clearer in your own words."
+                aria-label="What do you recognize here"
+                rows={6}
+              />
+              <div className={styles.memberMeaningKeep}>
                 <div>
-                  <h3 className="!text-dune-amber font-semibold">Moon · Emotional Truth</h3>
-                  <p className="text-sm !text-amber-200/80">Subconscious Landscape</p>
+                  <small>{recognitionText.trim() ? 'YOUR WORDS ONLY' : 'NOTHING IS KEPT YET'}</small>
+                  <p>
+                    {recognitionText.trim()
+                      ? 'Keeping creates a Reflection from these exact words. MAIA’s interpretation is not copied.'
+                      : 'Write first. Nothing from the chart or conversation is saved as your meaning automatically.'}
+                  </p>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-2xl font-bold !text-sky-300">
-                  {chartData.moon.sign} · {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.facetName || 'The Mystic'}
-                </p>
-                <p className="text-sm !text-amber-200/70">
-                  {chartData.moon.degree.toFixed(1)}° · House {chartData.moon.house}
-                </p>
-                <p className="text-sm !text-amber-200/90 italic mt-2">
-                  {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Emotional archetype'}
-                </p>
-                <Link
-                  href={`/astrology/placements/moon`}
-                  prefetch={false}
-                  className="text-sm !text-sky-400 hover:!text-sky-300 hover:underline inline-flex items-center gap-1"
+                <button
+                  type="button"
+                  disabled={!recognitionText.trim() || recognitionSaving}
+                  onClick={keepRecognitionAsReflection}
                 >
-                  Explore deeper <Sparkles className="w-3 h-3" />
-                </Link>
+                  {recognitionSaving ? 'Keeping…' : 'Keep this as a Reflection'}
+                </button>
               </div>
+              {recognitionError ? <p className={styles.memberMeaningError} role="alert">{recognitionError}</p> : null}
             </div>
+          )}
+        </section>
 
-            {/* Ascendant */}
-            <div className="bg-black/40 backdrop-blur-md border border-bene-gesserit-gold/40 rounded-lg p-6 shadow-xl text-amber-200">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-bene-gesserit-gold to-dune-sienna-rock flex items-center justify-center shadow-lg shadow-bene-gesserit-gold/30">
-                  <span className="text-2xl">⇡</span>
-                </div>
-                <div>
-                  <h3 className="!text-dune-amber font-semibold">Ascendant · Life Portal</h3>
-                  <p className="text-sm !text-amber-200/80">How You Meet the World</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-2xl font-bold !text-yellow-300">
-                  {chartData.ascendant.sign} · {getZodiacArchetype(chartData.ascendant.sign.toLowerCase())?.facetName || 'The Sustainer'}
-                </p>
-                <p className="text-sm !text-amber-200/70">
-                  {chartData.ascendant.degree.toFixed(1)}°
-                </p>
-                <p className="text-sm !text-amber-200/90 italic mt-2">
-                  {getZodiacArchetype(chartData.ascendant.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Rising energy'}
-                </p>
-                <Link
-                  href={`/astrology/placements/ascendant`}
-                  prefetch={false}
-                  className="text-sm !text-yellow-400 hover:!text-yellow-300 hover:underline inline-flex items-center gap-1"
-                >
-                  Explore deeper <Sparkles className="w-3 h-3" />
-                </Link>
-              </div>
-            </div>
-          </div>
-
+        <div className={styles.detailWrap}>
           {/* House Wheel & Planetary Positions */}
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* House Wheel */}
@@ -1270,7 +1340,7 @@ export default function AstrologyPage() {
                                 {/* Planetary Archetype */}
                                 <div>
                                   <h5 className="text-xs uppercase tracking-wider text-amber-200/70 mb-1">
-                                    {name} Archetype
+                                    {name} symbolism
                                   </h5>
                                   <p className="text-amber-200/90 text-sm font-medium">
                                     {planetArchetype?.archetype || 'The Guide'}
@@ -1283,7 +1353,7 @@ export default function AstrologyPage() {
                                 {/* Sign Facet */}
                                 <div>
                                   <h5 className="text-xs uppercase tracking-wider text-amber-200/70 mb-1">
-                                    {data.sign} Expression
+                                    {data.sign} symbolism
                                   </h5>
                                   <p className="text-dune-amber text-sm font-medium">
                                     {zodiacArchetype?.facetName}
@@ -1299,7 +1369,7 @@ export default function AstrologyPage() {
                                 {houseData && (
                                   <div>
                                     <h5 className="text-xs uppercase tracking-wider text-amber-200/70 mb-1">
-                                      House {(data as PlanetPosition).house} Activation
+                                      House {(data as PlanetPosition).house} symbolism
                                     </h5>
                                     <p className="text-amber-200/90 text-sm font-medium">
                                       {houseData.facet}
@@ -1354,11 +1424,17 @@ export default function AstrologyPage() {
                                 )}
                               </div>
 
-                              {/* Synthesis Quote */}
+                              {/* One symbolic synthesis — not a calculated fact */}
                               {generateArchetypalDescription(name, data.sign, (data as PlanetPosition).house) && (
                                 <div className="mt-3 pt-3 border-t border-white/10">
+                                  <h5 className="text-xs uppercase tracking-wider text-amber-200/70 mb-1">
+                                    One symbolic synthesis
+                                  </h5>
                                   <p className="text-xs italic text-dune-amber/80">
                                     "{generateArchetypalDescription(name, data.sign, (data as PlanetPosition).house)}"
+                                  </p>
+                                  <p className="text-xs text-amber-200/60 mt-1">
+                                    Read as a possibility to test against lived experience, not as a statement of identity.
                                   </p>
                                 </div>
                               )}
@@ -1373,210 +1449,174 @@ export default function AstrologyPage() {
             </div>
           </div>
 
-          {/* Major Aspects */}
-          <div className="bg-black/40 backdrop-blur-md border border-spice-orange/30 rounded-lg p-6 mb-12 shadow-xl relative">
-            <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-spice-orange" />
-              Major Aspects
-            </h2>
-            <p className="text-amber-200/90 mb-6 text-sm tracking-wide">
-              Archetypal dynamics between planetary energies in your chart
-            </p>
+          <section className={styles.interpretiveField} aria-label="Chart interpretation">
+            <header className={styles.interpretiveHead}>
+              <div>
+                <small>THE CHART IN RELATION</small>
+                <h2>Patterns to hold together</h2>
+              </div>
+              <p>
+                These are not conclusions about you. They are selected relationships in the chart,
+                read through one symbolic tradition and offered as questions rather than verdicts.
+              </p>
+            </header>
 
-            {isPersonal ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {chartData.aspects.map((aspect, index) => {
-                  const aspectIcon = aspect.type === 'square' ? '□' :
-                    aspect.type === 'conjunction' ? '☌' :
-                      aspect.type === 'trine' ? '△' :
-                        aspect.type === 'quincunx' ? '⚻' : '○';
+            <div className={styles.aspectReadingGrid}>
+              {primaryAspectReadings.length ? primaryAspectReadings.map((aspect, index) => {
+                const possibleGift = aspect.synthesis?.giftExpression
+                  ?.replace(/^When integrated:\s*/i, '')
+                  .replace(/^When mature:\s*/i, '');
+                const possibleDifficulty = aspect.synthesis?.shadowExpression
+                  ?.replace(/^When unconscious:\s*/i, '')
+                  .replace(/^When reactive:\s*/i, '');
 
-                  const aspectColor = aspect.type === 'square' ? 'text-red-400' :
-                    aspect.type === 'conjunction' ? 'text-spice-orange' :
-                      aspect.type === 'trine' ? 'text-green-400' :
-                        'text-sky-400';
+                return (
+                  <article className={styles.aspectReading} key={aspect.planet1 + '-' + aspect.type + '-' + aspect.planet2 + '-' + index}>
+                    <div className={styles.layer}>
+                      <small>CALCULATED RELATION</small>
+                      <h3>{aspect.planet1} {aspect.type} {aspect.planet2}</h3>
+                      <p>{aspect.orb.toFixed(1)}° orb</p>
+                    </div>
 
-                  return (
-                    <Link
-                      key={index}
-                      href={`/astrology/aspects/${aspect.planet1.toLowerCase()}-${aspect.type}-${aspect.planet2.toLowerCase()}`}
-                      className="group bg-black/30 border border-spice-sand/20 hover:border-spice-orange/60 rounded-lg p-4 transition-all duration-300 hover:shadow-lg hover:shadow-spice-orange/20"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-2xl ${aspectColor}`}>{aspectIcon}</span>
-                          <span className="text-dune-amber font-semibold">
-                            {aspect.planet1} {aspect.type} {aspect.planet2}
-                          </span>
-                        </div>
-                        <span className="text-xs text-amber-200/70">
-                          {aspect.orb.toFixed(1)}° orb
-                        </span>
+                    <div className={styles.layer}>
+                      <small>SYMBOLIC TRADITION</small>
+                      <p>{aspect.synthesis?.elementalDynamic || 'A traditional aspect relationship between these two planetary functions.'}</p>
+                    </div>
+
+                    {possibleGift ? (
+                      <div className={styles.layer}>
+                        <small>ONE POSSIBLE EXPRESSION</small>
+                        <p>{possibleGift}</p>
                       </div>
-                      <p className="text-sm text-amber-200/90 group-hover:text-spice-glow transition-colors">
-                        Tap to explore archetypal interpretation →
-                      </p>
+                    ) : null}
+
+                    {possibleDifficulty ? (
+                      <div className={styles.layer}>
+                        <small>ONE POSSIBLE COUNTERPOINT</small>
+                        <p>{possibleDifficulty}</p>
+                      </div>
+                    ) : null}
+
+                    {aspect.synthesis?.coreQuestion ? (
+                      <div className={styles.memberQuestion}>
+                        <small>FOR YOUR OWN RECOGNITION</small>
+                        <p>{aspect.synthesis.coreQuestion}</p>
+                      </div>
+                    ) : null}
+
+                    <Link href={'/astrology/aspects/' + aspect.planet1.toLowerCase() + '-' + aspect.type + '-' + aspect.planet2.toLowerCase()}>
+                      Open this aspect →
                     </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              /* Free user preview */
-              <div className="relative">
-                {/* Blurred preview of first 2 aspects */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 blur-sm opacity-50 pointer-events-none">
-                  {chartData.aspects.slice(0, 2).map((aspect, index) => {
-                    const aspectIcon = aspect.type === 'square' ? '□' :
-                      aspect.type === 'conjunction' ? '☌' :
-                        aspect.type === 'trine' ? '△' : '○';
-                    return (
-                      <div key={index} className="bg-black/30 border border-spice-sand/20 rounded-lg p-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl text-spice-orange">{aspectIcon}</span>
-                          <span className="text-dune-amber font-semibold">
-                            {aspect.planet1} {aspect.type} {aspect.planet2}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                {/* Upgrade overlay */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-lg">
-                  <Lock className="w-8 h-8 text-dune-amber mb-3" />
-                  <p className="text-dune-amber font-medium mb-2">
-                    {chartData.aspects.length} aspects in your chart
-                  </p>
-                  <p className="text-amber-200/90 text-sm mb-4 text-center px-4">
-                    Unlock detailed aspect interpretations with Personal Mentor
-                  </p>
-                  <Link
-                    href="/maia/membership"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-medium rounded-lg transition-colors"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Upgrade to unlock
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* North & South Nodes */}
-          {(chartData.northNode || chartData.southNode) && (
-          <div className="bg-black/40 backdrop-blur-md border border-navigator-purple/40 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
-              <span className="text-2xl">☊☋</span>
-              North & South Nodes
-            </h2>
-            <p className="text-amber-200/90 mb-6 text-sm tracking-wide">
-              Your soul's evolutionary path: past mastery and future growth
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* North Node */}
-              {chartData.northNode && (
-              <div className="bg-black/30 border border-atreides-green/40 rounded-lg p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">☊</span>
-                  <h3 className="text-xl font-bold text-green-400">North Node</h3>
-                </div>
-                <p className="text-lg font-semibold text-dune-amber mb-2">
-                  {chartData.northNode.sign} in {chartData.northNode.house}
-                  {chartData.northNode.house === 1 ? 'st' :
-                   chartData.northNode.house === 2 ? 'nd' :
-                   chartData.northNode.house === 3 ? 'rd' : 'th'} House
-                </p>
-                <p className="text-sm text-amber-200/90 mb-2">
-                  {chartData.northNode.degree.toFixed(1)}°
-                </p>
-                <p className="text-amber-200/90 text-sm mb-3">
-                  Your soul's calling toward {getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.facetName?.toLowerCase() || 'growth'} energy.
-                  {getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.archetypes?.mythological?.[0] &&
-                   ` Embrace the archetype of ${getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.archetypes?.mythological?.[0]}.`}
-                </p>
-              </div>
-              )}
-
-              {/* South Node */}
-              {chartData.southNode && (
-              <div className="bg-black/30 border border-dune-sienna-rock/40 rounded-lg p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">☋</span>
-                  <h3 className="text-xl font-bold text-orange-400">South Node</h3>
-                </div>
-                <p className="text-lg font-semibold text-dune-amber mb-2">
-                  {chartData.southNode.sign} in {chartData.southNode.house}
-                  {chartData.southNode.house === 1 ? 'st' :
-                   chartData.southNode.house === 2 ? 'nd' :
-                   chartData.southNode.house === 3 ? 'rd' : 'th'} House
-                </p>
-                <p className="text-sm text-amber-200/90 mb-2">
-                  {chartData.southNode.degree.toFixed(1)}°
-                </p>
-                <p className="text-amber-200/90 text-sm mb-3">
-                  Past life mastery in {getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.facetName?.toLowerCase() || 'expression'} energy.
-                  {getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.archetypes?.mythological?.[0] &&
-                   ` Release the shadow of ${getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.archetypes?.mythological?.[0]}.`}
-                </p>
-              </div>
+                  </article>
+                );
+              }) : (
+                <p className={styles.noInterpretation}>No major aspect interpretation from the current library is available for this chart.</p>
               )}
             </div>
-          </div>
+          </section>
+
+          {(chartData.northNode || chartData.southNode) && (
+            <section className={styles.nodeField} aria-label="Lunar node lens">
+              <header>
+                <div>
+                  <small>ONE SYMBOLIC TRADITION</small>
+                  <h2>The lunar nodes as an evolutionary lens</h2>
+                </div>
+                <p>
+                  Many modern Western astrology schools read the nodes as a tension between familiar patterning
+                  and qualities to explore. That is a symbolic tradition, not a calculated statement about destiny or past lives.
+                </p>
+              </header>
+
+              <div className={styles.nodeGrid}>
+                {chartData.northNode ? (
+                  <article>
+                    <small>CALCULATED NORTH NODE</small>
+                    <h3>{chartData.northNode.sign} · {chartData.northNode.degree.toFixed(1)}°</h3>
+                    <p>House {chartData.northNode.house}</p>
+                    <div>
+                      <span>TRADITIONAL READING</span>
+                      <p>
+                        This lens often treats the North Node as qualities worth experimenting with.
+                        Here the symbolic vocabulary is {getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.facetName?.toLowerCase() || chartData.northNode.sign.toLowerCase()}.
+                      </p>
+                    </div>
+                  </article>
+                ) : null}
+
+                {chartData.southNode ? (
+                  <article>
+                    <small>CALCULATED SOUTH NODE</small>
+                    <h3>{chartData.southNode.sign} · {chartData.southNode.degree.toFixed(1)}°</h3>
+                    <p>House {chartData.southNode.house}</p>
+                    <div>
+                      <span>TRADITIONAL READING</span>
+                      <p>
+                        This lens often treats the South Node as familiar or well-practiced patterning.
+                        Here the symbolic vocabulary is {getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.facetName?.toLowerCase() || chartData.southNode.sign.toLowerCase()}.
+                      </p>
+                    </div>
+                  </article>
+                ) : null}
+              </div>
+            </section>
           )}
 
-          {/* Current Transits */}
-          <div className="bg-black/40 backdrop-blur-md border border-dune-spice-blue/40 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
-              <span className="text-lg">🌙</span>
-              Current Transits & Activations
-            </h2>
-            <p className="text-amber-200/90 mb-6 text-sm tracking-wide">
-              Planetary movements currently influencing your chart
-            </p>
-
-            <div className="space-y-4">
-              <div className="bg-black/30 border border-spice-orange/30 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-spice-orange">Jupiter conjunct Natal Sun</h3>
-                  <span className="text-xs text-amber-200/70">Active Now</span>
-                </div>
-                <p className="text-amber-200/90 text-sm">
-                  A time of expansion and opportunity. Your philosophical nature is amplified, bringing growth in teaching, travel, or higher learning.
-                </p>
+          <section className={styles.currentSky} aria-label="Current sky">
+            <header>
+              <div>
+                <small>NOW · CALCULATED SKY</small>
+                <h2>The current sky is a separate layer</h2>
               </div>
+              <p>
+                Current planetary positions are facts about the sky now. They become natal activations only when
+                an actual aspect to your birth chart is calculated.
+              </p>
+            </header>
 
-              <div className="bg-black/30 border border-fremen-azure/30 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-sky-400">Saturn trine Natal Moon</h3>
-                  <span className="text-xs text-amber-200/70">Approaching</span>
+            {!showTransits ? (
+              <button type="button" onClick={() => setShowTransits(true)}>Show the current sky →</button>
+            ) : transitLoading ? (
+              <p className={styles.skyStatus}>Calculating the current positions…</p>
+            ) : transitPositions.length ? (
+              <>
+                <div className={styles.skyGrid}>
+                  {transitPositions.slice(0, 10).map((transit) => (
+                    <div key={transit.planet}>
+                      <small>{transit.planet}</small>
+                      <strong>{transit.sign} · {transit.degree.toFixed(1)}°</strong>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-amber-200/90 text-sm">
-                  Emotional maturity and structure. A supportive time for grounding feelings and building sustainable emotional foundations.
+                <p className={styles.skyBoundary}>
+                  No natal influence is inferred here. This view shows the current sky only.
                 </p>
-              </div>
-            </div>
-          </div>
+                <button type="button" onClick={() => setShowTransits(false)}>Hide current sky</button>
+              </>
+            ) : (
+              <p className={styles.skyStatus}>The current sky could not be calculated just now.</p>
+            )}
+          </section>
 
           {/* Alien Patterns — Steinbrecher transpersonal forces */}
           {alienPatterns.length > 0 && (
           <div className="bg-black/40 backdrop-blur-md border border-amber-800/30 rounded-lg p-6 mb-12 shadow-xl">
             <div className="text-center mb-6">
               <p className="text-xs tracking-widest uppercase mb-2 text-amber-500/60">
-                After Steinbrecher
+                STEINBRECHER LENS
               </p>
               <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-3">
-                Forces Active in Your Field
+                One symbolic reading of outer-planet patterns
               </h2>
               <div className="max-w-2xl mx-auto text-sm text-amber-200/70 leading-relaxed space-y-2">
                 <p>
-                  In the Inner Guide Meditation tradition, certain natal configurations create what Edward Steinbrecher called &ldquo;alien patterns&rdquo; — places where transpersonal forces (Saturn, Uranus, Neptune, Pluto) fuse with personal points (Sun, Moon, Ascendant).
+                  In the Inner Guide Meditation tradition, certain natal configurations are interpreted through what Edward Steinbrecher called &ldquo;alien patterns&rdquo; — a symbolic framework for reading contacts between outer planets and personal points.
                 </p>
                 <p>
-                  These are not personality labels. They describe archetypal forces that operate through you — whether you intend them to or not. Brought to consciousness through the guide work, they become precision instruments. Left unconscious, they manifest as compulsive patterns and intense reactions from others.
+                  Soullab presents this as one tradition, not as a fact about what operates through you. The configuration is calculated; the meaning belongs to the interpretive framework and remains something to test against lived experience.
                 </p>
                 <p className="text-amber-200/50 text-xs italic">
-                  Power = Sun fused with outer planet (you radiate it) · Vessel = Moon fused (you magnetize it in others) · Instrument = outer planet in 1st house (it operates through your body) · Adept = missing element or mode (you instinctively understand what you cannot easily access)
+                  In this tradition: Power names a Sun contact · Vessel names a Moon contact · Instrument names a first-house/Ascendant contact · Adept names an absent element or mode.
                 </p>
               </div>
             </div>
@@ -1601,9 +1641,10 @@ export default function AstrologyPage() {
                       }
                     </span>
                   </div>
-                  <p className="text-sm leading-relaxed text-amber-200/80">
-                    {pattern.description}
-                  </p>
+                  <div className={styles.traditionQuote}>
+                    <small>THIS TRADITION DESCRIBES THE PATTERN AS</small>
+                    <p>{pattern.description}</p>
+                  </div>
                   {pattern.livePrompt && (
                     <p className="text-sm italic mt-3 pt-3 border-t border-amber-800/10 text-amber-300/60">
                       {pattern.livePrompt}
@@ -1790,7 +1831,7 @@ export default function AstrologyPage() {
                         Chinese Astrology
                       </h3>
                       <p className="text-amber-200/90 text-sm">
-                        Explore your zodiac animal, element, and cosmic destiny →
+                        Explore your zodiac animal, element, and traditional cycle symbolism →
                       </p>
                     </div>
                   </Link>
@@ -1806,7 +1847,7 @@ export default function AstrologyPage() {
                         Synastry
                       </h3>
                       <p className="text-amber-200/90 text-sm">
-                        Compare two charts for harmony, friction, and soul-growth vectors →
+                        Compare two charts through relationship patterns and symbolic dynamics →
                       </p>
                     </div>
                   </Link>
@@ -1852,7 +1893,7 @@ export default function AstrologyPage() {
                           <Lock className="w-4 h-4" />
                         </h3>
                         <p className="text-amber-200/70 text-sm">
-                          Zodiac animal, element, cosmic destiny
+                          Zodiac animal, element, and traditional cycle symbolism
                         </p>
                       </div>
                     </div>
@@ -1960,6 +2001,6 @@ export default function AstrologyPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

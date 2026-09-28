@@ -1536,6 +1536,14 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🚪 [FAST] Knowledge Gate addendum applied: source well modulation injected`);
   }
 
+  // 📓 JOURNAL ENCOUNTER: current kept entry + transient in-room conversation,
+  // resolved by the Journal server after ownership verification. This is current
+  // member-authored context, not cross-session recall.
+  const journalContextAddendum = (meta as any)?.journalContextAddendum as string | undefined;
+  if (journalContextAddendum) {
+    console.log(`📓 [FAST] Journal encounter context applied (${journalContextAddendum.length} chars)`);
+  }
+
   // 🕸️ MEMBER WEB: Patterns + session summaries + journals — the threads of the web
   const memberWebAddendum = (meta as any)?.memberWebAddendum as string | undefined;
   if (memberWebAddendum) {
@@ -1665,7 +1673,7 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${PLATFORM_KNOWLEDGE_ADDENDUM}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${teachingIntelligenceAddendum ? '\n\n' + teachingIntelligenceAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${divinationIntentAddendum ? '\n\n' + divinationIntentAddendum : ''}${divinationCastAddendum ? '\n\n' + divinationCastAddendum : ''}${divinationInterpretationAddendum ? '\n\n' + divinationInterpretationAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${journalContextAddendum ? '\n\n' + journalContextAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${teachingIntelligenceAddendum ? '\n\n' + teachingIntelligenceAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${divinationIntentAddendum ? '\n\n' + divinationIntentAddendum : ''}${divinationCastAddendum ? '\n\n' + divinationCastAddendum : ''}${divinationInterpretationAddendum ? '\n\n' + divinationInterpretationAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -2039,6 +2047,8 @@ async function corePathResponse(
     governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
     // 🎓 T8 current-turn teaching authority
     teachingIntelligenceAddendum: (meta as any)?.teachingIntelligenceAddendum as string | undefined,
+    // 📓 JOURNAL ENCOUNTER: current kept entry + transient conversation context
+    journalContextAddendum: (meta as any)?.journalContextAddendum as string | undefined,
     // 🕸️ MEMBER WEB: Patterns + session summaries + journals
     memberWebAddendum: (meta as any)?.memberWebAddendum as string | undefined,
     // 🌟 ASTROLOGY: Natal chart + cosmic weather context
@@ -2621,6 +2631,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     metaAwareness: conversationContext.profile.conversationPhase === 'transcending' || conversationContext.profile.dominantElement === 'aether',
     governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
     teachingIntelligenceAddendum: (meta as any)?.teachingIntelligenceAddendum as string | undefined,
+    journalContextAddendum: (meta as any)?.journalContextAddendum as string | undefined,
   };
 
   // STEP 1: MAIA generates initial response using local consciousness processing
@@ -2692,6 +2703,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // T8 is instruction, not source evidence, so it participates on both local
         // and consultation stages without duplicating source content.
         (meta as any)?.teachingIntelligenceAddendum,
+        (meta as any)?.journalContextAddendum,
         (meta as any)?.conversationalRecallAddendum,
         (meta as any)?.episodicRecallAddendum,
         (meta as any)?.atomsAddendum,
@@ -2835,6 +2847,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
         // 🎓 T8 current-turn teaching authority
         teachingIntelligenceAddendum: (meta as any)?.teachingIntelligenceAddendum as string | undefined,
+        // 📓 JOURNAL ENCOUNTER: current kept entry + transient conversation context
+        journalContextAddendum: (meta as any)?.journalContextAddendum as string | undefined,
         // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
         consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
         // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
@@ -3690,6 +3704,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           loaded: m.divinationReadingsCount ?? 0,
           injected: !!(m.divinationIntentAddendum || m.divinationCastAddendum || m.divinationInterpretationAddendum),
         },
+        journalCurrent: !!m.journalContextAddendum,
         dreams: false,   // layer not wired
       };
       const evidenceProviders = [
@@ -3698,6 +3713,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         available.astrology && 'astrology',
         available.wuXing && 'wuXing',
         available.memberWeb && 'memberWeb',
+        available.journalCurrent && 'journalCurrent',
         available.knowledgeGate && 'knowledgeGate',
         available.memoryOrchestrator && 'memoryOrchestrator',
         available.episodic && 'episodicRecall',

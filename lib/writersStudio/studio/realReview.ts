@@ -156,18 +156,18 @@ function payload(v: unknown): v is StoredReadingPayload {
     && (s.heading === null || typeof s.heading === 'string'));
 }
 
-function lensId(lens: DevelopmentalLens): LensId {
+function reviewLensId(lens: DevelopmentalLens): LensId | null {
   switch (lens) {
     case 'development': case 'structure': case 'continuity': case 'arc':
     case 'voice': case 'coherence': case 'reader': return lens;
+    case 'themes': return null;
   }
 }
 
-function developDomain(lens: DevelopmentalLens): DevelopDomain | null {
+function developDomain(lens: DevelopmentalLens): DevelopDomain {
   switch (lens) {
     case 'development': case 'structure': case 'continuity': case 'arc':
-    case 'voice': case 'reader': return lens;
-    case 'coherence': return null;
+    case 'themes': case 'voice': case 'coherence': case 'reader': return lens;
   }
 }
 
@@ -223,13 +223,15 @@ function buildFinding(
   if (!sectionId) return { ok: false, reason: 'malformed_payload', detail: `${o.observationId} position is outside the frozen topology` };
 
   const domain = developDomain(o.lens);
-  if (domain === null) {
-    return { ok: false, reason: 'presentation_refused', detail: `${o.observationId}: coherence is not representable in frozen DevelopDomain` };
-  }
   const ids = new Set(o.evidenceRefs.flatMap(sectionIds));
   const crossWork = ids.size > 1 || o.evidenceRefs.some((r) => r.kind.startsWith('structure'));
   const evidence = o.evidenceRefs.map((r) => describeRef(r, reading.readState, sections));
-  const label = o.phenomenon === undefined ? 'Observation' : PHENOMENON_LABEL[o.phenomenon];
+  if (o.lens === 'themes' && !o.themeLabel?.trim()) {
+    return { ok: false, reason: 'malformed_payload', detail: `${o.observationId}: Themes observation has no frozen themeLabel` };
+  }
+  const label = o.lens === 'themes'
+    ? o.themeLabel!.trim()
+    : (o.phenomenon === undefined ? 'Observation' : PHENOMENON_LABEL[o.phenomenon]);
   const built = observe({
     id: o.observationId,
     domain,
@@ -313,6 +315,10 @@ export function mapRealReview(input: RealReviewInput): RealReviewOutcome {
     return { kind: 'unavailable', reason: 'frozen_citation_text_unavailable', detail: 'reading is stale but Review citation prose is unavailable' };
   }
 
+  const reviewLens = reviewLensId(reading.scope.commissionedLens);
+  if (!reviewLens) {
+    return { kind: 'unavailable', reason: 'presentation_refused', detail: 'Themes belongs to Develop, not Review' };
+  }
   const availability = reading.outcome === 'none'
     ? ({ kind: 'read-nothing-noticed' } as const)
     : ({ kind: 'read', found: findings.length } as const);
@@ -326,7 +332,7 @@ export function mapRealReview(input: RealReviewInput): RealReviewOutcome {
       freshness: { kind: 'current', when: reading.provenance.frozenAt },
       coverage: coverageOf(reading),
       findings,
-      lenses: [{ id: lensId(reading.scope.commissionedLens), availability }],
+      lenses: [{ id: reviewLens, availability }],
       context: input.host.context,
     },
   };

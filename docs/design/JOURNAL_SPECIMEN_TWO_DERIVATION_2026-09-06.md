@@ -218,3 +218,21 @@ unauthorized ambient handle (done — see Ruling 2).
 pattern, and canonical conversational continuity is not yet demonstrated as part
 of any shared invariant. No extraction. Walk Journal first, then compare two
 completed specimens.
+
+---
+
+## 9. Founder supersession — 2026-09-27
+
+Live founder use supplied the Journal-native reason that did **not** exist on 2026-09-06: after the one-shot reflection, the member explicitly wanted to keep talking with MAIA and could not. The earlier B1 ruling therefore became an experiential defect rather than a protective simplification.
+
+The founder authorized continuation on Journal's own merits. The resulting implementation preserves the original A/C/D/E laws while changing B:
+
+- the kept entry remains primary;
+- MAIA still enters only after `Reflect with MAIA` on kept writing;
+- conversation may continue in place for as many turns as the member wants;
+- `Let it rest` returns to the same kept entry without penalty;
+- `Write from here` remains an optional member-authored carry-back gesture;
+- MAIA cognition is canonical sovereign MAIA, not a Journal-specific persona;
+- persistence is **not** canonicalized with identity: Journal uses Sanctuary and ephemeral encounter identity, so conversation content remains transient unless the member explicitly carries something out.
+
+This supersedes Ruling 1 above. It also refines the original five-property hypothesis: what survives across rooms is not necessarily one durable transcript. The stronger invariant is **one MAIA entering a member-owned place without displacing its subject, while the room retains authority over persistence posture.**

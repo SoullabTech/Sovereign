@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { useMaiaPlace } from '@/components/maia/presence/MaiaPresence';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -44,6 +44,7 @@ import ClientInquiryPanel from '@/components/studio/practitioner/ClientInquiryPa
 import OccupancyRatingWidget from '@/components/studio/practitioner/OccupancyRatingWidget';
 import ProtocolSelector from '@/components/studio/practitioner/ProtocolSelector';
 import type { PractitionerLoopState } from '@/lib/studio/practitioner/types';
+import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
 
 const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label: string }> = {
   'leadership-power': { icon: Flame, color: 'text-red-400', label: 'Power Dynamics' },
@@ -418,10 +419,12 @@ function ContinueDecisionForm({
   onSubmit,
   consulting,
   situationType,
+  personal,
 }: {
   onSubmit: (sessionNotes: string, emotionalState?: string) => void;
   consulting: boolean;
   situationType: string | null;
+  personal: boolean;
 }) {
   const [sessionNotes, setSessionNotes] = useState('');
   const [emotionalState, setEmotionalState] = useState('');
@@ -446,11 +449,11 @@ function ContinueDecisionForm({
       animate={{ opacity: 1, y: 0 }}
       className="rounded-lg border border-amber-900/30 bg-amber-950/10 p-4 space-y-3"
     >
-      <h3 className="text-sm font-medium text-amber-300">What happened since last session?</h3>
+      <h3 className="text-sm font-medium text-amber-300">{personal ? 'What happened since?' : 'What happened since last session?'}</h3>
       <textarea
         value={sessionNotes}
         onChange={e => setSessionNotes(e.target.value)}
-        placeholder="What landed? What didn't? What emerged? What did the client reveal?"
+        placeholder={personal ? "What landed? What changed? What became clearer?" : "What landed? What didn't? What emerged? What did the client reveal?"}
         rows={4}
         autoFocus
         className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none resize-none"
@@ -463,7 +466,7 @@ function ContinueDecisionForm({
           type="text"
           value={emotionalState}
           onChange={e => setEmotionalState(e.target.value)}
-          placeholder="Optional — has their state shifted?"
+          placeholder={personal ? 'Optional — has your state shifted?' : 'Optional — has their state shifted?'}
           className="w-full px-3 py-1.5 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none"
         />
       </div>
@@ -492,6 +495,9 @@ function ContinueDecisionForm({
 
 export default function DecisionDetailPage() {
   const params = useParams();
+  const pathname = usePathname();
+  const personalLens = pathname?.startsWith('/decisions') ?? false;
+  const basePath = personalLens ? '/decisions' : '/studio/decisions';
   const decisionId = params?.id as string;
   // 🚪 House Presence: declarative place facts (id only — never contents).
   useMaiaPlace({
@@ -526,16 +532,21 @@ export default function DecisionDetailPage() {
 
   useEffect(() => {
     loadDecision();
-    loadLoopState();
-  }, [decisionId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!personalLens) loadLoopState();
+  }, [decisionId, personalLens]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadLoopState() {
     try {
       const params = new URLSearchParams({ decisionId });
-      const [signalsData, inquiryData, obsData] = await Promise.all([
+      const [signalsRes, inquiryRes, obsRes] = await Promise.all([
         apiFetch(`/api/studio/field-signals?${params.toString()}`),
         apiFetch(`/api/studio/client-inquiry/responses?${params.toString()}`),
         apiFetch(`/api/studio/practitioner-observations?${params.toString()}`),
+      ]);
+      const [signalsData, inquiryData, obsData] = await Promise.all([
+        signalsRes.ok ? signalsRes.json() : Promise.resolve({ signals: [] }),
+        inquiryRes.ok ? inquiryRes.json() : Promise.resolve({ responses: [] }),
+        obsRes.ok ? obsRes.json() : Promise.resolve({ observations: [] }),
       ]);
       setFieldSignalCount((signalsData.signals || []).length);
       setHasClientInquiry((inquiryData.responses || []).length > 0);
@@ -546,7 +557,7 @@ export default function DecisionDetailPage() {
   async function loadDecision() {
     setLoading(true);
     try {
-      const res = await apiFetch(`/api/studio/decisions/${decisionId}`);
+      const res = await apiFetch(`/api/studio/decisions/${decisionId}${personalLens ? '?scope=personal' : ''}`);
       if (res.ok) {
         const data = await res.json();
         setDecision(data.decision);
@@ -565,9 +576,9 @@ export default function DecisionDetailPage() {
       const body: Record<string, string> = {};
       if (sessionNotes?.trim()) body.sessionNotes = sessionNotes.trim();
       if (emotionalState?.trim()) body.emotionalState = emotionalState.trim();
-      if (selectedProtocolId) body.protocolId = selectedProtocolId;
+      if (!personalLens && selectedProtocolId) body.protocolId = selectedProtocolId;
 
-      const res = await apiFetch(`/api/studio/decisions/${decisionId}/consult`, {
+      const res = await apiFetch(`/api/studio/decisions/${decisionId}/consult${personalLens ? '?scope=personal' : ''}`, {
         method: 'POST',
         body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
       });
@@ -591,7 +602,7 @@ export default function DecisionDetailPage() {
   async function saveNotes() {
     setSaving(true);
     try {
-      await apiFetch(`/api/studio/decisions/${decisionId}`, {
+      await apiFetch(`/api/studio/decisions/${decisionId}${personalLens ? '?scope=personal' : ''}`, {
         method: 'PUT',
         body: JSON.stringify({ consultantNotes: notes, questionsForLeader: questions }),
       });
@@ -604,7 +615,7 @@ export default function DecisionDetailPage() {
 
   async function updateStatus(status: 'complete' | 'active') {
     try {
-      const res = await apiFetch(`/api/studio/decisions/${decisionId}`, {
+      const res = await apiFetch(`/api/studio/decisions/${decisionId}${personalLens ? '?scope=personal' : ''}`, {
         method: 'PUT',
         body: JSON.stringify({ status }),
       });
@@ -659,11 +670,13 @@ export default function DecisionDetailPage() {
 
   const loopState: PractitionerLoopState = {
     fieldSignalCount,
-    hasClientInquiry,
+    inquiryCount: hasClientInquiry ? 1 : 0,
     observationCount,
-    hasCouncilSynthesis: !!council,
-    hasExperiment: false,
-    hasFollowUp: !!(decision.followUpIntention),
+    councilIterationCount: decision.iterationCount || 0,
+    experimentCount: 0,
+    hasMentorReflection: !!decision.mentorReflection,
+    hasFollowUp: !!decision.followUpIntention,
+    currentOccupancyScore,
   };
   const priorIterations = decision.iterations?.slice(0, -1) || [];
   const isResolved = decision.status === 'complete';
@@ -673,7 +686,7 @@ export default function DecisionDetailPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <Link href="/studio/decisions" className="text-slate-400 hover:text-white transition-colors">
+          <Link href={basePath} className="text-slate-400 hover:text-white transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="flex-1">
@@ -710,10 +723,27 @@ export default function DecisionDetailPage() {
           </div>
         </div>
 
-        {/* Practitioner Loop Indicator */}
-        <div className="mb-4">
-          <PractitionerLoopIndicator state={loopState} />
-        </div>
+        {personalLens ? (
+          <div className="mb-5">
+            <FacetOriginTrail
+              targetFacet="decisions"
+              targetRefId={decisionId}
+            />
+            <a
+              href={`/maia/anchor?from=house&sourceFacet=decisions&sourceRefId=${encodeURIComponent(decisionId)}&crossingId=decision-hold-today`}
+              className="inline-block mt-3 text-xs text-amber-400/65 hover:text-amber-300 transition-colors"
+            >
+              Hold this choice today →
+            </a>
+          </div>
+        ) : null}
+
+        {/* Practice-only evidence loop. Personal Decisions do not assume practitioner identity. */}
+        {!personalLens && (
+          <div className="mb-4">
+            <PractitionerLoopIndicator state={loopState} />
+          </div>
+        )}
 
         {/* Context */}
         <div className="rounded-lg border border-slate-800/60 bg-slate-900/30 p-4 mb-6">
@@ -746,39 +776,40 @@ export default function DecisionDetailPage() {
           </div>
         </div>
 
-        {/* Evidence — Field Signals, Client Inquiry, Practitioner Observations */}
-        <div className="mb-6 rounded-lg border border-slate-800/60 bg-slate-900/20 overflow-hidden">
-          <button
-            onClick={() => setEvidenceOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-900/40 transition-colors"
-          >
-            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Evidence</span>
-            <span className="text-xs text-slate-600">{evidenceOpen ? 'hide' : 'show'}</span>
-          </button>
-          {evidenceOpen && (
-            <div className="px-4 pb-4 border-t border-slate-800/60 pt-4 space-y-6">
-              {/* Protocol selector — persisted, orients the evidence loop and biases the council */}
-              <ProtocolSelector
-                decisionId={decisionId}
-                clientId={decision.clientId || null}
-                occupancyScore={currentOccupancyScore}
-                onProtocolChange={setSelectedProtocolId}
-              />
-              <div className="border-t border-slate-800/60 pt-6">
-                <FieldSignalsPanel decisionId={decisionId} />
-              </div>
-              <div className="border-t border-slate-800/60 pt-6">
-                <ClientInquiryPanel
+        {/* Evidence — practice membrane only. */}
+        {!personalLens && (
+          <div className="mb-6 rounded-lg border border-slate-800/60 bg-slate-900/20 overflow-hidden">
+            <button
+              onClick={() => setEvidenceOpen((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-900/40 transition-colors"
+            >
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Evidence</span>
+              <span className="text-xs text-slate-600">{evidenceOpen ? 'hide' : 'show'}</span>
+            </button>
+            {evidenceOpen && (
+              <div className="px-4 pb-4 border-t border-slate-800/60 pt-4 space-y-6">
+                <ProtocolSelector
                   decisionId={decisionId}
-                  clientName={decision.clientName || null}
+                  clientId={decision.clientId || null}
+                  occupancyScore={currentOccupancyScore}
+                  onProtocolChange={setSelectedProtocolId}
                 />
+                <div className="border-t border-slate-800/60 pt-6">
+                  <FieldSignalsPanel decisionId={decisionId} />
+                </div>
+                <div className="border-t border-slate-800/60 pt-6">
+                  <ClientInquiryPanel
+                    decisionId={decisionId}
+                    clientName={decision.clientName || null}
+                  />
+                </div>
+                <div className="border-t border-slate-800/60 pt-6">
+                  <PractitionerObservationsPanel decisionId={decisionId} />
+                </div>
               </div>
-              <div className="border-t border-slate-800/60 pt-6">
-                <PractitionerObservationsPanel decisionId={decisionId} />
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Council Error */}
         {consultError && (
@@ -839,8 +870,8 @@ export default function DecisionDetailPage() {
           </div>
         )}
 
-        {/* Relational Occupancy Rating (post-session) */}
-        {council && (
+        {/* Relational occupancy is a practice instrument, not a personal requirement. */}
+        {!personalLens && council && (
           <div className="mt-4 rounded-lg border border-slate-800/60 bg-slate-900/20 p-4">
             <OccupancyRatingWidget
               decisionId={decisionId}
@@ -854,6 +885,7 @@ export default function DecisionDetailPage() {
           <div className="mt-6">
             <MentorPanel
               decisionId={decisionId}
+              scope={personalLens ? 'personal' : 'practice'}
               council={council}
               situationType={decision.situationType}
               timePressure={decision.timePressure}
@@ -875,12 +907,14 @@ export default function DecisionDetailPage() {
           <div className="mt-6 space-y-6">
             <DecisionChain
               decisionId={decisionId}
+              basePath={basePath}
               decisionTitle={decision.title}
               parentDecision={decision.parentDecision || null}
               childDecisions={decision.childDecisions || []}
             />
             <ExperienceTimeline
               decisionId={decisionId}
+              scope={personalLens ? 'personal' : 'practice'}
               experiences={decision.experiences || []}
               onExperienceAdded={(experience) => {
                 setDecision(prev => prev ? {
@@ -900,6 +934,7 @@ export default function DecisionDetailPage() {
                 onSubmit={(notes, state) => runCouncil(notes, state)}
                 consulting={consulting}
                 situationType={decision.situationType}
+                personal={personalLens}
               />
             )}
             {decision.status === 'active' && (
@@ -949,8 +984,8 @@ export default function DecisionDetailPage() {
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder={decision.situationType === 'self'
-                ? 'What am I noticing? What patterns might be active in me?'
+              placeholder={personalLens || decision.situationType === 'self'
+                ? 'What am I noticing? What patterns or possibilities deserve another look?'
                 : 'What patterns do you see? What would you surface in the next session?'
               }
               rows={4}
@@ -960,7 +995,9 @@ export default function DecisionDetailPage() {
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-slate-300">{situationConfig.contextLabels.questionsLabel}</label>
+              <label className="text-sm font-medium text-slate-300">
+                {personalLens ? 'Questions to carry' : situationConfig.contextLabels.questionsLabel}
+              </label>
               {questions.length > 0 && (
                 <button
                   onClick={copyQuestions}

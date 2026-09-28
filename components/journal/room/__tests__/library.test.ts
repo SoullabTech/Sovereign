@@ -113,4 +113,20 @@ describe('navigation honesty', () => {
     const capture = corpus.find((i) => i.kind === 'capture')!;
     expect(capture.href).toBeUndefined();
   });
+
+  it('Decision continuity stays in the member personal membrane', async () => {
+    const { loadLibrary } = await import('../library');
+    const mockFetch = jest.spyOn(await import('@/lib/http/apiBase'), 'apiFetch');
+    mockFetch.mockImplementation(async (path: string) => {
+      const body = path.includes('/api/studio/decisions?scope=personal')
+        ? { decisions: [{ id: 'd1', title: 'Whether to stay', context: 'Weighing it.', createdAt: '2026-08-01T10:00:00.000Z' }] }
+        : {};
+      return { ok: true, json: async () => body } as unknown as Response;
+    });
+
+    const { items } = await loadLibrary([]);
+    expect(mockFetch).toHaveBeenCalledWith('/api/studio/decisions?scope=personal');
+    expect(items.find((i) => i.kind === 'decision')?.href).toBe('/decisions');
+    mockFetch.mockRestore();
+  });
 });

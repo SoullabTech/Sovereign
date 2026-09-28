@@ -1,0 +1,351 @@
+@font-face {
+  font-family: 'Journal Crimson';
+  src: url('/fonts/crimson-pro/crimson-pro-300-normal-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Journal Crimson';
+  src: url('/fonts/crimson-pro/crimson-pro-400-normal-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+.sanctum {
+  --journal-leather: #0d0a08;
+  --journal-leather-2: #17100c;
+  --journal-paper: #efe5d4;
+  --journal-paper-2: #f5eddf;
+  --journal-ink: #241c16;
+  --journal-muted: #716253;
+  --journal-ember: #7f431f;
+  --journal-gold: #a88a55;
+  min-height: 100svh;
+  padding: clamp(18px, 3vw, 48px);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(176,125,71,.12), transparent 31%),
+    linear-gradient(180deg, #17100c 0%, #0d0a08 58%, #090706 100%);
+  color: var(--journal-ink);
+}
+.sanctum::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.012), transparent 12%, transparent 88%, rgba(255,255,255,.01)),
+    radial-gradient(circle at 50% 18%, rgba(215,179,111,.08), transparent 24%);
+}
+.book {
+  position: relative;
+  width: min(980px, 100%);
+  min-height: calc(100svh - clamp(36px, 6vw, 96px));
+  margin: 0 auto;
+  border: 1px solid rgba(205,172,126,.28);
+  border-radius: 3px 7px 7px 3px;
+  overflow: hidden;
+  background: var(--journal-paper);
+  box-shadow:
+    0 26px 70px rgba(0,0,0,.42),
+    -14px 0 30px rgba(0,0,0,.16),
+    inset 20px 0 36px rgba(111,79,44,.045),
+    inset -1px 0 0 rgba(255,255,255,.45);
+}
+.book::before {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 16px;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(71,44,26,.2), rgba(255,255,255,.08) 55%, transparent);
+  box-shadow: 7px 0 18px rgba(74,45,26,.08);
+}
+.book::after {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: 14%;
+  top: 50%;
+  width: 190px;
+  height: 190px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background: rgba(127,67,31,.055);
+  -webkit-mask: url('/holoflower.svg') center / contain no-repeat;
+  mask: url('/holoflower.svg') center / contain no-repeat;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,.28));
+  opacity: .66;
+  animation: journalWatermarkBreath 18s ease-in-out infinite;
+}
+.book :global(main) {
+  /* Journal is bounded by the physical book, not the viewport. A global
+     landscape rule sets main to 100vw; without this local correction the
+     writing spine drifts right and is progressively clipped as the browser
+     widens beyond the 980px book. */
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  min-height: calc(100svh - clamp(36px, 6vw, 96px)) !important;
+  background:
+    linear-gradient(90deg, rgba(102,72,42,.035), transparent 8%, transparent 94%, rgba(102,72,42,.025)),
+    radial-gradient(circle at 30% 8%, rgba(255,255,255,.45), transparent 28%),
+    var(--journal-paper) !important;
+  font-family: 'Journal Crimson', Georgia, serif;
+}
+.book :global(main)::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(91, 64, 41, .055) 8%,
+    rgba(91, 64, 41, .10) 48%,
+    rgba(91, 64, 41, .065) 90%,
+    transparent 100%
+  );
+}
+.book :global(main > *) {
+  position: relative;
+  z-index: 1;
+}
+.book :global(main) {
+  position: relative;
+}
+.book :global(main[aria-labelledby='journal-question']) {
+  background:
+    radial-gradient(circle at 72% 16%, rgba(151,111,61,.055), transparent 21%),
+    linear-gradient(90deg, rgba(102,72,42,.035), transparent 8%, transparent 94%, rgba(102,72,42,.025)),
+    var(--journal-paper) !important;
+}
+.book :global(#journal-question) {
+  max-width: 11ch;
+  color: var(--journal-ink) !important;
+  font-family: 'Journal Crimson', Georgia, serif !important;
+  font-size: clamp(2.55rem, 5vw, 4.15rem) !important;
+  font-weight: 300 !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.025em !important;
+}
+.book :global(main[aria-labelledby='journal-question'] > div:first-of-type) {
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(127,67,31,.12);
+}
+.book :global(main[aria-labelledby='journal-question'] > div:nth-of-type(2)) {
+  justify-content: center;
+}
+.book :global(main[aria-labelledby='journal-question'] button) {
+  font-family: 'Journal Crimson', Georgia, serif;
+}
+.book :global(main[aria-labelledby='journal-question'] > div:nth-of-type(2) > div button:first-child) {
+  position: relative;
+  width: fit-content;
+  color: var(--journal-ember) !important;
+  font-size: 1.28rem !important;
+  font-style: italic;
+  letter-spacing: .01em;
+}
+.book :global(main[aria-labelledby='journal-question'] > div:nth-of-type(2) > div button:first-child)::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: -28px;
+  bottom: 4px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(127,67,31,.72), rgba(168,138,85,.18));
+}
+.book :global(main[aria-labelledby='journal-question'] > div:nth-of-type(2) > div button:nth-child(2)) {
+  color: var(--journal-muted) !important;
+  font-size: .9rem !important;
+}
+.book :global(main[aria-labelledby='journal-question'] > div:last-of-type button) {
+  position: relative;
+  padding-left: 18px;
+  color: #695a4c !important;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font: 600 .68rem/1.3 Arial, sans-serif !important;
+}
+.book :global(main[aria-labelledby='journal-question'] > div:last-of-type button)::before {
+  content: '▤';
+  position: absolute;
+  left: 0;
+  color: var(--journal-gold);
+}
+.book :global(main[aria-labelledby='journal-writing-heading']) {
+  background:
+    linear-gradient(90deg, transparent 0 12%, rgba(127,67,31,.10) 12% calc(12% + 1px), transparent calc(12% + 1px)),
+    repeating-linear-gradient(180deg, transparent 0 32px, rgba(78,59,42,.055) 32px 33px),
+    linear-gradient(90deg, rgba(102,72,42,.035), transparent 8%, transparent 94%, rgba(102,72,42,.025)),
+    var(--journal-paper-2) !important;
+}
+.book :global(main[aria-labelledby='journal-writing-heading'] textarea) {
+  color: var(--journal-ink) !important;
+  caret-color: var(--journal-ember);
+  font-family: 'Journal Crimson', Georgia, serif !important;
+  font-size: clamp(1.12rem, 1.5vw, 1.28rem) !important;
+  line-height: 1.78 !important;
+  letter-spacing: .002em;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.book :global(main[aria-labelledby='journal-writing-heading'] > div:nth-of-type(2):has(textarea:focus-visible)) {
+  border-left-color: rgba(127,67,31,.28);
+}
+.book :global(main[aria-labelledby='journal-writing-heading'] > div:first-of-type),
+.book :global(main[aria-labelledby='journal-reading-heading'] > div:first-of-type),
+.book :global(main[aria-labelledby='journal-browse-heading'] > div:first-of-type) {
+  border-bottom: 1px solid rgba(127,67,31,.11);
+  padding-bottom: 14px;
+}
+.book :global(main[aria-labelledby='journal-writing-heading'] > div:nth-of-type(2)) {
+  border-left: 1px solid rgba(127,67,31,.12);
+  padding-left: clamp(18px, 3vw, 34px);
+}
+.book :global(main[aria-labelledby='journal-reading-heading'] article) {
+  color: var(--journal-ink) !important;
+  font-family: 'Journal Crimson', Georgia, serif !important;
+  font-size: clamp(1.12rem, 1.5vw, 1.28rem) !important;
+  line-height: 1.82 !important;
+}
+.book :global(main[aria-labelledby='journal-reading-heading'] > div:nth-of-type(2)) {
+  border-left: 1px solid rgba(127,67,31,.10);
+  padding-left: clamp(18px, 3vw, 34px);
+}
+.book :global(main[aria-labelledby='journal-reading-heading'] section[aria-label='What MAIA noticed and asked']) {
+  margin-top: 3rem !important;
+  padding: 1.6rem 0 0 1.2rem;
+  border-top: 1px solid rgba(168,138,85,.26);
+  border-left: 2px solid rgba(168,138,85,.38);
+}
+.book :global(main[aria-labelledby='journal-reading-heading'] section[aria-label='What MAIA noticed and asked'] p:first-child) {
+  color: var(--journal-gold) !important;
+}
+.book :global(main[aria-labelledby='journal-browse-heading']) {
+  background:
+    linear-gradient(90deg, rgba(102,72,42,.035), transparent 8%, transparent 94%, rgba(102,72,42,.025)),
+    var(--journal-paper-2) !important;
+}
+.book :global(#journal-find) {
+  font-family: 'Journal Crimson', Georgia, serif !important;
+  font-size: 1.25rem !important;
+  border-bottom-color: rgba(127,67,31,.22) !important;
+}
+.book :global(main[aria-labelledby='journal-browse-heading'] ul) {
+  margin-top: .4rem;
+}
+.book :global(main[aria-labelledby='journal-browse-heading'] li) {
+  padding: .3rem 0 1rem;
+  border-bottom: 1px solid rgba(127,67,31,.095);
+}
+.book :global(main[aria-labelledby='journal-browse-heading'] li button),
+.book :global(main[aria-labelledby='journal-browse-heading'] li a) {
+  padding: .5rem 0;
+}
+.book :global(main[aria-labelledby='journal-browse-heading'] [role='group']) {
+  padding-bottom: .6rem;
+  border-bottom: 1px solid rgba(168,138,85,.15);
+}
+.book :global(textarea.journal-maia-composer) {
+  font-size: 17px !important;
+  line-height: 1.65 !important;
+}
+@media (min-width: 640px) {
+  .book :global(textarea.journal-maia-composer) {
+    font-size: 18px !important;
+  }
+}
+
+.book :global(button),
+.book :global(a) {
+  text-underline-offset: 4px;
+}
+.book :global(button:focus-visible),
+.book :global(a:focus-visible),
+.book :global(input:focus-visible),
+.book :global(textarea:focus-visible) {
+  outline-color: var(--journal-ember) !important;
+}
+@media (max-width: 700px) {
+  .sanctum { padding: 0; }
+  .book {
+    min-height: 100svh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .book::before { width: 10px; }
+  .book::after {
+    left: auto;
+    top: auto;
+    right: 18px;
+    bottom: 18px;
+    width: 42px;
+    height: 42px;
+    transform: none;
+  }
+  .book :global(main)::before { display: none; }
+  .book :global(#journal-question) {
+    font-size: clamp(2.5rem, 11vw, 3.45rem) !important;
+  }
+  .book :global(main[aria-labelledby='journal-writing-heading']) {
+    background:
+      linear-gradient(90deg, transparent 0 8%, rgba(127,67,31,.09) 8% calc(8% + 1px), transparent calc(8% + 1px)),
+      repeating-linear-gradient(180deg, transparent 0 32px, rgba(78,59,42,.045) 32px 33px),
+      var(--journal-paper-2) !important;
+  }
+  .book :global(main[aria-labelledby='journal-writing-heading'] > div:nth-of-type(2)),
+  .book :global(main[aria-labelledby='journal-reading-heading'] > div:nth-of-type(2)) {
+    padding-left: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sanctum *, .sanctum *::before, .sanctum *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.book :global([aria-label='Journal entry type']) {
+  padding-left: .2rem;
+  border-left: 1px solid rgba(168,138,85,.16);
+}
+
+.book :global([aria-label='Journal entry type'] button) {
+  position: relative;
+  letter-spacing: .17em !important;
+}
+
+.book :global([aria-label='Journal entry type'] button[aria-pressed='true'])::after {
+  content: '';
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 7px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(127,67,31,.72), transparent);
+}
+
+.book :global(#journal-place) {
+  color: var(--journal-ink) !important;
+  font-family: 'Journal Crimson', Georgia, serif !important;
+  font-size: .95rem !important;
+  letter-spacing: .01em;
+}
+
+@keyframes journalWatermarkBreath {
+  0%, 100% { opacity: .56; }
+  50% { opacity: .74; }
+}

@@ -1,56 +1,131 @@
 'use client';
 
-/**
- * ReflectionsFeed — the member's kept reflections.
- *
- * WHY THIS LIVES AT /reflections (founder ruling 2026-09-04): reflections are
- * MEMBER-OWNED content — /api/capsules is requireMemberId()-scoped and every
- * capsule is the member's own Keep. The feed used to live only under
- * app/labtools/, whose layout calls requireFounder(), so members pushed there
- * met a 403 screen. Journal had the same shape and was resolved the same way:
- * the House points at /journal, not /labtools/journal.
- *
- * The ruling went one step further than the Journal precedent: Reflections was
- * MOVED out of Lab Tools, not mirrored. app/labtools/reflections/ is deleted
- * and there is no second address. Lab Tools is instrumentation — a taxonomy of
- * instruments — and is ruled out of the House
- * (lib/navigation/houseDispositions.ts → labtools). Member content simply does
- * not belong in that namespace.
- *
- * ⛔ Do NOT reintroduce a /labtools/reflections mount. One place, one address.
- *
- * No new data, no new API, no new persistence: the same member-scoped endpoint
- * the lab page always used.
- */
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Search, Sparkles, Archive, Pin } from 'lucide-react';
-import CapsuleCard from '@/components/capsules/CapsuleCard';
-import type { CapsuleDTO } from '@/lib/capsules/types';
-
-// Geometric symbol for reflections
-const ReflectionSymbol = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 40 40" className={className} fill="none" stroke="currentColor" strokeWidth="1.5">
-    {/* Crystal/prism reflecting light */}
-    <polygon points="20,6 32,18 26,34 14,34 8,18" />
-    <line x1="20" y1="6" x2="20" y2="34" strokeDasharray="2 2" opacity="0.5" />
-    <line x1="8" y1="18" x2="32" y2="18" strokeDasharray="2 2" opacity="0.5" />
-  </svg>
-);
+import type { CapsuleDTO, Element } from '@/lib/capsules/types';
+import styles from '@/app/reflections/reflections-room.module.css';
 
 type FilterTab = 'all' | 'pinned' | 'drafts' | 'archived';
 
+const ELEMENT_TONES: Record<Element, string> = {
+  fire: '#d58a28',
+  water: '#6f94bd',
+  earth: '#9eae6e',
+  air: '#c9b995',
+  aether: '#9d7fb0',
+};
+
+function dateFor(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: new Date(iso).getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
+  });
+}
+
+function sourceLabel(source: CapsuleDTO['sourceType']) {
+  if (source === 'chat') return 'Conversation';
+  if (source === 'voice') return 'Voice';
+  if (source === 'journal') return 'Journal';
+  if (source === 'transcript') return 'Transcript';
+  if (source === 'astrology') return 'Astrology';
+  return 'Note';
+}
+
+function ReflectionMark({ element }: { element?: Element }) {
+  const tone = element ? ELEMENT_TONES[element] : '#d2b078';
+  return (
+    <span
+      className={styles.reflectionMark}
+      data-element={element ?? 'kept'}
+      style={{ '--gem-tone': tone } as React.CSSProperties}
+      aria-hidden="true"
+    />
+  );
+}
+
+interface ReflectionGemProps {
+  capsule: CapsuleDTO;
+  index: number;
+  onOpen: (id: string) => void;
+  onPin: (id: string, pinned: boolean) => void;
+  onArchive: (id: string) => void;
+}
+
+function ReflectionGem({ capsule, index, onOpen, onPin, onArchive }: ReflectionGemProps) {
+  const element = capsule.signals?.element;
+  const tone = element ? ELEMENT_TONES[element] : '#d2b078';
+  const gold = capsule.goldLines[0];
+
+  return (
+    <motion.article
+      className={styles.gem}
+      data-pinned={capsule.pinned ? 'true' : undefined}
+      data-draft={capsule.draft ? 'true' : undefined}
+      style={{ '--gem-tone': tone } as React.CSSProperties}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.04, 0.2), duration: 0.35 }}
+    >
+      <button
+        type="button"
+        className={styles.gemOpen}
+        onClick={() => onOpen(capsule.id)}
+        aria-label={`Open reflection: ${capsule.title}`}
+      >
+        <div className={styles.gemTopline}>
+          <ReflectionMark element={element} />
+          <div className={styles.gemProvenance}>
+            <span>{sourceLabel(capsule.sourceType)}</span>
+            <i aria-hidden="true">·</i>
+            <time dateTime={capsule.createdAt}>{dateFor(capsule.createdAt)}</time>
+          </div>
+          {capsule.draft ? <span className={styles.draftMark}>Unfinished</span> : null}
+        </div>
+
+        <h2>{capsule.title}</h2>
+        <p className={styles.gemSummary}>{capsule.summary}</p>
+
+        {gold ? (
+          <blockquote className={styles.goldLine}>
+            <p>“{gold.text}”</p>
+            {gold.speaker ? <cite>— {gold.speaker === 'maia' ? 'MAIA' : 'You'}</cite> : null}
+          </blockquote>
+        ) : null}
+
+        <div className={styles.gemReturn}>
+          <span>Return to this reflection</span>
+          <b aria-hidden="true">→</b>
+        </div>
+      </button>
+
+      <div className={styles.gemActions} aria-label="Reflection actions">
+        <button
+          type="button"
+          onClick={() => onPin(capsule.id, !capsule.pinned)}
+          aria-pressed={capsule.pinned}
+        >
+          {capsule.pinned ? 'Kept close' : 'Keep close'}
+        </button>
+        <span aria-hidden="true">·</span>
+        <button type="button" onClick={() => onArchive(capsule.id)}>
+          Archive
+        </button>
+      </div>
+    </motion.article>
+  );
+}
+
 export default function ReflectionsFeed() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [capsules, setCapsules] = useState<CapsuleDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
 
-  // Fetch capsules
   const fetchCapsules = useCallback(async () => {
     try {
       setLoading(true);
@@ -81,23 +156,22 @@ export default function ReflectionsFeed() {
           router.push('/signin');
           return;
         }
-        throw new Error('Failed to fetch reflections');
+        throw new Error('Reflections could not be opened just now');
       }
 
       const data = await response.json();
       setCapsules(data.capsules || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : 'Reflections could not be opened just now');
     } finally {
       setLoading(false);
     }
   }, [searchQuery, activeFilter, router]);
 
   useEffect(() => {
-    fetchCapsules();
+    void fetchCapsules();
   }, [fetchCapsules]);
 
-  // Handle pin/unpin
   const handlePin = async (id: string, pinned: boolean) => {
     try {
       await fetch(`/api/capsules/${id}`, {
@@ -105,13 +179,12 @@ export default function ReflectionsFeed() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pinned }),
       });
-      fetchCapsules();
+      void fetchCapsules();
     } catch (err) {
       console.error('Failed to pin capsule:', err);
     }
   };
 
-  // Handle archive
   const handleArchive = async (id: string) => {
     try {
       await fetch(`/api/capsules/${id}`, {
@@ -119,145 +192,112 @@ export default function ReflectionsFeed() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ archived: true }),
       });
-      fetchCapsules();
+      void fetchCapsules();
     } catch (err) {
       console.error('Failed to archive capsule:', err);
     }
   };
 
-  // Handle open
-  const handleOpen = (id: string) => {
-    router.push(`/reflections/${id}`);
-  };
-
-  const filterTabs: { key: FilterTab; label: string; icon: React.ReactNode }[] = [
-    { key: 'all', label: 'All', icon: null },
-    { key: 'pinned', label: 'Pinned', icon: <Pin className="w-3.5 h-3.5" /> },
-    { key: 'drafts', label: 'Drafts', icon: <Sparkles className="w-3.5 h-3.5" /> },
-    { key: 'archived', label: 'Archived', icon: <Archive className="w-3.5 h-3.5" /> },
+  const filters: Array<{ key: FilterTab; label: string }> = [
+    { key: 'all', label: 'All' },
+    { key: 'pinned', label: 'Kept close' },
+    { key: 'drafts', label: 'Unfinished' },
+    { key: 'archived', label: 'Archive' },
   ];
 
+  const fromHouse = searchParams?.get('from') === 'house';
+
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: 'linear-gradient(180deg, #f8f7f5 0%, #f4f3f0 50%, #f0efec 100%)' }}
-    >
-      <div className="max-w-2xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.push('/maia')}
-            className="flex items-center gap-2 text-stone-400 hover:text-stone-600 transition-colors text-[13px] tracking-wide"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to MAIA</span>
-          </button>
+    <section className={styles.reflections}>
+      <header className={styles.roomIntro}>
+        <div className={styles.introTitle}>
+          <span className={styles.roomSigil} aria-hidden="true" />
+          <p>REFLECTIONS</p>
+          <h1>What mattered,<br /><em>kept.</em></h1>
         </div>
-
-        {/* Title Section */}
-        <div className="text-center mb-10">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-xl bg-[#5a7a6f]/10 flex items-center justify-center">
-              <ReflectionSymbol className="w-8 h-8 text-[#5a7a6f]" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-light tracking-wide text-stone-800 mb-3">
-            Reflections — what's been remembered
-          </h1>
-          <p className="text-stone-500 text-[14px] tracking-wide leading-relaxed max-w-md mx-auto">
-            A place to return to what mattered
+        <div className={styles.introText}>
+          <p>
+            Not a record of everything. A place for the moments, recognitions and
+            words you chose not to lose.
           </p>
+          <span>{fromHouse ? 'A room within your House.' : 'Your kept reflections live here.'}</span>
         </div>
+      </header>
 
-        {/* Search & Filters */}
-        <div className="space-y-4 mb-8">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search reflections..."
-              className="w-full pl-11 pr-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-800 text-[14px] placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#5a7a6f]/20 focus:border-[#5a7a6f]"
-            />
-          </div>
+      <div className={styles.tools}>
+        <label className={styles.search}>
+          <span>FIND AMONG WHAT YOU’VE KEPT</span>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="A word, a title, a remembered phrase…"
+          />
+        </label>
 
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-2">
-            {filterTabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveFilter(tab.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] tracking-wide transition-all ${
-                  activeFilter === tab.key
-                    ? 'bg-[#5a7a6f] text-white'
-                    : 'bg-white text-stone-500 hover:bg-stone-100 border border-stone-200'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Content */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-[#5a7a6f]/20 border-t-[#5a7a6f] rounded-full animate-spin" />
-          </div>
-        ) : error ? (
-          <div className="text-center py-20">
-            <p className="text-red-500 text-[14px]">{error}</p>
+        <nav className={styles.filters} aria-label="Reflection views">
+          <span>VIEW</span>
+          {filters.map((filter) => (
             <button
-              onClick={fetchCapsules}
-              className="mt-4 text-[13px] text-stone-500 hover:text-stone-700 underline"
+              key={filter.key}
+              type="button"
+              aria-current={activeFilter === filter.key ? 'page' : undefined}
+              onClick={() => setActiveFilter(filter.key)}
             >
-              Try again
+              {filter.label}
             </button>
-          </div>
-        ) : capsules.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-20"
-          >
-            <div className="w-16 h-16 mx-auto mb-6 rounded-xl bg-[#D4B896]/10 flex items-center justify-center">
-              <Sparkles className="w-8 h-8 text-[#D4B896]" />
-            </div>
-            <h3 className="text-lg font-light text-stone-700 mb-2">Nothing has been kept yet</h3>
-            <p className="text-stone-500 text-[14px] mb-6 max-w-sm mx-auto">
-              When you keep the spirit of a conversation with MAIA, your reflections will appear here.
-            </p>
-            <button
-              onClick={() => router.push('/maia')}
-              className="flex items-center gap-2 mx-auto px-5 py-2.5 bg-[#5a7a6f] hover:bg-[#4a6a5f] text-white rounded-xl text-[13px] tracking-wide transition-colors"
-            >
-              <Sparkles className="w-4 h-4" />
-              Talk with MAIA
-            </button>
-          </motion.div>
-        ) : (
-          <div className="space-y-3">
-            {capsules.map((capsule, idx) => (
-              <motion.div
-                key={capsule.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-              >
-                <CapsuleCard
-                  capsule={capsule}
-                  onOpen={handleOpen}
-                  onPin={handlePin}
-                  onArchive={handleArchive}
-                />
-              </motion.div>
-            ))}
-          </div>
-        )}
+          ))}
+        </nav>
       </div>
-    </div>
+
+      <div className={styles.collectionMeta}>
+        <span>{loading ? 'Gathering what you kept…' : `${capsules.length} ${capsules.length === 1 ? 'reflection' : 'reflections'} here`}</span>
+        <i aria-hidden="true" />
+      </div>
+
+      {loading ? (
+        <div className={styles.loading} aria-label="Loading reflections">
+          <span />
+          <p>Gathering what you kept…</p>
+        </div>
+      ) : error ? (
+        <div className={styles.empty}>
+          <p>{error}</p>
+          <button type="button" onClick={() => void fetchCapsules()}>Try again</button>
+        </div>
+      ) : capsules.length === 0 ? (
+        <motion.div
+          className={styles.empty}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <span className={styles.emptyMark} aria-hidden="true" />
+          <h2>Nothing has been kept here yet.</h2>
+          <p>
+            When something matters enough to keep — a phrase, a recognition,
+            a turning point — it can return here.
+          </p>
+          <button type="button" onClick={() => router.push('/maia')}>Meet MAIA →</button>
+        </motion.div>
+      ) : (
+        <div className={styles.gemField} aria-label="Kept reflections">
+          {capsules.map((capsule, index) => (
+            <ReflectionGem
+              key={capsule.id}
+              capsule={capsule}
+              index={index}
+              onOpen={(id) => router.push(`/reflections/${id}`)}
+              onPin={handlePin}
+              onArchive={handleArchive}
+            />
+          ))}
+        </div>
+      )}
+
+      <footer className={styles.roomFoot}>
+        <span>What you keep can change how you return.</span>
+        <button type="button" onClick={() => router.push('/maia')}>Meet MAIA →</button>
+      </footer>
+    </section>
   );
 }

@@ -20,7 +20,7 @@
  * @see docs/design/references/JOURNAL_SLICE1_IMPLEMENTATION_CONTRACT.md
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { Arrival } from './Arrival';
 import { WritingSurface, type EntryType } from './WritingSurface';
@@ -37,15 +37,32 @@ import {
   type LibraryKind,
 } from './library';
 import { type, color, space, focus, hit, quiet, quietGroup, hitBlock, srOnly, spine, roomMaterial } from './tokens';
+import type { FacetCarryRef } from '@/components/house/FacetCarryNotice';
 
 type RoomState =
   | { name: 'arrival' }
-  | { name: 'writing'; variant: 'writing' | 'note'; fromQuestion?: string }
+  | {
+      name: 'writing';
+      variant: 'writing' | 'note';
+      fromQuestion?: string;
+      carrySourceRef?: FacetCarryRef | null;
+    }
   | { name: 'reading'; entry: JournalEntry; reflecting: boolean }
   | { name: 'browsing' };
 
-export function JournalRoom() {
-  const [state, setState] = useState<RoomState>({ name: 'arrival' });
+export function JournalRoom({
+  initialEntryId = null,
+  initialCarrySourceRef = null,
+}: {
+  initialEntryId?: string | null;
+  initialCarrySourceRef?: FacetCarryRef | null;
+}) {
+  const [state, setState] = useState<RoomState>(() =>
+    initialCarrySourceRef && !initialEntryId
+      ? { name: 'writing', variant: 'writing', carrySourceRef: initialCarrySourceRef }
+      : { name: 'arrival' },
+  );
+  const openedInitialEntry = useRef(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [ready, setReady] = useState(false);
   const [returnPiece, setReturnPiece] = useState<ReturnPiece | null>(null);
@@ -74,11 +91,22 @@ export function JournalRoom() {
   }, [load]);
 
   const keep = useCallback(
-    async (content: string, entryType: EntryType) => {
+    async (
+      content: string,
+      entryType: EntryType,
+      meta?: { place?: string; fromQuestion?: string },
+      sourceRef?: FacetCarryRef | null,
+    ) => {
       const res = await apiFetch('/api/journal/quick/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entryType, content, source: 'journal_room' }),
+        body: JSON.stringify({
+          entryType,
+          content,
+          source: 'journal_room',
+          meta: meta ?? null,
+          sourceRef: sourceRef ?? undefined,
+        }),
       });
       const json = await res.json().catch(() => null);
       if (!json?.success || !json.entryId) throw new Error('keep failed');
@@ -89,6 +117,8 @@ export function JournalRoom() {
         id: json.entryId,
         content,
         created_at: json.createdAt ?? new Date().toISOString(),
+        entry_type: entryType,
+        meta: json.meta ?? meta ?? null,
       };
       setState({ name: 'reading', entry, reflecting: false });
       void load();
@@ -104,12 +134,24 @@ export function JournalRoom() {
     [entries],
   );
 
+  // A cross-facet return carries identity only. Once the member's own Journal
+  // rows are loaded, reopen that exact entry a single time. Missing/stale ids
+  // simply leave Journal at its ordinary arrival; no content is accepted from
+  // the URL and no entry is synthesized.
+  useEffect(() => {
+    if (!initialEntryId || !ready || openedInitialEntry.current) return;
+    openedInitialEntry.current = true;
+    const entry = entries.find((item) => item.id === initialEntryId);
+    if (entry) setState({ name: 'reading', entry, reflecting: false });
+  }, [entries, initialEntryId, ready]);
+
   switch (state.name) {
     case 'writing':
       return (
         <WritingSurface
           variant={state.variant}
           fromQuestion={state.fromQuestion}
+          carrySourceRef={state.carrySourceRef}
           onKeep={keep}
           onLeave={() => setState({ name: 'arrival' })}
         />

@@ -87,7 +87,7 @@ export interface Address {
   readonly sectionId: string;
 }
 
-export type DevelopDomain = 'continuity' | 'voice' | 'themes' | 'structure' | 'development' | 'arc' | 'reader';
+export type DevelopDomain = 'continuity' | 'voice' | 'themes' | 'structure' | 'development' | 'arc' | 'coherence' | 'reader';
 
 export interface DevelopObservation {
   readonly id: string;

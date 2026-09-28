@@ -1,0 +1,844 @@
+@font-face {
+  font-family: 'Decision Crimson';
+  src: url('/fonts/crimson-pro/crimson-pro-300-normal-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Decision Crimson';
+  src: url('/fonts/crimson-pro/crimson-pro-400-normal-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+.room {
+  --decision-ground: #100d0a;
+  --decision-ink: #efe7d9;
+  --decision-muted: #baa991;
+  --decision-gold: #d7b36f;
+  --decision-rule: rgba(217,187,142,.22);
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  background: var(--decision-ground);
+  color: var(--decision-ink);
+  font-family: 'Decision Crimson', Georgia, serif;
+}
+.room::before {
+  content: '';
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(16,13,10,.18) 0%, rgba(16,13,10,.7) 42%, #100d0a 100%),
+    url('/house/house-architecture-7a638061.webp') center top / cover no-repeat;
+  opacity: .52;
+}
+.room::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(202,155,88,.08), transparent 34%),
+    linear-gradient(90deg, rgba(0,0,0,.18), transparent 20%, transparent 80%, rgba(0,0,0,.18));
+}
+.threshold {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 10px clamp(18px, 3vw, 42px);
+  border-bottom: 1px solid var(--decision-rule);
+  background: rgba(13,10,8,.86);
+  backdrop-filter: blur(16px);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  width: fit-content;
+  color: #eadfce;
+  text-decoration: none;
+  font: 11px/1 Arial, sans-serif;
+  letter-spacing: .24em;
+}
+.brand img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+.roomName {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  color: #d9c7aa;
+  white-space: nowrap;
+}
+.roomName span {
+  font: 8px/1.4 Arial, sans-serif;
+  letter-spacing: .3em;
+}
+.roomName b {
+  color: #f0dfc4;
+  font: 400 18px/1.2 'Decision Crimson', Georgia, serif;
+}
+.return {
+  justify-self: end;
+  color: #d7bb91;
+  text-decoration: none;
+  font: 13px/1.4 Arial, sans-serif;
+}
+.return:hover, .brand:hover { color: #ffe5bb; }
+.room :where(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid #dec096;
+  outline-offset: 3px;
+}
+.content {
+  position: relative;
+  z-index: 1;
+}
+.content > :global(.min-h-screen) {
+  min-height: calc(100svh - 68px) !important;
+}
+.content [class~="bg-slate-950"] {
+  background: transparent !important;
+}
+.content [class~="bg-slate-900"],
+.content [class~="bg-slate-900/20"],
+.content [class~="bg-slate-900/30"],
+.content [class~="bg-slate-900/50"] {
+  background-color: rgba(29,21,15,.62) !important;
+}
+.content [class~="bg-slate-800"],
+.content [class~="bg-slate-800/50"],
+.content [class~="bg-slate-800/60"],
+.content [class~="bg-slate-800/80"] {
+  background-color: rgba(54,39,26,.62) !important;
+}
+.content [class~="border-slate-600"],
+.content [class~="border-slate-700"],
+.content [class~="border-slate-700/50"],
+.content [class~="border-slate-800"],
+.content [class~="border-slate-800/40"],
+.content [class~="border-slate-800/60"] {
+  border-color: rgba(217,187,142,.23) !important;
+}
+.content [class~="text-white"],
+.content [class~="text-slate-300"],
+.content [class~="text-slate-300/80"] {
+  color: #eee4d4 !important;
+}
+.content [class~="text-slate-400"] {
+  color: #c7b8a2 !important;
+}
+.content [class~="text-slate-500"] {
+  color: #a99982 !important;
+}
+.content [class~="text-slate-600"],
+.content [class~="text-slate-700"] {
+  color: #867963 !important;
+}
+.content [class~="text-amber-100"],
+.content [class~="text-amber-200"],
+.content [class~="text-amber-200/70"] {
+  color: #efd7ad !important;
+}
+.content [class~="text-amber-300"],
+.content [class~="text-amber-400"],
+.content [class~="text-amber-400/50"],
+.content [class~="text-amber-400/70"],
+.content [class~="text-amber-400/80"],
+.content [class~="text-amber-500"] {
+  color: var(--decision-gold) !important;
+}
+.content [class~="bg-amber-600"] {
+  background-color: #9c6f35 !important;
+}
+.content [class~="bg-amber-600/30"],
+.content [class~="bg-amber-900/20"],
+.content [class~="bg-amber-900/30"],
+.content [class~="bg-amber-900/40"],
+.content [class~="bg-amber-950/10"] {
+  background-color: rgba(121,82,39,.25) !important;
+}
+.content [class~="border-amber-500/20"],
+.content [class~="border-amber-500/30"],
+.content [class~="border-amber-500/50"],
+.content [class~="border-amber-800/30"],
+.content [class~="border-amber-900/30"] {
+  border-color: rgba(215,179,111,.34) !important;
+}
+.content h1, .content h2, .content h3, .content h4 {
+  font-family: 'Decision Crimson', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -.01em;
+}
+.content h1 {
+  color: #f1e8d9 !important;
+  font-weight: 300;
+}
+.content input,
+.content textarea,
+.content select {
+  background-color: rgba(21,16,12,.74) !important;
+  border-color: rgba(217,187,142,.27) !important;
+  color: #efe7d9 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.015);
+}
+.content input::placeholder,
+.content textarea::placeholder {
+  color: #81735f !important;
+}
+.content option {
+  background: #17120e;
+  color: #efe7d9;
+}
+.content [class~="rounded-lg"] {
+  box-shadow: 0 14px 35px rgba(0,0,0,.08);
+}
+.content [class~="hover:bg-amber-500"]:hover {
+  background-color: #b48142 !important;
+}
+.content [class~="hover:bg-amber-500/10"]:hover {
+  background-color: rgba(181,129,66,.12) !important;
+}
+.content [class~="hover:bg-slate-900/40"]:hover {
+  background-color: rgba(51,36,24,.55) !important;
+}
+.content [class~="hover:border-slate-600"]:hover,
+.content [class~="hover:border-slate-700"]:hover {
+  border-color: rgba(217,187,142,.4) !important;
+}
+.content [class~="hover:border-amber-500/50"]:hover,
+.content [class~="hover:border-amber-700"]:hover,
+.content [class~="hover:border-amber-800/40"]:hover {
+  border-color: rgba(215,179,111,.58) !important;
+}
+.content [class~="hover:text-amber-200"]:hover,
+.content [class~="hover:text-amber-300"]:hover {
+  color: #f5dab0 !important;
+}
+@media (max-width: 700px) {
+  .threshold {
+    min-height: 58px;
+    grid-template-columns: 1fr auto;
+    padding: 8px 16px;
+  }
+  .roomName { display: none; }
+  .brand img { width: 28px; height: 28px; }
+  .brand { font-size: 10px; }
+  .return { font-size: 12px; }
+  .content > :global(.min-h-screen) {
+    min-height: calc(100svh - 58px) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room *, .room *::before, .room *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.decisionsThreshold{max-width:1180px;margin:0 auto;padding:64px 34px 96px}
+.decisionArrival{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.46fr);gap:52px;align-items:end}
+.decisionKicker{margin:0;color:#d1ad73;font:9px/1.5 Arial,sans-serif;letter-spacing:.32em;text-transform:uppercase}
+.decisionArrival h1{max-width:760px;margin:14px 0 12px;color:#f1e8d9;font-size:clamp(48px,5.1vw,76px);font-weight:300;line-height:.98;letter-spacing:-.026em}
+.decisionLead{max-width:680px;margin:0;color:#c0b09b;font-size:21px;line-height:1.46}
+.perspectiveNote{padding:20px 0 2px 20px;border-left:1px solid rgba(111,148,189,.28)}
+.perspectiveNote small{color:#88a0ba;font:8px/1.4 Arial,sans-serif;letter-spacing:.2em}
+.perspectiveNote p{margin:12px 0 0;color:#ab9d89;font-size:15px;line-height:1.5;font-style:italic}
+
+.decisionBegin{margin-top:44px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:18px}
+.decisionBeginCard{min-height:220px;padding:30px 32px;border:1px solid rgba(215,179,111,.28);border-radius:12px;background:
+linear-gradient(145deg,rgba(65,43,22,.32),rgba(17,14,11,.60));color:inherit;text-decoration:none;box-shadow:0 18px 48px rgba(0,0,0,.20)}
+.decisionBeginCard small,.decisionOrientation small,.openChoicesHead small,.resolvedChoices small{color:#c6a069;font:8px/1.4 Arial,sans-serif;letter-spacing:.22em}
+.decisionBeginCard h2{margin:30px 0 10px;font-size:36px;font-weight:300}
+.decisionBeginCard>p{max-width:560px;margin:0;color:#b7a894;font-size:17px;line-height:1.48}
+.decisionBeginCard>span{margin-top:24px;padding-top:16px;border-top:1px solid rgba(211,173,116,.14);display:flex;align-items:center;justify-content:space-between;color:#d6b67f;font-size:16px}
+.decisionBeginCard b{font-weight:400}
+.decisionOrientation{padding:26px;border:1px solid rgba(215,181,132,.12);border-radius:12px;background:rgba(9,9,8,.38)}
+.decisionOrientation small{color:#8da3bb}
+.decisionOrientation h3{margin:18px 0 12px;font-size:24px;font-weight:300}
+.decisionOrientation p{margin:0;color:#a99c8c;font-size:15px;line-height:1.5}
+
+.openChoices{margin-top:54px;padding-top:24px;border-top:1px solid rgba(215,181,132,.15)}
+.openChoicesHead{display:flex;align-items:end;justify-content:space-between;gap:24px}
+.openChoicesHead h2{margin:8px 0 0;font-size:34px;font-weight:300}
+.openChoicesHead>p{margin:0;color:#918576;font-size:14px;font-style:italic}
+.decisionGrid{margin-top:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.decisionCard{min-height:184px;padding:22px;border:1px solid rgba(215,181,132,.14);border-radius:10px;background:rgba(11,10,9,.48);color:inherit;text-decoration:none;transition:border-color .2s ease,transform .2s ease,background .2s ease}
+.decisionCard:hover{transform:translateY(-2px);border-color:rgba(215,181,132,.28);background:rgba(17,14,11,.56)}
+.decisionCardMeta{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.decisionCardMeta span{color:#8ba2bb;font:8px/1.4 Arial,sans-serif;letter-spacing:.17em;text-transform:uppercase}
+.decisionCardMeta time{color:#756c61;font-size:12px}
+.decisionCard h3{margin:20px 0 8px;font-size:24px;font-weight:400;line-height:1.08}
+.decisionCard>p{margin:0;color:#aa9c8b;font-size:15px;line-height:1.45}
+.decisionCard footer{margin-top:20px;padding-top:14px;border-top:1px solid rgba(215,181,132,.09);display:flex;align-items:center;justify-content:space-between;gap:12px;color:#8f8478;font-size:12px}
+.decisionCard footer b{font-weight:400;color:#d0ad75}
+.decisionLoading{min-height:180px;display:grid;place-items:center;color:#af9f8c}
+.decisionSpinner{width:22px;height:22px;animation:decisionSpin 1s linear infinite}
+@keyframes decisionSpin{to{transform:rotate(360deg)}}
+.decisionError{margin-top:20px;padding:18px;border:1px solid rgba(171,103,91,.28);border-radius:10px;background:rgba(95,44,37,.11);color:#d3a99f}
+.decisionEmpty{margin-top:20px;min-height:170px;padding:30px;display:grid;place-items:center;border:1px solid rgba(215,181,132,.10);border-radius:10px;background:rgba(9,9,8,.32);text-align:center}
+.decisionEmpty h3{margin:0 0 8px;font-size:24px;font-weight:300}
+.decisionEmpty p{max-width:470px;margin:0;color:#a89a89;line-height:1.45}
+
+.resolvedChoices{margin-top:48px;padding-top:22px;border-top:1px solid rgba(215,181,132,.12)}
+.resolvedChoices header{display:flex;align-items:baseline;justify-content:space-between;gap:24px}
+.resolvedChoices header p{margin:0;color:#807669;font-size:13px;font-style:italic}
+.resolvedChoices>div{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.resolvedChoices a{min-height:52px;padding:12px 0;display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid rgba(215,181,132,.08);color:#bbae9c;text-decoration:none}
+.resolvedChoices a span{font-size:16px}.resolvedChoices time{color:#756d63;font-size:12px}
+
+@media(prefers-reduced-motion:reduce){.decisionSpinner{animation:none}.decisionCard{transition:none}}
+@media(max-width:900px){.decisionArrival,.decisionBegin{grid-template-columns:1fr}.decisionGrid{grid-template-columns:1fr}}
+@media(max-width:640px){.decisionsThreshold{padding:38px 16px 72px}.decisionArrival h1{font-size:44px}.decisionLead{font-size:18px}.decisionBegin{margin-top:30px}.decisionBeginCard{min-height:190px;padding:24px}.decisionBeginCard h2{font-size:30px}.decisionOrientation{padding:20px}.openChoices{margin-top:38px}.openChoicesHead{align-items:flex-start;flex-direction:column;gap:8px}.resolvedChoices header{display:block}.resolvedChoices header p{margin-top:6px}.resolvedChoices>div{grid-template-columns:1fr}}
+
+.namingDecision{max-width:920px;margin:0 auto;padding:48px 30px 90px}
+.namingBack{display:inline-block;margin-bottom:26px;color:#9e907d;text-decoration:none;font-size:14px}
+.namingDecisionIntro h1{max-width:720px;margin:12px 0 10px;color:#f1e8d9;font-size:clamp(44px,4.8vw,68px);font-weight:300;line-height:.98;letter-spacing:-.025em}
+.namingDecisionIntro>p:last-child{max-width:680px;margin:0;color:#b4a591;font-size:18px;line-height:1.5}
+.parentDecision,.decisionCarry{margin-top:24px}
+.parentDecision{padding:16px 18px;border-left:1px solid rgba(111,148,189,.32);background:rgba(12,13,14,.22)}
+.parentDecision small{color:#8ca4bc;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em}
+.parentDecision p{margin:6px 0 3px;color:#d5c8b6;font-size:17px}
+.parentDecision span{color:#897d70;font-size:13px;font-style:italic}
+
+.decisionPaper{margin-top:30px;padding:36px 38px;border:1px solid rgba(255,255,255,.26);border-radius:10px;color:#342c24;background:linear-gradient(145deg,#f2e7d4,#e7d7bf);box-shadow:0 20px 58px rgba(0,0,0,.22)}
+.decisionPaper label{display:block;margin:0 0 8px;color:#756858;font:8px/1.4 Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase}
+.decisionPaper label+input{margin-bottom:28px}
+.decisionPaper input,.decisionPaper textarea{width:100%;border:0;border-bottom:1px solid rgba(91,71,50,.20);outline:0;background:transparent;color:#463a2f;font:22px/1.4 'Decision Crimson',Georgia,serif}
+.decisionPaper input{padding:8px 0 12px}.decisionPaper textarea{min-height:210px;padding:10px 0;resize:vertical;font-size:19px;line-height:1.55}
+.decisionPaper input::placeholder,.decisionPaper textarea::placeholder{color:#958674;opacity:.66}
+.decisionPaper>p{margin:18px 0 0;color:#786b5b;font-style:italic;font-size:14px}
+
+.decisionContextThreshold{margin-top:18px;padding:22px;border:1px solid rgba(215,181,132,.12);border-radius:10px;background:rgba(9,9,8,.36)}
+.decisionContextThreshold[data-open='false']>p{margin:0;color:#887d70;font-style:italic}
+.decisionContextThreshold header{display:flex;align-items:end;justify-content:space-between;gap:24px}
+.decisionContextThreshold header small{color:#8aa1ba;font:8px/1.4 Arial,sans-serif;letter-spacing:.2em}
+.decisionContextThreshold header h2{margin:7px 0 0;font-size:25px;font-weight:300}
+.decisionContextThreshold header>p{max-width:260px;margin:0;color:#887d70;font-size:13px;text-align:right}
+.decisionContextGrid{margin-top:18px;display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+.decisionContextGrid label{display:flex;flex-direction:column;gap:8px}
+.decisionContextGrid label:first-child{grid-row:span 2}
+.decisionContextGrid span{color:#aa9c89;font-size:14px}
+.decisionContextGrid input,.decisionContextGrid textarea,.decisionContextGrid select{width:100%;border:1px solid rgba(215,181,132,.16)!important;border-radius:9px;background:rgba(255,255,255,.015)!important;color:#ddd1c1!important;padding:12px 13px;font:15px/1.45 'Decision Crimson',Georgia,serif}
+.decisionContextGrid textarea{min-height:126px;resize:vertical}.decisionContextGrid input{min-height:44px}.decisionContextGrid select{min-height:44px}
+.decisionContextGrid input::placeholder,.decisionContextGrid textarea::placeholder{color:#746a5e!important}
+
+.decisionKeep{margin-top:18px;padding:18px 0;display:flex;align-items:center;justify-content:space-between;gap:28px;border-top:1px solid rgba(215,181,132,.14)}
+.decisionKeep small{color:#8e8275;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em}
+.decisionKeep p{margin:5px 0 0;color:#988b7b;font-size:14px}
+.decisionKeep button{min-width:190px;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(215,179,111,.4);border-radius:10px;background:rgba(215,179,111,.10);color:#ddba7c;font:16px/1 'Decision Crimson',Georgia,serif}
+.decisionKeep button:disabled{opacity:.34;cursor:not-allowed}
+.decisionCreateError{margin:12px 0 0;color:#d3a99f;font-size:14px}
+
+@media(max-width:720px){.namingDecision{padding:34px 16px 70px}.namingDecisionIntro h1{font-size:42px}.decisionPaper{padding:26px 22px}.decisionContextThreshold header{display:block}.decisionContextThreshold header>p{margin-top:8px;text-align:left}.decisionContextGrid{grid-template-columns:1fr}.decisionContextGrid label:first-child{grid-row:auto}.decisionKeep{align-items:flex-start;flex-direction:column}.decisionKeep button{width:100%}}
+
+.personalDecisionRoom{max-width:1120px;margin:0 auto;padding:48px 30px 96px}
+.decisionRoomArrival{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.44fr);gap:48px;align-items:end}
+.decisionRoomArrival h1{max-width:760px;margin:12px 0 8px;color:#f1e8d9;font-size:clamp(44px,4.8vw,68px);font-weight:300;line-height:.98;letter-spacing:-.025em}
+.decisionRoomDate{margin:0;color:#968978;font-size:14px}
+.decisionRoomArrival>aside{padding:18px 0 2px 20px;border-left:1px solid rgba(111,148,189,.26)}
+.decisionRoomArrival>aside small{color:#8aa1ba;font:8px/1.4 Arial,sans-serif;letter-spacing:.19em}
+.decisionRoomArrival>aside p{margin:10px 0 0;color:#a99c8a;font-size:14px;line-height:1.48;font-style:italic}
+.decisionOrigin{margin-top:22px;max-width:680px}.decisionOrigin :global(a){color:#d0ad75!important}
+
+.decisionRoomGrid{margin-top:30px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:18px}
+.choicePaper{min-height:470px;padding:34px 38px 30px;border:1px solid rgba(255,255,255,.26);border-radius:10px;color:#342c24;background:linear-gradient(145deg,#f2e7d4,#e7d7bf);box-shadow:0 20px 58px rgba(0,0,0,.22);display:flex;flex-direction:column}
+.choicePaperMeta{display:flex;align-items:center;justify-content:space-between;gap:16px;color:#776a59;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.choicePaper h2{margin:34px 0 12px;color:#40352b!important;font-size:38px;font-weight:300}
+.choicePaper>p{margin:0;color:#5f5245;font-size:20px;line-height:1.55}
+.choiceContext{margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.choiceContext section{padding-top:14px;border-top:1px solid rgba(91,71,50,.15)}.choiceContext section:first-child{grid-column:1/-1}
+.choiceContext small{color:#816f59;font:8px/1.4 Arial,sans-serif;letter-spacing:.17em}
+.choiceContext p{margin:6px 0 0;color:#5e5144;font-size:15px;line-height:1.45}
+.holdToday{margin-top:auto;padding-top:20px;border-top:1px solid rgba(91,71,50,.16);color:#715a3e;text-decoration:none;font-size:15px}
+
+.perspectiveRail{display:flex;flex-direction:column;gap:12px}
+.gatherPerspective,.perspectivesHeld,.decisionMoments{padding:20px;border:1px solid rgba(215,181,132,.13);border-radius:10px;background:rgba(10,10,9,.42)}
+.gatherPerspective small,.perspectivesHeld small,.decisionMoments>small,.councilField header small,.earlierPerspective>small,.possibleDirection small{color:#8da3bb;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em}
+.gatherPerspective h3,.perspectivesHeld h3{margin:12px 0 8px;font-size:24px;font-weight:300}
+.gatherPerspective p,.perspectivesHeld p{margin:0;color:#a99c8c;font-size:14px;line-height:1.48}
+.gatherPerspective button{width:100%;min-height:46px;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(111,148,189,.30);border-radius:9px;background:rgba(111,148,189,.08);color:#bfd0df;font:15px/1 'Decision Crimson',Georgia,serif}
+.gatherPerspective button:disabled{opacity:.45}
+.decisionMoments>div{padding:12px 0;border-top:1px solid rgba(215,181,132,.08)}.decisionMoments>div:first-of-type{margin-top:10px}.decisionMoments time{color:#776f65;font-size:11px}.decisionMoments p{margin:5px 0 0;color:#b3a695;font-size:14px;line-height:1.4}
+
+.councilField{margin-top:42px;padding-top:26px;border-top:1px solid rgba(215,181,132,.15)}
+.councilField>header{display:flex;align-items:end;justify-content:space-between;gap:24px}.councilField>header h2{margin:8px 0 0;font-size:34px;font-weight:300}.councilField>header>p{margin:0;color:#8f8375;font-size:14px;font-style:italic}
+.councilSection{margin-top:26px}.councilSection h3{margin:0 0 12px;color:#d9cbb8;font-size:20px;font-weight:300}
+.perspectiveCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.perspectiveCards p,.tensionList p{margin:0;padding:16px;border:1px solid rgba(215,181,132,.11);border-radius:9px;background:rgba(10,10,9,.34);color:#b6a895;font-size:15px;line-height:1.5}
+.tensionList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.councilSection ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}.councilSection li{padding-left:18px;position:relative;color:#aa9d8d;font-size:14px;line-height:1.45}.councilSection li::before{content:'·';position:absolute;left:4px;color:#c49f68}
+.possibleDirection{margin-top:28px;padding:22px;border:1px solid rgba(215,179,111,.18);border-radius:10px;background:rgba(92,61,28,.11)}.possibleDirection small{color:#c6a069}.possibleDirection p{margin:10px 0 6px;color:#d3c2aa;font-size:17px;line-height:1.5}.possibleDirection span{color:#8d8173;font-size:13px;font-style:italic}
+.earlierPerspective{margin-top:36px;padding-top:22px;border-top:1px solid rgba(215,181,132,.12)}.earlierPerspective>div{margin-top:12px;display:grid;gap:8px}.earlierPerspective article{padding:13px 0;border-top:1px solid rgba(215,181,132,.08)}.earlierPerspective time{color:#7c7368;font-size:11px}.earlierPerspective p{margin:4px 0 0;color:#a99d8d;font-size:14px}
+.decisionRoomLoading{min-height:calc(100svh - 68px);display:grid;place-items:center;align-content:center;gap:12px;color:#ad9e8b}.decisionRoomLoading a{color:#d0ad75}
+
+@media(max-width:900px){.decisionRoomArrival,.decisionRoomGrid{grid-template-columns:1fr}.perspectiveCards,.tensionList{grid-template-columns:1fr}}
+@media(max-width:640px){.personalDecisionRoom{padding:34px 16px 76px}.decisionRoomArrival h1{font-size:42px}.choicePaper{min-height:0;padding:26px 22px}.choicePaper h2{font-size:32px}.choicePaper>p{font-size:18px}.choiceContext{grid-template-columns:1fr}.choiceContext section:first-child{grid-column:auto}.councilField>header{display:block}.councilField>header>p{margin-top:7px}}
+
+.decisionNotice{border:1px solid rgba(215,181,132,.13);border-radius:10px;background:rgba(10,10,9,.42);overflow:hidden}
+.decisionNoticeDoor{width:100%;min-height:66px;padding:0 18px;border:0;background:transparent;color:#d7cbb9;display:flex;align-items:center;justify-content:space-between;font:15px/1 'Decision Crimson',Georgia,serif}.decisionNoticeDoor>span:first-child{display:flex;align-items:center;gap:9px}.decisionNoticeDoor svg{width:16px;height:16px;color:#d0ad75}.decisionNoticeDoor>span:last-child{color:#d0ad75}
+.decisionNoticeForm{padding:18px}.decisionNoticeForm>header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.decisionNoticeForm header small{color:#8aa1ba;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em}.decisionNoticeForm header h3{margin:5px 0 0;font-size:22px;font-weight:300}.decisionNoticeForm header>button{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#8e8377}.decisionNoticeForm header>button svg{width:15px;height:15px}
+.decisionNoticeForm>textarea{width:100%;min-height:140px;margin-top:14px;padding:12px 0;border:0;border-top:1px solid rgba(215,181,132,.10)!important;border-bottom:1px solid rgba(215,181,132,.10)!important;outline:0;resize:vertical;background:transparent!important;color:#d8ccbc!important;font:16px/1.5 'Decision Crimson',Georgia,serif}.decisionNoticeForm>textarea::placeholder{color:#746a5f!important}
+.decisionNoticeKinds{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px}.decisionNoticeKinds>span{width:100%;color:#8e8275;font-size:13px;font-style:italic}.decisionNoticeKinds button{padding:6px 10px;border:1px solid rgba(215,181,132,.12);border-radius:999px;background:rgba(255,255,255,.015);color:#a99c8c;font:13px/1 'Decision Crimson',Georgia,serif}.decisionNoticeKinds button[data-active='true']{border-color:rgba(215,179,111,.40);background:rgba(215,179,111,.08);color:#dfcfb9}
+.keepDecisionNotice{width:100%;min-height:42px;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(215,179,111,.34);border-radius:9px;background:rgba(215,179,111,.08);color:#d9b77d;font:14px/1 'Decision Crimson',Georgia,serif}.keepDecisionNotice:disabled{opacity:.35}
+
+.revisitPerspective{margin-top:30px;padding:22px;border:1px solid rgba(111,148,189,.15);border-radius:10px;background:rgba(20,29,37,.12)}
+.revisitPerspective>small,.revisitForm small{color:#8ba2ba;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em}.revisitPerspective>h3{margin:10px 0 7px;font-size:21px;font-weight:300}.revisitPerspective>p{margin:0;color:#9e9284;font-size:14px;line-height:1.45}.revisitPerspective>button{width:100%;min-height:42px;margin-top:14px;padding:0;border:0;border-top:1px solid rgba(111,148,189,.14);background:transparent;color:#bfd0df;text-align:left;font:14px/1.2 'Decision Crimson',Georgia,serif}
+.revisitForm>header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.revisitForm header h3{margin:5px 0 0;font-size:22px;font-weight:300}.revisitForm header>button{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#8e8377}.revisitForm header>button svg{width:15px;height:15px}
+.recentEvidence{margin-top:14px;padding:12px 14px;border-left:1px solid rgba(111,148,189,.22);background:rgba(255,255,255,.012)}.recentEvidence p{margin:8px 0 0;color:#9f9385;font-size:13px;line-height:1.4}.recentEvidence p+p{padding-top:8px;border-top:1px solid rgba(111,148,189,.08)}
+.revisitForm>textarea,.revisitForm>input{width:100%;margin-top:14px;border:1px solid rgba(111,148,189,.17)!important;border-radius:9px;background:rgba(255,255,255,.014)!important;color:#d9cdbc!important;padding:12px 13px;font:15px/1.5 'Decision Crimson',Georgia,serif}.revisitForm>textarea{min-height:130px;resize:vertical}.revisitForm>input{min-height:44px}.revisitForm>textarea::placeholder,.revisitForm>input::placeholder{color:#746a5f!important}
+.revisitSubmit{width:100%;min-height:44px;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(111,148,189,.30);border-radius:9px;background:rgba(111,148,189,.08);color:#bfd0df;font:14px/1 'Decision Crimson',Georgia,serif}.revisitSubmit:disabled{opacity:.35}
+
+.choicePaper[data-resolved='true']{background:linear-gradient(145deg,#f4ead8,#eadac4);border-color:rgba(215,179,111,.34)}
+.chosenWords{margin:34px 0 10px!important;color:#3f342a!important;font-size:40px!important;line-height:1.05!important;font-weight:300!important}
+.chosenRecord{margin:0!important;color:#7a6d5e!important;font-size:14px!important;font-style:italic}
+.originalDecision{margin-top:34px;padding-top:18px;border-top:1px solid rgba(91,71,50,.16)}
+.originalDecision small{color:#806e58;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em}
+.originalDecision h3{margin:7px 0 6px;color:#4b4035;font-size:20px;font-weight:400}
+.originalDecision p{margin:0;color:#6a5c4e;font-size:15px;line-height:1.46}
+
+.resolutionChamber{padding:20px;border:1px solid rgba(215,181,132,.15);border-radius:10px;background:linear-gradient(145deg,rgba(56,39,22,.18),rgba(10,10,9,.44))}
+.resolutionChamber[data-standing='choice_recorded']{border-color:rgba(215,179,111,.28);background:linear-gradient(145deg,rgba(82,54,26,.20),rgba(10,10,9,.46))}
+.resolutionChamber[data-standing='legacy_complete_without_choice']{border-left:2px solid rgba(181,150,102,.42)}
+.resolutionChamber>small,.choiceForm small{color:#c5a16b;font:8px/1.4 Arial,sans-serif;letter-spacing:.19em}
+.resolutionChamber>h3{margin:10px 0 8px;font-size:23px;font-weight:300;line-height:1.15}
+.resolutionChamber>p{margin:0;color:#a99c8c;font-size:14px;line-height:1.48}
+.resolutionExcerpt{margin-top:10px!important;color:#d9cbb8!important;font-size:17px!important;line-height:1.45!important}
+.resolutionChamber>span{display:block;margin-top:8px;color:#807568;font-size:12px;font-style:italic}
+.resolutionChamber>button{width:100%;min-height:44px;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(215,179,111,.28);border-radius:9px;background:rgba(215,179,111,.07);color:#d6b47b;font:14px/1 'Decision Crimson',Georgia,serif}
+.resolutionChamber>button:disabled{opacity:.4}
+
+.legacyActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.legacyActions button{min-height:42px;border:1px solid rgba(215,181,132,.14);border-radius:9px;background:rgba(255,255,255,.014);color:#cdbfad;font:13px/1.2 'Decision Crimson',Georgia,serif}
+.legacyActions button:first-child{border-color:rgba(215,179,111,.30);color:#d8b77e;background:rgba(215,179,111,.07)}
+.legacyActions button:disabled{opacity:.4}
+
+.choiceForm{margin-top:4px}
+.choiceForm>label{display:block;color:#c7a36d;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.choiceForm>header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.choiceForm header h3{margin:5px 0 0;font-size:23px;font-weight:300}
+.choiceForm header>button{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#8d8276}
+.choiceForm header>button svg{width:15px;height:15px}
+.choiceForm textarea{width:100%;min-height:150px;margin-top:14px;padding:12px 0;border:0!important;border-top:1px solid rgba(215,181,132,.12)!important;border-bottom:1px solid rgba(215,181,132,.12)!important;outline:0;resize:vertical;background:transparent!important;color:#ded2c1!important;font:17px/1.52 'Decision Crimson',Georgia,serif}
+.choiceForm textarea::placeholder{color:#766c60!important}
+.choiceForm>p{margin:10px 0 0;color:#82776b;font-size:13px;line-height:1.4;font-style:italic}
+.choiceForm>button,.keepChoice{width:100%;min-height:44px;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(215,179,111,.38);border-radius:9px;background:rgba(215,179,111,.10);color:#ddb97c;font:14px/1 'Decision Crimson',Georgia,serif}
+.choiceForm>button:disabled,.keepChoice:disabled{opacity:.35}
+
+.choiceHistory{margin-top:36px;padding-top:22px;border-top:1px solid rgba(215,181,132,.12)}
+.choiceHistory>small{color:#c3a06a;font:8px/1.4 Arial,sans-serif;letter-spacing:.18em}
+.choiceHistory>div{margin-top:12px;display:grid;gap:8px}
+.choiceHistory article{padding:14px 16px;border:1px solid rgba(215,181,132,.09);border-radius:9px;background:rgba(10,10,9,.28)}
+.choiceHistory article[data-current='true']{border-color:rgba(215,179,111,.24);background:rgba(76,50,24,.10)}
+.choiceHistory time{color:#776e63;font-size:11px}
+.choiceHistory p{margin:5px 0 4px;color:#b8aa98;font-size:15px;line-height:1.45}
+.choiceHistory span{color:#7f756a;font-size:12px;font-style:italic}
+
+@media(max-width:640px){
+  .chosenWords{font-size:32px!important}
+  .legacyActions{grid-template-columns:1fr}
+  .resolutionChamber{padding:18px}
+}
+
+/* DECISIONS-UX-10 — naming field readability + material authority.
+   Soullab readability law: quiet is not the same as small. Meaningful text
+   stays at 16px+, metadata at 14px+, and only decorative markers may sit at 12px. */
+.namingBack{
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  font-size:16px;
+  line-height:1.35;
+}
+.namingDecisionIntro .decisionKicker{
+  font-size:12px;
+  line-height:1.4;
+  letter-spacing:.14em;
+}
+.namingDecisionIntro>p:last-child{
+  font-size:18px;
+  line-height:1.6;
+}
+.decisionPaper{
+  position:relative;
+  margin-top:32px;
+  padding:8px 38px 20px;
+  overflow:hidden;
+  border:1px solid rgba(153,119,75,.24);
+  border-radius:12px;
+  color:#342c24;
+  background:
+    linear-gradient(90deg,rgba(122,91,55,.035),transparent 12%,transparent 88%,rgba(122,91,55,.025)),
+    linear-gradient(145deg,#f4ead8,#eadcc6);
+  box-shadow:
+    0 24px 64px rgba(0,0,0,.23),
+    inset 0 1px 0 rgba(255,255,255,.5);
+}
+.decisionPaper::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:radial-gradient(circle at 12% 7%,rgba(255,255,255,.28),transparent 23%);
+  opacity:.65;
+}
+.decisionWriteField{
+  position:relative;
+  z-index:1;
+  padding:26px 0 30px;
+  border-bottom:1px solid rgba(96,72,49,.16);
+}
+.decisionWriteField:last-of-type{
+  border-bottom:0;
+  padding-bottom:22px;
+}
+.decisionWriteField>header{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:26px;
+  margin-bottom:13px;
+}
+.decisionWriteField label{
+  margin:0;
+  color:#665847;
+  font:600 14px/1.45 Arial,sans-serif;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.decisionWriteField header>p{
+  max-width:340px;
+  margin:0;
+  color:#6f6150;
+  font:400 16px/1.5 Arial,sans-serif;
+  text-align:right;
+}
+.content .decisionPaper input,
+.content .decisionPaper textarea{
+  width:100%;
+  margin:0;
+  padding:8px 0 10px;
+  border:0!important;
+  border-radius:0!important;
+  outline:0;
+  background:transparent!important;
+  color:#3c3229!important;
+  box-shadow:none!important;
+  font-family:'Decision Crimson',Georgia,serif;
+}
+.content .decisionPaper input{
+  min-height:56px;
+  font-size:24px!important;
+  line-height:1.4!important;
+}
+.content .decisionPaper textarea{
+  min-height:190px;
+  resize:vertical;
+  font-size:18px!important;
+  line-height:1.7!important;
+}
+.content .decisionPaper input::placeholder,
+.content .decisionPaper textarea::placeholder{
+  color:#726451!important;
+  opacity:1;
+}
+.content .decisionPaper input:focus,
+.content .decisionPaper textarea:focus{
+  box-shadow:inset 0 -2px 0 rgba(151,111,62,.48)!important;
+}
+.decisionPaperNote{
+  position:relative;
+  z-index:1;
+  margin:8px 0 0!important;
+  color:#6d6051!important;
+  font:italic 17px/1.55 'Decision Crimson',Georgia,serif!important;
+}
+.decisionContextThreshold[data-open='false']>p{
+  margin:0;
+  color:#a99b89;
+  font-size:16px;
+  line-height:1.55;
+}
+.decisionContextThreshold header small{
+  font-size:12px;
+  line-height:1.4;
+  letter-spacing:.14em;
+}
+.decisionContextThreshold header>p{
+  max-width:310px;
+  color:#9d9080;
+  font-size:16px;
+  line-height:1.5;
+}
+.decisionContextGrid span{
+  color:#b5a694;
+  font-size:16px;
+  line-height:1.45;
+}
+.decisionContextGrid input,
+.decisionContextGrid textarea,
+.decisionContextGrid select{
+  font-size:17px!important;
+  line-height:1.55!important;
+}
+.decisionKeep small{
+  font-size:12px;
+  line-height:1.4;
+  letter-spacing:.14em;
+}
+.decisionKeep p{
+  margin-top:6px;
+  color:#a99b89;
+  font-size:16px;
+  line-height:1.5;
+}
+.decisionKeep button{
+  min-height:48px;
+  font-size:16px;
+}
+.decisionCreateError{
+  font-size:16px;
+  line-height:1.5;
+}
+.return{
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  font-size:16px;
+  line-height:1.35;
+}
+.roomName span{
+  font-size:12px;
+  letter-spacing:.14em;
+}
+@media(max-width:720px){
+  .decisionPaper{
+    padding:6px 22px 18px;
+  }
+  .decisionWriteField>header{
+    display:block;
+  }
+  .decisionWriteField header>p{
+    margin-top:6px;
+    max-width:none;
+    text-align:left;
+  }
+  .content .decisionPaper input{
+    font-size:22px!important;
+  }
+  .content .decisionPaper textarea{
+    min-height:180px;
+    font-size:18px!important;
+  }
+}
+
+/* DECISIONS-UX-11 — living room readability conformance.
+   Founder acceptance: composition holds; increase meaningful type only.
+   Quiet is achieved through spacing/contrast, never by shrinking content. */
+.personalDecisionRoom .decisionRoomDate{
+  font-size:15px;
+  line-height:1.45;
+}
+.personalDecisionRoom .decisionRoomArrival>aside small,
+.personalDecisionRoom .gatherPerspective small,
+.personalDecisionRoom .perspectivesHeld small,
+.personalDecisionRoom .decisionMoments>small,
+.personalDecisionRoom .councilField header small,
+.personalDecisionRoom .earlierPerspective>small,
+.personalDecisionRoom .possibleDirection small,
+.personalDecisionRoom .resolutionChamber>small,
+.personalDecisionRoom .choiceForm small,
+.personalDecisionRoom .decisionNoticeForm header small,
+.personalDecisionRoom .revisitPerspective>small,
+.personalDecisionRoom .revisitForm small,
+.personalDecisionRoom .recentEvidence small,
+.personalDecisionRoom .choiceHistory>small{
+  font-size:12px;
+  line-height:1.4;
+  letter-spacing:.14em;
+}
+.personalDecisionRoom .decisionRoomArrival>aside p{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .choicePaperMeta{
+  font:600 14px/1.45 Arial,sans-serif;
+  letter-spacing:.07em;
+}
+.personalDecisionRoom .choiceContext small{
+  font-size:14px;
+  line-height:1.45;
+  letter-spacing:.07em;
+}
+.personalDecisionRoom .choiceContext p{
+  font-size:17px;
+  line-height:1.6;
+}
+.personalDecisionRoom .holdToday{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .resolutionChamber>h3{
+  font-size:25px;
+  line-height:1.2;
+}
+.personalDecisionRoom .resolutionChamber>p{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .resolutionExcerpt{
+  font-size:18px!important;
+  line-height:1.6!important;
+}
+.personalDecisionRoom .resolutionChamber>span{
+  font-size:14px;
+  line-height:1.5;
+}
+.personalDecisionRoom .resolutionChamber>button,
+.personalDecisionRoom .legacyActions button,
+.personalDecisionRoom .choiceForm>button,
+.personalDecisionRoom .keepChoice{
+  min-height:44px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .choiceForm>label{
+  font-size:14px;
+  line-height:1.45;
+}
+.personalDecisionRoom .choiceForm header h3{
+  font-size:25px;
+  line-height:1.2;
+}
+.personalDecisionRoom .choiceForm textarea{
+  font-size:18px!important;
+  line-height:1.65!important;
+}
+.personalDecisionRoom .choiceForm>p{
+  font-size:16px;
+  line-height:1.55;
+}
+.personalDecisionRoom .decisionNoticeDoor{
+  min-height:52px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .decisionNoticeForm header h3{
+  font-size:24px;
+  line-height:1.2;
+}
+.personalDecisionRoom .decisionNoticeForm>textarea{
+  font-size:18px!important;
+  line-height:1.65!important;
+}
+.personalDecisionRoom .decisionNoticeKinds>span{
+  font-size:16px;
+  line-height:1.45;
+}
+.personalDecisionRoom .decisionNoticeKinds button,
+.personalDecisionRoom .keepDecisionNotice{
+  min-height:44px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .gatherPerspective h3,
+.personalDecisionRoom .perspectivesHeld h3{
+  font-size:26px;
+  line-height:1.2;
+}
+.personalDecisionRoom .gatherPerspective p,
+.personalDecisionRoom .perspectivesHeld p{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .gatherPerspective button{
+  min-height:48px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .decisionMoments time{
+  font-size:14px;
+  line-height:1.45;
+}
+.personalDecisionRoom .decisionMoments p{
+  font-size:17px;
+  line-height:1.6;
+}
+.personalDecisionRoom .councilField>header>p{
+  font-size:16px;
+  line-height:1.5;
+}
+.personalDecisionRoom .councilSection h3{
+  font-size:22px;
+  line-height:1.25;
+}
+.personalDecisionRoom .perspectiveCards p,
+.personalDecisionRoom .tensionList p{
+  font-size:17px;
+  line-height:1.62;
+}
+.personalDecisionRoom .councilSection li{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .possibleDirection p{
+  font-size:18px;
+  line-height:1.65;
+}
+.personalDecisionRoom .possibleDirection span{
+  font-size:14px;
+  line-height:1.5;
+}
+.personalDecisionRoom .revisitPerspective>h3,
+.personalDecisionRoom .revisitForm header h3{
+  font-size:24px;
+  line-height:1.2;
+}
+.personalDecisionRoom .revisitPerspective>p{
+  font-size:16px;
+  line-height:1.6;
+}
+.personalDecisionRoom .revisitPerspective>button,
+.personalDecisionRoom .revisitSubmit{
+  min-height:44px;
+  font-size:16px;
+  line-height:1.35;
+}
+.personalDecisionRoom .recentEvidence p{
+  font-size:16px;
+  line-height:1.55;
+}
+.personalDecisionRoom .revisitForm>textarea,
+.personalDecisionRoom .revisitForm>input{
+  font-size:17px!important;
+  line-height:1.6!important;
+}
+.personalDecisionRoom .earlierPerspective time,
+.personalDecisionRoom .choiceHistory time{
+  font-size:14px;
+  line-height:1.45;
+}
+.personalDecisionRoom .earlierPerspective p{
+  font-size:16px;
+  line-height:1.55;
+}
+.personalDecisionRoom .choiceHistory p{
+  font-size:17px;
+  line-height:1.6;
+}
+.personalDecisionRoom .choiceHistory span{
+  font-size:14px;
+  line-height:1.5;
+}
