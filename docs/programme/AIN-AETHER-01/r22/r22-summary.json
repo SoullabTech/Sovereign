@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-09-28T20:01:50.450Z",
+  "parentR21": "9a5bddf9035451f07d32b900f25ede6e3832ae28",
+  "invariantCount": 7,
+  "passingInvariants": 7,
+  "allPass": true,
+  "contradictionRefs": [],
+  "temporalProgrammeStanding": "closed_for_benchmark_scope",
+  "runtimeAuthority": false
+}

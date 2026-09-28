@@ -1,0 +1,71 @@
+{
+  "generatedAt": "2026-09-28T20:01:50.450Z",
+  "closure": {
+    "parentR21": "9a5bddf9035451f07d32b900f25ede6e3832ae28",
+    "invariants": [
+      {
+        "invariantRef": "TINV-01",
+        "description": "Point precision is preserved and date-only evidence does not invent clock time.",
+        "pass": true,
+        "evidence": [
+          "R16 point metadata",
+          "repair:v1 calendar-date witness"
+        ]
+      },
+      {
+        "invariantRef": "TINV-02",
+        "description": "Temporal ranges remain ranges and never promote a midpoint to event time.",
+        "pass": true,
+        "evidence": [
+          "R17 range witness"
+        ]
+      },
+      {
+        "invariantRef": "TINV-03",
+        "description": "Conflicting temporal sources remain open by default with no forced winner.",
+        "pass": true,
+        "evidence": [
+          "R18 plural temporal evidence"
+        ]
+      },
+      {
+        "invariantRef": "TINV-04",
+        "description": "Question-specific authority may select different sources without creating a universal winner.",
+        "pass": true,
+        "evidence": [
+          "R19 system-record query",
+          "R19 remembered-time query"
+        ]
+      },
+      {
+        "invariantRef": "TINV-05",
+        "description": "Ambiguous temporal questions clarify rather than silently select.",
+        "pass": true,
+        "evidence": [
+          "R19 ambiguity law",
+          "R20 clarification dialogue"
+        ]
+      },
+      {
+        "invariantRef": "TINV-06",
+        "description": "Member-facing dialogue stays scoped, conflict-aware, and free of internal taxonomy.",
+        "pass": true,
+        "evidence": [
+          "R20 scoped dialogue"
+        ]
+      },
+      {
+        "invariantRef": "TINV-07",
+        "description": "Blind temporal dialogue falsification remains fully passing.",
+        "pass": true,
+        "evidence": [
+          "R21 blind set 6/6"
+        ]
+      }
+    ],
+    "allPass": true,
+    "contradictionRefs": [],
+    "temporalProgrammeStanding": "closed_for_benchmark_scope",
+    "runtimeAuthority": false
+  }
+}
