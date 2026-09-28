@@ -18,6 +18,15 @@ class Refusal extends Error {
   constructor(readonly code: string, message: string) { super(message); }
 }
 const sha256 = (b: Uint8Array | string) => createHash('sha256').update(b).digest('hex');
+function argAll(name: string): string[] {
+  const out: string[]=[];
+  for (let i=0;i<process.argv.length;i+=1) if (process.argv[i]==='--'+name) {
+    const v=process.argv[i+1];
+    if (!v || v.startsWith('--')) throw new Refusal('BAD_ARGUMENT','--'+name+' requires a value');
+    out.push(v); i+=1;
+  }
+  return out;
+}
 function arg(name: string): string {
   const i=process.argv.indexOf('--'+name);
   const v=i >= 0 ? process.argv[i+1] : undefined;
@@ -48,14 +57,15 @@ function main() {
   const baseRecordPath=arg('base-record');
   const deltaReviewPath=arg('delta-review');
   const projectionPath=arg('projection');
-  const observedPath=arg('observed-pending');
+  const observedPath=process.argv.includes('--observed-pending') ? arg('observed-pending') : '';
+  const migrationArgs=argAll('migration');
   const liveReader=git(repo,'rev-parse',arg('live-reader')+'^{commit}');
   const target=git(repo,'rev-parse',arg('target')+'^{commit}');
 
   const baseReview=readJson(baseReviewPath);
   const baseRecord=readJson(baseRecordPath);
   const projection=readJson(projectionPath);
-  const observed=readJson(observedPath);
+  const observed=observedPath ? readJson(observedPath) : null;
 
   if (baseRecord?.approval?.verdict !== 'APPROVED')
     throw new Refusal('BASE_NOT_APPROVED','base custody record carries no APPROVED admission');
@@ -74,7 +84,10 @@ function main() {
 
   const basePending=compat.pending as PendingMigration[];
   const projectedPending=projection.migration_bytes as PendingMigration[];
-  const observedPending=observed.pending as PendingMigration[];
+  const observedPending: PendingMigration[] = migrationArgs.length > 0
+    ? migrationArgs.map(path => ({ path, sha256: gitBlobHash(repo,target,path) }))
+    : ((observed?.pending ?? []) as PendingMigration[]);
+  if (observedPending.length===0) throw new Refusal('NO_PENDING_MIGRATIONS','no observed pending migration set supplied');
   const baseTarget=git(repo,'rev-parse',compat.target_reader_commit+'^{commit}');
 
   for (const m of basePending) {
