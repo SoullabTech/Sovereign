@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-28T21:02:34.680Z",
+  "parentR5": "b48fbd8a1f6e9aafb2604f06c795b0fc571d0a0b",
+  "invariantCount": 6,
+  "passingInvariants": 6,
+  "allPass": true,
+  "contradictionRefs": [],
+  "standing": "closed_for_fixture_live_adapter_scope",
+  "realConnectorAuthorized": false,
+  "realMemberDataRead": false,
+  "persistenceAuthorized": false,
+  "memberFacingDeliveryAuthorized": false,
+  "maiaPromptMutationAuthorized": false,
+  "networkSideEffect": false,
+  "productionAuthority": false
+}
