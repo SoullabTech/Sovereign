@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-09-28T18:44:58.724Z",
+  "parentR6": "619d8f18fe3ca8d637c2246516ab7c9bcef575aa",
+  "originalParticipating": [
+    "work",
+    "creative",
+    "relationship"
+  ],
+  "originalExcluded": [
+    "family",
+    "body",
+    "spiritual"
+  ],
+  "recognized": "recognized",
+  "rejected": "rejected",
+  "rejectedStanding": "insufficient_gestalt",
+  "narrowedRecognition": "reshaped",
+  "narrowedRemovedSpiral": "work",
+  "narrowedActive": [
+    "creative",
+    "relationship"
+  ],
+  "expandedRecognition": "reshaped",
+  "expandedAddedSpiral": "family",
+  "expandedActive": [
+    "work",
+    "creative",
+    "relationship",
+    "family"
+  ],
+  "sourceFieldPreserved": true,
+  "relationHistoryPreserved": true,
+  "memberOwnsFinalMeaning": true,
+  "allValid": true
+}
