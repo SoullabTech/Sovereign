@@ -597,7 +597,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                 {usernameParam ? `Welcome back, ${usernameParam.charAt(0).toUpperCase() + usernameParam.slice(1).toLowerCase()}.` : 'Welcome'}
               </h1>
               <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
-                {usernameParam ? 'Continue your conversation with MAIA.' : 'Sign in with your username and password.'}
+                {usernameParam ? 'Return to Soullab.' : 'Sign in with your username and password.'}
               </p>
               {errorBlock}
               <form onSubmit={signInWithPassword} className="space-y-3">

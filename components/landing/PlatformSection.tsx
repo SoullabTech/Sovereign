@@ -53,23 +53,28 @@ export function PlatformSection() {
             className="text-white/45 text-center text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-16"
             style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
           >
-            Soullab is the member-facing platform. AIN OS is the sovereign architecture beneath it.
-            MAIA is the relational intelligence that can accompany you across the field.
+            Soullab brings reflection, creativity, relationships, symbolic inquiry, and meaningful work
+            into one living environment. MAIA can accompany you across it; AIN OS quietly holds the architecture underneath.
           </p>
         </SectionReveal>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid md:grid-cols-2 gap-x-14 border-t border-white/10">
           {FACETS.map((facet, index) => (
-            <SectionReveal key={facet.name} delay={0.05 * index}>
-              <div className="h-full rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-7">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <h3 className="text-lg font-medium text-white">{facet.name}</h3>
-                  <span className="shrink-0 text-[10px] tracking-wider uppercase text-maia-spice-400/80">
+            <SectionReveal key={facet.name} delay={0.04 * index}>
+              <div className="group py-7 sm:py-8 border-b border-white/10">
+                <div className="flex items-baseline justify-between gap-5">
+                  <h3
+                    className="text-xl sm:text-2xl font-light text-white/90"
+                    style={{ fontFamily: "'Crimson Pro', serif" }}
+                  >
+                    {facet.name}
+                  </h3>
+                  <span className="shrink-0 text-[10px] tracking-[0.16em] uppercase text-maia-spice-400/65">
                     {facet.status}
                   </span>
                 </div>
                 <p
-                  className="text-white/45 text-sm leading-relaxed"
+                  className="mt-3 max-w-xl text-white/42 text-sm sm:text-[15px] leading-relaxed"
                   style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
                 >
                   {facet.body}

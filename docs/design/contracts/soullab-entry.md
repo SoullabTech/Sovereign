@@ -7,6 +7,9 @@ surfaces:
   - components/landing/**
   - components/auth/UnifiedAuth.tsx
   - app/onboarding/page.tsx
+  - app/oauth-success/page.tsx
+  - app/enter/page.tsx
+  - app/welcome-back/page.tsx
 
 change_class: experiential
 

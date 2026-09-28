@@ -138,18 +138,18 @@ export function ResearchSection() {
           </p>
         </SectionReveal>
 
-        {/* Principles grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
+        {/* Principles — open field, not feature cards */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 mb-20 border-t border-white/10">
           {PRINCIPLES.map((p, i) => (
-            <SectionReveal key={p.title} delay={0.06 * i}>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-7 h-full flex flex-col">
+            <SectionReveal key={p.title} delay={0.05 * i}>
+              <div className="py-7 border-b border-white/10 h-full">
                 <h3
-                  className="text-base font-semibold text-white mb-3 leading-tight"
+                  className="text-base font-medium text-white/85 mb-3 leading-tight"
                   style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
                 >
                   {p.title}
                 </h3>
-                <p className="text-white/40 text-sm leading-relaxed flex-1" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
+                <p className="text-white/40 text-sm leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
                   {p.body}
                 </p>
               </div>

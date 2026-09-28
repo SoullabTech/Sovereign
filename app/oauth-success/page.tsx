@@ -87,7 +87,7 @@ function OAuthSuccessContent() {
         setMessage('Welcome! Setting up your space...');
         // New users go through onboarding
         setTimeout(() => {
-          const nextStep = onboardingStep === 'complete' ? '/maia' : `/${onboardingStep}`;
+          const nextStep = onboardingStep === 'complete' ? '/home' : `/${onboardingStep}`;
           router.push(nextStep);
         }, 1500);
       } else if (!onboarded) {
@@ -99,14 +99,14 @@ function OAuthSuccessContent() {
             'test-elemental': '/test-elemental',
             'faq': '/faq',
             'onboarding': '/onboarding',
-            'complete': '/maia',
+            'complete': '/home',
           };
-          router.push(stepMap[onboardingStep] || '/maia');
+          router.push(stepMap[onboardingStep] || '/home');
         }, 1500);
       } else {
         setMessage('Welcome back!');
         // Returning user who has completed onboarding
-        setTimeout(() => router.push('/maia'), 1500);
+        setTimeout(() => router.push('/home'), 1500);
       }
     } catch (error) {
       console.error('Failed to store session:', error);

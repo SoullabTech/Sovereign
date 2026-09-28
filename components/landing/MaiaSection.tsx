@@ -6,14 +6,6 @@ import { useId, useState } from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
 import { SectionReveal } from './SectionReveal';
 
-const SITUATIONS = [
-  { label: 'When you\'re overwhelmed', desc: 'And need to find the thread back to yourself.' },
-  { label: 'When you\'re trying to write something that matters', desc: 'And the words won\'t come, or they\'re coming but not yet true.' },
-  { label: 'When your life is changing', desc: 'And you don\'t know yet who you\'re becoming.' },
-  { label: 'When you\'re caring for someone', desc: 'And carrying more than you can easily say.' },
-  { label: 'When you\'re trying to understand yourself', desc: 'Patterns, reactions, what you actually want.' },
-  { label: 'When you\'re building something important', desc: 'And need to think with greater clarity and depth.' },
-];
 
 export function MaiaSection() {
   const auraId = useId().replace(/:/g, '');
@@ -157,50 +149,33 @@ export function MaiaSection() {
               </div>
 
               <div className="mt-6 text-center">
-                <div className="text-sm font-medium text-white">Soullab</div>
-                <div className="mt-1 text-sm text-white/70">
-                  A living environment for practice, community, and inner guidance.
+                <div className="text-sm font-medium text-white">MAIA within Soullab</div>
+                <div className="mt-1 text-sm text-white/55">
+                  One relational presence moving through a larger living field.
                 </div>
               </div>
             </div>
           </SectionReveal>
         </div>
 
-        {/* Human situations */}
-        <SectionReveal delay={0.2} className="mt-16 sm:mt-20">
-          <div className="mx-auto max-w-3xl">
-            <p className="text-center text-white/30 text-xs tracking-widest uppercase mb-8">
-              What people bring to MAIA
-            </p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {SITUATIONS.map(({ label, desc }) => (
-                <div key={label} className="rounded-xl border border-white/8 bg-white/[0.02] px-5 py-4">
-                  <p className="text-sm font-medium text-white/80 mb-1" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>{label}</p>
-                  <p className="text-xs text-white/35 leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>{desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </SectionReveal>
-
         {/* AIN OS — constitutional foundation, revealed after MAIA */}
         <SectionReveal delay={0.3} className="mt-16 sm:mt-20">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-8 sm:p-10 max-w-3xl mx-auto">
+          <div className="border-t border-white/10 pt-10 max-w-3xl mx-auto">
             <button
               type="button"
               onClick={() => setAinOpen(v => !v)}
               aria-expanded={ainOpen}
               className="group mx-auto mb-6 flex w-full flex-col items-center"
             >
-              <span className="text-white/40 text-center text-xs tracking-widest uppercase mb-3">
-                AIN OS &middot; The Foundation
+              <span className="text-white/35 text-center text-xs tracking-widest uppercase mb-3">
+                Under the surface &middot; AIN OS
               </span>
               <span className="flex items-center gap-2">
                 <span
                   className="text-2xl sm:text-3xl font-extralight tracking-wide text-white/90 text-center"
                   style={{ fontFamily: "'Crimson Pro', serif" }}
                 >
-                  Built on different principles
+                  The architecture beneath the relationship
                 </span>
                 <ChevronDown
                   className={`h-5 w-5 shrink-0 text-white/40 transition-all duration-300 group-hover:text-white/70 ${ainOpen ? 'rotate-180 text-maia-spice-400 group-hover:text-maia-spice-400' : ''}`}
@@ -254,22 +229,6 @@ export function MaiaSection() {
           </div>
         </SectionReveal>
 
-        {/* Closing */}
-        <SectionReveal delay={0.45} className="mt-16 sm:mt-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <p
-              className="text-2xl sm:text-3xl font-extralight leading-snug tracking-wide text-white/85"
-              style={{ fontFamily: "'Crimson Pro', serif" }}
-            >
-              AIN OS is the foundation. MAIA is the companion.
-              <br className="hidden sm:block" />{' '}
-              <span className="text-maia-spice-400">You are the intelligence that emerges.</span>
-            </p>
-            <p className="mt-5 text-base text-white/45 leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-              Together they help people know themselves, grow consciously, and live more connected lives.
-            </p>
-          </div>
-        </SectionReveal>
       </div>
     </section>
   );

@@ -136,7 +136,7 @@ export function useUserAuth() {
       router.replace('/signin');
     } else {
       // Fully authenticated and onboarded
-      router.replace('/maia');
+      router.replace('/home');
     }
   }, [checkAuthStatus, router]);
 

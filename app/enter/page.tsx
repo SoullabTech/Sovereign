@@ -39,7 +39,7 @@ export default function EnterPage() {
     // NATIVE: On iOS, app-open is always a fresh start — clear web signout latch.
     // The web signout latch prevents auto-redirects on the browser, but native iOS
     // app restarts are not web-session restores. Clearing it lets the normal
-    // routing logic run (beta_user → /maia, clean → /begin, etc.)
+    // routing logic run (beta_user → /home, clean → /signin, etc.)
     if (Capacitor.isNativePlatform()) {
       localStorage.removeItem('maia_signed_out');
       console.log('[ENTER PAGE] Native: cleared web signout latch');
@@ -52,7 +52,7 @@ export default function EnterPage() {
       console.warn('[ENTER PAGE] Redirect guard tripped — routing to safe destination');
       const betaUser = localStorage.getItem('beta_user');
       if (betaUser) {
-        router.replace('/maia');
+        router.replace('/home');
       } else {
         router.replace('/signin');
       }
@@ -76,7 +76,7 @@ export default function EnterPage() {
     }
 
     // THREE-WAY ROUTING LOGIC:
-    // 1. User currently authenticated (active session) → /maia
+    // 1. User currently authenticated (active session) → /home
     // 2. User has ANY prior MAIA data (signed out) → /welcome-back (returning user)
     // 3. Completely empty localStorage → /begin (brand new user)
 
@@ -92,10 +92,10 @@ export default function EnterPage() {
       explorerName,
     });
 
-    // Case 1: User has ACTIVE SESSION - go straight to MAIA
+    // Case 1: User has ACTIVE SESSION - go straight to Soullab Home
     if (betaUser) {
-      console.log('[NAV] /enter -> /maia (reason: active session)');
-      router.replace('/maia');
+      console.log('[NAV] /enter -> /home (reason: active session)');
+      router.replace('/home');
       return;
     }
 
@@ -126,7 +126,7 @@ export default function EnterPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', background: '#0b0f1c', color: '#a0a0a0' }}>
-      <p style={{ marginBottom: '10px' }}>Entering MAIA...</p>
+      <p style={{ marginBottom: '10px' }}>Entering Soullab...</p>
       <p style={{ fontSize: '12px', maxWidth: '300px', textAlign: 'center' }}>{debugInfo}</p>
     </div>
   );
