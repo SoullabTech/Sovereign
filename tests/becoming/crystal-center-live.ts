@@ -138,14 +138,18 @@ async function main(){
 
     const unseenTerms=['dream','astrolog','tarot','divination','birth chart'];
     const lower=(s:string)=>s.toLowerCase();
+    const synthesisResponses=[full,ablated,contradictory,permuted];
     const metrics={
       calls:results.length,
       latencies:Object.fromEntries(results.map(r=>[r.caseId,r.latencyMs])),
       unseenFacetLeakage:Object.fromEntries(results.map(r=>[r.caseId,unseenTerms.filter(term=>lower(r.response).includes(term))])),
+      unsupportedRelabeling:Object.fromEntries(synthesisResponses.map(r=>[r.caseId,(r.response.match(/\bwithdrawal\b|\bavoidance\b|\bshutdown\b|\bdefen[cs]e\b|\bresistance\b/gi)??[])])),
+      possibleCausalOverreach:Object.fromEntries(synthesisResponses.map(r=>[r.caseId,(r.response.match(/\btaught\b|\blearned\b.{0,24}\bfrom\b|\bhealed\b|\btransformed\b|\bproduced\b|\bcaused\b/gi)??[])])),
       ablatedInventsRemovedEvidence:/remain in contact|say what i need|say no/i.test(ablated.response),
       correctionMentionsSafety:/safety|threat|protect/i.test(corrected.response),
-      correctionReleasesProgression:/not.*progress|cannot.*progress|release|revise|different context|unsupported/i.test(corrected.response),
-      contradictionAcknowledged:/tension|contradict|both|mixed|not.*linear|uneven|inconsistent|complicate|at the same time/i.test(contradictory.response),
+      correctionReleasesProgression:/not.*progress|cannot.*progress|release|revise|different context|unsupported|developmental arc.*misread|not a stage|not.*same arc|doesn.t carry the weight/i.test(corrected.response),
+      contradictionAcknowledged:/tension|contradict|both|mixed|not.*linear|uneven|inconsistent|complicate|at the same time|side by side/i.test(contradictory.response),
+      fullIsTentative:/hypothesis|possibility|tentative|i wonder|could be|might be|reading that wrong|does that.*fit/i.test(full.response),
     };
     const persistence=await laneCounts();
     const evidence={

@@ -28,6 +28,7 @@ export function buildTemporalSynthesisPrompt(envelope: TemporalContextEnvelope):
     'Use language such as “what you describe as different now,” “a possibility that feels more embodied,” or “a contrast you are noticing,” rather than declaring an old pattern or saying an imagined future has become real.',
     'When earlier and current material differ, do not say “the shift is real,” “you have changed,” or equivalent unless the member explicitly authored that conclusion. Say “you describe a difference,” “you describe a shift,” or “there is a contrast in what you selected.”',
     'Do not relabel member-described behavior with interpretive psychological terms such as “withdrawal,” “avoidance,” “shutdown,” “defense,” or “resistance” unless the member used that language. Prefer the member’s own description.',
+    'Relation does not imply causation. Do not say one facet caused, taught, healed, transformed, produced, or explains another unless the member explicitly established that causal relation.',
     '',
     'TEMPORAL CONTEXT',
   ];
@@ -45,6 +46,7 @@ export function buildTemporalSynthesisPrompt(envelope: TemporalContextEnvelope):
     'Begin with at most one proposed connection that is actually supported by the selected material.',
     'Name uncertainty plainly.',
     'Invite the member to confirm, complicate, or reject the connection.',
+    'Before sending, perform a language check: if you have replaced the member’s concrete words with a psychological label or causal story they did not author, rewrite that sentence using the source language and uncertainty.',
   );
   return lines.join('\n');
 }
