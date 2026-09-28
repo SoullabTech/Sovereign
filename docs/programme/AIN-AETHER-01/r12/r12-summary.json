@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-09-28T19:13:06.396Z",
+  "parentR11": "45b88f9c71dc72be113416a1d74b303c8e1ca532",
+  "cardCount": 5,
+  "humanReviewStatus": "pending",
+  "sourceMachineEvidenceMutable": false,
+  "frozenMachineWitnessRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json",
+  "admittedCards": 4,
+  "refusedCards": 1,
+  "allCardsHaveReviewQuestions": true,
+  "allCardsHaveAdjudicationOptions": true,
+  "valid": true
+}

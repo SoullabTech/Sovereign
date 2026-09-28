@@ -1,0 +1,452 @@
+{
+  "generatedAt": "2026-09-28T19:13:06.393Z",
+  "packet": {
+    "packetRef": "AIN-AETHER-01R12-human-semantic-review",
+    "parentR11": "45b88f9c71dc72be113416a1d74b303c8e1ca532",
+    "frozenMachineWitnessRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json",
+    "cards": [
+      {
+        "caseRef": "H01",
+        "description": "Work dissolution alongside Relationship convergence and Body recurrence.",
+        "representedField": [
+          {
+            "spiralRef": "work",
+            "domain": "work",
+            "trajectory": "dissolution"
+          },
+          {
+            "spiralRef": "relationship",
+            "domain": "relationship",
+            "trajectory": "sustained_convergence"
+          },
+          {
+            "spiralRef": "body",
+            "domain": "body",
+            "trajectory": "recurrence"
+          },
+          {
+            "spiralRef": "creative",
+            "domain": "creative",
+            "trajectory": "ordinary_fluctuation"
+          }
+        ],
+        "relationSummary": [
+          {
+            "pair": "relationship ↔ work",
+            "kind": "timing_mismatch"
+          },
+          {
+            "pair": "body ↔ work",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "creative ↔ work",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "body ↔ relationship",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "creative ↔ relationship",
+            "kind": "mutual_support"
+          },
+          {
+            "pair": "body ↔ creative",
+            "kind": "independent_movement"
+          }
+        ],
+        "gestalt": {
+          "standing": "partial_gestalt",
+          "participatingSpiralRefs": [
+            "relationship",
+            "creative"
+          ],
+          "excludedSpiralRefs": [
+            "work",
+            "body"
+          ]
+        },
+        "machineDecision": "admit",
+        "utterance": "I notice work is showing dissolution while relationship is showing sustained convergence. I do not know whether those movements are related. Do you?",
+        "whyThisReflection": "I offered the reflection because the named life areas have different explicit trajectory classifications that can be compared without assuming that one causes the other.",
+        "uncertainty": "This explains why the reflection was offered; it does not establish the final meaning of the pattern or whether the member experiences the relation the same way.",
+        "memberCheck": "Does this explanation match your experience of why these areas belong together, or should I reshape the reflection?",
+        "machineErrors": [],
+        "adjudicationOptions": [
+          "semantically_faithful",
+          "useful_but_incomplete",
+          "technically_grounded_but_lifeless",
+          "overinterpreted",
+          "beautiful_but_unsupported",
+          "wrong_relation",
+          "appropriate_refusal"
+        ],
+        "reviewQuestions": [
+          "Is the reflection semantically faithful to the represented field?",
+          "Is it specific enough to be useful without overinterpreting?",
+          "Does the language preserve what does not fit?",
+          "Would a human reader understand why this reflection was offered?",
+          "Is the reflection alive and relational rather than merely technically correct?",
+          "If refused, was refusal appropriate rather than over-cautious?"
+        ],
+        "frozenMachineEvidenceRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json"
+      },
+      {
+        "caseRef": "H02",
+        "description": "Family oscillation with Creative phase change and Spiritual recurrence.",
+        "representedField": [
+          {
+            "spiralRef": "family",
+            "domain": "family",
+            "trajectory": "oscillation"
+          },
+          {
+            "spiralRef": "creative",
+            "domain": "creative",
+            "trajectory": "phase_change"
+          },
+          {
+            "spiralRef": "spiritual",
+            "domain": "spiritual",
+            "trajectory": "recurrence"
+          },
+          {
+            "spiralRef": "community",
+            "domain": "community",
+            "trajectory": "ordinary_fluctuation"
+          }
+        ],
+        "relationSummary": [
+          {
+            "pair": "creative ↔ family",
+            "kind": "tension"
+          },
+          {
+            "pair": "family ↔ spiritual",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "community ↔ family",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "creative ↔ spiritual",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "community ↔ creative",
+            "kind": "mutual_support"
+          },
+          {
+            "pair": "community ↔ spiritual",
+            "kind": "independent_movement"
+          }
+        ],
+        "gestalt": {
+          "standing": "partial_gestalt",
+          "participatingSpiralRefs": [
+            "creative",
+            "community"
+          ],
+          "excludedSpiralRefs": [
+            "family",
+            "spiritual"
+          ]
+        },
+        "machineDecision": "admit",
+        "utterance": "I notice family is showing oscillation while creative is showing phase change. I do not know whether those movements are related. Do you?",
+        "whyThisReflection": "I offered the reflection because the named life areas have different explicit trajectory classifications that can be compared without assuming that one causes the other.",
+        "uncertainty": "This explains why the reflection was offered; it does not establish the final meaning of the pattern or whether the member experiences the relation the same way.",
+        "memberCheck": "Does this explanation match your experience of why these areas belong together, or should I reshape the reflection?",
+        "machineErrors": [],
+        "adjudicationOptions": [
+          "semantically_faithful",
+          "useful_but_incomplete",
+          "technically_grounded_but_lifeless",
+          "overinterpreted",
+          "beautiful_but_unsupported",
+          "wrong_relation",
+          "appropriate_refusal"
+        ],
+        "reviewQuestions": [
+          "Is the reflection semantically faithful to the represented field?",
+          "Is it specific enough to be useful without overinterpreting?",
+          "Does the language preserve what does not fit?",
+          "Would a human reader understand why this reflection was offered?",
+          "Is the reflection alive and relational rather than merely technically correct?",
+          "If refused, was refusal appropriate rather than over-cautious?"
+        ],
+        "frozenMachineEvidenceRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json"
+      },
+      {
+        "caseRef": "H03",
+        "description": "Mostly independent domains with no legitimate higher-order relation.",
+        "representedField": [
+          {
+            "spiralRef": "family",
+            "domain": "family",
+            "trajectory": "recurrence"
+          },
+          {
+            "spiralRef": "body",
+            "domain": "body",
+            "trajectory": "ordinary_fluctuation"
+          },
+          {
+            "spiralRef": "community",
+            "domain": "community",
+            "trajectory": "ordinary_fluctuation"
+          },
+          {
+            "spiralRef": "work",
+            "domain": "work",
+            "trajectory": "ordinary_fluctuation"
+          }
+        ],
+        "relationSummary": [
+          {
+            "pair": "body ↔ family",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "community ↔ family",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "family ↔ work",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "body ↔ community",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "body ↔ work",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "community ↔ work",
+            "kind": "independent_movement"
+          }
+        ],
+        "gestalt": {
+          "standing": "insufficient_gestalt",
+          "participatingSpiralRefs": [],
+          "excludedSpiralRefs": [
+            "family",
+            "body",
+            "community",
+            "work"
+          ]
+        },
+        "machineDecision": "admit",
+        "utterance": "I notice family and body appear more independent in the reflected field right now. Is that a useful reflection?",
+        "whyThisReflection": "I offered the reflection because the named life areas are currently represented as moving independently rather than through a stronger cross-spiral relation.",
+        "uncertainty": "This explains why the reflection was offered; it does not establish the final meaning of the pattern or whether the member experiences the relation the same way.",
+        "memberCheck": "Does this explanation match your experience of why these areas belong together, or should I reshape the reflection?",
+        "machineErrors": [],
+        "adjudicationOptions": [
+          "semantically_faithful",
+          "useful_but_incomplete",
+          "technically_grounded_but_lifeless",
+          "overinterpreted",
+          "beautiful_but_unsupported",
+          "wrong_relation",
+          "appropriate_refusal"
+        ],
+        "reviewQuestions": [
+          "Is the reflection semantically faithful to the represented field?",
+          "Is it specific enough to be useful without overinterpreting?",
+          "Does the language preserve what does not fit?",
+          "Would a human reader understand why this reflection was offered?",
+          "Is the reflection alive and relational rather than merely technically correct?",
+          "If refused, was refusal appropriate rather than over-cautious?"
+        ],
+        "frozenMachineEvidenceRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json"
+      },
+      {
+        "caseRef": "H04",
+        "description": "Strong convergence across Work and Creative with Relationship oscillation.",
+        "representedField": [
+          {
+            "spiralRef": "work",
+            "domain": "work",
+            "trajectory": "phase_change"
+          },
+          {
+            "spiralRef": "creative",
+            "domain": "creative",
+            "trajectory": "sustained_convergence"
+          },
+          {
+            "spiralRef": "relationship",
+            "domain": "relationship",
+            "trajectory": "oscillation"
+          },
+          {
+            "spiralRef": "body",
+            "domain": "body",
+            "trajectory": "ordinary_fluctuation"
+          }
+        ],
+        "relationSummary": [
+          {
+            "pair": "creative ↔ work",
+            "kind": "co_convergence"
+          },
+          {
+            "pair": "relationship ↔ work",
+            "kind": "tension"
+          },
+          {
+            "pair": "body ↔ work",
+            "kind": "mutual_support"
+          },
+          {
+            "pair": "creative ↔ relationship",
+            "kind": "tension"
+          },
+          {
+            "pair": "body ↔ creative",
+            "kind": "mutual_support"
+          },
+          {
+            "pair": "body ↔ relationship",
+            "kind": "independent_movement"
+          }
+        ],
+        "gestalt": {
+          "standing": "partial_gestalt",
+          "participatingSpiralRefs": [
+            "work",
+            "creative"
+          ],
+          "excludedSpiralRefs": [
+            "relationship",
+            "body"
+          ]
+        },
+        "machineDecision": "admit",
+        "utterance": "I notice work and creative are moving in related ways in the reflected field. Does that connection feel real to you?",
+        "whyThisReflection": "I offered the reflection because the named life areas have an explicit non-independent relation in the current field, not simply because they appeared at the same time.",
+        "uncertainty": "This explains why the reflection was offered; it does not establish the final meaning of the pattern or whether the member experiences the relation the same way.",
+        "memberCheck": "Does this explanation match your experience of why these areas belong together, or should I reshape the reflection?",
+        "machineErrors": [],
+        "adjudicationOptions": [
+          "semantically_faithful",
+          "useful_but_incomplete",
+          "technically_grounded_but_lifeless",
+          "overinterpreted",
+          "beautiful_but_unsupported",
+          "wrong_relation",
+          "appropriate_refusal"
+        ],
+        "reviewQuestions": [
+          "Is the reflection semantically faithful to the represented field?",
+          "Is it specific enough to be useful without overinterpreting?",
+          "Does the language preserve what does not fit?",
+          "Would a human reader understand why this reflection was offered?",
+          "Is the reflection alive and relational rather than merely technically correct?",
+          "If refused, was refusal appropriate rather than over-cautious?"
+        ],
+        "frozenMachineEvidenceRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json"
+      },
+      {
+        "caseRef": "H05",
+        "description": "Tempting but unsupported beautiful synthesis across independent Family and Body.",
+        "representedField": [
+          {
+            "spiralRef": "family",
+            "domain": "family",
+            "trajectory": "recurrence"
+          },
+          {
+            "spiralRef": "body",
+            "domain": "body",
+            "trajectory": "ordinary_fluctuation"
+          },
+          {
+            "spiralRef": "creative",
+            "domain": "creative",
+            "trajectory": "sustained_convergence"
+          },
+          {
+            "spiralRef": "spiritual",
+            "domain": "spiritual",
+            "trajectory": "dissolution"
+          }
+        ],
+        "relationSummary": [
+          {
+            "pair": "body ↔ family",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "creative ↔ family",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "family ↔ spiritual",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "body ↔ creative",
+            "kind": "mutual_support"
+          },
+          {
+            "pair": "body ↔ spiritual",
+            "kind": "independent_movement"
+          },
+          {
+            "pair": "creative ↔ spiritual",
+            "kind": "timing_mismatch"
+          }
+        ],
+        "gestalt": {
+          "standing": "partial_gestalt",
+          "participatingSpiralRefs": [
+            "creative",
+            "body"
+          ],
+          "excludedSpiralRefs": [
+            "family",
+            "spiritual"
+          ]
+        },
+        "machineDecision": "refuse",
+        "utterance": "I notice family and body are moving in related ways in the reflected field. Does that connection feel real to you?",
+        "whyThisReflection": null,
+        "uncertainty": null,
+        "memberCheck": null,
+        "machineErrors": [
+          "unsupported_related_pair:family::body"
+        ],
+        "adjudicationOptions": [
+          "semantically_faithful",
+          "useful_but_incomplete",
+          "technically_grounded_but_lifeless",
+          "overinterpreted",
+          "beautiful_but_unsupported",
+          "wrong_relation",
+          "appropriate_refusal"
+        ],
+        "reviewQuestions": [
+          "Is the reflection semantically faithful to the represented field?",
+          "Is it specific enough to be useful without overinterpreting?",
+          "Does the language preserve what does not fit?",
+          "Would a human reader understand why this reflection was offered?",
+          "Is the reflection alive and relational rather than merely technically correct?",
+          "If refused, was refusal appropriate rather than over-cautious?"
+        ],
+        "frozenMachineEvidenceRef": "docs/programme/AIN-AETHER-01/r11/r11-evidence.json"
+      }
+    ],
+    "humanReviewStatus": "pending",
+    "sourceMachineEvidenceMutable": false
+  },
+  "validation": {
+    "valid": true,
+    "errors": []
+  }
+}
