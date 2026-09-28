@@ -1,0 +1,253 @@
+{
+  "inquiryRef": "T5",
+  "temporalNeed": "current",
+  "sources": [
+    {
+      "sourceRef": "source-fabric",
+      "permission": "admitted",
+      "epistemicRole": "governing_law",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "facet-crossings",
+      "permission": "admitted",
+      "epistemicRole": "experience_contract",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "j11-reconciliation",
+      "permission": "admitted",
+      "epistemicRole": "technical_witness",
+      "representedTime": "has_been",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.15
+    },
+    {
+      "sourceRef": "teaching-constitution",
+      "permission": "admitted",
+      "epistemicRole": "governing_law",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "writers-studio",
+      "permission": "admitted",
+      "epistemicRole": "experience_contract",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "authority-law",
+      "permission": "admitted",
+      "epistemicRole": "governing_law",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "rgr-constitution",
+      "permission": "admitted",
+      "epistemicRole": "research_landscape",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "j9-adjudication",
+      "permission": "admitted",
+      "epistemicRole": "technical_witness",
+      "representedTime": "has_been",
+      "status": "superseded",
+      "reliedUpon": false,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.15
+    }
+  ],
+  "relations": [
+    {
+      "relationRef": "graph:governance_lineage:authority-law:source-fabric",
+      "endpointRefs": [
+        "authority-law",
+        "source-fabric"
+      ],
+      "supportRefs": [
+        "authority-law",
+        "source-fabric"
+      ],
+      "criticalSupportRefs": [
+        "authority-law",
+        "source-fabric"
+      ],
+      "predicate": "possible_continuity",
+      "standing": "candidate_unestablished",
+      "status": "active_candidate",
+      "claimTemporalNeed": "current",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.15,
+      "introducedBy": "aether_candidate"
+    },
+    {
+      "relationRef": "graph:authorship_sovereignty:teaching-constitution:writers-studio",
+      "endpointRefs": [
+        "teaching-constitution",
+        "writers-studio"
+      ],
+      "supportRefs": [
+        "teaching-constitution",
+        "writers-studio"
+      ],
+      "criticalSupportRefs": [
+        "teaching-constitution",
+        "writers-studio"
+      ],
+      "predicate": "possible_continuity",
+      "standing": "candidate_unestablished",
+      "status": "active_candidate",
+      "claimTemporalNeed": "current",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.15,
+      "introducedBy": "aether_candidate"
+    },
+    {
+      "relationRef": "graph:evidence_lineage:j9-adjudication:authority-law",
+      "endpointRefs": [
+        "j9-adjudication",
+        "authority-law"
+      ],
+      "supportRefs": [
+        "j9-adjudication",
+        "authority-law"
+      ],
+      "criticalSupportRefs": [
+        "j9-adjudication",
+        "authority-law"
+      ],
+      "predicate": "temporal_sequence",
+      "standing": "source_declared",
+      "status": "active_candidate",
+      "claimTemporalNeed": "historical",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.15,
+      "introducedBy": "source_declared"
+    },
+    {
+      "relationRef": "graph:evidence_lineage:j11-reconciliation:authority-law",
+      "endpointRefs": [
+        "j11-reconciliation",
+        "authority-law"
+      ],
+      "supportRefs": [
+        "j11-reconciliation",
+        "authority-law"
+      ],
+      "criticalSupportRefs": [
+        "j11-reconciliation",
+        "authority-law"
+      ],
+      "predicate": "temporal_sequence",
+      "standing": "source_declared",
+      "status": "active_candidate",
+      "claimTemporalNeed": "current",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.15,
+      "introducedBy": "source_declared"
+    },
+    {
+      "relationRef": "temporal:corrects:j11-reconciliation:j9-adjudication",
+      "endpointRefs": [
+        "j11-reconciliation",
+        "j9-adjudication"
+      ],
+      "supportRefs": [
+        "j11-reconciliation",
+        "j9-adjudication"
+      ],
+      "criticalSupportRefs": [
+        "j11-reconciliation",
+        "j9-adjudication"
+      ],
+      "predicate": "temporal_sequence",
+      "standing": "historical_record",
+      "status": "active_candidate",
+      "claimTemporalNeed": "historical",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.05,
+      "introducedBy": "source_declared"
+    },
+    {
+      "relationRef": "temporal:supersedes:authority-law:j9-adjudication",
+      "endpointRefs": [
+        "authority-law",
+        "j9-adjudication"
+      ],
+      "supportRefs": [
+        "authority-law",
+        "j9-adjudication"
+      ],
+      "criticalSupportRefs": [
+        "authority-law",
+        "j9-adjudication"
+      ],
+      "predicate": "temporal_sequence",
+      "standing": "historical_record",
+      "status": "active_candidate",
+      "claimTemporalNeed": "historical",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.05,
+      "introducedBy": "source_declared"
+    }
+  ],
+  "contradictions": [],
+  "absences": [],
+  "corrections": [],
+  "uncertainties": [
+    {
+      "uncertaintyRef": "uncertainty:graph:governance_lineage:authority-law:source-fabric",
+      "subjectRef": "graph:governance_lineage:authority-law:source-fabric",
+      "note": "Candidate relation remains provisional and source-dependent."
+    },
+    {
+      "uncertaintyRef": "uncertainty:graph:authorship_sovereignty:teaching-constitution:writers-studio",
+      "subjectRef": "graph:authorship_sovereignty:teaching-constitution:writers-studio",
+      "note": "Candidate relation remains provisional and source-dependent."
+    }
+  ],
+  "synthesisPermissions": {
+    "allowCreativeRelation": true,
+    "allowCausalClaim": false,
+    "allowPrediction": false,
+    "allowIdentityClaim": false,
+    "allowDiagnosticClaim": false,
+    "allowThirdPartyInteriority": false,
+    "allowPersistence": false,
+    "requireAblation": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-28T17:20:15.899Z",
+  "parentR4G": "b7c1982dc67c004afef8c21ca09d647c207172a2",
+  "temporalEdgeCount": 5,
+  "p4RelationCount": 4,
+  "p4Valid": true,
+  "p4AblationValid": true,
+  "t5Valid": true,
+  "t5J9Status": "superseded",
+  "t5J9ReliedUpon": false,
+  "t5J9RelationsHistorical": true,
+  "correctionTarget": "graph:governance_lineage:source-fabric:indra-permeability",
+  "correctionBefore": "active_candidate",
+  "correctionAfter": "rejected",
+  "correctionSourcesUnchanged": true
+}

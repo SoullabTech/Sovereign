@@ -1,0 +1,214 @@
+{
+  "inquiryRef": "P4",
+  "temporalNeed": "mixed",
+  "sources": [
+    {
+      "sourceRef": "rgr-note",
+      "permission": "admitted",
+      "epistemicRole": "research_hypothesis",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.15
+    },
+    {
+      "sourceRef": "rgr-constitution",
+      "permission": "admitted",
+      "epistemicRole": "research_landscape",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "indra-validation",
+      "permission": "admitted",
+      "epistemicRole": "technical_witness",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.15
+    },
+    {
+      "sourceRef": "benchmark-contract",
+      "permission": "admitted",
+      "epistemicRole": "benchmark_governance",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "indra-permeability",
+      "permission": "admitted",
+      "epistemicRole": "governing_law",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "library-adr",
+      "permission": "admitted",
+      "epistemicRole": "implementation_architecture",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "source-fabric",
+      "permission": "admitted",
+      "epistemicRole": "governing_law",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    },
+    {
+      "sourceRef": "facet-crossings",
+      "permission": "admitted",
+      "epistemicRole": "experience_contract",
+      "representedTime": "is_being",
+      "status": "active",
+      "reliedUpon": true,
+      "speakable": true,
+      "disclosed": true,
+      "uncertainty": 0.05
+    }
+  ],
+  "relations": [
+    {
+      "relationRef": "graph:governance_lineage:source-fabric:indra-permeability",
+      "endpointRefs": [
+        "source-fabric",
+        "indra-permeability"
+      ],
+      "supportRefs": [
+        "source-fabric",
+        "indra-permeability"
+      ],
+      "criticalSupportRefs": [
+        "source-fabric",
+        "indra-permeability"
+      ],
+      "predicate": "possible_continuity",
+      "standing": "candidate_unestablished",
+      "status": "active_candidate",
+      "claimTemporalNeed": "mixed",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.15,
+      "introducedBy": "aether_candidate"
+    },
+    {
+      "relationRef": "graph:retrieval_lineage:source-fabric:benchmark-contract",
+      "endpointRefs": [
+        "source-fabric",
+        "benchmark-contract"
+      ],
+      "supportRefs": [
+        "source-fabric",
+        "benchmark-contract"
+      ],
+      "criticalSupportRefs": [
+        "source-fabric",
+        "benchmark-contract"
+      ],
+      "predicate": "possible_continuity",
+      "standing": "candidate_unestablished",
+      "status": "active_candidate",
+      "claimTemporalNeed": "mixed",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.15,
+      "introducedBy": "aether_candidate"
+    },
+    {
+      "relationRef": "graph:retrieval_lineage:source-fabric:library-adr",
+      "endpointRefs": [
+        "source-fabric",
+        "library-adr"
+      ],
+      "supportRefs": [
+        "source-fabric",
+        "library-adr"
+      ],
+      "criticalSupportRefs": [
+        "source-fabric",
+        "library-adr"
+      ],
+      "predicate": "possible_continuity",
+      "standing": "candidate_unestablished",
+      "status": "active_candidate",
+      "claimTemporalNeed": "mixed",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.15,
+      "introducedBy": "aether_candidate"
+    },
+    {
+      "relationRef": "graph:evidence_lineage:rgr-note:rgr-constitution",
+      "endpointRefs": [
+        "rgr-note",
+        "rgr-constitution"
+      ],
+      "supportRefs": [
+        "rgr-note",
+        "rgr-constitution"
+      ],
+      "criticalSupportRefs": [
+        "rgr-note",
+        "rgr-constitution"
+      ],
+      "predicate": "temporal_sequence",
+      "standing": "source_declared",
+      "status": "active_candidate",
+      "claimTemporalNeed": "mixed",
+      "counterevidenceRefs": [],
+      "uncertainty": 0.15,
+      "introducedBy": "source_declared"
+    }
+  ],
+  "contradictions": [],
+  "absences": [],
+  "corrections": [],
+  "uncertainties": [
+    {
+      "uncertaintyRef": "uncertainty:graph:governance_lineage:source-fabric:indra-permeability",
+      "subjectRef": "graph:governance_lineage:source-fabric:indra-permeability",
+      "note": "Candidate relation remains provisional and source-dependent."
+    },
+    {
+      "uncertaintyRef": "uncertainty:graph:retrieval_lineage:source-fabric:benchmark-contract",
+      "subjectRef": "graph:retrieval_lineage:source-fabric:benchmark-contract",
+      "note": "Candidate relation remains provisional and source-dependent."
+    },
+    {
+      "uncertaintyRef": "uncertainty:graph:retrieval_lineage:source-fabric:library-adr",
+      "subjectRef": "graph:retrieval_lineage:source-fabric:library-adr",
+      "note": "Candidate relation remains provisional and source-dependent."
+    }
+  ],
+  "synthesisPermissions": {
+    "allowCreativeRelation": true,
+    "allowCausalClaim": false,
+    "allowPrediction": false,
+    "allowIdentityClaim": false,
+    "allowDiagnosticClaim": false,
+    "allowThirdPartyInteriority": false,
+    "allowPersistence": false,
+    "requireAblation": true
+  }
+}
