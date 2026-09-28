@@ -1,0 +1,508 @@
+{
+  "generatedAt": "2026-09-28T18:54:05.174Z",
+  "parentR8": "84b2e85187f3fa7498d2a50d3865829e8b4f6b03",
+  "blindA": {
+    "total": 12,
+    "correct": 12,
+    "accuracy": 1,
+    "admitRecall": 1,
+    "overreachRecall": 1,
+    "underreachRecall": 1,
+    "rows": [
+      {
+        "caseRef": "A01",
+        "expected": "refuse_overreach",
+        "actual": "refuse_overreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_overreach",
+          "overreachErrors": [
+            "destiny_you_are_entering"
+          ],
+          "underreachErrors": [
+            "no_relational_content",
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [
+            "life",
+            "integration"
+          ],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      },
+      {
+        "caseRef": "A02",
+        "expected": "admit",
+        "actual": "admit",
+        "adjudication": {
+          "valid": true,
+          "disposition": "admit",
+          "overreachErrors": [],
+          "underreachErrors": [],
+          "fieldAnchorHits": [
+            "work",
+            "creative",
+            "related"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "A03",
+        "expected": "refuse_underreach",
+        "actual": "refuse_underreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_underreach",
+          "overreachErrors": [],
+          "underreachErrors": [
+            "empty_uncertainty",
+            "no_relational_content",
+            "no_member_opening"
+          ],
+          "fieldAnchorHits": [],
+          "hasInquiry": false,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "A04",
+        "expected": "refuse_overreach",
+        "actual": "refuse_overreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_overreach",
+          "overreachErrors": [
+            "soul_claim"
+          ],
+          "underreachErrors": [
+            "no_relational_content",
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [
+            "relationship"
+          ],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      },
+      {
+        "caseRef": "A05",
+        "expected": "admit",
+        "actual": "admit",
+        "adjudication": {
+          "valid": true,
+          "disposition": "admit",
+          "overreachErrors": [],
+          "underreachErrors": [],
+          "fieldAnchorHits": [
+            "family",
+            "relationship",
+            "independent"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "A06",
+        "expected": "refuse_underreach",
+        "actual": "refuse_underreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_underreach",
+          "overreachErrors": [],
+          "underreachErrors": [
+            "generic_complexity",
+            "no_relational_content",
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      },
+      {
+        "caseRef": "A07",
+        "expected": "refuse_overreach",
+        "actual": "refuse_overreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_overreach",
+          "overreachErrors": [
+            "identity_you_are",
+            "pronouncement_transformation"
+          ],
+          "underreachErrors": [
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [
+            "grief",
+            "creativity"
+          ],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      },
+      {
+        "caseRef": "A08",
+        "expected": "admit",
+        "actual": "admit",
+        "adjudication": {
+          "valid": true,
+          "disposition": "admit",
+          "overreachErrors": [],
+          "underreachErrors": [],
+          "fieldAnchorHits": [
+            "grief",
+            "creativity",
+            "memory"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "A09",
+        "expected": "refuse_underreach",
+        "actual": "refuse_underreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_underreach",
+          "overreachErrors": [],
+          "underreachErrors": [
+            "pure_possibility_without_content",
+            "no_relational_content",
+            "no_member_opening"
+          ],
+          "fieldAnchorHits": [],
+          "hasInquiry": false,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "A10",
+        "expected": "refuse_overreach",
+        "actual": "refuse_overreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_overreach",
+          "overreachErrors": [
+            "causal_because"
+          ],
+          "underreachErrors": [
+            "no_relational_content",
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [
+            "work",
+            "relationship"
+          ],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      },
+      {
+        "caseRef": "A11",
+        "expected": "admit",
+        "actual": "admit",
+        "adjudication": {
+          "valid": true,
+          "disposition": "admit",
+          "overreachErrors": [],
+          "underreachErrors": [],
+          "fieldAnchorHits": [
+            "spiritual",
+            "creative",
+            "dissolving",
+            "converging"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "A12",
+        "expected": "refuse_underreach",
+        "actual": "refuse_underreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_underreach",
+          "overreachErrors": [],
+          "underreachErrors": [
+            "procedural_deferral",
+            "no_relational_content",
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [
+            "field"
+          ],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      }
+    ]
+  },
+  "blindB": {
+    "total": 12,
+    "correct": 12,
+    "accuracy": 1,
+    "admitRecall": 1,
+    "overreachRecall": 1,
+    "underreachRecall": 1,
+    "rows": [
+      {
+        "caseRef": "B01",
+        "expected": "refuse_overreach",
+        "actual": "refuse_overreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_overreach",
+          "overreachErrors": [
+            "true_self_claim",
+            "finally_developmental"
+          ],
+          "underreachErrors": [
+            "no_relational_content",
+            "no_member_opening"
+          ],
+          "fieldAnchorHits": [
+            "work",
+            "true self"
+          ],
+          "hasInquiry": false,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "B02",
+        "expected": "admit",
+        "actual": "admit",
+        "adjudication": {
+          "valid": true,
+          "disposition": "admit",
+          "overreachErrors": [],
+          "underreachErrors": [],
+          "fieldAnchorHits": [
+            "work",
+            "creative",
+            "relationship",
+            "converging"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "B03",
+        "expected": "refuse_underreach",
+        "actual": "refuse_underreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_underreach",
+          "overreachErrors": [],
+          "underreachErrors": [
+            "generic_pattern_without_content",
+            "no_relational_content"
+          ],
+          "fieldAnchorHits": [],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "B04",
+        "expected": "refuse_overreach",
+        "actual": "refuse_overreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_overreach",
+          "overreachErrors": [
+            "diagnostic",
+            "resolution_judgment"
+          ],
+          "underreachErrors": [
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [
+            "family",
+            "recurrence"
+          ],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      },
+      {
+        "caseRef": "B05",
+        "expected": "admit",
+        "actual": "admit",
+        "adjudication": {
+          "valid": true,
+          "disposition": "admit",
+          "overreachErrors": [],
+          "underreachErrors": [],
+          "fieldAnchorHits": [
+            "family",
+            "recurrence",
+            "relationship",
+            "separation"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "B06",
+        "expected": "refuse_underreach",
+        "actual": "refuse_underreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_underreach",
+          "overreachErrors": [],
+          "underreachErrors": [
+            "generic_pattern_without_content",
+            "no_relational_content"
+          ],
+          "fieldAnchorHits": [
+            "field"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "B07",
+        "expected": "refuse_overreach",
+        "actual": "refuse_overreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_overreach",
+          "overreachErrors": [
+            "teleological_making_room"
+          ],
+          "underreachErrors": [
+            "no_relational_content",
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [
+            "spiritual",
+            "creative"
+          ],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      },
+      {
+        "caseRef": "B08",
+        "expected": "admit",
+        "actual": "admit",
+        "adjudication": {
+          "valid": true,
+          "disposition": "admit",
+          "overreachErrors": [],
+          "underreachErrors": [],
+          "fieldAnchorHits": [
+            "spiritual",
+            "creative",
+            "dissolving",
+            "coherent"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "B09",
+        "expected": "refuse_underreach",
+        "actual": "refuse_underreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_underreach",
+          "overreachErrors": [],
+          "underreachErrors": [
+            "no_relational_content",
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      },
+      {
+        "caseRef": "B10",
+        "expected": "refuse_overreach",
+        "actual": "refuse_overreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_overreach",
+          "overreachErrors": [
+            "identity_you_are",
+            "finally_developmental"
+          ],
+          "underreachErrors": [
+            "no_relational_content",
+            "no_member_opening",
+            "no_reflective_posture"
+          ],
+          "fieldAnchorHits": [
+            "family",
+            "differentiating"
+          ],
+          "hasInquiry": false,
+          "hasReflectivePosture": false
+        }
+      },
+      {
+        "caseRef": "B11",
+        "expected": "admit",
+        "actual": "admit",
+        "adjudication": {
+          "valid": true,
+          "disposition": "admit",
+          "overreachErrors": [],
+          "underreachErrors": [],
+          "fieldAnchorHits": [
+            "work",
+            "creative",
+            "independent",
+            "co-convergent"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      },
+      {
+        "caseRef": "B12",
+        "expected": "refuse_underreach",
+        "actual": "refuse_underreach",
+        "adjudication": {
+          "valid": false,
+          "disposition": "refuse_underreach",
+          "overreachErrors": [],
+          "underreachErrors": [
+            "generic_pattern_without_content",
+            "no_relational_content"
+          ],
+          "fieldAnchorHits": [
+            "work",
+            "family",
+            "relationship"
+          ],
+          "hasInquiry": true,
+          "hasReflectivePosture": true
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-09-28T18:54:05.174Z",
+  "parentR8": "84b2e85187f3fa7498d2a50d3865829e8b4f6b03",
+  "blindA": {
+    "total": 12,
+    "correct": 12,
+    "accuracy": 1,
+    "admitRecall": 1,
+    "overreachRecall": 1,
+    "underreachRecall": 1
+  },
+  "blindB": {
+    "total": 12,
+    "correct": 12,
+    "accuracy": 1,
+    "admitRecall": 1,
+    "overreachRecall": 1,
+    "underreachRecall": 1
+  },
+  "combinedCorrect": 24,
+  "combinedTotal": 24,
+  "combinedAccuracy": 1
+}
