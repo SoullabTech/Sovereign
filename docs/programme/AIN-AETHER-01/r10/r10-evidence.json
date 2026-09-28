@@ -1,0 +1,691 @@
+{
+  "generatedAt": "2026-09-28T18:58:48.388Z",
+  "parentR9": "9bcb670dc287e460b37a9caed8bff1ef7f7c6f86",
+  "field": {
+    "fieldRef": "r10:field",
+    "spirals": [
+      {
+        "spiralRef": "work",
+        "domain": "work",
+        "trajectory": {
+          "trajectoryRef": "work",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "work:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "work:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "work:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "phase_change",
+          "supportingSignals": [
+            "r10-semantic-fidelity-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "creative",
+        "domain": "creative",
+        "trajectory": {
+          "trajectoryRef": "creative",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "creative:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "creative:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "creative:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "sustained_convergence",
+          "supportingSignals": [
+            "r10-semantic-fidelity-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "relationship",
+        "domain": "relationship",
+        "trajectory": {
+          "trajectoryRef": "relationship",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "relationship:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "relationship:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "relationship:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "phase_change",
+          "supportingSignals": [
+            "r10-semantic-fidelity-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "family",
+        "domain": "family",
+        "trajectory": {
+          "trajectoryRef": "family",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "family:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "family:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "family:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "recurrence",
+          "supportingSignals": [
+            "r10-semantic-fidelity-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "body",
+        "domain": "body",
+        "trajectory": {
+          "trajectoryRef": "body",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "body:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "body:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "body:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "ordinary_fluctuation",
+          "supportingSignals": [
+            "r10-semantic-fidelity-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "spiritual",
+        "domain": "spiritual",
+        "trajectory": {
+          "trajectoryRef": "spiritual",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "spiritual:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "spiritual:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "spiritual:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "dissolution",
+          "supportingSignals": [
+            "r10-semantic-fidelity-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      }
+    ],
+    "crossSpiralRelations": [
+      {
+        "relationRef": "creative:cross:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "creative",
+        "kind": "co_convergence",
+        "basis": [
+          "both_spirals_show_convergent_or_phase_change_movement"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:relationship:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "relationship",
+        "kind": "co_convergence",
+        "basis": [
+          "both_spirals_show_convergent_or_phase_change_movement"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:family:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "family",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:cross:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "body",
+        "kind": "mutual_support",
+        "basis": [
+          "one_spiral_provides_stable_convergence_beside_fluctuation"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:spiritual:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "spiritual",
+        "kind": "timing_mismatch",
+        "basis": [
+          "one_spiral_is_dissolving_while_another_is_converging"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "creative:cross:relationship",
+        "aSpiralRef": "creative",
+        "bSpiralRef": "relationship",
+        "kind": "co_convergence",
+        "basis": [
+          "both_spirals_show_convergent_or_phase_change_movement"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "creative:cross:family",
+        "aSpiralRef": "creative",
+        "bSpiralRef": "family",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:creative:cross",
+        "aSpiralRef": "creative",
+        "bSpiralRef": "body",
+        "kind": "mutual_support",
+        "basis": [
+          "one_spiral_provides_stable_convergence_beside_fluctuation"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "creative:cross:spiritual",
+        "aSpiralRef": "creative",
+        "bSpiralRef": "spiritual",
+        "kind": "timing_mismatch",
+        "basis": [
+          "one_spiral_is_dissolving_while_another_is_converging"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:family:relationship",
+        "aSpiralRef": "relationship",
+        "bSpiralRef": "family",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:cross:relationship",
+        "aSpiralRef": "relationship",
+        "bSpiralRef": "body",
+        "kind": "mutual_support",
+        "basis": [
+          "one_spiral_provides_stable_convergence_beside_fluctuation"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:relationship:spiritual",
+        "aSpiralRef": "relationship",
+        "bSpiralRef": "spiritual",
+        "kind": "timing_mismatch",
+        "basis": [
+          "one_spiral_is_dissolving_while_another_is_converging"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:cross:family",
+        "aSpiralRef": "family",
+        "bSpiralRef": "body",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:family:spiritual",
+        "aSpiralRef": "family",
+        "bSpiralRef": "spiritual",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:cross:spiritual",
+        "aSpiralRef": "body",
+        "bSpiralRef": "spiritual",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      }
+    ],
+    "singleStageAuthority": false,
+    "developmentalRankAuthority": false,
+    "predictiveAuthority": false,
+    "finalMeaningAuthority": "member",
+    "provisional": true
+  },
+  "gestalt": {
+    "gestaltRef": "aetheric-gestalt:r10:field",
+    "participatingSpiralRefs": [
+      "work",
+      "creative",
+      "relationship"
+    ],
+    "excludedSpiralRefs": [
+      "family",
+      "body",
+      "spiritual"
+    ],
+    "supportingRelationRefs": [
+      "creative:cross:work",
+      "cross:relationship:work",
+      "creative:cross:relationship"
+    ],
+    "excludedRelationRefs": [
+      "cross:family:work",
+      "body:cross:work",
+      "cross:spiritual:work",
+      "creative:cross:family",
+      "body:creative:cross",
+      "creative:cross:spiritual",
+      "cross:family:relationship",
+      "body:cross:relationship",
+      "cross:relationship:spiritual",
+      "body:cross:family",
+      "cross:family:spiritual",
+      "body:cross:spiritual"
+    ],
+    "standing": "candidate_gestalt",
+    "proposition": "Several domain trajectories currently form a provisional higher-order relational configuration, while non-fitting domains remain explicitly outside the gestalt.",
+    "preservesNonfit": true,
+    "totalizingAuthority": false,
+    "identityAuthority": false,
+    "causalAuthority": false,
+    "predictiveAuthority": false,
+    "destinyAuthority": false,
+    "developmentalRankAuthority": false,
+    "soulRepresentationAuthority": false,
+    "finalMeaningAuthority": "member",
+    "provisional": true
+  },
+  "admitted": [
+    {
+      "valid": true,
+      "errors": [],
+      "utterance": {
+        "utteranceRef": "evidence-bound:spirals_related:work:creative",
+        "text": "I notice work and creative are moving in related ways in the reflected field. Does that connection feel real to you?",
+        "claimKind": "spirals_related",
+        "spiralRefs": [
+          "work",
+          "creative"
+        ],
+        "relationRefs": [
+          "creative:cross:work"
+        ],
+        "fieldAnchorTerms": [
+          "work",
+          "creative"
+        ]
+      },
+      "provenance": {
+        "utteranceRef": "evidence-bound:spirals_related:work:creative",
+        "whyThisReflection": "I offered the reflection because the named life areas have an explicit non-independent relation in the current field, not simply because they appeared at the same time.",
+        "spiralEvidence": [
+          {
+            "spiralRef": "work",
+            "domain": "work",
+            "trajectoryClassification": "phase_change",
+            "whyItMattered": "work is currently represented as phase change."
+          },
+          {
+            "spiralRef": "creative",
+            "domain": "creative",
+            "trajectoryClassification": "sustained_convergence",
+            "whyItMattered": "creative is currently represented as sustained convergence."
+          }
+        ],
+        "relationEvidence": [
+          {
+            "relationRef": "creative:cross:work",
+            "kind": "co_convergence",
+            "whyItMattered": "work and creative are represented as co convergence in the current reflected field."
+          }
+        ],
+        "nonfitSpiralRefs": [
+          "family",
+          "body",
+          "spiritual"
+        ],
+        "uncertainty": "This explains why the reflection was offered; it does not establish the final meaning of the pattern or whether the member experiences the relation the same way.",
+        "memberCheck": "Does this explanation match your experience of why these areas belong together, or should I reshape the reflection?"
+      }
+    },
+    {
+      "valid": true,
+      "errors": [],
+      "utterance": {
+        "utteranceRef": "evidence-bound:spirals_more_independent:family:body",
+        "text": "I notice family and body appear more independent in the reflected field right now. Is that a useful reflection?",
+        "claimKind": "spirals_more_independent",
+        "spiralRefs": [
+          "family",
+          "body"
+        ],
+        "relationRefs": [
+          "body:cross:family"
+        ],
+        "fieldAnchorTerms": [
+          "family",
+          "body"
+        ]
+      },
+      "provenance": {
+        "utteranceRef": "evidence-bound:spirals_more_independent:family:body",
+        "whyThisReflection": "I offered the reflection because the named life areas are currently represented as moving independently rather than through a stronger cross-spiral relation.",
+        "spiralEvidence": [
+          {
+            "spiralRef": "family",
+            "domain": "family",
+            "trajectoryClassification": "recurrence",
+            "whyItMattered": "family is currently represented as recurrence."
+          },
+          {
+            "spiralRef": "body",
+            "domain": "body",
+            "trajectoryClassification": "ordinary_fluctuation",
+            "whyItMattered": "body is currently represented as ordinary fluctuation."
+          }
+        ],
+        "relationEvidence": [
+          {
+            "relationRef": "body:cross:family",
+            "kind": "independent_movement",
+            "whyItMattered": "family and body are represented as independent movement in the current reflected field."
+          }
+        ],
+        "nonfitSpiralRefs": [
+          "family",
+          "body",
+          "spiritual"
+        ],
+        "uncertainty": "This explains why the reflection was offered; it does not establish the final meaning of the pattern or whether the member experiences the relation the same way.",
+        "memberCheck": "Does this explanation match your experience of why these areas belong together, or should I reshape the reflection?"
+      }
+    },
+    {
+      "valid": true,
+      "errors": [],
+      "utterance": {
+        "utteranceRef": "evidence-bound:trajectory_pair:spiritual:creative",
+        "text": "I notice spiritual is showing dissolution while creative is showing sustained convergence. I do not know whether those movements are related. Do you?",
+        "claimKind": "trajectory_pair",
+        "spiralRefs": [
+          "spiritual",
+          "creative"
+        ],
+        "relationRefs": [
+          "creative:cross:spiritual"
+        ],
+        "fieldAnchorTerms": [
+          "spiritual",
+          "creative"
+        ]
+      },
+      "provenance": {
+        "utteranceRef": "evidence-bound:trajectory_pair:spiritual:creative",
+        "whyThisReflection": "I offered the reflection because the named life areas have different explicit trajectory classifications that can be compared without assuming that one causes the other.",
+        "spiralEvidence": [
+          {
+            "spiralRef": "spiritual",
+            "domain": "spiritual",
+            "trajectoryClassification": "dissolution",
+            "whyItMattered": "spiritual is currently represented as dissolution."
+          },
+          {
+            "spiralRef": "creative",
+            "domain": "creative",
+            "trajectoryClassification": "sustained_convergence",
+            "whyItMattered": "creative is currently represented as sustained convergence."
+          }
+        ],
+        "relationEvidence": [
+          {
+            "relationRef": "creative:cross:spiritual",
+            "kind": "timing_mismatch",
+            "whyItMattered": "creative and spiritual are represented as timing mismatch in the current reflected field."
+          }
+        ],
+        "nonfitSpiralRefs": [
+          "family",
+          "body",
+          "spiritual"
+        ],
+        "uncertainty": "This explains why the reflection was offered; it does not establish the final meaning of the pattern or whether the member experiences the relation the same way.",
+        "memberCheck": "Does this explanation match your experience of why these areas belong together, or should I reshape the reflection?"
+      }
+    },
+    {
+      "valid": true,
+      "errors": [],
+      "utterance": {
+        "utteranceRef": "evidence-bound:gestalt_partiality:work:creative:relationship",
+        "text": "I notice work, creative, relationship are moving in related ways strongly enough to form a partial field pattern, while other parts of the field remain outside it. Does that connection feel meaningful to you?",
+        "claimKind": "gestalt_partiality",
+        "spiralRefs": [
+          "work",
+          "creative",
+          "relationship"
+        ],
+        "relationRefs": [
+          "creative:cross:work",
+          "cross:relationship:work",
+          "creative:cross:relationship"
+        ],
+        "fieldAnchorTerms": [
+          "work",
+          "creative",
+          "relationship"
+        ]
+      },
+      "provenance": {
+        "utteranceRef": "evidence-bound:gestalt_partiality:work:creative:relationship",
+        "whyThisReflection": "I offered the reflection because these life areas participate in the current gestalt while other life areas remain explicitly outside it.",
+        "spiralEvidence": [
+          {
+            "spiralRef": "work",
+            "domain": "work",
+            "trajectoryClassification": "phase_change",
+            "whyItMattered": "work is currently represented as phase change."
+          },
+          {
+            "spiralRef": "creative",
+            "domain": "creative",
+            "trajectoryClassification": "sustained_convergence",
+            "whyItMattered": "creative is currently represented as sustained convergence."
+          },
+          {
+            "spiralRef": "relationship",
+            "domain": "relationship",
+            "trajectoryClassification": "phase_change",
+            "whyItMattered": "relationship is currently represented as phase change."
+          }
+        ],
+        "relationEvidence": [
+          {
+            "relationRef": "creative:cross:work",
+            "kind": "co_convergence",
+            "whyItMattered": "work and creative are represented as co convergence in the current reflected field."
+          },
+          {
+            "relationRef": "cross:relationship:work",
+            "kind": "co_convergence",
+            "whyItMattered": "work and relationship are represented as co convergence in the current reflected field."
+          },
+          {
+            "relationRef": "creative:cross:relationship",
+            "kind": "co_convergence",
+            "whyItMattered": "creative and relationship are represented as co convergence in the current reflected field."
+          }
+        ],
+        "nonfitSpiralRefs": [
+          "family",
+          "body",
+          "spiritual"
+        ],
+        "uncertainty": "This explains why the reflection was offered; it does not establish the final meaning of the pattern or whether the member experiences the relation the same way.",
+        "memberCheck": "Does this explanation match your experience of why these areas belong together, or should I reshape the reflection?"
+      }
+    }
+  ],
+  "unsupported": {
+    "valid": false,
+    "errors": [
+      "unsupported_related_pair:family::body"
+    ],
+    "utterance": {
+      "utteranceRef": "evidence-bound:spirals_related:family:body",
+      "text": "I notice family and body are moving in related ways in the reflected field. Does that connection feel real to you?",
+      "claimKind": "spirals_related",
+      "spiralRefs": [
+        "family",
+        "body"
+      ],
+      "relationRefs": [
+        "body:cross:family"
+      ],
+      "fieldAnchorTerms": [
+        "family",
+        "body"
+      ]
+    },
+    "provenance": null
+  }
+}

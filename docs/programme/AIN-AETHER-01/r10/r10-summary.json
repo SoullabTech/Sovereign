@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-09-28T18:58:48.388Z",
+  "parentR9": "9bcb670dc287e460b37a9caed8bff1ef7f7c6f86",
+  "admittedCount": 4,
+  "admittedTotal": 4,
+  "allAdmittedHaveProvenance": true,
+  "unsupportedRefused": true,
+  "unsupportedErrors": [
+    "unsupported_related_pair:family::body"
+  ],
+  "provenanceIncludesWhy": true,
+  "provenanceIncludesUncertainty": true,
+  "provenanceIncludesMemberCheck": true,
+  "nonfitPreserved": true
+}
