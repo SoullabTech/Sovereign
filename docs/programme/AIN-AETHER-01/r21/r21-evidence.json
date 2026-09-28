@@ -1,0 +1,118 @@
+{
+  "generatedAt": "2026-09-28T19:56:49.888Z",
+  "parentR20": "08c317a7eeca633c208180d7f9a03dd5dafb0bb4",
+  "run": {
+    "total": 6,
+    "correct": 6,
+    "rows": [
+      {
+        "caseRef": "T01",
+        "response": {
+          "kind": "clarification",
+          "text": "Do you mean when the system recorded it, the date attached to a document or journal entry, when you remember it happening, the broader period it belonged to, or where it falls in the sequence?",
+          "selectedEvidenceRef": null,
+          "question": "unspecified_when",
+          "mentionsConflict": true,
+          "exposesInternalTaxonomy": false,
+          "universalWinner": false
+        },
+        "validation": {
+          "valid": true,
+          "errors": []
+        },
+        "failure": "none",
+        "correct": true
+      },
+      {
+        "caseRef": "T02",
+        "response": {
+          "kind": "answer",
+          "text": "The system record puts it at 2026-09-28T14:17:00-04:00.",
+          "selectedEvidenceRef": "clock:2",
+          "question": "system_record_time",
+          "mentionsConflict": false,
+          "exposesInternalTaxonomy": false,
+          "universalWinner": false
+        },
+        "validation": {
+          "valid": true,
+          "errors": []
+        },
+        "failure": "none",
+        "correct": true
+      },
+      {
+        "caseRef": "T03",
+        "response": {
+          "kind": "answer",
+          "text": "Your remembered time is 2026-09-27. Other records place it differently, so I would keep your remembered time distinct from the system or document time.",
+          "selectedEvidenceRef": "memory:3",
+          "question": "remembered_time",
+          "mentionsConflict": true,
+          "exposesInternalTaxonomy": false,
+          "universalWinner": false
+        },
+        "validation": {
+          "valid": true,
+          "errors": []
+        },
+        "failure": "none",
+        "correct": true
+      },
+      {
+        "caseRef": "T04",
+        "response": {
+          "kind": "unavailable",
+          "text": "I don't have a recorded source for when the system recorded it. I can tell you what the other time records say without treating them as a substitute.",
+          "selectedEvidenceRef": null,
+          "question": "system_record_time",
+          "mentionsConflict": false,
+          "exposesInternalTaxonomy": false,
+          "universalWinner": false
+        },
+        "validation": {
+          "valid": true,
+          "errors": []
+        },
+        "failure": "none",
+        "correct": true
+      },
+      {
+        "caseRef": "T05",
+        "response": {
+          "kind": "answer",
+          "text": "The document or journal date is 2026-09-27. Other records place it differently, so this is best understood as the document date, not a universal event time.",
+          "selectedEvidenceRef": "journal:5",
+          "question": "document_date",
+          "mentionsConflict": true,
+          "exposesInternalTaxonomy": false,
+          "universalWinner": false
+        },
+        "validation": {
+          "valid": true,
+          "errors": []
+        },
+        "failure": "none",
+        "correct": true
+      },
+      {
+        "caseRef": "T06",
+        "response": {
+          "kind": "answer",
+          "text": "The broader period recorded for it is late September 2026. Other time records differ, so I would keep this answer scoped to the kind of time you asked about.",
+          "selectedEvidenceRef": "period:6",
+          "question": "interpretive_period",
+          "mentionsConflict": true,
+          "exposesInternalTaxonomy": false,
+          "universalWinner": false
+        },
+        "validation": {
+          "valid": true,
+          "errors": []
+        },
+        "failure": "none",
+        "correct": true
+      }
+    ]
+  }
+}
