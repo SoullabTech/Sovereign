@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-09-28T18:38:47.375Z",
+  "parentR5": "496d185efcf111271de34a47361ef6be805c6e2a",
+  "standing": "candidate_gestalt",
+  "participatingSpiralRefs": [
+    "work",
+    "creative",
+    "relationship"
+  ],
+  "excludedSpiralRefs": [
+    "family",
+    "body",
+    "spiritual"
+  ],
+  "supportingRelationCount": 3,
+  "excludedRelationCount": 12,
+  "preservesNonfit": true,
+  "totalizingAuthority": false,
+  "identityAuthority": false,
+  "causalAuthority": false,
+  "predictiveAuthority": false,
+  "destinyAuthority": false,
+  "developmentalRankAuthority": false,
+  "soulRepresentationAuthority": false,
+  "memberOwnsFinalMeaning": true,
+  "valid": true
+}

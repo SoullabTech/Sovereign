@@ -1,0 +1,442 @@
+{
+  "generatedAt": "2026-09-28T18:38:47.375Z",
+  "parentR5": "496d185efcf111271de34a47361ef6be805c6e2a",
+  "field": {
+    "fieldRef": "r6:field",
+    "spirals": [
+      {
+        "spiralRef": "work",
+        "domain": "work",
+        "trajectory": {
+          "trajectoryRef": "work",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "work:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "work:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "work:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "phase_change",
+          "supportingSignals": [
+            "r6-field-of-fields-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "creative",
+        "domain": "creative",
+        "trajectory": {
+          "trajectoryRef": "creative",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "creative:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "creative:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "creative:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "sustained_convergence",
+          "supportingSignals": [
+            "r6-field-of-fields-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "relationship",
+        "domain": "relationship",
+        "trajectory": {
+          "trajectoryRef": "relationship",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "relationship:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "relationship:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "relationship:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "phase_change",
+          "supportingSignals": [
+            "r6-field-of-fields-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "family",
+        "domain": "family",
+        "trajectory": {
+          "trajectoryRef": "family",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "family:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "family:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "family:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "recurrence",
+          "supportingSignals": [
+            "r6-field-of-fields-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "body",
+        "domain": "body",
+        "trajectory": {
+          "trajectoryRef": "body",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "body:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "body:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "body:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "ordinary_fluctuation",
+          "supportingSignals": [
+            "r6-field-of-fields-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      },
+      {
+        "spiralRef": "spiritual",
+        "domain": "spiritual",
+        "trajectory": {
+          "trajectoryRef": "spiritual",
+          "moments": [
+            {
+              "index": 0,
+              "fieldRef": "spiritual:1",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 1,
+              "fieldRef": "spiritual:2",
+              "motifRefs": [],
+              "relationRefs": []
+            },
+            {
+              "index": 2,
+              "fieldRef": "spiritual:3",
+              "motifRefs": [],
+              "relationRefs": []
+            }
+          ],
+          "deltas": [],
+          "classification": "dissolution",
+          "supportingSignals": [
+            "r6-field-of-fields-witness"
+          ],
+          "confidence": 0.7,
+          "predictiveAuthority": false,
+          "destinyAuthority": false,
+          "developmentalRankAuthority": false,
+          "finalMeaningAuthority": "member",
+          "provisional": true
+        }
+      }
+    ],
+    "crossSpiralRelations": [
+      {
+        "relationRef": "creative:cross:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "creative",
+        "kind": "co_convergence",
+        "basis": [
+          "both_spirals_show_convergent_or_phase_change_movement"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:relationship:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "relationship",
+        "kind": "co_convergence",
+        "basis": [
+          "both_spirals_show_convergent_or_phase_change_movement"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:family:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "family",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:cross:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "body",
+        "kind": "mutual_support",
+        "basis": [
+          "one_spiral_provides_stable_convergence_beside_fluctuation"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:spiritual:work",
+        "aSpiralRef": "work",
+        "bSpiralRef": "spiritual",
+        "kind": "timing_mismatch",
+        "basis": [
+          "one_spiral_is_dissolving_while_another_is_converging"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "creative:cross:relationship",
+        "aSpiralRef": "creative",
+        "bSpiralRef": "relationship",
+        "kind": "co_convergence",
+        "basis": [
+          "both_spirals_show_convergent_or_phase_change_movement"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "creative:cross:family",
+        "aSpiralRef": "creative",
+        "bSpiralRef": "family",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:creative:cross",
+        "aSpiralRef": "creative",
+        "bSpiralRef": "body",
+        "kind": "mutual_support",
+        "basis": [
+          "one_spiral_provides_stable_convergence_beside_fluctuation"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "creative:cross:spiritual",
+        "aSpiralRef": "creative",
+        "bSpiralRef": "spiritual",
+        "kind": "timing_mismatch",
+        "basis": [
+          "one_spiral_is_dissolving_while_another_is_converging"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:family:relationship",
+        "aSpiralRef": "relationship",
+        "bSpiralRef": "family",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:cross:relationship",
+        "aSpiralRef": "relationship",
+        "bSpiralRef": "body",
+        "kind": "mutual_support",
+        "basis": [
+          "one_spiral_provides_stable_convergence_beside_fluctuation"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:relationship:spiritual",
+        "aSpiralRef": "relationship",
+        "bSpiralRef": "spiritual",
+        "kind": "timing_mismatch",
+        "basis": [
+          "one_spiral_is_dissolving_while_another_is_converging"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:cross:family",
+        "aSpiralRef": "family",
+        "bSpiralRef": "body",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "cross:family:spiritual",
+        "aSpiralRef": "family",
+        "bSpiralRef": "spiritual",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      },
+      {
+        "relationRef": "body:cross:spiritual",
+        "aSpiralRef": "body",
+        "bSpiralRef": "spiritual",
+        "kind": "independent_movement",
+        "basis": [
+          "trajectories_remain_distinct_without_declared_dependency"
+        ],
+        "provisional": true
+      }
+    ],
+    "singleStageAuthority": false,
+    "developmentalRankAuthority": false,
+    "predictiveAuthority": false,
+    "finalMeaningAuthority": "member",
+    "provisional": true
+  },
+  "gestalt": {
+    "gestaltRef": "aetheric-gestalt:r6:field",
+    "participatingSpiralRefs": [
+      "work",
+      "creative",
+      "relationship"
+    ],
+    "excludedSpiralRefs": [
+      "family",
+      "body",
+      "spiritual"
+    ],
+    "supportingRelationRefs": [
+      "creative:cross:work",
+      "cross:relationship:work",
+      "creative:cross:relationship"
+    ],
+    "excludedRelationRefs": [
+      "cross:family:work",
+      "body:cross:work",
+      "cross:spiritual:work",
+      "creative:cross:family",
+      "body:creative:cross",
+      "creative:cross:spiritual",
+      "cross:family:relationship",
+      "body:cross:relationship",
+      "cross:relationship:spiritual",
+      "body:cross:family",
+      "cross:family:spiritual",
+      "body:cross:spiritual"
+    ],
+    "standing": "candidate_gestalt",
+    "proposition": "Several domain trajectories currently form a provisional higher-order relational configuration, while non-fitting domains remain explicitly outside the gestalt.",
+    "preservesNonfit": true,
+    "totalizingAuthority": false,
+    "identityAuthority": false,
+    "causalAuthority": false,
+    "predictiveAuthority": false,
+    "destinyAuthority": false,
+    "developmentalRankAuthority": false,
+    "soulRepresentationAuthority": false,
+    "finalMeaningAuthority": "member",
+    "provisional": true
+  },
+  "validation": {
+    "valid": true,
+    "errors": []
+  }
+}
