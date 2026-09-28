@@ -112,3 +112,25 @@ Before review, the repaired candidate has already passed:
 - all nine migrations applied in order against a disposable schema-only clone of production.
 
 These witnesses do not substitute for the independent compatibility review or its physical Read custody.
+
+## 2026-09-28 material-finding disposition and deployment-safety reconciliation
+
+The first fresh review of repaired target `79dcc1bc2b01b607cea9eead94c626caf50f72a8`
+returned `APPROVED / COMPATIBLE / ALL_PREFIXES_COMPATIBLE`, but the custody
+instrument correctly refused admission because that review also carried one
+**medium** finding: migration 4 could queue an ACCESS EXCLUSIVE lock ahead of
+live traffic with no lock or statement timeout.
+
+That finding has been dispositioned in the candidate now containing this plan:
+
+- `20260925000004_decision_scope_membranes.sql` sets a transaction-local
+  `lock_timeout = 5s` and `statement_timeout = 60s`;
+- the general rollback path now retags `:previous -> :prod`, recreates only the
+  `maia` reader with `--no-deps`, and verifies the running image identity;
+- the quick `deploy-maia` lane now refuses any target with production-pending
+  migrations and directs the operator to the full migrate-before-swap lane.
+
+The four prior low findings remain reviewable hardening debt unless a fresh
+review promotes any of them to material standing. No prior review is reused as
+authority. A fresh independent review and fresh custody record are required for
+the exact final target containing these bytes.
