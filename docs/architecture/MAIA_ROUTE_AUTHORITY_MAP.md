@@ -94,6 +94,22 @@ The import is now commented out (commit `5eabe290c`) and the canonical route is 
 | **Allowed future edits** | Observe for divergence from sovereign/list. No orientation wiring yet. |
 | **Notes** | ROUTING INVARIANT block at top. `force-dynamic`. Reference implementation for the sovereign path. |
 
+### `/api/journal/reflect`
+| Field | Value |
+|-------|-------|
+| **File** | `app/api/journal/reflect/route.ts` |
+| **Status** | `live-secondary` |
+| **Traffic evidence** | Member-explicit Journal action: “Reflect with MAIA” on one kept, owned Journal entry |
+| **Calls getMaiaResponse()** | ✅ YES — direct `getMaiaResponse()` call |
+| **memoryHealth wired** | ❌ NO — intentionally scoped Sanctuary encounter; ambient continuity is not invited |
+| **memoryAtomsLoader wired** | ❌ NO — intentionally scoped to the selected Journal entry |
+| **Provider routing** | Indirect via `getMaiaResponse()` |
+| **Orientation wiring** | ❌ NO |
+| **@ts-nocheck** | NO |
+| **Owner thread** | `journal` / route-authority |
+| **Allowed future edits** | Preserve explicit member invocation, owned-entry resolution, Sanctuary posture, and non-persistence. |
+| **Notes** | Live secondary ingress, not a competing primary chat route. CI registry addition records existing behavior; it does not widen authority. |
+
 ---
 
 ## TIER 3 — Reference Live (Supporting Routes, Not Chat Ingress)

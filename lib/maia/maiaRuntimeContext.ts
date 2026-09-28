@@ -82,6 +82,18 @@ export const MAIA_ROUTE_REGISTRY: Readonly<Record<string, RouteRegistryEntry>> =
     atomsExpected: true,
   },
 
+  // ── Registered 2026-09-28 | pre-deploy route authority repair ─────────────
+  // Status: live-secondary (member-invoked Journal encounter)
+  // Reason: explicit "Reflect with MAIA" on one owned Journal entry calls
+  //         getMaiaResponse() under Sanctuary posture; it is not the primary chat ingress.
+  'journal/reflect': {
+    status: 'live-secondary',
+    description: 'Transient Journal → MAIA encounter scoped to one member-owned entry',
+    callsMaiaResponse: true,
+    memoryHealthExpected: false,
+    atomsExpected: false,
+  },
+
   // ── Registered 2026-05-23 | de-frag thread ──────────────────────────────
   // Status: dormant (authority map Tier 4 — reclassified from live-secondary)
   // Reason: route DOES call getMaiaResponse() in its code (lines 278, 410) and
