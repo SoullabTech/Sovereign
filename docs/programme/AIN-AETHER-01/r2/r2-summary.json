@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-09-28T18:19:46.220Z",
+  "parentR1": "44c3d9fe67a2d6b0d5cec28fd167443c1f7b6efd",
+  "changed": true,
+  "griefKind": "intensified",
+  "griefAddedFacets": [
+    "creative"
+  ],
+  "relationsBefore": 9,
+  "relationsAfter": 12,
+  "addedRelations": 12,
+  "removedRelations": 9,
+  "appearedMotifs": [
+    "Love",
+    "Memory",
+    "Creativity"
+  ],
+  "disappearedMotifs": [
+    "Fear",
+    "Isolation"
+  ],
+  "provisional": true,
+  "memberOwnsFinalMeaning": true
+}
