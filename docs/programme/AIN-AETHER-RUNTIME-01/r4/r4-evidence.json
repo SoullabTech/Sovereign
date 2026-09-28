@@ -1,0 +1,140 @@
+{
+  "generatedAt": "2026-09-28T20:26:38.999Z",
+  "parentRuntimeR3": "2031daf5c7f1df04aab520ff28079995b00480f0",
+  "result": {
+    "derived": true,
+    "errors": [],
+    "field": {
+      "fieldRef": "synthetic:r4:field",
+      "observations": [
+        {
+          "observationRef": "r4:e1",
+          "facetRef": "work",
+          "motif": "A shared movement toward greater openness.",
+          "temporalStanding": "is_being",
+          "standing": "member_named",
+          "qualities": [],
+          "note": "A shared movement toward greater openness."
+        },
+        {
+          "observationRef": "r4:e2",
+          "facetRef": "creative",
+          "motif": "A shared movement toward greater openness.",
+          "temporalStanding": "is_being",
+          "standing": "source_observed",
+          "qualities": [],
+          "note": "A shared movement toward greater openness."
+        },
+        {
+          "observationRef": "r4:e3",
+          "facetRef": "relationship",
+          "motif": "Relationship feels unsettled but present.",
+          "temporalStanding": "is_being",
+          "standing": "member_named",
+          "qualities": [],
+          "note": "Relationship feels unsettled but present."
+        }
+      ],
+      "patterns": [
+        {
+          "patternRef": "aether-pattern:a-shared-movement-toward-greater-openness-",
+          "motif": "A shared movement toward greater openness.",
+          "contributingObservationRefs": [
+            "r4:e1",
+            "r4:e2"
+          ],
+          "contributingFacetRefs": [
+            "work",
+            "creative"
+          ],
+          "temporalStandings": [
+            "is_being"
+          ],
+          "movements": [
+            "converging"
+          ],
+          "qualities": [],
+          "contradictionRefs": [],
+          "uncertainty": 0.35,
+          "memberRecognition": "unreviewed",
+          "provisional": true,
+          "identityAuthority": false,
+          "diagnosticAuthority": false,
+          "predictiveAuthority": false,
+          "soulRepresentationAuthority": false
+        },
+        {
+          "patternRef": "aether-pattern:relationship-feels-unsettled-but-present-",
+          "motif": "Relationship feels unsettled but present.",
+          "contributingObservationRefs": [
+            "r4:e3"
+          ],
+          "contributingFacetRefs": [
+            "relationship"
+          ],
+          "temporalStandings": [
+            "is_being"
+          ],
+          "movements": [
+            "unresolved"
+          ],
+          "qualities": [],
+          "contradictionRefs": [],
+          "uncertainty": 0.15,
+          "memberRecognition": "unreviewed",
+          "provisional": true,
+          "identityAuthority": false,
+          "diagnosticAuthority": false,
+          "predictiveAuthority": false,
+          "soulRepresentationAuthority": false
+        }
+      ],
+      "contradictions": [],
+      "absences": [],
+      "fieldStatus": "changing",
+      "finalMeaningAuthority": "member",
+      "persistenceAuthority": false
+    },
+    "sourceObservationRefs": [
+      "r4:e1",
+      "r4:e2",
+      "r4:e3"
+    ],
+    "sourceProvenanceRefs": [
+      "r4:e1",
+      "r4:e2",
+      "r4:e3"
+    ],
+    "syntheticOnly": true,
+    "persisted": false,
+    "liveMemberDataBound": false,
+    "productionAuthority": false
+  },
+  "sharedPattern": {
+    "patternRef": "aether-pattern:a-shared-movement-toward-greater-openness-",
+    "motif": "A shared movement toward greater openness.",
+    "contributingObservationRefs": [
+      "r4:e1",
+      "r4:e2"
+    ],
+    "contributingFacetRefs": [
+      "work",
+      "creative"
+    ],
+    "temporalStandings": [
+      "is_being"
+    ],
+    "movements": [
+      "converging"
+    ],
+    "qualities": [],
+    "contradictionRefs": [],
+    "uncertainty": 0.35,
+    "memberRecognition": "unreviewed",
+    "provisional": true,
+    "identityAuthority": false,
+    "diagnosticAuthority": false,
+    "predictiveAuthority": false,
+    "soulRepresentationAuthority": false
+  }
+}

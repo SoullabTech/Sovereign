@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-09-28T20:26:38.999Z",
+  "parentRuntimeR3": "2031daf5c7f1df04aab520ff28079995b00480f0",
+  "derived": true,
+  "observationCount": 3,
+  "patternCount": 2,
+  "sharedPatternFacets": [
+    "work",
+    "creative"
+  ],
+  "sharedPatternMovements": [
+    "converging"
+  ],
+  "sharedPatternProvisional": true,
+  "sharedPatternIdentityAuthority": false,
+  "sharedPatternDiagnosticAuthority": false,
+  "sharedPatternPredictiveAuthority": false,
+  "sharedPatternSoulAuthority": false,
+  "finalMeaningAuthority": "member",
+  "persistenceAuthority": false,
+  "persisted": false,
+  "liveMemberDataBound": false,
+  "productionAuthority": false
+}
