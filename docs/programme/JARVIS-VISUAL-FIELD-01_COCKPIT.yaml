@@ -3,9 +3,9 @@ current_authority:
   - docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md
   - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: BUILD
-current_act: VISUAL-FIELD-RUNTIME-01R1R5 — Physics + Connections A/B Prototype
-current_subject_sha: c7715a4aa17d170ff49db50118aa6df67f691217
+current_phase: VERIFY
+current_act: VISUAL-FIELD-RUNTIME-01R1R5 — Founder A/B Physics Feel Witness
+current_subject_sha: 8a7d6c0b80513fcd25356eced87520dae8bcc096
 current_branch: feature/jarvis-visual-field-01-20260928
 worktree: /private/tmp/jarvis-visual-field-01
 runtime: http://localhost:3598/maia/living-field?from=house
@@ -14,13 +14,13 @@ deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - Candidate A (D3 nested force) and Candidate B (fCoSE compound force) are being built over one shared field corpus.
-  - Founder selection must be based on interaction feel, not screenshots.
+  - Candidate A and Candidate B both pass compile, runtime, hover, edge-insight, drag-response, and containment checks.
+  - Mechanical evidence shows different response magnitudes; founder selection must be based on felt behavior rather than numeric movement.
   - Later memory, MAIA, FLOW, and autonomous relation layers remain closed.
 founder_stops:
   - R1 PASS or RETURN before R2 true Grokker semantic zoom.
   - Any change of Living Field ontology or member-facing meaning.
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
-next_phase_on_exit: founder A/B physics witness and substrate selection
-last_state_change: 2026-09-29 — founder authorized R1R5 A/B physics prototype; build lane opened
+next_phase_on_exit: founder selects A, B, HYBRID, RETURN, or STOP; only then may the chosen physics substrate be integrated
+last_state_change: 2026-09-29 — R1R5 A/B physics candidate sealed at 8a7d6c0b8; founder feel witness is the current gate
