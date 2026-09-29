@@ -399,8 +399,8 @@ export function CellularLivingFieldPrototype() {
     }
   }
 
-  const updateProximity = (clientX: number, clientY: number) => {
-    if (draggingRef.current || hoveredNodeId) return
+  const updatePointerAttention = (clientX: number, clientY: number) => {
+    if (draggingRef.current) return
     const point = pointFromPointer(clientX, clientY)
     if (!point) return
 
@@ -417,11 +417,21 @@ export function CellularLivingFieldPrototype() {
       }
     }
 
+    if (nearest && nearestDistance <= nearest.r + 4) {
+      setProximityNodeId(null)
+      if (hoveredNodeId !== nearest.id) beginAttention(nearest.id)
+      return
+    }
+
+    if (hoveredNodeId) {
+      clearAttentionTimers()
+      setHoveredNodeId(null)
+    }
+
     const threshold = 74 / cameraRef.current.scale
     const next = nearest && nearestDistance <= threshold ? nearest.id : null
     setProximityNodeId(next)
-
-    if (!focusNodeId) setAttentionPhase(next ? 'proximity' : 'idle')
+    setAttentionPhase(focusNodeId ? 'dwell' : next ? 'proximity' : 'idle')
   }
 
   const dragStart = (node: SimNode, clientX: number, clientY: number) => {
@@ -586,14 +596,20 @@ export function CellularLivingFieldPrototype() {
           ref={svgRef}
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           className="block h-auto w-full touch-none"
+          style={{ pointerEvents: 'auto' }}
           onPointerMove={(event) => {
             dragMove(event.clientX, event.clientY)
-            updateProximity(event.clientX, event.clientY)
+            const target = event.target as Element
+            if (!target.closest('[data-relation-id]')) {
+              updatePointerAttention(event.clientX, event.clientY)
+            }
           }}
           onPointerLeave={() => {
-            if (!draggingRef.current && !hoveredNodeId) {
+            if (!draggingRef.current) {
+              clearAttentionTimers()
+              setHoveredNodeId(null)
               setProximityNodeId(null)
-              if (!focusNodeId) setAttentionPhase('idle')
+              setAttentionPhase(focusNodeId ? 'dwell' : 'idle')
             }
           }}
           onPointerUp={dragEnd}
@@ -711,6 +727,7 @@ export function CellularLivingFieldPrototype() {
                     stroke={style.edge}
                     strokeWidth={1.25 + attention * 1.5}
                     strokeOpacity={0.42 + attention * 0.48}
+                    pointerEvents="all"
                     onClick={(event) => {
                       event.stopPropagation()
                       enterWorld(group.id)
@@ -773,8 +790,9 @@ export function CellularLivingFieldPrototype() {
                     y2={target.y ?? 0}
                     stroke="transparent"
                     strokeWidth="14"
-                    onPointerEnter={() => setHoveredRelationId(relation.id)}
-                    onPointerLeave={() => setHoveredRelationId(null)}
+                    pointerEvents="stroke"
+                    onPointerOver={() => setHoveredRelationId(relation.id)}
+                    onPointerOut={() => setHoveredRelationId(null)}
                   />
                 </g>
               )
@@ -801,10 +819,6 @@ export function CellularLivingFieldPrototype() {
                   data-node-id={node.id}
                   transform={`translate(${node.x ?? 0},${node.y ?? 0}) scale(${attentionScale})`}
                   opacity={opacity}
-                  onPointerEnter={() => beginAttention(node.id)}
-                  onPointerLeave={() => {
-                    if (!draggingRef.current) endAttention()
-                  }}
                   onClick={(event) => {
                     event.stopPropagation()
                     selectNode(node)
@@ -815,7 +829,10 @@ export function CellularLivingFieldPrototype() {
                     dragStart(node, event.clientX, event.clientY)
                   }}
                   className="cursor-grab active:cursor-grabbing"
-                  style={{ transition: 'opacity 280ms ease, transform 340ms ease' }}
+                  style={{
+                    pointerEvents: activeNeighborhood && !activeNeighborhood.has(node.id) ? 'none' : 'all',
+                    transition: 'opacity 280ms ease, transform 340ms ease',
+                  }}
                 >
                   {trace > 0.02 && (
                     <circle
