@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SS-02 Frame Detection Prototype</title>
+<style>
+:root{--paper:#f8efe2;--ink:#312923;--muted:#7f6e5e;--copper:#d85d36;--gold:#e3a329;--teal:#27877a;--plum:#784f75;--line:rgba(76,56,40,.16)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#e8dccb;color:var(--ink);font-family:Inter,system-ui,sans-serif}body{padding:20px}
+.room{position:relative;isolation:isolate;max-width:1220px;min-height:840px;margin:auto;border-radius:44px;overflow:hidden;background:var(--paper);box-shadow:0 28px 85px rgba(67,44,29,.12)}
+.bg{position:absolute;inset:0;z-index:-2;background:linear-gradient(145deg,#fffaf3,#f4e2cd 53%,#eee1d4)}
+.b{position:absolute;border-radius:50%;filter:blur(76px);opacity:.65;mix-blend-mode:multiply;animation:d 22s ease-in-out infinite alternate}
+.b1{width:54%;height:60%;left:-15%;top:-9%;background:radial-gradient(circle,var(--copper),rgba(216,93,54,.1) 48%,transparent 72%)}
+.b2{width:50%;height:55%;right:-14%;top:6%;background:radial-gradient(circle,var(--teal),rgba(39,135,122,.1) 48%,transparent 74%);animation-delay:-7s}
+.b3{width:50%;height:50%;left:26%;bottom:-22%;background:radial-gradient(circle,var(--gold),rgba(227,163,41,.1) 46%,transparent 74%);animation-delay:-11s}
+.b4{width:34%;height:40%;right:12%;bottom:-16%;background:radial-gradient(circle,var(--plum),rgba(120,79,117,.08) 46%,transparent 72%);animation-delay:-3s}
+.grain{position:absolute;inset:0;opacity:.14;background-image:radial-gradient(rgba(75,55,40,.3) .55px,transparent .55px);background-size:17px 17px}
+@keyframes d{from{transform:translate(-2%,0) scale(1)}to{transform:translate(4%,3%) scale(1.07)}}
+.shell{padding:40px 48px 34px}.top{display:flex;justify-content:space-between;gap:18px}.k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#826f5d}.s{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#998574}
+.progress{display:flex;gap:7px;margin-top:24px}.p{height:5px;flex:1;border-radius:8px;background:rgba(87,64,47,.1)}.p.on{background:linear-gradient(90deg,var(--copper),var(--gold))}.p.done{background:rgba(39,135,122,.34)}
+.grid{display:grid;grid-template-columns:1.45fr .75fr;gap:32px;margin-top:32px}.field{min-height:620px;border:1px solid rgba(90,67,50,.1);border-radius:34px;background:rgba(255,251,245,.36);padding:36px;position:relative;overflow:hidden}
+.label{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:#927d69}.anchor{font:400 35px/1.4 Georgia,serif;max-width:760px;margin-top:16px}.src{font-size:11px;color:#8b7866;margin-top:10px}.note{font-size:13px;line-height:1.65;color:#75665a;max-width:700px;margin-top:28px}
+.orbit{position:relative;min-height:300px;margin-top:36px}.lens{position:absolute;width:230px;border:1px solid rgba(89,65,46,.16);border-radius:24px;padding:16px;background:rgba(255,252,247,.78);box-shadow:0 12px 30px rgba(70,45,28,.05);transition:.25s ease}
+.lens b{font:400 18px/1.3 Georgia,serif;display:block}.lens span{font-size:10px;line-height:1.45;color:#81705f;display:block;margin-top:6px}.lens[data-show="0"]{opacity:0;transform:translateY(9px);pointer-events:none}
+#f1{left:0;top:20px}#f2{right:4%;top:116px}#fm{left:32%;top:214px}
+.side{border:1px solid rgba(90,67,50,.11);border-radius:30px;background:rgba(255,250,244,.72);padding:23px}.head{display:flex;justify-content:space-between;gap:12px}.head strong{font:400 20px Georgia,serif}.standing{font-size:9px;text-transform:uppercase;letter-spacing:.11em;color:#8b7664}
+.copy{font-size:14px;line-height:1.68;color:#544940;margin-top:18px}.call{border-left:2px solid rgba(216,93,54,.42);padding-left:13px;margin-top:18px}.call small{font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:#947b68}.call p{font:400 18px/1.45 Georgia,serif;margin:5px 0}
+.actions{display:grid;gap:9px;margin-top:20px}.a{border:1px solid rgba(89,65,46,.14);border-radius:15px;background:rgba(255,255,255,.32);padding:11px 13px;text-align:left;cursor:pointer;color:#493f37}.a:hover{background:rgba(255,255,255,.58);border-color:rgba(216,93,54,.32)}.a strong{display:block;font-size:13px}.a span{display:block;font-size:10px;color:#877461;line-height:1.45;margin-top:3px}.primary{background:rgba(216,93,54,.07)}
+.compare{display:none;margin-top:20px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{border:1px solid rgba(89,65,46,.13);border-radius:16px;padding:12px;background:rgba(255,255,255,.3)}.card small{font-size:8px;text-transform:uppercase;letter-spacing:.12em;color:#917a67}.card h3{font:400 16px Georgia,serif;margin:6px 0}.card ul{font-size:10px;line-height:1.55;color:#756558;padding-left:16px;margin:8px 0 0}
+.entry{display:none;margin-top:12px}.entry input{width:100%;padding:11px;border:1px solid rgba(89,65,46,.16);border-radius:13px;background:#fffaf4}.entry button,.back,.reset{border:0;background:none;padding:0;color:#78512f;text-decoration:underline;text-underline-offset:4px;cursor:pointer}.entry button{margin-top:7px}
+.status{border-top:1px solid var(--line);padding-top:14px;margin-top:18px;font-size:10px;line-height:1.55;color:#806e5e}.back{display:none;margin-top:15px;font-size:11px}.footer{display:flex;justify-content:space-between;gap:20px;margin-top:20px}.footer p{font-size:10px;line-height:1.55;color:#927f6e;max-width:720px;margin:0}.reset{font-size:11px}
+@media(max-width:860px){body{padding:9px}.room{border-radius:30px}.shell{padding:27px 22px}.s{display:none}.grid{grid-template-columns:1fr}.field{min-height:575px;padding:25px 22px}.anchor{font-size:28px}.orbit{min-height:315px}.lens{width:195px;padding:13px}#f1{left:0}#f2{right:0;top:130px}#fm{left:20%;top:238px}.pair{grid-template-columns:1fr}.footer{display:block}.reset{margin-top:11px}}
+@media(prefers-reduced-motion:reduce){.b{animation:none}}
+</style>
+</head>
+<body><main class="room">
+<div class="bg"><div class="b b1"></div><div class="b b2"></div><div class="b b3"></div><div class="b b4"></div><div class="grain"></div></div>
+<div class="shell">
+<div class="top"><div class="k">Living Field · Frame Detection</div><div class="s" id="stage">1 · anchor</div></div>
+<div class="progress"><div class="p on" id="p1"></div><div class="p" id="p2"></div><div class="p" id="p3"></div><div class="p" id="p4"></div><div class="p" id="p5"></div></div>
+<div class="grid">
+<section class="field">
+<div class="label">Synthetic fixture · source stays stable</div>
+<div class="anchor">“I keep asking whether to keep refining this project or finally release it.”</div>
+<div class="src">Current statement · synthetic creator fixture · no member data</div>
+<div class="note" id="note">We begin with what was actually said. No frame has standing yet.</div>
+<div class="orbit">
+<div class="lens" id="f1" data-show="0"><b>continue / release</b><span>MAIA possible frame · not yet yours</span></div>
+<div class="lens" id="f2" data-show="0"><b>what would make it ready enough?</b><span>another possible view · not ranked above the first</span></div>
+<div class="lens" id="fm" data-show="0"><b id="memberText">stewardship</b><span>member-shaped frame · local only</span></div>
+</div>
+</section>
+<aside class="side">
+<div class="head"><strong>MAIA</strong><div class="standing">possible aperture · no persistence</div></div>
+<div class="copy" id="copy">I’ll keep your actual question in view before offering another way to look at it.</div>
+<div class="call" id="call"><small>Anchor</small><p>What are we actually looking at?</p></div>
+<div class="compare" id="compare"><div class="pair">
+<div class="card"><small>Possible current frame</small><h3>continue / release</h3><ul><li>foregrounds a decision</li><li>makes the choice feel binary</li><li>does not tell us why</li></ul></div>
+<div class="card"><small>Another possible view</small><h3>what would make it ready enough?</h3><ul><li>foregrounds conditions</li><li>opens timing and threshold</li><li>is not ranked as better</li></ul></div>
+</div></div>
+<div class="actions" id="actions"><button class="a primary" id="begin"><strong>Notice a possible frame</strong><span>MAIA offers the aperture, not a diagnosis.</span></button></div>
+<div class="entry" id="entry"><input id="mineInput" value="stewardship"><button id="useMine">Use my frame</button></div>
+<div class="status" id="status">Nothing here is stored. This prototype changes only the local view.</div>
+<button class="back" id="back">← Return to the source</button>
+</aside>
+</div>
+<div class="footer"><p>Frame detection describes the current aperture of inquiry, not the person. The source remains visible, alternate frames are not ranked, and the member can accept, revise, reject, or leave the matter unresolved.</p><button class="reset" onclick="location.reload()">Reset witness</button></div>
+</div></main>
+<script>
+var dots=[0,p1,p2,p3,p4,p5],f1=document.getElementById('f1'),f2=document.getElementById('f2'),fm=document.getElementById('fm'),actions=document.getElementById('actions'),copy=document.getElementById('copy'),call=document.getElementById('call'),compare=document.getElementById('compare'),entry=document.getElementById('entry'),status=document.getElementById('status'),back=document.getElementById('back'),stage=document.getElementById('stage');
+function S(n,t){stage.textContent=n+' · '+t;for(var i=1;i<=5;i++)dots[i].className='p'+(i<n?' done':i===n?' on':'');}
+function A(x){actions.innerHTML=x}function W(id,fn){var e=document.getElementById(id);if(e)e.onclick=fn}
+function possible(){S(2,'possible frame');f1.dataset.show='1';copy.textContent='A possible description of the current question is “continue or release.” I’m describing the shape of the question, not you.';call.innerHTML='<small>MAIA possible frame · not yet yours</small><p>We seem to be holding this mostly as continue versus release.</p>';A('<button class="a primary" id="another"><strong>Show another possible view</strong><span>Compare without replacing the anchor.</span></button><button class="a" id="reject"><strong>That frame does not fit</strong><span>Reject it without penalty.</span></button><button class="a" id="mine"><strong>I see it differently</strong><span>Name your own aperture.</span></button>');W('another',alternative);W('reject',reject);W('mine',custom)}
+function alternative(){S(3,'alternative frame');f2.dataset.show='1';copy.textContent='Another possible view is “what would make this ready enough?” It is not more true; it foregrounds different information.';call.innerHTML='<small>Another possible view</small><p>What would make it ready enough?</p>';A('<button class="a primary" id="cmp"><strong>Compare the two</strong><span>See what each frame foregrounds.</span></button><button class="a" id="one"><strong>The first fits for now</strong><span>Member ruling · local only.</span></button><button class="a" id="two"><strong>The second fits for now</strong><span>Member ruling · local only.</span></button><button class="a" id="open"><strong>Leave both open</strong><span>No synthesis required.</span></button>');W('cmp',compareFrames);W('one',function(){rule('continue / release',false)});W('two',function(){rule('what would make it ready enough?',false)});W('open',leaveOpen)}
+function compareFrames(){S(4,'compare');compare.style.display='block';copy.textContent='The source has not changed. Only the aperture changes. What becomes visible in one view that was harder to see in the other?';call.innerHTML='<small>Compare</small><p>Same source. Different foreground.</p>';A('<button class="a primary" id="two"><strong>Keep “ready enough” for now</strong><span>Member ruling · local only.</span></button><button class="a" id="one"><strong>Keep continue / release</strong><span>The first may still be useful.</span></button><button class="a" id="mine"><strong>Name my own frame</strong><span>Create another aperture.</span></button><button class="a" id="open"><strong>Not yet resolved</strong><span>Uncertainty is valid.</span></button>');W('two',function(){rule('what would make it ready enough?',false)});W('one',function(){rule('continue / release',false)});W('mine',custom);W('open',leaveOpen)}
+function custom(){entry.style.display='block';status.textContent='Your frame exists only in this browser view. Nothing is saved.';W('useMine',function(){var v=mineInput.value.trim()||'my own frame';memberText.textContent=v;fm.dataset.show='1';entry.style.display='none';rule(v,true)})}
+function rule(v,mine){S(5,'member ruling');copy.textContent=mine?'You named the frame yourself. I will not treat it as a permanent fact about you.':'You chose this aperture for this moment. It remains a way of looking, not a fact about who you are.';call.innerHTML='<small>'+(mine?'Your frame':'Member ruling')+'</small><p>'+v+'</p>';A('<button class="a" id="again"><strong>Compare again</strong><span>The ruling can be revised.</span></button><button class="a" id="ret"><strong>Return to the source</strong><span>Recover the anchor.</span></button>');status.textContent='Member ruling · current visit only · no persistence';back.style.display='inline-block';W('again',compareFrames);W('ret',returnSource);back.onclick=returnSource}
+function reject(){S(5,'member ruling');f1.dataset.show='0';f2.dataset.show='0';copy.textContent='Rejected. I will not treat that frame as hidden truth or return to it as though rejection were resistance.';call.innerHTML='<small>Member ruling</small><p>That frame does not fit.</p>';A('<button class="a primary" id="mine"><strong>Name a different frame</strong><span>Only if you want to.</span></button><button class="a" id="ret"><strong>Return to the source</strong><span>Leave the question open.</span></button>');status.textContent='Rejected frame · not stored · no penalty';back.style.display='inline-block';W('mine',custom);W('ret',returnSource);back.onclick=returnSource}
+function leaveOpen(){S(5,'leave open');copy.textContent='We can leave both possibilities unresolved. A useful frame does not have to be chosen right now.';call.innerHTML='<small>Lawful outcome</small><p>Not yet resolved.</p>';A('<button class="a" id="ret"><strong>Return to the source</strong><span>Nothing needs to be concluded.</span></button>');status.textContent='Unknown / unresolved remains first-class';back.style.display='inline-block';W('ret',returnSource);back.onclick=returnSource}
+function returnSource(){S(1,'anchor');f1.dataset.show='0';f2.dataset.show='0';fm.dataset.show='0';compare.style.display='none';entry.style.display='none';back.style.display='none';copy.textContent='Back at the source. No frame has authority over it.';call.innerHTML='<small>Anchor restored</small><p>What are we actually looking at?</p>';status.textContent='Nothing was stored. The source remained unchanged.';A('<button class="a primary" id="begin"><strong>Notice a possible frame</strong><span>Begin again from the same anchor.</span></button>');W('begin',possible)}
+W('begin',possible);
+</script></body></html>

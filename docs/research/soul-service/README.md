@@ -142,3 +142,18 @@ Immediate + delayed + ecological + generative transfer.
 This programme currently authorizes architecture, research design, paper development, and prototype planning.
 
 It does **not** authorize database schema changes, durable frame storage, behavioral runtime changes, member scoring, production deployment, or automated scaffold fading.
+
+
+---
+
+# Current execution standing — 2026-09-29
+
+- **SS-01 — Constitutional convergence:** PASS · docs only · commit `a0e6c83f82e0f4ed92cb49af59ab2794da21173d`
+- **SS-02 — Frame Detection prototype:** standalone witness complete · no persistence · no runtime integration
+- **SS-03+ — unopened by this execution**
+
+SS-02 preserves:
+
+> **anchor → possible frame → alternative frame → compare → member ruling → return**
+
+and includes explicit rejection, unresolved, member-authored-frame, and return-to-source states.
