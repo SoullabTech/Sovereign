@@ -15,6 +15,7 @@ import type { StudioAct } from '@/app/writers-studio/studioHistory';
 import { sentenceFor } from '@/app/writers-studio/studioHistory';
 import P4R1WorkMaterialsSummary from './P4R1WorkMaterialsSummary';
 import P4R1ProducePanel from './P4R1ProducePanel';
+import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 
 function fixedDate(iso: string | null | undefined): string {
   if (!iso) return 'date not recorded';
@@ -214,7 +215,7 @@ function WritingCard({ manuscript, works, onOpen, onMakeWork, onAddToWork }: {
 }
 
 export interface P4R1HomeViewProps {
-  appearance: 'light' | 'night';
+  appearance: Appearance;
   arrival: Arrival;
   works: readonly LivingWork[];
   manuscripts: readonly CurrentManuscript[];

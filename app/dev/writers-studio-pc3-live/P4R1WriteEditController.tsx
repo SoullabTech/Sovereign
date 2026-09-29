@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
@@ -71,7 +72,7 @@ export default function FlagshipWriteEditController() {
     reviewReturnRun && reviewReturnFinding ? 'review'
       : incomingReading && hasDevelopReturn ? 'develop'
         : null;
-  const appearance = params?.get('appearance') === 'night' ? 'night' : 'light';
+  const { id: appearance } = useAtmosphere();
   const initialSearch = params && params.toString() ? `?${params.toString()}` : '';
 
   const [phase, setPhase] = useState<Phase>('loading');

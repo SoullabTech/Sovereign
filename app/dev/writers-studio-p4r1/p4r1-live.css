@@ -3129,3 +3129,12 @@
 @media(max-width:900px){
   .p4r1-root .p4r1-source-verification-state,.p4r1-root .p4r1-source-verification-options{grid-template-columns:1fr}
 }
+
+/* P4R1 appearance continuity: member-chosen Studio themes restored. */
+.p4r1-root .p4r1-theme-menu{position:fixed;right:18px;top:13px;z-index:80;font-family:var(--fr-sans-stack)}
+.p4r1-root .p4r1-theme-trigger{min-height:34px;border:1px solid var(--fr-line);border-radius:999px;background:var(--fr-bar);color:var(--fr-ink2);padding:6px 10px;display:flex;align-items:center;gap:7px;font:600 10.5px var(--fr-sans-stack);cursor:pointer;box-shadow:var(--fr-shadow)}
+.p4r1-root .p4r1-theme-swatch{width:13px;height:13px;border:1px solid;border-radius:50%;display:inline-block;flex:0 0 auto}
+.p4r1-root .p4r1-theme-popover{position:absolute;right:0;top:41px;width:190px;border:1px solid var(--fr-line);border-radius:10px;background:var(--fr-panel);box-shadow:var(--fr-shadow);padding:8px;color:var(--fr-ink);display:grid;gap:3px}
+.p4r1-root .p4r1-theme-title{padding:5px 8px 7px;color:var(--fr-quiet);font:700 9px var(--fr-sans-stack);letter-spacing:.12em;text-transform:uppercase}
+.p4r1-root .p4r1-theme-option{border:0;border-radius:7px;background:transparent;color:var(--fr-ink2);min-height:36px;padding:7px 8px;display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:center;text-align:left;font:600 11px var(--fr-sans-stack);cursor:pointer}
+.p4r1-root .p4r1-theme-option:hover,.p4r1-root .p4r1-theme-option[aria-checked="true"]{background:var(--fr-action-soft);color:var(--fr-title)}

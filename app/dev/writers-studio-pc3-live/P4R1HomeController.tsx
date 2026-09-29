@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { useCurrentManuscript } from '@/app/writers-studio/useCurrentManuscript';
@@ -23,7 +24,7 @@ export default function P4R1HomeController() {
   const router = useRouter();
   const pathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const params = useSearchParams();
-  const appearance = params?.get('appearance') === 'night' ? 'night' : 'light';
+  const { id: appearance } = useAtmosphere();
 
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
   const { phase: manuscriptPhase, manuscripts, reload: reloadManuscripts } = useCurrentManuscript();

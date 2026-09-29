@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Inter, Newsreader } from 'next/font/google';
 import P4R1StudioHost from './P4R1StudioHost';
+import { StudioAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import '../writers-studio-full-redesign-review/full-redesign-review.css';
 import '../../writers-studio/insight/insight.css';
 import './p4r1-live.css';
@@ -30,9 +31,11 @@ export default function P4R1WriterStudioPage() {
     <div className={`${serif.variable} ${sans.variable} fr-root p4r1-root`}>
       <div className="fr-page">
         <div className="fr-capture-frame" data-capture-frame="">
-          <Suspense fallback={<div style={{ padding: 32 }}>Opening your Writer’s Studio…</div>}>
-            <P4R1StudioHost />
-          </Suspense>
+          <StudioAtmosphere>
+            <Suspense fallback={<div style={{ padding: 32 }}>Opening your Writer’s Studio…</div>}>
+              <P4R1StudioHost />
+            </Suspense>
+          </StudioAtmosphere>
         </div>
       </div>
     </div>

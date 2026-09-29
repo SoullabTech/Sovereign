@@ -24,6 +24,7 @@ import type { CanvasInsight } from '@/lib/writersStudio/insightCanvas';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
+import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -42,7 +43,7 @@ export type P4R1Pc3WriteEditViewProps = {
   };
   writing: SectionWriting;
   work: LivingWork | null;
-  appearance: 'light' | 'night';
+  appearance: Appearance;
   pathname: string;
   initialSearch: string;
   initial: string;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import {
@@ -53,7 +54,7 @@ type ReadyReview = {
   const reviewRunId = params?.get('reviewRun') ?? null;
   const requestedFindingId = params?.get('reviewFinding') ?? null;
   const requestedSectionId = params?.get('s') ?? null;
-  const appearance = params?.get('appearance') === 'night' ? 'night' : 'light';
+  const { id: appearance } = useAtmosphere();
   const { phase: worksPhase, works } = useLivingWorks();
 
   const [phase, setPhase] = useState<ReviewPhase>('loading');

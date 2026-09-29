@@ -31,6 +31,7 @@ import {
   verificationStanding,
 } from '@/lib/writersStudio/sourceVerification';
 import P4R1WriterUnderstanding from './P4R1WriterUnderstanding';
+import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 
 export const DEVELOP_FIELDS = [
   'overview',
@@ -95,7 +96,7 @@ export interface P4R1DevelopViewProps {
   manuscriptId: string;
   work: LivingWork | null;
   workTitle: string;
-  appearance: 'light' | 'night';
+  appearance: Appearance;
   field: DevelopField;
   intent: DevelopIntentKey | null;
   sections: readonly RebuildSection[];

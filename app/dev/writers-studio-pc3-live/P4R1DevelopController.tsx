@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContext';
@@ -106,7 +107,7 @@ export default function P4R1DevelopController() {
   const selectedDevelopmentalMovementId = params?.get('developmentalMovement') ?? null;
   const selectedLineageChapterId = params?.get('lineageChapter') ?? null;
   const selectedLineageCandidateId = params?.get('lineageCandidate') ?? null;
-  const appearance = params?.get('appearance') === 'night' ? 'night' : 'light';
+  const { id: appearance } = useAtmosphere();
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
