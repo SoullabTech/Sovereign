@@ -4,7 +4,8 @@
 **Status:** OPEN — founder visual witness pending  
 **Subject:** first recursive WORLD traversal in the dedicated Visual Field programme lane  
 **Base SHA:** `956ed92ac36121e0df4cfa64e40cb2d9d1642ebb`  
-**Branch:** `jarvis/visual-field-01-20260928`  
+**Branch:** `feature/jarvis-visual-field-01-20260928`
+**Sealed R1 implementation subject:** `60916e56e3331610d72267a5e5f7a850d1a088a5`  
 **Authority:** JARVIS-VISUAL-FIELD-01 charter + founder R1 boundary
 
 ## Five-field lane preamble
