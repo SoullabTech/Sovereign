@@ -13,6 +13,8 @@ principles:
   - INHABITABLE_ARCHITECTURE_STANDARD — meaning and human activity precede controls
   - SOULLAB_THEME — shared House language with room-specific character
   - LIVING_FIELD_GROKKER_ROADMAP — recursive containment, semantic movement, enriched return
+  - LIVING_FIELD_MEANING_EVOLUTION_LAWS — relation trust, productive tension, revisable meaning
+  - SOUL_LAB_SPATIAL_NAVIGATION_LAW — Living Field as a spatial threshold into the wider Soul lab
   - JARVIS-VISUAL-FIELD-01 — founder-gated runtime slices and evidence discipline
 
 reference_surfaces:
@@ -24,9 +26,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-cellular-actionable-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/living-field-cellular-nodefocus-mobile.png
-experience_verification: Founder confirmed the opening physics felt better but reported that nothing else was actionable and there was no cursor-over effect. Root cause was a global Soullab CSS rule, `svg { pointer-events: none; }`, inherited by the Living Field. R1R6R2 restores pointer events only for this field and routes exact attention through field-level geometric hit-testing. A real mouse witness now passes Nearby → Glance → Attend → Dwell → relation hover → enter Air → enter Calling → widen → drag/local response with zero browser errors. Founder actionability feel witness remains the exit gate.
+screenshot_desktop: docs/design/contracts/screenshots/living-field-r2a-calling-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/living-field-r2a-pinch-mobile.png
+experience_verification: Founder accepted the cellular visual language and authorized R2A Camera Physics, with the additional direction that Living Field should become a magical spatial way to explore the full Soullab platform — a true Soul lab. R2A now provides cursor-anchored wheel/trackpad zoom, bounded background pan, two-pointer pinch, click-to-enter, one-level Widen, Whole recovery, keyboard parity, and reduced-motion operation while preserving semantic topology. Mechanical witness passes with 0.08 field-unit anchor error, real wheel 1.0→2.373 without page scroll, Air 1.48×, Calling 1.9×, pinch 1.8×, clamps 0.86×→3.4×, and zero browser errors. Founder camera-feel witness remains the exit gate.
 ---
 # Living Field — Experience Contract
 
@@ -54,7 +56,10 @@ The first language belongs to the journey itself. System architecture, data mode
 |---|---|---|
 | enter | Step into the field | feels like crossing a threshold |
 | deepen | select a visible region | follows curiosity rather than task sequence |
-| widen | Wider | restores containing context |
+| free zoom | trackpad / wheel / pinch | approaches or withdraws without committing to a new semantic focus |
+| pan | drag open field | changes viewpoint without changing the field's meaning |
+| widen | Wider | restores one containing semantic level |
+| whole | Whole | restores the full-field orientation in one action |
 | path | Path | reveals the route through meaning |
 | dwell | This is also a place to linger | legitimizes stillness |
 | close | Close | simple exit without drama |
@@ -99,8 +104,14 @@ The threshold / invitation composition has received founder visual approval in t
 
 The dedicated R1 programme candidate has desktop and mobile viewport evidence on disk.
 
-The deeper experiential question — whether entering, moving inward, and widening truly feels like one continuous living world — remains OPEN under:
+The founder accepted the cellular physical grammar and authorized the next dependent runtime stage.
 
-`JARVIS-VISUAL-FIELD-01 · R1 — First Entry / WORLD Witness`
+R2A Camera Physics is mechanically verified and has desktop/mobile evidence on disk. The remaining experiential question is:
 
-The Experience Contract permits the current candidate to be committed for witness. It does not adjudicate R1 PASS.
+> **Does changing scale feel like approaching and withdrawing from one living world rather than operating a diagram?**
+
+That question remains OPEN under:
+
+`JARVIS-VISUAL-FIELD-01 · R2A — Camera Physics Founder Witness`
+
+R2B Level-of-Detail Resolver remains closed until that witness passes.
