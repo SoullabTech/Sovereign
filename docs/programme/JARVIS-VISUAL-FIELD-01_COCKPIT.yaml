@@ -3,8 +3,8 @@ current_authority:
   - docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md
   - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-01R1R6R1 — Founder Witness of Resting Metabolism
+current_phase: REPAIR
+current_act: VISUAL-FIELD-RUNTIME-01R1R6R2 — Pointer Hit Surface + Actionability Repair
 current_subject_sha: 52ba0ea3fc396d8cef1631d8478329ddab6e7f23
 current_branch: feature/jarvis-visual-field-01-20260928
 worktree: /private/tmp/jarvis-visual-field-01
@@ -14,8 +14,9 @@ deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - R1R6R1 resting metabolism is implemented and mechanically verified.
-  - Founder witness is required to decide whether the field now feels quietly alive before deliberate interaction.
+  - Founder confirms improved resting physics but reports no actionable cursor-over behavior.
+  - Root cause identified: global svg pointer-events:none disabled the Living Field interaction surface.
+  - R1R6R2 restores scoped hit-testing for membranes, cells, and relations.
   - Later durable memory, MAIA, FLOW, and autonomous relation generation remain closed.
 founder_stops:
   - R1 PASS or RETURN before R2 true Grokker semantic zoom.
@@ -23,4 +24,4 @@ founder_stops:
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
 next_phase_on_exit: founder cellular-field witness; PASS accepts membrane / attention / bridge grammar
-last_state_change: 2026-09-29 — R1R6R1 resting metabolism sealed at 52ba0ea3f; founder rest-state witness is the current gate
+last_state_change: 2026-09-29 — founder returned R1R6R1 for missing actionability; global SVG pointer-events defect identified and R1R6R2 opened

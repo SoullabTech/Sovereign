@@ -24,9 +24,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-cellular-metabolism-desktop.png
+screenshot_desktop: docs/design/contracts/screenshots/living-field-cellular-actionable-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/living-field-cellular-nodefocus-mobile.png
-experience_verification: Founder found R1R6 directionally better but too dormant at rest. R1R6R1 adds quiet resting metabolism: independent membrane breathing, low-energy anchored cell drift, latent node labels, and cursor-proximity pre-attention that wakes nearby membranes and bridge corridors before exact hover. Mechanical witness confirms subtle breath, 0.74 field-unit drift, proximity Air attention 0.34, proximity Air↔Earth bridge activity 0.34, and zero browser errors. Founder rest-state feel witness remains the exit gate.
+experience_verification: Founder confirmed the opening physics felt better but reported that nothing else was actionable and there was no cursor-over effect. Root cause was a global Soullab CSS rule, `svg { pointer-events: none; }`, inherited by the Living Field. R1R6R2 restores pointer events only for this field and routes exact attention through field-level geometric hit-testing. A real mouse witness now passes Nearby → Glance → Attend → Dwell → relation hover → enter Air → enter Calling → widen → drag/local response with zero browser errors. Founder actionability feel witness remains the exit gate.
 ---
 # Living Field — Experience Contract
 
