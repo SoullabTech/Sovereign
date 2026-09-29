@@ -95,3 +95,26 @@ A return must not preserve as truth merely because it was visible during explora
 If the underlying source legitimately changes during an exploration, return should restore orientation to that source's current standing rather than fabricate an obsolete state for the sake of visual continuity.
 
 > **Continuity serves truth; continuity does not overrule truth.**
+
+
+---
+
+## Truthful return under change — 2026-09-29
+
+Living Field continuity now distinguishes **identity** from **state**.
+
+> **Continuity preserves identity, not sameness.**
+
+When a source materially changes while the member is deeper in the field:
+
+- the same source identity should remain recognizable;
+- the field should reconcile to current source truth;
+- the fact of change may be made inspectable;
+- exact before / now source text may be shown when that reduces confusion;
+- no psychological or developmental meaning is inferred from the delta.
+
+A truth-driven layout change is permitted when a governed layout fact changes.
+
+For example, if an updated timestamp legitimately changes recency ordering, the same presence may move. The movement must preserve identity and should remain understandable as a change in field state rather than the appearance of a different object.
+
+> **Continuity serves truth; continuity does not freeze the field.**

@@ -16,13 +16,33 @@ interface Props {
   focus: ConstellationFocus;
   className?: string;
   enableSoulServiceAperturePilot?: boolean;
+  enableTruthfulReturnDeltaPilot?: boolean;
   projectionOverrideForWitness?: LivingConstellationProjection | null;
+}
+
+interface ReturnSourceSnapshot {
+  projectionId: string;
+  label: string;
+  excerpt: string | null;
+  updatedAt: string | null;
+  standing: string;
+  authorship: ConstellationProjectionNode['authorship'];
+  privacy: ConstellationProjectionNode['privacy'];
 }
 
 interface ReturnContinuitySnapshot {
   expanded: boolean;
   scrollY: number;
   openerId: string;
+  source: ReturnSourceSnapshot;
+}
+
+interface ReturnDelta {
+  projectionId: string;
+  label: string;
+  before: ReturnSourceSnapshot;
+  now: ReturnSourceSnapshot;
+  changedFields: Array<'excerpt' | 'updatedAt' | 'standing' | 'authorship' | 'privacy'>;
 }
 
 type ViewTransitionDocument = Document & {
@@ -39,6 +59,44 @@ function transitionStyleForPresence(node: ConstellationProjectionNode): CSSPrope
 
 function openerIdForPresence(node: ConstellationProjectionNode): string {
   return `living-presence-opener-${node.projectionId}`;
+}
+
+function returnSourceSnapshot(node: ConstellationProjectionNode): ReturnSourceSnapshot {
+  return {
+    projectionId: node.projectionId,
+    label: node.label,
+    excerpt: node.excerpt,
+    updatedAt: node.updatedAt,
+    standing: node.standing,
+    authorship: node.authorship,
+    privacy: node.privacy,
+  };
+}
+
+function computeReturnDelta(
+  before: ReturnSourceSnapshot,
+  nowNode: ConstellationProjectionNode | null,
+): ReturnDelta | null {
+  if (!nowNode || nowNode.projectionId !== before.projectionId) return null;
+
+  const now = returnSourceSnapshot(nowNode);
+  const changedFields: ReturnDelta['changedFields'] = [];
+
+  if (before.excerpt !== now.excerpt) changedFields.push('excerpt');
+  if (before.updatedAt !== now.updatedAt) changedFields.push('updatedAt');
+  if (before.standing !== now.standing) changedFields.push('standing');
+  if (before.authorship !== now.authorship) changedFields.push('authorship');
+  if (before.privacy !== now.privacy) changedFields.push('privacy');
+
+  if (changedFields.length === 0) return null;
+
+  return {
+    projectionId: before.projectionId,
+    label: now.label,
+    before,
+    now,
+    changedFields,
+  };
 }
 
 function runContinuityTransition(update: () => void): Promise<void> {
@@ -145,40 +203,72 @@ function PresenceTeaser({
   node,
   onOpen,
   continuation = false,
+  returnDelta = null,
 }: {
   node: ConstellationProjectionNode;
   onOpen: () => void;
   continuation?: boolean;
+  returnDelta?: ReturnDelta | null;
 }) {
   return (
-    <button
-      id={openerIdForPresence(node)}
-      type="button"
-      onClick={onOpen}
-      style={transitionStyleForPresence(node)}
-      className={[
-        'group relative block min-w-0 text-left transition',
-        continuation ? 'max-w-2xl py-5' : 'max-w-md py-4',
-      ].join(' ')}
-      aria-label={`Open ${node.label}`}
-    >
-      <span className="block text-[10px] uppercase tracking-[0.14em] text-[#9a8972]">
-        {continuation ? 'Continue' : node.label}
-      </span>
-      <span
+    <div className={continuation ? 'max-w-2xl' : 'max-w-md'}>
+      <button
+        id={openerIdForPresence(node)}
+        type="button"
+        onClick={onOpen}
+        style={transitionStyleForPresence(node)}
         className={[
-          'mt-2 block font-serif leading-snug text-[#443a31] transition group-hover:text-[#72512d]',
-          continuation ? 'text-2xl md:text-[28px]' : 'text-[19px] md:text-[21px]',
+          'group relative block min-w-0 text-left transition',
+          continuation ? 'w-full py-5' : 'w-full py-4',
         ].join(' ')}
+        aria-label={`Open ${node.label}`}
       >
-        {presenceFragment(node)}
-      </span>
-      {continuation && (
-        <span className="mt-2 block text-[11px] text-[#9a8972]">
-          {node.label} · {recencyLabel(node)}
+        <span className="block text-[10px] uppercase tracking-[0.14em] text-[#9a8972]">
+          {continuation ? 'Continue' : node.label}
         </span>
+        <span
+          className={[
+            'mt-2 block font-serif leading-snug text-[#443a31] transition group-hover:text-[#72512d]',
+            continuation ? 'text-2xl md:text-[28px]' : 'text-[19px] md:text-[21px]',
+          ].join(' ')}
+        >
+          {presenceFragment(node)}
+        </span>
+        {continuation && (
+          <span className="mt-2 block text-[11px] text-[#9a8972]">
+            {node.label} · {recencyLabel(node)}
+          </span>
+        )}
+      </button>
+
+      {returnDelta && (
+        <details
+          data-return-delta={node.projectionId}
+          className="mb-3 border-l-2 border-[#c69b5d]/45 pl-4 text-[11px] leading-6 text-[#7f6d5b]"
+        >
+          <summary className="cursor-pointer list-none text-[#785b36]">
+            Updated while you were inside
+          </summary>
+          <div className="mt-3 space-y-3">
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.13em] text-[#9a8972]">Before</p>
+              <p className="mt-1 font-serif text-[15px] leading-6 text-[#5c4f43]">
+                {returnDelta.before.excerpt || returnDelta.before.label}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.13em] text-[#9a8972]">Now</p>
+              <p className="mt-1 font-serif text-[15px] leading-6 text-[#5c4f43]">
+                {returnDelta.now.excerpt || returnDelta.now.label}
+              </p>
+            </div>
+            <p className="text-[10px] leading-5 text-[#8a7965]">
+              Same presence · source changed · no explanation inferred.
+            </p>
+          </div>
+        </details>
       )}
-    </button>
+    </div>
   );
 }
 
@@ -359,6 +449,7 @@ export function LivingConstellationPanel({
   focus,
   className = '',
   enableSoulServiceAperturePilot = false,
+  enableTruthfulReturnDeltaPilot = false,
   projectionOverrideForWitness = null,
 }: Props) {
   const [projection, setProjection] = useState<LivingConstellationProjection | null>(
@@ -368,6 +459,7 @@ export function LivingConstellationPanel({
   const [expanded, setExpanded] = useState(false);
   const [selectedPresenceId, setSelectedPresenceId] = useState<string | null>(null);
   const [returnSnapshot, setReturnSnapshot] = useState<ReturnContinuitySnapshot | null>(null);
+  const [returnDelta, setReturnDelta] = useState<ReturnDelta | null>(null);
 
   useEffect(() => {
     if (projectionOverrideForWitness) {
@@ -468,16 +560,27 @@ export function LivingConstellationPanel({
       expanded,
       scrollY: typeof window === 'undefined' ? 0 : window.scrollY,
       openerId: openerIdForPresence(node),
+      source: returnSourceSnapshot(node),
     };
     setReturnSnapshot(snapshot);
+    setReturnDelta(null);
     void runContinuityTransition(() => setSelectedPresenceId(node.projectionId));
   };
 
   const returnFromPresence = () => {
     const snapshot = returnSnapshot;
+    const currentNode = snapshot
+      ? grouped.living_field.find((node) => node.projectionId === snapshot.source.projectionId) ?? null
+      : null;
+    const delta =
+      snapshot && enableTruthfulReturnDeltaPilot
+        ? computeReturnDelta(snapshot.source, currentNode)
+        : null;
+
     void runContinuityTransition(() => {
       setSelectedPresenceId(null);
       if (snapshot) setExpanded(snapshot.expanded);
+      setReturnDelta(delta);
       setReturnSnapshot(null);
     }).then(() => {
       if (!snapshot || typeof window === 'undefined') return;
@@ -560,6 +663,9 @@ export function LivingConstellationPanel({
                 <PresenceTeaser
                   node={latestLiving}
                   continuation
+                  returnDelta={
+                    returnDelta?.projectionId === latestLiving.projectionId ? returnDelta : null
+                  }
                   onOpen={() => openPresence(latestLiving)}
                 />
               )}
@@ -569,6 +675,7 @@ export function LivingConstellationPanel({
                   <PresenceTeaser
                     key={node.projectionId}
                     node={node}
+                    returnDelta={returnDelta?.projectionId === node.projectionId ? returnDelta : null}
                     onOpen={() => openPresence(node)}
                   />
                 ))}
@@ -597,6 +704,7 @@ export function LivingConstellationPanel({
                   <PresenceTeaser
                     key={node.projectionId}
                     node={node}
+                    returnDelta={returnDelta?.projectionId === node.projectionId ? returnDelta : null}
                     onOpen={() => openPresence(node)}
                   />
                 ))}

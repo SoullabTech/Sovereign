@@ -15,6 +15,13 @@ const witnessPage = fs.readFileSync(
   path.join(root, 'app/dev/maia-soul-service/living-field-aperture/page.tsx'),
   'utf8',
 )
+const witnessClient = fs.readFileSync(
+  path.join(
+    root,
+    'app/dev/maia-soul-service/living-field-aperture/TruthfulReturnWitnessClient.tsx',
+  ),
+  'utf8',
+)
 
 describe('Living Field return continuity — 02R1', () => {
   it('preserves a stable transition identity across teaser and entered presence', () => {
@@ -41,14 +48,14 @@ describe('Living Field return continuity — 02R1', () => {
   it('integrates the aperture pilot only when explicitly enabled', () => {
     expect(panel).toContain('enableSoulServiceAperturePilot = false')
     expect(panel).toContain('<SoulServiceAperturePilot')
-    expect(witnessPage).toContain('enableSoulServiceAperturePilot')
+    expect(witnessClient).toContain('enableSoulServiceAperturePilot')
   })
 
   it('keeps the local witness production closed and uses synthetic projection data', () => {
     expect(witnessPage).toContain("process.env.NODE_ENV === 'production'")
     expect(witnessPage).toContain('notFound()')
-    expect(witnessPage).toContain('synthetic_witness')
-    expect(witnessPage).toContain('projectionOverrideForWitness')
+    expect(witnessClient).toContain('synthetic_witness')
+    expect(witnessClient).toContain('projectionOverrideForWitness')
   })
 
   it('keeps aperture state component-local and offers explicit return to source', () => {
