@@ -24,9 +24,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-cellular-dwell-desktop.png
+screenshot_desktop: docs/design/contracts/screenshots/living-field-cellular-metabolism-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/living-field-cellular-nodefocus-mobile.png
-experience_verification: Founder authorized a HYBRID direction after the A/B physics comparison: Grokker nested worlds + constrained relational physics + cellular membranes + attentional field behavior + cross-world bridges. R1R6 implements atmospheric world ecologies, Glance → Attend → Dwell, bundled bridge corridors, fading session-only attention traces, real world/node zoom, and preserved widening. Mechanical desktop/mobile witnesses pass with zero browser errors. Founder cellular-field feel witness remains the exit gate.
+experience_verification: Founder found R1R6 directionally better but too dormant at rest. R1R6R1 adds quiet resting metabolism: independent membrane breathing, low-energy anchored cell drift, latent node labels, and cursor-proximity pre-attention that wakes nearby membranes and bridge corridors before exact hover. Mechanical witness confirms subtle breath, 0.74 field-unit drift, proximity Air attention 0.34, proximity Air↔Earth bridge activity 0.34, and zero browser errors. Founder rest-state feel witness remains the exit gate.
 ---
 # Living Field — Experience Contract
 
