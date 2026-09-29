@@ -157,3 +157,27 @@ SS-02 preserves:
 > **anchor → possible frame → alternative frame → compare → member ruling → return**
 
 and includes explicit rejection, unresolved, member-authored-frame, and return-to-source states.
+
+
+---
+
+# Programme execution standing — 2026-09-29
+
+The first governed Soul-Service sequence has now reached:
+
+- SS-01 Constitutional convergence — PASS
+- SS-02 Frame Detection prototype — PASS
+- SS-03 Perspective Mobility prototype — PASS
+- SS-04 Contrast / Counterevidence prototype — PASS
+- SS-05 Spatiotemporal Grokker prototype — PASS
+- SS-06 Member-authored Relation Editing — PASS
+- SS-07 Solo Mode — PASS
+- SS-08 Transfer Battery harness — PASS
+- SS-09 Scaffold Fading — PASS
+- SS-10 Longitudinal Transfer Study — DESIGN COMPLETE
+
+See:
+
+MAIA_SOUL_SERVICE_01_SS01_SS10_PROGRAMME_WITNESS.md
+
+The programme remains stopped before runtime integration, persistence, schema, participant research, scoring, or deployment.
