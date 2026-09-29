@@ -15,6 +15,7 @@ principles:
   - LIVING_FIELD_GROKKER_ROADMAP — recursive containment, semantic movement, enriched return
   - LIVING_FIELD_MEANING_EVOLUTION_LAWS — relation trust, productive tension, revisable meaning
   - SOUL_LAB_SPATIAL_NAVIGATION_LAW — Living Field as a spatial threshold into the wider Soul lab
+  - SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS — one organism / earned portals / MAIA inquiry loci / member agency
   - JARVIS-VISUAL-FIELD-01 — founder-gated runtime slices and evidence discipline
 
 reference_surfaces:
@@ -26,9 +27,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-r2a-calling-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/living-field-r2a-pinch-mobile.png
-experience_verification: Founder accepted the cellular visual language and authorized R2A Camera Physics, with the additional direction that Living Field should become a magical spatial way to explore the full Soullab platform — a true Soul lab. R2A now provides cursor-anchored wheel/trackpad zoom, bounded background pan, two-pointer pinch, click-to-enter, one-level Widen, Whole recovery, keyboard parity, and reduced-motion operation while preserving semantic topology. Mechanical witness passes with 0.08 field-unit anchor error, real wheel 1.0→2.373 without page scroll, Air 1.48×, Calling 1.9×, pinch 1.8×, clamps 0.86×→3.4×, and zero browser errors. Founder camera-feel witness remains the exit gate.
+screenshot_desktop: docs/design/contracts/screenshots/living-field-r2b-relationship-lod4-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/living-field-r2b-relationship-lod4-mobile.png
+experience_verification: Founder accepted R2A Camera Physics as working and helpful. R2B now resolves perceptual depth declaratively across LOD0–LOD5: whole ecology → worlds → regional cells → local neighborhood → relational meaning → evidence/provenance. Specific relation edges do not leak into the whole view; relation verbs resolve at LOD4; a non-live MAIA inquiry locus appears at LOD3+; a prototype Relationships threshold appears only for the explicitly eligible Relationship node at LOD4+ with a visible rationale; a deep non-eligible Calling node receives no portal. Desktop and mobile witnesses pass with zero browser errors, and the depth lens no longer intercepts wheel zoom. Live MAIA execution and live cross-room crossing remain closed. Founder R2B feel witness is the exit gate.
 ---
 # Living Field — Experience Contract
 
@@ -106,12 +107,22 @@ The dedicated R1 programme candidate has desktop and mobile viewport evidence on
 
 The founder accepted the cellular physical grammar and authorized the next dependent runtime stage.
 
-R2A Camera Physics is mechanically verified and has desktop/mobile evidence on disk. The remaining experiential question is:
+R2A Camera Physics is mechanically verified and founder-accepted.
 
-> **Does changing scale feel like approaching and withdrawing from one living world rather than operating a diagram?**
+R2B Level-of-Detail Resolver + Soul Lab Coherence is now implemented as a local candidate with desktop/mobile evidence on disk.
 
-That question remains OPEN under:
+The current experiential questions are:
 
-`JARVIS-VISUAL-FIELD-01 · R2A — Camera Physics Founder Witness`
+> **Does deeper zoom feel richer rather than busier?**
 
-R2B Level-of-Detail Resolver remains closed until that witness passes.
+> **Does the larger ecology remain present while local relation becomes more articulate?**
+
+> **Does a portal cue feel like the field opening somewhere meaningful rather than an app shortcut appearing?**
+
+> **Does the MAIA locus feel available without turning the field back into chatbot-first UI?**
+
+These questions remain OPEN under:
+
+`JARVIS-VISUAL-FIELD-01 · R2B — Level-of-Detail Resolver + Soul Lab Coherence Founder Witness`
+
+R2C Progressive Relational Resolution remains closed until that witness passes.
