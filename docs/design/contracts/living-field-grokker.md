@@ -24,9 +24,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-grokker-r1r3-water-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/living-field-grokker-r1r3-water-mobile.png
-experience_verification: Founder stopped the static circle-world grammar because it behaved like a menu rather than Grokker: circles did not visibly contain circles, movement swapped layouts, and depth ended quickly. R1R3 replaces that grammar with one recursive D3 circle-packed SVG containing 72 stable nodes and continuous camera interpolation. Exact desktop and mobile witnesses pass Whole → Water → Relationship → Grief → Continuing Relation → widen → Grief → widen → Relationship with the same node set mounted throughout. Founder re-witness remains the exit gate.
+screenshot_desktop: docs/design/contracts/screenshots/living-field-physics-a-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/living-field-physics-a-mobile.png
+experience_verification: Founder accepted recursive containment as directionally closer, then identified the missing relational layer: Obsidian-like physics, visible semantic connections, drag response, and cursor-over insight. R1R5 compares two real physics substrates over the same field corpus: A = D3 nested force with circular containment; B = fCoSE compound force. Both compile, mount without browser errors, reveal node and edge insight on hover, respond to drag, preserve containment, and have desktop/mobile evidence. Founder A/B feel witness remains the exit gate.
 ---
 # Living Field — Experience Contract
 
