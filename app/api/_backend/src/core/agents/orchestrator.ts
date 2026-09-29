@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { LLMChain } from "langchain/chains";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import axios from "axios";
 import { logger } from '../../utils/logger';
 import { safetyService } from '../../services/SafetyModerationService';
@@ -558,14 +558,11 @@ export async function runLangChain(query: string): Promise<string> {
     "You are a wise oracle. Provide a poetic and thoughtful response to: {query}",
   );
 
-  const chain = new LLMChain({
-    llm: model,
-    prompt,
-  });
+  const chain = prompt.pipe(model).pipe(new StringOutputParser());
 
   try {
     const result = await chain.invoke({ query });
-    return result.text?.trim() || "🌀 The oracle was silent this time.";
+    return result.trim() || "🌀 The oracle was silent this time.";
   } catch (error) {
     console.error("❌ Error in runLangChain:", error);
     throw new Error("Failed to generate response from LangChain");

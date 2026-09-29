@@ -77,7 +77,7 @@ cd /Users/soullab/MAIA-SOVEREIGN/beta-deployment
 # Create Dockerfile for consciousness computing
 cat > Dockerfile << 'EOF'
 # Consciousness Computing Docker Image for M4 Mac Server
-FROM node:18-alpine
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
@@ -126,7 +126,7 @@ if [ ! -f package.json ]; then
     "cors": "^2.8.5"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   }
 }
 EOF

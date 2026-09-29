@@ -7,7 +7,7 @@
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID as uuidv4 } from 'node:crypto';
 
 interface SesameResponse {
   audio: string;  // Base64 encoded audio

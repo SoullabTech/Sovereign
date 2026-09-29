@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Post-Retreat Service - Long-term transformation support
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID as uuidv4 } from "node:crypto";
 import { logger } from "../utils/logger";
 import { soullabFounderAgent } from "../core/agents/soullabFounderAgent";
 import { PersonalOracleAgent } from "../core/agents/adjusterAgent";
