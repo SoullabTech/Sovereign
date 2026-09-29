@@ -1,19 +1,41 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BETA_FEEDBACK_LABEL, BETA_FEEDBACK_SIGNALS, type BetaFeedbackSignal } from '@/lib/writersStudio/betaFeedback';
 import { sendBetaFeedback } from '@/lib/writersStudio/betaFeedbackClient';
 import type { UnifiedStudioMode } from './P4R1StudioHost';
+import { apiFetch } from '@/lib/http/apiBase';
 
 export default function P4R1BetaFeedback({ mode }: { mode: UnifiedStudioMode }) {
   const params = useSearchParams();
-  const enabled = params?.get('beta') === '1';
+  const requested = params?.get('beta') === '1';
+  const [eligible, setEligible] = useState(false);
+  const [accessSettled, setAccessSettled] = useState(false);
   const [open, setOpen] = useState(false);
   const [signal, setSignal] = useState<BetaFeedbackSignal | null>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    if (!requested) {
+      setEligible(false);
+      setAccessSettled(true);
+      return () => { live = false; };
+    }
+    setAccessSettled(false);
+    void apiFetch('/api/sovereign/writers-studio/beta-access', { method: 'GET' })
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (!live) return;
+        setEligible(response.ok && body?.eligible === true);
+      })
+      .catch(() => { if (live) setEligible(false); })
+      .finally(() => { if (live) setAccessSettled(true); });
+    return () => { live = false; };
+  }, [requested]);
 
   const context = useMemo(() => ({
     ...(params?.get('developField') ? { developField: params.get('developField')! } : {}),
@@ -24,7 +46,7 @@ export default function P4R1BetaFeedback({ mode }: { mode: UnifiedStudioMode }) 
     ...(params?.get('lineageCandidate') ? { lineageCandidate: params.get('lineageCandidate')! } : {}),
   }), [params]);
 
-  if (!enabled) return null;
+  if (!requested || !accessSettled || !eligible) return null;
 
   const submit = async () => {
     if (!signal || busy) return;

@@ -14,10 +14,10 @@ reference_surfaces:
   - docs/design/contracts/writers-studio-full-redesign-pc3-s1.md
   - docs/design/contracts/writers-studio-rebuild.md
 shared_with_house: member sovereignty · explicit action over inference · provenance · uncertainty · MAIA as one relational voice · no hidden scoring
-distinct_to_room: correction is tied to an exact MAIA turn; beta feedback is opt-in and available only on beta=1 founder/beta URLs; navigation metadata may be kept only when the writer deliberately submits a beta note
+distinct_to_room: correction is tied to an exact MAIA turn; beta feedback requires both beta=1 presentation intent and server-proven pilot membership (active member-linked beta_tester, with founder/CTO witness access); navigation metadata may be kept only when the writer deliberately submits a beta note
 screenshot_desktop: docs/design/contracts/screenshots/writers-studio-small-beta/desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/writers-studio-small-beta/mobile.png
-experience_verification: desktop 1440×1000 and mobile 390×844 Chromium witnesses verify the beta=1 feedback membrane is explicit, contained, readable and absent without the beta flag; static and focused tests prove Where are we? only prepares a member-controlled prompt, Correct MAIA targets an exact persisted MAIA turn without rewriting it or the manuscript, current corrections enter later Work context, and the feedback schema contains no passive dwell, clickstream, engagement, inferred-emotion or manuscript-body telemetry. Authenticated correction persistence remains a post-migration beta-readiness witness and is not claimed by these signed-out screenshots.
+experience_verification: desktop 1440×1000 and mobile 390×844 Chromium presentation witnesses (with the beta-access endpoint explicitly stubbed eligible) verify the cohort-gated beta feedback membrane is contained and readable; static/server tests prove beta=1 alone does not grant access, the feedback POST independently refuses members outside the active linked pilot;  static and focused tests prove Where are we? only prepares a member-controlled prompt, Correct MAIA targets an exact persisted MAIA turn without rewriting it or the manuscript, current corrections enter later Work context, and the feedback schema contains no passive dwell, clickstream, engagement, inferred-emotion or manuscript-body telemetry. Authenticated correction persistence remains a post-migration beta-readiness witness and is not claimed by these signed-out screenshots.
 ---
 
 # Writer’s Studio Small Beta — Experience Contract
@@ -59,7 +59,7 @@ Any of these stops expansion until repaired:
 
 ## Feedback membrane
 
-Available only when `beta=1` is present. The writer may explicitly choose one of:
+Available only when `beta=1` is present **and** the server verifies the member is in the pilot: an active, member-linked `beta_tester` contact. Founder/CTO may enter for witness and support. The writer may explicitly choose one of:
 
 - I lost the thread
 - MAIA misunderstood me

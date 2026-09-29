@@ -7,6 +7,8 @@ const conversation = readFileSync(join(ROOT, 'app/writers-studio/canvas/WorkConv
 const askReader = readFileSync(join(ROOT, 'lib/manuscript/ask/askReader.ts'), 'utf8');
 const beta = readFileSync(join(ROOT, 'app/dev/writers-studio-p4r1/P4R1BetaFeedback.tsx'), 'utf8');
 const betaMigration = readFileSync(join(ROOT, 'database/migrations/20260929000005_writer_studio_beta_feedback.sql'), 'utf8');
+const betaAccess = readFileSync(join(ROOT, 'lib/writersStudio/betaAccessServer.ts'), 'utf8');
+const feedbackRoute = readFileSync(join(ROOT, 'app/api/sovereign/writers-studio/beta-feedback/route.ts'), 'utf8');
 
 describe('WRITERS-STUDIO-SMALL-BETA-01', () => {
   it('turns the eight beta priorities into explicit criteria', () => {
@@ -34,9 +36,14 @@ describe('WRITERS-STUDIO-SMALL-BETA-01', () => {
     expect(askReader).toContain('A correction changes your current working understanding; it does not erase what you said earlier.');
   });
 
-  it('keeps beta feedback explicit and absent unless beta=1', () => {
+  it('keeps beta feedback explicit and requires both beta=1 and server-side pilot membership', () => {
     expect(beta).toContain("params?.get('beta') === '1'");
-    expect(beta).toContain('if (!enabled) return null');
+    expect(beta).toContain("/api/sovereign/writers-studio/beta-access");
+    expect(beta).toContain('!requested || !accessSettled || !eligible');
+    expect(betaAccess).toContain("contact_type = 'beta_tester'");
+    expect(betaAccess).toContain("pipeline_stage = 'active'");
+    expect(betaAccess).toContain('c.member_id = $1');
+    expect(feedbackRoute).toContain('not_in_beta_pilot');
     expect(beta).toContain('Keep beta note');
   });
 

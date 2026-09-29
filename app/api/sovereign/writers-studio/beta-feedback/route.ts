@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { isBetaFeedbackSignal } from '@/lib/writersStudio/betaFeedback';
+import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,8 @@ const CONTEXT_KEYS = new Set([
 export async function POST(req: NextRequest) {
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  const access = await writersStudioBetaAccess(memberId);
+  if (!access.eligible) return NextResponse.json({ refusal: 'not_in_beta_pilot' }, { status: 403 });
   const raw = await req.json().catch(() => null);
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
