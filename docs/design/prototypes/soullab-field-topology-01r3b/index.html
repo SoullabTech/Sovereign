@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Soullab Field Topology R3B</title>
+<style>
+:root{
+ --bg:#0b0a09; --ink:#eee8df; --muted:#aaa097; --quiet:#766d65;
+ --line:#2b2622; --soft:#171411; --gold:#d5b06a; --teal:#78b7aa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+body{padding:34px}
+.shell{max-width:1180px;margin:0 auto}
+.prototype-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#5f5750;margin-bottom:28px}
+.stage{position:relative;min-height:760px;overflow:hidden}
+.head{position:relative;z-index:5;max-width:760px}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#756c64}
+h1{font:400 38px/1.14 Georgia,serif;margin:10px 0 10px}
+.lede{font-size:16px;line-height:1.65;color:var(--muted);margin:0;max-width:710px}
+.context{font-size:13px;line-height:1.55;color:#8d837a;margin-top:16px;max-width:720px}
+.horizon{position:absolute;inset:130px -4% -9%;border-radius:50%;border:1px solid #1e1b19}
+.horizon:before,.horizon:after{content:"";position:absolute;border-radius:50%;border:1px solid #181513}
+.horizon:before{inset:8% 10% 9%}
+.horizon:after{inset:18% 21% 20%}
+.orient{position:absolute;z-index:4;top:202px;left:0;color:#81766c;font-size:12px;display:flex;gap:8px;align-items:center}
+.orient i{width:7px;height:7px;background:#957744;border-radius:50%;display:block}
+.point{position:absolute;z-index:4;max-width:300px}
+.point .dot{width:9px;height:9px;border:1px solid #8a744d;background:#19140e;border-radius:50%;box-shadow:0 0 0 6px rgba(97,75,39,.08)}
+.point h3{font:400 18px/1.25 Georgia,serif;margin:8px 0 4px}
+.point p{font-size:12px;line-height:1.5;color:#766d65;margin:0}
+.point .meta{font-size:10px;color:#6b625a;margin-top:7px}
+.point.active h3{color:#f0e6d9}
+.point.active .dot{background:#b08b4b;box-shadow:0 0 0 8px rgba(176,139,75,.08)}
+.direction{position:absolute;z-index:4;max-width:260px;text-decoration:none}
+.direction span{font-size:13px;color:var(--gold)}
+.direction.teal span{color:var(--teal)}
+.direction small{display:block;color:#70675f;font-size:11px;line-height:1.5;margin-top:5px}
+.controls{position:absolute;z-index:6;left:0;bottom:18px;display:flex;gap:10px;flex-wrap:wrap}
+.pill{border:1px solid #332d28;border-radius:999px;padding:9px 13px;font-size:12px;color:#9d9288;background:rgba(14,13,12,.74)}
+.pill.primary{color:var(--gold);border-color:#554326}
+.prov{position:absolute;z-index:5;right:0;bottom:22px;color:#5f5750;font-size:10px;max-width:430px;text-align:right;line-height:1.5}
+.wide .horizon{inset:100px -20% -18%}
+.wide .horizon:before{inset:7% 9% 8%}
+.wide .horizon:after{inset:16% 18% 17%}
+.faint{opacity:.62}
+@media(max-width:700px){
+ body{padding:18px}
+ .prototype-label{margin-bottom:20px}
+ .stage{min-height:0;padding-bottom:28px}
+ h1{font-size:30px}
+ .lede{font-size:15px}
+ .context{font-size:12px}
+ .horizon,.wide .horizon{inset:190px -72% 70px;border-color:#191614}
+ .horizon:before{inset:10% 13% 11%}
+ .horizon:after{inset:21% 24% 21%}
+ .orient{position:relative;top:auto;left:auto;margin-top:70px}
+ .point{position:relative!important;left:auto!important;top:auto!important;max-width:270px;margin-top:54px}
+ .point:nth-of-type(even){margin-left:34px}
+ .point h3{font-size:17px}
+ .direction{position:relative!important;left:auto!important;top:auto!important;display:block;max-width:255px;margin:52px 0 0 48px}
+ .controls{position:relative;left:auto;bottom:auto;margin-top:58px}
+ .prov{position:relative;left:auto;right:auto;bottom:auto;text-align:left;max-width:330px;margin-top:18px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="prototype-label">Soullab · Perspectival Constellation · R3B design witness</div>
+<main id="app"></main>
+</div>
+<script>
+const q=new URLSearchParams(location.search);
+const view=q.get('view')||'living-collapsed';
+
+function point(x,y,title,body,meta='',active=false,extra=''){
+ return `<div class="point ${active?'active':''} ${extra}" style="left:${x};top:${y}">
+  <div class="dot"></div><h3>${title}</h3><p>${body}</p>${meta?'<div class="meta">'+meta+'</div>':''}</div>`;
+}
+function direction(x,y,title,body,tone=''){
+ return `<a class="direction ${tone}" href="#" style="left:${x};top:${y}"><span>${title} →</span><small>${body}</small></a>`;
+}
+function frame(cls,eyebrow,title,lede,context,body){
+ return `<section class="stage ${cls}"><div class="head"><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="lede">${lede}</p>${context?'<div class="context">'+context+'</div>':''}</div><div class="horizon"></div>${body}</section>`;
+}
+function livingCollapsed(){
+ return frame('', 'Living Field','See what is taking shape across your life.',
+ 'Some parts are being lived, some are becoming clearer, and some may be ready to develop or meet others.','',
+ `<div class="orient"><i></i>You are here</div>
+ ${point('7%','43%','Current Questions','Something is asking for attention, but it does not need to be named too quickly.','authored',true)}
+ ${point('37%','58%','Creative Work','A new direction is beginning to gather around the book and the work beyond it.','authored')}
+ ${point('15%','74%','Relationships','A changing pattern is becoming easier to notice.','confirmed')}
+ ${direction('68%','46%','Develop something','Give an emerging idea or body of work more form.')}
+ ${direction('69%','67%','Meet others through your work','Tend how what you do enters relationship with other people.','teal')}
+ <div class="controls"><span class="pill primary">See the wider field</span><span class="pill">Other directions</span></div>
+ <div class="prov">No line here claims a hidden psychological relationship. Standing and provenance remain source-governed.</div>`);
+}
+function livingExpanded(){
+ return frame('wide','Living Field','See what is taking shape across your life.',
+ 'Some parts are being lived, some are becoming clearer, and some may be ready to develop or meet others.','The view widens; the field itself changes scale.',
+ `<div class="orient"><i></i>You are here · wider view</div>
+ ${point('5%','39%','Current Questions','Something is asking for attention, but it does not need to be named too quickly.','authored',true)}
+ ${point('30%','54%','Creative Work','A new direction is gathering around the book and the work beyond it.','authored')}
+ ${point('11%','70%','Relationships','A changing pattern is becoming easier to notice.','confirmed')}
+ ${point('46%','75%','Body & Rhythm','Rest, energy, and pace are becoming part of the same season of attention.','suggested possibility')}
+ ${point('74%','34%','Family','A place that can be returned to when something here becomes alive.','',false,'faint')}
+ ${point('79%','57%','Place','The environments and places that are carrying meaning now.','',false,'faint')}
+ ${point('67%','79%','Future Self','What is becoming possible without turning possibility into prediction.','',false,'faint')}
+ ${direction('57%','40%','Develop something','Vision Studio can hold what wants sustained form.')}
+ ${direction('58%','62%','Meet others through your work','Practice Field can hold how the work enters relationship.','teal')}
+ <div class="controls"><span class="pill primary">Return to quiet view</span><span class="pill">Stay here</span></div>
+ <div class="prov">Widen changes visibility only. Authorship, privacy, standing, and provenance remain exactly where they came from.</div>`);
+}
+function vision(){
+ return frame('', 'Vision Studio','Develop what wants to become more real.',
+ 'This work sits within your wider Living Field.','',
+ `<div class="orient"><i></i>Vision Studio · current perspective</div>
+ ${point('8%','43%','Elemental Alchemy — next movement','The manuscript is asking for a clearer developmental arc before line-level refinement.','confirmed · private',true)}
+ ${point('37%','61%','Teaching architecture','A body of teaching wants a form that can remain alive rather than becoming a static curriculum.','authored')}
+ ${point('14%','76%','Relational Geometry','A research thread is becoming distinct enough to hold on its own.','confirmed')}
+ ${direction('70%','53%','See how this meets others','Practice Field is available as another direction — not a claim that these threads are already linked.','teal')}
+ <div class="controls"><span class="pill primary">Widen to Living Field</span><span class="pill">Return to where you were</span></div>
+ <div class="prov">Vision ↔ Practice is navigational adjacency only. No semantic relationship is implied between individual nodes.</div>`);
+}
+function practice(){
+ return frame('', 'Practice Field','Tend how your work meets other people.',
+ 'Your practice lives within the wider field of your life and work.','',
+ `<div class="orient"><i></i>Practice Field · current perspective</div>
+ ${point('8%','43%','Active Field','This season emphasizes helping people notice what is already alive before trying to improve it.','practitioner authored · private',true)}
+ ${point('38%','61%','Arrival','The threshold should feel human, grounded, and relational before it asks for information.','practitioner authored')}
+ ${point('14%','76%','Shared practice','Invitation and containment need to stay explicit as the field meets another person.','contained')}
+ ${direction('70%','53%','Develop the work further','Vision Studio is available as another direction when something here wants more form.')}
+ <div class="controls"><span class="pill primary">Widen to Living Field</span><span class="pill">Return to where you were</span></div>
+ <div class="prov">Readiness, containment, authorship, and privacy stay source-governed. Presentation does not reinterpret them.</div>`);
+}
+const render={ 'living-collapsed':livingCollapsed,'living-expanded':livingExpanded,vision,practice };
+document.getElementById('app').innerHTML=(render[view]||livingCollapsed)();
+</script>
+</body>
+</html>
