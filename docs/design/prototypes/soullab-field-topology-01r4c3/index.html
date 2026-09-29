@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Living Field R4C3 — Presence to Movement</title>
+<style>
+:root{
+  --paper:#f7ecdc; --ink:#302923; --soft:#6f6053; --quiet:#8d7966;
+  --copper:#d95b32; --gold:#e2a126; --teal:#23877a; --plum:#7a4d78;
+  --line:rgba(92,68,45,.18);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#eadfce;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+body{padding:26px}
+.room{position:relative;isolation:isolate;max-width:1180px;min-height:840px;margin:0 auto;overflow:hidden;border-radius:44px;padding:52px 62px 48px;background:var(--paper);box-shadow:0 28px 90px rgba(72,48,30,.10)}
+.field{position:absolute;inset:0;z-index:-2;overflow:hidden}
+.field:before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,#fff9f0 0%,#f4e4cf 54%,#f2e1ce 100%)}
+.bloom{position:absolute;border-radius:50%;filter:blur(72px);opacity:.72;mix-blend-mode:multiply;animation:drift 22s ease-in-out infinite alternate}
+.b1{width:56%;height:58%;left:-12%;top:-8%;background:radial-gradient(circle,var(--copper),rgba(201,95,56,.16) 44%,transparent 72%)}
+.b2{width:48%;height:52%;right:-8%;top:7%;background:radial-gradient(circle,var(--teal),rgba(47,129,118,.14) 44%,transparent 72%);animation-delay:-7s}
+.b3{width:48%;height:52%;left:18%;bottom:-22%;background:radial-gradient(circle,var(--gold),rgba(216,153,40,.14) 46%,transparent 74%);animation-delay:-12s}
+.b4{width:35%;height:42%;right:16%;bottom:-16%;background:radial-gradient(circle,var(--plum),rgba(114,80,113,.10) 48%,transparent 74%);animation-delay:-3s}
+.grain{position:absolute;inset:0;opacity:.18;background-image:radial-gradient(rgba(81,58,39,.28) .55px,transparent .55px);background-size:17px 17px}
+@keyframes drift{from{transform:translate3d(-2%,0,0) scale(1)}to{transform:translate3d(4%,3%,0) scale(1.08)}}
+.top{display:flex;justify-content:space-between;gap:20px;align-items:center}
+.kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7e6a58}
+.prototype{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9a8672}
+h1{font:400 46px/1.12 Georgia,serif;margin:12px 0 0;max-width:860px}
+.source{margin-top:12px;font-size:12px;color:#8c7966}
+.quote{margin-top:58px;max-width:890px;font:400 34px/1.42 Georgia,serif;color:#342c26}
+.context{margin-top:14px;font-size:13px;color:#846f5b}
+.prompt{margin-top:62px;font:400 23px/1.35 Georgia,serif}
+.movements{display:flex;flex-wrap:wrap;gap:13px 28px;margin-top:24px;max-width:980px;align-items:center}
+.move{position:relative;border:0;padding:0 0 5px;text-decoration:none;color:inherit;cursor:pointer;background:none;text-align:left}
+.move:after{content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;background:linear-gradient(90deg,var(--copper),var(--gold),var(--teal));transition:right .25s ease}
+.move:hover:after,.move[aria-pressed="true"]:after{right:0}
+.move strong{display:block;font:400 20px/1.3 Georgia,serif}
+.move span{display:none}
+.move:hover strong,.move[aria-pressed="true"] strong{color:#8a4d2d}
+.movement-panel{margin-top:34px;max-width:840px;border-left:2px solid rgba(158,92,49,.45);padding:2px 0 2px 20px;min-height:84px}
+.movement-panel .small{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#967e69}
+.movement-panel p{margin:7px 0 0;font:400 19px/1.55 Georgia,serif;color:#4d4036}
+.timeline{display:grid;gap:22px;margin-top:18px}
+.time{border-left:1px solid rgba(115,86,57,.25);padding-left:16px}
+.time b{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#947d68}
+.time p{font:400 17px/1.5 Georgia,serif;margin:5px 0 0}
+.footer{position:absolute;left:62px;right:62px;bottom:38px;display:flex;justify-content:space-between;align-items:end;border-top:1px solid var(--line);padding-top:14px}
+.footer button,.footer a{font-size:12px;color:#745834;text-decoration:underline;text-underline-offset:4px;background:none;border:0;padding:0;cursor:pointer}
+.legend{font-size:10px;color:#9a8877;max-width:520px;text-align:right}
+@media(max-width:760px){
+ body{padding:12px}
+ .room{min-height:1040px;border-radius:34px;padding:32px 28px 100px}
+ .prototype{display:none}
+ h1{font-size:34px}
+ .quote{margin-top:42px;font-size:26px;line-height:1.45}
+ .prompt{margin-top:48px;font-size:21px}
+ .movements{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px}
+ .footer{left:28px;right:28px;bottom:28px;display:block}
+ .legend{margin-top:12px;text-align:left}
+}
+@media(prefers-reduced-motion:reduce){.bloom{animation:none}}
+</style>
+</head>
+<body>
+<main class="room">
+  <div class="field"><div class="bloom b1"></div><div class="bloom b2"></div><div class="bloom b3"></div><div class="bloom b4"></div><div class="grain"></div></div>
+  <div class="top"><div class="kicker" id="kicker">Elemental Alchemy</div><div class="prototype">R4C3 · design prototype only</div></div>
+  <h1 id="title">The work is alive again.</h1>
+  <div class="source" id="source">Founder-authored work · continuing across time</div>
+
+  <div class="quote" id="quote">“The world is alive, and I am a living part of it, woven into its flow with my own. All is one.”</div>
+  <div class="context" id="context">From the manuscript · returned to repeatedly in the work</div>
+
+  <div class="prompt">What wants to happen with this now?</div>
+  <div class="movements">
+    <button class="move" data-action="stay" aria-pressed="false"><strong>Stay</strong><span>No task. Let it remain present.</span></button>
+    <button class="move" data-action="continue" aria-pressed="false"><strong>Continue</strong><span>Return to the source where this work already lives.</span></button>
+    <button class="move" data-action="time" aria-pressed="false"><strong>Across time</strong><span>See the authored traces without turning them into a story.</span></button>
+    <button class="move" data-action="connect" aria-pressed="false"><strong>Connections</strong><span>Only relationships you already authored or confirmed.</span></button>
+    <button class="move" data-action="maia" aria-pressed="false"><strong>With MAIA</strong><span>Bring this exact presence into conversation when you invite it.</span></button>
+    <button class="move" data-action="rest" aria-pressed="false"><strong>Let rest</strong><span>Close it for now. History remains untouched.</span></button>
+  </div>
+
+  <div class="movement-panel" id="panel">
+    <div class="small">Presence</div>
+    <p>You do not have to do anything with this.</p>
+  </div>
+
+  <div class="footer">
+    <button id="switch">Switch witness → relationship</button>
+    <div class="legend">Movement is chosen by the member. Color and motion carry atmosphere only; they do not encode importance, psychology, or stage.</div>
+  </div>
+</main>
+
+<script>
+const journeys = {
+  work:{
+    kicker:'Elemental Alchemy',
+    title:'The work is alive again.',
+    source:'Founder-authored work · continuing across time',
+    quote:'“The world is alive, and I am a living part of it, woven into its flow with my own. All is one.”',
+    context:'From the manuscript · returned to repeatedly in the work',
+    next:'relationship'
+  },
+  relationship:{
+    kicker:'Andrea, Augusten & Sophie',
+    title:'A relationship is not just something to remember.',
+    source:'Member-authored relationship · Elemental Alchemy dedication',
+    quote:'“For Andrea, Augusten, and Sophie—my center, my home.”',
+    context:'Written by you in the dedication',
+    next:'principle'
+  },
+  principle:{
+    kicker:'Living Spiral',
+    title:'An idea changed because you challenged it.',
+    source:'Founder ruling · Aug 16, 2026',
+    quote:'“A condition of the observer must never be promoted into a condition of the observed.”',
+    context:'A correction you authored rather than a conclusion the system inferred',
+    next:'work'
+  }
+};
+let current=new URLSearchParams(location.search).get('journey')||'work';
+function render(){
+ const j=journeys[current];
+ kicker.textContent=j.kicker; title.textContent=j.title; source.textContent=j.source; quote.textContent=j.quote; context.textContent=j.context;
+ switcher.textContent='Switch witness → '+j.next;
+ panel.innerHTML='<div class="small">Presence</div><p>You do not have to do anything with this.</p>';
+ history.replaceState({},'', '?journey='+current);
+}
+const panel=document.getElementById('panel'), switcher=document.getElementById('switch');
+document.querySelectorAll('.move').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('.move').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true');
+ const a=b.dataset.action;
+ if(a==='stay') panel.innerHTML='<div class="small">Stay</div><p>Nothing changes. The presence remains here with you.</p>';
+ if(a==='continue') panel.innerHTML='<div class="small">Continue</div><p>Return to the source where this already lives. No copy is created.</p>';
+ if(a==='time') panel.innerHTML=current==='work'
+   ? '<div class="small">Across time</div><div class="timeline"><div class="time"><b>2024 · manuscript</b><p>The world is alive, and I am a living part of it…</p></div><div class="time"><b>2025 · repository custody</b><p>Elemental Alchemy: The Art of Living a Phenomenal Life</p></div><div class="time"><b>Aug 2026 · returned to the work</b><p>“I’m writing a book. Not: reading page 7 of a PDF.”</p></div></div>'
+   : '<div class="small">Across time</div><p>Only source-bearing moments would appear here. No narrative is generated between them.</p>';
+ if(a==='connect') panel.innerHTML=current==='relationship'
+   ? '<div class="small">Connected by you</div><p>This dedication already places Andrea, Augusten, and Sophie in relationship to Elemental Alchemy. The interface reveals that authored relation; it does not create another one.</p>'
+   : '<div class="small">Connections</div><p>Only member-authored or member-confirmed relationships can appear here. No relation is inferred from similarity.</p>';
+ if(a==='maia') panel.innerHTML='<div class="small">With MAIA</div><p>MAIA would receive this exact source context only after your invitation. The presence stays yours; MAIA does not rewrite its standing.</p>';
+ if(a==='rest') panel.innerHTML='<div class="small">Rest</div><p>Close this presence for this visit. Nothing is deleted, completed, downgraded, or interpreted.</p>';
+}));
+switcher.addEventListener('click',()=>{current=journeys[current].next;render()});
+render();
+</script>
+</body>
+</html>
