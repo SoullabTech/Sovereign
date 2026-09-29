@@ -82,7 +82,26 @@ Local verification before founder walk:
 
 ## Result
 
-**PENDING FOUNDER WITNESS**
+**FOUNDER RETURN — 2026-09-28**
+
+Founder completed the threshold → Water → Continuing Relation → Path traversal.
+
+Observed strengths:
+- the arrival threshold feels inviting and coherent;
+- the nested Water field reads as a real region with distinct openings;
+- Continuing Relation can be entered as a deeper place;
+- the visual language is calm, soulful, and restrained.
+
+Founder finding:
+> “not sure what to do with this. it needs to be better thought out”
+
+Adjudication:
+- the current Path surface is legible but under-designed as an experience;
+- it presents traversal history more strongly than orientation, meaning, or invitation;
+- it does not yet answer what became visible, what the traveler might carry, or what natural directions remain available;
+- R1 therefore RETURNS for bounded Path / enriched-return repair.
+
+**R2 remains closed.**
 ## Falsification
 
 R1 returns rather than passes if:
