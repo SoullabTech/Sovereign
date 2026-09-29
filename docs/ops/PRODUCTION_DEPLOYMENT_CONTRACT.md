@@ -230,6 +230,7 @@ This contract is executed through, not around, existing production controls:
 - \`scripts/deploy-context.sh\`
 - \`scripts/deploy-lock.sh\`
 - \`scripts/deploy-tag.sh\`
+- \`scripts/deploy-reader-artifact.sh\`
 - \`scripts/pre-deploy-gate.sh\`
 - \`scripts/deploy-production.sh\`
 - \`docs/programme/DEPLOYMENT-SAFETY-03_MIGRATION_COMPATIBILITY_CONTRACT_2026-09-21.md\`

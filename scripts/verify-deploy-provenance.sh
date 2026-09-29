@@ -121,11 +121,34 @@ LABEL="M4 hostile: image stamp is a different SHA"
 DEPLOY_VERIFY_IMAGE_CMD="printf '%s' 'deadbeef1'" expect_red deploy_ctx_verify_image "$SHA_CLEAN"
 LABEL="M4 hostile: image stamp empty"
 DEPLOY_VERIFY_IMAGE_CMD="printf ''" expect_red deploy_ctx_verify_image "$SHA_CLEAN"
-# Static: both drivers call the pre-swap verify BEFORE tagging/swapping.
-for f in pre-deploy-gate.sh deploy-production.sh; do
-  v="$(grep -n 'deploy_ctx_verify_image' "$SCRIPT_DIR/$f" | head -1 | cut -d: -f1)"; t="$(grep -n 'tag_images_for_rollback "\$GIT_COMMIT"' "$SCRIPT_DIR/$f" | head -1 | cut -d: -f1)"
-  if [ -n "$v" ] && [ -n "$t" ] && [ "$v" -lt "$t" ]; then ok "M4 static: $f verifies the image before tagging/swapping"; else fail "M4 static: $f does not verify the image pre-swap (verify@${v:-none} tag@${t:-none})"; fi
-done
+# Static ordering proof.
+# Split quick lane: prepare verifies the built image before candidate staging,
+# and cutover verifies that prepared candidate before any production role tags move.
+pg="$SCRIPT_DIR/pre-deploy-gate.sh"
+v_prepare="$(grep -n 'deploy_ctx_verify_image "$GIT_COMMIT" "$MAIA_IMAGE_REPO:prod"' "$pg" | head -1 | cut -d: -f1)"
+stage="$(grep -n 'deploy_reader_stage_candidate' "$pg" | head -1 | cut -d: -f1)"
+v_cutover="$(grep -n 'deploy_ctx_verify_image "$GIT_COMMIT" "$candidate_tag"' "$pg" | head -1 | cut -d: -f1)"
+promote="$(grep -n 'deploy_reader_promote_prepared' "$pg" | head -1 | cut -d: -f1)"
+if [ -n "$v_prepare" ] && [ -n "$stage" ] && [ "$v_prepare" -lt "$stage" ]; then
+  ok "M4 static: prepare verifies built image before candidate staging"
+else
+  fail "M4 static: prepare ordering wrong (verify@${v_prepare:-none} stage@${stage:-none})"
+fi
+if [ -n "$v_cutover" ] && [ -n "$promote" ] && [ "$v_cutover" -lt "$promote" ]; then
+  ok "M4 static: cutover verifies candidate before role-tag promotion"
+else
+  fail "M4 static: cutover ordering wrong (verify@${v_cutover:-none} promote@${promote:-none})"
+fi
+
+# Full deploy/update still use the existing verify-before-tag ordering.
+dp="$SCRIPT_DIR/deploy-production.sh"
+v="$(grep -n 'deploy_ctx_verify_image' "$dp" | head -1 | cut -d: -f1)"
+t="$(grep -n 'tag_images_for_rollback "\$GIT_COMMIT"' "$dp" | head -1 | cut -d: -f1)"
+if [ -n "$v" ] && [ -n "$t" ] && [ "$v" -lt "$t" ]; then
+  ok "M4 static: deploy-production.sh verifies the image before tagging/swapping"
+else
+  fail "M4 static: deploy-production.sh does not verify the image pre-swap (verify@${v:-none} tag@${t:-none})"
+fi
 
 echo "[deploy-provenance] M5 — post-swap running container (both channels)"
 LABEL="M5 innocent: printenv == Config.Env == SHA"

@@ -33,9 +33,9 @@ build time**, before the running container is touched.
 
 1. **`scripts/deploy-lock.sh`** — `acquire_deploy_lock()` exports
    `DEPLOY_LANE_TOKEN=deploy-lane` at the moment the lane lock is acquired.
-   Both legitimate entry points (`deploy-production.sh` and
-   `pre-deploy-gate.sh deploy-maia`) take the lock first, so the token exists
-   for exactly the process trees that came through the lane.
+   The full deploy entry point (`deploy-production.sh`) and the split zero-drift
+   quick-lane entry points (`pre-deploy-gate.sh prepare-maia` / `cutover-maia`)
+   take the lock first, so the token exists only for governed deploy process trees.
 
 2. **`docker-compose.production.yml`** — forwards the token as a build arg
    with **deliberately no default**:
@@ -68,12 +68,12 @@ build time**, before the running container is touched.
    # → deploy-lane   (pre-tripwire images lack the variable entirely)
    ```
 
-5. **Rollback tagging joins the quick path** — `tag_images_for_rollback` moved
-   from `deploy-production.sh` into shared `scripts/deploy-tag.sh`, and
-   `pre-deploy-gate.sh deploy-maia` now runs **build → tag → swap** instead of
-   one `up -d --build`. Every gated deploy refreshes
-   `maia-sovereign:current` / `:previous` / `:<sha>`, so the stale-`:current`
-   failure mode of the incident cannot recur on any legitimate path.
+5. **Quick-lane preparation and cutover are separated** — `prepare-maia` builds
+   and freezes `candidate-<sha>` plus the SHA tag, then restores `:prod` to the
+   still-running reader before it exits. `cutover-maia` later re-proves candidate,
+   live-reader, rollback-artifact, and migration custody before moving
+   `:previous` / `:current` / `:prod` and recreating only the MAIA reader.
+   The retired `deploy-maia` command refuses the old combined build+swap path.
 
 ## Lanes that declare themselves
 
@@ -128,6 +128,9 @@ be deleted; doing so is unmistakably a choice.)
 docker compose -p maia-sovereign -f docker-compose.production.yml \
   --env-file .env.production build maia
 
-# Should succeed (gated path exports the token after taking the lane lock):
-scripts/pre-deploy-gate.sh deploy-maia
+# Should succeed through the governed preparation path after taking the lane lock:
+scripts/pre-deploy-gate.sh prepare-maia <SHA>
+
+# Live cutover is a separate governed act:
+scripts/pre-deploy-gate.sh cutover-maia <same-SHA>
 ```
