@@ -477,3 +477,20 @@ production ............................ UNTOUCHED BY THIS RECORD
 ## Programme sentence
 
 > **The goal is not that MAIA remembers more of a person's past. The goal is that, across a long relationship, MAIA can hold history, change, uncertainty, consent and present relevance together well enough to accompany the person without imprisoning them inside what she remembers.**
+
+
+---
+
+# 14. Soul-Service constitutional inheritance — 2026-09-29
+
+The Temporal Relational Memory programme now inherits the Human–AI Soul-Service constitutional center defined in `MAIA_SOUL_SERVICE_CONSTITUTIONAL_CONVERGENCE_2026-09-29.md`.
+
+This does not alter the programme sequence or authorize T2+ work.
+
+Additive future acceptance requirements are:
+
+- memory should strengthen continuity without creating cognitive dependence;
+- counterevidence must be capable of changing a proposed synthesis;
+- frame and salience states remain encounter-local unless separately authorized;
+- human transfer matters: future developmental memory claims require evidence that supported capacities can persist with reduced AI scaffolding;
+- memory personalization must remain compatible with surprise, disagreement, and member-authored reinterpretation.

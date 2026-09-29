@@ -188,3 +188,24 @@ This law works beside:
 Human presence governs what the experience should feel like.
 
 Epistemic perception governs what the presentation is allowed to imply.
+
+
+---
+
+## Soul-Service constitutional inheritance — 2026-09-29
+
+Living Field now additionally inherits `HUMAN-AI-SOUL-SERVICE-LAW-01`.
+
+The field is therefore not only constrained from implying unsupported meaning; future designs should also be evaluated by whether they help the member become more capable of:
+
+- orienting attention;
+- locating remembered material;
+- moving perspective;
+- authoring and revising relation;
+- noticing contrast and counterevidence;
+- synthesizing without losing source distinction;
+- returning to lived action.
+
+This does not authorize new UI or runtime behavior.
+
+> **The field should externalize complexity in ways that increase human capacity, not merely make the system's internal model visible.**
