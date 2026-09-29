@@ -19,9 +19,6 @@ import {
   NODE_BY_ID,
   PHYSICS_GROUPS,
   PHYSICS_NODES,
-  PHYSICS_RELATIONS,
-  relatedNodeIds,
-  relatedRelations,
   type PhysicsGroupKey,
   type PhysicsNodeDatum,
   type PhysicsRelation,
@@ -32,6 +29,14 @@ import {
   nodeLabelStanding,
   resolveSemanticLod,
 } from './livingFieldLod'
+import {
+  R2C_RELATIONS,
+  r2cRelatedNodeIds,
+  r2cRelatedRelations,
+  relationDash,
+  relationKindLabel,
+  relationResolution,
+} from './livingFieldRelationResolution'
 
 type AttentionPhase = 'idle' | 'proximity' | 'glance' | 'attend' | 'dwell'
 
@@ -128,7 +133,7 @@ function makeNodes(): SimNode[] {
 }
 
 function makeLinks(): SimLink[] {
-  return PHYSICS_RELATIONS.map((relation) => ({
+  return R2C_RELATIONS.map((relation) => ({
     source: relation.source,
     target: relation.target,
     relation,
@@ -173,7 +178,7 @@ function pairKey(a: PhysicsGroupKey, b: PhysicsGroupKey) {
 function buildBridgeBundles(): BridgeBundle[] {
   const map = new Map<string, BridgeBundle>()
 
-  for (const relation of PHYSICS_RELATIONS) {
+  for (const relation of R2C_RELATIONS) {
     const source = NODE_BY_ID.get(relation.source)
     const target = NODE_BY_ID.get(relation.target)
     if (!source || !target || source.group === target.group) continue
@@ -259,6 +264,7 @@ export function CellularLivingFieldPrototype() {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [proximityNodeId, setProximityNodeId] = useState<string | null>(null)
   const [hoveredRelationId, setHoveredRelationId] = useState<string | null>(null)
+  const [selectedRelationId, setSelectedRelationId] = useState<string | null>(null)
   const [attentionPhase, setAttentionPhase] = useState<AttentionPhase>('idle')
   const [attentionTraces, setAttentionTraces] = useState<AttentionTrace[]>([])
   const [metabolicTime, setMetabolicTime] = useState(0)
@@ -280,11 +286,13 @@ export function CellularLivingFieldPrototype() {
 
   const activeNodeId = hoveredNodeId ?? proximityNodeId ?? focusNodeId
   const activeNode = activeNodeId ? NODE_BY_ID.get(activeNodeId) ?? null : null
-  const activeNeighborhood = activeNodeId ? relatedNodeIds(activeNodeId) : null
-  const activeRelations = activeNodeId ? relatedRelations(activeNodeId) : []
-  const hoveredRelation = hoveredRelationId
-    ? PHYSICS_RELATIONS.find((relation) => relation.id === hoveredRelationId) ?? null
+  const activeNeighborhood = activeNodeId ? r2cRelatedNodeIds(activeNodeId) : null
+  const activeRelations = activeNodeId ? r2cRelatedRelations(activeNodeId) : []
+  const inspectedRelationId = hoveredRelationId ?? selectedRelationId
+  const hoveredRelation = inspectedRelationId
+    ? R2C_RELATIONS.find((relation) => relation.id === inspectedRelationId) ?? null
     : null
+  const inspectedRelationMeta = hoveredRelation ? relationResolution(hoveredRelation) : null
   const semanticLod = resolveSemanticLod(cameraView.scale, !!focusGroup, !!focusNodeId)
   const portalCue = activeNodeId ? PORTAL_BY_NODE.get(activeNodeId) ?? null : null
   const maiaLocusVisible =
@@ -421,6 +429,7 @@ export function CellularLivingFieldPrototype() {
 
   const selectNode = (node: SimNode) => {
     clearAttentionTimers()
+    setSelectedRelationId(null)
     setFocusNodeId(node.id)
     setFocusGroup(node.group)
     setAttentionPhase('dwell')
@@ -434,6 +443,7 @@ export function CellularLivingFieldPrototype() {
   }
 
   const releaseNodeFocus = () => {
+    setSelectedRelationId(null)
     setFocusNodeId(null)
     setHoveredNodeId(null)
     setProximityNodeId(null)
@@ -451,6 +461,7 @@ export function CellularLivingFieldPrototype() {
   }
 
   const enterWorld = (group: PhysicsGroupKey) => {
+    setSelectedRelationId(null)
     setFocusGroup(group)
     setFocusNodeId(null)
     setHoveredNodeId(null)
@@ -685,6 +696,7 @@ export function CellularLivingFieldPrototype() {
     setHoveredNodeId(null)
     setProximityNodeId(null)
     setHoveredRelationId(null)
+    setSelectedRelationId(null)
     setAttentionPhase('idle')
     animateCameraTo({ cx: WIDTH / 2, cy: HEIGHT / 2, scale: 1 })
   }
@@ -1109,7 +1121,9 @@ export function CellularLivingFieldPrototype() {
               const target = nodeById.get(endpointId(link.target))
               if (!source || !target) return null
 
-              const active = activeRelations.some((candidate) => candidate.id === relation.id)
+              const relationMeta = relationResolution(relation)
+              const inspected = inspectedRelationId === relation.id
+              const active = activeRelations.some((candidate) => candidate.id === relation.id) || inspected
               const recent = Math.max(recentTraceByNode.get(relation.source) ?? 0, recentTraceByNode.get(relation.target) ?? 0)
               const sameFocusedWorld = focusGroup && source.group === focusGroup && target.group === focusGroup
               const show =
@@ -1118,30 +1132,101 @@ export function CellularLivingFieldPrototype() {
                 (semanticLod >= 3 && recent > 0.18)
               if (!show) return null
 
-              const opacity = active ? 0.92 : sameFocusedWorld ? 0.28 : recent * 0.32
+              const opacity = inspected ? 1 : active ? 0.92 : sameFocusedWorld ? 0.28 : recent * 0.32
               const sourceStyle = WORLD_STYLE[source.group]
               const targetStyle = WORLD_STYLE[target.group]
-              const midX = ((source.x ?? 0) + (target.x ?? 0)) / 2
-              const midY = ((source.y ?? 0) + (target.y ?? 0)) / 2
+              const sourceX = source.x ?? 0
+              const sourceY = source.y ?? 0
+              const targetX = target.x ?? 0
+              const targetY = target.y ?? 0
+              const midX = (sourceX + targetX) / 2
+              const midY = (sourceY + targetY) / 2
+              const kindDash = relationDash(relationMeta.kind)
+              const dx = targetX - sourceX
+              const dy = targetY - sourceY
+              const lineLength = Math.sqrt(dx * dx + dy * dy) || 1
+              const ux = dx / lineLength
+              const uy = dy / lineLength
+              const px = -uy
+              const py = ux
+              const flowX = sourceX + dx * 0.64
+              const flowY = sourceY + dy * 0.64
+              const arrowTipX = flowX + ux * 7
+              const arrowTipY = flowY + uy * 7
+              const arrowLeftX = flowX - ux * 4 + px * 4
+              const arrowLeftY = flowY - uy * 4 + py * 4
+              const arrowRightX = flowX - ux * 4 - px * 4
+              const arrowRightY = flowY - uy * 4 - py * 4
 
               return (
-                <g key={relation.id} data-relation-id={relation.id}>
+                <g
+                  key={relation.id}
+                  data-relation-id={relation.id}
+                  data-relation-kind={relationMeta.kind}
+                  data-relation-inspected={inspected ? 'true' : 'false'}
+                >
                   <defs>
                     <linearGradient id={`edge-${relation.id}`} gradientUnits="userSpaceOnUse" x1={source.x} y1={source.y} x2={target.x} y2={target.y}>
                       <stop offset="0%" stopColor={sourceStyle.glow} />
                       <stop offset="100%" stopColor={targetStyle.glow} />
                     </linearGradient>
                   </defs>
+                  {relationMeta.kind === 'resonance' && active && (
+                    <line
+                      x1={sourceX}
+                      y1={sourceY}
+                      x2={targetX}
+                      y2={targetY}
+                      stroke={`url(#edge-${relation.id})`}
+                      strokeWidth={8}
+                      opacity={0.12}
+                      filter="url(#soft-glow)"
+                      pointerEvents="none"
+                    />
+                  )}
+                  {relationMeta.kind === 'tension' && active && (
+                    <>
+                      <line
+                        x1={sourceX + px * 2.5}
+                        y1={sourceY + py * 2.5}
+                        x2={targetX + px * 2.5}
+                        y2={targetY + py * 2.5}
+                        stroke={`url(#edge-${relation.id})`}
+                        strokeWidth={1}
+                        opacity={0.44}
+                        pointerEvents="none"
+                      />
+                      <line
+                        x1={sourceX - px * 2.5}
+                        y1={sourceY - py * 2.5}
+                        x2={targetX - px * 2.5}
+                        y2={targetY - py * 2.5}
+                        stroke={`url(#edge-${relation.id})`}
+                        strokeWidth={1}
+                        opacity={0.44}
+                        pointerEvents="none"
+                      />
+                    </>
+                  )}
                   <line
-                    x1={source.x ?? 0}
-                    y1={source.y ?? 0}
-                    x2={target.x ?? 0}
-                    y2={target.y ?? 0}
+                    x1={sourceX}
+                    y1={sourceY}
+                    x2={targetX}
+                    y2={targetY}
                     stroke={`url(#edge-${relation.id})`}
-                    strokeWidth={active ? 2.5 : 1.1}
+                    strokeWidth={inspected ? 3.2 : relationMeta.kind === 'tension' ? 2.4 : active ? 2.5 : 1.1}
+                    strokeDasharray={kindDash}
                     opacity={opacity}
                     pointerEvents="none"
                   />
+                  {relationMeta.kind === 'transformation' && semanticLod >= 4 && active && (
+                    <polygon
+                      points={`${arrowTipX},${arrowTipY} ${arrowLeftX},${arrowLeftY} ${arrowRightX},${arrowRightY}`}
+                      fill={targetStyle.glow}
+                      opacity={0.78}
+                      pointerEvents="none"
+                    />
+                  )}
                   <line
                     x1={source.x ?? 0}
                     y1={source.y ?? 0}
@@ -1150,15 +1235,20 @@ export function CellularLivingFieldPrototype() {
                     stroke="transparent"
                     strokeWidth="14"
                     pointerEvents="stroke"
+                    className="cursor-pointer"
                     onPointerOver={() => setHoveredRelationId(relation.id)}
                     onPointerOut={() => setHoveredRelationId(null)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setSelectedRelationId((current) => current === relation.id ? null : relation.id)
+                    }}
                   />
                   {semanticLod >= 4 && active && (
                     <g pointerEvents="none">
                       <rect
-                        x={midX - 33}
+                        x={midX - 42}
                         y={midY - 10}
-                        width="66"
+                        width="84"
                         height="20"
                         rx="10"
                         fill="rgba(9,10,10,0.88)"
@@ -1170,10 +1260,43 @@ export function CellularLivingFieldPrototype() {
                         textAnchor="middle"
                         dominantBaseline="middle"
                         fill="#d6d3d1"
-                        fontSize="9.5"
+                        fontSize="9.2"
                         fontWeight="600"
                       >
                         {relation.verb}
+                      </text>
+                    </g>
+                  )}
+                  {semanticLod >= 4 && inspected && relationMeta.sharedMeaning && (
+                    <g
+                      data-shared-meaning={relation.id}
+                      transform={`translate(${midX}, ${midY + 34})`}
+                      pointerEvents="none"
+                    >
+                      <circle
+                        r="26"
+                        fill="rgba(214,173,105,0.08)"
+                        stroke="#d6ad69"
+                        strokeOpacity="0.5"
+                      />
+                      <text
+                        x="0"
+                        y="-3"
+                        textAnchor="middle"
+                        fill="#e7e5e4"
+                        fontSize="7.2"
+                        fontWeight="600"
+                      >
+                        {relationMeta.sharedMeaning.label}
+                      </text>
+                      <text
+                        x="0"
+                        y="8"
+                        textAnchor="middle"
+                        fill="#78716c"
+                        fontSize="5.8"
+                      >
+                        candidate meaning
                       </text>
                     </g>
                   )}
@@ -1361,19 +1484,48 @@ export function CellularLivingFieldPrototype() {
             <span className="text-[10px] text-stone-600">{LOD_LABELS[semanticLod]}</span>
           </div>
 
-          {hoveredRelation ? (
+          {hoveredRelation && inspectedRelationMeta ? (
             <>
-              <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80">Relation</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80">Relation</p>
+                <span className="text-[10px] uppercase tracking-[0.14em] text-stone-600">
+                  {relationKindLabel(inspectedRelationMeta.kind)}
+                </span>
+              </div>
               <p className="mt-2 text-base text-stone-100">
                 {NODE_BY_ID.get(hoveredRelation.source)?.label}{' '}
                 <span className="text-amber-500">{hoveredRelation.verb}</span>{' '}
                 {NODE_BY_ID.get(hoveredRelation.target)?.label}
               </p>
               <p className="mt-3 text-sm leading-6 text-stone-400">{hoveredRelation.rationale}</p>
+
+              {inspectedRelationMeta.kind === 'tension' && (
+                <div className="mt-4 rounded-xl border border-amber-900/30 bg-amber-950/10 px-3 py-2 text-xs leading-5 text-stone-500">
+                  This relation is being held as tension. Connection does not imply resolution.
+                </div>
+              )}
+
+              {semanticLod >= 4 && inspectedRelationMeta.sharedMeaning && (
+                <div data-shared-meaning-lens={hoveredRelation.id} className="mt-4 border-t border-stone-800 pt-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-stone-500">Candidate shared meaning</p>
+                  <p className="mt-2 text-sm text-stone-200">{inspectedRelationMeta.sharedMeaning.label}</p>
+                  <p className="mt-1 text-xs leading-5 text-stone-600">
+                    {inspectedRelationMeta.sharedMeaning.rationale}
+                  </p>
+                  <p className="mt-1 text-[11px] text-stone-700">Candidate only · not persisted · not member-recognized.</p>
+                </div>
+              )}
+
               {semanticLod >= 5 && (
-                <div className="mt-4 border-t border-stone-800 pt-3 text-xs leading-5 text-stone-600">
+                <div data-relation-trust={hoveredRelation.id} className="mt-4 border-t border-stone-800 pt-3 text-xs leading-5 text-stone-600">
                   <p>Standing · {hoveredRelation.standing}</p>
-                  <p className="mt-1">Why here · explicit controlled-corpus relation</p>
+                  <p>Context · {inspectedRelationMeta.context}</p>
+                  <p>Temporal standing · {inspectedRelationMeta.temporalStanding}</p>
+                  <p>Revisability · {inspectedRelationMeta.revisability}</p>
+                  <p className="mt-2">Provenance · {inspectedRelationMeta.provenance}</p>
+                  {inspectedRelationMeta.counterevidence && (
+                    <p className="mt-2 text-stone-500">Qualification · {inspectedRelationMeta.counterevidence}</p>
+                  )}
                 </div>
               )}
             </>

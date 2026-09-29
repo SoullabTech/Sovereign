@@ -5,29 +5,31 @@ current_authority:
   - docs/canon/LIVING_FIELD_MEANING_EVOLUTION_LAWS.md
   - docs/canon/SOUL_LAB_SPATIAL_NAVIGATION_LAW.md
   - docs/canon/SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS.md
+  - docs/canon/LIVING_FIELD_RELATION_GRAMMAR.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-02B — Founder LOD + Soul Lab Coherence Witness
+current_phase: BUILD
+current_act: VISUAL-FIELD-RUNTIME-02C — Progressive Relational Resolution
 current_subject_sha: 08731dd277d204692421cac0664d1869df95360c
-current_branch: feature/jarvis-visual-field-r2b-20260929
-worktree: /private/tmp/jarvis-visual-field-r2b
-runtime: http://localhost:3603/public-demo
+current_branch: feature/jarvis-visual-field-r2c-20260929
+worktree: /private/tmp/jarvis-visual-field-r2c
+runtime: http://localhost:3604/public-demo
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - R2B is implemented and mechanically verified across LOD0–LOD5 on desktop and mobile.
-  - MAIA inquiry loci appear only at sufficient semantic depth; live MAIA interpretation remains closed.
-  - Prototype portal cues require explicit semantic eligibility plus LOD4 depth; deep non-eligible nodes do not receive portals.
-  - The depth lens is pointer-transparent and no longer interrupts wheel zoom.
-  - Founder witness is required to decide whether depth feels richer rather than busier and whether the portal cue feels earned.
-  - Live cross-room portals, durable memory, FLOW, and autonomous relation generation remain closed.
+  - Founder authorized continuation beyond R2B into R2C Progressive Relational Resolution.
+  - R2C must distinguish relation kinds without turning the field into a graph legend.
+  - Relation trust must expose context, provenance, standing, and revisability at sufficient depth.
+  - Productive tension must remain connected without forced synthesis.
+  - Candidate shared meaning may appear between loci only when explicitly supported and clearly marked candidate.
+  - Live MAIA interpretation, live cross-room crossing, durable memory, FLOW, and autonomous relation generation remain closed.
 founder_stops:
-  - R2B LOD witness before R2C Progressive Relational Resolution.
+  - R2C founder relational-resolution witness before R2D Focus + Context.
   - Any live cross-room portal or persistent return-address behavior.
   - Any live MAIA interpretation from semantic objects.
+  - Any durable relation or shared-meaning persistence.
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
-next_phase_on_exit: R2B founder LOD/coherence witness; PASS opens R2C Progressive Relational Resolution
-last_state_change: 2026-09-29 — R2B candidate sealed at 08731dd27; founder LOD / Soul Lab coherence witness is the current gate
+next_phase_on_exit: R2C founder relational-resolution witness; PASS opens R2D Focus + Context
+last_state_change: 2026-09-29 — founder authorized continuation; R2C Progressive Relational Resolution opened
