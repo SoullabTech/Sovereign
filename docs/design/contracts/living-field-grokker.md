@@ -16,6 +16,7 @@ principles:
   - LIVING_FIELD_MEANING_EVOLUTION_LAWS — relation trust, productive tension, revisable meaning
   - SOUL_LAB_SPATIAL_NAVIGATION_LAW — Living Field as a spatial threshold into the wider Soul lab
   - SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS — one organism / earned portals / MAIA inquiry loci / member agency
+  - LIVING_FIELD_RELATION_GRAMMAR — relation kinds / trust surface / productive conflict / interstitial shared meaning
   - JARVIS-VISUAL-FIELD-01 — founder-gated runtime slices and evidence discipline
 
 reference_surfaces:
@@ -27,9 +28,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-r2b-relationship-lod4-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/living-field-r2b-relationship-lod4-mobile.png
-experience_verification: Founder accepted R2A Camera Physics as working and helpful. R2B now resolves perceptual depth declaratively across LOD0–LOD5: whole ecology → worlds → regional cells → local neighborhood → relational meaning → evidence/provenance. Specific relation edges do not leak into the whole view; relation verbs resolve at LOD4; a non-live MAIA inquiry locus appears at LOD3+; a prototype Relationships threshold appears only for the explicitly eligible Relationship node at LOD4+ with a visible rationale; a deep non-eligible Calling node receives no portal. Desktop and mobile witnesses pass with zero browser errors, and the depth lens no longer intercepts wheel zoom. Live MAIA execution and live cross-room crossing remain closed. Founder R2B feel witness is the exit gate.
+screenshot_desktop: docs/design/contracts/screenshots/living-field-r2c-shared-meaning-lod4-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/living-field-r2c-shared-meaning-lod4-mobile.png
+experience_verification: Founder authorized continuation beyond R2B into Progressive Relational Resolution. R2C now treats relations as first-class semantic objects with distinct visual/physical grammars for resonance, support, qualification, constraint, tension, and transformation. A controlled Vision↔Boundary prototype proves unresolved tension can remain connected without forced synthesis and exposes explicit LOD5 context/provenance/revisability/qualification. Calling↔Stewardship can expose the interstitial candidate shared meaning “Responsible Participation,” explicitly marked candidate-only, non-persistent, and not member-recognized. Desktop and mobile relation-focus witnesses pass with zero browser errors. Live MAIA interpretation, durable relation persistence, and live cross-room crossing remain closed. Founder R2C feel witness is the exit gate.
 ---
 # Living Field — Experience Contract
 
@@ -109,20 +110,22 @@ The founder accepted the cellular physical grammar and authorized the next depen
 
 R2A Camera Physics is mechanically verified and founder-accepted.
 
-R2B Level-of-Detail Resolver + Soul Lab Coherence is now implemented as a local candidate with desktop/mobile evidence on disk.
+R2B Level-of-Detail Resolver + Soul Lab Coherence is mechanically verified and founder-authorized to continue.
+
+R2C Progressive Relational Resolution is now implemented as a local candidate with desktop/mobile evidence on disk.
 
 The current experiential questions are:
 
-> **Does deeper zoom feel richer rather than busier?**
+> **Do different relations feel different before they are explained?**
 
-> **Does the larger ecology remain present while local relation becomes more articulate?**
+> **Does tension feel held rather than “solved”?**
 
-> **Does a portal cue feel like the field opening somewhere meaningful rather than an app shortcut appearing?**
+> **Does candidate shared meaning feel as though it emerges between things rather than being assigned by the system?**
 
-> **Does the MAIA locus feel available without turning the field back into chatbot-first UI?**
+> **Does relation trust feel inspectable without turning the field into an audit dashboard?**
 
 These questions remain OPEN under:
 
-`JARVIS-VISUAL-FIELD-01 · R2B — Level-of-Detail Resolver + Soul Lab Coherence Founder Witness`
+`JARVIS-VISUAL-FIELD-01 · R2C — Progressive Relational Resolution Founder Witness`
 
-R2C Progressive Relational Resolution remains closed until that witness passes.
+R2D Focus + Context remains closed until that witness passes.
