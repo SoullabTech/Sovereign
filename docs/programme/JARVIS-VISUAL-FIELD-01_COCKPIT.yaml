@@ -7,22 +7,23 @@ current_authority:
   - docs/canon/SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS.md
   - docs/canon/LIVING_FIELD_RELATION_GRAMMAR.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: BUILD
-current_act: VISUAL-FIELD-RUNTIME-02C — Progressive Relational Resolution
-current_subject_sha: 08731dd277d204692421cac0664d1869df95360c
+current_phase: VERIFY
+current_act: VISUAL-FIELD-RUNTIME-02C — Founder Relational Resolution Witness
+current_subject_sha: 4542413339a859d6a56f776c088c328c2b3a02fd
 current_branch: feature/jarvis-visual-field-r2c-20260929
 worktree: /private/tmp/jarvis-visual-field-r2c
-runtime: http://localhost:3604/public-demo
+runtime: http://localhost:3605/public-demo
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - Founder authorized continuation beyond R2B into R2C Progressive Relational Resolution.
-  - R2C must distinguish relation kinds without turning the field into a graph legend.
-  - Relation trust must expose context, provenance, standing, and revisability at sufficient depth.
-  - Productive tension must remain connected without forced synthesis.
-  - Candidate shared meaning may appear between loci only when explicitly supported and clearly marked candidate.
+  - R2C is implemented and mechanically verified across desktop and mobile.
+  - Relation kinds now have distinct visual grammar; productive tension remains connected without forced synthesis.
+  - LOD5 exposes standing, context, temporal standing, revisability, provenance, and qualification.
+  - Calling↔Stewardship can expose the candidate shared meaning Responsible Participation without replacing its source nodes.
+  - Candidate shared meaning remains non-persistent and not member-recognized.
+  - Founder witness is required to decide whether relation differences feel natural rather than diagrammatic and whether shared meaning feels emergent rather than assigned.
   - Live MAIA interpretation, live cross-room crossing, durable memory, FLOW, and autonomous relation generation remain closed.
 founder_stops:
   - R2C founder relational-resolution witness before R2D Focus + Context.
@@ -32,4 +33,4 @@ founder_stops:
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
 next_phase_on_exit: R2C founder relational-resolution witness; PASS opens R2D Focus + Context
-last_state_change: 2026-09-29 — founder authorized continuation; R2C Progressive Relational Resolution opened
+last_state_change: 2026-09-29 — R2C candidate sealed at 454241333; founder relational-resolution witness is the current gate
