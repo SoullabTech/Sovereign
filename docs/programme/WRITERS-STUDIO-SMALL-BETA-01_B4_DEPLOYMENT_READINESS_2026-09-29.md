@@ -1,8 +1,8 @@
 # WRITERS-STUDIO-SMALL-BETA-01 / B4 — PILOT DEPLOYMENT READINESS
 
 **Date:** 2026-09-29
-**Status:** READINESS CANDIDATE · PRODUCTION UNTOUCHED · FOUNDER DEPLOYMENT AUTHORIZATION NOT YET GIVEN
-**Exact deploy target:** `0d251d531393f5094e17cb31065cb5a996972a49`
+**Status:** DEPLOYMENT AUTHORIZED BY FOUNDER · PRODUCTION UNTOUCHED · REVIEW-CUSTODY GATE STILL REQUIRED
+**Exact deploy target:** supplied and frozen externally by the admitted Review-Custody record; no self-referential commit SHA is embedded in this document
 **Current canonical incorporated through:** `2f5c130373b002de6d2d183dd29f6bcb4ac285db`
 **Exact live/rollback reader witnessed:** `7a096281acc22bc91bfc66799ce9acb841921771`
 
@@ -72,7 +72,7 @@ There is therefore no conflicting pre-existing shape for the five additions.
 Exact compatibility bundle:
 
 - old reader: `7a096281acc22bc91bfc66799ce9acb841921771`
-- target: `0d251d531393f5094e17cb31065cb5a996972a49`
+- target: exact canonical SHA supplied by the Review-Custody harness and reproduced by the admitted review
 - materialized review bundle: `/private/tmp/ws-b4-final-compat-bundle` during B4 witness
 
 Old-reader evidence bound by exact bytes:
@@ -138,12 +138,14 @@ npm ci
 npm run build
 ```
 
-This was executed successfully at exact target `0d251d531393f5094e17cb31065cb5a996972a49` with Next 16.3.6.
+This build witness was executed successfully on the application-byte-equivalent B4 code tree with Next 16.3.6. The production target itself is frozen externally by Review-Custody.
 
 ### Production operator command — the only authorized migration-bearing deploy act
 
+`EXACT_TARGET_SHA` must be set from the exact canonical target bound by the admitted Review-Custody record. The operator must not type or substitute a different SHA. The deploy script's custody gate must recompute and verify the same target before any migration or traffic mutation.
+
 ```bash
-./scripts/deploy-production.sh deploy 0d251d531393f5094e17cb31065cb5a996972a49
+./scripts/deploy-production.sh deploy "$EXACT_TARGET_SHA"
 ```
 
 Do **not** substitute raw `docker compose`, `prepare-maia`, `cutover-maia`, or an independent migration-only run for this release.
