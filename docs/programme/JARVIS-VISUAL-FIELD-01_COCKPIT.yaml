@@ -4,9 +4,10 @@ current_authority:
   - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
   - docs/canon/LIVING_FIELD_MEANING_EVOLUTION_LAWS.md
   - docs/canon/SOUL_LAB_SPATIAL_NAVIGATION_LAW.md
+  - docs/canon/SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-02A — Founder Camera Physics Witness
+current_phase: PLAN
+current_act: VISUAL-FIELD-RUNTIME-02B — Level-of-Detail Resolver + Soul Lab Coherence
 current_subject_sha: cac33b8ffff09b3567bd3e04571fc243778f20a3
 current_branch: feature/jarvis-visual-field-r2a-20260929
 worktree: /private/tmp/jarvis-visual-field-r2a
@@ -16,16 +17,16 @@ deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - R2A camera mechanics are implemented and mechanically verified across wheel, pan, pinch, semantic entry, Widen, Whole, keyboard, reduced motion, and safe bounds.
-  - Ordinary-motion desktop/mobile visual witnesses pass with zero browser errors.
-  - Founder witness is required to decide whether scale-change feels like approaching one living world rather than operating a diagram.
-  - Existing right-side insight panel intercepts gestures over its own area; founder may adjudicate whether that breaks field continuity.
-  - R2B semantic LOD, live cross-room portals, durable memory, MAIA, FLOW, and autonomous relation generation remain closed.
+  - Founder accepted R2A camera physics as helpful, coherent, and working.
+  - R2B must make semantic depth richer without turning the Living Field into a menu or losing the whole.
+  - Soul Lab coherence and earned-portal laws are canonical.
+  - Ask MAIA is now a required future affordance at semantic loci; live MAIA execution remains gated by context/provenance dependencies.
+  - Live cross-room portals, durable memory, FLOW, and autonomous relation generation remain closed.
 founder_stops:
-  - R2A PASS or RETURN before R2B Level-of-Detail Resolver.
-  - Any change of Living Field ontology or member-facing meaning.
+  - R2B LOD witness before R2C Progressive Relational Resolution.
   - Any live cross-room portal or persistent return-address behavior.
+  - Any live MAIA interpretation from semantic objects.
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
-next_phase_on_exit: founder R2A camera-physics witness; PASS opens R2B Level-of-Detail Resolver
-last_state_change: 2026-09-29 — R2A Camera Physics sealed at cac33b8ff; founder camera-feel witness is the current gate
+next_phase_on_exit: R2B founder LOD/coherence witness; PASS opens R2C Progressive Relational Resolution
+last_state_change: 2026-09-29 — founder accepted R2A; R2B Level-of-Detail + Soul Lab coherence planning opened
