@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SS-09 Scaffold Fading</title>
+<style>
+:root{--paper:#f8efe2;--ink:#302923;--muted:#7b6b5e;--line:rgba(77,57,42,.17);--copper:#d85e36;--teal:#27877a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#e7dac9;color:var(--ink);font-family:Inter,system-ui,sans-serif}body{padding:18px}
+.room{max-width:1180px;margin:auto;border-radius:40px;background:linear-gradient(145deg,#fffaf3,#f4e3cf 58%,#efe0d2);box-shadow:0 28px 85px rgba(65,43,29,.11);padding:34px 40px}
+.top{display:flex;justify-content:space-between;gap:16px}.k{font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#846f5e}.state{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#998675}
+.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:24px}.level{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.3);padding:11px 8px;cursor:pointer;text-align:left}.level.active{background:rgba(216,94,54,.07);border-color:rgba(216,94,54,.28)}.level b{display:block;font-size:11px}.level span{display:block;font-size:8px;line-height:1.4;color:#806e5e;margin-top:4px}
+.grid{display:grid;grid-template-columns:1.3fr .7fr;gap:24px;margin-top:24px}.work,.side{border:1px solid rgba(91,67,49,.11);border-radius:28px;background:rgba(255,251,245,.65);padding:22px}.source small,.support small,.safe small{font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:#917b68}.source blockquote{font:400 26px/1.45 Georgia,serif;margin:10px 0}.source p{font-size:10px;line-height:1.5;color:#806f60}
+.support{margin-top:18px;border-left:2px solid rgba(216,94,54,.42);padding-left:14px;min-height:220px}.support h2{font:400 21px Georgia,serif;margin:7px 0}.support p{font-size:12px;line-height:1.6;color:#66584c}.cues{display:grid;gap:9px;margin-top:13px}.cue{border:1px solid rgba(91,66,48,.13);border-radius:14px;padding:10px 11px;background:rgba(255,255,255,.28);font-size:11px;color:#574b41}.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.tool{border:1px solid rgba(91,66,48,.13);border-radius:13px;background:rgba(255,255,255,.3);padding:8px 10px;font-size:10px;cursor:pointer}.safe h2{font:400 21px Georgia,serif;margin:7px 0}.safe .item{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.safe b{font-size:11px}.safe p{font-size:10px;line-height:1.5;color:#756457;margin:4px 0}.law{margin-top:16px;font-size:10px;line-height:1.55;color:#887463}.foot{border-top:1px solid var(--line);padding-top:15px;margin-top:24px;font-size:10px;line-height:1.55;color:#8d7967}
+@media(max-width:850px){body{padding:8px}.room{padding:26px 20px;border-radius:28px}.state{display:none}.levels{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.source blockquote{font-size:23px}}
+</style>
+</head>
+<body><main class="room">
+<div class="top"><div class="k">Soul-Service · Scaffold Fading</div><div class="state" id="state">S0 · full support</div></div>
+<div class="levels">
+<button class="level active" data-level="0"><b>S0 · Full</b><span>MAIA names and structures</span></button>
+<button class="level" data-level="1"><b>S1 · Guided</b><span>MAIA asks; member performs</span></button>
+<button class="level" data-level="2"><b>S2 · Light</b><span>one optional cue</span></button>
+<button class="level" data-level="3"><b>S3 · Self-init</b><span>member chooses tools</span></button>
+<button class="level" data-level="4"><b>S4 · Solo</b><span>no generated scaffold</span></button>
+</div>
+<div class="grid">
+<section class="work">
+<div class="source"><small>Same source at every support level</small><blockquote>“I keep asking whether to keep refining this project or finally release it.”</blockquote><p>The task does not change when scaffolding fades.</p></div>
+<div class="support"><small id="supportSmall">Full scaffold</small><h2 id="supportTitle">MAIA structures the inquiry</h2><p id="supportText">The member is being introduced to the capacities explicitly.</p><div class="cues" id="cues"></div><div class="tools" id="tools"></div></div>
+</section>
+<aside class="side safe"><small>Permanent safeguards · do not fade</small><h2>Protection remains constant</h2>
+<div class="item"><b>Source fidelity</b><p>The original statement stays visible and unchanged.</p></div>
+<div class="item"><b>Authorship</b><p>MAIA suggestions remain different from member meaning.</p></div>
+<div class="item"><b>Uncertainty</b><p>Unknown and unresolved remain lawful outcomes.</p></div>
+<div class="item"><b>Rejection</b><p>The member may decline a frame or suggestion without penalty.</p></div>
+<div class="item"><b>Reality anchor</b><p>Perspective mobility does not override evidence or consequence.</p></div>
+<div class="law">We fade scaffolds, not safeguards. Using more support later is not regression.</div>
+</aside>
+</div>
+<div class="foot"><strong>Planned obsolescence:</strong> support may become quieter as capacity transfers. The system must not equate reduced MAIA use with failed engagement, and no capacity is assumed permanently mastered.</div>
+</main>
+<script>
+const levels={
+0:{small:'Full scaffold',title:'MAIA structures the inquiry',text:'The member is being introduced to the capacities explicitly.',cues:['Name the current frame.','Look for evidence that supports and complicates it.','Ask what is still unknown.','Try another perspective or scale.'],tools:[]},
+1:{small:'Guided participation',title:'MAIA asks; the member performs',text:'The structure is lighter, but MAIA still prompts the sequence.',cues:['What frame are you using?','What evidence would change your view?'],tools:[]},
+2:{small:'Light scaffold',title:'One cue remains',text:'The member carries most of the process. One optional invitation remains.',cues:['What else becomes visible if you change perspective?'],tools:[]},
+3:{small:'Self-initiated',title:'No prompt sequence',text:'MAIA does not initiate the capacity. The member may choose a tool if useful.',cues:[],tools:['Perspective','Counterevidence','What is unknown?','Across time']},
+4:{small:'Solo Mode',title:'No generated scaffold',text:'The member works directly with the source and their own capacities. MAIA remains available only by explicit invitation.',cues:[],tools:['Invite MAIA']}
+};
+const state=document.getElementById('state'),supportSmall=document.getElementById('supportSmall'),supportTitle=document.getElementById('supportTitle'),supportText=document.getElementById('supportText'),cues=document.getElementById('cues'),tools=document.getElementById('tools');
+function render(n){const x=levels[n];document.querySelectorAll('.level').forEach(b=>b.classList.toggle('active',Number(b.dataset.level)===n));state.textContent='S'+n+' · '+x.small.toLowerCase();supportSmall.textContent=x.small;supportTitle.textContent=x.title;supportText.textContent=x.text;cues.innerHTML=x.cues.map(c=>'<div class="cue">'+c+'</div>').join('');tools.innerHTML=x.tools.map(t=>'<button class="tool">'+t+'</button>').join('')}
+document.querySelectorAll('.level').forEach(b=>b.onclick=()=>render(Number(b.dataset.level)));render(0);
+</script></body></html>
