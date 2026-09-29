@@ -122,13 +122,98 @@ Questions:
 - Does widening preserve the sense of the journey?
 
 **STOP before R2 until founder witness.**
-### R2 · True Grokker semantic zoom
-Replace set-swapping with real spatial continuity:
-- chosen bubble expands,
-- camera/world recenters,
-- containing context remains perceptible,
-- child regions emerge within the chosen world,
-- transitions preserve spatial memory.
+### R2 · Semantic Zoom + Level-of-Detail Engine
+
+R2 is opened as a dependency-respecting sequence rather than one monolithic build.
+
+#### R2A · Camera Physics
+- cursor-anchored wheel/pinch zoom;
+- pan;
+- click-to-enter;
+- widen;
+- Home / whole-field recovery;
+- bounded smooth interpolation;
+- stable topology throughout camera movement.
+
+Founder test:
+> Can the field change scale without losing orientation?
+
+#### R2B · Level-of-Detail Resolver
+Define declarative perceptual levels:
+
+```text
+LOD0 · whole ecology
+LOD1 · worlds
+LOD2 · regional cells
+LOD3 · local neighborhood
+LOD4 · relational meaning
+LOD5 · evidence / provenance
+```
+
+Deeper scale reveals richer structure rather than merely larger graphics.
+
+#### R2C · Progressive Relational Resolution
+Relations resolve by scale:
+
+```text
+world bridge
+→ bridge bundle
+→ specific relation
+→ relation verb
+→ rationale
+→ standing / provenance
+```
+
+R2C obeys:
+- RELATION-TRUST-LAW-01;
+- PRODUCTIVE-TENSION-LAW-01;
+- SHARED-MEANING-FORMATION-LAW-01;
+- SHARED-MEANING-PLURALITY-LAW-01.
+
+Multiple relations may coexist between the same things.
+Conflict may remain unresolved.
+
+#### R2D · Focus + Context
+- focused region dominates without abolishing its containing ecology;
+- peripheral worlds remain spatially recoverable;
+- cross-world relations remain intelligible during deep focus;
+- attention supplies the preferred zoom anchor.
+
+#### R2E · Semantic Condensation
+Zooming outward condenses rather than erases:
+
+```text
+specific relations
+→ bundles
+→ bridges
+→ pattern
+```
+
+Condensation preserves unresolved tension and obeys SEMANTIC-CONDENSATION-INTEGRITY-LAW-01.
+
+#### R2F · Navigation Continuity
+Session-only orientation memory:
+- current camera;
+- scale;
+- focus;
+- parent;
+- recent route;
+- bridge / neighborhood context;
+- return point.
+
+Navigation continuity is not durable personal memory.
+
+#### R2G · Recursive Depth Adapter
+Any sufficiently supported semantic object may reveal a deeper ecology:
+- node;
+- relation;
+- conflict;
+- question;
+- shared meaning;
+- polarity.
+
+Depth must be supported by actual coherent child material.
+The field does not fabricate sub-worlds merely to appear infinite.
 
 ### R3 · WORLD spatial memory
 Stable topology, visited-region trace, positional inertia, progressive disclosure, mobile equivalent.
