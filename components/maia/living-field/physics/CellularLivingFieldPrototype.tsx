@@ -293,7 +293,12 @@ export function CellularLivingFieldPrototype() {
     ? R2C_RELATIONS.find((relation) => relation.id === inspectedRelationId) ?? null
     : null
   const inspectedRelationMeta = hoveredRelation ? relationResolution(hoveredRelation) : null
-  const semanticLod = resolveSemanticLod(cameraView.scale, !!focusGroup, !!focusNodeId)
+  const semanticLod = resolveSemanticLod(
+    cameraView.scale,
+    !!focusGroup,
+    !!focusNodeId,
+    !!selectedRelationId,
+  )
   const portalCue = activeNodeId ? PORTAL_BY_NODE.get(activeNodeId) ?? null : null
   const maiaLocusVisible =
     !!activeNodeId &&
@@ -474,7 +479,63 @@ export function CellularLivingFieldPrototype() {
     })
   }
 
+  const selectRelation = (relation: PhysicsRelation) => {
+    const source = nodeById.get(relation.source)
+    const target = nodeById.get(relation.target)
+    if (!source || !target) return
+
+    const wasSelected = selectedRelationId === relation.id
+    setSelectedRelationId(wasSelected ? null : relation.id)
+
+    if (wasSelected) return
+
+    const sourceX = source.x ?? GROUP_GEOMETRY[source.group].x
+    const sourceY = source.y ?? GROUP_GEOMETRY[source.group].y
+    const targetX = target.x ?? GROUP_GEOMETRY[target.group].x
+    const targetY = target.y ?? GROUP_GEOMETRY[target.group].y
+    const spanX = Math.abs(targetX - sourceX)
+    const spanY = Math.abs(targetY - sourceY)
+    const relationMeta = relationResolution(relation)
+    const maxScale = relationMeta.kind === 'tension' ? 1.82 : 2.22
+    const fitScale = Math.min(
+      WIDTH / (spanX + 260),
+      HEIGHT / (spanY + 220),
+      maxScale,
+    )
+
+    animateCameraTo({
+      cx: (sourceX + targetX) / 2,
+      cy: (sourceY + targetY) / 2,
+      scale: clamp(fitScale, 1.28, maxScale),
+    }, 680)
+  }
+
   const widen = () => {
+    if (selectedRelationId) {
+      setSelectedRelationId(null)
+
+      if (focusNodeId) {
+        const node = nodeById.get(focusNodeId)
+        if (node) {
+          animateCameraTo({
+            cx: node.x ?? GROUP_GEOMETRY[node.group].x,
+            cy: node.y ?? GROUP_GEOMETRY[node.group].y,
+            scale: 1.9,
+          }, 520)
+          return
+        }
+      }
+
+      if (focusGroup) {
+        animateCameraTo({
+          cx: GROUP_GEOMETRY[focusGroup].x,
+          cy: GROUP_GEOMETRY[focusGroup].y,
+          scale: 1.48,
+        }, 520)
+        return
+      }
+    }
+
     if (focusNodeId) {
       releaseNodeFocus()
       return
@@ -790,6 +851,8 @@ export function CellularLivingFieldPrototype() {
     if (!focusGroup && !activeNeighborhood) return 0.72
     if (activeNeighborhood) {
       if (attentionPhase === 'proximity') return activeNeighborhood.has(node.id) ? 0.92 : 0.38
+      if (selectedRelationId) return activeNeighborhood.has(node.id) ? 1 : 0.2
+      if (focusNodeId) return activeNeighborhood.has(node.id) ? 1 : 0.17
       return activeNeighborhood.has(node.id) ? 1 : 0.13
     }
     if (focusGroup) return node.group === focusGroup ? 1 : 0.16
@@ -830,25 +893,53 @@ export function CellularLivingFieldPrototype() {
     return bridgeScore
   }
 
+  const showContextEchoes = semanticLod >= 3 && (!!focusNodeId || !!selectedRelationId)
+  const contextEchoes = showContextEchoes
+    ? PHYSICS_GROUPS.flatMap((group) => {
+        const geometry = GROUP_GEOMETRY[group.id]
+        const projectedX = WIDTH / 2 + (geometry.x - cameraView.cx) * cameraView.scale
+        const projectedY = HEIGHT / 2 + (geometry.y - cameraView.cy) * cameraView.scale
+        const centerVisible =
+          projectedX >= 42 &&
+          projectedX <= WIDTH - 42 &&
+          projectedY >= 42 &&
+          projectedY <= HEIGHT - 42
+
+        if (centerVisible) return []
+
+        const x = clamp(projectedX, 46, WIDTH - 46)
+        const y = clamp(projectedY, 46, HEIGHT - 46)
+
+        return [{
+          ...group,
+          x,
+          y,
+          projectedX,
+          projectedY,
+        }]
+      })
+    : []
+
   const transform = `translate(${WIDTH / 2} ${HEIGHT / 2}) scale(${cameraView.scale}) translate(${-cameraView.cx} ${-cameraView.cy})`
 
   return (
     <section
       data-semantic-lod={semanticLod}
       data-semantic-lod-label={LOD_LABELS[semanticLod]}
+      data-focus-mode={selectedRelationId ? 'relation' : focusNodeId ? 'node' : focusGroup ? 'world' : 'whole'}
       className="overflow-hidden rounded-[30px] border border-stone-800 bg-[#090a0a]"
     >
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-800/80 px-5 py-4 sm:px-6">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Living Field · R2B</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Living Field · R2D</p>
             <span className="rounded-full border border-stone-800 bg-stone-950/70 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-stone-600">
               LOD{semanticLod} · {LOD_LABELS[semanticLod]}
             </span>
           </div>
-          <h2 className="mt-1 text-2xl font-light text-stone-100">Move closer and the field becomes more articulate.</h2>
+          <h2 className="mt-1 text-2xl font-light text-stone-100">Go deep without losing the whole.</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500">
-            Scale permits detail. Attention wakes relation. Relevance makes a threshold possible. Choice remains with the member.
+            Focus intensifies the foreground. Context remains at the edges. Relations frame both poles and preserve the space between them.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -1157,6 +1248,7 @@ export function CellularLivingFieldPrototype() {
               const arrowLeftY = flowY - uy * 4 + py * 4
               const arrowRightX = flowX - ux * 4 - px * 4
               const arrowRightY = flowY - uy * 4 - py * 4
+              const angleDeg = Math.atan2(dy, dx) * (180 / Math.PI)
 
               return (
                 <g
@@ -1171,6 +1263,50 @@ export function CellularLivingFieldPrototype() {
                       <stop offset="100%" stopColor={targetStyle.glow} />
                     </linearGradient>
                   </defs>
+                  {relationMeta.kind === 'tension' && inspected && (
+                    <g data-held-tension={relation.id} pointerEvents="none">
+                      <ellipse
+                        cx={midX}
+                        cy={midY}
+                        rx={lineLength / 2 + 32}
+                        ry="38"
+                        transform={`rotate(${angleDeg} ${midX} ${midY})`}
+                        fill="rgba(214,173,105,0.025)"
+                        stroke="#d6ad69"
+                        strokeOpacity="0.26"
+                        strokeWidth="1.2"
+                        strokeDasharray="3 7"
+                      />
+                      <circle
+                        data-tension-pole={relation.source}
+                        cx={sourceX}
+                        cy={sourceY}
+                        r={source.r + 13}
+                        fill="none"
+                        stroke={sourceStyle.glow}
+                        strokeOpacity="0.5"
+                        strokeWidth="2.2"
+                      />
+                      <circle
+                        data-tension-pole={relation.target}
+                        cx={targetX}
+                        cy={targetY}
+                        r={target.r + 13}
+                        fill="none"
+                        stroke={targetStyle.glow}
+                        strokeOpacity="0.5"
+                        strokeWidth="2.2"
+                      />
+                      <circle
+                        data-tension-midpoint-empty="true"
+                        cx={midX}
+                        cy={midY}
+                        r="16"
+                        fill="rgba(9,10,10,0.32)"
+                        stroke="none"
+                      />
+                    </g>
+                  )}
                   {relationMeta.kind === 'resonance' && active && (
                     <line
                       x1={sourceX}
@@ -1240,7 +1376,7 @@ export function CellularLivingFieldPrototype() {
                     onPointerOut={() => setHoveredRelationId(null)}
                     onClick={(event) => {
                       event.stopPropagation()
-                      setSelectedRelationId((current) => current === relation.id ? null : relation.id)
+                      selectRelation(relation)
                     }}
                   />
                   {semanticLod >= 4 && active && (
@@ -1471,6 +1607,40 @@ export function CellularLivingFieldPrototype() {
               )
             })}
           </g>
+
+          {contextEchoes.map((echo) => {
+            const style = WORLD_STYLE[echo.id]
+            const isCurrent = focusGroup === echo.id
+
+            return (
+              <g
+                key={`context-echo-${echo.id}`}
+                data-context-echo={echo.id}
+                data-context-current={isCurrent ? 'true' : 'false'}
+                transform={`translate(${echo.x}, ${echo.y})`}
+                opacity={isCurrent ? 0.82 : 0.46}
+                pointerEvents="none"
+              >
+                <circle
+                  r={isCurrent ? 5.2 : 4}
+                  fill={`rgba(${style.rgb},0.22)`}
+                  stroke={style.glow}
+                  strokeOpacity={isCurrent ? 0.8 : 0.48}
+                  strokeWidth={isCurrent ? 1.6 : 1}
+                />
+                <text
+                  x="0"
+                  y="-10"
+                  textAnchor="middle"
+                  fill={isCurrent ? style.glow : '#78716c'}
+                  fontSize={isCurrent ? 9 : 7.5}
+                  fontWeight={isCurrent ? 600 : 500}
+                >
+                  {echo.label}
+                </text>
+              </g>
+            )
+          })}
         </svg>
 
         <aside
