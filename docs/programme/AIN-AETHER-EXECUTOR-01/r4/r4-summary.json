@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-09-29T00:22:25.137Z",
+  "parentR3": "f51e8c08c1579de71bc0ad561e0a84bc94df059d",
+  "invariantCount": 4,
+  "passingInvariants": 4,
+  "allPass": true,
+  "contradictionRefs": [],
+  "standing": "closed_for_isolated_executor_scope",
+  "productionReachable": false,
+  "externalNetworkCall": false,
+  "persistenceAuthorized": false,
+  "memberFacingDeliveryAuthorized": false,
+  "maiaPromptMutationAuthorized": false,
+  "productionAuthority": false
+}
