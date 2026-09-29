@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SS-06 Member-authored Relation Editing</title>
+<style>
+:root{--paper:#f8efe2;--ink:#302923;--muted:#7c6b5d;--line:rgba(77,57,42,.18);--copper:#d85e36;--gold:#e1a129;--teal:#27877a;--plum:#7d5278}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#e8dccb;color:var(--ink);font-family:Inter,system-ui,sans-serif}body{padding:18px}
+.room{position:relative;isolation:isolate;max-width:1240px;min-height:900px;margin:auto;border-radius:44px;overflow:hidden;background:var(--paper);box-shadow:0 30px 90px rgba(65,43,29,.12)}
+.bg{position:absolute;inset:0;z-index:-2;background:linear-gradient(145deg,#fffaf3,#f4e3cf 52%,#efe0d2)}
+.b{position:absolute;border-radius:50%;filter:blur(78px);opacity:.64;mix-blend-mode:multiply;animation:drift 24s ease-in-out infinite alternate}
+.b1{width:54%;height:58%;left:-14%;top:-9%;background:radial-gradient(circle,var(--copper),rgba(216,94,54,.1) 48%,transparent 72%)}
+.b2{width:50%;height:56%;right:-12%;top:4%;background:radial-gradient(circle,var(--teal),rgba(39,135,122,.1) 48%,transparent 74%);animation-delay:-8s}
+.b3{width:52%;height:52%;left:23%;bottom:-22%;background:radial-gradient(circle,var(--gold),rgba(225,161,41,.1) 46%,transparent 74%);animation-delay:-13s}
+.b4{width:34%;height:42%;right:12%;bottom:-17%;background:radial-gradient(circle,var(--plum),rgba(125,82,120,.08) 46%,transparent 72%);animation-delay:-4s}
+.grain{position:absolute;inset:0;opacity:.14;background-image:radial-gradient(rgba(75,55,40,.3) .55px,transparent .55px);background-size:17px 17px}
+@keyframes drift{from{transform:translate(-2%,0) scale(1)}to{transform:translate(4%,3%) scale(1.07)}}
+.shell{padding:38px 44px 34px}.top{display:flex;justify-content:space-between;gap:18px}.k{font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#846f5e}.state{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#998675}
+.grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(350px,.7fr);gap:30px;margin-top:30px}
+.field{min-height:720px;border:1px solid rgba(91,67,49,.10);border-radius:34px;background:rgba(255,251,245,.34);position:relative;overflow:hidden}
+svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}.edge{stroke:rgba(90,67,49,.43);stroke-width:1.5;vector-effect:non-scaling-stroke}.edge.candidate{stroke-dasharray:7 7;opacity:.72}.edge.hidden{display:none}
+.node{position:absolute;width:190px;border:1px solid rgba(91,66,48,.14);border-radius:26px;background:rgba(255,253,248,.88);padding:16px 17px;z-index:3;box-shadow:0 12px 34px rgba(71,46,28,.05)}.node small,.tag small,.side small{font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:#917b68}.node b{display:block;font:400 18px Georgia,serif;margin-top:5px}.node p{font-size:10px;line-height:1.5;color:#756457;margin:6px 0 0}
+#ea{left:50%;top:44%;transform:translate(-50%,-50%);width:235px}#maia{right:8%;top:12%}#ws{left:8%;bottom:11%}#rg{right:8%;bottom:11%}
+.tag{position:absolute;z-index:4;border-radius:14px;padding:8px 10px;background:rgba(255,252,247,.94);border:1px solid rgba(91,66,48,.14);max-width:190px}.tag b{display:block;font-size:10px;margin-top:3px}.tag span{display:block;font-size:9px;line-height:1.4;color:#7e6d5e;margin-top:2px}
+#tagMaia{right:27%;top:28%}#tagWs{left:24%;bottom:27%}#tagRg{right:25%;bottom:28%}
+.tag.candidate{border-style:dashed}.tag.hidden{display:none}
+.side{border:1px solid rgba(91,67,49,.11);border-radius:30px;background:rgba(255,250,244,.73);padding:23px;min-height:720px}.side h2{font:400 22px Georgia,serif;margin:0}.intro{font-size:13px;line-height:1.67;color:#594d43;margin-top:14px}
+.rel{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}.rel:first-of-type{border-top:0}.relhead{display:flex;justify-content:space-between;gap:12px}.relhead b{font:400 16px Georgia,serif}.standing{font-size:8px;text-transform:uppercase;letter-spacing:.11em;color:#917b68}.rel p{font-size:10px;line-height:1.52;color:#756457;margin:6px 0}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px}.act{border:1px solid rgba(91,66,48,.14);border-radius:12px;background:rgba(255,255,255,.3);padding:8px 10px;font-size:10px;cursor:pointer;color:#493f37}.act:hover{background:rgba(255,255,255,.58)}.act.primary{background:rgba(216,94,54,.07)}
+.editor{display:none;margin-top:10px}.editor input,.creator input,.creator select{width:100%;border:1px solid rgba(91,66,48,.15);border-radius:12px;padding:10px;background:rgba(255,255,255,.55);color:#40362f}.editor button,.creator button,.reset{border:0;background:none;padding:0;color:#795230;text-decoration:underline;text-underline-offset:4px;cursor:pointer}.editor button{margin-top:7px}
+.creator{margin-top:20px;border-top:1px solid var(--line);padding-top:15px}.creator h3{font:400 17px Georgia,serif;margin:5px 0 11px}.creator select{margin-bottom:8px}.creator button{margin-top:8px}.result{display:none;margin-top:15px;border-left:2px solid rgba(216,94,54,.42);padding-left:13px}.result p{font:400 16px/1.5 Georgia,serif;margin:6px 0 0}.law{margin-top:16px;font-size:10px;line-height:1.55;color:#897564}
+.foot{display:flex;justify-content:space-between;gap:20px;margin-top:20px}.foot p{font-size:10px;line-height:1.55;color:#927f6f;max-width:760px;margin:0}.reset{font-size:11px}
+@media(max-width:900px){body{padding:8px}.room{border-radius:30px}.shell{padding:26px 20px}.state{display:none}.grid{grid-template-columns:1fr}.field{min-height:780px}.node{width:42%;padding:13px}.node b{font-size:16px}#ea{width:58%;top:45%}#maia{right:4%;top:7%}#ws{left:4%;bottom:7%}#rg{right:4%;bottom:7%}.tag{max-width:155px;padding:7px 8px}#tagMaia{right:27%;top:25%}#tagWs{left:23%;bottom:25%}#tagRg{right:24%;bottom:25%}.side{min-height:auto}.foot{display:block}.reset{margin-top:10px}}
+@media(prefers-reduced-motion:reduce){.b{animation:none}}
+</style>
+</head>
+<body><main class="room">
+<div class="bg"><div class="b b1"></div><div class="b b2"></div><div class="b b3"></div><div class="b b4"></div><div class="grain"></div></div>
+<div class="shell">
+<div class="top"><div class="k">Living Field · Member-authored Relations</div><div class="state" id="state">Relations have standing</div></div>
+<div class="grid">
+<section class="field">
+<svg viewBox="0 0 1000 700" preserveAspectRatio="none">
+<line id="edgeMaia" class="edge" x1="520" y1="310" x2="780" y2="135"/>
+<line id="edgeWs" class="edge" x1="460" y1="365" x2="235" y2="570"/>
+<line id="edgeRg" class="edge candidate" x1="540" y1="370" x2="780" y2="570"/>
+</svg>
+<div class="node" id="ea"><small>Continuing work</small><b>Elemental Alchemy</b><p>Stable source object</p></div>
+<div class="node" id="maia"><small>System / relationship</small><b>MAIA</b><p>Existing confirmed relation in this fixture</p></div>
+<div class="node" id="ws"><small>Creative room</small><b>Writer’s Studio</b><p>Member-authored relation in this fixture</p></div>
+<div class="node" id="rg"><small>Research field</small><b>Relational Geometry</b><p>MAIA candidate relation only</p></div>
+
+<div class="tag" id="tagMaia"><small>You confirmed</small><b id="labelMaia">teaching source</b><span>member-confirmed relation</span></div>
+<div class="tag" id="tagWs"><small>You connected this</small><b id="labelWs">develops here</b><span>member-authored relation</span></div>
+<div class="tag candidate" id="tagRg"><small>MAIA sees a possible connection</small><b id="labelRg">possibly informs</b><span>not yet yours</span></div>
+</section>
+
+<aside class="side">
+<h2>Connections are authored, not discovered for you</h2>
+<div class="intro">A line may exist because you created it, you confirmed it, or MAIA is offering a possibility. Those are different kinds of relation.</div>
+
+<div class="rel" id="relWs"><div class="relhead"><b>Elemental Alchemy ↔ Writer’s Studio</b><span class="standing">you connected this</span></div><p id="descWs">“develops here”</p><div class="actions"><button class="act" id="editWs">Revise label</button><button class="act" id="releaseWs">Release connection</button></div><div class="editor" id="editWsBox"><input id="editWsInput" value="develops here"><button id="saveWs">Use revised label</button></div></div>
+
+<div class="rel" id="relMaia"><div class="relhead"><b>Elemental Alchemy ↔ MAIA</b><span class="standing">you confirmed</span></div><p id="descMaia">“teaching source”</p><div class="actions"><button class="act" id="editMaia">Revise label</button><button class="act" id="releaseMaia">Release connection</button></div><div class="editor" id="editMaiaBox"><input id="editMaiaInput" value="teaching source"><button id="saveMaia">Use revised label</button></div></div>
+
+<div class="rel" id="relRg"><div class="relhead"><b>Elemental Alchemy ↔ Relational Geometry</b><span class="standing">MAIA possible · not yet yours</span></div><p>MAIA suggests “possibly informs.” No standing yet.</p><div class="actions"><button class="act primary" id="acceptRg">Accept & name it</button><button class="act" id="rejectRg">Reject</button></div><div class="editor" id="editRgBox"><input id="editRgInput" value="shares a concern with relational structure"><button id="saveRg">Make this my connection</button></div></div>
+
+<div class="creator"><small>Create a connection yourself</small><h3>Connect Elemental Alchemy to…</h3><select id="target"><option value="rg">Relational Geometry</option><option value="maia">MAIA</option><option value="ws">Writer’s Studio</option></select><input id="newLabel" value="belongs in conversation with"><button id="create">Create my connection</button></div>
+
+<div class="result" id="result"><small>Local prototype result</small><p id="resultText"></p></div>
+<div class="law">Releasing a relation does not delete either source. Rejecting a MAIA candidate does not become evidence of resistance. Nothing here persists.</div>
+</aside>
+</div>
+<div class="foot"><p>Standing is textual as well as visual: member-authored, member-confirmed, and MAIA-possible relations cannot collapse into one generic graph edge.</p><button class="reset" onclick="location.reload()">Reset witness</button></div>
+</div></main>
+<script>
+const result=document.getElementById('result'),resultText=document.getElementById('resultText'),state=document.getElementById('state');
+function show(msg){result.style.display='block';resultText.textContent=msg}
+function edit(box){document.getElementById(box).style.display='block'}
+function save(prefix){
+ const v=document.getElementById('edit'+prefix+'Input').value.trim()||'related by member';
+ document.getElementById('label'+prefix).textContent=v;
+ document.getElementById('desc'+prefix).textContent='“'+v+'”';
+ document.getElementById('edit'+prefix+'Box').style.display='none';
+ state.textContent='Member revised a relation label';
+ show('You revised this connection to: '+v+'. The sources did not change.');
+}
+editWs.onclick=()=>edit('editWsBox');saveWs.onclick=()=>save('Ws');editMaia.onclick=()=>edit('editMaiaBox');saveMaia.onclick=()=>save('Maia');
+releaseWs.onclick=()=>{edgeWs.classList.add('hidden');tagWs.classList.add('hidden');relWs.style.opacity='.42';state.textContent='Member released a connection';show('Connection released. Elemental Alchemy and Writer’s Studio remain in the field as separate sources.')};
+releaseMaia.onclick=()=>{edgeMaia.classList.add('hidden');tagMaia.classList.add('hidden');relMaia.style.opacity='.42';state.textContent='Member released a confirmed relation';show('Confirmed connection released for this visit. Neither source was removed.')};
+acceptRg.onclick=()=>{editRgBox.style.display='block';state.textContent='Candidate awaiting member wording'};
+saveRg.onclick=()=>{const v=editRgInput.value.trim()||'member-confirmed relation';labelRg.textContent=v;tagRg.querySelector('small').textContent='You connected this';tagRg.querySelector('span').textContent='member-authored from MAIA candidate';tagRg.classList.remove('candidate');edgeRg.classList.remove('candidate');relRg.querySelector('.standing').textContent='you accepted and named it';relRg.querySelector('p').textContent='“'+v+'”';editRgBox.style.display='none';state.textContent='Member conferred standing';show('MAIA’s candidate became your connection only after you named it: '+v)};
+rejectRg.onclick=()=>{edgeRg.classList.add('hidden');tagRg.classList.add('hidden');relRg.style.opacity='.42';state.textContent='MAIA candidate rejected';show('Candidate rejected. It is not hidden truth, and the two source objects remain unchanged.')};
+create.onclick=()=>{
+ const t=target.value,v=newLabel.value.trim()||'member-authored relation';
+ const names={rg:'Relational Geometry',maia:'MAIA',ws:'Writer’s Studio'};
+ const edge={rg:edgeRg,maia:edgeMaia,ws:edgeWs}[t],tag={rg:tagRg,maia:tagMaia,ws:tagWs}[t],label={rg:labelRg,maia:labelMaia,ws:labelWs}[t];
+ edge.classList.remove('hidden','candidate');tag.classList.remove('hidden','candidate');tag.querySelector('small').textContent='You connected this';tag.querySelector('span').textContent='member-authored relation';label.textContent=v;state.textContent='Member created a connection';show('You connected Elemental Alchemy to '+names[t]+' as: '+v+'. Local prototype only.');
+};
+</script></body></html>
