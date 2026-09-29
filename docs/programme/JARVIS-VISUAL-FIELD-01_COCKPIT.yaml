@@ -8,22 +8,23 @@ current_authority:
   - docs/canon/LIVING_FIELD_RELATION_GRAMMAR.md
   - docs/canon/LIVING_FIELD_FOCUS_CONTEXT_LAWS.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: BUILD
-current_act: VISUAL-FIELD-RUNTIME-02D — Focus + Context
-current_subject_sha: 4542413339a859d6a56f776c088c328c2b3a02fd
+current_phase: VERIFY
+current_act: VISUAL-FIELD-RUNTIME-02D — Founder Focus + Context Witness
+current_subject_sha: e2b34244384d35e7467f341333ee40b1397edb25
 current_branch: feature/jarvis-visual-field-r2d-20260929
 worktree: /private/tmp/jarvis-visual-field-r2d
-runtime: http://localhost:3606/public-demo
+runtime: http://localhost:3607/public-demo
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - Founder authorized continuation beyond R2C into R2D Focus + Context.
-  - R2D must intensify a locus without amputating its containing world or wider orientation.
-  - Relation focus must frame both endpoints and the between-space.
-  - Productive tension must keep both poles simultaneously present with equal visual dignity and no forced synthesis.
-  - Peripheral context may use quiet directional echoes rather than shrinking the entire field into view.
+  - R2D is implemented and mechanically verified across desktop and mobile.
+  - Deep node focus preserves directional whole-field context through non-interactive offscreen world echoes.
+  - Relation focus reframes both endpoints and the between-space rather than remaining loyal to the first node.
+  - Productive tension keeps both poles simultaneously visible with equal endpoint emphasis and an explicitly empty midpoint.
+  - Widen reverses relation → node → world → whole in semantic order.
+  - Founder witness is required to decide whether the whole feels genuinely present and whether tension feels held rather than diagrammatically framed.
   - Live MAIA interpretation, live cross-room crossing, durable memory, FLOW, and autonomous relation generation remain closed.
 founder_stops:
   - R2D founder focus/context witness before R2E Semantic Condensation.
@@ -33,4 +34,4 @@ founder_stops:
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
 next_phase_on_exit: R2D founder focus/context witness; PASS opens R2E Semantic Condensation
-last_state_change: 2026-09-29 — founder authorized continuation; R2D Focus + Context opened
+last_state_change: 2026-09-29 — R2D candidate sealed at e2b342443; founder focus/context witness is the current gate
