@@ -8346,7 +8346,7 @@ I'm not sure what I'm feeling yet.`;
                   }}
                   transition={{
                     duration: 4,
-                    repeat: Infinity,
+                    repeat: prefersReducedMotion ? 0 : Infinity,
                     ease: "easeInOut"
                   }}
                 >
@@ -8418,7 +8418,7 @@ I'm not sure what I'm feeling yet.`;
                   }}
                   transition={{
                     duration: 1.2,
-                    repeat: Infinity,
+                    repeat: prefersReducedMotion ? 0 : Infinity,
                     ease: "easeInOut"
                   }}
                   className={`w-3 h-3 rounded-full transition-colors duration-300 ${
@@ -8496,7 +8496,7 @@ I'm not sure what I'm feeling yet.`;
                   }}
                   transition={{
                     duration: 2.5,
-                    repeat: Infinity,
+                    repeat: prefersReducedMotion ? 0 : Infinity,
                     ease: "easeInOut"
                   }}
                   className="w-2.5 h-2.5 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.8)]"
@@ -8836,7 +8836,7 @@ I'm not sure what I'm feeling yet.`;
               }}
               transition={{
                 duration: 6,
-                repeat: Infinity,
+                repeat: prefersReducedMotion ? 0 : Infinity,
                 ease: "easeInOut"
               }}
             >
@@ -9148,7 +9148,8 @@ I'm not sure what I'm feeling yet.`;
 
             {/* Sparkles emanating from center - ULTRA SLOW & EPHEMERAL */}
             {/* Only render on client to prevent hydration mismatch from Math.random() */}
-            {isMounted && (
+            {/* Not rendered at all under prefers-reduced-motion (DESIGN.md §Motion) */}
+            {isMounted && !prefersReducedMotion && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               {/* Main radial sparkles - slower drift */}
               {[...Array(12)].map((_, i) => (

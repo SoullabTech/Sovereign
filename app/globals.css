@@ -34,6 +34,12 @@
    See docs/canon/SOULLAB_THEME.md for usage rules and prohibitions.
    ══════════════════════════════════════════════════════════════════════ */
 :root {
+  /* Motion vocabulary (DESIGN.md §Motion) — derived from values already in use */
+  --motion-quick: 200ms;      /* hover, state change */
+  --motion-settle: 400ms;     /* enter / exit */
+  --motion-threshold: 780ms;  /* rare crossings only */
+  --ease-quiet: cubic-bezier(.2, .7, .2, 1);
+
   /* Foundation */
   --sl-bg-canvas: #0A1628;
   --sl-bg-canvas-deep: #060D18;
@@ -1329,4 +1335,16 @@
 .sl-focus :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
   outline: 2px solid #D4AF37; /* --sl-gold-light, SOULLAB_THEME */
   outline-offset: 2px;
+}
+
+/* Global reduced-motion backstop (DESIGN.md §Motion). Room-level RM blocks stay
+   the primary mechanism; this catches everything they miss (specificity losses,
+   ungated keyframes, Tailwind spinners). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

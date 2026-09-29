@@ -13,6 +13,7 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { BetaBanner } from "@/components/BetaBanner";
 import BugReportButton from "@/components/bugs/BugReportButton";
 import { MaiaPresence } from "@/components/maia/presence/MaiaPresence";
+import { ReducedMotionProvider } from "@/components/providers/ReducedMotionProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -210,6 +211,7 @@ export default function RootLayout({
         <AppErrorBoundary>
         {/* Global "Report a bug" affordance — self-renders only for signed-in members */}
         <BugReportButton />
+        <ReducedMotionProvider>
         <SubscriptionProvider>
           <DevNoServiceWorker />
           <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>
@@ -228,6 +230,7 @@ export default function RootLayout({
             </AethericConsciousnessProvider>
           </SystemHealthProvider>
         </SubscriptionProvider>
+        </ReducedMotionProvider>
         </AppErrorBoundary>
       </body>
     </html>
