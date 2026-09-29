@@ -5,6 +5,7 @@ import { appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 
 const names = ATMOSPHERE_LIST.map((item) => item.name);
 const p4page = readFileSync(join(process.cwd(), 'app/dev/writers-studio-p4r1/page.tsx'), 'utf8');
+const p4css = readFileSync(join(process.cwd(), 'app/dev/writers-studio-p4r1/p4r1-live.css'), 'utf8');
 
 describe('P4R1 appearance continuity', () => {
   it('restores the accepted member-chosen theme family', () => {
@@ -17,6 +18,18 @@ describe('P4R1 appearance continuity', () => {
       'Cloud',
       'Midnight',
     ]);
+  });
+
+
+  it('keeps the theme chooser on the Studio atmosphere membrane, not shell-local colour variables', () => {
+    const start = p4css.indexOf('/* P4R1 appearance continuity: member-chosen Studio themes restored.');
+    const block = p4css.slice(start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(block).toContain('background:var(--ws-ground-raised');
+    expect(block).toContain('color:var(--ws-ink-primary');
+    expect(block).toContain('border:1px solid var(--ws-rule');
+    expect(block).not.toContain('background:var(--fr-panel)');
+    expect(block).not.toContain('color:var(--fr-ink2)');
   });
 
   it('defaults P4R1 to Day only when no member choice has been remembered', () => {

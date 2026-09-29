@@ -3130,11 +3130,97 @@
   .p4r1-root .p4r1-source-verification-state,.p4r1-root .p4r1-source-verification-options{grid-template-columns:1fr}
 }
 
-/* P4R1 appearance continuity: member-chosen Studio themes restored. */
-.p4r1-root .p4r1-theme-menu{position:fixed;right:18px;top:13px;z-index:80;font-family:var(--fr-sans-stack)}
-.p4r1-root .p4r1-theme-trigger{min-height:34px;border:1px solid var(--fr-line);border-radius:999px;background:var(--fr-bar);color:var(--fr-ink2);padding:6px 10px;display:flex;align-items:center;gap:7px;font:600 10.5px var(--fr-sans-stack);cursor:pointer;box-shadow:var(--fr-shadow)}
-.p4r1-root .p4r1-theme-swatch{width:13px;height:13px;border:1px solid;border-radius:50%;display:inline-block;flex:0 0 auto}
-.p4r1-root .p4r1-theme-popover{position:absolute;right:0;top:41px;width:190px;border:1px solid var(--fr-line);border-radius:10px;background:var(--fr-panel);box-shadow:var(--fr-shadow);padding:8px;color:var(--fr-ink);display:grid;gap:3px}
-.p4r1-root .p4r1-theme-title{padding:5px 8px 7px;color:var(--fr-quiet);font:700 9px var(--fr-sans-stack);letter-spacing:.12em;text-transform:uppercase}
-.p4r1-root .p4r1-theme-option{border:0;border-radius:7px;background:transparent;color:var(--fr-ink2);min-height:36px;padding:7px 8px;display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:center;text-align:left;font:600 11px var(--fr-sans-stack);cursor:pointer}
-.p4r1-root .p4r1-theme-option:hover,.p4r1-root .p4r1-theme-option[aria-checked="true"]{background:var(--fr-action-soft);color:var(--fr-title)}
+/* P4R1 appearance continuity: member-chosen Studio themes restored.
+   The switcher lives OUTSIDE .fr-shell, so it must use the Studio-wide --ws-*
+   atmosphere variables supplied by StudioAtmosphere. Using --fr-* here makes
+   the declarations invalid before the shell exists and leaves a transparent,
+   unreadable menu floating over the Work. */
+.p4r1-root .p4r1-theme-menu{
+  position:fixed;
+  right:16px;
+  top:11px;
+  z-index:120;
+  font-family:var(--fr-sans-stack,Inter,system-ui,sans-serif);
+}
+.p4r1-root .p4r1-theme-trigger{
+  min-height:34px;
+  max-width:164px;
+  border:1px solid var(--ws-rule,#4A4238);
+  border-radius:999px;
+  background:var(--ws-ground-raised,#221B12);
+  color:var(--ws-ink-secondary,#CFC5B6);
+  padding:6px 11px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font:600 10.5px var(--fr-sans-stack,Inter,system-ui,sans-serif);
+  cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,0,0,.14);
+  white-space:nowrap;
+}
+.p4r1-root .p4r1-theme-trigger:hover,
+.p4r1-root .p4r1-theme-trigger[aria-expanded="true"]{
+  border-color:var(--ws-gold-edge,#5A431C);
+  color:var(--ws-ink-primary,#F3EDE4);
+}
+.p4r1-root .p4r1-theme-swatch{
+  width:13px;
+  height:13px;
+  border:1px solid;
+  border-radius:50%;
+  display:inline-block;
+  flex:0 0 auto;
+}
+.p4r1-root .p4r1-theme-popover{
+  position:absolute;
+  right:0;
+  top:42px;
+  width:224px;
+  max-width:calc(100vw - 24px);
+  border:1px solid var(--ws-rule,#4A4238);
+  border-radius:12px;
+  background:var(--ws-ground-raised,#221B12);
+  box-shadow:0 14px 38px rgba(0,0,0,.24),0 2px 8px rgba(0,0,0,.14);
+  padding:9px;
+  color:var(--ws-ink-primary,#F3EDE4);
+  display:grid;
+  gap:3px;
+  overflow:hidden;
+}
+.p4r1-root .p4r1-theme-title{
+  padding:6px 9px 8px;
+  border-bottom:1px solid var(--ws-rule-soft,#3a322b);
+  margin-bottom:3px;
+  color:var(--ws-ink-quiet,#7A7065);
+  font:700 9px var(--fr-sans-stack,Inter,system-ui,sans-serif);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.p4r1-root .p4r1-theme-option{
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:var(--ws-ink-secondary,#CFC5B6);
+  min-height:40px;
+  padding:8px 9px;
+  display:grid;
+  grid-template-columns:16px minmax(0,1fr) 16px;
+  gap:9px;
+  align-items:center;
+  text-align:left;
+  font:600 11.5px var(--fr-sans-stack,Inter,system-ui,sans-serif);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-theme-option:hover,
+.p4r1-root .p4r1-theme-option[aria-checked="true"]{
+  background:var(--ws-ground-active,#342715);
+  color:var(--ws-ink-primary,#F3EDE4);
+}
+.p4r1-root .p4r1-theme-option[aria-checked="true"]{
+  box-shadow:inset 2px 0 0 var(--ws-gold,#C9A227);
+}
+@media (max-width:720px){
+  .p4r1-root .p4r1-theme-menu{right:10px;top:10px}
+  .p4r1-root .p4r1-theme-trigger{max-width:132px;padding-inline:9px}
+  .p4r1-root .p4r1-theme-popover{width:min(224px,calc(100vw - 20px));top:40px}
+}
