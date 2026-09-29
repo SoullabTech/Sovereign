@@ -1,0 +1,25 @@
+programme: JARVIS-VISUAL-FIELD-01
+current_authority:
+  - docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md
+  - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
+  - docs/design/contracts/living-field-grokker.md
+current_phase: VERIFY
+current_act: VISUAL-FIELD-RUNTIME-01R1 — First Entry / WORLD Visual Witness
+current_subject_sha: 60916e56e3331610d72267a5e5f7a850d1a088a5
+current_branch: feature/jarvis-visual-field-01-20260928
+worktree: /private/tmp/jarvis-visual-field-01
+runtime: http://localhost:3598/maia/living-field?from=house
+merge: NOT AUTHORIZED
+deploy: NOT AUTHORIZED
+production_write: NOT AUTHORIZED
+member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
+open_findings:
+  - R1 founder enter/deepen/widen traversal remains unwitnessed on the sealed candidate.
+  - Dedicated 3598 member route may require origin-local sign-in because client identity uses localStorage.
+founder_stops:
+  - R1 PASS or RETURN before R2 true Grokker semantic zoom.
+  - Any change of Living Field ontology or member-facing meaning.
+  - Persistent memory or cross-facet permission changes.
+  - Merge or deployment.
+next_phase_on_exit: VISUAL-FIELD-RUNTIME-01R2 — True Grokker Semantic Zoom
+last_state_change: 2026-09-28 — founder authorized full JARVIS flow; R1 candidate sealed after pre-commit gates

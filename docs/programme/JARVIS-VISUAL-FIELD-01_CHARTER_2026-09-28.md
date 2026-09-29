@@ -5,7 +5,7 @@
 **Subject:** Living Field recursive visual navigation and its governed integration into Soullab  
 **Current state:** VERIFY / FOUNDER WITNESS R1  
 **Canonical base:** `956ed92ac36121e0df4cfa64e40cb2d9d1642ebb`  
-**Branch / custody:** `jarvis/visual-field-01-20260928` in `/private/tmp/jarvis-visual-field-01`
+**Branch / custody:** `feature/jarvis-visual-field-01-20260928` in `/private/tmp/jarvis-visual-field-01`
 
 ## Authority
 
