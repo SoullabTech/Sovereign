@@ -3,8 +3,8 @@ current_authority:
   - docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md
   - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-01R1R3 — Founder Witness of Recursive Grokker Geometry
+current_phase: RESEARCH
+current_act: VISUAL-FIELD-RUNTIME-01R1R4 — Physics + Connections Research / Model Selection
 current_subject_sha: c7715a4aa17d170ff49db50118aa6df67f691217
 current_branch: feature/jarvis-visual-field-01-20260928
 worktree: /private/tmp/jarvis-visual-field-01
@@ -14,13 +14,14 @@ deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - R1R3 recursive circle-pack geometry is implemented and mechanically verified.
-  - Founder witness is required to determine whether it now feels like entering one persistent nested world rather than clicking a circle menu.
-  - Later semantic, relational, memory, and MAIA layers remain closed.
+  - Founder sees R1R3 as directionally closer but identifies missing Obsidian-like physics, semantic connections, and cursor-over insight.
+  - Pack-only containment is insufficient as the final WORLD interaction model.
+  - D3 hybrid constrained-force physics and fCoSE compound physics are the primary candidates for an A-B prototype.
+  - Later memory, MAIA, FLOW, and autonomous relation layers remain closed.
 founder_stops:
   - R1 PASS or RETURN before R2 true Grokker semantic zoom.
   - Any change of Living Field ontology or member-facing meaning.
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
-next_phase_on_exit: founder adjudication of R1R3; PASS permits roadmap reconciliation around the accepted Grokker substrate
-last_state_change: 2026-09-29 — R1R3 recursive geometry sealed at c7715a4aa; founder geometry witness is the current gate
+next_phase_on_exit: VISUAL-FIELD-RUNTIME-01R1R5 — Physics / Connections A-B Prototype, only after research/model-selection review
+last_state_change: 2026-09-29 — founder accepted direction but returned R1R3 for physics / connections research; R1R4 opened
