@@ -3,13 +3,13 @@
 **Date:** 2026-09-29
 **Status:** BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF
 **Live old reader at plan freeze:** `7a096281acc22bc91bfc66799ce9acb841921771`
-**Application-code parent:** `0d251d531393f5094e17cb31065cb5a996972a49`
+**Application-code parent:** `80b86eac3fea2680f5b782aa9825c247daa95620`
 
 ## Exact target relation
 
-The deployment target is the exact commit that contains this plan as a plan-only successor of application-code parent `0d251d531...`.
+The deployment target is the exact canonical commit that contains this plan as a plan-only successor in tree content of application-code parent `80b86eac3...`. The target may be a canonical merge commit; the reviewer must compare its tree bytes against this application-code parent and verify that only this review-plan document differs.
 
-The reviewer must independently confirm that the successor changes no application, migration, dependency, deployment-script, or runtime bytes relative to `0d251d531...` except this review-plan document (and any already-frozen readiness documentation that predates this plan commit). The exact target commit is supplied externally by the Review-Custody harness and must be reproduced in the review's migration compatibility attestation.
+The reviewer must independently confirm that the successor changes no application, migration, dependency, deployment-script, or runtime bytes relative to `0d251d531...` except this review-plan document. The readiness document already exists in the application-code parent and must remain byte-identical. The exact target commit is supplied externally by the Review-Custody harness and must be reproduced in the review's migration compatibility attestation.
 
 ## Exact production-pending set
 
