@@ -102,6 +102,15 @@ const POSITIONS_FOUR = [
   { left: 50, top: 80 },
 ]
 
+const REGION_INVITATION: Record<string, string> = {
+  root: 'A live question can be seen from several directions. Each doorway opens another way of meeting it.',
+  fire: 'Fire follows energy, desire, beginnings, courage, and what is asking to come alive.',
+  water: 'Water follows feeling, relationship, change, release, and the forms life is taking now.',
+  earth: 'Earth follows form, grounding, boundaries, embodiment, and what can become livable.',
+  air: 'Air follows clarity, distinction, reflection, perspective, and the words that help something become visible.',
+  aether: 'Aether follows relation, emergence, integration, and what becomes possible between distinct parts.',
+}
+
 const JOURNEY_LANGUAGE: Record<string, string> = {
   fire: 'what wants to begin',
   water: 'change, feeling, and what is moving',
@@ -214,13 +223,13 @@ export function LivingFieldInstrument() {
 
   return (
     <section className="overflow-hidden rounded-[32px] border border-stone-800 bg-[#11100f] shadow-[0_24px_90px_rgba(0,0,0,0.3)]">
-      <header className="border-b border-stone-800/80 px-5 py-4 sm:px-7">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <header className="border-b border-stone-800/80 px-5 py-5 sm:px-7">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.28em] text-stone-600">Beginning point</p>
-            <p className="mt-1 max-w-2xl text-sm text-stone-300">{origin.trim() || 'Open exploration'}</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-stone-600">Beginning point</p>
+            <p className="mt-2 max-w-2xl text-base leading-6 text-stone-200 sm:text-lg">{origin.trim() || 'Open exploration'}</p>
           </div>
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2 text-sm">
             <button type="button" onClick={() => setMode('world')} className={mode === 'world' ? 'rounded-full bg-stone-800 px-3 py-1.5 text-stone-100' : 'rounded-full px-3 py-1.5 text-stone-500 hover:text-stone-300'}>World</button>
             <button type="button" onClick={() => setMode('path')} className={mode === 'path' ? 'rounded-full bg-stone-800 px-3 py-1.5 text-stone-100' : 'rounded-full px-3 py-1.5 text-stone-500 hover:text-stone-300'}>Journey</button>
             <button type="button" onClick={reset} className="rounded-full px-3 py-1.5 text-stone-600 hover:text-stone-300">Close</button>
@@ -231,26 +240,26 @@ export function LivingFieldInstrument() {
       {mode === 'path' ? (
         <div className="px-5 py-8 sm:px-8 sm:py-10">
           <div className="mx-auto max-w-2xl">
-            <p className="text-[11px] uppercase tracking-[0.28em] text-stone-600">Journey</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-stone-500">Journey</p>
 
             <section className="mt-7 rounded-2xl border border-stone-800/80 bg-stone-950/35 px-5 py-5 sm:px-6">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-stone-600">Where this began</p>
-              <p className="mt-2 text-base leading-7 text-stone-200">{origin.trim() || 'Open exploration'}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500">Where this began</p>
+              <p className="mt-3 text-lg leading-8 text-stone-100">{origin.trim() || 'Open exploration'}</p>
             </section>
 
             <section className="mt-6">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-stone-600">What came into view</p>
-              <p className="mt-3 text-xl font-light leading-8 text-stone-200 sm:text-2xl">{journeyMovement}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500">What came into view</p>
+              <p className="mt-4 text-2xl font-light leading-9 text-stone-100 sm:text-3xl sm:leading-[1.35]">{journeyMovement}</p>
 
               {travelledNodes.length > 0 && (
                 <div className="mt-8 flex items-center gap-3 overflow-x-auto pb-2">
-                  <span className="shrink-0 text-[10px] uppercase tracking-[0.2em] text-stone-700">Beginning</span>
+                  <span className="shrink-0 text-xs uppercase tracking-[0.16em] text-stone-600">Beginning</span>
                   {travelledNodes.map((node, index) => (
                     <div key={node.key} className="flex shrink-0 items-center gap-3">
                       <span className="h-px w-8 bg-stone-800" />
                       <span className={index === travelledNodes.length - 1
-                        ? 'rounded-full border border-amber-800/60 bg-amber-950/10 px-3 py-1.5 text-xs text-amber-300'
-                        : 'rounded-full border border-stone-800 px-3 py-1.5 text-xs text-stone-400'
+                        ? 'rounded-full border border-amber-800/60 bg-amber-950/10 px-4 py-2 text-sm text-amber-300'
+                        : 'rounded-full border border-stone-800 px-4 py-2 text-sm text-stone-300'
                       }>
                         {node.label}
                       </span>
@@ -262,15 +271,15 @@ export function LivingFieldInstrument() {
 
             {deepestTravelled ? (
               <section className="mt-9 border-t border-stone-800/80 pt-7">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-stone-600">Where from here</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-stone-500">Where from here</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   <button
                     type="button"
                     onClick={() => returnTo(deepestTravelled.key)}
                     className="rounded-2xl border border-stone-800 bg-stone-950/45 px-4 py-4 text-left transition hover:border-amber-800/50 hover:bg-stone-900/70"
                   >
-                    <span className="block text-sm text-stone-200">Stay here</span>
-                    <span className="mt-1 block text-xs leading-5 text-stone-600">{deepestTravelled.label}</span>
+                    <span className="block text-base text-stone-100">Stay here</span>
+                    <span className="mt-2 block text-sm leading-6 text-stone-500">{deepestTravelled.label}</span>
                   </button>
 
                   {deepestParent && (
@@ -279,8 +288,8 @@ export function LivingFieldInstrument() {
                       onClick={() => returnTo(deepestParent.key)}
                       className="rounded-2xl border border-stone-800 bg-stone-950/45 px-4 py-4 text-left transition hover:border-amber-800/50 hover:bg-stone-900/70"
                     >
-                      <span className="block text-sm text-stone-200">Return to {deepestParent.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-stone-600">See this journey inside its wider field</span>
+                      <span className="block text-base text-stone-100">Return to {deepestParent.label}</span>
+                      <span className="mt-2 block text-sm leading-6 text-stone-500">See this journey inside its wider field</span>
                     </button>
                   )}
 
@@ -289,12 +298,12 @@ export function LivingFieldInstrument() {
                     onClick={() => returnTo('root')}
                     className="rounded-2xl border border-stone-800 bg-stone-950/45 px-4 py-4 text-left transition hover:border-amber-800/50 hover:bg-stone-900/70"
                   >
-                    <span className="block text-sm text-stone-200">Widen the view</span>
-                    <span className="mt-1 block text-xs leading-5 text-stone-600">Return to the larger Living Field</span>
+                    <span className="block text-base text-stone-100">Widen the view</span>
+                    <span className="mt-2 block text-sm leading-6 text-stone-500">Return to the larger Living Field</span>
                   </button>
                 </div>
 
-                <p className="mt-7 text-sm italic leading-6 text-stone-600">
+                <p className="mt-8 text-base italic leading-7 text-stone-500">
                   What feels different from where the journey began?
                 </p>
               </section>
@@ -304,20 +313,34 @@ export function LivingFieldInstrument() {
           </div>
         </div>
       ) : (
-        <div className="px-4 py-6 sm:px-8 sm:py-8">
-          <div className="mb-5 flex min-h-7 items-center justify-between gap-3">
-            <button type="button" onClick={widen} disabled={!parent} className="text-sm text-stone-500 transition hover:text-stone-200 disabled:invisible">
+        <div className="px-4 py-7 sm:px-8 sm:py-9">
+          <div className="mb-6 flex min-h-8 items-center justify-between gap-3">
+            <button type="button" onClick={widen} disabled={!parent} className="text-base text-stone-400 transition hover:text-stone-100 disabled:invisible">
               ← Wider
             </button>
-            <p className="text-center text-[10px] uppercase tracking-[0.25em] text-stone-600">
+            <p className="text-center text-xs uppercase tracking-[0.22em] text-stone-500">
               {parent ? parent.label + ' · inside' : 'Current field'}
             </p>
-            <button type="button" onClick={() => setMode('path')} className="text-sm text-stone-500 transition hover:text-stone-200">
+            <button type="button" onClick={() => setMode('path')} className="text-base text-stone-400 transition hover:text-stone-100">
               Journey →
             </button>
           </div>
 
-          <div className="relative mx-auto aspect-square w-full max-w-[650px] rounded-full border border-stone-700/70 bg-[radial-gradient(circle_at_50%_42%,rgba(120,100,70,0.12),rgba(30,28,26,0.18)_44%,rgba(10,10,10,0.6)_76%)] shadow-[inset_0_0_80px_rgba(255,255,255,0.025)]">
+          <div className="mx-auto mb-7 max-w-2xl text-center">
+            <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">
+              {focus.key === 'root' ? 'Why enter this field?' : focus.label + ' · a way of seeing'}
+            </p>
+            <p className="mt-3 text-base leading-7 text-stone-300 sm:text-lg">
+              {REGION_INVITATION[focus.key] ?? ('This doorway brings the beginning question toward ' + (JOURNEY_LANGUAGE[focus.key] ?? focus.essence.toLowerCase()) + '.')}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-stone-500">
+              {children.length > 0
+                ? 'Choose the opening that feels closest to the question now.'
+                : 'Stay with the question here, explore nearby openings, or widen the view.'}
+            </p>
+          </div>
+
+          <div className="relative mx-auto aspect-square w-full max-w-[760px] rounded-full border border-stone-700/70 bg-[radial-gradient(circle_at_50%_42%,rgba(120,100,70,0.12),rgba(30,28,26,0.18)_44%,rgba(10,10,10,0.6)_76%)] shadow-[inset_0_0_80px_rgba(255,255,255,0.025)]">
             {children.length > 0 && (
               <svg
                 viewBox="0 0 100 100"
@@ -344,10 +367,43 @@ export function LivingFieldInstrument() {
               </svg>
             )}
 
-            <div className="absolute left-1/2 top-1/2 z-10 w-[42%] -translate-x-1/2 -translate-y-1/2 text-center">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-stone-600">{focus.key === 'root' ? 'Whole' : focus.essence}</p>
-              <h2 className="mt-2 text-xl font-light text-stone-100 sm:text-3xl">{focus.label}</h2>
-              <p className="mx-auto mt-3 max-w-[250px] text-xs leading-5 text-stone-400 sm:text-sm sm:leading-6">{focus.inquiry}</p>
+            <div className={'absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 text-center ' + (children.length === 0 ? 'w-[72%]' : 'w-[44%]')}>
+              <p className="text-xs uppercase tracking-[0.26em] text-stone-500">{focus.key === 'root' ? 'Whole' : focus.essence}</p>
+              <h2 className="mt-3 text-3xl font-light text-stone-50 sm:text-4xl">{focus.label}</h2>
+              <p className="mx-auto mt-4 max-w-[360px] text-base leading-7 text-stone-300 sm:text-lg">{focus.inquiry}</p>
+
+              {children.length === 0 && (
+                <div className="mx-auto mt-7 max-w-[520px]">
+                  <p className="text-sm leading-6 text-stone-500 sm:text-base sm:leading-7">
+                    This doorway brings the beginning question toward {JOURNEY_LANGUAGE[focus.key] ?? focus.essence.toLowerCase()}.
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    {parent && (
+                      <button
+                        type="button"
+                        onClick={() => returnTo(parent.key)}
+                        className="rounded-full border border-stone-700 bg-stone-950/55 px-4 py-2.5 text-sm text-stone-200 transition hover:border-amber-800/50 hover:bg-stone-900"
+                      >
+                        Explore nearby openings
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setMode('path')}
+                      className="rounded-full border border-stone-700 bg-stone-950/55 px-4 py-2.5 text-sm text-stone-200 transition hover:border-amber-800/50 hover:bg-stone-900"
+                    >
+                      See the Journey
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => returnTo('root')}
+                      className="rounded-full border border-stone-700 bg-stone-950/55 px-4 py-2.5 text-sm text-stone-200 transition hover:border-amber-800/50 hover:bg-stone-900"
+                    >
+                      Widen to the whole field
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {children.map((node, index) => {
@@ -360,20 +416,36 @@ export function LivingFieldInstrument() {
                   key={node.key}
                   onClick={() => enter(node)}
                   style={{ left: position.left + '%', top: position.top + '%' }}
-                  className={'absolute z-20 flex aspect-square w-[26%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border bg-stone-900/88 px-2 text-center shadow-[0_12px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition duration-500 hover:scale-[1.04] hover:border-amber-700/55 hover:bg-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-700/60 sm:w-[24%] ' + (visited ? 'border-amber-800/60 shadow-[0_0_34px_rgba(146,92,34,0.09)]' : 'border-stone-700/80')}
+                  className={'absolute z-20 hidden aspect-square w-[25%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border bg-stone-900/88 px-3 text-center shadow-[0_12px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm transition duration-500 hover:scale-[1.04] hover:border-amber-700/55 hover:bg-stone-900 focus:outline-none focus:ring-1 focus:ring-amber-700/60 sm:flex ' + (visited ? 'border-amber-800/60 shadow-[0_0_34px_rgba(146,92,34,0.09)]' : 'border-stone-700/80')}
                 >
-                  <span className="text-xs font-medium text-stone-200 sm:text-sm">{node.label}</span>
-                  <span className="mt-1 hidden max-w-[120px] text-[10px] leading-4 text-stone-500 sm:block">{node.inquiry}</span>
+                  <span className="text-sm font-medium text-stone-100 sm:text-base">{node.label}</span>
+                  <span className="mt-2 hidden max-w-[155px] text-xs leading-5 text-stone-400 sm:block">{node.inquiry}</span>
                 </button>
               )
             })}
 
-            {children.length === 0 && (
-              <div className="absolute inset-x-[14%] bottom-[15%] z-20 text-center">
-                <p className="text-xs text-stone-500">This is also a place to linger.</p>
-              </div>
-            )}
           </div>
+
+          {children.length > 0 && (
+            <div className="mx-auto mt-5 grid max-w-xl grid-cols-1 gap-3 sm:hidden">
+              {children.map((node) => {
+                const visited = path.includes(node.key)
+                return (
+                  <button
+                    type="button"
+                    key={'mobile-' + node.key}
+                    onClick={() => enter(node)}
+                    className={'rounded-2xl border px-5 py-4 text-left transition ' + (visited
+                      ? 'border-amber-800/60 bg-amber-950/10'
+                      : 'border-stone-800 bg-stone-950/45 hover:border-stone-700')}
+                  >
+                    <span className="block text-base font-medium text-stone-100">{node.label}</span>
+                    <span className="mt-2 block text-sm leading-6 text-stone-400">{node.inquiry}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {focus.transition && (
             <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-stone-800/70 bg-stone-950/45 px-4 py-3 text-center">
