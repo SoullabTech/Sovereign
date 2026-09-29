@@ -22,6 +22,7 @@ export function resolveSemanticLod(
   scale: number,
   hasWorldFocus: boolean,
   hasNodeFocus: boolean,
+  hasRelationFocus = false,
 ): SemanticLod {
   let lod: SemanticLod =
     scale < 1.08 ? 0 :
@@ -32,6 +33,7 @@ export function resolveSemanticLod(
 
   if (hasWorldFocus && lod < 2) lod = 2
   if (hasNodeFocus && lod < 3) lod = 3
+  if (hasRelationFocus && lod < 4) lod = 4
 
   return lod
 }
