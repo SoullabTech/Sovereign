@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SS-04 Contrast and Counterevidence</title>
+<style>
+:root{--paper:#f8efe2;--ink:#302923;--muted:#7d6d60;--line:rgba(77,57,42,.17);--copper:#d85f37;--gold:#e3a42a;--teal:#27877a;--plum:#7d5278}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#e7dac9;color:var(--ink);font-family:Inter,system-ui,sans-serif}body{padding:18px}
+.room{position:relative;isolation:isolate;max-width:1240px;min-height:900px;margin:auto;border-radius:44px;overflow:hidden;background:var(--paper);box-shadow:0 30px 90px rgba(65,43,29,.12)}
+.bg{position:absolute;inset:0;z-index:-2;background:linear-gradient(145deg,#fffaf3,#f4e3cf 53%,#eee0d2)}
+.b{position:absolute;border-radius:50%;filter:blur(78px);opacity:.64;mix-blend-mode:multiply;animation:drift 24s ease-in-out infinite alternate}
+.b1{width:52%;height:58%;left:-13%;top:-8%;background:radial-gradient(circle,var(--copper),rgba(216,95,55,.1) 48%,transparent 72%)}
+.b2{width:50%;height:55%;right:-12%;top:4%;background:radial-gradient(circle,var(--teal),rgba(39,135,122,.1) 48%,transparent 74%);animation-delay:-8s}
+.b3{width:50%;height:52%;left:24%;bottom:-23%;background:radial-gradient(circle,var(--gold),rgba(227,164,42,.1) 46%,transparent 74%);animation-delay:-12s}
+.b4{width:34%;height:42%;right:12%;bottom:-17%;background:radial-gradient(circle,var(--plum),rgba(125,82,120,.08) 46%,transparent 72%);animation-delay:-4s}
+.grain{position:absolute;inset:0;opacity:.14;background-image:radial-gradient(rgba(75,55,40,.3) .55px,transparent .55px);background-size:17px 17px}
+@keyframes drift{from{transform:translate(-2%,0) scale(1)}to{transform:translate(4%,3%) scale(1.07)}}
+.shell{padding:38px 44px 34px}.top{display:flex;justify-content:space-between;gap:18px}.k{font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#846f5e}.state{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#998675}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(350px,.75fr);gap:30px;margin-top:30px}
+.field{min-height:720px;border:1px solid rgba(91,67,49,.1);border-radius:34px;background:rgba(255,251,245,.35);padding:30px;position:relative}
+.anchor{border-radius:28px;border:1px solid rgba(91,67,49,.13);background:rgba(255,253,248,.86);padding:22px 24px;max-width:720px}.anchor small,.section small,.synth small{font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:#917b68}.anchor blockquote{font:400 28px/1.43 Georgia,serif;margin:10px 0}.anchor p{font-size:10px;line-height:1.5;color:#867361;margin:0}
+.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px}.section{border-radius:26px;border:1px solid rgba(91,67,49,.12);background:rgba(255,252,247,.56);padding:17px;min-height:205px}.section h3{font:400 19px Georgia,serif;margin:7px 0 13px}.item{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.item:first-of-type{border-top:0;padding-top:0;margin-top:0}.item b{font-size:11px}.item p{font-size:10px;line-height:1.55;color:#756457;margin:5px 0 0}.item.hidden{display:none}.unknown{margin-top:14px;border:1px dashed rgba(91,67,49,.20);border-radius:20px;padding:13px 15px;background:rgba(255,255,255,.22)}.unknown b{font-size:11px}.unknown p{font-size:10px;line-height:1.5;color:#766658;margin:4px 0 0}
+.side{border:1px solid rgba(91,67,49,.11);border-radius:30px;background:rgba(255,250,244,.73);padding:23px;min-height:720px}.side h2{font:400 22px Georgia,serif;margin:0}.intro{font-size:13px;line-height:1.67;color:#594d43;margin-top:14px}
+.synth{border-left:2px solid rgba(216,95,55,.43);padding-left:14px;margin-top:20px}.synth h3{font:400 20px/1.32 Georgia,serif;margin:7px 0}.synth p{font-size:12px;line-height:1.65;color:#625449}.law{margin-top:14px;font-size:10px;line-height:1.55;color:#8a7563}
+.actions{display:grid;gap:9px;margin-top:20px}.btn{border:1px solid rgba(91,66,48,.14);border-radius:15px;background:rgba(255,255,255,.32);padding:11px 13px;text-align:left;cursor:pointer;color:#493f37}.btn:hover{background:rgba(255,255,255,.58);border-color:rgba(216,95,55,.32)}.btn strong{display:block;font-size:13px}.btn span{display:block;font-size:10px;line-height:1.45;color:#867361;margin-top:3px}.primary{background:rgba(216,95,55,.07)}
+.change{display:none;margin-top:18px;border-top:1px solid var(--line);padding-top:15px}.change h4{font:400 17px Georgia,serif;margin:6px 0}.change ul{font-size:10px;line-height:1.65;color:#746254;padding-left:17px}.choice{display:none;margin-top:18px}.choice textarea{width:100%;min-height:76px;border:1px solid rgba(91,66,48,.15);border-radius:15px;padding:11px;background:rgba(255,255,255,.52);resize:vertical;color:#40362f}.choice button,.reset{border:0;background:none;padding:0;color:#795230;text-decoration:underline;text-underline-offset:4px;cursor:pointer}.choice button{margin-top:7px}
+.member{display:none;margin-top:17px;border-top:1px solid var(--line);padding-top:14px}.member p{font:400 17px/1.5 Georgia,serif;margin:7px 0 0}
+.foot{display:flex;justify-content:space-between;gap:20px;margin-top:20px}.foot p{font-size:10px;line-height:1.55;color:#927f6f;max-width:760px;margin:0}.reset{font-size:11px}
+@media(max-width:900px){body{padding:8px}.room{border-radius:30px}.shell{padding:26px 20px}.state{display:none}.grid{grid-template-columns:1fr}.field,.side{min-height:auto}.anchor blockquote{font-size:25px}.evidence-grid{grid-template-columns:1fr}.section{min-height:auto}.foot{display:block}.reset{margin-top:10px}}
+@media(prefers-reduced-motion:reduce){.b{animation:none}}
+</style>
+</head>
+<body><main class="room">
+<div class="bg"><div class="b b1"></div><div class="b b2"></div><div class="b b3"></div><div class="b b4"></div><div class="grain"></div></div>
+<div class="shell">
+<div class="top"><div class="k">Living Field · Contrast / Counterevidence</div><div class="state" id="state">1 · support visible</div></div>
+<div class="grid">
+<section class="field">
+<div class="anchor"><small>Synthetic member statement</small><blockquote>“I always abandon things when they get hard.”</blockquote><p>Fixture only · no member data · the universal word “always” is part of the source statement, not a system finding</p></div>
+<div class="evidence-grid">
+<div class="section">
+<small>Supports / resembles</small><h3>Evidence that could support the claim</h3>
+<div class="item"><b>Prototype A</b><p>Paused after a difficult revision cycle and did not return during the observed period.</p></div>
+<div class="item"><b>Project B</b><p>Shelved shortly after receiving critical feedback.</p></div>
+</div>
+<div class="section">
+<small>Complicates / limits</small><h3>Evidence that resists the broad claim</h3>
+<div class="item hidden" id="counter1"><b>Long-form Work C</b><p>Continued through three difficult revision cycles and brought the work to completion.</p></div>
+<div class="item hidden" id="counter2"><b>Project D</b><p>Ended when external funding stopped; available evidence does not establish that difficulty caused the ending.</p></div>
+<div class="unknown"><b>Unknown</b><p>The fixture does not contain reliable evidence about motive in every project. “Why” remains partly unresolved.</p></div>
+</div>
+</div>
+</section>
+<aside class="side">
+<h2>What does the evidence actually support?</h2>
+<div class="intro">A pattern should become more conditional when counterevidence, exceptions, or missing information materially limit it.</div>
+<div class="synth" id="synth"><small>MAIA provisional synthesis · support only</small><h3 id="synthTitle">A possible recurrence</h3><p id="synthText">In the two visible examples, stepping away followed a difficult period. That is enough to ask whether difficulty sometimes precedes withdrawal here; it is not enough to establish “always.”</p></div>
+<div class="law">Counterevidence is not a disclaimer. If it matters, it must be capable of changing the synthesis.</div>
+<div class="actions" id="actions">
+<button class="btn primary" id="addCounter"><strong>Add known counterevidence</strong><span>Bring in a case where the opposite occurred.</span></button>
+</div>
+<div class="change" id="change"><small>Synthesis delta</small><h4>What had to change?</h4><ul id="changeList"></ul></div>
+<div class="choice" id="choice"><small>Your wording</small><textarea id="memberText">The pattern may be less about difficulty itself and more about the conditions around a project.</textarea><button id="useMember">Use this wording for this visit</button></div>
+<div class="member" id="member"><small>Member-shaped meaning · local only</small><p id="memberOut"></p></div>
+</aside>
+</div>
+<div class="foot"><p>Contrast does not require every exception to erase a pattern. It requires the system to let contradictory or qualifying evidence change scope, certainty, wording, or the question being asked when the evidence warrants it.</p><button class="reset" onclick="location.reload()">Reset witness</button></div>
+</div></main>
+<script>
+const c1=document.getElementById('counter1'),c2=document.getElementById('counter2'),actions=document.getElementById('actions'),synth=document.getElementById('synth'),synthTitle=document.getElementById('synthTitle'),synthText=document.getElementById('synthText'),state=document.getElementById('state'),change=document.getElementById('change'),changeList=document.getElementById('changeList'),choice=document.getElementById('choice'),member=document.getElementById('member'),memberOut=document.getElementById('memberOut');
+document.getElementById('addCounter').onclick=()=>{
+ c1.classList.remove('hidden'); state.textContent='2 · counterexample visible';
+ synth.querySelector('small').textContent='MAIA provisional synthesis · support + counterexample';
+ synthTitle.textContent='The universal claim no longer fits the visible evidence';
+ synthText.textContent='Difficulty preceded stepping away in two examples, but another difficult project was sustained through repeated revision. The available evidence does not support “always abandon when things get hard.” A narrower question is needed.';
+ change.style.display='block';changeList.innerHTML='<li>“always” is no longer supportable.</li><li>difficulty alone cannot explain the visible outcomes.</li><li>the inquiry shifts from “Do I abandon?” to “What conditions distinguish continuing from leaving?”</li>';
+ actions.innerHTML='<button class="btn primary" id="addContext"><strong>Add another complicating case</strong><span>Test whether some endings have different causes.</span></button><button class="btn" id="stop"><strong>Stop here</strong><span>The revised synthesis can remain provisional.</span></button>';
+ document.getElementById('addContext').onclick=addContext;document.getElementById('stop').onclick=()=>{choice.style.display='block';state.textContent='3 · revised synthesis'};
+};
+function addContext(){
+ c2.classList.remove('hidden');state.textContent='3 · exception + context visible';
+ synth.querySelector('small').textContent='MAIA revised synthesis · all visible evidence';
+ synthTitle.textContent='The evidence supports a conditional inquiry, not an identity claim';
+ synthText.textContent='Some difficult periods were followed by stepping away, one difficult work was sustained to completion, and one ending is better explained by an external constraint. The current evidence supports asking which conditions shape persistence or departure; it does not support a stable trait or universal pattern.';
+ changeList.innerHTML='<li>scope narrowed from universal to conditional.</li><li>cause is no longer assigned to difficulty alone.</li><li>external constraint remains distinct from member choice.</li><li>motive remains unknown where the fixture does not establish it.</li>';
+ choice.style.display='block';
+ actions.innerHTML='<button class="btn" id="leave"><strong>Leave the synthesis provisional</strong><span>Unknown remains first-class.</span></button><button class="btn" id="inspect"><strong>Return to the evidence</strong><span>No final meaning required.</span></button>';
+ document.getElementById('leave').onclick=()=>{state.textContent='4 · provisional';member.style.display='block';memberOut.textContent='Not yet resolved. The broader identity claim is unsupported; the conditional question remains open.'};
+ document.getElementById('inspect').onclick=()=>{state.textContent='Evidence remains primary'};
+}
+document.getElementById('useMember').onclick=()=>{member.style.display='block';memberOut.textContent=document.getElementById('memberText').value||'No member wording supplied.';state.textContent='4 · member-shaped meaning'};
+</script></body></html>
