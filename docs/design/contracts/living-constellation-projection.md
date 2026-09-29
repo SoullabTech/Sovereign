@@ -27,21 +27,21 @@ reference_surfaces:
 shared_with_house: the member remains the center of orientation; room names, provenance language, and quiet navigation remain legible across the House. The same projection component appears in all three rooms so continuity is learned once rather than reconstructed on every screen.
 distinct_to_room: this contract governs only the shared projection inserted into Living Field, Vision Studio, and Practice Field. Each room keeps its own purpose, controls, persistence, authority, palette, and developmental grammar. Foreground changes by room; source reality does not.
 
-screenshot_desktop: docs/design/prototypes/soullab-field-topology-01r4b/screenshots/living-quiet-desktop.png
-screenshot_mobile: docs/design/prototypes/soullab-field-topology-01r4b/screenshots/living-quiet-mobile.png
+screenshot_desktop: docs/design/prototypes/soullab-field-topology-01r4c1/screenshots/quiet-desktop.png
+screenshot_mobile: docs/design/prototypes/soullab-field-topology-01r4c1/screenshots/quiet-mobile.png
 experience_verification: >
   Re-witnessed 2026-09-29 against the actual shared LivingConstellationPanel
   using a temporary local-only Next route and synthetic, non-confidential
-  projection fixtures. Quiet and widened Living Field were rendered at
-  1440x1050 and 390x844. Four current screenshots are on disk: quiet and widened,
-  desktop and mobile. The witness verified that the member's stored expression
-  is visually primary, the canonical life dimension is secondary context,
-  authorship/standing remain textual, the quiet subset states that last-update
-  order is not importance, widening reveals all admitted Living Field expressions,
-  and MAIA-candidate material remains explicitly "not yet yours". No production
-  or member data was read or written. Vision Studio and Practice Field keep the
-  previously witnessed R4 presentation rather than inheriting the R4B Living
-  Field atmosphere. The temporary witness route was removed after capture.
+  projection fixtures. Quiet, one entered presence, and widened Living Field
+  were rendered at 1440x1050 and 390x844. Six screenshots are on disk. The
+  quiet surface now shows one factual continuation when a valid recent update
+  exists plus up to three recognition fragments; explanatory governance has
+  moved behind "About this view". Entering a presence gives that source-derived
+  excerpt the room and defers provenance behind "Why this is here". Widening
+  reveals all admitted Living Field expressions without cards, graph edges,
+  or ranking language in the primary surface. No production or member data was
+  read or written. Vision Studio and Practice Field retain the accepted R4
+  presentation. The temporary witness route was removed after capture.
 ---
 
 # Living Constellation Projection — Experience Contract

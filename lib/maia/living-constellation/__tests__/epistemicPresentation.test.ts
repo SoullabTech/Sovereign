@@ -8,17 +8,19 @@ const component = fs.readFileSync(
 );
 
 describe('Living Field epistemic presentation law', () => {
-  test('partial quiet view discloses its selection basis and rejects importance ranking', () => {
-    expect(component).toContain('livingByRecency');
-    expect(component).toContain('slice(0, 4)');
-    expect(component).toContain('not a judgment of importance');
-    expect(component).toContain('being treated as more important');
+  test('quiet view privileges only factual continuation and keeps the rest non-ranked', () => {
+    expect(component).toContain('nodeTimestamp(livingByRecency[0]) > 0');
+    expect(component).toContain("a.label.localeCompare(b.label)");
+    expect(component).toContain("The first presence is offered only because it was updated most recently.");
+    expect(component).toContain('The remaining presences are shown alphabetically');
   });
 
-  test('member language is foregrounded before canonical dimension metadata', () => {
-    expect(component).toContain('const memberLanguage = node.excerpt?.trim()');
-    expect(component).toContain('{memberLanguage}');
-    expect(component).toContain('{node.label}');
+  test('field level shows recognition fragments rather than full provenance blocks', () => {
+    expect(component).toContain('function presenceFragment');
+    expect(component).toContain('firstSentence');
+    expect(component).toContain('function PresenceTeaser');
+    expect(component).toContain('function EnteredPresence');
+    expect(component).toContain('Why this is here');
   });
 
   test('MAIA candidate standing remains explicitly subordinate', () => {
@@ -26,13 +28,14 @@ describe('Living Field epistemic presentation law', () => {
     expect(component).toContain('not yet confirmed');
   });
 
-  test('presentation explicitly refuses unsupported meaning', () => {
+  test('unsupported meaning remains explicitly refused in progressive disclosure', () => {
     expect(component).toContain('They do not claim hidden importance');
     expect(component).toContain('psychological connection');
     expect(component).toContain('complete picture of your life');
   });
 
-  test('quiet Living Field does not visually mark the first presence as important', () => {
+  test('quiet Living Field does not mark first presence important merely for being first', () => {
     expect(component).not.toContain('active={index === 0}');
+    expect(component).not.toContain('importance score');
   });
 });

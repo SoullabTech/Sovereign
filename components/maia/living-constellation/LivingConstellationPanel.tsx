@@ -24,8 +24,8 @@ const FOCUS_DOMAIN: Record<ConstellationFocus, ConstellationDomain> = {
 const PERSPECTIVE = {
   living: {
     eyebrow: 'Living Field',
-    title: 'What feels close to hand right now?',
-    lede: 'A few places you have already given words to are here. Nothing shown first is being treated as more important than the rest of your life.',
+    title: 'What is here with you?',
+    lede: '',
   },
   vision: {
     eyebrow: 'Vision Studio',
@@ -83,51 +83,99 @@ const STAGGER = [
   'md:-translate-y-2',
 ];
 
-function LivingPresence({
+function presenceFragment(node: ConstellationProjectionNode): string {
+  const text = node.excerpt?.trim();
+  if (!text) return node.label;
+
+  const firstSentence = text.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim() ?? text;
+  if (firstSentence.length <= 108) return firstSentence;
+  return `${firstSentence.slice(0, 105).trimEnd()}…`;
+}
+
+function PresenceTeaser({
   node,
-  index,
-  quiet = false,
+  onOpen,
+  continuation = false,
 }: {
   node: ConstellationProjectionNode;
-  index: number;
-  quiet?: boolean;
+  onOpen: () => void;
+  continuation?: boolean;
 }) {
-  const memberLanguage = node.excerpt?.trim();
-
   return (
-    <article
+    <button
+      type="button"
+      onClick={onOpen}
       className={[
-        'relative min-w-0 px-2 py-4 transition-opacity',
-        STAGGER[index % STAGGER.length],
-        quiet ? 'opacity-[0.78]' : 'opacity-100',
+        'group relative block min-w-0 text-left transition',
+        continuation ? 'max-w-2xl py-5' : 'max-w-md py-4',
       ].join(' ')}
+      aria-label={`Open ${node.label}`}
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-x-4 -inset-y-3 -z-10 rounded-[45%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.48),rgba(255,255,255,0.13)_48%,transparent_74%)] blur-xl"
-      />
-
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="font-serif text-sm text-[#735f47]">{node.label}</span>
-        <span className="text-[10px] uppercase tracking-[0.13em] text-[#9b8a73]">
-          {recencyLabel(node)}
+      <span className="block text-[10px] uppercase tracking-[0.14em] text-[#9a8972]">
+        {continuation ? 'Continue' : node.label}
+      </span>
+      <span
+        className={[
+          'mt-2 block font-serif leading-snug text-[#443a31] transition group-hover:text-[#72512d]',
+          continuation ? 'text-2xl md:text-[28px]' : 'text-[19px] md:text-[21px]',
+        ].join(' ')}
+      >
+        {presenceFragment(node)}
+      </span>
+      {continuation && (
+        <span className="mt-2 block text-[11px] text-[#9a8972]">
+          {node.label} · {recencyLabel(node)}
         </span>
+      )}
+    </button>
+  );
+}
+
+function EnteredPresence({
+  node,
+  onReturn,
+}: {
+  node: ConstellationProjectionNode;
+  onReturn: () => void;
+}) {
+  return (
+    <div className="relative z-10 mx-auto max-w-3xl py-8 md:py-14">
+      <button
+        type="button"
+        onClick={onReturn}
+        className="text-sm text-[#806844] underline decoration-[#c3ad8b] underline-offset-4"
+      >
+        ← Living Field
+      </button>
+
+      <div className="mt-12">
+        <p className="text-[11px] uppercase tracking-[0.17em] text-[#9a8972]">
+          {node.label}
+        </p>
+        {node.excerpt ? (
+          <p className="mt-4 font-serif text-3xl leading-[1.45] text-[#40372f] md:text-[40px]">
+            {node.excerpt}
+          </p>
+        ) : (
+          <p className="mt-4 font-serif text-3xl leading-[1.45] text-[#40372f]">
+            {node.label}
+          </p>
+        )}
       </div>
 
-      {memberLanguage ? (
-        <p className="mt-3 max-w-[34rem] font-serif text-[20px] leading-[1.55] text-[#443a31] md:text-[22px]">
-          {memberLanguage}
-        </p>
-      ) : (
-        <p className="mt-3 max-w-[32rem] text-[15px] leading-7 text-[#6f6254]">
-          This part of your Living Field is here when you want to return to it.
-        </p>
-      )}
-
-      <p className="mt-3 text-[11px] leading-relaxed text-[#8f7d66]">
-        {standingLine(node)}
-      </p>
-    </article>
+      <details className="mt-12 max-w-xl border-t border-[#c9b99f]/40 pt-4 text-sm text-[#7d6d59]">
+        <summary className="cursor-pointer list-none text-[#7a5c34]">
+          Why this is here
+        </summary>
+        <div className="mt-4 space-y-2 text-[12px] leading-6">
+          <p>{standingLine(node)}</p>
+          <p>{recencyLabel(node)}</p>
+          <p>
+            This is material already admitted to your Living Field. Its appearance here does not add new meaning or authority.
+          </p>
+        </div>
+      </details>
+    </div>
   );
 }
 
@@ -251,6 +299,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
   const [projection, setProjection] = useState<LivingConstellationProjection | null>(null);
   const [failed, setFailed] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [selectedPresenceId, setSelectedPresenceId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -307,13 +356,17 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
   const livingByRecency = [...grouped.living_field].sort(
     (a, b) => nodeTimestamp(b) - nodeTimestamp(a),
   );
-
-  const visibleLivingNodes =
-    focus === 'living'
-      ? expanded
-        ? livingByRecency
-        : livingByRecency.slice(0, 4)
-      : [];
+  const latestLiving =
+    livingByRecency.length > 0 && nodeTimestamp(livingByRecency[0]) > 0
+      ? livingByRecency[0]
+      : null;
+  const otherLiving = grouped.living_field
+    .filter((node) => node.projectionId !== latestLiving?.projectionId)
+    .sort((a, b) => a.label.localeCompare(b.label));
+  const quietLiving = otherLiving.slice(0, latestLiving ? 3 : 4);
+  const widenedLiving = [...(latestLiving ? [latestLiving] : []), ...otherLiving];
+  const selectedPresence =
+    grouped.living_field.find((node) => node.projectionId === selectedPresenceId) ?? null;
 
   const adjacent =
     focus === 'vision'
@@ -336,14 +389,23 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
 
   const isLiving = focus === 'living';
   const fieldIsWide = isLiving && expanded;
-  const hasDatedLivingMaterial = livingByRecency.some((node) => nodeTimestamp(node) > 0);
-  const livingSelectionCopy = expanded
-    ? hasDatedLivingMaterial
-      ? 'Wider view · more of what is already in your Living Field, ordered by last update. That order is not a judgment of importance.'
-      : 'Wider view · more of what is already in your Living Field. This is a partial presentation, not a ranking of your life.'
-    : hasDatedLivingMaterial
-      ? 'A partial view, ordered by when these expressions were last updated. That order is not a judgment of importance.'
-      : 'A partial view of what is already here. What appears first is not being ranked as more important.';
+
+  if (isLiving && selectedPresence) {
+    return (
+      <section
+        className={[
+          'relative isolate min-h-[560px] overflow-hidden rounded-[40px] bg-[#f5eee3] px-6 py-8 text-[#433a31] sm:px-8 sm:py-10 md:min-h-[620px]',
+          className,
+        ].join(' ')}
+      >
+        <AmbientLifeField wide={false} />
+        <EnteredPresence
+          node={selectedPresence}
+          onReturn={() => setSelectedPresenceId(null)}
+        />
+      </section>
+    );
+  }
 
   return (
     <section
@@ -376,84 +438,91 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
         >
           {perspective.title}
         </h2>
-        <p
-          className={
-            isLiving
-              ? 'mt-3 max-w-2xl text-sm leading-7 text-[#6e6255] md:text-base'
-              : 'mt-3 max-w-2xl text-sm leading-7 text-stone-400 md:text-base'
-          }
-        >
-          {perspective.lede}
-        </p>
-
-        {fieldIsWide && (
-          <p className="mt-4 text-sm text-[#847563]">
-            More of your life comes into view without making what was already here less true.
+        {!isLiving && (
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-400 md:text-base">
+            {perspective.lede}
           </p>
         )}
-
         {projection.partial && (
-          <p className="mt-4 text-xs text-amber-700/90">
-            This view is showing the parts currently within reach.
+          <p className={isLiving ? 'mt-3 text-xs text-[#8c6f43]' : 'mt-4 text-xs text-amber-700/90'}>
+            This view is showing only the parts currently within reach.
           </p>
         )}
       </div>
 
-      <div className="relative z-10 mt-7 max-w-2xl">
-        <p
-          className={
-            isLiving
-              ? 'text-[12px] leading-6 text-[#817260]'
-              : 'text-xs leading-6 text-stone-600'
-          }
-        >
-          {isLiving
-            ? livingSelectionCopy
-            : `${perspective.eyebrow} · current perspective`}
-        </p>
-      </div>
-
-      {focus === 'living' ? (
-        <div className="relative z-10 mt-12">
-          <div className="grid grid-cols-1 gap-x-20 gap-y-14 md:grid-cols-2">
-            {visibleLivingNodes.map((node, index) => (
-              <LivingPresence
-                key={node.projectionId}
-                node={node}
-                index={index}
-                quiet={expanded && index >= 4}
-              />
-            ))}
-          </div>
-
-          {visibleLivingNodes.length === 0 && (
-            <p className="max-w-md text-sm leading-7 text-[#8f806c]">
-              This field is ready for whatever begins to matter here.
-            </p>
-          )}
-
+      {isLiving ? (
+        <div className="relative z-10 mt-10">
           {!expanded ? (
-            <div className="mt-12 flex flex-wrap items-baseline gap-x-4 gap-y-2">
-              <span className="text-sm text-[#6e6255]">Looking for something else?</span>
-              <button
-                type="button"
-                onClick={() => setExpanded(true)}
-                className="text-sm text-[#8b6128] underline decoration-[#c3a77b] underline-offset-4 transition hover:text-[#6f4b1e]"
-              >
-                See more of my life →
-              </button>
-            </div>
+            <>
+              {latestLiving && (
+                <PresenceTeaser
+                  node={latestLiving}
+                  continuation
+                  onOpen={() => setSelectedPresenceId(latestLiving.projectionId)}
+                />
+              )}
+
+              <div className="mt-8 flex flex-wrap gap-x-16 gap-y-8 md:mt-10">
+                {quietLiving.map((node) => (
+                  <PresenceTeaser
+                    key={node.projectionId}
+                    node={node}
+                    onOpen={() => setSelectedPresenceId(node.projectionId)}
+                  />
+                ))}
+              </div>
+
+              {grouped.living_field.length === 0 && (
+                <p className="max-w-lg font-serif text-2xl leading-relaxed text-[#5f5143]">
+                  Nothing needs to be here yet.
+                </p>
+              )}
+
+              {grouped.living_field.length > quietLiving.length + (latestLiving ? 1 : 0) && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded(true)}
+                  className="mt-12 text-sm text-[#7d5a2d] underline decoration-[#c3ad8b] underline-offset-4 transition hover:text-[#67471f]"
+                >
+                  See more of my life →
+                </button>
+              )}
+            </>
           ) : (
-            <div className="mt-12">
+            <>
+              <div className="flex flex-wrap gap-x-16 gap-y-9">
+                {widenedLiving.map((node) => (
+                  <PresenceTeaser
+                    key={node.projectionId}
+                    node={node}
+                    onOpen={() => setSelectedPresenceId(node.projectionId)}
+                  />
+                ))}
+              </div>
               <button
                 type="button"
                 onClick={() => setExpanded(false)}
-                className="rounded-full border border-[#b69a70]/55 bg-white/25 px-4 py-2 text-xs text-[#795b34] transition hover:bg-white/45"
+                className="mt-12 text-sm text-[#7d5a2d] underline decoration-[#c3ad8b] underline-offset-4 transition hover:text-[#67471f]"
               >
-                Return to a quieter view
+                ← Quieter view
               </button>
-            </div>
+            </>
           )}
+
+          <details className="mt-14 max-w-xl border-t border-[#cabaa1]/35 pt-4 text-[12px] leading-6 text-[#8a7965]">
+            <summary className="cursor-pointer list-none text-[#7d684d]">
+              About this view
+            </summary>
+            <div className="mt-3 space-y-2">
+              {latestLiving ? (
+                <p>The first presence is offered only because it was updated most recently.</p>
+              ) : (
+                <p>No presence is being treated as more important than another.</p>
+              )}
+              <p>The remaining presences are shown alphabetically when the view is widened.</p>
+              <p>They do not claim hidden importance, causation, psychological connection, or a complete picture of your life.</p>
+            </div>
+          </details>
         </div>
       ) : (
         <div className="relative z-10 mt-12">
@@ -468,7 +537,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
           </div>
 
           {localNodes.length === 0 && (
-            <p className="max-w-md text-sm leading-7 text-[#8f806c]">
+            <p className="max-w-md text-sm leading-7 text-stone-600">
               This area is available when something wants to take shape here.
             </p>
           )}
@@ -499,18 +568,12 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
               Return to where you were
             </button>
           </div>
+
+          <p className="mt-16 max-w-2xl border-t border-stone-900 pt-4 text-[10px] leading-relaxed text-stone-700">
+            These presentations do not claim psychological or semantic relationship between the material shown.
+          </p>
         </div>
       )}
-
-      <p
-        className={
-          isLiving
-            ? 'relative z-10 mt-16 max-w-2xl border-t border-[#c3b39a]/35 pt-4 text-[10px] leading-relaxed text-[#9b8a73]'
-            : 'relative z-10 mt-16 max-w-2xl border-t border-stone-900 pt-4 text-[10px] leading-relaxed text-stone-700'
-        }
-      >
-        These are presentations of material already in your wider field. They do not claim hidden importance, causation, psychological connection, or a complete picture of your life.
-      </p>
     </section>
   );
 }
