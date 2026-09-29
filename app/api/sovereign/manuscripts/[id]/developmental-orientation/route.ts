@@ -11,6 +11,7 @@ import {
   DEVELOPMENTAL_MOVE_IDS,
   type DevelopmentalOrientation,
   type DevelopmentalMovementReflection,
+  type DevelopmentalEvidenceRef,
 } from '@/lib/writersStudio/developmentalOrientation';
 import { DEVELOPMENTAL_MOVEMENTS } from '@/lib/writersStudio/workDevelopment';
 
@@ -293,7 +294,7 @@ export async function POST(
     if (!Array.isArray(movement.evidenceRefs) || movement.evidenceRefs.length === 0) {
       return NextResponse.json({ error: 'developmental_evidence_required' }, { status: 502 });
     }
-    const evidence = [];
+    const evidence: DevelopmentalEvidenceRef[] = [];
     for (const ref of movement.evidenceRefs) {
       const source = canonical.get(ref);
       if (!source) {

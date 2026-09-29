@@ -312,7 +312,7 @@ export async function POST(
         questions: string[];
         provider: string;
         model: string;
-        reportedModel: string;
+        reportedModel: string | null;
       }
     | {
         ok: false;
@@ -409,7 +409,7 @@ export async function POST(
           questions: [...left.questions, ...right.questions],
           provider: left.provider || right.provider,
           model: left.model || right.model,
-          reportedModel: left.reportedModel || right.reportedModel,
+          reportedModel: left.reportedModel ?? right.reportedModel,
         };
       }
       return {
@@ -496,7 +496,7 @@ export async function POST(
   const mergedQuestions: string[] = [];
   let provider = '';
   let model = '';
-  let reportedModel = '';
+  let reportedModel: string | null = null;
 
   for (const result of windowResults) {
     if (!result.ok) {
@@ -507,7 +507,7 @@ export async function POST(
     }
     provider ||= result.provider;
     model ||= result.model;
-    reportedModel ||= result.reportedModel;
+    reportedModel ??= result.reportedModel;
     mergedCandidates.push(...result.candidates);
     for (const question of result.questions) {
       if (!mergedQuestions.includes(question)) mergedQuestions.push(question);

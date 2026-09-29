@@ -78,7 +78,7 @@ export default function Pc3LiveDevelopHost() {
   const params = useSearchParams();
   const pathname = usePathname() ?? '/dev/writers-studio-pc3-live';
   const manuscriptId = params?.get('m') ?? null;
-  const appearance = params?.get('appearance') === 'night' ? 'night' : 'light';
+  const appearance = params?.get('appearance') === 'night' ? 'evening' : 'day';
   const requestedSection = params?.get('s') ?? null;
   const requestedReading = params?.get('reading') ?? null;
   const [tab, setTabState] = useState<Pc3DevelopTab>(() => initialTab(params?.get('develop') ?? null));

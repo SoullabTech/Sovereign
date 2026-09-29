@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { loadReading } from '@/lib/manuscript/developmentalReading/store';
+import type { DevelopmentalReading } from '@/lib/manuscript/developmentalReading/contract';
 import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import { runStructured } from '@/lib/ai/structured/router';
@@ -12,6 +13,7 @@ import {
   buildAttentionMap,
   type AttentionSynthesisCommission,
   type AttentionSynthesisResult,
+  type FrozenAttentionObservation,
 } from '@/lib/writersStudio/studio/attentionMapSynthesis';
 import { validateAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
@@ -102,7 +104,7 @@ export async function POST(
   }
   const revisionNumber = Number(current.rows[0]!.revision_number);
 
-  const readings = [];
+  const readings: DevelopmentalReading[] = [];
   for (const id of readingIds) {
     const reading = await loadReading(id, memberId);
     if (!reading || reading.manuscriptId !== manuscriptId) {
@@ -136,7 +138,7 @@ export async function POST(
     return NextResponse.json({ error: 'whole_manuscript_scope_required' }, { status: 409 });
   }
 
-  const observations: AttentionSynthesisCommission['observations'] = [];
+  const observations: FrozenAttentionObservation[] = [];
   let synthesisIndex = 0;
   for (const reading of readings) {
     if (reading.outcome !== 'reading') continue;

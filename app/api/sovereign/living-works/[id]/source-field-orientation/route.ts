@@ -310,8 +310,8 @@ export async function POST(
     return NextResponse.json({ error: 'source_field_orientation_unreadable' }, { status: 502 });
   }
 
-  const refByHandle = new Map(
-    refs.map((ref) => [`${ref.type === 'source-upload' ? 'S' : 'I'}:${ref.id}`, ref] as const),
+  const refByHandle = new Map<string, SourceFieldMaterialRef>(
+    refs.map((ref) => [`${ref.type === 'source-upload' ? 'S' : 'I'}:${ref.id}`, ref]),
   );
 
   const terrains: SourceFieldTerrain[] = payload.terrains.map((terrain, index) => ({

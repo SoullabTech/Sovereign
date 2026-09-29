@@ -16,6 +16,7 @@ import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContex
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
+import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import {
   locationForSection,
   replacePlaceAddress,
@@ -38,7 +39,7 @@ function LiveWriteView(props: {
   context: ContextReady;
   writing: SectionWriting;
   workTitle: string | null;
-  appearance: 'light' | 'night';
+  appearance: Appearance;
   initialSearch: string;
   pathname: string;
   initial: string;
@@ -111,7 +112,7 @@ export default function Pc3LiveWriteHost() {
   const pathname = usePathname() ?? '/dev/writers-studio-pc3-live';
   const manuscriptId = params?.get('m') ?? null;
   const requestedSection = params?.get(SECTION_PARAM) ?? null;
-  const appearance = params?.get('appearance') === 'night' ? 'night' : 'light';
+  const appearance: Appearance = params?.get('appearance') === 'night' ? 'evening' : 'day';
   const initialSearch = params && params.toString() ? `?${params.toString()}` : '';
   const { phase: worksPhase, works } = useLivingWorks();
 
