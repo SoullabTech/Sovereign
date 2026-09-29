@@ -101,6 +101,35 @@ const POSITIONS_FOUR = [
   { left: 76, top: 49 },
   { left: 50, top: 80 },
 ]
+
+const JOURNEY_LANGUAGE: Record<string, string> = {
+  fire: 'what wants to begin',
+  water: 'change, feeling, and what is moving',
+  earth: 'form, grounding, and what can become livable',
+  air: 'clarity, distinction, and a wider perspective',
+  aether: 'what may be emerging between distinct parts',
+  ignition: 'a beginning becoming tangible',
+  vision: 'what is becoming imaginable',
+  possibility: 'a wider field of possibility',
+  creation: 'what wants to be brought into the world',
+  dissolution: 'a form beginning to loosen and reshape',
+  grief: 'what matters deeply as relationship changes',
+  surrender: 'what opens through release',
+  continuing: 'relationship continuing in a new form',
+  vessel: 'a form capable of holding what matters',
+  boundary: 'the limits that support integrity',
+  embodiment: 'what becomes real through lived form',
+  practice: 'what becomes known through doing',
+  differentiation: 'what becomes clearer when things are seen distinctly',
+  reflection: 'what experience is revealing',
+  identity: 'what feels most deeply authentic',
+  perspective: 'what changes through another angle of regard',
+  integration: 'coherence that preserves difference',
+  emergence: 'something new appearing through relation',
+  relation: 'what is happening in the between',
+  synthesis: 'a new possibility becoming visible through relation',
+}
+
 export function LivingFieldInstrument() {
   const [open, setOpen] = useState(false)
   const [origin, setOrigin] = useState('')
@@ -111,6 +140,18 @@ export function LivingFieldInstrument() {
   const focus = NODES[focusKey]
   const children = useMemo(() => (focus.children ?? []).map((key) => NODES[key]), [focus])
   const parent = focus.parent ? NODES[focus.parent] : null
+  const travelledNodes = path.filter((key) => key !== 'root').map((key) => NODES[key])
+  const firstTravelled = travelledNodes[0] ?? null
+  const deepestTravelled = travelledNodes[travelledNodes.length - 1] ?? null
+  const deepestParent = deepestTravelled?.parent ? NODES[deepestTravelled.parent] : null
+
+  const journeyMovement = (() => {
+    if (!firstTravelled) return 'The field is open. The first crossing will begin to shape the journey.'
+    if (!deepestTravelled || firstTravelled.key === deepestTravelled.key) {
+      return `The journey opened into ${JOURNEY_LANGUAGE[firstTravelled.key] ?? firstTravelled.essence.toLowerCase()}.`
+    }
+    return `The journey moved from ${JOURNEY_LANGUAGE[firstTravelled.key] ?? firstTravelled.essence.toLowerCase()} toward ${JOURNEY_LANGUAGE[deepestTravelled.key] ?? deepestTravelled.essence.toLowerCase()}.`
+  })()
 
   const enter = (node: FieldNode) => {
     setFocusKey(node.key)
@@ -123,6 +164,11 @@ export function LivingFieldInstrument() {
     setFocusKey(parent.key)
     // Keep the travelled path intact: widening restores context without erasing
     // the distinction just encountered (the enriched-return contract).
+    setMode('world')
+  }
+
+  const returnTo = (key: string) => {
+    setFocusKey(key)
     setMode('world')
   }
 
@@ -176,31 +222,85 @@ export function LivingFieldInstrument() {
           </div>
           <div className="flex items-center gap-2 text-xs">
             <button type="button" onClick={() => setMode('world')} className={mode === 'world' ? 'rounded-full bg-stone-800 px-3 py-1.5 text-stone-100' : 'rounded-full px-3 py-1.5 text-stone-500 hover:text-stone-300'}>World</button>
-            <button type="button" onClick={() => setMode('path')} className={mode === 'path' ? 'rounded-full bg-stone-800 px-3 py-1.5 text-stone-100' : 'rounded-full px-3 py-1.5 text-stone-500 hover:text-stone-300'}>Path</button>
+            <button type="button" onClick={() => setMode('path')} className={mode === 'path' ? 'rounded-full bg-stone-800 px-3 py-1.5 text-stone-100' : 'rounded-full px-3 py-1.5 text-stone-500 hover:text-stone-300'}>Journey</button>
             <button type="button" onClick={reset} className="rounded-full px-3 py-1.5 text-stone-600 hover:text-stone-300">Close</button>
           </div>
         </div>
       </header>
 
       {mode === 'path' ? (
-        <div className="px-5 py-8 sm:px-8">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-stone-600">The path so far</p>
-          <div className="mx-auto mt-8 max-w-xl space-y-1">
-            {path.map((key, index) => {
-              const node = NODES[key]
-              if (key === 'root') return null
-              return (
-                <div key={key} className="relative pl-8 pb-8 last:pb-0">
-                  <span className="absolute left-[9px] top-2 h-full w-px bg-stone-800 last:hidden" />
-                  <span className="absolute left-1 top-1.5 h-3 w-3 rounded-full border border-amber-700/60 bg-[#11100f]" />
-                  <p className="text-xs uppercase tracking-[0.2em] text-amber-500/75">{node.label}</p>
-                  <p className="mt-2 text-sm leading-6 text-stone-300">{node.transition}</p>
-                  <p className="mt-2 text-sm italic text-stone-500">“{node.inquiry}”</p>
-                  {index === path.length - 1 && <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-stone-600">Here now</p>}
+        <div className="px-5 py-8 sm:px-8 sm:py-10">
+          <div className="mx-auto max-w-2xl">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-stone-600">Journey</p>
+
+            <section className="mt-7 rounded-2xl border border-stone-800/80 bg-stone-950/35 px-5 py-5 sm:px-6">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-stone-600">Where this began</p>
+              <p className="mt-2 text-base leading-7 text-stone-200">{origin.trim() || 'Open exploration'}</p>
+            </section>
+
+            <section className="mt-6">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-stone-600">What came into view</p>
+              <p className="mt-3 text-xl font-light leading-8 text-stone-200 sm:text-2xl">{journeyMovement}</p>
+
+              {travelledNodes.length > 0 && (
+                <div className="mt-8 flex items-center gap-3 overflow-x-auto pb-2">
+                  <span className="shrink-0 text-[10px] uppercase tracking-[0.2em] text-stone-700">Beginning</span>
+                  {travelledNodes.map((node, index) => (
+                    <div key={node.key} className="flex shrink-0 items-center gap-3">
+                      <span className="h-px w-8 bg-stone-800" />
+                      <span className={index === travelledNodes.length - 1
+                        ? 'rounded-full border border-amber-800/60 bg-amber-950/10 px-3 py-1.5 text-xs text-amber-300'
+                        : 'rounded-full border border-stone-800 px-3 py-1.5 text-xs text-stone-400'
+                      }>
+                        {node.label}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              )
-            })}
-            {path.length === 1 && <p className="text-sm text-stone-500">The first path is waiting to be discovered.</p>}
+              )}
+            </section>
+
+            {deepestTravelled ? (
+              <section className="mt-9 border-t border-stone-800/80 pt-7">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-stone-600">Where from here</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={() => returnTo(deepestTravelled.key)}
+                    className="rounded-2xl border border-stone-800 bg-stone-950/45 px-4 py-4 text-left transition hover:border-amber-800/50 hover:bg-stone-900/70"
+                  >
+                    <span className="block text-sm text-stone-200">Stay here</span>
+                    <span className="mt-1 block text-xs leading-5 text-stone-600">{deepestTravelled.label}</span>
+                  </button>
+
+                  {deepestParent && (
+                    <button
+                      type="button"
+                      onClick={() => returnTo(deepestParent.key)}
+                      className="rounded-2xl border border-stone-800 bg-stone-950/45 px-4 py-4 text-left transition hover:border-amber-800/50 hover:bg-stone-900/70"
+                    >
+                      <span className="block text-sm text-stone-200">Return to {deepestParent.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-stone-600">See this journey inside its wider field</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => returnTo('root')}
+                    className="rounded-2xl border border-stone-800 bg-stone-950/45 px-4 py-4 text-left transition hover:border-amber-800/50 hover:bg-stone-900/70"
+                  >
+                    <span className="block text-sm text-stone-200">Widen the view</span>
+                    <span className="mt-1 block text-xs leading-5 text-stone-600">Return to the larger Living Field</span>
+                  </button>
+                </div>
+
+                <p className="mt-7 text-sm italic leading-6 text-stone-600">
+                  What feels different from where the journey began?
+                </p>
+              </section>
+            ) : (
+              <p className="mt-7 text-sm text-stone-500">The first crossing will begin to shape the journey.</p>
+            )}
           </div>
         </div>
       ) : (
@@ -213,11 +313,37 @@ export function LivingFieldInstrument() {
               {parent ? parent.label + ' · inside' : 'Current field'}
             </p>
             <button type="button" onClick={() => setMode('path')} className="text-sm text-stone-500 transition hover:text-stone-200">
-              Path →
+              Journey →
             </button>
           </div>
 
           <div className="relative mx-auto aspect-square w-full max-w-[650px] rounded-full border border-stone-700/70 bg-[radial-gradient(circle_at_50%_42%,rgba(120,100,70,0.12),rgba(30,28,26,0.18)_44%,rgba(10,10,10,0.6)_76%)] shadow-[inset_0_0_80px_rgba(255,255,255,0.025)]">
+            {children.length > 0 && (
+              <svg
+                viewBox="0 0 100 100"
+                className="pointer-events-none absolute inset-0 z-[5] h-full w-full"
+                aria-hidden="true"
+              >
+                {children.map((node, index) => {
+                  if (!path.includes(node.key)) return null
+                  const positions = children.length === 4 ? POSITIONS_FOUR : POSITIONS_FIVE
+                  const position = positions[index] ?? positions[0]
+                  return (
+                    <line
+                      key={'trace-' + node.key}
+                      x1="50"
+                      y1="50"
+                      x2={position.left}
+                      y2={position.top}
+                      stroke="rgba(180,112,38,0.34)"
+                      strokeWidth="0.38"
+                      strokeDasharray="1.2 1.8"
+                    />
+                  )
+                })}
+              </svg>
+            )}
+
             <div className="absolute left-1/2 top-1/2 z-10 w-[42%] -translate-x-1/2 -translate-y-1/2 text-center">
               <p className="text-[10px] uppercase tracking-[0.3em] text-stone-600">{focus.key === 'root' ? 'Whole' : focus.essence}</p>
               <h2 className="mt-2 text-xl font-light text-stone-100 sm:text-3xl">{focus.label}</h2>

@@ -24,9 +24,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-grokker-r1-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/living-field-grokker-r1-mobile.png
-experience_verification: Founder visually witnessed the revised Living Field arrival in the live local room and accepted it as a good direction; exact R1 instrument was also rendered from the programme worktree at desktop and mobile viewports. Full enter/deepen/widen R1 founder traversal remains the current programme gate.
+screenshot_desktop: docs/design/contracts/screenshots/living-field-grokker-r1r1-journey-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/living-field-grokker-r1r1-journey-mobile.png
+experience_verification: Founder visually accepted the Living Field arrival, then returned the first Path witness because it read as traversal history rather than meaningful orientation. R1R1 implements Journey + enriched return and has been exercised through Water → Continuing Relation → Journey → Return to Water at desktop and mobile viewports. Founder re-witness remains the current gate.
 ---
 # Living Field — Experience Contract
 

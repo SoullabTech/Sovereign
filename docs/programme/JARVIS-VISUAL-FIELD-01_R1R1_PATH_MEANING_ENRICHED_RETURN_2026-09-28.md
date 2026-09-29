@@ -122,6 +122,41 @@ The field remains usable through spatial movement alone.
 
 If Journey can still be removed without materially changing the member's orientation after a two-level traversal, the repair has failed.
 
+## Verification evidence
+
+Local R1R1 preflight:
+- scoped TypeScript compile for `LivingFieldInstrument.tsx`: PASS;
+- `git diff --check`: PASS;
+- desktop Journey screenshot captured from the exact component;
+- mobile Journey screenshot captured from the exact component;
+- desktop enriched-return screenshot captured after `Return to Water`;
+- mobile enriched-return screenshot captured after `Return to Water`;
+- scripted browser witness: PASS.
+
+The scripted witness exercised:
+
+```text
+Arrival
+→ Water
+→ Continuing Relation
+→ Journey
+→ Return to Water
+```
+
+It verified:
+- the Journey movement sentence is present;
+- Stay here / Return to Water / Widen the view are available;
+- Continuing Relation remains visibly marked after return;
+- a route trace remains visible inside Water.
+
+This verifies implementation behavior only. Founder experience remains the exit authority.
+
+## Current standing
+
+**R1R1 IMPLEMENTED CANDIDATE — READY FOR FOUNDER RE-WITNESS**
+
+R2 remains closed.
+
 ## Exit
 
 PASS → R1 can be re-witnessed and, if accepted, R2 may open.  
