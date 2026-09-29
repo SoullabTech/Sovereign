@@ -43,11 +43,36 @@ type Transporter = {
   }>;
 };
 
-function readConfig() {
+export interface SmtpProviderConfig {
+  host?: string;
+  user?: string;
+  password?: string;
+  port?: number;
+  secure?: boolean;
+}
+
+/**
+ * With no explicit config, preserve the managed-mail environment contract.
+ * With an explicit config, NEVER backfill missing values from global SMTP_*:
+ * an isolated pager transport must not accidentally borrow member-mail credentials.
+ */
+function readConfig(config?: SmtpProviderConfig) {
+  if (config !== undefined) {
+    const port = Number.isFinite(config.port) ? Number(config.port) : 587;
+    return {
+      host: config.host?.trim(),
+      user: config.user?.trim(),
+      pass: config.password,
+      port,
+      secure: config.secure ?? port === 465,
+    };
+  }
+
   const host = process.env.SMTP_HOST?.trim();
   const user = process.env.SMTP_USER?.trim();
   const pass = process.env.SMTP_PASSWORD ?? process.env.SMTP_PASS;
-  const port = Number(process.env.SMTP_PORT ?? 587);
+  const parsedPort = Number(process.env.SMTP_PORT ?? 587);
+  const port = Number.isFinite(parsedPort) ? parsedPort : 587;
 
   // Explicit opt-out only. Defaulting to plaintext because a variable is unset
   // would send credentials and member mail in the clear.
@@ -56,15 +81,17 @@ function readConfig() {
     process.env.SMTP_SECURE === 'false' ? false :
     port === 465;
 
-  return { host, user, pass, port: Number.isFinite(port) ? port : 587, secure };
+  return { host, user, pass, port, secure };
 }
 
 export class SmtpProvider implements EmailProvider {
   readonly name = 'smtp';
   private transporter: Transporter | null = null;
 
+  constructor(private readonly config?: SmtpProviderConfig) {}
+
   isConfigured(): boolean {
-    const { host, user, pass } = readConfig();
+    const { host, user, pass } = readConfig(this.config);
     // A host alone is not enough: an unauthenticated relay that happens to
     // accept mail is not a transport we should be reporting as configured.
     return Boolean(host && user && pass);
@@ -73,7 +100,7 @@ export class SmtpProvider implements EmailProvider {
   private getTransporter(): Transporter {
     if (this.transporter) return this.transporter;
 
-    const { host, user, pass, port, secure } = readConfig();
+    const { host, user, pass, port, secure } = readConfig(this.config);
     if (!host || !user || !pass) {
       throw new Error('[MAIA/email] SmtpProvider is not configured (SMTP_HOST, SMTP_USER, SMTP_PASSWORD)');
     }
