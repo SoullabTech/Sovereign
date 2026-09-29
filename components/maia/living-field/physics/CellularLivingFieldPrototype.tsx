@@ -27,13 +27,15 @@ import {
   type PhysicsRelation,
 } from './physicsFieldData'
 
-type AttentionPhase = 'idle' | 'glance' | 'attend' | 'dwell'
+type AttentionPhase = 'idle' | 'proximity' | 'glance' | 'attend' | 'dwell'
 
 type SimNode = SimulationNodeDatum &
   PhysicsNodeDatum & {
     r: number
     anchorX: number
     anchorY: number
+    homeX: number
+    homeY: number
   }
 
 type SimLink = SimulationLinkDatum<SimNode> & {
@@ -75,13 +77,18 @@ function makeNodes(): SimNode[] {
     const angle = (-Math.PI / 2) + groupIndex * (Math.PI * 2 / 4)
     const anchorDistance = 72
 
+    const homeX = group.x + Math.cos(angle) * anchorDistance
+    const homeY = group.y + Math.sin(angle) * anchorDistance
+
     return {
       ...datum,
       r: datum.label.length > 17 ? 30 : 27,
-      x: group.x + Math.cos(angle) * anchorDistance,
-      y: group.y + Math.sin(angle) * anchorDistance,
-      anchorX: group.x + Math.cos(angle) * anchorDistance,
-      anchorY: group.y + Math.sin(angle) * anchorDistance,
+      x: homeX,
+      y: homeY,
+      anchorX: homeX,
+      anchorY: homeY,
+      homeX,
+      homeY,
     }
   })
 }
@@ -195,9 +202,11 @@ export function CellularLivingFieldPrototype() {
   const [focusGroup, setFocusGroup] = useState<PhysicsGroupKey | null>(null)
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
+  const [proximityNodeId, setProximityNodeId] = useState<string | null>(null)
   const [hoveredRelationId, setHoveredRelationId] = useState<string | null>(null)
   const [attentionPhase, setAttentionPhase] = useState<AttentionPhase>('idle')
   const [attentionTraces, setAttentionTraces] = useState<AttentionTrace[]>([])
+  const [metabolicTime, setMetabolicTime] = useState(0)
   const [cameraView, setCameraView] = useState({ cx: WIDTH / 2, cy: HEIGHT / 2, scale: 1 })
 
   const svgRef = useRef<SVGSVGElement | null>(null)
@@ -211,7 +220,7 @@ export function CellularLivingFieldPrototype() {
   const bridgeBundles = useMemo(() => buildBridgeBundles(), [])
   const nodeById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
 
-  const activeNodeId = hoveredNodeId ?? focusNodeId
+  const activeNodeId = hoveredNodeId ?? proximityNodeId ?? focusNodeId
   const activeNode = activeNodeId ? NODE_BY_ID.get(activeNodeId) ?? null : null
   const activeNeighborhood = activeNodeId ? relatedNodeIds(activeNodeId) : null
   const activeRelations = activeNodeId ? relatedRelations(activeNodeId) : []
@@ -236,6 +245,38 @@ export function CellularLivingFieldPrototype() {
 
     return () => window.clearInterval(prune)
   }, [])
+
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reducedMotion) return
+
+    setMetabolicTime(performance.now())
+    const clock = window.setInterval(() => setMetabolicTime(performance.now()), 160)
+
+    return () => window.clearInterval(clock)
+  }, [])
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reducedMotion) return
+
+    let pulse = 0
+    const metabolism = window.setInterval(() => {
+      if (draggingRef.current || attentionPhase === 'attend' || attentionPhase === 'dwell') return
+
+      pulse += 1
+      nodes.forEach((node, index) => {
+        const phase = pulse * 0.73 + index * 1.618
+        node.anchorX = node.homeX + Math.cos(phase) * 2.4
+        node.anchorY = node.homeY + Math.sin(phase * 0.91) * 2.4
+      })
+
+      simulationRef.current?.alpha(0.036).restart()
+    }, 4200)
+
+    return () => window.clearInterval(metabolism)
+  }, [attentionPhase, nodes])
 
   useEffect(() => {
     const simulation = forceSimulation<SimNode>(nodes)
@@ -307,7 +348,7 @@ export function CellularLivingFieldPrototype() {
   const endAttention = () => {
     clearAttentionTimers()
     setHoveredNodeId(null)
-    setAttentionPhase(focusNodeId ? 'dwell' : 'idle')
+    setAttentionPhase(proximityNodeId ? 'proximity' : focusNodeId ? 'dwell' : 'idle')
   }
 
   const selectNode = (node: SimNode) => {
@@ -322,6 +363,7 @@ export function CellularLivingFieldPrototype() {
   const releaseNodeFocus = () => {
     setFocusNodeId(null)
     setHoveredNodeId(null)
+    setProximityNodeId(null)
     setAttentionPhase('idle')
   }
 
@@ -329,6 +371,7 @@ export function CellularLivingFieldPrototype() {
     setFocusGroup(group)
     setFocusNodeId(null)
     setHoveredNodeId(null)
+    setProximityNodeId(null)
     setAttentionPhase('idle')
   }
 
@@ -346,10 +389,39 @@ export function CellularLivingFieldPrototype() {
     const rect = svgRef.current?.getBoundingClientRect()
     if (!rect) return null
 
+    const screenX = ((clientX - rect.left) / rect.width) * WIDTH
+    const screenY = ((clientY - rect.top) / rect.height) * HEIGHT
+    const camera = cameraRef.current
+
     return {
-      x: ((clientX - rect.left) / rect.width) * WIDTH,
-      y: ((clientY - rect.top) / rect.height) * HEIGHT,
+      x: (screenX - WIDTH / 2) / camera.scale + camera.cx,
+      y: (screenY - HEIGHT / 2) / camera.scale + camera.cy,
     }
+  }
+
+  const updateProximity = (clientX: number, clientY: number) => {
+    if (draggingRef.current || hoveredNodeId) return
+    const point = pointFromPointer(clientX, clientY)
+    if (!point) return
+
+    let nearest: SimNode | null = null
+    let nearestDistance = Number.POSITIVE_INFINITY
+
+    for (const node of nodes) {
+      const dx = (node.x ?? 0) - point.x
+      const dy = (node.y ?? 0) - point.y
+      const distance = Math.sqrt(dx * dx + dy * dy)
+      if (distance < nearestDistance) {
+        nearest = node
+        nearestDistance = distance
+      }
+    }
+
+    const threshold = 74 / cameraRef.current.scale
+    const next = nearest && nearestDistance <= threshold ? nearest.id : null
+    setProximityNodeId(next)
+
+    if (!focusNodeId) setAttentionPhase(next ? 'proximity' : 'idle')
   }
 
   const dragStart = (node: SimNode, clientX: number, clientY: number) => {
@@ -391,14 +463,17 @@ export function CellularLivingFieldPrototype() {
   }
 
   const visibleNodeLabel = (node: SimNode) => {
-    if (!focusGroup) return activeNeighborhood?.has(node.id) || !!recentTraceByNode.get(node.id)
+    if (!focusGroup) return true
     if (focusNodeId) return activeNeighborhood?.has(node.id)
     return node.group === focusGroup
   }
 
   const nodeOpacity = (node: SimNode) => {
-    if (!focusGroup && !activeNeighborhood) return 0.68
-    if (activeNeighborhood) return activeNeighborhood.has(node.id) ? 1 : 0.13
+    if (!focusGroup && !activeNeighborhood) return 0.72
+    if (activeNeighborhood) {
+      if (attentionPhase === 'proximity') return activeNeighborhood.has(node.id) ? 0.92 : 0.38
+      return activeNeighborhood.has(node.id) ? 1 : 0.13
+    }
     if (focusGroup) return node.group === focusGroup ? 1 : 0.16
     return 1
   }
@@ -407,8 +482,11 @@ export function CellularLivingFieldPrototype() {
     let score = 0
     const activeIds = new Set(activeRelations.map((relation) => relation.id))
 
+    const attentionStrength =
+      attentionPhase === 'proximity' ? 0.34 : attentionPhase === 'glance' ? 0.55 : 1
+
     for (const relation of bundle.relations) {
-      if (activeIds.has(relation.id)) score = Math.max(score, 1)
+      if (activeIds.has(relation.id)) score = Math.max(score, attentionStrength)
       const sourceTrace = recentTraceByNode.get(relation.source) ?? 0
       const targetTrace = recentTraceByNode.get(relation.target) ?? 0
       score = Math.max(score, Math.max(sourceTrace, targetTrace) * 0.55)
@@ -421,7 +499,7 @@ export function CellularLivingFieldPrototype() {
   }
 
   const groupAttention = (groupId: PhysicsGroupKey) => {
-    if (activeNode?.group === groupId) return 1
+    if (activeNode?.group === groupId) return attentionPhase === 'proximity' ? 0.34 : 1
     if (focusGroup === groupId) return 0.75
 
     const bridgeScore = Math.max(
@@ -508,7 +586,16 @@ export function CellularLivingFieldPrototype() {
           ref={svgRef}
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           className="block h-auto w-full touch-none"
-          onPointerMove={(event) => dragMove(event.clientX, event.clientY)}
+          onPointerMove={(event) => {
+            dragMove(event.clientX, event.clientY)
+            updateProximity(event.clientX, event.clientY)
+          }}
+          onPointerLeave={() => {
+            if (!draggingRef.current && !hoveredNodeId) {
+              setProximityNodeId(null)
+              if (!focusNodeId) setAttentionPhase('idle')
+            }
+          }}
           onPointerUp={dragEnd}
           onPointerCancel={dragEnd}
         >
@@ -562,6 +649,7 @@ export function CellularLivingFieldPrototype() {
               const gradientId = `bridge-${bundle.key.replace('::', '-')}`
               const points = membranePoints(bundle.a, bundle.b)
               const visible = Math.min(1, 0.16 + activity * 0.84)
+              const flowOffset = -((metabolicTime / 95) % 18)
 
               return (
                 <g key={bundle.key} data-bridge-key={bundle.key} data-bridge-activity={activity.toFixed(3)} opacity={visible}>
@@ -581,6 +669,8 @@ export function CellularLivingFieldPrototype() {
                     strokeWidth={1.4 + activity * 1.8}
                     strokeOpacity={0.34 + activity * 0.56}
                     strokeLinecap="round"
+                    strokeDasharray={activity < 0.4 ? '2 11' : undefined}
+                    strokeDashoffset={activity < 0.4 ? flowOffset : 0}
                     pointerEvents="none"
                   />
                   <circle cx={points.start.x} cy={points.start.y} r={3.5 + activity * 3} fill={WORLD_STYLE[bundle.a].glow} opacity={0.35 + activity * 0.6} />
@@ -593,7 +683,9 @@ export function CellularLivingFieldPrototype() {
               const geometry = GROUP_GEOMETRY[group.id]
               const attention = groupAttention(group.id)
               const style = WORLD_STYLE[group.id]
-              const membraneR = geometry.r * (1 + attention * 0.025)
+              const groupIndex = PHYSICS_GROUPS.findIndex((candidate) => candidate.id === group.id)
+              const breath = Math.sin(metabolicTime / (2150 + groupIndex * 260) + groupIndex * 1.31) * 0.007
+              const membraneR = geometry.r * (1 + breath + attention * 0.025)
 
               return (
                 <g key={group.id}>
@@ -611,6 +703,7 @@ export function CellularLivingFieldPrototype() {
                   <circle
                     data-world-id={group.id}
                     data-world-attention={attention.toFixed(3)}
+                    data-world-breath={breath.toFixed(4)}
                     cx={geometry.x}
                     cy={geometry.y}
                     r={membraneR}
@@ -746,6 +839,7 @@ export function CellularLivingFieldPrototype() {
                       textAnchor="middle"
                       dominantBaseline="central"
                       fill={active ? '#fff7eb' : '#e7e5e4'}
+                      fillOpacity={active ? 1 : attentionPhase === 'proximity' && activeNeighborhood?.has(node.id) ? 0.88 : focusGroup ? 0.86 : 0.34}
                       fontSize={node.label.length > 17 ? 10.5 : 12}
                       fontWeight="600"
                       pointerEvents="none"
@@ -774,7 +868,13 @@ export function CellularLivingFieldPrototype() {
             <>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80">
-                  {attentionPhase === 'glance' ? 'Glance' : attentionPhase === 'attend' ? 'Attend' : 'Dwell'}
+                  {attentionPhase === 'proximity'
+                    ? 'Nearby'
+                    : attentionPhase === 'glance'
+                      ? 'Glance'
+                      : attentionPhase === 'attend'
+                        ? 'Attend'
+                        : 'Dwell'}
                 </p>
                 <span className="text-xs" style={{ color: WORLD_STYLE[activeNode.group].glow }}>
                   {GROUP_BY_ID.get(activeNode.group)?.label}
