@@ -1,0 +1,18 @@
+{
+  "parentExecutorClosure": "77261629781be4b3aa5333804023891b7095f51a",
+  "programme": "AIN-AETHER-REMOTE-TRANSPORT-01",
+  "round": "R1",
+  "sandboxEndpointIdentityRequired": true,
+  "httpsRequired": true,
+  "port": 443,
+  "exactHostEgressAllowlistRequired": true,
+  "realMemberDataReachable": false,
+  "productionDataReachable": false,
+  "remoteRequestImplementationPresent": false,
+  "recordReadImplementationPresent": false,
+  "remoteRequestExecuted": false,
+  "recordReadExecuted": false,
+  "recordCountRead": 0,
+  "focusedTestsPassed": 5,
+  "fullTestsPassed": 669
+}
