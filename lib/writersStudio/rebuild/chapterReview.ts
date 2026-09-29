@@ -80,7 +80,7 @@ export function findingsFromPayloads(payloads: readonly ReadingPayload[]): Revie
 }
 
 /**
- * One explicit member gesture, seven governed readings over the exact chapter
+ * One explicit member gesture, eight governed readings over the exact chapter
  * range. Each commission remains its own immutable reading; this function only
  * groups their ids for the experience. A failed lens is reported and the other
  * lenses still run — partial is never mislabeled complete.

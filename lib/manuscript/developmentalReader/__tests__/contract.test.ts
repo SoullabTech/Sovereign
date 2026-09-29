@@ -111,6 +111,12 @@ describe('D5C1 · Themes carries a governable candidate name without widening ot
     }
   });
 
+  it('states the repeated-evidence law explicitly to the Themes reader', () => {
+    expect(READER_SYSTEM).toContain('TWO DISTINCT BODY-depth sections');
+    expect(READER_SYSTEM).toContain('section-run');
+    expect(READER_SYSTEM).toContain('does NOT establish a repeated theme');
+  });
+
   it('refuses importance labels and one-location pseudo-themes', () => {
     const themes = request({ lens: 'themes' }).req;
     const ranked = resultFromBlocks([call({ outcome: 'claims', claims: [

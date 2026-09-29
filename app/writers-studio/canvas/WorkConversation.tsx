@@ -8,13 +8,21 @@ import { useMemberIdentity } from '../useMemberIdentity';
 import { useManuscriptKeeps } from '../useManuscriptKeeps';
 import { handoffToMaia } from '../workContext';
 import {
-  ask, loadThread, threadsOn, type AskThreadView,
+  ask,
+  askLivingWork,
+  loadThread,
+  loadLivingWorkAskThread,
+  threadsOn,
+  threadsOnLivingWorkAsk,
+  type AskThreadView,
 } from '@/lib/writersStudio/askClient';
 import {
   resumeDecision, sendMode, threadChoiceLabel,
   type ResumeDecision, type ThreadDiscovery,
 } from '@/lib/writersStudio/observationDialogueResume';
 import type { LivingWork } from '../useLivingWorks';
+import { createWriterCorrection } from '@/lib/writersStudio/writerCorrectionsClient';
+import { WRITER_CORRECTION_KINDS, WRITER_CORRECTION_LABEL, type WriterCorrectionKind } from '@/lib/writersStudio/writerCorrections';
 
 /**
  * MAIA-CONVERGENCE-01 · CANVAS — MAIA's ordinary conversation about the Work,
@@ -124,17 +132,20 @@ const when = (iso: string) => {
 
 export interface WorkConversationProps {
   work: LivingWork;
-  manuscriptId: string;
+  /** Null before a manuscript exists; the conversation then belongs directly to the Living Work. */
+  manuscriptId: string | null;
   /**
    * ⭐ The passage the writer is presently in, or null. CONTEXT, NOT IDENTITY —
    * it is handed to the server on each turn and it is not part of the anchor.
    */
   sectionId: string | null;
+  /** Optional member-facing starter held in the composer. Never auto-sent. */
+  initialDraft?: string;
   onClose: () => void;
 }
 
 export default function WorkConversation({
-  work, manuscriptId, sectionId, onClose,
+  work, manuscriptId, sectionId, initialDraft = '', onClose,
 }: WorkConversationProps) {
   const identity = useMemberIdentity();
   const { keeps } = useManuscriptKeeps(manuscriptId);
@@ -144,9 +155,14 @@ export default function WorkConversation({
   const [threadId, setThreadId] = useState<string | null>(null);
   const [thread, setThread] = useState<AskThreadView | null>(null);
 
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(initialDraft);
   const [pending, setPending] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
+  const [correctingTurn, setCorrectingTurn] = useState<number | null>(null);
+  const [correctionKind, setCorrectionKind] = useState<WriterCorrectionKind>('interpretation_rejection');
+  const [correctionDraft, setCorrectionDraft] = useState('');
+  const [correctionBusy, setCorrectionBusy] = useState(false);
+  const [correctionStatus, setCorrectionStatus] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -154,17 +170,21 @@ export default function WorkConversation({
   }, [thread, pending]);
 
   const adopt = useCallback(async (id: string) => {
-    const t = await loadThread(manuscriptId, id);
+    const t = manuscriptId
+      ? await loadThread(manuscriptId, id)
+      : await loadLivingWorkAskThread(work.id, id);
     setThreadId(id);
     if (t) setThread(t);
-  }, [manuscriptId]);
+  }, [manuscriptId, work.id]);
 
   /* ⛔ `sectionId` IS NOT A DEPENDENCY. Discovery is about the Work. */
   useEffect(() => {
     let cancelled = false;
     setDecision(null);
     void (async () => {
-      const discovery: ThreadDiscovery = await threadsOn(manuscriptId, WORK_ANCHOR);
+      const discovery: ThreadDiscovery = manuscriptId
+        ? await threadsOn(manuscriptId, WORK_ANCHOR)
+        : await threadsOnLivingWorkAsk(work.id);
       if (cancelled) return;
       const d = resumeDecision(discovery);
       setDecision(d);
@@ -172,9 +192,39 @@ export default function WorkConversation({
       if (d.kind === 'resume') await adopt(d.threadId);
     })();
     return () => { cancelled = true; };
-  }, [manuscriptId, adopt]);
+  }, [manuscriptId, work.id, adopt]);
 
   const mode = sendMode(decision, threadId);
+
+  const reorient = () => {
+    setDraft([
+      'Help me reorient before we do anything else.',
+      'From only this conversation and the Work context you actually have, tell me briefly:',
+      'where we are, what question or concern brought us here if that is established, what has changed, what remains untouched, and how I can return to the larger Work.',
+      'If any of that is unknown, say so. Do not introduce a new interpretation yet.',
+    ].join('\n'));
+  };
+
+  const keepCorrection = async (maiaTurnIndex: number) => {
+    if (!threadId || correctionBusy || !correctionDraft.trim()) return;
+    setCorrectionBusy(true);
+    setCorrectionStatus(null);
+    const result = await createWriterCorrection({
+      workId: work.id,
+      threadId,
+      maiaTurnIndex,
+      kind: correctionKind,
+      correction: correctionDraft.trim(),
+    });
+    setCorrectionBusy(false);
+    if (!result.ok) {
+      setCorrectionStatus('That correction was not kept. Nothing else changed.');
+      return;
+    }
+    setCorrectionDraft('');
+    setCorrectingTurn(null);
+    setCorrectionStatus('Correction kept. MAIA will receive this as the current working understanding for this Work.');
+  };
 
   const send = async () => {
     const question = draft.trim();
@@ -186,12 +236,18 @@ export default function WorkConversation({
     setDraft('');
     setRefusal(null);
     setPending(question);
-    const r = await ask({
-      manuscriptId,
-      question,
-      ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
-      ...(sectionId ? { sectionId } : {}),
-    });
+    const r = manuscriptId
+      ? await ask({
+          manuscriptId,
+          question,
+          ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
+          ...(sectionId ? { sectionId } : {}),
+        })
+      : await askLivingWork({
+          workId: work.id,
+          question,
+          ...(mode.kind === 'resume' ? { threadId: mode.threadId } : {}),
+        });
     setPending(null);
     if (r.ok) {
       setThreadId(r.threadId);
@@ -244,6 +300,18 @@ export default function WorkConversation({
           {work.title ?? 'your work'}
         </StudioText>
         <span style={{ flex: 1 }} />
+        <button
+          type="button"
+          onClick={reorient}
+          data-reorient-work="true"
+          style={{
+            background: 'transparent', border: `1px solid ${RULE.soft}`,
+            borderRadius: RADIUS.sm, padding: `${SPACE.hairline}px ${SPACE.tight}px`,
+            cursor: 'pointer', color: INK.secondary,
+          }}
+        >
+          <StudioText role="metadata" as="span">Where are we?</StudioText>
+        </button>
         <button
           type="button"
           onClick={onClose}
@@ -322,8 +390,92 @@ export default function WorkConversation({
             >
               {t.body}
             </StudioText>
+            {t.speaker === 'maia' && threadId ? (
+              <div style={{ marginTop: SPACE.tight }} data-maia-correction={t.index}>
+                {correctingTurn !== t.index ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCorrectingTurn(t.index);
+                      setCorrectionDraft('');
+                      setCorrectionStatus(null);
+                    }}
+                    style={{
+                      background: 'transparent', border: 0, padding: 0,
+                      cursor: 'pointer', color: INK.quiet,
+                    }}
+                  >
+                    <StudioText role="metadata" as="span">Correct MAIA</StudioText>
+                  </button>
+                ) : (
+                  <div
+                    style={{
+                      border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+                      padding: SPACE.snug, background: GROUND.base,
+                    }}
+                  >
+                    <StudioText role="metadata" tone="secondary" style={{ marginBottom: SPACE.tight }}>
+                      What should MAIA carry forward instead?
+                    </StudioText>
+                    <select
+                      aria-label="Kind of correction"
+                      value={correctionKind}
+                      onChange={(e) => setCorrectionKind(e.target.value as WriterCorrectionKind)}
+                      style={{
+                        width: '100%', marginBottom: SPACE.tight, background: GROUND.raised,
+                        color: INK.secondary, border: `1px solid ${RULE.soft}`,
+                        borderRadius: RADIUS.sm, padding: SPACE.tight,
+                      }}
+                    >
+                      {WRITER_CORRECTION_KINDS.map((kind) => (
+                        <option key={kind} value={kind}>{WRITER_CORRECTION_LABEL[kind]}</option>
+                      ))}
+                    </select>
+                    <textarea
+                      aria-label="Your correction"
+                      rows={3}
+                      value={correctionDraft}
+                      onChange={(e) => setCorrectionDraft(e.target.value)}
+                      placeholder="Say what MAIA should understand differently…"
+                      style={{
+                        ...typeStyle('maiaReading'), width: '100%', resize: 'vertical',
+                        background: GROUND.raised, color: INK.primary,
+                        border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+                        padding: SPACE.tight, outline: 'none',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: SPACE.tight, marginTop: SPACE.tight }}>
+                      <button
+                        type="button"
+                        onClick={() => void keepCorrection(t.index)}
+                        disabled={correctionBusy || !correctionDraft.trim()}
+                        style={{
+                          background: GROUND.active, border: `1px solid ${RULE.soft}`,
+                          borderRadius: RADIUS.sm, padding: `${SPACE.tight}px ${SPACE.snug}px`,
+                          cursor: 'pointer', color: INK.primary,
+                          opacity: correctionBusy || !correctionDraft.trim() ? 0.45 : 1,
+                        }}
+                      >
+                        <StudioText role="metadata" as="span">{correctionBusy ? 'Keeping…' : 'Keep correction'}</StudioText>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setCorrectingTurn(null); setCorrectionDraft(''); }}
+                        style={{ background: 'transparent', border: 0, cursor: 'pointer', color: INK.muted }}
+                      >
+                        <StudioText role="metadata" as="span">Cancel</StudioText>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         ))}
+
+        {correctionStatus ? (
+          <StudioText role="metadata" data-correction-status="true">{correctionStatus}</StudioText>
+        ) : null}
 
         {/* ⛔ A PENDING QUESTION IS NOT A TURN. It is shown so the writer can see
             their words went somewhere, and it is replaced by the server's record
@@ -343,7 +495,7 @@ export default function WorkConversation({
       </div>
 
       {/* ── The member's kept passages, offered rather than inserted. ── */}
-      {showKeeps && (
+      {manuscriptId && showKeeps && (
         <div
           data-keeps-chooser="true"
           style={{
@@ -414,30 +566,34 @@ export default function WorkConversation({
           }}
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE.base, marginTop: SPACE.snug }}>
-          <button
-            type="button"
-            data-keeps-toggle="true"
-            aria-expanded={showKeeps}
-            onClick={() => setShowKeeps((v) => !v)}
-            style={{
-              background: showKeeps ? GROUND.active : 'transparent',
-              border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
-              padding: `${SPACE.tight}px ${SPACE.snug}px`,
-              cursor: 'pointer', color: INK.secondary,
-            }}
-          >
-            <StudioText role="metadata" as="span">
-              Keeps{keeps.length > 0 ? ` ${keeps.length}` : ''}
-            </StudioText>
-          </button>
-          {/* ⚠️ No conversation id travels with this. See the header. */}
-          <Link
-            href={handoffToMaia('/maia', { workId: work.id, manuscriptId })}
-            data-open-in-maia="true"
-            style={{ textDecoration: 'none' }}
-          >
-            <StudioText role="metadata" as="span">Open in MAIA →</StudioText>
-          </Link>
+          {manuscriptId ? (
+            <button
+              type="button"
+              data-keeps-toggle="true"
+              aria-expanded={showKeeps}
+              onClick={() => setShowKeeps((v) => !v)}
+              style={{
+                background: showKeeps ? GROUND.active : 'transparent',
+                border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+                padding: `${SPACE.tight}px ${SPACE.snug}px`,
+                cursor: 'pointer', color: INK.secondary,
+              }}
+            >
+              <StudioText role="metadata" as="span">
+                Keeps{keeps.length > 0 ? ` ${keeps.length}` : ''}
+              </StudioText>
+            </button>
+          ) : null}
+          {/* ⚠️ Cross-surface handoff still requires a manuscript return contract. */}
+          {manuscriptId ? (
+            <Link
+              href={handoffToMaia('/maia', { workId: work.id, manuscriptId })}
+              data-open-in-maia="true"
+              style={{ textDecoration: 'none' }}
+            >
+              <StudioText role="metadata" as="span">Open in MAIA →</StudioText>
+            </Link>
+          ) : null}
           <span style={{ flex: 1 }} />
           <button
             type="button"

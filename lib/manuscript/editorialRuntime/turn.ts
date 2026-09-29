@@ -44,6 +44,7 @@ import { query } from '@/lib/db/postgres';
 import { runStructured } from '@/lib/ai/structured/router';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
 import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers-studio/canonicalWriterTurn';
+import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import {
@@ -59,7 +60,13 @@ import {
   UNFAMILIAR_BOUND, measureVoiceIntrusion, voiceNote,
 } from '../editorialScope/voice';
 import {
-  SEQUENCE_REFUSAL_DETAIL, availableOutcomeKinds, sequenceGateActive, sequenceInstruction,
+  REPLY_ONLY_REFUSAL_DETAIL,
+  SEQUENCE_REFUSAL_DETAIL,
+  availableOutcomeKinds,
+  proposalPolicyInstruction,
+  sequenceGateActive,
+  sequenceInstruction,
+  type ProposalPolicy,
 } from '../editorialScope/sequence';
 import { assembleEditorialCognition, type AssemblyRefusal } from './assembly';
 import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeResult } from './maiaOutcome';
@@ -112,6 +119,9 @@ export interface EditorialTurnInput {
    * the field gets the discussion-first order rather than losing it.
    */
   readonly mayProposeImmediately?: boolean;
+  /** Turn-local outcome permission. ⛔ Defaults to allow; exploratory surfaces
+   * may close the proposal/direction vocabulary to reply_only. */
+  readonly proposalPolicy?: ProposalPolicy;
 }
 
 export type EditorialTurnRefusal =
@@ -141,6 +151,8 @@ export type EditorialTurnRefusal =
    * that exists only in a schema holds until a provider disagrees.
    */
   | 'sequence_discussion_first'
+  /** ⛔ Exploratory reply-only turn returned a Direction or proposal anyway. */
+  | 'proposal_policy_reply_only'
   /**
    * ⭐⭐ THE PROPOSAL EXCEEDED THE AUTHOR'S DECLARED LATITUDE.
    * ⛔ Nothing was written, and the wording is not shown.
@@ -214,13 +226,33 @@ export async function runEditorialTurn(
   const teachingBlocks: CandidateBlock[] = teaching.active
     ? [{ producerId: 'computed.teaching_intelligence', text: teaching.directive }]
     : [];
-  const cognitionBlocks: CandidateBlock[] = [...assembly.blocks, ...teachingBlocks];
+  const declaredWriterContext = await writerUnderstandingContextForManuscript(
+    memberId,
+    assembly.manuscriptId,
+  );
+  const intentionBlocks: CandidateBlock[] = declaredWriterContext
+    ? [{
+        producerId: 'member.writer_intention',
+        text: [
+          declaredWriterContext,
+          'Use these declarations to preserve what the writer explicitly intends.',
+          'They may explain an unusual choice or establish a requested challenge area.',
+          'They do not override the writer’s current ask and do not authorize editing on their own.',
+        ].join('\n'),
+      }]
+    : [];
+  const cognitionBlocks: CandidateBlock[] = [
+    ...assembly.blocks,
+    ...intentionBlocks,
+    ...teachingBlocks,
+  ];
 
   /* ⭐ The author's declaration, resolved ONCE and used for both the
      instruction MAIA is given and the law her answer is judged by. ⛔ Two
      resolutions could disagree, and the one that governs must be the one she
      was told about. */
   const scope: EditorialScopeDeclaration = input.scope ?? DEFAULT_SCOPE_DECLARATION;
+  const proposalPolicy: ProposalPolicy = input.proposalPolicy ?? 'allow';
 
   /* ⭐⭐ THE SEQUENCE GATE (founder ruling, 2026-09-20): at latitude 1, and only
      there, MAIA discusses before offering wording — unless the writer has
@@ -265,13 +297,17 @@ export async function runEditorialTurn(
        exception rather than the routine. ⛔ It is NOT the enforcement — every
        sentence of it is also a bound checked below on what actually comes
        back, and deleting this line would not change what is permitted. */
-    system: [proof.systemPrompt, latitudeInstruction(scope), sequenceInstruction(gated)]
-      .filter(Boolean).join('\n\n'),
+    system: [
+      proof.systemPrompt,
+      latitudeInstruction(scope),
+      sequenceInstruction(gated),
+      proposalPolicyInstruction(proposalPolicy),
+    ].filter(Boolean).join('\n\n'),
     messages: [{ role: 'user', content: utterance }],
     maxTokens: MAX_TOKENS,
     /* ⭐ THE SCHEMA IS BUILT FOR THIS TURN. When the gate is on,
        `reply_with_proposal` is simply not among the kinds. */
-    tools: [{ name: EDITORIAL_TOOL_NAME, inputSchema: editorialToolSchemaForKinds(availableOutcomeKinds(gated)),
+    tools: [{ name: EDITORIAL_TOOL_NAME, inputSchema: editorialToolSchemaForKinds(availableOutcomeKinds(gated, proposalPolicy)),
       schemaEnforcement: 'required',
       description: 'Return exactly one editorial outcome. For a proposal use this nested shape: '
         + '{"kind":"reply_with_proposal","reply":"Your explanation","proposal":{"replacementText":"Exact candidate wording","rationale":"Editorial purpose: Short name. Reason"}}. '
@@ -331,6 +367,10 @@ export async function runEditorialTurn(
   /* 6a ⭐ THE SEQUENCE BACKSTOP. ⛔ Reached only if a provider returned a kind
      the schema withheld — rare by construction, and never the ordinary path,
      which is why this lane narrows the vocabulary instead of refusing. */
+  if (proposalPolicy === 'reply_only' && admission.outcome.kind !== 'reply_only') {
+    return { ok: false, reason: 'proposal_policy_reply_only', detail: REPLY_ONLY_REFUSAL_DETAIL };
+  }
+
   if (gated && admission.outcome.kind === 'reply_with_proposal') {
     return { ok: false, reason: 'sequence_discussion_first', detail: SEQUENCE_REFUSAL_DETAIL };
   }

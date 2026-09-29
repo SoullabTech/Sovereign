@@ -303,3 +303,101 @@ describe('WS-SOURCE-INTAKE-01 — reviewed source material may feed a Work', () 
     expect(insert![1]).toEqual([WORK, 'source_upload', THING, 'notes behind chapter four', MEMBER]);
   });
 });
+
+
+describe('C5 — an owned Idea may feed a Living Work without becoming manuscript prose', () => {
+  const IDEA_BROUGHT = {
+    ...BROUGHT,
+    id: 'm-idea-1',
+    material_type: 'idea',
+    relationship_sentence: 'the question this book began from',
+  };
+
+  it('refuses a foreign or missing Idea as 404 without leaking ownership', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 });
+
+    const res = await POST(
+      jsonRequest('POST', { materialType: 'idea', materialId: THING }),
+      ctx,
+    );
+
+    expect(res.status).toBe(404);
+    expect(String(mockQuery.mock.calls[1][0])).toContain('FROM member_ideas');
+    expect(mockQuery.mock.calls[1][1]).toEqual([THING, MEMBER]);
+    expect(mockTx).not.toHaveBeenCalled();
+  });
+
+  it('lets the member explicitly bring their Idea as material while the Idea keeps its own identity', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+
+    txReturning(
+      { rows: [] },
+      { rows: [IDEA_BROUGHT] },
+    );
+
+    const res = await POST(
+      jsonRequest('POST', {
+        materialType: 'idea',
+        materialId: THING,
+        sentence: 'the question this book began from',
+      }),
+      ctx,
+    );
+
+    expect(res.status).toBe(201);
+    const insert = txCalls.find((c) => String(c[0]).includes('INSERT INTO living_work_materials'));
+    expect(insert![1]).toEqual([
+      WORK,
+      'idea',
+      THING,
+      'the question this book began from',
+      MEMBER,
+    ]);
+
+    // The crossing writes only the relationship table. It never rewrites,
+    // copies, integrates, or otherwise mutates the Idea itself.
+    expect(
+      txCalls.some((c) =>
+        String(c[0]).includes('UPDATE member_ideas')
+        || String(c[0]).includes('INSERT INTO member_idea_blocks')
+      )
+    ).toBe(false);
+  });
+
+  it('re-affirming the same Idea relationship preserves the first member-authored sentence', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+
+    txReturning(
+      { rows: [] },
+      { rows: [] },
+      { rows: [IDEA_BROUGHT] },
+    );
+
+    const res = await POST(
+      jsonRequest('POST', {
+        materialType: 'idea',
+        materialId: THING,
+        sentence: 'a later sentence that must not overwrite the first',
+      }),
+      ctx,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({
+      material: {
+        materialType: 'idea',
+        materialId: THING,
+        sentence: 'the question this book began from',
+      },
+    });
+  });
+});

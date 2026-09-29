@@ -35,6 +35,9 @@ export type WriteChapterView = {
   label: string;
   title?: string;
   status?: 'conflict' | 'error';
+  /** Navigation-only manuscript structure. Optional so fixture mode stays valid. */
+  role?: 'part' | 'chapter' | 'section' | 'other';
+  depth?: 1 | 2 | 3 | null;
 };
 
 export type WriteRoomData = {
@@ -305,7 +308,7 @@ const Editor = memo(function Editor({
   );
 });
 
-/** The manuscript context at rest: the Work's chapters, the current one marked. */
+/** The manuscript context at rest: the whole Work, hierarchically navigable. */
 export function WriteManuscriptRail({
   fixture,
   onAct,
@@ -315,36 +318,125 @@ export function WriteManuscriptRail({
   onAct?: (act: string) => void;
   onOpenChapter?: (chapterId: string) => void;
 }) {
+  const chapterOwnerOf = (sectionId: string): string | null => {
+    let owner: string | null = null;
+    for (const item of fixture.chapters) {
+      if (item.role === 'part' || (item.depth === 1 && item.role === 'other')) owner = null;
+      if (item.role === 'chapter') owner = item.id;
+      if (item.id === sectionId) return owner;
+    }
+    return null;
+  };
+  const currentOwner = chapterOwnerOf(fixture.currentChapterId);
+  const [openChapters, setOpenChapters] = useState<ReadonlySet<string>>(
+    () => new Set(currentOwner ? [currentOwner] : []),
+  );
+
+  useEffect(() => {
+    if (!currentOwner) return;
+    setOpenChapters((previous) => {
+      if (previous.has(currentOwner)) return previous;
+      const next = new Set(previous);
+      next.add(currentOwner);
+      return next;
+    });
+  }, [currentOwner]);
+
+  const navigate = (c: WriteChapterView) => {
+    if (c.id === fixture.currentChapterId) return;
+    if (onOpenChapter) onOpenChapter(c.id);
+    else onAct?.(`Open ${c.label}${c.title ? ` — ${c.title}` : ''}`);
+  };
+
+  const navButton = (c: WriteChapterView, className?: string) => {
+    const current = c.id === fixture.currentChapterId;
+    return (
+      <button
+        type="button"
+        className={className}
+        data-chapter={c.id}
+        data-outline-role={c.role}
+        data-section-status={c.status}
+        aria-current={current ? 'true' : undefined}
+        aria-label={c.status === 'conflict' ? `${c.label} — Needs attention: changed elsewhere` : c.status === 'error' ? `${c.label} — Save unavailable` : undefined}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => navigate(c)}
+      >
+        <span className="fr-write-ch-no">{c.label}</span>
+        {c.title ? <span className="fr-write-ch-title">{c.title}</span> : null}
+        {c.status === 'conflict' ? <span className="fr-write-ch-title" data-conflict-marker>Needs attention</span> : null}
+        {c.status === 'error' ? <span className="fr-write-ch-title" data-error-marker>Save unavailable</span> : null}
+      </button>
+    );
+  };
+
+  const structured = fixture.chapters.some((c) => c.role === 'part' || c.role === 'chapter');
+  if (!structured) {
+    return (
+      <div className="fr-write-rail">
+        <p className="fr-write-rail-head">{fixture.heading}</p>
+        <ol className="fr-write-chapters">
+          {fixture.chapters.map((c) => <li key={c.id}>{navButton(c)}</li>)}
+        </ol>
+      </div>
+    );
+  }
+
+  const rows: JSX.Element[] = [];
+  for (let i = 0; i < fixture.chapters.length;) {
+    const item = fixture.chapters[i]!;
+    if (item.role === 'part') {
+      rows.push(<li key={item.id} className="fr-write-part-row">{navButton(item, 'fr-write-part-nav')}</li>);
+      i += 1;
+      continue;
+    }
+    if (item.role === 'chapter') {
+      let end = i + 1;
+      while (end < fixture.chapters.length) {
+        const next = fixture.chapters[end]!;
+        if (next.role === 'part' || next.role === 'chapter' || next.depth === 1) break;
+        end += 1;
+      }
+      const children = fixture.chapters.slice(i + 1, end);
+      const open = openChapters.has(item.id);
+      rows.push(
+        <li key={item.id} className="fr-write-chapter-group" data-open={open ? 'true' : 'false'}>
+          <div className="fr-write-chapter-row">
+            <button
+              type="button"
+              className="fr-write-chapter-toggle"
+              aria-label={`${open ? 'Collapse' : 'Expand'} ${item.label}${item.title ? ` — ${item.title}` : ''}`}
+              aria-expanded={open}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setOpenChapters((previous) => {
+                const next = new Set(previous);
+                if (next.has(item.id)) next.delete(item.id);
+                else next.add(item.id);
+                return next;
+              })}
+            >
+              <span aria-hidden="true">{open ? '⌄' : '›'}</span>
+            </button>
+            {navButton(item, 'fr-write-chapter-nav')}
+          </div>
+          {open && children.length > 0 ? (
+            <ol className="fr-write-section-children">
+              {children.map((child) => <li key={child.id}>{navButton(child, 'fr-write-section-nav')}</li>)}
+            </ol>
+          ) : null}
+        </li>,
+      );
+      i = end;
+      continue;
+    }
+    rows.push(<li key={item.id} className={item.depth === 1 ? 'fr-write-region-row' : undefined}>{navButton(item)}</li>);
+    i += 1;
+  }
+
   return (
-    <div className="fr-write-rail">
+    <div className="fr-write-rail" data-manuscript-hierarchy="parts-chapters-sections">
       <p className="fr-write-rail-head">{fixture.heading}</p>
-      <ol className="fr-write-chapters">
-        {fixture.chapters.map((c) => {
-          const current = c.id === fixture.currentChapterId;
-          return (
-            <li key={c.id}>
-              <button
-                type="button"
-                data-chapter={c.id}
-                data-section-status={c.status}
-                aria-current={current ? 'true' : undefined}
-                aria-label={c.status === 'conflict' ? `${c.label} — Needs attention: changed elsewhere` : c.status === 'error' ? `${c.label} — Save unavailable` : undefined}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  if (current) return;
-                  if (onOpenChapter) onOpenChapter(c.id);
-                  else onAct?.(`Open ${c.label}${c.title ? ` — ${c.title}` : ''}`);
-                }}
-              >
-                <span className="fr-write-ch-no">{c.label}</span>
-                {c.title ? <span className="fr-write-ch-title">{c.title}</span> : null}
-                {c.status === 'conflict' ? <span className="fr-write-ch-title" data-conflict-marker>Needs attention</span> : null}
-                {c.status === 'error' ? <span className="fr-write-ch-title" data-error-marker>Save unavailable</span> : null}
-              </button>
-            </li>
-          );
-        })}
-      </ol>
+      <ol className="fr-write-chapters">{rows}</ol>
     </div>
   );
 }

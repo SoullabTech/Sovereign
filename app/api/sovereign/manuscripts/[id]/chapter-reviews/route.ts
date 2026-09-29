@@ -60,6 +60,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const runId = req.nextUrl.searchParams.get('runId');
   const chapterRootSectionId = req.nextUrl.searchParams.get('chapterRootSectionId');
+  const list = req.nextUrl.searchParams.get('list') === '1';
+
+  if (list) {
+    const listed = await query<RunRow>(
+      `SELECT id, manuscript_id, chapter_root_section_id, section_ids, draft_revision,
+              reading_ids, failures, created_at
+         FROM writer_studio_chapter_review_runs
+        WHERE member_id = $1 AND manuscript_id = $2
+        ORDER BY created_at DESC, id DESC
+        LIMIT 50`,
+      [memberId, manuscriptId],
+    );
+    return NextResponse.json({ runs: listed.rows.map(present) });
+  }
+
   if (!runId && !chapterRootSectionId) {
     return NextResponse.json({ refusal: 'missing_review_identity' }, { status: 400 });
   }

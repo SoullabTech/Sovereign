@@ -66,6 +66,8 @@ export type EditorialAssemblyResult =
   | {
       readonly ok: true;
       readonly chainId: string;
+      /** The manuscript identity already bound into the proposal-chain locus. */
+      readonly manuscriptId: string;
       readonly blocks: readonly EditorialCandidateBlock[];
       /** ⭐ The predecessor MAIA is being invoked against. ER-R3 carries it forward. */
       readonly invokedAgainstVersionId: string | null;
@@ -202,6 +204,7 @@ export async function assembleEditorialCognition(
 
   return {
     ok: true, chainId,
+    manuscriptId: locus.workId,
     blocks: participation.blocks,
     invokedAgainstVersionId: work.work.focused?.id ?? null,
     /* ⭐ THE SAME VALUE THE LOCUS BLOCK CARRIED INTO COGNITION, from the same

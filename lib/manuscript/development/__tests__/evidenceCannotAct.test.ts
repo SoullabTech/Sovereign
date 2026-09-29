@@ -93,8 +93,15 @@ describe('the developmental-evidence substrate cannot act', () => {
     /* BUILD-07F (2026-09-06) stores the WRITER'S STANDING toward a frozen
        observation — a member's own act, addressed to the reading. It is not an
        evidence table either, so naming it here keeps this claim exact rather
-       than weakening it. */
-    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$|^20260906000001_developmental_observation_standing\.sql$/;
+       than weakening it.
+
+       S3 (2026-09-13) widens the disclosure-receipt boundary vocabulary for
+       developmental Ask. It alters context_disclosure_receipts, not evidence.
+
+       I1A (2026-09-21) evolves the READING store's observation JSON admission
+       contract to carry durable identity. It replaces a validation function on
+       developmental_readings; it does not create an evidence-object schema. */
+    const OTHER_UNITS_SCHEMA = /^(?:20260904000001_developmental_readings|20260904000002_developmental_reading_contract_v2|20260906000001_developmental_observation_standing|20260913000002_disclosure_boundary_developmental_ask|20260921000001_developmental_reading_observation_identity_compatibility)\.sql$/;
     const migrations = readdirSync(join(ROOT, 'database', 'migrations'));
     expect(migrations.filter((f) => f >= '20260903' && !OTHER_UNITS_SCHEMA.test(f)
       && /develop|evidence|reading|observation/i.test(f))).toEqual([]);

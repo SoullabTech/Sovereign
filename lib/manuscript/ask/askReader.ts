@@ -161,7 +161,7 @@ function workAnchorSays(ctx: WorkContext): string {
  * the member appears at all.
  */
 function workSays(ctx: WorkContext): string {
-  const { work, sections, locus, continuity } = ctx.facts;
+  const { work, sections, locus, writerUnderstanding, writerCorrections, continuity } = ctx.facts;
   const parts = [
     /* ⭐ The ratified formatter, verbatim — the member's own words and no others. */
     formatWorkSituationForPrompt(work) ?? 'They have not said anything about this Work yet.',
@@ -169,6 +169,20 @@ function workSays(ctx: WorkContext): string {
       sections.map((s) => `  ${s.position}. ${s.heading ?? '(no heading)'} [${s.id}]`).join('\n')
         || '  (no addressable sections)'}`,
   ];
+  if (writerUnderstanding) {
+    parts.push([
+      writerUnderstanding,
+      'This is the writer’s own declared context. Use it to understand intention and tradeoffs.',
+      'Do not turn it into a personality claim, manuscript fact, or permission to edit.',
+    ].join('\n'));
+  }
+  if (writerCorrections) {
+    parts.push([
+      writerCorrections,
+      'A correction changes your current working understanding; it does not erase what you said earlier.',
+      'Do not reassert the superseded interpretation as though the correction never happened.',
+    ].join('\n'));
+  }
   if (!locus) {
     parts.push('You have not been given the text of ANY section.');
   } else {

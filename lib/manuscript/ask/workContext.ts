@@ -55,6 +55,11 @@ import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection'
 import {
   resolveSituatedWork, type SituatedWork,
 } from '@/lib/writersStudio/workSituation';
+import {
+  writerUnderstandingContextForManuscript,
+  writerUnderstandingContextForWork,
+} from '@/lib/writersStudio/writerUnderstandingServer';
+import { writerCorrectionContextForWork } from '@/lib/writersStudio/writerCorrectionsServer';
 
 /**
  * ⭐ THE ONE READ THAT DID NOT EXIST: the canonical projected body of ONE
@@ -105,12 +110,20 @@ export interface Continuity {
 
 export interface WorkContextFacts {
   readonly work: SituatedWork;
-  readonly manuscript: { readonly id: string; readonly draftId: string | null;
-                         readonly version: number | null };
+  /** Null before a manuscript exists. A Living Work remains a lawful conversation subject. */
+  readonly manuscript: {
+    readonly id: string;
+    readonly draftId: string | null;
+    readonly version: number | null;
+  } | null;
   /** ⭐ Heads only — id, position, heading. ⛔ Never bodies. */
   readonly sections: readonly { id: string; position: number; heading: string | null }[];
   /** ⛔ `null` when the writer is not at a passage. Absence is a real state. */
   readonly locus: ProjectedLocus | null;
+  /** Member-authored C14 context. Empty string means nothing has been declared. */
+  readonly writerUnderstanding: string;
+  /** Current writer corrections of MAIA interpretation. Historical turns remain untouched. */
+  readonly writerCorrections: string;
   readonly continuity: Continuity;
 }
 
@@ -178,6 +191,11 @@ export async function buildWorkContext(input: {
   const locus = sectionId
     ? await loadProjectedSectionBody(manuscriptId, memberId, sectionId)
     : null;
+  const writerUnderstanding = await writerUnderstandingContextForManuscript(
+    memberId,
+    manuscriptId,
+  );
+  const writerCorrections = await writerCorrectionContextForWork(memberId, work.id);
 
   return {
     ok: true,
@@ -190,7 +208,45 @@ export async function buildWorkContext(input: {
       },
       sections,
       locus,
+      writerUnderstanding,
+      writerCorrections,
       continuity,
+    },
+  };
+}
+
+
+/**
+ * WORK-FIRST-DEVELOP-01 — Living Work context before manuscript.
+ *
+ * Same Work facts, same C14 declaration, deliberately no manuscript/sections/
+ * locus. Declared materials still do not cross here; belonging to the Work is
+ * not permission to disclose material bodies into the conversation.
+ */
+export async function buildLivingWorkOnlyContext(input: {
+  readonly workId: string;
+  readonly memberId: string;
+  readonly continuity: Continuity;
+}): Promise<WorkContextResult> {
+  const work = await resolveSituatedWork(input.memberId, input.workId);
+  if (!work) return { ok: false, reason: 'work_unresolved' };
+
+  const writerUnderstanding = await writerUnderstandingContextForWork(
+    input.memberId,
+    input.workId,
+  );
+  const writerCorrections = await writerCorrectionContextForWork(input.memberId, input.workId);
+
+  return {
+    ok: true,
+    facts: {
+      work,
+      manuscript: null,
+      sections: [],
+      locus: null,
+      writerUnderstanding,
+      writerCorrections,
+      continuity: input.continuity,
     },
   };
 }

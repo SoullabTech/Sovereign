@@ -148,10 +148,10 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  * teaches nothing:
  *
  *       500,000 code points  ≈  125,000 tokens at ~4 chars/token
- *       + 16,000 output budget
+ *       + 32,000 output budget
  *       + 20,000 system prompt · structure context · thread history
  *       ─────────
- *       161,000 of a 200,000 window  →  ~39,000 tokens of margin
+ *       177,000 total request/response allowance
  *
  *     and, on the same assumption, 650,000 was REFUSED as "~198,500 of
  *     200,000, leaving essentially nothing for tokenizer variation".
@@ -162,16 +162,16 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  *
  *     context window      1,000,000 tokens
  *     max output            128,000 tokens
- *     our request            16,000 tokens   ← comfortably inside
+ *     current allowance      32,000 tokens   ← still comfortably inside
  *
  * So the true arithmetic, at the same 500,000 code points:
  *
- *     125,000 read + 16,000 output + 20,000 reserve  =  ~161,000
- *     against 1,000,000                              →  ~839,000 remaining
+ *     125,000 read + 32,000 output + 20,000 reserve  =  ~177,000
+ *     against 1,000,000                              →  ~823,000 remaining
  *
  * ⭐ 500,000 IS THEREFORE A PRODUCT CEILING, NOT A CAPACITY ONE, and calling
  * it derived was the error. Capacity would put the bound at roughly
- * (1,000,000 − 16,000 − 20,000) × 4 ≈ 3,850,000 code points — nearly eight
+ * (1,000,000 − 32,000 − 20,000) × 4 ≈ 3,792,000 code points — more than seven
  * times this. 500,000 is retained deliberately as a CONSERVATIVE BRIDGE: it
  * admits ordinary books whole while hierarchical whole-work reading remains
  * unbuilt, and a bound we can raise on evidence is safer than one we set from
