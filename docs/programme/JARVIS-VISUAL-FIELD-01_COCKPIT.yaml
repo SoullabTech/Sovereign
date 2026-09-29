@@ -4,8 +4,8 @@ current_authority:
   - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
   - docs/design/contracts/living-field-grokker.md
 current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-01R1R1 — Founder Re-Witness of Journey / Enriched Return
-current_subject_sha: a209bfd10a016e467fa81da0defa87c8cc29d6eb
+current_act: VISUAL-FIELD-RUNTIME-01R1R2 — Founder Re-Witness of Purpose / Wayfinding / Readability
+current_subject_sha: f82cdf5cbc2f069e85b49fc4b752097b8360608a
 current_branch: feature/jarvis-visual-field-01-20260928
 worktree: /private/tmp/jarvis-visual-field-01
 runtime: http://localhost:3598/maia/living-field?from=house
@@ -14,8 +14,8 @@ deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - R1R1 Journey / enriched-return repair is implemented and structurally verified.
-  - Founder re-witness is required to determine whether Journey now adds meaningful orientation.
+  - R1R2 purpose / wayfinding / readability repair is implemented and structurally verified.
+  - Founder re-witness is required to decide whether the field now makes its purpose and flow self-evident.
   - Dedicated 3598 member route may require origin-local sign-in because client identity uses localStorage.
 founder_stops:
   - R1 PASS or RETURN before R2 true Grokker semantic zoom.
@@ -23,4 +23,4 @@ founder_stops:
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
 next_phase_on_exit: R1 founder re-witness; only a founder PASS opens VISUAL-FIELD-RUNTIME-01R2 — True Grokker Semantic Zoom
-last_state_change: 2026-09-28 — R1R1 repair sealed at a209bfd10; founder re-witness is the current gate
+last_state_change: 2026-09-29 — R1R2 sealed at f82cdf5cb; founder re-witness is the current gate
