@@ -24,9 +24,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-grokker-r1r2-identity-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/living-field-grokker-r1r2-identity-mobile.png
-experience_verification: Founder accepted the threshold direction, returned the first Path for lack of meaning, then returned R1R1 because the field still felt too small, sparse, and purposeless at the leaf. R1R2 adds explicit purpose, larger typography, regional invitations, leaf wayfinding, and a mobile-native doorway list. The exact founder path Living Field → Air → Identity → Journey → Return to Air passes scripted desktop and mobile witnesses. Founder re-witness remains the exit gate.
+screenshot_desktop: docs/design/contracts/screenshots/living-field-grokker-r1r3-water-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/living-field-grokker-r1r3-water-mobile.png
+experience_verification: Founder stopped the static circle-world grammar because it behaved like a menu rather than Grokker: circles did not visibly contain circles, movement swapped layouts, and depth ended quickly. R1R3 replaces that grammar with one recursive D3 circle-packed SVG containing 72 stable nodes and continuous camera interpolation. Exact desktop and mobile witnesses pass Whole → Water → Relationship → Grief → Continuing Relation → widen → Grief → widen → Relationship with the same node set mounted throughout. Founder re-witness remains the exit gate.
 ---
 # Living Field — Experience Contract
 
