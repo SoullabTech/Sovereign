@@ -221,6 +221,28 @@ deployment:
   closure_status:
 \`\`\`
 
+## DEPLOYMENT-AUTOMATION-LAW-01
+
+Automation may **measure → prove → classify → refuse → build → probe → observe → page → record**.
+
+For zero-drift MAIA reader releases, the governed stop structure is:
+
+- `prepare-maia <SHA>` — build and verify the immutable candidate, pin it by SHA,
+  restore the live `:prod` alias, and **do not move traffic**;
+- `cutover-maia <SHA>` — require that prepared candidate plus an exact immutable
+  rollback artifact matching the running reader, then move the MAIA reader only;
+- `deploy-production.sh rollback <SHA>` — restore an explicitly named immutable
+  rollback artifact to both runtime aliases, recreate only the MAIA reader, and
+  verify health + image identity + `GIT_COMMIT`.
+
+A mutable branch or tag is never an explicit rollback authority. The legacy no-argument
+rollback remains available for the `:previous` role, but an exact SHA is preferred
+during governed cutover.
+
+Cutover and rollback are permitted only inside an explicitly authorized production
+act. Automation never independently performs destructive migration, contraction,
+database recovery-point restoration, or rollback below a recorded floor.
+
 ## Existing structural controls
 
 This contract is executed through, not around, existing production controls:

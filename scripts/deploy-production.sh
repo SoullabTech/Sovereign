@@ -949,66 +949,94 @@ cmd_smoke() {
 # Two-command rollback: swap image tags, restart container
 # No rebuild required - just swap and go
 cmd_rollback() {
-    acquire_deploy_lock "deploy-production.sh rollback" "maia-sovereign:previous (image tag swap; no commit is built)"
-    log_info "Rolling back to previous deployment..."
+    local ref="${1:-}"
+    local repo="${MAIA_IMAGE_REPO:-maia-sovereign}"
+    local target_image target_desc
 
+    if [ -n "$ref" ]; then
+        if [[ ! "$ref" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+            log_error "Explicit rollback target must be a commit SHA, not a branch or mutable tag: '$ref'"
+            exit 1
+        fi
+        local resolved_short=""
+        resolved_short="$(git -C "$PROJECT_DIR" rev-parse --short=9 --verify "${ref}^{commit}" 2>/dev/null || true)"
+        if [ -n "$resolved_short" ] && docker image inspect "$repo:$resolved_short" >/dev/null 2>&1; then
+            target_image="$repo:$resolved_short"
+        elif docker image inspect "$repo:$ref" >/dev/null 2>&1; then
+            target_image="$repo:$ref"
+        else
+            log_error "Explicit rollback artifact not found for '$ref'."
+            exit 1
+        fi
+        target_desc="$target_image (explicit immutable rollback target)"
+    else
+        target_image="$repo:previous"
+        target_desc="$target_image (legacy previous-role rollback)"
+    fi
+
+    acquire_deploy_lock "deploy-production.sh rollback" "$target_desc"
     cd "$PROJECT_DIR"
 
-    # Check if previous image exists
-    if ! docker image inspect maia-sovereign:previous >/dev/null 2>&1; then
-        log_error "No previous image found. Cannot rollback."
-        log_info "Previous images are created during deploy. Run deploy at least twice."
+    if ! docker image inspect "$target_image" >/dev/null 2>&1; then
+        log_error "Rollback image not found: $target_image"
         exit 1
     fi
 
-    # Get current and previous commit SHAs from labels
-    CURRENT_SHA=$(docker inspect --format='{{index .Config.Labels "git.commit"}}' maia-sovereign:current 2>/dev/null || echo "unknown")
-    PREVIOUS_SHA=$(docker inspect --format='{{index .Config.Labels "git.commit"}}' maia-sovereign:previous 2>/dev/null || echo "unknown")
+    local current_id target_id current_sha target_sha
+    current_id="$(docker inspect maia-sovereign --format '{{.Image}}' 2>/dev/null || true)"
+    target_id="$(docker image inspect "$target_image" --format '{{.Id}}' 2>/dev/null || true)"
+    current_sha="$(docker exec maia-sovereign printenv GIT_COMMIT 2>/dev/null || true)"
+    target_sha="$(docker image inspect "$target_image" --format '{{range .Config.Env}}{{println .}}{{end}}' \
+        | sed -n 's/^GIT_COMMIT=//p' | head -1)"
 
-    log_info "Current deployment: $CURRENT_SHA"
-    log_info "Rolling back to: $PREVIOUS_SHA"
-
-    # Resolve image identities before moving any role tags.
-    local current_id previous_id
-    current_id="$(docker image inspect maia-sovereign:current --format '{{.Id}}')"
-    previous_id="$(docker image inspect maia-sovereign:previous --format '{{.Id}}')"
-    if [ -z "$current_id" ] || [ -z "$previous_id" ]; then
-        log_error "Rollback image identity is incomplete; refusing to move role tags."
+    if [ -z "$current_id" ] || [ -z "$target_id" ] || [ -z "$target_sha" ] || [ "$target_sha" = "unknown" ]; then
+        log_error "Rollback image/provenance identity is incomplete; refusing."
         exit 1
     fi
 
-    # Compose launches maia-sovereign:prod, not :current. Therefore rollback must
-    # move the previous image onto BOTH role tags before recreating the reader.
-    log_info "Swapping image tags..."
-    docker tag maia-sovereign:current maia-sovereign:broken
-    docker tag maia-sovereign:previous maia-sovereign:current
-    docker tag maia-sovereign:previous maia-sovereign:prod
+    if [ -n "$ref" ]; then
+        case "$ref" in
+            "$target_sha"|"$target_sha"*) ;;
+            *)
+                case "$target_sha" in
+                    "$ref"*) ;;
+                    *) log_error "Explicit rollback ref '$ref' does not match image GIT_COMMIT '$target_sha'."; exit 1 ;;
+                esac
+                ;;
+        esac
+    fi
 
-    # Restart only the application reader. A reader rollback must not restart
-    # Postgres or any other dependency.
-    log_info "Restarting MAIA with previous image..."
+    if [ "$current_id" = "$target_id" ]; then
+        log_success "Rollback target $target_sha is already the running production image."
+        return 0
+    fi
+
+    log_info "Current deployment: ${current_sha:-unknown} ($current_id)"
+    log_info "Rolling back to: $target_sha ($target_id)"
+
+    docker tag "$current_id" "$repo:broken"
+    docker tag "$target_image" "$repo:current"
+    docker tag "$target_image" "$repo:prod"
+
+    log_info "Restarting MAIA with rollback image..."
     docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-deps maia
-
-    # Wait for health
-    log_info "Waiting for service to be healthy..."
     sleep 10
 
-    # Verify both health and that Compose actually launched the previous image.
-    local running_id running_git
+    local running_id running_git health
     running_id="$(docker inspect maia-sovereign --format '{{.Image}}' 2>/dev/null || true)"
     running_git="$(docker exec maia-sovereign printenv GIT_COMMIT 2>/dev/null || true)"
-    if docker compose -f "$COMPOSE_FILE" ps | grep -q "healthy" \
-       && [ "$running_id" = "$previous_id" ]; then
-        log_success "Rollback complete! Now running: ${running_git:-$PREVIOUS_SHA}"
+    health="$(docker inspect maia-sovereign --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' 2>/dev/null || true)"
 
-        # Move the former reader to :previous so an explicit roll-forward remains possible.
-        docker tag maia-sovereign:broken maia-sovereign:previous
-
-        send_alert "warning" "Rollback executed" "{\"from\": \"$CURRENT_SHA\", \"to\": \"${running_git:-$PREVIOUS_SHA}\"}"
+    if [ "$health" = "healthy" ] \
+       && [ "$running_id" = "$target_id" ] \
+       && [ "$running_git" = "$target_sha" ]; then
+        log_success "Rollback complete! Now running: $running_git"
+        docker tag "$repo:broken" "$repo:previous"
+        send_alert "warning" "Rollback executed" "{\"from\": \"${current_sha:-unknown}\", \"to\": \"$running_git\"}"
     else
         log_error "Rollback verification FAILED."
-        log_error "Expected running image: $previous_id"
-        log_error "Observed running image: ${running_id:-<missing>}"
+        log_error "Expected image/SHA: $target_id / $target_sha"
+        log_error "Observed image/SHA/health: ${running_id:-missing} / ${running_git:-missing} / ${health:-missing}"
         cmd_status
         exit 1
     fi
@@ -1127,7 +1155,7 @@ case "${1:-help}" in
         BASE_URL="https://soullab.life" run_smoke_tests
         ;;
     rollback)
-        cmd_rollback
+        cmd_rollback "${2:-}"
         ;;
     safe-mode)
         cmd_safe_mode "$2"
@@ -1142,7 +1170,7 @@ case "${1:-help}" in
         echo "  deploy <SHA> - Build+deploy the full stack from a NAMED immutable commit"
         echo "                 (no SHA + DEPLOY_ALLOW_HEAD=1 → build current checkout tip, ack)"
         echo "  update      - Pull latest code, then build the pulled tip as an immutable snapshot"
-        echo "  rollback   - Instant rollback to previous deployment"
+        echo "  rollback [SHA] - Restore explicit immutable SHA (or :previous when omitted)"
         echo "  safe-mode  - Toggle safe mode (on/off/status)"
         echo "  migrate    - Run database migrations"
         echo "  logs       - Tail container logs"
@@ -1154,7 +1182,7 @@ case "${1:-help}" in
         echo "  smoke-prod - Run smoke tests against soullab.life (always)"
         echo ""
         echo "Stability:"
-        echo "  rollback   - Swap back to previous image (no rebuild)"
+        echo "  rollback [SHA] - Restore explicit immutable image; no rebuild"
         echo "  safe-mode on  - Disable non-essential features"
         echo "  safe-mode off - Re-enable all features"
         ;;

@@ -8,8 +8,8 @@ LOG="$TMP/docker.log"
 
 RUNNING_IMAGE="sha256:new"
 RUNNING_GIT="newsha999"
-PREVIOUS_SHA="oldsha123"
-PREVIOUS_IMAGE="maia-sovereign:previous"
+TARGET_SHA="7a096281a"
+TARGET_IMAGE="maia-sovereign:$TARGET_SHA"
 
 pass(){ printf 'PASS  %s\n' "$1"; }
 fail(){ printf 'FAIL  %s\n' "$1" >&2; exit 1; }
@@ -22,17 +22,26 @@ send_alert(){ :; }
 cmd_status(){ :; }
 sleep(){ :; }
 
-git(){ command git "$@"; }
-
+git(){
+  if [ "$1" = "-C" ]; then
+    printf '%s\n' "$TARGET_SHA"
+    return 0
+  fi
+  command git "$@"
+}
 docker(){
   printf '%s\n' "$*" >> "$LOG"
-  if [ "$1" = "image" ] && [ "$2" = "inspect" ] && [ "$3" = "$PREVIOUS_IMAGE" ]; then
-    if [[ "$*" == *".Config.Env"* ]]; then
-      printf 'GIT_COMMIT=%s\n' "$PREVIOUS_SHA"
-    else
-      printf 'sha256:old\n'
+
+  if [ "$1" = "image" ] && [ "$2" = "inspect" ]; then
+    local image="$3"
+    if [ "$image" = "$TARGET_IMAGE" ]; then
+      if [[ "$*" == *".Config.Env"* ]]; then
+        printf 'GIT_COMMIT=%s\n' "$TARGET_SHA"
+      else
+        printf 'sha256:old\n'
+      fi
+      return 0
     fi
-    return 0
   fi
 
   if [ "$1" = "inspect" ] && [ "$2" = "maia-sovereign" ]; then
@@ -54,7 +63,7 @@ docker(){
   fi
   if [ "$1" = "compose" ] && [[ "$*" == *"up -d --force-recreate --no-deps maia"* ]]; then
     RUNNING_IMAGE="sha256:old"
-    RUNNING_GIT="$PREVIOUS_SHA"
+    RUNNING_GIT="$TARGET_SHA"
     return 0
   fi
 
@@ -69,25 +78,29 @@ FUNC="$(awk '/^cmd_rollback\(\)/{f=1} f{print} f && /^}/{exit}' "$SOURCE")"
 [ -n "$FUNC" ] || fail 'could not extract cmd_rollback'
 eval "$FUNC"
 
-cmd_rollback
-
-grep -Fq 'tag maia-sovereign:previous maia-sovereign:prod' "$LOG" \
-  && pass 'legacy previous target promoted to prod' || fail 'previous did not reach prod'
-
-grep -Fq 'tag maia-sovereign:previous maia-sovereign:current' "$LOG" \
-  && pass 'legacy previous target promoted to current' || fail 'previous did not reach current'
-grep -Fq 'compose -f docker-compose.production.yml up -d --force-recreate --no-deps maia' "$LOG" \
-  && pass 'behavior: only maia recreated with no dependencies' \
-  || fail 'behavior: reader-only recreate not observed'
-
-if grep -Eq 'postgres|maia-postgres' "$LOG"; then
-  fail 'behavior: rollback touched Postgres'
+if (cmd_rollback main >/dev/null 2>&1); then
+  fail 'mutable branch name was accepted as explicit rollback target'
 else
-  pass 'behavior: Postgres untouched'
+  pass 'mutable branch name is refused'
 fi
 
-[ "$RUNNING_IMAGE" = "sha256:old" ] && [ "$RUNNING_GIT" = "$PREVIOUS_SHA" ] \
-  && pass 'behavior: running image and SHA are previous target' \
-  || fail 'behavior: previous target not made live'
+cmd_rollback "$TARGET_SHA"
 
-printf 'ROLLBACK_PROD_ALIAS_BEHAVIOR=PASS\n'
+grep -Fq "tag $TARGET_IMAGE maia-sovereign:prod" "$LOG" \
+  && pass 'explicit target promoted to prod' || fail 'explicit target did not reach prod'
+
+grep -Fq "tag $TARGET_IMAGE maia-sovereign:current" "$LOG" \
+  && pass 'explicit target promoted to current' || fail 'explicit target did not reach current'
+
+grep -Fq 'compose -f docker-compose.production.yml up -d --force-recreate --no-deps maia' "$LOG" \
+  && pass 'rollback recreates reader only' || fail 'reader-only rollback missing'
+[ "$RUNNING_IMAGE" = "sha256:old" ] && [ "$RUNNING_GIT" = "$TARGET_SHA" ] \
+  && pass 'running image and SHA equal explicit target' || fail 'explicit target not live'
+
+if grep -Eq 'postgres|maia-postgres' "$LOG"; then
+  fail 'rollback touched Postgres'
+else
+  pass 'rollback leaves database service untouched'
+fi
+
+printf 'ROLLBACK_EXPLICIT_SHA_BEHAVIOR=PASS\n'
