@@ -159,14 +159,14 @@ function payload(v: unknown): v is StoredReadingPayload {
 function lensId(lens: DevelopmentalLens): LensId {
   switch (lens) {
     case 'development': case 'structure': case 'continuity': case 'arc':
-    case 'voice': case 'coherence': case 'reader': return lens;
+    case 'themes': case 'voice': case 'coherence': case 'reader': return lens;
   }
 }
 
 function developDomain(lens: DevelopmentalLens): DevelopDomain | null {
   switch (lens) {
     case 'development': case 'structure': case 'continuity': case 'arc':
-    case 'voice': case 'reader': return lens;
+    case 'themes': case 'voice': case 'reader': return lens;
     case 'coherence': return null;
   }
 }
@@ -229,7 +229,12 @@ function buildFinding(
   const ids = new Set(o.evidenceRefs.flatMap(sectionIds));
   const crossWork = ids.size > 1 || o.evidenceRefs.some((r) => r.kind.startsWith('structure'));
   const evidence = o.evidenceRefs.map((r) => describeRef(r, reading.readState, sections));
-  const label = o.phenomenon === undefined ? 'Observation' : PHENOMENON_LABEL[o.phenomenon];
+  if (o.lens === 'themes' && !o.themeLabel?.trim()) {
+    return { ok: false, reason: 'malformed_payload', detail: `${o.observationId}: Themes observation has no frozen themeLabel` };
+  }
+  const label = o.lens === 'themes'
+    ? o.themeLabel!.trim()
+    : (o.phenomenon === undefined ? 'Observation' : PHENOMENON_LABEL[o.phenomenon]);
   const built = observe({
     id: o.observationId,
     domain,

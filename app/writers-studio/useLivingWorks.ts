@@ -49,6 +49,8 @@ export interface LivingWork {
   form: string | null;
   /** Where the member says they are. The system never sets or advances it. */
   stage: Stage | null;
+  /** What kind of manuscript the writer says this currently is. Never inferred from size. */
+  manuscriptState: 'pre-manuscript' | 'partial-manuscript' | 'existing-manuscript' | null;
   createdAt: string;
   updatedAt: string;
   /** Only what the member declared in — never inferred, never system-placed. */
@@ -81,6 +83,7 @@ export function useLivingWorks() {
       setWorks(
         list.map((w) => ({
           ...w,
+          manuscriptState: typeof w.manuscriptState === 'string' ? w.manuscriptState : null,
           expressions: Array.isArray(w.expressions) ? w.expressions : [],
           materials: Array.isArray(w.materials) ? w.materials : [],
         }))

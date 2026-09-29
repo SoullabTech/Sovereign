@@ -1,4 +1,5 @@
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { explicitRole } from '@/lib/writersStudio/focus/outlineTree';
 import type { SectionStatus } from '@/lib/writersStudio/sectionSaveQueue';
 import type { WriteChapterView, WriteRoomData } from './WriteRoom';
 
@@ -52,17 +53,25 @@ export function projectPc3LiveWrite(input: {
     ? navigable[index + 1]!.draftSectionId
     : null;
 
-  const currentForward = navigable.slice(index, index + 7);
-  const conflicted = navigable.filter(
-    (section) => input.statusOf(section.draftSectionId) === 'conflict'
-      && !currentForward.some((shown) => shown.draftSectionId === section.draftSectionId),
-  );
-  const visible = [...currentForward, ...conflicted];
+  // The manuscript rail is an orientation surface, not a seven-section viewport.
+  // Keep the whole editable manuscript visible so a member can understand where
+  // they are in the Work and move anywhere without the Studio appearing to have
+  // lost the rest of the manuscript.
+  const visible = navigable;
   const chapters: WriteChapterView[] = visible.map((section) => {
     const status = rowStatus(input.statusOf(section.draftSectionId));
+    const explicit = explicitRole(section.heading);
+    const role: WriteChapterView['role'] = explicit !== 'other' && section.headingDepth === 1
+      ? explicit
+      : section.headingDepth === 2 || section.headingDepth === 3
+        ? 'section'
+        : 'other';
     return {
       id: section.draftSectionId,
       ...exactDisplay(section),
+      role,
+      depth: section.headingDepth === 1 || section.headingDepth === 2 || section.headingDepth === 3
+        ? section.headingDepth : null,
       ...(status ? { status } : {}),
     };
   });

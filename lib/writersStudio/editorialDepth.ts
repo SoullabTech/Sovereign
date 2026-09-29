@@ -28,6 +28,8 @@
  * work. ⭐ Per-observation and changeable without ceremony (L6d).
  */
 
+import { EDITORIAL_INTELLIGENCE_DIRECTIVE } from './editorialIntelligence';
+
 export type EditorialDepth = 'guided' | 'learning' | 'direct';
 
 /** ⛔ Identical for every member, ⛔ never chosen from anything about them. */
@@ -186,7 +188,10 @@ export const EPISTEMIC_INTEGRITY_DIRECTIVE = [
  */
 export function editorialDirective(depth: EditorialDepth): string {
   return [
-    DEPTH_DIRECTIVE[depth], STYLE_RESPONSIVE_DIRECTIVE, ATTUNEMENT_DIRECTIVE,
+    DEPTH_DIRECTIVE[depth],
+    STYLE_RESPONSIVE_DIRECTIVE,
+    ATTUNEMENT_DIRECTIVE,
+    EDITORIAL_INTELLIGENCE_DIRECTIVE,
     EPISTEMIC_INTEGRITY_DIRECTIVE,
   ].join(' ');
 }

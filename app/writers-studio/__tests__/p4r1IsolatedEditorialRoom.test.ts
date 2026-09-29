@@ -1,0 +1,137 @@
+/** @jest-environment jsdom */
+import React, { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import IsolatedEditorialRoom from '@/app/dev/writers-studio-pc3-live/IsolatedEditorialRoom';
+
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+
+let root: Root;
+let container: HTMLDivElement;
+
+beforeEach(() => {
+  window.sessionStorage.clear();
+  container = document.createElement('div');
+  document.body.append(container);
+  root = createRoot(container);
+});
+
+afterEach(() => {
+  act(() => root.unmount());
+  container.remove();
+});
+
+function renderRoom() {
+  act(() => root.render(
+    React.createElement(
+      IsolatedEditorialRoom,
+      {
+        appearance: 'night',
+        title: 'Threshold',
+        currentText: 'Selected passage.',
+        sectionBody: 'Before.\n\nSelected passage.\n\nAfter.',
+        busy: false,
+        onClose: jest.fn(),
+      },
+      React.createElement(
+        'div',
+        { className: 'p4r1-dance' },
+        React.createElement('div', { className: 'p4r1-dance-options' }, 'Directions'),
+        React.createElement('div', { className: 'p4r1-dance-working' }, 'Working'),
+        React.createElement('div', { className: 'p4r1-dance-depth' }, 'Depth'),
+      ),
+    ),
+  ));
+}
+
+test('layout presets, tools, preferences and reset all change only isolated presentation state', () => {
+  renderRoom();
+  const room = container.querySelector('[data-isolated-editorial]') as HTMLElement;
+  expect(room.dataset.layout).toBe('balanced');
+  expect(room.dataset.readingSize).toBe('large');
+  expect(room.dataset.lineSpacing).toBe('open');
+  expect(room.dataset.showDirections).toBe('true');
+  expect(room.dataset.showWorking).toBe('true');
+  expect(room.dataset.showDepth).toBe('true');
+
+  const button = (text: string) =>
+    Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.trim().startsWith(text))!;
+
+  act(() => button('Passage wide').click());
+  expect(room.dataset.layout).toBe('passage');
+
+  act(() => button('MAIA wide').click());
+  expect(room.dataset.layout).toBe('maia');
+
+  act(() => button('Stacked').click());
+  expect(room.dataset.layout).toBe('stacked');
+
+  const checkboxes = Array.from(container.querySelectorAll('input[type="checkbox"]')) as HTMLInputElement[];
+  act(() => {
+    checkboxes[0].click();
+    checkboxes[1].click();
+    checkboxes[2].click();
+  });
+  expect(room.dataset.showDirections).toBe('false');
+  expect(room.dataset.showWorking).toBe('false');
+  expect(room.dataset.showDepth).toBe('false');
+
+  const largest = Array.from(container.querySelectorAll('input[type="radio"]'))
+    .find((input) => (input as HTMLInputElement).value === 'largest') as HTMLInputElement;
+  act(() => largest.click());
+  expect(room.dataset.readingSize).toBe('largest');
+
+  const moreOpen = Array.from(container.querySelectorAll('label'))
+    .find((label) => label.textContent?.trim() === 'More open')
+    ?.querySelector('input') as HTMLInputElement;
+  act(() => moreOpen.click());
+  expect(room.dataset.lineSpacing).toBe('more-open');
+
+  act(() => button('Reset view').click());
+  expect(room.dataset.layout).toBe('balanced');
+  expect(room.dataset.readingSize).toBe('large');
+  expect(room.dataset.lineSpacing).toBe('open');
+  expect(room.dataset.showDirections).toBe('true');
+  expect(room.dataset.showWorking).toBe('true');
+  expect(room.dataset.showDepth).toBe('true');
+});
+
+test('double-clicking the divider returns the custom split to balanced', () => {
+  renderRoom();
+  const room = container.querySelector('[data-isolated-editorial]') as HTMLElement;
+  const divider = container.querySelector('.p4r1-isolated-divider') as HTMLButtonElement;
+
+  act(() => divider.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })));
+  expect(room.dataset.layout).toBe('balanced');
+});
+
+
+test('focus layout and presentation choices survive reopening during the same browser session', () => {
+  renderRoom();
+
+  const button = (text: string) =>
+    Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.trim().startsWith(text))!;
+
+  act(() => button('Passage wide').click());
+
+  const largest = Array.from(container.querySelectorAll('input[type="radio"]'))
+    .find((input) => (input as HTMLInputElement).value === 'largest') as HTMLInputElement;
+  act(() => largest.click());
+
+  const depthToggle = Array.from(container.querySelectorAll('label'))
+    .find((label) => label.textContent?.includes('Craft depth'))
+    ?.querySelector('input') as HTMLInputElement;
+  act(() => depthToggle.click());
+
+  expect(window.sessionStorage.getItem('writers-studio:p4r1:focus-view')).toContain('"layout":"passage"');
+  expect(window.sessionStorage.getItem('writers-studio:p4r1:focus-view')).toContain('"readingSize":"largest"');
+  expect(window.sessionStorage.getItem('writers-studio:p4r1:focus-view')).toContain('"showCraftDepth":false');
+
+  act(() => root.unmount());
+  root = createRoot(container);
+  renderRoom();
+
+  const room = container.querySelector('[data-isolated-editorial]') as HTMLElement;
+  expect(room.dataset.layout).toBe('passage');
+  expect(room.dataset.readingSize).toBe('largest');
+  expect(room.dataset.showDepth).toBe('false');
+});

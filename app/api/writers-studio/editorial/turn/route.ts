@@ -32,6 +32,7 @@ import {
   DEFAULT_SCOPE_DECLARATION, isEditorialLatitude,
   type EditorialScopeDeclaration,
 } from '@/lib/manuscript/editorialScope/contract';
+import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +46,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * person to read their code would believe it too. The refusal names the keys so
  * the mistake is legible rather than mysterious.
  */
-const TOP_KEYS = ['threadId', 'act', 'sanctuary', 'scope'] as const;
+const TOP_KEYS = ['threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
 /**
  * ⭐⭐ THE AUTHOR'S TWO CONTROLS, AND THEY ARE SEPARATE KEYS ON PURPOSE.
@@ -64,6 +65,8 @@ type Parsed =
       scope: EditorialScopeDeclaration;
       /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
       mayProposeImmediately: boolean;
+      /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
+      proposalPolicy: ProposalPolicy;
     }
   | { ok: false; error: string };
 
@@ -111,6 +114,13 @@ function parseClosed(body: unknown): Parsed {
   let scope: EditorialScopeDeclaration = DEFAULT_SCOPE_DECLARATION;
   /* ⛔ Absence is not release — the discussion-first order is the default. */
   let mayProposeImmediately = false;
+  let proposalPolicy: ProposalPolicy = 'allow';
+  if (b.proposalPolicy !== undefined) {
+    if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
+      return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
+    }
+    proposalPolicy = b.proposalPolicy;
+  }
   if (b.scope !== undefined) {
     if (typeof b.scope !== 'object' || b.scope === null || Array.isArray(b.scope)) {
       return { ok: false, error: 'scope must be an object' };
@@ -150,6 +160,7 @@ function parseClosed(body: unknown): Parsed {
     sanctuary: TurnPosture.resolve(b).sanctuary,
     scope,
     mayProposeImmediately,
+    proposalPolicy,
   };
 }
 
@@ -206,6 +217,7 @@ export async function POST(request: NextRequest) {
     /* ⭐ The author's declaration, carried to the one place that enforces it. */
     scope: parsed.scope,
     mayProposeImmediately: parsed.mayProposeImmediately,
+    proposalPolicy: parsed.proposalPolicy,
   });
 
   if (!turn.ok) {
@@ -228,7 +240,8 @@ export async function POST(request: NextRequest) {
     /* ⭐ Scope, voice and sequence are one KIND of outcome: the writer drew a
        line and the system held it. ⛔ None of them is a server fault. */
     const scopeRefused = turn.scope !== undefined || turn.voice !== undefined
-      || turn.reason === 'sequence_discussion_first';
+      || turn.reason === 'sequence_discussion_first'
+      || turn.reason === 'proposal_policy_reply_only';
     return NextResponse.json({
       threadId: parsed.threadId,
       memberTurnIndex: act.turnIndex,

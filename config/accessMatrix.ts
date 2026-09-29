@@ -97,6 +97,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // unmapped default served the landing shell at 200 instead of the Studio —
   // the precise failure the explicit-mapping doctrine above exists to prevent.
   { exact: '/writers-studio', minTier: 'free', notes: "Writer's Studio Home (Layer 2) — same member-facing policy as /press/studio, whose address it inherited; unauthenticated visitors are redirected to sign-in before the door" },
+  { prefix: '/writers-studio/', minTier: 'free', notes: "Writer's Studio member corridor — authenticated members of any tier before every Studio subroute; individual proving/lab surfaces may impose a stricter server-side gate after this outer boundary" },
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
   // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
   // redirects at the edge (next.config redirects(), which run BEFORE middleware)

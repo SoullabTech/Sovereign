@@ -47,6 +47,7 @@ interface WorkRow {
   purpose: string | null;
   form: string | null;
   stage: string | null;
+  manuscript_state: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,8 +72,9 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       purpose?: unknown;
       form?: unknown;
       stage?: unknown;
+      manuscriptState?: unknown;
     };
-    if (!('title' in body) && !('purpose' in body) && !('form' in body) && !('stage' in body)) {
+    if (!('title' in body) && !('purpose' in body) && !('form' in body) && !('stage' in body) && !('manuscriptState' in body)) {
       return NextResponse.json({ error: 'nothing to change' }, { status: 400 });
     }
 
@@ -145,6 +147,18 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       stage = body.stage;
     }
 
+    const MANUSCRIPT_STATES = ['pre-manuscript', 'partial-manuscript', 'existing-manuscript'] as const;
+    let manuscriptState: string | null = null;
+    if (body.manuscriptState !== null && body.manuscriptState !== undefined) {
+      if (
+        typeof body.manuscriptState !== 'string'
+        || !(MANUSCRIPT_STATES as readonly string[]).includes(body.manuscriptState)
+      ) {
+        return NextResponse.json({ error: 'unknown_manuscript_state' }, { status: 400 });
+      }
+      manuscriptState = body.manuscriptState;
+    }
+
     // Only the fields the member actually addressed change; COALESCE-style
     // partial updates would silently keep a value the member tried to clear.
     const sets: string[] = [];
@@ -165,6 +179,10 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       params.push(stage);
       sets.push(`stage = $${params.length}`);
     }
+    if ('manuscriptState' in body) {
+      params.push(manuscriptState);
+      sets.push(`manuscript_state = $${params.length}`);
+    }
 
     // Member-scoped in the predicate, not after the fact: another member's id
     // cannot reach this row at all.
@@ -172,7 +190,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       `UPDATE living_works
           SET ${sets.join(', ')}, updated_at = now()
         WHERE id = $1 AND member_id = $2
-      RETURNING id, title, purpose, form, stage, created_at, updated_at`,
+      RETURNING id, title, purpose, form, stage, manuscript_state, created_at, updated_at`,
       params
     );
     if (updated.rows.length === 0) {
@@ -186,6 +204,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
         purpose: r.purpose,
         form: r.form,
         stage: r.stage,
+        manuscriptState: r.manuscript_state,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
       },

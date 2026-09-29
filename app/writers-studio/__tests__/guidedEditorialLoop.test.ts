@@ -125,9 +125,15 @@ test('Work direction enters only after explicit member gesture and remains edita
     setValue.call(textarea, 'Member-supplied orientation for this turn only:\nMy edited direction');
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
   });
-  const partly = Array.from(container.querySelectorAll('button'))
-    .find(b => b.textContent === 'Partly')!;
-  act(() => partly.click());
+  /* No onRevise is supplied in this test, so the current membrane law
+     correctly withholds bound editorial responses such as “Partly”. The
+     member-edited direction can still travel through the lawful unbound
+     observation conversation, and remains removable before sending. */
+  expect(Array.from(container.querySelectorAll('button'))
+    .some(b => b.textContent === 'Partly')).toBe(false);
+  const talk = Array.from(container.querySelectorAll('button'))
+    .find(b => b.textContent === 'Talk about this')!;
+  act(() => talk.click());
   expect(container.querySelector('[data-dialogue-question]')?.textContent)
     .toContain('My edited direction');
   const remove = Array.from(container.querySelectorAll('button'))

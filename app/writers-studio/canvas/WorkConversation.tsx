@@ -8,7 +8,13 @@ import { useMemberIdentity } from '../useMemberIdentity';
 import { useManuscriptKeeps } from '../useManuscriptKeeps';
 import { handoffToMaia } from '../workContext';
 import {
-  ask, loadThread, threadsOn, type AskThreadView,
+  ask,
+  askLivingWork,
+  loadThread,
+  loadLivingWorkAskThread,
+  threadsOn,
+  threadsOnLivingWorkAsk,
+  type AskThreadView,
 } from '@/lib/writersStudio/askClient';
 import {
   resumeDecision, sendMode, threadChoiceLabel,
@@ -124,17 +130,20 @@ const when = (iso: string) => {
 
 export interface WorkConversationProps {
   work: LivingWork;
-  manuscriptId: string;
+  /** Null before a manuscript exists; the conversation then belongs directly to the Living Work. */
+  manuscriptId: string | null;
   /**
    * ⭐ The passage the writer is presently in, or null. CONTEXT, NOT IDENTITY —
    * it is handed to the server on each turn and it is not part of the anchor.
    */
   sectionId: string | null;
+  /** Optional member-facing starter held in the composer. Never auto-sent. */
+  initialDraft?: string;
   onClose: () => void;
 }
 
 export default function WorkConversation({
-  work, manuscriptId, sectionId, onClose,
+  work, manuscriptId, sectionId, initialDraft = '', onClose,
 }: WorkConversationProps) {
   const identity = useMemberIdentity();
   const { keeps } = useManuscriptKeeps(manuscriptId);
@@ -144,7 +153,7 @@ export default function WorkConversation({
   const [threadId, setThreadId] = useState<string | null>(null);
   const [thread, setThread] = useState<AskThreadView | null>(null);
 
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(initialDraft);
   const [pending, setPending] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
@@ -154,17 +163,21 @@ export default function WorkConversation({
   }, [thread, pending]);
 
   const adopt = useCallback(async (id: string) => {
-    const t = await loadThread(manuscriptId, id);
+    const t = manuscriptId
+      ? await loadThread(manuscriptId, id)
+      : await loadLivingWorkAskThread(work.id, id);
     setThreadId(id);
     if (t) setThread(t);
-  }, [manuscriptId]);
+  }, [manuscriptId, work.id]);
 
   /* ⛔ `sectionId` IS NOT A DEPENDENCY. Discovery is about the Work. */
   useEffect(() => {
     let cancelled = false;
     setDecision(null);
     void (async () => {
-      const discovery: ThreadDiscovery = await threadsOn(manuscriptId, WORK_ANCHOR);
+      const discovery: ThreadDiscovery = manuscriptId
+        ? await threadsOn(manuscriptId, WORK_ANCHOR)
+        : await threadsOnLivingWorkAsk(work.id);
       if (cancelled) return;
       const d = resumeDecision(discovery);
       setDecision(d);
@@ -172,7 +185,7 @@ export default function WorkConversation({
       if (d.kind === 'resume') await adopt(d.threadId);
     })();
     return () => { cancelled = true; };
-  }, [manuscriptId, adopt]);
+  }, [manuscriptId, work.id, adopt]);
 
   const mode = sendMode(decision, threadId);
 
@@ -186,12 +199,18 @@ export default function WorkConversation({
     setDraft('');
     setRefusal(null);
     setPending(question);
-    const r = await ask({
-      manuscriptId,
-      question,
-      ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
-      ...(sectionId ? { sectionId } : {}),
-    });
+    const r = manuscriptId
+      ? await ask({
+          manuscriptId,
+          question,
+          ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
+          ...(sectionId ? { sectionId } : {}),
+        })
+      : await askLivingWork({
+          workId: work.id,
+          question,
+          ...(mode.kind === 'resume' ? { threadId: mode.threadId } : {}),
+        });
     setPending(null);
     if (r.ok) {
       setThreadId(r.threadId);
@@ -343,7 +362,7 @@ export default function WorkConversation({
       </div>
 
       {/* ── The member's kept passages, offered rather than inserted. ── */}
-      {showKeeps && (
+      {manuscriptId && showKeeps && (
         <div
           data-keeps-chooser="true"
           style={{
@@ -414,30 +433,34 @@ export default function WorkConversation({
           }}
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACE.base, marginTop: SPACE.snug }}>
-          <button
-            type="button"
-            data-keeps-toggle="true"
-            aria-expanded={showKeeps}
-            onClick={() => setShowKeeps((v) => !v)}
-            style={{
-              background: showKeeps ? GROUND.active : 'transparent',
-              border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
-              padding: `${SPACE.tight}px ${SPACE.snug}px`,
-              cursor: 'pointer', color: INK.secondary,
-            }}
-          >
-            <StudioText role="metadata" as="span">
-              Keeps{keeps.length > 0 ? ` ${keeps.length}` : ''}
-            </StudioText>
-          </button>
-          {/* ⚠️ No conversation id travels with this. See the header. */}
-          <Link
-            href={handoffToMaia('/maia', { workId: work.id, manuscriptId })}
-            data-open-in-maia="true"
-            style={{ textDecoration: 'none' }}
-          >
-            <StudioText role="metadata" as="span">Open in MAIA →</StudioText>
-          </Link>
+          {manuscriptId ? (
+            <button
+              type="button"
+              data-keeps-toggle="true"
+              aria-expanded={showKeeps}
+              onClick={() => setShowKeeps((v) => !v)}
+              style={{
+                background: showKeeps ? GROUND.active : 'transparent',
+                border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+                padding: `${SPACE.tight}px ${SPACE.snug}px`,
+                cursor: 'pointer', color: INK.secondary,
+              }}
+            >
+              <StudioText role="metadata" as="span">
+                Keeps{keeps.length > 0 ? ` ${keeps.length}` : ''}
+              </StudioText>
+            </button>
+          ) : null}
+          {/* ⚠️ Cross-surface handoff still requires a manuscript return contract. */}
+          {manuscriptId ? (
+            <Link
+              href={handoffToMaia('/maia', { workId: work.id, manuscriptId })}
+              data-open-in-maia="true"
+              style={{ textDecoration: 'none' }}
+            >
+              <StudioText role="metadata" as="span">Open in MAIA →</StudioText>
+            </Link>
+          ) : null}
           <span style={{ flex: 1 }} />
           <button
             type="button"

@@ -58,18 +58,45 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   if (!(await owns(manuscriptId, memberId))) return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
 
+  const runId = req.nextUrl.searchParams.get('runId');
   const chapterRootSectionId = req.nextUrl.searchParams.get('chapterRootSectionId');
-  if (!chapterRootSectionId) return NextResponse.json({ refusal: 'missing_chapter_root' }, { status: 400 });
+  const list = req.nextUrl.searchParams.get('list') === '1';
 
-  const r = await query<RunRow>(
-    `SELECT id, manuscript_id, chapter_root_section_id, section_ids, draft_revision,
-            reading_ids, failures, created_at
-       FROM writer_studio_chapter_review_runs
-      WHERE member_id = $1 AND manuscript_id = $2 AND chapter_root_section_id = $3
-      ORDER BY created_at DESC
-      LIMIT 1`,
-    [memberId, manuscriptId, chapterRootSectionId],
-  );
+  if (list) {
+    const listed = await query<RunRow>(
+      `SELECT id, manuscript_id, chapter_root_section_id, section_ids, draft_revision,
+              reading_ids, failures, created_at
+         FROM writer_studio_chapter_review_runs
+        WHERE member_id = $1 AND manuscript_id = $2
+        ORDER BY created_at DESC, id DESC
+        LIMIT 50`,
+      [memberId, manuscriptId],
+    );
+    return NextResponse.json({ runs: listed.rows.map(present) });
+  }
+
+  if (!runId && !chapterRootSectionId) {
+    return NextResponse.json({ refusal: 'missing_review_identity' }, { status: 400 });
+  }
+
+  const r = runId
+    ? await query<RunRow>(
+        `SELECT id, manuscript_id, chapter_root_section_id, section_ids, draft_revision,
+                reading_ids, failures, created_at
+           FROM writer_studio_chapter_review_runs
+          WHERE member_id = $1 AND manuscript_id = $2 AND id = $3
+          LIMIT 1`,
+        [memberId, manuscriptId, runId],
+      )
+    : await query<RunRow>(
+        `SELECT id, manuscript_id, chapter_root_section_id, section_ids, draft_revision,
+                reading_ids, failures, created_at
+           FROM writer_studio_chapter_review_runs
+          WHERE member_id = $1 AND manuscript_id = $2 AND chapter_root_section_id = $3
+          ORDER BY created_at DESC
+          LIMIT 1`,
+        [memberId, manuscriptId, chapterRootSectionId],
+      );
   return NextResponse.json({ run: r.rows[0] ? present(r.rows[0]) : null });
 }
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

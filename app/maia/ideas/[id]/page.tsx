@@ -42,6 +42,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import IdeaWorkBridge from './IdeaWorkBridge';
 
 // --- types -------------------------------------------------------------------
 
@@ -719,6 +720,8 @@ export default function IdeaWorkspacePage() {
             <span>Return to this</span>
           </button>
         </div>
+
+        <IdeaWorkBridge ideaId={idea.id} />
 
         {/* Decision strip — last 2–3 decisions, clickable */}
         {recentDecisions.length > 0 && (
