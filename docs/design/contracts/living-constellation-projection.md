@@ -27,23 +27,21 @@ reference_surfaces:
 shared_with_house: the member remains the center of orientation; room names, provenance language, and quiet navigation remain legible across the House. The same projection component appears in all three rooms so continuity is learned once rather than reconstructed on every screen.
 distinct_to_room: this contract governs only the shared projection inserted into Living Field, Vision Studio, and Practice Field. Each room keeps its own purpose, controls, persistence, authority, palette, and developmental grammar. Foreground changes by room; source reality does not.
 
-screenshot_desktop: docs/design/contracts/screenshots/living-constellation-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/living-constellation-mobile.png
+screenshot_desktop: docs/design/prototypes/soullab-field-topology-01r4b/screenshots/living-quiet-desktop.png
+screenshot_mobile: docs/design/prototypes/soullab-field-topology-01r4b/screenshots/living-quiet-mobile.png
 experience_verification: >
-  Walked 2026-09-18 against a Next dev server running from the LC-02 worktree
-  (port 3311). Used synthetic, non-confidential projection fixtures and browser
-  request interception so no production or member data was read or written.
-  The actual /maia/living-field and /maia/vision-studio?tab=vision and
-  ?tab=practice routes were rendered at 1280x900 and 390x844. Six screenshots
-  are on disk: the required Living Field desktop/mobile pair plus Vision Studio
-  and Practice Field desktop/mobile witnesses. Across all three routes the same
-  "Your wider field" projection rendered around the YOU orientation center;
-  Living Field, Vision Studio, and Practice Field remained separately named;
-  the room being visited was foregrounded without hiding the other two; authored
-  example nodes retained their authority labels; and the visual disclaimer
-  stated that lines indicate Soullab location only, not semantic or psychological
-  relationship. The walk used route mocks only for source data; the React
-  surfaces, layout, responsive CSS, and navigation were the candidate code.
+  Re-witnessed 2026-09-29 against the actual shared LivingConstellationPanel
+  using a temporary local-only Next route and synthetic, non-confidential
+  projection fixtures. Quiet and widened Living Field were rendered at
+  1440x1050 and 390x844. Four current screenshots are on disk: quiet and widened,
+  desktop and mobile. The witness verified that the member's stored expression
+  is visually primary, the canonical life dimension is secondary context,
+  authorship/standing remain textual, the quiet subset states that last-update
+  order is not importance, widening reveals all admitted Living Field expressions,
+  and MAIA-candidate material remains explicitly "not yet yours". No production
+  or member data was read or written. Vision Studio and Practice Field keep the
+  previously witnessed R4 presentation rather than inheriting the R4B Living
+  Field atmosphere. The temporary witness route was removed after capture.
 ---
 
 # Living Constellation Projection — Experience Contract
