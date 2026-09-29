@@ -113,7 +113,7 @@ function forwardSanitized(
 // MIDDLEWARE
 // =============================================================================
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const host = req.headers.get('host') ?? '';
 
@@ -462,17 +462,9 @@ export async function middleware(req: NextRequest) {
 // =============================================================================
 
 export const config = {
-  // NODE RUNTIME — AUTH-BOUNDARY-01B.
-  //
-  // Stable as of Next.js 15.5 (this repo is on ^15.5.11). It is what lets the
-  // middleware call `deriveVerifiedAccess`, which needs the postgres driver.
-  //
-  // This is the difference between a boundary that GUESSES and one that KNOWS.
-  // On the Edge runtime the central access matrix could only be fed cookie
-  // claims, and every protected handler had to independently remember to
-  // re-validate. Here the matrix is fed verified facts, so it can stay the
-  // single policy mechanism it was designed to be.
-  runtime: 'nodejs',
+  // Next 16 Proxy always runs on the Node.js runtime; an explicit runtime
+  // route-segment config is invalid here. Validated-session authority remains
+  // available without an override.
 
   // Apply to all routes except static files
   matcher: [

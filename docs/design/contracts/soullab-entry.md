@@ -8,6 +8,8 @@ surfaces:
   - components/auth/UnifiedAuth.tsx
   - components/auth/SignInCard.tsx
   - app/onboarding/page.tsx
+  - app/faq/page.tsx
+  - app/resume/page.tsx
   - app/oauth-success/page.tsx
   - app/enter/page.tsx
   - app/welcome-back/page.tsx

@@ -55,6 +55,51 @@ log_success() { echo -e "${GREEN}[OK]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
+
+run_dependency_security_audit() {
+    local manifest="${MAIA_BUILD_CONTEXT:-$PROJECT_DIR}/package.json"
+    local declared manager fix_hint
+    local -a audit_cmd
+
+    declared="$(node -p "require('$manifest').packageManager || ''" 2>/dev/null || true)"
+    manager="${declared%%@*}"
+    if [ -z "$manager" ]; then
+        if [ -f "${MAIA_BUILD_CONTEXT:-$PROJECT_DIR}/package-lock.json" ]; then
+            manager="npm"
+        elif [ -f "${MAIA_BUILD_CONTEXT:-$PROJECT_DIR}/pnpm-lock.yaml" ]; then
+            manager="pnpm"
+        fi
+    fi
+
+    log_info "Running dependency security audit${declared:+ (declared $declared)}..."
+
+    case "$manager" in
+        npm)
+            command -v npm >/dev/null 2>&1 || { log_error "Declared package manager npm is unavailable — dependency audit cannot run."; return 1; }
+            audit_cmd=(npm audit --omit=dev --audit-level=moderate)
+            fix_hint="npm audit fix"
+            ;;
+        pnpm)
+            command -v pnpm >/dev/null 2>&1 || { log_error "Declared package manager pnpm is unavailable — dependency audit cannot run."; return 1; }
+            audit_cmd=(pnpm audit --prod --audit-level=moderate)
+            fix_hint="pnpm audit --fix"
+            ;;
+        *)
+            log_error "No supported package manager could be resolved from the target snapshot."
+            return 1
+            ;;
+    esac
+
+    if ! "${audit_cmd[@]}" 2>&1; then
+        log_error "Dependency audit failed — moderate+ production vulnerabilities detected."
+        log_error "Review and remediate deliberately; do not apply fixes blindly."
+        log_error "Package-manager hint: $fix_hint"
+        return 1
+    fi
+
+    log_success "Dependency audit passed"
+}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MIGRATIONS - fail closed
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -646,23 +691,8 @@ cmd_deploy() {
         exit 1
     fi
 
-    # Dependency security audit — block deploy on moderate+ vulnerabilities
-    log_info "Running dependency security audit..."
-    if command -v pnpm >/dev/null 2>&1; then
-        if ! pnpm audit --prod --audit-level=moderate 2>&1; then
-            log_error "Dependency audit failed — vulnerable packages detected."
-            log_error "Fix vulnerabilities or run: pnpm audit --fix"
-            log_error "To skip (NOT recommended): SKIP_AUDIT=1 ./scripts/deploy-production.sh deploy"
-            if [ "${SKIP_AUDIT:-0}" != "1" ]; then
-                exit 1
-            fi
-            log_warn "SKIP_AUDIT=1 set — proceeding despite vulnerabilities"
-        else
-            log_success "Dependency audit passed"
-        fi
-    else
-        log_warn "pnpm not found — skipping dependency audit"
-    fi
+    # Dependency security audit — target-declared manager, fail closed at moderate+.
+    run_dependency_security_audit || exit 1
 
     # Build and start
     log_info "Building Docker images..."
@@ -752,21 +782,8 @@ cmd_update() {
 
     log_info "Rebuilding and redeploying..."
 
-    # Dependency security audit
-    log_info "Running dependency security audit..."
-    if command -v pnpm >/dev/null 2>&1; then
-        if ! pnpm audit --prod --audit-level=moderate 2>&1; then
-            log_error "Dependency audit failed — vulnerable packages detected."
-            if [ "${SKIP_AUDIT:-0}" != "1" ]; then
-                exit 1
-            fi
-            log_warn "SKIP_AUDIT=1 set — proceeding despite vulnerabilities"
-        else
-            log_success "Dependency audit passed"
-        fi
-    else
-        log_warn "pnpm not found — skipping dependency audit"
-    fi
+    # Dependency security audit — target-declared manager, fail closed at moderate+.
+    run_dependency_security_audit || exit 1
 
     # GIT_COMMIT was exported from the pulled SHA by materialize above; APP_VERSION
     # is read from the SNAPSHOT so it matches the deployed commit.

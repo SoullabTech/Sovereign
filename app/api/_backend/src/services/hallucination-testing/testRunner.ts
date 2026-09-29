@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID as uuidv4 } from 'node:crypto';
 import type { TestCase, TestConfig, TestResponse, TestResult, TestSummary } from './types';
 import { makeSeededRng } from './seed';
 import { generateMathCases } from './generators/math';

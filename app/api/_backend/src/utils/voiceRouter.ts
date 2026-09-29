@@ -5,7 +5,7 @@ import { synthesizeVoice } from "./voiceService";
 import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID as uuidv4 } from "node:crypto";
 import {
   VoiceProfile,
   AGENT_VOICE_MAPPING,

@@ -3,7 +3,7 @@
 import { FAQSection } from '@/components/onboarding/FAQSection';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { trackOnboarding } from '@/lib/onboarding/telemetry';
+import { trackOnboarding } from '@/lib/onboarding/telemetryClient';
 import { apiFetch } from '@/lib/http/apiBase';
 
 export default function FAQPage() {

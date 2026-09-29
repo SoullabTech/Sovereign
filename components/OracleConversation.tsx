@@ -233,11 +233,10 @@ import {
 } from '@/lib/session/SessionPersistence';
 // 🧠 BARDIC MEMORY INTEGRATION - McGilchrist's master-emissary pattern
 // Air (contextual wisdom) serves Fire (present emergence)
-import {
-  getConversationMemory,
-  type ConversationContext,
-  type PatternRecognitionResult,
-  type CrystallizationDetection
+import type {
+  ConversationContext,
+  PatternRecognitionResult,
+  CrystallizationDetection
 } from '@/lib/memory/bardic/ConversationMemoryIntegration';
 // 🌟 TEEN SUPPORT SYSTEM - ED-aware & Neurodivergent-affirming safety protocols
 import {
@@ -1570,7 +1569,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // 🧠 BARDIC MEMORY - Pattern recognition & crystallization state
   const [patternRecognition, setPatternRecognition] = useState<PatternRecognitionResult | null>(null);
   const [crystallizationState, setCrystallizationState] = useState<CrystallizationDetection | null>(null);
-  const conversationMemory = useRef(getConversationMemory()).current;
 
   // 🌟 TEEN SUPPORT - Safety and support for teen users (ages 13-18)
   const [teenProfile, setTeenProfile] = useState<TeenProfile | undefined>();

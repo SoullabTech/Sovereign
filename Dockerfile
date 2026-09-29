@@ -5,7 +5,7 @@
 # - Stages kept as: base → deps → builder → runner (matches your compose)
 # ════════════════════════════════════════════════════════════════════════
 
-FROM node:20-bookworm-slim AS base
+FROM node:22-bookworm-slim AS base
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -85,7 +85,7 @@ RUN npx tsx scripts/ingest-elemental-alchemy-governed.ts --runtime-custody
 RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # --- runner: minimal runtime with standalone server ---
-FROM node:20-bookworm-slim AS runner
+FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 
 # Re-declare ARGs in runner stage (ARGs don't cross stages)

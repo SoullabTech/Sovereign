@@ -5,7 +5,7 @@ import { Response } from 'express';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID as uuidv4 } from 'node:crypto';
 import { logger } from '../utils/logger';
 
 const SESAME_URL = process.env.SESAME_URL || process.env.SESAME_CSM_URL || 'http://localhost:8000';
