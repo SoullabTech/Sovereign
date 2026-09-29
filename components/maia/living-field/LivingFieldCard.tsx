@@ -51,7 +51,7 @@ export function LivingFieldCard({ field, memberId }: Props) {
         setDetail({ versions: data.versions, sources: data.sources, consents: data.consents })
         setOpen(true)
       } catch {
-        setOpenError('Couldn’t open this dimension just now. Try again.')
+        setOpenError('This dimension is still here. Try opening it again.')
       } finally {
         setLoading(false)
       }
@@ -97,12 +97,12 @@ export function LivingFieldCard({ field, memberId }: Props) {
           <p className="text-teal-200/70 text-sm leading-relaxed">
             {gathered} {gathered === 1 ? 'reflection has' : 'reflections have'} gathered here.
             <span className="block text-stone-500 text-xs mt-1">
-              Nothing written yet — draft with MAIA when you're ready.
+              Ready to be given words when the time feels right.
             </span>
           </p>
         ) : (
-          <p className="text-stone-600 text-sm italic">
-            Not enough has gathered yet. We can begin.
+          <p className="text-stone-500 text-sm leading-relaxed">
+            This dimension is ready for whatever begins to matter here.
           </p>
         )}
 
@@ -121,7 +121,7 @@ export function LivingFieldCard({ field, memberId }: Props) {
           </span>
         </div>
         {openError && (
-          <p className="mt-3 text-xs text-amber-500" role="status">{openError}</p>
+          <p className="mt-3 text-xs text-amber-400" role="status">{openError}</p>
         )}
       </button>
 

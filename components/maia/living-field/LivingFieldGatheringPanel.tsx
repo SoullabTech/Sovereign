@@ -7,12 +7,12 @@ import type { FieldGathering, GatheredKeep } from './types'
 // into plain language the member can read. This is the selection warrant made legible.
 const REGISTER_WORDS: Record<string, string> = {
   developmental: 'a developmental movement',
-  threshold: 'a threshold you crossed',
+  threshold: 'a crossed threshold',
   relational: 'a relational pattern',
   archetypal: 'a symbolic pattern',
   episodic: 'a lived moment',
   thematic: 'a recurring theme',
-  witnessed: 'something witnessed with you',
+  witnessed: 'a witnessed moment',
 }
 const LENS_WORDS: Record<string, string> = {
   fire: 'fire (vision, will, creativity)',
@@ -30,7 +30,7 @@ const SOURCE_WORDS: Record<string, string> = {
   decision: 'a decision',
   change: 'a change',
   session_excerpt: 'a conversation',
-  spontaneous: 'a note you wrote',
+  spontaneous: 'a personal note',
 }
 
 function humanizeWarrant(reason: string): string {
@@ -105,15 +105,14 @@ export function LivingFieldGatheringPanel({ fieldKey, fieldLabel, memberId }: Pr
           <span className="text-stone-500"> of </span>
           <span className="text-stone-300">{denominator}</span>
           <span className="text-stone-500">
-            {' '}Keep{denominator !== 1 ? 's' : ''} you have held gathered into <span className="text-stone-300">{fieldLabel}</span>.
+            {' '}saved reflection{denominator !== 1 ? 's have' : ' has'} gathered into <span className="text-stone-300">{fieldLabel}</span>.
           </span>
         </p>
         <p className="text-stone-600 text-xs leading-relaxed">{criterion}</p>
         {broadDominant && (
           <p className="text-amber-700/80 text-xs leading-relaxed">
-            Most of these gathered on a single broad signal — the <em>kind</em> of Keep, not a
-            register or elemental lens. Broad signals route the same Keep into more than one
-            dimension. Giving a Keep a register or lens would place it more precisely.
+            Most of these gathered through a broad signal — the <em>kind</em> of Keep.
+            Adding a register or elemental lens can place future reflections with greater precision.
           </p>
         )}
       </div>
