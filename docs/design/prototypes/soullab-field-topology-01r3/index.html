@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Soullab Field Topology R3</title>
+<style>
+:root{
+  --bg:#0c0b0a; --panel:#12100f; --panel2:#171412; --line:#29231f;
+  --text:#eee8df; --muted:#9c9186; --quiet:#6f665e; --gold:#d8b56f;
+  --gold2:#8f7141; --teal:#7eb7a9; --rose:#b98d86;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+body{padding:32px}
+.shell{max-width:1180px;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:28px}
+.brand{font-family:Georgia,serif;font-size:19px;letter-spacing:.02em}
+.switcher{display:flex;flex-wrap:wrap;gap:8px}
+.switcher a{color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-size:12px}
+.switcher a.active{border-color:var(--gold2);color:var(--gold);background:#18130d}
+.card{border:1px solid var(--line);background:linear-gradient(180deg,#11100f,#0f0e0d);border-radius:28px;padding:34px;box-shadow:0 18px 60px rgba(0,0,0,.24)}
+.eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--quiet)}
+h1{font-family:Georgia,serif;font-weight:400;font-size:34px;line-height:1.13;margin:10px 0 8px}
+.lede{max-width:710px;color:var(--muted);font-size:15px;line-height:1.7;margin:0}
+.context{margin-top:16px;color:#8c8178;font-size:13px}
+
+.field{position:relative;margin-top:32px;min-height:420px;border-top:1px solid #1d1a18;padding-top:24px;overflow:hidden}
+.field:before{content:"";position:absolute;inset:58px 7% 30px;border:1px solid #1d1a18;border-radius:50%;opacity:.7}
+.field:after{content:"";position:absolute;inset:105px 18% 70px;border:1px solid #171412;border-radius:50%}
+.anchor{position:relative;z-index:2;display:inline-flex;align-items:center;gap:8px;color:var(--quiet);font-size:12px}
+.anchor i{width:7px;height:7px;border-radius:50%;background:var(--gold2);display:block}
+.nodes{position:relative;z-index:2;display:grid;grid-template-columns:1.25fr .75fr;gap:18px;align-items:start;margin-top:38px}
+.cluster{display:grid;gap:12px}
+.node{border:1px solid #2a2521;background:rgba(20,18,16,.92);border-radius:18px;padding:16px 17px}
+.node strong{display:block;font-family:Georgia,serif;font-weight:400;font-size:17px;color:#ded5c9}
+.node p{margin:6px 0 0;color:var(--quiet);font-size:12px;line-height:1.5}
+.meta{margin-top:9px;font-size:10px;color:#766c63;letter-spacing:.03em}
+.node.primary{border-color:#4b3d28;background:linear-gradient(180deg,rgba(43,34,23,.72),rgba(20,17,14,.95))}
+.pathways{display:grid;gap:10px}
+.path{border:1px solid #25211e;background:#100f0e;border-radius:18px;padding:16px;text-decoration:none;color:inherit}
+.path span{display:block;color:var(--gold);font-size:13px}
+.path small{display:block;color:var(--quiet);font-size:11px;margin-top:5px;line-height:1.45}
+.path.teal span{color:var(--teal)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;position:relative;z-index:3}
+.pill{border:1px solid #302a25;border-radius:999px;padding:9px 13px;color:var(--muted);font-size:12px;background:#11100f}
+.pill.gold{color:var(--gold);border-color:#4b3d28}
+
+.wider{position:relative;z-index:2;margin-top:22px;border:1px solid #211d1a;border-radius:22px;padding:18px;background:rgba(13,12,11,.74)}
+.wider-title{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--quiet)}
+.wider-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.wider-item{border-top:1px solid #29231f;padding-top:10px}
+.wider-item b{font-family:Georgia,serif;font-weight:400;font-size:14px;color:#d8d0c6}
+.wider-item p{font-size:11px;line-height:1.45;color:#6e655d;margin:5px 0 0}
+.adjacent{margin-top:18px;border-left:1px solid #3c3021;padding-left:14px;position:relative;z-index:2}
+.adjacent .label{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:#776b61}
+.adjacent a{display:inline-block;margin-top:7px;color:var(--gold);text-decoration:none;font-size:13px}
+.legend{margin-top:24px;padding-top:15px;border-top:1px solid #1d1a18;color:#625a53;font-size:10px;line-height:1.55}
+.mobile-note{display:none}
+@media(max-width:700px){
+ body{padding:16px}
+ .topbar{display:block}
+ .switcher{margin-top:14px}
+ .card{padding:22px;border-radius:22px}
+ h1{font-size:28px}
+ .field{min-height:0;margin-top:24px}
+ .field:before,.field:after{display:none}
+ .nodes{grid-template-columns:1fr;margin-top:24px}
+ .wider-grid{grid-template-columns:1fr}
+ .pathways{order:2}
+ .mobile-note{display:block;color:#5d554f;font-size:10px;margin-top:14px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="topbar">
+  <div class="brand">Soullab · Perspectival Constellation</div>
+  <nav class="switcher" id="switcher"></nav>
+</div>
+<main id="app"></main>
+</div>
+<script>
+const views = ['living-collapsed','living-expanded','vision','practice'];
+const labels = {
+ 'living-collapsed':'Living · quiet',
+ 'living-expanded':'Living · expanded',
+ 'vision':'Vision Studio',
+ 'practice':'Practice Field'
+};
+const node = (title, body, meta='', primary=false) => `
+  <div class="node ${primary?'primary':''}">
+    <strong>${title}</strong><p>${body}</p>
+    ${meta?'<div class="meta">'+meta+'</div>':''}
+  </div>`;
+const path = (title, body, tone='') => `
+  <a class="path ${tone}" href="#"><span>${title} →</span><small>${body}</small></a>`;
+function frame({eyebrow,title,lede,context='',inside=''}) {
+  return `<section class="card"><div class="eyebrow">${eyebrow}</div><h1>${title}</h1>
+  <p class="lede">${lede}</p>${context?'<div class="context">'+context+'</div>':''}${inside}</section>`;
+}
+function livingCollapsed(){
+ return frame({eyebrow:'Living Field',title:'See what is taking shape across your life.',
+ lede:'Some parts are being lived, some are becoming clearer, and some may be ready to develop or meet others.',
+ inside:`<div class="field"><div class="anchor"><i></i>You are here</div><div class="nodes">
+ <div class="cluster">
+ ${node('Current Questions','Something is asking for attention, but it does not need to be named too quickly.','authored',true)}
+ ${node('Creative Work','A new direction is beginning to gather around the book and the work beyond it.','authored')}
+ ${node('Relationships','A changing pattern is becoming easier to notice.','confirmed')}</div>
+ <div class="pathways">${path('Develop something','Give an emerging idea or body of work more form.')}
+ ${path('Meet others through your work','Tend how what you do enters relationship with other people.','teal')}</div></div>
+ <div class="controls"><span class="pill gold">See the wider field</span><span class="pill">Other directions</span></div>
+ <div class="legend">These are places already within reach. No line here claims a hidden psychological relationship.</div></div>`});
+}
+function livingExpanded(){
+ return frame({eyebrow:'Living Field',title:'See what is taking shape across your life.',
+ lede:'The wider view lets more of the field come into view without turning it into a diagnosis or a fixed map of who you are.',
+ inside:`<div class="field"><div class="anchor"><i></i>You are here · wider view</div><div class="nodes">
+ <div class="cluster">
+ ${node('Current Questions','Something is asking for attention, but it does not need to be named too quickly.','authored',true)}
+ ${node('Creative Work','A new direction is gathering around the book and the work beyond it.','authored')}
+ ${node('Relationships','A changing pattern is becoming easier to notice.','confirmed')}
+ ${node('Body & Rhythm','Rest, energy, and pace are becoming part of the same season of attention.','suggested possibility')}</div>
+ <div class="pathways">${path('Develop something','Vision Studio can hold what wants sustained form.')}
+ ${path('Meet others through your work','Practice Field can hold how the work enters relationship.','teal')}</div></div>
+ <div class="wider"><div class="wider-title">More of the Living Field</div><div class="wider-grid">
+ <div class="wider-item"><b>Family</b><p>A place that can be returned to when something here becomes alive.</p></div>
+ <div class="wider-item"><b>Place</b><p>The environments and places that are carrying meaning now.</p></div>
+ <div class="wider-item"><b>Future Self</b><p>What is becoming possible without turning possibility into prediction.</p></div>
+ </div></div><div class="controls"><span class="pill gold">Return to quiet view</span><span class="pill">Stay here</span></div>
+ <div class="legend">Expanded changes visibility only. Authorship, privacy, standing, and provenance remain exactly where they came from.</div></div>`});
+}
+function vision(){
+ return frame({eyebrow:'Vision Studio',title:'Develop what wants to become more real.',
+ lede:'This work sits within your wider Living Field.',
+ context:'Foreground: what the work is becoming · wider context remains available without competing for attention.',
+ inside:`<div class="field"><div class="anchor"><i></i>Vision Studio · current perspective</div><div class="nodes">
+ <div class="cluster">
+ ${node('Elemental Alchemy — next movement','The manuscript is asking for a clearer developmental arc before line-level refinement.','confirmed · private',true)}
+ ${node('Teaching architecture','A body of teaching wants a form that can remain alive rather than becoming a static curriculum.','authored')}
+ ${node('Relational Geometry','A research thread is becoming distinct enough to hold on its own.','confirmed')}</div>
+ <div class="pathways">
+ ${path('See how this meets others','Practice Field is available as another direction — not a claim that these threads are already linked.','teal')}</div></div>
+ <div class="controls"><span class="pill gold">Widen to Living Field</span><span class="pill">Return to where you were</span></div>
+ <div class="legend">Vision ↔ Practice is navigational adjacency only. No semantic relationship is implied between individual nodes.</div></div>`});
+}
+function practice(){
+ return frame({eyebrow:'Practice Field',title:'Tend how your work meets other people.',
+ lede:'Your practice lives within the wider field of your life and work.',
+ context:'Foreground: how the work enters relationship · wider context remains available without becoming another card.',
+ inside:`<div class="field"><div class="anchor"><i></i>Practice Field · current perspective</div><div class="nodes">
+ <div class="cluster">
+ ${node('Active Field','This season emphasizes helping people notice what is already alive before trying to improve it.','practitioner authored · private',true)}
+ ${node('Arrival','The threshold should feel human, grounded, and relational before it asks for information.','practitioner authored')}
+ ${node('Shared practice','Invitation and containment need to stay explicit as the field meets another person.','contained')}</div>
+ <div class="pathways">
+ ${path('Develop the work further','Vision Studio is available as another direction when something here wants more form.')}</div></div>
+ <div class="controls"><span class="pill gold">Widen to Living Field</span><span class="pill">Return to where you were</span></div>
+ <div class="legend">Readiness, containment, authorship, and privacy stay source-governed. Presentation does not reinterpret them.</div></div>`});
+}
+const renderers={'living-collapsed':livingCollapsed,'living-expanded':livingExpanded,vision,practice};
+const params=new URLSearchParams(location.search);
+const current=views.includes(params.get('view'))?params.get('view'):'living-collapsed';
+document.getElementById('switcher').innerHTML=views.map(v=>`<a class="${v===current?'active':''}" href="?view=${v}">${labels[v]}</a>`).join('');
+document.getElementById('app').innerHTML=renderers[current]();
+</script>
+</body>
+</html>
