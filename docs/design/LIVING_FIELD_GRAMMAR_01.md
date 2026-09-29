@@ -53,3 +53,16 @@ Member-authored changes outrank model-suggested interpretations.
 
 ### Accessibility
 Meaning remains available without color, motion, fine pointer control, or hidden hover-only states.
+
+
+---
+
+## Technology-layer inheritance
+
+Living Field Grammar may be implemented through DOM, SVG, Canvas, WebGPU, audio, haptics, or future media.
+
+The grammar remains authoritative across rendering technologies.
+
+No rendering tier may redefine identity, provenance, authorship, relation, standing, or importance.
+
+> **The medium may reveal the grammar. It may not rewrite it.**

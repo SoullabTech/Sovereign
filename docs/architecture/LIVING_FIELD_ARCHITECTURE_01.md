@@ -86,3 +86,19 @@ It must not turn atmosphere, motion, color, scale, or proximity into unsupported
 ## Canonical phrase
 
 > **The field has structure, but it is alive.**
+
+
+---
+
+## Design Technology Layer
+
+Living Field Architecture includes a governed Design Technology Layer.
+
+See:
+
+- `docs/architecture/LIVING_FIELD_DESIGN_TECHNOLOGY_LAYER_01.md`
+- `docs/design/GROKKER_LIVING_FIELD_TECHNOLOGY_LAYER_01.md`
+
+The layer translates experiential law into medium-specific capability.
+
+> **Technology enters only when it makes an existing Living Field law more fully realizable.**
