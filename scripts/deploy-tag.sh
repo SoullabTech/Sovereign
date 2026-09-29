@@ -37,13 +37,13 @@ tag_images_for_rollback() {
     # If there's already a :current, move it to :previous
     if docker image inspect "$repo:current" >/dev/null 2>&1; then
         echo "[deploy-tag] Preserving current image as :previous for rollback..." >&2
-        docker tag "$repo:current" "$repo:previous" 2>/dev/null || true
+        docker tag "$repo:current" "$repo:previous"
     fi
 
     # Tag the new build as :current and with its SHA
     echo "[deploy-tag] Tagging new image as :current and :$sha..." >&2
-    docker tag "$repo:prod" "$repo:current" 2>/dev/null || true
-    docker tag "$repo:prod" "$repo:$sha" 2>/dev/null || true
+    docker tag "$repo:prod" "$repo:current"
+    docker tag "$repo:prod" "$repo:$sha"
 
     # Retention — a prune failure must never block the deploy, but it must be loud.
     prune_old_sha_tags \

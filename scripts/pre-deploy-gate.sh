@@ -246,6 +246,138 @@ gate_quick_lane_no_pending_migrations() {
     return 0
 }
 
+# prepare-maia <SHA> — build and prove an immutable candidate WITHOUT moving traffic.
+#
+# The compose file names maia-sovereign:prod, so a compose build necessarily writes
+# that alias. Preparation therefore captures the pre-existing :prod image ID, builds
+# and verifies the candidate, pins it under its immutable short-SHA tag, then restores
+# :prod to the exact pre-prepare image before returning. A trap restores :prod on any
+# failure after a successful build. The running container and :current/:previous role
+# tags are never changed here.
+cmd_prepare_maia() {
+    local ref="${1:-}"
+    acquire_deploy_lock "pre-deploy-gate.sh prepare-maia" "$ref"
+
+    deploy_ctx_assert_and_materialize "$ref" || exit 1
+    gate_disk
+    gate_colab
+    gate_quick_lane_no_pending_migrations
+
+    local prior_prod_id running_before candidate_image restored_prod_id running_after
+    prior_prod_id="$(docker image inspect "$MAIA_IMAGE_REPO:prod" --format '{{.Id}}' 2>/dev/null || true)"
+    running_before="$(docker inspect "$CONTAINER" --format '{{.Image}}' 2>/dev/null || true)"
+    if [ -z "$prior_prod_id" ] || [ -z "$running_before" ]; then
+        log_block "Preparation requires an existing live reader and :prod artifact; identity is incomplete."
+        return 1
+    fi
+
+    trap 'if ! docker tag "$prior_prod_id" "$MAIA_IMAGE_REPO:prod"; then log_block "CRITICAL: failed to restore :prod after preparation failure."; fi' EXIT
+
+    log_info "Preparing maia artifact at $GIT_COMMIT without traffic movement..."
+    deploy_ctx_compose build maia
+    deploy_ctx_verify_image "$GIT_COMMIT" "$MAIA_IMAGE_REPO:prod" || exit 1
+
+    candidate_image="$MAIA_IMAGE_REPO:$GIT_COMMIT"
+    docker tag "$MAIA_IMAGE_REPO:prod" "$candidate_image"
+    deploy_ctx_verify_image "$GIT_COMMIT" "$candidate_image" || exit 1
+
+    docker tag "$prior_prod_id" "$MAIA_IMAGE_REPO:prod"
+    restored_prod_id="$(docker image inspect "$MAIA_IMAGE_REPO:prod" --format '{{.Id}}')"
+    running_after="$(docker inspect "$CONTAINER" --format '{{.Image}}')"
+    trap - EXIT
+
+    if [ "$restored_prod_id" != "$prior_prod_id" ]; then
+        log_block "Preparation failed to restore :prod to the pre-prepare image."
+        return 1
+    fi
+    if [ "$running_after" != "$running_before" ]; then
+        log_block "Running reader changed during artifact preparation — refusing."
+        return 1
+    fi
+
+    log_ok "Candidate prepared: $candidate_image"
+    log_ok "Traffic unchanged: running image $running_after"
+    log_ok ":prod restored to pre-prepare image $restored_prod_id"
+}
+
+# cutover-maia <SHA> — move traffic ONLY to an already-prepared immutable image.
+#
+# No build occurs here. The command proves the candidate image, proves that the
+# currently running reader has an immutable SHA tag pointing at the same image ID,
+# then advances :previous/:current/:prod and recreates only the MAIA reader.
+cmd_cutover_maia() {
+    local ref="${1:-}"
+    acquire_deploy_lock "pre-deploy-gate.sh cutover-maia" "$ref"
+
+    deploy_ctx_assert_and_materialize "$ref" || exit 1
+    gate_colab
+    gate_quick_lane_no_pending_migrations
+
+    local candidate_image="$MAIA_IMAGE_REPO:$GIT_COMMIT"
+    local running_before rollback_sha rollback_image rollback_id current_id
+
+    if ! docker image inspect "$candidate_image" >/dev/null 2>&1; then
+        log_block "Prepared candidate missing: $candidate_image"
+        log_block "Run: scripts/pre-deploy-gate.sh prepare-maia $ref"
+        return 1
+    fi
+    deploy_ctx_verify_image "$GIT_COMMIT" "$candidate_image" || return 1
+
+    running_before="$(docker inspect "$CONTAINER" --format '{{.Image}}' 2>/dev/null || true)"
+    rollback_sha="$(docker exec "$CONTAINER" printenv GIT_COMMIT 2>/dev/null || true)"
+    if [ -z "$running_before" ] || [ -z "$rollback_sha" ] || [ "$rollback_sha" = "unknown" ]; then
+        log_block "Current production reader identity is incomplete; refusing cutover."
+        return 1
+    fi
+
+    rollback_image="$MAIA_IMAGE_REPO:$rollback_sha"
+    if ! docker image inspect "$rollback_image" >/dev/null 2>&1; then
+        log_block "Immutable rollback artifact missing: $rollback_image"
+        return 1
+    fi
+    rollback_id="$(docker image inspect "$rollback_image" --format '{{.Id}}')"
+    current_id="$(docker image inspect "$MAIA_IMAGE_REPO:current" --format '{{.Id}}' 2>/dev/null || true)"
+
+    if [ "$rollback_id" != "$running_before" ]; then
+        log_block "Rollback artifact does not equal the running production image; refusing cutover."
+        return 1
+    fi
+    if [ "$current_id" != "$running_before" ]; then
+        log_block ":current does not equal the running production image; refusing cutover."
+        return 1
+    fi
+
+    docker tag "$candidate_image" "$MAIA_IMAGE_REPO:prod"
+    tag_images_for_rollback "$GIT_COMMIT"
+
+    local previous_id
+    previous_id="$(docker image inspect "$MAIA_IMAGE_REPO:previous" --format '{{.Id}}')"
+    if [ "$previous_id" != "$running_before" ]; then
+        log_block "Rollback role tag does not point at the pre-cutover running image; refusing swap."
+        return 1
+    fi
+
+    log_info "Cutting over maia reader to $GIT_COMMIT..."
+    deploy_ctx_compose up -d --force-recreate --no-deps maia
+
+    if ! deploy_ctx_verify_running "$GIT_COMMIT" "$CONTAINER"; then
+        log_block "Post-cutover provenance verification FAILED."
+        log_block "Exact rollback: ./scripts/deploy-production.sh rollback $rollback_sha"
+        return 1
+    fi
+
+    sleep 10
+    local health
+    health="$(docker inspect "$CONTAINER" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' 2>/dev/null || true)"
+    if [ "$health" != "healthy" ]; then
+        log_block "Post-cutover container health is '${health:-missing}'."
+        log_block "Exact rollback: ./scripts/deploy-production.sh rollback $rollback_sha"
+        return 1
+    fi
+
+    log_ok "Cutover complete: $GIT_COMMIT healthy; rollback target preserved as $rollback_sha."
+}
+
 # deploy-maia <SHA> — the mechanized replacement for the quick maia-only command.
 # Takes an EXPLICITLY NAMED commit, materializes it into an isolated build context
 # (so the build is a commit, not whatever branch is checked out — 2026-07-27
@@ -308,16 +440,20 @@ case "${1:-help}" in
     colab)      gate_colab ;;
     disk)       gate_disk ;;
     all)        gate_all >/dev/null ;;   # SHA already logged to stderr; suppress stdout echo
+    prepare-maia) cmd_prepare_maia "${2:-}" ;;
+    cutover-maia) cmd_cutover_maia "${2:-}" ;;
     deploy-maia) cmd_deploy_maia "${2:-}" ;;
     *)
         echo "Pre-Deploy Gate — Construction Gate as structure, not discipline"
         echo ""
-        echo "Usage: $0 <provenance|colab|disk|all> | deploy-maia <SHA>"
+        echo "Usage: $0 <provenance|colab|disk|all> | prepare-maia <SHA> | cutover-maia <SHA> | deploy-maia <SHA>"
         echo ""
         echo "  provenance        Validate GIT_COMMIT (never unknown/empty); echo resolved SHA"
         echo "  colab             Run Co-Lab boundary verifier; block unless 31/31 · 0 failed · 0 warned"
         echo "  disk              Block unless / has >= MIN_FREE_DISK_GB (default 60) GB free"
         echo "  all               Run all gates (no build)"
+        echo "  prepare-maia <SHA> Build+verify immutable candidate; restore :prod; NO traffic movement."
+        echo "  cutover-maia <SHA> Require prepared candidate + exact rollback artifact; swap reader only."
         echo "  deploy-maia <SHA> Materialize the NAMED commit into an isolated build context,"
         echo "                    run gates, quick maia-only build+swap, verify running provenance."
         echo "                    No SHA + DEPLOY_ALLOW_HEAD=1 builds the current checkout tip (ack)."
