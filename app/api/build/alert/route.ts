@@ -4,11 +4,11 @@ export const dynamic = 'force-dynamic';
  * Build Alert Endpoint
  *
  * Sends alerts to developer about build/deployment issues.
- * Supports email (Resend), SMS (Twilio), Slack, and Telegram.
+ * Uses the configured managed email provider, plus optional Slack/Telegram channels.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { sendEmail } from "@/lib/email/sendEmail";
+import { sendEmail, SENDERS } from "@/lib/email/sendEmail";
 
 export const runtime = "nodejs";
 
@@ -57,30 +57,30 @@ export async function POST(req: NextRequest) {
 
   const results: Record<string, boolean> = {};
 
-  // 1. Send email
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const sent = await sendEmail({
-        purpose: "build:alert",
-        from: "MAIA Build Monitor <build@soullab.life>",
-        to: DEV_EMAIL,
-        subject: `[${payload.severity.toUpperCase()}] MAIA Build Alert`,
-        html: formatAlertEmail(payload),
-        metadata: { severity: payload.severity },
-      });
-      // `sent.success` — not `true`. A provider refusal (quota, bad sender) is
-      // reported as a failed channel, so the alert fan-out cannot claim it
-      // reached someone it did not reach.
-      results.email = sent.success;
-      if (!sent.success) {
-        console.error(
-          `[BuildAlert] Email REFUSED failureKind=${sent.failureKind ?? "unclassified"} providerCode=${sent.providerCode ?? "unnamed"}`
-        );
-      }
-    } catch (error) {
-      console.error("[BuildAlert] Email failed:", error);
-      results.email = false;
+  // 1. Send email through the configured managed provider.
+  // Never inspect a vendor-specific credential here: provider selection and
+  // configuration belong to lib/email/providers. This route must work unchanged
+  // when production moves from one transport to another.
+  try {
+    const sent = await sendEmail({
+      purpose: "build:alert",
+      from: SENDERS.default,
+      to: DEV_EMAIL,
+      subject: `[${payload.severity.toUpperCase()}] MAIA Build Alert`,
+      html: formatAlertEmail(payload),
+      metadata: { severity: payload.severity },
+      triggerType: "route",
+      triggerRef: "/api/build/alert",
+    });
+    results.email = sent.success;
+    if (!sent.success) {
+      console.error(
+        `[BuildAlert] Email REFUSED provider=${sent.provider ?? "unresolved"} failureKind=${sent.failureKind ?? "unclassified"} providerCode=${sent.providerCode ?? "unnamed"}`
+      );
     }
+  } catch (error) {
+    console.error("[BuildAlert] Email failed:", error);
+    results.email = false;
   }
 
   // 2. Send SMS for critical alerts only (Twilio optional - requires `npm install twilio`)
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
             ? "#ffaa00"
             : "#44aa44";
 
-      await fetch(process.env.SLACK_WEBHOOK_URL, {
+      const response = await fetch(process.env.SLACK_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -147,7 +147,10 @@ export async function POST(req: NextRequest) {
           ],
         }),
       });
-      results.slack = true;
+      results.slack = response.ok;
+      if (!response.ok) {
+        console.error(`[BuildAlert] Slack REFUSED status=${response.status}`);
+      }
     } catch (error) {
       console.error("[BuildAlert] Slack failed:", error);
       results.slack = false;
@@ -168,7 +171,7 @@ export async function POST(req: NextRequest) {
         payload.commit ? `\n\nCommit: \`${payload.commit}\`` : ""
       }`;
 
-      await fetch(
+      const response = await fetch(
         `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
         {
           method: "POST",
@@ -180,7 +183,10 @@ export async function POST(req: NextRequest) {
           }),
         }
       );
-      results.telegram = true;
+      results.telegram = response.ok;
+      if (!response.ok) {
+        console.error(`[BuildAlert] Telegram REFUSED status=${response.status}`);
+      }
     } catch (error) {
       console.error("[BuildAlert] Telegram failed:", error);
       results.telegram = false;
@@ -193,11 +199,19 @@ export async function POST(req: NextRequest) {
     { results, commit: payload.commit }
   );
 
-  return NextResponse.json({
-    success: true,
-    channels: results,
-    timestamp: new Date().toISOString(),
-  });
+  // A paging endpoint may never report success when every configured channel
+  // refused or failed. That would turn an incident into false reassurance.
+  const delivered = Object.values(results).some(Boolean);
+
+  return NextResponse.json(
+    {
+      success: delivered,
+      ...(delivered ? {} : { error: "no_alert_channel_delivered" }),
+      channels: results,
+      timestamp: new Date().toISOString(),
+    },
+    { status: delivered ? 200 : 503 }
+  );
 }
 
 function formatAlertEmail(payload: AlertPayload): string {
