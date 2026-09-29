@@ -6,21 +6,22 @@ current_authority:
   - docs/canon/SOUL_LAB_SPATIAL_NAVIGATION_LAW.md
   - docs/canon/SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: PLAN
-current_act: VISUAL-FIELD-RUNTIME-02B — Level-of-Detail Resolver + Soul Lab Coherence
-current_subject_sha: cac33b8ffff09b3567bd3e04571fc243778f20a3
-current_branch: feature/jarvis-visual-field-r2a-20260929
-worktree: /private/tmp/jarvis-visual-field-r2a
-runtime: http://localhost:3601/public-demo
+current_phase: VERIFY
+current_act: VISUAL-FIELD-RUNTIME-02B — Founder LOD + Soul Lab Coherence Witness
+current_subject_sha: 08731dd277d204692421cac0664d1869df95360c
+current_branch: feature/jarvis-visual-field-r2b-20260929
+worktree: /private/tmp/jarvis-visual-field-r2b
+runtime: http://localhost:3603/public-demo
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - Founder accepted R2A camera physics as helpful, coherent, and working.
-  - R2B must make semantic depth richer without turning the Living Field into a menu or losing the whole.
-  - Soul Lab coherence and earned-portal laws are canonical.
-  - Ask MAIA is now a required future affordance at semantic loci; live MAIA execution remains gated by context/provenance dependencies.
+  - R2B is implemented and mechanically verified across LOD0–LOD5 on desktop and mobile.
+  - MAIA inquiry loci appear only at sufficient semantic depth; live MAIA interpretation remains closed.
+  - Prototype portal cues require explicit semantic eligibility plus LOD4 depth; deep non-eligible nodes do not receive portals.
+  - The depth lens is pointer-transparent and no longer interrupts wheel zoom.
+  - Founder witness is required to decide whether depth feels richer rather than busier and whether the portal cue feels earned.
   - Live cross-room portals, durable memory, FLOW, and autonomous relation generation remain closed.
 founder_stops:
   - R2B LOD witness before R2C Progressive Relational Resolution.
@@ -29,4 +30,4 @@ founder_stops:
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
 next_phase_on_exit: R2B founder LOD/coherence witness; PASS opens R2C Progressive Relational Resolution
-last_state_change: 2026-09-29 — founder accepted R2A; R2B Level-of-Detail + Soul Lab coherence planning opened
+last_state_change: 2026-09-29 — R2B candidate sealed at 08731dd27; founder LOD / Soul Lab coherence witness is the current gate

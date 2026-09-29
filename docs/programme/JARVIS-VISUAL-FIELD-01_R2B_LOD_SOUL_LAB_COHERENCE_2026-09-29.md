@@ -4,6 +4,7 @@
 **Founder standing:** R2A PASS  
 **Branch:** `feature/jarvis-visual-field-r2b-20260929`
 **Status:** Implemented local candidate · founder witness required
+**Candidate:** `08731dd277d204692421cac0664d1869df95360c`
 
 ## Purpose
 
