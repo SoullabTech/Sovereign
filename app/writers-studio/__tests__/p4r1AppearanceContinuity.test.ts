@@ -1,7 +1,10 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { ATMOSPHERE_LIST } from '@/app/writers-studio/atmosphere/atmospheres';
 import { appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 
 const names = ATMOSPHERE_LIST.map((item) => item.name);
+const p4page = readFileSync(join(process.cwd(), 'app/dev/writers-studio-p4r1/page.tsx'), 'utf8');
 
 describe('P4R1 appearance continuity', () => {
   it('restores the accepted member-chosen theme family', () => {
@@ -14,6 +17,10 @@ describe('P4R1 appearance continuity', () => {
       'Cloud',
       'Midnight',
     ]);
+  });
+
+  it('defaults P4R1 to Day only when no member choice has been remembered', () => {
+    expect(p4page).toContain('<StudioAtmosphere defaultAtmosphere="day">');
   });
 
   it('pins Day to the accepted P4 light shell', () => {

@@ -92,15 +92,15 @@ export function useAtmosphere(): AtmosphereContext {
   return useContext(Ctx);
 }
 
-function remembered(): AtmosphereId {
-  if (typeof window === 'undefined') return DEFAULT_ATMOSPHERE;
+function remembered(fallback: AtmosphereId = DEFAULT_ATMOSPHERE): AtmosphereId {
+  if (typeof window === 'undefined') return fallback;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return isAtmosphereId(raw) ? raw : DEFAULT_ATMOSPHERE;
+    return isAtmosphereId(raw) ? raw : fallback;
   } catch {
     /* Private windows and blocked site data throw on access. A member who
        cannot store a preference still gets a working Studio. */
-    return DEFAULT_ATMOSPHERE;
+    return fallback;
   }
 }
 
@@ -145,18 +145,24 @@ function manuscriptFromUrl(): string | null {
   }
 }
 
-export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
+export function StudioAtmosphere({
+  children,
+  defaultAtmosphere = DEFAULT_ATMOSPHERE,
+}: {
+  children: React.ReactNode;
+  defaultAtmosphere?: AtmosphereId;
+}) {
   /* Starts at the default on both server and first client render so the markup
      matches; the remembered choice is applied in an effect. A hydration
      mismatch here would be a visible flicker, not a warning. */
-  const [id, setId] = useState<AtmosphereId>(DEFAULT_ATMOSPHERE);
+  const [id, setId] = useState<AtmosphereId>(defaultAtmosphere);
   const [canvasSurface, setCanvasSurface] = useState<CanvasSurfaceId>(DEFAULT_CANVAS_SURFACE);
   const [settled, setSettled] = useState(false);
 
   useEffect(() => {
-    setId(remembered());
+    setId(remembered(defaultAtmosphere));
     setCanvasSurface(rememberedCanvas());
-  }, []);
+  }, [defaultAtmosphere]);
 
   useEffect(() => {
     let live = true;

@@ -31,7 +31,7 @@ export default function P4R1WriterStudioPage() {
     <div className={`${serif.variable} ${sans.variable} fr-root p4r1-root`}>
       <div className="fr-page">
         <div className="fr-capture-frame" data-capture-frame="">
-          <StudioAtmosphere>
+          <StudioAtmosphere defaultAtmosphere="day">
             <Suspense fallback={<div style={{ padding: 32 }}>Opening your Writer’s Studio…</div>}>
               <P4R1StudioHost />
             </Suspense>
