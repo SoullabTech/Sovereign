@@ -9,7 +9,7 @@
 
 The deployment target is the exact canonical commit that contains this plan as a plan-only successor in tree content of application-code parent `80b86eac3...`. The target may be a canonical merge commit; the reviewer must compare its tree bytes against this application-code parent and verify that only this review-plan document differs.
 
-The reviewer must independently confirm that the successor changes no application, migration, dependency, deployment-script, or runtime bytes relative to `0d251d531...` except this review-plan document. The readiness document already exists in the application-code parent and must remain byte-identical. The exact target commit is supplied externally by the Review-Custody harness and must be reproduced in the review's migration compatibility attestation.
+The reviewer must independently confirm that the successor changes no application, migration, dependency, deployment-script, or runtime bytes relative to `80b86eac3...` except this review-plan document. The readiness document already exists in the application-code parent and must remain byte-identical. The exact target commit is supplied externally by the Review-Custody harness and must be reproduced in the review's migration compatibility attestation.
 
 ## Exact production-pending set
 
