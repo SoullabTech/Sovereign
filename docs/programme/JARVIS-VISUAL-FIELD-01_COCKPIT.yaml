@@ -5,21 +5,22 @@ current_authority:
   - docs/canon/LIVING_FIELD_MEANING_EVOLUTION_LAWS.md
   - docs/canon/SOUL_LAB_SPATIAL_NAVIGATION_LAW.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: BUILD
-current_act: VISUAL-FIELD-RUNTIME-02A — Camera Physics
-current_subject_sha: cd97315aa2605f29702a65a2193b3ce1cac691b1
+current_phase: VERIFY
+current_act: VISUAL-FIELD-RUNTIME-02A — Founder Camera Physics Witness
+current_subject_sha: cac33b8ffff09b3567bd3e04571fc243778f20a3
 current_branch: feature/jarvis-visual-field-r2a-20260929
 worktree: /private/tmp/jarvis-visual-field-r2a
-runtime: http://localhost:3600/public-demo
+runtime: http://localhost:3601/public-demo
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - Founder accepted the cellular visual language and authorized R2A.
-  - Living Field is now architecturally treated as a future spatial threshold into the whole Soul lab.
-  - R2A is limited to camera/navigation physics; R2B semantic LOD and live cross-room portals remain closed.
-  - Durable memory, MAIA, FLOW, and autonomous relation generation remain closed.
+  - R2A camera mechanics are implemented and mechanically verified across wheel, pan, pinch, semantic entry, Widen, Whole, keyboard, reduced motion, and safe bounds.
+  - Ordinary-motion desktop/mobile visual witnesses pass with zero browser errors.
+  - Founder witness is required to decide whether scale-change feels like approaching one living world rather than operating a diagram.
+  - Existing right-side insight panel intercepts gestures over its own area; founder may adjudicate whether that breaks field continuity.
+  - R2B semantic LOD, live cross-room portals, durable memory, MAIA, FLOW, and autonomous relation generation remain closed.
 founder_stops:
   - R2A PASS or RETURN before R2B Level-of-Detail Resolver.
   - Any change of Living Field ontology or member-facing meaning.
@@ -27,4 +28,4 @@ founder_stops:
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
 next_phase_on_exit: founder R2A camera-physics witness; PASS opens R2B Level-of-Detail Resolver
-last_state_change: 2026-09-29 — founder accepted cellular grammar and authorized R2A Camera Physics in isolated worktree
+last_state_change: 2026-09-29 — R2A Camera Physics sealed at cac33b8ff; founder camera-feel witness is the current gate
