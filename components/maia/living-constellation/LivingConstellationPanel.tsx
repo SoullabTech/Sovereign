@@ -15,100 +15,167 @@ interface Props {
   className?: string;
 }
 
-const DOMAIN_META: Record<ConstellationDomain, {
-  title: string;
-  subtitle: string;
-  href: string;
-}> = {
-  living_field: {
-    title: 'Living Field',
-    subtitle: 'what is alive in your life',
-    href: '/maia/living-field',
-  },
-  vision_studio: {
-    title: 'Vision Studio',
-    subtitle: 'what your work is becoming',
-    href: '/maia/vision-studio?tab=vision',
-  },
-  practice_field: {
-    title: 'Practice Field',
-    subtitle: 'how your practice meets others',
-    href: '/maia/vision-studio?tab=practice',
-  },
-};
 const FOCUS_DOMAIN: Record<ConstellationFocus, ConstellationDomain> = {
   living: 'living_field',
   vision: 'vision_studio',
   practice: 'practice_field',
 };
 
-const FOCUS_COPY: Record<ConstellationFocus, string> = {
-  living: 'See what is already real across your life, developing work, and practice.',
-  vision: 'Your wider field stays visible while you develop the work.',
-  practice: 'Your wider field stays visible while you shape how your practice meets others.',
-};
+const PERSPECTIVE = {
+  living: {
+    eyebrow: 'Living Field',
+    title: 'See what is taking shape across your life.',
+    lede: 'Some parts are being lived, some are becoming clearer, and some may be ready to develop or meet others.',
+  },
+  vision: {
+    eyebrow: 'Vision Studio',
+    title: 'Develop what wants to become more real.',
+    lede: 'This work sits within your wider Living Field.',
+  },
+  practice: {
+    eyebrow: 'Practice Field',
+    title: 'Tend how your work meets other people.',
+    lede: 'Your practice lives within the wider field of your life and work.',
+  },
+} as const;
 
 function authorityLabel(node: ConstellationProjectionNode): string {
-  if (node.authorship === 'maia_candidate') return 'MAIA candidate';
-  if (node.authorship === 'member_confirmed') return 'you confirmed';
-  return 'you authored';
+  if (node.authorship === 'maia_candidate') return 'suggested possibility';
+  if (node.authorship === 'member_confirmed') return 'confirmed';
+  if (node.authorship === 'practitioner_authored') return 'practitioner authored';
+  return 'authored';
 }
 
-function DomainCluster({
-  domain,
-  nodes,
-  focused,
+function privacyLabel(node: ConstellationProjectionNode): string | null {
+  if (node.privacy === 'member_shared_with_practitioner') return 'shared with practitioner';
+  if (node.privacy === 'practitioner_private') return 'private';
+  return null;
+}
+
+function standingLine(node: ConstellationProjectionNode): string {
+  const privacy = privacyLabel(node);
+  return [authorityLabel(node), privacy, node.standing].filter(Boolean).join(' · ');
+}
+
+const STAGGER = [
+  '',
+  'md:translate-y-3',
+  'md:-translate-y-2',
+  'md:translate-y-4',
+  'md:translate-y-1',
+  'md:-translate-y-3',
+  'md:translate-y-2',
+  'md:translate-y-1',
+  'md:-translate-y-1',
+  'md:translate-y-3',
+  'md:translate-y-2',
+  'md:-translate-y-2',
+];
+
+function FieldPoint({
+  node,
+  index,
+  active = false,
+  quiet = false,
 }: {
-  domain: ConstellationDomain;
-  nodes: ConstellationProjectionNode[];
-  focused: boolean;
+  node: ConstellationProjectionNode;
+  index: number;
+  active?: boolean;
+  quiet?: boolean;
 }) {
-  const meta = DOMAIN_META[domain];
-  const visible = nodes.slice(0, 3);
-  const more = Math.max(0, nodes.length - visible.length);
-
   return (
-    <div
-      className={`relative z-10 rounded-xl border px-4 py-3 min-h-[118px] transition-colors ${
-        focused
-          ? 'border-amber-700/60 bg-amber-950/10'
-          : 'border-stone-800 bg-stone-950/80'
-      }`}
+    <article
+      className={[
+        'relative min-w-0 max-w-sm pl-6 transition-opacity',
+        STAGGER[index % STAGGER.length],
+        quiet ? 'opacity-75' : 'opacity-100',
+      ].join(' ')}
     >
-      <Link href={meta.href} className="group block">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className={`text-xs uppercase tracking-widest ${
-            focused ? 'text-amber-400' : 'text-stone-400'
-          }`}>
-            {meta.title}
-          </p>
-          <span className="text-stone-700 text-xs group-hover:text-stone-500">open →</span>
-        </div>
-        <p className="mt-1 text-[11px] text-stone-600">{meta.subtitle}</p>
-      </Link>
+      <span
+        aria-hidden="true"
+        className={[
+          'absolute left-0 top-2 block h-2.5 w-2.5 rounded-full border',
+          active
+            ? 'border-amber-400/70 bg-amber-300/75 shadow-[0_0_0_7px_rgba(217,178,107,0.08)]'
+            : 'border-amber-700/60 bg-stone-950',
+        ].join(' ')}
+      />
+      <h3 className="font-serif text-[17px] leading-snug text-stone-200">
+        {node.label}
+      </h3>
+      {node.excerpt && (
+        <p className="mt-1.5 text-xs leading-relaxed text-stone-500">
+          {node.excerpt}
+        </p>
+      )}
+      <p className="mt-2 text-[10px] leading-relaxed text-stone-600">
+        {standingLine(node)}
+      </p>
+    </article>
+  );
+}
 
-      <div className="mt-3 space-y-2">
-        {visible.length === 0 ? (
-          <p className="text-xs text-stone-700 italic">Nothing authored here yet.</p>
-        ) : (
-          visible.map((node) => (
-            <div key={node.projectionId} className="min-w-0">
-              <p className="truncate text-xs text-stone-300">{node.label}</p>
-              <p className="text-[10px] text-stone-600">
-                {authorityLabel(node)}
-                {node.privacy === 'member_shared_with_practitioner' ? ' · shared' : ''}
-              </p>
-            </div>
-          ))
-        )}
-        {more > 0 && <p className="text-[10px] text-stone-600">+ {more} more</p>}
-      </div>
+function Pathway({
+  href,
+  title,
+  body,
+  tone = 'gold',
+}: {
+  href: string;
+  title: string;
+  body: string;
+  tone?: 'gold' | 'teal';
+}) {
+  return (
+    <Link
+      href={href}
+      className="group block max-w-xs border-l border-stone-800 pl-4"
+    >
+      <span
+        className={
+          tone === 'teal'
+            ? 'text-sm text-teal-300/85 group-hover:text-teal-200'
+            : 'text-sm text-amber-300/90 group-hover:text-amber-200'
+        }
+      >
+        {title} →
+      </span>
+      <span className="mt-1.5 block text-[11px] leading-relaxed text-stone-600">
+        {body}
+      </span>
+    </Link>
+  );
+}
+
+function FieldHorizon({ wide = false }: { wide?: boolean }) {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div
+        className={[
+          'absolute rounded-[50%] border border-stone-900/90 transition-all duration-700',
+          wide ? '-inset-x-[22%] top-4 bottom-0' : '-inset-x-[6%] top-16 bottom-8',
+        ].join(' ')}
+      />
+      <div
+        className={[
+          'absolute rounded-[50%] border border-stone-900/70 transition-all duration-700',
+          wide ? '-inset-x-[7%] top-20 bottom-12' : 'inset-x-[9%] top-28 bottom-16',
+        ].join(' ')}
+      />
+      <div
+        className={[
+          'absolute rounded-[50%] border border-stone-900/60 transition-all duration-700',
+          wide ? 'inset-x-[10%] top-36 bottom-24' : 'inset-x-[24%] top-40 bottom-28',
+        ].join(' ')}
+      />
     </div>
   );
 }
+
 export function LivingConstellationPanel({ focus, className = '' }: Props) {
   const [projection, setProjection] = useState<LivingConstellationProjection | null>(null);
   const [failed, setFailed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,84 +209,193 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
 
   if (failed) {
     return (
-      <div className={`rounded-xl border border-stone-900 px-4 py-3 ${className}`}>
-        <p className="text-xs text-stone-600">
-          Your wider field is unavailable right now. Nothing has been changed.
+      <div className={`py-3 ${className}`}>
+        <p className="text-sm text-stone-500">
+          The wider field can be revisited in a moment.
         </p>
       </div>
     );
   }
+
   if (!projection) {
     return (
-      <div className={`rounded-xl border border-stone-900 px-4 py-5 ${className}`}>
-        <p className="text-xs text-stone-700">Gathering your wider field…</p>
+      <div className={`py-5 ${className}`}>
+        <p className="text-sm text-stone-600">Gathering the wider field…</p>
       </div>
     );
   }
 
+  const perspective = PERSPECTIVE[focus];
   const focusedDomain = FOCUS_DOMAIN[focus];
+  const localNodes = grouped[focusedDomain];
+
+  const visibleLivingNodes =
+    focus === 'living'
+      ? expanded
+        ? grouped.living_field
+        : grouped.living_field.slice(0, 3)
+      : [];
+
+  const adjacent =
+    focus === 'vision'
+      ? {
+          visible: grouped.practice_field.length > 0,
+          href: '/maia/vision-studio?tab=practice',
+          title: 'See how this meets others',
+          body: 'Practice Field is available as another direction — not a claim that these threads are already linked.',
+          tone: 'teal' as const,
+        }
+      : focus === 'practice'
+        ? {
+            visible: grouped.vision_studio.length > 0,
+            href: '/maia/vision-studio?tab=vision',
+            title: 'Develop the work further',
+            body: 'Vision Studio is available as another direction when something here wants more form.',
+            tone: 'gold' as const,
+          }
+        : null;
+
+  const fieldIsWide = focus === 'living' && expanded;
 
   return (
-    <section className={`rounded-2xl border border-stone-800/80 bg-stone-950/60 p-5 ${className}`}>
-      <div className="max-w-2xl">
-        <p className="text-xs uppercase tracking-[0.18em] text-stone-500">Your wider field</p>
-        <p className="mt-2 text-sm font-light leading-relaxed text-stone-400">
-          {FOCUS_COPY[focus]}
+    <section
+      className={[
+        'relative isolate overflow-hidden py-2 text-stone-100',
+        'min-h-[560px] md:min-h-[640px]',
+        className,
+      ].join(' ')}
+    >
+      <FieldHorizon wide={fieldIsWide} />
+
+      <div className="relative z-10 max-w-3xl">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-stone-600">
+          {perspective.eyebrow}
         </p>
+        <h2 className="mt-2 max-w-2xl font-serif text-3xl font-normal leading-tight text-stone-100 md:text-4xl">
+          {perspective.title}
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-400 md:text-base">
+          {perspective.lede}
+        </p>
+
+        {fieldIsWide && (
+          <p className="mt-4 text-sm text-stone-500">
+            The view widens; the field itself changes scale.
+          </p>
+        )}
+
+        {projection.partial && (
+          <p className="mt-4 text-xs text-amber-700/90">
+            This view is showing the parts currently within reach.
+          </p>
+        )}
       </div>
 
-      {projection.partial && (
-        <p className="mt-3 text-xs text-amber-700/80">
-          Some parts of your field are temporarily unavailable; what is shown is partial.
-        </p>
-      )}
+      <div className="relative z-10 mt-12 flex items-center gap-2 text-xs text-stone-600">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-600/70" aria-hidden="true" />
+        <span>
+          {focus === 'living'
+            ? fieldIsWide
+              ? 'You are here · wider view'
+              : 'You are here'
+            : `${perspective.eyebrow} · current perspective`}
+        </span>
+      </div>
 
-      <div className="relative mt-6">
-        <svg
-          className="pointer-events-none absolute inset-0 hidden h-full w-full sm:block"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <line x1="50" y1="67" x2="50" y2="21" stroke="currentColor" className="text-stone-800" strokeWidth="0.5" />
-          <line x1="46" y1="70" x2="20" y2="70" stroke="currentColor" className="text-stone-800" strokeWidth="0.5" />
-          <line x1="54" y1="70" x2="80" y2="70" stroke="currentColor" className="text-stone-800" strokeWidth="0.5" />
-        </svg>
-        <div className="relative grid gap-4 sm:grid-cols-[1fr_132px_1fr] sm:grid-rows-[auto_auto] sm:gap-5">
-          <div className="sm:col-start-2 sm:row-start-1">
-            <DomainCluster
-              domain="vision_studio"
-              nodes={grouped.vision_studio}
-              focused={focusedDomain === 'vision_studio'}
+      {focus === 'living' ? (
+        <div className="relative z-10 mt-12">
+          <div className="grid grid-cols-1 gap-x-16 gap-y-12 md:grid-cols-2 xl:grid-cols-3">
+            {visibleLivingNodes.map((node, index) => (
+              <FieldPoint
+                key={node.projectionId}
+                node={node}
+                index={index}
+                active={index === 0}
+                quiet={expanded && index >= 4}
+              />
+            ))}
+          </div>
+
+          {visibleLivingNodes.length === 0 && (
+            <p className="max-w-md text-sm leading-7 text-stone-600">
+              This field is ready for whatever begins to matter here.
+            </p>
+          )}
+
+          <div className="mt-14 grid gap-8 md:grid-cols-2">
+            <Pathway
+              href="/maia/vision-studio?tab=vision"
+              title="Develop something"
+              body="Give an emerging idea or body of work more form."
+            />
+            <Pathway
+              href="/maia/vision-studio?tab=practice"
+              title="Meet others through your work"
+              body="Tend how what you do enters relationship with other people."
+              tone="teal"
             />
           </div>
 
-          <div className="sm:col-start-1 sm:row-start-2 sm:self-center">
-            <DomainCluster
-              domain="living_field"
-              nodes={grouped.living_field}
-              focused={focusedDomain === 'living_field'}
-            />
-          </div>
-
-          <div className="order-first flex items-center justify-center sm:order-none sm:col-start-2 sm:row-start-2">
-            <div className="relative z-20 flex h-20 w-20 flex-col items-center justify-center rounded-full border border-stone-700 bg-stone-950 shadow-lg">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500">you</span>
-              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-stone-500" />
-            </div>
-          </div>
-
-          <div className="sm:col-start-3 sm:row-start-2 sm:self-center">
-            <DomainCluster
-              domain="practice_field"
-              nodes={grouped.practice_field}
-              focused={focusedDomain === 'practice_field'}
-            />
+          <div className="mt-14 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => setExpanded((value) => !value)}
+              className="rounded-full border border-amber-800/50 px-4 py-2 text-xs text-amber-300/90 transition hover:border-amber-700 hover:text-amber-200"
+            >
+              {expanded ? 'Return to quiet view' : 'See the wider field'}
+            </button>
           </div>
         </div>
-      </div>
-      <p className="mt-5 border-t border-stone-900 pt-3 text-[10px] leading-relaxed text-stone-700">
-        These lines show where something currently lives in Soullab. They do not claim
+      ) : (
+        <div className="relative z-10 mt-12">
+          <div className="grid grid-cols-1 gap-x-16 gap-y-12 md:grid-cols-2 xl:grid-cols-3">
+            {localNodes.map((node, index) => (
+              <FieldPoint
+                key={node.projectionId}
+                node={node}
+                index={index}
+                active={index === 0}
+              />
+            ))}
+          </div>
+
+          {localNodes.length === 0 && (
+            <p className="max-w-md text-sm leading-7 text-stone-600">
+              This area is available when something wants to take shape here.
+            </p>
+          )}
+
+          {adjacent?.visible && (
+            <div className="mt-14">
+              <Pathway
+                href={adjacent.href}
+                title={adjacent.title}
+                body={adjacent.body}
+                tone={adjacent.tone}
+              />
+            </div>
+          )}
+
+          <div className="mt-14 flex flex-wrap gap-3">
+            <Link
+              href="/maia/living-field"
+              className="rounded-full border border-amber-800/50 px-4 py-2 text-xs text-amber-300/90 transition hover:border-amber-700 hover:text-amber-200"
+            >
+              Widen to Living Field
+            </Link>
+            <button
+              type="button"
+              onClick={() => window.history.back()}
+              className="rounded-full border border-stone-800 px-4 py-2 text-xs text-stone-500 transition hover:border-stone-700 hover:text-stone-300"
+            >
+              Return to where you were
+            </button>
+          </div>
+        </div>
+      )}
+
+      <p className="relative z-10 mt-16 max-w-2xl border-t border-stone-900 pt-4 text-[10px] leading-relaxed text-stone-700">
+        These points show where something currently lives in Soullab. They do not claim
         that the things themselves are psychologically or semantically connected.
       </p>
     </section>
