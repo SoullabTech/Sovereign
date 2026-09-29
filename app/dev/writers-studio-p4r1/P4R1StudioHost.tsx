@@ -6,6 +6,7 @@ import P4R1WriteEditController from '../writers-studio-pc3-live/P4R1WriteEditCon
 import P4R1DevelopController from '../writers-studio-pc3-live/P4R1DevelopController';
 import P4R1ReviewController from '../writers-studio-pc3-live/P4R1ReviewController';
 import P4R1ThemeMenu from './P4R1ThemeMenu';
+import P4R1BetaFeedback from './P4R1BetaFeedback';
 
 export type UnifiedStudioMode = 'home' | 'write' | 'develop' | 'review';
 
@@ -36,6 +37,7 @@ export default function P4R1StudioHost({
   return (
     <>
       <P4R1ThemeMenu />
+      <P4R1BetaFeedback mode={mode} />
       {room}
     </>
   );

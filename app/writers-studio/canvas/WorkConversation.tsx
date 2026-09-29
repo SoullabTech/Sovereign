@@ -21,6 +21,8 @@ import {
   type ResumeDecision, type ThreadDiscovery,
 } from '@/lib/writersStudio/observationDialogueResume';
 import type { LivingWork } from '../useLivingWorks';
+import { createWriterCorrection } from '@/lib/writersStudio/writerCorrectionsClient';
+import { WRITER_CORRECTION_KINDS, WRITER_CORRECTION_LABEL, type WriterCorrectionKind } from '@/lib/writersStudio/writerCorrections';
 
 /**
  * MAIA-CONVERGENCE-01 · CANVAS — MAIA's ordinary conversation about the Work,
@@ -156,6 +158,11 @@ export default function WorkConversation({
   const [draft, setDraft] = useState(initialDraft);
   const [pending, setPending] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
+  const [correctingTurn, setCorrectingTurn] = useState<number | null>(null);
+  const [correctionKind, setCorrectionKind] = useState<WriterCorrectionKind>('interpretation_rejection');
+  const [correctionDraft, setCorrectionDraft] = useState('');
+  const [correctionBusy, setCorrectionBusy] = useState(false);
+  const [correctionStatus, setCorrectionStatus] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -188,6 +195,36 @@ export default function WorkConversation({
   }, [manuscriptId, work.id, adopt]);
 
   const mode = sendMode(decision, threadId);
+
+  const reorient = () => {
+    setDraft([
+      'Help me reorient before we do anything else.',
+      'From only this conversation and the Work context you actually have, tell me briefly:',
+      'where we are, what question or concern brought us here if that is established, what has changed, what remains untouched, and how I can return to the larger Work.',
+      'If any of that is unknown, say so. Do not introduce a new interpretation yet.',
+    ].join('\n'));
+  };
+
+  const keepCorrection = async (maiaTurnIndex: number) => {
+    if (!threadId || correctionBusy || !correctionDraft.trim()) return;
+    setCorrectionBusy(true);
+    setCorrectionStatus(null);
+    const result = await createWriterCorrection({
+      workId: work.id,
+      threadId,
+      maiaTurnIndex,
+      kind: correctionKind,
+      correction: correctionDraft.trim(),
+    });
+    setCorrectionBusy(false);
+    if (!result.ok) {
+      setCorrectionStatus('That correction was not kept. Nothing else changed.');
+      return;
+    }
+    setCorrectionDraft('');
+    setCorrectingTurn(null);
+    setCorrectionStatus('Correction kept. MAIA will receive this as the current working understanding for this Work.');
+  };
 
   const send = async () => {
     const question = draft.trim();
@@ -263,6 +300,18 @@ export default function WorkConversation({
           {work.title ?? 'your work'}
         </StudioText>
         <span style={{ flex: 1 }} />
+        <button
+          type="button"
+          onClick={reorient}
+          data-reorient-work="true"
+          style={{
+            background: 'transparent', border: `1px solid ${RULE.soft}`,
+            borderRadius: RADIUS.sm, padding: `${SPACE.hairline}px ${SPACE.tight}px`,
+            cursor: 'pointer', color: INK.secondary,
+          }}
+        >
+          <StudioText role="metadata" as="span">Where are we?</StudioText>
+        </button>
         <button
           type="button"
           onClick={onClose}
@@ -341,8 +390,92 @@ export default function WorkConversation({
             >
               {t.body}
             </StudioText>
+            {t.speaker === 'maia' && threadId ? (
+              <div style={{ marginTop: SPACE.tight }} data-maia-correction={t.index}>
+                {correctingTurn !== t.index ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCorrectingTurn(t.index);
+                      setCorrectionDraft('');
+                      setCorrectionStatus(null);
+                    }}
+                    style={{
+                      background: 'transparent', border: 0, padding: 0,
+                      cursor: 'pointer', color: INK.quiet,
+                    }}
+                  >
+                    <StudioText role="metadata" as="span">Correct MAIA</StudioText>
+                  </button>
+                ) : (
+                  <div
+                    style={{
+                      border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+                      padding: SPACE.snug, background: GROUND.base,
+                    }}
+                  >
+                    <StudioText role="metadata" tone="secondary" style={{ marginBottom: SPACE.tight }}>
+                      What should MAIA carry forward instead?
+                    </StudioText>
+                    <select
+                      aria-label="Kind of correction"
+                      value={correctionKind}
+                      onChange={(e) => setCorrectionKind(e.target.value as WriterCorrectionKind)}
+                      style={{
+                        width: '100%', marginBottom: SPACE.tight, background: GROUND.raised,
+                        color: INK.secondary, border: `1px solid ${RULE.soft}`,
+                        borderRadius: RADIUS.sm, padding: SPACE.tight,
+                      }}
+                    >
+                      {WRITER_CORRECTION_KINDS.map((kind) => (
+                        <option key={kind} value={kind}>{WRITER_CORRECTION_LABEL[kind]}</option>
+                      ))}
+                    </select>
+                    <textarea
+                      aria-label="Your correction"
+                      rows={3}
+                      value={correctionDraft}
+                      onChange={(e) => setCorrectionDraft(e.target.value)}
+                      placeholder="Say what MAIA should understand differently…"
+                      style={{
+                        ...typeStyle('maiaReading'), width: '100%', resize: 'vertical',
+                        background: GROUND.raised, color: INK.primary,
+                        border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+                        padding: SPACE.tight, outline: 'none',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: SPACE.tight, marginTop: SPACE.tight }}>
+                      <button
+                        type="button"
+                        onClick={() => void keepCorrection(t.index)}
+                        disabled={correctionBusy || !correctionDraft.trim()}
+                        style={{
+                          background: GROUND.active, border: `1px solid ${RULE.soft}`,
+                          borderRadius: RADIUS.sm, padding: `${SPACE.tight}px ${SPACE.snug}px`,
+                          cursor: 'pointer', color: INK.primary,
+                          opacity: correctionBusy || !correctionDraft.trim() ? 0.45 : 1,
+                        }}
+                      >
+                        <StudioText role="metadata" as="span">{correctionBusy ? 'Keeping…' : 'Keep correction'}</StudioText>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setCorrectingTurn(null); setCorrectionDraft(''); }}
+                        style={{ background: 'transparent', border: 0, cursor: 'pointer', color: INK.muted }}
+                      >
+                        <StudioText role="metadata" as="span">Cancel</StudioText>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         ))}
+
+        {correctionStatus ? (
+          <StudioText role="metadata" data-correction-status="true">{correctionStatus}</StudioText>
+        ) : null}
 
         {/* ⛔ A PENDING QUESTION IS NOT A TURN. It is shown so the writer can see
             their words went somewhere, and it is replaced by the server's record

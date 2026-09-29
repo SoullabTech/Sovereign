@@ -59,6 +59,7 @@ import {
   writerUnderstandingContextForManuscript,
   writerUnderstandingContextForWork,
 } from '@/lib/writersStudio/writerUnderstandingServer';
+import { writerCorrectionContextForWork } from '@/lib/writersStudio/writerCorrectionsServer';
 
 /**
  * ⭐ THE ONE READ THAT DID NOT EXIST: the canonical projected body of ONE
@@ -121,6 +122,8 @@ export interface WorkContextFacts {
   readonly locus: ProjectedLocus | null;
   /** Member-authored C14 context. Empty string means nothing has been declared. */
   readonly writerUnderstanding: string;
+  /** Current writer corrections of MAIA interpretation. Historical turns remain untouched. */
+  readonly writerCorrections: string;
   readonly continuity: Continuity;
 }
 
@@ -192,6 +195,7 @@ export async function buildWorkContext(input: {
     memberId,
     manuscriptId,
   );
+  const writerCorrections = await writerCorrectionContextForWork(memberId, work.id);
 
   return {
     ok: true,
@@ -205,6 +209,7 @@ export async function buildWorkContext(input: {
       sections,
       locus,
       writerUnderstanding,
+      writerCorrections,
       continuity,
     },
   };
@@ -230,6 +235,7 @@ export async function buildLivingWorkOnlyContext(input: {
     input.memberId,
     input.workId,
   );
+  const writerCorrections = await writerCorrectionContextForWork(input.memberId, input.workId);
 
   return {
     ok: true,
@@ -239,6 +245,7 @@ export async function buildLivingWorkOnlyContext(input: {
       sections: [],
       locus: null,
       writerUnderstanding,
+      writerCorrections,
       continuity: input.continuity,
     },
   };
