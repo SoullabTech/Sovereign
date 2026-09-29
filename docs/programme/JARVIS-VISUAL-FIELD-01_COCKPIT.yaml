@@ -3,7 +3,7 @@ current_authority:
   - docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md
   - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: VERIFY
+current_phase: REPAIR
 current_act: VISUAL-FIELD-RUNTIME-01R1R6R2 — Founder Witness of Cellular Actionability
 current_subject_sha: 8ed989096bc06a480c4365a40f33f2276f2ef9dc
 current_branch: feature/jarvis-visual-field-01-20260928
