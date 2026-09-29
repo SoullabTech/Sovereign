@@ -105,6 +105,22 @@
 .centerIntro span { display: block; margin-top: 8px; color: #c9b9a2; font: 14px/1.5 Arial, sans-serif; }
 
 .worlds { position: relative; z-index: 1; margin-top: 24px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(14px, 1.6vw, 24px); }
+.worldShell { position: relative; min-width: 0; }
+.worldShell > .world { width: 100%; height: 100%; }
+.worldInner { display: flex; width: 100%; flex: 1; flex-direction: column; align-items: flex-start; }
+.worldReturning {
+  border-color: rgba(232, 202, 158, .68);
+  box-shadow: 0 0 0 1px rgba(232, 202, 158, .12), 0 18px 42px rgba(0,0,0,.2);
+  animation: houseReturnSettle 1.35s cubic-bezier(.2,.72,.2,1) both;
+}
+@keyframes houseReturnSettle {
+  0% { transform: translateY(0); background: linear-gradient(155deg, rgba(255,242,218,.14), rgba(0,0,0,.04)); }
+  45% { transform: translateY(-2px); }
+  100% { transform: translateY(0); }
+}
+::view-transition-group(house-place-writing) { animation-duration: .38s; animation-timing-function: cubic-bezier(.2,.72,.2,1); }
+::view-transition-old(house-place-writing),
+::view-transition-new(house-place-writing) { mix-blend-mode: normal; }
 .world { position: relative; display: flex; min-width: 0; min-height: 238px; flex-direction: column; align-items: flex-start; padding: 22px 20px 18px; border: 1px solid rgba(225, 196, 153, .16); border-radius: 10px; background: linear-gradient(155deg, rgba(255,242,218,.045), rgba(0,0,0,.08)); text-align: left; color: inherit; text-decoration: none; cursor: pointer; transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease; }
 .world::after { content: 'Enter  →'; display: block; margin-top: auto; padding-top: 20px; color: #dfc397; font: 11px/1 Arial, sans-serif; letter-spacing: .16em; text-transform: uppercase; }
 .world:hover, .world:focus-visible { transform: translateY(-3px); border-color: rgba(232, 202, 158, .48); background: linear-gradient(155deg, rgba(255,242,218,.085), rgba(0,0,0,.05)); box-shadow: 0 16px 32px rgba(0,0,0,.18); outline: none; }
@@ -233,7 +249,7 @@
   .welcome h1 { font-size: 50px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .house *, .house *::before, .house *::after { transition: none !important; scroll-behavior: auto !important; }
+  .house *, .house *::before, .house *::after { transition: none !important; scroll-behavior: auto !important; animation: none !important; }
   .world:hover { transform: none; }
 }
 

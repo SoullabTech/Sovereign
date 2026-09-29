@@ -7,6 +7,7 @@ import { defaultHousePreferences, parseHouseSnapshot, sameHouseOwner, visibleHou
   type HousePreferences, type HousePreferenceSnapshot } from '@/lib/house/preferences';
 import { PassingThrough } from './PassingThrough';
 import { DecisionAccessNotice } from './DecisionAccessNotice';
+import { HouseContinuityLink, HousePlaceContext, useHouseReturnPlace } from '@/components/house/HouseContinuityLink';
 import type { PassingQuote } from './passingContext';
 import house from './house.module.css';
 import styles from './house-preferences.module.css';
@@ -319,13 +320,41 @@ export function HouseMemberControls({ name }: { name: string }) {
 
 export function HouseCenter() {
   const { active, open } = useHousePreferences();
+  const returnPlace = useHouseReturnPlace();
   if (!active) return null;
   const places = visibleHouseCenter(active.preferences, active.eligibleIds);
+
   return <section className={house.worlds} aria-label="Your center">
-    {places.map(place => <Link href={place.href} className={house.world} key={place.id} data-place={place.id}>
-      <span className={`${house.worldMark} ${styles.placeMark}`} data-tone={place.tone} data-place={place.id} aria-hidden="true">{place.mark}</span>
-      <strong>{place.label}</strong><small>{place.purpose}</small>
-    </Link>)}
+    {places.map(place => {
+      const content = <>
+        <span className={`${house.worldMark} ${styles.placeMark}`} data-tone={place.tone} data-place={place.id} aria-hidden="true">{place.mark}</span>
+        <strong>{place.label}</strong><small>{place.purpose}</small>
+      </>;
+
+      if (place.id !== 'writing') {
+        return <Link href={place.href} className={house.world} key={place.id} data-place={place.id}>
+          {content}
+        </Link>;
+      }
+
+      return <div className={house.worldShell} key={place.id} data-place={place.id}>
+        <HouseContinuityLink
+          href={place.href}
+          placeId={place.id}
+          className={`${house.world} ${returnPlace === place.id ? house.worldReturning : ''}`}
+          ariaLabel={`Enter ${place.label}`}
+        >
+          <span className={house.worldInner} data-returning={returnPlace === place.id ? 'true' : 'false'}>
+            {content}
+          </span>
+        </HouseContinuityLink>
+        <HousePlaceContext
+          placeId={place.id}
+          label={place.label}
+          onArrange={() => open({ placeId: place.id, target: 'center' })}
+        />
+      </div>;
+    })}
     {places.length < 5 && <button type="button" className={styles.centerEmpty} onClick={() => open()}>+ Choose a place</button>}
   </section>;
 }

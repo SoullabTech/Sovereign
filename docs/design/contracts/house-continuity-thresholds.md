@@ -11,6 +11,7 @@ surfaces:
   - app/wisdom-keepers/wisdom/page.tsx
   - components/house/HouseEntryThreshold.tsx
   - components/house/HouseRoomThreshold.tsx
+  - components/house/HouseContinuityLink.tsx
   - components/team/TeamSidebar.tsx
 change_class: experiential
 principles:
@@ -27,7 +28,7 @@ shared_with_house: one restrained threshold grammar — Soullab mark, THE HOUSE,
 distinct_to_room: this contract governs only the entry/return membrane inside the listed files. Commons, Library, Ideas, Living Field, Relationships, Wisdom and Team remain their own rooms/products; the threshold neither grants access nor changes their inner meaning.
 screenshot_desktop: docs/design/contracts/screenshots/canonical-house-threshold-library-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/canonical-house-threshold-library-mobile.png
-experience_verification: 2026-09-27 authenticated reconciliation witness on isolated localhost:3705. Library was entered with ?from=house at desktop and mobile and rendered the shared House room threshold while retaining its own Wisdom Files experience. Source review confirmed the same explicit from=house membrane in Commons, Ideas, Living Field, Relationships and Wisdom, while TeamSidebar exposes a direct House return. This contract closes historical coverage only; no destination UI source changed during CANONICAL-RECONCILIATION-01.
+experience_verification: 2026-09-27 authenticated reconciliation witness on isolated localhost:3705 established the canonical House threshold at desktop and mobile. 2026-09-29 HOUSE-CONTINUITY-SPIKE-01 extends that same membrane in an isolated branch for one Writing crossing only: source/structural witness confirms stable place identity, explicit from=house entry, matched departure+return receipt, reduced-motion fallback, and no persistence/permission change. The new shared-element motion and anchored contextual affordance still require a rendered desktop/mobile felt-experience witness before promotion or merge; this contract does not claim that visual acceptance has passed.
 ---
 
 # House Continuity Thresholds

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FilePlus2, FolderInput, Loader2, NotebookPen, Trash2 } from 'lucide-react';
 import { PRESS, SERIF } from './pressTheme';
 import { REBUILD_HREF, IMPORT_HREF, SOURCE_INTAKE_HREF } from './studioMap';
@@ -17,6 +18,7 @@ import type { MarkedLine } from './useMarkedLines';
 import { byDay, sentenceFor, beneath, type StudioAct } from './studioHistory';
 import { WorkVisualChooser, CardVisual, HeroVisual } from './WorkVisual';
 import { AppearanceMenu } from './atmosphere/AppearanceMenu';
+import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
 
 /**
  * Writer's Studio — Home.
@@ -285,6 +287,8 @@ export default function HomeView({
   const [query, setQuery] = useState('');
   /* Changing a Work's image must be visible everywhere it appears at once. */
   const [visualEpoch, setVisualEpoch] = useState(0);
+  const searchParams = useSearchParams();
+  const fromHouse = searchParams?.get('from') === 'house';
 
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
   const { kind, resume, alsoWritten, shelf, feature, imported } = arrivalFor(works, manuscripts);
@@ -787,15 +791,24 @@ export default function HomeView({
       className="min-h-screen px-6 md:px-10 py-10 md:py-16"
       style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
     >
-      <div className="max-w-4xl mx-auto mb-6">
-        <Link
-          href="/home"
-          aria-label="Return to Soullab Home"
-          className="text-[12px] opacity-45 hover:opacity-75 transition-opacity"
-        >
-          ← Soullab Home
-        </Link>
-      </div>
+      {fromHouse ? (
+        <HouseRoomThreshold
+          room="Writer's Studio"
+          returnHref="/house"
+          returnLabel="House"
+          placeId="writing"
+        />
+      ) : (
+        <div className="max-w-4xl mx-auto mb-6">
+          <Link
+            href="/home"
+            aria-label="Return to Soullab Home"
+            className="text-[12px] opacity-45 hover:opacity-75 transition-opacity"
+          >
+            ← Soullab Home
+          </Link>
+        </div>
+      )}
       {!loading ? <Hero /> : null}
 
       <div className="max-w-4xl mx-auto">
