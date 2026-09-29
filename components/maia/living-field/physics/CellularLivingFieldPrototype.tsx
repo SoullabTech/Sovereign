@@ -55,9 +55,37 @@ type BridgeBundle = {
   strength: number
 }
 
+type CameraView = {
+  cx: number
+  cy: number
+  scale: number
+}
+
+type PanGesture = {
+  pointerId: number
+  startClientX: number
+  startClientY: number
+  startCamera: CameraView
+}
+
+type PinchGesture = {
+  startDistance: number
+  startScale: number
+  anchorWorldX: number
+  anchorWorldY: number
+}
+
 const WIDTH = 1000
 const HEIGHT = 720
 const TRACE_TTL = 10000
+const CAMERA_MIN_SCALE = 0.86
+const CAMERA_MAX_SCALE = 3.4
+const CAMERA_WORLD_BOUNDS = {
+  minX: -80,
+  maxX: 1080,
+  minY: -80,
+  maxY: 800,
+}
 
 const WORLD_STYLE: Record<PhysicsGroupKey, { rgb: string; edge: string; glow: string }> = {
   fire: { rgb: '214,116,46', edge: '#d97732', glow: '#f2a45f' },
@@ -194,6 +222,27 @@ function bridgePath(a: PhysicsGroupKey, b: PhysicsGroupKey) {
   return `M ${points.start.x} ${points.start.y} Q ${points.control.x} ${points.control.y} ${points.end.x} ${points.end.y}`
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function clampCameraView(view: CameraView): CameraView {
+  const scale = clamp(view.scale, CAMERA_MIN_SCALE, CAMERA_MAX_SCALE)
+  const halfWidth = WIDTH / (2 * scale)
+  const halfHeight = HEIGHT / (2 * scale)
+
+  const minCx = CAMERA_WORLD_BOUNDS.minX + halfWidth
+  const maxCx = CAMERA_WORLD_BOUNDS.maxX - halfWidth
+  const minCy = CAMERA_WORLD_BOUNDS.minY + halfHeight
+  const maxCy = CAMERA_WORLD_BOUNDS.maxY - halfHeight
+
+  return {
+    cx: minCx <= maxCx ? clamp(view.cx, minCx, maxCx) : WIDTH / 2,
+    cy: minCy <= maxCy ? clamp(view.cy, minCy, maxCy) : HEIGHT / 2,
+    scale,
+  }
+}
+
 export function CellularLivingFieldPrototype() {
   const [nodes] = useState<SimNode[]>(() => makeNodes())
   const [links] = useState<SimLink[]>(() => makeLinks())
@@ -215,7 +264,10 @@ export function CellularLivingFieldPrototype() {
   const attendTimerRef = useRef<number | null>(null)
   const dwellTimerRef = useRef<number | null>(null)
   const cameraAnimationRef = useRef<number | null>(null)
-  const cameraRef = useRef({ cx: WIDTH / 2, cy: HEIGHT / 2, scale: 1 })
+  const cameraRef = useRef<CameraView>({ cx: WIDTH / 2, cy: HEIGHT / 2, scale: 1 })
+  const panGestureRef = useRef<PanGesture | null>(null)
+  const touchPointersRef = useRef<Map<number, { clientX: number; clientY: number }>>(new Map())
+  const pinchGestureRef = useRef<PinchGesture | null>(null)
 
   const bridgeBundles = useMemo(() => buildBridgeBundles(), [])
   const nodeById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
@@ -358,6 +410,11 @@ export function CellularLivingFieldPrototype() {
     setAttentionPhase('dwell')
     rememberAttention(node.id)
     simulationRef.current?.alpha(0.18).restart()
+    animateCameraTo({
+      cx: node.x ?? GROUP_GEOMETRY[node.group].x,
+      cy: node.y ?? GROUP_GEOMETRY[node.group].y,
+      scale: 1.9,
+    })
   }
 
   const releaseNodeFocus = () => {
@@ -365,6 +422,16 @@ export function CellularLivingFieldPrototype() {
     setHoveredNodeId(null)
     setProximityNodeId(null)
     setAttentionPhase('idle')
+
+    if (focusGroup) {
+      animateCameraTo({
+        cx: GROUP_GEOMETRY[focusGroup].x,
+        cy: GROUP_GEOMETRY[focusGroup].y,
+        scale: 1.48,
+      })
+    } else {
+      animateCameraTo({ cx: WIDTH / 2, cy: HEIGHT / 2, scale: 1 })
+    }
   }
 
   const enterWorld = (group: PhysicsGroupKey) => {
@@ -373,6 +440,11 @@ export function CellularLivingFieldPrototype() {
     setHoveredNodeId(null)
     setProximityNodeId(null)
     setAttentionPhase('idle')
+    animateCameraTo({
+      cx: GROUP_GEOMETRY[group].x,
+      cy: GROUP_GEOMETRY[group].y,
+      scale: 1.48,
+    })
   }
 
   const widen = () => {
@@ -383,20 +455,222 @@ export function CellularLivingFieldPrototype() {
 
     setFocusGroup(null)
     setAttentionPhase('idle')
+    animateCameraTo({ cx: WIDTH / 2, cy: HEIGHT / 2, scale: 1 })
   }
 
-  const pointFromPointer = (clientX: number, clientY: number) => {
+  const clientToViewBox = (clientX: number, clientY: number) => {
     const rect = svgRef.current?.getBoundingClientRect()
     if (!rect) return null
 
-    const screenX = ((clientX - rect.left) / rect.width) * WIDTH
-    const screenY = ((clientY - rect.top) / rect.height) * HEIGHT
+    return {
+      x: ((clientX - rect.left) / rect.width) * WIDTH,
+      y: ((clientY - rect.top) / rect.height) * HEIGHT,
+    }
+  }
+
+  const applyCameraView = (view: CameraView) => {
+    if (cameraAnimationRef.current !== null) {
+      cancelAnimationFrame(cameraAnimationRef.current)
+      cameraAnimationRef.current = null
+    }
+
+    const next = clampCameraView(view)
+    cameraRef.current = next
+    setCameraView(next)
+    return next
+  }
+
+  const animateCameraTo = (targetView: CameraView, requestedDuration = 820) => {
+    if (cameraAnimationRef.current !== null) cancelAnimationFrame(cameraAnimationRef.current)
+
+    const target = clampCameraView(targetView)
+    const start = cameraRef.current
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const duration = reducedMotion ? 0 : requestedDuration
+
+    if (duration === 0) {
+      cameraRef.current = target
+      setCameraView(target)
+      cameraAnimationRef.current = null
+      return
+    }
+
+    const startTime = performance.now()
+
+    const tick = (now: number) => {
+      const raw = Math.min(1, (now - startTime) / duration)
+      const eased = 1 - Math.pow(1 - raw, 3)
+      const next = clampCameraView({
+        cx: start.cx + (target.cx - start.cx) * eased,
+        cy: start.cy + (target.cy - start.cy) * eased,
+        scale: start.scale + (target.scale - start.scale) * eased,
+      })
+
+      cameraRef.current = next
+      setCameraView(next)
+
+      if (raw < 1) cameraAnimationRef.current = requestAnimationFrame(tick)
+      else cameraAnimationRef.current = null
+    }
+
+    cameraAnimationRef.current = requestAnimationFrame(tick)
+  }
+
+  const pointFromPointer = (clientX: number, clientY: number) => {
+    const screen = clientToViewBox(clientX, clientY)
+    if (!screen) return null
+
     const camera = cameraRef.current
 
     return {
-      x: (screenX - WIDTH / 2) / camera.scale + camera.cx,
-      y: (screenY - HEIGHT / 2) / camera.scale + camera.cy,
+      x: (screen.x - WIDTH / 2) / camera.scale + camera.cx,
+      y: (screen.y - HEIGHT / 2) / camera.scale + camera.cy,
     }
+  }
+
+  const zoomAtClientPoint = (clientX: number, clientY: number, scaleFactor: number) => {
+    const screen = clientToViewBox(clientX, clientY)
+    if (!screen) return null
+
+    const current = cameraRef.current
+    const anchorWorldX = (screen.x - WIDTH / 2) / current.scale + current.cx
+    const anchorWorldY = (screen.y - HEIGHT / 2) / current.scale + current.cy
+    const nextScale = clamp(current.scale * scaleFactor, CAMERA_MIN_SCALE, CAMERA_MAX_SCALE)
+
+    return applyCameraView({
+      scale: nextScale,
+      cx: anchorWorldX - (screen.x - WIDTH / 2) / nextScale,
+      cy: anchorWorldY - (screen.y - HEIGHT / 2) / nextScale,
+    })
+  }
+
+  const zoomFromCenter = (scaleFactor: number) => {
+    const current = cameraRef.current
+    animateCameraTo({
+      ...current,
+      scale: clamp(current.scale * scaleFactor, CAMERA_MIN_SCALE, CAMERA_MAX_SCALE),
+    }, 320)
+  }
+
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!svg) return
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const sensitivity = event.ctrlKey ? 0.006 : 0.0018
+      const factor = clamp(Math.exp(-event.deltaY * sensitivity), 0.78, 1.28)
+      zoomAtClientPoint(event.clientX, event.clientY, factor)
+    }
+
+    svg.addEventListener('wheel', handleWheel, { passive: false })
+    return () => svg.removeEventListener('wheel', handleWheel)
+  }, [])
+
+  const beginCameraPan = (pointerId: number, clientX: number, clientY: number) => {
+    if (pinchGestureRef.current) return
+    panGestureRef.current = {
+      pointerId,
+      startClientX: clientX,
+      startClientY: clientY,
+      startCamera: cameraRef.current,
+    }
+    svgRef.current?.setPointerCapture?.(pointerId)
+  }
+
+  const updateCameraPan = (clientX: number, clientY: number) => {
+    const pan = panGestureRef.current
+    const rect = svgRef.current?.getBoundingClientRect()
+    if (!pan || !rect) return false
+
+    const dx = ((clientX - pan.startClientX) / rect.width) * WIDTH
+    const dy = ((clientY - pan.startClientY) / rect.height) * HEIGHT
+
+    applyCameraView({
+      cx: pan.startCamera.cx - dx / pan.startCamera.scale,
+      cy: pan.startCamera.cy - dy / pan.startCamera.scale,
+      scale: pan.startCamera.scale,
+    })
+
+    return true
+  }
+
+  const endCameraPan = (pointerId?: number) => {
+    if (pointerId !== undefined && panGestureRef.current?.pointerId !== pointerId) return
+    panGestureRef.current = null
+  }
+
+  const registerTouchPointer = (pointerId: number, clientX: number, clientY: number) => {
+    touchPointersRef.current.set(pointerId, { clientX, clientY })
+
+    if (touchPointersRef.current.size !== 2) return
+
+    const [first, second] = [...touchPointersRef.current.values()]
+    const dx = second.clientX - first.clientX
+    const dy = second.clientY - first.clientY
+    const distance = Math.sqrt(dx * dx + dy * dy)
+    const centerX = (first.clientX + second.clientX) / 2
+    const centerY = (first.clientY + second.clientY) / 2
+    const anchor = pointFromPointer(centerX, centerY)
+
+    if (!anchor || distance <= 0) return
+
+    pinchGestureRef.current = {
+      startDistance: distance,
+      startScale: cameraRef.current.scale,
+      anchorWorldX: anchor.x,
+      anchorWorldY: anchor.y,
+    }
+    panGestureRef.current = null
+  }
+
+  const updateTouchPointer = (pointerId: number, clientX: number, clientY: number) => {
+    if (!touchPointersRef.current.has(pointerId)) return false
+
+    touchPointersRef.current.set(pointerId, { clientX, clientY })
+    const pinch = pinchGestureRef.current
+
+    if (!pinch || touchPointersRef.current.size < 2) return false
+
+    const [first, second] = [...touchPointersRef.current.values()]
+    const dx = second.clientX - first.clientX
+    const dy = second.clientY - first.clientY
+    const distance = Math.sqrt(dx * dx + dy * dy)
+    const centerX = (first.clientX + second.clientX) / 2
+    const centerY = (first.clientY + second.clientY) / 2
+    const screen = clientToViewBox(centerX, centerY)
+
+    if (!screen || distance <= 0) return false
+
+    const nextScale = clamp(
+      pinch.startScale * (distance / pinch.startDistance),
+      CAMERA_MIN_SCALE,
+      CAMERA_MAX_SCALE,
+    )
+
+    applyCameraView({
+      scale: nextScale,
+      cx: pinch.anchorWorldX - (screen.x - WIDTH / 2) / nextScale,
+      cy: pinch.anchorWorldY - (screen.y - HEIGHT / 2) / nextScale,
+    })
+
+    return true
+  }
+
+  const releaseTouchPointer = (pointerId: number) => {
+    touchPointersRef.current.delete(pointerId)
+    if (touchPointersRef.current.size < 2) pinchGestureRef.current = null
+  }
+
+  const goWhole = () => {
+    clearAttentionTimers()
+    setFocusNodeId(null)
+    setFocusGroup(null)
+    setHoveredNodeId(null)
+    setProximityNodeId(null)
+    setHoveredRelationId(null)
+    setAttentionPhase('idle')
+    animateCameraTo({ cx: WIDTH / 2, cy: HEIGHT / 2, scale: 1 })
   }
 
   const updatePointerAttention = (clientX: number, clientY: number) => {
@@ -522,82 +796,90 @@ export function CellularLivingFieldPrototype() {
     return bridgeScore
   }
 
-  useEffect(() => {
-    const target = focusNodeId
-      ? {
-          cx: nodeById.get(focusNodeId)?.x ?? GROUP_GEOMETRY[focusGroup ?? 'air'].x,
-          cy: nodeById.get(focusNodeId)?.y ?? GROUP_GEOMETRY[focusGroup ?? 'air'].y,
-          scale: 1.9,
-        }
-      : focusGroup
-        ? {
-            cx: GROUP_GEOMETRY[focusGroup].x,
-            cy: GROUP_GEOMETRY[focusGroup].y,
-            scale: 1.48,
-          }
-        : { cx: WIDTH / 2, cy: HEIGHT / 2, scale: 1 }
-
-    if (cameraAnimationRef.current !== null) cancelAnimationFrame(cameraAnimationRef.current)
-
-    const start = cameraRef.current
-    const startTime = performance.now()
-    const duration = 820
-
-    const tick = (now: number) => {
-      const raw = Math.min(1, (now - startTime) / duration)
-      const eased = 1 - Math.pow(1 - raw, 3)
-      const next = {
-        cx: start.cx + (target.cx - start.cx) * eased,
-        cy: start.cy + (target.cy - start.cy) * eased,
-        scale: start.scale + (target.scale - start.scale) * eased,
-      }
-
-      cameraRef.current = next
-      setCameraView(next)
-
-      if (raw < 1) cameraAnimationRef.current = requestAnimationFrame(tick)
-      else cameraAnimationRef.current = null
-    }
-
-    cameraAnimationRef.current = requestAnimationFrame(tick)
-
-    return () => {
-      if (cameraAnimationRef.current !== null) {
-        cancelAnimationFrame(cameraAnimationRef.current)
-        cameraAnimationRef.current = null
-      }
-    }
-  }, [focusGroup, focusNodeId, nodeById])
-
   const transform = `translate(${WIDTH / 2} ${HEIGHT / 2}) scale(${cameraView.scale}) translate(${-cameraView.cx} ${-cameraView.cy})`
 
   return (
     <section className="overflow-hidden rounded-[30px] border border-stone-800 bg-[#090a0a]">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-800/80 px-5 py-4 sm:px-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Cellular Living Field · R1R6</p>
-          <h2 className="mt-1 text-2xl font-light text-stone-100">Attention reveals the ecology.</h2>
+          <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Living Field · R2A</p>
+          <h2 className="mt-1 text-2xl font-light text-stone-100">Move through one living world.</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500">
-            Hover to glance. Stay to attend. Dwell to reveal relation. Click a world to enter it; click a node to move closer.
+            Trackpad or wheel changes scale around attention. Drag open space to move. Click a world or cell to enter it.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={widen}
-          disabled={!focusGroup && !focusNodeId}
-          className="rounded-full border border-stone-800 px-4 py-2 text-sm text-stone-400 transition hover:border-stone-700 hover:text-stone-100 disabled:opacity-25"
-        >
-          ← Widen
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={widen}
+            disabled={!focusGroup && !focusNodeId}
+            className="rounded-full border border-stone-800 px-4 py-2 text-sm text-stone-400 transition hover:border-stone-700 hover:text-stone-100 disabled:opacity-25"
+          >
+            ← Widen
+          </button>
+          <div className="flex items-center rounded-full border border-stone-800 bg-stone-950/70 p-1">
+            <button
+              type="button"
+              aria-label="Zoom out"
+              onClick={() => zoomFromCenter(1 / 1.22)}
+              className="h-8 w-8 rounded-full text-lg text-stone-500 transition hover:bg-stone-900 hover:text-stone-100"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              aria-label="Zoom in"
+              onClick={() => zoomFromCenter(1.22)}
+              className="h-8 w-8 rounded-full text-lg text-stone-500 transition hover:bg-stone-900 hover:text-stone-100"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={goWhole}
+              className="rounded-full px-3 py-1.5 text-xs text-stone-500 transition hover:bg-stone-900 hover:text-stone-100"
+            >
+              Whole
+            </button>
+          </div>
+        </div>
       </header>
 
       <div className="relative">
         <svg
           ref={svgRef}
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          className="block h-auto w-full touch-none"
+          className="block h-auto w-full touch-none outline-none"
           style={{ pointerEvents: 'auto' }}
+          tabIndex={0}
+          role="img"
+          aria-label="Living Field. Zoom with wheel or trackpad, drag open space to pan, click a world or cell to enter."
+          onKeyDown={(event) => {
+            if (event.key === '+' || event.key === '=') {
+              event.preventDefault()
+              zoomFromCenter(1.22)
+            } else if (event.key === '-') {
+              event.preventDefault()
+              zoomFromCenter(1 / 1.22)
+            } else if (event.key === '0' || event.key === 'Home') {
+              event.preventDefault()
+              goWhole()
+            } else if (event.key === 'Escape' && (focusNodeId || focusGroup)) {
+              event.preventDefault()
+              widen()
+            }
+          }}
+          onPointerDownCapture={(event) => {
+            if (event.pointerType === 'touch') {
+              registerTouchPointer(event.pointerId, event.clientX, event.clientY)
+            }
+          }}
           onPointerMove={(event) => {
+            if (event.pointerType === 'touch' && updateTouchPointer(event.pointerId, event.clientX, event.clientY)) {
+              return
+            }
+            if (updateCameraPan(event.clientX, event.clientY)) return
+
             dragMove(event.clientX, event.clientY)
             const target = event.target as Element
             if (!target.closest('[data-relation-id]')) {
@@ -605,6 +887,7 @@ export function CellularLivingFieldPrototype() {
             }
           }}
           onPointerLeave={() => {
+            if (panGestureRef.current || pinchGestureRef.current) return
             if (!draggingRef.current) {
               clearAttentionTimers()
               setHoveredNodeId(null)
@@ -612,8 +895,16 @@ export function CellularLivingFieldPrototype() {
               setAttentionPhase(focusNodeId ? 'dwell' : 'idle')
             }
           }}
-          onPointerUp={dragEnd}
-          onPointerCancel={dragEnd}
+          onPointerUp={(event) => {
+            releaseTouchPointer(event.pointerId)
+            endCameraPan(event.pointerId)
+            dragEnd()
+          }}
+          onPointerCancel={(event) => {
+            releaseTouchPointer(event.pointerId)
+            endCameraPan(event.pointerId)
+            dragEnd()
+          }}
         >
           <defs>
             {PHYSICS_GROUPS.map((group) => {
@@ -648,11 +939,23 @@ export function CellularLivingFieldPrototype() {
             </filter>
           </defs>
 
-          <rect width={WIDTH} height={HEIGHT} fill="#090a0a" />
+          <rect
+            data-camera-pan-surface="true"
+            width={WIDTH}
+            height={HEIGHT}
+            fill="#090a0a"
+            className="cursor-grab active:cursor-grabbing"
+            onPointerDown={(event) => {
+              if (event.button !== 0) return
+              beginCameraPan(event.pointerId, event.clientX, event.clientY)
+            }}
+          />
 
           <g
             data-field-stage="camera"
             data-camera-scale={cameraView.scale.toFixed(3)}
+            data-camera-cx={cameraView.cx.toFixed(3)}
+            data-camera-cy={cameraView.cy.toFixed(3)}
             transform={transform}
           >
             <circle cx="500" cy="360" r="345" fill="rgba(255,255,255,0.008)" stroke="rgba(121,108,96,0.26)" strokeWidth="1.2" />
@@ -735,13 +1038,19 @@ export function CellularLivingFieldPrototype() {
                     className="cursor-pointer"
                   />
                   <text
+                    data-world-label={group.id}
                     x={geometry.x}
                     y={geometry.y - geometry.r + 22}
                     textAnchor="middle"
                     fill={focusGroup === group.id || activeNode?.group === group.id ? style.glow : '#aaa29a'}
                     fontSize={15 + attention * 2}
                     fontWeight="600"
-                    pointerEvents="none"
+                    pointerEvents="all"
+                    className="cursor-pointer"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      enterWorld(group.id)
+                    }}
                   >
                     {group.label}
                   </text>
@@ -834,6 +1143,7 @@ export function CellularLivingFieldPrototype() {
                     selectNode(node)
                   }}
                   onPointerDown={(event) => {
+                    if (event.pointerType === 'touch') return
                     event.preventDefault()
                     event.currentTarget.setPointerCapture(event.pointerId)
                     dragStart(node, event.clientX, event.clientY)

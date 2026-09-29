@@ -106,8 +106,8 @@ Arrival + Inquiry Anchor + WORLD + WEB + FLOW + TEXT + PATH + Aetheric Field + L
 - first enriched-return indication.
 - existing Living Field material preserved below.
 
-### R1 · First Entry / WORLD Visual Witness — CURRENT GATE
-Founder witnesses one complete traversal:
+### R1 · First Entry / WORLD Visual Witness — PHYSICAL GRAMMAR ACCEPTED
+Founder witnessed and iteratively refined one complete traversal:
 1. enter from lived language;
 2. inspect Fire / Water / Earth / Air / Aether;
 3. enter one region;
@@ -121,7 +121,8 @@ Questions:
 - Does going inward feel like discovering more of the same living world?
 - Does widening preserve the sense of the journey?
 
-**STOP before R2 until founder witness.**
+Founder accepted the cellular physical grammar on 2026-09-29 and authorized R2A Camera Physics.
+
 ### R2 · Semantic Zoom + Level-of-Detail Engine
 
 R2 is opened as a dependency-respecting sequence rather than one monolithic build.
@@ -265,5 +266,5 @@ House ↔ Living Field ↔ Journal ↔ Dream ↔ Relationships ↔ Writer's Stud
 
 Each runtime slice must be founder-witnessed before the next materially different interaction grammar is opened.
 
-**Current stop:** R1 founder WORLD witness.  
-**Next unopened boundary:** R2 true Grokker semantic zoom.
+**Current stop:** R2A founder Camera Physics witness.
+**Next unopened boundary:** R2B Level-of-Detail Resolver.

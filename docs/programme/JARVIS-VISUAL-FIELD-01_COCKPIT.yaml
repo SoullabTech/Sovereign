@@ -3,26 +3,28 @@ current_authority:
   - docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md
   - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
   - docs/canon/LIVING_FIELD_MEANING_EVOLUTION_LAWS.md
+  - docs/canon/SOUL_LAB_SPATIAL_NAVIGATION_LAW.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: REPAIR
-current_act: VISUAL-FIELD-RUNTIME-01R1R6R2 — Founder Witness of Cellular Actionability
-current_subject_sha: 8ed989096bc06a480c4365a40f33f2276f2ef9dc
-current_branch: feature/jarvis-visual-field-01-20260928
-worktree: /private/tmp/jarvis-visual-field-01
-runtime: http://localhost:3598/maia/living-field?from=house
+current_phase: BUILD
+current_act: VISUAL-FIELD-RUNTIME-02A — Camera Physics
+current_subject_sha: cd97315aa2605f29702a65a2193b3ce1cac691b1
+current_branch: feature/jarvis-visual-field-r2a-20260929
+worktree: /private/tmp/jarvis-visual-field-r2a
+runtime: http://localhost:3600/public-demo
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - R1R6R2 scoped pointer interaction is implemented and verified with a real browser mouse.
-  - Nearby → Glance → Attend → Dwell, relation hover, world click, node click, and drag/local response all pass.
-  - Founder witness is required to determine whether the field now feels genuinely actionable and relational.
-  - Later durable memory, MAIA, FLOW, and autonomous relation generation remain closed.
+  - Founder accepted the cellular visual language and authorized R2A.
+  - Living Field is now architecturally treated as a future spatial threshold into the whole Soul lab.
+  - R2A is limited to camera/navigation physics; R2B semantic LOD and live cross-room portals remain closed.
+  - Durable memory, MAIA, FLOW, and autonomous relation generation remain closed.
 founder_stops:
-  - R1 PASS or RETURN before R2 true Grokker semantic zoom.
+  - R2A PASS or RETURN before R2B Level-of-Detail Resolver.
   - Any change of Living Field ontology or member-facing meaning.
+  - Any live cross-room portal or persistent return-address behavior.
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
-next_phase_on_exit: founder cellular-field witness; PASS accepts membrane / attention / bridge grammar
-last_state_change: 2026-09-29 — R1R6R2 pointer/actionability repair sealed at 8ed989096; founder actionability witness is the current gate
+next_phase_on_exit: founder R2A camera-physics witness; PASS opens R2B Level-of-Detail Resolver
+last_state_change: 2026-09-29 — founder accepted cellular grammar and authorized R2A Camera Physics in isolated worktree
