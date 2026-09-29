@@ -19,21 +19,25 @@ const DOMAIN_META: Record<ConstellationDomain, {
   title: string;
   subtitle: string;
   href: string;
+  action: string;
 }> = {
   living_field: {
     title: 'Living Field',
-    subtitle: 'what is alive in your life',
+    subtitle: 'See the patterns and dimensions gathering across your life.',
     href: '/maia/living-field',
+    action: 'Enter Living Field',
   },
   vision_studio: {
     title: 'Vision Studio',
-    subtitle: 'what your work is becoming',
+    subtitle: 'Develop a possibility, project, or future into a vision you can work with.',
     href: '/maia/vision-studio?tab=vision',
+    action: 'Enter Vision Studio',
   },
   practice_field: {
     title: 'Practice Field',
-    subtitle: 'how your practice meets others',
+    subtitle: 'Explore how your practice or work meets other people.',
     href: '/maia/vision-studio?tab=practice',
+    action: 'Enter Practice Field',
   },
 };
 const FOCUS_DOMAIN: Record<ConstellationFocus, ConstellationDomain> = {
@@ -68,26 +72,25 @@ function DomainCluster({
   const more = Math.max(0, nodes.length - visible.length);
 
   return (
-    <div
-      className={`relative z-10 rounded-xl border px-4 py-3 min-h-[118px] transition-colors ${
+    <Link
+      href={meta.href}
+      aria-label={`${meta.action}. ${meta.subtitle}`}
+      className={`group relative z-10 flex min-h-[210px] flex-col rounded-xl border px-5 py-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600/70 ${
         focused
           ? 'border-amber-700/60 bg-amber-950/10'
-          : 'border-stone-800 bg-stone-950/80'
+          : 'border-stone-800 bg-stone-950/80 hover:border-stone-700'
       }`}
     >
-      <Link href={meta.href} className="group block">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className={`text-xs uppercase tracking-widest ${
-            focused ? 'text-amber-400' : 'text-stone-400'
-          }`}>
-            {meta.title}
-          </p>
-          <span className="text-stone-700 text-xs group-hover:text-stone-500">open →</span>
-        </div>
-        <p className="mt-1 text-[11px] text-stone-600">{meta.subtitle}</p>
-      </Link>
+      <div>
+        <p className={`text-xs uppercase tracking-widest ${
+          focused ? 'text-amber-400' : 'text-stone-300'
+        }`}>
+          {meta.title}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-stone-500">{meta.subtitle}</p>
+      </div>
 
-      <div className="mt-3 space-y-2">
+      <div className="mt-4 space-y-2">
         {visible.length === 0 ? (
           <p className="text-xs text-stone-700 italic">Nothing authored here yet.</p>
         ) : (
@@ -103,9 +106,16 @@ function DomainCluster({
         )}
         {more > 0 && <p className="text-[10px] text-stone-600">+ {more} more</p>}
       </div>
-    </div>
+
+      <span className={`mt-auto pt-5 text-xs font-medium ${
+        focused ? 'text-amber-400' : 'text-stone-400 group-hover:text-stone-200'
+      }`}>
+        {meta.action} <span aria-hidden="true">→</span>
+      </span>
+    </Link>
   );
 }
+
 export function LivingConstellationPanel({ focus, className = '' }: Props) {
   const [projection, setProjection] = useState<LivingConstellationProjection | null>(null);
   const [failed, setFailed] = useState(false);
@@ -161,10 +171,11 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
 
   return (
     <section className={`rounded-2xl border border-stone-800/80 bg-stone-950/60 p-5 ${className}`}>
-      <div className="max-w-2xl">
+      <div className="max-w-3xl">
         <p className="text-xs uppercase tracking-[0.18em] text-stone-500">Your wider field</p>
+        <h2 className="mt-2 text-xl font-medium text-stone-200">Three spaces. Three different kinds of attention.</h2>
         <p className="mt-2 text-sm font-light leading-relaxed text-stone-400">
-          {FOCUS_COPY[focus]}
+          {FOCUS_COPY[focus]} Each space does a different job; opening one changes where you work, not who you are.
         </p>
       </div>
 
@@ -185,7 +196,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
           <line x1="46" y1="70" x2="20" y2="70" stroke="currentColor" className="text-stone-800" strokeWidth="0.5" />
           <line x1="54" y1="70" x2="80" y2="70" stroke="currentColor" className="text-stone-800" strokeWidth="0.5" />
         </svg>
-        <div className="relative grid gap-4 sm:grid-cols-[1fr_132px_1fr] sm:grid-rows-[auto_auto] sm:gap-5">
+        <div className="relative grid gap-4 sm:grid-cols-3 sm:grid-rows-[auto_auto] sm:gap-5">
           <div className="sm:col-start-2 sm:row-start-1">
             <DomainCluster
               domain="vision_studio"

@@ -35,21 +35,27 @@ export function LivingFieldCard({ field, memberId }: Props) {
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<DetailData | null>(null)
   const [loading, setLoading] = useState(false)
+  const [openError, setOpenError] = useState('')
 
   async function openDetail() {
+    if (loading) return
+    setOpenError('')
     if (!detail) {
       setLoading(true)
       try {
         const res = await fetch(`/api/maia/living-field/${field.field_key}`, {
           headers: { 'x-member-id': memberId },
         })
-        if (res.ok) {
-          const data = await res.json()
-          setDetail({ versions: data.versions, sources: data.sources, consents: data.consents })
-        }
+        if (!res.ok) throw new Error('detail unavailable')
+        const data = await res.json()
+        setDetail({ versions: data.versions, sources: data.sources, consents: data.consents })
+        setOpen(true)
+      } catch {
+        setOpenError('Couldn’t open this dimension just now. Try again.')
       } finally {
         setLoading(false)
       }
+      return
     }
     setOpen(true)
   }
@@ -68,8 +74,13 @@ export function LivingFieldCard({ field, memberId }: Props) {
 
   return (
     <>
-      <div className="group relative rounded-xl bg-stone-900 border border-stone-800 hover:border-stone-700 p-4 transition-colors cursor-pointer"
-           onClick={openDetail}>
+      <button
+        type="button"
+        className="group relative w-full min-h-[176px] rounded-xl bg-stone-900 border border-stone-800 hover:border-stone-700 p-4 text-left transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600/60"
+        onClick={() => void openDetail()}
+        aria-label={`Open ${field.label} dimension`}
+        aria-busy={loading}
+      >
         {/* Status dot */}
         <span
           className={`absolute top-3 right-3 w-2 h-2 rounded-full ${dotClass}`}
@@ -105,18 +116,14 @@ export function LivingFieldCard({ field, memberId }: Props) {
             )}
           </div>
 
-          {/* Hover actions */}
-          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => { e.stopPropagation(); openDetail() }}
-              disabled={loading}
-              className="text-stone-400 hover:text-stone-200 text-xs"
-            >
-              {loading ? '…' : 'Open'}
-            </button>
-          </div>
+          <span className="text-stone-400 group-hover:text-stone-200 text-xs font-medium">
+            {loading ? 'Opening…' : 'Open dimension →'}
+          </span>
         </div>
-      </div>
+        {openError && (
+          <p className="mt-3 text-xs text-amber-500" role="status">{openError}</p>
+        )}
+      </button>
 
       {open && detail && (
         <LivingFieldDetailPanel

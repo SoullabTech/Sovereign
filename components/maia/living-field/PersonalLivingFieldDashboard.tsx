@@ -126,9 +126,15 @@ export function PersonalLivingFieldDashboard({
 
         {/* Living field constellation */}
         <section className="space-y-4">
-          <h2 className="text-stone-500 text-xs uppercase tracking-widest">
-            Living Field Dimensions
-          </h2>
+          <div>
+            <h2 className="text-stone-500 text-xs uppercase tracking-widest">
+              Living Field Dimensions
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-500">
+              These are areas of life Soullab can help you notice over time — not forms you need to complete.
+              Open a dimension to see what has gathered, write what feels true now, or explore it with MAIA.
+            </p>
+          </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {orderedFields.map((field) => (
               <LivingFieldCard key={field.field_key} field={field} memberId={memberId} />
