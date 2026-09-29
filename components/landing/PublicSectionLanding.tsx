@@ -33,7 +33,7 @@ export function PublicSectionLanding({
   const s = SECTIONS[section];
   return (
     <div
-      className="min-h-screen flex flex-col text-[#F3EDE4]"
+      className="sl-focus min-h-[100dvh] flex flex-col text-[#F3EDE4]"
       style={{ background: 'linear-gradient(135deg, #1A1513 0%, #241C18 60%, #1A1513 100%)' }}
     >
       <main className="flex-1 flex flex-col justify-center px-6 py-20 sm:px-10">

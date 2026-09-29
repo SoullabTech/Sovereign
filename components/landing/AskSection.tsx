@@ -101,7 +101,7 @@ export function AskSection() {
                 </button>
               )}
 
-              <span className="ml-auto text-xs text-white/20">
+              <span className="ml-auto text-xs text-white/55">
                 Shift+Enter for new line
               </span>
             </div>

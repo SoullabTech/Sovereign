@@ -87,7 +87,7 @@ const CARD_STYLE: React.CSSProperties = {
 const INPUT_CLASS =
   'w-full rounded-xl bg-maia-navy-900/45 backdrop-blur-sm border border-maia-navy-700/60 px-4 py-3 text-base text-white caret-white placeholder:text-slate-500 outline-none ' +
   'shadow-[inset_0_1px_2px_rgba(0,0,0,0.28)] ' +
-  'focus:border-maia-navy-600 focus:bg-maia-navy-900/60 transition-all ' +
+  'focus:border-maia-navy-600 focus:bg-maia-navy-900/60 focus-visible:ring-2 focus-visible:ring-maia-spice-400/80 transition-all ' +
   'autofill:shadow-[inset_0_0_0_1000px_rgba(10,22,40,0.92)] ' +
   'autofill:[-webkit-text-fill-color:#ffffff] autofill:[caret-color:#ffffff] ' +
   'autofill:[transition:background-color_9999s_ease-in-out_0s]';
@@ -606,10 +606,10 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               </p>
               {errorBlock}
               <form onSubmit={signInWithPassword} className="space-y-3">
-                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Email or username" autoComplete="username" className={inputCls} />
+                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Email or username" aria-label="Email or username" autoComplete="username" className={inputCls} />
                 <div className="relative">
-                  <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPasswordText ? 'text' : 'password'} placeholder="Password" autoComplete="current-password" className={`${inputCls} pr-12`} />
-                  <button type="button" onClick={() => setShowPasswordText(!showPasswordText)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-300" tabIndex={-1}>{showPasswordText ? 'Hide' : 'Show'}</button>
+                  <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPasswordText ? 'text' : 'password'} placeholder="Password" aria-label="Password" autoComplete="current-password" className={`${inputCls} pr-12`} />
+                  <button type="button" onClick={() => setShowPasswordText(!showPasswordText)} aria-pressed={showPasswordText} aria-label={showPasswordText ? 'Hide password' : 'Show password'} className="absolute right-1 top-1/2 -translate-y-1/2 px-3 py-3 text-xs text-slate-400 hover:text-slate-200">{showPasswordText ? 'Hide' : 'Show'}</button>
                 </div>
                 <button type="submit" disabled={isLoading || !username || !password} className={primaryBtn}>{isLoading ? 'Signing in…' : 'Sign in'}</button>
               </form>
@@ -692,7 +692,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               </p>
               {errorBlock}
               <form onSubmit={completeSignup} className="space-y-3">
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoFocus className={inputCls} />
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" aria-label="Your name" autoFocus className={inputCls} />
                 <button type="submit" disabled={isLoading} className={primaryBtn}>{isLoading ? 'Entering…' : 'Enter Soullab'}</button>
               </form>
               {/* Was: "an emailed code{bioAvailable ? ` or ${biometricLabel}`}". That
@@ -707,7 +707,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em]">Enter code</h1>
               <p className="text-sm text-slate-300/80 font-light mb-6 leading-relaxed">We sent a 6-digit code to <span className="text-slate-200">{email}</span>.</p>
               {errorBlock}
-              <input value={code} onChange={(e) => onCodeChange(e.target.value)} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} autoFocus placeholder="••••••" className={codeInputCls} />
+              <input value={code} onChange={(e) => onCodeChange(e.target.value)} inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} autoFocus placeholder="••••••" aria-label="Six-digit code" className={codeInputCls} />
               <button type="button" disabled={isLoading || code.length < 6} onClick={() => verifyCode(code)} className={`${primaryBtn} mt-4`}>{isLoading ? 'Verifying…' : 'Verify'}</button>
               <div className="mt-5 flex items-center justify-center gap-4 text-xs text-slate-500">
                 <button type="button" onClick={() => sendCode()} disabled={isLoading} className="hover:text-slate-300 transition-colors">Resend code</button>
@@ -722,7 +722,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               {errorBlock}
 
               <form onSubmit={sendCode} className="space-y-3">
-                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={inputCls} />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" aria-label="Email address" autoComplete="email" autoFocus className={inputCls} />
                 {/* sendBlocked demotes Continue so the username+password button can carry
                     primary weight instead. That button only exists on /signin — nobody
                     joining has a password — so on /signup the demotion would leave the

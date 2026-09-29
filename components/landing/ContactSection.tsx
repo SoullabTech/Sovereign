@@ -46,7 +46,7 @@ export function ContactSection() {
             <a href="/maia/privacy" className="hover:text-white/50 transition-colors">Privacy</a>
             <a href="/maia/stewardship" className="hover:text-white/50 transition-colors">Stewardship</a>
           </div>
-          <span className="text-xs text-white/20">
+          <span className="text-xs text-white/55">
             &copy; {new Date().getFullYear()} Soullab
           </span>
         </div>

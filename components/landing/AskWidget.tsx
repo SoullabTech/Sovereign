@@ -85,16 +85,18 @@ export function AskWidget() {
           Ask Soullab
         </button>
       ) : (
-        <div className="w-[360px] max-h-[500px] overflow-hidden rounded-2xl border border-white/10 bg-maia-navy-950/95 backdrop-blur-xl shadow-2xl shadow-black/50 flex flex-col">
+        <div className="w-[min(360px,calc(100vw-2rem))] max-h-[min(500px,70dvh)] overflow-hidden rounded-2xl border border-white/10 bg-maia-navy-950/95 backdrop-blur-xl shadow-2xl shadow-black/50 flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 shrink-0">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-maia-spice-400 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-maia-spice-400 animate-pulse motion-reduce:animate-none" aria-hidden="true" />
               <span className="text-sm font-medium text-white">Ask Kelly / MAIA</span>
             </div>
             <button
+              type="button"
               onClick={() => setOpen(false)}
-              className="text-white/40 hover:text-white/70 transition-colors"
+              aria-label="Close"
+              className="text-white/60 hover:text-white p-2.5 -m-2.5 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -107,6 +109,7 @@ export function AskWidget() {
               onChange={e => setQuestion(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={2}
+              aria-label="Your question"
               placeholder="Ask about projects, AIN, MAIA..."
               className="w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-maia-spice-500/30 transition-all"
             />
@@ -136,7 +139,7 @@ export function AskWidget() {
 
             {answer ? (
               <>
-                <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-white/75 leading-relaxed whitespace-pre-wrap" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
+                <div aria-live="polite" className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-white/75 leading-relaxed whitespace-pre-wrap" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
                   {answer}
                 </div>
                 {/* CTA chips */}

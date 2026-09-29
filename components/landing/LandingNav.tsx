@@ -78,7 +78,7 @@ export function LandingNav() {
             onClick={scrollToTop}
             className="flex items-center gap-3 group"
           >
-            <img src="/soullab-logo.png" alt="Soullab" className="w-8 h-8 rounded-full" />
+            <img src="/soullab-logo.png" alt="" className="w-8 h-8 rounded-full" />
             <span className="text-white/70 group-hover:text-white text-sm tracking-[0.2em] uppercase transition-colors">
               Soullab
             </span>
@@ -90,7 +90,7 @@ export function LandingNav() {
               <button
                 key={link.label}
                 onClick={() => handleNavClick(link.href)}
-                className="text-white/40 hover:text-white/80 text-sm transition-colors"
+                className="text-white/60 hover:text-white text-sm transition-colors"
               >
                 {link.label}
               </button>
@@ -118,8 +118,12 @@ export function LandingNav() {
               Soullab
             </Link>
             <button
+              type="button"
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="text-white/50 hover:text-white p-1"
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
+              aria-controls="landing-mobile-menu"
+              className="text-white/60 hover:text-white p-2.5 min-h-11 min-w-11 inline-flex items-center justify-center"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -129,7 +133,7 @@ export function LandingNav() {
 
       {/* Mobile menu overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 bg-maia-navy-950/98 backdrop-blur-xl flex flex-col items-center justify-center gap-8">
+        <div id="landing-mobile-menu" className="fixed inset-0 z-40 bg-maia-navy-950/98 backdrop-blur-xl flex flex-col items-center justify-center gap-8">
           {navLinks.map(link => (
             <button
               key={link.label}

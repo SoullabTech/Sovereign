@@ -1323,3 +1323,10 @@
 .book-toc-close:hover {
   color: rgba(254, 243, 199, 0.6);
 }
+
+/* Public-surface focus ring (DESIGN.md §Accessibility). Scoped with :where() so
+   component-level focus styles still win; applied via the .sl-focus wrapper. */
+.sl-focus :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid #D4AF37; /* --sl-gold-light, SOULLAB_THEME */
+  outline-offset: 2px;
+}

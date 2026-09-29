@@ -15,7 +15,7 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden"
+      className="relative min-h-[100dvh] flex flex-col items-center justify-center px-4 overflow-hidden"
       style={{
         background: 'radial-gradient(ellipse at center, #111827 0%, #0b0f1c 70%)',
       }}
@@ -65,6 +65,7 @@ export function HeroSection() {
           {/* Violet aura */}
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div
+              data-hero-aura
               className="absolute h-[130%] w-[130%] rounded-full"
               style={{
                 background:
@@ -78,6 +79,9 @@ export function HeroSection() {
                 0% { transform: scale(0.92); opacity: 0.65; }
                 50% { transform: scale(1.05); opacity: 0.90; }
                 100% { transform: scale(0.92); opacity: 0.65; }
+              }
+              @media (prefers-reduced-motion: reduce) {
+                [data-hero-aura] { animation: none !important; }
               }
             `}</style>
           </div>
@@ -135,7 +139,7 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.8 }}
-          className="mt-14 text-white/20 text-xs tracking-widest uppercase"
+          className="mt-14 text-white/55 text-xs tracking-widest uppercase"
         >
           Private by design &middot; Self-hosted &middot; You control what's remembered
         </motion.p>

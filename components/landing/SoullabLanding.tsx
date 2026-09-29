@@ -11,10 +11,12 @@ import { ContactSection } from './ContactSection';
 import { InquirySection } from './InquirySection';
 import { CovenantSection } from './CovenantSection';
 import { AskWidget } from './AskWidget';
+import { MotionConfig } from 'framer-motion';
 
 export function SoullabLanding() {
   return (
-    <div className="bg-maia-navy-950 text-maia-ink-100 min-h-screen">
+    <MotionConfig reducedMotion="user">
+    <div className="sl-focus bg-maia-navy-950 text-maia-ink-100 min-h-[100dvh]">
       <LandingNav />
       <main>
         <HeroSection />
@@ -29,5 +31,6 @@ export function SoullabLanding() {
       </main>
       <AskWidget />
     </div>
+    </MotionConfig>
   );
 }

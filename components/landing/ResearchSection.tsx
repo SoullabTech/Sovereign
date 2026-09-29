@@ -180,6 +180,7 @@ export function ResearchSection() {
             <button
               type="button"
               onClick={() => setCapabilitiesOpen(v => !v)}
+              aria-expanded={capabilitiesOpen}
               className="group flex items-center gap-3 mx-auto text-white/40 hover:text-white/70 transition-colors"
             >
               <span className="text-sm tracking-widest uppercase" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
