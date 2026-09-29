@@ -804,19 +804,29 @@ export function CellularLivingFieldPrototype() {
               const labelVisible = visibleNodeLabel(node)
               const opacity = nodeOpacity(node)
               const style = WORLD_STYLE[node.group]
+              const proximity = proximityNodeId === node.id && hoveredNodeId !== node.id
               const attentionScale =
                 active && attentionPhase === 'dwell'
-                  ? 1.13
+                  ? 1.16
                   : active && attentionPhase === 'attend'
-                    ? 1.09
-                    : active
-                      ? 1.045
-                      : 1
+                    ? 1.12
+                    : hoveredNodeId === node.id
+                      ? 1.085
+                      : proximity
+                        ? 1.055
+                        : 1
 
               return (
                 <g
                   key={node.id}
                   data-node-id={node.id}
+                  data-attention-state={
+                    hoveredNodeId === node.id
+                      ? attentionPhase
+                      : proximity
+                        ? 'proximity'
+                        : 'idle'
+                  }
                   transform={`translate(${node.x ?? 0},${node.y ?? 0}) scale(${attentionScale})`}
                   opacity={opacity}
                   onClick={(event) => {
@@ -828,12 +838,42 @@ export function CellularLivingFieldPrototype() {
                     event.currentTarget.setPointerCapture(event.pointerId)
                     dragStart(node, event.clientX, event.clientY)
                   }}
-                  className="cursor-grab active:cursor-grabbing"
+                  className="cursor-pointer active:cursor-grabbing"
                   style={{
                     pointerEvents: activeNeighborhood && !activeNeighborhood.has(node.id) ? 'none' : 'all',
-                    transition: 'opacity 280ms ease, transform 340ms ease',
+                    transition: 'opacity 220ms ease, transform 260ms ease',
                   }}
                 >
+                  <circle
+                    r={node.r + 25}
+                    fill="transparent"
+                    stroke="transparent"
+                    pointerEvents="all"
+                    onPointerOver={() => {
+                      if (!hoveredNodeId) {
+                        setProximityNodeId(node.id)
+                        if (!focusNodeId) setAttentionPhase('proximity')
+                      }
+                    }}
+                    onPointerOut={(event) => {
+                      if (event.relatedTarget && event.currentTarget.parentElement?.contains(event.relatedTarget as Node)) return
+                      if (proximityNodeId === node.id && hoveredNodeId !== node.id) {
+                        setProximityNodeId(null)
+                        if (!focusNodeId) setAttentionPhase('idle')
+                      }
+                    }}
+                  />
+                  {(proximity || hoveredNodeId === node.id) && (
+                    <circle
+                      r={node.r + (hoveredNodeId === node.id ? 13 : 10)}
+                      fill="none"
+                      stroke={style.glow}
+                      strokeWidth={hoveredNodeId === node.id ? 3 : 2}
+                      opacity={hoveredNodeId === node.id ? 0.62 : 0.36}
+                      filter="url(#soft-glow)"
+                      pointerEvents="none"
+                    />
+                  )}
                   {trace > 0.02 && (
                     <circle
                       r={node.r + 7}
@@ -846,10 +886,26 @@ export function CellularLivingFieldPrototype() {
                   )}
                   <circle
                     r={node.r}
-                    fill={active ? `rgba(${style.rgb},0.32)` : `rgba(${style.rgb},0.12)`}
+                    fill={
+                      hoveredNodeId === node.id
+                        ? `rgba(${style.rgb},0.48)`
+                        : proximity
+                          ? `rgba(${style.rgb},0.30)`
+                          : active
+                            ? `rgba(${style.rgb},0.32)`
+                            : `rgba(${style.rgb},0.12)`
+                    }
                     stroke={active ? style.glow : style.edge}
-                    strokeWidth={active ? 2.3 : 1.25}
-                    strokeOpacity={active ? 0.96 : 0.66}
+                    strokeWidth={hoveredNodeId === node.id ? 3 : proximity ? 2.2 : active ? 2.3 : 1.25}
+                    strokeOpacity={hoveredNodeId === node.id ? 1 : proximity ? 0.92 : active ? 0.96 : 0.66}
+                    onPointerOver={() => {
+                      setProximityNodeId(node.id)
+                      beginAttention(node.id)
+                    }}
+                    onPointerOut={(event) => {
+                      if (event.relatedTarget && event.currentTarget.parentElement?.contains(event.relatedTarget as Node)) return
+                      endAttention()
+                    }}
                   />
                   {labelVisible && (
                     <text
