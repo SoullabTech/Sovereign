@@ -479,3 +479,40 @@ The `soullab` theme in Stellium provides these key tokens:
 ---
 
 *Last updated: January 2026*
+
+
+---
+
+## Relationship to Living Field Architecture — 2026-09-29
+
+This document is now understood as an **organism-specific Soullab expression** of the broader Living Field Architecture discipline.
+
+Hierarchy:
+
+```text
+LIVING FIELD ARCHITECTURE
+        ↓
+Phenomenological Field Design
+        ↓
+Living Field Grammar
+        ↓
+Soullab Design Canon
+        ↓
+surface-specific implementation
+```
+
+Therefore:
+
+- this canon governs Soullab's current visual/system expression;
+- it does not define the whole discipline;
+- palette, typography, cards, and themes are implementation choices within a larger experiential architecture;
+- future Grokker, House, Writer, MAIA, Relationships, and Oracle work may share Living Field Grammar while expressing different surface-specific aesthetics.
+
+See:
+
+- `docs/architecture/LIVING_FIELD_ARCHITECTURE_01.md`
+- `docs/architecture/PHENOMENOLOGICAL_FIELD_DESIGN_01.md`
+- `docs/design/LIVING_FIELD_GRAMMAR_01.md`
+- `docs/design/GROKKER_LIVING_FIELD_01.md`
+
+> **The field has structure, but it is alive.**
