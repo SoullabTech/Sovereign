@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { flushSync } from 'react-dom';
 import { apiFetch } from '@/lib/http/apiBase';
+import { SoulServiceAperturePilot } from './SoulServiceAperturePilot';
 import type {
   ConstellationDomain,
   ConstellationFocus,
@@ -13,6 +15,53 @@ import type {
 interface Props {
   focus: ConstellationFocus;
   className?: string;
+  enableSoulServiceAperturePilot?: boolean;
+  projectionOverrideForWitness?: LivingConstellationProjection | null;
+}
+
+interface ReturnContinuitySnapshot {
+  expanded: boolean;
+  scrollY: number;
+  openerId: string;
+}
+
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (callback: () => void) => { finished: Promise<void> };
+};
+
+function transitionNameForPresence(node: ConstellationProjectionNode): string {
+  return `living-presence-${node.projectionId.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+}
+
+function transitionStyleForPresence(node: ConstellationProjectionNode): CSSProperties {
+  return { viewTransitionName: transitionNameForPresence(node) } as CSSProperties;
+}
+
+function openerIdForPresence(node: ConstellationProjectionNode): string {
+  return `living-presence-opener-${node.projectionId}`;
+}
+
+function runContinuityTransition(update: () => void): Promise<void> {
+  if (typeof document === 'undefined') {
+    update();
+    return Promise.resolve();
+  }
+
+  const reducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const documentWithTransitions = document as ViewTransitionDocument;
+  if (reducedMotion || !documentWithTransitions.startViewTransition) {
+    flushSync(update);
+    return Promise.resolve();
+  }
+
+  const transition = documentWithTransitions.startViewTransition(() => {
+    flushSync(update);
+  });
+
+  return transition.finished.catch(() => undefined);
 }
 
 const FOCUS_DOMAIN: Record<ConstellationFocus, ConstellationDomain> = {
@@ -103,8 +152,10 @@ function PresenceTeaser({
 }) {
   return (
     <button
+      id={openerIdForPresence(node)}
       type="button"
       onClick={onOpen}
+      style={transitionStyleForPresence(node)}
       className={[
         'group relative block min-w-0 text-left transition',
         continuation ? 'max-w-2xl py-5' : 'max-w-md py-4',
@@ -134,12 +185,17 @@ function PresenceTeaser({
 function EnteredPresence({
   node,
   onReturn,
+  enableSoulServiceAperturePilot = false,
 }: {
   node: ConstellationProjectionNode;
   onReturn: () => void;
+  enableSoulServiceAperturePilot?: boolean;
 }) {
   return (
-    <div className="relative z-10 mx-auto max-w-3xl py-8 md:py-14">
+    <div
+      className="relative z-10 mx-auto max-w-3xl py-8 md:py-14"
+      style={transitionStyleForPresence(node)}
+    >
       <button
         type="button"
         onClick={onReturn}
@@ -162,6 +218,10 @@ function EnteredPresence({
           </p>
         )}
       </div>
+
+      {enableSoulServiceAperturePilot && (
+        <SoulServiceAperturePilot source={node.excerpt?.trim() || node.label} />
+      )}
 
       <details className="mt-12 max-w-xl border-t border-[#c9b99f]/40 pt-4 text-sm text-[#7d6d59]">
         <summary className="cursor-pointer list-none text-[#7a5c34]">
@@ -295,13 +355,26 @@ function recencyLabel(node: ConstellationProjectionNode): string {
   return `last updated · ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
 }
 
-export function LivingConstellationPanel({ focus, className = '' }: Props) {
-  const [projection, setProjection] = useState<LivingConstellationProjection | null>(null);
+export function LivingConstellationPanel({
+  focus,
+  className = '',
+  enableSoulServiceAperturePilot = false,
+  projectionOverrideForWitness = null,
+}: Props) {
+  const [projection, setProjection] = useState<LivingConstellationProjection | null>(
+    projectionOverrideForWitness,
+  );
   const [failed, setFailed] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [selectedPresenceId, setSelectedPresenceId] = useState<string | null>(null);
+  const [returnSnapshot, setReturnSnapshot] = useState<ReturnContinuitySnapshot | null>(null);
 
   useEffect(() => {
+    if (projectionOverrideForWitness) {
+      setProjection(projectionOverrideForWitness);
+      return;
+    }
+
     let cancelled = false;
 
     apiFetch('/api/maia/living-constellation')
@@ -319,7 +392,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [projectionOverrideForWitness]);
 
   const grouped = useMemo(() => {
     const empty: Record<ConstellationDomain, ConstellationProjectionNode[]> = {
@@ -390,6 +463,34 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
   const isLiving = focus === 'living';
   const fieldIsWide = isLiving && expanded;
 
+  const openPresence = (node: ConstellationProjectionNode) => {
+    const snapshot: ReturnContinuitySnapshot = {
+      expanded,
+      scrollY: typeof window === 'undefined' ? 0 : window.scrollY,
+      openerId: openerIdForPresence(node),
+    };
+    setReturnSnapshot(snapshot);
+    void runContinuityTransition(() => setSelectedPresenceId(node.projectionId));
+  };
+
+  const returnFromPresence = () => {
+    const snapshot = returnSnapshot;
+    void runContinuityTransition(() => {
+      setSelectedPresenceId(null);
+      if (snapshot) setExpanded(snapshot.expanded);
+      setReturnSnapshot(null);
+    }).then(() => {
+      if (!snapshot || typeof window === 'undefined') return;
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: snapshot.scrollY, behavior: 'auto' });
+        const opener = document.getElementById(snapshot.openerId);
+        if (opener instanceof HTMLButtonElement) {
+          opener.focus({ preventScroll: true });
+        }
+      });
+    });
+  };
+
   if (isLiving && selectedPresence) {
     return (
       <section
@@ -401,7 +502,8 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
         <AmbientLifeField wide={false} />
         <EnteredPresence
           node={selectedPresence}
-          onReturn={() => setSelectedPresenceId(null)}
+          onReturn={returnFromPresence}
+          enableSoulServiceAperturePilot={enableSoulServiceAperturePilot}
         />
       </section>
     );
@@ -458,7 +560,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
                 <PresenceTeaser
                   node={latestLiving}
                   continuation
-                  onOpen={() => setSelectedPresenceId(latestLiving.projectionId)}
+                  onOpen={() => openPresence(latestLiving)}
                 />
               )}
 
@@ -467,7 +569,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
                   <PresenceTeaser
                     key={node.projectionId}
                     node={node}
-                    onOpen={() => setSelectedPresenceId(node.projectionId)}
+                    onOpen={() => openPresence(node)}
                   />
                 ))}
               </div>
@@ -495,7 +597,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
                   <PresenceTeaser
                     key={node.projectionId}
                     node={node}
-                    onOpen={() => setSelectedPresenceId(node.projectionId)}
+                    onOpen={() => openPresence(node)}
                   />
                 ))}
               </div>
