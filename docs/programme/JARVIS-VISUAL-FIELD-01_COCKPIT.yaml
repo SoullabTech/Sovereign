@@ -3,8 +3,8 @@ current_authority:
   - docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md
   - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-01R1R5 — Founder A/B Physics Feel Witness
+current_phase: BUILD
+current_act: VISUAL-FIELD-RUNTIME-01R1R6 — Cellular Living Field Prototype
 current_subject_sha: 8a7d6c0b80513fcd25356eced87520dae8bcc096
 current_branch: feature/jarvis-visual-field-01-20260928
 worktree: /private/tmp/jarvis-visual-field-01
@@ -14,13 +14,13 @@ deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - Candidate A and Candidate B both pass compile, runtime, hover, edge-insight, drag-response, and containment checks.
-  - Mechanical evidence shows different response magnitudes; founder selection must be based on felt behavior rather than numeric movement.
-  - Later memory, MAIA, FLOW, and autonomous relation layers remain closed.
+  - Founder authorized HYBRID direction: Grokker nested worlds + constrained relational physics + living membranes + attention + cross-world bridges.
+  - Bridge formation, attention phases, and short-lived attention trace are now governed by R1R6.
+  - Later durable memory, MAIA, FLOW, and autonomous relation generation remain closed.
 founder_stops:
   - R1 PASS or RETURN before R2 true Grokker semantic zoom.
   - Any change of Living Field ontology or member-facing meaning.
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
-next_phase_on_exit: founder selects A, B, HYBRID, RETURN, or STOP; only then may the chosen physics substrate be integrated
-last_state_change: 2026-09-29 — R1R5 A/B physics candidate sealed at 8a7d6c0b8; founder feel witness is the current gate
+next_phase_on_exit: founder cellular-field witness; PASS accepts membrane / attention / bridge grammar
+last_state_change: 2026-09-29 — founder authorized HYBRID R1R6 cellular field; build lane opened

@@ -24,9 +24,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-physics-a-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/living-field-physics-a-mobile.png
-experience_verification: Founder accepted recursive containment as directionally closer, then identified the missing relational layer: Obsidian-like physics, visible semantic connections, drag response, and cursor-over insight. R1R5 compares two real physics substrates over the same field corpus: A = D3 nested force with circular containment; B = fCoSE compound force. Both compile, mount without browser errors, reveal node and edge insight on hover, respond to drag, preserve containment, and have desktop/mobile evidence. Founder A/B feel witness remains the exit gate.
+screenshot_desktop: docs/design/contracts/screenshots/living-field-cellular-dwell-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/living-field-cellular-nodefocus-mobile.png
+experience_verification: Founder authorized a HYBRID direction after the A/B physics comparison: Grokker nested worlds + constrained relational physics + cellular membranes + attentional field behavior + cross-world bridges. R1R6 implements atmospheric world ecologies, Glance → Attend → Dwell, bundled bridge corridors, fading session-only attention traces, real world/node zoom, and preserved widening. Mechanical desktop/mobile witnesses pass with zero browser errors. Founder cellular-field feel witness remains the exit gate.
 ---
 # Living Field — Experience Contract
 
