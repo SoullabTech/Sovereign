@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SS-08 Transfer Battery Harness</title>
+<style>
+:root{--paper:#f8efe2;--ink:#302923;--muted:#7b6b5e;--line:rgba(77,57,42,.17);--copper:#d85e36;--teal:#27877a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#e7dac9;color:var(--ink);font-family:Inter,system-ui,sans-serif}body{padding:18px}
+.room{max-width:1180px;margin:auto;border-radius:40px;background:linear-gradient(145deg,#fffaf3,#f4e3cf 58%,#efe0d2);box-shadow:0 28px 85px rgba(65,43,29,.11);padding:34px 40px}
+.top{display:flex;justify-content:space-between;gap:16px}.k{font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#846f5e}.state{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#998675}
+.phases{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:24px}.phase{border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.3);padding:12px;cursor:pointer;text-align:left}.phase.active{background:rgba(216,94,54,.07);border-color:rgba(216,94,54,.28)}.phase b{display:block;font-size:12px}.phase span{display:block;font-size:9px;line-height:1.45;color:#806e5e;margin-top:4px}
+.grid{display:grid;grid-template-columns:1.25fr .75fr;gap:24px;margin-top:24px}.task,.observer{border:1px solid rgba(91,67,49,.11);border-radius:28px;background:rgba(255,251,245,.65);padding:22px}.task small,.observer small{font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:#917b68}.task h2{font:400 25px Georgia,serif;margin:8px 0}.task p{font-size:12px;line-height:1.65;color:#625449}.prompt{border-left:2px solid rgba(216,94,54,.42);padding-left:13px;margin-top:16px}.support{margin-top:16px;border:1px solid rgba(91,66,48,.13);border-radius:18px;padding:13px;background:rgba(255,255,255,.32)}.support.hidden{display:none}.support h3{font:400 16px Georgia,serif;margin:4px 0 8px}.support ul{font-size:10px;line-height:1.6;color:#766557;padding-left:17px;margin:0}
+textarea{width:100%;min-height:210px;margin-top:18px;border:1px solid rgba(91,66,48,.15);border-radius:18px;padding:14px;background:rgba(255,255,255,.55);font:400 16px/1.55 Georgia,serif;color:#40362f;resize:vertical}
+.observer h2{font:400 21px Georgia,serif;margin:7px 0 12px}.obs{display:grid;gap:10px;margin-top:13px}.obs label{font-size:11px;line-height:1.4;color:#5e5146}.obs input{margin-right:8px}.note{margin-top:15px;font-size:10px;line-height:1.55;color:#877463}.nav{display:flex;justify-content:space-between;gap:12px;margin-top:18px}.nav button,.reset{border:0;background:none;color:#795230;text-decoration:underline;text-underline-offset:4px;cursor:pointer;padding:0}.reset{font-size:11px}.foot{border-top:1px solid var(--line);padding-top:15px;margin-top:24px;font-size:10px;line-height:1.55;color:#8e7a68}
+@media(max-width:850px){body{padding:8px}.room{padding:26px 20px;border-radius:28px}.state{display:none}.phases{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main class="room">
+<div class="top"><div class="k">Soul-Service · Transfer Battery Harness</div><div class="state" id="state">A · unassisted baseline</div></div>
+<div class="phases">
+<button class="phase active" data-phase="A"><b>A · Baseline</b><span>novel task · no MAIA scaffold</span></button>
+<button class="phase" data-phase="B"><b>B · Full support</b><span>equivalent task · full scaffold</span></button>
+<button class="phase" data-phase="C"><b>C · Light scaffold</b><span>equivalent task · one cue</span></button>
+<button class="phase" data-phase="D"><b>D · Transfer</b><span>novel task · no support</span></button>
+</div>
+<div class="grid">
+<section class="task"><small id="taskKind">Unassisted baseline</small><h2 id="taskTitle">A project is delayed after mixed feedback.</h2><p id="taskText">The team is debating whether to cancel, continue unchanged, or rethink the plan. Some evidence supports concern; some is incomplete.</p><div class="prompt"><p id="taskPrompt"><strong>Prompt:</strong> What is going on here, and what would you want to understand before deciding what to do?</p></div>
+<div class="support hidden" id="support"><small>Available scaffold</small><h3 id="supportTitle"></h3><ul id="supportList"></ul></div>
+<textarea id="response" aria-label="Participant response" placeholder="Participant responds here."></textarea>
+<div class="nav"><button id="clear">Clear response</button><button class="reset" onclick="location.reload()">Reset harness</button></div>
+</section>
+<aside class="observer"><small>Research observation · no member score</small><h2>What appeared spontaneously?</h2><div class="obs">
+<label><input type="checkbox"> frame awareness</label>
+<label><input type="checkbox"> alternative perspective</label>
+<label><input type="checkbox"> counterevidence search</label>
+<label><input type="checkbox"> source / inference distinction</label>
+<label><input type="checkbox"> scale shift</label>
+<label><input type="checkbox"> temporal shift</label>
+<label><input type="checkbox"> uncertainty preserved</label>
+<label><input type="checkbox"> member synthesis</label>
+<label><input type="checkbox"> possibility expansion</label>
+<label><input type="checkbox"> intentional next move</label>
+</div><div class="note">These observations remain separate dimensions. The harness does not calculate a developmental total or rank the participant.</div></aside>
+</div>
+<div class="foot"><strong>Research interpretation:</strong> B &gt; A shows assistance. The critical transfer comparison is D versus A. Stronger evidence requires delayed and ecological follow-up; this local prototype stores nothing.</div>
+</main>
+<script>
+const tasks={
+A:{kind:'Unassisted baseline',title:'A project is delayed after mixed feedback.',text:'The team is debating whether to cancel, continue unchanged, or rethink the plan. Some evidence supports concern; some is incomplete.',prompt:'What is going on here, and what would you want to understand before deciding what to do?',support:null},
+B:{kind:'Full support',title:'A community programme loses momentum after a difficult launch.',text:'Two early events were poorly attended, while one later event drew strong participation. The organizer is considering ending the programme.',prompt:'Explore the situation before deciding what it means.',support:{title:'MAIA scaffold',items:['What frame is organizing the question?','What evidence supports it? What complicates it?','What is still unknown?','Would another scale or perspective change the view?']}},
+C:{kind:'Light scaffold',title:'A creative team is split after a prototype fails.',text:'The first trial failed, but a related experiment succeeded under different conditions. The team must decide what to test next.',prompt:'What do you make of this?',support:{title:'One optional cue',items:['What else becomes visible if you change perspective?']}},
+D:{kind:'Novel unassisted transfer',title:'A neighborhood group faces a conflict over a shared space.',text:'Several members want immediate action; others want more information. Past attempts produced mixed outcomes and there is no clear consensus.',prompt:'What is going on here, and what would you want to understand before deciding what to do?',support:null}
+};
+const phaseBtns=document.querySelectorAll('.phase'),support=document.getElementById('support'),state=document.getElementById('state'),taskKind=document.getElementById('taskKind'),taskTitle=document.getElementById('taskTitle'),taskText=document.getElementById('taskText'),taskPrompt=document.getElementById('taskPrompt'),supportTitle=document.getElementById('supportTitle'),supportList=document.getElementById('supportList'),response=document.getElementById('response');
+function render(k){const t=tasks[k];phaseBtns.forEach(b=>b.classList.toggle('active',b.dataset.phase===k));state.textContent=k+' · '+t.kind.toLowerCase();taskKind.textContent=t.kind;taskTitle.textContent=t.title;taskText.textContent=t.text;taskPrompt.innerHTML='<strong>Prompt:</strong> '+t.prompt;response.value='';document.querySelectorAll('.obs input').forEach(x=>x.checked=false);if(t.support){support.style.display='block';supportTitle.textContent=t.support.title;supportList.innerHTML=t.support.items.map(i=>'<li>'+i+'</li>').join('')}else support.style.display='none'}
+phaseBtns.forEach(b=>b.onclick=()=>render(b.dataset.phase));document.getElementById('clear').onclick=()=>response.value='';
+</script></body></html>
