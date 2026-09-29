@@ -23,11 +23,13 @@ const modules = () => readdirSync(DIR).filter((f) => f.endsWith('.ts'))
   .map((f) => ({ name: f, code: strip(readFileSync(join(DIR, f), 'utf8')) }));
 
 const ALLOWED: Record<string, RegExp[]> = {
-  'contract.ts': [/^\.\.\/development\/(evidenceRef|readState)$/, /^\.\.\/developmentalReader\/contract$/, /^\.\.\/structure\/readerProvenance$/],
-  'freeze.ts': [/^\.\/contract$/, /^\.\.\/development\/(bind|evidenceRef)$/, /^\.\.\/developmentalReader\/contract$/, /^\.\.\/structure\/readerProvenance$/],
+  'contract.ts': [/^\.\/observationIdentity$/, /^\.\.\/development\/(evidenceRef|readState)$/, /^\.\.\/developmentalReader\/contract$/, /^\.\.\/structure\/readerProvenance$/],
+  'freeze.ts': [/^\.\/(contract|observationIdentity)$/, /^\.\.\/development\/(bind|evidenceRef)$/, /^\.\.\/developmentalReader\/(contract|themes)$/, /^\.\.\/structure\/readerProvenance$/],
   'assess.ts': [/^\.\/contract$/, /^\.\.\/development\/resolve$/],
   'classify.ts': [/^\.\/contract$/, /^crypto$/, /^\.\.\/\.\.\/ai\/structured\/(router|types)$/, /^\.\.\/developmentalReader\/contract$/],
   'store.ts': [/^\.\/contract$/, /^\.\.\/\.\.\/db\/postgres$/, /^\.\.\/development\/evidenceRef$/],
+  'observationIdentity.ts': [/^crypto$/, /^\.\.\/development\/evidenceRef$/, /^\.\.\/developmentalReader\/contract$/],
+  'observationAddress.ts': [/^@\/lib\/db\/postgres$/],
   /* WS-DEV-SCOPE-01. The scope law is PURE: it decides which sections a
      reading covers from a topology its caller supplies, and imports nothing at
      all. No database, no contract, no reader — an empty allow-list is the

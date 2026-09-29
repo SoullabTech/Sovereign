@@ -29,7 +29,7 @@ import { groundRamp, inkRamp, mix, type GroundRamp, type InkRamp } from './palet
  * colour that has never met a screen is a proposal, not a value.
  */
 
-export const ATMOSPHERE_IDS = ['atelier', 'night-study', 'forest', 'cloud', 'midnight'] as const;
+export const ATMOSPHERE_IDS = ['day', 'evening', 'atelier', 'night-study', 'forest', 'cloud', 'midnight'] as const;
 export type AtmosphereId = (typeof ATMOSPHERE_IDS)[number];
 
 /** What the Studio looks like when the member has chosen nothing. */
@@ -120,6 +120,24 @@ const ATELIER: Atmosphere = {
 };
 
 export const ATMOSPHERES: Record<AtmosphereId, Atmosphere> = {
+  /* Founder-accepted P4 light shell, restored as the named Day choice.
+     P4 keeps its exact accepted role tokens; this shared room uses the normal
+     validated ramp so the same choice remains accessible outside P4. */
+  day: compose('day', 'Day', {
+    ground: '#F3F3F3',
+    ink: '#08143B',
+    accent: '#7E5F22',
+    toward: 'shadow',
+  }),
+
+  /* Founder-accepted blue lower-light shell, restored as Evening. */
+  evening: compose('evening', 'Evening', {
+    ground: '#0F1422',
+    ink: '#E6EAF4',
+    accent: '#D4A95E',
+    toward: 'light',
+  }),
+
   atelier: ATELIER,
 
   /* A colder lamp and a bluer dark. The same room after the house has gone

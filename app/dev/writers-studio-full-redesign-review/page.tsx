@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Newsreader } from 'next/font/google';
 import { FullRedesignReviewClient } from './FullRedesignReviewClient';
 import { isReviewState } from '@/app/writers-studio/full-redesign/fixtures';
+import { isAtmosphereId } from '@/app/writers-studio/atmosphere/atmospheres';
 import './full-redesign-review.css';
 
 /**
@@ -27,7 +28,10 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 export default async function FullRedesignReviewPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const requested = Array.isArray(params.state) ? params.state[0] : params.state;
-  const appearance = (Array.isArray(params.appearance) ? params.appearance[0] : params.appearance) === 'night' ? 'night' : 'light';
+  const requestedAppearance = Array.isArray(params.appearance) ? params.appearance[0] : params.appearance;
+  const appearance = requestedAppearance === 'night' ? 'evening'
+    : requestedAppearance === 'light' ? 'day'
+      : isAtmosphereId(requestedAppearance) ? requestedAppearance : 'day';
   const state = isReviewState(requested) ? requested : 'develop-themes';
 
   return (

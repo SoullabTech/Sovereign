@@ -15,9 +15,11 @@ export const PRIMARY_MODES: ReadonlyArray<{ id: StudioMode; label: string }> = [
   { id: 'review', label: 'Review' },
 ];
 
+import type { AtmosphereId } from '../atmosphere/atmospheres';
+
 /** Appearance changes atmosphere, never architecture or authority (PC1 VS-06). */
-export type Appearance = 'light' | 'night';
-export const DEFAULT_APPEARANCE: Appearance = 'light';
+export type Appearance = AtmosphereId;
+export const DEFAULT_APPEARANCE: Appearance = 'day';
 
 /** The controlled founder-review fixture states PC3-S1 renders. */
 export type FixtureStateId = 'develop-themes' | 'develop-manuscript' | 'review-chapter';

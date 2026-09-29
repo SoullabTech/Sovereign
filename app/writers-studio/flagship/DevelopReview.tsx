@@ -177,14 +177,16 @@ export const LENSES = [
   { id: 'voice',       plain: 'How it sounds',                    term: 'Voice' },
   { id: 'reader',      plain: 'How it might land',                term: 'Reader perspective' },
 ] as const;
-export type LensId = (typeof LENSES)[number]['id'];
+export const THEMES_LENS = { id: 'themes', plain: 'What keeps returning', term: 'Themes' } as const;
+export const DEVELOP_LENS_META = [...LENSES, THEMES_LENS] as const;
+export type LensId = (typeof DEVELOP_LENS_META)[number]['id'];
 
 /**
  * ⭐ Derived from positive facts. ⛔ Never stored, ⛔ never inferred from a click.
  * ⚠️ `read-nothing-noticed` and `not-read` MUST render differently — a completed
  * reading that surfaced nothing is a RESULT; an absent reading is an ABSENCE.
  */
-export type LensState = 'not-read' | 'partially-read' | 'read' | 'read-nothing-noticed';
+export type LensState = 'not-read' | 'available' | 'partially-read' | 'read' | 'read-nothing-noticed';
 
 /**
  * ⭐ THE OPENING — recognition, ⛔ not assessment.

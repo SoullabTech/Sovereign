@@ -49,7 +49,13 @@ export interface ReadOptions {
 }
 
 const DEFAULT_MODEL = process.env.MAIA_DEVELOPMENTAL_READER_MODEL || 'claude-opus-5';
-const DEFAULT_MAX_TOKENS = 16_000;
+/* C11R2 · Whole-work Structure on Elemental Alchemy exhausted the former
+   16k allowance while the response was still structurally valid in intent.
+   Refusing truncation remains the law; the repair is to give the governed
+   reader enough output room to finish. 32k remains far below the pinned
+   model's documented output ceiling and changes no evidence or parsing rule. */
+export const DEFAULT_DEVELOPMENTAL_READER_MAX_TOKENS = 32_000;
+const DEFAULT_MAX_TOKENS = DEFAULT_DEVELOPMENTAL_READER_MAX_TOKENS;
 
 /**
  * The seam's own facts about a response that came back. Attribution is NOT

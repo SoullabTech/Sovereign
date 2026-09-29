@@ -9,6 +9,7 @@ human_activity: a writer inhabiting one Work at different altitudes — the manu
 surfaces:
   - app/writers-studio/full-redesign/*.tsx
   - app/writers-studio/full-redesign/**
+  - app/writers-studio/atmosphere/StudioAtmosphere.tsx
 
 change_class: experiential
 
@@ -18,6 +19,7 @@ principles:
   - PC1 VS-04 — MAIA is a contextual relationship, not a copilot sidebar; in Develop and Review she holds the designed right region
   - PC1 VS-05 — the left region is literary Work context, never a findings rail or file tree
   - PC1 VS-06 — one Studio, many atmospheres; appearance changes colour roles, never navigation, capability, place or geometry
+  - P4R1 continuity — when no member preference exists, the P4R1 founder-review surface may name Day as its local arrival default; a remembered member choice still wins and no other Studio route inherits that fallback
   - PC1 VS-16 — no hidden grading; readiness, "Balanced" and relevance ranking are withheld even where a founder image shows them
   - PC1 VS-17 — no fake global destinations; the primary spine is Home · Write · Develop · Review only
   - PC1 VS-19 — the founder original is the visual comparator; the candidate never cites its own previous render

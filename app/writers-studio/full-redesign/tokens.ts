@@ -1,4 +1,5 @@
 import type { Appearance, FixtureStateId, ShellGeometry } from './types';
+import { ATMOSPHERES } from '../atmosphere/atmospheres';
 
 /**
  * Colour ROLES for the Light Shell, sampled from the founder originals
@@ -18,64 +19,55 @@ type RoleTokens = Record<
   string
 >;
 
-export const APPEARANCE_TOKENS: Record<Appearance, RoleTokens> = {
-  light: {
-    ground: '#F3F3F3',
-    bar: '#F8F8F8',
-    panel: '#FEFEFE',
-    panelSoft: '#F4F5F7',
-    line: '#E6E7EA',
-    lineSoft: '#EEEFF1',
-    ink: '#08143B',
-    ink2: '#3A4257',
-    muted: '#697084',
-    quiet: '#9AA0AE',
-    title: '#08143B',
-    action: '#1F6FC4',
-    actionDeep: '#23508B',
-    actionSoft: '#F2F8FD',
-    actionLine: '#B9D3F0',
-    maiaCard: '#F0F4F7',
-    held: '#FAF2E7',
-    heldPassage: '#EEF3FB',
-    gold: '#B8893E',
-    shadow: '0 1px 2px rgba(8,20,59,.04), 0 4px 14px rgba(8,20,59,.035)',
-    field: '#F9F8F5',
-    fieldLine: '#E7E5DF',
-    recess: '#F2F1ED',
-    saved: '#2E9B6C',
-  },
-  // Derived Night proof: same roles, same geometry, lower light.
-  night: {
-    ground: '#0F1422',
-    bar: '#131A2A',
-    panel: '#171E30',
-    panelSoft: '#1C2438',
-    line: '#27314A',
-    lineSoft: '#222B41',
-    ink: '#E6EAF4',
-    ink2: '#C3CAD9',
-    muted: '#98A1B6',
-    quiet: '#6E778C',
-    title: '#EEF1F8',
-    action: '#7FB0EA',
-    actionDeep: '#9CC2EF',
-    actionSoft: '#1D2A44',
-    actionLine: '#3A5680',
-    maiaCard: '#1D2539',
-    held: '#2E2A22',
-    heldPassage: '#1E2A42',
-    gold: '#D4A95E',
-    shadow: '0 1px 2px rgba(0,0,0,.25), 0 6px 18px rgba(0,0,0,.22)',
-    field: '#131A2A',
-    fieldLine: '#212A3F',
-    recess: '#10172A',
-    saved: '#4DBF8C',
-  },
+const DAY_TOKENS: RoleTokens = {
+  ground: '#F3F3F3', bar: '#F8F8F8', panel: '#FEFEFE', panelSoft: '#F4F5F7',
+  line: '#E6E7EA', lineSoft: '#EEEFF1', ink: '#08143B', ink2: '#3A4257',
+  muted: '#697084', quiet: '#9AA0AE', title: '#08143B', action: '#1F6FC4',
+  actionDeep: '#23508B', actionSoft: '#F2F8FD', actionLine: '#B9D3F0',
+  maiaCard: '#F0F4F7', held: '#FAF2E7', heldPassage: '#EEF3FB', gold: '#B8893E',
+  shadow: '0 1px 2px rgba(8,20,59,.04), 0 4px 14px rgba(8,20,59,.035)',
+  field: '#F9F8F5', fieldLine: '#E7E5DF', recess: '#F2F1ED', saved: '#2E9B6C',
 };
 
-export function appearanceVars(appearance: Appearance): Record<string, string> {
-  const t = APPEARANCE_TOKENS[appearance];
+const EVENING_TOKENS: RoleTokens = {
+  ground: '#0F1422', bar: '#131A2A', panel: '#171E30', panelSoft: '#1C2438',
+  line: '#27314A', lineSoft: '#222B41', ink: '#E6EAF4', ink2: '#C3CAD9',
+  muted: '#98A1B6', quiet: '#6E778C', title: '#EEF1F8', action: '#7FB0EA',
+  actionDeep: '#9CC2EF', actionSoft: '#1D2A44', actionLine: '#3A5680',
+  maiaCard: '#1D2539', held: '#2E2A22', heldPassage: '#1E2A42', gold: '#D4A95E',
+  shadow: '0 1px 2px rgba(0,0,0,.25), 0 6px 18px rgba(0,0,0,.22)',
+  field: '#131A2A', fieldLine: '#212A3F', recess: '#10172A', saved: '#4DBF8C',
+};
+
+function fromAtmosphere(appearance: Exclude<Appearance, 'day' | 'evening'>): RoleTokens {
+  const a = ATMOSPHERES[appearance];
+  return {
+    ground: a.ground.base, bar: a.ground.raised, panel: a.ground.field, panelSoft: a.ground.raised,
+    line: a.rule.base, lineSoft: a.rule.soft, ink: a.ink.primary, ink2: a.ink.secondary,
+    muted: a.ink.muted, quiet: a.ink.quiet, title: a.ink.primary, action: a.gold.base,
+    actionDeep: a.gold.text, actionSoft: a.ground.active, actionLine: a.gold.edge,
+    maiaCard: a.ground.raised, held: a.ground.active, heldPassage: a.gold.fill, gold: a.gold.base,
+    shadow: '0 1px 2px rgba(0,0,0,.12), 0 6px 18px rgba(0,0,0,.10)',
+    field: a.ground.field, fieldLine: a.rule.soft, recess: a.ground.deepest, saved: '#4DBF8C',
+  };
+}
+
+export const APPEARANCE_TOKENS: Record<Appearance, RoleTokens> = {
+  day: DAY_TOKENS,
+  evening: EVENING_TOKENS,
+  atelier: fromAtmosphere('atelier'),
+  'night-study': fromAtmosphere('night-study'),
+  forest: fromAtmosphere('forest'),
+  cloud: fromAtmosphere('cloud'),
+  midnight: fromAtmosphere('midnight'),
+};
+
+export function appearanceVars(appearance: Appearance | 'light' | 'night'): Record<string, string> {
+  /* Compatibility only: legacy founder-review fixtures used light/night.
+     The member-facing names are Day/Evening, but old saved links and tests must
+     still resolve to the exact same accepted palettes. */
+  const resolved: Appearance = appearance === 'light' ? 'day' : appearance === 'night' ? 'evening' : appearance;
+  const t = APPEARANCE_TOKENS[resolved];
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(t)) out[`--fr-${k.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())}`] = v;
   return out;

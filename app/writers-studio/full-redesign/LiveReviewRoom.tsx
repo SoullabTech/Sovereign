@@ -19,6 +19,7 @@ export type Pc3LiveReviewFinding = {
   lensLabel: string;
   evidence: readonly string[];
   hypothesis?: boolean;
+  canWorkWith?: boolean;
 };
 export type Pc3LiveReviewLens = {
   id: string;
@@ -77,11 +78,12 @@ export function LiveReviewRail({ data }: { data: Pc3LiveReviewData }) {
     </div>
   );
 }function FindingList({
-  findings, selectedFindingId, onOpenFinding, onDiscuss,
+  findings, selectedFindingId, onOpenFinding, onWorkWith, onDiscuss,
 }: {
   findings: readonly Pc3LiveReviewFinding[];
   selectedFindingId?: string;
   onOpenFinding: (finding: Pc3LiveReviewFinding) => void;
+  onWorkWith: (finding: Pc3LiveReviewFinding) => void;
   onDiscuss: (finding: Pc3LiveReviewFinding) => void;
 }) {
   return (
@@ -98,6 +100,11 @@ export function LiveReviewRail({ data }: { data: Pc3LiveReviewData }) {
               <span>{finding.lensLabel}</span>
               {finding.hypothesis ? <span>Possibility</span> : null}
             </span>
+            {finding.canWorkWith ? (
+              <button type="button" className="fr-open fr-open-primary" onClick={() => onWorkWith(finding)}>
+                Work with this <Arrow />
+              </button>
+            ) : null}
             <button type="button" className="fr-open" onClick={() => onOpenFinding(finding)}>
               Open in manuscript <Arrow />
             </button>
@@ -113,11 +120,12 @@ export function LiveReviewRail({ data }: { data: Pc3LiveReviewData }) {
 }
 
 function LensPanel({
-  data, tab, onOpenFinding, onDiscuss,
+  data, tab, onOpenFinding, onWorkWith, onDiscuss,
 }: {
   data: Pc3LiveReviewData;
   tab: string;
   onOpenFinding: (finding: Pc3LiveReviewFinding) => void;
+  onWorkWith: (finding: Pc3LiveReviewFinding) => void;
   onDiscuss: (finding: Pc3LiveReviewFinding) => void;
 }) {  const lens = data.lenses.find((candidate) => candidate.label === tab);
   if (!lens) return <p className="fr-later">This Review view is not available.</p>;
@@ -138,11 +146,11 @@ function LensPanel({
         <span className="fr-sel fr-sel-sm">{findings.length} finding{findings.length === 1 ? '' : 's'}</span>
       </div>
       <FindingList findings={findings} selectedFindingId={data.selectedFindingId}
-        onOpenFinding={onOpenFinding} onDiscuss={onDiscuss} />
+        onOpenFinding={onOpenFinding} onWorkWith={onWorkWith} onDiscuss={onDiscuss} />
     </div>
   );
 }export function LiveReviewChapter({
-  data, filter, onFilter, tab, onTab, onBack, onOpenFinding, onDiscuss,
+  data, filter, onFilter, tab, onTab, onBack, onOpenFinding, onWorkWith, onDiscuss,
 }: {
   data: Pc3LiveReviewData;
   filter: string;
@@ -151,6 +159,7 @@ function LensPanel({
   onTab: (t: string) => void;
   onBack: () => void;
   onOpenFinding: (finding: Pc3LiveReviewFinding) => void;
+  onWorkWith: (finding: Pc3LiveReviewFinding) => void;
   onDiscuss: (finding: Pc3LiveReviewFinding) => void;
 }) {
   const tabs = ['Overview', ...data.lenses.map((lens) => lens.label)];
@@ -179,7 +188,7 @@ function LensPanel({
           </button>
         ))}
       </div>      {tab !== 'Overview' ? (
-        <LensPanel data={data} tab={tab} onOpenFinding={onOpenFinding} onDiscuss={onDiscuss} />
+        <LensPanel data={data} tab={tab} onOpenFinding={onOpenFinding} onWorkWith={onWorkWith} onDiscuss={onDiscuss} />
       ) : (
         <>
           <div className="fr-hero fr-hero-rev" data-landmark="hero">
@@ -213,7 +222,7 @@ function LensPanel({
                   <button key={f} type="button" aria-pressed={f === filter} onClick={() => onFilter(f)}>{f} {n}</button>
                 ))}
               </div>              <FindingList findings={shown} selectedFindingId={data.selectedFindingId}
-                onOpenFinding={onOpenFinding} onDiscuss={onDiscuss} />
+                onOpenFinding={onOpenFinding} onWorkWith={onWorkWith} onDiscuss={onDiscuss} />
             </div>
             <div className="fr-rev-side">
               <section className="fr-card">

@@ -38,16 +38,20 @@ describe('Writer workbench usability repair', () => {
   });
   it('a long review exposes progressive lens state instead of one blocking spinner', () => {
     expect(room).toContain("data-review-lens-state={failure ? 'failed' : readingNow ? 'reading' : complete ? 'complete' : 'waiting'}");
-    expect(room).toContain("'Could not complete'");
+    expect(room).toContain("'Could not finish this reading'");
+    expect(room).toContain("'Read, but findings not prepared'");
+    expect(room).toContain("'Read, but not finalized'");
+    expect(room).toContain("'Read, but not recorded'");
+    expect(room).toContain("'Read, but not loaded back'");
     expect(room).toContain("'Reading…'");
     expect(room).toContain("'Waiting in this review.'");
-    expect(room).toContain('setReview({ readingIds: [], payloads: [], findings: [], failures: [] })');
-    expect(room).toContain('(partial) => setReview(partial)');
+    expect(room).toContain('setReview(carried)');
+    expect(room).toContain('(partial) => setReview({');
   });
 
   it('failed lenses remain distinct from a completed zero-observation lens', () => {
     expect(room).toContain('data-review-lens-failure={reviewLens}');
-    expect(room).toContain('could not complete safely');
+    expect(room).toContain('· could not complete');
     expect(room).toContain('MAIA completed this lens and reported no observations.');
     expect(room).toContain("failure.refusal === 'claim_unbindable'");
   });

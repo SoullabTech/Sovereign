@@ -12,6 +12,11 @@ surfaces:
   - app/writers-studio/rebuild/flagshipWriteHost.css
   - app/writers-studio/rebuild/DiscussLayer.tsx
   - app/writers-studio/rebuild/discussAct.ts
+  # P4R1 — durable Work-level conversation shared by the flagship journey.
+  # The optional initialDraft is member-facing composer state only: it is never
+  # auto-sent, never changes the Work anchor, and never creates another
+  # conversation identity.
+  - app/writers-studio/canvas/WorkConversation.tsx
   # R1-1C, 2026-09-23 — Review navigation succession: the pure navigation law and the reading chooser.
   - app/writers-studio/rebuild/reviewNavigation.ts
   # R1-2, 2026-09-23 — exact Review → manuscript section return as data, and the live read-only Review mount (R1-1B) it navigates from.

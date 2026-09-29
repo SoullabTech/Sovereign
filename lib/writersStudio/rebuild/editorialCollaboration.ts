@@ -1,6 +1,7 @@
 import { apiFetch } from '@/lib/http/apiBase';
 import { occurrences } from '@/lib/manuscript/exactText';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
+import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 
 /**
  * SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1 — POSTURE IS CARRIED, NEVER DEFAULTED.
@@ -173,6 +174,10 @@ export async function sendBoundEditorialTurn(
     /** ⭐ The per-Work release of the discuss-first order. ⛔ Default false. */
     mayProposeImmediately?: boolean;
   },
+  options?: {
+    /** Exploratory turns may close the outcome vocabulary to reply_only. */
+    proposalPolicy?: ProposalPolicy;
+  },
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
   try {
@@ -183,6 +188,7 @@ export async function sendBoundEditorialTurn(
         threadId, act: { act: 'discourse', text, refersTo: null },
         sanctuary: posture.sanctuary,
         ...(scope ? { scope } : {}),
+        ...(options?.proposalPolicy ? { proposalPolicy: options.proposalPolicy } : {}),
       }),
     });
     const body = await res.json().catch(() => null);
@@ -195,7 +201,16 @@ export async function sendBoundEditorialTurn(
          author's latitude. The surface must say what happened in the author's
          terms — ⛔ never surface `scope_removes_paragraphs` as a raw error
          code, and never imply the request broke. */
-      if (res.status === 409 && (body?.scope || body?.voice)) {
+      if (res.status === 409 && body?.error === 'proposal_policy_reply_only') {
+        return {
+          ok: false,
+          reason: 'turn_refused',
+          detail: typeof body?.detail === 'string'
+            ? body.detail
+            : 'MAIA stayed in exploration. Nothing was added to the revision options.',
+        };
+      }
+      if (res.status === 409 && (body?.scope || body?.voice || body?.error === 'sequence_discussion_first')) {
         return {
           ok: false, reason: 'scope_refused',
           detail: typeof body?.detail === 'string' ? body.detail : undefined,

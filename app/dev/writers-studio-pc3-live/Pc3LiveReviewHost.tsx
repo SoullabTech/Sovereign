@@ -50,7 +50,7 @@ type ReadyReview = {
   const manuscriptId = params?.get('m') ?? null;
   const reviewRunId = params?.get('reviewRun') ?? null;
   const requestedFindingId = params?.get('reviewFinding') ?? null;
-  const appearance = params?.get('appearance') === 'night' ? 'night' : 'light';
+  const appearance = params?.get('appearance') === 'night' ? 'evening' : 'day';
   const { phase: worksPhase, works } = useLivingWorks();
 
   const [phase, setPhase] = useState<ReviewPhase>('loading');
@@ -257,6 +257,7 @@ type ReadyReview = {
           onTab={setTab}
           onBack={() => goWrite(review.rootId)}
           onOpenFinding={openFinding}
+          onWorkWith={openFinding}
           onDiscuss={discussFinding}
         />
       }

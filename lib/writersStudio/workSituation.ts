@@ -81,6 +81,8 @@ export interface SituatedWork {
   form: string | null;
   /** Where the member says they are. The system never sets or advances it. */
   stage: string | null;
+  /** The manuscript maturity the writer explicitly declared, or null. */
+  manuscriptState: 'pre-manuscript' | 'partial-manuscript' | 'existing-manuscript' | null;
 }
 
 /**
@@ -101,8 +103,9 @@ export async function resolveSituatedWork(
       purpose: string | null;
       form: string | null;
       stage: string | null;
+      manuscriptState: 'pre-manuscript' | 'partial-manuscript' | 'existing-manuscript' | null;
     }>(
-      `SELECT id, title, purpose, form, stage
+      `SELECT id, title, purpose, form, stage, manuscript_state AS "manuscriptState"
          FROM living_works
         WHERE id = $1 AND member_id = $2
         LIMIT 1`,
@@ -136,6 +139,9 @@ export function formatWorkSituationForPrompt(work: SituatedWork | null): string 
   if (work.form) lines.push(`They call it: ${work.form}`);
   if (work.purpose) lines.push(`Why they are making it: ${work.purpose}`);
   if (work.stage) lines.push(`Where they say they are: ${work.stage}`);
+  if (work.manuscriptState) {
+    lines.push(`They describe the manuscript state as: ${work.manuscriptState}`);
+  }
 
   lines.push(
     '',
