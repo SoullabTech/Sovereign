@@ -153,6 +153,15 @@ LOD5 · evidence / provenance
 
 Deeper scale reveals richer structure rather than merely larger graphics.
 
+R2B also establishes the perceptual grammar for the whole Soul Lab:
+- the larger ecology remains perceptible while one locus comes forward;
+- platform rooms are not shown as a static app menu;
+- a room threshold may become perceptible only when semantically relevant;
+- an inspectable node / relation may reserve an **Ask MAIA** affordance;
+- zoom level may permit disclosure but never by itself earns a portal or interpretation;
+- portal relevance and MAIA context remain governed by SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS.md;
+- live cross-room navigation and live MAIA execution remain unopened during R2B.
+
 #### R2C · Progressive Relational Resolution
 Relations resolve by scale:
 
