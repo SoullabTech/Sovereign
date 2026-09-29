@@ -58,13 +58,13 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
         const data = await res.json().catch(() => null)
         if (cancelled) return
         if (!res.ok || !data?.encounter_id) {
-          setError('Could not open this encounter. Try again.')
+          setError('The encounter paused for a moment. Try again.')
           return
         }
         setEncounterId(data.encounter_id)
-        setTurns([{ role: 'maia', text: data.greeting || `I'm here with you in ${fieldLabel}.` }])
+        setTurns([{ role: 'maia', text: data.greeting || `What is ready to unfold here in ${fieldLabel}?` }])
       } catch {
-        if (!cancelled) setError('Could not reach MAIA. Check your connection and try again.')
+        if (!cancelled) setError('The connection paused for a moment. Try again.')
       } finally {
         if (!cancelled) setOpening(false)
       }
@@ -95,12 +95,12 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
       })
       const data = await res.json().catch(() => null)
       if (!res.ok || typeof data?.reply !== 'string') {
-        setError('MAIA could not respond just now. Try again.')
+        setError('The conversation paused for a moment. Try again.')
         return
       }
       setTurns((prev) => [...prev, { role: 'maia', text: data.reply }])
     } catch {
-      setError('Could not reach MAIA. Check your connection and try again.')
+      setError('The connection paused for a moment. Try again.')
     } finally {
       setSending(false)
     }
@@ -238,18 +238,18 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
                     : 'px-3 py-2 rounded bg-stone-900 hover:bg-stone-800 text-stone-400 text-xs border border-stone-800 transition-colors'
                 }
               >
-                {markError === opt.kind ? 'Could not mark — tap to retry' : opt.label}
+                {markError === opt.kind ? 'Try marking again' : opt.label}
               </button>
             ))}
             <button
               onClick={() => setMarkOpen(false)}
               className="text-stone-700 hover:text-stone-500 text-xs px-2 py-1.5"
             >
-              never mind
+              Close
             </button>
           </div>
         )}
-        {markSent && <span className="text-stone-600 text-xs italic">marked.</span>}
+        {markSent && <span className="text-stone-600 text-xs italic">Kept.</span>}
       </div>
     </div>
   )

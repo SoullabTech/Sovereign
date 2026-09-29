@@ -70,7 +70,7 @@ export function PhaseStatePanel({ spiralState, recentStates, memberId }: Props) 
 
       {isEmpty && (
         <p className="text-stone-600 text-xs">
-          Your emotional weather will form here as you note what you're holding.
+          Emotional weather begins to take shape as feelings, states, and inner weather are named.
         </p>
       )}
 

@@ -109,7 +109,7 @@ export function LivingFieldDetailPanel({
       if (drafted && typeof drafted.candidate_expression === 'string' && drafted.candidate_expression.trim()) {
         setCandidate(drafted)
       } else {
-        setRefineNote('MAIA could not draft a candidate just now. You can write directly, or try again in a moment.')
+        setRefineNote('A fresh draft can be invited again in a moment, or this space can be written directly.')
       }
     } finally {
       setRefining(false)
@@ -221,13 +221,13 @@ export function LivingFieldDetailPanel({
               disabled={refining}
               className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-700 text-amber-400 text-xs border border-stone-700 disabled:opacity-50 transition-colors"
             >
-              {refining ? 'Gathering…' : 'Refine with MAIA'}
+              {refining ? 'Gathering…' : 'Refine this'}
             </button>
             <Link
               href={`/maia?field=${field.field_key}`}
               className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs border border-stone-700 transition-colors"
             >
-              Talk with MAIA about this
+              Explore this further
             </Link>
           </div>
 
@@ -255,7 +255,7 @@ export function LivingFieldDetailPanel({
                     <li key={v.id} className="space-y-0.5">
                       <p className="text-stone-500 text-xs">
                         {formatDate(v.created_at)} ·{' '}
-                        {v.authored_by === 'maia_candidate' ? 'MAIA candidate, accepted' : 'Written by you'}
+                        {v.authored_by === 'maia_candidate' ? 'Accepted suggestion' : 'Authored'}
                       </p>
                       <p className="text-stone-300 text-sm leading-relaxed">{v.expression}</p>
                       {v.change_note && (
@@ -273,8 +273,8 @@ export function LivingFieldDetailPanel({
             <h4 className="text-stone-500 text-xs uppercase tracking-widest">Supported By</h4>
             {activeConsents.length === 0 && revokedConsents.length === 0 ? (
               <p className="text-stone-600 text-xs">
-                Your Living Field is complete on its own. You can invite development partners to
-                walk alongside specific dimensions of it.
+                Development partners can be invited to walk alongside particular dimensions
+                of the field.
               </p>
             ) : (
               <ul className="space-y-2">
