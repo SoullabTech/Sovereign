@@ -26,6 +26,12 @@ import {
   type PhysicsNodeDatum,
   type PhysicsRelation,
 } from './physicsFieldData'
+import {
+  LOD_LABELS,
+  PORTAL_BY_NODE,
+  nodeLabelStanding,
+  resolveSemanticLod,
+} from './livingFieldLod'
 
 type AttentionPhase = 'idle' | 'proximity' | 'glance' | 'attend' | 'dwell'
 
@@ -279,6 +285,16 @@ export function CellularLivingFieldPrototype() {
   const hoveredRelation = hoveredRelationId
     ? PHYSICS_RELATIONS.find((relation) => relation.id === hoveredRelationId) ?? null
     : null
+  const semanticLod = resolveSemanticLod(cameraView.scale, !!focusGroup, !!focusNodeId)
+  const portalCue = activeNodeId ? PORTAL_BY_NODE.get(activeNodeId) ?? null : null
+  const maiaLocusVisible =
+    !!activeNodeId &&
+    semanticLod >= 3 &&
+    (attentionPhase === 'attend' || attentionPhase === 'dwell' || focusNodeId === activeNodeId)
+  const portalCueVisible =
+    !!portalCue &&
+    semanticLod >= 4 &&
+    (attentionPhase === 'dwell' || focusNodeId === activeNodeId)
 
   const recentTraceByNode = useMemo(() => {
     const now = Date.now()
@@ -746,11 +762,17 @@ export function CellularLivingFieldPrototype() {
     simulationRef.current?.alphaTarget(0)
   }
 
-  const visibleNodeLabel = (node: SimNode) => {
-    if (!focusGroup) return true
-    if (focusNodeId) return activeNeighborhood?.has(node.id)
-    return node.group === focusGroup
+  const nodeLabelOpacity = (node: SimNode) => {
+    if (focusNodeId && activeNeighborhood && !activeNeighborhood.has(node.id)) return 0
+    return nodeLabelStanding(
+      node,
+      semanticLod,
+      activeNodeId === node.id,
+      focusGroup === node.group,
+    )
   }
+
+  const visibleNodeLabel = (node: SimNode) => nodeLabelOpacity(node) > 0.02
 
   const nodeOpacity = (node: SimNode) => {
     if (!focusGroup && !activeNeighborhood) return 0.72
@@ -799,13 +821,22 @@ export function CellularLivingFieldPrototype() {
   const transform = `translate(${WIDTH / 2} ${HEIGHT / 2}) scale(${cameraView.scale}) translate(${-cameraView.cx} ${-cameraView.cy})`
 
   return (
-    <section className="overflow-hidden rounded-[30px] border border-stone-800 bg-[#090a0a]">
+    <section
+      data-semantic-lod={semanticLod}
+      data-semantic-lod-label={LOD_LABELS[semanticLod]}
+      className="overflow-hidden rounded-[30px] border border-stone-800 bg-[#090a0a]"
+    >
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-800/80 px-5 py-4 sm:px-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Living Field · R2A</p>
-          <h2 className="mt-1 text-2xl font-light text-stone-100">Move through one living world.</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Living Field · R2B</p>
+            <span className="rounded-full border border-stone-800 bg-stone-950/70 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-stone-600">
+              LOD{semanticLod} · {LOD_LABELS[semanticLod]}
+            </span>
+          </div>
+          <h2 className="mt-1 text-2xl font-light text-stone-100">Move closer and the field becomes more articulate.</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500">
-            Trackpad or wheel changes scale around attention. Drag open space to move. Click a world or cell to enter it.
+            Scale permits detail. Attention wakes relation. Relevance makes a threshold possible. Choice remains with the member.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -1054,6 +1085,20 @@ export function CellularLivingFieldPrototype() {
                   >
                     {group.label}
                   </text>
+                  {semanticLod >= 1 && (focusGroup === group.id || activeNode?.group === group.id) && (
+                    <text
+                      x={geometry.x}
+                      y={geometry.y - geometry.r + 40}
+                      textAnchor="middle"
+                      fill="#a8a29e"
+                      fillOpacity={semanticLod >= 2 ? 0.72 : 0.44}
+                      fontSize="8.5"
+                      letterSpacing="0.03em"
+                      pointerEvents="none"
+                    >
+                      {group.essence}
+                    </text>
+                  )}
                 </g>
               )
             })}
@@ -1067,12 +1112,17 @@ export function CellularLivingFieldPrototype() {
               const active = activeRelations.some((candidate) => candidate.id === relation.id)
               const recent = Math.max(recentTraceByNode.get(relation.source) ?? 0, recentTraceByNode.get(relation.target) ?? 0)
               const sameFocusedWorld = focusGroup && source.group === focusGroup && target.group === focusGroup
-              const show = active || recent > 0.18 || sameFocusedWorld
+              const show =
+                (semanticLod >= 3 && active) ||
+                (semanticLod >= 2 && !!sameFocusedWorld) ||
+                (semanticLod >= 3 && recent > 0.18)
               if (!show) return null
 
               const opacity = active ? 0.92 : sameFocusedWorld ? 0.28 : recent * 0.32
               const sourceStyle = WORLD_STYLE[source.group]
               const targetStyle = WORLD_STYLE[target.group]
+              const midX = ((source.x ?? 0) + (target.x ?? 0)) / 2
+              const midY = ((source.y ?? 0) + (target.y ?? 0)) / 2
 
               return (
                 <g key={relation.id} data-relation-id={relation.id}>
@@ -1103,6 +1153,30 @@ export function CellularLivingFieldPrototype() {
                     onPointerOver={() => setHoveredRelationId(relation.id)}
                     onPointerOut={() => setHoveredRelationId(null)}
                   />
+                  {semanticLod >= 4 && active && (
+                    <g pointerEvents="none">
+                      <rect
+                        x={midX - 33}
+                        y={midY - 10}
+                        width="66"
+                        height="20"
+                        rx="10"
+                        fill="rgba(9,10,10,0.88)"
+                        stroke="rgba(168,162,158,0.24)"
+                      />
+                      <text
+                        x={midX}
+                        y={midY + 1}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="#d6d3d1"
+                        fontSize="9.5"
+                        fontWeight="600"
+                      >
+                        {relation.verb}
+                      </text>
+                    </g>
+                  )}
                 </g>
               )
             })}
@@ -1222,7 +1296,7 @@ export function CellularLivingFieldPrototype() {
                       textAnchor="middle"
                       dominantBaseline="central"
                       fill={active ? '#fff7eb' : '#e7e5e4'}
-                      fillOpacity={active ? 1 : attentionPhase === 'proximity' && activeNeighborhood?.has(node.id) ? 0.88 : focusGroup ? 0.86 : 0.34}
+                      fillOpacity={nodeLabelOpacity(node)}
                       fontSize={node.label.length > 17 ? 10.5 : 12}
                       fontWeight="600"
                       pointerEvents="none"
@@ -1230,22 +1304,78 @@ export function CellularLivingFieldPrototype() {
                       {node.label}
                     </text>
                   )}
+                  {active && maiaLocusVisible && (
+                    <g
+                      data-maia-locus={node.id}
+                      transform={`translate(${-node.r - 13}, ${-node.r - 15})`}
+                      pointerEvents="none"
+                    >
+                      <circle r="8" fill="rgba(231,229,228,0.08)" stroke={style.glow} strokeOpacity="0.72" />
+                      <text
+                        x="0"
+                        y="0.5"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill={style.glow}
+                        fontSize="6.8"
+                        fontWeight="700"
+                      >
+                        M
+                      </text>
+                    </g>
+                  )}
+                  {active && portalCueVisible && portalCue?.nodeId === node.id && (
+                    <g
+                      data-portal-cue={portalCue.roomId}
+                      data-portal-standing={portalCue.standing}
+                      transform={`translate(${node.r + 24}, ${-node.r - 8})`}
+                      pointerEvents="none"
+                    >
+                      <path
+                        d="M -8 8 A 10 10 0 0 1 12 -2"
+                        fill="none"
+                        stroke={style.glow}
+                        strokeWidth="1.8"
+                        strokeOpacity="0.72"
+                      />
+                      <circle cx="12" cy="-2" r="2.8" fill={style.glow} opacity="0.78" />
+                      <text x="18" y="1" fill="#d6d3d1" fontSize="7.5" fontWeight="600">
+                        {portalCue.roomLabel}
+                      </text>
+                    </g>
+                  )}
                 </g>
               )
             })}
           </g>
         </svg>
 
-        <aside className="absolute right-4 top-4 w-[300px] rounded-2xl border border-stone-800/90 bg-stone-950/90 p-4 shadow-2xl backdrop-blur-md">
+        <aside
+          data-depth-lens="true"
+          className="pointer-events-none absolute right-4 top-4 w-[300px] rounded-2xl border border-stone-800/90 bg-stone-950/90 p-4 shadow-2xl backdrop-blur-md"
+        >
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-stone-700">
+              LOD{semanticLod}
+            </p>
+            <span className="text-[10px] text-stone-600">{LOD_LABELS[semanticLod]}</span>
+          </div>
+
           {hoveredRelation ? (
             <>
-              <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80">Bridge detail</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80">Relation</p>
               <p className="mt-2 text-base text-stone-100">
                 {NODE_BY_ID.get(hoveredRelation.source)?.label}{' '}
                 <span className="text-amber-500">{hoveredRelation.verb}</span>{' '}
                 {NODE_BY_ID.get(hoveredRelation.target)?.label}
               </p>
               <p className="mt-3 text-sm leading-6 text-stone-400">{hoveredRelation.rationale}</p>
+              {semanticLod >= 5 && (
+                <div className="mt-4 border-t border-stone-800 pt-3 text-xs leading-5 text-stone-600">
+                  <p>Standing · {hoveredRelation.standing}</p>
+                  <p className="mt-1">Why here · explicit controlled-corpus relation</p>
+                </div>
+              )}
             </>
           ) : activeNode ? (
             <>
@@ -1274,7 +1404,7 @@ export function CellularLivingFieldPrototype() {
                     <div className="mt-2 space-y-2">
                       {activeRelations
                         .sort((a, b) => b.strength - a.strength)
-                        .slice(0, attentionPhase === 'dwell' ? 5 : 3)
+                        .slice(0, semanticLod >= 4 ? 5 : 3)
                         .map((relation) => {
                           const otherId = relation.source === activeNode.id ? relation.target : relation.source
                           return (
@@ -1290,6 +1420,39 @@ export function CellularLivingFieldPrototype() {
                 </>
               )}
 
+              {maiaLocusVisible && (
+                <div data-maia-context-slot={activeNode.id} className="mt-4 border-t border-stone-800 pt-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-stone-500">MAIA inquiry locus</p>
+                  <p className="mt-2 text-xs leading-5 text-stone-600">
+                    Insight · Connections · Counterview · History · Teach me · Why here?
+                  </p>
+                  <p className="mt-1 text-[11px] leading-4 text-stone-700">
+                    Context slot only · live interpretation remains unopened.
+                  </p>
+                </div>
+              )}
+
+              {portalCueVisible && portalCue && (
+                <div
+                  data-portal-rationale={portalCue.roomId}
+                  className="mt-4 border-t border-stone-800 pt-3"
+                >
+                  <p className="text-xs uppercase tracking-[0.16em] text-amber-700/80">
+                    Threshold forming · {portalCue.roomLabel}
+                  </p>
+                  <p className="mt-2 text-xs leading-5 text-stone-500">{portalCue.rationale}</p>
+                  <p className="mt-1 text-[11px] text-stone-700">
+                    Prototype relevance · crossing remains unopened.
+                  </p>
+                </div>
+              )}
+
+              {semanticLod >= 5 && (
+                <div className="mt-4 border-t border-stone-800 pt-3 text-[11px] leading-5 text-stone-700">
+                  Evidence / provenance layer · controlled prototype corpus
+                </div>
+              )}
+
               {attentionPhase === 'dwell' && (
                 <p className="mt-4 text-xs leading-5 text-stone-600">
                   A faint trace will remain briefly after attention moves elsewhere.
@@ -1298,9 +1461,17 @@ export function CellularLivingFieldPrototype() {
             </>
           ) : (
             <>
-              <p className="text-xs uppercase tracking-[0.18em] text-stone-600">Attention</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-stone-600">{LOD_LABELS[semanticLod]}</p>
               <p className="mt-2 text-sm leading-6 text-stone-500">
-                Hover a cell. Stay with it long enough and its neighborhood, bridges, and meaning become more visible.
+                {semanticLod <= 1
+                  ? 'Stay with the whole. Worlds and broad crossings remain primary.'
+                  : semanticLod === 2
+                    ? 'Regional cells can now become legible without losing their containing world.'
+                    : semanticLod === 3
+                      ? 'Local neighborhoods can reveal specific relationships and an inquiry locus.'
+                      : semanticLod === 4
+                        ? 'Relational meaning, verbs, and earned thresholds can become perceptible.'
+                        : 'Evidence, standing, provenance, and revision history belong at this depth.'}
               </p>
             </>
           )}

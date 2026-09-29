@@ -247,3 +247,87 @@ Therefore:
 > **The whole remains present while a part comes forward.**
 >
 > **MAIA can be asked from any meaningful locus, but never becomes the center of the field.**
+
+## MAIA-ATTENTION-GUIDANCE-LAW-01
+
+> **MAIA may invite attention toward a meaningful locus, relation, tension, absence, or possibility, but attention remains with the member. Guidance changes perceptual availability, not epistemic standing.**
+
+MAIA attention acts:
+- **ORIENT** — clarify here and whole-field context;
+- **DEEPEN** — reveal more inside the current locus;
+- **CONNECT** — illuminate an existing relation;
+- **CONTRAST** — bring another legitimate perspective into view;
+- **TENSION** — make competing demands perceptible without resolving them;
+- **WIDEN** — restore larger context;
+- **RETURN** — surface a relevant prior path without converting recurrence into meaning;
+- **POSSIBILITY** — make a candidate opening available;
+- **QUESTION** — change the way the field is regarded rather than supplying an answer;
+- **REFRAIN** — leave the field alone.
+
+MAIA joins where attention already is before inviting movement elsewhere.
+## ATTENTIONAL-SALIENCE-NON-SIGNIFICANCE-LAW-01
+
+> **MAIA may alter what is perceptually available without treating perceptual salience as evidence of personal importance.**
+
+A locus may become salient because it is:
+- related;
+- new;
+- contradictory;
+- unresolved;
+- necessary for orientation;
+- recently encountered.
+
+None of these alone establish durable personal significance.
+
+### Attentional budget
+
+Default field guidance should expose:
+- one primary invitation;
+- at most one secondary contrast;
+- the recoverable whole.
+
+The field should not illuminate a swarm of simultaneous “insights.”
+
+Every MAIA-led attentional invitation must eventually support **Why this?**
+## EARNED-PORTAL-LAW-02
+
+> **A portal is earned when crossing into another room would meaningfully continue an inquiry already alive in the present field, and the reason for that crossing is legible, reversible, and member-chosen.**
+
+An earned portal requires:
+1. **semantic continuity** — an actual object, relation, question, or intention connects origin and destination;
+2. **destination fitness** — the other room can do something the current field cannot do as well;
+3. **contextual readiness** — the crossing matters now, not merely in principle;
+4. **explainability** — the threshold can answer “Why here?”;
+5. **returnability** — origin orientation can be restored;
+6. **member choice** — availability never becomes automatic entry.
+
+> **Relation establishes eligibility. Context establishes readiness. The member establishes entry.**
+### Portal formation
+
+A portal should emerge from the relation that earns it rather than appear beside the field as a generic button.
+
+Portal intensity may move through:
+- **latent**;
+- **stirring**;
+- **available**;
+- **invited**;
+- **active threshold**;
+- **crossing**;
+- **return trace**.
+
+R2B may prototype latent / stirring / available / invited states only.
+
+Crossing remains closed until live destination and return-address contracts are authorized.
+
+## SOUL-LAB-ATTENTION-AGENCY-LAW-01
+
+> **Scale permits disclosure. Attention activates possibility. Relation and context establish relevance. The member chooses the crossing.**
+
+This law governs:
+- semantic zoom;
+- MAIA attention guidance;
+- portal visibility;
+- local relation disclosure;
+- future cross-room navigation.
+
+No one layer substitutes for another.
