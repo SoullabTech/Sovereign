@@ -93,6 +93,18 @@ Uncertainty is allowed.
 
 Unrelated things are allowed to remain unrelated.
 
+### Epistemic perception law
+
+All Living Constellation presentation is additionally bound by:
+
+`docs/design/contracts/living-field-epistemic-perception-law.md`
+
+> **Visual prominence, proximity, persistence, color, motion, and spatial position must not imply importance, relationship, certainty, or authorship beyond what the underlying governed evidence establishes.**
+
+This means visual treatment is part of authority discipline, not decoration added after the fact.
+
+In particular, a partial view must not masquerade as a ranking; spatial proximity must not manufacture relationship; repeated visibility must not harden a MAIA candidate into autobiographical truth; and model-derived salience must not become member-facing importance without a human act.
+
 ---
 
 ## 3. The three rooms retain distinct meanings

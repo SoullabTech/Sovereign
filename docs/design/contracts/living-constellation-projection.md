@@ -15,9 +15,11 @@ principles:
   - MAIA_SOVEREIGNTY_INVARIANTS — member authorship and agency outrank system interpretation
   - SOULLAB_THEME §3 — emphasis carries meaning; the foregrounded room may be accented while the other rooms remain present
   - MAIA_OATH — no guru stance; the projection reports source and standing rather than claiming hidden meaning
+  - LIVING-FIELD-EPISTEMIC-PERCEPTION-LAW-01 — visual prominence, proximity, persistence, color, motion, and position may not imply unsupported importance, relationship, certainty, or authorship
 
 reference_surfaces:
   - docs/design/contracts/LIVING_CONSTELLATION_CONTRACT_V0_1_2026-09-18.md
+  - docs/design/contracts/living-field-epistemic-perception-law.md
   - docs/design/contracts/LIVING_CONSTELLATION_PROJECTION_CONTRACT_LC02_2026-09-18.md
   - docs/fields/larry/VISION_STUDIO_SPEC.md
   - docs/ACCOMPANIMENT_MODEL.md
@@ -95,6 +97,10 @@ can be created in this gate.
 - showing another practitioner's Practice Field;
 - mutating source data from the projection;
 - implying an empty or failed source means "nothing exists";
+- treating the first, largest, brightest, nearest, most central, or most persistent visible item as important without a governed source for that importance;
+- using spatial proximity, motion, color, or repeated surfacing to imply a relationship, certainty, or autobiographical standing the member has not granted;
+- presenting a partial visible subset as though it were a ranking of the member's life;
+- allowing a MAIA candidate to become perceptually indistinguishable from member-authored or member-confirmed material;
 - a stepper suggesting Living Field → Vision Studio → Practice Field is required.
 ## The two brand tests
 
