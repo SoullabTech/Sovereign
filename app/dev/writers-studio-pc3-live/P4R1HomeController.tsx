@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -11,6 +11,7 @@ import { useStudioHistory } from '@/app/writers-studio/useStudioHistory';
 import { useSectionActivity } from '@/app/writers-studio/useSectionActivity';
 import { arrivalFor, manuscriptIdOf } from '@/app/writers-studio/homeState';
 import { IMPORT_HREF } from '@/app/writers-studio/studioMap';
+import { HOUSE_WORK_PARAM, resolveHouseArrival } from '@/app/writers-studio/houseArrival';
 import P4R1HomeView from './P4R1HomeView';
 
 function idFrom(payload: Record<string, unknown>): string | null {
@@ -38,6 +39,24 @@ export default function P4R1HomeController() {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /* HOUSE → STUDIO — the Work the member pointed at in the House (houseArrival.ts).
+     Resolved only against the member's own Works; opens only a single declared
+     manuscript, never a guessed one. `replace`, so Back returns to the House. */
+  const houseArrival = useMemo(
+    () => resolveHouseArrival(params?.get(HOUSE_WORK_PARAM), worksPhase, works),
+    [params, worksPhase, works],
+  );
+  const houseArrivalActed = useRef(false);
+  useEffect(() => {
+    if (houseArrival.kind !== 'open' || houseArrivalActed.current) return;
+    houseArrivalActed.current = true;
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.delete(HOUSE_WORK_PARAM);
+    next.set('mode', 'write');
+    next.set('m', houseArrival.manuscriptId);
+    router.replace(pathname + '?' + next.toString());
+  }, [houseArrival, params, pathname, router]);
 
   const post = useCallback(async (url: string, body?: unknown) => {
     const response = await apiFetch(url, {
@@ -159,6 +178,10 @@ export default function P4R1HomeController() {
       setBusy(false);
     }
   }, [busy, declare, refresh]);
+
+  if (houseArrival.kind === 'open') {
+    return <main className="fr-root"><div style={{ padding: 32 }}>Opening your Work…</div></main>;
+  }
 
   if (worksPhase === 'loading' || manuscriptPhase === 'loading') {
     return <main className="fr-root"><div style={{ padding: 32 }}>Opening Writer’s Studio…</div></main>;
