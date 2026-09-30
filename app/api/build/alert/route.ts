@@ -4,11 +4,13 @@ export const dynamic = 'force-dynamic';
  * Build Alert Endpoint
  *
  * Sends alerts to developer about build/deployment issues.
- * Uses the configured managed email provider, plus optional Slack/Telegram channels.
+ * Uses a dedicated SMTP pager transport, plus optional Slack/Telegram channels.
+ * Member mail provider selection is intentionally outside this route.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { sendEmail, SENDERS } from "@/lib/email/sendEmail";
+import { sendEmail } from "@/lib/email/sendEmail";
+import { SmtpProvider } from "@/lib/email/providers/SmtpProvider";
 
 export const runtime = "nodejs";
 
@@ -21,6 +23,42 @@ interface AlertPayload {
 }
 
 const DEV_EMAIL = process.env.DEV_EMAIL || "kelly@soullab.life";
+
+function mailboxOf(from: string): string {
+  const bracketed = from.match(/<([^<>]+)>/);
+  return (bracketed?.[1] ?? from).trim().toLowerCase();
+}
+
+function resolveAlertSmtp():
+  | { provider: SmtpProvider; from: string }
+  | { error: "alert_smtp_not_configured" | "alert_sender_mismatch" } {
+  const host = process.env.ALERT_SMTP_HOST?.trim();
+  const user = process.env.ALERT_SMTP_USER?.trim();
+  const password = process.env.ALERT_SMTP_PASSWORD;
+  const from = process.env.ALERT_FROM?.trim();
+
+  if (!host || !user || !password || !from) {
+    return { error: "alert_smtp_not_configured" };
+  }
+
+  if (mailboxOf(from) !== user.toLowerCase()) {
+    return { error: "alert_sender_mismatch" };
+  }
+
+  const parsedPort = Number(process.env.ALERT_SMTP_PORT ?? 587);
+  const port = Number.isFinite(parsedPort) ? parsedPort : 587;
+  const secure =
+    process.env.ALERT_SMTP_SECURE === "true" ? true :
+    process.env.ALERT_SMTP_SECURE === "false" ? false :
+    port === 465;
+
+  const provider = new SmtpProvider({ host, user, password, port, secure });
+  if (!provider.isConfigured()) {
+    return { error: "alert_smtp_not_configured" };
+  }
+
+  return { provider, from };
+}
 
 export async function POST(req: NextRequest) {
   // Static export: return stub response during pre-rendering
@@ -57,25 +95,30 @@ export async function POST(req: NextRequest) {
 
   const results: Record<string, boolean> = {};
 
-  // 1. Send email through the configured managed provider.
-  // Never inspect a vendor-specific credential here: provider selection and
-  // configuration belong to lib/email/providers. This route must work unchanged
-  // when production moves from one transport to another.
+  // 1. Required pager email uses its own SMTP credentials. Passing the provider
+  // explicitly keeps global EMAIL_PROVIDER/member mail completely untouched,
+  // while sendEmail still supplies classification, logging and delivery-ledger evidence.
+  const alertSmtp = resolveAlertSmtp();
+  if ("error" in alertSmtp) {
+    return NextResponse.json({ error: alertSmtp.error }, { status: 503 });
+  }
+
   try {
     const sent = await sendEmail({
       purpose: "build:alert",
-      from: SENDERS.default,
+      from: alertSmtp.from,
       to: DEV_EMAIL,
       subject: `[${payload.severity.toUpperCase()}] MAIA Build Alert`,
       html: formatAlertEmail(payload),
       metadata: { severity: payload.severity },
       triggerType: "route",
       triggerRef: "/api/build/alert",
+      provider: alertSmtp.provider,
     });
     results.email = sent.success;
     if (!sent.success) {
       console.error(
-        `[BuildAlert] Email REFUSED provider=${sent.provider ?? "unresolved"} failureKind=${sent.failureKind ?? "unclassified"} providerCode=${sent.providerCode ?? "unnamed"}`
+        `[BuildAlert] Email REFUSED provider=${sent.provider ?? "smtp"} failureKind=${sent.failureKind ?? "unclassified"} providerCode=${sent.providerCode ?? "unnamed"}`
       );
     }
   } catch (error) {
@@ -199,14 +242,14 @@ export async function POST(req: NextRequest) {
     { results, commit: payload.commit }
   );
 
-  // A paging endpoint may never report success when every configured channel
-  // refused or failed. That would turn an incident into false reassurance.
-  const delivered = Object.values(results).some(Boolean);
+  // Email is the required paging channel for this release. Optional channels
+  // may add redundancy, but may never mask a failed required page.
+  const delivered = results.email === true;
 
   return NextResponse.json(
     {
       success: delivered,
-      ...(delivered ? {} : { error: "no_alert_channel_delivered" }),
+      ...(delivered ? {} : { error: "required_alert_email_not_delivered" }),
       channels: results,
       timestamp: new Date().toISOString(),
     },
