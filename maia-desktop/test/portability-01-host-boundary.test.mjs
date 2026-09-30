@@ -48,6 +48,7 @@ const PORTABLE_DOMAIN = [
   'voice/wav.js', 'voice/transcription.js', 'voice/diagnostics.js',
   'voice/member-draft.js', // DSC-FINAL — salvage authorship left the composition root
   'shell-policy.js', 'shell.js', // HOUSE-RECONCILE-01 — carried; both Electron-free
+  'soullab-desktop-boundary.js', // SDU-01 — pure product/realm/transport law; no host dependency
 ];
 
 // The presentation edge. Speaks an abstract capability surface, never Electron.
