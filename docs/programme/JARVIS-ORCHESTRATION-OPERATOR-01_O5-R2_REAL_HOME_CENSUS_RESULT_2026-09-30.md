@@ -73,3 +73,32 @@ been witnessed. Merging it remains a separate founder act.
 
 **Standing: REAL-HOME CENSUS ✅ (8 CONVERGED · 0 anything else · 0 shapes · 0 Path A) · WRITE PASS ⛔
 NOT RUN (no-op; nothing to admit) · O5-R3 NAMED, NO LIVE INSTANCE · ⛔ NOT MERGED · PRODUCTION UNTOUCHED.**
+
+## 5. Founder ruling — R2F closed (2026-09-30)
+
+> *The important result is not merely "no errors"; it is stronger: the real delegation home required no
+> recovery action at all.*
+
+**Law now carrying real evidence:**
+
+> ***Recovery should be capable of acting, but should remain inactive when durable history is already complete.***
+
+It is paired with the law R2 was built under: *recovery may complete the recording of an effect already
+witnessed; it may never manufacture evidence by repeating the effect.* The first says **when**
+recovery may act; the second says **what** it may do when it does.
+
+**Standing (ruled):**
+
+| | |
+|---|---|
+| R2A–R2E | implemented and tested |
+| R2F | real-home read-only census **complete** |
+| Real-state mutation | **not needed** |
+| O5-R3 | code-level hazard finding only, **not** a witnessed production incident |
+| Merge / deploy | separate decisions, not taken |
+
+**Preserved limit:** this census proves the current historical field is clean. It does **not** prove
+that future interrupted executions will converge correctly without a fresh census and digest.
+
+Housekeeping: the temporary worktree was removed by the founder. The census JSON stays local and uncommitted
+(machine-specific paths and timelines).
