@@ -7,31 +7,34 @@ current_authority:
   - docs/canon/SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS.md
   - docs/canon/LIVING_FIELD_RELATION_GRAMMAR.md
   - docs/canon/LIVING_FIELD_FOCUS_CONTEXT_LAWS.md
+  - docs/canon/LIVING_FIELD_BIOLOGICAL_SPATIAL_DYNAMICS.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-02D — Founder Focus + Context Witness
+current_phase: BUILD
+current_act: VISUAL-FIELD-RUNTIME-02D1 — Biological Spatial Dynamics
 current_subject_sha: e2b34244384d35e7467f341333ee40b1397edb25
-current_branch: feature/jarvis-visual-field-r2d-20260929
-worktree: /private/tmp/jarvis-visual-field-r2d
-runtime: http://localhost:3607/public-demo
+current_branch: feature/jarvis-visual-field-r2d1-20260930
+worktree: /private/tmp/jarvis-visual-field-r2d1
+runtime: http://localhost:3608/public-demo
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - R2D is implemented and mechanically verified across desktop and mobile.
-  - Deep node focus preserves directional whole-field context through non-interactive offscreen world echoes.
-  - Relation focus reframes both endpoints and the between-space rather than remaining loyal to the first node.
-  - Productive tension keeps both poles simultaneously visible with equal endpoint emphasis and an explicitly empty midpoint.
-  - Widen reverses relation → node → world → whole in semantic order.
-  - Founder witness is required to decide whether the whole feels genuinely present and whether tension feels held rather than diagrammatically framed.
+  - Founder authorized a bounded 2.5D biological-spatial substrate pass before R2E.
+  - R2D1 is implemented as a parallel Three.js / React Three Fiber witness while semantic identity and x/y topology remain authoritative.
+  - Controlled impulse evidence shows local coupling, recoil, and dissipation: Calling moved 0.259→0.445 before returning to 0.227; related Stewardship/Identity moved while unrelated Belonging remained effectively still; speed decayed 1.284→0.184.
+  - World membranes respond to local pressure; cells gain shallow attention/drag lift; relations stretch in depth; subtle parallax is active.
+  - Active cells expose latent inner membrane structure only. Actual child ecology generation remains closed until R2G.
+  - Founder witness is required to decide whether the field feels more bodily, connected, and alive without becoming game-like or distracting.
   - Live MAIA interpretation, live cross-room crossing, durable memory, FLOW, and autonomous relation generation remain closed.
 founder_stops:
-  - R2D founder focus/context witness before R2E Semantic Condensation.
+  - R2D1 founder biological-spatial witness before R2E Semantic Condensation.
+  - Any generated recursive child ecology before R2G.
+  - Any free-roaming orbit camera or semantic meaning from z-position.
   - Any live cross-room portal or persistent return-address behavior.
   - Any live MAIA interpretation from semantic objects.
   - Any durable relation or shared-meaning persistence.
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
-next_phase_on_exit: R2D founder focus/context witness; PASS opens R2E Semantic Condensation
-last_state_change: 2026-09-29 — R2D candidate sealed at e2b342443; founder focus/context witness is the current gate
+next_phase_on_exit: R2D1 founder biological-spatial witness; PASS returns to R2E Semantic Condensation
+last_state_change: 2026-09-30 — founder accepted R2D direction and authorized R2D1 Biological Spatial Dynamics

@@ -18,6 +18,7 @@ principles:
   - SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS — one organism / earned portals / MAIA inquiry loci / member agency
   - LIVING_FIELD_RELATION_GRAMMAR — relation kinds / trust surface / productive conflict / interstitial shared meaning
   - LIVING_FIELD_FOCUS_CONTEXT_LAWS — focus-with-context / peripheral echoes / relation framing / held tension
+  - LIVING_FIELD_BIOLOGICAL_SPATIAL_DYNAMICS — 2.5D depth / viscous drag / recoil / membrane pressure / recursive readiness
   - JARVIS-VISUAL-FIELD-01 — founder-gated runtime slices and evidence discipline
 
 reference_surfaces:
@@ -29,9 +30,9 @@ reference_surfaces:
 shared_with_house: warm threshold language, quiet field hierarchy, clear return to House, restrained amber accent, and orientation before action
 distinct_to_room: recursive exploration of what is alive; the room feels like entering a landscape and moving through nested regions rather than operating a dashboard
 
-screenshot_desktop: docs/design/contracts/screenshots/living-field-r2d-held-tension-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/living-field-r2d-held-tension-mobile.png
-experience_verification: Founder authorized continuation beyond R2C into Focus + Context. R2D now lets deep focus intensify without amputating the whole: offscreen worlds leave quiet non-interactive directional echoes, while the containing world remains un-echoed when its center is still visible. Relation selection reframes both endpoints and the between-space. In the controlled Vision↔Boundary tension witness the camera widened from 2.318× to ~1.447×, both poles remained simultaneously visible with equal endpoint emphasis, the midpoint remained explicitly empty, and no synthetic shared meaning appeared. Widen reverses relation → node → world → whole. Desktop and mobile witnesses pass with zero browser errors. Founder R2D feel witness is the exit gate.
+screenshot_desktop: docs/design/contracts/screenshots/living-field-r2d1-biological-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/living-field-r2d1-biological-mobile.png
+experience_verification: Founder accepted the increasingly biological direction and authorized a bounded 2.5D substrate pass before R2E. R2D1 adds a parallel Three.js / React Three Fiber witness while keeping semantic identity and x/y topology authoritative. Cells now have shallow volume, attention/drag z-lift, viscous spring-coupled motion, local relation stretch, membrane pressure, recoil, dissipation, and subtle parallax. A controlled impulse to Calling moved it 0.259→0.445 field units before recoiling to 0.227; related Stewardship/Identity moved while unrelated Belonging remained effectively still; Calling speed dissipated 1.284→0.184. Mobile WebGL smoke passes with zero browser errors. Active cells expose only latent inner membrane structure; actual recursive child meaning remains closed until R2G. Founder R2D1 physical-feel witness is the exit gate.
 ---
 # Living Field — Experience Contract
 
@@ -115,20 +116,22 @@ R2B Level-of-Detail Resolver + Soul Lab Coherence is mechanically verified and f
 
 R2C Progressive Relational Resolution is mechanically verified and founder-authorized to continue.
 
-R2D Focus + Context is now implemented as a local candidate with desktop/mobile evidence on disk.
+R2D Focus + Context is mechanically verified and founder-authorized to continue into a bounded biological-spatial substrate witness.
+
+R2D1 Biological Spatial Dynamics is now implemented as a parallel local candidate.
 
 The current experiential questions are:
 
-> **Can one thing come fully forward without the larger field disappearing?**
+> **Does dragging feel like applying force to connected living matter rather than moving an icon?**
 
-> **Do peripheral context echoes preserve orientation without becoming navigation chrome?**
+> **Do recoil, local coupling, pressure, and settling increase felt relationship without becoming distracting?**
 
-> **When a tension is selected, do both poles feel equally held in one field?**
+> **Does shallow dimensionality deepen the field without turning it into a videogame space?**
 
-> **Does the open between-space feel unresolved rather than empty or incomplete?**
+> **Does an active node feel capable of becoming a world-within-world while its current identity remains intact?**
 
 These questions remain OPEN under:
 
-`JARVIS-VISUAL-FIELD-01 · R2D — Focus + Context Founder Witness`
+`JARVIS-VISUAL-FIELD-01 · R2D1 — Biological Spatial Dynamics Founder Witness`
 
-R2E Semantic Condensation remains closed until that witness passes.
+R2E Semantic Condensation remains closed until this substrate witness passes.
