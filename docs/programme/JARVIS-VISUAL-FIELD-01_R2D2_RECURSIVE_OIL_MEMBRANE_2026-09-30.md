@@ -4,7 +4,7 @@
 **Founder standing:** R2D1 PASS · current physics explicitly retained  
 **Branch:** `feature/jarvis-visual-field-r2d2-recursive-membrane-20260930`  
 **Implementation candidate:** `84d18c5d6cf0b0c7c3bac1e8647840c90a851a9d`  
-**Status:** local candidate · founder recursive-feel witness required
+**Status:** refined local candidate · founder re-witness required
 
 ## Founder direction
 
@@ -46,9 +46,32 @@ Controlled real paths include:
 - click on a bubble marked `···` enters its actual child ecology;
 - a child with children may be entered again;
 - wheel / trackpad adjusts physical scale;
+- dragging **open space** pans the camera through the field without moving semantic objects;
 - **Wider** reverses one semantic depth;
 - **Whole** restores the complete ecology;
 - outer worlds remain present and are physically displaced rather than discarded.
+
+## Founder refinement after first recursive witness
+
+The first live witness exposed two missing behaviors:
+
+> “we need to be able to pull screen side to side to center zoomed in material.”
+
+> “When I click on Grief it should have opened with those bubbles associated with grief inside.”
+
+The repair changes recursion from **replacement** to **true nested containment**:
+
+```text
+Relationship membrane
+└── Grief membrane
+    ├── Continuing Relation
+    ├── Remembrance
+    └── Ritual
+```
+
+Relationship remains perceptible as the larger containing membrane while Grief swells from its own child position. Parent visual emphasis quiets rather than disappearing.
+
+Open-space drag now produces explicit world-space camera translation. Pointer movement without drag remains the subtle parallax effect; the two are no longer conflated.
 
 ## Mechanical witness
 
@@ -58,10 +81,12 @@ Controlled traversal:
 PASS:
 - depth 1 Relationship world present;
 - Grief child present and enterable;
-- depth 2 Grief world present;
-- Continuing Relation / Remembrance / Ritual present;
+- depth 2 Grief membrane is nested *inside* Relationship rather than replacing it;
+- Continuing Relation / Remembrance / Ritual are contained inside Grief;
 - Wider returns to Relationship;
 - Whole returns to complete ecology;
+- open-space horizontal pull produces persistent camera pan (~231 px screen shift in controlled witness);
+- node drag remains separate from field pan;
 - browser errors: 0.
 ## Physics regression
 

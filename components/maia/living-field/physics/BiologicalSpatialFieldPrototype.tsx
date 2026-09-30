@@ -18,6 +18,7 @@ import {
   type FieldDatum,
 } from '../livingFieldHierarchy'
 import { RecursiveMembraneWorld } from './RecursiveMembraneWorld'
+import { recursivePathOffset } from './recursiveFieldLayout'
 
 const SCALE = 50
 const WORLD_R = 155 / SCALE
@@ -114,27 +115,103 @@ function buildRelations(bodies: Map<string, Body>): RelationBody[] {
 
 function CameraRig({
   focusBody,
+  recursivePath,
+  panRef,
   zoom,
 }: {
   focusBody: Body | null
+  recursivePath: FieldDatum[]
+  panRef: React.MutableRefObject<THREE.Vector2>
   zoom: number
 }) {
   const { camera, pointer } = useThree()
+  const recursiveOffset = useMemo(
+    () => recursivePathOffset(recursivePath),
+    [recursivePath],
+  )
 
   useFrame(() => {
-    const px = focusBody ? focusBody.pos.x : 0
-    const py = focusBody ? focusBody.pos.y : 0
-    const parallaxX = pointer.x * (focusBody ? 0.1 : 0.38)
-    const parallaxY = pointer.y * (focusBody ? 0.07 : 0.24)
+    const baseX = focusBody ? focusBody.pos.x + recursiveOffset.x : 0
+    const baseY = focusBody ? focusBody.pos.y + recursiveOffset.y : 0
+    const targetX = baseX + panRef.current.x
+    const targetY = baseY + panRef.current.y
+    const parallaxX = pointer.x * (focusBody ? 0.08 : 0.38)
+    const parallaxY = pointer.y * (focusBody ? 0.055 : 0.24)
     const targetZ = (focusBody ? 17.5 : 28) / zoom
 
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, px + parallaxX, 0.055)
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, py + parallaxY, 0.055)
+    camera.position.x = THREE.MathUtils.lerp(
+      camera.position.x,
+      targetX + parallaxX,
+      0.055,
+    )
+    camera.position.y = THREE.MathUtils.lerp(
+      camera.position.y,
+      targetY + parallaxY,
+      0.055,
+    )
     camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.045)
-    camera.lookAt(px, py, 0)
+    camera.lookAt(targetX, targetY, 0)
   })
 
   return null
+}
+
+function PanSurface({
+  panRef,
+  enabled,
+}: {
+  panRef: React.MutableRefObject<THREE.Vector2>
+  enabled: boolean
+}) {
+  const { camera, size, viewport } = useThree()
+  const panning = useRef(false)
+  const target = useRef(new THREE.Vector3())
+
+  return (
+    <mesh
+      position={[0, 0, -4.8]}
+      onPointerDown={(event) => {
+        if (!enabled) return
+        event.stopPropagation()
+        panning.current = true
+        ;(event.target as Element).setPointerCapture?.(event.pointerId)
+        document.body.style.cursor = 'grabbing'
+      }}
+      onPointerMove={(event) => {
+        if (!enabled || !panning.current) return
+        event.stopPropagation()
+
+        target.current.set(camera.position.x, camera.position.y, 0)
+        const visible = viewport.getCurrentViewport(camera, target.current)
+        const unitsPerPixelX = visible.width / Math.max(size.width, 1)
+        const unitsPerPixelY = visible.height / Math.max(size.height, 1)
+        const native = event.nativeEvent
+
+        panRef.current.x -= native.movementX * unitsPerPixelX
+        panRef.current.y += native.movementY * unitsPerPixelY
+      }}
+      onPointerUp={(event) => {
+        if (!panning.current) return
+        event.stopPropagation()
+        panning.current = false
+        ;(event.target as Element).releasePointerCapture?.(event.pointerId)
+        document.body.style.cursor = enabled ? 'grab' : 'default'
+      }}
+      onPointerCancel={() => {
+        panning.current = false
+        document.body.style.cursor = 'default'
+      }}
+      onPointerOver={() => {
+        if (enabled && !panning.current) document.body.style.cursor = 'grab'
+      }}
+      onPointerOut={() => {
+        if (!panning.current) document.body.style.cursor = 'default'
+      }}
+    >
+      <planeGeometry args={[90, 70]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+    </mesh>
+  )
 }
 
 function WorldMembrane({
@@ -503,6 +580,7 @@ function Scene({
   draggingId,
   recursiveRootId,
   recursivePath,
+  panRef,
   zoom,
   setActiveId,
   setDraggingId,
@@ -514,6 +592,7 @@ function Scene({
   draggingId: string | null
   recursiveRootId: string | null
   recursivePath: FieldDatum[]
+  panRef: React.MutableRefObject<THREE.Vector2>
   zoom: number
   setActiveId: (id: string | null) => void
   setDraggingId: (id: string | null) => void
@@ -527,7 +606,6 @@ function Scene({
     fire: 0, water: 0, earth: 0, air: 0, aether: 0,
   })
   const recursiveRoot = recursiveRootId ? bodies.get(recursiveRootId) ?? null : null
-  const recursiveCurrent = recursivePath[recursivePath.length - 1] ?? null
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return
@@ -557,7 +635,13 @@ function Scene({
   return (
     <>
       <PerspectiveCamera makeDefault position={[0, 0, 28]} fov={42} />
-      <CameraRig focusBody={recursiveRoot} zoom={zoom} />
+      <CameraRig
+        focusBody={recursiveRoot}
+        recursivePath={recursivePath}
+        panRef={panRef}
+        zoom={zoom}
+      />
+      <PanSurface panRef={panRef} enabled={draggingId === null} />
       <ambientLight intensity={0.88} />
       <directionalLight position={[-8, 10, 16]} intensity={1.3} color="#f4e8d8" />
       <pointLight position={[7, -4, 10]} intensity={32} distance={28} color="#cf9e68" />
@@ -595,11 +679,11 @@ function Scene({
         )
       })}
 
-      {recursiveRoot && recursiveCurrent && (
+      {recursiveRoot && recursivePath.length > 0 && (
         <RecursiveMembraneWorld
           parentPosition={recursiveRoot.pos}
-          current={recursiveCurrent}
-          depth={recursivePath.length}
+          path={recursivePath}
+          depth={1}
           color={STYLE[recursiveRoot.group].body}
           glow={STYLE[recursiveRoot.group].glow}
           onEnter={onEnterChild}
@@ -617,6 +701,7 @@ export function BiologicalSpatialFieldPrototype() {
   const [recursivePath, setRecursivePath] = useState<FieldDatum[]>([])
   const [recursiveLeaf, setRecursiveLeaf] = useState<FieldDatum | null>(null)
   const [zoom, setZoom] = useState(1)
+  const panRef = useRef(new THREE.Vector2())
 
   const active = activeId ? NODE_BY_ID.get(activeId) ?? null : null
   const recursiveCurrent = recursivePath[recursivePath.length - 1] ?? null
@@ -626,6 +711,7 @@ export function BiologicalSpatialFieldPrototype() {
     if (!node?.children?.length) return
     setActiveId(id)
     setDraggingId(null)
+    panRef.current.set(0, 0)
     setRecursiveRootId(id)
     setRecursivePath([node])
     setRecursiveLeaf(null)
@@ -633,11 +719,13 @@ export function BiologicalSpatialFieldPrototype() {
 
   const enterChild = (node: FieldDatum) => {
     if (!node.children?.length) return
+    panRef.current.set(0, 0)
     setRecursivePath((path) => [...path, node])
     setRecursiveLeaf(null)
   }
 
   const widen = () => {
+    panRef.current.set(0, 0)
     setRecursiveLeaf(null)
     setRecursivePath((path) => {
       if (path.length > 1) return path.slice(0, -1)
@@ -647,6 +735,7 @@ export function BiologicalSpatialFieldPrototype() {
   }
 
   const whole = () => {
+    panRef.current.set(0, 0)
     setRecursiveLeaf(null)
     setRecursivePath([])
     setRecursiveRootId(null)
@@ -682,6 +771,7 @@ export function BiologicalSpatialFieldPrototype() {
             draggingId={draggingId}
             recursiveRootId={recursiveRootId}
             recursivePath={recursivePath}
+            panRef={panRef}
             zoom={zoom}
             setActiveId={setActiveId}
             setDraggingId={setDraggingId}
