@@ -8,10 +8,10 @@
      1. Fresh UTF-8 PostgreSQL 16 with pgvector; load
         database/baseline/0001_baseline_2026-09-01.sql, then every migration
         not in its .manifest, in filename order.
-     2. Seed one member: username 'walker', password 'walk-pass-2026'
+     2. Seed one member: username 'walker' with a password you choose
         (hash via lib/auth/passwordUtils hashPassword), onboarded = true.
      3. DATABASE_URL=<shadow> npx next dev -p 3100
-     4. WALK_DATABASE_URL=<shadow> node tests/constitutional/house-studio-crossing/walk/walk.cjs
+     4. WALK_DATABASE_URL=<shadow> WALK_MEMBER_PASSWORD=<that password> node tests/constitutional/house-studio-crossing/walk/walk.cjs
    The walk member must have no Works or manuscripts before a run.
    Screenshots + results.json go to WALK_OUT_DIR (default: OS tmp) — runtime
    output, never staged. */
@@ -24,6 +24,9 @@ const { Client } = require(R + 'pg');
 const BASE = process.env.WALK_BASE_URL || 'http://localhost:3100';
 const DB = process.env.WALK_DATABASE_URL;
 if (!DB) { console.error('WALK_DATABASE_URL is required — a DISPOSABLE shadow, never production'); process.exit(2); }
+// The walk member's password is supplied at run time — never committed, even for a throwaway member.
+const PASSWORD = process.env.WALK_MEMBER_PASSWORD;
+if (!PASSWORD) { console.error('WALK_MEMBER_PASSWORD is required'); process.exit(2); }
 const OUT = process.env.WALK_OUT_DIR || require('os').tmpdir() + '/h1r1-walk';
 fs.mkdirSync(OUT, { recursive: true });
 
@@ -42,7 +45,7 @@ const record = (id, pass, detail) => { results.push({ id, pass, detail }); conso
   const page = await ctx.newPage();
   page.setDefaultTimeout(120000);
 
-  const signin = await ctx.request.post('/api/members/signin', { data: { username: 'walker', password: 'walk-pass-2026' } });
+  const signin = await ctx.request.post('/api/members/signin', { data: { username: 'walker', password: PASSWORD } });
   if (!signin.ok()) throw new Error('signin ' + signin.status() + ' ' + (await signin.text()).slice(0, 200));
 
   const post = async (url, data) => {
