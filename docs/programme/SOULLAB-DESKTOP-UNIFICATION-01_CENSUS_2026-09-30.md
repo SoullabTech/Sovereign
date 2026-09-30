@@ -106,3 +106,24 @@ Electron surface and can survive a later native host.
 verbs to the MAIA or remote platform preloads. Product rename, bundle-id change,
 userData migration, installed-app replacement, and offline runtime packaging
 remain later acts.
+
+## Composition seam — SDU-F8/F9
+
+JARVIS main.js now distinguishes standalone ownership from embedded composition
+with STANDALONE = require.main === module. Embedded use registers the existing
+jarvis:* IPC authority surface but does not change Desktop userData, claim the
+single-instance lock, replace the app menu, or install JARVIS app lifecycle hooks.
+The existing JARVIS window constructor is exported for a later Soullab-host doorway.
+
+JARVIS durable state remains where it already lives:
+~/Library/Application Support/JARVIS/ for repository binding and
+~/.jarvis/continuity/ for the local continuity index.
+
+Verification after the seam:
+- unification falsifiers: **9/9 PASS**;
+- full MAIA Desktop suite: **367/367 PASS**;
+- full JARVIS suite: no new failures; the same two pre-existing JOP-00 stale
+  negative-control assertions remain.
+
+No shared-host doorway is wired yet. This commit makes composition possible;
+it does not expose JARVIS to a member-facing renderer.

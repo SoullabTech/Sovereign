@@ -66,3 +66,19 @@ test('SDU-F7 existing Electron boundaries still structurally agree with the law'
   assert.match(jarvisPreload, /exposeInMainWorld\('jarvis'/);
   assert.doesNotMatch(jarvisPreload, /exposeInMainWorld\('maia'/);
 });
+
+test('SDU-F8 JARVIS host lifecycle is suppressible when composed inside Soullab Desktop', () => {
+  const jarvisMain = fs.readFileSync(path.join(ROOT, 'jarvis-desktop/src/main.js'), 'utf8');
+  assert.match(jarvisMain, /const STANDALONE = require\.main === module/);
+  assert.match(jarvisMain, /if \(STANDALONE && !app\.isPackaged\)/);
+  assert.match(jarvisMain, /if \(STANDALONE\) \{[\s\S]*app\.whenReady\(\)/);
+  assert.match(jarvisMain, /module\.exports = \{[\s\S]*createWindow/);
+});
+
+test('SDU-F9 JARVIS durable state is product-name independent', () => {
+  const repoConfig = fs.readFileSync(path.join(ROOT, 'jarvis-desktop/src/repo-config.js'), 'utf8');
+  const continuity = fs.readFileSync(path.join(ROOT, 'jarvis-desktop/src/continuity.js'), 'utf8');
+  assert.match(repoConfig, /CONFIG_DIRNAME = 'JARVIS'/);
+  assert.match(repoConfig, /configDir\(appSupportDir\)/);
+  assert.match(continuity, /'\.jarvis', 'continuity', 'continuity\.sqlite3'/);
+});
