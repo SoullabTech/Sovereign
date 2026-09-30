@@ -3,7 +3,7 @@
 **Programme:** JARVIS-VISUAL-FIELD-01
 **Founder authorization:** 2026-09-30
 **Status:** Canonical room composition / interaction law
-**Implementation witness:** `4aa951ecc`
+**Implementation witness:** `0d6fa5de4`
 **Scope:** complete Grokker room shell, semantic orientation, illumination, scale navigation, and Soullab platform fit
 
 ## Governing proposition

@@ -9,14 +9,15 @@ current_authority:
   - docs/canon/LIVING_FIELD_FOCUS_CONTEXT_LAWS.md
   - docs/canon/LIVING_FIELD_BIOLOGICAL_SPATIAL_DYNAMICS.md
   - docs/canon/LIVING_FIELD_SEMANTIC_SCALE_AND_ILLUMINATION.md
+  - docs/canon/LIVING_FIELD_GROKKER_ROOM_CANON.md
   - docs/design/contracts/living-field-grokker.md
   - docs/programme/JARVIS-VISUAL-FIELD-01_R2D2_RECURSIVE_OIL_MEMBRANE_2026-09-30.md
 current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-02D2 — Recursive Oil Membrane Founder Witness
-current_subject_sha: 6594d0182
-current_branch: feature/jarvis-visual-field-r2d2-recursive-membrane-20260930
-worktree: /private/tmp/jarvis-visual-field-r2d2
-runtime: http://localhost:3610/dev/living-field-recursive-r2d2
+current_act: VISUAL-FIELD-RUNTIME-02D3 — Complete Soullab Room + Semantic Illuminator Founder Witness
+current_subject_sha: 0d6fa5de4
+current_branch: feature/jarvis-visual-field-r2d3-semantic-illumination-20260930
+worktree: /private/tmp/jarvis-visual-field-r2d3
+runtime: http://localhost:3611/dev/living-field-grokker-r2d3
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
@@ -33,14 +34,19 @@ open_findings:
   - Outer and recursive cells carry two-layer presence halos; a shader-based plasmic interstitial medium animates ambient between-space without claiming semantic relation.
   - Controlled Relationship → Grief traversal, optical scale return, Wider return, Whole recovery, nested-containment witness, pan witness, plasmic render witness, and R2D1 physics regression all pass with zero browser errors.
   - R2D2 proves physical node-to-world recursion only; universal semantic-object recursion remains governed by R2G.
-  - Live MAIA interpretation, durable memory, and autonomous child-ecology generation remain closed.
+  - R2D3 wraps that substrate in a Soullab House shell with platform orientation, explicit Context Path, governed field search, semantic Illuminator, and bottom scale instrument.
+  - Calling semantic audit: no fabricated Within children; current Air / Perspective / Identity / Calling path remains explicitly prototype context rather than lineage or ontology authority.
+  - Grief semantic audit: Continuing Relation / Remembrance / Ritual remain true contained children and expose Enter field.
+  - How this became and What this rests on are separate apertures; both fail honest/unbound where exact lineage/source fabric is not yet attached.
+  - Optical magnification and semantic scale are now separated by dead-zone / settled-intent hysteresis before widening.
+  - Live MAIA interpretation, durable memory, full Source Fabric, and autonomous child-ecology generation remain closed.
 founder_stops:
-  - R2D2 founder recursive-feel witness before semantic condensation work resumes.
+  - R2D3 founder complete-room / semantic-honesty witness before semantic condensation work resumes.
   - No fabricated child ecologies.
   - No claim that R2G universal recursive depth is complete.
   - No free-roaming orbit camera or semantic meaning from z-position.
   - No live MAIA interpretation from semantic objects.
   - No durable relation or shared-meaning persistence.
   - No merge or deployment.
-next_phase_on_exit: R2D2 founder recursive-feel witness; PASS resumes R2E Semantic Condensation on this substrate
-last_state_change: 2026-09-30 — candidate advanced at 6594d0182: optical scale recursion + plasmic medium + cell halos + soft foreground membranes; founder re-witness is current gate
+next_phase_on_exit: R2D3 founder complete-room / semantic-honesty witness; PASS opens R2E Semantic Condensation on this substrate
+last_state_change: 2026-09-30 — R2D3 candidate 0d6fa5de4: Soullab shell + governed Context Path + semantic Illuminator + separate lineage/evidence apertures + settled semantic-scale threshold; founder witness is current gate
