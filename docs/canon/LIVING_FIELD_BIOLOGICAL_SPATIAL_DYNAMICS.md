@@ -10,6 +10,16 @@
 
 Visual dimensionality may change perception. It may not silently change meaning, standing, membership, or truth.
 
+## LEGIBILITY-AT-REST-LAW-01
+
+> **A living field must remain readable before the member acts. Beauty may invite attention; it may not require guessing.**
+
+At whole-field rest:
+- node identity remains legible enough to choose deliberately;
+- labels stay visually subordinate to the ecology rather than becoming interface chrome;
+- hover / focus may increase contrast and prominence;
+- semantic zoom may reveal richer language, but basic naming is never withheld merely for visual purity.
+
 ## FORCE-NOT-TELEPORT-LAW-01
 
 > **Drag applies force; it does not teleport. Release returns energy to the field. Related cells respond locally. The field dissipates that energy and settles.**
@@ -52,6 +62,41 @@ A node may become a parent membrane while keeping:
 > **Entering a node may reveal bubbles within bubbles while preserving the membrane, position, relations, and return path of the containing ecology.**
 
 Recursive entry should feel like discovering latent inner ecology, not opening another page.
+
+## OIL-MEMBRANE-ENTRY-LAW-01
+
+> **Entering a bubble should feel like pressing into a membrane suspended in a viscous medium. The membrane yields, enlarges, displaces its surroundings, and reveals the ecology already contained within it.**
+
+The transition is continuous:
+
+```text
+attention
+→ contact
+→ membrane yield
+→ viscous expansion
+→ surrounding-field displacement
+→ inner ecology emergence
+→ scale settlement
+```
+
+It must not feel like:
+- opening a card;
+- changing pages;
+- replacing the parent with a new diagram;
+- teleporting the camera.
+
+## SCALE-PHYSICS-CONTINUITY-LAW-01
+
+> **The accepted biological physics persist across recursive depth. Scale changes; the physical grammar does not.**
+
+At every supported depth:
+- bubbles retain mass, viscosity, elasticity, recoil, and settling;
+- relations remain physically responsive;
+- the parent membrane remains perceptible during entry;
+- zoom-out physically reverses the disclosure;
+- deeper bubbles may themselves become containing membranes when actual child material exists.
+
+Zooming inward is scale revelation. Zooming outward is re-gathering.
 
 ## RECURSION-INTEGRITY-LAW-01
 

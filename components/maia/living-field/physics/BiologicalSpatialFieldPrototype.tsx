@@ -318,11 +318,13 @@ function Cell({
         </group>
       )}
 
-      <Html position={body.pos} center distanceFactor={9.6} style={{ pointerEvents: 'none' }}>
+      <Html position={body.pos} center distanceFactor={7.2} style={{ pointerEvents: 'none' }}>
         <div
           data-bio-node-label={body.id}
-          className={`whitespace-nowrap rounded-full px-2 py-1 text-[10px] font-semibold ${
-            active ? 'bg-black/55 text-stone-100' : 'text-stone-400'
+          className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] backdrop-blur-[2px] transition-all ${
+            active
+              ? 'border-stone-500/50 bg-black/72 text-stone-50 shadow-[0_0_18px_rgba(255,255,255,0.08)]'
+              : 'border-stone-800/45 bg-black/42 text-stone-300'
           }`}
         >
           {body.label}
