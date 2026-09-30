@@ -92,6 +92,9 @@ export function LivingFieldDetailPanel({
     }
   }
 
+  // Failure is named as failure; no promise that it is temporary.
+  const REFINE_FAILED = 'MAIA’s draft did not return. Nothing has been changed. You can try again.'
+
   async function refine() {
     setRefining(true)
     setCandidate(null)
@@ -108,9 +111,15 @@ export function LivingFieldDetailPanel({
       // note instead; do not claim "nothing gathered" when Keeps have gathered.
       if (drafted && typeof drafted.candidate_expression === 'string' && drafted.candidate_expression.trim()) {
         setCandidate(drafted)
+      } else if (res.ok && drafted && drafted.candidate_expression === null && typeof drafted.rationale === 'string' && drafted.rationale.trim()) {
+        // Not a failure: the route deliberately declined (e.g. nothing has
+        // gathered yet) and said why. Show its reason rather than a failure.
+        setRefineNote(drafted.rationale)
       } else {
-        setRefineNote('MAIA could not draft a candidate just now. You can write directly, or try again in a moment.')
+        setRefineNote(REFINE_FAILED)
       }
+    } catch {
+      setRefineNote(REFINE_FAILED)
     } finally {
       setRefining(false)
     }
@@ -273,8 +282,8 @@ export function LivingFieldDetailPanel({
             <h4 className="text-stone-500 text-xs uppercase tracking-widest">Supported By</h4>
             {activeConsents.length === 0 && revokedConsents.length === 0 ? (
               <p className="text-stone-600 text-xs">
-                Your Living Field is complete on its own. You can invite development partners to
-                walk alongside specific dimensions of it.
+                Development partners can be invited to walk alongside particular dimensions
+                of the field.
               </p>
             ) : (
               <ul className="space-y-2">
