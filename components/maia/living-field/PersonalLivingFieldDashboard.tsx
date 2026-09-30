@@ -9,6 +9,7 @@ import { LivingEncounterView } from './LivingEncounterView'
 import { ReturnHome } from '@/components/navigation/ReturnHome'
 import { LivingConstellationPanel } from '@/components/maia/living-constellation/LivingConstellationPanel'
 import { LifeFacetFlowPanel } from './LifeFacetFlowPanel'
+import { LivingFieldInstrument } from './LivingFieldInstrument'
 
 const RELATIONAL_PHASE_LABELS: Record<number, string> = {
   1: 'Orientation',
@@ -63,10 +64,10 @@ export function PersonalLivingFieldDashboard({
 
         {/* Welcome header */}
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-stone-100">Your Living Field</h1>
+          <h1 className="text-2xl font-semibold text-stone-100">Living Field</h1>
           <p className="text-stone-400 text-sm max-w-xl leading-relaxed">
-            AIN does not ask people to fill in fields. It cultivates Living Fields that grow
-            alongside a life. These dimensions are not a profile — they are a developmental mirror.
+            A living landscape for the questions, relationships, patterns, and possibilities unfolding
+            through a life. Each region offers another way into the journey.
           </p>
           {phaseLabel ? (
             <p className="text-stone-500 text-xs">
@@ -74,21 +75,24 @@ export function PersonalLivingFieldDashboard({
             </p>
           ) : (
             <p className="text-stone-600 text-xs">
-              Your spiral state is still forming — it will appear here as patterns emerge.
+              The spiral is beginning to take shape as patterns gather.
             </p>
           )}
           {(gatheringCount > 0 || authoredCount > 0) && (
             <p className="text-teal-300/70 text-xs">
               {authoredCount > 0 && (
-                <span>{authoredCount} dimension{authoredCount !== 1 ? 's' : ''} you've begun to author</span>
+                <span>{authoredCount} dimension{authoredCount !== 1 ? 's' : ''} taking shape</span>
               )}
               {authoredCount > 0 && gatheringCount > 0 && <span className="text-stone-600"> · </span>}
               {gatheringCount > 0 && (
-                <span>{gatheringCount} already gathering from what you've kept</span>
+                <span>{gatheringCount} gathering from saved reflections</span>
               )}
             </p>
           )}
         </div>
+
+        {/* R1: additive, session-local WORLD witness. Existing Living Field remains below. */}
+        <LivingFieldInstrument />
 
         {/* LC-02: same read-only constellation used across all three rooms. */}
         <LivingConstellationPanel focus="living" />
