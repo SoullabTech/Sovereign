@@ -52,6 +52,15 @@ import {
   QUIET_PRESENCE_EXAMPLES,
   QUIET_PRESENCE_RULES,
 } from '@/lib/memory/developmental-epistemics/quietPresence'
+import {
+  DISCLOSURE_WITNESS_CASES,
+  MAIA_APERTURE_FIRST_LAW,
+  MAIA_DISCLOSURE_MATERIALITY_LAW,
+  MAIA_NO_COVERT_PREMISE_LAW,
+  MAIA_RETURN_TO_PRESENT_LAW,
+  MAIA_SILENCE_LIMIT_LAW,
+  materialDimensions,
+} from '@/lib/memory/developmental-epistemics/disclosureThreshold'
 
 type WitnessResult = 'NOT_RUN' | 'PASS' | 'HOLD' | 'FAIL'
 
@@ -277,6 +286,50 @@ export function J6ARepairWitness() {
 
           <div className="mt-5 rounded-2xl border border-[#62584a]/65 bg-[#1a1713] p-4">
             <p className="text-sm leading-6 text-[#c7b8a5]">{MAIA_QUIET_PRESENCE_FELT_LAW}</p>
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[28px] border border-[#50483e]/70 bg-[#171411] p-5 sm:p-6">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[#978671]">Disclosure threshold · when silence stops being tact</p>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <LawCard title="Silence limit" text={MAIA_SILENCE_LIMIT_LAW} />
+            <LawCard title="Materiality" text={MAIA_DISCLOSURE_MATERIALITY_LAW} />
+            <LawCard title="No covert premise" text={MAIA_NO_COVERT_PREMISE_LAW} />
+            <LawCard title="Aperture first" text={MAIA_APERTURE_FIRST_LAW} />
+            <LawCard title="Return to present" text={MAIA_RETURN_TO_PRESENT_LAW} />
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {DISCLOSURE_WITNESS_CASES.map((item) => {
+              const material = materialDimensions(item.materiality)
+              return (
+                <div key={item.id} className="rounded-2xl border border-[#494239] bg-[#11100f] p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.15em] text-[#8f7f6b]">{item.id}</p>
+                      <p className="mt-1 text-sm text-[#dfd0bd]">{item.situation}</p>
+                    </div>
+                    <span className="rounded-full border border-[#62584a] px-3 py-1 text-[10px] tracking-[0.08em] text-[#d1b78f]">
+                      {item.expected.replaceAll('_', ' ')}
+                    </span>
+                  </div>
+                  <p className="mt-4 text-sm leading-6 text-[#d6c6b2]">{item.memberFacingMove}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {(material.length ? material : ['NO MATERIAL TRIGGER']).map((dimension) => (
+                      <span key={dimension} className="rounded-full border border-[#494239] px-2.5 py-1 text-[10px] text-[#8f8271]">
+                        {dimension.replaceAll('_', ' ')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-[#62584a]/65 bg-[#1a1713] p-4">
+            <p className="text-sm leading-6 text-[#c7b8a5]">
+              The transition rule: if remembered material materially shapes accuracy, current standing, agency, provenance, or scope, it cannot remain a hidden premise of the response.
+            </p>
           </div>
         </section>
 
