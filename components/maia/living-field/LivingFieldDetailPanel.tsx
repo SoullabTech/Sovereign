@@ -92,6 +92,9 @@ export function LivingFieldDetailPanel({
     }
   }
 
+  // Failure is named as failure; no promise that it is temporary.
+  const REFINE_FAILED = 'MAIA’s draft did not return. Nothing has been changed. You can try again.'
+
   async function refine() {
     setRefining(true)
     setCandidate(null)
@@ -108,9 +111,15 @@ export function LivingFieldDetailPanel({
       // note instead; do not claim "nothing gathered" when Keeps have gathered.
       if (drafted && typeof drafted.candidate_expression === 'string' && drafted.candidate_expression.trim()) {
         setCandidate(drafted)
+      } else if (res.ok && drafted && drafted.candidate_expression === null && typeof drafted.rationale === 'string' && drafted.rationale.trim()) {
+        // Not a failure: the route deliberately declined (e.g. nothing has
+        // gathered yet) and said why. Show its reason rather than a failure.
+        setRefineNote(drafted.rationale)
       } else {
-        setRefineNote('A fresh draft can be invited again in a moment, or this space can be written directly.')
+        setRefineNote(REFINE_FAILED)
       }
+    } catch {
+      setRefineNote(REFINE_FAILED)
     } finally {
       setRefining(false)
     }

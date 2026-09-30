@@ -249,7 +249,7 @@ function ThreadLensExplorer({
             <p className="text-[11px] text-stone-700">Gathering only this thread’s source and target…</p>
           ) : failed ? (
             <p className="text-[11px] text-stone-600">
-              This thread can be revisited when its source and destination are ready.
+              This thread’s evidence failed to load. Nothing has been sent. You can try again.
             </p>
           ) : evidence && lens ? (
             <div className="space-y-3">
@@ -334,7 +334,7 @@ export function LifeFacetFlowPanel() {
           Threads in the journey
         </p>
         <p className="mt-2 text-xs text-stone-700">
-          These paths are quiet for now. The journey remains gently held.
+          Threads failed to load. Nothing has been changed. You can try again.
         </p>
       </section>
     );
