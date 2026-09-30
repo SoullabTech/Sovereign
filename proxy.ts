@@ -16,6 +16,7 @@ import {
 } from './config/accessMatrix';
 import { stripClientIdentityAssertions } from './lib/auth/identityAssertions';
 import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAccess';
+import { canonicalStudioRoute } from './lib/writersStudio/canonicalStudioRoute';
 // NOTE: entitlements are still checked in route handlers, not here — they are a
 // commercial concern with their own surface, not part of the trust boundary.
 
@@ -440,6 +441,17 @@ export async function proxy(req: NextRequest) {
   // NOTE: Entitlements are NOT set in middleware headers because the postgres
   // driver requires Node.js runtime. Route handlers call getEntitlements directly.
   // This is intentional - entitlement checks happen at the route level.
+
+  /* Writer's Studio convergence. Keep access enforcement first, then retire
+     only legacy routes whose meanings are already proven equivalent. Query
+     identity is preserved by canonicalStudioRoute; Canvas, Source Intake and
+     historical structure-proposal Review deliberately remain separate. */
+  if (pathname === '/writers-studio/rebuild' || pathname === '/writers-studio/develop') {
+    const decision = canonicalStudioRoute(pathname, req.nextUrl.search);
+    if (decision.kind === 'canonical' && decision.from !== '/writers-studio') {
+      return NextResponse.redirect(new URL(decision.href, req.url));
+    }
+  }
 
   const response = forwardSanitized(req, derived);
 
