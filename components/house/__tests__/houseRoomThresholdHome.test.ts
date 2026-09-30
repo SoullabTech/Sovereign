@@ -18,8 +18,13 @@ describe('HouseRoomThreshold canonical Home return', () => {
     expect(source).not.toContain('Return to House');
   });
 
-  it('presents Home as the orienting context rather than the old House label', () => {
-    expect(source).toContain('<span>HOME</span>');
-    expect(source).not.toContain('<span>THE HOUSE</span>');
+  // H1-close-2 (2026-09-30), layered: Home is the place and the return action;
+  // THE HOUSE names the containing whole on the threshold. Supersedes the
+  // 2026-09-28 assertion that the label read HOME — the route, return copy and
+  // aria above are unchanged, and "Return to House" stays forbidden.
+  it('labels the threshold as the containing whole while returning Home', () => {
+    expect(source).toContain('<span>THE HOUSE</span>');
+    expect(source).not.toContain('<span>HOME</span>');
+    expect(source).toContain('Return Home →');
   });
 });

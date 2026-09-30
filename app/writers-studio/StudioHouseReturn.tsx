@@ -25,7 +25,8 @@ export function StudioHouseReturn() {
   if (searchParams?.get('from') !== 'house') return null;
   return (
     <div data-house-return="" style={{ background: '#0d1b2e', padding: '6px 16px 0' }}>
-      <HouseRoomThreshold room="WRITER’S STUDIO" />
+      {/* The Studio shell carries the Soullab mark; the threshold does not repeat it. */}
+      <HouseRoomThreshold room="WRITER’S STUDIO" destinationCarriesMark />
     </div>
   );
 }

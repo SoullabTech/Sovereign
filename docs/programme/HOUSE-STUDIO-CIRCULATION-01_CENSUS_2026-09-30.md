@@ -227,3 +227,12 @@ Wiring (items 2, 5, 8, 9) opens once `ea-house.md` is committed.
 2. ⚠️ **Vocabulary drift, pre-existing.** The thresholds contract's grammar says *THE HOUSE · Return to House*; the shared `HouseRoomThreshold` renders *HOME · Return Home →* and links `/home` (which renders the House). I reused the component unchanged, so the Studio says what every other room says. Aligning them is one component edit, for every room at once.
 3. ⚠️ **Arrival on "none" when declarations outlived their manuscripts.** A Work whose only declared manuscript was deleted arrives as *This Work has no manuscript yet.* — honest about what can be opened, slightly imprecise about history. Left as is.
 4. ⭐ **Owed before members see it**: the authenticated walk (House → Work → Studio arrival → open/choose/begin → Write → Develop → Return Home), and `npm run typecheck` + `npm run preflight` on the Mac.
+
+## 12 · H1 close — threshold rulings (2026-09-30)
+
+| # | Ruling | Landed |
+|---|---|---|
+| H1-close-1 | The threshold is orientation, not branding: where the destination already carries the Soullab mark, don't repeat it — as **contextual behaviour of the shared component**, not a Studio hack. | `HouseRoomThreshold` gains `destinationCarriesMark` (default `false`, so every other room is unchanged); Writer's Studio declares it. On phones the room name returns when the mark is absent. Test `houseRoomThresholdMark.test.ts`. |
+| H1-close-2 | **Both, layered — no canon reversal.** *Home* is the member-facing place (route, navigation, **Return Home**); *The House* names the containing whole in threshold/circulation language. A House threshold is a boundary of the whole, not a place. | Threshold label `HOME` → **`THE HOUSE`**; return stays **Return Home →** `/home`. The 2026-09-28 test (`8b7c6f3d4`) is **amended in place**, with its supersession stated: it now requires the THE HOUSE label and still forbids `Return to House`. The Platform Identity Canon is ⛔ not edited. Contract Amendment 2 records the layering and *return is not undo* (Home → Work → Studio → Home). |
+
+⚠️ **Routed, not repaired — pre-existing vocabulary drift**: Anchor (×3), Oracle, Astrology (×2), Decisions, Practices and Commons still render their own *Return to House →* links to `/house`, outside the shared threshold. Under the layered ruling their action should read *Return Home* → `/home`. A separate sweep; ⛔ not in H1.

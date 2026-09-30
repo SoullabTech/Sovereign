@@ -28,7 +28,7 @@ reference_surfaces:
   - docs/design/contracts/house-return.md
   - docs/design/contracts/facet-crossings.md
   - docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md
-shared_with_house: one restrained threshold grammar — Soullab mark, THE HOUSE, destination name, Return to House — plus preservation of an explicit from=house return path.
+shared_with_house: one restrained threshold grammar — Soullab mark (omitted where the destination already carries it), THE HOUSE, destination name, Return Home → (/home) — plus preservation of an explicit from=house return path.
 distinct_to_room: this contract governs only the entry/return membrane inside the listed files. Commons, Library, Ideas, Living Field, Relationships, Wisdom and Team remain their own rooms/products; the threshold neither grants access nor changes their inner meaning.
 screenshot_desktop: docs/design/contracts/screenshots/canonical-house-threshold-library-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/canonical-house-threshold-library-mobile.png
@@ -80,6 +80,16 @@ This strengthens the contract; it does not weaken it. The invariant is unchanged
 **Return (H1-2):** Writer's Studio renders the shared House threshold on `from=house`, which Studio mode changes preserve. Return is navigation only; it carries nothing back.
 
 ⚠️ **Experience verification for the Studio surfaces is owed** — no authenticated witness of the Studio threshold or the arrival panel has been taken yet.
+
+## Amendment 2 — layered vocabulary and the mark (2026-09-30, founder rulings H1-close-1/2)
+
+**Layered, no canon reversal.** *Home* is the member-facing place — where the member arrives, orients and navigates; the route (`/home`), the navigation, and the return action (**Return Home →**). *The House* names the containing whole of Soullab in threshold and circulation language. A House threshold is a boundary of that whole, **not a place**: the member may leave Home through it without `house` becoming a crossing endpoint. The Platform Identity Canon (2026-09-28) stands unamended.
+
+So every threshold reads **THE HOUSE · ‹ROOM› · Return Home →**.
+
+**The mark is orientation's guest, not its subject.** Where the destination already visibly carries the Soullab mark (Writer's Studio's own shell), the threshold omits it (`destinationCarriesMark`); the destination declares that, the threshold never guesses. Every other room keeps the mark.
+
+**Return is not undo.** The member is not backing out of a room; they move from one inhabited place back into Home: *Home → Work → Studio → Home*, never *Home → Studio → back*.
 
 ## Reconciliation standing
 
