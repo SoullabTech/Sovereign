@@ -16,7 +16,7 @@ current_authority:
   - docs/programme/JARVIS-VISUAL-FIELD-01_R2D2_RECURSIVE_OIL_MEMBRANE_2026-09-30.md
 current_phase: VERIFY
 current_act: VISUAL-FIELD-RUNTIME-02E2 — Whole-Field Pattern Visibility
-current_subject_sha: R2E1-CANDIDATE
+current_subject_sha: 175af0cf0
 current_branch: feature/jarvis-visual-field-r2e2-semantic-condensation-20260930
 worktree: /private/tmp/jarvis-visual-field-r2e2
 runtime: http://localhost:3613/dev/living-field-grokker-r2e
