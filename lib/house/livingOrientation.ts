@@ -2,6 +2,23 @@ import type { HousePlaceId } from './catalog';
 
 export type OrientationEndpoint = HousePlaceId | 'maia';
 
+/**
+ * Orientation thresholds — origins that are NOT places.
+ *
+ * The House is not a room and has no facet. It is where attention selects a
+ * living thing before entering the place that works with it. A threshold may
+ * ORIGINATE a crossing but is never a destination, and a threshold crossing
+ * may only carry validated identity INTO a place — it creates no place
+ * identity and decides nothing on the place's behalf.
+ *
+ * Founder ruling, H1-R1 D-01 (2026-09-30). Threshold-ness is derived from the
+ * origin (see isThresholdCrossing) rather than stored beside it, so the two
+ * can never disagree.
+ */
+export const THRESHOLD_ORIGINS = ['house'] as const;
+export type ThresholdOrigin = (typeof THRESHOLD_ORIGINS)[number];
+export type CrossingOrigin = OrientationEndpoint | ThresholdOrigin;
+
 export interface OrientationFacet {
   label: string;
   question: string;
@@ -31,7 +48,7 @@ export type CrossingStanding =
 
 export interface FacetCrossing {
   id: string;
-  from: OrientationEndpoint;
+  from: CrossingOrigin;
   to: OrientationEndpoint;
   gesture: string | null;
   carries: readonly string[];
@@ -653,6 +670,23 @@ export const FACET_CROSSINGS = [
     law: 'The remembered dream remains primary and uninterpreted. It may accompany the member into today as source provenance only; Daily Anchor remains blank until the member authors and keeps their own words.',
   },
   {
+    id: 'house-open-work-in-studio',
+    from: 'house',
+    to: 'writing',
+    gesture: 'Writing →',
+    carries: ['living work identity'],
+    mode: 'navigation',
+    authority: 'member_explicit',
+    standing: 'live',
+    evidence: [
+      'app/house/page.tsx',
+      'app/writers-studio/workIntake.ts',
+      'app/dev/writers-studio-pc3-live/P4R1HomeController.tsx',
+      'docs/programme/WRITERS-STUDIO-CONVERGENCE-01_H1-R1_HOUSE_STUDIO_CROSSING_2026-09-30.md',
+    ],
+    law: 'A threshold crossing. The member chose this living Work, so the Work stays selected; only its identity travels. The Studio re-validates ownership and resolves the Work\'s own declared manuscripts: one opens, several are the member\'s choice, none is said plainly with a member act to begin. Never recency, never the first, never stored, never remembered.',
+  },
+  {
     id: 'writers-studio-discuss-with-maia',
     from: 'writing',
     to: 'maia',
@@ -686,7 +720,11 @@ export function orientationFacet(id: HousePlaceId): OrientationFacet {
   return ORIENTATION_FACETS[id];
 }
 
-export function crossingsFrom(id: OrientationEndpoint): readonly FacetCrossing[] {
+export function isThresholdCrossing(crossing: FacetCrossing): boolean {
+  return (THRESHOLD_ORIGINS as readonly string[]).includes(crossing.from);
+}
+
+export function crossingsFrom(id: CrossingOrigin): readonly FacetCrossing[] {
   return FACET_CROSSINGS.filter((crossing) => crossing.from === id);
 }
 

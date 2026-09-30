@@ -8,6 +8,7 @@ import { MaiaThresholdLink } from './MaiaThresholdLink';
 import { HousePreferencesProvider, HouseMemberControls, HouseCenter, HouseQuickAccess, HouseDirectory, HousePassingThrough } from './HousePreferences';
 import { selectPassingQuote } from './passingContext';
 import { PASSING_QUOTES } from './passingQuotes';
+import { studioForWork } from '@/app/writers-studio/workIntake';
 
 async function memberForHouse() {
   let memberId: string;
@@ -105,7 +106,9 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
           {livingWorks.length > 0 ? livingWorks.map((work) => (
             <div key={work.id}>
               <span>{work.title || 'An unnamed living work'}</span>
-              <Link href="/writers-studio">Writing →</Link>
+              {/* H1-R1 threshold crossing `house-open-work-in-studio`: the member
+                  chose THIS Work, so its identity travels and nothing else. */}
+              <Link href={studioForWork(work.id)}>Writing →</Link>
             </div>
           )) : (
             <div>

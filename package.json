@@ -214,6 +214,7 @@
     "typecheck:ws-observation-identity": "tsc -p tsconfig.ws-observation-identity.json",
     "typecheck:house-studio-crossing": "tsc -p tsconfig.house-studio-crossing.json",
     "matrix:house-studio-crossing": "tsx tests/constitutional/house-studio-crossing/matrix.ts",
+    "verify:house-studio-crossing": "tsx tests/constitutional/house-studio-crossing/liveRunner.ts",
     "matrix:ws-observation-identity": "tsx tests/constitutional/writers-studio/matrix.ts",
     "typecheck:ws-flagship": "tsc -p tsconfig.ws-flagship.json",
     "matrix:ws-flagship": "tsx tests/constitutional/writers-studio/flagship/matrix.ts",

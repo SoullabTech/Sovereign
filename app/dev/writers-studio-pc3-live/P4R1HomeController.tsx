@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -12,6 +12,16 @@ import { useSectionActivity } from '@/app/writers-studio/useSectionActivity';
 import { arrivalFor, manuscriptIdOf } from '@/app/writers-studio/homeState';
 import { IMPORT_HREF } from '@/app/writers-studio/studioMap';
 import P4R1HomeView from './P4R1HomeView';
+import P4R1WorkIntake from './P4R1WorkIntake';
+import {
+  WORK_INTAKE_PARAM,
+  intakeInputFrom,
+  requestedWorkIdFrom,
+  resolveWorkIntake,
+} from '@/app/writers-studio/workIntake';
+
+/* H1-R1 D-01…D-03 — a refused Work says nothing about whether it exists. */
+const INTAKE_REFUSED_LINE = 'That Work isn’t available here. Your Studio is below.';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -39,6 +49,18 @@ export default function P4R1HomeController() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /* H1-R1 — a Work chosen at the House threshold. Resolved before Home's own
+     "Continue" pick can substitute a different Work: explicit present intention
+     outranks inferred continuity. Derived every render, stored nowhere. */
+  const requestedWorkId = requestedWorkIdFrom(params);
+  const intake = useMemo(() => resolveWorkIntake(intakeInputFrom({
+    worksPhase,
+    manuscriptPhase,
+    works,
+    manuscripts,
+    requestedWorkId,
+  })), [worksPhase, manuscriptPhase, works, manuscripts, requestedWorkId]);
+
   const post = useCallback(async (url: string, body?: unknown) => {
     const response = await apiFetch(url, {
       method: 'POST',
@@ -60,8 +82,10 @@ export default function P4R1HomeController() {
     await Promise.all([reloadWorks(), reloadManuscripts()]);
   }, [reloadWorks, reloadManuscripts]);
 
-  const open = useCallback((manuscriptId: string, sectionId?: string) => {
+  const navigateToManuscript = useCallback((manuscriptId: string, sectionId: string | undefined, replace: boolean) => {
     const next = new URLSearchParams(params?.toString() ?? '');
+    // The House choice has been honoured once the writing opens; it is not carried further.
+    next.delete(WORK_INTAKE_PARAM);
     next.set('mode', 'write');
     next.set('m', manuscriptId);
     next.delete('developField');
@@ -70,7 +94,30 @@ export default function P4R1HomeController() {
     next.delete('reviewFinding');
     if (sectionId) next.set('s', sectionId);
     else next.delete('s');
-    router.push(pathname + '?' + next.toString());
+    const href = pathname + '?' + next.toString();
+    if (replace) router.replace(href);
+    else router.push(href);
+  }, [params, pathname, router]);
+
+  const open = useCallback((manuscriptId: string, sectionId?: string) => {
+    navigateToManuscript(manuscriptId, sectionId, false);
+  }, [navigateToManuscript]);
+
+  /* Exactly one piece of writing → open it without asking twice (HS-F7).
+     `replace`, so Back returns to the House rather than to this hand-off. */
+  const intakeOpened = useRef<string | null>(null);
+  useEffect(() => {
+    if (intake.kind !== 'open') return;
+    if (intakeOpened.current === intake.manuscriptId) return;
+    intakeOpened.current = intake.manuscriptId;
+    navigateToManuscript(intake.manuscriptId, undefined, true);
+  }, [intake, navigateToManuscript]);
+
+  const leaveIntake = useCallback(() => {
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.delete(WORK_INTAKE_PARAM);
+    const query = next.toString();
+    router.replace(query ? pathname + '?' + query : pathname);
   }, [params, pathname, router]);
 
   const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
@@ -78,6 +125,7 @@ export default function P4R1HomeController() {
     const manuscriptId = resumeManuscriptId ?? manuscripts[0]?.id ?? null;
     if (!manuscriptId) return;
     const next = new URLSearchParams(params?.toString() ?? '');
+    next.delete(WORK_INTAKE_PARAM);
     next.set('mode', mode);
     next.set('m', manuscriptId);
     if (mode !== 'develop') {
@@ -110,7 +158,7 @@ export default function P4R1HomeController() {
     }
   }, [busy, post, declare, refresh, open]);
 
-  const onStartWriting = useCallback(async (workId: string) => {
+  const onStartWriting = useCallback(async (workId: string, openAfter = true) => {
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -122,7 +170,10 @@ export default function P4R1HomeController() {
       if (!manuscriptId) throw new Error('manuscript id');
       await declare(workId, manuscriptId);
       await refresh();
-      open(manuscriptId);
+      /* Inside an H1-R1 Work intake the refreshed declarations resolve to
+         exactly one manuscript and the intake opens it — opening here too
+         would navigate twice. */
+      if (openAfter) open(manuscriptId);
     } catch {
       setError('Could not begin writing for this Work just now. The Work and everything feeding it remain unchanged.');
     } finally {
@@ -168,6 +219,27 @@ export default function P4R1HomeController() {
     return <main className="fr-root"><div style={{ padding: 32 }}>Sign in to open your Writer’s Studio.</div></main>;
   }
 
+  if (intake.kind === 'open') {
+    return <main className="fr-root"><div style={{ padding: 32 }}>Opening your Work…</div></main>;
+  }
+
+  if (intake.kind === 'choose' || intake.kind === 'no-writing') {
+    const work = works.find((w) => w.id === intake.workId) ?? null;
+    return (
+      <P4R1WorkIntake
+        workTitle={work?.title ?? null}
+        manuscripts={intake.kind === 'choose'
+          ? intake.manuscriptIds.map((id) => ({ id, title: manuscripts.find((m) => m.id === id)?.title ?? null }))
+          : []}
+        busy={busy}
+        error={error}
+        onOpen={(manuscriptId) => open(manuscriptId)}
+        onBeginManuscript={() => void onStartWriting(intake.workId, false)}
+        onStudioHome={leaveIntake}
+      />
+    );
+  }
+
   return (
     <P4R1HomeView
       appearance={appearance}
@@ -178,7 +250,7 @@ export default function P4R1HomeController() {
       markedLines={markedLines}
       historyActs={historyActs}
       busy={busy}
-      error={error}
+      error={error ?? (intake.kind === 'refused' ? INTAKE_REFUSED_LINE : null)}
       onMode={onMode}
       onBegin={(title) => void onBegin(title)}
       onOpen={open}

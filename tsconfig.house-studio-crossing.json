@@ -6,9 +6,16 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "skipLibCheck": true,
     "esModuleInterop": true
   },
-  "include": ["tests/constitutional/house-studio-crossing/**/*.ts"]
+  "include": [
+    "tests/constitutional/house-studio-crossing/**/*.ts",
+    "app/writers-studio/workIntake.ts",
+    "lib/house/livingOrientation.ts",
+    "lib/house/catalog.ts"
+  ]
 }
