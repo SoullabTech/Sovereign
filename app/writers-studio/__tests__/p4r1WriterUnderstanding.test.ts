@@ -67,4 +67,15 @@ describe('C14 writer understanding', () => {
     expect(route).toContain('WHERE id = $1 AND member_id = $2');
     expect(route).not.toMatch(/runStructured|getMaiaResponse|Anthropic|OpenAI/);
   });
+
+  it('degrades only undefined-table during migrate-before-swap', () => {
+    const server = read('lib/writersStudio/writerUnderstandingServer.ts');
+    const route = read('app/api/sovereign/living-works/[id]/writer-understanding/route.ts');
+
+    expect(server).toContain("code === '42P01'");
+    expect(server.match(/isUndefinedTable\(error\)/g)).toHaveLength(2);
+    expect(server).toContain('throw error');
+    expect(route).toContain("code === '42P01'");
+    expect(route).toContain('throw error');
+  });
 });
