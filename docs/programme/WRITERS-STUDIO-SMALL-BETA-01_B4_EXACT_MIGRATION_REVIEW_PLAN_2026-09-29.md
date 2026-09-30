@@ -3,13 +3,13 @@
 **Date:** 2026-09-29
 **Status:** BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF
 **Live old reader at plan freeze:** `7a096281acc22bc91bfc66799ce9acb841921771`
-**Application-code parent:** `60b97d670a3c736e8304cb3ca0544d07678c82d7`
+**Application-code parent:** `b7ab784d95f1231c5f25a6c26dba3fa811d0d02d`
 
 ## Exact target relation
 
-The deployment target is supplied externally by the Review-Custody harness and is never self-identified by a commit SHA embedded in this document. The target may be a canonical merge commit. The reviewer must compare immutable git tree bytes against application-code parent `60b97d670a3c736e8304cb3ca0544d07678c82d7` and establish the exact target relation from bundle evidence.
+The deployment target is supplied externally by the Review-Custody harness and is never self-identified by a commit SHA embedded in this document. The target may be a canonical merge commit. The reviewer must compare immutable git tree bytes against application-code parent `b7ab784d95f1231c5f25a6c26dba3fa811d0d02d` and establish the exact target relation from bundle evidence.
 
-The reviewer must independently confirm that the target changes no application, migration, dependency, deployment-script, or runtime bytes relative to `60b97d670a3c736e8304cb3ca0544d07678c82d7`. Governance-document changes are permitted only in the B4 review plan and B4 deployment-readiness document. The review bundle must carry a target-vs-parent name/status diff derived from immutable git objects. The exact target commit is supplied externally by the Review-Custody harness and must be reproduced in the review's migration compatibility attestation.
+The reviewer must independently confirm that the target changes no application, migration, dependency, deployment-script, or runtime bytes relative to `b7ab784d95f1231c5f25a6c26dba3fa811d0d02d`. Governance-document changes are permitted only in the B4 review plan and B4 deployment-readiness document. The review bundle must carry a target-vs-parent name/status diff derived from immutable git objects. The exact target commit is supplied externally by the Review-Custody harness and must be reproduced in the review's migration compatibility attestation.
 
 ## Exact production-pending set
 
@@ -69,7 +69,7 @@ The reviewer must independently establish or reject all of the following from ex
 8. The pilot-access gate cannot be granted solely by a URL flag and feedback POST independently verifies pilot eligibility.
 9. Reader rollback to `7a096281a...` remains lawful against every possible committed migration prefix and the final expanded schema; no DB down-migration is needed for reader rollback.
 10. DDL locking/constraint-validation risks are materially acceptable or are identified as findings requiring remediation before deployment.
-11. The exact target is application-byte-equivalent to application-code parent `60b97d670a3c736e8304cb3ca0544d07678c82d7`, with only the two permitted B4 governance documents allowed to differ.
+11. The exact target is application-byte-equivalent to application-code parent `b7ab784d95f1231c5f25a6c26dba3fa811d0d02d`, with only the two permitted B4 governance documents allowed to differ.
 
 A verdict of `REVISE` or `BLOCKED` is lawful and must not be converted into approval to complete deployment.
 
