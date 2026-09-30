@@ -17,7 +17,6 @@ import { LEASE_CANDIDATES, buildLease } from './lease-candidates.mjs';
 import { REASON_FALSIFIERS, SETTLEMENT_FALSIFIERS } from './settlement-falsifiers.mjs';
 import { TAIL_FALSIFIERS } from './tail-falsifiers.mjs';
 import { TAIL_REFERENCE, TAIL_CANDIDATES } from './tail-reference-candidates.mjs';
-import { ADDITIVE_REASON_CANDIDATES } from './additive-candidates.mjs';
 import { readCanonicalGrantLedgerV1 } from '../../../scripts/builder/canonical-provider-execution-grant-store-v1.mjs';
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
 import os from 'node:os';
@@ -107,7 +106,7 @@ out('One process writes a delegation home\'s grant ledgers. The per-append lock 
 
 await group('R3-L / R3-D · process-lifetime writer lease over the grant authority domain', LEASE_FALSIFIERS, LEASE_REFERENCE, LEASE_CANDIDATES);
 await group('R3-T · grant-ledger tail: commit marker · single write · quarantine-before-truncate · no repair of history', TAIL_FALSIFIERS, TAIL_REFERENCE, TAIL_CANDIDATES);
-await group('R3-C · honest reason for CLAIMED on ROUTED (relabel only)', REASON_FALSIFIERS, REASON_REFERENCE, [...REASON_CANDIDATES, ...ADDITIVE_REASON_CANDIDATES]);
+await group('R3-C · honest reason for CLAIMED on ROUTED (relabel only)', REASON_FALSIFIERS, REASON_REFERENCE, REASON_CANDIDATES);
 await group('R3-S · refused invalidate / consume returns are surfaced', SETTLEMENT_FALSIFIERS, SETTLEMENT_REFERENCE, SETTLEMENT_CANDIDATES);
 
 // ⭐ Predictions FLIPPED at implementation (FREEZE.json anticipated this, in the open): before R3

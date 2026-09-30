@@ -39,8 +39,12 @@ export const REASON_CANDIDATES = Object.freeze([
   { id: 'DC-C1', named: 'R3-C1', law: 'today\'s label, pinned: a proven-undispatched grant is labelled "authority no longer sufficient"',
     subject: { classifyWorkUnit: (fx) => REAL_CLASSIFIER.classifyWorkUnit(fx).map((d) => (d.reason === 'CLAIMED_NEVER_DISPATCHED' ? { ...d, reason: 'W2_NOT_EXECUTING', phase: 'unconverged' } : d)) },
     collateral: {} },
+  // FREEZE AMENDMENT 1 (founder act, 2026-09-30): the subject formerly wrapped the LIVE classifier
+  // and acted only on today's label, so it became conforming once the classifier was corrected.
+  // Law, falsifier and expected death unchanged; the wrong decision is now pinned to the honest label.
   { id: 'DC-C2', named: 'R3-C2', law: 'relabel AND retire: the absence proof is used as licence to act',
-    subject: relabel(REAL_CLASSIFIER.classifyWorkUnit, { act: true }), collateral: {} },
+    subject: { classifyWorkUnit: (fx) => REASON_REFERENCE.classifyWorkUnit(fx).map((d) => (d.reason === 'CLAIMED_NEVER_DISPATCHED' ? { ...d, action: 'RETIRE', retire_grant: true } : d)) },
+    collateral: {} },
   { id: 'DC-C3', named: 'R3-C3', law: 'never-dispatched whenever there is no witness, whatever the lifecycle',
     subject: relabel(REAL_CLASSIFIER.classifyWorkUnit, { anyLifecycle: true }), collateral: {} },
 ]);

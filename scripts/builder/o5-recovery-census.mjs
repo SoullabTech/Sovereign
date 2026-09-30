@@ -47,8 +47,11 @@ export const STOP_CATEGORY = Object.freeze({
   W0_ENVELOPE_FOREIGN: 'wrong_work_unit_identity',
   GRANT_FOREIGN: 'wrong_work_unit_identity',
   W2_NOT_EXECUTING: 'authority_no_longer_sufficient',
-  // O5-R3: a proven-undispatched claimed grant. Not "authority no longer sufficient" — that
-  // label was safe but untrue. Its own category, flagged for founder ratification.
+  // O5-R3 — RATIFIED (founder, 2026-09-30): execution authority was successfully claimed, but no
+  // dispatch was ever evidenced for the associated routed Work Unit. DESCRIPTIVE, NOT CAUSAL: it
+  // says where the lifecycle stopped, never why (crash, cancellation, operator act, bug …). The
+  // reason code is the machine classification; this category is the lifecycle state; a cause, if
+  // known, is separate evidence and is never inferred here.
   CLAIMED_NEVER_DISPATCHED: 'claimed_never_dispatched',
   W2_AUTHORIZED_CORE_MUTATED: 'authority_no_longer_sufficient',
   GRANT_REVOKED: 'authority_no_longer_sufficient',

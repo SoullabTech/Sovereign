@@ -2,9 +2,9 @@
 
 **Date:** 2026-09-30
 **Base:** `2df99c9e` (O5-R3 grant-settlement census) · frozen O5-R1 @ `af2f0203` · **FREEZE INTACT**
-**Standing:** ⭐ O5-R3 OPENED · census ✅ · rulings R3-R1…R12 (§7, §10) · BUILD GATE PASSED (§8) · suite FROZEN @ `3dc118ae` ·
-⭐ **IMPLEMENTED (§11)**: integration proof 17/17, every check mutation-proven · ⚠️ frozen DC-C2 now SURVIVES, a frozen-candidate
-instrument defect, **reopening requested** (§11.4) · ⛔ **NOT ADMITTED** (Mac Studio witnesses owed, §11.6) · ⛔ not merged · production untouched
+**Standing:** ⭐ O5-R3 OPENED · rulings R3-R1…R12 (§7, §10) · suite FROZEN @ `3dc118ae`, **amended once (§12.1)** · IMPLEMENTED
+(§11) · **implementation complete · constitutional suite complete · local integration evidence complete · ⛔ admission pending
+real-host witness (§12.4)** · ⛔ not merged · production untouched
 
 > §1–§6 below are the census and the pre-gate suite **as first recorded**. Where the rulings in §7 changed
 > them, the text is marked, not rewritten.
@@ -522,3 +522,84 @@ concept, so it can never show the flip. The matrix now reads through an unfrozen
 **Standing: R3-R1…R12 · SUITE FROZEN @ `3dc118ae` (freeze INTACT) · IMPLEMENTED · INTEGRATION 17/17 ×6, all 10
 implementation mutations killed · ⚠️ DC-C2 REOPENING REQUESTED · ⚠️ `claimed_never_dispatched` CATEGORY FLAGGED
 · ⛔ NOT ADMITTED (Mac Studio witnesses + R3-R11 runtime binding owed) · ⛔ NOT MERGED · PRODUCTION UNTOUCHED.**
+
+---
+
+## 12. Founder rulings after implementation (2026-09-30)
+
+### 12.1 Ruling 1: freeze amendment 1, DC-C2 reopened narrowly
+
+> **Freeze amendment cause:** DC-C2 depended on live production behavior and ceased to be a defeat candidate
+> when the production classifier was corrected. The constitutional law did not change. The frozen instrument
+> was repaired so the wrong design remains independently wrong.
+
+| | |
+|---|---|
+| File changed | `tests/constitutional/jarvis-o5-r3/settlement-reference-candidates.mjs`, and **only** that frozen file |
+| Blob | `37dede6d…` (freeze `3dc118ae`) → **`d7621654…`** |
+| Changed | DC-C2's `subject` only. It had wrapped the live classifier and acted only on the pre-R3 label `W2_NOT_EXECUTING`; it now acts on `CLAIMED_NEVER_DISPATCHED` over the reference, so it stays wrong whatever the live classifier does |
+| Unchanged | DC-C2's id, law text, named falsifier R3-C2 and expected death; every falsifier; every other frozen file (the freeze guard reports only this file as drifted before re-freeze) |
+| Pre-amendment proof | the matrix showed **DC-C2 SURVIVED R3-C2** (MATRIX DEFECT 1), while the identical construction as additive DC-C2p was **KILLED on R3-C2** |
+| Post-amendment | 28 falsifiers · **37/37 KILLED**, DC-C2 on R3-C2 with reason *"the never-dispatched grant was acted on"* · **MATRIX LETHAL + DISCRIMINATING** · Class A as predicted |
+| DC-C2p | **removed**: after the amendment it would have been a byte-identical second candidate for the same law |
+| Lineage | `FREEZE.json` now carries an `amendments` entry (previous blob, previous freeze commit, new blob, authority, cause, changed/unchanged, evidence). The original hash stays in history at `3dc118ae`/`10fbe5e4`. The guard is proven lethal both ways on the amended file |
+
+⚠️ **A procedural slip, caught and corrected before anything was committed.** My first drift probe restored
+the frozen file with `git checkout`, which silently reverted the still-unstaged amendment to the pre-amendment
+bytes. The blob check exposed it (`37dede6d`, amendment comment absent). The amendment was re-applied, and it
+reproduced **byte-identically** (`d7621654`). The probe was then re-run with a file backup instead of
+`git checkout`.
+
+### 12.2 Ruling 2: `claimed_never_dispatched` ratified
+
+> `claimed_never_dispatched` means execution authority was successfully claimed, but no dispatch was ever
+> evidenced for the associated routed Work Unit.
+
+**Descriptive, not causal:** it says where the lifecycle stopped, never why. Three layers are kept apart:
+**reason code** (`CLAIMED_NEVER_DISPATCHED`, the machine classification) · **census category**
+(`claimed_never_dispatched`, the lifecycle state) · **cause** (separate evidence, if known, never inferred).
+Recorded at the mapping in `o5-recovery-census.mjs`.
+
+### 12.3 Rulings on the implementation notes
+
+- **Lease-generation pruning: out of R3.** *Accumulating immutable generation records is acceptable
+  operational cost.* Pruning would be another concurrent mutation protocol and another race surface. It opens
+  later, only if accumulation becomes materially problematic, with its own retention and race law.
+- **"Grant Writer Lease Recovery": named, ⛔ not built.** *When current writer authority cannot be proven
+  because the authoritative lease record is unreadable, no process may infer vacancy. A human operator must
+  first establish that no valid grant writer remains active, preserve the unreadable evidence, and explicitly
+  authorize creation of a new generation.*
+
+  Likely procedure, for a later act:
+  1. identify the grant home;
+  2. stop and verify every possible writer;
+  3. record the exact Desktop/runtime SHAs;
+  4. preserve the unreadable generation losslessly;
+  5. record the operator recovery act;
+  6. create a **new** generation, never a rewrite of the corrupt one.
+
+  Until then, failing closed (`LEASE_RECORD_UNREADABLE`) is the R3 behaviour.
+
+### 12.4 Admission state
+
+**Implementation complete · constitutional suite complete · local integration evidence complete · admission
+pending real-host witness.**
+
+Owed on the **Mac Studio**, and substantive rather than ceremonial:
+
+- APFS two-process acquisition and takeover;
+- live-holder refusal;
+- incarnation discrimination through the real `ps -o lstart=` probe;
+- the R3-R12 durability sequence on APFS;
+- raw torn UTF-8 fragment quarantine and recovery;
+- the exact runtime checkout SHA;
+- ⭐ proof that **no older lease-unaware grant writer is active**. For the human-provider ledger this is the
+  only protection: the new append lock protects future transitions and cannot retroactively protect against a
+  writer that never knew it existed.
+
+Instrument: `npm run test:jarvis-o5-r3` at `ff34acac` plus this amendment. **No further mechanism is to be
+added before that witness.**
+
+**Standing: FREEZE AMENDED ONCE (DC-C2, `d7621654`) · MATRIX LETHAL + DISCRIMINATING (28 / 37) ·
+`claimed_never_dispatched` RATIFIED · PRUNING DEFERRED · GRANT WRITER LEASE RECOVERY NAMED, NOT BUILT · ⛔
+ADMISSION PENDING MAC STUDIO WITNESS · ⛔ NOT MERGED · PRODUCTION UNTOUCHED.**
