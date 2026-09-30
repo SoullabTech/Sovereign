@@ -224,3 +224,84 @@ ruling. It is one commit and reverts cleanly.
 
 ⛔ Merge and deploy remain unauthorized. Next: founder rendered walk from
 `/maia/living-field?from=house`, then a merge ruling.
+
+---
+
+## 12 · Founder rulings (2026-09-30, second) and the admission evidence
+
+**Rulings.** Keep `68211fea` separate and visible. Operative law: *Living Field may change the
+voice of an experience, but it may not erase the agent, provenance, consent boundary, or
+truth-status of the experience.* LF-SCOPE-01 is **inherited debt**, not cleaned up here. R2 is
+**not mounted** by this reconciliation; the next lane is `LIVING-FIELD-R2-MOUNT-01`, which starts
+from this reconciled canonical tree. `d3-hierarchy`, `d3-interpolate`, `cytoscape` and
+`cytoscape-fcose` must be **declared explicitly before any R2 surface becomes
+production-reachable**.
+
+### 12.1 · Typecheck: final head vs canonical control
+
+Both trees were run with `node scripts/check-typehealth-baseline.js --json` after
+`prisma generate`, using the same `node_modules`.
+
+| | final head `b587fad0` | canon `04005ca7c` |
+|---|---|---|
+| gate | ✅ ok | ✅ ok |
+| current errors | 222 | 222 |
+| introduced / increased | 0 / 0 | 0 / 0 |
+| fixed vs baseline 239 | 15 identities | 15 identities (same) |
+| program files gained vs baseline | 671 | 652 |
+
+`currentErrors`, `introduced`, `increased`, `fixed`, `decreased`, `coverageLost` and
+`coverageDeleted` are **byte-identical** between the two runs. The 19 extra files are all Living
+Field (`LivingFieldInstrument.tsx`, `livingFieldHierarchy.ts`, `physics/**`), and they enter the
+program with **zero diagnostics**. **Zero new diagnostics.**
+
+### 12.2 · Rendered walk: fixture walk of the mounted R1R3 surface
+
+**Method.** Real `next dev` on this tree and the real `/maia/living-field?from=house` page,
+driven with Playwright and Chromium. There is no database in this container, so every `/api/**` call was answered from typed
+fixtures. The page loaded via the proxy's existing Capacitor client-side-auth path
+(`x-capacitor-app: true` + `localStorage.memberId`). Four passes: happy path (mixed
+member / MAIA-candidate / member-confirmed authorship), failures (constellation, facet flows,
+dimension open), encounter failure, partial projection. **0 page errors in all four passes.**
+Evidence: `docs/programme/evidence/living-field-reconcile-walk-2026-09-30/` (screenshots,
+`results.json`, the script). **Fixture data only; no member content.**
+
+⛔ **What this walk is not:** it is not a walk on real member data, and it is not the founder's
+witness. It shows how the mounted surface renders controlled states. It proves nothing about
+real data, real MAIA greetings, or real latency.
+
+⛔ **This is an R1R3 admission walk.** The R2 code in canon was not rendered and is not admitted
+as member experience.
+
+| # | Criterion | Observed | Standing |
+|---|---|---|---|
+| 1 | Threshold continuity | `HOME · LIVING FIELD` threshold bar with Return Home; the R1 instrument ("Every journey begins with a doorway.") opens the room; the Wider field follows with Enter doors | ✅ continuity. ⚠️ two home affordances (threshold "Return Home →" and page "← Home") |
+| 2 | MAIA boundaries | member: "you authored", "Written by you", "You carried this path"; MAIA: "MAIA candidate", "MAIA candidate, accepted"; transfer: "WHAT MAIA WILL RECEIVE" + "MAIA receives only the evidence shown here", "Refine with MAIA", "Talk with MAIA about this" | ✅ all three classes are distinct. ⚠️ the lens send button itself reads "Follow this lens →" (lane), framed by two MAIA-naming lines on the same panel |
+| 3 | Non-claim language | both disclaimers render as a quiet 10px footnote under their panel | ✅ honest, not dominant. ⚠️ low contrast (`stone-700` on near-black), possibly below WCAG. Recorded, not changed |
+| 4 | Failure surfaces | constellation: "Your wider field is unavailable right now. Nothing has been changed." · dimension open: "Couldn't open this dimension just now. Try again." · encounter: "Could not open this encounter. Try again." · partial: "…what is shown is partial." | ✅ for these four |
+| 4a | | **facet-flow failure: "These paths are quiet for now. The journey remains gently held."** | ❌ **failure softened into ambiguity.** It reads as an empty state, not an error. Canon's version ("…quiet right now. Nothing has been changed.") also called it "quiet" |
+| 4b | | **refine returned no draft: "A fresh draft can be invited again in a moment, or this space can be written directly."** | ⚠️ does not say MAIA's draft failed; it predicts availability ("in a moment") that the UI cannot know |
+| 5 | What members see | R1R3 (`LivingFieldInstrument`) + existing dashboard; no `physics/` component rendered | ✅ as ruled |
+
+**Canonical MAIA-boundary observation (outside this lane, not introduced by it).** Opening a
+dimension **immediately opens a MAIA encounter** (`POST …/encounter {action:'open'}`, and a MAIA
+greeting). That is canon since `29e038c7` (2026-09-22, J0R3): *"Conversation-first: opening a
+dimension lands the member IN the encounter."* No member content is sent. But a click labelled
+"Open dimension →" starts a MAIA conversation without the member choosing MAIA. Carried
+forward for its own ruling; not changed here.
+
+### 12.3 · Admission boundary: standing
+
+| Condition | Standing |
+|---|---|
+| final-head typecheck, zero regressions vs canonical control | ✅ |
+| Living Field tests 16/16 | ✅ |
+| protected paths (`lib/sovereign/**`, `lib/maia/**`) untouched · no-Supabase | ✅ · ✅ |
+| rendered R1R3 walk preserves the restored agency/provenance language | ✅ |
+| failure truthfulness (walk criterion 4) | ❌ 4a · ⚠️ 4b, both need a founder ruling |
+
+Proposed merge record: *Admits the reconciled Living Field corpus through R2E2 into canonical
+custody, while retaining R1R3 as the member-facing mounted surface. R2 member presentation is not
+admitted by this merge and requires a separate mounting lane (`LIVING-FIELD-R2-MOUNT-01`).*
+
+⛔ Merge and deploy are still not performed.
