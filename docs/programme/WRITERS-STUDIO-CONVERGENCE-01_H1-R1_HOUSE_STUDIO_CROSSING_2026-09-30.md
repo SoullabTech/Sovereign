@@ -192,7 +192,7 @@ rather than deferred.
   ⛔ not waved away: `npx prisma generate`, then the identical gate → exit 0. *An environment defect can
   wear the costume of a regression exactly as easily as the reverse.*
 
-## 7c · Residual question — ⛔ NOT DECIDED, surfaced
+## 7c · Residual question — *(historical; ✅ RULED C same day, see §7d)*
 
 D-02 says *the Work remains selected throughout*; WS2-03B stays intact. They agree everywhere except
 **one edge**: a manuscript declared in **two or more** Works. Opened from Work B, the writing room still
@@ -200,6 +200,95 @@ derives the current Work from declarations and shows WS2-03B's honest *ambiguous
 "selected throughout" inside the writing room would mean carrying the Work into it as a disambiguator —
 an amendment to WS2-03B's ambiguous branch. ⛔ Built as the ruling's "WS2-03B intact" requires; the edge
 is left for an explicit act.
+
+## 7d · WS2-03B AMENDMENT — ruling C, built, verified, walked
+
+### Ruling (founder, 2026-09-30), recorded verbatim
+> **Explicit Work Choice Precedes Inference.** *A member's explicit Work selection is a first-class act
+> of intent. It may resolve manuscript ambiguity only within the declared Work's actual associations.
+> Explicit selection outranks inference. No selection is persisted merely because navigation occurred.*
+
+A rejected (the member already answered; asking again privileges inference over intent). B rejected
+(a doorway exception creates two realities). ⭐ *Continuity comes from preserving acts of meaning, not
+preserving system guesses.*
+
+**Precedence as built:** explicit choice (only if that Work declares the manuscript) → declarations
+(exactly one) → ⛔ **inference: EMPTY BY LAW** → ask. The ruling's precedence listed "inferred Work
+candidates" as step 3; WS2-03B has never inferred, so that step is recorded as empty, and ⛔ the
+amendment does not create a place for inference to enter later.
+
+### Build
+- `resolveWorkContext(…, explicitWorkId = null)`: a choice is confined to `declaringWorks`. It cannot
+  override a single declaration and cannot make a Work out of none. Without a choice, behaviour is
+  identical at all 11 call sites.
+- The canonical rooms (write · develop · review) pass the visible `work` parameter. The eight
+  older/alternate routes pass nothing, so they are unchanged by construction.
+- The House intake now **carries** the chosen Work into the writing room (single-manuscript open and
+  chooser). Every open without a choice drops it, so a stale choice never rides along.
+- ⭐ **A defect caught before it shipped:** all three rooms copy every URL parameter on a mode switch,
+  so pressing *Home* in the writing room would have kept `work`, re-fired the House intake and
+  re-opened the manuscript, and **Studio Home would have been unreachable**. Going Home ends the act the
+  choice was for, so each room drops it there; write ↔ develop ↔ review (the same act) keep it.
+
+### Verification
+- **Lethality first:** WA-F1…WA-F6 with six defeat candidates (option A · trust the pointer · adopt the
+  orphan · choice beats declaration · default to first · assert early) → `npm run matrix:ws2-03b-amendment`
+  **LETHAL + DISCRIMINATING**, proved **before** `workContext.ts` changed. DA-2 and DA-4 each carry one
+  classified collateral kill, with reasons: they lack the same containment check, from opposite sides.
+- **Real code:** `npm run verify:house-studio-crossing` → **intake 8/8 · amendment 6/6 · guards 11/11**
+  (new: HG-8 room wiring, including "Home never inherits the choice"; HG-9 resolver confinement).
+- **Mutants 9/9 killed:** no containment · option A · choice before ready · intake open drops the choice ·
+  chooser drops it · stale choice rides along · write room Home inherits it · develop room doesn't pass it ·
+  review room stores it.
+- **Project gates:** `npm run typecheck` **0 regressions** (222 vs 239) · jest **88/88 suites · 900 tests**.
+- ⚠️ `workContext.ts` stays out of the strict (`noUncheckedIndexedAccess`) suite config: pulling it in
+  surfaces pre-existing diagnostics in `canvasIdentity.ts`, `useLivingWorks.ts` and its own one-Work
+  line, none of which were written to that flag. ⛔ The flag was not weakened and those files were not
+  retrofitted here; the enforced project typecheck covers `workContext.ts`.
+
+### Automated walk — disposable shadow, real app, real browser
+Throwaway PostgreSQL 16 (UTF8, pgvector) ← production baseline `0001_baseline_2026-09-01` + all **62**
+post-baseline SQL migrations (**0 refused**; `README.md` is not a migration); real `next dev`; Chromium;
+the member signs in through `/api/members/signin`; fixtures are made through the app's own create and
+declare APIs, and only recency and purpose are staged in SQL. Instrument:
+`tests/constitutional/house-studio-crossing/walk/walk.cjs` (requires `WALK_DATABASE_URL`, ⛔ never
+production). **15/15 PASS:**
+
+| Case | Result |
+|---|---|
+| C0 control: plain Studio Home names Alpha (written most recently) first | ✅ the discriminating condition exists |
+| **C1 deciding case:** Beta Work clicked (written 30 days ago) → Beta's manuscript opens, room names Beta Work, not Alpha | ✅ |
+| C2 Back → `/house` (the hand-off replaced its own history entry) | ✅ |
+| C3 two manuscripts → chooser `["Gamma one","Gamma two"]`, declared order, nothing opened; choosing keeps the Work | ✅ |
+| C4 no writing → manuscripts 5 → 5 on arrival; **Begin** creates one, declared in Delta, opens it | ✅ |
+| C5 foreign id → neutral refusal, no navigation | ✅ |
+| **C6 amendment:** shared manuscript opened from Zeta → room names Zeta Work, not Epsilon | ✅ |
+| C6b control: same manuscript, no choice → names neither Work (WS2-03B unchanged) | ✅ |
+| C6c choice of Alpha (doesn't contain it) → ignored, names no Work | ✅ |
+| C7 Home from the writing room → `mode=home`, no `work`, Home reachable | ✅ |
+| C8 no Work id in local or session storage · `member_facet_crossings` 0 → 0 | ✅ |
+
+⭐ **The walk was proven able to fail:** amendment disabled (choice ignored) → **C6 FAIL**, C6b/C6c
+still PASS; House link reverted to plain `/writers-studio` → **the deciding case cannot complete** (the
+member stays on Studio Home and never reaches Beta's writing; the run times out at C1). Both files
+restored byte-identical to the commit.
+
+⭐ **Two instrument failures, scored as NO EVIDENCE, ⛔ not as findings:**
+1. The first fixture wrote a draft's content without its sections; the database's deferred round-trip
+   check refused it. Repaired by writing both in one transaction.
+2. Four checks read a Work *sentence* that turned out to be **computed and never rendered**, and the
+   unchanged-rule control (C6b) failed with them. *A failing control is the signal that the instrument,
+   not the subject, is blind.* Repaired by observing what the room actually renders: the Work title.
+
+**Finding routed out, ⛔ not repaired:** `workContextSentence` in `P4R1WriteEditController.tsx`
+(including its *"The Studio will not choose one for you"* ambiguity copy) is **dead**: computed on
+every render, used nowhere. So the writing room currently gives an ambiguous manuscript **no visible
+explanation**; it just shows no Work. Whether that sentence should render is a design question for the
+chooser/intake design pass.
+
+⚠️ **This is machine evidence, ⛔ not the founder walk.** It establishes behaviour: which manuscript
+opened, which Work the room names, what history and storage hold. It cannot establish whether the
+arrival *feels* like being met in the Work you chose. The founder walk (§8) remains owed.
 
 ## 7 · Out of scope (explicit)
 ⛔ context store · transition history · movement logging · MAIA context input · memory creation ·
@@ -211,8 +300,9 @@ becoming behavioural exhaust?*
 
 *(Superseded same day; kept as the state at the time:)* G0 ✅ · G2 drafted · G3 ✅ LETHAL · G1 OPEN · no intake built.
 
-**Current: G0 ✅ · G1 ✅ RULED · G2 ✅ · G3 ✅ LETHAL (8/8) · G4 ✅ BUILT · G5 ✅ VERIFY PASS (8/8 + 9/9, mutants
-10/10) · ✅ project typecheck (0 regressions) + jest 897/897 RUN in-container · ⛔ G6 FOUNDER WALK OWED · §7c edge OPEN ·
+**Current: G0 ✅ · G1 ✅ RULED · G2 ✅ · G3 ✅ LETHAL · G4 ✅ BUILT · G5 ✅ VERIFY PASS (intake 8/8 · WS2-03B
+amendment 6/6 · guards 11/11 · mutants 10/10 + 9/9) · ✅ typecheck 0 regressions · jest 900/900 · §7c ✅ RULED C +
+BUILT · ✅ AUTOMATED WALK 15/15 (proven able to fail) · ⛔ G6 FOUNDER WALK OWED ·
 ⛔ NO PERSISTENCE · ⛔ NO MAIA INPUT · ⛔ NO MERGE · ⛔ NO DEPLOY · PRODUCTION UNTOUCHED.**
 
 **G6 walk (human witness):** (1) House → click a Work with one manuscript → lands in that writing, and
