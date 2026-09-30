@@ -8,6 +8,7 @@ import { MaiaThresholdLink } from './MaiaThresholdLink';
 import { HousePreferencesProvider, HouseMemberControls, HouseCenter, HouseQuickAccess, HouseDirectory, HousePassingThrough } from './HousePreferences';
 import { selectPassingQuote } from './passingContext';
 import { PASSING_QUOTES } from './passingQuotes';
+import { studioArrivalFromHouse } from '@/app/writers-studio/situatedWork';
 
 async function memberForHouse() {
   let memberId: string;
@@ -105,12 +106,14 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
           {livingWorks.length > 0 ? livingWorks.map((work) => (
             <div key={work.id}>
               <span>{work.title || 'An unnamed living work'}</span>
-              <Link href="/writers-studio">Writing →</Link>
+              {/* HOUSE-STUDIO-CIRCULATION-01R1 · H1-B: carries the Work the member
+                  points at — a pointer, never meaning. The Studio validates it. */}
+              <Link href={studioArrivalFromHouse(work.id)}>Writing →</Link>
             </div>
           )) : (
             <div>
               <span>No living Work is asking for space here.</span>
-              <Link href="/writers-studio">Writing →</Link>
+              <Link href="/writers-studio?from=house">Writing →</Link>
             </div>
           )}
           <div>
