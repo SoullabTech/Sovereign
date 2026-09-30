@@ -336,3 +336,32 @@ Its **F7** — *carried Work authority ceases when the manuscript/Work relations
 validates* — is already law here: `L5-withdrawn-declaration-does-not-survive` (killing
 `DC6-stored-last-work`) and walk check 7 (forged id). A cross-reference port of its test is
 worth doing in the #1534 rebuild; no second implementation.
+
+## 15 · Founder real-stack walk: a defect found, H1 not yet admitted (2026-09-30)
+
+**Witnesses at the time of writing:**
+
+| Witness | Result |
+|---|---|
+| GitHub CI on #1536 | ✅ 11/11 green before merge |
+| Mac gates on canonical `f5cd0211e` | ✅ `typecheck` "No TypeScript regressions" (222 vs baseline 239, Prisma generated) · ✅ `preflight` passed, including the Docker compose check |
+| Real-stack walk | ⚠️ **defect found**, admission held |
+
+**What the walk saw, on the admission build (`localhost:3100`) unless noted:**
+- Plain Develop entry: no House bar; the Work is named only because exactly one Work declares the manuscript. ✅
+- The House → ELEMENTAL_ALCHEMY → one-manuscript panel → Write → Develop sequence was seen on **port 3139**. That's the `pr1539-walk` worktree: it contains H1 but adds #1539 on top, so it isn't evidence for admission. The behaviour matched H1 in every step, including the theme pill resting on the Studio bar.
+
+**⚠️ Defect (H1's): a failed read hung the arrival on "Opening Writer's Studio…".**
+- `resolveStudioArrival` treated every non-ready phase (`unauthorized`, `error`) as `unknown`, meaning not read yet.
+- The Home controller tests for `unknown` before it tests for `unauthorized`.
+- So a member whose Studio API calls failed, arriving with `work=`, waited forever instead of seeing "Sign in…". The ordinary Studio showed "Sign in" in the same situation.
+- **A sibling defect** came to light from reading that code: a failed manuscripts read counted as an empty pool, which would show *This Work has no manuscript yet* and offer **Begin this Work**, creating a duplicate beside existing manuscripts.
+- **Repair:** `unknown` now means loading only. A failed Works or manuscripts read returns `fallback`, so the Studio's own handling is reached. Only a readable list, or a read that found none, can produce the arrival states.
+- **Tests:** new rules **A8** (a failed read defers to the Studio and never hangs) and **A9** (a failed manuscripts read is not an empty Work). **DA8** and **DA9** reproduce the shipped behaviour exactly, and both are killed by those rules.
+- **Results:** Studio and House suites 82/82, 880/880.
+
+**Why the walk hit it (the dev environment, not H1):** two dev servers on `localhost` (3100 = `h1-admission`, 3139 = `pr1539-walk`) use different databases, where the member has different UUIDs. Browsers share `localhost` cookies across ports, so 3139's `maia_member_id` claim contradicted 3100's session. `getMemberIdFromRequest` then correctly refused every Studio API call as a possible impersonation, while the House page (session cookie only) still rendered. That put the arrival into the failed-read path, which is what exposed the defect.
+
+**Also routed, not H1:** in Develop, selecting a section sets `s=` but the whole-Work Overview doesn't respond. It reproduces without the House crossing, so it predates H1; open PR #1532 is the likely home.
+
+**Standing:** H1 is **merged, not admitted**. The repair goes on a fresh branch from canonical; the walk resumes on the repaired build.
