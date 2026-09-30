@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 
 export type SourceStatus = 'extracting' | 'draft' | 'reviewed' | 'error';
-export type SourceKind = 'typed_text' | 'typed_doc' | 'handwritten_image' | 'scanned_pdf' | 'generic_file';
+export type SourceKind = 'typed_text' | 'typed_doc' | 'handwritten_image' | 'scanned_pdf';
 
 export interface StudioSource {
   id: string;

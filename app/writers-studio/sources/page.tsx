@@ -14,6 +14,8 @@ interface SourceDetail extends StudioSource {
   transcriptionReviewed: string | null;
 }
 
+const ACCEPT = '.txt,.md,.markdown,.docx,.pdf,.jpg,.jpeg,.png,.heic,.heif,.tif,.tiff,.webp';
+
 function SourceCard({ source, works, onChanged }: { source: StudioSource; works: LivingWork[]; onChanged: () => void }) {
   const [detail, setDetail] = useState<SourceDetail | null>(null);
   const [text, setText] = useState('');
@@ -104,7 +106,7 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
   const isPdf = source.mimeType === 'application/pdf' || source.originalName.toLowerCase().endsWith('.pdf');
   const needsManualTranscription =
     source.transcriptionStatus === 'error'
-    && (source.sourceKind === 'handwritten_image' || source.sourceKind === 'scanned_pdf' || source.sourceKind === 'generic_file');
+    && (source.sourceKind === 'handwritten_image' || source.sourceKind === 'scanned_pdf');
   const statusLabel = needsManualTranscription ? 'manual transcription' : source.transcriptionStatus;
 
   return (
@@ -148,11 +150,9 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
       ) : source.transcriptionStatus === 'error' ? (
         <div className="mt-4">
           <p className="text-[12px] opacity-60 mb-2">
-            {source.sourceKind === 'generic_file'
-              ? 'The original file is preserved. Studio does not automatically read this format yet; add or paste a transcription if you want to use its words.'
-              : needsManualTranscription
-                ? 'Automatic handwriting transcription is still being tested. The original remains preserved.'
-                : 'Studio could not transcribe this source. The original remains preserved.'}
+            {needsManualTranscription
+              ? 'Automatic handwriting transcription is still being tested. The original remains preserved.'
+              : 'Studio could not transcribe this source. The original remains preserved.'}
           </p>
           <button onClick={() => void openReview()} disabled={busy} className="text-[13px] underline underline-offset-4 disabled:opacity-40">Enter transcription manually</button>
         </div>
@@ -274,8 +274,8 @@ export default function WriterSourcesPage() {
             {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
             {uploading ? 'Bringing material in…' : 'Choose files or photographed pages'}
           </button>
-          <input ref={inputRef} type="file" multiple onChange={(e) => void uploadFiles(e.target.files)} className="hidden" />
-          <p className="text-[11.5px] opacity-40 mt-2">Beta: any file type up to 50 MB each. DOCX/PDF/TXT/MD and images can be read automatically; other formats are preserved intact for manual transcription.</p>
+          <input ref={inputRef} type="file" multiple accept={ACCEPT} onChange={(e) => void uploadFiles(e.target.files)} className="hidden" />
+          <p className="text-[11.5px] opacity-40 mt-2">.docx · .pdf · .txt · .md · JPG/PNG/HEIC/TIFF/WebP · up to 50 MB each</p>
           {message ? <p className="text-[12.5px] mt-3 opacity-65">{message}</p> : null}
         </section>
 

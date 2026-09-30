@@ -11,9 +11,7 @@ export const MAX_SOURCE_BYTES = 50 * 1024 * 1024;
 export const HANDWRITING_OCR_FLAG = 'WRITERS_STUDIO_HANDWRITING_OCR_ENABLED';
 export const MANUAL_TRANSCRIPTION_MESSAGE =
   'Automatic handwriting transcription is still being tested. The original is preserved for manual transcription.';
-export const GENERIC_FILE_MESSAGE =
-  'The original file is preserved. Automatic text extraction is not available for this format yet; you can enter or paste a transcription manually.';
-export type WorkbenchSourceKind = 'typed_text' | 'typed_doc' | 'handwritten_image' | 'scanned_pdf' | 'generic_file';
+export type WorkbenchSourceKind = 'typed_text' | 'typed_doc' | 'handwritten_image' | 'scanned_pdf';
 
 export function handwritingOcrEnabled(): boolean {
   return process.env[HANDWRITING_OCR_FLAG] === '1';
@@ -29,16 +27,11 @@ export function classifyWorkbenchUpload(mime: string, ext: string): WorkbenchSou
   return null;
 }
 
-export async function ingestWorkbenchUpload(
-  memberId: string,
-  file: File,
-  options: { allowGeneric?: boolean } = {},
-) {
+export async function ingestWorkbenchUpload(memberId: string, file: File) {
   if (file.size === 0) throw new IntakeError('Empty file', 400);
   if (file.size > MAX_SOURCE_BYTES) throw new IntakeError('File is larger than 50 MB', 413);
   const ext = extFromName(file.name);
-  const classified = classifyWorkbenchUpload(file.type, ext);
-  const initialKind: WorkbenchSourceKind | null = classified ?? (options.allowGeneric ? 'generic_file' : null);
+  const initialKind = classifyWorkbenchUpload(file.type, ext);
   if (!initialKind) throw new IntakeError('Unsupported file type', 415);
 
   const inserted = await query<{ id: string }>(
@@ -60,15 +53,12 @@ export async function ingestWorkbenchUpload(
       [relPath, id, memberId],
     );
     const storedPath = originalPath(memberId, id, ext);
-    const preserveForManualTranscription = async (
-      sourceKind: 'handwritten_image' | 'scanned_pdf' | 'generic_file',
-      message = MANUAL_TRANSCRIPTION_MESSAGE,
-    ) => {
+    const preserveForManualTranscription = async (sourceKind: 'handwritten_image' | 'scanned_pdf') => {
       await query(
         `UPDATE workbench_uploads
             SET source_kind = $1, transcription_status = 'error', error_message = $2, updated_at = NOW()
           WHERE id = $3 AND arranger_id = $4`,
-        [sourceKind, message, id, memberId],
+        [sourceKind, MANUAL_TRANSCRIPTION_MESSAGE, id, memberId],
       );
       return {
         id,
@@ -80,13 +70,6 @@ export async function ingestWorkbenchUpload(
     let sourceKind: WorkbenchSourceKind = initialKind;
     let status: 'draft' | 'reviewed' = 'reviewed';
     let text = '';
-
-    if (initialKind === 'generic_file') {
-      // Beta generic-file intake is custody-first and inert: preserve the exact
-      // bytes, do not execute or parse an unknown format, and let the member
-      // supply text manually if they want to use it in the Work.
-      return await preserveForManualTranscription('generic_file', GENERIC_FILE_MESSAGE);
-    }
 
     if (initialKind === 'typed_text') {
       text = await extractText(storedPath);

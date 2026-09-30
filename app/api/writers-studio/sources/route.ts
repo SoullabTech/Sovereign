@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { ingestWorkbenchUpload, IntakeError } from '@/lib/workbench/intake';
-import { writersStudioBetaAccess } from '@/lib/writersStudio/betaAccessServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,8 +40,7 @@ export async function POST(request: NextRequest) {
     const form = await request.formData();
     const file = form.get('file');
     if (!(file instanceof File)) return NextResponse.json({ error: 'Missing file' }, { status: 400 });
-    const beta = await writersStudioBetaAccess(memberId);
-    const source = await ingestWorkbenchUpload(memberId, file, { allowGeneric: beta.eligible });
+    const source = await ingestWorkbenchUpload(memberId, file);
     return NextResponse.json({ source }, { status: 201 });
   } catch (error) {
     if (error instanceof IntakeError) return NextResponse.json({ error: error.message }, { status: error.status });
