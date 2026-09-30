@@ -92,6 +92,16 @@ function defaultSovereignResponse() {
 }
 
 export async function POST(req: NextRequest) {
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    return NextResponse.json(
+      {
+        error: 'CABIN_COGNITION_NOT_LOCAL',
+        message: 'MAIA cognition is not yet localized to the Cabin data plane.',
+      },
+      { status: 503 },
+    );
+  }
+
   const start = Date.now();
 
   try {

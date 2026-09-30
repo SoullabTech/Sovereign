@@ -652,6 +652,8 @@ async function startCabinRuntimeIfNeeded() {
   const runtimeRoot = process.env.MAIA_CABIN_RUNTIME_ROOT || defaultRoot;
   const entrypoint = process.env.MAIA_CABIN_RUNTIME_ENTRYPOINT
     || path.join(runtimeRoot, 'server.js');
+  const cabinDataPath = process.env.MAIA_CABIN_DATA_PATH
+    || path.join(app.getPath('userData'), 'cabin', 'cabin.sqlite');
 
   cabinRuntime = createCabinRuntimeSupervisor({
     // Electron-specific host adapter. The supervisor itself never imports
@@ -677,6 +679,8 @@ async function startCabinRuntimeIfNeeded() {
     runtimeRoot,
     extraEnv: {
       MAIA_CABIN_RUNTIME_ROOT: runtimeRoot,
+      MAIA_CABIN_DATA_PATH: cabinDataPath,
+      MAIA_CABIN_ORIGIN: cabinOrigin(CABIN_PORT),
     },
   });
 

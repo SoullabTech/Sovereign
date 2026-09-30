@@ -36,6 +36,7 @@ import {
 import { memberRef } from '@/lib/privacy/memberRef';
 import { claimArrival, recordSuppliedArrival } from '@/lib/manuscript/source/arrivals';
 import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
+import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 const MAX_TEXT_CHARS = 2_000_000; // ~a very long book; hard cap for sanity
 
@@ -43,6 +44,35 @@ export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      const manuscripts = store.listManuscripts(member.id).map((manuscript) => {
+        const sections = store.listManuscriptSections(member.id, manuscript.id);
+        return {
+          id: manuscript.id,
+          title: manuscript.title,
+          createdAt: manuscript.createdAt,
+          sectionCount: sections.length,
+          charCount: sections.reduce((sum, section) => sum + section.body.length, 0),
+          keepCount: 0,
+          lastMemberDraftActivityAt: null,
+          draftCharCount: null,
+          hasDraftWriting: false,
+          hasWriting: sections.some((section) => /\S/.test(section.body)),
+          hasCurrentMemberContribution: sections.some((section) => /\S/.test(section.body)),
+        };
+      });
+      const response = NextResponse.json({ manuscripts });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -188,6 +218,86 @@ export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+
+      const input = (body ?? {}) as {
+        title?: unknown;
+        text?: unknown;
+        sections?: unknown;
+      };
+
+      if (typeof input.title !== 'string' || input.title.trim().length === 0) {
+        return NextResponse.json({ error: 'title is required' }, { status: 400 });
+      }
+
+      if (typeof input.text === 'string') {
+        if (input.text.trim().length === 0) {
+          return NextResponse.json({ error: 'text is empty' }, { status: 400 });
+        }
+        if (input.text.length > MAX_TEXT_CHARS) {
+          return NextResponse.json({ error: 'manuscript too large (2MB text max)' }, { status: 400 });
+        }
+        return NextResponse.json({ preview: segment(input.text), lossless: true });
+      }
+
+      if (!Array.isArray(input.sections) || input.sections.length === 0) {
+        return NextResponse.json(
+          { error: 'Provide { title, text } to preview or { title, sections } to save' },
+          { status: 400 },
+        );
+      }
+      if (input.sections.length > MAX_SECTIONS) {
+        return NextResponse.json({ error: 'too many sections' }, { status: 400 });
+      }
+
+      const sections = input.sections
+        .map((section, index) => {
+          const item = section as { heading?: unknown; body?: unknown };
+          if (typeof item.body !== 'string' || item.body.trim().length === 0) return null;
+          return {
+            position: index,
+            heading: typeof item.heading === 'string' && item.heading.trim() ? item.heading : null,
+            body: item.body,
+          };
+        })
+        .filter((section): section is { position: number; heading: string | null; body: string } => section !== null);
+
+      if (sections.length === 0) {
+        return NextResponse.json({ error: 'no non-empty sections' }, { status: 400 });
+      }
+
+      const manuscript = store.createManuscript(member.id, {
+        title: input.title.trim(),
+        provenance: 'member_uploaded',
+      });
+      store.addManuscriptSections(member.id, manuscript.id, sections);
+
+      const response = NextResponse.json(
+        {
+          id: manuscript.id,
+          sectionCount: sections.length,
+          sourceCustody: 'local_cabin',
+        },
+        { status: 201 },
+      );
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -3,6 +3,10 @@ import { requireMemberId } from '@/lib/auth/session';
 import { readHousePreferences } from '@/lib/house/preferencesStore';
 import { redirect } from 'next/navigation';
 import { query } from '@/lib/db/postgres';
+import { HOUSE_PLACES, type HousePlaceId } from '@/lib/house/catalog';
+import { defaultHousePreferences, type HousePreferenceSnapshot } from '@/lib/house/preferences';
+import { housePreferenceTag } from '@/lib/house/preferencesStore';
+import { cabinStore } from '@/lib/cabin/request';
 import styles from './house.module.css';
 import { MaiaThresholdLink } from './MaiaThresholdLink';
 import { HousePreferencesProvider, HouseMemberControls, HouseCenter, HouseQuickAccess, HouseDirectory, HousePassingThrough } from './HousePreferences';
@@ -11,6 +15,19 @@ import { PASSING_QUOTES } from './passingQuotes';
 import { houseWriterStudioHref } from '@/lib/house/houseCabinContext';
 
 async function memberForHouse() {
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const member = store.ensureLocalMember();
+      return {
+        id: member.id,
+        name: member.preferredName || member.name || 'there',
+      };
+    } finally {
+      store.close();
+    }
+  }
+
   let memberId: string;
   try { memberId = await requireMemberId(); }
   catch (error) {
@@ -22,6 +39,17 @@ async function memberForHouse() {
 }
 
 async function livingWorksForHouse(memberId: string) {
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      return store.listWorks(memberId)
+        .slice(0, 2)
+        .map((work) => ({ id: work.id, title: work.title }));
+    } finally {
+      store.close();
+    }
+  }
+
   const r = await query(
     `SELECT id, title FROM living_works
      WHERE member_id = $1
@@ -32,6 +60,32 @@ async function livingWorksForHouse(memberId: string) {
   return r.rows as { id: string; title: string | null }[];
 }
 
+function cabinHousePreferences(memberId: string): HousePreferenceSnapshot {
+  const eligibleIds = HOUSE_PLACES.map((place) => place.id) as HousePlaceId[];
+  const store = cabinStore();
+  try {
+    const saved = store.readHousePreferences(memberId);
+    const preferences = saved
+      ? {
+          version: 1 as const,
+          center: saved.center as HousePlaceId[],
+          shortcuts: saved.shortcuts as HousePlaceId[],
+          passingThrough: saved.passingThrough,
+        }
+      : defaultHousePreferences(eligibleIds);
+
+    const revision = saved?.revision ?? 0;
+    return {
+      preferences,
+      revision,
+      eligibleIds,
+      tag: housePreferenceTag(memberId, revision),
+    };
+  } finally {
+    store.close();
+  }
+}
+
 export const dynamic = 'force-dynamic';
 
 export async function HouseExperience({ current = 'house' }: { current?: 'home' | 'house' } = {}) {
@@ -39,7 +93,9 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
   if (!member) redirect('/signin');
   const firstName = member.name?.trim().split(/\s+/)[0] || 'there';
   const livingWorks = await livingWorksForHouse(member.id);
-  const housePreferences = await readHousePreferences(member.id, query);
+  const housePreferences = process.env.MAIA_CABIN_MODE === 'offline'
+    ? cabinHousePreferences(member.id)
+    : await readHousePreferences(member.id, query);
   const passingQuote = selectPassingQuote(PASSING_QUOTES, new Date());
 
   return (

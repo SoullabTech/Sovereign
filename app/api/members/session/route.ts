@@ -17,6 +17,7 @@ import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 import type { Tier, Role } from '@/config/accessMatrix';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import { CabinLocalStore } from '@/lib/cabin/localStore';
 
 interface SessionRow {
   member_id: string;
@@ -41,11 +42,67 @@ const COOKIE_OPTIONS = {
   path: '/',
 };
 
+async function cabinSessionResponse() {
+  const dataPath = process.env.MAIA_CABIN_DATA_PATH;
+  if (!dataPath) {
+    return NextResponse.json(
+      { authenticated: false, reason: 'cabin_data_unavailable' },
+      { status: 503 },
+    );
+  }
+
+  const cookieStore = await cookies();
+  const store = new CabinLocalStore(dataPath);
+
+  try {
+    const incoming = cookieStore.get('maia_cabin_session')?.value || null;
+    let member = store.resolveSession(incoming);
+    let issuedToken: string | null = null;
+
+    if (!member) {
+      member = store.ensureLocalMember();
+      issuedToken = store.issueSession(member.id);
+    }
+
+    const response = NextResponse.json({
+      authenticated: true,
+      member: {
+        id: member.id,
+        username: member.username,
+        name: member.name,
+        preferredName: member.preferredName || member.name,
+        onboarded: member.onboarded,
+        onboardingStep: member.onboardingStep,
+        tier: member.tier,
+        roles: member.roles,
+      },
+    });
+
+    if (issuedToken) {
+      response.cookies.set('maia_cabin_session', issuedToken, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false,
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365 * 5,
+      });
+    }
+
+    return response;
+  } finally {
+    store.close();
+  }
+}
+
 /**
  * GET /api/members/session
  * Returns current session state without modifying cookies
  */
 export async function GET() {
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    return cabinSessionResponse();
+  }
+
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('maia_session')?.value;
@@ -120,6 +177,10 @@ export async function GET() {
  * Call this after Stripe checkout or when you need to sync cookies with DB
  */
 export async function POST() {
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    return cabinSessionResponse();
+  }
+
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('maia_session')?.value;
