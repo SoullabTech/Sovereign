@@ -31,6 +31,14 @@
  *
  * That is strictly safer: stored context can go stale against a declaration
  * the member has since withdrawn. Derived context cannot.
+ *
+ * ── AMENDED 2026-09-30 (HOUSE-STUDIO-CIRCULATION-01R1, founder R3) ─────────
+ *
+ * PRECEDENCE, NOT WEAKENING: valid explicit context → inference → ambiguity.
+ * A member who enters M through W may carry W beside M in the URL; it has
+ * authority only while W is theirs and W declares M, re-validated on every
+ * render. The ambiguity rule below is unchanged. Choice resolves context,
+ * not ontology. See ./situatedWork.ts.
  */
 
 import type { LivingWork, LivingWorksPhase } from './useLivingWorks';

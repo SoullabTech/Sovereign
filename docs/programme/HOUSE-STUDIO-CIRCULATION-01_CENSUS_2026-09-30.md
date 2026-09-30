@@ -102,3 +102,46 @@ mistaken for settled.
 
 ⛔ No provider · ⛔ no store · ⛔ no inferred Work · ⛔ no inferred intent · ⛔ no MAIA
 interpretation at the crossing · ⛔ field/relationship questions (HOUSE-FIELD-01) not opened.
+
+---
+
+## 8 · Founder rulings (2026-09-30)
+
+| # | Ruling |
+|---|---|
+| R1 | **Convergence Step 2 — Work-primary composition.** |
+| R2 | **(b).** The House remains the whole, not a place in the crossing vocabulary. The existing Writing doorway carries the Work id; `FACET_CROSSINGS` continues to govern movement *between* places. |
+| R3 | **Yes — a scoped declaration of present context, not a durable declaration of relationship.** *Choice resolves context, not ontology.* Structural truth (durable declarations: M may belong to W and W2) and situational truth (the present act: "I am entering M as part of W right now") are kept apart. WS2-03B's ambiguity rule is **not weakened**; its precedence becomes **valid explicit context → inference → ambiguity**, and the resolved Work carries its authority (`member_explicit` \| `relationship_inferred`) so explicit context never masquerades as inference. The carried W has authority only while (1) the member holds M, (2) the member holds W, (3) the member has declared M into W — re-validated on every load; otherwise the URL is never trusted. |
+| R4 | **Commit `ea-house.md` from the Mac first; implementation descends from that authority.** |
+
+Governing sentence of the act: ***A member's explicit movement may declare the context in which
+something is being encountered without declaring what that thing ultimately is or exclusively
+belongs to.***
+
+`WHAT'S ALIVE` (`LIMIT 2`, recency) is **not** solved in this unit; until member-directed
+aliveness exists, UI wording must not imply choice or salience beyond recency. Its own later act.
+
+## 9 · `HOUSE-STUDIO-CIRCULATION-01R1 — WORK-CONTEXT CONTINUITY` · progress
+
+| Build item | Standing |
+|---|---|
+| 1 · commit `ea-house.md` | ⛔ **OWED — only on the Mac Studio; unreachable from a remote session** |
+| 3 · Work → manuscripts reverse lookup (`resolveWorkArrival`) | ✅ law layer landed |
+| 4 · none / one / several (+ `absent`, `unknown`) | ✅ |
+| 6 · M↔W validation on every resolve | ✅ (`resolveSituatedWorkContext`) |
+| 7 · WS2-03B precedence amendment | ✅ law layer; header of `workContext.ts` records it |
+| 2 · House doorway carries Work id | ⏸ address builder `studioArrivalFromHouse` landed; **`app/house/page.tsx` not edited** (R4) |
+| 5 · 8 · 9 · carry M+W through Studio navigation, return to W | ⏸ address builder `situatedManuscriptAddress` landed; **no Studio host wired** |
+| 10 · no `memberId` / no `ALLOWED_CROSSINGS` packet / no "recently entered" / no "Review related material" | ✅ asserted structurally |
+
+Artifacts: `app/writers-studio/situatedWork.ts` · `app/writers-studio/__tests__/situatedWork.test.ts`.
+**Lethality first**: 8 laws (L1–L8), 9 defeat candidates (DC1 choice ignored · DC2 first-row
+default · DC3 recency default · DC4 URL trusted · DC5 ownership without relationship · DC6
+stored last-Work · DC7 authority collapsed · DC8 choice rewrites ontology · DC9 eager before
+ready) — **every candidate dies on its named law; every law kills at least one candidate.**
+Run: `jest app/writers-studio/__tests__/situatedWork.test.ts` → with the existing
+`shellProjection` suite, **84/84 pass** (jest 29 / TS 5.6.3 from a scratchpad; the container has
+no project `node_modules` — the founder's run is the evidence of record).
+
+⛔ No UI · ⛔ no House presentation change · ⛔ no Studio host wired · ⛔ no schema · ⛔ no deploy.
+Wiring (items 2, 5, 8, 9) opens once `ea-house.md` is committed.
