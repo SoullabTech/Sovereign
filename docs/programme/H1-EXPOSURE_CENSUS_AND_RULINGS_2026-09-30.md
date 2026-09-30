@@ -7,8 +7,8 @@ Canonical at acceptance: 89f7876e (merge of #1540). See §6 for applicability
 Subject: H1 = #1536 (House → Writer's Studio continuity bridge) + #1538 (H1-R2
          multi-manuscript choice), both merged, neither deployed
 Production runtime: 04005ca7c (pre-H1)
-Sibling lane: EARLY-FIELD-01 (#1541), which governs the Living Field instrument
-              only and is not touched by this record
+Sibling lane: EARLY-FIELD-01 (#1542, authoritative; #1541 superseded), which governs
+              the Living Field instrument only and is not touched by this record
 Standing: CENSUS COMPLETE · RULINGS TAKEN · ratified by the PR that merges this file
           · ⛔ H1 COHORT GATE NOT BUILT
 This record introduces no runtime behaviour.
