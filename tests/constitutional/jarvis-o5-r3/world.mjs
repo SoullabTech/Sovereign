@@ -20,7 +20,21 @@
  * ⛔ This is a test world, not an implementation, and never a seed for one.
  */
 export const LEASE = 'home/writer.lease';
+/** Canonical (W v2) grant ledger. */
 export const LEDGER = 'home/work-units-v2/execution-grants/wu-o5r3.jsonl';
+/** Human-provider grant ledger (R3-R2: inside the grant authority domain). */
+export const HUMAN_LEDGER = 'home/execution-grants/wu-o5r3.jsonl';
+/** The grant authority domain (R3-R1). The lease governs exactly these. */
+export const GRANT_LEDGERS = Object.freeze([LEDGER, HUMAN_LEDGER]);
+/** Home writers OUTSIDE the grant domain (R3-R1): the lease must not serialize them. */
+export const NON_GRANT_PATHS = Object.freeze([
+  'home/work-units-v2/wu-o5r3.json',           // Work Unit record
+  'home/sessions/s-o5r3.json',                 // session record
+  'home/runs/run-o5r3.json',                   // Path A run record
+  'home/work-units-v2/recovery/wu-o5r3.jsonl', // general recovery disposition
+]);
+/** The legacy per-append lock beside a ledger (`<wu>.lock`), which lease-unaware writers honour. */
+export const appendLockOf = (ledger) => ledger.replace(/\.jsonl$/, '.lock');
 
 export function makeWorld({ host = 'studio', probeUndeterminable = false } = {}) {
   const files = new Map();
@@ -70,7 +84,7 @@ export function makeWorld({ host = 'studio', probeUndeterminable = false } = {})
       },
       write(p, bytes) { files.set(p, bytes); },
       append(p, bytes) {
-        writes.push({ path: p, bytes });
+        writes.push({ path: p, bytes, appendLockHeld: files.has(appendLockOf(p)) });
         files.set(p, (files.get(p) ?? '') + bytes);
       },
     },

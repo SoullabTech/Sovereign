@@ -14,9 +14,10 @@
 import { LEASE_FALSIFIERS } from './lease-falsifiers.mjs';
 import { REFERENCE as LEASE_REFERENCE } from './lease-reference.mjs';
 import { LEASE_CANDIDATES, buildLease } from './lease-candidates.mjs';
-import { TAIL_FALSIFIERS, REASON_FALSIFIERS, SETTLEMENT_FALSIFIERS } from './settlement-falsifiers.mjs';
+import { REASON_FALSIFIERS, SETTLEMENT_FALSIFIERS } from './settlement-falsifiers.mjs';
+import { TAIL_FALSIFIERS } from './tail-falsifiers.mjs';
+import { TAIL_REFERENCE, TAIL_CURRENT, TAIL_CANDIDATES } from './tail-reference-candidates.mjs';
 import {
-  TAIL_REFERENCE, TAIL_CURRENT, TAIL_CANDIDATES,
   REASON_REFERENCE, REASON_CURRENT, REASON_CANDIDATES,
   SETTLEMENT_REFERENCE, SETTLEMENT_CANDIDATES,
 } from './settlement-reference-candidates.mjs';
@@ -36,7 +37,11 @@ async function group(title, falsifiers, reference, candidates) {
   const killers = new Set();
   for (const c of candidates) {
     const deaths = [];
-    for (const id of ids) if (!(await falsifiers[id](subjectOf(c))).pass) deaths.push(id);
+    let why = '';
+    for (const id of ids) {
+      const r = await falsifiers[id](subjectOf(c));
+      if (!r.pass) { deaths.push(id); if (id === c.named) why = r.failures[0]; }
+    }
     const namedDied = deaths.includes(c.named);
     if (namedDied) killers.add(c.named);
     const extra = deaths.filter((id) => id !== c.named);
@@ -46,6 +51,7 @@ async function group(title, falsifiers, reference, candidates) {
     if (!ok) bad += 1;
     out(`  ${c.id} → ${ok ? 'KILLED' : 'DEFECT'} on ${c.named}${namedDied ? '' : ' (SURVIVED — repair the suite)'}`);
     out(`        ${c.law}`);
+    if (why) out(`        why: ${why}`);
     for (const id of extra) out(`        + ${id} ${id in c.collateral ? `CLASSIFIED: ${c.collateral[id]}` : 'UNCLASSIFIED'}`);
     for (const id of stale) out(`        ! declared collateral ${id} did not occur (stale)`);
   }
@@ -76,12 +82,12 @@ out('One process writes a delegation home\'s grant ledgers. The per-append lock 
   if (!ok) bad += 1;
 }
 
-await group('R3-L · process-lifetime writer lease', LEASE_FALSIFIERS, LEASE_REFERENCE, LEASE_CANDIDATES);
-await group('R3-T · tail-tolerant grant-ledger reader + single-write append', TAIL_FALSIFIERS, TAIL_REFERENCE, TAIL_CANDIDATES);
+await group('R3-L / R3-D · process-lifetime writer lease over the grant authority domain', LEASE_FALSIFIERS, LEASE_REFERENCE, LEASE_CANDIDATES);
+await group('R3-T · grant-ledger tail: commit marker · single write · quarantine-before-truncate · no repair of history', TAIL_FALSIFIERS, TAIL_REFERENCE, TAIL_CANDIDATES);
 await group('R3-C · honest reason for CLAIMED on ROUTED (relabel only)', REASON_FALSIFIERS, REASON_REFERENCE, REASON_CANDIDATES);
 await group('R3-S · refused invalidate / consume returns are surfaced', SETTLEMENT_FALSIFIERS, SETTLEMENT_REFERENCE, SETTLEMENT_CANDIDATES);
 
-await classA('Class A · canonical grant-ledger reader as it stands (read laws only; append is not exported, so R3-T2\'s append half and R3-T4…T6 are not run)',
+await classA('Class A · canonical grant-ledger reader as it stands (read laws only; append is not exported, so R3-T2\'s append half and R3-T4…T10 are not run)',
   { 'R3-T1': TAIL_FALSIFIERS['R3-T1'], 'R3-T3': TAIL_FALSIFIERS['R3-T3'] },
   TAIL_CURRENT, ['R3-T1', 'R3-T3']);
 await classA('Class A · Path B classifier as it stands', REASON_FALSIFIERS, REASON_CURRENT, ['R3-C1']);

@@ -8,17 +8,26 @@
  *   acquire(world, self, { nonce, now }) → { ok:true, lease, took_over_from?, proof? }
  *                                        | { ok:false, reason, holder? }
  *   release(world, self, lease)          → { ok:true } | { ok:false, reason }
- *   append(world, self, lease, record)   → { ok:true } | { ok:false, reason }   (the ONLY ledger mutation)
+ *   append(world, self, lease, record, ledger = LEDGER)
+ *                                        → { ok:true } | { ok:false, reason }   (the ONLY grant-ledger mutation,
+ *                                          for EVERY ledger in the grant domain, human-provider included)
+ *   writeOther(world, self, path, bytes) → { ok:true } | { ok:false, reason }   (a home write OUTSIDE the grant domain;
+ *                                          the lease does not govern it, R3-R1)
  *   readLedger(world, self)              → { ok:true, events }                  (never needs the lease)
+ *
+ * Mixed-version law (R3-R10): the lease holder STILL takes the legacy per-append
+ * lock for every append, and never treats an existing one as abandoned merely
+ * because it holds the lease, so a lease-unaware writer on an older binding keeps
+ * seeing GRANT_LEDGER_BUSY and is never written through.
  *
  * Refusal vocabulary: HOME_LEASE_HELD · HELD_BY_THIS_PROCESS · LEASE_OWNER_UNDETERMINABLE ·
  * LEASE_RECORD_UNREADABLE · WRITER_LEASE_NOT_HELD · NOT_LEASE_OWNER.
  */
-import { LEASE, LEDGER } from './world.mjs';
+import { LEASE, LEDGER, GRANT_LEDGERS, appendLockOf } from './world.mjs';
 
 export const REASONS = Object.freeze([
   'HOME_LEASE_HELD', 'HELD_BY_THIS_PROCESS', 'LEASE_OWNER_UNDETERMINABLE',
-  'LEASE_RECORD_UNREADABLE', 'WRITER_LEASE_NOT_HELD', 'NOT_LEASE_OWNER',
+  'LEASE_RECORD_UNREADABLE', 'WRITER_LEASE_NOT_HELD', 'NOT_LEASE_OWNER', 'GRANT_LEDGER_BUSY',
 ]);
 
 export const recordOf = (self, nonce, now = 0) => JSON.stringify({
@@ -46,9 +55,18 @@ export function judgeHolder(world, holder, self) {
   return 'UNDETERMINABLE';
 }
 
-function currentHolder(world, self, lease) {
+/** Fencing: the DURABLE lease record names this exact process and lease incarnation. */
+export function holdsLease(world, self, lease) {
   const cur = parseLease(world.fs.read(LEASE));
   return !!(cur && lease && cur.owner_nonce === lease.owner_nonce && sameProcess(cur, self));
+}
+
+/** One append under the legacy per-append lock; an existing lock is never cleared here. */
+export function appendUnderLock(world, ledger, record, holder = 'lease-holder') {
+  const lock = appendLockOf(ledger);
+  if (!world.fs.createExclusive(lock, holder)) return { ok: false, reason: 'GRANT_LEDGER_BUSY' };
+  try { world.fs.append(ledger, JSON.stringify(record) + '\n'); } finally { world.fs.remove(lock, holder); }
+  return { ok: true };
 }
 
 export const REFERENCE = Object.freeze({
@@ -81,10 +99,16 @@ export const REFERENCE = Object.freeze({
     return world.fs.remove(LEASE, cur) ? { ok: true } : { ok: false, reason: 'NOT_LEASE_OWNER' };
   },
 
-  async append(world, self, lease, record) {
+  async append(world, self, lease, record, ledger = LEDGER) {
+    if (!GRANT_LEDGERS.includes(ledger)) throw new Error('NOT_A_GRANT_LEDGER');
     // Fencing: the DURABLE lease record is checked at the moment of every mutation.
-    if (!currentHolder(world, self, lease)) return { ok: false, reason: 'WRITER_LEASE_NOT_HELD' };
-    world.fs.append(LEDGER, JSON.stringify(record) + '\n');
+    if (!holdsLease(world, self, lease)) return { ok: false, reason: 'WRITER_LEASE_NOT_HELD' };
+    return appendUnderLock(world, ledger, record);
+  },
+
+  async writeOther(world, self, target, bytes) {
+    if (GRANT_LEDGERS.includes(target)) throw new Error('GRANT_LEDGER_IS_NOT_OTHER');
+    world.fs.write(target, bytes);
     return { ok: true };
   },
 

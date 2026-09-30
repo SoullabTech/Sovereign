@@ -97,6 +97,7 @@
     "verify:jarvis-o5-r1-freeze": "node scripts/verify-jarvis-o5-r1-freeze.mjs",
     "matrix:jarvis-o5-r2": "node tests/constitutional/jarvis-o5-r2/matrix.mjs",
     "matrix:jarvis-o5-r3": "node tests/constitutional/jarvis-o5-r3/matrix.mjs",
+    "verify:jarvis-o5-r3-freeze": "node scripts/verify-jarvis-o5-r3-freeze.mjs",
     "test:jarvis-o5-r2": "cd jarvis-desktop && node --test test/o5-path-b-recovery.test.mjs test/o5-path-a-orphan.test.mjs test/o5-recovery-census.test.mjs",
     "jarvis:o5-census": "node scripts/builder/o5-recovery-census.mjs",
     "verify:flagship-freeze": "npx tsx scripts/verify-flagship-freeze.ts",

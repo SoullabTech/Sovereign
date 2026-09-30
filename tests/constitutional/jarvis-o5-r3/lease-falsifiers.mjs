@@ -13,7 +13,7 @@
  * model world (`world.mjs`). They test the invariant AT THE BOUNDARY
  * (acquisition, mutation, release), not whether two appends corrupt a file.
  */
-import { makeWorld, LEASE, LEDGER, ledgerLines } from './world.mjs';
+import { makeWorld, LEASE, LEDGER, HUMAN_LEDGER, GRANT_LEDGERS, NON_GRANT_PATHS, appendLockOf, ledgerLines } from './world.mjs';
 import { recordOf } from './lease-reference.mjs';
 
 const expect = (f, cond, msg) => { if (!cond) f.push(msg); };
@@ -196,7 +196,74 @@ export const L9 = (s) => run(async (f) => {
   expect(f, w.files.size === snapshot.size && [...snapshot].every(([k, v]) => w.files.get(k) === v), 'the read changed the home');
 });
 
+/**
+ * R3-D1 — every ledger in the grant authority domain is inside the lease (R3-R2, R3-R3):
+ * the human-provider grant ledger refuses lease-less mutation exactly as the canonical one does.
+ */
+export const D1 = (s) => run(async (f) => {
+  for (const ledger of GRANT_LEDGERS) {
+    const w = makeWorld();
+    const A = w.spawn(100, 1);
+    const B = w.spawn(200, 2);
+    const a = await s.acquire(w, A, { nonce: 'na' });
+    for (const lease of [undefined, { owner_nonce: 'forged' }, a.lease]) {
+      const r = await s.append(w, B, lease, { event: 'ISSUED', by: 'B' }, ledger);
+      expect(f, !r.ok, `${ledger}: a non-holder mutated it with ${JSON.stringify(lease)}`);
+    }
+    expect(f, w.fs.read(ledger) === null, `${ledger}: a lease-less write reached the grant ledger`);
+    const ra = await s.append(w, A, a.lease, { event: 'ISSUED', by: 'A' }, ledger);
+    expect(f, ra.ok && w.fs.read(ledger) !== null, `${ledger}: the holder could not write`);
+  }
+});
+
+/**
+ * R3-D2 — scope is the grant domain, not the home (R3-R1): while the lease is held, other
+ * processes still write Work Unit, session, Path A run and recovery records unimpeded.
+ */
+export const D2 = (s) => run(async (f) => {
+  const w = makeWorld();
+  const A = w.spawn(100, 1);
+  const B = w.spawn(200, 2);
+  await s.acquire(w, A, { nonce: 'na' });
+  for (const target of NON_GRANT_PATHS) {
+    const r = await s.writeOther(w, B, target, `{"by":"B"}`);
+    expect(f, r?.ok && w.fs.read(target) === '{"by":"B"}', `${target}: a non-grant home write was serialized behind the grant lease (${r?.reason})`);
+  }
+  const bare = makeWorld();
+  const C = bare.spawn(300, 3);
+  const r = await s.writeOther(bare, C, NON_GRANT_PATHS[0], '{}');
+  expect(f, r?.ok, 'a non-grant write required a lease with no lease in existence');
+});
+
+/**
+ * R3-L10 — mixed-version safety (R3-R10): until every grant writer is lease-aware, the lease
+ * holder still takes the legacy per-append lock, and never clears one it did not take.
+ */
+export const L10 = (s) => run(async (f) => {
+  // (a) a lease-unaware legacy writer holds the append lock → the holder is refused, nothing is written through
+  { const w = makeWorld(); const A = w.spawn(100, 1);
+    const a = await s.acquire(w, A, { nonce: 'na' });
+    const lock = appendLockOf(LEDGER);
+    w.fs.createExclusive(lock, 'legacy-writer');
+    const r = await s.append(w, A, a.lease, { event: 'CLAIMED' });
+    expect(f, !r.ok && r.reason === 'GRANT_LEDGER_BUSY', `holder wrote while a legacy writer held the append lock (${r.ok ? 'accepted' : r.reason})`);
+    expect(f, w.fs.read(lock) === 'legacy-writer', 'the legacy writer\'s append lock was removed or replaced');
+    expect(f, w.fs.read(LEDGER) === null, 'the ledger changed under a legacy writer\'s lock'); }
+  // (b) every holder append happens under the append lock, and releases only its own
+  { const w = makeWorld(); const A = w.spawn(100, 1);
+    const a = await s.acquire(w, A, { nonce: 'na' });
+    for (const ledger of GRANT_LEDGERS) await s.append(w, A, a.lease, { event: 'ISSUED' }, ledger);
+    expect(f, w.writes.length === GRANT_LEDGERS.length && w.writes.every((x) => x.appendLockHeld), 'an append happened without the legacy append lock held');
+    expect(f, GRANT_LEDGERS.every((l) => !w.fs.exists(appendLockOf(l))), 'the holder left an append lock behind'); }
+  // (c) acquiring the lease never clears an existing append lock
+  { const w = makeWorld(); const A = w.spawn(100, 1);
+    w.fs.createExclusive(appendLockOf(LEDGER), 'legacy-writer');
+    await s.acquire(w, A, { nonce: 'na' });
+    expect(f, w.fs.read(appendLockOf(LEDGER)) === 'legacy-writer', 'lease acquisition treated a legacy append lock as residue'); }
+});
+
 export const LEASE_FALSIFIERS = Object.freeze({
   'R3-L1': L1, 'R3-L2': L2, 'R3-L3': L3, 'R3-L4': L4, 'R3-L5': L5,
-  'R3-L6': L6, 'R3-L7': L7, 'R3-L8': L8, 'R3-L9': L9,
+  'R3-L6': L6, 'R3-L7': L7, 'R3-L8': L8, 'R3-L9': L9, 'R3-L10': L10,
+  'R3-D1': D1, 'R3-D2': D2,
 });

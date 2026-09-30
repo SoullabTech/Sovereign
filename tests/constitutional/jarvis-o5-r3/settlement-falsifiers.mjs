@@ -1,7 +1,7 @@
 /**
- * JARVIS O5-R3 — ledger-tail, reason-code and settlement-surfacing FALSIFIERS.
+ * JARVIS O5-R3 — reason-code and settlement-surfacing FALSIFIERS.
+ * (The ledger-tail laws R3-T1…T10, scope item 1, live in tail-falsifiers.mjs.)
  *
- *   R3-T1…T6  tail-tolerant grant-ledger reader + single-write append     (scope item 1)
  *   R3-C1…C3  honest reason for a CLAIMED grant on a ROUTED unit, relabel only (scope item 3)
  *   R3-S1…S3  refused consume / invalidate returns are surfaced          (scope item 4)
  *
@@ -19,77 +19,6 @@ function run(fn) {
   try { fn(failures); } catch (e) { failures.push(`threw: ${e.message}`); }
   return { pass: failures.length === 0, failures };
 }
-/** Only a corruption refusal counts; an incidental TypeError is not "failing loudly". */
-const throws = (fn) => { try { fn(); return false; } catch (e) { return /CORRUPT/.test(String(e?.message)); } };
-
-// ── Tail ──────────────────────────────────────────────────────────────────────
-// Subject: { parse(text) → { events, uncommitted_tail: null | { bytes } } (throws on corruption),
-//            append(io, record) }  where io = { text, writes[], quarantined[], write(b), truncate(n), quarantine(b) }.
-// The newline is the commit marker: a line is committed iff it is newline-terminated.
-
-export function makeIo(text = '') {
-  const io = {
-    text, writes: [], quarantined: [], truncations: [],
-    write(b) { io.writes.push(b); io.text += b; },
-    truncate(n) { io.truncations.push(n); io.text = io.text.slice(0, n); },
-    quarantine(b) { io.quarantined.push(b); },
-  };
-  return io;
-}
-
-/** R3-T1 — an unterminated final line is an uncommitted write: skipped and recorded, not fatal. */
-export const T1 = (s) => run((f) => {
-  const r = s.parse('{"e":"ISSUED"}\n{"e":"CLAIMED"}\n{"e":"CONS');
-  expect(f, r?.events?.length === 2, `committed events lost around a torn tail (${r?.events?.length})`);
-  expect(f, r?.uncommitted_tail?.bytes === '{"e":"CONS', 'the torn tail was not recorded as uncommitted');
-  const clean = s.parse('{"e":"ISSUED"}\n');
-  expect(f, clean?.uncommitted_tail === null, 'a clean ledger reported an uncommitted tail');
-});
-
-/** R3-T2 — a committed (newline-terminated) corrupt line still fails loudly, on read and on append. */
-export const T2 = (s) => run((f) => {
-  expect(f, throws(() => s.parse('{"a":1}\n{bad\n{"b":2}\n')), 'mid-file corruption was read silently');
-  expect(f, throws(() => s.parse('{"a":1}\n{bad\n')), 'a committed corrupt final line was read silently');
-  const io = makeIo('{bad\n{"a":1}\n');
-  expect(f, throws(() => s.append(io, { e: 'X' })), 'append proceeded over a corrupt ledger');
-  expect(f, io.text === '{bad\n{"a":1}\n', 'append altered a corrupt ledger');
-});
-
-/** R3-T3 — commitment is the newline, never parse success: an unterminated line that parses is still uncommitted. */
-export const T3 = (s) => run((f) => {
-  const r = s.parse('{"a":1}\n{"x":1}');
-  expect(f, r?.events?.length === 1, 'an unterminated line was treated as committed because it parsed');
-  expect(f, r?.uncommitted_tail?.bytes === '{"x":1}', 'the unterminated line was not recorded as uncommitted');
-});
-
-/** R3-T4 — record and newline are ONE write, so a crash cannot commit a record without its marker or vice versa. */
-export const T4 = (s) => run((f) => {
-  const io = makeIo('');
-  s.append(io, { e: 'ISSUED' });
-  expect(f, io.writes.length === 1, `append issued ${io.writes.length} writes`);
-  expect(f, io.writes[0] === '{"e":"ISSUED"}\n', 'the single write is not exactly record + newline');
-});
-
-/** R3-T5 — an append after a torn tail never manufactures a committed corrupt line. */
-export const T5 = (s) => run((f) => {
-  const io = makeIo('{"a":1}\n{"par');
-  s.append(io, { b: 2 });
-  let r = null;
-  try { r = s.parse(io.text); } catch (e) { f.push(`append after a torn tail bricked the ledger: ${e.message}`); return; }
-  expect(f, r.events.length === 2 && r.events[1].b === 2 && r.uncommitted_tail === null, 'the ledger is not exactly the committed prefix + the new record');
-});
-
-/** R3-T6 — uncommitted bytes are never silently discarded; a clean ledger is never truncated. */
-export const T6 = (s) => run((f) => {
-  const io = makeIo('{"a":1}\n{"par');
-  s.append(io, { b: 2 });
-  expect(f, io.quarantined.includes('{"par'), 'the torn fragment was discarded without a quarantine record');
-  const clean = makeIo('{"a":1}\n');
-  s.append(clean, { b: 2 });
-  expect(f, clean.truncations.length === 0 && clean.quarantined.length === 0, 'a clean ledger was truncated or quarantined');
-});
-
-export const TAIL_FALSIFIERS = Object.freeze({ 'R3-T1': T1, 'R3-T2': T2, 'R3-T3': T3, 'R3-T4': T4, 'R3-T5': T5, 'R3-T6': T6 });
 
 // ── Reason code (subject: a Path B classifier { classifyWorkUnit }) ────────────
 const one = (c, fx) => c.classifyWorkUnit(fx)[0];
