@@ -60,7 +60,7 @@ proves it **ABSENT**; **UNKNOWN** gates to `BLOCKED_BY_EVIDENCE`.
 | **F1** Restart-from-zero | interruption discards lawful completed progress | clean-boundary crash must RESUME; every effect sent exactly once, every step ledgered exactly once |
 | **F2** Blind resume | trusting checkpoint over live authority | six cases must GATE and send/ledger nothing: core re-scoped · unit withdrawn · canonical tip moved · checkpoint claims a **wider** core (validly resealed) · seal broken · foreign unit |
 | **F3** Dead checkpoint | written, never consumed | resume must read the checkpoint |
-| **F4** Error flattening | cause replaces the specific code | every live `failure_class` code (**47**, parsed from the three runtime sources) keeps its code, maps to one of seven causes with the lawful response, carries no authority; an unknown code **fails closed** (`cause: null · STOP`) |
+| **F4** Error flattening | cause replaces the specific code | every live `failure_class` code (**47**, parsed from the three runtime sources — ⚠️ **SUPERSEDED 2026-09-30 by the O5-R2 census §5.1: the true live count is 63; the extractor misses 16 routed through `DELEGATE_EXIT_FAILURES` and thrown `error.code`. The law stands; the instrument's reach was narrower than claimed.**) keeps its code, maps to one of seven causes with the lawful response, carries no authority; an unknown code **fails closed** (`cause: null · STOP`) |
 | **F5** Evidence escalation | proposal/finding becomes O2 work or O3 authority | O2 and O3 digests unchanged; ledgered as `proposal`/`finding`; a proposal surfaces as exactly one O1 `CANDIDATE` with empty grants; a finding never does |
 | **F6** Cross-lane write leakage | a finding carries mutation into another lane | 16 forbidden fields + one unlisted field each **explicitly refused**; lawful finding admitted with a closed field set and reaches the lane's inbox; the naive consumer writes nothing |
 | **F7** Cosmetic recovery | reads the checkpoint, reconstructs from the original unit | continuation state must equal the lawful pre-interruption history, across two independent histories (salts) and two crash depths |
@@ -143,8 +143,8 @@ candidates die on exactly one falsifier. The three with collateral are
 ## 7. Owed next — ⛔ not started
 
 - O5-R1 implementation written **to** this frozen suite: the conforming decisions
-  must be wired into the real runtime (`reconcileOrphanedRuns()` is F1's DC-1 in
-  production today), W4 gains `finding`/`proposal`, and the matrix must run
+  must be wired into the real runtime (~~`reconcileOrphanedRuns()` is F1's DC-1 in
+  production today~~ — ⚠️ **SUPERSEDED by O5-R2 census §1: it has no caller; the live behaviour is a silent orphan, and even if called it would be DC-9-like, not DC-1**), W4 gains `finding`/`proposal`, and the matrix must run
   against the real decisions, not the double.
 - A real-effect probe inventory (§6).
 
