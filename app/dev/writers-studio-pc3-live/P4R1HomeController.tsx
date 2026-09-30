@@ -185,7 +185,7 @@ export default function P4R1HomeController() {
       onMakeWork={(manuscriptId, title) => void onMakeWork(manuscriptId, title)}
       onAddToWork={(manuscriptId, workId) => void onAddToWork(manuscriptId, workId)}
       onStartWriting={(workId) => void onStartWriting(workId)}
-      onImport={() => router.push(IMPORT_HREF)}
+      onImport={() => window.location.assign(IMPORT_HREF)}
       onSources={() => router.push('/writers-studio/sources')}
     />
   );
