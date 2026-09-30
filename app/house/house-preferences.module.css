@@ -35,10 +35,10 @@
 .conflict { display:flex; gap:10px; flex-wrap:wrap; margin:15px 0; }
 .actions { display:flex; justify-content:flex-end; gap:12px; border-top:1px solid rgba(222,188,145,.2); padding-top:20px; }
 .actions .save { background:rgba(195,146,74,.22); border-color:#9d7b4b; }
-.member { display:flex; flex-direction:column; align-items:flex-start; gap:3px; }
+.member { display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0; }
 .arrange { border:0; padding:0; min-height:32px; color:#c5b193; background:none; cursor:pointer; font:11px/1.4 Arial,sans-serif; letter-spacing:.02em; }
 .arrange:hover { color:#f0d5ab; }
-.notice { display:block; max-width:260px; color:#d0b995; font:12px/1.5 Arial,sans-serif; letter-spacing:0; white-space:normal; }
+.notice { display:block; width:100%; max-width:100%; color:#d0b995; font:12px/1.5 Arial,sans-serif; letter-spacing:0; white-space:normal; overflow-wrap:anywhere; }
 .notice a { color:inherit; }
 @media(max-width:520px) { .panel { padding:20px; } .panel h2 { font-size:28px; } .actions { flex-wrap:wrap; } }
 
