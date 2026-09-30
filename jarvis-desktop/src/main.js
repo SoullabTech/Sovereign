@@ -25,6 +25,11 @@ const CWUV2 = require('./canonical-work-unit-v2.js');
 // a Desktop-local copy would fork it and defeat the containment.
 const { decideCorrectness } = require('./correctness');
 
+// SOULLAB-DESKTOP-UNIFICATION-01. Standalone JARVIS owns application lifecycle;
+// when composed by the Soullab host it contributes its governed realm and IPC
+// surface without taking over userData, the single-instance lock, menu, or app events.
+const STANDALONE = require.main === module;
+
 // ---------------------------------------------------------------------------
 // Instance identity.
 //
@@ -41,7 +46,7 @@ const { decideCorrectness } = require('./correctness');
 // genuinely different artifacts operating potentially different substrates, so
 // they get genuinely different userData — and therefore different locks. Two
 // packaged copies still collide, which is what F5 actually wanted to prevent.
-if (!app.isPackaged) {
+if (STANDALONE && !app.isPackaged) {
   app.setPath('userData', path.join(app.getPath('appData'), 'jarvis-desktop-dev'));
 }
 
@@ -246,13 +251,15 @@ function currentProvenance() {
 // handlers and a whenReady window — while shutting down. Whatever it did in
 // that window it did silently, which is part of why this exit was so hard to
 // read from the outside.
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-  return;
+if (STANDALONE) {
+  if (!app.requestSingleInstanceLock()) {
+    app.quit();
+    return;
+  }
+  app.on('second-instance', () => {
+    if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
+  });
 }
-app.on('second-instance', () => {
-  if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
-});
 
 let mainWindow;
 function createWindow() {
@@ -462,13 +469,15 @@ ipcMain.handle('jarvis:clear-repo', async () => {
   return repoConfigState();
 });
 
-app.whenReady().then(async () => {
-  buildMenu();
-  createWindow();
-  await ensureBindingOnFirstRun();
-});
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+if (STANDALONE) {
+  app.whenReady().then(async () => {
+    buildMenu();
+    createWindow();
+    await ensureBindingOnFirstRun();
+  });
+  app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+  app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+}
 
 // ---------------------------------------------------------------------------
 // jarvis:status — HOME + SYSTEM truth states. Every field is either a real
@@ -1301,3 +1310,12 @@ ipcMain.handle('jarvis:governance-action', async (_evt, req) => {
     return { ok: false, ...r, errors: [], invoked: built.argv.join(' ') };
   }
 });
+
+// Embedded Soullab Desktop seam. Requiring this module registers the existing
+// jarvis:* IPC surface, but only the standalone artifact owns app lifecycle.
+module.exports = {
+  createWindow,
+  ensureBindingOnFirstRun,
+  repoConfigState,
+  currentRoot,
+};
