@@ -3152,6 +3152,11 @@
   z-index:120;
   font-family:var(--fr-sans-stack,Inter,system-ui,sans-serif);
 }
+/* HOUSE-STUDIO-CIRCULATION-01R1 · H1: when the Studio is entered from the House,
+   the House band (60px + 14px gap) sits above the Studio bar. The fixed pill keeps
+   its existing relationship to the Studio bar instead of covering the band's
+   "Return Home →". Measured in the signed-in witness, 2026-09-30. */
+body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
 .p4r1-root .p4r1-theme-trigger{
   min-height:34px;
   max-width:164px;
@@ -3231,6 +3236,8 @@
 }
 @media (max-width:720px){
   .p4r1-root .p4r1-theme-menu{right:10px;top:10px}
+  /* H1: with the House band above (54px band + 8px gap), keep the pill on the Studio bar. */
+  body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:73px}
   .p4r1-root .p4r1-theme-trigger{max-width:132px;padding-inline:9px}
   .p4r1-root .p4r1-theme-popover{width:min(224px,calc(100vw - 20px));top:40px}
 }
@@ -3328,3 +3335,9 @@
   color:var(--ws-ink-secondary);
 }
 .p4r1-root .p4r1-arrival-elsewhere{ margin-top:22px; }
+
+.p4r1-root .fr-home-arrival .fr-home-primary:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+  box-shadow:none;
+}

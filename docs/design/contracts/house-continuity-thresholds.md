@@ -79,7 +79,7 @@ This strengthens the contract; it does not weaken it. The invariant is unchanged
 
 **Return (H1-2):** Writer's Studio renders the shared House threshold on `from=house`, which Studio mode changes preserve. Return is navigation only; it carries nothing back.
 
-⚠️ **Experience verification for the Studio surfaces is owed** — no authenticated witness of the Studio threshold or the arrival panel has been taken yet.
+**Experience verification (Studio surfaces) — 2026-09-30, authenticated witness on a disposable stack** (fresh Postgres 16 from the canonical baseline + all migrations, `next dev`, one member, data seeded through the app's own APIs): `scripts/witness/house-studio-h1-walk.cjs` → **63 passed · 0 failed**. Evidence: `screenshots/house-studio-circulation-01r1/walk/` (incl. `results.json`). ⛔ Not production; the founder's own walk on the real stack remains the record.
 
 ## Amendment 2 — layered vocabulary and the mark (2026-09-30, founder rulings H1-close-1/2)
 

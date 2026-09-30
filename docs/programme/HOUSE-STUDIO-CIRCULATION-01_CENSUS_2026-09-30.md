@@ -236,3 +236,66 @@ Wiring (items 2, 5, 8, 9) opens once `ea-house.md` is committed.
 | H1-close-2 | **Both, layered — no canon reversal.** *Home* is the member-facing place (route, navigation, **Return Home**); *The House* names the containing whole in threshold/circulation language. A House threshold is a boundary of the whole, not a place. | Threshold label `HOME` → **`THE HOUSE`**; return stays **Return Home →** `/home`. The 2026-09-28 test (`8b7c6f3d4`) is **amended in place**, with its supersession stated: it now requires the THE HOUSE label and still forbids `Return to House`. The Platform Identity Canon is ⛔ not edited. Contract Amendment 2 records the layering and *return is not undo* (Home → Work → Studio → Home). |
 
 ⚠️ **Routed, not repaired — pre-existing vocabulary drift**: Anchor (×3), Oracle, Astrology (×2), Decisions, Practices and Commons still render their own *Return to House →* links to `/house`, outside the shared threshold. Under the layered ruling their action should read *Return Home* → `/home`. A separate sweep; ⛔ not in H1.
+
+## 13 · H1 signed-in witness — ✅ 63/63 (2026-09-30)
+
+**Stack (disposable, in the session container — ⛔ not production):** Postgres 16 + pgvector,
+`scripts/bootstrap-database.sh` then `npm run db:migrate` (*all migrations applied + invariants
+verified*); one member + one `auth_sessions` row; `next dev -p 3707`; Works and manuscripts
+created **through the app's own APIs** (the same calls a member's clicks make). Manuscript
+titles were set in SQL — test data, not behaviour under test. Seed design:
+
+| Work | Declared manuscripts | Purpose |
+|---|---|---|
+| Witness One | Solo Draft | case 1 |
+| Witness Several | Chapter 10 — The Alchemical Self · Introduction · Future revision notes | case 2 |
+| Witness None | — | case 3 |
+| Witness Other | Introduction | makes *Introduction* structurally **ambiguous** — tests R3 directly |
+| *(none)* | **Recency Decoy** — newest manuscript, in no Work | any recency leak would pick it |
+
+Each case **starts from a real click on Home** (WHAT'S ALIVE shows 2 Works by recency — §5 — so
+the walk touches the chosen Work's `updated_at` first; that is seeding, not the behaviour under test).
+
+| # | Founder's pass | Result |
+|---|---|---|
+| 1 | one manuscript — recognised, nothing invented | ✅ state `one`, names *Solo Draft*; link carries only `from` + `work` |
+| 2 | several — no pre-selection, member chooses | ✅ 3 offered in **declaration** order, decoy absent, none checked, **Enter disabled** until a choice |
+| 3 | none — *Begin this Work* explicit, nothing created on arrival | ✅ manuscript + declaration counts unchanged on arrival; *Return* → Home; *Begin* created **exactly one** manuscript, declared into the Work, opened within it |
+| 4 | Write / Develop / Review stable, no recency | ✅ from *one* and from *several*: `m` stable, `work` carried, never the decoy, Work named in every mode. ⭐ *Introduction* (in two Works) arrived through *Witness Several* is named **Witness Several** — explicit context, not ambiguity |
+| 5 | Return to Home carries nothing | ✅ lands on `/home` with **no query string at all** |
+| 6 | plain entry — threshold is a crossing condition, not sticky | ✅ `/writers-studio`, `…?mode=write&m=Introduction`, and a reload: no threshold, no arrival; ⭐ without a carried Work the Studio **names no Work** for the ambiguous *Introduction* (WS2-03B unweakened) |
+| + | forged Work id | ✅ unknown id → ordinary Studio home, nothing disclosed |
+| + | threshold | ✅ reads *THE HOUSE · WRITER'S STUDIO · Return Home →*; no repeated mark |
+
+**The first run was 61/63, and both failures were my instrument, recorded rather than smoothed:**
+(1) Review was still *"Opening this Review…"* on first compile — the walk now waits for load;
+(2) I asserted the ambiguity sentence was visible, but `workContextSentence` in
+`P4R1WriteEditController` is **computed and never rendered** (pre-existing dead variable — routed,
+not repaired). The correct observable — *no Work named* — is now what the walk checks.
+
+**Two real defects the component render could not show, found and fixed here:**
+- the fixed **Theme pill covered the threshold's *Return Home →*** (pill 1303–1424 px over a
+  link ending at 1306). Fix keeps the pill's pre-existing relationship to the Studio bar, offset
+  by the band (`body:has([data-house-return])`, 85 px desktop / 73 px mobile — measured, re-measured
+  after: pill 85–119 inside bar 74–130; mobile 73–107 inside 62–118);
+- **disabled *Enter* looked enabled** — now visibly unavailable (`:disabled` opacity).
+
+**Project gates, with the full dependency tree installed:**
+- `npm run typecheck` reports FAILED with 46 "new" diagnostics — **all `@prisma/client` exports,
+  an artifact of installing with `--ignore-scripts` (no `prisma generate`)**. Run the same gate at
+  canonical `04005ca7` in a worktree sharing the same `node_modules`: **identical 46, identical
+  268 total**. Full `tsc -p tsconfig.ship.json` diagnostic sets at base vs HEAD: **268 = 268,
+  byte-identical after line-number normalisation → 0 diagnostics attributable to H1.** HEAD's
+  program has exactly 3 more files — the three H1 added. ⚠️ The gate's own green is still owed
+  on the Mac with Prisma generated.
+- Jest (house, studio, navigation, home): **99/101 suites, 1099/1101** — the 2 failures are the
+  pre-existing `houseNavDrift` / `journalReachability` (§11.3).
+- `check:no-supabase` ✅ · `check:design-canon` ✅.
+
+**Standing: H1 ✅ WITNESSED ON A DISPOSABLE STACK · 63/63 · 0 attributable type diagnostics ·
+⛔ NOT MERGED · ⛔ NOT DEPLOYED · ⛔ founder's own walk on the real stack still the record ·
+no crossing-registry reopening (R2 holds).**
+
+⚠️ Routed, not repaired: `workContextSentence` dead variable · WHAT'S ALIVE `LIMIT 2` recency (§5) ·
+pre-existing *Return to House* links in six rooms (§12) · a dev-only *"Audio enabled"* toast on the
+Studio home (unrelated to H1).
