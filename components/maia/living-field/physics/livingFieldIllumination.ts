@@ -35,25 +35,28 @@ export type IlluminationModel = {
   label: string
   inquiry: string
   essence?: string
-  lineage: FieldDatum[]
+  contextPath: FieldDatum[]
   children: FieldDatum[]
   element?: { id: PhysicsGroupKey; label: string; essence: string }
   relations: IlluminationRelation[]
   tensions: IlluminationRelation[]
   relatedFields: Array<{ id: PhysicsGroupKey; label: string; essence: string }>
   spatiallyNavigable: boolean
+  canEnter: boolean
+  contextPathStanding: 'prototype'
+  lineageStanding: 'unbound'
   sourceStanding: 'prototype-unbound'
 }
 const FIELD_KEY_TO_PHYSICS_NODE = new Map(
   Object.entries(PHYSICS_NODE_TO_FIELD_KEY).map(([nodeId, fieldKey]) => [fieldKey, nodeId]),
 )
 
-function findLineage(targetKey: string, node: FieldDatum = FIELD_TREE, path: FieldDatum[] = []): FieldDatum[] | null {
+function findContextPath(targetKey: string, node: FieldDatum = FIELD_TREE, path: FieldDatum[] = []): FieldDatum[] | null {
   const next = [...path, node]
   if (node.key === targetKey) return next
 
   for (const child of node.children ?? []) {
-    const found = findLineage(targetKey, child, next)
+    const found = findContextPath(targetKey, child, next)
     if (found) return found
   }
 
@@ -73,7 +76,7 @@ export function buildIlluminationModel(key: string): IlluminationModel | null {
   const node = FIELD_NODE_BY_KEY.get(key)
   if (!node) return null
 
-  const lineage = findLineage(key) ?? [node]
+  const contextPath = findContextPath(key) ?? [node]
   const physicsNodeId = physicsNodeIdForFieldKey(key)
   const physicsNode = physicsNodeId ? NODE_BY_ID.get(physicsNodeId) ?? null : null
   const relations = physicsNodeId
@@ -102,7 +105,7 @@ export function buildIlluminationModel(key: string): IlluminationModel | null {
     : []
 
   const elementId = physicsNode?.group
-    ?? lineage
+    ?? contextPath
       .map((item) => item.key)
       .find((item): item is PhysicsGroupKey =>
         item === 'fire' || item === 'water' || item === 'earth' || item === 'air' || item === 'aether',
@@ -124,7 +127,7 @@ export function buildIlluminationModel(key: string): IlluminationModel | null {
     label: node.label,
     inquiry: node.inquiry,
     essence: node.essence ?? physicsNode?.essence,
-    lineage,
+    contextPath,
     children: node.children ?? [],
     element,
     relations,
@@ -133,6 +136,9 @@ export function buildIlluminationModel(key: string): IlluminationModel | null {
     ),
     relatedFields,
     spatiallyNavigable: Boolean(navigationPlanForFieldKey(node.key)),
+    canEnter: Boolean(node.children?.length && navigationPlanForFieldKey(node.key)),
+    contextPathStanding: 'prototype',
+    lineageStanding: 'unbound',
     sourceStanding: 'prototype-unbound',
   }
 }

@@ -64,6 +64,8 @@ export function LivingFieldIlluminationPanel({
   onRevealKey,
 }: Props) {
   const [evidenceOpen, setEvidenceOpen] = useState(false)
+  const [lineageOpen, setLineageOpen] = useState(false)
+  const [perspectivesOpen, setPerspectivesOpen] = useState(false)
   const panelRef = useRef<HTMLElement>(null)
   const model = useMemo(() => buildIlluminationModel(selectedKey), [selectedKey])
   const orientation = useMemo(
@@ -76,6 +78,8 @@ export function LivingFieldIlluminationPanel({
 
   useEffect(() => {
     setEvidenceOpen(false)
+    setLineageOpen(false)
+    setPerspectivesOpen(false)
     panelRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }, [selectedKey])
 
@@ -107,8 +111,12 @@ export function LivingFieldIlluminationPanel({
           </p>
         ) : null}
 
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {model.lineage.slice(1).map((item) => (
+        <div className="mt-4">
+          <p className="mb-2 text-[8px] uppercase tracking-[0.18em] text-[#746654]">
+            Context path · prototype
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+          {model.contextPath.slice(1).map((item) => (
             <span
               key={item.key}
               className={`rounded-full border px-2.5 py-1 ${styles.pathChip}`}
@@ -116,6 +124,7 @@ export function LivingFieldIlluminationPanel({
               {item.label}
             </span>
           ))}
+          </div>
         </div>
 
         {inspectingBeyondFocus ? (
@@ -203,10 +212,48 @@ export function LivingFieldIlluminationPanel({
           </section>
         ) : null}
 
+        <section className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setPerspectivesOpen((open) => !open)}
+            className="flex w-full items-center justify-between gap-3 text-left"
+          >
+            <SectionTitle>Perspectives</SectionTitle>
+            <span className="text-xs text-[#6f6252]">{perspectivesOpen ? '−' : '+'}</span>
+          </button>
+          {perspectivesOpen ? (
+            <div className={`rounded-xl border p-3.5 ${styles.quietBox}`}>
+              <p className="text-[15px] text-[#c8b79f]">Elemental lens · current rendering perspective</p>
+              <p className="mt-2 text-xs leading-5 text-[#716451]">
+                The current field is being shown through the Elemental Alchemy perspective. Perspective shapes what becomes perceptible; it does not silently redefine the underlying field or become its only ontology.
+              </p>
+            </div>
+          ) : null}
+        </section>
+
+        <section className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setLineageOpen((open) => !open)}
+            className="flex w-full items-center justify-between gap-3 text-left"
+          >
+            <SectionTitle>How this became</SectionTitle>
+            <span className="text-xs text-[#6f6252]">{lineageOpen ? '−' : '+'}</span>
+          </button>
+          {lineageOpen ? (
+            <div className={`rounded-xl border p-3.5 ${styles.quietBox}`}>
+              <p className="text-[15px] text-[#bfae96]">Lineage not yet bound in this witness</p>
+              <p className="mt-2 text-xs leading-5 text-[#716451]">
+                The context path above answers where this locus currently sits. It is not the same as lineage. Lineage will show how this meaning changed, emerged, or was reconciled through time once exact lineage evidence is bound.
+              </p>
+            </div>
+          ) : null}
+        </section>
+
         <section className="space-y-2.5">
-          <SectionTitle>Possible paths</SectionTitle>
+          <SectionTitle>Possible movements</SectionTitle>
           <p className="text-xs leading-5 text-[#7d6f5d]">
-            Enter a contained locus, inspect a relation, widen toward the containing field, or stay here. No path is treated as the correct next step.
+            Enter a genuinely contained field, inspect a relation, widen toward the containing context, change perspective when available, or stay here. No movement is treated as the correct next step.
           </p>
         </section>
 
@@ -235,7 +282,15 @@ export function LivingFieldIlluminationPanel({
         </section>
 
         <div className="grid gap-2 pt-1">
-          {inspectingBeyondFocus && model.spatiallyNavigable && onRevealKey ? (
+          {model.canEnter && onRevealKey ? (
+            <button
+              type="button"
+              onClick={() => onRevealKey(model.key)}
+              className={`rounded-lg px-4 py-3 text-center text-sm font-medium transition ${styles.secondaryAction}`}
+            >
+              Enter field →
+            </button>
+          ) : inspectingBeyondFocus && model.spatiallyNavigable && onRevealKey ? (
             <button
               type="button"
               onClick={() => onRevealKey(model.key)}
