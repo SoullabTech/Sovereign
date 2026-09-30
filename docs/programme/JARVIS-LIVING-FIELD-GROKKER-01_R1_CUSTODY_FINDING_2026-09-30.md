@@ -114,7 +114,8 @@ Between them sit five pre-lane commits:
 `app/api/sovereign/ain-vault` route. `lib/ain/vault/` does not exist in canon.
 
 ⛔ **Merging any visual-field branch as it stands would bring an AIN-vault cognition change into
-canon through a Living Field PR.** That change has had no review in its own lane. It would add a
+canon through a Living Field PR.** That change carries its own witness record (`…OBSIDIAN_VAULT_02_READ_ONLY_WITNESS_2026-09-27.md`),
+but it has not been merged through its own lane. It would add a
 producer to the CMT-01 closed registry and change the prompt path. The Living Field charter
 stops at "no additional MAIA cognition". This commit is exactly that, arriving by ancestry
 rather than by an act.
