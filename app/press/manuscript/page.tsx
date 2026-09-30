@@ -6,7 +6,6 @@ import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { buildKeepRequestBody, interpretKeepReply } from './keepRequest';
-import { REBUILD_HREF } from '../../writers-studio/studioMap';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
 /**
@@ -378,7 +377,7 @@ function PressManuscriptRoom() {
       // identity, with the new draft on the table. The 2026-08-05 persona
       // walk found imports still ending in this room's seven-tab workbench:
       // the environment existed, but its main entry path predated it.
-      window.location.href = `${REBUILD_HREF}?m=${encodeURIComponent(data.id)}`;
+      window.location.href = `/writers-studio?mode=write&m=${encodeURIComponent(data.id)}`;
     } catch {
       // Preview is preserved so the member can retry the save.
       setSaveError(true);

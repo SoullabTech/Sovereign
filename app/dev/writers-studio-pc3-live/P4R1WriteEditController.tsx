@@ -173,12 +173,35 @@ export default function FlagshipWriteEditController() {
         manuscriptId = manuscripts[0].id;
       }
       if (!manuscriptId) throw new Error('manuscript identity');
-      const response = await apiFetch(
+      let response = await apiFetch(
         '/api/writers-studio/rebuild/context?manuscriptId=' + encodeURIComponent(manuscriptId),
       );
       if (response.status === 401) { setPhase('unauthorized'); return; }
       if (!response.ok) throw new Error('context');
-      const body = await response.json() as ContextPayload;
+      let body = await response.json() as ContextPayload;
+
+      /* Imported manuscripts arrive as immutable Source first. The unified
+         Write room requires a section-addressable Working Draft, so opening an
+         imported manuscript is the explicit member act that initializes the
+         canonical verbatim draft from the already-confirmed Source sections.
+         The draft route owns composition and section identity; this controller
+         never guesses structure. */
+      if (body.state === 'no_draft') {
+        const seed = await apiFetch(
+          '/api/sovereign/manuscripts/' + encodeURIComponent(manuscriptId) + '/draft',
+          { method: 'POST' },
+        );
+        if (seed.status === 401) { setPhase('unauthorized'); return; }
+        if (!seed.ok && seed.status !== 409) throw new Error('draft seed');
+
+        response = await apiFetch(
+          '/api/writers-studio/rebuild/context?manuscriptId=' + encodeURIComponent(manuscriptId),
+        );
+        if (response.status === 401) { setPhase('unauthorized'); return; }
+        if (!response.ok) throw new Error('context after draft seed');
+        body = await response.json() as ContextPayload;
+      }
+
       if (body.state !== 'section_aware') {
         setPhase('error');
         setMessage('This manuscript is not section-addressable yet. The Studio will not guess at its structure.');
