@@ -10,6 +10,7 @@ import { query } from '@/lib/db/postgres'
 import { CANONICAL_FIELD_KEYS } from '@/lib/maia/living-field/canonicalFieldKeys'
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 import { livingFieldAtomGuards } from '@/lib/maia/living-field/atomEligibility'
+import { canEnterEarlyField } from '@/lib/access/earlyFieldAccess'
 
 export async function GET(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request)
@@ -124,6 +125,10 @@ export async function GET(request: NextRequest) {
       spiral_state: spiralState,
       active_spirals: spiralsResult.rows,
       recent_states: statesResult.rows,
+      // EARLY-FIELD-01: server-authoritative cohort decision for the R1R3
+      // instrument only. Derived from the verified session memberId above;
+      // no request parameter participates. The room itself is not gated.
+      early_field: { instrument: canEnterEarlyField(memberId) },
     })
   } catch (err) {
     console.error('[living-field] GET error', err)

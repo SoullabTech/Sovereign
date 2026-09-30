@@ -102,3 +102,110 @@ rollback · broad exposure), each killing its defeat candidate for the named rea
 that come R8 (observation contract) and R9 (widening criteria).
 
 The #1539 real-stack walk (port 3139, test member) remains separate, owed evidence.
+
+---
+
+## 4 · Founder ruling R1 (2026-09-30): Option A. Charter correction
+
+> **Original assumption:** Living Field itself was the new rollout surface.
+> **Observed reality:** Living Field is established production infrastructure; #1539 added a
+> bounded R1R3 instrument inside it.
+> **Therefore the governed object of EARLY-FIELD-01 is the new instrument's exposure, not the
+> room's existence.** That distinction is now authoritative for this lane.
+
+- **Not gated, by ruling:** `/maia/living-field`, the House doorway, MAIA nav, Vision Studio and
+  Practice Field circulation, every Living Field API, and all member-authored dimensions,
+  expressions, history, consents and encounters. A member outside the cohort keeps exactly the
+  access they had before #1539.
+- **A non-cohort member sees the ordinary room.** There is no access-denied page, no 403, no
+  message implying the room is restricted, and no disabled doorway. The instrument is simply absent.
+- **The shared #1539 copy and truthfulness wording stays broadly exposed**, by explicit ruling after
+  this census. No second boundary for wording.
+- **H1 (#1536/#1538) is not governed here.** It needs its own exposure ruling before broad deploy.
+- **The original direct-route falsifier is superseded** by the instrument-authority falsifier (L1
+  and the structural tests in §5).
+
+## 5 · Built (R2–R7)
+
+| Piece | Where |
+|---|---|
+| Authority, one decision `canEnterEarlyField(verifiedMemberId)` | `lib/access/earlyFieldAccess.ts` |
+| Server decision delivered | `GET /api/maia/living-field` → `early_field: { instrument }`, computed from the `getMemberIdFromRequest` verified session; the route reads no request parameter |
+| Single mount, default closed | `PersonalLivingFieldDashboard`: `{earlyFieldInstrument === true && <LivingFieldInstrument />}`; the page passes only `data.early_field?.instrument === true` |
+| Config | `EARLY_FIELD_ENABLED` (exactly `"true"` opens; `"false"`/absent closes; other values are malformed → closed) · `EARLY_FIELD_MEMBER_IDS` (UUIDs; one malformed entry → closed for everyone); documented in `.env.example` |
+| Rollback | `EARLY_FIELD_ENABLED=false` → instrument gone for everyone, room intact. No code, no migration, no member data touched |
+| Persistence | none. Cohort membership is env configuration only; nothing is written |
+
+**Distinct authority.** It is neither `labAccess` nor founder access, and founders are **not**
+admitted automatically. Membership is explicit. The authority module imports neither list (guarded
+by a test).
+
+**R7 falsifiers** (`lib/access/__tests__/earlyFieldAccess.test.ts`, 19 tests). Six laws run
+against the real decision and six defeat candidates. The real decision passes all six, and each
+candidate dies on its named law:
+
+| Defeat candidate | Killed by |
+|---|---|
+| client-only gate (`?early=1`, storage flag) | L1 no client input grants admission |
+| fail-open configuration | L2 absent/malformed config fails closed (7 configs) |
+| identity substitution (claimed id) | L3 only the verified identity counts |
+| shared lab authority | L4 lab/founder membership grants nothing |
+| cosmetic rollback (ignores `ENABLED=false`) | L5 `ENABLED=false` closes it for everyone |
+| broad exposure (any authenticated member) | L6 enabled cohort admits only listed members |
+
+Structural falsifiers:
+- exactly **one** instrument mount in `app/**` and `components/**`, and it is gated
+- the page takes the decision only from the API response
+- the route uses the verified `memberId` and reads no `searchParams`, `nextUrl` or `request.url`
+- the authority consults no lab or founder list and writes nothing
+- the room itself carries no admission check
+
+**Mutation check.** Three real-code mutants were each killed by exactly one test, and the restored
+code passes 19/19:
+- unconditional mount
+- route trusts `?early=1`
+- page trusts the URL
+
+**⚠️ The honest limit of "server-authoritative".** The decision is made only on the server from
+the verified session, and no URL, query, storage, cookie claim or request parameter can change it.
+The instrument's JavaScript still ships in the page bundle, as all client code does. A member who
+rewrites their own browser's runtime could render it locally. That reveals nothing and writes
+nothing: the instrument is session-local, uses no API, and holds no data. No web gate can prevent
+someone running code in their own browser. This gate governs what Soullab presents.
+
+## 6 · R8 · Observation contract (what the cohort witnesses)
+
+The cohort witnesses **the R1R3 instrument and its integration into the existing Living Field**:
+- entry into the instrument from the established room
+- threshold behaviour
+- identity continuity
+- session-local behaviour (nothing persists)
+- evidence-loading and failure states where applicable
+- circulation back into the Living Field and the House
+- no mutation of member content through instrument use
+- the instrument never visible to non-cohort members
+- clean rollback to the ordinary room
+
+**Evidence sources:** existing operational logs and explicit witness reports from cohort members.
+⛔ No new behavioural telemetry for this rollout.
+
+## 7 · R9 · Widening criteria (all required; widening stays a founder decision)
+
+1. The #1539 real-stack R1R3 walk passes on canonical-equivalent code (port 3139, test member).
+2. This falsifier suite passes on the deployed SHA.
+3. **Exclusion witnessed in production:** a non-cohort member sees the ordinary room with no
+   instrument, and no URL, query or storage manipulation mounts it.
+4. **Rollback witnessed in production:** `EARLY_FIELD_ENABLED=false` removes the instrument for the
+   cohort, and the room and member material stay intact.
+5. No identity leakage or cross-member context contamination observed.
+6. No unresolved Class A defect.
+7. Cohort members complete the intended circulation without developer intervention.
+8. Every defect found during the cohort has an explicit disposition.
+
+"No one complained" is not a criterion.
+
+## 8 · R10 · Deployment law
+
+Canon `7ec42ce6` is **merged but not cleared** for broad production deployment. The next rollout is
+**canonical + EARLY-FIELD-01**, deployed with `EARLY_FIELD_ENABLED=false` until the cohort is
+named, and never canon alone. H1's exposure ruling is also owed before any broad deploy.

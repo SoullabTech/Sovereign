@@ -24,6 +24,12 @@ interface Props {
   activeSpirals: PersonalSpiral[]
   recentStates: PersonalState[]
   memberId: string
+  /**
+   * EARLY-FIELD-01: whether the server admitted this member to the R1R3
+   * instrument. Only the /api/maia/living-field response may set it; it
+   * defaults closed. The rest of the Living Field never depends on it.
+   */
+  earlyFieldInstrument?: boolean
 }
 
 export function PersonalLivingFieldDashboard({
@@ -32,6 +38,7 @@ export function PersonalLivingFieldDashboard({
   activeSpirals,
   recentStates,
   memberId,
+  earlyFieldInstrument = false,
 }: Props) {
   const phase = spiralState?.relational_phase
   const phaseLabel = phase ? RELATIONAL_PHASE_LABELS[phase] : null
@@ -118,8 +125,9 @@ export function PersonalLivingFieldDashboard({
         </div>
 
         {/* VFE-02R12 / RUNTIME-01: additive first witness. The existing Living Field
-            remains below unchanged while recursive WORLD/PATH navigation is witnessed. */}
-        <LivingFieldInstrument />
+            remains below unchanged while recursive WORLD/PATH navigation is witnessed.
+            EARLY-FIELD-01: mounted only for the server-admitted cohort. */}
+        {earlyFieldInstrument === true && <LivingFieldInstrument />}
 
         {/* LC-02: same read-only constellation used across all three rooms. */}
         <LivingConstellationPanel focus="living" />
