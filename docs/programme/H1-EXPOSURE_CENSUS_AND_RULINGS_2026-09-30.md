@@ -2,13 +2,16 @@
 
 ```text
 Class: A programme · exposure governance (documentary only, no implementation)
-Canonical base: 7ec42ce6
+Census baseline: 7ec42ce6 (the census was conducted against this SHA; not rewritten)
+Canonical at acceptance: 89f7876e (merge of #1540). See §6 for applicability
 Subject: H1 = #1536 (House → Writer's Studio continuity bridge) + #1538 (H1-R2
          multi-manuscript choice), both merged, neither deployed
 Production runtime: 04005ca7c (pre-H1)
 Sibling lane: EARLY-FIELD-01 (#1541), which governs the Living Field instrument
               only and is not touched by this record
-Standing: CENSUS COMPLETE · RULINGS TAKEN · ⛔ H1 COHORT GATE NOT BUILT
+Standing: CENSUS COMPLETE · RULINGS TAKEN · ratified by the PR that merges this file
+          · ⛔ H1 COHORT GATE NOT BUILT
+This record introduces no runtime behaviour.
 ```
 
 ## 1 · Governing principle (founder)
@@ -61,10 +64,8 @@ via `MAIA_WORK_PARAM`: a different route in the opposite direction. The `work` c
 `/writers-studio` is therefore H1's alone, and ignoring it for non-cohort members breaks no
 earlier doorway.
 
-⚠️ **For the implementation lane to verify, not assumed here:** that no *universal* post-H1 path
-(for example the #1538 multi-manuscript choice, or a MAIA `return=` address) now emits a
-`/writers-studio` URL carrying `work=`. If one does, ignoring `work` for non-cohort members would
-change that path, and it must be dispositioned before the Studio side of the gate lands.
+The one question this leaves for the implementation lane (every *universal* post-H1 producer of
+`/writers-studio?...work=`) is recorded in §7 as a non-blocking follow-on.
 
 ### 2.4 What H1 contains that is **not** a crossing
 
@@ -115,15 +116,51 @@ accepted.
   session, fails closed, writes nothing, and needs no migration, as in EARLY-FIELD-01.
 - **Rollback** restores the pre-H1 House → Studio entry without hiding the Studio, manuscripts or
   any member-authored work.
-- **Design point owed by the implementation lane:** the pc3-live Studio controllers run
-  client-side, so the admission decision must reach them through a server response they already
-  load. Which response is the first thing to settle.
+- The two implementation questions this law leaves open are recorded in §7. They are follow-ons for
+  the implementation lane, not gaps in the ruling.
 
-## 5 · Release state after this record
+## 5 · Release state at acceptance
 
 | Item | State |
 |---|---|
-| #1541 EARLY-FIELD-01 | PR open at `538079a4`; awaiting CI and review; ⛔ no merge on CI alone |
-| #1539 real-stack walk (port 3139, test member) | ⛔ still owed |
-| H1 exposure | principle and rulings recorded here; ⛔ cohort gate not built (separate lane) |
+| EARLY-FIELD-01 | #1541 closed as superseded; **#1542** (`feat/early-field-01-cohort-gate-20260930`, own admission endpoint) is the authoritative candidate. Recommended before its admission: an invariant test that the Living Field page and its APIs carry no admission check. *Gate the instrument; never gate the Living Field.* |
+| #1540 H1 arrival fix | merged into canon (`89f7876e`); ⛔ the H1 browser admission witness is still owed |
+| H1 exposure census (this record) | docs-only; accepted when this PR merges |
+| H1 cohort gate | ⛔ not built; separate implementation lane, bound by §4 |
+| #1539 real-stack witness | ⛔ still a separate evidence obligation |
 | Production | stays at `04005ca7c` until these boundaries resolve |
+
+## 6 · Applicability at acceptance (`7ec42ce6` → `89f7876e`)
+
+One change landed between the census baseline and acceptance: **#1540**
+(`3d3f58a4`, "a failed read never hangs a House arrival or reads as an empty Work"). It touches
+`app/writers-studio/situatedWork.ts` (`resolveStudioArrival` phase handling), its tests, and the
+HOUSE-STUDIO-CIRCULATION-01 census.
+
+**It does not invalidate any finding here:**
+- **The constructor and readers are unchanged.** `studioArrivalFromHouse` is still the single
+  constructor. `resolveStudioArrival` and `readStudioWorkParam` are the readers, in the same
+  controllers.
+- **The House doorways, the plain `/writers-studio` doorways, #1538 and `HouseRoomThreshold`
+  are untouched.**
+- **The fallback finding (§2.1) is reinforced.** A failed Works or manuscripts read now returns
+  `fallback`, the ordinary Studio, where before it hung on "Opening…" or read as an empty Work.
+  More paths now end in the pre-H1 behaviour.
+- **No new producer or reader of `work=` was introduced** (checked across the diff).
+
+The census stands as conducted at `7ec42ce6` and applies unchanged at `89f7876e`.
+
+## 7 · Non-blocking follow-ons for the H1 implementation lane
+
+These belong to the implementation lane. They are not holes in the ruling, and neither is in scope
+for this record.
+
+1. **Census every universal producer of `/writers-studio?...work=`.** Confirm that no path
+   reachable by all members emits a Studio URL carrying `work=` (candidates to check: the #1538
+   multi-manuscript choice, `situatedManuscriptAddress`, any MAIA `return=` address). If one does,
+   ignoring `work` for non-cohort members would change that path, and it must be dispositioned
+   before the Studio side of the gate lands.
+2. **Determine the authenticated server→client carrier for H1 admission.** The pc3-live Studio
+   controllers run client-side, so the decision has to reach them from a verified-session server
+   response. #1542's pattern is the precedent: a narrow endpoint of its own, leaving existing APIs
+   untouched.
