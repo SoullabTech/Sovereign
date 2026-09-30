@@ -41,6 +41,17 @@ import {
   MAIA_TIMING_NON_PROMOTION_LAW,
   MAIA_WHY_NOW_LAW,
 } from '@/lib/memory/developmental-epistemics/interactionalWarrant'
+import {
+  MAIA_CONTINUITY_AS_CONSTRAINT_LAW,
+  MAIA_NO_MEMORY_THEATER_LAW,
+  MAIA_QUIET_PRESENCE_FELT_LAW,
+  MAIA_QUIET_PRESENCE_LAW,
+  MAIA_QUIET_PRESENCE_NONINFLUENCE_LAW,
+  MAIA_QUIET_PRESENCE_PROGRESSIVE_DISCLOSURE_LAW,
+  MAIA_SILENT_MEMORY_BOUNDARY_LAW,
+  QUIET_PRESENCE_EXAMPLES,
+  QUIET_PRESENCE_RULES,
+} from '@/lib/memory/developmental-epistemics/quietPresence'
 
 type WitnessResult = 'NOT_RUN' | 'PASS' | 'HOLD' | 'FAIL'
 
@@ -218,6 +229,54 @@ export function J6ARepairWitness() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[28px] border border-[#50483e]/70 bg-[#171411] p-5 sm:p-6">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[#978671]">Quiet presence · continuity without resurfacing</p>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <LawCard title="Quiet presence" text={MAIA_QUIET_PRESENCE_LAW} />
+            <LawCard title="Silent memory boundary" text={MAIA_SILENT_MEMORY_BOUNDARY_LAW} />
+            <LawCard title="No memory theater" text={MAIA_NO_MEMORY_THEATER_LAW} />
+            <LawCard title="Continuity as constraint" text={MAIA_CONTINUITY_AS_CONSTRAINT_LAW} />
+            <LawCard title="Progressive provenance" text={MAIA_QUIET_PRESENCE_PROGRESSIVE_DISCLOSURE_LAW} />
+            <LawCard title="No hidden influence" text={MAIA_QUIET_PRESENCE_NONINFLUENCE_LAW} />
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {QUIET_PRESENCE_EXAMPLES.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-[#494239] bg-[#11100f] p-4">
+                <p className="text-[10px] uppercase tracking-[0.15em] text-[#8f7f6b]">{item.id}</p>
+                <p className="mt-2 text-sm leading-6 text-[#a99b89]">{item.situation}</p>
+                <div className="mt-4 rounded-xl border border-[#4c463e] bg-[#171411] p-3">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#8f9b84]">Quiet presence</p>
+                  <p className="mt-1 text-sm leading-6 text-[#d6c6b2]">{item.quietPresence}</p>
+                </div>
+                <div className="mt-3 rounded-xl border border-[#5a4643] bg-[#181211] p-3">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#a6817a]">Memory theater</p>
+                  <p className="mt-1 text-sm leading-6 text-[#c9aaa4]">{item.memoryTheater}</p>
+                </div>
+                <p className="mt-3 text-xs leading-5 text-[#837768]">{item.protectedTruth}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {QUIET_PRESENCE_RULES.map((rule) => (
+              <div key={rule.use} className="rounded-2xl border border-[#494239] bg-[#11100f] p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-[#d1b78f]">{rule.use.replaceAll('_', ' ')}</p>
+                  <span className={rule.allowed ? 'text-[10px] text-[#9aae90]' : 'text-[10px] text-[#b78980]'}>
+                    {rule.allowed ? 'ALLOWED' : 'FORBIDDEN'}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-[#8f8271]">{rule.reason}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-[#62584a]/65 bg-[#1a1713] p-4">
+            <p className="text-sm leading-6 text-[#c7b8a5]">{MAIA_QUIET_PRESENCE_FELT_LAW}</p>
           </div>
         </section>
 
