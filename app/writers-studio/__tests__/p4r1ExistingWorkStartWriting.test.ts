@@ -48,7 +48,7 @@ describe('C7 — existing Work → begin writing without copying materials', () 
     expect(home).toContain('Notes &amp; sources');
     expect(home.match(/\{creationControls\}/g)?.length).toBe(3);
     expect(controller).toContain("import { IMPORT_HREF } from '@/app/writers-studio/studioMap';");
-    expect(controller).toContain('onImport={() => router.push(IMPORT_HREF)}');
+    expect(controller).toContain('onImport={() => window.location.assign(IMPORT_HREF)}');
   });
 });
 
