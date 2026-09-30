@@ -32,7 +32,9 @@ describe('Living Field navigation + illumination', () => {
     expect(model).not.toBeNull()
     expect(model?.label).toBe('Calling')
     expect(model?.element?.id).toBe('air')
-    expect(model?.lineage.map((node) => node.key)).toEqual([
+    // R2D3 (0d6fa5de) renamed lineage -> contextPath and declared it prototype
+    // standing: the path orients, it does not claim ancestry.
+    expect(model?.contextPath.map((node) => node.key)).toEqual([
       'root',
       'air',
       'air-perspective',
@@ -42,6 +44,8 @@ describe('Living Field navigation + illumination', () => {
     expect(model?.relations.length).toBeGreaterThan(0)
     expect(model?.spatiallyNavigable).toBe(true)
     expect(model?.sourceStanding).toBe('prototype-unbound')
+    expect(model?.contextPathStanding).toBe('prototype')
+    expect(model?.lineageStanding).toBe('unbound')
   })
 
   it('keeps Grief children and its actual relations distinct', () => {
