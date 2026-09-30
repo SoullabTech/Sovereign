@@ -18,6 +18,7 @@ import {
   manuscriptIdOf,
   manuscriptIdsOf,
   manuscriptsForWork,
+  manuscriptsInOrder,
   modeEntryTarget,
   type ModeEntryTarget,
 } from '../homeState';
@@ -65,9 +66,10 @@ interface Impl {
   manuscriptsForWork: (w: LivingWork, m: readonly CurrentManuscript[]) => CurrentManuscript[];
   arrivalFor: typeof arrivalFor;
   modeEntryTarget: (resume: LivingWork | null, m: readonly CurrentManuscript[]) => ModeEntryTarget;
+  manuscriptsInOrder: (ids: readonly string[], m: readonly CurrentManuscript[]) => CurrentManuscript[];
 }
 
-const real: Impl = { manuscriptIdOf, manuscriptsForWork, arrivalFor, modeEntryTarget };
+const real: Impl = { manuscriptIdOf, manuscriptsForWork, arrivalFor, modeEntryTarget, manuscriptsInOrder };
 
 /** The canonical definition before this port: the first manuscript expression. */
 const firstPick = (w: LivingWork) =>
@@ -128,6 +130,10 @@ const candidates: Record<string, { impl: Impl; dies: string }> = {
     },
     dies: 'MM-L6-choice-is-scoped-to-the-continue-work',
   },
+  'DM-7 chooser rendered by filtering the recency-ordered list (the defect the walk found)': {
+    impl: { ...real, manuscriptsInOrder: (ids, m) => m.filter((x) => ids.includes(x.id)) },
+    dies: 'MM-L7-rendered-chooser-keeps-the-given-order',
+  },
 };
 
 /* ── the laws ───────────────────────────────────────────────────────────── */
@@ -174,6 +180,12 @@ const laws: Record<string, (r: Impl) => string | null> = {
       ? null
       : `got ${JSON.stringify(t)}`;
   },
+  'MM-L7-rendered-chooser-keeps-the-given-order': (r) => {
+    // `held` arrives newest-first, as the Studio's manuscript list does.
+    const held = [ms('m-second', '2026-09-29T00:00:00Z'), ms('m-x', null), ms('m-first', '2026-01-01T00:00:00Z')];
+    const got = r.manuscriptsInOrder(['m-first', 'm-second'], held).map((m) => m.id);
+    return JSON.stringify(got) === JSON.stringify(['m-first', 'm-second']) ? null : `got ${JSON.stringify(got)}`;
+  },
 };
 
 describe('H1-R2 — multi-manuscript Works require explicit choice', () => {
@@ -218,5 +230,14 @@ describe('H1-R2 — multi-manuscript Works require explicit choice', () => {
     expect(src).toMatch(/modeEntryTarget\(arrival\.resume \?\? null, manuscripts\)/);
     expect(src).not.toMatch(/manuscripts\[0\]/);
     expect(src).toMatch(/onChooseManuscript=\{onChooseManuscript\}/);
+  });
+
+  it('the Home view renders the mode-bar chooser in the given order, not by filtering the held list', () => {
+    const src = fs
+      .readFileSync(path.resolve(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1HomeView.tsx'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    expect(src).toMatch(/manuscriptsInOrder\(props\.pendingMode\.manuscriptIds, props\.manuscripts\)/);
+    expect(src).not.toMatch(/props\.manuscripts\.filter\(\(m\) => props\.pendingMode/);
   });
 });

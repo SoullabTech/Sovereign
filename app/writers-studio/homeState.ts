@@ -72,6 +72,21 @@ export function manuscriptIdOf(work: LivingWork): string | null {
   return ids.length === 1 ? ids[0] : null;
 }
 
+/**
+ * The held manuscripts named by `ids`, in the order of `ids`. ⛔ Never
+ * `manuscripts.filter(m => ids.includes(m.id))`: that keeps the held list's
+ * RECENCY order and silently discards the order the choice was given in.
+ */
+export function manuscriptsInOrder(
+  ids: readonly string[],
+  manuscripts: readonly CurrentManuscript[],
+): CurrentManuscript[] {
+  const byId = new Map(manuscripts.map((m) => [m.id, m]));
+  return ids
+    .map((id) => byId.get(id))
+    .filter((m): m is CurrentManuscript => Boolean(m));
+}
+
 /** Resolve every manuscript a Work declares, preserving declaration order. */
 export function manuscriptsForWork(
   work: LivingWork,

@@ -12,6 +12,7 @@ import {
   homeWritingExtent,
   manuscriptIdsOf,
   manuscriptsForWork,
+  manuscriptsInOrder,
 } from '@/app/writers-studio/homeState';
 import type { SectionActivity } from '@/lib/writersStudio/sectionActivity';
 import type { MarkedLine } from '@/app/writers-studio/useMarkedLines';
@@ -268,8 +269,9 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     [props.works],
   );
   const unclaimed = props.manuscripts.filter((m) => !claimed.has(m.id));
+  // The mode-bar chooser keeps the order it was given (declaration order), never recency.
   const pendingManuscripts = props.pendingMode
-    ? props.manuscripts.filter((m) => props.pendingMode!.manuscriptIds.includes(m.id))
+    ? manuscriptsInOrder(props.pendingMode.manuscriptIds, props.manuscripts)
     : [];
   const recentHistory = props.historyActs.slice(0, 4).map(sentenceFor).filter((x): x is string => Boolean(x));
 

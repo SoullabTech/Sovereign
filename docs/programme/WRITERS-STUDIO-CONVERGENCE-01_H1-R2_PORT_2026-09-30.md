@@ -52,6 +52,30 @@ code does not route House arrival through `modeEntryTarget`.
 - `check:design-canon` ✅.
 - Forbidden-import scan: no `houseArrival`, no `workIntake`, no `THRESHOLD_ORIGINS` anywhere.
 
+## Automated walk — against the founder's merge boundary
+
+Disposable shadow (production baseline + all migrations), real `next dev` at the PR head, Chromium.
+Fixtures are adversarial: one Work with three manuscripts whose **recency order is the reverse of
+declaration order**, plus a newer **decoy** manuscript outside the Work; a second member with a
+single-manuscript Work.
+
+⭐ **The first run went 5/8 and caught a real defect in this PR**: the mode-bar chooser listed the
+Work's manuscripts newest-first. `P4R1HomeView` (ported from #1534) rendered it with
+`props.manuscripts.filter(m => ids.includes(m.id))`, which keeps the held list's recency order and
+discards the declaration order `modeEntryTarget` gave. The unit laws passed because they tested
+`modeEntryTarget`, not the view. Repaired with `manuscriptsInOrder()` + law MM-L7 + defeat candidate
+DM-7 (the filter shape) + a view guard that fails on the old view.
+
+**After the repair: 8/8 PASS**
+- C1: Home shows a chooser for the 2+ manuscript Work, in declared order.
+- C2: nothing is preselected (no `m`, no pressed or checked choice, no direct "Return to this work").
+- C3: the order matches House arrival, with nothing checked there either.
+- C4 ×3: Write, Develop and Review from the mode bar each ask, scoped to the Work, and the decoy is absent.
+- C4b: choosing opens exactly that manuscript.
+- C5: a single-manuscript Work opens directly.
+
+Jest studio + house: 93/93 suites · 975 tests. Typecheck 0 regressions.
+
 ## Audit of the superseded branches
 
 | Law in a superseded branch | Represented in #1536? |
