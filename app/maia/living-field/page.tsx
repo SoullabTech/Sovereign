@@ -24,6 +24,7 @@ interface LivingFieldData {
   spiral_state: SpiralState | null
   active_spirals: PersonalSpiral[]
   recent_states: PersonalState[]
+  r2_presentation?: 'r1r3' | 'r2e2'
 }
 
 function LivingFieldFrame({ fromHouse, children }: { fromHouse: boolean; children: ReactNode }) {
@@ -123,6 +124,7 @@ export default function LivingFieldPage() {
         activeSpirals={data.active_spirals}
         recentStates={data.recent_states}
         memberId={memberId}
+        r2Presentation={data.r2_presentation === 'r2e2'}
       />
     </LivingFieldFrame>
   )

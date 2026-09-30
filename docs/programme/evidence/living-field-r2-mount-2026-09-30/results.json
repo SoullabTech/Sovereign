@@ -1,0 +1,41 @@
+[
+  {
+    "name": "A-admitted-desktop",
+    "presentation": "r2e2",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "triggerBefore": 1,
+    "apertureOpened": true,
+    "returned": true,
+    "houseThreshold": true,
+    "pageErrors": []
+  },
+  {
+    "name": "B-noncohort-desktop",
+    "presentation": "r1r3",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "triggerBefore": 0,
+    "apertureOpened": false,
+    "returned": false,
+    "houseThreshold": true,
+    "pageErrors": []
+  },
+  {
+    "name": "C-admitted-mobile",
+    "presentation": "r2e2",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "triggerBefore": 0,
+    "apertureOpened": false,
+    "returned": false,
+    "houseThreshold": true,
+    "pageErrors": []
+  }
+]

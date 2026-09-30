@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { useEffect, useRef, useState } from 'react'
 import type { LivingField, PersonalSpiral, PersonalState, SpiralState } from './types'
 import { LivingFieldCard } from './LivingFieldCard'
 import { SpiralSummaryCard } from './SpiralSummaryCard'
@@ -10,6 +11,11 @@ import { ReturnHome } from '@/components/navigation/ReturnHome'
 import { LivingConstellationPanel } from '@/components/maia/living-constellation/LivingConstellationPanel'
 import { LifeFacetFlowPanel } from './LifeFacetFlowPanel'
 import { LivingFieldInstrument } from './LivingFieldInstrument'
+
+const LivingFieldSpatialAperture = dynamic(
+  () => import('./LivingFieldSpatialAperture').then((module) => module.LivingFieldSpatialAperture),
+  { ssr: false },
+)
 
 const RELATIONAL_PHASE_LABELS: Record<number, string> = {
   1: 'Orientation',
@@ -24,6 +30,7 @@ interface Props {
   activeSpirals: PersonalSpiral[]
   recentStates: PersonalState[]
   memberId: string
+  r2Presentation?: boolean
 }
 
 export function PersonalLivingFieldDashboard({
@@ -32,6 +39,7 @@ export function PersonalLivingFieldDashboard({
   activeSpirals,
   recentStates,
   memberId,
+  r2Presentation = false,
 }: Props) {
   const phase = spiralState?.relational_phase
   const phaseLabel = phase ? RELATIONAL_PHASE_LABELS[phase] : null
@@ -40,13 +48,46 @@ export function PersonalLivingFieldDashboard({
   // (Current Questions: the dimension for what is alive right now), never a
   // navigation away to main MAIA. Closing returns to the constellation.
   const [talkOpen, setTalkOpen] = useState(false)
+  const [spatialOpen, setSpatialOpen] = useState(false)
+  const [r2ViewportReady, setR2ViewportReady] = useState(false)
   const encounterRef = useRef<HTMLDivElement>(null)
+  const spatialRef = useRef<HTMLDivElement>(null)
+  const spatialTriggerRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!r2Presentation) {
+      setR2ViewportReady(false)
+      setSpatialOpen(false)
+      return
+    }
+
+    const query = window.matchMedia('(min-width: 901px)')
+    const sync = () => {
+      setR2ViewportReady(query.matches)
+      if (!query.matches) setSpatialOpen(false)
+    }
+    sync()
+    query.addEventListener('change', sync)
+    return () => query.removeEventListener('change', sync)
+  }, [r2Presentation])
 
   function beginMaiaExploration() {
     setTalkOpen(true)
     window.requestAnimationFrame(() => {
       encounterRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
+  }
+
+  function openSpatialField() {
+    setSpatialOpen(true)
+    window.requestAnimationFrame(() => {
+      spatialRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
+  function returnFromSpatialField() {
+    setSpatialOpen(false)
+    window.requestAnimationFrame(() => spatialTriggerRef.current?.focus())
   }
 
   // Surface aliveness at the top level. A field is "alive" if the member has
@@ -120,6 +161,25 @@ export function PersonalLivingFieldDashboard({
         {/* VFE-02R12 / RUNTIME-01: additive first witness. The existing Living Field
             remains below unchanged while recursive WORLD/PATH navigation is witnessed. */}
         <LivingFieldInstrument />
+
+        {r2Presentation && r2ViewportReady ? (
+          <div ref={spatialRef} className="scroll-mt-4">
+            {!spatialOpen ? (
+              <div className="flex justify-center">
+                <button
+                  ref={spatialTriggerRef}
+                  type="button"
+                  onClick={openSpatialField}
+                  className="rounded-full border border-amber-200/15 bg-amber-100/[0.03] px-4 py-2 text-sm text-amber-200/80 transition hover:border-amber-200/30 hover:text-amber-100"
+                >
+                  See the wider field →
+                </button>
+              </div>
+            ) : (
+              <LivingFieldSpatialAperture onReturn={returnFromSpatialField} />
+            )}
+          </div>
+        ) : null}
 
         {/* LC-02: same read-only constellation used across all three rooms. */}
         <LivingConstellationPanel focus="living" />

@@ -10,6 +10,7 @@ import { query } from '@/lib/db/postgres'
 import { CANONICAL_FIELD_KEYS } from '@/lib/maia/living-field/canonicalFieldKeys'
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 import { livingFieldAtomGuards } from '@/lib/maia/living-field/atomEligibility'
+import { livingFieldR2PresentationForMember } from '@/lib/maia/living-field/r2PresentationAccess'
 
 export async function GET(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request)
@@ -124,6 +125,7 @@ export async function GET(request: NextRequest) {
       spiral_state: spiralState,
       active_spirals: spiralsResult.rows,
       recent_states: statesResult.rows,
+      r2_presentation: livingFieldR2PresentationForMember(memberId),
     })
   } catch (err) {
     console.error('[living-field] GET error', err)
