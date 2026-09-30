@@ -25,6 +25,7 @@ import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
+import type { A2RelationshipSummary } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -63,6 +64,11 @@ export type P4R1Pc3WriteEditViewProps = {
   workspaceInsight: { readingId: string; key: string } | null;
   editorialThread: RebuildEditorialThread | null;
   relationshipChoices: readonly RebuildEditorialRelationship[];
+  maiaRelationship: A2RelationshipSummary | null;
+  maiaRelationshipChoices: readonly A2RelationshipSummary[];
+  maiaRelationshipPhase: 'idle' | 'loading' | 'ready' | 'unavailable';
+  maiaRelationshipBusy: boolean;
+  maiaRelationshipMessage: string | null;
   suggestedVersion: RebuildEditorialThread['versions'][number] | null;
   appliedVersionId: string | null;
   editorialDraft: string;
@@ -99,6 +105,9 @@ export type P4R1Pc3WriteEditViewProps = {
   onReviseInsight: NonNullable<Parameters<typeof InsightReadings>[0]['onRevise']>;
   onChoosePassage: NonNullable<Parameters<typeof InsightReadings>[0]['onChoosePassage']>;
   onChooseRelationship: (threadId: string) => void;
+  onBeginMaiaRelationship: () => void;
+  onChooseMaiaRelationship: (relationshipId: string) => void;
+  onLeaveMaiaRelationship: () => void;
 };
 
 function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRect } | null {
@@ -120,6 +129,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [canvas, setCanvas] = useState(false);
   const [workConversationOpen, setWorkConversationOpen] = useState(false);
   const [workConversationStarter, setWorkConversationStarter] = useState('');
+  const [maiaRelationshipChooserOpen, setMaiaRelationshipChooserOpen] = useState(false);
   const [blankArrivalDismissed, setBlankArrivalDismissed] = useState(false);
   const [selectionRect, setSelectionRect] = useState<DOMRect | null>(null);
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
@@ -387,6 +397,119 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         </div>
       ) : null}
     </div>
+  ) : null;
+
+
+  const maiaRelationshipCard = props.work && !canvas ? (
+    <section
+      className="p4r1-context-card p4r1-maia-relationship"
+      data-p4r1-maia-relationship
+      aria-label="Relationship with MAIA"
+    >
+      <header className="p4r1-context-head">
+        <div>
+          <span>Relationship with MAIA</span>
+          <strong>
+            {props.maiaRelationship
+              ? 'Continuing one relationship across this Work'
+              : 'Choose whether this Work should carry a continuing MAIA relationship'}
+          </strong>
+        </div>
+        {props.maiaRelationship ? (
+          <button
+            type="button"
+            disabled={props.maiaRelationshipBusy}
+            onClick={() => setMaiaRelationshipChooserOpen((open) => !open)}
+          >
+            {maiaRelationshipChooserOpen ? 'Close' : 'Change'}
+          </button>
+        ) : null}
+      </header>
+
+      {props.maiaRelationshipPhase === 'loading' ? (
+        <p className="p4r1-empty">Restoring your relationship with MAIA…</p>
+      ) : props.maiaRelationshipPhase === 'unavailable' ? (
+        <p className="p4r1-empty">
+          {props.maiaRelationshipMessage ?? 'Your MAIA relationships are unavailable just now. Nothing was changed.'}
+        </p>
+      ) : props.maiaRelationship ? (
+        <div>
+          <p className="p4r1-empty">
+            Editorial acts can carry this relationship without merging distinct passages or Review findings.
+          </p>
+          <p className="p4r1-empty">
+            Started {new Date(props.maiaRelationship.createdAt).toLocaleString()} · {props.maiaRelationship.episodeCount} carried act{props.maiaRelationship.episodeCount === 1 ? '' : 's'}
+          </p>
+          {maiaRelationshipChooserOpen ? (
+            <div className="p4r1-relationships" data-p4r1-maia-relationship-chooser>
+              {props.maiaRelationshipChoices
+                .filter((choice) => choice.id !== props.maiaRelationship?.id)
+                .map((choice) => (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    disabled={props.maiaRelationshipBusy}
+                    onClick={() => {
+                      props.onChooseMaiaRelationship(choice.id);
+                      setMaiaRelationshipChooserOpen(false);
+                    }}
+                  >
+                    Continue relationship · {new Date(choice.createdAt).toLocaleDateString()}
+                  </button>
+                ))}
+              <button
+                type="button"
+                disabled={props.maiaRelationshipBusy}
+                onClick={() => {
+                  props.onBeginMaiaRelationship();
+                  setMaiaRelationshipChooserOpen(false);
+                }}
+              >
+                Begin another relationship
+              </button>
+              <button
+                type="button"
+                disabled={props.maiaRelationshipBusy}
+                onClick={() => {
+                  props.onLeaveMaiaRelationship();
+                  setMaiaRelationshipChooserOpen(false);
+                }}
+              >
+                Leave relationship · nothing is deleted
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div>
+          <p className="p4r1-empty">
+            No continuing MAIA relationship is selected. Ordinary writing remains fully available.
+          </p>
+          <div className="p4r1-relationships">
+            <button
+              type="button"
+              disabled={props.maiaRelationshipBusy}
+              onClick={props.onBeginMaiaRelationship}
+            >
+              {props.maiaRelationshipBusy ? 'Beginning…' : 'Begin relationship with MAIA'}
+            </button>
+            {props.maiaRelationshipChoices.map((choice) => (
+              <button
+                key={choice.id}
+                type="button"
+                disabled={props.maiaRelationshipBusy}
+                onClick={() => props.onChooseMaiaRelationship(choice.id)}
+              >
+                Continue relationship · {new Date(choice.createdAt).toLocaleDateString()}
+              </button>
+            ))}
+          </div>
+          {props.maiaRelationshipMessage ? (
+            <p className="p4r1-empty" role="status">{props.maiaRelationshipMessage}</p>
+          ) : null}
+        </div>
+      )}
+    </section>
   ) : null;
 
   const workConversation = props.work && workConversationOpen ? (
@@ -702,6 +825,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           ) : null}
 
           {contextualActions}
+          {maiaRelationshipCard}
           {workConversation}
           {editorial}
         </>
