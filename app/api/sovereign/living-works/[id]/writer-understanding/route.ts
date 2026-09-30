@@ -70,18 +70,25 @@ function shape(row: Row): WriterUnderstanding {
 }
 
 async function read(workId: string, memberId: string): Promise<WriterUnderstanding | null> {
-  const result = await query<Row>(
-    `SELECT w.id AS work_id, w.purpose,
-            u.becoming, u.preserve, u.reader_relationship, u.central_ideas,
-            u.voice_cadence, u.intentional_ambiguity, u.challenge_me_on,
-            u.non_negotiables, u.unresolved_intentions, u.updated_at
-       FROM living_works w
-       LEFT JOIN living_work_writer_understanding u
-         ON u.living_work_id = w.id AND u.member_id = w.member_id
-      WHERE w.id = $1 AND w.member_id = $2`,
-    [workId, memberId],
-  );
-  return result.rows[0] ? shape(result.rows[0]) : null;
+  try {
+    const result = await query<Row>(
+      `SELECT w.id AS work_id, w.purpose,
+              u.becoming, u.preserve, u.reader_relationship, u.central_ideas,
+              u.voice_cadence, u.intentional_ambiguity, u.challenge_me_on,
+              u.non_negotiables, u.unresolved_intentions, u.updated_at
+         FROM living_works w
+         LEFT JOIN living_work_writer_understanding u
+           ON u.living_work_id = w.id AND u.member_id = w.member_id
+        WHERE w.id = $1 AND w.member_id = $2`,
+      [workId, memberId],
+    );
+    return result.rows[0] ? shape(result.rows[0]) : null;
+  } catch (error) {
+    // Migrate-before-swap compatibility: only an absent additive substrate is
+    // treated as "no understanding available"; all other DB failures propagate.
+    if ((error as { code?: string })?.code === '42P01') return null;
+    throw error;
+  }
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

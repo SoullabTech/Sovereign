@@ -19,6 +19,9 @@ type Row = {
 const arr = (value: unknown): string[] => Array.isArray(value)
   ? value.filter((x): x is string => typeof x === 'string') : [];
 
+const isUndefinedTable = (error: unknown): boolean =>
+  (error as { code?: string })?.code === '42P01';
+
 function shape(row: Row): WriterUnderstanding {
   return {
     workId: row.work_id,
@@ -40,21 +43,29 @@ export async function writerUnderstandingForManuscript(
   memberId: string,
   manuscriptId: string,
 ): Promise<WriterUnderstanding | null> {
-  const rows = await query<Row>(
-    `SELECT w.id AS work_id, w.purpose,
-            u.becoming, u.preserve, u.reader_relationship, u.central_ideas,
-            u.voice_cadence, u.intentional_ambiguity, u.challenge_me_on,
-            u.non_negotiables, u.unresolved_intentions, u.updated_at
-       FROM living_work_expressions e
-       JOIN living_works w ON w.id = e.living_work_id AND w.member_id = $1
-       LEFT JOIN living_work_writer_understanding u
-         ON u.living_work_id = w.id AND u.member_id = w.member_id
-      WHERE e.expression_type = 'manuscript' AND e.expression_id = $2
-      ORDER BY w.id`,
-    [memberId, manuscriptId],
-  );
-  if (rows.rows.length !== 1) return null;
-  return shape(rows.rows[0]!);
+  try {
+    const rows = await query<Row>(
+      `SELECT w.id AS work_id, w.purpose,
+              u.becoming, u.preserve, u.reader_relationship, u.central_ideas,
+              u.voice_cadence, u.intentional_ambiguity, u.challenge_me_on,
+              u.non_negotiables, u.unresolved_intentions, u.updated_at
+         FROM living_work_expressions e
+         JOIN living_works w ON w.id = e.living_work_id AND w.member_id = $1
+         LEFT JOIN living_work_writer_understanding u
+           ON u.living_work_id = w.id AND u.member_id = w.member_id
+        WHERE e.expression_type = 'manuscript' AND e.expression_id = $2
+        ORDER BY w.id`,
+      [memberId, manuscriptId],
+    );
+    if (rows.rows.length !== 1) return null;
+    return shape(rows.rows[0]!);
+  } catch (error) {
+    // Migrate-before-swap compatibility: absence of the additive writer-
+    // understanding table means "no declared understanding yet", not a broken
+    // Work/Ask lane. Every other database failure remains visible.
+    if (isUndefinedTable(error)) return null;
+    throw error;
+  }
 }
 
 export async function writerUnderstandingContextForManuscript(
@@ -68,19 +79,24 @@ export async function writerUnderstandingForWork(
   memberId: string,
   workId: string,
 ): Promise<WriterUnderstanding | null> {
-  const rows = await query<Row>(
-    `SELECT w.id AS work_id, w.purpose,
-            u.becoming, u.preserve, u.reader_relationship, u.central_ideas,
-            u.voice_cadence, u.intentional_ambiguity, u.challenge_me_on,
-            u.non_negotiables, u.unresolved_intentions, u.updated_at
-       FROM living_works w
-       LEFT JOIN living_work_writer_understanding u
-         ON u.living_work_id = w.id AND u.member_id = w.member_id
-      WHERE w.id = $1 AND w.member_id = $2`,
-    [workId, memberId],
-  );
-  if (rows.rows.length !== 1) return null;
-  return shape(rows.rows[0]!);
+  try {
+    const rows = await query<Row>(
+      `SELECT w.id AS work_id, w.purpose,
+              u.becoming, u.preserve, u.reader_relationship, u.central_ideas,
+              u.voice_cadence, u.intentional_ambiguity, u.challenge_me_on,
+              u.non_negotiables, u.unresolved_intentions, u.updated_at
+         FROM living_works w
+         LEFT JOIN living_work_writer_understanding u
+           ON u.living_work_id = w.id AND u.member_id = w.member_id
+        WHERE w.id = $1 AND w.member_id = $2`,
+      [workId, memberId],
+    );
+    if (rows.rows.length !== 1) return null;
+    return shape(rows.rows[0]!);
+  } catch (error) {
+    if (isUndefinedTable(error)) return null;
+    throw error;
+  }
 }
 
 export async function writerUnderstandingContextForWork(
