@@ -20,6 +20,15 @@ import {
   MAIA_EARNED_DIRECTNESS_LAW,
   MAIA_MEANING_AUTHORITY_LAW,
 } from '@/lib/memory/developmental-epistemics/earnedDirectness'
+import {
+  DIRECTNESS_CONTRASTS,
+  MAIA_CLEAR_CENTER_OPEN_EDGE_LAW,
+  MAIA_DIRECTNESS_FELT_TEST,
+  MAIA_NO_VERDICT_LAW,
+  MAIA_OPEN_EDGE_PROGRESSIVE_DISCLOSURE_LAW,
+  MAIA_RELATIONAL_DIRECTNESS_LAW,
+  OPEN_EDGE_DIMENSIONS,
+} from '@/lib/memory/developmental-epistemics/relationalDirectness'
 
 type WitnessResult = 'NOT_RUN' | 'PASS' | 'HOLD' | 'FAIL'
 
@@ -115,6 +124,44 @@ export function J6ARepairWitness() {
           <p className="mt-5 text-xs leading-5 text-[#7f7365]">
             The hinge is member recognition: evidence may strengthen what MAIA can say about recurrence, but personal meaning becomes directly speakable only after the member authors or confirms it.
           </p>
+        </section>
+
+        <section className="mt-8 rounded-[28px] border border-[#50483e]/70 bg-[#171411] p-5 sm:p-6">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[#978671]">Directness is not certainty</p>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <LawCard title="Relational directness" text={MAIA_RELATIONAL_DIRECTNESS_LAW} />
+            <LawCard title="Clear center / open edge" text={MAIA_CLEAR_CENTER_OPEN_EDGE_LAW} />
+            <LawCard title="No verdict" text={MAIA_NO_VERDICT_LAW} />
+            <LawCard title="Progressive disclosure" text={MAIA_OPEN_EDGE_PROGRESSIVE_DISCLOSURE_LAW} />
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {DIRECTNESS_CONTRASTS.map((contrast) => (
+              <div key={contrast.direct} className="rounded-2xl border border-[#494239] bg-[#11100f] p-4">
+                <p className="text-[10px] uppercase tracking-[0.15em] text-[#8f7f6b]">Direct / grounded</p>
+                <p className="mt-2 text-sm leading-6 text-[#ddd0bd]">{contrast.direct}</p>
+                <p className="mt-4 text-[10px] uppercase tracking-[0.15em] text-[#9d756f]">Certain / closing</p>
+                <p className="mt-2 text-sm leading-6 text-[#c7aaa4]">{contrast.certain}</p>
+                <p className="mt-4 text-xs leading-5 text-[#8f8271]">{contrast.distinction}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6">
+            <p className="text-[10px] uppercase tracking-[0.15em] text-[#8f7f6b]">The open edge</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {OPEN_EDGE_DIMENSIONS.map((dimension) => (
+                <div key={dimension.id} className="rounded-2xl border border-[#494239] bg-[#11100f] p-4">
+                  <p className="text-xs text-[#d1b78f]">{dimension.label}</p>
+                  <p className="mt-1 text-xs leading-5 text-[#8f8271]">{dimension.question}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-[#62584a]/65 bg-[#1a1713] p-4">
+            <p className="text-sm leading-6 text-[#c7b8a5]">{MAIA_DIRECTNESS_FELT_TEST}</p>
+          </div>
         </section>
 
         <section className="mt-8 rounded-[28px] border border-[#50483e]/70 bg-[#171411] p-5 sm:p-6">
