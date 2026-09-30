@@ -131,7 +131,8 @@ aliveness exists, UI wording must not imply choice or salience beyond recency. I
 | 6 · M↔W validation on every resolve | ✅ (`resolveSituatedWorkContext`) |
 | 7 · WS2-03B precedence amendment | ✅ law layer; header of `workContext.ts` records it |
 | 2 · House doorway carries Work id | ⏸ address builder `studioArrivalFromHouse` landed; **`app/house/page.tsx` not edited** (R4) |
-| 5 · 8 · 9 · carry M+W through Studio navigation, return to W | ⏸ address builder `situatedManuscriptAddress` landed; **no Studio host wired** |
+| 5 · 8 · carry M+W through Studio navigation | ✅ **Studio side wired** (see §10) — inert until a link produces `work=` |
+| 9 · return to W / to House | ⏸ design owed (§10.3) |
 | 10 · no `memberId` / no `ALLOWED_CROSSINGS` packet / no "recently entered" / no "Review related material" | ✅ asserted structurally |
 
 Artifacts: `app/writers-studio/situatedWork.ts` · `app/writers-studio/__tests__/situatedWork.test.ts`.
@@ -145,3 +146,50 @@ no project `node_modules` — the founder's run is the evidence of record).
 
 ⛔ No UI · ⛔ no House presentation change · ⛔ no Studio host wired · ⛔ no schema · ⛔ no deploy.
 Wiring (items 2, 5, 8, 9) opens once `ea-house.md` is committed.
+
+## 10 · Increment 2 — Studio side wired (2026-09-30)
+
+### 10.1 What changed
+* **Canonical host corrected.** `/writers-studio` is the C11 unified host (`P4R1StudioHost`,
+  modes by `?mode=`); `/writers-studio/rebuild` is not. `situatedManuscriptAddress` now builds
+  `/writers-studio?mode=write&m=M&work=W`.
+* **The three canonical controllers** (`P4R1WriteEditController` · `P4R1DevelopController` ·
+  `P4R1ReviewController`) now resolve via `resolveSituatedWorkContext(…, readStudioWorkParam(params))`
+  instead of `resolveWorkContext`. Same four kinds, so every existing branch (`none` /
+  `ambiguous` copy — *"The Studio will not choose one for you."*) is untouched.
+* **Carry (item 8) needed no code.** Every mode change in Home / Write / Develop / Review builds
+  `new URLSearchParams(params.toString())`, so `work=` rides along; wherever the manuscript
+  changes to one W does not declare, the claim stops validating and inference resumes.
+* **Inert today**: nothing yet produces `work=`. Behaviour changes only once the House doorway
+  (item 2) is wired.
+
+### 10.2 Verification (scratchpad toolchain; founder's run is the record)
+* `app/writers-studio/__tests__`: **76/76 suites · 809/809 tests** after; **75/75 · 780/780** at
+  the prior commit (situatedWork excluded) — **0 regressions**. (A first run showed 13 suites
+  "failing"; all were module-load failures — no `react` / jsdom in the container — ⛔ not
+  assertions. Reinstalled and rerun rather than reported.)
+* Isolated `tsc` over the three controllers + `situatedWork.ts`: **1 diagnostic before, the same
+  1 after** (`P4R1WriteEditController.tsx:800`, outside the change, an artifact of partial
+  dependencies). **0 new.** ⚠️ `npm run typecheck` (ship gate) not run — needs full deps.
+
+### 10.3 Findings for the founder (⛔ not acted on)
+1. ⚠️ **Design-contract tension.** `docs/design/contracts/house-continuity-thresholds.md` (the
+   committed House→room membrane) says *"navigation never implies semantic carry, hidden context
+   transfer"* and *"`from=house` … must not become hidden content context"*; it does **not**
+   list the Studio among its surfaces. `work=` is **not hidden** (visible, member-editable URL),
+   carries **identity, not content**, and is authorized by R3 — but the contract predates R3 and
+   should record it before the House doorway ships, with `app/writers-studio` added and a
+   witness. A founder-governed contract edit, ⛔ not made here.
+2. ⚠️ **No return to House from the Studio.** `HOUSE_PLACES.writing.href` already carries
+   `?from=house`, yet the Studio renders no `HouseRoomThreshold`. The component and grammar exist
+   (*Soullab mark · THE HOUSE · destination · Return to House*). Adding it is a visual change in
+   the Studio → wants the same design authority as item 2.
+3. ⚠️ **Pre-existing recency defaults inside the Studio** (routed, not repaired):
+   `useCurrentManuscript` — *"The most recent is the current book"*; `P4R1HomeController.onMode`
+   falls back to `manuscripts[0]`. The House arrival must not flow into either: with `work=W`,
+   the Home arrival must present `resolveWorkArrival`'s none/one/several, never the recency pick.
+   That Home arrival surface (the *several* chooser) is new UI → design authority owed.
+4. ⚠️ **`ea-house.md` still absent from every branch** (fetched 2026-09-30). The committed House
+   contracts (`house-room.md`, `house-continuity-thresholds.md`, `house-return.md`) exist and
+   cover `app/house/page.tsx`; whether they suffice for an **href-only** doorway change, or R4
+   holds until `ea-house.md` lands, is the founder's call.

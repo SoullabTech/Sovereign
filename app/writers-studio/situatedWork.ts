@@ -161,7 +161,10 @@ export function studioArrivalFromHouse(workId: string): string {
  * and NEVER "M uniquely belongs to W". It is re-validated on every load.
  */
 export function situatedManuscriptAddress(manuscriptId: string, workId: string | null): string {
-  const base = `/writers-studio/rebuild?${CANVAS_MANUSCRIPT_PARAM}=${encodeURIComponent(manuscriptId)}`;
+  // The canonical host (C11): /writers-studio with query-addressed modes. Mode
+  // changes inside the host copy every param, so `work` rides along unaided —
+  // and falls through to inference wherever it stops validating.
+  const base = `/writers-studio?mode=write&${CANVAS_MANUSCRIPT_PARAM}=${encodeURIComponent(manuscriptId)}`;
   return workId ? `${base}&${STUDIO_WORK_PARAM}=${encodeURIComponent(workId)}` : base;
 }
 

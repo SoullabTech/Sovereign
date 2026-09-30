@@ -249,8 +249,8 @@ describe('addresses — carry identity only', () => {
     expect(href).not.toMatch(/member/i);
   });
   it('situated address carries the pair; unsituated carries M alone', () => {
-    expect(situatedManuscriptAddress('M', 'W')).toBe('/writers-studio/rebuild?m=M&work=W');
-    expect(situatedManuscriptAddress('M', null)).toBe('/writers-studio/rebuild?m=M');
+    expect(situatedManuscriptAddress('M', 'W')).toBe('/writers-studio?mode=write&m=M&work=W');
+    expect(situatedManuscriptAddress('M', null)).toBe('/writers-studio?mode=write&m=M');
   });
   it('round trip: the carried pair resolves back to the explicit context', () => {
     const href = situatedManuscriptAddress('M', 'W');
