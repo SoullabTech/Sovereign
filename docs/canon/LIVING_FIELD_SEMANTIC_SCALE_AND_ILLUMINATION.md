@@ -80,9 +80,9 @@ The following are semantic invariants.
 
 The current locus retains its identity across scale.
 
-### 2. Containing lineage
+### 2. Containing context / path
 
-The member can recover what contains the current locus.
+The member can recover what contains the current locus. This is current semantic orientation, not developmental lineage.
 
 ### 3. Current inquiry
 
@@ -190,7 +190,7 @@ Keep visible:
 - world essence / inquiry;
 - major child regions or child count;
 - bridges to other worlds;
-- current containing lineage;
+- current containing context path;
 - unresolved tension crossing the world boundary.
 
 Condense:

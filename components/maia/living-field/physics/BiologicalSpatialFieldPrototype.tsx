@@ -24,6 +24,12 @@ import {
   navigationPlanForFieldKey,
   resolveNavigationNodes,
 } from './livingFieldNavigation'
+import {
+  buildRelationBundles,
+  condensationModeForScale,
+  type CondensationMode,
+  type RelationBundle,
+} from './livingFieldSemanticCondensation'
 
 const SCALE = 50
 const WORLD_R = 155 / SCALE
@@ -59,6 +65,12 @@ type RelationBody = {
 type DebugBridge = {
   snapshot: () => Record<string, { x: number; y: number; z: number; vx: number; vy: number }>
   impulse: (id: string, x: number, y: number) => void
+  condensation: () => {
+    mode: CondensationMode
+    bridgeIds: string[]
+    unresolvedBridgeIds: string[]
+    relationIdsByBridge: Record<string, string[]>
+  }
 }
 
 type RecursiveChildBody = {
@@ -341,6 +353,129 @@ function RelationLine({
   })
 
   return <primitive object={line} />
+}
+
+function CondensedRelationBridge({
+  bundle,
+  mode,
+}: {
+  bundle: RelationBundle
+  mode: CondensationMode
+}) {
+  const geometries = useMemo(() => {
+    const source = GROUP_GEOMETRY[bundle.sourceGroup]
+    const target = GROUP_GEOMETRY[bundle.targetGroup]
+    const start = scenePoint(source.x, source.y, -0.2)
+    const end = scenePoint(target.x, target.y, -0.2)
+    const midpoint = start.clone().lerp(end, 0.5)
+    const control = midpoint.clone()
+    control.z += 0.42 + Math.min(0.42, start.distanceTo(end) * 0.035)
+
+    const curve = new THREE.QuadraticBezierCurve3(start, control, end)
+    const radius =
+      0.014 +
+      Math.min(0.035, bundle.relationCount * (mode === 'bundle' ? 0.006 : 0.0045))
+
+    return {
+      core: new THREE.TubeGeometry(curve, 42, radius, 8, false),
+      halo: new THREE.TubeGeometry(curve, 42, radius * 2.35, 8, false),
+    }
+  }, [
+    bundle.relationCount,
+    bundle.sourceGroup,
+    bundle.targetGroup,
+    mode,
+  ])
+
+  const midpoint = useMemo(() => {
+    const source = GROUP_GEOMETRY[bundle.sourceGroup]
+    const target = GROUP_GEOMETRY[bundle.targetGroup]
+    return scenePoint(
+      (source.x + target.x) / 2,
+      (source.y + target.y) / 2,
+      0.48,
+    )
+  }, [bundle.sourceGroup, bundle.targetGroup])
+
+  useEffect(() => () => {
+    geometries.core.dispose()
+    geometries.halo.dispose()
+  }, [geometries])
+
+  const color = bundle.unresolved ? '#c59b60' : '#887b69'
+  const opacity =
+    mode === 'pattern' ? 0.13 :
+    mode === 'bridge' ? 0.22 :
+    0.3
+
+  const showLabel =
+    bundle.unresolved ||
+    (mode === 'bundle' && bundle.relationCount > 1)
+
+  return (
+    <group>
+      <mesh geometry={geometries.halo} raycast={() => null}>
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={opacity * 0.16}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          toneMapped={false}
+        />
+      </mesh>
+
+      <mesh geometry={geometries.core} raycast={() => null}>
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={opacity}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          toneMapped={false}
+        />
+      </mesh>
+
+      <mesh position={midpoint} raycast={() => null}>
+        <sphereGeometry args={[
+          0.035 + Math.min(0.055, bundle.relationCount * 0.012),
+          20,
+          12,
+        ]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={bundle.unresolved ? 0.28 : 0.13}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          toneMapped={false}
+        />
+      </mesh>
+
+      {showLabel ? (
+        <Html position={midpoint} center style={{ pointerEvents: 'none' }}>
+          <div
+            data-condensed-bridge-label={bundle.id}
+            className={
+              'translate-y-[-15px] whitespace-nowrap rounded-full border bg-black/55 px-1.5 py-0.5 text-[8px] backdrop-blur-md ' +
+              (bundle.unresolved
+                ? 'border-amber-800/35 text-amber-300/75'
+                : 'border-stone-800/55 text-stone-600')
+            }
+          >
+            ×{bundle.relationCount}
+            {bundle.unresolved ? ' · tension held' : ''}
+          </div>
+        </Html>
+      ) : null}
+    </group>
+  )
+}
+
+function relationCrossesWorlds(relation: RelationBody) {
+  const source = NODE_BY_ID.get(relation.source)
+  const target = NODE_BY_ID.get(relation.target)
+  return Boolean(source && target && source.group !== target.group)
 }
 
 function Cell({
@@ -677,6 +812,8 @@ function Scene({
 }) {
   const bodies = useMemo(() => buildBodies(), [])
   const relations = useMemo(() => buildRelations(bodies), [bodies])
+  const relationBundles = useMemo(() => buildRelationBundles(), [])
+  const condensationMode = condensationModeForScale(zoom)
   const pressure = useRef<Record<PhysicsGroupKey, number>>({
     fire: 0, water: 0, earth: 0, air: 0, aether: 0,
   })
@@ -701,11 +838,21 @@ function Scene({
         body.vel.x += x
         body.vel.y += y
       },
+      condensation: () => ({
+        mode: condensationMode,
+        bridgeIds: relationBundles.map((bundle) => bundle.id),
+        unresolvedBridgeIds: relationBundles
+          .filter((bundle) => bundle.unresolved)
+          .map((bundle) => bundle.id),
+        relationIdsByBridge: Object.fromEntries(
+          relationBundles.map((bundle) => [bundle.id, bundle.relationIds]),
+        ),
+      }),
     }
     return () => {
       delete w.__soullabBiology
     }
-  }, [bodies])
+  }, [bodies, condensationMode, relationBundles])
 
   return (
     <>
@@ -733,9 +880,23 @@ function Scene({
         <WorldMembrane key={group.id} group={group.id} pressure={pressure} />
       ))}
 
-      {relations.map((relation) => (
-        <RelationLine key={relation.id} relation={relation} bodies={bodies} />
-      ))}
+      {relations
+        .filter((relation) =>
+          !relationCrossesWorlds(relation) || condensationMode === 'specific',
+        )
+        .map((relation) => (
+          <RelationLine key={relation.id} relation={relation} bodies={bodies} />
+        ))}
+
+      {condensationMode !== 'specific'
+        ? relationBundles.map((bundle) => (
+            <CondensedRelationBridge
+              key={bundle.id}
+              bundle={bundle}
+              mode={condensationMode}
+            />
+          ))
+        : null}
 
       {[...bodies.values()].map((body) => {
         const fieldNode = fieldNodeForPhysicsNode(body.id)
