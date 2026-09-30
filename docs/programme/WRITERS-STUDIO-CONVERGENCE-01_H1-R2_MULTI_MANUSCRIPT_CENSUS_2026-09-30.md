@@ -1,13 +1,13 @@
 # WRITERS-STUDIO-CONVERGENCE-01 · H1-R2
 ## Multi-manuscript Work census · 2026-09-30
 
-**Base:** `acfbdbee0` (`claude/beautiful-mayer-mt9jc9`), itself on canonical `04005ca7c`  
-**Scope:** manuscript selection only. H1-R1 House → Studio intake is not changed.  
+**Base:** `acfbdbee0` (`claude/beautiful-mayer-mt9jc9`), itself on canonical `04005ca7c`
+**Scope:** manuscript selection only. H1-R1 House → Studio intake is not changed.
 **Method:** read-only census before repair.
 
 ## Governing defect
 
-`LivingWork.expressions` may contain multiple `manuscript` expressions.  
+`LivingWork.expressions` may contain multiple `manuscript` expressions.
 `manuscriptIdOf(work)` currently returns the first expression. That is an
 implicit selection with no member act authorizing it.
 
