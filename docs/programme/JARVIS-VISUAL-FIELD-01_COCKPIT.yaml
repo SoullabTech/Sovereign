@@ -12,7 +12,7 @@ current_authority:
   - docs/programme/JARVIS-VISUAL-FIELD-01_R2D2_RECURSIVE_OIL_MEMBRANE_2026-09-30.md
 current_phase: VERIFY
 current_act: VISUAL-FIELD-RUNTIME-02D2 — Recursive Oil Membrane Founder Witness
-current_subject_sha: 84d18c5d6cf0b0c7c3bac1e8647840c90a851a9d
+current_subject_sha: b61394c4f
 current_branch: feature/jarvis-visual-field-r2d2-recursive-membrane-20260930
 worktree: /private/tmp/jarvis-visual-field-r2d2
 runtime: http://localhost:3610/dev/living-field-recursive-r2d2
@@ -24,8 +24,10 @@ open_findings:
   - R2D1 biological physics passed founder witness and remain the chosen Grokker substrate.
   - R2D2 binds the existing real Living Field hierarchy into that same biological renderer.
   - Click on a supported bubble yields a containing membrane; surrounding worlds remain present and are physically displaced.
+  - Founder refinement now requires true nested containment: Relationship remains the parent membrane while Grief opens inside it with Continuing Relation / Remembrance / Ritual.
+  - Open-space drag pans the camera in world-space independently of pointer parallax; controlled horizontal pull witness shifts the scene ~231 px with zero browser errors.
   - Existing nested child material can be entered recursively without page navigation.
-  - Controlled Relationship → Grief traversal, Wider return, Whole recovery, and R2D1 physics regression all pass with zero browser errors.
+  - Controlled Relationship → Grief traversal, Wider return, Whole recovery, nested-containment witness, pan witness, and R2D1 physics regression all pass with zero browser errors.
   - R2D2 proves physical node-to-world recursion only; universal semantic-object recursion remains governed by R2G.
   - Live MAIA interpretation, durable memory, and autonomous child-ecology generation remain closed.
 founder_stops:
@@ -37,4 +39,4 @@ founder_stops:
   - No durable relation or shared-meaning persistence.
   - No merge or deployment.
 next_phase_on_exit: R2D2 founder recursive-feel witness; PASS resumes R2E Semantic Condensation on this substrate
-last_state_change: 2026-09-30 — recursive oil-membrane candidate sealed at 84d18c5d6; founder witness is current gate
+last_state_change: 2026-09-30 — founder refinement implemented at b61394c4f: nested Grief membrane + open-space field pan; founder re-witness is current gate
