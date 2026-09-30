@@ -2,8 +2,13 @@ import Link from 'next/link';
 import styles from './house-room-threshold.module.css';
 
 export function HouseRoomThreshold({ room }: { room: string }) {
+  const writerStudio = room === "WRITER'S STUDIO";
   return (
-    <header className={styles.threshold} aria-label={`${room} Soullab navigation`}>
+    <header
+      className={styles.threshold + (writerStudio ? ' ' + styles.writerStudio : '')}
+      data-room={room}
+      aria-label={room + ' Soullab navigation'}
+    >
       <Link href="/home" className={styles.brand} aria-label="Return to Soullab Home">
         <img src="/holoflower-studio-transparent.png" alt="" />
         <span>SOULLAB</span>

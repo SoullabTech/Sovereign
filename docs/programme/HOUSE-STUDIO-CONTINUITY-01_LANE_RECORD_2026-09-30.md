@@ -207,14 +207,19 @@ Behavioral witness:
 - H1-R1 Work/manuscript landing identity remains unchanged: PASS.
 
 Verification:
-- Writer's Studio: **78 suites / 805 tests PASS**.
-- Focused H1-R2 + H1-R3: **19 tests PASS**.
+- Writer's Studio: **78 suites / 805 tests PASS** before the final visual repair;
+  the targeted H1-R3 suite is **20 tests PASS** after it.
+- Focused H1-R2 + H1-R3: **20 tests PASS** after the mobile threshold repair.
+- Desktop 1440×900 visual witness: Return Home visible.
+- Mobile 390×844 visual witness: Return Home visible and clear of the fixed
+  Theme control.
 - Project typecheck: blocked by unrelated new diagnostic
   `lib/stripe/config.ts:23` (Stripe API version type mismatch). No H1-R3
   diagnostic was reported.
 
 **H1-R3 disposition:** IMPLEMENTATION COMPLETE · BEHAVIORAL EVIDENCE COMPLETE ·
-MERGE REVIEW PENDING.
+VISUAL WITNESS COMPLETE · FOUNDER VISUAL ACCEPTANCE PENDING · MERGE REVIEW
+PENDING.
 
 ## 7a · H1-R4 context release
 

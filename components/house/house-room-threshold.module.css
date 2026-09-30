@@ -72,6 +72,15 @@
     grid-template-columns: 1fr auto;
   }
 
+  .writerStudio {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
+
+  .writerStudio .return {
+    justify-self: start;
+  }
+
   .room { display: none; }
   .brand img { width: 24px; height: 24px; }
   .return { font-size: 11px; }

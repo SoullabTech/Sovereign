@@ -5,6 +5,7 @@ const root = process.cwd();
 const layout = fs.readFileSync(path.join(root, 'app/writers-studio/layout.tsx'), 'utf8');
 const threshold = fs.readFileSync(path.join(root, 'components/house/HouseEntryThreshold.tsx'), 'utf8');
 const roomThreshold = fs.readFileSync(path.join(root, 'components/house/HouseRoomThreshold.tsx'), 'utf8');
+const thresholdCss = fs.readFileSync(path.join(root, 'components/house/house-room-threshold.module.css'), 'utf8');
 
 describe('H1-R3 — Writer Studio → House return', () => {
   it('reuses the canonical House threshold at the Studio outer boundary', () => {
@@ -20,6 +21,13 @@ describe('H1-R3 — Writer Studio → House return', () => {
     expect(roomThreshold).toContain('href="/home"');
     expect(roomThreshold).toContain('Return Home →');
     expect(roomThreshold).not.toContain('href="/house"');
+  });
+
+  it('keeps the mobile Writer Studio return clear of the fixed theme control', () => {
+    expect(roomThreshold).toContain('styles.writerStudio');
+    expect(thresholdCss).toContain('.writerStudio');
+    expect(thresholdCss).toContain('grid-template-columns: auto auto;');
+    expect(thresholdCss).toContain('.writerStudio .return');
   });
 
   it('does not introduce a crossing or persistence seam', () => {

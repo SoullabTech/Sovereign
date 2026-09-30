@@ -80,10 +80,30 @@ The same browser walk also preserved the H1-R1 landing contract: the Studio
 arrival retained the member-selected manuscript and did not reintroduce the
 transient `work=` parameter.
 
+### Visual witness
+
+The first 390px witness exposed a real presentation collision: the fixed
+Writer's Studio Theme control occupied the same top-right space as the shared
+House Return link. The threshold remained technically present, but the return
+text was visually covered.
+
+The repair keeps the shared threshold contract and changes only the
+Writer's Studio mobile grid: the brand and Return Home remain left-aligned as
+a pair, leaving the fixed Theme control clear.
+
+Fresh witnesses after the repair:
+- desktop 1440×900: Return Home visible;
+- mobile 390×844: Return Home visible and separated from Theme;
+- direct Studio entry without `from=house`: threshold absent.
+
+No new persistence or navigation mechanism was introduced by the visual repair.
+
 ## Verification
 
-- Writer's Studio test population: **78 suites / 805 tests PASS**.
-- Focused H1-R2 + H1-R3 suites: **19 tests PASS**.
+- Writer's Studio test population: **78 suites / 805 tests PASS** before the
+  final visual repair.
+- Focused H1-R2 + H1-R3 suites: **20 tests PASS** after the mobile threshold
+  repair.
 - Project `npm run typecheck`: **FAIL at the existing global regression
   gate**, with one unrelated new diagnostic in `lib/stripe/config.ts:23`
   (Stripe API version type mismatch). The H1-R3 files are not implicated.
