@@ -14,7 +14,7 @@ current_act: VISUAL-FIELD-RUNTIME-02D1 — Founder Biological Spatial Dynamics W
 current_subject_sha: a1feb66fba902729a46b5aa971f6abc6d37c2cc0
 current_branch: feature/jarvis-visual-field-r2d1-20260930
 worktree: /private/tmp/jarvis-visual-field-r2d1
-runtime: http://localhost:3609/public-demo
+runtime: http://localhost:3608/dev/living-field-biological-r2d1
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED

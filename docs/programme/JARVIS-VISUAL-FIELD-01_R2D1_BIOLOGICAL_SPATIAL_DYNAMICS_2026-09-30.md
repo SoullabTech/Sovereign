@@ -96,6 +96,7 @@ Desktop browser errors: **0**.
 
 - `docs/design/contracts/screenshots/living-field-r2d1-biological-desktop.png`
 - `docs/design/contracts/screenshots/living-field-r2d1-biological-mobile.png`
+- `scripts/witness/grokker-r2d1-witness.mjs` — repeatable browser impulse witness; latest rerun: Calling 0.359 → 0.607 → 0.135 field units, speed 2.171 → 0.073, coupled Stewardship / Identity response, unrelated Belonging 0.000, browser errors 0.
 
 ## Founder witness
 
