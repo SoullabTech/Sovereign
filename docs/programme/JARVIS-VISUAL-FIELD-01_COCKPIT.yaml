@@ -11,10 +11,11 @@ current_authority:
   - docs/canon/LIVING_FIELD_SEMANTIC_SCALE_AND_ILLUMINATION.md
   - docs/canon/LIVING_FIELD_GROKKER_ROOM_CANON.md
   - docs/programme/JARVIS-VISUAL-FIELD-01_R2E1_SEMANTIC_CONDENSATION_2026-09-30.md
+  - docs/programme/JARVIS-VISUAL-FIELD-01_R2E2_WHOLE_FIELD_PATTERN_VISIBILITY_2026-09-30.md
   - docs/design/contracts/living-field-grokker.md
   - docs/programme/JARVIS-VISUAL-FIELD-01_R2D2_RECURSIVE_OIL_MEMBRANE_2026-09-30.md
 current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-02E1 — Cross-World Semantic Condensation
+current_act: VISUAL-FIELD-RUNTIME-02E2 — Whole-Field Pattern Visibility
 current_subject_sha: R2E1-CANDIDATE
 current_branch: feature/jarvis-visual-field-r2e2-semantic-condensation-20260930
 worktree: /private/tmp/jarvis-visual-field-r2e2
@@ -42,12 +43,12 @@ open_findings:
   - Optical magnification and semantic scale are now separated by dead-zone / settled-intent hysteresis before widening.
   - Live MAIA interpretation, durable memory, full Source Fabric, and autonomous child-ecology generation remain closed.
 founder_stops:
-  - R2E1 founder semantic-condensation witness before pattern interpretation or synthesis.
+  - R2E2 founder whole-field pattern witness before navigation continuity or any pattern interpretation.
   - No fabricated child ecologies.
   - No claim that R2G universal recursive depth is complete.
   - No free-roaming orbit camera or semantic meaning from z-position.
   - No live MAIA interpretation from semantic objects.
   - No durable relation or shared-meaning persistence.
   - No merge or deployment.
-next_phase_on_exit: R2E1 PASS opens bounded whole-field pattern visibility without pattern interpretation
-last_state_change: 2026-09-30 — R2E1 candidate: reversible cross-world bridge/bundle/specific condensation; exact membership, tension, standing and R2D1 physics preserved; founder witness is current gate
+next_phase_on_exit: R2E2 PASS opens R2F session-only Navigation Continuity
+last_state_change: 2026-09-30 — R2E2 candidate: pattern view quiets specific relations and non-selected labels while preserving worlds, current locus, bridges, tension and exact reversible membership; founder witness is current gate

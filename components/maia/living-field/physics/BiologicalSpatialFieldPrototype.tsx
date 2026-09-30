@@ -70,6 +70,7 @@ type DebugBridge = {
     bridgeIds: string[]
     unresolvedBridgeIds: string[]
     relationIdsByBridge: Record<string, string[]>
+    visibleSpecificRelationIds: string[]
   }
 }
 
@@ -484,6 +485,7 @@ function Cell({
   draggingId,
   entered,
   canEnter,
+  semanticMode,
   setActiveId,
   setDraggingId,
   onEnter,
@@ -493,6 +495,7 @@ function Cell({
   draggingId: string | null
   entered: boolean
   canEnter: boolean
+  semanticMode: CondensationMode
   setActiveId: (id: string | null) => void
   setDraggingId: (id: string | null) => void
   onEnter: (id: string) => void
@@ -503,6 +506,7 @@ function Cell({
   const style = STYLE[body.group]
   const active = activeId === body.id
   const dragging = draggingId === body.id
+  const patternQuiet = semanticMode === 'pattern' && !active
 
   useFrame(({ clock }) => {
     if (mesh.current) mesh.current.position.copy(body.pos)
@@ -526,6 +530,7 @@ function Cell({
         entered ? 0.2 :
         dragging ? 0.3 :
         active || body.hovered ? 0.17 :
+        patternQuiet ? 0.028 :
         0.075
 
       mat.opacity = THREE.MathUtils.lerp(mat.opacity, opacity, 0.09)
@@ -548,6 +553,7 @@ function Cell({
         entered ? 0.085 :
         dragging ? 0.11 :
         active || body.hovered ? 0.075 :
+        patternQuiet ? 0.012 :
         0.032
 
       mat.opacity = THREE.MathUtils.lerp(mat.opacity, opacity, 0.06)
@@ -617,12 +623,12 @@ function Cell({
         <meshPhysicalMaterial
           color={style.body}
           emissive={style.body}
-          emissiveIntensity={entered ? 0.7 : active ? 0.52 : 0.25}
+          emissiveIntensity={entered ? 0.7 : active ? 0.52 : patternQuiet ? 0.12 : 0.25}
           roughness={0.24}
           clearcoat={0.72}
           clearcoatRoughness={0.34}
           transparent
-          opacity={0.8}
+          opacity={patternQuiet ? 0.34 : 0.8}
         />
       </mesh>
 
@@ -646,10 +652,13 @@ function Cell({
       <Html position={body.pos} center distanceFactor={7.2} style={{ pointerEvents: 'none' }}>
         <div
           data-bio-node-label={body.id}
+          data-semantic-visibility={patternQuiet ? 'latent' : 'visible'}
           className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] backdrop-blur-[2px] transition-all ${
             active
               ? 'border-stone-500/50 bg-black/72 text-stone-50 shadow-[0_0_18px_rgba(255,255,255,0.08)]'
-              : 'border-stone-800/45 bg-black/42 text-stone-300'
+              : patternQuiet
+                ? 'border-transparent bg-transparent text-transparent opacity-0'
+                : 'border-stone-800/45 bg-black/42 text-stone-300'
           }`}
         >
           {body.label}
@@ -847,6 +856,12 @@ function Scene({
         relationIdsByBridge: Object.fromEntries(
           relationBundles.map((bundle) => [bundle.id, bundle.relationIds]),
         ),
+        visibleSpecificRelationIds: relations
+          .filter((relation) =>
+            condensationMode !== 'pattern' &&
+            (!relationCrossesWorlds(relation) || condensationMode === 'specific'),
+          )
+          .map((relation) => relation.id),
       }),
     }
     return () => {
@@ -882,7 +897,8 @@ function Scene({
 
       {relations
         .filter((relation) =>
-          !relationCrossesWorlds(relation) || condensationMode === 'specific',
+          condensationMode !== 'pattern' &&
+          (!relationCrossesWorlds(relation) || condensationMode === 'specific'),
         )
         .map((relation) => (
           <RelationLine key={relation.id} relation={relation} bodies={bodies} />
@@ -908,6 +924,7 @@ function Scene({
             draggingId={draggingId}
             entered={recursiveRootId === body.id}
             canEnter={Boolean(fieldNode?.children?.length)}
+            semanticMode={condensationMode}
             setActiveId={setActiveId}
             setDraggingId={setDraggingId}
             onEnter={onEnterRoot}
