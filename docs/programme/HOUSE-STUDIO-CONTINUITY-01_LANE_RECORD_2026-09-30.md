@@ -184,6 +184,38 @@ validation · ✓ no persistence · ✓ no crossing-registry expansion · ✓ no
 4. **Review question** — *Does this implementation preserve the difference between member
    intention, system inference, and durable relationship?* **Yes → merge. No → STOP.**
 
+## 7 · H1-R3 return boundary
+
+H1-R3 reuses the existing House threshold rather than inventing a Studio return
+mechanism.
+
+`app/writers-studio/layout.tsx` now places
+`HouseEntryThreshold room="WRITER'S STUDIO"` at the Studio's outer boundary.
+The existing threshold already enforces the needed law:
+
+- it appears only when `from=house` is present;
+- it returns through canonical `/home`;
+- it does not know the Work or manuscript;
+- it creates no persistence;
+- it introduces no `FACET_CROSSINGS` vocabulary.
+
+This is therefore a **navigation membrane**, not a memory layer.
+
+Behavioral witness:
+- House → Studio → Return Home → `/home`: PASS.
+- Direct Studio entry → no House return threshold: PASS.
+- H1-R1 Work/manuscript landing identity remains unchanged: PASS.
+
+Verification:
+- Writer's Studio: **78 suites / 805 tests PASS**.
+- Focused H1-R2 + H1-R3: **19 tests PASS**.
+- Project typecheck: blocked by unrelated new diagnostic
+  `lib/stripe/config.ts:23` (Stripe API version type mismatch). No H1-R3
+  diagnostic was reported.
+
+**H1-R3 disposition:** IMPLEMENTATION COMPLETE · BEHAVIORAL EVIDENCE COMPLETE ·
+MERGE REVIEW PENDING.
+
 ## 7 · Explicit non-authorizations
 
 ⛔ merge · ⛔ deploy · ⛔ migration · ⛔ stored context / continuation tokens · ⛔ MAIA context
