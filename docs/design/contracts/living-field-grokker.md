@@ -118,20 +118,18 @@ R2C Progressive Relational Resolution is mechanically verified and founder-autho
 
 R2D Focus + Context is mechanically verified and founder-authorized to continue into a bounded biological-spatial substrate witness.
 
-R2D1 Biological Spatial Dynamics is now implemented as a parallel local candidate.
+R2D1 Biological Spatial Dynamics passed founder witness on 2026-09-30.
 
-The current experiential questions are:
+Founder response:
 
-> **Does dragging feel like applying force to connected living matter rather than moving an icon?**
+> **“this effect and presentation is beautiful! yes!”**
 
-> **Do recoil, local coupling, pressure, and settling increase felt relationship without becoming distracting?**
+The biological 2.5D field is now the chosen Grokker substrate. Its shallow volume, viscous movement, recoil, pressure response, and recursive-membrane readiness should be preserved as later semantic capabilities are added.
 
-> **Does shallow dimensionality deepen the field without turning it into a videogame space?**
+R2E Semantic Condensation is OPEN.
 
-> **Does an active node feel capable of becoming a world-within-world while its current identity remains intact?**
+The next experiential question is:
 
-These questions remain OPEN under:
+> **Can the field become simpler as we pull back without becoming poorer, falsely harmonious, or semantically vague?**
 
-`JARVIS-VISUAL-FIELD-01 · R2D1 — Biological Spatial Dynamics Founder Witness`
-
-R2E Semantic Condensation remains closed until this substrate witness passes.
+Actual recursive child ecology remains closed until R2G.
