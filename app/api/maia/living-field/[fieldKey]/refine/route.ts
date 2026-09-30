@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { buildEncounterContext, formatGatheredMaterial } from '@/lib/maia/living-field/encounterContext'
-import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -23,7 +23,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { fieldKey: string } }
 ) {
-  const memberId = probeAuthPosture(request)
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
