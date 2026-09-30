@@ -471,28 +471,33 @@ app.whenReady().then(async () => {
 });
 
 // ---------------------------------------------------------------------------
-// O5-R2 startup recovery. Runs once, under the single-instance lock, before
-// this process has dispatched anything — so nothing it finds can be this
-// process's own live work.
-//   Path B (canonical W v2): read-only classification of interrupted provider
-//     executions; a WITNESSED result is ledgered into W4, everything else stops
-//     visibly (work-units-v2/recovery/<id>.jsonl). Never issues or reissues a grant.
-//   Path A (local-native pipeline): orphan VISIBILITY only — a run whose owner
-//     is proven gone becomes FAILED / BLOCKED_BY_EVIDENCE. Never resumed.
+// O5-R2 startup recovery — READ-ONLY (founder ruling 2026-09-30).
+// First contact with historical real state can mutate W4, settle grants and
+// terminate run records, so it is a separate witnessed act. Startup therefore
+// only CLASSIFIES and logs; it writes nothing. The write pass is the explicit,
+// census-bound CLI act:
+//   node scripts/builder/o5-recovery-census.mjs --write --admit <census_digest>
 // A recovery fault is logged and never blocks startup. Surfacing to an operator
-// inbox is O7 and is NOT admitted; the durable records are the visibility.
+// inbox is O7 and is NOT admitted.
 // ---------------------------------------------------------------------------
 async function runStartupRecovery() {
   const root = currentRoot();
   if (!root) { console.log('[JARVIS/O5-R2] startup recovery skipped: no bound root'); return; }
-  const report = { ran: true, at: new Date().toISOString(), path_a: null, path_b: null };
-  try { report.path_a = await MECH.reconcileOrphans(root); }
-  catch (e) { report.path_a = { ok: false, error: String(e?.message || e).slice(0, 300) }; }
+  const report = { mode: 'READ_ONLY', at: new Date().toISOString(), path_a: null, path_b: null };
   try {
-    const b = await RECOVERY_B.recoverPathB(root, { env: process.env });
-    report.path_b = { ok: true, units: b.units.map((u) => ({ work_unit_id: u.work_unit_id, error: u.error, actions: (u.outcomes || []).map((o) => ({ grant_id: o.grant_id, action: o.action, gate: o.gate ?? null, reason: o.reason, written: o.written })) })) };
+    const a = await MECH.reconcileOrphans(root, { dryRun: true });
+    report.path_a = { ok: a.ok, would_reconcile: (a.reconciled || []).length, unproven: (a.unproven || []).length, reason: a.reason };
+  } catch (e) { report.path_a = { ok: false, error: String(e?.message || e).slice(0, 300) }; }
+  try {
+    const b = await RECOVERY_B.recoverPathB(root, { env: process.env, write: false });
+    const counts = {};
+    for (const u of b.units) for (const o of (u.outcomes || [])) {
+      const k = o.action === 'GATED' ? `GATED:${o.gate}` : o.action;
+      counts[k] = (counts[k] || 0) + 1;
+    }
+    report.path_b = { ok: true, units: b.units.length, counts, errors: b.units.filter((u) => u.error).length };
   } catch (e) { report.path_b = { ok: false, error: String(e?.message || e).slice(0, 300) }; }
-  console.log('[JARVIS/O5-R2] startup recovery', JSON.stringify(report));
+  console.log('[JARVIS/O5-R2] startup recovery (read-only)', JSON.stringify(report));
 }
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });

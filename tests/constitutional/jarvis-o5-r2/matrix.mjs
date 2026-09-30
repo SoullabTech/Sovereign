@@ -10,7 +10,7 @@
 import * as REAL from '../../../scripts/builder/o5-recovery-path-b-v1.mjs';
 import { REFERENCE } from '../jarvis-o5-r1/reference.mjs';
 import { existingFailureCodes } from '../jarvis-o5-r1/falsifiers.mjs';
-import { F4R } from './f4r.mjs';
+import { F4R, extendedFailureCodes } from './f4r.mjs';
 import { PB_FALSIFIERS } from './pathb-falsifiers.mjs';
 import { PB_CANDIDATES } from './pathb-candidates.mjs';
 import { CAUSE_OF } from '../jarvis-o5-r1/reference-cause-map.mjs';
@@ -55,8 +55,11 @@ for (const [cause, codes] of Object.entries(CAUSE_OF)) for (const c of codes) if
 group('R2A · F4-R (widened failure-code inventory)', { 'F4-R': (s) => F4R(s.decisions, s.opts) }, { decisions: REFERENCE, opts: {} }, [
   { id: 'DC-F4R-1', named: 'F4-R', collateral: {}, law: 'a cause map that covers only the codes the frozen F4 extractor could see',
     subject: { decisions: { ...REFERENCE, classify: (code) => (narrowMap.has(code) ? REFERENCE.classify(code) : { code, cause: null, response: 'STOP', classified: false }) }, opts: {} } },
-  { id: 'DC-F4R-2', named: 'F4-R', collateral: {}, law: 'a regressed extractor that silently sees fewer codes than the measured baseline',
+  { id: 'DC-F4R-2', named: 'F4-R', collateral: {}, law: 'a regressed extractor that silently loses reach (sees fewer codes than the decision record)',
     subject: { decisions: REFERENCE, opts: { extract: existingFailureCodes } } },
+  { id: 'DC-F4R-3', named: 'F4-R', collateral: {}, law: 'a catch-all cause map: a newly introduced live code is silently "classified" with no mapping decision',
+    subject: { decisions: { ...REFERENCE, classify: (code) => { const c = REFERENCE.classify(code); return c.classified ? c : { code, cause: 'EXECUTION', response: 'REATTEMPT_UNDER_EXISTING_LIFECYCLE', classified: true }; } },
+      opts: { extract: () => [...extendedFailureCodes(), 'O5_R2_NEWLY_INTRODUCED_CODE'] } } },
 ]);
 
 // ── R2B/R2C · Path B classifier ──────────────────────────────────────────────

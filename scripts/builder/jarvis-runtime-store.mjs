@@ -121,6 +121,7 @@ export function reconcileOrphanedRuns(inFlightStates, {
   selfPid = process.pid,
   isAlive = ownerProcessAlive,
   effectsByState = {},
+  dryRun = false,
 } = {}) {
   const { runs } = listRuns({ limit: 10_000 });
   const reconciled = [];
@@ -137,7 +138,13 @@ export function reconcileOrphanedRuns(inFlightStates, {
       if (alive === true) why = 'OWNER_ALIVE';
       else if (alive !== false) why = 'OWNER_UNDETERMINABLE';
     }
-    if (why) { unproven.push({ run_id: r.run_id, state: r.state, reason: why }); continue; }
+    if (why) { unproven.push({ run_id: r.run_id, state: r.state, reason: why, owner: owner ?? null, created_at: r.created_at ?? null, updated_at: r.updated_at ?? null }); continue; }
+    if (dryRun) {
+      // Read-only census: report what WOULD be reconciled, write nothing.
+      reconciled.push({ run_id: r.run_id, state: r.state, owner, created_at: r.created_at ?? null, updated_at: r.updated_at ?? null,
+        effects_possible: effectsByState[r.state] ?? ['unknown'] });
+      continue;
+    }
     const lastState = r.state;
     const at = nowISO();
     r.state = 'FAILED';
@@ -156,5 +163,5 @@ export function reconcileOrphanedRuns(inFlightStates, {
     appendEvent({ run_id: r.run_id, kind: 'transition', from: lastState, to: 'FAILED', disposition: 'BLOCKED_BY_EVIDENCE', reason: 'O5-R2E orphan reconciliation' });
     reconciled.push(r.run_id);
   }
-  return { reconciled, unproven };
+  return { dry_run: dryRun, reconciled, unproven };
 }

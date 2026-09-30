@@ -245,11 +245,12 @@ async function runWorkUnit(root, packet, hooks = {}) {
  * resumed, re-dispatched or re-queued. Uses the mechanism's own in-flight
  * vocabulary and the store's proof-requiring reconciliation.
  */
-async function reconcileOrphans(root) {
+async function reconcileOrphans(root, { dryRun = false } = {}) {
   const m = await loadMechanism(root);
   if (!m.ok) return { ok: false, reason: m.state.reason, reconciled: [], unproven: [] };
   const out = m.store.reconcileOrphanedRuns(m.pipeline.IN_FLIGHT_STATES, {
     effectsByState: m.pipeline.EFFECTS_POSSIBLE_BY_STATE,
+    dryRun,
   });
   return { ok: true, ...out };
 }

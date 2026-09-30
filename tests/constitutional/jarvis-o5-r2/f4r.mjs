@@ -24,9 +24,17 @@ import { existingFailureCodes } from '../jarvis-o5-r1/falsifiers.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
-/** Measured 2026-09-30 (O5-R2 census §5.1). A floor, never a total: the
- *  inventory may grow; it may not shrink below what was once seen. */
-export const MEASURED_BASELINE = 63;
+/**
+ * The explicit decision record (failure-code-inventory.json). F4-R requires the
+ * live inventory to EQUAL it — not merely to exceed a floor:
+ *   · a live code absent from the record  → FAIL: a new code needs an explicit mapping decision;
+ *   · a recorded code no longer live      → FAIL: a retired code needs an explicit retirement,
+ *                                            and an extractor that silently loses reach is caught here.
+ * (Founder, 2026-09-30: the baseline must not be a permanent magic number.)
+ */
+export function decisionRecord() {
+  return JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'failure-code-inventory.json'), 'utf8')).codes;
+}
 
 export const EXTENDED_SOURCES = Object.freeze({
   exitTable: 'scripts/builder/jarvis-runtime-pipeline.mjs',
@@ -48,13 +56,14 @@ export function extendedFailureCodes() {
   return [...codes].sort();
 }
 
-export function F4R(d, { extract = extendedFailureCodes } = {}) {
+export function F4R(d, { extract = extendedFailureCodes, record = decisionRecord } = {}) {
   const f = [];
   let codes;
   try { codes = extract(); } catch (e) { return { id: 'F4-R', pass: false, failures: [`instrument: ${e.message}`] }; }
-  if (codes.length < MEASURED_BASELINE) {
-    f.push(`inventory regressed: ${codes.length} codes < measured baseline ${MEASURED_BASELINE} (fail closed)`);
-  }
+  const recorded = new Set(record());
+  const live = new Set(codes);
+  for (const c of live) if (!recorded.has(c)) f.push(`${c}: live but not in the decision record — a new code requires an explicit mapping decision`);
+  for (const c of recorded) if (!live.has(c)) f.push(`${c}: in the decision record but not live — retire it explicitly, or the extractor lost reach (fail closed)`);
   for (const code of codes) {
     let c;
     try { c = d.classify(code); } catch (e) { f.push(`${code}: classifier threw ${e.message}`); continue; }
