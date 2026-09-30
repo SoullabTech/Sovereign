@@ -38,4 +38,12 @@ describe('P4R1 durable return and MAIA relationship carriage', () => {
     expect(review).toContain('readA2Relationship');
     expect(review).toContain('relationshipId: a2Relationship.id');
   });
+
+  it('lets the writer explicitly select one prior MAIA response for a single editorial turn', () => {
+    expect(write).toContain('readEligibleCarrySources');
+    expect(write).toContain('sourceEpisodeSequence: selectedCarrySource.sourceEpisodeSequence');
+    expect(write).toContain('if (carry) setSelectedCarrySource(null)');
+    expect(view).toContain('carrySourceAvailable={props.carrySourceAvailable}');
+    expect(view).toContain('onSelectCarrySource={props.onSelectCarrySource}');
+  });
 });
