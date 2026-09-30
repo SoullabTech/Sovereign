@@ -2,11 +2,10 @@
 
 ```text
 Class: B (bounded implementation; navigation only)
-Governing authority: founder direction 2026-09-30 ("let's get going" · "make it a Jarvis flow"),
-                     bounded by WS2-03B (app/writers-studio/workContext.ts) and the
-                     no-stealth-memory vow. Placement under WRITERS-STUDIO-CONVERGENCE-01
-                     (step 3) vs its own lane is ⛔ NOT RULED — see D-01.
-Current gate: BUILD → VERIFY (candidate on branch; merge not authorized)
+Governing authority: founder direction 2026-09-30 ("let's get going" · "make it a Jarvis flow");
+                     founder rulings D-01…D-03 (2026-09-30, §6); bounded by WS2-03B
+                     (app/writers-studio/workContext.ts) and the no-stealth-memory vow.
+Current gate: VERIFY PASS → MERGE PENDING (merge not authorized)
 Evidence subject: branch claude/beautiful-mayer-mt9jc9 on base 04005ca7c
 Stop boundary: no stored context, no inference of intent, no MAIA input, no new
                crossing vocabulary, no merge, no deploy
@@ -45,7 +44,8 @@ registry) · MAIA receiving House context (a new cognition input; separate act).
 | `app/writers-studio/houseArrival.ts` | **New.** `houseWorkHref(workId)` → `/writers-studio?from=house&work=<id>`; pure `resolveHouseArrival(id, phase, works)` → `none · pending · unknown · open · orient`. Law in header. |
 | `app/house/page.tsx` | Each living Work row links via `houseWorkHref(work.id)` with an accessible label; empty-state link gains `?from=house` (matching the catalog). |
 | `app/dev/writers-studio-pc3-live/P4R1HomeController.tsx` | Resolves the carried id against the member's own Works; on `open`, `router.replace` to Write mode with `m=<manuscript>` (drops `work`), so Back returns to the House. `orient` / `unknown` → Studio Home exactly as before. |
-| `app/writers-studio/__tests__/houseArrival.test.ts` | **New.** Falsifiers HSC-F1…F6. |
+| `app/writers-studio/houseArrival.ts` · `houseArrivalTarget()` | Pure landing-URL builder: drops `work`, names only `m` (added for HSC-F7). |
+| `app/writers-studio/__tests__/houseArrival.test.ts` | **New.** Falsifiers HSC-F1…F7. |
 
 Crosses: **one living-work id**. Stored: **nothing**. Ownership: the id resolves only against
 `/api/sovereign/living-works` (member-scoped); the manuscript is then loaded by the existing
@@ -57,8 +57,8 @@ Canvas path, which enforces its own ownership.
 (jest 29.7.0 / ts-jest 29.4.6 / TS 5.6.3 installed in a scratchpad — no project `node_modules`
 in the container; ⭐ the founder's run is the evidence of record).
 
-**Result:** 12/12 PASS · neighbours `livingOrientation.test.ts` + `homeState.test.ts` PASS
-(57/57 across the three suites) · `check:no-supabase` exit 0.
+**Result:** 15/15 PASS · neighbours `livingOrientation.test.ts` + `homeState.test.ts` PASS
+(60/60 across the three suites) · `check:no-supabase` exit 0.
 
 **Controlled failure — every weaker candidate killed by exactly its named falsifier, no collateral:**
 
@@ -70,6 +70,8 @@ in the container; ⭐ the founder's run is the evidence of record).
 | M4 carry `intent=continue` in the URL | HSC-F4 |
 | M5 House keeps bare `/writers-studio` | HSC-F5 |
 | M6 controller writes `sessionStorage` | HSC-F6 |
+| M7a landing keeps `work=` | HSC-F7 (both cases) |
+| M7b landing forwards the Work under another key (`w=`) | HSC-F7 (both cases) |
 
 **Typecheck:** strict + `noUncheckedIndexedAccess` over the seam and its test → **0 diagnostics
 in lane-owned files**; 2 in the type-only neighbour `useLivingWorks.ts` (unresolved `@/` alias
@@ -78,20 +80,61 @@ under a bare CLI; that file is not written to the extra flag) — pre-existing, 
 
 ## 5 · Adjudication
 
-**BUILD → candidate. VERIFY: PASS (bounded).**
-This proves: the carried id is resolved only against the member's own Works; one declared
-manuscript opens, zero or several never are guessed; nothing is written; the URL carries
-identity only; the House door carries the Work.
-It does **not** prove: the ship-baseline typecheck; a rendered walk in a browser; behaviour
-for a member in production; that Write mode is the right landing (vs Studio Home focused on
-the Work) — that is a founder-walk question.
+**Status: IMPLEMENTATION COMPLETE · EVIDENCE COMPLETE (container) · MERGE PENDING.**
 
-## 6 · Founder handoff
+This proves:
+1. **Context continuity** — a member's intentional movement preserves which Work they chose.
+2. **Context without authority** — the URL id is a request; authority stays with session
+   identity + server-scoped reads + member declarations. An id that is not theirs opens nothing.
+3. **Movement is not memory** — nothing is written because circulation occurred.
+4. **Context does not outlive its validation (F7)** — the entered-through Work is dropped at the
+   landing; the Studio re-derives Work from declarations, so moving on to other writing carries
+   nothing along.
+5. One declared manuscript opens; zero or several are never guessed.
 
-- **D-01** Placement: rule this as step 3 of `WRITERS-STUDIO-CONVERGENCE-01`, or as its own lane.
-- **D-02** Should the House become an endpoint in `FACET_CROSSINGS` so House doors are
-  registered crossings? (Vocabulary change; not taken.)
-- **D-03** Landing: open Write mode directly (candidate), or Studio Home with the Work in focus.
+It does **not** prove, and does not establish:
+- **persistent continuity** — no "member last worked on W" exists; that needs a separate
+  member-intent model and its own act;
+- **a general circulation architecture** — this is the first expression; no reusable
+  abstraction has been extracted;
+- **MAIA awareness** — MAIA receives nothing from this lane;
+- **Work ontology** — it answers *which Work context did the member explicitly enter through*,
+  never *what a manuscript ultimately belongs to*;
+- the ship-baseline typecheck, a rendered browser walk, or production behaviour.
+
+## 6 · Founder rulings (2026-09-30)
+
+- **D-01 — OWN LANE.** A foundational *circulation* lane, not step 3 of Writer's Studio
+  convergence. Convergence asks how the Studio becomes the canonical writing environment; this
+  asks how meaning moves between living surfaces without being lost or fabricated. **Writer's
+  Studio consumes the capability; it does not own it.** Future carries (House → Journal ·
+  MAIA → Studio · Studio → Field · Field → Journal) answer to this law, not to the Studio lane.
+- **D-02 — NO.** The House does not become a `FACET_CROSSINGS` endpoint. The registry describes
+  place → place movement; the House is **orientation into the ecosystem** (whole → part), and
+  registering it would flatten that into place → place — a category mistake.
+
+  | Thing | Function |
+  |---|---|
+  | Crossing registry | movement between governed places |
+  | House | orientation into the ecosystem |
+  | Work context | meaning carried into a place |
+  | URL payload | temporary explicit context |
+  | Persistence | created only by artifact / member acts |
+- **D-03 — DIRECT WRITE, ONLY UNDER THE THREE-STATE RULE.** The gesture was *continue this
+  Work*, not *take me to the Studio*; with exactly one legitimate continuation, asking again is
+  friction. **0 manuscripts → Studio Home · >1 → Studio Home** stays binding — otherwise the
+  system starts pretending to understand intention.
+- **Added by ruling: HSC-F7** — *context survives only while the relationship validates*;
+  delivered above (M7a/M7b killed).
+
+**Circulation law (founder, carried forward as the lane's statement):** *a living system does
+not preserve everything that passes through it. It preserves the relationships that remain alive
+under validation.*
+
+**Authorized and delivered:** ✓ Work-id transport · ✓ explicit context preservation · ✓ server-scoped
+validation · ✓ no persistence · ✓ no crossing-registry expansion · ✓ no memberId transport ·
+✓ no content payload.
+
 - **Owed before merge:** `npm run typecheck` (no regression vs baseline) · the founder walk
   below · visual authority (`ea-house.md` + screenshots, still uncommitted on the Mac Studio).
 

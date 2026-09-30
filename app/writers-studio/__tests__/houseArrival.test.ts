@@ -9,12 +9,14 @@
  *   HSC-F4  carry content (title, excerpt, intention) through the URL
  *   HSC-F5  the House keeps linking to a bare /writers-studio (the defect)
  *   HSC-F6  the House or the Studio stores a record of the crossing
+ *   HSC-F7  the entered-through Work keeps riding along after the member
+ *           moves to other writing (context outliving its validation)
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { HOUSE_WORK_PARAM, houseWorkHref, resolveHouseArrival } from '../houseArrival';
+import { HOUSE_WORK_PARAM, houseArrivalTarget, houseWorkHref, resolveHouseArrival } from '../houseArrival';
 import type { LivingWork, WorkExpression } from '../useLivingWorks';
 
 const expr = (expressionId: string, expressionType = 'manuscript', declaredAt = '2026-09-01T00:00:00Z'): WorkExpression =>
@@ -87,6 +89,33 @@ describe('houseWorkHref', () => {
     expect([...url.searchParams.keys()].sort()).toEqual(['from', HOUSE_WORK_PARAM].sort());
     expect(url.searchParams.get('from')).toBe('house');
     expect(url.searchParams.get(HOUSE_WORK_PARAM)).toBe('w 1&x=y');
+  });
+});
+
+describe('HSC-F7 — context survives only while the relationship validates', () => {
+  it('the landing drops the carried Work and names only the manuscript', () => {
+    const target = new URLSearchParams(houseArrivalTarget('from=house&work=wA', 'mA1'));
+    expect(target.get(HOUSE_WORK_PARAM)).toBeNull();
+    expect(target.get('m')).toBe('mA1');
+    expect(target.get('mode')).toBe('write');
+    expect(target.get('from')).toBe('house');
+    expect([...target.values()]).not.toContain('wA');
+  });
+
+  it('after the landing, nothing resolves Work A again', () => {
+    const works = [work('wA', [expr('mA1')]), work('wB', [expr('mB1')])];
+    const landed = new URLSearchParams(houseArrivalTarget('from=house&work=wA', 'mA1'));
+    expect(resolveHouseArrival(landed.get(HOUSE_WORK_PARAM), 'ready', works)).toEqual({ kind: 'none' });
+    // Moving on to other writing: the Studio's own navigation rewrites `m`; Work A is gone.
+    landed.set('m', 'mB1');
+    expect(resolveHouseArrival(landed.get(HOUSE_WORK_PARAM), 'ready', works)).toEqual({ kind: 'none' });
+    expect([...landed.values()]).not.toContain('wA');
+  });
+
+  it('the Studio lands through houseArrivalTarget, not a hand-built URL', () => {
+    const controller = fs.readFileSync(
+      path.resolve(process.cwd(), 'app/dev/writers-studio-pc3-live/P4R1HomeController.tsx'), 'utf8');
+    expect(controller).toContain('router.replace(pathname + \'?\' + houseArrivalTarget(');
   });
 });
 

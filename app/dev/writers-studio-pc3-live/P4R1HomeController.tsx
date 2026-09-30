@@ -11,7 +11,7 @@ import { useStudioHistory } from '@/app/writers-studio/useStudioHistory';
 import { useSectionActivity } from '@/app/writers-studio/useSectionActivity';
 import { arrivalFor, manuscriptIdOf } from '@/app/writers-studio/homeState';
 import { IMPORT_HREF } from '@/app/writers-studio/studioMap';
-import { HOUSE_WORK_PARAM, resolveHouseArrival } from '@/app/writers-studio/houseArrival';
+import { HOUSE_WORK_PARAM, houseArrivalTarget, resolveHouseArrival } from '@/app/writers-studio/houseArrival';
 import P4R1HomeView from './P4R1HomeView';
 
 function idFrom(payload: Record<string, unknown>): string | null {
@@ -51,11 +51,7 @@ export default function P4R1HomeController() {
   useEffect(() => {
     if (houseArrival.kind !== 'open' || houseArrivalActed.current) return;
     houseArrivalActed.current = true;
-    const next = new URLSearchParams(params?.toString() ?? '');
-    next.delete(HOUSE_WORK_PARAM);
-    next.set('mode', 'write');
-    next.set('m', houseArrival.manuscriptId);
-    router.replace(pathname + '?' + next.toString());
+    router.replace(pathname + '?' + houseArrivalTarget(params?.toString() ?? '', houseArrival.manuscriptId));
   }, [houseArrival, params, pathname, router]);
 
   const post = useCallback(async (url: string, body?: unknown) => {

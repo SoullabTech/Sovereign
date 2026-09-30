@@ -89,3 +89,21 @@ export function resolveHouseArrival(
   }
   return { kind: 'orient', workId: work.id, manuscriptCount: manuscriptIds.length };
 }
+
+/**
+ * The Studio address a resolved `open` arrival lands on.
+ *
+ * F7 — context survives only while the relationship validates. The carried
+ * Work id is DROPPED here and never handed further in: the landing names only
+ * the manuscript (`m`), and the Studio re-derives its Work from the member's
+ * declarations (WS2-03B). So when the member later moves to another manuscript,
+ * the Work they entered through cannot follow them — there is nothing left to
+ * follow. Other query state is preserved; `from=house` stays as entry provenance.
+ */
+export function houseArrivalTarget(current: string, manuscriptId: string): string {
+  const next = new URLSearchParams(current);
+  next.delete(HOUSE_WORK_PARAM);
+  next.set('mode', 'write');
+  next.set('m', manuscriptId);
+  return next.toString();
+}
