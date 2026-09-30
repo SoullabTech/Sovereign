@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { StudioAtmosphere } from './atmosphere/StudioAtmosphere';
+import { StudioHouseReturn } from './StudioHouseReturn';
 
 /**
  * The Studio's outermost room.
@@ -11,5 +13,11 @@ import { StudioAtmosphere } from './atmosphere/StudioAtmosphere';
  * update.
  */
 export default function WritersStudioLayout({ children }: { children: React.ReactNode }) {
-  return <StudioAtmosphere>{children}</StudioAtmosphere>;
+  return (
+    <StudioAtmosphere>
+      {/* HOUSE-STUDIO-CIRCULATION-01R1 · H1-2: present only on from=house. */}
+      <Suspense fallback={null}><StudioHouseReturn /></Suspense>
+      {children}
+    </StudioAtmosphere>
+  );
 }

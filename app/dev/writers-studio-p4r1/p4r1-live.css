@@ -3152,6 +3152,11 @@
   z-index:120;
   font-family:var(--fr-sans-stack,Inter,system-ui,sans-serif);
 }
+/* HOUSE-STUDIO-CIRCULATION-01R1 · H1: when the Studio is entered from the House,
+   the House band (60px + 14px gap) sits above the Studio bar. The fixed pill keeps
+   its existing relationship to the Studio bar instead of covering the band's
+   "Return Home →". Measured in the signed-in witness, 2026-09-30. */
+body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
 .p4r1-root .p4r1-theme-trigger{
   min-height:34px;
   max-width:164px;
@@ -3231,6 +3236,8 @@
 }
 @media (max-width:720px){
   .p4r1-root .p4r1-theme-menu{right:10px;top:10px}
+  /* H1: with the House band above (54px band + 8px gap), keep the pill on the Studio bar. */
+  body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:73px}
   .p4r1-root .p4r1-theme-trigger{max-width:132px;padding-inline:9px}
   .p4r1-root .p4r1-theme-popover{width:min(224px,calc(100vw - 20px));top:40px}
 }
@@ -3291,4 +3298,46 @@
 @media(max-width:720px){
   .p4r1-root .p4r1-beta-feedback{left:10px;bottom:10px}
   .p4r1-root .p4r1-beta-panel{width:min(320px,calc(100vw - 20px));bottom:40px}
+}
+
+/* HOUSE-STUDIO-CIRCULATION-01R1 · H1-3 — arriving through a Work.
+   The chooser is a plain list in declaration order; nothing is pre-selected.
+   Colours ride the Studio atmosphere membrane (--ws-*), so the member's chosen
+   theme holds here too. */
+.p4r1-root .p4r1-arrival-choices{
+  margin:18px 0 6px;
+  padding:0;
+  border:0;
+  display:grid;
+  gap:10px;
+}
+.p4r1-root .p4r1-arrival-choices legend{ margin-bottom:10px; }
+.p4r1-root .p4r1-arrival-choice{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  border:1px solid var(--ws-rule);
+  border-radius:10px;
+  background:var(--ws-ground-raised);
+  font:17px/1.35 var(--fr-serif-stack);
+  color:var(--ws-ink-primary);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-arrival-choice:has(input:checked){
+  border-color:var(--ws-gold-edge);
+  background:var(--ws-ground-active);
+}
+.p4r1-root .p4r1-arrival-choice input{ accent-color:var(--ws-gold); }
+.p4r1-root .p4r1-arrival-error{
+  margin-top:14px;
+  font:13px/1.45 var(--fr-sans-stack);
+  color:var(--ws-ink-secondary);
+}
+.p4r1-root .p4r1-arrival-elsewhere{ margin-top:22px; }
+
+.p4r1-root .fr-home-arrival .fr-home-primary:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+  box-shadow:none;
 }

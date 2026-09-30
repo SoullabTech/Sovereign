@@ -1,0 +1,380 @@
+[
+  {
+    "step": "1-one",
+    "name": "House shows a link carrying this Work",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "1-one",
+    "name": "link carries only from + work",
+    "ok": true,
+    "detail": "/writers-studio?from=house&work=7cfb0eb7-3a1e-410b-b690-69f37b8045dd"
+  },
+  {
+    "step": "1-one",
+    "name": "arrival state = one",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "1-one",
+    "name": "names its manuscript",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "1-one",
+    "name": "House threshold present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "1-one",
+    "name": "threshold reads THE HOUSE · WRITER’S STUDIO · Return Home",
+    "ok": true,
+    "detail": "THE HOUSE WRITER’S STUDIO Return Home →"
+  },
+  {
+    "step": "1-one",
+    "name": "threshold does not repeat the Soullab mark",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Write: manuscript stable",
+    "ok": true,
+    "detail": "2de385b5-ec7a-4480-964f-8f05894b783a"
+  },
+  {
+    "step": "4-from-one",
+    "name": "Write: Work carried",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Write: never the recency decoy",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Write: no \"belongs to several Works\" ambiguity",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Write: Work named",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Develop: manuscript stable",
+    "ok": true,
+    "detail": "2de385b5-ec7a-4480-964f-8f05894b783a"
+  },
+  {
+    "step": "4-from-one",
+    "name": "Develop: Work carried",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Develop: never the recency decoy",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Develop: no \"belongs to several Works\" ambiguity",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Develop: Work named",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Review: manuscript stable",
+    "ok": true,
+    "detail": "2de385b5-ec7a-4480-964f-8f05894b783a"
+  },
+  {
+    "step": "4-from-one",
+    "name": "Review: Work carried",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Review: never the recency decoy",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Review: no \"belongs to several Works\" ambiguity",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "Review: Work named",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "House threshold present",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-one",
+    "name": "threshold reads THE HOUSE · WRITER’S STUDIO · Return Home",
+    "ok": true,
+    "detail": "THE HOUSE WRITER’S STUDIO Return Home →"
+  },
+  {
+    "step": "4-from-one",
+    "name": "threshold does not repeat the Soullab mark",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "2-several",
+    "name": "House shows a link carrying this Work",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "2-several",
+    "name": "link carries only from + work",
+    "ok": true,
+    "detail": "/writers-studio?from=house&work=c8067f0f-3e30-4adf-832c-f3e5c58a758b"
+  },
+  {
+    "step": "2-several",
+    "name": "arrival state = several",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "2-several",
+    "name": "three threads offered",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "2-several",
+    "name": "nothing pre-selected",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "2-several",
+    "name": "Enter unavailable before a choice",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "2-several",
+    "name": "declaration order, decoy absent",
+    "ok": true,
+    "detail": "Chapter 10 — The Alchemical Self|Introduction|Future revision notes"
+  },
+  {
+    "step": "4-from-several",
+    "name": "Write: manuscript stable",
+    "ok": true,
+    "detail": "7ec5b109-b0c7-4a69-a5b6-9afae0a695cb"
+  },
+  {
+    "step": "4-from-several",
+    "name": "Write: Work carried",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Write: never the recency decoy",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Write: no \"belongs to several Works\" ambiguity",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Write: Work named",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Develop: manuscript stable",
+    "ok": true,
+    "detail": "7ec5b109-b0c7-4a69-a5b6-9afae0a695cb"
+  },
+  {
+    "step": "4-from-several",
+    "name": "Develop: Work carried",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Develop: never the recency decoy",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Develop: no \"belongs to several Works\" ambiguity",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Develop: Work named",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Review: manuscript stable",
+    "ok": true,
+    "detail": "7ec5b109-b0c7-4a69-a5b6-9afae0a695cb"
+  },
+  {
+    "step": "4-from-several",
+    "name": "Review: Work carried",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Review: never the recency decoy",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Review: no \"belongs to several Works\" ambiguity",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "4-from-several",
+    "name": "Review: Work named",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "3-none",
+    "name": "House shows a link carrying this Work",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "3-none",
+    "name": "link carries only from + work",
+    "ok": true,
+    "detail": "/writers-studio?from=house&work=8d27da37-883f-48a6-91f2-e1d7a364b78f"
+  },
+  {
+    "step": "3-none",
+    "name": "arrival state = no-manuscript",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "3-none",
+    "name": "nothing created on arrival",
+    "ok": true,
+    "detail": "5 manuscripts"
+  },
+  {
+    "step": "3-none",
+    "name": "Return goes Home",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "3-none-begin",
+    "name": "House shows a link carrying this Work",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "3-none-begin",
+    "name": "link carries only from + work",
+    "ok": true,
+    "detail": "/writers-studio?from=house&work=8d27da37-883f-48a6-91f2-e1d7a364b78f"
+  },
+  {
+    "step": "3-none-begin",
+    "name": "Begin created + declared exactly one manuscript",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "3-none-begin",
+    "name": "opened that manuscript within the Work",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "5-return",
+    "name": "lands on /home with no query at all",
+    "ok": true,
+    "detail": "http://localhost:3707/home"
+  },
+  {
+    "step": "6-plain",
+    "name": "House threshold absent",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "6-plain",
+    "name": "no Work arrival on plain entry",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "6-plain-write",
+    "name": "House threshold absent",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "6-plain-write",
+    "name": "without a carried Work, the Studio names no Work for an ambiguous manuscript",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "6-reload",
+    "name": "House threshold absent",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "step": "7-forged",
+    "name": "unknown Work → ordinary Studio home, nothing disclosed",
+    "ok": true,
+    "detail": ""
+  }
+]
