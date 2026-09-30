@@ -212,6 +212,8 @@
     "verify:migrate-before-swap-step3": "bash scripts/verify-migrate-before-swap-step3.sh",
     "verify:migrate-before-swap-ordering": "npx tsx tests/constitutional/migration-compatibility-gate/step3-ordering.ts",
     "typecheck:ws-observation-identity": "tsc -p tsconfig.ws-observation-identity.json",
+    "typecheck:house-studio-crossing": "tsc -p tsconfig.house-studio-crossing.json",
+    "matrix:house-studio-crossing": "tsx tests/constitutional/house-studio-crossing/matrix.ts",
     "matrix:ws-observation-identity": "tsx tests/constitutional/writers-studio/matrix.ts",
     "typecheck:ws-flagship": "tsc -p tsconfig.ws-flagship.json",
     "matrix:ws-flagship": "tsx tests/constitutional/writers-studio/flagship/matrix.ts",
