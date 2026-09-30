@@ -382,3 +382,27 @@ regressions against canonical control · Living Field 16/16 · protected paths +
 clean · agency/provenance language re-witnessed · both misleading failure messages made
 explicit and re-witnessed. Proposed merge record unchanged (§12.3). ⛔ Merge and deploy remain
 founder acts.
+
+---
+
+## 16 · Partial-view duration claim removed (founder ruling) and final re-witness
+
+**Commit `92b3ecaa`**: "Some parts of your field are **temporarily** unavailable; what is shown
+is partial." → "Some parts of your field are unavailable; what is shown is partial." States only
+what is known. Founder ruling: the extra scope in `6326abbc` stands, because it is the same
+defect class, not feature creep.
+
+**Gates on `92b3ecaa`:** Living Field 16/16 · typecheck vs canon `04005ca7c`: every diagnostic
+field **identical** (222 · 0 introduced · 0 increased · 15 fixed); coverage 671, all 19 extra files
+Living Field (dev-server `.next/dev/types` cleared first) · failure re-walk
+(`results-rewalk-2.json`): 8 passes, 0 page errors, every failure message as intended, partial
+view reads the new line.
+
+**Out of the PR's scope, by ruling:** mounting R2 · declaring `d3-hierarchy`/`d3-interpolate`/
+`cytoscape`/`cytoscape-fcose` · the open-dimension → MAIA-encounter behaviour (§14; its own
+consent/interaction lane) · any consent redesign around it.
+
+**Admission boundary (verbatim for the merge record):** *Admit the reconciled Living Field corpus
+through R2E2 into canonical custody. R1R3 remains the mounted member-facing surface. R2
+presentation is not admitted and requires `LIVING-FIELD-R2-MOUNT-01`.* ⛔ No deploy until the
+PR is reviewed and merged.
