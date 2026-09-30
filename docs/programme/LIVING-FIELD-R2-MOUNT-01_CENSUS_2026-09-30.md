@@ -54,11 +54,15 @@ The existing Living Field GET already resolves the authenticated member through
 server-held, fail-closed named cohort authority, following the existing
 `LAB_ACCESS_MEMBER_IDS` pattern rather than misclassifying testers as founders.
 
+`EARLY_FIELD_MEMBER_IDS` is deliberately **not** reused here. Its prior authority is narrow:
+it gates #1539's R1R3 instrument only. Treating it as a generic cohort for the complete R2
+room would widen that authorization.
+
 Proposed authority vocabulary:
 
 ```text
 LIVING_FIELD_R2_ENABLED
-EARLY_FIELD_MEMBER_IDS
+LIVING_FIELD_R2_MEMBER_IDS
 ```
 
 Rules:
