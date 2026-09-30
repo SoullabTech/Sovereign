@@ -12,6 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { decideEarlyField, parseCohort, type EarlyFieldConfig } from '../earlyFieldAccess';
+import { matchRule, checkAccess } from '@/config/accessMatrix';
 
 const A = '11111111-1111-4111-8111-111111111111'; // cohort member
 const B = '22222222-2222-4222-8222-222222222222'; // authenticated, not in cohort
@@ -190,5 +191,41 @@ describe('EARLY-FIELD-01 — structural defeat candidates are caught', () => {
     const mutant = read(ROUTE).replace('canEnterEarlyField(memberId)',
       "canEnterEarlyField(request.headers.get('x-member-id') ?? memberId)");
     expect(routeTrustsSessionOnly(mutant)).toBe(false);
+  });
+});
+
+/* ── Merge-bar item 6: the access matrix really protects the admission route ── */
+
+
+describe('EARLY-FIELD-01 — /api/early-field/admission is behind the authenticated boundary', () => {
+  const PATH = '/api/early-field/admission';
+
+  it('resolves to its own exact, non-public rule (no broader prefix decides it)', () => {
+    const rule = matchRule(PATH);
+    expect(rule?.exact).toBe(PATH);
+    expect(rule?.public).not.toBe(true);
+    expect(rule?.minTier).toBe('free');
+  });
+
+  it('refuses an unauthenticated caller at the proxy, before the handler runs', () => {
+    const r = checkAccess(PATH, 'free', [], false);
+    expect(r.allowed).toBe(false);
+    expect(r.reason).toBe('unauthenticated');
+  });
+
+  it('admits an authenticated member of any tier to ASK (the answer is still the handler’s)', () => {
+    expect(checkAccess(PATH, 'free', [], true).allowed).toBe(true);
+  });
+
+  it('a matrix that marked the route public would be caught', () => {
+    const matrix = read('config/accessMatrix.ts');
+    const mutant = matrix.replace(
+      "{ exact: '/api/early-field/admission', minTier: 'free',",
+      "{ exact: '/api/early-field/admission', public: true, minTier: 'free',",
+    );
+    expect(mutant).not.toBe(matrix); // the mutation applied
+    const line = (src: string) => src.split('\n').find((l) => l.includes("exact: '/api/early-field/admission'")) ?? '';
+    expect(/public:\s*true/.test(line(matrix))).toBe(false);
+    expect(/public:\s*true/.test(line(mutant))).toBe(true);
   });
 });

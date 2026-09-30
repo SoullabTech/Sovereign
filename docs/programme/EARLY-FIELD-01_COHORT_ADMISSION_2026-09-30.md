@@ -174,3 +174,23 @@ The founder ruled this branch authoritative, preferring **admission on its own n
 endpoint** so the established room's API is untouched. #1541 was closed as superseded. Its
 `.env.example` documentation (default closed) was carried over. No second implementation
 exists.
+
+## 11 · Merge-bar item 6: access-matrix protection, verified in code and pinned by test
+
+The chain, each link read in source:
+1. The `proxy.ts` matcher runs on every path except static assets and two named upload routes.
+   `/api/early-field/admission` is covered.
+2. `matchRule` checks exact rules before prefix rules, so
+   `{ exact: '/api/early-field/admission', minTier: 'free' }` decides the route and no broader
+   prefix can shadow it. It is not `public`.
+3. For a non-public rule, `checkAccess` requires `isAuthenticated`, which the proxy derives
+   server-side through `deriveVerifiedAccess` (the session token is validated against
+   `auth_sessions`, unrevoked and unexpired). An unauthenticated API caller gets **401 JSON**
+   before the handler runs.
+4. The handler checks again through `getMemberIdFromRequest`, which verifies the session and
+   rejects a conflicting `x-member-id` claim.
+
+**Pinned by test** (`earlyFieldAccess.test.ts`): the route resolves to its own exact,
+non-public `free` rule; `checkAccess(…, unauthenticated)` is refused with `unauthenticated`;
+an authenticated member may ask; and a matrix mutated to mark the route `public` is detected.
+Access and Living Field suites: **52/52**.
