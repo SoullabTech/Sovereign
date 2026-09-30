@@ -441,10 +441,31 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       }
       const resolvedManuscriptId = manuscriptId;
       if (!resolvedManuscriptId) throw new Error('manuscript identity');
-      const res = await apiFetch(`/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(resolvedManuscriptId)}`);
+      let res = await apiFetch(`/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(resolvedManuscriptId)}`);
       if (res.status === 401) { setPhase('unauthorized'); return; }
       if (!res.ok) throw new Error('context');
-      const body = await res.json() as ContextPayload;
+      let body = await res.json() as ContextPayload;
+
+      /* Imported manuscripts are immutable Source first. The rebuilt Studio
+         writes only through a section-addressable Working Draft. A newly
+         imported manuscript can therefore arrive here with Source sections
+         but no draft yet. Opening the manuscript is the writer's explicit
+         request to work on it, so initialize the canonical verbatim draft
+         through the existing draft route, then re-read the context. */
+      if (body.state === 'no_draft') {
+        const seed = await apiFetch(
+          `/api/sovereign/manuscripts/${encodeURIComponent(resolvedManuscriptId)}/draft`,
+          { method: 'POST' },
+        );
+        if (seed.status === 401) { setPhase('unauthorized'); return; }
+        if (!seed.ok && seed.status !== 409) throw new Error('draft seed');
+
+        res = await apiFetch(`/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(resolvedManuscriptId)}`);
+        if (res.status === 401) { setPhase('unauthorized'); return; }
+        if (!res.ok) throw new Error('context after draft seed');
+        body = await res.json() as ContextPayload;
+      }
+
       if (body.state !== 'section_aware') {
         setPhase('error');
         setMessage('This manuscript is not section-addressable yet. The rebuild will not guess at its structure.');
