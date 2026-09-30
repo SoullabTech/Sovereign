@@ -19,6 +19,7 @@ principles:
   - LIVING_FIELD_RELATION_GRAMMAR — relation kinds / trust surface / productive conflict / interstitial shared meaning
   - LIVING_FIELD_FOCUS_CONTEXT_LAWS — focus-with-context / peripheral echoes / relation framing / held tension
   - LIVING_FIELD_BIOLOGICAL_SPATIAL_DYNAMICS — 2.5D depth / viscous drag / recoil / membrane pressure / recursive readiness
+  - LIVING_FIELD_SEMANTIC_SCALE_AND_ILLUMINATION — semantic primacy / two-axis depth / conservation across scale / right-side illumination
   - JARVIS-VISUAL-FIELD-01 — founder-gated runtime slices and evidence discipline
 
 reference_surfaces:
