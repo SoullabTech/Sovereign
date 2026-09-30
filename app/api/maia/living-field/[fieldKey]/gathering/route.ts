@@ -19,14 +19,14 @@ const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
   const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
 
-  const { fieldKey } = params
+  const { fieldKey } = await params
 
   try {
     // The gathered Keeps for this field, with their warrant. Constitutional guards

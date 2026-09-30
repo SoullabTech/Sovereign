@@ -127,14 +127,14 @@ Rules — these are constitutional, not stylistic:
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
   const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
 
-  const { fieldKey } = params
+  const { fieldKey } = await params
   let body: any
   try {
     body = await request.json()
@@ -292,13 +292,13 @@ export async function POST(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
   const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
-  const { fieldKey } = params
+  const { fieldKey } = await params
 
   let body: any
   try {

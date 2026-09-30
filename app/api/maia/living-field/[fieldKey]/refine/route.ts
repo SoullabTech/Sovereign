@@ -21,14 +21,14 @@ function getAnthropicClient(): Anthropic | null {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
   const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
 
-  const { fieldKey } = params
+  const { fieldKey } = await params
 
   try {
     // Shared context assembly — same source of truth the encounter route uses.
