@@ -15,6 +15,9 @@ type MountObservation = {
   viewportWidth: number
   completeShellWitnessed: boolean
   dataContractChanged: boolean
+  dashboardPreserved: boolean
+  separateRouteCreated: boolean
+  memberChoseR2: boolean
 }
 
 type MountLaw = {
@@ -80,7 +83,13 @@ const LAWS: MountLaw[] = [
   },
   {
     code: 'M10_EXISTING_DATA_LAW',
-    passes: (o) => o.presentation !== 'r2e2' || !o.dataContractChanged,
+    passes: (o) =>
+      o.presentation !== 'r2e2' ||
+      (!o.dataContractChanged && o.dashboardPreserved && !o.separateRouteCreated),
+  },
+  {
+    code: 'M11_EXPLICIT_APERTURE',
+    passes: (o) => o.presentation !== 'r2e2' || o.memberChoseR2,
   },
 ]
 
@@ -103,6 +112,9 @@ const conforming: MountObservation = {
   viewportWidth: 1440,
   completeShellWitnessed: true,
   dataContractChanged: false,
+  dashboardPreserved: true,
+  separateRouteCreated: false,
+  memberChoseR2: true,
 }
 
 const defeats: Array<{ code: string; candidate: MountObservation }> = [
@@ -147,12 +159,16 @@ const defeats: Array<{ code: string; candidate: MountObservation }> = [
   },
   {
     code: 'M10_EXISTING_DATA_LAW',
-    candidate: { ...conforming, dataContractChanged: true },
+    candidate: { ...conforming, dashboardPreserved: false },
+  },
+  {
+    code: 'M11_EXPLICIT_APERTURE',
+    candidate: { ...conforming, memberChoseR2: false },
   },
 ]
 
 describe('LIVING-FIELD-R2-MOUNT-01 falsifier instrument', () => {
-  it('the conforming reference double survives all M1–M10 laws', () => {
+  it('the conforming reference double survives all M1–M11 laws', () => {
     expect(failures(conforming)).toEqual([])
   })
 

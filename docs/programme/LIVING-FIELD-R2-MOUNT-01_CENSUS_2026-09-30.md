@@ -106,6 +106,13 @@ That is not sufficient evidence that the complete room remains inhabitable on mo
 First mount therefore admits the complete R2 shell only where its layout is witnessed.
 Unwitnessed narrow viewports retain R1R3 until a separate responsive witness passes.
 
+## 6a · Same room, explicit aperture
+
+Grokker remains a different affordance over the same Living Field, not a replacement room.
+The R2 cohort receives an explicit spatial aperture inside the existing Living Field route.
+Entering R2 is a member act. Leaving R2 returns to the existing dashboard with its member data
+intact. No competing Grokker route is created.
+
 ## 7 · R2F standing
 
 `/private/tmp/jarvis-visual-field-r2f` contains an uncommitted session-navigation
@@ -125,7 +132,8 @@ part of the R2 mount. It must remain a separate governed lane.
 - **M7 — House return:** `?from=house` preserves the governed House threshold/return behavior.
 - **M8 — failure fallback:** R2 render failure cannot strand the member; R1R3 remains available.
 - **M9 — viewport law:** complete shell appears only in a witnessed viewport class.
-- **M10 — existing data law:** Living Field data/provenance/failure truthfulness remains unchanged.
+- **M10 — existing data law:** the existing dashboard/member data remains present; no competing route is created and no data/provenance/failure contract changes.
+- **M11 — explicit aperture:** cohort membership makes the R2 aperture available; the member still chooses whether to enter it.
 
 Each defeat candidate must die for its named reason before implementation is admitted.
 
@@ -134,7 +142,7 @@ Each defeat candidate must die for its named reason before implementation is adm
 1. Merge PR #1539 as the reserved founder act.
 2. Re-open this census against the exact merge-result SHA; stop on drift.
 3. Declare the four ruled dependencies directly; run lockfile/build/type gates.
-4. Build M1–M10 falsifiers before the mount mechanism.
+4. Build M1–M11 falsifiers before the mount mechanism.
 5. Add server-held cohort authority at the existing verified identity boundary.
 6. Mount `LivingFieldGrokkerShell` only for the admitted cohort + witnessed viewport.
 7. Keep R1R3 as fallback and for all other members.
