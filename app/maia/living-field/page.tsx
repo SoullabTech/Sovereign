@@ -24,6 +24,8 @@ interface LivingFieldData {
   spiral_state: SpiralState | null
   active_spirals: PersonalSpiral[]
   recent_states: PersonalState[]
+  /** EARLY-FIELD-01: the server's cohort decision. Absent → instrument absent. */
+  early_field?: { instrument?: boolean }
 }
 
 function LivingFieldFrame({ fromHouse, children }: { fromHouse: boolean; children: ReactNode }) {
@@ -123,6 +125,7 @@ export default function LivingFieldPage() {
         activeSpirals={data.active_spirals}
         recentStates={data.recent_states}
         memberId={memberId}
+        earlyFieldInstrument={data.early_field?.instrument === true}
       />
     </LivingFieldFrame>
   )
