@@ -51,7 +51,7 @@ export function LivingFieldCard({ field, memberId }: Props) {
         setDetail({ versions: data.versions, sources: data.sources, consents: data.consents })
         setOpen(true)
       } catch {
-        setOpenError('This dimension is still here. Try opening it again.')
+        setOpenError('Couldn’t open this dimension just now. Try again.')
       } finally {
         setLoading(false)
       }
