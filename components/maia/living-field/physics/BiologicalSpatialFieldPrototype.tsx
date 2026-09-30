@@ -20,6 +20,10 @@ import {
 import { RecursiveMembraneWorld } from './RecursiveMembraneWorld'
 import { PlasmicInterstitialField } from './PlasmicInterstitialField'
 import { recursivePathOffset } from './recursiveFieldLayout'
+import {
+  navigationPlanForFieldKey,
+  resolveNavigationNodes,
+} from './livingFieldNavigation'
 
 const SCALE = 50
 const WORLD_R = 155 / SCALE
@@ -765,17 +769,75 @@ function Scene({
   )
 }
 
-export function BiologicalSpatialFieldPrototype() {
+export type BiologicalFieldSemanticState = {
+  selectedKey: string | null
+  recursivePathKeys: string[]
+}
+
+export type BiologicalFieldNavigationRequest = {
+  key: string
+  token: number
+}
+
+export function BiologicalSpatialFieldPrototype({
+  embedded = false,
+  navigationRequest = null,
+  onSemanticStateChange,
+}: {
+  embedded?: boolean
+  navigationRequest?: BiologicalFieldNavigationRequest | null
+  onSemanticStateChange?: (state: BiologicalFieldSemanticState) => void
+} = {}) {
   const [activeId, setActiveId] = useState<string | null>('calling')
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [recursiveRootId, setRecursiveRootId] = useState<string | null>(null)
   const [recursivePath, setRecursivePath] = useState<FieldDatum[]>([])
   const [recursiveLeaf, setRecursiveLeaf] = useState<FieldDatum | null>(null)
-  const [zoom, setZoom] = useState(1)
+  const wholeZoom = embedded ? 1.32 : 1
+  const [zoom, setZoom] = useState(wholeZoom)
   const panRef = useRef(new THREE.Vector2())
 
   const active = activeId ? NODE_BY_ID.get(activeId) ?? null : null
+  const activeFieldNode = activeId ? fieldNodeForPhysicsNode(activeId) : null
   const recursiveCurrent = recursivePath[recursivePath.length - 1] ?? null
+  const selectedSemanticKey =
+    recursiveLeaf?.key ??
+    recursiveCurrent?.key ??
+    activeFieldNode?.key ??
+    null
+
+  useEffect(() => {
+    onSemanticStateChange?.({
+      selectedKey: selectedSemanticKey,
+      recursivePathKeys: recursivePath.map((node) => node.key),
+    })
+  }, [onSemanticStateChange, recursivePath, selectedSemanticKey])
+
+  useEffect(() => {
+    if (!navigationRequest) return
+
+    const plan = navigationPlanForFieldKey(navigationRequest.key)
+    if (!plan) return
+
+    const resolved = resolveNavigationNodes(plan)
+
+    setDraggingId(null)
+    panRef.current.set(0, 0)
+    setActiveId(plan.rootPhysicsNodeId)
+
+    if (resolved.recursivePath.length > 0) {
+      setZoom(1.05)
+      setRecursiveRootId(plan.rootPhysicsNodeId)
+      setRecursivePath(resolved.recursivePath)
+      setRecursiveLeaf(resolved.leaf)
+      return
+    }
+
+    setZoom(1.12)
+    setRecursiveRootId(null)
+    setRecursivePath([])
+    setRecursiveLeaf(resolved.leaf)
+  }, [navigationRequest?.token])
 
   const enterRoot = (id: string) => {
     const node = fieldNodeForPhysicsNode(id)
@@ -799,13 +861,20 @@ export function BiologicalSpatialFieldPrototype() {
 
   const widen = () => {
     panRef.current.set(0, 0)
-    setZoom(1)
     setRecursiveLeaf(null)
     setRecursivePath((path) => {
-      if (path.length > 1) return path.slice(0, -1)
+      if (path.length > 1) {
+        setZoom(1.05)
+        return path.slice(0, -1)
+      }
       setRecursiveRootId(null)
+      setZoom(wholeZoom)
       return []
     })
+  }
+
+  const centerView = () => {
+    panRef.current.set(0, 0)
   }
 
   const whole = () => {
@@ -813,21 +882,33 @@ export function BiologicalSpatialFieldPrototype() {
     setRecursiveLeaf(null)
     setRecursivePath([])
     setRecursiveRootId(null)
-    setZoom(1)
+    setZoom(wholeZoom)
   }
 
   return (
-    <section className="overflow-hidden rounded-[32px] border border-stone-800 bg-[#080909]">
-      <header className="border-b border-stone-800/80 px-5 py-4 sm:px-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Living Field · R2D2</p>
-        <h2 className="mt-1 text-2xl font-light text-stone-100">Touch a bubble. Let the world inside it open.</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500">
-          Drag still has the same viscous physics. Click a bubble marked ··· to enter it. The membrane yields, the surrounding field makes room, and its actual inner ecology emerges without leaving the field.
-        </p>
-      </header>
+    <section
+      className={
+        embedded
+          ? 'h-full overflow-hidden bg-[#080909]'
+          : 'overflow-hidden rounded-[32px] border border-stone-800 bg-[#080909]'
+      }
+    >
+      {!embedded && (
+        <header className="border-b border-stone-800/80 px-5 py-4 sm:px-6">
+          <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Living Field · R2D2</p>
+          <h2 className="mt-1 text-2xl font-light text-stone-100">Touch a bubble. Let the world inside it open.</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500">
+            Drag still has the same viscous physics. Click a bubble marked ··· to enter it. The membrane yields, the surrounding field makes room, and its actual inner ecology emerges without leaving the field.
+          </p>
+        </header>
+      )}
 
       <div
-        className="relative h-[760px] min-h-[620px] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_46%,rgba(56,49,43,0.22),rgba(8,9,9,0.96)_64%)]"
+        className={
+          embedded
+            ? 'relative h-full min-h-[640px] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_46%,rgba(68,52,37,0.17),rgba(9,8,7,0.98)_66%)]'
+            : 'relative h-[760px] min-h-[620px] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_46%,rgba(56,49,43,0.22),rgba(8,9,9,0.96)_64%)]'
+        }
         onPointerUp={() => setDraggingId(null)}
         onPointerLeave={() => setDraggingId(null)}
         onWheel={(event) => {
@@ -866,6 +947,7 @@ export function BiologicalSpatialFieldPrototype() {
           />
         </Canvas>
 
+        {!embedded && (
         <div className="pointer-events-none absolute bottom-4 left-4 rounded-2xl border border-stone-800/80 bg-black/45 px-4 py-3 backdrop-blur-md">
           <p className="text-[10px] uppercase tracking-[0.16em] text-stone-600">
             {recursiveCurrent ? `depth ${recursivePath.length}` : active ? GROUP_BY_ID.get(active.group)?.label : 'Living Field'}
@@ -877,8 +959,9 @@ export function BiologicalSpatialFieldPrototype() {
             {recursiveLeaf?.inquiry ?? recursiveCurrent?.inquiry ?? active?.essence ?? 'Each cell remains part of the larger ecology at every scale.'}
           </p>
         </div>
+        )}
 
-        {recursivePath.length > 0 && (
+        {!embedded && recursivePath.length > 0 && (
           <div className="absolute left-1/2 top-4 flex -translate-x-1/2 items-center gap-2 rounded-full border border-stone-800/80 bg-black/55 px-2 py-2 backdrop-blur-md">
             <button
               type="button"
@@ -900,11 +983,61 @@ export function BiologicalSpatialFieldPrototype() {
           </div>
         )}
 
-        <div className="pointer-events-none absolute right-4 top-4 max-w-[295px] rounded-2xl border border-stone-800/70 bg-black/38 px-4 py-3 text-xs leading-5 text-stone-600 backdrop-blur-md">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-stone-500">Scale physics</p>
-          <p className="mt-2">Click → membrane yield → viscous expansion → inner ecology → settle.</p>
-          <p className="mt-2 text-stone-700">Scroll / pinch inward magnifies. Pull outward far enough and the current membrane returns into its parent — like lowering magnification on a microscope. Wider remains a fallback; Whole restores the ecology.</p>
-        </div>
+        {!embedded && (
+          <div className="pointer-events-none absolute right-4 top-4 max-w-[295px] rounded-2xl border border-stone-800/70 bg-black/38 px-4 py-3 text-xs leading-5 text-stone-600 backdrop-blur-md">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-stone-500">Scale physics</p>
+            <p className="mt-2">Click → membrane yield → viscous expansion → inner ecology → settle.</p>
+            <p className="mt-2 text-stone-700">Scroll / pinch inward magnifies. Pull outward far enough and the current membrane returns into its parent — like lowering magnification on a microscope. Wider remains a fallback; Whole restores the ecology.</p>
+          </div>
+        )}
+
+        {embedded && (
+          <div className="absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-[rgba(217,187,142,.3)] bg-[rgba(14,11,9,.92)] px-2.5 py-2 shadow-2xl backdrop-blur-xl">
+            <button
+              type="button"
+              onClick={() => setZoom((value) => THREE.MathUtils.clamp(value / 1.14, 0.78, 1.7))}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[#9f8c73] transition hover:bg-[rgba(203,169,116,.08)] hover:text-[#ead9bf]"
+              aria-label="Zoom out"
+            >
+              −
+            </button>
+            <span className="min-w-[54px] text-center text-[11px] tabular-nums text-[#7e6f5d]">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={() => setZoom((value) => THREE.MathUtils.clamp(value * 1.14, 0.78, 1.7))}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[#9f8c73] transition hover:bg-[rgba(203,169,116,.08)] hover:text-[#ead9bf]"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+            <div className="mx-1 h-4 w-px bg-[rgba(217,187,142,.16)]" />
+            <button
+              type="button"
+              onClick={centerView}
+              className="rounded-full px-3 py-1.5 text-xs text-[#9f8c73] transition hover:bg-[rgba(203,169,116,.08)] hover:text-[#ead9bf]"
+            >
+              Center
+            </button>
+            {recursivePath.length > 0 && (
+              <button
+                type="button"
+                onClick={widen}
+                className="rounded-full px-3 py-1.5 text-xs text-[#9f8c73] transition hover:bg-[rgba(203,169,116,.08)] hover:text-[#ead9bf]"
+              >
+                Wider
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={whole}
+              className="rounded-full px-3 py-1.5 text-xs text-[#c7b59c] transition hover:bg-[rgba(203,169,116,.08)] hover:text-[#f0e3d0]"
+            >
+              Whole
+            </button>
+          </div>
+        )}
       </div>
     </section>
   )
