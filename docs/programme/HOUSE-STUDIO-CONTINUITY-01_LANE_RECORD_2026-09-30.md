@@ -216,6 +216,30 @@ Verification:
 **H1-R3 disposition:** IMPLEMENTATION COMPLETE · BEHAVIORAL EVIDENCE COMPLETE ·
 MERGE REVIEW PENDING.
 
+## 7a · H1-R4 context release
+
+H1-R4 was a witness-only act. No new code or persistence mechanism was
+authorized because H1-R1/F7 already contains the release seam.
+
+Real Chromium witness:
+- House → Work A → manuscript A: mode=write&m=A, no work=.
+- Studio Home was opened explicitly.
+- Work B was selected with the existing Studio Home action.
+- Final address: mode=write&m=B&s=<section>, no work= or alternate Work key.
+- Visible Work identity changed to Work B.
+- Browser localStorage and sessionStorage contained neither Work A nor Work B
+  ids.
+
+**H1-R4 disposition:** IMPLEMENTATION NOT REQUIRED · BEHAVIORAL EVIDENCE
+COMPLETE.
+
+This closes the stronger F7 question:
+
+> **Does the system let go when the member moves?**
+
+Yes. The temporary relationship is released because the next Work is resolved
+from the member's own declarations, not from the threshold that preceded it.
+
 ## 7 · Explicit non-authorizations
 
 ⛔ merge · ⛔ deploy · ⛔ migration · ⛔ stored context / continuation tokens · ⛔ MAIA context
