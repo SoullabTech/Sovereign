@@ -58,7 +58,7 @@ Proposed authority vocabulary:
 
 ```text
 LIVING_FIELD_R2_ENABLED
-LIVING_FIELD_R2_MEMBER_IDS
+EARLY_FIELD_MEMBER_IDS
 ```
 
 Rules:
