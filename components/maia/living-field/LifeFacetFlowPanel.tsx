@@ -334,7 +334,7 @@ export function LifeFacetFlowPanel() {
           Threads across your life
         </p>
         <p className="mt-2 text-xs text-stone-700">
-          These paths are quiet right now. Nothing has been changed.
+          These paths are quiet for now. The journey remains gently held.
         </p>
       </section>
     );
@@ -346,7 +346,7 @@ export function LifeFacetFlowPanel() {
         <p className="text-[10px] uppercase tracking-[0.2em] text-stone-600">
           Threads across your life
         </p>
-        <p className="mt-2 text-xs text-stone-700">Gathering the paths you chose to make…</p>
+        <p className="mt-2 text-xs text-stone-700">Gathering the paths already carried forward…</p>
       </section>
     );
   }
