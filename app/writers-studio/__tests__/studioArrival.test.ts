@@ -71,6 +71,17 @@ const LAWS: Record<string, (r: Resolver) => boolean> = {
   'A7-no-verdict-before-declarations-read': (r) =>
     r('loading', WORKS, 'ready', HELD, 'EA').kind === 'unknown' &&
     r('ready', WORKS, 'loading', HELD, 'EA').kind === 'unknown',
+  // Real-stack walk, 2026-09-30: a signed-out member arriving with work= was held
+  // on "Opening…" forever. A FAILED read is not a pending one.
+  'A8-failed-read-defers-to-studio-never-hangs': (r) =>
+    r('unauthorized', WORKS, 'ready', HELD, 'EA').kind === 'fallback' &&
+    r('error', WORKS, 'ready', HELD, 'EA').kind === 'fallback' &&
+    r('ready', WORKS, 'unauthorized', HELD, 'EA').kind === 'fallback',
+  // A failed manuscripts read must never masquerade as an empty Work (which
+  // would offer Begin this Work and create a duplicate).
+  'A9-failed-manuscripts-read-is-not-an-empty-work': (r) =>
+    r('ready', WORKS, 'error', [], 'EA').kind === 'fallback' &&
+    r('ready', WORKS, 'none', [], 'EMPTY').kind === 'no-manuscript',
 };
 
 const recencyPick: Resolver = (wp, works, hp, held, w) => {
@@ -133,6 +144,23 @@ const CANDIDATES: Record<string, { resolver: Resolver; dies: string }> = {
     resolver: (wp, works, hp, held, w) =>
       w ? resolveStudioArrival(wp, works, hp, held, w) : { kind: 'no-manuscript', work: works[0] },
     dies: 'A6-nothing-carried-leaves-studio-unchanged',
+  },
+  // The shipped H1 behaviour: every non-ready phase reported as `unknown`.
+  'DA8-failure-reported-as-pending': {
+    resolver: (wp, works, hp, held, w) => {
+      if (!w) return { kind: 'fallback' };
+      if (wp !== 'ready' || hp === 'loading') return { kind: 'unknown' };
+      return resolveStudioArrival(wp, works, hp, held, w);
+    },
+    dies: 'A8-failed-read-defers-to-studio-never-hangs',
+  },
+  // The shipped H1 behaviour: a failed manuscripts read treated as an empty pool.
+  'DA9-failed-read-as-empty-work': {
+    resolver: (wp, works, hp, held, w) => {
+      const a = resolveStudioArrival(wp, works, hp === 'error' ? 'ready' : hp, hp === 'error' ? [] : held, w);
+      return a;
+    },
+    dies: 'A9-failed-manuscripts-read-is-not-an-empty-work',
   },
   'DA7-eager-verdict': {
     resolver: (wp, works, hp, held, w) =>

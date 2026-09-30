@@ -215,11 +215,21 @@ export function resolveStudioArrival(
   workId: string | null,
 ): StudioArrival {
   if (!workId) return { kind: 'fallback' };
+  // `unknown` means "not read YET" — loading only. A read that FAILED
+  // (unauthorized, error) is not pending: the carried Work confers nothing and
+  // the Studio's own handling ("Sign in…", its error state) must be reached.
+  // Reporting a failure as `unknown` would hold the member on "Opening…"
+  // forever. (Found by the founder's real-stack walk, 2026-09-30.)
+  if (worksPhase === 'loading' || heldPhase === 'loading') return { kind: 'unknown' };
+  if (worksPhase !== 'ready') return { kind: 'fallback' };
+  // A failed manuscripts read must never read as "this Work has none": that
+  // would offer *Begin this Work* and create a duplicate beside manuscripts the
+  // member already has. Only a readable list (or a read that found none) may
+  // produce the arrival states.
+  if (heldPhase !== 'ready' && heldPhase !== 'none') return { kind: 'fallback' };
   const base = resolveWorkArrival(worksPhase, works, workId);
   if (base.kind === 'unknown') return { kind: 'unknown' };
   if (base.kind === 'absent') return { kind: 'fallback' };
-  if (heldPhase === 'loading') return { kind: 'unknown' };
-  // Anything other than a readable list holds nothing we can honestly offer.
   const pool = heldPhase === 'ready' ? held : [];
 
   const ids =
