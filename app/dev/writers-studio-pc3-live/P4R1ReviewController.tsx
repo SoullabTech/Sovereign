@@ -31,6 +31,7 @@ import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPostur
 import { relationshipIdFrom } from '@/app/writers-studio/canvasIdentity';
 import { readA2Relationship, type A2RelationshipSummary } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import { readRelationshipReturnClient } from '@/lib/writersStudio/rebuild/returnStateClient';
+import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
 
 interface ContextReady {
   state: 'section_aware';
@@ -75,6 +76,7 @@ type ReadyReview = {
   const [tab, setTab] = useState('Overview');
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(requestedFindingId);
   const [discussion, setDiscussion] = useState<ReviewDiscussionState | null>(null);
+  const [workTalking, setWorkTalking] = useState(false);
   const [availableRuns, setAvailableRuns] = useState<ChapterReviewManifest[]>([]);
   const [availableRootId, setAvailableRootId] = useState<string | null>(null);
   const [a2Relationship, setA2Relationship] = useState<A2RelationshipSummary | null>(null);
@@ -133,6 +135,7 @@ type ReadyReview = {
       setReview(null);
       setMessage(null);
       setDiscussion(null);
+      setWorkTalking(false);
       discussGen.current += 1;
       if (!manuscriptId) {
         setPhase('error');
@@ -429,18 +432,40 @@ type ReadyReview = {
           </div>
         }
         maia={
-          <div className="fr-maia-inner">
-            <div className="fr-maia-head fr-maia-head-lg">
-              <div className="fr-orb fr-orb-lg" aria-hidden="true" />
-              <div className="fr-maia-name"><h2>MAIA</h2><span>In relation to Review</span></div>
-            </div>
-            <div className="fr-mbody">
-              <div className="fr-say fr-say-rev">
-                <p>I’ll stay with what has already been read here. Opening Review does not commission a new reading.</p>
+          work && workTalking ? (
+            <div className="fr-maia-inner p4r1-work-conversation" data-review-work-conversation>
+              <div className="fr-maia-head fr-maia-head-lg">
+                <div className="fr-orb fr-orb-lg" aria-hidden="true" />
+                <div className="fr-maia-name"><h2>MAIA</h2><span>In relation to your Work</span></div>
+              </div>
+              <div className="fr-mbody">
+                <WorkConversation
+                  work={work}
+                  manuscriptId={context.manuscriptId}
+                  sectionId={availableRootId}
+                  onClose={() => setWorkTalking(false)}
+                />
               </div>
             </div>
-            <div className="fr-foot">Review is a return to what was noticed, not an automatic reread.</div>
-          </div>
+          ) : (
+            <div className="fr-maia-inner">
+              <div className="fr-maia-head fr-maia-head-lg">
+                <div className="fr-orb fr-orb-lg" aria-hidden="true" />
+                <div className="fr-maia-name"><h2>MAIA</h2><span>In relation to Review</span></div>
+              </div>
+              <div className="fr-mbody">
+                <div className="fr-say fr-say-rev">
+                  <p>I’ll stay with what has already been read here. Opening Review does not commission a new reading.</p>
+                </div>
+                {work ? (
+                  <button type="button" className="fr-open" data-action="talk-work" onClick={() => setWorkTalking(true)}>
+                    Talk about the larger Work
+                  </button>
+                ) : null}
+              </div>
+              <div className="fr-foot">Review is a return to what was noticed, not an automatic reread.</div>
+            </div>
+          )
         }
       />
     );
@@ -483,13 +508,31 @@ type ReadyReview = {
         />
       }
       maia={
-        <LiveMaiaReview
-          data={data}
-          selectedFinding={selectedFinding}
-          discussion={discussion}
-          onSubmit={submitDiscussion}
-          onClose={closeDiscussion}
-        />
+        work && workTalking ? (
+          <div className="fr-maia-inner p4r1-work-conversation" data-review-work-conversation>
+            <div className="fr-maia-head fr-maia-head-lg">
+              <div className="fr-orb fr-orb-lg" aria-hidden="true" />
+              <div className="fr-maia-name"><h2>MAIA</h2><span>In relation to your Work</span></div>
+            </div>
+            <div className="fr-mbody">
+              <WorkConversation
+                work={work}
+                manuscriptId={context.manuscriptId}
+                sectionId={selectedFinding?.sectionId ?? review.rootId}
+                onClose={() => setWorkTalking(false)}
+              />
+            </div>
+          </div>
+        ) : (
+          <LiveMaiaReview
+            data={data}
+            selectedFinding={selectedFinding}
+            discussion={discussion}
+            onSubmit={submitDiscussion}
+            onClose={closeDiscussion}
+            onTalkWork={work ? () => setWorkTalking(true) : undefined}
+          />
+        )
       }
       maiaAbove={<span className="fr-matters">Your work matters. ✦</span>}
       footer={<span>A deeper you. A more human world.</span>}
