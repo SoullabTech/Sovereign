@@ -240,6 +240,26 @@ This closes the stronger F7 question:
 Yes. The temporary relationship is released because the next Work is resolved
 from the member's own declarations, not from the threshold that preceded it.
 
+## 7b · H1-R5 no-manuscript orientation
+
+H1-R5 was also witness-only. A Work with zero declared manuscripts was entered
+from House.
+
+Real Chromium witness:
+- Work identity remained in the Studio URL.
+- no m= parameter was introduced;
+- Studio remained in Home/orientation rather than Write;
+- the Work title was visible;
+- Start writing was offered;
+- the member's manuscript count remained zero.
+
+**H1-R5 disposition:** IMPLEMENTATION NOT REQUIRED · BEHAVIORAL EVIDENCE
+COMPLETE.
+
+The three-state crossing rule is now behaviorally witnessed at its two
+nontrivial edges: zero manuscripts refuses invention; two manuscripts refuses
+selection by guess.
+
 ## 7 · Explicit non-authorizations
 
 ⛔ merge · ⛔ deploy · ⛔ migration · ⛔ stored context / continuation tokens · ⛔ MAIA context
