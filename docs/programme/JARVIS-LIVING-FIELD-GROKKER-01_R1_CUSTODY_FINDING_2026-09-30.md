@@ -158,3 +158,69 @@ so it is a founder ruling. Only the first commit was probed. Later commits may c
    touched.
 5. Decide whether the `app/dev/living-field-*` witness pages ship to canon or stay lane-only.
 6. Founder rendered walk, then a merge ruling. Merge and deploy stay unauthorized.
+
+---
+
+## 10 · Founder rulings (2026-09-30) and the reconciliation they authorized
+
+**Rulings.** (1) `956ed92a` is excluded; AIN vault comes through its own governed lane.
+(2) Canon's door behaviour and labels stand (whole-card link, "Enter …"); the lane's shorter
+supporting copy is used where it stays intelligible. (3) `app/dev/living-field-*` witness pages
+stay out of canon by default. **Precedence:** canonical cross-system law wins; Living Field
+design and semantics win inside the field unless they violate that law. **Stop:** if
+`lib/sovereign/**` or `lib/maia/**` changes, stop rather than absorb.
+
+**Replay.** `git cherry-pick -x 956ed92a..024c6c69` onto `04005ca7c`: 47 commits, conflict only
+at `60916e56` (3 files). The Living Field tree then equalled the lane tip except in those
+3 files and in canon's `livingFieldClarity.test.ts`, which the lane never had.
+
+**Reconciliation commits (on top of the replay):**
+
+| Commit | What | Why |
+|---|---|---|
+| `7f3fd02a` | remove 4 `app/dev/living-field-*` pages + 10 `scripts/witness/grokker-*` | ruling 3; the scripts only drive those pages; both preserved at `024c6c69` |
+| `68211fea` | restore canon wording on 18 lines | precedence rule, see below |
+| `79fd4292` | two first-conflict hunks back to canon | canon's clarity test pins them as navigation law; my first resolution chose the lane side and was wrong |
+| `203a2e68` | illumination test asserts `contextPath` | lane defect: failed identically at `024c6c69`; R2D3 renamed `lineage` and left the test behind |
+
+**`68211fea`: the lines that merged without conflict but crossed law.** The lane removed MAIA's
+name and authorship across the field. Git would have absorbed that silently. Restored to canon, narrowly:
+- *provenance*: "MAIA candidate" / "you confirmed" / "you authored"; "MAIA candidate, accepted" /
+  "Written by you"; "You carried this path";
+- *recipient disclosure on acts that send content to MAIA*: "What MAIA will receive",
+  "Refine with MAIA", "Talk with MAIA about this";
+- *non-claim disclaimers* on the constellation and facet-flow lines;
+- *truthful failure*: constellation unavailable/partial; encounter errors name the failure
+  instead of calling it a pause.
+
+Lane voice is kept everywhere else. This is my application of the precedence rule, not a
+ruling. It is one commit and reverts cleanly.
+
+**Gates on the final head.**
+- Living Field suites (`components/maia/living-field`, `…/living-constellation`): **16/16 pass**.
+- `lib/maia/living-field/__tests__/livingFieldScopeContainment.test.ts` (LF-SCOPE-01): **6 fail,
+  identically on canon `04005ca7c`**. They test `app/api/maia/living-field/route.ts`, which this
+  port does not touch. ⛔ Pre-existing, not absorbed, not repaired here.
+- `npm run typecheck`: **✅ no regressions, 222 errors vs baseline 239.** Run on the replay +
+  `7f3fd02a` + `68211fea`. The two later commits change two string literals and one test file.
+  Needed `prisma generate`, which `npm ci --ignore-scripts` skips.
+- `check:no-supabase`: ✅.
+- Protected-path audit, `04005ca7c..HEAD`: **0 files under `lib/sovereign/**` or `lib/maia/**`;
+  0 package files.**
+
+## 11 · Findings carried forward (not decided here)
+
+1. **What production mounts is R1R3, not R2E2.** `/maia/living-field` renders
+   `LivingFieldInstrument` (d3 circle-pack geometry). All R2 work under `physics/` (shell,
+   membranes, illumination, condensation) was reachable only from the removed dev pages, so in
+   canon it is **present but unmounted**. The last founder witness (R2E2) was of a surface
+   members cannot reach. Mounting it is a separate founder act.
+2. **Undeclared dependencies.** `LivingFieldInstrument` imports `d3-hierarchy` and
+   `d3-interpolate`, which resolve only through `d3`. `physics/` imports `cytoscape` and
+   `cytoscape-fcose`, present only as **dev** dependencies through `mermaid`. Safe while `physics/`
+   stays unmounted. Mounting it without declaring them risks a production build that lacks them.
+3. **LF-SCOPE-01 is red on canon** (6 tests), which is outside this lane.
+4. `956ed92a` (AIN vault) remains unmerged and unreviewed in its own lane.
+
+⛔ Merge and deploy remain unauthorized. Next: founder rendered walk from
+`/maia/living-field?from=house`, then a merge ruling.
