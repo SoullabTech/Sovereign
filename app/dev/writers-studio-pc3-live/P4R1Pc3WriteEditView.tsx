@@ -7,7 +7,7 @@ import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 import { projectPc3LiveWrite } from '@/app/writers-studio/full-redesign/liveWriteAdapter';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
-import RevisionDesk, { type MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
+import RevisionDesk, { type CarryChooserPresentation, type MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import InsightReadings from '@/app/writers-studio/insight/InsightReadings';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -25,7 +25,7 @@ import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
-import type { A2RelationshipSummary } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
+import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -69,6 +69,9 @@ export type P4R1Pc3WriteEditViewProps = {
   maiaRelationshipPhase: 'idle' | 'loading' | 'ready' | 'unavailable';
   maiaRelationshipBusy: boolean;
   maiaRelationshipMessage: string | null;
+  carrySourceAvailable: boolean;
+  carryChooser: CarryChooserPresentation;
+  selectedCarrySource: EligibleCarrySource | null;
   suggestedVersion: RebuildEditorialThread['versions'][number] | null;
   appliedVersionId: string | null;
   editorialDraft: string;
@@ -108,6 +111,10 @@ export type P4R1Pc3WriteEditViewProps = {
   onBeginMaiaRelationship: () => void;
   onChooseMaiaRelationship: (relationshipId: string) => void;
   onLeaveMaiaRelationship: () => void;
+  onOpenCarryChooser: () => void;
+  onCloseCarryChooser: () => void;
+  onSelectCarrySource: (source: EligibleCarrySource) => void;
+  onRemoveCarrySource: () => void;
 };
 
 function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRect } | null {
@@ -605,6 +612,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           mayProposeImmediately={props.mayProposeImmediately}
           onMayProposeImmediately={props.onMayProposeImmediately}
           voiceNotice={props.voiceNotice}
+          carrySourceAvailable={props.carrySourceAvailable}
+          carryChooser={props.carryChooser}
+          selectedCarrySource={props.selectedCarrySource}
+          onOpenCarryChooser={props.onOpenCarryChooser}
+          onCloseCarryChooser={props.onCloseCarryChooser}
+          onSelectCarrySource={props.onSelectCarrySource}
+          onRemoveCarrySource={props.onRemoveCarrySource}
         />
       </details>
 

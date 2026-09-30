@@ -49,7 +49,9 @@ import {
   createA2Relationship,
   listA2Relationships,
   readA2Relationship,
+  readEligibleCarrySources,
   type A2RelationshipSummary,
+  type EligibleCarrySource,
 } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 import {
   clearRelationshipReturnClient,
@@ -70,6 +72,17 @@ interface ContextReady {
 }
 type ContextPayload = ContextReady | { state: 'no_draft' | 'continuous'; manuscriptId: string; title: string | null };
 type Phase = 'loading' | 'ready' | 'unauthorized' | 'error';
+
+type CarryChooserState =
+  | { readonly kind: 'closed' }
+  | { readonly kind: 'loading'; readonly relationshipId: string; readonly receiverThreadId: string; readonly generation: number }
+  | { readonly kind: 'ready'; readonly relationshipId: string; readonly receiverThreadId: string; readonly generation: number; readonly sources: readonly EligibleCarrySource[] }
+  | { readonly kind: 'unavailable'; readonly relationshipId: string; readonly receiverThreadId: string; readonly generation: number };
+
+type SelectedCarrySource = EligibleCarrySource & {
+  readonly relationshipId: string;
+  readonly receiverThreadId: string;
+};
 
 export default function FlagshipWriteEditController() {
   const params = useSearchParams();
@@ -118,6 +131,14 @@ export default function FlagshipWriteEditController() {
   const [a2RelationshipPhase, setA2RelationshipPhase] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
   const [a2RelationshipBusy, setA2RelationshipBusy] = useState(false);
   const [a2RelationshipMessage, setA2RelationshipMessage] = useState<string | null>(null);
+  const carryChooserGen = useRef(0);
+  const [carryChooser, setCarryChooser] = useState<CarryChooserState>({ kind: 'closed' });
+  const [selectedCarrySource, setSelectedCarrySource] = useState<SelectedCarrySource | null>(null);
+  const [carryPostureAvailable, setCarryPostureAvailable] = useState(false);
+  const a2RelationshipIdRef = useRef<string | null>(null);
+  const editorialThreadIdRef = useRef<string | null>(null);
+  a2RelationshipIdRef.current = a2Relationship?.id ?? null;
+  editorialThreadIdRef.current = editorialThread?.threadId ?? null;
   const [editorialDraft, setEditorialDraft] = useState('');
   const [editorialDepth, setEditorialDepth] = useState<EditorialDepth>(DEFAULT_EDITORIAL_DEPTH);
   const [suggestedVersionId, setSuggestedVersionId] = useState<string | null>(null);
@@ -445,6 +466,27 @@ export default function FlagshipWriteEditController() {
     replaceA2RelationshipAddress(null);
   }, [context, replaceA2RelationshipAddress, work, workContext.kind]);
 
+  useEffect(() => {
+    carryChooserGen.current += 1;
+    setCarryChooser({ kind: 'closed' });
+    setSelectedCarrySource(null);
+  }, [a2Relationship?.id, editorialThread?.threadId, focusId, context?.manuscriptId, workspaceOpen]);
+
+  useEffect(() => {
+    const allowed = Boolean(
+      workspaceOpen
+      && a2Relationship
+      && editorialThread
+      && sessionPosture.resolved
+      && !sessionPosture.sanctuary
+    );
+    setCarryPostureAvailable(allowed);
+    if (!allowed) {
+      carryChooserGen.current += 1;
+      setCarryChooser({ kind: 'closed' });
+    }
+  }, [workspaceOpen, a2Relationship, editorialThread, sessionPosture]);
+
   const editorialScope = JSON.stringify([
     context?.manuscriptId,
     focusId,
@@ -637,6 +679,57 @@ export default function FlagshipWriteEditController() {
     setEditorialFailure(null);
     return null;
   }, [focusId, focusSection, selectedPassage, editorialThread, startNewEditorial, bindEditorialThread]);
+
+  const openCarryChooser = useCallback(() => {
+    if (!workspaceOpen || !a2Relationship || !editorialThread || editorialBusy) return;
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved || posture.sanctuary) {
+      setCarryPostureAvailable(false);
+      carryChooserGen.current += 1;
+      setCarryChooser({ kind: 'closed' });
+      return;
+    }
+    const relationshipId = a2Relationship.id;
+    const receiverThreadId = editorialThread.threadId;
+    const generation = ++carryChooserGen.current;
+    setCarryChooser({ kind: 'loading', relationshipId, receiverThreadId, generation });
+    void readEligibleCarrySources(relationshipId, receiverThreadId).then((out) => {
+      if (
+        generation !== carryChooserGen.current
+        || a2RelationshipIdRef.current !== relationshipId
+        || editorialThreadIdRef.current !== receiverThreadId
+      ) return;
+      if (!out.ok) {
+        setCarryChooser({ kind: 'unavailable', relationshipId, receiverThreadId, generation });
+        return;
+      }
+      setCarryChooser({ kind: 'ready', relationshipId, receiverThreadId, generation, sources: out.sources });
+    });
+  }, [workspaceOpen, a2Relationship, editorialThread, editorialBusy]);
+
+  const closeCarryChooser = useCallback(() => {
+    carryChooserGen.current += 1;
+    setCarryChooser({ kind: 'closed' });
+  }, []);
+
+  const selectCarrySource = useCallback((source: EligibleCarrySource) => {
+    if (carryChooser.kind !== 'ready') return;
+    const relationshipId = a2Relationship?.id ?? null;
+    const receiverThreadId = editorialThread?.threadId ?? null;
+    if (
+      !relationshipId
+      || !receiverThreadId
+      || carryChooser.relationshipId !== relationshipId
+      || carryChooser.receiverThreadId !== receiverThreadId
+      || !carryChooser.sources.some((candidate) => candidate.sourceEpisodeSequence === source.sourceEpisodeSequence)
+    ) return;
+    setSelectedCarrySource({ ...source, relationshipId, receiverThreadId });
+    carryChooserGen.current += 1;
+    setCarryChooser({ kind: 'closed' });
+  }, [carryChooser, a2Relationship?.id, editorialThread?.threadId]);
+
+  const removeCarrySource = useCallback(() => setSelectedCarrySource(null), []);
+
   const sendEditorial = useCallback(async (
     requestText?: string,
     options?: { proposalPolicy?: ProposalPolicy },
@@ -654,6 +747,18 @@ export default function FlagshipWriteEditController() {
       if (!thread) return;
       const posture = await readCurrentSanctuaryPosture();
       const exactWords = text + '\n\n' + editorialDirective(editorialDepth);
+      const carry = selectedCarrySource
+        && a2Relationship
+        && selectedCarrySource.relationshipId === a2Relationship.id
+        && selectedCarrySource.receiverThreadId === thread.threadId
+        ? {
+            kind: 'prior_maia_editorial_turn' as const,
+            sourceEpisodeSequence: selectedCarrySource.sourceEpisodeSequence,
+          }
+        : undefined;
+      if (selectedCarrySource && !carry) setSelectedCarrySource(null);
+      if (carry) setSelectedCarrySource(null);
+
       const outcome = await sendBoundEditorialTurn(
         thread.threadId,
         focusId,
@@ -667,6 +772,7 @@ export default function FlagshipWriteEditController() {
         {
           ...(options ?? {}),
           ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
+          ...(carry ? { carry } : {}),
         },
       );
 
@@ -700,6 +806,7 @@ export default function FlagshipWriteEditController() {
     mayRemoveParagraphs,
     mayProposeImmediately,
     a2Relationship,
+    selectedCarrySource,
   ]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
@@ -1056,6 +1163,11 @@ export default function FlagshipWriteEditController() {
             maiaRelationshipPhase={a2RelationshipPhase}
             maiaRelationshipBusy={a2RelationshipBusy}
             maiaRelationshipMessage={a2RelationshipMessage}
+            carrySourceAvailable={carryPostureAvailable && Boolean(a2Relationship) && Boolean(editorialThread)}
+            carryChooser={carryChooser.kind === 'ready'
+              ? { kind: 'ready', sources: carryChooser.sources }
+              : { kind: carryChooser.kind }}
+            selectedCarrySource={selectedCarrySource}
             suggestedVersion={suggestedVersion}
             appliedVersionId={editorialThread?.application && !editorialThread.application.undone
               ? editorialThread.application.versionId
@@ -1111,6 +1223,10 @@ export default function FlagshipWriteEditController() {
             onBeginMaiaRelationship={() => void beginA2Relationship()}
             onChooseMaiaRelationship={(relationshipId) => void chooseA2Relationship(relationshipId)}
             onLeaveMaiaRelationship={leaveA2Relationship}
+            onOpenCarryChooser={openCarryChooser}
+            onCloseCarryChooser={closeCarryChooser}
+            onSelectCarrySource={selectCarrySource}
+            onRemoveCarrySource={removeCarrySource}
           />
         );
       }}
