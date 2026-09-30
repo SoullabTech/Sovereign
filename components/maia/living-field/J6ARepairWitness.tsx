@@ -29,6 +29,18 @@ import {
   MAIA_RELATIONAL_DIRECTNESS_LAW,
   OPEN_EDGE_DIMENSIONS,
 } from '@/lib/memory/developmental-epistemics/relationalDirectness'
+import {
+  INTERACTIONAL_DECISION_LANGUAGE,
+  INTERACTIONAL_WITNESS_CASES,
+  MAIA_INTERACTIONAL_WARRANT_LAW,
+  MAIA_MEMORY_AVAILABILITY_LAW,
+  MAIA_MINIMUM_NECESSARY_SURFACING_LAW,
+  MAIA_NON_PSYCHOLOGICAL_TACT_LAW,
+  MAIA_SILENCE_WITH_CONTINUITY_LAW,
+  MAIA_TACT_LAW,
+  MAIA_TIMING_NON_PROMOTION_LAW,
+  MAIA_WHY_NOW_LAW,
+} from '@/lib/memory/developmental-epistemics/interactionalWarrant'
 
 type WitnessResult = 'NOT_RUN' | 'PASS' | 'HOLD' | 'FAIL'
 
@@ -161,6 +173,51 @@ export function J6ARepairWitness() {
 
           <div className="mt-5 rounded-2xl border border-[#62584a]/65 bg-[#1a1713] p-4">
             <p className="text-sm leading-6 text-[#c7b8a5]">{MAIA_DIRECTNESS_FELT_TEST}</p>
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-[28px] border border-[#50483e]/70 bg-[#171411] p-5 sm:p-6">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[#978671]">Interactional warrant · tact</p>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <LawCard title="Truth is not timing" text={MAIA_INTERACTIONAL_WARRANT_LAW} />
+            <LawCard title="Tact" text={MAIA_TACT_LAW} />
+            <LawCard title="No covert readiness model" text={MAIA_NON_PSYCHOLOGICAL_TACT_LAW} />
+            <LawCard title="Memory availability" text={MAIA_MEMORY_AVAILABILITY_LAW} />
+            <LawCard title="Silence with continuity" text={MAIA_SILENCE_WITH_CONTINUITY_LAW} />
+            <LawCard title="Why now" text={MAIA_WHY_NOW_LAW} />
+            <LawCard title="Minimum necessary" text={MAIA_MINIMUM_NECESSARY_SURFACING_LAW} />
+            <LawCard title="Timing does not change standing" text={MAIA_TIMING_NON_PROMOTION_LAW} />
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {INTERACTIONAL_WITNESS_CASES.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-[#494239] bg-[#11100f] p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.15em] text-[#8f7f6b]">{item.id}</p>
+                    <p className="mt-1 text-sm text-[#dfd0bd]">{item.title}</p>
+                  </div>
+                  <span className="rounded-full border border-[#62584a] px-3 py-1 text-[10px] tracking-[0.08em] text-[#d1b78f]">
+                    {item.expectedDecision.replaceAll('_', ' ')}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-[#a99b89]">{item.situation}</p>
+                <p className="mt-4 text-sm leading-6 text-[#d6c6b2]">{item.memberFacingMove}</p>
+                <p className="mt-3 text-xs leading-5 text-[#837768]">{item.why}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6">
+            <p className="text-[10px] uppercase tracking-[0.15em] text-[#8f7f6b]">The five possible moves</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(INTERACTIONAL_DECISION_LANGUAGE).map(([decision, language]) => (
+                <div key={decision} className="rounded-2xl border border-[#494239] bg-[#11100f] p-4">
+                  <p className="text-xs text-[#d1b78f]">{decision.replaceAll('_', ' ')}</p>
+                  <p className="mt-1 text-xs leading-5 text-[#8f8271]">{language}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
