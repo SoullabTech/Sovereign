@@ -2,8 +2,12 @@
 
 **Date:** 2026-09-30
 **Base:** `2df99c9e` (O5-R3 grant-settlement census) · frozen O5-R1 @ `af2f0203` · **FREEZE INTACT**
-**Standing:** ⭐ O5-R3 OPENED (founder ruling) · census ✅ · falsifier suite ✅ **LETHAL + DISCRIMINATING** ·
-⛔ **no implementation** · ⛔ suite NOT frozen (freeze is part of the build gate) · ⛔ not merged · production untouched
+**Standing:** ⭐ O5-R3 OPENED · census ✅ · founder rulings R3-R1…R11 taken (§7) · **BUILD GATE PASSED (§8)** ·
+⭐ suite **FROZEN @ `3dc118ae`** (28 falsifiers · 37 candidates, LETHAL + DISCRIMINATING) · implementation authorized, ⛔ not started ·
+⛔ not admitted · ⛔ not merged · production untouched
+
+> §1–§6 below are the census and the pre-gate suite **as first recorded**. Where the rulings in §7 changed
+> them, the text is marked, not rewritten.
 
 ## 1. Founder ruling (recorded)
 
@@ -225,7 +229,10 @@ counts only a `CORRUPT` refusal, so an incidental `TypeError` cannot pass it vac
 5. The census `STOP_CATEGORY` entry for `CLAIMED_NEVER_DISPATCHED`.
 6. The `census --write` refusal while Desktop holds the lease, which turns "run it with Desktop closed" into
    a structural refusal.
-7. ⭐ **Proposed, ⛔ not ruled: scope item 2 largely collapses into the lease.**
+7. ~~⭐ **Proposed, ⛔ not ruled: scope item 2 largely collapses into the lease.**~~ ⛔ **WITHDRAWN by R3-R10 (§7).**
+   The argument below holds only once every grant writer is lease-aware. Until then, an older pinned
+   Desktop may be a lease-unaware writer, so an append lock found under a held lease is *not* provably
+   residue. The proposal is now defeat candidate DC-L11, and it dies on R3-L10.
    - Under a held lease, an existing append lockfile cannot belong to a live writer. The only other writer
      would be this process, and its locked sections are synchronous.
    - So a lockfile found at acquisition is **provably residue** of a dead prior holder, and it can be
@@ -239,7 +246,7 @@ counts only a `CORRUPT` refusal, so an incidental `TypeError` cannot pass it vac
 - ⛔ fsync is deferred under the ruled process-crash fault model, so power loss remains unexamined.
 - ⛔ Grant retirement, the lease-reconciliation operator act and the PR are out of scope.
 
-## 6. Questions for the founder
+## 6. Questions for the founder (answered in §7)
 
 - **Q1 (scope).** Does the lease cover **the home** or **the grant ledgers**?
   - Home-wide brings W0/W4, session, run-record and delegate-script writers under it. That is a much
@@ -256,3 +263,105 @@ counts only a `CORRUPT` refusal, so an incidental `TypeError` cannot pass it vac
 **Standing: O5-R3 OPENED · LEASE CENSUS ✅ · SUITE 21 falsifiers / 25 candidates, LETHAL + DISCRIMINATING
 · CLASS A 3 RED AS PREDICTED · ⛔ NOT FROZEN · ⛔ NO IMPLEMENTATION · O5-R1 FREEZE INTACT · O5-R2
 MATRIX UNCHANGED · PRODUCTION UNTOUCHED.**
+
+---
+
+## 7. Founder rulings R3-R1…R11 (2026-09-30)
+
+Answers to §6: **Q1 grant ledgers only · Q2 human-provider in · Q3 lawful, with an exact definition.**
+
+| Ruling | Substance |
+|---|---|
+| **R3-R1** scope | Single-writer authority for the **grant authority domain**: every store whose writes create, mutate, revoke, route, claim or record execution-grant authority. ⛔ Not Work Unit, session, Path A run or general recovery records, and not the home. *One proven writer may mutate the grant authority domain at a time*, not *one process may write anything beneath the home*. Whole-home single-writer would be a later governed act. |
+| **R3-R2** human-provider | `human-provider-execution-grant-store.mjs` is inside the boundary. Every mutating entry point requires the same writer authority. There is no second, weaker grant-writing path. |
+| **R3-R3** enforcement | Inside the grant-store mutation functions. Caller discipline is insufficient: a caller holding a lease that then calls an unguarded store is not conforming. |
+| **R3-R4** reads | Lease-free. Requiring the lease to inspect a ledger is a defeat candidate. |
+| **R3-R5** terminal fragment | Lawful removal, and only when all ten conditions hold: (1) lease held; (2) last committed boundary proven; (3) only the suffix after it touched; (4) exact bytes quarantined first, separately; (5) the record names ledger · byte offset · exact or lossless bytes · reason · lease identity · time; (6) quarantine durable before truncation; (7) quarantine failure ⇒ no truncation; (8) truncate only to the proven offset; (9) repaired ledger durable before the next append; (10) no committed record changed. *Recovery may remove bytes that never became a ledger record. It may not rewrite ledger history.* |
+| **R3-R6** no semantic repair | Never guess, reconstruct, complete or merge a fragment. Corruption anywhere but the terminal uncommitted suffix is a STOP under R3, and a different failure class. |
+| **R3-R7** identity | host · pid · process incarnation (start time) · unforgeable lease token. The owner and the reconciler use the same probe and unit. A local probe is never evidence about another host. *Unknown is not dead; unreadable is not stale; age is not death.* |
+| **R3-R8** takeover | Never `check → decide stale → rename/overwrite` without an exclusive takeover gate, because POSIX rename is not compare-and-swap. The single-process race falsifiers are necessary but not sufficient. A **real two-process race witness on the Mac Studio** is an admission requirement. |
+| **R3-R9** release | Only if the authoritative record still names that exact lease incarnation. A fenced-out former owner cannot delete its successor. |
+| **R3-R10** legacy append lock | ⭐ **Kept.** Under a held lease an append lock is *not* abandoned by that fact alone, because an older pinned Desktop may be a lease-unaware writer that honours only the append lock. Retirement is a later, evidenced act, taken once no lease-unaware grant writer can coexist. |
+| **R3-R11** runtime binding | Merging R3 does not establish enforcement. Admission witnesses the **exact checkout SHA** the participating Desktop/JARVIS process runs. |
+
+## 8. Build gate
+
+### 8.1 Laws added before freeze
+
+| New law | Guards | Killed candidate(s), with the recorded reason |
+|---|---|---|
+| **R3-D1** every grant ledger, human-provider included, refuses lease-less and stolen-lease mutation; the holder writes | R3-R2 / R3-R3 | DC-D1 canonical-only guard: "`home/execution-grants/…`: a non-holder mutated it" |
+| **R3-D2** Work Unit, session, Path A run and recovery writes are not serialized behind the lease | R3-R1 | DC-D2 whole-home lease: "a non-grant home write was serialized behind the grant lease" |
+| **R3-L10** mixed version. (a) While a legacy writer holds the append lock, the holder is refused `GRANT_LEDGER_BUSY`; the lock and ledger are untouched. (b) Every holder append happens under the append lock, and the holder releases only its own. (c) Acquiring the lease never clears an append lock | R3-R10 | DC-L9 lease subsumes the lock · DC-L10 holder clears "stale" lock at append · **DC-L11 the withdrawn §4.7 proposal**: "lease acquisition treated a legacy append lock as residue" |
+| **R3-T7** quarantine strictly before truncate; a quarantine failure surfaces, and nothing is truncated or appended | R3-R5 (4, 6, 7) | DC-T6 truncate-first · DC-T7 swallowed failure |
+| **R3-T8** the quarantine record carries ledger · **byte** offset · exact bytes · reason · lease incarnation · time | R3-R5 (5) | DC-T8a bare bytes · **DC-T8b character offset**: "offset 45, expected the byte boundary 46". The fixture's committed prefix contains `é`, so R3-R7's unit hazard is tested in the ledger too |
+| **R3-T9** tail recovery without the lease quarantines, truncates and writes nothing | R3-R5 (1) | DC-T9 |
+| **R3-T10** a *completable* fragment is never completed or merged, and is preserved verbatim | R3-R6 | DC-T10 JSON completion |
+| **R3-T2 extended** committed corruption, including corruption **plus** a torn tail, stops the append with zero operations | R3-R6 | DC-T11 repair-anywhere (cut back to the first bad line) |
+| **R3-T5 tightened** the committed prefix is preserved byte for byte | admission list | DC-T4, plus DC-T8b as collateral |
+
+### 8.2 Instrument repairs made at the gate (⛔ no law weakened)
+
+- **Known-bad candidates are now pinned as code.** Previously DC-T0 imported the live grant-ledger reader and
+  DC-C1 *was* the live classifier. Both would have **started passing the moment R3 was implemented**, which is a
+  matrix defect disguised as progress. DC-T0 is now a pinned snapshot of today's strict reader. DC-C1 forces
+  today's label back onto the live classifier's output. The live code appears only in the Class A adapters,
+  which the unfrozen matrix runs.
+- **The matrix prints why each candidate died:** the first failure message of its named falsifier. All 37
+  were read. Each dies for the reason its law names; none dies on an incidental error.
+- The tail laws moved to `tail-falsifiers.mjs` and `tail-reference-candidates.mjs`. The contract gained `ctx`
+  (ledger · lease · holdsLease · now) and byte offsets.
+
+### 8.3 Result
+
+`npm run matrix:jarvis-o5-r3` exits 0: **MATRIX LETHAL + DISCRIMINATING · CLASS A AS PREDICTED.**
+
+- **28 falsifiers:** R3-L1…L10 · R3-D1…D2 · R3-T1…T10 · R3-C1…C3 · R3-S1…S3.
+- **37/37 candidates** die on their named falsifier, with 20 collateral deaths, all classified irreducible.
+- `buildLease({})` is proven equal to the reference.
+- **Class A** is unchanged: the canonical reader is RED on T1 and T3, and the classifier is RED on C1.
+
+Neighbouring gates: O5-R1 freeze intact, and the O5-R2 matrix is still LETHAL + DISCRIMINATING.
+
+### 8.4 Freeze
+
+`tests/constitutional/jarvis-o5-r3/FREEZE.json` pins eight files by git **blob hash**: the world, the lease
+reference, the lease falsifiers and candidates, the tail falsifiers and reference/candidates, and the reason and
+settlement falsifiers and reference/candidates. `freeze_commit` is `3dc118ae`.
+
+`npm run verify:jarvis-o5-r3-freeze` is proven lethal both ways: intact exits 0; a one-line append to a frozen
+file exits 1 and names the file; restoring it exits 0.
+
+⚠️ **The unfrozen matrix has a known, lawful change ahead.** When the implementation lands, its Class A
+predictions must flip to PASS, in the open. That flip is part of the implementation's evidence. The matrix may
+also gain integration checks against the real stores. It may never weaken lethality or classification.
+
+### 8.5 Findings the gate surfaced (for implementation, ⛔ not new rulings)
+
+1. ⚠️ **The legacy human-provider writer takes no lock at all.** R3-R10's append-lock compatibility therefore
+   protects only the canonical ledger. For the human-provider ledger, a lease-unaware writer on an older binding
+   is invisible to every lock, so mixed-version safety there rests **entirely** on R3-R11 (witnessing that no
+   lease-unaware binding is running). The implementation should also add the append lock to the human-provider
+   store, so the next version transition is protected the way the canonical ledger is today.
+2. ⚠️ **Quarantine must hold raw bytes losslessly** (for example base64). A torn write can split a multi-byte
+   UTF-8 sequence. The model's string io cannot represent that, which is a named limit of the frozen suite, so
+   the build's integration check owns it.
+3. ⚠️ **"Durably" under the ruled fault model.** R3-R5 (6) and (9) say durable. Under the ruled fault model
+   (process crash, fsync deferred), a write is durable once its call returns, and the suite reads it that way.
+   If "durably" was meant to require fsync for the quarantine-then-truncate pair, which is the one place a power
+   loss could lose the evidence *and* the bytes, that is a narrow exception to the fsync deferral and needs a
+   ruling before the build writes it.
+
+## 9. Admission evidence owed (verbatim from the ruling, ⛔ none yet produced)
+
+Real two-process acquisition contention · real stale-owner takeover · live-owner non-takeover · PID-reuse /
+incarnation discrimination · release-after-fencing rejection · torn-terminal quarantine + truncation + next
+append · exact preservation of all committed pre-fragment bytes · human-provider grant writes refusing mutation
+without lease authority · runtime proof that Desktop runs the lease-aware pinned checkout.
+
+**Implementation order (ruled):** lease substrate → store-enforced mutation authority → human-provider store →
+terminal-tail recovery → reason-code correction → ignored-return surfacing → integration verification.
+
+**Standing: RULINGS R3-R1…R11 RECORDED · BUILD GATE ✅ · SUITE FROZEN @ `3dc118ae` (28 / 37, LETHAL +
+DISCRIMINATING, guard proven both ways) · IMPLEMENTATION AUTHORIZED, ⛔ NOT STARTED · ⛔ NOT ADMITTED · ⛔ NOT
+MERGED · PRODUCTION UNTOUCHED.**
