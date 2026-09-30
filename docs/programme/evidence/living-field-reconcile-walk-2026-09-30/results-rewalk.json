@@ -1,0 +1,161 @@
+[
+  {
+    "name": "R-B-failures",
+    "fail": [
+      "constellation",
+      "flows",
+      "detail"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "constellation": "Your wider field is unavailable right now. Nothing has been changed.",
+      "flows": "Threads failed to load. Nothing has been changed. You can try again.",
+      "dimension-open": "Couldn’t open this dimension just now. Try again."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/maia/living-field/current_questions"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "R-D-encounter",
+    "fail": [
+      "encounter"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "encounter": "Could not open this encounter. Try again."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/maia/living-field/current_questions",
+      "POST /api/maia/living-field/current_questions/encounter",
+      "GET /api/maia/living-field/current_questions/gathering"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "R-C-partial",
+    "fail": [
+      "partial"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "partial": "Some parts of your field are temporarily unavailable; what is shown is partial."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "R-E-evidence",
+    "fail": [
+      "evidence"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "lens evidence": "This thread’s evidence failed to load. Nothing has been sent. You can try again."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/house/facet-flow-evidence?flowId=fl1"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "R-F-refine-empty",
+    "fail": [],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "refine": "MAIA’s draft did not return. Nothing has been changed. You can try again."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/maia/living-field/current_questions",
+      "POST /api/maia/living-field/current_questions/encounter",
+      "GET /api/maia/living-field/current_questions/gathering",
+      "POST /api/maia/living-field/current_questions/refine"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "R-G-refine-500",
+    "fail": [
+      "refine-500"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "refine": "MAIA’s draft did not return. Nothing has been changed. You can try again."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/maia/living-field/current_questions",
+      "POST /api/maia/living-field/current_questions/encounter",
+      "GET /api/maia/living-field/current_questions/gathering",
+      "POST /api/maia/living-field/current_questions/refine"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "R-H-refine-abort",
+    "fail": [
+      "refine-abort"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "refine": "MAIA’s draft did not return. Nothing has been changed. You can try again."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/maia/living-field/current_questions",
+      "POST /api/maia/living-field/current_questions/encounter",
+      "GET /api/maia/living-field/current_questions/gathering",
+      "POST /api/maia/living-field/current_questions/refine"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "R-I-refine-decline",
+    "fail": [
+      "refine-decline"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "refine": "Not enough has gathered in this field yet to draft from. You can write directly, speak, or explore it with MAIA."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/maia/living-field/current_questions",
+      "POST /api/maia/living-field/current_questions/encounter",
+      "GET /api/maia/living-field/current_questions/gathering",
+      "POST /api/maia/living-field/current_questions/refine"
+    ],
+    "pageErrors": []
+  }
+]
