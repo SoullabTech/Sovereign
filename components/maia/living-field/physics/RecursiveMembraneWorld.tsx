@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { FieldDatum } from '../livingFieldHierarchy'
+import { recursiveChildHome } from './recursiveFieldLayout'
 
 type RecursiveBody = {
   node: FieldDatum
@@ -16,7 +17,7 @@ type RecursiveBody = {
 
 export type RecursiveMembraneWorldProps = {
   parentPosition: THREE.Vector3
-  current: FieldDatum
+  path: FieldDatum[]
   depth: number
   color: string
   glow: string
@@ -27,26 +28,17 @@ export type RecursiveMembraneWorldProps = {
 const MEMBRANE_R = 2.9
 function buildChildren(node: FieldDatum) {
   const children = node.children ?? []
-  const count = Math.max(children.length, 1)
 
-  return children.map((child, index): RecursiveBody => {
-    const angle = -Math.PI / 2 + index * (Math.PI * 2 / count)
-    const ring = count <= 3 ? 1.35 : 1.55
-    const home = new THREE.Vector3(
-      Math.cos(angle) * ring,
-      Math.sin(angle) * ring,
-      0.58,
-    )
+  return children.map((child): RecursiveBody => {
+    const point = recursiveChildHome(node, child.key) ?? { x: 0, y: 0, z: 0.58 }
+    const home = new THREE.Vector3(point.x, point.y, point.z)
+    const direction = home.clone().setZ(0).normalize()
 
     return {
       node: child,
       home,
       pos: new THREE.Vector3(0, 0, 0.72),
-      vel: new THREE.Vector3(
-        Math.cos(angle) * 0.035,
-        Math.sin(angle) * 0.035,
-        0,
-      ),
+      vel: direction.multiplyScalar(0.035),
       r: child.label.length > 16 ? 0.39 : 0.34,
     }
   })
@@ -56,12 +48,14 @@ function RecursiveChild({
   body,
   glow,
   color,
+  selected,
   onEnter,
   onLeaf,
 }: {
   body: RecursiveBody
   glow: string
   color: string
+  selected: boolean
   onEnter: (node: FieldDatum) => void
   onLeaf: (node: FieldDatum) => void
 }) {
@@ -73,14 +67,14 @@ function RecursiveChild({
   useFrame(() => {
     if (group.current) group.current.position.copy(body.pos)
     if (halo.current) {
-      const target = hovered ? 1.26 : 1
+      const target = selected ? 1.34 : hovered ? 1.26 : 1
       halo.current.scale.setScalar(
         THREE.MathUtils.lerp(halo.current.scale.x, target, 0.1),
       )
       const material = halo.current.material as THREE.MeshBasicMaterial
       material.opacity = THREE.MathUtils.lerp(
         material.opacity,
-        hovered ? 0.24 : canEnter ? 0.09 : 0.04,
+        selected ? 0.08 : hovered ? 0.24 : canEnter ? 0.09 : 0.04,
         0.09,
       )
     }
@@ -114,12 +108,12 @@ function RecursiveChild({
         <meshPhysicalMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={hovered ? 0.62 : 0.34}
+          emissiveIntensity={selected ? 0.2 : hovered ? 0.62 : 0.34}
           roughness={0.22}
           clearcoat={0.78}
           clearcoatRoughness={0.28}
           transparent
-          opacity={0.88}
+          opacity={selected ? 0.16 : 0.88}
         />
       </mesh>
 
@@ -134,11 +128,13 @@ function RecursiveChild({
         <div
           data-recursive-child={body.node.key}
           className={
-            'whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold ' +
-            'backdrop-blur-[2px] ' +
-            (hovered
-              ? 'border-stone-500/60 bg-black/75 text-stone-50'
-              : 'border-stone-800/55 bg-black/46 text-stone-200')
+            'whitespace-nowrap rounded-full border px-2.5 py-1 text-[12px] font-semibold ' +
+            'backdrop-blur-[2px] transition-opacity ' +
+            (selected
+              ? 'border-transparent bg-transparent text-stone-500/30 opacity-30'
+              : hovered
+                ? 'border-stone-500/60 bg-black/75 text-stone-50'
+                : 'border-stone-700/65 bg-black/58 text-stone-100')
           }
         >
           {body.node.label}
@@ -150,18 +146,24 @@ function RecursiveChild({
 }
 export function RecursiveMembraneWorld({
   parentPosition,
-  current,
+  path,
   depth,
   color,
   glow,
   onEnter,
   onLeaf,
 }: RecursiveMembraneWorldProps) {
+  const current = path[0]
+  const selectedNext = path[1] ?? null
   const group = useRef<THREE.Group>(null)
   const membrane = useRef<THREE.Mesh>(null)
   const rim = useRef<THREE.Mesh>(null)
   const progress = useRef(0)
   const bodies = useMemo(() => buildChildren(current), [current.key])
+  const selectedBody = selectedNext
+    ? bodies.find((body) => body.node.key === selectedNext.key) ?? null
+    : null
+  const hasDeeperWorld = Boolean(selectedBody && path.length > 1)
 
   useFrame((_, rawDelta) => {
     const dt = Math.min(rawDelta, 1 / 30)
@@ -247,20 +249,30 @@ export function RecursiveMembraneWorld({
           clearcoat={0.66}
           clearcoatRoughness={0.34}
           transparent
-          opacity={0.22}
+          opacity={hasDeeperWorld ? 0.12 : 0.22}
           depthWrite={false}
         />
       </mesh>
 
       <mesh ref={rim} scale={0.18} position={[0, 0, 0.18]} raycast={() => null}>
         <ringGeometry args={[MEMBRANE_R * 0.992, MEMBRANE_R * 1.012, 128]} />
-        <meshBasicMaterial color={glow} transparent opacity={0.54} depthWrite={false} />
+        <meshBasicMaterial
+          color={glow}
+          transparent
+          opacity={hasDeeperWorld ? 0.28 : 0.54}
+          depthWrite={false}
+        />
       </mesh>
 
       <Html position={[0, MEMBRANE_R * 0.72, 0.55]} center style={{ pointerEvents: 'none' }}>
         <div
           data-recursive-current={current.key}
-          className="whitespace-nowrap rounded-full border border-stone-700/45 bg-black/62 px-3 py-1.5 text-center backdrop-blur-md"
+          className={
+            'whitespace-nowrap rounded-full border px-3 py-1.5 text-center backdrop-blur-md transition-opacity ' +
+            (hasDeeperWorld
+              ? 'border-stone-800/35 bg-black/35 opacity-55'
+              : 'border-stone-700/45 bg-black/62 opacity-100')
+          }
         >
           <div className="text-[10px] uppercase tracking-[0.14em] text-stone-500">
             depth {depth}
@@ -275,10 +287,23 @@ export function RecursiveMembraneWorld({
           body={body}
           color={color}
           glow={glow}
+          selected={selectedNext?.key === body.node.key}
           onEnter={onEnter}
           onLeaf={onLeaf}
         />
       ))}
+
+      {selectedBody && path.length > 1 && (
+        <RecursiveMembraneWorld
+          parentPosition={selectedBody.pos}
+          path={path.slice(1)}
+          depth={depth + 1}
+          color={color}
+          glow={glow}
+          onEnter={onEnter}
+          onLeaf={onLeaf}
+        />
+      )}
     </group>
   )
 }
