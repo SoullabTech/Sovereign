@@ -14,6 +14,8 @@ import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { useWorkVisual } from '@/app/writers-studio/useWorkVisual';
 import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContext';
+// WS2-03B amendment: the member's explicit Work choice travels only as a visible URL parameter.
+import { WORK_INTAKE_PARAM, requestedWorkIdFrom } from '@/app/writers-studio/workIntake';
 import { hostFactsFrom } from '@/app/writers-studio/rebuild/liveReview';
 import { listChapterReviewManifests, loadChapterReviewManifestById, type ChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { rehydrateChapterReview } from '@/lib/writersStudio/rebuild/chapterReview';
@@ -70,7 +72,7 @@ type ReadyReview = {
   const discussGen = useRef(0);
 
   const workContext = context
-    ? resolveWorkContext(worksPhase, works, context.manuscriptId)
+    ? resolveWorkContext(worksPhase, works, context.manuscriptId, requestedWorkIdFrom(params))
     : { kind: 'unknown' as const };
   const work = currentWork(workContext);
   const visual = useWorkVisual(work?.id ?? null);  useEffect(() => {
@@ -189,6 +191,8 @@ type ReadyReview = {
   const goMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review', sectionId?: string) => {
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
+    // Studio Home ends the act a Work was chosen for; carrying it there would re-fire the House intake.
+    if (mode === 'home') next.delete(WORK_INTAKE_PARAM);
     if (sectionId) next.set('s', sectionId);
     if (mode !== 'review') {
       next.delete('reviewRun');

@@ -33,6 +33,33 @@
  * the member has since withdrawn. Derived context cannot.
  */
 
+/* ── AMENDMENT — EXPLICIT WORK CHOICE PRECEDES INFERENCE ───────────────────
+ *
+ * Founder ruling C, 2026-09-30 (H1-R1 §7c), recorded verbatim:
+ *
+ *   "A member's explicit Work selection is a first-class act of intent. It
+ *    may resolve manuscript ambiguity only within the declared Work's actual
+ *    associations. Explicit selection outranks inference. No selection is
+ *    persisted merely because navigation occurred."
+ *
+ * Precedence, as built:
+ *
+ *   1. explicit choice   the member chose this Work (e.g. at the House) AND
+ *                        it declares this manuscript. A choice of a Work that
+ *                        does not contain the manuscript is ignored — it can
+ *                        never attach the manuscript somewhere new.
+ *   2. declarations      exactly one declaring Work.
+ *   3. inference         ⛔ EMPTY BY LAW. This rule has never inferred, and
+ *                        the amendment opens no place for inference to enter.
+ *   4. ask               two or more declare it and no choice settles it.
+ *
+ * The choice travels only as a visible URL parameter (workIntake.ts
+ * WORK_INTAKE_PARAM) — never storage, cookie or session. It cannot override
+ * a single declaration and cannot make a Work out of none. Without a choice,
+ * every case below behaves exactly as before the amendment. Laws WA-F1…WA-F6
+ * in tests/constitutional/house-studio-crossing/amendment.
+ */
+
 import type { LivingWork, LivingWorksPhase } from './useLivingWorks';
 import { CANVAS_MANUSCRIPT_PARAM } from './canvasIdentity';
 
@@ -62,10 +89,16 @@ export function resolveWorkContext(
   phase: LivingWorksPhase,
   works: readonly LivingWork[],
   manuscriptId: string | null,
+  /** The member's explicit Work choice for this act, if any (see AMENDMENT above). */
+  explicitWorkId: string | null = null,
 ): WorkContext {
   if (phase !== 'ready') return { kind: 'unknown' };
   if (!manuscriptId) return { kind: 'none' };
   const declaring = declaringWorks(works, manuscriptId);
+  if (explicitWorkId) {
+    const chosen = declaring.find((w) => w.id === explicitWorkId);
+    if (chosen) return { kind: 'work', work: chosen };
+  }
   if (declaring.length === 0) return { kind: 'none' };
   if (declaring.length === 1) return { kind: 'work', work: declaring[0] };
   return { kind: 'ambiguous', works: declaring };

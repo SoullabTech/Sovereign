@@ -69,14 +69,43 @@ export function runGuards(): GuardResult[] {
   g('HG-5b controller keeps no browser memory of the crossing',
     /\b(localStorage|sessionStorage|indexedDB)\b|document\.cookie/.test(controller) ? 'browser storage in the controller' : null);
 
-  // HG-6 — the controller resolves through the intake, honours it before Home's own pick,
-  // and drops the Work parameter once writing opens or the member leaves.
+  // HG-6 — the controller resolves through the intake and honours it before Home's own pick.
+  // WS2-03B amendment: opens FROM the intake carry the chosen Work into the writing room;
+  // every other open, Home-mode switch and leaving the intake drop it.
   const drops = (controller.match(/next\.delete\(WORK_INTAKE_PARAM\)/g) ?? []).length;
   g('HG-6 controller wiring',
     !/resolveWorkIntake\(intakeInputFrom\(/.test(controller) ? 'intake not resolved through workIntake'
-      : !/navigateToManuscript\(intake\.manuscriptId, undefined, true\)/.test(controller) ? 'single-manuscript open does not use the intake result (or does not replace history)'
-        : controller.indexOf("intake.kind === 'open'") > controller.indexOf('<P4R1HomeView') ? 'Home renders before the intake is honoured'
-          : drops < 3 ? `Work parameter not dropped on every exit (${drops}/3)` : null);
+      : !/navigateToManuscript\(intake\.manuscriptId, undefined, true, intake\.workId\)/.test(controller) ? 'single-manuscript open does not use the intake result, replace history, and carry the chosen Work'
+        : !/navigateToManuscript\(manuscriptId, undefined, false, intake\.workId\)/.test(controller) ? 'chooser open does not carry the chosen Work'
+          : !/if \(chosenWorkId\) next\.set\(WORK_INTAKE_PARAM, chosenWorkId\);\s*else next\.delete\(WORK_INTAKE_PARAM\);/.test(controller) ? 'an open without a choice does not drop the Work parameter'
+            : controller.indexOf("intake.kind === 'open'") > controller.indexOf('<P4R1HomeView') ? 'Home renders before the intake is honoured'
+              : drops < 3 ? `Work parameter not dropped on every exit (${drops}/3)` : null);
+
+  // HG-8 — amendment wiring in the three canonical rooms: the visible choice reaches the
+  // resolver, Studio Home never inherits it (else the intake re-fires and Home is unreachable),
+  // and no storage line touches it. The rooms keep unrelated storage (settings, drafts).
+  const rooms = [
+    'app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx',
+    'app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx',
+    'app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx',
+  ];
+  const roomFaults = rooms.flatMap((rel) => {
+    const src = code(rel);
+    const name = path.basename(rel);
+    const faults: string[] = [];
+    if (!/resolveWorkContext\([^;]*requestedWorkIdFrom\(params\)\)/.test(src)) faults.push(`${name}: choice not passed to resolver`);
+    if (!/if \(mode === 'home'\) (next|query)\.delete\(WORK_INTAKE_PARAM\)/.test(src)) faults.push(`${name}: Home inherits the choice`);
+    if (src.split('\n').some((l) => /(localStorage|sessionStorage|indexedDB|document\.cookie)/.test(l) && /WORK_INTAKE_PARAM|requestedWorkIdFrom|explicitWork|chosenWork/.test(l))) faults.push(`${name}: choice stored`);
+    return faults;
+  });
+  g('HG-8 amendment wiring in canonical rooms', roomFaults.length ? roomFaults.join('; ') : null);
+
+  // HG-9 — the resolver: the choice is confined to Works that declare the manuscript,
+  // and the resolver reads no storage or network.
+  const ctx = code('app/writers-studio/workContext.ts');
+  g('HG-9 resolver amendment',
+    !/declaring\.find\(\(w\) => w\.id === explicitWorkId\)/.test(ctx) ? 'explicit choice not confined to declaring Works'
+      : /\b(localStorage|sessionStorage|indexedDB|apiFetch)\b|document\.cookie/.test(ctx) ? 'resolver reads storage or network' : null);
 
   // HG-7 — the chooser keeps declaration order and never recommends.
   const view = code('app/dev/writers-studio-pc3-live/P4R1WorkIntake.tsx');

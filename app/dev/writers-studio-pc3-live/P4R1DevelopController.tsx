@@ -6,6 +6,8 @@ import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere'
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContext';
+// WS2-03B amendment: the member's explicit Work choice travels only as a visible URL parameter.
+import { WORK_INTAKE_PARAM, requestedWorkIdFrom } from '@/app/writers-studio/workIntake';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import {
@@ -314,7 +316,7 @@ export default function P4R1DevelopController() {
     }
   }, [context?.manuscriptId]);
 
-  const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? manuscriptId);
+  const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? manuscriptId, requestedWorkIdFrom(params));
   const work = currentWork(workContext);
   const workTitle = work?.title ?? context?.title ?? 'This Work';
 
@@ -558,6 +560,8 @@ export default function P4R1DevelopController() {
   const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
     updateQuery((query) => {
       query.set('mode', mode);
+      // Studio Home ends the act a Work was chosen for; carrying it there would re-fire the House intake.
+      if (mode === 'home') query.delete(WORK_INTAKE_PARAM);
       if (mode !== 'develop') {
         query.delete('developField');
         query.delete('developIntent');

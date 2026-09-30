@@ -82,10 +82,19 @@ export default function P4R1HomeController() {
     await Promise.all([reloadWorks(), reloadManuscripts()]);
   }, [reloadWorks, reloadManuscripts]);
 
-  const navigateToManuscript = useCallback((manuscriptId: string, sectionId: string | undefined, replace: boolean) => {
+  const navigateToManuscript = useCallback((
+    manuscriptId: string,
+    sectionId: string | undefined,
+    replace: boolean,
+    chosenWorkId: string | null = null,
+  ) => {
     const next = new URLSearchParams(params?.toString() ?? '');
-    // The House choice has been honoured once the writing opens; it is not carried further.
-    next.delete(WORK_INTAKE_PARAM);
+    /* WS2-03B amendment (ruling C): a Work the member chose travels INTO the
+       writing room as a visible parameter so it can settle ambiguity there.
+       Any open without a choice drops it — a stale choice must never ride
+       along to a manuscript the member did not choose it for. */
+    if (chosenWorkId) next.set(WORK_INTAKE_PARAM, chosenWorkId);
+    else next.delete(WORK_INTAKE_PARAM);
     next.set('mode', 'write');
     next.set('m', manuscriptId);
     next.delete('developField');
@@ -110,7 +119,7 @@ export default function P4R1HomeController() {
     if (intake.kind !== 'open') return;
     if (intakeOpened.current === intake.manuscriptId) return;
     intakeOpened.current = intake.manuscriptId;
-    navigateToManuscript(intake.manuscriptId, undefined, true);
+    navigateToManuscript(intake.manuscriptId, undefined, true, intake.workId);
   }, [intake, navigateToManuscript]);
 
   const leaveIntake = useCallback(() => {
@@ -233,7 +242,7 @@ export default function P4R1HomeController() {
           : []}
         busy={busy}
         error={error}
-        onOpen={(manuscriptId) => open(manuscriptId)}
+        onOpen={(manuscriptId) => navigateToManuscript(manuscriptId, undefined, false, intake.workId)}
         onBeginManuscript={() => void onStartWriting(intake.workId, false)}
         onStudioHome={leaveIntake}
       />

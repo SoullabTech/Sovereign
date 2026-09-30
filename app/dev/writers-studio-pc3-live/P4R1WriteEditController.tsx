@@ -7,6 +7,8 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContext';
+// WS2-03B amendment: the member's explicit Work choice travels only as a visible URL parameter.
+import { WORK_INTAKE_PARAM, requestedWorkIdFrom } from '@/app/writers-studio/workIntake';
 import { editorialThreadIdFrom } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -225,7 +227,7 @@ export default function FlagshipWriteEditController() {
   const focusSection = context?.sections.find((s) => s.draftSectionId === focusId) ?? null;
   const chapter = context && focusId ? chapterSpanFor(context.sections, focusId) : null;
   const visibleSections = chapter?.sections ?? (focusSection ? [focusSection] : []);
-  const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
+  const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null, requestedWorkIdFrom(params));
   const work = currentWork(workContext);
   const workContextSentence = workContext.kind === 'work'
     ? (work?.purpose ?? 'A Work you declared.')
@@ -765,6 +767,8 @@ export default function FlagshipWriteEditController() {
   const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
+    // Studio Home ends the act a Work was chosen for; carrying it there would re-fire the House intake.
+    if (mode === 'home') next.delete(WORK_INTAKE_PARAM);
     next.delete('insightReading');
     next.delete('insightObservation');
     next.delete('insightAction');

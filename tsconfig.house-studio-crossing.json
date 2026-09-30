@@ -13,7 +13,13 @@
     "esModuleInterop": true
   },
   "include": [
-    "tests/constitutional/house-studio-crossing/**/*.ts",
+    "tests/constitutional/house-studio-crossing/contract.ts",
+    "tests/constitutional/house-studio-crossing/reference.ts",
+    "tests/constitutional/house-studio-crossing/candidates.ts",
+    "tests/constitutional/house-studio-crossing/falsifiers.ts",
+    "tests/constitutional/house-studio-crossing/matrix.ts",
+    "tests/constitutional/house-studio-crossing/guards.ts",
+    "tests/constitutional/house-studio-crossing/amendment/**/*.ts",
     "app/writers-studio/workIntake.ts",
     "lib/house/livingOrientation.ts",
     "lib/house/catalog.ts"
