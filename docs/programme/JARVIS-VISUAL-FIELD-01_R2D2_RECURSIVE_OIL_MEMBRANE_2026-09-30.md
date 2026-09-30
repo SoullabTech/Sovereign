@@ -73,6 +73,21 @@ Relationship remains perceptible as the larger containing membrane while Grief s
 
 Open-space drag now produces explicit world-space camera translation. Pointer movement without drag remains the subtle parallax effect; the two are no longer conflated.
 
+## Optical scale + biological figure/ground refinement
+
+Founder further clarified that recursive movement should feel like looking through a microscope or telescope rather than using UI navigation.
+
+Implemented:
+- outward wheel / pinch crosses a semantic scale threshold and returns depth 2 → depth 1 → whole;
+- inward wheel / pinch remains continuous magnification within the current semantic depth;
+- **Wider** remains a fallback rather than the primary scale gesture;
+- active recursive worlds receive a stronger dark translucent inner veil so the ecology behind them recedes without disappearing;
+- the rigid recursive ring is replaced by a soft, slowly breathing irregular membrane edge;
+- cells at outer and recursive levels receive a two-layer halo / corona whose intensity follows presence and attention rather than importance;
+- a shader-based plasmic interstitial medium now gives the between-space slow flowing materiality without claiming semantic relation.
+
+The ambient plasmic field and semantic relation network remain intentionally distinct.
+
 ## Mechanical witness
 
 Controlled traversal:
@@ -87,7 +102,9 @@ PASS:
 - Whole returns to complete ecology;
 - open-space horizontal pull produces persistent camera pan (~231 px screen shift in controlled witness);
 - node drag remains separate from field pan;
-- browser errors: 0.
+- optical zoom-out witness: depth 2 Grief → depth 1 Relationship → whole ecology;
+- child-depth and whole-field recovery both complete with browser errors: 0;
+- plasmic medium + halo render witness: PASS, browser errors: 0.
 ## Physics regression
 
 Original R2D1 controlled impulse rerun on the recursive renderer:

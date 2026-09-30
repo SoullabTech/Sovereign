@@ -5,6 +5,8 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { FieldDatum } from '../livingFieldHierarchy'
+import { PlasmicInterstitialField } from './PlasmicInterstitialField'
+import { SoftMembraneEdge } from './SoftMembraneEdge'
 import { recursiveChildHome } from './recursiveFieldLayout'
 
 type RecursiveBody = {
@@ -61,30 +63,71 @@ function RecursiveChild({
 }) {
   const group = useRef<THREE.Group>(null)
   const halo = useRef<THREE.Mesh>(null)
+  const corona = useRef<THREE.Mesh>(null)
   const [hovered, setHovered] = useState(false)
   const canEnter = Boolean(body.node.children?.length)
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
     if (group.current) group.current.position.copy(body.pos)
+
+    const breath = 1 + Math.sin(clock.elapsedTime * 1.08 + body.home.x * 0.9) * 0.03
+
     if (halo.current) {
-      const target = selected ? 1.34 : hovered ? 1.26 : 1
+      const target = (selected ? 1.34 : hovered ? 1.26 : 1.04) * breath
       halo.current.scale.setScalar(
-        THREE.MathUtils.lerp(halo.current.scale.x, target, 0.1),
+        THREE.MathUtils.lerp(halo.current.scale.x, target, 0.095),
       )
       const material = halo.current.material as THREE.MeshBasicMaterial
       material.opacity = THREE.MathUtils.lerp(
         material.opacity,
-        selected ? 0.08 : hovered ? 0.24 : canEnter ? 0.09 : 0.04,
-        0.09,
+        selected ? 0.07 : hovered ? 0.22 : canEnter ? 0.1 : 0.075,
+        0.085,
+      )
+    }
+
+    if (corona.current) {
+      const target = (
+        selected ? 1.18 :
+        hovered ? 1.12 :
+        1
+      ) * (1 + Math.sin(clock.elapsedTime * 0.7 + body.home.y * 0.75) * 0.04)
+
+      corona.current.scale.setScalar(
+        THREE.MathUtils.lerp(corona.current.scale.x, target, 0.06),
+      )
+      const material = corona.current.material as THREE.MeshBasicMaterial
+      material.opacity = THREE.MathUtils.lerp(
+        material.opacity,
+        selected ? 0.028 : hovered ? 0.08 : 0.038,
+        0.055,
       )
     }
   })
 
   return (
     <group ref={group}>
+      <mesh ref={corona} raycast={() => null} renderOrder={-0.5}>
+        <sphereGeometry args={[body.r * 1.88, 28, 18]} />
+        <meshBasicMaterial
+          color={glow}
+          transparent
+          opacity={0.038}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          toneMapped={false}
+        />
+      </mesh>
+
       <mesh ref={halo} raycast={() => null}>
-        <sphereGeometry args={[body.r * 1.3, 24, 16]} />
-        <meshBasicMaterial color={glow} transparent opacity={0.06} depthWrite={false} />
+        <sphereGeometry args={[body.r * 1.42, 28, 18]} />
+        <meshBasicMaterial
+          color={glow}
+          transparent
+          opacity={0.075}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          toneMapped={false}
+        />
       </mesh>
 
       <mesh
@@ -156,8 +199,7 @@ export function RecursiveMembraneWorld({
   const current = path[0]
   const selectedNext = path[1] ?? null
   const group = useRef<THREE.Group>(null)
-  const membrane = useRef<THREE.Mesh>(null)
-  const rim = useRef<THREE.Mesh>(null)
+  const surface = useRef<THREE.Group>(null)
   const progress = useRef(0)
   const bodies = useMemo(() => buildChildren(current), [current.key])
   const selectedBody = selectedNext
@@ -187,26 +229,9 @@ export function RecursiveMembraneWorld({
       )
     }
     const membraneScale = THREE.MathUtils.lerp(0.18, 1, progress.current)
-    if (membrane.current) {
-      membrane.current.scale.x = THREE.MathUtils.lerp(
-        membrane.current.scale.x,
-        membraneScale,
-        0.11,
-      )
-      membrane.current.scale.y = THREE.MathUtils.lerp(
-        membrane.current.scale.y,
-        membraneScale,
-        0.11,
-      )
-      membrane.current.scale.z = THREE.MathUtils.lerp(
-        membrane.current.scale.z,
-        0.18,
-        0.08,
-      )
-    }
-    if (rim.current) {
-      rim.current.scale.setScalar(
-        THREE.MathUtils.lerp(rim.current.scale.x, membraneScale, 0.11),
+    if (surface.current) {
+      surface.current.scale.setScalar(
+        THREE.MathUtils.lerp(surface.current.scale.x, membraneScale, 0.11),
       )
     }
 
@@ -239,30 +264,50 @@ export function RecursiveMembraneWorld({
       position={[parentPosition.x, parentPosition.y, parentPosition.z]}
       userData={{ recursiveWorld: current.key, recursiveDepth: depth }}
     >
-      <mesh ref={membrane} scale={[0.18, 0.18, 0.18]} raycast={() => null}>
-        <sphereGeometry args={[MEMBRANE_R, 56, 28]} />
-        <meshPhysicalMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={0.18}
-          roughness={0.3}
-          clearcoat={0.66}
-          clearcoatRoughness={0.34}
-          transparent
-          opacity={hasDeeperWorld ? 0.12 : 0.22}
-          depthWrite={false}
-        />
-      </mesh>
+      <group ref={surface} scale={0.18}>
+        <mesh position={[0, 0, -0.13]} raycast={() => null}>
+          <circleGeometry args={[MEMBRANE_R * 0.94, 128]} />
+          <meshBasicMaterial
+            color="#050708"
+            transparent
+            opacity={hasDeeperWorld ? 0.14 : 0.58}
+            depthWrite={false}
+          />
+        </mesh>
 
-      <mesh ref={rim} scale={0.18} position={[0, 0, 0.18]} raycast={() => null}>
-        <ringGeometry args={[MEMBRANE_R * 0.992, MEMBRANE_R * 1.012, 128]} />
-        <meshBasicMaterial
-          color={glow}
-          transparent
-          opacity={hasDeeperWorld ? 0.28 : 0.54}
-          depthWrite={false}
+        <mesh scale={[1, 1, 0.18]} raycast={() => null}>
+          <sphereGeometry args={[MEMBRANE_R, 56, 28]} />
+          <meshPhysicalMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={0.2}
+            roughness={0.34}
+            clearcoat={0.58}
+            clearcoatRoughness={0.42}
+            transparent
+            opacity={hasDeeperWorld ? 0.16 : 0.3}
+            depthWrite={false}
+          />
+        </mesh>
+
+        <PlasmicInterstitialField
+          radius={MEMBRANE_R * 0.91}
+          color={color}
+          glow={glow}
+          opacity={hasDeeperWorld ? 0.1 : 0.2}
+          position={[0, 0, -0.015]}
+          flatten={0.12}
+          phase={depth * 1.91}
         />
-      </mesh>
+
+        <SoftMembraneEdge
+          radius={MEMBRANE_R}
+          glow={glow}
+          opacity={hasDeeperWorld ? 0.16 : 0.28}
+          phase={depth * 1.37}
+          position={[0, 0, 0.16]}
+        />
+      </group>
 
       <Html position={[0, MEMBRANE_R * 0.72, 0.55]} center style={{ pointerEvents: 'none' }}>
         <div

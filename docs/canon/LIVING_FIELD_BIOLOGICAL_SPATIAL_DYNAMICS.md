@@ -98,6 +98,44 @@ At every supported depth:
 
 Zooming inward is scale revelation. Zooming outward is re-gathering.
 
+## OPTICAL-SCALE-NAVIGATION-LAW-01
+
+> **Recursive depth should be reversible through magnification, as though the member were changing scale through a microscope or telescope rather than changing screens.**
+
+At recursive depth:
+- inward wheel / pinch increases physical magnification;
+- outward wheel / pinch decreases magnification;
+- crossing the outward scale threshold returns the deepest active membrane into its parent;
+- repeated outward scaling continues toward the whole ecology;
+- **Wider** remains an explicit fallback, not the primary felt navigation gesture;
+- **Whole** remains immediate recovery.
+
+## INTERSTITIAL-MEDIUM-LAW-01
+
+> **The space between cells may be rendered as living ambient matter, but ambient field effects must not imply semantic relation.**
+
+The interstitial medium may carry:
+- translucent plasma / gel volume;
+- slow domain-warped flow;
+- soft luminous filaments;
+- caustic-like membrane highlights.
+
+Semantic relation lines remain independently governed.
+
+## CELL-HALO-LAW-01
+
+> **Cells may carry a persistent halo as a sign of presence, not importance.**
+
+A halo may intensify with attention, drag, or recursive entry. It must not imply truth, rank, urgency, or stronger semantic standing.
+
+## FOREGROUND-MEMBRANE-LAW-01
+
+> **When a recursive world becomes active, its membrane must establish enough visual foreground that contained meaning is not confused with the ecology behind it.**
+
+The active membrane may veil the background without erasing it. Parent worlds remain perceivable as containing context, while deeper content receives the stronger figure-ground claim.
+
+Membrane boundaries should read as living tissue: soft, breathing, slightly irregular, and diffuse rather than as rigid rings or mechanical frames.
+
 ## RECURSION-INTEGRITY-LAW-01
 
 > **Recursive capacity is universal; recursive content is earned.**

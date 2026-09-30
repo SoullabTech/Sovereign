@@ -18,6 +18,7 @@ import {
   type FieldDatum,
 } from '../livingFieldHierarchy'
 import { RecursiveMembraneWorld } from './RecursiveMembraneWorld'
+import { PlasmicInterstitialField } from './PlasmicInterstitialField'
 import { recursivePathOffset } from './recursiveFieldLayout'
 
 const SCALE = 50
@@ -256,6 +257,17 @@ function WorldMembrane({
           depthWrite={false}
         />
       </mesh>
+
+      <PlasmicInterstitialField
+        radius={WORLD_R * 0.94}
+        color={style.body}
+        glow={style.glow}
+        opacity={0.19}
+        position={[p.x, p.y, -0.18]}
+        flatten={0.12}
+        phase={phase}
+      />
+
       <mesh ref={rim} position={[p.x, p.y, -0.45]}>
         <ringGeometry args={[WORLD_R * 0.988, WORLD_R * 1.008, 96]} />
         <meshBasicMaterial color={style.glow} transparent opacity={0.45} depthWrite={false} />
@@ -348,18 +360,58 @@ function Cell({
 }) {
   const mesh = useRef<THREE.Mesh>(null)
   const halo = useRef<THREE.Mesh>(null)
+  const corona = useRef<THREE.Mesh>(null)
   const style = STYLE[body.group]
   const active = activeId === body.id
   const dragging = draggingId === body.id
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
     if (mesh.current) mesh.current.position.copy(body.pos)
+
+    const breath = 1 + Math.sin(clock.elapsedTime * 1.05 + body.home.x * 0.7) * 0.025
+
     if (halo.current) {
       halo.current.position.copy(body.pos)
-      const target = entered ? 1.46 : dragging ? 1.34 : active || body.hovered ? 1.13 : 0.94
-      halo.current.scale.setScalar(THREE.MathUtils.lerp(halo.current.scale.x, target, 0.11))
+      const target = (
+        entered ? 1.48 :
+        dragging ? 1.36 :
+        active || body.hovered ? 1.16 :
+        1
+      ) * breath
+
+      halo.current.scale.setScalar(
+        THREE.MathUtils.lerp(halo.current.scale.x, target, 0.095),
+      )
       const mat = halo.current.material as THREE.MeshBasicMaterial
-      mat.opacity = THREE.MathUtils.lerp(mat.opacity, dragging ? 0.34 : active ? 0.18 : 0.04, 0.1)
+      const opacity =
+        entered ? 0.2 :
+        dragging ? 0.3 :
+        active || body.hovered ? 0.17 :
+        0.075
+
+      mat.opacity = THREE.MathUtils.lerp(mat.opacity, opacity, 0.09)
+    }
+
+    if (corona.current) {
+      corona.current.position.copy(body.pos)
+      const target = (
+        entered ? 1.28 :
+        dragging ? 1.18 :
+        active || body.hovered ? 1.1 :
+        1
+      ) * (1 + Math.sin(clock.elapsedTime * 0.72 + body.home.y * 0.6) * 0.035)
+
+      corona.current.scale.setScalar(
+        THREE.MathUtils.lerp(corona.current.scale.x, target, 0.065),
+      )
+      const mat = corona.current.material as THREE.MeshBasicMaterial
+      const opacity =
+        entered ? 0.085 :
+        dragging ? 0.11 :
+        active || body.hovered ? 0.075 :
+        0.032
+
+      mat.opacity = THREE.MathUtils.lerp(mat.opacity, opacity, 0.06)
     }
   })
 
@@ -371,9 +423,28 @@ function Cell({
 
   return (
     <group data-recursive-ready={body.id}>
-      <mesh ref={halo} position={body.pos} scale={0.94} raycast={() => null}>
-        <sphereGeometry args={[body.r * 1.3, 28, 18]} />
-        <meshBasicMaterial color={style.glow} transparent opacity={0.04} depthWrite={false} />
+      <mesh ref={corona} position={body.pos} raycast={() => null} renderOrder={-0.5}>
+        <sphereGeometry args={[body.r * 1.82, 32, 20]} />
+        <meshBasicMaterial
+          color={style.glow}
+          transparent
+          opacity={0.032}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          toneMapped={false}
+        />
+      </mesh>
+
+      <mesh ref={halo} position={body.pos} raycast={() => null}>
+        <sphereGeometry args={[body.r * 1.38, 32, 20]} />
+        <meshBasicMaterial
+          color={style.glow}
+          transparent
+          opacity={0.075}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          toneMapped={false}
+        />
       </mesh>
 
       <mesh
@@ -712,6 +783,7 @@ export function BiologicalSpatialFieldPrototype() {
     setActiveId(id)
     setDraggingId(null)
     panRef.current.set(0, 0)
+    setZoom(1.05)
     setRecursiveRootId(id)
     setRecursivePath([node])
     setRecursiveLeaf(null)
@@ -720,12 +792,14 @@ export function BiologicalSpatialFieldPrototype() {
   const enterChild = (node: FieldDatum) => {
     if (!node.children?.length) return
     panRef.current.set(0, 0)
+    setZoom(1.05)
     setRecursivePath((path) => [...path, node])
     setRecursiveLeaf(null)
   }
 
   const widen = () => {
     panRef.current.set(0, 0)
+    setZoom(1)
     setRecursiveLeaf(null)
     setRecursivePath((path) => {
       if (path.length > 1) return path.slice(0, -1)
@@ -758,7 +832,18 @@ export function BiologicalSpatialFieldPrototype() {
         onPointerLeave={() => setDraggingId(null)}
         onWheel={(event) => {
           const factor = Math.exp(-event.deltaY * 0.0011)
-          setZoom((value) => THREE.MathUtils.clamp(value * factor, 0.78, 1.7))
+          const nextZoom = THREE.MathUtils.clamp(zoom * factor, 0.78, 1.7)
+
+          if (
+            recursivePath.length > 0 &&
+            event.deltaY > 0 &&
+            nextZoom <= 0.84
+          ) {
+            widen()
+            return
+          }
+
+          setZoom(nextZoom)
         }}
       >
         <Canvas
@@ -818,7 +903,7 @@ export function BiologicalSpatialFieldPrototype() {
         <div className="pointer-events-none absolute right-4 top-4 max-w-[295px] rounded-2xl border border-stone-800/70 bg-black/38 px-4 py-3 text-xs leading-5 text-stone-600 backdrop-blur-md">
           <p className="text-[10px] uppercase tracking-[0.16em] text-stone-500">Scale physics</p>
           <p className="mt-2">Click → membrane yield → viscous expansion → inner ecology → settle.</p>
-          <p className="mt-2 text-stone-700">Scroll / pinch changes physical scale. Wider reverses one semantic depth. Whole restores the ecology.</p>
+          <p className="mt-2 text-stone-700">Scroll / pinch inward magnifies. Pull outward far enough and the current membrane returns into its parent — like lowering magnification on a microscope. Wider remains a fallback; Whole restores the ecology.</p>
         </div>
       </div>
     </section>
