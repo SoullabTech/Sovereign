@@ -12,7 +12,12 @@ jest.mock('../extract/pdf', () => ({ extractPdf: jest.fn() }));
 jest.mock('../ocr', () => ({ ocrImage: jest.fn(), ocrPdf: jest.fn() }));
 
 import { query } from '@/lib/db/postgres';
-import { HANDWRITING_OCR_FLAG, MANUAL_TRANSCRIPTION_MESSAGE, ingestWorkbenchUpload } from '../intake';
+import {
+  GENERIC_FILE_MESSAGE,
+  HANDWRITING_OCR_FLAG,
+  MANUAL_TRANSCRIPTION_MESSAGE,
+  ingestWorkbenchUpload,
+} from '../intake';
 import { extFromName, originalPath, writeDraft, writeOriginal } from '../storage';
 import { extractPdf } from '../extract/pdf';
 import { ocrImage, ocrPdf } from '../ocr';
@@ -39,6 +44,12 @@ const scan = {
   type: 'application/pdf',
   size: 2345,
   arrayBuffer: async () => new TextEncoder().encode('pdf').buffer,
+} as unknown as File;
+const generic = {
+  name: 'research.bundle',
+  type: 'application/x-soullab-test',
+  size: 3456,
+  arrayBuffer: async () => new TextEncoder().encode('opaque bytes').buffer,
 } as unknown as File;
 
 const originalFlag = process.env[HANDWRITING_OCR_FLAG];
@@ -114,5 +125,26 @@ describe('WS-SOURCE-INTAKE-01 — source custody survives transcription', () => 
     expect(custodyUpdate).toBeTruthy();
     const errorUpdate = mockQuery.mock.calls.find((c) => String(c[0]).includes("transcription_status = 'error'"));
     expect(errorUpdate).toBeTruthy();
+  });
+
+  it('keeps unsupported formats refused by default', async () => {
+    mockExtFromName.mockReturnValue('bundle');
+    await expect(ingestWorkbenchUpload(member, generic)).rejects.toMatchObject({ status: 415 });
+    expect(mockWriteOriginal).not.toHaveBeenCalled();
+  });
+
+  it('lets the beta lane preserve an unknown file inertly for manual transcription', async () => {
+    mockExtFromName.mockReturnValue('bundle');
+    mockOriginalPath.mockReturnValue('/tmp/original.bundle');
+    mockWriteOriginal.mockResolvedValue(`${member}/${id}/original.bundle`);
+
+    const out = await ingestWorkbenchUpload(member, generic, { allowGeneric: true });
+
+    expect(out).toMatchObject({ sourceKind: 'generic_file', transcriptionStatus: 'error' });
+    expect(mockWriteOriginal).toHaveBeenCalledTimes(1);
+    expect(mockOcrImage).not.toHaveBeenCalled();
+    expect(mockOcrPdf).not.toHaveBeenCalled();
+    const manualUpdate = mockQuery.mock.calls.find((c) => String(c[0]).includes("transcription_status = 'error'"));
+    expect(manualUpdate?.[1]).toEqual(['generic_file', GENERIC_FILE_MESSAGE, id, member]);
   });
 });

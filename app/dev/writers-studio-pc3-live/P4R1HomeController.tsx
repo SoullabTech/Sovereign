@@ -10,6 +10,7 @@ import { useMarkedLines } from '@/app/writers-studio/useMarkedLines';
 import { useStudioHistory } from '@/app/writers-studio/useStudioHistory';
 import { useSectionActivity } from '@/app/writers-studio/useSectionActivity';
 import { arrivalFor, manuscriptIdOf } from '@/app/writers-studio/homeState';
+import { IMPORT_HREF } from '@/app/writers-studio/studioMap';
 import P4R1HomeView from './P4R1HomeView';
 
 function idFrom(payload: Record<string, unknown>): string | null {
@@ -184,6 +185,7 @@ export default function P4R1HomeController() {
       onMakeWork={(manuscriptId, title) => void onMakeWork(manuscriptId, title)}
       onAddToWork={(manuscriptId, workId) => void onAddToWork(manuscriptId, workId)}
       onStartWriting={(workId) => void onStartWriting(workId)}
+      onImport={() => router.push(IMPORT_HREF)}
       onSources={() => router.push('/writers-studio/sources')}
     />
   );
