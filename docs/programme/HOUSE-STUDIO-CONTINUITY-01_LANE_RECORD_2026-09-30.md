@@ -5,7 +5,7 @@ Class: B (bounded implementation; navigation only)
 Governing authority: founder direction 2026-09-30 ("let's get going" · "make it a Jarvis flow");
                      founder rulings D-01…D-03 (2026-09-30, §6); bounded by WS2-03B
                      (app/writers-studio/workContext.ts) and the no-stealth-memory vow.
-Current gate: VERIFY PASS → MERGE PENDING (merge not authorized)
+Current gate: VERIFY PASS → FOUNDER WALKTHROUGH + MERGE REVIEW PENDING
 Evidence subject: branch claude/beautiful-mayer-mt9jc9 on base 04005ca7c
 Stop boundary: no stored context, no inference of intent, no MAIA input, no new
                crossing vocabulary, no merge, no deploy
@@ -80,7 +80,25 @@ under a bare CLI; that file is not written to the extra flag) — pre-existing, 
 
 ## 5 · Adjudication
 
-**Status: IMPLEMENTATION COMPLETE · EVIDENCE COMPLETE (container) · MERGE PENDING.**
+**Disposition (founder, 2026-09-30):**
+
+```text
+Status:   IMPLEMENTATION COMPLETE · EVIDENCE COMPLETE · FOUNDER WALKTHROUGH PENDING · MERGE PENDING
+Boundary: BUILD AUTHORIZED · MERGE NOT AUTHORIZED · DEPLOY NOT AUTHORIZED
+```
+
+The lane has crossed the design/build threshold, not the acceptance threshold.
+
+**Three questions the lane keeps apart** (their collapse — *arrival → identity → relationship* — is
+the failure it prevents):
+
+| Question | Answers | Standing |
+|---|---|---|
+| **Entry** | how did the member arrive here? | temporary — dropped at the landing (F7) |
+| **Identity** | what is this thing? | requires declarations |
+| **Relationship** | what does this belong with? | requires evidence |
+
+*Context is temporary authority, not inherited identity.*
 
 This proves:
 1. **Context continuity** — a member's intentional movement preserves which Work they chose.
@@ -127,9 +145,12 @@ It does **not** prove, and does not establish:
 - **Added by ruling: HSC-F7** — *context survives only while the relationship validates*;
   delivered above (M7a/M7b killed).
 
-**Circulation law (founder, carried forward as the lane's statement):** *a living system does
-not preserve everything that passes through it. It preserves the relationships that remain alive
-under validation.*
+**Circulation laws (founder, carried forward as the lane's statements):**
+- *A living system does not preserve everything that passes through it. It preserves the
+  relationships that remain alive under validation.*
+- ⭐ ***A path may reveal relationship, but it may not create relationship.*** — the same rule
+  future MAIA memory, journals, fields and relational graphs must answer to: movement is not
+  meaning.
 
 **Authorized and delivered:** ✓ Work-id transport · ✓ explicit context preservation · ✓ server-scoped
 validation · ✓ no persistence · ✓ no crossing-registry expansion · ✓ no memberId transport ·
@@ -138,9 +159,30 @@ validation · ✓ no persistence · ✓ no crossing-registry expansion · ✓ no
 - **Owed before merge:** `npm run typecheck` (no regression vs baseline) · the founder walk
   below · visual authority (`ea-house.md` + screenshots, still uncommitted on the Mac Studio).
 
-**Founder walk (5 steps):** House → click a Work with one manuscript → Studio opens that
-writing in Write → Back → House, unchanged. Repeat with a Work that has no manuscript →
-Studio Home, nothing guessed.
+**Founder walk — tests authority, not only navigation:**
+
+1. **One manuscript** — House → Work with one manuscript → opens in Write → Back → House, unchanged.
+2. **No manuscript** — House → Work with none → Studio Home, nothing guessed.
+3. **Several manuscripts** — House → Work with 2+ → Studio Home, nothing guessed.
+4. **Context release (the real F7 acceptance)** — House → Work A → Manuscript A1 → move within the
+   Studio to Manuscript B1. Verify: no `work=` in the URL; no hidden Work state; B1 resolves by
+   **B1's own declarations**. *Does the system let go when the member moves?*
+
+   Static support, ⛔ not a substitute for the walk: every Studio `localStorage` /
+   `sessionStorage` key in `app/writers-studio/**` and `app/dev/writers-studio-*/**` is keyed by
+   **manuscript id** (writing surface, developmental/lineage orientation, attention map) or is an
+   appearance/session preference — **none is keyed by Work**, and no Studio code reads a `work` /
+   `w` / `workId` query parameter other than this seam.
+
+## 6a · Merge review — in this order
+
+1. **Evidence** — lane record · census · falsifier suite · mutation evidence · F7 release proof.
+2. **Environment** — canonical `npm run typecheck` · canonical test commands · walks 1–4.
+3. **Visual authority** — `ea-house.md` + screenshots committed. Not documentation only: it is the
+   counterweight to *"add a recent Works list" / "remember where they were" / "make Continue
+   smarter"*. **The House presents living possibilities; it does not narrate the member's history.**
+4. **Review question** — *Does this implementation preserve the difference between member
+   intention, system inference, and durable relationship?* **Yes → merge. No → STOP.**
 
 ## 7 · Explicit non-authorizations
 
