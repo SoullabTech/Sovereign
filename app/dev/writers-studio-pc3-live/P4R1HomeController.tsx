@@ -12,6 +12,8 @@ import { useSectionActivity } from '@/app/writers-studio/useSectionActivity';
 import { arrivalFor, manuscriptIdOf } from '@/app/writers-studio/homeState';
 import { IMPORT_HREF } from '@/app/writers-studio/studioMap';
 import P4R1HomeView from './P4R1HomeView';
+import ExplicitWorkArrival from './ExplicitWorkArrival';
+import { explicitWorkForArrival } from './explicitWorkArrivalLogic';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -31,6 +33,15 @@ export default function P4R1HomeController() {
   const { phase: manuscriptPhase, manuscripts, reload: reloadManuscripts } = useCurrentManuscript();
   const { lines: markedLines } = useMarkedLines();
   const { acts: historyActs } = useStudioHistory();
+
+  const requestedWorkId = params?.get('work');
+  const requestedWorkArrival = explicitWorkForArrival(
+    works,
+    manuscripts,
+    requestedWorkId ?? null,
+  );
+  const requestedWork = requestedWorkArrival?.work ?? null;
+  const requestedWorkManuscripts = requestedWorkArrival?.manuscripts ?? [];
 
   const arrival = useMemo(() => arrivalFor(works, manuscripts), [works, manuscripts]);
   const resumeManuscriptId = arrival.resume ? manuscriptIdOf(arrival.resume) : null;
@@ -110,6 +121,14 @@ export default function P4R1HomeController() {
     }
   }, [busy, post, declare, refresh, open]);
 
+  const returnFromExplicitWork = useCallback(() => {
+    const next = new URLSearchParams(params?.toString() ?? '');
+    next.delete('work');
+    next.set('mode', 'home');
+    next.delete('m');
+    router.push(pathname + '?' + next.toString());
+  }, [params, pathname, router]);
+
   const onStartWriting = useCallback(async (workId: string) => {
     if (busy) return;
     setBusy(true);
@@ -166,6 +185,19 @@ export default function P4R1HomeController() {
 
   if (worksPhase === 'unauthorized' || manuscriptPhase === 'unauthorized') {
     return <main className="fr-root"><div style={{ padding: 32 }}>Sign in to open your Writer’s Studio.</div></main>;
+  }
+
+  if (requestedWork) {
+    return (
+      <ExplicitWorkArrival
+        work={requestedWork}
+        manuscripts={requestedWorkManuscripts}
+        busy={busy}
+        onOpen={open}
+        onBegin={(workId) => void onStartWriting(workId)}
+        onReturn={returnFromExplicitWork}
+      />
+    );
   }
 
   return (
