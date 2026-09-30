@@ -105,3 +105,52 @@ The lawful repair is now in the same convergence lane.
   suites remained green.
 
 **Status:** implementation complete locally; no migration and no deploy.
+
+## Behavioral witness
+
+A real Chromium walk was run against the local Next app after aligning the local
+database schema with the current Writer's Studio contract.
+
+### Deciding Work-order case
+
+Two Works were seeded:
+- **H1 Work A — newer**
+- **H1 Work B — older**
+
+Each had exactly one declared manuscript. The member clicked the **older**
+Work B from House.
+
+Observed:
+- House rendered both lawful Work links with their own `work=` identity.
+- Studio resolved the clicked Work B to manuscript B.
+- Landing URL contained `mode=write&m=<B>`.
+- The transient `work=` parameter was removed at the Studio landing.
+- One browser Back returned directly to `/home` (the House), not to a duplicate
+  Studio landing.
+
+This is the deciding D-02 behavior in the browser, not only in unit tests.
+
+### Multi-manuscript behavioral case
+
+A Work with two declared manuscripts was seeded and opened from House.
+
+Observed:
+- Studio remained at the Work-scoped arrival rather than selecting an `m`.
+- **Choose a manuscript to continue** was visible.
+- Both declared manuscripts were presented.
+- Selecting the second manuscript produced `mode=write&m=<second>`.
+- The selected manuscript matched the member's explicit choice.
+
+No hidden persistence was introduced by either walk.
+
+### Local environment note
+
+The first behavioral attempt exposed local schema drift: the local
+`living_works` table lacked `manuscript_state`, which the canonical route
+already expects. The repository migration runner also stopped on an existing
+local checksum mismatch in `20260925000001_house_member_preferences.sql`.
+For the witness environment only, the missing `manuscript_state` column and
+its governing constraint were applied directly; no repository migration file
+was changed and no production database was touched.
+
+**Behavioral witness status:** PASS.
