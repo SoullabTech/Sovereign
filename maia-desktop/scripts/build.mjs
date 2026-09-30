@@ -20,7 +20,7 @@ const stage = path.join(stageParent, 'project');
 
 fs.rmSync(stage, { recursive: true, force: true });
 fs.mkdirSync(stage, { recursive: true });
-for (const entry of ['package.json', 'src', 'build']) {
+for (const entry of ['package.json', 'src', 'build', 'cabin-runtime']) {
   fs.cpSync(path.join(root, entry), path.join(stage, entry), { recursive: true });
 }
 const args = [

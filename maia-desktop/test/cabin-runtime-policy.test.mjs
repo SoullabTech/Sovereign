@@ -4,12 +4,21 @@ import assert from 'node:assert/strict';
 import {
   CABIN_ENTRY_PATH,
   CABIN_HOST,
+  DEFAULT_CABIN_PORT,
+  resolveCabinPort,
   cabinOrigin,
   cabinEntryUrl,
   cabinHealthUrl,
   offlineRuntimeSpec,
   isCabinMode,
 } from '../src/cabin-runtime-policy.js';
+
+test('Cabin chooses a bounded loopback port', () => {
+  assert.equal(resolveCabinPort(), DEFAULT_CABIN_PORT);
+  assert.equal(resolveCabinPort('43130'), 43130);
+  assert.throws(() => resolveCabinPort('not-a-port'), /integer from 1 to 65535/);
+  assert.throws(() => resolveCabinPort('70000'), /integer from 1 to 65535/);
+});
 
 test('Cabin binds only to loopback', () => {
   assert.equal(CABIN_HOST, '127.0.0.1');

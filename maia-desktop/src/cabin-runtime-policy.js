@@ -7,11 +7,12 @@
  * MAIA Desktop platform shell.
  *
  * This module deliberately does NOT spawn a process. Process lifecycle belongs
- * to the Electron host; these functions define the boundary it must honor.
+ * to the host; these functions define the boundary it must honor.
  */
 
 const CABIN_ENTRY_PATH = '/maia';
 const CABIN_HOST = '127.0.0.1';
+const DEFAULT_CABIN_PORT = 43121;
 const CABIN_MODES = Object.freeze(['offline', 'connected']);
 
 function assertPort(port) {
@@ -19,6 +20,14 @@ function assertPort(port) {
     throw new Error('Cabin runtime port must be an integer from 1 to 65535');
   }
   return port;
+}
+
+function resolveCabinPort(raw) {
+  if (raw === undefined || raw === null || String(raw).trim() === '') {
+    return DEFAULT_CABIN_PORT;
+  }
+  const value = Number(String(raw).trim());
+  return assertPort(Number.isInteger(value) ? value : NaN);
 }
 
 function cabinOrigin(port, host = CABIN_HOST) {
@@ -54,6 +63,7 @@ function offlineRuntimeSpec({ port, entrypoint, runtimeRoot, extraEnv = {} }) {
   }
 
   return {
+    port,
     command: process.execPath,
     args: [entrypoint],
     cwd: runtimeRoot,
@@ -74,7 +84,9 @@ function isCabinMode(value) {
 module.exports = {
   CABIN_ENTRY_PATH,
   CABIN_HOST,
+  DEFAULT_CABIN_PORT,
   CABIN_MODES,
+  resolveCabinPort,
   cabinOrigin,
   cabinEntryUrl,
   cabinHealthUrl,

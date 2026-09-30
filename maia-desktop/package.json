@@ -31,6 +31,13 @@
       "src/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "cabin-runtime",
+        "to": "cabin-runtime",
+        "filter": ["**/*"]
+      }
+    ],
     "mac": {
       "category": "public.app-category.lifestyle",
       "icon": "build/icon.icns",
