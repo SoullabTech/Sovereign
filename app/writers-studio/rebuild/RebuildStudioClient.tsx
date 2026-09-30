@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import { beginDraft } from '../../press/manuscript/workingDraftClient';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
 import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
@@ -441,10 +442,31 @@ export default function RebuildStudioClient({ reviewDiscussEnabled = false }: Re
       }
       const resolvedManuscriptId = manuscriptId;
       if (!resolvedManuscriptId) throw new Error('manuscript identity');
-      const res = await apiFetch(`/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(resolvedManuscriptId)}`);
+      const contextUrl = `/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(resolvedManuscriptId)}`;
+      let res = await apiFetch(contextUrl);
       if (res.status === 401) { setPhase('unauthorized'); return; }
       if (!res.ok) throw new Error('context');
-      const body = await res.json() as ContextPayload;
+      let body = await res.json() as ContextPayload;
+      /* A fresh import arrives here with Source sections and NO working draft:
+         import redirects straight to this room, and nothing on that path makes
+         the draft. Begin it with the SAME call the Canvas makes on arrival
+         (`beginDraft` — verbatim from Source, born section-addressable), then
+         re-read. Only `no_draft` is begun; a legacy `continuous` draft is
+         still refused below — conversion is its own act, never a guess. */
+      if (body.state === 'no_draft') {
+        const begun = await beginDraft(apiFetch, resolvedManuscriptId);
+        if (begun.kind === 'unauthorized') { setPhase('unauthorized'); return; }
+        if (begun.kind === 'no-sections') {
+          setPhase('error');
+          setMessage('This manuscript has no text to open yet. Import it again with its content.');
+          return;
+        }
+        if (begun.kind === 'error') throw new Error('begin draft');
+        res = await apiFetch(contextUrl);
+        if (res.status === 401) { setPhase('unauthorized'); return; }
+        if (!res.ok) throw new Error('context');
+        body = await res.json() as ContextPayload;
+      }
       if (body.state !== 'section_aware') {
         setPhase('error');
         setMessage('This manuscript is not section-addressable yet. The rebuild will not guess at its structure.');
