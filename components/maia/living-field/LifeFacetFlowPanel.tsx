@@ -257,7 +257,7 @@ function ThreadLensExplorer({
                 htmlFor={'facet-flow-message-' + flow.id}
                 className="block text-[10px] uppercase tracking-[0.18em] text-stone-600"
               >
-                What travels with this lens
+                What MAIA will receive
               </label>
               <textarea
                 id={'facet-flow-message-' + flow.id}
@@ -389,7 +389,7 @@ export function LifeFacetFlowPanel() {
               </div>
 
               <p className="mt-3 text-[10px] text-stone-700">
-                Carried forward{when(flow.createdAt) ? ' · ' + when(flow.createdAt) : ''}
+                You carried this path{when(flow.createdAt) ? ' · ' + when(flow.createdAt) : ''}
               </p>
 
               <ThreadLensExplorer flow={flow} />
@@ -399,8 +399,8 @@ export function LifeFacetFlowPanel() {
       )}
 
       <p className="mt-4 max-w-xl text-[10px] leading-relaxed text-stone-700">
-        These lines preserve movements that were explicitly made. Deeper relationships
-        can be explored separately as they come into view.
+        These lines record movement you explicitly made. They do not claim that the things
+        are psychologically, causally, or developmentally connected.
       </p>
     </section>
   );

@@ -58,13 +58,13 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
         const data = await res.json().catch(() => null)
         if (cancelled) return
         if (!res.ok || !data?.encounter_id) {
-          setError('The encounter paused for a moment. Try again.')
+          setError('Could not open this encounter. Try again.')
           return
         }
         setEncounterId(data.encounter_id)
         setTurns([{ role: 'maia', text: data.greeting || `What is ready to unfold here in ${fieldLabel}?` }])
       } catch {
-        if (!cancelled) setError('The connection paused for a moment. Try again.')
+        if (!cancelled) setError('Could not reach MAIA. Check your connection and try again.')
       } finally {
         if (!cancelled) setOpening(false)
       }
@@ -95,12 +95,12 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
       })
       const data = await res.json().catch(() => null)
       if (!res.ok || typeof data?.reply !== 'string') {
-        setError('The conversation paused for a moment. Try again.')
+        setError('MAIA could not respond just now. Try again.')
         return
       }
       setTurns((prev) => [...prev, { role: 'maia', text: data.reply }])
     } catch {
-      setError('The connection paused for a moment. Try again.')
+      setError('Could not reach MAIA. Check your connection and try again.')
     } finally {
       setSending(false)
     }

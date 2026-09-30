@@ -221,13 +221,13 @@ export function LivingFieldDetailPanel({
               disabled={refining}
               className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-700 text-amber-400 text-xs border border-stone-700 disabled:opacity-50 transition-colors"
             >
-              {refining ? 'Gathering…' : 'Refine this'}
+              {refining ? 'Gathering…' : 'Refine with MAIA'}
             </button>
             <Link
               href={`/maia?field=${field.field_key}`}
               className="px-3 py-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs border border-stone-700 transition-colors"
             >
-              Explore this further
+              Talk with MAIA about this
             </Link>
           </div>
 
@@ -255,7 +255,7 @@ export function LivingFieldDetailPanel({
                     <li key={v.id} className="space-y-0.5">
                       <p className="text-stone-500 text-xs">
                         {formatDate(v.created_at)} ·{' '}
-                        {v.authored_by === 'maia_candidate' ? 'Accepted suggestion' : 'Authored'}
+                        {v.authored_by === 'maia_candidate' ? 'MAIA candidate, accepted' : 'Written by you'}
                       </p>
                       <p className="text-stone-300 text-sm leading-relaxed">{v.expression}</p>
                       {v.change_note && (

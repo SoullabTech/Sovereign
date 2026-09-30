@@ -53,9 +53,9 @@ const FOCUS_COPY: Record<ConstellationFocus, string> = {
 };
 
 function authorityLabel(node: ConstellationProjectionNode): string {
-  if (node.authorship === 'maia_candidate') return 'suggested possibility';
-  if (node.authorship === 'member_confirmed') return 'confirmed';
-  return 'authored';
+  if (node.authorship === 'maia_candidate') return 'MAIA candidate';
+  if (node.authorship === 'member_confirmed') return 'you confirmed';
+  return 'you authored';
 }
 
 function DomainCluster({
@@ -154,7 +154,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
     return (
       <div className={`rounded-xl border border-stone-900 px-4 py-3 ${className}`}>
         <p className="text-xs text-stone-600">
-          The wider field can be revisited in a moment.
+          Your wider field is unavailable right now. Nothing has been changed.
         </p>
       </div>
     );
@@ -181,7 +181,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
 
       {projection.partial && (
         <p className="mt-3 text-xs text-amber-700/80">
-          This view is showing the parts currently within reach.
+          Some parts of your field are temporarily unavailable; what is shown is partial.
         </p>
       )}
 
@@ -230,8 +230,8 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
         </div>
       </div>
       <p className="mt-5 border-t border-stone-900 pt-3 text-[10px] leading-relaxed text-stone-700">
-        These lines mark where each part currently lives in the wider field. Meaningful
-        relationships can be explored as they come into view.
+        These lines show where something currently lives in Soullab. They do not claim
+        that the things themselves are psychologically or semantically connected.
       </p>
     </section>
   );
