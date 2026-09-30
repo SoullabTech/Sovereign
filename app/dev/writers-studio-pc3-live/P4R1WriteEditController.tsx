@@ -7,7 +7,12 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContext';
-import { editorialThreadIdFrom } from '@/app/writers-studio/canvasIdentity';
+import {
+  canvasWithRelationship,
+  canvasWithoutRelationship,
+  editorialThreadIdFrom,
+  relationshipIdFrom,
+} from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
@@ -37,6 +42,19 @@ import {
   type InsightPassage,
 } from '@/lib/writersStudio/insightCanvas';
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
+import {
+  createA2Relationship,
+  listA2Relationships,
+  readA2Relationship,
+  type A2RelationshipSummary,
+} from '@/lib/writersStudio/rebuild/relationshipOrchestration';
+import {
+  clearRelationshipReturnClient,
+  persistPlaceReturnOrdered,
+  readPlaceReturnClient,
+  readRelationshipReturnClient,
+  writeRelationshipReturnClient,
+} from '@/lib/writersStudio/rebuild/returnStateClient';
 import { P4R1Pc3WriteEditView, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
 
 interface ContextReady {
@@ -59,6 +77,7 @@ export default function FlagshipWriteEditController() {
   const incomingReading = params?.get(INSIGHT_READING) ?? null;
   const incomingObservation = params?.get(INSIGHT_OBSERVATION) ?? null;
   const requestedEditorialThread = params ? editorialThreadIdFrom(params) : null;
+  const requestedRelationship = params ? relationshipIdFrom(params) : null;
   const incomingAction = params?.get('insightAction') ?? null;
   const attentionReturnItemId = params?.get('attentionItem') ?? null;
   const lineageReturnChapterId = params?.get('lineageChapter') ?? null;
@@ -88,6 +107,11 @@ export default function FlagshipWriteEditController() {
   const [arrivalInsight, setArrivalInsight] = useState<CanvasInsight | null>(null);
   const [editorialThread, setEditorialThread] = useState<RebuildEditorialThread | null>(null);
   const [relationshipChoices, setRelationshipChoices] = useState<readonly RebuildEditorialRelationship[]>([]);
+  const [a2Relationship, setA2Relationship] = useState<A2RelationshipSummary | null>(null);
+  const [a2RelationshipChoices, setA2RelationshipChoices] = useState<readonly A2RelationshipSummary[]>([]);
+  const [a2RelationshipPhase, setA2RelationshipPhase] = useState<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
+  const [a2RelationshipBusy, setA2RelationshipBusy] = useState(false);
+  const [a2RelationshipMessage, setA2RelationshipMessage] = useState<string | null>(null);
   const [editorialDraft, setEditorialDraft] = useState('');
   const [editorialDepth, setEditorialDepth] = useState<EditorialDepth>(DEFAULT_EDITORIAL_DEPTH);
   const [suggestedVersionId, setSuggestedVersionId] = useState<string | null>(null);
@@ -235,6 +259,183 @@ export default function FlagshipWriteEditController() {
         ? `This manuscript belongs to ${workContext.works.length} Works. The Studio will not choose one for you.`
         : 'The Studio has not established this manuscript’s Work context yet.';
 
+  const replaceA2RelationshipAddress = useCallback((relationshipId: string | null) => {
+    if (typeof window === 'undefined') return;
+    const next = relationshipId
+      ? canvasWithRelationship(window.location.pathname, window.location.search, relationshipId)
+      : canvasWithoutRelationship(window.location.pathname, window.location.search);
+    replacePlaceAddress(next);
+  }, []);
+
+  const placeReturnHydrated = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!context || workContext.kind !== 'work' || !work) return;
+    const key = `${work.id}:${context.manuscriptId}`;
+    if (placeReturnHydrated.current === key) return;
+
+    /* An explicit address is the member's current instruction. Durable return
+       fills only an absent place; it never overrides a place the member named. */
+    if (requestedSection) {
+      if (!focusId || !context.sections.some((section) => section.draftSectionId === focusId)) return;
+      placeReturnHydrated.current = key;
+      void persistPlaceReturnOrdered(
+        { livingWorkId: work.id, manuscriptId: context.manuscriptId },
+        focusId,
+      );
+      return;
+    }
+
+    placeReturnHydrated.current = key;
+    let cancelled = false;
+    void readPlaceReturnClient({
+      livingWorkId: work.id,
+      manuscriptId: context.manuscriptId,
+    }).then((saved) => {
+      if (cancelled || !saved.ok || !saved.sectionId) return;
+      if (!context.sections.some((section) => section.draftSectionId === saved.sectionId)) return;
+      setFocusId(saved.sectionId);
+      writingRef.current?.goToSection(saved.sectionId);
+      if (typeof window !== 'undefined') {
+        replacePlaceAddress(
+          locationForSection(window.location.pathname, window.location.search, saved.sectionId),
+        );
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [context, focusId, requestedSection, work, workContext.kind]);
+
+  useEffect(() => {
+    if (!context) return;
+    if (workContext.kind === 'unknown') {
+      setA2RelationshipPhase('loading');
+      return;
+    }
+    if (workContext.kind !== 'work' || !work) {
+      setA2Relationship(null);
+      setA2RelationshipChoices([]);
+      setA2RelationshipPhase('ready');
+      setA2RelationshipMessage(null);
+      if (requestedRelationship) replaceA2RelationshipAddress(null);
+      return;
+    }
+
+    let cancelled = false;
+    const scope = { livingWorkId: work.id, manuscriptId: context.manuscriptId };
+    setA2RelationshipPhase('loading');
+    setA2RelationshipMessage(null);
+
+    void (async () => {
+      const listed = await listA2Relationships(work.id, context.manuscriptId);
+      if (cancelled) return;
+      if (!listed.ok) {
+        setA2Relationship(null);
+        setA2RelationshipChoices([]);
+        setA2RelationshipPhase('unavailable');
+        setA2RelationshipMessage('Your MAIA relationships could not be read just now. Nothing was changed.');
+        return;
+      }
+      setA2RelationshipChoices(listed.relationships);
+
+      let targetId = requestedRelationship;
+      if (!targetId) {
+        const saved = await readRelationshipReturnClient(scope);
+        if (cancelled) return;
+        targetId = saved.ok ? saved.relationshipId : null;
+      }
+
+      if (!targetId) {
+        setA2Relationship(null);
+        setA2RelationshipPhase('ready');
+        return;
+      }
+
+      const addressed = await readA2Relationship(targetId);
+      if (cancelled) return;
+      if (
+        !addressed.ok
+        || addressed.relationship.livingWorkId !== work.id
+        || addressed.relationship.manuscriptId !== context.manuscriptId
+      ) {
+        setA2Relationship(null);
+        setA2RelationshipPhase('ready');
+        setA2RelationshipMessage('That MAIA relationship is not available for this Work.');
+        if (requestedRelationship) replaceA2RelationshipAddress(null);
+        else void clearRelationshipReturnClient(scope);
+        return;
+      }
+
+      setA2Relationship(addressed.relationship);
+      setA2RelationshipPhase('ready');
+      if (!requestedRelationship) replaceA2RelationshipAddress(addressed.relationship.id);
+      void writeRelationshipReturnClient(scope, addressed.relationship.id);
+    })();
+
+    return () => { cancelled = true; };
+  }, [
+    context,
+    requestedRelationship,
+    replaceA2RelationshipAddress,
+    work,
+    workContext.kind,
+  ]);
+
+  const beginA2Relationship = useCallback(async () => {
+    if (!context || !work || workContext.kind !== 'work' || a2RelationshipBusy) return;
+    setA2RelationshipBusy(true);
+    setA2RelationshipMessage(null);
+    const out = await createA2Relationship(work.id, context.manuscriptId);
+    if (!out.ok) {
+      setA2RelationshipMessage('The Studio could not begin that MAIA relationship just now. Nothing else changed.');
+      setA2RelationshipBusy(false);
+      return;
+    }
+    setA2Relationship(out.relationship);
+    setA2RelationshipChoices((choices) => [...choices, out.relationship]);
+    replaceA2RelationshipAddress(out.relationship.id);
+    void writeRelationshipReturnClient(
+      { livingWorkId: work.id, manuscriptId: context.manuscriptId },
+      out.relationship.id,
+    );
+    setA2RelationshipBusy(false);
+  }, [a2RelationshipBusy, context, replaceA2RelationshipAddress, work, workContext.kind]);
+
+  const chooseA2Relationship = useCallback(async (relationshipId: string) => {
+    if (!context || !work || workContext.kind !== 'work' || a2RelationshipBusy) return;
+    setA2RelationshipBusy(true);
+    setA2RelationshipMessage(null);
+    const out = await readA2Relationship(relationshipId);
+    if (
+      !out.ok
+      || out.relationship.livingWorkId !== work.id
+      || out.relationship.manuscriptId !== context.manuscriptId
+    ) {
+      setA2RelationshipMessage('That MAIA relationship is not available for this Work.');
+      setA2RelationshipBusy(false);
+      return;
+    }
+    setA2Relationship(out.relationship);
+    replaceA2RelationshipAddress(out.relationship.id);
+    void writeRelationshipReturnClient(
+      { livingWorkId: work.id, manuscriptId: context.manuscriptId },
+      out.relationship.id,
+    );
+    setA2RelationshipBusy(false);
+  }, [a2RelationshipBusy, context, replaceA2RelationshipAddress, work, workContext.kind]);
+
+  const leaveA2Relationship = useCallback(() => {
+    if (context && work && workContext.kind === 'work') {
+      void clearRelationshipReturnClient({
+        livingWorkId: work.id,
+        manuscriptId: context.manuscriptId,
+      });
+    }
+    setA2Relationship(null);
+    setA2RelationshipMessage(null);
+    replaceA2RelationshipAddress(null);
+  }, [context, replaceA2RelationshipAddress, work, workContext.kind]);
+
   const editorialScope = JSON.stringify([
     context?.manuscriptId,
     focusId,
@@ -292,10 +493,16 @@ export default function FlagshipWriteEditController() {
       setSelectedPassage(null);
     }
     setFocusId(sectionId);
+    if (context && work && workContext.kind === 'work') {
+      void persistPlaceReturnOrdered(
+        { livingWorkId: work.id, manuscriptId: context.manuscriptId },
+        sectionId,
+      );
+    }
     if (typeof window !== 'undefined') {
       replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, sectionId));
     }
-  }, [focusId, clearEditorial]);
+  }, [focusId, clearEditorial, context, work, workContext.kind]);
 
   const holdPassage = useCallback((section: RebuildSection, start: number, end: number, text: string) => {
     const revisionNumber = writingRef.current?.currentRevisionId() ?? context?.version ?? 0;
@@ -308,10 +515,16 @@ export default function FlagshipWriteEditController() {
       text,
       revisionNumber,
     });
+    if (context && work && workContext.kind === 'work') {
+      void persistPlaceReturnOrdered(
+        { livingWorkId: work.id, manuscriptId: context.manuscriptId },
+        section.draftSectionId,
+      );
+    }
     if (typeof window !== 'undefined') {
       replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, section.draftSectionId));
     }
-  }, [context?.version, focusId, clearEditorial]);
+  }, [context, focusId, clearEditorial, work, workContext.kind]);
 
   const bindEditorialThread = useCallback((thread: RebuildEditorialThread): boolean => {
     if (!focusId || thread.targetSectionId !== focusId) {
@@ -442,7 +655,10 @@ export default function FlagshipWriteEditController() {
           mayRemoveParagraphs,
           mayProposeImmediately,
         },
-        options,
+        {
+          ...(options ?? {}),
+          ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
+        },
       );
 
       if (!outcome.ok) {
@@ -474,6 +690,7 @@ export default function FlagshipWriteEditController() {
     editLatitude,
     mayRemoveParagraphs,
     mayProposeImmediately,
+    a2Relationship,
   ]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
@@ -825,6 +1042,11 @@ export default function FlagshipWriteEditController() {
             workspaceInsight={workspaceInsight}
             editorialThread={editorialThread}
             relationshipChoices={relationshipChoices}
+            maiaRelationship={a2Relationship}
+            maiaRelationshipChoices={a2RelationshipChoices}
+            maiaRelationshipPhase={a2RelationshipPhase}
+            maiaRelationshipBusy={a2RelationshipBusy}
+            maiaRelationshipMessage={a2RelationshipMessage}
             suggestedVersion={suggestedVersion}
             appliedVersionId={editorialThread?.application && !editorialThread.application.undone
               ? editorialThread.application.versionId
@@ -877,6 +1099,9 @@ export default function FlagshipWriteEditController() {
             onReviseInsight={reviseInsightPassage}
             onChoosePassage={chooseOwnPassage}
             onChooseRelationship={(threadId) => void chooseRelationship(threadId)}
+            onBeginMaiaRelationship={() => void beginA2Relationship()}
+            onChooseMaiaRelationship={(relationshipId) => void chooseA2Relationship(relationshipId)}
+            onLeaveMaiaRelationship={leaveA2Relationship}
           />
         );
       }}

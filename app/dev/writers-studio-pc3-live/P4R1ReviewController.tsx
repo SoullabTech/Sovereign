@@ -25,6 +25,9 @@ import {
   type ReviewDiscussionState,
 } from '@/lib/writersStudio/rebuild/reviewDiscuss';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import { relationshipIdFrom } from '@/app/writers-studio/canvasIdentity';
+import { readA2Relationship, type A2RelationshipSummary } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
+import { readRelationshipReturnClient } from '@/lib/writersStudio/rebuild/returnStateClient';
 
 interface ContextReady {
   state: 'section_aware';
@@ -54,6 +57,7 @@ type ReadyReview = {
   const reviewRunId = params?.get('reviewRun') ?? null;
   const requestedFindingId = params?.get('reviewFinding') ?? null;
   const requestedSectionId = params?.get('s') ?? null;
+  const requestedRelationship = params ? relationshipIdFrom(params) : null;
   const { id: appearance } = useAtmosphere();
   const { phase: worksPhase, works } = useLivingWorks();
 
@@ -67,13 +71,53 @@ type ReadyReview = {
   const [discussion, setDiscussion] = useState<ReviewDiscussionState | null>(null);
   const [availableRuns, setAvailableRuns] = useState<ChapterReviewManifest[]>([]);
   const [availableRootId, setAvailableRootId] = useState<string | null>(null);
+  const [a2Relationship, setA2Relationship] = useState<A2RelationshipSummary | null>(null);
   const discussGen = useRef(0);
 
   const workContext = context
     ? resolveWorkContext(worksPhase, works, context.manuscriptId)
     : { kind: 'unknown' as const };
   const work = currentWork(workContext);
-  const visual = useWorkVisual(work?.id ?? null);  useEffect(() => {
+  const visual = useWorkVisual(work?.id ?? null);
+
+  useEffect(() => {
+    if (!context || workContext.kind !== 'work' || !work) {
+      setA2Relationship(null);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      let relationshipId = requestedRelationship;
+      if (!relationshipId) {
+        const saved = await readRelationshipReturnClient({
+          livingWorkId: work.id,
+          manuscriptId: context.manuscriptId,
+        });
+        if (cancelled) return;
+        relationshipId = saved.ok ? saved.relationshipId : null;
+      }
+      if (!relationshipId) {
+        setA2Relationship(null);
+        return;
+      }
+      const read = await readA2Relationship(relationshipId);
+      if (cancelled) return;
+      if (
+        !read.ok
+        || read.relationship.livingWorkId !== work.id
+        || read.relationship.manuscriptId !== context.manuscriptId
+      ) {
+        setA2Relationship(null);
+        return;
+      }
+      setA2Relationship(read.relationship);
+    })();
+
+    return () => { cancelled = true; };
+  }, [context, requestedRelationship, work, workContext.kind]);
+
+  useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setPhase('loading');
@@ -259,6 +303,7 @@ type ReadyReview = {
       readingId: truth.address.readingId,
       observationKey: truth.address.observationKey,
       question: ask,
+      ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
     }, readCurrentSanctuaryPosture()).then((outcome) => {
       if (gen !== discussGen.current) return;
       if (outcome.ok) {
@@ -273,7 +318,9 @@ type ReadyReview = {
           : REVIEW_DISCUSS_COPY.failed;
       setDiscussion({ kind: 'refused', findingId, ask, copy });
     });
-  }, [context, review]);  const data = useMemo(() => {
+  }, [context, review, a2Relationship]);
+
+  const data = useMemo(() => {
     if (!review || !context) return null;
     const view = selectedFindingId
       && review.view.findings.some((finding) => finding.id === selectedFindingId)
