@@ -649,6 +649,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // auth-gated here and cohort-gated server-side via requireCohort (members.tester).
   // Admin prefix MUST precede the cohort prefix (more specific first).
   { prefix: '/api/admin/beta-testers', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Beta tester field admin API — admin role (also enforced in requireAdmin)' },
+  { prefix: '/api/admin/writers-studio', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Writer’s Studio stewardship evidence — admin-only structural release evidence; route also enforces founder-only writes' },
   { prefix: '/api/beta-testers', minTier: 'free', notes: 'Beta tester field API — cohort-gated server-side (members.tester via requireCohort)' },
 
   // Stripe webhooks (system routes, validated by signature)
