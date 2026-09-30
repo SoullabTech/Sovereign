@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
+import { beginDraft } from '@/app/press/manuscript/workingDraftClient';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContext';
@@ -173,12 +174,35 @@ export default function FlagshipWriteEditController() {
         manuscriptId = manuscripts[0].id;
       }
       if (!manuscriptId) throw new Error('manuscript identity');
-      const response = await apiFetch(
-        '/api/writers-studio/rebuild/context?manuscriptId=' + encodeURIComponent(manuscriptId),
-      );
+      const contextUrl =
+        '/api/writers-studio/rebuild/context?manuscriptId=' + encodeURIComponent(manuscriptId);
+      let response = await apiFetch(contextUrl);
       if (response.status === 401) { setPhase('unauthorized'); return; }
       if (!response.ok) throw new Error('context');
-      const body = await response.json() as ContextPayload;
+      let body = await response.json() as ContextPayload;
+
+      /* A newly imported manuscript arrives with immutable Source sections
+         before a Working Draft exists. Write is the canonical working room, so
+         opening it is the explicit member act that may begin the verbatim
+         draft. Reuse the same beginDraft contract as the historical Canvas;
+         never infer boundaries here, and never auto-convert a legacy
+         continuous draft. */
+      if (body.state === 'no_draft') {
+        const begun = await beginDraft(apiFetch, manuscriptId);
+        if (begun.kind === 'unauthorized') { setPhase('unauthorized'); return; }
+        if (begun.kind === 'no-sections') {
+          setPhase('error');
+          setMessage('This manuscript has no text to open yet. Import it again with its content.');
+          return;
+        }
+        if (begun.kind === 'error') throw new Error('begin draft');
+
+        response = await apiFetch(contextUrl);
+        if (response.status === 401) { setPhase('unauthorized'); return; }
+        if (!response.ok) throw new Error('context after draft begin');
+        body = await response.json() as ContextPayload;
+      }
+
       if (body.state !== 'section_aware') {
         setPhase('error');
         setMessage('This manuscript is not section-addressable yet. The Studio will not guess at its structure.');

@@ -6,7 +6,7 @@ import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { buildKeepRequestBody, interpretKeepReply } from './keepRequest';
-import { REBUILD_HREF } from '../../writers-studio/studioMap';
+import { CANONICAL_STUDIO_PATH } from '@/lib/writersStudio/canonicalStudioRoute';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
 /**
@@ -373,12 +373,14 @@ function PressManuscriptRoom() {
       setSourceArrivalId(null);
       setDraftTitle('');
       setImporting(false); // intent spent — do not pin the member on the form
-      // Import is a threshold, not a destination — and since the Writer
-      // Canvas exists, the room the member lands in is the Canvas, by
-      // identity, with the new draft on the table. The 2026-08-05 persona
-      // walk found imports still ending in this room's seven-tab workbench:
-      // the environment existed, but its main entry path predated it.
-      window.location.href = `${REBUILD_HREF}?m=${encodeURIComponent(data.id)}`;
+      // Import is a threshold, not a destination. The canonical Writer's
+      // Studio owns the working experience now, so a completed import enters
+      // its Write mode by manuscript identity. Use a full navigation here:
+      // the import door deliberately avoids stale App Router state, and the
+      // Write controller will begin the verbatim Working Draft if Source has
+      // arrived before a draft exists.
+      window.location.href =
+        `${CANONICAL_STUDIO_PATH}?mode=write&m=${encodeURIComponent(data.id)}`;
     } catch {
       // Preview is preserved so the member can retry the save.
       setSaveError(true);
