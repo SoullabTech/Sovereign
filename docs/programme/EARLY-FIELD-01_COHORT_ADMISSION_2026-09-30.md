@@ -61,6 +61,8 @@ EARLY_FIELD_MEMBER_IDS=<uuid>,<uuid>             # explicit cohort
 `yes` are closed) · a missing or empty list · **any** malformed entry (the whole list is then
 untrusted, not partially honoured) · no authenticated member.
 
+**Documented default:** `.env.example` ships `EARLY_FIELD_ENABLED=false`, so production starts closed.
+
 **Separate authority:** not lab access and not founder status. Founders are **not** admitted
 implicitly (unlike `labAccess`): cohort membership is explicit, and the founder is listed like
 anyone else. The module imports neither `labAccess` nor `founderAuth`.
@@ -163,3 +165,12 @@ Studio's API reject requests as possible impersonation. Walk **one port at a tim
 - A new persistence layer? **No.**
 - Becoming a general feature-flag platform? **No.** It covers one component, one variable and
   one switch.
+
+## 10 · Duplicate lane resolved
+
+A parallel session opened **#1541** (`claude/modest-maxwell-8vtlsn`) implementing the same
+ruling by adding `early_field.instrument` to the existing `/api/maia/living-field` response.
+The founder ruled this branch authoritative, preferring **admission on its own narrow server
+endpoint** so the established room's API is untouched. #1541 was closed as superseded. Its
+`.env.example` documentation (default closed) was carried over. No second implementation
+exists.
