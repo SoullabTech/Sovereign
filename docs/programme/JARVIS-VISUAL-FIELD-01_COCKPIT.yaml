@@ -9,12 +9,12 @@ current_authority:
   - docs/canon/LIVING_FIELD_FOCUS_CONTEXT_LAWS.md
   - docs/canon/LIVING_FIELD_BIOLOGICAL_SPATIAL_DYNAMICS.md
   - docs/design/contracts/living-field-grokker.md
-current_phase: BUILD
-current_act: VISUAL-FIELD-RUNTIME-02D1 — Biological Spatial Dynamics
-current_subject_sha: e2b34244384d35e7467f341333ee40b1397edb25
+current_phase: VERIFY
+current_act: VISUAL-FIELD-RUNTIME-02D1 — Founder Biological Spatial Dynamics Witness
+current_subject_sha: a1feb66fba902729a46b5aa971f6abc6d37c2cc0
 current_branch: feature/jarvis-visual-field-r2d1-20260930
 worktree: /private/tmp/jarvis-visual-field-r2d1
-runtime: http://localhost:3608/public-demo
+runtime: http://localhost:3609/public-demo
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
@@ -37,4 +37,4 @@ founder_stops:
   - Persistent memory or cross-facet permission changes.
   - Merge or deployment.
 next_phase_on_exit: R2D1 founder biological-spatial witness; PASS returns to R2E Semantic Condensation
-last_state_change: 2026-09-30 — founder accepted R2D direction and authorized R2D1 Biological Spatial Dynamics
+last_state_change: 2026-09-30 — R2D1 candidate sealed at a1feb66fb; founder biological-spatial witness is the current gate
