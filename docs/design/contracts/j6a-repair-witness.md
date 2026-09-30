@@ -22,7 +22,7 @@ distinct_to_room: explicit before/after comparison and founder adjudication are 
 
 screenshot_desktop: docs/design/contracts/screenshots/j6a-repair-witness-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/j6a-repair-witness-mobile.png
-experience_verification: Playwright desktop and mobile walks loaded the route, changed repair experiments and scenarios, exercised the session-only witness controls, verified repaired language, and produced no browser errors.
+experience_verification: Playwright desktop and mobile walks loaded the route, verified the seven-band earned-directness progression, changed repair experiments and scenarios, exercised the session-only witness controls, verified repaired language, and produced no browser errors.
 ---
 # J6A Repair Witness — Experience Contract
 

@@ -13,6 +13,13 @@ import {
   type J6ScenarioId,
   type RepairExperimentId,
 } from '@/lib/memory/developmental-epistemics/j6RepairExperiments'
+import {
+  DIRECTNESS_WITNESSES,
+  MAIA_DIRECTNESS_REGRESSION_LAW,
+  MAIA_DIRECTNESS_REVERSIBILITY_LAW,
+  MAIA_EARNED_DIRECTNESS_LAW,
+  MAIA_MEANING_AUTHORITY_LAW,
+} from '@/lib/memory/developmental-epistemics/earnedDirectness'
 
 type WitnessResult = 'NOT_RUN' | 'PASS' | 'HOLD' | 'FAIL'
 
@@ -79,6 +86,37 @@ export function J6ARepairWitness() {
           <LawCard title="Insight standing" text={MAIA_INSIGHT_STANDING_LAW} />
           <LawCard title="Human correction" text={MAIA_HUMAN_CORRECTION_LAW} />
         </section>
+        <section className="mt-8 rounded-[28px] border border-[#50483e]/70 bg-[#171411] p-5 sm:p-6">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[#978671]">Earned directness</p>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <LawCard title="Directness law" text={MAIA_EARNED_DIRECTNESS_LAW} />
+            <LawCard title="Meaning authority" text={MAIA_MEANING_AUTHORITY_LAW} />
+            <LawCard title="Reversibility" text={MAIA_DIRECTNESS_REVERSIBILITY_LAW} />
+            <LawCard title="Regression" text={MAIA_DIRECTNESS_REGRESSION_LAW} />
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {DIRECTNESS_WITNESSES.map((item, index) => (
+              <div key={item.maturity} className="grid gap-3 rounded-2xl border border-[#494239] bg-[#11100f] p-4 lg:grid-cols-[170px_1fr]">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#8f7f6b]">
+                    {String(index + 1).padStart(2, '0')} · {item.maturity.replaceAll('_', ' ')}
+                  </p>
+                  <p className="mt-1 text-xs text-[#b59f7e]">{item.authority.replaceAll('_', ' ')}</p>
+                </div>
+                <div>
+                  <p className="text-sm leading-6 text-[#dfd0bd]">{item.memberFacingExample}</p>
+                  <p className="mt-1 text-xs leading-5 text-[#8f8271]">{item.whyThisLevel}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-5 text-xs leading-5 text-[#7f7365]">
+            The hinge is member recognition: evidence may strengthen what MAIA can say about recurrence, but personal meaning becomes directly speakable only after the member authors or confirms it.
+          </p>
+        </section>
+
         <section className="mt-8 rounded-[28px] border border-[#50483e]/70 bg-[#171411] p-5 sm:p-6">
           <div className="flex flex-wrap gap-2">
             {J6A_REPAIR_EXPERIMENTS.map((item) => (
