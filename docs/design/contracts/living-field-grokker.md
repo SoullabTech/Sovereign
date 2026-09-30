@@ -126,10 +126,22 @@ Founder response:
 
 The biological 2.5D field is now the chosen Grokker substrate. Its shallow volume, viscous movement, recoil, pressure response, and recursive-membrane readiness should be preserved as later semantic capabilities are added.
 
-R2E Semantic Condensation is OPEN.
+R2D2 Recursive Oil Membrane is now the active founder witness.
+
+The accepted biological physics are preserved while existing real hierarchy becomes physically enterable:
+- a supported bubble yields rather than opens like a card;
+- its containing membrane expands inside the same field;
+- surrounding ecology remains present and gives way;
+- actual child bubbles emerge inside it;
+- a child with existing children may be entered again;
+- Wider and Whole reverse the scale movement without page navigation.
+
+This is a bounded physical-recursion witness, not a claim that R2G universal recursive depth is complete.
+
+On R2D2 PASS, R2E Semantic Condensation resumes on this same substrate.
 
 The next experiential question is:
 
-> **Can the field become simpler as we pull back without becoming poorer, falsely harmonious, or semantically vague?**
+> **Does entering a bubble feel like crossing the membrane of the same living organism, with the oily, elastic physics preserved across scale?**
 
-Actual recursive child ecology remains closed until R2G.
+Generated or unsupported child ecology remains closed until R2G.

@@ -9,32 +9,32 @@ current_authority:
   - docs/canon/LIVING_FIELD_FOCUS_CONTEXT_LAWS.md
   - docs/canon/LIVING_FIELD_BIOLOGICAL_SPATIAL_DYNAMICS.md
   - docs/design/contracts/living-field-grokker.md
+  - docs/programme/JARVIS-VISUAL-FIELD-01_R2D2_RECURSIVE_OIL_MEMBRANE_2026-09-30.md
 current_phase: VERIFY
-current_act: VISUAL-FIELD-RUNTIME-02D1 — Founder Biological Spatial Dynamics Witness
-current_subject_sha: a1feb66fba902729a46b5aa971f6abc6d37c2cc0
-current_branch: feature/jarvis-visual-field-r2d1-20260930
-worktree: /private/tmp/jarvis-visual-field-r2d1
-runtime: http://localhost:3608/dev/living-field-biological-r2d1
+current_act: VISUAL-FIELD-RUNTIME-02D2 — Recursive Oil Membrane Founder Witness
+current_subject_sha: 84d18c5d6cf0b0c7c3bac1e8647840c90a851a9d
+current_branch: feature/jarvis-visual-field-r2d2-recursive-membrane-20260930
+worktree: /private/tmp/jarvis-visual-field-r2d2
+runtime: http://localhost:3610/dev/living-field-recursive-r2d2
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 production_write: NOT AUTHORIZED
 member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
 open_findings:
-  - Founder authorized a bounded 2.5D biological-spatial substrate pass before R2E.
-  - R2D1 is implemented as a parallel Three.js / React Three Fiber witness while semantic identity and x/y topology remain authoritative.
-  - Controlled impulse evidence shows local coupling, recoil, and dissipation: Calling moved 0.259→0.445 before returning to 0.227; related Stewardship/Identity moved while unrelated Belonging remained effectively still; speed decayed 1.284→0.184.
-  - World membranes respond to local pressure; cells gain shallow attention/drag lift; relations stretch in depth; subtle parallax is active.
-  - Active cells expose latent inner membrane structure only. Actual child ecology generation remains closed until R2G.
-  - Founder witness is required to decide whether the field feels more bodily, connected, and alive without becoming game-like or distracting.
-  - Live MAIA interpretation, live cross-room crossing, durable memory, FLOW, and autonomous relation generation remain closed.
+  - R2D1 biological physics passed founder witness and remain the chosen Grokker substrate.
+  - R2D2 binds the existing real Living Field hierarchy into that same biological renderer.
+  - Click on a supported bubble yields a containing membrane; surrounding worlds remain present and are physically displaced.
+  - Existing nested child material can be entered recursively without page navigation.
+  - Controlled Relationship → Grief traversal, Wider return, Whole recovery, and R2D1 physics regression all pass with zero browser errors.
+  - R2D2 proves physical node-to-world recursion only; universal semantic-object recursion remains governed by R2G.
+  - Live MAIA interpretation, durable memory, and autonomous child-ecology generation remain closed.
 founder_stops:
-  - R2D1 founder biological-spatial witness before R2E Semantic Condensation.
-  - Any generated recursive child ecology before R2G.
-  - Any free-roaming orbit camera or semantic meaning from z-position.
-  - Any live cross-room portal or persistent return-address behavior.
-  - Any live MAIA interpretation from semantic objects.
-  - Any durable relation or shared-meaning persistence.
-  - Persistent memory or cross-facet permission changes.
-  - Merge or deployment.
-next_phase_on_exit: R2D1 founder biological-spatial witness; PASS returns to R2E Semantic Condensation
-last_state_change: 2026-09-30 — R2D1 candidate sealed at a1feb66fb; founder biological-spatial witness is the current gate
+  - R2D2 founder recursive-feel witness before semantic condensation work resumes.
+  - No fabricated child ecologies.
+  - No claim that R2G universal recursive depth is complete.
+  - No free-roaming orbit camera or semantic meaning from z-position.
+  - No live MAIA interpretation from semantic objects.
+  - No durable relation or shared-meaning persistence.
+  - No merge or deployment.
+next_phase_on_exit: R2D2 founder recursive-feel witness; PASS resumes R2E Semantic Condensation on this substrate
+last_state_change: 2026-09-30 — recursive oil-membrane candidate sealed at 84d18c5d6; founder witness is current gate
