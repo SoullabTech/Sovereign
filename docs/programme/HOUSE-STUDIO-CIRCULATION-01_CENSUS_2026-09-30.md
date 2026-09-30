@@ -299,3 +299,40 @@ no crossing-registry reopening (R2 holds).**
 ⚠️ Routed, not repaired: `workContextSentence` dead variable · WHAT'S ALIVE `LIMIT 2` recency (§5) ·
 pre-existing *Return to House* links in six rooms (§12) · a dev-only *"Audio enabled"* toast on the
 Studio home (unrelated to H1).
+
+## 14 · Lineage and registry rulings (founder, 2026-09-30)
+
+Three parallel implementations of the House → Writer's Studio crossing existed on the same day:
+**HOUSE-STUDIO-CONTINUITY-01** (`claude/beautiful-mayer-mt9jc9`, #1534 stacked on it),
+**H1-R1** (#1533, `claude/vigilant-edison-x0oxbf`), and this lane (#1536). Rulings:
+
+1. **#1536 / HOUSE-STUDIO-CIRCULATION-01R1 is the canonical H1 lineage.**
+2. **#1533 does not merge** — closed as superseded; its record is preserved as design history.
+3. **The continuity branch is superseded, not merged.** Its records stay; individual laws or tests
+   may be *ported* into this lineage, never carried as a second implementation.
+4. **#1534 is rebuilt on canonical after #1536** as its own act. Law to carry:
+   ***A Work containing multiple manuscripts must never silently resolve to the first manuscript***
+   — tested for House arrival **and** ordinary Studio behaviour (`manuscriptIdOf()` and the
+   `manuscripts[0]` mode fallback), because the defect is deeper than the crossing.
+5. **`ea-house.md` is not a prerequisite for #1536.** It was a prerequisite named by the
+   superseded continuity lane and governed that lane; no ratified canon makes it a precondition
+   for a House crossing. (Checked: none of the three branches carries it.)
+
+### ⭐ Architectural ruling — the House is a threshold origin, not a registry place
+
+> **The House is a threshold origin, not a place in the crossing registry. H1 may carry House
+> provenance without widening the registry vocabulary. Any future proposal to make `house` a
+> first-class crossing origin is a separate governed architectural act.**
+
+Two levels, kept apart: *conceptually*, "threshold origin" is exactly what the House is doing;
+*architecturally*, that does not make `house` a member of `FACET_CROSSINGS`, whose existing
+meaning is place-to-place circulation. H1 encodes the distinction locally — `from=house` plus
+the situated-work semantics — which preserves the ontology without widening the registry. This
+supersedes the H1-R1 D-01 threshold-origin registry entry for H1 and confirms R2(b).
+
+### Port candidate from the continuity lane
+
+Its **F7** — *carried Work authority ceases when the manuscript/Work relationship no longer
+validates* — is already law here: `L5-withdrawn-declaration-does-not-survive` (killing
+`DC6-stored-last-work`) and walk check 7 (forged id). A cross-reference port of its test is
+worth doing in the #1534 rebuild; no second implementation.

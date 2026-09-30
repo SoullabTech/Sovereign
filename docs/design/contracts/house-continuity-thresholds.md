@@ -91,6 +91,12 @@ So every threshold reads **THE HOUSE · ‹ROOM› · Return Home →**.
 
 **Return is not undo.** The member is not backing out of a room; they move from one inhabited place back into Home: *Home → Work → Studio → Home*, never *Home → Studio → back*.
 
+## Amendment 3 — threshold origin, not registry place (2026-09-30, founder)
+
+> **The House is a threshold origin, not a place in the crossing registry. H1 may carry House provenance without widening the registry vocabulary. Any future proposal to make `house` a first-class crossing origin is a separate governed architectural act.**
+
+`FACET_CROSSINGS` keeps its meaning — circulation between places. This membrane (`from=house`, the carried Work pointer, the shared threshold) is where House provenance lives.
+
 ## Reconciliation standing
 
 The listed surfaces already existed in the frozen candidate. This contract records the experience they serve without modifying product source.
