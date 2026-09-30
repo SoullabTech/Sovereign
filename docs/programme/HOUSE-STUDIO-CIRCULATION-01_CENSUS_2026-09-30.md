@@ -193,3 +193,37 @@ Wiring (items 2, 5, 8, 9) opens once `ea-house.md` is committed.
    contracts (`house-room.md`, `house-continuity-thresholds.md`, `house-return.md`) exist and
    cover `app/house/page.tsx`; whether they suffice for an **href-only** doorway change, or R4
    holds until `ea-house.md` lands, is the founder's call.
+
+## 11 · Increment 3 — H1 built end to end (2026-09-30)
+
+### 11.1 Founder rulings H1 (same day)
+| # | Ruling |
+|---|---|
+| H1-1 | **Amend `house-continuity-thresholds.md`**: *a House crossing may carry an explicit Work identity when the member has chosen to continue an existing act of creation. The carried identity is a pointer, not meaning. Destination surfaces remain responsible for interpretation and presentation.* A strengthening, not a weakening. |
+| H1-2 | **Studio → House return: yes.** A membrane that opens one way is a funnel. A quiet contextual return, not a browser-like back button. |
+| H1-3 | **Arrival precedence: explicit Work → the Work's manuscripts → member chooses → existing fallback.** *Recency is an algorithmic substitute for relationship; the House has already supplied relationship.* Three states: one (name it, member opens) · several (no auto-select) · none (create nothing silently; *Begin this Work* / *Return*). |
+| H1-4 | **R4 satisfied for the link** by the committed House contracts; `ea-house.md` remains authority for the larger House architecture. |
+
+### 11.2 What landed
+| Step | Artifact |
+|---|---|
+| A · governance | `docs/design/contracts/house-continuity-thresholds.md` — **Amendment 1** + Studio surfaces added. |
+| B · House crossing | `app/house/page.tsx` — each WHAT'S ALIVE Work links via `studioArrivalFromHouse(work.id)` → `/writers-studio?from=house&work=W`; the empty-state link gains `?from=house` (the catalog's own href). ⛔ No visual change. |
+| C · resolver | `resolveStudioArrival()` in `app/writers-studio/situatedWork.ts`: explicit Work > member choice > `fallback`. Offers only manuscripts the member **holds**, in **declaration** order; an unheld Work is `fallback` and discloses nothing. |
+| D · arrival | `app/dev/writers-studio-pc3-live/P4R1WorkArrival.tsx` (the three states), mounted by `P4R1HomeController` inside the Studio shell. Mode tabs from the arrival go only to a *single* declared manuscript — ⛔ never `manuscripts[0]` / resume. *Begin this Work* reuses the existing C7 `onStartWriting(workId)` (blank manuscript + declaration, on the member's click). Chosen manuscripts open via the existing `open()`, which keeps `work` + `from` in the URL, so Write/Develop/Review resolve W as `member_explicit`. |
+| E · return | `app/writers-studio/StudioHouseReturn.tsx`, mounted in `app/writers-studio/layout.tsx`: the shared `HouseRoomThreshold`, only on `from=house`, carrying nothing back. |
+
+⚠️ **One deviation from the H1 text, made to keep R2:** H1-B/E speak of a crossing-registry extension and a *reciprocal crossing*. R2(b) ruled the House is **not** a crossing endpoint, so neither leg is a `FACET_CROSSINGS` entry — the doorway is the existing Writing href carrying `work`, and the return is the existing House threshold component. If you want both legs in the registry, R2 has to be reopened (it would add the House to the crossing vocabulary).
+
+### 11.3 Verification (scratchpad toolchain; ⭐ the founder's run is the record)
+* **Lethality**: `studioArrival.test.ts` — 7 arrival laws (A1–A7) × 8 defeat candidates (DA1 recency substitutes for relationship · DA2 first pre-selected · DA2b re-sorted by recency · DA3 silent creation · DA4 refusal discloses · DA5 declaration trusted over holding · DA6 arrival always on · DA7 eager verdict) — **all killed; every law kills one** — plus 5 source guards (House link, chooser pre-selects nothing, arrival never reaches the recency pick, nothing created without a click, return only on `from=house`).
+* **Suites**: `app/writers-studio/__tests__` + `app/house` → **79/79 · 851/851**. `lib/navigation` + `app/home` + `components/house` + `lib/house` → 19/21; the **2 failures are pre-existing, identical with this change stashed** (`houseNavDrift` — `/maia/encounter` absent from the Capacitor keep-list; `journalReachability` — Journal route rendering). ⛔ Not caused here, ⛔ not repaired here.
+* **An existing guard caught me**: `p4r1AppearanceContinuity` failed on the chooser CSS — I had used shell-local `--fr-*` colours inside the atmosphere membrane block. Repaired by moving to the `--ws-*` tokens (so the member's chosen theme holds on the chooser), ⛔ not by relocating the CSS out of the guard's reach.
+* **Types**: isolated `tsc` over the six changed files with React types installed — **one real diagnostic found and fixed** (a redundant `'unknown'` comparison in the controller); the only remaining line is the unchanged `./house.module.css` import, an artifact of absent Next type declarations. ⚠️ `npm run typecheck` (ship gate) not run — needs the full dependency tree.
+* **Visual witness — COMPONENT RENDER, ⛔ NOT AN AUTHENTICATED WALK**: the arrival panel's three states rendered through the real `StudioAtmosphere` (Day) + `Shell` + Studio CSS + House threshold band, screenshotted in Chromium at 1440×900 and 390×844 → `docs/design/contracts/screenshots/house-studio-circulation-01r1/arrival-{one,several,none}-{desktop,mobile}.png`. Web fonts absent (system serif stands in). No database, no session, no routing — the House → Studio → House walk is **owed**.
+
+### 11.4 For the founder
+1. ⚠️ **Double brand.** With `from=house`, the Soullab mark appears twice: the House band's and the Studio shell's own. The shell is a separate room (its own brand is correct there); whether the band should drop its mark in the Studio is a design call.
+2. ⚠️ **Vocabulary drift, pre-existing.** The thresholds contract's grammar says *THE HOUSE · Return to House*; the shared `HouseRoomThreshold` renders *HOME · Return Home →* and links `/home` (which renders the House). I reused the component unchanged, so the Studio says what every other room says. Aligning them is one component edit, for every room at once.
+3. ⚠️ **Arrival on "none" when declarations outlived their manuscripts.** A Work whose only declared manuscript was deleted arrives as *This Work has no manuscript yet.* — honest about what can be opened, slightly imprecise about history. Left as is.
+4. ⭐ **Owed before members see it**: the authenticated walk (House → Work → Studio arrival → open/choose/begin → Write → Develop → Return Home), and `npm run typecheck` + `npm run preflight` on the Mac.

@@ -12,6 +12,15 @@ import { useSectionActivity } from '@/app/writers-studio/useSectionActivity';
 import { arrivalFor, manuscriptIdOf } from '@/app/writers-studio/homeState';
 import { IMPORT_HREF } from '@/app/writers-studio/studioMap';
 import P4R1HomeView from './P4R1HomeView';
+import P4R1WorkArrival from './P4R1WorkArrival';
+import { Shell } from '@/app/writers-studio/full-redesign/Shell';
+import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
+import {
+  FROM_HOUSE,
+  STUDIO_WORK_PARAM,
+  readStudioWorkParam,
+  resolveStudioArrival,
+} from '@/app/writers-studio/situatedWork';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -160,12 +169,58 @@ export default function P4R1HomeController() {
     }
   }, [busy, declare, refresh]);
 
-  if (worksPhase === 'loading' || manuscriptPhase === 'loading') {
+  /* HOUSE-STUDIO-CIRCULATION-01R1 · H1-3 — explicit Work > member choice >
+     fallback. With a Work carried, the recency pick above is never consulted. */
+  const carriedWorkId = params ? readStudioWorkParam(params) : null;
+  const studioArrival = resolveStudioArrival(
+    worksPhase, works, manuscriptPhase, manuscripts, carriedWorkId,
+  );
+  const arrivedFromHouse = params?.get('from') === FROM_HOUSE;
+
+  if (worksPhase === 'loading' || manuscriptPhase === 'loading' || studioArrival.kind === 'unknown') {
     return <main className="fr-root"><div style={{ padding: 32 }}>Opening Writer’s Studio…</div></main>;
   }
 
   if (worksPhase === 'unauthorized' || manuscriptPhase === 'unauthorized') {
     return <main className="fr-root"><div style={{ padding: 32 }}>Sign in to open your Writer’s Studio.</div></main>;
+  }
+
+  if (studioArrival.kind !== 'fallback') {
+    const withoutWork = () => {
+      const next = new URLSearchParams(params?.toString() ?? '');
+      next.delete(STUDIO_WORK_PARAM);
+      const query = next.toString();
+      router.push(pathname + (query ? '?' + query : ''));
+    };
+    // A mode change from the arrival never guesses: only a single declared
+    // manuscript is a place to go without asking.
+    const onArrivalMode = (mode: 'home' | 'write' | 'develop' | 'review') => {
+      if (mode === 'home' || studioArrival.kind !== 'one') return;
+      const next = new URLSearchParams(params?.toString() ?? '');
+      next.set('mode', mode);
+      next.set('m', studioArrival.manuscript.id);
+      router.push(pathname + '?' + next.toString());
+    };
+    return (
+      <Shell
+        mode="home"
+        appearance={appearance}
+        geometry={HOME_GEOMETRY}
+        memberInitial=""
+        onSelectMode={onArrivalMode}
+        work={
+          <P4R1WorkArrival
+            arrival={studioArrival}
+            busy={busy}
+            error={error}
+            onOpen={(id) => open(id)}
+            onBegin={(workId) => void onStartWriting(workId)}
+            onReturn={() => (arrivedFromHouse ? router.push('/home') : withoutWork())}
+            onStudioHome={withoutWork}
+          />
+        }
+      />
+    );
   }
 
   return (

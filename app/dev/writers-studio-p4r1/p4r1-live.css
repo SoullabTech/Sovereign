@@ -3292,3 +3292,39 @@
   .p4r1-root .p4r1-beta-feedback{left:10px;bottom:10px}
   .p4r1-root .p4r1-beta-panel{width:min(320px,calc(100vw - 20px));bottom:40px}
 }
+
+/* HOUSE-STUDIO-CIRCULATION-01R1 · H1-3 — arriving through a Work.
+   The chooser is a plain list in declaration order; nothing is pre-selected.
+   Colours ride the Studio atmosphere membrane (--ws-*), so the member's chosen
+   theme holds here too. */
+.p4r1-root .p4r1-arrival-choices{
+  margin:18px 0 6px;
+  padding:0;
+  border:0;
+  display:grid;
+  gap:10px;
+}
+.p4r1-root .p4r1-arrival-choices legend{ margin-bottom:10px; }
+.p4r1-root .p4r1-arrival-choice{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  border:1px solid var(--ws-rule);
+  border-radius:10px;
+  background:var(--ws-ground-raised);
+  font:17px/1.35 var(--fr-serif-stack);
+  color:var(--ws-ink-primary);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-arrival-choice:has(input:checked){
+  border-color:var(--ws-gold-edge);
+  background:var(--ws-ground-active);
+}
+.p4r1-root .p4r1-arrival-choice input{ accent-color:var(--ws-gold); }
+.p4r1-root .p4r1-arrival-error{
+  margin-top:14px;
+  font:13px/1.45 var(--fr-sans-stack);
+  color:var(--ws-ink-secondary);
+}
+.p4r1-root .p4r1-arrival-elsewhere{ margin-top:22px; }

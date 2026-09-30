@@ -174,3 +174,66 @@ export function readStudioWorkParam(search: string | URLSearchParams): string | 
   const v = params.get(STUDIO_WORK_PARAM);
   return v && v.trim() ? v : null;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   STUDIO ARRIVAL THROUGH A GOVERNED CROSSING  (founder ruling H1-3)
+
+     explicit Work  >  member choice  >  existing Studio fallback
+
+   Recency is an algorithmic substitute for relationship, and the House has
+   already supplied the relationship. So when a Work arrives, "the most recent
+   manuscript" is never consulted: the Work's own declared manuscripts are the
+   whole field, and where there are several the member chooses.
+
+   `fallback` means the carried claim conferred nothing (absent, or nothing
+   carried) — the Studio's existing arrival resumes, unchanged. A Work the
+   member does not hold is indistinguishable from no Work at all.
+
+   Only manuscripts the member HOLDS are offered: a declaration can outlive the
+   manuscript it names, and an entry that cannot be opened is a dead end.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export interface ArrivalManuscript {
+  id: string;
+  title: string | null;
+}
+
+export type StudioArrival =
+  | { kind: 'fallback' }
+  | { kind: 'unknown' }
+  | { kind: 'no-manuscript'; work: LivingWork }
+  | { kind: 'one'; work: LivingWork; manuscript: ArrivalManuscript }
+  | { kind: 'several'; work: LivingWork; manuscripts: ArrivalManuscript[] };
+
+export type HeldManuscriptsPhase = 'loading' | 'none' | 'ready' | 'unauthorized' | 'error';
+
+export function resolveStudioArrival(
+  worksPhase: LivingWorksPhase,
+  works: readonly LivingWork[],
+  heldPhase: HeldManuscriptsPhase,
+  held: readonly ArrivalManuscript[],
+  workId: string | null,
+): StudioArrival {
+  if (!workId) return { kind: 'fallback' };
+  const base = resolveWorkArrival(worksPhase, works, workId);
+  if (base.kind === 'unknown') return { kind: 'unknown' };
+  if (base.kind === 'absent') return { kind: 'fallback' };
+  if (heldPhase === 'loading') return { kind: 'unknown' };
+  // Anything other than a readable list holds nothing we can honestly offer.
+  const pool = heldPhase === 'ready' ? held : [];
+
+  const ids =
+    base.kind === 'one' ? [base.manuscriptId]
+      : base.kind === 'several' ? base.manuscriptIds
+        : [];
+  // Declaration order, filtered to what the member holds. Never re-sorted.
+  const offered: ArrivalManuscript[] = [];
+  for (const id of ids) {
+    const m = pool.find((x) => x.id === id);
+    if (m) offered.push({ id: m.id, title: m.title });
+  }
+
+  if (offered.length === 0) return { kind: 'no-manuscript', work: base.work };
+  if (offered.length === 1) return { kind: 'one', work: base.work, manuscript: offered[0] };
+  return { kind: 'several', work: base.work, manuscripts: offered };
+}

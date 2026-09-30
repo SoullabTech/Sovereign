@@ -12,6 +12,11 @@ surfaces:
   - components/house/HouseEntryThreshold.tsx
   - components/house/HouseRoomThreshold.tsx
   - components/team/TeamSidebar.tsx
+  - app/house/page.tsx
+  - app/writers-studio/layout.tsx
+  - app/writers-studio/StudioHouseReturn.tsx
+  - app/writers-studio/situatedWork.ts
+  - app/dev/writers-studio-pc3-live/P4R1WorkArrival.tsx
 change_class: experiential
 principles:
   - SOULLAB_LIVING_ORIENTATION_SYSTEM — movement between rooms is part of the experience and return remains visible
@@ -53,6 +58,28 @@ Where a room contains deeper child routes, from=house may be preserved only so r
 ## Access
 
 The threshold is navigation only. It cannot grant Studio, practitioner, community, library, relationship, or other permissions.
+
+## Amendment 1 — explicit Work identity (2026-09-30, founder ruling H1-1 / R3)
+
+> **A House crossing may carry an explicit Work identity when the member has chosen to continue an existing act of creation. The carried identity is a pointer, not meaning. Destination surfaces remain responsible for interpretation and presentation.**
+
+This strengthens the contract; it does not weaken it. The invariant is unchanged: *the House does not carry hidden meaning — it carries only explicit member-chosen continuity.*
+
+**Allowed** — `/writers-studio?from=house&work=W`, and within the Studio `…&m=M&work=W`, where `W` is:
+- an explicit Work identity the member pointed at;
+- visible in the URL (never hidden state, never stored);
+- validated on every load against the member's own Works and declarations — a Work the member does not hold confers nothing and discloses nothing;
+- carrying **no** manuscript content, **no** interpretation, **no** memory retrieval, **no** inferred intention.
+
+**Not allowed** — any identity accompanied by meaning: a summary of what the member was doing, an emotional thread to "continue", or MAIA preloading an interpretation. That is semantic carry and violates this threshold.
+
+*Choice resolves context, not ontology:* entering M through W declares the context of this encounter only; it never declares that M belongs exclusively to W, and it rewrites no declaration.
+
+**Arrival precedence at the destination (H1-3):** explicit carried Work → the Work's declared manuscripts → the member chooses where several exist → the destination's existing fallback. Recency never decides an arrival made through a governed crossing.
+
+**Return (H1-2):** Writer's Studio renders the shared House threshold on `from=house`, which Studio mode changes preserve. Return is navigation only; it carries nothing back.
+
+⚠️ **Experience verification for the Studio surfaces is owed** — no authenticated witness of the Studio threshold or the arrival panel has been taken yet.
 
 ## Reconciliation standing
 
