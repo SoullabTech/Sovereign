@@ -181,7 +181,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
 
       {projection.partial && (
         <p className="mt-3 text-xs text-amber-700/80">
-          Some parts of your field are temporarily unavailable; what is shown is partial.
+          Some parts of your field are unavailable; what is shown is partial.
         </p>
       )}
 
