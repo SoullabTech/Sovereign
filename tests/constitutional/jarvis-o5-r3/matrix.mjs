@@ -16,7 +16,30 @@ import { REFERENCE as LEASE_REFERENCE } from './lease-reference.mjs';
 import { LEASE_CANDIDATES, buildLease } from './lease-candidates.mjs';
 import { REASON_FALSIFIERS, SETTLEMENT_FALSIFIERS } from './settlement-falsifiers.mjs';
 import { TAIL_FALSIFIERS } from './tail-falsifiers.mjs';
-import { TAIL_REFERENCE, TAIL_CURRENT, TAIL_CANDIDATES } from './tail-reference-candidates.mjs';
+import { TAIL_REFERENCE, TAIL_CANDIDATES } from './tail-reference-candidates.mjs';
+import { ADDITIVE_REASON_CANDIDATES } from './additive-candidates.mjs';
+import { readCanonicalGrantLedgerV1 } from '../../../scripts/builder/canonical-provider-execution-grant-store-v1.mjs';
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+/**
+ * Class A adapter over the REAL reader (unfrozen). The frozen TAIL_CURRENT adapter hard-codes
+ * `uncommitted_tail: null` because the pre-R3 reader had no such concept, so it can never show
+ * the flip; this one reports what the real reader now reports (raw bytes decoded for the model).
+ */
+const CURRENT_READER = Object.freeze({
+  parse(text) {
+    const home = mkdtempSync(path.join(os.tmpdir(), 'o5r3-classa-'));
+    try {
+      mkdirSync(path.join(home, 'work-units-v2', 'execution-grants'), { recursive: true });
+      writeFileSync(path.join(home, 'work-units-v2', 'execution-grants', 'wu-o5r3.jsonl'), text);
+      const r = readCanonicalGrantLedgerV1('wu-o5r3', { home });
+      const t = r.uncommitted_tail;
+      return { events: r.events, uncommitted_tail: t ? { bytes: Buffer.from(t.bytes_b64, 'base64').toString('utf8'), offset: t.offset } : null };
+    } finally { rmSync(home, { recursive: true, force: true }); }
+  },
+});
 import {
   REASON_REFERENCE, REASON_CURRENT, REASON_CANDIDATES,
   SETTLEMENT_REFERENCE, SETTLEMENT_CANDIDATES,
@@ -84,15 +107,17 @@ out('One process writes a delegation home\'s grant ledgers. The per-append lock 
 
 await group('R3-L / R3-D · process-lifetime writer lease over the grant authority domain', LEASE_FALSIFIERS, LEASE_REFERENCE, LEASE_CANDIDATES);
 await group('R3-T · grant-ledger tail: commit marker · single write · quarantine-before-truncate · no repair of history', TAIL_FALSIFIERS, TAIL_REFERENCE, TAIL_CANDIDATES);
-await group('R3-C · honest reason for CLAIMED on ROUTED (relabel only)', REASON_FALSIFIERS, REASON_REFERENCE, REASON_CANDIDATES);
+await group('R3-C · honest reason for CLAIMED on ROUTED (relabel only)', REASON_FALSIFIERS, REASON_REFERENCE, [...REASON_CANDIDATES, ...ADDITIVE_REASON_CANDIDATES]);
 await group('R3-S · refused invalidate / consume returns are surfaced', SETTLEMENT_FALSIFIERS, SETTLEMENT_REFERENCE, SETTLEMENT_CANDIDATES);
 
-await classA('Class A · canonical grant-ledger reader as it stands (read laws only; append is not exported, so R3-T2\'s append half and R3-T4…T10 are not run)',
+// ⭐ Predictions FLIPPED at implementation (FREEZE.json anticipated this, in the open): before R3
+// the canonical reader was RED on R3-T1/T3 and the classifier RED on R3-C1; after R3 all must PASS.
+await classA('Class A · canonical grant-ledger reader AFTER R3 (read laws; append laws are witnessed by the integration proof)',
   { 'R3-T1': TAIL_FALSIFIERS['R3-T1'], 'R3-T3': TAIL_FALSIFIERS['R3-T3'] },
-  TAIL_CURRENT, ['R3-T1', 'R3-T3']);
-await classA('Class A · Path B classifier as it stands', REASON_FALSIFIERS, REASON_CURRENT, ['R3-C1']);
-out('\nNot Class A: the lease (no lease exists today — its absence is the finding) · settlement surfacing');
-out('(the ignored returns live inside canonicalConfirmAuthorizedExecution; DC-S1/DC-S3 model that shape).');
+  CURRENT_READER, []);
+await classA('Class A · Path B classifier AFTER R3', REASON_FALSIFIERS, REASON_CURRENT, []);
+out('\nNot Class A here: the lease, store enforcement, append-lock compatibility, the fsync barrier and settlement');
+out('surfacing are witnessed against the REAL stores by scripts/builder/__tests__/o5-r3-grant-writer-proof.mjs.');
 
 out(`\n${bad === 0 ? 'MATRIX LETHAL + DISCRIMINATING · CLASS A AS PREDICTED' : `MATRIX DEFECT (${bad})`}`);
 process.exit(bad === 0 ? 0 : 1);

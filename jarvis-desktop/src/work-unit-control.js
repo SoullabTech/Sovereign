@@ -69,6 +69,43 @@ async function importBound(root, rel) {
   return import(`${pathToFileURL(file).href}?t=${Date.now()}`);
 }
 
+/**
+ * O5-R3 (R3-R1/R3-R3): Desktop becomes the grant writer on its FIRST grant mutation and
+ * holds the process-lifetime lease until it quits. Nothing is written at startup; a
+ * Desktop that never mutates a grant never touches the lease. The grant stores refuse
+ * any mutation without the current lease, so this is presentation, not the guard.
+ */
+async function grantWriter(root, opts = {}) {
+  const leaseMod = await importBound(root, 'scripts/builder/grant-writer-lease-v1.mjs');
+  const home = homeOf(opts.env || process.env);
+  const r = leaseMod.ensureGrantWriterLeaseV1(home);
+  if (r.ok) return { ok: true, home, lease: r.lease };
+  return {
+    ok: false,
+    status: 'REFUSED',
+    reason: 'GRANT_WRITER_LEASE_UNAVAILABLE',
+    lease_reason: r.reason,
+    holder: r.holder ? { host: r.holder.host, pid: r.holder.pid, acquired_at: r.holder.acquired_at } : null,
+  };
+}
+
+/**
+ * O5-R3 (R3-S1/S3): a refused invalidation or consume is REPORTED, never assumed.
+ * Surfacing never changes what is recorded: a witnessed result is still ledgered.
+ */
+const invalidationOutcome = (r) => (r?.ok
+  ? { recorded: true }
+  : { recorded: false, reason: r?.reason || 'UNKNOWN' });
+const settlementOutcome = (r) => (r?.ok
+  ? { settled: true }
+  : { settled: false, reason: r?.reason || 'UNKNOWN' });
+
+/** Release the grant writer lease this process holds (Desktop quit). */
+async function releaseGrantWriter(root) {
+  const leaseMod = await importBound(root, 'scripts/builder/grant-writer-lease-v1.mjs');
+  return leaseMod.releaseAllGrantWriterLeasesV1();
+}
+
 function readLogExcerpt(logPath) {
   if (!logPath || !fs.existsSync(logPath)) return null;
   try {
@@ -457,12 +494,14 @@ async function authorizeExecutionOnce(root, workUnitId, providerId, opts = {}) {
       blockers: ctx.preview?.blockers || [],
     };
   }
+  const writer = await grantWriter(root, opts);
+  if (!writer.ok) return writer;
   const store = await importBound(
     root,
     'scripts/builder/human-provider-execution-grant-store.mjs',
   );
   const issued = store.issueHumanExecutionGrant(ctx.preview, {
-    home: homeOf(opts.env || process.env),
+    home: writer.home,
     grantor: 'founder',
     authorization_act: 'JARVIS_DESKTOP_R5B_AUTHORIZE_ONCE',
   });
@@ -474,12 +513,14 @@ async function authorizeExecutionOnce(root, workUnitId, providerId, opts = {}) {
 }
 
 async function revokeExecutionGrant(root, workUnitId, grantId, opts = {}) {
+  const writer = await grantWriter(root, opts);
+  if (!writer.ok) return writer;
   const store = await importBound(
     root,
     'scripts/builder/human-provider-execution-grant-store.mjs',
   );
   return store.revokeHumanExecutionGrant(workUnitId, grantId, {
-    home: homeOf(opts.env || process.env),
+    home: writer.home,
     reason: 'HUMAN_REVOKED',
   });
 }
@@ -627,12 +668,14 @@ async function canonicalAuthorizeExecutionOnce(root, workUnitId, participantId, 
       blockers: ctx.preview?.blockers || [],
     };
   }
+  const writer = await grantWriter(root, opts);
+  if (!writer.ok) return writer;
   const store = await importBound(
     root,
     'scripts/builder/canonical-provider-execution-grant-store-v1.mjs',
   );
   const issued = store.issueCanonicalExecutionGrantV1(ctx.preview, {
-    home: homeOf(opts.env || process.env),
+    home: writer.home,
     actor_id: opts.actorId || 'human:jarvis-desktop:operator',
     authorization_act: 'JARVIS_DESKTOP_E1_AUTHORIZE_ONCE',
   });
@@ -643,12 +686,14 @@ async function canonicalAuthorizeExecutionOnce(root, workUnitId, participantId, 
 }
 
 async function canonicalRevokeExecutionGrant(root, workUnitId, grantId, opts = {}) {
+  const writer = await grantWriter(root, opts);
+  if (!writer.ok) return writer;
   const store = await importBound(
     root,
     'scripts/builder/canonical-provider-execution-grant-store-v1.mjs',
   );
   return store.revokeCanonicalExecutionGrantV1(workUnitId, grantId, {
-    home: homeOf(opts.env || process.env),
+    home: writer.home,
     reason: 'HUMAN_REVOKED',
   });
 }
@@ -1031,6 +1076,8 @@ async function executeCanonicalResolvedProvider(
 async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) {
   const sourceEnv = opts.env || process.env;
   const home = homeOf(sourceEnv);
+  const writer = await grantWriter(root, opts);
+  if (!writer.ok) return writer;
   const store = await importBound(
     root,
     'scripts/builder/canonical-provider-execution-grant-store-v1.mjs',
@@ -1055,11 +1102,12 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
     local_worktree_available: canonicalEvidenceSubstrateAvailable(root, envelope.work_unit),
   });
   if (!finalAdmission.ok) {
-    store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
+    const invalidation = invalidationOutcome(store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
       home,
       reason: finalAdmission.status || 'FINAL_CANONICAL_ADMISSION_REFUSED',
-    });
+    }));
     return {
+      invalidation,
       ok: false,
       status: finalAdmission.status,
       reason: finalAdmission.blockers?.[0]?.code || 'FINAL_CANONICAL_ADMISSION_REFUSED',
@@ -1082,11 +1130,12 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
     && resolved.model_id === binding.model_id
     && resolved.execution_adapter === binding.adapter_id;
   if (!exactTransport) {
-    store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
+    const invalidation = invalidationOutcome(store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
       home,
       reason: resolved.code || 'REGISTERED_TRANSPORT_IDENTITY_MISMATCH',
-    });
+    }));
     return {
+      invalidation,
       ok: false,
       status: 'GRANT_INVALID',
       reason: resolved.code || 'REGISTERED_TRANSPORT_IDENTITY_MISMATCH',
@@ -1147,11 +1196,12 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
       if (preparedContainment?.runtime?.runRoot) {
         fs.rmSync(preparedContainment.runtime.runRoot, { recursive: true, force: true });
       }
-      store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
+      const invalidation = invalidationOutcome(store.invalidateCanonicalExecutionGrantV1(workUnitId, grantId, {
         home,
         reason: executing.reason || 'W2_V2_EXECUTING_TRANSITION_REFUSED',
-      });
+      }));
       return {
+        invalidation,
         ok: false,
         status: 'EXECUTING_TRANSITION_REFUSED',
         reason: executing.reason || 'W2_V2_EXECUTING_TRANSITION_REFUSED',
@@ -1236,6 +1286,7 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
       execution_grant: {
         grant_id: grantId,
         standing: consumed.ok ? 'CONSUMED' : 'CLAIMED',
+        settlement: settlementOutcome(consumed),
       },
     };
   }
@@ -1255,6 +1306,7 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
       grant_id: grantId,
       standing: consumed.ok ? 'CONSUMED' : 'CLAIMED',
       consume_status: consumed.status,
+      settlement: settlementOutcome(consumed),
     },
   };
 }
@@ -1419,6 +1471,8 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
     };
   }
   const home = homeOf(sourceEnv);
+  const writer = await grantWriter(root, opts);
+  if (!writer.ok) return writer;
   const store = await importBound(
     root,
     'scripts/builder/human-provider-execution-grant-store.mjs',
@@ -1439,11 +1493,12 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
   const grant = standing.grant;
   const ctx = await r5bContext(root, workUnitId, grant.provider_id, opts);
   if (!ctx.ok) {
-    store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+    const invalidation = invalidationOutcome(store.invalidateHumanExecutionGrant(workUnitId, grantId, {
       home,
       reason: ctx.reason || 'CURRENT_FACTS_CHANGED',
-    });
+    }));
     return {
+      invalidation,
       ok: false,
       status: 'GRANT_INVALID',
       reason: ctx.reason || 'CURRENT_FACTS_CHANGED',
@@ -1462,11 +1517,12 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
     local_worktree_available: true,
   });
   if (!finalAdmission.ok) {
-    store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+    const invalidation = invalidationOutcome(store.invalidateHumanExecutionGrant(workUnitId, grantId, {
       home,
       reason: finalAdmission.status || 'FINAL_R4_ADMISSION_REFUSED',
-    });
+    }));
     return {
+      invalidation,
       ok: false,
       status: finalAdmission.status,
       reason: finalAdmission.blockers?.[0]?.code || 'FINAL_R4_ADMISSION_REFUSED',
@@ -1486,11 +1542,12 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
     skipCredentialCheck: true,
   });
   if (!resolved.ok) {
-    store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+    const invalidation = invalidationOutcome(store.invalidateHumanExecutionGrant(workUnitId, grantId, {
       home,
       reason: resolved.code,
-    });
+    }));
     return {
+      invalidation,
       ok: false,
       status: 'GRANT_INVALID',
       reason: resolved.code,
@@ -1515,11 +1572,12 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
 
   const lane = delegateLaneForProvider(resolved);
   if (!lane) {
-    store.invalidateHumanExecutionGrant(workUnitId, grantId, {
+    const invalidation = invalidationOutcome(store.invalidateHumanExecutionGrant(workUnitId, grantId, {
       home,
       reason: 'PROVIDER_AUTOMATION_UNSUPPORTED',
-    });
+    }));
     return {
+      invalidation,
       ok: false,
       status: 'GRANT_INVALID',
       reason: 'PROVIDER_AUTOMATION_UNSUPPORTED',
@@ -1563,6 +1621,7 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
       grant_id: grantId,
       standing: consumed.ok ? 'CONSUMED' : 'CLAIMED',
       consume_status: consumed.status,
+      settlement: settlementOutcome(consumed),
     },
   };
 }
@@ -1585,4 +1644,5 @@ module.exports = {
   executeCanonicalResolvedProvider,
   executionAuthorizationPreview, authorizeExecutionOnce, revokeExecutionGrant,
   confirmAuthorizedExecution, executeResolvedProvider, status, runProvider,
+  grantWriter, releaseGrantWriter,
 };

@@ -37,12 +37,13 @@ const dispositionFile = (env, id) => path.join(v2Dir(env), 'recovery', id + '.js
 
 async function loadModules(root) {
   const url = (rel) => pathToFileURL(path.join(root, rel)).href + '?t=' + Date.now();
-  const [classifier, store, lifecycle] = await Promise.all([
+  const [classifier, store, lifecycle, lease] = await Promise.all([
     import(url('scripts/builder/o5-recovery-path-b-v1.mjs')),
     import(url('scripts/builder/canonical-provider-execution-grant-store-v1.mjs')),
     import(url('scripts/builder/work-unit-lifecycle-v2.mjs')),
+    import(url('scripts/builder/grant-writer-lease-v1.mjs')),
   ]);
-  return { classifier, store, lifecycle };
+  return { classifier, store, lifecycle, lease };
 }
 
 function listWorkUnitIds(env) {
@@ -185,6 +186,26 @@ async function recoverWorkUnit(root, mods, id, { env, write, now }) {
 async function recoverPathB(root, { env = process.env, write = true, now = () => new Date().toISOString(), ids } = {}) {
   const mods = await loadModules(root);
   const report = { recovery_version: RECOVERY_VERSION, write, units: [] };
+  // O5-R3: a writing recovery pass is a grant writer and must hold the lease (R3-R1/R3-R3).
+  // A read-only pass never touches it (R3-R4).
+  let acquiredHere = null;
+  if (write) {
+    const held = mods.lease.ensureGrantWriterLeaseV1(homeOf(env));
+    if (!held.ok) {
+      report.refused = { reason: 'GRANT_WRITER_LEASE_UNAVAILABLE', lease_reason: held.reason,
+        holder: held.holder ? { host: held.holder.host, pid: held.holder.pid, acquired_at: held.holder.acquired_at } : null };
+      return report;
+    }
+    if (!held.reused) acquiredHere = held.lease;
+  }
+  try {
+    await recoverAll();
+  } finally {
+    if (acquiredHere) report.lease_release = mods.lease.releaseGrantWriterLeaseV1(homeOf(env), acquiredHere);
+  }
+  return report;
+
+  async function recoverAll() {
   for (const id of ids || listWorkUnitIds(env)) {
     try {
       const outcomes = await recoverWorkUnit(root, mods, id, { env, write, now });
@@ -193,7 +214,7 @@ async function recoverPathB(root, { env = process.env, write = true, now = () =>
       report.units.push({ work_unit_id: id, error: String(e?.message || e).slice(0, 300) });
     }
   }
-  return report;
+  }
 }
 
 module.exports = {

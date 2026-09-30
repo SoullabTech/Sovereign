@@ -31,6 +31,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { pathToFileURL, fileURLToPath } from 'node:url';
+import * as LEASE from './grant-writer-lease-v1.mjs';
 
 const require = createRequire(import.meta.url);
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -46,6 +47,9 @@ export const STOP_CATEGORY = Object.freeze({
   W0_ENVELOPE_FOREIGN: 'wrong_work_unit_identity',
   GRANT_FOREIGN: 'wrong_work_unit_identity',
   W2_NOT_EXECUTING: 'authority_no_longer_sufficient',
+  // O5-R3: a proven-undispatched claimed grant. Not "authority no longer sufficient" — that
+  // label was safe but untrue. Its own category, flagged for founder ratification.
+  CLAIMED_NEVER_DISPATCHED: 'claimed_never_dispatched',
   W2_AUTHORIZED_CORE_MUTATED: 'authority_no_longer_sufficient',
   GRANT_REVOKED: 'authority_no_longer_sufficient',
   GRANT_INVALIDATED: 'authority_no_longer_sufficient',
@@ -269,6 +273,23 @@ export async function census(root = DEFAULT_ROOT, { env = process.env, rehearseR
 }
 
 export async function admittedWrite(root, { env = process.env, admit } = {}) {
+  // O5-R3: the write pass is a grant writer. It takes the lease BEFORE re-reading the census,
+  // so no other writer can move the state between the digest check and the write; with
+  // Desktop holding the lease it refuses structurally (no longer "run with Desktop closed").
+  const home = env.AIN_DELEGATION_HOME || path.join(os.homedir(), '.claude', 'ain-delegation');
+  const held = LEASE.ensureGrantWriterLeaseV1(home);
+  if (!held.ok) {
+    return { ok: false, refused: 'GRANT_WRITER_LEASE_UNAVAILABLE', lease_reason: held.reason,
+      holder: held.holder ? { host: held.holder.host, pid: held.holder.pid, acquired_at: held.holder.acquired_at } : null };
+  }
+  try {
+    return await admittedWriteUnderLease(root, { env, admit });
+  } finally {
+    if (!held.reused) LEASE.releaseGrantWriterLeaseV1(home, held.lease);
+  }
+}
+
+async function admittedWriteUnderLease(root, { env, admit }) {
   const c = await census(root, { env });
   if (!admit || admit !== c.census_digest) return { ok: false, refused: 'CENSUS_DIGEST_MISMATCH', admitted: admit ?? null, current: c.census_digest, note: 'state changed since review, or no admission given — re-run the census and review it' };
   if (!c.admissible) return { ok: false, refused: 'CENSUS_NOT_ADMISSIBLE', unclassified: c.path_b.UNCLASSIFIED_OR_MALFORMED };

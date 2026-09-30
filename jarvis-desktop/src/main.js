@@ -500,6 +500,14 @@ async function runStartupRecovery() {
   console.log('[JARVIS/O5-R2] startup recovery (read-only)', JSON.stringify(report));
 }
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+// O5-R3: release the grant writer lease, if this process ever became the writer.
+// A crash that skips this leaves the lease to proof-based takeover on next launch.
+app.on('will-quit', () => {
+  const release = globalThis[Symbol.for('jarvis.o5r3.releaseAllGrantWriterLeases')];
+  if (typeof release === 'function') {
+    try { console.log('[jarvis] O5-R3 grant writer lease release', JSON.stringify(release())); } catch (error) { console.error('[jarvis] O5-R3 lease release failed', error); }
+  }
+});
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
 // ---------------------------------------------------------------------------

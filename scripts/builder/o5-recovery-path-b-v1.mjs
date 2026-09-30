@@ -117,7 +117,21 @@ export function classifyGrant(facts, grantEntry) {
   }
 
   const auth = liveAuthority(facts, grantEntry);
-  if (!auth.ok) return gated(auth.gate, auth.reason, { ...base, phase: 'unconverged' });
+  if (!auth.ok) {
+    // O5-R3 (R3-C1…C3): the one probe-free absence proof. The runner (the only effect-bearing
+    // step) is reachable only after the ROUTED → EXECUTING transition, and lifecycle never
+    // returns to ROUTED; so CLAIMED ∧ still ROUTED ∧ no witness ⇒ this grant was never
+    // dispatched. RELABEL ONLY: the gate is unchanged and nothing is acted on — retiring the
+    // grant is an operator act outside O5-R3. The proof holds ONLY while the unit is ROUTED.
+    const unit = facts.envelope?.work_unit;
+    const neverDispatched = auth.reason === 'W2_NOT_EXECUTING'
+      && grantEntry.standing === 'CLAIMED'
+      && unit?.state?.lifecycle_state === 'ROUTED'
+      && facts.envelope?.guard?.current_state === 'ROUTED'
+      && witnessStanding(facts, grantId).standing === 'ABSENT';
+    if (neverDispatched) return gated(auth.gate, 'CLAIMED_NEVER_DISPATCHED', { ...base, phase: 'never_dispatched' });
+    return gated(auth.gate, auth.reason, { ...base, phase: 'unconverged' });
+  }
 
   const w = witnessStanding(facts, grantId);
   if (w.standing === 'ABSENT') return gated(GATES.EVIDENCE, 'DISPATCHED_WITHOUT_WITNESS_NO_PROBE', { ...base, phase: 'dispatched' });

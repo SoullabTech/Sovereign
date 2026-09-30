@@ -2,9 +2,9 @@
 
 **Date:** 2026-09-30
 **Base:** `2df99c9e` (O5-R3 grant-settlement census) · frozen O5-R1 @ `af2f0203` · **FREEZE INTACT**
-**Standing:** ⭐ O5-R3 OPENED · census ✅ · founder rulings R3-R1…R11 taken (§7) · **BUILD GATE PASSED (§8)** ·
-⭐ suite **FROZEN @ `3dc118ae`** (28 falsifiers · 37 candidates, LETHAL + DISCRIMINATING) · implementation authorized, ⛔ not started ·
-⛔ not admitted · ⛔ not merged · production untouched
+**Standing:** ⭐ O5-R3 OPENED · census ✅ · rulings R3-R1…R12 (§7, §10) · BUILD GATE PASSED (§8) · suite FROZEN @ `3dc118ae` ·
+⭐ **IMPLEMENTED (§11)**: integration proof 17/17, every check mutation-proven · ⚠️ frozen DC-C2 now SURVIVES, a frozen-candidate
+instrument defect, **reopening requested** (§11.4) · ⛔ **NOT ADMITTED** (Mac Studio witnesses owed, §11.6) · ⛔ not merged · production untouched
 
 > §1–§6 below are the census and the pre-gate suite **as first recorded**. Where the rulings in §7 changed
 > them, the text is marked, not rewritten.
@@ -365,3 +365,160 @@ terminal-tail recovery → reason-code correction → ignored-return surfacing �
 **Standing: RULINGS R3-R1…R11 RECORDED · BUILD GATE ✅ · SUITE FROZEN @ `3dc118ae` (28 / 37, LETHAL +
 DISCRIMINATING, guard proven both ways) · IMPLEMENTATION AUTHORIZED, ⛔ NOT STARTED · ⛔ NOT ADMITTED · ⛔ NOT
 MERGED · PRODUCTION UNTOUCHED.**
+
+---
+
+## 10. Founder ruling R3-R12 — durable recovery barrier (2026-09-30)
+
+> *A terminal-fragment recovery may destroy ledger bytes only after the quarantine evidence that replaces them has
+> crossed a durable persistence barrier.*
+>
+> **Evidence becomes durable before destruction; repaired authority becomes durable before new history.**
+
+```
+identify last proven committed byte boundary
+  → write exact terminal fragment to quarantine → fsync quarantine
+  → [new quarantine file/name: fsync its parent directory]
+  → truncate ledger to the boundary → fsync repaired ledger
+  → only then permit the next append
+```
+
+Any failed durability step stops recovery: no truncation, no append. Precision rulings:
+
+- an append to an **existing** quarantine log needs only `fsync(fd)`;
+- a **new** file, or a name made authoritative by rename or link, needs the file and its containing directory
+  persisted before truncation;
+- `fsync(ledgerFd)` is required after `ftruncate` and before the next append;
+- normal grant appends stay un-fsynced, because this is a narrow exception to the deferral, not a new default;
+- a failed `fsync` is a recovery failure and is never ignored;
+- the fragment is kept **losslessly as raw bytes** (base64 + byte offset).
+
+**Human-provider append lock:** added as **implementation hardening**, witnessed in integration, and ⛔ **not**
+encoded into the frozen suite. It does **not** solve the current mixed-version hazard, because older
+human-provider writers don't know the lock. R3-R11 remains that protection. What the lock gives is symmetric
+behaviour in future rolling transitions: *writer lease = grant-domain authority; append lock = short
+critical-section compatibility fence.*
+
+**Frozen suite accepted as the build boundary.** Implementation ordered:
+lease → store enforcement → human-provider store → terminal recovery with the barrier → reason code →
+ignored-return surfacing.
+
+## 11. Implementation (2026-09-30) — ⭐ implementation-complete, ⛔ NOT admitted
+
+### 11.1 What was built
+
+| Step | Artifact | Substance |
+|---|---|---|
+| 1 lease | `scripts/builder/grant-writer-lease-v1.mjs` | ⭐ **Generation files, not a rewritten lease.** State is the highest `grant-writer-lease/g-NNNNNNNNNNNN.json`. Every change (first acquire, takeover of a proven-dead holder, release) is the **exclusive creation of the next generation**: temp file, then `link()`, which fails with `EEXIST`. POSIX has no CAS (R3-R8), but an exclusive create of the next name *is* one, so there is no rename-over window. Identity is host · pid · incarnation (`/proc/<pid>/stat` starttime + boot id on Linux, `ps -o lstart=` otherwise) · nonce, stamped by the owner **through the same probe** the reconciler uses (R3-R7). Presentation uses a process-wide registry on `globalThis`, needed because Desktop's `importBound` re-imports every module per call; fencing re-reads the durable generation at each mutation. |
+| 2 store enforcement | `scripts/builder/grant-ledger-core-v1.mjs`; canonical store rewired | Every mutation runs `mutateGrantLedgerV1`: (1) the **current** lease or `WRITER_LEASE_NOT_HELD`; (2) the legacy append lock, still taken and honoured, never cleared (R3-R10); (3) terminal recovery; (4) one write, record + newline. The reader is tail-tolerant (the newline is the commit marker) and reports the uncommitted fragment; committed corruption still throws with the historical codes. |
+| 3 human-provider | `human-provider-execution-grant-store.mjs` rewired | Same core, same lease; ⭐ **now takes a per-append lock `<wu>.lock`** (it had none). |
+| 4 terminal recovery | in the core | Exactly R3-R12: quarantine JSONL at `grant-ledger-quarantine/<store>/<wu>.jsonl`, carrying `version · ledger · store · offset · byte_length · bytes_b64 · reason · lease {generation, owner_nonce} · at`. Then fsync, fsync of every new directory's parent, `ftruncate`, ledger fsync, and only then the append. Committed corruption anywhere is a STOP before any quarantine (R3-R6). |
+| 5 reason code | `o5-recovery-path-b-v1.mjs` | CLAIMED ∧ unit **and** guard ROUTED ∧ witness ABSENT ⇒ `CLAIMED_NEVER_DISPATCHED`, same gate (`NEEDS_OPERATOR_AUTHORITY`), relabel only. ⚠️ The census maps it to a **new category `claimed_never_dispatched`**. The founder's five categories had no truthful home for it, so this is **flagged for ratification**. |
+| 6 surfaced returns | `work-unit-control.js` | All **7** invalidations (3 canonical, 4 human) are captured and returned as `invalidation: {recorded, reason}`. All **3** consume results feed `execution_grant.settlement: {settled, reason}`. W4 is still appended exactly as before (R3-S2). |
+| callers | `work-unit-control.js` · `main.js` · `o5-path-b-recovery.js` · `o5-recovery-census.mjs` | ⭐ **Desktop takes the lease lazily, on its first grant mutation**, so **startup still writes nothing** (CENSUS-9 intact), and a Desktop that never mutates a grant never touches the lease. It holds the lease for its lifetime and releases on `will-quit`. A crash leaves the lease to proof-based takeover. A writing recovery pass takes the lease, and a read-only pass never does. ⭐ **`census --write` takes the lease BEFORE re-reading the census**, so nothing can move between the digest check and the write. **With Desktop holding the lease it refuses structurally**, which retires "run it with Desktop closed" as procedure. |
+
+### 11.2 Integration proof — `npm run test:jarvis-o5-r3` (`scripts/builder/__tests__/o5-r3-grant-writer-proof.mjs`)
+
+**17/17, in 6 consecutive runs.** These are real stores and **real separate processes**.
+
+| # | Witness |
+|---|---|
+| I1 | both stores refuse **all eight** mutators without the lease, and the ledgers stay byte-identical |
+| I2 | a lease object presented under another process identity writes nothing |
+| I3 | **8 real processes race an empty home: exactly one acquires**, and the durable owner is the reported winner |
+| I4 | a real holder exits without releasing: takeover with proof `DEAD` (not age) |
+| I5 | a real live holder keeps the home; after it releases, acquisition needs no takeover |
+| I6 | a record naming a **live** pid with a different incarnation: proof `DEAD_PID_REUSED` |
+| I7 | **8 real reconcilers prove the same death: exactly one takes over** |
+| I8 | a superseded holder cannot release its successor and cannot write |
+| I9 | a torn fragment **ending mid-UTF-8 sequence (`0xC3`)** is quarantined losslessly; the committed prefix, containing `é`, is preserved byte for byte; the next append lands |
+| I10 | recorded syscall order: quarantine write → fsync → fsync of **the named directories** (the file's own and each new directory's parent) → `ftruncate` → ledger fsync → append. A later recovery appending to the existing log does **no** directory fsync |
+| I11 | an injected failure at **each** of five durability steps stops recovery: the ledger is untouched before the evidence is durable, never appended after a failed repair, and no append lock is left behind |
+| I12 | mid-file corruption plus a torn tail: STOP, nothing quarantined, truncated or appended |
+| I13 | a legacy writer's append lock (exactly what legacy code creates): the holder is refused `GRANT_LEDGER_BUSY` on **both** stores, and the lock survives |
+| I14 | the human-provider store takes and releases the append lock around its write |
+| I15 | while another process holds the lease, reads of both ledgers work and the home is byte-identical |
+| I16 | Desktop's `grantWriter` acquires, then reuses, then releases. With another process holding the lease, `census --write` is refused `GRANT_WRITER_LEASE_UNAVAILABLE`, and so is Desktop |
+| I17 | static: no invalidate or consume result is discarded; 7/7 invalidations are reported and 3/3 settlements are reported |
+
+### 11.3 The proof is not vacuous: implementation mutation checks
+
+Each mutation was applied to a copy, the proof was run, and the original was restored and verified with `cmp`.
+
+| Mutation | Killed by |
+|---|---|
+| M1 no fsync of the quarantine evidence | I10, I11 |
+| M2 no fsync of the new quarantine file's directory | I10, I11 |
+| M2b no fsync of a new directory's parent | I10 |
+| M2c directory fsyncs moved after truncation | I10, I11 |
+| M3 no fsync of the repaired ledger | I10, I11 |
+| M4 the store does not check the lease | I1, I2, I8 |
+| M5 the lease holder clears a legacy append lock | I13 |
+| M6 pid without incarnation | I6 |
+| M7 generation created by overwrite instead of exclusive `link()` | **I3, I7**, the real-process races |
+| M8 a consume result dropped again | I17 |
+
+⭐ **The proof had two defects of its own, both found by this step.** (1) The first M7 mutant called an undefined
+function, so it "failed" everything and proved nothing; it was rebuilt as a real non-exclusive overwrite, and now
+only the two race witnesses kill it, which is the right answer. (2) I10 at first counted directory fsyncs rather
+than naming them, so M2 went uncaught by I10. It now names the exact directories and their order relative to
+truncation.
+
+### 11.4 ⚠️ Frozen-suite instrument defect: DC-C2 survives, reopening requested
+
+With the classifier repaired, `npm run matrix:jarvis-o5-r3` reports **one** defect: **frozen DC-C2 SURVIVES
+R3-C2.** DC-C2 ("relabel and retire") wraps the live classifier and acts only when it sees **today's** label
+`W2_NOT_EXECUTING`. Once the live classifier says `CLAIMED_NEVER_DISPATCHED`, DC-C2 no longer embodies its
+error. It is the exact defect §8.2 fixed for DC-C1, and I missed it in DC-C2.
+
+- ⛔ **The frozen file was not edited**, and the freeze guard is still INTACT.
+- ⭐ Additive **DC-C2p** (`additive-candidates.mjs`, at its own address) is the same wrong decision **pinned to
+  the honest label**. It is KILLED on R3-C2, so the law is still lethal.
+- The matrix is left **red on purpose**. It is not silenced by skipping DC-C2, because skipping would be
+  weakening.
+- **Requested founder act:** reopen `settlement-reference-candidates.mjs` for one change, replacing DC-C2's
+  subject with the DC-C2p construction (the same law, pinned), then re-freeze.
+
+The evidence is this paragraph, and the defect is in the instrument, not the law.
+
+### 11.5 Class A flipped, in the open
+
+The unfrozen matrix's predictions flipped as FREEZE.json anticipated. The canonical reader now **PASSES**
+R3-T1/T3, and the classifier **PASSES** R3-C1…C3.
+
+The frozen `TAIL_CURRENT` adapter hard-codes `uncommitted_tail: null`, because the pre-R3 reader had no such
+concept, so it can never show the flip. The matrix now reads through an unfrozen `CURRENT_READER` over the real
+`readCanonicalGrantLedgerV1`.
+
+### 11.6 Regressions and what remains
+
+**Regressions:**
+
+- **Desktop suite: failure set IDENTICAL by name** to the pre-change baseline (stash-and-rerun). 13 failures, all
+  pre-existing, from the shallow-clone SHA.
+- O5-R2 Desktop tests: 22/0.
+- Store proofs: canonical 9/0 and human 8/0. They now acquire the lease, which is the lawful caller change;
+  their corruption tests still pass, with newline-terminated committed corruption.
+- Builder proofs: native-runtime 8/0 · desktop-canonical-v2 30/0 · work-unit 34/0.
+- O5-R1 freeze INTACT · O5-R2 matrix LETHAL + DISCRIMINATING · O5-R3 freeze INTACT · `check:no-supabase` clean.
+
+**⛔ Admission evidence NOT produced.** All of the above ran in a **Linux container**. Owed on the **Mac Studio**:
+
+- `npm run test:jarvis-o5-r3` as the real two-process race, takeover, incarnation, fencing and torn-byte witness on
+  APFS. On macOS the incarnation probe is `ps -o lstart=` (one-second resolution), which this container never
+  exercised.
+- The durability witness.
+- ⭐ The **runtime-binding proof (R3-R11)**: the exact checkout SHA the running Desktop executes contains these
+  stores, and **no lease-unaware grant writer is active**. For the human-provider ledger, whose legacy writer
+  takes no lock, R3-R11 is the **only** protection during the transition.
+
+**Implementation notes:**
+
+- Lease generations accumulate: two small files per Desktop launch, and no pruning. That is deliberate for now,
+  since pruning is a write with its own race.
+- A lease record that becomes unreadable blocks all writers (`LEASE_RECORD_UNREADABLE`) until an operator acts.
+  That operator act is unnamed, like grant retirement.
+
+**Standing: R3-R1…R12 · SUITE FROZEN @ `3dc118ae` (freeze INTACT) · IMPLEMENTED · INTEGRATION 17/17 ×6, all 10
+implementation mutations killed · ⚠️ DC-C2 REOPENING REQUESTED · ⚠️ `claimed_never_dispatched` CATEGORY FLAGGED
+· ⛔ NOT ADMITTED (Mac Studio witnesses + R3-R11 runtime binding owed) · ⛔ NOT MERGED · PRODUCTION UNTOUCHED.**
