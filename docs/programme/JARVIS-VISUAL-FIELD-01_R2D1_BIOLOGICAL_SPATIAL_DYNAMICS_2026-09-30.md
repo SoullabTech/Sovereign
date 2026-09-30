@@ -4,6 +4,7 @@
 **Founder standing:** R2D direction accepted
 **Branch:** `feature/jarvis-visual-field-r2d1-20260930`
 **Status:** Implemented local candidate · founder witness required
+**Candidate:** `a1feb66fba902729a46b5aa971f6abc6d37c2cc0`
 
 ## Purpose
 
