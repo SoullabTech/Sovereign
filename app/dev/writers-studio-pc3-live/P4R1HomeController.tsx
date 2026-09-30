@@ -9,7 +9,7 @@ import { useCurrentManuscript } from '@/app/writers-studio/useCurrentManuscript'
 import { useMarkedLines } from '@/app/writers-studio/useMarkedLines';
 import { useStudioHistory } from '@/app/writers-studio/useStudioHistory';
 import { useSectionActivity } from '@/app/writers-studio/useSectionActivity';
-import { arrivalFor, manuscriptIdOf } from '@/app/writers-studio/homeState';
+import { arrivalFor, manuscriptIdOf, modeEntryTarget } from '@/app/writers-studio/homeState';
 import { IMPORT_HREF } from '@/app/writers-studio/studioMap';
 import P4R1HomeView from './P4R1HomeView';
 import P4R1WorkArrival from './P4R1WorkArrival';
@@ -82,10 +82,16 @@ export default function P4R1HomeController() {
     router.push(pathname + '?' + next.toString());
   }, [params, pathname, router]);
 
-  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
-    if (mode === 'home') return;
-    const manuscriptId = resumeManuscriptId ?? manuscripts[0]?.id ?? null;
-    if (!manuscriptId) return;
+  /* H1-R2 — a mode request with no Work carried. A single manuscript (in the
+     Continue Work, or in the whole Studio when there is none) is a place to go;
+     several are the member's choice, scoped to the Continue Work when known.
+     ⛔ Never `manuscripts[0]`: the list is recency-ordered. Nothing is stored. */
+  const [pendingMode, setPendingMode] = useState<{
+    mode: 'write' | 'develop' | 'review';
+    manuscriptIds: string[];
+  } | null>(null);
+
+  const navigateMode = useCallback((mode: 'write' | 'develop' | 'review', manuscriptId: string) => {
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
     next.set('m', manuscriptId);
@@ -98,7 +104,26 @@ export default function P4R1HomeController() {
       next.delete('reviewFinding');
     }
     router.push(pathname + '?' + next.toString());
-  }, [resumeManuscriptId, manuscripts, params, pathname, router]);
+  }, [params, pathname, router]);
+
+  const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
+    if (mode === 'home') {
+      setPendingMode(null);
+      return;
+    }
+    const target = modeEntryTarget(arrival.resume ?? null, manuscripts);
+    if (target.kind === 'open') {
+      setPendingMode(null);
+      navigateMode(mode, target.manuscriptId);
+      return;
+    }
+    setPendingMode(target.kind === 'choose' ? { mode, manuscriptIds: target.manuscriptIds } : null);
+  }, [arrival.resume, manuscripts, navigateMode]);
+
+  const onChooseManuscript = useCallback((mode: 'write' | 'develop' | 'review', manuscriptId: string) => {
+    setPendingMode(null);
+    navigateMode(mode, manuscriptId);
+  }, [navigateMode]);
 
   const onBegin = useCallback(async (title: string) => {
     if (busy) return;
@@ -234,7 +259,9 @@ export default function P4R1HomeController() {
       historyActs={historyActs}
       busy={busy}
       error={error}
+      pendingMode={pendingMode}
       onMode={onMode}
+      onChooseManuscript={onChooseManuscript}
       onBegin={(title) => void onBegin(title)}
       onOpen={open}
       onMakeWork={(manuscriptId, title) => void onMakeWork(manuscriptId, title)}

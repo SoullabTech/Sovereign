@@ -8,7 +8,12 @@ import { useWorkVisual } from '@/app/writers-studio/useWorkVisual';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { CurrentManuscript } from '@/app/writers-studio/useCurrentManuscript';
 import type { Arrival } from '@/app/writers-studio/homeState';
-import { homeWritingExtent, manuscriptIdOf } from '@/app/writers-studio/homeState';
+import {
+  homeWritingExtent,
+  manuscriptIdsOf,
+  manuscriptsForWork,
+  manuscriptsInOrder,
+} from '@/app/writers-studio/homeState';
 import type { SectionActivity } from '@/lib/writersStudio/sectionActivity';
 import type { MarkedLine } from '@/app/writers-studio/useMarkedLines';
 import type { StudioAct } from '@/app/writers-studio/studioHistory';
@@ -34,13 +39,15 @@ function wordsFromChars(chars: number): number {
   return Math.max(0, Math.round(chars / 6));
 }
 
-function workManuscript(work: LivingWork, manuscripts: readonly CurrentManuscript[]): CurrentManuscript | null {
-  const id = manuscriptIdOf(work);
-  return id ? manuscripts.find((m) => m.id === id) ?? null : null;
-}
-
 function workFacts(work: LivingWork, manuscripts: readonly CurrentManuscript[]): { extent: string; written: string } {
-  const manuscript = workManuscript(work, manuscripts);
+  const choices = manuscriptsForWork(work, manuscripts);
+  if (choices.length > 1) {
+    return {
+      extent: `${choices.length} manuscripts`,
+      written: 'Choose a manuscript to continue',
+    };
+  }
+  const manuscript = choices[0] ?? null;
   if (!manuscript) return { extent: 'No manuscript yet', written: 'not yet written here' };
   const extent = homeWritingExtent(manuscript);
   const words = wordsFromChars(extent);
@@ -68,7 +75,8 @@ function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy 
   onStartWriting: (workId: string) => void;
   busy: boolean;
 }) {
-  const manuscript = workManuscript(work, manuscripts);
+  const choices = manuscriptsForWork(work, manuscripts);
+  const manuscript = choices.length === 1 ? choices[0] : null;
   const [producing, setProducing] = useState(false);
   const facts = workFacts(work, manuscripts);
   const title = work.title?.trim() || 'Untitled Work';
@@ -115,6 +123,12 @@ function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy 
                 />
               ) : null}
             </>
+          ) : choices.length > 1 ? (
+            <ManuscriptChooser
+              manuscripts={choices}
+              heading="Choose a manuscript to continue"
+              onChoose={(id) => onOpen(id, sectionId)}
+            />
           ) : !hasManuscriptExpression ? (
             <div className="fr-home-actions">
               <button
@@ -144,7 +158,8 @@ function WorkShelfCard({ work, manuscripts, onOpen, onStartWriting, busy }: {
   onStartWriting: (workId: string) => void;
   busy: boolean;
 }) {
-  const manuscript = workManuscript(work, manuscripts);
+  const choices = manuscriptsForWork(work, manuscripts);
+  const manuscript = choices.length === 1 ? choices[0] : null;
   const facts = workFacts(work, manuscripts);
   const title = work.title?.trim() || 'Untitled Work';
   const hasManuscriptExpression = work.expressions.some((expression) => expression.expressionType === 'manuscript');
@@ -158,6 +173,12 @@ function WorkShelfCard({ work, manuscripts, onOpen, onStartWriting, busy }: {
         <p className="fr-home-facts">{facts.extent}<br />{facts.written}</p>
         {manuscript ? (
           <button type="button" className="fr-home-link" onClick={() => onOpen(manuscript.id)}>Open</button>
+        ) : choices.length > 1 ? (
+          <ManuscriptChooser
+            manuscripts={choices}
+            heading="Choose a manuscript"
+            onChoose={onOpen}
+          />
         ) : !hasManuscriptExpression ? (
           <div className="p4r1-home-shelf-start">
             <button
@@ -224,7 +245,12 @@ export interface P4R1HomeViewProps {
   historyActs: readonly StudioAct[];
   busy: boolean;
   error: string | null;
+  pendingMode: {
+    mode: 'write' | 'develop' | 'review';
+    manuscriptIds: readonly string[];
+  } | null;
   onMode: (mode: 'home' | 'write' | 'develop' | 'review') => void;
+  onChooseManuscript: (mode: 'write' | 'develop' | 'review', manuscriptId: string) => void;
   onBegin: (title: string) => void;
   onOpen: (manuscriptId: string, sectionId?: string) => void;
   onMakeWork: (manuscriptId: string, title: string | null) => void;
@@ -239,10 +265,14 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   const [title, setTitle] = useState('');
 
   const claimed = useMemo(
-    () => new Set(props.works.map(manuscriptIdOf).filter(Boolean) as string[]),
+    () => new Set(props.works.flatMap(manuscriptIdsOf)),
     [props.works],
   );
   const unclaimed = props.manuscripts.filter((m) => !claimed.has(m.id));
+  // The mode-bar chooser keeps the order it was given (declaration order), never recency.
+  const pendingManuscripts = props.pendingMode
+    ? manuscriptsInOrder(props.pendingMode.manuscriptIds, props.manuscripts)
+    : [];
   const recentHistory = props.historyActs.slice(0, 4).map(sentenceFor).filter((x): x is string => Boolean(x));
 
   const creationControls = (
@@ -271,6 +301,19 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
         </div>
       )}
       {props.error ? <p className="p4r1-error">{props.error}</p> : null}
+      {props.pendingMode ? (
+        <ManuscriptChooser
+          manuscripts={pendingManuscripts}
+          heading={
+            props.pendingMode.mode === 'write'
+              ? 'Choose a manuscript to write'
+              : props.pendingMode.mode === 'develop'
+                ? 'Choose a manuscript to develop'
+                : 'Choose a manuscript to review'
+          }
+          onChoose={(id) => props.onChooseManuscript(props.pendingMode!.mode, id)}
+        />
+      ) : null}
     </section>
   );
 
@@ -407,5 +450,36 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
       onSelectMode={props.onMode}
       work={work}
     />
+  );
+}
+
+function ManuscriptChooser({
+  manuscripts,
+  heading = 'Choose a manuscript',
+  onChoose,
+}: {
+  manuscripts: readonly CurrentManuscript[];
+  heading?: string;
+  onChoose: (manuscriptId: string) => void;
+}) {
+  if (manuscripts.length < 2) return null;
+
+  return (
+    <div className="mt-4" data-manuscript-choice="">
+      <p className="text-[13px] opacity-55 mb-2">{heading}</p>
+      <ul className="grid gap-2 max-w-xl" aria-label={heading}>
+        {manuscripts.map((manuscript) => (
+          <li key={manuscript.id}>
+            <button
+              type="button"
+              onClick={() => onChoose(manuscript.id)}
+              className="block w-full text-left px-4 py-3 border border-current rounded-[2px] opacity-75 hover:opacity-100 transition-opacity"
+            >
+              {manuscript.title?.trim() || 'Untitled manuscript'}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
