@@ -55,7 +55,12 @@ export function LivingFieldGrokkerShell() {
   }, [])
 
   const revealKey = useCallback((key: string) => {
+    const candidate = buildIlluminationModel(key)
     setSelectedKey(key)
+
+    if (!candidate?.spatiallyNavigable) return
+
+    setFieldKey(key)
     setNavigationRequest((current) => ({
       key,
       token: (current?.token ?? 0) + 1,
@@ -72,6 +77,9 @@ export function LivingFieldGrokkerShell() {
         >
           <img className={styles.brandMark} src="/holoflower-studio-transparent.png" alt="" />
           <span className="text-[9px]">SOULLAB</span>
+          <span className="max-w-[58px] text-center text-[6px] leading-[1.45] tracking-[0.18em] text-[#7c6c58]">
+            BEING · BECOMING · TOGETHER
+          </span>
         </Link>
 
         <nav className="flex w-full flex-1 flex-col items-center gap-2">
@@ -104,8 +112,10 @@ export function LivingFieldGrokkerShell() {
       <header className={`relative z-30 col-start-2 row-start-1 flex items-center justify-between gap-4 border-b px-5 ${styles.topbar}`}>
         <div className="min-w-0">
           <div className={`flex min-w-0 items-center gap-1.5 ${styles.breadcrumb}`}>
+            <span className="mr-1 text-[#665846]">Context</span>
+            <span className="opacity-35">·</span>
             <span>Living Field</span>
-            {fieldModel?.lineage.slice(1).map((item) => (
+            {fieldModel?.contextPath.slice(1).map((item) => (
               <span key={item.key} className="flex min-w-0 items-center gap-1.5">
                 <span className="opacity-35">›</span>
                 <span className="truncate">{item.label}</span>

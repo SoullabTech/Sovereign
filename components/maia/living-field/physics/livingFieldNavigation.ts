@@ -17,7 +17,7 @@ const FIELD_KEY_TO_PHYSICS_NODE = new Map(
   Object.entries(PHYSICS_NODE_TO_FIELD_KEY).map(([nodeId, fieldKey]) => [fieldKey, nodeId]),
 )
 
-export function fieldLineageForKey(
+export function contextPathForKey(
   targetKey: string,
   node: FieldDatum = FIELD_TREE,
   path: FieldDatum[] = [],
@@ -26,7 +26,7 @@ export function fieldLineageForKey(
   if (node.key === targetKey) return next
 
   for (const child of node.children ?? []) {
-    const found = fieldLineageForKey(targetKey, child, next)
+    const found = contextPathForKey(targetKey, child, next)
     if (found) return found
   }
 
@@ -40,14 +40,14 @@ function physicsNodeForFieldKey(key: string) {
 export function navigationPlanForFieldKey(
   targetKey: string,
 ): FieldNavigationPlan | null {
-  const lineage = fieldLineageForKey(targetKey)
-  if (!lineage) return null
+  const contextPath = contextPathForKey(targetKey)
+  if (!contextPath) return null
 
   let rootIndex = -1
   let rootPhysicsNodeId: string | null = null
 
-  for (let index = 1; index < lineage.length; index += 1) {
-    const physicsNodeId = physicsNodeForFieldKey(lineage[index].key)
+  for (let index = 1; index < contextPath.length; index += 1) {
+    const physicsNodeId = physicsNodeForFieldKey(contextPath[index].key)
     if (!physicsNodeId) continue
     rootIndex = index
     rootPhysicsNodeId = physicsNodeId
@@ -56,8 +56,8 @@ export function navigationPlanForFieldKey(
 
   if (rootIndex < 0 || !rootPhysicsNodeId) return null
 
-  const target = lineage[lineage.length - 1]
-  const segment = lineage.slice(rootIndex)
+  const target = contextPath[contextPath.length - 1]
+  const segment = contextPath.slice(rootIndex)
   const targetCanContain = Boolean(target.children?.length)
 
   const recursiveNodes = targetCanContain

@@ -796,6 +796,7 @@ export function BiologicalSpatialFieldPrototype({
   const wholeZoom = embedded ? 1.32 : 1
   const [zoom, setZoom] = useState(wholeZoom)
   const panRef = useRef(new THREE.Vector2())
+  const semanticScaleIntentRef = useRef({ amount: 0, lastAt: 0 })
 
   const active = activeId ? NODE_BY_ID.get(activeId) ?? null : null
   const activeFieldNode = activeId ? fieldNodeForPhysicsNode(activeId) : null
@@ -839,7 +840,13 @@ export function BiologicalSpatialFieldPrototype({
     setRecursiveLeaf(resolved.leaf)
   }, [navigationRequest?.token])
 
+  const resetSemanticScaleIntent = () => {
+    semanticScaleIntentRef.current.amount = 0
+    semanticScaleIntentRef.current.lastAt = 0
+  }
+
   const enterRoot = (id: string) => {
+    resetSemanticScaleIntent()
     const node = fieldNodeForPhysicsNode(id)
     if (!node?.children?.length) return
     setActiveId(id)
@@ -852,6 +859,7 @@ export function BiologicalSpatialFieldPrototype({
   }
 
   const enterChild = (node: FieldDatum) => {
+    resetSemanticScaleIntent()
     if (!node.children?.length) return
     panRef.current.set(0, 0)
     setZoom(1.05)
@@ -860,6 +868,7 @@ export function BiologicalSpatialFieldPrototype({
   }
 
   const widen = () => {
+    resetSemanticScaleIntent()
     panRef.current.set(0, 0)
     setRecursiveLeaf(null)
     setRecursivePath((path) => {
@@ -878,6 +887,7 @@ export function BiologicalSpatialFieldPrototype({
   }
 
   const whole = () => {
+    resetSemanticScaleIntent()
     panRef.current.set(0, 0)
     setRecursiveLeaf(null)
     setRecursivePath([])
@@ -914,17 +924,35 @@ export function BiologicalSpatialFieldPrototype({
         onWheel={(event) => {
           const factor = Math.exp(-event.deltaY * 0.0011)
           const nextZoom = THREE.MathUtils.clamp(zoom * factor, 0.78, 1.7)
+          setZoom(nextZoom)
 
-          if (
-            recursivePath.length > 0 &&
-            event.deltaY > 0 &&
-            nextZoom <= 0.84
-          ) {
-            widen()
+          if (recursivePath.length === 0) {
+            resetSemanticScaleIntent()
             return
           }
 
-          setZoom(nextZoom)
+          const now = performance.now()
+          const intent = semanticScaleIntentRef.current
+          const outward = event.deltaY > 4
+          const nearSemanticBoundary = nextZoom <= 0.88
+
+          if (!outward || !nearSemanticBoundary) {
+            if (now - intent.lastAt > 260 || event.deltaY < -4) {
+              resetSemanticScaleIntent()
+            }
+            return
+          }
+
+          if (now - intent.lastAt > 420) {
+            intent.amount = 0
+          }
+
+          intent.lastAt = now
+          intent.amount += Math.min(Math.abs(event.deltaY), 72)
+
+          if (intent.amount >= 190) {
+            widen()
+          }
         }}
       >
         <Canvas
