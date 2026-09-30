@@ -13,6 +13,11 @@ import {
   type PhysicsGroupKey,
 } from './physicsFieldData'
 import { R2C_RELATIONS, relationResolution } from './livingFieldRelationResolution'
+import {
+  fieldNodeForPhysicsNode,
+  type FieldDatum,
+} from '../livingFieldHierarchy'
+import { RecursiveMembraneWorld } from './RecursiveMembraneWorld'
 
 const SCALE = 50
 const WORLD_R = 155 / SCALE
@@ -48,6 +53,14 @@ type RelationBody = {
 type DebugBridge = {
   snapshot: () => Record<string, { x: number; y: number; z: number; vx: number; vy: number }>
   impulse: (id: string, x: number, y: number) => void
+}
+
+type RecursiveChildBody = {
+  node: FieldDatum
+  r: number
+  home: THREE.Vector3
+  pos: THREE.Vector3
+  vel: THREE.Vector3
 }
 
 function scenePoint(x: number, y: number, z = 0.72) {
@@ -99,13 +112,28 @@ function buildRelations(bodies: Map<string, Body>): RelationBody[] {
   })
 }
 
-function Parallax() {
+function CameraRig({
+  focusBody,
+  zoom,
+}: {
+  focusBody: Body | null
+  zoom: number
+}) {
   const { camera, pointer } = useThree()
+
   useFrame(() => {
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, pointer.x * 0.38, 0.035)
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, pointer.y * 0.24, 0.035)
-    camera.lookAt(0, 0, 0)
+    const px = focusBody ? focusBody.pos.x : 0
+    const py = focusBody ? focusBody.pos.y : 0
+    const parallaxX = pointer.x * (focusBody ? 0.1 : 0.38)
+    const parallaxY = pointer.y * (focusBody ? 0.07 : 0.24)
+    const targetZ = (focusBody ? 17.5 : 28) / zoom
+
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, px + parallaxX, 0.055)
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, py + parallaxY, 0.055)
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.045)
+    camera.lookAt(px, py, 0)
   })
+
   return null
 }
 
@@ -226,14 +254,20 @@ function Cell({
   body,
   activeId,
   draggingId,
+  entered,
+  canEnter,
   setActiveId,
   setDraggingId,
+  onEnter,
 }: {
   body: Body
   activeId: string | null
   draggingId: string | null
+  entered: boolean
+  canEnter: boolean
   setActiveId: (id: string | null) => void
   setDraggingId: (id: string | null) => void
+  onEnter: (id: string) => void
 }) {
   const mesh = useRef<THREE.Mesh>(null)
   const halo = useRef<THREE.Mesh>(null)
@@ -245,7 +279,7 @@ function Cell({
     if (mesh.current) mesh.current.position.copy(body.pos)
     if (halo.current) {
       halo.current.position.copy(body.pos)
-      const target = dragging ? 1.34 : active || body.hovered ? 1.13 : 0.94
+      const target = entered ? 1.46 : dragging ? 1.34 : active || body.hovered ? 1.13 : 0.94
       halo.current.scale.setScalar(THREE.MathUtils.lerp(halo.current.scale.x, target, 0.11))
       const mat = halo.current.material as THREE.MeshBasicMaterial
       mat.opacity = THREE.MathUtils.lerp(mat.opacity, dragging ? 0.34 : active ? 0.18 : 0.04, 0.1)
@@ -285,14 +319,18 @@ function Cell({
         onPointerUp={(event) => {
           event.stopPropagation()
           setDraggingId(null)
-          document.body.style.cursor = 'grab'
+          document.body.style.cursor = canEnter ? 'zoom-in' : 'grab'
+        }}
+        onClick={(event) => {
+          event.stopPropagation()
+          if (canEnter) onEnter(body.id)
         }}
       >
         <sphereGeometry args={[body.r, 36, 22]} />
         <meshPhysicalMaterial
           color={style.body}
           emissive={style.body}
-          emissiveIntensity={active ? 0.52 : 0.25}
+          emissiveIntensity={entered ? 0.7 : active ? 0.52 : 0.25}
           roughness={0.24}
           clearcoat={0.72}
           clearcoatRoughness={0.34}
@@ -328,6 +366,7 @@ function Cell({
           }`}
         >
           {body.label}
+          {canEnter ? <span className="ml-1 text-stone-500">···</span> : null}
         </div>
       </Html>
     </group>
@@ -338,11 +377,13 @@ function Physics({
   bodies,
   relations,
   draggingId,
+  enteredId,
   pressure,
 }: {
   bodies: Map<string, Body>
   relations: RelationBody[]
   draggingId: string | null
+  enteredId: string | null
   pressure: React.MutableRefObject<Record<PhysicsGroupKey, number>>
 }) {
   const { pointer, camera, raycaster } = useThree()
@@ -392,9 +433,28 @@ function Physics({
       fire: 0, water: 0, earth: 0, air: 0, aether: 0,
     }
 
+    const entered = enteredId ? bodies.get(enteredId) ?? null : null
+
+    if (entered) {
+      for (const body of list) {
+        if (body.id === entered.id) continue
+        const delta = body.pos.clone().sub(entered.pos)
+        delta.z = 0
+        const distance = Math.max(delta.length(), 0.001)
+        const clearance = 4.7
+        if (distance < clearance) {
+          const oilDisplacement = delta
+            .multiplyScalar(1 / distance)
+            .multiplyScalar((clearance - distance) * 0.24)
+          forces.get(body.id)?.add(oilDisplacement)
+          forces.get(entered.id)?.addScaledVector(oilDisplacement, -0.08)
+        }
+      }
+    }
+
     for (const body of list) {
       const force = forces.get(body.id) ?? new THREE.Vector3()
-      const dragging = draggingId === body.id
+      const dragging = draggingId === body.id && enteredId !== body.id
       const group = GROUP_GEOMETRY[body.group]
       const center = scenePoint(group.x, group.y, body.pos.z)
       const radial = body.pos.clone().sub(center)
@@ -402,7 +462,8 @@ function Physics({
       const radialLen = radial.length()
       const maxRadius = WORLD_R - body.r - 0.14
 
-      force.add(body.home.clone().sub(body.pos).multiplyScalar(dragging ? 0.34 : 1.12))
+      const anchorStrength = enteredId === body.id ? 2.4 : dragging ? 0.34 : 1.12
+      force.add(body.home.clone().sub(body.pos).multiplyScalar(anchorStrength))
 
       if (dragging) {
         force.add(
@@ -440,19 +501,33 @@ function Physics({
 function Scene({
   activeId,
   draggingId,
+  recursiveRootId,
+  recursivePath,
+  zoom,
   setActiveId,
   setDraggingId,
+  onEnterRoot,
+  onEnterChild,
+  onLeaf,
 }: {
   activeId: string | null
   draggingId: string | null
+  recursiveRootId: string | null
+  recursivePath: FieldDatum[]
+  zoom: number
   setActiveId: (id: string | null) => void
   setDraggingId: (id: string | null) => void
+  onEnterRoot: (id: string) => void
+  onEnterChild: (node: FieldDatum) => void
+  onLeaf: (node: FieldDatum) => void
 }) {
   const bodies = useMemo(() => buildBodies(), [])
   const relations = useMemo(() => buildRelations(bodies), [bodies])
   const pressure = useRef<Record<PhysicsGroupKey, number>>({
     fire: 0, water: 0, earth: 0, air: 0, aether: 0,
   })
+  const recursiveRoot = recursiveRootId ? bodies.get(recursiveRootId) ?? null : null
+  const recursiveCurrent = recursivePath[recursivePath.length - 1] ?? null
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return
@@ -482,12 +557,18 @@ function Scene({
   return (
     <>
       <PerspectiveCamera makeDefault position={[0, 0, 28]} fov={42} />
-      <Parallax />
+      <CameraRig focusBody={recursiveRoot} zoom={zoom} />
       <ambientLight intensity={0.88} />
       <directionalLight position={[-8, 10, 16]} intensity={1.3} color="#f4e8d8" />
       <pointLight position={[7, -4, 10]} intensity={32} distance={28} color="#cf9e68" />
 
-      <Physics bodies={bodies} relations={relations} draggingId={draggingId} pressure={pressure} />
+      <Physics
+        bodies={bodies}
+        relations={relations}
+        draggingId={draggingId}
+        enteredId={recursiveRootId}
+        pressure={pressure}
+      />
 
       {PHYSICS_GROUPS.map((group) => (
         <WorldMembrane key={group.id} group={group.id} pressure={pressure} />
@@ -497,16 +578,34 @@ function Scene({
         <RelationLine key={relation.id} relation={relation} bodies={bodies} />
       ))}
 
-      {[...bodies.values()].map((body) => (
-        <Cell
-          key={body.id}
-          body={body}
-          activeId={activeId}
-          draggingId={draggingId}
-          setActiveId={setActiveId}
-          setDraggingId={setDraggingId}
+      {[...bodies.values()].map((body) => {
+        const fieldNode = fieldNodeForPhysicsNode(body.id)
+        return (
+          <Cell
+            key={body.id}
+            body={body}
+            activeId={activeId}
+            draggingId={draggingId}
+            entered={recursiveRootId === body.id}
+            canEnter={Boolean(fieldNode?.children?.length)}
+            setActiveId={setActiveId}
+            setDraggingId={setDraggingId}
+            onEnter={onEnterRoot}
+          />
+        )
+      })}
+
+      {recursiveRoot && recursiveCurrent && (
+        <RecursiveMembraneWorld
+          parentPosition={recursiveRoot.pos}
+          current={recursiveCurrent}
+          depth={recursivePath.length}
+          color={STYLE[recursiveRoot.group].body}
+          glow={STYLE[recursiveRoot.group].glow}
+          onEnter={onEnterChild}
+          onLeaf={onLeaf}
         />
-      ))}
+      )}
     </>
   )
 }
@@ -514,15 +613,53 @@ function Scene({
 export function BiologicalSpatialFieldPrototype() {
   const [activeId, setActiveId] = useState<string | null>('calling')
   const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [recursiveRootId, setRecursiveRootId] = useState<string | null>(null)
+  const [recursivePath, setRecursivePath] = useState<FieldDatum[]>([])
+  const [recursiveLeaf, setRecursiveLeaf] = useState<FieldDatum | null>(null)
+  const [zoom, setZoom] = useState(1)
+
   const active = activeId ? NODE_BY_ID.get(activeId) ?? null : null
+  const recursiveCurrent = recursivePath[recursivePath.length - 1] ?? null
+
+  const enterRoot = (id: string) => {
+    const node = fieldNodeForPhysicsNode(id)
+    if (!node?.children?.length) return
+    setActiveId(id)
+    setDraggingId(null)
+    setRecursiveRootId(id)
+    setRecursivePath([node])
+    setRecursiveLeaf(null)
+  }
+
+  const enterChild = (node: FieldDatum) => {
+    if (!node.children?.length) return
+    setRecursivePath((path) => [...path, node])
+    setRecursiveLeaf(null)
+  }
+
+  const widen = () => {
+    setRecursiveLeaf(null)
+    setRecursivePath((path) => {
+      if (path.length > 1) return path.slice(0, -1)
+      setRecursiveRootId(null)
+      return []
+    })
+  }
+
+  const whole = () => {
+    setRecursiveLeaf(null)
+    setRecursivePath([])
+    setRecursiveRootId(null)
+    setZoom(1)
+  }
 
   return (
     <section className="overflow-hidden rounded-[32px] border border-stone-800 bg-[#080909]">
       <header className="border-b border-stone-800/80 px-5 py-4 sm:px-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Living Field · R2D1</p>
-        <h2 className="mt-1 text-2xl font-light text-stone-100">Touch the field and feel it answer.</h2>
+        <p className="text-xs uppercase tracking-[0.22em] text-amber-700/80">Living Field · R2D2</p>
+        <h2 className="mt-1 text-2xl font-light text-stone-100">Touch a bubble. Let the world inside it open.</h2>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-500">
-          Drag a cell slowly, then release it. Related cells should yield, relations stretch, the membrane carries pressure, and the field recoils and settles.
+          Drag still has the same viscous physics. Click a bubble marked ··· to enter it. The membrane yields, the surrounding field makes room, and its actual inner ecology emerges without leaving the field.
         </p>
       </header>
 
@@ -530,6 +667,10 @@ export function BiologicalSpatialFieldPrototype() {
         className="relative h-[760px] min-h-[620px] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_46%,rgba(56,49,43,0.22),rgba(8,9,9,0.96)_64%)]"
         onPointerUp={() => setDraggingId(null)}
         onPointerLeave={() => setDraggingId(null)}
+        onWheel={(event) => {
+          const factor = Math.exp(-event.deltaY * 0.0011)
+          setZoom((value) => THREE.MathUtils.clamp(value * factor, 0.78, 1.7))
+        }}
       >
         <Canvas
           dpr={[1, 1.75]}
@@ -539,25 +680,55 @@ export function BiologicalSpatialFieldPrototype() {
           <Scene
             activeId={activeId}
             draggingId={draggingId}
+            recursiveRootId={recursiveRootId}
+            recursivePath={recursivePath}
+            zoom={zoom}
             setActiveId={setActiveId}
             setDraggingId={setDraggingId}
+            onEnterRoot={enterRoot}
+            onEnterChild={enterChild}
+            onLeaf={setRecursiveLeaf}
           />
         </Canvas>
 
         <div className="pointer-events-none absolute bottom-4 left-4 rounded-2xl border border-stone-800/80 bg-black/45 px-4 py-3 backdrop-blur-md">
           <p className="text-[10px] uppercase tracking-[0.16em] text-stone-600">
-            {active ? GROUP_BY_ID.get(active.group)?.label : 'Living Field'}
+            {recursiveCurrent ? `depth ${recursivePath.length}` : active ? GROUP_BY_ID.get(active.group)?.label : 'Living Field'}
           </p>
-          <p className="mt-1 text-sm text-stone-300">{active?.label ?? 'Move through the field'}</p>
-          <p className="mt-1 max-w-[310px] text-xs leading-5 text-stone-600">
-            {active?.essence ?? 'Each cell stays part of a larger ecology and is physically ready to become a containing world at deeper scale.'}
+          <p className="mt-1 text-sm text-stone-200">
+            {recursiveLeaf?.label ?? recursiveCurrent?.label ?? active?.label ?? 'Move through the field'}
+          </p>
+          <p className="mt-1 max-w-[350px] text-xs leading-5 text-stone-500">
+            {recursiveLeaf?.inquiry ?? recursiveCurrent?.inquiry ?? active?.essence ?? 'Each cell remains part of the larger ecology at every scale.'}
           </p>
         </div>
 
-        <div className="pointer-events-none absolute right-4 top-4 max-w-[285px] rounded-2xl border border-stone-800/70 bg-black/38 px-4 py-3 text-xs leading-5 text-stone-600 backdrop-blur-md">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-stone-500">Physical witness</p>
-          <p className="mt-2">Approach → adhesion → pull → resistance → displacement → release → recoil → settling.</p>
-          <p className="mt-2 text-stone-700">Active cells reveal only latent inner membrane structure. Actual recursive child meaning remains governed by R2G.</p>
+        {recursivePath.length > 0 && (
+          <div className="absolute left-1/2 top-4 flex -translate-x-1/2 items-center gap-2 rounded-full border border-stone-800/80 bg-black/55 px-2 py-2 backdrop-blur-md">
+            <button
+              type="button"
+              onClick={widen}
+              className="rounded-full px-3 py-1.5 text-xs text-stone-300 transition hover:bg-stone-800/70 hover:text-stone-50"
+            >
+              Wider
+            </button>
+            <div className="max-w-[420px] truncate px-2 text-[11px] text-stone-600">
+              {recursivePath.map((node) => node.label).join(' · ')}
+            </div>
+            <button
+              type="button"
+              onClick={whole}
+              className="rounded-full px-3 py-1.5 text-xs text-stone-300 transition hover:bg-stone-800/70 hover:text-stone-50"
+            >
+              Whole
+            </button>
+          </div>
+        )}
+
+        <div className="pointer-events-none absolute right-4 top-4 max-w-[295px] rounded-2xl border border-stone-800/70 bg-black/38 px-4 py-3 text-xs leading-5 text-stone-600 backdrop-blur-md">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-stone-500">Scale physics</p>
+          <p className="mt-2">Click → membrane yield → viscous expansion → inner ecology → settle.</p>
+          <p className="mt-2 text-stone-700">Scroll / pinch changes physical scale. Wider reverses one semantic depth. Whole restores the ecology.</p>
         </div>
       </div>
     </section>
