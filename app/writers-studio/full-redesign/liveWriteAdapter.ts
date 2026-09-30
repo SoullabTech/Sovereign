@@ -18,7 +18,12 @@ export function pc3SaveState(statuses: readonly SectionStatus[]): string {
 }
 
 export function pc3Paragraphs(body: string): string[] {
-  return body.length === 0 ? [''] : body.split(/\n{2,}/);
+  if (body.length === 0) return [''];
+  /* Imported prose can carry hard-wrapped single newlines inside a paragraph.
+     Blank lines are the paragraph boundary; the editor's CSS lets the browser
+     reflow the single-newline wraps as ordinary prose instead of preserving
+     an 80-column text-file shape on the writing page. */
+  return body.replace(/\r\n?/g, '\n').split(/\n[ \t]*\n+/);
 }
 function exactDisplay(section: RebuildSection): Pick<WriteChapterView, 'label' | 'title'> {
   const heading = section.heading?.trim();

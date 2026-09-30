@@ -5,6 +5,14 @@ import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { WriteManuscriptRail, WriteRoom } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
+
+const WRITE_RELATIONAL_GEOMETRY = {
+  ...WRITE_GEOMETRY,
+  padRight: 9,
+  maiaWidth: 360,
+  maiaFloor: 300,
+  gapRight: 13,
+};
 import { projectPc3LiveWrite } from '@/app/writers-studio/full-redesign/liveWriteAdapter';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
 import RevisionDesk, { type CarryChooserPresentation, type MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
@@ -142,6 +150,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
+  const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -183,7 +192,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   });
 
   const go = useCallback((sectionId: string | null) => {
-    if (!sectionId || sectionId === props.writing.activeId) return;
+    if (!sectionId) return;
+    /* A manuscript-rail choice is a meaningful attentional gesture even when
+       the writer clicks the place already open. Keep it visible to the right
+       hand support field instead of treating same-place selection as a no-op. */
+    setRailSelectionId(sectionId);
+    if (sectionId === props.writing.activeId) return;
     props.writing.goToSection(sectionId);
     props.onFocusSection(sectionId);
   }, [props]);
@@ -652,6 +666,67 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : null;
 
+  const railSection = props.context.sections.find(
+    (section) => section.draftSectionId === (railSelectionId ?? props.focusId),
+  ) ?? null;
+  const railLabel = railSection?.heading?.trim() || 'this section';
+
+  const writeMaia = props.work ? (
+    <div className="fr-maia-inner p4r1-write-maia">
+      <div className="fr-maia-head">
+        <div className="fr-orb" aria-hidden="true" />
+        <div className="fr-maia-name">
+          <h2>MAIA</h2>
+          <span>{railSelectionId ? `In relation to ${railLabel}` : 'In relation to this writing place'}</span>
+        </div>
+        <span className="fr-dots" aria-hidden="true">•••</span>
+      </div>
+      <div className="fr-mbody">
+        {workConversationOpen ? (
+          workConversation
+        ) : railSelectionId && railSection ? (
+          <div className="p4r1-locus-support" data-write-locus-support={railSection.draftSectionId}>
+            <span className="p4r1-eyebrow">You selected</span>
+            <h3>{railLabel}</h3>
+            <p>
+              I’m with this exact place now. You do not need to hunt through another panel
+              before we can work with it.
+            </p>
+            <div className="p4r1-locus-actions">
+              <button
+                type="button"
+                className="p4r1-talk"
+                onClick={() => openWorkConversation([
+                  `I selected “${railLabel}” and want to work with this place directly.`,
+                  'Start with what is happening here and ask me one useful question about what I want from it.',
+                  'Do not rewrite anything unless I ask.',
+                ].join('\n\n'))}
+              >
+                Talk about this
+              </button>
+              <button type="button" onClick={() => props.onMode('develop')}>Develop this place</button>
+              <button type="button" onClick={() => props.onMode('review')}>Review this place</button>
+            </div>
+            <p className="fr-also">Select exact words in the manuscript for passage-level revision.</p>
+          </div>
+        ) : (
+          <>
+            <div className="fr-say">
+              <p>
+                Choose a chapter or section at left and I’ll orient to that place immediately.
+                Or select exact words in the manuscript for passage-level work.
+              </p>
+            </div>
+            <button type="button" className="p4r1-talk" onClick={() => openWorkConversation('')}>
+              Talk with MAIA
+            </button>
+          </>
+        )}
+      </div>
+      <div className="fr-foot">The manuscript stays primary; support follows your attention.</div>
+    </div>
+  ) : undefined;
+
   const blankArrival = blankArrivalVisible && props.work ? (
     <P4R1BlankWritingArrival
       work={props.work}
@@ -799,13 +874,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <Shell
           mode="write"
           appearance={props.appearance}
-          geometry={WRITE_GEOMETRY}
+          geometry={railSelectionId || workConversationOpen ? WRITE_RELATIONAL_GEOMETRY : WRITE_GEOMETRY}
           workTitle={props.work?.title ?? undefined}
           memberInitial=""
           onSelectMode={props.onMode}
           canvas={canvas}
           manuscript={<WriteManuscriptRail fixture={projection.data} onOpenChapter={go} />}
           work={workSurface}
+          maia={railSelectionId || workConversationOpen ? writeMaia : undefined}
         />
 
       {isolatedRoom}
@@ -840,7 +916,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
           {contextualActions}
           {maiaRelationshipCard}
-          {workConversation}
           {editorial}
         </>
       ) : null}

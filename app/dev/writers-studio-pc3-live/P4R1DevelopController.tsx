@@ -581,7 +581,29 @@ export default function P4R1DevelopController() {
   }, [updateQuery]);
 
   const onSection = useCallback((sectionId: string) => {
-    if (!context?.sections.some((section) => section.draftSectionId === sectionId)) return;
+    if (!context) return;
+    const selected = context.sections.find((section) => section.draftSectionId === sectionId);
+    if (!selected) return;
+
+    /* Choosing a place in the manuscript is also choosing the developmental
+       scope. Do not leave the center/right field pretending the whole Work is
+       still selected after the writer has explicitly chosen a chapter/section. */
+    const chapter = chapterSpanFor(context.sections, sectionId);
+    if (chapter?.root.draftSectionId === sectionId && chapter.sections.length) {
+      setScope({
+        kind: 'chapter',
+        label: chapter.root.heading?.trim() || 'Current chapter',
+        fromSectionId: chapter.sections[0]!.draftSectionId,
+        toSectionId: chapter.sections[chapter.sections.length - 1]!.draftSectionId,
+      });
+    } else {
+      setScope({
+        kind: 'section',
+        sectionId,
+        label: selected.heading?.trim() || 'Current section',
+      });
+    }
+
     updateQuery((query) => {
       query.set(SECTION_PARAM, sectionId);
     });

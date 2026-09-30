@@ -632,9 +632,9 @@
 .fr-write-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
 .fr-write-page { width: min(980px, calc(100% - 64px)); margin: 0 auto; padding: 8px 0 40px; }
 .fr-write-title { margin: 0 0 22px; font-family: var(--fr-serif-stack); font-size: 44px; font-weight: 500; line-height: 1.2; letter-spacing: -.01em; color: var(--fr-title); text-wrap: balance; }
-.fr-write-editor { font-family: var(--fr-serif-stack); font-size: 22px; line-height: 1.6; color: var(--fr-ink); caret-color: var(--fr-action); white-space: pre-wrap; overflow-wrap: break-word; }
+.fr-write-editor { font-family: var(--fr-serif-stack); font-size: 22px; line-height: 1.68; color: var(--fr-ink); caret-color: var(--fr-action); white-space: normal; overflow-wrap: break-word; }
 .fr-shell .fr-write-editor:focus, .fr-shell .fr-write-editor:focus-visible { outline: none; }
-.fr-write-editor p { margin: 0 0 34px; }
+.fr-write-editor p { margin: 0 0 38px; white-space: normal; }
 .fr-write-editor p:last-child { margin-bottom: 0; }
 .fr-write-editor p[data-held] { padding: 7px 14px; border-radius: 4px; background: var(--fr-held-passage); color: var(--fr-action-deep); }
 .fr-write-editor ::selection { background: color-mix(in srgb, var(--fr-action) 20%, transparent); }
