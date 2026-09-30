@@ -176,6 +176,22 @@ Home caller is unchanged (`openAfter` defaults to `true`).
   graph; no project `node_modules` here). ⚠️ **The existing jest suites (`lib/house/__tests__/*`) were NOT
   run.** Both are owed on the founder's machine: `npm run typecheck` (no-regression gate) + `npx jest lib/house`.
 
+### 7b.1 · Project gates — RUN in-container (2026-09-30, head `50a18464`)
+
+Dependencies installed with `npm ci` inside the session container, so the owed gates above were run here
+rather than deferred.
+
+- `npm run typecheck` (no-regression gate, `tsconfig.ship.json`, 4,611 program files incl. the Home
+  controller and House page) → **exit 0 · 222 errors vs baseline 239 · ✅ No TypeScript regressions.**
+- `npx jest lib/house app/writers-studio/__tests__` → **87/87 suites · 897/897 tests PASS**, including
+  `livingOrientation.test.ts` (unique ids, **real evidence paths** for the new crossing) and
+  `facetCrossingContract.test.ts`.
+- ⭐ **The first typecheck run FAILED with 46 "new" diagnostics, and it was not the change.** Every one
+  sat in Prisma-typed files (`lib/types/database.ts` ×37, `lib/db/prisma.ts`, …) because the install used
+  `--ignore-scripts`, so the Prisma client was never generated. ⛔ Not absorbed into the baseline and
+  ⛔ not waved away: `npx prisma generate`, then the identical gate → exit 0. *An environment defect can
+  wear the costume of a regression exactly as easily as the reverse.*
+
 ## 7c · Residual question — ⛔ NOT DECIDED, surfaced
 
 D-02 says *the Work remains selected throughout*; WS2-03B stays intact. They agree everywhere except
@@ -196,7 +212,7 @@ becoming behavioural exhaust?*
 *(Superseded same day; kept as the state at the time:)* G0 ✅ · G2 drafted · G3 ✅ LETHAL · G1 OPEN · no intake built.
 
 **Current: G0 ✅ · G1 ✅ RULED · G2 ✅ · G3 ✅ LETHAL (8/8) · G4 ✅ BUILT · G5 ✅ VERIFY PASS (8/8 + 9/9, mutants
-10/10) · ⚠️ project typecheck + jest OWED on founder machine · ⛔ G6 FOUNDER WALK OWED · §7c edge OPEN ·
+10/10) · ✅ project typecheck (0 regressions) + jest 897/897 RUN in-container · ⛔ G6 FOUNDER WALK OWED · §7c edge OPEN ·
 ⛔ NO PERSISTENCE · ⛔ NO MAIA INPUT · ⛔ NO MERGE · ⛔ NO DEPLOY · PRODUCTION UNTOUCHED.**
 
 **G6 walk (human witness):** (1) House → click a Work with one manuscript → lands in that writing, and
