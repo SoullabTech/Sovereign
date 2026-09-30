@@ -175,6 +175,7 @@ export default function AdminPage() {
             <nav className="hidden md:flex items-center space-x-1">
               {[
                 { label: 'Monitor', href: '/admin/monitor' },
+                { label: 'Writer’s Studio', href: '/admin/writers-studio' },
                 { label: 'Platform Pulse', href: '/admin/activity-feed' },
                 { label: 'Beta Testers', href: '/admin/beta-testers' },
                 { label: 'Opus Pulse', href: '/admin/opus-pulse' },
