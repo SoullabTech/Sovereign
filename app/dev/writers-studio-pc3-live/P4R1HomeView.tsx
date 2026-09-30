@@ -230,6 +230,7 @@ export interface P4R1HomeViewProps {
   onMakeWork: (manuscriptId: string, title: string | null) => void;
   onAddToWork: (manuscriptId: string, workId: string) => void;
   onStartWriting: (workId: string) => void;
+  onImport: () => void;
   onSources: () => void;
 }
 
@@ -244,6 +245,35 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   const unclaimed = props.manuscripts.filter((m) => !claimed.has(m.id));
   const recentHistory = props.historyActs.slice(0, 4).map(sentenceFor).filter((x): x is string => Boolean(x));
 
+  const creationControls = (
+    <section className="p4r1-home-create" aria-label="Start or bring writing">
+      <div className="p4r1-home-create-copy">
+        <p className="fr-home-eyebrow">Start or bring a Work</p>
+        <p>Begin something new, or bring writing you already have into the Studio.</p>
+      </div>
+      {!beginning ? (
+        <div className="fr-home-actions">
+          <button type="button" className="fr-home-primary" onClick={() => setBeginning(true)}>New Work</button>
+          <button type="button" className="fr-home-quiet" onClick={props.onImport}>Upload / import writing</button>
+          <button type="button" className="fr-home-quiet" onClick={props.onSources}>Notes &amp; sources</button>
+        </div>
+      ) : (
+        <div className="p4r1-home-begin-form">
+          <label htmlFor="p4r1-work-title">Give the new Work a name, or leave it blank for now.</label>
+          <div>
+            <input id="p4r1-work-title" autoFocus value={title} onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !props.busy) props.onBegin(title); if (e.key === 'Escape') setBeginning(false); }} />
+            <button type="button" className="fr-home-primary" disabled={props.busy} onClick={() => props.onBegin(title)}>
+              {props.busy ? 'Beginning…' : 'Begin'}
+            </button>
+            <button type="button" className="fr-home-quiet" onClick={() => setBeginning(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {props.error ? <p className="p4r1-error">{props.error}</p> : null}
+    </section>
+  );
+
   let work: React.ReactNode;
   if (props.arrival.kind === 'begin') {
     work = (
@@ -254,6 +284,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
             {!beginning ? (
               <div className="fr-home-actions">
                 <button type="button" className="fr-home-primary" onClick={() => setBeginning(true)}>Begin a new Work</button>
+                <button type="button" className="fr-home-quiet" onClick={props.onImport}>Upload / import writing</button>
                 <button type="button" className="fr-home-quiet" onClick={props.onSources}>Bring notes &amp; sources</button>
               </div>
             ) : (
@@ -279,6 +310,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     work = (
       <div className="fr-home fr-home-returning">
         <div className="fr-home-field" data-field="room">
+          {creationControls}
           <WorkAnchor
             work={props.arrival.resume}
             manuscripts={props.manuscripts}
@@ -317,6 +349,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     work = (
       <div className="fr-home fr-home-unclaimed">
         <div className="fr-home-field" data-field="room">
+          {creationControls}
           <p className="fr-home-here">{HOME_COPY.writingHere}</p>
           <div className="fr-home-writing-list">
             {unclaimed.map((manuscript) => (
@@ -346,6 +379,7 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
     work = (
       <div className="fr-home fr-home-many">
         <div className="fr-home-field" data-field="room">
+          {creationControls}
           <section className="fr-home-region">
             <p className="fr-home-eyebrow">Your Works</p>
             <div className="fr-home-shelf fr-home-shelf-4">

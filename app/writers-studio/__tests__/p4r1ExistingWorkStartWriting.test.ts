@@ -40,6 +40,16 @@ describe('C7 — existing Work → begin writing without copying materials', () 
     expect(slice).not.toContain('/materials');
     expect(slice).not.toContain('idea');
   });
+
+  it('keeps New Work and import affordances visible after a writer already has Works', () => {
+    expect(home).toContain('Start or bring a Work');
+    expect(home).toContain('New Work');
+    expect(home).toContain('Upload / import writing');
+    expect(home).toContain('Notes &amp; sources');
+    expect(home.match(/\{creationControls\}/g)?.length).toBe(3);
+    expect(controller).toContain("import { IMPORT_HREF } from '@/app/writers-studio/studioMap';");
+    expect(controller).toContain('onImport={() => router.push(IMPORT_HREF)}');
+  });
 });
 
 
