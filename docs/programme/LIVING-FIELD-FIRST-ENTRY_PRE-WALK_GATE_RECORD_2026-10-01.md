@@ -178,6 +178,10 @@ Window chosen (UTC) and evidence it was quiet:
 Cohort notified: yes (how/when) / no (why)
 Lane used:
 
+**Governed lane shape (prepared, not executed):** source `scripts/deploy-lock.sh` on the production host with `PROJECT_DIR` bound to the production checkout, then call `acquire_deploy_lock "living-field G3b emergency-disable witness" "runtime 298414555 env-only recreate"` before editing `.env.production` or recreating `maia`. Keep the shell process alive through disable, verification, restore, and post-restore verification so fd 9 retains the kernel lock for the whole witness. Do not use a bare compose command outside this wrapper.
+
+A read-only readiness probe at `2026-10-01T23:41:09Z` on production `298414555` found `active_cohort_sessions_last_15m=0`. This is evidence that the cohort was quiet at that moment only; it is **not** the chosen G3b window and must be re-run immediately before mutation.
+
 Captures, each with the evidence rule above:
 
 1. Pre-state: `EARLY_FIELD_ENABLED` value, cohort **size** (never IDs), SHA, health.
