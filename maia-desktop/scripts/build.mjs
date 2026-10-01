@@ -42,10 +42,20 @@ const cabinSourceParent = process.env.MAIA_DESKTOP_CABIN_STAGING_PARENT ||
 const cabinSource = path.join(cabinSourceParent, `cabin-runtime-${sha}`);
 fs.rmSync(cabinSource, { recursive: true, force: true });
 fs.mkdirSync(cabinSourceParent, { recursive: true });
-fs.cpSync(standaloneRoot, cabinSource, { recursive: true });
+const shouldCopyCabinRuntimeEntry = (source) => {
+  const relative = path.relative(standaloneRoot, source);
+  const isBackupPayload = relative === 'backups' || relative.startsWith(`backups${path.sep}`);
+  const nextCache = path.join('.next', 'cache');
+  const isNextBuildCache = relative === nextCache || relative.startsWith(`${nextCache}${path.sep}`);
+  return !isBackupPayload && !isNextBuildCache;
+};
+fs.cpSync(standaloneRoot, cabinSource, {
+  recursive: true,
+  filter: shouldCopyCabinRuntimeEntry,
+});
 fs.mkdirSync(path.join(cabinSource, '.next'), { recursive: true });
 fs.cpSync(standaloneStatic, path.join(cabinSource, '.next', 'static'), { recursive: true });
-fs.cpSync(standalonePublic, path.join(cabinSource, 'public'), { recursive: true });
+fs.cpSync(standalonePublic, path.join(cabinSource, 'public'), { recursive: true, verbatimSymlinks: true });
 
 const standaloneNextPackage = path.join(cabinSource, 'node_modules', 'next', 'package.json');
 if (!fs.existsSync(standaloneNextPackage)) {
