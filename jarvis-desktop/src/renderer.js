@@ -2505,6 +2505,39 @@ function pinButton(kind, key, label) {
   return `<button class="act" data-field-pin="${escapeHtml(pinRef(kind,key,label))}">${pinned ? 'Unpin' : 'Keep in sight'}</button>`;
 }
 
+function orientationItemLine(item, sectionId) {
+  if (sectionId === 'keep_in_sight') {
+    return `<div class="row"><div><div class="label">${escapeHtml(item.label)}</div><div class="why">${escapeHtml(item.why)}</div></div><span class="state ${item.resolved ? 'AVAILABLE' : 'UNVERIFIED'}">${item.resolved ? 'IN SIGHT' : 'UNRESOLVED'}</span></div>`;
+  }
+  if (['needs_kelly','in_motion','watching'].includes(sectionId)) {
+    return `<div class="row"><div><div class="label">${escapeHtml(item.label)}</div><div class="why">${escapeHtml(item.lifecycle)} · ${escapeHtml(item.why)}</div></div><button class="act" data-open-governed-work="${escapeHtml(item.work_unit_id)}">Open</button></div>`;
+  }
+  if (sectionId === 'unfinished') {
+    return `<div class="row"><div><div class="label">${escapeHtml(item.label)}</div><div class="why">${escapeHtml(item.signal)} · ${escapeHtml(item.why)}</div><div class="src">${escapeHtml(item.path)}:${escapeHtml(item.evidence_line)}</div></div><button class="act" data-recovery-trace="${escapeHtml(item.programme_key)}">Trace</button></div>`;
+  }
+  return `<div class="row"><div><div class="label">${escapeHtml(item.label)}</div><div class="why">${escapeHtml(item.why)}</div></div></div>`;
+}
+
+function renderOrientationSummary(lib) {
+  const o = GrokkerOrientation.compose({
+    library: lib,
+    pins: libraryState.pins,
+    governedWork: libraryState.governedWork,
+  });
+  return `<div class="card">
+    <p class="headline">What am I holding?</p>
+    <p class="sentence">One orientation view across the things currently being held in view. This does not rank importance or create authority.</p>
+    <div class="library-summary">${escapeHtml(o.law)} · ${o.total_visible} visible references</div>
+    ${o.sections.map(section => `<details class="library-group" ${['keep_in_sight','needs_kelly','in_motion','watching'].includes(section.id) ? 'open' : ''}>
+      <summary><span>${escapeHtml(section.label)}</span><span class="library-count">${section.items.length}</span></summary>
+      <div class="library-items">
+        <div class="hint">${escapeHtml(section.meaning)}</div>
+        ${section.items.length ? section.items.map(item => orientationItemLine(item, section.id)).join('') : '<div class="hint">None.</div>'}
+      </div>
+    </details>`).join('')}
+  </div>`;
+}
+
 function renderPinnedShelf(lib) {
   const resolved = GrokkerFieldPins.resolve(libraryState.pins, lib, libraryState.governedWork);
   if (!resolved.length) {
@@ -2836,6 +2869,7 @@ function renderLibrary() {
   const q = String(libraryState.browseQuery || '');
   const gq = String(libraryState.grokkerQuery || '');
   $main.innerHTML = `
+    ${renderOrientationSummary(lib)}
     <div class="card">
       <p class="headline">Living Field Library</p>
       <p class="sentence">A scrollable map of the fields, laws, ideas, and programme lanes we have been building. Collapse back to the whole whenever you need orientation.</p>
