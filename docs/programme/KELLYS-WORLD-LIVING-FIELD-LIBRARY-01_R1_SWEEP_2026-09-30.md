@@ -66,3 +66,37 @@ Focused verification:
 - `git diff --check` — pass
 
 No merge or deploy is authorized by this record.
+
+## R2 — Grokker Ask / Trace retrieval
+
+The first Grokker layer is now implemented as deterministic retrieval over the same generated Library corpus.
+
+It follows the existing Grokker laws:
+- focus + context rather than isolated hits;
+- source descent remains visible;
+- retrieval does not synthesize or ratify a new claim;
+- a failed retrieval is not evidence that the underlying work does not exist;
+- cross-record standing is not upgraded by being retrieved.
+
+The query engine is isolated in `field-library-query.js` and has no I/O, model call, write authority, or persistence.
+
+### R2 witness
+
+Focused Grokker tests: **4/4 PASS**
+- ordinary question words do not dominate retrieval;
+- title evidence outranks incidental excerpt evidence;
+- the real corpus recovers context-release work;
+- source paths remain attached rather than invented.
+
+Full JARVIS Desktop suite:
+- **371 pass**
+- **2 fail**
+- **9 skipped**
+
+The two failures are the already-documented canonical JOP-00 stale negative controls:
+1. expected `LOCAL_WRITE_AUTHORITY_REFUSED`, runtime now returns `LOCAL_WORKER_WRITE_AUTHORITY_REFUSED`;
+2. the formerly minimal authorized `local-native` packet no longer satisfies the evolved authority contract.
+
+Those failures predate this lane and are recorded in `SOULLAB-DESKTOP-UNIFICATION-01_CENSUS_2026-09-30.md`.
+
+No merge or deploy is authorized.
