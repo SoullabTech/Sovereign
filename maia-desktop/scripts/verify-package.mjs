@@ -59,7 +59,22 @@ for (const entry of forbiddenCabinEntries) {
   assert.ok(!fs.existsSync(path.join(cabinRuntime, entry)), `forbidden cabin-runtime entry: ${entry}`);
 }
 
-const forbiddenName = /^(?:\.env(?:\..*)?|.*\.(?:pem|p8|p12)|maia-android-debug.*\.apk)$/i;
+const allowedCabinRootEntries = new Set([
+  '.next',
+  'app',
+  'lib',
+  'maia_notes',
+  'node_modules',
+  'package.json',
+  'pages',
+  'public',
+  'server.js',
+]);
+for (const entry of fs.readdirSync(cabinRuntime)) {
+  assert.ok(allowedCabinRootEntries.has(entry), `unexpected cabin-runtime root entry: ${entry}`);
+}
+
+const forbiddenName = /^(?:\.git|\.env(?:\..*)?|.*\.(?:pem|p8|p12)|maia-android-debug.*\.apk)$/i;
 const stack = [cabinRuntime];
 while (stack.length) {
   const dir = stack.pop();

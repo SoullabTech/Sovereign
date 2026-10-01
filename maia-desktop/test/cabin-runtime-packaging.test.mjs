@@ -44,6 +44,8 @@ test('Desktop packaging carries standalone, static, and public assets into the C
 test('Desktop packaging materializes host-bound public symlinks and rejects non-portable staged symlinks', () => {
   assert.match(BUILD, /fs\.rmSync\(cabinPublic, \{ recursive: true, force: true \}\)/);
   assert.match(BUILD, /dereference: true/);
+  assert.match(BUILD, /materializeSymlinks\(cabinPublic\)/);
+  assert.match(BUILD, /fs\.realpathSync\(entryPath\)/);
   assert.match(BUILD, /assertPortableSymlinks\(cabinSource\)/);
   assert.match(BUILD, /Cabin runtime contains absolute symlink/);
   assert.match(BUILD, /Cabin runtime symlink escapes staging root/);
