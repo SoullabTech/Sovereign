@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { apiFetch } from '@/lib/http/apiBase'
 import type { LivingField, FieldVersion, FieldSource, ParticipantConsent } from './types'
 import { LivingFieldDetailPanel } from './LivingFieldDetailPanel'
 
@@ -28,10 +29,9 @@ interface DetailData {
 
 interface Props {
   field: LivingField
-  memberId: string
 }
 
-export function LivingFieldCard({ field, memberId }: Props) {
+export function LivingFieldCard({ field }: Props) {
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<DetailData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -43,9 +43,7 @@ export function LivingFieldCard({ field, memberId }: Props) {
     if (!detail) {
       setLoading(true)
       try {
-        const res = await fetch(`/api/maia/living-field/${field.field_key}`, {
-          headers: { 'x-member-id': memberId },
-        })
+        const res = await apiFetch(`/api/maia/living-field/${field.field_key}`)
         if (!res.ok) throw new Error('detail unavailable')
         const data = await res.json()
         setDetail({ versions: data.versions, sources: data.sources, consents: data.consents })
@@ -131,7 +129,6 @@ export function LivingFieldCard({ field, memberId }: Props) {
           versions={detail.versions}
           sources={detail.sources}
           consents={detail.consents}
-          memberId={memberId}
           onClose={() => setOpen(false)}
         />
       )}
