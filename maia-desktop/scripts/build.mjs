@@ -55,7 +55,7 @@ fs.cpSync(standaloneRoot, cabinSource, {
 });
 fs.mkdirSync(path.join(cabinSource, '.next'), { recursive: true });
 fs.cpSync(standaloneStatic, path.join(cabinSource, '.next', 'static'), { recursive: true });
-fs.cpSync(standalonePublic, path.join(cabinSource, 'public'), { recursive: true });
+fs.cpSync(standalonePublic, path.join(cabinSource, 'public'), { recursive: true, verbatimSymlinks: true });
 
 const standaloneNextPackage = path.join(cabinSource, 'node_modules', 'next', 'package.json');
 if (!fs.existsSync(standaloneNextPackage)) {

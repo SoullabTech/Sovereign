@@ -26,7 +26,7 @@ test('Desktop packaging carries standalone, static, and public assets into the C
   assert.match(BUILD, /const nextCache = path\.join\('\.next', 'cache'\)/);
   assert.match(BUILD, /const isNextBuildCache = relative === nextCache/);
   assert.match(BUILD, /fs\.cpSync\(standaloneStatic, path\.join\(cabinSource, '\.next', 'static'\)/);
-  assert.match(BUILD, /fs\.cpSync\(standalonePublic, path\.join\(cabinSource, 'public'\)/);
+  assert.match(BUILD, /fs\.cpSync\(standalonePublic, path\.join\(cabinSource, 'public'\), \{ recursive: true, verbatimSymlinks: true \}\)/);
   assert.match(PACKAGE, /"from": "cabin-runtime"/);
   assert.match(BUILD, /cabinResource\.from = cabinSource/);
   assert.match(BUILD, /const cabinNodeModulesSource = path\.join\(cabinSource, 'node_modules'\)/);
