@@ -1,0 +1,42 @@
+{
+  "instrument": "jarvis-o5-r3-freeze/v1",
+  "frozen_at": "2026-09-30",
+  "freeze_commit": "3dc118aeb5f914b328266dc4585b5d36871edf50",
+  "authority": "founder rulings R3-R1..R11 and the O5-R3 BUILD GATE, 2026-09-30: amend the record, add the named falsifiers, re-run, confirm every candidate dies for its intended reason, freeze before implementation",
+  "governing_sentence": "One proven writer may mutate the grant authority domain at a time. Recovery may remove bytes that never became a ledger record; it may not rewrite ledger history.",
+  "law": "Implementation fails suite -> repair the implementation. Editing any frozen file (the model world, the lease reference and its candidates, R3-L1..L10, R3-D1..D2, R3-T1..T10, R3-C1..C3, R3-S1..S3, or any defeat candidate) requires a formal, named founder act with evidence the LAW or the INSTRUMENT was wrong, never that an implementation was inconvenient.",
+  "additive_law_permitted": "New law may be ADDED at its own address with its own falsifier and defeat candidate. Adding never edits a frozen file; the blob hashes below are the mechanical test.",
+  "frozen": {
+    "tests/constitutional/jarvis-o5-r3/world.mjs": "96e2f2142852eaa8a234a18428675c3321233375",
+    "tests/constitutional/jarvis-o5-r3/lease-reference.mjs": "e35d093ab91652c682d778b23ff44ba15776a4f7",
+    "tests/constitutional/jarvis-o5-r3/lease-falsifiers.mjs": "653b3ef12b4b9ffccf16db6b8edc041491c968f9",
+    "tests/constitutional/jarvis-o5-r3/lease-candidates.mjs": "5154dbe84afcd6e8c4d9c649e328407da5d90178",
+    "tests/constitutional/jarvis-o5-r3/tail-falsifiers.mjs": "8ce91ae94d1e20a3c130027df8141a8f7609b609",
+    "tests/constitutional/jarvis-o5-r3/tail-reference-candidates.mjs": "d6b8ac1b27315bce8c42f72e039fd580f56531cb",
+    "tests/constitutional/jarvis-o5-r3/settlement-falsifiers.mjs": "8208f0626bf8cfc814a961771bad6ba74d72c1f7",
+    "tests/constitutional/jarvis-o5-r3/settlement-reference-candidates.mjs": "d7621654b981e576da090194343276d5c080f466"
+  },
+  "deliberately_not_frozen": {
+    "tests/constitutional/jarvis-o5-r3/matrix.mjs": "the runner. Its Class A predictions (canonical reader RED on R3-T1/T3, classifier RED on R3-C1) MUST flip to PASS when the implementation lands; that flip, made in the open, is part of the implementation's evidence. It may also gain integration checks against the real stores. It may never weaken lethality or classification.",
+    "scripts/verify-jarvis-o5-r3-freeze.mjs": "the guard itself",
+    "package.json": "script wiring only"
+  },
+  "note": "Blob hashes, not a commit diff: they survive history rewriting and say exactly which bytes are law. The frozen falsifiers bind the model world; the build must additionally bind the real stores (integration checks in the unfrozen matrix) and the admission evidence named in the record.",
+  "amendments": [
+    {
+      "amendment": 1,
+      "date": "2026-09-30",
+      "authority": "founder Ruling 1 (2026-09-30): reopen DC-C2 narrowly — a one-file instrument repair, not a weakening of the law",
+      "file": "tests/constitutional/jarvis-o5-r3/settlement-reference-candidates.mjs",
+      "previous_blob": "37dede6d41bf30ce26a8b9b7542dac30415ef229",
+      "previous_freeze_commit": "3dc118aeb5f914b328266dc4585b5d36871edf50",
+      "new_blob": "d7621654b981e576da090194343276d5c080f466",
+      "cause": "DC-C2 depended on live production behavior and ceased to be a defeat candidate when the production classifier was corrected. The constitutional law did not change. The frozen instrument was repaired so the wrong design remains independently wrong.",
+      "changed": "DC-C2's subject only: it formerly wrapped the live classifier and acted only on the pre-R3 label W2_NOT_EXECUTING; it now acts on CLAIMED_NEVER_DISPATCHED over the reference, so it is wrong whatever the live classifier does",
+      "unchanged": "DC-C2's id, law text, named falsifier (R3-C2) and expected death; every falsifier; every other frozen file",
+      "pre_amendment_evidence": "matrix before the change: DC-C2 SURVIVED R3-C2 (MATRIX DEFECT 1); the identical construction as additive DC-C2p was KILLED on R3-C2",
+      "post_amendment_evidence": "matrix after the change: 28 falsifiers, 37/37 candidates KILLED, DC-C2 on R3-C2, MATRIX LETHAL + DISCRIMINATING",
+      "redundancy": "additive DC-C2p removed: after the amendment it would have been a byte-identical second candidate for the same law"
+    }
+  ]
+}
