@@ -2352,11 +2352,74 @@ function spInspectEdge(sp, from, to) {
   host.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
+
+function libraryGroups(groups, query, prefix) {
+  const q = String(query || '').trim().toLowerCase();
+  return (groups || []).map((g, gi) => {
+    const items = (g.items || []).filter(i => {
+      if (!q) return true;
+      return (String(i.title || '') + ' ' + String(i.path || '') + ' ' + String(g.title || '')).toLowerCase().includes(q);
+    });
+    if (!items.length) return '';
+    return `<details class="library-group" data-library-group="${prefix}-${gi}" ${q ? 'open' : ''}>
+      <summary><span>${escapeHtml(g.title)}</span><span class="library-count">${items.length}</span></summary>
+      <div class="library-items">${items.map(i => `<div class="library-item">
+        <div>${escapeHtml(i.title)}</div>
+        ${i.path ? `<div class="library-path">${escapeHtml(i.path)}</div>` : ''}
+      </div>`).join('')}</div>
+    </details>`;
+  }).join('');
+}
+
+function wireLibrary() {
+  const search = document.getElementById('library-search');
+  if (search) {
+    search.addEventListener('input', () => renderLibrary(search.value));
+    search.focus();
+  }
+  document.getElementById('library-expand')?.addEventListener('click', () => {
+    document.querySelectorAll('.library-group').forEach(d => { d.open = true; });
+  });
+  document.getElementById('library-collapse')?.addEventListener('click', () => {
+    document.querySelectorAll('.library-group').forEach(d => { d.open = false; });
+  });
+}
+
+function renderLibrary(query = '') {
+  const lib = window.KELLY_FIELD_LIBRARY;
+  if (!lib) {
+    $main.innerHTML = '<div class="card"><p class="headline">Field Library unavailable.</p><p class="sentence">The generated index was not loaded.</p></div>';
+    return;
+  }
+  const q = String(query || '');
+  $main.innerHTML = `
+    <div class="card">
+      <p class="headline">Living Field Library</p>
+      <p class="sentence">A scrollable map of the fields, laws, ideas, and programme lanes we have been building. Collapse back to the whole whenever you need orientation.</p>
+      <div class="library-summary">${lib.counts.concepts} durable concepts · ${lib.counts.lanes} canonical programme records · ${lib.counts.recent} touched since September 27 · sweep generated ${escapeHtml(lib.generatedAt)}</div>
+      <div class="library-toolbar">
+        <input id="library-search" type="text" value="${escapeHtml(q)}" placeholder="Search memory, consciousness, Writer's Studio, JARVIS, capture…">
+        <button class="act" id="library-expand">Expand all</button>
+        <button class="act" id="library-collapse">Collapse all</button>
+      </div>
+      <div class="hint">Browse is live now. Grokker Ask / Trace / Synthesize can bind to this same corpus without making a second source of truth.</div>
+    </div>
+    <div class="library-section-title">Fields and enduring ideas</div>
+    ${libraryGroups(lib.conceptGroups, q, 'concept')}
+    <div class="library-section-title">Recent activity · since September 27</div>
+    ${libraryGroups([{title:'Recently touched programme records',items:lib.recentItems || []}], q, 'recent')}
+    <div class="library-section-title">Full canonical programme corpus</div>
+    ${libraryGroups(lib.laneGroups, q, 'lane')}
+  `;
+  wireLibrary();
+}
+
 function render() {
   if (currentView === 'home') renderHome();
   else if (currentView === 'work') renderWork();
   else if (currentView === 'system') renderSystem();
   else if (currentView === 'spiral') renderSpiral();
+  else if (currentView === 'library') renderLibrary();
 }
 
 (async function init() {
