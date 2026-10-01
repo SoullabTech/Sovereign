@@ -2,9 +2,11 @@
 
 **Participant label:** FIRST-ENTRY-___
 **Date/time:**
-**Production SHA at start:** (`docker exec maia-sovereign printenv GIT_COMMIT`)
-**Production SHA at end:** (same command, after the walk; if it differs from start → the walk is **NO EVIDENCE**)
-**Public health:**
+**Scheduled-against SHA:**
+**Production SHA at start of walk:** (`docker exec maia-sovereign printenv GIT_COMMIT`)
+**Production SHA at end of walk:** (same command, after the walk)
+**Deploy freeze held for the window:** yes / no
+**Public health (start / end):**
 **Device/browser:**
 **Early Field admitted:** yes / no
 **Pre-existing member-owned substrate:** no
@@ -13,6 +15,34 @@
 **Member saved an expression:** yes / no
 **MAIA entered:** yes / no
 **MAIA request before explicit entry:** yes / no / not observed
+
+> **Validity.** If any of the three SHAs differ, or the freeze did not hold, stop filling this in:
+> mark the record **VOID — NO EVIDENCE** and do not adjudicate it.
+
+## Script — read these words, and only these
+
+Copied verbatim from §3 of `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md`. Do not
+paraphrase, and do not use the task wording from the populated-field packet or protocol.
+
+Before the first attempt:
+
+> You're trying an early way of entering the Living Field. Nothing has been written into your
+> field for this test. You do not have to create anything. Explore whatever draws your attention.
+> If you choose to write something, write only what is genuinely true for you. You can explore
+> without talking with MAIA; MAIA begins only when you explicitly choose a MAIA action — either
+> “Explore with MAIA →” or “Enter this dimension with MAIA.” You may stop at any time.
+
+Then give only this task:
+
+> **Start from the House and enter your Living Field. Explore whatever draws your attention.
+> Follow one path if you want to. Do whatever feels natural when you reach a dimension, then
+> return toward the wider field and Home. Say what you are noticing if you are comfortable.**
+
+Do not ask them to create an expression, choose a particular element, or enter MAIA. Do not
+explain the elements, the field hierarchy, or the intended route, and do not apologize for the
+empty field: how the system presents that absence is part of what is being witnessed.
+
+**Script read verbatim:** yes / no (if no, record what was said instead)
 
 ## Uncoached path
 
@@ -79,6 +109,8 @@ Choose exactly one:
 - [ ] FIRST-ENTRY PASS
 - [ ] FIRST-ENTRY PASS WITH FRICTION
 - [ ] NOT ADMITTED / STOP
+
+(Or, before adjudicating: **VOID — NO EVIDENCE** if the SHA or deploy-freeze check failed.)
 
 Reason:
 
