@@ -1,0 +1,41 @@
+{
+  "freeze_version": "O5-R5A.v1",
+  "date": "2026-10-01",
+  "base": "2e657fa0dd6261584dd77463ced7782d80906d7d",
+  "scope": "Current-reachable execution binding/readiness only: canonical O2 V1 replay, exact one-to-one O2\u2192W2 binding, CLOSED predecessor, ROUTED own state, evidence fail-closed, zero/one capacity gate, deterministic selection, no mutation, live session recheck authoritative. Parallel multi-ready selection is deferred to R5B.",
+  "frozen_files": {
+    "tests/constitutional/jarvis-o5-r5/contract.mjs": "4824e7a591f3368181a9f52f9abed525cf5897cb18609120a6df845b976a39fd",
+    "tests/constitutional/jarvis-o5-r5/substrate.mjs": "ea997573b3dc0de4cee9c95bc2fcdb9a30594cf1a41b7163fe9c9bcb5629a3b9",
+    "tests/constitutional/jarvis-o5-r5/reference.mjs": "ada18a4df3061f20e61474089f029029f810a4a3e92d2d92833e205f5d0e6817",
+    "tests/constitutional/jarvis-o5-r5/falsifiers.mjs": "8b9d995f531757ed21ec78a91cf6d8279d67fa47082941acb3682d4ccf8c11f6",
+    "tests/constitutional/jarvis-o5-r5/candidates.mjs": "074dd26b4fb8c10dd75c08edd07f1eba9bb2aef4f8e8a12ed8d78c0007a6d91d"
+  },
+  "unfrozen": [
+    "tests/constitutional/jarvis-o5-r5/matrix.mjs"
+  ],
+  "amendments": [
+    {
+      "amendment": 1,
+      "date": "2026-10-01",
+      "previous_freeze_commit": "3dfd4d9840db38e0a6762c7c9a2c94225a7a80fb",
+      "authority": "pre-admission instrument correction after O2 canonical-replay review",
+      "cause": "The initial R5 freeze used a synthetic branched/multi-ready graph. O2 V1 canonically serializes every compiled graph and O3 requires byte-identical canonical replay, so the parallel scenarios were unreachable from current canonical O2. The instrument was narrowed before admission rather than legislating future graph behavior.",
+      "changed": "R5A now adds canonical O2 replay integrity and tests only current-reachable serial readiness/capacity. Multi-dependency and multi-ready parallel scheduling move to unopened R5B.",
+      "unchanged": "Exact planned\u2192runtime binding, one-to-one identity, CLOSED-only dependency satisfaction, ROUTED-only own eligibility, missing-evidence fail-closed, no mutation, and live session recheck authority.",
+      "previous_hashes": {
+        "tests/constitutional/jarvis-o5-r5/contract.mjs": "4824e7a591f3368181a9f52f9abed525cf5897cb18609120a6df845b976a39fd",
+        "tests/constitutional/jarvis-o5-r5/substrate.mjs": "0129b4b28d8f8e789604ca5aff944a1b64a88b3bd341111813e4a9488e6e852a",
+        "tests/constitutional/jarvis-o5-r5/reference.mjs": "63a99f911c0a7e02a37d31525cff3819c15fb7519ce79fc54bf75b8bc0532812",
+        "tests/constitutional/jarvis-o5-r5/falsifiers.mjs": "aedee5dbe7b0a31f4fd1987fbb0ead186c97bfc31d466c6f44433d8d18926991",
+        "tests/constitutional/jarvis-o5-r5/candidates.mjs": "bb14e6ceb934b528088735f5499c6d8012ec8850ebe52bac1d2189632c3873fc"
+      },
+      "new_hashes": {
+        "tests/constitutional/jarvis-o5-r5/contract.mjs": "4824e7a591f3368181a9f52f9abed525cf5897cb18609120a6df845b976a39fd",
+        "tests/constitutional/jarvis-o5-r5/substrate.mjs": "ea997573b3dc0de4cee9c95bc2fcdb9a30594cf1a41b7163fe9c9bcb5629a3b9",
+        "tests/constitutional/jarvis-o5-r5/reference.mjs": "ada18a4df3061f20e61474089f029029f810a4a3e92d2d92833e205f5d0e6817",
+        "tests/constitutional/jarvis-o5-r5/falsifiers.mjs": "8b9d995f531757ed21ec78a91cf6d8279d67fa47082941acb3682d4ccf8c11f6",
+        "tests/constitutional/jarvis-o5-r5/candidates.mjs": "074dd26b4fb8c10dd75c08edd07f1eba9bb2aef4f8e8a12ed8d78c0007a6d91d"
+      }
+    }
+  ]
+}
