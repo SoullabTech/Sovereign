@@ -1207,3 +1207,77 @@ The admitted normalization produced exactly:
 No grant, Work Unit, W4, result, or provider state was changed by A8.
 The real delegation home therefore again has coherently terminated lease history suitable for a fresh pre-write
 baseline. A new O5-R3 admission specimen is still required; this normalization is not admission evidence.
+
+
+## 19. Final fresh admission walk — PASS (2026-10-01)
+
+The final specimen ran from detached clean worktree `/Users/soullab/o5r3-witness-5f408aa0f` at exact HEAD
+`5f408aa0f7583a5477a24a6b1fe9402ec1c27128`, containing required ancestor `ce061073`, with
+`JARVIS_REPO_ROOT` unset. The live Desktop incarnation was pid `65256`, process start
+`ps-lstart:Thu Oct 1 19:45:02 2026`.
+
+### 19.1 Pre-write baseline
+
+`~/o5r3-w6-step5.txt` and `~/o5r3-w6-prewrite.json` preserve the baseline.
+The readiness barrier reported READY. C1–C5 passed and C6-pre reported:
+
+`NOT_YET_HELD_AFTER_RELEASE · generation 11 released at 2026-10-01T23:42:06.464Z`
+
+Verdict: `PRE-WRITE BASELINE PASS — C1–C5 + C6-pre (a baseline, not admission)`.
+
+### 19.2 Single authorized transition
+
+A fresh canonical witness Work Unit was created at the same exact SHA:
+`v2-witness-the-o5-r3-final-single-aut-muq6oszr`.
+Both required route participants received governed READY transport bindings, but only PRIMARY/QWEN was reviewed
+and authorized. The live Desktop renderer performed exactly one `Authorize this execution once` act.
+
+The transition produced:
+- lease generation 12 held by pid `65256` / the exact Desktop incarnation;
+- exactly one changed grant ledger, belonging to the witness Work Unit;
+- exactly one new grant event, `ISSUED`;
+- grant `e1-73a5c76ad7c87f810cee2e0a1659d3de`;
+- no `CLAIMED` event;
+- no provider launch.
+
+Step 6 passed C1–C6, C6A and C6B, with C7/C8 pending only.
+
+### 19.3 Second-writer refusal and closure
+
+With no further Desktop UI activity, the second writer was attempted through the recovery census write seam.
+It was refused:
+- `GRANT_WRITER_LEASE_UNAVAILABLE`;
+- `HOME_LEASE_HELD`;
+- lease generation 12;
+- holder pid `65256`, exact process start `ps-lstart:Thu Oct 1 19:45:02 2026`.
+
+C8 compared 23 governed files across that refused attempt and found them byte-identical.
+The final witness verdict was:
+
+**`CONSTITUTIONAL PASS — C1–C8 + C6A + C6B witnessed`**
+
+Exit status: 0.
+
+### 19.4 Orderly lifecycle termination
+
+Desktop then quit orderly. The binding record gained
+`terminatedAt: 2026-10-01T23:53:13.293Z`, and the lease appended generation 13 as the release of generation 12 at
+`2026-10-01T23:53:13.306Z` with the same owner nonce.
+
+The admission evidence is preserved locally in:
+- `~/o5r3-w6-prewrite.json`
+- `~/o5r3-w6-step5.txt`
+- `~/o5r3-w6-step6.txt`
+- `~/o5r3-w6-before.json`
+- `~/o5r3-w6-refusal.json`
+- `~/o5r3-w6-evidence.json`
+- `~/o5r3-w6-step7.txt`
+
+> **O5-R3 — ADMITTED.** Runtime binding and execution-lease standing have been witnessed across historical
+> incarnation turnover, crash recovery, proof-based lease normalization, pre-write baseline discrimination,
+> one exact human one-shot authorization, C6A transition integrity, C6B event purity, incarnation-bound
+> current-holder proof, structurally refused second-writer mutation, byte-identical refusal integrity, and
+> orderly lifecycle release.
+
+This admission does not authorize provider execution, merge, deploy, production access, or any broader authority.
+**O5-R4 remains closed** under the current standing ruling; admission satisfies its prerequisite but does not open it.
