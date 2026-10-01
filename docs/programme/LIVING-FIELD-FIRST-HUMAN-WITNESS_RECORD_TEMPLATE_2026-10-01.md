@@ -6,6 +6,7 @@
 **Public health:**
 **Device/browser:**
 **Early Field admitted:** yes / no
+**Authentic member-owned substrate present before witness:** yes / no
 **Facilitator intervention:** none / describe
 **MAIA entered:** yes / no
 **MAIA request before explicit entry:** yes / no / not observed
