@@ -3341,3 +3341,36 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
   cursor:not-allowed;
   box-shadow:none;
 }
+
+/* WS-R0 founder witness repair — manuscript selection is an attentional act.
+   A chapter/section choice immediately reorients the center + MAIA field. */
+.p4r1-root .p4r1-locus-arrival{display:grid;gap:14px;max-width:920px;margin:2px auto 24px}
+.p4r1-root .p4r1-locus-primary{padding:22px 24px}
+.p4r1-root .p4r1-locus-primary h3,
+.p4r1-root .p4r1-locus-support h3{
+  margin:6px 0 8px;font-family:var(--fr-serif-stack);font-size:25px;line-height:1.2;
+  font-weight:560;color:var(--fr-title)
+}
+.p4r1-root .p4r1-locus-primary>p,
+.p4r1-root .p4r1-locus-support>p{margin:0;color:var(--fr-ink2);font:14px/1.58 var(--fr-sans-stack)}
+.p4r1-root .p4r1-locus-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.p4r1-root .p4r1-locus-actions button,
+.p4r1-root .p4r1-locus-lens-grid button,
+.p4r1-root .p4r1-locus-whole{
+  min-height:36px;border:1px solid var(--fr-line);border-radius:9px;background:var(--fr-panel);
+  color:var(--fr-title);padding:8px 11px;font:600 11.5px/1.25 var(--fr-sans-stack);cursor:pointer
+}
+.p4r1-root .p4r1-locus-actions .p4r1-talk{background:var(--fr-held);border-color:var(--fr-action-line)}
+.p4r1-root .p4r1-locus-lenses{
+  border:1px solid var(--fr-line);border-radius:12px;background:color-mix(in srgb,var(--fr-panel) 74%,transparent);
+  padding:16px 18px
+}
+.p4r1-root .p4r1-locus-lens-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.p4r1-root .p4r1-locus-whole{justify-self:start;background:transparent;color:var(--fr-ink2)}
+.p4r1-root .p4r1-locus-support{padding:2px 0}
+.p4r1-root .p4r1-locus-support .fr-also{margin-top:14px}
+.p4r1-root .p4r1-write-maia .p4r1-context-card{position:static;inset:auto;width:auto;max-height:none;box-shadow:none}
+@media(max-width:900px){
+  .p4r1-root .p4r1-locus-arrival{margin-left:0;margin-right:0}
+  .p4r1-root .p4r1-locus-actions,.p4r1-root .p4r1-locus-lens-grid{display:grid;grid-template-columns:1fr 1fr}
+}

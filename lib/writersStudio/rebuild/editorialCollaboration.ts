@@ -135,6 +135,11 @@ export interface VoiceNotice {
   note: string; unfamiliar: string[]; sampleWords: number;
 }
 
+export interface EditorialCarrySelection {
+  readonly kind: 'prior_maia_editorial_turn';
+  readonly sourceEpisodeSequence: number;
+}
+
 export type EditorialTurnOutcome =
   | {
       ok: true; thread: RebuildEditorialThread; producedVersionId: string | null;
@@ -177,9 +182,16 @@ export async function sendBoundEditorialTurn(
   options?: {
     /** Exploratory turns may close the outcome vocabulary to reply_only. */
     proposalPolicy?: ProposalPolicy;
-  },
+    /** Selected durable Work-level editorial relationship, when carrying one. */
+    relationshipId?: string;
+    /** One explicitly selected prior MAIA editorial response from this relationship. */
+    carry?: EditorialCarrySelection;
+  } | string,
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
+  const proposalPolicy = typeof options === 'string' ? undefined : options?.proposalPolicy;
+  const relationshipId = typeof options === 'string' ? options : options?.relationshipId;
+  const carry = typeof options === 'string' ? undefined : options?.carry;
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
       method: 'POST',
@@ -188,7 +200,9 @@ export async function sendBoundEditorialTurn(
         threadId, act: { act: 'discourse', text, refersTo: null },
         sanctuary: posture.sanctuary,
         ...(scope ? { scope } : {}),
-        ...(options?.proposalPolicy ? { proposalPolicy: options.proposalPolicy } : {}),
+        ...(proposalPolicy ? { proposalPolicy } : {}),
+        ...(relationshipId ? { relationshipId } : {}),
+        ...(carry ? { carry } : {}),
       }),
     });
     const body = await res.json().catch(() => null);

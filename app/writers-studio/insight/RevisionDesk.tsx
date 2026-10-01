@@ -12,15 +12,24 @@ import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract
 import EditingLatitude from './EditingLatitude';
 import { editorialSegments } from '@/lib/writersStudio/editorialDiff';
 import { DEPTH_CHOICES, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
+import type { EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 
 export interface MemberRevisionDraft {
   threadId: string; sectionId: string; supersedes: string | null; text: string; purpose?: string;
 }
+
+export type CarryChooserPresentation =
+  | { readonly kind: 'closed' }
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'ready'; readonly sources: readonly EligibleCarrySource[] }
+  | { readonly kind: 'unavailable' };
 export default function RevisionDesk({
   active = true, inline = false, onPreview, onEditOriginal, onReadContext, composedText, depth, onDepth, openDraftNonce, showInspiration = true, scopeKey = 'passage', manuscriptId, title, currentText, thread, version, instruction, onInstruction, onSend, onSelectVersion,
   onApply, onSaveMember, busy, message, response, onKeep, sectionBody, appliedVersionId, onUndo, undoMessage,
   latitude = 1, onLatitude, mayRemoveParagraphs = false, onMayRemoveParagraphs, voiceNotice,
   mayProposeImmediately = false, onMayProposeImmediately,
+  carrySourceAvailable = false, carryChooser = { kind: 'closed' }, selectedCarrySource = null,
+  onOpenCarryChooser, onCloseCarryChooser, onSelectCarrySource, onRemoveCarrySource,
 }: {
   onEditOriginal?: () => void; onReadContext?: () => void;
   /** ⭐ C6R4 — what the writer wants of MAIA next. ⛔ Never what MAIA has
@@ -56,6 +65,14 @@ export default function RevisionDesk({
    * ⛔ Shown BESIDE the proposal, never after the writer has accepted it.
    */
   voiceNotice?: string | null;
+  /** A2-14 presentation only. Authority-bearing source state stays in the Rebuild host. */
+  carrySourceAvailable?: boolean;
+  carryChooser?: CarryChooserPresentation;
+  selectedCarrySource?: EligibleCarrySource | null;
+  onOpenCarryChooser?: () => void;
+  onCloseCarryChooser?: () => void;
+  onSelectCarrySource?: (source: EligibleCarrySource) => void;
+  onRemoveCarrySource?: () => void;
 }) {
   const [openTool, setOpenTool] = useState<string | null>(null);
   useEffect(() => { setOpenTool(null); }, [scopeKey]);
@@ -226,6 +243,51 @@ export default function RevisionDesk({
           onInstruction(instruction.trim() ? instruction + '\n\n' + question : question);
         }}>{label}</button>)}
       </div>}
+      {(carrySourceAvailable || selectedCarrySource || carryChooser.kind !== 'closed') && <section
+        aria-label="Earlier MAIA response context"
+        style={{ margin: '8px 0 10px', borderTop: '1px solid rgba(120,100,75,.16)', paddingTop: 8 }}>
+        {selectedCarrySource && <div role="status" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', justifyContent: 'space-between', border: '1px solid rgba(120,100,75,.2)', borderRadius: 8, padding: '8px 9px', marginBottom: 7 }}>
+          <div style={{ minWidth: 0 }}>
+            <strong style={{ fontSize: 11 }}>Earlier MAIA response</strong>
+            <div style={{ fontSize: 10.5, lineHeight: 1.4, marginTop: 3 }}>
+              {selectedCarrySource.excerpt}{selectedCarrySource.excerptTruncated ? '…' : ''}
+            </div>
+          </div>
+          {onRemoveCarrySource && <button type="button" className="wsi-text-button" onClick={onRemoveCarrySource} disabled={blocked}>Remove</button>}
+        </div>}
+        {carrySourceAvailable && carryChooser.kind === 'closed' && onOpenCarryChooser && <button
+          type="button" className="wsi-text-button" onClick={onOpenCarryChooser} disabled={blocked}>
+          Bring an earlier MAIA response
+        </button>}
+        {carryChooser.kind === 'loading' && <div role="status" aria-live="polite" style={{ fontSize: 10.5 }}>Checking earlier MAIA responses…</div>}
+        {carryChooser.kind === 'unavailable' && <div role="status" aria-live="polite" style={{ fontSize: 10.5 }}>
+          Earlier MAIA responses could not be checked just now. Nothing has been selected.
+          {onCloseCarryChooser && <button type="button" className="wsi-text-button" onClick={onCloseCarryChooser}>Close</button>}
+        </div>}
+        {carryChooser.kind === 'ready' && <div role="region" aria-labelledby="a2-carry-source-heading" style={{ marginTop: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+            <strong id="a2-carry-source-heading" style={{ fontSize: 11 }}>Earlier in this relationship</strong>
+            {onCloseCarryChooser && <button type="button" className="wsi-text-button" onClick={onCloseCarryChooser}>Close</button>}
+          </div>
+          <p className="wsi-muted" style={{ margin: '4px 0 7px' }}>Choose one earlier response from MAIA to bring into this turn. Nothing is added unless you choose it.</p>
+          {carryChooser.sources.length === 0 ? <p role="status" className="wsi-muted">No earlier MAIA Editorial responses are available to bring into this conversation.</p> :
+            <div style={{ maxHeight: 280, overflowY: 'auto', display: 'grid', gap: 6 }}>
+              {carryChooser.sources.map(source => {
+                const date = new Date(source.admittedAt).toLocaleString();
+                const selected = selectedCarrySource?.sourceEpisodeSequence === source.sourceEpisodeSequence;
+                return <button key={source.sourceEpisodeSequence} type="button"
+                  aria-pressed={selected}
+                  aria-label={`${source.sourceScope === 'section' ? 'Section' : 'Passage'} response from ${date}: ${source.excerpt}`}
+                  disabled={blocked}
+                  onClick={() => onSelectCarrySource?.(source)}
+                  style={{ textAlign: 'left', border: '1px solid rgba(120,100,75,.2)', borderRadius: 8, padding: '8px 9px', background: selected ? 'rgba(180,145,75,.12)' : 'transparent', cursor: blocked ? 'default' : 'pointer' }}>
+                  <span style={{ display: 'block', fontSize: 9.5, opacity: .7, marginBottom: 3 }}>{source.sourceScope === 'section' ? 'Section' : 'Passage'} · {date}</span>
+                  <span style={{ display: 'block', fontSize: 10.5, lineHeight: 1.4 }}>{source.excerpt}{source.excerptTruncated ? '…' : ''}</span>
+                </button>;
+              })}
+            </div>}
+        </div>}
+      </section>}
       <form className="wsi-page-reply" onSubmit={e => { e.preventDefault(); discuss(); }}>
         <textarea aria-label="Discuss this passage" rows={1} value={instruction}
           onChange={e => onInstruction(e.target.value)} disabled={blocked}
