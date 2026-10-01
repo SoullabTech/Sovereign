@@ -189,12 +189,18 @@ No other clause changes.
   The consent test cannot pass while its own observation breaks consent.
 
 **§3 addition: say this before the existing text, and adapt it to the actual setup.**
+Written to be spoken. Read it aloud once before using it.
 
-> Before you start: here is who can see this. [The facilitator, in person / on this call.]
-> [Nothing is being recorded on screen.] [No AI system is connected to your device or can see your
-> screen.] What I write down is short notes in my own words about what you did and said. I won't
-> copy anything you write in your field. The notes go into an internal Soullab witness record under
-> a label, not your name. You can stop at any time, and you can ask me to leave anything out.
+> Before we start, I'd like you to know exactly who's with you. It's just me, [here with you /
+> on this call]. Nothing is recording your screen, and no AI is connected to your device or
+> watching what you do. MAIA only joins if you choose her, the way I'll describe in a moment.
+> While you explore, I'll jot a few notes in my own words about what you do
+> and say, but I won't copy anything you write in your field. The notes are kept under a label,
+> not your name. If there's anything you'd rather I leave out, just tell me, now or afterwards.
+> I'm here the whole time, so if anything feels hard, you can say so and we'll stop.
+
+Then continue with the existing §3 text. Its closing *"You may stop at any time"* now repeats this
+script; say it once, wherever it lands more naturally.
 
 If any bracket is untrue for the actual setup, say what is true instead. If the member declines
 the setup, the walk does not run.

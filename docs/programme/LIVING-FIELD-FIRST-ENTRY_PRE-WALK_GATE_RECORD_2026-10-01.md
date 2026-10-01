@@ -76,25 +76,34 @@ Verdict: PASS / FAIL
 
 ---
 
-## G2 · Postgres restart: cause established
+## G2 · Database stable
 
-A database restart with no known cause is an open production fault. No member goes in front of
-production while one is open.
+What matters for a member is that the database is stable now. The question is not settled by
+proving why the old container had drifted, which may be unprovable. Docker's event buffer may not
+reach back that far, and a gate that demands an unprovable root cause either never passes or gets
+waived.
 
-Required: the restart time, the cause, and the evidence for that cause. Suggested captures
-(read-only):
+**Already established (cite, do not re-derive):**
+`docs/programme/WS-ADVANCED-RUNTIME-01_RC1_PRODUCTION_WITNESS_2026-10-01.md`, observation 1.
+`maia-postgres` was **recreated**, not crashed, at the first `compose run migrate` of the RC1
+deploy: `started=2026-10-01T14:34:47Z restarts=0 oom=false`. The ledger survived intact. That
+record reaches canonical through its own docs-only PR. Until that PR merges, the citation points
+at a branch and this gate cannot pass.
+
+**Required now:**
 
 ```bash
 ssh soullab@minisforum 'date -u +%FT%TZ; docker exec maia-sovereign printenv GIT_COMMIT; \
-  docker inspect maia-postgres --format "started={{.State.StartedAt}} restarts={{.RestartCount}} oom={{.State.OOMKilled}} exit={{.State.ExitCode}}"; \
-  docker logs maia-postgres --since 48h 2>&1 | grep -E "database system (is shut down|was shut down|was interrupted|is ready)|terminated by signal|out of memory|PANIC|FATAL" | tail -40; \
-  journalctl -k --since "48 hours ago" 2>/dev/null | grep -iE "oom|killed process" | tail -20; \
-  uptime'
+  docker inspect maia-postgres --format "started={{.State.StartedAt}} restarts={{.RestartCount}} oom={{.State.OOMKilled}} status={{.State.Status}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}"'
 ```
 
-The cause must be **named and supported by a line in the output**. "Probably a deploy" is not a
-cause. If the output cannot establish one, the verdict is FAIL and the next step is investigation,
-not the walk.
+PASS requires all of:
+
+- `restarts=0` and `oom=false`;
+- `started=` still equal to `2026-10-01T14:34:47Z`. A later value means another recreate or
+  restart has happened since the witnessed one, and it needs its own explanation before this gate
+  can pass;
+- `status=running`.
 
 captured_at_utc:
 production_sha_at_capture:
@@ -103,9 +112,18 @@ production_sha_at_capture:
 (paste verbatim)
 ```
 
-Restart time (from output):
-Cause (one sentence, citing the output line):
-Recurrence risk before the walk:
+**Root cause:** recorded as **UNKNOWN**. The leading inference (a compose call outside
+`deploy_ctx_compose` with different interpolation) is not established. ⛔ Do not upgrade it here.
+**Tracked separately, not gating:** the deploy fix (`--no-deps` on the migrate container, so a
+pending-set read cannot recreate Postgres).
+
+**Recorded, not gating (founder attention):** the witness record also states that **disaster
+recovery is not established**. The Hetzner standby has been offline for 7 days, and it needs a fresh
+base backup when it returns. Off-host backups were verified on the Mac Studio at ~15:25Z. A member
+who writes during the walk creates real substrate that exists on one host and in a nightly backup.
+Accept that exposure explicitly or defer the walk; do not leave it assumed.
+
+Standby exposure accepted for this walk: yes (by whom) / no (walk deferred)
 
 Verdict: PASS / FAIL
 
@@ -114,6 +132,10 @@ Verdict: PASS / FAIL
 ## G3 · J18 rollback gate: emergency disable witnessed
 
 Exactly one of G3a or G3b is filled.
+
+⚠️ No branch carries the J18 verdict or the emergency-disable outputs; they exist only in the
+Mac-connected session's transcript. G3a is therefore the only route by which they can reach the
+repository, and it must land as a docs-only commit on canonical before this gate can cite it.
 
 ### G3a · Commit the existing witness
 
@@ -186,6 +208,11 @@ Verdict: PASS / FAIL
 - Start SHA (repeat at the end in the witness record; any difference → NO EVIDENCE).
 - If the start SHA differs from the SHA re-baselined in `LIVING-FIELD_WITNESS_REBASELINE_RC1_2026-10-01.md`
   (`03f0fd3ab`), a new source re-baseline is required **before** the walk. Name it here.
+- Whether the start SHA is an ancestor of `clean-main-no-secrets`
+  (`git merge-base --is-ancestor <sha> origin/clean-main-no-secrets; echo $?`). ⚠️ At the time
+  of writing, production `03f0fd3ab` is **not** on canonical, and neither are the three migrations it
+  applied. Record the result either way. It does not block the walk, but it does decide what a later
+  deploy of canonical would do to the build the member walked on.
 - Preconditions 3 and 6 re-witnessed live: aggregate substrate **counts only**, and explicit MAIA
   entry present in the deployed build.
 
@@ -218,17 +245,55 @@ Verdict: PASS / FAIL
 
 ---
 
+## G7 · A human safety layer for the person in front of MAIA
+
+If MAIA detects a crisis during the walk, nothing currently routes it to a person. This gate makes
+the layer that covers that explicit. Fill **exactly one** of G7a or G7b.
+
+### G7a · In-conversation crisis resources are live in the deployed build
+
+Cite the code path in the walk's start SHA and a verbatim capture showing that a crisis-indicating
+turn produces the resources in-conversation on that build. Citing legacy code that exists in the
+repository is not enough: the path must be reachable from the route the member will use.
+
+Code path at start SHA:
+captured_at_utc:
+production_sha_at_capture:
+
+```text
+(paste verbatim)
+```
+
+### G7b · A named facilitator is the human safety layer
+
+Use this while G7a is not established. It makes the walk possible and keeps the gap visible.
+
+- Facilitator present for the whole walk, in person or on a call the member chose: (name or role)
+- The member was told, before the walk, who that person is and that they are there if anything
+  becomes hard: yes / no
+- The facilitator has a crisis line appropriate to the member's location ready before starting: yes / no
+- The facilitator knows they may stop the walk at any time, and that stopping for the member's
+  wellbeing is never a protocol failure: yes / no
+- Member is an adult, by the facilitator's direct knowledge: yes / no. Nothing in the schema
+  marks an account as a teen, so this cannot be read from data. **No → STOP. A founder ruling is
+  needed before any minor walks.**
+
+Verdict: PASS (G7a / G7b) / FAIL
+
+---
+
 ## Gate summary
 
 | Gate | Verdict |
 |---|---|
 | G0 protocol canonical | |
 | G1 cabin mode unset | |
-| G2 Postgres restart cause | |
+| G2 database stable | |
 | G3 emergency disable witnessed | |
 | G4 admission server-side | |
 | G5 Amendment 1 at start | |
 | G6 observation disclosed | |
+| G7 human safety layer (a / b) | |
 
 Any FAIL → **no walk**. The record names the failing gate and its next bounded act, nothing more.
 All PASS → the walk proceeds under the protocol, recorded in the first-entry witness record template.
