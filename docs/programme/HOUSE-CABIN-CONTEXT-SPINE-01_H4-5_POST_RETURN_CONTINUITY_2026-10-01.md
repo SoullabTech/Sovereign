@@ -21,27 +21,32 @@ Runtime:
 For each entry:
 
 1. open /cabin;
-2. capture the Cabin state, visible field text, and doorway hrefs;
+2. capture the Cabin state;
 3. enter the destination with from=cabin;
 4. wait for hydration;
 5. activate the explicit Return to Cabin control;
 6. capture /cabin again;
-7. compare state, field text, and doorway hrefs;
-8. record requests to /api/cabin/context.
+7. record requests to /api/cabin/context.
 
 ### Results
 
-| Entry | Return URL | State same | Field text same | Door hrefs same | Cabin API hits |
-|---|---|---:|---:|---:|---|
-| Writer's Studio | /cabin | yes | yes | yes | none |
-| Relationships | /cabin | yes | yes | yes | none |
-| Anchor history | /cabin | yes | yes | yes | none |
-| Daily Anchor | /cabin | yes | yes | yes | none |
+| Entry | Return URL | Mounted state after return | Cabin API hits during return |
+|---|---|---:|---|
+| Writer's Studio | /cabin | mounted | none |
+| Relationships | /cabin | mounted | none |
+| Anchor history | /cabin | mounted | none |
+| Daily Anchor | /cabin | mounted | none |
 
 All four returned to the exact /cabin route.
 
+The Relationships walk additionally re-observed the same domain-presence tuple
+after return: Work present; Relationships empty; Memory empty.
+
+The evidence is deliberately not expanded into stronger field-by-field equality
+claims where the individual witness did not capture that field.
+
 No request to /api/cabin/context or its refresh/import family was observed
-during the return crossing.
+during any return crossing.
 
 ## Structural witness
 
@@ -61,22 +66,18 @@ Existing H3/H4 runtime tests remain green.
 
 ## Focused test evidence
 
-H4.5 post-return suite:
+Combined H4.2–H4.5 continuity suite:
 
-- 5/5 PASS
+**46/46 PASS** across:
 
-Existing continuity substrate:
+- H4.5 post-return continuity guards;
+- context runtime;
+- experience context;
+- H4.4 destination membranes;
+- H4.3 doorway crossing;
+- H4.2 arrival.
 
-- context runtime: 9/9 PASS
-- experience context: 10/10 PASS
-
-H4.4 destination membrane suite:
-
-- 22/22 PASS
-
-H4.3 doorway + H4.2 arrival suites:
-
-- 22/22 PASS
+The H4.5 suite itself is **5/5 PASS**.
 
 ## Falsifier status
 

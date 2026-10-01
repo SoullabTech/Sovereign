@@ -39,6 +39,15 @@ The Cabin page reads the current process-local mounted context through the
 experience-context bridge. It does not initialize, refresh, import, or clear
 the mount.
 
+## Runtime evidence
+
+2026-10-01 local offline browser witness on port 3692 exercised all four
+H4.4 destination crossings. Each explicit return resolved to `/cabin`, the
+returned Cabin route reported `data-state="mounted"`, and no request to
+`/api/cabin/context` or its refresh/import family occurred during the return.
+The Relationships walk additionally re-observed Work present with
+Relationships and Memory empty after return.
+
 ## Acceptance
 
 H4.5 is accepted when:
