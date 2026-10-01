@@ -104,3 +104,34 @@ test('inline applied receipt keeps Undo visible outside the collapsed tools', ()
   act(()=>undo.click());
   expect(onUndo).toHaveBeenCalledTimes(1);
 });
+
+test('A2-14 inline chooser keeps earlier MAIA context separate, explicit, and removable', () => {
+  const onOpen=jest.fn(), onClose=jest.fn(), onSelect=jest.fn(), onRemove=jest.fn();
+  const source={kind:'prior_maia_editorial_turn' as const,sourceEpisodeSequence:3,sourceScope:'passage' as const,admittedAt:'2026-09-25T12:00:00.000Z',excerpt:'Earlier MAIA words stay separate.',excerptTruncated:false};
+  const thread={threadId:'t1',targetSectionId:'s1',headVersionId:null,locusText:'Original words.',legacyLocus:false,versions:[],turns:[]};
+  const base={
+    inline:true,showInspiration:false,manuscriptId:'m1',title:'My chapter',currentText:'Original words.',sectionBody:'Original words.',
+    thread,version:null,instruction:'My own current words',onInstruction:jest.fn(),onSend:jest.fn(),onApply:jest.fn(),onPreview:jest.fn(),
+    onSelectVersion:jest.fn(),onSaveMember:jest.fn(),onKeep:jest.fn(),busy:false,message:null,response:null,
+    carrySourceAvailable:true,onOpenCarryChooser:onOpen,onCloseCarryChooser:onClose,onSelectCarrySource:onSelect,onRemoveCarrySource:onRemove,
+  };
+  act(()=>root.render(React.createElement(RevisionDesk,{...base,carryChooser:{kind:'closed'},selectedCarrySource:null} as any)));
+  const byText=(text:string)=>Array.from(container.querySelectorAll('button')).find(b=>b.textContent===text)!;
+  expect(byText('Bring an earlier MAIA response')).toBeTruthy();
+  act(()=>byText('Bring an earlier MAIA response').click());
+  expect(onOpen).toHaveBeenCalledTimes(1);
+
+  act(()=>root.render(React.createElement(RevisionDesk,{...base,carryChooser:{kind:'ready',sources:[source]},selectedCarrySource:null} as any)));
+  expect(container.textContent).toContain('Earlier in this relationship');
+  const card=Array.from(container.querySelectorAll('button')).find(b=>b.textContent?.includes('Earlier MAIA words stay separate.'))!;
+  act(()=>card.click());
+  expect(onSelect).toHaveBeenCalledWith(source);
+
+  act(()=>root.render(React.createElement(RevisionDesk,{...base,carryChooser:{kind:'closed'},selectedCarrySource:source} as any)));
+  expect(container.textContent).toContain('Earlier MAIA response');
+  const composer=container.querySelector('textarea[aria-label="Discuss this passage"]') as HTMLTextAreaElement;
+  expect(composer.value).toBe('My own current words');
+  expect(composer.value).not.toContain(source.excerpt);
+  act(()=>byText('Remove').click());
+  expect(onRemove).toHaveBeenCalledTimes(1);
+});

@@ -60,7 +60,7 @@ import {
   appendVersion, validateChain,
 } from './succession';
 import type {
-  EditorialRulingRef, LocusIdentity, ProposalChain, ProposalVersion,
+  EditorialRulingRef, LocusIdentity, LocusScopeKind, ProposalChain, ProposalVersion,
   SuccessionRefusal, VersionAuthor,
 } from './contract';
 
@@ -71,7 +71,7 @@ import type {
 interface ChainRow {
   id: string; member_id: string; work_id: string; draft_id: string;
   base_version: number | string; target_section_id: string; expected_text: string;
-  decision_chain_id: string | null; opened_at: Date;
+  locus_scope_kind: LocusScopeKind | null; decision_chain_id: string | null; opened_at: Date;
 }
 
 interface VersionRow {
@@ -80,7 +80,8 @@ interface VersionRow {
 }
 
 const CHAIN_COLUMNS = `id, member_id, work_id, draft_id, base_version,
-                       target_section_id, expected_text, decision_chain_id, opened_at`;
+                       target_section_id, expected_text, locus_scope_kind,
+                       decision_chain_id, opened_at`;
 
 const VERSION_COLUMNS = `id, chain_id, author, formulation, rationale,
                          supersedes, authored_at`;
@@ -94,6 +95,7 @@ const hydrateChain = (r: ChainRow): ProposalChain => ({
     /* ⛔ pg returns integer/numeric as a string on some drivers. */
     baseVersion: Number(r.base_version),
     targetSectionId: r.target_section_id,
+    ...(r.locus_scope_kind !== null ? { locusScopeKind: r.locus_scope_kind } : {}),
     expectedText: r.expected_text,
   },
   /* ⭐ ABSENT STAYS ABSENT. A chain no ruling governs has no `governedBy` key
@@ -162,7 +164,7 @@ export interface StoredChain {
    ══════════════════════════════════════════════════════════════════════════ */
 
 export interface OpenChainInput {
-  readonly locus: LocusIdentity;
+  readonly locus: LocusIdentity & { readonly locusScopeKind: LocusScopeKind };
   /** ⛔ The lineage reference, when one is known at open. Never set later. */
   readonly governedBy?: EditorialRulingRef;
 }
@@ -196,12 +198,12 @@ export async function openChainWithExecutor(
   const r = await exec.query<ChainRow>(
     `INSERT INTO proposal_chains
        (member_id, work_id, draft_id, base_version, target_section_id,
-        expected_text, decision_chain_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+        expected_text, locus_scope_kind, decision_chain_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING ${CHAIN_COLUMNS}`,
     [memberId, input.locus.workId, input.locus.draftId, input.locus.baseVersion,
       input.locus.targetSectionId, input.locus.expectedText,
-      input.governedBy?.decisionChainId ?? null]);
+      input.locus.locusScopeKind, input.governedBy?.decisionChainId ?? null]);
   return hydrateChain(r.rows[0]);
 }
 

@@ -252,13 +252,15 @@ function LensPanel({
 }
 
 export function LiveMaiaReview({
-  data, selectedFinding, discussion, onSubmit, onClose,
+  data, selectedFinding, discussion, onSubmit, onClose, onTalkWork,
 }: {
   data: Pc3LiveReviewData;
   selectedFinding: Pc3LiveReviewFinding | null;
   discussion: ReviewDiscussionState | null;
   onSubmit: (findingId: string, text: string) => void;
   onClose: () => void;
+  /** Ordinary durable Work conversation. Distinct from frozen Review discussion. */
+  onTalkWork?: () => void;
 }) {
   const [text, setText] = useState('');
   const active = selectedFinding ?? data.findings.find((f) => f.id === data.selectedFindingId)
@@ -295,6 +297,11 @@ export function LiveMaiaReview({
             <p className="fr-maia-quote">{state.copy}</p>
             <button type="button" className="fr-open" onClick={onClose}>Close</button>
           </div>
+        ) : null}
+        {onTalkWork ? (
+          <button type="button" className="fr-open" data-action="talk-work" onClick={onTalkWork}>
+            Talk about the larger Work
+          </button>
         ) : null}
       </div>
       {active && (!state || state.kind === 'composing') ? (

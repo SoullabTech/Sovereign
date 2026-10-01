@@ -37,6 +37,7 @@ import { query } from '@/lib/db/postgres';
 import { surroundOf } from '../editorialScope/surround';
 import { loadProjectedSectionBody } from '../ask/workContext';
 import { readProposalWork } from '../proposalChain/proposalWork';
+import type { LocusScopeKind } from '../proposalChain/contract';
 import {
   editorialCandidates,
   type EditorialCandidateBlock,
@@ -83,6 +84,7 @@ export type EditorialAssemblyResult =
        * arriving through the measurement instead of the write.
        */
       readonly locusText: string;
+      readonly locusScopeKind: LocusScopeKind | null;
       /**
        * ⭐ The writer's own nearby prose, as a VOCABULARY SAMPLE for the voice
        * measurement (WS-EDITORIAL-SCOPE-01 · voice).
@@ -210,6 +212,7 @@ export async function assembleEditorialCognition(
     /* ⭐ THE SAME VALUE THE LOCUS BLOCK CARRIED INTO COGNITION, from the same
        read. ⛔ Not a second lookup that could disagree with it. */
     locusText: locus.expectedText,
+    locusScopeKind: locus.locusScopeKind ?? null,
     authorSample: surround ? `${surround.before}\n${surround.after}` : '',
     /* ⭐ From the history already read — strictly before the current turn. */
     hasPriorMaiaTurn: turns.some((t) => t.author === 'maia'),

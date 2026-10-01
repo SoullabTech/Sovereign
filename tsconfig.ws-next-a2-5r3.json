@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true, "strict": true, "noUncheckedIndexedAccess": false, "noImplicitAny": false },
+  "include": [
+    "lib/writers-studio/relationshipCarriage.ts",
+    "lib/writers-studio/relationshipCustody.ts",
+    "lib/manuscript/editorialRuntime/assembly.ts",
+    "lib/manuscript/editorialRuntime/turn.ts",
+    "lib/manuscript/editorialRuntime/maiaOutcome.ts",
+    "app/api/writers-studio/editorial/turn/route.ts",
+    "app/api/writers-studio/relationships/**/*.ts",
+    "app/api/sovereign/manuscripts/[id]/review-discuss/route.ts",
+    "tests/constitutional/writers-studio/a2-5r3-live-carriage/**/*.ts"
+  ],
+  "exclude": []
+}
