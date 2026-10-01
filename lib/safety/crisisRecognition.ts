@@ -69,3 +69,36 @@ export function recognizeLiveCrisisLanguage(input: string): LiveCrisisRecognitio
     disclosureAuthorized: false,
   };
 }
+
+export function buildLiveCrisisMemberResponse(recognition: LiveCrisisRecognition): string | null {
+  if (!recognition.safetyOverride) return null;
+
+  const resourceLine =
+    'If you are in the U.S. or its territories, call or text 988 for free, confidential crisis support. If you are elsewhere, contact your local crisis line or emergency service.';
+
+  if (recognition.level === 'imminent') {
+    return [
+      "I'm glad you told me.",
+      'Your immediate safety matters more than anything else in this conversation.',
+      'Move away from anything you could use to hurt yourself and get another person with you if you can.',
+      'If you may act right now or have already harmed yourself, call your local emergency number now.',
+      resourceLine,
+    ].join(' ');
+  }
+
+  if (recognition.level === 'nssi') {
+    return [
+      'Thank you for telling me.',
+      'Please move away from anything you could use to injure yourself and get another person with you if you can.',
+      'If you think you may seriously hurt yourself or cannot stay safe, contact immediate real-world help now.',
+      resourceLine,
+    ].join(' ');
+  }
+
+  return [
+    "I'm glad you told me.",
+    'Please stay near another person if you can and move away from anything you could use to hurt yourself.',
+    'If you think you may act on these thoughts or cannot stay safe, contact immediate real-world help now.',
+    resourceLine,
+  ].join(' ');
+}

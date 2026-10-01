@@ -106,6 +106,7 @@ import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionMa
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
+import { recognizeLiveCrisisLanguage, buildLiveCrisisMemberResponse } from '@/lib/safety/crisisRecognition';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
@@ -458,6 +459,94 @@ export async function POST(req: NextRequest) {
           durabilityErr?.message ?? durabilityErr
         );
       }
+    }
+
+    // 🛡️ SAFETY-DELIVERY-01 — deterministic hard safety override.
+    // Recognition happens only AFTER F1 has accepted/durably attempted the member
+    // turn and BEFORE command handling, profile/field routing, knowledge, or model
+    // cognition. Recognition grants NO disclosure authority.
+    const liveCrisisRecognition = recognizeLiveCrisisLanguage(message);
+    if (liveCrisisRecognition.safetyOverride) {
+      const safetyResponseText = buildLiveCrisisMemberResponse(liveCrisisRecognition);
+      if (!safetyResponseText) {
+        throw new Error('SAFETY_OVERRIDE_WITHOUT_MEMBER_RESPONSE');
+      }
+
+      await withTimeoutLabeled(
+        'initializeSessionTable:safetyOverride',
+        initializeSessionTable(),
+        5000,
+        start,
+      );
+      const safetySession = await withTimeoutLabeled(
+        'ensureSession:safetyOverride',
+        ensureSession(sessionId),
+        5000,
+        start,
+      );
+
+      // Preserve the deterministic assistant half under the same exchange identity.
+      // Failure cannot reopen ordinary cognition: the member still receives the
+      // safety response, and the already-durable member half remains standing.
+      if (memberTurnDurable && isRecognizedUser && !isSanctuary) {
+        try {
+          await withTimeoutLabeled(
+            'durableSafetyOverrideTurn',
+            TurnsStore.addExchangeTurn(turnPosture, {
+              userId: userId!,
+              sessionId: acceptedSessionId,
+              role: 'assistant',
+              content: safetyResponseText,
+              exchangeId,
+            }),
+            5000,
+            start,
+          );
+        } catch (durabilityErr: any) {
+          console.error(
+            `❌ [MAIA/durability] safety response NOT durable exchange=${exchangeId.slice(0, 8)}:`,
+            durabilityErr?.message ?? durabilityErr,
+          );
+        }
+      }
+
+      const safetyCanonHeaders = makeCanonHeaders({
+        requestId,
+        pipeline: 'direct',
+        source: 'direct',
+        mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
+        validation: null,
+        repaired: false,
+      });
+
+      return jsonWithCors(
+        req,
+        {
+          message: safetyResponseText,
+          route: {
+            endpoint: '/api/sovereign/app/maia',
+            type: 'Sovereign Consciousness Interface',
+            operational: true,
+            mode: 'deterministic-safety-override',
+            safeMode: true,
+            voiceEnabled: false,
+          },
+          session: {
+            id: safetySession.id,
+            turns: safetySession.turn_count,
+          },
+          metadata: {
+            processingProfile: 'DETERMINISTIC_SAFETY',
+            processingTimeMs: Date.now() - start,
+            tierProcessing: false,
+            voiceRequested: false,
+            crisisLevel: liveCrisisRecognition.level,
+            disclosureAuthorized: false,
+          },
+        },
+        200,
+        safetyCanonHeaders,
+      );
     }
 
     // TII-03 — PURE COMMAND ACCEPTANCE: post-F1, pre-O8/F2/cognition.

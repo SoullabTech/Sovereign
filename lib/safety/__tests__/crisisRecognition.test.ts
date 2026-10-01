@@ -1,4 +1,7 @@
-import { recognizeLiveCrisisLanguage } from '../crisisRecognition';
+import {
+  recognizeLiveCrisisLanguage,
+  buildLiveCrisisMemberResponse,
+} from '../crisisRecognition';
 
 describe('SAFETY-DELIVERY-01 minimal live crisis recognition', () => {
   it('does not convert ordinary completion, farewell, medication, or quoted-topic language into crisis', () => {
@@ -92,6 +95,27 @@ describe('SAFETY-DELIVERY-01 minimal live crisis recognition', () => {
     ]) {
       expect(recognizeLiveCrisisLanguage(text).disclosureAuthorized).toBe(false);
     }
+  });
+
+  it('builds a self-contained member response for every hard override', () => {
+    for (const text of [
+      'I want to die',
+      'I need to hurt myself',
+      "I'm going to kill myself",
+    ]) {
+      const recognition = recognizeLiveCrisisLanguage(text);
+      const response = buildLiveCrisisMemberResponse(recognition);
+
+      expect(response).toBeTruthy();
+      expect(response).toContain('988');
+      expect(response).toMatch(/real-world help|crisis support|emergency/i);
+      expect(response).not.toMatch(/therapist|guardian|Soullab team/i);
+    }
+  });
+
+  it('does not fabricate a crisis response for check-in or ordinary language', () => {
+    expect(buildLiveCrisisMemberResponse(recognizeLiveCrisisLanguage("what's the point"))).toBeNull();
+    expect(buildLiveCrisisMemberResponse(recognizeLiveCrisisLanguage('hello'))).toBeNull();
   });
 
   it('is recognition-only: no transport, persistence, recipient, or alert authority', () => {
