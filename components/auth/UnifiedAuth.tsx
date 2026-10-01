@@ -61,6 +61,12 @@ import {
 import { unifiedBiometry } from '@/lib/auth/unifiedBiometry';
 import { deviceTrust } from '@/lib/auth/deviceTrust';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
+import {
+  ADULT_ACK_COPY,
+  ADULT_ACK_COOKIE,
+  ADULT_ACK_COOKIE_VALUE,
+  adultRefusalMessage,
+} from '@/lib/members/adultConfirmation';
 import { Capacitor } from '@capacitor/core';
 import { getFeatureFlag } from '@/lib/features/flags';
 import { isFeatureEnabled } from '@/lib/utils/feature-flags';
@@ -196,6 +202,10 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
+  // MEMBER-ADULT-ACK-01: every new account carries the person's own 18+ confirmation.
+  const [confirmsAdult, setConfirmsAdult] = useState(false);
+  const adultRequiredReturn = searchParams?.get('age') === 'required';
+  const adultRequiredMessage = adultRefusalMessage('adult_confirmation_required');
   const [username, setUsername] = useState(usernameParam);
   const [password, setPassword] = useState('');
   const [showPasswordText, setShowPasswordText] = useState(false);
@@ -404,10 +414,36 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
     if (digits.length === 6 && !isLoading) verifyCode(digits);
   }
 
+  // The web Google/Apple flows leave this page, so the confirmation travels to
+  // the provider callback as a short-lived cookie. SameSite=None so Apple's
+  // cross-site form POST callback still carries it.
+  function carryAdultConfirmation(): boolean {
+    if (!confirmsAdult) return false;
+    try {
+      const secure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      document.cookie = `${ADULT_ACK_COOKIE}=${ADULT_ACK_COOKIE_VALUE}; Max-Age=900; Path=/; ${secure ? 'SameSite=None; Secure' : 'SameSite=Lax'}`;
+    } catch { /* cookie unavailable: the callback sends them back to confirm */ }
+    return true;
+  }
+
+  const adultCheckbox = (
+    <label className="flex items-start gap-3 text-sm text-slate-300/90 cursor-pointer select-none">
+      <input
+        type="checkbox"
+        checked={confirmsAdult}
+        onChange={(e) => setConfirmsAdult(e.target.checked)}
+        required
+        className="mt-0.5 h-4 w-4 rounded border-slate-500 accent-amber-400"
+      />
+      <span>{ADULT_ACK_COPY}</span>
+    </label>
+  );
+
   // ── New member → create account ──────────────────────────────────────────
   async function completeSignup(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (!confirmsAdult) { setError(adultRequiredMessage); return; }
     setIsLoading(true);
     try {
       const cleanEmail = email.toLowerCase().trim();
@@ -418,7 +454,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
       for (let attempt = 0; attempt < 3; attempt++) {
         res = await fetch(apiUrl('/api/members/register-email'), {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ email: cleanEmail, username: uname, password: pwd, name: name.trim() || uname }),
+          body: JSON.stringify({ email: cleanEmail, username: uname, password: pwd, name: name.trim() || uname, confirmsAdult: true }),
         });
         data = await res.json().catch(() => ({}));
         if (res.status === 409 && /username/i.test(data?.error || '')) { uname = `${deriveUsername(cleanEmail)}${randomSuffix()}`; continue; }
@@ -531,6 +567,10 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   // ── Secondary: Google / Apple ────────────────────────────────────────────
   const handleGoogle = async () => {
     setError('');
+    // On /signup a new account needs the confirmation first. On /signin an
+    // existing member continues; a new one is sent back to /signup by the callback.
+    if (mode === 'signup' && !confirmsAdult) { setError(adultRequiredMessage); return; }
+    const carriesAdult = carryAdultConfirmation();
     try {
       if (Capacitor.isNativePlatform() && nativeOAuthEnabled) {
         const { GoogleAuth } = await import('@southdevs/capacitor-google-auth');
@@ -543,7 +583,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         if (!idToken) throw new Error('Missing Google idToken');
         const res = await fetch(apiUrl('/api/auth/google/native-callback'), {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ idToken, email: result.email, name: result.name, imageUrl: result.imageUrl }),
+          body: JSON.stringify({ idToken, email: result.email, name: result.name, imageUrl: result.imageUrl, confirmsAdult: carriesAdult }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Google sign-in failed');
@@ -558,6 +598,8 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
 
   const handleApple = async () => {
     setError('');
+    if (mode === 'signup' && !confirmsAdult) { setError(adultRequiredMessage); return; }
+    const carriesAdult = carryAdultConfirmation();
     try {
       if (Capacitor.isNativePlatform() && nativeOAuthEnabled) {
         const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
@@ -569,6 +611,7 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
           body: JSON.stringify({
             identityToken, authorizationCode: result.response?.authorizationCode,
             email: result.response?.email, givenName: result.response?.givenName, familyName: result.response?.familyName,
+            confirmsAdult: carriesAdult,
           }),
         });
         const data = await res.json();
@@ -693,7 +736,8 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               {errorBlock}
               <form onSubmit={completeSignup} className="space-y-3">
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoFocus className={inputCls} />
-                <button type="submit" disabled={isLoading} className={primaryBtn}>{isLoading ? 'Entering…' : 'Enter Soullab'}</button>
+                {adultCheckbox}
+                <button type="submit" disabled={isLoading || !confirmsAdult} className={primaryBtn}>{isLoading ? 'Entering…' : 'Enter Soullab'}</button>
               </form>
               {/* Was: "an emailed code{bioAvailable ? ` or ${biometricLabel}`}". That
                   promised biometric return from device CAPABILITY, but the passkey
@@ -770,6 +814,15 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                 <span className="text-xs text-slate-500 uppercase tracking-wide">or</span>
                 <div className={`flex-1 h-px ${dividerCls}`} />
               </div>
+
+              {mode === 'signup' && (
+                <div className="mt-4">
+                  {adultRequiredReturn && !confirmsAdult && (
+                    <p className="mb-2 text-xs text-amber-300/90 text-center">{adultRequiredMessage}</p>
+                  )}
+                  {adultCheckbox}
+                </div>
+              )}
 
               <div className="mt-4 flex justify-center gap-3">
                 <button type="button" onClick={handleGoogle} title="Continue with Google" className={`w-11 h-11 rounded-xl border ${oauthChrome} flex items-center justify-center transition-all`}>

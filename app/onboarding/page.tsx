@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import CompleteWelcomeFlow from '@/components/onboarding/CompleteWelcomeFlow';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiUrl } from '@/lib/http/apiBase';
+import { YOUTH_PATH_OPEN, YOUTH_CLOSED_ROUTE } from '@/lib/youth/youthAvailability';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -39,6 +40,12 @@ export default function OnboardingPage() {
         // redirect to youth-specific flow first
         const tier = userData.developmentalTier;
         const isYouthTier = tier === 'tier2' || tier === 'tier3' || tier === 'under13';
+        if (isYouthTier && !YOUTH_PATH_OPEN) {
+          // Youth is closed for now (founder ruling 2026-10-01): no youth-tier
+          // member proceeds into onboarding, whatever their youth flags say.
+          router.push(YOUTH_CLOSED_ROUTE);
+          return;
+        }
         if (isYouthTier && !userData.youthOnboarded && !userData.youthOnboardingSkipped) {
           if (tier === 'under13') {
             // Under-13 not supported yet
