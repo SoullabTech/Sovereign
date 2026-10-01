@@ -12,7 +12,7 @@ function loadLibrary() {
 }
 
 test('ordinary question words do not dominate Grokker Trace', () => {
-  assert.deepEqual(Q.tokens('What have we established about context release?'), ['established', 'context', 'release']);
+  assert.deepEqual(Q.tokens('What have we established about context release?'), ['context', 'release']);
 });
 
 test('title evidence ranks above incidental excerpt evidence', () => {

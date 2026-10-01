@@ -2374,7 +2374,7 @@ function renderLocalSynthesis() {
   const errs = s.proposal_check?.errors || [];
   return `<div class="source-packet">
     <div class="packet-law">GROKKER LOCAL SYNTHESIS · ${escapeHtml(s.standing)} · ${s.ok ? 'contract-valid' : 'not admitted'}</div>
-    <div class="grokker-why">Model: ${escapeHtml(s.model || 'unreported')} · local execution: ${s.local_execution_verified ? 'verified' : 'unverified'} · citation correctness: ${escapeHtml(s.citation_correctness)}</div>
+    <div class="grokker-why">Model: ${escapeHtml(s.model || 'unreported')} · local execution: ${s.local_execution_verified ? 'verified' : 'unverified'} · citation containment: ${escapeHtml(s.citation_containment)} · semantic review: ${escapeHtml(s.semantic_review)}</div>
     ${s.raw_response ? `<div class="library-excerpt" style="white-space:pre-wrap">${escapeHtml(s.raw_response)}</div>` : ''}
     ${s.cited_paths?.length ? `<div class="library-headings">Relied-on source descent: ${s.cited_paths.map(escapeHtml).join(' · ')}</div>` : ''}
     ${errs.length ? `<div class="errors">${errs.map(e => `<div>${escapeHtml(e)}</div>`).join('')}</div>` : ''}
