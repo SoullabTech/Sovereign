@@ -15,6 +15,7 @@ Record only:
 - `EARLY_FIELD_ENABLED` = true;
 - configured Early Field cohort count;
 - whether the participant's account is already in that cohort;
+- whether at least one authentic member-owned Living Field / constellation / governed-flow source already exists for that participant, recorded only as yes/no without reading content;
 - device/browser class;
 - start time.
 
@@ -25,14 +26,17 @@ Confirm that the ordinary Living Field is available and that the production buil
 the explicit MAIA-entry consent repair.
 
 If any Class A boundary is uncertain before the session, do not begin.
+
+If authentic member-owned substrate is absent, do not run the **populated-field** witness. Use `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md` instead; its evidence must not be adjudicated as populated-field ownership/continuity evidence.
+
 ## What to say
 
 Use only this orientation before the first attempt:
 
 > You're trying an early way of moving through the Living Field. Your existing field and
 > material remain yours whether or not you continue. You can explore your field without
-> talking with MAIA. If you choose “Enter this dimension with MAIA,” that is the point at
-> which the MAIA encounter begins. You can stop at any time.
+> talking with MAIA. MAIA begins only when you explicitly choose a MAIA action — either
+> “Explore with MAIA →” or “Enter this dimension with MAIA.” You can stop at any time.
 
 Then give the task:
 
