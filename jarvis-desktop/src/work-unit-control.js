@@ -620,7 +620,20 @@ async function canonicalExecutionContext(root, workUnitId, participantId, opts =
     return { ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND' };
   }
   if (envelope.work_unit?.identity?.capability === 'local-native-candidate') {
-    return { ok: false, status: 'REFUSED', reason: 'LOCAL_CANDIDATE_USES_HOST_DECISION_PATH' };
+    const participant = envelope.work_unit?.routing?.route_record?.challengers?.find(
+      (item) => item?.participant_id === participantId,
+    ) ?? (envelope.work_unit?.routing?.route_record?.primary?.participant_id === participantId
+      ? envelope.work_unit.routing.route_record.primary
+      : null);
+    const isChallenger = Array.isArray(envelope.work_unit?.routing?.route_record?.challengers)
+      && envelope.work_unit.routing.route_record.challengers.some((item) => item?.participant_id === participantId);
+    const challengerReview = isChallenger
+      && participant?.participant_id === 'local-review-1'
+      && participant?.model_family === 'GPT_OSS'
+      && participant?.role === 'independent_local_challenger';
+    if (!challengerReview) {
+      return { ok: false, status: 'REFUSED', reason: 'LOCAL_CANDIDATE_USES_HOST_DECISION_PATH' };
+    }
   }
   const e1 = await importBound(root, 'scripts/builder/canonical-provider-execution-v1.mjs');
   const preview = e1.prepareCanonicalExecutionAuthorizationV1({

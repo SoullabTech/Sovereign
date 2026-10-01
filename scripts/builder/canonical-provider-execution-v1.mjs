@@ -309,6 +309,27 @@ function r4RouteProjection(participant, binding) {
   };
 }
 
+function participantExecutionAuthorityView(workUnit, participant, binding) {
+  const cloneUnit = clone(workUnit);
+  const localReview = workUnit?.identity?.capability === 'local-native-candidate'
+    && participant?.participant_id === 'local-review-1'
+    && participant?.route_position === 'challenger'
+    && participant?.model_family === 'GPT_OSS'
+    && participant?.role === 'independent_local_challenger'
+    && binding?.provider_id === 'gpt-oss-local';
+  if (!localReview) return cloneUnit;
+  cloneUnit.authority = {
+    ...cloneUnit.authority,
+    repository_write: 'none',
+    shell: 'none',
+    test_execution: false,
+    merge: false,
+    deploy: false,
+    production_write: false,
+  };
+  return cloneUnit;
+}
+
 function canonicalAuthorityActs(workUnit, includeProviderExecute = null) {
   const a = workUnit?.authority || {};
   const allowed = [];
@@ -367,7 +388,8 @@ function runR4(workUnit, participant, binding, options = {}) {
     source: ROUTE_SOURCE,
     bound_at_sha: workUnit.scope.base_ref,
   };
-  const projected = r4WorkUnitProjection(workUnit, binding, options);
+  const authorityView = participantExecutionAuthorityView(workUnit, participant, binding);
+  const projected = r4WorkUnitProjection(authorityView, binding, options);
   const admission = evaluateExecutionAdmission({
     binding: r4Binding,
     work_unit: projected,
@@ -503,6 +525,7 @@ export function prepareCanonicalExecutionAuthorizationV1({
     },
     transport_binding: clone(binding),
     evidence_policy: clone(evidence),
+    participant_authority_projection: clone(participantExecutionAuthorityView(workUnit, participant, binding).authority),
     attempt_population_digest: population.digest,
     attempt_count_at_issue: population.attempt_count,
     verifier_count_at_issue: population.verifier_count,
@@ -571,6 +594,7 @@ export function createCanonicalExecutionGrantV1(preview, {
     route_participant: clone(preview.route_participant),
     transport_binding: clone(preview.transport_binding),
     evidence_policy: clone(preview.evidence_policy),
+    participant_authority_projection: clone(preview.participant_authority_projection),
     attempt_count_at_issue: preview.attempt_count_at_issue,
     verifier_count_at_issue: preview.verifier_count_at_issue,
     granted_authority: clone(preview.grant_scope),
@@ -639,13 +663,17 @@ export function validateCanonicalExecutionGrantV1(grant, currentPreview) {
   if (digest(grant.evidence_policy) !== digest(currentPreview.evidence_policy)) {
     blocks.push(blocker('GRANT_EVIDENCE_POLICY_CHANGED', 'Evidence policy changed after authorization.'));
   }
+  if (digest(grant.participant_authority_projection) !== digest(currentPreview.participant_authority_projection)) {
+    blocks.push(blocker('GRANT_PARTICIPANT_AUTHORITY_CHANGED', 'Participant-scoped execution authority changed after authorization.'));
+  }
   if (digest(grant.granted_authority) !== digest(currentPreview.grant_scope)) {
     blocks.push(blocker('GRANT_SCOPE_CHANGED', 'Human grant scope changed after authorization.'));
   }
   return deepFreeze({ ok: blocks.length === 0, blockers: blocks });
 }
 
-function permissionEnvelope(workUnit) {
+function permissionEnvelope(workUnit, participant, binding) {
+  workUnit = participantExecutionAuthorityView(workUnit, participant, binding);
   return deepFreeze({
     repo_read: workUnit.authority?.repository_read === true,
     repo_write_scope: workUnit.authority?.repository_write === 'worktree' ? 'worktree' : 'none',
@@ -716,6 +744,6 @@ export function evaluateCanonicalExecutionGrantV1({
     r5a_integrity: r5a,
     route_participant: clone(participant),
     transport_binding: clone(binding),
-    permission_envelope: permissionEnvelope(workUnit),
+    permission_envelope: permissionEnvelope(workUnit, participant, binding),
   });
 }
