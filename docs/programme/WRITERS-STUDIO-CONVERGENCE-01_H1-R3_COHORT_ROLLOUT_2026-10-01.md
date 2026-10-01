@@ -4,8 +4,8 @@
 Class: A programme · rollout admission (no arrival semantics change)
 Mechanism under test: #1578 (H1-R2 convergence) — DRAFT, merge held
 Prior rollout: #1551 runtime 3421a2096 with the H1 cohort ALREADY OPEN (see §2)
-Standing: R3 OPENED · CENSUS DONE · ⚠️ SEQUENCE AMENDED FOR A LIVE COHORT — FOUNDER RULING OWED (§4)
-          · ⛔ cohort ledger not yet resolved · ⛔ no merge · ⛔ no deploy · ⛔ no env change
+Standing: R3 OPENED · CENSUS DONE · ⭐ FOUR RULINGS TAKEN (§7) · RUNBOOK READY (§8)
+          · ⛔ step 1 not yet run · ⛔ no merge · ⛔ no deploy · ⛔ no env change
 Untouched by this record: #1539, #1542, production
 ```
 
@@ -101,7 +101,9 @@ fingerprint per id** (first 12 hex of `sha256(id)`), the counts, and the match r
 name↔id mapping lives in the founder's private human record. Fingerprints let a later witness prove
 "the same four" without the repository ever pairing a person with an id.
 
-## 4 · Deployment sequence — amended for a live cohort (⚠️ founder ruling owed)
+## 4 · Deployment sequence — amended for a live cohort
+
+> ⚠️ **SUPERSEDED by §8** (founder sequence, 2026-10-01). Kept as the proposal the ruling answered.
 
 The frozen principle stands: **deploy the mechanism before installing the people, and never merge
 code and membership into one opaque event.** Because people are already installed, honouring it
@@ -159,6 +161,8 @@ resolution (inherited from #1551). R3 tests the **decision**, never identical tr
 
 ## 6 · Rulings owed before step 1 runs
 
+> ✅ **ALL FOUR TAKEN — see §7.**
+
 1. **Ledger custody (§3):** participant-neutral labels plus fingerprints in the repository, mapping in
    the private human record? (recommended)
 2. **Sequence (§4):** close → deploy → verify closed → reopen? (recommended), or deploy under the live
@@ -168,3 +172,86 @@ resolution (inherited from #1551). R3 tests the **decision**, never identical tr
 4. **Who walks (step 13):** H1 grants no founder inheritance, so the founder's account cannot take the
    admitted path unless its id is added. That would make a fifth cohort member. Either the four walk
    it themselves, per the #1572 protocol, or the founder is explicitly added and recorded.
+
+## 7 · Founder rulings (2026-10-01)
+
+| # | Question | Ruling |
+|---|---|---|
+| 1 | Ledger custody | **C1–C4 + a one-way fingerprint per id in the repository**; the name→id mapping (Nathan Kane, Jondi Whitis, Andrea Fagan, Andrea Nezat) stays outside source control. The record states only that the four fingerprints correspond to the founder-designated cohort. |
+| 2 | Sequence | **Close cohort → deploy #1578 → verify closed → reopen cohort → walk.** Closure and reopening are recorded as **explicit production-state transitions**, never incidental config edits. A short interruption is preferable to changing the mechanism under admitted members and being unable to tell a code defect from a cohort-state defect. |
+| 3 | R3-F6 | **Full cohort closure plus the existing per-member test is sufficient.** ⛔ No real member is removed to produce a prettier witness. Closure proves admission can be withdrawn by authority/configuration without changing Studio code; `houseStudioH1Access` (H2, H6) proves the per-member semantics. |
+| 4 | Who walks | **One of C1–C4, under the pre-registered #1572 protocol.** ⛔ Kelly is not added as a fifth member, so the cohort stays stable and the witness does not mutate the population it observes. |
+
+**Binding limitation (R3-F5):** production evidence covers the fail-closed denial paths that can be
+observed safely: signed out → 401, a non-cohort member → `{ admitted: false }`, and the switch closed
+→ nobody. **Timeout and malformed-response behaviour remain test-proven, not production-induced.**
+⛔ Production is not broken to make the matrix symmetrical.
+
+**Truth table.** R3 witnesses exactly two of the four Early Field × H1 states:
+**Early Field CLOSED / H1 OPEN** and **Early Field CLOSED / H1 CLOSED**. The other two
+(Early Field OPEN with H1 OPEN or CLOSED) are **explicitly unwitnessed**. Step 2 must confirm Early
+Field is actually CLOSED in production. If it is not, stop: the two states named here would not be
+the ones observed.
+
+## 8 · Runbook (founder-run; nothing below has been executed)
+
+**Evidence classes, never merged:** **WITNESSED** = a literal output line or a direct observation.
+**ENTAILED** = follows from configuration plus code that has been read, without being observed for
+that member. "Exactly these four are admitted" is ENTAILED from the installed fingerprints. It is
+WITNESSED only for the member who walks.
+
+**Fingerprint function** (used at steps 2, 5, 8 and 11). It reads the env **in force in the running
+container**, not the file, prints only 12-hex sha256 prefixes of lower-cased ids, and never prints an id:
+
+```bash
+ssh soullab@minisforum 'docker exec maia-sovereign sh -c '"'"'
+  echo "HOUSE_STUDIO_H1_ENABLED=${HOUSE_STUDIO_H1_ENABLED:-<unset>}"
+  echo "EARLY_FIELD_ENABLED=${EARLY_FIELD_ENABLED:-<unset>}"
+  echo "${HOUSE_STUDIO_H1_MEMBER_IDS:-}" | tr "," "\n" | tr -d " " | grep -v "^$" | tr "A-F" "a-f" \
+    | while read id; do printf %s "$id" | sha256sum | cut -c1-12; done | sort | nl
+'"'"''
+```
+
+The ledger fingerprints (rows C1–C4) are computed **privately** from the four resolved ids with the
+same normalisation (`printf %s "<id lower-case>" | sha256sum | cut -c1-12`). Only the prefixes enter
+this file.
+
+| Step | Act | Evidence to record |
+|---|---|---|
+| 1 | Confirm no deploy is in progress: `ssh soullab@minisforum 'fuser -v ~/MAIA-SOVEREIGN/.deploy.lock'` | no holder (WITNESSED). Cohort acts take no lane lock, so this is the only guard |
+| 2 | Capture production: `printenv GIT_COMMIT`, `Config.Env` GIT_COMMIT, `:current`/`:prod` tags, `/api/health`, the fingerprint function | expect `3421a2096`; `HOUSE_STUDIO_H1_ENABLED=true`; **4** fingerprints equal to ledger C1–C4; `EARLY_FIELD_ENABLED` not `true` (else **stop**, §7) |
+| 3 | **TRANSITION T1 — H1 OPEN → CLOSED.** Back up `.env.production` (`cp .env.production .env.production.h1-r3-close-$(date -u +%Y%m%dT%H%M%SZ).bak`), set `HOUSE_STUDIO_H1_ENABLED=false`, **leave the id list untouched** | backup path; the diff of the env file is exactly one line (WITNESSED) |
+| 4 | Recreate maia only: `docker compose -f docker-compose.production.yml up -d --no-deps --force-recreate maia` | container `Created` timestamp; still `3421a2096` |
+| 5 | Verify closed on #1551 | fingerprint function → `ENABLED=false`, the same 4 fingerprints (WITNESSED). Signed out `GET /api/house-studio/admission` → 401 `{admitted:false}` (WITNESSED). Kelly signed in → `{admitted:false}` and the House Writing link → `/writers-studio` (WITNESSED). Cohort members → not admitted (**ENTAILED**). Studio, Works and manuscripts open normally for Kelly (WITNESSED) |
+| 6 | Lift #1578's draft hold; merge; deploy by SHA: `scripts/pre-deploy-gate.sh deploy-maia <merge-sha>` (the full deploy path is not needed: no migration) | PR head SHA, merge SHA, gate output incl. Co-Lab `0 failed` |
+| 7 | Verify the production commit and image | `printenv GIT_COMMIT` == `Config.Env` == merge SHA; `:current` → merge SHA, `:previous` → `3421a2096`; `/api/health` version; converged code present: `docker exec maia-sovereign sh -c 'grep -rl resolveH1Arrival .next/server \| head -1'` non-empty |
+| 8 | Verify H1 still closed under the new mechanism | repeat step 5's checks on the merge SHA |
+| 9 | **TRANSITION T2 — H1 CLOSED → OPEN, exactly C1–C4.** Back up, set `HOUSE_STUDIO_H1_ENABLED=true`, id list unchanged | backup path; one-line diff (WITNESSED) |
+| 10 | Recreate maia only (as step 4) | `Created`; still the merge SHA |
+| 11 | Verify exactly C1–C4 | fingerprint function → `ENABLED=true`, **exactly 4** fingerprints equal to the ledger (WITNESSED); admission for those four (**ENTAILED**) |
+| 12 | #1572 admitted-member walk with **one of C1–C4** | per #1572, with the participant-neutral label only. **R3-F1 and R3-F4 WITNESSED** for that member. ⚠️ #1572 is pinned to runtime `3421a2096`; for this run the runtime is the merge SHA, recorded here as an amendment of that pin and never as a silent change |
+| 13 | Ordinary-member denied path (Kelly, non-cohort) | House Writing link → `/writers-studio` (R3-F2); hand-typed owned `work=` → the ordinary resolution, identical to without it (R3-F3); `/api/house-studio/admission` → `{admitted:false}` (WITNESSED) |
+| 14 | Record the two observed states | **Early Field CLOSED / H1 OPEN** (steps 11–13) and **Early Field CLOSED / H1 CLOSED** (steps 5 and 8) |
+| 15 | Leave the other two states explicitly unwitnessed | Early Field OPEN × H1 {OPEN, CLOSED}: **UNWITNESSED** |
+
+**Stop conditions.** Each of these stops the run and is reported, never worked around:
+- step 1 shows a lock holder;
+- step 2 fingerprints ≠ ledger, the count ≠ 4, or Early Field is open;
+- any env diff larger than the one intended line;
+- the step 7 provenance doesn't match the merge SHA (the deploy gate is fail-closed and aborts);
+- any step 5 or 8 check admits anyone;
+- step 11 shows a fingerprint not in the ledger.
+
+**Rollback at any point.** Set `HOUSE_STUDIO_H1_ENABLED=false` and recreate maia (closes H1 for
+everyone). For the code: `scripts/deploy-production.sh rollback` to `:previous` = `3421a2096`. Neither
+hides Writer's Studio, Works or manuscripts.
+
+### Ledger (to be filled at step 2 — fingerprints only)
+
+| Label | Fingerprint (sha256[0:12]) | Matches installed |
+|---|---|---|
+| C1 | ⏳ | ⏳ |
+| C2 | ⏳ | ⏳ |
+| C3 | ⏳ | ⏳ |
+| C4 | ⏳ | ⏳ |
+| Non-cohort witness | (Kelly's account; fingerprint not recorded) | must be **absent** |
