@@ -24,7 +24,6 @@ interface Props {
   spiralState: SpiralState | null
   activeSpirals: PersonalSpiral[]
   recentStates: PersonalState[]
-  memberId: string
   fromHouse?: boolean
 }
 
@@ -33,7 +32,6 @@ export function PersonalLivingFieldDashboard({
   spiralState,
   activeSpirals,
   recentStates,
-  memberId,
   fromHouse = false,
 }: Props) {
   const phase = spiralState?.relational_phase
@@ -159,7 +157,6 @@ export function PersonalLivingFieldDashboard({
           <PhaseStatePanel
             spiralState={spiralState}
             recentStates={recentStates}
-            memberId={memberId}
           />
         </section>
 
@@ -176,7 +173,7 @@ export function PersonalLivingFieldDashboard({
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {orderedFields.map((field) => (
-              <LivingFieldCard key={field.field_key} field={field} memberId={memberId} />
+              <LivingFieldCard key={field.field_key} field={field} />
             ))}
           </div>
         </section>
@@ -187,7 +184,6 @@ export function PersonalLivingFieldDashboard({
             <LivingEncounterView
               fieldKey="current_questions"
               fieldLabel="Current Questions"
-              memberId={memberId}
               onClose={() => setTalkOpen(false)}
             />
           ) : (

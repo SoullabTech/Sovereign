@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { apiFetch } from '@/lib/http/apiBase'
 import type { SpiralState, PersonalState } from './types'
 
 const RELATIONAL_PHASE_LABELS: Record<number, string> = {
@@ -21,10 +22,9 @@ const ELEMENT_COLOR: Record<string, string> = {
 interface Props {
   spiralState: SpiralState | null
   recentStates: PersonalState[]
-  memberId: string
 }
 
-export function PhaseStatePanel({ spiralState, recentStates, memberId }: Props) {
+export function PhaseStatePanel({ spiralState, recentStates }: Props) {
   const [adding, setAdding] = useState(false)
   const [label, setLabel] = useState('')
   const [saving, setSaving] = useState(false)
@@ -37,9 +37,9 @@ export function PhaseStatePanel({ spiralState, recentStates, memberId }: Props) 
     if (!label.trim()) return
     setSaving(true)
     try {
-      const res = await fetch('/api/maia/living-field/states', {
+      const res = await apiFetch('/api/maia/living-field/states', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ state_key: 'emotional_weather', label: label.trim() }),
       })
       if (res.ok) {

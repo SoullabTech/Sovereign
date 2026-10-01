@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { apiFetch } from '@/lib/http/apiBase'
 import type { FieldGathering, GatheredKeep } from './types'
 
 // Translate a raw evidence_reason ("register:developmental, lens:fire, source_type:idea")
@@ -60,24 +61,21 @@ function isBroadSignal(reason: string): boolean {
 interface Props {
   fieldKey: string
   fieldLabel: string
-  memberId: string
 }
 
-export function LivingFieldGatheringPanel({ fieldKey, fieldLabel, memberId }: Props) {
+export function LivingFieldGatheringPanel({ fieldKey, fieldLabel }: Props) {
   const [gathering, setGathering] = useState<FieldGathering | null>(null)
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     let alive = true
-    fetch(`/api/maia/living-field/${fieldKey}/gathering`, {
-      headers: { 'x-member-id': memberId },
-    })
+    apiFetch(`/api/maia/living-field/${fieldKey}/gathering`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => { if (alive) setGathering(data) })
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
-  }, [fieldKey, memberId])
+  }, [fieldKey])
 
   if (loading) {
     return <p className="text-stone-600 text-xs">Looking at what has gathered…</p>
