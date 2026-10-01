@@ -75,6 +75,64 @@ function assertPortableSymlinks(rootDir) {
   visit(rootDir);
 }
 
+function developerIdIdentity() {
+  if (process.platform !== 'darwin') return null;
+  try {
+    const out = execFileSync('/usr/bin/security', ['find-identity', '-v', '-p', 'codesigning'], {
+      encoding: 'utf8',
+    });
+    const lines = out.split('\n').filter((line) => line.includes('Developer ID Application:'));
+    const requested = String(process.env.CSC_NAME || '').trim();
+    const line = requested ? lines.find((candidate) => candidate.includes(requested)) : lines[0];
+    const match = line && line.match(/"(Developer ID Application:[^"]+)"/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+function cabinMachOBinaries(rootDir) {
+  const binaries = [];
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      const stat = fs.lstatSync(entryPath);
+      if (stat.isSymbolicLink()) continue;
+      if (stat.isDirectory()) {
+        visit(entryPath);
+        continue;
+      }
+      if (!stat.isFile()) continue;
+      try {
+        const description = execFileSync('/usr/bin/file', ['-b', entryPath], { encoding: 'utf8' });
+        if (description.includes('Mach-O')) binaries.push(entryPath);
+      } catch {
+        // Non-native or unreadable files are irrelevant to codesign.
+      }
+    }
+  };
+  visit(rootDir);
+  return binaries;
+}
+
+function signCabinMachOBinaries(rootDir) {
+  if (process.platform !== 'darwin') return [];
+  const binaries = cabinMachOBinaries(rootDir);
+  const identity = developerIdIdentity();
+  if (!identity) {
+    console.log(`[MAIA Desktop] no Developer ID identity; ${binaries.length} Cabin Mach-O binaries remain local-only`);
+    return binaries;
+  }
+  for (const binary of binaries) {
+    execFileSync('/usr/bin/codesign', [
+      '--force', '--timestamp', '--options', 'runtime', '--sign', identity, binary,
+    ], { stdio: 'inherit' });
+    execFileSync('/usr/bin/codesign', ['--verify', '--strict', binary], { stdio: 'inherit' });
+  }
+  console.log(`[MAIA Desktop] signed ${binaries.length} Cabin Mach-O binaries with ${identity}`);
+  return binaries;
+}
+
 if (!fs.existsSync(standaloneServer)) {
   throw new Error(
     'Cabin runtime is not built. Run MAIA_CABIN_MODE=offline next build first so .next/standalone/server.js exists.',
@@ -104,6 +162,7 @@ fs.rmSync(cabinPublic, { recursive: true, force: true });
 fs.cpSync(standalonePublic, cabinPublic, { recursive: true, dereference: true });
 materializeSymlinks(cabinPublic);
 assertPortableSymlinks(cabinSource);
+signCabinMachOBinaries(cabinSource);
 
 const standaloneNextPackage = path.join(cabinSource, 'node_modules', 'next', 'package.json');
 if (!fs.existsSync(standaloneNextPackage)) {
