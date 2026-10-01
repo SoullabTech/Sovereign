@@ -125,8 +125,8 @@ export function WriterStudioShell({
         }}
       >
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-          <Link href="/home" aria-label="Return to Soullab Home" style={{ textDecoration: 'none' }}>
-            <StudioText role="bandLabel" tone="muted">Soullab</StudioText>
+          <Link href="/house" aria-label="Return to Kelly’s World" style={{ textDecoration: 'none' }}>
+            <StudioText role="bandLabel" tone="muted">Kelly’s World</StudioText>
           </Link>
           <StudioText role="bandLabel" tone="muted">·</StudioText>
           <Link href="/writers-studio" aria-label="Return to Writer’s Studio Home" style={{ textDecoration: 'none' }}>
