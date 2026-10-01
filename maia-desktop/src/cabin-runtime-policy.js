@@ -1,5 +1,7 @@
 'use strict';
 
+const path = require('node:path');
+
 /**
  * AIN-CABIN-RUNTIME-01
  *
@@ -46,6 +48,24 @@ function cabinHealthUrl(port, host = CABIN_HOST) {
   return cabinOrigin(port, host) + '/api/cabin/health';
 }
 
+function resolveCabinContextPackagePath(raw, dataPath) {
+  if (typeof dataPath !== 'string' || dataPath.length === 0) {
+    throw new Error('Cabin data path is required');
+  }
+
+  const explicit = raw === undefined || raw === null ? '' : String(raw).trim();
+  const candidate = explicit || path.join(
+    path.dirname(dataPath),
+    'context-package.json',
+  );
+
+  if (!path.isAbsolute(candidate)) {
+    throw new Error('Cabin context package path must be absolute');
+  }
+
+  return candidate;
+}
+
 /**
  * Build the environment for the future packaged Next standalone runtime.
  *
@@ -90,6 +110,7 @@ module.exports = {
   cabinOrigin,
   cabinEntryUrl,
   cabinHealthUrl,
+  resolveCabinContextPackagePath,
   offlineRuntimeSpec,
   isCabinMode,
 };

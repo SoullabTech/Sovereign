@@ -9,6 +9,7 @@ import {
   cabinOrigin,
   cabinEntryUrl,
   cabinHealthUrl,
+  resolveCabinContextPackagePath,
   offlineRuntimeSpec,
   isCabinMode,
 } from '../src/cabin-runtime-policy.js';
@@ -26,6 +27,24 @@ test('Cabin binds only to loopback', () => {
   assert.equal(cabinEntryUrl(43121), 'http://127.0.0.1:43121' + CABIN_ENTRY_PATH);
   assert.equal(cabinHealthUrl(43121), 'http://127.0.0.1:43121/api/cabin/health');
   assert.throws(() => cabinOrigin(43121, '0.0.0.0'), /loopback/);
+});
+
+test('Cabin resolves one explicit absolute context package path', () => {
+  assert.equal(
+    resolveCabinContextPackagePath(undefined, '/tmp/cabin/cabin.sqlite'),
+    '/tmp/cabin/context-package.json',
+  );
+  assert.equal(
+    resolveCabinContextPackagePath(
+      '/tmp/explicit/context-package.json',
+      '/tmp/cabin/cabin.sqlite',
+    ),
+    '/tmp/explicit/context-package.json',
+  );
+  assert.throws(
+    () => resolveCabinContextPackagePath('context-package.json', '/tmp/cabin/cabin.sqlite'),
+    /absolute/i,
+  );
 });
 
 test('Cabin runtime spec is offline by construction', () => {
