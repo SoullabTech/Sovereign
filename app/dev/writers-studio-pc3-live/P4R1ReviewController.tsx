@@ -14,7 +14,7 @@ import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { useWorkVisual } from '@/app/writers-studio/useWorkVisual';
 import { currentWork } from '@/app/writers-studio/workContext';
-import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { resolveSituatedWorkContext, studioHomeReturnSearch } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { hostFactsFrom } from '@/app/writers-studio/rebuild/liveReview';
@@ -28,6 +28,10 @@ import {
   type ReviewDiscussionState,
 } from '@/lib/writersStudio/rebuild/reviewDiscuss';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import { relationshipIdFrom } from '@/app/writers-studio/canvasIdentity';
+import { readA2Relationship, type A2RelationshipSummary } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
+import { readRelationshipReturnClient } from '@/lib/writersStudio/rebuild/returnStateClient';
+import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
 
 interface ContextReady {
   state: 'section_aware';
@@ -57,6 +61,7 @@ type ReadyReview = {
   const reviewRunId = params?.get('reviewRun') ?? null;
   const requestedFindingId = params?.get('reviewFinding') ?? null;
   const requestedSectionId = params?.get('s') ?? null;
+  const requestedRelationship = params ? relationshipIdFrom(params) : null;
   const { id: appearance } = useAtmosphere();
   const { phase: worksPhase, works } = useLivingWorks();
   // H1 · R2: the seam produces the arrival; the hook only supplies the admission fact.
@@ -71,8 +76,10 @@ type ReadyReview = {
   const [tab, setTab] = useState('Overview');
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(requestedFindingId);
   const [discussion, setDiscussion] = useState<ReviewDiscussionState | null>(null);
+  const [workTalking, setWorkTalking] = useState(false);
   const [availableRuns, setAvailableRuns] = useState<ChapterReviewManifest[]>([]);
   const [availableRootId, setAvailableRootId] = useState<string | null>(null);
+  const [a2Relationship, setA2Relationship] = useState<A2RelationshipSummary | null>(null);
   const discussGen = useRef(0);
 
   const workContext = context
@@ -82,13 +89,53 @@ type ReadyReview = {
     )
     : { kind: 'unknown' as const };
   const work = currentWork(workContext);
-  const visual = useWorkVisual(work?.id ?? null);  useEffect(() => {
+  const visual = useWorkVisual(work?.id ?? null);
+
+  useEffect(() => {
+    if (!context || workContext.kind !== 'work' || !work) {
+      setA2Relationship(null);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      let relationshipId = requestedRelationship;
+      if (!relationshipId) {
+        const saved = await readRelationshipReturnClient({
+          livingWorkId: work.id,
+          manuscriptId: context.manuscriptId,
+        });
+        if (cancelled) return;
+        relationshipId = saved.ok ? saved.relationshipId : null;
+      }
+      if (!relationshipId) {
+        setA2Relationship(null);
+        return;
+      }
+      const read = await readA2Relationship(relationshipId);
+      if (cancelled) return;
+      if (
+        !read.ok
+        || read.relationship.livingWorkId !== work.id
+        || read.relationship.manuscriptId !== context.manuscriptId
+      ) {
+        setA2Relationship(null);
+        return;
+      }
+      setA2Relationship(read.relationship);
+    })();
+
+    return () => { cancelled = true; };
+  }, [context, requestedRelationship, work, workContext.kind]);
+
+  useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setPhase('loading');
       setReview(null);
       setMessage(null);
       setDiscussion(null);
+      setWorkTalking(false);
       discussGen.current += 1;
       if (!manuscriptId) {
         setPhase('error');
@@ -196,6 +243,11 @@ type ReadyReview = {
   }, [params, pathname, router]);
 
   const goMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review', sectionId?: string) => {
+    if (mode === 'home') {
+      const query = studioHomeReturnSearch(params?.toString() ?? '');
+      router.push(`${pathname}${query ? `?${query}` : ''}`);
+      return;
+    }
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
     if (sectionId) next.set('s', sectionId);
@@ -268,6 +320,7 @@ type ReadyReview = {
       readingId: truth.address.readingId,
       observationKey: truth.address.observationKey,
       question: ask,
+      ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
     }, readCurrentSanctuaryPosture()).then((outcome) => {
       if (gen !== discussGen.current) return;
       if (outcome.ok) {
@@ -282,7 +335,9 @@ type ReadyReview = {
           : REVIEW_DISCUSS_COPY.failed;
       setDiscussion({ kind: 'refused', findingId, ask, copy });
     });
-  }, [context, review]);  const data = useMemo(() => {
+  }, [context, review, a2Relationship]);
+
+  const data = useMemo(() => {
     if (!review || !context) return null;
     const view = selectedFindingId
       && review.view.findings.some((finding) => finding.id === selectedFindingId)
@@ -382,18 +437,40 @@ type ReadyReview = {
           </div>
         }
         maia={
-          <div className="fr-maia-inner">
-            <div className="fr-maia-head fr-maia-head-lg">
-              <div className="fr-orb fr-orb-lg" aria-hidden="true" />
-              <div className="fr-maia-name"><h2>MAIA</h2><span>In relation to Review</span></div>
-            </div>
-            <div className="fr-mbody">
-              <div className="fr-say fr-say-rev">
-                <p>I’ll stay with what has already been read here. Opening Review does not commission a new reading.</p>
+          work && workTalking ? (
+            <div className="fr-maia-inner p4r1-work-conversation" data-review-work-conversation>
+              <div className="fr-maia-head fr-maia-head-lg">
+                <div className="fr-orb fr-orb-lg" aria-hidden="true" />
+                <div className="fr-maia-name"><h2>MAIA</h2><span>In relation to your Work</span></div>
+              </div>
+              <div className="fr-mbody">
+                <WorkConversation
+                  work={work}
+                  manuscriptId={context.manuscriptId}
+                  sectionId={availableRootId}
+                  onClose={() => setWorkTalking(false)}
+                />
               </div>
             </div>
-            <div className="fr-foot">Review is a return to what was noticed, not an automatic reread.</div>
-          </div>
+          ) : (
+            <div className="fr-maia-inner">
+              <div className="fr-maia-head fr-maia-head-lg">
+                <div className="fr-orb fr-orb-lg" aria-hidden="true" />
+                <div className="fr-maia-name"><h2>MAIA</h2><span>In relation to Review</span></div>
+              </div>
+              <div className="fr-mbody">
+                <div className="fr-say fr-say-rev">
+                  <p>I’ll stay with what has already been read here. Opening Review does not commission a new reading.</p>
+                </div>
+                {work ? (
+                  <button type="button" className="fr-open" data-action="talk-work" onClick={() => setWorkTalking(true)}>
+                    Talk about the larger Work
+                  </button>
+                ) : null}
+              </div>
+              <div className="fr-foot">Review is a return to what was noticed, not an automatic reread.</div>
+            </div>
+          )
         }
       />
     );
@@ -436,13 +513,31 @@ type ReadyReview = {
         />
       }
       maia={
-        <LiveMaiaReview
-          data={data}
-          selectedFinding={selectedFinding}
-          discussion={discussion}
-          onSubmit={submitDiscussion}
-          onClose={closeDiscussion}
-        />
+        work && workTalking ? (
+          <div className="fr-maia-inner p4r1-work-conversation" data-review-work-conversation>
+            <div className="fr-maia-head fr-maia-head-lg">
+              <div className="fr-orb fr-orb-lg" aria-hidden="true" />
+              <div className="fr-maia-name"><h2>MAIA</h2><span>In relation to your Work</span></div>
+            </div>
+            <div className="fr-mbody">
+              <WorkConversation
+                work={work}
+                manuscriptId={context.manuscriptId}
+                sectionId={selectedFinding?.sectionId ?? review.rootId}
+                onClose={() => setWorkTalking(false)}
+              />
+            </div>
+          </div>
+        ) : (
+          <LiveMaiaReview
+            data={data}
+            selectedFinding={selectedFinding}
+            discussion={discussion}
+            onSubmit={submitDiscussion}
+            onClose={closeDiscussion}
+            onTalkWork={work ? () => setWorkTalking(true) : undefined}
+          />
+        )
       }
       maiaAbove={<span className="fr-matters">Your work matters. ✦</span>}
       footer={<span>A deeper you. A more human world.</span>}

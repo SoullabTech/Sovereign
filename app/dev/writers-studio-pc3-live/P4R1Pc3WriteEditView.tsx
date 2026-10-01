@@ -5,9 +5,17 @@ import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { WriteManuscriptRail, WriteRoom } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
+
+const WRITE_RELATIONAL_GEOMETRY = {
+  ...WRITE_GEOMETRY,
+  padRight: 9,
+  maiaWidth: 360,
+  maiaFloor: 300,
+  gapRight: 13,
+};
 import { projectPc3LiveWrite } from '@/app/writers-studio/full-redesign/liveWriteAdapter';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
-import RevisionDesk, { type MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
+import RevisionDesk, { type CarryChooserPresentation, type MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import InsightReadings from '@/app/writers-studio/insight/InsightReadings';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -25,6 +33,7 @@ import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
+import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -63,6 +72,14 @@ export type P4R1Pc3WriteEditViewProps = {
   workspaceInsight: { readingId: string; key: string } | null;
   editorialThread: RebuildEditorialThread | null;
   relationshipChoices: readonly RebuildEditorialRelationship[];
+  maiaRelationship: A2RelationshipSummary | null;
+  maiaRelationshipChoices: readonly A2RelationshipSummary[];
+  maiaRelationshipPhase: 'idle' | 'loading' | 'ready' | 'unavailable';
+  maiaRelationshipBusy: boolean;
+  maiaRelationshipMessage: string | null;
+  carrySourceAvailable: boolean;
+  carryChooser: CarryChooserPresentation;
+  selectedCarrySource: EligibleCarrySource | null;
   suggestedVersion: RebuildEditorialThread['versions'][number] | null;
   appliedVersionId: string | null;
   editorialDraft: string;
@@ -99,6 +116,13 @@ export type P4R1Pc3WriteEditViewProps = {
   onReviseInsight: NonNullable<Parameters<typeof InsightReadings>[0]['onRevise']>;
   onChoosePassage: NonNullable<Parameters<typeof InsightReadings>[0]['onChoosePassage']>;
   onChooseRelationship: (threadId: string) => void;
+  onBeginMaiaRelationship: () => void;
+  onChooseMaiaRelationship: (relationshipId: string) => void;
+  onLeaveMaiaRelationship: () => void;
+  onOpenCarryChooser: () => void;
+  onCloseCarryChooser: () => void;
+  onSelectCarrySource: (source: EligibleCarrySource) => void;
+  onRemoveCarrySource: () => void;
 };
 
 function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRect } | null {
@@ -120,11 +144,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [canvas, setCanvas] = useState(false);
   const [workConversationOpen, setWorkConversationOpen] = useState(false);
   const [workConversationStarter, setWorkConversationStarter] = useState('');
+  const [maiaRelationshipChooserOpen, setMaiaRelationshipChooserOpen] = useState(false);
   const [blankArrivalDismissed, setBlankArrivalDismissed] = useState(false);
   const [selectionRect, setSelectionRect] = useState<DOMRect | null>(null);
   const [selectedRevisionEdits, setSelectedRevisionEdits] = useState<ReadonlySet<number>>(new Set());
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
+  const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -166,7 +192,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   });
 
   const go = useCallback((sectionId: string | null) => {
-    if (!sectionId || sectionId === props.writing.activeId) return;
+    if (!sectionId) return;
+    /* A manuscript-rail choice is a meaningful attentional gesture even when
+       the writer clicks the place already open. Keep it visible to the right
+       hand support field instead of treating same-place selection as a no-op. */
+    setRailSelectionId(sectionId);
+    if (sectionId === props.writing.activeId) return;
     props.writing.goToSection(sectionId);
     props.onFocusSection(sectionId);
   }, [props]);
@@ -389,6 +420,119 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : null;
 
+
+  const maiaRelationshipCard = props.work && !canvas ? (
+    <section
+      className="p4r1-context-card p4r1-maia-relationship"
+      data-p4r1-maia-relationship
+      aria-label="Relationship with MAIA"
+    >
+      <header className="p4r1-context-head">
+        <div>
+          <span>Relationship with MAIA</span>
+          <strong>
+            {props.maiaRelationship
+              ? 'Continuing one relationship across this Work'
+              : 'Choose whether this Work should carry a continuing MAIA relationship'}
+          </strong>
+        </div>
+        {props.maiaRelationship ? (
+          <button
+            type="button"
+            disabled={props.maiaRelationshipBusy}
+            onClick={() => setMaiaRelationshipChooserOpen((open) => !open)}
+          >
+            {maiaRelationshipChooserOpen ? 'Close' : 'Change'}
+          </button>
+        ) : null}
+      </header>
+
+      {props.maiaRelationshipPhase === 'loading' ? (
+        <p className="p4r1-empty">Restoring your relationship with MAIA…</p>
+      ) : props.maiaRelationshipPhase === 'unavailable' ? (
+        <p className="p4r1-empty">
+          {props.maiaRelationshipMessage ?? 'Your MAIA relationships are unavailable just now. Nothing was changed.'}
+        </p>
+      ) : props.maiaRelationship ? (
+        <div>
+          <p className="p4r1-empty">
+            Editorial acts can carry this relationship without merging distinct passages or Review findings.
+          </p>
+          <p className="p4r1-empty">
+            Started {new Date(props.maiaRelationship.createdAt).toLocaleString()} · {props.maiaRelationship.episodeCount} carried act{props.maiaRelationship.episodeCount === 1 ? '' : 's'}
+          </p>
+          {maiaRelationshipChooserOpen ? (
+            <div className="p4r1-relationships" data-p4r1-maia-relationship-chooser>
+              {props.maiaRelationshipChoices
+                .filter((choice) => choice.id !== props.maiaRelationship?.id)
+                .map((choice) => (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    disabled={props.maiaRelationshipBusy}
+                    onClick={() => {
+                      props.onChooseMaiaRelationship(choice.id);
+                      setMaiaRelationshipChooserOpen(false);
+                    }}
+                  >
+                    Continue relationship · {new Date(choice.createdAt).toLocaleDateString()}
+                  </button>
+                ))}
+              <button
+                type="button"
+                disabled={props.maiaRelationshipBusy}
+                onClick={() => {
+                  props.onBeginMaiaRelationship();
+                  setMaiaRelationshipChooserOpen(false);
+                }}
+              >
+                Begin another relationship
+              </button>
+              <button
+                type="button"
+                disabled={props.maiaRelationshipBusy}
+                onClick={() => {
+                  props.onLeaveMaiaRelationship();
+                  setMaiaRelationshipChooserOpen(false);
+                }}
+              >
+                Leave relationship · nothing is deleted
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div>
+          <p className="p4r1-empty">
+            No continuing MAIA relationship is selected. Ordinary writing remains fully available.
+          </p>
+          <div className="p4r1-relationships">
+            <button
+              type="button"
+              disabled={props.maiaRelationshipBusy}
+              onClick={props.onBeginMaiaRelationship}
+            >
+              {props.maiaRelationshipBusy ? 'Beginning…' : 'Begin relationship with MAIA'}
+            </button>
+            {props.maiaRelationshipChoices.map((choice) => (
+              <button
+                key={choice.id}
+                type="button"
+                disabled={props.maiaRelationshipBusy}
+                onClick={() => props.onChooseMaiaRelationship(choice.id)}
+              >
+                Continue relationship · {new Date(choice.createdAt).toLocaleDateString()}
+              </button>
+            ))}
+          </div>
+          {props.maiaRelationshipMessage ? (
+            <p className="p4r1-empty" role="status">{props.maiaRelationshipMessage}</p>
+          ) : null}
+        </div>
+      )}
+    </section>
+  ) : null;
+
   const workConversation = props.work && workConversationOpen ? (
     <div className="p4r1-context-card p4r1-work-conversation" data-p4r1-work-conversation>
       <WorkConversation
@@ -482,6 +626,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           mayProposeImmediately={props.mayProposeImmediately}
           onMayProposeImmediately={props.onMayProposeImmediately}
           voiceNotice={props.voiceNotice}
+          carrySourceAvailable={props.carrySourceAvailable}
+          carryChooser={props.carryChooser}
+          selectedCarrySource={props.selectedCarrySource}
+          onOpenCarryChooser={props.onOpenCarryChooser}
+          onCloseCarryChooser={props.onCloseCarryChooser}
+          onSelectCarrySource={props.onSelectCarrySource}
+          onRemoveCarrySource={props.onRemoveCarrySource}
         />
       </details>
 
@@ -514,6 +665,67 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       ) : null}
     </div>
   ) : null;
+
+  const railSection = props.context.sections.find(
+    (section) => section.draftSectionId === (railSelectionId ?? props.focusId),
+  ) ?? null;
+  const railLabel = railSection?.heading?.trim() || 'this section';
+
+  const writeMaia = props.work ? (
+    <div className="fr-maia-inner p4r1-write-maia">
+      <div className="fr-maia-head">
+        <div className="fr-orb" aria-hidden="true" />
+        <div className="fr-maia-name">
+          <h2>MAIA</h2>
+          <span>{railSelectionId ? `In relation to ${railLabel}` : 'In relation to this writing place'}</span>
+        </div>
+        <span className="fr-dots" aria-hidden="true">•••</span>
+      </div>
+      <div className="fr-mbody">
+        {workConversationOpen ? (
+          workConversation
+        ) : railSelectionId && railSection ? (
+          <div className="p4r1-locus-support" data-write-locus-support={railSection.draftSectionId}>
+            <span className="p4r1-eyebrow">You selected</span>
+            <h3>{railLabel}</h3>
+            <p>
+              I’m with this exact place now. You do not need to hunt through another panel
+              before we can work with it.
+            </p>
+            <div className="p4r1-locus-actions">
+              <button
+                type="button"
+                className="p4r1-talk"
+                onClick={() => openWorkConversation([
+                  `I selected “${railLabel}” and want to work with this place directly.`,
+                  'Start with what is happening here and ask me one useful question about what I want from it.',
+                  'Do not rewrite anything unless I ask.',
+                ].join('\n\n'))}
+              >
+                Talk about this
+              </button>
+              <button type="button" onClick={() => props.onMode('develop')}>Develop this place</button>
+              <button type="button" onClick={() => props.onMode('review')}>Review this place</button>
+            </div>
+            <p className="fr-also">Select exact words in the manuscript for passage-level revision.</p>
+          </div>
+        ) : (
+          <>
+            <div className="fr-say">
+              <p>
+                Choose a chapter or section at left and I’ll orient to that place immediately.
+                Or select exact words in the manuscript for passage-level work.
+              </p>
+            </div>
+            <button type="button" className="p4r1-talk" onClick={() => openWorkConversation('')}>
+              Talk with MAIA
+            </button>
+          </>
+        )}
+      </div>
+      <div className="fr-foot">The manuscript stays primary; support follows your attention.</div>
+    </div>
+  ) : undefined;
 
   const blankArrival = blankArrivalVisible && props.work ? (
     <P4R1BlankWritingArrival
@@ -662,13 +874,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <Shell
           mode="write"
           appearance={props.appearance}
-          geometry={WRITE_GEOMETRY}
+          geometry={railSelectionId || workConversationOpen ? WRITE_RELATIONAL_GEOMETRY : WRITE_GEOMETRY}
           workTitle={props.work?.title ?? undefined}
           memberInitial=""
           onSelectMode={props.onMode}
           canvas={canvas}
           manuscript={<WriteManuscriptRail fixture={projection.data} onOpenChapter={go} />}
           work={workSurface}
+          maia={railSelectionId || workConversationOpen ? writeMaia : undefined}
         />
 
       {isolatedRoom}
@@ -702,7 +915,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           ) : null}
 
           {contextualActions}
-          {workConversation}
+          {maiaRelationshipCard}
           {editorial}
         </>
       ) : null}

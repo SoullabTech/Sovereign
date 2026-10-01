@@ -2,7 +2,8 @@
 
 **Participant label:** FIRST-ENTRY-___
 **Date/time:**
-**Production SHA:**
+**Production SHA at start:** (`docker exec maia-sovereign printenv GIT_COMMIT`)
+**Production SHA at end:** (same command, after the walk; if it differs from start → the walk is **NO EVIDENCE**)
 **Public health:**
 **Device/browser:**
 **Early Field admitted:** yes / no
