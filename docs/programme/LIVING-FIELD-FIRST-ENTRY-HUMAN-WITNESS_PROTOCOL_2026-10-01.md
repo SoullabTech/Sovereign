@@ -32,6 +32,24 @@ Run only when:
 5. the early-field admission endpoint returns `admitted:true`;
 6. explicit MAIA entry is present in the deployed build;
 7. no session credential, private content, or new telemetry is obtained for the witness.
+8. **production deploys are frozen for the witness window** — no deploy of any kind (`deploy`,
+   `update`, `deploy-maia`, `migrate`, `rollback`, or a container recreation) from the moment the
+   start SHA is recorded until the end SHA is recorded.
+
+The runtime SHA is read **at the start and at the end** of the walk
+(`docker exec maia-sovereign printenv GIT_COMMIT` on minisforum, plus `/api/health`). If the two
+differ, or either differs from the SHA the witness was scheduled against, the record is
+**VOID — NO EVIDENCE**: it is not adjudicated, and it is neither a PASS nor a STOP. A deploy
+landing mid-walk is an instrument failure, never a finding about the Living Field. A PASS that
+cannot be tied to the build it witnessed does not count as a PASS.
+
+**Participant selection (guidance, not a precondition — the choice stays a founder act).** This
+witness tests whether the *interface itself* communicates and keeps the MAIA boundary. A participant
+who already knows the architecture well will fill gaps with what they know, which weakens exactly
+that signal. Prefer the cohort member with the **least prior exposure** among those trusted with an
+unfinished system, and keep architecture insiders for the later populated-field witness. The cost is
+accepted: a less-exposed participant is harder to debrief and more exposed to rough edges, so the
+stop conditions in §6 apply without discount.
 
 ## 3 · What to tell the member
 
@@ -90,7 +108,7 @@ STOP / NOT ADMITTED if:
 - another member's material appears;
 - the empty state makes an unsupported claim about who the member is;
 - opening a dimension begins MAIA before explicit entry;
-- the member reasonably believes MAIA has already interpreted or received material when she has not;
+- the member reasonably believes MAIA has already interpreted or received material when MAIA has not;
 - saving changes material the member did not choose to change;
 - the member cannot safely return to the wider field or Home;
 - any privacy, authentication, authorship, or consent boundary fails.
