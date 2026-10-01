@@ -619,6 +619,9 @@ async function canonicalExecutionContext(root, workUnitId, participantId, opts =
   if (!envelope) {
     return { ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND' };
   }
+  if (envelope.work_unit?.identity?.capability === 'local-native-candidate') {
+    return { ok: false, status: 'REFUSED', reason: 'LOCAL_CANDIDATE_USES_HOST_DECISION_PATH' };
+  }
   const e1 = await importBound(root, 'scripts/builder/canonical-provider-execution-v1.mjs');
   const preview = e1.prepareCanonicalExecutionAuthorizationV1({
     envelope,

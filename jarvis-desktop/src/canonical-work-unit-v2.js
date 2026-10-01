@@ -1147,7 +1147,7 @@ function nextActions(workUnit, meta) {
 
   if (state === 'DRAFT') actions.push({ action: 'canonical-bound', label: 'Bound scope' });
   if (state === 'BOUNDED') actions.push({ action: 'canonical-authorize', label: 'Authorize Work Unit' });
-  if (state === 'AUTHORIZED' && workUnit?.identity?.capability !== 'local-native-candidate') actions.push({ action: 'canonical-route', label: 'Bind canonical route' });
+  if (state === 'AUTHORIZED') actions.push({ action: 'canonical-route', label: 'Bind canonical route' });
   if (state === 'ROUTED') {
     for (const participant of unbound) {
       actions.push({
