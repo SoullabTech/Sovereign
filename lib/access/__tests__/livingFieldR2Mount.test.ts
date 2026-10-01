@@ -46,7 +46,7 @@ const BIO = 'components/maia/living-field/physics/BiologicalSpatialFieldPrototyp
 
 function hookReflectsServerOnly(src: string): boolean {
   const c = code(src);
-  return /apiFetch\('\/api\/living-field-r2\/admission'/.test(c) && /useState\(false\)/.test(c) && /body\?\.admitted === true/.test(c) && !/localStorage|sessionStorage|document\.cookie|useSearchParams|location\.search/.test(c);
+  return /apiFetch\('\/api\/living-field-r2\/admission'/.test(c) && /resolved: false/.test(c) && /body\?\.admitted === true/.test(c) && !/localStorage|sessionStorage|document\.cookie|useSearchParams|location\.search/.test(c);
 }
 function routeTrustsSessionOnly(src: string): boolean {
   const c = code(src);
@@ -85,15 +85,17 @@ describe('LIVING-FIELD-R2-MOUNT-01 — structural mount laws', () => {
   it('M8 R2 is a gated presentation branch and the canonical dashboard remains the fallback', () => {
     const d = code(read(DASHBOARD));
     expect(d).toContain('LivingFieldGrokkerShell');
-    expect(d).toContain('if (livingFieldR2Admitted && livingFieldR2Viewport)');
-    expect(d).toContain('return <LivingFieldGrokkerShell />');
+    expect(d).toContain('if (!livingFieldR2Admission.resolved || !livingFieldR2Viewport.resolved)');
+    expect(d).toContain('if (livingFieldR2Admission.admitted && livingFieldR2Viewport.admitted)');
+    expect(d).toContain('return <LivingFieldGrokkerShell belowHouseThreshold />');
+    expect(read(SHELL)).toContain("belowHouseThreshold ? 'h-[calc(100dvh-80px)] min-h-[640px]'");
     expect(d).toContain('LivingConstellationPanel');
     expect(d).toContain('LivingFieldCard');
   });
   it('M9 final shell is desktop-gated until narrow composition is witnessed', () => {
     const d = code(read(DASHBOARD));
     expect(d).toContain('useLivingFieldR2Viewport');
-    expect(d).toMatch(/livingFieldR2Admitted\s*&&\s*livingFieldR2Viewport/);
+    expect(d).toContain('livingFieldR2Admission.admitted && livingFieldR2Viewport.admitted');
   });
   it('M10 R2 mount does not alter existing Living Field API/data route', () => {
     const route = read('app/api/maia/living-field/route.ts');

@@ -47,11 +47,19 @@ export function PersonalLivingFieldDashboard({
   const encounterRef = useRef<HTMLDivElement>(null)
   // EARLY-FIELD-01: the server decides; this only reflects it (closed until told).
   const earlyFieldAdmitted = useEarlyFieldAdmission()
-  const livingFieldR2Admitted = useLivingFieldR2Admission()
+  const livingFieldR2Admission = useLivingFieldR2Admission()
   const livingFieldR2Viewport = useLivingFieldR2Viewport()
 
-  if (livingFieldR2Admitted && livingFieldR2Viewport) {
-    return <LivingFieldGrokkerShell />
+  if (!livingFieldR2Admission.resolved || !livingFieldR2Viewport.resolved) {
+    return (
+      <div className="min-h-[50vh] bg-stone-950 flex items-center justify-center px-6">
+        <p className="text-stone-500 text-sm font-light">Gathering your Living Field…</p>
+      </div>
+    )
+  }
+
+  if (livingFieldR2Admission.admitted && livingFieldR2Viewport.admitted) {
+    return <LivingFieldGrokkerShell belowHouseThreshold />
   }
 
   function beginMaiaExploration() {
