@@ -14,6 +14,8 @@ It did not establish that the practitioner had a relationship with the requested
 
 Therefore the member's share gesture was narrower than the read authority enforced by the page.
 
+This is a source-level authorization finding. No cross-member production request was sent to prove exploitability, because a successful request could expose another member's shared field material. The repair is justified by the code path itself.
+
 ## Why this matters
 
 `can_be_shown_to_practitioner` means a member chose practitioner visibility for a thread. It is not a grant to every practitioner on the platform.
