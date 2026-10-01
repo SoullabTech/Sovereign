@@ -4,8 +4,9 @@
 Class: A programme · R1 read-only census + propagation decision + falsifier design
 Governing law: docs/programme/H1-EXPOSURE_CENSUS_AND_RULINGS_2026-09-30.md (#1544, canonical 71859c3a)
 Census baseline: 71859c3a
-Standing: CENSUS COMPLETE · PROPAGATION DECISION PROPOSED · FALSIFIERS DESIGNED
-          · ⛔ NO RUNTIME CODE · ⛔ NO UI
+Standing: CENSUS COMPLETE · §3 + §4 RATIFIED (founder, 2026-10-01) · F10 ADDED
+          · FALSIFIER SUITE BUILT · MATRIX LETHAL + DISCRIMINATING (§7)
+          · ⛔ NO RUNTIME CODE · ⛔ NO UI · ⛔ NO PR · implementation awaits founder act
 Untouched by this lane: #1539, #1542, production (04005ca7c)
 ```
 
@@ -192,6 +193,79 @@ Stop and report instead of widening scope if:
 
 ## 6 · Next act
 
-Founder ruling on §3 (propagation) and §4 (falsifier set). Then: falsifiers and defeat candidates
-built and proven lethal, then implementation, then H1 admission against the population matrix
-on a recorded origin.
+~~Founder ruling on §3 (propagation) and §4 (falsifier set).~~ **Taken 2026-10-01** (§7.1).
+~~Falsifiers and defeat candidates built and proven lethal.~~ **Done** (§7). Remaining, each its
+own founder act: implementation → H1 admission against the population matrix on a recorded origin.
+
+## 7 · Founder ruling and falsifier result (2026-10-01)
+
+### 7.1 Ruling (ratified as written in §3/§4, with these tightenings)
+
+- **No URL cleansing — frozen as law (F9).** *Removing H1 authority does not require removing H1
+  syntax.* A non-admitted `work=` stays in the URL and simply has no authority.
+- **Closed during uncertainty.** Loading, error, timeout and malformed responses are not admitted;
+  there is never a transient moment where `work=` is honoured before admission resolves (F5).
+- **The endpoint returns only `{ admitted: boolean }`** — no reason, no cohort, no list.
+- **F1–F9 frozen.** **F10 added**: *H1 admission can change which explicit context is
+  authoritative; it cannot create a new fallback resolution algorithm.* It needs its own law: a
+  gate that replaces the fallback for EVERY non-admitted member passes F1, because with and
+  without `work=` it returns the same invented answer.
+- Scope of this act: **falsifiers only** — ⛔ no `canUseH1Arrival`, endpoint, hook, House
+  conditional or Studio choke point.
+
+### 7.2 Artifacts
+
+`tests/constitutional/h1-cohort-gate/` — `contract.ts` (the gate seam) · `world.ts` (fixtures +
+the seven delivery paths; legacy redirect and MAIA return use real canon functions) · `laws.ts`
+(F1–F7, F9, F10) · `structural.ts` (F8 producer containment over a source map) · `gates.ts`
+(reference test double + defeat candidates + canon witness) · `matrix.ts`.
+Commands: `npm run typecheck:h1-cohort-gate` · `npm run matrix:h1-cohort-gate`.
+
+⭐ "Ordinary pre-H1 resolution" in these laws **is** canon's `resolveSituatedWorkContext` /
+`resolveStudioArrival` / `modeEntryTarget`, imported, never paraphrased — a gate cannot pass by
+agreeing with a copy of them. ⛔ The reference is a **test double, never a seed**: nothing ships
+from `gates.ts`.
+
+### 7.3 Result
+
+| Subject | Outcome |
+|---|---|
+| Conforming reference | passes all 10 laws |
+| DC-H1 House-only gate | killed by F1 · classified collateral F4, F5, F9 |
+| DC-H2 admission from client state | killed by F2 |
+| DC-H3 House keeps its own list | killed by F3 |
+| DC-H4 Review bypasses choke point | killed by F4 · classified collateral F1, F5, F9 |
+| DC-H5 fail-open | killed by F5 (config half and loading half each independently) |
+| DC-H6 #1538 collapsed for non-admitted | killed by F6 |
+| DC-H7 non-admitted link keeps `from=house` | killed by F7 |
+| DC-H8 latent producer gains a caller | killed by F8 (structural) |
+| DC-H9 strips `work=` instead of removing authority | killed by F9 · classified collateral F4, F5 |
+| DC-H10 invents a fallback | killed by F10 |
+| **Canon at baseline (no gate)** | **fails F1, F7, F8** (+ F2, F4, F5, F9) — the suite sees the defect |
+
+`✓ MATRIX LETHAL AND DISCRIMINATING · reference clean · 10 candidates killed on their named laws ·
+canon witness red` — exit 0. Typecheck: 0 diagnostics in lane files.
+
+Classified collateral is always the same reason: the candidate is *defined* by a non-admitted
+reader honouring `work=`, and F4/F5/F9 each also ask that question; narrowing the candidate to
+avoid them would stop it being the error it models.
+
+### 7.4 Things the run found, recorded rather than smoothed
+
+- **DC-H5 was wrong first, and the matrix said so.** The first version ignored the allowlist
+  altogether — broad exposure, not fail-open — and killed F1/F2 as UNCLASSIFIED collateral. The
+  **candidate** was repaired (correct when config is trustworthy; open only when it is missing or
+  malformed, and while loading); ⛔ the law was not touched.
+- **Inherited typecheck debt.** Under `noUncheckedIndexedAccess` the imported canon modules carry
+  8 pre-existing TS2322 diagnostics (`canvasIdentity.ts`, `homeState.ts`, `situatedWork.ts`,
+  `useLivingWorks.ts`, `workContext.ts`). Listed by the script, not failing it; ⛔ the flag was not
+  weakened, and they are not this lane's to repair.
+- **F8 names a module that does not exist yet** (`app/writers-studio/h1Arrival.ts`) so the law
+  can be stated before the implementation. Implementation must land the choke point at that path
+  or amend `CHOKE_POINT_MODULE` by a recorded act — never by quietly widening the allowlist.
+- The controllers' query-copying navigations are inline in components, so their observable shape
+  is reproduced in `world.ts`, not imported; a change to how they copy the query is a reason to
+  revisit `DELIVERIES`.
+- ⛔ Run in this container with no live stack; ⭐ the founder's run of the two commands is the
+  evidence of record.
+
