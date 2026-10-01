@@ -1,10 +1,10 @@
 # LIVING-FIELD-R2-MOUNT-01 · Pre-mount census
 
-**Date:** 2026-09-30  
-**Class:** presentation admission / bounded cohort rollout  
-**Subject:** PR #1539 exact head `2640ec28e6`  
-**Base at census:** canonical `e7dbb8722e`  
-**Current gate:** custody merge → dependency declaration → cohort mount falsifiers → rendered witness  
+**Date:** 2026-09-30
+**Class:** presentation admission / bounded cohort rollout
+**Subject:** PR #1539 exact head `2640ec28e6`
+**Base at census:** canonical `e7dbb8722e`
+**Current gate:** custody merge → dependency declaration → cohort mount falsifiers → rendered witness
 **Stop:** no R2 member mount before PR #1539 is canonical; no R2F; no new inference; no memory expansion; no general rollout
 
 ## 1 · Existing member surface
@@ -87,8 +87,9 @@ R2 cohort presentation is frozen at the admitted R2E2 corpus. It does not add:
 - live Source Fabric;
 - autonomous child-ecology generation.
 
-The existing R1R3 member surface remains the fallback for non-cohort members and for any
-mount HOLD.
+The existing canonical Living Field presentation remains the fallback for non-R2 members and for any
+mount HOLD. At current canon, R1R3 itself is separately governed by `EARLY_FIELD_*`; the R2
+gate must preserve that decision rather than broaden or replace it.
 
 ## 6 · Responsive finding
 
@@ -112,7 +113,7 @@ part of the R2 mount. It must remain a separate governed lane.
 
 ## 8 · Mount falsifiers to build after custody merge
 
-- **M1 — fallback:** non-cohort member receives byte-for-byte R1R3 presentation authority.
+- **M1 — fallback:** non-R2 member receives the same canonical Living Field presentation they would receive with the R2 gate absent, including the separate EARLY-FIELD-01 decision.
 - **M2 — fail closed:** missing switch / empty cohort / invalid identity cannot expose R2.
 - **M3 — named cohort:** only a verified listed member receives R2 presentation.
 - **M4 — dependency custody:** all four ruled packages are direct declarations.
@@ -133,7 +134,7 @@ Each defeat candidate must die for its named reason before implementation is adm
 4. Build M1–M10 falsifiers before the mount mechanism.
 5. Add server-held cohort authority at the existing verified identity boundary.
 6. Mount `LivingFieldGrokkerShell` only for the admitted cohort + witnessed viewport.
-7. Keep R1R3 as fallback and for all other members.
+7. Preserve the canonical Living Field fallback exactly, including EARLY-FIELD-01.
 8. Walk House → Living Field → spatial depth → Wider/Whole → House with synthetic data.
 9. Founder witness.
 10. Small cohort witness. HOLD on return failure, provenance/consent drift, or disruption of the existing Living Field.
