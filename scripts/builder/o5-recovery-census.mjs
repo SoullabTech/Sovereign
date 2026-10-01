@@ -282,8 +282,11 @@ export async function admittedWrite(root, { env = process.env, admit } = {}) {
   const home = env.AIN_DELEGATION_HOME || path.join(os.homedir(), '.claude', 'ain-delegation');
   const held = LEASE.ensureGrantWriterLeaseV1(home);
   if (!held.ok) {
+    // The full refusal: which lease generation, held by which process incarnation, defeated this writer.
     return { ok: false, refused: 'GRANT_WRITER_LEASE_UNAVAILABLE', lease_reason: held.reason,
-      holder: held.holder ? { host: held.holder.host, pid: held.holder.pid, acquired_at: held.holder.acquired_at } : null };
+      lease_generation: held.generation ?? null, refused_at: new Date().toISOString(),
+      holder: held.holder ? { host: held.holder.host, pid: held.holder.pid, process_start_time: held.holder.process_start_time ?? null,
+        generation: held.holder.generation ?? null, acquired_at: held.holder.acquired_at } : null };
   }
   try {
     return await admittedWriteUnderLease(root, { env, admit });

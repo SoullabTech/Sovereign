@@ -242,24 +242,20 @@ named falsifier, with 2 classified collateral deaths.
 `c9285aae`. `npm run verify:jarvis-o5-r3-rb-freeze` is proven lethal both ways. The module and `main.js` stay
 unfrozen. They are bound by the suite.
 
-### 7.3 Reader: `scripts/builder/o5-r3-runtime-witness.mjs`
+### 7.3 Reader: `scripts/witness/o5-r3-runtime-witness.mjs`
 
-Read-only. It writes nothing, and its verdict confers nothing. It checks:
-- the record is LIVE;
-- mode A holds: development, source root = bound root, `dev-walk`, no foreign `JARVIS_REPO_ROOT`;
-- record HEAD = HEAD now, and HEAD contains `ce061073`;
-- the tree is clean in the record and now;
-- all four store hashes are present and equal to the bytes on disk now;
-- the lease generation, and whether its holder **is this Desktop** (host + pid + incarnation equal);
-- a process census of other grant-writer entry points.
+It is read-only: it writes nothing in the delegation home, and its verdict confers nothing. Its structure is the one
+ruled in §9.2. It was **moved out of `scripts/builder/`** before the walk; §9.4 gives the reason.
 
-⚠️ The census matches **command lines**, so it is a heuristic. A process importing a store through a
-differently named script won't show, and a shell whose text merely mentions one will. A hit is a question to
-answer, and a clean census is point-in-time evidence. Exercised here against a simulated live writer: every
-binding check passes. As expected in this container, `clean` fails (uncommitted tree), and the census flags this
-session's own shell.
+## 8. The admission walk (Mac Studio). zsh-safe: no comments in the commands
 
-## 8. The admission walk (Mac Studio, steps 4–9). zsh-safe: no comments in the commands
+**The walk is boring by design.** If any expected result does not appear:
+- stop;
+- keep every output file;
+- diagnose afterwards.
+
+⛔ Do not modify the implementation, the checkout or the delegation home inside the walk. A modified tree also
+fails C4 by construction.
 
 **Step 4: a clean mode-A worktree at the branch tip, then launch it.**
 ```
@@ -270,47 +266,153 @@ launchctl getenv JARVIS_REPO_ROOT
 cd jarvis-desktop && npm ci && cd .. && git status --porcelain
 cd jarvis-desktop && npm start
 ```
-`git status --porcelain` must print nothing; `node_modules/` is ignored.
+Expected:
+- `launchctl getenv` prints nothing;
+- `git status --porcelain` prints nothing (`node_modules/` is ignored).
 
-**Step 5: witness the live binding** (second terminal, Desktop running).
+**Step 5: witness the live binding, before any grant write** (second terminal, Desktop running).
 ```
-cd ~/.claude/worktrees/o5r3-admit && node scripts/builder/o5-r3-runtime-witness.mjs > ~/o5r3-witness-step5.txt; tail -20 ~/o5r3-witness-step5.txt
+cd ~/.claude/worktrees/o5r3-admit && node scripts/witness/o5-r3-runtime-witness.mjs > ~/o5r3-step5.txt; tail -25 ~/o5r3-step5.txt
 ```
-Expect every check PASS **except** "lease holder is this Desktop", which is expected only after step 6.
+Expect:
+- C1–C5 PASS;
+- C6 FAIL with `no lease yet` (Desktop takes the lease lazily, on its first grant mutation);
+- C7 and C8 PENDING.
 
-**Step 6: one real grant write from Desktop.** Authorize once on a Work Unit in the Desktop UI. This mutates the
-real delegation home; the ruling authorizes one write. Then:
+Any other failure stops the walk.
+
+**Step 6: one real grant write from Desktop.** Authorize once on a Work Unit in the Desktop UI. The ruling
+authorizes this one write to the real delegation home. Then:
 ```
-node scripts/builder/o5-r3-runtime-witness.mjs > ~/o5r3-witness-step6.txt; tail -20 ~/o5r3-witness-step6.txt
+node scripts/witness/o5-r3-runtime-witness.mjs > ~/o5r3-step6.txt; tail -25 ~/o5r3-step6.txt
 ```
-Expect **RUNTIME BINDING WITNESSED**, including `HELD_BY_THIS_DESKTOP`. That means the lease generation names the
-same host, pid and incarnation as `runtime-binding.json`.
+Expect:
+- C1–C6 PASS, verdict `CONSTITUTIONAL PARTIAL — C7, C8 pending` (exit 2);
+- the two identity lines printing the **same** pid and process start time, with the lease generation shown.
 
-**Step 7 + 9: a second writer is refused, and nothing changes.** Same worktree, Desktop still alive. Snapshot the
-ledgers and the lease, run the second writer, snapshot again:
+**Step 7: snapshot, refuse a second writer, judge.** Same worktree, Desktop still alive, ⛔ no UI activity from here
+until the verdict:
 ```
-find ~/.claude/ain-delegation/work-units-v2/execution-grants ~/.claude/ain-delegation/execution-grants ~/.claude/ain-delegation/grant-writer-lease -type f -exec shasum -a 256 {} + | sort > ~/o5r3-before.txt
-node scripts/builder/o5-recovery-census.mjs --write --admit sha256:step7-refusal-probe > ~/o5r3-step7.json; cat ~/o5r3-step7.json
-find ~/.claude/ain-delegation/work-units-v2/execution-grants ~/.claude/ain-delegation/execution-grants ~/.claude/ain-delegation/grant-writer-lease -type f -exec shasum -a 256 {} + | sort > ~/o5r3-after.txt
-diff ~/o5r3-before.txt ~/o5r3-after.txt && echo NOTHING-CHANGED
-node scripts/builder/o5-r3-runtime-witness.mjs | tail -3
+node scripts/witness/o5-r3-runtime-witness.mjs --snapshot ~/o5r3-before.json > /dev/null; ls -l ~/o5r3-before.json
+node scripts/builder/o5-recovery-census.mjs --write --admit sha256-step7-refusal-probe > ~/o5r3-refusal.json; cat ~/o5r3-refusal.json
+node scripts/witness/o5-r3-runtime-witness.mjs --refusal ~/o5r3-refusal.json --before ~/o5r3-before.json --json ~/o5r3-evidence.json > ~/o5r3-step7.txt; cat ~/o5r3-step7.txt
 ```
+The `--admit` value is irrelevant: `census --write` takes the lease **before** it reads the census, so the
+refusal comes first and nothing is written. Expected:
+- the refusal reads `"refused": "GRANT_WRITER_LEASE_UNAVAILABLE"` and `"lease_reason": "HOME_LEASE_HELD"`;
+- the refusal carries `lease_generation` and `holder.{host, pid, process_start_time, generation}`;
+- the final verdict is **`CONSTITUTIONAL PASS — C1–C8 witnessed`** (exit 0).
 
-Requirements:
-- step 7 returns `"refused": "GRANT_WRITER_LEASE_UNAVAILABLE"`, `"lease_reason": "HOME_LEASE_HELD"`, and a
-  `holder.pid` equal to the record's `pid`;
-- `NOTHING-CHANGED`: the ledgers and lease are byte-identical, so no second write occurred;
-- the reader still reports the Desktop as LIVE holder.
+**Step 8: quit Desktop.** The lease releases (a released generation appears), and `runtime-binding.json` gains
+`terminatedAt`. Optional confirmation:
+```
+node scripts/witness/o5-r3-runtime-witness.mjs | grep -E "C1|C6"
+```
+This should report `TERMINATED` and `released at generation N`.
 
-The `--admit` value is irrelevant, because `census --write` takes the lease **before** reading the census. So
-the refusal comes first and writes nothing.
+Keep `~/o5r3-step5.txt`, `~/o5r3-step6.txt`, `~/o5r3-before.json`, `~/o5r3-refusal.json`, `~/o5r3-step7.txt` and
+`~/o5r3-evidence.json` local. They hold machine paths and are not committed; the record cites their verdict lines.
 
-**Then:** quit Desktop. The lease releases (a released generation appears), and `runtime-binding.json` gains
-`terminatedAt`. Keep the four `~/o5r3-*` evidence files local; they hold machine paths.
+## 9. Founder rulings before the walk (2026-10-01)
 
-Step 10 is a founder act: O5-R3 is admitted only on the complete walk. Then package B and repeat with separate
-app and checkout identities.
+### 9.1 Status
 
-**Standing: RULINGS RECORDED · RUNTIME BINDING WITNESS BUILT · SUITE FROZEN @ `c9285aae` (RB-1…RB-5, 12/12, wiring
-5/5) · READER READY · ⛔ ADMISSION WALK OWED (Mac Studio, mode A) · ⛔ FALLBACK FAIL-CLOSED: NAMED, NOT REPAIRED ·
-⛔ NOT MERGED · PRODUCTION UNTOUCHED.**
+The status is **IMPLEMENTED + FROZEN TEST INSTRUMENT · ⛔ NOT ADMITTED**. The implementation boundary is judged
+strong enough to hold, and the live walk proceeds.
+
+`selectionSource: "dev-walk"` is kept. It is recorded as an **additive vocabulary amendment** to Ruling 2's
+minimum schema: one new value naming launch mode A. It is not a semantic change, and no existing value changed
+meaning.
+
+### 9.2 Evidence hierarchy: two tiers, never mixed
+
+**Constitutional evidence.** This tier alone decides the verdict:
+
+| | Witnessed |
+|---|---|
+| C1 | binding record LIVE, incarnation-correct (host + pid + process start time, probed as the lease probes) |
+| C2 | checkout identity: mode A (development, source root = bound root, `dev-walk`, no foreign `JARVIS_REPO_ROOT`), record HEAD = HEAD now |
+| C3 | required ancestor `ce061073` contained in HEAD |
+| C4 | checkout clean, in the record and now |
+| C5 | working-tree hashes of the four R3 stores = recorded hashes |
+| C6 | lease `HELD_BY_THIS_DESKTOP`: `(binding.pid, binding.processStartTime) == (lease.pid, lease.processStartTime)`, same host |
+| C7 | the second writer was refused `GRANT_WRITER_LEASE_UNAVAILABLE` / `HOME_LEASE_HELD` by **this** incarnation, **at the current lease generation** |
+| C8 | every file under both grant-ledger trees and the lease directory is byte-identical across the refused attempt |
+
+**Supporting operational census (S1).** The command-line process census is a heuristic. It can raise an
+**ALARM** that must be answered before admission, but it can neither grant admission nor defeat it.
+
+Why it is excluded: a process census can only show the *absence of visible* writers. The lease is what makes a
+second writer **structurally unable** to write, and C7 + C8 witness exactly that.
+
+> ⛔ *"Desktop appears to be this process, on this checkout"* never becomes *"therefore this process may write
+> grants."* The lease alone answers the latter. Neither `runtime-binding.json` nor this verdict confers anything.
+
+### 9.3 The refusal payload is preserved whole
+
+Both refusal sites now return the lease generation that defeated the writer and the holder's full incarnation:
+- `census --write` returns `lease_generation`, `refused_at`, and
+  `holder.{host, pid, process_start_time, generation, acquired_at}`;
+- Desktop's `grantWriter` returns the same fields, apart from `refused_at`.
+
+C7 binds the refusal to the live binding (holder = this incarnation) **and** to the lease generation that is still
+current at judgment time. So a refusal from an earlier or different generation fails.
+
+Exercised against a simulated live writer:
+- C1–C3, C5–C8 PASS (C4 fails there only because that tree carried uncommitted work);
+- a refusal edited to generation 2 fails C7;
+- an extra file dropped in the lease directory fails C8, naming the file.
+
+### 9.4 ⚠️ Defect found and repaired: the reader sat in authority territory
+
+At `2cdd490e` the frozen wiring law **RB-W5** ("no authority path reads the record") was **red**: the reader lived
+in `scripts/builder/` and loads `runtime-binding.js`. RB-W5 scans `scripts/builder/` and `jarvis-desktop/src/`
+as the places where grant authority lives.
+
+That commit was pushed with the RB matrix failing, and the run was not read before committing. It is recorded
+here rather than smoothed over.
+
+The repair moves the instrument, not the law:
+- the reader moved to `scripts/witness/`, beside the repository's other read-only witness instruments, which is
+  its honest home;
+- the frozen matrix is untouched, and `verify:jarvis-o5-r3-rb-freeze` is INTACT;
+- `matrix:jarvis-o5-r3-rb` is again LETHAL + DISCRIMINATING · WIRING INTACT.
+
+⚠️ RB-W5 scans by directory, so its perimeter is a convention, not a proof. What actually keeps the record
+authority-free is that no lease or store code reads it. RB-W5 pins that for the directories where those live.
+
+### 9.5 Admission criterion and statement
+
+Admission requires all of the following:
+- the step 7 verdict `CONSTITUTIONAL PASS — C1–C8 witnessed` from a clean mode-A worktree;
+- S1 QUIET, or its ALARM answered;
+- the founder's act.
+
+On that, the statement is narrow and exact:
+
+> *On the witnessed Mac Studio incarnation, JARVIS Desktop proved that its runtime application identity, bound
+> checkout identity, loaded grant-store content, and exclusive grant-writer lease referred to the same live
+> Desktop generation. A second writer was refused without mutating the grant state. `runtime-binding.json`
+> remained evidentiary only and conferred no grant authority.*
+
+It admits nothing beyond that incarnation and that launch mode. Package B (separate app and checkout
+identities) remains a separate witness.
+
+### 9.6 Named for after admission: O5-R4 — Silent Repository Fallback (⛔ not touched)
+
+> *Desktop must never silently acquire a grant-store authority from `~/MAIA-SOVEREIGN` merely because explicit
+> runtime binding is absent.*
+
+The default direction is no silent authority-bearing fallback (§3.3). The founder ruled: not now.
+
+**Standing:**
+- rulings recorded;
+- checker restructured (C1–C8 constitutional, S1 supporting);
+- refusal payload preserved;
+- RB-W5 defect repaired by relocation, freeze intact;
+- regressions green: `test:jarvis-o5-r3` 17/0, `test:jarvis-o5-r2` green, `matrix:jarvis-o5-r3` lethal, both
+  freezes intact;
+- ⛔ admission walk owed (Mac Studio, mode A);
+- ⛔ O5-R4 named, not opened;
+- ⛔ not merged;
+- production untouched.

@@ -85,7 +85,9 @@ async function grantWriter(root, opts = {}) {
     status: 'REFUSED',
     reason: 'GRANT_WRITER_LEASE_UNAVAILABLE',
     lease_reason: r.reason,
-    holder: r.holder ? { host: r.holder.host, pid: r.holder.pid, acquired_at: r.holder.acquired_at } : null,
+    lease_generation: r.generation ?? null,
+    holder: r.holder ? { host: r.holder.host, pid: r.holder.pid, process_start_time: r.holder.process_start_time ?? null,
+      generation: r.holder.generation ?? null, acquired_at: r.holder.acquired_at } : null,
   };
 }
 
