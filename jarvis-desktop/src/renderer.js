@@ -13,6 +13,9 @@ const libraryState = {
   deliberativeWorkUnit: null,
   deliberativeError: null,
   deliberativeRunning: false,
+  governedWork: null,
+  governedWorkLoading: false,
+  governedWorkError: null,
 };
 
 function escapeHtml(value) {
@@ -32,6 +35,9 @@ function setView(v) {
   currentView = v;
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
   render();
+  if (v === 'library' && !libraryState.governedWork && !libraryState.governedWorkLoading) {
+    refreshGovernedWork();
+  }
 }
 
 function stateRow(label, s) {
@@ -2641,12 +2647,91 @@ function wireLibrary() {
     setView('work');
     refreshActiveWorkUnit();
   });
+  document.getElementById('governed-work-refresh')?.addEventListener('click', refreshGovernedWork);
+  document.querySelectorAll('[data-open-governed-work]').forEach(button => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.openGovernedWork;
+      if (!id) return;
+      activeWorkUnitId = id;
+      activeWorkUnitStrategy = [];
+      activeExecutionReview = null;
+      activeCanonicalExecutionReview = null;
+      sessionStorage.setItem('jarvis:active-work-unit', id);
+      setView('work');
+      refreshActiveWorkUnit();
+    });
+  });
   document.getElementById('library-expand')?.addEventListener('click', () => {
     document.querySelectorAll('.library-group').forEach(d => { d.open = true; });
   });
   document.getElementById('library-collapse')?.addEventListener('click', () => {
     document.querySelectorAll('.library-group').forEach(d => { d.open = false; });
   });
+}
+
+async function refreshGovernedWork() {
+  libraryState.governedWorkLoading = true;
+  libraryState.governedWorkError = null;
+  if (currentView === 'library') renderLibrary();
+  try {
+    const out = await window.jarvis.workUnitAction({ action: 'canonical-list' });
+    if (!out?.ok) {
+      libraryState.governedWork = null;
+      libraryState.governedWorkError = out?.reason || 'Canonical Work Unit list could not be read.';
+    } else {
+      libraryState.governedWork = GrokkerGovernedWork.project(out);
+    }
+  } catch (e) {
+    libraryState.governedWork = null;
+    libraryState.governedWorkError = String(e?.message || e);
+  } finally {
+    libraryState.governedWorkLoading = false;
+    if (currentView === 'library') renderLibrary();
+  }
+}
+
+function governedWorkRows(items) {
+  if (!items?.length) return '<div class="hint">None.</div>';
+  return items.map(item => {
+    const title = item.grokker_origin?.query || item.objective;
+    const origin = item.grokker_origin ? 'Grokker inquiry' : (item.task_shape || 'canonical work');
+    return `<div class="grokker-result">
+      <b>${escapeHtml(title)}</b>
+      <div class="grokker-why">${escapeHtml(origin)} · ${escapeHtml(item.lifecycle)} · ${escapeHtml(item.reason)}</div>
+      ${item.grokker_origin?.source_ranges?.length ? `<div class="grokker-source">${item.grokker_origin.source_ranges.map(escapeHtml).join(' · ')}</div>` : ''}
+      <div class="actions"><button class="act" data-open-governed-work="${escapeHtml(item.work_unit_id)}">Open in Work</button></div>
+    </div>`;
+  }).join('');
+}
+
+function renderGovernedWork() {
+  if (libraryState.governedWorkLoading) {
+    return '<div class="grokker-box"><h3>Governed work</h3><div class="hint">Reading canonical Work Units…</div></div>';
+  }
+  if (libraryState.governedWorkError) {
+    return `<div class="grokker-box"><h3>Governed work</h3><div class="errors"><div>${escapeHtml(libraryState.governedWorkError)}</div></div><div class="actions"><button class="act" id="governed-work-refresh">Try again</button></div></div>`;
+  }
+  const view = libraryState.governedWork;
+  if (!view) {
+    return '<div class="grokker-box"><h3>Governed work</h3><div class="hint">Canonical Work Units have not been read yet.</div><div class="actions"><button class="act" id="governed-work-refresh">Read governed work</button></div></div>';
+  }
+  const p = view.population || {};
+  return `<div class="grokker-box">
+    <h3>Governed work</h3>
+    <div class="sentence">Persistent canonical Work Units grouped for orientation. These headings do not change lifecycle standing.</div>
+    <div class="library-summary">${p.returned || 0} returned of ${p.total || 0}${p.truncated ? ' · list truncated' : ''}${p.unreadable ? ' · ' + p.unreadable + ' unreadable' : ''}</div>
+    <div class="library-section-title">Needs Kelly</div>
+    ${governedWorkRows(view.needs_kelly)}
+    <div class="library-section-title">In motion</div>
+    ${governedWorkRows(view.in_motion)}
+    <div class="library-section-title">Watching</div>
+    ${governedWorkRows(view.watching)}
+    <details class="library-group">
+      <summary><span>Historical</span><span class="library-count">${view.historical.length}</span></summary>
+      <div class="library-items">${governedWorkRows(view.historical)}</div>
+    </details>
+    <div class="actions"><button class="act" id="governed-work-refresh">Refresh governed work</button></div>
+  </div>`;
 }
 
 function renderLibrary() {
@@ -2674,6 +2759,7 @@ function renderLibrary() {
       <div class="sentence">A lightweight pulse of the programme records touched most recently. This is orientation, not a claim that recent means important.</div>
       <div class="library-items">${renderRecentPulse(lib)}</div>
     </div>
+    ${renderGovernedWork()}
     <div class="grokker-box">
       <h3>Grokker · Ask / Trace</h3>
       <div class="sentence">Ask in ordinary language. This first layer retrieves the strongest field and source traces; it does not synthesize a new claim or upgrade their standing.</div>
