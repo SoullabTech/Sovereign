@@ -153,9 +153,11 @@ function canonicalize(value) {
   return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
 }
 function canonicalJson(value) { return JSON.stringify(canonicalize(value)); }
-function evidenceRecordId(kind, entry) {
+export function evidenceRecordIdV2(kind, entry) {
   return 'sha256:' + createHash('sha256').update(kind + '\n' + canonicalJson(entry)).digest('hex');
 }
+const evidenceRecordId = evidenceRecordIdV2;
+
 function validSha(value) { return typeof value === 'string' && /^[0-9a-f]{40}$/i.test(value.trim()); }
 function exactFields(entry, kind) {
   const allowed = ENTRY_FIELDS[kind] ?? [];

@@ -6,6 +6,7 @@ import { createLifecycleEnvelopeV2, transitionLifecycleV2, authorizedCoreSnapsho
 import { bindAuthorizedRouteV2 } from '../../scripts/builder/work-unit-routing-v2.mjs';
 import { appendTransportBindingV1 } from '../../scripts/builder/work-unit-transport-v1.mjs';
 import { appendLedgerRecordV2 } from '../../scripts/builder/work-unit-ledger-v2.mjs';
+import { projectConsequenceFindingV1 } from '../../scripts/builder/o5-consequence-finding-projection-v1.mjs';
 
 const require=createRequire(import.meta.url);
 const O1=require('../src/operator-intent-contract.js');
@@ -81,4 +82,23 @@ test('R4-R2 — finding/proposal admission closes when lifecycle leaves EXECUTIN
   let env=preparedExecuting();
   const returned=transitionLifecycleV2(env,{to:'RETURNED',evidence_ref:'proof:return',reason_code:'PROOF'}); assert.equal(returned.ok,true,JSON.stringify(returned.blockers)); env=returned.envelope;
   for(const [kind,entry] of [['proposal',proposal()],['finding',finding()]]) { const r=appendLedgerRecordV2(env,{kind,entry}); assert.equal(r.ok,false); assert.ok(codes(r).includes('LEDGER_STATE_NOT_ADMITTED')); }
+});
+
+
+test('R4-E9 — admitted consequence evidence targets exactly affected_lane; ordinary/forged findings do not project',()=>{
+  let env=preparedExecuting();
+  const admitted=appendLedgerRecordV2(env,{kind:'finding',entry:consequence()}); assert.equal(admitted.ok,true,JSON.stringify(admitted.blockers));
+  const projection=projectConsequenceFindingV1(admitted.record); assert.ok(projection);
+  assert.deepEqual(Object.keys(projection).sort(),['evidence','source','source_ref','target_lane']);
+  assert.equal(projection.target_lane,'lane-b'); assert.equal(projection.source,'executor-consequence-finding');
+  assert.equal(projection.source_ref,'w4-finding:'+admitted.record.id); assert.deepEqual(projection.evidence,admitted.record.entry);
+
+  const lanes={'lane-a':{inbox:[]},'lane-b':{inbox:[]},'lane-c':{inbox:[]}};
+  if (projection && lanes[projection.target_lane]) lanes[projection.target_lane].inbox.push(projection.evidence);
+  assert.equal(lanes['lane-b'].inbox.length,1); assert.equal(lanes['lane-a'].inbox.length,0); assert.equal(lanes['lane-c'].inbox.length,0);
+
+  const ordinary=appendLedgerRecordV2(admitted.envelope,{kind:'finding',entry:finding()}); assert.equal(ordinary.ok,true);
+  assert.equal(projectConsequenceFindingV1(ordinary.record),null);
+  assert.equal(projectConsequenceFindingV1({...admitted.record,id:'sha256:'+'0'.repeat(64)}),null);
+  assert.equal(projectConsequenceFindingV1({...admitted.record,entry:{...admitted.record.entry,affected_lane:'lane-c'}}),null);
 });

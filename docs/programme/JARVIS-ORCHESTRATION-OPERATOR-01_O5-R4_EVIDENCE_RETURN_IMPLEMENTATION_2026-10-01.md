@@ -16,7 +16,8 @@ Only the evidence-return boundary was implemented:
 5. ordinary and cross-lane finding schemas are closed;
 6. proposal→O1 `CANDIDATE` is a separate pure projection from the W4 record;
 7. candidate projection is idempotent by `source_ref`;
-8. a candidate cannot satisfy O1 continuation inheritance.
+8. a candidate cannot satisfy O1 continuation inheritance;
+9. an authentic cross-lane consequence finding projects as evidence to exactly its `affected_lane`, with forged/tampered records refused.
 
 No scheduler, O7 founder inbox, O8 semantic merge, automatic work creation, authority grant, cross-lane write, lifecycle-state addition, or W4.v1 runtime path was added.
 
@@ -92,18 +93,31 @@ Repeated reads are deduplicated by `source_ref`, not free-text summary. Two dist
 
 A `CANDIDATE` is deliberately not accepted as the prior `CLEAR` intent for `continue`, so candidate evidence cannot bootstrap itself into continuation authority.
 
-## 5. Evidence earned
+## 5. E9 targeted consequence projection
+
+`scripts/builder/o5-consequence-finding-projection-v1.mjs` is a pure read/projection seam. It does not create or persist an inbox. It accepts only an authentic W4.v2 consequence-finding record whose `sha256:` identity recomputes from its canonical entry.
+
+A conforming record projects to the four-field frozen shape:
+
+`target_lane · source · source_ref · evidence`
+
+with `target_lane` exactly equal to `affected_lane`, `source=executor-consequence-finding`, and `source_ref=w4-finding:<W4 record id>`. Ordinary findings, forged record IDs, and records whose payload has been altered after admission project to `null`.
+
+The live-host integration proof delivers the projection into a synthetic lane map and proves exactly the named lane receives one copy while every other lane remains empty. This is evidence propagation only; no persistent lane inbox, O7 surface, O2 node, O3 authority, command, patch, or cross-lane write is introduced.
+
+## 6. Evidence earned
 
 ### R4 real-module integration
 
 `node --test jarvis-desktop/test/o5-r4-evidence-return.test.mjs`
 
-**4/4 pass**:
+**5/5 pass**:
 
 - evidence-only append + digest identity + duplicate refusal, with identity/context/scope/authority/routing/execution/verifier-results/provenance/state all byte-equivalent before/after;
 - ordinary/consequence closed finding schemas + no finding projection;
 - separate proposal→O1 candidate projection + stable source-ref idempotency;
-- evidence admission closes after leaving `EXECUTING`.
+- evidence admission closes after leaving `EXECUTING`;
+- E9 targeted lane projection, ordinary-finding non-projection, and forged/tampered record refusal.
 
 ### Existing substrate regressions
 
@@ -117,7 +131,7 @@ A `CANDIDATE` is deliberately not accepted as the prior `CLEAR` intent for `cont
 
 `node --check` passes for both modified runtime files.
 
-## 6. What remains before admission
+## 7. What remains before admission
 
 - the frozen-law PR must become canonical;
 - this implementation must pass repository CI after reconciliation to then-current canonical;
@@ -125,4 +139,4 @@ A `CANDIDATE` is deliberately not accepted as the prior `CLEAR` intent for `cont
 
 No production or delegation-home state was touched by implementation or tests.
 
-**Standing: O5-R4 IMPLEMENTED ✅ · FROZEN LAW INTACT ✅ · REAL-MODULE PROOF 4/4 ✅ · W4 23/23 ✅ · W2 13/13 ✅ · E2E 24/24 + 12/12 ✅ · O1 18/18 ✅ · ⛔ NOT MERGED · ⛔ NOT DEPLOYED.**
+**Standing: O5-R4 IMPLEMENTED ✅ · AMENDED FROZEN LAW INTACT ✅ · REAL-MODULE PROOF 5/5 ✅ · W4 23/23 ✅ · W2 13/13 ✅ · E2E 24/24 + 12/12 ✅ · O1 18/18 ✅ · ⛔ NOT MERGED · ⛔ NOT DEPLOYED.**
