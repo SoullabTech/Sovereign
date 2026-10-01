@@ -28,8 +28,10 @@ def record_item(path: Path):
     lines = text.splitlines()
     headings = [re.sub(r"^#+\\s*", "", line).strip() for line in lines if re.match(r"^#{1,4}\\s+", line)]
     excerpt_lines = []
+    excerpt_start = None
+    excerpt_end = None
     in_fence = False
-    for line in lines:
+    for line_no, line in enumerate(lines, start=1):
         s = line.strip()
         if s.startswith("```"):
             in_fence = not in_fence
@@ -40,6 +42,9 @@ def record_item(path: Path):
             continue
         if s.startswith(("- ", "* ")) and not excerpt_lines:
             continue
+        if excerpt_start is None:
+            excerpt_start = line_no
+        excerpt_end = line_no
         excerpt_lines.append(re.sub(r"[\`*_]", "", s))
         if len(" ".join(excerpt_lines)) >= 320:
             break
@@ -48,6 +53,8 @@ def record_item(path: Path):
         "title": headings[0] if headings else path.stem.replace("_", " · "),
         "path": rel,
         "excerpt": " ".join(excerpt_lines)[:420],
+        "excerpt_start_line": excerpt_start,
+        "excerpt_end_line": excerpt_end,
         "headings": headings[1:7],
     }
 

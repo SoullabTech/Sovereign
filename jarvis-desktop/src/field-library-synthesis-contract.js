@@ -19,6 +19,8 @@
       title: String(row.item?.title || ''),
       path: row.item?.path || null,
       excerpt: row.item?.excerpt || null,
+      excerpt_start_line: Number.isInteger(row.item?.excerpt_start_line) ? row.item.excerpt_start_line : null,
+      excerpt_end_line: Number.isInteger(row.item?.excerpt_end_line) ? row.item.excerpt_end_line : null,
       headings: Array.isArray(row.item?.headings) ? [...row.item.headings] : [],
       retrieval_matches: Array.isArray(row.matched) ? [...row.matched] : [],
       retrieval_score: Number(row.score || 0),
