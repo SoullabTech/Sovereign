@@ -18,6 +18,7 @@
     in_motion: Object.freeze([
       'PR #1671 gives adult crisis/high-risk, teen crisis, and Stellium safety failures one content-free human fallback.',
       'The uptime monitor now fails its own test unless SMS or Slack accepts both DOWN and RECOVERED alerts.',
+      'E6 reply routing is being structurally repaired: practitioner-authored mail replies to the practitioner; system booking notices reply to the Soullab support mailbox.',
     ]),
     watching: Object.freeze([
       'After merge and configuration, witness a real test alert reaching a human before closing S1-S3 or E2.',
