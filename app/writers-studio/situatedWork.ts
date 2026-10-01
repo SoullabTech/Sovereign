@@ -169,7 +169,9 @@ export function situatedManuscriptAddress(manuscriptId: string, workId: string |
 }
 
 /** The carried contextual Work, read raw. A claim until resolved above. */
-export function readStudioWorkParam(search: string | URLSearchParams): string | null {
+export type StudioSearchParams = string | Pick<URLSearchParams, 'get'>;
+
+export function readStudioWorkParam(search: StudioSearchParams): string | null {
   const params = typeof search === 'string' ? new URLSearchParams(search) : search;
   const v = params.get(STUDIO_WORK_PARAM);
   return v && v.trim() ? v : null;

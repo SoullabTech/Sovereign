@@ -18,9 +18,9 @@ import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import {
   FROM_HOUSE,
   STUDIO_WORK_PARAM,
-  readStudioWorkParam,
   resolveStudioArrival,
 } from '@/app/writers-studio/situatedWork';
+import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -196,13 +196,13 @@ export default function P4R1HomeController() {
 
   /* HOUSE-STUDIO-CIRCULATION-01R1 · H1-3 — explicit Work > member choice >
      fallback. With a Work carried, the recency pick above is never consulted. */
-  const carriedWorkId = params ? readStudioWorkParam(params) : null;
+  const { workId: carriedWorkId, checking: h1AdmissionChecking } = useHouseStudioH1WorkClaim(params);
   const studioArrival = resolveStudioArrival(
     worksPhase, works, manuscriptPhase, manuscripts, carriedWorkId,
   );
   const arrivedFromHouse = params?.get('from') === FROM_HOUSE;
 
-  if (worksPhase === 'loading' || manuscriptPhase === 'loading' || studioArrival.kind === 'unknown') {
+  if (h1AdmissionChecking || worksPhase === 'loading' || manuscriptPhase === 'loading' || studioArrival.kind === 'unknown') {
     return <main className="fr-root"><div style={{ padding: 32 }}>Opening Writer’s Studio…</div></main>;
   }
 
