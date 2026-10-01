@@ -1,5 +1,12 @@
 # Living Field — First Human Witness Record
 
+> ⛔ **NOT FOR USE WHILE THE POPULATED-FIELD WITNESS IS `BLOCKED BY EVIDENCE`** (see
+> `LIVING-FIELD-FIRST-HUMAN-WITNESS_READINESS_2026-10-01.md`). This instrument is for the
+> **populated-field** witness. For a member whose Living Field is empty, use
+> `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md` and its record template; its
+> participant script differs from this one. Lift this banner only when a re-census shows the
+> participant has authentic member-owned substrate.
+
 **Participant label:** WITNESS-___
 **Date/time:**
 **Production SHA:**
