@@ -3,7 +3,7 @@
 **Date:** 2026-10-01
 **Base:** `ce061073` (O5-R3 implementation + freeze amendment 1). ⛔ **Kept frozen. No lease or ledger change.**
 **Standing:** implementation complete · constitutional suite complete · ⭐ **Mac Studio integration witness complete** ·
-⛔ **runtime-binding admission pending**
+⭐ **R3-R11 runtime-binding witness complete · O5-R3 admission evidence complete** · ⛔ merge still pending
 
 > *Source truth and runtime truth are not the same thing.* R3-R11: admission witnesses the exact checkout SHA
 > the participating Desktop/JARVIS process runs.
@@ -128,6 +128,70 @@ process (`census --write`) refused `GRANT_WRITER_LEASE_UNAVAILABLE`.
 - ⛔ Clean worktree hygiene is outside this act. Pre-R3 store code stays on disk in older worktrees, so the
   no-legacy-writer property is **point-in-time**, witnessed at the moment of step 6, not permanent.
 
-**Standing: MAC STUDIO INTEGRATION WITNESS ✅ · RUNTIME BINDING ⛔ PENDING · installed build `6528475` pre-R3 and
-not running · ⚠️ DEFAULT ROOT `~/MAIA-SOVEREIGN` IS PRE-R3, so a bare relaunch would be the legacy writer ·
-founder rulings owed: launch mode A/B · runtime binding record yes/no.**
+## 6. Founder ruling carried out: Mode A is sufficient for this admission
+
+For **this R3-R11 admission witness**, Mode A is accepted: an unpackaged Desktop launched from one clean detached
+checkout is a single execution identity. A new persistent runtime-binding file is **not an admission prerequisite**
+when the external witness can establish the same facts directly from the live process and filesystem. A durable
+runtime-binding record remains useful later operational hardening, especially for packaged launches and re-binding,
+but it is not retroactively made part of R3.
+
+### 6.1 Live Desktop identity witnessed
+
+A real Electron Desktop was launched from the detached witness checkout with an explicit substrate binding. While it
+was alive, the Mac Studio reported:
+
+- main PID: **13427**;
+- process incarnation: **Wed Sep 30 21:38:36 2026**;
+- executable: `.../o5r3-witness-chatgpt/jarvis-desktop/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron .`;
+- cwd: `/Users/soullab/.claude/worktrees/o5r3-witness-chatgpt/jarvis-desktop`;
+- `JARVIS_REPO_ROOT=/Users/soullab/.claude/worktrees/o5r3-witness-chatgpt`;
+- `AIN_DELEGATION_HOME=/Users/soullab/.claude/ain-delegation`;
+- bound checkout: **`ce061073ea911270fed5dde59099b2b843079664`**;
+- worktree: **clean**.
+
+This is stronger than reading the installed app stamp: it identifies the checkout the participating live process was
+actually running from and the substrate root it was explicitly told to execute through.
+
+### 6.2 Execution-critical blobs matched `ce061073` byte-for-byte
+
+| File | Git blob, working tree = `ce061073` |
+|---|---|
+| `scripts/builder/grant-writer-lease-v1.mjs` | `d02a5cba192042be4bc89093e9f7072ad2ae2505` |
+| `scripts/builder/grant-ledger-core-v1.mjs` | `35c3d44f35e8d9ed3eba8981ab1f70f5d3bb12aa` |
+| `scripts/builder/canonical-provider-execution-grant-store-v1.mjs` | `fdb99a51146d1a2bd9db8e383cf63bef7cf2b980` |
+| `scripts/builder/human-provider-execution-grant-store.mjs` | `5b2d3d884b83f8361e2f55313022be9a3acfb953` |
+| `jarvis-desktop/src/work-unit-control.js` | `9eb0762331a0364d1871060accb6bb493537b833` |
+
+The live-process census found **no other grant-writer entry point active**. In particular there was no active
+`work-unit-control`, `o5-recovery-census`, `o5-path-b-recovery`, canonical grant-store writer, human-provider
+grant-store writer or grant-writer-lease process from another checkout.
+
+### 6.3 Real Mac Studio holder/refusal boundary
+
+Against an isolated temporary delegation home, the actual exported Desktop `grantWriter()` path from this same clean
+`ce061073` checkout acquired generation 1 and stamped:
+
+- host `Kellys-Mac-Studio.local`;
+- PID `15533`;
+- incarnation `ps-lstart:Wed Sep 30 21:39:31 2026`;
+- owner nonce `f9fe34b9e9d4590abf0d58898e2d5c82`.
+
+A second process calling the same Desktop path was refused:
+
+`GRANT_WRITER_LEASE_UNAVAILABLE` → `HOME_LEASE_HELD`.
+
+The durable lease record's start time matched `ps -o lstart=` for PID 15533 exactly. The temporary witness home and
+processes were then removed. This is **not described as an Electron grant mutation**: it is a real-host proof of the
+Desktop acquisition path from the identical witnessed checkout, while the live Electron runtime established the
+R3-R11 binding separately. No production grant ledger was touched.
+
+## 7. Operational consequence
+
+The installed `/Applications/JARVIS.app` remains build `652847596...`, which predates R3, and the persisted Preferences
+binding still names the September 24 worktree `kellys-world-b6r1r1-grounded-response-20260924`. Those facts do not
+revoke this admission witness; they mean the **installed app is not yet an admitted R3 runtime** and must not be treated
+as one merely because the R3 branch is admitted. Packaging/rebinding the installed Desktop is a separate deployment act.
+
+**Standing: MAC STUDIO INTEGRATION WITNESS ✅ · R3-R11 LIVE RUNTIME BINDING ✅ · O5-R3 ADMISSION EVIDENCE COMPLETE ✅ ·
+installed packaged Desktop still pre-R3 / stale-bound and therefore not yet an admitted deployment · merge pending.**
