@@ -9,13 +9,38 @@
   "frozen": {
     "tests/constitutional/jarvis-o5-r3-runtime-binding/falsifiers.mjs": "143b29579919d67008f98ef089a4f13080e21d3b",
     "tests/constitutional/jarvis-o5-r3-runtime-binding/candidates.mjs": "cba31748d316dbbfdd013f199f9099ac6b923e22",
-    "tests/constitutional/jarvis-o5-r3-runtime-binding/matrix.mjs": "5bbd566dea62f92d0b9d22dd5e2d075b9c6a5d3e"
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/matrix.mjs": "5bbd566dea62f92d0b9d22dd5e2d075b9c6a5d3e",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/falsifiers.mjs": "5e8a1ac29b9818b641d831ad333411eb19cd4d71",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/candidates.mjs": "27f087de170e6f45e6d18cd3db116b6d8b5e22f5",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/matrix.mjs": "f251b9666d9005c6f1c5122d0999f9c860af4857"
   },
   "deliberately_not_frozen": {
     "jarvis-desktop/src/runtime-binding.js": "the implementation under test; it may be repaired, never by weakening the suite",
     "jarvis-desktop/src/main.js": "the Desktop entry point; its runtime-binding wiring is bound by the frozen RB-W checks in matrix.mjs",
     "scripts/verify-jarvis-o5-r3-rb-freeze.mjs": "the guard itself",
-    "package.json": "script wiring only"
+    "package.json": "script wiring only",
+    "scripts/witness/o5-r3-lease-standing.mjs": "the pre-write standing module under test; repaired, never by weakening PW-1…PW-9",
+    "scripts/witness/o5-r3-runtime-witness.mjs": "the checker; its C6 wiring is bound by the frozen PW-W checks"
   },
-  "note": "matrix.mjs IS frozen here (unlike the R3 lease matrix): it carries the RB-W wiring law, and this suite has no Class A predictions that must flip."
+  "note": "matrix.mjs IS frozen here (unlike the R3 lease matrix): it carries the RB-W wiring law, and this suite has no Class A predictions that must flip.",
+  "amendments": [
+    {
+      "id": "RB-A1",
+      "date": "2026-10-01",
+      "kind": "ADDITIVE — no frozen byte edited",
+      "cause": "Live Mac Studio walk stopped at Step 5: the real delegation home carried a correctly RELEASED prior lease generation, and the checker read that history as a failed pre-write baseline. Instrument defect, not a runtime-binding failure. The failed Step 5 witness is preserved (~/o5r3-step5.txt on the Mac Studio).",
+      "law": "Historical lease state may exist. What matters before the first write is that no live writer holds authority. After Desktop writes, the live lease must belong to this exact Desktop incarnation.",
+      "added": [
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/candidates.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/falsifiers.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/matrix.mjs"
+      ],
+      "unchanged": [
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/falsifiers.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/candidates.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/matrix.mjs"
+      ],
+      "authority": "founder recommendation 2026-10-01 (pre-admission instrument amendment, steps 1–5)"
+    }
+  ]
 }

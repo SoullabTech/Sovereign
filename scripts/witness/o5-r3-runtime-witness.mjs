@@ -11,6 +11,10 @@
  *     C4  checkout clean (in the record and now)
  *     C5  working-tree hashes of the four R3 stores = the recorded hashes
  *     C6  lease HELD_BY_THIS_DESKTOP: (binding.pid, binding.processStartedAt) == (lease.pid, lease.process_start_time)
+ *         --phase pre-write (amendment 2026-10-01): C6 asks instead that NO LIVE WRITER holds authority
+ *         (NOT_YET_HELD or NOT_YET_HELD_AFTER_RELEASE). Lease history may exist; only the latest
+ *         generation decides. A pre-write verdict is a baseline, never admission, and it may not
+ *         carry --refusal / --before.
  *     C7  second writer refused GRANT_WRITER_LEASE_UNAVAILABLE by this same Desktop incarnation,
  *         at the current lease generation                                      (needs --refusal)
  *     C8  grant ledgers + lease byte-identical across the refused attempt     (needs --before)
@@ -22,7 +26,8 @@
  * authority, and neither does this verdict. `--snapshot <file>` writes a hash snapshot to a
  * file of the operator's choosing (keep it OUTSIDE the delegation home).
  *
- *   node scripts/witness/o5-r3-runtime-witness.mjs                       C1–C6 (C6 expected only after the grant write)
+ *   node scripts/witness/o5-r3-runtime-witness.mjs --phase pre-write     baseline before the first grant write
+ *   node scripts/witness/o5-r3-runtime-witness.mjs                       C1–C6 post-write (C6 strict)
  *   node scripts/witness/o5-r3-runtime-witness.mjs --snapshot <file>     also write the ledger+lease hash snapshot
  *   node scripts/witness/o5-r3-runtime-witness.mjs --refusal <json> --before <snapshot>   the full C1–C8 verdict
  *   options: --support <appSupportDir>  --base <sha>  --json <file> (write the full evidence object)
@@ -39,11 +44,18 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const require = createRequire(import.meta.url);
 const RB = require(path.join(ROOT, 'jarvis-desktop/src/runtime-binding.js'));
 const LEASE = await import(pathToFileURL(path.join(ROOT, 'scripts/builder/grant-writer-lease-v1.mjs')).href);
+const STAND = await import(pathToFileURL(path.join(ROOT, 'scripts/witness/o5-r3-lease-standing.mjs')).href);
 
 const args = process.argv.slice(2);
 const val = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : undefined; };
 const support = val('--support') || path.join(os.homedir(), 'Library', 'Application Support');
 const base = val('--base') || 'ce061073';
+const phase = val('--phase') || 'post-write';
+if (!['pre-write', 'post-write'].includes(phase)) { process.stderr.write(`unknown --phase ${phase}\n`); process.exit(1); }
+if (phase === 'pre-write' && (val('--refusal') || val('--before'))) {
+  process.stderr.write('a pre-write baseline cannot carry admission evidence (--refusal / --before); run them post-write\n');
+  process.exit(1);
+}
 const git = (root, ...a) => { try { return execFileSync('git', ['-C', root, ...a], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { return null; } };
 const sha = (buf) => 'sha256:' + crypto.createHash('sha256').update(buf).digest('hex');
 
@@ -83,8 +95,16 @@ const lr = lease.record;
 const bindingPair = { pid: rec?.pid ?? null, processStartTime: rec?.processStartedAt ?? null, host: rec?.host ?? null };
 const leasePair = lr && !lr.released ? { pid: lr.pid, processStartTime: lr.process_start_time, host: lr.host, generation: lease.generation } : null;
 const pairEqual = !!leasePair && leasePair.host === bindingPair.host && leasePair.pid === bindingPair.pid && leasePair.processStartTime === bindingPair.processStartTime;
-C('C6', 'lease HELD_BY_THIS_DESKTOP: (binding.pid, binding.processStartTime) == (lease.pid, lease.processStartTime)', pairEqual,
-  lease.unreadable ? 'LEASE RECORD UNREADABLE' : !lr ? 'no lease yet' : lr.released ? `released at generation ${lease.generation}` : `generation ${lease.generation}`);
+const standing = home ? STAND.classifyLeaseStanding(STAND.readLeaseHistory(home), bindingPair) : { standing: 'MALFORMED', generation: 0, detail: 'no delegation home in the record' };
+if (phase === 'pre-write') {
+  C('C6-pre', 'no live writer holds grant authority before the first write (history may exist; latest generation decides)',
+    STAND.PRE_WRITE_ACCEPTABLE.includes(standing.standing), `${standing.standing} · ${standing.detail}`);
+} else {
+  // Strict: the standing AND the field-for-field pair must both name this Desktop.
+  C('C6', 'lease HELD_BY_THIS_DESKTOP: (binding.pid, binding.processStartTime) == (lease.pid, lease.processStartTime)',
+    pairEqual && STAND.POST_WRITE_ACCEPTABLE.includes(standing.standing),
+    lease.unreadable ? 'LEASE RECORD UNREADABLE' : `${standing.standing} · ${standing.detail}`);
+}
 
 const refusalFile = val('--refusal');
 let refusal = null;
@@ -92,7 +112,7 @@ if (refusalFile) { try { refusal = JSON.parse(fs.readFileSync(refusalFile, 'utf8
 const refusalOk = !!refusal && refusal.ok === false && refusal.refused === 'GRANT_WRITER_LEASE_UNAVAILABLE' && refusal.lease_reason === 'HOME_LEASE_HELD'
   && refusal.holder?.pid === bindingPair.pid && refusal.holder?.process_start_time === bindingPair.processStartTime && refusal.holder?.host === bindingPair.host
   && refusal.lease_generation === lease.generation;
-C('C7', 'second writer refused by THIS Desktop incarnation at the current lease generation', refusalOk,
+if (phase === 'post-write') C('C7', 'second writer refused by THIS Desktop incarnation at the current lease generation', refusalOk,
   refusal ? `${refusal.refused ?? refusal.status ?? '?'} · ${refusal.lease_reason ?? '?'} · holder ${refusal.holder?.pid}/${refusal.holder?.process_start_time} · generation ${refusal.lease_generation} (lease now ${lease.generation})` : 'needs --refusal <file>', !refusalFile);
 
 const beforeFile = val('--before');
@@ -101,7 +121,7 @@ let before = null;
 if (beforeFile) { try { before = JSON.parse(fs.readFileSync(beforeFile, 'utf8')); } catch { before = null; } }
 const identical = !!before && !!now && JSON.stringify(before.files) === JSON.stringify(now.files);
 const changed = before && now ? [...new Set([...Object.keys(before.files), ...Object.keys(now.files)])].filter((k) => before.files[k] !== now.files[k]) : [];
-C('C8', 'grant ledgers + lease byte-identical across the refused attempt', identical,
+if (phase === 'post-write') C('C8', 'grant ledgers + lease byte-identical across the refused attempt', identical,
   before ? (identical ? `${Object.keys(now.files).length} files unchanged` : `CHANGED: ${changed.join(', ')}`) : 'needs --before <snapshot>', !beforeFile);
 
 const snapshotOut = val('--snapshot');
@@ -118,7 +138,7 @@ try {
 const census = { id: 'S1', name: 'no other visible process names a grant-writer entry point (heuristic)', status: others.length ? 'ALARM' : 'QUIET', detail: others };
 
 const evidence = {
-  witnessed_at: new Date().toISOString(), base, record: rec,
+  witnessed_at: new Date().toISOString(), phase, base, record: rec, lease_standing: standing,
   identities: { binding: { ...bindingPair, repoRoot: root, head: rec?.binding?.head ?? null }, lease: leasePair },
   refusal, snapshot_before: before, snapshot_now: now, constitutional, supporting: [census],
 };
@@ -135,7 +155,8 @@ out('\nSUPPORTING OPERATIONAL CENSUS (cannot grant or defeat admission)');
 out(`  ${census.status.padEnd(7)} ${census.id} ${census.name}${others.length ? '\n          ' + others.join('\n          ') : ''}`);
 const failed = constitutional.filter((c) => c.status === 'FAIL');
 const pending = constitutional.filter((c) => c.status === 'PENDING');
-const verdict = failed.length ? `CONSTITUTIONAL FAIL (${failed.map((c) => c.id).join(', ')})`
+const verdict = failed.length ? `${phase === 'pre-write' ? 'PRE-WRITE BASELINE' : 'CONSTITUTIONAL'} FAIL (${failed.map((c) => c.id).join(', ')})`
+  : phase === 'pre-write' ? 'PRE-WRITE BASELINE PASS — C1–C5 + C6-pre (a baseline, not admission)'
   : pending.length ? `CONSTITUTIONAL PARTIAL — ${pending.map((c) => c.id).join(', ')} pending`
   : 'CONSTITUTIONAL PASS — C1–C8 witnessed';
 out(`\n${verdict}${census.status === 'ALARM' ? ' · ⚠ census ALARM: answer it before admission, but it is not the verdict' : ''}`);

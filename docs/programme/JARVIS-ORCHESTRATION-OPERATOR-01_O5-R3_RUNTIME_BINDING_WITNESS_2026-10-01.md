@@ -260,8 +260,8 @@ fails C4 by construction.
 **Step 4: a clean mode-A worktree at the branch tip, then launch it.**
 ```
 cd ~/MAIA-SOVEREIGN && git fetch origin claude/modest-goldberg-c6avhc
-git worktree add --detach ~/.claude/worktrees/o5r3-admit origin/claude/modest-goldberg-c6avhc
-cd ~/.claude/worktrees/o5r3-admit && git rev-parse HEAD && git merge-base --is-ancestor ce061073 HEAD && echo CONTAINS-ce061073
+git worktree add --detach ~/o5r3-witness-WALK origin/claude/modest-goldberg-c6avhc
+cd ~/o5r3-witness-WALK && git rev-parse HEAD && git merge-base --is-ancestor ce061073 HEAD && echo CONTAINS-ce061073
 launchctl getenv JARVIS_REPO_ROOT
 cd jarvis-desktop && npm ci && cd .. && git status --porcelain
 cd jarvis-desktop && npm start
@@ -270,16 +270,19 @@ Expected:
 - `launchctl getenv` prints nothing;
 - `git status --porcelain` prints nothing (`node_modules/` is ignored).
 
-**Step 5: witness the live binding, before any grant write** (second terminal, Desktop running).
+**Step 5: witness the live binding, before any grant write** (second terminal, Desktop running). *Amended by
+§10 (RB-A1): this is a pre-write baseline, judged with `--phase pre-write`.*
 ```
-cd ~/.claude/worktrees/o5r3-admit && node scripts/witness/o5-r3-runtime-witness.mjs > ~/o5r3-step5.txt; tail -25 ~/o5r3-step5.txt
+cd ~/o5r3-witness-WALK && node scripts/witness/o5-r3-runtime-witness.mjs --phase pre-write > ~/o5r3-step5b.txt; tail -25 ~/o5r3-step5b.txt
 ```
 Expect:
 - C1–C5 PASS;
-- C6 FAIL with `no lease yet` (Desktop takes the lease lazily, on its first grant mutation);
-- C7 and C8 PENDING.
+- C6-pre PASS with `NOT_YET_HELD` (no history) **or** `NOT_YET_HELD_AFTER_RELEASE` (released history, e.g.
+  `generation 2 released at …`);
+- verdict `PRE-WRITE BASELINE PASS — C1–C5 + C6-pre (a baseline, not admission)`, exit 0.
 
-Any other failure stops the walk.
+Any other C6-pre standing (`HELD_BY_OTHER_LIVE`, `UNRELEASED_HOLDER_GONE`, `UNDETERMINABLE`, `MALFORMED`,
+`HELD_BY_THIS_DESKTOP`) stops the walk. ⛔ Never clear or edit lease history to reach a pass.
 
 **Step 6: one real grant write from Desktop.** Authorize once on a Work Unit in the Desktop UI. The ruling
 authorizes this one write to the real delegation home. Then:
@@ -405,7 +408,7 @@ identities) remains a separate witness.
 
 The default direction is no silent authority-bearing fallback (§3.3). The founder ruled: not now.
 
-**Standing:**
+**Standing at §9 (superseded by §10):**
 - rulings recorded;
 - checker restructured (C1–C8 constitutional, S1 supporting);
 - refusal payload preserved;
@@ -416,3 +419,147 @@ The default direction is no silent authority-bearing fallback (§3.3). The found
 - ⛔ O5-R4 named, not opened;
 - ⛔ not merged;
 - production untouched.
+
+## 10. Live walk, first attempt: stopped at Step 5 · instrument amendment RB-A1 (2026-10-01)
+
+### 10.1 What the walk established before it stopped (founder-run, Mac Studio)
+
+- `JARVIS_REPO_ROOT` unset.
+- Worktree `/Users/soullab/o5r3-witness-b86079dc` at exactly `b86079dc14002980fdb02d337af6f489d4cd70d4`; contains
+  `ce061073`; clean.
+- `npm ci` completed, and Desktop launched from that checkout.
+- Binding record: `development` · `dev-walk` · source = bound root · correct HEAD · `clean=true` · pid `42439` ·
+  start `ps-lstart:Wed Sep 30 22:08:04 2026`.
+- **C1–C5 PASS.**
+
+**The stop.** Step 5 expected `C6 FAIL — no lease yet`; the checker reported `C6 FAIL — released at generation 2`.
+The walk stopped as the procedure requires. ⛔ No grant write, census write, code change, checkout change or
+delegation-home mutation was made. The failed witness is preserved, uncommitted, at `~/o5r3-step5.txt` on the Mac
+Studio. It is not re-run and not overwritten; the re-run writes `~/o5r3-step5b.txt`.
+
+### 10.2 What the real home carried
+
+| Generation | Record |
+|---|---|
+| 1, held | `Kellys-Mac-Studio.local` · pid `24766` · `ps-lstart:Wed Sep 30 21:47:32 2026` · acquired `2026-10-01T02:03:42.939Z` |
+| 2, release | `released: true` · `released_at 2026-10-01T02:04:36.639Z` |
+
+The walked Desktop (pid `42439`, started 22:08:04) is a different incarnation. So there is **no live holder**, only
+prior history that was correctly released.
+
+### 10.3 Classification: an instrument defect, not a runtime-binding failure
+
+The walk's real precondition is *"no live writer holds authority, and this Desktop does not hold the lease yet."*
+The checker collapsed that into *"no lease history exists"*, so the witness depended on whether the home had ever
+been used legitimately. On a persistent delegation home that is too strong.
+
+A released generation is evidence of **absence** of current authority. ⛔ Lease history was **not** cleared to make
+the walk pass, because that would destroy exactly the persistent-history condition the witness must observe.
+
+> **Law (founder):** *Historical lease state may exist. What matters before the first write is that no live
+> writer holds authority. After Desktop writes, the live lease must belong to this exact Desktop incarnation.*
+
+### 10.4 The amendment (RB-A1), additive: no frozen byte edited
+
+**Standing module.** `scripts/witness/o5-r3-lease-standing.mjs` (read-only, outside authority territory) judges
+the lease **relative to one Desktop incarnation**. It uses the lease's own `judgeHolder`, so the checker and the
+writer cannot disagree.
+
+| Standing | Meaning | Pre-write | Post-write |
+|---|---|---|---|
+| `NOT_YET_HELD` | no generation exists | ✅ | ⛔ |
+| `NOT_YET_HELD_AFTER_RELEASE` | latest generation is a well-formed release of the one before it | ✅ | ⛔ |
+| `HELD_BY_THIS_DESKTOP` | latest generation held by this host + pid + incarnation | ⛔ (a write already happened) | ✅ |
+| `HELD_BY_OTHER_LIVE` | latest generation held by a different live incarnation | ⛔ | ⛔ |
+| `UNRELEASED_HOLDER_GONE` | never released; holder dead or its pid reused | ⛔ (the first write would be a takeover, a different witness) | ⛔ |
+| `UNDETERMINABLE` | holder cannot be judged from this host | ⛔ | ⛔ |
+| `MALFORMED` | latest generation unreadable, or the release chain broken | ⛔ | ⛔ |
+
+**Two rules carry the safety:**
+- **Only the latest generation decides.** A release earlier in history never vouches for the present.
+- **A release is well-formed only as the release OF the generation immediately before it.** That generation must
+  be a readable held record, with the same `owner_nonce`, a matching generation field and a valid `released_at`.
+
+**Checker.** `--phase pre-write` evaluates **C6-pre** (pre-write standings only) and prints
+`PRE-WRITE BASELINE PASS … (a baseline, not admission)`.
+- It refuses `--refusal` / `--before`, so a baseline can never carry admission evidence.
+- The default post-write C6 is **not weakened**: it requires the strict standing **and** the field-for-field pair
+  `(binding.pid, processStartTime) == (lease.pid, processStartTime)`.
+
+**Falsifiers.** `tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/`, run as
+`npm run matrix:jarvis-o5-r3-rb-prewrite`, gives **LETHAL + DISCRIMINATING · WIRING INTACT**. PW-1…PW-9 run
+against the real module:
+
+| Falsifier | Law | Killer |
+|---|---|---|
+| PW-1 | empty home is a baseline | DC-PW10 (absence read as unknown) |
+| PW-2 | released history is a baseline, even if the former holder still runs; this is the walked shape | DC-PW1 (the walked checker's semantics) |
+| PW-3 | a live foreign holder blocks, even after an earlier release | DC-PW2 (any release vouches) |
+| PW-4 | a dead unreleased holder is not a baseline | DC-PW4 |
+| PW-5 | pid reuse is judged by incarnation, including this Desktop's pid in an older incarnation | DC-PW3 (pid-only liveness) |
+| PW-6 | eight malformed shapes are never a baseline | DC-PW5 (lenient release) · DC-PW6 (unreadable = vacant) |
+| PW-7 | post-write is strict and disjoint from pre-write | DC-PW7 |
+| PW-8 | a foreign-host holder is undeterminable | DC-PW8 (host ignored) |
+| PW-9 | the real reader on a real acquire + release + torn file | DC-PW9 (reader drops torn files) |
+
+Collateral is classified as irreducible in three places:
+- DC-PW2 hides every later generation;
+- DC-PW6 must read PW-9's torn file as vacant;
+- DC-PW7 grants exactly what PW-1/PW-2 forbid.
+
+Wiring PW-W1…W5 includes a **live** run proving `--phase pre-write --refusal` exits 1.
+
+**Mutations of the shipped module: 7/7 killed by a named falsifier.** M7 (predecessor shape unchecked) first
+"died" only by a crash on the unreadable-predecessor case. That is a vacuous kill, so the suite gained the case
+*release of a release*, and M7 now dies on PW-6 for its stated reason.
+
+**Freeze.** The three prewrite files are added to the runtime-binding `FREEZE.json` with lineage entry **RB-A1**.
+- The original `falsifiers.mjs` / `candidates.mjs` / `matrix.mjs` blobs are unchanged (`143b2957` / `cba31748` /
+  `5bbd566d`).
+- The guard was proven lethal both ways on a new entry.
+- The original RB matrix is still LETHAL + DISCRIMINATING · WIRING INTACT.
+
+### 10.5 ⚠️ Owed before admission: attribute generation 1
+
+Lease acquisition happens only on a **writing** path:
+- a Desktop grant mutation (issue, revoke, claim, confirm);
+- a writing recovery pass;
+- `census --write`.
+
+Desktop startup recovery runs `write:false` and never takes the lease.
+
+Generation 1 was held for 54 s and then **released**, and release happens on Desktop `will-quit` or at the end of a
+census or recovery write. The shape fits a Desktop (started 21:47:32 local) that performed a grant mutation at
+22:03:42 local and quit at 22:04:36.
+
+⚠️ **That would be a real-home grant write before the walk, outside the walk's one authorized write.** It is not
+assumed to be one. It is a question whose answer belongs in the admission record. Two read-only probes, in zsh:
+```
+find ~/.claude/ain-delegation/work-units-v2/execution-grants ~/.claude/ain-delegation/execution-grants -type f -newermt "2026-09-30 22:03:00" ! -newermt "2026-09-30 22:05:00" -print
+ls -lT ~/.claude/ain-delegation/grant-writer-lease
+```
+If a ledger changed in that window, the record names which unit and which event, and who launched pid `24766`.
+Then C8's "nothing changed across the refusal" is read against that known prior state. It does not block the
+re-walk.
+
+### 10.6 Re-walk
+
+1. Quit Desktop pid `42439`, which releases nothing because it never held.
+2. Run §8 Step 4 with the new tip in a **fresh** worktree (`~/o5r3-witness-WALK`; name it after the new short
+   SHA).
+3. Run §8 Step 5 with `--phase pre-write`. Expected: `NOT_YET_HELD_AFTER_RELEASE · generation 2 released at
+   2026-10-01T02:04:36.639Z`.
+4. Run Steps 6–8 unchanged. The first grant write takes **generation 3**, so C7 requires a refusal at generation 3.
+
+⛔ Do not reuse `/Users/soullab/o5r3-witness-b86079dc`: it lacks the amended checker, and editing it would fail C4.
+
+**Standing:**
+- **IMPLEMENTED + FROZEN TEST INSTRUMENT · ⛔ NOT ADMITTED**;
+- first live walk stopped at Step 5 on an instrument defect (C1–C5 PASS live), with its witness preserved;
+- RB-A1 additive amendment built, lethal and frozen with lineage;
+- generation 1 attribution owed;
+- re-walk next;
+- ⛔ O5-R4 untouched;
+- ⛔ not merged;
+- production untouched.
+
