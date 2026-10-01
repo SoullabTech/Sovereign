@@ -25,6 +25,23 @@ LIVING-ARCHIVE-SOURCE-VAULT-R1: 11/11 falsifiers lethal; layered entry PASS; coo
 
 `git diff --check` is clean.
 
+### Isolated PostgreSQL 16 witness
+
+The migration was applied to a clean ephemeral PostgreSQL 16 instance, with no Soullab production database involved:
+
+```text
+catalogue_versions=1
+artifacts=0
+known_gaps=0
+bad_exact_rejected=yes
+bad_sealed_gap_rejected=yes
+bad_withheld_rejected=yes
+rollback_with_data_refused=yes
+rollback_empty_applied=t
+```
+
+This establishes that R1 seeds only the catalogue-unit definition, admits no historical artifact/gap rows, structurally refuses three representative privacy/date wrong worlds, and that the rollback is fail-closed once historical data exists while remaining usable on an empty R1 substrate.
+
 ## What the matrix proves
 
 - F1 decorative points die;
