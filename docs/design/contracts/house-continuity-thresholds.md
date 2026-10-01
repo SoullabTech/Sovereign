@@ -12,6 +12,11 @@ surfaces:
   - components/house/HouseEntryThreshold.tsx
   - components/house/HouseRoomThreshold.tsx
   - components/team/TeamSidebar.tsx
+  - app/house/page.tsx
+  - app/writers-studio/layout.tsx
+  - app/writers-studio/StudioHouseReturn.tsx
+  - app/writers-studio/situatedWork.ts
+  - app/dev/writers-studio-pc3-live/P4R1WorkArrival.tsx
 change_class: experiential
 principles:
   - SOULLAB_LIVING_ORIENTATION_SYSTEM — movement between rooms is part of the experience and return remains visible
@@ -23,7 +28,7 @@ reference_surfaces:
   - docs/design/contracts/house-return.md
   - docs/design/contracts/facet-crossings.md
   - docs/canon/SOULLAB_LIVING_ORIENTATION_SYSTEM.md
-shared_with_house: one restrained threshold grammar — Soullab mark, THE HOUSE, destination name, Return to House — plus preservation of an explicit from=house return path.
+shared_with_house: one restrained threshold grammar — Soullab mark (omitted where the destination already carries it), THE HOUSE, destination name, Return Home → (/home) — plus preservation of an explicit from=house return path.
 distinct_to_room: this contract governs only the entry/return membrane inside the listed files. Commons, Library, Ideas, Living Field, Relationships, Wisdom and Team remain their own rooms/products; the threshold neither grants access nor changes their inner meaning.
 screenshot_desktop: docs/design/contracts/screenshots/canonical-house-threshold-library-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/canonical-house-threshold-library-mobile.png
@@ -53,6 +58,44 @@ Where a room contains deeper child routes, from=house may be preserved only so r
 ## Access
 
 The threshold is navigation only. It cannot grant Studio, practitioner, community, library, relationship, or other permissions.
+
+## Amendment 1 — explicit Work identity (2026-09-30, founder ruling H1-1 / R3)
+
+> **A House crossing may carry an explicit Work identity when the member has chosen to continue an existing act of creation. The carried identity is a pointer, not meaning. Destination surfaces remain responsible for interpretation and presentation.**
+
+This strengthens the contract; it does not weaken it. The invariant is unchanged: *the House does not carry hidden meaning — it carries only explicit member-chosen continuity.*
+
+**Allowed** — `/writers-studio?from=house&work=W`, and within the Studio `…&m=M&work=W`, where `W` is:
+- an explicit Work identity the member pointed at;
+- visible in the URL (never hidden state, never stored);
+- validated on every load against the member's own Works and declarations — a Work the member does not hold confers nothing and discloses nothing;
+- carrying **no** manuscript content, **no** interpretation, **no** memory retrieval, **no** inferred intention.
+
+**Not allowed** — any identity accompanied by meaning: a summary of what the member was doing, an emotional thread to "continue", or MAIA preloading an interpretation. That is semantic carry and violates this threshold.
+
+*Choice resolves context, not ontology:* entering M through W declares the context of this encounter only; it never declares that M belongs exclusively to W, and it rewrites no declaration.
+
+**Arrival precedence at the destination (H1-3):** explicit carried Work → the Work's declared manuscripts → the member chooses where several exist → the destination's existing fallback. Recency never decides an arrival made through a governed crossing.
+
+**Return (H1-2):** Writer's Studio renders the shared House threshold on `from=house`, which Studio mode changes preserve. Return is navigation only; it carries nothing back.
+
+**Experience verification (Studio surfaces) — 2026-09-30, authenticated witness on a disposable stack** (fresh Postgres 16 from the canonical baseline + all migrations, `next dev`, one member, data seeded through the app's own APIs): `scripts/witness/house-studio-h1-walk.cjs` → **63 passed · 0 failed**. Evidence: `screenshots/house-studio-circulation-01r1/walk/` (incl. `results.json`). ⛔ Not production; the founder's own walk on the real stack remains the record.
+
+## Amendment 2 — layered vocabulary and the mark (2026-09-30, founder rulings H1-close-1/2)
+
+**Layered, no canon reversal.** *Home* is the member-facing place — where the member arrives, orients and navigates; the route (`/home`), the navigation, and the return action (**Return Home →**). *The House* names the containing whole of Soullab in threshold and circulation language. A House threshold is a boundary of that whole, **not a place**: the member may leave Home through it without `house` becoming a crossing endpoint. The Platform Identity Canon (2026-09-28) stands unamended.
+
+So every threshold reads **THE HOUSE · ‹ROOM› · Return Home →**.
+
+**The mark is orientation's guest, not its subject.** Where the destination already visibly carries the Soullab mark (Writer's Studio's own shell), the threshold omits it (`destinationCarriesMark`); the destination declares that, the threshold never guesses. Every other room keeps the mark.
+
+**Return is not undo.** The member is not backing out of a room; they move from one inhabited place back into Home: *Home → Work → Studio → Home*, never *Home → Studio → back*.
+
+## Amendment 3 — threshold origin, not registry place (2026-09-30, founder)
+
+> **The House is a threshold origin, not a place in the crossing registry. H1 may carry House provenance without widening the registry vocabulary. Any future proposal to make `house` a first-class crossing origin is a separate governed architectural act.**
+
+`FACET_CROSSINGS` keeps its meaning — circulation between places. This membrane (`from=house`, the carried Work pointer, the shared threshold) is where House provenance lives.
 
 ## Reconciliation standing
 

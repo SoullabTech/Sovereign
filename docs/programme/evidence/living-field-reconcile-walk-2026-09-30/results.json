@@ -1,0 +1,103 @@
+[
+  {
+    "name": "A-happy",
+    "fail": [],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "LIVING FIELD": true,
+      "Wider field": true,
+      "Three spaces. Three different kinds of attention.": true,
+      "Enter Living Field": true,
+      "what is alive across a life": true,
+      "you authored": true,
+      "MAIA candidate": true,
+      "you confirmed": true,
+      "They do not claim": true,
+      "You carried this path": true,
+      "not forms you need to complete": true,
+      "What MAIA will receive": true,
+      "MAIA receives only the evidence shown here": true,
+      "send button": "Explore with MAIA →",
+      "Enter this dimension with MAIA": false,
+      "Written by you": true,
+      "MAIA candidate, accepted": true,
+      "Refine with MAIA": true,
+      "Talk with MAIA about this": true,
+      "refine-empty note": "A fresh draft can be invited again in a moment, or this space can be written directly."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/house/facet-flow-evidence?flowId=fl1",
+      "GET /api/maia/living-field/current_questions",
+      "POST /api/maia/living-field/current_questions/encounter",
+      "GET /api/maia/living-field/current_questions/gathering",
+      "POST /api/maia/living-field/current_questions/refine"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "B-failures",
+    "fail": [
+      "constellation",
+      "flows",
+      "detail",
+      "encounter"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "constellation failure": "Your wider field is unavailable right now. Nothing has been changed.",
+      "flows failure": "These paths are quiet for now. The journey remains gently held.",
+      "dimension-open failure": "Couldn’t open this dimension just now. Try again.",
+      "footer invite text": "These are areas of life Soullab can help you notice over time — not forms you need to complete. Open a dimension to see what has gathered, write what feels true now, or explore it with MAIA.",
+      "encounter failure": null
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/maia/living-field/current_questions"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "D-encounter-fail",
+    "fail": [
+      "encounter"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "encounter failure": "Could not open this encounter. Try again."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me",
+      "GET /api/maia/living-field/current_questions",
+      "POST /api/maia/living-field/current_questions/encounter",
+      "GET /api/maia/living-field/current_questions/gathering"
+    ],
+    "pageErrors": []
+  },
+  {
+    "name": "C-partial",
+    "fail": [
+      "partial"
+    ],
+    "finalUrl": "http://localhost:3000/maia/living-field?from=house",
+    "notes": {
+      "partial disclosure": "Some parts of your field are temporarily unavailable; what is shown is partial."
+    },
+    "apiCalls": [
+      "GET /api/maia/living-field",
+      "GET /api/maia/living-constellation",
+      "GET /api/house/facet-flows?limit=8",
+      "GET /api/members/me"
+    ],
+    "pageErrors": []
+  }
+]

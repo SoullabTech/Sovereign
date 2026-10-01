@@ -13,7 +13,9 @@ import { projectPc3LiveReview } from '@/app/writers-studio/full-redesign/liveRev
 import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { useWorkVisual } from '@/app/writers-studio/useWorkVisual';
-import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContext';
+import { currentWork } from '@/app/writers-studio/workContext';
+import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { hostFactsFrom } from '@/app/writers-studio/rebuild/liveReview';
 import { listChapterReviewManifests, loadChapterReviewManifestById, type ChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { rehydrateChapterReview } from '@/lib/writersStudio/rebuild/chapterReview';
@@ -56,6 +58,7 @@ type ReadyReview = {
   const requestedSectionId = params?.get('s') ?? null;
   const { id: appearance } = useAtmosphere();
   const { phase: worksPhase, works } = useLivingWorks();
+  const { workId: carriedWorkId } = useHouseStudioH1WorkClaim(params);
 
   const [phase, setPhase] = useState<ReviewPhase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
@@ -70,7 +73,10 @@ type ReadyReview = {
   const discussGen = useRef(0);
 
   const workContext = context
-    ? resolveWorkContext(worksPhase, works, context.manuscriptId)
+    // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
+    ? resolveSituatedWorkContext(
+      worksPhase, works, context.manuscriptId, carriedWorkId,
+    )
     : { kind: 'unknown' as const };
   const work = currentWork(workContext);
   const visual = useWorkVisual(work?.id ?? null);  useEffect(() => {

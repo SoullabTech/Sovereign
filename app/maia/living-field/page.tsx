@@ -67,8 +67,11 @@ export default function LivingFieldPage() {
   if (!authChecked || loading) {
     return (
       <LivingFieldFrame fromHouse={fromHouse}>
-        <div className="min-h-screen bg-stone-950 flex items-center justify-center">
-          <p className="text-stone-600 text-sm font-light">Opening your Living Field…</p>
+        <div className="min-h-screen bg-stone-950 flex items-center justify-center px-6">
+          <div className="text-center space-y-2">
+            <p className="text-stone-300 text-sm font-light">Gathering your Living Field…</p>
+            <p className="text-stone-600 text-xs">Bringing together what is here now.</p>
+          </div>
         </div>
       </LivingFieldFrame>
     )
@@ -79,7 +82,7 @@ export default function LivingFieldPage() {
       <LivingFieldFrame fromHouse={fromHouse}>
         <div className="min-h-screen bg-stone-950 flex items-center justify-center">
           <div className="text-center space-y-3">
-            <p className="text-stone-400 text-sm">Sign in to enter your Living Field.</p>
+            <p className="text-stone-400 text-sm">Sign in to enter the Living Field.</p>
             <Link
               href="/signin"
               className="text-amber-500 hover:text-amber-400 text-sm transition-colors"
@@ -95,8 +98,18 @@ export default function LivingFieldPage() {
   if (failed || !data) {
     return (
       <LivingFieldFrame fromHouse={fromHouse}>
-        <div className="min-h-screen bg-stone-950 flex items-center justify-center">
-          <p className="text-stone-400 text-sm">Something went quiet. Try returning in a moment.</p>
+        <div className="min-h-screen bg-stone-950 flex items-center justify-center px-6">
+          <div className="text-center space-y-3 max-w-md">
+            <p className="text-stone-300 text-sm">Your Living Field is still here.</p>
+            <p className="text-stone-500 text-sm">This view needs a fresh connection to gather it.</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="text-amber-500 hover:text-amber-400 text-sm transition-colors"
+            >
+              Try again →
+            </button>
+          </div>
         </div>
       </LivingFieldFrame>
     )

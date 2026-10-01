@@ -6,7 +6,9 @@ import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere'
 import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
-import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContext';
+import { currentWork } from '@/app/writers-studio/workContext';
+import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { editorialThreadIdFrom } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -82,6 +84,7 @@ export default function FlagshipWriteEditController() {
   const [selectedPassage, setSelectedPassage] = useState<Pc3HeldPassage | null>(null);
   const writingRef = useRef<SectionWriting | null>(null);
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
+  const { workId: carriedWorkId } = useHouseStudioH1WorkClaim(params);
 
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
@@ -225,7 +228,10 @@ export default function FlagshipWriteEditController() {
   const focusSection = context?.sections.find((s) => s.draftSectionId === focusId) ?? null;
   const chapter = context && focusId ? chapterSpanFor(context.sections, focusId) : null;
   const visibleSections = chapter?.sections ?? (focusSection ? [focusSection] : []);
-  const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? null);
+  // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
+  const workContext = resolveSituatedWorkContext(
+    worksPhase, works, context?.manuscriptId ?? null, carriedWorkId,
+  );
   const work = currentWork(workContext);
   const workContextSentence = workContext.kind === 'work'
     ? (work?.purpose ?? 'A Work you declared.')

@@ -46,13 +46,13 @@ const LENSES: Array<{ id: LensId; label: string; question: string }> = [
     id: 'elemental',
     label: 'Elemental',
     question:
-      'What modes of participation — Fire, Water, Earth, Air, or the larger Fifth — might this movement invite me to notice? Do not turn an element into a fixed identity.',
+      'What modes of participation — Fire, Water, Earth, Air, or the larger Fifth — might this movement invite me to notice? Hold each element as a living mode that can change with context.',
   },
   {
     id: 'spiralogic',
     label: 'Spiralogic',
     question:
-      'What movement, differentiation, integration, return, or threshold might this path invite me to notice? Do not assign me a fixed stage.',
+      'What movement, differentiation, integration, return, or threshold might this path invite me to notice? Hold stage language lightly and provisionally.',
   },
   {
     id: 'developmental',
@@ -103,7 +103,7 @@ function Endpoint({
         <p className="text-[10px] uppercase tracking-[0.18em] text-stone-700">
           {role === 'source' ? 'Earlier source' : 'Later place'}
         </p>
-        <p className="mt-1 text-xs italic text-stone-700">No longer available.</p>
+        <p className="mt-1 text-xs italic text-stone-700">This place sits beyond the current view.</p>
       </div>
     );
   }
@@ -137,7 +137,7 @@ function buildLensPrompt(evidence: FlowEvidence, lens: LensId): string {
     `I want to look at this through ${lensConfig.id === 'elemental' ? 'an' : 'a'} ${lensConfig.label} lens.`,
     lensConfig.question,
     '',
-    'Please distinguish what is directly present in the source and target from what this lens merely suggests. Treat the lens as a perspective, not a verdict. Ask me about my lived meaning rather than deciding it for me.',
+    'Please distinguish what is directly present in the source and target from what this lens suggests. Treat the lens as a perspective. Let lived meaning remain with me, and invite reflection on what the lens opens.',
   ].join('\n');
 }
 
@@ -222,7 +222,7 @@ function ThreadLensExplorer({
               Look through a lens
             </p>
             <p className="mt-1 max-w-lg text-[11px] leading-relaxed text-stone-700">
-              Choose a perspective. Nothing is classified or saved by choosing one.
+              Choose a perspective and let the same thread come into view from another angle.
             </p>
           </div>
 
@@ -249,7 +249,7 @@ function ThreadLensExplorer({
             <p className="text-[11px] text-stone-700">Gathering only this thread’s source and target…</p>
           ) : failed ? (
             <p className="text-[11px] text-stone-600">
-              This thread’s evidence is not available right now. Nothing has been sent.
+              This thread’s evidence failed to load. Nothing has been sent. You can try again.
             </p>
           ) : evidence && lens ? (
             <div className="space-y-3">
@@ -277,7 +277,7 @@ function ThreadLensExplorer({
                   disabled={!message.trim()}
                   className="text-xs text-amber-400/80 transition-colors hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-35"
                 >
-                  Explore with MAIA →
+                  Follow this lens →
                 </button>
                 <button
                   type="button"
@@ -331,10 +331,10 @@ export function LifeFacetFlowPanel() {
     return (
       <section className="border-t border-stone-900 pt-6">
         <p className="text-[10px] uppercase tracking-[0.2em] text-stone-600">
-          Threads across your life
+          Threads in the journey
         </p>
         <p className="mt-2 text-xs text-stone-700">
-          These paths are quiet right now. Nothing has been changed.
+          Threads failed to load. Nothing has been changed. You can try again.
         </p>
       </section>
     );
@@ -344,9 +344,9 @@ export function LifeFacetFlowPanel() {
     return (
       <section className="border-t border-stone-900 pt-6" aria-label="Gathering life threads">
         <p className="text-[10px] uppercase tracking-[0.2em] text-stone-600">
-          Threads across your life
+          Threads in the journey
         </p>
-        <p className="mt-2 text-xs text-stone-700">Gathering the paths you chose to make…</p>
+        <p className="mt-2 text-xs text-stone-700">Gathering the paths already carried forward…</p>
       </section>
     );
   }
@@ -358,17 +358,16 @@ export function LifeFacetFlowPanel() {
           id="life-facet-flow-heading"
           className="text-[10px] uppercase tracking-[0.2em] text-stone-500"
         >
-          Threads across your life
+          Threads in the journey
         </h2>
         <p className="mt-2 text-sm font-light leading-relaxed text-stone-500">
-          Paths you chose to carry from one part of Soullab into another.
+          Paths carried from one part of the journey into another.
         </p>
       </div>
 
       {flows.length === 0 ? (
         <p className="mt-5 max-w-lg text-xs italic leading-relaxed text-stone-700">
-          Nothing has crossed between these facets yet. When you choose to carry something
-          forward, the path can remain visible here.
+          As something is carried from one place into another, its path can remain visible here.
         </p>
       ) : (
         <div className="mt-6 space-y-3">

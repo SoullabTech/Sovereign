@@ -23,19 +23,19 @@ const DOMAIN_META: Record<ConstellationDomain, {
 }> = {
   living_field: {
     title: 'Living Field',
-    subtitle: 'See the patterns and dimensions gathering across your life.',
+    subtitle: 'what is alive across a life',
     href: '/maia/living-field',
     action: 'Enter Living Field',
   },
   vision_studio: {
     title: 'Vision Studio',
-    subtitle: 'Develop a possibility, project, or future into a vision you can work with.',
+    subtitle: 'what the work is becoming',
     href: '/maia/vision-studio?tab=vision',
     action: 'Enter Vision Studio',
   },
   practice_field: {
     title: 'Practice Field',
-    subtitle: 'Explore how your practice or work meets other people.',
+    subtitle: 'how practice meets others',
     href: '/maia/vision-studio?tab=practice',
     action: 'Enter Practice Field',
   },
@@ -47,9 +47,9 @@ const FOCUS_DOMAIN: Record<ConstellationFocus, ConstellationDomain> = {
 };
 
 const FOCUS_COPY: Record<ConstellationFocus, string> = {
-  living: 'See what is already real across your life, developing work, and practice.',
-  vision: 'Your wider field stays visible while you develop the work.',
-  practice: 'Your wider field stays visible while you shape how your practice meets others.',
+  living: 'See what is already taking shape across life, developing work, and practice.',
+  vision: 'The wider field stays in view as the work develops.',
+  practice: 'The wider field stays in view as practice meets others.',
 };
 
 function authorityLabel(node: ConstellationProjectionNode): string {
@@ -92,7 +92,7 @@ function DomainCluster({
 
       <div className="mt-4 space-y-2">
         {visible.length === 0 ? (
-          <p className="text-xs text-stone-700 italic">Nothing authored here yet.</p>
+          <p className="text-xs text-stone-700 italic">A place ready to take shape.</p>
         ) : (
           visible.map((node) => (
             <div key={node.projectionId} className="min-w-0">
@@ -162,7 +162,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
   if (!projection) {
     return (
       <div className={`rounded-xl border border-stone-900 px-4 py-5 ${className}`}>
-        <p className="text-xs text-stone-700">Gathering your wider field…</p>
+        <p className="text-xs text-stone-700">Gathering the wider field…</p>
       </div>
     );
   }
@@ -172,7 +172,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
   return (
     <section className={`rounded-2xl border border-stone-800/80 bg-stone-950/60 p-5 ${className}`}>
       <div className="max-w-3xl">
-        <p className="text-xs uppercase tracking-[0.18em] text-stone-500">Your wider field</p>
+        <p className="text-xs uppercase tracking-[0.18em] text-stone-500">Wider field</p>
         <h2 className="mt-2 text-xl font-medium text-stone-200">Three spaces. Three different kinds of attention.</h2>
         <p className="mt-2 text-sm font-light leading-relaxed text-stone-400">
           {FOCUS_COPY[focus]} Each space does a different job; opening one changes where you work, not who you are.
@@ -181,7 +181,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
 
       {projection.partial && (
         <p className="mt-3 text-xs text-amber-700/80">
-          Some parts of your field are temporarily unavailable; what is shown is partial.
+          Some parts of your field are unavailable; what is shown is partial.
         </p>
       )}
 
@@ -215,7 +215,7 @@ export function LivingConstellationPanel({ focus, className = '' }: Props) {
 
           <div className="order-first flex items-center justify-center sm:order-none sm:col-start-2 sm:row-start-2">
             <div className="relative z-20 flex h-20 w-20 flex-col items-center justify-center rounded-full border border-stone-700 bg-stone-950 shadow-lg">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500">you</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500">life</span>
               <span className="mt-1 h-1.5 w-1.5 rounded-full bg-stone-500" />
             </div>
           </div>

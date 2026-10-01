@@ -5,7 +5,9 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
-import { currentWork, resolveWorkContext } from '@/app/writers-studio/workContext';
+import { currentWork } from '@/app/writers-studio/workContext';
+import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import {
@@ -108,6 +110,8 @@ export default function P4R1DevelopController() {
   const selectedLineageChapterId = params?.get('lineageChapter') ?? null;
   const selectedLineageCandidateId = params?.get('lineageCandidate') ?? null;
   const { id: appearance } = useAtmosphere();
+
+  const { workId: carriedWorkId } = useHouseStudioH1WorkClaim(params);
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
@@ -314,7 +318,10 @@ export default function P4R1DevelopController() {
     }
   }, [context?.manuscriptId]);
 
-  const workContext = resolveWorkContext(worksPhase, works, context?.manuscriptId ?? manuscriptId);
+  // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
+  const workContext = resolveSituatedWorkContext(
+    worksPhase, works, context?.manuscriptId ?? manuscriptId, carriedWorkId,
+  );
   const work = currentWork(workContext);
   const workTitle = work?.title ?? context?.title ?? 'This Work';
 

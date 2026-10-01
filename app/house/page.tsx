@@ -8,6 +8,8 @@ import { MaiaThresholdLink } from './MaiaThresholdLink';
 import { HousePreferencesProvider, HouseMemberControls, HouseCenter, HouseQuickAccess, HouseDirectory, HousePassingThrough } from './HousePreferences';
 import { selectPassingQuote } from './passingContext';
 import { PASSING_QUOTES } from './passingQuotes';
+import { studioArrivalFromHouse } from '@/app/writers-studio/situatedWork';
+import { canUseHouseStudioH1 } from '@/lib/access/houseStudioH1Access';
 
 async function memberForHouse() {
   let memberId: string;
@@ -38,6 +40,7 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
   if (!member) redirect('/signin');
   const firstName = member.name?.trim().split(/\s+/)[0] || 'there';
   const livingWorks = await livingWorksForHouse(member.id);
+  const houseStudioH1Admitted = canUseHouseStudioH1(member.id);
   const housePreferences = await readHousePreferences(member.id, query);
   const passingQuote = selectPassingQuote(PASSING_QUOTES, new Date());
 
@@ -105,12 +108,14 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
           {livingWorks.length > 0 ? livingWorks.map((work) => (
             <div key={work.id}>
               <span>{work.title || 'An unnamed living work'}</span>
-              <Link href="/writers-studio">Writing →</Link>
+              {/* HOUSE-STUDIO-CIRCULATION-01R1 · H1-B: carries the Work the member
+                  points at — a pointer, never meaning. The Studio validates it. */}
+              <Link href={houseStudioH1Admitted ? studioArrivalFromHouse(work.id) : '/writers-studio'}>Writing →</Link>
             </div>
           )) : (
             <div>
               <span>No living Work is asking for space here.</span>
-              <Link href="/writers-studio">Writing →</Link>
+              <Link href={houseStudioH1Admitted ? '/writers-studio?from=house' : '/writers-studio'}>Writing →</Link>
             </div>
           )}
           <div>

@@ -47,6 +47,8 @@
   letter-spacing: .02em;
 }
 
+.brandSpace { display: block; }
+
 .return {
   justify-self: end;
   color: #cdb18a;
@@ -73,6 +75,10 @@
   }
 
   .room { display: none; }
+  /* With no mark of its own, the threshold still has room to say where you are. */
+  .threshold[data-mark='destination'] { grid-template-columns: 1fr auto; }
+  .threshold[data-mark='destination'] .brandSpace { display: none; }
+  .threshold[data-mark='destination'] .room { display: flex; }
   .brand img { width: 24px; height: 24px; }
   .return { font-size: 11px; }
 }
