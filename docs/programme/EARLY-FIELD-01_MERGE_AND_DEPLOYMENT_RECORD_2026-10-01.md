@@ -286,3 +286,41 @@ An operational record for the activation **exists on canonical**. Its existence 
 - **Guard built before R3, as ruled:** `lib/access/__tests__/monotonicIndependentGates.test.ts` on `chore/monotonic-gates-guard-20261001` (`f188aeae0`, no PR). It walks each gate's whole admission path (authority + endpoint + client hook, transitively), so coupling cannot migrate into a route, hook or shared helper unseen. 15/15, with 8 defeat candidates each caught by its intended mechanism. ⚠️ It is **frozen only on merge**. Until then it is a candidate guard on a branch.
 
 On R3 PASS, the matrix in `MONOTONIC-INDEPENDENT-GATES-01_RATIFICATION_2026-10-01.md` updates `(0,1)` → **witnessed**. Every other row stays *not yet witnessed*.
+
+---
+
+## 12 · R3 rulings (founder, 2026-10-01) and the run-ready procedure
+
+### Two separate evidentiary acts
+
+- **Guard PR opened:** [SoullabTech/Sovereign#1584](https://github.com/SoullabTech/Sovereign/pull/1584) (test-only; current with canonical `e28118ba0`; 15/15, access suites 72/72).
+- ⛔ **R3 does not depend on #1584's merge.** The guard proves the shape of the code. R3 witnesses production behaviour. Merging the guard later makes the law durable in CI **without rewriting what R3 meant**.
+
+### B: gate denial is not feature breakage
+
+For the ordinary member, `false` from both endpoints is **necessary but not sufficient**. W1 and W6 carry the weight: the Living Field and Writer's Studio must be **normally usable through their ungated paths**. A row where an endpoint correctly says `false` but the underlying room misbehaves is a **FAIL**, recorded as feature breakage and kept distinct from gate denial.
+
+### A5: bind the visible arrival to the governed seam
+
+In canonical source at `3421a2096`, `work=` has **exactly one reader**. `readStudioWorkParam` is called only inside `useHouseStudioH1WorkClaim`, and all four Studio controllers (Home, Write, Develop, Review) take the carried Work only from that hook. The hook returns the claim **only on `{"admitted":true}`** from `/api/house-studio/admission`. On the House side, the `work=` link is chosen server-side by `canUseHouseStudioH1(member.id)`.
+
+So during A4–A5, with DevTools → Network open (observation only, no new test, no instrumentation):
+
+| Bind | Observe | Ties A5 to |
+|---|---|---|
+| A4b | House page source / link inspector shows the `from=house&work=…` href | server-side H1 decision on the House render |
+| A5b | **One** `GET /api/house-studio/admission` → `200 {"admitted":true}`, issued **before** the arrival panel renders | the governed seam: the server answer gates the claim |
+| A5c | No other request or client step supplies the Work. The arrival panel is the resolution of the admitted claim against the member's own Works | no client-side reinterpretation of `work=` |
+
+The **mirror** for B: on W8, the same request returns `200 {"admitted":false}` and no arrival panel appears.
+
+Together these make A5 evidence of the **deployed architecture** (the #1551 seam that the #1584 guard pins structurally), not only of the visible UI.
+
+### Closing language (only on PASS of A1–A6 + A4b/A5b/A5c, and W1–W9)
+
+- Matrix row `EARLY_FIELD 0 / H1 1` → **WITNESSED**. Rows `(0,0)`, `(1,0)` and `(1,1)` stay **not yet witnessed**. ⛔ They are not extrapolated.
+- R3 standing:
+
+> **CONTROLLED COHORT WITNESS PASSED FOR ONE H1 MEMBER AND ONE ORDINARY MEMBER; GATE INDEPENDENCE OBSERVED IN PRODUCTION FOR THE CLOSED/OPEN AND CLOSED/CLOSED STATES.**
+
+⚠️ *"CLOSED/CLOSED"* in that sentence means **both gates denying for the ordinary member** (B). It is a per-member observation inside the running configuration. It does **not** witness the global `(0,0)` configuration row, which requires `HOUSE_STUDIO_H1_ENABLED` off and stays unwitnessed until rollout reaches it.
