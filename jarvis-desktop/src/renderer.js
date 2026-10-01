@@ -17,7 +17,35 @@ const libraryState = {
   governedWorkLoading: false,
   governedWorkError: null,
   pins: [],
+  viewState: null,
 };
+
+function currentLibraryViewState() {
+  const open_groups = [
+    ...document.querySelectorAll('details[data-view-key][open], details[data-library-group][open]'),
+  ].map(el => el.dataset.viewKey || el.dataset.libraryGroup).filter(Boolean);
+  return {
+    browse_query: libraryState.browseQuery,
+    grokker_query: libraryState.grokkerQuery,
+    open_groups,
+    scroll_top: currentView === 'library' ? $main.scrollTop : (libraryState.viewState?.scroll_top || 0),
+  };
+}
+
+function saveLibraryViewState() {
+  libraryState.viewState = GrokkerViewState.save(localStorage, currentLibraryViewState());
+}
+
+function applyLibraryViewState() {
+  const state = libraryState.viewState;
+  if (!state) return;
+  const open = new Set(state.open_groups || []);
+  document.querySelectorAll('details[data-view-key], details[data-library-group]').forEach(el => {
+    const key = el.dataset.viewKey || el.dataset.libraryGroup;
+    if (open.size) el.open = open.has(key);
+  });
+  if (Number.isFinite(state.scroll_top)) $main.scrollTop = state.scroll_top;
+}
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -2600,7 +2628,7 @@ function renderOrientationSummary(lib) {
     <p class="headline">What am I holding?</p>
     <p class="sentence">One orientation view across the things currently being held in view. This does not rank importance or create authority.</p>
     <div class="library-summary">${escapeHtml(o.law)} · ${o.total_visible} visible references</div>
-    ${o.sections.map(section => `<details class="library-group" ${['keep_in_sight','needs_kelly','in_motion','watching'].includes(section.id) ? 'open' : ''}>
+    ${o.sections.map(section => `<details class="library-group" data-view-key="orientation-${section.id}" ${['keep_in_sight','needs_kelly','in_motion','watching'].includes(section.id) ? 'open' : ''}>
       <summary><span>${escapeHtml(section.label)}</span><span class="library-count">${section.items.length}</span></summary>
       <div class="library-items">
         <div class="hint">${escapeHtml(section.meaning)}</div>
@@ -2681,6 +2709,7 @@ function wireLibrary() {
   if (search) {
     search.addEventListener('input', () => {
       libraryState.browseQuery = search.value;
+      saveLibraryViewState();
       renderLibrary();
     });
   }
@@ -2688,6 +2717,7 @@ function wireLibrary() {
   const runTrace = () => {
     if (!ask) return;
     libraryState.grokkerQuery = ask.value;
+    saveLibraryViewState();
     libraryState.grokkerResults = GrokkerLibraryQuery.trace(window.KELLY_FIELD_LIBRARY, ask.value);
     libraryState.sourcePacket = null;
     libraryState.synthesis = null;
@@ -2840,6 +2870,16 @@ function wireLibrary() {
       refreshActiveWorkUnit();
     });
   });
+  document.getElementById('library-reset-view')?.addEventListener('click', () => {
+    libraryState.viewState = GrokkerViewState.clear(localStorage);
+    libraryState.browseQuery = '';
+    libraryState.grokkerQuery = '';
+    $main.scrollTop = 0;
+    renderLibrary();
+  });
+  document.querySelectorAll('details[data-view-key], details[data-library-group]').forEach(el => {
+    el.addEventListener('toggle', saveLibraryViewState);
+  });
   document.getElementById('library-expand')?.addEventListener('click', () => {
     document.querySelectorAll('.library-group').forEach(d => { d.open = true; });
   });
@@ -2950,6 +2990,7 @@ function renderLibrary() {
         <input id="library-search" type="text" value="${escapeHtml(q)}" placeholder="Search memory, consciousness, Writer's Studio, JARVIS, capture…">
         <button class="act" id="library-expand">Expand all</button>
         <button class="act" id="library-collapse">Collapse all</button>
+        <button class="act" id="library-reset-view">Reset view</button>
       </div>
       <div class="hint">Browse remains a read-only index over canonical records. Grokker Trace below retrieves into that same corpus without inventing a second source of truth.</div>
     </div>
@@ -2981,6 +3022,7 @@ function renderLibrary() {
     ${libraryGroups(lib.laneGroups, q, 'lane')}
   `;
   wireLibrary();
+  applyLibraryViewState();
 }
 
 function render() {
@@ -2993,6 +3035,12 @@ function render() {
 
 (async function init() {
   libraryState.pins = GrokkerFieldPins.load(localStorage);
+  libraryState.viewState = GrokkerViewState.load(localStorage);
+  libraryState.browseQuery = libraryState.viewState.browse_query;
+  libraryState.grokkerQuery = libraryState.viewState.grokker_query;
+  $main.addEventListener('scroll', () => {
+    if (currentView === 'library') saveLibraryViewState();
+  });
   render();
   await Promise.all([refreshStatus(), loadCapabilities()]);
   render();

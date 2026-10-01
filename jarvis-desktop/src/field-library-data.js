@@ -3,6 +3,21 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
   "recentItems": [
     {
+      "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R16 What Am I Holding? · 2026-10-01",
+      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R16_WHAT_AM_I_HOLDING_2026-10-01.md",
+      "excerpt": "Give Kelly one concise orientation surface across the things currently being held in view without converting visibility into priority, authority, or programme standing.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Purpose",
+        "Orientation law",
+        "Standing preservation",
+        "UI",
+        "Verification",
+        "Exact next boundary"
+      ]
+    },
+    {
       "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R15 Keep in Sight · 2026-10-01",
       "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R15_KEEP_IN_SIGHT_2026-10-01.md",
       "excerpt": "Let Kelly explicitly keep selected fields, unfinished-thread recovery candidates, and governed Work Units visible without changing their programme, epistemic, or authority standing.",
@@ -1052,7 +1067,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 412,
       "evidence": "## 10 · Next act",
       "last_touched_epoch": 1788716166,
-      "hours_dormant": 589,
+      "hours_dormant": 595,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1064,7 +1079,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 12,
       "evidence": "STATE             OPEN · DIAGNOSIS ONLY · no determination made",
       "last_touched_epoch": 1788546913,
-      "hours_dormant": 636,
+      "hours_dormant": 642,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1076,7 +1091,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 132,
       "evidence": "STATE        BUILT · local gates PASS · PRODUCTION WITNESS PENDING",
       "last_touched_epoch": 1788567104,
-      "hours_dormant": 630,
+      "hours_dormant": 636,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1088,7 +1103,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 22,
       "evidence": "STATE            SOURCE MERGED · NOT CLOSED · NOT DEPLOYED",
       "last_touched_epoch": 1788697516,
-      "hours_dormant": 594,
+      "hours_dormant": 600,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1100,7 +1115,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Standing:** REPAIR closed · VERIFY full candidate pass (54/54) · INVOKE open, I0 only.",
       "last_touched_epoch": 1788745887,
-      "hours_dormant": 581,
+      "hours_dormant": 587,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1112,7 +1127,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 222,
       "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
       "last_touched_epoch": 1789318246,
-      "hours_dormant": 422,
+      "hours_dormant": 428,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1124,7 +1139,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 219,
       "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
       "last_touched_epoch": 1789317901,
-      "hours_dormant": 422,
+      "hours_dormant": 428,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1136,7 +1151,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 139,
       "evidence": "## 7. Owed witnesses, re-run on the composition",
       "last_touched_epoch": 1789510856,
-      "hours_dormant": 368,
+      "hours_dormant": 374,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1148,7 +1163,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Status:** **AUTOMATIC HANDWRITING OCR HELD · ORIGINAL + MANUAL TRANSCRIPTION OPEN · BLANK-WORK RELEASE INDEPENDENT · PRODUCTION UNTOUCHED.**",
       "last_touched_epoch": 1789602025,
-      "hours_dormant": 343,
+      "hours_dormant": 349,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1160,7 +1175,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 4,
       "evidence": "**Status:** ⚠️ FOUNDER ADJUDICATION OPEN · documentary only",
       "last_touched_epoch": 1789682893,
-      "hours_dormant": 320,
+      "hours_dormant": 326,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1172,7 +1187,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 182,
       "evidence": "## Owed, if the candidate instrument is ever wired",
       "last_touched_epoch": 1789917878,
-      "hours_dormant": 255,
+      "hours_dormant": 261,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1184,7 +1199,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 360,
       "evidence": "## 8 · Owed before A2 can be written",
       "last_touched_epoch": 1790078900,
-      "hours_dormant": 210,
+      "hours_dormant": 216,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     }
@@ -10780,6 +10795,21 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R17 Return / Release Discipline · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R17_RETURN_RELEASE_DISCIPLINE_2026-10-01.md",
+          "excerpt": "Let Kelly leave and re-enter the Living Field Library without reconstructing her place, while preserving the constitutional distinction between presentation continuity and active context/authority.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Purpose",
+            "Presentation continuity",
+            "Release",
+            "Law",
+            "Verification",
+            "Exact next boundary"
+          ]
+        },
+        {
           "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R1 Sweep · 2026-09-30",
           "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R1_SWEEP_2026-09-30.md",
           "excerpt": "Give Kelly one scrollable place to re-enter the large body of Soullab work without requiring working-memory reconstruction from chats, branches, or programme filenames.",
@@ -11426,8 +11456,8 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 657,
-    "recent": 77,
+    "lanes": 658,
+    "recent": 78,
     "recovery": 12
   }
 };
