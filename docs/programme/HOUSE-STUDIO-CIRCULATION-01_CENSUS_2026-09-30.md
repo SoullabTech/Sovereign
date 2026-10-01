@@ -365,3 +365,39 @@ worth doing in the #1534 rebuild; no second implementation.
 **Also routed, not H1:** in Develop, selecting a section sets `s=` but the whole-Work Overview doesn't respond. It reproduces without the House crossing, so it predates H1; open PR #1532 is the likely home.
 
 **Standing:** H1 is **merged, not admitted**. The repair goes on a fresh branch from canonical; the walk resumes on the repaired build.
+
+## 16 · Post-#1540 canonical admission witness — ✅ H1 admitted (2026-09-30)
+
+**Build witnessed:** canonical `89f7876e8` (includes #1540), Mac Studio real local stack,
+`localhost:3100`. The witness used a fresh browser context and the repository's development-only
+login endpoint to establish the authenticated member; no production state or deployment changed.
+
+| Step | Result |
+|---|---|
+| Home → WHAT'S ALIVE → ELEMENTAL_ALCHEMY | ✅ real Home link emitted `/writers-studio?from=house&work=…` and the browser followed that link |
+| one-manuscript arrival | ✅ settled as `data-arrival="one"`; Work and manuscript both named **ELEMENTAL_ALCHEMY**; no loading hang |
+| Write | ✅ `from=house` + `work` + `m` carried; chosen Work named |
+| Develop | ✅ same `m` and `work`; House provenance retained; chosen Work named |
+| Review | ✅ same `m` and `work`; waited for the ready shell; chosen Work named; saved Review opened without commissioning a reread |
+| Return Home | ✅ returned to `/home` with an empty query string — no Work identity carried back |
+| signed-out direct House address | ✅ fresh signed-out context redirected to Sign in; no “Opening Writer's Studio…” state appeared during the poll or at settlement |
+
+### Develop selection follow-up — classified, not an H1 blocker
+
+The §15 observation was re-witnessed on **plain Studio entry**, with neither `from=house` nor
+`work=`: selecting *Permissions* changed `s=`, highlighted the manuscript rail, but left the
+generic whole-Work arrival as the primary surface. The H1 merge itself changed none of
+`currentSection`, `onSection`, `SECTION_PARAM`, or the whole-Work Overview composition.
+Therefore the gap is **pre-existing / not H1**.
+
+PR **#1532** is its existing owner. It was rebased from `04005ca7c` onto canonical `89f7876e8`
+as `8d2868d28`; the only reconciliation conflict was CSS append order, resolved by preserving
+both H1 arrival styles and #1532 selected-place styles. Focused verification after rebase:
+**4 suites / 78 tests pass**, `typecheck:ws-flagship` passes, design-canon passes, and a plain-entry
+browser witness shows **SECTION SELECTED — Permissions**, the selected-place actions and seven
+lenses, with the generic whole-Work arrival no longer primary. Refreshed GitHub CI runs on that PR.
+
+**Standing after this witness:** **H1 ✅ ADMITTED TO CANONICAL at `89f7876e8`.** The House remains
+a threshold origin, not a crossing-registry place; R2 remains intact. This admission statement is
+not a deployment claim: production remains whatever commit the production container reports until
+a separately witnessed deployment advances it.
