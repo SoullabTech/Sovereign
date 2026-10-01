@@ -7,7 +7,8 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function() {
   const STOP = new Set([
     'the','a','an','and','or','of','to','in','for','we','have','has',
-    'about','what','show','me','all','our','did','do','is','are','on','with'
+    'about','what','show','me','all','our','did','do','is','are','on','with',
+    'established','establish','learned','learnt'
   ]);
 
   function tokens(query) {
@@ -39,6 +40,9 @@
         matched.push(token);
       }
     }
+
+    if (matched.length >= 2) score += matched.length * 6;
+    if (queryTokens.length > 1 && matched.length === queryTokens.length) score += 20;
 
     return score ? { item, group, kind, score, matched } : null;
   }
