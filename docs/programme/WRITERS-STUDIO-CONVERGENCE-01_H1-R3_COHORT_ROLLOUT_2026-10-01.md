@@ -255,3 +255,9 @@ hides Writer's Studio, Works or manuscripts.
 | C3 | ⏳ | ⏳ |
 | C4 | ⏳ | ⏳ |
 | Non-cohort witness | (Kelly's account; fingerprint not recorded) | must be **absent** |
+
+## 9 · Execution log
+
+| Step | Time / host | Output | Class | Result |
+|---|---|---|---|---|
+| 1 | 2026-10-01 · run from Kelly's Mac Studio → minisforum | `fuser -v ~/MAIA-SOVEREIGN/.deploy.lock` printed nothing (no holder line, no "No such file" error) | WITNESSED | ✅ no deploy in progress |
