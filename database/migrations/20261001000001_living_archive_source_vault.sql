@@ -9,6 +9,12 @@
 -- silently reuse Library Intelligence, Writer's Studio custody, or deletion
 -- provenance as historical-evidence authority.
 
+-- Rollback: DROP the five living_archive_* tables in reverse dependency order.
+-- No artifact/member data is inserted by this migration.
+
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+
 -- ---------------------------------------------------------------------------
 -- 1. Catalogue unit versions.
 -- LA-27 requires visible standing for the point-counting unit. A unit change is
@@ -256,3 +262,5 @@ CREATE INDEX IF NOT EXISTS idx_living_archive_lineage_standing
 
 COMMENT ON TABLE living_archive_lineage_edges IS
   'Historical/genealogical edges with explicit standing: direct, founder_attested, structural, or proposed. Rendering must still exclude withheld_third_party endpoints by LA-29.';
+
+COMMIT;
