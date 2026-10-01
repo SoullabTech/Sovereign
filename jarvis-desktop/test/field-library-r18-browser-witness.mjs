@@ -132,7 +132,7 @@ async function witness(viewport, filename) {
   await page.screenshot({path:path.join(SHOTS,filename),fullPage:true});
   const result={
     viewport,
-    recoveryText:await page.getByText(/candidates · standing RECOVERY_CANDIDATE_UNREVIEWED/).first().textContent(),
+    recoveryText:await page.getByText(/unfinished threads surfaced for re-checking/).first().textContent(),
     overflow,
     screenshot:path.join(SHOTS,filename),
   };

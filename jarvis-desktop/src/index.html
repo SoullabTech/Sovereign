@@ -17,7 +17,7 @@
     padding: 14px 20px; border-bottom: 1px solid #1c1d20; display: flex;
     align-items: center; gap: 16px; flex-wrap: wrap; -webkit-app-region: drag;
   }
-  header .brand { font-weight: 600; letter-spacing: 0.04em; color: #d8d8dc; }
+  header .brand { font-weight: 600; letter-spacing: 0.02em; color: #d8d8dc; }
   nav { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; -webkit-app-region: no-drag; }
   nav button {
     background: none; border: none; color: #8a8a92; padding: 6px 12px;
@@ -25,6 +25,7 @@
   }
   nav button.active { background: #1c1d20; color: #fff; }
   main { flex: 1; min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 20px; }
+  main > * { width:100%; max-width:1180px; margin-left:auto; margin-right:auto; }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; padding: 10px 0; border-bottom: 1px solid #16171a; }
   .row > div { min-width: 0; }
   .row:last-child { border-bottom: none; }
@@ -194,7 +195,7 @@
 </head>
 <body>
   <header>
-    <span class="brand">JARVIS</span>
+    <span class="brand">Kelly’s World</span>
     <nav>
       <button data-view="home" class="active">Home</button>
       <button data-view="work">Work</button>

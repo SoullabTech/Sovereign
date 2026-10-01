@@ -2888,6 +2888,28 @@ function wireLibrary() {
   });
 }
 
+function humanLifecycle(state) {
+  const labels = {
+    DRAFT: 'Draft',
+    BOUNDED: 'Scope set',
+    AUTHORIZED: 'Authorized',
+    ROUTED: 'Route prepared',
+    EXECUTING: 'In progress',
+    EVIDENCE_READY: 'Ready for your decision',
+    ADJUDICATED: 'Decision recorded',
+    CLOSED: 'Closed',
+    UNREADABLE: 'Unreadable',
+  };
+  return labels[state] || String(state || 'Unknown').replaceAll('_',' ').toLowerCase();
+}
+
+function hoursAgoLabel(hours) {
+  const n = Number(hours || 0);
+  if (n < 48) return 'about ' + Math.max(1, Math.round(n)) + ' hours ago';
+  const days = Math.round(n / 24);
+  return 'about ' + days + ' days ago';
+}
+
 function renderRecoveryCandidates(lib) {
   const items = lib.recoveryCandidates || [];
   if (!items.length) {
@@ -2896,12 +2918,13 @@ function renderRecoveryCandidates(lib) {
   return `<div class="grokker-box">
     <h3>Unfinished threads · recovery candidates</h3>
     <div class="sentence">Older programme lineages carrying explicit unfinished evidence. Dormancy does not create importance; these are invitations to re-check, not claims that the work should resume.</div>
-    <div class="library-summary">${items.length} candidates · standing RECOVERY_CANDIDATE_UNREVIEWED</div>
+    <div class="library-summary">${items.length} unfinished threads surfaced for re-checking</div>
     <div class="library-items">${items.map(item => `<div class="grokker-result">
       <b>${escapeHtml(item.title)}</b>
-      <div class="grokker-why">${escapeHtml(item.signal)} · ~${escapeHtml(item.hours_dormant)}h since last Git touch · ${escapeHtml(item.candidate_law)}</div>
+      <div class="grokker-why">Last touched ${escapeHtml(hoursAgoLabel(item.hours_dormant))} · surfaced because the record still names unfinished work</div>
       <div class="library-excerpt">${escapeHtml(item.evidence)}</div>
       <div class="grokker-source">${escapeHtml(item.path)}:${escapeHtml(item.evidence_line)}</div>
+      <details class="advanced-tools"><summary>Why Grokker surfaced this</summary><div class="hint">${escapeHtml(item.signal)} · ${escapeHtml(item.standing)} · ${escapeHtml(item.candidate_law)}</div></details>
       <div class="actions"><button class="act" data-recovery-trace="${escapeHtml(item.programme_key)}">Trace this thread</button>${pinButton('recovery', item.programme_key, item.title)}</div>
     </div>`).join('')}</div>
   </div>`;
@@ -2935,7 +2958,7 @@ function governedWorkRows(items) {
     const origin = item.grokker_origin ? 'Grokker inquiry' : (item.task_shape || 'canonical work');
     return `<div class="grokker-result">
       <b>${escapeHtml(title)}</b>
-      <div class="grokker-why">${escapeHtml(origin)} · ${escapeHtml(item.lifecycle)} · ${escapeHtml(item.reason)}</div>
+      <div class="grokker-why">${escapeHtml(item.grokker_origin ? 'Grokker inquiry' : 'Governed work')} · ${escapeHtml(humanLifecycle(item.lifecycle))} · ${escapeHtml(item.reason)}</div>
       ${item.grokker_origin?.source_ranges?.length ? `<div class="grokker-source">${item.grokker_origin.source_ranges.map(escapeHtml).join(' · ')}</div>` : ''}
       <div class="actions"><button class="act" data-open-governed-work="${escapeHtml(item.work_unit_id)}">Open in Work</button>${pinButton('work', item.work_unit_id, title)}</div>
     </div>`;
@@ -2956,7 +2979,7 @@ function renderGovernedWork() {
   const p = view.population || {};
   return `<div class="grokker-box">
     <h3>Governed work</h3>
-    <div class="sentence">Persistent canonical Work Units grouped for orientation. These headings do not change lifecycle standing.</div>
+    <div class="sentence">Work that still has a governed life in JARVIS, grouped so you can see what needs you, what is moving, and what deserves watching.</div>
     <div class="library-summary">${p.returned || 0} returned of ${p.total || 0}${p.truncated ? ' · list truncated' : ''}${p.unreadable ? ' · ' + p.unreadable + ' unreadable' : ''}</div>
     <div class="library-section-title">Needs Kelly</div>
     ${governedWorkRows(view.needs_kelly)}
@@ -3003,11 +3026,11 @@ function renderLibrary() {
     ${renderRecoveryCandidates(lib)}
     ${renderGovernedWork()}
     <div class="grokker-box">
-      <h3>Grokker · Ask / Trace</h3>
-      <div class="sentence">Ask in ordinary language. This first layer retrieves the strongest field and source traces; it does not synthesize a new claim or upgrade their standing.</div>
+      <h3>Ask Grokker</h3>
+      <div class="sentence">Ask about anything we’ve worked on. Grokker will gather the strongest traces and show where they came from.</div>
       <div class="grokker-input">
         <input id="grokker-query" type="text" value="${escapeHtml(gq)}" placeholder="What have we established about context release?">
-        <button class="primary" id="grokker-trace">Trace this</button>
+        <button class="primary" id="grokker-trace">Find this</button>
       </div>
       <div id="grokker-results">${renderGrokkerResults(libraryState.grokkerResults, gq)}</div>
       ${libraryState.grokkerResults.length ? `<div class="actions"><button class="act" id="grokker-packet">Prepare source packet</button></div>` : ''}
