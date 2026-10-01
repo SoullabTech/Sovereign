@@ -26,20 +26,29 @@ test('R9 proposed Work Unit uses existing canonical vocabulary only',()=>{
   assert.equal(spec.requestedPosture,'local_only');
   assert.equal(spec.authorityRequest.networkExternal,false);
 });
+test('R9 defeat candidate still proves whole-file-only scope loses Grokker precision',()=>{
+  const p=packet();
+  const defeat={scope:{allowed_paths:['docs/programme/AUTHORITY.md','docs/programme/ROUTING.md']}};
+  const losses=D.precisionLoss(p,defeat);
+  assert.equal(losses.length,2);
+  assert.equal(losses[0].expected,'docs/programme/AUTHORITY.md:3-7');
+  assert.equal(losses[0].reason,'LINE_RANGE_STRIPPED');
+});
 
-test('R9 falsifier catches W0.v2 stripping Grokker line ranges',()=>{
+test('R10 repair preserves Grokker line ranges through canonical W0.v2 input',()=>{
   const out=D.preview(packet(),SHA);
-  assert.equal(out.ok,false);
-  assert.equal(out.status,'WORK_UNIT_EVIDENCE_PRECISION_LOSS');
-  assert.equal(out.losses.length,2);
+  assert.equal(out.ok,true,JSON.stringify(out.losses || out.blockers));
+  assert.equal(out.status,'WORK_UNIT_PRECISION_PRESERVED');
   assert.deepEqual(out.canonical_input.scope.allowed_paths,[
     'docs/programme/AUTHORITY.md','docs/programme/ROUTING.md'
   ]);
-  assert.equal(out.losses[0].expected,'docs/programme/AUTHORITY.md:3-7');
-  assert.equal(out.losses[0].reason,'LINE_RANGE_STRIPPED');
+  assert.deepEqual(out.canonical_input.scope.evidence_selectors,[
+    {ref:'docs/programme/AUTHORITY.md',selector:{type:'lines',start:3,end:7}},
+    {ref:'docs/programme/ROUTING.md',selector:{type:'lines',start:11,end:15}},
+  ]);
 });
 
-test('R9 adapter refuses before creating or executing any Work Unit',()=>{
+test('R9/R10 adapter remains preview-only and cannot create or execute a Work Unit',()=>{
   const fs=require('node:fs');
   const src=fs.readFileSync(new URL('../src/field-library-deliberative-work-unit.js',import.meta.url),'utf8');
   assert.doesNotMatch(src,/createCanonicalV2\s*\(/);

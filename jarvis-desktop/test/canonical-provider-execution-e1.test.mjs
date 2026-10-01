@@ -635,6 +635,65 @@ test('unreconciled non-local OpenCode refuses before process creation', async ()
   assert.equal(processCalls, 0);
 });
 
+
+test('canonical Qwen direct disclosure obeys exact line-range evidence selectors', async () => {
+  const { home } = tempEnv();
+  let seen = null;
+  try {
+    const out = await WUC.executeCanonicalResolvedProvider(
+      REPO,
+      {
+        workUnitId: 'e3-direct-qwen-range-proof',
+        grantId: 'e3-direct-range-grant-proof',
+        workUnit: {
+          identity: { objective: 'Prove exact line-range disclosure.' },
+          custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
+          scope: {
+            base_ref: SHA,
+            allowed_paths: ['scripts/builder/work-unit-v2.mjs'],
+            evidence_selectors: [{
+              ref: 'scripts/builder/work-unit-v2.mjs',
+              selector: { type: 'lines', start: 1, end: 5 },
+            }],
+          },
+          evaluation: {
+            acceptance_conditions: ['Return only selected evidence.'],
+            stop_conditions: ['Stop before any write.'],
+          },
+        },
+        binding: {
+          route_participant_id: 'primary',
+          transport_binding_id: 'tb-qwen-range-proof',
+          provider_id: 'qwen-local',
+          model_id: 'qwen3-coder:30b',
+          adapter_id: 'ollama-direct',
+        },
+        resolved: {
+          execution_adapter: 'ollama-direct',
+          model_ref: 'ollama/qwen3-coder:30b',
+          model_id: 'qwen3-coder:30b',
+        },
+        sourceEnv: { ...process.env, AIN_DELEGATION_HOME: home },
+      },
+      {
+        localWorkerRun: async (args) => {
+          seen = args;
+          return { ok:true, model:'jarvis-qwen3-coder:65k', output:'RANGE_OK', duration_s:0 };
+        },
+      },
+    );
+
+    assert.equal(out.ok, true);
+    assert.ok(seen);
+    assert.match(seen.prompt, /AUTHORIZED EVIDENCE FRAGMENTS/);
+    assert.match(seen.prompt, /LINES:\s+1-5/);
+    assert.match(seen.prompt, /\s+1\|/);
+    assert.doesNotMatch(seen.prompt, /createWorkUnitDraftV2/);
+  } finally {
+    cleanup(home);
+  }
+});
+
 test('canonical Qwen direct launch reuses Unit 9 native worker with bounded evidence and JARVIS 65K identity', async () => {
   const { home } = tempEnv();
   let seen = null;
