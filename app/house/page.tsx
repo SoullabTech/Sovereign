@@ -10,6 +10,7 @@ import { selectPassingQuote } from './passingContext';
 import { PASSING_QUOTES } from './passingQuotes';
 import { studioArrivalFromHouse } from '@/app/writers-studio/situatedWork';
 import { canUseHouseStudioH1 } from '@/lib/access/houseStudioH1Access';
+import { houseWritingHref } from '@/app/writers-studio/h1Arrival';
 
 async function memberForHouse() {
   let memberId: string;
@@ -110,12 +111,12 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
               <span>{work.title || 'An unnamed living work'}</span>
               {/* HOUSE-STUDIO-CIRCULATION-01R1 · H1-B: carries the Work the member
                   points at — a pointer, never meaning. The Studio validates it. */}
-              <Link href={houseStudioH1Admitted ? studioArrivalFromHouse(work.id) : '/writers-studio'}>Writing →</Link>
+              <Link href={houseWritingHref(houseStudioH1Admitted, work.id, studioArrivalFromHouse)}>Writing →</Link>
             </div>
           )) : (
             <div>
               <span>No living Work is asking for space here.</span>
-              <Link href={houseStudioH1Admitted ? '/writers-studio?from=house' : '/writers-studio'}>Writing →</Link>
+              <Link href={houseWritingHref(houseStudioH1Admitted, null, studioArrivalFromHouse)}>Writing →</Link>
             </div>
           )}
           <div>

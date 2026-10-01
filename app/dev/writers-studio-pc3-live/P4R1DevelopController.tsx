@@ -8,6 +8,7 @@ import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
 import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
+import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import {
@@ -111,7 +112,9 @@ export default function P4R1DevelopController() {
   const selectedLineageCandidateId = params?.get('lineageCandidate') ?? null;
   const { id: appearance } = useAtmosphere();
 
-  const { workId: carriedWorkId } = useHouseStudioH1WorkClaim(params);
+  // H1 · R2: the seam produces the arrival; the hook only supplies the admission fact.
+  const h1 = useHouseStudioH1WorkClaim(h1AdmissionNeeded(params));
+  const { workId: carriedWorkId } = resolveH1Arrival(params, h1);
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);

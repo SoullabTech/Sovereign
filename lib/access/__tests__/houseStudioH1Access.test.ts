@@ -71,29 +71,36 @@ describe('H1 cohort authority — structural boundary', () => {
   it('House emits explicit H1 addresses only behind the server decision', () => {
     const src = code(read(HOUSE));
     expect(src).toMatch(/canUseHouseStudioH1\(member\.id\)/);
-    expect(src).toMatch(/houseStudioH1Admitted \? studioArrivalFromHouse\(work\.id\) : '\/writers-studio'/);
-    expect(src).toMatch(/houseStudioH1Admitted \? '\/writers-studio\?from=house' : '\/writers-studio'/);
+    // H1 · R2: the same decision, expressed through the governed seam's doorway builder.
+    expect(src).toMatch(/const houseStudioH1Admitted = canUseHouseStudioH1\(member\.id\);/);
+    expect(src).toMatch(/houseWritingHref\(houseStudioH1Admitted, work\.id, studioArrivalFromHouse\)/);
+    expect(src).toMatch(/houseWritingHref\(houseStudioH1Admitted, null, studioArrivalFromHouse\)/);
   });
 
-  it('Studio controllers consume work only through the admission hook', () => {
+  // H1 · R2: the hook supplies the admission fact; the arrival comes from the seam.
+  it('Studio controllers consume work only through the governed arrival seam', () => {
     for (const file of CONTROLLERS) {
       const src = code(read(file));
-      expect(src).toMatch(/useHouseStudioH1WorkClaim\(params\)/);
-      expect(src).not.toMatch(/readStudioWorkParam\(params\)/);
+      expect(src).toMatch(/useHouseStudioH1WorkClaim\(h1AdmissionNeeded\(params\)\)/);
+      expect(src).toMatch(/resolveH1Arrival\(params, h1\)/);
+      expect(src).not.toMatch(/readStudioWorkParam|STUDIO_WORK_PARAM|\.get\('work'\)/);
     }
   });
 
   it('hook reflects the server and has no client-side authority source', () => {
     const src = code(read(HOOK));
     expect(src).toMatch(/apiFetch\('\/api\/house-studio\/admission'/);
-    expect(src).toMatch(/body\?\.admitted === true/);
+    // H1 · R2: the hook settles through the seam, which admits only `admitted === true`.
+    expect(src).toMatch(/settleH1Admission\(/);
+    expect(code(read('app/writers-studio/h1Arrival.ts'))).toMatch(/\.admitted === true/);
     expect(src).not.toMatch(/localStorage|sessionStorage|document\.cookie|location\.search/);
   });
 
   it('route derives identity from the verified session only', () => {
     const src = code(read(ROUTE));
     expect(src).toMatch(/getMemberIdFromRequest\(request\)/);
-    expect(src).toMatch(/canUseHouseStudioH1\(memberId\)/);
+    // H1 · R2: the route's answer comes from the authority's pure response core.
+    expect(src).toMatch(/houseStudioH1AdmissionResponse\(memberId\)/);
     expect(src).not.toMatch(/searchParams|request\.json|x-member-id|headers\.get/);
   });
 
