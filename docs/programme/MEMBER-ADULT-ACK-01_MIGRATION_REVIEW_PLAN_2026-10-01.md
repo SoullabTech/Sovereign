@@ -3,7 +3,7 @@
 **Date:** 2026-10-01  
 **Status:** BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF  
 **Production old reader at plan freeze:** `56d0cd679c247a91dfe5a3592ce59e5a488c1fba`  
-**Target lineage before this plan:** `5855d5764f927b3d598a641c964f9892a5f8c0e7`
+**Target lineage before this plan:** `03f2a4fc87b8b80c0add68514d0ef9a4278e9565`
 
 ## Exact production-pending migration
 
