@@ -328,6 +328,8 @@ _run_lane() {
         wt="$(cmd_claim "$work_unit_id")"
     fi
     branch="$(jq -r '.branch' "$f")"
+    local verification_mode
+    verification_mode="$(jq -r '.verification_mode // "legacy"' "$f")"
     if [ "$lane" = "local" ]; then model="maia-coder:latest"
     elif [ "$lane" = "kimi" ]; then model="kimi-k2.7-code"
     elif [ "$lane" = "claude" ]; then
@@ -575,7 +577,7 @@ _run_lane() {
     vcount="$(jq '.verification_commands | length' "$f")"
     local verify_this_run=true
     if [ "$lane" = "local-native" ] && { [ "$exit_code" -ne 0 ] || [ -n "$gate_json" ]; }; then verify_this_run=false; fi
-    if [ "$vcount" -gt 0 ] && $verify_this_run; then
+    if [ "$verification_mode" != "structured-v1" ] && [ "$vcount" -gt 0 ] && $verify_this_run; then
         local all_pass=true
         while IFS= read -r vcmd; do
             [ -z "$vcmd" ] && continue
@@ -614,6 +616,7 @@ _run_lane() {
     # The replacement sees the same materialized context plus bounded verifier output.
     local attempts=1 repair_attempted=false repair_log=""
     if [ "$lane" = "local-native" ] \
+        && [ "$verification_mode" != "structured-v1" ] \
         && [ "$test_results" = "fail" ] \
         && [ "$exit_code" -eq 0 ] \
         && [ -z "$gate_json" ] \
@@ -807,6 +810,7 @@ _run_lane() {
         --arg ending_sha "$ending_sha" \
         --argjson files_changed "$files_changed_json" \
         --arg test_results "$test_results" \
+        --arg verification_mode "$verification_mode" \
         --arg evidence "$verification_evidence" \
         --argjson escalation_required "$escalation_required" \
         --argjson unresolved_questions "$unresolved_questions_json" \
@@ -830,6 +834,7 @@ _run_lane() {
             exit_code: $exit_code,
             tests_run: [],
             test_results: $test_results,
+            verification_mode: $verification_mode,
             typecheck_result: "not_run",
             build_result: "not_run",
             evidence: $evidence,

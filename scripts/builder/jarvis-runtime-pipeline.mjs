@@ -35,6 +35,8 @@ import { validateNativeExecutionBoundary } from './jarvis-native-prompt.mjs';
 import { derivePermissionEnvelope } from './work-unit.mjs';
 import { ledgerPath, pathAllowed } from './jarvis-native-patch-admission.mjs';
 import { AIN_HOME, nowISO } from './jarvis-runtime-store.mjs';
+import { validateVerifierPlanV1 } from './local-verifier-plan-v1.mjs';
+import { executeInspectionVerifierPlanV1 } from './local-verifier-inspection-v1.mjs';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DELEGATE = path.join(REPO_ROOT, 'scripts', 'ain-delegate.sh');
@@ -159,11 +161,19 @@ export function checkAuthority(packet) {
     return { ok: false, failure_class: 'NATIVE_AUTHORITY_TOO_BROAD',
       detail: 'local-native V1 admits only local repo read + worktree write + checks; production/network/spend authority is refused' };
   }
-  if (!envelope.execute_checks
-      || !Array.isArray(packet.verification_commands)
-      || packet.verification_commands.length === 0) {
+  if (!envelope.execute_checks) {
     return { ok: false, failure_class: 'NATIVE_VERIFICATION_REQUIRED',
-      detail: 'local-native coding V1 requires at least one packet verification command' };
+      detail: 'local-native coding V1 requires explicit test-execution authority' };
+  }
+  if (packet.verification_mode === 'structured-v1') {
+    const plan = validateVerifierPlanV1(packet.verification_plan);
+    if (!plan.ok || !plan.executable) {
+      return { ok: false, failure_class: 'NATIVE_VERIFICATION_REQUIRED',
+        detail: `structured verifier plan is not inspection-executable: ${plan.reason || plan.status}` };
+    }
+  } else if (!Array.isArray(packet.verification_commands) || packet.verification_commands.length === 0) {
+    return { ok: false, failure_class: 'NATIVE_VERIFICATION_REQUIRED',
+      detail: 'legacy local-native coding requires at least one packet verification command' };
   }
   return { ok: true, envelope };
 }
@@ -193,6 +203,13 @@ export function validatePacket(packet) {
                    'acceptance_criteria', 'escalation_conditions', 'context_selectors']) {
     if (packet[k] != null && !Array.isArray(packet[k])) errors.push(`${k}: must be an array when present`);
   }
+  if (packet.verification_mode != null && packet.verification_mode !== 'structured-v1') errors.push('verification_mode: only structured-v1 is recognized when present');
+  if (packet.verification_plan != null) {
+    const vp = validateVerifierPlanV1(packet.verification_plan);
+    if (!vp.ok) errors.push(`verification_plan: ${vp.reason}${vp.path ? ' @ ' + vp.path : ''}`);
+    if (packet.verification_mode !== 'structured-v1') errors.push('verification_plan requires verification_mode=structured-v1');
+  }
+  if (packet.verification_mode === 'structured-v1' && packet.verification_plan == null) errors.push('verification_mode structured-v1 requires verification_plan');
   return errors.length
     ? { ok: false, failure_class: 'PACKET_SCHEMA_INVALID', errors }
     : { ok: true, errors: [] };
@@ -303,7 +320,18 @@ export function validateNativePatchResult(packet, result, worktree, {
   if (result?.exit_code !== 0) {
     return nativeRefusal('NATIVE_RESULT_EXIT_NONZERO', `exit_code=${result?.exit_code}`);
   }
-  if (result?.test_results !== 'pass') {
+  const structuredVerification = packet?.verification_mode === 'structured-v1';
+  if (structuredVerification) {
+    if (result?.verification_mode !== 'structured-v1') {
+      return nativeRefusal('NATIVE_STRUCTURED_VERIFICATION_MODE_MISMATCH', `result mode=${result?.verification_mode}`);
+    }
+    const plan = validateVerifierPlanV1(packet.verification_plan);
+    if (!plan.ok) return nativeRefusal('NATIVE_STRUCTURED_VERIFIER_PLAN_INVALID', plan.reason);
+    if (!plan.executable) return nativeRefusal('NATIVE_STRUCTURED_VERIFIER_EFFECT_NOT_ADMITTED', plan.status);
+    if (result?.test_results !== 'not_run') {
+      return nativeRefusal('NATIVE_STRUCTURED_VERIFIER_PREEXECUTED', `test_results=${result?.test_results}`);
+    }
+  } else if (result?.test_results !== 'pass') {
     return nativeRefusal('NATIVE_VERIFICATION_NOT_PASSING', `test_results=${result?.test_results}`);
   }
   if (result?.escalation_required === true) {
@@ -412,6 +440,21 @@ export function validateNativePatchResult(packet, result, worktree, {
   const ledgerPaths = exactPaths(appliedEvent.changed_paths);
   if (!ledgerPaths.ok || !samePaths(admitted.paths, ledgerPaths.paths)) {
     return nativeRefusal('NATIVE_PATCH_LEDGER_PATH_MISMATCH', JSON.stringify(appliedEvent.changed_paths ?? []));
+  }
+
+  if (structuredVerification) {
+    const plan = validateVerifierPlanV1(packet.verification_plan);
+    return {
+      ok: true,
+      method: 'NPA1 + candidate-commit custody; structured verification pending',
+      commit_sha: head,
+      parent_sha: base,
+      patch_digest: admission.patch_digest,
+      changed_paths: admitted.paths,
+      verification: [],
+      verification_plan_digest: plan.digest,
+      structured_verification_pending: true,
+    };
   }
 
   const commands = packet.verification_commands;
@@ -716,6 +759,40 @@ export async function executeRun(run, ctx) {
     }
     return fail(nativeVerification.failure_class, nativeVerification.detail);
   }
+
+  if (packet.verification_mode === 'structured-v1') {
+    const structured = executeInspectionVerifierPlanV1(packet.verification_plan, { worktree });
+    run.verification.structured = structured;
+    let postHead = null;
+    let postStatus = null;
+    try {
+      postHead = nativeGit(worktree, ['rev-parse', 'HEAD']);
+      postStatus = nativeGit(worktree, ['status', '--porcelain', '--untracked-files=all']);
+    } catch (error) {
+      const rollback = rollbackNativeCandidate(worktree, packet.canonical_sha);
+      run.verification.rollback = rollback;
+      return fail('NATIVE_STRUCTURED_VERIFICATION_CUSTODY_UNREADABLE', String(error?.message || error).slice(0, 500));
+    }
+    if (postHead !== nativeVerification.commit_sha || postStatus) {
+      const rollback = rollbackNativeCandidate(worktree, packet.canonical_sha);
+      run.verification.rollback = rollback;
+      return fail('NATIVE_STRUCTURED_VERIFICATION_MUTATED_CANDIDATE',
+        `head=${postHead} expected=${nativeVerification.commit_sha} status=${String(postStatus).slice(0, 300)}`);
+    }
+    if (!structured.ok) {
+      ctx.emit('verification.completed', {
+        run_id: run.run_id, ok: false, failure_class: 'NATIVE_STRUCTURED_VERIFICATION_FAILED',
+      });
+      const rollback = rollbackNativeCandidate(worktree, packet.canonical_sha);
+      run.verification.rollback = rollback;
+      if (!rollback.ok) {
+        return fail('NATIVE_RUNTIME_ROLLBACK_INCOMPLETE', `structured verifier failed; rollback: ${rollback.detail}`);
+      }
+      return fail('NATIVE_STRUCTURED_VERIFICATION_FAILED', structured.reason || structured.status);
+    }
+    run.result.test_results = 'pass';
+  }
+
   ctx.emit('verification.completed', {
     run_id: run.run_id, ok: true, commit_sha: nativeVerification.commit_sha,
     changed_paths: nativeVerification.changed_paths,

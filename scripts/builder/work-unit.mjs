@@ -136,6 +136,7 @@ const PACKET_CONTRACT_FIELDS = [
   'work_unit_id', 'title', 'objective', 'execution_lane', 'canonical_sha', 'branch',
   'worktree', 'governing_authority', 'established_facts', 'allowed_files',
   'prohibited_files_actions', 'acceptance_criteria', 'verification_commands',
+  'verification_mode', 'verification_plan',
   'escalation_conditions', 'max_attempts', 'expected_output',
 ];
 export function projectPacket(workUnit) {
