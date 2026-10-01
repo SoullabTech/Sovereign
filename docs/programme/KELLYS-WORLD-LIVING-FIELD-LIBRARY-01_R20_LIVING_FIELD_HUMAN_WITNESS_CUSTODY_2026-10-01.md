@@ -24,7 +24,8 @@ Kelly's World holds only the operational orientation needed to know what is true
 - content-blind substrate census at that re-baseline: **0 / 4** across the sources used by the experience;
 - explicit MAIA entry gestures: **PRESENT** in the deployed source at that re-baseline;
 - first-entry / empty-field witness: **PRE-WALK GATED — G0 through G7 must all PASS before a member walk**;
-- crisis safety: **G7 REQUIRED** — deployed in-conversation resources on the actual member route, or a named disclosed human facilitator as the safety layer;
+- G1/G2 preflight at `2026-10-01T23:26:53Z`: Cabin mode absent (`exit=1`); Postgres still `started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy`; **PRE-FLIGHT ONLY — not gate PASS before G0**;
+- crisis safety: **G7 REQUIRED** — G7a implementation candidates are #1665 (recognition contract) → #1669 (live ingress), both Class A and awaiting founder/council authority; G7b remains a named disclosed human facilitator as the alternative safety layer;
 - populated-field continuity witness: **BLOCKED BY EVIDENCE**;
 - R2: **NOT ADMITTED**;
 - cohort widening: **CLOSED PENDING HUMAN EVIDENCE**.
