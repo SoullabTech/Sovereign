@@ -360,3 +360,9 @@ The founder's first attempt to deploy `bde0f6590` was **refused by the deploy-la
 ### 13.3 Standing
 
 Production runtime = **`bde0f6590`**, rollback point `68af62fda`. Of the H1 work this includes #1551 and #1578. **R3 now targets `bde0f6590`**, with no configuration change and with H1 left on. The `(0,1)` row stays **RUNNING · R3 OPEN** until R3 passes. ⛔ This deploy witness is not R3 and does not mark any matrix row as witnessed.
+
+### 13.4 Correction (2026-10-01): the `68af62fda` deploy is now attributed
+
+§13.1 recorded the `68af62fda` deployer as **not established**, which was accurate when it was written. Canonical now carries `docs/programme/H1-COHORT-GATE-01_R3_RUNTIME_CONVERGENCE_WITNESS_2026-10-01.md` (commit `dbc9a63bb`, merged via #1587, authored by the founder). That record says the governed entry point `./scripts/deploy-production.sh deploy 68af62fda…` was run on minisforum to deploy the #1578 merge. It also records: no pending migrations, `:previous` preserved, provenance stamped on both channels, the four-person cohort preserved, and the human-lived witness **PENDING**. The attribution now rests on that founder record, not on commit authorship. §13.1 is left as written.
+
+⚠️ **Two acts share the name "R3".** `H1-COHORT-GATE-01 · R3` is the **runtime-convergence deployment witness** of #1578 and is PASS. `ROLLOUT-R3` in this record (§10–§12) is the **`(EARLY_FIELD 0, H1 1)` composition witness**: one cohort member and one ordinary member, A1–A6 + A4b/A5b/A5c and W1–W9. ROLLOUT-R3 is **still open**. A pass on one does not discharge the other, and the `(0,1)` matrix row stays RUNNING until ROLLOUT-R3 passes.
