@@ -79,3 +79,32 @@ Side effect found: the same-commit redeploys rotated `:previous` onto an RC1 reb
 
 ⚠️ The precheck reported the deploy lock as **HELD** when the checkout was switched. It has not yet been confirmed that no deploy was in flight at that moment.
 
+
+## Later deploy: `6d51f1b9e` (founder-run lock and container read, 2026-10-01)
+
+The HELD lock was a **completed** deploy, not one in flight. `fuser` showed no holder.
+
+| Field | Value |
+|---|---|
+| Entry point | `pre-deploy-gate.sh deploy-maia` |
+| Target | `6d51f1b9e` |
+| Started | 16:26:51Z |
+| Container created | 16:33:31Z |
+| Live `GIT_COMMIT` | `6d51f1b9e` |
+
+`6d51f1b9e` is the head of `claude/confident-mayer-kuc4pp` (PR #1629) at the time of the deploy. Its relation to other commits:
+- It descends from `03f0fd3ab`.
+- It sits **beside** canonical, not inside it:
+  - the merge base is the #1619 merge `cf9624cdf`;
+  - it carries 2 commits that canonical lacks;
+  - canonical `b8592e60e` carries #1621, #1622 and #1625, which production lacks.
+
+Its non-documentation diff from `cf9624cdf` touches only three client components: `ContinuousConversation.tsx`, `FeedbackSheet.tsx` and `BugReportButton.tsx`. Crisis detection is byte-identical to canonical, because the detector change was reverted in `6d51f1b9e` itself. No migrations were added.
+
+**Re-baseline:**
+- No Living Field surface changed, and no House surface changed.
+- The source verdict above therefore carries forward to `6d51f1b9e`.
+- The walk's subject build is now `6d51f1b9e`.
+- The start/end SHA rule still applies.
+
+⚠️ **Consequence for the next canonical deploy.** Production is not an ancestor of canonical, so the #1621 ancestry check will **refuse** a deploy of `b8592e60e`. That refusal is correct. It is resolved either by landing `6d51f1b9e` in canonical (through #1629) or by a recorded override.
