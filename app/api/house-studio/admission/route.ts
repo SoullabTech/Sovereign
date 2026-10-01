@@ -7,18 +7,10 @@ export const dynamic = 'force-dynamic';
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { canUseHouseStudioH1 } from '@/lib/access/houseStudioH1Access';
+import { houseStudioH1AdmissionResponse } from '@/lib/access/houseStudioH1Access';
 
 export async function GET(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
-  if (!memberId) {
-    return NextResponse.json(
-      { admitted: false },
-      { status: 401, headers: { 'cache-control': 'no-store' } },
-    );
-  }
-  return NextResponse.json(
-    { admitted: canUseHouseStudioH1(memberId) },
-    { headers: { 'cache-control': 'no-store' } },
-  );
+  const { status, body } = houseStudioH1AdmissionResponse(memberId);
+  return NextResponse.json(body, { status, headers: { 'cache-control': 'no-store' } });
 }
