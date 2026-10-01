@@ -5,9 +5,9 @@
 
 Class: **B** — production deployment / runtime convergence
 Governing authority: founder direction on 2026-10-01 to bring Writer's Studio production together and continue the full JARVIS flow
-Current gate: **P0 — deployment-convergence census**
-Evidence subject: production reader `56d0cd679c247a91dfe5a3592ce59e5a488c1fba`, canonical `7973d9eb667c0787296835f865483a9517a09b88`, and PR #1662 head `7d7ed82f93fe7ec413e5b961760758f41e94d584`
-Stop boundary: no production deploy before #1662 is admitted/merged and the exact post-merge canonical SHA passes its own deployment gates
+Current gate: **P6 — invited-writer production witness**
+Evidence subject: running production reader `298414555bbe7eccdf453b09e026737d4f7f4e29` and the admitted four-member H1 writer cohort
+Stop boundary: automated/server-side evidence must not be promoted into a claim that an invited writer personally experienced the full signed-in journey
 
 ## Governing question
 
@@ -19,15 +19,14 @@ return/place custody, Review conversation, manuscript navigation, or the Kelly's
 
 - RC1 advanced Writer's Studio was deployed and its three migrations were applied.
 - RC1/advanced runtime lineage was subsequently admitted back into canonical through #1619/#1606.
-- Production currently runs `56d0cd679`, healthy, with zero container restarts.
-- The production reader is an ancestor of current canonical; there is no production-only fork.
+- Production advanced from `56d0cd679` to exact canonical `298414555`; the running container is healthy with zero restarts.
+- `56d0cd679` is preserved as the `:previous` rollback image; there is no production-only fork.
 - H1 is enabled for a four-member admitted cohort; Early Field currently names the same cohort.
 - The three Writer's Studio relationship/return tables exist in production and all three migration ledger entries are present.
 - Normalized production-ledger vs canonical migration comparison: **0 pending `.sql` migrations**.
-- No deploy process is active on minisforum; the deployment lock is presently available.
+- P0 prestate had no active deploy and an available structural deployment lock; P4 later acquired and released that lock normally.
 - The live container carries `DEPLOY_LANE=deploy-lane`, `HOUSE_STUDIO_H1_ENABLED=true`, and `EARLY_FIELD_ENABLED=true`.
-- The production→canonical diff is 45 paths and contains **no Writer's Studio runtime path**.
-  The advanced Studio organism is therefore already serving; the next Writer-specific runtime delta is #1662.
+- At P0 the production→canonical diff was 45 paths with **no Writer's Studio runtime path**; after P4 production and canonical converge exactly at `298414555`.
 
 ## P0 census findings
 
@@ -46,6 +45,40 @@ return/place custody, Review conversation, manuscript navigation, or the Kelly's
    resumed, canonical was re-fetched as `7973d9eb6`, and decisive #1662 evidence was rerun on the reconciled head.
 9. **JARVIS provider boundary:** O5-R3 external/local provider execution remains NOT ADMITTED after the
    crash witness. This lane will not silently launch Qwen or treat that provider path as available.
+
+## P1 / P2 admission record
+
+- #1662 exact head `7d7ed82f9`: all required GitHub gates PASS, including Docker build, TypeScript,
+  empty-database reconstruction, sovereignty, Axis 1, covenant-gates, JARVIS native falsifiers, and GitGuardian.
+- #1662 merged with exact-head protection at `298414555bbe7eccdf453b09e026737d4f7f4e29`.
+- Post-merge canonical is exactly `298414555`; the only merge delta is the two intended Writer's Studio files.
+- The merge adds **no migration path**, preserving the already-witnessed zero-pending-SQL state.
+- This custody branch was rebased onto the post-merge canonical before opening P3.
+
+## P3 pre-deploy admission
+
+- Exact target `298414555` fetched and materialized on minisforum.
+- Production-host disk gate: PASS with 392 GB free against a 60 GB floor.
+- Co-Lab constitutional gate: 33/33 PASS · 0 failed · 0 warned.
+- Deployment-control files are byte-identical between live `56d0cd679` and target `298414555`.
+- Docker Compose dry-run for the migration profile proved `maia-postgres` would remain Running/Healthy rather than recreate.
+- Exact target carried zero production-pending SQL migrations.
+
+## P4 / P5 deployment and runtime witness
+
+- Immutable-SHA deploy ran under `/home/soullab/MAIA-SOVEREIGN/.deploy.lock` and exited 0.
+- Built-image provenance: `maia-sovereign:prod GIT_COMMIT=298414555` equals asserted target.
+- Runtime migration census: 568 already applied / 516 files / **0 pending**; no schema movement.
+- Postgres creation time remained `2026-10-01T21:41:44Z`, restart count 0, healthy: **no database recreate**.
+- Rollback tags: `:previous` → `56d0cd679`; `:current` and `:298414555` → target image.
+- Running provenance: `printenv GIT_COMMIT=298414555` and Docker `Config.Env` agrees.
+- Running MAIA: healthy, restart count 0; `/api/health`, `/api/version`, `/api/ready` all 200.
+- Deploy smoke: main page PASS; build/status closed; constitutional verification PASS.
+- Writer's Studio and House are reachable but signed-out requests correctly redirect (307), not open member content.
+- H1 and Early Field remain enabled after the swap.
+- Four exact Caddy containment reads return 403; two additional app-guarded admin reads return 401.
+- Production backup cron script bytes equal target and all current database dump files are owner-only `0600`.
+- Known warning preserved: deploy-alert delivery is unconfigured and fails closed at 503; this did not block runtime health.
 
 ## Exact flow
 
@@ -80,9 +113,25 @@ The release target is the **exact post-merge canonical SHA**, not a Writer's Stu
 No schema action is authorized by assumption. If the deploy gate discovers a newly pending migration,
 the lane returns to migration-review law before any schema mutation or reader swap.
 
-## Human witness boundary
+## P6 machine preflight on the deployed runtime
 
-Automated runtime evidence can establish deployment, provenance, route/configuration standing,
-and server-side continuity. It cannot establish that an invited writer experienced the complete
-member journey. The final invited-writer walk remains a real member-path witness and must be
-recorded as such rather than inferred from green CI or server-side probes.
+- After deployment, remote canonical and production are exactly converged at `298414555` (`0 ahead / 0 behind`).
+- Custody branch runtime tree is byte-identical to `298414555`; its only additional changes are documentary evidence.
+- Focused invited-writer preservation bundle: **15 suites / 153 tests PASS**.
+- Covered: H1 admission, arrival composition, explicit multi-manuscript choice, Studio mode return,
+  imported-manuscript seed, A2 relationship address/return, eligible carry sources, prior-MAIA carry,
+  Review Work conversation/focus, section-selection orientation, and situated Work continuity.
+- Admission falsifier explicitly rejects a mismatched claimed member id against the authenticated session.
+- Production `/writers-studio` and `/house` both preserve the signed-in boundary; unauthenticated probes redirect 307.
+
+## P6 human witness boundary
+
+Automated runtime evidence establishes deployment, provenance, route/configuration standing, and the exact
+mechanism behind the invited-writer journey. It cannot establish that an invited writer personally experienced
+the complete signed-in path. One real member must still witness:
+
+`Kelly's World / current Work → Writer's Studio → explicit manuscript → Write / Develop → MAIA relationship`
+`→ leave and return to the saved manuscript place → Review → larger-Work conversation → return to Kelly's World`.
+
+That walk must be recorded from the member's own experience rather than inferred from green CI, database rows,
+or server-side probes. Until then P6 is **PARTIAL: machine preflight PASS · human experience OPEN**.
