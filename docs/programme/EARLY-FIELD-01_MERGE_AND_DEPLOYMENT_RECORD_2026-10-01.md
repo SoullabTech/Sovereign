@@ -324,3 +324,39 @@ Together these make A5 evidence of the **deployed architecture** (the #1551 seam
 > **CONTROLLED COHORT WITNESS PASSED FOR ONE H1 MEMBER AND ONE ORDINARY MEMBER; GATE INDEPENDENCE OBSERVED IN PRODUCTION FOR THE CLOSED/OPEN AND CLOSED/CLOSED STATES.**
 
 ⚠️ *"CLOSED/CLOSED"* in that sentence means **both gates denying for the ordinary member** (B). It is a per-member observation inside the running configuration. It does **not** witness the global `(0,0)` configuration row, which requires `HOUSE_STUDIO_H1_ENABLED` off and stays unwitnessed until rollout reaches it.
+
+## 13 · Two further production deploys (2026-10-01): `68af62fda` (unattributed) → `bde0f6590` (founder)
+
+### 13.1 `68af62fda` — deploy found in flight, deployer ⛔ NOT ESTABLISHED
+
+The founder's first attempt to deploy `bde0f6590` was **refused by the deploy-lane lock**: the holder record named pid `3051458`, target `68af62fda`, started `02:46:50Z`. ⛔ Who ran that deploy is not established, and it is not inferred from commit authorship. The lock refused the second deploy as designed; the lockfile was not touched. Once the holder exited, `68af62fda` was live. It carried #1578 and #1545 but not #1563.
+
+### 13.2 `bde0f6590` — full deploy, founder-run, ✅ WITNESSED
+
+`scripts/deploy-production.sh deploy bde0f6590`, run by the founder from minisforum. Witnessed from the deploy output and from separate checks afterwards:
+
+| Check | Result |
+|---|---|
+| Built image provenance | `maia-sovereign:prod GIT_COMMIT=bde0f6590` |
+| Migrations | none pending (565 recorded, 513 files); run **before** the swap |
+| Rollback tags | `:previous` = `46d49fd54f8d` = `68af62fda` · `:current` = `:bde0f6590` = `c344292669b0` · `cc1c5b4d7` pruned |
+| Running provenance (deploy script) | `printenv` == `Config.Env` == asserted `bde0f6590` |
+| Running provenance (separate check) | `printenv GIT_COMMIT` → `bde0f6590`; `Config.Env` `GIT_COMMIT=bde0f6590` |
+| `/api/health` (in container, 03:09:26Z) | `health: ok` · `version: bde0f6590` · `uptime: 89` · database/tables/memory ok |
+| Smoke tests | health · version · ready · main page · two auth locks (503) — all PASS |
+| Constitutional verification (Co-Lab + Memory + Relationships + Development + MAIA) | PASSED |
+| H1 configuration | `HOUSE_STUDIO_H1_ENABLED=true` in `Config.Env` — unchanged by the deploy |
+
+**Not witnessed (recorded, not inferred):**
+- `EARLY_FIELD_ENABLED` being unset in the new container: the separate check grepped only `GIT_COMMIT` and `HOUSE_STUDIO_H1_ENABLED`. R3's precondition check (A0) must confirm it.
+- The H1 member list being unchanged: not read here, deliberately, since records list no member IDs. R3 confirms membership by behaviour.
+
+**Observations (routed, ⛔ not repaired):**
+- The full deploy recreated **nine** containers, not only `maia-sovereign`: `maia-api`, the three workers, `maia-rlm`, `maia-nostr-relay`, `demo-plaster` and `oldhead-plaster`. All came up healthy. This matches the S3-O1 observation that a full deploy's `up` covers every service.
+- `[deploy-tag] WARNING: failed to remove maia-sovereign:staging (in use by a container?)`: retention housekeeping only, not a deploy failure.
+- `[WARN] Alert send failed (non-critical)`: the notification channel did not deliver. This deploy still has no external alert record.
+- `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` unset warnings: pre-existing and unrelated.
+
+### 13.3 Standing
+
+Production runtime = **`bde0f6590`**, rollback point `68af62fda`. Of the H1 work this includes #1551 and #1578. **R3 now targets `bde0f6590`**, with no configuration change and with H1 left on. The `(0,1)` row stays **RUNNING · R3 OPEN** until R3 passes. ⛔ This deploy witness is not R3 and does not mark any matrix row as witnessed.
