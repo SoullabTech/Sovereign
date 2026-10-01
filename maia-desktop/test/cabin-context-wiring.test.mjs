@@ -47,7 +47,7 @@ test('Context runtime never writes the package artifact or browser storage', () 
 test('Cabin health and context have explicit Proxy access-matrix entries', () => {
   const source = read('config/accessMatrix.ts');
 
-  assert.match(source, /exact: '\/api\/cabin\/health',);
-  assert.match(source, /exact: '\/api\/cabin\/context',);
+  assert.match(source, /exact: '\/api\/cabin\/health'/);
+  assert.match(source, /exact: '\/api\/cabin\/context'/);
   assert.match(source, /maia_cabin_session/);
 });
