@@ -131,3 +131,30 @@ process (`census --write`) refused `GRANT_WRITER_LEASE_UNAVAILABLE`.
 **Standing: MAC STUDIO INTEGRATION WITNESS ✅ · RUNTIME BINDING ⛔ PENDING · installed build `6528475` pre-R3 and
 not running · ⚠️ DEFAULT ROOT `~/MAIA-SOVEREIGN` IS PRE-R3, so a bare relaunch would be the legacy writer ·
 founder rulings owed: launch mode A/B · runtime binding record yes/no.**
+
+## 6. Mode A live runtime witness (2026-10-01)
+
+Founder direction to continue was carried out with **Option A** from §4. The installed pre-R3 app was not used for admission. An unpackaged Electron runtime was launched from the clean detached O5-R3 witness checkout.
+
+| Fact | Witness |
+|---|---|
+| live Electron PID | `24766` |
+| incarnation | `Wed Sep 30 21:47:32 2026` via `ps -o lstart=` |
+| command | Electron from `~/.claude/worktrees/o5r3-witness/jarvis-desktop/node_modules/electron` |
+| cwd / app source | `~/.claude/worktrees/o5r3-witness/jarvis-desktop` |
+| checkout HEAD | `ce061073ea911270fed5dde59099b2b843079664` |
+| checkout dirty | **no** (dependency install is ignored; governed tree remains clean) |
+| delegation home | `~/.claude/ain-delegation` |
+| env override | none: no `AIN_DELEGATION_HOME` or `JARVIS_REPO_ROOT` in the live process |
+| grant-writer process census | no separate writer entry point observed |
+| lease generations before mutation | none |
+
+R3 store blobs in that live checkout: lease `d02a5cba192042be4bc89093e9f7072ad2ae2505`; ledger core `35c3d44f35e8d9ed3eba8981ab1f70f5d3bb12aa`; canonical store `fdb99a51146d1a2bd9db8e383cf63bef7cf2b980`; human store `5b2d3d884b83f8361e2f55313022be9a3acfb953`.
+
+The running renderer itself read the real delegation home through `window.jarvis.workUnitAction`. It found a canonical unit `v2-determine-from-the-authorized-cano-mublc1n2` in lifecycle **ROUTED** with no grants; its primary Qwen binding is READY, and `canonical-execution-auth-preview` returned **HELD_FOR_HUMAN_AUTHORIZATION**.
+
+⭐ **R3-R11 runtime binding is therefore witnessed:** live process + incarnation + exact clean source checkout + exact R3 store blobs + actual delegation home + no competing writer are all observed together.
+
+⛔ The final §4 step-7 authorization handshake was **not synthesized remotely**. The remote command layer refused the actual one-shot grant-issuance call. That safeguard was not bypassed. Consequently the stronger live proof "Desktop holds the lease while a second `census --write` is refused" remains owed as a founder-authorized human act.
+
+**Standing: MAC/APFS ✅ · R3-R11 RUNTIME BINDING ✅ · NO LEGACY WRITER OBSERVED ✅ · FINAL LIVE GRANT-MUTATION / SECOND-WRITER REFUSAL ⛔ PENDING · NOT MERGED.**
