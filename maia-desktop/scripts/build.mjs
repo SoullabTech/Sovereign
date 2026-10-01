@@ -37,15 +37,36 @@ if (!fs.existsSync(standaloneServer)) {
   );
 }
 
-const cabinStage = path.join(stage, 'cabin-runtime');
-fs.mkdirSync(cabinStage, { recursive: true });
-fs.cpSync(standaloneRoot, cabinStage, { recursive: true });
-fs.mkdirSync(path.join(cabinStage, '.next'), { recursive: true });
-fs.cpSync(standaloneStatic, path.join(cabinStage, '.next', 'static'), { recursive: true });
-fs.cpSync(standalonePublic, path.join(cabinStage, 'public'), { recursive: true });
+const cabinSourceParent = process.env.MAIA_DESKTOP_CABIN_STAGING_PARENT ||
+  path.join(os.tmpdir(), 'maia-desktop-cabin-staging');
+const cabinSource = path.join(cabinSourceParent, `cabin-runtime-${sha}`);
+fs.rmSync(cabinSource, { recursive: true, force: true });
+fs.mkdirSync(cabinSourceParent, { recursive: true });
+fs.cpSync(standaloneRoot, cabinSource, { recursive: true });
+fs.mkdirSync(path.join(cabinSource, '.next'), { recursive: true });
+fs.cpSync(standaloneStatic, path.join(cabinSource, '.next', 'static'), { recursive: true });
+fs.cpSync(standalonePublic, path.join(cabinSource, 'public'), { recursive: true });
 
-console.log('[MAIA Desktop] cabin runtime staged from .next/standalone');
-console.log(`[MAIA Desktop] cabin server=${path.join(cabinStage, 'server.js')}`);
+const standaloneNextPackage = path.join(cabinSource, 'node_modules', 'next', 'package.json');
+if (!fs.existsSync(standaloneNextPackage)) {
+  throw new Error('Cabin runtime staging missing node_modules/next; refusing to package');
+}
+
+const stagedPackagePath = path.join(stage, 'package.json');
+const stagedPackage = JSON.parse(fs.readFileSync(stagedPackagePath, 'utf8'));
+const cabinResource = stagedPackage.build?.extraResources?.find(
+  (resource) => resource?.to === 'cabin-runtime',
+);
+if (!cabinResource) {
+  throw new Error('Cabin extraResources entry is missing from staged package');
+}
+cabinResource.from = cabinSource;
+fs.writeFileSync(stagedPackagePath, `${JSON.stringify(stagedPackage, null, 2)}\n`, 'utf8');
+
+console.log('[MAIA Desktop] cabin runtime staged outside electron-builder project and staging parent');
+console.log(`[MAIA Desktop] cabin source=${cabinSource}`);
+console.log(`[MAIA Desktop] cabin server=${path.join(cabinSource, 'server.js')}`);
+console.log(`[MAIA Desktop] cabin next=${standaloneNextPackage}`);
 
 const args = [
   '--projectDir', stage,
@@ -67,4 +88,5 @@ try {
   });
 } finally {
   fs.rmSync(stage, { recursive: true, force: true });
+  fs.rmSync(cabinSource, { recursive: true, force: true });
 }
