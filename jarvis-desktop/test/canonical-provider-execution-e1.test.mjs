@@ -754,6 +754,33 @@ test('E1 Desktop keeps authorization, execution, verification, evidence-ready, a
   assert.notEqual(evidenceReadyAction, adjudicationAction);
 });
 
+test('E1 requires a fresh post-authorization review before Confirm Execute can appear or invoke IPC', () => {
+  const renderer = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/renderer.js'), 'utf8');
+  const gesture = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/e1-gesture-separation.js'), 'utf8');
+
+  const activeGrantBranch = renderer.match(
+    /else if \(primaryAction === 'REVIEW_AUTHORIZED'\) \{([\s\S]*?)\n    \} else \{/,
+  );
+  assert.ok(activeGrantBranch);
+  assert.match(activeGrantBranch[1], /data-e1-review-active/);
+  assert.match(activeGrantBranch[1], /Review authorized execution/);
+  assert.doesNotMatch(activeGrantBranch[1], /data-e1-confirm/);
+
+  assert.match(gesture, /confirmation_review === true/);
+  assert.match(renderer, /Fresh post-authorization review complete/);
+  assert.match(renderer, /Fresh post-authorization review required before Confirm Execute/);
+  assert.match(renderer, /reviewCanonicalAuthorizedExecution/);
+  assert.match(renderer, /data-e1-review-active/);
+
+  const confirmStart = renderer.indexOf('async function confirmCanonicalExecution');
+  const confirmEnd = renderer.indexOf('async function revokeCanonicalExecution', confirmStart);
+  const confirm = renderer.slice(confirmStart, confirmEnd);
+  const armCheck = confirm.indexOf('confirmationArmed');
+  const consumeArm = confirm.indexOf('activeCanonicalExecutionReview = null');
+  const privilegedIpc = confirm.indexOf("action: 'canonical-confirm-execute'");
+  assert.ok(armCheck >= 0 && consumeArm > armCheck && privilegedIpc > consumeArm);
+});
+
 test('M1 MODEL MODE uses exact frozen local realizations and never invokes OpenCode', async () => {
   assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS), true);
   assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS['qwen-local']), true);

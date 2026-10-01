@@ -819,3 +819,112 @@ All are killed on their named rule.
 
 **Standing:** RB-A3 is frozen as additive lineage; earlier frozen blobs remain unchanged. A new fresh walk is
 required from the commit containing RB-A3. O5-R4 remains closed and production remains untouched.
+
+## 14. Fresh walk #3 falsified after authorization · system panic · RB-A4 Execution Gesture Separation (2026-10-01)
+
+### 14.1 The lawful baseline passed
+
+A fresh detached specimen at `2a6bd1a6e8bc50ac8cdd5627eba7898ee61340df` cleared the RB-A3 readiness barrier.
+`~/o5r3-w3-step5.txt` records C1–C5 PASS and
+`C6-pre PASS — NOT_YET_HELD_AFTER_RELEASE · generation 2`, ending in
+`PRE-WRITE BASELINE PASS`. The matching baseline is preserved at `~/o5r3-w3-prewrite.json`.
+
+The prepared Work Unit was `v2-witness-the-o5-r3-single-authorize-muq1l3w5`.
+Its acceptance condition was exactly one E1 authorization with no provider execution. Its stop conditions said:
+stop immediately after the first E1 authorization, do not Confirm Execute, do not launch a provider, and do not issue
+a second grant.
+
+### 14.2 The specimen crossed its stop condition
+
+Generation 3 was acquired by the walked Desktop incarnation, pid `85599`, at
+`2026-10-01T21:47:22.042Z`. The target grant ledger then recorded:
+- `ISSUED` at `2026-10-01T21:47:22.074Z`;
+- `CLAIMED` for that same grant at `2026-10-01T21:47:25.242Z`.
+
+The CLAIMED event followed ISSUED by 3.168 seconds. That is already a falsification of this witness: the grant
+crossed the Confirm-Execute membrane after the explicit stop condition. The Work Unit durable state reached
+`EXECUTING`, while no completed attempt and no durable result for this Work Unit were present after restart.
+
+### 14.3 The machine failure is recorded without overclaiming causality
+
+The Mac subsequently became unresponsive and rebooted. After recovery, `kern.boottime` reported
+`Thu Oct 1 17:49:37 2026`. The system diagnostic
+`/Library/Logs/DiagnosticReports/panic-full-2026-10-01-175246.0002.panic` records a kernel watchdog panic:
+`watchdog timeout: no checkins from watchdogd in 90 seconds`. The same report records eight swapfiles and
+`LOW swap space`.
+
+⛔ This record does **not** claim that Qwen, Ollama, JARVIS, or the E1 execution caused the kernel panic.
+What is established is the temporal chain:
+`Authorize → ISSUED → CLAIMED → machine unresponsiveness/reboot`, followed by a watchdog-panic diagnostic.
+That correlation is sufficient to prohibit another live execution attempt inside this witness until the gesture
+boundary is repaired and separately re-admitted.
+
+After reboot the binding belonged to a new Desktop incarnation, pid `68617`, while generation 3 still named
+the dead pid `85599`. Therefore `~/o5r3-w3-step6.txt` correctly reports:
+- C1–C5 PASS;
+- C6A FAIL on T2;
+- C6 FAIL — `UNRELEASED_HOLDER_GONE`;
+- C7/C8 pending;
+- `CONSTITUTIONAL FAIL (C6A, C6)`.
+
+Step 7 was not run. O5-R3 remains **NOT ADMITTED**. O5-R4 remains closed.
+
+### 14.4 RB-A4 law
+
+> **Execution Gesture Separation.** Authorization and execution must be separate not only semantically but
+> physically in the Desktop interaction. An ACTIVE E1 grant must never make `Confirm Execute` immediately
+> actionable. It first exposes a fresh post-authorization, read-only review of that exact ACTIVE grant.
+
+Only after that separate review may `Confirm Execute` appear. The review is bound to Work Unit + grant identity,
+and its one-use UI arm is consumed before privileged IPC. A stale pre-authorization review, another Work Unit,
+another grant, a repeated click, or an immediate post-authorization click cannot cross the execution membrane.
+
+The implementation is isolated in `jarvis-desktop/src/e1-gesture-separation.js`; the renderer delegates the
+three decisions to it. The RB-A4 matrix carries GS-1…GS-9 and deliberately wrong versions for: no-grant
+misclassification, direct Confirm on ACTIVE, implicit review, reused pre-authorization review, wrong-grant review,
+permanent refusal after lawful review, wrong-Work-Unit arm, never-open arm, and wrong-grant arm.
+
+`npm run matrix:jarvis-o5-r3-rb-gesture` must report
+**LETHAL + DISCRIMINATING · WIRING INTACT**. The earlier RB, RB-A1, RB-A2/C6A and RB-A3 frozen blobs remain
+unchanged.
+
+### 14.5 Crash residue and the next lawful recovery boundary
+
+Generation 3 is truthful crash residue: an unreleased generation whose recorded holder is gone. It is deliberately
+**not** a pre-write baseline, and it must not be deleted, edited, or relabelled as released.
+
+The lease implementation already defines the lawful crash path: a new process may acquire only after proving the
+same-host prior holder is `DEAD` or `DEAD_PID_REUSED`. Such a takeover creates the next generation and records
+`took_over { generation, owner_nonce, proof }`; an orderly release then creates the following released generation.
+
+Before any fourth live walk, that recovery must be witnessed as its own act. The expected historical shape is
+generation 3 (dead, unreleased) → generation 4 (proof-based takeover) → generation 5 (release). The recovery act
+must not append, rewrite, shorten or quarantine any grant ledger. Only after generation 5 is coherently released
+may a new walk establish a new pre-write baseline. No real-home recovery mutation is authorized by this section.
+
+### 14.6 Recovery mechanism simulation
+
+The exact crash-residue shape was exercised in a temporary delegation home, not the real home. The simulation
+seeded generations 1–3 with generation 3 held by the dead walked incarnation, then called the shipped
+`acquireGrantWriterLeaseV1()` with a same-host `GONE` proof and finally
+`releaseGrantWriterLeaseV1()`.
+
+Observed result:
+- generation 4 acquired with `took_over.generation = 3`, the prior owner nonce, and `proof = DEAD`;
+- generation 5 released with the recovery owner's nonce;
+- generations 1–3 remained byte-preserved;
+- the temporary delegation home contained no non-lease root at all.
+
+So the existing lease mechanism can normalize the crash residue without touching grant state. This simulation
+authorizes no real-home mutation; it establishes only that the proposed recovery act has a lawful mechanism.
+
+### 14.7 Standing after RB-A4
+
+- focused E1 + Work cockpit tests: **29/29 PASS**;
+- grant-writer implementation proof: **17/17 PASS**, including real stale-owner takeover and concurrent takeover;
+- RB, RB-A1 pre-write, RB-A2/C6A transition, RB-A3 readiness, and RB-A4 gesture matrices:
+  **LETHAL + DISCRIMINATING · WIRING INTACT**;
+- runtime-binding freeze guard: **INTACT**, including the additive RB-A4 lineage;
+- the real delegation home remains at unreleased generation 3; no recovery generation was created;
+- O5-R3 remains **NOT ADMITTED**;
+- O5-R4 remains closed.

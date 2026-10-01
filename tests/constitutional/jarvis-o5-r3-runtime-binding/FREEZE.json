@@ -18,7 +18,10 @@
     "tests/constitutional/jarvis-o5-r3-runtime-binding/transition/matrix.mjs": "df2b174ef55806744bc7e08377f8e6176ba6d5a6",
     "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/falsifiers.mjs": "5913b3fad35e04cb0944727fae132c0a5238aeff",
     "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/candidates.mjs": "ccdf94d7054f00b58c7b6c34facdad41dc01e67a",
-    "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/matrix.mjs": "76c47a5c4be04b5038efc47fe5b9d43b44b864c8"
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/matrix.mjs": "76c47a5c4be04b5038efc47fe5b9d43b44b864c8",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/falsifiers.mjs": "39c39467f86bb2378ebefd14d0fe95e34d3d589f",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/candidates.mjs": "b0208cfac1866b9d0748454ab251af046eb9d0a6",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/matrix.mjs": "4959376af389a79f454e5c4017726d7e2e925f0a"
   },
   "deliberately_not_frozen": {
     "jarvis-desktop/src/runtime-binding.js": "the implementation under test; it may be repaired, never by weakening the suite",
@@ -27,7 +30,8 @@
     "package.json": "script wiring only",
     "scripts/witness/o5-r3-lease-standing.mjs": "the pre-write standing module under test; repaired, never by weakening PW-1\u2026PW-9",
     "scripts/witness/o5-r3-runtime-witness.mjs": "the checker; its C6 wiring is bound by the frozen PW-W checks",
-    "scripts/witness/o5-r3-transition-integrity.mjs": "the C6A judge under test; repaired, never by weakening TI-1\u2026TI-11"
+    "scripts/witness/o5-r3-transition-integrity.mjs": "the C6A judge under test; repaired, never by weakening TI-1\u2026TI-11",
+    "jarvis-desktop/src/e1-gesture-separation.js": "the RB-A4 gesture-separation implementation under test; repaired, never by weakening GS-1\u2026GS-9"
   },
   "note": "matrix.mjs IS frozen here (unlike the R3 lease matrix): it carries the RB-W wiring law, and this suite has no Class A predictions that must flip.",
   "amendments": [
@@ -75,6 +79,19 @@
         "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/matrix.mjs"
       ],
       "authority": "founder continuation 2026-10-01 after the stopped bd9df7db witness"
+    },
+    {
+      "id": "RB-A4",
+      "date": "2026-10-01",
+      "kind": "ADDITIVE — no earlier frozen byte edited; execution authority law unchanged",
+      "cause": "Fresh walk #3 crossed beyond its explicit stop condition: E1 ISSUED was followed 3.17 s later by CLAIMED; the Mac subsequently watchdog-panicked and rebooted. Causality of the panic is not inferred, but the UI allowed Confirm Execute to become immediately actionable after authorization, so the two human gestures were not physically separated strongly enough.",
+      "law": "Execution Gesture Separation — an ACTIVE E1 grant exposes only a fresh post-authorization review, never Confirm Execute directly. Confirm Execute may appear only for the exact ACTIVE grant after that separate read-only review, and the one-use UI arm is consumed before privileged IPC.",
+      "added": [
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/falsifiers.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/candidates.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/matrix.mjs"
+      ],
+      "authority": "founder continuation 2026-10-01 after the crash/reboot witness"
     }
   ]
 }
