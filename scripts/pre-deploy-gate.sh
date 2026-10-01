@@ -255,6 +255,7 @@ cmd_prepare_maia() {
 
     acquire_deploy_lock "pre-deploy-gate.sh prepare-maia" "$ref"
     deploy_ctx_assert_and_materialize "$ref" || exit 1
+    deploy_ctx_assert_descends_from_running "pre-deploy-gate.sh prepare-maia" || exit 1
 
     gate_disk
     gate_colab
@@ -278,6 +279,7 @@ cmd_cutover_maia() {
 
     acquire_deploy_lock "pre-deploy-gate.sh cutover-maia" "$ref"
     deploy_ctx_assert_and_materialize "$ref" || exit 1
+    deploy_ctx_assert_descends_from_running "pre-deploy-gate.sh cutover-maia" || exit 1
 
     gate_colab
     gate_quick_lane_no_pending_migrations
