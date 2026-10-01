@@ -10,6 +10,7 @@ import { ReturnHome } from '@/components/navigation/ReturnHome'
 import { LivingConstellationPanel } from '@/components/maia/living-constellation/LivingConstellationPanel'
 import { LifeFacetFlowPanel } from './LifeFacetFlowPanel'
 import { LivingFieldInstrument } from './LivingFieldInstrument'
+import { useEarlyFieldAdmission } from './useEarlyFieldAdmission'
 
 const RELATIONAL_PHASE_LABELS: Record<number, string> = {
   1: 'Orientation',
@@ -41,6 +42,8 @@ export function PersonalLivingFieldDashboard({
   // navigation away to main MAIA. Closing returns to the constellation.
   const [talkOpen, setTalkOpen] = useState(false)
   const encounterRef = useRef<HTMLDivElement>(null)
+  // EARLY-FIELD-01: the server decides; this only reflects it (closed until told).
+  const earlyFieldAdmitted = useEarlyFieldAdmission()
 
   function beginMaiaExploration() {
     setTalkOpen(true)
@@ -118,8 +121,10 @@ export function PersonalLivingFieldDashboard({
         </div>
 
         {/* VFE-02R12 / RUNTIME-01: additive first witness. The existing Living Field
-            remains below unchanged while recursive WORLD/PATH navigation is witnessed. */}
-        <LivingFieldInstrument />
+            remains below unchanged while recursive WORLD/PATH navigation is witnessed.
+            EARLY-FIELD-01: shown only to the server-admitted cohort; everyone else
+            keeps the Living Field exactly as it was. */}
+        {earlyFieldAdmitted && <LivingFieldInstrument />}
 
         {/* LC-02: same read-only constellation used across all three rooms. */}
         <LivingConstellationPanel focus="living" />
