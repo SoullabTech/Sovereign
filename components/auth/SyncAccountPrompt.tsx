@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Smartphone, Check } from 'lucide-react';
 import { betaConfig, validatePassword, validateEmail } from '@/lib/auth/betaConfig';
+import AdultConfirmationCheckbox from '@/components/members/AdultConfirmationCheckbox';
 
 /**
  * SyncAccountPrompt
@@ -21,6 +22,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
   const [showModal, setShowModal] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmsAdult, setConfirmsAdult] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -124,6 +126,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
           email: email.trim() || undefined,
           name: explorerName || username,
           explorerId,
+          confirmsAdult,
         }),
       });
 
@@ -332,9 +335,11 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                       </div>
                     )}
 
+                    <AdultConfirmationCheckbox checked={confirmsAdult} onChange={setConfirmsAdult} className="flex items-start gap-3 text-sm font-light text-teal-800 cursor-pointer select-none" />
+
                     <button
                       type="submit"
-                      disabled={isLoading || !username.trim() || !password}
+                      disabled={isLoading || !username.trim() || !password || !confirmsAdult}
                       className="w-full py-2.5 rounded-xl font-medium bg-amber-500/80 hover:bg-amber-500 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                     >
                       {isLoading ? 'Creating...' : 'Create Account'}

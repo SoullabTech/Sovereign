@@ -47,6 +47,7 @@ import { useSearchParams } from 'next/navigation';
 import { RoomHoloflower } from '@/components/maia/vision-studio/RoomHoloflower';
 import { invitedFieldContext, UNINVITED_COPY } from '@/lib/nowWhat/invitation';
 import { NowWhatSurface } from '@/components/now-what/NowWhatSurface';
+import AdultConfirmationCheckbox from '@/components/members/AdultConfirmationCheckbox';
 
 const ACCENT = '#c9a35e';
 
@@ -168,6 +169,7 @@ function CreateForm({ next, onExistingIdentity }: { next: string; onExistingIden
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmsAdult, setConfirmsAdult] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -179,7 +181,7 @@ function CreateForm({ next, onExistingIdentity }: { next: string; onExistingIden
       const res = await fetch('/api/now-what/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, next }),
+        body: JSON.stringify({ name, email, password, next, confirmsAdult }),
       });
       const json = await res.json().catch(() => ({}));
       if (res.status === 409) {
@@ -203,8 +205,9 @@ function CreateForm({ next, onExistingIdentity }: { next: string; onExistingIden
       <input className={inputClass} placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
       <input className={inputClass} placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
       <input className={inputClass} placeholder="Choose a password (8+ characters)" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+      <AdultConfirmationCheckbox checked={confirmsAdult} onChange={setConfirmsAdult} className="flex items-start gap-3 text-sm font-light text-white/70 cursor-pointer select-none" />
       {error && <p role="alert" className="text-red-400 text-sm font-light">{error}</p>}
-      <button type="submit" disabled={busy} className={buttonClass} style={{ color: ACCENT, borderColor: 'rgba(201,163,94,0.45)' }}>
+      <button type="submit" disabled={busy || !confirmsAdult} className={buttonClass} style={{ color: ACCENT, borderColor: 'rgba(201,163,94,0.45)' }}>
         {busy ? 'Opening the door…' : 'Create my key and enter'}
       </button>
     </form>

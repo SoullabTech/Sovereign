@@ -50,15 +50,17 @@ Tests: `lib/members/__tests__/adultAcknowledgment.test.ts` passed 17/17 in round
 
 **#1634 collision found and resolved toward this branch.** #1634 had grown its own `member_acknowledgments` migration (`20261001200000`). Its shape differed: kind `age_18_plus`, text `copy_version`, a free-text `source`, and no append-only triggers. Both migrations use `CREATE TABLE IF NOT EXISTS`, so whichever ran first would win silently and the other's code would fail at runtime. Under the single-home ruling, #1634's best ideas are folded in here, on this branch's schema:
 - **The acknowledgment is written in the same SQL statement as the member** (`withAdultAcknowledgment`, a CTE). A member can no longer exist without it. This replaces round one's write-after-insert.
-- **Account creation is now gated on six routes**, all with the atomic write:
-  - `/api/members/register`;
-  - `/api/members/register-email`, which the live `/signup` page uses and which collects no birth date;
-  - the Google and Apple web callbacks (no confirmation → back to `/signup?age=required`);
-  - the Google and Apple native callbacks (no confirmation → 403).
+- **Account creation is now gated on all ten database member-creation routes**, all with the atomic write:
+  - `/api/members/register` and `/api/members/register-email`;
+  - Google and Apple web callbacks;
+  - Google and Apple native callbacks;
+  - `/api/members/register-local` and `/api/members/enter`;
+  - team-invite registration and `/api/now-what/register`.
+  A source census test fails if any `app/api` route gains an unwrapped `INSERT INTO members`.
 - **The confirmation travels to the web OAuth callbacks** as the short-lived `maia_adult_ack` cookie (`adult_18_plus@1`, 15 minutes, `SameSite=None; Secure` so Apple's cross-site POST carries it).
 - **`/signup` (`UnifiedAuth`)** carries the checkbox for email signup and for Google/Apple.
 - A test fails if any of those six routes contains a member `INSERT` that is not wrapped, or loses the confirmation check. Both mutations were checked.
-- **Still covered only by the MAIA-route gate and the sign-in prompt:** `register-local`, `members/enter`, team-invite register, `now-what/register`, and the cabin local store.
+- **The four remaining database creation paths are no longer deferred to MAIA entry.** `register-local`, `members/enter`, team-invite register, and `now-what/register` now collect the confirmation at creation and write it atomically. The cabin local store is not a database member-registration route; a later server account creation still crosses one of the governed routes.
 
 ## What this does NOT cover, said plainly
 
@@ -70,3 +72,15 @@ Tests: `lib/members/__tests__/adultAcknowledgment.test.ts` passed 17/17 in round
 ## Deploy
 
 This is a schema change. Under the 2026-09-07 finding, merging it to `clean-main-no-secrets` authorizes the next full deploy to apply it. Deploy requires the Review Custody migration gate and an explicit founder act.
+
+## Fourth round: registration completeness (same day)
+
+A final consolidation audit caught a semantic mismatch: the branch said “every registration” while four database member-creation routes still depended on the later MAIA-entry gate. That was not the founder ruling.
+
+The repair closes the mismatch without adding another schema:
+- `register-local`, `members/enter`, team-invite registration and `now-what/register` now require `confirmsAdult: true` (or the current-version acknowledgment cookie where applicable);
+- each writes `adult_18_plus@1` in the same CTE statement as the member row;
+- Sync Account, team-invite acceptance and Now What arrival show the same canonical checkbox text;
+- the source census now enumerates every `app/api` member INSERT and requires the complete set to be governed.
+
+The MAIA-entry acknowledgment gate remains defense in depth and the one-time path for existing members. It is no longer a substitute for admission-time confirmation on a server registration route.

@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { hasAdultConfirmation, withAdultAcknowledgment, ADULT_ACK_COOKIE, adultRefusalMessage } from '@/lib/members/adultConfirmation';
 import { betaConfig, validatePassword, validateEmail } from '@/lib/auth/betaConfig';
 import crypto from 'crypto';
 import { hashPassword } from '@/lib/auth/passwordUtils';
@@ -27,6 +28,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { username, password, email: rawEmail, name, explorerId } = body;
+
+    if (!hasAdultConfirmation(body, request.cookies.get(ADULT_ACK_COOKIE)?.value)) {
+      return NextResponse.json(
+        { error: adultRefusalMessage('adult_confirmation_required'), code: 'adult_confirmation_required' },
+        { status: 400 },
+      );
+    }
     const email = rawEmail ? rawEmail.toLowerCase().trim() : null;
 
     // Validate required fields
@@ -77,12 +85,14 @@ export async function POST(request: NextRequest) {
     // Hash password with bcrypt
     const passwordHash = await hashPassword(password);
 
-    // Create member
-    await query(
+    // Create the member and their own 18+ acknowledgment atomically.
+    const insert = withAdultAcknowledgment(
       `INSERT INTO members (id, username, password_hash, name, email, passkey, onboarded, onboarding_step, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, true, 'complete', NOW())`,
-      [memberId, normalizedUsername, passwordHash, name || username, email || null, passkey]
+       VALUES ($1, $2, $3, $4, $5, $6, true, 'complete', NOW())
+       RETURNING id`,
+      [memberId, normalizedUsername, passwordHash, name || username, email || null, passkey],
     );
+    await query(insert.sql, insert.params);
 
     console.log(`[RegisterLocal] Created account for ${normalizedUsername} (${memberId})`);
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { hasAdultConfirmation, withAdultAcknowledgment, ADULT_ACK_COOKIE, adultRefusalMessage } from '@/lib/members/adultConfirmation';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
@@ -51,6 +52,13 @@ export async function POST(request: NextRequest) {
     const password = body.password || '';
     const next = typeof body.next === 'string' ? body.next : '';
 
+    if (!hasAdultConfirmation(body, request.cookies.get(ADULT_ACK_COOKIE)?.value)) {
+      return NextResponse.json(
+        { error: adultRefusalMessage('adult_confirmation_required'), code: 'adult_confirmation_required' },
+        { status: 400 },
+      );
+    }
+
     // The invitation is the gate — enforced, not narrated.
     if (!invitedFieldContext(next)) {
       return NextResponse.json(
@@ -88,14 +96,15 @@ export async function POST(request: NextRequest) {
     for (let attempt = 0; attempt < 4; attempt++) {
       const passkey = `NOWWHAT-${randToken(8)}`;
       try {
-        const result = await query(
+        const insert = withAdultAcknowledgment(
           `INSERT INTO members (
              passkey, username, password_hash, name, email, onboarded, onboarding_step
            )
            VALUES ($1, $2, $3, $4, $5, TRUE, 'complete')
            RETURNING id, username, name, onboarded, onboarding_step, tier, roles`,
-          [passkey, username, passwordHash, name, email]
+          [passkey, username, passwordHash, name, email],
         );
+        const result = await query(insert.sql, insert.params);
         member = result.rows[0];
         break;
       } catch (e: any) {

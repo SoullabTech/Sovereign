@@ -298,6 +298,10 @@ describe('every account-creation route with a member INSERT', () => {
     'app/api/auth/google/native-callback/route.ts',
     'app/api/auth/signin/apple/callback/route.ts',
     'app/api/auth/apple/native-callback/route.ts',
+    'app/api/members/register-local/route.ts',
+    'app/api/members/enter/route.ts',
+    'app/api/team/invite/[token]/register/route.ts',
+    'app/api/now-what/register/route.ts',
   ];
   for (const p of GATED) {
     it(`${p} requires the confirmation and wraps every member INSERT`, () => {
@@ -309,6 +313,26 @@ describe('every account-creation route with a member INSERT', () => {
       expect(inserts - wrapped).toBe(0);
     });
   }
+
+  it('covers every API route that inserts a member', () => {
+    const { execSync } = require('child_process') as typeof import('child_process');
+    const found = execSync(
+      "git grep -l 'INSERT INTO members' -- 'app/api/**/*.ts' ':!**/__tests__/**'",
+      { encoding: 'utf8' },
+    ).trim().split('\n').filter(Boolean).sort();
+    expect(found).toEqual([...GATED].sort());
+  });
+
+  it('all live registration forms send the adult confirmation', () => {
+    for (const p of [
+      'components/auth/UnifiedAuth.tsx',
+      'components/auth/SyncAccountPrompt.tsx',
+      'components/team/InviteAcceptClient.tsx',
+      'app/now-what/arrive/page.tsx',
+    ]) {
+      expect(code(p)).toContain('confirmsAdult');
+    }
+  });
 
   it('accepts only a literal true flag or the current-version cookie', () => {
     expect(hasAdultConfirmation({ confirmsAdult: true }, undefined)).toBe(true);
