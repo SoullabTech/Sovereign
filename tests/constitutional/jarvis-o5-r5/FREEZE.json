@@ -1,0 +1,16 @@
+{
+  "freeze_version": "O5-R5.v1",
+  "date": "2026-10-01",
+  "base": "2e657fa0dd6261584dd77463ced7782d80906d7d",
+  "scope": "Execution binding and readiness only: exact O2\u2192W2 binding, one-to-one identity, CLOSED-only dependency satisfaction, ROUTED-only eligibility, evidence fail-closed, bounded deterministic selection, no mutation, live session recheck remains authoritative.",
+  "frozen_files": {
+    "tests/constitutional/jarvis-o5-r5/contract.mjs": "4824e7a591f3368181a9f52f9abed525cf5897cb18609120a6df845b976a39fd",
+    "tests/constitutional/jarvis-o5-r5/substrate.mjs": "0129b4b28d8f8e789604ca5aff944a1b64a88b3bd341111813e4a9488e6e852a",
+    "tests/constitutional/jarvis-o5-r5/reference.mjs": "63a99f911c0a7e02a37d31525cff3819c15fb7519ce79fc54bf75b8bc0532812",
+    "tests/constitutional/jarvis-o5-r5/falsifiers.mjs": "aedee5dbe7b0a31f4fd1987fbb0ead186c97bfc31d466c6f44433d8d18926991",
+    "tests/constitutional/jarvis-o5-r5/candidates.mjs": "bb14e6ceb934b528088735f5499c6d8012ec8850ebe52bac1d2189632c3873fc"
+  },
+  "unfrozen": [
+    "tests/constitutional/jarvis-o5-r5/matrix.mjs"
+  ]
+}
