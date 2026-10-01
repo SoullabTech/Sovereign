@@ -287,10 +287,10 @@ Any other C6-pre standing (`HELD_BY_OTHER_LIVE`, `UNRELEASED_HOLDER_GONE`, `UNDE
 **Step 6: one real grant write from Desktop.** Authorize once on a Work Unit in the Desktop UI. The ruling
 authorizes this one write to the real delegation home. Then:
 ```
-node scripts/witness/o5-r3-runtime-witness.mjs > ~/o5r3-step6.txt; tail -25 ~/o5r3-step6.txt
+node scripts/witness/o5-r3-runtime-witness.mjs --prewrite ~/o5r3-prewrite.json > ~/o5r3-step6.txt; tail -25 ~/o5r3-step6.txt
 ```
 Expect:
-- C1–C6 PASS, verdict `CONSTITUTIONAL PARTIAL — C7, C8 pending` (exit 2);
+- C1–C5 + **C6A** + C6 PASS, verdict `CONSTITUTIONAL PARTIAL — C7, C8 pending` (exit 2); C6A names `generation 3 acquired` and the one changed ledger (§12);
 - the two identity lines printing the **same** pid and process start time, with the lease generation shown.
 
 **Step 7: snapshot, refuse a second writer, judge.** Same worktree, Desktop still alive, ⛔ no UI activity from here
@@ -298,13 +298,13 @@ until the verdict:
 ```
 node scripts/witness/o5-r3-runtime-witness.mjs --snapshot ~/o5r3-before.json > /dev/null; ls -l ~/o5r3-before.json
 node scripts/builder/o5-recovery-census.mjs --write --admit sha256-step7-refusal-probe > ~/o5r3-refusal.json; cat ~/o5r3-refusal.json
-node scripts/witness/o5-r3-runtime-witness.mjs --refusal ~/o5r3-refusal.json --before ~/o5r3-before.json --json ~/o5r3-evidence.json > ~/o5r3-step7.txt; cat ~/o5r3-step7.txt
+node scripts/witness/o5-r3-runtime-witness.mjs --prewrite ~/o5r3-prewrite.json --refusal ~/o5r3-refusal.json --before ~/o5r3-before.json --json ~/o5r3-evidence.json > ~/o5r3-step7.txt; cat ~/o5r3-step7.txt
 ```
 The `--admit` value is irrelevant: `census --write` takes the lease **before** it reads the census, so the
 refusal comes first and nothing is written. Expected:
 - the refusal reads `"refused": "GRANT_WRITER_LEASE_UNAVAILABLE"` and `"lease_reason": "HOME_LEASE_HELD"`;
 - the refusal carries `lease_generation` and `holder.{host, pid, process_start_time, generation}`;
-- the final verdict is **`CONSTITUTIONAL PASS — C1–C8 witnessed`** (exit 0).
+- the final verdict is **`CONSTITUTIONAL PASS — C1–C8 + C6A witnessed`** (exit 0).
 
 **Step 8: quit Desktop.** The lease releases (a released generation appears), and `runtime-binding.json` gains
 `terminatedAt`. Optional confirmation:
@@ -387,7 +387,7 @@ authority-free is that no lease or store code reads it. RB-W5 pins that for the 
 ### 9.5 Admission criterion and statement
 
 Admission requires all of the following:
-- the step 7 verdict `CONSTITUTIONAL PASS — C1–C8 witnessed` from a clean mode-A worktree;
+- the step 7 verdict `CONSTITUTIONAL PASS — C1–C8 + C6A witnessed` (amended by §12) from a clean mode-A worktree;
 - S1 QUIET, or its ALARM answered;
 - the founder's act.
 
@@ -634,4 +634,116 @@ So a C8 PASS today does **not** witness *"only the authorized transition happene
 **Evidence is preserved either way.** Step 5 now also writes `~/o5r3-prewrite.json`, a pre-write hash snapshot
 taken under `--phase pre-write`, which carries no admission evidence. So option (b) can be judged against this
 walk's actual baseline without re-walking.
+
+## 12. Amendment RB-A2: C6A Authorized Transition Integrity (founder ruling: option b, 2026-10-01)
+
+### 12.1 Why
+
+The admission statement claims *"a single authorized acquisition"*. Frozen C8 proves only byte-identity **across
+the refused second writer**. Without this amendment the record would be semantically ahead of its evidence:
+*"single authorized acquisition"* would be reconstructed from the operator's recollection instead of proven.
+
+**C8 is untouched.** It is not renamed, not broadened and not edited; it keeps its own snapshot view. The witness
+now asks four distinct questions:
+
+```
+pre-write standing (C6-pre)
+        ↓
+authorized transition integrity (C6A)      ← new
+        ↓
+post-write current-holder proof (C6)
+        ↓
+second-writer refusal integrity (C7, C8)
+```
+
+### 12.2 The law
+
+From the saved pre-write baseline (`--prewrite`) to the post-write state:
+
+| | Rule |
+|---|---|
+| T1 | exactly one new lease generation exists, and it is the next one (max + 1) |
+| T2 | that generation is held by this Desktop incarnation: host + pid + process start time, a well-formed held record with an owner nonce, never a release |
+| T3 | prior lease history is unchanged: every earlier generation byte-identical, none removed |
+| T4 | grant ledgers are append-only: none removed, none shortened |
+| T5 | prior ledger bytes are unchanged: the old bytes are an exact prefix |
+| T6 | no more than one Work Unit ledger changed; a newly created ledger counts |
+| T7 | no other governed artifact changed |
+
+**Scope (founder refinement): governed state only.** Four roots are covered:
+- `grant-writer-lease/`
+- `work-units-v2/execution-grants/`
+- `execution-grants/`
+- `grant-ledger-quarantine/`
+
+Unit records, notes and everything else in the home are out of scope, so ordinary activity cannot make C6A
+noisy. The legacy `<wu>.lock` is transient (exclusive create, unlinked after the append), so a lock that
+survives a clean write **is** a governed change. A torn-tail recovery during the walk would show as T4
+(shortened ledger) plus T7 (quarantine record). That is a stop to diagnose, never an authorized transition.
+
+### 12.3 Built
+
+**Judge.** `scripts/witness/o5-r3-transition-integrity.mjs` is read-only and outside authority territory. It
+never reads the binding record. Snapshots now carry a `governed` size + hash view beside C8's unchanged `files`
+view.
+
+**Checker.**
+- C6A is computed post-write only, from `--prewrite`, and placed before C6.
+- A pre-write run refuses `--prewrite`, so a baseline cannot carry admission evidence.
+- The verdict now reads `CONSTITUTIONAL PASS — C1–C8 + C6A witnessed`.
+
+**Falsifiers.** `npm run matrix:jarvis-o5-r3-rb-transition` reports **LETHAL + DISCRIMINATING · WIRING INTACT**.
+TI-1…TI-11 run on real homes on disk:
+
+| Falsifier | Founder's defeat case | Killer |
+|---|---|---|
+| TI-2 two lease generations added | ✅ | DC-TI1 (count-insensitive) |
+| TI-3 historical lease bytes rewritten / removed | ✅ | DC-TI2 (history by name) |
+| TI-4 two Work Unit ledgers touched | ✅ | DC-TI3 (per-store limit) · DC-TI9 (new ledgers uncounted) |
+| TI-5 existing grant entry mutated rather than appended | ✅ | DC-TI4 (size-only) |
+| TI-6 foreign-incarnation holder (pid reuse, other host, release record, no nonce) | ✅ | DC-TI5 (pid-only identity) |
+| TI-7 unrelated governed artifact (lock, quarantine, lease temp) | ✅ | DC-TI6 (ledgers-and-lease only) |
+| TI-8 ledger shortened / removed | | DC-TI8 (shrink tolerated) |
+| TI-9 no acquisition inside the transition | | DC-TI10 |
+| TI-10 skipped generation number | | DC-TI11 |
+| TI-11 non-governed state out of scope | | DC-TI7 (whole-home scope) |
+| TI-1 lawful transition passes | | DC-TI12 (*"nothing else changed"* read as forbidding the authorized append) |
+
+Two collaterals are classified as irreducible: DC-TI1 also kills TI-10, and DC-TI12 also kills TI-11.
+
+**Wiring TI-W1…W6:**
+- C6A uses the shipped judge;
+- C6A is post-write only and precedes C6;
+- **C8 is byte-for-byte the same check**;
+- snapshots carry the governed view;
+- a live run proves `--phase pre-write --prewrite` exits 1;
+- the judge never reads the binding record.
+
+### 12.4 What the instrument caught in itself before freeze
+
+- **DC-TI10 first died for the wrong reason** (T2, not T1). TI-9 was reshaped so a baseline already holding the
+  lease is falsifiable on its own.
+- **TI-1 had no killer**, so DC-TI12 was added.
+- **A "new generation is the latest" check was removed** as an equivalent mutant: T1 already guarantees it, so it
+  could never be honestly claimed as tested.
+- **Mutations of the shipped judge: 12 of 13 killed by a named falsifier.**
+  - M13 (owner nonce unchecked) first survived, and TI-6 gained a *no owner nonce* case.
+  - M1 (zero generations accepted by the count test) is **equivalent**: zero additions still fail the next-number
+    test. It is recorded, not claimed.
+- **End-to-end simulation of the walked shape** (released history → pre-write baseline + snapshot → one write →
+  C6A → refusal) gave C6A, C6, C7 and C8 all PASS. A lingering `.lock` alone turned C6A FAIL.
+
+**Freeze.** The three transition files are added to the runtime-binding `FREEZE.json` as lineage **RB-A2**.
+- No earlier frozen blob changed.
+- The guard was proven lethal both ways on a new entry.
+
+**Standing:**
+- **IMPLEMENTED + FROZEN TEST INSTRUMENT · ⛔ NOT ADMITTED**;
+- RB-A1 + RB-A2 frozen;
+- generation-1 attribution owed (§11.1);
+- **the fresh walk starts only from a worktree at the commit containing this amendment, after the full frozen
+  matrix is green**;
+- ⛔ O5-R4 untouched;
+- ⛔ not merged;
+- production untouched.
 
