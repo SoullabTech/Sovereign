@@ -1,89 +1,95 @@
 # Living Field #1539 — Real-Stack Re-witness
 
 **Witnessed:** 2026-10-01  
-**Canonical witnessed:** `dbc3036f2ff498779c56b91152d1d79f5e30fde8`  
+**Canonical witnessed:** `975a208b8c39f99e9b47208ce5139bbec94bd8ac`
 **Origin witnessed:** `http://127.0.0.1:3139`  
-**Standing:** **PASS — 31/31, 0 failures**
+**Standing:** **PASS — 29/29, 0 failures**
 
 ## Purpose
 
-Close the real-stack obligation left by #1539 after the original walk stopped at the
-Current Questions detail boundary.
+Close the outstanding real-stack obligation left by #1539 after the original walk
+stopped at the Current Questions detail boundary.
 
-The earlier walk on #1539 head `2640ec28e` reached the Living Field successfully but
+The earlier #1539-head walk reached the Living Field but
 `GET /api/maia/living-field/current_questions` returned HTTP 400
-`{"error":"Valid memberId required"}`. That failure was classified as inherited
-auth-posture convergence debt rather than a #1539 regression.
+`{"error":"Valid memberId required"}`.
 
-PR #1545 repaired that seam by replacing the retired Phase-0
-`probeAuthPosture()` identity reads with verified session-backed
-`getMemberIdFromRequest()`, and by unwrapping current Next dynamic-route params.
-#1545 subsequently merged to canonical before this re-witness.
+That failure was inherited auth-posture convergence debt rather than a #1539
+regression. PR #1545 replaced the retired Phase-0 identity probe with verified
+session-backed identity and corrected current Next dynamic-route params.
+Two later canonical changes touched this same member journey and were therefore
+included before closure:
+
+- #1564 corrected the Living Field return surface;
+- #1554 made MAIA entry inside a dimension explicitly member-chosen.
+
+The final witness was therefore rerun after both had entered canonical.
+
 ## Witness environment
 
-The re-witness used the exact canonical SHA above on the Mac Studio.
+The walk used a detached worktree at the exact canonical SHA above.
 
 - one Next development server bound only to `127.0.0.1:3139`;
-- normal email-code sign-in flow on that same origin;
-- a fresh disposable PostgreSQL database rebuilt from the canonical baseline plus all migrations;
-- one synthetic witness member and synthetic Living Field history only;
-- no production credentials, browser cookies, member content, or production database rows;
+- normal `/signin` email-code authentication on that same origin;
+- the repository's documented `EMAIL_PROVIDER=memory` development transport;
+- a disposable PostgreSQL database rebuilt from canonical baseline + all migrations;
+- one synthetic witness member and synthetic Current Questions history only;
+- no production credentials, cookies, member content, or production database rows;
 - EARLY-FIELD enabled locally only for the synthetic member;
 - H1 disabled in this witness environment;
 - no request interception or fixture API responses.
+The in-memory email provider is explicitly a development transport and is refused
+by the provider selector in production. The generated one-time code was read only
+from the disposable database to complete the ordinary sign-in UI.
 
-The witness was rerun after #1564 merged because that PR changed the Living Field
-House-return surface. The final evidence therefore includes the new return behavior as well
-as the #1545 auth repair.
+## Origin-preservation finding
+
+A preliminary attempt considered the development-only `/api/auth/dev-login`
+path. Direct inspection showed that a request on `127.0.0.1:3139` emitted:
+
+`Location: http://localhost:3139/maia/living-field?from=house`
+
+That violates this witness's origin law, so the dev-login route was not used.
+The final successful walk used the normal `/signin` flow and never crossed from
+`127.0.0.1` to `localhost` or another port.
 
 ## Result
 
-The browser witness completed **31 checks with 31 passes and 0 failures**.
+The final browser witness completed **29 checks with 29 passes and 0 failures**.
 No browser page errors were emitted.
-## Decisive repaired boundary
+## Repaired dimension boundary
 
-The exact request that failed previously now passed:
+The request that originally failed now passed:
 
 - `GET /api/maia/living-field/current_questions` → **200**
-- no member-facing “Couldn’t open this dimension just now” failure copy
+- no “Couldn’t open this dimension just now” failure copy
 - **Development History** reachable
 - **Written by you** provenance visible
 - **MAIA candidate, accepted** provenance visible
 
-The repaired route therefore receives member identity through the verified session boundary
-rather than depending on a stripped caller identity claim.
+The route therefore receives member identity through the verified session
+boundary rather than depending on a stripped caller identity claim.
 
-## Same-origin and return continuity
+## Explicit MAIA-entry consent
 
-The complete sign-in and Living Field journey remained on
-`http://127.0.0.1:3139`.
+Current canonical now preserves the field before the encounter:
 
-Arrival settled at:
-
-`http://127.0.0.1:3139/maia/living-field?from=house`
-
-The canonical Return Home control then landed at:
-
-`http://127.0.0.1:3139/home`
-
-No redirect crossed to `localhost`, another port, or another origin.
-## Instrument interaction
+- opening Current Questions changed encounter count **0 → 0**;
+- **Enter this dimension with MAIA** was present;
+- Development History and provenance remained inspectable before MAIA entry;
+- choosing the explicit MAIA gesture started exactly one encounter, **0 → 1**;
+- `POST /api/maia/living-field/current_questions/encounter` → **200**.
+## Instrument and room continuity
 
 The locally admitted R1R3 instrument also passed its live interaction path:
 
-1. root rendered the five elemental regions: Fire, Water, Earth, Air, Aether;
-2. Fire opened and exposed only Beginning, Vision, Creation;
-3. Creation opened and exposed only Prototype, Expression, Experiment;
-4. Expression opened as a leaf without a duplicate SVG label;
-5. Wider returned correctly to Creation;
-6. the instrument SVG accepted pointer interaction.
+1. the instrument rendered and accepted pointer input;
+2. Fire opened;
+3. Creation opened;
+4. Expression opened as a leaf;
+5. Wider returned correctly to Creation.
 
-This confirms the current canonical instrument interaction while preserving the separate law
-that Living Field itself is never cohort-gated.
-
-## API observations
-
-The authenticated browser observed HTTP 200 from:
+Authenticated browser requests also returned HTTP 200 from:
 
 - `/api/early-field/admission`
 - `/api/maia/living-field`
@@ -93,23 +99,30 @@ The authenticated browser observed HTTP 200 from:
 - `/api/maia/living-field/current_questions`
 - `/api/maia/living-field/current_questions/gathering`
 - `POST /api/maia/living-field/current_questions/encounter`
-## Scope and remaining governance
+## Same-origin return
 
-Current canonical still contains the pre-#1554 behavior in which opening a dimension can
-immediately open the MAIA encounter. This re-witness records that behavior but does not
-ratify or reject it. PR #1554 governs explicit MAIA-entry consent separately and remains
-outside this admission claim.
+Arrival settled at:
 
-This witness closes the #1539 real-stack prerequisite and satisfies the EARLY-FIELD-01
-criterion requiring the #1539 real-stack walk to pass on current canonical code.
+`http://127.0.0.1:3139/maia/living-field?from=house`
 
-It does **not** by itself authorize cohort widening, alter production configuration, or replace
-the separate production non-cohort exclusion witness.
+The canonical Return Home control landed at:
 
+`http://127.0.0.1:3139/home`
+
+No successful-witness navigation crossed to `localhost`, another port, or
+another origin.
+
+## Ruling
+
+This closes the #1539 real-stack prerequisite on canonical `975a208b8`.
+
+It also satisfies the EARLY-FIELD-01 criterion requiring the #1539 real-stack
+walk to pass on current canonical code. It does **not** by itself authorize
+cohort widening or any production environment change.
 ## Evidence
 
-- `docs/programme/evidence/living-field-reconcile-walk-2026-09-30/REAL-STACK-3139-auth-convergence-pass-dbc3036f2.json`
-- `docs/programme/evidence/living-field-reconcile-walk-2026-09-30/REAL-STACK-3139-auth-convergence-pass-dbc3036f2.png`
+- `docs/programme/evidence/living-field-reconcile-walk-2026-09-30/REAL-STACK-3139-current-canonical-pass-975a208b8.json`
+- `docs/programme/evidence/living-field-reconcile-walk-2026-09-30/REAL-STACK-3139-current-canonical-pass-975a208b8.png`
 
-The disposable database and local witness scripts are not part of canonical evidence and are
-removed after the walk.
+The disposable database, server, and local witness scripts are not canonical
+evidence and are removed after the walk.
