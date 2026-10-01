@@ -15,6 +15,7 @@ Record only:
 - `EARLY_FIELD_ENABLED` = true;
 - configured Early Field cohort count;
 - whether the participant's account is already in that cohort;
+- whether at least one authentic member-owned Living Field / constellation / governed-flow source already exists for that participant, recorded only as yes/no without reading content;
 - device/browser class;
 - start time.
 
@@ -25,6 +26,9 @@ Confirm that the ordinary Living Field is available and that the production buil
 the explicit MAIA-entry consent repair.
 
 If any Class A boundary is uncertain before the session, do not begin.
+
+If authentic member-owned substrate is absent, do not run the **full** human witness. A navigation-only observation may be run separately, but it must not be adjudicated as the ownership/consent witness.
+
 ## What to say
 
 Use only this orientation before the first attempt:

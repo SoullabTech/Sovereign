@@ -47,6 +47,7 @@ Run only when all are true:
 1. The member is explicitly named in the Early Field production cohort.
 2. They sign into their own ordinary production account.
 3. Their existing Living Field is used; no private content is fabricated merely to make the witness pass.
+   Readiness is established without reading content: at least one authentic member-owned source already exists in a mounted Living Field / constellation / governed flow source before the witness begins.
 4. Production health is green and the deployed SHA is recorded before the encounter.
 5. The early-field switch is open and the member's admission endpoint returns `admitted:true`.
 6. The ordinary-member exclusion witness has already established that non-cohort members retain the Living Field without the early instrument.
