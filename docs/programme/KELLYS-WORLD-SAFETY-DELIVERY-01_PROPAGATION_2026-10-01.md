@@ -18,13 +18,14 @@ No member utterance, crisis transcript, risk score, or personal safety state is 
 
 ## Source state
 
-The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by five review surfaces:
+The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by six review surfaces:
 
 - PR #1663 — S1 reachability correction;
 - PR #1664 — canonical live crisis-path census;
 - PR #1665 — minimal deterministic recognition contract;
 - PR #1669 — stacked canonical live wiring, based on #1665;
-- PR #1675 — SAFETY-DISCLOSURE-01 authority contract: member act is the only currently executable disclosure basis; imminent/legal/minor-vulnerable-adult exceptions remain review-required.
+- PR #1675 — SAFETY-DISCLOSURE-01 authority contract: member act is the only currently executable disclosure basis; imminent/legal/minor-vulnerable-adult exceptions remain review-required;
+- PR #1678 — practitioner-field relationship boundary: a member's practitioner-sharing gesture is readable only by the practitioner in that member's active/paused relationship, not by practitioner role globally.
 
 These are review/merge surfaces. Kelly's World must not present an open PR as canonical merely because it is visible.
 
@@ -71,11 +72,27 @@ The live-wiring branch adds no practitioner, guardian, Soullab-team, email, webh
 
 1. admit/correct the evidence records;
 2. admit the recognition law;
-3. only then admit the stacked live wiring.
+3. only then admit the stacked live wiring;
+4. admit the disclosure-authority law independently of crisis severity;
+5. admit the practitioner-field relationship repair before treating Now What practitioner visibility as correctly recipient-bounded.
 
-Stack order matters. A child implementation must not make its parent law appear merged.
+Stack and dependency order matter. A child implementation or UI promise must not make its parent law or privacy repair appear merged.
+
+### Member-act disclosure substrates
+
+Three existing acts now have distinct standing:
+
+- **Send a message** — actual member-authored communication, with optional member-selected `safety_concern` urgency and practitioner notification;
+- **Share this thread with my practitioner** — direct, revocable field visibility. PR #1678 narrows the recipient to the member's actual practitioner relationship;
+- **Bring this into my work** — isolated encrypted snapshot architecture in `bringForward()`, currently with no live caller.
+
+These are not interchangeable. Safety recognition must not silently choose among them for the member.
 
 ## Watching
+
+### Sharing semantics
+
+Watch for future work collapsing message urgency, field visibility, and snapshot offerings into one generic `share` operation. Each carries a different human intention, persistence model, and recipient expectation.
 
 ### False-positive pressure
 
@@ -114,9 +131,9 @@ This record belongs in the Living Field Library because it gives Kelly one place
 
 Its orientation should read:
 
-- **Needs Kelly:** third-party disclosure authority only;
-- **In motion:** deterministic canonical member-facing safety floor;
-- **Watching:** false positives, multi-turn privacy, and legacy safety/non-delivery seams.
+- **Needs Kelly:** only exception policy beyond explicit member-act disclosure;
+- **In motion:** deterministic canonical safety floor, disclosure-authority law, and practitioner-field recipient-boundary repair;
+- **Watching:** false positives, multi-turn privacy, sharing-semantics collapse, and legacy safety/non-delivery seams.
 
 Nothing here authorizes execution, merge, deployment, or disclosure.
 

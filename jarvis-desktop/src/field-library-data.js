@@ -2173,7 +2173,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 412,
       "evidence": "## 10 · Next act",
       "last_touched_epoch": 1788716166,
-      "hours_dormant": 605,
+      "hours_dormant": 606,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2185,7 +2185,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 12,
       "evidence": "STATE             OPEN · DIAGNOSIS ONLY · no determination made",
       "last_touched_epoch": 1788546913,
-      "hours_dormant": 652,
+      "hours_dormant": 653,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2197,7 +2197,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 132,
       "evidence": "STATE        BUILT · local gates PASS · PRODUCTION WITNESS PENDING",
       "last_touched_epoch": 1788567104,
-      "hours_dormant": 646,
+      "hours_dormant": 647,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2209,7 +2209,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 22,
       "evidence": "STATE            SOURCE MERGED · NOT CLOSED · NOT DEPLOYED",
       "last_touched_epoch": 1788697516,
-      "hours_dormant": 610,
+      "hours_dormant": 611,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2221,7 +2221,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Standing:** REPAIR closed · VERIFY full candidate pass (54/54) · INVOKE open, I0 only.",
       "last_touched_epoch": 1788745887,
-      "hours_dormant": 597,
+      "hours_dormant": 598,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2233,7 +2233,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 222,
       "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
       "last_touched_epoch": 1789318246,
-      "hours_dormant": 438,
+      "hours_dormant": 439,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2245,7 +2245,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 219,
       "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
       "last_touched_epoch": 1789317901,
-      "hours_dormant": 438,
+      "hours_dormant": 439,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2257,7 +2257,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 139,
       "evidence": "## 7. Owed witnesses, re-run on the composition",
       "last_touched_epoch": 1789510856,
-      "hours_dormant": 384,
+      "hours_dormant": 385,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2269,7 +2269,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Status:** **AUTOMATIC HANDWRITING OCR HELD · ORIGINAL + MANUAL TRANSCRIPTION OPEN · BLANK-WORK RELEASE INDEPENDENT · PRODUCTION UNTOUCHED.**",
       "last_touched_epoch": 1789602025,
-      "hours_dormant": 359,
+      "hours_dormant": 360,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2281,7 +2281,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 4,
       "evidence": "**Status:** ⚠️ FOUNDER ADJUDICATION OPEN · documentary only",
       "last_touched_epoch": 1789682893,
-      "hours_dormant": 336,
+      "hours_dormant": 337,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2293,7 +2293,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 182,
       "evidence": "## Owed, if the candidate instrument is ever wired",
       "last_touched_epoch": 1789917878,
-      "hours_dormant": 271,
+      "hours_dormant": 272,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2305,7 +2305,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 360,
       "evidence": "## 8 · Owed before A2 can be written",
       "last_touched_epoch": 1790078900,
-      "hours_dormant": 226,
+      "hours_dormant": 227,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     }
