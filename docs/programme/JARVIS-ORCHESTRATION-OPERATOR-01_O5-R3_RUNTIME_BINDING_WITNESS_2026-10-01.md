@@ -819,3 +819,107 @@ All are killed on their named rule.
 
 **Standing:** RB-A3 is frozen as additive lineage; earlier frozen blobs remain unchanged. A new fresh walk is
 required from the commit containing RB-A3. O5-R4 remains closed and production remains untouched.
+
+## 14. Fresh walk #3 defeated after the authorization boundary · RB-A4 Grant Event Purity (2026-10-01)
+
+### 14.1 Step 5 passed on the RB-A3 specimen
+
+A fresh detached worktree ran at
+`2a6bd1a6e8bc50ac8cdd5627eba7898ee61340df` with Desktop pid `85599`,
+start `ps-lstart:Thu Oct 1 17:09:38 2026`. The RB-A3 readiness barrier converged to the
+exact worktree and HEAD with `clean=true`.
+
+`~/o5r3-w3-step5.txt` records:
+- C1–C5 PASS;
+- C6-pre PASS — `NOT_YET_HELD_AFTER_RELEASE · generation 2`;
+- `PRE-WRITE BASELINE PASS — C1–C5 + C6-pre (a baseline, not admission)`.
+
+The saved baseline is `~/o5r3-w3-prewrite.json`.
+
+### 14.2 The specimen was defeated: authorization was followed by execution claim
+
+The prepared Work Unit was
+`v2-witness-the-o5-r3-single-authorize-muq1l3w5`, whose stop conditions explicitly said:
+*stop immediately after the first E1 authorization; do not Confirm Execute; do not launch a provider; do not
+issue a second grant.*
+
+The durable history says:
+- generation 3 acquired by pid `85599` at `2026-10-01T21:47:22.042Z`;
+- one `ISSUED` event appended at `2026-10-01T21:47:22.074Z`;
+- a `CLAIMED` event appended for that same grant at `2026-10-01T21:47:25.242Z`;
+- the Work Unit moved to `EXECUTING`.
+
+The local Ollama server independently records provider launch immediately after the claim:
+at `2026-10-01 17:47:25.444 -04:00` it started a llama-server for the selected local model and began loading it.
+So the Work Unit falsifier *"Any provider launch occurs"* was met. This specimen cannot admit O5-R3.
+
+No durable canonical execution attempt was recorded; the Work Unit's `execution.attempts` remains empty. That
+does not erase the launch. The grant ledger is the authority history and the Ollama log is independent launch
+evidence.
+
+The Desktop incarnation later disappeared without orderly release. Generation 3 remains unreleased, and the
+runtime-binding record still names pid `85599` with `terminatedAt: null`.
+
+### 14.3 What Step 6 exposed in the instrument
+
+`~/o5r3-w3-step6.txt` was taken only after the above state already existed. It correctly failed C1 because
+pid `85599` was STALE. It also reported:
+- C2–C5 PASS;
+- **C6A PASS** — generation 3 acquired and exactly one Work Unit ledger changed;
+- C6 PASS by the stored binding/lease pair;
+- C7/C8 pending.
+
+That C6A PASS is an instrument defect. RB-A2 proved that one ledger changed append-only; it did **not** prove
+how many events were appended or what those events meant. `ISSUED + CLAIMED` therefore fit its structural law.
+
+Step 7 was not run. The stopped worktree and delegation history were not edited to manufacture a pass.
+
+### 14.4 RB-A4 additive law: C6B Grant Event Purity
+
+RB-A4 adds a separate semantic witness after C6A and before C6:
+
+> **C6B — Grant Event Purity.** From the saved pre-write governed capture to the first post-write sample,
+> exactly one grant ledger changes. Its delta is exactly one complete UTF-8 JSONL record. That record is
+> `ISSUED` with one `E1-GRANT.v1` grant whose Work Unit matches the ledger, whose actor is human, whose
+> authorization act is `JARVIS_DESKTOP_E1_AUTHORIZE_ONCE`, and whose authority is one-shot and
+> non-transferable. Any additional event defeats the witness.
+
+This keeps the questions separate:
+`C6-pre → C6A structural transition → C6B event purity → C6 current holder → C7/C8 refusal integrity`.
+
+The new judge is `scripts/witness/o5-r3-grant-event-integrity.mjs`. Against the **actual preserved walk #3**
+baseline and current home it returns:
+`E2 — ledger delta is not exactly one JSONL record`.
+
+The event-purity matrix carries nine real falsifiers and nine one-decision defeat candidates. It kills:
+two ledgers changed; `ISSUED + CLAIMED`; non-ISSUED events; malformed/incomplete/invalid-UTF8 deltas;
+wrong Work Unit identity; wrong actor/authorization/one-shot semantics; rewritten historical prefix; and
+two `ISSUED` events. Wiring proves C6B uses the shipped judge, sits after C6A and before C6, leaves C8
+unchanged, and is named in the final verdict.
+
+`npm run matrix:jarvis-o5-r3-rb-event-purity`:
+**MATRIX LETHAL + DISCRIMINATING · WIRING INTACT**.
+
+All earlier frozen matrices remain green and their blobs are unchanged. The grant-writer proof remains
+15/15 PASS. RB-A4 is frozen as additive lineage in `FREEZE.json`.
+
+The admission verdict is now necessarily:
+`CONSTITUTIONAL PASS — C1–C8 + C6A + C6B witnessed`.
+
+### 14.5 Standing and next boundary
+
+**Standing: IMPLEMENTED + RB-A1/A2/A3/A4 FROZEN · ⛔ O5-R3 NOT ADMITTED.**
+
+Generation 3 is an unreleased dead holder. By the already-frozen pre-write law,
+`UNRELEASED_HOLDER_GONE` is **not** a lawful pre-write baseline: silently treating death as release would
+collapse crash recovery into ordinary standing.
+
+The lease implementation already permits a **proof-based takeover** only when the previous holder is proven
+`DEAD` or `DEAD_PID_REUSED`. Therefore the next act is a separate recovery witness:
+1. prove generation 3's holder is dead by the lease's own incarnation probe;
+2. acquire the next generation as an explicit takeover carrying that proof;
+3. release it orderly;
+4. preserve both generations as history;
+5. only then start a new O5-R3 specimen from the RB-A4 commit.
+
+No generation is deleted or rewritten. O5-R4 remains closed. Production is untouched.

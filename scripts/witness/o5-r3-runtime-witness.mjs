@@ -50,6 +50,7 @@ const RB = require(path.join(ROOT, 'jarvis-desktop/src/runtime-binding.js'));
 const LEASE = await import(pathToFileURL(path.join(ROOT, 'scripts/builder/grant-writer-lease-v1.mjs')).href);
 const STAND = await import(pathToFileURL(path.join(ROOT, 'scripts/witness/o5-r3-lease-standing.mjs')).href);
 const TI = await import(pathToFileURL(path.join(ROOT, 'scripts/witness/o5-r3-transition-integrity.mjs')).href);
+const EVENT = await import(pathToFileURL(path.join(ROOT, 'scripts/witness/o5-r3-grant-event-integrity.mjs')).href);
 const READY = await import(pathToFileURL(path.join(ROOT, 'scripts/witness/o5-r3-binding-readiness.mjs')).href);
 
 const args = process.argv.slice(2);
@@ -116,6 +117,7 @@ const bindingPair = { pid: rec?.pid ?? null, processStartTime: rec?.processStart
 const leasePair = lr && !lr.released ? { pid: lr.pid, processStartTime: lr.process_start_time, host: lr.host, generation: lease.generation } : null;
 const pairEqual = !!leasePair && leasePair.host === bindingPair.host && leasePair.pid === bindingPair.pid && leasePair.processStartTime === bindingPair.processStartTime;
 let transition = null;
+let eventPurity = null;
 const standing = home ? STAND.classifyLeaseStanding(STAND.readLeaseHistory(home), bindingPair) : { standing: 'MALFORMED', generation: 0, detail: 'no delegation home in the record' };
 if (phase === 'pre-write') {
   C('C6-pre', 'no live writer holds grant authority before the first write (history may exist; latest generation decides)',
@@ -135,6 +137,23 @@ if (phase === 'pre-write') {
       : ti.ok ? `generation ${ti.summary.new_generation} acquired · ledgers changed: ${ti.summary.changed_ledgers.join(', ') || 'none'}`
       : ti.violations.map((x) => `${x.rule} ${x.detail}`).join(' · '),
     !prewriteFile);
+
+  // C6B: C6A proves structural append-only transition; this proves the ledger delta itself
+  // contains exactly one complete ISSUED authorization event and no follow-on act.
+  const currentGoverned = home ? TI.captureGoverned(home) : null;
+  const ep = prewrite?.governed && currentGoverned && home
+    ? EVENT.judgeGrantEventPurity(prewrite.governed, currentGoverned, home)
+    : null;
+  eventPurity = ep;
+  C('C6B', 'grant-event purity: the changed ledger delta is exactly one human one-shot ISSUED authorization and nothing else',
+    !!ep && ep.ok,
+    !prewriteFile ? 'needs --prewrite <pre-write snapshot>'
+      : !prewrite ? 'pre-write snapshot unreadable'
+      : !prewrite.governed ? 'pre-write snapshot has no governed capture (taken by an older checker)'
+      : ep.ok ? `event ISSUED · grant ${ep.summary.grant_id} · Work Unit ${ep.summary.work_unit_id}`
+      : ep.violations.map((x) => `${x.rule} ${x.detail}`).join(' · '),
+    !prewriteFile);
+
   // Strict: the standing AND the field-for-field pair must both name this Desktop.
   C('C6', 'lease HELD_BY_THIS_DESKTOP: (binding.pid, binding.processStartTime) == (lease.pid, lease.processStartTime)',
     pairEqual && STAND.POST_WRITE_ACCEPTABLE.includes(standing.standing),
@@ -173,7 +192,7 @@ try {
 const census = { id: 'S1', name: 'no other visible process names a grant-writer entry point (heuristic)', status: others.length ? 'ALARM' : 'QUIET', detail: others };
 
 const evidence = {
-  witnessed_at: new Date().toISOString(), phase, base, readiness, record: rec, lease_standing: standing, transition,
+  witnessed_at: new Date().toISOString(), phase, base, readiness, record: rec, lease_standing: standing, transition, event_purity: eventPurity,
   identities: { binding: { ...bindingPair, repoRoot: root, head: rec?.binding?.head ?? null }, lease: leasePair },
   refusal, snapshot_before: before, snapshot_now: now, constitutional, supporting: [census],
 };
@@ -194,6 +213,6 @@ const pending = constitutional.filter((c) => c.status === 'PENDING');
 const verdict = failed.length ? `${phase === 'pre-write' ? 'PRE-WRITE BASELINE' : 'CONSTITUTIONAL'} FAIL (${failed.map((c) => c.id).join(', ')})`
   : phase === 'pre-write' ? 'PRE-WRITE BASELINE PASS — C1–C5 + C6-pre (a baseline, not admission)'
   : pending.length ? `CONSTITUTIONAL PARTIAL — ${pending.map((c) => c.id).join(', ')} pending`
-  : 'CONSTITUTIONAL PASS — C1–C8 + C6A witnessed';
+  : 'CONSTITUTIONAL PASS — C1–C8 + C6A + C6B witnessed';
 out(`\n${verdict}${census.status === 'ALARM' ? ' · ⚠ census ALARM: answer it before admission, but it is not the verdict' : ''}`);
 process.exit(failed.length ? 1 : pending.length ? 2 : 0);
