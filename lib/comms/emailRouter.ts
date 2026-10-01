@@ -15,6 +15,7 @@
 
 import { ResendProvider } from '@/lib/email/providers';
 import { classifyProviderError } from '@/lib/email/sendEmail';
+import { adjudicateSender } from '@/lib/email/identity';
 import {
   getEmailIntegration,
   updateIntegrationStatus,
@@ -118,6 +119,9 @@ export class EmailRouter {
       ? `${config.fromName} <${config.fromEmail}>`
       : config.fromEmail;
 
+    const refusal = mailAuthorityRefusal(from, 'resend');
+    if (refusal) return refusal;
+
     try {
       const result = await provider.send({
         from,
@@ -195,6 +199,9 @@ export class EmailRouter {
 
     const from = `${defaults.fromName} <${defaults.fromEmail}>`;
 
+    const refusal = mailAuthorityRefusal(from, 'managed');
+    if (refusal) return refusal;
+
     try {
       const result = await provider.send({
         from,
@@ -240,6 +247,24 @@ export class EmailRouter {
  * Send an email through practitioner's configured provider
  * Convenience wrapper around EmailRouter
  */
+/**
+ * MAIL AUTHORITY (EMAIL-IDENTITY-01, lib/email/identity.ts). Both lanes here
+ * call a provider directly rather than through sendEmail(), so the check is
+ * repeated: a soullab.life sender must be a declared software identity. On the
+ * BYO lane this also stops a practitioner key from sending AS Soullab. A
+ * practitioner's own domain is not governed and passes untouched.
+ */
+function mailAuthorityRefusal(from: string, provider: EmailResult['provider']): EmailResult | null {
+  const verdict = adjudicateSender(from, 'resend');
+  if (verdict.authorized) return null;
+  console.error(`[EmailRouter] Sender REFUSED by Mail Authority reason=${verdict.reason} lane=${provider}`);
+  return {
+    success: false,
+    error: `Sender not authorized by Mail Authority (${verdict.reason})`,
+    provider,
+  };
+}
+
 export async function sendPractitionerEmail(
   practitionerId: string,
   payload: EmailPayload,

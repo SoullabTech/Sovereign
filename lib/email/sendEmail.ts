@@ -39,6 +39,7 @@ import { resolvePriority, type EmailPriority } from './purpose';
 import { openAttempt, settleAttempt, stateForFailure } from './ledger';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
+import { adjudicateSender, laneOfProvider, mailboxOf, GOVERNED_MAIL_DOMAIN } from './identity';
 
 // ============================================================================
 // VERIFIED SENDERS
@@ -192,6 +193,7 @@ export type SendFailureKind =
   | 'invalid_recipient'  // the RECIPIENT address is bad — the only class that is not ours
   | 'provider_error'     // refused or failed for a reason we cannot attribute
   | 'not_configured'     // no API key in this environment
+  | 'sender_not_authorized' // Mail Authority: software may not send as this soullab.life address on this lane
   | 'exception';         // transport threw (network, DNS, timeout)
 
 // ============================================================================
@@ -291,6 +293,7 @@ const FAILURE_POLICY: Record<SendFailureKind, { ourFault: boolean; retryable: bo
   invalid_recipient: { ourFault: false, retryable: false },
   provider_error:    { ourFault: true,  retryable: false },
   not_configured:    { ourFault: true,  retryable: false },
+  sender_not_authorized: { ourFault: true, retryable: false },
   exception:         { ourFault: true,  retryable: true  },
 };
 
@@ -413,6 +416,29 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
 
   if (!provider.isConfigured()) {
     const result = failure('not_configured', `${provider.name} provider is not configured`, undefined, ctx);
+    logSend(opts.purpose, from, toLog, domain, result, trace);
+    return result;
+  }
+
+  // MAIL AUTHORITY (EMAIL-IDENTITY-01, lib/email/identity.ts). A soullab.life
+  // sender must be declared, and authorized on the lane this message would
+  // travel: Proton owns human and organizational mailboxes, Resend owns
+  // software identities. Refused BEFORE the ledger opens and before the
+  // provider is called — this is our identity defect, not a delivery attempt.
+  // Fails closed on a provider whose lane is unknown.
+  const lane = laneOfProvider(provider.name);
+  const verdict = lane
+    ? adjudicateSender(from, lane)
+    : mailboxOf(from).endsWith(`@${GOVERNED_MAIL_DOMAIN}`)
+      ? ({ authorized: false, reason: 'wrong_lane', mailbox: mailboxOf(from) } as const)
+      : ({ authorized: true, governed: false } as const);
+  if (!verdict.authorized) {
+    const result = failure(
+      'sender_not_authorized',
+      `Sender not authorized by Mail Authority (${verdict.reason}) on lane ${lane ?? provider.name}`,
+      verdict.reason,
+      ctx,
+    );
     logSend(opts.purpose, from, toLog, domain, result, trace);
     return result;
   }
