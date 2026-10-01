@@ -35,10 +35,54 @@ export function decideAcknowledgmentGate(
     ok: false,
     status: 403,
     body: {
-      error: "Before you continue, please confirm the notice on screen (you're 18 or older).",
+      error: "Soullab is opening to adults first. Please confirm you're 18 or older to continue.",
       code: ACKNOWLEDGMENT_REQUIRED_CODE,
       missing,
     },
   };
 }
 
+
+/* SATISFIED CACHE. Acknowledgments are append-only, so once a member holds
+   every required acknowledgment at its current version, that stays true and a
+   positive answer can be remembered without re-reading. The key carries the
+   required set, so adding a requirement (e.g. #1636's disclosure) re-checks
+   everyone. Only "satisfied" is cached; a missing or unreadable answer is
+   re-read every turn. Effect: a database hiccup cannot take MAIA down for
+   members this process has already seen satisfied. It still refuses (503) a
+   member this process has not yet verified, e.g. right after a restart. */
+export function createCachedAcknowledgmentGate(opts: {
+  readMissing: (memberId: string) => Promise<Array<{ kind: AcknowledgmentKind; version: number }>>;
+  requiredSignature: () => string;
+  max?: number;
+  onReadError?: (err: unknown) => void;
+}) {
+  const max = opts.max ?? 10_000;
+  const satisfied = new Set<string>();
+  const onReadError =
+    opts.onReadError ??
+    ((err: unknown) => console.error('[ACK] gate read failed; refusing member turn (fail-closed):', err));
+
+  async function check(memberId: string): Promise<AcknowledgmentGateDecision> {
+    const key = `${memberId}|${opts.requiredSignature()}`;
+    if (satisfied.has(key)) return { ok: true };
+    let missing: Array<{ kind: AcknowledgmentKind; version: number }> | Error;
+    try {
+      missing = await opts.readMissing(memberId);
+    } catch (err) {
+      onReadError(err);
+      missing = err instanceof Error ? err : new Error(String(err));
+    }
+    const decision = decideAcknowledgmentGate(missing);
+    if (decision.ok) {
+      if (satisfied.size >= max) {
+        const oldest = satisfied.values().next().value;
+        if (oldest !== undefined) satisfied.delete(oldest);
+      }
+      satisfied.add(key);
+    }
+    return decision;
+  }
+
+  return { check, clear: () => satisfied.clear(), size: () => satisfied.size };
+}

@@ -72,10 +72,10 @@ export function decideAdultRegistration(input: {
 export function adultRefusalMessage(reason: AdultRegistrationRefusal): string {
   switch (reason) {
     case 'adult_confirmation_required':
-      return "Please confirm you're 18 or older to create an account.";
+      return "Soullab is opening to adults first. Please confirm you're 18 or older to create your account.";
     case 'invalid_birth_date':
       return 'That birth date could not be read. Please use the format YYYY-MM-DD.';
     case 'under_18':
-      return 'Soullab is open to adults (18+) only for now.';
+      return 'Soullab is opening to adults first. A space for younger members will come later, with its own entrance.';
   }
 }

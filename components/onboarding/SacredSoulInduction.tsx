@@ -299,7 +299,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
     }
 
     if (!confirmsAdult) {
-      setError("Please confirm you're 18 or older to continue");
+      setError("Soullab is opening to adults first. Please confirm you're 18 or older to continue");
       return;
     }
 
@@ -380,7 +380,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
 
     // Register to server (unless already registered from server check)
     if (!serverMember && !confirmsAdult) {
-      setError("Please confirm you're 18 or older to continue");
+      setError("Soullab is opening to adults first. Please confirm you're 18 or older to continue");
       return;
     }
     if (!serverMember) {

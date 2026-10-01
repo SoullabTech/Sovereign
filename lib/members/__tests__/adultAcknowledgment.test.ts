@@ -11,7 +11,8 @@ import {
   parseBirthDate,
   ADULT_ACK_KIND,
 } from '../adultConfirmation';
-import { decideAcknowledgmentGate } from '../acknowledgmentGate';
+import { decideAcknowledgmentGate, createCachedAcknowledgmentGate } from '../acknowledgmentGate';
+import { ACCESS_RULES, checkAccess } from '../../../config/accessMatrix';
 
 const read = (rel: string) => readFileSync(join(process.cwd(), rel), 'utf8');
 const code = (rel: string) =>
@@ -191,5 +192,99 @@ describe('migration lock-timeout shape (#1622 lint)', () => {
     expect(code('database/migrations/20261001000001_member_acknowledgments.sql')).toMatch(
       /^\s*BEGIN;\s*SET LOCAL lock_timeout = '\d+s';/,
     );
+  });
+});
+
+describe('acknowledgment cache (one DB hiccup must not take MAIA down)', () => {
+  const quiet = () => {};
+  it('a member once seen satisfied survives a later read failure', async () => {
+    let fail = false;
+    let reads = 0;
+    const g = createCachedAcknowledgmentGate({
+      readMissing: async () => { reads++; if (fail) throw new Error('db down'); return []; },
+      requiredSignature: () => 'adult_18_plus@1',
+      onReadError: quiet,
+    });
+    expect(await g.check('m1')).toEqual({ ok: true });
+    fail = true;
+    expect(await g.check('m1')).toEqual({ ok: true });
+    expect(reads).toBe(1);
+  });
+
+  it('a missing acknowledgment is never cached: confirming takes effect next turn', async () => {
+    let missing = [{ kind: 'adult_18_plus' as const, version: 1 }];
+    const g = createCachedAcknowledgmentGate({
+      readMissing: async () => missing,
+      requiredSignature: () => 'adult_18_plus@1',
+    });
+    expect((await g.check('m2')).ok).toBe(false);
+    missing = [];
+    expect((await g.check('m2')).ok).toBe(true);
+  });
+
+  it('a refused member stays refused on the next turn', async () => {
+    const g = createCachedAcknowledgmentGate({
+      readMissing: async () => [{ kind: 'adult_18_plus' as const, version: 1 }],
+      requiredSignature: () => 'adult_18_plus@1',
+    });
+    expect((await g.check('m5')).ok).toBe(false);
+    expect((await g.check('m5')).ok).toBe(false);
+  });
+
+  it('a failed read is not remembered as satisfied', async () => {
+    let fail = true;
+    const g = createCachedAcknowledgmentGate({
+      readMissing: async () => { if (fail) throw new Error('db down'); return [{ kind: 'adult_18_plus' as const, version: 1 }]; },
+      requiredSignature: () => 'adult_18_plus@1',
+      onReadError: quiet,
+    });
+    expect((await g.check('m6')).ok).toBe(false);
+    fail = false;
+    expect((await g.check('m6')).ok).toBe(false);
+  });
+
+  it('an unverified member is still refused when the read fails', async () => {
+    const g = createCachedAcknowledgmentGate({
+      readMissing: async () => { throw new Error('db down'); },
+      requiredSignature: () => 'adult_18_plus@1',
+      onReadError: quiet,
+    });
+    const d = await g.check('m3');
+    expect(d.ok).toBe(false);
+    if (!d.ok) expect(d.status).toBe(503);
+  });
+
+  it('adding a requirement re-checks members already cached', async () => {
+    let sig = 'adult_18_plus@1';
+    let reads = 0;
+    const g = createCachedAcknowledgmentGate({
+      readMissing: async () => { reads++; return []; },
+      requiredSignature: () => sig,
+    });
+    await g.check('m4');
+    sig = 'adult_18_plus@1,maia_not_monitored@1';
+    await g.check('m4');
+    expect(reads).toBe(2);
+  });
+
+  it('stays bounded', async () => {
+    const g = createCachedAcknowledgmentGate({
+      readMissing: async () => [],
+      requiredSignature: () => 's',
+      max: 3,
+    });
+    for (const id of ['a', 'b', 'c', 'd', 'e']) await g.check(id);
+    expect(g.size()).toBe(3);
+  });
+});
+
+describe('guests do not reach MAIA conversation', () => {
+  for (const path of ['/api/sovereign/app/maia', '/api/sovereign/app/maia/list']) {
+    it(`${path} refuses an unauthenticated request at the proxy`, () => {
+      expect(checkAccess(path, 'free', [], false).allowed).toBe(false);
+    });
+  }
+  it('no public rule shadows /api/sovereign', () => {
+    expect(ACCESS_RULES.some((r) => r.public && r.prefix && '/api/sovereign/app/maia'.startsWith(r.prefix))).toBe(false);
   });
 });
