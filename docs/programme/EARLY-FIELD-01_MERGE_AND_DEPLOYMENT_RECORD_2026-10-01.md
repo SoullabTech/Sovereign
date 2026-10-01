@@ -346,9 +346,9 @@ The founder's first attempt to deploy `bde0f6590` was **refused by the deploy-la
 | Smoke tests | health · version · ready · main page · two auth locks (503) — all PASS |
 | Constitutional verification (Co-Lab + Memory + Relationships + Development + MAIA) | PASSED |
 | H1 configuration | `HOUSE_STUDIO_H1_ENABLED=true` in `Config.Env` — unchanged by the deploy |
+| Early Field configuration (founder check after the deploy) | `printenv EARLY_FIELD_ENABLED` → not set — **R3 precondition A0 met** |
 
 **Not witnessed (recorded, not inferred):**
-- `EARLY_FIELD_ENABLED` being unset in the new container: the separate check grepped only `GIT_COMMIT` and `HOUSE_STUDIO_H1_ENABLED`. R3's precondition check (A0) must confirm it.
 - The H1 member list being unchanged: not read here, deliberately, since records list no member IDs. R3 confirms membership by behaviour.
 
 **Observations (routed, ⛔ not repaired):**
