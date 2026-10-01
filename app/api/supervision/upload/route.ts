@@ -20,7 +20,9 @@ import {
   enqueueJob
 } from '@/lib/supervision/SupervisionStore';
 
-const STORAGE_DIR = process.env.SUPERVISION_STORAGE_DIR || 'storage/supervision';
+const STORAGE_DIR = process.env.SUPERVISION_STORAGE_DIR
+  ? path.resolve(process.env.SUPERVISION_STORAGE_DIR)
+  : path.join(process.cwd(), 'storage', 'supervision');
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB max
 const ALLOWED_TYPES = ['audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/m4a', 'audio/mp4'];
 
@@ -98,7 +100,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create storage directory
-    const sessionDir = path.join(process.cwd(), STORAGE_DIR, session.id);
+    const sessionDir = path.join(STORAGE_DIR, session.id);
     if (!existsSync(sessionDir)) {
       await mkdir(sessionDir, { recursive: true });
     }
