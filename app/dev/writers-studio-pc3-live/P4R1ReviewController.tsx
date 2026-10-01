@@ -14,7 +14,7 @@ import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { useWorkVisual } from '@/app/writers-studio/useWorkVisual';
 import { currentWork } from '@/app/writers-studio/workContext';
-import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { resolveSituatedWorkContext, studioHomeReturnSearch } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { hostFactsFrom } from '@/app/writers-studio/rebuild/liveReview';
@@ -243,6 +243,11 @@ type ReadyReview = {
   }, [params, pathname, router]);
 
   const goMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review', sectionId?: string) => {
+    if (mode === 'home') {
+      const query = studioHomeReturnSearch(params?.toString() ?? '');
+      router.push(`${pathname}${query ? `?${query}` : ''}`);
+      return;
+    }
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
     if (sectionId) next.set('s', sectionId);

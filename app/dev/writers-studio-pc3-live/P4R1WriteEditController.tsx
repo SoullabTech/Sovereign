@@ -7,7 +7,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
-import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { resolveSituatedWorkContext, studioHomeReturnSearch } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import {
@@ -1096,6 +1096,11 @@ export default function FlagshipWriteEditController() {
     }
   }, [context, workContext.kind, reloadWorks]);
   const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
+    if (mode === 'home') {
+      const query = studioHomeReturnSearch(params?.toString() ?? '');
+      router.push(`${pathname}${query ? `?${query}` : ''}`);
+      return;
+    }
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
     next.delete('insightReading');

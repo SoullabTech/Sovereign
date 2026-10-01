@@ -6,7 +6,7 @@ import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere'
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
-import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { resolveSituatedWorkContext, studioHomeReturnSearch } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
@@ -566,6 +566,11 @@ export default function P4R1DevelopController() {
   }, [updateQuery]);
 
   const onMode = useCallback((mode: 'home' | 'write' | 'develop' | 'review') => {
+    if (mode === 'home') {
+      const query = studioHomeReturnSearch(params?.toString() ?? '');
+      router.push(`${pathname}${query ? `?${query}` : ''}`);
+      return;
+    }
     updateQuery((query) => {
       query.set('mode', mode);
       if (mode !== 'develop') {
@@ -578,7 +583,7 @@ export default function P4R1DevelopController() {
         query.delete('reviewFinding');
       }
     });
-  }, [updateQuery]);
+  }, [params, pathname, router, updateQuery]);
 
   const onSection = useCallback((sectionId: string) => {
     if (!context) return;
