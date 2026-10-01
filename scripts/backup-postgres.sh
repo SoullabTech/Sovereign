@@ -1,4 +1,5 @@
 #!/bin/bash
+umask 077
 # MAIA Postgres Daily Backup Script
 
 BACKUP_DIR="$HOME/MAIA-SOVEREIGN/database/backups"
