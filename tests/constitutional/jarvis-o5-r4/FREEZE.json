@@ -2,15 +2,41 @@
   "freeze_version": "O5-R4.v1",
   "date": "2026-10-01",
   "base": "dbc3036f2ff498779c56b91152d1d79f5e30fde8",
-  "scope": "Evidence-return law only: W4 finding/proposal admission, O1 candidate projection separation, consequence non-escalation, v1 non-live guard.",
+  "scope": "Evidence-return law: W4 finding/proposal admission, O1 candidate projection separation, consequence non-escalation, targeted evidence-only cross-lane consequence projection, v1 non-live guard.",
   "frozen_files": {
-    "tests/constitutional/jarvis-o5-r4/contract.mjs": "d3d7f32151b218ce70fba482f0d2d15e1750f55b3af7e4a292bec54e2f3c57fd",
-    "tests/constitutional/jarvis-o5-r4/substrate.mjs": "1893e5f996987db5b5c376919468b458d9776b219c9016b007e0d37101b5dd68",
-    "tests/constitutional/jarvis-o5-r4/reference.mjs": "31b0d480229d3bec385d6b283529a0b3b4b216920fbdcef74f9d53aa8f6df987",
-    "tests/constitutional/jarvis-o5-r4/falsifiers.mjs": "6ebb17445cd1d91faa1e0a2a36b9d511833184317fad444c676697eefe9a6b26",
-    "tests/constitutional/jarvis-o5-r4/candidates.mjs": "31b05865a26e3f9a9349206bc10dc1e08b2fd3b52bbeb9a77c91c358f56e7117"
+    "tests/constitutional/jarvis-o5-r4/contract.mjs": "7f1b9b3a90b3610183ce7d8177c45fa9167b816d1deab35e0f76a94e506d4173",
+    "tests/constitutional/jarvis-o5-r4/substrate.mjs": "f9b4e2dedee41635ce46caa1969775bf7399f91d2731d90bdb0906910c14f9e4",
+    "tests/constitutional/jarvis-o5-r4/reference.mjs": "72d68c73a8559b3b6898fd0bcf6a9c0a13a50fa4190b185c3f3a1ada1fc06e59",
+    "tests/constitutional/jarvis-o5-r4/falsifiers.mjs": "beb56683a98983e6f9667672e0bbaf05327f67b95d7eb87fe1f4de5060e88d04",
+    "tests/constitutional/jarvis-o5-r4/candidates.mjs": "2acd245acfdf8133936477ec3caf1109ef9080d594c3b30e645bc557ead9c448"
   },
   "unfrozen": [
     "tests/constitutional/jarvis-o5-r4/matrix.mjs"
+  ],
+  "amendments": [
+    {
+      "amendment": 1,
+      "date": "2026-10-01",
+      "previous_freeze_commit": "b1c719610c7f450cf2dc6b807a85ef6b56be0530",
+      "previous_canonical_merge": "f7f53dee95181dcaebee17f90452780bf0f1e3d7",
+      "authority": "R1 F6 reconciliation before R4 implementation admission",
+      "cause": "The initial R4 freeze proved consequence-finding schema closure and non-escalation but omitted R1 F6\u2019s positive requirement that a lawful consequence finding reach its affected lane as evidence. The law was incomplete relative to its frozen predecessor, not wrong in what it asserted.",
+      "changed": "Added R4-E9 targeted evidence-only lane projection, its reference projection, synthetic delivery substrate, and DC-E9 defeat candidate.",
+      "unchanged": "R4-E1 through R4-E8, W4/O1 authority boundaries, finding/proposal payload schemas, admission window, v1 reachability law, and all runtime implementation files.",
+      "previous_hashes": {
+        "tests/constitutional/jarvis-o5-r4/contract.mjs": "d3d7f32151b218ce70fba482f0d2d15e1750f55b3af7e4a292bec54e2f3c57fd",
+        "tests/constitutional/jarvis-o5-r4/substrate.mjs": "1893e5f996987db5b5c376919468b458d9776b219c9016b007e0d37101b5dd68",
+        "tests/constitutional/jarvis-o5-r4/reference.mjs": "31b0d480229d3bec385d6b283529a0b3b4b216920fbdcef74f9d53aa8f6df987",
+        "tests/constitutional/jarvis-o5-r4/falsifiers.mjs": "6ebb17445cd1d91faa1e0a2a36b9d511833184317fad444c676697eefe9a6b26",
+        "tests/constitutional/jarvis-o5-r4/candidates.mjs": "31b05865a26e3f9a9349206bc10dc1e08b2fd3b52bbeb9a77c91c358f56e7117"
+      },
+      "new_hashes": {
+        "tests/constitutional/jarvis-o5-r4/contract.mjs": "7f1b9b3a90b3610183ce7d8177c45fa9167b816d1deab35e0f76a94e506d4173",
+        "tests/constitutional/jarvis-o5-r4/substrate.mjs": "f9b4e2dedee41635ce46caa1969775bf7399f91d2731d90bdb0906910c14f9e4",
+        "tests/constitutional/jarvis-o5-r4/reference.mjs": "72d68c73a8559b3b6898fd0bcf6a9c0a13a50fa4190b185c3f3a1ada1fc06e59",
+        "tests/constitutional/jarvis-o5-r4/falsifiers.mjs": "beb56683a98983e6f9667672e0bbaf05327f67b95d7eb87fe1f4de5060e88d04",
+        "tests/constitutional/jarvis-o5-r4/candidates.mjs": "2acd245acfdf8133936477ec3caf1109ef9080d594c3b30e645bc557ead9c448"
+      }
+    }
   ]
 }
