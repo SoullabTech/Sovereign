@@ -1,8 +1,8 @@
 # MAIA-MEMORY-ATTRIBUTION-01 · R0/R1 — Canonical Reconciliation + Expected-Red Falsifier
 
-**Date:** 2026-10-01  
-**Base:** `9c608128361eadd2e6ba2c6c1371353bdb0d7ebe`  
-**Class:** local memory/CMT integration · falsifier only  
+**Date:** 2026-10-01
+**Base:** `d8e0c6bcaeb40fb2708886dbb8ea5c29412de28f`
+**Class:** local memory/CMT integration · falsifier only
 **Standing:** R0 RECONCILED · R1 EXPECTED RED ESTABLISHED · NO BEHAVIOR CHANGE
 
 ## 1. Question

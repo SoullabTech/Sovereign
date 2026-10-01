@@ -1,8 +1,8 @@
 # MAIA-MEMORY-ATTRIBUTION-01 · R2 — Minimum Repair Design
 
-**Date:** 2026-10-01  
-**Parent:** `e98ecaeec90b57709cd63c3639956f7fdb971462`  
-**Class:** local design only  
+**Date:** 2026-10-01
+**Parent:** `d9e954b36`
+**Class:** local design only
 **Standing:** DESIGN COMPLETE · IMPLEMENTATION NOT YET TAKEN
 
 ## 1. Missing function

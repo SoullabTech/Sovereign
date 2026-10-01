@@ -1,8 +1,8 @@
 # MAIA-MEMORY-ATTRIBUTION-01 · R3 — Implementation Witness
 
-**Date:** 2026-10-01  
-**Parent:** `e98ecaeec90b57709cd63c3639956f7fdb971462`  
-**Scope:** legacy FAST `MemoryBundle` standing preservation only  
+**Date:** 2026-10-01
+**Parent:** `d9e954b36`
+**Scope:** legacy FAST `MemoryBundle` standing preservation only
 **Standing:** IMPLEMENTED LOCALLY · R32 GREEN · TYPEHEALTH NO-REGRESSION · NOT MERGED · NOT DEPLOYED
 
 ## 1. Change
@@ -63,10 +63,10 @@ The runner's expected state advances from RED to GREEN; the falsifier itself is 
 `npm run typecheck -- --pretty false`
 
 ```text
-program files : 4663 (baseline 3965)
+program files : 4664 (baseline 3965)
 errors        : 222 (baseline 239)
 17 errors fixed since baseline
-705 new files entered the program
+706 new files entered the program
 No TypeScript regressions
 ```
 
