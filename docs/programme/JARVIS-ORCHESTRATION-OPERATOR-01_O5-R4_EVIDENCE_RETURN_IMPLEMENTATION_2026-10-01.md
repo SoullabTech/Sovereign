@@ -100,7 +100,7 @@ A `CANDIDATE` is deliberately not accepted as the prior `CLEAR` intent for `cont
 
 **4/4 pass**:
 
-- evidence-only append + digest identity + duplicate refusal;
+- evidence-only append + digest identity + duplicate refusal, with identity/context/scope/authority/routing/execution/verifier-results/provenance/state all byte-equivalent before/after;
 - ordinary/consequence closed finding schemas + no finding projection;
 - separate proposal→O1 candidate projection + stable source-ref idempotency;
 - evidence admission closes after leaving `EXECUTING`.

@@ -38,22 +38,33 @@ function preparedExecuting(){
   const t=transitionLifecycleV2(env,{to:'EXECUTING',evidence_ref:'proof:execute',reason_code:'BINDINGS_READY'}); assert.equal(t.ok,true,JSON.stringify(t.blockers)); return t.envelope;
 }
 const codes=(r)=>r.blockers.map((b)=>b.code);
+function protectedEvidenceReturnSurface(env) {
+  const w=env.work_unit;
+  return JSON.stringify({
+    guard:env.guard, identity:w.identity, context:w.context, scope:w.scope, authority:w.authority,
+    routing:w.routing, execution:w.execution,
+    verifier_results:w.evaluation.verifier_results,
+    evaluation_conditions:{acceptance_conditions:w.evaluation.acceptance_conditions,falsification_conditions:w.evaluation.falsification_conditions,stop_conditions:w.evaluation.stop_conditions},
+    provenance:w.provenance, state:w.state,
+  });
+}
+
 const proposal=(summary='inspect adjacent resolver',source='o5-r4-proof')=>({kind:'proposal',source_act:source,summary,proposed_kind:'INSPECT'});
 const finding=()=>({kind:'finding',source_act:'o5-r4-proof',summary:'unexpected sibling state',urgency:'high'});
 const consequence=()=>({kind:'finding',source_act:'o5-r4-proof',affected_lane:'lane-b',reason:'identity resolution differs',evidence_refs:['w4:a1'],urgency:'normal'});
 
 test('R4-E1/E3 — proposal append is evidence-only, digest-identified, and duplicate-refusing',()=>{
-  const env=preparedExecuting(); const core=authorizedCoreSnapshotV2(env.work_unit);
+  const env=preparedExecuting(); const core=authorizedCoreSnapshotV2(env.work_unit); const protectedBefore=protectedEvidenceReturnSurface(env);
   const r=appendLedgerRecordV2(env,{kind:'proposal',entry:proposal()}); assert.equal(r.ok,true,JSON.stringify(r.blockers));
   assert.match(r.record.id,/^sha256:[0-9a-f]{64}$/); assert.equal(r.envelope.work_unit.evaluation.proposals.length,1);
-  assert.equal(authorizedCoreSnapshotV2(r.envelope.work_unit),core); assert.equal(env.work_unit.evaluation.proposals,undefined);
+  assert.equal(authorizedCoreSnapshotV2(r.envelope.work_unit),core); assert.equal(protectedEvidenceReturnSurface(r.envelope),protectedBefore); assert.equal(env.work_unit.evaluation.proposals,undefined);
   const dup=appendLedgerRecordV2(r.envelope,{kind:'proposal',entry:proposal()}); assert.equal(dup.ok,false); assert.ok(codes(dup).includes('DUPLICATE_PROPOSAL_ID'));
   const other=appendLedgerRecordV2(r.envelope,{kind:'proposal',entry:proposal('inspect adjacent resolver','other-act')}); assert.equal(other.ok,true); assert.notEqual(other.record.id,r.record.id);
 });
 
 test('R4-E2/E6 — ordinary and consequence findings are closed evidence and never project to O1',()=>{
   let env=preparedExecuting();
-  for(const entry of [finding(),consequence()]) { const r=appendLedgerRecordV2(env,{kind:'finding',entry}); assert.equal(r.ok,true,JSON.stringify(r.blockers)); assert.equal(O1.projectExecutorProposalCandidate(r.record),null); env=r.envelope; }
+  for(const entry of [finding(),consequence()]) { const protectedBefore=protectedEvidenceReturnSurface(env); const r=appendLedgerRecordV2(env,{kind:'finding',entry}); assert.equal(r.ok,true,JSON.stringify(r.blockers)); assert.equal(protectedEvidenceReturnSurface(r.envelope),protectedBefore); assert.equal(O1.projectExecutorProposalCandidate(r.record),null); env=r.envelope; }
   const attack=appendLedgerRecordV2(env,{kind:'finding',entry:{...consequence(),suggested_patch:'lane-b/x.ts'}}); assert.equal(attack.ok,false); assert.ok(codes(attack).includes('UNKNOWN_LEDGER_FIELD'));
 });
 
