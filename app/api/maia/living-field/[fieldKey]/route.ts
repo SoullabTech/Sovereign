@@ -5,24 +5,20 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
-import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
-
-function getMemberId(request: NextRequest): string | null {
-  return probeAuthPosture(request)
-}
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
-  const memberId = getMemberId(request)
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
 
-  const { fieldKey } = params
+  const { fieldKey } = await params
 
   try {
     // Field record (may not exist yet)
@@ -85,14 +81,14 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
-  const memberId = getMemberId(request)
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
 
-  const { fieldKey } = params
+  const { fieldKey } = await params
   const body = await request.json()
   const { expression, change_note } = body as { expression: string; change_note?: string }
 
