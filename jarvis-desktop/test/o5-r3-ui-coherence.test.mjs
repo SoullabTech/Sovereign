@@ -24,6 +24,14 @@ describe('O5-R3 canonical status presentation coherence', () => {
     assert.match(renderer, /Canonical provider execution · E1/);
   });
 
+  test('evidence/source SHA and runtime execution SHA are explicitly distinct', () => {
+    assert.match(renderer, /evidence source @/);
+    assert.match(renderer, /runtime @/);
+    assert.match(renderer, /Work Unit evidence\/source SHA:/);
+    assert.match(renderer, /JARVIS runtime execution SHA:/);
+    assert.doesNotMatch(renderer, /<div class=\"a-line\">Canonical SHA:/);
+  });
+
   test('defeat candidate: the old contradictory labels are absent', () => {
     assert.doesNotMatch(renderer, /<b>Next lawful gesture:<\/b>/);
     assert.doesNotMatch(renderer, /<b>Lifecycle:<\/b> \$\{escapeHtml\(transitionTrace\)\}/);
