@@ -97,6 +97,26 @@ export function cabinContextSnapshot(
 }
 
 /**
+ * Read the current process-local mount without initializing or refreshing it.
+ * Experiences use this seam so reading mounted context cannot become a hidden
+ * activation act.
+ */
+export function currentCabinContextRuntime(): {
+  state: CabinContextRuntimeState['state'];
+  package: CabinContextPackage;
+} | null {
+  if (!runtimeMount || !runtimeState) return null;
+
+  const snapshot = runtimeMount.snapshot();
+  if (!snapshot) return null;
+
+  return {
+    state: runtimeState.state,
+    package: snapshot,
+  };
+}
+
+/**
  * Test/process teardown seam. It does not write or delete the package artifact.
  */
 export function clearCabinContextMount(): void {
