@@ -16,7 +16,7 @@
  * `statusCanonicalV2` reader (desktop-native standing 2026-09-18) via
  * createRequire; this module adds only enumeration and unreadable custody.
  */
-import { readdirSync, readFileSync, existsSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync, statSync, lstatSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createRequire } from 'node:module';
@@ -33,6 +33,65 @@ export const REPO_ROOT = path.resolve(here, '../../..');
 /** Resolve the AIN home without touching the filesystem. @param {NodeJS.ProcessEnv} [env] */
 export function resolveAinHome(env = process.env) {
   return env.AIN_DELEGATION_HOME || path.join(os.homedir(), '.claude', 'ain-delegation');
+}
+
+export const PARTNER_HANDOFF_VERSION = 'jarvis.partner-context.v1';
+export const PARTNER_HANDOFF_SOURCES = Object.freeze(['maia','chatgpt','claude-code']);
+
+/** @param {string} [home] */
+export function resolvePartnerHandoffDir(home = os.homedir()) {
+  return path.join(home, '.jarvis', 'context-handoffs');
+}
+
+/**
+ * B7R1 bounded read organ for AI-partner handoff receipts.
+ * It may enumerate only ~/.jarvis/context-handoffs/*.json, refuses symlinks,
+ * refuses oversized or schema-invalid objects, and performs no write.
+ * @param {{ home?: string, limit?: number }} [opts]
+ */
+export function listPartnerHandoffs(opts = {}) {
+  const dir = resolvePartnerHandoffDir(opts.home || os.homedir());
+  const observed_at = new Date().toISOString();
+  const limit = Number.isInteger(opts.limit) && /** @type {number} */ (opts.limit) > 0 ? Math.min(/** @type {number} */ (opts.limit), 100) : 40;
+  /** @type {Unreadable[]} */ const unreadable = [];
+  /** @type {any[]} */ const handoffs = [];
+  if (!dirPresent(dir)) return { organ:'partner-handoffs', present:false, dir, observed_at, handoffs, unreadable, truncated:false };
+  let files;
+  try { files = readdirSync(dir).filter((f) => f.endsWith('.json')).sort(); }
+  catch (e) { unreadable.push({ file:dir, error:`readdir: ${errMsg(e)}`, kind:'partner-handoff-directory' }); return { organ:'partner-handoffs', present:true, dir, observed_at, handoffs, unreadable, truncated:false }; }
+  for (const name of files) {
+    const file = path.join(dir,name);
+    try {
+      const st=lstatSync(file);
+      if (st.isSymbolicLink()) { unreadable.push({ file:name, error:'symlink refused', kind:'partner-handoff' }); continue; }
+      if (!st.isFile()) continue;
+      if (st.size > 16*1024) { unreadable.push({ file:name, error:'handoff too large', kind:'partner-handoff' }); continue; }
+      const r=readJson(file);
+      if (!r.ok) { unreadable.push({ file:name, error:r.error, kind:'partner-handoff' }); continue; }
+      const h=r.value || {};
+      const ok = h.version===PARTNER_HANDOFF_VERSION
+        && /^[a-z0-9][a-z0-9._-]{2,100}$/i.test(String(h.handoff_id||''))
+        && PARTNER_HANDOFF_SOURCES.includes(h.source)
+        && typeof h.field==='string' && h.field.trim().length>0 && h.field.length<=200
+        && typeof h.summary==='string' && h.summary.trim().length>0 && h.summary.length<=6000
+        && h.authority==='orientation_only'
+        && Number.isFinite(Date.parse(h.created_at));
+      if (!ok) { unreadable.push({ file:name, error:'invalid partner handoff schema', kind:'partner-handoff' }); continue; }
+      handoffs.push({
+        handoff_id:h.handoff_id,
+        source:h.source,
+        field:h.field.trim(),
+        summary:h.summary.trim(),
+        created_at:h.created_at,
+        authority:'orientation_only',
+        provenance_note:typeof h.provenance_note==='string' ? h.provenance_note : null,
+        file:name,
+        evidence_state:'ORIENTATION_ONLY',
+      });
+    } catch (e) { unreadable.push({ file:name, error:errMsg(e), kind:'partner-handoff' }); }
+  }
+  handoffs.sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+  return { organ:'partner-handoffs', present:true, dir, observed_at, handoffs:handoffs.slice(0,limit), unreadable, truncated:handoffs.length>limit };
 }
 
 /** @param {string} dir */
@@ -88,11 +147,16 @@ export async function listWorkUnitsV2(opts = {}) {
   return { organ: 'work-units-v2', present: true, dir, observed_at, units, unreadable };
 }
 
-/** The canonical v2 status reader, resolved once (CommonJS, jarvis-desktop/src). Read-only by construction: readEnvelope + readMeta + pure read models. */
+/**
+ * Canonical v2 read model plus the existing E1 grant-standing resolver.
+ * canonicalExecutionStatus composes statusCanonicalV2 + listCanonicalGrantStandingsV1;
+ * both sides are read-only on this path. B7R1 consumes the resolved standing,
+ * never raw grant-event spam.
+ */
 function canonicalStatusReader() {
   const require = createRequire(import.meta.url);
-  const C = require(path.join(REPO_ROOT, 'jarvis-desktop/src/canonical-work-unit-v2.js'));
-  return C.statusCanonicalV2;
+  const C = require(path.join(REPO_ROOT, 'jarvis-desktop/src/work-unit-control.js'));
+  return C.canonicalExecutionStatus;
 }
 
 // ── Runtime runs + events ─────────────────────────────────────────────────────
@@ -232,7 +296,7 @@ export function listResults(opts = {}) {
 
 /**
  * Every read organ at once, for the composer. Nothing here writes.
- * @param {{ env?: NodeJS.ProcessEnv, root?: string, runsLimit?: number, eventsN?: number, resultsLimit?: number, since?: string, exec?: any, statusReader?: any }} [opts]
+ * @param {{ env?: NodeJS.ProcessEnv, root?: string, runsLimit?: number, eventsN?: number, resultsLimit?: number, partnerLimit?: number, since?: string, exec?: any, statusReader?: any }} [opts]
  */
 export async function readAllOrgans(opts = {}) {
   const env = opts.env || process.env;
@@ -249,5 +313,6 @@ export async function readAllOrgans(opts = {}) {
     sessions: listSessions({ env }),
     governor,
     results: listResults({ env, limit: opts.resultsLimit }),
+    partner_handoffs: listPartnerHandoffs({ limit: opts.partnerLimit }),
   };
 }

@@ -13,6 +13,7 @@
  *   AL-4  every monitor row names the instrument that observed it and the time it was observed
  *   AL-5  the composer carries no count; population is the one lawful exception (VM-7)
  */
+import path from 'node:path';
 import { assertViewModel, SCHEMA } from './viewmodel-v1.mjs';
 
 /** @param {unknown} s */ const str = (s) => (typeof s === 'string' ? s : s == null ? '' : String(s));
@@ -152,6 +153,12 @@ export function adaptUnits(listing) {
       last_event: last ? `${str(last.at || last.recorded_at || '')} · ${str(last.from || '')}→${str(last.to || '')}`.trim() : (u.file_mtime ? `file modified ${u.file_mtime}` : 'no transition recorded'),
       needs_founder: nextActions.filter((/** @type {any} */ a) => a && typeof a === 'object').map((/** @type {any} */ a) => ({ what: str(a.label || a.action), action: str(a.action) })),
       programme: str(s.authorized_core?.identity?.programme) || null,
+      parent_work_unit: str(s.authorized_core?.identity?.parent_work_unit) || null,
+      execution_grants: (Array.isArray(s.execution_bridge?.grants) ? s.execution_bridge.grants : []).map((/** @type {any} */ row) => ({
+        standing: str(row?.standing) || 'UNKNOWN',
+        grant: row?.grant ? { grant_id: str(row.grant.grant_id), route_participant_id: str(row.grant.route_participant_id) || null } : null,
+        ledger_ref: path.join(path.dirname(u.file), 'execution-grants', `${id}.jsonl`),
+      })),
       file: u.file,
       evidence_state: 'OBSERVED',
     });
@@ -192,7 +199,7 @@ export function adaptSessions(sessions) {
   for (const s of sessions.sessions) {
     const rec = s.session || {};
     const state = str(rec.state) || 'unknown';
-    handoffs.push({ id: str(rec.session_id) || s.file, title: str(rec.purpose || rec.work_unit || rec.work_unit_id) || 'Session', plain: state === 'handed-off' ? 'This session was handed off and can be picked up.' : state === 'paused' ? 'This session is paused.' : state === 'active' || state === 'queued' ? 'This session is open.' : `This session is ${state}.`, state, branch: str(rec.branch) || null, worktree: str(rec.worktree) || null, opened_at: str(rec.opened_at) || null, closed_at: str(rec.closed_at) || null, last_heartbeat: str(rec.last_heartbeat) || null, file: s.file, evidence_state: 'OBSERVED' });
+    handoffs.push({ id: str(rec.session_id) || s.file, title: str(rec.purpose || rec.work_unit || rec.work_unit_id) || 'Session', plain: state === 'handed-off' ? 'This session was handed off and can be picked up.' : state === 'paused' ? 'This session is paused.' : state === 'active' || state === 'queued' ? 'This session is open.' : `This session is ${state}.`, state, work_unit: str(rec.work_unit || rec.work_unit_id) || null, branch: str(rec.branch) || null, worktree: str(rec.worktree) || null, opened_at: str(rec.opened_at) || null, closed_at: str(rec.closed_at) || null, last_heartbeat: str(rec.last_heartbeat) || null, file: s.file, evidence_state: 'OBSERVED' });
   }
   for (const u of sessions.unreadable) handoffs.push({ ...unreadableRow(u, 'session'), state: 'UNREADABLE' });
   return handoffs;

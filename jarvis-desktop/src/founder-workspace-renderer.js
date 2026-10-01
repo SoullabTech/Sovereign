@@ -16,6 +16,7 @@ const state = {
   evidence: null,
   error: null,
   loading: false,
+  graphFocus: loadSession('jfw:b7:graph-focus') || null,
   workRoom: {
     input: '',
     intent: null,
@@ -230,13 +231,18 @@ function currentContextObject() {
   return null;
 }
 
+function resetGraphFocus() {
+  state.graphFocus=null;
+  try { sessionStorage.removeItem('jfw:b7:graph-focus'); } catch {}
+}
 function setContext(ctx, goWork = true) {
-  state.context = ctx; saveContext();
+  state.context = ctx; saveContext(); resetGraphFocus();
   if (goWork) setView('work'); else render();
 }
-function clearContext() { state.context = null; saveContext(); render(); }
+function clearContext() { state.context = null; saveContext(); resetGraphFocus(); render(); }
 function setView(view) {
   if (!['today','work','graph','monitor','system'].includes(view)) view = 'today';
+  if (view==='graph' && state.view!=='graph') resetGraphFocus();
   state.view = view; saveSession('jfw:b5:view', view); render();
 }
 
@@ -395,6 +401,8 @@ function lastResolvedTurnContext() {
   const last=[...arr(state.workRoom.turns)].reverse().find(t=>t.role==='jarvis' && t.context?.precision?.resolved_label && t.context?.precision?.fragment_count>0);
   if (!last) return null;
   return {
+    kind:'programme',
+    id:last.context.precision.field?.id || null,
     label:last.context.precision.resolved_label,
     summary:'Resolved safely from your request for the last JARVIS turn. This is not a persistent field selection.',
   };
@@ -450,21 +458,58 @@ function workUnitRow(u) {
   return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(label)}</div><div class="rowPlain">${esc(humanWorkStatus(u))}</div>${ask?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(ask)}</div>`:''}${technicalDetails([`Work Unit: ${u.title}`,`State: ${u.state}`,u.route?`Route: ${u.route}`:null,`Evidence: ${u.evidence_state}`,u.file?`Source: ${u.file}`:null])}<div class="actions">${contextButton('work',u.id,label,'Work',u.file)}${evidenceButton(u.file)}</div></div>${pill(ask?'Needs Kelly':u.state_plain||u.state,level)}</div></div>`;
 }
 
-function renderGraph() {
-  const g=state.vm.graph||{nodes:[],edges:[]}, ctx=currentContextObject();
-  let live;
-  if (!arr(g.edges).length) {
-    live=`<div class="empty"><b>No live relationship join is projected yet.</b><br>B7 owns the evidence-backed relationship join. B5 keeps Graph as a real shared-context surface but refuses to invent edges from names or filenames.</div>`;
-  } else {
-    live=`<div class="list">${arr(g.edges).map(e=>`<div class="row"><div class="rowTitle">${esc(nodeLabel(g,e.from))} → ${esc(e.rel)} → ${esc(nodeLabel(g,e.to))}</div><div class="rowMeta">${esc(e.evidence?.kind||'evidence')} · ${esc(e.evidence?.ref||'')}</div><div class="actions">${e.evidence?.ref?evidenceButton(e.evidence.ref):''}</div></div>`).join('')}</div>`;
-  }
-  const contextEvidence=ctx?.sources ? arr(ctx.sources) : state.context?.source ? [state.context.source] : ctx?.file ? [ctx.file] : [];
-  return `<div class="eyebrow">Graph · how your world connects</div><h1>See the current field in relation to the rest of your world.</h1><p class="lede">Graph is not a decorative network. Every visible relationship must be evidenced. It carries the same active field as Today and Work, so Kelly can move from a relationship to its source and back without reconstructing what “this” means. The live relation join remains held for B7; B5 will not invent edges.</p>
-    <section class="section"><h2>Current active field · center</h2>${state.context?`<div class="contextCard"><b>${esc(state.context.label)}</b><div class="why">from ${esc(state.context.origin)}</div><div class="actions">${contextEvidence.slice(0,6).map(s=>evidenceButton(s)).join('')}<button class="btn" data-view-jump="work">Back to Work</button></div></div>`:'<div class="empty">Choose a programme, Work Unit, or Monitor observation first. Graph will keep that subject in focus.</div>'}</section>
-    <section class="section"><h2>Evidence-backed relationships</h2>${live}</section>
-    <section class="section"><h2>Choose a programme focus</h2><div class="focusList">${arr(state.vm.programme_state?.programmes).slice(0,30).map(p=>{const label=friendlyProgrammeName(p);return `<button class="focusChip ${state.context?.kind==='programme'&&state.context.id===p.id?'active':''}" data-action="context-only" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(label))}" data-origin="${attr(enc('Graph'))}" data-source="${attr(enc(arr(p.sources)[0]||''))}">${esc(label)}</button>`}).join('')}</div></section>`;
+function graphNode(g,id){return arr(g.nodes).find(n=>n.id===id)||null;}
+function graphNodeIdForContext() {
+  if (state.context?.kind==='programme') return `programme:${state.context.id}`;
+  if (state.context?.kind==='work') return `work:${state.context.id}`;
+  const resolved=lastResolvedTurnContext();
+  if (!state.context && resolved?.id) return `programme:${resolved.id}`;
+  return null;
 }
-function nodeLabel(g,id){return arr(g.nodes).find(n=>n.id===id)?.label||id;}
+function graphCategory(node,edge) {
+  if (edge?.rel==='governed by founder decision') return 'Decisions';
+  return ({work:'Work',programme:'Programmes',record:'Records',session:'Sessions',branch:'Sessions',result:'Results',partner:'Partner context',grant:'System evidence',run:'System evidence'})[node?.kind]||'Related';
+}
+function renderGraphRelation(g,centerId,edge) {
+  const outbound=edge.from===centerId;
+  const otherId=outbound?edge.to:edge.from;
+  const other=graphNode(g,otherId);
+  if (!other) return '';
+  const phrase=outbound?`${edge.rel} →`:`← ${edge.rel}`;
+  return `<div class="graphRelation"><div class="graphRelationTop"><div><div class="graphRel">${esc(phrase)}</div><div class="graphNodeLabel">${esc(other.label)}</div><div class="graphNodeSub">${esc(other.sub||other.kind)}</div></div><span class="pill neutral">${esc(other.kind)}</span></div><div class="actions"><button class="btn" data-action="graph-focus" data-node="${attr(enc(other.id))}">Explore</button>${edge.evidence?.ref?evidenceButton(edge.evidence.ref,'Open evidence'):''}</div></div>`;
+}
+function renderGraph() {
+  const g=state.vm.graph||{nodes:[],edges:[]};
+  const preferred=state.graphFocus || graphNodeIdForContext();
+  const center=preferred?graphNode(g,preferred):null;
+  if (state.graphFocus && !center) { state.graphFocus=null; try{sessionStorage.removeItem('jfw:b7:graph-focus')}catch{} }
+  const centerId=center?.id||null;
+  const direct=centerId?arr(g.edges).filter(e=>e.from===centerId||e.to===centerId):[];
+  const groups=new Map();
+  for (const edge of direct) {
+    const other=graphNode(g,edge.from===centerId?edge.to:edge.from); if(!other) continue;
+    const cat=graphCategory(other,edge); const list=groups.get(cat)||[]; list.push(edge); groups.set(cat,list);
+  }
+  const order=['Work','Programmes','Decisions','Records','Sessions','Results','Partner context','System evidence','Related'];
+  const grouped=order.filter(k=>groups.has(k)).map(k=>`<section class="graphGroup"><h3>${esc(k)}</h3><div class="graphGroupGrid">${groups.get(k).map(e=>renderGraphRelation(g,centerId,e)).join('')}</div></section>`).join('');
+  const resolved=lastResolvedTurnContext();
+  const centerNote=state.graphFocus
+    ? 'Exploring one evidenced neighborhood. Your working field has not changed.'
+    : state.context
+      ? `Current field from ${state.context.origin}.`
+      : resolved?.id ? 'Resolved safely from your last Work turn; not promoted into a persistent selection.' : '';
+  const centreHtml=center
+    ? `<div class="graphCenter"><div class="eyebrow">Center</div><h2>${esc(center.label)}</h2><div class="graphNodeSub">${esc(center.sub||center.kind)}</div><p>${esc(centerNote)}</p><div class="actions">${state.graphFocus?'<button class="btn" data-action="graph-reset-focus">Back to field</button>':''}<button class="btn" data-view-jump="work">Work</button></div></div>`
+    : `<div class="empty"><b>No graph field is selected.</b><br>Enter a field from Today or Work, or choose a programme below. Graph will show only its directly evidenced neighborhood.</div>`;
+  const relationHtml=center
+    ? (direct.length?grouped:`<div class="empty"><b>No evidenced one-hop relationships are available for this node.</b><br>Graph does not fill empty space with inferred links.</div>`)
+    : '';
+  return `<div class="eyebrow">Graph · how your world connects</div><h1>${center?`What ${esc(center.label)} is connected to.`:'See your work through evidenced relationships.'}</h1><p class="lede">The real Graph is now live. It opens on the current field and shows one evidenced neighborhood at a time. <b>No evidence → no relationship.</b> Similar names, shared prefixes, co-mentions and AI guesses do not create edges.</p>
+    <section class="section">${centreHtml}</section>
+    ${center?`<section class="section"><div class="graphScope"><b>${direct.length} direct relationship${direct.length===1?'':'s'}</b><span> · one hop only · technical identity underneath · evidence opens in place</span></div>${relationHtml}</section>`:''}
+    <details class="secondaryDetails" ${center?'':'open'}><summary>Choose a programme focus</summary><div class="detailsBody"><div class="focusList">${arr(state.vm.programme_state?.programmes).slice(0,60).map(p=>{const label=friendlyProgrammeName(p);return `<button class="focusChip ${centerId===`programme:${p.id}`?'active':''}" data-action="context-only" data-kind="programme" data-id="${attr(enc(p.id))}" data-label="${attr(enc(label))}" data-origin="${attr(enc('Graph'))}" data-source="${attr(enc(arr(p.sources)[0]||''))}">${esc(label)}</button>`}).join('')}</div></div></details>`;
+}
+function nodeLabel(g,id){return graphNode(g,id)?.label||id;}
 
 function renderMonitor() {
   const rows=arr(state.vm.monitor), groups=[...new Set(rows.map(r=>r.group))];
@@ -533,13 +578,19 @@ async function handleClick(e) {
     try { sessionStorage.removeItem('jfw:b6:turns'); sessionStorage.removeItem('jfw:b6:last-clear-intent'); } catch {}
     render(); return;
   }
+  if(action==='graph-focus'){
+    const id=dec(el.dataset.node);
+    if (graphNode(state.vm?.graph||{nodes:[]},id)) { state.graphFocus=id; saveSession('jfw:b7:graph-focus',id); render(); }
+    return;
+  }
+  if(action==='graph-reset-focus'){ resetGraphFocus(); render(); return; }
   if(action==='clear-context'){ clearContext(); return; }
   if(action==='close-evidence'){ state.evidence=null; renderEvidence(); return; }
   if(action==='reveal-workspace'){ try{await window.jarvis.revealWorkspace();}catch{} return; }
   if(action==='evidence'){ state.evidence=null; renderEvidence(); await refresh({evidenceRef:dec(el.dataset.ref)}); return; }
   if(action==='context'||action==='context-only'||action==='context-view'){
     const ctx={kind:el.dataset.kind,id:dec(el.dataset.id),label:dec(el.dataset.label),origin:dec(el.dataset.origin),source:dec(el.dataset.source),stale:false};
-    state.context=ctx; saveContext();
+    state.context=ctx; saveContext(); resetGraphFocus();
     if(action==='context') setView('work'); else if(action==='context-view') setView(el.dataset.target||'system'); else render();
   }
 }

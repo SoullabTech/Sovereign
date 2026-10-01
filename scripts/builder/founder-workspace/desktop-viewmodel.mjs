@@ -8,15 +8,16 @@
  * composed view-model and to safe text-like files beneath the bound repo or
  * local AIN home.
  */
-import { mkdtempSync, readFileSync, statSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, readFileSync, statSync, lstatSync, rmSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
-import { readAllOrgans, resolveAinHome } from './read-organs.mjs';
+import { readAllOrgans, resolveAinHome, resolvePartnerHandoffDir } from './read-organs.mjs';
 import { composeViewModel } from './adapters.mjs';
 import { readTree, project } from './programme-state-projector.mjs';
 import { buildRegistry, observeAll, readObservationHistory } from './instrument-registry.mjs';
 import { validateViewModel } from './viewmodel-v1.mjs';
+import { buildEvidenceGraph, parseExplicitProgrammeRelation } from './graph-join.mjs';
 
 const SAFE_EXT = new Set(['.md', '.txt', '.json', '.jsonl', '.mjs', '.js', '.cjs', '.ts', '.tsx', '.html', '.sh', '.yml', '.yaml']);
 const MAX_PREVIEW_BYTES = 64 * 1024;
@@ -33,6 +34,7 @@ function emptyOrgans(observedAgainst, now, env) {
     sessions: { ...absent('sessions', path.join(home, 'sessions')), sessions: [] },
     governor: { organ: 'governor-report', present: false, observed_at: now, report: null, unreadable: [], reason: `no bound workspace (${observedAgainst})` },
     results: { ...absent('results', path.join(home, 'results')), results: [], siblings: [], truncated: false },
+    partner_handoffs: { ...absent('partner-handoffs', path.join(os.homedir(), '.jarvis', 'context-handoffs')), handoffs: [], truncated: false },
   };
 }
 
@@ -67,6 +69,35 @@ export function projectCanonicalProgrammeState(root, canonicalRef, now) {
   } finally {
     try { rmSync(scratch, { recursive: true, force: true }); } catch { /* disposable canonical snapshot */ }
   }
+}
+
+/**
+ * Read only explicit programme relation sentences from the exact canonical tree.
+ * V1 admits only a literal backticked "A supersedes B" statement. Co-mention,
+ * shared prefixes, and fuzzy name resemblance produce no relation.
+ * @param {string} root @param {string} canonicalRef @param {any} programmeState
+ */
+export function projectCanonicalProgrammeRelations(root, canonicalRef, programmeState) {
+  if (!/^[0-9a-f]{40}$/.test(String(canonicalRef||''))) return [];
+  const known=new Set((Array.isArray(programmeState?.programmes)?programmeState.programmes:[]).map((/** @type {any} */ p)=>String(p?.id||'')).filter(Boolean));
+  let out='';
+  try {
+    out=execFileSync('git',['-C',root,'grep','-n','-I','-E','supersedes',canonicalRef,'--','docs/programme'],{
+      encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:16*1024*1024,
+    });
+  } catch (e) {
+    if (/** @type {any} */ (e)?.status===1) return [];
+    throw e;
+  }
+  /** @type {any[]} */ const relations=[];
+  for (const raw of out.split('\n')) {
+    if (!raw.trim()) continue;
+    const m=raw.match(/^[0-9a-f]{40}:(.*?):(\d+):(.*)$/);
+    if (!m) continue;
+    const rel=parseExplicitProgrammeRelation({path:m[1],line:Number(m[2]),text:m[3]},known);
+    if (rel) relations.push(rel);
+  }
+  return relations;
 }
 
 /**
@@ -108,13 +139,23 @@ export async function buildDesktopViewModel(input) {
     organs,
     observed_against: input.observedAgainst,
     programme_state,
-    graph: { nodes: [], edges: [] }, // B7 owns the live evidence join.
+    graph: { nodes: [], edges: [] },
     vocabularies: [],
     now,
     observations,
     registry,
     observation_history: history,
   });
+
+  if (root) {
+    const explicitRelations = projectCanonicalProgrammeRelations(root, input.observedAgainst, vm.programme_state);
+    vm.graph = buildEvidenceGraph({
+      programme_state: vm.programme_state,
+      work: vm.work,
+      partner_handoffs: organs.partner_handoffs?.handoffs || [],
+      explicit_relations: explicitRelations,
+    });
+  }
 
   const validation = validateViewModel(vm, { mode: 'live' });
   if (!validation.ok) {
@@ -169,7 +210,7 @@ function inside(candidate, parent) {
  * Read one exact evidence ref that already exists in the live view-model.
  * @param {any} vm
  * @param {string} ref
- * @param {{ root: string|null, env?: NodeJS.ProcessEnv, canonicalRef?: string }} opts
+ * @param {{ root: string|null, env?: NodeJS.ProcessEnv, canonicalRef?: string, partnerHome?: string }} opts
  */
 export function readEvidencePreview(vm, ref, opts) {
   if (typeof ref !== 'string' || !ref.trim()) return { ok: false, reason: 'evidence ref required' };
@@ -179,6 +220,24 @@ export function readEvidencePreview(vm, ref, opts) {
 
   const env = opts.env || process.env;
   const home = resolveAinHome(env);
+
+  if (ref.startsWith('partner-handoff:')) {
+    const name=ref.slice('partner-handoff:'.length);
+    if (!/^[a-z0-9][a-z0-9._-]{2,100}\.json$/i.test(name) || path.basename(name)!==name) return { ok:false, reason:'invalid partner handoff evidence ref' };
+    const dir=resolvePartnerHandoffDir(opts.partnerHome || os.homedir());
+    const full=path.join(dir,name);
+    try {
+      const st=lstatSync(full);
+      if (st.isSymbolicLink() || !st.isFile()) return { ok:false, reason:'partner handoff evidence is not a regular file' };
+      if (st.size > 16*1024) return { ok:false, reason:'partner handoff evidence exceeds bounded size' };
+      const raw=readFileSync(full,'utf8');
+      return {
+        ok:true, ref, display_path:`Partner handoff/${name}`, line_start:1, line_end:raw.split('\n').length,
+        text:raw, truncated:false, source_kind:'partner handoff receipt · orientation only', evidence_state:'ORIENTATION_ONLY',
+      };
+    } catch (e) { return { ok:false, reason:`partner handoff evidence read failed: ${String(e)}` }; }
+  }
+
   const { token, line } = splitRef(ref);
   if (!token || /^(https?:|file:)/i.test(token)) return { ok: false, reason: 'non-local evidence refs are not readable here' };
 
