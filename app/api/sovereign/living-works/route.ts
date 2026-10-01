@@ -32,6 +32,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { refuseTitle } from '@/lib/livingWork/domain';
+import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 const MAX_TITLE_CHARS = 300;
 
@@ -75,6 +76,38 @@ export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      const response = NextResponse.json({
+        works: store.listWorks(member.id).map((work) => ({
+          ...shape({
+            id: work.id,
+            title: work.title,
+            purpose: work.purpose,
+            form: work.form,
+            stage: work.stage,
+            manuscript_state: work.manuscriptState,
+            created_at: work.createdAt,
+            updated_at: work.updatedAt,
+          }),
+          expressions: work.expressions.map((expression) => ({
+            expressionType: expression.expressionType,
+            expressionId: expression.expressionId,
+            declaredAt: expression.declaredAt,
+          })),
+          materials: [],
+        })),
+      });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -157,6 +190,53 @@ export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      const body = (await request.json().catch(() => ({}))) as { title?: unknown };
+
+      let title: string | null = null;
+      if (body.title !== undefined && body.title !== null) {
+        if (typeof body.title !== 'string') {
+          return NextResponse.json({ error: 'title must be text' }, { status: 400 });
+        }
+        if (body.title.length > MAX_TITLE_CHARS) {
+          return NextResponse.json(
+            { error: `title is longer than ${MAX_TITLE_CHARS} characters` },
+            { status: 400 },
+          );
+        }
+        if (refuseTitle(body.title) === 'blank_title') {
+          return NextResponse.json({ error: 'blank_title' }, { status: 400 });
+        }
+        title = body.title;
+      }
+
+      const work = store.createWork(member.id, { title });
+      const response = NextResponse.json(
+        {
+          work: {
+            id: work.id,
+            title: work.title,
+            purpose: work.purpose,
+            form: work.form,
+            stage: work.stage,
+            manuscriptState: work.manuscriptState,
+            createdAt: work.createdAt,
+            updatedAt: work.updatedAt,
+          },
+        },
+        { status: 201 },
+      );
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
