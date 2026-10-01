@@ -1186,3 +1186,24 @@ live-holder refusal, already-released refusal, and expected-generation mismatch.
 At construction time all A8 proofs pass and `git diff --check` is clean.
 O5-R3 remains **NOT ADMITTED** until the real generation-8 normalization and a later fresh walk complete.
 O5-R4 remains closed.
+
+
+### 18.1 Real-home normalization witness
+
+The dry-run first refused stale expectation generation 8 because another short-lived canonical execution had
+already taken over to generation 9. That generation-9 holder was then identified as the completed local-review
+QWEN leg of a separate Early Field reconciliation Work Unit: its attempt was durably recorded and its grant was
+CONSUMED, but the short-lived Node process exited without the Electron release hook.
+
+A8 was re-run against the actual current generation 9. The read-only inspection returned `ready: true`,
+`holder_proof: DEAD`, and admission digest
+`sha256:2da7756908fcd6fee47bf7d8a3f52328d03c2c2131929ca06c91cfd5e792c25d`.
+
+The admitted normalization produced exactly:
+- generation 10: takeover of generation 9 with proof `DEAD`;
+- generation 11: release of generation 10;
+- final latest standing: released generation 11 at `2026-10-01T23:42:06.464Z`.
+
+No grant, Work Unit, W4, result, or provider state was changed by A8.
+The real delegation home therefore again has coherently terminated lease history suitable for a fresh pre-write
+baseline. A new O5-R3 admission specimen is still required; this normalization is not admission evidence.
