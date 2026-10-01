@@ -268,18 +268,859 @@ window.KELLY_FIELD_LIBRARY = {
       ]
     },
     {
-      "title": "H1 — First Human Production Witness Protocol",
-      "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
-      "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline: 168c37c0d56493f179d644033738ed82d41822da Runtime implementation: 3421a2096c3afcce617a394bca1ffe246171f39f Governing law: H1-EXPOSURECENSUSANDRULINGS2026-09-30.md §4 Admission witness: H1-COHORT-GATEADMISSION2026-09-30.md",
+      "title": "SOULLAB-LIVING-ARCHIVE-01 · LA2 / Dark Field Prebuild Closure",
+      "path": "docs/programme/SOULLAB-LIVING-ARCHIVE-01_LA2_DARK_FIELD_PREBUILD_CLOSURE_CANDIDATE_2026-10-01.md",
+      "excerpt": "Status: CANDIDATE · evidence-backed prebuild closure · 2026-10-01. No runtime implementation. No Source Vault schema. No production change.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "1. LA2 cataloguing unit — resolved as candidate",
+        "2. LA2 privacy classes — resolved as candidate",
+        "3. Known gaps",
+        "4. Entry policy — provisional build contract, not ratified law",
+        "5. Telemetry audit — current infrastructure finding",
+        "Required archive transport rule"
+      ]
+    },
+    {
+      "title": "SOULLAB-LIVING-ARCHIVE-01 · §30a–36 — The Dark Field and the Choice",
+      "path": "docs/programme/SOULLAB-LIVING-ARCHIVE-01_DARK_FIELD_AND_CHOICE_CANDIDATE_2026-10-01.md",
+      "excerpt": "Status: CANDIDATE (founder-directed record, 2026-10-01). ⛔ Not ratified · ⛔ no implementation · ⛔ no Source Vault schema · ⛔ no telemetry · production untouched.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "1. The moment",
+        "2. Candidate laws",
+        "3. Review amendments (2026-10-01)",
+        "3.1 Cataloguing unit — ⚠️ OWED IN LA2",
+        "3.2 Haze",
+        "3.3 Sealed vs Withheld — ⚠️ OWED IN LA2"
+      ]
+    },
+    {
+      "title": "BRANCH-POLICY AUTHORITY — FINDING",
+      "path": "docs/programme/BRANCH_POLICY_AUTHORITY_FINDING_2026-09-13.md",
+      "excerpt": "Date 2026-09-13 · Status VALID · UNRESOLVED · ⛔ OUTSIDE S3 Opened by founder ruling, 2026-09-13 · ⛔ no lane opened, no repair authorized",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "The defect class",
+        "The observed conflict",
+        "Two questions, and they must not be collapsed",
+        "⭐ INTERIM RULE — in force until the governance lane rules",
+        "What actually happened here",
+        "Standing"
+      ]
+    },
+    {
+      "title": "JARVIS O5-R4 — Freeze Amendment 2 (E9 discrimination) · Production delivery state",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R4_FREEZE_AMENDMENT_2_AND_DELIVERY_STATE_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 · Base: canonical commit:9c608128361eadd2e6ba2c6c1371353bdb0d7ebe Standing: Amendment 2 recorded · laws R4-E1…E9 unchanged · ⚠️ no affected lane receives any consequence finding in the running system · ⭐ non-delivery ACCEPTED as a declared state, and the never-a-safety-channel rule RATIFIED (founder, 2026-10-01; §6) · ⛔ runtime delivery not authorized · ⛔ durable lane inbox not authorized",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "1. Why this amendment exists",
+        "2. What changed",
+        "3. Verification",
+        "4. Production delivery state",
+        "4a. Nothing produces a consequence finding either",
+        "4b. Could a projectable finding be safety-relevant?"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.7-R1 — Release Source Reconciliation",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-7-R1_RELEASE_SOURCE_RECONCILIATION_2026-10-01.md",
+      "excerpt": "H4.7 produced a real arm64 MAIA Desktop bundle on T7 Shield:",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Boundary",
+        "Facts (repository, verified in-session)",
+        "Reconciliation candidate",
+        "Gates run here (Linux container, no project `node_modules`)",
+        "The release-SHA ruling this unit asks for",
+        "Carried into R2 (the rebuild); no gate is skipped"
+      ]
+    },
+    {
+      "title": "WS-ADVANCED-RUNTIME-01 / RC1 — Split-Verdict Founder Adjudication",
+      "path": "docs/programme/WS-ADVANCED-RUNTIME-01_RC1_SPLIT_VERDICT_FOUNDER_ADJUDICATION_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: RECORDED ON FOUNDER INSTRUCTION · ⚠️ RETROSPECTIVE · per-finding dispositions F2–F5 drafted from the record, ⛔ owed founder ratification",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "What happened",
+        "Adjudication",
+        "What this does not do"
+      ]
+    },
+    {
+      "title": "Living Field — First-Entry Human Production Witness Protocol",
+      "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Production condition: admitted cohort member with genuinely empty member-owned Living Field substrate Standing: first-entry evidence only · does not substitute for populated-field ownership/continuity evidence",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1 · Human-only question",
+        "2 · Preconditions",
+        "3 · What to tell the member",
+        "4 · Observe",
+        "5 · Content-creation law",
+        "6 · Stop conditions"
+      ]
+    },
+    {
+      "title": "Living Field — First-Entry Human Witness Record",
+      "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
+      "excerpt": "Participant label: FIRST-ENTRY- Date/time: Production SHA at start: (docker exec maia-sovereign printenv GITCOMMIT) Production SHA at end: (same command, after the walk; if it differs from start → the walk is NO EVIDENCE) Public health: Device/browser: Early Field admitted: yes / no Pre-existing member-owned substrate: no",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 10,
+      "headings": [
+        "Uncoached path",
+        "First-entry observations",
+        "Post-walk responses",
+        "Findings",
+        "Adjudication"
+      ]
+    },
+    {
+      "title": "Living Field + Writer's Studio Witnesses — Re-baseline after RC1",
+      "path": "docs/programme/LIVING-FIELD_WITNESS_REBASELINE_RC1_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: SOURCE RE-BASELINE COMPLETE · ⛔ two live confirmations owed at walk time Previous readiness runtime: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Current production runtime: 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 (founder deploy, ~14:35Z)",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Correction to the premise",
+        "Source re-baseline: `975a208b8` → `03f0fd3ab`",
+        "Live confirmations owed (read-only, at walk start)",
+        "1. Cabin mode must be unset in the live container (expect: empty line)",
+        "2. Start SHA (repeat at the end; a difference makes the walk NO EVIDENCE)",
+        "Writer's Studio cohort walk: same rule"
+      ]
+    },
+    {
+      "title": "REVIEW-CUSTODY — Verdict Plurality (Candidate Law)",
+      "path": "docs/programme/REVIEW-CUSTODY_VERDICT_PLURALITY_CANDIDATE_LAW_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: ⭐ CANDIDATE LAW FOR RATIFICATION · ⛔ not implemented · ⛔ the gate is unchanged Occasion: RC1 split verdict. Two reviews of one relation under one plan returned REVISE and APPROVED, and the gate admitted the APPROVED without seeing the REVISE (WS-ADVANCED-RUNTIME-01RC1SPLITVERDICTFOUNDERADJUDICATION2026-10-01.md).",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "The hole",
+        "Candidate law",
+        "Why VP-2 is the load-bearing clause",
+        "Design questions owed before implementation",
+        "Retroactive application"
+      ]
+    },
+    {
+      "title": "WS-ADVANCED-RUNTIME-01 / P5 — RC2 Formal Migration Review: APPROVED · ⛔ SUPERSEDED",
+      "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P5_RC2_FORMAL_MIGRATION_REVIEW_APPROVED_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: ⭐ REVIEW ADMITTED APPROVED · check APPLIES · drift witness PASS · composed gate (simulated) APPLIES ⛔ Not deployed · no migration applied · production untouched. Applying the schema is a founder act.",
+      "excerpt_start_line": 12,
+      "excerpt_end_line": 14,
+      "headings": [
+        "What changed from RC1 (P3 REVISE → RC2)",
+        "Proof at the target",
+        "Custody chain",
+        "Deployment runbook"
+      ]
+    },
+    {
+      "title": "WS-ADVANCED-RUNTIME-01 / P4 — RC2 Exact Three-Migration Review Plan",
+      "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P4_RC2_EXACT_THREE_MIGRATION_REVIEW_PLAN_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader at plan freeze: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Candidate lineage before this plan: RC1 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 + canonical d8e0c6bc + RC2 remediation Supersedes for review purposes: P2 (RC1). P2 is preserved unedited; its admitted review (P3, verdict REVISE) is not converted.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Exact target relation",
+        "Exact production-pending set",
+        "RC2 remediation of the P3 REVISE findings",
+        "Deployment ordering",
+        "Independent review questions",
+        "Minimum physical Reads"
+      ]
+    },
+    {
+      "title": "WS-ADVANCED-RUNTIME-01 / P3 — Formal Migration Review Result",
+      "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P3_FORMAL_MIGRATION_REVIEW_RESULT_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: ⭐ REVIEW RUN · ADMITTED · VERDICT REVISE · check REFUSES [NOTAPPROVED] Target: feature/ws-advanced-runtime-rc1-20261001 @ 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 Old reader: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Plan: docs/programme/WS-ADVANCED-RUNTIME-01P2EXACTTHREEMIGRATIONREVIEWPLAN2026-10-01.md (sha256 62b0de90…8a11)",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 7,
+      "headings": [
+        "How it ran",
+        "Custody chain",
+        "Verdict",
+        "Next lawful act (founder rulings owed)"
+      ]
+    },
+    {
+      "title": "MAIA Desktop — Cabin Artifact Packaging Diagnosis · 2026-10-01",
+      "path": "docs/programme/MAIA-DESKTOP-CABIN-ARTIFACT-DIAGNOSIS_2026-10-01.md",
+      "excerpt": "Candidate: e3688fce20dde0b539988ebdd27c06162783a1ea",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Boundary observed",
+        "Root cause",
+        "Final bounded repair",
+        "Provenance",
+        "Standing"
+      ]
+    },
+    {
+      "title": "MAIA Desktop — Cabin Artifact Packaging Repair 02 · 2026-10-01",
+      "path": "docs/programme/MAIA-DESKTOP-CABIN-ARTIFACT-REPAIR-02_2026-10-01.md",
+      "excerpt": "First repair candidate: 147815873090",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Failed successor to the first repair",
+        "Observed mechanism",
+        "Smallest second repair",
+        "Standing"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.7 — Desktop Artifact Gate",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-7_DESKTOP_ARTIFACT_GATE_2026-10-01.md",
+      "excerpt": "H4.6 established controlled-cohort readiness. H4.7 is the distribution membrane: produce one exact MAIA Desktop artifact carrying the canonical Cabin runtime, prove its identity, then satisfy the existing macOS external-distribution gates.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Boundary",
+        "Source authority",
+        "Distribution prerequisites",
+        "Local artifact build witness",
+        "Negative controls / non-claims",
+        "Standing"
+      ]
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R5 — Execution Binding & Readiness Census",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R5_EXECUTION_READINESS_CENSUS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Base: 2e657fa0dd6261584dd77463ced7782d80906d7d Class: Census / pre-falsifier · READ-ONLY against runtime mechanism Predecessors: O2 Work Graph · O3 Authority Planner · O4 Capability Router · O5-R1…R4 Standing: ⭐ R5 CENSUS COMPLETE · ⛔ NO SCHEDULER · ⛔ NO DISPATCH IMPLEMENTATION",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 7,
+      "headings": [
+        "1. Why R5 is next",
+        "2. First gap: planned node → canonical runtime binding",
+        "3. Dependency satisfaction",
+        "4. Node eligibility",
+        "5. Capacity and current-reachable selection",
+        "6. R5B parallelism explicitly deferred"
+      ]
+    },
+    {
+      "title": "MAIA Desktop — Cabin Artifact Packaging Repair · 2026-10-01",
+      "path": "docs/programme/MAIA-DESKTOP-CABIN-ARTIFACT-REPAIR_2026-10-01.md",
+      "excerpt": "Source SHA: c6102a347af14600ea49edc108dd720f649d7e2c",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Failed candidate",
+        "Observed artifact defect",
+        "Additional artifact observations",
+        "Smallest repair surface",
+        "Existing evidence retained",
+        "Fresh witness requirement"
+      ]
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R4 — Installed Deployment Witness",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R4_INSTALLED_DEPLOYMENT_WITNESS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Canonical / installed SHA: c6102a347af14600ea49edc108dd720f649d7e2c R4 law: initial freeze #1591 + E9 amendment #1595 R4 implementation: #1592 Standing: ⭐ post-R4 installed Desktop deployed and live · stable canonical substrate bound · prior artifact preserved.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 7,
+      "headings": [
+        "1. Canonical admission",
+        "2. Deployment substrate",
+        "O5-R3 preservation",
+        "O5-R4 admission mechanism",
+        "3. Installed artifact",
+        "4. Explicit runtime binding"
+      ]
+    },
+    {
+      "title": "Living Field — First Human Witness Packet",
+      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PACKET_2026-10-01.md",
+      "excerpt": "Use with: LIVING-FIELD-FIRST-HUMAN-WITNESSPROTOCOL2026-09-30.md Standing: facilitator packet · no participant selected · no widening authority",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Before the member arrives",
+        "What to say",
+        "During the uncoached pass",
+        "Stop immediately if",
+        "After the uncoached pass",
+        "Adjudication reminder"
+      ]
+    },
+    {
+      "title": "Living Field — First Human Production Witness Protocol",
+      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
+      "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline at protocol drafting: 68af62fda Early Field authority: EARLY-FIELD-01COHORTADMISSION2026-09-30.md Layered Admission candidate: docs/canon/LAYEREDADMISSION.md (if admitted) Standing: protocol only · no member added · no environment change · no deployment",
       "excerpt_start_line": 3,
       "excerpt_end_line": 8,
       "headings": [
         "1 · Human-only question",
-        "2 · What machines have already established",
+        "2 · What machines establish before a human enters",
         "3 · Participant and environment preconditions",
         "4 · Consent and evidence posture",
         "5 · Participant-facing task",
-        "6 · Observe, do not interpret for the member"
+        "6 · Observe without interpreting for the member"
+      ]
+    },
+    {
+      "title": "Living Field — First Human Witness Readiness",
+      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_READINESS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Production runtime: 975a208b8 Canonical base at census: dbcdcf786 Standing: POPULATED-FIELD WITNESS BLOCKED BY EVIDENCE · FIRST-ENTRY WITNESS ELIGIBLE · cohort remains open · no rollback condition observed",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Trigger",
+        "Aggregate result",
+        "Interpretation",
+        "Ruling",
+        "Eligibility condition for the first populated-field human witness",
+        "Current state"
+      ]
+    },
+    {
+      "title": "Living Field — First Human Witness Record",
+      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
+      "excerpt": "Participant label: WITNESS- Date/time: Production SHA: Public health: Device/browser: Early Field admitted: yes / no Authentic member-owned substrate present before witness: yes / no Facilitator intervention: none / describe MAIA entered: yes / no MAIA request before explicit entry: yes / no / not observed",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 12,
+      "headings": [
+        "Uncoached path",
+        "Observed orientation",
+        "MAIA boundary",
+        "Return",
+        "Trust and privacy",
+        "Post-walk responses"
+      ]
+    },
+    {
+      "title": "WS-ADVANCED-RUNTIME-01 / P2 — Exact Three-Migration Review Plan",
+      "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P2_EXACT_THREE_MIGRATION_REVIEW_PLAN_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader at plan freeze: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Candidate lineage before this plan: ecf69ae97eef4e8b9bb010e2f224d33b252ebb42",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Exact target relation",
+        "Exact production-pending set",
+        "Deployment ordering",
+        "Independent review questions",
+        "Minimum physical Reads",
+        "Required review JSON"
+      ]
+    },
+    {
+      "title": "EARLY-FIELD-01 — Merge Record",
+      "path": "docs/programme/EARLY-FIELD-01_MERGE_RECORD_2026-09-30.md",
+      "excerpt": "Programme day: 2026-09-30 Merged: 2026-10-01 00:26:13Z PR: #1547 — feat(living-field): cohort-gate R1R3 instrument on current canon Status: MERGED TO CANON · deployment witness still required",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1 · Merge subject",
+        "2 · Certified lineage",
+        "3 · Merge bar",
+        "4 · What this merge does not establish"
+      ]
+    },
+    {
+      "title": "EARLY-FIELD-01 — Production Deployment Record",
+      "path": "docs/programme/EARLY-FIELD-01_PRODUCTION_DEPLOYMENT_RECORD_2026-09-30.md",
+      "excerpt": "Programme day: 2026-09-30 Status: DEPLOYED · PROVENANCE VERIFIED · NON-COHORT EXCLUSION WITNESSED · widening/admission still open Current production at record opening: 89f7876e8 Next governed target: cc1c5b4d79793dd7911d6aea0054e8c678d01bcb",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1 · Production sequence before EARLY-FIELD-01 merge",
+        "2 · Exposure state before the gate deploy",
+        "3 · Rollback custody",
+        "4 · New canonical target",
+        "5 · Required pre-deploy witness",
+        "6 · First post-deploy witness"
+      ]
+    },
+    {
+      "title": "Living Field — Rollout Evidence Convergence",
+      "path": "docs/programme/LIVING-FIELD-ROLLOUT-EVIDENCE-CONVERGENCE_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Base: current canonical at lane opening 0ea02739f Standing: documentary convergence only · no runtime change · no production mutation",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Why convergence is needed",
+        "Source lineage carried",
+        "What this does not do",
+        "Canonical meaning after convergence",
+        "Supersession rule",
+        "Next boundary"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.6 — Controlled-Cohort Readiness",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-6_CONTROLLED_COHORT_READINESS_2026-10-01.md",
+      "excerpt": "H4.5 completes the local Cabin crossing sequence:",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Ruling",
+        "Production posture",
+        "Release interpretation",
+        "Controlled sequence",
+        "Evidence already complete",
+        "Stop boundary"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.5 — Post-Return Continuity",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-5_POST_RETURN_CONTINUITY_2026-10-01.md",
+      "excerpt": "H4.4 established the destination return membranes.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Ruling",
+        "Runtime witness",
+        "Results",
+        "Structural witness",
+        "Focused test evidence",
+        "Falsifier status"
+      ]
+    },
+    {
+      "title": "EARLY-FIELD-01 — Production Cohort Open",
+      "path": "docs/programme/EARLY-FIELD-01_PRODUCTION_COHORT_OPEN_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Production runtime SHA: 975a208b8 Canonical at operational record branch start: cb208a26a Standing: SMALL CONTROLLED COHORT OPEN · FIRST HUMAN WITNESS PENDING",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1 · Founder-designated cohort",
+        "2 · Pre-change witness",
+        "3 · Environment mutation",
+        "4 · Recreate boundary",
+        "5 · Post-open network witness",
+        "6 · Rollback"
+      ]
+    },
+    {
+      "title": "LAYERED-ADMISSION-01 — Applicability Census",
+      "path": "docs/programme/LAYERED-ADMISSION-01_APPLICABILITY_CENSUS_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: 008963af1 Standing: read-only architectural census; no runtime change authorized",
+      "excerpt_start_line": 2,
+      "excerpt_end_line": 4,
+      "headings": [
+        "1. Strong semantic fits",
+        "Writer's Studio — Editorial capability",
+        "Writer's Studio — Review Discuss",
+        "Writer's Studio — Develop standing",
+        "2. Conditional fits",
+        "Chat — memory-reference citations"
+      ]
+    },
+    {
+      "title": "Living Field #1539 — Real-Stack Re-witness",
+      "path": "docs/programme/LIVING-FIELD-1539_REAL_STACK_REWITNESS_2026-10-01.md",
+      "excerpt": "Witnessed: 2026-10-01 Canonical witnessed: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Origin witnessed: http://127.0.0.1:3139 Standing: PASS — 29/29, 0 failures",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Purpose",
+        "Witness environment",
+        "Origin-preservation finding",
+        "Result",
+        "Repaired dimension boundary",
+        "Explicit MAIA-entry consent"
+      ]
+    },
+    {
+      "title": "Living Field Consent Repair — Production Deployment Record",
+      "path": "docs/programme/LIVING-FIELD-CONSENT-REPAIR_PRODUCTION_DEPLOYMENT_2026-09-30.md",
+      "excerpt": "Programme day: 2026-09-30 Deployed: 2026-10-01 UTC Target / canonical at deployment: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Source PR: #1554 · explicit MAIA entry Standing: DEPLOYED · PRODUCTION HEALTHY · EARLY FIELD STILL CLOSED",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 7,
+      "headings": [
+        "1 · Deployment boundary",
+        "2 · Pre-deploy gates",
+        "3 · Governed deploy act",
+        "4 · Running provenance and health",
+        "5 · Exposure state after deployment",
+        "6 · Rollback custody"
+      ]
+    },
+    {
+      "title": "LIVING FIELD R1R3 — Final Real-Stack Witness",
+      "path": "docs/programme/LIVING-FIELD-R1R3_FINAL_REAL_STACK_WITNESS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Canonical witnessed: f7f53dee9 Route: /maia/living-field?from=house Origin: http://127.0.0.1:3145 Member: existing non-sensitive local test member qa-soulportrait-test Standing: final real-stack witness PASS for the mounted R1R3 instrument and House circulation repairs",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 8,
+      "headings": [
+        "1. Why this witness exists",
+        "2. Repairs now in canonical",
+        "#1563 — recursive interaction + progressive disclosure",
+        "#1564 — House return convergence",
+        "3. Canonical context crossed after those merges",
+        "4. Real-stack witness"
+      ]
+    },
+    {
+      "title": "WRITERS-STUDIO-NEXT-01 / A2-7",
+      "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-7_DURABLE_RELATIONSHIP_RETURN_CROSS_SESSION_PLACE_2026-09-26.md",
+      "excerpt": "Date: 2026-09-26 Parent: 7e62ccc4ab7c48d2054b87314aef17766b47ccad Branch: feature/ws-next-a2-7-durable-return-place-20260926 Execution packet SHA-256: e144c81b5be4c9801a45b91d59a0c70ab2f601819875b0fd378e67af99838ac9",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "DURABLE RELATIONSHIP RETURN + CROSS-SESSION PLACE INTEGRATION",
+        "I. Result",
+        "II. Durable relationship return",
+        "III. Durable place return",
+        "IV. Work-context gate",
+        "V. Storage"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.4 — Destination Membranes",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-4_DESTINATION_MEMBRANES_2026-10-01.md",
+      "excerpt": "H4.3 established the non-semantic crossing marker.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Ruling",
+        "Surfaces",
+        "Implementation state",
+        "Destination behavior",
+        "Writer's Studio",
+        "Relationships"
+      ]
+    },
+    {
+      "title": "WRITERS-STUDIO-NEXT-01 / A2-14",
+      "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-14_ELIGIBLE_CARRY_SOURCE_READ_REBUILD_INLINE_SELECTION_UI_2026-09-26.md",
+      "excerpt": "Date: 2026-09-26 Parent: 6da5305e066b2e8fce8d96cec9f1f9de9540e81f Branch: feature/ws-next-a2-14-carry-ui-runtime-20260926 Execution packet SHA-256: 14260c272e6e52731d62385bfabbe6b2a3d72dbf9b9b04925852892cb12322e4",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "ELIGIBLE CARRY SOURCE READ + REBUILD INLINE SELECTION UI IMPLEMENTATION ONLY",
+        "I. Result",
+        "II. Eligible-source server read",
+        "III. Eligible-source service",
+        "IV. Exact excerpt law",
+        "V. Strict client read"
+      ]
+    },
+    {
+      "title": "WRITERS-STUDIO-NEXT-01 / A2-11",
+      "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-11_PRIOR_MAIA_EDITORIAL_TURN_CARRY_RUNTIME_2026-09-26.md",
+      "excerpt": "Date: 2026-09-26 Parent: 29061babd7d8d0fd147a9f8449afb009d75ce9e4 Branch: feature/ws-next-a2-11-carry-runtime-20260926",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 6,
+      "headings": [
+        "PRIOR MAIA EDITORIAL TURN CARRY RUNTIME IMPLEMENTATION ONLY",
+        "I. Boundary provenance",
+        "II. Result",
+        "III. HTTP ingress implementation",
+        "IV. Ordering implementation",
+        "V. Source-read runtime"
+      ]
+    },
+    {
+      "title": "WRITERS-STUDIO-NEXT-01 / A2-6",
+      "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-6_MEMBER_FACING_UNIFIED_RELATIONSHIP_ORCHESTRATION_2026-09-26.md",
+      "excerpt": "Date: 2026-09-26 Parent candidate: 4f5f05069892948a23c0cfd477412d72b6ac950a Packet: 651c15a7624bde226bff0e8c70c5d7f176b2317017fad398b260cf50e812e598 · 6,923 bytes · 219 lines Cross-episode cognition carry: NONE Focus: UNCHANGED / EXCLUDED Deployment: NONE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 9,
+      "headings": [
+        "MEMBER-FACING UNIFIED RELATIONSHIP ORCHESTRATION + SCOPE TRANSITIONS",
+        "I. Result",
+        "II. No-auto-selection law",
+        "III. Parent relationship address",
+        "IV. Work-context gate",
+        "V. Member-facing control"
+      ]
+    },
+    {
+      "title": "WRITERS-STUDIO-NEXT-01 / A2-5R3",
+      "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-5R3_LIVE_RELATIONSHIP_CARRIAGE_2026-09-25.md",
+      "excerpt": "Date: 2026-09-25 Parent candidate: ec3103797ae381913d070bc5a5f05103aee78aff Packet: a1d3e03ae588de4b522d6ac1039bcbb80722b5d1b0392ba0d9b9db31e5d32c5e · 4,734 bytes · 148 lines UI / Focus / deployment / A3: NONE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "LIVE RELATIONSHIP IDENTITY CARRIAGE + EDITORIAL/REVIEW ATOMIC ADMISSION",
+        "I. Result",
+        "II. Explicit identity law",
+        "III. Parent API",
+        "IV. Shared carriage preflight",
+        "V. Editorial atomic admission"
+      ]
+    },
+    {
+      "title": "WRITERS-STUDIO-NEXT-01 / A2-5R2",
+      "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-5R2_SCOPE_IDENTITY_SCHEMA_SUCCESSION_2026-09-25.md",
+      "excerpt": "Date: 2026-09-25 Parent candidate: 9a08f84b5a876499272b6aa4d4ad11c221c0ac48 Packet: cb24d6c3fdedd3c9d704d6405344fb12ccf73d7754ebe378d69955c8ce0aa382 · 5,449 bytes · 173 lines Live relationshipId carriage: NOT OPEN UI / Focus / deployment / A3: NONE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 8,
+      "headings": [
+        "SCOPE IDENTITY SCHEMA SUCCESSION + EDITORIAL DISCRIMINATOR IMPLEMENTATION",
+        "I. Result",
+        "II. Proposal-chain scope discriminator",
+        "III. Historical standing",
+        "IV. A2 episode scope succession",
+        "V. Migration fail-closed law"
+      ]
+    },
+    {
+      "title": "WRITERS-STUDIO-NEXT-01 / A2-4",
+      "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-4_RELATIONSHIP_CUSTODY_SCHEMA_STORE_IMPLEMENTATION_2026-09-25.md",
+      "excerpt": "Date: 2026-09-25 Parent candidate: e264121e57bd1b8b1cac3212b110537e183e3300 Packet: 55e20a2da2a99a7b04a695f55fd7a9bca5e451d3efdfd67409140f95a82b0b68 · 7,673 bytes · 224 lines UI / route contract / deployment: NONE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "RELATIONSHIP CUSTODY SCHEMA + STORE IMPLEMENTATION",
+        "I. Result",
+        "II. Migration",
+        "III. Parent custody",
+        "IV. Episode custody",
+        "V. Closed child semantics"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.3 — Cabin Doorway Crossing",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-3_CABIN_DOORWAY_CROSSING_2026-10-01.md",
+      "excerpt": "H4.2 established the real Cabin arrival field. H4.3 establishes the narrow crossing seam between that field and its receiving rooms.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Ruling",
+        "Implementation",
+        "Canonical doorways",
+        "Why this is a separate seam",
+        "Falsifier suite",
+        "Evidence"
+      ]
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R4 — Evidence Return Implementation",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R4_EVIDENCE_RETURN_IMPLEMENTATION_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Base / frozen-law parent: b1c719610 (chore/o5r4-evidence-return-census-20261001) Class: B — Structural Risk Standing: ⭐ IMPLEMENTATION COMPLETE · LOCAL PROOFS GREEN · ⛔ NOT MERGED · ⛔ INSTALLED JARVIS UNTOUCHED",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1. Scope carried from the frozen R4 instrument",
+        "2. W4.v2 implementation",
+        "New evidence kinds",
+        "Finding schemas",
+        "Proposal schema",
+        "Backward compatibility"
+      ]
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R4 — Evidence Return Census",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R4_EVIDENCE_RETURN_CENSUS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Base: dbc3036f2ff498779c56b91152d1d79f5e30fde8 Class: Census / pre-falsifier · READ-ONLY against runtime mechanism Predecessors: O5-R1 frozen F5/F6; O5-R2 recovery seam; O5-R3 grant-writer admission Standing: ⭐ R4 CENSUS COMPLETE · ⭐ FALSIFIERS FROZEN · ⛔ NO W4 IMPLEMENTATION",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 7,
+      "headings": [
+        "1. Why R4 is the next O5 boundary",
+        "2. Current W4 mechanism",
+        "3. Lawful placement: evaluation evidence, outside authorized core",
+        "4. Existing frozen law R4 must reuse, not rename",
+        "5. Critical seam: W4 append ≠ O1 projection",
+        "6. Pre-implementation rulings for falsifier construction"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.2 — Mounted Arrival Context",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-2_MOUNTED_ARRIVAL_CONTEXT_2026-10-01.md",
+      "excerpt": "H4.1 visual authority was founder-ratified before this implementation.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Ruling",
+        "Implementation",
+        "Domain behavior",
+        "Important infrastructure correction",
+        "1. Next.js route-handler dependency injection",
+        "2. Runtime mount bundle boundary"
+      ]
+    },
+    {
+      "title": "H1 — First Human Witness · Observer Sheet",
+      "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_OBSERVER_SHEET_2026-10-01.md",
+      "excerpt": "Private facilitator sheet. Do not show the participant before the uncoached attempt. Governing protocol: H1-FIRST-HUMAN-WITNESSPROTOCOL2026-09-30.md",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Preflight",
+        "First attempt",
+        "Recognition",
+        "First move",
+        "Hesitation",
+        "Continuity"
+      ]
+    },
+    {
+      "title": "H1 — First Human Witness · Participant Card",
+      "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_PARTICIPANT_CARD_2026-10-01.md",
+      "excerpt": "Use: hand or read this card to the participant only after the facilitator has completed the private preflight.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "Before we begin",
+        "Task"
+      ]
+    },
+    {
+      "title": "H1 — First Human Witness · Result Template",
+      "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_RESULT_TEMPLATE_2026-10-01.md",
+      "excerpt": "Participant-neutral record. Do not include participant name, email, UUID, session credential, Work title, manuscript title, manuscript excerpt, or private reflective content.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Identity of the witnessed condition",
+        "Uncoached first attempt",
+        "Recognition",
+        "First move",
+        "Hesitation",
+        "Continuity"
+      ]
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O1 — Intent Contract",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O1_INTENT_CONTRACT_2026-09-21.md",
+      "excerpt": "Opening canonical: 65bcb76bb38d4f57e816253fdbec0ea036d6c166",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "Purpose",
+        "Operator levels",
+        "Governing laws",
+        "Machine-readable contract",
+        "Continuation",
+        "Falsifier matrix"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.1 — Cabin Arrival Visual Authority Candidate",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-1_CABIN_ARRIVAL_VISUAL_AUTHORITY_2026-10-01.md",
+      "excerpt": "H4.0 explicitly stopped member-facing implementation until Cabin visual authority existed.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Archaeology ruling",
+        "H4.1 gate question",
+        "Ruling",
+        "Visual relationship",
+        "Implementation boundary",
+        "Acceptance"
+      ]
+    },
+    {
+      "title": "H1-COHORT-GATE-01 · R3 — Runtime Convergence Deployment Witness · 2026-10-01",
+      "path": "docs/programme/H1-COHORT-GATE-01_R3_RUNTIME_CONVERGENCE_WITNESS_2026-10-01.md",
+      "excerpt": "R3 establishes that the H1 authority admitted under #1551 is now running through the single governed arrival seam merged by #1578, without reopening or changing the already-designated production cohort.",
+      "excerpt_start_line": 16,
+      "excerpt_end_line": 16,
+      "headings": [
+        "1 · What R3 establishes",
+        "2 · Immutable deployment",
+        "3 · Pre-swap gates",
+        "4 · Running provenance and health",
+        "5 · H1 operational configuration survived the deployment",
+        "6 · Converged authority present in the running image"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.0 — Cabin Arrival Experience Contract",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-0_CABIN_ARRIVAL_EXPERIENCE_2026-10-01.md",
+      "excerpt": "H3.10 established the mounted experience bridge. The repository already establishes the House as the orientation layer: arrival is a human experience, not a capability inventory.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Archaeology",
+        "Core ruling",
+        "Domain authority",
+        "Critical continuity rule",
+        "Human experience",
+        "Falsifier suite"
+      ]
+    },
+    {
+      "title": "Implementation witness",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-10_MOUNTED_EXPERIENCE_CONTEXT_2026-10-01.md",
+      "excerpt": "Implemented as:",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Standing"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.9 — Explicit Cabin Runtime Refresh",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-9_EXPLICIT_RUNTIME_REFRESH_2026-10-01.md",
+      "excerpt": "Can a member deliberately activate a newly placed Cabin Context Package without making placement itself an activation, without automatic remount, and without exposing package contents to the browser?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Gate question",
+        "Ruling",
+        "Request law",
+        "Runtime law",
+        "Falsifiers",
+        "Acceptance"
+      ]
+    },
+    {
+      "title": "Implementation witness",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-8_EXPLICIT_LOCAL_PLACEMENT_CENSUS_2026-10-01.md",
+      "excerpt": "Implemented as:",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Standing"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.7 — Connected Cabin Package Delivery",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-7_CONNECTED_CABIN_PACKAGE_DELIVERY_CENSUS_2026-09-30.md",
+      "excerpt": "How does a member explicitly carry the already-assembled Cabin Context Package from the connected Soullab environment onto the member's own machine without giving JARVIS, the browser, or the server a new source-selection authority?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Gate question",
+        "Ruling",
+        "Request contract",
+        "Security / custody",
+        "Falsifiers",
+        "F1 — identity substitution"
+      ]
+    },
+    {
+      "title": "H1-COHORT-GATE-01 · Cohort Boundary and Context Authority · census and propagation design · 2026-10-01",
+      "path": "docs/programme/H1-COHORT-GATE-01_CENSUS_AND_DESIGN_2026-10-01.md",
+      "excerpt": "Make the canonical #1544 distinction real without creating a second admission system or weakening the existing Writer's Studio ambiguity law. The contract is not \"build H1\". It is to control whether H1's contextual arrival is allowed to exist for this member.",
+      "excerpt_start_line": 16,
+      "excerpt_end_line": 18,
+      "headings": [
+        "0 · Purpose and boundary",
+        "Frozen invariants (founder, 2026-10-01)",
+        "1 · Census Q1: where can `work=` come from today?",
+        "1.1 Producers (originate a Studio `work=`)",
+        "1.2 Forwarders (carry an existing `work=` onward; never originate one)",
+        "1.3 Readers (where `work=` acquires authority)"
+      ]
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3 — Installed Deployment Witness",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_INSTALLED_DEPLOYMENT_WITNESS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Canonical base: 2463f66d6b02af3edcfdd6c092fadc2d129b4f72 O5-R3 admission: PR #1570 merged as bd4b9ba5ed0032dc289cd4dbcc70e2dcf9783461; the admitted O5-R3 lineage is an ancestor of this deployment SHA. Standing: ⭐ installed post-R3 Desktop deployed and live · explicit canonical substrate binding established · rollback copy preserved.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1. Deployment substrate",
+        "2. Installed artifact",
+        "3. Explicit substrate binding",
+        "4. Live installed witness",
+        "5. Scope discipline"
       ]
     },
     {
@@ -295,6 +1136,81 @@ window.KELLY_FIELD_LIBRARY = {
         "3.1 Desktop's runtime identity is two things, and only one is a SHA",
         "3.2 Packaged-mode resolution order (`findRepoRootPackagedMode`)",
         "3.3 ⭐ The finding: the default path lands on the legacy combination"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.5 — Explicit Connected Export Command",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-5_EXPLICIT_CONNECTED_EXPORT_COMMAND_CENSUS_2026-09-30.md",
+      "excerpt": "Can one explicit connected export command join H3.4 source assembly to the H3.3 artifact writer without opening a second write path, automatic behavior, or hidden selection?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Gate question",
+        "Ruling",
+        "Command law",
+        "Falsifiers",
+        "F1 — writer bypass",
+        "F2 — assembly bypass"
+      ]
+    },
+    {
+      "title": "H1 — First Human Production Witness Protocol",
+      "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
+      "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline: 168c37c0d56493f179d644033738ed82d41822da Runtime implementation: 3421a2096c3afcce617a394bca1ffe246171f39f Governing law: H1-EXPOSURECENSUSANDRULINGS2026-09-30.md §4 Admission witness: H1-COHORT-GATEADMISSION2026-09-30.md",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 8,
+      "headings": [
+        "1 · Human-only question",
+        "2 · What machines have already established",
+        "3 · Participant and environment preconditions",
+        "4 · Consent and evidence posture",
+        "5 · Participant-facing task",
+        "6 · Observe, do not interpret for the member"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.4 — Connected Export Assembly Census",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-4_CONNECTED_EXPORT_ASSEMBLY_CENSUS_2026-09-30.md",
+      "excerpt": "Can the connected Soullab platform assemble a Cabin Context Package from canonical member-owned sources without turning export into ambient capture, inference, or synchronization?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Gate question",
+        "Current state",
+        "Source census",
+        "Work",
+        "Relationship",
+        "Memory"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.3 — Explicit Context Package Export",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-3_EXPLICIT_CONTEXT_PACKAGE_EXPORT_CENSUS_2026-09-30.md",
+      "excerpt": "Can an explicit export write a portable Context Package artifact from already-governed projections without creating a synchronization mechanism or a second authority?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Gate question",
+        "Ruling",
+        "Export law",
+        "Falsifiers",
+        "F1 — path ambiguity",
+        "F2 — projection bypass"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.2 — Desktop Context Wiring",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-2_DESKTOP_CONTEXT_WIRING_CENSUS_2026-09-30.md",
+      "excerpt": "Can the Desktop carry an explicit Cabin Context Package into the local runtime, let the Cabin validate and mount it, and let the runtime read only the governed Work / Relationship / Memory projections without creating a new authority?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Gate question",
+        "Authorized boundary",
+        "Package ownership",
+        "Runtime identity boundary",
+        "Falsifiers",
+        "F1 — package-path ambiguity"
       ]
     },
     {
@@ -342,6 +1258,78 @@ window.KELLY_FIELD_LIBRARY = {
       ]
     },
     {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.1 — Cabin Context Mount Census",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-1_CONTEXT_MOUNT_CENSUS_2026-09-30.md",
+      "excerpt": "How does a validated portable Context Package become available to the local Cabin runtime without becoming a second persistent authority?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Gate question",
+        "Existing runtime boundary",
+        "Ruling",
+        "Mount law",
+        "Falsifiers",
+        "F1 — invalid package admission"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.5 — Package Custody Census",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-5_PACKAGE_CUSTODY_CENSUS_2026-09-30.md",
+      "excerpt": "Can a serialized Cabin Context Package be accepted back into the Cabin without trusting the file to tell the Cabin what it is?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Gate question",
+        "Ruling",
+        "Why strictness matters",
+        "Falsifiers",
+        "F1 — schema spoofing",
+        "F2 — scope spoofing"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.4 — Local Cabin Context Package Census",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-4_CONTEXT_PACKAGE_CENSUS_2026-09-30.md",
+      "excerpt": "Can the Work, Relationship, and Memory projections travel together as one portable package without creating a universal context object or a second authority?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Gate question",
+        "Ruling",
+        "Package shape",
+        "Composition law",
+        "Falsifiers",
+        "F1 — second authority"
+      ]
+    },
+    {
+      "title": "LIVING-FIELD-MAIA-ENTRY-CONSENT-01",
+      "path": "docs/programme/LIVING-FIELD-MAIA-ENTRY-CONSENT-01_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: 8b2680254 / PR #1545 auth-runtime repair Status: implementation in progress; merge/deploy not authorized",
+      "excerpt_start_line": 2,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Founder ruling",
+        "Repair law",
+        "Falsifier and real-stack witness"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.3 — Memory Eligibility Projection Census",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-3_MEMORY_ELIGIBILITY_CENSUS_2026-09-30.md",
+      "excerpt": "Can member-owned memory cross into a local Cabin package without confusing being stored with being eligible for recall?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Gate question",
+        "Existing authority",
+        "H2.3 ruling",
+        "Package eligibility",
+        "Recall eligibility",
+        "What crosses"
+      ]
+    },
+    {
       "title": "H1 cohort gate — implementation witness — 2026-09-30",
       "path": "docs/programme/H1-COHORT-GATE_IMPLEMENTATION_2026-09-30.md",
       "excerpt": "Only explicit Work-context arrival into Writer's Studio is cohort-controlled. Writer's Studio, member manuscripts, member Works, H1-R2 multi-manuscript correctness and House threshold presentation remain universal.",
@@ -354,6 +1342,106 @@ window.KELLY_FIELD_LIBRARY = {
         "Two-sided gate",
         "Evidence",
         "Rollback"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.2 — Relationship Projection Census",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-2_RELATIONSHIP_PROJECTION_CENSUS_2026-09-30.md",
+      "excerpt": "Can an explicitly handed-off relationship become a portable Cabin reference without carrying inferred relational meaning or private relationship content?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Gate question",
+        "Existing authority",
+        "Projection law",
+        "Why the inferred bridge fields do not cross",
+        "Falsifiers",
+        "F1 — implicit relationship authority"
+      ]
+    },
+    {
+      "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.1 — Work Projection Census",
+      "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-1_WORK_PROJECTION_CENSUS_2026-09-30.md",
+      "excerpt": "Can an already-governed Living Work cross into a portable Cabin package as a reference without creating a second Work authority?",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Gate question",
+        "Existing authority",
+        "Projection law",
+        "Deliberately excluded",
+        "Falsifiers",
+        "F1 — Ownership confusion"
+      ]
+    },
+    {
+      "title": "AIN-CABIN-MEMORY-SOURCE-01 — Local Memory Source Seam",
+      "path": "docs/programme/AIN-CABIN-MEMORY-SOURCE-01.md",
+      "excerpt": "Status: implementation complete; cognition remains closed Base: 76cfd65f3",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Governing sentence",
+        "What this cut does",
+        "What it refuses to claim",
+        "Falsifiers",
+        "Witness"
+      ]
+    },
+    {
+      "title": "AIN-CABIN-MEMORY-01 — Memory Authority Census",
+      "path": "docs/programme/AIN-CABIN-MEMORY-01_CENSUS_2026-09-30.md",
+      "excerpt": "Status: census complete; build open Base: 439d9bd1c",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Governing sentence",
+        "Existing memory authorities",
+        "1. Conversation turns",
+        "2. Developmental memory",
+        "3. Episodic memory",
+        "4. Conversational recall"
+      ]
+    },
+    {
+      "title": "AIN-CABIN-MEMORY-01 — Falsifier Contract",
+      "path": "docs/programme/AIN-CABIN-MEMORY-01_FALSIFIERS_2026-09-30.md",
+      "excerpt": "Status: implementation target Base: 439d9bd1c",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "F1 — Acceptance durability",
+        "F2 — Idempotency",
+        "F3 — Provenance and Sanctuary",
+        "F4 — Session boundary",
+        "F5 — Member ownership",
+        "F6 — Developmental derivation"
+      ]
+    },
+    {
+      "title": "LIVING-FIELD-RUNTIME-PARAMS-01",
+      "path": "docs/programme/LIVING-FIELD-RUNTIME-PARAMS-01_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: auth convergence commit fe8806d28 Status: implementation witnessed; merge/deploy not authorized",
+      "excerpt_start_line": 2,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Trigger",
+        "Repair law",
+        "Witness"
+      ]
+    },
+    {
+      "title": "LIVING-FIELD-AUTH-CONVERGENCE-01 — Census",
+      "path": "docs/programme/LIVING-FIELD-AUTH-CONVERGENCE-01_CENSUS_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: 89f7876e8 (clean-main-no-secrets) Status: census complete; repair lane open; no merge/deploy authority",
+      "excerpt_start_line": 2,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Trigger",
+        "Measured seam",
+        "Repair law",
+        "Auth repair",
+        "Real-stack witness after auth repair"
       ]
     },
     {
@@ -399,6 +1487,21 @@ window.KELLY_FIELD_LIBRARY = {
         "A limit stated, not hidden",
         "4 · R7 tests that wrong versions must fail",
         "5 · R8 observation contract (what the cohort is for)"
+      ]
+    },
+    {
+      "title": "AIN-CABIN-DATA-01 — Local Member/Data Authority Census",
+      "path": "docs/programme/AIN-CABIN-DATA-01_CENSUS_2026-09-30.md",
+      "excerpt": "Status: census complete; falsifier suite next Base: 9909a1cf6 Question: which existing local substrate can become the single authoritative local store for the member's own Cabin field?",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Governing sentence",
+        "Existing candidates",
+        "Candidate A — lib/memory/stores/SQLiteMemoryStore.ts",
+        "Candidate B — lib/services/DatabaseService.ts",
+        "Candidate C — browser localStorage",
+        "Candidate D — PostgreSQL"
       ]
     },
     {
@@ -1039,7 +2142,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 132,
       "evidence": "STATE        BUILT · local gates PASS · PRODUCTION WITNESS PENDING",
       "last_touched_epoch": 1788567104,
-      "hours_dormant": 645,
+      "hours_dormant": 646,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1051,7 +2154,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 22,
       "evidence": "STATE            SOURCE MERGED · NOT CLOSED · NOT DEPLOYED",
       "last_touched_epoch": 1788697516,
-      "hours_dormant": 609,
+      "hours_dormant": 610,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1063,7 +2166,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Standing:** REPAIR closed · VERIFY full candidate pass (54/54) · INVOKE open, I0 only.",
       "last_touched_epoch": 1788745887,
-      "hours_dormant": 595,
+      "hours_dormant": 596,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1075,7 +2178,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 222,
       "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
       "last_touched_epoch": 1789318246,
-      "hours_dormant": 436,
+      "hours_dormant": 437,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1087,7 +2190,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 219,
       "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
       "last_touched_epoch": 1789317901,
-      "hours_dormant": 436,
+      "hours_dormant": 437,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1099,7 +2202,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 139,
       "evidence": "## 7. Owed witnesses, re-run on the composition",
       "last_touched_epoch": 1789510856,
-      "hours_dormant": 383,
+      "hours_dormant": 384,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1111,7 +2214,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Status:** **AUTOMATIC HANDWRITING OCR HELD · ORIGINAL + MANUAL TRANSCRIPTION OPEN · BLANK-WORK RELEASE INDEPENDENT · PRODUCTION UNTOUCHED.**",
       "last_touched_epoch": 1789602025,
-      "hours_dormant": 357,
+      "hours_dormant": 358,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1123,7 +2226,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 4,
       "evidence": "**Status:** ⚠️ FOUNDER ADJUDICATION OPEN · documentary only",
       "last_touched_epoch": 1789682893,
-      "hours_dormant": 335,
+      "hours_dormant": 336,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1135,7 +2238,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 182,
       "evidence": "## Owed, if the candidate instrument is ever wired",
       "last_touched_epoch": 1789917878,
-      "hours_dormant": 270,
+      "hours_dormant": 271,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1147,7 +2250,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 360,
       "evidence": "## 8 · Owed before A2 can be written",
       "last_touched_epoch": 1790078900,
-      "hours_dormant": 225,
+      "hours_dormant": 226,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     }
@@ -2250,6 +3353,20 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "REVIEW-CUSTODY — Verdict Plurality (Candidate Law)",
+          "path": "docs/programme/REVIEW-CUSTODY_VERDICT_PLURALITY_CANDIDATE_LAW_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: ⭐ CANDIDATE LAW FOR RATIFICATION · ⛔ not implemented · ⛔ the gate is unchanged Occasion: RC1 split verdict. Two reviews of one relation under one plan returned REVISE and APPROVED, and the gate admitted the APPROVED without seeing the REVISE (WS-ADVANCED-RUNTIME-01RC1SPLITVERDICTFOUNDERADJUDICATION2026-10-01.md).",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "The hole",
+            "Candidate law",
+            "Why VP-2 is the load-bearing clause",
+            "Design questions owed before implementation",
+            "Retroactive application"
+          ]
+        },
+        {
           "title": "SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1 — Request-Scoped Thread + Turn Zero-Write Boundary",
           "path": "docs/programme/SANCTUARY-EDITORIAL-PERSISTENCE-01_E1_THREAD_TURN_ZERO_WRITE_2026-09-23.md",
           "excerpt": "Date: 2026-09-23 Act: E1 (founder-authorized after C1C0 surfaced the gap) Against: flagship candidate 6f19ff1b9 (C1C0) · canonical b23ae2d7f — unmoved E1 lineage: suite → repair + witness → this record (SHAs in §8) Authority: persistence boundary only. ⛔ No contextual MAIA mounted. ⛔ No production flag enabled. ⛔ Merge/deploy: NOT authorized. ⛔ STOPPED for founder adjudication.",
@@ -2722,6 +3839,111 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "WRITERS-STUDIO-NEXT-01 / A2-11",
+          "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-11_PRIOR_MAIA_EDITORIAL_TURN_CARRY_RUNTIME_2026-09-26.md",
+          "excerpt": "Date: 2026-09-26 Parent: 29061babd7d8d0fd147a9f8449afb009d75ce9e4 Branch: feature/ws-next-a2-11-carry-runtime-20260926",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 6,
+          "headings": [
+            "PRIOR MAIA EDITORIAL TURN CARRY RUNTIME IMPLEMENTATION ONLY",
+            "I. Boundary provenance",
+            "II. Result",
+            "III. HTTP ingress implementation",
+            "IV. Ordering implementation",
+            "V. Source-read runtime"
+          ]
+        },
+        {
+          "title": "WRITERS-STUDIO-NEXT-01 / A2-14",
+          "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-14_ELIGIBLE_CARRY_SOURCE_READ_REBUILD_INLINE_SELECTION_UI_2026-09-26.md",
+          "excerpt": "Date: 2026-09-26 Parent: 6da5305e066b2e8fce8d96cec9f1f9de9540e81f Branch: feature/ws-next-a2-14-carry-ui-runtime-20260926 Execution packet SHA-256: 14260c272e6e52731d62385bfabbe6b2a3d72dbf9b9b04925852892cb12322e4",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "ELIGIBLE CARRY SOURCE READ + REBUILD INLINE SELECTION UI IMPLEMENTATION ONLY",
+            "I. Result",
+            "II. Eligible-source server read",
+            "III. Eligible-source service",
+            "IV. Exact excerpt law",
+            "V. Strict client read"
+          ]
+        },
+        {
+          "title": "WRITERS-STUDIO-NEXT-01 / A2-4",
+          "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-4_RELATIONSHIP_CUSTODY_SCHEMA_STORE_IMPLEMENTATION_2026-09-25.md",
+          "excerpt": "Date: 2026-09-25 Parent candidate: e264121e57bd1b8b1cac3212b110537e183e3300 Packet: 55e20a2da2a99a7b04a695f55fd7a9bca5e451d3efdfd67409140f95a82b0b68 · 7,673 bytes · 224 lines UI / route contract / deployment: NONE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "RELATIONSHIP CUSTODY SCHEMA + STORE IMPLEMENTATION",
+            "I. Result",
+            "II. Migration",
+            "III. Parent custody",
+            "IV. Episode custody",
+            "V. Closed child semantics"
+          ]
+        },
+        {
+          "title": "WRITERS-STUDIO-NEXT-01 / A2-5R2",
+          "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-5R2_SCOPE_IDENTITY_SCHEMA_SUCCESSION_2026-09-25.md",
+          "excerpt": "Date: 2026-09-25 Parent candidate: 9a08f84b5a876499272b6aa4d4ad11c221c0ac48 Packet: cb24d6c3fdedd3c9d704d6405344fb12ccf73d7754ebe378d69955c8ce0aa382 · 5,449 bytes · 173 lines Live relationshipId carriage: NOT OPEN UI / Focus / deployment / A3: NONE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 8,
+          "headings": [
+            "SCOPE IDENTITY SCHEMA SUCCESSION + EDITORIAL DISCRIMINATOR IMPLEMENTATION",
+            "I. Result",
+            "II. Proposal-chain scope discriminator",
+            "III. Historical standing",
+            "IV. A2 episode scope succession",
+            "V. Migration fail-closed law"
+          ]
+        },
+        {
+          "title": "WRITERS-STUDIO-NEXT-01 / A2-5R3",
+          "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-5R3_LIVE_RELATIONSHIP_CARRIAGE_2026-09-25.md",
+          "excerpt": "Date: 2026-09-25 Parent candidate: ec3103797ae381913d070bc5a5f05103aee78aff Packet: a1d3e03ae588de4b522d6ac1039bcbb80722b5d1b0392ba0d9b9db31e5d32c5e · 4,734 bytes · 148 lines UI / Focus / deployment / A3: NONE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "LIVE RELATIONSHIP IDENTITY CARRIAGE + EDITORIAL/REVIEW ATOMIC ADMISSION",
+            "I. Result",
+            "II. Explicit identity law",
+            "III. Parent API",
+            "IV. Shared carriage preflight",
+            "V. Editorial atomic admission"
+          ]
+        },
+        {
+          "title": "WRITERS-STUDIO-NEXT-01 / A2-6",
+          "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-6_MEMBER_FACING_UNIFIED_RELATIONSHIP_ORCHESTRATION_2026-09-26.md",
+          "excerpt": "Date: 2026-09-26 Parent candidate: 4f5f05069892948a23c0cfd477412d72b6ac950a Packet: 651c15a7624bde226bff0e8c70c5d7f176b2317017fad398b260cf50e812e598 · 6,923 bytes · 219 lines Cross-episode cognition carry: NONE Focus: UNCHANGED / EXCLUDED Deployment: NONE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 9,
+          "headings": [
+            "MEMBER-FACING UNIFIED RELATIONSHIP ORCHESTRATION + SCOPE TRANSITIONS",
+            "I. Result",
+            "II. No-auto-selection law",
+            "III. Parent relationship address",
+            "IV. Work-context gate",
+            "V. Member-facing control"
+          ]
+        },
+        {
+          "title": "WRITERS-STUDIO-NEXT-01 / A2-7",
+          "path": "docs/programme/WRITERS-STUDIO-NEXT-01_A2-7_DURABLE_RELATIONSHIP_RETURN_CROSS_SESSION_PLACE_2026-09-26.md",
+          "excerpt": "Date: 2026-09-26 Parent: 7e62ccc4ab7c48d2054b87314aef17766b47ccad Branch: feature/ws-next-a2-7-durable-return-place-20260926 Execution packet SHA-256: e144c81b5be4c9801a45b91d59a0c70ab2f601819875b0fd378e67af99838ac9",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "DURABLE RELATIONSHIP RETURN + CROSS-SESSION PLACE INTEGRATION",
+            "I. Result",
+            "II. Durable relationship return",
+            "III. Durable place return",
+            "IV. Work-context gate",
+            "V. Storage"
+          ]
+        },
+        {
           "title": "`OBSERVATION-ADDRESS-01 / A1` — RESOLVER EVIDENCE PACKET",
           "path": "docs/programme/WRITERS-STUDIO-OBSERVATION-ADDRESS-01_A1_EVIDENCE_PACKET_2026-09-21.md",
           "excerpt": "Base fix/ws-observation-identity-i1a-20260921 @ 7a91d6992c2a03ae3095baf445e6d36195f04637 Branch claude/ws-observation-address-a1 ⛔ No standing writes · ⛔ no UI · ⛔ no legacy backfill · ⛔ no deploy · ⛔ no migration.",
@@ -2989,6 +4211,74 @@ window.KELLY_FIELD_LIBRARY = {
             "4 · ⚠️ Findings reported, not absorbed",
             "5 · Falsifiers",
             "6 · Gates"
+          ]
+        },
+        {
+          "title": "WS-ADVANCED-RUNTIME-01 / P2 — Exact Three-Migration Review Plan",
+          "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P2_EXACT_THREE_MIGRATION_REVIEW_PLAN_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader at plan freeze: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Candidate lineage before this plan: ecf69ae97eef4e8b9bb010e2f224d33b252ebb42",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Exact target relation",
+            "Exact production-pending set",
+            "Deployment ordering",
+            "Independent review questions",
+            "Minimum physical Reads",
+            "Required review JSON"
+          ]
+        },
+        {
+          "title": "WS-ADVANCED-RUNTIME-01 / P3 — Formal Migration Review Result",
+          "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P3_FORMAL_MIGRATION_REVIEW_RESULT_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: ⭐ REVIEW RUN · ADMITTED · VERDICT REVISE · check REFUSES [NOTAPPROVED] Target: feature/ws-advanced-runtime-rc1-20261001 @ 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 Old reader: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Plan: docs/programme/WS-ADVANCED-RUNTIME-01P2EXACTTHREEMIGRATIONREVIEWPLAN2026-10-01.md (sha256 62b0de90…8a11)",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 7,
+          "headings": [
+            "How it ran",
+            "Custody chain",
+            "Verdict",
+            "Next lawful act (founder rulings owed)"
+          ]
+        },
+        {
+          "title": "WS-ADVANCED-RUNTIME-01 / P4 — RC2 Exact Three-Migration Review Plan",
+          "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P4_RC2_EXACT_THREE_MIGRATION_REVIEW_PLAN_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader at plan freeze: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Candidate lineage before this plan: RC1 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 + canonical d8e0c6bc + RC2 remediation Supersedes for review purposes: P2 (RC1). P2 is preserved unedited; its admitted review (P3, verdict REVISE) is not converted.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Exact target relation",
+            "Exact production-pending set",
+            "RC2 remediation of the P3 REVISE findings",
+            "Deployment ordering",
+            "Independent review questions",
+            "Minimum physical Reads"
+          ]
+        },
+        {
+          "title": "WS-ADVANCED-RUNTIME-01 / P5 — RC2 Formal Migration Review: APPROVED · ⛔ SUPERSEDED",
+          "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P5_RC2_FORMAL_MIGRATION_REVIEW_APPROVED_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: ⭐ REVIEW ADMITTED APPROVED · check APPLIES · drift witness PASS · composed gate (simulated) APPLIES ⛔ Not deployed · no migration applied · production untouched. Applying the schema is a founder act.",
+          "excerpt_start_line": 12,
+          "excerpt_end_line": 14,
+          "headings": [
+            "What changed from RC1 (P3 REVISE → RC2)",
+            "Proof at the target",
+            "Custody chain",
+            "Deployment runbook"
+          ]
+        },
+        {
+          "title": "WS-ADVANCED-RUNTIME-01 / RC1 — Split-Verdict Founder Adjudication",
+          "path": "docs/programme/WS-ADVANCED-RUNTIME-01_RC1_SPLIT_VERDICT_FOUNDER_ADJUDICATION_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: RECORDED ON FOUNDER INSTRUCTION · ⚠️ RETROSPECTIVE · per-finding dispositions F2–F5 drafted from the record, ⛔ owed founder ratification",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "What happened",
+            "Adjudication",
+            "What this does not do"
           ]
         },
         {
@@ -6017,6 +7307,20 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3 — Installed Deployment Witness",
+          "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_INSTALLED_DEPLOYMENT_WITNESS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Canonical base: 2463f66d6b02af3edcfdd6c092fadc2d129b4f72 O5-R3 admission: PR #1570 merged as bd4b9ba5ed0032dc289cd4dbcc70e2dcf9783461; the admitted O5-R3 lineage is an ancestor of this deployment SHA. Standing: ⭐ installed post-R3 Desktop deployed and live · explicit canonical substrate binding established · rollback copy preserved.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1. Deployment substrate",
+            "2. Installed artifact",
+            "3. Explicit substrate binding",
+            "4. Live installed witness",
+            "5. Scope discipline"
+          ]
+        },
+        {
           "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3 — Runtime Binding Witness (R3-R11)",
           "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_RUNTIME_BINDING_WITNESS_2026-10-01.md",
           "excerpt": "Date: 2026-10-01 Base: ce061073 (O5-R3 implementation + freeze amendment 1). ⛔ Kept frozen. No lease or ledger change. Standing: implementation complete · constitutional suite complete · ⭐ Mac Studio integration witness complete · ⭐ R3-R11 runtime-binding witness complete · O5-R3 admission evidence complete · ⛔ merge still pending",
@@ -6044,6 +7348,81 @@ window.KELLY_FIELD_LIBRARY = {
             "2.2 The ruling says \"home\"; the mechanism covers grant ledgers",
             "2.3 Why Electron's single-instance lock is not this lease",
             "2.4 ⭐ Process start time: the build can get this wrong in the unsafe direction"
+          ]
+        },
+        {
+          "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R4 — Evidence Return Census",
+          "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R4_EVIDENCE_RETURN_CENSUS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Base: dbc3036f2ff498779c56b91152d1d79f5e30fde8 Class: Census / pre-falsifier · READ-ONLY against runtime mechanism Predecessors: O5-R1 frozen F5/F6; O5-R2 recovery seam; O5-R3 grant-writer admission Standing: ⭐ R4 CENSUS COMPLETE · ⭐ FALSIFIERS FROZEN · ⛔ NO W4 IMPLEMENTATION",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 7,
+          "headings": [
+            "1. Why R4 is the next O5 boundary",
+            "2. Current W4 mechanism",
+            "3. Lawful placement: evaluation evidence, outside authorized core",
+            "4. Existing frozen law R4 must reuse, not rename",
+            "5. Critical seam: W4 append ≠ O1 projection",
+            "6. Pre-implementation rulings for falsifier construction"
+          ]
+        },
+        {
+          "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R4 — Evidence Return Implementation",
+          "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R4_EVIDENCE_RETURN_IMPLEMENTATION_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Base / frozen-law parent: b1c719610 (chore/o5r4-evidence-return-census-20261001) Class: B — Structural Risk Standing: ⭐ IMPLEMENTATION COMPLETE · LOCAL PROOFS GREEN · ⛔ NOT MERGED · ⛔ INSTALLED JARVIS UNTOUCHED",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1. Scope carried from the frozen R4 instrument",
+            "2. W4.v2 implementation",
+            "New evidence kinds",
+            "Finding schemas",
+            "Proposal schema",
+            "Backward compatibility"
+          ]
+        },
+        {
+          "title": "JARVIS O5-R4 — Freeze Amendment 2 (E9 discrimination) · Production delivery state",
+          "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R4_FREEZE_AMENDMENT_2_AND_DELIVERY_STATE_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 · Base: canonical commit:9c608128361eadd2e6ba2c6c1371353bdb0d7ebe Standing: Amendment 2 recorded · laws R4-E1…E9 unchanged · ⚠️ no affected lane receives any consequence finding in the running system · ⭐ non-delivery ACCEPTED as a declared state, and the never-a-safety-channel rule RATIFIED (founder, 2026-10-01; §6) · ⛔ runtime delivery not authorized · ⛔ durable lane inbox not authorized",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "1. Why this amendment exists",
+            "2. What changed",
+            "3. Verification",
+            "4. Production delivery state",
+            "4a. Nothing produces a consequence finding either",
+            "4b. Could a projectable finding be safety-relevant?"
+          ]
+        },
+        {
+          "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R4 — Installed Deployment Witness",
+          "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R4_INSTALLED_DEPLOYMENT_WITNESS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Canonical / installed SHA: c6102a347af14600ea49edc108dd720f649d7e2c R4 law: initial freeze #1591 + E9 amendment #1595 R4 implementation: #1592 Standing: ⭐ post-R4 installed Desktop deployed and live · stable canonical substrate bound · prior artifact preserved.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 7,
+          "headings": [
+            "1. Canonical admission",
+            "2. Deployment substrate",
+            "O5-R3 preservation",
+            "O5-R4 admission mechanism",
+            "3. Installed artifact",
+            "4. Explicit runtime binding"
+          ]
+        },
+        {
+          "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R5 — Execution Binding & Readiness Census",
+          "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R5_EXECUTION_READINESS_CENSUS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Base: 2e657fa0dd6261584dd77463ced7782d80906d7d Class: Census / pre-falsifier · READ-ONLY against runtime mechanism Predecessors: O2 Work Graph · O3 Authority Planner · O4 Capability Router · O5-R1…R4 Standing: ⭐ R5 CENSUS COMPLETE · ⛔ NO SCHEDULER · ⛔ NO DISPATCH IMPLEMENTATION",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 7,
+          "headings": [
+            "1. Why R5 is next",
+            "2. First gap: planned node → canonical runtime binding",
+            "3. Dependency satisfaction",
+            "4. Node eligibility",
+            "5. Capacity and current-reachable selection",
+            "6. R5B parallelism explicitly deferred"
           ]
         },
         {
@@ -7715,6 +9094,65 @@ window.KELLY_FIELD_LIBRARY = {
       "title": "MAIA / Soul Service",
       "items": [
         {
+          "title": "AIN-CABIN-DATA-01 — Local Member/Data Authority Census",
+          "path": "docs/programme/AIN-CABIN-DATA-01_CENSUS_2026-09-30.md",
+          "excerpt": "Status: census complete; falsifier suite next Base: 9909a1cf6 Question: which existing local substrate can become the single authoritative local store for the member's own Cabin field?",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Governing sentence",
+            "Existing candidates",
+            "Candidate A — lib/memory/stores/SQLiteMemoryStore.ts",
+            "Candidate B — lib/services/DatabaseService.ts",
+            "Candidate C — browser localStorage",
+            "Candidate D — PostgreSQL"
+          ]
+        },
+        {
+          "title": "AIN-CABIN-MEMORY-01 — Memory Authority Census",
+          "path": "docs/programme/AIN-CABIN-MEMORY-01_CENSUS_2026-09-30.md",
+          "excerpt": "Status: census complete; build open Base: 439d9bd1c",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Governing sentence",
+            "Existing memory authorities",
+            "1. Conversation turns",
+            "2. Developmental memory",
+            "3. Episodic memory",
+            "4. Conversational recall"
+          ]
+        },
+        {
+          "title": "AIN-CABIN-MEMORY-01 — Falsifier Contract",
+          "path": "docs/programme/AIN-CABIN-MEMORY-01_FALSIFIERS_2026-09-30.md",
+          "excerpt": "Status: implementation target Base: 439d9bd1c",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "F1 — Acceptance durability",
+            "F2 — Idempotency",
+            "F3 — Provenance and Sanctuary",
+            "F4 — Session boundary",
+            "F5 — Member ownership",
+            "F6 — Developmental derivation"
+          ]
+        },
+        {
+          "title": "AIN-CABIN-MEMORY-SOURCE-01 — Local Memory Source Seam",
+          "path": "docs/programme/AIN-CABIN-MEMORY-SOURCE-01.md",
+          "excerpt": "Status: implementation complete; cognition remains closed Base: 76cfd65f3",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Governing sentence",
+            "What this cut does",
+            "What it refuses to claim",
+            "Falsifiers",
+            "Witness"
+          ]
+        },
+        {
           "title": "`AIN-CONTEXT-01` · A6 — IMPLEMENTATION + ACCEPTANCE WITNESS",
           "path": "docs/programme/AIN-CONTEXT-01_A6_ACCEPTANCE_2026-09-15.md",
           "excerpt": "Date: 2026-09-15 · Verdict: ⭐ GREEN — 59 passed · 0 failed Authority: founder ruling 2026-09-15, \"A6 — Post-F1a Founder Ruling\", R1–R7 Pre-repair evidence: AIN-CONTEXT-01A6F1aWITNESS2026-09-15.md (RED) Instrument: tests/constitutional/ain-context/f1b-a6-acceptance.ts",
@@ -7879,6 +9317,79 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "EARLY-FIELD-01 — Merge Record",
+          "path": "docs/programme/EARLY-FIELD-01_MERGE_RECORD_2026-09-30.md",
+          "excerpt": "Programme day: 2026-09-30 Merged: 2026-10-01 00:26:13Z PR: #1547 — feat(living-field): cohort-gate R1R3 instrument on current canon Status: MERGED TO CANON · deployment witness still required",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1 · Merge subject",
+            "2 · Certified lineage",
+            "3 · Merge bar",
+            "4 · What this merge does not establish"
+          ]
+        },
+        {
+          "title": "EARLY-FIELD-01 — Production Cohort Open",
+          "path": "docs/programme/EARLY-FIELD-01_PRODUCTION_COHORT_OPEN_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Production runtime SHA: 975a208b8 Canonical at operational record branch start: cb208a26a Standing: SMALL CONTROLLED COHORT OPEN · FIRST HUMAN WITNESS PENDING",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1 · Founder-designated cohort",
+            "2 · Pre-change witness",
+            "3 · Environment mutation",
+            "4 · Recreate boundary",
+            "5 · Post-open network witness",
+            "6 · Rollback"
+          ]
+        },
+        {
+          "title": "EARLY-FIELD-01 — Production Deployment Record",
+          "path": "docs/programme/EARLY-FIELD-01_PRODUCTION_DEPLOYMENT_RECORD_2026-09-30.md",
+          "excerpt": "Programme day: 2026-09-30 Status: DEPLOYED · PROVENANCE VERIFIED · NON-COHORT EXCLUSION WITNESSED · widening/admission still open Current production at record opening: 89f7876e8 Next governed target: cc1c5b4d79793dd7911d6aea0054e8c678d01bcb",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1 · Production sequence before EARLY-FIELD-01 merge",
+            "2 · Exposure state before the gate deploy",
+            "3 · Rollback custody",
+            "4 · New canonical target",
+            "5 · Required pre-deploy witness",
+            "6 · First post-deploy witness"
+          ]
+        },
+        {
+          "title": "H1-COHORT-GATE-01 · Cohort Boundary and Context Authority · census and propagation design · 2026-10-01",
+          "path": "docs/programme/H1-COHORT-GATE-01_CENSUS_AND_DESIGN_2026-10-01.md",
+          "excerpt": "Make the canonical #1544 distinction real without creating a second admission system or weakening the existing Writer's Studio ambiguity law. The contract is not \"build H1\". It is to control whether H1's contextual arrival is allowed to exist for this member.",
+          "excerpt_start_line": 16,
+          "excerpt_end_line": 18,
+          "headings": [
+            "0 · Purpose and boundary",
+            "Frozen invariants (founder, 2026-10-01)",
+            "1 · Census Q1: where can `work=` come from today?",
+            "1.1 Producers (originate a Studio `work=`)",
+            "1.2 Forwarders (carry an existing `work=` onward; never originate one)",
+            "1.3 Readers (where `work=` acquires authority)"
+          ]
+        },
+        {
+          "title": "H1-COHORT-GATE-01 · R3 — Runtime Convergence Deployment Witness · 2026-10-01",
+          "path": "docs/programme/H1-COHORT-GATE-01_R3_RUNTIME_CONVERGENCE_WITNESS_2026-10-01.md",
+          "excerpt": "R3 establishes that the H1 authority admitted under #1551 is now running through the single governed arrival seam merged by #1578, without reopening or changing the already-designated production cohort.",
+          "excerpt_start_line": 16,
+          "excerpt_end_line": 16,
+          "headings": [
+            "1 · What R3 establishes",
+            "2 · Immutable deployment",
+            "3 · Pre-swap gates",
+            "4 · Running provenance and health",
+            "5 · H1 operational configuration survived the deployment",
+            "6 · Converged authority present in the running image"
+          ]
+        },
+        {
           "title": "H1 Cohort Gate — Canonical Admission Witness",
           "path": "docs/programme/H1-COHORT-GATE_ADMISSION_2026-09-30.md",
           "excerpt": "Programme day: 2026-09-30 Witnessed: 2026-10-01 Governing law: H1-EXPOSURECENSUSANDRULINGS2026-09-30.md §4 Implementation PR: #1551 Canonical witnessed: 3421a2096c3afcce617a394bca1ffe246171f39f Origin witnessed: http://localhost:3100 Standing: ✅ H1 ADMITTED TO CANONICAL · production deployment is separate",
@@ -7938,6 +9449,32 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "H1 — First Human Witness · Observer Sheet",
+          "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_OBSERVER_SHEET_2026-10-01.md",
+          "excerpt": "Private facilitator sheet. Do not show the participant before the uncoached attempt. Governing protocol: H1-FIRST-HUMAN-WITNESSPROTOCOL2026-09-30.md",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Preflight",
+            "First attempt",
+            "Recognition",
+            "First move",
+            "Hesitation",
+            "Continuity"
+          ]
+        },
+        {
+          "title": "H1 — First Human Witness · Participant Card",
+          "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_PARTICIPANT_CARD_2026-10-01.md",
+          "excerpt": "Use: hand or read this card to the participant only after the facilitator has completed the private preflight.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "Before we begin",
+            "Task"
+          ]
+        },
+        {
           "title": "H1 — First Human Production Witness Protocol",
           "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
           "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline: 168c37c0d56493f179d644033738ed82d41822da Runtime implementation: 3421a2096c3afcce617a394bca1ffe246171f39f Governing law: H1-EXPOSURECENSUSANDRULINGS2026-09-30.md §4 Admission witness: H1-COHORT-GATEADMISSION2026-09-30.md",
@@ -7950,6 +9487,21 @@ window.KELLY_FIELD_LIBRARY = {
             "4 · Consent and evidence posture",
             "5 · Participant-facing task",
             "6 · Observe, do not interpret for the member"
+          ]
+        },
+        {
+          "title": "H1 — First Human Witness · Result Template",
+          "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_RESULT_TEMPLATE_2026-10-01.md",
+          "excerpt": "Participant-neutral record. Do not include participant name, email, UUID, session credential, Work title, manuscript title, manuscript excerpt, or private reflective content.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Identity of the witnessed condition",
+            "Uncoached first attempt",
+            "Recognition",
+            "First move",
+            "Hesitation",
+            "Continuity"
           ]
         },
         {
@@ -8025,6 +9577,48 @@ window.KELLY_FIELD_LIBRARY = {
             "Founder acceptance walk",
             "Clean-device rehearsal",
             "Feedback record"
+          ]
+        },
+        {
+          "title": "MAIA Desktop — Cabin Artifact Packaging Diagnosis · 2026-10-01",
+          "path": "docs/programme/MAIA-DESKTOP-CABIN-ARTIFACT-DIAGNOSIS_2026-10-01.md",
+          "excerpt": "Candidate: e3688fce20dde0b539988ebdd27c06162783a1ea",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Boundary observed",
+            "Root cause",
+            "Final bounded repair",
+            "Provenance",
+            "Standing"
+          ]
+        },
+        {
+          "title": "MAIA Desktop — Cabin Artifact Packaging Repair 02 · 2026-10-01",
+          "path": "docs/programme/MAIA-DESKTOP-CABIN-ARTIFACT-REPAIR-02_2026-10-01.md",
+          "excerpt": "First repair candidate: 147815873090",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Failed successor to the first repair",
+            "Observed mechanism",
+            "Smallest second repair",
+            "Standing"
+          ]
+        },
+        {
+          "title": "MAIA Desktop — Cabin Artifact Packaging Repair · 2026-10-01",
+          "path": "docs/programme/MAIA-DESKTOP-CABIN-ARTIFACT-REPAIR_2026-10-01.md",
+          "excerpt": "Source SHA: c6102a347af14600ea49edc108dd720f649d7e2c",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Failed candidate",
+            "Observed artifact defect",
+            "Additional artifact observations",
+            "Smallest repair surface",
+            "Existing evidence retained",
+            "Fresh witness requirement"
           ]
         },
         {
@@ -8535,6 +10129,208 @@ window.KELLY_FIELD_LIBRARY = {
             "3. Three judgment calls, stated rather than silently taken",
             "4. Deliberately NOT done",
             "5. Proof"
+          ]
+        },
+        {
+          "title": "Living Field #1539 — Real-Stack Re-witness",
+          "path": "docs/programme/LIVING-FIELD-1539_REAL_STACK_REWITNESS_2026-10-01.md",
+          "excerpt": "Witnessed: 2026-10-01 Canonical witnessed: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Origin witnessed: http://127.0.0.1:3139 Standing: PASS — 29/29, 0 failures",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Purpose",
+            "Witness environment",
+            "Origin-preservation finding",
+            "Result",
+            "Repaired dimension boundary",
+            "Explicit MAIA-entry consent"
+          ]
+        },
+        {
+          "title": "LIVING-FIELD-AUTH-CONVERGENCE-01 — Census",
+          "path": "docs/programme/LIVING-FIELD-AUTH-CONVERGENCE-01_CENSUS_2026-09-30.md",
+          "excerpt": "Date: 2026-09-30 Base: 89f7876e8 (clean-main-no-secrets) Status: census complete; repair lane open; no merge/deploy authority",
+          "excerpt_start_line": 2,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Trigger",
+            "Measured seam",
+            "Repair law",
+            "Auth repair",
+            "Real-stack witness after auth repair"
+          ]
+        },
+        {
+          "title": "Living Field Consent Repair — Production Deployment Record",
+          "path": "docs/programme/LIVING-FIELD-CONSENT-REPAIR_PRODUCTION_DEPLOYMENT_2026-09-30.md",
+          "excerpt": "Programme day: 2026-09-30 Deployed: 2026-10-01 UTC Target / canonical at deployment: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Source PR: #1554 · explicit MAIA entry Standing: DEPLOYED · PRODUCTION HEALTHY · EARLY FIELD STILL CLOSED",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 7,
+          "headings": [
+            "1 · Deployment boundary",
+            "2 · Pre-deploy gates",
+            "3 · Governed deploy act",
+            "4 · Running provenance and health",
+            "5 · Exposure state after deployment",
+            "6 · Rollback custody"
+          ]
+        },
+        {
+          "title": "Living Field — First-Entry Human Production Witness Protocol",
+          "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Production condition: admitted cohort member with genuinely empty member-owned Living Field substrate Standing: first-entry evidence only · does not substitute for populated-field ownership/continuity evidence",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1 · Human-only question",
+            "2 · Preconditions",
+            "3 · What to tell the member",
+            "4 · Observe",
+            "5 · Content-creation law",
+            "6 · Stop conditions"
+          ]
+        },
+        {
+          "title": "Living Field — First-Entry Human Witness Record",
+          "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
+          "excerpt": "Participant label: FIRST-ENTRY- Date/time: Production SHA at start: (docker exec maia-sovereign printenv GITCOMMIT) Production SHA at end: (same command, after the walk; if it differs from start → the walk is NO EVIDENCE) Public health: Device/browser: Early Field admitted: yes / no Pre-existing member-owned substrate: no",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 10,
+          "headings": [
+            "Uncoached path",
+            "First-entry observations",
+            "Post-walk responses",
+            "Findings",
+            "Adjudication"
+          ]
+        },
+        {
+          "title": "Living Field — First Human Witness Packet",
+          "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PACKET_2026-10-01.md",
+          "excerpt": "Use with: LIVING-FIELD-FIRST-HUMAN-WITNESSPROTOCOL2026-09-30.md Standing: facilitator packet · no participant selected · no widening authority",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Before the member arrives",
+            "What to say",
+            "During the uncoached pass",
+            "Stop immediately if",
+            "After the uncoached pass",
+            "Adjudication reminder"
+          ]
+        },
+        {
+          "title": "Living Field — First Human Production Witness Protocol",
+          "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
+          "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline at protocol drafting: 68af62fda Early Field authority: EARLY-FIELD-01COHORTADMISSION2026-09-30.md Layered Admission candidate: docs/canon/LAYEREDADMISSION.md (if admitted) Standing: protocol only · no member added · no environment change · no deployment",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 8,
+          "headings": [
+            "1 · Human-only question",
+            "2 · What machines establish before a human enters",
+            "3 · Participant and environment preconditions",
+            "4 · Consent and evidence posture",
+            "5 · Participant-facing task",
+            "6 · Observe without interpreting for the member"
+          ]
+        },
+        {
+          "title": "Living Field — First Human Witness Readiness",
+          "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_READINESS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Production runtime: 975a208b8 Canonical base at census: dbcdcf786 Standing: POPULATED-FIELD WITNESS BLOCKED BY EVIDENCE · FIRST-ENTRY WITNESS ELIGIBLE · cohort remains open · no rollback condition observed",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Trigger",
+            "Aggregate result",
+            "Interpretation",
+            "Ruling",
+            "Eligibility condition for the first populated-field human witness",
+            "Current state"
+          ]
+        },
+        {
+          "title": "Living Field — First Human Witness Record",
+          "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
+          "excerpt": "Participant label: WITNESS- Date/time: Production SHA: Public health: Device/browser: Early Field admitted: yes / no Authentic member-owned substrate present before witness: yes / no Facilitator intervention: none / describe MAIA entered: yes / no MAIA request before explicit entry: yes / no / not observed",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 12,
+          "headings": [
+            "Uncoached path",
+            "Observed orientation",
+            "MAIA boundary",
+            "Return",
+            "Trust and privacy",
+            "Post-walk responses"
+          ]
+        },
+        {
+          "title": "LIVING-FIELD-MAIA-ENTRY-CONSENT-01",
+          "path": "docs/programme/LIVING-FIELD-MAIA-ENTRY-CONSENT-01_2026-09-30.md",
+          "excerpt": "Date: 2026-09-30 Base: 8b2680254 / PR #1545 auth-runtime repair Status: implementation in progress; merge/deploy not authorized",
+          "excerpt_start_line": 2,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Founder ruling",
+            "Repair law",
+            "Falsifier and real-stack witness"
+          ]
+        },
+        {
+          "title": "LIVING FIELD R1R3 — Final Real-Stack Witness",
+          "path": "docs/programme/LIVING-FIELD-R1R3_FINAL_REAL_STACK_WITNESS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Canonical witnessed: f7f53dee9 Route: /maia/living-field?from=house Origin: http://127.0.0.1:3145 Member: existing non-sensitive local test member qa-soulportrait-test Standing: final real-stack witness PASS for the mounted R1R3 instrument and House circulation repairs",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 8,
+          "headings": [
+            "1. Why this witness exists",
+            "2. Repairs now in canonical",
+            "#1563 — recursive interaction + progressive disclosure",
+            "#1564 — House return convergence",
+            "3. Canonical context crossed after those merges",
+            "4. Real-stack witness"
+          ]
+        },
+        {
+          "title": "Living Field — Rollout Evidence Convergence",
+          "path": "docs/programme/LIVING-FIELD-ROLLOUT-EVIDENCE-CONVERGENCE_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Base: current canonical at lane opening 0ea02739f Standing: documentary convergence only · no runtime change · no production mutation",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Why convergence is needed",
+            "Source lineage carried",
+            "What this does not do",
+            "Canonical meaning after convergence",
+            "Supersession rule",
+            "Next boundary"
+          ]
+        },
+        {
+          "title": "LIVING-FIELD-RUNTIME-PARAMS-01",
+          "path": "docs/programme/LIVING-FIELD-RUNTIME-PARAMS-01_2026-09-30.md",
+          "excerpt": "Date: 2026-09-30 Base: auth convergence commit fe8806d28 Status: implementation witnessed; merge/deploy not authorized",
+          "excerpt_start_line": 2,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Trigger",
+            "Repair law",
+            "Witness"
+          ]
+        },
+        {
+          "title": "Living Field + Writer's Studio Witnesses — Re-baseline after RC1",
+          "path": "docs/programme/LIVING-FIELD_WITNESS_REBASELINE_RC1_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: SOURCE RE-BASELINE COMPLETE · ⛔ two live confirmations owed at walk time Previous readiness runtime: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Current production runtime: 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 (founder deploy, ~14:35Z)",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Correction to the premise",
+            "Source re-baseline: `975a208b8` → `03f0fd3ab`",
+            "Live confirmations owed (read-only, at walk start)",
+            "1. Cabin mode must be unset in the live container (expect: empty line)",
+            "2. Start SHA (repeat at the end; a difference makes the walk NO EVIDENCE)",
+            "Writer's Studio cohort walk: same rule"
           ]
         },
         {
@@ -9390,6 +11186,341 @@ window.KELLY_FIELD_LIBRARY = {
     {
       "title": "Soullab Desktop / House",
       "items": [
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.1 — Work Projection Census",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-1_WORK_PROJECTION_CENSUS_2026-09-30.md",
+          "excerpt": "Can an already-governed Living Work cross into a portable Cabin package as a reference without creating a second Work authority?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Gate question",
+            "Existing authority",
+            "Projection law",
+            "Deliberately excluded",
+            "Falsifiers",
+            "F1 — Ownership confusion"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.2 — Relationship Projection Census",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-2_RELATIONSHIP_PROJECTION_CENSUS_2026-09-30.md",
+          "excerpt": "Can an explicitly handed-off relationship become a portable Cabin reference without carrying inferred relational meaning or private relationship content?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Gate question",
+            "Existing authority",
+            "Projection law",
+            "Why the inferred bridge fields do not cross",
+            "Falsifiers",
+            "F1 — implicit relationship authority"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.3 — Memory Eligibility Projection Census",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-3_MEMORY_ELIGIBILITY_CENSUS_2026-09-30.md",
+          "excerpt": "Can member-owned memory cross into a local Cabin package without confusing being stored with being eligible for recall?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Gate question",
+            "Existing authority",
+            "H2.3 ruling",
+            "Package eligibility",
+            "Recall eligibility",
+            "What crosses"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.4 — Local Cabin Context Package Census",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-4_CONTEXT_PACKAGE_CENSUS_2026-09-30.md",
+          "excerpt": "Can the Work, Relationship, and Memory projections travel together as one portable package without creating a universal context object or a second authority?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Gate question",
+            "Ruling",
+            "Package shape",
+            "Composition law",
+            "Falsifiers",
+            "F1 — second authority"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H2.5 — Package Custody Census",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H2-5_PACKAGE_CUSTODY_CENSUS_2026-09-30.md",
+          "excerpt": "Can a serialized Cabin Context Package be accepted back into the Cabin without trusting the file to tell the Cabin what it is?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Gate question",
+            "Ruling",
+            "Why strictness matters",
+            "Falsifiers",
+            "F1 — schema spoofing",
+            "F2 — scope spoofing"
+          ]
+        },
+        {
+          "title": "Implementation witness",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-10_MOUNTED_EXPERIENCE_CONTEXT_2026-10-01.md",
+          "excerpt": "Implemented as:",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Standing"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.1 — Cabin Context Mount Census",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-1_CONTEXT_MOUNT_CENSUS_2026-09-30.md",
+          "excerpt": "How does a validated portable Context Package become available to the local Cabin runtime without becoming a second persistent authority?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Gate question",
+            "Existing runtime boundary",
+            "Ruling",
+            "Mount law",
+            "Falsifiers",
+            "F1 — invalid package admission"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.2 — Desktop Context Wiring",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-2_DESKTOP_CONTEXT_WIRING_CENSUS_2026-09-30.md",
+          "excerpt": "Can the Desktop carry an explicit Cabin Context Package into the local runtime, let the Cabin validate and mount it, and let the runtime read only the governed Work / Relationship / Memory projections without creating a new authority?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Gate question",
+            "Authorized boundary",
+            "Package ownership",
+            "Runtime identity boundary",
+            "Falsifiers",
+            "F1 — package-path ambiguity"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.3 — Explicit Context Package Export",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-3_EXPLICIT_CONTEXT_PACKAGE_EXPORT_CENSUS_2026-09-30.md",
+          "excerpt": "Can an explicit export write a portable Context Package artifact from already-governed projections without creating a synchronization mechanism or a second authority?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Gate question",
+            "Ruling",
+            "Export law",
+            "Falsifiers",
+            "F1 — path ambiguity",
+            "F2 — projection bypass"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.4 — Connected Export Assembly Census",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-4_CONNECTED_EXPORT_ASSEMBLY_CENSUS_2026-09-30.md",
+          "excerpt": "Can the connected Soullab platform assemble a Cabin Context Package from canonical member-owned sources without turning export into ambient capture, inference, or synchronization?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Gate question",
+            "Current state",
+            "Source census",
+            "Work",
+            "Relationship",
+            "Memory"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.5 — Explicit Connected Export Command",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-5_EXPLICIT_CONNECTED_EXPORT_COMMAND_CENSUS_2026-09-30.md",
+          "excerpt": "Can one explicit connected export command join H3.4 source assembly to the H3.3 artifact writer without opening a second write path, automatic behavior, or hidden selection?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Gate question",
+            "Ruling",
+            "Command law",
+            "Falsifiers",
+            "F1 — writer bypass",
+            "F2 — assembly bypass"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.7 — Connected Cabin Package Delivery",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-7_CONNECTED_CABIN_PACKAGE_DELIVERY_CENSUS_2026-09-30.md",
+          "excerpt": "How does a member explicitly carry the already-assembled Cabin Context Package from the connected Soullab environment onto the member's own machine without giving JARVIS, the browser, or the server a new source-selection authority?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Gate question",
+            "Ruling",
+            "Request contract",
+            "Security / custody",
+            "Falsifiers",
+            "F1 — identity substitution"
+          ]
+        },
+        {
+          "title": "Implementation witness",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-8_EXPLICIT_LOCAL_PLACEMENT_CENSUS_2026-10-01.md",
+          "excerpt": "Implemented as:",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Standing"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H3.9 — Explicit Cabin Runtime Refresh",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H3-9_EXPLICIT_RUNTIME_REFRESH_2026-10-01.md",
+          "excerpt": "Can a member deliberately activate a newly placed Cabin Context Package without making placement itself an activation, without automatic remount, and without exposing package contents to the browser?",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Gate question",
+            "Ruling",
+            "Request law",
+            "Runtime law",
+            "Falsifiers",
+            "Acceptance"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.0 — Cabin Arrival Experience Contract",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-0_CABIN_ARRIVAL_EXPERIENCE_2026-10-01.md",
+          "excerpt": "H3.10 established the mounted experience bridge. The repository already establishes the House as the orientation layer: arrival is a human experience, not a capability inventory.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Archaeology",
+            "Core ruling",
+            "Domain authority",
+            "Critical continuity rule",
+            "Human experience",
+            "Falsifier suite"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.1 — Cabin Arrival Visual Authority Candidate",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-1_CABIN_ARRIVAL_VISUAL_AUTHORITY_2026-10-01.md",
+          "excerpt": "H4.0 explicitly stopped member-facing implementation until Cabin visual authority existed.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Archaeology ruling",
+            "H4.1 gate question",
+            "Ruling",
+            "Visual relationship",
+            "Implementation boundary",
+            "Acceptance"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.2 — Mounted Arrival Context",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-2_MOUNTED_ARRIVAL_CONTEXT_2026-10-01.md",
+          "excerpt": "H4.1 visual authority was founder-ratified before this implementation.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Ruling",
+            "Implementation",
+            "Domain behavior",
+            "Important infrastructure correction",
+            "1. Next.js route-handler dependency injection",
+            "2. Runtime mount bundle boundary"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.3 — Cabin Doorway Crossing",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-3_CABIN_DOORWAY_CROSSING_2026-10-01.md",
+          "excerpt": "H4.2 established the real Cabin arrival field. H4.3 establishes the narrow crossing seam between that field and its receiving rooms.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Ruling",
+            "Implementation",
+            "Canonical doorways",
+            "Why this is a separate seam",
+            "Falsifier suite",
+            "Evidence"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.4 — Destination Membranes",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-4_DESTINATION_MEMBRANES_2026-10-01.md",
+          "excerpt": "H4.3 established the non-semantic crossing marker.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Ruling",
+            "Surfaces",
+            "Implementation state",
+            "Destination behavior",
+            "Writer's Studio",
+            "Relationships"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.5 — Post-Return Continuity",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-5_POST_RETURN_CONTINUITY_2026-10-01.md",
+          "excerpt": "H4.4 established the destination return membranes.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Ruling",
+            "Runtime witness",
+            "Results",
+            "Structural witness",
+            "Focused test evidence",
+            "Falsifier status"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.6 — Controlled-Cohort Readiness",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-6_CONTROLLED_COHORT_READINESS_2026-10-01.md",
+          "excerpt": "H4.5 completes the local Cabin crossing sequence:",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Ruling",
+            "Production posture",
+            "Release interpretation",
+            "Controlled sequence",
+            "Evidence already complete",
+            "Stop boundary"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.7-R1 — Release Source Reconciliation",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-7-R1_RELEASE_SOURCE_RECONCILIATION_2026-10-01.md",
+          "excerpt": "H4.7 produced a real arm64 MAIA Desktop bundle on T7 Shield:",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Boundary",
+            "Facts (repository, verified in-session)",
+            "Reconciliation candidate",
+            "Gates run here (Linux container, no project `node_modules`)",
+            "The release-SHA ruling this unit asks for",
+            "Carried into R2 (the rebuild); no gate is skipped"
+          ]
+        },
+        {
+          "title": "HOUSE-CABIN-CONTEXT-SPINE-01 · H4.7 — Desktop Artifact Gate",
+          "path": "docs/programme/HOUSE-CABIN-CONTEXT-SPINE-01_H4-7_DESKTOP_ARTIFACT_GATE_2026-10-01.md",
+          "excerpt": "H4.6 established controlled-cohort readiness. H4.7 is the distribution membrane: produce one exact MAIA Desktop artifact carrying the canonical Cabin runtime, prove its identity, then satisfy the existing macOS external-distribution gates.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Boundary",
+            "Source authority",
+            "Distribution prerequisites",
+            "Local artifact build witness",
+            "Negative controls / non-claims",
+            "Standing"
+          ]
+        },
         {
           "title": "HOUSE-STUDIO-CIRCULATION-01 — Census (read-only)",
           "path": "docs/programme/HOUSE-STUDIO-CIRCULATION-01_CENSUS_2026-09-30.md",
@@ -10919,6 +13050,21 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "LAYERED-ADMISSION-01 — Applicability Census",
+          "path": "docs/programme/LAYERED-ADMISSION-01_APPLICABILITY_CENSUS_2026-09-30.md",
+          "excerpt": "Date: 2026-09-30 Base: 008963af1 Standing: read-only architectural census; no runtime change authorized",
+          "excerpt_start_line": 2,
+          "excerpt_end_line": 4,
+          "headings": [
+            "1. Strong semantic fits",
+            "Writer's Studio — Editorial capability",
+            "Writer's Studio — Review Discuss",
+            "Writer's Studio — Develop standing",
+            "2. Conditional fits",
+            "Chat — memory-reference citations"
+          ]
+        },
+        {
           "title": "MANUSCRIPT-INGEST-TRANSPORT — design packet",
           "path": "docs/programme/MANUSCRIPT-INGEST-TRANSPORT_PACKET_2026-09-06.md",
           "excerpt": "Evidence in hand, and its limits:",
@@ -11273,6 +13419,36 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "SOULLAB-LIVING-ARCHIVE-01 · §30a–36 — The Dark Field and the Choice",
+          "path": "docs/programme/SOULLAB-LIVING-ARCHIVE-01_DARK_FIELD_AND_CHOICE_CANDIDATE_2026-10-01.md",
+          "excerpt": "Status: CANDIDATE (founder-directed record, 2026-10-01). ⛔ Not ratified · ⛔ no implementation · ⛔ no Source Vault schema · ⛔ no telemetry · production untouched.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "1. The moment",
+            "2. Candidate laws",
+            "3. Review amendments (2026-10-01)",
+            "3.1 Cataloguing unit — ⚠️ OWED IN LA2",
+            "3.2 Haze",
+            "3.3 Sealed vs Withheld — ⚠️ OWED IN LA2"
+          ]
+        },
+        {
+          "title": "SOULLAB-LIVING-ARCHIVE-01 · LA2 / Dark Field Prebuild Closure",
+          "path": "docs/programme/SOULLAB-LIVING-ARCHIVE-01_LA2_DARK_FIELD_PREBUILD_CLOSURE_CANDIDATE_2026-10-01.md",
+          "excerpt": "Status: CANDIDATE · evidence-backed prebuild closure · 2026-10-01. No runtime implementation. No Source Vault schema. No production change.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "1. LA2 cataloguing unit — resolved as candidate",
+            "2. LA2 privacy classes — resolved as candidate",
+            "3. Known gaps",
+            "4. Entry policy — provisional build contract, not ratified law",
+            "5. Telemetry audit — current infrastructure finding",
+            "Required archive transport rule"
+          ]
+        },
+        {
           "title": "STUDIO-WRITING-PRESENCE-01 — DISCOVER",
           "path": "docs/programme/STUDIO-WRITING-PRESENCE-01_DISCOVER_2026-09-08.md",
           "excerpt": "Date: 2026-09-08 · Census from clean-main-no-secrets @ 21e315871.",
@@ -11449,8 +13625,8 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 661,
-    "recent": 68,
+    "lanes": 735,
+    "recent": 144,
     "recovery": 12
   }
 };
