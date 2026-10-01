@@ -170,4 +170,44 @@ describe('HOUSE-CABIN-CONTEXT-SPINE-01 · H3.10 Mounted Experience Context', () 
 
     expect(again.work[0].work.title).toBe('Elemental Alchemy');
   });
+
+  it('F8 excludes member and session identity from the experience bridge', () => {
+    const root = tempRoot();
+    const dataPath = path.join(root, 'cabin.sqlite');
+
+    fs.writeFileSync(
+      path.join(root, 'context-package.json'),
+      serializeCabinContextPackage(validPackage()),
+    );
+    initializeCabinContextMount(dataPath);
+
+    const serialized = JSON.stringify(readCabinExperienceContext());
+
+    expect(serialized).not.toContain('memberId');
+    expect(serialized).not.toContain('sessionId');
+    expect(serialized).not.toContain('local-member');
+  });
+
+  it('F9 remains bound to the current ephemeral mount after the artifact changes', () => {
+    const root = tempRoot();
+    const dataPath = path.join(root, 'cabin.sqlite');
+    const packagePath = path.join(root, 'context-package.json');
+
+    fs.writeFileSync(
+      packagePath,
+      serializeCabinContextPackage(validPackage()),
+    );
+    initializeCabinContextMount(dataPath);
+
+    fs.writeFileSync(
+      packagePath,
+      serializeCabinContextPackage(buildCabinContextPackage()!),
+    );
+
+    const context = readCabinExperienceContext();
+
+    expect(context.state).toBe('mounted');
+    expect(context.work).toHaveLength(1);
+    expect(context.work[0].work.title).toBe('Elemental Alchemy');
+  });
 });

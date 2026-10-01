@@ -19,9 +19,14 @@ The bridge:
 - has no database, network, filesystem-write, or JARVIS seam;
 - returns detached data so an experience cannot mutate the runtime mount.
 
-H3.10 focused suite: **7/7 PASS**.
+H3.10 focused suite: **9/9 PASS**.
 
-Combined Cabin suite including H3.7–H3.10: **146/146 PASS**.
+Additional falsifiers now cover:
+
+- member/session identity exclusion from the experience shape;
+- resistance to artifact changes after the runtime mount has already been established.
+
+Combined Cabin suite including H3.7–H3.10: **148/148 PASS**.
 
 ## Standing
 
