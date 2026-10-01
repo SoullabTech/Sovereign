@@ -12,6 +12,7 @@
     canonical_base: 'a999932df7aa3d4052ee78f044878026aa4f680b',
     live_telemetry: false,
     needs_kelly: Object.freeze([
+      'Rotate the invalid production Resend API key. Read-only production witness at running SHA 56d0cd679 returned HTTP 400 · validation_error · API key is invalid.',
       'Configure at least one independent human alert channel: Twilio SMS or Slack webhook; then run npm run check:safety-human-delivery until it reports READY.',
     ]),
     in_motion: Object.freeze([
