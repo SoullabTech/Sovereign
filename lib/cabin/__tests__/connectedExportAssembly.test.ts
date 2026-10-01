@@ -128,7 +128,19 @@ describe('HOUSE-CABIN-CONTEXT-SPINE-01 · H3.4 Connected Export Assembly', () =>
     expect(JSON.stringify(result.relationships[0])).not.toContain('distance');
   });
 
-  it('F5 preserves member_pulled as a non-ambient memory standing and rejects rejected memory', async () => {
+  it('F5 refuses a memory atom whose crossing flag is not canonically false', async () => {
+    const d = deps({
+      query: async <T>(sql: string) => ({
+        rows: /member_memory_atoms/i.test(sql) ? [memoryRow({ crossing_allowed: true }) as T] : workRows() as T[],
+      }) as Promise<{ rows: T[] }>,
+    });
+
+    await expect(
+      assembleConnectedCabinContextPackage(MEMBER, selection({ memoryIds: [MEMORY] }), d),
+    ).rejects.toThrow(`CABIN_EXPORT_SELECTION_INVALID:memory:${MEMORY}`);
+  });
+
+  it('F6 preserves member_pulled as a non-ambient memory standing and rejects rejected memory', async () => {
     const result = await assembleConnectedCabinContextPackage(MEMBER, selection({ memoryIds: [MEMORY] }), deps());
     expect(result.memories[0].recall).toEqual({ standing: 'member_pulled', basis: 'return_preference' });
 
