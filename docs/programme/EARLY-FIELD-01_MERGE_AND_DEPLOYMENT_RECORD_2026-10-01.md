@@ -206,3 +206,68 @@ The rule *independent admission gates compose monotonically* generalizes beyond 
 - composition is witnessed per cell, never assumed from the cells already witnessed.
 
 Ratification is a founder act. This entry only names it.
+
+---
+
+## 8 · ROLLOUT-R2 result: **NO EVIDENCE · PRECONDITION NOT MET** (founder-run pre-walk, 2026-10-01)
+
+Read-only on minisforum. No configuration was changed.
+
+| Check | Observed | Result |
+|---|---|---|
+| Running commit | `3421a2096` | PASS |
+| `:previous` | image for `cc1c5b4d7` (gated) | PASS |
+| `EARLY_FIELD_*` | not present | PASS: closed |
+| `HOUSE_STUDIO_H1_ENABLED` | `true` | **STOP** |
+| `HOUSE_STUDIO_H1_MEMBER_IDS` | populated, 4 members | **STOP** |
+| Deployer of this runtime | shell history does not establish it | NOT ESTABLISHED |
+
+> At runtime `3421a2096`, EARLY-FIELD is closed, but `HOUSE_STUDIO_H1_ENABLED=true` with a populated H1 cohort. The intended `(EARLY_FIELD=closed, H1=closed)` composition was not the state under observation, so W1–W9 were **not entered**.
+
+This is **not** a W1 failure and **not** an H1 failure. There is no evidence H1 is malfunctioning. Its production cohort had already been opened. ⛔ H1 is not turned off to make §7 convenient. The state actually running is preserved and witnessed as its own case (§10).
+
+## 9 · Provenance of the H1 activation (read-only, repository side)
+
+An operational record for the activation **exists on canonical**. Its existence is recorded here as a finding. ⛔ Authorization is **not inferred from the environment** existing.
+
+| Record | Canonical | What it says |
+|---|---|---|
+| `H1-EXPOSURE_CENSUS_AND_RULINGS_2026-09-30.md` §3 | via #1544 | Founder law: *existing room remains universal; experimental crossing is cohort-controlled* |
+| `H1-COHORT-GATE_ADMISSION_2026-09-30.md` | #1560 | Two-population browser witness PASS on `3421a2096`. *"An admission claim, not a production deployment claim"* |
+| `PRODUCTION_DEPLOYMENT_HISTORY_2026-09-30.md` | #1561 | At its writing: image `3421a2096` created `01:08:27Z`, container created `01:12:19Z`, **H1 unset**. **Superseded on the H1 line by the next row.** |
+| `H1-COHORT-GATE_PRODUCTION_ROLLOUT_2026-09-30.md` | #1565 | `.env.production` changed from no H1 config to `ENABLED=true` + **"4 founder-designated members"**; 4/4 UUIDs resolved read-only, no extras; only `maia` recreated from the current image (no rebuild, no migration); pre-change backup `.env.production.h1-20261001T012910Z.bak`; post-restart health ok, unauthenticated admission `401`; **"member-visible production witness with a signed-in cohort member and a signed-in ordinary member remains the final observational step"** |
+| `H1-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md` | #1572 | Pre-registered human-experience witness for a cohort member. Explicitly does **not** re-prove mechanics |
+
+**What is and is not established:**
+- ✅ An operational record of the activation exists. It names the act, the time (backup stamped `2026-10-01T01:29:10Z`), the scope, the rollback and the post-restart checks.
+- ✅ #1561's "H1 unset" was true at its writing and is superseded by #1565. It is not a contradiction.
+- ⚠️ **"Founder-designated"** is the rollout record's own statement. The only person who can confirm it is the founder. **Owed: one founder line confirming (or denying) that those four members were designated.** On confirmation, the activation counts as authorized. Without it, it stands as a configuration-governance finding.
+- ⛔ **Who ran the `3421a2096` deploy and the `01:29Z` recreate: not established.** No deploy artifact seen names an initiator. Commit authorship, GitHub actor and shell user are not used as substitutes.
+- ⚠️ **Overlap:** #1561 independently recorded the same deployment lineage and rollback tags as §2/§6 here. Two records of one history must not drift. This branch's record defers to #1561 on deployment lineage where they cover the same facts. Whether this branch is merged at all is a founder call.
+
+## 10 · ROLLOUT-R3 (draft, ⛔ not run): `(EARLY_FIELD 0, H1 1)` composition witness
+
+**Runs only after** §9's founder confirmation. It discharges the rollout record's own *"final observational step"* and EARLY-FIELD widening criterion 3 in one sitting, on the state actually running. ⛔ No configuration change before, during or after.
+
+**Discipline (from #1565 and #1572):** each member uses their **own existing session**. No facilitator obtains, copies or inspects credentials. No telemetry, recording or new instrumentation. No member id, email, Work title or excerpt in the record.
+
+### Population A: one H1 cohort member
+
+⚠️ To avoid priming #1572: run A with a cohort member who is **not** the #1572 participant, or only **after** #1572's untouched first attempt is complete. #1572 forbids re-proving mechanics with the participant, and A *is* mechanics.
+
+| # | Act | Pass | Cell |
+|---|---|---|---|
+| A1 | `/maia/living-field` | Loads; `LivingFieldInstrument` **absent** | EARLY-FIELD deny holds while H1 admits |
+| A2 | `/api/early-field/admission` | `{"admitted":false}` | EARLY-FIELD answer independent of H1 |
+| A3 | `/api/house-studio/admission` | `{"admitted":true}` | H1 admit |
+| A4 | House **Writing →** `href` | `/writers-studio?from=house&work=<that Work>` | H1 doorway open |
+| A5 | Click | Work arrival panel, THE HOUSE · WRITER'S STUDIO mark, Return Home pill; manuscript opens only on an explicit gesture | H1 arrival |
+| A6 | After A5, reload Living Field; re-ask A2 | Instrument still absent; still `false` | monotonic: admitting H1 did not open EARLY-FIELD |
+
+### Population B: one ordinary, non-cohort member
+
+§7 W1–W9 unchanged (deny on both gates; both universal surfaces open). This is also EARLY-FIELD widening criterion 3.
+
+**Result:** PASS (A1–A6 and W1–W9 all observed) · FAIL (name the row; ⛔ no reactive change, return for a ruling) · NO EVIDENCE (wrong SHA, wrong population, unauthenticated, or a row not observed).
+
+**What R3 establishes on pass:** the `(0,1)` row of the matrix, for both an admitted and a non-admitted member, plus the deny × deny behaviour from the non-cohort side. ⛔ It says nothing about `(1,0)` or `(1,1)`. Each needs its own deliberate cohort act and its own witness.
