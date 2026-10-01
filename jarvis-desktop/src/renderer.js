@@ -2358,15 +2358,24 @@ function libraryGroups(groups, query, prefix) {
   return (groups || []).map((g, gi) => {
     const items = (g.items || []).filter(i => {
       if (!q) return true;
-      return (String(i.title || '') + ' ' + String(i.path || '') + ' ' + String(g.title || '')).toLowerCase().includes(q);
+      const haystack = [
+        i.title, i.path, i.excerpt, ...(i.headings || []), g.title,
+      ].map(v => String(v || '')).join(' ').toLowerCase();
+      return haystack.includes(q);
     });
     if (!items.length) return '';
     return `<details class="library-group" data-library-group="${prefix}-${gi}" ${q ? 'open' : ''}>
       <summary><span>${escapeHtml(g.title)}</span><span class="library-count">${items.length}</span></summary>
-      <div class="library-items">${items.map(i => `<div class="library-item">
-        <div>${escapeHtml(i.title)}</div>
-        ${i.path ? `<div class="library-path">${escapeHtml(i.path)}</div>` : ''}
-      </div>`).join('')}</div>
+      <div class="library-items">${items.map(i => {
+        const detail = i.excerpt || (i.headings && i.headings.length) || i.path;
+        if (!detail) return `<div class="library-item">${escapeHtml(i.title)}</div>`;
+        return `<details class="library-item">
+          <summary>${escapeHtml(i.title)}</summary>
+          ${i.excerpt ? `<div class="library-excerpt">${escapeHtml(i.excerpt)}</div>` : ''}
+          ${i.headings && i.headings.length ? `<div class="library-headings">Inside: ${i.headings.map(escapeHtml).join(' · ')}</div>` : ''}
+          ${i.path ? `<div class="library-path">${escapeHtml(i.path)}</div>` : ''}
+        </details>`;
+      }).join('')}</div>
     </details>`;
   }).join('');
 }
