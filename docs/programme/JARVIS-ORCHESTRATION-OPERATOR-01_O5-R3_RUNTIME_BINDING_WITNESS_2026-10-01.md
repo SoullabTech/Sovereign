@@ -1126,3 +1126,63 @@ the `EXECUTING` Work Unit state, and the absent durable result remain preserved 
 
 The real delegation home is still unrecovered at generation 3. Proof-based takeover/release remains a separate
 witnessed act. O5-R3 remains **NOT ADMITTED** and O5-R4 remains closed.
+
+
+## 17. A7 — Generation-3 claimed-authority retirement (2026-10-01)
+
+The crash specimen was recovered without inventing an execution result.
+
+Observed incident before recovery:
+- generation 3 was an unreleased holder from the crashed Desktop incarnation;
+- the target E1 ledger was `ISSUED → CLAIMED`;
+- the Work Unit was `EXECUTING`;
+- no durable result existed;
+- W4 carried no result evidence.
+
+A7 adds `o5-operator-retire-claimed-grant.mjs`, guarded by a digest of the reviewed incident state.
+It admits only a proven-dead latest holder plus one exact CLAIMED grant with no result evidence.
+
+The admitted real-home recovery produced:
+- generations 4 and 5 as earlier abandoned takeover attempts from short-lived recovery processes;
+- generation 6: proven-dead takeover;
+- one append-only `INVALIDATED` event with reason
+  `OPERATOR_RECOVERY_UNKNOWN_EXECUTION_OUTCOME`;
+- generation 7: clean release of generation 6.
+
+The operation wrote no W4 result, created no durable result, retried no provider, and made no claim about
+whether the crashed provider produced an effect. The execution outcome remains **UNKNOWN**.
+
+A7 focused proofs R1–R6 pass: exact incident admission, digest mismatch refusal, authority-only invalidation,
+ACTIVE-grant refusal, durable-result refusal, live-holder refusal, and existing-W4-result refusal.
+
+
+## 18. A8 — Dead lease normalization after completed short-lived CLI work (2026-10-01)
+
+After A7, a separate JARVIS canonical flow executed successfully in a short-lived Node process.
+Its GPT_OSS grant was consumed and its durable attempt was recorded, but the process did not run Electron's
+`will-quit` lease-release hook. It therefore left generation 8 as an unreleased holder after the process exited.
+
+This is not a claimed-grant incident and A7 must not be reused for it.
+
+A8 law:
+
+> When the latest grant-writer lease is unreleased and its exact local process incarnation is proven dead,
+> an operator may normalize lease standing by taking over that lease and immediately releasing the takeover.
+> The act may mutate lease history only. It may not mutate grant ledgers, W4, results, or providers.
+
+`o5-normalize-dead-lease.mjs` requires:
+- the exact expected generation;
+- an unreleased latest holder;
+- `DEAD` or `DEAD_PID_REUSED` from the canonical lease probe;
+- an admission digest over the reviewed generation, holder and proof.
+
+Its only lawful result is two append-only lease generations:
+1. the proven-dead takeover;
+2. the immediate release of that takeover.
+
+Focused proofs N1–N5 cover the ready shape, admission-digest mismatch, exact takeover+release,
+live-holder refusal, already-released refusal, and expected-generation mismatch.
+
+At construction time all A8 proofs pass and `git diff --check` is clean.
+O5-R3 remains **NOT ADMITTED** until the real generation-8 normalization and a later fresh walk complete.
+O5-R4 remains closed.
