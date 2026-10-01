@@ -210,4 +210,25 @@ describe('HOUSE-CABIN-CONTEXT-SPINE-01 · H3.10 Mounted Experience Context', () 
     expect(context.work).toHaveLength(1);
     expect(context.work[0].work.title).toBe('Elemental Alchemy');
   });
+
+  it('F10 sees a mount created by a separate runtime module instance', () => {
+    const root = tempRoot();
+    const dataPath = path.join(root, 'cabin.sqlite');
+    const packagePath = path.join(root, 'context-package.json');
+
+    fs.writeFileSync(
+      packagePath,
+      serializeCabinContextPackage(validPackage()),
+    );
+
+    jest.resetModules();
+    const secondRuntime = require('../contextRuntime') as typeof import('../contextRuntime');
+
+    expect(secondRuntime.initializeCabinContextMount(dataPath).state).toBe('mounted');
+
+    const context = readCabinExperienceContext();
+
+    expect(context.state).toBe('mounted');
+    expect(context.work[0].work.title).toBe('Elemental Alchemy');
+  });
 });

@@ -18,8 +18,27 @@ export type CabinContextRuntimeState = {
   packagePath: string;
 };
 
-let runtimeMount: CabinContextMount | null = null;
-let runtimeState: CabinContextRuntimeState | null = null;
+const GLOBAL_RUNTIME_KEY = '__soullabCabinContextRuntimeV1';
+
+type GlobalRuntimeState = {
+  mount: CabinContextMount | null;
+  state: CabinContextRuntimeState | null;
+};
+
+function globalRuntime(): GlobalRuntimeState {
+  const root = globalThis as typeof globalThis & {
+    [GLOBAL_RUNTIME_KEY]?: GlobalRuntimeState;
+  };
+
+  if (!root[GLOBAL_RUNTIME_KEY]) {
+    root[GLOBAL_RUNTIME_KEY] = {
+      mount: null,
+      state: null,
+    };
+  }
+
+  return root[GLOBAL_RUNTIME_KEY]!;
+}
 
 /**
  * Resolve the explicit package artifact path used by the local Cabin runtime.
@@ -54,33 +73,34 @@ export function resolveCabinContextPackagePath(
 export function initializeCabinContextMount(
   dataPath: string,
 ): CabinContextRuntimeState {
-  if (runtimeMount && runtimeState) return runtimeState;
+  const runtime = globalRuntime();
+  if (runtime.mount && runtime.state) return runtime.state;
 
   const packagePath = resolveCabinContextPackagePath(dataPath);
-  runtimeMount = createCabinContextMount();
+  runtime.mount = createCabinContextMount();
 
   if (!fs.existsSync(packagePath)) {
     const emptyPackage = buildCabinContextPackage();
-    if (!emptyPackage || !runtimeMount.mountSerialized(
+    if (!emptyPackage || !runtime.mount.mountSerialized(
       serializeCabinContextPackage(emptyPackage),
     )) {
-      runtimeMount = null;
+      runtime.mount = null;
       throw new Error('CABIN_CONTEXT_MOUNT_UNAVAILABLE');
     }
 
-    runtimeState = { state: 'empty', packagePath };
-    return runtimeState;
+    runtime.state = { state: 'empty', packagePath };
+    return runtime.state;
   }
 
   const serialized = fs.readFileSync(packagePath, 'utf8');
-  if (!runtimeMount.mountSerialized(serialized)) {
-    runtimeMount = null;
-    runtimeState = null;
+  if (!runtime.mount.mountSerialized(serialized)) {
+    runtime.mount = null;
+    runtime.state = null;
     throw new Error('CABIN_CONTEXT_PACKAGE_INVALID');
   }
 
-  runtimeState = { state: 'mounted', packagePath };
-  return runtimeState;
+  runtime.state = { state: 'mounted', packagePath };
+  return runtime.state;
 }
 
 export function cabinContextSnapshot(
@@ -88,7 +108,8 @@ export function cabinContextSnapshot(
 ): CabinContextPackage {
   initializeCabinContextMount(dataPath);
 
-  const snapshot = runtimeMount?.snapshot();
+  const runtime = globalRuntime();
+  const snapshot = runtime.mount?.snapshot();
   if (!snapshot) {
     throw new Error('CABIN_CONTEXT_MOUNT_UNAVAILABLE');
   }
@@ -105,13 +126,14 @@ export function currentCabinContextRuntime(): {
   state: CabinContextRuntimeState['state'];
   package: CabinContextPackage;
 } | null {
-  if (!runtimeMount || !runtimeState) return null;
+  const runtime = globalRuntime();
+  if (!runtime.mount || !runtime.state) return null;
 
-  const snapshot = runtimeMount.snapshot();
+  const snapshot = runtime.mount.snapshot();
   if (!snapshot) return null;
 
   return {
-    state: runtimeState.state,
+    state: runtime.state.state,
     package: snapshot,
   };
 }
@@ -120,7 +142,8 @@ export function currentCabinContextRuntime(): {
  * Test/process teardown seam. It does not write or delete the package artifact.
  */
 export function clearCabinContextMount(): void {
-  runtimeMount?.clear();
-  runtimeMount = null;
-  runtimeState = null;
+  const runtime = globalRuntime();
+  runtime.mount?.clear();
+  runtime.mount = null;
+  runtime.state = null;
 }
