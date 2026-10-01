@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-10-01T00:17:07.962Z",
+  "head": "2640ec28e66024d69f672ea04cfc357b4b35cbb8",
+  "origin": "http://127.0.0.1:3139",
+  "finalUrl": "http://127.0.0.1:3139/maia/living-field?from=house",
+  "sameOrigin": true,
+  "member": "Kelly",
+  "detailResponse": {
+    "status": 400,
+    "url": "http://127.0.0.1:3139/api/maia/living-field/current_questions",
+    "body": "{\"error\":\"Valid memberId required\"}"
+  },
+  "uiFailure": "Couldn’t open this dimension just now. Try again.",
+  "developmentHistoryReachable": false,
+  "screenshot": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/REAL-STACK-3139-dimension-open-fail.png"
+}
