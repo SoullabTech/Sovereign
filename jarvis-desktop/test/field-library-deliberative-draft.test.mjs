@@ -59,6 +59,9 @@ test('R11 creates a canonical DRAFT with exact Grokker source selectors and no e
     assert.equal(out.work_unit.routing.route_record, null);
     assert.deepEqual(out.work_unit.execution.attempts, []);
     assert.deepEqual(out.work_unit.evaluation.verifier_results, []);
+    assert.deepEqual(out.next_actions, [
+      { action: 'canonical-bound', label: 'Bound scope' },
+    ]);
   } finally {
     fs.rmSync(home, { recursive:true, force:true });
   }
