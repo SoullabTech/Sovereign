@@ -195,3 +195,34 @@ as one merely because the R3 branch is admitted. Packaging/rebinding the install
 
 **Standing: MAC STUDIO INTEGRATION WITNESS ✅ · R3-R11 LIVE RUNTIME BINDING ✅ · O5-R3 ADMISSION EVIDENCE COMPLETE ✅ ·
 installed packaged Desktop still pre-R3 / stale-bound and therefore not yet an admitted deployment · merge pending.**
+
+## 8. Real delegation-home live grant witness — stronger closing evidence
+
+A second Mode A walk used the **real** delegation home `~/.claude/ain-delegation`, not an isolated temporary home. The unpackaged Electron runtime was launched from clean checkout `ce061073ea911270fed5dde59099b2b843079664`.
+
+- live Electron PID **24766**, incarnation **Wed Sep 30 21:47:32 2026**;
+- cwd `~/.claude/worktrees/o5r3-witness/jarvis-desktop`;
+- no `JARVIS_REPO_ROOT` or `AIN_DELEGATION_HOME` environment override in that process;
+- real delegation home `/Users/soullab/.claude/ain-delegation`;
+- execution-critical R3 blobs matched the hashes already recorded in §6.2.
+
+The live renderer selected canonical Work Unit `v2-determine-from-the-authorized-cano-mublc1n2`. Its page showed PRIMARY · QWEN transport `e1-ready-primary-d6ec13103f4a` READY with provider/model/adapter `qwen-local · qwen3-coder:30b · opencode`. Human authority remained bounded: no external network, spend or disclosure; write/merge/deploy/production denied.
+
+The founder clicked **Authorize this execution once** for PRIMARY only. **Confirm Execute was not clicked.** The Desktop then created immutable lease generation 1:
+
+- host `Kellys-Mac-Studio.local`;
+- pid **24766**;
+- `process_start_time: ps-lstart:Wed Sep 30 21:47:32 2026`;
+- acquired_at `2026-10-01T02:03:42.939Z`.
+
+The real canonical grant ledger was created with one and only one event, `ISSUED`, grant `e1-5264ecdcd9a23450aa632ee64a26c9f0`, one-shot and non-transferable. The Work Unit's authorized-core snapshot names evidence/source SHA `b40558cdac92258472053cdfdf11f4846431bb1d`; that is deliberately recorded separately from runtime SHA `ce061073...` so evidence identity is never conflated with execution identity.
+
+A read-only census returned admissible with digest `sha256:92bee29c6f2440e6c6706b5e36e8588878469238c84becf4b1c2f0ba46ddd652`. A separate process then attempted the admitted write pass with that exact digest and was refused:
+
+`GRANT_WRITER_LEASE_UNAVAILABLE` → `HOME_LEASE_HELD`, holder host `Kellys-Mac-Studio.local`, pid **24766**, acquired_at `2026-10-01T02:03:42.939Z`.
+
+The Work Unit still had **0 provider attempts** and the grant ledger still contained only `ISSUED`: Authorize Once did not execute Qwen. On termination, generation 2 was created with `released:true`, the same owner nonce, and `released_at: 2026-10-01T02:04:36.639Z`.
+
+Two observations are preserved rather than normalized away: the UI simultaneously displayed outer badge **ROUTED** and inner **Lifecycle: DRAFT · Next lawful gesture: none**; and the Work Unit source SHA `b40558cd...` differs from runtime SHA `ce061073...`. Neither weakened the E1 membrane in this walk, but both remain follow-up presentation/provenance items.
+
+**Admission conclusion: O5-R3 ✅ ADMITTED on the Mac Studio.** The live runtime acquired the real grant-writer lease on first mutation; the durable lease matched its exact pid/incarnation; a competing real write pass was refused by that lease; no provider execution occurred; and release advanced the immutable generation sequence. Merge remains a separate repository act.
