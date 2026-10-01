@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { acquireGrantWriterLeaseV1 } from '../grant-writer-lease-v1.mjs';
 
 import { createWorkUnitDraftV2 } from '../work-unit-v2.mjs';
 import { createLifecycleEnvelopeV2, transitionLifecycleV2 } from '../work-unit-lifecycle-v2.mjs';
@@ -66,6 +67,8 @@ function preview(){
 }
 
 const home=fs.mkdtempSync(path.join(os.tmpdir(),'e1-grant-store-'));
+// O5-R3: grant-ledger mutation requires the process-lifetime writer lease (R3-R3).
+assert.equal(acquireGrantWriterLeaseV1(home).ok, true);
 try{
   const p=preview();
   check('E1S-1 — issue appends ACTIVE human grant',()=>{
