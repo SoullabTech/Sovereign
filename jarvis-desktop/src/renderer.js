@@ -16,6 +16,7 @@ const libraryState = {
   governedWork: null,
   governedWorkLoading: false,
   governedWorkError: null,
+  pins: [],
 };
 
 function escapeHtml(value) {
@@ -2489,6 +2490,53 @@ function renderGrokkerResults(results, query) {
     </div>`).join('')}`;
 }
 
+function pinRef(kind, key, label) {
+  return encodeURIComponent(JSON.stringify({ kind, key, label }));
+}
+function pinButton(kind, key, label) {
+  const pin = { kind, key, label };
+  const pinned = GrokkerFieldPins.has(libraryState.pins, pin);
+  return `<button class="act" data-field-pin="${escapeHtml(pinRef(kind,key,label))}">${pinned ? 'Unpin' : 'Keep in sight'}</button>`;
+}
+
+function renderPinnedShelf(lib) {
+  const resolved = GrokkerFieldPins.resolve(libraryState.pins, lib, libraryState.governedWork);
+  if (!resolved.length) {
+    return `<div class="grokker-box">
+      <h3>Keep in sight</h3>
+      <div class="sentence">Nothing pinned yet. Pinning is Kelly's local attention preference only; it changes no programme standing or authority.</div>
+    </div>`;
+  }
+  return `<div class="grokker-box">
+    <h3>Keep in sight</h3>
+    <div class="sentence">Your local orientation shelf. Pins do not reactivate lanes, alter Work Units, or assert importance beyond your own attention.</div>
+    <div class="library-items">${resolved.map(pin => {
+      if (!pin.resolved) return `<div class="grokker-result">
+        <b>${escapeHtml(pin.label)}</b>
+        <div class="grokker-why">Pinned reference is not currently resolved. Nothing was substituted.</div>
+        <div class="actions">${pinButton(pin.kind,pin.key,pin.label)}</div>
+      </div>`;
+      if (pin.kind === 'recovery') return `<div class="grokker-result">
+        <b>${escapeHtml(pin.label)}</b>
+        <div class="grokker-why">Unfinished-thread recovery candidate · standing ${escapeHtml(pin.source.standing)}</div>
+        <div class="library-excerpt">${escapeHtml(pin.source.evidence)}</div>
+        <div class="grokker-source">${escapeHtml(pin.source.path)}:${escapeHtml(pin.source.evidence_line)}</div>
+        <div class="actions"><button class="act" data-recovery-trace="${escapeHtml(pin.source.programme_key)}">Trace this thread</button>${pinButton(pin.kind,pin.key,pin.label)}</div>
+      </div>`;
+      if (pin.kind === 'work') return `<div class="grokker-result">
+        <b>${escapeHtml(pin.source.grokker_origin?.query || pin.source.objective)}</b>
+        <div class="grokker-why">Governed work · ${escapeHtml(pin.group || '')} · ${escapeHtml(pin.source.lifecycle)}</div>
+        <div class="actions"><button class="act" data-open-governed-work="${escapeHtml(pin.source.work_unit_id)}">Open in Work</button>${pinButton(pin.kind,pin.key,pin.label)}</div>
+      </div>`;
+      return `<div class="grokker-result">
+        <b>${escapeHtml(pin.label)}</b>
+        <div class="grokker-why">Durable field · ${escapeHtml(pin.group || '')}</div>
+        <div class="actions">${pinButton(pin.kind,pin.key,pin.label)}</div>
+      </div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
 function libraryGroups(groups, query, prefix) {
   const q = String(query || '').trim().toLowerCase();
   return (groups || []).map((g, gi) => {
@@ -2510,6 +2558,7 @@ function libraryGroups(groups, query, prefix) {
           ${i.excerpt ? `<div class="library-excerpt">${escapeHtml(i.excerpt)}</div>` : ''}
           ${i.headings && i.headings.length ? `<div class="library-headings">Inside: ${i.headings.map(escapeHtml).join(' · ')}</div>` : ''}
           ${i.path ? `<div class="library-path">${escapeHtml(i.path)}</div>` : ''}
+          ${prefix === 'concept' ? `<div class="actions">${pinButton('field', g.title + '/' + i.title, i.title)}</div>` : ''}
         </details>`;
       }).join('')}</div>
     </details>`;
@@ -2641,6 +2690,15 @@ function wireLibrary() {
     setView('work');
     refreshActiveWorkUnit();
   });
+  document.querySelectorAll('[data-field-pin]').forEach(button => {
+    button.addEventListener('click', () => {
+      try {
+        const pin = JSON.parse(decodeURIComponent(button.dataset.fieldPin || ''));
+        libraryState.pins = GrokkerFieldPins.toggle(localStorage, libraryState.pins, pin);
+      } catch {}
+      renderLibrary();
+    });
+  });
   document.querySelectorAll('[data-recovery-trace]').forEach(button => {
     button.addEventListener('click', () => {
       const query = button.dataset.recoveryTrace || '';
@@ -2693,7 +2751,7 @@ function renderRecoveryCandidates(lib) {
       <div class="grokker-why">${escapeHtml(item.signal)} · ~${escapeHtml(item.hours_dormant)}h since last Git touch · ${escapeHtml(item.candidate_law)}</div>
       <div class="library-excerpt">${escapeHtml(item.evidence)}</div>
       <div class="grokker-source">${escapeHtml(item.path)}:${escapeHtml(item.evidence_line)}</div>
-      <div class="actions"><button class="act" data-recovery-trace="${escapeHtml(item.programme_key)}">Trace this thread</button></div>
+      <div class="actions"><button class="act" data-recovery-trace="${escapeHtml(item.programme_key)}">Trace this thread</button>${pinButton('recovery', item.programme_key, item.title)}</div>
     </div>`).join('')}</div>
   </div>`;
 }
@@ -2728,7 +2786,7 @@ function governedWorkRows(items) {
       <b>${escapeHtml(title)}</b>
       <div class="grokker-why">${escapeHtml(origin)} · ${escapeHtml(item.lifecycle)} · ${escapeHtml(item.reason)}</div>
       ${item.grokker_origin?.source_ranges?.length ? `<div class="grokker-source">${item.grokker_origin.source_ranges.map(escapeHtml).join(' · ')}</div>` : ''}
-      <div class="actions"><button class="act" data-open-governed-work="${escapeHtml(item.work_unit_id)}">Open in Work</button></div>
+      <div class="actions"><button class="act" data-open-governed-work="${escapeHtml(item.work_unit_id)}">Open in Work</button>${pinButton('work', item.work_unit_id, title)}</div>
     </div>`;
   }).join('');
 }
@@ -2783,6 +2841,7 @@ function renderLibrary() {
       </div>
       <div class="hint">Browse remains a read-only index over canonical records. Grokker Trace below retrieves into that same corpus without inventing a second source of truth.</div>
     </div>
+    ${renderPinnedShelf(lib)}
     <div class="grokker-box">
       <h3>Where are we now?</h3>
       <div class="sentence">A lightweight pulse of the programme records touched most recently. This is orientation, not a claim that recent means important.</div>
@@ -2821,6 +2880,7 @@ function render() {
 }
 
 (async function init() {
+  libraryState.pins = GrokkerFieldPins.load(localStorage);
   render();
   await Promise.all([refreshStatus(), loadCapabilities()]);
   render();

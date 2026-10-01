@@ -3,6 +3,21 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
   "recentItems": [
     {
+      "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R14 Unfinished Field Recovery · 2026-10-01",
+      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R14_UNFINISHED_FIELD_RECOVERY_2026-10-01.md",
+      "excerpt": "Recover older programme threads that carry concrete unfinished evidence without equating age, recency, or machine salience with importance.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Purpose",
+        "Recovery standing",
+        "Admission rules",
+        "Closure suppression",
+        "Member interaction",
+        "Additional repair found during R14"
+      ]
+    },
+    {
       "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R13 Governed Work Orientation · 2026-10-01",
       "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R13_GOVERNED_WORK_ORIENTATION_2026-10-01.md",
       "excerpt": "Make persistent canonical Work Units visible in Kelly's World without creating a second work store or changing canonical lifecycle semantics.",
@@ -1075,18 +1090,6 @@ window.KELLY_FIELD_LIBRARY = {
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
     {
-      "programme_key": "S3-B-IV_DESIGN_2026-09",
-      "title": "S3 B-IV · DESIGN — the durable transition substrate",
-      "path": "docs/programme/S3-B-IV_DESIGN_2026-09-13.md",
-      "signal": "OPEN_HEADING",
-      "evidence_line": 222,
-      "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
-      "last_touched_epoch": 1789318246,
-      "hours_dormant": 421,
-      "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
-      "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
-    },
-    {
       "programme_key": "S3-B-IV_DURABLE_TRANSITION_SUBSTRATE_CENSUS_2026-09",
       "title": "S3 B-IV · DURABLE TRANSITION SUBSTRATE CENSUS — READ-ONLY",
       "path": "docs/programme/S3-B-IV_DURABLE_TRANSITION_SUBSTRATE_CENSUS_2026-09-13.md",
@@ -1094,6 +1097,18 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 219,
       "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
       "last_touched_epoch": 1789317901,
+      "hours_dormant": 422,
+      "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
+      "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
+    },
+    {
+      "programme_key": "S3-B-IV_DESIGN_2026-09",
+      "title": "S3 B-IV · DESIGN — the durable transition substrate",
+      "path": "docs/programme/S3-B-IV_DESIGN_2026-09-13.md",
+      "signal": "OPEN_HEADING",
+      "evidence_line": 222,
+      "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
+      "last_touched_epoch": 1789318246,
       "hours_dormant": 421,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
@@ -1118,7 +1133,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Status:** **AUTOMATIC HANDWRITING OCR HELD · ORIGINAL + MANUAL TRANSCRIPTION OPEN · BLANK-WORK RELEASE INDEPENDENT · PRODUCTION UNTOUCHED.**",
       "last_touched_epoch": 1789602025,
-      "hours_dormant": 342,
+      "hours_dormant": 343,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -10720,6 +10735,21 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R15 Keep in Sight · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R15_KEEP_IN_SIGHT_2026-10-01.md",
+          "excerpt": "Let Kelly explicitly keep selected fields, unfinished-thread recovery candidates, and governed Work Units visible without changing their programme, epistemic, or authority standing.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Purpose",
+            "Law",
+            "Persistence boundary",
+            "Supported pins",
+            "Verification",
+            "Exact next boundary"
+          ]
+        },
+        {
           "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R1 Sweep · 2026-09-30",
           "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R1_SWEEP_2026-09-30.md",
           "excerpt": "Give Kelly one scrollable place to re-enter the large body of Soullab work without requiring working-memory reconstruction from chats, branches, or programme filenames.",
@@ -11366,8 +11396,8 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 655,
-    "recent": 75,
+    "lanes": 656,
+    "recent": 76,
     "recovery": 12
   }
 };
