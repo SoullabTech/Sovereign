@@ -65,5 +65,11 @@ container        restarts=0 · started 2026-10-01T15:32:50Z · image sha256:a028
 
 Cabin offline mode is **unset**. RC1's House changes are inert in production, and the re-baseline holds.
 
-⚠️ The container start time moved from 14:47:54Z (earlier check) to 15:32:50Z. `restarts=0` means each move was a *recreation*, not a crash-restart, and it happened twice after the ~14:36Z RC1 swap on the same commit. The cause is not yet attributed. A walk is admissible as evidence on RC1 only once the running image is confirmed to be the RC1 build.
+⚠️ The container start time moved from 14:47:54Z (earlier check) to 15:32:50Z. `restarts=0` means each move was a *recreation*, not a crash-restart, and it happened twice after the ~14:36Z RC1 swap on the same commit. **Attributed (founder-run image + lock check):** every image since the swap is commit `03f0fd3ab`.
+- `6a1ec88` was built 14:44:42 (container 14:47). It was an in-lane rebuild, but its entry point is unrecorded because the lock file holds only the latest acquisition.
+- `a028302c` was built 15:31:37 (container 15:32) by a **locked `pre-deploy-gate.sh deploy-maia`**, target `03f0fd3ab`, `soullab@soullab`, at 15:30:17Z.
+
+The walk therefore ran on RC1 code, whichever container served it. Residual: the 14:44 image's `GIT_COMMIT` is inferred from its tag lineage, not read.
+
+Side effect found: the same-commit redeploys rotated `:previous` onto an RC1 rebuild, so `rollback` no longer reached pre-RC1. The fix is in #1621, with a one-time host retag documented there.
 
