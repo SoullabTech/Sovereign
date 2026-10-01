@@ -27,13 +27,14 @@ The admission boundary should normally surround **2**, not **1**.
 
 ## II. Why this exists
 
-The pattern follows existing Soullab constitutional commitments:
+The pattern is assembled from Soullab law and design disciplines of **different standing**. It must not borrow authority from a candidate merely by citing it:
 
-- **The member's world is primary.** Member-facing architecture should inhabit the member's world rather than reorganize it around platform internals.
-- **Presentation does not grant authority.** A UI layer, classification, or experiment does not acquire authority merely because it exists or can be rendered.
-- **The member remains final authority on lived meaning.** New interpretive capability should arrive as invitation, not as a silent takeover of the underlying experience.
-- **Rooms must remain inhabitable.** Experimental layering should not make an established room illegible, inaccessible, or semantically false for people outside the experiment.
-- **Standing requires explicit admission.** Experimental participation is not inferred from mere availability, technical reachability, lab access, founder status, or client-side knowledge.
+- **Ratified constitutional law — Representation Authority.** Presentation, computation, classification, or experiment status do not confer authority by themselves.
+- **Ratified constitutional law — Declared Membership.** Standing comes from explicit admission under a rule; containers, labels, or access modes do not create it.
+- **Ratified constitutional law — Direction of Authority.** Higher layers may not manufacture meaning or standing that the member has not authored or accepted.
+- **Governing design standard — Inhabitable Architecture.** Experimental layering should not make an established room illegible, inaccessible, or semantically false.
+- **Operational discipline — Interface Humility.** The member remains final authority on lived meaning; new interpretation should arrive as invitation rather than possession.
+- **Candidate orientation — The Member's World is Primary.** Layered Admission is consistent with that founder-authored candidate, but does not depend on its ratification and does not silently ratify it.
 
 Layered Admission therefore asks a prior question before any flag, allowlist, or rollout mechanism is designed:
 
@@ -193,14 +194,14 @@ These cases do not imply that every future feature should be decomposed this way
 
 ## X. Relation to other canon
 
-Layered Admission is subordinate to, and should be read with:
+Layered Admission is subordinate to the ratified laws below, constrained by the governing design disciplines below, and merely **consistent with** the cited candidate orientation:
 
-- `THE_MEMBERS_WORLD_IS_PRIMARY.md` — the interface inhabits the member's world;
-- `REPRESENTATION_AUTHORITY_LAW.md` — presentation and computation do not confer authority;
-- `INTERFACE_HUMILITY.md` — the member remains final authority on lived meaning;
-- `INHABITABLE_ARCHITECTURE_STANDARD.md` — member-facing rooms must remain legible and inhabitable;
-- `DECLARED_MEMBERSHIP_RATIFICATION_2026-09-16.md` — standing comes from explicit admission under a rule;
-- `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` — higher layers may not manufacture authority over lower-layer reality.
+- **Ratified:** `REPRESENTATION_AUTHORITY_LAW.md` — presentation and computation do not confer authority;
+- **Ratified:** `DECLARED_MEMBERSHIP_RATIFICATION_2026-09-16.md` — standing comes from explicit admission under a rule;
+- **Ratified:** `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` — higher layers may not manufacture authority over lower-layer reality;
+- **Governing design standard:** `INHABITABLE_ARCHITECTURE_STANDARD.md` — member-facing rooms must remain legible and inhabitable;
+- **Operational discipline:** `INTERFACE_HUMILITY.md` — the member remains final authority on lived meaning;
+- **Candidate orientation only:** `THE_MEMBERS_WORLD_IS_PRIMARY.md` — the interface inhabits the member's world. Citing it here changes none of its standing.
 
 This principle adds one narrower question:
 
@@ -218,6 +219,8 @@ This document records the founder direction expressed on 2026-09-30:
 
 > Use this approach elsewhere when it is semantically and heuristically useful.
 
-That direction does **not** authorize mechanical propagation. Every application must still pass the eligibility test in §III.
+That direction authorizes continued **evaluation and use of the pattern where its semantic test fits**. Under `RATIFICATION_BOUNDARY_PRECEDENT_2026-07-26.md`, it is not treated as a formal constitutional ratification unless the founder makes an explicit ratification act.
+
+It does **not** authorize mechanical propagation. Every application must still pass the eligibility test in §III.
 
 **Semantic usefulness outranks architectural repetition.**
