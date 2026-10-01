@@ -37,15 +37,15 @@ if (!fs.existsSync(standaloneServer)) {
   );
 }
 
-const cabinStage = path.join(stage, 'cabin-runtime');
-fs.mkdirSync(cabinStage, { recursive: true });
-fs.cpSync(standaloneRoot, cabinStage, { recursive: true });
-fs.mkdirSync(path.join(cabinStage, '.next'), { recursive: true });
-fs.cpSync(standaloneStatic, path.join(cabinStage, '.next', 'static'), { recursive: true });
-fs.cpSync(standalonePublic, path.join(cabinStage, 'public'), { recursive: true });
+const cabinSource = path.join(stageParent, 'cabin-runtime');
+fs.mkdirSync(cabinSource, { recursive: true });
+fs.cpSync(standaloneRoot, cabinSource, { recursive: true });
+fs.mkdirSync(path.join(cabinSource, '.next'), { recursive: true });
+fs.cpSync(standaloneStatic, path.join(cabinSource, '.next', 'static'), { recursive: true });
+fs.cpSync(standalonePublic, path.join(cabinSource, 'public'), { recursive: true });
 
-console.log('[MAIA Desktop] cabin runtime staged from .next/standalone');
-console.log(`[MAIA Desktop] cabin server=${path.join(cabinStage, 'server.js')}`);
+console.log('[MAIA Desktop] cabin runtime staged outside electron-builder project root to preserve standalone node_modules');
+console.log(`[MAIA Desktop] cabin server=${path.join(cabinSource, 'server.js')}`);
 
 const args = [
   '--projectDir', stage,
@@ -67,4 +67,5 @@ try {
   });
 } finally {
   fs.rmSync(stage, { recursive: true, force: true });
+  fs.rmSync(cabinSource, { recursive: true, force: true });
 }
