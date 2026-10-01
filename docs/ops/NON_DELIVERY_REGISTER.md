@@ -49,7 +49,7 @@ EMAIL-IDENTITY-01 R7 (auth mail from `kelly@`) is a reputation and routing conce
 | # | Mechanism | Claims or records | Actually delivered | Evidence | Owner | Status | Closes when |
 |---|---|---|---|---|---|---|---|
 | O1 | **Deploy and build alert path** (`/api/build/alert`) | Deploy and build failures raise an alert | Nothing: `INTERNAL_ALERT_TOKEN`, `ALERT_SMTP_HOST` and `ALERT_FROM` are UNSET in production (founder-confirmed), so the send returns 503. The smoke test scored that as PASS. | RECORD: [#1621](https://github.com/SoullabTech/Sovereign/pull/1621) body; its fix is commit:`c0edc6e5e7c868e2ed271b130b5f2a69975b0206` (unmerged), which turns the 503 into a WARN. | unassigned | OPEN | The env is configured and a deploy smoke delivers a real alert to a human, witnessed. |
-| O2 | **Postgres standby** (`ubuntu-8gb-fsn1-2`) | A replication standby exists | Nothing. Tailscale shows the host offline, last seen 7 days ago; `pg_stat_replication` returns 0 rows. | RECORD: `docs/programme/WS-ADVANCED-RUNTIME-01_RC1_PRODUCTION_WITNESS_2026-10-01.md` at commit:`ac21d53ff9743f14175921a5452d196200938109` on `claude/wonderful-newton-ddw3gx` (unmerged). | unassigned | OPEN | `pg_stat_replication` shows the standby streaming, witnessed. |
+| O2 | **Postgres standby** (`ubuntu-8gb-fsn1-2`) | A replication standby exists | Nothing. Tailscale shows the host offline, last seen 7 days ago; `pg_stat_replication` returns 0 rows. | RECORD: `docs/programme/WS-ADVANCED-RUNTIME-01_RC1_PRODUCTION_WITNESS_2026-10-01.md` at commit:`06406b40dff5589136557e59df013dd504ff24f1` on `claude/magical-shannon-oht8gz-rc1-witness` (unmerged). | unassigned | OPEN | `pg_stat_replication` shows the standby streaming, witnessed. |
 
 ### Development orchestration
 

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/database/postgres';
 import { z } from 'zod';
 import { sendEmail } from '@/lib/email/sendEmail';
+import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 
 const KELLY_EMAIL = 'kelly@soullab.life';
 const KELLY_PHONE = '+15044539009';
@@ -126,6 +127,12 @@ export async function POST(request: NextRequest) {
 
 // Get feedback entries (for admin dashboard)
 export async function GET(request: NextRequest) {
+  if (!process.env.CAPACITOR_BUILD) {
+    const access = await deriveVerifiedAccess(request);
+    if (!access.authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!access.roles.includes('admin')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
