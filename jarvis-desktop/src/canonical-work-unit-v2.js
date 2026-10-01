@@ -389,7 +389,11 @@ async function prospectivePreview(root, spec, opts = {}) {
 async function createCanonicalV2(root, spec, opts = {}) {
   const canonicalSha = String(opts.canonicalSha || '');
   const nowMs = Number.isFinite(opts.nowMs) ? opts.nowMs : Date.now();
-  const workUnitId = makeId(text(spec?.objective) || 'work', nowMs);
+  const suppliedWorkUnitId = opts.workUnitId == null ? '' : String(opts.workUnitId);
+  if (suppliedWorkUnitId && !safeId(suppliedWorkUnitId)) {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'SHARED_WORK_UNIT_ID_INVALID', blockers: [] });
+  }
+  const workUnitId = suppliedWorkUnitId || makeId(text(spec?.objective) || 'work', nowMs);
   const built = canonicalInputFromSpec(spec, { canonicalSha, workUnitId });
   if (!built.ok) {
     return deepFreeze({ ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_INTENT_REFUSED', blockers: built.blockers });

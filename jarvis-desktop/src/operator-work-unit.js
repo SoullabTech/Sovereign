@@ -113,6 +113,7 @@
       nowMs = Date.now(),
       routeRecord = null,
       routeDigest = null,
+      workUnitId = null,
     } = {},
   ) {
     const checked = validateSpec(spec);
@@ -131,7 +132,10 @@
       };
     }
 
-    const id = makeId(checked.objective, nowMs);
+    if (workUnitId != null && !/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(workUnitId))) {
+      return { ok: false, errors: ['Shared Work Unit id is invalid.'], packet: null };
+    }
+    const id = workUnitId == null ? makeId(checked.objective, nowMs) : String(workUnitId);
     const acceptance = lines(spec.acceptanceCriteria);
     const selectors = parseEvidence(spec.evidenceFocus, canonicalSha);
     const routed = !!routeRecord;
