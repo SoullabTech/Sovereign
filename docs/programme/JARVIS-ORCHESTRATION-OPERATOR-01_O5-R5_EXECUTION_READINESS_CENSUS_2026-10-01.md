@@ -61,11 +61,11 @@ A planned node may enter the ready set only when all of the following are true:
 
 R5 readiness is therefore **selection evidence**, not dispatch authority.
 
-## 5. Capacity and parallel selection
+## 5. Capacity and current-reachable selection
 
 Builder OS already owns a machine-level concurrency budget and write-session exclusivity. R5 must not duplicate or bypass those controls.
 
-The scheduler may consume an observed `available_slots >= 0` as input evidence and select at most that many ready nodes, deterministically by O2 `topological_order`.
+O2 V1 canonically serializes its compiled graph, so current canonical can expose at most one dependency-ready node at a time. R5A may consume observed capacity as input evidence: zero/unknown capacity selects none; any positive capacity may select at most that single canonical ready node.
 
 Important distinction:
 
@@ -74,13 +74,19 @@ Important distinction:
 
 A stale capacity observation can therefore cause a later refusal; it can never authorize an over-budget session.
 
-## 6. No hidden priority or speculative execution
+## 6. R5B parallelism explicitly deferred
+
+Review against O3 canonical replay found that a manually branched/multi-ready graph is not current-runtime-admissible: O2 V1 emits a strict predecessor chain, and O3 reconstructs the graph from embedded intent and requires structural identity.
+
+Therefore **R5A does not freeze multi-ready parallel scheduling law**. R5B may open only when O2 has a canonical representation capable of expressing independent nodes (or another already-governed dependency relation is explicitly admitted). Until then, O5 must not delete O2 dependencies merely to manufacture parallelism.
+
+## 7. No hidden priority or speculative execution
 
 R5 does not invent scoring, urgency, cost optimization, speculative execution, dependency skipping, or semantic priority. With the same graph/bindings/states/capacity it must return the same ready set and selected prefix.
 
 The first scheduler is intentionally boring: **dependency truth first, deterministic bounded progress second.**
 
-## 7. Scope exclusions
+## 8. Scope exclusions
 
 R5 does not open:
 
@@ -93,28 +99,28 @@ R5 does not open:
 - automatic successor resolution;
 - production deployment.
 
-## 8. Falsifier scope
+## 9. Falsifier scope
 
 The pre-implementation suite must kill at least these designs:
 
 | Falsifier | Wrong design killed |
 |---|---|
-| **R5-F1 exact binding** | matches live runtime units to planned nodes by string coincidence / objective text |
-| **R5-F2 one-to-one binding** | one planned node has multiple live runtime instances, or one runtime unit instantiates multiple nodes |
-| **R5-F3 closed-only dependency** | treats `ADJUDICATED`, `RETURNED`, `STOPPED`, `SUPERSEDED`, or executing states as satisfied |
-| **R5-F4 all dependencies required** | starts a node when only some dependencies are closed |
+| **R5-F1 canonical O2 replay** | accepts a dependency-mutated graph that O3 would reject as noncanonical |
+| **R5-F2 exact binding** | matches live runtime units to planned nodes by string coincidence / objective text |
+| **R5-F3 one-to-one binding** | one planned node has multiple live runtime instances, or one runtime unit instantiates multiple nodes |
+| **R5-F4 closed-only predecessor** | treats `ADJUDICATED`, `RETURNED`, `STOPPED`, `SUPERSEDED`, or executing predecessor as satisfied |
 | **R5-F5 routed-only own state** | selects DRAFT/AUTHORIZED/EXECUTING/terminal node as ready |
-| **R5-F6 fail closed on missing evidence** | missing binding/state is treated as not-yet-complete but still schedulable |
-| **R5-F7 capacity bound** | selects more nodes than observed slots or treats negative/unknown capacity as unlimited |
-| **R5-F8 deterministic selection** | equal inputs produce different selected sets / hidden priority |
+| **R5-F6 fail closed on missing evidence** | missing predecessor binding/state is treated as schedulable |
+| **R5-F7 current capacity gate** | zero/unknown capacity still selects work, or positive capacity selects beyond the single current-reachable ready node |
+| **R5-F8 deterministic selection** | equal canonical inputs select a different node |
 | **R5-F9 no authority mutation** | readiness changes W2 state, route, authority, scope, or session records |
-| **R5-F10 live session recheck remains authoritative** | scheduler capacity decision bypasses `session.mjs` ownership/concurrency refusal |
+| **R5-F10 live session recheck remains authoritative** | readiness capacity decision bypasses `session.mjs` ownership/concurrency refusal |
 
 No R5 falsifier is frozen by this census yet.
 
 **Standing: O5-R5 CENSUS ✅ · PLANNED→RUNTIME BINDING GAP PROVEN · CLOSED-ONLY DEPENDENCY DEFAULT IDENTIFIED · ROUTED-ONLY ELIGIBILITY IDENTIFIED · CAPACITY INPUT / SESSION RECHECK SEPARATED · ⛔ NO IMPLEMENTATION.**
 
-## 9. Falsifier freeze result
+## 10. Initial falsifier freeze result
 
 The R5 constitutional instrument is frozen at `tests/constitutional/jarvis-o5-r5/FREEZE.json`.
 
@@ -142,7 +148,15 @@ Freeze guard proof:
 - deliberate comment drift in `falsifiers.mjs` → `FREEZE VIOLATED (1)`, exit 1;
 - byte restore from backup → `FREEZE INTACT`.
 
-## 10. Implementation boundary opened by the instrument — mechanism still untouched
+## 11. Pre-admission freeze correction — current-reachable R5A
+
+After the initial freeze was pushed, review against O3 canonical replay exposed an instrument overreach: the synthetic branched graph used to prove multi-ready selection cannot be emitted by current O2 V1. O2 V1 serializes every stage, and O3 rejects any graph not identical to replay from its embedded O1 intent.
+
+The freeze was therefore corrected **before admission**. The new R5A instrument tests only current-reachable behavior and adds an explicit canonical-replay falsifier. `FREEZE.json` records the previous hashes, commit `3dfd4d984`, amendment cause, changed scope, unchanged laws, and new hashes. R5B parallel scheduling remains unopened.
+
+Post-correction: **R5-F1…F10 PASS · DC-F1…DC-F10 KILLED · MATRIX LETHAL + DISCRIMINATING**.
+
+## 12. Implementation boundary opened by the corrected instrument — mechanism still untouched
 
 A conforming R5 implementation, if opened, is limited to:
 
@@ -151,10 +165,10 @@ A conforming R5 implementation, if opened, is limited to:
 3. pure dependency-readiness evaluation with `CLOSED` as the only satisfied dependency state;
 4. `ROUTED` as the only selectable own runtime state;
 5. fail-closed treatment of missing/invalid binding or runtime evidence;
-6. deterministic topological-prefix selection bounded by observed nonnegative capacity;
+6. deterministic selection of the single current-reachable ready node, suppressed by zero/unknown capacity;
 7. no runtime/session mutation by readiness calculation;
 8. actual Builder session/worktree/concurrency admission rechecked live at dispatch time and remaining authoritative.
 
 It may not yet launch a process, claim a worktree, transition W2 to `EXECUTING`, override session capacity, infer successor completion, or create O7/O8 behavior.
 
-**Standing: O5-R5 CENSUS ✅ · R5-F1…F10 FROZEN ✅ · 10/10 DEFEAT CANDIDATES KILLED ✅ · FREEZE GUARD PROVEN ✅ · ⛔ NO RUNTIME IMPLEMENTATION · ⛔ NO DISPATCH.**
+**Standing: O5-R5A CENSUS ✅ · PRE-ADMISSION FREEZE CORRECTED ONCE ✅ · R5-F1…F10 CURRENT-REACHABLE LAWS FROZEN ✅ · 10/10 DEFEAT CANDIDATES KILLED ✅ · R5B PARALLELISM DEFERRED ⛔ · NO RUNTIME IMPLEMENTATION · NO DISPATCH.**
