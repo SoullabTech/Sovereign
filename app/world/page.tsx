@@ -8,6 +8,51 @@ import styles from './world.module.css';
 
 export const dynamic = 'force-dynamic';
 
+const FRONTIER_WAYS = [
+  {
+    id: 'imagine',
+    label: 'Imagine',
+    line: 'What wants to become possible through you?',
+    href: '/maia/vision-studio?from=world',
+    action: 'Enter Vision Studio →',
+  },
+  {
+    id: 'make',
+    label: 'Make',
+    line: 'Use AI in service of authorship, craft and something real.',
+    href: '/writers-studio?from=world',
+    action: 'Enter Writer’s Studio →',
+  },
+  {
+    id: 'understand',
+    label: 'Understand',
+    line: 'Learn enough about the technology to participate with discernment.',
+    href: '/library?from=world',
+    action: 'Explore the Library →',
+  },
+  {
+    id: 'whole',
+    label: 'See the larger whole',
+    line: 'Explore patterns, relationships and the field around what you are making.',
+    href: '/maia/living-field?from=world',
+    action: 'Enter Living Field →',
+  },
+  {
+    id: 'deepen',
+    label: 'Consciousness & AI',
+    line: 'Question intelligence, agency, meaning, sovereignty and what remains mysterious.',
+    href: '/wisdom-keepers/wisdom?from=world',
+    action: 'Go deeper →',
+  },
+  {
+    id: 'kelly',
+    label: 'Build with Kelly',
+    line: 'If an idea feels larger than what you know how to build yet, bring it.',
+    href: '#build-with-kelly',
+    action: 'See the invitation ↓',
+  },
+] as const;
+
 type WorldMember = { id: string; name: string };
 type LivingWork = { id: string; title: string | null };
 
@@ -115,6 +160,50 @@ export default async function MemberWorldPage() {
             <Link href="/writers-studio">Enter Writer’s Studio →</Link>
           </div>
         )}
+      </section>
+
+      <section className={styles.frontier} aria-labelledby="frontier-title">
+        <header className={styles.frontierHead}>
+          <div>
+            <p>THE FRONTIER</p>
+            <h3 id="frontier-title">AI as a medium for imagination, inquiry and creation.</h3>
+          </div>
+          <span>
+            Not a course to complete. A place to wonder, understand, make, question,
+            and discover what becomes possible when emerging intelligence meets your own work.
+          </span>
+        </header>
+
+        <div className={styles.frontierGrid}>
+          {FRONTIER_WAYS.map(way => (
+            <Link href={way.href} key={way.id} className={styles.frontierCard}>
+              <span>{way.label}</span>
+              <strong>{way.line}</strong>
+              <small>{way.action}</small>
+            </Link>
+          ))}
+        </div>
+
+        <aside className={styles.edges}>
+          <div>
+            <p>FROM THE EDGES</p>
+            <h4>Experiments, questions, failures and discoveries from the frontier.</h4>
+          </div>
+          <span>
+            This can become a living stream of what Kelly and the Soullab community are
+            learning as we build with AI — technical, creative, philosophical and strange.
+          </span>
+        </aside>
+
+        <aside className={styles.buildWithKelly} id="build-with-kelly">
+          <p>BUILD WITH KELLY</p>
+          <h4>Some ideas want a companion.</h4>
+          <span>
+            If you are carrying something unusual and want help giving it form, keep it close.
+            A direct way to bring it to Kelly is being designed. Nothing here asks you to book
+            or buy anything.
+          </span>
+        </aside>
       </section>
 
       <section className={styles.fields} aria-labelledby="fields-title">

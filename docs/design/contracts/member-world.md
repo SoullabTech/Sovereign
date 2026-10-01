@@ -16,9 +16,9 @@ reference_surfaces:
   - docs/canon/THE_HOUSE.md
 shared_with_house: warm architectural field, editorial hierarchy, explicit return to the House, truthful room boundaries, and member choice about what to enter next.
 distinct_to_room: House is arrival and threshold choice; World is member-relative whole-field orientation across what is already theirs. Founder programme records, JARVIS governance, deployment state and cross-member data remain outside the room.
-screenshot_desktop: docs/design/contracts/screenshots/member-world-r1-desktop.png
-screenshot_mobile: docs/design/contracts/screenshots/member-world-r1-mobile.png
-experience_verification: 2026-10-01 R1 visual proof at desktop and mobile over an isolated member-shaped fixture. Verified personalized World title, House return, living-work area, grouped House fields, responsive containment, and absence of founder/internal programme vocabulary.
+screenshot_desktop: docs/design/contracts/screenshots/member-world-r2-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/member-world-r2-mobile.png
+experience_verification: 2026-10-01 R2 browser witness over isolated member-shaped fixtures at 1440x1100 and 390x844. Verified personalized World title, House return, living-work area, The Frontier, grouped House fields, responsive containment with zero horizontal overflow, truthful existing destinations, no booking funnel, and absence of founder/internal programme vocabulary.
 ---
 
 # Member World — Experience Contract
@@ -74,3 +74,29 @@ Excluded from the member World by default:
 ## Orientation law
 
 > **Seeing the whole must not become a new authority over the parts.**
+
+## The Frontier
+
+The Frontier is the member-facing AI creativity field inside World.
+
+It exists to:
+
+- inspire possibility;
+- teach enough technical literacy for meaningful participation;
+- invite making rather than passive consumption;
+- hold questions of consciousness, sovereignty, ethics and relationship;
+- let members encounter emerging intelligence through their own work.
+
+It is not a course-completion surface and not a sales funnel.
+
+The first admitted pathways point only to existing Soullab rooms:
+
+- Vision Studio;
+- Writer’s Studio;
+- Library;
+- Living Field;
+- Wisdom.
+
+Build with Kelly is present as an invitation without a transactional route. No booking or purchase is required to receive value from The Frontier.
+
+> **The educational field must remain complete enough to matter even when no consulting relationship follows.**
