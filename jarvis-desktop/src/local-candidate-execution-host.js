@@ -1,6 +1,7 @@
 // EC1-R19 — host-side structured local-candidate execution boundary.
 'use strict';
 const fs=require('node:fs');
+const crypto=require('node:crypto');
 const os=require('node:os');
 const path=require('node:path');
 const { pathToFileURL }=require('node:url');
@@ -10,6 +11,8 @@ const DECISION=require('./local-candidate-execution-decision.js');
 
 const clone=v=>JSON.parse(JSON.stringify(v));
 const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v??null);
+const storageDigest=v=>'sha256:'+crypto.createHash('sha256').update(JSON.stringify(v)).digest('hex');
+const bytesDigest=v=>'sha256:'+crypto.createHash('sha256').update(v).digest('hex');
 const homeOf=env=>env?.AIN_DELEGATION_HOME||path.join(os.homedir(),'.claude','ain-delegation');
 async function importBound(root,rel){return import(pathToFileURL(path.join(root,rel)).href+'?ec1r19='+Date.now());}
 function fail(status,reason,extra={}){return{ok:false,submitted:false,status,outcome:status,reason,...extra};}
@@ -95,7 +98,24 @@ async function executePreparedLocalCandidate(root,{workUnitId,verificationPlan},
       transportBinding:current.route.transport_binding,
     });
   }finally{DECISION.forget(staged.occurrence_id);}
-  return{...run,ok:run?.submitted===true,work_unit_id:workUnitId,run_id:runId,execution_decision:clone(executionDecision)};
+
+  const response={...run,ok:run?.submitted===true,work_unit_id:workUnitId,run_id:runId,execution_decision:clone(executionDecision)};
+  if(run?.submitted!==true||run?.outcome!=='VERIFIED'||run?.run?.state!=='VERIFIED')return response;
+
+  const resultPath=run.run.result_path||paths.result;
+  let rawResult,durableResult;
+  try{rawResult=fs.readFileSync(resultPath);durableResult=JSON.parse(rawResult.toString('utf8'));}
+  catch(error){return{...response,ok:false,status:'W4_PERSISTENCE_REFUSED',completion_status:'W4_PERSISTENCE_REFUSED',completion_reason:'PATH_A_DURABLE_RESULT_UNREADABLE',completion_error:String(error?.message||error)};}
+  const canonicalBase=CWUV2.readCanonicalExecutionEnvelopeV2(workUnitId,env);
+  if(!canonicalBase)return{...response,ok:false,status:'W4_PERSISTENCE_REFUSED',completion_status:'W4_PERSISTENCE_REFUSED',completion_reason:'CANONICAL_V2_WORK_UNIT_NOT_FOUND'};
+  const persisted=await CWUV2.persistHostDecidedLocalCandidateV1(root,workUnitId,{
+    run:run.run,
+    durable_result:durableResult,
+    result_ref:'path-a-result:'+workUnitId+':'+runId,
+    result_digest:bytesDigest(rawResult),
+  },{env,expectedEnvelopeDigest:storageDigest(canonicalBase)});
+  if(!persisted.ok)return{...response,ok:false,status:'W4_PERSISTENCE_REFUSED',completion_status:'W4_PERSISTENCE_REFUSED',completion_reason:persisted.reason||persisted.status,w4_persistence:clone(persisted)};
+  return{...response,ok:true,completion_status:persisted.status,w4_persistence:clone(persisted)};
 }
 
 module.exports={executePreparedLocalCandidate,_projectCurrentForTest:projectCurrent,_summaryFromForTest:summaryFrom};

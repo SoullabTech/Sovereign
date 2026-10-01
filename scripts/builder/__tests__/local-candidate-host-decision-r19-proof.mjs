@@ -24,7 +24,7 @@ async function routed(env,now=1){const made=await C.createCanonicalV2(REPO,spec(
 function patchMechanism(runId='r-1234567890'){
   const oldAlloc=MECH.allocateRunId;const oldRun=MECH.runWorkUnit;const calls=[];
   MECH.allocateRunId=async()=>({ok:true,run_id:runId});
-  MECH.runWorkUnit=async(root,packet,hooks,opts)=>{calls.push({root,packet:JSON.parse(JSON.stringify(packet)),opts:JSON.parse(JSON.stringify(opts))});return{submitted:true,outcome:'VERIFIED',terminal:true,run:{run_id:opts.runId,state:'VERIFIED',execution_decision:opts.executionDecision},events:[]};};
+  MECH.runWorkUnit=async(root,packet,hooks,opts)=>{calls.push({root,packet:JSON.parse(JSON.stringify(packet)),opts:JSON.parse(JSON.stringify(opts))});return{submitted:true,outcome:'RUNNING',terminal:false,run:{run_id:opts.runId,state:'RUNNING',execution_decision:opts.executionDecision},events:[]};};
   return{calls,restore(){MECH.allocateRunId=oldAlloc;MECH.runWorkUnit=oldRun;}};
 }
 
