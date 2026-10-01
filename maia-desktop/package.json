@@ -33,7 +33,7 @@
     ],
     "extraResources": [
       {
-        "from": "../cabin-runtime",
+        "from": "cabin-runtime",
         "to": "cabin-runtime",
         "filter": ["**/*"]
       }

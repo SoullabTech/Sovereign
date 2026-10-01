@@ -19,15 +19,22 @@ test('Desktop packaging refuses to claim a Cabin without a real standalone serve
 });
 
 test('Desktop packaging carries standalone, static, and public assets into the Cabin resource', () => {
-  assert.match(BUILD, /const cabinSource = path\.join\(stageParent, 'cabin-runtime'\)/);
+  assert.match(BUILD, /const cabinSourceParent = process\.env\.MAIA_DESKTOP_CABIN_STAGING_PARENT/);
+  assert.match(BUILD, /const cabinSource = path\.join\(cabinSourceParent, `cabin-runtime-\$\{sha\}`\)/);
   assert.match(BUILD, /fs\.cpSync\(standaloneRoot, cabinSource/);
   assert.match(BUILD, /fs\.cpSync\(standaloneStatic, path\.join\(cabinSource, '\.next', 'static'\)/);
   assert.match(BUILD, /fs\.cpSync\(standalonePublic, path\.join\(cabinSource, 'public'\)/);
-  assert.match(PACKAGE, /"from": "\.\.\/cabin-runtime"/);
+  assert.match(PACKAGE, /"from": "cabin-runtime"/);
+  assert.match(BUILD, /cabinResource\.from = cabinSource/);
   assert.match(BUILD, /fs\.rmSync\(cabinSource/);
 });
 
-test('Desktop packaging keeps the standalone Cabin dependency tree outside electron-builder npm install', () => {
-  assert.doesNotMatch(BUILD, /const cabinStage = path\.join\(stage, 'cabin-runtime'\)/);
-  assert.match(BUILD, /outside electron-builder project root/);
+test('Desktop packaging refuses to proceed when standalone next is absent', () => {
+  assert.match(BUILD, /node_modules', 'next', 'package\.json'/);
+  assert.match(BUILD, /Cabin runtime staging missing node_modules\/next/);
+});
+
+test('Desktop packaging keeps the standalone Cabin source outside both builder project and staging parent', () => {
+  assert.doesNotMatch(BUILD, /path\.join\(stageParent, 'cabin-runtime'/);
+  assert.match(BUILD, /outside electron-builder project and staging parent/);
 });
