@@ -11,9 +11,10 @@ This is an orientation surface, not a new source of truth. Canonical programme r
 The first Library index contains:
 
 - **189 durable field concepts** grouped into 14 conceptual families.
-- **643 canonical programme records** from `docs/programme/`.
-- **64 records touched in Git history since 2026-09-27**, shown separately as recent activity.
+- **644 canonical programme records** from `docs/programme/`, including this sweep record itself.
+- **65 records touched in Git history since 2026-09-27**, shown separately as recent activity.
 - Search, expand-all, collapse-all, and nested collapsible groups.
+- Each programme record carries a generated first meaningful excerpt and up to six section headings so Kelly can re-orient without opening the raw file.
 
 The UI is added to JARVIS Desktop as **Field Library**.
 ## Concept families
