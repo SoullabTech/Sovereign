@@ -97,6 +97,49 @@
             close
         }
     }
+
+    # ADMIN-READ-SOVEREIGNTY-01 · temporary containment for four read surfaces
+    # that are presently reachable through permissive access-matrix fallback or
+    # insufficient route-local authorization. Keep the member-facing feedback
+    # POST open: only GET is denied.
+    # RETIRE PER ROUTE only after the application itself proves the intended
+    # verified actor/role boundary with this edge deny inactive.
+    @steward_opus_pulse_read {
+        path /api/steward/opus-pulse /api/steward/opus-pulse/
+        method GET
+    }
+    handle @steward_opus_pulse_read {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+    @feedback_admin_read {
+        path /api/feedback /api/feedback/
+        method GET
+    }
+    handle @feedback_admin_read {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+    @supervision_transcript_read {
+        path /api/supervision/transcript/list /api/supervision/transcript/list/
+        method GET
+    }
+    handle @supervision_transcript_read {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+    @partner_prelude_admin path /api/admin/partners/prelude/*
+    handle @partner_prelude_admin {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
 }
 
 # Local development - no TLS
