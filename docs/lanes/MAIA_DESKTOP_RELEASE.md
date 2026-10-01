@@ -18,7 +18,7 @@ appended sections.
 
 ## Last updated
 
-2026-10-01 · canonical observed `f2346dae11f5` (#1618 merged); #1647 reconciled onto that canonical as candidate `4bf7753dac58`. `ef511f0ef` remains rejected.
+2026-10-01 · canonical observed `a2652d01d64b` (#1648 merged after #1618); #1647 reconciled onto that canonical as candidate `1f26fa7ae15b`. `ef511f0ef` remains rejected.
 · evidence: git + GitHub PR/CI state + founder Mac Studio command output.
 
 ## Release SHA
