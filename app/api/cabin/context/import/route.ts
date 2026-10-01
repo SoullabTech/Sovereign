@@ -61,9 +61,15 @@ const productionDeps: CabinContextImportDeps = {
   writePackage: writeCabinContextPackage,
 };
 
-export async function POST(
+function isCabinImportDeps(value: unknown): value is CabinContextImportDeps {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.writePackage === 'function';
+}
+
+async function handlePost(
   request: NextRequest,
-  deps: CabinContextImportDeps = productionDeps,
+  deps: CabinContextImportDeps,
 ): Promise<Response> {
   if (process.env.MAIA_CABIN_MODE !== 'offline') {
     return reply({ error: 'local_placement_requires_offline_cabin' }, 404);
@@ -202,4 +208,12 @@ export async function POST(
   } finally {
     store.close();
   }
+}
+
+export async function POST(
+  request: NextRequest,
+  context?: unknown,
+): Promise<Response> {
+  const deps = isCabinImportDeps(context) ? context : productionDeps;
+  return handlePost(request, deps);
 }
