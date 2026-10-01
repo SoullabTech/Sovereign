@@ -22,6 +22,12 @@ test('offline mode starts the supervised runtime before the window is created', 
   assert.ok(window > start);
 });
 
+test('offline startup passes one explicit context package path to the local runtime', () => {
+  assert.match(MAIN, /resolveCabinContextPackagePath\(/);
+  assert.match(MAIN, /MAIA_CABIN_CONTEXT_PACKAGE_PATH/);
+  assert.match(MAIN, /cabinContextPackagePath/);
+});
+
 test('offline startup fails closed instead of falling back to the connected origin', () => {
   assert.match(MAIN, /if \(!cabin\.ok\) \{\s*app\.quit\(\);/);
 });
