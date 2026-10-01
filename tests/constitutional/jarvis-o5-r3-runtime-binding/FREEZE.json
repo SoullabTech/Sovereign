@@ -24,7 +24,10 @@
     "tests/constitutional/jarvis-o5-r3-runtime-binding/event-purity/matrix.mjs": "370a2b0806afd1ebbf7780010765a366d838d4df",
     "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/falsifiers.mjs": "a422d4945429efc11f9090300228a28efd8eb4cd",
     "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/candidates.mjs": "c353a30dd4fb28ee713e4a9e65deefb437f9cd6e",
-    "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/matrix.mjs": "d2e651b96a1bf18b1c34d4966d2cf79ca0d1c516"
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/matrix.mjs": "d2e651b96a1bf18b1c34d4966d2cf79ca0d1c516",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/capacity/falsifiers.mjs": "06c3beb4557c91798631494d861bca5b6afb617a",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/capacity/candidates.mjs": "55894c728bd197a45f2366da8111160258d33b19",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/capacity/matrix.mjs": "1793426f5ee12915a31ecf55cf6e989222e9283c"
   },
   "deliberately_not_frozen": {
     "jarvis-desktop/src/runtime-binding.js": "the implementation under test; it may be repaired, never by weakening the suite",
@@ -35,7 +38,8 @@
     "scripts/witness/o5-r3-runtime-witness.mjs": "the checker; its C6 wiring is bound by the frozen PW-W checks",
     "scripts/witness/o5-r3-transition-integrity.mjs": "the C6A judge under test; repaired, never by weakening TI-1…TI-11",
     "scripts/witness/o5-r3-grant-event-integrity.mjs": "the C6B event-purity judge under test; repaired only by strengthening its newly frozen EP falsifiers",
-    "jarvis-desktop/src/e1-gesture-separation.js": "the RB-A5 gesture-separation implementation under test; repaired, never by weakening GS-1 through GS-9"
+    "jarvis-desktop/src/e1-gesture-separation.js": "the RB-A5 gesture-separation implementation under test; repaired, never by weakening GS-1 through GS-9",
+    "jarvis-desktop/src/e1-local-capacity.js": "the RB-A6 local-capacity implementation under test; repaired, never by weakening LC-1 through LC-8"
   },
   "note": "matrix.mjs IS frozen here (unlike the R3 lease matrix): it carries the RB-W wiring law, and this suite has no Class A predictions that must flip.",
   "amendments": [
@@ -111,6 +115,20 @@
         "tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/matrix.mjs"
       ],
       "authority": "founder continuation 2026-10-01 after the defeated/crash walk #3"
+    },
+    {
+      "id": "RB-A6",
+      "date": "2026-10-01",
+      "kind": "ADDITIVE — no earlier frozen byte edited; RB-A4/C6B and RB-A5 unchanged",
+      "cause": "Walk #3 entered CLAIMED and launched the 65K Qwen runtime while Ollama reported 48 GiB total RAM, 5.5 GiB free RAM and 0 B free swap. A later watchdog panic is correlated but not assigned causal responsibility. The execution path lacked any host-capacity admission before CLAIMED.",
+      "law": "Local Capacity Admission — an ollama-direct canonical execution must pass the exact runtime realization through a fail-closed host-capacity gate before the grant becomes CLAIMED or W2 becomes EXECUTING. A hold preserves ACTIVE authority, ROUTED lifecycle, zero attempts and zero provider launch.",
+      "separation": "RB-A5 separates the human gestures; RB-A6 judges whether the machine can safely honor the second gesture at that moment.",
+      "added": [
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/capacity/falsifiers.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/capacity/candidates.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/capacity/matrix.mjs"
+      ],
+      "authority": "founder continuation 2026-10-01 after the watchdog-panic investigation"
     }
   ]
 }

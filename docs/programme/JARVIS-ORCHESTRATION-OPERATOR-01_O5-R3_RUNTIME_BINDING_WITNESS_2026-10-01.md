@@ -1032,3 +1032,97 @@ authorizes no real-home mutation; it establishes only that the proposed recovery
 - the real delegation home remains at unreleased generation 3; no recovery generation was created;
 - O5-R3 remains **NOT ADMITTED**;
 - O5-R4 remains closed.
+
+## 16. RB-A6 — Local Capacity Admission before CLAIMED (2026-10-01)
+
+### 16.1 Why this amendment exists
+
+Fresh walk #3 established more than a crossed UI stop condition. The preserved authority and host logs line up:
+
+- `2026-10-01T21:47:22.074Z` — the primary QWEN E1 grant was `ISSUED`;
+- `2026-10-01T21:47:25.242Z` — that grant was `CLAIMED`;
+- `2026-10-01 17:47:25.444 -04:00` — Ollama started `llama-server`;
+- that launch used the exact runtime realization `jarvis-qwen3-coder:65k`, backed by the
+  `qwen3-coder:30b` Q4_K_M weights and `-c 65536`;
+- Ollama recorded `48.0 GiB` total memory, `5.5 GiB` free memory and `0 B` free swap at launch;
+- the later macOS diagnostic records a watchdog panic because `watchdogd` failed to check in for 90 seconds,
+  with LOW swap space in the panic record.
+
+The kernel diagnostic does not name Qwen, Ollama or JARVIS as the cause. RB-A6 therefore does not convert temporal
+correlation into a causal claim. The narrower engineering fact is sufficient: the execution membrane admitted a
+large local realization while the host had very little free RAM and exhausted active swap, and no capacity gate
+stood between ACTIVE authority and CLAIMED execution.
+
+### 16.2 Law
+
+> **Local Capacity Admission.** For an `ollama-direct` canonical execution, the exact runtime realization must
+> pass a fail-closed host-capacity check before the E1 grant may move from ACTIVE to CLAIMED and before W2 may
+> move from ROUTED to EXECUTING. A capacity hold consumes no execution authority and launches no provider.
+
+The gate judges the runtime realization, not merely the governed model label. In particular,
+`qwen-local / qwen3-coder:30b / ollama-direct` realizes as `jarvis-qwen3-coder:65k`, so the 65K profile is the
+object whose launch capacity must be admitted.
+
+### 16.3 Conservative profiles
+
+RB-A6 uses explicit operational floors. They are safety reserves, not predictions of exact peak memory use.
+
+| Runtime realization | Model bytes | Context | Host RAM floor | Free-RAM launch floor | Active-swap free floor |
+|---|---:|---:|---:|---:|---:|
+| `jarvis-qwen3-coder:65k` | 18,556,688,736 | 65,536 | 40 GiB | model bytes + 8 GiB | 1 GiB |
+| `gpt-oss:20b` | 13,793,422,144 | 65,536 | 32 GiB | model bytes + 8 GiB | 1 GiB |
+
+If the host has no active swap (`swap_total = 0`), RB-A6 does not invent a requirement that swap exist; the RAM
+floor still applies. If swap is active, its standing must be known and at least 1 GiB must remain free.
+Unknown runtime profile, unknown RAM standing, or unknown active-swap standing fails closed.
+
+The 8 GiB reserve protects the operating system and the rest of the local field from being treated as disposable
+model headroom. A future performance programme may establish a different admitted profile with its own evidence;
+it may not silently weaken this one.
+
+### 16.4 Implementation position
+
+`jarvis-desktop/src/e1-local-capacity.js` owns the pure profile judgment and the bounded host sampler.
+On macOS it reads physical/free RAM plus `vm.swapusage`; Linux uses `MemAvailable`, `SwapTotal` and `SwapFree`.
+
+`canonicalConfirmAuthorizedExecution()` now orders the local path as:
+
+`ACTIVE grant → exact transport realization → RB-A6 capacity admission → CLAIMED → EXECUTING → provider`.
+
+If RB-A6 refuses, the return is `HELD_FOR_LOCAL_CAPACITY`, `grant_standing: ACTIVE`, and the provider runner is
+never called. The Work Unit remains ROUTED and no attempt is recorded.
+
+This is deliberately separate from RB-A5. RB-A5 proves the human gestures are physically distinct. RB-A6 asks
+whether the machine is safe enough to honor the second gesture at that moment.
+
+### 16.5 Falsification and integration evidence
+
+`npm run matrix:jarvis-o5-r3-rb-capacity` carries LC-1…LC-8 and one-decision defeat candidates for:
+
+- a gate that can never open;
+- ignoring free-RAM headroom;
+- ignoring the physical-host floor;
+- ignoring exhausted active swap;
+- requiring swap even when none exists;
+- silently borrowing another model's profile;
+- treating unknown swap standing as safe;
+- omitting the admitted GPT-OSS profile.
+
+Wiring checks require the shipped capacity module, place the judgment before both CLAIMED and EXECUTING, require
+capacity refusal to preserve ACTIVE standing, bind the judgment to the exact runtime realization, and pin an
+integration test where the observed panic-window shape leaves the unit ROUTED with zero provider calls and zero
+attempts.
+
+Focused E1 + capacity tests pass 20/20 at construction time.
+
+A read-only sample on the Mac Studio after recovery reported approximately 48 GiB total RAM, 3.5 GiB free RAM, 2.25 GiB active swap and less than 1 GiB free swap. Both admitted local profiles correctly return
+`HELD_FOR_LOCAL_CAPACITY` on that sample. This is supporting evidence only; capacity is re-sampled at every
+Confirm Execute act.
+
+### 16.6 Standing
+
+RB-A6 does not repair or reinterpret the failed walk #3 history. Generation 3, the `ISSUED → CLAIMED` ledger,
+the `EXECUTING` Work Unit state, and the absent durable result remain preserved crash evidence.
+
+The real delegation home is still unrecovered at generation 3. Proof-based takeover/release remains a separate
+witnessed act. O5-R3 remains **NOT ADMITTED** and O5-R4 remains closed.

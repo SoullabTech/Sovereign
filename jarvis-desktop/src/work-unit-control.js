@@ -12,6 +12,7 @@ const { pathToFileURL } = require('node:url');
 const { childEnv, allowlistedChildEnv, resolveNodeBinary } = require('./child-env.js');
 const FRONTIER = require('./frontier-worker.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
+const LOCAL_CAPACITY = require('./e1-local-capacity.js');
 
 const MAX_LOG_CHARS = 12000;
 const RUN_TIMEOUT_MS = 10 * 60 * 1000;
@@ -1142,6 +1143,31 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
       status: 'GRANT_INVALID',
       reason: resolved.code || 'REGISTERED_TRANSPORT_IDENTITY_MISMATCH',
     };
+  }
+
+  let localCapacity = null;
+  if (resolved.execution_adapter === 'ollama-direct') {
+    const realization = canonicalLocalOllamaDirectRealization(binding);
+    if (!realization) {
+      return {
+        ok: false,
+        status: 'HELD_FOR_LOCAL_CAPACITY',
+        reason: 'LOCAL_CAPACITY_PROFILE_UNKNOWN',
+        grant_standing: 'ACTIVE',
+      };
+    }
+    const sample = opts.localCapacitySample
+      || LOCAL_CAPACITY.sampleLocalCapacity(opts.localCapacityDeps || {});
+    localCapacity = LOCAL_CAPACITY.evaluateLocalCapacity(realization.runtime_model, sample);
+    if (!localCapacity.ok) {
+      return {
+        ok: false,
+        status: 'HELD_FOR_LOCAL_CAPACITY',
+        reason: localCapacity.reason,
+        grant_standing: 'ACTIVE',
+        local_capacity: localCapacity,
+      };
+    }
   }
 
   let preparedContainment = null;

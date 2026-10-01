@@ -105,6 +105,7 @@
     "matrix:jarvis-o5-r3-rb-readiness": "node tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/matrix.mjs",
     "matrix:jarvis-o5-r3-rb-event-purity": "node tests/constitutional/jarvis-o5-r3-runtime-binding/event-purity/matrix.mjs",
     "matrix:jarvis-o5-r3-rb-gesture": "node tests/constitutional/jarvis-o5-r3-runtime-binding/gesture/matrix.mjs",
+    "matrix:jarvis-o5-r3-rb-capacity": "node tests/constitutional/jarvis-o5-r3-runtime-binding/capacity/matrix.mjs",
     "verify:jarvis-o5-r3-rb-freeze": "node scripts/verify-jarvis-o5-r3-rb-freeze.mjs",
     "test:jarvis-o5-r2": "cd jarvis-desktop && node --test test/o5-path-b-recovery.test.mjs test/o5-path-a-orphan.test.mjs test/o5-recovery-census.test.mjs",
     "jarvis:o5-census": "node scripts/builder/o5-recovery-census.mjs",
