@@ -58,6 +58,7 @@ no branch-only commit is to be called the release SHA.
 | `e3688fce20dd` | T7 `maia-desktop-artifacts/e3688fce20dd/` | same omission; root cause found: electron-builder `FileMatcher` drops a root `node_modules` |
 | `65e0f0e29` | `claude/cool-feynman-8kvyyc` | merges canonical with `e3688fce2` but **not** the working fix `bdf95a8e1`; its 4/4 packaging test passing proves only that the test is source-regex and cannot see the artifact. Do not open a PR from it. |
 | `ef511f0efea3` | T7 release worktree / failed package | signing stopped on broken `backups/ultimate-consciousness-system/latest`; census then showed ~4.8 GiB Cabin runtime containing `docs/`, `data/ain/source`, copyrighted/source corpora, repo scripts/artifacts/database material, Android debug APKs and env templates. No private keys were found. **Never sign or ship.** |
+| `5eee48caf508` | T7 `maia-desktop-artifacts/5eee48caf/` branch-candidate package | first containment pass reduced Cabin runtime to ~827 MiB and removed the original forbidden trees, but a second census found `books/staging/` full-text works, `Community-Commons/`, tests and platform-source trees still bundled. Packaging was terminated before signing/notarization. **Never sign or ship.** |
 
 ## Blockers
 
@@ -66,7 +67,7 @@ no branch-only commit is to be called the release SHA.
 | Packaging repair `bdf95a8e1` | in #1616 (the only carrier; #1624 closed), on `cf9624cdf` (post-#1619; #1619 changed no `maia-desktop/**`). Suite **408/408** under tsx (canonical 405/405). Packaging-test mutants M1 + M2 killed | git + local run; see H4-7-R1 record, Amendment 2 |
 | Desktop suite at release SHA | **408/408 PASS** | founder, Mac Studio, `ef511f0ef` worktree on T7, 2026-10-01 |
 | Next standalone build at release SHA | FAILED with `npx next build` (Turbopack: `PageNotFoundError: /_document`); rerun with `npm run build` (webpack) pending | founder, Mac Studio, 2026-10-01 |
-| Offline trace containment | **REPAIR IN PROGRESS** on `fix/desktop-offline-trace-containment-20261001`; web config unchanged; package verifier now fails closed on forbidden repo material and >1 GiB Cabin runtime | Mac Studio source inspection + local config checks, 2026-10-01 |
+| Offline trace containment | **REPAIR IN PROGRESS** on `fix/desktop-offline-trace-containment-20261001`; first candidate `5eee48caf508` rejected after second-level census found books/Commons/tests/platform-source trees; exclusions and package guard widened | Mac Studio packaged-app census, 2026-10-01 |
 | Artifact carries next 16.3.8 | NOT WITNESSED on a post-containment candidate | — |
 | Packaged runtime healthy offline | NOT WITNESSED | — |
 | Developer ID Application | **PRESENT**: `32276A3F…55DB48 "Developer ID Application: Kelly Nezat (ZVK2X646Z2)"` | founder, `security find-identity -v -p codesigning`, 2026-10-01 |
