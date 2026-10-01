@@ -14,6 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import TeenOnboarding, { type TeenProfile } from '@/components/onboarding/TeenOnboarding';
 import { apiUrl } from '@/lib/http/apiBase';
+import { YOUTH_PATH_OPEN, YOUTH_CLOSED_ROUTE } from '@/lib/youth/youthAvailability';
 
 export default function YouthOnboardingPage() {
   const router = useRouter();
@@ -21,6 +22,12 @@ export default function YouthOnboardingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Youth is closed for now (founder ruling 2026-10-01). This page stays in
+    // code but is unreachable, including by direct URL.
+    if (!YOUTH_PATH_OPEN) {
+      router.replace(YOUTH_CLOSED_ROUTE);
+      return;
+    }
     const betaUser = localStorage.getItem('beta_user');
     if (!betaUser) {
       router.push('/signin');

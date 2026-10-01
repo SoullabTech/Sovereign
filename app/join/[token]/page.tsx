@@ -15,6 +15,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import { ADULT_ACK_COPY } from '@/lib/members/adultConfirmation';
 
 type Stage = 'loading' | 'invalid' | 'create_account' | 'sign_in' | 'linking';
 
@@ -38,6 +39,8 @@ export default function JoinPage() {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // MEMBER-ADULT-ACK-01: the member's own 18+ confirmation; registration refuses without it.
+  const [confirmsAdult, setConfirmsAdult] = useState(false);
 
   // Sign in fields
   const [siUsername, setSiUsername] = useState('');
@@ -74,7 +77,7 @@ export default function JoinPage() {
       const regRes = await fetch('/api/members/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, username, password, invited_via: token }),
+        body: JSON.stringify({ name, username, password, invited_via: token, confirmsAdult }),
       });
       const regData = await regRes.json();
       if (!regRes.ok) throw new Error(regData.error || 'Registration failed');
@@ -211,6 +214,13 @@ export default function JoinPage() {
                   className="w-full bg-stone-900 border border-stone-700 text-stone-200 px-4 py-3 text-sm font-light focus:outline-none focus:border-stone-500 rounded"
                 />
               </div>
+              <label className="flex items-start gap-3 text-sm text-stone-300">
+                <input
+                  type="checkbox" checked={confirmsAdult} onChange={e => setConfirmsAdult(e.target.checked)}
+                  required className="mt-0.5"
+                />
+                <span>{ADULT_ACK_COPY}</span>
+              </label>
             </div>
 
             {error && <p className="text-red-400 text-xs">{error}</p>}
