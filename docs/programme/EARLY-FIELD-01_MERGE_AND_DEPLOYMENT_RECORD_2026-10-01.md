@@ -1,7 +1,9 @@
 # EARLY-FIELD-01 — Merge and Deployment Record
 
 **Date:** 2026-10-01 · **Kind:** operational record. This is evidence about **deployment**, not
-part of the certified implementation. Founder ruling: production history around admission is
+part of the certified implementation.
+
+> **Authority (founder ruling, 2026-10-01):** this record is a **convergence / observation record and defers**. Deployment and rollback history: **`PRODUCTION_DEPLOYMENT_HISTORY_2026-09-30.md` (#1561) is authoritative** where the two overlap. H1 production activation: **`H1-COHORT-GATE_PRODUCTION_ROLLOUT_2026-09-30.md` (#1565) is authoritative.** Where this record and those disagree, they govern. Founder ruling: production history around admission is
 kept out of the candidate (#1547 stayed frozen at its certified head) and recorded here.
 
 > Production history belongs to the operational record. Certified implementation stays
@@ -271,3 +273,16 @@ An operational record for the activation **exists on canonical**. Its existence 
 **Result:** PASS (A1–A6 and W1–W9 all observed) · FAIL (name the row; ⛔ no reactive change, return for a ruling) · NO EVIDENCE (wrong SHA, wrong population, unauthenticated, or a row not observed).
 
 **What R3 establishes on pass:** the `(0,1)` row of the matrix, for both an admitted and a non-admitted member, plus the deny × deny behaviour from the non-cohort side. ⛔ It says nothing about `(1,0)` or `(1,1)`. Each needs its own deliberate cohort act and its own witness.
+
+---
+
+## 11 · Founder rulings (2026-10-01): authorization confirmed · R3 opened
+
+- **H1 production cohort is founder-authorized.** The founder confirmed designating the four members configured in production. The confirmation holds on the condition that the four configured member ids are exactly those four people, which #1565 records as 4/4 resolved with no extras. ⛔ Names and ids are deliberately **not** copied here, following #1565's discipline: production configuration stays the operational authority.
+- **#1565 is authoritative** for H1 production activation. **#1561 is authoritative** for deployment and rollback history. This record defers to both (header note).
+- **Deployer of `3421a2096` and of the ~01:29Z recreate: not established.** No provenance is manufactured.
+- **§9's owed item is discharged.** R3 (§10) is **open**, against the running `(EARLY_FIELD 0, H1 1)` state, with **no configuration change**. ⛔ H1 is **not** turned off to fill `(0,0)`. *The matrix governs evidence; it does not dictate production churn.* Combinations are witnessed when rollout naturally reaches them.
+- **R3 populations:** (A) one H1 cohort member **other than the #1572 participant**, unless #1572's unprompted first attempt has already happened; (B) one ordinary non-cohort member.
+- **Guard built before R3, as ruled:** `lib/access/__tests__/monotonicIndependentGates.test.ts` on `chore/monotonic-gates-guard-20261001` (`f188aeae0`, no PR). It walks each gate's whole admission path (authority + endpoint + client hook, transitively), so coupling cannot migrate into a route, hook or shared helper unseen. 15/15, with 8 defeat candidates each caught by its intended mechanism. ⚠️ It is **frozen only on merge**. Until then it is a candidate guard on a branch.
+
+On R3 PASS, the matrix in `MONOTONIC-INDEPENDENT-GATES-01_RATIFICATION_2026-10-01.md` updates `(0,1)` → **witnessed**. Every other row stays *not yet witnessed*.
