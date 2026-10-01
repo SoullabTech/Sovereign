@@ -47,11 +47,11 @@ The member can later withdraw practitioner visibility without deleting the threa
 
 ### Standing
 
-**PROVEN MEMBER ACT + VISIBILITY INTENT. COMPLETED DISCLOSURE CROSSING NOT ESTABLISHED BY THIS CENSUS.**
+**PROVEN MEMBER ACT + DIRECT PRACTITIONER-VISIBILITY CROSSING. RECIPIENT-SCOPE DEFECT FOUND SEPARATELY.**
 
-The census found no `bringForward()` caller from Now What? and no evidence that the checkbox itself creates the separate shared-offering object.
+`app/studio/fields/[memberId]/page.tsx` directly reads `member_field_note_threads` with `can_be_shown_to_practitioner = TRUE`, so the checkbox does create real practitioner-readable visibility. It is a different sharing model from `bringForward()`; no shared-offering object is required for this path.
 
-Therefore R1 does not promote `can_be_shown_to_practitioner = true` into proof that a practitioner received content.
+The same read-side census found a separate Class A defect: the facilitator page gated only on generic active-practitioner status, not on a relationship with the requested member. PR #1678 (`8bb936e62`) repairs that recipient boundary by requiring the authenticated practitioner's practice to hold an active/paused relationship with the target member before any target-member read.
 
 ## S3 — Coach-field bringForward
 
@@ -82,19 +82,20 @@ The three mechanisms must not be collapsed:
 | Mechanism | Explicit member act | Recipient-readable crossing established | Private source isolated | Revocable |
 |---|---|---|---|---|
 | Portal safety message | yes | yes | member authors exact sent message | message itself persists |
-| Now What share flag | yes | not established here | source remains member-owned | yes, visibility withdrawal |
+| Now What share flag | yes | yes — direct facilitator read, relationship-bounded by #1678 candidate | no — practitioner reads the shared thread itself while visible | yes, visibility withdrawal |
 | Coach-field bringForward | API enforces member/client actor | substrate yes, caller absent | yes, separate encrypted snapshot | yes |
 
 ## Design consequence
 
 SAFETY-DISCLOSURE-01 should not wire crisis recognition directly to any of these mechanisms.
 
-For a member-initiated safety off-ramp, the clean options are:
+The existing member acts serve three different intentions and should remain distinct:
 
-1. **Send a message** — reuse the proven portal messaging pattern when the member wants to actively contact their practitioner and optionally mark urgency.
-2. **Bring this into my work** — bind an explicit Now What? member gesture to the existing `bringForward()` snapshot substrate, preserving source isolation and withdrawal.
+1. **Send a message** — the correct existing substrate when the member wants to actively contact their practitioner. It carries exact member-authored content and optional `safety_concern` urgency, with an actual notification path.
+2. **Share this thread with my practitioner** — the existing Now What? visibility act. It makes that chosen field thread readable in the facilitator view and is revocable. It is not an urgency signal and must not be presented as an alert.
+3. **Bring this into my work** — the stronger snapshot-isolation model implemented by `bringForward()`. It keeps later private edits separate from what was offered, but no live caller currently mounts it.
 
-Those are different member intentions and should remain different controls.
+For a member-initiated safety off-ramp, use the message/urgency semantics rather than silently converting field visibility into notification. Whether `bringForward()` should later become a separate relational gesture is a product decision outside this safety lane.
 
 ## Refusal
 
