@@ -3,6 +3,51 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
   "recentItems": [
     {
+      "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R20 Living Field Human Witness Custody · 2026-10-01",
+      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R20_LIVING_FIELD_HUMAN_WITNESS_CUSTODY_2026-10-01.md",
+      "excerpt": "Carry the current Living Field human-witness boundary into Kelly's World without copying private member material, creating a second evidence store, or changing programme standing.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Purpose",
+        "Source custody",
+        "Current standing",
+        "Human next boundary",
+        "Kelly's World standing",
+        "Release discipline"
+      ]
+    },
+    {
+      "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R19 Visual Adjudication Repair · 2026-10-01",
+      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R19_VISUAL_ADJUDICATION_REPAIR_2026-10-01.md",
+      "excerpt": "R18 made the actual wide and narrow screenshots inspectable in-chat.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Trigger",
+        "R19 repairs",
+        "Standing preservation",
+        "Verification",
+        "Separate Writer's Studio finding",
+        "Standing"
+      ]
+    },
+    {
+      "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R18 Founder-Facing Browser Witness · 2026-10-01",
+      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R18_FOUNDER_FACING_BROWSER_WITNESS_2026-10-01.md",
+      "excerpt": "Witness the actual Kelly's World Field Library renderer as one integrated founder-facing surface rather than accepting component/unit evidence as sufficient.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Purpose",
+        "Viewports",
+        "Interaction witness",
+        "Falsifier bites and repairs",
+        "F1 — false narrow witness",
+        "F2 — true 390px horizontal overflow"
+      ]
+    },
+    {
       "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R17 Return / Release Discipline · 2026-10-01",
       "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R17_RETURN_RELEASE_DISCIPLINE_2026-10-01.md",
       "excerpt": "Let Kelly leave and re-enter the Living Field Library without reconstructing her place, while preserving the constitutional distinction between presentation continuity and active context/authority.",
@@ -970,7 +1015,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 412,
       "evidence": "## 10 · Next act",
       "last_touched_epoch": 1788716166,
-      "hours_dormant": 595,
+      "hours_dormant": 604,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -982,7 +1027,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 12,
       "evidence": "STATE             OPEN · DIAGNOSIS ONLY · no determination made",
       "last_touched_epoch": 1788546913,
-      "hours_dormant": 642,
+      "hours_dormant": 651,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -994,7 +1039,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 132,
       "evidence": "STATE        BUILT · local gates PASS · PRODUCTION WITNESS PENDING",
       "last_touched_epoch": 1788567104,
-      "hours_dormant": 636,
+      "hours_dormant": 645,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1006,7 +1051,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 22,
       "evidence": "STATE            SOURCE MERGED · NOT CLOSED · NOT DEPLOYED",
       "last_touched_epoch": 1788697516,
-      "hours_dormant": 600,
+      "hours_dormant": 609,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1018,7 +1063,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Standing:** REPAIR closed · VERIFY full candidate pass (54/54) · INVOKE open, I0 only.",
       "last_touched_epoch": 1788745887,
-      "hours_dormant": 587,
+      "hours_dormant": 595,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1030,7 +1075,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 222,
       "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
       "last_touched_epoch": 1789318246,
-      "hours_dormant": 428,
+      "hours_dormant": 436,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1042,7 +1087,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 219,
       "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
       "last_touched_epoch": 1789317901,
-      "hours_dormant": 428,
+      "hours_dormant": 436,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1054,7 +1099,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 139,
       "evidence": "## 7. Owed witnesses, re-run on the composition",
       "last_touched_epoch": 1789510856,
-      "hours_dormant": 374,
+      "hours_dormant": 383,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1066,7 +1111,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Status:** **AUTOMATIC HANDWRITING OCR HELD · ORIGINAL + MANUAL TRANSCRIPTION OPEN · BLANK-WORK RELEASE INDEPENDENT · PRODUCTION UNTOUCHED.**",
       "last_touched_epoch": 1789602025,
-      "hours_dormant": 349,
+      "hours_dormant": 357,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1078,7 +1123,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 4,
       "evidence": "**Status:** ⚠️ FOUNDER ADJUDICATION OPEN · documentary only",
       "last_touched_epoch": 1789682893,
-      "hours_dormant": 326,
+      "hours_dormant": 335,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1090,7 +1135,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 182,
       "evidence": "## Owed, if the candidate instrument is ever wired",
       "last_touched_epoch": 1789917878,
-      "hours_dormant": 261,
+      "hours_dormant": 270,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -1102,7 +1147,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 360,
       "evidence": "## 8 · Owed before A2 can be written",
       "last_touched_epoch": 1790078900,
-      "hours_dormant": 216,
+      "hours_dormant": 225,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     }
@@ -10728,6 +10773,21 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R19 Visual Adjudication Repair · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R19_VISUAL_ADJUDICATION_REPAIR_2026-10-01.md",
+          "excerpt": "R18 made the actual wide and narrow screenshots inspectable in-chat.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Trigger",
+            "R19 repairs",
+            "Standing preservation",
+            "Verification",
+            "Separate Writer's Studio finding",
+            "Standing"
+          ]
+        },
+        {
           "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R1 Sweep · 2026-09-30",
           "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R1_SWEEP_2026-09-30.md",
           "excerpt": "Give Kelly one scrollable place to re-enter the large body of Soullab work without requiring working-memory reconstruction from chats, branches, or programme filenames.",
@@ -10740,6 +10800,21 @@ window.KELLY_FIELD_LIBRARY = {
             "Programme families",
             "Grokker boundary",
             "Evidence"
+          ]
+        },
+        {
+          "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R20 Living Field Human Witness Custody · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R20_LIVING_FIELD_HUMAN_WITNESS_CUSTODY_2026-10-01.md",
+          "excerpt": "Carry the current Living Field human-witness boundary into Kelly's World without copying private member material, creating a second evidence store, or changing programme standing.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Purpose",
+            "Source custody",
+            "Current standing",
+            "Human next boundary",
+            "Kelly's World standing",
+            "Release discipline"
           ]
         },
         {
@@ -11374,8 +11449,8 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 659,
-    "recent": 65,
+    "lanes": 661,
+    "recent": 68,
     "recovery": 12
   }
 };
