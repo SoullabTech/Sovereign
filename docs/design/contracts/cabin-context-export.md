@@ -1,6 +1,6 @@
 ---
 room: Cabin Context Export
-human_activity: explicitly carrying an earned continuity field into a portable artifact without turning export into synchronization or a second source of truth
+human_activity: explicitly carrying a governed continuity field out of Soullab as a portable Cabin artifact
 
 surfaces:
   - lib/cabin/contextPackageWriter.ts
@@ -9,99 +9,86 @@ surfaces:
 change_class: architecture
 
 principles:
-  - EXPLICIT_EXPORT — writing occurs only because an explicit caller requests it
-  - PROJECTION_NOT_COLLAPSE — the writer composes governed projections and owns none of their identities
-  - CUSTODY_CONTINUITY — output remains a valid H2.5 package
-  - ATOMIC_ARTIFACT — replacement is staged and renamed within the target directory
-  - NO_STEALTH_SYNC — no watcher, timer, network pull, or runtime remount exists
+  - EXPLICIT_EXPORT — export occurs only because a caller invokes it
+  - PROJECTION_ONLY — the writer accepts already-governed projections and creates no new meaning
+  - ATOMIC_CUSTODY — readers never observe a partially written package
+  - OWNER_ONLY — the portable artifact is readable only by the local owner
+  - NO_SYNC — export is not a watcher, scheduler, network bridge, or runtime refresh
+  - AUTHORITY_PRESERVATION — the package remains subordinate to its canonical source domains
 
 reference_surfaces:
   - docs/design/contracts/cabin-context-package.md
   - docs/design/contracts/cabin-context-mount.md
   - docs/design/contracts/cabin-context-runtime.md
 
-shared_with_house: explicit choice, provenance, member authority, and refusal to turn passage into hidden state
-distinct_to_room: this is an explicit artifact-export seam; it is not synchronization, cognition, or source-domain storage
+shared_with_house: explicit member authorship, provenance, bounded context, and refusal to infer continuity from movement
+distinct_to_room: this is the outbound artifact seam from governed projections to a portable file; it does not decide when export should happen or what source projections mean
 
 experience_verification: >-
-  H3.3 is a pure export boundary. The focused suite verifies absolute-path
-  custody, H2.4 validation, deterministic bytes, identity exclusion, atomic
-  failure behavior, owner-only artifact permissions, empty-package truthfulness,
-  and the H3.2 runtime round trip.
+  Twelve focused tests verify absolute-path discipline, H2.4 validation,
+  H3.2 remount compatibility, identity exclusion, determinism, atomic failure
+  behavior, authority neutrality, no persistence/network/watcher seams, owner
+  permissions, and truthful empty export.
 ---
 
 # Cabin Context Export — Architecture Contract
 
-## What this surface is for
-
-H3.3 turns already-governed projections into the portable Context Package
-artifact consumed by H3.2.
-
-It does not decide what belongs in the package.
-
-The caller supplies the projections. H2.4 decides whether they form a valid
-package. H3.3 only persists that already-governed result as an explicit artifact.
-
-## Write lifecycle
+## The export crossing
 
 ```
-governed projections
-      ↓
-H2.4 package composition
-      ↓
-explicit export invocation
-      ↓
-same-directory staging file
-      ↓
-atomic rename
-      ↓
-portable Context Package
+governed Work / Relationship / Memory
+              ↓
+          H2.4 package
+              ↓
+       explicit export call
+              ↓
+    context-package.json
 ```
 
-The runtime does not automatically remount the result. A later runtime start,
-or another explicitly governed mount operation, is required to consume a new
-artifact.
+The writer never discovers source material.
 
-## Security and authority
+It never asks:
 
-The artifact contains no:
+> What else should be carried?
 
-- member id;
-- session id;
-- browser state;
-- package id;
-- generated timestamp;
-- question;
-- transition;
-- graph edge;
-- relevance score;
-- MAIA interpretation.
+It receives the member's already-authorized projections.
 
-The writer has no database dependency and does not discover source records.
+## Atomic custody
 
-## Failure law
+The artifact is staged in the same directory and then atomically renamed into
+place.
 
-Validation occurs before staging.
+If validation or staging fails, the previous artifact remains untouched.
 
-Staging occurs before replacement.
+## Permissions
 
-Replacement occurs only after the complete serialized package has been written.
+The package is written with owner-readable permissions (`0600`).
 
-A failed validation or failed rename therefore cannot intentionally replace the
-existing artifact.
+The portable artifact therefore remains local to the machine unless the member
+explicitly moves or shares it.
 
-## Stop boundary
+## Empty export
 
-H3.3 does not add:
+An empty package is valid.
 
-- automatic synchronization;
-- filesystem watching;
-- scheduled export;
-- network retrieval;
-- identity transfer;
-- MAIA cognition;
-- Grokker ingestion;
-- Question or Transition;
-- graph synthesis;
-- automatic runtime remount;
-- production deployment.
+Exporting an empty package means:
+
+> The member explicitly exported the current continuity envelope, and nothing
+> was eligible to carry at that moment.
+
+It does not mean the member has no Work, memory, or relationships.
+
+## What this does not do
+
+The writer does not:
+
+- synchronize;
+- watch the filesystem;
+- schedule exports;
+- call the network;
+- write CabinLocalStore;
+- transfer member identity;
+- alter MAIA cognition;
+- ingest into Grokker;
+- invent Questions or Transitions;
+- remount the runtime automatically.

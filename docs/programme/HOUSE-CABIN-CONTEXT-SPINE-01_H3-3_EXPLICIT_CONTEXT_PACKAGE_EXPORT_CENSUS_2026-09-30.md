@@ -86,6 +86,40 @@ H3.3 passes when the export writes a valid H2.5 package, invalid input cannot
 replace an existing artifact, output is deterministic and owner-readable, and
 the writer remains offline, explicit, and source-authority-neutral.
 
+## Implementation witness
+
+Implemented as:
+
+- `lib/cabin/contextPackageWriter.ts`
+- `lib/cabin/__tests__/contextPackageWriter.test.ts`
+
+The writer composes only already-governed projections through H2.4. It writes
+ordinary versioned JSON to an explicitly supplied absolute path, using a
+same-directory staging file and atomic rename. Staging uses owner-readable
+permissions (`0600`).
+
+Focused H3.3 suite: **12/12 PASS**.
+
+Combined H2.1–H3.3 focused Cabin tests: **83/83 PASS**.
+
+The focused suite includes a direct H3.2 custody witness: a package written by
+H3.3 is mounted by the H3.2 runtime and returns the exact same governed Work
+projection.
+
+The writer also proves:
+
+- malformed projections cannot replace an existing artifact;
+- identical projections produce byte-identical JSON;
+- package artifacts contain no member/session/browser identity;
+- failed staging leaves the prior target intact;
+- no CabinLocalStore, browser-storage, network, watcher, timer, or automatic
+  remount seam exists;
+- an explicitly empty package is valid.
+
+No production file, database, or deployment target was touched.
+
+**H3.3 IMPLEMENTATION COMPLETE · EVIDENCE COMPLETE.**
+
 ## Stop boundary
 
 Do not add:
