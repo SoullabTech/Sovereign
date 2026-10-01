@@ -39,6 +39,8 @@ import { BirthDataForm } from '@/components/astrology/BirthDataForm';
 import { useBirthChart } from '@/lib/hooks/useBirthChart';
 import type { AlienPattern } from '@/lib/astrology/alienPatterns';
 import { OracleConversation } from '@/components/OracleConversation';
+import { WhatIsAliveNow } from '@/components/astrology/WhatIsAliveNow';
+import type { TransitActivation, TransitField } from '@/lib/astrology/transitField';
 import styles from './astrology-room.module.css';
 
 // Elemental colors for planet insights
@@ -227,6 +229,9 @@ export default function AstrologyPage() {
   const [showTransits, setShowTransits] = useState(false);
   const [transitPositions, setTransitPositions] = useState<TransitPosition[]>([]);
   const [transitLoading, setTransitLoading] = useState(false);
+  // What is alive now — verified transit field, shared with the House Wheel
+  const [transitField, setTransitField] = useState<TransitField | null>(null);
+  const [wheelTransitFocus, setWheelTransitFocus] = useState<string | null>(null);
 
   // House system guide toggle
   const [showHouseGuide, setShowHouseGuide] = useState(false);
@@ -712,6 +717,47 @@ export default function AstrologyPage() {
     }
   };
 
+  // Natal points for the transit field: tropical longitudes of the admitted points only.
+  const transitNatal = useMemo(() => {
+    if (!chartData) return [];
+    const entries: Array<[string, { sign: string; degree: number } | undefined]> = [
+      ['Sun', chartData.sun], ['Moon', chartData.moon], ['Mercury', chartData.mercury],
+      ['Venus', chartData.venus], ['Mars', chartData.mars], ['Jupiter', chartData.jupiter],
+      ['Saturn', chartData.saturn], ['Uranus', chartData.uranus], ['Neptune', chartData.neptune],
+      ['Pluto', chartData.pluto], ['Ascendant', chartData.ascendant], ['Midheaven', chartData.midheaven],
+    ];
+    return entries
+      .filter((entry): entry is [string, { sign: string; degree: number }] =>
+        Boolean(entry[1]?.sign) && Number.isFinite(entry[1]?.degree))
+      .map(([point, pos]) => ({ point, longitude: getTropicalLongitude(pos.sign, pos.degree) }));
+  }, [chartData]);
+
+  const wheelTransitAspects = useMemo(() => {
+    if (!transitField) return undefined;
+    return transitField.activations
+      .filter((a) => !wheelTransitFocus || a.id === wheelTransitFocus)
+      .map((a) => ({
+        transitPlanet: a.transiting.body,
+        natalPlanet: a.natal.point,
+        aspectType: a.aspect.name,
+        orb: a.deviation,
+        applying: a.motion === 'applying',
+      }));
+  }, [transitField, wheelTransitFocus]);
+
+  function showActivationOnWheel(activation: TransitActivation) {
+    setWheelTransitFocus(activation.id);
+    setShowTransits(true);
+    requestAnimationFrame(() => {
+      document.getElementById('house-wheel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function bringActivationToMaia(text: string) {
+    setMaiaInjection({ text, nonce: Date.now() });
+    setMaiaOpen(true);
+  }
+
   // Fetch current transit positions
   const fetchTransits = async () => {
     setTransitLoading(true);
@@ -951,6 +997,13 @@ export default function AstrologyPage() {
           </div>
         </section>
 
+        <WhatIsAliveNow
+          natal={transitNatal}
+          onField={setTransitField}
+          onShowOnWheel={showActivationOnWheel}
+          onBringToMaia={memberId ? bringActivationToMaia : undefined}
+        />
+
         <section className={styles.lensBar}>
           <div className={styles.lensCopy}>
             <small>CURRENT LENS</small>
@@ -1112,7 +1165,7 @@ export default function AstrologyPage() {
           {/* House Wheel & Planetary Positions */}
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* House Wheel */}
-            <div className="bg-black/40 backdrop-blur-md border border-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl overflow-visible relative" style={{ zIndex: 10 }}>
+            <div id="house-wheel" className="bg-black/40 backdrop-blur-md border border-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl overflow-visible relative" style={{ zIndex: 10, scrollMarginTop: 80 }}>
               <h3 className="text-dune-amber font-semibold mb-4 text-center">House Wheel</h3>
 
               {/* House System Selector & Transits Toggle */}
@@ -1143,7 +1196,9 @@ export default function AstrologyPage() {
                 {/* Transits Toggle */}
                 <div className="flex items-end">
                   <button
-                    onClick={() => setShowTransits(!showTransits)}
+                    onClick={() => { setShowTransits(!showTransits); setWheelTransitFocus(null); }}
+                    aria-pressed={showTransits}
+                    title="Show the current sky's geometry on the wheel"
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
                       showTransits
                         ? 'bg-dune-amber/20 border-dune-amber text-dune-amber'
@@ -1155,7 +1210,7 @@ export default function AstrologyPage() {
                     ) : (
                       <span className="text-lg">🌙</span>
                     )}
-                    <span className="text-sm">Transits</span>
+                    <span className="text-sm">Transits on chart</span>
                   </button>
                 </div>
               </div>
@@ -1209,7 +1264,12 @@ export default function AstrologyPage() {
                   .filter((a): a is typeof a & { type: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' } =>
                     ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(a.type)
                   )}
-                transits={showTransits ? transitPositions : undefined}
+                transits={showTransits
+                  ? (transitField
+                      ? transitField.sky.map((p) => ({ planet: p.body, sign: p.sign, degree: p.degree, longitude: p.longitude }))
+                      : transitPositions)
+                  : undefined}
+                transitAspects={showTransits ? wheelTransitAspects : undefined}
                 missionLayerSettings={{
                   showEmerging: false,
                   showActive: false,
