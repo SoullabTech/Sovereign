@@ -136,124 +136,80 @@ export interface CrisisOverride {
   systemPrompt?: string;
 }
 
-// Crisis patterns - no "MAIA" prefix required, these override any mode.
-//
-// VOICE-CRISIS-FALSE-POSITIVE-01: these patterns run on every live voice
-// transcript and the `high` tier interrupts MAIA and speaks a 988 script. A
-// false positive is not harmless caution — it is MAIA diagnosing a member who
-// said "goodbye", "this is it", or "I'm on the edge of something". So:
-//   - every pattern is word-bounded (no matching inside other words);
-//   - a phrase whose meaning depends on context (means, location, finality,
-//     farewells, "I'm going to do it") is NOT evidence by itself. It escalates
-//     to `high` only when the SAME utterance also carries explicit self-harm
-//     language (SELF_HARM_ANCHOR). Explicit statements still fire alone.
-// Genuine risk that this narrower net misses remains MAIA's to meet in the
-// conversation itself; this layer exists for unambiguous statements only.
-
-/** Explicit self-harm / suicide language. Context-dependent high-risk phrases count only alongside this. */
-const SELF_HARM_ANCHOR =
-  /\b(kill(ing)?\s+myself|end(ing)?\s+(my\s+life|it\s+all)|take\s+my\s+(own\s+)?life|suicid(e|al)|want\s+to\s+die|wanna\s+die|(hurt|harm)(ing)?\s+myself|not\s+(be\s+)?alive\s+(anymore|any\s+more|tomorrow)|overdos(e|ed|ing))\b/i;
-
+// Crisis patterns - no "MAIA" prefix required, these override any mode
 const CRISIS_PATTERNS: Record<CrisisLevel, RegExp[]> = {
   // Soft flag: ambiguous distress language.
   // Deliberately exclude bare "I'm done": it is ordinary completion language
   // and was also the member-facing explicit-yield phrase in TURN-01. Treating
   // those two words as crisis evidence creates deterministic false positives.
-  // Likewise bare "what's the point" / "nothing matters" / "tired of this" /
-  // "don't want to be here" — everyday speech; only their life-directed forms count.
   soft: [
-    /\bi\s+can'?t\s+do\s+this\s+any\s*more\b/i,
-    /\bi\s+wish\s+i\s+could\s+(just\s+)?disappear\b/i,
-    /\bwhat'?s\s+the\s+point\s+(of\s+(living|life|being\s+alive|going\s+on|anything)|any\s*more)\b/i,
-    /\bi\s+don'?t\s+want\s+to\s+be\s+(here|alive)\s+any\s*more\b/i,
-    /\bi'?m\s+so\s+tired\s+of\s+(everything|living|being\s+alive|life)\b/i,
-    /\bnothing\s+matters\s+any\s*more\b/i,
-    /\bno\s+one\s+would\s+(care|notice|miss\s+me)\s+if\s+i\s+(was|were|died|disappeared|was\s+gone|were\s+gone)\b/i,
-    /\bi'?m\s+(just\s+)?a\s+burden\b/i,
-    /\beveryone\s+would\s+be\s+better\s+off\s+without\s+me\b/i,
+    /i\s+can'?t\s+do\s+this\s+anymore/i,
+    /i\s+wish\s+i\s+could\s+disappear/i,
+    /what'?s\s+the\s+point/i,
+    /i\s+don'?t\s+want\s+to\s+be\s+here/i,
+    /i'?m\s+so\s+tired\s+of\s+(this|everything|living)/i,
+    /nothing\s+matters/i,
+    /no\s+one\s+would\s+(care|notice|miss\s+me)/i,
+    /i'?m\s+a\s+burden/i,
+    /everyone\s+would\s+be\s+better\s+off/i,
   ],
 
   // Active ideation: clear self-harm intent, no plan stated
   active: [
-    /\bi\s+want\s+to\s+die\b/i,
-    /\bi\s+don'?t\s+want\s+to\s+(live|be\s+alive)\s*(any\s*more\b|[.!?]*$)/i,
-    /\bi\s+can'?t\s+live\s+(like\s+this|any\s*more)\b/i,
-    /\bi'?m\s+going\s+to\s+hurt\s+myself\b/i,
-    /\bi\s+want\s+to\s+end\s+(it\s+all|my\s+life)\b/i,
-    /\bi'?ve\s+been\s+thinking\s+about\s+(suicide|killing\s+myself|ending\s+(it\s+all|my\s+life))\b/i,
-    /\bi\s+wish\s+i\s+(was|were)\s+dead\b/i,
+    /i\s+want\s+to\s+die/i,
+    /i\s+don'?t\s+want\s+to\s+live/i,
+    /i\s+can'?t\s+live\s+(like\s+this|anymore)/i,
+    /i'?m\s+going\s+to\s+hurt\s+myself/i,
+    /i\s+want\s+to\s+end\s+(it|this|my\s+life)/i,
+    /i'?ve\s+been\s+thinking\s+about\s+(suicide|killing\s+myself|ending\s+it)/i,
+    /i\s+wish\s+i\s+was\s+dead/i,
+    /i\s+wish\s+i\s+were\s+dead/i,
   ],
 
-  // High risk: plan, means, or imminent — explicit on its own.
+  // High risk: plan, means, or imminent
   high: [
-    /\bi'?m\s+going\s+to\s+(kill\s+myself|end\s+my\s+life|take\s+my\s+(own\s+)?life)\b/i,
-    /\bi'?ve\s+(already|just)\s+(taken|swallowed)\s+(all\s+(of\s+)?|a\s+bunch\s+of\s+|the\s+|my\s+)?(pills|tablets|meds|medication)\b/i,
-    /\bi'?ve\s+(already|just)\s+(cut|hurt)\s+myself\b/i,
-    /\bi\s+(wrote|have\s+written|left)\s+(a|my)\s+(suicide|goodbye)\s+(note|letter)s?\b/i,
+    /i'?m\s+going\s+to\s+(do\s+it|kill\s+myself)/i,
+    /i\s+have\s+(pills|a\s+gun|a\s+knife|rope|means)/i,
+    /i'?m\s+on\s+(a\s+bridge|the\s+roof|the\s+edge)/i,
+    /goodbye/i,
+    /this\s+is\s+(it|the\s+end|goodbye)/i,
+    /i'?ve\s+(already|just)\s+(taken|swallowed|cut)/i,
+    /tell\s+(them|everyone|my\s+family)\s+i\s+(love|loved)/i,
+    /tonight\s+is\s+the\s+night/i,
+    /i\s+wrote\s+(a\s+note|my\s+note|letters)/i,
   ],
 
   // Non-suicidal self-injury
   nssi: [
-    /\bi\s+want\s+to\s+cut\s+myself\b/i,
-    /\bi\s+need\s+to\s+hurt\s+myself\b/i,
-    /\bi\s+want\s+to\s+(burn|scratch|hit)\s+myself\b/i,
-    /\bi\s+need\s+to\s+feel\s+pain\b/i,
-    /\bcutting\s+(myself\s+)?(helps|makes\s+it\s+better)\b/i,
-    /\bi\s+already\s+cut\s+myself\b/i,
+    /i\s+want\s+to\s+cut/i,
+    /i\s+need\s+to\s+hurt\s+myself/i,
+    /i\s+want\s+to\s+(burn|scratch|hit)\s+myself/i,
+    /i\s+need\s+to\s+feel\s+(pain|something)/i,
+    /cutting\s+(helps|makes\s+it\s+better)/i,
+    /i\s+already\s+cut/i,
   ],
 };
-
-/**
- * Context-dependent high-risk signals: plan, means, location, finality.
- * Each is ordinary language on its own ("goodbye", "this is it", "I have a
- * knife", "I'm on the roof", "I'm going to do it") and escalates to `high`
- * ONLY when the same utterance also matches SELF_HARM_ANCHOR.
- */
-const HIGH_CONTEXTUAL_PATTERNS: RegExp[] = [
-  /\bi'?m\s+going\s+to\s+do\s+it\b/i,
-  /\bi\s+have\s+(pills|a\s+gun|a\s+knife|a\s+rope|rope|the\s+means)\b/i,
-  /\bi'?m\s+on\s+(a\s+bridge|the\s+roof|the\s+edge|the\s+ledge)\b/i,
-  /\bgoodbye\b/i,
-  /\bthis\s+is\s+(it|the\s+end|goodbye)\b/i,
-  /\btell\s+(them|everyone|my\s+family)\s+i\s+(love|loved)\b/i,
-  /\btonight\s+is\s+the\s+night\b/i,
-  /\bi\s+wrote\s+(a\s+note|my\s+note|letters)\b/i,
-];
 
 /**
  * Detect crisis language in transcript - this overrides any active mode
  */
 export function detectCrisis(transcript: string): CrisisOverride {
   const normalizedTranscript = transcript.toLowerCase().trim();
-  const build = (level: CrisisLevel, trigger: string): CrisisOverride => ({
-    detected: true,
-    level,
-    trigger,
-    responseScript: getCrisisResponseScript(level),
-    systemPrompt: getCrisisSystemPrompt(level),
-  });
 
-  // Explicit high-risk statements stand alone.
-  for (const pattern of CRISIS_PATTERNS.high) {
-    const m = normalizedTranscript.match(pattern);
-    if (m) return build('high', m[0]);
-  }
+  // Check in order of severity (high → active → nssi → soft)
+  const levelOrder: CrisisLevel[] = ['high', 'active', 'nssi', 'soft'];
 
-  // Context-dependent signals escalate only alongside explicit self-harm language.
-  const anchor = normalizedTranscript.match(SELF_HARM_ANCHOR);
-  if (anchor) {
-    for (const pattern of HIGH_CONTEXTUAL_PATTERNS) {
-      const m = normalizedTranscript.match(pattern);
-      if (m) return build('high', `${anchor[0]} + ${m[0]}`);
-    }
-  }
-
-  // Remaining levels in order of severity (active → nssi → soft)
-  const levelOrder: CrisisLevel[] = ['active', 'nssi', 'soft'];
   for (const level of levelOrder) {
     for (const pattern of CRISIS_PATTERNS[level]) {
-      const m = normalizedTranscript.match(pattern);
-      if (m) return build(level, m[0]);
+      if (pattern.test(normalizedTranscript)) {
+        return {
+          detected: true,
+          level,
+          trigger: normalizedTranscript.match(pattern)?.[0] || normalizedTranscript,
+          responseScript: getCrisisResponseScript(level),
+          systemPrompt: getCrisisSystemPrompt(level),
+        };
+      }
     }
   }
 
