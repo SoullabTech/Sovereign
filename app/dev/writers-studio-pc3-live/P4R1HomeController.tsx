@@ -18,6 +18,7 @@ import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import {
   FROM_HOUSE,
   resolveStudioArrival,
+  resolveStudioHomeReturnWork,
 } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
@@ -44,6 +45,8 @@ export default function P4R1HomeController() {
   const arrival = useMemo(() => arrivalFor(works, manuscripts), [works, manuscripts]);
   const resumeManuscriptId = arrival.resume ? manuscriptIdOf(arrival.resume) : null;
   const resumeActivity = useSectionActivity(resumeManuscriptId);
+  const returnManuscriptId = params?.get('m') ?? null;
+  const returnActivity = useSectionActivity(returnManuscriptId);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -204,6 +207,10 @@ export default function P4R1HomeController() {
     worksPhase, works, manuscriptPhase, manuscripts, carriedWorkId,
   );
   const arrivedFromHouse = params?.get('from') === FROM_HOUSE;
+  const returningInsideStudio = params?.get('mode') === 'home' && Boolean(returnManuscriptId) && !arrivedFromHouse;
+  const returnWork = returningInsideStudio
+    ? resolveStudioHomeReturnWork(worksPhase, works, returnManuscriptId, carriedWorkId)
+    : null;
 
   if (h1AdmissionChecking || worksPhase === 'loading' || manuscriptPhase === 'loading' || studioArrival.kind === 'unknown') {
     return <main className="fr-root"><div style={{ padding: 32 }}>Opening Writer’s Studio…</div></main>;
@@ -213,7 +220,7 @@ export default function P4R1HomeController() {
     return <main className="fr-root"><div style={{ padding: 32 }}>Sign in to open your Writer’s Studio.</div></main>;
   }
 
-  if (studioArrival.kind !== 'fallback') {
+  if (arrivedFromHouse && studioArrival.kind !== 'fallback') {
     const withoutWork = () => {
       const query = withoutStudioWork(params?.toString() ?? '');
       router.push(pathname + (query ? '?' + query : ''));
@@ -256,6 +263,8 @@ export default function P4R1HomeController() {
       works={works}
       manuscripts={manuscripts}
       resumeActivity={resumeActivity}
+      returnWork={returnWork}
+      returnActivity={returnActivity}
       markedLines={markedLines}
       historyActs={historyActs}
       busy={busy}

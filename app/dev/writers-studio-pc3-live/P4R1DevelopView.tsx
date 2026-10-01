@@ -1270,6 +1270,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const [dialoguePrompt, setDialoguePrompt] = useState('');
   const [workTalking, setWorkTalking] = useState(true);
   const [attentionConversationDraft, setAttentionConversationDraft] = useState('');
+  const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
 
   useEffect(() => {
     setSelectedObservationKey(props.reading?.observations[0]?.key ?? null);
@@ -1280,6 +1281,31 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const selectedObservation = props.reading?.observations.find(
     (observation) => observation.key === selectedObservationKey,
   ) ?? null;
+
+  const selectedRailSection = props.sections.find(
+    (section) => section.draftSectionId === railSelectionId,
+  ) ?? null;
+  const selectedRailLabel = selectedRailSection?.heading?.trim() || 'Selected place';
+
+  const selectManuscriptLocus = (sectionId: string) => {
+    setRailSelectionId(sectionId);
+    setTalking(false);
+    setDialoguePrompt('');
+    setAttentionConversationDraft('');
+    /* The rail selection itself should visibly orient Develop. Conversation
+       remains one more explicit act; the writer should not have to read a
+       generic whole-Work dashboard to discover that the selection mattered. */
+    setWorkTalking(false);
+    props.onSection(sectionId);
+    if (typeof window !== 'undefined') {
+      window.requestAnimationFrame(() => {
+        document.querySelector<HTMLElement>('[data-region="work"]')?.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
+      });
+    }
+  };
 
   const activeField = props.field === 'overview'
     ? null
@@ -1460,6 +1486,65 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       </div>
 
       {props.field === 'overview' ? (
+        railSelectionId && selectedRailSection ? (
+          <div className="p4r1-locus-arrival" data-develop-locus={selectedRailSection.draftSectionId}>
+            <section className="fr-card p4r1-locus-primary">
+              <span className="p4r1-eyebrow">
+                {props.scope.kind === 'chapter' ? 'Chapter selected' : 'Section selected'}
+              </span>
+              <h3>{selectedRailLabel}</h3>
+              <p>
+                This is the active developmental place now. Choose what you want to understand
+                and MAIA will stay with this chapter or section rather than making you work
+                through the whole-Work dashboard first.
+              </p>
+              <div className="p4r1-locus-actions">
+                <button
+                  type="button"
+                  className="p4r1-talk"
+                  onClick={() => beginWholeConversation([
+                    `I selected “${selectedRailLabel}” in Develop.`,
+                    'Stay with this exact chapter or section.',
+                    'Help me understand what it is doing, what may be alive or unresolved here, and ask me one useful question before suggesting changes.',
+                  ].join('\n\n'))}
+                >
+                  Talk about this
+                </button>
+                <button type="button" onClick={() => props.onMode('write')}>Open in Write</button>
+              </div>
+            </section>
+
+            <section className="p4r1-locus-lenses" aria-label="Ways to examine the selected place">
+              <span className="p4r1-eyebrow">Look at this place through</span>
+              <div className="p4r1-locus-lens-grid">
+                {([
+                  ['structure', 'Structure'],
+                  ['arc', 'Arc'],
+                  ['themes', 'Themes'],
+                  ['voice', 'Voice'],
+                  ['coherence', 'Coherence'],
+                  ['continuity', 'Continuity'],
+                  ['reader', 'Reader'],
+                ] as const).map(([field, label]) => (
+                  <button key={field} type="button" onClick={() => props.onField(field)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <button
+              type="button"
+              className="p4r1-locus-whole"
+              onClick={() => {
+                setRailSelectionId(null);
+                props.onScope({ kind: 'whole' });
+              }}
+            >
+              Return to the whole Work
+            </button>
+          </div>
+        ) : (
         <div className="p4r1-intent-arrival">
           <section className="fr-card p4r1-developmental-orientation" data-developmental-orientation>
             <div className="p4r1-developmental-head">
@@ -1719,6 +1804,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             />
           </section>
         </div>
+        )
       ) : (
         <>
           {activeIntent && activeField ? (
@@ -1853,7 +1939,13 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <div className="fr-orb" aria-hidden="true" />
         <div className="fr-maia-name">
           <h2>MAIA</h2>
-          <span>{selectedObservation && talking ? 'In relation to this observation' : 'In relation to your Work'}</span>
+          <span>
+            {selectedObservation && talking
+              ? 'In relation to this observation'
+              : railSelectionId && selectedRailSection
+                ? `In relation to ${selectedRailLabel}`
+                : 'In relation to your Work'}
+          </span>
         </div>
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
@@ -1908,12 +2000,40 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               }}
             />
           </div>
+        ) : railSelectionId && selectedRailSection ? (
+          <div className="p4r1-locus-support" data-develop-locus-support={selectedRailSection.draftSectionId}>
+            <span className="p4r1-eyebrow">
+              {props.scope.kind === 'chapter' ? 'Chapter selected' : 'Section selected'}
+            </span>
+            <h3>{selectedRailLabel}</h3>
+            <p>
+              I’m oriented here now. You can talk about this place, move into a lens,
+              or open it in Write without going through the whole-Work material first.
+            </p>
+            <div className="p4r1-locus-actions">
+              <button
+                type="button"
+                className="p4r1-talk"
+                onClick={() => beginWholeConversation([
+                  `I selected “${selectedRailLabel}” in Develop.`,
+                  'Stay with this exact place and help me understand it before we move anywhere else.',
+                  'Ask me one useful question first.',
+                ].join('\n\n'))}
+              >
+                Talk about this
+              </button>
+              <button type="button" onClick={() => props.onField('structure')}>Structure</button>
+              <button type="button" onClick={() => props.onField('arc')}>Arc</button>
+              <button type="button" onClick={() => props.onMode('write')}>Open in Write</button>
+            </div>
+            <p className="fr-also">Nothing new is read until you explicitly ask MAIA to read.</p>
+          </div>
         ) : (
           <>
             <div className="fr-say">
               <p>
                 {props.field === 'overview'
-                  ? 'Tell me what you are trying to understand. We can begin with what I already know and decide together whether I need to read anything more.'
+                  ? 'Select a chapter or section at left and I’ll orient to it immediately, or tell me what you are trying to understand about the whole Work.'
                   : `We can stay with your question about ${LABEL[props.field].toLowerCase()} and use what I have already read before asking for anything new.`}
               </p>
             </div>
@@ -1938,7 +2058,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       workTitle={props.workTitle || undefined}
       memberInitial=""
       onSelectMode={props.onMode}
-      manuscript={<ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={props.onSection} />}
+      manuscript={<ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
       work={center}
       maia={maia}
     />
