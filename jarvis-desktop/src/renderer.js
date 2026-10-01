@@ -1102,7 +1102,8 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
 
   const transitionTrace = (lifecycle.transitions || [])
     .map(t => `${t.from} → ${t.to}`)
-    .join(' · ') || 'DRAFT';
+    .join(' · ') || 'none recorded';
+  const w2Gesture = actions.map(a => a.label).join(' · ') || 'none';
 
   const previewStanding = snapshot.preview_comparison?.standing || 'PROSPECTIVE_ONLY';
   const participantHtml = routing?.participants?.length
@@ -1188,8 +1189,10 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
     <div class="run-plan">
       <div class="plan-title">Native canonical substrate</div>
       <div class="plan-line">This Work Unit is the governed nervous system beneath the Desktop experience—not the limit of what the Desktop can become.</div>
-      <div class="plan-line"><b>Lifecycle:</b> ${escapeHtml(transitionTrace)}</div>
-      <div class="plan-line"><b>Next lawful gesture:</b> ${escapeHtml(actions.map(a => a.label).join(' · ') || 'none')}</div>
+      <div class="plan-line"><b>Lifecycle:</b> ${escapeHtml(lifecycle.state || 'UNKNOWN')}</div>
+      <div class="plan-line"><b>W2 transition history:</b> ${escapeHtml(transitionTrace)}</div>
+      <div class="plan-line"><b>Next W2 gesture:</b> ${escapeHtml(w2Gesture)}</div>
+      <div class="plan-line"><b>Execution bridge:</b> governed separately below — routing ≠ authorization ≠ execution</div>
     </div>
 
     ${transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : ''}
