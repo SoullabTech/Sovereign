@@ -23,6 +23,34 @@ concepts += [
 ("Living Law & Evidence", ["Cases","Rulings","Interpretations","Tensions","Exceptions","Amendments","Falsifiers","Defeat candidates","Witness independence","Evidence compatibility","Visual authority","Runtime witness","Epistemic standing","Claim provenance","Historical persistence is not present jurisdiction"]),
 ]
 
+def record_item(path: Path):
+    text = path.read_text(errors="ignore")
+    lines = text.splitlines()
+    headings = [re.sub(r"^#+\\s*", "", line).strip() for line in lines if re.match(r"^#{1,4}\\s+", line)]
+    excerpt_lines = []
+    in_fence = False
+    for line in lines:
+        s = line.strip()
+        if s.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence or not s or s.startswith(("#", "|", ">", "---")):
+            if excerpt_lines:
+                break
+            continue
+        if s.startswith(("- ", "* ")) and not excerpt_lines:
+            continue
+        excerpt_lines.append(re.sub(r"[\`*_]", "", s))
+        if len(" ".join(excerpt_lines)) >= 320:
+            break
+    rel = path.relative_to(root).as_posix()
+    return {
+        "title": headings[0] if headings else path.stem.replace("_", " · "),
+        "path": rel,
+        "excerpt": " ".join(excerpt_lines)[:420],
+        "headings": headings[1:7],
+    }
+
 families = [
 ("Writer's Studio", re.compile(r"^(WRITERS-STUDIO|WRITERS_STUDIO|WS2-|WS-|WRITING-|EDITORIAL-|FLAGSHIP-|REVIEW-CUSTODY|OBSERVATION-|FOCUS-WITNESS|SANCTUARY-)")),
 ("JARVIS", re.compile(r"^(SOULLAB-JARVIS|JARVIS|JOP-|J10|J11|CANONICAL-ADMISSION|DEPLOYMENT-SAFETY|CMT-|ADOPTION-)")),
@@ -38,7 +66,7 @@ recent_text = subprocess.check_output([
 ], text=True)
 recent_paths = sorted({line.strip() for line in recent_text.splitlines() if line.strip()})
 recent_items = [
-    {"title": Path(path).stem.replace("_", " · "), "path": path}
+    record_item(root / path)
     for path in recent_paths if (root / path).is_file()
 ]
 
@@ -47,10 +75,7 @@ lane_groups["Other programme work"] = []
 
 for f in all_records:
     target = next((name for name, pat in families if pat.search(f.name)), "Other programme work")
-    lane_groups[target].append({
-        "title": f.stem.replace("_", " · "),
-        "path": f.as_posix(),
-    })
+    lane_groups[target].append(record_item(f))
 
 data = {
     "generatedAt": "2026-09-30",
