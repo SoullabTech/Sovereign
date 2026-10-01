@@ -7,9 +7,11 @@
  */
 import { query, type TransactionClient } from '@/lib/db/postgres';
 import { ADULT_ACK_KIND, ADULT_ACK_VERSION } from './adultConfirmation';
+import { decideAcknowledgmentGate, type AcknowledgmentGateDecision } from './acknowledgmentGate';
+import type { AcknowledgmentKind, AcknowledgmentSource } from './acknowledgmentGate';
 
-export type AcknowledgmentKind = 'adult_18_plus' | 'maia_not_monitored';
-export type AcknowledgmentSource = 'registration' | 'sign_in_prompt';
+export type { AcknowledgmentKind, AcknowledgmentSource, AcknowledgmentGateDecision };
+export { decideAcknowledgmentGate };
 
 /** The acknowledgments a member must hold today, with their current versions.
  *  `maia_not_monitored` is reserved and joins this list once its copy is ratified. */
@@ -44,4 +46,22 @@ export async function missingAcknowledgments(
   );
   const held = new Set(result.rows.map((r) => `${r.kind}@${r.version}`));
   return REQUIRED_ACKNOWLEDGMENTS.filter((r) => !held.has(`${r.kind}@${r.version}`));
+}
+
+/** Kinds a member may record through /api/members/acknowledgments today.
+ *  `maia_not_monitored` joins (with its version) when the disclosure copy is
+ *  ratified (#1636), and at the same time joins REQUIRED_ACKNOWLEDGMENTS. */
+export const RECORDABLE_ACKNOWLEDGMENTS: ReadonlyArray<{ kind: AcknowledgmentKind; version: number }> =
+  REQUIRED_ACKNOWLEDGMENTS;
+
+/** Server enforcement point for a signed-in member's MAIA turn. */
+export async function acknowledgmentGateForMember(memberId: string): Promise<AcknowledgmentGateDecision> {
+  let missing: Array<{ kind: AcknowledgmentKind; version: number }> | Error;
+  try {
+    missing = await missingAcknowledgments(memberId);
+  } catch (err) {
+    console.error('[ACK] gate read failed; refusing member turn (fail-closed):', err);
+    missing = err instanceof Error ? err : new Error(String(err));
+  }
+  return decideAcknowledgmentGate(missing);
 }

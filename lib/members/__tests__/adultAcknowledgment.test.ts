@@ -11,6 +11,7 @@ import {
   parseBirthDate,
   ADULT_ACK_KIND,
 } from '../adultConfirmation';
+import { decideAcknowledgmentGate } from '../acknowledgmentGate';
 
 const read = (rel: string) => readFileSync(join(process.cwd(), rel), 'utf8');
 const code = (rel: string) =>
@@ -92,8 +93,9 @@ describe('acknowledgments route', () => {
     expect(route).not.toMatch(/body\.(memberId|member_id|userId)/);
   });
 
-  it('records only the 18+ kind, only on a literal true', () => {
-    expect(route).toContain('body.kind !== ADULT_ACK_KIND || body.confirms !== true');
+  it('records only allow-listed kinds, only on a literal true', () => {
+    expect(route).toContain('RECORDABLE_ACKNOWLEDGMENTS.find((r) => r.kind === body.kind)');
+    expect(route).toContain("!recordable || body.confirms !== true");
     expect(route).toContain("'sign_in_prompt'");
   });
 });
@@ -137,6 +139,57 @@ describe('youth path closed', () => {
   it('the youth page redirects even on direct URL', () => {
     expect(code('app/onboarding/youth/page.tsx')).toMatch(
       /if \(!YOUTH_PATH_OPEN\) \{\s*router\.replace\(YOUTH_CLOSED_ROUTE\)/,
+    );
+  });
+});
+
+describe('MAIA conversation gate (server enforcement)', () => {
+  it('lets a member through only with nothing missing', () => {
+    expect(decideAcknowledgmentGate([])).toEqual({ ok: true });
+  });
+
+  it('refuses a member missing the 18+ acknowledgment', () => {
+    const d = decideAcknowledgmentGate([{ kind: 'adult_18_plus', version: 1 }]);
+    expect(d.ok).toBe(false);
+    if (!d.ok) {
+      expect(d.status).toBe(403);
+      expect(d.body.code).toBe('ACKNOWLEDGMENT_REQUIRED');
+    }
+  });
+
+  it('fails closed when the record cannot be read', () => {
+    const d = decideAcknowledgmentGate(new Error('relation does not exist'));
+    expect(d.ok).toBe(false);
+    if (!d.ok) expect(d.status).toBe(503);
+  });
+
+  for (const [route, idVar] of [
+    ['app/api/sovereign/app/maia/list/route.ts', 'userId'],
+    ['app/api/sovereign/app/maia/route.ts', 'memberId'],
+  ] as const) {
+    it(`${route} gates a signed-in member before cognition`, () => {
+      const src = code(route);
+      const gate = src.indexOf(`acknowledgmentGateForMember(${idVar})`);
+      expect(gate).toBeGreaterThan(-1);
+      expect(src.indexOf('getMaiaResponse(')).toBeGreaterThan(gate);
+    });
+  }
+
+  it('the client never answers in MAIA\'s name on a refusal', () => {
+    const oc = code('components/OracleConversation.tsx');
+    const branch = oc.indexOf("ackErr?.code === 'ACKNOWLEDGMENT_REQUIRED'");
+    const fallback = oc.indexOf('generatePresenceFallback({', branch);
+    const ret = oc.indexOf('return;', branch);
+    expect(branch).toBeGreaterThan(-1);
+    expect(ret).toBeGreaterThan(branch);
+    expect(fallback).toBeGreaterThan(ret);
+  });
+});
+
+describe('migration lock-timeout shape (#1622 lint)', () => {
+  it('opens with BEGIN; then SET LOCAL lock_timeout', () => {
+    expect(code('database/migrations/20261001000001_member_acknowledgments.sql')).toMatch(
+      /^\s*BEGIN;\s*SET LOCAL lock_timeout = '\d+s';/,
     );
   });
 });

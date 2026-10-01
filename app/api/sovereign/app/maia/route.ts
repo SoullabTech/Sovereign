@@ -45,6 +45,7 @@ import { probeAuthPosture } from '@/lib/auth/authPostureProbe';
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { acknowledgmentGateForMember } from '@/lib/members/acknowledgments';
 import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 // Serverless platform config (prevents platform killing long-running DEEP requests)
@@ -183,6 +184,14 @@ export async function POST(req: NextRequest) {
 
     // `memberId` is null for guests. Every member-scoped read/write below keys off it.
     const memberId: string | null = verifiedMemberId;
+
+    // MEMBER-ADULT-ACK-01: a signed-in member's turn reaches MAIA only once they
+    // hold every required acknowledgment. Fail-closed (503 on an unreadable
+    // record). Guests are not gated here.
+    if (memberId) {
+      const ackGate = await acknowledgmentGateForMember(memberId);
+      if (!ackGate.ok) return NextResponse.json(ackGate.body, { status: ackGate.status });
+    }
 
     // ⚠️ EXPLICIT GUEST NAMESPACE — required, not cosmetic.
     //
