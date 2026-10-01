@@ -4,7 +4,7 @@
 Class: A programme · rollout admission (no arrival semantics change)
 Mechanism under test: #1578 (H1-R2 convergence) — DRAFT, merge held
 Prior rollout: #1551 runtime 3421a2096 with the H1 cohort ALREADY OPEN (see §2)
-Standing: R3 OPENED · CENSUS DONE · ⭐ FOUR RULINGS TAKEN (§7) · RUNBOOK READY (§8)
+Standing: R3 OPENED · CENSUS DONE · ⭐ FOUR RULINGS TAKEN (§7) · RUNBOOK FROZEN (§8, founder 2026-10-01)
           · ⛔ step 1 not yet run · ⛔ no merge · ⛔ no deploy · ⛔ no env change
 Untouched by this record: #1539, #1542, production
 ```
@@ -229,7 +229,7 @@ this file.
 | 9 | **TRANSITION T2 — H1 CLOSED → OPEN, exactly C1–C4.** Back up, set `HOUSE_STUDIO_H1_ENABLED=true`, id list unchanged | backup path; one-line diff (WITNESSED) |
 | 10 | Recreate maia only (as step 4) | `Created`; still the merge SHA |
 | 11 | Verify exactly C1–C4 | fingerprint function → `ENABLED=true`, **exactly 4** fingerprints equal to the ledger (WITNESSED); admission for those four (**ENTAILED**) |
-| 12 | #1572 admitted-member walk with **one of C1–C4** | per #1572, with the participant-neutral label only. **R3-F1 and R3-F4 WITNESSED** for that member. ⚠️ #1572 is pinned to runtime `3421a2096`; for this run the runtime is the merge SHA, recorded here as an amendment of that pin and never as a silent change |
+| 12 | **R3 execution of the #1572 protocol with amended runtime binding**, walked by **one of C1–C4** (⛔ never recorded as "the #1572 witness was performed": #1572 is pinned to `3421a2096` and that witness remains unrun) | per #1572, with the participant-neutral label only. **R3-F1 and R3-F4 WITNESSED** for that member. ⚠️ #1572 is pinned to runtime `3421a2096`; for this run the runtime is the merge SHA, recorded here as an amendment of that pin and never as a silent change |
 | 13 | Ordinary-member denied path (Kelly, non-cohort) | House Writing link → `/writers-studio` (R3-F2); hand-typed owned `work=` → the ordinary resolution, identical to without it (R3-F3); `/api/house-studio/admission` → `{admitted:false}` (WITNESSED) |
 | 14 | Record the two observed states | **Early Field CLOSED / H1 OPEN** (steps 11–13) and **Early Field CLOSED / H1 CLOSED** (steps 5 and 8) |
 | 15 | Leave the other two states explicitly unwitnessed | Early Field OPEN × H1 {OPEN, CLOSED}: **UNWITNESSED** |
