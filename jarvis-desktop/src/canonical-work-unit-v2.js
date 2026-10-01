@@ -854,6 +854,76 @@ async function appendCanonicalExecutionResultV2(root, workUnitId, req = {}, opts
   });
 }
 
+async function persistHostDecidedLocalCandidateV1(root, workUnitId, input = {}, opts = {}) {
+  const base = readEnvelope(workUnitId, opts.env);
+  if (!base) {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND', blockers: [] });
+  }
+  if (base.work_unit?.state?.lifecycle_state !== 'EXECUTING') {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'EXECUTING_STATE_REQUIRED', blockers: [] });
+  }
+  if (base.work_unit?.identity?.capability !== 'local-native-candidate') {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'LOCAL_CANDIDATE_CAPABILITY_REQUIRED', blockers: [] });
+  }
+  const baseDigest = digestObject(base);
+  if (opts.expectedEnvelopeDigest && text(opts.expectedEnvelopeDigest) !== baseDigest) {
+    return deepFreeze({ ok: false, status: 'REFUSED', reason: 'CANONICAL_ENVELOPE_STALE', blockers: [], current_digest: baseDigest });
+  }
+
+  const projector = await importBound(root, 'scripts/builder/local-native-candidate-projection-v1.mjs');
+  const projected = projector.projectHostDecidedLocalCandidateV1(base, input);
+  if (!projected?.ok) {
+    return deepFreeze({ ok: false, status: projected?.status || 'REFUSED', reason: projected?.reason || 'LOCAL_CANDIDATE_PROJECTION_REFUSED', blockers: [], projection: clone(projected?.projection || null) });
+  }
+  if (projected.status === 'CONVERGED') {
+    return deepFreeze({
+      ok: true,
+      status: 'CONVERGED',
+      work_unit_id: workUnitId,
+      base_digest: baseDigest,
+      persisted_digest: baseDigest,
+      projection: clone(projected.projection),
+    });
+  }
+
+  if (typeof opts._beforeFinalReadForTest === 'function') await opts._beforeFinalReadForTest();
+  const current = readEnvelope(workUnitId, opts.env);
+  const currentDigest = current ? digestObject(current) : null;
+  if (!current || currentDigest !== baseDigest) {
+    return deepFreeze({
+      ok: false,
+      status: 'REFUSED',
+      reason: 'CANONICAL_ENVELOPE_CHANGED_DURING_PROJECTION',
+      blockers: [],
+      base_digest: baseDigest,
+      current_digest: currentDigest,
+    });
+  }
+
+  writeEnvelope(workUnitId, projected.envelope, opts.env);
+  const persisted = readEnvelope(workUnitId, opts.env);
+  const projectedDigest = digestObject(projected.envelope);
+  const persistedDigest = persisted ? digestObject(persisted) : null;
+  if (!persisted || persistedDigest !== projectedDigest) {
+    return deepFreeze({
+      ok: false,
+      status: 'PERSISTENCE_VERIFY_FAILED',
+      reason: 'CANONICAL_W4_PERSISTENCE_VERIFY_FAILED',
+      blockers: [],
+      expected_digest: projectedDigest,
+      persisted_digest: persistedDigest,
+    });
+  }
+  return deepFreeze({
+    ok: true,
+    status: 'PROJECTED',
+    work_unit_id: workUnitId,
+    base_digest: baseDigest,
+    persisted_digest: persistedDigest,
+    projection: clone(projected.projection),
+  });
+}
+
 async function appendCanonicalVerifierResultV2(root, workUnitId, req = {}, opts = {}) {
   const envelope = readEnvelope(workUnitId, opts.env);
   if (!envelope) {
@@ -1270,6 +1340,7 @@ module.exports = {
   readCanonicalExecutionEnvelopeV2,
   prepareCanonicalTransportForExecutionV2,
   appendCanonicalExecutionResultV2,
+  persistHostDecidedLocalCandidateV1,
   appendCanonicalVerifierResultV2,
   markCanonicalEvidenceReadyV2,
   adjudicateCanonicalV2,
