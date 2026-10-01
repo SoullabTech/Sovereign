@@ -3,8 +3,13 @@
 // C1 x1 (auto-routed, genuinely local — raw Ollama HTTP, zero Claude process),
 // C3 x1 (auto-routed, an already-real qualifying task, not manufactured).
 import { route } from '../router.mjs';
+import { declareRoutingEligibility } from '../routing-eligibility.mjs';
 import { runCapability } from '../deterministic.mjs';
 import { execFileSync } from 'node:child_process';
+
+// JOP-04 RB-6A: registration no longer grants routing. C0 tasks must carry a
+// satisfied routing eligibility, declared on a basis the registry cannot supply.
+const ELIGIBLE = declareRoutingEligibility({ satisfied: true, basis: 'alpha_proof_fixture', declared_by: 'router-alpha-proof' });
 
 const cwd = process.cwd();
 let pass = 0, fail = 0;
@@ -15,7 +20,7 @@ function report(name, ok, detail) {
 
 console.log('==================== C0 — task 1: inventory.routes ====================');
 {
-  const decision = route({ capability: 'inventory.routes', args: { dir: 'app/api' } });
+  const decision = route({ capability: 'inventory.routes', args: { dir: 'app/api' } }, ELIGIBLE);
   report('router selected C0', decision.execution_lane === 'C0', decision.reason);
   const result = runCapability('inventory.routes', decision.task.args, cwd);
   const independent = execFileSync('git', ['ls-files', 'app/api'], { cwd, encoding: 'utf8' }).split('\n').filter(Boolean);
@@ -27,7 +32,7 @@ console.log('==================== C0 — task 1: inventory.routes ==============
 console.log('\n==================== C0 — task 2: verify.count_matches ====================');
 {
   const args = { file: 'scripts/builder/deterministic.mjs', pattern: "type: 'string'" };
-  const decision = route({ capability: 'verify.count_matches', args });
+  const decision = route({ capability: 'verify.count_matches', args }, ELIGIBLE);
   report('router selected C0', decision.execution_lane === 'C0', decision.reason);
   const result = runCapability('verify.count_matches', decision.task.args, cwd);
   // Independent verification via a wholly separate mechanism: plain Node fs
@@ -80,6 +85,18 @@ console.log('\n==================== control — oversized C1 packet does NOT aut
 {
   const decision = route({ bounded_for_local: true, input_chars: 999999 });
   report('oversized packet rejected, not silently escalated to C3', decision.status === 'rejected_oversized' && decision.execution_lane === null, decision.reason);
+}
+
+console.log('\n==================== RB-6A — registration does not grant routing ====================');
+{
+  const d = route({ capability: 'inventory.routes', args: { dir: 'app/api' } });
+  report('registered capability with NO routing eligibility is refused', d.status === 'refused_not_routable' && d.execution_lane === null, d.reason);
+  const forged = route({ capability: 'inventory.routes', args: { dir: 'app/api' } }, { satisfied: true });
+  report('an unbranded { satisfied: true } is not a routing eligibility', forged.status === 'refused_not_routable');
+  const over = route({ capability: 'inventory.routes', bounded_for_local: true, input_chars: 999999 }, ELIGIBLE);
+  report('router refusal defeats registration (registration no longer preempts judgment)', over.status === 'rejected_oversized');
+  const unreg = route({ capability: 'definitely.not.registered' }, ELIGIBLE);
+  report('unregistered remains non-C0 even with satisfied eligibility', unreg.execution_lane !== 'C0', unreg.execution_lane);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

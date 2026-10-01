@@ -1187,8 +1187,25 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   const routerPath = path.join(currentRoot(), 'scripts', 'builder', 'router.mjs');
   const detPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
 
-  const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
-  const decision = route(task);
+  // JOP-04 RB-6A host-brand reconciliation: producer and consumer come from
+  // the same cache-busted router graph, preserving one private brand lineage.
+  const { route, declareRoutingEligibility } = await import(`file://${routerPath}?t=${Date.now()}`);
+
+  let routingEligibility = null;
+  try {
+    const declared = task && typeof task.routing === 'object' && task.routing !== null ? task.routing : null;
+    if (declared && typeof declareRoutingEligibility === 'function') {
+      routingEligibility = declareRoutingEligibility({
+        satisfied: declared.satisfied === true,
+        basis: typeof declared.basis === 'string' && declared.basis.trim() ? declared.basis : 'operator_submission',
+        declared_by: 'jarvis-desktop:submit-task',
+      });
+    }
+  } catch {
+    routingEligibility = null;
+  }
+
+  const decision = route(task, routingEligibility);
 
   const response = {
     task: task,
