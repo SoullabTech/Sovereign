@@ -38,6 +38,7 @@ import { query, transaction } from '@/lib/db/postgres';
 import { sweepVaultErasureQueue } from '@/lib/manuscript/source/eraseManuscript';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { refuseTitle } from '@/lib/livingWork/domain';
+import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 const MAX_TITLE_CHARS = 300;
 
@@ -63,6 +64,56 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
   const { id } = await ctx.params;
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      const body = (await request.json().catch(() => ({}))) as {
+        title?: unknown;
+        purpose?: unknown;
+        form?: unknown;
+        stage?: unknown;
+        manuscriptState?: unknown;
+      };
+
+      const patch: Record<string, string | null> = {};
+      for (const key of ['title', 'purpose', 'form', 'stage', 'manuscriptState']) {
+        if (Object.prototype.hasOwnProperty.call(body, key)) {
+          const value = body[key as keyof typeof body];
+          if (value !== null && typeof value !== 'string') {
+            return NextResponse.json({ error: key + ' must be text' }, { status: 400 });
+          }
+          patch[key] = value as string | null;
+        }
+      }
+
+      if (Object.keys(patch).length === 0) {
+        return NextResponse.json({ error: 'nothing to change' }, { status: 400 });
+      }
+
+      const work = store.updateWork(member.id, id, patch);
+      if (!work) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+      const response = NextResponse.json({
+        work: {
+          id: work.id,
+          title: work.title,
+          purpose: work.purpose,
+          form: work.form,
+          stage: work.stage,
+          manuscriptState: work.manuscriptState,
+          createdAt: work.createdAt,
+          updatedAt: work.updatedAt,
+        },
+      });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -219,7 +270,24 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
   const { id } = await ctx.params;
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      if (!store.deleteWork(member.id, id)) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      const response = NextResponse.json({ withdrawn: id });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

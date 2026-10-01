@@ -1,0 +1,381 @@
+@font-face {
+  font-family: 'Cabin Crimson';
+  src: url('/fonts/crimson-pro/crimson-pro-300-normal-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+.cabinArrival {
+  --field: #100d0a;
+  --ink: #efe7d9;
+  --muted: #bca991;
+  --accent: #d2ae75;
+  --rule: rgba(219, 185, 136, .18);
+  min-height: 100svh;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(211, 173, 112, .065), transparent 31%),
+    radial-gradient(circle at 18% 72%, rgba(102, 75, 44, .09), transparent 29%),
+    linear-gradient(135deg, #120f0c 0%, #0c0a08 52%, #15100c 100%);
+  color: var(--ink);
+  font-family: 'Cabin Crimson', Georgia, serif;
+}
+
+.cabinArrival::before,
+.cabinArrival::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  inset: 8% 11%;
+  border: 1px solid rgba(219, 185, 136, .055);
+  border-radius: 50%;
+  transform: rotate(-8deg);
+}
+
+.cabinArrival::after {
+  inset: 17% 23%;
+  border-color: rgba(219, 185, 136, .035);
+  transform: rotate(11deg);
+}
+
+.cabinIdentity {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px 42px;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.markFlower {
+  width: 34px;
+  height: 34px;
+  display: block;
+  background: var(--accent);
+  -webkit-mask: url('/holoflower.svg') center / contain no-repeat;
+  mask: url('/holoflower.svg') center / contain no-repeat;
+  opacity: .82;
+}
+
+.markWord {
+  font: 400 12px/1 Arial, sans-serif;
+  letter-spacing: .3em;
+}
+
+.return {
+  color: #bda98f;
+  font: 12px/1.4 Arial, sans-serif;
+  text-decoration: none;
+  letter-spacing: .08em;
+}
+
+.return:hover,
+.return:focus-visible {
+  color: #ead1a7;
+}
+.arrivalField {
+  position: relative;
+  z-index: 2;
+  min-height: calc(100svh - 100px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 7vh 7vw 10vh;
+}
+
+.arrivalCopy {
+  width: min(800px, 100%);
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 22px;
+  color: #bca88d;
+  font: 8px/1.5 Arial, sans-serif;
+  letter-spacing: .34em;
+}
+
+.arrivalCopy h1 {
+  margin: 0;
+  color: #f1e8da;
+  font-size: clamp(58px, 7vw, 106px);
+  font-weight: 300;
+  line-height: .92;
+  letter-spacing: -.035em;
+  text-shadow: 0 3px 28px rgba(0, 0, 0, .24);
+}
+
+.arrivalCopy h1 span {
+  display: inline;
+}
+
+.arrivalCopy h1 span + span {
+  margin-left: .12em;
+}
+
+.stateCopy {
+  margin: 22px 0 0;
+  color: #cdbca5;
+  font: italic clamp(18px, 1.6vw, 24px)/1.45 Georgia, serif;
+}
+
+.continuityField {
+  width: min(1040px, 100%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: clamp(72px, 8vw, 118px);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.doorway {
+  position: relative;
+  min-height: 245px;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 28px 24px;
+  color: inherit;
+  text-decoration: none;
+  border-left: 1px solid var(--rule);
+  overflow: hidden;
+}
+
+.doorway:first-child {
+  border-left: 0;
+}
+
+.doorGlow {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.doorway[data-present='true'] .doorGlow {
+  background: var(--accent);
+  box-shadow: 0 0 18px rgba(210, 174, 117, .34);
+}
+
+.doorLabel {
+  margin-top: 17px;
+  color: #eee4d5;
+  font-size: 29px;
+  font-weight: 300;
+  line-height: 1.1;
+}
+
+.doorPhrase {
+  max-width: 230px;
+  margin-top: 12px;
+  color: #ad9c86;
+  font: 13px/1.55 Arial, sans-serif;
+}
+
+.enter {
+  margin-top: auto;
+  color: #d5b982;
+  font: 11px/1 Arial, sans-serif;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.doorway:hover,
+.doorway:focus-visible {
+  background: linear-gradient(180deg, rgba(214, 176, 113, .04), transparent);
+  outline: none;
+}
+
+.doorway:focus-visible {
+  box-shadow: inset 0 0 0 1px rgba(226, 202, 164, .42);
+}
+.maiaThreshold {
+  display: inline-flex;
+  align-items: center;
+  gap: 17px;
+  margin-top: 47px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.maiaHalo {
+  width: 52px;
+  height: 52px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(214, 181, 124, .27);
+  border-radius: 50%;
+}
+
+.maiaHalo::before,
+.maiaHalo::after,
+.maiaHalo span {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(214, 181, 124, .2);
+  border-radius: 50%;
+}
+
+.maiaHalo::before {
+  transform: rotate(60deg) scaleX(.55);
+}
+
+.maiaHalo::after {
+  transform: rotate(-60deg) scaleX(.55);
+}
+
+.maiaHalo span {
+  width: 9px;
+  height: 9px;
+  border: 0;
+  background: rgba(214, 181, 124, .72);
+  box-shadow: 0 0 18px rgba(214, 181, 124, .32);
+}
+
+.maiaThreshold small {
+  display: block;
+  margin-bottom: 5px;
+  color: #9e8d77;
+  font: 8px/1.3 Arial, sans-serif;
+  letter-spacing: .22em;
+}
+
+.maiaThreshold strong {
+  color: #dfd2c0;
+  font-size: 20px;
+  font-weight: 300;
+}
+
+.fixtureNote {
+  position: absolute;
+  right: 32px;
+  bottom: 24px;
+  z-index: 4;
+  display: flex;
+  gap: 18px;
+  color: rgba(173, 156, 134, .58);
+  font: 8px/1.4 Arial, sans-serif;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 800px) {
+  .cabinIdentity {
+    padding: 18px 19px;
+  }
+
+  .markFlower {
+    width: 29px;
+    height: 29px;
+  }
+
+  .markWord {
+    font-size: 10px;
+  }
+
+  .return {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .arrivalField {
+    min-height: calc(100svh - 70px);
+    padding: 5vh 20px 56px;
+  }
+
+  .eyebrow {
+    margin-bottom: 18px;
+    font-size: 7px;
+    letter-spacing: .25em;
+  }
+
+  .arrivalCopy h1 {
+    max-width: 100%;
+    font-size: clamp(40px, 10.5vw, 58px);
+    letter-spacing: -.045em;
+    overflow-wrap: normal;
+  }
+
+  .arrivalCopy h1 span {
+    display: block;
+  }
+
+  .arrivalCopy h1 span + span {
+    margin-left: 0;
+  }
+
+  .stateCopy {
+    margin-top: 18px;
+    font-size: 18px;
+  }
+
+  .continuityField {
+    grid-template-columns: 1fr;
+    margin-top: 44px;
+    border-bottom: 0;
+  }
+
+  .doorway,
+  .doorway:first-child {
+    min-height: 116px;
+    padding: 22px 2px 20px;
+    border-left: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .doorGlow {
+    top: 20px;
+    left: 2px;
+  }
+
+  .doorLabel {
+    margin-top: 12px;
+    font-size: 27px;
+  }
+
+  .doorPhrase {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .enter {
+    margin-top: 16px;
+  }
+
+  .maiaThreshold {
+    margin-top: 22px;
+  }
+
+  .fixtureNote {
+    position: static;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cabinArrival *,
+  .cabinArrival *::before,
+  .cabinArrival *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
