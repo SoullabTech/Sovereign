@@ -129,7 +129,11 @@ The live-host integration proof delivers the projection into a synthetic lane ma
 - O5-R4 frozen matrix: **LETHAL + DISCRIMINATING**;
 - O5-R4 freeze: **INTACT**.
 
-`node --check` passes for both modified runtime files.
+`node --check` passes for the modified runtime modules.
+
+### E9 implementation mutation probe
+
+The projector was mutated under a file backup so `target_lane` always returned `lane-a`. The real-module suite failed **4 pass / 1 fail** at R4-E9 with the direct assertion `lane-a !== lane-b`. The original projector was then restored from the backup and verified byte-identical with `cmp`; the suite returned to **5/5**. No `git checkout` restoration was used.
 
 ## 7. What remains before admission
 
