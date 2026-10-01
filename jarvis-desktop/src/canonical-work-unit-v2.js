@@ -192,7 +192,7 @@ function validateSpecShape(spec) {
   return blocks;
 }
 
-function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
+function canonicalInputFromSpec(spec, { canonicalSha, workUnitId, authorityProfile = null }) {
   const blocks = [...validateSpecShape(spec)];
   const objective = text(spec?.objective);
   const taskShape = text(spec?.taskShape || 'CODE_GROUNDED');
@@ -201,6 +201,7 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
   const posture = text(spec?.requestedPosture || 'default');
   const reviewPressure = text(spec?.reviewPressure || 'ordinary');
   const capability = text(spec?.capability) || null;
+  const localCandidateAuthority = authorityProfile === 'LOCAL_CANDIDATE';
 
   if (!objective) blocks.push(blocker('OBJECTIVE_REQUIRED', 'Describe what this Work Unit should accomplish.', 'objective'));
   if (!TASK_SHAPES.includes(taskShape)) blocks.push(blocker('INVALID_TASK_SHAPE', 'Use one of the six J5 task shapes.', 'taskShape'));
@@ -281,8 +282,9 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
     },
     authority: {
       repository_read: !isTaskTextOnly,
-      repository_write: 'none',
-      shell: 'none',
+      repository_write: localCandidateAuthority ? 'worktree' : 'none',
+      shell: localCandidateAuthority ? 'bounded_write' : 'none',
+      test_execution: localCandidateAuthority,
       network_external: networkExternal,
       provider_spend: providerSpend,
       external_disclosure: externalDisclosure,
@@ -329,7 +331,7 @@ async function prospectivePreview(root, spec, opts = {}) {
   const canonicalSha = String(opts.canonicalSha || '');
   const nowMs = Number.isFinite(opts.nowMs) ? opts.nowMs : Date.now();
   const workUnitId = 'preview-' + makeId(text(spec?.objective) || 'work', nowMs).slice(3);
-  const built = canonicalInputFromSpec(spec, { canonicalSha, workUnitId });
+  const built = canonicalInputFromSpec(spec, { canonicalSha, workUnitId, authorityProfile: opts.authorityProfile || null });
   if (!built.ok) {
     return deepFreeze({
       ok: false,
@@ -394,7 +396,11 @@ async function createCanonicalV2(root, spec, opts = {}) {
     return deepFreeze({ ok: false, status: 'REFUSED', reason: 'SHARED_WORK_UNIT_ID_INVALID', blockers: [] });
   }
   const workUnitId = suppliedWorkUnitId || makeId(text(spec?.objective) || 'work', nowMs);
-  const built = canonicalInputFromSpec(spec, { canonicalSha, workUnitId });
+  const built = canonicalInputFromSpec(spec, {
+    canonicalSha,
+    workUnitId,
+    authorityProfile: opts.authorityProfile || null,
+  });
   if (!built.ok) {
     return deepFreeze({ ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_INTENT_REFUSED', blockers: built.blockers });
   }

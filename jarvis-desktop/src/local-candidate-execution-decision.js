@@ -1,0 +1,33 @@
+// EC1-R11B — host-side local-candidate occurrence + execution-decision custody.
+'use strict';
+const crypto = require('node:crypto');
+const path = require('node:path');
+
+const VERSION = 'EC1-R11B.v1';
+const pending = new Map();
+function clone(v){return JSON.parse(JSON.stringify(v));}
+function canonical(v){if(Array.isArray(v))return '['+v.map(canonical).join(',')+']';if(v&&typeof v==='object')return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';return JSON.stringify(v??null);}
+function digest(v){return 'sha256:'+crypto.createHash('sha256').update(canonical(v)).digest('hex');}
+function occurrenceId(){return 'lc-'+crypto.randomBytes(10).toString('hex');}
+function decisionId(){return 'exec-'+crypto.randomBytes(10).toString('hex');}
+function binding({root,runId,packet,canonicalCoreDigest}){
+  return Object.freeze({
+    binding_version:'EC1-LOCAL-CANDIDATE.v1',
+    root:path.resolve(root),
+    run_id:String(runId||''),
+    work_unit_id:String(packet?.work_unit_id||''),
+    packet_digest:digest(packet),
+    canonical_core_digest:String(canonicalCoreDigest||''),
+  });
+}
+function stage({root,runId,packet,canonicalCoreDigest}){
+  if(!root||!runId||!packet?.work_unit_id||!canonicalCoreDigest)return{ok:false,status:'REFUSED',reason:'LOCAL_CANDIDATE_BINDING_REQUIRED'};
+  const id=occurrenceId();const bound=binding({root,runId,packet,canonicalCoreDigest});
+  const record=Object.freeze({version:VERSION,occurrence_id:id,binding:bound,binding_digest:digest(bound),decided:false});
+  pending.set(id,record);return{ok:true,status:'LOCAL_CANDIDATE_AWAITING_EXECUTION_DECISION',occurrence_id:id,binding_digest:record.binding_digest};
+}
+function verify(id,input){const r=pending.get(String(id||''));if(!r)return{ok:false,status:'REFUSED',reason:'PENDING_OCCURRENCE_NOT_FOUND'};if(r.decided)return{ok:false,status:'REFUSED',reason:'OCCURRENCE_ALREADY_DECIDED'};const current=binding(input);if(digest(current)!==r.binding_digest)return{ok:false,status:'REFUSED',reason:'LOCAL_CANDIDATE_BINDING_CHANGED'};return{ok:true,record:clone(r)};}
+function constitute(id,input){const checked=verify(id,input);if(!checked.ok)return checked;const current=pending.get(String(id));const decision=Object.freeze({decision_version:VERSION,decision_id:decisionId(),occurrence_id:current.occurrence_id,binding_digest:current.binding_digest,source:'host:local-candidate-confirmation',constituted_at:new Date().toISOString(),one_shot:true});pending.set(String(id),Object.freeze({...current,decided:true,execution_decision:decision}));return{ok:true,status:'EXECUTION_DECISION_CONSTITUTED',execution_decision:clone(decision)};}
+function inspect(id){const r=pending.get(String(id||''));return r?clone(r):null;}
+function forget(id){return pending.delete(String(id||''));}
+module.exports={VERSION,stage,verify,constitute,inspect,forget,_bindingForTest:binding,_digestForTest:digest};

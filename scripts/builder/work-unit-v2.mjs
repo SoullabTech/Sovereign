@@ -130,6 +130,7 @@ function coreBlockers(input) {
     if (!booleanField(authority.repository_read)) blocks.push(blocker('INVALID_REPOSITORY_READ', 'authority.repository_read must be boolean.', 'authority.repository_read'));
     if (!enumOk(authority.repository_write, REPOSITORY_WRITE_SCOPES)) blocks.push(blocker('INVALID_REPOSITORY_WRITE', 'authority.repository_write must be none or worktree.', 'authority.repository_write'));
     if (!enumOk(authority.shell, SHELL_SCOPES)) blocks.push(blocker('INVALID_SHELL_SCOPE', 'authority.shell is not recognized.', 'authority.shell'));
+    if (authority.test_execution != null && !booleanField(authority.test_execution)) blocks.push(blocker('INVALID_TEST_EXECUTION', 'authority.test_execution must be boolean when present.', 'authority.test_execution'));
     if (!booleanField(authority.network_external)) blocks.push(blocker('INVALID_NETWORK_AUTHORITY', 'authority.network_external must be boolean.', 'authority.network_external'));
     if (!booleanField(authority.provider_spend)) blocks.push(blocker('INVALID_PROVIDER_SPEND', 'authority.provider_spend must be boolean.', 'authority.provider_spend'));
     if (!enumOk(authority.external_disclosure, EXTERNAL_DISCLOSURE_SCOPES)) blocks.push(blocker('INVALID_EXTERNAL_DISCLOSURE', 'authority.external_disclosure is not recognized.', 'authority.external_disclosure'));
@@ -209,6 +210,7 @@ export function createWorkUnitDraftV2(input) {
       repository_read: input.authority.repository_read,
       repository_write: input.authority.repository_write,
       shell: input.authority.shell,
+      test_execution: input.authority.test_execution === true,
       network_external: input.authority.network_external,
       provider_spend: input.authority.provider_spend,
       external_disclosure: input.authority.external_disclosure,
