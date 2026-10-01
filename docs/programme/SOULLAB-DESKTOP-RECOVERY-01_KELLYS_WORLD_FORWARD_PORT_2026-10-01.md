@@ -154,3 +154,29 @@ That next unit may converge the single installed Soullab Desktop body, but it mu
 > MAIA/member realm ≠ JARVIS/operator realm.
 
 Kelly's World is the human-readable operational surface of the governed field. The Operator Console remains the deeper machinery surface underneath it.
+
+## 11. Current-canonical reconciliation
+
+After the recovery commit was preserved, canonical advanced to:
+
+`5898fbbf6e35407a4004cd60cbbd80837547916b`
+
+The incoming canonical interval included:
+
+- Writer's Studio → Kelly's World return (#1662);
+- Living Field witness hardening (#1661);
+- non-delivery evidence custody (#1660);
+- MAIA developmental ancestry I0 (#1673).
+
+The recovery branch was merged with this canonical boundary using `--no-commit` first. Git reported **zero conflicts**.
+The full recovery verification was then repeated on the reconciled tree:
+
+- Founder Workspace typecheck: PASS.
+- base / B2 / B3 / B4 / B5 / B5R1 / B6 / B6R1 / B6R1R1 / B7R1: PASS.
+- Voice Doorway matrix: LETHAL + DISCRIMINATING.
+- provider governance: PASS; no new OpenAI surface.
+- full JARVIS Desktop population: 390 tests · 379 pass · 2 known stale JOP-00 baseline failures · 9 skipped.
+
+No new failure appeared after the Writer's Studio, Living Field, non-delivery, or developmental-ancestry canonical changes entered the recovery tree.
+
+**Reconciled standing:** current-canonical recovery candidate; no merge to canonical, deployment, notarization, or release authorized by this record.
