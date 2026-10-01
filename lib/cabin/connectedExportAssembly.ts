@@ -134,6 +134,10 @@ function workFromRows(rows: WorkRow[], memberId: string, workId: string) {
 }
 
 function memoryFromRow(row: MemoryRow): { candidate: Parameters<typeof projectMemoryForCabin>[0] } {
+  if (row.crossing_allowed !== false) {
+    throw new Error(`CABIN_EXPORT_SELECTION_INVALID:memory:${row.id}`);
+  }
+
   const memory: CrystallizedMemory = {
     id: row.id,
     memberId: row.member_id,
