@@ -819,3 +819,103 @@ All are killed on their named rule.
 
 **Standing:** RB-A3 is frozen as additive lineage; earlier frozen blobs remain unchanged. A new fresh walk is
 required from the commit containing RB-A3. O5-R4 remains closed and production remains untouched.
+
+## 14. Fresh walk #3 incident · execution interlock + generation-3 recovery (2026-10-01)
+
+### 14.1 Step 5 passed on RB-A3
+
+Fresh specimen `2a6bd1a6e8bc50ac8cdd5627eba7898ee61340df` passed the bounded readiness barrier:
+- C1–C5 PASS;
+- C6-pre PASS — `NOT_YET_HELD_AFTER_RELEASE · generation 2`;
+- `PRE-WRITE BASELINE PASS — C1–C5 + C6-pre`.
+
+The pre-write snapshot is preserved at `~/o5r3-w3-prewrite.json`.
+
+### 14.2 The intended authorization crossed the execution boundary
+
+The prepared Work Unit was:
+`v2-witness-the-o5-r3-single-authorize-muq1l3w5`.
+
+Primary/QWEN authorization appended:
+- lease generation 3, held by Desktop pid `85599`, incarnation `ps-lstart:Thu Oct 1 17:09:38 2026`;
+- `ISSUED` at `2026-10-01T21:47:22.074Z`;
+- grant `e1-c5e48bd04800c6b9c2009077a0ff3df0`;
+- exact participant `primary`, exact transport `e1-ready-primary-0990055d798c`.
+
+At `2026-10-01T21:47:25.242Z` the same grant became `CLAIMED`, and W2 moved to `EXECUTING`.
+
+No canonical durable result was ever written for that grant, and W4 contains no result reference for it. The provider outcome is therefore **UNKNOWN**. The grant remained stranded at `CLAIMED` when the Desktop incarnation disappeared, leaving generation 3 unreleased.
+
+macOS unified logging between 17:47:24 and 17:47:25 local shows a burst of Node process creation immediately before `CLAIMED`. This is evidence that the execution-confirm path entered substantial preparation; it is not sufficient to claim that QWEN completed, or to assign the whole-system crash to one process with certainty.
+
+The walk stopped. C6A/C6 could not pass against the dead holder, and no C7/C8 refusal witness was attempted.
+
+### 14.3 UI execution interlock
+
+Source inspection showed `Authorize this execution once` and `Confirm Execute` are distinct IPC acts. The unsafe affordance was temporal: after authorization, the renderer immediately replaced the control with an executable `Confirm Execute` button in the same interaction flow.
+
+Repair `11f10ec0dbe550607a64d8f2af211cd43bae15e8` adds a separate non-executing gesture:
+
+`Authorize Once → Review authorized execution → Confirm Execute`
+
+The confirm handler also refuses unless that exact grant has first been armed by the new review gesture. Focused E1 tests are 11/11; O5-R3 writer proof is 17/17; RB, RB-A1, RB-A2 and RB-A3 matrices remain lethal + discriminating.
+
+### 14.4 Generations 4 and 5 attributed: concurrent legitimate writers
+
+Two later lease generations initially looked like unexplained drift. Recent-command history attributes both exactly:
+
+- generation 4 / pid `15809`: another JARVIS flow authorized and executed the primary participant of Work Unit `v2-early-field-01-r65-candidate-reaso-muq5ureh`;
+- generation 5 / pid `17735`: the same flow authorized and executed its independent-review participant.
+
+Both used the same real delegation home through lease-aware `work-unit-control.js`. They are therefore **ATTRIBUTED concurrent writers**, not hidden corruption. Their one-shot CLI processes exited without an orderly lease release, so each later writer lawfully took over the proven-dead predecessor.
+
+This establishes a new operational condition for the admission walk: from the saved Step-5 baseline through the Step-7 verdict, no other real-home grant-writing JARVIS flow may run. C6A is intentionally sensitive to such concurrent governed changes.
+
+### 14.5 Bounded operator retirement of the stranded grant
+
+A separate recovery instrument was built and proven before real-home use:
+`scripts/builder/o5-operator-retire-claimed-grant.mjs` at commit `e023d223f80c8c978d41b9a27999df8966716c5e`.
+
+Its executable contract is narrow:
+- exact named grant must still be `CLAIMED`;
+- Work Unit + guard must still be `EXECUTING`;
+- no durable result may exist;
+- W4 may not already record a result;
+- latest lease holder must be proven `DEAD` or `DEAD_PID_REUSED`;
+- a reviewed state digest must still match at execution time;
+- it may append only `INVALIDATED` with reason `OPERATOR_RECOVERY_UNKNOWN_EXECUTION_OUTCOME`;
+- it never writes W4, retries a provider or claims an execution outcome.
+
+The exact real incident was first rehearsed on a throwaway copy. The proof suite then passed 6/6 and the existing O5-R3 writer proof 17/17.
+
+Real-home recovery admitted digest `sha256:8c12c48d957e8efc22885c8fe86623402020d0c077b716f199484e01e76de61c` against generation 5 and produced:
+- generation 6 takeover, proof `DEAD`;
+- exactly one append to the target grant ledger;
+- `INVALIDATED` with reason `OPERATOR_RECOVERY_UNKNOWN_EXECUTION_OUTCOME`;
+- prior ledger bytes exact prefix;
+- Work Unit envelope byte-identical;
+- no durable result and no W4 write;
+- generation 7 clean release.
+
+Post-recovery read-only census:
+- `BLOCKED_BY_EVIDENCE 0`;
+- `UNCLASSIFIED_OR_MALFORMED 0`;
+- shape observations `0`;
+- one `NEEDS_OPERATOR_AUTHORITY / authority_no_longer_sufficient`, which is the preserved historical Work Unit still `EXECUTING` with its grant now invalidated.
+
+That remaining stop is **not repaired into completion**. The unknown execution outcome remains unknown.
+
+### 14.6 Standing and next specimen
+
+**O5-R3 remains NOT ADMITTED.** The failed/incident Work Unit is never reused.
+
+The next admission specimen must:
+- start from a fresh worktree at a commit containing RB-A3, the execution interlock and this recovery record;
+- use a **new** canonical Work Unit;
+- take its Step-5 baseline from the current released lease history (generation 7 or later);
+- preserve a quiet grant-writing field from Step 5 through Step 7;
+- require C6A to witness exactly one next acquisition and exactly one changed Work Unit ledger;
+- stop after Authorize Once; the new interlock must show `Review authorized execution`, never immediate `Confirm Execute`;
+- then run the refusal witness and require `CONSTITUTIONAL PASS — C1–C8 + C6A witnessed`.
+
+O5-R4 remains closed. Production remains untouched by this programme.
