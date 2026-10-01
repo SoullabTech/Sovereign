@@ -1,7 +1,7 @@
 # Living Field + Writer's Studio Witnesses — Re-baseline after RC1
 
 **Date:** 2026-10-01
-**Status:** SOURCE RE-BASELINE COMPLETE · ⛔ two live confirmations owed at walk time
+**Status:** SOURCE RE-BASELINE COMPLETE · live check 1 ✅ (cabin mode empty) · per-walk SHA start/end still owed
 **Previous readiness runtime:** `975a208b8c39f99e9b47208ce5139bbec94bd8ac`
 **Current production runtime:** `03f0fd3abce16fcc1132481836b2e6ff8d364cd7` (founder deploy, ~14:35Z)
 
@@ -54,3 +54,16 @@ No Writer's Studio cohort-walk protocol is on record yet. Whoever writes it inhe
 - the walk's subject build is `03f0fd3ab`. Any later deploy before the walk requires a new re-baseline.
 
 The Living Field protocol and its record template were amended to match (protocol Amendment 1, made before any run).
+
+## Live check result (founder-run, 2026-10-01 ~15:3xZ)
+
+```text
+GIT_COMMIT       03f0fd3ab
+MAIA_CABIN_MODE  (empty)
+container        restarts=0 · started 2026-10-01T15:32:50Z · image sha256:a028302c2cfc…
+```
+
+Cabin offline mode is **unset**. RC1's House changes are inert in production, and the re-baseline holds.
+
+⚠️ The container start time moved from 14:47:54Z (earlier check) to 15:32:50Z. `restarts=0` means each move was a *recreation*, not a crash-restart, and it happened twice after the ~14:36Z RC1 swap on the same commit. The cause is not yet attributed. A walk is admissible as evidence on RC1 only once the running image is confirmed to be the RC1 build.
+
