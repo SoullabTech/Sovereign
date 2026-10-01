@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
+import { cabinReturnPath, isCabinOrigin } from '@/lib/cabin/doorway';
 import { apiFetch } from '@/lib/http/apiBase';
 import { todayISODate } from '@/lib/maia/dailyAnchor';
 import styles from './anchor-room.module.css';
@@ -66,7 +67,10 @@ interface YesterdayAnchor {
 export default function AnchorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const fromCabin = isCabinOrigin(searchParams);
   const fromHouse = searchParams?.get('from') === 'house';
+  const returnTarget = fromCabin ? cabinReturnPath() : fromHouse ? '/house' : '/maia';
+  const returnLabel = fromCabin ? 'Return to Cabin →' : fromHouse ? 'Return to House →' : 'Return to MAIA →';
   const sourceFacet = searchParams?.get('sourceFacet');
   const sourceRefId = searchParams?.get('sourceRefId');
   const crossingId = searchParams?.get('crossingId');
@@ -213,7 +217,7 @@ export default function AnchorPage() {
         ) : !prompt ? (
           <div className={styles.unavailable}>
             <p>{error || 'This daily place could not open just now.'}</p>
-            <button type="button" onClick={() => router.push('/house')}>Return to House →</button>
+            <button type="button" onClick={() => router.push(returnTarget)}>{returnLabel}</button>
           </div>
         ) : showEditor ? (
           <section className={styles.practice}>
@@ -300,7 +304,7 @@ export default function AnchorPage() {
             <button type="button" onClick={() => void onToggleYesterday()}>
               {showYesterday ? 'Hide yesterday' : 'Yesterday'}
             </button>
-            <button type="button" onClick={() => router.push('/maia/anchor/history')}>
+            <button type="button" onClick={() => router.push(fromCabin ? '/maia/anchor/history?from=cabin' : '/maia/anchor/history')}>
               Earlier anchors →
             </button>
           </div>
@@ -326,8 +330,8 @@ export default function AnchorPage() {
 
         <footer className={styles.footer}>
           <span>One thread is enough.</span>
-          <button type="button" onClick={() => router.push(fromHouse ? '/house' : '/maia')}>
-            {fromHouse ? 'Return to House →' : 'Return to MAIA →'}
+          <button type="button" onClick={() => router.push(returnTarget)}>
+            {returnLabel}
           </button>
         </footer>
       </section>
