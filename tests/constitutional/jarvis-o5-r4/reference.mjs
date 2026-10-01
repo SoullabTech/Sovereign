@@ -1,6 +1,7 @@
 import {
   EVIDENCE_KINDS, O1_CANDIDATE_STANDING, CONSEQUENCE_FINDING_FIELDS, URGENCY,
   PROPOSAL_FIELDS, ORDINARY_FINDING_FIELDS, ADMISSION_STATE, PROPOSAL_SOURCE, PROPOSAL_SOURCE_PREFIX,
+  CONSEQUENCE_SOURCE, CONSEQUENCE_SOURCE_PREFIX,
 } from './contract.mjs';
 import { digest, stable } from './substrate.mjs';
 import { execFileSync } from 'node:child_process';
@@ -44,6 +45,16 @@ export function projectProposalSet(entries) {
   for (const entry of entries) { const c=projectProposal(entry); if (!c || seen.has(c.source_ref)) continue; seen.add(c.source_ref); out.push(c); }
   return Object.freeze(out);
 }
+export function projectConsequenceFinding(entry) {
+  if (!validEntry(entry) || entry.kind !== 'finding' || classifyFinding(entry) !== 'consequence') return null;
+  return Object.freeze({
+    target_lane: entry.affected_lane,
+    source: CONSEQUENCE_SOURCE,
+    source_ref: CONSEQUENCE_SOURCE_PREFIX + evidenceIdentity(entry),
+    evidence: Object.freeze(clone(entry)),
+  });
+}
+
 export function applyProjection(programme, candidates) { const next=clone(programme); next.o1Candidates=[...candidates]; return next; }
 export const equal=(a,b)=>stable(a)===stable(b);
 
