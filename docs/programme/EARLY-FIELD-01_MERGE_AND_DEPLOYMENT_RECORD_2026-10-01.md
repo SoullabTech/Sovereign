@@ -137,3 +137,72 @@ Facts from the founder's terminal output.
 - **Production:** `3421a2096`. The `LivingFieldInstrument` exposure that began at 23:28Z is **closed in code**, because the gate is deployed with the environment unset. It has **not been witnessed in production** yet.
 - **Owed next (unchanged):** the non-cohort witness from §4, run against `3421a2096`.
 - **Consequence for H1 admission:** the H1 browser witness (`localhost:3100`) now needs the walking member listed in `HOUSE_STUDIO_H1_*` on that dev server. Otherwise the arrival is correctly closed, and the walk would test the gate, not H1. That belongs to the H1 lane record and is noted here only as a cross-reference.
+
+---
+
+## 7 · `EARLY-FIELD-01 · ROLLOUT-R2`: production non-cohort + dual-gate composition witness
+
+**Status: owed, founder-run. ⛔ No configuration change before or during it.** It replaces §4 as the next production act and runs against the **actual running SHA `3421a2096`**, not `cc1c5b4d7`.
+
+### Law under test
+
+> **Independent feature admission gates compose monotonically: admitting or denying one feature never silently changes the admission state of another.**
+
+EARLY-FIELD-01 (`EARLY_FIELD_*` → `LivingFieldInstrument`) and H1 (`HOUSE_STUDIO_H1_*` → explicit Work-context arrival) are two separate authorities in one running image. R2 witnesses the **deny × deny** cell of their composition. Deny × admit, admit × deny and admit × admit belong to later, deliberate cohort acts. They are not inferred from this one.
+
+### Expected production truth
+
+| Surface | Gate | Expected |
+|---|---|---|
+| `LivingFieldInstrument` | EARLY-FIELD-01 | **Closed** (settings unset) |
+| Living Field itself | none | **Open** |
+| House → Writer's Studio situated arrival | H1 | **Closed** (settings unset) |
+| Writer's Studio itself | none | **Open** |
+
+### Pre-witness reads (minisforum, read-only)
+
+```bash
+docker images maia-sovereign
+docker inspect maia-sovereign --format '{{.Config.Image}} {{range .Config.Env}}{{println .}}{{end}}' \
+  | grep -E 'GIT_COMMIT|EARLY_FIELD|HOUSE_STUDIO_H1'
+history | grep -E 'deploy|maia-sovereign|3421a2096'
+```
+
+Pass: `GIT_COMMIT=3421a2096`; no `EARLY_FIELD_*` or `HOUSE_STUDIO_H1_*` lines, or `false` / empty; `:previous` resolves to a gated image (expected `cc1c5b4d7`).
+
+⛔ **Deployer provenance is not inferred from commit authorship.** The merge author, the GitHub actor, the local shell user and the person who initiated the production deploy are four different claims. Record only what a deploy artifact shows. If it shows nothing, record *not established*.
+
+### The walk (one signed-in, ordinary, non-cohort member · one browser session · `https://soullab.life`)
+
+| # | Act | Pass condition | Gate exercised |
+|---|---|---|---|
+| W1 | Open `/maia/living-field` | The Living Field loads and its existing content is present | none: universality preserved |
+| W2 | Look for the instrument | `LivingFieldInstrument` is **absent** | EARLY-FIELD deny |
+| W3 | Same session: open `/api/early-field/admission` | Exactly `{"admitted":false}`, HTTP 200 | EARLY-FIELD server answer |
+| W4 | Open `/house`; inspect the Work's **Writing →** link before clicking | `href` is exactly `/writers-studio`, with **no** `from=` and **no** `work=` | H1 deny at the doorway |
+| W5 | Click **Writing →** | Writer's Studio opens through its ordinary arrival. No Work-arrival panel, no THE HOUSE · WRITER'S STUDIO mark, no Return Home pill (it renders only on `from=house`) | H1 deny, Studio universal |
+| W6 | Use the Studio normally: open a manuscript, switch Write / Develop / Review | All usable | none: universality preserved |
+| W7 | Same session: open `/api/house-studio/admission` | Exactly `{"admitted":false}`, HTTP 200 | H1 server answer |
+| W8 | Hand-enter `/writers-studio?from=house&work=<a real Work id of this member>` | The claim is **dropped**: the Studio shows its ordinary arrival with no one-manuscript panel and no "Begin" for that Work. ("Opening Writer's Studio…" may appear briefly while it asks the server.) | H1 deny is server-side; a URL confers nothing |
+| W9 | Cross-check composition: after W5–W8, reload `/maia/living-field` | The instrument is still absent and W3 still answers `false`. Nothing about the H1 path changed EARLY-FIELD's answer | monotonic composition |
+
+**Result vocabulary:** PASS (all nine) · FAIL (name the row; ⛔ no configuration change and no source edit in response, return for a ruling) · NO EVIDENCE (the session was not ordinary or not authenticated, the SHA was not `3421a2096`, or a row was not observed). A partial run is recorded as such, never as a pass.
+
+**Record shape:** runtime SHA · timestamp (UTC) · member described as "ordinary, non-cohort" (⛔ no member id in the record) · W1–W9 each PASS / FAIL / not observed · pre-witness read output verbatim.
+
+### What R2 establishes, and what it does not
+
+- ✅ On pass: both gates deny in production on the deployed SHA, both universal surfaces remain open, and the deny × deny composition is monotonic.
+- ⛔ It does **not** establish that either gate *admits* correctly in production. That is the first cohort act.
+- ⛔ It does **not** admit H1: the H1 browser witness (`localhost:3100`, member in `HOUSE_STUDIO_H1_*` on that dev server) is still owed.
+- ⛔ It does **not** authorize opening any cohort. That stays a separate, deliberate founder act after R2 passes.
+
+### Reusable pattern (proposed, ⛔ not ratified)
+
+The rule *independent admission gates compose monotonically* generalizes beyond these two features. Proposed for preservation as a House/runtime governance pattern:
+- each gate has its own authority, environment and endpoint;
+- no gate reads another gate's configuration;
+- every gate fails closed;
+- composition is witnessed per cell, never assumed from the cells already witnessed.
+
+Ratification is a founder act. This entry only names it.
