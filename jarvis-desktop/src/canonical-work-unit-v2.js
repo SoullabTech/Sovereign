@@ -200,8 +200,8 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId, authorityProfi
   const workClass = text(spec?.workClass || 'VERIFICATION');
   const posture = text(spec?.requestedPosture || 'default');
   const reviewPressure = text(spec?.reviewPressure || 'ordinary');
-  const capability = text(spec?.capability) || null;
   const localCandidateAuthority = authorityProfile === 'LOCAL_CANDIDATE';
+  const capability = localCandidateAuthority ? 'local-native-candidate' : (text(spec?.capability) || null);
 
   if (!objective) blocks.push(blocker('OBJECTIVE_REQUIRED', 'Describe what this Work Unit should accomplish.', 'objective'));
   if (!TASK_SHAPES.includes(taskShape)) blocks.push(blocker('INVALID_TASK_SHAPE', 'Use one of the six J5 task shapes.', 'taskShape'));
@@ -1147,7 +1147,7 @@ function nextActions(workUnit, meta) {
 
   if (state === 'DRAFT') actions.push({ action: 'canonical-bound', label: 'Bound scope' });
   if (state === 'BOUNDED') actions.push({ action: 'canonical-authorize', label: 'Authorize Work Unit' });
-  if (state === 'AUTHORIZED') actions.push({ action: 'canonical-route', label: 'Bind canonical route' });
+  if (state === 'AUTHORIZED' && workUnit?.identity?.capability !== 'local-native-candidate') actions.push({ action: 'canonical-route', label: 'Bind canonical route' });
   if (state === 'ROUTED') {
     for (const participant of unbound) {
       actions.push({

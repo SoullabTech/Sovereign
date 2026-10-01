@@ -22,6 +22,7 @@ const RECOVERY_B = require('./o5-path-b-recovery.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
 const DUAL_SHADOW = require('./dual-work-shadow.js');
+const LOCAL_CANDIDATE_EXECUTION = require('./local-candidate-execution-host.js');
 const C0_DECISION = require('./c0-execution-decision.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
@@ -849,6 +850,15 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
           actorId: desktopHumanActorId(),
         });
       }
+      if (req?.mode === 'local-candidate-v2') {
+        return await CWUV2.createCanonicalV2(root, spec, {
+          canonicalSha,
+          nowMs: Date.now(),
+          env: process.env,
+          actorId: desktopHumanActorId(),
+          authorityProfile: 'LOCAL_CANDIDATE',
+        });
+      }
       if (req?.mode === 'dual-shadow') {
         const legacySpec = req?.legacy_spec;
         const canonicalSpec = req?.canonical_spec;
@@ -911,6 +921,33 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
         });
       }
       return await WUC.status(root, req.work_unit_id);
+    }
+    if (action === 'local-candidate-execute') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      if (!req?.verification_plan || typeof req.verification_plan !== 'object') {
+        return { ok: false, status: 'REFUSED', reason: 'Structured verification_plan is required.' };
+      }
+      return await LOCAL_CANDIDATE_EXECUTION.executePreparedLocalCandidate(
+        root,
+        { workUnitId: req.work_unit_id, verificationPlan: req.verification_plan },
+        {
+          env: process.env,
+          confirm: async (summary, occurrence) => {
+            const files = (summary.allowed_files || []).slice(0, 12).join('\n') || '(none)';
+            const ops = (summary.verification_operations || []).map((op) => `${op.operation_id}: ${op.kind}`).slice(0, 12).join('\n') || '(none)';
+            const answer = await dialog.showMessageBox({
+              type: 'warning',
+              buttons: ['Cancel', 'Execute'],
+              defaultId: 0,
+              cancelId: 0,
+              title: 'Execute local candidate',
+              message: 'Execute this exact structured local-candidate attempt?',
+              detail: `Work: ${summary.work_unit_id}\nRun: ${occurrence.run_id}\n\nObjective:\n${summary.objective}\n\nAllowed files:\n${files}\n\nStructured verifier:\n${ops}`,
+            });
+            return answer.response === 1;
+          },
+        },
+      );
     }
     if (action === 'canonical-bound') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };

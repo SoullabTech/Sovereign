@@ -1,0 +1,68 @@
+// EC1-R19 — host-side structured local-candidate execution boundary.
+'use strict';
+const fs=require('node:fs');
+const os=require('node:os');
+const path=require('node:path');
+const { pathToFileURL }=require('node:url');
+const CWUV2=require('./canonical-work-unit-v2.js');
+const MECH=require('./builder-mechanism.js');
+const DECISION=require('./local-candidate-execution-decision.js');
+
+const clone=v=>JSON.parse(JSON.stringify(v));
+const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v??null);
+const homeOf=env=>env?.AIN_DELEGATION_HOME||path.join(os.homedir(),'.claude','ain-delegation');
+async function importBound(root,rel){return import(pathToFileURL(path.join(root,rel)).href+'?ec1r19='+Date.now());}
+function fail(status,reason,extra={}){return{ok:false,submitted:false,status,outcome:status,reason,...extra};}
+function evidencePaths(home,id){return{packet:path.join(home,'packets',id+'.json'),result:path.join(home,'results',id+'.json')};}
+function summaryFrom(packet,plan){return{work_unit_id:packet.work_unit_id,objective:packet.objective,canonical_sha:packet.canonical_sha,allowed_files:clone(packet.allowed_files||[]),verification_operations:clone(plan?.operations||[])};}
+
+async function projectCurrent(root,workUnitId,verificationPlan,env){
+  const envelope=CWUV2.readCanonicalExecutionEnvelopeV2(workUnitId,env);
+  if(!envelope)return fail('REFUSED','CANONICAL_V2_WORK_UNIT_NOT_FOUND');
+  if(envelope.work_unit?.state?.lifecycle_state!=='AUTHORIZED')return fail('REFUSED','AUTHORIZED_STATE_REQUIRED',{state:envelope.work_unit?.state?.lifecycle_state||null});
+  if(envelope.work_unit?.identity?.capability!=='local-native-candidate')return fail('REFUSED','LOCAL_CANDIDATE_CAPABILITY_REQUIRED');
+  const projector=await importBound(root,'scripts/builder/local-candidate-packet-v1.mjs');
+  const projected=projector.projectAuthorizedLocalCandidatePacketV1(envelope,{verification_plan:verificationPlan});
+  if(!projected.ok)return fail('REFUSED',projected.reason,{detail:projected.detail||null});
+  return{ok:true,envelope,projected};
+}
+
+async function executePreparedLocalCandidate(root,{workUnitId,verificationPlan},{env=process.env,confirm,hooks={}}={}){
+  if(!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(workUnitId||'')))return fail('REFUSED','INVALID_WORK_UNIT_ID');
+  if(typeof confirm!=='function')return fail('REFUSED','HOST_CONFIRMATION_CALLBACK_REQUIRED');
+  const first=await projectCurrent(root,workUnitId,verificationPlan,env);
+  if(!first.ok)return first;
+  const home=homeOf(env);const paths=evidencePaths(home,workUnitId);
+  if(fs.existsSync(paths.packet)||fs.existsSync(paths.result))return fail('REFUSED','PREEXISTING_PATH_A_EVIDENCE_REFUSED');
+
+  const allocated=await MECH.allocateRunId(root);
+  if(!allocated.ok)return fail('REFUSED',allocated.reason||'RUN_ID_ALLOCATION_REFUSED');
+  const runId=allocated.run_id;
+  const staged=DECISION.stage({root,runId,packet:first.projected.packet,canonicalCoreDigest:first.projected.authorized_core_digest});
+  if(!staged.ok)return fail('REFUSED',staged.reason);
+
+  let approved=false;
+  try{approved=(await confirm(summaryFrom(first.projected.packet,first.projected.packet.verification_plan),{occurrence_id:staged.occurrence_id,run_id:runId,binding_digest:staged.binding_digest}))===true;}
+  catch(error){DECISION.forget(staged.occurrence_id);return fail('HOST_CONFIRMATION_FAILED',String(error?.message||error));}
+  if(!approved){DECISION.forget(staged.occurrence_id);return{ok:true,submitted:false,status:'EXECUTION_DECISION_WITHHELD',outcome:'EXECUTION_DECISION_WITHHELD',work_unit_id:workUnitId,run_id:runId,occurrence_id:staged.occurrence_id};}
+
+  const current=await projectCurrent(root,workUnitId,verificationPlan,env);
+  if(!current.ok){DECISION.forget(staged.occurrence_id);return current;}
+  if(canonical(current.projected.packet)!==canonical(first.projected.packet)
+      || current.projected.authorized_core_digest!==first.projected.authorized_core_digest
+      || current.projected.verification_plan_digest!==first.projected.verification_plan_digest){
+    DECISION.forget(staged.occurrence_id);return fail('REFUSED','LOCAL_CANDIDATE_BINDING_CHANGED_AFTER_CONFIRMATION');
+  }
+  if(fs.existsSync(paths.packet)||fs.existsSync(paths.result)){DECISION.forget(staged.occurrence_id);return fail('REFUSED','PATH_A_EVIDENCE_APPEARED_AFTER_CONFIRMATION');}
+
+  const constituted=DECISION.constitute(staged.occurrence_id,{root,runId,packet:current.projected.packet,canonicalCoreDigest:current.projected.authorized_core_digest});
+  if(!constituted.ok){DECISION.forget(staged.occurrence_id);return fail('REFUSED',constituted.reason);}
+  const executionDecision=constituted.execution_decision;
+  let run;
+  try{
+    run=await MECH.runWorkUnit(root,clone(current.projected.packet),hooks,{runId,executionDecision,authorizedCoreDigest:current.projected.authorized_core_digest});
+  }finally{DECISION.forget(staged.occurrence_id);}
+  return{...run,ok:run?.submitted===true,work_unit_id:workUnitId,run_id:runId,execution_decision:clone(executionDecision)};
+}
+
+module.exports={executePreparedLocalCandidate,_projectCurrentForTest:projectCurrent,_summaryFromForTest:summaryFrom};

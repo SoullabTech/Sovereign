@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+const require=createRequire(import.meta.url);
+const HERE=path.dirname(fileURLToPath(import.meta.url));
+const REPO=path.resolve(HERE,'..','..','..');
+const C=require('../../../jarvis-desktop/src/canonical-work-unit-v2.js');
+const HOST=require('../../../jarvis-desktop/src/local-candidate-execution-host.js');
+const MECH=require('../../../jarvis-desktop/src/builder-mechanism.js');
+const SHA=execGit(['rev-parse','HEAD']);
+let passed=0,failed=0;
+function execGit(args){return require('node:child_process').execFileSync('git',args,{cwd:REPO,encoding:'utf8'}).trim();}
+function check(name,fn){try{fn();passed++;console.log('PASS  '+name)}catch(e){failed++;console.log('FAIL  '+name);console.log('      '+e.stack)}}
+async function checkAsync(name,fn){try{await fn();passed++;console.log('PASS  '+name)}catch(e){failed++;console.log('FAIL  '+name);console.log('      '+e.stack)}}
+function temp(){const home=fs.mkdtempSync(path.join(os.tmpdir(),'ec1-r19-'));return{home,env:{...process.env,AIN_DELEGATION_HOME:home,USER:'r19'}}}
+function spec(){return{objective:'Execute one bounded local candidate',workClass:'PATCH',taskShape:'CODE_GROUNDED',capability:'',evidenceClass:'E1_REPOSITORY_LOCAL',requestedPosture:'local_only',reviewPressure:'ordinary',evidenceFocus:'scripts/builder/jarvis-runtime-pipeline.mjs',acceptanceCriteria:'candidate is bounded',falsificationConditions:'scope diverges',stopConditions:'stop before merge',authorityRequest:{networkExternal:false,providerSpend:false,externalDisclosure:'none'}}}
+const plan={version:'EC1-VERIFY.v1',operations:[{operation_id:'o1',kind:'git.diff_check',effect_class:'INSPECT',args:{}}]};
+async function authorized(env,now=1){const made=await C.createCanonicalV2(REPO,spec(),{canonicalSha:SHA,nowMs:now,env,actorId:'human:r19',authorityProfile:'LOCAL_CANDIDATE'});assert.equal(made.ok,true,JSON.stringify(made.blockers));let s=await C.transitionCanonicalV2(REPO,made.work_unit_id,'BOUNDED',{env,actorId:'human:r19'});assert.equal(s.ok,true);s=await C.transitionCanonicalV2(REPO,made.work_unit_id,'AUTHORIZED',{env,actorId:'human:r19'});assert.equal(s.ok,true);return made.work_unit_id;}
+function patchMechanism(runId='r-1234567890'){
+  const oldAlloc=MECH.allocateRunId;const oldRun=MECH.runWorkUnit;const calls=[];
+  MECH.allocateRunId=async()=>({ok:true,run_id:runId});
+  MECH.runWorkUnit=async(root,packet,hooks,opts)=>{calls.push({root,packet:JSON.parse(JSON.stringify(packet)),opts:JSON.parse(JSON.stringify(opts))});return{submitted:true,outcome:'VERIFIED',terminal:true,run:{run_id:opts.runId,state:'VERIFIED',execution_decision:opts.executionDecision},events:[]};};
+  return{calls,restore(){MECH.allocateRunId=oldAlloc;MECH.runWorkUnit=oldRun;}};
+}
+
+await checkAsync('R19-1 withholding native decision executes nothing',async()=>{const {home,env}=temp();const m=patchMechanism();try{const id=await authorized(env,11);let confirmation=null;const out=await HOST.executePreparedLocalCandidate(REPO,{workUnitId:id,verificationPlan:plan},{env,confirm:async(summary,occ)=>{confirmation={summary,occ};return false;}});assert.equal(out.status,'EXECUTION_DECISION_WITHHELD');assert.equal(out.submitted,false);assert.equal(m.calls.length,0);assert.equal(confirmation.summary.work_unit_id,id);assert.equal(confirmation.occ.run_id,'r-1234567890');assert.equal(fs.existsSync(path.join(home,'packets',id+'.json')),false);}finally{m.restore();fs.rmSync(home,{recursive:true,force:true})}});
+
+await checkAsync('R19-2 approval constitutes exact decision before mechanism call',async()=>{const {home,env}=temp();const m=patchMechanism('r-1111111111');try{const id=await authorized(env,12);const out=await HOST.executePreparedLocalCandidate(REPO,{workUnitId:id,verificationPlan:plan},{env,confirm:async()=>true});assert.equal(out.ok,true,JSON.stringify(out));assert.equal(m.calls.length,1);const call=m.calls[0];assert.equal(call.opts.runId,'r-1111111111');assert.equal(call.opts.executionDecision.run_id,'r-1111111111');assert.equal(call.opts.executionDecision.work_unit_id,id);assert.equal(call.opts.executionDecision.one_shot,true);assert.match(call.opts.executionDecision.binding_digest,/^sha256:[0-9a-f]{64}$/);assert.equal(call.opts.authorizedCoreDigest,call.opts.executionDecision.canonical_core_digest);assert.equal(call.packet.work_unit_id,id);assert.equal(call.packet.verification_mode,'structured-v1');assert.deepEqual(call.packet.verification_commands,[]);}finally{m.restore();fs.rmSync(home,{recursive:true,force:true})}});
+
+await checkAsync('R19-3 canonical drift during confirmation refuses before mechanism execution',async()=>{const {home,env}=temp();const m=patchMechanism('r-2222222222');try{const id=await authorized(env,13);const out=await HOST.executePreparedLocalCandidate(REPO,{workUnitId:id,verificationPlan:plan},{env,confirm:async()=>{const file=C.workUnitPath(id,env);const raw=JSON.parse(fs.readFileSync(file,'utf8'));raw.work_unit.identity.objective='drifted after confirmation prompt';fs.writeFileSync(file,JSON.stringify(raw,null,2));return true;}});assert.equal(out.ok,false);assert.equal(out.reason,'LOCAL_CANDIDATE_BINDING_CHANGED_AFTER_CONFIRMATION');assert.equal(m.calls.length,0);}finally{m.restore();fs.rmSync(home,{recursive:true,force:true})}});
+
+await checkAsync('R19-4 Path A evidence appearing during confirmation refuses',async()=>{const {home,env}=temp();const m=patchMechanism('r-3333333333');try{const id=await authorized(env,14);const out=await HOST.executePreparedLocalCandidate(REPO,{workUnitId:id,verificationPlan:plan},{env,confirm:async()=>{fs.mkdirSync(path.join(home,'packets'),{recursive:true});fs.writeFileSync(path.join(home,'packets',id+'.json'),'{}');return true;}});assert.equal(out.ok,false);assert.equal(out.reason,'PATH_A_EVIDENCE_APPEARED_AFTER_CONFIRMATION');assert.equal(m.calls.length,0);}finally{m.restore();fs.rmSync(home,{recursive:true,force:true})}});
+
+await checkAsync('R19-5 preexisting packet/result refuses before confirmation',async()=>{for(const which of ['packet','result']){const {home,env}=temp();const m=patchMechanism('r-4444444444');try{const id=await authorized(env,which==='packet'?15:16);const dir=path.join(home,which==='packet'?'packets':'results');fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(path.join(dir,id+'.json'),'{}');let confirmed=false;const out=await HOST.executePreparedLocalCandidate(REPO,{workUnitId:id,verificationPlan:plan},{env,confirm:async()=>{confirmed=true;return true;}});assert.equal(out.ok,false);assert.equal(out.reason,'PREEXISTING_PATH_A_EVIDENCE_REFUSED');assert.equal(confirmed,false);assert.equal(m.calls.length,0);}finally{m.restore();fs.rmSync(home,{recursive:true,force:true})}}});
+
+await checkAsync('R19-6 non-AUTHORIZED Work cannot stage a decision',async()=>{const {home,env}=temp();const m=patchMechanism('r-5555555555');try{const made=await C.createCanonicalV2(REPO,spec(),{canonicalSha:SHA,nowMs:17,env,actorId:'human:r19',authorityProfile:'LOCAL_CANDIDATE'});assert.equal(made.ok,true);let confirmed=false;const out=await HOST.executePreparedLocalCandidate(REPO,{workUnitId:made.work_unit_id,verificationPlan:plan},{env,confirm:async()=>{confirmed=true;return true;}});assert.equal(out.ok,false);assert.equal(out.reason,'AUTHORIZED_STATE_REQUIRED');assert.equal(confirmed,false);assert.equal(m.calls.length,0);}finally{m.restore();fs.rmSync(home,{recursive:true,force:true})}});
+
+check('R19-7 host executor accepts no caller packet or execution decision fields',()=>{const src=fs.readFileSync(path.join(REPO,'jarvis-desktop/src/local-candidate-execution-host.js'),'utf8');assert.doesNotMatch(src,/req\.packet|caller.*packet|executionDecision\s*:/);assert.match(src,/projectAuthorizedLocalCandidatePacketV1/);assert.match(src,/DECISION\.stage/);assert.match(src,/DECISION\.constitute/);});
+
+console.log('\n'+passed+' passed · '+failed+' failed');process.exit(failed?1:0);

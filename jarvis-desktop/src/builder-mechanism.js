@@ -42,6 +42,7 @@
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
+const LOCAL_CANDIDATE_DECISION = require('./local-candidate-execution-decision.js');
 
 /** The cluster, by exact filename. All five, or the mechanism is not present. */
 const MECHANISM_MODULES = Object.freeze([
@@ -159,7 +160,7 @@ async function loadMechanism(root) {
  * Returns the mechanism's own outcome verbatim. Nothing here upgrades a refusal,
  * retries a failure, or reinterprets a state.
  */
-async function runWorkUnit(root, packet, hooks = {}) {
+async function runWorkUnit(root, packet, hooks = {}, opts = {}) {
   const m = await loadMechanism(root);
   if (!m.ok) {
     return {
@@ -175,8 +176,26 @@ async function runWorkUnit(root, packet, hooks = {}) {
   const { pipeline, store } = m;
   store.initStore();
 
+  const requestedRunId = opts.runId == null ? null : String(opts.runId);
+  if (requestedRunId && (!/^r-[0-9a-f]{10}$/.test(requestedRunId) || store.loadRun(requestedRunId))) {
+    return { submitted: false, outcome: 'RUN_ID_REFUSED', reason: 'host-supplied run id is invalid or already exists', mechanism: m.state, run: null, events: [] };
+  }
+  if (packet?.verification_mode === 'structured-v1') {
+    const d = opts.executionDecision;
+    const coreDigest = opts.authorizedCoreDigest;
+    const checkedDecision = LOCAL_CANDIDATE_DECISION.verifyConstituted(d, {
+      root,
+      runId: requestedRunId,
+      packet,
+      canonicalCoreDigest: coreDigest,
+    });
+    if (!requestedRunId || !/^sha256:[0-9a-f]{64}$/.test(String(coreDigest || '')) || !checkedDecision.ok) {
+      return { submitted: false, outcome: 'EXECUTION_DECISION_REQUIRED', reason: checkedDecision.reason || 'structured-v1 requires one constituted EC1-R11B host decision bound to this exact run, Work, packet and canonical authority', mechanism: m.state, run: null, events: [] };
+    }
+  }
+
   const run = {
-    run_id: store.newRunId(),
+    run_id: requestedRunId || store.newRunId(),
     packet,
     owns_packet: false,
     state: 'QUEUED',
@@ -185,6 +204,7 @@ async function runWorkUnit(root, packet, hooks = {}) {
     // O5-R2E: who owns this in-flight run. Lets a later process PROVE the owner is
     // gone before declaring the run interrupted, instead of guessing.
     owner: { pid: process.pid, host: os.hostname(), started_at: store.nowISO() },
+    execution_decision: opts.executionDecision ? JSON.parse(JSON.stringify(opts.executionDecision)) : null,
   };
   store.saveRun(run);
 
@@ -240,6 +260,17 @@ async function runWorkUnit(root, packet, hooks = {}) {
   };
 }
 
+async function allocateRunId(root) {
+  const m = await loadMechanism(root);
+  if (!m.ok) return { ok: false, reason: m.state.reason, run_id: null };
+  m.store.initStore();
+  for (let i = 0; i < 32; i++) {
+    const runId = m.store.newRunId();
+    if (!m.store.loadRun(runId)) return { ok: true, run_id: runId };
+  }
+  return { ok: false, reason: 'RUN_ID_ALLOCATION_EXHAUSTED', run_id: null };
+}
+
 /**
  * O5-R2E — make interrupted Path A runs visible. NOT recovery: nothing is
  * resumed, re-dispatched or re-queued. Uses the mechanism's own in-flight
@@ -263,5 +294,6 @@ module.exports = {
   mechanismState,
   advisoryLaneNote,
   loadMechanism,
+  allocateRunId,
   runWorkUnit,
 };
