@@ -3,7 +3,7 @@
 **Date:** 2026-10-01  
 **Frozen-law parent:** `e8479f28e065723333cf02096296504ca58aa625`  
 **Class:** B — Structural Risk  
-**Standing:** ⭐ IMPLEMENTED LOCALLY · PROOFS GREEN · ⛔ NOT MERGED · ⛔ NO DISPATCH
+**Standing:** ⭐ IMPLEMENTED LOCALLY · PROOFS GREEN · ⭐ FOUNDER CONTINUATION OPENED R5A ADMISSION · ⛔ NOT MERGED · ⛔ NO DISPATCH
 
 ## 1. Scope
 
@@ -138,3 +138,10 @@ The first run found one implementation typo (`blockers` vs `blocks`) in the bind
 - no installed JARVIS change.
 
 **Standing: O5-R5A IMPLEMENTED ✅ · REAL-STACK 9/9 ✅ · O2 25/25 ✅ · O3 54/54 ✅ · W2 13/13 ✅ · FREEZE INTACT ✅ · R5B DEFERRED ⛔ · NOT MERGED · NOT DEPLOYED.**
+
+
+## 9. Founder continuation opening
+
+After the R5A boundary and canonical frozen law were explicitly surfaced, the founder/operator issued the continuation act `continue`. The separate opening record `JARVIS-ORCHESTRATION-OPERATOR-01_O5-R5A_FOUNDER_CONTINUATION_OPENING_2026-10-01.md` constrains that act to R5A admission under the frozen law. R5B parallel scheduling remains closed.
+
+This opening does not retroactively convert earlier local experimentation into authority; it authorizes review/admission from the recorded continuation act forward.
