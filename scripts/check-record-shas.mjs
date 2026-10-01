@@ -10,6 +10,12 @@
  * error, so a new hash-bearing field forces a decision about what it names.
  * Refuses on a shallow clone (missing objects would read as false failures).
  *
+ * Markdown records under docs/programme/ and docs/ops/ write commit references
+ * as commit:`<hex>` (7-40 hex). Each must resolve to a commit object; any other
+ * text inside commit:`…` fails as MALFORMED rather than being skipped. Only that
+ * marked form is checked, so content hashes (sha256 digests, blob hashes in
+ * prose) are never mistaken for commits.
+ *
  * Exit: 0 all present · 1 missing / wrong type / unclassified · 2 cannot check.
  */
 import { execFileSync } from 'node:child_process';
@@ -23,6 +29,11 @@ const BLOB_KEYS = new Set(['blob', 'previous_blob', 'new_blob']);
 // A `frozen` object maps a repository path to the git blob hash of that file's bytes.
 const BLOB_MAPS = new Set(['frozen']);
 const HEX40 = /^[0-9a-f]{40}$/i;
+const MD_DIRS = ['docs/programme', 'docs/ops'];
+// Match every commit:`…` and judge its shape afterwards: a narrower pattern would
+// silently skip a malformed reference (e.g. a 41-char SHA) instead of failing it.
+const MD_COMMIT = /commit:`([^`]*)`/gi;
+const COMMIT_SHAPE = /^[0-9a-f]{7,40}$/i;
 
 function classify(key, parent) {
   if (BLOB_MAPS.has(parent) || BLOB_KEYS.has(key)) return 'blob';
@@ -71,5 +82,30 @@ for (const file of freezeFiles(SCAN)) {
     if (got !== want) { bad++; console.error(`${got ? 'WRONG TYPE' : 'MISSING'} ${rel} ${path} = ${value} (want ${want}${got ? `, got ${got}` : ''})`); }
   }
 }
+function markdownFiles(dir) {
+  const out = [];
+  let names;
+  try { names = readdirSync(dir); } catch { return out; }
+  for (const name of names) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) out.push(...markdownFiles(p));
+    else if (name.endsWith('.md')) out.push(p);
+  }
+  return out;
+}
+
+for (const dir of MD_DIRS) for (const file of markdownFiles(join(ROOT, dir))) {
+  const rel = relative(ROOT, file);
+  const lines = readFileSync(file, 'utf8').split('\n');
+  lines.forEach((line, i) => {
+    for (const m of line.matchAll(MD_COMMIT)) {
+      checked++;
+      if (!COMMIT_SHAPE.test(m[1])) { bad++; console.error(`MALFORMED ${rel}:${i + 1} commit:\`${m[1]}\` (want 7-40 hex)`); continue; }
+      const got = git(['cat-file', '-t', m[1]]);
+      if (got !== 'commit') { bad++; console.error(`${got ? 'WRONG TYPE' : 'MISSING OR AMBIGUOUS'} ${rel}:${i + 1} commit:\`${m[1]}\`${got ? ` (got ${got})` : ''}`); }
+    }
+  });
+}
+
 if (bad) { console.error(`RECORD SHAS: ${bad} of ${checked} failed`); process.exit(1); }
 console.log(`RECORD SHAS: ${checked} of ${checked} present with the claimed type`);

@@ -1,7 +1,7 @@
 # JARVIS O5-R4 — Freeze Amendment 2 (E9 discrimination) · Production delivery state
 
-**Date:** 2026-10-01 · **Base:** canonical `9c608128361eadd2e6ba2c6c1371353bdb0d7ebe`
-**Standing:** Amendment 2 recorded · laws R4-E1…E9 unchanged · ⚠️ **no affected lane receives any consequence finding in the running system** · ⛔ runtime delivery not authorized · ⛔ durable lane inbox not authorized
+**Date:** 2026-10-01 · **Base:** canonical commit:`9c608128361eadd2e6ba2c6c1371353bdb0d7ebe`
+**Standing:** Amendment 2 recorded · laws R4-E1…E9 unchanged · ⚠️ **no affected lane receives any consequence finding in the running system** · ⭐ **non-delivery ACCEPTED as a declared state, and the never-a-safety-channel rule RATIFIED (founder, 2026-10-01; §6)** · ⛔ runtime delivery not authorized · ⛔ durable lane inbox not authorized
 
 ---
 
@@ -51,7 +51,7 @@ This is lawful, because no frozen law demands runtime delivery. It is not a capa
 
 ### 4a. Nothing produces a consequence finding either
 
-A follow-up census on canonical `8f8ba73b83397c716722c7c9f5835c02d131cae8` searched for runtime producers. In `jarvis-desktop/src`, `scripts`, `lib` and `app`, outside tests, **no code appends a W4 `finding` of any shape.** The only runtime callers of `appendLedgerRecordV2` write `model_identity`, `artifact`, `test_result` and `verifier_result`.
+A follow-up census on canonical commit:`8f8ba73b83397c716722c7c9f5835c02d131cae8` searched for runtime producers. In `jarvis-desktop/src`, `scripts`, `lib` and `app`, outside tests, **no code appends a W4 `finding` of any shape.** The only runtime callers of `appendLedgerRecordV2` write `model_identity`, `artifact`, `test_result` and `verifier_result`.
 
 So the non-delivery is total in both directions. Production has no consequence findings, so none are undelivered today. The admission path and the projection are law-complete and unused.
 
@@ -63,7 +63,7 @@ This is asked so that a lane finding that means "a member could be harmed" is no
 - **By current fact, vacuously no.** Nothing produces findings (§4a).
 - **⚠️ By enforcement, nothing excludes it.** `reason` is free text, and `urgency` admits `high`. The schema cannot stop a future producer from writing "this change would expose member data" into a channel that reaches no one. So "not safety-relevant" holds by domain and by absence, not by construction.
 
-## 5. Open founder question (not answered here)
+## 5. Founder question (answered in §6)
 
 > Is it acceptable, for now, that findings about a lane reach no one in production?
 
@@ -74,4 +74,19 @@ Until the founder rules, nothing is wired and the non-delivery state in §4 is t
 
 A recommended condition for **yes**, not ruled: consequence findings are not a safety channel. A concern about member harm must go through a path that delivers to a human, never only into a W4 finding. Recording that rule keeps the domain argument in §4b true once producers exist.
 
-This state is line 5 of `docs/ops/NON_DELIVERY_REGISTER.md`.
+This state is line D1 of `docs/ops/NON_DELIVERY_REGISTER.md`.
+
+## 6. Founder ruling (2026-10-01)
+
+**Decision: yes.** It is acceptable for now that findings about a lane reach no one in production. The non-delivery state in §4 is **accepted as a declared state** and stands as line D1 of the non-delivery register.
+
+**Rule, ratified with it:** *Consequence findings are never a safety channel. Any concern about harm to a member must go through a path that reaches a human.*
+
+Why now: no producer exists yet (§4a). Making the rule law before the first producer means every future producer is built under it, rather than the rule being added after something has already gone through the wrong channel.
+
+What the rule binds:
+- A producer of consequence findings may not be the only route by which a member-harm concern travels. If a producer can observe one, it must also raise it through a path that reaches a human. That path is outside W4.
+- A safety-relevant `reason` written into a finding does not discharge any safety obligation, whatever its `urgency`.
+- The domain argument in §4b (findings concern development lanes, not member state) is now a governed rule, not only an observation about current code.
+
+What it does not do: it adds no schema constraint and no runtime check. Enforcing it mechanically, for example a falsifier that fails a producer which writes a member-harm finding with no human-reaching path, is owed when the first producer is designed. It is ⛔ not built here.
