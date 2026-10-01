@@ -241,6 +241,32 @@ export default function TermsOfServicePage() {
           </div>
         </motion.section>
 
+        {/* Not an Emergency Service — SAFETY-CRISIS-01 Option A (2026-10-01). ⚠️ Counsel review owed before launch. */}
+        <motion.section
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+        >
+          <h3 className="text-sm font-medium tracking-wide mb-6 text-white/80 uppercase flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            Not an Emergency Service
+          </h3>
+          <div className="p-6 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-4">
+            <p className="text-[14px] leading-relaxed text-white/70">
+              MAIA is not a crisis or emergency service and is not monitored by any person. Soullab does
+              not review conversations in real time and will not contact anyone, including emergency
+              services, based on what you share.
+            </p>
+            <p className="text-[14px] leading-relaxed text-white/70">
+              If you are in crisis, call or text <strong className="text-white">988</strong> (US), text{' '}
+              <strong className="text-white">HOME to 741741</strong>, or call{' '}
+              <strong className="text-white">911</strong> if you are in immediate danger. Outside the US,
+              contact your local emergency number.
+            </p>
+          </div>
+        </motion.section>
+
         {/* Limitations */}
         <motion.section
           className="mb-12"

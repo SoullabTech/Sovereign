@@ -62,6 +62,7 @@ import {
   REFLECTION_LENSES,
 } from '@/lib/consciousness/therapeuticFrameworks';
 import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
+import NotMonitoredNotice from '@/components/safety/NotMonitoredNotice';
 import { reportServerIdentityParity } from '@/lib/auth/verifyServerIdentity';
 
 // Migration version - increment to force re-auth for all users
@@ -2172,11 +2173,15 @@ function MAIAPageContent() {
 // compatibility threshold into the wider Soullab platform.
 export function MaiaEncounterPage() {
   return (
+    <>
+    {/* SAFETY-CRISIS-01 Option A: no person monitors MAIA; say so before the first turn. */}
+    <NotMonitoredNotice />
     <Suspense fallback={<div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
       <div className="text-[#D4B896] animate-pulse">Loading MAIA...</div>
     </div>}>
       <MAIAPageContent />
     </Suspense>
+    </>
   );
 }
 
