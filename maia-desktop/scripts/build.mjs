@@ -61,12 +61,32 @@ if (!cabinResource) {
   throw new Error('Cabin extraResources entry is missing from staged package');
 }
 cabinResource.from = cabinSource;
+const cabinNodeModulesSource = path.join(cabinSource, 'node_modules');
+const cabinNodeModulesDestination = 'cabin-runtime/node_modules';
+if (!fs.existsSync(path.join(cabinNodeModulesSource, 'next', 'package.json'))) {
+  throw new Error('Cabin node_modules source is incomplete; refusing to package');
+}
+stagedPackage.build.extraResources.push({
+  from: cabinNodeModulesSource,
+  to: cabinNodeModulesDestination,
+  filter: ['**/*'],
+});
+
+const stagedNodeModulesResource = stagedPackage.build.extraResources.find(
+  (resource) => resource?.from === cabinNodeModulesSource && resource?.to === cabinNodeModulesDestination,
+);
+if (!stagedNodeModulesResource) {
+  throw new Error('Cabin node_modules extraResources entry was not staged');
+}
+
 fs.writeFileSync(stagedPackagePath, `${JSON.stringify(stagedPackage, null, 2)}\n`, 'utf8');
 
 console.log('[MAIA Desktop] cabin runtime staged outside electron-builder project and staging parent');
 console.log(`[MAIA Desktop] cabin source=${cabinSource}`);
 console.log(`[MAIA Desktop] cabin server=${path.join(cabinSource, 'server.js')}`);
 console.log(`[MAIA Desktop] cabin next=${standaloneNextPackage}`);
+console.log(`[MAIA Desktop] cabin node_modules source=${cabinNodeModulesSource}`);
+console.log(`[MAIA Desktop] cabin node_modules destination=${cabinNodeModulesDestination}`);
 
 const args = [
   '--projectDir', stage,
