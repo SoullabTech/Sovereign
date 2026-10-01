@@ -75,5 +75,7 @@ Side effect found: the same-commit redeploys rotated `:previous` onto an RC1 reb
 
 **Repaired on the host (founder-run, 2026-10-01).** The SHA tag's provenance was read first (`GIT_COMMIT=975a208b8`), then it was retagged. `:previous` is now `96a539353023` (pre-RC1) and `:current` is `a028302c` (RC1), so `rollback` again reaches pre-RC1.
 
-⚠️ Until #1621 is merged and pulled into the host checkout, any further same-commit redeploy will rotate `:previous` onto an RC1 rebuild again.
+~~⚠️ Until #1621 is merged and pulled into the host checkout, any further same-commit redeploy will rotate `:previous` onto an RC1 rebuild again.~~ **Discharged (founder-run, 2026-10-01).** The host checkout is now on `clean-main-no-secrets` at `b8592e60e`, and both #1621 guards are present in it (grep count 2 each). Tags after the pull: `:current` = `a028302c2cfc` (RC1), `:previous` = `96a539353023` (pre-RC1).
+
+⚠️ The precheck reported the deploy lock as **HELD** when the checkout was switched. It has not yet been confirmed that no deploy was in flight at that moment.
 
