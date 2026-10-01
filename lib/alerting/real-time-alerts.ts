@@ -199,7 +199,10 @@ export class RealTimeAlertService {
     payload: AlertPayload,
     response: AlertResponse
   ): Promise<void> {
-    if (!this.twilioClient || !therapist.phone) return;
+    if (!this.twilioClient || !therapist.phone) {
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] SMS alert skipped: ' + (!this.twilioClient ? 'no SMS client configured' : 'therapist has no phone'));
+      return;
+    }
 
     try {
       const smsBody = this.generateSMSBody(payload);
@@ -224,7 +227,10 @@ export class RealTimeAlertService {
     payload: AlertPayload,
     response: AlertResponse
   ): Promise<void> {
-    if (!this.config.webhook) return;
+    if (!this.config.webhook) {
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] webhook alert skipped: no webhook configured');
+      return;
+    }
 
     try {
       const webhookPayload = {
