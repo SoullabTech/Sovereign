@@ -20,10 +20,8 @@ import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
   decideAdultRegistration,
   adultRefusalMessage,
-  ADULT_ACK_KIND,
-  ADULT_ACK_VERSION,
+  withAdultAcknowledgment,
 } from '@/lib/members/adultConfirmation';
-import { recordAcknowledgment } from '@/lib/members/acknowledgments';
 import {
   checkRateLimit,
   getClientIP,
@@ -189,7 +187,9 @@ export async function POST(request: NextRequest) {
 
     // Try full insert first (with all columns)
     // birth_date triggers auto-computation of developmental_tier via DB trigger
-    let result = await safeQuery(
+    // MEMBER-ADULT-ACK-01: the 18+ acknowledgment is written in the SAME
+    // statement as the member, so a member never exists without it.
+    const insert = withAdultAcknowledgment(
       `INSERT INTO members (
          passkey, username, password_hash, name, email, onboarding_step, birth_date
        )
@@ -197,6 +197,7 @@ export async function POST(request: NextRequest) {
        RETURNING id, username, name, onboarded, onboarding_step, created_at, developmental_tier, guardian_required`,
       [normalizedPasskey, cleanUsername, passwordHash, displayName, email, birthDate || null]
     );
+    let result = await safeQuery(insert.sql, insert.params);
 
     if (result.error) {
       console.error(`[MEMBERS] Insert failed: ${result.error}`);
@@ -216,15 +217,6 @@ export async function POST(request: NextRequest) {
 
     const member = result.rows[0];
     console.log(`[MEMBERS] Successfully registered: ${cleanUsername} (${member.id})`);
-
-    /* Record the member's own 18+ confirmation. If this write fails the member
-       simply has no acknowledgment yet and is asked again at sign-in, so the
-       failure is safe in the direction that matters; it is still logged loudly. */
-    try {
-      await recordAcknowledgment(String(member.id), ADULT_ACK_KIND, ADULT_ACK_VERSION, 'registration');
-    } catch (ackErr) {
-      console.error('[MEMBERS] 18+ acknowledgment not recorded at registration; member will be asked at sign-in:', ackErr);
-    }
 
     /* Redeem the invite that admitted this member. `inviteId` is no longer
        optional: registration cannot reach here without one. The conditional

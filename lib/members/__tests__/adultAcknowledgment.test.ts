@@ -9,7 +9,10 @@ import { join } from 'path';
 import {
   decideAdultRegistration,
   parseBirthDate,
+  hasAdultConfirmation,
+  withAdultAcknowledgment,
   ADULT_ACK_KIND,
+  ADULT_ACK_COOKIE_VALUE,
 } from '../adultConfirmation';
 import { decideAcknowledgmentGate, createCachedAcknowledgmentGate } from '../acknowledgmentGate';
 import { ACCESS_RULES, checkAccess } from '../../../config/accessMatrix';
@@ -78,11 +81,9 @@ describe('register route', () => {
     expect(admit).toBeGreaterThan(decide);
   });
 
-  it('records the acknowledgment after the member exists', () => {
-    const insert = route.indexOf('INSERT INTO members');
-    const record = route.indexOf('recordAcknowledgment(');
-    expect(record).toBeGreaterThan(insert);
-    expect(route).toContain("'registration'");
+  it('writes the acknowledgment in the same statement as the member', () => {
+    expect(route).toContain('withAdultAcknowledgment(');
+    expect(route).not.toContain('recordAcknowledgment(');
   });
 });
 
@@ -286,5 +287,44 @@ describe('guests do not reach MAIA conversation', () => {
   }
   it('no public rule shadows /api/sovereign', () => {
     expect(ACCESS_RULES.some((r) => r.public && r.prefix && '/api/sovereign/app/maia'.startsWith(r.prefix))).toBe(false);
+  });
+});
+
+describe('every account-creation route with a member INSERT', () => {
+  const GATED = [
+    'app/api/members/register/route.ts',
+    'app/api/members/register-email/route.ts',
+    'app/api/auth/signin/google/callback/route.ts',
+    'app/api/auth/google/native-callback/route.ts',
+    'app/api/auth/signin/apple/callback/route.ts',
+    'app/api/auth/apple/native-callback/route.ts',
+  ];
+  for (const p of GATED) {
+    it(`${p} requires the confirmation and wraps every member INSERT`, () => {
+      const src = code(p);
+      expect(src.includes('decideAdultRegistration(') || src.includes('hasAdultConfirmation(')).toBe(true);
+      const wrapped = src.split('withAdultAcknowledgment(').length - 1;
+      const inserts = (src.match(/INSERT INTO members\b/g) || []).length;
+      expect(inserts).toBeGreaterThan(0);
+      expect(inserts - wrapped).toBe(0);
+    });
+  }
+
+  it('accepts only a literal true flag or the current-version cookie', () => {
+    expect(hasAdultConfirmation({ confirmsAdult: true }, undefined)).toBe(true);
+    expect(hasAdultConfirmation(null, ADULT_ACK_COOKIE_VALUE)).toBe(true);
+    for (const v of [false, 'true', 1, 'yes', undefined, null]) {
+      expect(hasAdultConfirmation({ confirmsAdult: v }, undefined)).toBe(false);
+    }
+    expect(hasAdultConfirmation(null, 'adult_18_plus@0')).toBe(false);
+    expect(hasAdultConfirmation(null, null)).toBe(false);
+  });
+
+  it('the wrapper writes the acknowledgment from the created row, in one statement', () => {
+    const { sql, params } = withAdultAcknowledgment('INSERT INTO members (a) VALUES ($1) RETURNING id', ['x']);
+    expect(sql).toMatch(/^WITH m AS \(INSERT INTO members/);
+    expect(sql).toContain("SELECT id, $2, $3, 'registration' FROM m");
+    expect(sql.trim().endsWith('SELECT * FROM m')).toBe(true);
+    expect(params).toEqual(['x', ADULT_ACK_KIND, 1]);
   });
 });

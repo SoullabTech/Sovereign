@@ -79,3 +79,48 @@ export function adultRefusalMessage(reason: AdultRegistrationRefusal): string {
       return 'Soullab is opening to adults first. A space for younger members will come later, with its own entrance.';
   }
 }
+
+/* ── Account creation on every path ──────────────────────────────────────────
+   Every route that creates a member requires the confirmation and writes the
+   acknowledgment IN THE SAME SQL STATEMENT as the member row, so a member can
+   never exist without the statement it was admitted on. (Approach and coverage
+   folded in from #1634 under the founder's single-home ruling, 2026-10-01.)
+
+   How a request carries the confirmation:
+   - a JSON body flag `confirmsAdult: true` (email signup, invite register,
+     native Google/Apple), or
+   - the short-lived cookie set by /signup when the box is ticked, for the web
+     Google/Apple redirect flows, whose callback carries no body of ours. */
+
+export const ADULT_ACK_COOKIE = 'maia_adult_ack';
+/** Cookie value names the kind AND version agreed to; an older version is refused. */
+export const ADULT_ACK_COOKIE_VALUE = `${ADULT_ACK_KIND}@${ADULT_ACK_VERSION}`;
+
+/** True only for a literal `true` body flag or the current-version cookie. */
+export function hasAdultConfirmation(body: unknown, cookieValue: string | null | undefined): boolean {
+  const flag =
+    body && typeof body === 'object' ? (body as { confirmsAdult?: unknown }).confirmsAdult : undefined;
+  return flag === true || cookieValue === ADULT_ACK_COOKIE_VALUE;
+}
+
+/**
+ * Wrap a member `INSERT … RETURNING` (which must return `id`) so the 18+
+ * acknowledgment is written in the same statement. The result rows are the
+ * member rows, unchanged.
+ */
+export function withAdultAcknowledgment(
+  insertMemberSql: string,
+  params: unknown[],
+): { sql: string; params: unknown[] } {
+  const n = params.length;
+  return {
+    sql: `WITH m AS (${insertMemberSql}),
+a AS (
+  INSERT INTO member_acknowledgments (member_id, kind, version, source)
+  SELECT id, $${n + 1}, $${n + 2}, 'registration' FROM m
+  ON CONFLICT (member_id, kind, version) DO NOTHING
+)
+SELECT * FROM m`,
+    params: [...params, ADULT_ACK_KIND, ADULT_ACK_VERSION],
+  };
+}
