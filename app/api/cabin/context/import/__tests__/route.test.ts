@@ -2,6 +2,7 @@ import { File } from 'node:buffer';
 import { NextRequest } from 'next/server';
 
 import { buildCabinContextPackage, serializeCabinContextPackage } from '@/lib/cabin/contextPackage';
+import { writeCabinContextPackage } from '@/lib/cabin/contextPackageWriter';
 import { POST } from '../route';
 import { cabinMemberFromRequest, cabinStore, setCabinSessionCookie } from '@/lib/cabin/request';
 
@@ -9,6 +10,10 @@ jest.mock('@/lib/cabin/request', () => ({
   cabinMemberFromRequest: jest.fn(),
   cabinStore: jest.fn(),
   setCabinSessionCookie: jest.fn(),
+}));
+
+jest.mock('@/lib/cabin/contextPackageWriter', () => ({
+  writeCabinContextPackage: jest.fn(),
 }));
 
 const DATA_PATH = '/tmp/maia-cabin-import-test/cabin.sqlite';
@@ -81,6 +86,19 @@ describe('HOUSE-CABIN-CONTEXT-SPINE-01 · H3.8 Explicit Local Placement', () => 
 
     if (originalDataPath === undefined) delete process.env.MAIA_CABIN_DATA_PATH;
     else process.env.MAIA_CABIN_DATA_PATH = originalDataPath;
+  });
+
+  it('accepts the Next.js route context without treating it as dependency injection', async () => {
+    (writeCabinContextPackage as jest.Mock).mockReturnValue({
+      packagePath: '/tmp/maia-cabin-import-test/context-package.json',
+      bytes: 123,
+      package: PACKAGE,
+    });
+
+    const res = await POST(requestWithFile(), { params: {} });
+
+    expect(res.status).toBe(200);
+    expect(writeCabinContextPackage).toHaveBeenCalled();
   });
 
   it('F1 is local-only: connected mode refuses placement', async () => {

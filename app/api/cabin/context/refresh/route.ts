@@ -50,9 +50,18 @@ const productionDeps: CabinContextRefreshDeps = {
   initialize: initializeCabinContextMount,
 };
 
-export async function POST(
+function isRefreshDeps(value: unknown): value is CabinContextRefreshDeps {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.clear === 'function' &&
+    typeof candidate.initialize === 'function'
+  );
+}
+
+async function handlePost(
   request: NextRequest,
-  deps: CabinContextRefreshDeps = productionDeps,
+  deps: CabinContextRefreshDeps,
 ): Promise<Response> {
   if (process.env.MAIA_CABIN_MODE !== 'offline') {
     return reply({ error: 'local_refresh_requires_offline_cabin' }, 404);
@@ -117,4 +126,12 @@ export async function POST(
   } finally {
     store.close();
   }
+}
+
+export async function POST(
+  request: NextRequest,
+  context?: unknown,
+): Promise<Response> {
+  const deps = isRefreshDeps(context) ? context : productionDeps;
+  return handlePost(request, deps);
 }

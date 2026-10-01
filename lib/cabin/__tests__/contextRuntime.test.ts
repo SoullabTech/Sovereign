@@ -5,6 +5,7 @@ import path from 'node:path';
 import {
   cabinContextSnapshot,
   clearCabinContextMount,
+  currentCabinContextRuntime,
   initializeCabinContextMount,
   resolveCabinContextPackagePath,
 } from '../contextRuntime';
@@ -187,7 +188,33 @@ describe('HOUSE-CABIN-CONTEXT-SPINE-01 · H3.2 Desktop Context Wiring', () => {
     });
   });
 
-  it('F8 contains no network or write-to-store seam', () => {
+  it('F8 keeps the runtime carrier process-global so independently bundled consumers share the mount', () => {
+    const root = globalThis as typeof globalThis & {
+      __SOULLAB_CABIN_CONTEXT_RUNTIME__?: unknown;
+    };
+    const before = root.__SOULLAB_CABIN_CONTEXT_RUNTIME__;
+
+    const secondRoot = tempRoot();
+    const secondDataPath = path.join(secondRoot, 'cabin.sqlite');
+    fs.writeFileSync(
+      path.join(secondRoot, 'context-package.json'),
+      serializeCabinContextPackage(validPackage()),
+      'utf8',
+    );
+
+    initializeCabinContextMount(secondDataPath);
+
+    expect(root.__SOULLAB_CABIN_CONTEXT_RUNTIME__).toBeDefined();
+    expect(currentCabinContextRuntime()?.state).toBe('mounted');
+
+    clearCabinContextMount();
+    expect(root.__SOULLAB_CABIN_CONTEXT_RUNTIME__).toBeDefined();
+    expect(currentCabinContextRuntime()).toBeNull();
+
+    root.__SOULLAB_CABIN_CONTEXT_RUNTIME__ = before;
+  });
+
+  it('F9 contains no network or write-to-store seam', () => {
     const source = fs.readFileSync(
       path.join(process.cwd(), 'lib/cabin/contextRuntime.ts'),
       'utf8',

@@ -111,9 +111,19 @@ const productionDeps: CabinExportRouteDeps = {
   unlink: fs.unlinkSync,
 };
 
-export async function POST(
+function isCabinExportDeps(value: unknown): value is CabinExportRouteDeps {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.exportPackage === 'function' &&
+    typeof candidate.readFile === 'function' &&
+    typeof candidate.unlink === 'function'
+  );
+}
+
+async function handlePost(
   request: NextRequest,
-  deps: CabinExportRouteDeps = productionDeps,
+  deps: CabinExportRouteDeps,
 ): Promise<Response> {
   if (process.env.MAIA_CABIN_MODE === 'offline') {
     return reply({ error: 'not_connected_runtime' }, 404);
@@ -208,4 +218,12 @@ export async function POST(
       // Best-effort cleanup. No persistent server artifact is intended.
     }
   }
+}
+
+export async function POST(
+  request: NextRequest,
+  context?: unknown,
+): Promise<Response> {
+  const deps = isCabinExportDeps(context) ? context : productionDeps;
+  return handlePost(request, deps);
 }

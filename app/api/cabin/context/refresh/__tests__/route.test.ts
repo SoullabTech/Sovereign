@@ -112,6 +112,14 @@ describe('HOUSE-CABIN-CONTEXT-SPINE-01 · H3.9 Explicit Cabin Runtime Refresh', 
     expect(clear).not.toHaveBeenCalled();
   });
 
+  it('accepts the Next.js route context without treating it as dependency injection', async () => {
+    const response = await POST(request(), { params: {} });
+
+    expect(response.status).toBe(200);
+    expect(clear).toHaveBeenCalledTimes(1);
+    expect(initialize).toHaveBeenCalledWith('/tmp/maia-cabin/cabin.sqlite');
+  });
+
   it('F4 refresh does not invoke the package writer', async () => {
     const response = await POST(request());
 

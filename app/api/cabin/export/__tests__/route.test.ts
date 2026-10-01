@@ -1,5 +1,7 @@
+import fs from 'node:fs';
 import { NextRequest } from 'next/server';
 
+import { exportConnectedCabinContextPackage } from '@/lib/cabin/connectedContextExport';
 import { POST } from '../route';
 import { requireMemberId } from '@/lib/auth/session';
 
@@ -7,10 +9,15 @@ jest.mock('@/lib/auth/session', () => ({
   requireMemberId: jest.fn(),
 }));
 
+jest.mock('@/lib/cabin/connectedContextExport', () => ({
+  exportConnectedCabinContextPackage: jest.fn(),
+}));
+
 const MEMBER = '00000000-0000-4000-8000-000000000001';
 const WORK = '00000000-0000-4000-8000-000000000002';
 const RELATIONSHIP = '00000000-0000-4000-8000-000000000003';
 const MEMORY = '00000000-0000-4000-8000-000000000004';
+const exportPackage = exportConnectedCabinContextPackage as jest.Mock;
 
 const validSelection = {
   workIds: [WORK],
@@ -48,11 +55,36 @@ describe('HOUSE-CABIN-CONTEXT-SPINE-01 · H3.7 Connected Cabin Package Delivery'
     jest.clearAllMocks();
     delete process.env.MAIA_CABIN_MODE;
     (requireMemberId as jest.Mock).mockResolvedValue(MEMBER);
+    exportPackage.mockImplementation(async (_memberId: string, _selection: unknown, targetPath: string) => {
+      fs.writeFileSync(targetPath, '{}');
+      return {
+        packagePath: targetPath,
+        bytes: 2,
+        package: {
+          schema: 'soullab.cabin.context-package.v1',
+          scope: 'member',
+          works: [],
+          relationships: [],
+          memories: [],
+        },
+      };
+    });
   });
 
   afterAll(() => {
     if (originalMode === undefined) delete process.env.MAIA_CABIN_MODE;
     else process.env.MAIA_CABIN_MODE = originalMode;
+  });
+
+  it('accepts the Next.js route context without treating it as dependency injection', async () => {
+    const res = await POST(jsonRequest({
+      workIds: [],
+      relationshipIds: [],
+      memoryIds: [],
+    }), { params: {} });
+
+    expect(res.status).toBe(200);
+    expect(exportPackage).toHaveBeenCalled();
   });
 
   it('F1 refuses unauthenticated export before assembly', async () => {
