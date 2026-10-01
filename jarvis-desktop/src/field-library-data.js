@@ -12,7 +12,7 @@ window.KELLY_FIELD_LIBRARY = {
         "Governing law",
         "Source state",
         "Needs Kelly",
-        "Human-disclosure authority",
+        "Exception policy beyond member act",
         "In motion",
         "Canonical member-facing safety floor"
       ]
@@ -13155,7 +13155,7 @@ window.KELLY_FIELD_LIBRARY = {
             "Governing law",
             "Source state",
             "Needs Kelly",
-            "Human-disclosure authority",
+            "Exception policy beyond member act",
             "In motion",
             "Canonical member-facing safety floor"
           ]

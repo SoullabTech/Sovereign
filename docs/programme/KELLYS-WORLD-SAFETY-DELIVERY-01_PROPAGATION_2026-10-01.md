@@ -18,34 +18,33 @@ No member utterance, crisis transcript, risk score, or personal safety state is 
 
 ## Source state
 
-The current SAFETY-DELIVERY-01 lineage is represented by four review surfaces:
+The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by five review surfaces:
 
 - PR #1663 — S1 reachability correction;
 - PR #1664 — canonical live crisis-path census;
 - PR #1665 — minimal deterministic recognition contract;
-- PR #1669 — stacked canonical live wiring, based on #1665.
+- PR #1669 — stacked canonical live wiring, based on #1665;
+- PR #1675 — SAFETY-DISCLOSURE-01 authority contract: member act is the only currently executable disclosure basis; imminent/legal/minor-vulnerable-adult exceptions remain review-required.
 
 These are review/merge surfaces. Kelly's World must not present an open PR as canonical merely because it is visible.
 
 ## Needs Kelly
 
-### Human-disclosure authority
+### Exception policy beyond member act
 
-**Needs Kelly only if Soullab is to notify another human or service because a crisis signal was detected.**
+The ordinary disclosure law is now frozen in PR #1675: **a present explicit member act is the only currently executable basis for safety-related disclosure.** A crisis signal, risk class, model judgment, or practitioner relationship does not manufacture permission.
 
-That decision is not delegated to the recognizer, route, model, practitioner layer, or notification infrastructure.
+**Needs Kelly only on the narrower question:** does Soullab want to commission and eventually support any separately reviewed exception to that rule?
 
-A future disclosure law would need to settle:
+The candidate exception classes are:
 
-- eligible recipients;
-- member consent or other lawful basis;
-- what information may cross;
-- when the threshold is met;
-- what happens when delivery fails;
-- retention and audit;
-- whether minors, practitioner relationships, or explicit emergency contexts have distinct rules.
+- imminent danger;
+- legal compulsion;
+- minors or vulnerable adults.
 
-Current standing: **not authorized by SAFETY-DELIVERY-01**.
+PR #1675 represents each as `review_required` with `mayCross: false`. It does not define thresholds, recipients, jurisdiction, retention, or operational duty.
+
+Current standing: **member-act disclosure has a governed path; automatic or exception-based disclosure remains unauthorized.**
 
 ## In motion
 
