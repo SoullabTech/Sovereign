@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime, timezone
 import json, re, subprocess
 
 root = Path(__file__).resolve().parents[2]
@@ -23,10 +24,43 @@ concepts += [
 ("Living Law & Evidence", ["Cases","Rulings","Interpretations","Tensions","Exceptions","Amendments","Falsifiers","Defeat candidates","Witness independence","Evidence compatibility","Visual authority","Runtime witness","Epistemic standing","Claim provenance","Historical persistence is not present jurisdiction"]),
 ]
 
+RECOVERY_SIGNALS = [
+    ("EXACT_NEXT_HEADING", re.compile(r"(?i)^#{1,4}\s+(?:\d+\s*[·.-]?\s*)?(?:exact\s+)?next\s+(?:boundary|act|step)\b"), 10),
+    ("OPEN_HEADING", re.compile(r"(?i)^#{1,4}\s+(?:\d+\s*[·.-]?\s*)?(?:what\s+)?(?:remains?\s+open|still\s+open|owed|outstanding|pending)\b"), 9),
+    ("FOUNDER_PENDING", re.compile(r"(?i)(?:founder (?:ruling|decision|witness)[^\n]{0,100}\bpending\b|\bpending founder (?:ruling|decision|witness))"), 10),
+    ("STATE_OPEN", re.compile(r"(?i)^(?:\*\*)?(?:current\s+state|state|standing|status)(?:\*\*)?\s*[:| ]+.*(?:\bNOT CLOSED\b|\bOPEN\b|\bPENDING\b)"), 9),
+]
+RECOVERY_CLOSE_NAME = re.compile(r"(?i)(?:CLOSURE|SUPERSESSION|_CLOSED_|CANONICALIZATION_CLOSURE)")
+RECOVERY_CLOSE_LINE = re.compile(r"(?i)(^#{1,4}\s+.*(?:closure|supersession)|\bstatus:\s*(?:closed|superseded)\b|\bprogramme (?:is )?closed\b|\bsuperseded by\b|\bclosed on\b)")
+
+def programme_key(path: Path):
+    stem = path.stem
+    match = re.match(r"^(.+?-\d{2})(?=[_-]|$)", stem)
+    return match.group(1) if match else stem.split("_")[0]
+
+def git_touch_map():
+    raw = subprocess.check_output([
+        "git", "-C", str(root), "log", "--format=@@%ct",
+        "--name-only", "--", "docs/programme"
+    ], text=True)
+    touch = {}
+    stamp = None
+    for line in raw.splitlines():
+        if line.startswith("@@"):
+            stamp = int(line[2:] or 0)
+            continue
+        rel = line.strip()
+        if rel and rel not in touch and stamp:
+            touch[rel] = stamp
+    head_stamp = int(subprocess.check_output(
+        ["git", "-C", str(root), "log", "-1", "--format=%ct"], text=True
+    ).strip())
+    return touch, head_stamp
+
 def record_item(path: Path):
     text = path.read_text(errors="ignore")
     lines = text.splitlines()
-    headings = [re.sub(r"^#+\\s*", "", line).strip() for line in lines if re.match(r"^#{1,4}\\s+", line)]
+    headings = [re.sub(r"^#+\s*", "", line).strip() for line in lines if re.match(r"^#{1,4}\s+", line)]
     excerpt_lines = []
     excerpt_start = None
     excerpt_end = None
@@ -58,6 +92,78 @@ def record_item(path: Path):
         "headings": headings[1:7],
     }
 
+def recovery_candidates(paths, touch_map, head_stamp, dormant_hours=36):
+    records = []
+    for path in paths:
+        rel = path.relative_to(root).as_posix()
+        touched = touch_map.get(rel)
+        if not touched:
+            continue
+        lines = path.read_text(errors="ignore").splitlines()
+        closed = bool(RECOVERY_CLOSE_NAME.search(path.name)) or any(
+            RECOVERY_CLOSE_LINE.search(line.strip()) for line in lines
+        )
+        hits = []
+        for line_no, line in enumerate(lines, start=1):
+            stripped = line.strip()
+            for kind, pattern, weight in RECOVERY_SIGNALS:
+                if pattern.search(stripped):
+                    hits.append((weight, kind, line_no, stripped[:320]))
+        records.append({
+            "key": programme_key(path),
+            "path": path,
+            "touched": touched,
+            "closed": closed,
+            "hits": hits,
+        })
+
+    by_lineage = {}
+    for record in records:
+        by_lineage.setdefault(record["key"], []).append(record)
+
+    candidates = []
+    for key, lineage in by_lineage.items():
+        latest_close = max(
+            (record["touched"] for record in lineage if record["closed"]),
+            default=0,
+        )
+        eligible = []
+        for record in lineage:
+            if record["closed"] or not record["hits"] or record["touched"] <= latest_close:
+                continue
+            hours = (head_stamp - record["touched"]) / 3600
+            if hours < dormant_hours:
+                continue
+            weight, kind, line_no, evidence = max(
+                record["hits"], key=lambda hit: (hit[0], hit[2])
+            )
+            eligible.append((record["touched"], weight, kind, line_no, evidence, hours, record["path"]))
+        if not eligible:
+            continue
+        touched, weight, kind, line_no, evidence, hours, path = max(
+            eligible, key=lambda item: item[0]
+        )
+        item = record_item(path)
+        candidates.append({
+            "programme_key": key,
+            "title": item["title"],
+            "path": item["path"],
+            "signal": kind,
+            "evidence_line": line_no,
+            "evidence": evidence,
+            "last_touched_epoch": touched,
+            "hours_dormant": round(hours),
+            "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
+            "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE",
+        })
+
+    candidates.sort(key=lambda item: (
+        -next(weight for kind, _, weight in RECOVERY_SIGNALS if kind == item["signal"]),
+        -item["hours_dormant"],
+        item["programme_key"],
+    ))
+    return candidates
+
 families = [
 ("Writer's Studio", re.compile(r"^(WRITERS-STUDIO|WRITERS_STUDIO|WS2-|WS-|WRITING-|EDITORIAL-|FLAGSHIP-|REVIEW-CUSTODY|OBSERVATION-|FOCUS-WITNESS|SANCTUARY-)")),
 ("JARVIS", re.compile(r"^(SOULLAB-JARVIS|JARVIS|JOP-|J10|J11|CANONICAL-ADMISSION|DEPLOYMENT-SAFETY|CMT-|ADOPTION-)")),
@@ -67,6 +173,9 @@ families = [
 ("Soullab Desktop / House", re.compile(r"^(SOULLAB-DESKTOP|HOUSE|SOULLAB-HOUSE|S3-|S3_)")),
 ]
 all_records = sorted([f for f in prog.glob("*") if f.is_file()], key=lambda p: p.name)
+touch_map, head_stamp = git_touch_map()
+recovery_items = recovery_candidates(all_records, touch_map, head_stamp)
+
 recent_text = subprocess.check_output([
     "git", "-C", str(root), "log", "--since=2026-09-27 00:00",
     "--name-only", "--pretty=format:", "--", "docs/programme"
@@ -92,9 +201,10 @@ for f in all_records:
     lane_groups[target].append(record_item(f))
 
 data = {
-    "generatedAt": "2026-09-30",
-    "scope": "Curated field map plus the full canonical programme corpus; recent activity is derived from Git history since 2026-09-27",
+    "generatedAt": datetime.now(timezone.utc).date().isoformat(),
+    "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
     "recentItems": recent_items,
+    "recoveryCandidates": recovery_items,
     "conceptGroups": [
         {"title": title, "items": [{"title": item} for item in items]}
         for title, items in concepts
@@ -107,6 +217,7 @@ data = {
         "concepts": sum(len(items) for _, items in concepts),
         "lanes": len(all_records),
         "recent": len(recent_items),
+        "recovery": len(recovery_items),
     },
 }
 out = "window.KELLY_FIELD_LIBRARY = " + json.dumps(data, ensure_ascii=False, indent=2) + ";\n"

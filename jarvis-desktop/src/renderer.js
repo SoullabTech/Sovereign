@@ -2641,6 +2641,22 @@ function wireLibrary() {
     setView('work');
     refreshActiveWorkUnit();
   });
+  document.querySelectorAll('[data-recovery-trace]').forEach(button => {
+    button.addEventListener('click', () => {
+      const query = button.dataset.recoveryTrace || '';
+      libraryState.grokkerQuery = query;
+      libraryState.grokkerResults = GrokkerLibraryQuery.trace(window.KELLY_FIELD_LIBRARY, query);
+      libraryState.sourcePacket = null;
+      libraryState.synthesis = null;
+      libraryState.synthesisError = null;
+      libraryState.synthesisRunning = false;
+      libraryState.deliberativePreview = null;
+      libraryState.deliberativeWorkUnit = null;
+      libraryState.deliberativeError = null;
+      libraryState.deliberativeRunning = false;
+      renderLibrary();
+    });
+  });
   document.getElementById('governed-work-refresh')?.addEventListener('click', refreshGovernedWork);
   document.querySelectorAll('[data-open-governed-work]').forEach(button => {
     button.addEventListener('click', () => {
@@ -2661,6 +2677,25 @@ function wireLibrary() {
   document.getElementById('library-collapse')?.addEventListener('click', () => {
     document.querySelectorAll('.library-group').forEach(d => { d.open = false; });
   });
+}
+
+function renderRecoveryCandidates(lib) {
+  const items = lib.recoveryCandidates || [];
+  if (!items.length) {
+    return '<div class="grokker-box"><h3>Unfinished threads · recovery candidates</h3><div class="hint">No structurally warranted dormant candidates are currently indexed.</div></div>';
+  }
+  return `<div class="grokker-box">
+    <h3>Unfinished threads · recovery candidates</h3>
+    <div class="sentence">Older programme lineages carrying explicit unfinished evidence. Dormancy does not create importance; these are invitations to re-check, not claims that the work should resume.</div>
+    <div class="library-summary">${items.length} candidates · standing RECOVERY_CANDIDATE_UNREVIEWED</div>
+    <div class="library-items">${items.map(item => `<div class="grokker-result">
+      <b>${escapeHtml(item.title)}</b>
+      <div class="grokker-why">${escapeHtml(item.signal)} · ~${escapeHtml(item.hours_dormant)}h since last Git touch · ${escapeHtml(item.candidate_law)}</div>
+      <div class="library-excerpt">${escapeHtml(item.evidence)}</div>
+      <div class="grokker-source">${escapeHtml(item.path)}:${escapeHtml(item.evidence_line)}</div>
+      <div class="actions"><button class="act" data-recovery-trace="${escapeHtml(item.programme_key)}">Trace this thread</button></div>
+    </div>`).join('')}</div>
+  </div>`;
 }
 
 async function refreshGovernedWork() {
@@ -2753,6 +2788,7 @@ function renderLibrary() {
       <div class="sentence">A lightweight pulse of the programme records touched most recently. This is orientation, not a claim that recent means important.</div>
       <div class="library-items">${renderRecentPulse(lib)}</div>
     </div>
+    ${renderRecoveryCandidates(lib)}
     ${renderGovernedWork()}
     <div class="grokker-box">
       <h3>Grokker · Ask / Trace</h3>
