@@ -198,9 +198,12 @@ export function LivingFieldInstrument() {
         </div>
 
         <div className="relative mx-auto max-w-[980px]">
+          {/* app/icon-fix.css globally makes SVGs click-through for Safari icons.
+              This SVG is the instrument itself, so opting back into pointer events is
+              load-bearing: without it Fire/Water/Earth/Air/Aether cannot be entered. */}
           <svg
             viewBox={`0 0 ${WIDTH} ${WIDTH}`}
-            className="block h-auto w-full rounded-full bg-[radial-gradient(circle_at_50%_45%,rgba(110,78,43,0.12),rgba(17,16,15,0.2)_46%,rgba(7,7,7,0.85)_80%)]"
+            className="pointer-events-auto block h-auto w-full rounded-full bg-[radial-gradient(circle_at_50%_45%,rgba(110,78,43,0.12),rgba(17,16,15,0.2)_46%,rgba(7,7,7,0.85)_80%)]"
             onClick={widen}
             role="img"
             aria-label="Recursive Living Field"
