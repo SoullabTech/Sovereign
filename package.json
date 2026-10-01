@@ -99,6 +99,7 @@
     "matrix:jarvis-o5-r3": "node tests/constitutional/jarvis-o5-r3/matrix.mjs",
     "verify:jarvis-o5-r3-freeze": "node scripts/verify-jarvis-o5-r3-freeze.mjs",
     "test:jarvis-o5-r3": "node scripts/builder/__tests__/o5-r3-grant-writer-proof.mjs",
+    "test:jarvis-o5-r3-operator-recovery": "node scripts/builder/__tests__/o5-r3-operator-retirement-proof.mjs",
     "matrix:jarvis-o5-r3-rb": "node tests/constitutional/jarvis-o5-r3-runtime-binding/matrix.mjs",
     "matrix:jarvis-o5-r3-rb-prewrite": "node tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/matrix.mjs",
     "matrix:jarvis-o5-r3-rb-transition": "node tests/constitutional/jarvis-o5-r3-runtime-binding/transition/matrix.mjs",
