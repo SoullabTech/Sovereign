@@ -1,7 +1,7 @@
 # EARLY-FIELD-01 — Production Deployment Record
 
 **Programme day:** 2026-09-30
-**Status:** PRE-GATE PRODUCTION HISTORY RECORDED · canonical gate merged · deployment closure pending
+**Status:** DEPLOYED · PROVENANCE VERIFIED · NON-COHORT EXCLUSION WITNESSED · widening/admission still open
 **Current production at record opening:** `89f7876e8`
 **Next governed target:** `cc1c5b4d79793dd7911d6aea0054e8c678d01bcb`
 
@@ -88,8 +88,102 @@ This proves exclusion without withdrawing the established room.
 The rollback witness, cohort circulation, #1539 real-stack walk and H1 browser
 admission remain separate required evidence acts.
 
-## 7 · Closure
+## 7 · Closure gate
 
-**OPEN.** Append the exact deployed SHA, environment witness, dual runtime-SHA
-verification and non-cohort result after the governed deploy. Do not mark this
-record closed merely because the image starts successfully.
+This record closes only when the exact deployed SHA, environment witness,
+dual runtime-SHA verification and non-cohort result are present. Container
+startup alone is not sufficient evidence.
+
+Sections 8–11 record that closure evidence.
+
+## 8 · Pre-deploy environment witness
+
+Immediately before deployment, the minisforum was re-read rather than relying
+on the earlier observation.
+
+Host shell:
+
+```text
+EARLY_FIELD_ENABLED=UNSET
+EARLY_FIELD_MEMBER_IDS=EMPTY_OR_UNSET
+```
+
+Running `maia-sovereign` container `Config.Env`:
+
+```text
+EARLY_FIELD_ENABLED=UNSET
+EARLY_FIELD_MEMBER_IDS=EMPTY_OR_UNSET
+```
+
+The target commit was already present in the production repository, and
+`origin/clean-main-no-secrets` resolved exactly to
+`cc1c5b4d79793dd7911d6aea0054e8c678d01bcb`.
+
+## 9 · Governed deploy transaction
+
+A deploy for the same canonical target was already holding the production lane:
+
+```text
+entry=pre-deploy-gate.sh deploy-maia
+target=cc1c5b4d7
+started=2026-10-01T00:34:40Z
+```
+
+A second deploy attempt was refused by the deploy lock. The lock was not
+deleted, bypassed or forced. The existing immutable-SHA deploy was allowed to
+finish.
+
+The holder exited at approximately `2026-10-01T00:41:04Z`. At
+`2026-10-01T00:41:18Z` the production container reported `healthy`.
+
+Post-deploy provenance:
+
+```text
+docker exec maia-sovereign printenv GIT_COMMIT  = cc1c5b4d7
+docker inspect maia-sovereign Config.Env        = cc1c5b4d7
+maia-sovereign:current                          = cc1c5b4d7
+maia-sovereign:previous                         = 89f7876e8
+```
+
+## 10 · Non-cohort production witness — PASS
+
+The witness used the existing authenticated Safari production session; no
+session cookie, member id or credential was extracted.
+
+On `https://soullab.life/maia/living-field` the signed-in member reached the
+normal Living Field and member-specific field content loaded. At the exact
+mount position governed by EARLY-FIELD-01, the page moved directly from the
+Living Field introduction into the existing wider-field constellation.
+`LivingFieldInstrument` was absent.
+
+In the same authenticated browser session:
+
+```text
+GET https://soullab.life/api/early-field/admission
+{"admitted":false}
+```
+
+This satisfies EARLY-FIELD-01 widening criterion 3: exclusion is witnessed
+without withdrawing the Living Field itself.
+
+The visual witness was inspected locally but is not committed to the repository,
+because the Living Field screen contains member-specific content. The evidence
+record preserves only the minimum operational facts needed for adjudication.
+
+## 11 · Standing after this deploy
+
+The production deployment act is **VERIFIED** at canonical `cc1c5b4d7`.
+
+The following claims are now supported:
+
+- production is running the canonical merge commit from #1547;
+- runtime `printenv` and Docker `Config.Env` agree on that identity;
+- the rollback chain advanced truthfully to `current=cc1c5b4d7` and
+  `previous=89f7876e8`;
+- a signed-in non-cohort member retains the Living Field;
+- that member does not receive `LivingFieldInstrument`;
+- the server admission endpoint answers `{"admitted":false}`.
+
+This does **not** admit or widen EARLY-FIELD-01. The rollback witness, cohort
+circulation evidence, #1539 real-stack witness, and the separate H1 browser
+admission remain open under their own governing records.
