@@ -7,7 +7,8 @@ surfaces:
   - future Cabin visual shell
 
 change_class: experiential
-status: founder-review
+status: founder-ratified
+ratified_at: 2026-10-01
 
 principles:
   - ONE_LIVING_FIELD — Cabin Arrival is one inhabitable place, not a grid of capability cards
@@ -38,7 +39,7 @@ experience_verification: >-
   and 390×844 for unavailable, empty, and mounted states. Six screenshots are
   committed under the Cabin Arrival visual-authority evidence directory. No
   real Work, Relationship, Memory, member identity, MAIA cognition, or runtime
-  context was bound. Visual authority remains pending founder adjudication.
+  context was bound. Founder reviewed the fixture witness and ratified this visual authority on 2026-10-01.
 ---
 
 # Cabin Arrival — Visual Authority
@@ -375,8 +376,9 @@ The first implementation must:
 
 ## 18. Acceptance
 
-H4.1 is visually accepted only after founder review of the fixture-only arrival
-surface against this authority.
+H4.1 was visually accepted after founder review of the fixture-only arrival
+surface on 2026-10-01. No visual changes were requested at adjudication.
 
-Until that review, this document remains a visual candidate and no member-facing
-Cabin arrival implementation is admitted to production.
+This authority now governs H4.2 implementation. It still does not itself admit
+member-facing production code; H4.2 must bind the real mounted context without
+crossing the semantic and activation boundaries above.

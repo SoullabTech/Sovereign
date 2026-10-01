@@ -111,13 +111,28 @@ inside the narrow field without horizontal overflow.
 
 Design canon: **PASS** because the review surface is founder/dev-only.
 
+## Founder adjudication
+
+Founder reviewed the fixture witness on 2026-10-01 and continued the lane with no visual changes requested. The authority is therefore ratified.
+
+The ruling is limited to the visual grammar and does not authorize real-context binding, cognition, synchronization, or production deployment.
+
 ## Next act
 
-**Founder visual adjudication.**
+**H4.2 — bind the already-governed mounted context to the ratified arrival experience.**
 
-If ratified, H4.2 may bind the already-governed mounted context to this visual
-grammar. Until then, the fixture remains the only implementation surface.
+The binding must preserve:
+
+- unavailable / empty / mounted truth;
+- no hidden mount activation;
+- no source substitution;
+- no Work guessing;
+- no relationship interpretation;
+- no memory recall on arrival;
+- no ambient MAIA cognition;
+- explicit doorway choice;
+- the ratified visual authority.
 
 ## Standing
 
-**H4.1 VISUAL AUTHORITY CANDIDATE — FIXTURE WITNESSED — NOT YET FOUNDER-RATIFIED.**
+**H4.1 VISUAL AUTHORITY — FOUNDER-RATIFIED · FIXTURE WITNESSED.**
