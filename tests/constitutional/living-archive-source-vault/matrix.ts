@@ -149,7 +149,7 @@ assert.deepEqual(grownField.coordinates['LA-ART-001'], lawful.coordinates['LA-AR
 
 // Schema binding: the migration must encode the same authority boundaries rather
 // than leaving them as comments in the reference model.
-const migration = readFileSync('database/migrations/20261001000001_living_archive_source_vault.sql', 'utf8');
+const migration = readFileSync('database/migrations/20261001215400_living_archive_source_vault.sql', 'utf8');
 for (const table of [
   'living_archive_catalogue_versions',
   'living_archive_artifacts',

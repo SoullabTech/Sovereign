@@ -6,7 +6,7 @@
 
 ## Candidate contents
 
-- additive migration: `20261001000001_living_archive_source_vault.sql`;
+- additive migration: `20261001215400_living_archive_source_vault.sql`;
 - five domain-qualified tables: catalogue versions, artifacts, provenance claims, known gaps, lineage edges;
 - `living_archive_*` namespace kept separate from MAIA-WISDOM Source Vault authority;
 - structural `WITHHELD (THIRD PARTY)` no-geometry constraints;
