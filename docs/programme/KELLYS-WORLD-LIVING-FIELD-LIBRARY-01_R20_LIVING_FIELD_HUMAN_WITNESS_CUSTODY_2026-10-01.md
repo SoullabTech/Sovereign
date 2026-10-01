@@ -6,9 +6,11 @@ Carry the current Living Field human-witness boundary into Kelly's World without
 
 ## Source custody
 
-The authoritative witness instruments remain in the Sovereign canonical lane through PR **#1637**, currently headed by the `claude/clever-mayer-q9zrym` lineage.
+The authoritative witness hardening is now carried by PR **#1661** on `chore/living-field-witness-hardening-r2-20261001`, a clean six-file replay on current canonical. PR **#1637** is closed as superseded provenance for the original `0df16caf` → `b8e6834f7` lineage.
 
-Production was re-baselined on **`56d0cd679`** after moving beyond the original readiness runtime `975a208b8`.
+PR **#1661** depends on PR **#1660** to repair a pre-existing canonical record-SHA custody defect; that dependency does not change the Living Field witness standing itself.
+
+Production remains healthy at **`56d0cd679`**, the runtime against which the fresh machine re-baseline and 0/4 substrate census were performed, after moving beyond the original readiness runtime `975a208b8`.
 
 Kelly's World holds only the operational orientation needed to know what is true now and what human act is next. It does not become authority for the witness evidence itself.
 
