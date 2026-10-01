@@ -33,8 +33,12 @@
       'Use ONLY the supplied source fragments.',
       'Do not treat co-occurrence, retrieval rank, lexical similarity, repetition, or fluency as a relation warrant.',
       'Preserve disagreement and unresolvedness.',
+      'Call something a contradiction only when two cited statements cannot both be true in the same scope and time.',
+      'Silence, omission, different scope, or different level of detail is NOT a contradiction.',
       'Separate: (1) convergences actually visible in the sources, (2) tensions/contradictions, (3) candidate cross-source patterns, (4) unanswered questions.',
-      'Every factual statement about a source must carry an inline path:LINE citation.',
+      'Every factual statement about a source must carry a literal inline path:LINE citation.',
+      'Use the exact token docs/.../file.ext:NN. Never write file.ext (NN), line NN, or a filename without :NN.',
+      'If you cannot cite a statement in that exact form, omit the statement.',
       'Never say a candidate pattern is established, proved, confirmed, or ratified.',
       'Founder question: ' + packet.query,
     ].join('\n');
@@ -65,9 +69,21 @@
     return [...hits];
   }
 
+  function verifiedEvidencePaths(response) {
+    const citations = response?.verification?.evidence?.citations || [];
+    const paths = [];
+    for (const c of citations) {
+      if (!c?.in_context || !c.fragment) continue;
+      const m = String(c.fragment).match(/^(.*):\d+-\d+$/);
+      if (m && !paths.includes(m[1])) paths.push(m[1]);
+    }
+    return paths;
+  }
+
   function wrapC1Result(packet, response) {
     const text = String(response?.result?.response || '');
-    const paths = citedPaths(text);
+    const verifiedPaths = verifiedEvidencePaths(response);
+    const paths = verifiedPaths.length ? verifiedPaths : citedPaths(text);
     const byPath = new Map((packet?.sources || []).filter(s => s.path).map(s => [s.path, s.source_id]));
     const relied = paths.map(p => byPath.get(p)).filter(Boolean);
 
@@ -88,12 +104,13 @@
       proposal,
       proposal_check: proposalCheck,
       local_execution_verified: localExecutionVerified,
-      citation_correctness: citationCorrectness,
+      citation_containment: citationCorrectness,
+      semantic_review: 'UNREVIEWED',
       cited_paths: paths,
       model: response?.result?.model || null,
       raw_response: text,
     };
   }
 
-  return { MAX_SOURCES, programmeSources, buildC1Task, citedPaths, wrapC1Result };
+  return { MAX_SOURCES, programmeSources, buildC1Task, citedPaths, verifiedEvidencePaths, wrapC1Result };
 });

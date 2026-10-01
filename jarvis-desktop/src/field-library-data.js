@@ -3,6 +3,14 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity is derived from Git history since 2026-09-27",
   "recentItems": [
     {
+      "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R6 · LOCAL · GROKKER · SYNTHESIS · ADAPTER · 2026-10-01",
+      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R6_LOCAL_GROKKER_SYNTHESIS_ADAPTER_2026-10-01.md",
+      "excerpt": "Bind Grokker synthesis to the already-governed JARVIS C1 local reasoning lane without creating a second model-execution mechanism.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": []
+    },
+    {
       "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R5 · SOURCE · PACKET · SYNTHESIS · CONTRACT · 2026-10-01",
       "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R5_SOURCE_PACKET_SYNTHESIS_CONTRACT_2026-10-01.md",
       "excerpt": "Create the minimum lawful envelope between Grokker Trace and any future semantic synthesis.",
@@ -6085,6 +6093,22 @@ window.KELLY_FIELD_LIBRARY = {
           "headings": []
         },
         {
+          "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R6 · LOCAL · GROKKER · SYNTHESIS · ADAPTER · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R6_LOCAL_GROKKER_SYNTHESIS_ADAPTER_2026-10-01.md",
+          "excerpt": "Bind Grokker synthesis to the already-governed JARVIS C1 local reasoning lane without creating a second model-execution mechanism.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": []
+        },
+        {
+          "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R7 · FIRST · LOCAL · SYNTHESIS · WITNESS · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R7_FIRST_LOCAL_SYNTHESIS_WITNESS_2026-10-01.md",
+          "excerpt": "Founder-oriented query:",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": []
+        },
+        {
           "title": "L1-CURRENT-SESSION-RECOVERY-01 · ACCEPTANCE · 2026-09-15",
           "path": "docs/programme/L1-CURRENT-SESSION-RECOVERY-01_ACCEPTANCE_2026-09-15.md",
           "excerpt": "Authority founder ruling 2026-09-15 — open for implementation and same-day deployment, FAST/CORE only. Status IMPLEMENTED · falsifier GREEN · gates GREEN · ⛔ PRODUCTION WITNESS OWED",
@@ -6385,7 +6409,7 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 646,
-    "recent": 67
+    "lanes": 648,
+    "recent": 68
   }
 };

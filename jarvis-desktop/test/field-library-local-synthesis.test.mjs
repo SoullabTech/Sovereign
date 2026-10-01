@@ -48,14 +48,29 @@ test('verified C1 result is wrapped as candidate-unestablished Grokker authorshi
   const p = packet();
   const response = {
     status:'completed',
-    result:{ model:'qwen2.5:7b', response:'A candidate convergence appears in docs/programme/HOUSE-STUDIO-F7.md:42 and docs/programme/MEMORY-RELEASE.md:14.' },
-    verification:{ pass:true, correctness:'VERIFIED' },
+    result:{ model:'qwen2.5:7b', response:'A candidate convergence appears in HOUSE-STUDIO-F7.md:42 and MEMORY-RELEASE.md:14.' },
+    verification:{
+      pass:true,
+      correctness:'verified',
+      evidence:{
+        citations:[
+          { citation:'HOUSE-STUDIO-F7.md:42', in_context:true, fragment:'docs/programme/HOUSE-STUDIO-F7.md:41-44' },
+          { citation:'MEMORY-RELEASE.md:14', in_context:true, fragment:'docs/programme/MEMORY-RELEASE.md:12-15' },
+        ]
+      }
+    },
   };
   const wrapped = L.wrapC1Result(p, response);
   assert.equal(wrapped.ok, true);
   assert.equal(wrapped.standing, 'CANDIDATE_UNESTABLISHED');
   assert.equal(wrapped.proposal.authorship, 'GROKKER_AUTHORED');
   assert.equal(wrapped.proposal.relation_warrant, null);
+  assert.equal(wrapped.semantic_review, 'UNREVIEWED');
+  assert.equal(wrapped.citation_containment, 'verified');
+  assert.deepEqual(wrapped.cited_paths, [
+    'docs/programme/HOUSE-STUDIO-F7.md',
+    'docs/programme/MEMORY-RELEASE.md',
+  ]);
 });
 test('uncited local answer cannot become a valid synthesis proposal', () => {
   const p = packet();
