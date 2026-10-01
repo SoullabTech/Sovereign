@@ -304,3 +304,48 @@ free immediately afterward. Either APFS delayed block reclamation (documented
 above) or the removed trees shared extents with the main checkout, which would
 mean the 7.7 GB `du` figure was again counting clones. Both are consistent with
 the evidence in hand; which one applies was not established.
+
+### The loss was never in the managed roots
+
+Measured 2026-10-01, under a 100%-full disk that was failing writes
+(`zsh: can't create temp file for here document: no space left on device`).
+
+Two weeks of reclamation targeted `~/.claude/worktrees` and
+`~/MAIA-SOVEREIGN/.claude/worktrees`, because those were the roots the tooling
+knew about. Together they held **26 GB**. The disk was 409 GB used.
+
+A `du -h -d1 ~` — started and killed three times before it was allowed to
+finish — located the actual mass: roughly **25 ad-hoc full checkouts directly in
+`$HOME`**, each carrying its own `node_modules` and `.next`, one per work unit,
+never cleaned up. Three created in the preceding 48 hours held 28 GB between
+them. `ws-full-experience-r2-20260930` alone was **12 GB against a ~350 MB bare
+checkout — 97% regenerable build artifact.**
+
+Stripping `node_modules`, `.next` and `.turbo` from 37 such trees returned
+**63 GB in a single pass**, taking free space from 13 GiB to 76 GiB. Nothing was
+classified, nothing was pushed, nothing was at risk: the strip touches no source,
+no commits and no uncommitted work, so it needs no custody decision at all.
+
+**Three rules follow.**
+
+**Finish the census before optimising the sweep.** Every round of this lane
+produced a smaller return than the last, and each one was read as *the tier is
+exhausted* rather than *we are measuring the wrong tier*. The scan that found the
+answer takes minutes and was abandoned three times for being slow.
+
+**Count what you have located against what `df` reports used.** Summing the
+measured directories came to ~240 GB against 409 GB used. That 170 GB gap was
+visible for days and was the single most informative number available; it was
+noticed late. A reclamation plan that does not reconcile against total used space
+is optimising inside whatever fraction it happens to see.
+
+**Separate the cache question from the custody question.** Custody
+classification is expensive — it needs `unpushed`, `dirty`, a backup push, SHA
+verification. Cache stripping needs none of it, because `node_modules` and
+`.next` are regenerable by definition. Running the cheap operation across every
+checkout first, and reserving classification for checkouts actually proposed for
+deletion, would have returned 63 GB on day one.
+
+Additional roots found the same day, neither known to any instrument:
+`~/.jarvis` (22 GB) and `~/.worktrees` (16 GB) — a fourth and fifth worktree
+root, further instances of the scope defect recorded above.
