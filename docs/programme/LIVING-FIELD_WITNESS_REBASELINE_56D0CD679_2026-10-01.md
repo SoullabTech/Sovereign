@@ -16,6 +16,7 @@ Production moved after the first-entry readiness census. The first-entry protoco
 - production has `EARLY_FIELD_ENABLED=true`.
 - the configured Early Field cohort contains **4 UUID-shaped member ids**; no ids were copied into this record.
 - production has `HOUSE_STUDIO_H1_ENABLED=true` and the H1 cohort also contains **4 UUID-shaped member ids**.
+- `MAIA_CABIN_MODE` is unset in the live container, so the intervening Cabin/offline House branches are inert for this witness path.
 
 No member content, session credential, email, name, or private cohort material was read.
 
