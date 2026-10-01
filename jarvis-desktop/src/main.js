@@ -18,6 +18,7 @@ const MECH = require('./builder-mechanism.js');
 const CONTINUITY = require('./continuity.js');
 const FRONTIER = require('./frontier-worker.js');
 const WUC = require('./work-unit-control.js');
+const RB = require('./runtime-binding.js');
 const RECOVERY_B = require('./o5-path-b-recovery.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
@@ -309,7 +310,30 @@ function repoConfigState() {
   };
 }
 
+// O5-R3 runtime binding witness (founder ruling 2026-10-01). Descriptive only: it
+// records the app code and the bound checkout this live process operates under,
+// for an EXTERNAL witness. Nothing reads it for authority; the lease is the only
+// writer authority. Written outside the delegation home. A failure to write is
+// logged, never fatal — an absent witness simply means no admission evidence.
+function writeRuntimeBinding(cause) {
+  try {
+    const rec = RB.captureAndWrite({
+      appSupportDir: app.getPath('appData'),
+      resolved: RESOLVED,
+      app: {
+        mode: app.isPackaged ? 'packaged' : 'development',
+        build: (readBuildInfo() || {}).app_build_sha || null,
+        sourceRoot: app.isPackaged ? process.resourcesPath : path.resolve(__dirname, '..', '..'),
+      },
+    });
+    console.log(`[jarvis] O5-R3 runtime binding (${cause}): ${rec.binding.repoRoot} @ ${rec.binding.head} clean=${rec.binding.clean} via ${rec.binding.selectionSource}`);
+  } catch (error) {
+    console.error('[jarvis] O5-R3 runtime binding write failed', error);
+  }
+}
+
 function broadcastRepoChange() {
+  writeRuntimeBinding('rebind');
   const state = repoConfigState();
   for (const w of BrowserWindow.getAllWindows()) {
     if (!w.isDestroyed()) w.webContents.send('jarvis:repo-changed', state);
@@ -464,6 +488,7 @@ ipcMain.handle('jarvis:clear-repo', async () => {
 });
 
 app.whenReady().then(async () => {
+  writeRuntimeBinding('startup');
   buildMenu();
   createWindow();
   await ensureBindingOnFirstRun();
@@ -503,6 +528,7 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 // O5-R3: release the grant writer lease, if this process ever became the writer.
 // A crash that skips this leaves the lease to proof-based takeover on next launch.
 app.on('will-quit', () => {
+  try { RB.markTerminated(app.getPath('appData')); } catch (error) { console.error('[jarvis] O5-R3 runtime binding terminate failed', error); }
   const release = globalThis[Symbol.for('jarvis.o5r3.releaseAllGrantWriterLeases')];
   if (typeof release === 'function') {
     try { console.log('[jarvis] O5-R3 grant writer lease release', JSON.stringify(release())); } catch (error) { console.error('[jarvis] O5-R3 lease release failed', error); }
