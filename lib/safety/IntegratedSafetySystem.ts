@@ -71,7 +71,11 @@ export class IntegratedSafetySystem {
     therapistDb?: any
   ) {
     // Initialize all components
-    this.safetyPipeline = new MAIASafetyPipeline(alertService, therapistDb);
+    this.safetyPipeline = new MAIASafetyPipeline(
+      alertService,
+      therapistDb,
+      alertService && therapistDb ? 'clinician_alert' : 'member_only'
+    );
     this.driftEngine = new DriftDetectionEngine();
     this.loopingDrift = new LoopingDriftProtocol();
     this.immuneMemory = new CollectiveImmuneMemory();

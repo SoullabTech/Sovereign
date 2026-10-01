@@ -579,7 +579,7 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
     );
 
     // 🛡️ Initialize safety pipeline for crisis detection
-    this.safetyPipeline = new MAIASafetyPipeline();
+    this.safetyPipeline = new MAIASafetyPipeline(undefined, undefined, 'member_only');
 
     // 🎧 Initialize active listening core for sacred presence
     this.activeListening = new ActiveListeningCore();

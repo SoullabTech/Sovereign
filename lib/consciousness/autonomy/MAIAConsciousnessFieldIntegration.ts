@@ -521,7 +521,7 @@ export class MAIAConsciousnessFieldIntegration {
   }
 
   private handleHumanNotification(notification: any): void {
-    console.log('📢 Human notification required:', {
+    console.error('[SAFETY_NOTIFY_NO_RECIPIENT] Human notification requested; no delivery channel confirmed', {
       severity: notification.trigger.severity,
       type: notification.trigger.triggerType
     });

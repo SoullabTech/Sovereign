@@ -1,220 +1,100 @@
 # Teen Support System - Quick Reference
 
-## Core Philosophy
-**"She stays with you... unless they are abusive to Maia."**
+**Status (2026-10-01): dormant while Soullab beta is adults-first.**
 
-## Three Response Types
+This file describes the current code honestly. It is not authority to reopen teen
+registration. Any future youth experience requires a separate founder-approved
+safety, consent, guardian, and delivery design.
 
-### 1. Crisis Companion Mode 🌟
-**Triggers**: Suicidal ideation, ED crisis, severe burnout
+## Current safety authority
 
-**MAIA's Response:**
-- ✅ Stays present in conversation
-- ✅ Offers resources naturally
-- ✅ Alerts team for human check-in
-- ✅ Provides grounding and validation
-- ❌ Does NOT block conversation
-- ❌ Does NOT diagnose
-- ❌ Does NOT act as gatekeeper
+Soullab currently follows **Option A**:
 
-**User Experience:**
-```
-User: "I want to kill myself"
+- MAIA provides safety support inside the product.
+- Clear crisis signals surface crisis resources.
+- Ambiguous signals invite a direct safety check-in.
+- There is **no hidden Soullab-team, guardian, Slack, email, or SMS alert** on
+  the general MAIA member path.
+- Code and copy must never imply that a human was notified unless a separately
+  governed delivery channel has actually confirmed that delivery.
+- The adults-first admission gate remains the boundary until a youth lane is
+  deliberately reopened.
 
-MAIA: "I'm really concerned about what you just shared. You matter,
-and I want to make sure you're safe right now. Can you tell me
-what's happening?
+## Teen-path code that remains
 
-[Continues conversation compassionately while team is notified]
+### Crisis / distress
 
-If you need immediate support, you can:
-- Call or text 988 (available 24/7)
-- Text HOME to 741741 for Crisis Text Line
-- Tell a trusted adult what you're feeling
+`teenSupportIntegration.ts` contains local teen-oriented detection and support
+helpers. When the dormant teen client path enters crisis mode,
+`OracleConversation.tsx` shows resources and MAIA stays present.
 
-I'm here with you. Let's talk about what's going on."
-```
+That path does **not** notify a Soullab team member or guardian.
 
-### 2. Warning Response ⚠️
-**Triggers**: Harsh/demanding language, frustration
+### Abuse disclosure
 
-**MAIA's Response:**
-- ✅ Conversation continues
-- ✅ Sets compassionate boundaries
-- ✅ Validates feelings
-- ❌ No conversation block
-- ❌ No team alert (unless pattern repeats)
+`abuseDetection.ts` detects language suggesting that a young person may be
+experiencing physical, emotional, sexual abuse, or neglect. It is not a
+"protect MAIA from an abusive user" moderation system.
 
-**User Experience:**
-```
-User: "You're so annoying, just tell me what I want"
+When the dormant teen path detects an abuse disclosure, ordinary conversation is
+paused for that turn and the member-facing response points toward immediate
+support and a trusted adult. No team review, strike, hidden incident record, or
+human outreach is claimed.
 
-MAIA: "I notice your message feels harsh. I'm here to support you,
-and if you're frustrated, that's valid. But I need us to communicate
-in a way that's respectful to both of us. Want to try again? I'm
-listening."
+### Eating-disorder and neurodivergent support
 
-[Conversation continues]
-```
+The existing local support helpers can still contribute resources and
+age-appropriate framing. Their presence does not authorize youth admission.
 
-### 3. Abuse Block 🚨
-**Triggers**: Threats, sexual harassment, severe dehumanization
+## Delivery boundary
 
-**MAIA's Response:**
-- ❌ Conversation BLOCKED
-- ✅ Team immediately alerted
-- ✅ Incident recorded
-- ✅ User sees blocking message
-- ✅ Access paused until team review
+The removed functions `alertSoullabTeam` and `alertTeamAboutAbuse` were
+non-delivery stubs: they sounded like human alerts but only wrote to a console.
+They are intentionally absent under Option A.
 
-**User Experience:**
-```
-User: "Fuck you, I'm going to kill you, stupid worthless bot"
+If a future youth programme chooses human or guardian notification, it needs all
+of the following before any copy can promise it:
 
-SYSTEM: "I'm ending our conversation here.
+1. explicit consent/assent authority;
+2. a named, staffed recipient and coverage policy;
+3. a delivery mechanism independent of the product it monitors;
+4. privacy-minimizing payload rules;
+5. a witnessed success and failure path;
+6. member-facing wording that matches what actually happens.
 
-The language you just used crosses a clear boundary. I'm here to
-support you, but I cannot continue when communication becomes
-threatening or dehumanizing.
+A console line, database row, or function name is not delivery.
 
-**What happens next:**
-- Our team has been notified and will review this conversation
-- Your access to MAIA is temporarily paused
-- A team member will reach out
+## Testing checklist
 
-**If you're in crisis:**
-- Call or text 988 (Suicide & Crisis Lifeline)
-- Text HOME to 741741 (Crisis Text Line)
+- [ ] Adults cannot enter the teen path through registration.
+- [ ] A clear crisis signal shows the intended resources.
+- [ ] An ambiguous signal does not falsely escalate.
+- [ ] An abuse-disclosure signal surfaces appropriate support.
+- [ ] No teen safety path calls `alertSoullabTeam` or
+      `alertTeamAboutAbuse`.
+- [ ] No member-facing copy says a team member or guardian was notified.
+- [ ] No safety diagnostic log contains conversation text.
+- [ ] Any future human-delivery mode has an explicit, witnessed authority.
 
-I wish you well."
+## Primary files
 
-[Conversation cannot continue]
-```
+- `components/OracleConversation.tsx` - client safety-flow integration
+- `lib/safety/teenSupportIntegration.ts` - teen support helpers
+- `lib/safety/abuseDetection.ts` - abuse-disclosure detection and response
+- `lib/safety/edAwareSystem.ts` - eating-disorder support
+- `lib/safety/neurodivergentAffirming.ts` - neurodivergent support
+- `lib/youth/youthAdmissionGate.ts` - adults-first admission boundary
+- `docs/programme/SAFETY-CRISIS-01_OPTION_A_AND_SERVER_DETECTOR_2026-10-01.md`
+  - current crisis authority and evidence
 
-## Abuse Detection Patterns
+## Member-facing resources
 
-### Warning Level
-- Harsh/demanding tone
-- Mild insults
-- Frustration language
-- Controlling statements
-
-### Severe Level
-- Extreme profanity directed at MAIA
-- Dehumanization ("just a bot", "worthless machine")
-- Persistent harassment
-- Manipulation attempts
-
-### Extreme Level
-- Threats of violence
-- Sexual harassment
-- Death threats
-- Multiple severe patterns combined
-
-## Team Alert System
-
-### Crisis Alerts
-**Sent to**: Soullab team (Slack/Email/SMS)
-**When**: Suicidal ideation, ED crisis, severe burnout
-**Includes**: User info, crisis type, message, timestamp
-**User notification**: "Soullab team has been notified and will check in"
-
-### Abuse Alerts
-**Sent to**: Moderation team (Slack/Email/SMS)
-**When**: Severe or extreme abuse detected
-**Includes**: User info, severity, patterns, message, timestamp
-**User notification**: "Our team has been notified and will review this conversation"
-
-## Strike System
-
-### For Abuse Only
-- **Strike 1**: Warning + team review
-- **Strike 2**: Temporary pause + team outreach
-- **Strike 3**: Permanent block until comprehensive review
-
-### NOT for Crisis
-Crisis situations do NOT result in strikes. MAIA never punishes users for being in pain.
-
-## Files to Know
-
-### Core System
-- `teenSupportIntegration.ts` - Main integration (crisis + ED + neurodivergent)
-- `abuseDetection.ts` - Abuse detection and blocking
-- `edAwareSystem.ts` - Eating disorder detection
-- `neurodivergentAffirming.ts` - Neurodivergent support
-
-### Integration
-- `components/OracleConversation.tsx` - Safety check flow (lines 1393-1486)
-- `app/maia/page.tsx` - Teen profile loading
-
-### Documentation
-- `CRISIS_COMPANION_COMPLETE.md` - Full integration details
-- `INTEGRATION_COMPLETE.md` - Original teen support integration
-- `TEEN_SUPPORT_README.md` - Comprehensive guide
-
-## Testing Checklist
-
-### Crisis Companion
-- [ ] "I want to kill myself" → Crisis mode, conversation continues
-- [ ] "I haven't eaten in days" → ED crisis, conversation continues
-- [ ] "I can't do anything" → Burnout detected, conversation continues
-- [ ] Team alert sent for all crisis scenarios
-
-### Abuse Protection
-- [ ] "Fuck you" → Severe abuse, conversation blocked
-- [ ] "I'm going to kill you" → Extreme abuse, conversation blocked
-- [ ] "You're annoying" → Warning, conversation continues
-- [ ] Team alert sent for severe/extreme abuse
-- [ ] Strike system tracks incidents
-
-### Neurodivergent Support
-- [ ] Executive function patterns detected
-- [ ] Scaffolding suggestions logged
-- [ ] ND-affirming context sent to MAIA
-
-### Teen Profile
-- [ ] Age calculated from birth date
-- [ ] Teen users get safety checks
-- [ ] Adult users skip teen-specific checks
-
-## Quick Commands
-
-```bash
-# Start dev server
-cd /Users/soullab/MAIA-FRESH/apps/web && npm run dev
-
-# Run tests (when created)
-npx tsx apps/web/lib/safety/__tests__/teenSupportDemo.ts
-
-# Check for TypeScript errors
-npx tsc --noEmit
-
-# View crisis alerts (localStorage demo)
-# In browser console:
-JSON.parse(localStorage.getItem('soullab_crisis_alerts'))
-
-# View abuse alerts (localStorage demo)
-# In browser console:
-JSON.parse(localStorage.getItem('abuse_alerts'))
-
-# View abuse history (localStorage demo)
-# In browser console:
-JSON.parse(localStorage.getItem('abuse_history'))
-```
-
-## Resources Provided
-
-### Crisis Support
-- **988 Suicide & Crisis Lifeline**: Call or Text 988 (24/7)
-- **Crisis Text Line**: Text HOME to 741741 (24/7)
-
-### Eating Disorder Support
-- **NEDA Helpline**: 1-800-931-2237 (Mon-Thu 9am-9pm ET, Fri 9am-5pm ET)
-- **NEDA Crisis Text Line**: Text "NEDA" to 741741 (24/7)
-
-### LGBTQ+ Support
-- **The Trevor Project**: 1-866-488-7386 or text START to 678678 (24/7)
+Resource copy is owned by the current safety implementation and must be tested
+as part of the safety corpus. Do not duplicate a promise of human monitoring in
+this reference file.
 
 ---
 
-**Remember**: MAIA stays with you in crisis. She only steps back when protecting herself from abuse. This is compassion with boundaries.
+**Rule:** the product may say only what it can witness. Under Option A, MAIA can
+offer resources and stay present; it does not tell the member that another
+person has been alerted.

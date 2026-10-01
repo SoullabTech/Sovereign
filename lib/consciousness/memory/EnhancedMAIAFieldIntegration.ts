@@ -873,7 +873,10 @@ export class EnhancedMAIAFieldIntegration {
   }
 
   private handleHumanNotification(notification: any): void {
-    console.log('📢 Human notification:', notification);
+    console.error('[SAFETY_NOTIFY_NO_RECIPIENT] Human notification requested; no delivery channel confirmed', {
+      severity: notification.trigger?.severity,
+      type: notification.trigger?.triggerType
+    });
   }
 
   /**

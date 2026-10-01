@@ -155,35 +155,3 @@ function generateInterventionMessage(type: string, severity: string): string {
     'You matter, and your safety matters.'
   );
 }
-
-/**
- * Alert the team about abuse detection (logs for now, Phase 2: email + guardian).
- */
-export async function alertTeamAboutAbuse(details: {
-  userId?: string;
-  type?: string;
-  severity?: string;
-  timestamp?: Date;
-}): Promise<void> {
-  console.warn('[ABUSE ALERT]', {
-    ...details,
-    timestamp: details.timestamp || new Date(),
-    // NEVER log message content
-  });
-}
-
-/**
- * Record abuse incident for safety tracking (logs for now, Phase 2: database).
- */
-export async function recordAbuseIncident(details: {
-  userId?: string;
-  type?: string;
-  severity?: string;
-  timestamp?: Date;
-}): Promise<void> {
-  console.warn('[ABUSE RECORD]', {
-    ...details,
-    timestamp: details.timestamp || new Date(),
-    // NEVER store message content
-  });
-}

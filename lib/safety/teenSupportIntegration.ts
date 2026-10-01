@@ -69,16 +69,6 @@ export interface TeenSupportResponse {
   contextForAI?: string;
 }
 
-export interface TeamAlertParams {
-  userId: string;
-  userName?: string;
-  age?: number;
-  crisisType?: string;
-  message?: string;
-  sessionId?: string;
-  timestamp?: Date;
-}
-
 // ---------------------------------------------------------------------------
 // Detection patterns (local regex, no external API)
 // ---------------------------------------------------------------------------
@@ -435,41 +425,4 @@ export function getTeenResources(
   );
 
   return resources;
-}
-
-// ---------------------------------------------------------------------------
-// Team alerts
-// ---------------------------------------------------------------------------
-
-/**
- * Alert the Soullab team about a critical situation.
- * In Phase 2 (Guardian Mirror), this will also notify linked guardians.
- */
-export async function alertSoullabTeam(
-  paramsOrUserId: TeamAlertParams | string,
-  safetyCheck?: TeenSafetyCheck,
-  context?: string
-): Promise<void> {
-  const params: TeamAlertParams = typeof paramsOrUserId === 'string'
-    ? { userId: paramsOrUserId }
-    : paramsOrUserId;
-
-  const alertType = safetyCheck?.isCrisis ? 'crisis'
-    : safetyCheck?.isAbuse ? 'abuse'
-    : safetyCheck?.isED ? 'ed'
-    : 'general';
-
-  // ⚠️ No delivery channel exists yet: this alert reaches NO human (guardian or team).
-  // Logged as an error with a stable code so the gap is visible, never mistaken for delivery.
-  console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN SAFETY ALERT] NOT delivered — guardian/team notification not implemented', {
-    type: alertType,
-    userId: params.userId,
-    age: params.age,
-    crisisType: params.crisisType || alertType,
-    timestamp: params.timestamp || new Date(),
-    // NEVER log message content in alerts
-  });
-
-  // TODO (Phase 2): Query guardian_links and send guardian notifications
-  // TODO (Phase 2): Insert guardian_safety_alerts record
 }

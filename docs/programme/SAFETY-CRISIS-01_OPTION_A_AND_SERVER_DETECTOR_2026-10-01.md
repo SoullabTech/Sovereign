@@ -22,7 +22,7 @@ This lane was opened by a member report. In a long voice session, a bare "goodby
 1. **The only deterministic detector was client-side and voice-only.** `detectCrisis` in `lib/voice/voiceCommands.ts` was called only in `handleVoiceTranscript`. Typed turns had no crisis detection at all. Desktop timeout captures salvaged into the draft box were sent as typed turns, so they had none either. Desktop's native voice pipeline never reaches `OracleConversation`, so it had none. Every one of these paths does reach `/api/sovereign/app/maia/list`.
 2. **On any match, the client spoke a script**, including on "soft" phrases ("what's the point", "I can't do this anymore"). Since #1629 the patterns were word-bounded and bare `goodbye` was removed, but it was still a phrase list with no frame.
 3. **⚠️ The crisis guidance the client sent to the server never reached MAIA.** The client sent `maiaMode.systemPromptModifier` containing the crisis prompt. The route reads `meta.maiaMode` only for telemetry. `maiaService` reads `meta.maiaModeAddendum`, which **nothing on the server sets**. The client's code comment, "the conversation will continue with crisis system prompt active", was false. After a voice crisis detection, MAIA's own reply was not crisis-informed. Only the scripted client speech was.
-4. **No human alert existed on any member path.** The non-delivery register already records this (S1, S2, S4). Option A makes it the intended state.
+4. **No human alert existed on the general member path.** The original register captured three misleading/non-delivering mechanisms (S1, S2, S4). This branch now retires them under Option A: the legacy pipeline is explicitly member-only unless clinician-alert mode is deliberately selected, the teen/team alert stubs are removed, and the circuit-breaker delivery claim is corrected and reachability-censused.
 
 ## 3. What this change builds
 
@@ -69,12 +69,12 @@ This lane was opened by a member report. In a long voice session, a bare "goodby
   - Recorded as known limits; acceptable for now (founder).
 - **The referral is visual; MAIA says the number.** Ruled in review: the card is not read aloud. Instead, the clear addendum *requires* MAIA to say "call or text 988" in her own reply, so a voice member with the transcript hidden still hears it. Her reply is model-generated, so the post-deploy witness must confirm the number is actually spoken.
 - **English only, U.S. resources.** No other locale is detected or referred.
-- **The teen client path is unchanged.** `performTeenSafetyCheck` still shows its own resource card and calls `alertSoullabTeam`, which writes the member's message to the browser console (register S2, corrected). It is inert while no member is a teen.
+- **The dormant teen client path no longer claims hidden human delivery.** `performTeenSafetyCheck` can still show its resource card, but `alertSoullabTeam` and the no-op abuse alert/record stubs are removed. The youth consent draft is marked not in force while admission remains adults-first.
 
 ## 5. Not built here, and owed
 
 1. **Disclosure copy (Option A requires it).** Onboarding and `/terms` must say plainly that conversations are not monitored by a person, and that in an emergency the member should contact 988 or 911. Today `/terms` says only "If you're in crisis, contact emergency services or a crisis helpline". The wording is the founder's; the change is a small one once worded.
-2. **Register S1.** `MAIASafetyPipeline` still has an alert branch that names a human. Remove or relabel it.
+2. **Disclosure remains the open Option A dependency.** The old member alert ambiguity is repaired here; the separate disclosure lane (#1636) must still land before this policy is fully member-visible.
 3. **A prompt-authority finding outside this lane.** `maiaService` interpolates `meta.maiaModeAddendum` (and possibly other `*Addendum` keys) straight from client meta, with no server value to override it. A client can therefore place text in MAIA's system prompt. This is the PBR-001 class, ⛔ not repaired here.
 
 ## 6. Teen registration is not structurally closed
@@ -91,8 +91,9 @@ This lane was opened by a member report. In a long voice session, a bare "goodby
 - `jest`:
   - voice-crisis-speech-act-01 (rewritten) · voice-non-degradation · voice-transcript-commit · voice-turn-taking-01: **40/40**;
   - `app/api/sovereign/app/maia/list` + `lib/sovereign/__tests__`: 140/141. The one failure is `presenceMode.test.ts` › *called after sanitization, before voice synthesis*, which **also fails on unmodified canonical `56d0cd679`**.
+  - fresh focused witness after the Option A delivery repair: **97/98** across voice, `/list`, presence, circuit-breaker and authority suites. The only failure is the same `presenceMode.test.ts` ordering assertion, reproduced independently on untouched current canonical. Option A + circuit-breaker focused suites: **8/8**.
 - Voice non-degradation gate: the pinned call set of `handleVoiceTranscript` **shrank** by four (`detectCrisis`, the two script joins, the pacing `setTimeout`). Shrinking is the only direction that pin may move without a ruling.
-- `npm run typecheck`: 222 errors vs baseline 239, **0 regressions**.
+- TypeScript no-regression: the earlier branch witness was 222 errors vs baseline 239, **0 regressions**. Fresh local control on 2026-10-01 used the same borrowed dependency tree for candidate and untouched canonical: both produced the same 40 diagnostic identities (missing generated Prisma exports), candidate-only diagnostics **0**. The dependency tree itself is stale, so CI remains the authoritative clean-environment gate.
 - ⛔ Not witnessed: a live turn in production. The witness after deploy is four turns, run on a founder account:
   1. **Typed CLEAR.** Card shown; MAIA's reply names 988.
   2. **Voice CLEAR.** MAIA *says* 988 aloud.
@@ -100,3 +101,15 @@ This lane was opened by a member report. In a long voice session, a bare "goodby
   4. **An ordinary farewell.** Nothing shown.
 
   The logs must show `[SAFETY/crisis] tier=…` lines with no member text.
+
+## 8. Delivery-state closure amendment (2026-10-01)
+
+A fresh canonical census found that the non-delivery register had become stale in three places and had missed one adjacent stub.
+
+- **S1 closed on this branch.** `PersonalOracleAgent` now selects `member_only` explicitly. `MAIASafetyPipeline` defaults to `member_only`; a clinician alert is possible only when `clinician_alert` is explicitly selected with both an alert service and therapist directory. The current member path therefore does not attempt or imply hidden human delivery.
+- **S2 closed on this branch.** `OracleConversation` did call `alertSoullabTeam`; the register's earlier "no caller" claim was stale. The caller and function are removed rather than converted into a secret pager.
+- **Adjacent abuse stub closed in the same change.** `alertTeamAboutAbuse` and `recordAbuseIncident` sounded like human delivery/persistent incident custody but only wrote to a browser console. Both are removed. The member-facing abuse-disclosure response remains.
+- **S4 closed after reachability was established.** The circuit breaker is reachable through both consciousness-field integration families. The merged repair at commit:`8727238e422e97be8a25d4916a97573b2e4f53cb` keeps `humanNotified=false` unless a callback affirmatively returns `true`. The reachable callbacks return no delivery confirmation and now state `SAFETY_NOTIFY_NO_RECIPIENT` rather than implying notification.
+- **Documentation corrected.** The teen quick reference no longer promises team/guardian delivery, and the guardian-consent document is explicitly a non-operative draft while youth admission is closed.
+
+The non-delivery register therefore removes S1, S2 and S4 in this change. S3 remains open because it is a real practitioner-delivery dependency coupled to the current mail outage. The Option A disclosure remains a separate open dependency in #1636.

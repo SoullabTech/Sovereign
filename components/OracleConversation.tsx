@@ -5347,53 +5347,30 @@ I'm not sure what I'm feeling yet.`;
 
     // 🌟 TEEN SUPPORT - Perform safety check for teen users BEFORE processing
     if (isTeenUser && teenProfile && requiresTeenSupport(teenProfile)) {
-      console.log('🌟 [TEEN SUPPORT] Checking message for safety concerns:', cleanedText.substring(0, 50) + '...');
+      console.log('[TEEN SUPPORT] Running local safety check');
 
       const safetyCheck = performTeenSafetyCheck(cleanedText, teenProfile);
       setLastSafetyCheck(safetyCheck);
 
       const supportResponse = generateTeenSupportResponse(cleanedText, safetyCheck, teenProfile);
 
-      // 🚨 ABUSE DETECTED - THE ONE EXCEPTION WHERE WE BLOCK CONVERSATION
+      // ABUSE DISCLOSURE - pause ordinary conversation and surface immediate support
       if (supportResponse.blockConversation && safetyCheck.isAbuse) {
-        console.log('🚨 [ABUSE DETECTED] BLOCKING conversation for MAIA\'s protection');
+        console.log('[YOUTH SAFETY] Abuse-disclosure signal; pausing ordinary conversation');
 
         // Add blocking message directly to conversation
         const blockingMessage: ConversationMessage = {
           id: `abuse-block-${Date.now()}`,
           role: 'oracle',
-          text: supportResponse.interventionMessage || 'This conversation has been paused for review.',
+          text: supportResponse.interventionMessage || 'This conversation is pausing here so we can focus on immediate safety and support.',
           timestamp: new Date(),
           source: 'system'
         };
         setMessages(prev => appendMessageCapped(prev, blockingMessage));
         onMessageAddedRef.current?.(blockingMessage);
 
-        // Alert team about abuse
-        if (safetyCheck.abuseResult && userId) {
-          const { alertTeamAboutAbuse } = await import('@/lib/safety/abuseDetection');
-          const { recordAbuseIncident } = await import('@/lib/safety/abuseDetection');
-
-          // Record the incident
-          recordAbuseIncident({
-            userId: userId || `anon_${sessionId}`,
-            severity: safetyCheck.abuseResult.severity as 'warning' | 'severe' | 'extreme',
-            patterns: safetyCheck.abuseResult.patterns,
-            message: cleanedText,
-            blocked: true,
-          });
-
-          // Alert the team
-          await alertTeamAboutAbuse({
-            userId: userId || `anon_${sessionId}`,
-            userName: userName || 'Anonymous',
-            severity: safetyCheck.abuseResult.severity as 'warning' | 'severe' | 'extreme',
-            patterns: safetyCheck.abuseResult.patterns,
-            message: cleanedText,
-            sessionId,
-            timestamp: new Date(),
-          });
-        }
+        // Option A: no hidden Soullab-team or guardian notification is attempted.
+        // The member-facing response above is the safety act in this beta.
 
         // STOP HERE - do not process normal conversation
         setIsProcessing(false);
@@ -5425,27 +5402,7 @@ I'm not sure what I'm feeling yet.`;
         setMessages(prev => appendMessageCapped(prev, crisisResourceMessage));
         onMessageAddedRef.current?.(crisisResourceMessage);
 
-        // Alert team for human check-in
-        if (userId) {
-          const { alertSoullabTeam } = await import('@/lib/safety/teenSupportIntegration');
-
-          const crisisType = safetyCheck.isCrisis
-            ? 'suicidal_ideation'
-            : safetyCheck.edResult?.severity === 'crisis'
-              ? 'ed_crisis'
-              : 'severe_burnout';
-
-          await alertSoullabTeam({
-            userId: userId || `anon_${sessionId}`,
-            userName: userName || 'Anonymous Teen',
-            age: teenProfile.age,
-            crisisType,
-            message: cleanedText,
-            sessionId,
-            timestamp: new Date(),
-          });
-        }
-
+        // Option A: no hidden Soullab-team or guardian notification is attempted.
         // MAIA continues conversation with crisis context - she does NOT abandon the user
         console.log('🌟 [CRISIS COMPANION] MAIA will respond with crisis-aware compassion');
       }
