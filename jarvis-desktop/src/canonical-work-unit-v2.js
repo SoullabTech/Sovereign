@@ -1307,6 +1307,68 @@ async function statusCanonicalV2(root, workUnitId, opts = {}) {
   });
 }
 
+async function listCanonicalV2(root, opts = {}) {
+  const dir = canonicalHome(opts.env);
+  const limit = Math.min(Math.max(Number(opts.limit) || 200, 1), 500);
+  if (!fs.existsSync(dir)) {
+    return deepFreeze({
+      ok: true,
+      status: 'CANONICAL_V2_LIST',
+      population: { total: 0, returned: 0, truncated: false, unreadable: 0 },
+      items: [],
+    });
+  }
+
+  const candidates = fs.readdirSync(dir)
+    .filter((name) => name.endsWith('.json')
+      && !name.endsWith('.desktop.json')
+      && !name.includes('.tmp-'))
+    .map((name) => {
+      const id = name.slice(0, -'.json'.length);
+      const file = path.join(dir, name);
+      let mtimeMs = 0;
+      try { mtimeMs = fs.statSync(file).mtimeMs; } catch {}
+      return { id, file, mtimeMs };
+    })
+    .filter((entry) => safeId(entry.id))
+    .sort((a, b) => b.mtimeMs - a.mtimeMs || a.id.localeCompare(b.id));
+
+  const items = [];
+  let unreadable = 0;
+  for (const entry of candidates.slice(0, limit)) {
+    try {
+      const snapshot = await statusCanonicalV2(root, entry.id, opts);
+      items.push({
+        work_unit_id: entry.id,
+        observed_mtime_ms: entry.mtimeMs,
+        readable: snapshot.ok === true,
+        snapshot,
+      });
+    } catch (error) {
+      unreadable += 1;
+      items.push({
+        work_unit_id: entry.id,
+        observed_mtime_ms: entry.mtimeMs,
+        readable: false,
+        error: String(error?.message || error),
+        snapshot: null,
+      });
+    }
+  }
+
+  return deepFreeze({
+    ok: true,
+    status: 'CANONICAL_V2_LIST',
+    population: {
+      total: candidates.length,
+      returned: items.length,
+      truncated: candidates.length > items.length,
+      unreadable,
+    },
+    items,
+  });
+}
+
 module.exports = {
   MODE,
   STORE_VERSION,
@@ -1334,4 +1396,5 @@ module.exports = {
   adjudicateCanonicalV2,
   closeCanonicalV2,
   statusCanonicalV2,
+  listCanonicalV2,
 };
