@@ -7,6 +7,11 @@
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    if (process.env.MAIA_CABIN_MODE === 'offline') {
+      console.log('[SchemaCheck] offline Cabin — PostgreSQL startup check skipped');
+      return;
+    }
+
     const { runSchemaCheck } = await import('@/lib/db/schemaCheck');
     await runSchemaCheck();
   }

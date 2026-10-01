@@ -44,10 +44,42 @@
 
 'use strict';
 
-const { app, BrowserWindow, ipcMain, Menu, session, safeStorage, shell, WebContentsView } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  session,
+  safeStorage,
+  shell,
+  WebContentsView,
+  utilityProcess,
+} = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const packageMetadata = require('../package.json');
+
+const {
+  cabinOrigin,
+  isCabinMode,
+  resolveCabinContextPackagePath,
+  resolveCabinPort,
+} = require('./cabin-runtime-policy');
+
+const CABIN_MODE = process.env.MAIA_CABIN_MODE || 'connected';
+if (!isCabinMode(CABIN_MODE)) {
+  throw new Error(`MAIA_CABIN_MODE is invalid: ${CABIN_MODE}`);
+}
+
+const CABIN_PORT = CABIN_MODE === 'offline'
+  ? resolveCabinPort(process.env.MAIA_CABIN_PORT)
+  : null;
+
+// shell-policy reads MAIA_PLATFORM_ORIGIN when it is loaded. Set the local
+// perimeter before importing it; connected Desktop keeps its existing origin.
+if (CABIN_MODE === 'offline') {
+  process.env.MAIA_PLATFORM_ORIGIN = cabinOrigin(CABIN_PORT);
+}
 
 // The canonical voice surface routes Desktop away from browser speech by this
 // exact product token. Electron derives its default token from productName
@@ -72,6 +104,7 @@ const { createContinuity } = require('./continuity');
 const { createTurn } = require('./turn');
 const { createVoiceLifecycle } = require('./voice-lifecycle');
 const { createDesktopConversation } = require('./desktop-conversation');
+const { createCabinRuntimeSupervisor } = require('./cabin-runtime');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -84,6 +117,7 @@ let platformShell = null;     // DESKTOP-SHELL-01 — the one remote view, or no
 let desktopPlace = MAIA;      // where the member is: MAIA, or a platform place
 let memberSession = null; // member session — survives capture start/stop
 let conversation = null; // one continuity for this run
+let cabinRuntime = null;
 
 // ── voice session, owned entirely by main ───────────────────────────────────
 let voice = null;
@@ -399,6 +433,9 @@ ipcMain.handle('maia:status', async () => ({
   // Builder injects maiaBuildSha into the packaged package.json. A source
   // launch remains honestly UNSTAMPED unless its caller supplies a witness SHA.
   build: process.env.MAIA_DESKTOP_BUILD_SHA || packageMetadata.maiaBuildSha || 'UNSTAMPED',
+  cabin: cabinRuntime
+    ? cabinRuntime.snapshot()
+    : { state: CABIN_MODE === 'offline' ? 'not_started' : 'disabled', origin: null, port: CABIN_PORT, failure: null, pid: null },
 }));
 
 // ── the turn ────────────────────────────────────────────────────────────────
@@ -607,6 +644,61 @@ ipcMain.handle('maia:sign-out', async () => {
 
 ipcMain.handle('maia:auth-state', async () => memberSession.state());
 
+async function startCabinRuntimeIfNeeded() {
+  if (CABIN_MODE !== 'offline') return { ok: true, state: 'disabled' };
+
+  const defaultRoot = app.isPackaged
+    ? path.join(process.resourcesPath, 'cabin-runtime')
+    : path.join(__dirname, 'cabin-runtime');
+  const runtimeRoot = process.env.MAIA_CABIN_RUNTIME_ROOT || defaultRoot;
+  const entrypoint = process.env.MAIA_CABIN_RUNTIME_ENTRYPOINT
+    || path.join(runtimeRoot, 'server.js');
+  const cabinDataPath = process.env.MAIA_CABIN_DATA_PATH
+    || path.join(app.getPath('userData'), 'cabin', 'cabin.sqlite');
+  const cabinContextPackagePath = resolveCabinContextPackagePath(
+    process.env.MAIA_CABIN_CONTEXT_PACKAGE_PATH,
+    cabinDataPath,
+  );
+
+  cabinRuntime = createCabinRuntimeSupervisor({
+    // Electron-specific host adapter. The supervisor itself never imports
+    // Electron. UtilityProcess supplies a Node-enabled child without relying on
+    // ELECTRON_RUN_AS_NODE or a package fuse remaining enabled.
+    spawnImpl: (_command, args, options) => utilityProcess.fork(
+      args[0],
+      args.slice(1),
+      {
+        cwd: options.cwd,
+        env: options.env,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        serviceName: 'MAIA Cabin Runtime',
+      },
+    ),
+    fetchImpl: (...args) => fetch(...args),
+    logger: (record) => console.log('[Cabin runtime]', record.event),
+  });
+
+  const result = await cabinRuntime.start({
+    port: CABIN_PORT,
+    entrypoint,
+    runtimeRoot,
+    extraEnv: {
+      MAIA_CABIN_RUNTIME_ROOT: runtimeRoot,
+      MAIA_CABIN_DATA_PATH: cabinDataPath,
+      MAIA_CABIN_CONTEXT_PACKAGE_PATH: cabinContextPackagePath,
+      MAIA_CABIN_ORIGIN: cabinOrigin(CABIN_PORT),
+    },
+  });
+
+  if (!result.ok) {
+    console.error(`[Cabin runtime] failed to start: ${result.error}`);
+  } else {
+    console.log(`[Cabin runtime] ready at ${result.origin}`);
+  }
+
+  return result;
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900,
@@ -653,7 +745,15 @@ function createWindow() {
   buildMenu();
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Explicit offline mode owns a local runtime. The normal connected Desktop
+  // path does not start one and remains unchanged.
+  const cabin = await startCabinRuntimeIfNeeded();
+  if (!cabin.ok) {
+    app.quit();
+    return;
+  }
+
   // Grant ONLY audio, and only to our own loaded file. Everything else — video,
   // geolocation, notifications, display capture — is refused, so the renderer
   // cannot acquire a device this unit never authorized.
@@ -688,6 +788,18 @@ app.whenReady().then(() => {
       void goTo(MAIA);
     });
   }
+});
+
+let cabinQuitting = false;
+
+app.on('before-quit', (event) => {
+  if (!cabinRuntime || cabinQuitting) return;
+  const state = cabinRuntime.snapshot().state;
+  if (state === 'stopped' || state === 'idle') return;
+
+  event.preventDefault();
+  cabinQuitting = true;
+  void cabinRuntime.stop().finally(() => app.quit());
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

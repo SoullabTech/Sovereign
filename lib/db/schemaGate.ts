@@ -68,6 +68,12 @@ let gateResult: { checked: boolean; error: Error | null } = { checked: false, er
  * @throws Error if schema_migrations table doesn't exist or required migrations are missing
  */
 export function ensureSchemaReady(): Promise<void> {
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const error = new Error('CABIN_POSTGRES_DISABLED');
+    gateResult = { checked: true, error };
+    return Promise.reject(error);
+  }
+
   // Return cached result if already checked
   if (gateResult.checked) {
     if (gateResult.error) {
@@ -152,6 +158,14 @@ export function resetSchemaGate(): void {
 export async function checkSchemaCompatibility(): Promise<
   { compatible: true } | { compatible: false; missing: string[]; error?: string }
 > {
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    return {
+      compatible: false,
+      missing: [],
+      error: 'CABIN_POSTGRES_DISABLED',
+    };
+  }
+
   const requiredMigrations = getRequiredMigrations();
 
   if (requiredMigrations.length === 0) {

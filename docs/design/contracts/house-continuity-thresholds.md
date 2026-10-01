@@ -55,6 +55,16 @@ HouseRoomThreshold names the destination and returns to /house. It does not repl
 
 Where a room contains deeper child routes, from=house may be preserved only so return orientation survives. It must not become hidden content context.
 
+## Explicit continuity exception
+
+The default law remains: navigation alone does not carry semantic content.
+
+A separately governed continuity threshold may carry an explicitly chosen object identity when the member has acted on that specific object. The destination must validate that identity against the authenticated member and resolve its own local children, ambiguity, and permissions.
+
+`HOUSE-CABIN-CONTEXT-SPINE-01` is the first such governed exception for House → Writer’s Studio: a member explicitly chooses a Work in House, so the Work identity may travel. The House still does not choose a manuscript, and the Studio remains authoritative for manuscript resolution.
+
+This exception does not authorize generic semantic carry, hidden memory transfer, or system-authored interpretation across House doors.
+
 ## Access
 
 The threshold is navigation only. It cannot grant Studio, practitioner, community, library, relationship, or other permissions.

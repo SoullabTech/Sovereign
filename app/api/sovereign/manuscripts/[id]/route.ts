@@ -58,15 +58,51 @@ import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { eraseManuscript } from '@/lib/manuscript/source/eraseManuscript';
+import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
+  const { id } = await ctx.params;
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      const manuscript = store.getManuscript(member.id, id);
+      if (!manuscript) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+      const sections = store.listManuscriptSections(member.id, id);
+      const response = NextResponse.json({
+        manuscript: {
+          id: manuscript.id,
+          title: manuscript.title,
+          createdAt: manuscript.createdAt,
+        },
+        sections: sections.map((section) => ({
+          id: section.id,
+          position: section.position,
+          heading: section.heading,
+          headingDepth: null,
+          headingSignal: null,
+          chars: section.body.length,
+          body: section.body,
+        })),
+        keeps: [],
+        collections: [],
+      });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const { id } = await ctx.params;
 
     const ms = await query<{ id: string; title: string; created_at: string }>(
       `SELECT id, title, created_at FROM member_manuscripts WHERE id = $1 AND member_id = $2`,
@@ -154,10 +190,27 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
+  const { id } = await ctx.params;
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      if (!store.deleteManuscript(member.id, id)) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      const response = NextResponse.json({ removed: true });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const { id } = await ctx.params;
 
     const outcome = await eraseManuscript(id, memberId);
 
