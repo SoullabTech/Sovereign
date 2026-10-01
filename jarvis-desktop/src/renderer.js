@@ -872,7 +872,8 @@ function renderCanonicalExecutionBridge(snapshot) {
         <div class="a-line">Execution mode: <b>${escapeHtml(b.execution_mode || 'none')}</b> · evidence <b>${escapeHtml(b.evidence_class || 'none')}</b></div>
         <div class="a-line">Readiness: <b>${escapeHtml(b.readiness?.status || 'none')}</b> · ${escapeHtml(b.readiness?.evidence_ref || 'no evidence')}</div>
         <div class="a-line">Response budget: <b>${escapeHtml(b.response_budget_profile_id || p.response_budget_profile_id || 'none')}</b></div>
-        <div class="a-line">Canonical SHA: <b>${escapeHtml(review.canonical_sha || snapshot.routing.bound_at_sha || 'unknown')}</b></div>
+        <div class="a-line">Work Unit evidence/source SHA: <b>${escapeHtml(review.canonical_sha || snapshot.routing.bound_at_sha || 'unknown')}</b></div>
+        <div class="a-line">JARVIS runtime execution SHA: <b>${escapeHtml(runtimeExecutionSha || 'unknown')}</b></div>
         <div class="a-line">Route digest: <b>${escapeHtml(review.route_digest || snapshot.routing.route_digest || 'unknown')}</b></div>
         <div class="a-line">Attempt population: <b>${escapeHtml(review.attempt_population_digest || 'unknown')}</b></div>
         ${error ? `<div class="errors"><div>${escapeHtml(error)}</div></div>` : ''}
@@ -1099,10 +1100,13 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
   const adjudication = provenance.adjudication || null;
   const closure = provenance.closure || null;
   const actions = snapshot.next_actions || [];
+  const evidenceSourceSha = wu.scope?.base_ref || snapshot.routing?.bound_at_sha || null;
+  const runtimeExecutionSha = lastStatus?.provenance?.substrate?.resolved_repo_head || null;
 
   const transitionTrace = (lifecycle.transitions || [])
     .map(t => `${t.from} → ${t.to}`)
-    .join(' · ') || 'DRAFT';
+    .join(' · ') || 'none recorded';
+  const w2Gesture = actions.map(a => a.label).join(' · ') || 'none';
 
   const previewStanding = snapshot.preview_comparison?.standing || 'PROSPECTIVE_ONLY';
   const participantHtml = routing?.participants?.length
@@ -1180,7 +1184,7 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
     <div class="row">
       <div>
         <div class="label">Canonical Work Unit · W0.v2</div>
-        <div class="src">${escapeHtml(snapshot.work_unit_id)} · @${escapeHtml(String(wu.scope?.base_ref || '').slice(0, 12))}</div>
+        <div class="src">${escapeHtml(snapshot.work_unit_id)} · evidence source @${escapeHtml(String(evidenceSourceSha || 'unknown').slice(0, 12))} · runtime @${escapeHtml(String(runtimeExecutionSha || 'unknown').slice(0, 12))}</div>
       </div>
       <span class="state AVAILABLE">${escapeHtml(lifecycle.state || 'UNKNOWN')}</span>
     </div>
@@ -1188,8 +1192,10 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
     <div class="run-plan">
       <div class="plan-title">Native canonical substrate</div>
       <div class="plan-line">This Work Unit is the governed nervous system beneath the Desktop experience—not the limit of what the Desktop can become.</div>
-      <div class="plan-line"><b>Lifecycle:</b> ${escapeHtml(transitionTrace)}</div>
-      <div class="plan-line"><b>Next lawful gesture:</b> ${escapeHtml(actions.map(a => a.label).join(' · ') || 'none')}</div>
+      <div class="plan-line"><b>Lifecycle:</b> ${escapeHtml(lifecycle.state || 'UNKNOWN')}</div>
+      <div class="plan-line"><b>W2 transition history:</b> ${escapeHtml(transitionTrace)}</div>
+      <div class="plan-line"><b>Next W2 gesture:</b> ${escapeHtml(w2Gesture)}</div>
+      <div class="plan-line"><b>Execution bridge:</b> governed separately below — routing ≠ authorization ≠ execution</div>
     </div>
 
     ${transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : ''}
