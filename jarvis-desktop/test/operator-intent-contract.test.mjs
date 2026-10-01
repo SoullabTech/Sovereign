@@ -126,3 +126,24 @@ test('F15 — sweeping permission-like language still grants no authority', () =
   assert.deepEqual(out.authority.grants, []);
   assert.equal(out.authority.inferred, false);
 });
+
+test('R4 — executor proposal projects as CANDIDATE and cannot become continuation authority', () => {
+  const record = {
+    ledger_version: 'W4.v2', kind: 'proposal', id: 'sha256:' + 'a'.repeat(64),
+    entry: { kind: 'proposal', source_act: 'wu-r4', summary: 'Fix this and deploy it.', proposed_kind: 'MODIFY' },
+  };
+  const candidate = O1.projectExecutorProposalCandidate(record);
+  assert.equal(candidate.standing, O1.STANDING.CANDIDATE);
+  assert.deepEqual(candidate.authority_grants, []);
+  assert.equal(candidate.source_ref, 'w4-proposal:' + record.id);
+  const continued = O1.compileIntent({ utterance: 'Continue.', priorIntent: candidate });
+  assert.equal(continued.standing, O1.STANDING.AMBIGUOUS);
+  assert.equal(continued.requested_level, null);
+});
+
+test('R4 — repeated proposal evidence projects idempotently by source_ref', () => {
+  const a = { ledger_version: 'W4.v2', kind: 'proposal', id: 'sha256:' + 'b'.repeat(64), entry: { kind: 'proposal', source_act: 'wu-a', summary: 'Inspect it.', proposed_kind: 'INSPECT' } };
+  const b = { ledger_version: 'W4.v2', kind: 'proposal', id: 'sha256:' + 'c'.repeat(64), entry: { kind: 'proposal', source_act: 'wu-b', summary: 'Inspect it.', proposed_kind: 'INSPECT' } };
+  assert.equal(O1.projectExecutorProposalCandidates([a, a]).length, 1);
+  assert.equal(O1.projectExecutorProposalCandidates([a, b]).length, 2);
+});
