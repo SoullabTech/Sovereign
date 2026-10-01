@@ -113,3 +113,68 @@ on that merge.
 **H4.7-R1 RECONCILIATION CANDIDATE `65e0f0e29` · CLEAN · 0 NEW TEST FAILURES ·
 ⛔ NOT CANONICAL · RELEASE SHA = FOUNDER RULING (recommend: post-merge canonical) ·
 R2–R8 NOT STARTED · TESTER RELEASE CLOSED.**
+
+---
+
+## Amendment 1 — founder rulings and refreshed base (same day)
+
+### Rulings
+
+1. **The release SHA is the merge commit this PR produces on canonical.** `65e0f0e29`
+   is withdrawn as a candidate.
+2. **Ordering:** **#1619** (Writer's Studio RC1 onto canonical) merges first. This PR
+   is then updated onto that canonical, and the merge commit it then produces is the
+   release SHA. The Desktop bundles its own copy of the web app
+   (`cabin-runtime/` is the Next standalone server), so a release SHA that predates
+   #1619 would ship beta testers an older Writer's Studio than production.
+   ⛔ **This PR must not merge before #1619.**
+3. **Signing.** A Developer ID Application certificate now exists on the Mac Studio. The
+   remaining blocker is the notary profile: create an App Store Connect API key, then
+   run `xcrun notarytool store-credentials "MAIA-BETA"` on the Mac Studio. That is a
+   founder act, and this container cannot perform it.
+
+### Refreshed base
+
+The canonical picture in the body above is superseded. Canonical is now
+`8f8ba73b83397c716722c7c9f5835c02d131cae8`: #1614 (beta-tester roster) merged, then
+#1615 bumped `next` to **16.3.8** (`package.json` and the lockfile both resolve
+`next-16.3.8.tgz`). It was merged into this branch as `726b426dc`. The diff against
+canonical is still exactly the Desktop repair (`build.mjs` and its packaging test)
+plus records, with no conflict.
+
+This aligns with the other session that named `8f8ba73b8` as the only valid Desktop
+build parent. ⚠️ Once #1619 lands, that parent is superseded too: the build parent
+is the post-#1619 merge commit of this PR, and nothing earlier.
+
+### Test-count reconciliation (394 here vs 405 cited earlier)
+
+These are the same suite, counted differently. Without `tsx`, `node --test` counts
+each of the three files it cannot load (`cabin-local-store` · `cabin-memory-source` ·
+`cabin-work-projection`) as **one** failed test. That hides the tests inside them,
+which a source count puts at 13 + 2 + 1 = 16.
+
+| Tree | `node --test` here | Derived `npm test` (tsx) total |
+|---|---|---|
+| canonical | 392 (389 pass, 3 file-level fail) | 392 − 3 + 16 = **405**, matching the earlier session |
+| this branch | 394 (391 pass, 3 file-level fail) | 394 − 3 + 16 = **407** (+2 new packaging tests) |
+
+The 16 comes from a source grep and is **derived, not run**. ⭐ **R2 acceptance:**
+`npm test` on the Mac Studio at the release SHA must report **407 tests, 407 pass**,
+unless #1619 changes the Desktop suite, in which case the delta must be named. A
+total below the expected count is a failure, even if every test reported passes.
+
+### R2 additions
+
+- The `node_modules/next` witness is checked on the **packaged bundle**.
+  `Resources/cabin-runtime/node_modules/next/package.json` must exist **and** report
+  `"version": "16.3.8"`. A folder that exists with any other version is a failure.
+- Carried unchanged: verify the packaged app rather than the build step; give a
+  definite answer on whether `/_document` reproduces; record digests before and after
+  signing; never re-sign the T7 `e3688fce20dd` bundle.
+
+### Standing (amended)
+
+**H4.7-R1 RECONCILED ONTO `8f8ba73b8` (Next 16.3.8) as `726b426dc` · PR OPEN, ⛔ HOLD
+until #1619 merges and this branch is updated onto it · RELEASE SHA = that merge
+commit · Developer ID PRESENT · `MAIA-BETA` notary profile OWED (founder) · R2–R8 NOT
+STARTED · TESTER RELEASE CLOSED.**
