@@ -18,14 +18,24 @@ appended sections.
 
 ## Last updated
 
-2026-10-01 · canonical at time of writing `cf9624cdf` (#1619 merged; Next 16.3.8)
-· evidence: git + GitHub CI + founder Mac Studio command output.
+2026-10-01 · canonical at time of writing `2b756dea6` · evidence: git (release SHA,
+ancestry) + founder Mac Studio command output (signing identity, notary profile,
+candidate-checkout census).
 
 ## Release SHA
 
-**Not yet fixed.** It will be the merge commit of PR #1616 into
-`clean-main-no-secrets`, landed after PR #1619. Record it here on merge, and
-build only from that exact SHA.
+**`ef511f0efea38792c597da01e67299740210e903`** (`ef511f0ef`): the merge commit of
+PR #1616 into `clean-main-no-secrets`. Recorded per the rule above, which names it
+in advance; this is a record, not a new ruling. Git evidence: `cf9624cdf` (#1619)
+is an ancestor, and so are the packaging repair `bdf95a8e1` and the artifact
+check `c55bbcbf3`. Build only from this exact SHA. Later canonical commits are not
+the release source, even where they leave `maia-desktop/**` unchanged.
+
+Census 2026-10-01 (founder, Mac Studio): **no checkout on the Mac Studio or T7 sits
+at `ef511f0ef`**. So the build needs a fresh, clean worktree at this SHA (release
+order step 3). Every existing `HAS-CABIN` checkout is at some other commit.
+`fb3629039dd4` (`T7/maia-desktop-release-h4-7-20261001`) does not exist on
+`origin`; it is unpushed local work and cannot be the release source.
 
 ## Release order
 
@@ -54,7 +64,7 @@ build only from that exact SHA.
 |---|---|---|
 | `c6102a347af1` | T7 `maia-desktop-artifacts/c6102a347/` | `cabin-runtime/node_modules/next` missing → `Cannot find module 'next'` |
 | `147815873090` | T7 | same omission (repair 1 failed) |
-| `e3688fce20dd` | T7 `maia-desktop-artifacts/e3688fce20dd/` | same omission; root cause found: electron-builder `FileMatcher` drops a root `node_modules` |
+| `e3688fce20dd` | T7 `maia-desktop-artifacts/e3688fce20dd/` | same omission; root cause found: electron-builder `FileMatcher` drops a root `node_modules`. ⚠️ On 2026-10-01 a session reported this ad-hoc `.app` as "Desktop .app produced: PASS" and nearly sent it to signing; this row stopped that. The directory holds only `builder-debug.yml` + `mac-arm64` (a `--dir` build, no DMG/zip). |
 | `65e0f0e29` | `claude/cool-feynman-8kvyyc` | merges canonical with `e3688fce2` but **not** the working fix `bdf95a8e1`; its 4/4 packaging test passing proves only that the test is source-regex and cannot see the artifact. Do not open a PR from it. |
 
 ## Blockers
@@ -65,7 +75,7 @@ build only from that exact SHA.
 | Artifact carries next 16.3.8 | NOT WITNESSED | — |
 | Packaged runtime healthy offline | NOT WITNESSED | — |
 | Developer ID Application | **PRESENT**: `32276A3F…55DB48 "Developer ID Application: Kelly Nezat (ZVK2X646Z2)"` | founder, `security find-identity -v -p codesigning`, 2026-10-01 |
-| Notary profile `MAIA-BETA` | ABSENT (last observed) | Mac Studio, 2026-10-01 |
+| Notary profile `MAIA-BETA` | **PRESENT**: Team API key `9JY6Q7N6H5`, `store-credentials` → `Success. Credentials validated.`; `notarytool history` → `No submission history.` (The Apple ID + app-specific-password route returned 401 twice and was abandoned.) | founder, Mac Studio, 2026-10-01 |
 | Notarize / staple | NOT YET | — |
 | Second-Mac Gatekeeper | NOT YET | — |
 | Tester release | CLOSED | — |
