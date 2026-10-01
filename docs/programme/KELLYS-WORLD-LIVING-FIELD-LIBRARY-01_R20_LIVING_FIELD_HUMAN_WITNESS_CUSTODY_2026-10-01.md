@@ -24,6 +24,7 @@ Kelly's World holds only the operational orientation needed to know what is true
 - cohort widening: **CLOSED PENDING HUMAN EVIDENCE**.
 
 No member ids, names, emails, sessions, or private content are carried into this record.
+
 ## Human next boundary
 
 Choose one consenting admitted member for the first-entry witness. At the start of that person's walk:
