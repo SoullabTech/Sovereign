@@ -113,6 +113,32 @@ function run(command, args) {
   return spawnSync(command, args, { encoding: 'utf8' });
 }
 
+function collectMachOBinaries(rootDir) {
+  const binaries = [];
+  const dirs = [rootDir];
+  while (dirs.length) {
+    const dir = dirs.pop();
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      const stat = fs.lstatSync(full);
+      if (stat.isSymbolicLink()) continue;
+      if (stat.isDirectory()) {
+        dirs.push(full);
+        continue;
+      }
+      if (!stat.isFile()) continue;
+      const candidate = entry.name.endsWith('.node') ||
+        entry.name.endsWith('.dylib') ||
+        (stat.mode & 0o111) !== 0;
+      if (!candidate) continue;
+      const kind = run('/usr/bin/file', ['-b', full]);
+      assert.equal(kind.status, 0, kind.stderr);
+      if (kind.stdout.includes('Mach-O')) binaries.push(full);
+    }
+  }
+  return binaries.sort();
+}
+
 function plistValue(key) {
   const out = run('plutil', ['-extract', key, 'raw', '-o', '-', plist]);
   assert.equal(out.status, 0, out.stderr);
@@ -141,6 +167,40 @@ assert.equal(signature.status, 0, signature.stderr || 'invalid application signa
 const details = run('codesign', ['-dv', '--verbose=4', appPath]);
 const signatureText = `${details.stdout}\n${details.stderr}`;
 const developerId = /Authority=Developer ID Application:/.test(signatureText);
+const outerTeam = /TeamIdentifier=([^\s]+)/.exec(signatureText)?.[1] ?? null;
+if (developerId) {
+  assert.ok(outerTeam, 'Developer ID app signature is missing a TeamIdentifier');
+  for (const nativeFile of collectMachOBinaries(cabinRuntime)) {
+    const relative = path.relative(cabinRuntime, nativeFile);
+    const nativeVerify = run('codesign', ['--verify', '--strict', nativeFile]);
+    assert.equal(
+      nativeVerify.status,
+      0,
+      `Cabin native binary signature invalid: ${relative}\n${nativeVerify.stderr}`,
+    );
+    const nativeDetails = run('codesign', ['-dv', '--verbose=4', nativeFile]);
+    const nativeText = `${nativeDetails.stdout}\n${nativeDetails.stderr}`;
+    assert.match(
+      nativeText,
+      /Authority=Developer ID Application:/,
+      `Cabin native binary lacks Developer ID signature: ${relative}`,
+    );
+    assert.match(
+      nativeText,
+      /Timestamp=/,
+      `Cabin native binary lacks secure timestamp: ${relative}`,
+    );
+    assert.match(
+      nativeText,
+      /flags=.*runtime/,
+      `Cabin native binary lacks hardened runtime: ${relative}`,
+    );
+    assert.ok(
+      nativeText.includes(`TeamIdentifier=${outerTeam}`),
+      `Cabin native binary TeamIdentifier mismatch: ${relative}`,
+    );
+  }
+}
 const assessment = run('spctl', ['--assess', '--type', 'execute', '--verbose=4', appPath]);
 const gatekeeperAccepted = assessment.status === 0;
 const externalReady = developerId && gatekeeperAccepted;

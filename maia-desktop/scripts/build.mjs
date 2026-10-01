@@ -75,6 +75,69 @@ function assertPortableSymlinks(rootDir) {
   visit(rootDir);
 }
 
+function collectMachOBinaries(rootDir) {
+  const binaries = [];
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      const stat = fs.lstatSync(entryPath);
+      if (stat.isSymbolicLink()) continue;
+      if (stat.isDirectory()) {
+        visit(entryPath);
+        continue;
+      }
+      if (!stat.isFile()) continue;
+      const candidate = entry.name.endsWith('.node') ||
+        entry.name.endsWith('.dylib') ||
+        (stat.mode & 0o111) !== 0;
+      if (!candidate) continue;
+      const kind = execFileSync('/usr/bin/file', ['-b', entryPath], { encoding: 'utf8' }).trim();
+      if (kind.includes('Mach-O')) binaries.push(entryPath);
+    }
+  };
+  visit(rootDir);
+  return binaries.sort();
+}
+
+function resolveDeveloperIdIdentity() {
+  if (process.env.CSC_IDENTITY_AUTO_DISCOVERY === 'false') return null;
+  if (process.env.MAIA_DESKTOP_SIGNING_IDENTITY) {
+    return process.env.MAIA_DESKTOP_SIGNING_IDENTITY;
+  }
+  const identities = execFileSync('security', ['find-identity', '-v', '-p', 'codesigning'], {
+    encoding: 'utf8',
+  });
+  const matches = [...identities.matchAll(/"([^"]*Developer ID Application:[^"]+)"/g)]
+    .map((match) => match[1]);
+  if (matches.length === 0) return null;
+  if (matches.length > 1) {
+    throw new Error(
+      'Multiple Developer ID Application identities found; set MAIA_DESKTOP_SIGNING_IDENTITY explicitly',
+    );
+  }
+  return matches[0];
+}
+
+function signCabinNativeBinaries(rootDir) {
+  const identity = resolveDeveloperIdIdentity();
+  if (!identity) {
+    console.log('[MAIA Desktop] Cabin native signing skipped (no Developer ID identity selected)');
+    return [];
+  }
+  const binaries = collectMachOBinaries(rootDir);
+  for (const binary of binaries) {
+    execFileSync('codesign', [
+      '--force',
+      '--options', 'runtime',
+      '--timestamp',
+      '--sign', identity,
+      binary,
+    ], { stdio: 'inherit' });
+  }
+  console.log(`[MAIA Desktop] signed ${binaries.length} Cabin Mach-O binaries with ${identity}`);
+  return binaries;
+}
+
 if (!fs.existsSync(standaloneServer)) {
   throw new Error(
     'Cabin runtime is not built. Run MAIA_CABIN_MODE=offline next build first so .next/standalone/server.js exists.',
@@ -104,6 +167,7 @@ fs.rmSync(cabinPublic, { recursive: true, force: true });
 fs.cpSync(standalonePublic, cabinPublic, { recursive: true, dereference: true });
 materializeSymlinks(cabinPublic);
 assertPortableSymlinks(cabinSource);
+signCabinNativeBinaries(cabinSource);
 
 const standaloneNextPackage = path.join(cabinSource, 'node_modules', 'next', 'package.json');
 if (!fs.existsSync(standaloneNextPackage)) {
