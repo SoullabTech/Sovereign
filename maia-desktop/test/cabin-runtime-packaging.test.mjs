@@ -7,6 +7,10 @@ const BUILD = fs.readFileSync(
   path.join(process.cwd(), 'scripts', 'build.mjs'),
   'utf8',
 );
+const VERIFY = fs.readFileSync(
+  path.join(process.cwd(), 'scripts', 'verify-package.mjs'),
+  'utf8',
+);
 const PACKAGE = fs.readFileSync(
   path.join(process.cwd(), 'package.json'),
   'utf8',
@@ -40,4 +44,10 @@ test('Desktop packaging refuses to proceed when standalone next is absent', () =
 test('Desktop packaging keeps the standalone Cabin source outside both builder project and staging parent', () => {
   assert.doesNotMatch(BUILD, /path\.join\(stageParent, 'cabin-runtime'/);
   assert.match(BUILD, /outside electron-builder project and staging parent/);
+});
+
+test('Artifact verification witnesses the packaged Cabin next at the pinned version', () => {
+  assert.match(VERIFY, /'cabin-runtime', 'node_modules', 'next', 'package\.json'|cabinRuntime, 'node_modules', 'next', 'package\.json'/);
+  assert.match(VERIFY, /packaged cabin-runtime\/node_modules\/next is missing/);
+  assert.match(VERIFY, /assert\.equal\(packagedNextVersion, pinnedNext/);
 });
