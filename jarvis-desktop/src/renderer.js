@@ -2139,6 +2139,40 @@ function renderResult(res) {
   }
 }
 
+function renderSafetyDeliveryCard() {
+  const snapshot = globalThis.KellySafetyDelivery?.snapshot?.();
+  if (!snapshot) {
+    return `<div class="card">
+      <h3>Safety delivery</h3>
+      <div class="why">Safety-delivery custody snapshot is not available in this build.</div>
+    </div>`;
+  }
+
+  const rows = (label, items) => `
+    <div style="margin-top:12px">
+      <div class="label">${escapeHtml(label)}</div>
+      ${items.map(item => `<div class="why" style="margin-top:5px">→ ${escapeHtml(item)}</div>`).join('')}
+    </div>`;
+
+  return `
+    <div class="card">
+      <h3>Safety delivery</h3>
+      <div class="row">
+        <span class="label">Standing</span>
+        <span class="state NEEDS_SETUP">${escapeHtml(snapshot.standing)}</span>
+      </div>
+      <div class="hint">Custody snapshot as of ${escapeHtml(snapshot.as_of)} · not live telemetry.</div>
+      ${rows('Needs Kelly', snapshot.needs_kelly)}
+      ${rows('In motion', snapshot.in_motion)}
+      ${rows('Watching', snapshot.watching)}
+      <details style="margin-top:12px">
+        <summary>Unresolved boundaries</summary>
+        ${snapshot.unresolved.map(item => `<div class="why" style="margin-top:5px">• ${escapeHtml(item)}</div>`).join('')}
+      </details>
+      <div class="src" style="margin-top:12px">source: ${escapeHtml(snapshot.source)} · canonical base @${escapeHtml(snapshot.canonical_base.slice(0, 12))}</div>
+    </div>`;
+}
+
 function renderSystem() {
   const s = lastStatus;
   if (!s) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
@@ -2162,6 +2196,7 @@ function renderSystem() {
       ${stateRow('Memory / Postgres', s.memory_postgres || { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one.' })}
       ${stateRow('Production', s.production || { state: 'NOT PROBED', detail: 'Requires explicit production/SSH authority, which Desktop does not hold. Not probed by design.' })}
     </div>
+    ${renderSafetyDeliveryCard()}
     ${provenanceRows(s.provenance)}
     <div class="card">
       <h3>Builder OS detail</h3>
