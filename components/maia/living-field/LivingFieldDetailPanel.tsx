@@ -43,10 +43,9 @@ export function LivingFieldDetailPanel({
   const [historyOpen, setHistoryOpen] = useState(false)
   const [captured, setCaptured] = useState<string | null>(null)
   const [refineNote, setRefineNote] = useState<string | null>(null)
-  // Conversation-first: opening a dimension lands the member IN the encounter.
-  // The expression form, gathering panel, and history are below — projections,
-  // not the primary surface.
-  const [encounterOpen, setEncounterOpen] = useState(true)
+  // Opening member-owned field material is not consent to begin an AI encounter.
+  // The dimension opens first; MAIA enters only after the member explicitly chooses it.
+  const [encounterOpen, setEncounterOpen] = useState(false)
 
   // Modal is fixed inset-0 — lock background scroll while it's open, and
   // restore whatever overflow value was there before.
