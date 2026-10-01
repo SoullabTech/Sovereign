@@ -20,11 +20,15 @@ export const metadata: Metadata = {
   title: "Soullab — We build for the soul",
   description: "Soullab explores what carries transformation forward. We build environments that help meaningful relationships, experiences, and practices continue shaping our lives over time.",
   manifest: "/manifest.json",
-  metadataBase: new URL("https://soullab.life"),
+  metadataBase: process.env.MAIA_CABIN_MODE === "offline"
+    ? new URL(process.env.MAIA_CABIN_ORIGIN || "http://127.0.0.1:43121")
+    : new URL("https://soullab.life"),
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://soullab.life",
+    url: process.env.MAIA_CABIN_MODE === "offline"
+      ? (process.env.MAIA_CABIN_ORIGIN || "http://127.0.0.1:43121")
+      : "https://soullab.life",
     siteName: "Soullab",
     title: "Soullab — We build for the soul",
     description: "Soullab explores what carries transformation forward. We build environments that help meaningful relationships, experiences, and practices continue shaping our lives over time. Through MAIA, practitioner worlds, and living communities, we seek to support relationships of care, wisdom, and service while returning people more fully to their own lives.",
