@@ -144,9 +144,9 @@ Successful delivery uses the exact H3.4 → H3.5 pipeline, reads the resulting
 temporary artifact, returns it as a private no-store attachment, and removes
 the server temporary path in `finally`.
 
-Focused H3.7 route suite: **13/13 PASS**.
+Focused H3.7 route suite: **14/14 PASS**.
 
-Combined Cabin suite: **101/101 PASS**.
+Combined Cabin + H3.7 delivery suite: **115/115 PASS**.
 
 Design canon: **PASS**.
 
