@@ -31,6 +31,50 @@ const standaloneServer = path.join(standaloneRoot, 'server.js');
 const standaloneStatic = path.join(repoRoot, '.next', 'static');
 const standalonePublic = path.join(repoRoot, 'public');
 
+function materializeSymlinks(rootDir) {
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      const stat = fs.lstatSync(entryPath);
+      if (stat.isSymbolicLink()) {
+        const resolved = fs.realpathSync(entryPath);
+        const resolvedStat = fs.statSync(resolved);
+        fs.rmSync(entryPath, { recursive: true, force: true });
+        fs.cpSync(resolved, entryPath, {
+          recursive: resolvedStat.isDirectory(),
+          dereference: true,
+        });
+        if (resolvedStat.isDirectory()) visit(entryPath);
+        continue;
+      }
+      if (stat.isDirectory()) visit(entryPath);
+    }
+  };
+  visit(rootDir);
+}
+
+function assertPortableSymlinks(rootDir) {
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      const stat = fs.lstatSync(entryPath);
+      if (stat.isSymbolicLink()) {
+        const target = fs.readlinkSync(entryPath);
+        if (path.isAbsolute(target)) {
+          throw new Error(`Cabin runtime contains absolute symlink: ${entryPath} -> ${target}`);
+        }
+        const resolved = path.resolve(path.dirname(entryPath), target);
+        if (resolved !== rootDir && !resolved.startsWith(`${rootDir}${path.sep}`)) {
+          throw new Error(`Cabin runtime symlink escapes staging root: ${entryPath} -> ${target}`);
+        }
+        continue;
+      }
+      if (stat.isDirectory()) visit(entryPath);
+    }
+  };
+  visit(rootDir);
+}
+
 if (!fs.existsSync(standaloneServer)) {
   throw new Error(
     'Cabin runtime is not built. Run MAIA_CABIN_MODE=offline next build first so .next/standalone/server.js exists.',
@@ -55,7 +99,11 @@ fs.cpSync(standaloneRoot, cabinSource, {
 });
 fs.mkdirSync(path.join(cabinSource, '.next'), { recursive: true });
 fs.cpSync(standaloneStatic, path.join(cabinSource, '.next', 'static'), { recursive: true });
-fs.cpSync(standalonePublic, path.join(cabinSource, 'public'), { recursive: true, verbatimSymlinks: true });
+const cabinPublic = path.join(cabinSource, 'public');
+fs.rmSync(cabinPublic, { recursive: true, force: true });
+fs.cpSync(standalonePublic, cabinPublic, { recursive: true, dereference: true });
+materializeSymlinks(cabinPublic);
+assertPortableSymlinks(cabinSource);
 
 const standaloneNextPackage = path.join(cabinSource, 'node_modules', 'next', 'package.json');
 if (!fs.existsSync(standaloneNextPackage)) {

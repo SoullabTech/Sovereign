@@ -70,6 +70,52 @@ const nextConfig = {
   // Fix workspace root warning - set explicit output file tracing
   outputFileTracingRoot: __dirname,
 
+  // Desktop Cabin is an external-distribution artifact, not a repository
+  // snapshot. Dynamic fs paths can cause @vercel/nft to conservatively trace
+  // unrelated repo material. Keep the web build unchanged; only the explicit
+  // offline Cabin build excludes material that must never cross the package
+  // boundary. Runtime-required files must be moved to an admitted runtime
+  // location rather than widening this list.
+  ...(process.env.MAIA_CABIN_MODE === 'offline' ? {
+    outputFileTracingExcludes: {
+      '/*': [
+        './backups/**/*',
+        './artifacts/**/*',
+        './docs/**/*',
+        './scripts/**/*',
+        './database/**/*',
+        './data/ain/source/**/*',
+        './data/library-sources/**/*',
+        './data/sacred-texts/**/*',
+        './data/voice-training/**/*',
+        './books/**/*',
+        './Community-Commons/**/*',
+        './tests/**/*',
+        './**/__tests__/**/*',
+        './android/**/*',
+        './ios/**/*',
+        './desktop-app/**/*',
+        './jarvis-desktop/**/*',
+        './beta-deployment/**/*',
+        './community-pages-temp/**/*',
+        './mcp-servers/**/*',
+        './compact-companion/**/*',
+        './chess-tools/**/*',
+        './mobile/**/*',
+        './maia-android-debug*.apk',
+        './.git',
+        './.git/**/*',
+        './.env*',
+        './**/.env*',
+        './**/*.pem',
+        './**/*.p8',
+        './**/*.p12',
+        './.next/cache/**/*',
+        './.next/standalone/**/*',
+      ],
+    },
+  } : {}),
+
   // Progressive Web App optimizations
   reactStrictMode: false,
   compress: true,
