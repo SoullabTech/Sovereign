@@ -78,18 +78,46 @@ H4.1 is not ratified merely because the contract exists.
 
 Founder visual review is required before member-facing Cabin UI is admitted.
 
+## H4.1-R1 implementation witness
+
+Implemented as an isolated dev-only review surface:
+
+- `app/dev/cabin-arrival-visual-review/page.tsx`
+- `app/dev/cabin-arrival-visual-review/CabinArrivalVisualFixture.tsx`
+- `app/dev/cabin-arrival-visual-review/cabin-arrival-visual-review.css`
+- `app/dev/cabin-arrival-visual-review/__tests__/fixture.test.ts`
+
+The fixture accepts only one of three explicit states:
+
+- unavailable;
+- empty;
+- mounted.
+
+It contains no import from the live Cabin context/runtime, no local store,
+no network fetch, no MAIA cognition, and no production data.
+
+Focused fixture suite: **5/5 PASS**.
+
+Visual witness:
+
+- desktop: **1440×1100**
+- mobile: **390×844**
+- all three states captured;
+- six PNG evidence files committed under
+  `docs/design/contracts/screenshots/cabin-arrival-visual-authority/`.
+
+The mobile witness was adjusted so the full welcome/doorway/MAIA hierarchy remains
+inside the narrow field without horizontal overflow.
+
+Design canon: **PASS** because the review surface is founder/dev-only.
+
 ## Next act
 
-**H4.1-R1 — fixture-only Cabin Arrival visual prototype**:
+**Founder visual adjudication.**
 
-1. build an isolated review route;
-2. render unavailable / empty / mounted states;
-3. render desktop and mobile;
-4. use fixture-only context;
-5. capture visual evidence;
-6. do not bind real Cabin data;
-7. stop for founder visual adjudication.
+If ratified, H4.2 may bind the already-governed mounted context to this visual
+grammar. Until then, the fixture remains the only implementation surface.
 
 ## Standing
 
-**H4.1 VISUAL AUTHORITY CANDIDATE — NOT YET FOUNDER-RATIFIED.**
+**H4.1 VISUAL AUTHORITY CANDIDATE — FIXTURE WITNESSED — NOT YET FOUNDER-RATIFIED.**

@@ -7,7 +7,7 @@ surfaces:
   - future Cabin visual shell
 
 change_class: experiential
-status: founder-visual-candidate
+status: founder-review
 
 principles:
   - ONE_LIVING_FIELD — Cabin Arrival is one inhabitable place, not a grid of capability cards
@@ -31,10 +31,14 @@ reference_surfaces:
 shared_with_house: editorial serif hierarchy, warm dark architectural field, restrained metallic accent, quiet thresholds, holoflower wayfinding, explicit member choice
 distinct_to_room: a quieter sovereign field with no House architectural photograph, no public-platform rail, and no application-dashboard grammar
 
+screenshot_desktop: docs/design/contracts/screenshots/cabin-arrival-visual-authority/mounted-desktop.png
+screenshot_mobile: docs/design/contracts/screenshots/cabin-arrival-visual-authority/mounted-mobile.png
 experience_verification: >-
-  Visual authority only. No member-facing Cabin UI is authorized by this document.
-  The next implementation must reproduce this grammar in an isolated fixture-only
-  review surface before real Cabin context is bound.
+  Fixture-only H4.1-R1 witness captured on the local review route at 1440×1100
+  and 390×844 for unavailable, empty, and mounted states. Six screenshots are
+  committed under the Cabin Arrival visual-authority evidence directory. No
+  real Work, Relationship, Memory, member identity, MAIA cognition, or runtime
+  context was bound. Visual authority remains pending founder adjudication.
 ---
 
 # Cabin Arrival — Visual Authority
