@@ -61,7 +61,7 @@ build only from that exact SHA.
 
 | Gate | State | Evidence |
 |---|---|---|
-| Packaging repair `bdf95a8e1` | in #1616, updated onto `8f8ba73b8`, desktop suite 408/408 | git + local run |
+| Packaging repair `bdf95a8e1` | in #1616 (the only carrier; #1624 closed), on `8f8ba73b8`. Suite **408/408** under tsx (canonical 405/405). Packaging-test mutants M1 + M2 killed | git + local run; see H4-7-R1 record, Amendment 2 |
 | Artifact carries next 16.3.8 | NOT WITNESSED | — |
 | Packaged runtime healthy offline | NOT WITNESSED | — |
 | Developer ID Application | **PRESENT**: `32276A3F…55DB48 "Developer ID Application: Kelly Nezat (ZVK2X646Z2)"` | founder, `security find-identity -v -p codesigning`, 2026-10-01 |

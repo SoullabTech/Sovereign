@@ -33,6 +33,11 @@ test('Desktop packaging carries standalone, static, and public assets into the C
   assert.match(BUILD, /const cabinNodeModulesSource = path\.join\(cabinSource, 'node_modules'\)/);
   assert.match(BUILD, /const cabinNodeModulesDestination = 'cabin-runtime\/node_modules'/);
   assert.match(BUILD, /stagedPackage\.build\.extraResources\.push/);
+  // The extra resource must copy FROM the node_modules directory itself:
+  // electron-builder's FileMatcher drops a root node_modules, so pointing it
+  // back at cabinSource (the e3688fce2 defect) would ship without next.
+  assert.match(BUILD, /extraResources\.push\(\{\s*from: cabinNodeModulesSource,\s*to: cabinNodeModulesDestination,/);
+  assert.match(BUILD, /resource\?\.from === cabinNodeModulesSource && resource\?\.to === cabinNodeModulesDestination/);
   assert.match(BUILD, /fs\.rmSync\(cabinSource/);
 });
 
