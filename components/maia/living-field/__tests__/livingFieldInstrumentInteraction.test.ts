@@ -19,4 +19,9 @@ describe('Living Field instrument interaction', () => {
     expect(interactiveSvg).toBeDefined();
     expect(interactiveSvg).toContain('pointer-events-auto');
   });
+
+  it('reveals labels one level at a time and leaves the focused node to the center overlay', () => {
+    expect(instrument).toContain("node.parent?.data.key === focus.data.key");
+    expect(instrument).not.toContain('const visibleLabel = radius > 25\n');
+  });
 });
