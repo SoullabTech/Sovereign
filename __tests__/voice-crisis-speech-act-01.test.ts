@@ -1,67 +1,69 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { detectCrisis } from '@/lib/voice/voiceCommands';
+import { assessCrisis, CRISIS_ADDENDUM } from '@/lib/safety/crisisAssessment';
+import { ALL_CASES } from '@/lib/safety/__fixtures__/crisisCorpus';
 
 const W = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
 
-describe('VOICE-CRISIS-SPEECH-ACT-01', () => {
-  it('does not treat ordinary completion language as crisis evidence', () => {
-    for (const transcript of [
-      "I'm done",
-      "I'm going to click I'm done and listen and let you talk",
-      "I like the I'm done mode",
-      "I'm done talking for now",
-      "I'm done with this test",
-    ]) {
-      expect(detectCrisis(transcript)).toEqual({ detected: false });
+/**
+ * VOICE-CRISIS-SPEECH-ACT-01, superseded in substance by SAFETY-CRISIS-01
+ * (founder ruling 2026-10-01). The voice-only client phrase list this file used
+ * to pin is retired. Crisis assessment runs on the server for every turn; the
+ * full corpus and the defeat candidates live in
+ * tests/constitutional/safety-crisis/matrix.ts (npm run matrix:safety-crisis).
+ */
+describe('SAFETY-CRISIS-01 server-side crisis assessment', () => {
+  it('classifies every corpus case exactly (false positives weigh as much as misses)', () => {
+    for (const c of ALL_CASES) {
+      expect({ text: c.text, tier: assessCrisis(c.text).tier }).toEqual({ text: c.text, tier: c.tier });
     }
   });
 
-  it('VOICE-CRISIS-STOPGAP-01: bare farewells and in-word matches no longer fire', () => {
-    for (const transcript of [
-      'I said goodbye to my mother at the airport',
-      'goodbye to that old pattern',
-      'okay goodbye for now, talk tomorrow',
-      'this is itself a teaching',
-      'this is italian food',
-    ]) {
-      expect(detectCrisis(transcript)).toEqual({ detected: false });
+  it('a bare farewell and turn-taking language trigger nothing', () => {
+    for (const t of ['goodbye', "I'm done", "I'm done talking for now", 'okay goodbye MAIA, talk tomorrow']) {
+      expect(assessCrisis(t)).toEqual({ tier: 'none', signals: [] });
     }
-    // Stopgap scope only: everything else in the pattern set still fires.
-    expect(detectCrisis('this is goodbye').level).toBe('high');
-    expect(detectCrisis('this is it').level).toBe('high');
-    expect(detectCrisis('I wrote letters').level).toBe('high');
-    expect(detectCrisis("I've just taken").level).toBe('high');
   });
 
-  it('retains unambiguous self-harm and suicide triggers', () => {
-    expect(detectCrisis('I want to die').level).toBe('active');
-    expect(detectCrisis("I don't want to live anymore").level).toBe('active');
-    expect(detectCrisis("I'm going to hurt myself").level).toBe('active');
-    expect(detectCrisis("I've been thinking about suicide").level).toBe('active');
-    expect(detectCrisis("I'm going to kill myself").level).toBe('high');
-    expect(detectCrisis('I need to hurt myself').level).toBe('nssi');
+  it('the client no longer runs a crisis detector or speaks a crisis script', () => {
+    const client = W('components/OracleConversation.tsx');
+    expect(client).not.toMatch(/\bdetectCrisis\s*\(/);
+    expect(client).not.toContain('responseScript');
+    expect(client).not.toContain('crisisStateRef');
+    expect(W('lib/voice/voiceCommands.ts')).not.toMatch(/export function detectCrisis/);
   });
 
-  it('records genuine crisis intervention text before speaking it', () => {
-    const src = W('components/OracleConversation.tsx');
-    const start = src.indexOf('const crisisCheck = detectCrisis(t)');
-    const end = src.indexOf('// 🎭 COMPREHENSIVE VOICE COMMAND DETECTION', start);
-    expect(start).toBeGreaterThan(-1);
-    expect(end).toBeGreaterThan(start);
-
-    const block = src.slice(start, end);
-    expect(block).toContain("const crisisInterventionText = crisisCheck.responseScript?.join(' ').trim()");
-    expect(block).toContain('const crisisInterventionMessage: ConversationMessage');
-    expect(block).toContain('setMessages(prev => appendMessageCapped(prev, crisisInterventionMessage))');
-    expect(block).toContain('onMessageAddedRef.current?.(crisisInterventionMessage)');
-
-    const record = block.indexOf('setMessages(prev => appendMessageCapped(prev, crisisInterventionMessage))');
-    const speak = block.indexOf('await maiaSpeak(line)');
-    expect(record).toBeGreaterThan(-1);
-    expect(speak).toBeGreaterThan(record);
+  it('the client renders the server referral on success AND error responses', () => {
+    const client = W('components/OracleConversation.tsx');
+    expect(client).toContain('buildSafetyReferralMessage(responseData?.safetyReferral)');
+    expect(client).toContain('(await response.clone().json().catch(() => null))?.safetyReferral');
   });
 
+  it('the live route attaches the referral to every response after assessment', () => {
+    const route = W('app/api/sovereign/app/maia/list/route.ts');
+    expect(route.match(/assessCrisis\(message\)/g)).toHaveLength(1);
+    // success, field-safety boundary, and the four error/timeout responses
+    expect(route.match(/\.\.\.\(safetyReferral \? \{ safetyReferral \} : \{\}\)/g)).toHaveLength(6);
+  });
+
+  it('safety context is server-authored: a client value is always overwritten', () => {
+    const svc = W('lib/sovereign/maiaService.ts');
+    expect(svc).toContain('const crisisAssessment = assessCrisis(input);');
+    expect(svc).toMatch(/\(meta as Record<string, unknown>\)\.crisisSafetyAddendum =\s*\n\s*crisisAssessment\.tier === 'none' \? undefined : CRISIS_ADDENDUM\[crisisAssessment\.tier\];/);
+    // FAST, CORE and the CORE repair regeneration all send through the helper.
+    expect(svc.match(/systemPrompt: withCrisisSafety\(/g)).toHaveLength(3);
+    // A crisis turn is never served by DEEP, whose builder drops addenda.
+    expect(svc).toContain("crisisAssessment.tier !== 'none' && routerResult.profile === 'DEEP' ? 'CORE' : routerResult.profile");
+  });
+
+  it('only CLEAR copy names a hotline up front; AMBIGUOUS asks first', () => {
+    const [beforeConfirm] = CRISIS_ADDENDUM.ambiguous.split('If they confirm');
+    expect(beforeConfirm).not.toMatch(/988|741741/);
+    expect(CRISIS_ADDENDUM.clear).toMatch(/988/);
+  });
+});
+
+describe('VOICE-CRISIS-SPEECH-ACT-01 retained: floor ownership', () => {
   it('keeps explicit floor ownership language while exposing Pause to the member', () => {
     const bar = W('components/voice/VoiceInteractionBar.tsx');
     const panel = W('components/settings/VoiceSettingsPanel.tsx');
