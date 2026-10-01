@@ -33,3 +33,13 @@ export function protectedView(env) {
     execution:w.execution, verifier_results:w.evaluation.verifier_results });
 }
 export function makeProgramme() { return { o1Candidates: [], o2: { nodes: [] }, o3: { held_authority: [] } }; }
+
+export function makeLaneWorld() {
+  return { lanes: { 'lane-a': { inbox: [] }, 'lane-b': { inbox: [] }, 'lane-c': { inbox: [] } } };
+}
+export function deliverLaneProjection(world, projection) {
+  if (!projection || typeof projection.target_lane !== 'string') return;
+  const lane = world.lanes[projection.target_lane];
+  if (!lane) return;
+  lane.inbox.push(projection.evidence);
+}
