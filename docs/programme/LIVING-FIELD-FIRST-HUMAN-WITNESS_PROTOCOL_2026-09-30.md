@@ -37,7 +37,7 @@ Do not ask the participant to re-prove these mechanically:
 - dynamic Living Field routes resolve member identity through verified session authority;
 - dynamic route params are unwrapped before field operations;
 - opening a dimension does not itself create a MAIA encounter;
-- MAIA begins only after the explicit **Enter this dimension with MAIA** gesture.
+- MAIA begins only after an explicit member gesture — either **Explore with MAIA →** at the field level or **Enter this dimension with MAIA** inside a dimension.
 
 If any one of those machine boundaries is red on the production candidate, do not begin the human witness.
 ## 3 · Participant and environment preconditions
@@ -63,7 +63,7 @@ Before observation, tell the member plainly that:
 - their existing Living Field and authored material remain theirs whether or not they continue;
 - some visual and navigational parts are still being tested with a small group;
 - they may explore their own field without talking with MAIA;
-- if they choose **Enter this dimension with MAIA**, that is the point at which the MAIA encounter begins;
+- MAIA begins only when they make an explicit MAIA gesture: **Explore with MAIA →** at the field level or **Enter this dimension with MAIA** inside a dimension;
 - they may stop at any time without explanation and without affecting their account or material;
 - the facilitator may take minimal notes about orientation, hesitation, trust, and consent clarity;
 - no private reflective passage needs to be copied into the programme record.

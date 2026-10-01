@@ -27,7 +27,7 @@ the explicit MAIA-entry consent repair.
 
 If any Class A boundary is uncertain before the session, do not begin.
 
-If authentic member-owned substrate is absent, do not run the **full** human witness. A navigation-only observation may be run separately, but it must not be adjudicated as the ownership/consent witness.
+If authentic member-owned substrate is absent, do not run the **populated-field** witness. Use `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md` instead; its evidence must not be adjudicated as populated-field ownership/continuity evidence.
 
 ## What to say
 
@@ -35,8 +35,8 @@ Use only this orientation before the first attempt:
 
 > You're trying an early way of moving through the Living Field. Your existing field and
 > material remain yours whether or not you continue. You can explore your field without
-> talking with MAIA. If you choose “Enter this dimension with MAIA,” that is the point at
-> which the MAIA encounter begins. You can stop at any time.
+> talking with MAIA. MAIA begins only when you explicitly choose a MAIA action — either
+> “Explore with MAIA →” or “Enter this dimension with MAIA.” You can stop at any time.
 
 Then give the task:
 

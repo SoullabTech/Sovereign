@@ -16,7 +16,7 @@ This witness asks:
 > about them?**
 
 It also tests whether the early R1R3 instrument is discoverable and whether MAIA remains outside
-the dimension until the member explicitly chooses **Enter this dimension with MAIA**.
+the member's exploration until the member makes an explicit MAIA gesture — **Explore with MAIA →** at the field level or **Enter this dimension with MAIA** inside a dimension.
 
 It does **not** claim that an already-populated Living Field feels continuous with the member's
 existing lived material. That is a later witness.
@@ -32,6 +32,7 @@ Run only when:
 5. the early-field admission endpoint returns `admitted:true`;
 6. explicit MAIA entry is present in the deployed build;
 7. no session credential, private content, or new telemetry is obtained for the witness.
+
 ## 3 · What to tell the member
 
 Before the first attempt:
@@ -39,8 +40,8 @@ Before the first attempt:
 > You're trying an early way of entering the Living Field. Nothing has been written into your
 > field for this test. You do not have to create anything. Explore whatever draws your attention.
 > If you choose to write something, write only what is genuinely true for you. You can explore
-> without talking with MAIA; MAIA begins only if you choose “Enter this dimension with MAIA.”
-> You may stop at any time.
+> without talking with MAIA; MAIA begins only when you explicitly choose a MAIA action — either
+> “Explore with MAIA →” or “Enter this dimension with MAIA.” You may stop at any time.
 
 Then give only this task:
 
