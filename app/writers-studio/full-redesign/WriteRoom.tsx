@@ -343,9 +343,15 @@ export function WriteManuscriptRail({
   }, [currentOwner]);
 
   const navigate = (c: WriteChapterView) => {
+    /* In live Studio the rail choice itself has relational meaning: selecting
+       the place already open should still orient contextual support. Fixture
+       mode keeps the old no-op behavior when there is no live navigation port. */
+    if (onOpenChapter) {
+      onOpenChapter(c.id);
+      return;
+    }
     if (c.id === fixture.currentChapterId) return;
-    if (onOpenChapter) onOpenChapter(c.id);
-    else onAct?.(`Open ${c.label}${c.title ? ` — ${c.title}` : ''}`);
+    onAct?.(`Open ${c.label}${c.title ? ` — ${c.title}` : ''}`);
   };
 
   const navButton = (c: WriteChapterView, className?: string) => {

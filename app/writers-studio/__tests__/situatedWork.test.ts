@@ -14,6 +14,8 @@ import {
   studioArrivalFromHouse,
   situatedManuscriptAddress,
   readStudioWorkParam,
+  studioHomeReturnSearch,
+  resolveStudioHomeReturnWork,
   type SituatedWorkContext,
 } from '../situatedWork';
 import { declaringWorks, resolveWorkContext } from '../workContext';
@@ -266,4 +268,108 @@ describe('addresses — carry identity only', () => {
     const c = resolveSituatedWorkContext('ready', PLURAL, 'M', 'W');
     expect(asWorkContext(c)).toEqual({ kind: 'work', work: W });
   });
+});
+
+describe('Studio Home return continuity — transport and focus laws', () => {
+  it('drops House-arrival/transient state while preserving manuscript and Work context', () => {
+    const next = new URLSearchParams(studioHomeReturnSearch(
+      '?mode=write&m=M&work=W&from=house&s=S&reviewRun=R&reviewFinding=F&developField=arc&r=1&insightReading=I&insightObservation=O&insightAction=focus&attentionItem=A',
+    ));
+    expect(next.get('mode')).toBe('home');
+    expect(next.get('m')).toBe('M');
+    expect(next.get('work')).toBe('W');
+    expect(next.get('s')).toBe('S');
+    for (const key of ['from', 'reviewRun', 'reviewFinding', 'developField', 'r', 'insightReading', 'insightObservation', 'insightAction', 'attentionItem']) {
+      expect(next.get(key)).toBeNull();
+    }
+  });
+
+  it('focuses only the Work resolved by the existing situated-Work law', () => {
+    expect(resolveStudioHomeReturnWork('ready', [W, OTHER], 'M', null)?.id).toBe('W');
+    expect(resolveStudioHomeReturnWork('ready', PLURAL, 'M', null)).toBeNull();
+    expect(resolveStudioHomeReturnWork('ready', PLURAL, 'M', 'W')?.id).toBe('W');
+    expect(resolveStudioHomeReturnWork('ready', PLURAL, 'M', 'FOREIGN')).toBeNull();
+    expect(resolveStudioHomeReturnWork('loading', PLURAL, 'M', 'W')).toBeNull();
+    expect(resolveStudioHomeReturnWork('ready', PLURAL, null, 'W')).toBeNull();
+  });
+});
+
+type HomeTransport = (search: string) => string;
+type HomeFocus = typeof resolveStudioHomeReturnWork;
+const HOME_SOURCE = '?mode=write&m=M&work=W&from=house&reviewRun=R&developField=arc&insightReading=I';
+
+const HOME_TRANSPORT_LAWS: Record<string, (f: HomeTransport) => boolean> = {
+  'HRT1-house-origin-does-not-replay': (f) =>
+    new URLSearchParams(f(HOME_SOURCE)).get('from') === null,
+  'HRT2-manuscript-and-context-survive': (f) => {
+    const q = new URLSearchParams(f(HOME_SOURCE));
+    return q.get('mode') === 'home' && q.get('m') === 'M' && q.get('work') === 'W';
+  },
+  'HRT3-room-transients-do-not-survive': (f) => {
+    const q = new URLSearchParams(f(HOME_SOURCE));
+    return ['reviewRun', 'developField', 'insightReading'].every((k) => q.get(k) === null);
+  },
+};
+
+const HOME_TRANSPORT_CANDIDATES: Record<string, { fn: HomeTransport; dies: string }> = {
+  'DC-HRT1-replay-house-arrival': {
+    fn: (s) => { const q = new URLSearchParams(s); q.set('mode', 'home'); return q.toString(); },
+    dies: 'HRT1-house-origin-does-not-replay',
+  },
+  'DC-HRT2-drop-work-context': {
+    fn: (s) => { const q = new URLSearchParams(studioHomeReturnSearch(s)); q.delete('work'); return q.toString(); },
+    dies: 'HRT2-manuscript-and-context-survive',
+  },
+  'DC-HRT3-leak-room-state': {
+    fn: (s) => { const q = new URLSearchParams(s); q.set('mode', 'home'); q.delete('from'); return q.toString(); },
+    dies: 'HRT3-room-transients-do-not-survive',
+  },
+};
+
+const HOME_FOCUS_LAWS: Record<string, (f: HomeFocus) => boolean> = {
+  'HRF1-unique-relation-focuses': (f) => f('ready', [W, OTHER], 'M', null)?.id === 'W',
+  'HRF2-ambiguity-never-guesses': (f) => f('ready', PLURAL, 'M', null) === null,
+  'HRF3-valid-explicit-context-focuses': (f) => f('ready', PLURAL, 'M', 'W')?.id === 'W',
+  'HRF4-invalid-explicit-context-confers-nothing': (f) => f('ready', PLURAL, 'M', 'OTHER') === null,
+};
+
+const HOME_FOCUS_CANDIDATES: Record<string, { fn: HomeFocus; dies: string }> = {
+  'DC-HRF1-no-return-focus': {
+    fn: () => null,
+    dies: 'HRF1-unique-relation-focuses',
+  },
+  'DC-HRF2-recency-default': {
+    fn: (_p, works) => [...works].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0] ?? null,
+    dies: 'HRF2-ambiguity-never-guesses',
+  },
+  'DC-HRF3-ignore-explicit-context': {
+    fn: (p, works, m) => {
+      const c = resolveSituatedWorkContext(p, works, m, null);
+      return c.kind === 'work' ? c.work : null;
+    },
+    dies: 'HRF3-valid-explicit-context-focuses',
+  },
+  'DC-HRF4-owned-id-trusted-without-relation': {
+    fn: (_p, works, _m, explicit) => works.find((w) => w.id === explicit) ?? null,
+    dies: 'HRF4-invalid-explicit-context-confers-nothing',
+  },
+};
+describe('Studio Home return continuity — lethality', () => {
+  it('real transport satisfies every law', () => {
+    for (const law of Object.values(HOME_TRANSPORT_LAWS)) expect(law(studioHomeReturnSearch)).toBe(true);
+  });
+  for (const [name, candidate] of Object.entries(HOME_TRANSPORT_CANDIDATES)) {
+    it(name + ' dies on ' + candidate.dies, () => {
+      expect(HOME_TRANSPORT_LAWS[candidate.dies](candidate.fn)).toBe(false);
+    });
+  }
+
+  it('real focus consumer satisfies every law', () => {
+    for (const law of Object.values(HOME_FOCUS_LAWS)) expect(law(resolveStudioHomeReturnWork)).toBe(true);
+  });
+  for (const [name, candidate] of Object.entries(HOME_FOCUS_CANDIDATES)) {
+    it(name + ' dies on ' + candidate.dies, () => {
+      expect(HOME_FOCUS_LAWS[candidate.dies](candidate.fn)).toBe(false);
+    });
+  }
 });

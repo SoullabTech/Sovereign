@@ -63,12 +63,20 @@ export const isVersionAuthor = (v: unknown): v is VersionAuthor =>
  * version. A chain whose locus would need to change is not that chain any more:
  * it is a new proposal against a new state of the Work.
  */
+export type LocusScopeKind = 'section' | 'passage';
+
 export interface LocusIdentity {
   readonly workId: string;
   readonly draftId: string;
   /** The state of the Work this chain was opened against. */
   readonly baseVersion: number;
   readonly targetSectionId: string;
+  /**
+   * Server-authored classification of the frozen locus. Absent only on
+   * historical chains opened before A2-5R2; absence means UNMEASURED, never
+   * inferred later from expectedText or current UI state.
+   */
+  readonly locusScopeKind?: LocusScopeKind;
   /**
    * ⭐ THE LAW ACCEPTANCE USES — the exact characters this chain may replace,
    * required to occur exactly once at the target. Immutable for the chain's

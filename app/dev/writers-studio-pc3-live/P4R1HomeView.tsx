@@ -241,6 +241,8 @@ export interface P4R1HomeViewProps {
   works: readonly LivingWork[];
   manuscripts: readonly CurrentManuscript[];
   resumeActivity: SectionActivity | null;
+  returnWork: LivingWork | null;
+  returnActivity: SectionActivity | null;
   markedLines: readonly MarkedLine[];
   historyActs: readonly StudioAct[];
   busy: boolean;
@@ -318,7 +320,29 @@ export default function P4R1HomeView(props: P4R1HomeViewProps) {
   );
 
   let work: React.ReactNode;
-  if (props.arrival.kind === 'begin') {
+  if (props.returnWork) {
+    work = (
+      <div className="fr-home fr-home-returning" data-home-return-work={props.returnWork.id}>
+        <div className="fr-home-field" data-field="room">
+          {creationControls}
+          <WorkAnchor
+            work={props.returnWork}
+            manuscripts={props.manuscripts}
+            activity={props.returnActivity}
+            onOpen={props.onOpen}
+            onStartWriting={props.onStartWriting}
+            busy={props.busy}
+          />
+          {recentHistory.length > 0 ? (
+            <section className="fr-home-region p4r1-home-history">
+              <p className="fr-home-eyebrow">History</p>
+              <ol>{recentHistory.map((line, i) => <li key={i}>{line}</li>)}</ol>
+            </section>
+          ) : null}
+        </div>
+      </div>
+    );
+  } else if (props.arrival.kind === 'begin') {
     work = (
       <div className="fr-home fr-home-begin">
         <div className="fr-home-field" data-field="room">
