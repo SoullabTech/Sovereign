@@ -1,7 +1,7 @@
 const $main = document.getElementById('main');
 let currentView = 'home';
 let lastStatus = null;
-const libraryState = { browseQuery: '', grokkerQuery: '', grokkerResults: [] };
+const libraryState = { browseQuery: '', grokkerQuery: '', grokkerResults: [], sourcePacket: null };
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -2354,6 +2354,20 @@ function spInspectEdge(sp, from, to) {
 }
 
 
+function renderSourcePacket(packet) {
+  if (!packet) return '';
+  const check = GrokkerSynthesisContract.validateSourcePacket(packet);
+  return `<div class="source-packet">
+    <div class="packet-law">${escapeHtml(packet.packet_law)} · ${check.ok ? 'packet valid' : 'packet invalid'}</div>
+    ${(packet.sources || []).map(s => `<div class="packet-source">
+      <b>${escapeHtml(s.title)}</b>
+      <div class="grokker-why">${escapeHtml(s.source_type)} · standing ${escapeHtml(s.standing)} · relation warrant: none</div>
+      ${s.path ? `<div class="grokker-source">${escapeHtml(s.path)}</div>` : ''}
+    </div>`).join('')}
+    <div class="hint" style="margin-top:9px">This packet is the maximum material a future synthesis act may rely upon unless a new source is explicitly added and revalidated.</div>
+  </div>`;
+}
+
 function renderRecentPulse(lib) {
   const recent = (lib.recentItems || []).slice(0, 12);
   if (!recent.length) return '<div class="hint">No recent programme activity is indexed.</div>';
@@ -2418,12 +2432,20 @@ function wireLibrary() {
     if (!ask) return;
     libraryState.grokkerQuery = ask.value;
     libraryState.grokkerResults = GrokkerLibraryQuery.trace(window.KELLY_FIELD_LIBRARY, ask.value);
+    libraryState.sourcePacket = null;
     renderLibrary();
   };
   if (ask) {
     ask.addEventListener('keydown', e => { if (e.key === 'Enter') runTrace(); });
   }
   document.getElementById('grokker-trace')?.addEventListener('click', runTrace);
+  document.getElementById('grokker-packet')?.addEventListener('click', () => {
+    libraryState.sourcePacket = GrokkerSynthesisContract.buildSourcePacket(
+      libraryState.grokkerQuery,
+      libraryState.grokkerResults
+    );
+    renderLibrary();
+  });
   document.getElementById('library-expand')?.addEventListener('click', () => {
     document.querySelectorAll('.library-group').forEach(d => { d.open = true; });
   });
@@ -2465,6 +2487,8 @@ function renderLibrary() {
         <button class="primary" id="grokker-trace">Trace this</button>
       </div>
       <div id="grokker-results">${renderGrokkerResults(libraryState.grokkerResults, gq)}</div>
+      ${libraryState.grokkerResults.length ? `<div class="actions"><button class="act" id="grokker-packet">Prepare source packet</button></div>` : ''}
+      ${renderSourcePacket(libraryState.sourcePacket)}
     </div>
     <div class="library-section-title">Fields and enduring ideas</div>
     ${libraryGroups(lib.conceptGroups, q, 'concept')}
