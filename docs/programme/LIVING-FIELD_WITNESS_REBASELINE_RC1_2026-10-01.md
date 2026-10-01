@@ -108,3 +108,36 @@ Its non-documentation diff from `cf9624cdf` touches only three client components
 - The start/end SHA rule still applies.
 
 ⚠️ **Consequence for the next canonical deploy.** Production is not an ancestor of canonical, so the #1621 ancestry check will **refuse** a deploy of `b8592e60e`. That refusal is correct. It is resolved either by landing `6d51f1b9e` in canonical (through #1629) or by a recorded override.
+
+## Canonical deploy `56d0cd679` (founder-run checks, 2026-10-01)
+
+#1629 merged as `56d0cd679`, which descends from both `6d51f1b9e` and `b8592e60e`. Production has returned to canonical's lineage.
+
+The deploy ran as `prepare-maia` (candidate built 17:27:41Z) followed by `cutover-maia` (container created 18:02:55Z). The combined `deploy-maia` is retired and refuses to run.
+
+**Live state:**
+- `GIT_COMMIT=56d0cd679`
+- `DEPLOY_LANE=deploy-lane`
+- Co-Lab gate: 33 passed · 0 failed · 0 warned
+- `:previous` = `6d51f1b9e`
+
+**Image identity.** The running image and the frozen candidate show different IDs: `90ca62d4…` vs `057049fa…`. They are the **same build**:
+- identical creation timestamp, to the nanosecond;
+- identical layer list (the hash of `RootFS.Layers` is equal);
+- identical environment.
+
+Docker here uses the containerd image store, which gives one image more than one descriptor ID. **Custody holds in substance.**
+
+**Residual gap:** cutover verifies the running image by its `GIT_COMMIT` only. A *different* build of the same commit would pass that check. Comparing the layer list would close the gap. Comparing image IDs would not, because on this store one image can have more than one ID. Proposed, ⛔ not built.
+
+**Attribution:**
+- The lock record shows a second `cutover-maia` at 18:03:11Z, *after* the container existed. It was probably refused, because the live commit had already moved past the prepare baseline.
+- The record of the first cutover was overwritten.
+- No bash history exists for either act, because they ran over non-interactive SSH.
+- No durable deploy log exists either. That gap was first named on 2026-09-07.
+
+**Rollback images, pinned outside prune scope:**
+- `maia-sovereign-pinned:pre-rc1-975a208b8`
+- `maia-sovereign-pinned:rc1-03f0fd3ab`
+
+**Living Field:** no Living Field or House surface changed in `56d0cd679`. The walk's subject build is now `56d0cd679`.
