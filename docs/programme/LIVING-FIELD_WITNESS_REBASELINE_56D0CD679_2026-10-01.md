@@ -3,7 +3,7 @@
 **Date:** 2026-10-01  
 **Observed production runtime:** `56d0cd679c247a91dfe5a3592ce59e5a488c1fba`  
 **Prior readiness runtime:** `975a208b8`  
-**Standing:** HUMAN WITNESS HOLD · RE-CENSUS REQUIRED BEFORE RUN
+**Standing:** MACHINE RE-BASELINE PASS · FIRST-ENTRY WITNESS ELIGIBLE SUBJECT TO PARTICIPANT-SESSION ADMISSION CHECK
 
 ## Trigger
 
@@ -33,17 +33,29 @@ The House diff preserves the member doorway exactly as:
 `/maia/living-field?from=house`
 
 The House changes are Cabin/offline and Writer's Studio routing work; they do not rewrite the Living Field doorway itself.
+
+## Fresh aggregate readiness census
+
+A content-blind census was rerun against the four configured Early Field cohort members at `56d0cd679`. No member ids or content were emitted.
+
+```text
+cohort members                         4
+personal_living_fields                 0 members · 0 rows
+personal_living_field_versions        0 members · 0 rows
+qualifying Vision Studio threads       0 members · 0 rows
+Practice Fields                        0 members · 0 rows
+member_facet_crossings                 0 members · 0 rows
+quick_journal_entries                  0 members · 0 rows
+personal studio_decisions              0 members · 0 rows
+```
+
+The deployed source at `56d0cd679` also contains both explicit MAIA entry gestures used by the witness: `Explore with MAIA →` and `Enter this dimension with MAIA`.
+
 ## Consequence
 
-Because the House is part of the participant's required start path and changed between readiness and the current runtime, Amendment 1 is applied conservatively: **do not run the first-entry human witness yet**.
+The machine-side re-baseline is now complete. The first-entry witness remains the truthful witness class: no cohort member has accumulated substrate in the sources used by this experience.
 
-Before the hold can clear, re-run the aggregate, content-blind readiness census at `56d0cd679` and confirm for the intended participant:
-
-- no persisted member-owned Living Field substrate that would convert the walk into a populated-field witness;
-- `GET /api/early-field/admission` returns `admitted:true` in that member's own ordinary session;
-- the explicit MAIA entry gestures are present in the deployed build.
-
-Then record the production SHA at the start and end of the actual walk. Any mismatch remains `VOID — NO EVIDENCE`.
+At the actual walk, confirm `GET /api/early-field/admission` returns `admitted:true` in the chosen member's own ordinary session. Then record the production SHA at both start and end. Any SHA mismatch remains `VOID — NO EVIDENCE`.
 
 ## What this record does not claim
 
@@ -51,4 +63,4 @@ This record does not re-adjudicate the human witness, widen the cohort, admit R2
 
 **Current machine-side standing:**
 
-`PRODUCTION HEALTH GREEN · FOUR-PERSON COHORT PRESERVED · DIRECT LIVING-FIELD SOURCE UNCHANGED · HOUSE TOUCHED · HUMAN WITNESS HELD PENDING FRESH AGGREGATE READINESS CENSUS`
+`PRODUCTION HEALTH GREEN · FOUR-PERSON COHORT PRESERVED · FRESH AGGREGATE SUBSTRATE CENSUS 0/4 · EXPLICIT MAIA ENTRY PRESENT · FIRST-ENTRY WITNESS ELIGIBLE · POPULATED-FIELD WITNESS BLOCKED BY EVIDENCE · R2 NOT ADMITTED`
