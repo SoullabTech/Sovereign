@@ -8,15 +8,21 @@
  *
  * Flow:
  *   1. Validate token → show who invited them
- *   2. Create account (name + username + password) OR sign in
+ *   2. Sign in with an existing member account
  *   3. Link to relationship_space → redirect to threshold
+ *
+ * Sign-in only (founder ruling 2026-10-01). The former create-account branch
+ * posted to /api/members/register without a passkey, which passkey admission
+ * (lib/auth/passkeyAdmission.ts) always refuses — a dead path. Any future
+ * account-creation path here must carry a passkey and the 18+ confirmation
+ * (lib/members/adultConfirmation.ts); none is built.
  */
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 
-type Stage = 'loading' | 'invalid' | 'create_account' | 'sign_in' | 'linking';
+type Stage = 'loading' | 'invalid' | 'sign_in' | 'linking';
 
 interface InviteInfo {
   space_id: string;
@@ -33,11 +39,6 @@ export default function JoinPage() {
   const [invite, setInvite] = useState<InviteInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
-
-  // Account creation fields
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
 
   // Sign in fields
   const [siUsername, setSiUsername] = useState('');
@@ -57,34 +58,10 @@ export default function JoinPage() {
         return;
       }
       setInvite(data);
-      setStage(data.already_member ? 'sign_in' : 'create_account');
+      setStage('sign_in');
     } catch {
       setStage('invalid');
       setError('Unable to verify invitation. Please try again.');
-    }
-  }
-
-  async function handleCreateAccount(e: React.FormEvent) {
-    e.preventDefault();
-    if (!invite) return;
-    setWorking(true);
-    setError(null);
-    try {
-      // Register new member
-      const regRes = await fetch('/api/members/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, username, password, invited_via: token }),
-      });
-      const regData = await regRes.json();
-      if (!regRes.ok) throw new Error(regData.error || 'Registration failed');
-
-      // Sign in to get session
-      await signInAndLink(username, password);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setWorking(false);
     }
   }
 
@@ -179,58 +156,6 @@ export default function JoinPage() {
           </div>
         )}
 
-        {/* Account creation form */}
-        {stage === 'create_account' && (
-          <form onSubmit={handleCreateAccount} className="space-y-5">
-            <p className="text-stone-500 text-sm font-light">Create your secure account to continue.</p>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-stone-500 uppercase tracking-wider block mb-1">Your name</label>
-                <input
-                  type="text" value={name} onChange={e => setName(e.target.value)}
-                  required autoFocus
-                  className="w-full bg-stone-900 border border-stone-700 text-stone-200 px-4 py-3 text-sm font-light focus:outline-none focus:border-stone-500 rounded"
-                  placeholder="Sarah"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-stone-500 uppercase tracking-wider block mb-1">Username</label>
-                <input
-                  type="text" value={username} onChange={e => setUsername(e.target.value)}
-                  required
-                  className="w-full bg-stone-900 border border-stone-700 text-stone-200 px-4 py-3 text-sm font-light focus:outline-none focus:border-stone-500 rounded"
-                  placeholder="sarah"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-stone-500 uppercase tracking-wider block mb-1">Password</label>
-                <input
-                  type="password" value={password} onChange={e => setPassword(e.target.value)}
-                  required minLength={8}
-                  className="w-full bg-stone-900 border border-stone-700 text-stone-200 px-4 py-3 text-sm font-light focus:outline-none focus:border-stone-500 rounded"
-                />
-              </div>
-            </div>
-
-            {error && <p className="text-red-400 text-xs">{error}</p>}
-
-            <button
-              type="submit" disabled={working}
-              className="w-full bg-stone-200 text-stone-900 py-3 text-sm font-medium tracking-wide hover:bg-white transition-colors disabled:opacity-50"
-            >
-              {working ? 'Creating account…' : 'Continue'}
-            </button>
-
-            <p className="text-center text-stone-600 text-xs">
-              Already have an account?{' '}
-              <button type="button" onClick={() => setStage('sign_in')} className="text-stone-400 underline">
-                Sign in
-              </button>
-            </p>
-          </form>
-        )}
-
         {/* Sign in form */}
         {stage === 'sign_in' && (
           <form onSubmit={handleSignIn} className="space-y-5">
@@ -265,10 +190,7 @@ export default function JoinPage() {
             </button>
 
             <p className="text-center text-stone-600 text-xs">
-              New here?{' '}
-              <button type="button" onClick={() => setStage('create_account')} className="text-stone-400 underline">
-                Create an account
-              </button>
+              Accepting needs an existing Soullab account. If you don't have one yet, let {invite?.practitioner_name} know.
             </p>
           </form>
         )}
