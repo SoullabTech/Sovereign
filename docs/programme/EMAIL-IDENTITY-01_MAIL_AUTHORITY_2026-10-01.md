@@ -83,10 +83,14 @@ The established contract, which this lane keeps, is that `sendEmail()` never thr
 
 | # | Path | Failure mode | Status | Next evidence |
 |---|---|---|---|---|
-| R1 | All Resend mail | Invalid API key | ⛔ OBSERVED on the domains endpoint | Ledger states over 7 days; key shape check |
-| R2 | Stellium safety → practitioner | `soullab.ai` may be unverified | UNKNOWN (blocked by R1) | Domains listing once the key is valid; `safety_concern_logs` where `email_status='failed'` |
+| R1 | All Resend mail | Invalid API key | ⛔ **CONFIRMED OUTAGE.** Ledger, 7 days: 6 `accepted`, the last at **2026-09-29 00:40Z**; then 9 `refused · provider_auth · validation_error`, the latest at 2026-10-01 13:57Z. The key is well-formed (36 chars, `re_`, unpadded, unquoted), so it was revoked or regenerated in Resend, not mis-edited | Fix: new key → `.env.production` → locked redeploy of the live SHA → re-read the ledger |
+| R2 | Stellium safety → practitioner | `soullab.ai` may be unverified | UNKNOWN (blocked by R1). `safety_concern_logs` has **0 rows ever**, so there is no historical exposure; the risk is latent | Domains listing once the key is valid; `safety_concern_logs` where `email_status='failed'` |
 | R3 | Member problem reports → `problem@` | Mailbox may not exist | UNKNOWN | External test email (a bounce is decisive) |
 | R4 | Data-rights requests → `privacy@` | Mailbox may not exist | UNKNOWN, legal deadline | External test email; create today if it bounces |
 | R5 | `hello@` and the other published contacts | Mailbox may not exist | UNKNOWN | External test email |
 | R6 | Replies to `bookings@` / `updates@` | No reply-to | STRUCTURAL | Ruling: reply-to = practitioner or `support@` |
 | R7 | Auth mail from `kelly@` | Reputation coupling; replies go to the personal inbox | DEFERRED, not indefinite | Move to `noreply@` + reply-to `support@` |
+
+### Meta-finding: the outage ran 2.5 days unseen
+
+`sendEmail()` emits `[MAIA/email] TRANSPORT_DOWN` on `provider_auth`, so the code *announced* the outage on every refused send. Nothing reads that line, and the out-of-band channels cannot help: the build-alert SMTP pager is unconfigured in production, and `scripts/maia-monitor.js` alerts **through Resend**, the transport that was down. *An alarm routed through the thing it watches is silent exactly when it is needed.* Proposed (⛔ not built): a daily ledger check (`refused` with `failure_class IN ('provider_auth','quota_exceeded','provider_config')` in the last 24h → page via SMS/Twilio, not email).

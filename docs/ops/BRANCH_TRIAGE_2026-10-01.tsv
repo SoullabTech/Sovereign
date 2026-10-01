@@ -1,0 +1,355 @@
+CONFLICT	2	-	2026-09-06	claude/accounted-for-deploy-witness-7uquoi	
+CODE	4	3	2026-09-20	claude/admiring-einstein-8p0itg	lib/sanctuary/__tests__/sanctuaryGuards.test.ts,lib/sanctuary/sanctuaryGuards.ts
+CONFLICT	3	-	2026-03-19	claude/admiring-joliot	
+CONFLICT	26	-	2026-09-02	claude/admiring-ride-b4n9ft	
+DOCS_ONLY	1	3	2026-09-20	claude/admiring-turing-bodwdc	
+DOCS_ONLY	4	2	2026-08-24	claude/adoring-davinci-9ckuam	
+DOCS_ONLY	2	2	2026-09-17	claude/adoring-goodall-0yhl8d	
+CONFLICT	3	-	2026-03-24	claude/adoring-visvesvaraya	
+CONFLICT	1	-	2026-03-20	claude/affectionate-almeida	
+CODE	29	97	2026-10-01	claude/affectionate-carson-i6nqfu	app/api/sovereign/manuscripts/[id]/review-discuss/route.ts,app/api/writers-studio/editorial/turn/__tests__/a2CarryRoute.test.ts,app/api/writers-studio/editorial/turn/route.ts
+CONFLICT	1	-	2026-02-10	claude/affectionate-jemison	
+DOCS_ONLY	2	8	2026-05-06	claude/agitated-sutherland-93fb0a	
+CONFLICT	5	-	2026-07-03	claude/agitated-villani-0bb5e7	
+CONFLICT	6	-	2026-08-29	claude/ain-maia-architecture-frft0p	
+CONFLICT	1	-	2026-09-15	claude/ain-prefix-containment-01	
+CONFLICT	1	-	2026-09-15	claude/ask-work-anchor-01	
+CONFLICT	3	-	2026-08-24	claude/auth-01-d-route-identity-containment	
+ABSORBED	1	0	2026-08-24	claude/auth-01-d3-shadow-authority-containment	
+CONFLICT	1	-	2026-08-28	claude/auth-audit-01	
+DOCS_ONLY	2	1	2026-08-24	claude/auth-lane-witness-record-73106dc9	
+CONFLICT	4	-	2026-08-24	claude/avo-jarvis-learning-arch-lmmvcy	
+CONFLICT	25	-	2026-03-14	claude/awesome-chaum	
+DOCS_ONLY	1	1	2026-10-01	claude/awesome-clarke-3yrktn	
+CODE	1	3	2026-03-29	claude/awesome-murdock	app/api/oracle/conversation/route.ts,lib/greetings/greetingRender.ts,lib/maia/presence-greetings.ts
+DOCS_ONLY	1	2	2026-10-01	claude/awesome-tesla-1itt11	
+CONFLICT	5	-	2026-03-31	claude/beautiful-hopper	
+CONFLICT	11	-	2026-10-01	claude/beautiful-mayer-mt9jc9	
+CONFLICT	1	-	2026-08-24	claude/beta-signup-gate-investigation-exdgby	
+CONFLICT	2	-	2026-04-21	claude/blissful-noether	
+CONFLICT	1	-	2026-02-13	claude/blissful-rhodes	
+CONFLICT	80	-	2026-09-14	claude/bold-bohr-pmtynu	
+CONFLICT	1	-	2026-04-22	claude/brave-moser	
+CONFLICT	154	-	2026-03-18	claude/brave-williams	
+CONFLICT	2	-	2026-09-04	claude/build-07d-acceptance-l2lo4w	
+CODE	4	5	2026-09-21	claude/busy-bohr-ngluni	scripts/witness/opencode-v2-containment-probe.sh
+CONFLICT	1	-	2026-02-15	claude/busy-hofstadter	
+DOCS_ONLY	1	1	2026-05-19	claude/busy-lichterman-efd90c	
+CONFLICT	2	-	2026-02-15	claude/busy-mayer	
+CONFLICT	28	-	2026-09-11	claude/busy-meitner-ppms4e	
+CONFLICT	90	-	2026-03-17	claude/care-evaluator	
+CONFLICT	1	-	2026-05-06	claude/ch10-alchemy-elective-framing	
+CONFLICT	2	-	2026-05-07	claude/ch10-significance-rewrite	
+CODE	252	70	2026-09-01	claude/chapter-10-kdp-revision-fee7ot	lib/manuscript/render/fonts/eb-garamond-static.css,lib/manuscript/render/print-book.css,scripts/fetch-print-fonts.mjs
+CONFLICT	4	-	2026-08-25	claude/chapter-10-spiralogic-edit-mshhjr	
+CODE	4	11	2026-08-31	claude/chapter-10-structure-7wz1ry	lib/manuscript/render/fonts/eb-garamond-static.css,lib/manuscript/render/print-book.css,scripts/fetch-print-fonts.mjs
+DOCS_ONLY	1	1	2026-10-01	claude/charming-brown-olfead	
+DOCS_ONLY	1	1	2026-10-01	claude/charming-lovelace-j5h6bc	
+DOCS_ONLY	1	1	2026-09-17	claude/clever-einstein-mojiar	
+CODE	1	1	2026-03-23	claude/clever-jackson	Dockerfile
+DOCS_ONLY	1	5	2026-10-01	claude/clever-mayer-q9zrym	
+CONFLICT	134	-	2026-03-18	claude/clever-shirley	
+DOCS_ONLY	1	2	2026-09-11	claude/cmt-focus-runtime-records-2026-09-10	
+DOCS_ONLY	2	2	2026-09-20	claude/compassionate-edison-fgk9u5	
+CONFLICT	13	-	2026-04-01	claude/condescending-mccarthy	
+CODE	1	4	2026-10-01	claude/confident-bell-8b6cc5	tests/constitutional/jarvis-o5-r4/FREEZE.json,tests/constitutional/jarvis-o5-r4/candidates.mjs
+CONFLICT	1	-	2026-03-02	claude/confident-zhukovsky	
+DOCS_ONLY	2	2	2026-09-08	claude/consciousness-technology-soul-7hgzk1	
+CODE	6	5	2026-10-01	claude/cool-feynman-8kvyyc	maia-desktop/scripts/build.mjs,maia-desktop/test/cabin-runtime-packaging.test.mjs
+CONFLICT	5	-	2026-09-08	claude/council-maia-conversations-4r1sej	
+CONFLICT	3	-	2026-05-06	claude/cranky-carson-508d09	
+CONFLICT	206	-	2026-03-21	claude/creativity-field	
+CONFLICT	6	-	2026-08-28	claude/cross-surface-thread-adoption-01	
+DOCS_ONLY	1	1	2026-08-28	claude/d05-close-record	
+CONFLICT	5	-	2026-09-10	claude/d9-write-integration	
+CONFLICT	2	-	2026-03-12	claude/dazzling-pare	
+DOCS_ONLY	1	1	2026-09-05	claude/deep-stage1-participation-census-01	
+CONFLICT	13	-	2026-08-28	claude/desktop-adoption-convergence-01	
+CONFLICT	4	-	2026-08-31	claude/desktop-conversational-silence-01	
+CONFLICT	28	-	2026-08-29	claude/desktop-full-platform-01	
+CONFLICT	36	-	2026-08-30	claude/desktop-ghost-rearm-transfer-20260830	
+DOCS_ONLY	1	1	2026-08-28	claude/desktop-member-parity-census	
+CONFLICT	5	-	2026-08-28	claude/desktop-platform-composition-1wmu2y	
+CONFLICT	37	-	2026-08-29	claude/desktop-sovereign-tts-bx63g3	
+CONFLICT	6	-	2026-08-31	claude/desktop-voice-continuation-a9wolm	
+CONFLICT	34	-	2026-08-30	claude/desktop-voice-recovery-20260830	
+CONFLICT	39	-	2026-08-30	claude/desktop-voice-witness-candidate-20260830	
+ABSORBED	1	0	2026-09-30	claude/determined-archimedes-d4ozo8	
+CODE	7	13	2026-09-17	claude/determined-bell-olsuy7	app/api/sovereign/episodes/mark/__tests__/sanctuaryGuard.test.ts,components/__tests__/sanctuaryCaptureRefusal.test.ts
+CONFLICT	2	-	2026-09-13	claude/determined-gauss-5jbynt	
+CODE	18	6	2026-09-28	claude/disk-space-cleanup-iyjp0r	scripts/ain-worktree-claim.sh,scripts/disk-census.sh,scripts/disk-data-inventory.sh
+CONFLICT	3	-	2026-04-21	claude/dreamy-allen	
+CONFLICT	1	-	2026-09-06	claude/e1-correction-shadow-deploy	
+CONFLICT	1	-	2026-05-05	claude/ecstatic-carson-1c31e0	
+DOCS_ONLY	6	4	2026-09-23	claude/ecstatic-hamilton-cq5y89	
+DOCS_ONLY	3	2	2026-09-14	claude/elegant-mccarthy-k2zcgk	
+DOCS_ONLY	5	5	2026-09-04	claude/elemental-alchemy-reading-group-as3p32	
+DOCS_ONLY	4	6	2026-09-13	claude/eloquent-clarke-fmz012	
+CONFLICT	13	-	2026-03-22	claude/epic-leakey	
+CONFLICT	257	-	2026-09-14	claude/exciting-brown-346wkb	
+CODE	1	8	2026-10-01	claude/exciting-euler-w49hze	app/api/astrology/transit-field/route.ts,app/astrology/page.tsx,components/astrology/WhatIsAliveNow.tsx
+CONFLICT	1	-	2026-08-28	claude/f10-sanctuary-wire-01	
+DOCS_ONLY	7	40	2026-08-28	claude/fable-5-architecture-ucjwq0	
+CODE	1	4	2026-05-05	claude/fervent-ardinghelli-5fa803	app/api/founder/field-signals/route.ts,app/founder/field-signals/page.tsx,lib/founder/founderNav.ts
+CONFLICT	5	-	2026-09-17	claude/fervent-einstein-za564h	
+CONFLICT	5	-	2026-04-02	claude/festive-bardeen	
+CODE	10	2993	2026-09-20	claude/festive-galileo-rplz8a	.jarvis/run/closeout-24548a82-1b4e-471b-a790-e93bd88782e7,.jarvis/run/closeout-289dd98d-1050-4072-afce-589986c7af37,.jarvis/run/closeout-53d5f771-7343-4d25-9e91-ad1e6179daad
+DOCS_ONLY	9	8	2026-09-17	claude/festive-sagan-apvfs5	
+DOCS_ONLY	1	1	2026-09-09	claude/finding-a-census	
+CODE	1	3	2026-03-28	claude/flamboyant-feistel	app/api/oracle/conversation/route.ts,lib/maia/maiaPlanner.ts,lib/services/ClaudeService.ts
+CONFLICT	2	-	2026-03-21	claude/flamboyant-morse	
+CODE	1	9	2026-09-10	claude/focus-assembler-custody-closure	lib/writers-studio/__tests__/focusProducer.test.ts,lib/writers-studio/assembleFocus.ts,lib/writers-studio/focusCrossing.ts
+DOCS_ONLY	2	2	2026-09-09	claude/focus-disclosure-contract	
+CONFLICT	271	-	2026-09-10	claude/focus-gate-reconciliation	
+DOCS_ONLY	2	1	2026-09-09	claude/focus-producer-01a-recovery	
+DOCS_ONLY	3	10	2026-09-11	claude/focus-surface-design	
+CONFLICT	275	-	2026-09-10	claude/focus-witness-record	
+CONFLICT	1	-	2026-02-14	claude/focused-easley	
+CONFLICT	4	-	2026-03-20	claude/focused-gagarin	
+CONFLICT	2	-	2026-04-07	claude/focused-matsumoto	
+DOCS_ONLY	3	2	2026-09-20	claude/focused-mccarthy-jv4xg7	
+CONFLICT	8	-	2026-09-16	claude/friendly-keller-aspijy	
+CONFLICT	2	-	2026-05-09	claude/friendly-pare-5c623a	
+CONFLICT	1	-	2026-04-22	claude/frosty-yonath	
+CONFLICT	17	-	2026-09-23	claude/funny-maxwell-94g4z1	
+CONFLICT	1	-	2026-09-23	claude/funny-wozniak-vs3okx	
+CONFLICT	8	-	2026-09-21	claude/gallant-ritchie-y60vw6	
+CODE	1	7	2026-03-07	claude/gallant-yonath	components/OracleConversation.tsx,lib/maia/maiaPlanner.ts,lib/settings/accountSettings.ts
+CONFLICT	1	-	2026-08-28	claude/gitignore-capture-profile	
+CONFLICT	5	-	2026-02-14	claude/goofy-volhard	
+ABSORBED	12	0	2026-02-14	claude/goofy-wiles	
+CONFLICT	9	-	2026-09-14	claude/gov-spm-01-personal-model-boundary	
+CODE	2	14	2026-09-29	claude/gracious-shannon-c5zmvy	app/globals.css,app/layout.tsx,components/OracleConversation.tsx
+CONFLICT	7	-	2026-09-16	claude/great-lovelace-4e1q14	
+CONFLICT	3	-	2026-03-21	claude/great-snyder	
+CONFLICT	1	-	2026-02-15	claude/great-zhukovsky	
+CONFLICT	2	-	2026-05-06	claude/h3-heading-register-css	
+CONFLICT	2	-	2026-05-06	claude/hardcore-fermat-bbaa0c	
+CONFLICT	31	-	2026-09-15	claude/hopeful-faraday-6pcwm2	
+CONFLICT	1	-	2026-05-16	claude/hotfix-begin-config-redirect	
+ABSORBED	1	0	2026-05-16	claude/hotfix-error-rethrow-redirects	
+CONFLICT	1	-	2026-04-02	claude/hungry-chatelet	
+CONFLICT	9	-	2026-02-11	claude/hungry-cohen	
+CONFLICT	6	-	2026-03-18	claude/hungry-ptolemy	
+CONFLICT	30	-	2026-09-02	claude/ideas-cut02-repair-spec	
+CONFLICT	1	-	2026-09-02	claude/ideas-cut02-t1-fault-localization-rlfash	
+CONFLICT	2	-	2026-09-03	claude/ideas-prereq-progression-stance-01	
+DOCS_ONLY	2	2	2026-09-02	claude/ideas-t1-canonical-integration-01	
+DOCS_ONLY	1	1	2026-09-20	claude/intelligent-bell-6raooy	
+CODE	2	8	2026-10-01	claude/intelligent-clarke-v9zk51	lib/comms/emailRouter.ts,lib/email/__tests__/identity-authority.test.ts,lib/email/identity.ts
+CONFLICT	1	-	2026-02-10	claude/interesting-proskuriakova	
+CONFLICT	2	-	2026-03-16	claude/interesting-rhodes	
+CONFLICT	22	-	2026-09-11	claude/ios-runtime-01-audiosession-registration	
+CONFLICT	2	-	2026-09-11	claude/ios-runtime-01-repair-two-turn-close	
+CONFLICT	3	-	2026-09-02	claude/ios-transcript-scroll-audio-cutoff-aop1b8	
+DOCS_ONLY	3	1	2026-09-01	claude/jarvis-02c-witness-lane-e7qni0	
+CODE	3	4	2026-08-24	claude/jarvis-adapter-architecture-qrv8im	scripts/experiments/jma01_tokenrouter_probe.py
+CONFLICT	8	-	2026-08-24	claude/jarvis-agent-memory-build-988kqw	
+CONFLICT	9	-	2026-08-24	claude/jarvis-anthropic-architecture-lvne26	
+CONFLICT	9	-	2026-08-27	claude/jarvis-app-stabilization-1jwcen	
+CONFLICT	32	-	2026-09-07	claude/jarvis-circles-programme-reouzc	
+CONFLICT	4	-	2026-09-03	claude/jarvis-cross-domain-patterns-7z41vj	
+DOCS_ONLY	15	11	2026-09-09	claude/jarvis-flow-architecture-w2gont	
+CODE	1	3	2026-08-24	claude/jarvis-master-directive-ckcg9b	jarvis-desktop/src/main.js,jarvis-desktop/test/jop-05-c1-root-binding.test.mjs
+CONFLICT	10	-	2026-08-24	claude/jarvis-operating-instructions-i1hjhz	
+CONFLICT	3	-	2026-09-02	claude/jarvis-preflight-restoration-xnmkpi	
+CONFLICT	3	-	2026-08-24	claude/jarvis-repo-root-resolution-tmdhb5	
+DOCS_ONLY	2	1	2026-08-24	claude/jarvis-self-learning-build-uizovx	
+CODE	3	5	2026-08-29	claude/jarvis-simulation-orchestration-sjsqm1	scripts/simulate-field-scaffold.sh
+CONFLICT	9	-	2026-09-02	claude/jarvis-stage-8-revision-wo2yhf	
+CONFLICT	5	-	2026-08-24	claude/jarvis-worktree-identity-9ikm0u	
+CONFLICT	14	-	2026-09-11	claude/jolly-lamport-r6oh8x	
+CODE	69	9	2026-09-14	claude/jop-04-census	jarvis-desktop/src/main.js,scripts/builder/__tests__/desktop-c0-explorer-proof.mjs,scripts/builder/__tests__/router-alpha-proof.mjs
+CONFLICT	1	-	2026-03-16	claude/jovial-albattani	
+DOCS_ONLY	3	2	2026-09-13	claude/jws-01-census	
+CONFLICT	2	-	2026-03-12	claude/kind-haibt	
+DOCS_ONLY	1	1	2026-05-16	claude/laughing-gates-17573f	
+CONFLICT	1	-	2026-03-15	claude/laughing-johnson	
+CONFLICT	4	-	2026-09-03	claude/layer-2-recognition-upgrade-99d1re	
+DOCS_ONLY	1	1	2026-08-28	claude/ledger-b-lineage	
+CODE	6	1	2026-09-06	claude/local-fonts-closure	scripts/witness/local-fonts-production-witness.mjs
+CODE	2	1	2026-09-05	claude/local-fonts-production-witness	scripts/witness/local-fonts-production-witness.mjs
+CODE	24	15	2026-09-15	claude/loving-ramanujan-mlka7d	scripts/witness/ain-corpus-census.mjs
+CONFLICT	12	-	2026-09-15	claude/loving-ride-8qaikf	
+DOCS_ONLY	5	6	2026-09-17	claude/loving-volta-k4gd1c	
+ABSORBED	2	0	2026-09-23	claude/lucid-hopper-2hz7ty	
+CONFLICT	9	-	2026-09-01	claude/mac-studio-jarvis-witness-v3cmxp	
+CONFLICT	9	-	2026-09-17	claude/magical-archimedes-dcsry5	
+CONFLICT	20	-	2026-09-23	claude/magical-dirac-6rcn5k	
+DOCS_ONLY	12	2	2026-09-20	claude/magical-feynman-5uu9wx	
+CONFLICT	14	-	2026-09-15	claude/magical-hawking-p340hr	
+DOCS_ONLY	3	4	2026-10-01	claude/magical-shannon-oht8gz	
+DOCS_ONLY	1	8	2026-10-01	claude/magical-shannon-oht8gz-rc1-witness	
+CODE	7	13	2026-09-15	claude/magical-volta-yh4njo	lib/consciousness/__tests__/relationalObserverPossessionGuard.test.ts,lib/consciousness/relationalObserver.ts
+CONFLICT	2	-	2026-08-28	claude/maia-conversation-execution-s9oyi8	
+CONFLICT	5	-	2026-08-29	claude/maia-conversational-completion-hamx9h	
+CONFLICT	51	-	2026-08-30	claude/maia-desktop-architecture-yzqb3p	
+CONFLICT	37	-	2026-08-27	claude/maia-desktop-companion-roadmap-c4i9v5	
+CONFLICT	20	-	2026-09-06	claude/maia-human-experience-phase1-census	
+CONFLICT	2	-	2026-08-28	claude/maia-image-upload-xufpsn	
+CONFLICT	9	-	2026-08-31	claude/maia-intelligence-census-6aav7v	
+CONFLICT	32	-	2026-09-03	claude/maia-long-term-memory-fda5gf	
+CONFLICT	48	-	2026-08-27	claude/maia-onboarding-orientation-djtoii	
+CODE	1	5	2026-08-28	claude/maia-prosody-alloy-06r3r6	app/api/voice/stream-conversation/route.ts,lib/tts/__tests__/openaiSpeechAdapter.test.ts,lib/tts/openaiSpeechAdapter.ts
+CODE	5	2	2026-09-03	claude/maia-quality-acceptance	scripts/witness/now-what-register-and-history.ts
+CODE	7	26	2026-09-04	claude/maia-reengagement-nudges-rtzrwg	app/api/reminders/[id]/route.ts,app/api/reminders/cancel/route.ts,app/api/reminders/route.ts
+CONFLICT	43	-	2026-09-07	claude/maia-shadow-practice-3pvlms	
+CODE	13	14	2026-09-09	claude/maia-turns-derivative-custody	app/api/maia/log-turn/route.ts,database/migrations/20260909000001_maia_turns_member_identity.sql,lib/memory/__tests__/maiaTurnsContainment.test.ts
+CONFLICT	1	-	2026-08-27	claude/maia-voice-input-disconnect-agkuba	
+CONFLICT	1	-	2026-08-28	claude/maia-voice-quality-continuity-gnwqls	
+DOCS_ONLY	3	1	2026-09-04	claude/maia-whole-organism-census-01	
+ABSORBED	2	0	2026-05-06	claude/manuscript-remove-invocation-signature	
+ABSORBED	2	0	2026-05-06	claude/manuscript-remove-part-placeholders	
+CODE	2	2	2026-08-25	claude/maya-voice-input-disconnect-agkuba	components/OracleConversation.tsx
+DOCS_ONLY	1	1	2026-08-28	claude/member-entry-email-01	
+CODE	13	7	2026-08-24	claude/member-identity-portrait-split-y4zhaq	scripts/witness/identity-origin-read.sql,scripts/witness/member-identity-ownership-census.sql,scripts/witness/member-identity-ownership-census.ts
+CODE	3	5	2026-09-04	claude/memory-divination-between-room-01	app/api/between/chat/route.ts,lib/maia/canonical-turn/__tests__/divinationBetweenRoom.test.ts,lib/maia/canonical-turn/__tests__/divinationParticipation.test.ts
+CONFLICT	5	-	2026-09-14	claude/memory-m1-m2-supersession	
+CONFLICT	3	-	2026-08-28	claude/memory-surfacing-audit-6z845t	
+DOCS_ONLY	2	2	2026-09-16	claude/modest-brahmagupta-9r5fes	
+CONFLICT	6	-	2026-10-01	claude/modest-goldberg-c6avhc	
+CONFLICT	2	-	2026-09-30	claude/modest-maxwell-8vtlsn	
+ABSORBED	1	0	2026-03-06	claude/musing-nobel	
+CODE	1	1	2026-03-21	claude/mystifying-poincare	lib/memory/MemberLiveContext.ts
+CONFLICT	2	-	2026-02-11	claude/mystifying-rhodes	
+CONFLICT	1	-	2026-02-13	claude/mystifying-wiles	
+CONFLICT	5	-	2026-04-11	claude/naughty-stonebraker	
+CONFLICT	33	-	2026-09-15	claude/nice-franklin-noe4gb	
+CONFLICT	32	-	2026-09-11	claude/nice-mayer-e96lxb	
+DOCS_ONLY	7	2	2026-09-13	claude/nice-volta-fogiyw	
+CONFLICT	212	-	2026-03-22	claude/nifty-swirles	
+CONFLICT	1	-	2026-05-06	claude/nostalgic-gould-0dbf31	
+CONFLICT	1	-	2026-02-15	claude/nostalgic-lewin	
+CODE	1	5	2026-05-14	claude/nostalgic-nash-dc7bf6	app/layout.tsx,components/NativeSessionHydrator.tsx,lib/storage/nativeSessionStorage.ts
+CONFLICT	16	-	2026-08-28	claude/now-what-design-refinement-wpbkbo	
+DOCS_ONLY	1	1	2026-08-28	claude/nw-f00-2-remeasure	
+DOCS_ONLY	7	7	2026-08-28	claude/nw-v1-design-01	
+CONFLICT	5	-	2026-03-20	claude/objective-gould	
+CODE	6	10	2026-08-25	claude/ops-dt-01-device-test-env	.gitignore,Caddyfile.device-test,docker-compose.device-test.yml
+CONFLICT	2	-	2026-04-26	claude/optimistic-turing-6ad15e	
+DOCS_ONLY	1	1	2026-05-06	claude/park-authored-exception-doctrine	
+DOCS_ONLY	1	1	2026-05-06	claude/park-visual-lexicon-symbolic-atlas	
+CONFLICT	3	-	2026-09-15	claude/peaceful-archimedes-ehdddx	
+CONFLICT	1	-	2026-05-09	claude/peaceful-brattain-c8b5a8	
+ABSORBED	1	0	2026-05-09	claude/peaceful-brattain-c8b5a8-final	
+ABSORBED	1	0	2026-05-09	claude/peaceful-brattain-c8b5a8-fix-314	
+ABSORBED	1	0	2026-05-09	claude/peaceful-brattain-c8b5a8-revert-319	
+CONFLICT	1	-	2026-05-09	claude/peaceful-brattain-c8b5a8-title-stack	
+ABSORBED	1	0	2026-05-09	claude/peaceful-brattain-c8b5a8-tune-threshold	
+CONFLICT	2	-	2026-05-09	claude/peaceful-brattain-c8b5a8-typeset-front-back	
+CONFLICT	3	-	2026-04-21	claude/peaceful-dirac	
+CONFLICT	6	-	2026-09-20	claude/peaceful-ptolemy-ez62oh	
+CONFLICT	4	-	2026-02-25	claude/pedantic-zhukovsky	
+CONFLICT	55	-	2026-08-31	claude/platform-sovereign-reentry-01	
+CONFLICT	6	-	2026-03-20	claude/practical-kowalevski	
+CONFLICT	106	-	2026-03-18	claude/priceless-chatterjee	
+CONFLICT	303	-	2026-09-14	claude/proposal-authorization-integration	
+CONFLICT	283	-	2026-09-14	claude/proposal-authorization-runtime-port	
+CONFLICT	279	-	2026-09-14	claude/proposal-authorization-schema	
+CONFLICT	278	-	2026-09-14	claude/proposal-authorization-separation	
+CONFLICT	263	-	2026-09-14	claude/proposal-succession-schema	
+CONFLICT	268	-	2026-09-14	claude/proposal-succession-store	
+CONFLICT	9	-	2026-09-08	claude/pt3-runtime-integration	
+CONFLICT	118	-	2026-09-15	claude/quirky-lovelace-yxaes0	
+CONFLICT	132	-	2026-03-18	claude/quizzical-jennings	
+CODE	13	5	2026-08-24	claude/recover-kellys-soul-portraits-wldnv9	scripts/kelly-identity-footprint.sh,scripts/soul-portrait-db-witness.sh,scripts/soul-portrait-delete-trace.sh
+CONFLICT	12	-	2026-09-06	claude/reflections-discuss-uiux-iu892z	
+CONFLICT	1	-	2026-03-29	claude/relaxed-nash	
+CONFLICT	269	-	2026-09-14	claude/s3-implementation	
+CODE	1	6	2026-09-09	claude/sacred-instance-2-repair	lib/memory/__tests__/sacredInstance2TaskBypassRisk.test.ts,lib/memory/beads-sync/MaiaBeadsPlugin.ts,lib/memory/beads-sync/server.ts
+CODE	8	9	2026-08-28	claude/sanctuary-button-state-issue-872q0a	app/field/talk/page.tsx,app/maia/page.tsx,components/account/AccountSettings.tsx
+CONFLICT	6	-	2026-08-28	claude/sanctuary-init-gate-01	
+CONFLICT	1	-	2026-08-28	claude/sanctuary-settings-disconnect-01	
+CODE	1	3	2026-08-28	claude/sanctuary-settings-disconnect-01-memory-lane	__tests__/sanctuary-settings-disconnect-01.test.ts,app/maia/page.tsx,lib/settings/accountSettings.ts
+CONFLICT	1	-	2026-08-28	claude/sanctuary-settings-disconnect-01-v2	
+CONFLICT	2	-	2026-08-28	claude/sanctuary-settings-disconnect-01-v3	
+CODE	1	4	2026-08-28	claude/sanctuary-settings-write-safety-01	__tests__/sanctuary-settings-write-safety-01.test.ts,components/MaiaSettingsPanel.tsx,components/account/AccountSettings.tsx
+CONFLICT	1	-	2026-03-21	claude/serene-golick	
+CONFLICT	1	-	2026-09-08	claude/session-anchor-2026-09-08	
+CONFLICT	3	-	2026-08-24	claude/session-data-diagnostics-ghgh2v	
+CODE	3	15	2026-08-25	claude/session-room-capture-system-lzw56y	app/api/capture/[id]/promote/route.ts,app/api/capture/active-session/route.ts,app/api/capture/route.ts
+CONFLICT	1	-	2025-12-14	claude/setup-init-command-XLYKL	
+CONFLICT	12	-	2026-09-23	claude/sharp-cannon-cyrdeb	
+CONFLICT	2	-	2026-09-20	claude/sharp-hamilton-cg8qno	
+CONFLICT	21	-	2026-08-28	claude/signin-form-field-order-c5h4u1	
+DOCS_ONLY	1	1	2026-08-28	claude/signin-guidance	
+CONFLICT	1	-	2026-08-24	claude/signup-resend-architecture-0faprs	
+CONFLICT	3	-	2026-08-31	claude/soullab-maia-timeout-ifqlc9	
+CONFLICT	3	-	2026-09-13	claude/sovereign-personal-intelligence-census	
+CONFLICT	18	-	2026-09-14	claude/spm-00-sovereign-personal-model	
+CONFLICT	2	-	2026-09-15	claude/spx-b3-composition	
+CONFLICT	46	-	2026-09-08	claude/studio-bring-work-back-icvfaa	
+CONFLICT	1	-	2026-03-17	claude/stupefied-albattani	
+DOCS_ONLY	15	8	2026-09-15	claude/sweet-mayer-on4m5x	
+CONFLICT	171	-	2026-03-20	claude/team-messaging	
+CONFLICT	173	-	2026-03-20	claude/team-v2	
+CODE	1	3	2026-03-14	claude/tender-mayer	app/api/oracle/conversation/route.ts,lib/consciousness/turnOutcome.ts
+CONFLICT	153	-	2026-03-19	claude/tender-thompson	
+CODE	6	3	2026-08-24	claude/tokenrouter-kimi-k3-proof-f74ibx	scripts/jarvis-k3-00-keyshape.sh,scripts/jarvis-k3-00-probe.sh
+CONFLICT	27	-	2026-09-06	claude/transcript-upload-dev-issue-cssjuq	
+DOCS_ONLY	3	2	2026-09-09	claude/two-day-integration-census	
+CONFLICT	12	-	2026-09-13	claude/uare-ai-analysis-bm8azo	
+CONFLICT	2	-	2026-03-12	claude/unruffled-pare	
+CONFLICT	3	-	2026-09-22	claude/upbeat-rubin-l261ig	
+CONFLICT	2	-	2026-02-10	claude/vibrant-archimedes	
+CONFLICT	8	-	2026-09-21	claude/vibrant-bardeen-w5btk0	
+CONFLICT	3	-	2026-09-20	claude/vibrant-johnson-qedi8k	
+CONFLICT	1	-	2026-03-17	claude/vibrant-pike	
+CONFLICT	6	-	2026-09-30	claude/vigilant-edison-x0oxbf	
+CODE	1	6	2026-04-01	claude/vigilant-mahavira	app/api/community/posts/[id]/route.ts,app/api/community/user-stats/route.ts,app/maia/community/new-post/page.tsx
+CONFLICT	3	-	2026-03-16	claude/vigorous-edison	
+CONFLICT	383	-	2026-09-15	claude/voice-2026-census-01	
+CONFLICT	453	-	2026-09-21	claude/voice-2026-closure-reconcile-20260921	
+DOCS_ONLY	3	1	2026-09-13	claude/voice-2026-research	
+DOCS_ONLY	4	3	2026-09-13	claude/voice-2026-research-ici0ph	
+DOCS_ONLY	1	1	2026-08-28	claude/voice-capture-provenance-01	
+CODE	1	1	2026-08-28	claude/voice-capture-provenance-build	lib/provenance/captureProvenance.ts
+CONFLICT	29	-	2026-09-11	claude/voice-recognition-acceptance-witness-ffeadt	
+CONFLICT	305	-	2026-09-14	claude/w4-0-canonical-discourse-census	
+CONFLICT	308	-	2026-09-14	claude/w4-1-editorial-discourse-contract	
+CONFLICT	321	-	2026-09-15	claude/w4-2-schema-design	
+CODE	1	2	2026-09-15	claude/w4-schema-implementation	scripts/witness/w4-post-landing-verify.sh,scripts/witness/w4-schema-land-preflight.sh
+CONFLICT	304	-	2026-09-14	claude/w5-4-editorial-runtime-store	
+CONFLICT	302	-	2026-09-14	claude/w5-editorial-ontology-schema	
+CONFLICT	301	-	2026-09-14	claude/w5-ontology-census	
+CONFLICT	303	-	2026-09-14	claude/w5-z0-chain-editorial-subject	
+CODE	5	5	2026-09-21	claude/wizardly-pascal-xjlgrm	work-units/wu-convergence-proof-portability-01.json
+CONFLICT	83	-	2026-03-17	claude/wizardly-turing	
+CONFLICT	14	-	2026-09-13	claude/wonderful-edison-29hwdg	
+CODE	9	14	2026-10-01	claude/wonderful-newton-ddw3gx	lib/consciousness/autonomy/SafetyCircuitBreakers.ts,lib/consciousness/autonomy/__tests__/SafetyCircuitBreakers.humanNotified.test.ts,scripts/ops/__tests__/health-sentinel.test.sh
+CONFLICT	1	-	2026-05-08	claude/wonderful-sinoussi-7c0847	
+DOCS_ONLY	8	6	2026-09-08	claude/writer-author-studios-roadmap-b2tqf5	
+CONFLICT	12	-	2026-08-29	claude/writers-studio-build-flow-jx9j6o	
+CONFLICT	49	-	2026-09-08	claude/writers-studio-capability-clxw8d	
+CONFLICT	16	-	2026-09-08	claude/writers-studio-experiences-afia8t	
+CONFLICT	5	-	2026-08-31	claude/writers-studio-maia-roadmap-vnby0k	
+CONFLICT	46	-	2026-09-07	claude/writers-studio-onboarding-ek7p06	
+CONFLICT	115	-	2026-08-28	claude/writers-studio-organization-wxpb7q	
+CONFLICT	1	-	2026-08-25	claude/writers-studio-roadmap-gk2jwv	
+CONFLICT	1	-	2026-08-29	claude/writers-studio-save-401	
+CONFLICT	4	-	2026-08-31	claude/writers-studio-spacing-save-1meh7v	
+CONFLICT	128	-	2026-08-31	claude/writers-studio-ws2-03b-qf49hj	
+DOCS_ONLY	6	6	2026-09-15	claude/ws-02-census	
+CODE	10	2	2026-09-09	claude/ws-4b-witness-tooling	scripts/witness/whole-manuscript/export-work.sh,scripts/witness/whole-manuscript/witness-real-work.sh
+CONFLICT	295	-	2026-09-14	claude/ws-editorial-discourse-ruling-transfer	
+CONFLICT	8	-	2026-09-12	claude/ws-field-focus-recovery	
+CONFLICT	6	-	2026-09-09	claude/ws-field-substrate-integration	
+DOCS_ONLY	1	1	2026-09-09	claude/ws-focus-cognition-census	
+CODE	2	3	2026-09-15	claude/ws-production-deploy-01	scripts/witness/ws-production-deploy-preflight.sh,scripts/witness/ws-production-deploy-preflight.sql
+CODE	6	8	2026-09-16	claude/ws-stage1-predeploy	scripts/witness/ws-stage1-postdeploy-verify.sh,scripts/witness/ws-stage1-predeploy-check.sh,scripts/witness/ws-stage2-activation.sh
+DOCS_ONLY	6	3	2026-09-07	claude/ws-write-selection-maia-01	
+CODE	2	4	2026-09-01	claude/ws2-02c-2r-witness-ltdfvw	.witness/browser-witness.mjs,.witness/seed.ts
+CONFLICT	12	-	2026-08-29	claude/ws2-03a-witness	
+CONFLICT	25	-	2026-09-05	claude/ws2-07-f1-semantic-boundary-repair	
+CODE	1	2	2026-09-06	claude/ws2-08a-witness-custody-01	scripts/witness/ws2-08a-f6a-baseline.sh,scripts/witness/ws2-08a-f6b-compare.sh
+CONFLICT	131	-	2026-08-31	claude/ws2-developmental-editing-capture	
+CONFLICT	3	-	2026-09-01	claude/ws2-witness-structure-review-ldeobz	
+ABSORBED	5	0	2026-07-06	claude/xenodochial-bose-7a4504	
+CONFLICT	3	-	2026-04-10	claude/xenodochial-cori	
+CONFLICT	3	-	2026-04-01	claude/xenodochial-jackson	
+CONFLICT	2	-	2026-02-09	claude/youthful-euclid	
+CONFLICT	3	-	2026-03-14	claude/youthful-lumiere	
+CONFLICT	1	-	2026-09-15	claude/youthful-volta-v5ntl8	
+CODE	1	5	2026-05-03	claude/zen-hermann-214ba3	scripts/ddns/iam-policy.json,scripts/ddns/install.sh,scripts/ddns/route53-ddns.service
+DOCS_ONLY	3	3	2026-09-20	claude/zen-keller-evr16j	
+CONFLICT	1	-	2026-04-11	claude/zen-varahamihira	
