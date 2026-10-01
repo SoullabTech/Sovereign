@@ -17,10 +17,10 @@ import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import {
   FROM_HOUSE,
-  STUDIO_WORK_PARAM,
   resolveStudioArrival,
 } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
+import { h1AdmissionNeeded, resolveH1Arrival, withoutStudioWork } from '@/app/writers-studio/h1Arrival';
 
 function idFrom(payload: Record<string, unknown>): string | null {
   const direct = typeof payload.id === 'string' ? payload.id : null;
@@ -196,7 +196,10 @@ export default function P4R1HomeController() {
 
   /* HOUSE-STUDIO-CIRCULATION-01R1 · H1-3 — explicit Work > member choice >
      fallback. With a Work carried, the recency pick above is never consulted. */
-  const { workId: carriedWorkId, checking: h1AdmissionChecking } = useHouseStudioH1WorkClaim(params);
+  // H1 · R2: the seam produces the arrival; the hook only supplies the admission fact.
+  // `pending` is presentation timing ("Opening…"), not authority: workId is already null.
+  const h1 = useHouseStudioH1WorkClaim(h1AdmissionNeeded(params));
+  const { workId: carriedWorkId, pending: h1AdmissionChecking } = resolveH1Arrival(params, h1);
   const studioArrival = resolveStudioArrival(
     worksPhase, works, manuscriptPhase, manuscripts, carriedWorkId,
   );
@@ -212,9 +215,7 @@ export default function P4R1HomeController() {
 
   if (studioArrival.kind !== 'fallback') {
     const withoutWork = () => {
-      const next = new URLSearchParams(params?.toString() ?? '');
-      next.delete(STUDIO_WORK_PARAM);
-      const query = next.toString();
+      const query = withoutStudioWork(params?.toString() ?? '');
       router.push(pathname + (query ? '?' + query : ''));
     };
     // A mode change from the arrival never guesses: only a single declared

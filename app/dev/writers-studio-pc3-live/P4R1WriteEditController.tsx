@@ -9,6 +9,7 @@ import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
 import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
+import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { editorialThreadIdFrom } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -84,7 +85,9 @@ export default function FlagshipWriteEditController() {
   const [selectedPassage, setSelectedPassage] = useState<Pc3HeldPassage | null>(null);
   const writingRef = useRef<SectionWriting | null>(null);
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
-  const { workId: carriedWorkId } = useHouseStudioH1WorkClaim(params);
+  // H1 · R2: the seam produces the arrival; the hook only supplies the admission fact.
+  const h1 = useHouseStudioH1WorkClaim(h1AdmissionNeeded(params));
+  const { workId: carriedWorkId } = resolveH1Arrival(params, h1);
 
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
