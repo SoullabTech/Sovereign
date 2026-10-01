@@ -21,6 +21,7 @@
     CLEAR: 'CLEAR',
     AMBIGUOUS: 'AMBIGUOUS',
     INVALID: 'INVALID',
+    CANDIDATE: 'CANDIDATE',
   });
 
   const CONTINUATION_WORDS = /^(?:continue|proceed|keep going|next\b|take this as far as you safely can\b)/i;
@@ -123,6 +124,43 @@
     };
   }
 
+  function validProposalEvidenceRecord(record) {
+    return record && typeof record === 'object'
+      && record.ledger_version === 'W4.v2'
+      && record.kind === 'proposal'
+      && typeof record.id === 'string'
+      && /^sha256:[0-9a-f]{64}$/i.test(record.id)
+      && record.entry && typeof record.entry === 'object'
+      && record.entry.kind === 'proposal'
+      && typeof record.entry.source_act === 'string' && record.entry.source_act.trim()
+      && typeof record.entry.summary === 'string' && record.entry.summary.trim()
+      && typeof record.entry.proposed_kind === 'string' && record.entry.proposed_kind.trim();
+  }
+
+  function projectExecutorProposalCandidate(record) {
+    if (!validProposalEvidenceRecord(record)) return null;
+    return Object.freeze({
+      standing: STANDING.CANDIDATE,
+      raw_utterance: normalizeUtterance(record.entry.summary),
+      source: 'executor-proposal',
+      source_ref: `w4-proposal:${record.id}`,
+      authority_grants: Object.freeze([]),
+    });
+  }
+
+  function projectExecutorProposalCandidates(records = []) {
+    if (!Array.isArray(records)) return Object.freeze([]);
+    const seen = new Set();
+    const out = [];
+    for (const record of records) {
+      const candidate = projectExecutorProposalCandidate(record);
+      if (!candidate || seen.has(candidate.source_ref)) continue;
+      seen.add(candidate.source_ref);
+      out.push(candidate);
+    }
+    return Object.freeze(out);
+  }
+
   function compileIntent({ utterance, priorIntent = null } = {}) {
     const raw = normalizeUtterance(utterance);
     if (!raw) return invalidRecord(raw, 'Operator intent is empty.');
@@ -209,6 +247,8 @@
     isContinuation,
     hasChainedRelease,
     authorityMentions,
+    projectExecutorProposalCandidate,
+    projectExecutorProposalCandidates,
     compileIntent,
   };
 });
