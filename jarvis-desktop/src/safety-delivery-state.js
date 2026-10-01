@@ -12,7 +12,7 @@
     canonical_base: 'a999932df7aa3d4052ee78f044878026aa4f680b',
     live_telemetry: false,
     needs_kelly: Object.freeze([
-      'Configure at least one independent human alert channel: Twilio SMS or Slack webhook.',
+      'Configure at least one independent human alert channel: Twilio SMS or Slack webhook; then run npm run check:safety-human-delivery until it reports READY.',
     ]),
     in_motion: Object.freeze([
       'PR #1671 gives adult crisis/high-risk, teen crisis, and Stellium safety failures one content-free human fallback.',
