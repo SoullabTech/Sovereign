@@ -11,15 +11,15 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function(Origin) {
   function classification(item) {
     if (!item?.readable || !item?.snapshot?.ok) {
-      return { group:'watching', reason:'Work Unit could not be read from canonical custody.' };
+      return { group:'watching', reason:'This work record could not be read and needs checking.' };
     }
     const snapshot = item.snapshot;
     const state = snapshot.lifecycle?.state || 'UNKNOWN';
     if (state === 'CLOSED') {
-      return { group:'historical', reason:'Closed canonical Work Unit.' };
+      return { group:'historical', reason:'This work is closed and kept for history.' };
     }
     if ((snapshot.next_actions || []).some(a => a.action === 'canonical-adjudicate')) {
-      return { group:'needs_kelly', reason:'Evidence is ready for explicit human adjudication.' };
+      return { group:'needs_kelly', reason:'The evidence is ready for your review and decision.' };
     }
     const failed = (snapshot.provenance?.attempts || []).some(a => a.status === 'failed');
     const challenged = (snapshot.provenance?.verifier_results || []).some(v =>
@@ -28,12 +28,12 @@
       || snapshot.routing?.execution_disposition === 'refused';
     if (failed || challenged || routeBlocked) {
       return { group:'watching', reason: failed
-        ? 'A durable execution attempt failed.'
+        ? 'One attempt failed and this work needs watching.'
         : challenged
-          ? 'Verifier evidence contains challenge, disagreement, or insufficiency.'
-          : 'Canonical routing reports a blocker or refusal.' };
+          ? 'A review challenged the result or found the evidence insufficient.'
+          : 'This work is blocked before it can continue.' };
     }
-    return { group:'in_motion', reason:'Canonical Work Unit remains open without a current adjudication hold.' };
+    return { group:'in_motion', reason:'This work is still open and moving.' };
   }
 
   function row(item) {
