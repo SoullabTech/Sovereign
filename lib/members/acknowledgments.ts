@@ -7,7 +7,11 @@
  */
 import { query, type TransactionClient } from '@/lib/db/postgres';
 import { ADULT_ACK_KIND, ADULT_ACK_VERSION } from './adultConfirmation';
-import { decideAcknowledgmentGate, type AcknowledgmentGateDecision } from './acknowledgmentGate';
+import {
+  decideAcknowledgmentGate,
+  createCachedAcknowledgmentGate,
+  type AcknowledgmentGateDecision,
+} from './acknowledgmentGate';
 import type { AcknowledgmentKind, AcknowledgmentSource } from './acknowledgmentGate';
 
 export type { AcknowledgmentKind, AcknowledgmentSource, AcknowledgmentGateDecision };
@@ -54,14 +58,11 @@ export async function missingAcknowledgments(
 export const RECORDABLE_ACKNOWLEDGMENTS: ReadonlyArray<{ kind: AcknowledgmentKind; version: number }> =
   REQUIRED_ACKNOWLEDGMENTS;
 
-/** Server enforcement point for a signed-in member's MAIA turn. */
-export async function acknowledgmentGateForMember(memberId: string): Promise<AcknowledgmentGateDecision> {
-  let missing: Array<{ kind: AcknowledgmentKind; version: number }> | Error;
-  try {
-    missing = await missingAcknowledgments(memberId);
-  } catch (err) {
-    console.error('[ACK] gate read failed; refusing member turn (fail-closed):', err);
-    missing = err instanceof Error ? err : new Error(String(err));
-  }
-  return decideAcknowledgmentGate(missing);
-}
+/* Server enforcement point for a signed-in member's MAIA turn, with the
+   satisfied-cache described in ./acknowledgmentGate.ts. */
+const gate = createCachedAcknowledgmentGate({
+  readMissing: missingAcknowledgments,
+  requiredSignature: () => REQUIRED_ACKNOWLEDGMENTS.map((r) => `${r.kind}@${r.version}`).join(','),
+});
+
+export const acknowledgmentGateForMember = gate.check;

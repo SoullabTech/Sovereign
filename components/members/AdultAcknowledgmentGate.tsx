@@ -102,11 +102,11 @@ export function AdultAcknowledgmentGate() {
     >
       <div className="w-full max-w-md rounded-2xl bg-stone-900 p-6 text-stone-100 shadow-xl">
         <h2 id="adult-ack-title" className="text-lg font-medium">
-          One thing before you continue
+          Soullab is opening to adults first
         </h2>
         <p className="mt-3 text-sm text-stone-300">
-          Soullab is open to adults only for now. We&apos;re asking every member to confirm this
-          once, in their own words, rather than assuming it.
+          We&apos;re starting with adults, and a space for younger members will come later with its
+          own entrance. We ask everyone once, rather than assume.
         </p>
         <label className="mt-5 flex items-start gap-3 text-sm">
           <input
