@@ -184,6 +184,87 @@ validation · ✓ no persistence · ✓ no crossing-registry expansion · ✓ no
 4. **Review question** — *Does this implementation preserve the difference between member
    intention, system inference, and durable relationship?* **Yes → merge. No → STOP.**
 
+## 7 · H1-R3 return boundary
+
+H1-R3 reuses the existing House threshold rather than inventing a Studio return
+mechanism.
+
+`app/writers-studio/layout.tsx` now places
+`HouseEntryThreshold room="WRITER'S STUDIO"` at the Studio's outer boundary.
+The existing threshold already enforces the needed law:
+
+- it appears only when `from=house` is present;
+- it returns through canonical `/home`;
+- it does not know the Work or manuscript;
+- it creates no persistence;
+- it introduces no `FACET_CROSSINGS` vocabulary.
+
+This is therefore a **navigation membrane**, not a memory layer.
+
+Behavioral witness:
+- House → Studio → Return Home → `/home`: PASS.
+- Direct Studio entry → no House return threshold: PASS.
+- H1-R1 Work/manuscript landing identity remains unchanged: PASS.
+
+Verification:
+- Writer's Studio: **78 suites / 805 tests PASS** before the final visual repair;
+  the targeted H1-R3 suite is **20 tests PASS** after it.
+- Focused H1-R2 + H1-R3: **20 tests PASS** after the mobile threshold repair.
+- Desktop 1440×900 visual witness: Return Home visible.
+- Mobile 390×844 visual witness: Return Home visible and clear of the fixed
+  Theme control.
+- Project typecheck: blocked by unrelated new diagnostic
+  `lib/stripe/config.ts:23` (Stripe API version type mismatch). No H1-R3
+  diagnostic was reported.
+
+**H1-R3 disposition:** IMPLEMENTATION COMPLETE · BEHAVIORAL EVIDENCE COMPLETE ·
+VISUAL WITNESS COMPLETE · FOUNDER VISUAL ACCEPTANCE PENDING · MERGE REVIEW
+PENDING.
+
+## 7a · H1-R4 context release
+
+H1-R4 was a witness-only act. No new code or persistence mechanism was
+authorized because H1-R1/F7 already contains the release seam.
+
+Real Chromium witness:
+- House → Work A → manuscript A: mode=write&m=A, no work=.
+- Studio Home was opened explicitly.
+- Work B was selected with the existing Studio Home action.
+- Final address: mode=write&m=B&s=<section>, no work= or alternate Work key.
+- Visible Work identity changed to Work B.
+- Browser localStorage and sessionStorage contained neither Work A nor Work B
+  ids.
+
+**H1-R4 disposition:** IMPLEMENTATION NOT REQUIRED · BEHAVIORAL EVIDENCE
+COMPLETE.
+
+This closes the stronger F7 question:
+
+> **Does the system let go when the member moves?**
+
+Yes. The temporary relationship is released because the next Work is resolved
+from the member's own declarations, not from the threshold that preceded it.
+
+## 7b · H1-R5 no-manuscript orientation
+
+H1-R5 was also witness-only. A Work with zero declared manuscripts was entered
+from House.
+
+Real Chromium witness:
+- Work identity remained in the Studio URL.
+- no m= parameter was introduced;
+- Studio remained in Home/orientation rather than Write;
+- the Work title was visible;
+- Start writing was offered;
+- the member's manuscript count remained zero.
+
+**H1-R5 disposition:** IMPLEMENTATION NOT REQUIRED · BEHAVIORAL EVIDENCE
+COMPLETE.
+
+The three-state crossing rule is now behaviorally witnessed at its two
+nontrivial edges: zero manuscripts refuses invention; two manuscripts refuses
+selection by guess.
+
 ## 7 · Explicit non-authorizations
 
 ⛔ merge · ⛔ deploy · ⛔ migration · ⛔ stored context / continuation tokens · ⛔ MAIA context

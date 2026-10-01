@@ -1,3 +1,4 @@
+import { HouseEntryThreshold } from '@/components/house/HouseEntryThreshold';
 import { StudioAtmosphere } from './atmosphere/StudioAtmosphere';
 
 /**
@@ -11,5 +12,10 @@ import { StudioAtmosphere } from './atmosphere/StudioAtmosphere';
  * update.
  */
 export default function WritersStudioLayout({ children }: { children: React.ReactNode }) {
-  return <StudioAtmosphere>{children}</StudioAtmosphere>;
+  return (
+    <StudioAtmosphere>
+      <HouseEntryThreshold room="WRITER'S STUDIO" />
+      {children}
+    </StudioAtmosphere>
+  );
 }
