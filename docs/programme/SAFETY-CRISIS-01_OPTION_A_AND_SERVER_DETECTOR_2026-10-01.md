@@ -113,3 +113,29 @@ A fresh canonical census found that the non-delivery register had become stale i
 - **Documentation corrected.** The teen quick reference no longer promises team/guardian delivery, and the guardian-consent document is explicitly a non-operative draft while youth admission is closed.
 
 The non-delivery register therefore removes S1, S2 and S4 in this change. S3 remains open because it is a real practitioner-delivery dependency coupled to the current mail outage. The Option A disclosure remains a separate open dependency in #1636.
+
+## 9. Frontier-check determination
+
+The `frontier-dependent` / `frontier-check` labels on #1633 are a **path
+heuristic**, triggered because `lib/sovereign/maiaService.ts` appears in the
+diff.
+
+A direct diff census found **no actual frontier dependency** in this change:
+
+- no model ID is added or changed;
+- no model provider is added or changed;
+- no SDK/API behavior is assumed;
+- no pricing, rate-limit, availability, or vendor-runtime fact is used;
+- no external capability claim determines the safety policy.
+
+The `maiaService` change only carries a server-authored crisis addendum into
+existing FAST/CORE send sites and prevents a crisis-signaled turn from choosing
+DEEP because that existing prompt builder does not carry addenda. Those are
+repository-local routing and prompt-authority facts, witnessed by source and
+tests.
+
+Under the precedent recorded in
+`docs/programme/GOVERNANCE-CLASS-A-BOOTSTRAP-SHADOW-01.md` §4, this
+determination resolves the `frontier-check` for **#1633 only**. The labels may
+remain as diagnostic output from the path-based auto-labeler; they do not
+represent an unresolved external-fact dependency for this PR.
