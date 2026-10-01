@@ -59,11 +59,11 @@ This lane was opened by a member report. In a long voice session, a bare "goodby
 
 ## 4. Known limits, stated rather than hidden
 
-- **Single turn.** A bare "yes" answering MAIA's check-in is `none`. The ambiguous addendum tells MAIA to name 988 herself if the member confirms, and she sees her own question in the conversation history. Cross-turn classification is not built.
+- **Cross-turn confirmation (added in review, 2026-10-01).** On an AMBIGUOUS turn, MAIA is now *required* to ask gently and directly about safety. If her reply actually contains a safety question (`maiaAskedAboutSafety`), the route holds an in-memory check-in flag for two turns or 15 minutes, whichever ends first. An affirmative answer ("yes", "maybe", "kind of") then escalates to CLEAR and shows the card; a negative answer clears the flag. Requiring MAIA's question is what keeps a "yes" to an unrelated question from firing. The flag holds no text and no identifier beyond the session key, and nothing is persisted. A restart loses it, which fails safe toward single-turn assessment. It applies under Sanctuary because it stores no content. 12 cross-turn cases; defeat candidates DC-10…DC-13 are all DEAD.
 - **Conditional idiom.** *"I'm going to kill myself if I have to sit through another meeting"* is **clear**. A real conditional statement ("if things don't change I'm going to kill myself") is serious, and a miss costs more than this false positive. Accepted and recorded.
 - **Third person and fiction are `none`.** *"My friend wants to kill herself"* gets no context. The Writer's Studio canonical turn does not receive the addendum: its membership is fixed by CMT-01, and an addendum added outside that would be the P8 double-participation trap. When CMT M3 lands, crisis safety must become a registered producer.
 - **Other callers.** `getMaiaResponse` callers other than `/list` (the sibling `/api/sovereign/app/maia` and `/api/journal/reflect`) get the safety context but **no referral**, because the referral is attached by the route. Cognition routes that do not call `getMaiaResponse` (`/api/between/chat`, `/api/oracle/conversation`, `/api/voice/stream-conversation`) get neither. `/maia` uses `/list`.
-- **The referral is visual.** In voice mode with the transcript hidden, the member may not see the card. What they hear is MAIA's own reply, which the clear addendum directs to encourage 988 now. That reply is model-generated, not deterministic. The retired client script was spoken but fired on ordinary speech. Whether the card should also be spoken is a founder call.
+- **The referral is visual; MAIA says the number.** Ruled in review: the card is not read aloud. Instead, the clear addendum *requires* MAIA to say "call or text 988" in her own reply, so a voice member with the transcript hidden still hears it. Her reply is model-generated, so the post-deploy witness must confirm the number is actually spoken.
 - **English only, U.S. resources.** No other locale is detected or referred.
 - **The teen client path is unchanged.** `performTeenSafetyCheck` still shows its own resource card and calls `alertSoullabTeam`, which writes the member's message to the browser console (register S2, corrected). It is inert while no member is a teen.
 
@@ -79,10 +79,20 @@ This lane was opened by a member report. In a long voice session, a bare "goodby
 
 ## 7. Evidence
 
-- `npm run matrix:safety-crisis` → reference 83/83 · content-free + disclosure PASS · DC-1…DC-9 DEAD · **LETHAL + REFERENCE CLEAN**, exit 0.
+- `npm run matrix:safety-crisis` → **LETHAL + REFERENCE CLEAN**, exit 0:
+  - reference 86/86;
+  - cross-turn 12/12;
+  - content-free, disclosure and copy obligations PASS;
+  - DC-1…DC-13 all DEAD.
 - `jest`:
   - voice-crisis-speech-act-01 (rewritten) · voice-non-degradation · voice-transcript-commit · voice-turn-taking-01: **40/40**;
   - `app/api/sovereign/app/maia/list` + `lib/sovereign/__tests__`: 140/141. The one failure is `presenceMode.test.ts` › *called after sanitization, before voice synthesis*, which **also fails on unmodified canonical `56d0cd679`**.
 - Voice non-degradation gate: the pinned call set of `handleVoiceTranscript` **shrank** by four (`detectCrisis`, the two script joins, the pacing `setTimeout`). Shrinking is the only direction that pin may move without a ruling.
 - `npm run typecheck`: 222 errors vs baseline 239, **0 regressions**.
-- ⛔ Not witnessed: a live turn in production. After deploy, the witness is one typed CLEAR turn and one voice CLEAR turn, run on a founder account. Each must show the referral card and a MAIA reply that encourages 988, with `[SAFETY/crisis] tier=clear` in the logs and no member text. One ordinary farewell must show nothing.
+- ⛔ Not witnessed: a live turn in production. The witness after deploy is four turns, run on a founder account:
+  1. **Typed CLEAR.** Card shown; MAIA's reply names 988.
+  2. **Voice CLEAR.** MAIA *says* 988 aloud.
+  3. **AMBIGUOUS** ("I don't see the point anymore"). No card; MAIA asks directly about safety. Then answer "yes" on the next turn: the card must appear.
+  4. **An ordinary farewell.** Nothing shown.
+
+  The logs must show `[SAFETY/crisis] tier=…` lines with no member text.

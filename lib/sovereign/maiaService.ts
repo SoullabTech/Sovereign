@@ -27,7 +27,7 @@ import {
 const DEEP_CONSULTATION_APERTURE = 5;
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
-import { assessCrisis, CRISIS_ADDENDUM } from '../safety/crisisAssessment';
+import { assessCrisis, CRISIS_ADDENDUM, type CrisisAssessment } from '../safety/crisisAssessment';
 
 /**
  * SAFETY-CRISIS-01: append the server-authored crisis safety context, if this
@@ -665,6 +665,13 @@ type MaiaRequest = {
    * Absent → getMaiaResponse computes one at the shared boundary.
    */
   orientationContract?: OrientationContract | null;
+  /**
+   * SAFETY-CRISIS-01: the route's crisis assessment for this turn, including an
+   * escalation from a confirmed safety check-in that `input` alone cannot show.
+   * Typed and top-level, never in `meta`, so a client cannot forge it. Absent →
+   * getMaiaResponse assesses `input` itself.
+   */
+  crisisAssessment?: CrisisAssessment;
   /**
    * FOCUS-PRODUCER-01 — the writers_studio canonical participation path.
    *
@@ -3080,7 +3087,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // ALWAYS overwrites `meta.crisisSafetyAddendum`, so a client cannot supply,
   // suppress or replace safety context through the request body (PBR-001). Pure,
   // in-memory, content-free: nothing here is logged or persisted.
-  const crisisAssessment = assessCrisis(input);
+  const crisisAssessment = req.crisisAssessment ?? assessCrisis(input);
   (meta as Record<string, unknown>).crisisSafetyAddendum =
     crisisAssessment.tier === 'none' ? undefined : CRISIS_ADDENDUM[crisisAssessment.tier];
   if (writerStudio) {

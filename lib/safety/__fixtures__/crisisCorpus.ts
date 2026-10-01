@@ -57,6 +57,8 @@ export const MUST_BE_AMBIGUOUS: CorpusCase[] = [
   { text: "I'm a burden to everyone", tier: 'ambiguous', why: 'hopelessness' },
   { text: 'there is no reason to live', tier: 'ambiguous', why: 'hopelessness' },
   { text: "I can't do this anymore", tier: 'ambiguous', why: 'hopelessness: classic warning sign' },
+  { text: "I don't see the point anymore", tier: 'ambiguous', why: 'hopelessness: the founder live-check case' },
+  { text: "honestly there's no point anymore", tier: 'ambiguous', why: 'hopelessness' },
   { text: "I'm going to hurt myself", tier: 'ambiguous', why: 'self-harm' },
   { text: 'I need to hurt myself', tier: 'ambiguous', why: 'self-harm urge' },
   { text: "I've been cutting myself again", tier: 'ambiguous', why: 'self-harm act' },
@@ -87,6 +89,7 @@ export const MUST_BE_NONE: CorpusCase[] = [
   { text: 'tonight is the night of the full moon ceremony', tier: 'none', why: '"tonight is the night"' },
   { text: 'tell them I love the new design', tier: 'none', why: '"tell them I love"' },
   { text: 'what is the point of this feature', tier: 'none', why: '"what\'s the point" about a feature' },
+  { text: "I don't see the point of this meeting", tier: 'none', why: '"don\'t see the point" about a meeting' },
   { text: 'nothing matters more than presence', tier: 'none', why: '"nothing matters"' },
   { text: "I'm so tired of this rain", tier: 'none', why: '"so tired of this"' },
   { text: "I don't want to be here in this job forever", tier: 'none', why: '"don\'t want to be here" about a job' },
@@ -114,3 +117,33 @@ export const MUST_BE_NONE: CorpusCase[] = [
 ];
 
 export const ALL_CASES: CorpusCase[] = [...MUST_BE_CLEAR, ...MUST_BE_AMBIGUOUS, ...MUST_BE_NONE];
+
+/**
+ * Cross-turn cases: an AMBIGUOUS member turn, MAIA's reply, then the member's
+ * next message. `tier` is what the next message must assess to.
+ */
+export interface FollowUpCase {
+  maiaReply: string;
+  memberReply: string;
+  tier: CrisisTier;
+  why: string;
+}
+
+const ASKED = "That sounds really heavy. Can I ask you something directly: are you having thoughts of ending your life?";
+const ASKED_HURT = "I'm here with you. Are you thinking about hurting yourself?";
+const NOT_ASKED = "It sounds like the job is wearing you down. Do you want to talk about what happened today?";
+
+export const FOLLOW_UPS: FollowUpCase[] = [
+  { maiaReply: ASKED, memberReply: 'yes', tier: 'clear', why: 'a bare "yes" to a direct safety question' },
+  { maiaReply: ASKED, memberReply: 'yeah, sometimes', tier: 'clear', why: 'affirmative, qualified' },
+  { maiaReply: ASKED, memberReply: 'maybe', tier: 'clear', why: '"maybe" to a safety question is a yes for this purpose' },
+  { maiaReply: ASKED_HURT, memberReply: 'kind of. I keep thinking about it', tier: 'clear', why: 'affirmative to a self-harm question' },
+  { maiaReply: ASKED, memberReply: "yes but I'm not going to do anything", tier: 'clear', why: 'thoughts confirmed; reassurance does not cancel the referral' },
+  { maiaReply: ASKED, memberReply: 'no', tier: 'none', why: 'negative answer' },
+  { maiaReply: ASKED, memberReply: "no, I'm just exhausted from work", tier: 'none', why: 'negative answer with context' },
+  { maiaReply: ASKED, memberReply: 'not really', tier: 'none', why: 'negative answer' },
+  { maiaReply: ASKED, memberReply: 'no, I am fine', tier: 'none', why: '"I am" appears, but the answer is no' },
+  { maiaReply: NOT_ASKED, memberReply: 'yes', tier: 'none', why: 'MAIA did not ask about safety: a "yes" answers something else' },
+  { maiaReply: NOT_ASKED, memberReply: 'yeah I guess', tier: 'none', why: 'MAIA did not ask about safety' },
+  { maiaReply: 'Are you having thoughts of ending your life.', memberReply: 'yes', tier: 'none', why: 'not phrased as a question: no check-in recorded' },
+];

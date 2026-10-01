@@ -12,8 +12,8 @@
  *
  * Exit 0 only when the reference is clean AND every candidate dies on its named kind.
  */
-import { assessCrisis, crisisLogLine, CRISIS_REFERRAL, CRISIS_ADDENDUM, type CrisisTier } from '../../../lib/safety/crisisAssessment.ts';
-import { ALL_CASES, MUST_BE_CLEAR, MUST_BE_AMBIGUOUS, MUST_BE_NONE, type CorpusCase } from '../../../lib/safety/__fixtures__/crisisCorpus.ts';
+import { assessCrisis, assessCrisisWithCheckIn, maiaAskedAboutSafety, classifyCheckInAnswer, crisisLogLine, CRISIS_REFERRAL, CRISIS_ADDENDUM, type CrisisTier } from '../../../lib/safety/crisisAssessment.ts';
+import { ALL_CASES, MUST_BE_CLEAR, MUST_BE_AMBIGUOUS, MUST_BE_NONE, FOLLOW_UPS, type CorpusCase } from '../../../lib/safety/__fixtures__/crisisCorpus.ts';
 
 type Detector = (text: string) => CrisisTier;
 
@@ -137,6 +137,48 @@ for (const cand of candidates) {
   }
   const first = named[0];
   console.log(`  ✓ ${cand.id} ${cand.name}: DEAD on ${cand.dies} ×${named.length} — e.g. ${JSON.stringify(first.c.text)} → ${first.got} (expected ${first.c.tier})`);
+}
+
+// ─── Cross-turn confirmation ────────────────────────────────────────────────
+type FollowUpDetector = (maiaReply: string, memberReply: string) => CrisisTier;
+const followUpReference: FollowUpDetector = (r, m) => assessCrisisWithCheckIn(m, maiaAskedAboutSafety(r)).tier;
+const fuFailures = FOLLOW_UPS.filter((c) => followUpReference(c.maiaReply, c.memberReply) !== c.tier);
+console.log(`\nCROSS-TURN reference: ${FOLLOW_UPS.length - fuFailures.length}/${FOLLOW_UPS.length} cases`);
+for (const c of fuFailures) {
+  failed = true;
+  console.log(`  ✗ expected ${c.tier}, got ${followUpReference(c.maiaReply, c.memberReply)}: ${JSON.stringify(c.memberReply)} after ${JSON.stringify(c.maiaReply)} (${c.why})`);
+}
+const followUpCandidates: { id: string; name: string; dies: Kind; detector: FollowUpDetector }[] = [
+  // DC-10: escalate any affirmative after an ambiguous turn, whether or not MAIA asked.
+  { id: 'DC-10', name: 'any "yes" escalates, no check-in required', dies: 'false-positive', detector: (_r, m) => assessCrisisWithCheckIn(m, true).tier },
+  // DC-11: single-turn only, the gap this closes.
+  { id: 'DC-11', name: 'no cross-turn memory', dies: 'miss', detector: (_r, m) => assessCrisis(m).tier },
+  // DC-12: affirmative read by substring, so "no, I am fine" is a yes.
+  { id: 'DC-12', name: 'affirmative by substring', dies: 'false-positive', detector: (r, m) => (maiaAskedAboutSafety(r) && /\b(?:yes|yeah|i am|maybe)\b/i.test(m) ? 'clear' : assessCrisis(m).tier) },
+  // DC-13: a negative answer escalates anyway (the check-in itself is treated as the signal).
+  { id: 'DC-13', name: 'check-in alone escalates', dies: 'false-positive', detector: (r, m) => (maiaAskedAboutSafety(r) ? 'clear' : assessCrisis(m).tier) },
+];
+for (const cand of followUpCandidates) {
+  const named = FOLLOW_UPS.filter((c) => kindOf(c.tier, cand.detector(c.maiaReply, c.memberReply)) === cand.dies);
+  if (named.length === 0) {
+    failed = true;
+    console.log(`  ✗ ${cand.id} ${cand.name}: SURVIVED its named kind (${cand.dies}). Repair the corpus.`);
+  } else {
+    console.log(`  ✓ ${cand.id} ${cand.name}: DEAD on ${cand.dies} ×${named.length} — e.g. ${JSON.stringify(named[0].memberReply)}`);
+  }
+}
+if (classifyCheckInAnswer('') !== 'other') { failed = true; console.log('  ✗ empty answer must be "other"'); }
+
+// ─── Copy obligations ───────────────────────────────────────────────────────
+// CLEAR: MAIA must say the number aloud (voice members may never see the card).
+if (!/say the number/i.test(CRISIS_ADDENDUM.clear) || !/988/.test(CRISIS_ADDENDUM.clear)) {
+  failed = true;
+  console.log('  ✗ clear addendum must require MAIA to say 988 in her reply');
+}
+// AMBIGUOUS: the direct question is required, not optional.
+if (!/ask gently and directly/i.test(CRISIS_ADDENDUM.ambiguous) || /if it fits/i.test(CRISIS_ADDENDUM.ambiguous)) {
+  failed = true;
+  console.log('  ✗ ambiguous addendum must require a gentle, direct safety question');
 }
 
 console.log(`\n${failed ? 'FAIL' : 'LETHAL + REFERENCE CLEAN'}`);

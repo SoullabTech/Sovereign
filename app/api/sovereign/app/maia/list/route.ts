@@ -94,7 +94,8 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
-import { assessCrisis, crisisLogLine, CRISIS_REFERRAL } from '@/lib/safety/crisisAssessment';
+import { assessCrisisWithCheckIn, classifyCheckInAnswer, crisisLogLine, maiaAskedAboutSafety, CRISIS_REFERRAL } from '@/lib/safety/crisisAssessment';
+import { takeSafetyCheckIn, clearSafetyCheckIn, markSafetyCheckIn } from '@/lib/safety/crisisCheckIn';
 import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/runner';
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
@@ -423,20 +424,6 @@ export async function POST(req: NextRequest) {
     // ─────────────────────────────────────────────────────────────────────────
     const isSanctuary = (meta as any)?.sanctuary === true;
 
-    // 🆘 SAFETY-CRISIS-01 (founder ruling 2026-10-01, Option A): server-side crisis
-    // assessment of the member's own words. This is the point where typed turns,
-    // web voice, desktop native voice and salvaged drafts all converge, so every
-    // path is assessed once and identically. No human is alerted: we are not the
-    // alert. CLEAR → deterministic 988 / Crisis Text Line referral on the response
-    // (below) + safety context for MAIA (set inside getMaiaResponse). AMBIGUOUS →
-    // safety context for MAIA only. The log line is content-free by construction
-    // and is suppressed under Sanctuary.
-    const crisisAssessment = assessCrisis(message);
-    if (crisisAssessment.tier === 'clear') safetyReferral = CRISIS_REFERRAL;
-    if (crisisAssessment.tier !== 'none' && !isSanctuary) {
-      console.warn(crisisLogLine(crisisAssessment, '/api/sovereign/app/maia/list'));
-    }
-
     // 🛡️ IDENTITY GUARD: Only attempt cross-session memory for recognized users
     // Anonymous sessions (no userId) can still have in-session context but won't
     // trigger "0 memories found" alarms from cross-session retrieval
@@ -478,6 +465,28 @@ export async function POST(req: NextRequest) {
           durabilityErr?.message ?? durabilityErr
         );
       }
+    }
+
+    // 🆘 SAFETY-CRISIS-01 (founder ruling 2026-10-01, Option A): server-side crisis
+    // assessment of the member's own words. This is the point where typed turns,
+    // web voice, desktop native voice and salvaged drafts all converge, so every
+    // path is assessed once and identically. No human is alerted: we are not the
+    // alert. CLEAR → deterministic 988 / Crisis Text Line referral on the response
+    // (below) + safety context for MAIA (passed to getMaiaResponse as a typed,
+    // server-only field). AMBIGUOUS → safety context for MAIA only. If MAIA's
+    // reply to an AMBIGUOUS turn asked directly about safety, a short-lived
+    // check-in flag lets an affirmative answer ("yes") escalate to CLEAR on the
+    // next turns. The log line is content-free and suppressed under Sanctuary.
+    // Placed after the durable write above, so it cannot widen the loss window.
+    const crisisCheckInKey =
+      acceptedSessionId ?? (isRecognizedUser ? `member:${userId}` : '');
+    const crisisAssessment = assessCrisisWithCheckIn(message, takeSafetyCheckIn(crisisCheckInKey));
+    if (crisisAssessment.tier === 'clear' || classifyCheckInAnswer(message) === 'negative') {
+      clearSafetyCheckIn(crisisCheckInKey);
+    }
+    if (crisisAssessment.tier === 'clear') safetyReferral = CRISIS_REFERRAL;
+    if (crisisAssessment.tier !== 'none' && !isSanctuary) {
+      console.warn(crisisLogLine(crisisAssessment, '/api/sovereign/app/maia/list'));
     }
 
     // TII-03 — PURE COMMAND ACCEPTANCE: post-F1, pre-O8/F2/cognition.
@@ -1660,6 +1669,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       getMaiaResponse({
         sessionId: session.id,
         input: message,
+        // 🆘 SAFETY-CRISIS-01: the route's assessment (including a confirmed
+        // check-in) is the one cognition uses. Typed and top-level, never meta.
+        crisisAssessment,
         includeAudio: includeAudio || false,
         voiceProfile: voiceProfile,
         // R1 serving-route witness (2026-08-13): declared at the HTTP boundary. Note
@@ -1831,6 +1843,12 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Conditions: Care/counsel mode + turn 3+ + meaningful length + no anchor already present + not sanctuary
     // Applied before telemetry so the shape evaluator sees the final anchored text.
     let sovereignText = orchestratorResult.text ?? '';
+
+    // 🆘 SAFETY-CRISIS-01: if this was an AMBIGUOUS turn and MAIA actually asked
+    // the member directly about safety, hold the check-in for the next turns.
+    if (crisisAssessment.tier === 'ambiguous' && maiaAskedAboutSafety(sovereignText)) {
+      markSafetyCheckIn(crisisCheckInKey);
+    }
 
     // 🧱 MAIA TURN DURABLE (F1 — second half of durable turn acceptance)
     //

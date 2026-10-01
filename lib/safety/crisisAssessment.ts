@@ -42,7 +42,9 @@ export type CrisisSignal =
   | 'death_wish'               // "I want to die", "I wish I were dead"
   | 'hopelessness'             // "no reason to live", "better off without me", "I'm a burden"
   | 'self_harm'                // urge or act of self-injury
-  | 'negated_or_hypothetical'; // a clear phrase that is negated or hyperbolic ("I'd never kill myself")
+  | 'negated_or_hypothetical' // a clear phrase that is negated, hyperbolic or unframed ("I'd never kill myself")
+  // CROSS-TURN
+  | 'confirmed_after_checkin'; // an affirmative answer to MAIA's direct safety check-in
 
 export interface CrisisAssessment {
   tier: CrisisTier;
@@ -106,7 +108,7 @@ const RE_FAREWELL = /\b(?:this is goodbye|goodbye forever|tonight is the night|w
 // ("die of embarrassment", "die laughing") are excluded outright.
 const RE_DEATH_WISH = /\b(?:i (?:just |really |honestly )?want to die\b(?! (?:of|from|laughing|happy|for|in|on|at|with|trying|when|if)\b)|i wish i (?:was|were|had been) dead|i wish i (?:had )?never (?:been born|woke up|existed)|i (?:don't|do not) want to (?:live|be alive|exist|wake up)(?: anymore| any more| like this)?(?= *[.!?,;]| *$| and | but )|i can't (?:live|go on)(?: like this| anymore| any more)?(?= *[.!?,;]| *$| and | but )|i want to end it(?: all)?(?= *[.!?,;]| *$| and | but )|i'm (?:going|about) to end it(?: all)?(?= *[.!?,;]| *$| and | but | tonight| today| now)|end it all\b)/;
 
-const RE_HOPELESSNESS = /\b(?:no reason to (?:live|keep going|go on)|nothing (?:left )?to live for|(?:everyone|they|you|my family|the world) (?:would|'d) be better off without me|better off (?:if i (?:was|were) )?dead|i'm (?:just )?a burden(?: to| on)?|no one would (?:miss|notice|care)(?: if i (?:was|were) gone| if i died| about me| me)|what's the point (?:of|in) (?:living|going on|being alive|staying alive)|(?:sick|tired) of (?:living|being alive)|i want to disappear forever|i can't do this anymore)\b/;
+const RE_HOPELESSNESS = /\b(?:no reason to (?:live|keep going|go on)|nothing (?:left )?to live for|(?:everyone|they|you|my family|the world) (?:would|'d) be better off without me|better off (?:if i (?:was|were) )?dead|i'm (?:just )?a burden(?: to| on)?|no one would (?:miss|notice|care)(?: if i (?:was|were) gone| if i died| about me| me)|what's the point (?:of|in) (?:living|going on|being alive|staying alive)|(?:sick|tired) of (?:living|being alive)|i want to disappear forever|i can't do this anymore|i (?:don't|do not|can't|cannot) see (?:the|any) point(?: in| of)? ?(?:anymore|any more|living|going on|being alive|anything|it all|(?:in |of )?(?:anything|it all) anymore)?(?= *[.!?,;]| *$| and | but )|there's no point (?:anymore|any more|in living|in going on|to (?:living|any of it)))\b/;
 
 // Self-harm needs an urge, a habit or a deliberate act. A past accident ("I hurt
 // myself skiing") and idiom ("cutting myself a break") are not signals.
@@ -190,14 +192,55 @@ export const CRISIS_REFERRAL: {
 export const CRISIS_ADDENDUM: Record<Exclude<CrisisTier, 'none'>, string> = {
   ambiguous: `SAFETY CONTEXT (server-authored, this turn only):
 The member's message contains language that can signal thoughts of death or self-harm, and it may also be ordinary speech. Do not switch into a script, do not list hotlines, and do not assume a crisis.
-Respond as a skilled, caring practitioner would: stay with what they actually said, and if it fits, check in gently and directly, for example by asking whether they are having thoughts of hurting themselves or of ending their life.
+Respond as a skilled, caring practitioner would: stay with what they actually said, and then ask gently and directly whether they are having thoughts of hurting themselves or of ending their life. Ask it as a plain question in your own words. Staying present is not enough on its own: the direct question is what lets them tell you. Leave it out only if the message is plainly a figure of speech, or they have just told you they are not at risk.
 If they confirm such thoughts, take it seriously: stay present, and encourage them to call or text 988 (U.S.) or text HOME to 741741 (Crisis Text Line).
 Never say or imply that a person is watching this conversation or has been notified. No one has.`,
   clear: `SAFETY CONTEXT (server-authored, this turn only):
 The member has clearly expressed intent to end their life, a plan or means, or that they have already acted. A referral to the 988 Suicide & Crisis Lifeline and the Crisis Text Line is being shown to them separately, outside your reply.
-Stay with them warmly and plainly. Tell them you are glad they told you and that you want them to stay safe. Ask directly whether they are safe right now and whether someone can be with them. Encourage them to call or text 988 now, or emergency services if they are in immediate danger.
+Stay with them warmly and plainly. Tell them you are glad they told you and that you want them to stay safe. Ask directly whether they are safe right now and whether someone can be with them.
+In your reply, say the number in plain words: they can call or text 988, right now. Some members only hear you and never see the screen, so the number must be in what you say, not only on the card. If they may be in immediate danger, tell them to call 911 or their local emergency number.
 Do not lecture, moralize, diagnose, or change the subject. Never say or imply that a person is watching this conversation or has been notified. No one has.`,
 };
+
+// ─── Cross-turn confirmation ────────────────────────────────────────────────
+//
+// On an AMBIGUOUS turn MAIA asks directly about safety. A member who answers
+// "yes" has just given a CLEAR signal, but "yes" alone matches nothing above.
+// The route therefore holds a short-lived check-in flag, set ONLY when MAIA's
+// reply actually asked a safety question, and an affirmative answer within the
+// next turns escalates to CLEAR. Requiring MAIA's question keeps "yes" to an
+// unrelated question ("do you want to talk about the job?") from firing.
+
+/** True when MAIA's reply asks the member, as a question, about self-harm or suicide. */
+export function maiaAskedAboutSafety(reply: string): boolean {
+  if (typeof reply !== 'string') return false;
+  const questions = reply.replace(/[\u2018\u2019]/g, "'").match(/[^.!?\n]*\?/g) ?? [];
+  return questions.some((q) =>
+    /\b(?:hurt(?:ing)? yourself|harm(?:ing)? yourself|kill(?:ing)? yourself|end(?:ing)? your (?:own )?life|tak(?:e|ing) your (?:own )?life|suicid\w*|safe right now|thoughts of (?:death|dying|not being here)|not (?:wanting|want) to be (?:here|alive))\b/i.test(q),
+  );
+}
+
+export type CheckInAnswer = 'affirmative' | 'negative' | 'other';
+
+/** How a member's message answers a direct safety question. Leading words only. */
+export function classifyCheckInAnswer(text: string): CheckInAnswer {
+  const t = normalize(typeof text === 'string' ? text : '').trim();
+  if (/^(?:no|nope|nah|not really|not at all|never|i'm not|i don't think so|no,|not right now)\b/.test(t)) return 'negative';
+  if (/^(?:maybe not|probably not)\b/.test(t)) return 'negative';
+  if (/^(?:yes|yeah|yea|yep|yup|ya|i am|i do|i have|i've been|i was|sometimes|often|kind of|kinda|sort of|maybe|a little|a bit|i think so|i guess|honestly,? yes|truthfully,? yes|uh-?huh|mm-?hm|mhm|every day|a lot|more than)\b/.test(t)) return 'affirmative';
+  return 'other';
+}
+
+/**
+ * Assess a turn that may answer a pending safety check-in. With no pending
+ * check-in this is exactly `assessCrisis`.
+ */
+export function assessCrisisWithCheckIn(text: string, checkInPending: boolean): CrisisAssessment {
+  const base = assessCrisis(text);
+  if (!checkInPending || base.tier === 'clear') return base;
+  if (classifyCheckInAnswer(text) !== 'affirmative') return base;
+  return { tier: 'clear', signals: ['confirmed_after_checkin', ...base.signals] };
+}
 
 /** A content-free log line. Contains no member text by construction. */
 export function crisisLogLine(a: CrisisAssessment, route: string): string {
