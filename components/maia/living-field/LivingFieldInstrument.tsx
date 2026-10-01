@@ -217,7 +217,13 @@ export function LivingFieldInstrument() {
               const focused = node.data.key === focusKey
               const selected = node.data.key === selectedLeafKey
               const inFocusLineage = isAncestor(node, focus) || isAncestor(focus, node)
-              const visibleLabel = radius > 25
+              // Progressive disclosure is load-bearing for legibility: the whole field
+              // names only its five elemental regions; once one is entered, only that
+              // region's immediate children are named. The focused node itself is spoken
+              // once by the large center overlay rather than duplicated inside its circle.
+              const visibleLabel =
+                radius > 25 &&
+                node.parent?.data.key === focus.data.key
               const depthOpacity = Math.max(0.18, 0.72 - node.depth * 0.09)
               const fillOpacity = node.depth === 0 ? 0.04 : Math.max(0.025, 0.09 - node.depth * 0.012)
 
