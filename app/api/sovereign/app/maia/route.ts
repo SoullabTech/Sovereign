@@ -20,6 +20,7 @@
 // ═════════════════════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from 'next/server';
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { withoutClientPromptAuthority } from '@/lib/sovereign/clientPromptAuthority';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
@@ -368,7 +369,9 @@ export async function POST(req: NextRequest) {
           cognitiveProfile, // 🧠 Pass cognitive profile for downstream use
           fieldRouting: fieldSafety?.fieldRouting, // 🛡️ Pass field routing decision
           fieldWorkSafe: fieldSafety?.allowed ?? true, // 🛡️ Pass safety flag
-          ...meta,
+          // PROMPT-AUTHORITY-02: prompt-bearing client keys are removed; the server
+          // authors every prompt field, below.
+          ...withoutClientPromptAuthority(meta),
           // 🧠 MEMORY ORCHESTRATOR (Phase 1.5) — placed AFTER ...meta so server-built
           // addenda cannot be overridden by stale client-supplied meta.
           memoryInfluenceAddendum,
