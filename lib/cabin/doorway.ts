@@ -44,11 +44,13 @@ export function cabinDoorwayPath(doorway: CabinDoorway): string {
   return url.pathname + url.search;
 }
 
-export function isCabinOrigin(searchParams: URLSearchParams): boolean {
-  return searchParams.get(CABIN_ORIGIN_PARAM) === CABIN_ORIGIN;
+type CabinSearchParams = Pick<URLSearchParams, 'get' | 'keys'>;
+
+export function isCabinOrigin(searchParams: CabinSearchParams | null | undefined): boolean {
+  return searchParams?.get(CABIN_ORIGIN_PARAM) === CABIN_ORIGIN;
 }
 
-export function hasForbiddenCabinCarry(searchParams: URLSearchParams): boolean {
+export function hasForbiddenCabinCarry(searchParams: CabinSearchParams): boolean {
   for (const key of searchParams.keys()) {
     if (FORBIDDEN_CARRY_KEYS.has(key)) return true;
   }
