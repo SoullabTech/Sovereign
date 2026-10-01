@@ -137,56 +137,60 @@ export interface CrisisOverride {
 }
 
 // Crisis patterns - no "MAIA" prefix required, these override any mode
+// VOICE-CRISIS-STOPGAP-01: every pattern is word-bounded so phrases cannot
+// match inside other words ("this is italian", "this is itself").
 const CRISIS_PATTERNS: Record<CrisisLevel, RegExp[]> = {
   // Soft flag: ambiguous distress language.
   // Deliberately exclude bare "I'm done": it is ordinary completion language
   // and was also the member-facing explicit-yield phrase in TURN-01. Treating
   // those two words as crisis evidence creates deterministic false positives.
   soft: [
-    /i\s+can'?t\s+do\s+this\s+anymore/i,
-    /i\s+wish\s+i\s+could\s+disappear/i,
-    /what'?s\s+the\s+point/i,
-    /i\s+don'?t\s+want\s+to\s+be\s+here/i,
-    /i'?m\s+so\s+tired\s+of\s+(this|everything|living)/i,
-    /nothing\s+matters/i,
-    /no\s+one\s+would\s+(care|notice|miss\s+me)/i,
-    /i'?m\s+a\s+burden/i,
-    /everyone\s+would\s+be\s+better\s+off/i,
+    /\bi\s+can'?t\s+do\s+this\s+anymore\b/i,
+    /\bi\s+wish\s+i\s+could\s+disappear\b/i,
+    /\bwhat'?s\s+the\s+point\b/i,
+    /\bi\s+don'?t\s+want\s+to\s+be\s+here\b/i,
+    /\bi'?m\s+so\s+tired\s+of\s+(this|everything|living)\b/i,
+    /\bnothing\s+matters\b/i,
+    /\bno\s+one\s+would\s+(care|notice|miss\s+me)\b/i,
+    /\bi'?m\s+a\s+burden\b/i,
+    /\beveryone\s+would\s+be\s+better\s+off\b/i,
   ],
 
   // Active ideation: clear self-harm intent, no plan stated
   active: [
-    /i\s+want\s+to\s+die/i,
-    /i\s+don'?t\s+want\s+to\s+live/i,
-    /i\s+can'?t\s+live\s+(like\s+this|anymore)/i,
-    /i'?m\s+going\s+to\s+hurt\s+myself/i,
-    /i\s+want\s+to\s+end\s+(it|this|my\s+life)/i,
-    /i'?ve\s+been\s+thinking\s+about\s+(suicide|killing\s+myself|ending\s+it)/i,
-    /i\s+wish\s+i\s+was\s+dead/i,
-    /i\s+wish\s+i\s+were\s+dead/i,
+    /\bi\s+want\s+to\s+die\b/i,
+    /\bi\s+don'?t\s+want\s+to\s+live\b/i,
+    /\bi\s+can'?t\s+live\s+(like\s+this|anymore)\b/i,
+    /\bi'?m\s+going\s+to\s+hurt\s+myself\b/i,
+    /\bi\s+want\s+to\s+end\s+(it|this|my\s+life)\b/i,
+    /\bi'?ve\s+been\s+thinking\s+about\s+(suicide|killing\s+myself|ending\s+it)\b/i,
+    /\bi\s+wish\s+i\s+was\s+dead\b/i,
+    /\bi\s+wish\s+i\s+were\s+dead\b/i,
   ],
 
   // High risk: plan, means, or imminent
   high: [
-    /i'?m\s+going\s+to\s+(do\s+it|kill\s+myself)/i,
-    /i\s+have\s+(pills|a\s+gun|a\s+knife|rope|means)/i,
-    /i'?m\s+on\s+(a\s+bridge|the\s+roof|the\s+edge)/i,
-    /goodbye/i,
-    /this\s+is\s+(it|the\s+end|goodbye)/i,
-    /i'?ve\s+(already|just)\s+(taken|swallowed|cut)/i,
-    /tell\s+(them|everyone|my\s+family)\s+i\s+(love|loved)/i,
-    /tonight\s+is\s+the\s+night/i,
-    /i\s+wrote\s+(a\s+note|my\s+note|letters)/i,
+    /\bi'?m\s+going\s+to\s+(do\s+it|kill\s+myself)\b/i,
+    /\bi\s+have\s+(pills|a\s+gun|a\s+knife|rope|means)\b/i,
+    /\bi'?m\s+on\s+(a\s+bridge|the\s+roof|the\s+edge)\b/i,
+    // Bare /goodbye/ removed (VOICE-CRISIS-STOPGAP-01): it fired the 988 script on
+    // ordinary farewells ("goodbye to that old pattern"). Founder-approved stopgap
+    // pending the server-side tiered detector; 'this is goodbye' still matches below.
+    /\bthis\s+is\s+(it|the\s+end|goodbye)\b/i,
+    /\bi'?ve\s+(already|just)\s+(taken|swallowed|cut)\b/i,
+    /\btell\s+(them|everyone|my\s+family)\s+i\s+(love|loved)\b/i,
+    /\btonight\s+is\s+the\s+night\b/i,
+    /\bi\s+wrote\s+(a\s+note|my\s+note|letters)\b/i,
   ],
 
   // Non-suicidal self-injury
   nssi: [
-    /i\s+want\s+to\s+cut/i,
-    /i\s+need\s+to\s+hurt\s+myself/i,
-    /i\s+want\s+to\s+(burn|scratch|hit)\s+myself/i,
-    /i\s+need\s+to\s+feel\s+(pain|something)/i,
-    /cutting\s+(helps|makes\s+it\s+better)/i,
-    /i\s+already\s+cut/i,
+    /\bi\s+want\s+to\s+cut\b/i,
+    /\bi\s+need\s+to\s+hurt\s+myself\b/i,
+    /\bi\s+want\s+to\s+(burn|scratch|hit)\s+myself\b/i,
+    /\bi\s+need\s+to\s+feel\s+(pain|something)\b/i,
+    /\bcutting\s+(helps|makes\s+it\s+better)\b/i,
+    /\bi\s+already\s+cut\b/i,
   ],
 };
 

@@ -17,6 +17,23 @@ describe('VOICE-CRISIS-SPEECH-ACT-01', () => {
     }
   });
 
+  it('VOICE-CRISIS-STOPGAP-01: bare farewells and in-word matches no longer fire', () => {
+    for (const transcript of [
+      'I said goodbye to my mother at the airport',
+      'goodbye to that old pattern',
+      'okay goodbye for now, talk tomorrow',
+      'this is itself a teaching',
+      'this is italian food',
+    ]) {
+      expect(detectCrisis(transcript)).toEqual({ detected: false });
+    }
+    // Stopgap scope only: everything else in the pattern set still fires.
+    expect(detectCrisis('this is goodbye').level).toBe('high');
+    expect(detectCrisis('this is it').level).toBe('high');
+    expect(detectCrisis('I wrote letters').level).toBe('high');
+    expect(detectCrisis("I've just taken").level).toBe('high');
+  });
+
   it('retains unambiguous self-harm and suicide triggers', () => {
     expect(detectCrisis('I want to die').level).toBe('active');
     expect(detectCrisis("I don't want to live anymore").level).toBe('active');
