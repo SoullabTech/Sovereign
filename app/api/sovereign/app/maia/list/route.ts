@@ -96,6 +96,7 @@ export async function OPTIONS(req: NextRequest) {
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { assessCrisisWithCheckIn, classifyCheckInAnswer, crisisLogLine, maiaAskedAboutSafety, CRISIS_REFERRAL } from '@/lib/safety/crisisAssessment';
 import { takeSafetyCheckIn, clearSafetyCheckIn, markSafetyCheckIn } from '@/lib/safety/crisisCheckIn';
+import { withoutClientPromptAuthority } from '@/lib/sovereign/clientPromptAuthority';
 import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/runner';
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
@@ -1702,7 +1703,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           //
           // Statically established from source. Production exploitability NOT demonstrated
           // and deliberately not tested.
-          ...meta,
+          // PROMPT-AUTHORITY-02: prompt-bearing client keys are removed; the server
+          // authors every prompt field, below.
+          ...withoutClientPromptAuthority(meta),
           chatType: 'sovereign-interface',
           endpoint: '/api/sovereign/app/maia',
           safeMode: SAFE_MODE,

@@ -18,23 +18,25 @@ appended sections.
 
 ## Last updated
 
-2026-10-01 · canonical at time of writing `cf9624cdf` (#1619 merged; Next 16.3.8)
+2026-10-01 · canonical at time of writing `ef511f0ef` (#1616 merged; Next 16.3.8)
 · evidence: git + GitHub CI + founder Mac Studio command output.
 
 ## Release SHA
 
-**Not yet fixed.** It will be the merge commit of PR #1616 into
-`clean-main-no-secrets`, landed after PR #1619. Record it here on merge, and
-build only from that exact SHA.
+**`ef511f0efea38792c597da01e67299740210e903`**: the merge commit of PR #1616
+into `clean-main-no-secrets` (after #1619 `cf9624cdf`). Verified in git: it contains
+the fix `bdf95a8e1` and the #1619 merge, pins `next` 16.3.8, and has the
+`cabin-runtime/node_modules` extraResources step. Desktop version
+`0.1.0-beta.1`. Build **only** from this exact SHA. The `maiaBuildSha` embedded in
+the app must read `ef511f0efea3`.
 
 ## Release order
 
 1. ✅ Merged #1619 as `cf9624cdf` (Writer's Studio RC1 lineage; no pending migrations: its three
    migrations are already applied in production).
-2. Merge #1616, updated onto canonical after #1619 lands. The merge commit is
-   the release SHA.
+2. ✅ Merged #1616 as `ef511f0ef`. That is the release SHA.
 3. Mac Studio, from the release SHA on the T7 build volume: root `npm ci` →
-   `MAIA_CABIN_MODE=offline next build` → `maia-desktop` `npm ci` → `npm test` (**must report 408/408**, or name any delta from #1619)
+   `MAIA_CABIN_MODE=offline npm run build` (webpack, as CI and production build; bare `next build` uses Turbopack and fails with `PageNotFoundError: /_document`) → `maia-desktop` `npm ci` → `npm test` (**must report 408/408**)
    → `npm run dist:mac` → `npm run verify:package`. `verify:package` now
    fails unless `Resources/cabin-runtime/node_modules/next/package.json` exists
    **and** its version equals the root `package.json` pin (16.3.8).
@@ -62,6 +64,8 @@ build only from that exact SHA.
 | Gate | State | Evidence |
 |---|---|---|
 | Packaging repair `bdf95a8e1` | in #1616 (the only carrier; #1624 closed), on `cf9624cdf` (post-#1619; #1619 changed no `maia-desktop/**`). Suite **408/408** under tsx (canonical 405/405). Packaging-test mutants M1 + M2 killed | git + local run; see H4-7-R1 record, Amendment 2 |
+| Desktop suite at release SHA | **408/408 PASS** | founder, Mac Studio, `ef511f0ef` worktree on T7, 2026-10-01 |
+| Next standalone build at release SHA | FAILED with `npx next build` (Turbopack: `PageNotFoundError: /_document`); rerun with `npm run build` (webpack) pending | founder, Mac Studio, 2026-10-01 |
 | Artifact carries next 16.3.8 | NOT WITNESSED | — |
 | Packaged runtime healthy offline | NOT WITNESSED | — |
 | Developer ID Application | **PRESENT**: `32276A3F…55DB48 "Developer ID Application: Kelly Nezat (ZVK2X646Z2)"` | founder, `security find-identity -v -p codesigning`, 2026-10-01 |
