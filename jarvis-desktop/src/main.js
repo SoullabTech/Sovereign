@@ -21,6 +21,7 @@ const WUC = require('./work-unit-control.js');
 const RECOVERY_B = require('./o5-path-b-recovery.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
+const DUAL_SHADOW = require('./dual-work-shadow.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
@@ -846,6 +847,23 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
           env: process.env,
           actorId: desktopHumanActorId(),
         });
+      }
+      if (req?.mode === 'dual-shadow') {
+        const legacySpec = req?.legacy_spec;
+        const canonicalSpec = req?.canonical_spec;
+        if (!legacySpec || typeof legacySpec !== 'object' || !canonicalSpec || typeof canonicalSpec !== 'object') {
+          return { ok: false, status: 'REFUSED', reason: 'DUAL_SHADOW_SPECS_REQUIRED', eligible: false };
+        }
+        return await DUAL_SHADOW.createDualShadow(
+          root,
+          { legacySpec, canonicalSpec },
+          {
+            canonicalSha,
+            nowMs: Date.now(),
+            env: process.env,
+            actorId: desktopHumanActorId(),
+          },
+        );
       }
       let routeRecord = null;
       let routeDigest = null;
