@@ -19,7 +19,7 @@ Parallel work produced separate PRs for:
 - the #1539 real-stack re-witness;
 - the final R1R3 interaction witness;
 - the explicit-MAIA-entry production deployment record;
-- the Early Field production cohort-opening record;
+- the Early Field merge/deployment history and production cohort-opening record;
 - the first-human witness protocol, facilitator packet, and result template.
 
 Each record is useful. Merging them independently while canonical is moving rapidly creates repeated
@@ -37,6 +37,7 @@ Convergence changes the merge mechanics, not the evidence boundaries.
 | #1590 | #1539 real-stack re-witness + synthetic result + screenshot | Class C |
 | #1597 | final R1R3 real-stack witness after interaction/return repairs | Class C |
 | #1593 | explicit MAIA-entry production deployment record | Class A |
+| #1558 | Early Field implementation merge + closed-state production deployment/exclusion witness | Class C |
 | #1599 | Early Field four-person production cohort opening record | Class A |
 | #1585 | first-human witness protocol + facilitator packet + record template | Class A |
 
