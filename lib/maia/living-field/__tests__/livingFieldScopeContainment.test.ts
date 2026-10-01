@@ -18,18 +18,18 @@
  */
 
 jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));
-jest.mock('@/lib/auth/authPostureProbe', () => ({ probeAuthPosture: jest.fn() }));
+jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
 jest.mock('@/lib/consciousness/spiralStatePersistence', () => ({
   loadSpiralState: jest.fn().mockResolvedValue(null),
 }));
 
 import { query } from '@/lib/db/postgres';
-import { probeAuthPosture } from '@/lib/auth/authPostureProbe';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { livingFieldAtomGuards } from '../atomEligibility';
 import { PRACTITIONER_ATTRIBUTION_GUARD } from '@/lib/maia/memoryAtomsLoader';
 
 const mockQuery = query as jest.MockedFunction<typeof query>;
-const mockProbe = probeAuthPosture as jest.MockedFunction<typeof probeAuthPosture>;
+const mockGetMember = getMemberIdFromRequest as jest.MockedFunction<typeof getMemberIdFromRequest>;
 
 const MEMBER = '11111111-1111-1111-1111-111111111111';
 
@@ -48,7 +48,7 @@ const flat = (s: string) => s.replace(/\s+/g, ' ');
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockProbe.mockReturnValue(MEMBER);
+  mockGetMember.mockResolvedValue(MEMBER);
   // Canned rows, deliberately UNFILTERED — see mock discipline above.
   mockQuery.mockResolvedValue({ rows: [], rowCount: 0 } as never);
 });

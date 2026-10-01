@@ -1,0 +1,23 @@
+{
+  "instrument": "jarvis-o5-r1-freeze/v1",
+  "frozen_at": "2026-09-30",
+  "freeze_commit": "af2f0203d38fd3249260aebd0082de90b81b5334",
+  "authority": "founder ruling OPEN O5, 2026-09-30 — freeze falsifiers before implementation (S3 Class-B / review-custody precedent)",
+  "governing_sentence": "Recovery preserves lawful consequence, not merely computational position.",
+  "law": "Implementation fails suite -> repair the implementation. Editing any frozen file (contract vocabulary, substrate semantics, F1..F8, the reference double, or DC-1..DC-9) requires a formal, named founder act with evidence the LAW or the INSTRUMENT was wrong — never that an implementation was inconvenient.",
+  "additive_law_permitted": "New law may be ADDED at its own address with its own falsifier and defeat candidate. Adding never edits a frozen file; the blob hashes below are the mechanical test.",
+  "frozen": {
+    "tests/constitutional/jarvis-o5-r1/contract.mjs": "08ae3292b7811ab2dfd8c5c22e238f32498b1299",
+    "tests/constitutional/jarvis-o5-r1/substrate.mjs": "4c5c1787efbe1353b63a219c538ba0338a023629",
+    "tests/constitutional/jarvis-o5-r1/falsifiers.mjs": "bb574ba4c5a81e403556f846a5e11593f0f12b96",
+    "tests/constitutional/jarvis-o5-r1/reference.mjs": "04b421ff24ceb62592371c2d916a161fc433e392",
+    "tests/constitutional/jarvis-o5-r1/candidates.mjs": "c2be9b9c43d9493265228a12482c50b21c658bf8"
+  },
+  "deliberately_not_frozen": {
+    "tests/constitutional/jarvis-o5-r1/matrix.mjs": "the runner; it enforces lethality + classification and may be extended to run more suites without weakening the law it runs",
+    "tests/constitutional/jarvis-o5-r1/reference-cause-map.mjs": "illustrative code→cause judgment, not law; a NEW runtime failure code is answered here additively (F4 turns red until it is mapped — completeness biting by design)",
+    "scripts/verify-jarvis-o5-r1-freeze.mjs": "the guard itself",
+    "package.json": "script wiring only"
+  },
+  "note": "Blob hashes, not a commit diff: they survive history rewriting and say exactly which bytes are law."
+}

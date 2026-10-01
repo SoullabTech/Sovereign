@@ -1,0 +1,16 @@
+{
+  "freeze_version": "O5-R4.v1",
+  "date": "2026-10-01",
+  "base": "dbc3036f2ff498779c56b91152d1d79f5e30fde8",
+  "scope": "Evidence-return law only: W4 finding/proposal admission, O1 candidate projection separation, consequence non-escalation, v1 non-live guard.",
+  "frozen_files": {
+    "tests/constitutional/jarvis-o5-r4/contract.mjs": "d3d7f32151b218ce70fba482f0d2d15e1750f55b3af7e4a292bec54e2f3c57fd",
+    "tests/constitutional/jarvis-o5-r4/substrate.mjs": "1893e5f996987db5b5c376919468b458d9776b219c9016b007e0d37101b5dd68",
+    "tests/constitutional/jarvis-o5-r4/reference.mjs": "31b0d480229d3bec385d6b283529a0b3b4b216920fbdcef74f9d53aa8f6df987",
+    "tests/constitutional/jarvis-o5-r4/falsifiers.mjs": "6ebb17445cd1d91faa1e0a2a36b9d511833184317fad444c676697eefe9a6b26",
+    "tests/constitutional/jarvis-o5-r4/candidates.mjs": "31b05865a26e3f9a9349206bc10dc1e08b2fd3b52bbeb9a77c91c358f56e7117"
+  },
+  "unfrozen": [
+    "tests/constitutional/jarvis-o5-r4/matrix.mjs"
+  ]
+}

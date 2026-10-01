@@ -5,6 +5,7 @@ const root = process.cwd();
 const constellation = fs.readFileSync(path.join(root, 'components/maia/living-constellation/LivingConstellationPanel.tsx'), 'utf8');
 const card = fs.readFileSync(path.join(root, 'components/maia/living-field/LivingFieldCard.tsx'), 'utf8');
 const dashboard = fs.readFileSync(path.join(root, 'components/maia/living-field/PersonalLivingFieldDashboard.tsx'), 'utf8');
+const page = fs.readFileSync(path.join(root, 'app/maia/living-field/page.tsx'), 'utf8');
 
 describe('Living Field navigation clarity', () => {
   it('gives the three domain rooms equal desktop width and whole-card links', () => {
@@ -34,5 +35,11 @@ describe('Living Field navigation clarity', () => {
   it('explains dimensions before asking the member to use them', () => {
     expect(dashboard).toContain('not forms you need to complete');
     expect(dashboard).toContain('Open a dimension to see what has gathered');
+  });
+
+  it('uses one House-owned return gesture for House arrivals', () => {
+    expect(page).toContain('fromHouse={fromHouse}');
+    expect(dashboard).toContain('{!fromHouse && (');
+    expect(dashboard).toContain('<ReturnHome');
   });
 });

@@ -41,6 +41,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
 
 /** The cluster, by exact filename. All five, or the mechanism is not present. */
 const MECHANISM_MODULES = Object.freeze([
@@ -181,6 +182,9 @@ async function runWorkUnit(root, packet, hooks = {}) {
     state: 'QUEUED',
     created_at: store.nowISO(),
     origin: 'jarvis-desktop',
+    // O5-R2E: who owns this in-flight run. Lets a later process PROVE the owner is
+    // gone before declaring the run interrupted, instead of guessing.
+    owner: { pid: process.pid, host: os.hostname(), started_at: store.nowISO() },
   };
   store.saveRun(run);
 
@@ -236,7 +240,23 @@ async function runWorkUnit(root, packet, hooks = {}) {
   };
 }
 
+/**
+ * O5-R2E — make interrupted Path A runs visible. NOT recovery: nothing is
+ * resumed, re-dispatched or re-queued. Uses the mechanism's own in-flight
+ * vocabulary and the store's proof-requiring reconciliation.
+ */
+async function reconcileOrphans(root, { dryRun = false } = {}) {
+  const m = await loadMechanism(root);
+  if (!m.ok) return { ok: false, reason: m.state.reason, reconciled: [], unproven: [] };
+  const out = m.store.reconcileOrphanedRuns(m.pipeline.IN_FLIGHT_STATES, {
+    effectsByState: m.pipeline.EFFECTS_POSSIBLE_BY_STATE,
+    dryRun,
+  });
+  return { ok: true, ...out };
+}
+
 module.exports = {
+  reconcileOrphans,
   MECHANISM_MODULES,
   AUTHORIZED_LANE,
   mechanismDir,

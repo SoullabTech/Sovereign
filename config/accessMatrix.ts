@@ -380,6 +380,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/house', minTier: 'free', notes: 'Member House orientation' },
   { exact: '/api/house/preferences', minTier: 'free', notes: 'Verified member-owned House presentation preferences' },
   { exact: '/api/early-field/admission', minTier: 'free', notes: 'EARLY-FIELD-01 — server-side admission to the early Living Field instrument; authenticated members only; answers a boolean from the session, never a client claim' },
+  { exact: '/api/house-studio/admission', minTier: 'free', notes: 'H1 — server-side admission to explicit House → Writer’s Studio Work-context arrival; authenticated members only; session-derived boolean only' },
   { exact: '/decisions', minTier: 'free', notes: 'Personal Decision Council — member-owned reflection' },
   { prefix: '/decisions/', minTier: 'free', notes: 'Personal Decision Council detail/new routes' },
   { exact: '/practices', minTier: 'free', notes: 'Member Practices room — member-ready embodied practices only; Lab Tools remains internal' },

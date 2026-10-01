@@ -9,18 +9,19 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
-import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
-  const memberId = probeAuthPosture(request)
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
+  const { fieldKey } = await params
 
   try {
     const result = await query(
@@ -29,7 +30,7 @@ export async function GET(
        FROM living_field_participant_consents
        WHERE member_id = $1 AND field_key = $2
        ORDER BY granted_at DESC`,
-      [memberId, params.fieldKey]
+      [memberId, fieldKey]
     )
     return NextResponse.json({ consents: result.rows })
   } catch (err) {
@@ -40,12 +41,13 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
-  const memberId = probeAuthPosture(request)
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
+  const { fieldKey } = await params
 
   const body = await request.json()
   const {
@@ -78,7 +80,7 @@ export async function POST(
         participant_member_id ?? null,
         participant_label ?? null,
         participant_type,
-        params.fieldKey,
+        fieldKey,
         consent_scope,
       ]
     )
@@ -91,12 +93,13 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
-  const memberId = probeAuthPosture(request)
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
+  const { fieldKey } = await params
 
   const { consent_id } = await request.json() as { consent_id: string }
   if (!consent_id) {
@@ -109,7 +112,7 @@ export async function DELETE(
       `UPDATE living_field_participant_consents
        SET revoked_at = NOW()
        WHERE id = $1 AND member_id = $2 AND field_key = $3`,
-      [consent_id, memberId, params.fieldKey]
+      [consent_id, memberId, fieldKey]
     )
     return NextResponse.json({ revoked: true })
   } catch (err) {

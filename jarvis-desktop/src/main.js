@@ -18,6 +18,7 @@ const MECH = require('./builder-mechanism.js');
 const CONTINUITY = require('./continuity.js');
 const FRONTIER = require('./frontier-worker.js');
 const WUC = require('./work-unit-control.js');
+const RECOVERY_B = require('./o5-path-b-recovery.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
@@ -466,8 +467,47 @@ app.whenReady().then(async () => {
   buildMenu();
   createWindow();
   await ensureBindingOnFirstRun();
+  await runStartupRecovery();
 });
+
+// ---------------------------------------------------------------------------
+// O5-R2 startup recovery — READ-ONLY (founder ruling 2026-09-30).
+// First contact with historical real state can mutate W4, settle grants and
+// terminate run records, so it is a separate witnessed act. Startup therefore
+// only CLASSIFIES and logs; it writes nothing. The write pass is the explicit,
+// census-bound CLI act:
+//   node scripts/builder/o5-recovery-census.mjs --write --admit <census_digest>
+// A recovery fault is logged and never blocks startup. Surfacing to an operator
+// inbox is O7 and is NOT admitted.
+// ---------------------------------------------------------------------------
+async function runStartupRecovery() {
+  const root = currentRoot();
+  if (!root) { console.log('[JARVIS/O5-R2] startup recovery skipped: no bound root'); return; }
+  const report = { mode: 'READ_ONLY', at: new Date().toISOString(), path_a: null, path_b: null };
+  try {
+    const a = await MECH.reconcileOrphans(root, { dryRun: true });
+    report.path_a = { ok: a.ok, would_reconcile: (a.reconciled || []).length, unproven: (a.unproven || []).length, reason: a.reason };
+  } catch (e) { report.path_a = { ok: false, error: String(e?.message || e).slice(0, 300) }; }
+  try {
+    const b = await RECOVERY_B.recoverPathB(root, { env: process.env, write: false });
+    const counts = {};
+    for (const u of b.units) for (const o of (u.outcomes || [])) {
+      const k = o.action === 'GATED' ? `GATED:${o.gate}` : o.action;
+      counts[k] = (counts[k] || 0) + 1;
+    }
+    report.path_b = { ok: true, units: b.units.length, counts, errors: b.units.filter((u) => u.error).length };
+  } catch (e) { report.path_b = { ok: false, error: String(e?.message || e).slice(0, 300) }; }
+  console.log('[JARVIS/O5-R2] startup recovery (read-only)', JSON.stringify(report));
+}
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+// O5-R3: release the grant writer lease, if this process ever became the writer.
+// A crash that skips this leaves the lease to proof-based takeover on next launch.
+app.on('will-quit', () => {
+  const release = globalThis[Symbol.for('jarvis.o5r3.releaseAllGrantWriterLeases')];
+  if (typeof release === 'function') {
+    try { console.log('[jarvis] O5-R3 grant writer lease release', JSON.stringify(release())); } catch (error) { console.error('[jarvis] O5-R3 lease release failed', error); }
+  }
+});
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
 // ---------------------------------------------------------------------------
