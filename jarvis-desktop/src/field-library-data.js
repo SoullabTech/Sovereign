@@ -2118,7 +2118,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 412,
       "evidence": "## 10 · Next act",
       "last_touched_epoch": 1788716166,
-      "hours_dormant": 604,
+      "hours_dormant": 605,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2130,7 +2130,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 12,
       "evidence": "STATE             OPEN · DIAGNOSIS ONLY · no determination made",
       "last_touched_epoch": 1788546913,
-      "hours_dormant": 651,
+      "hours_dormant": 652,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2214,7 +2214,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Status:** **AUTOMATIC HANDWRITING OCR HELD · ORIGINAL + MANUAL TRANSCRIPTION OPEN · BLANK-WORK RELEASE INDEPENDENT · PRODUCTION UNTOUCHED.**",
       "last_touched_epoch": 1789602025,
-      "hours_dormant": 358,
+      "hours_dormant": 359,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2255,6 +2255,22 @@ window.KELLY_FIELD_LIBRARY = {
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     }
   ],
+  "accessAuthority": {
+    "kind": "kellys_world_access_authority_v1",
+    "authority": "members.tester",
+    "ordinary_platform_minimum": "free",
+    "subscription_gates_ordinary_platform": false,
+    "early_field_separate": true,
+    "beta_testers": 7,
+    "password_capable": 7,
+    "email_code_capable": 6,
+    "early_field": 4,
+    "witnessed_running_commit": "56d0cd679",
+    "source_merge_commit": "d8e0c6bc",
+    "standing": "PRODUCTION_WITNESS",
+    "projection_law": "WITNESS_IS_NOT_AUTHORITY",
+    "record_path": "docs/programme/KELLYS-WORLD-ACCESS-AUTHORITY-01_2026-10-01.md"
+  },
   "conceptGroups": [
     {
       "title": "Ontological Foundation",
@@ -12770,6 +12786,19 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "KELLY'S WORLD — ACCESS AUTHORITY 01 · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-ACCESS-AUTHORITY-01_2026-10-01.md",
+          "excerpt": "Carry the production beta-access authority into Kelly's World as a human-readable projection without creating a second roster, changing access, or granting authority.",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Purpose",
+            "Governing distinction",
+            "Production witness",
+            "Kelly's World standing"
+          ]
+        },
+        {
           "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R10 Work Unit Evidence Precision · 2026-10-01",
           "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R10_WORK_UNIT_EVIDENCE_PRECISION_2026-10-01.md",
           "excerpt": "Remove the R9 blocker without changing C1 or inventing a new Grokker execution class.",
@@ -13625,7 +13654,7 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 735,
+    "lanes": 736,
     "recent": 144,
     "recovery": 12
   }

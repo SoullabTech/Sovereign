@@ -173,6 +173,20 @@ families = [
 ("RGR / Research", re.compile(r"^(RGR|SPM-FC|SOURCE-CUSTODY|TEMPORAL-MEMORY)")),
 ("Soullab Desktop / House", re.compile(r"^(SOULLAB-DESKTOP|HOUSE|SOULLAB-HOUSE|S3-|S3_)")),
 ]
+def access_authority_projection(paths):
+    candidates = [p for p in paths if p.name.startswith("KELLYS-WORLD-ACCESS-AUTHORITY-")]
+    for path in reversed(candidates):
+        text = path.read_text(errors="ignore")
+        for block in re.findall(r"```json\s*(\{.*?\})\s*```", text, flags=re.S):
+            try:
+                payload = json.loads(block)
+            except json.JSONDecodeError:
+                continue
+            if payload.get("kind") == "kellys_world_access_authority_v1":
+                payload["record_path"] = path.relative_to(root).as_posix()
+                return payload
+    return None
+
 all_records = sorted([f for f in prog.glob("*") if f.is_file()], key=lambda p: p.name)
 touch_map, head_stamp = git_touch_map()
 recovery_items = recovery_candidates(all_records, touch_map, head_stamp)
@@ -212,6 +226,7 @@ data = {
     "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
     "recentItems": recent_items,
     "recoveryCandidates": recovery_items,
+    "accessAuthority": access_authority_projection(all_records),
     "conceptGroups": [
         {"title": title, "items": [{"title": item} for item in items]}
         for title, items in concepts
