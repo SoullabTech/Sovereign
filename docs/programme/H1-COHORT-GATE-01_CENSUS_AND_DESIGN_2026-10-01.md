@@ -334,7 +334,7 @@ unchanged.
 | 9 | WS2-03B (`situatedWork`) | 29/29 |
 | 10 | Auth/session + endpoint (`lib/auth`, the route test, `lib/access`) | 260/264 — the 4 failures are pre-existing (below) |
 | 11 | `npm run typecheck` (no-regression gate) | **PASS** — 222 vs baseline 239, 0 new |
-| 12 | `npm run build` | ⏳ running at commit time — result recorded in the follow-up commit |
+| 12 | `npm run build` | **PASS** — exit 0; `ƒ /api/writers-studio/h1-arrival/admission` built as dynamic. One unrelated traced-file copy warning (`api/supervision/upload` → a `backups/` path absent from this checkout); not this lane |
 
 Breadth: all `app/writers-studio` + `app/dev/writers-studio-pc3-live` suites 80/80 (884 tests).
 
