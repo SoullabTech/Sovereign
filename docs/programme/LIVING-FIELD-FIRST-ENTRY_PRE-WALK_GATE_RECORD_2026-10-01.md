@@ -83,12 +83,16 @@ proving why the old container had drifted, which may be unprovable. Docker's eve
 reach back that far, and a gate that demands an unprovable root cause either never passes or gets
 waived.
 
-**Already established (cite, do not re-derive):**
-`docs/programme/WS-ADVANCED-RUNTIME-01_RC1_PRODUCTION_WITNESS_2026-10-01.md`, observation 1.
-`maia-postgres` was **recreated**, not crashed, at the first `compose run migrate` of the RC1
-deploy: `started=2026-10-01T14:34:47Z restarts=0 oom=false`. The ledger survived intact. That
-record reaches canonical through its own docs-only PR. Until that PR merges, the citation points
-at a branch and this gate cannot pass.
+**Established lineage (cite, do not re-derive):**
+`docs/programme/WS-ADVANCED-RUNTIME-01_RC1_PRODUCTION_WITNESS_2026-10-01.md`, observation 1,
+records the earlier RC1 recreate: `started=2026-10-01T14:34:47Z restarts=0 oom=false`.
+
+A later read-only production observation at `2026-10-01T22:14:34Z` supersedes that start-time
+value for this gate. Runtime was `56d0cd679`; `maia-postgres` reported
+`started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy`.
+Docker's journal at `21:41:44Z` shows the prior Postgres task being stopped/deleted and a new
+`maia-postgres` endpoint joining the compose network. This establishes another **recreate, not a
+crash**. The initiating command or actor is **UNKNOWN** and must not be invented.
 
 **Required now:**
 
@@ -100,10 +104,10 @@ ssh soullab@minisforum 'date -u +%FT%TZ; docker exec maia-sovereign printenv GIT
 PASS requires all of:
 
 - `restarts=0` and `oom=false`;
-- `started=` still equal to `2026-10-01T14:34:47Z`. A later value means another recreate or
-  restart has happened since the witnessed one, and it needs its own explanation before this gate
-  can pass;
-- `status=running`.
+- `started=` still equal to `2026-10-01T21:41:44.870926604Z`. A later value means another recreate
+  or restart has happened since the latest witnessed one and must be bounded before this gate can
+  pass;
+- `status=running` and, when health is present, `health=healthy`.
 
 captured_at_utc:
 production_sha_at_capture:
@@ -112,8 +116,9 @@ production_sha_at_capture:
 (paste verbatim)
 ```
 
-**Root cause:** recorded as **UNKNOWN**. The leading inference (a compose call outside
-`deploy_ctx_compose` with different interpolation) is not established. ⛔ Do not upgrade it here.
+**Root cause / trigger:** recorded as **UNKNOWN** for both the earlier drift and the 21:41Z
+recreate. The newer daemon journal proves recreate-not-crash, not who or what invoked it. ⛔ Do
+not upgrade inference to fact here.
 **Tracked separately, not gating:** the deploy fix (`--no-deps` on the migrate container, so a
 pending-set read cannot recreate Postgres).
 
@@ -206,15 +211,18 @@ Verdict: PASS / FAIL
 ## G5 · Amendment 1 conditions at walk start
 
 - Start SHA (repeat at the end in the witness record; any difference → NO EVIDENCE).
-- If the start SHA differs from the SHA re-baselined in `LIVING-FIELD_WITNESS_REBASELINE_RC1_2026-10-01.md`
-  (`03f0fd3ab`), a new source re-baseline is required **before** the walk. Name it here.
+- The latest admitted source re-baseline for the currently observed runtime is
+  `LIVING-FIELD_WITNESS_REBASELINE_56D0CD679_2026-10-01.md` (`56d0cd679`). If the walk starts on
+  that SHA, cite that record. If it starts on any other SHA, a new source re-baseline is required
+  **before** the walk and is named here.
 - Whether the start SHA is an ancestor of `clean-main-no-secrets`
-  (`git merge-base --is-ancestor <sha> origin/clean-main-no-secrets; echo $?`). ⚠️ At the time
-  of writing, production `03f0fd3ab` is **not** on canonical, and neither are the three migrations it
-  applied. Record the result either way. It does not block the walk, but it does decide what a later
-  deploy of canonical would do to the build the member walked on.
-- Preconditions 3 and 6 re-witnessed live: aggregate substrate **counts only**, and explicit MAIA
-  entry present in the deployed build.
+  (`git merge-base --is-ancestor <sha> origin/clean-main-no-secrets; echo $?`). At
+  `2026-10-01T22:13:34Z`, production reported `56d0cd679`, and both `56d0cd679` and the earlier
+  `03f0fd3ab` were ancestors of canonical `a999932df7aa`. Re-run the ancestry check at walk time;
+  do not carry this observation forward as a permanent fact.
+- Preconditions 3 and 6: when the start SHA is `56d0cd679`, cite the 56d0 re-baseline's aggregate
+  content-blind census and explicit-MAIA-entry proof. On any other start SHA, re-witness them live
+  using aggregate substrate **counts only** and deployed-source evidence.
 
 captured_at_utc:
 production_sha_at_capture:
