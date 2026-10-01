@@ -439,6 +439,12 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       verdict.reason,
       ctx,
     );
+    // Its own greppable line, beside the structured one: an identity refusal
+    // never reaches the provider or the ledger, so this log is the only place
+    // it surfaces. Callers still receive success:false and must record it.
+    console.error(
+      `[MAIA/email] SENDER_REFUSED reason=${verdict.reason} lane=${lane ?? provider.name} purpose=${opts.purpose}`
+    );
     logSend(opts.purpose, from, toLog, domain, result, trace);
     return result;
   }

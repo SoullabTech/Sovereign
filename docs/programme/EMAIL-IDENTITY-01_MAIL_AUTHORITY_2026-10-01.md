@@ -54,3 +54,39 @@ Every sender literal in source today is authorized on its lane. Dynamic senders:
 ## Next, after the rulings
 
 DMARC hardening `p=none → quarantine → reject` becomes safe once every legitimate sender authenticates. This registry now lists those senders: the Resend identities above, Proton for the HUMAN and ORGANIZATIONAL mailboxes, and the `messages@` SMTP relay. Get a DMARC aggregate report (`rua=`) back clean before each step.
+
+---
+
+## Addendum (same day): first production evidence, and the non-delivery register
+
+### ⛔ P0: production `RESEND_API_KEY` reads as INVALID
+
+The founder ran the Resend domain listing **from inside the production container** and got `{"statusCode":400,"message":"API key is invalid","name":"validation_error"}`. That is a key-level rejection, not a domain one. If it reproduces on the send path, **every** transactional send fails: auth codes, magic links, recovery, reminders, safety notices. That ranks above every other item in this record. Leading hypotheses, not yet established:
+(a) the 2026-09-07 key rotation (MAIL-04c) left a quoted or whitespace-padded value in `.env.production`;
+(b) the key was revoked in Resend after rotation;
+(c) the container was not recreated after a later edit.
+**The decisive evidence is the delivery ledger** (`email_delivery_attempts.state` / `failure_class`), not the domains endpoint. The ledger records what actually happened to real sends.
+
+### Refusal loudness (verified in source)
+
+The established contract, which this lane keeps, is that `sendEmail()` never throws. It returns `success:false` with a classified `failureKind`. Throwing would turn a notification failure into a crashed route. What matters is that no caller *ignores* the result. Checked:
+- Stellium safety (`lib/notifications/safety.ts`) logs `REFUSED` and sets `safety_concern_logs.email_status='failed'` with the error.
+- Scheduled sends (cron and self-test) write `status`/`last_error` to `scheduled_sends`. Soul Portrait inspects `result.success`.
+- Mail Authority refusals now also emit `[MAIA/email] SENDER_REFUSED reason=… lane=… purpose=…`. This is needed because they never reach the provider or the ledger, so the log is their only trace.
+⚠️ A recorded failure is not a *seen* failure. Nothing pages anyone when `safety_concern_logs.email_status='failed'`, so that table belongs in the register's daily check.
+
+### `soullab.ai` under the new rules: allowed, explicitly
+
+`adjudicateSender` governs `soullab.life` only, so `notifications@soullab.ai` passes as `governed:false`. It is not silently exempt: it is named debt in `UNGOVERNED_SOULLAB_SENDERS`, and the static guard fails CI if that list grows. Whether Resend accepts the domain is a separate fact. It is unknowable until the key works, because the domains call above failed on the key, not on the domain.
+
+### Non-delivery register
+
+| # | Path | Failure mode | Status | Next evidence |
+|---|---|---|---|---|
+| R1 | All Resend mail | Invalid API key | ⛔ OBSERVED on the domains endpoint | Ledger states over 7 days; key shape check |
+| R2 | Stellium safety → practitioner | `soullab.ai` may be unverified | UNKNOWN (blocked by R1) | Domains listing once the key is valid; `safety_concern_logs` where `email_status='failed'` |
+| R3 | Member problem reports → `problem@` | Mailbox may not exist | UNKNOWN | External test email (a bounce is decisive) |
+| R4 | Data-rights requests → `privacy@` | Mailbox may not exist | UNKNOWN, legal deadline | External test email; create today if it bounces |
+| R5 | `hello@` and the other published contacts | Mailbox may not exist | UNKNOWN | External test email |
+| R6 | Replies to `bookings@` / `updates@` | No reply-to | STRUCTURAL | Ruling: reply-to = practitioner or `support@` |
+| R7 | Auth mail from `kelly@` | Reputation coupling; replies go to the personal inbox | DEFERRED, not indefinite | Move to `noreply@` + reply-to `support@` |
