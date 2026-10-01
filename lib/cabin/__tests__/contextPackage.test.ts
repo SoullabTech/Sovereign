@@ -1,6 +1,7 @@
 import {
   CABIN_CONTEXT_PACKAGE_SCHEMA,
   buildCabinContextPackage,
+  parseCabinContextPackage,
   serializeCabinContextPackage,
 } from '../contextPackage';
 import { projectMemoryForCabin } from '../memoryProjection';
@@ -280,6 +281,82 @@ describe('HOUSE-CABIN-CONTEXT-SPINE-01 · H2.4 Local Cabin context package', () 
     });
   });
 
+  it('H2.5 accepts a valid package through the strict offline custody parser', () => {
+    const packageValue = buildCabinContextPackage({
+      works: [workProjection()],
+      relationships: [relationshipProjection()],
+      memories: [memoryProjection()],
+    })!;
+
+    const serialized = serializeCabinContextPackage(packageValue);
+    const restored = parseCabinContextPackage(serialized);
+
+    expect(restored).toEqual(packageValue);
+    expect(restored?.schema).toBe(CABIN_CONTEXT_PACKAGE_SCHEMA);
+  });
+
+  it('H2.5 rejects malformed JSON without throwing', () => {
+    expect(parseCabinContextPackage('{not json')).toBeNull();
+  });
+
+  it('H2.5 rejects a wrong package schema', () => {
+    const packageValue = buildCabinContextPackage()!;
+    const parsed = JSON.parse(serializeCabinContextPackage(packageValue));
+    parsed.schema = 'soullab.cabin.context-package.v999';
+
+    expect(parseCabinContextPackage(JSON.stringify(parsed))).toBeNull();
+  });
+
+  it('H2.5 rejects unknown top-level fields', () => {
+    const packageValue = buildCabinContextPackage()!;
+    const parsed = JSON.parse(serializeCabinContextPackage(packageValue));
+    parsed.debug = 'smuggled';
+
+    expect(parseCabinContextPackage(JSON.stringify(parsed))).toBeNull();
+  });
+
+  it('H2.5 rejects unknown nested fields inside a Work projection', () => {
+    const packageValue = buildCabinContextPackage({
+      works: [workProjection()],
+    })!;
+    const parsed = JSON.parse(serializeCabinContextPackage(packageValue));
+    parsed.works[0].work.hiddenContext = 'smuggled';
+
+    expect(parseCabinContextPackage(JSON.stringify(parsed))).toBeNull();
+  });
+
+  it('H2.5 rejects Question and Transition fields even when the package schema is correct', () => {
+    const packageValue = buildCabinContextPackage()!;
+    const parsed = JSON.parse(serializeCabinContextPackage(packageValue));
+    parsed.questions = [];
+    parsed.transitions = [];
+
+    expect(parseCabinContextPackage(JSON.stringify(parsed))).toBeNull();
+  });
+
+  it('H2.5 rejects identity and graph smuggling inside a Memory projection', () => {
+    const packageValue = buildCabinContextPackage({
+      memories: [memoryProjection()],
+    })!;
+    const parsed = JSON.parse(serializeCabinContextPackage(packageValue));
+    parsed.memories[0].memory.relevance = 0.99;
+    parsed.memories[0].memory.memberId = 'member-secret';
+
+    expect(parseCabinContextPackage(JSON.stringify(parsed))).toBeNull();
+  });
+
+  it('H2.5 returns a fresh package object rather than reusing parsed mutable state', () => {
+    const packageValue = buildCabinContextPackage({
+      works: [workProjection()],
+    })!;
+    const serialized = serializeCabinContextPackage(packageValue);
+
+    const restored = parseCabinContextPackage(serialized)!;
+    restored.works[0].work.title = 'Imported copy';
+
+    expect(packageValue.works[0].work.title).toBe('Elemental Alchemy');
+  });
+
   it('round-trips through ordinary JSON without network/runtime state', () => {
     const packageValue = buildCabinContextPackage({
       works: [workProjection()],
@@ -287,7 +364,8 @@ describe('HOUSE-CABIN-CONTEXT-SPINE-01 · H2.4 Local Cabin context package', () 
       memories: [memoryProjection()],
     })!;
 
-    const restored = JSON.parse(serializeCabinContextPackage(packageValue));
+    const serialized = serializeCabinContextPackage(packageValue);
+    const restored = parseCabinContextPackage(serialized);
 
     expect(restored).toEqual(packageValue);
     expect(Object.getPrototypeOf(restored)).toBe(Object.prototype);

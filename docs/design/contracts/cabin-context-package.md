@@ -91,6 +91,17 @@ The package is ordinary versioned JSON.
 It contains no member id, session id, browser state, generated timestamp, random
 package id, network token, or vendor-specific opaque handle.
 
+### Custody on re-entry
+
+The same contract now has a strict offline parser.
+
+Import accepts only the exact package schema and exact governed projection
+shapes. Unknown fields are refused rather than carried forward. The parser
+returns a fresh package object, so imported mutable state is not shared with
+the serialized source representation.
+
+This is a custody membrane, not a sync protocol.
+
 ## Stop boundary
 
 H2.4 adds no database, migration, sync protocol, MAIA cognition, Grokker
