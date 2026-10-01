@@ -1,0 +1,14 @@
+import * as R from './reference.mjs';
+const base=()=>({canonicalGraphOk:R.canonicalGraphOk,bindingIndex:R.bindingIndex,readiness:R.readiness,selectReady:R.selectReady,decide:R.decide,sessionRecheckAllows:R.sessionRecheckAllows});
+export const CANDIDATES=Object.freeze([
+{id:'DC-F1',kills:'R5-F1',description:'valid-looking graph accepted without canonical replay',decision:{...base(),readiness:w=>R.readiness({...w,graph:{...w.graph,canonical_replay:true}})}},
+{id:'DC-F2',kills:'R5-F2',description:'fallback string-id matching',decision:{...base(),readiness:w=>{if(!w.bindings.some(b=>b.planned_work_unit_id==='p3')&&w.runtimes.p3)return R.readiness({...w,bindings:[...w.bindings,{graph_id:w.graph.graph_id,graph_digest:w.graph.graph_digest,planned_work_unit_id:'p3',canonical_work_unit_id:'p3',bound_at_sha:'a'.repeat(40)}]});return R.readiness(w);}}},
+{id:'DC-F3',kills:'R5-F3',description:'last duplicate planned binding wins',decision:{...base(),readiness:w=>R.readiness({...w,bindings:[...new Map(w.bindings.map(b=>[b.planned_work_unit_id,b])).values()]})}},
+{id:'DC-F4',kills:'R5-F4',description:'any terminal predecessor satisfies',decision:{...base(),readiness:w=>{const x=structuredClone(w);for(const r of Object.values(x.runtimes))if(['ADJUDICATED','RETURNED','STOPPED','SUPERSEDED'].includes(r.state))r.state='CLOSED';return R.readiness(x);}}},
+{id:'DC-F5',kills:'R5-F5',description:'any nonterminal own state is eligible',decision:{...base(),readiness:w=>R.readiness({...w,runtimes:Object.fromEntries(Object.entries(w.runtimes).map(([k,v])=>[k,{...v,state:k==='w3'&&v.state!=='CLOSED'?'ROUTED':v.state}]))})}},
+{id:'DC-F6',kills:'R5-F6',description:'missing predecessor evidence assumed closed',decision:{...base(),readiness:w=>{const rows=R.readiness(w);const p=rows.find(x=>x.planned_work_unit_id==='p3');if(p&&p.status==='BLOCKED')Object.assign(p,{status:'READY',reason:'ASSUME_OK'});return rows;}}},
+{id:'DC-F7',kills:'R5-F7',description:'positive/unknown capacity treated as unlimited selector',decision:{...base(),selectReady:w=>R.readiness(w).filter(x=>x.status==='READY').map(x=>x.planned_work_unit_id)}},
+{id:'DC-F8',kills:'R5-F8',description:'ready selection silently chooses successor instead',decision:{...base(),selectReady:w=>{const s=R.selectReady(w);return s.length?['p4']:s;}}},
+{id:'DC-F9',kills:'R5-F9',description:'readiness marks selected runtime EXECUTING directly',decision:{...base(),decide:w=>{const s=R.selectReady(w);for(const pid of s){const b=w.bindings.find(x=>x.planned_work_unit_id===pid);w.runtimes[b.canonical_work_unit_id].state='EXECUTING';}return {selected:s,protected_unchanged:true};}}},
+{id:'DC-F10',kills:'R5-F10',description:'observed slot bypasses live session recheck',decision:{...base(),sessionRecheckAllows:({observed_slots})=>observed_slots>0}},
+]);
