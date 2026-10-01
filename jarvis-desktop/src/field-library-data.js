@@ -3,6 +3,21 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
   "recentItems": [
     {
+      "title": "KELLY'S WORLD — SAFETY-DELIVERY-01 Propagation",
+      "path": "docs/programme/KELLYS-WORLD-SAFETY-DELIVERY-01_PROPAGATION_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Purpose: carry the current SAFETY-DELIVERY-01 state into Kelly's World as founder-facing orientation without copying member material, creating a second safety system, or changing programme authority.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Governing law",
+        "Source state",
+        "Needs Kelly",
+        "Human-disclosure authority",
+        "In motion",
+        "Canonical member-facing safety floor"
+      ]
+    },
+    {
       "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R20 Living Field Human Witness Custody · 2026-10-01",
       "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R20_LIVING_FIELD_HUMAN_WITNESS_CUSTODY_2026-10-01.md",
       "excerpt": "Carry the current Living Field human-witness boundary into Kelly's World without copying private member material, creating a second evidence store, or changing programme standing.",
@@ -15,6 +30,46 @@ window.KELLY_FIELD_LIBRARY = {
         "Human next boundary",
         "Kelly's World standing",
         "Release discipline"
+      ]
+    },
+    {
+      "title": "KELLY'S WORLD — ACCESS AUTHORITY 01 · 2026-10-01",
+      "path": "docs/programme/KELLYS-WORLD-ACCESS-AUTHORITY-01_2026-10-01.md",
+      "excerpt": "Carry the production beta-access authority into Kelly's World as a human-readable projection without creating a second roster, changing access, or granting authority.",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Purpose",
+        "Governing distinction",
+        "Production witness",
+        "Kelly's World standing"
+      ]
+    },
+    {
+      "title": "WS-ADVANCED-RUNTIME-01 / P2 — Formal Migration Review ADMITTED · Gate APPLIES",
+      "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P2_FORMAL_REVIEW_ADMITTED_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: REVIEW ADMITTED · COMPOSED GATE APPLIES (local, exact git objects) · ⛔ NOT DEPLOYED · ⛔ NO MIGRATION APPLIED Target (RC1): 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 (feature/ws-advanced-runtime-rc1-20261001, unchanged by this act) Old reader: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Plan: docs/programme/WS-ADVANCED-RUNTIME-01P2EXACTTHREEMIGRATIONREVIEWPLAN2026-10-01.md @ sha256 62b0de90…8a11",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 7,
+      "headings": [
+        "What happened",
+        "Result",
+        "Low findings (non-blocking by law; carried to the act)",
+        "Limitations the reviewer stated (not converted into findings)",
+        "The act (founder, from the Mac Studio — this container has no route to minisforum)"
+      ]
+    },
+    {
+      "title": "WS-ADVANCED-RUNTIME-01 / RC1 — Production Witness",
+      "path": "docs/programme/WS-ADVANCED-RUNTIME-01_RC1_PRODUCTION_WITNESS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 · Status: RC1 LIVE · migrations APPLIED · ⛔ cohort walk not yet done Target: 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 · Old reader: 975a208b8 Act: founder-run from the Mac Studio, scripts/deploy-production.sh deploy 03f0fd3ab… with the admitted custody evidence (docs/programme/evidence/WS-ADVANCED-RUNTIME-01-RC1-REVIEW/).",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Witnessed (transcript, run 1, swap ~14:35Z)",
+        "Run 2 (~14:48Z, same SHA)",
+        "Observations (⛔ not repaired here)",
+        "Owed"
       ]
     },
     {
@@ -2166,7 +2221,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Standing:** REPAIR closed · VERIFY full candidate pass (54/54) · INVOKE open, I0 only.",
       "last_touched_epoch": 1788745887,
-      "hours_dormant": 596,
+      "hours_dormant": 597,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2178,7 +2233,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 222,
       "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
       "last_touched_epoch": 1789318246,
-      "hours_dormant": 437,
+      "hours_dormant": 438,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2190,7 +2245,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 219,
       "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
       "last_touched_epoch": 1789317901,
-      "hours_dormant": 437,
+      "hours_dormant": 438,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -4245,6 +4300,20 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "WS-ADVANCED-RUNTIME-01 / P2 — Formal Migration Review ADMITTED · Gate APPLIES",
+          "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P2_FORMAL_REVIEW_ADMITTED_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: REVIEW ADMITTED · COMPOSED GATE APPLIES (local, exact git objects) · ⛔ NOT DEPLOYED · ⛔ NO MIGRATION APPLIED Target (RC1): 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 (feature/ws-advanced-runtime-rc1-20261001, unchanged by this act) Old reader: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Plan: docs/programme/WS-ADVANCED-RUNTIME-01P2EXACTTHREEMIGRATIONREVIEWPLAN2026-10-01.md @ sha256 62b0de90…8a11",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 7,
+          "headings": [
+            "What happened",
+            "Result",
+            "Low findings (non-blocking by law; carried to the act)",
+            "Limitations the reviewer stated (not converted into findings)",
+            "The act (founder, from the Mac Studio — this container has no route to minisforum)"
+          ]
+        },
+        {
           "title": "WS-ADVANCED-RUNTIME-01 / P3 — Formal Migration Review Result",
           "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P3_FORMAL_MIGRATION_REVIEW_RESULT_2026-10-01.md",
           "excerpt": "Date: 2026-10-01 Status: ⭐ REVIEW RUN · ADMITTED · VERDICT REVISE · check REFUSES [NOTAPPROVED] Target: feature/ws-advanced-runtime-rc1-20261001 @ 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 Old reader: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Plan: docs/programme/WS-ADVANCED-RUNTIME-01P2EXACTTHREEMIGRATIONREVIEWPLAN2026-10-01.md (sha256 62b0de90…8a11)",
@@ -4283,6 +4352,19 @@ window.KELLY_FIELD_LIBRARY = {
             "Proof at the target",
             "Custody chain",
             "Deployment runbook"
+          ]
+        },
+        {
+          "title": "WS-ADVANCED-RUNTIME-01 / RC1 — Production Witness",
+          "path": "docs/programme/WS-ADVANCED-RUNTIME-01_RC1_PRODUCTION_WITNESS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 · Status: RC1 LIVE · migrations APPLIED · ⛔ cohort walk not yet done Target: 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 · Old reader: 975a208b8 Act: founder-run from the Mac Studio, scripts/deploy-production.sh deploy 03f0fd3ab… with the admitted custody evidence (docs/programme/evidence/WS-ADVANCED-RUNTIME-01-RC1-REVIEW/).",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Witnessed (transcript, run 1, swap ~14:35Z)",
+            "Run 2 (~14:48Z, same SHA)",
+            "Observations (⛔ not repaired here)",
+            "Owed"
           ]
         },
         {
@@ -13064,6 +13146,21 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "KELLY'S WORLD — SAFETY-DELIVERY-01 Propagation",
+          "path": "docs/programme/KELLYS-WORLD-SAFETY-DELIVERY-01_PROPAGATION_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Purpose: carry the current SAFETY-DELIVERY-01 state into Kelly's World as founder-facing orientation without copying member material, creating a second safety system, or changing programme authority.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Governing law",
+            "Source state",
+            "Needs Kelly",
+            "Human-disclosure authority",
+            "In motion",
+            "Canonical member-facing safety floor"
+          ]
+        },
+        {
           "title": "`L1 · CURRENT-SESSION-RECOVERY-01` — IMPLEMENTATION + ACCEPTANCE",
           "path": "docs/programme/L1-CURRENT-SESSION-RECOVERY-01_ACCEPTANCE_2026-09-15.md",
           "excerpt": "Authority founder ruling 2026-09-15 — open for implementation and same-day deployment, FAST/CORE only. Status IMPLEMENTED · falsifier GREEN · gates GREEN · ⛔ PRODUCTION WITNESS OWED",
@@ -13654,8 +13751,8 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 736,
-    "recent": 144,
+    "lanes": 739,
+    "recent": 148,
     "recovery": 12
   }
 };

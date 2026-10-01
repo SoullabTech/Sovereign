@@ -1,0 +1,132 @@
+# KELLY'S WORLD — SAFETY-DELIVERY-01 Propagation
+
+**Date:** 2026-10-01
+**Purpose:** carry the current SAFETY-DELIVERY-01 state into Kelly's World as founder-facing orientation without copying member material, creating a second safety system, or changing programme authority.
+
+## Governing law
+
+Kelly's World is an operational projection of canonical work, not a competing source of truth.
+
+A safety finding may appear here as orientation only:
+
+- visibility does not create urgency;
+- urgency does not create disclosure authority;
+- recognition does not create notification authority;
+- a programme record does not become implementation merely because it is visible here.
+
+No member utterance, crisis transcript, risk score, or personal safety state is copied into Kelly's World.
+
+## Source state
+
+The current SAFETY-DELIVERY-01 lineage is represented by four review surfaces:
+
+- PR #1663 — S1 reachability correction;
+- PR #1664 — canonical live crisis-path census;
+- PR #1665 — minimal deterministic recognition contract;
+- PR #1669 — stacked canonical live wiring, based on #1665.
+
+These are review/merge surfaces. Kelly's World must not present an open PR as canonical merely because it is visible.
+
+## Needs Kelly
+
+### Human-disclosure authority
+
+**Needs Kelly only if Soullab is to notify another human or service because a crisis signal was detected.**
+
+That decision is not delegated to the recognizer, route, model, practitioner layer, or notification infrastructure.
+
+A future disclosure law would need to settle:
+
+- eligible recipients;
+- member consent or other lawful basis;
+- what information may cross;
+- when the threshold is met;
+- what happens when delivery fails;
+- retention and audit;
+- whether minors, practitioner relationships, or explicit emergency contexts have distinct rules.
+
+Current standing: **not authorized by SAFETY-DELIVERY-01**.
+
+## In motion
+
+### Canonical member-facing safety floor
+
+The implementation stack is moving toward a deterministic safety floor at the canonical `/api/sovereign/app/maia/list` ingress.
+
+The intended invariant is:
+
+member utterance
+→ durable acceptance when lawful
+→ deterministic recognition
+→ hard override for explicit active / NSSI / imminent language
+→ deterministic member-facing safety response
+→ return before ordinary symbolic / teaching / model cognition
+
+The recognition seam carries:
+
+`disclosureAuthorized: false`
+
+The live-wiring branch adds no practitioner, guardian, Soullab-team, email, webhook, or emergency-service dispatch.
+
+### Current review order
+
+1. admit/correct the evidence records;
+2. admit the recognition law;
+3. only then admit the stacked live wiring.
+
+Stack order matters. A child implementation must not make its parent law appear merged.
+
+## Watching
+
+### False-positive pressure
+
+The older voice crisis detector has known broad stopgap phrases. The server recognizer deliberately does not inherit examples such as:
+
+- "this is goodbye";
+- "I wrote letters";
+- "I've just taken my medication";
+- ordinary discussion of suicide prevention;
+- third-person reports.
+
+Watch for pressure to widen detection without corresponding falsifiers.
+
+### Multi-turn safety posture
+
+The current minimal live design is deliberately self-contained per hard-override turn.
+
+No hidden persistent crisis mode is added because:
+
+- process-local Maps are not reliable across server instances/restarts;
+- database-backed risk state would persist sensitive mental-health information and change the privacy contract.
+
+If a multi-turn safety posture is later desired, it requires its own privacy/retention design rather than being smuggled into session metadata.
+
+### Non-delivery register
+
+S1 remains an architecture finding with live reachability not established for the old prototype pipeline.
+
+S2–S4 remain separate findings.
+
+The new canonical live safety contract does not automatically close those rows because it is not the same mechanism.
+
+## Kelly's World projection
+
+This record belongs in the Living Field Library because it gives Kelly one place to recover the current safety boundary without reconstructing it from multiple PRs or chats.
+
+Its orientation should read:
+
+- **Needs Kelly:** third-party disclosure authority only;
+- **In motion:** deterministic canonical member-facing safety floor;
+- **Watching:** false positives, multi-turn privacy, and legacy safety/non-delivery seams.
+
+Nothing here authorizes execution, merge, deployment, or disclosure.
+
+## Release discipline
+
+When the relevant PRs merge or are superseded, regenerate the Field Library from the resulting programme corpus.
+
+If the programme state changes, update this record or supersede it; do not let Kelly's World preserve an obsolete open-state as if it were current.
+
+## Standing
+
+**PROPAGATED AS ORIENTATION · no member data copied · no new safety authority · no new execution mechanism.**
