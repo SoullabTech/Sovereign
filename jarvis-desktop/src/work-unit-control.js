@@ -791,6 +791,62 @@ function canonicalOpenCodeAncestorPreflight(cwd) {
   return { ok: true, status: 'ADMITTED', reason: null };
 }
 
+function canonicalEvidenceFragments(root, sha, selectors) {
+  const fragments = [];
+  for (const item of selectors || []) {
+    const ref = String(item?.ref || '');
+    const selector = item?.selector || {};
+    if (selector.type !== 'lines') throw new Error('CANONICAL_EVIDENCE_SELECTOR_UNSUPPORTED');
+    const start = Number(selector.start);
+    const end = Number(selector.end);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < start) {
+      throw new Error('CANONICAL_EVIDENCE_SELECTOR_INVALID');
+    }
+    const text = execFileSync('git', ['show', sha + ':' + ref], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      maxBuffer: 8 * 1024 * 1024,
+    });
+    const lines = String(text).split('\n');
+    if (end > lines.length) throw new Error('CANONICAL_EVIDENCE_SELECTOR_OUT_OF_RANGE');
+    const content = lines.slice(start - 1, end).join('\n');
+    fragments.push({
+      source_file: ref,
+      source_sha: sha,
+      selector: { type: 'lines', start, end },
+      start_line: start,
+      end_line: end,
+      extraction_method: 'line-range',
+      content_hash: crypto.createHash('sha256').update(content, 'utf8').digest('hex'),
+      content,
+    });
+  }
+  return fragments;
+}
+
+function renderCanonicalEvidenceFragments(fragments) {
+  if (!fragments?.length) return '';
+  const parts = fragments.map((f) => {
+    const numbered = f.content.split('\n')
+      .map((line, i) => String(f.start_line + i).padStart(5) + '| ' + line)
+      .join('\n');
+    return [
+      'SOURCE: ' + f.source_file,
+      'LINES:  ' + f.start_line + '-' + f.end_line + ' (line-range, @' + f.source_sha + ')',
+      'SHA256: ' + f.content_hash.slice(0, 16),
+      '---',
+      numbered,
+    ].join('\n');
+  });
+  return [
+    'AUTHORIZED EVIDENCE FRAGMENTS — reason only from these exact ranges.',
+    'The left gutter carries the absolute source line number for citation.',
+    '',
+    parts.join('\n\n'),
+  ].join('\n');
+}
+
 function materializeCanonicalEvidenceSandbox(root, workUnit, opts = {}) {
   const sha = String(workUnit?.scope?.base_ref || '');
   const allowed = boundedCanonicalPaths(workUnit);
@@ -813,16 +869,40 @@ function materializeCanonicalEvidenceSandbox(root, workUnit, opts = {}) {
     if (!files.length) throw new Error('CANONICAL_EVIDENCE_SCOPE_EMPTY');
   }
 
+  const selectors = Array.isArray(workUnit?.scope?.evidence_selectors)
+    ? workUnit.scope.evidence_selectors
+    : [];
+  const selectorRefs = [...new Set(selectors.map((item) => String(item?.ref || '')))];
+  if (selectors.length && selectorRefs.some((ref) => !allowed.includes(ref) || !files.includes(ref))) {
+    throw new Error('CANONICAL_EVIDENCE_SELECTOR_OUTSIDE_SCOPE');
+  }
+  const fragments = selectors.length ? canonicalEvidenceFragments(root, sha, selectors) : [];
+
   const workspace = opts.workspace || fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-e1-evidence-'));
   fs.mkdirSync(workspace, { recursive: true, mode: 0o700 });
   let totalBytes = 0;
   for (const rel of files) {
-    const bytes = execFileSync('git', ['show', sha + ':' + rel], {
-      cwd: root,
-      encoding: null,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      maxBuffer: 8 * 1024 * 1024,
-    });
+    let bytes;
+    if (selectors.length) {
+      const selected = fragments.filter((fragment) => fragment.source_file === rel);
+      if (!selected.length) continue;
+      const maxEnd = Math.max(...selected.map((fragment) => fragment.end_line));
+      const sparse = Array(maxEnd).fill('');
+      for (const fragment of selected) {
+        const sourceLines = fragment.content.split('\n');
+        for (let i = 0; i < sourceLines.length; i += 1) {
+          sparse[fragment.start_line - 1 + i] = sourceLines[i];
+        }
+      }
+      bytes = Buffer.from(sparse.join('\n'), 'utf8');
+    } else {
+      bytes = execFileSync('git', ['show', sha + ':' + rel], {
+        cwd: root,
+        encoding: null,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        maxBuffer: 8 * 1024 * 1024,
+      });
+    }
     totalBytes += bytes.length;
     if (totalBytes > 2 * 1024 * 1024) {
       fs.rmSync(workspace, { recursive: true, force: true });
@@ -841,7 +921,7 @@ function materializeCanonicalEvidenceSandbox(root, workUnit, opts = {}) {
       fs.copyFileSync(agent, target);
     }
   }
-  return { workspace, files };
+  return { workspace, files: selectors.length ? selectorRefs : files, fragments };
 }
 
 function prepareCanonicalOpenCodeContainment(root, workUnit, binding, sourceEnv) {
@@ -874,7 +954,7 @@ function prepareCanonicalOpenCodeContainment(root, workUnit, binding, sourceEnv)
   }
 }
 
-function canonicalProviderPrompt(workUnit, files, { inlineEvidence = false, workspace } = {}) {
+function canonicalProviderPrompt(workUnit, files, { inlineEvidence = false, workspace, fragments = [] } = {}) {
   const acceptance = (workUnit?.evaluation?.acceptance_conditions || [])
     .map((v) => '- ' + v).join('\n') || '(none)';
   const stops = (workUnit?.evaluation?.stop_conditions || [])
@@ -882,7 +962,9 @@ function canonicalProviderPrompt(workUnit, files, { inlineEvidence = false, work
   let evidence = files.length
     ? files.map((v) => '- ' + v).join('\n')
     : '(task text only; no repository file evidence disclosed)';
-  if (inlineEvidence && files.length) {
+  if (inlineEvidence && fragments.length) {
+    evidence = renderCanonicalEvidenceFragments(fragments);
+  } else if (inlineEvidence && files.length) {
     evidence = files.map((rel) => {
       const file = path.join(workspace, rel);
       return '=== ' + rel + ' ===\n' + fs.readFileSync(file, 'utf8');
@@ -935,6 +1017,7 @@ async function executeCanonicalResolvedProvider(
       const prompt = canonicalProviderPrompt(workUnit, sandbox.files, {
         inlineEvidence: true,
         workspace: sandbox.workspace,
+        fragments: sandbox.fragments,
       });
       const localWorker = opts.localWorkerRun
         ? { run: opts.localWorkerRun }
@@ -1003,6 +1086,7 @@ async function executeCanonicalResolvedProvider(
       const prompt = canonicalProviderPrompt(workUnit, sandbox.files, {
         inlineEvidence: true,
         workspace: sandbox.workspace,
+        fragments: sandbox.fragments,
       });
       run = await new Promise((resolve) => {
         // Credential value custody stays in this child. The Desktop parent has

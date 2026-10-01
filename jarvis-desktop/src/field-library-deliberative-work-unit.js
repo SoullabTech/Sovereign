@@ -50,12 +50,17 @@
   function precisionLoss(packet, canonicalInput) {
     const sources = programmeSources(packet);
     const allowed = canonicalInput?.scope?.allowed_paths || [];
+    const selectors = canonicalInput?.scope?.evidence_selectors || [];
+    const selectorKeys = new Set(selectors.map((entry) =>
+      entry?.ref + ':' + entry?.selector?.start + '-' + entry?.selector?.end
+    ));
     const losses = [];
     for (const source of sources) {
       const expected = source.path + ':' + source.excerpt_start_line + '-' + source.excerpt_end_line;
-      if (allowed.includes(source.path) && !allowed.includes(expected)) {
+      if (selectorKeys.has(expected)) continue;
+      if (allowed.includes(source.path)) {
         losses.push({ source_id:source.source_id, expected, actual:source.path, reason:'LINE_RANGE_STRIPPED' });
-      } else if (!allowed.includes(expected)) {
+      } else {
         losses.push({ source_id:source.source_id, expected, actual:null, reason:'SOURCE_SCOPE_NOT_PRESERVED' });
       }
     }

@@ -173,6 +173,24 @@ function boundedRepoPath(value) {
   if (p.startsWith('/') || p.startsWith('../') || p.includes('/../') || p.includes('\\')) return null;
   return p;
 }
+function parseEvidenceFocus(value) {
+  const raw = String(value || '').trim();
+  const match = /^(.*):(\d+)-(\d+)$/.exec(raw);
+  const path = boundedRepoPath(raw);
+  if (!path) return { ok: false, path: null, selector: null, raw };
+  if (!match) return { ok: true, path, selector: null, raw };
+  const start = Number(match[2]);
+  const end = Number(match[3]);
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < start) {
+    return { ok: false, path, selector: null, raw };
+  }
+  return {
+    ok: true,
+    path,
+    selector: { ref: path, selector: { type: 'lines', start, end } },
+    raw,
+  };
+}
 function validateSpecShape(spec) {
   const blocks = [];
   if (!isObject(spec)) return [blocker('CANONICAL_SPEC_REQUIRED', 'Canonical v2 intent must be structured.')];
@@ -214,7 +232,15 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
   }
   if (!safeId(workUnitId)) blocks.push(blocker('WORK_UNIT_ID_REQUIRED', 'MAIN must derive canonical Work Unit identity.'));
 
-  const focus = unique(lines(spec?.evidenceFocus).map(boundedRepoPath).filter(Boolean));
+  const focusEntries = unique(lines(spec?.evidenceFocus)).map(parseEvidenceFocus);
+  const invalidFocus = focusEntries.filter((entry) => !entry.ok);
+  for (const entry of invalidFocus) {
+    blocks.push(blocker('INVALID_EVIDENCE_FOCUS', 'Evidence focus must be a bounded repository path or path:start-end line range.', 'evidenceFocus'));
+  }
+  const focus = unique(focusEntries.filter((entry) => entry.ok).map((entry) => entry.path));
+  const evidenceSelectors = focusEntries
+    .filter((entry) => entry.ok && entry.selector)
+    .map((entry) => entry.selector);
   const acceptance = lines(spec?.acceptanceCriteria);
   const falsification = lines(spec?.falsificationConditions);
   const stopConditions = lines(spec?.stopConditions);
@@ -279,6 +305,7 @@ function canonicalInputFromSpec(spec, { canonicalSha, workUnitId }) {
       base_ref: canonicalSha,
       allowed_paths: isTaskTextOnly ? [] : focus,
       forbidden_paths: [],
+      ...(evidenceSelectors.length ? { evidence_selectors: evidenceSelectors } : {}),
     },
     authority: {
       repository_read: !isTaskTextOnly,
@@ -317,7 +344,7 @@ function prospectiveIntentKey(spec, canonicalSha) {
     evidenceClass: text(spec?.evidenceClass),
     requestedPosture: text(spec?.requestedPosture),
     reviewPressure: text(spec?.reviewPressure),
-    evidenceFocus: unique(lines(spec?.evidenceFocus).map(stripLineSelector)),
+    evidenceFocus: unique(lines(spec?.evidenceFocus)),
     acceptanceCriteria: lines(spec?.acceptanceCriteria),
     falsificationConditions: lines(spec?.falsificationConditions),
     stopConditions: lines(spec?.stopConditions),
