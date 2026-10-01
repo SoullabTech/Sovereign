@@ -101,6 +101,11 @@ expectKilled('LA30-F7', {
   points: [...lawful.points, { id: 'LA-ART-001-A', kind: 'artifact' }],
   coordinates: { ...lawful.coordinates, 'LA-ART-001-A': coordinateV1('LA-ART-001-A', 1991) },
 });
+// F7 also kills duplicate rendering of one catalogue object as two points.
+expectKilled('LA30-F7', {
+  ...lawful,
+  points: [...lawful.points, lawful.points[0]],
+});
 
 // F8 — Haze performs quantity.
 expectKilled('LA30-F8', { ...lawful, haze: [{ locationId: 'box-a', intensity: 0.8, estimatedCount: 400 }] });
@@ -131,6 +136,19 @@ expectKilled('LA30-F11', {
 const anonymous = buildReferenceDarkField(catalogue, 'anonymous');
 assert.deepEqual(anonymous.points.map((p) => p.id), ['LA-ART-001', 'LA-GAP-001']);
 assert.ok(!anonymous.points.some((p) => p.id === 'LA-GAP-SEALED'), 'anonymous visitors must not see sealed known-gap points');
+
+// Existence leaks count too: an anonymous visitor may not receive a sealed record
+// indirectly through thread adjacency or a coordinate with no visible point.
+const anonymousLeak = {
+  ...anonymous,
+  threads: [{ id: 'leaky-thread', artifactIds: ['LA-ART-002'] }],
+  coordinates: {
+    ...anonymous.coordinates,
+    'LA-ART-002': coordinateV1('LA-ART-002', 1999),
+  },
+};
+const anonymousLeakViolations = validateDarkFieldCandidate(anonymousLeak, catalogue, 'anonymous');
+assert.ok(anonymousLeakViolations.some((v) => v.falsifier === 'LA30-F2'), 'sealed existence leak must be killed for anonymous entry');
 
 // Catalogue growth cannot move an existing coordinate.
 const grown: ArchiveCatalogue = {

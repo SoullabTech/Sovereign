@@ -218,7 +218,13 @@ export function validateDarkFieldCandidate(
   const artifacts = new Map(catalogue.artifacts.map((artifact) => [artifact.archiveId, artifact]));
   const gaps = new Map(catalogue.knownGaps.map((gap) => [gap.gapId, gap]));
 
+  const seenPointIds = new Set<string>();
   for (const point of candidate.points) {
+    if (seenPointIds.has(point.id)) {
+      violations.push({ falsifier: 'LA30-F7', detail: `catalogue record ${point.id} rendered more than once` });
+    }
+    seenPointIds.add(point.id);
+
     const artifact = artifacts.get(point.id);
     const gap = gaps.get(point.id);
     if (!artifact && !gap) {
@@ -262,8 +268,18 @@ export function validateDarkFieldCandidate(
     }
     for (const id of thread.artifactIds) {
       const artifact = artifacts.get(id);
-      if (artifact?.privacyClass === 'withheld_third_party') {
-        violations.push({ falsifier: 'LA30-F9', detail: `withheld artifact ${id} leaked through thread adjacency` });
+      const gap = gaps.get(id);
+      if (!artifact && !gap) {
+        violations.push({ falsifier: 'LA30-F1', detail: `thread ${thread.id} references uncatalogued record ${id}` });
+        continue;
+      }
+      if (artifact?.privacyClass === 'withheld_third_party' || gap?.privacyClass === 'withheld_third_party') {
+        violations.push({ falsifier: 'LA30-F9', detail: `withheld record ${id} leaked through thread adjacency` });
+        continue;
+      }
+      const visible = artifact ? expectedArtifactPoint(artifact, viewer) : expectedGapPoint(gap!, viewer);
+      if (!visible) {
+        violations.push({ falsifier: 'LA30-F2', detail: `non-visible record ${id} leaked through thread adjacency` });
       }
     }
   }
@@ -305,6 +321,11 @@ export function validateDarkFieldCandidate(
     const dateOrdinal = artifact?.dateOrdinal ?? gap?.dateOrdinal;
     if (dateOrdinal === undefined) {
       violations.push({ falsifier: 'LA30-F1', detail: `coordinate ${id} has no catalogue record` });
+      continue;
+    }
+    const visible = artifact ? expectedArtifactPoint(artifact, viewer) : expectedGapPoint(gap!, viewer);
+    if (!visible) {
+      violations.push({ falsifier: 'LA30-F2', detail: `non-visible record ${id} leaked through coordinates` });
       continue;
     }
     const expected = coordinateV1(id, dateOrdinal);
