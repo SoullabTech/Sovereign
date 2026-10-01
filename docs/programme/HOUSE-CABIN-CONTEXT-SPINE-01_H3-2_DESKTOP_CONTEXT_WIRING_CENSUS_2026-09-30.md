@@ -123,17 +123,61 @@ H3.2 passes only when:
 
 ## Implementation witness
 
-Current H3.2 candidate surfaces are:
+Implemented surfaces:
 
-- maia-desktop/src/cabin-runtime-policy.js
-- maia-desktop/src/main.js
-- app/api/cabin/health/route.ts
-- app/api/cabin/context/route.ts
-- lib/cabin/contextRuntime.ts
+- `maia-desktop/src/cabin-runtime-policy.js`
+- `maia-desktop/src/main.js`
+- `config/accessMatrix.ts`
+- `app/api/cabin/health/route.ts`
+- `app/api/cabin/context/route.ts`
+- `lib/cabin/contextRuntime.ts`
+- `docs/design/contracts/cabin-context-runtime.md`
 
-The first four runtime tests already establish the pre-existing Desktop
-lifecycle boundary. H3.2 adds package-path propagation and the local runtime
-read/mount seam.
+### What is now wired
+
+Desktop resolves one absolute Context Package artifact path and passes it to the
+supervised local runtime as `MAIA_CABIN_CONTEXT_PACKAGE_PATH`.
+
+The local runtime:
+
+1. treats an absent artifact as a truthful empty package;
+2. validates a present artifact through H2.5;
+3. mounts it through H3.1;
+4. reports `empty` or `mounted` through the health witness;
+5. fails health closed on an invalid package;
+6. exposes the mounted package only through the offline Cabin context route;
+7. requires an existing `maia_cabin_session` before returning context;
+8. never writes the artifact, browser storage, or CabinLocalStore.
+
+### Evidence
+
+Focused H3.2 runtime suite: **9/9 PASS**.
+
+Desktop/context wiring suite: **18/18 PASS**.
+
+Combined H2.1–H3.2 focused Cabin tests: **71/71 PASS**.
+
+Full Cabin Desktop witness population: **46/46 PASS**.
+
+Design canon: **PASS**.
+
+Project typehealth: **223 errors against a 239-error baseline**. The only new
+diagnostic remains the unrelated Stripe API-version mismatch at
+`lib/stripe/config.ts:23`; no H3.2 diagnostic is reported.
+
+### Real local runtime witness
+
+Using an actual Next development server in offline Cabin mode:
+
+- no package artifact → health **HTTP 200**, `context: "empty"`;
+- valid package containing a governed Work reference → health **HTTP 200**,
+  `context: "mounted"`, and `GET /api/cabin/context` returned the exact
+  package through the authenticated local Cabin session;
+- malformed package → health **HTTP 503** with
+  `cabin_context_unavailable`.
+
+The witness was isolated to a temporary local data directory. No production
+server, Mac Studio production database, or deployment path was touched.
 
 No production deployment is authorized by this record.
 ## Explicit stop boundary
