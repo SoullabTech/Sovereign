@@ -126,7 +126,15 @@ plus an expected member scope and returns either the portable reference or
 
 Focused projection suite: **10/10 PASS**.
 
-The broader Cabin suite, run from `maia-desktop/`, is **37/37 PASS**.
+Real local-authority witness:
+- `maia-desktop/test/cabin-work-projection.test.mjs` — **1/1 PASS**.
+- The witness creates one real local Work, two member-owned manuscripts, two
+  declarations, reads the Work back through `CabinLocalStore`, projects it,
+  and verifies both manuscript references survive with no current-manuscript
+  selection.
+
+The broader Cabin suite, run from `maia-desktop/`, is **37/37 PASS** before
+the added one-test H2.1 witness; the added witness is separately **1/1 PASS**.
 This includes the local Work ownership, multi-Work manuscript declaration,
 restart durability, Cabin runtime, packaging, and offline-boundary witnesses.
 
