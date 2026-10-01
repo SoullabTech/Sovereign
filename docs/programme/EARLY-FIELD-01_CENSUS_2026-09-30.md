@@ -209,3 +209,48 @@ The cohort witnesses **the R1R3 instrument and its integration into the existing
 Canon `7ec42ce6` is **merged but not cleared** for broad production deployment. The next rollout is
 **canonical + EARLY-FIELD-01**, deployed with `EARLY_FIELD_ENABLED=false` until the cohort is
 named, and never canon alone. H1's exposure ruling is also owed before any broad deploy.
+## 9 · Reconciled port after auth/runtime + explicit MAIA consent
+
+EARLY-FIELD-01 was replayed unchanged onto the repaired Living Field line after:
+
+- verified-session auth convergence (#1545 candidate);
+- dynamic `[fieldKey]` params repair;
+- the founder ruling that opening member-owned field material does not itself
+  begin a MAIA encounter.
+
+The gate remains scoped to the R1R3 `LivingFieldInstrument` only. The ordinary
+Living Field room, member-authored dimensions, and the explicit
+“Enter this dimension with MAIA” action remain available outside the cohort.
+
+### Real-stack cohort witness
+
+A fresh disposable PostgreSQL database held two synthetic members:
+
+- one explicitly listed in `EARLY_FIELD_MEMBER_IDS`;
+- one authenticated member outside the cohort.
+
+With `EARLY_FIELD_ENABLED=true`, the real Mac Studio stack passed **9/9**:
+
+- admitted member sees the R1R3 instrument;
+- admitted member still sees the ordinary Living Field;
+- server reports `instrument=true` only for the admitted member;
+- non-cohort member does not see the instrument;
+- non-cohort member still sees the ordinary room;
+- `?early=1` plus a localStorage `earlyField=true` spoof does not grant it;
+- server reports `instrument=false` for the non-cohort member;
+- non-cohort member retains access to their authored dimension;
+- ordinary dimension open still does not auto-start MAIA.
+
+### Rollback witness
+
+The same listed member was then tested with
+`EARLY_FIELD_ENABLED=false`. The real stack passed **4/4**:
+
+- the instrument disappeared;
+- the Living Field room remained intact;
+- the server decision was false;
+- member-authored dimension access remained intact.
+
+This witnesses both exclusion and rollback before any production cohort is
+named. Deployment still requires an explicit release act and production
+configuration.

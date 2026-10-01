@@ -1,0 +1,29 @@
+{
+  "head": "7e70eb96e",
+  "base": "http://localhost:3644",
+  "enabled": false,
+  "passed": 4,
+  "failed": 0,
+  "results": [
+    {
+      "name": "rollback removes instrument for listed member",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rollback leaves Living Field room intact",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rollback server decision is false",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rollback does not revoke member-authored dimension",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

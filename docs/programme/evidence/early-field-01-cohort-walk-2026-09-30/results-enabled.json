@@ -1,0 +1,54 @@
+{
+  "head": "7e70eb96e",
+  "base": "http://localhost:3643",
+  "enabled": true,
+  "passed": 9,
+  "failed": 0,
+  "results": [
+    {
+      "name": "admitted member sees R1R3 instrument",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "admitted member still sees ordinary Living Field",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "server reports admitted instrument=true",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "non-cohort member does not see R1R3 instrument",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "non-cohort member still sees ordinary Living Field",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "query/storage spoof does not grant instrument",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "server reports non-cohort instrument=false",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "non-cohort member keeps access to authored dimension",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ordinary dimension open still does not auto-start MAIA",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}
