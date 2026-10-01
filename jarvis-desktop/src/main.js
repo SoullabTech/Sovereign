@@ -22,6 +22,7 @@ const RECOVERY_B = require('./o5-path-b-recovery.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
 const DUAL_SHADOW = require('./dual-work-shadow.js');
+const C0_DECISION = require('./c0-execution-decision.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
@@ -1222,19 +1223,23 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
 
   if (decision.execution_lane === 'C0') {
     try {
-      const { runCapability } = await import(`file://${detPath}?t=${Date.now()}`);
-      const r = runCapability(task.capability, task.args || {}, currentRoot());
-      response.result = r;
-      response.status = 'completed';
-      // Independent verification: a second, structurally different check —
-      // that the capability is still registered and the result carries the
-      // expected shape. Deep re-verification is the caller's job (as proven
-      // in the live Route A proof); the console surfaces what it can cheaply
-      // confirm itself without duplicating capability logic.
-      // C0: an independent check genuinely establishes the RESULT is correct
-      // (proven in the live Route A proof — a separate code path re-derives
-      // the same fact). "Verification: PASS" is warranted here.
-      response.verification = { kind: 'result', label: 'Verification', checked: 'capability registered + exit_code present', pass: typeof r.exit_code === 'number' };
+      const { describeInvocation } = await import(`file://${detPath}?t=${Date.now()}`);
+      const invocation = describeInvocation(task.capability, task.args || {});
+      const staged = C0_DECISION.stage({
+        task,
+        routeDecision: decision,
+        root: currentRoot(),
+        invocation,
+      });
+      response.status = staged.status;
+      response.reason = staged.ok
+        ? 'C0 is routable, but routing is not execution authority. A separate host decision is required.'
+        : staged.reason;
+      response.occurrence_id = staged.occurrence_id || null;
+      response.invocation_binding_digest = staged.binding_digest || null;
+      response.result = staged.ok
+        ? { note: 'Invocation staged. No capability executed.' }
+        : { note: 'Invocation is not executable through RB-6B yet.' };
     } catch (e) {
       response.status = 'failed';
       response.result = { error: e.message };
@@ -1334,6 +1339,118 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   }
 
   return response;
+});
+
+// JOP-04 RB-6B — a separate host act after routing.
+// The renderer may name ONLY a host-minted occurrence id. MAIN owns the pending
+// invocation, the bound root, the native confirmation, the decision event and
+// the actual capability call. Routing by itself never reaches runCapability().
+ipcMain.handle('jarvis:execute-routed-task', async (_evt, req) => {
+  if (!currentRoot()) return { ok: false, status: 'REFUSED', reason: 'NO_BOUND_SUBSTRATE' };
+  if (!req || typeof req !== 'object' || Array.isArray(req)
+      || Object.keys(req).length !== 1 || typeof req.occurrence_id !== 'string') {
+    return { ok: false, status: 'REFUSED', reason: 'EXACT_OCCURRENCE_ID_REQUIRED' };
+  }
+  const occurrenceId = req.occurrence_id;
+  const pending = C0_DECISION.inspect(occurrenceId);
+  if (!pending) return { ok: false, status: 'REFUSED', reason: 'PENDING_OCCURRENCE_NOT_FOUND' };
+
+  const root = currentRoot();
+  const detPath = path.join(root, 'scripts', 'builder', 'deterministic.mjs');
+  const routerPath = path.join(root, 'scripts', 'builder', 'router.mjs');
+  try {
+    const det = await import(`file://${detPath}?t=${Date.now()}`);
+    const router = await import(`file://${routerPath}?t=${Date.now()}`);
+    const invocation = det.describeInvocation(pending.task.capability, pending.task.args || {});
+    const declared = pending.task && typeof pending.task.routing === 'object' ? pending.task.routing : null;
+    const routingEligibility = declared && typeof router.declareRoutingEligibility === 'function'
+      ? router.declareRoutingEligibility({
+          satisfied: declared.satisfied === true,
+          basis: typeof declared.basis === 'string' && declared.basis.trim() ? declared.basis : 'operator_submission',
+          declared_by: 'jarvis-desktop:execute-routed-task',
+        })
+      : null;
+    const routeDecision = router.route(pending.task, routingEligibility);
+    const checked = C0_DECISION.verify(occurrenceId, { root, invocation, routeDecision });
+    if (!checked.ok) return checked;
+
+    const answer = await dialog.showMessageBox({
+      type: 'warning',
+      buttons: ['Cancel', 'Execute'],
+      defaultId: 0,
+      cancelId: 0,
+      title: 'Execute deterministic capability?',
+      message: pending.task.capability,
+      detail: `Arguments: ${JSON.stringify(pending.task.args || {})}\nBound workspace: ${root}\nOccurrence: ${occurrenceId}`,
+      noLink: true,
+    });
+    if (answer.response !== 1) {
+      return {
+        ok: true,
+        status: 'EXECUTION_DECISION_WITHHELD',
+        occurrence_id: occurrenceId,
+        execution_lane: 'C0',
+        result: null,
+      };
+    }
+
+    // Re-establish the exact binding AFTER the human gesture. A repository
+    // rebind or invocation drift while the dialog was open invalidates it.
+    const rootAfter = currentRoot();
+    const detAfterPath = path.join(rootAfter, 'scripts', 'builder', 'deterministic.mjs');
+    const routerAfterPath = path.join(rootAfter, 'scripts', 'builder', 'router.mjs');
+    const detAfter = await import(`file://${detAfterPath}?t=${Date.now()}`);
+    const routerAfter = await import(`file://${routerAfterPath}?t=${Date.now()}`);
+    const invocationAfter = detAfter.describeInvocation(pending.task.capability, pending.task.args || {});
+    const declaredAfter = pending.task && typeof pending.task.routing === 'object' ? pending.task.routing : null;
+    const routingEligibilityAfter = declaredAfter && typeof routerAfter.declareRoutingEligibility === 'function'
+      ? routerAfter.declareRoutingEligibility({
+          satisfied: declaredAfter.satisfied === true,
+          basis: typeof declaredAfter.basis === 'string' && declaredAfter.basis.trim() ? declaredAfter.basis : 'operator_submission',
+          declared_by: 'jarvis-desktop:execute-routed-task',
+        })
+      : null;
+    const routeDecisionAfter = routerAfter.route(pending.task, routingEligibilityAfter);
+    const constituted = C0_DECISION.constitute(occurrenceId, {
+      root: rootAfter,
+      invocation: invocationAfter,
+      routeDecision: routeDecisionAfter,
+      source: 'host:native-confirmation',
+    });
+    if (!constituted.ok) return constituted;
+
+    try {
+      const r = detAfter.runCapability(
+        constituted.record.task.capability,
+        constituted.record.task.args || {},
+        rootAfter,
+      );
+      return {
+        ok: true,
+        status: 'completed',
+        occurrence_id: occurrenceId,
+        execution_lane: 'C0',
+        execution_decision: constituted.execution_decision,
+        result: r,
+        verification: {
+          kind: 'result', label: 'Verification',
+          checked: 'host decision constituted + capability registered + exit_code present',
+          pass: typeof r.exit_code === 'number',
+        },
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        status: 'failed',
+        occurrence_id: occurrenceId,
+        execution_lane: 'C0',
+        execution_decision: constituted.execution_decision,
+        result: { error: String(e.message || e) },
+      };
+    }
+  } catch (e) {
+    return { ok: false, status: 'REFUSED', reason: String(e.message || e).slice(0, 500) };
+  }
 });
 
 // Explicit C3 frontier act. This is intentionally a separate IPC action from

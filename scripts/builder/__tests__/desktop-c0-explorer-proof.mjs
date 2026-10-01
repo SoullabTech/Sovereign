@@ -7,7 +7,7 @@
 // (the DOM-free logic the renderer calls). Nothing is re-implemented for the
 // test, so a divergence between console and registry would fail here.
 import { CAPABILITIES } from '../deterministic.mjs';
-import { route } from '../router.mjs';
+import { route, declareRoutingEligibility } from '../router.mjs';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -138,25 +138,33 @@ console.log('\n==================== E — malformed Advanced JSON rejected befor
   report('well-formed Advanced JSON still accepted', good.ok && JSON.stringify(good.task.args) === '{"dir":"app/api"}');
 }
 
-console.log('\n==================== F — existing execution path preserved ====================');
+console.log('\n==================== F — routing and execution are distinct ====================');
 {
   const out = CF.validateSubmission({ manifest, capabilityName: 'inventory.routes', mode: 'structured', rawValues: { dir: 'app/api' } });
-  const decision = route(out.task);
+  const eligibility = declareRoutingEligibility({
+    satisfied: true,
+    basis: 'c0_explorer_proof_fixture',
+    declared_by: 'desktop-c0-explorer-proof',
+  });
+  const decision = route(out.task, eligibility);
   report('validated task routes to C0 through the canonical router', decision.execution_lane === 'C0', decision.reason);
   report('router still verification_required', decision.verification_required === true);
 
   const mainJs = code('main.js');
-  report('main.js still routes every submitted task through router.mjs', mainJs.includes("'router.mjs'") && mainJs.includes('const decision = route(task);'));
-  // The root is read through currentRoot() rather than a REPO_ROOT const now,
-  // so Preferences can rebind the substrate without relaunching. Still pinned
-  // exactly: what matters is that C0 executes via runCapability against the
-  // RESOLVED root, so changing either half forces a re-read here.
-  report('C0 execution still goes through runCapability against the resolved root',
-    mainJs.includes('runCapability(task.capability, task.args || {}, currentRoot())'));
-  // Was: "exactly one execFileSync". That count-based proxy broke when the
-  // founder-ruled Alpha floor added F3 (git provenance reads) and F2 (running
-  // the governor). The property it stood for is asserted directly instead:
-  // no shell, and no execFileSync whose COMMAND is renderer-supplied.
+  const submitStart = mainJs.indexOf("ipcMain.handle('jarvis:submit-task'");
+  const executeStart = mainJs.indexOf("ipcMain.handle('jarvis:execute-routed-task'", submitStart);
+  const submitSlice = mainJs.slice(submitStart, executeStart);
+  const executeEnd = mainJs.indexOf("ipcMain.handle('jarvis:run-external-reasoning'", executeStart);
+  const executeSlice = mainJs.slice(executeStart, executeEnd);
+  report('main.js routes submitted tasks with an explicit routing eligibility',
+    mainJs.includes("'router.mjs'") && mainJs.includes('const decision = route(task, routingEligibility);'));
+  report('C0 submission stages a routed occurrence and does not execute',
+    submitSlice.includes('C0_DECISION.stage') && !/runCapability\s*\(/.test(submitSlice));
+  report('C0 execution lives only behind the separate host-decision handler',
+    executeSlice.includes('C0_DECISION.constitute') && executeSlice.includes('runCapability('));
+  report('native confirmation defaults to Cancel before C0 execution',
+    executeSlice.includes("buttons: ['Cancel', 'Execute']") && executeSlice.includes('defaultId: 0') && executeSlice.includes('cancelId: 0'));
+
   const execCmds = [...mainJs.matchAll(/execFileSync\(\s*'([^']+)'/g)].map(m => m[1]);
   report('no Desktop-side execution shortcut',
     !mainJs.includes('execSync(') &&
@@ -229,7 +237,11 @@ console.log('\n==================== H — no new authority ===================='
     JSON.stringify(channels) === JSON.stringify(INVOKE_CHANNEL_NAMES), channels.join(', '));
   report('the governance channel delegates to the governor, inventing no authority',
     code('main.js').includes('GOV.buildGovernanceArgv') && !/['"](recover|reconcile)['"]/.test(code('main.js')));
-  report('no general IPC / shell bridge added', !preload.includes('exec') && !preload.includes('send('));
+  report('no general IPC / shell bridge added',
+    !preload.includes('ipcRenderer.send(') &&
+    !/ipcRenderer\.invoke\(\s*[^'\"]/.test(preload) &&
+    !preload.includes('child_process') &&
+    !preload.includes('shell.'));
 
   const mainJs = code('main.js');
   report('jarvis:capabilities is read-only (no runCapability, no execution)',

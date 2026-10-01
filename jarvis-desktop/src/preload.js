@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('jarvis', {
   getCapabilities: () => ipcRenderer.invoke('jarvis:capabilities'),
   searchContinuity: (query, limit = 8) => ipcRenderer.invoke('jarvis:continuity-search', { query, limit }),
   submitTask: (task) => ipcRenderer.invoke('jarvis:submit-task', task),
+  executeRoutedTask: (occurrenceId) => ipcRenderer.invoke('jarvis:execute-routed-task', { occurrence_id: occurrenceId }),
   runExternalReasoning: (req) => ipcRenderer.invoke('jarvis:run-external-reasoning', req),
   governanceAction: (req) => ipcRenderer.invoke('jarvis:governance-action', req),
 

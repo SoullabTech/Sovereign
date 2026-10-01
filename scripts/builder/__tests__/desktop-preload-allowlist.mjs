@@ -98,6 +98,16 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'open-or-execute authority is introduced. It returns no file contents.',
   },
   {
+    channel: 'jarvis:execute-routed-task',
+    ratified_in: 'JOP-04 RB-6B current-lineage restoration 2026-10-01',
+    purpose:
+      'A separate explicit host act after C0 routing. The renderer may supply only a host-minted ' +
+      'occurrence id; MAIN owns the pending invocation, bound repository, native confirmation dialog, ' +
+      'one-shot execution decision and capability invocation. No task, path, command, permission ' +
+      'envelope, permit, or decision object crosses this channel. Cancel preserves the routed-but-' +
+      'unexecuted state, proving route does not imply execution.',
+  },
+  {
     channel: 'jarvis:run-external-reasoning',
     ratified_in: 'JARVIS-NEMOTRON-C3 founder direction 2026-09-17',
     purpose:

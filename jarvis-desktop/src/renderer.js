@@ -1617,7 +1617,7 @@ function renderWork() {
             </select>
           </label>
           <label class="hint">Deterministic capability (optional)<br>
-            <input id="wu-capability" type="text" placeholder="e.g. git.rev_parse">
+            <input id="wu-capability" type="text" placeholder="e.g. registered capability">
           </label>
         </div>
 
@@ -1965,7 +1965,12 @@ async function submitTask() {
       advancedText: (document.getElementById('cap-args-json') || {}).value || '',
     });
     if (!check.ok) { showLocalErrors(check.errors); return; }
-    task = check.task; // identical payload shape to what is valid today
+    task = {
+      ...check.task,
+      // JOP-04 RB-6A: this declares placement eligibility only. It is never
+      // execution authority; RB-6B requires a separate host decision later.
+      routing: { satisfied: true, basis: 'operator_submission' },
+    };
   } else if (laneHint === 'c1') {
     const p = document.getElementById('prompt').value;
     task = { bounded_for_local: true, input_chars: p.length, prompt: p };
@@ -2007,6 +2012,17 @@ function renderResult(res) {
       </div>`
     : '';
 
+  const c0Action = res.execution_lane === 'C0'
+    && res.status === 'ROUTED_AWAITING_EXECUTION_DECISION'
+    && res.occurrence_id
+    ? `<div class="card">
+        <h3>Explicit deterministic act</h3>
+        <div class="hint">Routing selected this capability, but nothing has executed. Continue to MAIN's native confirmation for this exact occurrence.</div>
+        <button class="primary" id="execute-c0">Review & execute</button>
+        <div id="c0-execution-result"></div>
+      </div>`
+    : '';
+
   const reasoner = res.result && res.result.frontier_reasoner;
   const c3Action = res.execution_lane === 'C3' && res.status === 'routed_not_executed'
     ? `<div class="card">
@@ -2026,6 +2042,7 @@ function renderResult(res) {
 
   document.getElementById('result').innerHTML = `
     ${invocation}
+    ${c0Action}
     ${c3Action}
     <div class="card">
       <h3>Result</h3>
@@ -2040,6 +2057,23 @@ function renderResult(res) {
       <pre>${JSON.stringify(res.result, null, 2)}</pre>
     </div>
   `;
+
+  const executeC0 = document.getElementById('execute-c0');
+  if (executeC0) {
+    executeC0.addEventListener('click', async () => {
+      const out = document.getElementById('c0-execution-result');
+      executeC0.disabled = true;
+      executeC0.textContent = 'Awaiting host decision…';
+      const result = await window.jarvis.executeRoutedTask(res.occurrence_id);
+      executeC0.disabled = false;
+      executeC0.textContent = 'Review & execute';
+      if (result.status === 'completed' || result.status === 'failed') {
+        renderResult({ ...res, ...result, task: t, cost_class: res.cost_class, reason: result.status === 'completed' ? 'Host execution decision constituted for this occurrence.' : (result.reason || res.reason) });
+      } else {
+        out.innerHTML = `<pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+      }
+    });
+  }
 
   const runFrontier = document.getElementById('run-frontier');
   if (runFrontier) {
