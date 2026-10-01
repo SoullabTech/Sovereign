@@ -25,6 +25,7 @@
       'No Twilio or Slack safety transport was configured in the inspected production environment.',
       'Resend outage E1 remains a separate open delivery problem.',
       'Guardian delivery for teen safety remains separately governed Phase 2 work.',
+      'S4 circuit-breaker state is truthful but still non-delivering: live field integrations log critical/emergency human notifications without a delivering callback.',
     ]),
   });
 
