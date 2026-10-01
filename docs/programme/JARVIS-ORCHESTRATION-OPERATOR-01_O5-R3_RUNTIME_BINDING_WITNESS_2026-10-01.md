@@ -819,3 +819,82 @@ All are killed on their named rule.
 
 **Standing:** RB-A3 is frozen as additive lineage; earlier frozen blobs remain unchanged. A new fresh walk is
 required from the commit containing RB-A3. O5-R4 remains closed and production remains untouched.
+
+## 14. Fresh walk #3 crossed the execution membrane and stopped as a crash specimen (2026-10-01)
+
+### 14.1 The A3 baseline passed
+
+A fresh detached witness at `2a6bd1a6e8bc50ac8cdd5627eba7898ee61340df` passed Step 5 with the
+RB-A3 readiness barrier. `~/o5r3-w3-step5.txt` records C1–C5 PASS and
+`C6-pre PASS — NOT_YET_HELD_AFTER_RELEASE · generation 2`.
+The corresponding baseline is preserved at `~/o5r3-w3-prewrite.json`.
+
+### 14.2 What happened after the human authorization
+
+The intended one-shot authorization did occur:
+- lease generation 3 acquired at `2026-10-01T21:47:22.042Z` by Desktop pid `85599`;
+- `ISSUED` at `21:47:22.074Z` for Work Unit
+  `v2-witness-the-o5-r3-single-authorize-muq1l3w5`, participant `primary`, QWEN;
+- authorization act `JARVIS_DESKTOP_E1_AUTHORIZE_ONCE`.
+
+But the walk did not remain at authorization. The same grant
+`e1-c5e48bd04800c6b9c2009077a0ff3df0` became `CLAIMED` at
+`21:47:25.242Z`, and W2 moved to `EXECUTING`.
+The Desktop incarnation subsequently disappeared without releasing generation 3.
+No durable canonical result exists.
+
+Read-only O5-R2 classification is exact:
+`phase=dispatched · reason=DISPATCHED_WITHOUT_WITNESS_NO_PROBE · gate=BLOCKED_BY_EVIDENCE · category=no_durable_result`.
+Recovery therefore may not replay, infer, or ledger an outcome.
+
+### 14.3 Provider launch is proven; completion is not
+
+Ollama's rotated `server-1.log` records a new llama-server launch at
+`17:47:25.444-04:00`, 202 ms after CLAIMED, for model blob
+`sha256:1194192cf2a187eb02722edcc3f77b11d21f537048ce04b67ccf8ba78863006a`.
+The local manifests bind that blob to `qwen3-coder:30b` and the runtime realization
+`jarvis-qwen3-coder:65k`. The launch used context `65536`.
+
+At `17:47:25.454`, Ollama recorded system memory `48.0 GiB total · 5.5 GiB free · 0 B free swap`.
+macOS also recorded memory-status idle-process kills in the seconds immediately before the launch.
+The Ollama log ends while the model is entering its memory-fitting/load phase.
+
+This proves provider launch and severe resource pressure in the crash window.
+It does **not** prove model completion, and it does not by itself establish a complete causal explanation for
+the whole-machine crash. The founder reports that the system crashed during this attempt.
+
+### 14.4 Standing and containment
+
+**O5-R3 remains NOT ADMITTED.** Generation 3 and the CLAIMED ledger are preserved as evidence.
+No recovery write, lease takeover, grant invalidation, replay, or second authorization is permitted inside this
+failed specimen. O5-R4 remains closed.
+
+### 14.5 Repair candidate: local resource admission before CLAIMED
+
+The execution membrane had no host-resource admission check before
+`claimCanonicalExecutionGrantV1()`. The candidate repair on
+`fix/jarvis-e1-local-resource-admission-20261001` adds one for real `ollama-direct` execution:
+
+- read macOS `memory_pressure -Q` and `vm.swapusage`;
+- fail closed if the probe is unavailable or unreadable;
+- require at least 30% system-wide free-memory headroom;
+- below 50% headroom, also require at least 512 MiB free swap;
+- on failure return `HELD_FOR_LOCAL_RESOURCES`;
+- keep the one-shot grant `ACTIVE`, keep W2 `ROUTED`, and launch no provider;
+- run this check before `CLAIMED`.
+
+The numeric threshold is an intentionally conservative **operational policy**, not a claimed physical minimum for
+Qwen. Historical Ollama logs show this same `qwen3-coder:30b` / 65K realization successfully loading at about
+17.5 GiB free system memory and, on another run, beginning and completing a load from about 6.6 GiB free with
+zero swap. Therefore the crash evidence supports *resource-pressure risk at the boundary*, not the stronger
+claim that a particular free-memory number alone causes failure. The policy's job is to leave margin before
+authority is spent; it may be refined later by the capacity-sentinel programme without weakening the fail-closed
+placement before `CLAIMED`.
+
+The focused E1 suite is 14/14 green. O5-R2 recovery/census collateral is 17/17 green, O5-R3 grant-writer
+proof is 17/17 green, and RB/RB-A1/RB-A2/RB-A3 frozen matrices remain lethal + discriminating with the freeze
+intact. The live Mac probe currently passes at 78% free headroom and about 1.33 GiB free swap.
+
+This repair is not a recovery of the failed specimen and does not authorize another live execution.
+A new admission walk is owed only after the repair has its own custody and the stranded generation-3 state
+has been resolved by an explicit operator ruling outside O5-R3.

@@ -994,8 +994,15 @@ async function confirmCanonicalExecution(grantId) {
       action: 'status',
       work_unit_id: activeWorkUnitId,
     });
+    const resources = out?.local_resources;
+    const resourceDetail = out?.status === 'HELD_FOR_LOCAL_RESOURCES' && resources
+      ? `Local execution held before authority was claimed · memory headroom ${resources.free_percent ?? 'unknown'}% · swap free ${Number.isFinite(resources.swap_free_bytes) ? Math.round(resources.swap_free_bytes / (1024 * 1024)) + ' MiB' : 'unknown'} · ${out.reason || 'resource admission failed'}`
+      : null;
     renderWorkUnitSnapshot(snapshot, {
-      transientError: out?.reason || out?.blockers?.[0]?.code || 'Canonical execution refused.',
+      transientError: resourceDetail
+        || out?.reason
+        || out?.blockers?.[0]?.code
+        || 'Canonical execution refused.',
     });
   }
 }

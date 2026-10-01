@@ -127,6 +127,130 @@ function stubResult(args, {
   };
 }
 
+test('E1 local resource probe fails closed on the witnessed low-headroom shape', () => {
+  const low = WUC.defaultLocalResourceProbe({
+    platform: 'darwin',
+    exec: (file) => file === '/usr/bin/memory_pressure'
+      ? 'System-wide memory free percentage: 11%\n'
+      : 'vm.swapusage: total = 1792.00M used = 1792.00M free = 0.00M (encrypted)\n',
+  });
+  assert.equal(low.ok, false);
+  assert.equal(low.reason, 'LOCAL_MEMORY_HEADROOM_INSUFFICIENT');
+  assert.equal(low.free_percent, 11);
+  assert.equal(low.swap_free_bytes, 0);
+
+  const ready = WUC.defaultLocalResourceProbe({
+    platform: 'darwin',
+    exec: (file) => file === '/usr/bin/memory_pressure'
+      ? 'System-wide memory free percentage: 78%\n'
+      : 'vm.swapusage: total = 1792.00M used = 441.56M free = 1350.44M (encrypted)\n',
+  });
+  assert.equal(ready.ok, true);
+  assert.equal(ready.free_percent, 78);
+
+  const unknown = WUC.defaultLocalResourceProbe({
+    platform: 'darwin',
+    exec: () => 'unparseable',
+  });
+  assert.equal(unknown.ok, false);
+  assert.equal(unknown.reason, 'LOCAL_RESOURCE_PROBE_UNREADABLE');
+
+  const unsupported = WUC.defaultLocalResourceProbe({ platform: 'linux' });
+  assert.equal(unsupported.ok, false);
+  assert.equal(unsupported.reason, 'LOCAL_RESOURCE_PROBE_UNSUPPORTED');
+
+  const swapStarved = WUC.defaultLocalResourceProbe({
+    platform: 'darwin',
+    exec: (file) => file === '/usr/bin/memory_pressure'
+      ? 'System-wide memory free percentage: 40%\n'
+      : 'vm.swapusage: total = 1792.00M used = 1792.00M free = 0.00M (encrypted)\n',
+  });
+  assert.equal(swapStarved.ok, false);
+  assert.equal(swapStarved.reason, 'LOCAL_MEMORY_HEADROOM_INSUFFICIENT');
+});
+
+test('E1 local resource HOLD occurs before CLAIMED and leaves the one-shot grant ACTIVE', async () => {
+  const { home, env } = tempEnv();
+  try {
+    const { id, status } = await routedReady(env, 3050);
+    const primary = status.routing.participants.find((p) => p.participant_id === 'primary');
+    const issued = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, primary.participant_id,
+      { env, actorId: 'human:e1-resource-proof' },
+    );
+    assert.equal(issued.ok, true);
+    assert.equal(issued.standing, 'ACTIVE');
+
+    let runnerCalls = 0;
+    const held = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, issued.grant.grant_id,
+      {
+        env,
+        actorId: 'human:e1-resource-proof',
+        localResourceProbe: async () => ({
+          ok: false,
+          reason: 'LOCAL_MEMORY_HEADROOM_INSUFFICIENT',
+          free_percent: 11,
+          swap_free_bytes: 0,
+        }),
+        executeCanonicalProvider: async () => {
+          runnerCalls += 1;
+          throw new Error('resource HOLD must precede provider execution');
+        },
+      },
+    );
+    assert.equal(held.ok, false);
+    assert.equal(held.status, 'HELD_FOR_LOCAL_RESOURCES');
+    assert.equal(held.reason, 'LOCAL_MEMORY_HEADROOM_INSUFFICIENT');
+    assert.equal(held.grant_standing, 'ACTIVE');
+    assert.equal(runnerCalls, 0);
+
+    const after = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    assert.equal(after.lifecycle.state, 'ROUTED');
+    const grant = after.execution_bridge.grants
+      .find((entry) => entry.grant?.grant_id === issued.grant.grant_id);
+    assert.equal(grant.standing, 'ACTIVE');
+    assert.deepEqual(grant.events.map((event) => event.event), ['ISSUED']);
+  } finally {
+    cleanup(home);
+  }
+});
+
+test('E1 admitted local resources allow Confirm to claim and execute the exact stubbed provider once', async () => {
+  const { home, env } = tempEnv();
+  try {
+    const { id, status } = await routedReady(env, 3075);
+    const primary = status.routing.participants.find((p) => p.participant_id === 'primary');
+    const issued = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, primary.participant_id,
+      { env, actorId: 'human:e1-resource-proof' },
+    );
+
+    let runnerCalls = 0;
+    const out = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, issued.grant.grant_id,
+      {
+        env,
+        actorId: 'human:e1-resource-proof',
+        localResourceProbe: async () => ({
+          ok: true,
+          free_percent: 78,
+          swap_free_bytes: 1350 * 1024 * 1024,
+        }),
+        executeCanonicalProvider: async (_root, args) => {
+          runnerCalls += 1;
+          return stubResult(args, { exitCode: 0, testResults: 'pass' });
+        },
+      },
+    );
+    assert.equal(out.ok, true, JSON.stringify(out.blockers));
+    assert.equal(runnerCalls, 1);
+    assert.equal(out.execution_grant.standing, 'CONSUMED');
+  } finally {
+    cleanup(home);
+  }
+});
+
 test('E1 full canonical local flow: Authorize Once != Confirm Execute, DR1/W4 evidence, verifier, explicit evidence-ready', async () => {
   const { home, env } = tempEnv();
   try {
@@ -731,8 +855,16 @@ test('E1 reuses one existing Work Unit IPC channel and renderer cannot supply pr
   const finalAdmission = controller.indexOf('const finalAdmission = e1.evaluateCanonicalExecutionGrantV1');
   const providerResolve = controller.indexOf('const resolved = providerMod.resolveOpenCodeProvider', finalAdmission);
   const credential = controller.indexOf('const credential = credentialAvailability', providerResolve);
-  const claim = controller.indexOf('const claimed = store.claimCanonicalExecutionGrantV1', credential);
-  assert.ok(finalAdmission >= 0 && providerResolve > finalAdmission && credential > providerResolve && claim > credential);
+  const resourceAdmission = controller.indexOf('const localResources = await localResourceAdmission', credential);
+  const claim = controller.indexOf('const claimed = store.claimCanonicalExecutionGrantV1', resourceAdmission);
+  assert.ok(
+    finalAdmission >= 0
+      && providerResolve > finalAdmission
+      && credential > providerResolve
+      && resourceAdmission > credential
+      && claim > resourceAdmission,
+  );
+  assert.match(renderer, /Local execution held before authority was claimed/);
 });
 
 test('E1 Desktop keeps authorization, execution, verification, evidence-ready, and adjudication as separate gestures', () => {

@@ -30,11 +30,106 @@ const LOCAL_OLLAMA_DIRECT_REALIZATIONS = Object.freeze({
   }),
 });
 
+// Conservative execution policy, not a constitutional constant. The crash specimen
+// entered a 30B / 65K load at 5.5 GiB free system memory with 0 B free swap while
+// macOS was already shedding idle processes. Unknown is never admitted as healthy.
+// These bounds deliberately leave more headroom than the observed failure shape.
+const LOCAL_RESOURCE_MIN_FREE_PERCENT = 30;
+const LOCAL_RESOURCE_MIN_SWAP_FREE_BYTES = 512 * 1024 * 1024;
+
 function canonicalLocalOllamaDirectRealization(binding) {
   if (binding?.adapter_id !== 'ollama-direct') return null;
   const realization = LOCAL_OLLAMA_DIRECT_REALIZATIONS[binding?.provider_id];
   if (!realization || binding?.model_id !== realization.governed_model_id) return null;
   return realization;
+}
+
+function parseMemoryPressureFreePercent(text) {
+  const match = /System-wide memory free percentage:\s*(\d+)%/i.exec(String(text || ''));
+  return match ? Number(match[1]) : null;
+}
+
+function parseSwapFreeBytes(text) {
+  const match = /free\s*=\s*([0-9.]+)([KMGT])?/i.exec(String(text || ''));
+  if (!match) return null;
+  const unit = (match[2] || '').toUpperCase();
+  const factor = unit === 'T' ? 1024 ** 4
+    : unit === 'G' ? 1024 ** 3
+      : unit === 'M' ? 1024 ** 2
+        : unit === 'K' ? 1024
+          : 1;
+  return Math.round(Number(match[1]) * factor);
+}
+
+function defaultLocalResourceProbe({
+  platform = process.platform,
+  exec = execFileSync,
+} = {}) {
+  if (platform !== 'darwin') {
+    return { ok: false, reason: 'LOCAL_RESOURCE_PROBE_UNSUPPORTED', platform };
+  }
+  try {
+    const memory = exec('/usr/bin/memory_pressure', ['-Q'], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000,
+    });
+    const swap = exec('/usr/sbin/sysctl', ['vm.swapusage'], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000,
+    });
+    const free_percent = parseMemoryPressureFreePercent(memory);
+    const swap_free_bytes = parseSwapFreeBytes(swap);
+    if (!Number.isFinite(free_percent) || !Number.isFinite(swap_free_bytes)) {
+      return {
+        ok: false,
+        reason: 'LOCAL_RESOURCE_PROBE_UNREADABLE',
+        free_percent,
+        swap_free_bytes,
+      };
+    }
+    const memoryReady = free_percent >= LOCAL_RESOURCE_MIN_FREE_PERCENT;
+    const swapReady = free_percent >= 50 || swap_free_bytes >= LOCAL_RESOURCE_MIN_SWAP_FREE_BYTES;
+    return {
+      ok: memoryReady && swapReady,
+      reason: memoryReady && swapReady ? null : 'LOCAL_MEMORY_HEADROOM_INSUFFICIENT',
+      free_percent,
+      swap_free_bytes,
+      min_free_percent: LOCAL_RESOURCE_MIN_FREE_PERCENT,
+      min_swap_free_bytes: LOCAL_RESOURCE_MIN_SWAP_FREE_BYTES,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: 'LOCAL_RESOURCE_PROBE_FAILED',
+      error: String(error?.message || error).slice(0, 300),
+    };
+  }
+}
+
+async function localResourceAdmission(binding, resolved, opts = {}) {
+  if (resolved?.execution_adapter !== 'ollama-direct') {
+    return { ok: true, checked: false, reason: null };
+  }
+  const realization = canonicalLocalOllamaDirectRealization(binding);
+  if (!realization) {
+    return {
+      ok: false,
+      checked: true,
+      reason: 'CANONICAL_OLLAMA_DIRECT_IDENTITY_MISMATCH',
+    };
+  }
+  const probe = opts.localResourceProbe
+    || (opts.executeCanonicalProvider
+      ? (() => ({ ok: true, checked: false, reason: null, source: 'injected-test-runner' }))
+      : defaultLocalResourceProbe);
+  const observed = await probe({
+    provider_id: binding.provider_id,
+    governed_model_id: binding.model_id,
+    runtime_model: realization.runtime_model,
+  });
+  return {
+    checked: true,
+    runtime_model: realization.runtime_model,
+    ...(observed || {}),
+  };
 }
 
 const homeOf = (env = process.env) => env.AIN_DELEGATION_HOME || path.join(os.homedir(), '.claude', 'ain-delegation');
@@ -1181,6 +1276,20 @@ async function canonicalConfirmAuthorizedExecution(root, workUnitId, grantId, op
     };
   }
 
+  const localResources = await localResourceAdmission(binding, resolved, opts);
+  if (!localResources.ok) {
+    if (preparedContainment?.runtime?.runRoot) {
+      fs.rmSync(preparedContainment.runtime.runRoot, { recursive: true, force: true });
+    }
+    return {
+      ok: false,
+      status: 'HELD_FOR_LOCAL_RESOURCES',
+      reason: localResources.reason || 'LOCAL_RESOURCE_ADMISSION_FAILED',
+      grant_standing: 'ACTIVE',
+      local_resources: localResources,
+    };
+  }
+
   const claimed = store.claimCanonicalExecutionGrantV1(workUnitId, grantId, { home });
   if (!claimed.ok) {
     if (preparedContainment?.runtime?.runRoot) {
@@ -1631,6 +1740,9 @@ async function confirmAuthorizedExecution(root, workUnitId, grantId, opts = {}) 
 module.exports = {
   MAX_LOG_CHARS, RUN_TIMEOUT_MS, KEYCHAIN_CREDENTIALS,
   LOCAL_OLLAMA_DIRECT_REALIZATIONS, canonicalLocalOllamaDirectRealization,
+  LOCAL_RESOURCE_MIN_FREE_PERCENT, LOCAL_RESOURCE_MIN_SWAP_FREE_BYTES,
+  parseMemoryPressureFreePercent, parseSwapFreeBytes,
+  defaultLocalResourceProbe, localResourceAdmission,
   homeOf, resultPath, readLogExcerpt, exitCodeFromSummary,
   credentialAvailability, delegateLaneForProvider,
   modelFamilyFromAttempt, durableProviderOutcome,
