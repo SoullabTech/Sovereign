@@ -32,7 +32,7 @@ export function projectAuthorizedLocalCandidatePacketV1(envelope,{verification_p
   const wu=envelope?.work_unit;const guard=envelope?.guard;
   if(!wu||!guard)return fail('AUTHORIZED_ENVELOPE_REQUIRED');
   if(wu.work_unit_version!=='W0.v2')return fail('W0_V2_REQUIRED');
-  if(wu.state?.lifecycle_state!=='AUTHORIZED')return fail('AUTHORIZED_STATE_REQUIRED',wu.state?.lifecycle_state??null);
+  if(!['AUTHORIZED','ROUTED'].includes(wu.state?.lifecycle_state))return fail('AUTHORIZED_OR_ROUTED_STATE_REQUIRED',wu.state?.lifecycle_state??null);
   if(!text(guard.authorized_core_snapshot))return fail('AUTHORIZED_CORE_SNAPSHOT_REQUIRED');
   const a=wu.authority||{};
   if(!(a.repository_read===true&&a.repository_write==='worktree'&&a.shell==='bounded_write'&&a.test_execution===true))return fail('LOCAL_CANDIDATE_AUTHORITY_REQUIRED');

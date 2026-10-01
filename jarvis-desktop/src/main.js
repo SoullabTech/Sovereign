@@ -932,6 +932,7 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
         { workUnitId: req.work_unit_id, verificationPlan: req.verification_plan },
         {
           env: process.env,
+          actorId: desktopHumanActorId(),
           confirm: async (summary, occurrence) => {
             const files = (summary.allowed_files || []).slice(0, 12).join('\n') || '(none)';
             const ops = (summary.verification_operations || []).map((op) => `${op.operation_id}: ${op.kind}`).slice(0, 12).join('\n') || '(none)';

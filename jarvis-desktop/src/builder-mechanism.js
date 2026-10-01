@@ -188,6 +188,8 @@ async function runWorkUnit(root, packet, hooks = {}, opts = {}) {
       runId: requestedRunId,
       packet,
       canonicalCoreDigest: coreDigest,
+      routeDigest: opts.routeDigest,
+      transportBinding: opts.transportBinding,
     });
     if (!requestedRunId || !/^sha256:[0-9a-f]{64}$/.test(String(coreDigest || '')) || !checkedDecision.ok) {
       return { submitted: false, outcome: 'EXECUTION_DECISION_REQUIRED', reason: checkedDecision.reason || 'structured-v1 requires one constituted EC1-R11B host decision bound to this exact run, Work, packet and canonical authority', mechanism: m.state, run: null, events: [] };

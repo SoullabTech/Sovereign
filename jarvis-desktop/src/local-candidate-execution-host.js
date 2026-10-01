@@ -15,19 +15,28 @@ async function importBound(root,rel){return import(pathToFileURL(path.join(root,
 function fail(status,reason,extra={}){return{ok:false,submitted:false,status,outcome:status,reason,...extra};}
 function evidencePaths(home,id){return{packet:path.join(home,'packets',id+'.json'),result:path.join(home,'results',id+'.json')};}
 function summaryFrom(packet,plan){return{work_unit_id:packet.work_unit_id,objective:packet.objective,canonical_sha:packet.canonical_sha,allowed_files:clone(packet.allowed_files||[]),verification_operations:clone(plan?.operations||[])};}
+function activeBindings(workUnit){const all=Array.isArray(workUnit?.routing?.transport_bindings)?workUnit.routing.transport_bindings:[];const superseded=new Set(all.map(b=>b?.supersedes_binding_id).filter(Boolean));return all.filter(b=>b?.transport_binding_id&&!superseded.has(b.transport_binding_id));}
+function primaryRouteFacts(workUnit){
+  const primary=workUnit?.routing?.route_record?.primary;
+  const binding=activeBindings(workUnit).find(b=>b.route_participant_id===primary?.participant_id);
+  if(!primary||primary.participant_id!=='primary'||primary.model_family!=='QWEN'||primary.role!=='code_primary')return null;
+  if(!binding||binding.provider_id!=='qwen-local'||binding.model_id!=='qwen3-coder:30b'||binding.adapter_id!=='ollama-direct'||binding.readiness?.status!=='READY')return null;
+  return{route_digest:String(workUnit.routing?.route_digest||''),transport_binding:clone(binding)};
+}
 
 async function projectCurrent(root,workUnitId,verificationPlan,env){
   const envelope=CWUV2.readCanonicalExecutionEnvelopeV2(workUnitId,env);
   if(!envelope)return fail('REFUSED','CANONICAL_V2_WORK_UNIT_NOT_FOUND');
-  if(envelope.work_unit?.state?.lifecycle_state!=='AUTHORIZED')return fail('REFUSED','AUTHORIZED_STATE_REQUIRED',{state:envelope.work_unit?.state?.lifecycle_state||null});
+  if(envelope.work_unit?.state?.lifecycle_state!=='ROUTED')return fail('REFUSED','ROUTED_STATE_REQUIRED',{state:envelope.work_unit?.state?.lifecycle_state||null});
   if(envelope.work_unit?.identity?.capability!=='local-native-candidate')return fail('REFUSED','LOCAL_CANDIDATE_CAPABILITY_REQUIRED');
+  const route=primaryRouteFacts(envelope.work_unit);if(!route||!route.route_digest)return fail('REFUSED','READY_LOCAL_QWEN_ROUTE_REQUIRED');
   const projector=await importBound(root,'scripts/builder/local-candidate-packet-v1.mjs');
   const projected=projector.projectAuthorizedLocalCandidatePacketV1(envelope,{verification_plan:verificationPlan});
   if(!projected.ok)return fail('REFUSED',projected.reason,{detail:projected.detail||null});
-  return{ok:true,envelope,projected};
+  return{ok:true,envelope,projected,route};
 }
 
-async function executePreparedLocalCandidate(root,{workUnitId,verificationPlan},{env=process.env,confirm,hooks={}}={}){
+async function executePreparedLocalCandidate(root,{workUnitId,verificationPlan},{env=process.env,confirm,hooks={},actorId='human:jarvis-desktop:operator'}={}){
   if(!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(workUnitId||'')))return fail('REFUSED','INVALID_WORK_UNIT_ID');
   if(typeof confirm!=='function')return fail('REFUSED','HOST_CONFIRMATION_CALLBACK_REQUIRED');
   const first=await projectCurrent(root,workUnitId,verificationPlan,env);
@@ -38,7 +47,14 @@ async function executePreparedLocalCandidate(root,{workUnitId,verificationPlan},
   const allocated=await MECH.allocateRunId(root);
   if(!allocated.ok)return fail('REFUSED',allocated.reason||'RUN_ID_ALLOCATION_REFUSED');
   const runId=allocated.run_id;
-  const staged=DECISION.stage({root,runId,packet:first.projected.packet,canonicalCoreDigest:first.projected.authorized_core_digest});
+  const staged=DECISION.stage({
+    root,
+    runId,
+    packet:first.projected.packet,
+    canonicalCoreDigest:first.projected.authorized_core_digest,
+    routeDigest:first.route.route_digest,
+    transportBinding:first.route.transport_binding,
+  });
   if(!staged.ok)return fail('REFUSED',staged.reason);
 
   let approved=false;
@@ -50,17 +66,34 @@ async function executePreparedLocalCandidate(root,{workUnitId,verificationPlan},
   if(!current.ok){DECISION.forget(staged.occurrence_id);return current;}
   if(canonical(current.projected.packet)!==canonical(first.projected.packet)
       || current.projected.authorized_core_digest!==first.projected.authorized_core_digest
-      || current.projected.verification_plan_digest!==first.projected.verification_plan_digest){
+      || current.projected.verification_plan_digest!==first.projected.verification_plan_digest
+      || current.route.route_digest!==first.route.route_digest
+      || canonical(current.route.transport_binding)!==canonical(first.route.transport_binding)){
     DECISION.forget(staged.occurrence_id);return fail('REFUSED','LOCAL_CANDIDATE_BINDING_CHANGED_AFTER_CONFIRMATION');
   }
   if(fs.existsSync(paths.packet)||fs.existsSync(paths.result)){DECISION.forget(staged.occurrence_id);return fail('REFUSED','PATH_A_EVIDENCE_APPEARED_AFTER_CONFIRMATION');}
 
-  const constituted=DECISION.constitute(staged.occurrence_id,{root,runId,packet:current.projected.packet,canonicalCoreDigest:current.projected.authorized_core_digest});
+  const constituted=DECISION.constitute(staged.occurrence_id,{
+    root,
+    runId,
+    packet:current.projected.packet,
+    canonicalCoreDigest:current.projected.authorized_core_digest,
+    routeDigest:current.route.route_digest,
+    transportBinding:current.route.transport_binding,
+  });
   if(!constituted.ok){DECISION.forget(staged.occurrence_id);return fail('REFUSED',constituted.reason);}
   const executionDecision=constituted.execution_decision;
+  const executing=await CWUV2.transitionCanonicalV2(root,workUnitId,'EXECUTING',{env,actorId});
+  if(!executing.ok){DECISION.forget(staged.occurrence_id);return fail('EXECUTING_TRANSITION_REFUSED',executing.reason||executing.blockers?.[0]?.code||'W2_EXECUTING_TRANSITION_REFUSED',{blockers:executing.blockers||[]});}
   let run;
   try{
-    run=await MECH.runWorkUnit(root,clone(current.projected.packet),hooks,{runId,executionDecision,authorizedCoreDigest:current.projected.authorized_core_digest});
+    run=await MECH.runWorkUnit(root,clone(current.projected.packet),hooks,{
+      runId,
+      executionDecision,
+      authorizedCoreDigest:current.projected.authorized_core_digest,
+      routeDigest:current.route.route_digest,
+      transportBinding:current.route.transport_binding,
+    });
   }finally{DECISION.forget(staged.occurrence_id);}
   return{...run,ok:run?.submitted===true,work_unit_id:workUnitId,run_id:runId,execution_decision:clone(executionDecision)};
 }
