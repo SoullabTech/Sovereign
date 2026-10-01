@@ -25,6 +25,7 @@ interface Props {
   activeSpirals: PersonalSpiral[]
   recentStates: PersonalState[]
   memberId: string
+  fromHouse?: boolean
 }
 
 export function PersonalLivingFieldDashboard({
@@ -33,6 +34,7 @@ export function PersonalLivingFieldDashboard({
   activeSpirals,
   recentStates,
   memberId,
+  fromHouse = false,
 }: Props) {
   const phase = spiralState?.relational_phase
   const phaseLabel = phase ? RELATIONAL_PHASE_LABELS[phase] : null
@@ -67,11 +69,12 @@ export function PersonalLivingFieldDashboard({
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
 
-        {/* The way out. The House opens this room with
-            `returnBehavior: 'back-to-home'`; until this link existed nothing in
-            the page's whole component closure honoured that, so a member who
-            entered had no route home. */}
-        <ReturnHome className="text-stone-500 hover:text-stone-300 text-sm" />
+        {/* Outside a House arrival, keep the room's ordinary way home.
+            When `from=house`, HouseRoomThreshold already owns the return gesture;
+            rendering this second link creates two competing exits. */}
+        {!fromHouse && (
+          <ReturnHome className="text-stone-500 hover:text-stone-300 text-sm" />
+        )}
 
         {/* Welcome header */}
         <div className="space-y-3">

@@ -1,59 +1,59 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { apiFetch } from '@/lib/http/apiBase';
-import { readStudioWorkParam, type StudioSearchParams } from './situatedWork';
-
-type AdmissionState = {
-  claim: string | null;
-  checked: boolean;
-  admitted: boolean;
-};
-
 /**
- * Reflects the server's H1 decision and returns a Work claim only when admitted.
- * No claim means no admission request is needed. Every failure stays closed.
+ * H1 — the admission FACT for a Studio Work claim. Transport and state only.
+ *
+ * H1-COHORT-GATE-01 · R2 (founder ruling 2026-10-01). This hook may fetch
+ * admission and expose `{ admitted, resolved }`. It does NOT read `work=`, does
+ * NOT decide whether a claim is exposed, and does NOT resolve a Work: that is
+ * app/writers-studio/h1Arrival.ts alone (falsifier F11 — the hook must never
+ * become a second semantic authority). The name is historical (#1551): it
+ * supplies the fact a Work claim is decided by; it never holds the claim.
+ *
+ *   needed   whether the request carries a claim at all — computed by the seam
+ *            (h1AdmissionNeeded). No claim → no request, as in #1551.
+ *
+ * Starts unresolved (no H1 authority). 401, any non-2xx, a malformed body, a
+ * network error and a timeout all settle closed. Nothing in the URL, storage,
+ * or a client-side member id is consulted.
  */
-export function useHouseStudioH1WorkClaim(search: StudioSearchParams | null): {
-  workId: string | null;
-  checking: boolean;
-} {
-  const claim = useMemo(() => (search ? readStudioWorkParam(search) : null), [search]);
-  const [state, setState] = useState<AdmissionState>({
-    claim: null,
-    checked: claim === null,
-    admitted: false,
+import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/http/apiBase';
+import { H1_UNRESOLVED, settleH1Admission, type H1Admission } from './h1Arrival';
+
+const TIMEOUT_MS = 5000;
+
+export function useHouseStudioH1WorkClaim(needed: boolean): H1Admission {
+  const [state, setState] = useState<{ needed: boolean; admission: H1Admission }>({
+    needed: false,
+    admission: H1_UNRESOLVED,
   });
 
   useEffect(() => {
+    if (!needed) return;
     let live = true;
-    if (!claim) {
-      setState({ claim: null, checked: true, admitted: false });
-      return () => { live = false; };
-    }
-
-    setState({ claim, checked: false, admitted: false });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    setState({ needed: true, admission: H1_UNRESOLVED });
     (async () => {
-      let admitted = false;
+      let next: H1Admission;
       try {
-        const res = await apiFetch('/api/house-studio/admission', { method: 'GET' });
-        if (res.ok) {
-          const body = (await res.json().catch(() => null)) as { admitted?: unknown } | null;
-          admitted = body?.admitted === true;
-        }
+        const res = await apiFetch('/api/house-studio/admission', {
+          method: 'GET', cache: 'no-store', signal: controller.signal,
+        });
+        const body = await res.json().catch(() => null);
+        next = settleH1Admission({ kind: 'response', ok: res.ok, body });
       } catch {
-        /* closed */
+        next = settleH1Admission({ kind: 'failed' });
       } finally {
-        if (live) setState({ claim, checked: true, admitted });
+        clearTimeout(timer);
       }
+      if (live) setState({ needed: true, admission: next });
     })();
+    return () => { live = false; clearTimeout(timer); controller.abort(); };
+  }, [needed]);
 
-    return () => { live = false; };
-  }, [claim]);
-
-  const current = state.claim === claim ? state : { claim, checked: false, admitted: false };
-  return {
-    workId: current.admitted ? claim : null,
-    checking: Boolean(claim) && !current.checked,
-  };
+  // No claim → no admission question → unresolved (no H1 authority). Admission is a
+  // member-level fact, so a verdict for this member stays true across claims.
+  return needed && state.needed ? state.admission : H1_UNRESOLVED;
 }

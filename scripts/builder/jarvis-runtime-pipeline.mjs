@@ -58,6 +58,27 @@ export const RUN_STATES = [
 export const TERMINAL_STATES = ['VERIFIED', 'ESCALATION_REQUIRED', 'FAILED', 'CANCELLED'];
 
 /**
+ * O5-R2E — states in which an effect may be in flight. QUEUED (nothing sent yet)
+ * and PAUSED_FOR_GOVERNANCE (a durable, deliberate pause) are NOT in flight.
+ * Path A has no per-effect witness, so an interrupted run in one of these states
+ * cannot be recovered — only made visible (jarvis-runtime-store reconcile).
+ */
+export const IN_FLIGHT_STATES = Object.freeze([
+  'VALIDATING', 'CONTEXT_ROUTING', 'READY_FOR_WORKER', 'RUNNING', 'VALIDATING_RESULT', 'VERIFYING_EVIDENCE',
+]);
+
+/** What MAY already have happened when a run is interrupted in each state. Descriptive, not a probe. */
+export const EFFECTS_POSSIBLE_BY_STATE = Object.freeze({
+  VALIDATING: Object.freeze(['packet file written']),
+  CONTEXT_ROUTING: Object.freeze(['packet file written', 'worktree claimed', 'packet bound to worktree']),
+  READY_FOR_WORKER: Object.freeze(['packet file written', 'worktree claimed']),
+  RUNNING: Object.freeze(['worktree claimed', 'Builder session opened', 'model invoked', 'patch applied to worktree',
+    'verifier commands executed (arbitrary effects)', 'rollback reset/clean', 'candidate commit created', 'result contract written']),
+  VALIDATING_RESULT: Object.freeze(['all RUNNING effects', 'result contract written']),
+  VERIFYING_EVIDENCE: Object.freeze(['all RUNNING effects', 'independent verifier replay executed', 'candidate rollback reset/clean']),
+});
+
+/**
  * Legal transitions. Every non-terminal state may reach FAILED or CANCELLED —
  * but FAILED is a *destination*, never a shortcut past a stage, and a failure
  * always carries its own failure_class so "where JARVIS is" survives the collapse

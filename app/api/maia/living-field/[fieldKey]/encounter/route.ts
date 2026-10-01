@@ -18,7 +18,7 @@ import { query } from '@/lib/db/postgres'
 import Anthropic from '@anthropic-ai/sdk'
 import { buildEncounterContext, formatGatheredMaterial } from '@/lib/maia/living-field/encounterContext'
 import { CANONICAL_FIELD_KEYS } from '@/lib/maia/living-field/canonicalFieldKeys'
-import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -127,14 +127,14 @@ Rules — these are constitutional, not stylistic:
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
-  const memberId = probeAuthPosture(request)
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
 
-  const { fieldKey } = params
+  const { fieldKey } = await params
   let body: any
   try {
     body = await request.json()
@@ -292,13 +292,13 @@ export async function POST(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { fieldKey: string } }
+  { params }: { params: Promise<{ fieldKey: string }> }
 ) {
-  const memberId = probeAuthPosture(request)
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId || !uuidRegex.test(memberId)) {
     return NextResponse.json({ error: 'Valid memberId required' }, { status: 400 })
   }
-  const { fieldKey } = params
+  const { fieldKey } = await params
 
   let body: any
   try {
