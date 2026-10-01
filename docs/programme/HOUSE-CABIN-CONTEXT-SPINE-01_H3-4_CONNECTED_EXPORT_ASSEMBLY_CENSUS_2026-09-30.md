@@ -209,3 +209,44 @@ Do not add:
 - Grokker ingestion;
 - UI;
 - production deployment.
+
+## Implementation witness
+
+Implemented as:
+
+- `lib/cabin/connectedExportAssembly.ts`
+- `lib/cabin/__tests__/connectedExportAssembly.test.ts`
+- `docs/design/contracts/cabin-connected-export-assembly.md`
+
+The connected assembly:
+
+- accepts only explicit Work, Relationship, and Memory ids;
+- validates ids before source access;
+- reads canonical connected Work rows member-scoped;
+- preserves every declared Work expression;
+- loads relationships only through the explicit Relational Context Bridge path;
+- never enables the bridge's recent-relationship fallback;
+- reads memory atoms directly rather than reusing the narrower prompt loader;
+- requires personal scope and H2.3 projection eligibility;
+- preserves `member_pulled` as non-ambient recall standing;
+- rejects member-rejected observations;
+- returns no partial package when any selected item is invalid;
+- composes the result through H2.4;
+- does not write the artifact — H3.3 remains the sole writer;
+- performs no source mutation, network access, synchronization, ranking, or synthesis.
+
+Focused H3.4 suite: **11/11 PASS**.
+
+Combined `lib/cabin/__tests__` suite: **94/94 PASS**.
+
+The suite directly defeats F1–F10, including explicit-selection-only behavior,
+multi-manuscript preservation, relationship interpretation stripping, memory
+standing preservation, whole-selection failure, identity exclusion, source
+immutability, and H3.3 writer singleton.
+
+## Standing
+
+**H3.4 IMPLEMENTATION COMPLETE · EVIDENCE COMPLETE.**
+
+No artifact write path, synchronization, MAIA cognition, Grokker ingestion, UI,
+or production deployment is opened by this slice.
