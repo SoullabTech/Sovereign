@@ -1,0 +1,415 @@
+@font-face {
+  font-family: 'Cabin Crimson';
+  src: url('/fonts/crimson-pro/crimson-pro-300-normal-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+.cabin {
+  --field: #100d0a;
+  --ink: #efe7d9;
+  --muted: #bca991;
+  --accent: #d2ae75;
+  --rule: rgba(219, 185, 136, .18);
+  min-height: 100svh;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(211, 173, 112, .065), transparent 31%),
+    radial-gradient(circle at 18% 72%, rgba(102, 75, 44, .09), transparent 29%),
+    linear-gradient(135deg, #120f0c 0%, #0c0a08 52%, #15100c 100%);
+  color: var(--ink);
+  font-family: 'Cabin Crimson', Georgia, serif;
+}
+
+.cabin::before,
+.cabin::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  inset: 8% 11%;
+  border: 1px solid rgba(219, 185, 136, .055);
+  border-radius: 50%;
+  transform: rotate(-8deg);
+}
+
+.cabin::after {
+  inset: 17% 23%;
+  border-color: rgba(219, 185, 136, .035);
+  transform: rotate(11deg);
+}
+
+.identity {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px 42px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.flower {
+  width: 34px;
+  height: 34px;
+  display: block;
+  background: var(--accent);
+  -webkit-mask: url('/holoflower.svg') center / contain no-repeat;
+  mask: url('/holoflower.svg') center / contain no-repeat;
+  opacity: .82;
+}
+
+.brand > span:last-child {
+  font: 400 12px/1 Arial, sans-serif;
+  letter-spacing: .3em;
+}
+
+.family {
+  color: #bda98f;
+  font: 9px/1 Arial, sans-serif;
+  letter-spacing: .28em;
+}
+
+.arrival {
+  position: relative;
+  z-index: 2;
+  width: min(800px, calc(100% - 40px));
+  margin: 7vh auto 0;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 22px;
+  color: #bca88d;
+  font: 8px/1.5 Arial, sans-serif;
+  letter-spacing: .34em;
+}
+
+.arrival h1 {
+  margin: 0;
+  color: #f1e8da;
+  font-size: clamp(58px, 7vw, 106px);
+  font-weight: 300;
+  line-height: .92;
+  letter-spacing: -.035em;
+}
+
+.lead {
+  margin: 22px 0 0;
+  color: #cdbca5;
+  font: italic clamp(18px, 1.6vw, 24px)/1.45 Georgia, serif;
+}
+
+.field {
+  position: relative;
+  z-index: 2;
+  width: min(1040px, calc(100% - 80px));
+  margin: clamp(72px, 8vw, 118px) auto 0;
+}
+
+.doors {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.door {
+  position: relative;
+  min-height: 245px;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 28px 24px;
+  color: inherit;
+  text-decoration: none;
+  border-left: 1px solid var(--rule);
+}
+
+.door:first-child {
+  border-left: 0;
+}
+
+.door:hover,
+.door:focus-visible {
+  background: linear-gradient(180deg, rgba(214, 176, 113, .04), transparent);
+  outline: none;
+}
+
+.door:focus-visible {
+  box-shadow: inset 0 0 0 1px rgba(226, 202, 164, .42);
+}
+
+.presenceMark {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 27px;
+  opacity: .22;
+}
+
+.presenceMark[data-active='true'] {
+  opacity: .9;
+}
+
+.presenceMark span {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+}
+
+.presenceMark span:nth-child(2) {
+  inset: 1px 11px;
+  transform: rotate(60deg);
+}
+
+.presenceMark span:nth-child(3) {
+  inset: 11px 1px;
+  transform: rotate(120deg);
+}
+
+.doorLabel {
+  color: #eee4d5;
+  font-size: 29px;
+  font-weight: 300;
+  line-height: 1.1;
+}
+
+.doorPhrase {
+  max-width: 230px;
+  margin-top: 12px;
+  color: #ad9c86;
+  font: 13px/1.55 Arial, sans-serif;
+}
+
+.enter {
+  margin-top: auto;
+  color: #d5b982;
+  font: 11px/1 Arial, sans-serif;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.maia {
+  display: inline-flex;
+  align-items: center;
+  gap: 17px;
+  margin: 47px auto 0;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  color: inherit;
+  text-decoration: none;
+}
+
+.maia:hover,
+.maia:focus-visible {
+  outline: none;
+}
+
+.maia:focus-visible .maiaMark,
+.maia:hover .maiaMark {
+  border-color: rgba(214, 181, 124, .5);
+}
+
+.maiaMark {
+  width: 52px;
+  height: 52px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(214, 181, 124, .27);
+  border-radius: 50%;
+}
+
+.maiaMark::before,
+.maiaMark::after,
+.maiaMark span {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(214, 181, 124, .2);
+  border-radius: 50%;
+}
+
+.maiaMark::before {
+  transform: rotate(60deg) scaleX(.55);
+}
+
+.maiaMark::after {
+  transform: rotate(-60deg) scaleX(.55);
+}
+
+.maiaMark span {
+  width: 9px;
+  height: 9px;
+  border: 0;
+  background: rgba(214, 181, 124, .72);
+  box-shadow: 0 0 18px rgba(214, 181, 124, .32);
+}
+
+.maiaCopy small,
+.maiaCopy strong,
+.maiaCopy em {
+  display: block;
+}
+
+.maiaCopy small {
+  margin-bottom: 5px;
+  color: #9e8d77;
+  font: 8px/1.3 Arial, sans-serif;
+  letter-spacing: .22em;
+}
+
+.maiaCopy strong {
+  color: #dfd2c0;
+  font-size: 20px;
+  font-weight: 300;
+}
+
+.maiaCopy em {
+  margin-top: 3px;
+  color: #9f917d;
+  font: italic 12px/1.4 Georgia, serif;
+}
+
+.maiaArrow {
+  margin-left: 12px;
+  color: #c9aa76;
+  font-size: 18px;
+}
+
+.return {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 46px auto 30px;
+  color: #807565;
+  font: italic 12px/1.4 Georgia, serif;
+}
+
+.return a {
+  color: #bda278;
+  text-decoration: none;
+}
+
+.return a:hover,
+.return a:focus-visible {
+  color: #ead1a7;
+}
+
+@media (max-width: 800px) {
+  .cabin {
+    min-height: 100svh;
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  .identity {
+    padding: 18px 19px;
+  }
+
+  .flower {
+    width: 29px;
+    height: 29px;
+  }
+
+  .brand > span:last-child {
+    font-size: 10px;
+  }
+
+  .family {
+    font-size: 8px;
+  }
+
+  .arrival {
+    width: calc(100% - 40px);
+    margin-top: 5vh;
+  }
+
+  .eyebrow {
+    margin-bottom: 18px;
+    font-size: 7px;
+    letter-spacing: .25em;
+  }
+
+  .arrival h1 {
+    font-size: clamp(40px, 10.5vw, 58px);
+    letter-spacing: -.045em;
+  }
+
+  .lead {
+    margin-top: 18px;
+    font-size: 18px;
+  }
+
+  .field {
+    width: calc(100% - 40px);
+    margin-top: 44px;
+  }
+
+  .doors {
+    grid-template-columns: 1fr;
+    border-bottom: 0;
+  }
+
+  .door,
+  .door:first-child {
+    min-height: 116px;
+    padding: 22px 2px 20px;
+    border-left: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .presenceMark {
+    width: 34px;
+    height: 34px;
+    margin-bottom: 15px;
+  }
+
+  .doorLabel {
+    font-size: 27px;
+  }
+
+  .doorPhrase {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .enter {
+    margin-top: 16px;
+  }
+
+  .maia {
+    margin-top: 22px;
+  }
+
+  .return {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-top: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cabin *,
+  .cabin *::before,
+  .cabin *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
