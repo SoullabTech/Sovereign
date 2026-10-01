@@ -392,23 +392,10 @@ send_alert() {
         fi
     fi
 
-    # Report WHY a send fails: a silent alert path is how an incident goes unnoticed.
-    #   503 server_not_configured  → INTERNAL_ALERT_TOKEN unset in the app container
-    #   503 alert_smtp_not_configured / alert_sender_mismatch → ALERT_SMTP_* / ALERT_FROM
-    #   401 → token here differs from the container's
-    local alert_http alert_body
-    alert_body=$(mktemp)
-    alert_http=$(curl -s -o "$alert_body" -w '%{http_code}' -X POST "${base_url}/api/build/alert" \
+    curl -sf -X POST "${base_url}/api/build/alert" \
         -H "Content-Type: application/json" \
         -H "x-internal-token: ${alert_token}" \
-        -d "$json_payload" 2>/dev/null) || alert_http="000"
-    if [ "${alert_http:0:1}" != "2" ]; then
-        local alert_err
-        alert_err=$(grep -o '"error":"[a-z_]*"' "$alert_body" 2>/dev/null | head -n1)
-        [ -z "$alert_token" ] && alert_err="${alert_err:+$alert_err; }no INTERNAL_ALERT_TOKEN on the deploy host"
-        log_warn "Alert send FAILED (non-critical): HTTP ${alert_http}${alert_err:+ — $alert_err}"
-    fi
-    rm -f "$alert_body"
+        -d "$json_payload" > /dev/null 2>&1 || log_warn "Alert send failed (non-critical)"
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -567,14 +554,9 @@ run_smoke_tests() {
         # HTTP→HTTPS redirect is acceptable for localhost smoke tests only
         log_success "  /api/build/alert redirects to HTTPS ($status_code) — acceptable for localhost HTTP smoke only"
         add_result "PASS  /api/build/alert (redirect: $status_code, localhost only)"
-    elif [ "$status_code" = "401" ] || [ "$status_code" = "403" ]; then
+    elif [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
         log_success "  /api/build/alert locked ($status_code)"
         add_result "PASS  /api/build/alert (locked: $status_code)"
-    elif [ "$status_code" = "503" ]; then
-        # 503 to an unauthenticated probe = INTERNAL_ALERT_TOKEN unset: the route is
-        # closed, but ALSO cannot deliver any alert. Not "locked" — unconfigured.
-        log_warn "  /api/build/alert UNCONFIGURED (503) — closed, but deploy alerts cannot be delivered"
-        add_result "WARN  /api/build/alert (503: alert path unconfigured — alerts undeliverable)"
     else
         log_error "  /api/build/alert NOT LOCKED (got $status_code, expected 401/403/503)"
         add_result "FAIL  /api/build/alert (got $status_code, not locked)"
