@@ -495,7 +495,7 @@ access-matrix assertions are unchanged.
 | 9 | WS2-03B | 29/29 |
 | 10 | Auth/session + endpoint + authority | 294/298 |
 | 11 | `npm run typecheck` | **PASS** — 222 vs baseline 239, 0 new |
-| 12 | `npm run build` | BUILD_RESULT |
+| 12 | `npm run build` | **PASS** — exit 0; `ƒ /api/house-studio/admission` built as dynamic; no `h1-arrival` route in the output. ⚠️ First attempt was killed by the container's OOM killer (exit 137, 15 GB box, 8 GB build heap) during page-data collection — not a compile failure; a clean rerun passed |
 
 Breadth: all Studio suites 80/80 (884). The 7 failures in rows 4 and 10 (`lifeFacetFlowProjection`,
 `facetFlowLens`, `authBoundaryMiddleware`, `journalGuardCoverage`, `handlerGuardCoverage`) fail
