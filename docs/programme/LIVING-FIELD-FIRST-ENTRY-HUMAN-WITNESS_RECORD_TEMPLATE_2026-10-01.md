@@ -5,8 +5,11 @@
 **Production SHA at start:** (`docker exec maia-sovereign printenv GIT_COMMIT`)
 **Production SHA at end:** (same command, after the walk; if it differs from start → the walk is **NO EVIDENCE**)
 **Public health:**
-**Device/browser:**
-**Early Field admitted:** yes / no
+**Device/browser:** (member's own device: yes / no; if no, why and what the member was told)
+**Early Field admitted:** yes / no (server-side check per Amendment 2 §5; paste the verbatim output line; never a member session)
+**Observation channels disclosed before the walk:** list each (facilitator / call / recording / screenshots / AI agent: none)
+**Member accepted the disclosed setup:** yes / no (no → the walk does not run)
+**Any channel discovered afterwards that was not disclosed:** none / describe (any → **NO EVIDENCE**)
 **Pre-existing member-owned substrate:** no
 **Facilitator intervention:** none / describe
 **Member chose to write:** yes / no

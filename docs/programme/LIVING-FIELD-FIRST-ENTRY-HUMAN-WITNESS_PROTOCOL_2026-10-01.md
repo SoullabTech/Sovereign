@@ -150,3 +150,51 @@ which readiness was censused (`975a208b8`). Precondition 4 is tightened. No othe
   intervening change did not touch Living Field surfaces. If it did, re-census readiness first.
   The RC1 re-baseline is `LIVING-FIELD_WITNESS_REBASELINE_RC1_2026-10-01.md`.
 
+
+## Amendment 2 · 2026-10-01 · before any run (founder-directed pre-registration amendment)
+
+Occasioned by the proposal to verify admission by signing into a cohort account on the Mac Studio,
+a machine whose browser an AI agent session can control. Two acts had been merged into one: checking
+whether a member is admitted, and the member's walk. They are separated here. Precondition 5 is
+replaced, precondition 2 is tightened, §3 gains a disclosure, and precondition 8 is added.
+No other clause changes.
+
+- **5 (replaces).** Admission is verified **server-side and read-only**. Nobody signs into, borrows,
+  or opens the member's account or session to check it. The check runs the same decision function
+  the route uses (`decideEarlyField` in `lib/access/earlyFieldAccess.ts`) against the live container
+  environment, and prints a boolean and nothing else:
+
+  ```bash
+  ssh soullab@minisforum "docker exec -e EF_MEMBER=<member-uuid> maia-sovereign npx tsx -e \"
+    import { decideEarlyField, earlyFieldConfigFromEnv } from './lib/access/earlyFieldAccess';
+    console.log(JSON.stringify({ admitted: decideEarlyField(process.env.EF_MEMBER, earlyFieldConfigFromEnv()) }));\""
+  ```
+
+  The member UUID is an operational input. It is **never written into the witness record**, which
+  uses the participant label only. ⚠️ This command has not been run from the repository session
+  that wrote it. Its first run is its own evidence: if it errors, precondition 5 is unmet. That
+  outcome is not a reason to fall back to a member session.
+- **2 (tightened).** The member signs in **themselves**, on **their own device**, in their ordinary
+  browser. The facilitator never types the member's credentials, and no shared or operator machine
+  is used by default.
+- **8 (new). No undisclosed observer.** Before the walk, every channel through which the walk can be
+  seen is known, and each one is either disclosed to the member and accepted, or absent. This
+  includes the facilitator (in person, or on a call the member chose), screen-share, screen or video
+  recording, screenshots, and **any AI agent session that can read or control the browser or
+  screen** (for example a Desktop Commander or remote-control connection on the device used).
+  An AI agent with that access must not be connected to the member's device. If the walk has to
+  happen on the Mac Studio, the agent connection is closed for the walk, **and** the member is told
+  that the machine is one an AI agent can normally operate and that it has been disconnected.
+  An observer the member was not told about makes the walk **NO EVIDENCE**, whatever it recorded.
+  The consent test cannot pass while its own observation breaks consent.
+
+**§3 addition: say this before the existing text, and adapt it to the actual setup.**
+
+> Before you start: here is who can see this. [The facilitator, in person / on this call.]
+> [Nothing is being recorded on screen.] [No AI system is connected to your device or can see your
+> screen.] What I write down is short notes in my own words about what you did and said. I won't
+> copy anything you write in your field. The notes go into an internal Soullab witness record under
+> a label, not your name. You can stop at any time, and you can ask me to leave anything out.
+
+If any bracket is untrue for the actual setup, say what is true instead. If the member declines
+the setup, the walk does not run.
