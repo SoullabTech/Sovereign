@@ -1112,6 +1112,7 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
   const adjudication = provenance.adjudication || null;
   const closure = provenance.closure || null;
   const actions = snapshot.next_actions || [];
+  const grokkerOrigin = GrokkerWorkUnitOrigin.project(wu);
 
   const transitionTrace = (lifecycle.transitions || [])
     .map(t => `${t.from} → ${t.to}`)
@@ -1205,6 +1206,14 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
       <div class="plan-line"><b>Next lawful gesture:</b> ${escapeHtml(actions.map(a => a.label).join(' · ') || 'none')}</div>
     </div>
 
+    ${grokkerOrigin ? `<div class="authority-box">
+      <div class="a-title">Grokker origin · Field Library</div>
+      <div class="a-line">Inquiry: <b>${escapeHtml(grokkerOrigin.query)}</b></div>
+      <div class="a-line">Source ranges: <b>${escapeHtml(grokkerOrigin.source_ranges.join(' · ') || 'none')}</b></div>
+      <div class="hint">Derived from canonical Work Unit facts. No separate Grokker packet memory is active here.</div>
+      <button class="act" id="grokker-return-inquiry">Return to Field Library inquiry</button>
+    </div>` : ''}
+
     ${transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : ''}
 
     <div class="authority-box">
@@ -1263,6 +1272,23 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
     </div>
   </div>`;
 
+  document.getElementById('grokker-return-inquiry')?.addEventListener('click', () => {
+    if (!grokkerOrigin) return;
+    libraryState.grokkerQuery = grokkerOrigin.query;
+    libraryState.grokkerResults = GrokkerLibraryQuery.trace(
+      window.KELLY_FIELD_LIBRARY,
+      grokkerOrigin.query,
+    );
+    libraryState.sourcePacket = null;
+    libraryState.synthesis = null;
+    libraryState.synthesisError = null;
+    libraryState.synthesisRunning = false;
+    libraryState.deliberativePreview = null;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    libraryState.deliberativeRunning = false;
+    setView('library');
+  });
   document.getElementById('wu-refresh')?.addEventListener('click', refreshActiveWorkUnit);
   document.querySelectorAll('[data-canonical-action]').forEach((button) => {
     button.addEventListener('click', async () => {

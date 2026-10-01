@@ -3,6 +3,14 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity is derived from Git history since 2026-09-27",
   "recentItems": [
     {
+      "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R11 · FIRST · DELIBERATIVE · DRAFT · 2026-10-01",
+      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R11_FIRST_DELIBERATIVE_DRAFT_2026-10-01.md",
+      "excerpt": "Prove that a Grokker source packet can cross from Kelly's World into the existing canonical JARVIS Work Unit substrate without inventing a new execution lane and without executing a model.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": []
+    },
+    {
       "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R10 · WORK · UNIT · EVIDENCE · PRECISION · 2026-10-01",
       "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R10_WORK_UNIT_EVIDENCE_PRECISION_2026-10-01.md",
       "excerpt": "Remove the R9 blocker without changing C1 or inventing a new Grokker execution class.",
@@ -6117,6 +6125,14 @@ window.KELLY_FIELD_LIBRARY = {
           "headings": []
         },
         {
+          "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R12 · WORK · REENTRY · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R12_WORK_REENTRY_2026-10-01.md",
+          "excerpt": "Prove that a Grokker-created canonical DRAFT can enter the ordinary JARVIS Work room, remain recognizably connected to the originating inquiry, and use only the existing canonical lifecycle.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": []
+        },
+        {
           "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R1 · SWEEP · 2026-09-30",
           "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R1_SWEEP_2026-09-30.md",
           "excerpt": "Give Kelly one scrollable place to re-enter the large body of Soullab work without requiring working-memory reconstruction from chats, branches, or programme filenames.",
@@ -6473,7 +6489,7 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 652,
-    "recent": 72
+    "lanes": 653,
+    "recent": 73
   }
 };
