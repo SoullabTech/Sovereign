@@ -46,3 +46,16 @@ export function houseStudioH1ConfigFromEnv(): HouseStudioH1Config {
 export function canUseHouseStudioH1(sessionMemberId: string | null | undefined): boolean {
   return decideHouseStudioH1(sessionMemberId, houseStudioH1ConfigFromEnv());
 }
+
+/**
+ * The admission endpoint's whole answer (GET /api/house-studio/admission).
+ * A boolean and nothing else: no member ids, no list size, no cohort name, no
+ * configuration state, no reason. Signed out → 401 `{ admitted: false }`.
+ */
+export function houseStudioH1AdmissionResponse(
+  sessionMemberId: string | null,
+  config: HouseStudioH1Config = houseStudioH1ConfigFromEnv(),
+): { status: 200 | 401; body: { admitted: boolean } } {
+  if (!sessionMemberId) return { status: 401, body: { admitted: false } };
+  return { status: 200, body: { admitted: decideHouseStudioH1(sessionMemberId, config) } };
+}
