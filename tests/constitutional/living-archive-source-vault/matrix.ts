@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   buildReferenceDarkField,
   coordinateV1,
@@ -140,4 +141,25 @@ const grown: ArchiveCatalogue = {
 const grownField = buildReferenceDarkField(grown, 'member');
 assert.deepEqual(grownField.coordinates['LA-ART-001'], lawful.coordinates['LA-ART-001']);
 
-console.log('LIVING-ARCHIVE-SOURCE-VAULT-R1: 11/11 falsifiers lethal; layered entry PASS; coordinate growth PASS');
+// Schema binding: the migration must encode the same authority boundaries rather
+// than leaving them as comments in the reference model.
+const migration = readFileSync('database/migrations/20261001000001_living_archive_source_vault.sql', 'utf8');
+for (const table of [
+  'living_archive_catalogue_versions',
+  'living_archive_artifacts',
+  'living_archive_provenance_claims',
+  'living_archive_known_gaps',
+  'living_archive_lineage_edges',
+]) {
+  assert.match(migration, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}\\b`), `${table} missing`);
+}
+assert.match(migration, /living_archive_subartifact_not_point/);
+assert.match(migration, /living_archive_withheld_no_geometry/);
+assert.match(migration, /living_archive_known_gaps_withheld_no_geometry/);
+assert.match(migration, /LA-CATALOGUE-UNIT-v1/);
+assert.doesNotMatch(migration, /INSERT\s+INTO\s+living_archive_artifacts/i, 'R1 must not ingest artifacts');
+assert.doesNotMatch(migration, /INSERT\s+INTO\s+living_archive_known_gaps/i, 'R1 must not backfill gaps');
+assert.doesNotMatch(migration, /REFERENCES\s+library_sources/i, 'Living Archive must not inherit Library authority');
+assert.doesNotMatch(migration, /REFERENCES\s+manuscript_source_arrivals/i, 'Living Archive must not inherit Studio custody authority');
+
+console.log('LIVING-ARCHIVE-SOURCE-VAULT-R1: 11/11 falsifiers lethal; layered entry PASS; coordinate growth PASS; schema binding PASS');
