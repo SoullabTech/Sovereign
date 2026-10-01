@@ -17,15 +17,27 @@ BEGIN;
 
 -- Composite FK targets. These add no new uniqueness beyond the existing PK;
 -- they exist only so one FK can prove id + member in a single constraint.
+--
+-- Build the indexes before attaching the constraints. CREATE INDEX takes SHARE
+-- rather than ACCESS EXCLUSIVE, so reads continue during the build. The later
+-- ADD CONSTRAINT ... USING INDEX is metadata-only and keeps the exclusive-lock
+-- interval bounded to the attachment itself.
+CREATE UNIQUE INDEX IF NOT EXISTS living_works_id_member_a2_key
+  ON living_works(id, member_id);
+CREATE UNIQUE INDEX IF NOT EXISTS member_manuscripts_id_member_a2_key
+  ON member_manuscripts(id, member_id);
+
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'living_works_id_member_a2_key') THEN
     ALTER TABLE living_works
-      ADD CONSTRAINT living_works_id_member_a2_key UNIQUE (id, member_id);
+      ADD CONSTRAINT living_works_id_member_a2_key
+      UNIQUE USING INDEX living_works_id_member_a2_key;
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'member_manuscripts_id_member_a2_key') THEN
     ALTER TABLE member_manuscripts
-      ADD CONSTRAINT member_manuscripts_id_member_a2_key UNIQUE (id, member_id);
+      ADD CONSTRAINT member_manuscripts_id_member_a2_key
+      UNIQUE USING INDEX member_manuscripts_id_member_a2_key;
   END IF;
 END $$;
 CREATE TABLE IF NOT EXISTS writer_editorial_relationships (

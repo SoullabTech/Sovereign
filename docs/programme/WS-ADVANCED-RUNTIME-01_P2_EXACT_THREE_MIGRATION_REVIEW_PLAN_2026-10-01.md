@@ -21,13 +21,32 @@ Read-only production ledger comparison found these three candidate migrations ab
 The deploy lane must independently rederive the pending set immediately before mutation.
 
 1. `database/migrations/20260925000005_writer_editorial_relationship_custody.sql`
-   SHA-256 `39c5c91dc31510cccb72f01d6fca35047730997f4758ca59e2b629ec62dd5b33`
+   SHA-256 `1107b6382edc30d66fd6a043ff0ae8c01fd789c5670462d4ce71bcd8e3d7a84d`
 2. `database/migrations/20260925000006_writer_editorial_scope_identity_successor.sql`
    SHA-256 `a514c25540e88e1ef6b20ff49a1f205ddb94a4e95d3c7a1d616dcad8034a2154`
 3. `database/migrations/20260926000004_writer_studio_return_state.sql`
    SHA-256 `be3d512e8342060e4056a8643aa77fd78dd576467804b6ee55483ef20f06d616`
 Any addition, removal, reorder, byte movement, live-reader movement, or target movement
 refuses this review.
+
+### Review-remediation amendment · 2026-10-01
+
+The first independent restricted review returned `REVISE`. Its material schema finding
+was that migration 1 built the two composite unique indexes implicitly inside
+`ALTER TABLE ... ADD CONSTRAINT UNIQUE`, extending an `ACCESS EXCLUSIVE` lock across the
+index build on `living_works` and `member_manuscripts`. Read-only production census at
+that point observed 8 and 21 rows respectively (48 KiB each), but the finding was not
+converted into approval merely because the present tables are small.
+
+Migration 1 is therefore amended before admission: it now creates the two unique indexes
+first, then attaches them with `ADD CONSTRAINT ... UNIQUE USING INDEX`. The composite-FK
+semantics are unchanged; reads remain available during index construction and the
+exclusive-lock interval is reduced to the metadata attachment. The migration-1 hash above
+is the amended blob identity. The earlier A2 programme record retains the original hash as
+historical provenance rather than being rewritten.
+
+This amendment invalidates the first review and requires a fresh independent review,
+fresh custody binding, and fresh target proof before any production mutation.
 
 ## Deployment ordering
 
