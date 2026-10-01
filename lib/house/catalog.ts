@@ -14,6 +14,7 @@ export interface HousePlace {
 }
 
 export const HOUSE_PLACES = [
+  { id:'world', label:'My World', purpose:'See what you are holding across your House.', href:'/world?from=house', mark:'◎', tone:'gold', group:'reflect', aliases:['world','whole','overview','orientation','grokker'], centerEligible:true },
   { id:'writing', label:'Writing', purpose:'Write, revise, and develop a living work.', href:'/writers-studio?from=house', mark:'✎', tone:'amber', group:'create', aliases:['writer','work','manuscript'], centerEligible:true },
   { id:'relationships', label:'Relationships', purpose:'Explore the relationships and patterns shaping your life.', href:'/relationships?from=house', mark:'◎', tone:'rose', group:'practice', aliases:['people','connection','relating'], centerEligible:true },
   { id:'practices', label:'Practices', purpose:'Return to body, breath, attention, and daily practice.', href:'/practices', mark:'◌', tone:'green', group:'practice', aliases:['practice','meditate','breath','body'], centerEligible:true },

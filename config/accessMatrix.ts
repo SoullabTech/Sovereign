@@ -378,6 +378,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // longer a redirect into founder-gated /labtools/journal.
   // HOUSE-PREFERENCES-01: member presentation only; ownership is resolved again in the reader.
   { exact: '/house', minTier: 'free', notes: 'Member House orientation' },
+  { exact: '/world', minTier: 'free', notes: 'Member-owned whole-field orientation' },
   { exact: '/api/house/preferences', minTier: 'free', notes: 'Verified member-owned House presentation preferences' },
   { exact: '/api/early-field/admission', minTier: 'free', notes: 'EARLY-FIELD-01 — server-side admission to the early Living Field instrument; authenticated members only; answers a boolean from the session, never a client claim' },
   { exact: '/api/house-studio/admission', minTier: 'free', notes: 'H1 — server-side admission to explicit House → Writer’s Studio Work-context arrival; authenticated members only; session-derived boolean only' },
