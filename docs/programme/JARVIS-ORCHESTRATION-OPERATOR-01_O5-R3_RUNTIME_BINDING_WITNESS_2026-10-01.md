@@ -158,3 +158,25 @@ The running renderer itself read the real delegation home through `window.jarvis
 ⛔ The final §4 step-7 authorization handshake was **not synthesized remotely**. The remote command layer refused the actual one-shot grant-issuance call. That safeguard was not bypassed. Consequently the stronger live proof "Desktop holds the lease while a second `census --write` is refused" remains owed as a founder-authorized human act.
 
 **Standing: MAC/APFS ✅ · R3-R11 RUNTIME BINDING ✅ · NO LEGACY WRITER OBSERVED ✅ · FINAL LIVE GRANT-MUTATION / SECOND-WRITER REFUSAL ⛔ PENDING · NOT MERGED.**
+
+## 7. Final live grant-writer witness — PASS
+
+The founder clicked **Authorize this execution once** for PRIMARY · QWEN on canonical Work Unit `v2-determine-from-the-authorized-cano-mublc1n2`. **Confirm Execute was not clicked.**
+
+- The live Desktop created lease generation 1 at `2026-10-01T02:03:42.939Z`, naming host `Kellys-Mac-Studio.local`, pid `24766`, and incarnation `ps-lstart:Wed Sep 30 21:47:32 2026`. This exactly matches the live Mode A Electron process witnessed in §6.
+- The canonical grant ledger was created with exactly one `ISSUED` event: grant `e1-5264ecdcd9a23450aa632ee64a26c9f0`, participant `primary`, transport `e1-ready-primary-d6ec13103f4a`, one-shot + non-transferable, actor `human:jarvis-desktop:soullab`.
+- The grant's authorized-core snapshot names source/canonical SHA `b40558cdac92258472053cdfdf11f4846431bb1d`. This is **Work Unit evidence identity**, distinct from the live runtime checkout `ce061073ea911270fed5dde59099b2b843079664`. Both identities are therefore recorded explicitly; neither is substituted for the other.
+- The UI simultaneously showed badge **ROUTED** and inner lifecycle **DRAFT · Next lawful gesture: none**. That presentation disagreement is recorded as an observation. It did **not** weaken the execution membrane: the explicit E1 authorization review succeeded, while execution remained separate.
+- Immediately after authorization, a read-only O5 census returned admissible with digest `sha256:92bee29c6f2440e6c6706b5e36e8588878469238c84becf4b1c2f0ba46ddd652`.
+- A separate process then attempted `o5-recovery-census.mjs --write --admit <that digest>` and was refused exactly:
+  `GRANT_WRITER_LEASE_UNAVAILABLE` / `HOME_LEASE_HELD`, holder host `Kellys-Mac-Studio.local`, pid `24766`, acquired_at `2026-10-01T02:03:42.939Z`.
+- The target Work Unit still had **0 provider attempts**; the grant ledger still contained only the `ISSUED` event. Therefore Authorize Once did not execute Qwen.
+- After the witness, PID `24766` was terminated normally. Generation 2 was created with `released:true`, the same owner nonce, and `released_at: 2026-10-01T02:04:36.639Z`. Release therefore preserved the immutable-generation protocol.
+
+### Admission conclusion
+
+**O5-R3 ADMITTED on the Mac Studio witness.** The constitutional matrix and freeze are intact; the APFS integration proof is green; a live conforming Desktop runtime at `ce061073` acquired the canonical grant-writer lease on first mutation; the exact lease identity matched its live pid/incarnation; a competing write process was refused by the held-home lease; no provider execution occurred; and release created the next immutable generation.
+
+The two UI/source-identity observations above remain follow-up items, not R3 admission failures. Grant Writer Lease Recovery remains named and unbuilt. Lease-generation pruning remains out of scope.
+
+**Standing: O5-R3 ✅ ADMITTED · NOT YET MERGED · production untouched by this witness.**
