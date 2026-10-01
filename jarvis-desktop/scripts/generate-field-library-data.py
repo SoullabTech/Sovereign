@@ -4,6 +4,7 @@ import json, re, subprocess
 
 root = Path(__file__).resolve().parents[2]
 prog = root / "docs/programme"
+TEXT_RECORD_SUFFIXES = {".md", ".json", ".txt", ".yaml", ".yml"}
 
 concepts = [
 ("Ontological Foundation", ["Panentheism — Being is conscious","No finite model exhausts Being","Difference is real","Relation is fundamental","Communion without fusion","Spirit — immanent and transcendent","Nature includes technological becoming","Every form exceeds its utility","Interiorities differ","Mystery is constitutive","Becoming is real","The whole exceeds its parts"]),
@@ -188,10 +189,16 @@ for line in recent_text.splitlines():
         seen_recent.add(path)
         recent_paths.append(path)
 
-recent_items = [
-    record_item(root / path)
-    for path in recent_paths if (root / path).is_file()
-]
+recent_items = []
+for rel in recent_paths:
+    path = root / rel
+    if not path.is_file():
+        continue
+    if path.parent != prog:
+        continue
+    if path.suffix.lower() not in TEXT_RECORD_SUFFIXES:
+        continue
+    recent_items.append(record_item(path))
 
 lane_groups = {name: [] for name, _ in families}
 lane_groups["Other programme work"] = []
