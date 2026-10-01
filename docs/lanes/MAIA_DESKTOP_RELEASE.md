@@ -18,7 +18,7 @@ appended sections.
 
 ## Last updated
 
-2026-10-01 · canonical at time of writing `8f8ba73b8` (Next 16.3.8, PR #1615)
+2026-10-01 · canonical at time of writing `cf9624cdf` (#1619 merged; Next 16.3.8)
 · evidence: git + GitHub CI + founder Mac Studio command output.
 
 ## Release SHA
@@ -29,7 +29,7 @@ build only from that exact SHA.
 
 ## Release order
 
-1. Merge #1619 (Writer's Studio RC1 lineage; no pending migrations: its three
+1. ✅ Merged #1619 as `cf9624cdf` (Writer's Studio RC1 lineage; no pending migrations: its three
    migrations are already applied in production).
 2. Merge #1616, updated onto canonical after #1619 lands. The merge commit is
    the release SHA.
@@ -61,7 +61,7 @@ build only from that exact SHA.
 
 | Gate | State | Evidence |
 |---|---|---|
-| Packaging repair `bdf95a8e1` | in #1616 (the only carrier; #1624 closed), on `8f8ba73b8`. Suite **408/408** under tsx (canonical 405/405). Packaging-test mutants M1 + M2 killed | git + local run; see H4-7-R1 record, Amendment 2 |
+| Packaging repair `bdf95a8e1` | in #1616 (the only carrier; #1624 closed), on `cf9624cdf` (post-#1619; #1619 changed no `maia-desktop/**`). Suite **408/408** under tsx (canonical 405/405). Packaging-test mutants M1 + M2 killed | git + local run; see H4-7-R1 record, Amendment 2 |
 | Artifact carries next 16.3.8 | NOT WITNESSED | — |
 | Packaged runtime healthy offline | NOT WITNESSED | — |
 | Developer ID Application | **PRESENT**: `32276A3F…55DB48 "Developer ID Application: Kelly Nezat (ZVK2X646Z2)"` | founder, `security find-identity -v -p codesigning`, 2026-10-01 |
