@@ -1186,6 +1186,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // 🚨 CRISIS OVERRIDE: Safety boundary that interrupts any mode
   // This takes precedence over all other voice commands and mode states
   const crisisStateRef = useRef<CrisisOverride | null>(null);
+  // VOICE-CRISIS-FALSE-POSITIVE-01: crisis context is a response to what was
+  // said, not a permanent label on the member. It lapses after this many
+  // consecutive voice turns with no crisis language (re-arms on any new signal).
+  const crisisCalmTurnsRef = useRef(0);
+  const CRISIS_CONTEXT_CALM_TURNS = 3;
 
   // 💡 IDEA FIELD: Track dismissed/saved idea fingerprints to avoid re-suggesting
   const ideaDismissedRef = useRef<Set<string>>(new Set());
@@ -7001,9 +7006,18 @@ I'm not sure what I'm feeling yet.`;
     // 🚨 CRISIS DETECTION - Safety override that takes precedence over ALL modes
     // This runs FIRST before any voice command matching
     const crisisCheck = detectCrisis(t);
+    if (!crisisCheck.detected && crisisStateRef.current?.detected) {
+      crisisCalmTurnsRef.current += 1;
+      if (crisisCalmTurnsRef.current >= CRISIS_CONTEXT_CALM_TURNS) {
+        console.log('🚨 [CRISIS] Context lapsed after calm turns');
+        crisisStateRef.current = null;
+        crisisCalmTurnsRef.current = 0;
+      }
+    }
     if (crisisCheck.detected) {
       console.log(`🚨 [CRISIS] Level ${crisisCheck.level} detected:`, crisisCheck.trigger);
       crisisStateRef.current = crisisCheck;
+      crisisCalmTurnsRef.current = 0;
 
       // Stop any ongoing MAIA speech immediately
       stopStreamingVoice();

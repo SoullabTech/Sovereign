@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { apiFetch } from '@/lib/http/apiBase';
 import {
   X,
+  Bug,
   MessageCircle,
   Heart,
   Lightbulb,
@@ -82,6 +84,7 @@ export default function FeedbackSheet({
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const selectedOption = feedbackOptions.find(opt => opt.id === selectedCategory);
 
@@ -89,8 +92,11 @@ export default function FeedbackSheet({
     if (!selectedCategory || !message.trim()) return;
 
     setIsSubmitting(true);
+    setErrorMsg(null);
     try {
-      const response = await fetch('/api/feedback', {
+      // apiFetch, not a relative fetch: on the iOS app a relative /api URL
+      // resolves to the static bundle and silently 404s (CLAUDE.md trap).
+      const response = await apiFetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -114,9 +120,13 @@ export default function FeedbackSheet({
             setSubmitted(false);
           }, 300);
         }, 1500);
+      } else {
+        const data = await response.json().catch(() => ({} as { error?: string }));
+        setErrorMsg(data?.error || `Couldn't send (${response.status}). Your words are still here — please try again.`);
       }
     } catch (error) {
       console.error('Failed to submit feedback:', error);
+      setErrorMsg("Couldn't reach Soullab. Your words are still here — please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -125,6 +135,15 @@ export default function FeedbackSheet({
   const handleBack = () => {
     setSelectedCategory(null);
     setMessage('');
+    setErrorMsg(null);
+  };
+
+  // Problems go to the ONE canonical bug flow (BugReportButton → /api/bugs).
+  const openBugReport = () => {
+    handleClose();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('soullab:open-bug-report'));
+    }
   };
 
   const handleClose = () => {
@@ -134,6 +153,7 @@ export default function FeedbackSheet({
       setSelectedCategory(null);
       setMessage('');
       setSubmitted(false);
+      setErrorMsg(null);
     }, 300);
   };
 
@@ -235,6 +255,21 @@ export default function FeedbackSheet({
                       exit={{ opacity: 0, y: -10 }}
                       className="grid grid-cols-1 gap-3"
                     >
+                      <button
+                        onClick={openBugReport}
+                        className="group flex w-full items-center justify-between rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-4 text-left transition-all hover:bg-red-500/15"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/20 bg-black/30">
+                            <Bug className="h-4 w-4 text-red-300" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-red-50">Report a Problem</div>
+                            <div className="text-xs text-red-100/70">Something broke or didn&apos;t work</div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-red-200/70 transition-colors group-hover:text-red-200">→</div>
+                      </button>
                       {feedbackOptions.map((option) => {
                         const Icon = option.icon;
                         return (
@@ -324,6 +359,12 @@ export default function FeedbackSheet({
                         className="w-full rounded-2xl border border-green-500/20 bg-black/30 px-4 py-3 text-sm text-green-50 placeholder:text-green-100/40 focus:border-green-500/40 focus:outline-none focus:ring-1 focus:ring-green-500/20 resize-none"
                         autoFocus
                       />
+
+                      {errorMsg && (
+                        <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                          {errorMsg}
+                        </p>
+                      )}
 
                       {/* Submit button */}
                       <button

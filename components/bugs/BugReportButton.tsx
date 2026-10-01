@@ -38,20 +38,36 @@ export default function BugReportButton() {
   const previewUrls = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
   useEffect(() => () => { previewUrls.forEach((u) => URL.revokeObjectURL(u)); }, [previewUrls]);
 
-  // Only show for signed-in members. Checked on mount (client-only).
+  // Only show the launcher for signed-in members. Re-checked on focus and when
+  // session storage changes: this lives in the root layout, which does not
+  // remount on client-side navigation, so a mount-only check left members who
+  // signed in after first load without the launcher (BUG-REPORT-REACH-01).
   useEffect(() => {
-    setHasMember(getValidMemberId() !== null);
+    const check = () => setHasMember(getValidMemberId() !== null);
+    check();
+    window.addEventListener('focus', check);
+    window.addEventListener('storage', check);
+    return () => {
+      window.removeEventListener('focus', check);
+      window.removeEventListener('storage', check);
+    };
   }, []);
 
   // Other surfaces (e.g. the Beta Hub "Report a Bug" tile) open the ONE canonical bug flow
   // via a lightweight event — decoupled, no shared ownership between components.
   useEffect(() => {
-    const open = () => setPhase('open');
+    const open = () => {
+      setHasMember(getValidMemberId() !== null);
+      setPhase('open');
+    };
     window.addEventListener('soullab:open-bug-report', open);
     return () => window.removeEventListener('soullab:open-bug-report', open);
   }, []);
 
-  if (!hasMember) return null;
+  // An explicit open request (e.g. from the Feedback sheet) always shows the
+  // composer — the server accepts reports without a member id. Only the
+  // ambient launcher pill is member-gated.
+  if (!hasMember && phase === 'idle') return null;
 
   const addFiles = (files: File[]) => {
     const picked = files.filter((f) => ACCEPT_IMAGE_TYPES.includes(f.type));
@@ -159,7 +175,7 @@ export default function BugReportButton() {
       {/* Confirmation — reflects the submitted report back to the member so they can see
           we captured what they're experiencing (not just a generic "sent" flash). */}
       {phase === 'sent' && confirmed && (
-        <div className="fixed bottom-4 right-4 z-[60] w-[min(360px,calc(100vw-2rem))] rounded-xl border border-emerald-400/25 bg-[#1A1513] p-4 text-white shadow-2xl">
+        <div className="fixed bottom-4 right-4 z-[95] w-[min(360px,calc(100vw-2rem))] rounded-xl border border-emerald-400/25 bg-[#1A1513] p-4 text-white shadow-2xl">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-light tracking-wide text-emerald-200">
               <CheckCircle2 className="h-4 w-4 text-emerald-300" />
@@ -196,7 +212,7 @@ export default function BugReportButton() {
 
       {/* Composer */}
       {(phase === 'open' || phase === 'sending' || phase === 'error') && (
-        <div className="fixed bottom-4 right-4 z-[60] w-[min(360px,calc(100vw-2rem))] rounded-xl border border-white/15 bg-[#1A1513] p-4 text-white shadow-2xl">
+        <div className="fixed bottom-4 right-4 z-[95] w-[min(360px,calc(100vw-2rem))] rounded-xl border border-white/15 bg-[#1A1513] p-4 text-white shadow-2xl">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-light tracking-wide">
               <Bug className="h-4 w-4 text-amber-300" />
