@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { hasAdultConfirmation, withAdultAcknowledgment, adultRefusalMessage, ADULT_ACK_COOKIE } from '@/lib/members/adultConfirmation';
 import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 
@@ -96,8 +97,12 @@ export async function POST(req: NextRequest) {
   let clientFamilyName: string | undefined;
   let clientEmail: string | undefined;
 
+  // MEMBER-ADULT-ACK-01: the 18+ confirmation sent by /signup, used only if a new account is created.
+  let clientConfirmsAdult = false;
+
   try {
     const body = await req.json();
+    clientConfirmsAdult = body?.confirmsAdult === true;
     identityToken = body.identityToken;
     clientGivenName = body.givenName ? String(body.givenName) : undefined;
     clientFamilyName = body.familyName ? String(body.familyName) : undefined;
@@ -173,12 +178,22 @@ export async function POST(req: NextRequest) {
           crypto.randomBytes(2).toString('hex');
         const passkey = 'APPLE-' + crypto.randomBytes(6).toString('hex').toUpperCase();
 
-        const created = await query(
+        // MEMBER-ADULT-ACK-01: a NEW account needs the person's own 18+ confirmation.
+        if (!hasAdultConfirmation({ confirmsAdult: clientConfirmsAdult }, req.cookies.get(ADULT_ACK_COOKIE)?.value)) {
+          console.log('[OAUTH] New account refused (apple-native): adult_confirmation_required');
+          return NextResponse.json(
+            { error: adultRefusalMessage('adult_confirmation_required'), code: 'adult_confirmation_required' },
+            { status: 403 }
+          );
+        }
+        // The 18+ acknowledgment is written in the same statement as the member.
+        const insert = withAdultAcknowledgment(
           `INSERT INTO members (username, name, email, passkey, onboarded, onboarding_step, created_at)
            VALUES ($1, $2, $3, $4, false, 'begin', NOW())
            RETURNING id, username, name, onboarded, onboarding_step`,
           [username, name || 'Member', email || null, passkey]
         );
+        const created = await query(insert.sql, insert.params);
 
         memberData = created.rows[0];
         memberId = memberData.id as string;

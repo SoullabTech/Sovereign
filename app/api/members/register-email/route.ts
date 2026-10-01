@@ -18,6 +18,7 @@ import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession } from '@/lib/auth/serverSessions';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
+import { hasAdultConfirmation, withAdultAcknowledgment, adultRefusalMessage, ADULT_ACK_COOKIE } from '@/lib/members/adultConfirmation';
 import {
   checkRateLimit,
   getClientIP,
@@ -39,11 +40,20 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email, username, password, name } = await request.json();
+    const body = await request.json();
+    const { email, username, password, name } = body;
 
     if (!email || !username || !password) {
       return NextResponse.json(
         { error: 'Email, username, and password required' },
+        { status: 400 }
+      );
+    }
+
+    // MEMBER-ADULT-ACK-01: every new account carries the person's own 18+ confirmation.
+    if (!hasAdultConfirmation(body, request.cookies.get(ADULT_ACK_COOKIE)?.value)) {
+      return NextResponse.json(
+        { error: adultRefusalMessage('adult_confirmation_required'), code: 'adult_confirmation_required' },
         { status: 400 }
       );
     }
@@ -100,12 +110,14 @@ export async function POST(request: NextRequest) {
     // Generate a synthetic passkey so the column constraint is satisfied
     const syntheticPasskey = `EMAIL-${cleanUsername.toUpperCase()}-${Date.now()}`;
 
-    const result = await query(
+    // The 18+ acknowledgment is written in the same statement as the member.
+    const insert = withAdultAcknowledgment(
       `INSERT INTO members (passkey, username, password_hash, name, email, onboarding_step)
        VALUES ($1, $2, $3, $4, $5, 'faq')
        RETURNING id, username, name, onboarded, onboarding_step`,
       [syntheticPasskey, cleanUsername, passwordHash, displayName, normalizedEmail]
     );
+    const result = await query(insert.sql, insert.params);
 
     const member = result.rows[0];
     console.log(`[register-email] Created: ${cleanUsername} (${member.id})`);

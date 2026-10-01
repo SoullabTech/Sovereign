@@ -38,6 +38,28 @@ Tests: `lib/members/__tests__/adultAcknowledgment.test.ts` passed 17/17 in round
 - **Dead forms:** `UnifiedAuthModal` (imported nowhere) and `/join/[token]` (account creation sends no passkey and fails; still linked from practice-field invite emails). The checkbox edits were reverted, and removal is logged as a separate item.
 - **Teens:** path A (adults now, a teen entrance as its own later phase) is what is built. Path B (invite-only teens in this beta, with a guardian-consent kind, refused at the MAIA routes until #1633, and legal review) is ⛔ not started. It needs the founder's answer on cohort size and how the teens are known, plus the guardian-notification decision.
 
+## Third round: founder ruling on teens, and the #1634 fold-in (same day)
+
+**Ruling: this beta is adults-only.** No specific teens need access to the present cohort, so the current scope does not expand into a youth pathway.
+- The 18+ gate stays exactly as built, with the "Soullab is opening to adults first" wording. This sequences admission; it does not declare MAIA "for adults".
+- The teen experience will be a **distinct future admission lane**, opened later as its own governed workstream. It is not an exception to the adult gate.
+- That lane is designed deliberately around invited 13–17-year-olds, with guardian consent where legally required, age-appropriate disclosure and interaction design, the crisis-safety substrate (#1633), and legal review before activation.
+- **Under 13 stays closed.**
+- ⛔ **Guardian notification is not decided here.** It is held for the teen-lane design, which must distinguish crisis detection, confidentiality, guardian involvement, imminent-risk escalation, and what MAIA does and does not represent itself as doing.
+- ⛔ The teen entrance is not built on this branch.
+
+**#1634 collision found and resolved toward this branch.** #1634 had grown its own `member_acknowledgments` migration (`20261001200000`). Its shape differed: kind `age_18_plus`, text `copy_version`, a free-text `source`, and no append-only triggers. Both migrations use `CREATE TABLE IF NOT EXISTS`, so whichever ran first would win silently and the other's code would fail at runtime. Under the single-home ruling, #1634's best ideas are folded in here, on this branch's schema:
+- **The acknowledgment is written in the same SQL statement as the member** (`withAdultAcknowledgment`, a CTE). A member can no longer exist without it. This replaces round one's write-after-insert.
+- **Account creation is now gated on six routes**, all with the atomic write:
+  - `/api/members/register`;
+  - `/api/members/register-email`, which the live `/signup` page uses and which collects no birth date;
+  - the Google and Apple web callbacks (no confirmation → back to `/signup?age=required`);
+  - the Google and Apple native callbacks (no confirmation → 403).
+- **The confirmation travels to the web OAuth callbacks** as the short-lived `maia_adult_ack` cookie (`adult_18_plus@1`, 15 minutes, `SameSite=None; Secure` so Apple's cross-site POST carries it).
+- **`/signup` (`UnifiedAuth`)** carries the checkbox for email signup and for Google/Apple.
+- A test fails if any of those six routes contains a member `INSERT` that is not wrapped, or loses the confirmation check. Both mutations were checked.
+- **Still covered only by the MAIA-route gate and the sign-in prompt:** `register-local`, `members/enter`, team-invite register, `now-what/register`, and the cabin local store.
+
 ## What this does NOT cover, said plainly
 
 - ~~Other ways to create an account do not ask at creation time.~~ Superseded by the MAIA-route enforcement above; the original text is kept below.
