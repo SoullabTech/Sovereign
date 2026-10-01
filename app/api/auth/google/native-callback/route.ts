@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { hasAgeConfirmation, withAgeAcknowledgment, AGE_ACK_COOKIE, AGE_ACK_REQUIRED_MESSAGE } from '@/lib/members/ageAcknowledgment';
 import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
 
 // Safe query wrapper (consistent with other auth routes)
@@ -95,8 +96,12 @@ export async function POST(req: NextRequest) {
   let clientName: string | undefined;
   let clientEmail: string | undefined;
 
+  // MEMBER-ACK-01: the 18+ confirmation sent by the signup page, kept for new-account creation.
+  let clientAgeConfirmed = false;
+
   try {
     const body = await req.json();
+    clientAgeConfirmed = body?.ageConfirmed === true;
     idToken = body.idToken;
     clientName = body.name ? String(body.name) : undefined;
     clientEmail = body.email ? String(body.email).toLowerCase() : undefined;
@@ -170,12 +175,23 @@ export async function POST(req: NextRequest) {
           crypto.randomBytes(2).toString('hex');
         const passkey = 'GOOGLE-' + crypto.randomBytes(6).toString('hex').toUpperCase();
 
-        const created = await query(
+        // MEMBER-ACK-01 / TEEN-CLOSED-01: a NEW account needs the person's own 18+ confirmation.
+        if (!hasAgeConfirmation({ ageConfirmed: clientAgeConfirmed }, req.cookies.get(AGE_ACK_COOKIE)?.value)) {
+          console.log('[OAUTH] New account refused (google-native): AGE_CONFIRMATION_REQUIRED');
+          return NextResponse.json(
+            { error: AGE_ACK_REQUIRED_MESSAGE, code: 'AGE_CONFIRMATION_REQUIRED' },
+            { status: 403 }
+          );
+        }
+        // The 18+ acknowledgment is written in the same statement as the member.
+        const insert = withAgeAcknowledgment(
           `INSERT INTO members (username, name, email, passkey, onboarded, onboarding_step, created_at)
            VALUES ($1, $2, $3, $4, false, 'begin', NOW())
            RETURNING id, username, name, onboarded, onboarding_step`,
-          [username, name || 'Member', email || null, passkey]
+          [username, name || 'Member', email || null, passkey],
+          'google-native',
         );
+        const created = await query(insert.sql, insert.params);
 
         memberData = created.rows[0];
         memberId = memberData.id as string;

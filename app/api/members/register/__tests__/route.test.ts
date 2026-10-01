@@ -48,7 +48,7 @@ function req(body: Record<string, unknown>) {
   });
 }
 
-const NEW_BODY = { passkey: 'SOULLAB-TESTSOUL', username: 'testsoul', password: 'secretpass', name: 'Test Soul' };
+const NEW_BODY = { passkey: 'SOULLAB-TESTSOUL', username: 'testsoul', password: 'secretpass', name: 'Test Soul', ageConfirmed: true };
 
 function memberRow() {
   return {
@@ -172,6 +172,31 @@ describe('POST /api/members/register — TEEN-CLOSED-01', () => {
     mockHappyPath();
     const res = await POST(req({ ...NEW_BODY, birthDate: '1985-03-02' }));
     expect(res.status).toBe(200);
+  });
+});
+
+describe('POST /api/members/register — MEMBER-ACK-01 (18+ confirmation)', () => {
+  beforeEach(() => { jest.clearAllMocks(); });
+
+  it('refuses a registration without the 18+ confirmation: no invite touched, no member created', async () => {
+    mockHappyPath();
+    const { ageConfirmed: _omit, ...withoutAge } = NEW_BODY;
+    const res = await POST(req(withoutAge));
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe('AGE_CONFIRMATION_REQUIRED');
+    const sqls = mockQuery.mock.calls.map(c => String(c[0]));
+    expect(sqls.some(q => /INSERT INTO members/i.test(q))).toBe(false);
+    expect(sqls.some(q => /FROM invites/i.test(q))).toBe(false);
+  });
+
+  it('records the acknowledgment in the SAME statement that creates the member', async () => {
+    mockHappyPath();
+    const res = await POST(req(NEW_BODY));
+    expect(res.status).toBe(200);
+    const insert = mockQuery.mock.calls.find(c => /INSERT INTO members/i.test(String(c[0])));
+    expect(insert).toBeDefined();
+    expect(String(insert![0])).toMatch(/INSERT INTO member_acknowledgments/);
+    expect(insert![1]).toEqual(expect.arrayContaining(['age_18_plus', 'register']));
   });
 });
 

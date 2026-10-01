@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { hasAgeConfirmation, withAgeAcknowledgment, AGE_ACK_COOKIE, AGE_ACK_REQUIRED_MESSAGE } from '@/lib/members/ageAcknowledgment';
 import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
 
 // Safe query wrapper
@@ -182,12 +183,22 @@ export async function GET(req: NextRequest) {
           crypto.randomBytes(2).toString('hex');
         const passkey = 'GOOGLE-' + crypto.randomBytes(6).toString('hex').toUpperCase();
 
-        const created = await query(
+        // MEMBER-ACK-01 / TEEN-CLOSED-01: a NEW account needs the person's own
+        // 18+ confirmation, carried from the signup page by the maia_age_ack cookie.
+        // Without it, send them to /signup to confirm, then continue with this provider.
+        if (!hasAgeConfirmation(null, req.cookies.get(AGE_ACK_COOKIE)?.value)) {
+          console.log('[OAUTH] New account refused (google-web): AGE_CONFIRMATION_REQUIRED');
+          return NextResponse.redirect(`${baseUrl}/signup?age=required`);
+        }
+        // The 18+ acknowledgment is written in the same statement as the member.
+        const insert = withAgeAcknowledgment(
           `INSERT INTO members (username, name, email, passkey, onboarded, onboarding_step, created_at)
            VALUES ($1, $2, $3, $4, false, 'begin', NOW())
            RETURNING id, username, name, onboarded, onboarding_step`,
-          [username, name || 'Member', email, passkey]
+          [username, name || 'Member', email, passkey],
+          'google-web',
         );
+        const created = await query(insert.sql, insert.params);
 
         memberData = created.rows[0];
         memberId = memberData.id as string;

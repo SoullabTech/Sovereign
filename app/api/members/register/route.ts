@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { resolveAdmission, admissionRefusalMessage } from '@/lib/auth/passkeyAdmission';
 import { checkYouthAdmission } from '@/lib/youth/youthAdmissionGate';
+import { hasAgeConfirmation, withAgeAcknowledgment, AGE_ACK_COOKIE, AGE_ACK_REQUIRED_MESSAGE } from '@/lib/members/ageAcknowledgment';
 import { createSession } from '@/lib/auth/serverSessions';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
@@ -118,6 +119,13 @@ export async function POST(request: NextRequest) {
     /* TEEN-CLOSED-01: teen registration is closed (founder ruling 2026-10-01).
        Checked BEFORE admission, so a refused minor's invite is never redeemed.
        The birth date itself is never logged. */
+    if (!hasAgeConfirmation(body, request.cookies.get(AGE_ACK_COOKIE)?.value)) {
+      console.log('[MEMBERS] Registration refused (AGE_CONFIRMATION_REQUIRED)');
+      return NextResponse.json(
+        { error: AGE_ACK_REQUIRED_MESSAGE, code: 'AGE_CONFIRMATION_REQUIRED' },
+        { status: 400, headers: corsHeaders }
+      );
+    }
     const youthGate = checkYouthAdmission(birthDate);
     if (!youthGate.ok) {
       console.log(`[MEMBERS] Registration refused (${youthGate.code})`);
@@ -182,14 +190,17 @@ export async function POST(request: NextRequest) {
 
     // Try full insert first (with all columns)
     // birth_date triggers auto-computation of developmental_tier via DB trigger
-    let result = await safeQuery(
+    // MEMBER-ACK-01: the 18+ acknowledgment is written in the same statement as the member.
+    const insert = withAgeAcknowledgment(
       `INSERT INTO members (
          passkey, username, password_hash, name, email, onboarding_step, birth_date
        )
        VALUES ($1, $2, $3, $4, $5, 'test-elemental', $6)
        RETURNING id, username, name, onboarded, onboarding_step, created_at, developmental_tier, guardian_required`,
-      [normalizedPasskey, cleanUsername, passwordHash, displayName, email, birthDate || null]
+      [normalizedPasskey, cleanUsername, passwordHash, displayName, email, birthDate || null],
+      'register',
     );
+    let result = await safeQuery(insert.sql, insert.params);
 
     if (result.error) {
       console.error(`[MEMBERS] Insert failed: ${result.error}`);
