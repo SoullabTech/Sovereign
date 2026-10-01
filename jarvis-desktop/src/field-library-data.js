@@ -3,6 +3,21 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
   "recentItems": [
     {
+      "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R17 Return / Release Discipline · 2026-10-01",
+      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R17_RETURN_RELEASE_DISCIPLINE_2026-10-01.md",
+      "excerpt": "Let Kelly leave and re-enter the Living Field Library without reconstructing her place, while preserving the constitutional distinction between presentation continuity and active context/authority.",
+      "excerpt_start_line": 5,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Purpose",
+        "Presentation continuity",
+        "Release",
+        "Law",
+        "Verification",
+        "Exact next boundary"
+      ]
+    },
+    {
       "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R16 What Am I Holding? · 2026-10-01",
       "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R16_WHAT_AM_I_HOLDING_2026-10-01.md",
       "excerpt": "Give Kelly one concise orientation surface across the things currently being held in view without converting visibility into priority, authority, or programme standing.",
@@ -387,22 +402,6 @@ window.KELLY_FIELD_LIBRARY = {
       ]
     },
     {
-      "title": "R-C-partial",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-C-partial.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000z\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 13,
-      "headings": []
-    },
-    {
-      "title": "results-rewalk-2",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/results-rewalk-2.json",
-      "excerpt": "[ { \"name\": \"R-B-failures\", \"fail\": [ \"constellation\", \"flows\", \"detail\" ], \"finalUrl\": \"http://localhost:3000/maia/living-field?from=house\", \"notes\": { \"constellation\": \"Your wider field is unavailable right now. Nothing has been changed.\", \"flows\": \"Threads failed to load. Nothing has been changed. You can try again.\",",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 12,
-      "headings": []
-    },
-    {
       "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R2 — Real-Home Recovery Census · RESULT",
       "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R2_REAL_HOME_CENSUS_RESULT_2026-09-30.md",
       "excerpt": "Date: 2026-09-30 (census run 18:37 local) Instrument: scripts/builder/o5-recovery-census.mjs at 4a4ae20cd, run by the founder from a detached worktree (~/.claude/worktrees/o5-census) on the Mac Studio, JARVIS Desktop closed Delegation home: /Users/soullab/.claude/ain-delegation Evidence file (founder's machine, not committed): ~/o5-census-20260930T183707.json",
@@ -431,54 +430,6 @@ window.KELLY_FIELD_LIBRARY = {
       ]
     },
     {
-      "title": "\u000f\u00006ji5CAڛ<5ZSK\u0017lO;",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-B-failures.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\u0006\b\u0002\u0000\u0000\u0000u\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 13,
-      "headings": []
-    },
-    {
-      "title": "K",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-E-evidence.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000 0\b\u0002\u0000\u0000\u0000e\u001f\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 14,
-      "headings": []
-    },
-    {
-      "title": "Y[\t2",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-H-refine-abort.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000 ]\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 14,
-      "headings": []
-    },
-    {
-      "title": "Y[\t2",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-I-refine-decline.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000 ]\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 14,
-      "headings": []
-    },
-    {
-      "title": "results-rewalk",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/results-rewalk.json",
-      "excerpt": "[ { \"name\": \"R-B-failures\", \"fail\": [ \"constellation\", \"flows\", \"detail\" ], \"finalUrl\": \"http://localhost:3000/maia/living-field?from=house\", \"notes\": { \"constellation\": \"Your wider field is unavailable right now. Nothing has been changed.\", \"flows\": \"Threads failed to load. Nothing has been changed. You can try again.\",",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 12,
-      "headings": []
-    },
-    {
-      "title": "walk-rewalk",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/walk-rewalk.mjs",
-      "excerpt": "// Fixture walk of the MOUNTED Living Field (R1R3) at /maia/living-field?from=house. // Real Next dev server + real page; /api/ answered from fixtures (no DB here). import { chromium } from 'playwright'; import fs from 'node:fs';",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 4,
-      "headings": []
-    },
-    {
       "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R2 — Real-Home Recovery Census (admission instrument)",
       "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R2_REAL_HOME_CENSUS_INSTRUMENT_2026-09-30.md",
       "excerpt": "Date: 2026-09-30 Base: 6f8511b4 (O5-R2 seam) · frozen O5-R1 @ af2f0203 — FREEZE INTACT Standing: INSTRUMENT BUILT + WITNESSED ON A SYNTHETIC HOME · ⛔ REAL-HOME CENSUS NOT YET RUN · ⛔ NO REAL STATE TOUCHED · ⛔ NOT MERGED",
@@ -492,54 +443,6 @@ window.KELLY_FIELD_LIBRARY = {
         "3.2 F4-R: no magic number",
         "3.3 Path A dry run"
       ]
-    },
-    {
-      "title": "A-happy",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/A-happy.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000 \b\u0002\u0000\u0000\u00005\u0006\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 14,
-      "headings": []
-    },
-    {
-      "title": "B-failures",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/B-failures.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\u0006\b\u0002\u0000\u0000\u0000u\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 13,
-      "headings": []
-    },
-    {
-      "title": "T;8B:O\u0005\u0013?I]m(9\u001b\"֠\u0016n\u0014\u0005PgÁ6FTdCf\u0002n~`ݱ^N\bD@\u0017oj8\u0011P\u0014\u0016s\u0004\u0004\u0000\u0000\u0000\u0000`>%pŅ:y;+wT \u0016$qBU\\_)WDWU$=\u001fI\u0002T\\+\u0011F}\u0001\\+Ŵ0lmnE\u0006\u0013X{Ǡ@",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/C-partial.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000z\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 13,
-      "headings": []
-    },
-    {
-      "title": "D-encounter-fail",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/D-encounter-fail.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000 ]\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 14,
-      "headings": []
-    },
-    {
-      "title": "results",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/results.json",
-      "excerpt": "[ { \"name\": \"A-happy\", \"fail\": [], \"finalUrl\": \"http://localhost:3000/maia/living-field?from=house\", \"notes\": { \"LIVING FIELD\": true, \"Wider field\": true, \"Three spaces. Three different kinds of attention.\": true, \"Enter Living Field\": true, \"what is alive across a life\": true, \"you authored\": true, \"MAIA candidate\": true,",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 13,
-      "headings": []
-    },
-    {
-      "title": "walk",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/walk.mjs",
-      "excerpt": "// Fixture walk of the MOUNTED Living Field (R1R3) at /maia/living-field?from=house. // Real Next dev server + real page; /api/ answered from fixtures (no DB here). import { chromium } from 'playwright'; import fs from 'node:fs';",
-      "excerpt_start_line": 1,
-      "excerpt_end_line": 4,
-      "headings": []
     },
     {
       "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R2 — Path B Recovery Seam · F4-R · Path A Orphan Visibility",
@@ -10810,6 +10713,21 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R18 Founder-Facing Browser Witness · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R18_FOUNDER_FACING_BROWSER_WITNESS_2026-10-01.md",
+          "excerpt": "Witness the actual Kelly's World Field Library renderer as one integrated founder-facing surface rather than accepting component/unit evidence as sufficient.",
+          "excerpt_start_line": 5,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Purpose",
+            "Viewports",
+            "Interaction witness",
+            "Falsifier bites and repairs",
+            "F1 — false narrow witness",
+            "F2 — true 390px horizontal overflow"
+          ]
+        },
+        {
           "title": "KELLY'S WORLD — LIVING FIELD LIBRARY 01 · R1 Sweep · 2026-09-30",
           "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R1_SWEEP_2026-09-30.md",
           "excerpt": "Give Kelly one scrollable place to re-enter the large body of Soullab work without requiring working-memory reconstruction from chats, branches, or programme filenames.",
@@ -11456,8 +11374,8 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 658,
-    "recent": 78,
+    "lanes": 659,
+    "recent": 65,
     "recovery": 12
   }
 };
