@@ -43,12 +43,13 @@ describe('H4.2 Cabin mounted arrival', () => {
     expect(source).not.toContain("context.state === 'mounted' ? true : true");
   });
 
-  it('never places a Work, Relationship, or Memory id into a doorway URL', () => {
+  it('delegates every doorway to the governed Cabin crossing helper', () => {
     const source = view();
 
-    expect(source).toContain('/writers-studio?from=cabin');
-    expect(source).toContain('/relationships?from=cabin');
-    expect(source).toContain('/maia/anchor/history?from=cabin');
+    expect(source).toContain("cabinDoorwayPath('work')");
+    expect(source).toContain("cabinDoorwayPath('relationship')");
+    expect(source).toContain("cabinDoorwayPath('memory')");
+    expect(source).toContain("cabinDoorwayPath('maia')");
     expect(source).not.toMatch(/[?&](workId|relationshipId|memoryId)=/);
   });
 

@@ -1,4 +1,5 @@
 import type { CabinExperienceContext } from '@/lib/cabin/experienceContext';
+import { cabinDoorwayPath } from '@/lib/cabin/doorway';
 import styles from './cabin.module.css';
 
 type Door = {
@@ -13,19 +14,19 @@ const DOORS: Door[] = [
     id: 'work',
     label: 'Work',
     phrase: 'Make and tend what is becoming.',
-    href: '/writers-studio?from=cabin',
+    href: cabinDoorwayPath('work'),
   },
   {
     id: 'relationship',
     label: 'Relationships',
     phrase: 'Meet what is between you.',
-    href: '/relationships?from=cabin',
+    href: cabinDoorwayPath('relationship'),
   },
   {
     id: 'memory',
     label: 'Memory',
     phrase: 'Enter what you have chosen to keep.',
-    href: '/maia/anchor/history?from=cabin',
+    href: cabinDoorwayPath('memory'),
   },
 ];
 
@@ -103,7 +104,7 @@ export default function CabinArrival({
           })}
         </div>
 
-        <a className={styles.maia} href="/maia/anchor?from=cabin">
+        <a className={styles.maia} href={cabinDoorwayPath('maia')}>
           <span className={styles.maiaMark} aria-hidden="true">
             <span />
           </span>
