@@ -158,3 +158,48 @@ A conforming R4 implementation, if opened, is limited to:
 It may not add scheduler behavior, automatic work creation, authority, founder-inbox behavior, semantic merge, or cross-lane writes.
 
 **Standing: O5-R4 CENSUS ✅ · RULINGS R4-R1…R4-R4 ✅ · FALSIFIERS R4-E1…E8 FROZEN ✅ · 8/8 DEFEAT CANDIDATES KILLED ✅ · FREEZE GUARD PROVEN ✅ · ⛔ NO RUNTIME IMPLEMENTATION · INSTALLED JARVIS UNTOUCHED.**
+
+## 11. Freeze amendment 1 — R4-E9 cross-lane evidence projection
+
+After the initial R4 law merged, review against the predecessor **O5-R1 F6** exposed one omission in the R4 instrument. R1 F6 does not stop at schema closure/non-escalation: a lawful consequence finding must also **reach its named `affected_lane` as evidence**.
+
+The initial R4 freeze proved that a consequence finding could not carry executable/write authority, but it did not positively prove targeted evidence propagation. That was an instrument omission relative to the already-frozen predecessor law. The runtime implementation was therefore held before admission.
+
+### Amendment cause
+
+> The initial R4 freeze proved consequence-finding schema closure and non-escalation but omitted R1 F6’s positive requirement that a lawful consequence finding reach its affected lane as evidence. The law was incomplete relative to its frozen predecessor, not wrong in what it asserted.
+
+### Added law — R4-E9
+
+A lawful consequence finding projects as **evidence** to exactly its `affected_lane` and nowhere else.
+
+The projection is pure and contains only:
+
+`target_lane · source · source_ref · evidence`
+
+with:
+
+- `target_lane = finding.affected_lane`;
+- `source = executor-consequence-finding`;
+- stable `source_ref = w4-finding:sha256:<evidence digest>`;
+- `evidence` equal to the admitted consequence-finding payload.
+
+Ordinary findings do not produce a cross-lane projection. The projection is not an O7 founder inbox, O2 work node, O3 grant, scheduler act, command, patch, or cross-lane write. A host may deliver this evidence projection to its named lane; R4 does not invent a persistent lane-inbox subsystem.
+
+### Defeat candidate
+
+**DC-E9 — local-only consequence:** the finding is safely stored in W4 but no targeted lane projection is produced. It is killed only by R4-E9: `no cross-lane projection`.
+
+### Freeze lineage
+
+`FREEZE.json` retains the complete previous hashes and records amendment 1 with the prior freeze commit `b1c719610`, prior canonical merge `f7f53dee`, cause, changed surface, unchanged laws, and new hashes.
+
+The amended guard was proven both ways:
+
+- amended corpus → `FREEZE INTACT`;
+- deliberate comment drift in `falsifiers.mjs` → `FREEZE VIOLATED (1)`, exit 1;
+- byte restoration from backup → `FREEZE INTACT`.
+
+Post-amendment matrix: **R4-E1…E9 all PASS on reference · DC-E1…E9 all KILLED · MATRIX LETHAL + DISCRIMINATING**.
+
+**Standing after amendment: O5-R4 LAW = 9 FALSIFIERS / 9 NAMED DEFEAT CANDIDATES · FREEZE AMENDED ONCE · R1 F6 POSITIVE PROPAGATION RESTORED · ⛔ IMPLEMENTATION ADMISSION HELD UNTIL E9 MECHANISM/PROOF LANDS.**
