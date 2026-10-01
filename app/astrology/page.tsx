@@ -39,6 +39,17 @@ import { BirthDataForm } from '@/components/astrology/BirthDataForm';
 import { useBirthChart } from '@/lib/hooks/useBirthChart';
 import type { AlienPattern } from '@/lib/astrology/alienPatterns';
 import { OracleConversation } from '@/components/OracleConversation';
+import {
+  classifyTransitScale,
+  filterTransitAspects,
+  transitAspectKey,
+  transitAspectLabel,
+  transitInterpretiveLens,
+  transitScaleLabel,
+  TRANSIT_SCOPE_COPY,
+  type TransitAspectRecord,
+  type TransitScope,
+} from '@/lib/astrology/transitField';
 import styles from './astrology-room.module.css';
 
 // Elemental colors for planet insights
@@ -226,7 +237,12 @@ export default function AstrologyPage() {
   // Transits display
   const [showTransits, setShowTransits] = useState(false);
   const [transitPositions, setTransitPositions] = useState<TransitPosition[]>([]);
+  const [transitAspects, setTransitAspects] = useState<TransitAspectRecord[]>([]);
   const [transitLoading, setTransitLoading] = useState(false);
+  const [transitError, setTransitError] = useState<string | null>(null);
+  const [transitScope, setTransitScope] = useState<TransitScope>('major');
+  const [expandedTransit, setExpandedTransit] = useState<string | null>(null);
+  const [showAllTransitContacts, setShowAllTransitContacts] = useState(false);
 
   // House system guide toggle
   const [showHouseGuide, setShowHouseGuide] = useState(false);
@@ -281,6 +297,23 @@ export default function AstrologyPage() {
       .filter((aspect) => aspect.synthesis)
       .slice(0, 4);
   }, [chartData]);
+
+  const majorTransitAspects = useMemo(
+    () => filterTransitAspects(transitAspects, 'major'),
+    [transitAspects],
+  );
+  const minorTransitAspects = useMemo(
+    () => filterTransitAspects(transitAspects, 'minor'),
+    [transitAspects],
+  );
+  const visibleTransitAspects = useMemo(
+    () => filterTransitAspects(transitAspects, transitScope),
+    [transitAspects, transitScope],
+  );
+  const displayedTransitAspects = useMemo(
+    () => showAllTransitContacts ? visibleTransitAspects : visibleTransitAspects.slice(0, 4),
+    [showAllTransitContacts, visibleTransitAspects],
+  );
 
   // Calculate current ayanamsa value (memoized)
   const ayanamsaValue = useMemo(() => {
@@ -712,37 +745,46 @@ export default function AstrologyPage() {
     }
   };
 
-  // Fetch current transit positions
-  const fetchTransits = async () => {
+  // The living transit field is calculated automatically from the current sky
+  // against this member-owned natal chart. The House Wheel toggle only controls
+  // whether those already-calculated positions are drawn on the wheel.
+  const fetchTransits = useCallback(async () => {
+    if (!chartData) return;
     setTransitLoading(true);
+    setTransitError(null);
     try {
-      const res = await fetch(apiUrl('/api/astrology/current-transits'));
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data?.positions) {
-          // Transform to our TransitPosition interface
-          const positions = json.data.positions.map((p: { planet: string; sign: string; degree: number; longitude: number }) => ({
-            planet: p.planet,
-            sign: p.sign,
-            degree: p.degree,
-            longitude: p.longitude,
-          }));
-          setTransitPositions(positions);
-        }
+      const res = await fetch(apiUrl('/api/astrology/current-transits'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ birthChart: chartData }),
+      });
+      if (!res.ok) throw new Error('The current sky could not be calculated just now.');
+      const json = await res.json();
+      if (!json.success || !json.data?.positions) {
+        throw new Error('The current sky could not be calculated just now.');
       }
+      const positions = json.data.positions.map((p: { planet: string; sign: string; degree: number; longitude: number }) => ({
+        planet: p.planet,
+        sign: p.sign,
+        degree: p.degree,
+        longitude: p.longitude,
+      }));
+      setTransitPositions(positions);
+      setTransitAspects(Array.isArray(json.data.aspects) ? json.data.aspects : []);
     } catch (error) {
       console.error('Error fetching transits:', error);
+      setTransitError(error instanceof Error ? error.message : 'The current sky could not be calculated just now.');
     } finally {
       setTransitLoading(false);
     }
-  };
+  }, [chartData]);
 
-  // Fetch transits when toggle is enabled
   useEffect(() => {
-    if (showTransits && transitPositions.length === 0) {
-      fetchTransits();
-    }
-  }, [showTransits, transitPositions.length]);
+    const timer = window.setTimeout(() => {
+      void fetchTransits();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchTransits]);
 
   function closeMaiaEncounter() {
     setMaiaOpen(false);
@@ -800,8 +842,28 @@ export default function AstrologyPage() {
     parts.push(
       'Please keep calculated facts distinct from symbolic interpretation. Offer possibilities rather than identity claims or predictions, and ask what I recognize in lived experience. Do not treat chart symbolism as established truth about me.'
     );
-    setMaiaInjection({ text: parts.join('\n\n'), nonce: Date.now() });
+    setMaiaInjection((current) => ({
+      text: parts.join('\n\n'),
+      nonce: (current?.nonce ?? 0) + 1,
+    }));
     setChartContextShared(true);
+  }
+
+  function bringTransitToMaia(aspect: TransitAspectRecord) {
+    const lens = transitInterpretiveLens(aspect);
+    const parts = [
+      'I am explicitly bringing one current transit contact into this Astrology conversation.',
+      'Calculated geometry: ' + lens.calculated,
+      'Traditional symbolic lens: ' + lens.tradition,
+      'Whole-chart boundary: ' + lens.wholeChart,
+      'Please help me explore this as a possible mirror rather than a prediction, diagnosis, identity claim, or authority over my experience.',
+      'Begin with this question: ' + lens.inquiry,
+    ];
+    setMaiaInjection((current) => ({
+      text: parts.join('\n\n'),
+      nonce: (current?.nonce ?? 0) + 1,
+    }));
+    setMaiaOpen(true);
   }
 
   if (loading) {
@@ -948,6 +1010,146 @@ export default function AstrologyPage() {
                 <div><span>Air</span><b>{Math.round(elementalBalance.air * 100)}%</b></div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className={styles.transitField} aria-label="What is alive now">
+          <div className={styles.transitPaper}>
+            <div className={styles.transitHead}>
+              <div>
+                <small>CURRENT SKY · NATAL CONTACTS</small>
+                <h2>What is alive now</h2>
+              </div>
+              <p>
+                The current sky meeting your natal chart. Geometry can be calculated;
+                symbolic meaning remains a lens for reflection.
+              </p>
+            </div>
+
+            <div className={styles.transitScopeRow}>
+              <div className={styles.transitScopes} aria-label="Transit depth">
+                {([
+                  ['major', `Major · ${majorTransitAspects.length}`],
+                  ['minor', `Minor · ${minorTransitAspects.length}`],
+                  ['all', `All · ${majorTransitAspects.length + minorTransitAspects.length}`],
+                ] as Array<[TransitScope, string]>).map(([scope, label]) => (
+                  <button
+                    type="button"
+                    key={scope}
+                    aria-pressed={transitScope === scope}
+                    onClick={() => {
+                      setTransitScope(scope);
+                      setExpandedTransit(null);
+                      setShowAllTransitContacts(false);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p>{TRANSIT_SCOPE_COPY[transitScope]}</p>
+            </div>
+
+            {transitLoading && transitPositions.length === 0 ? (
+              <p className={styles.transitStatus}>Calculating the present sky against your natal chart…</p>
+            ) : transitError ? (
+              <div className={styles.transitStatus}>
+                <p>{transitError}</p>
+                <button type="button" onClick={() => void fetchTransits()}>Try again</button>
+              </div>
+            ) : visibleTransitAspects.length === 0 ? (
+              <div className={styles.transitStatus}>
+                <p>No planetary contacts in this lens are inside the current aspect orbs.</p>
+                <button type="button" onClick={() => setTransitScope('all')}>See all current contacts</button>
+              </div>
+            ) : (
+              <div className={styles.transitActivationGrid}>
+                {displayedTransitAspects.map((aspect) => {
+                  const key = transitAspectKey(aspect);
+                  const lens = transitInterpretiveLens(aspect);
+                  const currentPosition = transitPositions.find(
+                    (position) => position.planet.toLowerCase() === aspect.transitPlanet.toLowerCase(),
+                  );
+                  const isOpen = expandedTransit === key;
+                  return (
+                    <article className={styles.transitActivation} key={key}>
+                      <button
+                        type="button"
+                        className={styles.transitActivationDoor}
+                        aria-expanded={isOpen}
+                        onClick={() => setExpandedTransit(isOpen ? null : key)}
+                      >
+                        <small>
+                          {transitScaleLabel(classifyTransitScale(aspect))} · {aspect.orb.toFixed(2)}° orb
+                        </small>
+                        <h3>{transitAspectLabel(aspect)}</h3>
+                        {currentPosition ? (
+                          <p className={styles.transitPosition}>
+                            Now · {currentPosition.sign} {currentPosition.degree.toFixed(2)}°
+                          </p>
+                        ) : null}
+                        <span>{isOpen ? 'Close' : 'Explore this contact'} →</span>
+                      </button>
+
+                      {isOpen ? (
+                        <div className={styles.transitDeepening}>
+                          <div>
+                            <small>CALCULATED GEOMETRY</small>
+                            <p>
+                              {currentPosition
+                                ? `${currentPosition.planet} is now at ${currentPosition.sign} ${currentPosition.degree.toFixed(2)}°. `
+                                : ''}
+                              {lens.calculated}
+                            </p>
+                          </div>
+                          <div>
+                            <small>SYMBOLIC TRADITION</small>
+                            <p>{lens.tradition}</p>
+                          </div>
+                          <div>
+                            <small>WHOLE-CHART RELATION</small>
+                            <p>{lens.wholeChart}</p>
+                          </div>
+                          <div className={styles.transitInquiry}>
+                            <small>YOUR MEANING</small>
+                            <p>{lens.inquiry}</p>
+                          </div>
+                          <div className={styles.transitActions}>
+                            <button type="button" onClick={() => setShowTransits(true)}>
+                              Show the current sky on the House Wheel
+                            </button>
+                            {memberId ? (
+                              <button type="button" onClick={() => bringTransitToMaia(aspect)}>
+                                Bring this activation to MAIA
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
+                {visibleTransitAspects.length > 4 ? (
+                  <button
+                    type="button"
+                    className={styles.transitMore}
+                    onClick={() => {
+                      setShowAllTransitContacts((current) => !current);
+                      setExpandedTransit(null);
+                    }}
+                  >
+                    {showAllTransitContacts
+                      ? 'Return to the four closest contacts'
+                      : `Explore all ${visibleTransitAspects.length} contacts in this lens`}
+                  </button>
+                ) : null}
+              </div>
+            )}
+
+            <p className={styles.transitBoundary}>
+              This first field uses ephemeris-calculated planetary positions and current natal geometry.
+              Exact timing and applying/separating language stay out until their calculation is independently witnessed.
+            </p>
           </div>
         </section>
 

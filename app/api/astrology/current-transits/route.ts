@@ -455,7 +455,7 @@ function calculateTransitAspects(
   // Check each transit against each natal planet
   for (const transit of transits) {
     for (const [natalName, natalPlanet] of Object.entries(birthChart)) {
-      if (!natalPlanet?.sign || !natalPlanet?.degree) continue;
+      if (!natalPlanet?.sign || !Number.isFinite(natalPlanet.degree)) continue;
 
       const transitLon = transit.longitude;
       const natalLon = getAbsoluteLongitude(natalPlanet);

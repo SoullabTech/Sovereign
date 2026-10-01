@@ -882,3 +882,225 @@
   .memberMeaningKeep button{width:100%}
   .keptMeaning>div{align-items:flex-start;flex-direction:column}
 }
+
+/* Living transit field — current sky meeting the natal chart. */
+.transitField{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 34px 34px;
+}
+.transitPaper{
+  padding:32px 38px 28px;
+  border:1px solid rgba(152,118,76,.25);
+  border-radius:12px;
+  color:#342c24;
+  background:
+    radial-gradient(circle at 88% 12%,rgba(132,154,179,.10),transparent 28%),
+    linear-gradient(145deg,#f3eadb,#e9ddca);
+  box-shadow:0 24px 64px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.50);
+}
+.transitHead{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:30px;
+  padding-bottom:18px;
+  border-bottom:1px solid rgba(93,72,49,.14);
+}
+.transitHead small{
+  color:#75654f;
+  font:600 12px/1.4 Arial,sans-serif;
+  letter-spacing:.14em;
+}
+.transitHead h2{
+  margin:7px 0 0;
+  color:#42372d;
+  font-size:32px;
+  line-height:1.05;
+  font-weight:300;
+}
+.transitHead>p{
+  max-width:430px;
+  margin:0;
+  color:#716453;
+  font:15px/1.55 Arial,sans-serif;
+  text-align:right;
+}
+.transitScopeRow{
+  padding:18px 0;
+  display:grid;
+  grid-template-columns:auto minmax(260px,1fr);
+  gap:22px;
+  align-items:center;
+  border-bottom:1px solid rgba(93,72,49,.12);
+}
+.transitScopes{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.transitScopes button{
+  min-height:38px;
+  padding:0 13px;
+  border:1px solid rgba(93,72,49,.16);
+  border-radius:999px;
+  background:rgba(255,255,255,.16);
+  color:#675744;
+  font:600 13px/1 Arial,sans-serif;
+  letter-spacing:.02em;
+}
+.transitScopes button[aria-pressed="true"]{
+  border-color:rgba(116,84,47,.42);
+  background:#6b4e2c;
+  color:#f7eddf;
+  box-shadow:0 5px 14px rgba(87,61,34,.16);
+}
+.transitScopeRow>p{
+  margin:0;
+  color:#786b5b;
+  font-size:15px;
+  line-height:1.5;
+  text-align:right;
+  font-style:italic;
+}
+.transitActivationGrid{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.transitActivation{
+  overflow:hidden;
+  border:1px solid rgba(93,72,49,.14);
+  border-radius:10px;
+  background:rgba(255,255,255,.12);
+}
+.transitActivationDoor{
+  width:100%;
+  min-height:126px;
+  padding:18px;
+  display:block;
+  border:0;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+}
+.transitActivationDoor:hover{
+  background:rgba(255,255,255,.16);
+}
+.transitActivationDoor small,
+.transitDeepening small{
+  color:#76644e;
+  font:600 11px/1.4 Arial,sans-serif;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.transitActivationDoor h3{
+  margin:9px 0 10px;
+  color:#3f3329;
+  font-size:23px;
+  line-height:1.15;
+  font-weight:400;
+}
+.transitActivationDoor>span{
+  color:#765a36;
+  font:15px/1.35 Arial,sans-serif;
+}
+.transitDeepening{
+  padding:0 18px 18px;
+  border-top:1px solid rgba(93,72,49,.11);
+}
+.transitDeepening>div{
+  padding:14px 0 0;
+}
+.transitDeepening p{
+  margin:6px 0 0;
+  color:#65584a;
+  font-size:15px;
+  line-height:1.58;
+}
+.transitInquiry{
+  margin-top:14px;
+  padding:14px!important;
+  border-left:2px solid rgba(116,84,47,.36);
+  background:rgba(116,84,47,.055);
+}
+.transitInquiry p{
+  color:#46382c;
+  font-size:17px;
+  font-style:italic;
+}
+.transitActions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.transitActions button,
+.transitStatus button{
+  min-height:42px;
+  padding:0 13px;
+  border:1px solid rgba(93,72,49,.20);
+  border-radius:8px;
+  background:rgba(255,255,255,.18);
+  color:#674d2d;
+  font:15px/1.3 Arial,sans-serif;
+}
+.transitActions button:last-child{
+  border-color:rgba(99,119,143,.28);
+  color:#4f6379;
+  background:rgba(111,135,161,.07);
+}
+.transitStatus{
+  margin:20px 0 0;
+  padding:18px;
+  border:1px dashed rgba(93,72,49,.18);
+  border-radius:9px;
+  color:#6f6253;
+  font-size:16px;
+  line-height:1.55;
+}
+.transitStatus p{margin:0}
+.transitStatus button{margin-top:10px}
+.transitBoundary{
+  margin:18px 0 0;
+  padding-top:15px;
+  border-top:1px solid rgba(93,72,49,.11);
+  color:#7c7062;
+  font-size:14px;
+  line-height:1.55;
+  font-style:italic;
+}
+
+@media(max-width:900px){
+  .transitActivationGrid{grid-template-columns:1fr}
+  .transitScopeRow{grid-template-columns:1fr}
+  .transitScopeRow>p{text-align:left}
+}
+@media(max-width:640px){
+  .transitField{padding-left:16px;padding-right:16px}
+  .transitPaper{padding:24px 22px}
+  .transitHead{display:block}
+  .transitHead>p{margin-top:8px;text-align:left}
+  .transitScopes{display:grid;grid-template-columns:repeat(3,1fr)}
+  .transitScopes button{padding:0 8px}
+  .transitActivationDoor{min-height:116px;padding:16px}
+  .transitDeepening{padding:0 16px 16px}
+  .transitActions{display:grid;grid-template-columns:1fr}
+}
+
+.transitMore{
+  grid-column:1/-1;
+  min-height:44px;
+  border:1px solid rgba(93,72,49,.16);
+  border-radius:9px;
+  background:rgba(255,255,255,.12);
+  color:#6e5232;
+  font:15px/1.35 Arial,sans-serif;
+}
+.transitMore:hover{background:rgba(255,255,255,.20)}
+
+.transitPosition{
+  margin:-4px 0 9px;
+  color:#80705e;
+  font:14px/1.35 Arial,sans-serif;
+}

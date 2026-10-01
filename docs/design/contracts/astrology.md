@@ -42,6 +42,30 @@ symbolic map to think with, and choosing the lens through which to read it.
 The chart is material for the member's own reflection. It is not a readout of
 who they are.
 
+## Living transit field (opened 2026-10-01)
+
+The natal chart is not the only temporal layer in the room. The member may also
+meet the present sky as calculated geometry in relation to the natal chart.
+
+The transit field preserves this order:
+
+```text
+current planetary position
+→ calculated natal contact + orb
+→ symbolic tradition
+→ whole-chart relation
+→ member recognition
+```
+
+"Major" and "Minor" are transparent temporal-scale lenses, not scores of
+importance, intensity, spiritual significance, or destiny. Exact timing and
+applying/separating language require their own witnessed calculation before
+they may appear as fact.
+
+Opening a transit does not send chart context to MAIA. Bringing an activation
+to MAIA is a separate, explicit member gesture. No interpretation is
+automatically retained as the member's meaning.
+
 The reference surfaces above are cited as **House-level** patterns only — for
 how a room is defined by human activity and how it separates what is shared
 with the House from what is distinctive. They are not templates for Astrology's
