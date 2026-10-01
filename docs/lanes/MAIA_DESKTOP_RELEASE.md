@@ -18,8 +18,8 @@ appended sections.
 
 ## Last updated
 
-2026-10-01 · canonical observed `8e4372d18f3e`; `ef511f0ef` rejected after Mac Studio artifact census exposed repository over-tracing.
-· evidence: git + founder Mac Studio command output.
+2026-10-01 · canonical observed `f2346dae11f5` (#1618 merged); #1647 reconciled onto that canonical as candidate `4bf7753dac58`. `ef511f0ef` remains rejected.
+· evidence: git + GitHub PR/CI state + founder Mac Studio command output.
 
 ## Release SHA
 
@@ -33,21 +33,15 @@ no branch-only commit is to be called the release SHA.
 
 1. ✅ Merged #1619 as `cf9624cdf` (Writer's Studio RC1 lineage; no pending migrations: its three
    migrations are already applied in production).
-2. ✅ Merged #1616 as `ef511f0ef`. That is the release SHA.
-3. Mac Studio, from the release SHA on the T7 build volume: root `npm ci` →
-   `MAIA_CABIN_MODE=offline npm run build` (webpack, as CI and production build; bare `next build` uses Turbopack and fails with `PageNotFoundError: /_document`) → `maia-desktop` `npm ci` → `npm test` (**must report 408/408**)
-   → `npm run dist:mac` → `npm run verify:package`. `verify:package` now
-   fails unless `Resources/cabin-runtime/node_modules/next/package.json` exists
-   **and** its version equals the root `package.json` pin (16.3.8).
-4. Launch the packaged app offline through the Desktop host and witness
-   `/api/cabin/health` and `/cabin`. Check that the embedded `maiaBuildSha`
-   equals the release SHA. Record SHA-256 of the executable, `app.asar`, and
-   the DMG/zip.
-5. Signing identity: **present** (see Blockers). Store the notary profile.
-6. Sign (hardened runtime) → `notarytool submit --wait` → `stapler staple` →
-   `REQUIRE_EXTERNAL_BETA=1 npm run verify:package`.
-7. Untouched download accepted by Gatekeeper on a clean second Mac.
-8. Only then: release to the named small cohort (H4.6 contract).
+2. ✅ Merged #1616 as `ef511f0ef`; that SHA was later **rejected** after its Mac artifact census exposed unsafe repository over-tracing. It is historical provenance, not a release candidate.
+3. ✅ Merged #1618 as `f2346dae11f5`, preserving the Desktop packaging lineage and a copy-stage refusal for `backups/` and `.next/cache`.
+4. #1647 must pass required CI and merge into current `clean-main-no-secrets`. **That canonical merge commit becomes the only release SHA.**
+5. Mac Studio, from that exact release SHA on the T7 build volume: clean root install/build → `MAIA_CABIN_MODE=offline npm run build` (webpack) → inspect the actual `.next/standalone` root, forbidden paths, credentials, symlinks, and Next 16.3.8 → `maia-desktop` tests (**at least 411/411; any lower total is a failure unless explicitly explained**) → fresh package → `npm run verify:package`.
+6. Launch the packaged app offline through the Desktop host and witness `/api/cabin/health` and `/cabin`. The embedded `maiaBuildSha` must equal the release SHA. Record immutable artifact digests; never rename or re-sign a rejected candidate.
+7. Developer ID identity and `MAIA-BETA` notary profile are **present** (see Blockers). Produce the signed hardened-runtime artifact from the exact release SHA, record the signed digest, submit with `notarytool --wait`, and staple.
+8. Run `REQUIRE_EXTERNAL_BETA=1 npm run verify:package` and Gatekeeper assessment on the signed/stapled artifact.
+9. Untouched download accepted by Gatekeeper on a clean second Mac.
+10. Only then: release to the named small cohort (H4.6 contract).
 
 ## Rejected (never sign, never ship)
 
@@ -59,25 +53,24 @@ no branch-only commit is to be called the release SHA.
 | `65e0f0e29` | `claude/cool-feynman-8kvyyc` | merges canonical with `e3688fce2` but **not** the working fix `bdf95a8e1`; its 4/4 packaging test passing proves only that the test is source-regex and cannot see the artifact. Do not open a PR from it. |
 | `ef511f0efea3` | T7 release worktree / failed package | signing stopped on broken `backups/ultimate-consciousness-system/latest`; census then showed ~4.8 GiB Cabin runtime containing `docs/`, `data/ain/source`, copyrighted/source corpora, repo scripts/artifacts/database material, Android debug APKs and env templates. No private keys were found. **Never sign or ship.** |
 | `5eee48caf508` | T7 `maia-desktop-artifacts/5eee48caf/` branch-candidate package | first containment pass reduced Cabin runtime to ~827 MiB and removed the original forbidden trees, but a second census found `books/staging/` full-text works, `Community-Commons/`, tests and platform-source trees still bundled. Packaging was terminated before signing/notarization. **Never sign or ship.** |
+| `9656405caaa3` | T7 `maia-desktop-artifacts/symlink-fix/` unsigned rehearsal | Cabin runtime reduced to ~801 MiB and carried Next 16.3.8 with no credential-like files or previously named forbidden trees, but artifact-level census still found broad repository-root material including `.git`, `.github`, internal Markdown/configuration, Docker, test and development files. **Negative witness only; never sign or ship.** |
 
 ## Blockers
 
 | Gate | State | Evidence |
 |---|---|---|
-| Packaging repair `bdf95a8e1` | in #1616 (the only carrier; #1624 closed), on `cf9624cdf` (post-#1619; #1619 changed no `maia-desktop/**`). Suite **408/408** under tsx (canonical 405/405). Packaging-test mutants M1 + M2 killed | git + local run; see H4-7-R1 record, Amendment 2 |
-| Desktop suite at release SHA | **408/408 PASS** | founder, Mac Studio, `ef511f0ef` worktree on T7, 2026-10-01 |
-| Next standalone build at release SHA | FAILED with `npx next build` (Turbopack: `PageNotFoundError: /_document`); rerun with `npm run build` (webpack) pending | founder, Mac Studio, 2026-10-01 |
-| Offline trace containment | **REPAIR IN PROGRESS** on `fix/desktop-offline-trace-containment-20261001`; first candidate `5eee48caf508` rejected after second-level census found books/Commons/tests/platform-source trees; exclusions and package guard widened | Mac Studio packaged-app census, 2026-10-01 |
-| Artifact carries next 16.3.8 | NOT WITNESSED on a post-containment candidate | — |
-| Packaged runtime healthy offline | NOT WITNESSED | — |
+| Canonical Desktop packaging lineage | #1618 merged as `f2346dae11f5`; #1647 reconciliation retains its copy-stage refusal for `backups/` and `.next/cache` while adding causal trace containment and package fail-closed guards | git + merge-sensitive tests, 2026-10-01 |
+| Desktop suite on containment lineage | **411/411 PASS** on causal lineage; current #1618/#1647 reconciliation tests **8/8 PASS**. Full suite at the final canonical release SHA is still required. | founder, Mac Studio, 2026-10-01 |
+| Exact final release-SHA standalone build | **PENDING** until #1647 merges and the canonical merge SHA is known | — |
+| Offline trace containment | **CANDIDATE IN #1647**: offline-only tracing exclusions + causal supervision-storage path fix + #1618 copy-stage backup/cache filter + root allowlist/credential/size verifier + portable public-symlink materialization. No post-reconciliation external-beta artifact is admitted yet. | git + 411/411 causal suite + 8/8 reconciliation suite + pre-commit governance, 2026-10-01 |
+| Artifact carries Next 16.3.8 | rejected `9656405caaa3` rehearsal carried 16.3.8; **final exact release-SHA artifact not yet witnessed** | Mac Studio artifact census, 2026-10-01 |
+| Packaged runtime healthy offline | NOT WITNESSED at the final release SHA | — |
 | Developer ID Application | **PRESENT**: `32276A3F…55DB48 "Developer ID Application: Kelly Nezat (ZVK2X646Z2)"` | founder, `security find-identity -v -p codesigning`, 2026-10-01 |
-| Notary profile `MAIA-BETA` | ABSENT (last observed) | Mac Studio, 2026-10-01 |
+| Notary profile `MAIA-BETA` | **PRESENT**; `xcrun notarytool history --keychain-profile MAIA-BETA` authenticated and returned `No submission history.` | founder, Mac Studio, 2026-10-01 |
 | Notarize / staple | NOT YET | — |
 | Second-Mac Gatekeeper | NOT YET | — |
 | Tester release | CLOSED | — |
 
 ## Non-claims
 
-No artifact has been signed, notarized, distributed, or deployed. Public
-`/cabin` is unchanged. Packaging CI does not build the `.app`; only a Mac
-Studio witness establishes the artifact rows above.
+No post-containment external-beta artifact has been admitted, notarized, distributed, or deployed. Rejected and rehearsal artifacts remain non-release evidence only. Public `/cabin` is unchanged. Packaging CI does not build the final signed `.app`; only an exact-release-SHA Mac Studio witness establishes the final artifact rows above.
