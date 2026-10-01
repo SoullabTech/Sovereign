@@ -49,6 +49,20 @@ This is a gap, and the green checks above do not cover it, so it is stated here 
 
 This is lawful, because no frozen law demands runtime delivery. It is not a capability. "Implementation canonical" means a lawful projection exists and is uncalled. It does not mean findings are delivered.
 
+### 4a. Nothing produces a consequence finding either
+
+A follow-up census on canonical `8f8ba73b83397c716722c7c9f5835c02d131cae8` searched for runtime producers. In `jarvis-desktop/src`, `scripts`, `lib` and `app`, outside tests, **no code appends a W4 `finding` of any shape.** The only runtime callers of `appendLedgerRecordV2` write `model_identity`, `artifact`, `test_result` and `verifier_result`.
+
+So the non-delivery is total in both directions. Production has no consequence findings, so none are undelivered today. The admission path and the projection are law-complete and unused.
+
+### 4b. Could a projectable finding be safety-relevant?
+
+This is asked so that a lane finding that means "a member could be harmed" is not left in a channel that delivers to no one, which is the crisis-pipeline pattern.
+
+- **By domain, no.** `affected_lane` names a JARVIS programme lane: development Work Units orchestrated on the founder's workstation. The W4 ledger lives in the delegation home, not in MAIA's database. A finding is evidence about development work, for example "identity resolution now differs". It is not a member's state.
+- **By current fact, vacuously no.** Nothing produces findings (§4a).
+- **⚠️ By enforcement, nothing excludes it.** `reason` is free text, and `urgency` admits `high`. The schema cannot stop a future producer from writing "this change would expose member data" into a channel that reaches no one. So "not safety-relevant" holds by domain and by absence, not by construction.
+
 ## 5. Open founder question (not answered here)
 
 > Is it acceptable, for now, that findings about a lane reach no one in production?
@@ -57,3 +71,7 @@ This is lawful, because no frozen law demands runtime delivery. It is not a capa
 - **If no:** the next act is a runtime caller with an **ephemeral** delivery path, scoped by its own law and falsifiers. That law has to stop the path from becoming the durable inbox by accretion, for example through persistence or retention across restarts.
 
 Until the founder rules, nothing is wired and the non-delivery state in §4 is the current truth.
+
+A recommended condition for **yes**, not ruled: consequence findings are not a safety channel. A concern about member harm must go through a path that delivers to a human, never only into a W4 finding. Recording that rule keeps the domain argument in §4b true once producers exist.
+
+This state is line 5 of `docs/ops/NON_DELIVERY_REGISTER.md`.

@@ -1,0 +1,38 @@
+# RECORD SHA CHECK — every git object a constitutional FREEZE.json names must
+# exist in this repository with the type its field claims (commit or blob).
+#
+# Added 2026-10-01: a canonical SHA typed from memory into a freeze record
+# would otherwise pass every matrix and freeze guard while pointing at nothing.
+#
+# A green run establishes existence and type only. It does NOT establish that
+# a named commit is the right one, or that it is an ancestor of canonical.
+
+name: Record SHA Check
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets, main]
+    paths:
+      - 'tests/constitutional/**/FREEZE.json'
+      - 'scripts/check-record-shas.mjs'
+  push:
+    branches: [clean-main-no-secrets, main]
+    paths:
+      - 'tests/constitutional/**/FREEZE.json'
+      - 'scripts/check-record-shas.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  record-shas:
+    name: Freeze-record SHAs exist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/check-record-shas.mjs
