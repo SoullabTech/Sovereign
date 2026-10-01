@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { resolveAdmission, admissionRefusalMessage } from '@/lib/auth/passkeyAdmission';
+import { checkYouthAdmission } from '@/lib/youth/youthAdmissionGate';
 import { createSession } from '@/lib/auth/serverSessions';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
@@ -111,6 +112,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Passkey, username, and password required' },
         { status: 400, headers: corsHeaders }
+      );
+    }
+
+    /* TEEN-CLOSED-01: teen registration is closed (founder ruling 2026-10-01).
+       Checked BEFORE admission, so a refused minor's invite is never redeemed.
+       The birth date itself is never logged. */
+    const youthGate = checkYouthAdmission(birthDate);
+    if (!youthGate.ok) {
+      console.log(`[MEMBERS] Registration refused (${youthGate.code})`);
+      return NextResponse.json(
+        { error: youthGate.error, code: youthGate.code },
+        { status: youthGate.status, headers: corsHeaders }
       );
     }
 

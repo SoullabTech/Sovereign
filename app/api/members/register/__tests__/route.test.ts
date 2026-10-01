@@ -152,3 +152,26 @@ describe('POST /api/members/register — session mint', () => {
     expect(mockCreateSession).not.toHaveBeenCalled();
   });
 });
+
+describe('POST /api/members/register — TEEN-CLOSED-01', () => {
+  beforeEach(() => { jest.clearAllMocks(); });
+
+  it('refuses a minor before admission: no member row, no invite redeemed', async () => {
+    mockHappyPath();
+    const res = await POST(req({ ...NEW_BODY, birthDate: '2012-06-15' }));
+    expect(res.status).toBe(403);
+    const data = await res.json();
+    expect(data.code).toBe('YOUTH_NOT_YET_OPEN');
+    const sqls = mockQuery.mock.calls.map(c => String(c[0]));
+    expect(sqls.some(q => /INSERT INTO members/i.test(q))).toBe(false);
+    expect(sqls.some(q => /UPDATE invites/i.test(q))).toBe(false);
+    expect(sqls.some(q => /FROM invites/i.test(q))).toBe(false);
+  });
+
+  it('still registers an adult who gives a birth date', async () => {
+    mockHappyPath();
+    const res = await POST(req({ ...NEW_BODY, birthDate: '1985-03-02' }));
+    expect(res.status).toBe(200);
+  });
+});
+
