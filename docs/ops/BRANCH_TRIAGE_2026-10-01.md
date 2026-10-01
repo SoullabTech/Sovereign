@@ -173,7 +173,13 @@ The full list is in the TSV.
 
 ## Deleting (founder act; nothing here deletes)
 
+**Archive before deleting (founder ruling):** every closure must be reversible. `scripts/ops/archive-branches.sh` tags `archive/<branch>` at the remote tip and pushes the tag. It deletes only with `ARCHIVE_DELETE_AUTHORIZED=1`, and only branches whose tag still equals the remote tip; a branch that moved after tagging is refused. Restore with `git push origin archive/<branch>:refs/heads/<branch>`. Verified on a scratch remote: tag, verify, unauthorized-refuse, moved-refuse, delete and restore all behave as stated.
+
 ```bash
-# ABSORBED only. Re-run the triage first; a branch can move.
-scripts/ops/branch-triage.sh | awk -F'\t' '$1=="ABSORBED"{print $5}' | xargs -n1 -I{} git push origin --delete {}
+L=$(scripts/ops/branch-triage.sh | awk -F'\t' '$1=="ABSORBED"{print $5}')
+scripts/ops/archive-branches.sh tag    $L
+scripts/ops/archive-branches.sh verify $L
+ARCHIVE_DELETE_AUTHORIZED=1 scripts/ops/archive-branches.sh delete $L
 ```
+
+**Sanctuary rows (section A) were verified by running each branch's own tests on canonical:** see `docs/programme/SANCTUARY_BRANCH_VERIFICATION_2026-10-01.md`. Five need porting (four protections absent, one live), one is covered, one is dead-code retirement.
