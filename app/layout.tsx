@@ -13,6 +13,7 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { BetaBanner } from "@/components/BetaBanner";
 import BugReportButton from "@/components/bugs/BugReportButton";
 import { MaiaPresence } from "@/components/maia/presence/MaiaPresence";
+import { AdultAcknowledgmentGate } from "@/components/members/AdultAcknowledgmentGate";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -214,6 +215,8 @@ export default function RootLayout({
         <AppErrorBoundary>
         {/* Global "Report a bug" affordance — self-renders only for signed-in members */}
         <BugReportButton />
+        {/* One-time 18+ confirmation for members who have not given it (MEMBER-ADULT-ACK-01) */}
+        <AdultAcknowledgmentGate />
         <SubscriptionProvider>
           <DevNoServiceWorker />
           <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>

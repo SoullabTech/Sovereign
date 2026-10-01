@@ -7,6 +7,7 @@ import { Crown, Sparkles, ArrowRight, Eye, EyeOff, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { api, ApiError } from '@/lib/api-client';
+import { ADULT_ACK_COPY } from '@/lib/members/adultConfirmation';
 
 /**
  * SOURCE-CUSTODY-PII-01 · ACT 2 — this module no longer holds human records.
@@ -94,6 +95,8 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
   const [blessings, setBlessings] = useState<string[]>([]);
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  // MEMBER-ADULT-ACK-01: the member's own 18+ confirmation; registration refuses without it.
+  const [confirmsAdult, setConfirmsAdult] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [serverMember, setServerMember] = useState<{ id: string; username: string; name: string } | null>(null);
@@ -295,6 +298,11 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
       return;
     }
 
+    if (!confirmsAdult) {
+      setError("Please confirm you're 18 or older to continue");
+      return;
+    }
+
     // Register to server
     try {
       const response = await fetch('/api/members/register', {
@@ -308,6 +316,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
           preferredName: preferredName.trim() || name.trim(),
           email: email.trim().toLowerCase() || undefined,
           birthDate: birthDate || undefined,
+          confirmsAdult,
         }),
       });
 
@@ -370,6 +379,10 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
     }
 
     // Register to server (unless already registered from server check)
+    if (!serverMember && !confirmsAdult) {
+      setError("Please confirm you're 18 or older to continue");
+      return;
+    }
     if (!serverMember) {
       try {
         const response = await fetch('/api/members/register', {
@@ -383,6 +396,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
             preferredName: preferredName.trim() || name.trim(),
             email: email.trim().toLowerCase() || undefined,
             birthDate: birthDate || undefined,
+            confirmsAdult,
           }),
         });
 
@@ -713,6 +727,16 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                         </p>
                       </div>
 
+                      <label className="flex items-start gap-3 text-sm text-teal-900">
+                        <input
+                          type="checkbox"
+                          checked={confirmsAdult}
+                          onChange={(e) => setConfirmsAdult(e.target.checked)}
+                          className="mt-0.5 h-4 w-4"
+                        />
+                        <span>{ADULT_ACK_COPY}</span>
+                      </label>
+
                       <div>
                         <label className="block text-sm font-medium text-teal-800 mb-2">
                           Password
@@ -880,6 +904,16 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           Helps us create the right experience for you
                         </p>
                       </div>
+
+                      <label className="flex items-start gap-3 text-sm text-teal-900">
+                        <input
+                          type="checkbox"
+                          checked={confirmsAdult}
+                          onChange={(e) => setConfirmsAdult(e.target.checked)}
+                          className="mt-0.5 h-4 w-4"
+                        />
+                        <span>{ADULT_ACK_COPY}</span>
+                      </label>
 
                       <div>
                         <label className="block text-sm font-medium text-teal-800 mb-2">

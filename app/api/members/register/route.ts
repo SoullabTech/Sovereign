@@ -18,6 +18,13 @@ import { resolveAdmission, admissionRefusalMessage } from '@/lib/auth/passkeyAdm
 import { createSession } from '@/lib/auth/serverSessions';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
+  decideAdultRegistration,
+  adultRefusalMessage,
+  ADULT_ACK_KIND,
+  ADULT_ACK_VERSION,
+} from '@/lib/members/adultConfirmation';
+import { recordAcknowledgment } from '@/lib/members/acknowledgments';
+import {
   checkRateLimit,
   getClientIP,
   buildRateLimitHeaders
@@ -101,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { passkey, username, password, name, email: rawEmail, preferredName, birthDate } = body;
+    const { passkey, username, password, name, email: rawEmail, preferredName, birthDate, confirmsAdult } = body;
     const email = rawEmail ? rawEmail.toLowerCase().trim() : null;
 
     console.log('[MEMBERS] Registration attempt');
@@ -110,6 +117,19 @@ export async function POST(request: NextRequest) {
       console.log('[MEMBERS] Missing required fields');
       return NextResponse.json(
         { error: 'Passkey, username, and password required' },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    /* ADULTS ONLY (MEMBER-ADULT-ACK-01, founder ruling 2026-10-01: youth closed).
+       The member's own 18+ confirmation is required. A birth date can only make
+       this stricter: an under-18 date refuses even when the box was ticked.
+       Checked before admission so a refused registration spends no invite. */
+    const adult = decideAdultRegistration({ confirmsAdult, birthDate });
+    if (!adult.ok) {
+      console.log(`[MEMBERS] Registration refused (${adult.reason})`);
+      return NextResponse.json(
+        { error: adultRefusalMessage(adult.reason), code: adult.reason },
         { status: 400, headers: corsHeaders }
       );
     }
@@ -196,6 +216,15 @@ export async function POST(request: NextRequest) {
 
     const member = result.rows[0];
     console.log(`[MEMBERS] Successfully registered: ${cleanUsername} (${member.id})`);
+
+    /* Record the member's own 18+ confirmation. If this write fails the member
+       simply has no acknowledgment yet and is asked again at sign-in, so the
+       failure is safe in the direction that matters; it is still logged loudly. */
+    try {
+      await recordAcknowledgment(String(member.id), ADULT_ACK_KIND, ADULT_ACK_VERSION, 'registration');
+    } catch (ackErr) {
+      console.error('[MEMBERS] 18+ acknowledgment not recorded at registration; member will be asked at sign-in:', ackErr);
+    }
 
     /* Redeem the invite that admitted this member. `inviteId` is no longer
        optional: registration cannot reach here without one. The conditional

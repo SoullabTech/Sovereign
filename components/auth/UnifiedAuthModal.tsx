@@ -7,6 +7,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { ADULT_ACK_COPY } from '@/lib/members/adultConfirmation';
 import { biometricAuth } from '@/lib/auth/biometricAuth';
 import { deviceTrust } from '@/lib/auth/deviceTrust';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
@@ -34,6 +35,8 @@ export function UnifiedAuthModal({ mode, onSuccess }: Props) {
   const [signupUsername, setSignupUsername] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  // MEMBER-ADULT-ACK-01: the member's own 18+ confirmation; registration refuses without it.
+  const [confirmsAdult, setConfirmsAdult] = useState(false);
 
   const biometricLabel = useMemo(() => biometricAuth.getBiometricName(), []);
 
@@ -102,6 +105,7 @@ export function UnifiedAuthModal({ mode, onSuccess }: Props) {
           name,
           email,
           preferredName: name,
+          confirmsAdult,
         }),
       });
 
@@ -212,6 +216,15 @@ export function UnifiedAuthModal({ mode, onSuccess }: Props) {
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-white/25"
             />
           </div>
+          <label className="flex items-start gap-2 text-xs text-white/70">
+            <input
+              type="checkbox"
+              checked={confirmsAdult}
+              onChange={(e) => setConfirmsAdult(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>{ADULT_ACK_COPY}</span>
+          </label>
         </div>
       )}
 
