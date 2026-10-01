@@ -1,8 +1,8 @@
 # Living Field — Witness Re-baseline at production `56d0cd679`
 
-**Date:** 2026-10-01  
-**Observed production runtime:** `56d0cd679c247a91dfe5a3592ce59e5a488c1fba`  
-**Prior readiness runtime:** `975a208b8`  
+**Date:** 2026-10-01
+**Observed production runtime:** `56d0cd679c247a91dfe5a3592ce59e5a488c1fba`
+**Prior readiness runtime:** `975a208b8`
 **Standing:** MACHINE RE-BASELINE PASS · FIRST-ENTRY WITNESS ELIGIBLE SUBJECT TO PARTICIPANT-SESSION ADMISSION CHECK
 
 ## Trigger
