@@ -1,4 +1,8 @@
+'use client';
+
 import type { ReactNode } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { isCabinOrigin, cabinReturnPath } from '@/lib/cabin/doorway';
 import { appearanceVars, geometryVars } from './tokens';
 import { PRIMARY_MODES, type Appearance, type ShellGeometry, type StudioMode } from './types';
 
@@ -43,6 +47,8 @@ export type ShellProps = {
 
 export function Shell(props: ShellProps) {
   const { mode, appearance, geometry } = props;
+  const searchParams = useSearchParams();
+  const fromCabin = isCabinOrigin(searchParams);
   const oneRoom = props.manuscript === undefined && props.maia === undefined;
   const canvas = props.canvas === true;
   const style = { ...appearanceVars(appearance), ...geometryVars(geometry) } as React.CSSProperties;
@@ -63,6 +69,11 @@ export function Shell(props: ShellProps) {
             <span>Soullab</span>
           </div>
           <nav className="fr-nav" aria-label="Studio">
+            {fromCabin ? (
+              <a href={cabinReturnPath()} className="fr-nav-item" aria-label="Return to Cabin">
+                ← Cabin
+              </a>
+            ) : null}
             {PRIMARY_MODES.map((m) => (
               <button
                 key={m.id}
