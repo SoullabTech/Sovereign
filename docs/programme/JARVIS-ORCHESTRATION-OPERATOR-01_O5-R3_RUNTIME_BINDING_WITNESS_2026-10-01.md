@@ -273,9 +273,10 @@ Expected:
 **Step 5: witness the live binding, before any grant write** (second terminal, Desktop running). *Amended by
 §10 (RB-A1): this is a pre-write baseline, judged with `--phase pre-write`.*
 ```
-cd ~/o5r3-witness-WALK && node scripts/witness/o5-r3-runtime-witness.mjs --phase pre-write --snapshot ~/o5r3-prewrite.json > ~/o5r3-step5b.txt; tail -25 ~/o5r3-step5b.txt
+cd ~/o5r3-witness-WALK && node scripts/witness/o5-r3-runtime-witness.mjs --phase pre-write --await-current-ms 60000 --snapshot ~/o5r3-prewrite.json > ~/o5r3-step5b.txt; tail -25 ~/o5r3-step5b.txt
 ```
 Expect:
+- readiness READY for this exact worktree before constitutional sampling;
 - C1–C5 PASS;
 - C6-pre PASS with `NOT_YET_HELD` (no history) **or** `NOT_YET_HELD_AFTER_RELEASE` (released history, e.g.
   `generation 2 released at …`);
@@ -747,3 +748,74 @@ Two collaterals are classified as irreducible: DC-TI1 also kills TI-10, and DC-T
 - ⛔ not merged;
 - production untouched.
 
+
+## 13. Fresh walk #2 stopped at Step 5 · amendment RB-A3 Runtime Binding Readiness (2026-10-01)
+
+### 13.1 Generation 1 attribution resolved
+
+The §10.5 probes found one concrete grant-ledger artifact in the 22:03–22:05 window:
+`work-units-v2/execution-grants/v2-determine-from-the-authorized-cano-mublc1n2.jsonl`.
+Its `ISSUED` event is timestamped `2026-10-01T02:03:42.947Z`, 8 ms after generation 1 was acquired,
+and carries `authorization_act: JARVIS_DESKTOP_E1_AUTHORIZE_ONCE` and
+`actor_id: human:jarvis-desktop:soullab`.
+
+**Classification: ATTRIBUTED.** This is a historical note only. It does not block or strengthen the fresh walk.
+
+### 13.2 What the second fresh specimen established
+
+A new detached worktree was created at exactly
+`bd9df7db83735dd55919630501b7189eddd041f8`; it contains `ce061073`, `JARVIS_REPO_ROOT` was unset,
+`npm ci` completed, and the worktree was clean. Desktop launched from that checkout.
+Step 5 ran at 16:51:34 local, before the new Electron process had written its app-ready binding record.
+The reader therefore still saw the preserved predecessor record:
+`/Users/soullab/o5r3-witness-b86079dc`, pid `42439`, now STALE.
+
+The checker correctly produced:
+- C6-pre PASS — `NOT_YET_HELD_AFTER_RELEASE · generation 2`;
+- C1 FAIL — stale predecessor binding;
+- `PRE-WRITE BASELINE FAIL (C1)`.
+
+The walk stopped. No grant write occurred.
+
+At `2026-10-01T20:51:42.709Z`, after Step 5 had already stopped, the new Desktop wrote the exact
+`bd9df7db` binding for pid `25720`, start `ps-lstart:Thu Oct 1 16:51:25 2026`.
+That record carried `clean: null`, so it would not have satisfied C4 either.
+
+The delegation home remained unchanged: only lease generations 1 and 2 existed. No Step 6/7 artifact was created.
+The stopped files `~/o5r3-prewrite.json` and `~/o5r3-step5b.txt` are preserved.
+### 13.3 Diagnosis
+
+Two distinct readiness facts were being collapsed into timing:
+
+1. **App-ready race.** `npm start` returning control/output did not mean the O5-R3 binding record for that
+   Electron incarnation had been written. Sampling before `app.whenReady()` could therefore read a truthful
+   but stale predecessor record.
+2. **Cold repository probe.** `runtime-binding.js` gave each git probe a single 10 s timeout and collapsed
+   a failure to `null`. The later `clean:null` is consistent with that timeout boundary. The exact child-process
+   error was not retained, so the record does not claim more than that. Subsequent read-only calls to the same
+   `gitState()` on the same worktree returned `clean:true` in roughly 0.1–0.5 s.
+
+The safety behavior was correct—both shapes fail admission—but the walk depended on timing and could stop
+needlessly before the actual specimen became observable.
+
+### 13.4 RB-A3 law and repair
+
+> **Runtime Binding Readiness.** Before constitutional sampling, the binding record must be LIVE for this exact
+> walk worktree and exact HEAD, in dev-walk mode, with `clean=true`. A stale predecessor, another worktree,
+> another HEAD, `clean=false`, or `clean=null` is never ready.
+The repair is additive and does not alter RB, RB-A1, RB-A2, C6A or C8:
+
+- `runtime-binding.gitState()` gives each repository identity fact one bounded retry: 10 s, then 30 s.
+  A permanent failure remains `null`; it is never converted into clean or dirty certainty.
+- `scripts/witness/o5-r3-binding-readiness.mjs` is a read-only classifier outside authority territory.
+- the runtime witness accepts `--await-current-ms`; during that bounded wait it samples only the binding record.
+  The wait grants nothing. On timeout, readiness remains false and C1 fails.
+- Step 5 now uses `--await-current-ms 60000` before taking the pre-write snapshot.
+
+The readiness matrix carries eight falsifiers and eight deliberately wrong versions:
+transient probe not retried; permanent failure collapsed to false; stale liveness ignored; wrong worktree accepted;
+wrong HEAD accepted; `clean:null` accepted; dirty accepted; and a barrier that can never open.
+All are killed on their named rule.
+
+**Standing:** RB-A3 is frozen as additive lineage; earlier frozen blobs remain unchanged. A new fresh walk is
+required from the commit containing RB-A3. O5-R4 remains closed and production remains untouched.

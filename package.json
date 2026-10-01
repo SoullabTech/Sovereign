@@ -102,6 +102,7 @@
     "matrix:jarvis-o5-r3-rb": "node tests/constitutional/jarvis-o5-r3-runtime-binding/matrix.mjs",
     "matrix:jarvis-o5-r3-rb-prewrite": "node tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/matrix.mjs",
     "matrix:jarvis-o5-r3-rb-transition": "node tests/constitutional/jarvis-o5-r3-runtime-binding/transition/matrix.mjs",
+    "matrix:jarvis-o5-r3-rb-readiness": "node tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/matrix.mjs",
     "verify:jarvis-o5-r3-rb-freeze": "node scripts/verify-jarvis-o5-r3-rb-freeze.mjs",
     "test:jarvis-o5-r2": "cd jarvis-desktop && node --test test/o5-path-b-recovery.test.mjs test/o5-path-a-orphan.test.mjs test/o5-recovery-census.test.mjs",
     "jarvis:o5-census": "node scripts/builder/o5-recovery-census.mjs",

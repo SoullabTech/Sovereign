@@ -95,11 +95,21 @@ function storeHashes(root, deps = defaultDeps()) {
   return out;
 }
 function gitState(root, deps = defaultDeps()) {
-  const git = (args) => deps.execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 10000 }).trim();
-  let head = null; let clean = null;
-  try { head = git(['rev-parse', 'HEAD']) || null; } catch { /* unknown */ }
-  try { clean = git(['status', '--porcelain']) === ''; } catch { /* unknown */ }
-  return { head, clean };
+  const git = (args, timeout) => deps.execFileSync('git', ['-C', root, ...args], {
+    encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout,
+  }).trim();
+  // A just-created worktree can make its first status probe materially slower
+  // than the same probe a few seconds later. One inconclusive cold read must not
+  // become the durable startup record, so each fact gets one bounded retry.
+  const read = (args) => {
+    for (const timeout of [10000, 30000]) {
+      try { return git(args, timeout); } catch { /* retry once, then remain unknown */ }
+    }
+    return null;
+  };
+  const head = read(['rev-parse', 'HEAD']);
+  const status = read(['status', '--porcelain']);
+  return { head: head || null, clean: status === null ? null : status === '' };
 }
 
 // ── The record ────────────────────────────────────────────────────────────────

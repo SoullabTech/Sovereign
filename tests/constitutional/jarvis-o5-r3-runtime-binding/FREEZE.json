@@ -15,23 +15,26 @@
     "tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/matrix.mjs": "f251b9666d9005c6f1c5122d0999f9c860af4857",
     "tests/constitutional/jarvis-o5-r3-runtime-binding/transition/falsifiers.mjs": "597709f456ca617f44a13293b2f00fc8d289d2b9",
     "tests/constitutional/jarvis-o5-r3-runtime-binding/transition/candidates.mjs": "4caf438b5c247af1c0c5bc84ca176fbfa63b2eaa",
-    "tests/constitutional/jarvis-o5-r3-runtime-binding/transition/matrix.mjs": "df2b174ef55806744bc7e08377f8e6176ba6d5a6"
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/transition/matrix.mjs": "df2b174ef55806744bc7e08377f8e6176ba6d5a6",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/falsifiers.mjs": "5913b3fad35e04cb0944727fae132c0a5238aeff",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/candidates.mjs": "ccdf94d7054f00b58c7b6c34facdad41dc01e67a",
+    "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/matrix.mjs": "76c47a5c4be04b5038efc47fe5b9d43b44b864c8"
   },
   "deliberately_not_frozen": {
     "jarvis-desktop/src/runtime-binding.js": "the implementation under test; it may be repaired, never by weakening the suite",
     "jarvis-desktop/src/main.js": "the Desktop entry point; its runtime-binding wiring is bound by the frozen RB-W checks in matrix.mjs",
     "scripts/verify-jarvis-o5-r3-rb-freeze.mjs": "the guard itself",
     "package.json": "script wiring only",
-    "scripts/witness/o5-r3-lease-standing.mjs": "the pre-write standing module under test; repaired, never by weakening PW-1…PW-9",
+    "scripts/witness/o5-r3-lease-standing.mjs": "the pre-write standing module under test; repaired, never by weakening PW-1\u2026PW-9",
     "scripts/witness/o5-r3-runtime-witness.mjs": "the checker; its C6 wiring is bound by the frozen PW-W checks",
-    "scripts/witness/o5-r3-transition-integrity.mjs": "the C6A judge under test; repaired, never by weakening TI-1…TI-11"
+    "scripts/witness/o5-r3-transition-integrity.mjs": "the C6A judge under test; repaired, never by weakening TI-1\u2026TI-11"
   },
   "note": "matrix.mjs IS frozen here (unlike the R3 lease matrix): it carries the RB-W wiring law, and this suite has no Class A predictions that must flip.",
   "amendments": [
     {
       "id": "RB-A1",
       "date": "2026-10-01",
-      "kind": "ADDITIVE — no frozen byte edited",
+      "kind": "ADDITIVE \u2014 no frozen byte edited",
       "cause": "Live Mac Studio walk stopped at Step 5: the real delegation home carried a correctly RELEASED prior lease generation, and the checker read that history as a failed pre-write baseline. Instrument defect, not a runtime-binding failure. The failed Step 5 witness is preserved (~/o5r3-step5.txt on the Mac Studio).",
       "law": "Historical lease state may exist. What matters before the first write is that no live writer holds authority. After Desktop writes, the live lease must belong to this exact Desktop incarnation.",
       "added": [
@@ -44,21 +47,34 @@
         "tests/constitutional/jarvis-o5-r3-runtime-binding/candidates.mjs",
         "tests/constitutional/jarvis-o5-r3-runtime-binding/matrix.mjs"
       ],
-      "authority": "founder recommendation 2026-10-01 (pre-admission instrument amendment, steps 1–5)"
+      "authority": "founder recommendation 2026-10-01 (pre-admission instrument amendment, steps 1\u20135)"
     },
     {
       "id": "RB-A2",
       "date": "2026-10-01",
-      "kind": "ADDITIVE — no frozen byte edited; C8 untouched",
+      "kind": "ADDITIVE \u2014 no frozen byte edited; C8 untouched",
       "cause": "The admission statement claims \"a single authorized acquisition\"; frozen C8 proves only byte-identity across the refused second writer. Founder ruling (option b): bring the instrument up to the claim before the walk, so the record is never semantically ahead of its evidence.",
-      "law": "C6A Authorized Transition Integrity — from the saved pre-write baseline to the post-write state: T1 exactly one new lease generation (the next) · T2 held by this Desktop incarnation · T3 prior lease history unchanged · T4 grant ledgers append-only · T5 prior ledger bytes unchanged · T6 at most one Work Unit ledger changed · T7 no other governed artifact changed. Scope: the governed roots only (lease, both grant-ledger stores, quarantine), never the whole home.",
-      "separation": "pre-write standing (C6-pre) → authorized transition integrity (C6A) → post-write current-holder proof (C6) → second-writer refusal integrity (C7, C8)",
+      "law": "C6A Authorized Transition Integrity \u2014 from the saved pre-write baseline to the post-write state: T1 exactly one new lease generation (the next) \u00b7 T2 held by this Desktop incarnation \u00b7 T3 prior lease history unchanged \u00b7 T4 grant ledgers append-only \u00b7 T5 prior ledger bytes unchanged \u00b7 T6 at most one Work Unit ledger changed \u00b7 T7 no other governed artifact changed. Scope: the governed roots only (lease, both grant-ledger stores, quarantine), never the whole home.",
+      "separation": "pre-write standing (C6-pre) \u2192 authorized transition integrity (C6A) \u2192 post-write current-holder proof (C6) \u2192 second-writer refusal integrity (C7, C8)",
       "added": [
         "tests/constitutional/jarvis-o5-r3-runtime-binding/transition/candidates.mjs",
         "tests/constitutional/jarvis-o5-r3-runtime-binding/transition/falsifiers.mjs",
         "tests/constitutional/jarvis-o5-r3-runtime-binding/transition/matrix.mjs"
       ],
       "authority": "founder ruling 2026-10-01, option (b)"
+    },
+    {
+      "id": "RB-A3",
+      "date": "2026-10-01",
+      "kind": "ADDITIVE \u2014 no earlier frozen byte edited",
+      "cause": "Fresh walk at bd9df7db stopped at Step 5 before any grant write: the reader sampled the stale predecessor binding before Electron app-ready wrote the new one; the later exact binding carried clean:null after an inconclusive cold git-status probe.",
+      "law": "Runtime Binding Readiness \u2014 before constitutional sampling, the record must be LIVE for this exact walk worktree and HEAD with clean=true. A stale predecessor, another worktree, another HEAD, clean=false, or clean=null is never ready. Repository identity probes get one bounded retry; permanent failure remains unknown.",
+      "added": [
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/falsifiers.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/candidates.mjs",
+        "tests/constitutional/jarvis-o5-r3-runtime-binding/readiness/matrix.mjs"
+      ],
+      "authority": "founder continuation 2026-10-01 after the stopped bd9df7db witness"
     }
   ]
 }

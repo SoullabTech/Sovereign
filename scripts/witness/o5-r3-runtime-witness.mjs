@@ -34,7 +34,7 @@
  *   node scripts/witness/o5-r3-runtime-witness.mjs                       C1–C6 post-write (C6 strict)
  *   node scripts/witness/o5-r3-runtime-witness.mjs --snapshot <file>     also write the ledger+lease hash snapshot
  *   node scripts/witness/o5-r3-runtime-witness.mjs --refusal <json> --before <snapshot>   the full C1–C8 verdict
- *   options: --support <appSupportDir>  --base <sha>  --json <file> (write the full evidence object)
+ *   options: --support <appSupportDir>  --base <sha>  --await-current-ms <ms>  --json <file> (write the full evidence object)
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -50,12 +50,15 @@ const RB = require(path.join(ROOT, 'jarvis-desktop/src/runtime-binding.js'));
 const LEASE = await import(pathToFileURL(path.join(ROOT, 'scripts/builder/grant-writer-lease-v1.mjs')).href);
 const STAND = await import(pathToFileURL(path.join(ROOT, 'scripts/witness/o5-r3-lease-standing.mjs')).href);
 const TI = await import(pathToFileURL(path.join(ROOT, 'scripts/witness/o5-r3-transition-integrity.mjs')).href);
+const READY = await import(pathToFileURL(path.join(ROOT, 'scripts/witness/o5-r3-binding-readiness.mjs')).href);
 
 const args = process.argv.slice(2);
 const val = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : undefined; };
 const support = val('--support') || path.join(os.homedir(), 'Library', 'Application Support');
 const base = val('--base') || 'ce061073';
 const phase = val('--phase') || 'post-write';
+const awaitCurrentMs = Number(val('--await-current-ms') || 0);
+if (!Number.isFinite(awaitCurrentMs) || awaitCurrentMs < 0) { process.stderr.write('invalid --await-current-ms\n'); process.exit(1); }
 if (!['pre-write', 'post-write'].includes(phase)) { process.stderr.write(`unknown --phase ${phase}\n`); process.exit(1); }
 if (phase === 'pre-write' && (val('--refusal') || val('--before') || val('--prewrite'))) {
   process.stderr.write('a pre-write baseline cannot carry admission evidence (--refusal / --before / --prewrite); run them post-write\n');
@@ -77,9 +80,20 @@ function snapshotGrantState(home) {
   return { home, taken_at: new Date().toISOString(), files: Object.fromEntries(Object.entries(files).sort()), governed: TI.captureGoverned(home) };
 }
 
-const rec = RB.readRecord(RB.bindingPath(support));
-const live = rec ? RB.judgeLive(rec) : 'UNREADABLE';
-C('C1', 'binding record LIVE and incarnation-correct', live === 'LIVE', `${live} · pid ${rec?.pid} · start ${rec?.processStartedAt}`);
+const expectedHead = git(ROOT, 'rev-parse', 'HEAD');
+let rec = null;
+let live = 'UNREADABLE';
+let readiness = { ready: false, reason: 'NOT_SAMPLED' };
+const deadline = Date.now() + awaitCurrentMs;
+do {
+  rec = RB.readRecord(RB.bindingPath(support));
+  live = rec ? RB.judgeLive(rec) : 'UNREADABLE';
+  readiness = READY.classifyBindingReadiness({ record: rec, live, expectedRoot: ROOT, expectedHead });
+  if (readiness.ready || awaitCurrentMs === 0 || Date.now() >= deadline) break;
+  await READY.sleep(250);
+} while (true);
+C('C1', 'binding record LIVE and incarnation-correct', live === 'LIVE' && (awaitCurrentMs === 0 || readiness.ready),
+  `${live} · pid ${rec?.pid} · start ${rec?.processStartedAt}${awaitCurrentMs > 0 ? ` · readiness ${readiness.reason}` : ''}`);
 
 const root = rec?.binding?.repoRoot ?? null;
 const headNow = root ? git(root, 'rev-parse', 'HEAD') : null;
@@ -159,7 +173,7 @@ try {
 const census = { id: 'S1', name: 'no other visible process names a grant-writer entry point (heuristic)', status: others.length ? 'ALARM' : 'QUIET', detail: others };
 
 const evidence = {
-  witnessed_at: new Date().toISOString(), phase, base, record: rec, lease_standing: standing, transition,
+  witnessed_at: new Date().toISOString(), phase, base, readiness, record: rec, lease_standing: standing, transition,
   identities: { binding: { ...bindingPair, repoRoot: root, head: rec?.binding?.head ?? null }, lease: leasePair },
   refusal, snapshot_before: before, snapshot_now: now, constitutional, supporting: [census],
 };
@@ -168,6 +182,7 @@ if (jsonOut) fs.writeFileSync(jsonOut, JSON.stringify(evidence, null, 2) + '\n')
 
 const out = (s) => process.stdout.write(s + '\n');
 out('O5-R3 runtime binding witness · the record grants no authority; this verdict grants none either\n');
+if (awaitCurrentMs > 0) out(`readiness         ${readiness.ready ? 'READY' : 'TIMEOUT'} · ${readiness.reason} · waited up to ${awaitCurrentMs}ms`);
 out(`binding identity  pid ${bindingPair.pid} · start ${bindingPair.processStartTime} · ${root} @ ${rec?.binding?.head}`);
 out(`lease identity    ${leasePair ? `pid ${leasePair.pid} · start ${leasePair.processStartTime} · generation ${leasePair.generation}` : '(none held)'}\n`);
 out('CONSTITUTIONAL EVIDENCE');
