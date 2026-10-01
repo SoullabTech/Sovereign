@@ -78,7 +78,7 @@ The server derives member identity from authentication.
 ## V. Storage
 
 Migration:
-`database/migrations/20260926000001_writer_studio_return_state.sql`
+`database/migrations/20260926000004_writer_studio_return_state.sql`
 
 Creates two independent mutable return-state tables:
 - `writer_studio_relationship_returns`;
@@ -218,7 +218,7 @@ The repository's operational `ci:sovereignty` path passed completely.
 `app/api/writers-studio/return/place/route.ts`  
 `5c57282e12bc1c61477e37f66ff8af7da5076706d70d48bf18cf86822f4b4fbd`
 
-`database/migrations/20260926000001_writer_studio_return_state.sql`  
+`database/migrations/20260926000004_writer_studio_return_state.sql`  
 `be3d512e8342060e4056a8643aa77fd78dd576467804b6ee55483ef20f06d616`
 
 `lib/writers-studio/returnState.ts`  

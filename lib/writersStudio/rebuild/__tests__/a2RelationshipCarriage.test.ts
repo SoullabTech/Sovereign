@@ -94,8 +94,11 @@ describe('A2-6 relationship carriage', () => {
 
     await sendBoundEditorialTurn(
       'thread-1', 'section-1', 'My question', posture,
-      { latitude: 1, mayRemoveParagraphs: false }, 'relationship-1',
-      { kind: 'prior_maia_editorial_turn', sourceEpisodeSequence: 7 },
+      { latitude: 1, mayRemoveParagraphs: false },
+      {
+        relationshipId: 'relationship-1',
+        carry: { kind: 'prior_maia_editorial_turn', sourceEpisodeSequence: 7 },
+      },
     );
 
     const body = JSON.parse(String(mockedApiFetch.mock.calls[0]![1]?.body));
