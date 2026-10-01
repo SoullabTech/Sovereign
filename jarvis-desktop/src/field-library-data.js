@@ -4709,6 +4709,12 @@ window.KELLY_FIELD_LIBRARY = {
           "headings": []
         },
         {
+          "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R4 · GROKKER · SYNTHESIS · BOUNDARY · 2026-10-01",
+          "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R4_GROKKER_SYNTHESIS_BOUNDARY_2026-10-01.md",
+          "excerpt": "The Library now supports: 1. Re-enter — recent programme pulse. 2. Ask / Trace — deterministic retrieval across curated fields and the canonical programme corpus. 3. Browse — collapsible access to the full indexed field.",
+          "headings": []
+        },
+        {
           "title": "L1-CURRENT-SESSION-RECOVERY-01 · ACCEPTANCE · 2026-09-15",
           "path": "docs/programme/L1-CURRENT-SESSION-RECOVERY-01_ACCEPTANCE_2026-09-15.md",
           "excerpt": "Authority founder ruling 2026-09-15 — open for implementation and same-day deployment, FAST/CORE only. Status IMPLEMENTED · falsifier GREEN · gates GREEN · ⛔ PRODUCTION WITNESS OWED",
@@ -4935,7 +4941,7 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 644,
+    "lanes": 645,
     "recent": 65
   }
 };
