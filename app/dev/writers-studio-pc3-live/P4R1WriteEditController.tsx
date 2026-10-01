@@ -7,7 +7,8 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
-import { readStudioWorkParam, resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { editorialThreadIdFrom } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -83,6 +84,7 @@ export default function FlagshipWriteEditController() {
   const [selectedPassage, setSelectedPassage] = useState<Pc3HeldPassage | null>(null);
   const writingRef = useRef<SectionWriting | null>(null);
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
+  const { workId: carriedWorkId } = useHouseStudioH1WorkClaim(params);
 
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
@@ -228,7 +230,7 @@ export default function FlagshipWriteEditController() {
   const visibleSections = chapter?.sections ?? (focusSection ? [focusSection] : []);
   // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
   const workContext = resolveSituatedWorkContext(
-    worksPhase, works, context?.manuscriptId ?? null, params ? readStudioWorkParam(params) : null,
+    worksPhase, works, context?.manuscriptId ?? null, carriedWorkId,
   );
   const work = currentWork(workContext);
   const workContextSentence = workContext.kind === 'work'
