@@ -17,6 +17,7 @@ import { generateLocalEmbedding } from './embeddings';
 import { calculateDecayedConfidence } from './confidenceDecay';
 import { ConversationMemoryUsesStore } from './stores/ConversationMemoryUsesStore';
 import { memberRef } from '../privacy/memberRef';
+import type { ParticipationIdentity } from '../maia/canonical-turn/participationDisposition';
 import {
   CUT1_BASELINE_NONVECTOR_SQL,
   type Cut1TracePayload,
@@ -30,10 +31,13 @@ import {
 // TYPES
 // ═══════════════════════════════════════════════════════════════
 
-export interface MemoryBullet {
+export interface MemoryBullet extends ParticipationIdentity {
   id?: string;          // Original memory row ID (for audit trail)
   content: string;      // Compressed summary
   source: 'turn' | 'developmental' | 'insight' | 'breakthrough';
+  authoredBy: ParticipationIdentity['authoredBy'];
+  participationClass: ParticipationIdentity['participationClass'];
+  authority: ParticipationIdentity['authority'];
   significance: number; // 0-1
   timestamp: Date;
   facet?: string;       // Spiralogic facet if available
@@ -282,6 +286,9 @@ export const MemoryBundleService = {
           id: row.id,
           content: row.content_text,
           source: 'developmental' as const,
+          authoredBy: 'system' as const,
+          participationClass: 'inferred' as const,
+          authority: 'infer' as const,
           significance: parseFloat(row.significance) || 0.5,
           timestamp: new Date(row.formed_at),
           facet: row.facet_code,
@@ -349,6 +356,9 @@ export const MemoryBundleService = {
         id: row.id,
         content: row.content_text || '',
         source: 'developmental' as const,
+        authoredBy: 'system' as const,
+        participationClass: 'inferred' as const,
+        authority: 'infer' as const,
         significance: parseFloat(row.significance) || 0.5,
         timestamp: new Date(row.formed_at),
         facet: row.facet_code,
@@ -517,6 +527,9 @@ export const MemoryBundleService = {
       id: candidate.id || undefined,  // Preserve for audit trail
       content,
       source: candidate.source,
+      authoredBy: candidate.authoredBy,
+      participationClass: candidate.participationClass,
+      authority: candidate.authority,
       significance: candidate.significance,
       timestamp: candidate.timestamp,
       facet: candidate.facet,
@@ -596,6 +609,9 @@ export const MemoryBundleService = {
         id: t.id || '',  // Preserve turn ID for audit trail
         content: t.content,
         source: 'turn' as const,
+        authoredBy: 'member' as const,
+        participationClass: 'retrieved' as const,
+        authority: 'situate' as const,
         significance: 0.5, // Base significance for turns
         timestamp: new Date(t.createdAt),
         similarity: 0,
@@ -608,6 +624,9 @@ export const MemoryBundleService = {
       id: b.id,
       content: b.insight,
       source: 'breakthrough' as const,
+      authoredBy: 'system' as const,
+      participationClass: 'inferred' as const,
+      authority: 'infer' as const,
       significance: 0.9, // High significance for breakthroughs
       timestamp: b.timestamp,
       facet: b.element,
@@ -658,7 +677,7 @@ export const MemoryBundleService = {
     // Memory bullets (if any relevant ones)
     if (bundle.memoryBullets.length > 0) {
       const bulletText = bundle.memoryBullets
-        .map(b => `• [${b.source}${b.facet ? `/${b.facet}` : ''}] ${b.content}`)
+        .map(b => `• [${b.source}${b.facet ? `/${b.facet}` : ''} · ${b.authoredBy}/${b.participationClass}/${b.authority}] ${b.content}`)
         .join('\n');
       parts.push(`\n📚 RELEVANT MEMORIES:\n${bulletText}`);
     }
@@ -673,7 +692,7 @@ export const MemoryBundleService = {
 };
 
 // Internal type for ranking candidates
-interface MemoryCandidate {
+interface MemoryCandidate extends ParticipationIdentity {
   id: string;
   content: string;
   source: 'turn' | 'developmental' | 'insight' | 'breakthrough';
