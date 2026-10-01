@@ -43,7 +43,7 @@ function req(body: Record<string, unknown>) {
   });
 }
 
-const BODY = { username: 'localsoul', password: 'secretpass', name: 'Local Soul' };
+const BODY = { username: 'localsoul', password: 'secretpass', name: 'Local Soul', ageConfirmed: true };
 
 function mockHappyPath() {
   mockQuery

@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { hasAgeConfirmation, withAgeAcknowledgment, AGE_ACK_COOKIE, AGE_ACK_REQUIRED_MESSAGE } from '@/lib/members/ageAcknowledgment';
 import { hashPassword, verifyPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 
@@ -58,6 +59,14 @@ export async function POST(request: NextRequest) {
       const displayName = name.trim();
       const passwordHash = await hashPassword(password);
 
+      // MEMBER-ACK-01 / TEEN-CLOSED-01: a NEW account needs the person's own 18+ confirmation.
+      if (!hasAgeConfirmation(body, request.cookies.get(AGE_ACK_COOKIE)?.value)) {
+        return NextResponse.json(
+          { error: AGE_ACK_REQUIRED_MESSAGE, code: 'AGE_CONFIRMATION_REQUIRED' },
+          { status: 400 }
+        );
+      }
+
       // Generate unique username from email prefix
       let username = normalizedEmail.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 20);
       if (!username) username = 'member';
@@ -71,12 +80,15 @@ export async function POST(request: NextRequest) {
       // Generate a unique passkey (required NOT NULL)
       const passkey = `ML-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
-      const created = await query(
+      // The 18+ acknowledgment is written in the same statement as the member.
+      const insert = withAgeAcknowledgment(
         `INSERT INTO members (email, username, password_hash, name, preferred_name, passkey, onboarded, onboarding_step, tier, roles, created_at)
          VALUES ($1, $2, $3, $4, $4, $5, false, 'begin', 'free', ARRAY['member'], NOW())
          RETURNING id, username, name, preferred_name, onboarded, onboarding_step, tier, roles`,
-        [normalizedEmail, username, passwordHash, displayName, passkey]
+        [normalizedEmail, username, passwordHash, displayName, passkey],
+        'enter',
       );
+      const created = await query(insert.sql, insert.params);
 
       member = created.rows[0];
     }

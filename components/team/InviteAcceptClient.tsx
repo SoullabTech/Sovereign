@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AgeConfirmationCheckbox from '@/components/members/AgeConfirmationCheckbox';
 
 interface InviteAcceptClientProps {
   token: string;
@@ -27,6 +28,7 @@ export function InviteAcceptClient({
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   const accept = async () => {
     setStatus('accepting');
@@ -59,7 +61,7 @@ export function InviteAcceptClient({
       const res = await fetch(`/api/team/invite/${token}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, username, password }),
+        body: JSON.stringify({ name, username, password, ageConfirmed }),
       });
       if (res.ok) {
         setStatus('done');
@@ -168,9 +170,10 @@ export function InviteAcceptClient({
                   className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-amber-400/50"
                 />
               </div>
+              <AgeConfirmationCheckbox checked={ageConfirmed} onChange={setAgeConfirmed} className="flex items-start gap-3 text-sm text-white/60 cursor-pointer select-none" />
               <button
                 type="submit"
-                disabled={status === 'accepting'}
+                disabled={status === 'accepting' || !ageConfirmed}
                 className="w-full py-3 rounded-xl bg-amber-500 text-black text-sm font-semibold hover:bg-amber-400 transition-colors disabled:opacity-50"
               >
                 {status === 'accepting' ? 'Creating account...' : 'Create account & join'}

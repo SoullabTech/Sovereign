@@ -32,6 +32,9 @@ describe('MEMBER-ACK-01 age acknowledgment', () => {
       'app/api/auth/google/native-callback/route.ts',
       'app/api/auth/signin/apple/callback/route.ts',
       'app/api/auth/apple/native-callback/route.ts',
+      'app/api/team/invite/[token]/register/route.ts',
+      'app/api/now-what/register/route.ts',
+      'app/api/members/register-local/route.ts',
     ];
     for (const p of creators) {
       const src = W(p);
@@ -53,3 +56,20 @@ describe('MEMBER-ACK-01 age acknowledgment', () => {
     expect(code).not.toMatch(/\bALTER\s+TABLE|\bDROP\s+\w+|\bUPDATE\s+\w+\s+SET|\bDELETE\s+FROM|\bTRUNCATE\b/i);
   });
 });
+
+describe('MEMBER-ACK-01 census', () => {
+  it('no other route creates a member without going through this law', () => {
+    const { execSync } = require('child_process');
+    const files: string[] = execSync("git grep -l 'INSERT INTO members' -- 'app/api/**/*.ts' ':!**/__tests__/**'", { encoding: 'utf8' })
+      .trim().split('\n').filter(Boolean);
+    const ungated = files.filter((f) => !W(f).includes('withAgeAcknowledgment('));
+    expect(ungated).toEqual([]);
+  });
+
+  it('every registration form sends the confirmation', () => {
+    for (const p of ['components/auth/UnifiedAuth.tsx', 'app/now-what/arrive/page.tsx', 'components/team/InviteAcceptClient.tsx', 'components/auth/SyncAccountPrompt.tsx']) {
+      expect({ p, sends: /ageConfirmed/.test(W(p)) }).toEqual({ p, sends: true });
+    }
+  });
+});
+

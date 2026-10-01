@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { hasAgeConfirmation, withAgeAcknowledgment, AGE_ACK_COOKIE, AGE_ACK_REQUIRED_MESSAGE } from '@/lib/members/ageAcknowledgment';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { resolveTeamIdForInviter, addMemberToTeam, isTeamMember } from '@/lib/team/teamMembership';
@@ -14,6 +15,14 @@ export async function POST(
 
   const body = await request.json().catch(() => ({}));
   const { name, username, password } = body as Record<string, string>;
+
+  // MEMBER-ACK-01 / TEEN-CLOSED-01: every registration confirms 18+, in the person's own words.
+  if (!hasAgeConfirmation(body, request.cookies.get(AGE_ACK_COOKIE)?.value)) {
+    return NextResponse.json(
+      { error: AGE_ACK_REQUIRED_MESSAGE, code: 'AGE_CONFIRMATION_REQUIRED' },
+      { status: 400 }
+    );
+  }
 
   if (!name?.trim() || !username?.trim() || !password?.trim()) {
     return NextResponse.json({ error: 'Name, username, and password are required' }, { status: 400 });
@@ -58,12 +67,15 @@ export async function POST(
   const passwordHash = await hashPassword(password);
 
   // Create member — mark onboarded=true so they skip the onboarding flow
-  const memberResult = await query<{ id: string }>(
+  // MEMBER-ACK-01: the 18+ acknowledgment is written in the same statement as the member.
+  const insert = withAgeAcknowledgment(
     `INSERT INTO members (passkey, username, password_hash, name, email, onboarded, onboarding_step, roles)
      VALUES ($1, $2, $3, $4, $5, true, 'complete', ARRAY['member']::text[])
      RETURNING id`,
-    [passkey, usernameClean, passwordHash, name.trim(), invite.email]
+    [passkey, usernameClean, passwordHash, name.trim(), invite.email],
+    'team-invite',
   );
+  const memberResult = await query<{ id: string }>(insert.sql, insert.params);
 
   const memberId = memberResult.rows[0].id;
 

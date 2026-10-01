@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { hasAgeConfirmation, withAgeAcknowledgment, AGE_ACK_COOKIE, AGE_ACK_REQUIRED_MESSAGE } from '@/lib/members/ageAcknowledgment';
 import { betaConfig, validatePassword, validateEmail } from '@/lib/auth/betaConfig';
 import crypto from 'crypto';
 import { hashPassword } from '@/lib/auth/passwordUtils';
@@ -27,6 +28,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { username, password, email: rawEmail, name, explorerId } = body;
+
+    // MEMBER-ACK-01 / TEEN-CLOSED-01: every registration confirms 18+, in the person's own words.
+    if (!hasAgeConfirmation(body, request.cookies.get(AGE_ACK_COOKIE)?.value)) {
+      return NextResponse.json(
+        { error: AGE_ACK_REQUIRED_MESSAGE, code: 'AGE_CONFIRMATION_REQUIRED' },
+        { status: 400 }
+      );
+    }
     const email = rawEmail ? rawEmail.toLowerCase().trim() : null;
 
     // Validate required fields
@@ -78,11 +87,15 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hashPassword(password);
 
     // Create member
-    await query(
+    // MEMBER-ACK-01: the 18+ acknowledgment is written in the same statement as the member.
+    const insert = withAgeAcknowledgment(
       `INSERT INTO members (id, username, password_hash, name, email, passkey, onboarded, onboarding_step, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, true, 'complete', NOW())`,
-      [memberId, normalizedUsername, passwordHash, name || username, email || null, passkey]
+       VALUES ($1, $2, $3, $4, $5, $6, true, 'complete', NOW())
+       RETURNING id`,
+      [memberId, normalizedUsername, passwordHash, name || username, email || null, passkey],
+      'register-local',
     );
+    await query(insert.sql, insert.params);
 
     console.log(`[RegisterLocal] Created account for ${normalizedUsername} (${memberId})`);
 

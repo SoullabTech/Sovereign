@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { hasAgeConfirmation, withAgeAcknowledgment, AGE_ACK_COOKIE, AGE_ACK_REQUIRED_MESSAGE } from '@/lib/members/ageAcknowledgment';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
@@ -51,6 +52,14 @@ export async function POST(request: NextRequest) {
     const password = body.password || '';
     const next = typeof body.next === 'string' ? body.next : '';
 
+    // MEMBER-ACK-01 / TEEN-CLOSED-01: every registration confirms 18+, in the person's own words.
+    if (!hasAgeConfirmation(body, request.cookies.get(AGE_ACK_COOKIE)?.value)) {
+      return NextResponse.json(
+        { error: AGE_ACK_REQUIRED_MESSAGE, code: 'AGE_CONFIRMATION_REQUIRED' },
+        { status: 400 }
+      );
+    }
+
     // The invitation is the gate — enforced, not narrated.
     if (!invitedFieldContext(next)) {
       return NextResponse.json(
@@ -88,14 +97,17 @@ export async function POST(request: NextRequest) {
     for (let attempt = 0; attempt < 4; attempt++) {
       const passkey = `NOWWHAT-${randToken(8)}`;
       try {
-        const result = await query(
+        // MEMBER-ACK-01: the 18+ acknowledgment is written in the same statement as the member.
+        const insert = withAgeAcknowledgment(
           `INSERT INTO members (
              passkey, username, password_hash, name, email, onboarded, onboarding_step
            )
            VALUES ($1, $2, $3, $4, $5, TRUE, 'complete')
            RETURNING id, username, name, onboarded, onboarding_step, tier, roles`,
-          [passkey, username, passwordHash, name, email]
+          [passkey, username, passwordHash, name, email],
+          'now-what',
         );
+        const result = await query(insert.sql, insert.params);
         member = result.rows[0];
         break;
       } catch (e: any) {
