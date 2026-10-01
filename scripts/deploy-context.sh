@@ -287,6 +287,83 @@ deploy_ctx_assert_and_materialize() {
 }
 
 # ───────────────────────────────────────────────────────────────────────────────
+# ancestry — a deploy may only move production FORWARD. The target must descend
+# from the commit production is running now. Otherwise a routine deploy of a
+# branch that is merely behind production (e.g. canonical not yet carrying a
+# live candidate) silently reverts it. Deliberate rollback is cmd_rollback (image
+# tag swap, unaffected). Deploying an older/divergent commit ON PURPOSE requires
+#   DEPLOY_ALLOW_NON_DESCENDANT=1  DEPLOY_NON_DESCENDANT_REASON="<why>"
+# and the override is appended to $DEPLOY_OVERRIDE_LOG (default ~/.maia-deploy-overrides.log).
+# Fail closed: an unknown/unresolvable running identity refuses (override applies).
+# Requires deploy_ctx_resolve_sha / assert_and_materialize first (DEPLOY_CTX_FULL_SHA).
+# ───────────────────────────────────────────────────────────────────────────────
+deploy_ctx_assert_descends_from_running() {
+    local entry="${1:-deploy}"
+    local repo="${DEPLOY_SOURCE_REPO:-${PROJECT_DIR:-.}}"
+    local docker_bin="${DEPLOY_DOCKER_BIN:-docker}"
+    local container="${DEPLOY_RUNNING_CONTAINER:-maia-sovereign}"
+    local target="${DEPLOY_CTX_FULL_SHA:-}"
+    local stamp="" source="" running="" problem=""
+
+    if [ -z "$target" ]; then
+        _dctx_block "ancestry check called before the target was resolved. This is a bug."
+        return 1
+    fi
+
+    stamp="$("$docker_bin" exec "$container" printenv GIT_COMMIT 2>/dev/null | tr -d '[:space:]' || true)"
+    source="running container $container"
+    if [ -z "$stamp" ]; then
+        stamp="$("$docker_bin" image inspect "${DEPLOY_CURRENT_IMAGE:-maia-sovereign:current}" \
+            --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+            | sed -n 's/^GIT_COMMIT=//p' | head -n1 | tr -d '[:space:]' || true)"
+        source="image ${DEPLOY_CURRENT_IMAGE:-maia-sovereign:current} (no running container)"
+    fi
+
+    if [ -z "$stamp" ] || [ "$stamp" = "unknown" ]; then
+        problem="production's current commit cannot be identified (stamp='${stamp:-<none>}' from $source)"
+    else
+        running="$(git -C "$repo" rev-parse --verify --quiet "${stamp}^{commit}" 2>/dev/null || true)"
+        if [ -z "$running" ]; then
+            problem="running stamp $stamp does not resolve to a commit in $repo (git fetch first?)"
+        elif [ "$running" = "$target" ]; then
+            _dctx_ok "ancestry: target $DEPLOY_CTX_SHORT_SHA IS the running commit (redeploy)"
+            return 0
+        elif git -C "$repo" merge-base --is-ancestor "$running" "$target" 2>/dev/null; then
+            _dctx_ok "ancestry: target $DEPLOY_CTX_SHORT_SHA descends from running ${running:0:9} ($source)"
+            return 0
+        else
+            problem="target $DEPLOY_CTX_SHORT_SHA does NOT descend from running ${running:0:9} — deploying it would revert production"
+        fi
+    fi
+
+    if [ "${DEPLOY_ALLOW_NON_DESCENDANT:-0}" = "1" ]; then
+        local reason="${DEPLOY_NON_DESCENDANT_REASON:-}"
+        if [ -z "${reason// /}" ]; then
+            _dctx_block "DEPLOY_ALLOW_NON_DESCENDANT=1 requires DEPLOY_NON_DESCENDANT_REASON (a recorded reason)."
+            _dctx_block "  $problem"
+            return 1
+        fi
+        local log="${DEPLOY_OVERRIDE_LOG:-$HOME/.maia-deploy-overrides.log}"
+        printf '%s\tentry=%s\ttarget=%s\trunning=%s\tuser=%s@%s\treason=%s\n' \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$entry" "$target" "${running:-${stamp:-unknown}}" \
+            "$(id -un 2>/dev/null || echo ?)" "$(hostname 2>/dev/null || echo ?)" "$reason" >> "$log" || {
+            _dctx_block "could not record the override in $log — refusing rather than overriding unrecorded."
+            return 1
+        }
+        _dctx_warn "ANCESTRY OVERRIDE: $problem"
+        _dctx_warn "  reason: $reason   (recorded in $log)"
+        return 0
+    fi
+
+    _dctx_block "Refusing: $problem."
+    _dctx_block "  A deploy may only move production forward. For a deliberate rollback use:"
+    _dctx_block "    scripts/deploy-production.sh rollback"
+    _dctx_block "  To deploy a non-descendant commit on purpose, state why:"
+    _dctx_block "    DEPLOY_ALLOW_NON_DESCENDANT=1 DEPLOY_NON_DESCENDANT_REASON=\"...\" <entrypoint> <SHA>"
+    return 1
+}
+
+# ───────────────────────────────────────────────────────────────────────────────
 # compose — docker compose bound to the SNAPSHOT's compose file, with the project
 # directory supplying runtime files (.env.production, ./Caddyfile bind-mounts…).
 # Requires deploy_ctx_materialize first (DEPLOY_COMPOSE_FILE). One writer for the
