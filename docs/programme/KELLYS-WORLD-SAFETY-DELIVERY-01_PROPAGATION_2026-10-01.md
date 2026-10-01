@@ -88,6 +88,12 @@ Three existing acts now have distinct standing:
 
 These are not interchangeable. Safety recognition must not silently choose among them for the member.
 
+### Member-controlled safety off-ramp — candidate only
+
+R2 on PR #1675 defines the lowest-authority future off-ramp: MAIA may eventually offer `Message my practitioner`, but the action would open the existing composer rather than send anything. The member would still choose the recipient when needed, author/review the content, select urgency, and press Send. A separate optional act could copy only the member's current utterance into the draft; hidden context and MAIA interpretation remain excluded.
+
+**Standing: design candidate only. No UI wiring or new disclosure authority is authorized by R2.**
+
 ## Watching
 
 ### Sharing semantics
