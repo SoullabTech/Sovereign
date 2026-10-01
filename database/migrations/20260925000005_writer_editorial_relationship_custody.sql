@@ -15,11 +15,6 @@
 
 BEGIN;
 
--- RC2 (F2): bound lock ACQUISITION. A DDL lock queued behind a long reader
--- transaction would stall every later query on the table; time out instead.
--- A timeout aborts this file pre-swap with the old reader intact.
-SET LOCAL lock_timeout = '5s';
-
 -- Composite FK targets. These add no new uniqueness beyond the existing PK;
 -- they exist only so one FK can prove id + member in a single constraint.
 DO $$

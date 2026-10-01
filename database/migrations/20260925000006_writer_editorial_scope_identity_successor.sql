@@ -5,11 +5,6 @@
 -- reinterpret existing A2 episode rows.
 BEGIN;
 
--- RC2 (F2): bound lock ACQUISITION. A DDL lock queued behind a long reader
--- transaction would stall every later query on the table; time out instead.
--- A timeout aborts this file pre-swap with the old reader intact.
-SET LOCAL lock_timeout = '5s';
-
 ALTER TABLE proposal_chains
   ADD COLUMN IF NOT EXISTS locus_scope_kind text
   CHECK (locus_scope_kind IN ('section', 'passage'));
@@ -17,105 +12,92 @@ ALTER TABLE proposal_chains
 COMMENT ON COLUMN proposal_chains.locus_scope_kind IS
   'Server-authored immutable classification of the chain locus: section or passage. NULL means historical/unmeasured. Full-body selections remain passage.';
 
--- RC2 (F3): re-runnable after commit. If succession already happened (the
--- successor column exists), this block is a no-op; otherwise it fails closed
--- on any pre-successor episode row, then performs the succession.
+-- Fail closed before changing A2 episode semantics.
 DO $$
 BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = current_schema()
-      AND table_name = 'writer_editorial_relationship_episodes'
-      AND column_name = 'manuscript_scope_requested'
-  ) THEN
-    RAISE NOTICE 'A2-5R2 scope succession already applied; skipping';
-    RETURN;
-  END IF;
-
   IF EXISTS (
     SELECT 1 FROM writer_editorial_relationship_episodes LIMIT 1
   ) THEN
     RAISE EXCEPTION
       'A2-5R2 refuses scope succession: pre-successor A2 episode rows exist and may not be reinterpreted or backfilled';
   END IF;
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    RENAME COLUMN requested_scope TO manuscript_scope_requested;
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    RENAME COLUMN executed_scope TO manuscript_scope_executed;
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    ALTER COLUMN manuscript_scope_requested DROP NOT NULL;
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    ALTER COLUMN manuscript_scope_executed DROP NOT NULL;
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    DROP CONSTRAINT IF EXISTS were_scope_exact;
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    DROP CONSTRAINT IF EXISTS writer_editorial_relationship_episodes_requested_scope_check;
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    DROP CONSTRAINT IF EXISTS writer_editorial_relationship_episodes_executed_scope_check;
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    DROP CONSTRAINT IF EXISTS were_child_shape_and_semantics;
-  ALTER TABLE writer_editorial_relationship_episodes
-    ADD CONSTRAINT were_manuscript_scope_values CHECK (
-      manuscript_scope_requested IS NULL
-      OR manuscript_scope_requested IN ('section', 'passage')
-    );
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    ADD CONSTRAINT were_manuscript_scope_executed_values CHECK (
-      manuscript_scope_executed IS NULL
-      OR manuscript_scope_executed IN ('section', 'passage')
-    );
-
-  ALTER TABLE writer_editorial_relationship_episodes
-    ADD CONSTRAINT were_child_shape_scope_and_semantics CHECK (
-      (
-        child_kind = 'EDITORIAL_TURN'
-        AND manuscript_scope_requested IS NOT NULL
-        AND manuscript_scope_executed IS NOT NULL
-        AND manuscript_scope_requested = manuscript_scope_executed
-        AND editorial_thread_id IS NOT NULL
-        AND editorial_proposal_chain_id IS NOT NULL
-        AND editorial_member_turn_index IS NOT NULL
-        AND editorial_maia_turn_index IS NOT NULL
-        AND review_thread_id IS NULL
-        AND review_maia_turn_index IS NULL
-        AND review_authorization_id IS NULL
-        AND review_reading_id IS NULL
-        AND review_observation_key IS NULL
-        AND temporal_posture = 'CURRENT_FROZEN_LOCUS'
-        AND history_policy = 'CHILD_LOCAL_MULTI_TURN'
-        AND continuation_authorized = TRUE
-        AND authority_class = 'EDITORIAL_CHAIN'
-      )
-      OR
-      (
-        child_kind = 'REVIEW_DISCUSS'
-        AND manuscript_scope_requested IS NULL
-        AND manuscript_scope_executed IS NULL
-        AND review_thread_id IS NOT NULL
-        AND review_maia_turn_index IS NOT NULL
-        AND review_authorization_id IS NOT NULL
-        AND review_reading_id IS NOT NULL
-        AND review_observation_key IS NOT NULL
-        AND editorial_thread_id IS NULL
-        AND editorial_proposal_chain_id IS NULL
-        AND editorial_member_turn_index IS NULL
-        AND editorial_maia_turn_index IS NULL
-        AND temporal_posture = 'AS_READ'
-        AND history_policy = 'NONE'
-        AND continuation_authorized = FALSE
-        AND authority_class = 'R2_DISCLOSURE'
-      )
-    );
 END $$;
+ALTER TABLE writer_editorial_relationship_episodes
+  RENAME COLUMN requested_scope TO manuscript_scope_requested;
+
+ALTER TABLE writer_editorial_relationship_episodes
+  RENAME COLUMN executed_scope TO manuscript_scope_executed;
+
+ALTER TABLE writer_editorial_relationship_episodes
+  ALTER COLUMN manuscript_scope_requested DROP NOT NULL;
+
+ALTER TABLE writer_editorial_relationship_episodes
+  ALTER COLUMN manuscript_scope_executed DROP NOT NULL;
+
+ALTER TABLE writer_editorial_relationship_episodes
+  DROP CONSTRAINT IF EXISTS were_scope_exact;
+
+ALTER TABLE writer_editorial_relationship_episodes
+  DROP CONSTRAINT IF EXISTS writer_editorial_relationship_episodes_requested_scope_check;
+
+ALTER TABLE writer_editorial_relationship_episodes
+  DROP CONSTRAINT IF EXISTS writer_editorial_relationship_episodes_executed_scope_check;
+
+ALTER TABLE writer_editorial_relationship_episodes
+  DROP CONSTRAINT IF EXISTS were_child_shape_and_semantics;
+ALTER TABLE writer_editorial_relationship_episodes
+  ADD CONSTRAINT were_manuscript_scope_values CHECK (
+    manuscript_scope_requested IS NULL
+    OR manuscript_scope_requested IN ('section', 'passage')
+  );
+
+ALTER TABLE writer_editorial_relationship_episodes
+  ADD CONSTRAINT were_manuscript_scope_executed_values CHECK (
+    manuscript_scope_executed IS NULL
+    OR manuscript_scope_executed IN ('section', 'passage')
+  );
+
+ALTER TABLE writer_editorial_relationship_episodes
+  ADD CONSTRAINT were_child_shape_scope_and_semantics CHECK (
+    (
+      child_kind = 'EDITORIAL_TURN'
+      AND manuscript_scope_requested IS NOT NULL
+      AND manuscript_scope_executed IS NOT NULL
+      AND manuscript_scope_requested = manuscript_scope_executed
+      AND editorial_thread_id IS NOT NULL
+      AND editorial_proposal_chain_id IS NOT NULL
+      AND editorial_member_turn_index IS NOT NULL
+      AND editorial_maia_turn_index IS NOT NULL
+      AND review_thread_id IS NULL
+      AND review_maia_turn_index IS NULL
+      AND review_authorization_id IS NULL
+      AND review_reading_id IS NULL
+      AND review_observation_key IS NULL
+      AND temporal_posture = 'CURRENT_FROZEN_LOCUS'
+      AND history_policy = 'CHILD_LOCAL_MULTI_TURN'
+      AND continuation_authorized = TRUE
+      AND authority_class = 'EDITORIAL_CHAIN'
+    )
+    OR
+    (
+      child_kind = 'REVIEW_DISCUSS'
+      AND manuscript_scope_requested IS NULL
+      AND manuscript_scope_executed IS NULL
+      AND review_thread_id IS NOT NULL
+      AND review_maia_turn_index IS NOT NULL
+      AND review_authorization_id IS NOT NULL
+      AND review_reading_id IS NOT NULL
+      AND review_observation_key IS NOT NULL
+      AND editorial_thread_id IS NULL
+      AND editorial_proposal_chain_id IS NULL
+      AND editorial_member_turn_index IS NULL
+      AND editorial_maia_turn_index IS NULL
+      AND temporal_posture = 'AS_READ'
+      AND history_policy = 'NONE'
+      AND continuation_authorized = FALSE
+      AND authority_class = 'R2_DISCLOSURE'
+    )
+  );
 
 COMMENT ON COLUMN writer_editorial_relationship_episodes.manuscript_scope_requested IS
   'Child-local manuscript locus scope. Required for Editorial section/passage loci; NULL for finding-scoped Review Discuss. Not the A2 relationship frame.';
