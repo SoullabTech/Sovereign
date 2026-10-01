@@ -1,6 +1,7 @@
 const $main = document.getElementById('main');
 let currentView = 'home';
 let lastStatus = null;
+const libraryState = { browseQuery: '', grokkerQuery: '', grokkerResults: [] };
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -2425,6 +2426,18 @@ function spInspectEdge(sp, from, to) {
 }
 
 
+function renderGrokkerResults(results, query) {
+  if (!query.trim()) return '<div class="hint">Ask about a theme, law, programme, room, or idea. Grokker Trace searches the indexed corpus and preserves source standing.</div>';
+  if (!results.length) return '<div class="hint">No indexed trace matched this question. That is a retrieval result, not evidence that the work does not exist.</div>';
+  return `<div class="library-summary">${results.length} strongest traces for “${escapeHtml(query)}” · retrieval only, no synthesized claim</div>
+    ${results.map(r => `<div class="grokker-result">
+      <b>${escapeHtml(r.item.title)}</b>
+      <div class="grokker-why">${escapeHtml(r.kind === 'field' ? 'Field' : r.group)} · matched: ${escapeHtml(r.matched.join(', '))}</div>
+      ${r.item.excerpt ? `<div class="library-excerpt">${escapeHtml(r.item.excerpt)}</div>` : ''}
+      ${r.item.path ? `<div class="grokker-source">${escapeHtml(r.item.path)}</div>` : ''}
+    </div>`).join('')}`;
+}
+
 function libraryGroups(groups, query, prefix) {
   const q = String(query || '').trim().toLowerCase();
   return (groups || []).map((g, gi) => {
@@ -2455,9 +2468,22 @@ function libraryGroups(groups, query, prefix) {
 function wireLibrary() {
   const search = document.getElementById('library-search');
   if (search) {
-    search.addEventListener('input', () => renderLibrary(search.value));
-    search.focus();
+    search.addEventListener('input', () => {
+      libraryState.browseQuery = search.value;
+      renderLibrary();
+    });
   }
+  const ask = document.getElementById('grokker-query');
+  const runTrace = () => {
+    if (!ask) return;
+    libraryState.grokkerQuery = ask.value;
+    libraryState.grokkerResults = GrokkerLibraryQuery.trace(window.KELLY_FIELD_LIBRARY, ask.value);
+    renderLibrary();
+  };
+  if (ask) {
+    ask.addEventListener('keydown', e => { if (e.key === 'Enter') runTrace(); });
+  }
+  document.getElementById('grokker-trace')?.addEventListener('click', runTrace);
   document.getElementById('library-expand')?.addEventListener('click', () => {
     document.querySelectorAll('.library-group').forEach(d => { d.open = true; });
   });
@@ -2466,13 +2492,14 @@ function wireLibrary() {
   });
 }
 
-function renderLibrary(query = '') {
+function renderLibrary() {
   const lib = window.KELLY_FIELD_LIBRARY;
   if (!lib) {
     $main.innerHTML = '<div class="card"><p class="headline">Field Library unavailable.</p><p class="sentence">The generated index was not loaded.</p></div>';
     return;
   }
-  const q = String(query || '');
+  const q = String(libraryState.browseQuery || '');
+  const gq = String(libraryState.grokkerQuery || '');
   $main.innerHTML = `
     <div class="card">
       <p class="headline">Living Field Library</p>
@@ -2483,7 +2510,16 @@ function renderLibrary(query = '') {
         <button class="act" id="library-expand">Expand all</button>
         <button class="act" id="library-collapse">Collapse all</button>
       </div>
-      <div class="hint">Browse is live now. Grokker Ask / Trace / Synthesize can bind to this same corpus without making a second source of truth.</div>
+      <div class="hint">Browse remains a read-only index over canonical records. Grokker Trace below retrieves into that same corpus without inventing a second source of truth.</div>
+    </div>
+    <div class="grokker-box">
+      <h3>Grokker · Ask / Trace</h3>
+      <div class="sentence">Ask in ordinary language. This first layer retrieves the strongest field and source traces; it does not synthesize a new claim or upgrade their standing.</div>
+      <div class="grokker-input">
+        <input id="grokker-query" type="text" value="${escapeHtml(gq)}" placeholder="What have we established about context release?">
+        <button class="primary" id="grokker-trace">Trace this</button>
+      </div>
+      <div id="grokker-results">${renderGrokkerResults(libraryState.grokkerResults, gq)}</div>
     </div>
     <div class="library-section-title">Fields and enduring ideas</div>
     ${libraryGroups(lib.conceptGroups, q, 'concept')}
