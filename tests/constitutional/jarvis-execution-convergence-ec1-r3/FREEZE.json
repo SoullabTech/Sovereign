@@ -1,0 +1,13 @@
+{
+  "programme": "JARVIS-EXECUTION-CONVERGENCE-01",
+  "act": "EC1-R3",
+  "base": "bde0f6590eca",
+  "files": {
+    "contract.mjs": "3fff274d5a75c5383546a604aad5cb02377c1aca",
+    "reference.mjs": "394c2536fa8aabfa3edcbf99700d184634f1d4b6",
+    "falsifiers.mjs": "7cd5777897ec5b8ef39aca7fccf3fcd40fc9a824",
+    "candidates.mjs": "920d4f9e83677c1b03a33fd1f113e3584afaaa98",
+    "matrix.mjs": "68370c4fe0463afc4e8b2f09fc0db5d6d92a8697",
+    "substrate-guard.mjs": "cbc47749d207862e0010c80e89174ad93541f2ed"
+  }
+}
