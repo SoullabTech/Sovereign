@@ -1,3 +1,5 @@
+import { memberRef } from '@/lib/privacy/memberRef';
+
 export type HumanSafetySource =
   | 'maia_crisis'
   | 'teen_crisis'
@@ -128,7 +130,7 @@ export async function deliverHumanSafetyAlert(
     console.error('[SAFETY_NOTIFY_NO_RECIPIENT] human safety alert was not delivered', {
       source: alert.source,
       severity: alert.severity,
-      memberId: alert.memberId,
+      memberRef: memberRef(alert.memberId),
       sms,
       slack,
       errors,

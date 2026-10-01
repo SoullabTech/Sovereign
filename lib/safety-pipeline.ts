@@ -2,6 +2,7 @@
 import { DateTime } from 'luxon';
 import { RealTimeAlertService, type AlertPayload, type TherapistContact } from './alerting/real-time-alerts';
 import { deliverHumanSafetyAlert } from './safety/humanSafetyAlert.server';
+import { memberRef } from './privacy/memberRef';
 
 interface RiskAssessment {
   level: 'none' | 'moderate' | 'high' | 'crisis';
@@ -493,7 +494,7 @@ export class MAIASafetyPipeline {
       });
 
       if (practitionerDelivered) {
-        console.log(`Crisis alert delivered for user ${userId}, alert ID: ${alertPayload.alert_id}`);
+        console.log(`Crisis alert delivered for member ${memberRef(userId)}, alert ID: ${alertPayload.alert_id}`);
       }
     } catch (error) {
       console.error('Failed to send crisis alert:', error);
@@ -568,7 +569,7 @@ export class MAIASafetyPipeline {
       });
 
       if (practitionerDelivered) {
-        console.log(`High-risk alert delivered for user ${userId}, alert ID: ${alertPayload.alert_id}`);
+        console.log(`High-risk alert delivered for member ${memberRef(userId)}, alert ID: ${alertPayload.alert_id}`);
       }
     } catch (error) {
       console.error('Failed to send high-risk alert:', error);
