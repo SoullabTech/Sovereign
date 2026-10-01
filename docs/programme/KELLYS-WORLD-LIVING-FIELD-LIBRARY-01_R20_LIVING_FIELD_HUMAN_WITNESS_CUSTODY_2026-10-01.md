@@ -6,9 +6,9 @@ Carry the current Living Field human-witness boundary into Kelly's World without
 
 ## Source custody
 
-The authoritative witness hardening is now carried by PR **#1661** on `chore/living-field-witness-hardening-r2-20261001`, a clean six-file replay on current canonical. PR **#1637** is closed as superseded provenance for the original `0df16caf` → `b8e6834f7` lineage.
+The authoritative witness hardening is now **canonical** at merge commit **`7973d9eb667c0787296835f865483a9517a09b88`** via PR **#1661**. PR **#1637** remains closed as superseded provenance for the original `0df16caf` → `b8e6834f7` lineage.
 
-PR **#1661** depends on PR **#1660** to repair a pre-existing canonical record-SHA custody defect; that dependency does not change the Living Field witness standing itself.
+Its prerequisite custody repair, PR **#1660**, is also canonical at merge commit **`16e6cfbbdc4fb0365e0c12936de783064fac9809`**. The former dependency is therefore satisfied; no open repository dependency remains between the frozen witness instruments and the first human first-entry witness.
 
 Production is currently observed at **`56d0cd679`** (`2026-10-01T22:13:34Z`), the runtime against which the fresh machine re-baseline and 0/4 substrate census were performed. That SHA is now an ancestor of current canonical. A later Postgres recreate occurred at `2026-10-01T21:41:44Z`; the container is healthy with `restarts=0` and `oom=false`, while the initiating trigger remains unknown and must not be inferred.
 
