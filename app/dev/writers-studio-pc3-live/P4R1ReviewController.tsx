@@ -14,7 +14,8 @@ import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { useWorkVisual } from '@/app/writers-studio/useWorkVisual';
 import { currentWork } from '@/app/writers-studio/workContext';
-import { readStudioWorkParam, resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { hostFactsFrom } from '@/app/writers-studio/rebuild/liveReview';
 import { listChapterReviewManifests, loadChapterReviewManifestById, type ChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { rehydrateChapterReview } from '@/lib/writersStudio/rebuild/chapterReview';
@@ -57,6 +58,7 @@ type ReadyReview = {
   const requestedSectionId = params?.get('s') ?? null;
   const { id: appearance } = useAtmosphere();
   const { phase: worksPhase, works } = useLivingWorks();
+  const { workId: carriedWorkId } = useHouseStudioH1WorkClaim(params);
 
   const [phase, setPhase] = useState<ReviewPhase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
@@ -73,7 +75,7 @@ type ReadyReview = {
   const workContext = context
     // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
     ? resolveSituatedWorkContext(
-      worksPhase, works, context.manuscriptId, params ? readStudioWorkParam(params) : null,
+      worksPhase, works, context.manuscriptId, carriedWorkId,
     )
     : { kind: 'unknown' as const };
   const work = currentWork(workContext);
