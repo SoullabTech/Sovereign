@@ -548,6 +548,12 @@ export const ACCESS_RULES: AccessRule[] = [
   // metadata; no PII beyond a 120-char UA. Anon by design.
   { exact: '/api/telemetry/client', public: true, notes: 'Client diagnostic telemetry — reachable in unauthenticated/broken states (signin breaker + voice events). See PR #328.' },
 
+  // Local Cabin runtime — these exact paths must cross the Proxy even when
+  // connected-mode auth is absent. The handlers themselves enforce the
+  // offline-mode boundary and, for /api/cabin/context, the local Cabin session.
+  { exact: '/api/cabin/health', public: true, notes: 'Local Cabin readiness witness — handler is offline-only and reports package custody state' },
+  { exact: '/api/cabin/context', public: true, notes: 'Local Cabin Context Package read surface — handler is offline-only and requires an existing maia_cabin_session' },
+
   // Public API
   { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },

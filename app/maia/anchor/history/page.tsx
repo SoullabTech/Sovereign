@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
+import { cabinReturnPath, isCabinOrigin } from '@/lib/cabin/doorway';
 import { apiFetch } from '@/lib/http/apiBase';
 import styles from '../anchor-room.module.css';
 
@@ -53,6 +54,8 @@ function wasRevisited(anchor: Anchor): boolean {
 
 export default function AnchorHistoryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromCabin = isCabinOrigin(searchParams);
   const [anchors, setAnchors] = useState<Anchor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,7 +123,7 @@ export default function AnchorHistoryPage() {
             <p>
               Not a streak and not a score. Just the threads you chose to stay connected to.
             </p>
-            <button type="button" onClick={() => router.push('/maia/anchor?from=house')}>
+            <button type="button" onClick={() => router.push(fromCabin ? '/maia/anchor?from=cabin' : '/maia/anchor?from=house')}>
               Today’s anchor →
             </button>
           </div>
@@ -133,7 +136,7 @@ export default function AnchorHistoryPage() {
         ) : anchors.length === 0 ? (
           <div className={styles.historyEmpty}>
             <p>Nothing has been held yet.</p>
-            <button type="button" onClick={() => router.push('/maia/anchor?from=house')}>
+            <button type="button" onClick={() => router.push(fromCabin ? '/maia/anchor?from=cabin' : '/maia/anchor?from=house')}>
               Begin with today →
             </button>
           </div>
@@ -182,7 +185,9 @@ export default function AnchorHistoryPage() {
 
         <footer className={styles.footer}>
           <span>Nothing here asks you to keep up.</span>
-          <button type="button" onClick={() => router.push('/house')}>Return to House →</button>
+          <button type="button" onClick={() => router.push(fromCabin ? cabinReturnPath() : '/house')}>
+            {fromCabin ? 'Return to Cabin →' : 'Return to House →'}
+          </button>
         </footer>
       </section>
     </main>
