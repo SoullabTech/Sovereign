@@ -1,0 +1,226 @@
+{
+  "timestamp": "2026-10-01T03:43:22.319Z",
+  "canonical": "975a208b8c39f99e9b47208ce5139bbec94bd8ac",
+  "origin": "http://127.0.0.1:3139",
+  "auth": "normal /signin email-code flow using development-only memory mail transport",
+  "syntheticMember": "lf1539-witness",
+  "finalUrl": "http://127.0.0.1:3139/home",
+  "passed": 29,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "signin begins on witnessed origin",
+      "ok": true,
+      "detail": "http://127.0.0.1:3139/signin?next=%2Fmaia%2Fliving-field%3Ffrom%3Dhouse"
+    },
+    {
+      "name": "email-code send accepted locally",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "email-code verification succeeded",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "origin preserved on arrival",
+      "ok": true,
+      "detail": "http://127.0.0.1:3139/maia/living-field?from=house"
+    },
+    {
+      "name": "Living Field arrival path",
+      "ok": true,
+      "detail": "http://127.0.0.1:3139/maia/living-field?from=house"
+    },
+    {
+      "name": "Return Home present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "R1R3 instrument admitted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "instrument SVG receives pointer events",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Fire opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Creation opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Expression leaf opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Wider returns to Creation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "/api/early-field/admission returned 200",
+      "ok": true,
+      "detail": "{\"method\":\"GET\",\"path\":\"/api/early-field/admission\",\"status\":200}"
+    },
+    {
+      "name": "/api/maia/living-field returned 200",
+      "ok": true,
+      "detail": "{\"method\":\"GET\",\"path\":\"/api/maia/living-field\",\"status\":200}"
+    },
+    {
+      "name": "/api/maia/living-constellation returned 200",
+      "ok": true,
+      "detail": "{\"method\":\"GET\",\"path\":\"/api/maia/living-constellation\",\"status\":200}"
+    },
+    {
+      "name": "/api/house/facet-flows returned 200",
+      "ok": true,
+      "detail": "{\"method\":\"GET\",\"path\":\"/api/house/facet-flows\",\"status\":200}"
+    },
+    {
+      "name": "/api/members/me returned 200",
+      "ok": true,
+      "detail": "{\"method\":\"GET\",\"path\":\"/api/members/me\",\"status\":200}"
+    },
+    {
+      "name": "Current Questions detail returned 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "dimension failure copy absent",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "opening dimension does not start MAIA",
+      "ok": true,
+      "detail": "0->0"
+    },
+    {
+      "name": "explicit MAIA entry gesture present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Development History reachable before MAIA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "member provenance visible before MAIA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "MAIA-candidate provenance visible before MAIA",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "explicit MAIA entry starts encounter with 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "explicit MAIA choice starts exactly one encounter",
+      "ok": true,
+      "detail": "0->1"
+    },
+    {
+      "name": "return stays on witnessed origin",
+      "ok": true,
+      "detail": "http://127.0.0.1:3139/home"
+    },
+    {
+      "name": "Return Home reaches /home",
+      "ok": true,
+      "detail": "http://127.0.0.1:3139/home"
+    },
+    {
+      "name": "browser emitted no page errors",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "responses": [
+    {
+      "method": "GET",
+      "path": "/api/auth/whoami",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/members/email-code",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/members/lookup-email",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/members/email-code/verify",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/device/trust",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/maia/living-field",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/early-field/admission",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/house/facet-flows",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/members/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/maia/living-constellation",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/maia/living-field/current_questions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/maia/living-field/current_questions/gathering",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/maia/living-field/current_questions/encounter",
+      "status": 200
+    }
+  ],
+  "pageErrors": [],
+  "screenshot": "/tmp/pr1539-rewitness-975a208b8.png"
+}
