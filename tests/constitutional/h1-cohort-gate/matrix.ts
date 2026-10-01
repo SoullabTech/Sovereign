@@ -14,11 +14,15 @@ import { LAWS } from './laws';
 import { CANDIDATES, CANON_TODAY, REFERENCE } from './gates';
 import type { H1Gate } from './contract';
 import {
-  CENSUS_BASELINE, DC_H8_SOURCES, REFERENCE_SOURCES, producerContainment, repositorySources, repositorySourcesAt,
+  CENSUS_BASELINE, DC_H11B_SOURCES, DC_H11_SOURCES, DC_H8_SOURCES, F11_REFERENCE_SOURCES, REFERENCE_SOURCES,
+  hookFactOnly, oneAuthority, producerContainment, repositorySources, repositorySourcesAt,
 } from './structural';
 import { IMPLEMENTATION, controllerWiring } from './implementation';
 
 const F8 = 'F8 producer containment';
+const F11 = 'F11 hook is a fact supplier, never a semantic authority';
+/** #1551 as merged: the cohort gate R2 converges. Must fail F8 and F11. */
+const CANON_1551 = 'ad7b2d3e';
 let failures = 0;
 const fail = (msg: string) => { failures++; console.log(`  ✗ ${msg}`); };
 
@@ -38,7 +42,9 @@ console.log('1. Conforming reference');
 const refKills = { ...run(REFERENCE) };
 const refF8 = producerContainment(REFERENCE_SOURCES);
 if (refF8) refKills[F8] = refF8;
-const lawCount = Object.keys(LAWS).length + 1;
+const refF11 = hookFactOnly(F11_REFERENCE_SOURCES);
+if (refF11) refKills[F11] = refF11;
+const lawCount = Object.keys(LAWS).length + 2;
 if (Object.keys(refKills).length) for (const [l, r] of Object.entries(refKills)) fail(`reference broke ${l}: ${r}`);
 else console.log(`  ✓ passes all ${lawCount} laws`);
 
@@ -52,6 +58,13 @@ const allCandidates: Array<[string, Outcome]> = Object.entries(CANDIDATES).map(
   const kills: Record<string, string> = {};
   if (r) kills[F8] = r;
   allCandidates.push(['DC-H8 latent producer gains an ungoverned caller', { kills, killedBy: F8, collateral: {} }]);
+}
+for (const [name, files] of [
+  ['DC-H11 seam exists, but the hook also reads work= and decides exposure', DC_H11_SOURCES],
+  ['DC-H11b hook is clean, but a controller re-reads the raw claim beside the seam', DC_H11B_SOURCES],
+] as const) {
+  const r = hookFactOnly(files);
+  allCandidates.push([name, { kills: r ? { [F11]: r } : {}, killedBy: F11, collateral: {} }]);
 }
 for (const [name, { kills, killedBy, collateral }] of allCandidates) {
   const threw = Object.entries(kills).filter(([, r]) => r.startsWith('THREW'));
@@ -78,6 +91,34 @@ for (const headline of ['F1 supplied-work equivalence', 'F7 truthful House prove
 const others = Object.keys(canonKills).filter((l) => !['F1 supplied-work equivalence', 'F7 truthful House provenance', F8].includes(l));
 if (others.length) console.log(`    (canon also fails: ${others.join(', ')})`);
 
+{
+  // The one-authority check must itself be able to fail: each candidate is the
+  // real working tree plus ONE second authority surface.
+  const ONE = 'one authority';
+  const tree = repositorySources();
+  const seconds: Array<[string, Record<string, string>]> = [
+    ['DC-H12a a second module reads the cohort env', { 'lib/access/writersStudioCohort.ts': 'export const on = process.env.HOUSE_STUDIO_H1_ENABLED === "true";' }],
+    ['DC-H12b a competing admission endpoint', { 'app/api/writers-studio/h1-arrival/admission/route.ts': 'export async function GET() { return Response.json({ admitted: false }); }' }],
+    ['DC-H12c eligibility re-evaluated outside the authority', { 'app/house/studioDoor.ts': 'export const ok = (m) => decideHouseStudioH1(m, cfg);' }],
+    ['DC-H12d the retired R1 authority survives', { 'lib/access/h1ArrivalAccess.ts': 'export function canUseH1Arrival(m) { return false; }' }],
+  ];
+  for (const [name, extra] of seconds) {
+    const r = oneAuthority({ ...tree, ...extra });
+    allCandidates.push([name, { kills: r ? { [ONE]: r } : {}, killedBy: ONE, collateral: {} }]);
+    if (r) console.log(`  ✓ ${name}\n      killed by ${ONE}: ${r}`);
+    else fail(`${name} SURVIVED ${ONE}`);
+  }
+}
+
+console.log(`\n3b. #1551 as merged (${CANON_1551}) must fail the laws R2 exists to repair`);
+{
+  const at1551 = repositorySourcesAt(CANON_1551);
+  for (const [law, r] of [[F8, producerContainment(at1551)], [F11, hookFactOnly(at1551)]] as const) {
+    if (r) console.log(`  ✓ #1551 fails ${law}: ${r}`);
+    else fail(`#1551 PASSES ${law}: the suite cannot see what R2 repairs`);
+  }
+}
+
 console.log('\n4. The real implementation (working tree)');
 const implKills = run(IMPLEMENTATION);
 const tree = repositorySources();
@@ -85,8 +126,12 @@ const implF8 = producerContainment(tree);
 if (implF8) implKills[F8] = implF8;
 const wiring = controllerWiring(tree);
 if (wiring) implKills['controller wiring'] = wiring;
+const implF11 = hookFactOnly(tree);
+if (implF11) implKills[F11] = implF11;
+const single = oneAuthority(tree);
+if (single) implKills['one authority'] = single;
 if (Object.keys(implKills).length) for (const [l, r] of Object.entries(implKills)) fail(`implementation broke ${l}: ${r}`);
-else console.log(`  ✓ passes all ${lawCount} laws · every Studio reader wired through the choke point`);
+else console.log(`  ✓ passes all ${lawCount} laws · every Studio reader wired through the seam · exactly one authority and one endpoint`);
 
 console.log(failures ? `\n✗ MATRIX FAILED (${failures})` : `\n✓ MATRIX LETHAL AND DISCRIMINATING · reference clean · ${allCandidates.length} candidates killed on their named laws · canon witness red · implementation conformant`);
 process.exit(failures ? 1 : 0);

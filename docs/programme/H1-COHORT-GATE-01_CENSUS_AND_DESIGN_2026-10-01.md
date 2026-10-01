@@ -4,10 +4,11 @@
 Class: A programme · R1 read-only census + propagation decision + falsifier design
 Governing law: docs/programme/H1-EXPOSURE_CENSUS_AND_RULINGS_2026-09-30.md (#1544, canonical 71859c3a)
 Census baseline: 71859c3a
-Standing: IMPLEMENTATION COMPLETE · FALSIFIER-CONFORMANT · ROLLOUT UNOPENED (§8)
-          · falsifier baseline FROZEN @ 61f77602 (H1-CG-03)
-          · ⛔ NO PR · ⛔ NO DEPLOY · cohort NOT configured (closed by default)
-Untouched by this lane: #1539, #1542, production (04005ca7c)
+Standing: R2 CANONICAL CONVERGENCE COMPLETE · ONE AUTHORITY (#1551) · ONE SEAM · FALSIFIER-CONFORMANT (§9)
+          · R1 implementation (§8) SUPERSEDED IN PART — authority/endpoint/hook retired in favour of #1551
+          · falsifier baseline FROZEN @ 61f77602 · F8 amended (name only) · F11 added
+          · ⛔ NO MERGE · ⛔ NO DEPLOY · cohort NOT configured (closed by default)
+Untouched by this lane: #1539, #1542, production
 ```
 
 ## 0 · Purpose and boundary
@@ -272,6 +273,11 @@ avoid them would stop it being the error it models.
 
 ## 8 · H1-CG-03 — implementation (founder ruling 2026-10-01)
 
+> ⚠️ **SUPERSEDED IN PART by §9 (R2).** The authority (`canUseH1Arrival`, `H1_ARRIVAL_*`), the endpoint
+> (`/api/writers-studio/h1-arrival/admission`) and the hook (`useH1Arrival`) described below were
+> retired in favour of canon's already-admitted #1551 equivalents. The seam path, the House doorway
+> and the proof discipline carry forward. Kept verbatim as the R1 record.
+
 ### 8.1 Ruling
 
 H1-CG-03 OPEN. **Falsifier baseline frozen at `61f77602`.** F1–F10 are constitutional evidence:
@@ -389,3 +395,122 @@ admitted id → not admitted; absent/malformed config → not admitted; body key
 Founder: PR for the lane (merge = latent deploy authorization); then cohort configuration
 (`H1_ARRIVAL_ENABLED`, `H1_ARRIVAL_MEMBER_IDS`) and H1 admission against the population matrix on
 a recorded origin. ⛔ #1539, #1542, production untouched.
+
+## 9 · R2 — canonical convergence + seam repair (founder ruling 2026-10-01)
+
+### 9.1 Why R2 exists
+
+Before opening the R1 PR, canon was found to have moved: **#1551** (`ad7b2d3e`, merged `3421a209`) had
+already landed an H1 cohort gate for the same crossing, and **#1560** (`646ca0ae`) recorded it as
+*H1 ADMITTED TO CANONICAL* (production deployment separate). Opening R1 would have put a second
+cohort authority into review. Founder ruling: **converge on #1551's authority, endpoint and env;
+repair the seam.** *This does not introduce a new cohort gate. It converges the already-admitted
+#1551 H1 authority onto the governed Writer's Studio arrival seam, eliminating distributed `work=`
+interpretation and duplicate cohort logic.*
+
+History is preserved: canon was **merged** into the lane branch (no rebase, no force push); the R1
+commits `61f77602`·`6cd60a4b`·`40f0c269` remain in the lineage.
+
+### 9.2 What #1551 got right, and what R2 repairs
+
+#1551 already satisfied the law's core: one verified-identity authority, closed on any doubt,
+`{ admitted }`-only endpoint, non-admitted House → exactly `/writers-studio`. Against the frozen
+suite it failed two things, both now witnessed by the matrix (stage 3b):
+
+| Law | #1551 at `ad7b2d3e` |
+|---|---|
+| F8 producer containment | `readStudioWorkParam` referenced from `useHouseStudioH1WorkClaim.ts`, outside the governed path |
+| F11 hook is a fact supplier | the admission hook reads the claim and decides whether to expose it |
+
+That is the *second diagram* the ruling names: `URL → hook → controller` with `h1Arrival.ts` beside
+it. R2 produces the first: `URL → h1Arrival.ts → resolved arrival → controllers`, with the hook
+supplying only the admission fact.
+
+### 9.3 The converged shape
+
+| Concern | One place |
+|---|---|
+| Cohort authority | `lib/access/houseStudioH1Access.ts` (`canUseHouseStudioH1`, `HOUSE_STUDIO_H1_ENABLED` / `HOUSE_STUDIO_H1_MEMBER_IDS`) — #1551, unchanged except an added pure `houseStudioH1AdmissionResponse` |
+| Admission endpoint | `GET /api/house-studio/admission` — #1551; now answers from that pure core |
+| `work=` interpretation + resolved arrival | `app/writers-studio/h1Arrival.ts` — `h1AdmissionNeeded`, `resolveH1Arrival → { workId, pending }`, `withoutStudioWork`, `houseWritingHref`, `settleH1Admission` |
+| Admission fact (transport/state) | `useHouseStudioH1WorkClaim(needed: boolean) → { admitted, resolved }` — no claim, no Work id, no resolution. Name kept from #1551 for archaeology. |
+| Consumers | Home, Develop, Review, Write/Edit: `const h1 = useHouseStudioH1WorkClaim(h1AdmissionNeeded(params)); const { workId … } = resolveH1Arrival(params, h1);` → the unchanged canon resolver. House: `houseWritingHref(canUseHouseStudioH1(member.id) …)`. None references `readStudioWorkParam`, `STUDIO_WORK_PARAM` or `.get('work')`. |
+
+Retired (deleted): `lib/access/h1ArrivalAccess.ts` + test · `app/api/writers-studio/h1-arrival/**` ·
+`app/writers-studio/useH1Arrival.ts`. The R1 endpoint test was ported to the #1551 endpoint.
+
+### 9.4 Acceptance conditions (founder, R2)
+
+| # | Condition | Evidence |
+|---|---|---|
+| 1 | Exactly one cohort authority, no second helper, no duplicate env pair | `oneAuthority()` on the working tree: no `canUseH1Arrival` / `H1_ARRIVAL_*` / `useH1Arrival` in runtime source; `HOUSE_STUDIO_H1_*` read only in the authority module; `decideHouseStudioH1`/`parseHouseStudioH1Cohort` called nowhere else. **Proven able to fail**: DC-H12a (second env reader), DC-H12c (eligibility re-evaluated elsewhere), DC-H12d (retired authority survives) each killed |
+| 2 | Exactly one admission endpoint | same check; DC-H12b (competing endpoint) killed |
+| 3 | One governed URL interpretation seam | F8 + F11 on the working tree: the claim is read only in `situatedWork.ts`/`h1Arrival.ts`; no controller, House page or hook parses `work=` |
+| 4 | Hook is transport/state glue | F11; DC-H11 (seam exists and the hook also reads `work=`) killed — the exact smell the ruling names |
+| 5 | Four controllers consume one arrival contract | controller wiring: each takes the fact via `h1AdmissionNeeded`, calls `resolveH1Arrival(params, h1)` exactly once, and feeds its `workId` to the canon resolver — no local defaults, no first-match guess, no fallback. DC-H11b (a controller re-reading `work=` beside the seam) killed |
+| 6 | House behaviour exact | F7 against the real implementation; `studioArrival` + `houseStudioH1Access` structural tests |
+| 7 | Loading behaviour unchanged | Home still holds "Opening…" while a claim awaits admission (`pending`, #1551's `checking`); Develop/Review/Write still render the ordinary resolution meanwhile. **Documented in the seam as presentation timing, not authority**: while `pending` is true `workId` is already null. Only change: a 5 s timeout now settles a hung admission closed, where #1551 would hold "Opening…" indefinitely |
+| 8 | F8 amended, not weakened | `AUTHORITY_CALL` `'canUseH1Arrival('` → `'canUseHouseStudioH1('` with the frozen lineage recorded in `structural.ts`; the invariant (House emits the H1 arrival only after consulting the one authority) unchanged; F8 still red on canon @ `71859c3a` and on #1551 |
+
+### 9.5 F11 — numbered, not F9
+
+The ruling called the new falsifier "F9". **F9 is already a frozen law** (*authority ≠ URL
+mutation*), so the new law is **F11 — the admission hook is a fact supplier, never a second semantic
+authority**: the hook may not reference `readStudioWorkParam`, `STUDIO_WORK_PARAM`, `.get/.has('work')`,
+any resolver, or expose a `workId`; and no arrival consumer (four controllers, House, hook) may read
+the claim itself. Additive — no frozen law edited.
+
+### 9.6 Other instrument changes (recorded per the freeze rule)
+
+- `implementation.ts` rebuilt on #1551's authority and the converged seam. The frozen fixtures name the
+  config with **abstract** keys `H1_ARRIVAL_ENABLED` / `H1_ARRIVAL_MEMBER_IDS`; an adapter maps exactly
+  those two onto `HOUSE_STUDIO_H1_*`. Any other key a law supplies (F3's `H1_HOUSE_MEMBER_IDS`,
+  `LAB_ACCESS_MEMBER_IDS`) is deliberately unmapped, so a second eligibility source still has nowhere to
+  enter. ⛔ `laws.ts`, `world.ts`, `gates.ts` untouched.
+- Matrix: stage 3b (#1551 must fail F8 + F11), DC-H11/H11b, DC-H12a–d, F11 + one-authority on the
+  working tree.
+- Lane typecheck file list follows the converged modules.
+
+**Canon tests updated, intent preserved** (`lib/access/__tests__/houseStudioH1Access.test.ts`,
+`app/writers-studio/__tests__/studioArrival.test.ts`): they pinned #1551's *shape* — the hook taking
+`params`, the inline House ternary, `body?.admitted === true` in the hook, `canUseHouseStudioH1` called
+in the route. Each now pins the same decision through the converged shape (`houseWritingHref(…)`,
+`useHouseStudioH1WorkClaim(h1AdmissionNeeded(params))` + `resolveH1Arrival(params, h1)` and no claim read,
+settlement in the seam, `houseStudioH1AdmissionResponse(memberId)` in the route). The "no client-side
+authority source", "separate from EARLY-FIELD / lab / founder", "closed default documented" and
+access-matrix assertions are unchanged.
+
+### 9.7 Proof (ruled order)
+
+| # | Proof | Result |
+|---|---|---|
+| 1 | F1–F11 reference + defeat matrix | reference 11/11 · **16** candidates killed on named laws (DC-H1…H10, H8, H11, H11b, H12a–d) |
+| 2 | Real implementation | 11/11 + controller wiring + one authority/one endpoint · canon @ `71859c3a` red F1/F7/F8 · #1551 red F8/F11 |
+| 3 | Lane strict typecheck | 0 lane diagnostics (9 inherited listed) |
+| 4 | House crossing | 163/166 |
+| 5 | Studio Home | 67/67 |
+| 6 | Develop | 25/25 |
+| 7 | Review | 25/25 |
+| 8 | #1538 | 23/23 |
+| 9 | WS2-03B | 29/29 |
+| 10 | Auth/session + endpoint + authority | 294/298 |
+| 11 | `npm run typecheck` | **PASS** — 222 vs baseline 239, 0 new |
+| 12 | `npm run build` | BUILD_RESULT |
+
+Breadth: all Studio suites 80/80 (884). The 7 failures in rows 4 and 10 (`lifeFacetFlowProjection`,
+`facetFlowLens`, `authBoundaryMiddleware`, `journalGuardCoverage`, `handlerGuardCoverage`) fail
+**identically on canon's tip** `008963af` (failing-test names diffed) — pre-existing, not repaired here.
+
+### 9.8 Next: R3 — deployment witness, then cohort activation (two acts, never blurred)
+
+**Deployment witness**: canonical merge SHA · image SHA · running container `GIT_COMMIT` · `/api/health`
+· the converged H1 code present in the image · `HOUSE_STUDIO_H1_ENABLED` still closed.
+**Then, separately, cohort activation**: initial member ids chosen and recorded · `HOUSE_STUDIO_H1_ENABLED=true`
++ `HOUSE_STUDIO_H1_MEMBER_IDS` set · restart as required · admitted and non-admitted behaviour proved in
+production. First cohort deliberately small — the question is whether the crossing *feels* coherent,
+not only whether it works. Sequence: **R1 law → R2 convergence → R3 deployment → R4 small-cohort observation.**
+
+⚠️ Merge/deploy effect (unchanged from #1551, which is already canonical): until the cohort is
+configured, House Writing links carry no `from=house` for any member, so the Studio return-to-House
+strip does not appear; admitted members move from the ordinary Studio view to the Work arrival once
+admission resolves. ⛔ #1539, #1542, production untouched.

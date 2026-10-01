@@ -25,7 +25,7 @@
   },
   "include": [
     "tests/constitutional/h1-cohort-gate/**/*.ts",
-    "app/writers-studio/useH1Arrival.ts",
-    "app/api/writers-studio/h1-arrival/**/*.ts"
+    "app/writers-studio/useHouseStudioH1WorkClaim.ts",
+    "app/api/house-studio/admission/**/*.ts"
   ]
 }

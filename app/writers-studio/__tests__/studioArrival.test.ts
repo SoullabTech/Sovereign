@@ -192,12 +192,11 @@ const code = (rel: string) =>
   src(rel).replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 
 describe('surfaces', () => {
-  it('House links each living Work through the one doorway builder', () => {
+  it('House uses the one doorway builder only for H1-admitted members and otherwise preserves plain Studio entry', () => {
     const house = code('app/house/page.tsx');
-    // H1-COHORT-GATE-01: the same builder, reached only through the H1 authority.
-    expect(house).toMatch(/href=\{houseWritingHref\(h1Admitted, work\.id, studioArrivalFromHouse\)\}/);
-    expect(house).toMatch(/const h1Admitted = canUseH1Arrival\(member\.id\);/);
-    expect(house).not.toMatch(/href="\/writers-studio"/);
+    expect(house).toMatch(/const houseStudioH1Admitted = canUseHouseStudioH1\(member\.id\);/);
+    expect(house).toMatch(/href=\{houseWritingHref\(houseStudioH1Admitted, work\.id, studioArrivalFromHouse\)\}/);
+    expect(house).toMatch(/href=\{houseWritingHref\(houseStudioH1Admitted, null, studioArrivalFromHouse\)\}/);
     expect(studioArrivalFromHouse('x')).not.toMatch(/member|intent|thread|title/i);
   });
 

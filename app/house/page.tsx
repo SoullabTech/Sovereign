@@ -9,8 +9,8 @@ import { HousePreferencesProvider, HouseMemberControls, HouseCenter, HouseQuickA
 import { selectPassingQuote } from './passingContext';
 import { PASSING_QUOTES } from './passingQuotes';
 import { studioArrivalFromHouse } from '@/app/writers-studio/situatedWork';
+import { canUseHouseStudioH1 } from '@/lib/access/houseStudioH1Access';
 import { houseWritingHref } from '@/app/writers-studio/h1Arrival';
-import { canUseH1Arrival } from '@/lib/access/h1ArrivalAccess';
 
 async function memberForHouse() {
   let memberId: string;
@@ -39,10 +39,9 @@ export const dynamic = 'force-dynamic';
 export async function HouseExperience({ current = 'house' }: { current?: 'home' | 'house' } = {}) {
   const member = await memberForHouse();
   if (!member) redirect('/signin');
-  // H1-COHORT-GATE-01: one authority, verified server identity (requireMemberId).
-  const h1Admitted = canUseH1Arrival(member.id);
   const firstName = member.name?.trim().split(/\s+/)[0] || 'there';
   const livingWorks = await livingWorksForHouse(member.id);
+  const houseStudioH1Admitted = canUseHouseStudioH1(member.id);
   const housePreferences = await readHousePreferences(member.id, query);
   const passingQuote = selectPassingQuote(PASSING_QUOTES, new Date());
 
@@ -111,15 +110,13 @@ export async function HouseExperience({ current = 'house' }: { current?: 'home' 
             <div key={work.id}>
               <span>{work.title || 'An unnamed living work'}</span>
               {/* HOUSE-STUDIO-CIRCULATION-01R1 · H1-B: carries the Work the member
-                  points at — a pointer, never meaning. The Studio validates it.
-                  H1-COHORT-GATE-01: only for an admitted member; otherwise the
-                  ordinary crossing, exactly. */}
-              <Link href={houseWritingHref(h1Admitted, work.id, studioArrivalFromHouse)}>Writing →</Link>
+                  points at — a pointer, never meaning. The Studio validates it. */}
+              <Link href={houseWritingHref(houseStudioH1Admitted, work.id, studioArrivalFromHouse)}>Writing →</Link>
             </div>
           )) : (
             <div>
               <span>No living Work is asking for space here.</span>
-              <Link href={houseWritingHref(h1Admitted, null, studioArrivalFromHouse)}>Writing →</Link>
+              <Link href={houseWritingHref(houseStudioH1Admitted, null, studioArrivalFromHouse)}>Writing →</Link>
             </div>
           )}
           <div>

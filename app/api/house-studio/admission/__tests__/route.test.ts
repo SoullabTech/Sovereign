@@ -1,5 +1,5 @@
 /**
- * H1-COHORT-GATE-01 · GET /api/writers-studio/h1-arrival/admission.
+ * H1-COHORT-GATE-01 · GET /api/house-studio/admission (H1 · R2: the #1551 endpoint).
  *
  * Identity comes ONLY from a verified session (the REAL getMemberIdFromRequest
  * runs; auth_sessions and the cookie jar are mocked). Nothing a client sends —
@@ -30,15 +30,15 @@ jest.mock('next/headers', () => ({
 
 import { GET } from '../route';
 
-const URL_BASE = 'http://localhost/api/writers-studio/h1-arrival/admission';
+const URL_BASE = 'http://localhost/api/house-studio/admission';
 const req = (headers: Record<string, string> = {}, search = '') =>
   new NextRequest(`${URL_BASE}${search}`, { method: 'GET', headers });
 
 const ENV = { ...process.env };
 beforeEach(() => {
   for (const k of Object.keys(mockCookieJar)) delete mockCookieJar[k];
-  process.env.H1_ARRIVAL_ENABLED = 'true';
-  process.env.H1_ARRIVAL_MEMBER_IDS = ADMITTED;
+  process.env.HOUSE_STUDIO_H1_ENABLED = 'true';
+  process.env.HOUSE_STUDIO_H1_MEMBER_IDS = ADMITTED;
   mockQuery.mockReset();
   mockQuery.mockImplementation(async (sql: string, params?: unknown[]) => {
     if (/auth_sessions/i.test(String(sql))) {
@@ -83,10 +83,10 @@ describe('admission endpoint', () => {
 
   it('closed when configuration is absent or malformed', async () => {
     mockCookieJar.maia_session = 'token-admitted';
-    delete process.env.H1_ARRIVAL_ENABLED;
+    delete process.env.HOUSE_STUDIO_H1_ENABLED;
     expect((await read(await GET(req()))).body).toEqual({ admitted: false });
-    process.env.H1_ARRIVAL_ENABLED = 'true';
-    process.env.H1_ARRIVAL_MEMBER_IDS = `${ADMITTED},broken`;
+    process.env.HOUSE_STUDIO_H1_ENABLED = 'true';
+    process.env.HOUSE_STUDIO_H1_MEMBER_IDS = `${ADMITTED},broken`;
     expect((await read(await GET(req()))).body).toEqual({ admitted: false });
   });
 

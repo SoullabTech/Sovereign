@@ -15,8 +15,8 @@ import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { useWorkVisual } from '@/app/writers-studio/useWorkVisual';
 import { currentWork } from '@/app/writers-studio/workContext';
 import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
-import { admittedStudioWorkParam } from '@/app/writers-studio/h1Arrival';
-import { useH1Arrival } from '@/app/writers-studio/useH1Arrival';
+import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
+import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { hostFactsFrom } from '@/app/writers-studio/rebuild/liveReview';
 import { listChapterReviewManifests, loadChapterReviewManifestById, type ChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { rehydrateChapterReview } from '@/lib/writersStudio/rebuild/chapterReview';
@@ -51,8 +51,6 @@ type ReadyReview = {
   durable: Readonly<Record<string, DurableObservationTruth>>;
 };export default function Pc3LiveReviewHost() {
   const params = useSearchParams();
-  // H1-COHORT-GATE-01: a carried `work=` has authority only for a resolved, admitted member.
-  const h1 = useH1Arrival();
   const router = useRouter();
   const pathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const manuscriptId = params?.get('m') ?? null;
@@ -61,6 +59,9 @@ type ReadyReview = {
   const requestedSectionId = params?.get('s') ?? null;
   const { id: appearance } = useAtmosphere();
   const { phase: worksPhase, works } = useLivingWorks();
+  // H1 · R2: the seam produces the arrival; the hook only supplies the admission fact.
+  const h1 = useHouseStudioH1WorkClaim(h1AdmissionNeeded(params));
+  const { workId: carriedWorkId } = resolveH1Arrival(params, h1);
 
   const [phase, setPhase] = useState<ReviewPhase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
@@ -77,7 +78,7 @@ type ReadyReview = {
   const workContext = context
     // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
     ? resolveSituatedWorkContext(
-      worksPhase, works, context.manuscriptId, params ? admittedStudioWorkParam(params, h1) : null,
+      worksPhase, works, context.manuscriptId, carriedWorkId,
     )
     : { kind: 'unknown' as const };
   const work = currentWork(workContext);

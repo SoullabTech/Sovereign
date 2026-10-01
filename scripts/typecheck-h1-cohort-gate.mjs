@@ -16,10 +16,10 @@ const res = spawnSync('npx', ['tsc', '-p', 'tsconfig.h1-cohort-gate.json', '--pr
 const lines = (res.stdout + res.stderr).split('\n').filter((l) => /\(\d+,\d+\): error TS\d+/.test(l));
 const LANE = [
   'tests/constitutional/h1-cohort-gate/',
-  'lib/access/h1ArrivalAccess.ts',
+  'lib/access/houseStudioH1Access.ts',
   'app/writers-studio/h1Arrival.ts',
-  'app/writers-studio/useH1Arrival.ts',
-  'app/api/writers-studio/h1-arrival/',
+  'app/writers-studio/useHouseStudioH1WorkClaim.ts',
+  'app/api/house-studio/admission/',
 ];
 const isLane = (l) => LANE.some((p) => l.startsWith(p));
 const lane = lines.filter(isLane);

@@ -8,8 +8,8 @@ import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanc
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
 import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
-import { admittedStudioWorkParam } from '@/app/writers-studio/h1Arrival';
-import { useH1Arrival } from '@/app/writers-studio/useH1Arrival';
+import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
+import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { editorialThreadIdFrom } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -55,8 +55,6 @@ type Phase = 'loading' | 'ready' | 'unauthorized' | 'error';
 
 export default function FlagshipWriteEditController() {
   const params = useSearchParams();
-  // H1-COHORT-GATE-01: a carried `work=` has authority only for a resolved, admitted member.
-  const h1 = useH1Arrival();
   const router = useRouter();
   const pathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const requested = params?.get('m') ?? null;
@@ -87,6 +85,9 @@ export default function FlagshipWriteEditController() {
   const [selectedPassage, setSelectedPassage] = useState<Pc3HeldPassage | null>(null);
   const writingRef = useRef<SectionWriting | null>(null);
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
+  // H1 · R2: the seam produces the arrival; the hook only supplies the admission fact.
+  const h1 = useHouseStudioH1WorkClaim(h1AdmissionNeeded(params));
+  const { workId: carriedWorkId } = resolveH1Arrival(params, h1);
 
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
@@ -232,7 +233,7 @@ export default function FlagshipWriteEditController() {
   const visibleSections = chapter?.sections ?? (focusSection ? [focusSection] : []);
   // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
   const workContext = resolveSituatedWorkContext(
-    worksPhase, works, context?.manuscriptId ?? null, params ? admittedStudioWorkParam(params, h1) : null,
+    worksPhase, works, context?.manuscriptId ?? null, carriedWorkId,
   );
   const work = currentWork(workContext);
   const workContextSentence = workContext.kind === 'work'
