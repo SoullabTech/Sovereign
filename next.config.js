@@ -103,6 +103,8 @@ const nextConfig = {
         './chess-tools/**/*',
         './mobile/**/*',
         './maia-android-debug*.apk',
+        './.git',
+        './.git/**/*',
         './.env*',
         './**/.env*',
         './**/*.pem',
