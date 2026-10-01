@@ -41,6 +41,15 @@ export function AdultAcknowledgmentGate() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // The MAIA route refuses a turn without the acknowledgment and signals here,
+  // so the prompt appears even if the first check missed (e.g. offline).
+  const [recheck, setRecheck] = useState(0);
+  useEffect(() => {
+    const onRequired = () => setRecheck((n) => n + 1);
+    window.addEventListener('maia:acknowledgment-required', onRequired);
+    return () => window.removeEventListener('maia:acknowledgment-required', onRequired);
+  }, []);
+
   useEffect(() => {
     if (!isMemberSurface(pathname) || needed) return;
     let cancelled = false;
@@ -57,7 +66,7 @@ export function AdultAcknowledgmentGate() {
     return () => {
       cancelled = true;
     };
-  }, [pathname, needed]);
+  }, [pathname, needed, recheck]);
 
   if (!needed) return null;
 

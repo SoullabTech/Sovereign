@@ -14,6 +14,7 @@
 -- Absence of a row means "not acknowledged", never "acknowledged by default".
 
 BEGIN;
+SET LOCAL lock_timeout = '5s';
 
 CREATE TABLE IF NOT EXISTS member_acknowledgments (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),

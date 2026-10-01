@@ -191,6 +191,7 @@ import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { acknowledgmentGateForMember } from '@/lib/members/acknowledgments';
 
 // Skip during static export (Capacitor builds)
 
@@ -363,6 +364,17 @@ export async function POST(req: NextRequest) {
           : 'absent',
       finalUserId: userId ? memberRef(userId) : 'null',
     });
+
+    // MEMBER-ADULT-ACK-01: a signed-in member's turn reaches MAIA only once
+    // they hold every required acknowledgment (today: their own 18+
+    // confirmation). This is the one server enforcement point, so it covers
+    // members created by OAuth, team invite or Now What?, which never see the
+    // signup checkbox. Fail-closed: an unreadable record refuses (503).
+    // Guests are not gated here (anonymous conversation is unchanged).
+    if (userId) {
+      const ackGate = await acknowledgmentGateForMember(userId);
+      if (!ackGate.ok) return jsonWithCors(req, ackGate.body, ackGate.status);
+    }
 
     // Validate and sanitize timezone (default to UTC if invalid)
     const timezone = (rawTimezone && isValidTimeZone(rawTimezone)) ? rawTimezone : 'UTC';

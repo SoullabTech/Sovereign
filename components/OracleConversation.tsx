@@ -5750,6 +5750,24 @@ I'm not sure what I'm feeling yet.`;
           }
         }
 
+        // MEMBER-ADULT-ACK-01: the server refused because a required
+        // acknowledgment (18+) is missing or could not be read. Never answer in
+        // MAIA's name here: say what happened, keep the message for Resend, and
+        // ask the acknowledgment gate to show itself.
+        if (response.status === 403 || response.status === 503) {
+          const ackErr = await response.clone().json().catch(() => null);
+          if (ackErr?.code === 'ACKNOWLEDGMENT_REQUIRED' || ackErr?.code === 'ACKNOWLEDGMENT_UNAVAILABLE') {
+            setInputSubmitError(ackErr.error || "Your message hasn't been sent.");
+            setMessages(prev => markFailed(prev, targetMessageId, 'server'));
+            if (ackErr.code === 'ACKNOWLEDGMENT_REQUIRED' && typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('maia:acknowledgment-required'));
+            }
+            setIsProcessing(false);
+            setIsResponding(false);
+            return;
+          }
+        }
+
         // 🚧 MAINTENANCE MODE: Show pause message when system is in maintenance
         if (response.status === 503) {
           const errData = await response.json().catch(() => null);

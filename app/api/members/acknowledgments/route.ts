@@ -12,8 +12,12 @@ export const dynamic = 'force-dynamic';
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { missingAcknowledgments, recordAcknowledgment } from '@/lib/members/acknowledgments';
-import { ADULT_ACK_COPY, ADULT_ACK_KIND, ADULT_ACK_VERSION } from '@/lib/members/adultConfirmation';
+import {
+  missingAcknowledgments,
+  recordAcknowledgment,
+  RECORDABLE_ACKNOWLEDGMENTS,
+} from '@/lib/members/acknowledgments';
+import { ADULT_ACK_COPY, ADULT_ACK_KIND } from '@/lib/members/adultConfirmation';
 
 const ALLOWED_ORIGINS = new Set([
   'https://soullab.life',
@@ -65,17 +69,18 @@ export async function POST(req: NextRequest) {
   } catch {
     /* empty body is refused below */
   }
-  // Only the 18+ confirmation can be recorded today; the disclosure kind is
-  // reserved until its copy is ratified. Only a literal `true` confirms.
-  if (body.kind !== ADULT_ACK_KIND || body.confirms !== true) {
+  // Only kinds in RECORDABLE_ACKNOWLEDGMENTS can be recorded, at their current
+  // version (today: the 18+ confirmation). Only a literal `true` confirms.
+  const recordable = RECORDABLE_ACKNOWLEDGMENTS.find((r) => r.kind === body.kind);
+  if (!recordable || body.confirms !== true) {
     return NextResponse.json(
-      { error: "Please confirm you're 18 or older to continue." },
+      { error: 'Please confirm the notice to continue.' },
       { status: 400, headers },
     );
   }
   try {
-    await recordAcknowledgment(memberId, ADULT_ACK_KIND, ADULT_ACK_VERSION, 'sign_in_prompt');
-    return NextResponse.json({ recorded: ADULT_ACK_KIND, version: ADULT_ACK_VERSION }, { headers });
+    await recordAcknowledgment(memberId, recordable.kind, recordable.version, 'sign_in_prompt');
+    return NextResponse.json({ recorded: recordable.kind, version: recordable.version }, { headers });
   } catch (err) {
     console.error('[ACK] record failed:', err);
     return NextResponse.json({ error: 'Could not record. Please try again.' }, { status: 503, headers });
