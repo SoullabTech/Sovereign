@@ -113,3 +113,27 @@ EARLY-FIELD-01 is **merged, not deployed and not witnessed in production**.
   401s. Clearing site data before each walk remains prudent.
 
 H1 remains **merged, not admitted** until its browser witness passes.
+
+---
+
+## 6 · Addendum: canonical deploy taken, then superseded (2026-10-01)
+
+Facts from the founder's terminal output.
+
+| # | Act | Running after |
+|---|---|---|
+| 5 | Environment re-witnessed before deploy: `EARLY_FIELD_ENABLED` and `EARLY_FIELD_MEMBER_IDS` both unset in the container (earlier check: `<unset>`, length 0). | `89f7876e8` |
+| 6 | `pre-deploy-gate.sh deploy-maia cc1c5b4d7`: Co-Lab gate 33/0/0, no pending migrations, built image verified `cc1c5b4d7`, running container verified `printenv == Config.Env == cc1c5b4d7`. Rollback tags: `:previous` → `89f7876e8`; `7ec42ce6f` pruned. | **`cc1c5b4d7`** |
+| 7 | **A later deploy superseded act 6.** The founder's provenance check afterwards returned `GIT_COMMIT=3421a2096` on both channels. Who ran it and when were **not captured** in the relayed output and are not inferred here. | **`3421a2096`** |
+
+**`3421a2096` = canonical merge of #1551** (`feature/h1-cohort-gate-20260930`, "gate H1 Work-context arrival by cohort"), parents `cc1c5b4d7` + `ad7b2d3ea`.
+
+- `c31b85a34`, `0e29c65df` and `cc1c5b4d7` are all ancestors, so **EARLY-FIELD-01 is in the running image.**
+- #1551 touches **no EARLY-FIELD file**: `lib/access/earlyFieldAccess.ts`, `app/api/early-field/**` and `components/maia/living-field/**` are unchanged. The dashboard still has one gated render path: `{earlyFieldAdmitted && <LivingFieldInstrument />}`.
+- #1551 adds a **separate** authority, `HOUSE_STUDIO_H1_ENABLED` / `HOUSE_STUDIO_H1_MEMBER_IDS` (`.env.example` default closed), and `GET /api/house-studio/admission` (exact, non-public `free` rule). Like EARLY_FIELD, it is unset in production, so **H1 explicit Work-context arrival is closed for every member** until a cohort is configured.
+
+### Standing
+
+- **Production:** `3421a2096`. The `LivingFieldInstrument` exposure that began at 23:28Z is **closed in code**, because the gate is deployed with the environment unset. It has **not been witnessed in production** yet.
+- **Owed next (unchanged):** the non-cohort witness from §4, run against `3421a2096`.
+- **Consequence for H1 admission:** the H1 browser witness (`localhost:3100`) now needs the walking member listed in `HOUSE_STUDIO_H1_*` on that dev server. Otherwise the arrival is correctly closed, and the walk would test the gate, not H1. That belongs to the H1 lane record and is noted here only as a cross-reference.
