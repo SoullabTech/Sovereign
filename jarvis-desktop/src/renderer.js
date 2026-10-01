@@ -2139,6 +2139,28 @@ function renderResult(res) {
   }
 }
 
+function renderAccessAuthority() {
+  const a = window.KELLY_FIELD_LIBRARY && window.KELLY_FIELD_LIBRARY.accessAuthority;
+  if (!a) {
+    return `<div class="card"><h3>Member access boundary</h3><div class="hint">No canonical access-authority witness is present in this Field Library build. Kelly’s World does not infer one.</div></div>`;
+  }
+  const yesNo = value => value === true ? 'YES' : value === false ? 'NO' : 'UNWITNESSED';
+  return `<div class="card">
+    <h3>Member access boundary</h3>
+    <div class="hint">Read-only projection of canonical programme evidence. Witness is not authority; Kelly’s World cannot grant, revoke, extend, or narrow access.</div>
+    <div class="row"><span class="label">Beta cohort authority</span><span class="kv">${escapeHtml(a.authority || 'UNWITNESSED')}</span></div>
+    <div class="row"><span class="label">Ordinary platform minimum</span><span class="kv">${escapeHtml(a.ordinary_platform_minimum || 'UNWITNESSED')}</span></div>
+    <div class="row"><span class="label">Subscription gates ordinary platform</span><span class="kv">${yesNo(a.subscription_gates_ordinary_platform)}</span></div>
+    <div class="row"><span class="label">Early Field is separate</span><span class="kv">${yesNo(a.early_field_separate)}</span></div>
+    <div class="row"><span class="label">Beta testers</span><span class="kv">${Number.isInteger(a.beta_testers) ? a.beta_testers : 'UNWITNESSED'}</span></div>
+    <div class="row"><span class="label">Password-capable</span><span class="kv">${Number.isInteger(a.password_capable) ? a.password_capable : 'UNWITNESSED'}</span></div>
+    <div class="row"><span class="label">Email-code capable</span><span class="kv">${Number.isInteger(a.email_code_capable) ? a.email_code_capable : 'UNWITNESSED'}</span></div>
+    <div class="row"><span class="label">Early Field cohort</span><span class="kv">${Number.isInteger(a.early_field) ? a.early_field : 'UNWITNESSED'}</span></div>
+    <div class="row"><span class="label">Production witness</span><span class="kv">${escapeHtml(a.witnessed_running_commit || 'UNWITNESSED')}</span></div>
+    <div class="library-path">${escapeHtml(a.record_path || 'canonical record path unavailable')}</div>
+  </div>`;
+}
+
 function renderSystem() {
   const s = lastStatus;
   if (!s) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
@@ -2162,6 +2184,7 @@ function renderSystem() {
       ${stateRow('Memory / Postgres', s.memory_postgres || { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one.' })}
       ${stateRow('Production', s.production || { state: 'NOT PROBED', detail: 'Requires explicit production/SSH authority, which Desktop does not hold. Not probed by design.' })}
     </div>
+    ${renderAccessAuthority()}
     ${provenanceRows(s.provenance)}
     <div class="card">
       <h3>Builder OS detail</h3>
