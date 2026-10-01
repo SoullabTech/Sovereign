@@ -1,6 +1,6 @@
 # Living Field First Entry: Pre-Walk Gate Record
 
-**Status:** PARTIAL · G1 PASS · G2 PASS · G0/G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
+**Status:** PARTIAL · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G0/G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
 **Governs:** `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md` (with Amendments 1 and 2)
 **Occasioned by:** a J18 verdict and an emergency-disable PASS that existed only in a session
 transcript and were never committed. Under this programme's rules a probe is not the record.
@@ -120,7 +120,7 @@ production_sha_at_capture: `298414555`
 started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy
 ```
 
-Verdict: **PASS**
+Mechanical verdict: **PASS** — database stability criteria satisfied. Final G2 remains OPEN until the founder explicitly accepts the recorded standby exposure or defers the walk.
 
 **Root cause / trigger:** recorded as **UNKNOWN** for both the earlier drift and the 21:41Z
 recreate. The newer daemon journal proves recreate-not-crash, not who or what invoked it. ⛔ Do
@@ -136,7 +136,7 @@ Accept that exposure explicitly or defer the walk; do not leave it assumed.
 
 Standby exposure accepted for this walk: yes (by whom) / no (walk deferred)
 
-Verdict: PASS / FAIL
+Final G2 verdict: PASS / DEFERRED — fill only after the founder's explicit acceptance choice.
 
 ---
 
@@ -305,7 +305,7 @@ Verdict: PASS (G7a / G7b) / FAIL
 |---|---|
 | G0 protocol canonical | OPEN |
 | G1 cabin mode unset | **PASS** |
-| G2 database stable | **PASS** |
+| G2 database stable | OPEN — mechanical PASS; founder standby-exposure choice required |
 | G3 emergency disable witnessed | OPEN |
 | G4 admission server-side | OPEN |
 | G5 Amendment 1 at start | OPEN |
