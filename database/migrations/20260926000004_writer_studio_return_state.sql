@@ -6,6 +6,11 @@
 -- passage, Review finding, Editorial thread, or authorization.
 BEGIN;
 
+-- RC2 (F2): bound lock ACQUISITION. A DDL lock queued behind a long reader
+-- transaction would stall every later query on the table; time out instead.
+-- A timeout aborts this file pre-swap with the old reader intact.
+SET LOCAL lock_timeout = '5s';
+
 CREATE TABLE IF NOT EXISTS writer_studio_relationship_returns (
   member_id       UUID NOT NULL,
   living_work_id  UUID NOT NULL,
@@ -47,6 +52,13 @@ CREATE TABLE IF NOT EXISTS writer_studio_place_returns (
     REFERENCES member_manuscripts(id, member_id)
     ON UPDATE RESTRICT ON DELETE CASCADE
 );
+
+-- RC2 (F5): index the cascade FK columns so a parent delete does not scan.
+CREATE INDEX IF NOT EXISTS wsrr_relationship_idx
+  ON writer_studio_relationship_returns (relationship_id);
+
+CREATE INDEX IF NOT EXISTS wspr_draft_section_idx
+  ON writer_studio_place_returns (draft_section_id);
 
 COMMENT ON TABLE writer_studio_relationship_returns IS
   'A2-7 member-owned exact return selection for one explicitly chosen A2 relationship. No place, child or cognition fields.';
