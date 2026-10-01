@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { CabinLocalStore } from '@/lib/cabin/localStore';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -54,6 +55,67 @@ function getCorsHeaders(req: NextRequest): Record<string, string> {
   };
 }
 
+function cabinMemberResponse(
+  request: NextRequest,
+  headers: Record<string, string>,
+): NextResponse {
+  const dataPath = process.env.MAIA_CABIN_DATA_PATH;
+  if (!dataPath) {
+    return NextResponse.json(
+      { error: 'Cabin data path unavailable', code: 'CABIN_DATA_UNAVAILABLE' },
+      { status: 503, headers },
+    );
+  }
+
+  const store = new CabinLocalStore(dataPath);
+  try {
+    const incoming = request.cookies.get('maia_cabin_session')?.value || null;
+    let member = store.resolveSession(incoming);
+    let issuedToken: string | null = null;
+
+    if (!member) {
+      member = store.ensureLocalMember();
+      issuedToken = store.issueSession(member.id);
+    }
+
+    const response = NextResponse.json({
+      success: true,
+      correlationId: headers['X-Request-ID'],
+      action: 'sync',
+      member: {
+        id: member.id,
+        username: member.username,
+        name: member.name,
+        preferredName: member.preferredName || member.name,
+        email: member.email,
+        onboarded: member.onboarded,
+        onboardingStep: member.onboardingStep,
+        circleTier: 'explorer',
+        tier: member.tier,
+        roles: member.roles,
+        createdAt: member.createdAt,
+        lastSignIn: member.lastSignIn,
+        hasWebauthn: false,
+        preferredAuthMethod: 'local',
+      },
+    }, { headers });
+
+    if (issuedToken) {
+      response.cookies.set('maia_cabin_session', issuedToken, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false,
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365 * 5,
+      });
+    }
+
+    return response;
+  } finally {
+    store.close();
+  }
+}
+
 /**
  * CORS Preflight Handler
  */
@@ -91,6 +153,10 @@ export async function GET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true }, { headers });
+  }
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    return cabinMemberResponse(request, headers);
   }
 
   try {

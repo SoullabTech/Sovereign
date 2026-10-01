@@ -1,5 +1,5 @@
-import { CONSEQUENCE_FORBIDDEN_FIELDS, CONSEQUENCE_FINDING_FIELDS, O1_CANDIDATE_STANDING, PROPOSAL_SOURCE_PREFIX } from './contract.mjs';
-import { makeEnvelope, makeProgramme, protectedView, stable } from './substrate.mjs';
+import { CONSEQUENCE_FORBIDDEN_FIELDS, CONSEQUENCE_FINDING_FIELDS, CONSEQUENCE_PROJECTION_FIELDS, CONSEQUENCE_SOURCE, CONSEQUENCE_SOURCE_PREFIX, O1_CANDIDATE_STANDING, PROPOSAL_SOURCE_PREFIX } from './contract.mjs';
+import { deliverLaneProjection, makeEnvelope, makeLaneWorld, makeProgramme, protectedView, stable } from './substrate.mjs';
 
 const safe=(id,fn)=>{try{return fn()}catch(e){return [`${id}: threw ${e?.message||e}`]}};
 const proposal=()=>({kind:'proposal',source_act:'wu-r4',summary:'inspect adjacent resolver',proposed_kind:'INSPECT'});
@@ -15,4 +15,5 @@ export const FALSIFIERS=Object.freeze([
   {id:'R4-E6',law:'finding never projects to O1, O2 or O3',run:(d)=>safe('R4-E6',()=>{const f=[];for(const e of [ordinaryFinding(),consequence()])if(d.projectProposal(e)!=null)f.push('finding projected as candidate');return f;})},
   {id:'R4-E7',law:'re-reading one proposal is idempotent by evidence source_ref, not summary text',run:(d)=>safe('R4-E7',()=>{const f=[];const e=proposal();const cs=d.projectProposalSet([e,e,{...e}]);if(!Array.isArray(cs)||cs.length!==1)f.push(`candidate count ${cs?.length}`);const other={...e,source_act:'wu-other'};const ds=d.projectProposalSet([e,other]);if(ds.length!==2)f.push('distinct evidence collapsed by summary');return f;})},
   {id:'R4-E8',law:'historical W4 v1 has no live non-test runtime caller',run:(d)=>safe('R4-E8',()=>{const live=d.v1RuntimeCallers();return live.length?live.map(x=>'live v1 caller: '+x):[];})},
+  {id:'R4-E9',law:'a lawful consequence finding projects as evidence to exactly its affected lane and nowhere else',run:(d)=>safe('R4-E9',()=>{const f=[];const e=consequence();const p=d.projectConsequenceFinding(e);if(!p)return ['no cross-lane projection'];if(p.target_lane!==e.affected_lane)f.push(`target ${p.target_lane} != ${e.affected_lane}`);if(p.source!==CONSEQUENCE_SOURCE)f.push(`source ${p.source}`);if(!String(p.source_ref||'').startsWith(CONSEQUENCE_SOURCE_PREFIX))f.push('no stable finding source_ref');for(const k of Object.keys(p))if(!CONSEQUENCE_PROJECTION_FIELDS.includes(k))f.push(`projection carries ${k}`);if(stable(p.evidence)!==stable(e))f.push('projected evidence changed');const w=makeLaneWorld();deliverLaneProjection(w,p);if(w.lanes['lane-b'].inbox.length!==1)f.push('affected lane did not receive finding');if(w.lanes['lane-a'].inbox.length||w.lanes['lane-c'].inbox.length)f.push('finding broadcast to another lane');if(d.projectConsequenceFinding(ordinaryFinding())!=null)f.push('ordinary finding projected cross-lane');return f;})},
 ]);

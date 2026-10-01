@@ -20,9 +20,33 @@ const stage = path.join(stageParent, 'project');
 
 fs.rmSync(stage, { recursive: true, force: true });
 fs.mkdirSync(stage, { recursive: true });
+
 for (const entry of ['package.json', 'src', 'build']) {
   fs.cpSync(path.join(root, entry), path.join(stage, entry), { recursive: true });
 }
+
+const repoRoot = path.join(root, '..');
+const standaloneRoot = path.join(repoRoot, '.next', 'standalone');
+const standaloneServer = path.join(standaloneRoot, 'server.js');
+const standaloneStatic = path.join(repoRoot, '.next', 'static');
+const standalonePublic = path.join(repoRoot, 'public');
+
+if (!fs.existsSync(standaloneServer)) {
+  throw new Error(
+    'Cabin runtime is not built. Run MAIA_CABIN_MODE=offline next build first so .next/standalone/server.js exists.',
+  );
+}
+
+const cabinStage = path.join(stage, 'cabin-runtime');
+fs.mkdirSync(cabinStage, { recursive: true });
+fs.cpSync(standaloneRoot, cabinStage, { recursive: true });
+fs.mkdirSync(path.join(cabinStage, '.next'), { recursive: true });
+fs.cpSync(standaloneStatic, path.join(cabinStage, '.next', 'static'), { recursive: true });
+fs.cpSync(standalonePublic, path.join(cabinStage, 'public'), { recursive: true });
+
+console.log('[MAIA Desktop] cabin runtime staged from .next/standalone');
+console.log(`[MAIA Desktop] cabin server=${path.join(cabinStage, 'server.js')}`);
+
 const args = [
   '--projectDir', stage,
   '--mac',
