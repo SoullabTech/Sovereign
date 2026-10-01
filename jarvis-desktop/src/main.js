@@ -17,6 +17,7 @@ const { childEnv, resolveNodeBinary } = require('./child-env.js');
 const MECH = require('./builder-mechanism.js');
 const CONTINUITY = require('./continuity.js');
 const FRONTIER = require('./frontier-worker.js');
+const CABIN_CONTEXT = require('./cabin-context-status.js');
 const WUC = require('./work-unit-control.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
@@ -520,6 +521,7 @@ ipcMain.handle('jarvis:status', async () => {
     claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; routing alone never executes a frontier model.' },
     frontier_reasoner: FRONTIER.status(),
     continuity: CONTINUITY.status(currentRoot()),
+    cabin_context: CABIN_CONTEXT.inspectCabinContextArtifact(),
     builder_mechanism: { state: 'UNKNOWN', detail: null },
     governance_holds: [],
     desktop_runtime: { state: 'AVAILABLE', detail: `Electron ${process.versions.electron}, node ${process.versions.node}` },
