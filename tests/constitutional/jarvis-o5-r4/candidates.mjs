@@ -12,4 +12,8 @@ export const CANDIDATES=Object.freeze([
   {id:'DC-E7',kills:'R4-E7',description:'projection deduplicates by summary',decision:{...base(),projectProposalSet:(entries)=>{const seen=new Set(),out=[];for(const e of entries){if(seen.has(e.summary))continue;seen.add(e.summary);const c=R.projectProposal(e);if(c)out.push(c);}return out;}}},
   {id:'DC-E8',kills:'R4-E8',description:'a runtime caller silently reintroduces W4 v1',decision:{...base(),v1RuntimeCallers:()=>['jarvis-desktop/src/legacy-runtime.js:1: work-unit-ledger-v1.mjs']}},
   {id:'DC-E9',kills:'R4-E9',description:'consequence finding is stored locally but never projected to its affected lane',decision:{...base(),projectConsequenceFinding:()=>null}},
+  {id:'DC-E9b',kills:'R4-E9',description:'consequence finding is projected to the wrong lane',decision:{...base(),projectConsequenceFinding:(e)=>{const p=R.projectConsequenceFinding(e);return p&&{...p,target_lane:'lane-c'};}}},
+  {id:'DC-E9c',kills:'R4-E9',description:'consequence finding is broadcast instead of targeted',decision:{...base(),projectConsequenceFinding:(e)=>{const p=R.projectConsequenceFinding(e);return p&&{...p,target_lane:'*'};}}},
+  {id:'DC-E9d',kills:'R4-E9',description:'cross-lane projection carries authority beside its evidence',decision:{...base(),projectConsequenceFinding:(e)=>{const p=R.projectConsequenceFinding(e);return p&&{...p,grant:'write'};}}},
+  {id:'DC-E9e',kills:'R4-E9',description:'ordinary local finding is also projected cross-lane',decision:{...base(),projectConsequenceFinding:(e)=>R.projectConsequenceFinding(e)??{target_lane:e?.affected_lane??'lane-b',source:'executor-consequence-finding',source_ref:'w4-finding:x',evidence:e}}},
 ]);
