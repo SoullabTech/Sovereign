@@ -9,6 +9,10 @@ const libraryState = {
   synthesis: null,
   synthesisError: null,
   synthesisRunning: false,
+  deliberativePreview: null,
+  deliberativeWorkUnit: null,
+  deliberativeError: null,
+  deliberativeRunning: false,
 };
 
 function escapeHtml(value) {
@@ -2376,6 +2380,40 @@ function renderLocalSynthesis() {
   </div>`;
 }
 
+function renderDeliberativeWorkUnit() {
+  const packet = libraryState.sourcePacket;
+  if (!packet) return '';
+  if (libraryState.deliberativeRunning) {
+    return '<div class="source-packet"><div class="packet-law">DELIBERATIVE WORK UNIT · preparing…</div><div class="hint">No provider execution is authorized by this gesture.</div></div>';
+  }
+  if (libraryState.deliberativeError) {
+    return `<div class="source-packet"><div class="packet-law">DELIBERATIVE WORK UNIT · held</div><div class="errors"><div>${escapeHtml(libraryState.deliberativeError)}</div></div></div>`;
+  }
+  const preview = libraryState.deliberativePreview;
+  const created = libraryState.deliberativeWorkUnit;
+  if (created) {
+    return `<div class="source-packet">
+      <div class="packet-law">DELIBERATIVE WORK UNIT · DRAFT CREATED</div>
+      <div class="grokker-why">Work Unit: ${escapeHtml(created.work_unit_id || 'unknown')} · lifecycle ${escapeHtml(created.lifecycle?.state || created.work_unit?.state?.lifecycle_state || 'DRAFT')}</div>
+      <div class="library-excerpt">The source packet is now held by canonical JARVIS governance with exact evidence selectors. No model has run. No provider execution grant exists. No merge, deploy, production, or write authority was created.</div>
+      <div class="actions"><button class="act" id="grokker-open-draft-work">Open in Work</button></div>
+    </div>`;
+  }
+  if (preview) {
+    const status = preview.ok ? 'preview valid' : 'preview refused';
+    const route = preview.route_record || preview.routing?.route_record || null;
+    return `<div class="source-packet">
+      <div class="packet-law">DELIBERATIVE WORK UNIT · ${escapeHtml(status)}</div>
+      <div class="grokker-why">Prospective only · canonical effect none · task shape EVIDENCE_SYNTHESIS · posture local_only · review pressure high_value_uncertain</div>
+      ${route?.primary ? `<div class="library-headings">Prospective route: ${escapeHtml(route.primary.model_family || route.primary.participant_id || 'primary')} ${(route.challengers || []).length ? '· challenger ' + escapeHtml(route.challengers.map(c => c.model_family || c.participant_id).join(', ')) : ''}</div>` : ''}
+      ${preview.ok ? '<div class="actions"><button class="primary" id="grokker-create-deliberative">Create DRAFT Work Unit</button></div>' : ''}
+      <div class="hint">Creating the DRAFT records governed work only. It does not authorize, route, prepare transport, or execute a provider.</div>
+    </div>`;
+  }
+  return `<div class="actions"><button class="act" id="grokker-preview-deliberative">Inspect deliberative Work Unit</button></div>
+    <div class="hint">For slower, stronger synthesis: inspect the canonical Work Unit before creating it. This path stops at DRAFT.</div>`;
+}
+
 function renderSourcePacket(packet) {
   if (!packet) return '';
   const check = GrokkerSynthesisContract.validateSourcePacket(packet);
@@ -2391,6 +2429,7 @@ function renderSourcePacket(packet) {
     ${localPlan.ok
       ? `<div class="actions"><button class="primary" id="grokker-synthesize-local" ${libraryState.synthesisRunning ? 'disabled' : ''}>Synthesize locally</button></div>`
       : `<div class="hint">Local synthesis is held: ${escapeHtml(localPlan.errors.join(', '))}</div>`}
+    ${renderDeliberativeWorkUnit()}
   </div>`;
 }
 
@@ -2462,6 +2501,10 @@ function wireLibrary() {
     libraryState.synthesis = null;
     libraryState.synthesisError = null;
     libraryState.synthesisRunning = false;
+    libraryState.deliberativePreview = null;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    libraryState.deliberativeRunning = false;
     renderLibrary();
   };
   if (ask) {
@@ -2476,6 +2519,10 @@ function wireLibrary() {
     libraryState.synthesis = null;
     libraryState.synthesisError = null;
     libraryState.synthesisRunning = false;
+    libraryState.deliberativePreview = null;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    libraryState.deliberativeRunning = false;
     renderLibrary();
   });
   document.getElementById('grokker-synthesize-local')?.addEventListener('click', async () => {
@@ -2498,6 +2545,69 @@ function wireLibrary() {
       libraryState.synthesisRunning = false;
       renderLibrary();
     }
+  });
+  document.getElementById('grokker-preview-deliberative')?.addEventListener('click', async () => {
+    const spec = GrokkerDeliberativeWorkUnit.specForPacket(libraryState.sourcePacket);
+    libraryState.deliberativeRunning = true;
+    libraryState.deliberativePreview = null;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    renderLibrary();
+    try {
+      const out = await window.jarvis.workUnitAction({
+        action: 'preview-route',
+        mode: 'canonical-v2',
+        spec,
+      });
+      libraryState.deliberativePreview = out;
+      if (!out?.ok) {
+        libraryState.deliberativeError = out?.reason
+          || out?.blockers?.map(b => b.code + ': ' + b.detail).join('; ')
+          || 'Canonical deliberative preview refused.';
+      }
+    } catch (e) {
+      libraryState.deliberativeError = String(e?.message || e);
+    } finally {
+      libraryState.deliberativeRunning = false;
+      renderLibrary();
+    }
+  });
+  document.getElementById('grokker-create-deliberative')?.addEventListener('click', async () => {
+    const spec = GrokkerDeliberativeWorkUnit.specForPacket(libraryState.sourcePacket);
+    libraryState.deliberativeRunning = true;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    renderLibrary();
+    try {
+      const out = await window.jarvis.workUnitAction({
+        action: 'create',
+        mode: 'canonical-v2',
+        spec,
+      });
+      if (!out?.ok) {
+        libraryState.deliberativeError = out?.reason
+          || out?.blockers?.map(b => b.code + ': ' + b.detail).join('; ')
+          || 'Canonical DRAFT creation refused.';
+      } else {
+        libraryState.deliberativeWorkUnit = out;
+      }
+    } catch (e) {
+      libraryState.deliberativeError = String(e?.message || e);
+    } finally {
+      libraryState.deliberativeRunning = false;
+      renderLibrary();
+    }
+  });
+  document.getElementById('grokker-open-draft-work')?.addEventListener('click', () => {
+    const id = libraryState.deliberativeWorkUnit?.work_unit_id;
+    if (!id) return;
+    activeWorkUnitId = id;
+    activeWorkUnitStrategy = [];
+    activeExecutionReview = null;
+    activeCanonicalExecutionReview = null;
+    sessionStorage.setItem('jarvis:active-work-unit', id);
+    setView('work');
+    refreshActiveWorkUnit();
   });
   document.getElementById('library-expand')?.addEventListener('click', () => {
     document.querySelectorAll('.library-group').forEach(d => { d.open = true; });
