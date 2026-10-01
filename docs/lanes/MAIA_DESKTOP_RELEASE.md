@@ -18,17 +18,16 @@ appended sections.
 
 ## Last updated
 
-2026-10-01 · canonical at time of writing `ef511f0ef` (#1616 merged; Next 16.3.8)
-· evidence: git + GitHub CI + founder Mac Studio command output.
+2026-10-01 · canonical observed `8e4372d18f3e`; `ef511f0ef` rejected after Mac Studio artifact census exposed repository over-tracing.
+· evidence: git + founder Mac Studio command output.
 
 ## Release SHA
 
-**`ef511f0efea38792c597da01e67299740210e903`**: the merge commit of PR #1616
-into `clean-main-no-secrets` (after #1619 `cf9624cdf`). Verified in git: it contains
-the fix `bdf95a8e1` and the #1619 merge, pins `next` 16.3.8, and has the
-`cabin-runtime/node_modules` extraResources step. Desktop version
-`0.1.0-beta.1`. Build **only** from this exact SHA. The `maiaBuildSha` embedded in
-the app must read `ef511f0efea3`.
+**OPEN.** `ef511f0efea38792c597da01e67299740210e903` is no longer admissible
+as an external-beta release SHA. Its offline standalone trace expanded to ~4.8 GiB
+and included repository-internal material that must not ship. The next release SHA
+will be the canonical merge commit carrying the offline trace-containment repair;
+no branch-only commit is to be called the release SHA.
 
 ## Release order
 
@@ -58,6 +57,7 @@ the app must read `ef511f0efea3`.
 | `147815873090` | T7 | same omission (repair 1 failed) |
 | `e3688fce20dd` | T7 `maia-desktop-artifacts/e3688fce20dd/` | same omission; root cause found: electron-builder `FileMatcher` drops a root `node_modules` |
 | `65e0f0e29` | `claude/cool-feynman-8kvyyc` | merges canonical with `e3688fce2` but **not** the working fix `bdf95a8e1`; its 4/4 packaging test passing proves only that the test is source-regex and cannot see the artifact. Do not open a PR from it. |
+| `ef511f0efea3` | T7 release worktree / failed package | signing stopped on broken `backups/ultimate-consciousness-system/latest`; census then showed ~4.8 GiB Cabin runtime containing `docs/`, `data/ain/source`, copyrighted/source corpora, repo scripts/artifacts/database material, Android debug APKs and env templates. No private keys were found. **Never sign or ship.** |
 
 ## Blockers
 
@@ -66,7 +66,8 @@ the app must read `ef511f0efea3`.
 | Packaging repair `bdf95a8e1` | in #1616 (the only carrier; #1624 closed), on `cf9624cdf` (post-#1619; #1619 changed no `maia-desktop/**`). Suite **408/408** under tsx (canonical 405/405). Packaging-test mutants M1 + M2 killed | git + local run; see H4-7-R1 record, Amendment 2 |
 | Desktop suite at release SHA | **408/408 PASS** | founder, Mac Studio, `ef511f0ef` worktree on T7, 2026-10-01 |
 | Next standalone build at release SHA | FAILED with `npx next build` (Turbopack: `PageNotFoundError: /_document`); rerun with `npm run build` (webpack) pending | founder, Mac Studio, 2026-10-01 |
-| Artifact carries next 16.3.8 | NOT WITNESSED | — |
+| Offline trace containment | **REPAIR IN PROGRESS** on `fix/desktop-offline-trace-containment-20261001`; web config unchanged; package verifier now fails closed on forbidden repo material and >1 GiB Cabin runtime | Mac Studio source inspection + local config checks, 2026-10-01 |
+| Artifact carries next 16.3.8 | NOT WITNESSED on a post-containment candidate | — |
 | Packaged runtime healthy offline | NOT WITNESSED | — |
 | Developer ID Application | **PRESENT**: `32276A3F…55DB48 "Developer ID Application: Kelly Nezat (ZVK2X646Z2)"` | founder, `security find-identity -v -p codesigning`, 2026-10-01 |
 | Notary profile `MAIA-BETA` | ABSENT (last observed) | Mac Studio, 2026-10-01 |
