@@ -1,313 +1,283 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Crown, Shield, Star, Trash2, Users, Plus, Search, Download } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  FlaskConical,
+  KeyRound,
+  Loader2,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  UserCheck,
+  Users,
+} from 'lucide-react';
+import { adminFetch } from '@/lib/admin/adminFetch';
 
-interface BetaTester {
+type Tester = {
   id: string;
   name: string;
-  subscription: {
-    status: 'active' | 'expired';
-    tier: 'premium';
-    expiresAt: string;
-    features: string[];
-    planId: string;
-    customerId: string;
+  username: string | null;
+  email: string | null;
+  tier: string;
+  roles: string[];
+  onboarded: boolean;
+  signInMethods: string[];
+  signInReady: boolean;
+  earlyFieldAdmitted: boolean;
+  subscriptionActive: boolean;
+  subscriptionExpiresAt: string | null;
+  lastSignIn: string | null;
+  createdAt: string | null;
+  preferredAuthMethod: string | null;
+};
+
+type Payload = {
+  testers: Tester[];
+  summary: {
+    total: number;
+    signInReady: number;
+    needsReview: number;
+    earlyField: number;
+    onboarded: number;
   };
-  createdAt: string;
-  lastActive: string;
-  addedAt: string;
-  notes: string;
+  authority: {
+    betaCohort: string;
+    platformAccess: string;
+    subscriptionGatesOrdinaryPlatform: boolean;
+    earlyFieldSeparate: boolean;
+  };
+};
+
+function when(value: string | null): string {
+  if (!value) return 'Never';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Unknown';
+  return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function methodLabel(method: string): string {
+  if (method === 'email-code') return 'Email code';
+  if (method === 'password') return 'Password';
+  if (method === 'passkey') return 'Passkey';
+  return method;
 }
 
 export default function BetaTestersAdmin() {
-  const [betaTesters, setBetaTesters] = useState<BetaTester[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    loadBetaTesters();
-  }, []);
-
-  const loadBetaTesters = () => {
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const storedTesters = localStorage.getItem('maia_beta_testers');
-      if (storedTesters) {
-        const testers = JSON.parse(storedTesters);
-        setBetaTesters(testers);
+      const res = await adminFetch('/api/admin/beta-testers', { cache: 'no-store' });
+      if (res.status === 401 || res.status === 403) {
+        setError('Admin authorization is required to view the beta cohort.');
+        return;
       }
-    } catch (error) {
-      console.error('Failed to load beta testers:', error);
+      if (!res.ok) throw new Error(`Could not load beta testers (${res.status})`);
+      setData(await res.json());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load beta testers');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const removeBetaTester = (testerId: string) => {
-    const updatedTesters = betaTesters.filter(tester => tester.id !== testerId);
-    setBetaTesters(updatedTesters);
-    localStorage.setItem('maia_beta_testers', JSON.stringify(updatedTesters));
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const extendAccess = (testerId: string, days: number) => {
-    const updatedTesters = betaTesters.map(tester => {
-      if (tester.id === testerId) {
-        const newExpiryDate = new Date(tester.subscription.expiresAt);
-        newExpiryDate.setDate(newExpiryDate.getDate() + days);
-        return {
-          ...tester,
-          subscription: {
-            ...tester.subscription,
-            expiresAt: newExpiryDate.toISOString()
-          }
-        };
-      }
-      return tester;
-    });
-
-    setBetaTesters(updatedTesters);
-    localStorage.setItem('maia_beta_testers', JSON.stringify(updatedTesters));
-  };
-
-  const clearAllTesters = () => {
-    if (confirm('Are you sure you want to remove all beta testers? This action cannot be undone.')) {
-      setBetaTesters([]);
-      localStorage.removeItem('maia_beta_testers');
-      localStorage.removeItem('maia_user_subscription');
-    }
-  };
-
-  const exportData = () => {
-    const dataStr = JSON.stringify(betaTesters, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `maia-beta-testers-${new Date().toISOString().split('T')[0]}.json`;
-
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
-
-  const filteredTesters = betaTesters.filter(tester =>
-    tester.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tester.subscription.customerId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const isExpired = (expiresAt: string) => new Date(expiresAt) < new Date();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/20 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-      </div>
+  const filtered = useMemo(() => {
+    if (!data) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return data.testers;
+    return data.testers.filter((t) =>
+      [t.name, t.username, t.email, t.tier, ...t.roles]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
     );
-  }
+  }, [data, search]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/20 p-6">
-      <div className="max-w-6xl mx-auto">
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-slate-900/80 backdrop-blur-md border border-amber-500/30 rounded-xl p-6 mb-6"
-        >
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center">
-              <Shield className="w-6 h-6 text-amber-400" />
+    <main className="min-h-screen bg-[#07111f] px-5 py-8 text-slate-100 md:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <header className="flex flex-col gap-4 border-b border-slate-800/80 pb-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-amber-300/80">
+              <ShieldCheck className="h-4 w-4" />
+              Authoritative production roster
             </div>
+            <h1 className="text-3xl font-semibold tracking-tight text-white">Beta Testers</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+              This view reads the production <code className="text-slate-300">members.tester</code> cohort.
+              It does not use the old browser-local beta list.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={load}
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </header>
+
+        <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-5 py-4">
+          <div className="flex gap-3">
+            <UserCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
             <div>
-              <h1 className="text-2xl font-bold text-amber-100">MAIA Beta Testers</h1>
-              <p className="text-amber-300/70">Admin Dashboard - Manage Beta Access</p>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-slate-800/50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-amber-400" />
-                <div>
-                  <p className="text-amber-300/70 text-sm">Total Beta Testers</p>
-                  <p className="text-amber-100 font-semibold">{betaTesters.length}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-slate-800/50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <Star className="w-5 h-5 text-green-400" />
-                <div>
-                  <p className="text-amber-300/70 text-sm">Active Access</p>
-                  <p className="text-amber-100 font-semibold">
-                    {betaTesters.filter(t => !isExpired(t.subscription.expiresAt)).length}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-slate-800/50 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <Crown className="w-5 h-5 text-red-400" />
-                <div>
-                  <p className="text-amber-300/70 text-sm">Expired Access</p>
-                  <p className="text-amber-100 font-semibold">
-                    {betaTesters.filter(t => isExpired(t.subscription.expiresAt)).length}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-amber-400/50" />
-                <input
-                  type="text"
-                  placeholder="Search beta testers..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-amber-500/30 text-amber-100 rounded-lg focus:outline-none focus:border-amber-500"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={exportData}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-amber-50 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </button>
-              <button
-                onClick={clearAllTesters}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-red-50 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Clear All
-              </button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Beta Access Link */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-slate-900/80 backdrop-blur-md border border-amber-500/30 rounded-xl p-4 mb-6"
-        >
-          <div className="flex items-center gap-3">
-            <Plus className="w-5 h-5 text-amber-400" />
-            <div>
-              <p className="text-amber-100 font-medium">Beta Access Page</p>
-              <p className="text-amber-300/70 text-sm">Share this link with new beta testers:</p>
-              <a
-                href="/beta-access"
-                target="_blank"
-                className="text-amber-400 hover:text-amber-300 underline text-sm"
-              >
-                {typeof window !== 'undefined' ? `${window.location.origin}/beta-access` : '/beta-access'}
-              </a>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Beta Testers List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-slate-900/80 backdrop-blur-md border border-amber-500/30 rounded-xl overflow-hidden"
-        >
-          {filteredTesters.length === 0 ? (
-            <div className="p-8 text-center">
-              <Users className="w-12 h-12 text-amber-400/50 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-amber-100 mb-2">
-                {betaTesters.length === 0 ? 'No Beta Testers Yet' : 'No Matching Testers'}
-              </h3>
-              <p className="text-amber-300/70">
-                {betaTesters.length === 0
-                  ? 'Share the beta access link to get started.'
-                  : 'Try adjusting your search terms.'
-                }
+              <h2 className="font-medium text-emerald-100">Beta access and Early Field are separate</h2>
+              <p className="mt-1 text-sm leading-6 text-emerald-100/70">
+                Every authenticated member can enter the ordinary platform at the free tier or above.
+                Subscription status is informational here and does not gate ordinary platform access.
+                Early Field is a separate experimental cohort and does not replace beta access.
               </p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-800/50 border-b border-amber-500/20">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-amber-300 font-medium">Name</th>
-                    <th className="px-4 py-3 text-left text-amber-300 font-medium">Customer ID</th>
-                    <th className="px-4 py-3 text-left text-amber-300 font-medium">Status</th>
-                    <th className="px-4 py-3 text-left text-amber-300 font-medium">Expires</th>
-                    <th className="px-4 py-3 text-left text-amber-300 font-medium">Added</th>
-                    <th className="px-4 py-3 text-left text-amber-300 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTesters.map((tester) => {
-                    const expired = isExpired(tester.subscription.expiresAt);
-                    return (
-                      <tr key={tester.id} className="border-b border-amber-500/10 hover:bg-slate-800/30">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <Crown className="w-4 h-4 text-amber-400" />
-                            <span className="text-amber-100 font-medium">{tester.name}</span>
+          </div>
+        </section>
+
+        {error && (
+          <div className="flex items-center gap-3 rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            {error}
+          </div>
+        )}
+
+        {loading && !data ? (
+          <div className="flex min-h-64 items-center justify-center gap-3 text-slate-400">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Reading the production beta cohort…
+          </div>
+        ) : data ? (
+          <>
+            <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {[
+                { label: 'Beta testers', value: data.summary.total, icon: Users },
+                { label: 'Sign-in ready', value: data.summary.signInReady, icon: KeyRound },
+                { label: 'Early Field', value: data.summary.earlyField, icon: FlaskConical },
+                { label: 'Onboarded', value: data.summary.onboarded, icon: CheckCircle2 },
+                { label: 'Needs review', value: data.summary.needsReview, icon: AlertCircle },
+              ].map(({ label, value, icon: Icon }) => (
+                <div key={label} className="rounded-xl border border-slate-800 bg-slate-900/55 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-400">{label}</span>
+                    <Icon className="h-4 w-4 text-slate-500" />
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
+                </div>
+              ))}
+            </section>
+
+            <section className="rounded-xl border border-slate-800 bg-slate-900/40">
+              <div className="border-b border-slate-800 p-4">
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search name, username, email, tier…"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950/70 py-2 pl-9 pr-3 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-slate-600"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1040px] text-left text-sm">
+                  <thead className="border-b border-slate-800 bg-slate-950/35 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Member</th>
+                      <th className="px-4 py-3 font-medium">Sign in</th>
+                      <th className="px-4 py-3 font-medium">Platform</th>
+                      <th className="px-4 py-3 font-medium">Early Field</th>
+                      <th className="px-4 py-3 font-medium">Tier</th>
+                      <th className="px-4 py-3 font-medium">Onboarding</th>
+                      <th className="px-4 py-3 font-medium">Last sign-in</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/80">
+                    {filtered.map((tester) => (
+                      <tr key={tester.id} className="align-top hover:bg-slate-800/20">
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-white">{tester.name}</div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            {tester.username ? `@${tester.username}` : tester.email || 'No username'}
+                          </div>
+                          {tester.email && <div className="mt-0.5 text-xs text-slate-600">{tester.email}</div>}
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex flex-wrap gap-1.5">
+                            {tester.signInMethods.length ? tester.signInMethods.map((method) => (
+                              <span key={method} className="rounded-full border border-slate-700 bg-slate-800/60 px-2 py-1 text-xs text-slate-300">
+                                {methodLabel(method)}
+                              </span>
+                            )) : (
+                              <span className="text-xs text-rose-300">No known account-bound path</span>
+                            )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-amber-300/70 font-mono text-sm">
-                          {tester.subscription.customerId}
+                        <td className="px-4 py-4">
+                          {tester.signInReady ? (
+                            <span className="inline-flex items-center gap-1.5 text-emerald-300">
+                              <CheckCircle2 className="h-4 w-4" /> Ready
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-rose-300">
+                              <AlertCircle className="h-4 w-4" /> Review
+                            </span>
+                          )}
+                          <div className="mt-1 text-xs text-slate-600">Subscription does not gate this</div>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            expired
-                              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                              : 'bg-green-500/20 text-green-400 border border-green-500/30'
-                          }`}>
-                            {expired ? 'Expired' : 'Active'}
+                        <td className="px-4 py-4">
+                          {tester.earlyFieldAdmitted ? (
+                            <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-xs text-violet-200">
+                              Early instrument
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-500">Ordinary Living Field</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 capitalize text-slate-300">{tester.tier}</td>
+                        <td className="px-4 py-4">
+                          <span className={tester.onboarded ? 'text-emerald-300' : 'text-amber-300'}>
+                            {tester.onboarded ? 'Complete' : 'Continues after sign-in'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-amber-300/70 text-sm">
-                          {new Date(tester.subscription.expiresAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3 text-amber-300/70 text-sm">
-                          {new Date(tester.addedAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => extendAccess(tester.id, 30)}
-                              className="px-2 py-1 bg-amber-600/20 hover:bg-amber-600/40 text-amber-400 text-xs rounded border border-amber-500/30 transition-colors"
-                            >
-                              +30d
-                            </button>
-                            <button
-                              onClick={() => extendAccess(tester.id, 90)}
-                              className="px-2 py-1 bg-amber-600/20 hover:bg-amber-600/40 text-amber-400 text-xs rounded border border-amber-500/30 transition-colors"
-                            >
-                              +90d
-                            </button>
-                            <button
-                              onClick={() => removeBetaTester(tester.id)}
-                              className="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs rounded border border-red-500/30 transition-colors"
-                            >
-                              Remove
-                            </button>
-                          </div>
+                        <td className="px-4 py-4 text-slate-400">{when(tester.lastSignIn)}</td>
+                      </tr>
+                    ))}
+                    {filtered.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
+                          No beta testers match this search.
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </motion.div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="grid gap-3 text-xs text-slate-500 md:grid-cols-3">
+              <div className="rounded-lg border border-slate-800 bg-slate-900/30 p-3">
+                <span className="text-slate-400">Beta authority:</span> {data.authority.betaCohort}
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-900/30 p-3">
+                <span className="text-slate-400">Ordinary platform:</span> {data.authority.platformAccess}
+              </div>
+              <div className="rounded-lg border border-slate-800 bg-slate-900/30 p-3">
+                <span className="text-slate-400">Early Field:</span> separate operational cohort
+              </div>
+            </section>
+          </>
+        ) : null}
       </div>
-    </div>
+    </main>
   );
 }

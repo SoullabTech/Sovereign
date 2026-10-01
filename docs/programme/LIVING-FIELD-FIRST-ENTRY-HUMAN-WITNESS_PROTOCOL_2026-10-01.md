@@ -155,3 +155,16 @@ Use for any §6 boundary failure.
 
 One first-entry PASS proves only that the empty-field entry can be inhabited coherently by that
 participant. It does not establish populated-field continuity, cohort-wide preference, or widening readiness.
+
+## Amendment 1 · 2026-10-01 · before any run (pre-registration amendment)
+
+Occasioned by the RC1 deploy (`03f0fd3ab`, 14:35Z), which moved production off the runtime at
+which readiness was censused (`975a208b8`). Precondition 4 is tightened. No other clause changes.
+
+- **4a.** Record the production SHA **at the start and at the end** of the walk. If they differ,
+  the walk is **NO EVIDENCE**. Not a partial pass: the member experienced two builds.
+- **4b.** If the start SHA differs from the SHA named in the readiness record, preconditions 3, 5 and 6
+  must be **re-witnessed live** at the start SHA, and a source re-baseline must show that the
+  intervening change did not touch Living Field surfaces. If it did, re-census readiness first.
+  The RC1 re-baseline is `LIVING-FIELD_WITNESS_REBASELINE_RC1_2026-10-01.md`.
+

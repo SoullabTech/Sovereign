@@ -88,3 +88,23 @@ INTERIM RULE         IN FORCE
 HISTORY              PRESERVED · not rewritten
 REPAIR               ⛔ NOT AUTHORIZED
 ```
+
+---
+
+## Addendum — 2026-10-01 · Q1 answered (founder ruling)
+
+**Q1, should `claude/*` be admissible? Yes.** The ban did not match how the work is done: on 2026-10-01 alone, work ran on about a dozen `claude/*` branches. A rule that everyone, including the founder's own agents, routinely breaks teaches that rules here are optional. The ruling encodes the real practice instead:
+
+1. **`claude/*` is allowed.** `scripts/check-branch-allowed.sh` now admits it, so both local hooks accept it. This answers Q1 explicitly; it is not a silent fix to Q2, which this finding warned against.
+2. **Direct pushes to canonical are forbidden.**
+3. **Required status checks with no bypass, including for admins.**
+
+Branch-triage tags (`docs/ops/BRANCH_TRIAGE_*`) and the non-delivery register are how the branch sprawl is managed, rather than a prohibition nobody follows.
+
+**Q2, making branch law authoritative across environments, is still OPEN**, and items 2 and 3 are its answer. They live in GitHub's server-side rulesets, which only a repository admin can configure; nothing in this repository can enforce them. Until they are configured, the canonical branch accepts writes that bypass its declared checks (the 2026-09-07 `Bypassed rule violations` finding).
+
+```text
+Q1 claude/* admissible?          ✅ YES (founder, 2026-10-01) · hook updated
+Q2 cross-environment authority?  OPEN · owed: server-side ruleset (admin act)
+INTERIM RULE                     IN FORCE until Q2 closes
+```

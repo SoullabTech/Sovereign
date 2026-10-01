@@ -177,6 +177,36 @@ export function readStudioWorkParam(search: StudioSearchParams): string | null {
   return v && v.trim() ? v : null;
 }
 
+/**
+ * Internal room → Studio Home transport. Preserve the manuscript and validated
+ * contextual Work claim, but remove the House-arrival marker and room-local
+ * transient state. Returning Home is not a second House arrival.
+ */
+export function studioHomeReturnSearch(search: string): string {
+  const next = new URLSearchParams(search);
+  next.set('mode', 'home');
+  next.delete('from');
+  for (const key of [
+    'reviewRun', 'reviewFinding', 'developField', 'developIntent', 'r',
+    'insightReading', 'insightObservation', 'insightAction', 'attentionItem',
+  ]) next.delete(key);
+  return next.toString();
+}
+
+/**
+ * The Work Home may focus after an internal Studio return. This is a consumer
+ * of the existing situated-Work resolver, never a second resolution rule.
+ */
+export function resolveStudioHomeReturnWork(
+  phase: LivingWorksPhase,
+  works: readonly LivingWork[],
+  manuscriptId: string | null,
+  explicitWorkId: string | null,
+): LivingWork | null {
+  const context = resolveSituatedWorkContext(phase, works, manuscriptId, explicitWorkId);
+  return context.kind === 'work' ? context.work : null;
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    STUDIO ARRIVAL THROUGH A GOVERNED CROSSING  (founder ruling H1-3)
 

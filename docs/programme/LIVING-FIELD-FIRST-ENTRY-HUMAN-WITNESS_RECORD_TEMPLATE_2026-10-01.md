@@ -3,8 +3,8 @@
 **Participant label:** FIRST-ENTRY-___
 **Date/time:**
 **Scheduled-against SHA:**
-**Production SHA at start of walk:**
-**Production SHA at end of walk:**
+**Production SHA at start of walk:** (`docker exec maia-sovereign printenv GIT_COMMIT`)
+**Production SHA at end of walk:** (same command, after the walk)
 **Deploy freeze held for the window:** yes / no
 **Public health (start / end):**
 **Device/browser:**
