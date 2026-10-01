@@ -90,6 +90,7 @@ interface SacredHouseWheelProps {
   // CURRENT TRANSITS - Live planetary positions
   transits?: Transit[];
   transitAspects?: TransitAspect[];
+  onTransitSelect?: (transit: Transit, aspects: TransitAspect[]) => void;
 }
 
 // Spiralogic Spiral Order - House 1 at 12 o'clock (top of wheel)
@@ -299,6 +300,7 @@ export function SacredHouseWheel({
   },
   transits = [],
   transitAspects = [],
+  onTransitSelect,
 }: SacredHouseWheelProps) {
   // Select house order based on layout mode
   const houseOrder = layoutMode === 'traditional' ? traditionalOrder : spiralogicOrder;
@@ -2042,7 +2044,16 @@ export function SacredHouseWheel({
                   key={`transit-${transit.planet}`}
                   onMouseEnter={() => setHoveredTransit(transit)}
                   onMouseLeave={() => setHoveredTransit(null)}
-                  onClick={() => setClickedTransit(isClicked ? null : transit)}
+                  onClick={() => {
+                    const next = isClicked ? null : transit;
+                    setClickedTransit(next);
+                    if (next) {
+                      onTransitSelect?.(
+                        transit,
+                        transitAspects.filter((aspect) => aspect.transitPlanet === transit.planet),
+                      );
+                    }
+                  }}
                   style={{ cursor: 'pointer' }}
                 >
                   {/* Transit aspect line to natal planet */}

@@ -9,18 +9,26 @@ import { recordFacetCrossing } from '@/lib/house/facetCrossing.server';
 const HOUSE_SYSTEMS = new Set(['porphyry', 'placidus', 'whole-sign', 'equal', 'koch']);
 const ZODIAC_MODES = new Set(['tropical', 'sidereal']);
 
-function shortTitle(text: string): string {
+function shortTitle(text: string, activationLabel?: string | null): string {
   const first = text.split(/[\n.!?]/)[0]?.trim() || text.trim();
   const clipped = first.length <= 72 ? first : first.slice(0, 72).trimEnd() + '…';
-  return 'Astrology · ' + clipped;
+  if (!activationLabel) return 'Astrology · ' + clipped;
+  const label = activationLabel.length <= 72
+    ? activationLabel
+    : activationLabel.slice(0, 72).trimEnd() + '…';
+  return `Astrology · ${label} · ${clipped}`;
 }
 
 function sourceRef(args: {
+  scope: 'natal' | 'transit';
   zodiacMode: 'tropical' | 'sidereal';
   houseSystem: string;
   ayanamsa?: string | null;
+  activationId?: string | null;
 }): string {
-  const parts = ['natal', args.zodiacMode, args.houseSystem];
+  const parts = args.scope === 'transit'
+    ? ['transit', args.activationId || 'unknown', args.zodiacMode, args.houseSystem]
+    : ['natal', args.zodiacMode, args.houseSystem];
   if (args.zodiacMode === 'sidereal' && args.ayanamsa) parts.push(args.ayanamsa);
   return parts.join(':');
 }
@@ -33,12 +41,24 @@ export async function POST(request: NextRequest) {
       zodiacMode?: unknown;
       houseSystem?: unknown;
       ayanamsa?: unknown;
+      scope?: unknown;
+      activation?: unknown;
     } | null;
 
     const text = typeof body?.text === 'string' ? body.text.trim() : '';
     const zodiacMode = typeof body?.zodiacMode === 'string' ? body.zodiacMode : '';
     const houseSystem = typeof body?.houseSystem === 'string' ? body.houseSystem : '';
     const ayanamsa = typeof body?.ayanamsa === 'string' ? body.ayanamsa.trim() : '';
+    const requestedScope = body?.scope;
+    if (requestedScope !== undefined && requestedScope !== 'natal' && requestedScope !== 'transit') {
+      return NextResponse.json({ error: 'Invalid astrology reflection scope.' }, { status: 400 });
+    }
+    const scope: 'natal' | 'transit' = requestedScope === 'transit' ? 'transit' : 'natal';
+    const activation = body?.activation && typeof body.activation === 'object'
+      ? body.activation as { id?: unknown; label?: unknown }
+      : null;
+    const activationId = typeof activation?.id === 'string' ? activation.id.trim() : '';
+    const activationLabel = typeof activation?.label === 'string' ? activation.label.trim() : '';
 
     if (!text) {
       return NextResponse.json({ error: 'Reflection text is required.' }, { status: 400 });
@@ -52,12 +72,19 @@ export async function POST(request: NextRequest) {
     if (ayanamsa && !/^[a-z0-9_-]{1,40}$/i.test(ayanamsa)) {
       return NextResponse.json({ error: 'Invalid ayanamsa.' }, { status: 400 });
     }
+    if (scope === 'transit') {
+      if (!/^[a-z0-9-]{3,120}$/i.test(activationId) || !activationLabel || activationLabel.length > 160) {
+        return NextResponse.json({ error: 'Invalid transit activation.' }, { status: 400 });
+      }
+    }
 
     const normalizedMode = zodiacMode as 'tropical' | 'sidereal';
     const astrologyRef = sourceRef({
+      scope,
       zodiacMode: normalizedMode,
       houseSystem,
       ayanamsa: ayanamsa || null,
+      activationId: scope === 'transit' ? activationId : null,
     });
 
     const result = await transaction(async (client) => {
@@ -77,7 +104,9 @@ export async function POST(request: NextRequest) {
         userId: memberId,
         sourceType: 'astrology',
         sourceId: astrologyRef,
-        title: shortTitle(text),
+        title: shortTitle(text, scope === 'transit' ? activationLabel : null),
+        // Member authorship boundary: the kept artifact contains only their words.
+        // Calculated geometry and symbolic interpretation remain source context.
         summary: text,
         goldLines: [],
         decisions: [],
@@ -85,7 +114,11 @@ export async function POST(request: NextRequest) {
         practices: [],
         patterns: [],
         signals: { facet: 'astrology', tone: 'member-recognition' },
-        tags: ['member-kept', 'astrology', 'chart-recognition'],
+        // Transit provenance is carried by sourceId + title + tag; signals has a
+        // deliberately narrow schema and is not widened for this feature.
+        tags: scope === 'transit'
+          ? ['member-kept', 'astrology', 'transit-reflection']
+          : ['member-kept', 'astrology', 'chart-recognition'],
         sourceExcerpt: null,
         draft: false,
         client,
@@ -93,7 +126,9 @@ export async function POST(request: NextRequest) {
 
       await recordFacetCrossing(client, {
         memberId,
-        crossingId: 'astrology-keep-as-reflection',
+        crossingId: scope === 'transit'
+          ? 'astrology-transit-keep-as-reflection'
+          : 'astrology-keep-as-reflection',
         sourceFacet: 'astrology',
         sourceRefId: astrologyRef,
         targetFacet: 'reflections',

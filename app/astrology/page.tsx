@@ -41,6 +41,7 @@ import type { AlienPattern } from '@/lib/astrology/alienPatterns';
 import { OracleConversation } from '@/components/OracleConversation';
 import { WhatIsAliveNow } from '@/components/astrology/WhatIsAliveNow';
 import type { TransitActivation, TransitField } from '@/lib/astrology/transitField';
+import { chooseTransitActivation } from '@/lib/astrology/transitJourney';
 import styles from './astrology-room.module.css';
 
 // Elemental colors for planet insights
@@ -232,6 +233,7 @@ export default function AstrologyPage() {
   // What is alive now — verified transit field, shared with the House Wheel
   const [transitField, setTransitField] = useState<TransitField | null>(null);
   const [wheelTransitFocus, setWheelTransitFocus] = useState<string | null>(null);
+  const [fieldActivationFocus, setFieldActivationFocus] = useState<string | null>(null);
 
   // House system guide toggle
   const [showHouseGuide, setShowHouseGuide] = useState(false);
@@ -753,6 +755,22 @@ export default function AstrologyPage() {
     });
   }
 
+  function openTransitFromWheel(
+    planet: string,
+    displayedAspects: Array<{ natalPlanet: string; aspectType: string; orb: number }>,
+  ) {
+    const activation = chooseTransitActivation(
+      transitField?.activations ?? [],
+      planet,
+      displayedAspects,
+    );
+    if (!activation) return;
+    setWheelTransitFocus(activation.id);
+    // Reset first so choosing the same wheel planet can reopen a field the member closed.
+    setFieldActivationFocus(null);
+    requestAnimationFrame(() => setFieldActivationFocus(activation.id));
+  }
+
   function bringActivationToMaia(text: string) {
     setMaiaInjection({ text, nonce: Date.now() });
     setMaiaOpen(true);
@@ -999,6 +1017,13 @@ export default function AstrologyPage() {
 
         <WhatIsAliveNow
           natal={transitNatal}
+          natalAspects={chartData?.aspects ?? []}
+          focusActivationId={fieldActivationFocus}
+          reflectionContext={memberId ? {
+            zodiacMode: zodiacMode === 'sidereal' ? 'sidereal' : 'tropical',
+            houseSystem,
+            ayanamsa: zodiacMode === 'sidereal' ? ayanamsa : null,
+          } : undefined}
           onField={setTransitField}
           onShowOnWheel={showActivationOnWheel}
           onBringToMaia={memberId ? bringActivationToMaia : undefined}
@@ -1270,6 +1295,7 @@ export default function AstrologyPage() {
                       : transitPositions)
                   : undefined}
                 transitAspects={showTransits ? wheelTransitAspects : undefined}
+                onTransitSelect={(transit, aspects) => openTransitFromWheel(transit.planet, aspects)}
                 missionLayerSettings={{
                   showEmerging: false,
                   showActive: false,

@@ -4,7 +4,8 @@
  * What is alive now — the current sky meeting this natal chart.
  *
  * JARVIS-ASTROLOGY-SOUL-JOURNEY-01 · T1 (field) · T2 (Major / Minor / All)
- * · T3 (deepening, first slice) · T4 (activation timeline) · T5 (wheel link).
+ * · T3 (whole-chart + human expression) · T4 (field + activation timelines)
+ * · T5 (bidirectional wheel link) · T6 (member-authored Reflection).
  *
  * Layering is the law of this surface:
  *   calculated geometry  →  symbolic tradition  →  member meaning
@@ -14,11 +15,17 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiFetch, apiUrl } from '@/lib/http/apiBase';
 // Type-only: the ephemeris engine stays on the server.
 import type { NatalPointInput, TransitActivation, TransitField } from '@/lib/astrology/transitField';
-import { PLANET_DOMAIN_MAP } from '@/lib/astrology/transitInterpretation';
-import { synthesizeAspect } from '@/lib/astrology/aspectSynthesis';
+import {
+  fieldContextLines,
+  fieldTimelineRange,
+  natalWebLinks,
+  possibleHumanExpressions,
+  transitTradition,
+  type NatalAspectInput,
+} from '@/lib/astrology/transitJourney';
 import styles from './what-is-alive-now.module.css';
 
 type Lens = 'major' | 'minor' | 'all';
@@ -26,19 +33,6 @@ type Lens = 'major' | 'minor' | 'all';
 const GLYPHS: Record<string, string> = {
   Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃',
   Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇', Ascendant: 'AC', Midheaven: 'MC',
-};
-
-const PRINCIPLES: Record<string, string> = {
-  ...PLANET_DOMAIN_MAP,
-  midheaven: 'vocation / public direction / what one is oriented toward',
-};
-
-const ASPECT_QUALITY: Record<string, string> = {
-  conjunction: 'a conjunction fuses two principles in one place, where they can be hard to tell apart',
-  sextile: 'a sextile opens an available cooperation that tends to need a step taken',
-  square: 'a square is friction that has traditionally asked for adjustment or action',
-  trine: 'a trine is an ease that can support, or simply pass unnoticed',
-  opposition: 'an opposition is a polarity often met through relationship, mirror or balance',
 };
 
 /** Degrees → `0°24′` (mirrors formatOrb in lib/astrology/transitField.ts). */
@@ -84,6 +78,15 @@ function phaseOf(a: TransitActivation): string {
 
 export interface WhatIsAliveNowProps {
   natal: NatalPointInput[];
+  natalAspects?: NatalAspectInput[];
+  /** Opens a wheel-selected contact back inside this field. */
+  focusActivationId?: string | null;
+  /** Present only for an authenticated member who can keep their own words. */
+  reflectionContext?: {
+    zodiacMode: 'tropical' | 'sidereal';
+    houseSystem: string;
+    ayanamsa?: string | null;
+  };
   /** Verified activations, lifted so the House Wheel can draw the same field. */
   onField?: (field: TransitField | null) => void;
   /** Member asks to see an activation on the wheel. */
@@ -92,7 +95,15 @@ export interface WhatIsAliveNowProps {
   onBringToMaia?: (text: string) => void;
 }
 
-export function WhatIsAliveNow({ natal, onField, onShowOnWheel, onBringToMaia }: WhatIsAliveNowProps) {
+export function WhatIsAliveNow({
+  natal,
+  natalAspects = [],
+  focusActivationId = null,
+  reflectionContext,
+  onField,
+  onShowOnWheel,
+  onBringToMaia,
+}: WhatIsAliveNowProps) {
   const [field, setField] = useState<TransitField | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [lens, setLens] = useState<Lens | null>(null);
@@ -102,7 +113,9 @@ export function WhatIsAliveNow({ natal, onField, onShowOnWheel, onBringToMaia }:
 
   useEffect(() => {
     let cancelled = false;
-    setStatus('loading');
+    queueMicrotask(() => {
+      if (!cancelled) setStatus('loading');
+    });
     fetch(apiUrl('/api/astrology/transit-field'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -127,10 +140,19 @@ export function WhatIsAliveNow({ natal, onField, onShowOnWheel, onBringToMaia }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [natalKey]);
 
-  const activations = field?.activations ?? [];
+  const activations = useMemo(() => field?.activations ?? [], [field]);
   const strongest = activations.slice(0, 4);
   const listed = lens ? activations.filter((a) => lens === 'all' || a.scale === lens) : [];
   const selected = activations.find((a) => a.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!focusActivationId || !activations.some((a) => a.id === focusActivationId)) return;
+    const frame = requestAnimationFrame(() => {
+      setSelectedId(focusActivationId);
+      document.getElementById('alive-now-deepening')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [focusActivationId, activations]);
 
   function open(a: TransitActivation) {
     setSelectedId(a.id);
@@ -174,6 +196,8 @@ export function WhatIsAliveNow({ natal, onField, onShowOnWheel, onBringToMaia }:
               ))}
             </ul>
 
+            {field ? <FieldTimeline field={field} onOpen={open} /> : null}
+
             <div className={styles.lenses} role="group" aria-label="Transit lens">
               <LensButton
                 active={lens === 'major'}
@@ -210,9 +234,13 @@ export function WhatIsAliveNow({ natal, onField, onShowOnWheel, onBringToMaia }:
               )
             ) : null}
 
-            {selected ? (
+            {selected && field ? (
               <Deepening
+                key={selected.id}
                 a={selected}
+                field={field}
+                natalAspects={natalAspects}
+                reflectionContext={reflectionContext}
                 onClose={() => setSelectedId(null)}
                 onShowOnWheel={onShowOnWheel}
                 onBringToMaia={onBringToMaia}
@@ -295,8 +323,61 @@ function ActivationRow({ a, selected, onOpen }: { a: TransitActivation; selected
   );
 }
 
-function Timeline({ a }: { a: TransitActivation }) {
-  const now = Date.now();
+function FieldTimeline({ field, onOpen }: { field: TransitField; onOpen: (a: TransitActivation) => void }) {
+  const now = Date.parse(field.calculatedAt);
+  const range = fieldTimelineRange(field.activations, now);
+  const span = Math.max(range.end - range.start, 1);
+  const pct = (t: number) => `${Math.max(0, Math.min(100, ((t - range.start) / span) * 100)).toFixed(2)}%`;
+
+  return (
+    <section className={styles.fieldTimeline} aria-label="Whole transit field timeline">
+      <div className={styles.fieldTimelineHead}>
+        <div>
+          <small>WHOLE FIELD IN TIME</small>
+          <h3>Different clocks, one present moment</h3>
+        </div>
+        <p>Each band is the calculated activation window. Dots mark exact passes or closest approaches.</p>
+      </div>
+      <div className={styles.fieldTimelineRows}>
+        {field.activations.map((a) => {
+          const start = a.timing.windowStart ? Date.parse(a.timing.windowStart) : range.start;
+          const end = a.timing.windowEnd ? Date.parse(a.timing.windowEnd) : range.end;
+          return (
+            <button type="button" key={a.id} className={styles.fieldTimelineRow} onClick={() => onOpen(a)}>
+              <span className={styles.fieldTimelineLabel}>
+                <b>{a.transiting.body}</b>
+                <em>{a.aspect.symbol} {a.natal.point}</em>
+              </span>
+              <span className={styles.fieldTimelineTrack}>
+                <span
+                  className={styles.fieldTimelineWindow}
+                  style={{ left: pct(start), right: `${(100 - parseFloat(pct(end))).toFixed(2)}%` }}
+                />
+                {a.timing.passes.map((pass) => (
+                  <span
+                    key={pass.at}
+                    className={pass.perfects ? styles.fieldTimelinePass : styles.fieldTimelineNearPass}
+                    style={{ left: pct(Date.parse(pass.at)) }}
+                    title={(pass.perfects ? 'Exact ' : 'Closest approach ') + longDate(pass.at)}
+                  />
+                ))}
+                <span className={styles.fieldTimelineToday} style={{ left: pct(now) }} />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className={styles.fieldTimelineRange}>
+        <span>{range.clippedStart ? 'earlier ←' : shortDate(new Date(range.start).toISOString())}</span>
+        <b>today</b>
+        <span>{range.clippedEnd ? '→ later' : shortDate(new Date(range.end).toISOString())}</span>
+      </div>
+    </section>
+  );
+}
+
+function Timeline({ a, nowIso }: { a: TransitActivation; nowIso: string }) {
+  const now = Date.parse(nowIso);
   const startMs = a.timing.windowStart ? Date.parse(a.timing.windowStart) : null;
   const endMs = a.timing.windowEnd ? Date.parse(a.timing.windowEnd) : null;
   const passes = a.timing.passes.map((p) => Date.parse(p.at));
@@ -340,20 +421,29 @@ function Timeline({ a }: { a: TransitActivation }) {
 
 function Deepening({
   a,
+  field,
+  natalAspects,
+  reflectionContext,
   onClose,
   onShowOnWheel,
   onBringToMaia,
 }: {
   a: TransitActivation;
+  field: TransitField;
+  natalAspects: NatalAspectInput[];
+  reflectionContext?: WhatIsAliveNowProps['reflectionContext'];
   onClose: () => void;
   onShowOnWheel?: (a: TransitActivation) => void;
   onBringToMaia?: (text: string) => void;
 }) {
-  const transitPrinciple = PRINCIPLES[a.transiting.body.toLowerCase()];
-  const natalPrinciple = PRINCIPLES[a.natal.point.toLowerCase()];
-  const pairing = a.natal.point === 'Ascendant' || a.natal.point === 'Midheaven'
-    ? null
-    : synthesizeAspect(a.transiting.body, a.natal.point, a.aspect.name);
+  const [reflectionText, setReflectionText] = useState('');
+  const [reflectionSaving, setReflectionSaving] = useState(false);
+  const [reflectionError, setReflectionError] = useState<string | null>(null);
+  const [keptHref, setKeptHref] = useState<string | null>(null);
+  const tradition = transitTradition(a);
+  const expressions = possibleHumanExpressions(a);
+  const natalWeb = natalWebLinks(a.natal.point, natalAspects);
+  const currentFieldContext = fieldContextLines(a, field.activations);
 
   function bring() {
     const lines = [
@@ -361,9 +451,38 @@ function Deepening({
       `Transit: ${a.transiting.body} ${a.aspect.name} natal ${a.natal.point}.`,
       `Geometry: ${a.transiting.body} at ${a.transiting.sign} ${a.transiting.degree.toFixed(1)}°${a.transiting.retrograde ? ' (retrograde)' : ''}; natal ${a.natal.point} at ${a.natal.sign} ${a.natal.degree.toFixed(1)}°; ${formatOrb(a.deviation)} from exact, ${a.motion}.`,
       `Timing: ${describeExact(a)}; ${describeWindow(a)}.`,
+      reflectionText.trim() ? `My own words: ${reflectionText.trim()}` : null,
       'Please keep the calculated facts distinct from symbolic interpretation. Offer possibilities, not predictions or identity claims, and ask what I recognize in my own life.',
-    ];
+    ].filter((line): line is string => Boolean(line));
     onBringToMaia?.(lines.join('\n\n'));
+  }
+
+  async function keepReflection() {
+    const text = reflectionText.trim();
+    if (!text || !reflectionContext || reflectionSaving || keptHref) return;
+    setReflectionSaving(true);
+    setReflectionError(null);
+    try {
+      const response = await apiFetch('/api/astrology/reflection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          zodiacMode: reflectionContext.zodiacMode,
+          houseSystem: reflectionContext.houseSystem,
+          ayanamsa: reflectionContext.ayanamsa ?? null,
+          scope: 'transit',
+          activation: { id: a.id, label: contactLabel(a) },
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || 'Could not keep this reflection');
+      setKeptHref(typeof body?.href === 'string' ? body.href : null);
+    } catch (error) {
+      setReflectionError(error instanceof Error ? error.message : 'Could not keep this reflection');
+    } finally {
+      setReflectionSaving(false);
+    }
   }
 
   return (
@@ -387,7 +506,7 @@ function Deepening({
             <li>{a.aspect.symbol} {a.aspect.name} ({a.aspect.angle}°), {formatOrb(a.deviation)} from exact within a {a.allowedOrb}° orb.</li>
             <li>
               {a.transiting.body} is {a.transiting.stationary ? 'near a station' : a.transiting.retrograde ? 'retrograde' : 'direct'},
-              moving {Math.abs(a.transiting.speedPerDay).toFixed(a.transiting.speedPerDay > 1 ? 1 : 3)}° per day.
+              moving {Math.abs(a.transiting.speedPerDay).toFixed(Math.abs(a.transiting.speedPerDay) > 1 ? 1 : 3)}° per day.
             </li>
             <li>{describeWindow(a).replace(/^a/, 'A')}.</li>
             {a.timing.passes.length === 0 ? <li>{describeExact(a)}.</li> : null}
@@ -395,7 +514,7 @@ function Deepening({
               <li key={p.at}>{p.perfects ? 'Exact' : 'Closest approach'} {longDate(p.at)}{p.perfects ? '' : ` (${formatOrb(p.deviation)})`}.</li>
             ))}
           </ul>
-          <Timeline a={a} />
+          <Timeline a={a} nowIso={field.calculatedAt} />
         </section>
 
         <section className={styles.layer}>
@@ -405,23 +524,60 @@ function Deepening({
 
         <section className={styles.layer}>
           <small>SYMBOLIC TRADITION</small>
-          <p>
-            In Western tradition, {ASPECT_QUALITY[a.aspect.name]}. Here it joins transiting {a.transiting.body}
-            {transitPrinciple ? ` (${transitPrinciple})` : ''} with natal {a.natal.point}
-            {natalPrinciple ? ` (${natalPrinciple})` : ''}.
-          </p>
-          {pairing?.coreQuestion ? (
-            <p className={styles.tradQuestion}>A question this pairing has traditionally raised: <em>{pairing.coreQuestion}</em></p>
+          <p>{tradition}</p>
+          <p className={styles.boundary}>This is a traditional symbolic lens, not a prediction and not a claim about your life.</p>
+        </section>
+
+        <section className={styles.layer}>
+          <small>WITHIN YOUR WHOLE CHART</small>
+          {currentFieldContext.map((line) => <p key={line}>{line}</p>)}
+          {natalWeb.length ? (
+            <>
+              <p>Natal {a.natal.point} is already woven into these natal relationships:</p>
+              <ul className={styles.natalWeb}>
+                {natalWeb.map((link) => (
+                  <li key={`${link.otherPoint}-${link.type}`}>
+                    <b>{link.type} {link.otherPoint}</b> · {formatOrb(link.orb)}
+                    {link.coreQuestion ? <span> — {link.coreQuestion}</span> : null}
+                  </li>
+                ))}
+              </ul>
+              <p className={styles.boundary}>These links come from the natal aspect library. They describe the birth chart, not the transit itself.</p>
+            </>
+          ) : currentFieldContext.length === 0 ? (
+            <p>No additional natal-aspect link is available in the current chart data for this point. That is absence of context, not evidence that the point is isolated.</p>
           ) : null}
-          <p className={styles.boundary}>
-            This is a lens from a tradition, not a reading of your life. Where it sits within your whole chart, and how it
-            may be expressed, are the next layers of this journey.
-          </p>
+        </section>
+
+        <section className={styles.layer}>
+          <small>POSSIBLE HUMAN EXPRESSION</small>
+          <ul>{expressions.map((line) => <li key={line}>{line}</li>)}</ul>
+          <p className={styles.boundary}>These are possibilities for recognition, not forecasts, diagnoses or identity statements.</p>
         </section>
 
         <section className={styles.layer}>
           <small>YOUR MEANING</small>
           <p>What do you recognize here — including what does not fit?</p>
+          <textarea
+            className={styles.meaningTextarea}
+            value={reflectionText}
+            onChange={(event) => {
+              setReflectionText(event.target.value);
+              setReflectionError(null);
+            }}
+            maxLength={4000}
+            placeholder="Write what is actually true for you…"
+            aria-label="Your meaning for this transit"
+          />
+          {reflectionContext ? (
+            <div className={styles.saveRow}>
+              <button type="button" disabled={!reflectionText.trim() || reflectionSaving || Boolean(keptHref)} onClick={keepReflection}>
+                {reflectionSaving ? 'Keeping…' : keptHref ? 'Kept as Reflection' : 'Keep my words as a Reflection'}
+              </button>
+              {keptHref ? <a className={styles.keptLink} href={keptHref}>Open this Reflection →</a> : null}
+            </div>
+          ) : null}
+          {reflectionError ? <p className={styles.saveError}>{reflectionError}</p> : null}
           <div className={styles.actions}>
             {onShowOnWheel ? (
               <button type="button" onClick={() => onShowOnWheel(a)}>Show on the House Wheel</button>
@@ -430,7 +586,9 @@ function Deepening({
               <button type="button" className={styles.primary} onClick={bring}>Bring this activation to MAIA →</button>
             ) : null}
           </div>
-          <p className={styles.consent}>Nothing is sent to MAIA until you choose to bring it.</p>
+          <p className={styles.consent}>
+            Your words stay here until you choose an action. Keeping stores only your words; bringing shares this activation and, if present, your words with MAIA.
+          </p>
         </section>
       </div>
     </article>
