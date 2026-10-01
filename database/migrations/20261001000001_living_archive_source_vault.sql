@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS living_archive_artifacts (
 
   CONSTRAINT living_archive_artifacts_date_shape CHECK (
     (date_precision = 'unknown' AND date_start IS NULL AND date_end IS NULL)
-    OR (date_precision = 'exact' AND date_start IS NOT NULL AND date_end = date_start)
+    OR (date_precision = 'exact' AND date_start IS NOT NULL AND date_end IS NOT NULL AND date_end = date_start)
     OR (date_precision = 'approximate' AND date_start IS NOT NULL AND (date_end IS NULL OR date_end >= date_start))
     OR (date_precision = 'range' AND date_start IS NOT NULL AND date_end IS NOT NULL AND date_end >= date_start)
   ),
@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS living_archive_known_gaps (
 
   CONSTRAINT living_archive_known_gaps_date_shape CHECK (
     (date_precision = 'unknown' AND date_start IS NULL AND date_end IS NULL)
-    OR (date_precision = 'exact' AND date_start IS NOT NULL AND date_end = date_start)
+    OR (date_precision = 'exact' AND date_start IS NOT NULL AND date_end IS NOT NULL AND date_end = date_start)
     OR (date_precision = 'approximate' AND date_start IS NOT NULL AND (date_end IS NULL OR date_end >= date_start))
     OR (date_precision = 'range' AND date_start IS NOT NULL AND date_end IS NOT NULL AND date_end >= date_start)
   ),
@@ -228,6 +228,14 @@ CREATE TABLE IF NOT EXISTS living_archive_known_gaps (
       point_visibility = 'none'
       AND content_access = 'private'
       AND display_status IN ('hidden','restricted','private')
+    )
+  ),
+  CONSTRAINT living_archive_known_gaps_sealed_content_closed CHECK (
+    privacy_class <> 'sealed_self'
+    OR (
+      point_visibility IN ('member','founder','none')
+      AND content_access IN ('founder','private')
+      AND display_status IN ('hidden','eligible','restricted','private')
     )
   )
 );

@@ -37,6 +37,10 @@ const catalogue: ArchiveCatalogue = {
       gapId: 'LA-GAP-001', privacyClass: 'ordinary', pointVisibility: 'public',
       admissionStage: 'admitted', displayStatus: 'exhibited', dateOrdinal: 1995,
     },
+    {
+      gapId: 'LA-GAP-SEALED', privacyClass: 'sealed_self', pointVisibility: 'member',
+      admissionStage: 'admitted', displayStatus: 'private', dateOrdinal: 1997,
+    },
   ],
 };
 
@@ -52,6 +56,7 @@ assert.deepEqual(lawful.points.map((p) => [p.id, p.kind]), [
   ['LA-ART-001', 'artifact'],
   ['LA-ART-002', 'sealed'],
   ['LA-GAP-001', 'known_gap'],
+  ['LA-GAP-SEALED', 'sealed'],
 ]);
 assert.deepEqual(lawful.threads[0].artifactIds, ['LA-ART-001', 'LA-ART-002']);
 
@@ -125,6 +130,7 @@ expectKilled('LA30-F11', {
 // Anonymous entry is PUBLIC-only: sealed self vanishes, not merely closes.
 const anonymous = buildReferenceDarkField(catalogue, 'anonymous');
 assert.deepEqual(anonymous.points.map((p) => p.id), ['LA-ART-001', 'LA-GAP-001']);
+assert.ok(!anonymous.points.some((p) => p.id === 'LA-GAP-SEALED'), 'anonymous visitors must not see sealed known-gap points');
 
 // Catalogue growth cannot move an existing coordinate.
 const grown: ArchiveCatalogue = {
@@ -156,6 +162,7 @@ for (const table of [
 assert.match(migration, /living_archive_subartifact_not_point/);
 assert.match(migration, /living_archive_withheld_no_geometry/);
 assert.match(migration, /living_archive_known_gaps_withheld_no_geometry/);
+assert.match(migration, /living_archive_known_gaps_sealed_content_closed/);
 assert.match(migration, /LA-CATALOGUE-UNIT-v1/);
 assert.doesNotMatch(migration, /INSERT\s+INTO\s+living_archive_artifacts/i, 'R1 must not ingest artifacts');
 assert.doesNotMatch(migration, /INSERT\s+INTO\s+living_archive_known_gaps/i, 'R1 must not backfill gaps');
