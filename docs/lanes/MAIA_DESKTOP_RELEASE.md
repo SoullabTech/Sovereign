@@ -18,23 +18,25 @@ appended sections.
 
 ## Last updated
 
-2026-10-01 · canonical at time of writing `cf9624cdf` (#1619 merged; Next 16.3.8)
+2026-10-01 · canonical at time of writing `ef511f0ef` (#1616 merged; Next 16.3.8)
 · evidence: git + GitHub CI + founder Mac Studio command output.
 
 ## Release SHA
 
-**Not yet fixed.** It will be the merge commit of PR #1616 into
-`clean-main-no-secrets`, landed after PR #1619. Record it here on merge, and
-build only from that exact SHA.
+**`ef511f0efea38792c597da01e67299740210e903`**: the merge commit of PR #1616
+into `clean-main-no-secrets` (after #1619 `cf9624cdf`). Verified in git: it contains
+the fix `bdf95a8e1` and the #1619 merge, pins `next` 16.3.8, and has the
+`cabin-runtime/node_modules` extraResources step. Desktop version
+`0.1.0-beta.1`. Build **only** from this exact SHA. The `maiaBuildSha` embedded in
+the app must read `ef511f0efea3`.
 
 ## Release order
 
 1. ✅ Merged #1619 as `cf9624cdf` (Writer's Studio RC1 lineage; no pending migrations: its three
    migrations are already applied in production).
-2. Merge #1616, updated onto canonical after #1619 lands. The merge commit is
-   the release SHA.
+2. ✅ Merged #1616 as `ef511f0ef`. That is the release SHA.
 3. Mac Studio, from the release SHA on the T7 build volume: root `npm ci` →
-   `MAIA_CABIN_MODE=offline next build` → `maia-desktop` `npm ci` → `npm test` (**must report 408/408**, or name any delta from #1619)
+   `MAIA_CABIN_MODE=offline next build` → `maia-desktop` `npm ci` → `npm test` (**must report 408/408**)
    → `npm run dist:mac` → `npm run verify:package`. `verify:package` now
    fails unless `Resources/cabin-runtime/node_modules/next/package.json` exists
    **and** its version equals the root `package.json` pin (16.3.8).
