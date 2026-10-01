@@ -8,7 +8,7 @@
     "tests/constitutional/jarvis-o5-r4/substrate.mjs": "f9b4e2dedee41635ce46caa1969775bf7399f91d2731d90bdb0906910c14f9e4",
     "tests/constitutional/jarvis-o5-r4/reference.mjs": "72d68c73a8559b3b6898fd0bcf6a9c0a13a50fa4190b185c3f3a1ada1fc06e59",
     "tests/constitutional/jarvis-o5-r4/falsifiers.mjs": "beb56683a98983e6f9667672e0bbaf05327f67b95d7eb87fe1f4de5060e88d04",
-    "tests/constitutional/jarvis-o5-r4/candidates.mjs": "2acd245acfdf8133936477ec3caf1109ef9080d594c3b30e645bc557ead9c448"
+    "tests/constitutional/jarvis-o5-r4/candidates.mjs": "c822a9d334aa2c4f3de6ab433d0533a70f2931fc8e69cd492fd8ae76c7e0474f"
   },
   "unfrozen": [
     "tests/constitutional/jarvis-o5-r4/matrix.mjs"
@@ -36,6 +36,21 @@
         "tests/constitutional/jarvis-o5-r4/reference.mjs": "72d68c73a8559b3b6898fd0bcf6a9c0a13a50fa4190b185c3f3a1ada1fc06e59",
         "tests/constitutional/jarvis-o5-r4/falsifiers.mjs": "beb56683a98983e6f9667672e0bbaf05327f67b95d7eb87fe1f4de5060e88d04",
         "tests/constitutional/jarvis-o5-r4/candidates.mjs": "2acd245acfdf8133936477ec3caf1109ef9080d594c3b30e645bc557ead9c448"
+      }
+    },
+    {
+      "amendment": 2,
+      "date": "2026-10-01",
+      "previous_canonical_merge": "9c608128361eadd2e6ba2c6c1371353bdb0d7ebe",
+      "authority": "Founder direction: commit the session-local E9 discrimination probe as standing defeat candidates",
+      "cause": "Amendment 1 recorded one E9 defeat candidate (no projection). R4-E9 already rejected wrong-lane, broadcast, authority-carrying and ordinary-finding projection, but only a one-session disposable probe witnessed it. A weakening of R4-E9 to 'something was sent' would have kept the recorded matrix green. Demonstrated: under that weakening DC-E9b..e SURVIVE while DC-E9 is still killed.",
+      "changed": "Added defeat candidates DC-E9b (wrong lane), DC-E9c (broadcast '*'), DC-E9d (authority field beside evidence), DC-E9e (ordinary finding projected cross-lane). Only candidates.mjs changed.",
+      "unchanged": "Laws R4-E1 through R4-E9, contract.mjs, substrate.mjs, reference.mjs, falsifiers.mjs, and every runtime implementation file.",
+      "previous_hashes": {
+        "tests/constitutional/jarvis-o5-r4/candidates.mjs": "2acd245acfdf8133936477ec3caf1109ef9080d594c3b30e645bc557ead9c448"
+      },
+      "new_hashes": {
+        "tests/constitutional/jarvis-o5-r4/candidates.mjs": "c822a9d334aa2c4f3de6ab433d0533a70f2931fc8e69cd492fd8ae76c7e0474f"
       }
     }
   ]

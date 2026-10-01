@@ -1,0 +1,28 @@
+You are an independent production-migration reviewer. Your working directory is a review bundle: target-reader source at repository-relative paths, and the exact live old-reader source under old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/.
+
+Task: review the plan at docs/programme/WS-ADVANCED-RUNTIME-01_P2_EXACT_THREE_MIGRATION_REVIEW_PLAN_2026-10-01.md and answer its ten independent review questions from the source itself. Read the plan first, then MIGRATION_COMPATIBILITY_CONTEXT.json, then every file in the plan's "Minimum physical Reads" list (old-reader paths under the old-reader/<sha>/ root), plus anything else you judge necessary. You have Read, Grep and Glob only. Grep/Glob scope discovery but do not count as coverage; only files you Read count.
+
+You owe no particular verdict. APPROVED, REVISE and BLOCKED are all lawful. Approve only if you independently establish every question, including old-reader compatibility after each committed prefix (after migration 1 alone, after 1+2, after 1+2+3) and lawful reader rollback. If anything material is unestablished or wrong, return REVISE or BLOCKED with findings, and set migration_compatibility / failure_prefix_compatibility verdicts honestly (INCOMPATIBLE / NOT_ALL_PREFIXES_COMPATIBLE where warranted). Do not claim the migrations are correct beyond what you read.
+
+Output fields (structured output):
+- plan_sha256: 62b0de90f0480caf3c90b1c6bcb8a170fdae34cf61a2545cb28b21a8beca8a11
+- trace_id: 402fe5ae-628e-4642-8836-bbfa5a86e2ce
+- reviewer: "claude-code separate-process reviewer (read-only)"
+- coverage.files: bundle-relative paths you actually Read (old-reader ones with the old-reader/<sha>/ prefix).
+- limitations: explicit list (may not be omitted).
+- migration_compatibility.old_reader_commit: 975a208b8c39f99e9b47208ce5139bbec94bd8ac
+- migration_compatibility.target_reader_commit: 03f0fd3abce16fcc1132481836b2e6ff8d364cd7
+- migration_compatibility.pending, in this order, with these harness-computed SHA-256 values (the production gate recomputes them from git; you cannot hash):
+  database/migrations/20260925000005_writer_editorial_relationship_custody.sql 39c5c91dc31510cccb72f01d6fca35047730997f4758ca59e2b629ec62dd5b33
+  database/migrations/20260925000006_writer_editorial_scope_identity_successor.sql a514c25540e88e1ef6b20ff49a1f205ddb94a4e95d3c7a1d616dcad8034a2154
+  database/migrations/20260926000004_writer_studio_return_state.sql be3d512e8342060e4056a8643aa77fd78dd576467804b6ee55483ef20f06d616
+- migration_compatibility.old_reader_evidence: one entry per old-reader file you Read and rely on, with repo_path (repository-relative, no old-reader prefix), trace_path (the bundle-relative path you Read, with the old-reader/<sha>/ prefix), and sha256 from this harness-computed list:
+aadbb74ed3156ac67f4b94b520c123e73509edd877b23a497b54b13ec686ca1f  app/api/sovereign/living-works/route.ts
+5e1ca95b5cc9d6d52bab12db28411001763f8dd2b7c70846fd2d223c6df1887e  app/api/sovereign/living-works/[id]/expressions/route.ts
+3188c0e30d20e52cc835c90240ece58806da65bf1224a6033c56d52a18228527  app/api/sovereign/manuscripts/route.ts
+cd21cfbf3a26db71d826c3c8940c22b41cc42d42e4ae0dd4dfc1cf7493bacae1  app/api/sovereign/manuscripts/blank/route.ts
+b8110e889e2f6d766937abfad789ac737b47b514c81a1665c3005f78f8089698  lib/manuscript/proposalChain/store.ts
+1d39c09e192d4c1c1976790d7b8170e338e7bf9703f64dd22a9f2db053514352  lib/manuscript/editorialRuntime/thread.ts
+f4e5216218e9a998e9fb4760752ea25e73ba473a6e6ed784ca9efd7749a1672a  app/api/writers-studio/rebuild/context/route.ts
+1636f09c9840a4e5dc2ecc3618acc2175512ffae1b893c8a4e98dba8c8fd28ac  app/api/sovereign/manuscripts/[id]/draft/route.ts
+- failure_prefix_compatibility.prefixes: exactly three entries, through_path/through_sha256 = migration 1, 2, 3 respectively, each with its own rationale and limitations.

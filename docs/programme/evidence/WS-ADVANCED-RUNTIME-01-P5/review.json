@@ -1,0 +1,181 @@
+{
+  "verdict": "APPROVED",
+  "plan_sha256": "b2c455ff19cc9d8722c7872ef6922796da6484a20743082059257a94f839ec50",
+  "trace_id": "6a336a06-1936-4a28-8cde-158ce33c14ec",
+  "reviewer": "claude-code separate-process reviewer (read-only)",
+  "summary": "I read the plan, the three pending migrations, the deploy and migration-runner scripts, every listed target file and the eight listed old-reader files. I could establish all eleven questions from source. No high or medium findings. The old reader (975a208b) never names the new tables, constraints or column. It inserts into `proposal_chains`, `living_works` and `member_manuscripts` with explicit column lists. Its updates and deletes touch no key column, and its deletes cascade cleanly into the new tables. So it is compatible after migration 1 alone, after 1+2, and after 1+2+3. Reader rollback needs no down-migration. The target reader hard-requires migration 2. That is acceptable because deploy/update run migrations before the swap, but it is a process rule rather than a mechanical one. The remaining items are low severity and are recorded as limitations and findings.",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "low",
+      "path": "lib/manuscript/proposalChain/store.ts",
+      "evidence": "Target `CHAIN_COLUMNS` selects `locus_scope_kind`, and `openChainWithExecutor` inserts it. Every proposal-chain read and append, and the plain section-door `openEditorialRelationship`, depends on migration 2. Without migration 2 these fail with an undefined-column error (a loud 500, no partial write). The failure is not confined to A2 routes.",
+      "fix": "Keep the plan's runbook rule: ship the target only through `deploy-production.sh deploy|update`, where migrate precedes the swap and a migration failure exits pre-swap. Do not use `pre-deploy-gate.sh deploy-maia` or bare container recreation while any of the three migrations is pending. A mechanical guard in those paths would be better; I did not read `pre-deploy-gate.sh`."
+    },
+    {
+      "id": "F2",
+      "severity": "low",
+      "path": "database/migrations/20260926000004_writer_studio_return_state.sql",
+      "evidence": "Q10's production shapes cover only `member_manuscripts`, `living_works` and `proposal_chains`. Migration 3 also references `manuscript_draft_sections` and `writer_editorial_relationships`. The new referencing tables are empty at creation, so no validation scan is needed and only brief locks are taken, bounded by the 5s `lock_timeout`. The production counts are plan-reported and I could not verify them.",
+      "fix": "Optionally record the `manuscript_draft_sections` row count in the deploy record. No remediation is required."
+    },
+    {
+      "id": "F3",
+      "severity": "low",
+      "path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/source/eraseManuscript.ts",
+      "evidence": "Old-reader erasure (`DELETE FROM member_manuscripts`, `DELETE FROM living_works`, and `DELETE FROM living_works` in the `[id]` route) cascades into the new relationship, episode and return-state rows. No RESTRICT or delete trigger blocks it, and the immutability triggers are BEFORE UPDATE only. The old reader's deletes keep working, and A2 custody is removed along with the Work or manuscript. This follows the migration's own comments and is not a compatibility defect.",
+      "fix": "None required. Note that a reader rollback followed by member erasure removes A2 history by design."
+    }
+  ],
+  "coverage": {
+    "files": [
+      "docs/programme/WS-ADVANCED-RUNTIME-01_P4_RC2_EXACT_THREE_MIGRATION_REVIEW_PLAN_2026-10-01.md",
+      "MIGRATION_COMPATIBILITY_CONTEXT.json",
+      "database/migrations/20260925000005_writer_editorial_relationship_custody.sql",
+      "database/migrations/20260925000006_writer_editorial_scope_identity_successor.sql",
+      "database/migrations/20260926000004_writer_studio_return_state.sql",
+      "scripts/deploy-production.sh",
+      "scripts/run-sql-migrations.sh",
+      "lib/writers-studio/relationshipCustody.ts",
+      "lib/writers-studio/relationshipCarriage.ts",
+      "lib/writers-studio/returnState.ts",
+      "lib/writersStudio/rebuild/relationshipOrchestration.ts",
+      "lib/writersStudio/rebuild/returnStateClient.ts",
+      "lib/manuscript/proposalChain/store.ts",
+      "lib/manuscript/editorialRuntime/thread.ts",
+      "lib/manuscript/proposalChain/contract.ts",
+      "app/api/writers-studio/relationships/route.ts",
+      "app/api/writers-studio/relationships/[id]/route.ts",
+      "app/api/writers-studio/relationships/[id]/carry-sources/route.ts",
+      "app/api/writers-studio/return/place/route.ts",
+      "app/api/writers-studio/return/relationship/route.ts",
+      "app/api/writers-studio/editorial/turn/route.ts",
+      "app/api/sovereign/manuscripts/[id]/review-discuss/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/living-works/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/living-works/[id]/expressions/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/blank/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/proposalChain/store.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/editorialRuntime/thread.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/writers-studio/rebuild/context/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/[id]/draft/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/source/eraseManuscript.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/living-works/[id]/route.ts",
+      "database/migrations/20260801000001_living_works.sql",
+      "database/migrations/20260721000003_press_manuscript_room.sql",
+      "database/migrations/20260914000001_proposal_succession.sql"
+    ]
+  },
+  "limitations": [
+    "Source-only, read-only review. No migration was executed, no database was touched, and I did not reproduce the plan's disposable PostgreSQL 16 witness.",
+    "The production row counts and sizes (21, 8 and 9 rows) are the plan's own claims. I could not verify them and relied on them only as a bound on DDL lock-hold time.",
+    "I did not read `scripts/pre-deploy-gate.sh`, `scripts/deploy-lock.sh` or `scripts/deploy-context.sh`. The statement that `deploy-maia` and bare recreation bypass the migration ordering is taken from the plan's runbook rule, not independently established.",
+    "Old-reader compatibility rests on the eight listed files plus targeted Grep and two extra Reads (`eraseManuscript.ts` and the `living-works/[id]` route). Other old-reader paths that touch `proposal_chains` (`adoption.ts`, `relationships.ts`, `revisionAuthorization/store.ts`) were located by Grep only and not Read. I infer they are unaffected because the added column is nullable with no default and never named or required by the old reader.",
+    "`information_schema.columns` in migration 2's re-run guard is keyed on `current_schema()`. I assumed the runner's `search_path` resolves the same schema as the table, which is the only case the repository uses.",
+    "Later migrations that might alter `living_works` or `member_manuscripts` keys were checked only by Grep. I saw none that drop or change `id` or `member_id`.",
+    "Review of the three migrations covers their behaviour on the stated production-pending relation. It does not establish that the migrations are correct beyond that, and it does not cover the target reader's non-A2 behaviour.",
+    "The harness-supplied SHA-256 values were taken as given. I cannot hash files."
+  ],
+  "migration_compatibility": {
+    "instrument": "migration-compatibility/v1",
+    "verdict": "COMPATIBLE",
+    "old_reader_commit": "975a208b8c39f99e9b47208ce5139bbec94bd8ac",
+    "target_reader_commit": "b74751d7b834ae0733d952d7b4b341d4ab8ac046",
+    "pending": [
+      {
+        "path": "database/migrations/20260925000005_writer_editorial_relationship_custody.sql",
+        "sha256": "e77e45d11c4416785350ffbbea4dc648ecb09557468ee4c1840e9bf8c9600c47"
+      },
+      {
+        "path": "database/migrations/20260925000006_writer_editorial_scope_identity_successor.sql",
+        "sha256": "c10bea44e539aa452c558d9f794975640eab533a2f47787b86da2d4911856607"
+      },
+      {
+        "path": "database/migrations/20260926000004_writer_studio_return_state.sql",
+        "sha256": "a3ea657a23dba0e1c3c020a2e1641791bbbc3d91a324ef6d739295911576b6df"
+      }
+    ],
+    "old_reader_evidence": [
+      {
+        "repo_path": "app/api/sovereign/living-works/route.ts",
+        "sha256": "aadbb74ed3156ac67f4b94b520c123e73509edd877b23a497b54b13ec686ca1f",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/living-works/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/living-works/[id]/expressions/route.ts",
+        "sha256": "5e1ca95b5cc9d6d52bab12db28411001763f8dd2b7c70846fd2d223c6df1887e",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/living-works/[id]/expressions/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/manuscripts/route.ts",
+        "sha256": "3188c0e30d20e52cc835c90240ece58806da65bf1224a6033c56d52a18228527",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/manuscripts/blank/route.ts",
+        "sha256": "cd21cfbf3a26db71d826c3c8940c22b41cc42d42e4ae0dd4dfc1cf7493bacae1",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/blank/route.ts"
+      },
+      {
+        "repo_path": "lib/manuscript/proposalChain/store.ts",
+        "sha256": "b8110e889e2f6d766937abfad789ac737b47b514c81a1665c3005f78f8089698",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/proposalChain/store.ts"
+      },
+      {
+        "repo_path": "lib/manuscript/editorialRuntime/thread.ts",
+        "sha256": "1d39c09e192d4c1c1976790d7b8170e338e7bf9703f64dd22a9f2db053514352",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/editorialRuntime/thread.ts"
+      },
+      {
+        "repo_path": "app/api/writers-studio/rebuild/context/route.ts",
+        "sha256": "f4e5216218e9a998e9fb4760752ea25e73ba473a6e6ed784ca9efd7749a1672a",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/writers-studio/rebuild/context/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/manuscripts/[id]/draft/route.ts",
+        "sha256": "1636f09c9840a4e5dc2ecc3618acc2175512ffae1b893c8a4e98dba8c8fd28ac",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/[id]/draft/route.ts"
+      }
+    ],
+    "rationale": "The old reader has no code that names the A2 tables, the two composite unique constraints, `proposal_chains.locus_scope_kind`, or the return-state tables. A Grep for those names across old-reader app/lib/scripts found only unrelated producer-id strings.\n\nQ1: `living_works` and `member_manuscripts` both have `id UUID PRIMARY KEY` and `member_id NOT NULL`, so `UNIQUE (id, member_id)` cannot reject any old-reader-valid row. The old reader's inserts supply `member_id`, and its updates (title, purpose, `source_custody`, etc.) change no key column, so the ON UPDATE RESTRICT foreign keys never engage.\n\nQ2 and Q3: the new tables, indexes, the BEFORE UPDATE-only immutability triggers and the foreign keys are purely additive. Child references are non-FK. The only deletes the old reader issues (`eraseManuscript`, the living-works DELETE and the expression DELETE) go through the ON DELETE CASCADE foreign keys, which are not blocked, because the triggers fire on UPDATE only.\n\nQ4: `locus_scope_kind` is nullable with no default. The old `openChainWithExecutor` lists its insert columns explicitly, so the new column stays NULL and the CHECK passes on NULL. The old reads use an explicit `CHAIN_COLUMNS`. The `proposal_chains` BEFORE UPDATE OR DELETE trigger is unaffected by ADD COLUMN or INSERT.\n\nQ5: in migration 2 the DO block raises before any rename when an episode row exists. The runner uses ON_ERROR_STOP with `-c BEGIN; -f file -c COMMIT;`, so psql exits non-zero, nothing commits, and the earlier ADD COLUMN rolls back with it. The schema stays at prefix 1. In production no episode row can exist before migration 1 ships, and the old reader cannot create one.\n\nQ6: the succession touches only `writer_editorial_relationship_episodes`, which migration 1 creates and the old reader never references.\n\nQ7: migration 3's tables, indexes and cascade foreign keys reference only tables the old reader uses in ways that never fire the RESTRICT actions. Cascaded deletes work, and cascades into the return tables do not interact with the section round-trip triggers.\n\nQ8: every new reader path that needs A2 schema throws on a missing relation or column and writes nothing. Core target proposal-chain code needs migration 2 (finding F1). The deploy/update ordering runs migrate before the swap and exits pre-swap on any migration failure, so the target is not swapped in without the schema or after a migration 2 refusal.\n\nQ9: the old reader works unchanged against the final schema, because the changes are additive and the cascades are non-blocking. Rollback via `cmd_rollback` swaps the image only, so no down-migration is needed.\n\nQ10: the DDL is metadata-only or on tiny tables, and each file bounds lock acquisition at 5s so a timeout aborts pre-swap with the old reader intact. The sizes are plan-reported.\n\nQ11: the re-run guard keys on `manuscript_scope_requested`, which only the rename creates, so it cannot skip an unapplied succession. When the guard is false, the refusal check still runs, so it is not weakened.\n\nRe-running any of the three files after a commit is idempotent, which covers the unchecked ledger INSERT.",
+    "limitations": [
+      "Source-only review; the migrations were not executed here.",
+      "Production size figures and the claim that `deploy-maia` and bare recreation are the only bypass paths come from the plan and were not independently verified.",
+      "Three old-reader proposal_chains readers (`adoption.ts`, `relationships.ts`, `revisionAuthorization/store.ts`) were found by Grep and not Read. Compatibility for them is inferred from the additive nullable column.",
+      "Compatibility is established for the old reader's behaviour against the schema only; the target reader's non-A2 behaviour is outside this claim."
+    ],
+    "failure_prefix_compatibility": {
+      "instrument": "migration-prefix-compatibility/v1",
+      "verdict": "ALL_PREFIXES_COMPATIBLE",
+      "prefixes": [
+        {
+          "through_path": "database/migrations/20260925000005_writer_editorial_relationship_custody.sql",
+          "through_sha256": "e77e45d11c4416785350ffbbea4dc648ecb09557468ee4c1840e9bf8c9600c47",
+          "rationale": "After migration 1 alone, the schema has two UNIQUE (id, member_id) constraints, two new tables with indexes and immutability triggers, and one trigger function. All are additive. The old reader never references the new objects. The unique constraints cannot reject its rows because `id` is the primary key and `member_id` is NOT NULL. Its deletes cascade through non-blocking foreign keys. Its updates touch no key column. Migration 1 is idempotent on re-run, so a failed ledger INSERT after commit is safe. A migration 2 or 3 failure leaves exactly this state with the candidate reader unswapped and the old reader live.",
+          "limitations": [
+            "Source-only reasoning; not executed.",
+            "Production sizes are plan-reported."
+          ]
+        },
+        {
+          "through_path": "database/migrations/20260925000006_writer_editorial_scope_identity_successor.sql",
+          "through_sha256": "c10bea44e539aa452c558d9f794975640eab533a2f47787b86da2d4911856607",
+          "rationale": "After migrations 1+2, `proposal_chains` gains a nullable `locus_scope_kind` with a CHECK that passes on NULL. The old reader's explicit-column inserts and reads are unaffected. The BEFORE UPDATE OR DELETE trigger does not fire on ADD COLUMN or INSERT. The episodes-table rename and constraint succession affect only the table from migration 1, which the old reader does not touch. The refusal guard rolls back the whole file, including the ADD COLUMN, so a refusal leaves prefix 1. The re-run guard makes a repeat of migration 2 a no-op once succession has applied.",
+          "limitations": [
+            "Source-only reasoning; not executed.",
+            "Other old-reader proposal_chains readers were checked by Grep only."
+          ]
+        },
+        {
+          "through_path": "database/migrations/20260926000004_writer_studio_return_state.sql",
+          "through_sha256": "a3ea657a23dba0e1c3c020a2e1641791bbbc3d91a324ef6d739295911576b6df",
+          "rationale": "After all three migrations, the two return tables and their two cascade-FK indexes are additive. Their foreign keys reference `living_works`, `member_manuscripts`, `writer_editorial_relationships` and `manuscript_draft_sections`, all with ON DELETE CASCADE and ON UPDATE RESTRICT where composite. The old reader never updates referenced key columns, and its deletes cascade without being blocked. This is the final schema, and the old reader can run against it unchanged, so reader rollback needs no down-migration. The migration is re-runnable (IF NOT EXISTS).",
+          "limitations": [
+            "Source-only reasoning; not executed.",
+            "The `manuscript_draft_sections` row count is not recorded in the plan; the FK addition on an empty referencing table needs only a brief lock."
+          ]
+        }
+      ]
+    }
+  }
+}

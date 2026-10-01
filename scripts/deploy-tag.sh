@@ -34,10 +34,23 @@ tag_images_for_rollback() {
     local sha="$1"
     local repo="$MAIA_IMAGE_REPO"
 
-    # If there's already a :current, move it to :previous
+    # If there's already a :current, move it to :previous — UNLESS :current is the
+    # same commit being deployed again. A same-commit redeploy must not rotate the
+    # rollback point: on 2026-10-01 two redeploys of RC1 03f0fd3ab moved :previous
+    # onto an RC1 rebuild, so `rollback` would have swapped RC1 for RC1 while the
+    # real pre-RC1 image survived only as its SHA tag.
     if docker image inspect "$repo:current" >/dev/null 2>&1; then
-        echo "[deploy-tag] Preserving current image as :previous for rollback..." >&2
-        docker tag "$repo:current" "$repo:previous" 2>/dev/null || true
+        local current_commit
+        current_commit="$(docker image inspect "$repo:current" \
+            --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+            | sed -n 's/^GIT_COMMIT=//p' | head -n1 | tr -d '[:space:]')"
+        if [ -n "$current_commit" ] && [ "$current_commit" != "unknown" ] \
+            && { [ "${current_commit#"$sha"}" != "$current_commit" ] || [ "${sha#"$current_commit"}" != "$sha" ]; }; then
+            echo "[deploy-tag] :current is already commit $current_commit (same-commit redeploy) — keeping :previous as the last DIFFERENT commit." >&2
+        else
+            echo "[deploy-tag] Preserving current image as :previous for rollback..." >&2
+            docker tag "$repo:current" "$repo:previous" 2>/dev/null || true
+        fi
     fi
 
     # Tag the new build as :current and with its SHA

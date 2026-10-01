@@ -459,8 +459,9 @@ export async function alertSoullabTeam(
     : safetyCheck?.isED ? 'ed'
     : 'general';
 
-  // Log alert (production: send via Resend email or webhook)
-  console.warn('[TEEN SAFETY ALERT]', {
+  // ⚠️ No delivery channel exists yet: this alert reaches NO human (guardian or team).
+  // Logged as an error with a stable code so the gap is visible, never mistaken for delivery.
+  console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN SAFETY ALERT] NOT delivered — guardian/team notification not implemented', {
     type: alertType,
     userId: params.userId,
     age: params.age,

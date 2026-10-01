@@ -1,0 +1,182 @@
+{
+  "verdict": "REVISE",
+  "plan_sha256": "62b0de90f0480caf3c90b1c6bcb8a170fdae34cf61a2545cb28b21a8beca8a11",
+  "trace_id": "402fe5ae-628e-4642-8836-bbfa5a86e2ce",
+  "reviewer": "claude-code separate-process reviewer (read-only)",
+  "summary": "I established old-reader schema compatibility after each committed prefix (1, 1+2, 1+2+3) and lawful reader-only rollback, for the old-reader code I read. I did not establish Q10 (DDL lock and validation risk) or fully establish Q8 (target reader against the final schema). I am returning REVISE for those two gaps, not for any old-reader incompatibility.\n\n**Compatibility, by question:**\n- **Q1:** `living_works.id` and `member_manuscripts.id` are primary keys in their creation migrations, so `UNIQUE (id, member_id)` cannot reject any row the old reader can write. The old-reader inserts (`living-works` POST, `manuscripts` POST, `manuscripts/blank`) use explicit column lists.\n- **Q2\u2013Q3:** Migration 1's tables, indexes, immutable-update trigger and composite FKs are additive. The episode child references are non-FK, so the old reader's deletes and updates are unaffected. Parent deletes cascade only to relationship rows, which are empty while the old reader is live.\n- **Q4:** The old reader has one `INSERT INTO proposal_chains`, which does not list `locus_scope_kind`, so it gets NULL and passes the CHECK. All its chain selects use an explicit `CHAIN_COLUMNS`, and I found no `SELECT *` on `proposal_chains` in the old reader outside tests.\n- **Q5:** Migration 2's refusal sits inside the file's own BEGIN, and the runner uses `ON_ERROR_STOP`. A refusal therefore rolls back the `ADD COLUMN` and leaves the schema at prefix 1.\n- **Q6:** The renames and constraint succession touch only the table created by migration 1. The old reader has no runtime reference to it beyond registry strings in `membrane.ts`.\n- **Q7:** Migration 3's return tables are additive, and the old reader never references them.\n- **Q9:** `cmd_rollback` swaps image tags and recreates only the `maia` service, with no DB down-migration. After a rollback the old reader's only new effects are NULL `locus_scope_kind` on new chains and cascade deletes of A2 and return rows. Both fail closed on the target reader.\n\n**What remains unestablished or needs repair:**\n- **Q10** cannot be established. No production row counts or table sizes are in the bundle, and neither the runner nor the migration files set `lock_timeout`.\n- **Q8** is only partly established. I read the target stores and clients but not the routes, `contract.ts` or the other callers of `openChainWithExecutor`. The fail-closed behaviour I can show is that a missing schema makes the queries throw. I did not read how routes handle that.\n- Migration 2 is not re-runnable after a commit if the separate ledger INSERT fails.\n\nI have not claimed the migrations are correct beyond what I read.",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "medium",
+      "path": "database/migrations/20260925000005_writer_editorial_relationship_custody.sql",
+      "evidence": "Q10 is not established from the bundle. Migration 1 runs `ALTER TABLE living_works ADD CONSTRAINT ... UNIQUE (id, member_id)` and the same on `member_manuscripts`, which builds an index under ACCESS EXCLUSIVE while the old reader is live and reading those tables. Migration 2 runs `ADD COLUMN ... CHECK` on `proposal_chains`. The new FKs in migrations 1 and 3 take SHARE ROW EXCLUSIVE on `living_works`, `member_manuscripts`, `manuscript_draft_sections` and `writer_editorial_relationships`. The plan and bundle carry no observed production row counts or table sizes, so I cannot judge the lock durations acceptable.",
+      "fix": "Record read-only production row counts and sizes for `living_works`, `member_manuscripts` and `proposal_chains`, and state an acceptable lock budget. Re-review with that evidence."
+    },
+    {
+      "id": "F2",
+      "severity": "medium",
+      "path": "scripts/run-sql-migrations.sh",
+      "evidence": "Neither the runner (`psql -v ON_ERROR_STOP=1 -c BEGIN; -f file -c COMMIT;`) nor the three migration files set `lock_timeout` or `statement_timeout`. A DDL statement waiting for ACCESS EXCLUSIVE behind a long-running old-reader transaction queues all later queries on that table. That risk is highest for `living_works` and `member_manuscripts`, which the old reader hits constantly.",
+      "fix": "Add `SET LOCAL lock_timeout` to the migrations (this changes the pinned blobs, so a new review is required), or add a bounded timeout to the runner. A failure then aborts pre-swap with the old reader intact, which the prefix analysis already tolerates. Alternatively, prove a quiesced window."
+    },
+    {
+      "id": "F3",
+      "severity": "low",
+      "path": "database/migrations/20260925000006_writer_editorial_scope_identity_successor.sql",
+      "evidence": "Migration 2 is not idempotent after it commits. If the runner's separate ledger INSERT (no ON_ERROR_STOP) fails after the file commits, a retry reaches `RENAME COLUMN requested_scope`, which no longer exists, and fails. Every later deploy then aborts pre-swap until the ledger is repaired by hand. Migrations 1 and 3 are re-runnable. The failure is safe for the old reader but can block deployment.",
+      "fix": "Guard the renames with an `information_schema` existence check, or document a manual ledger-repair step in the runbook."
+    },
+    {
+      "id": "F4",
+      "severity": "low",
+      "path": "lib/manuscript/proposalChain/store.ts",
+      "evidence": "The target reader selects and inserts `locus_scope_kind` in every proposal-chain read and open (`CHAIN_COLUMNS`, `openChainWithExecutor`). Against a pre-migration-2 database it breaks all Editorial chain operations, not only A2. This is safe only because the full-deploy path orders migrations before the swap. `scripts/pre-deploy-gate.sh deploy-maia` and plain container recreation are not covered by this review. I also did not read the routes, `contract.ts` or the other callers, so route-level fail-closed behaviour (Q8) is unestablished.",
+      "fix": "State in the runbook that the target image must not be run against a pre-migration-2 database, and name the paths that enforce this. Read the target relationship routes and `contract.ts` in a re-review."
+    },
+    {
+      "id": "F5",
+      "severity": "low",
+      "path": "database/migrations/20260926000004_writer_studio_return_state.sql",
+      "evidence": "`writer_studio_place_returns.draft_section_id` and `writer_studio_relationship_returns.relationship_id` are FK columns with ON DELETE CASCADE and no supporting index. Cascade deletes of draft sections or relationships do a sequential scan of the return tables. The tables are tiny and new, so this is likely immaterial.",
+      "fix": "Optional: add indexes on the FK columns in a later migration."
+    }
+  ],
+  "coverage": {
+    "files": [
+      "docs/programme/WS-ADVANCED-RUNTIME-01_P2_EXACT_THREE_MIGRATION_REVIEW_PLAN_2026-10-01.md",
+      "MIGRATION_COMPATIBILITY_CONTEXT.json",
+      "database/migrations/20260925000005_writer_editorial_relationship_custody.sql",
+      "database/migrations/20260925000006_writer_editorial_scope_identity_successor.sql",
+      "database/migrations/20260926000004_writer_studio_return_state.sql",
+      "scripts/deploy-production.sh",
+      "scripts/run-sql-migrations.sh",
+      "lib/writers-studio/relationshipCustody.ts",
+      "lib/writers-studio/relationshipCarriage.ts",
+      "lib/writers-studio/returnState.ts",
+      "lib/writersStudio/rebuild/relationshipOrchestration.ts",
+      "lib/writersStudio/rebuild/returnStateClient.ts",
+      "lib/manuscript/proposalChain/store.ts",
+      "lib/manuscript/editorialRuntime/thread.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/living-works/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/living-works/[id]/expressions/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/blank/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/proposalChain/store.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/editorialRuntime/thread.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/writers-studio/rebuild/context/route.ts",
+      "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/[id]/draft/route.ts"
+    ]
+  },
+  "limitations": [
+    "Production data shape was not available: no row counts, table sizes, concurrent-transaction profile or lock-wait evidence. Q10 is therefore unestablished.",
+    "I read only the plan's minimum list. I did not read the old-reader paths outside it that touch the affected tables (for example editorialRuntime/adoption.ts, editorialRuntime/relationships.ts, revisionAuthorization/store.ts, member erasure and deletion flows, structure commands). Old-reader conclusions rest on the eight files read plus Grep scoping, which does not count as coverage.",
+    "I did not read the target relationship, return and carry route handlers, `lib/manuscript/proposalChain/contract.ts`, or other callers of `openChainWithExecutor`. Q8 (target reader against the final schema, and fail-closed behaviour) is only partly established, from the store and client code.",
+    "I confirmed from the creation migrations that `living_works.id`, `member_manuscripts.id` and `manuscript_draft_sections.id` are primary keys. I did not read any later migration or ledger state that might have altered them, and I did not read the production schema.",
+    "Nothing was executed. No migration was run against a database, so lock behaviour, trigger and constraint names (including the auto-generated inline CHECK names that migration 2 drops) and the runner's ON_ERROR_STOP and rollback behaviour were reasoned from source only.",
+    "Migration hashes and old-reader evidence hashes are as supplied by the harness. I cannot compute hashes, and the production gate recomputes them.",
+    "`scripts/pre-deploy-gate.sh`, `scripts/deploy-context.sh`, `scripts/deploy-tag.sh` and the migrate compose service were not read. I did not establish what the rollback tag `maia-sovereign:previous` points to at rollback time, or that migrations are not applied by any other path.",
+    "Review-Custody coverage derived from this process's reads bounds coverage from above only. A read shows a file was opened, not that it was fully understood."
+  ],
+  "migration_compatibility": {
+    "instrument": "migration-compatibility/v1",
+    "verdict": "COMPATIBLE",
+    "old_reader_commit": "975a208b8c39f99e9b47208ce5139bbec94bd8ac",
+    "target_reader_commit": "03f0fd3abce16fcc1132481836b2e6ff8d364cd7",
+    "pending": [
+      {
+        "path": "database/migrations/20260925000005_writer_editorial_relationship_custody.sql",
+        "sha256": "39c5c91dc31510cccb72f01d6fca35047730997f4758ca59e2b629ec62dd5b33"
+      },
+      {
+        "path": "database/migrations/20260925000006_writer_editorial_scope_identity_successor.sql",
+        "sha256": "a514c25540e88e1ef6b20ff49a1f205ddb94a4e95d3c7a1d616dcad8034a2154"
+      },
+      {
+        "path": "database/migrations/20260926000004_writer_studio_return_state.sql",
+        "sha256": "be3d512e8342060e4056a8643aa77fd78dd576467804b6ee55483ef20f06d616"
+      }
+    ],
+    "old_reader_evidence": [
+      {
+        "repo_path": "app/api/sovereign/living-works/route.ts",
+        "sha256": "aadbb74ed3156ac67f4b94b520c123e73509edd877b23a497b54b13ec686ca1f",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/living-works/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/living-works/[id]/expressions/route.ts",
+        "sha256": "5e1ca95b5cc9d6d52bab12db28411001763f8dd2b7c70846fd2d223c6df1887e",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/living-works/[id]/expressions/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/manuscripts/route.ts",
+        "sha256": "3188c0e30d20e52cc835c90240ece58806da65bf1224a6033c56d52a18228527",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/manuscripts/blank/route.ts",
+        "sha256": "cd21cfbf3a26db71d826c3c8940c22b41cc42d42e4ae0dd4dfc1cf7493bacae1",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/blank/route.ts"
+      },
+      {
+        "repo_path": "lib/manuscript/proposalChain/store.ts",
+        "sha256": "b8110e889e2f6d766937abfad789ac737b47b514c81a1665c3005f78f8089698",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/proposalChain/store.ts"
+      },
+      {
+        "repo_path": "lib/manuscript/editorialRuntime/thread.ts",
+        "sha256": "1d39c09e192d4c1c1976790d7b8170e338e7bf9703f64dd22a9f2db053514352",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/lib/manuscript/editorialRuntime/thread.ts"
+      },
+      {
+        "repo_path": "app/api/writers-studio/rebuild/context/route.ts",
+        "sha256": "f4e5216218e9a998e9fb4760752ea25e73ba473a6e6ed784ca9efd7749a1672a",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/writers-studio/rebuild/context/route.ts"
+      },
+      {
+        "repo_path": "app/api/sovereign/manuscripts/[id]/draft/route.ts",
+        "sha256": "1636f09c9840a4e5dc2ecc3618acc2175512ffae1b893c8a4e98dba8c8fd28ac",
+        "trace_path": "old-reader/975a208b8c39f99e9b47208ce5139bbec94bd8ac/app/api/sovereign/manuscripts/[id]/draft/route.ts"
+      }
+    ],
+    "rationale": "For the old-reader source I read, the three migrations are additive and schema-compatible. Old-reader inserts use explicit column lists. The one `INSERT INTO proposal_chains` omits `locus_scope_kind` and gets NULL. Chain selects use an explicit column list, and no old-reader `SELECT *` on `proposal_chains` exists outside tests. The new `UNIQUE (id, member_id)` sits on primary-key tables, so it cannot reject any old-reader row. The new tables are never referenced by the old reader. Their parent FKs are ON DELETE CASCADE, and ON UPDATE RESTRICT does not fire on non-key updates. Migration 2's refusal rolls back inside its own transaction, and rollback is reader-only. I mark the relation COMPATIBLE for what I read, but the overall verdict is REVISE because Q10 and part of Q8 are unestablished.",
+    "limitations": [
+      "Compatibility rests on the eight old-reader files read plus Grep scoping.",
+      "Old-reader modules outside the minimum list that touch the affected tables were not read.",
+      "DDL lock and validation cost against the real production shape was not assessed (finding F1 and F2).",
+      "Nothing was executed against a database."
+    ],
+    "failure_prefix_compatibility": {
+      "instrument": "migration-prefix-compatibility/v1",
+      "verdict": "ALL_PREFIXES_COMPATIBLE",
+      "prefixes": [
+        {
+          "through_path": "database/migrations/20260925000005_writer_editorial_relationship_custody.sql",
+          "through_sha256": "39c5c91dc31510cccb72f01d6fca35047730997f4758ca59e2b629ec62dd5b33",
+          "rationale": "After migration 1 alone, the schema gains two UNIQUE(id, member_id) constraints on tables where id is already the primary key, plus two new empty tables. The tables carry composite FKs to `living_works` and `member_manuscripts`, an immutable-update trigger and indexes. The old reader never reads or writes the new tables. Its inserts into `living_works`, `member_manuscripts`, `living_work_expressions` and the draft and revision tables list explicit columns, so the new constraints cannot reject its rows. Cascades from parent deletes hit only empty relationship tables. The file is one transaction, so a failure leaves nothing partial.",
+          "limitations": [
+            "Lock duration of the constraint index builds on live tables was not assessed (Q10).",
+            "Old-reader delete and update paths outside the files read were not examined."
+          ]
+        },
+        {
+          "through_path": "database/migrations/20260925000006_writer_editorial_scope_identity_successor.sql",
+          "through_sha256": "a514c25540e88e1ef6b20ff49a1f205ddb94a4e95d3c7a1d616dcad8034a2154",
+          "rationale": "After migrations 1 and 2, `proposal_chains` has a nullable `locus_scope_kind` with a CHECK that accepts NULL. The old reader's single insert omits the column and its selects use an explicit column list, so it is unaffected. The episode-table renames and constraint swap touch only the migration 1 table, which is empty and unreferenced by the old reader. If any episode row exists, the DO block raises, the whole file rolls back with the `ADD COLUMN`, and the schema stays at prefix 1. That is a compatible state for the old reader.",
+          "limitations": [
+            "Migration 2 is not re-runnable after commit if the ledger write fails (F3). That blocks deployment but does not affect old-reader compatibility.",
+            "The ACCESS EXCLUSIVE and CHECK-validation cost on `proposal_chains` was not assessed."
+          ]
+        },
+        {
+          "through_path": "database/migrations/20260926000004_writer_studio_return_state.sql",
+          "through_sha256": "be3d512e8342060e4056a8643aa77fd78dd576467804b6ee55483ef20f06d616",
+          "rationale": "After all three migrations, two new empty return tables exist, with FKs and cascades to Work, manuscript, relationship and draft-section rows. They carry no writes from the old reader. Old-reader draft saves update only the `text` column of draft sections, which does not fire RI checks. Cascade deletes of draft sections or relationships remove at most return pointers. Rolling the reader back to the old image needs no DB change, because `cmd_rollback` only swaps image tags and recreates `maia`.",
+          "limitations": [
+            "Draft-section deletion paths in old-reader modules I did not read were not examined. The cascade is benign in any case.",
+            "I did not read `pre-deploy-gate.sh` or `deploy-tag.sh`, so I cannot confirm what `maia-sovereign:previous` points to at rollback time."
+          ]
+        }
+      ]
+    }
+  }
+}

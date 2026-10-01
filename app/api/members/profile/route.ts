@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { checkYouthAdmission } from '@/lib/youth/youthAdmissionGate';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -251,6 +252,18 @@ export async function PUT(request: NextRequest) {
 
   try {
     const { name, preferredName, pronouns, email, bio, timezone, birthData, astrologyConsent } = body;
+
+    // TEEN-CLOSED-01: a birth date that computes to under 18 is refused here too,
+    // or a later edit would recompute an adult account into a youth tier.
+    if (birthData && typeof birthData === 'object' && birthData.date !== undefined) {
+      const youthGate = checkYouthAdmission(birthData.date);
+      if (!youthGate.ok) {
+        return NextResponse.json(
+          { error: youthGate.error, code: youthGate.code, correlationId },
+          { status: youthGate.status, headers }
+        );
+      }
+    }
 
     // Build SET clauses dynamically
     const setClauses: string[] = [];

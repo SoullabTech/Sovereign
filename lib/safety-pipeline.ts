@@ -410,7 +410,7 @@ export class MAIASafetyPipeline {
     riskAssessment: RiskAssessment
   ): Promise<void> {
     if (!this.alertService || !this.therapistDb) {
-      console.error('Alert service or therapist database not configured for crisis alert');
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] crisis alert NOT delivered: no alert service / therapist directory configured — no human was notified');
       return;
     }
 
@@ -425,7 +425,7 @@ export class MAIASafetyPipeline {
       }
 
       if (!therapist) {
-        console.error('No therapist available for crisis alert');
+        console.error('[SAFETY_NOTIFY_NO_RECIPIENT] crisis alert NOT delivered: no assigned or on-call therapist — no human was notified');
         return;
       }
 
@@ -481,7 +481,7 @@ export class MAIASafetyPipeline {
     riskAssessment: RiskAssessment
   ): Promise<void> {
     if (!this.alertService || !this.therapistDb) {
-      console.error('Alert service or therapist database not configured for high-risk alert');
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] high-risk alert NOT delivered: no alert service / therapist directory configured — no human was notified');
       return;
     }
 

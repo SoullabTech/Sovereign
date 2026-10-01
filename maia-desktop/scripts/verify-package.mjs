@@ -16,6 +16,20 @@ assert.ok(fs.existsSync(plist), `packaged app missing: ${appPath}`);
 assert.ok(fs.existsSync(executable), 'packaged executable is missing');
 assert.ok(fs.existsSync(asar), 'app.asar is missing');
 
+// Cabin runtime: the packaged app must carry the Next standalone server AND its
+// root node_modules (electron-builder's FileMatcher drops a root node_modules —
+// candidates c6102a347, 147815873, e3688fce2 all shipped without it). Existence
+// is not enough: the packaged next must be the version canonical pins.
+const cabinRuntime = path.join(appPath, 'Contents', 'Resources', 'cabin-runtime');
+assert.ok(fs.existsSync(path.join(cabinRuntime, 'server.js')), 'packaged cabin-runtime/server.js is missing');
+const packagedNextManifest = path.join(cabinRuntime, 'node_modules', 'next', 'package.json');
+assert.ok(fs.existsSync(packagedNextManifest), 'packaged cabin-runtime/node_modules/next is missing');
+const packagedNextVersion = JSON.parse(fs.readFileSync(packagedNextManifest, 'utf8')).version;
+const rootManifest = JSON.parse(fs.readFileSync(path.join(root, '..', 'package.json'), 'utf8'));
+const pinnedNext = rootManifest.dependencies?.next;
+assert.match(pinnedNext ?? '', /^\d+\.\d+\.\d+$/, `root package.json must pin an exact next version (got ${pinnedNext})`);
+assert.equal(packagedNextVersion, pinnedNext, `packaged next ${packagedNextVersion} != pinned next ${pinnedNext}`);
+
 function run(command, args) {
   return spawnSync(command, args, { encoding: 'utf8' });
 }
@@ -56,6 +70,7 @@ console.log(JSON.stringify({
   appPath,
   version: plistValue('CFBundleShortVersionString'),
   arch: arch.stdout.trim(),
+  cabinNext: packagedNextVersion,
   signatureValid: true,
   developerId,
   gatekeeperAccepted,

@@ -1,0 +1,32 @@
+{
+  "instrument": "review-custody/v1",
+  "bound_at": "2026-10-01T14:29:29.941Z",
+  "repo_head": "b74751d7b834ae0733d952d7b4b341d4ab8ac046",
+  "plan": {
+    "path": "docs/programme/WS-ADVANCED-RUNTIME-01_P4_RC2_EXACT_THREE_MIGRATION_REVIEW_PLAN_2026-10-01.md",
+    "sha256": "b2c455ff19cc9d8722c7872ef6922796da6484a20743082059257a94f839ec50",
+    "bytes": 10223
+  },
+  "base": {
+    "ref": "HEAD",
+    "commit": "b74751d7b834ae0733d952d7b4b341d4ab8ac046"
+  },
+  "tree": {
+    "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "paths": 0
+  },
+  "approval": {
+    "admitted_at": "2026-10-01T14:37:57.084Z",
+    "verdict": "APPROVED",
+    "reviewer": "claude-code separate-process reviewer (read-only)",
+    "plan_sha256": "b2c455ff19cc9d8722c7872ef6922796da6484a20743082059257a94f839ec50",
+    "review_sha256": "ee29705d0c454e282343e8d9837de8fb1828c0a29367edba28a8c938996b974e",
+    "findings": {
+      "high": 0,
+      "medium": 0,
+      "low": 3
+    },
+    "coverage_files": 35,
+    "limitations": 8
+  }
+}
