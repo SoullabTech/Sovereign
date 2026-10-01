@@ -13,7 +13,7 @@
     live_telemetry: false,
     needs_kelly: Object.freeze([
       'Rotate the invalid production Resend API key. Read-only production witness at running SHA 56d0cd679 returned HTTP 400 · validation_error · API key is invalid.',
-      'Configure at least one independent human alert channel: Twilio SMS or Slack webhook; then run npm run check:safety-human-delivery until it reports READY.',
+      'Designate the independent safety recipient: production Twilio credentials are already live, but SAFETY_ALERT_PHONE is unset. Set that intentionally (or configure a safety Slack webhook), then run npm run check:safety-human-delivery until it reports READY.',
     ]),
     in_motion: Object.freeze([
       'PR #1671 gives adult crisis/high-risk, teen crisis, and Stellium safety failures one content-free human fallback.',
@@ -24,10 +24,12 @@
       'After merge and configuration, witness a real test alert reaching a human before closing S1-S3 or E2.',
     ]),
     unresolved: Object.freeze([
-      'No Twilio or Slack safety transport was configured in the inspected production environment.',
+      'Production Twilio transport credentials are present, but no designated SAFETY_ALERT_PHONE or safety Slack webhook is configured.',
       'Resend outage E1 remains a separate open delivery problem.',
       'Guardian delivery for teen safety remains separately governed Phase 2 work.',
       'S4 circuit-breaker state is truthful but still non-delivering: live field integrations log critical/emergency human notifications without a delivering callback.',
+      'O1 build/deploy alerts remain unconfigured in production: the required internal token and SMTP alert settings are absent.',
+      'O2 Postgres standby remains down: replication count is 0 and ubuntu-8gb-fsn1-2 is offline, last seen 7 days ago.',
     ]),
   });
 
