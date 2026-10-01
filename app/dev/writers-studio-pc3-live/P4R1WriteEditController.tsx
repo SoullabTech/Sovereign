@@ -7,7 +7,9 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture, type CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
-import { readStudioWorkParam, resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { admittedStudioWorkParam } from '@/app/writers-studio/h1Arrival';
+import { useH1Arrival } from '@/app/writers-studio/useH1Arrival';
 import { editorialThreadIdFrom } from '@/app/writers-studio/canvasIdentity';
 import RebuildWritingBoundary from '@/app/writers-studio/rebuild/RebuildWritingBoundary';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
@@ -53,6 +55,8 @@ type Phase = 'loading' | 'ready' | 'unauthorized' | 'error';
 
 export default function FlagshipWriteEditController() {
   const params = useSearchParams();
+  // H1-COHORT-GATE-01: a carried `work=` has authority only for a resolved, admitted member.
+  const h1 = useH1Arrival();
   const router = useRouter();
   const pathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const requested = params?.get('m') ?? null;
@@ -228,7 +232,7 @@ export default function FlagshipWriteEditController() {
   const visibleSections = chapter?.sections ?? (focusSection ? [focusSection] : []);
   // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
   const workContext = resolveSituatedWorkContext(
-    worksPhase, works, context?.manuscriptId ?? null, params ? readStudioWorkParam(params) : null,
+    worksPhase, works, context?.manuscriptId ?? null, params ? admittedStudioWorkParam(params, h1) : null,
   );
   const work = currentWork(workContext);
   const workContextSentence = workContext.kind === 'work'

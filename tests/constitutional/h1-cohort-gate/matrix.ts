@@ -13,7 +13,10 @@
 import { LAWS } from './laws';
 import { CANDIDATES, CANON_TODAY, REFERENCE } from './gates';
 import type { H1Gate } from './contract';
-import { DC_H8_SOURCES, REFERENCE_SOURCES, producerContainment, repositorySources } from './structural';
+import {
+  CENSUS_BASELINE, DC_H8_SOURCES, REFERENCE_SOURCES, producerContainment, repositorySources, repositorySourcesAt,
+} from './structural';
+import { IMPLEMENTATION, controllerWiring } from './implementation';
 
 const F8 = 'F8 producer containment';
 let failures = 0;
@@ -64,9 +67,9 @@ for (const [name, { kills, killedBy, collateral }] of allCandidates) {
   }
 }
 
-console.log('\n3. Canon at the census baseline (no gate) must fail the headline laws');
+console.log(`\n3. Canon at the census baseline ${CENSUS_BASELINE} (no gate) must fail the headline laws`);
 const canonKills = run(CANON_TODAY);
-const canonF8 = producerContainment(repositorySources());
+const canonF8 = producerContainment(repositorySourcesAt(CENSUS_BASELINE));
 if (canonF8) canonKills[F8] = canonF8;
 for (const headline of ['F1 supplied-work equivalence', 'F7 truthful House provenance', F8]) {
   if (canonKills[headline]) console.log(`  ✓ canon fails ${headline}: ${canonKills[headline]}`);
@@ -75,5 +78,15 @@ for (const headline of ['F1 supplied-work equivalence', 'F7 truthful House prove
 const others = Object.keys(canonKills).filter((l) => !['F1 supplied-work equivalence', 'F7 truthful House provenance', F8].includes(l));
 if (others.length) console.log(`    (canon also fails: ${others.join(', ')})`);
 
-console.log(failures ? `\n✗ MATRIX FAILED (${failures})` : `\n✓ MATRIX LETHAL AND DISCRIMINATING · reference clean · ${allCandidates.length} candidates killed on their named laws · canon witness red`);
+console.log('\n4. The real implementation (working tree)');
+const implKills = run(IMPLEMENTATION);
+const tree = repositorySources();
+const implF8 = producerContainment(tree);
+if (implF8) implKills[F8] = implF8;
+const wiring = controllerWiring(tree);
+if (wiring) implKills['controller wiring'] = wiring;
+if (Object.keys(implKills).length) for (const [l, r] of Object.entries(implKills)) fail(`implementation broke ${l}: ${r}`);
+else console.log(`  ✓ passes all ${lawCount} laws · every Studio reader wired through the choke point`);
+
+console.log(failures ? `\n✗ MATRIX FAILED (${failures})` : `\n✓ MATRIX LETHAL AND DISCRIMINATING · reference clean · ${allCandidates.length} candidates killed on their named laws · canon witness red · implementation conformant`);
 process.exit(failures ? 1 : 0);

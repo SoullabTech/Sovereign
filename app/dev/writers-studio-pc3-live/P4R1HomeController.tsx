@@ -12,13 +12,14 @@ import { useSectionActivity } from '@/app/writers-studio/useSectionActivity';
 import { arrivalFor, manuscriptIdOf, modeEntryTarget } from '@/app/writers-studio/homeState';
 import { IMPORT_HREF } from '@/app/writers-studio/studioMap';
 import P4R1HomeView from './P4R1HomeView';
+import { admittedStudioWorkParam } from '@/app/writers-studio/h1Arrival';
+import { useH1Arrival } from '@/app/writers-studio/useH1Arrival';
 import P4R1WorkArrival from './P4R1WorkArrival';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { HOME_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import {
   FROM_HOUSE,
   STUDIO_WORK_PARAM,
-  readStudioWorkParam,
   resolveStudioArrival,
 } from '@/app/writers-studio/situatedWork';
 
@@ -34,6 +35,8 @@ export default function P4R1HomeController() {
   const router = useRouter();
   const pathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const params = useSearchParams();
+  // H1-COHORT-GATE-01: a carried `work=` has authority only for a resolved, admitted member.
+  const h1 = useH1Arrival();
   const { id: appearance } = useAtmosphere();
 
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
@@ -195,8 +198,10 @@ export default function P4R1HomeController() {
   }, [busy, declare, refresh]);
 
   /* HOUSE-STUDIO-CIRCULATION-01R1 · H1-3 — explicit Work > member choice >
-     fallback. With a Work carried, the recency pick above is never consulted. */
-  const carriedWorkId = params ? readStudioWorkParam(params) : null;
+     fallback. With a Work carried, the recency pick above is never consulted.
+     H1-COHORT-GATE-01: the Work is "carried" only when the H1 seam authorizes
+     it; otherwise null, and arrival resolves exactly as before H1. */
+  const carriedWorkId = params ? admittedStudioWorkParam(params, h1) : null;
   const studioArrival = resolveStudioArrival(
     worksPhase, works, manuscriptPhase, manuscripts, carriedWorkId,
   );

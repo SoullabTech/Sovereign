@@ -14,7 +14,9 @@ import { STATE_GEOMETRY } from '@/app/writers-studio/full-redesign/tokens';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { useWorkVisual } from '@/app/writers-studio/useWorkVisual';
 import { currentWork } from '@/app/writers-studio/workContext';
-import { readStudioWorkParam, resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { admittedStudioWorkParam } from '@/app/writers-studio/h1Arrival';
+import { useH1Arrival } from '@/app/writers-studio/useH1Arrival';
 import { hostFactsFrom } from '@/app/writers-studio/rebuild/liveReview';
 import { listChapterReviewManifests, loadChapterReviewManifestById, type ChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { rehydrateChapterReview } from '@/lib/writersStudio/rebuild/chapterReview';
@@ -49,6 +51,8 @@ type ReadyReview = {
   durable: Readonly<Record<string, DurableObservationTruth>>;
 };export default function Pc3LiveReviewHost() {
   const params = useSearchParams();
+  // H1-COHORT-GATE-01: a carried `work=` has authority only for a resolved, admitted member.
+  const h1 = useH1Arrival();
   const router = useRouter();
   const pathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const manuscriptId = params?.get('m') ?? null;
@@ -73,7 +77,7 @@ type ReadyReview = {
   const workContext = context
     // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
     ? resolveSituatedWorkContext(
-      worksPhase, works, context.manuscriptId, params ? readStudioWorkParam(params) : null,
+      worksPhase, works, context.manuscriptId, params ? admittedStudioWorkParam(params, h1) : null,
     )
     : { kind: 'unknown' as const };
   const work = currentWork(workContext);

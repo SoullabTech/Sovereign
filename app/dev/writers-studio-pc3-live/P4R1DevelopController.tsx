@@ -6,7 +6,9 @@ import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere'
 import { apiFetch } from '@/lib/http/apiBase';
 import { useLivingWorks } from '@/app/writers-studio/useLivingWorks';
 import { currentWork } from '@/app/writers-studio/workContext';
-import { readStudioWorkParam, resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
+import { admittedStudioWorkParam } from '@/app/writers-studio/h1Arrival';
+import { useH1Arrival } from '@/app/writers-studio/useH1Arrival';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import {
@@ -97,6 +99,8 @@ function sectionLabel(section: RebuildSection | undefined, index = 0): string {
 
 export default function P4R1DevelopController() {
   const params = useSearchParams();
+  // H1-COHORT-GATE-01: a carried `work=` has authority only for a resolved, admitted member.
+  const h1 = useH1Arrival();
   const router = useRouter();
   const pathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const manuscriptId = params?.get('m') ?? null;
@@ -317,7 +321,7 @@ export default function P4R1DevelopController() {
 
   // HOUSE-STUDIO-CIRCULATION-01R1: a carried Work is honoured only while it validates.
   const workContext = resolveSituatedWorkContext(
-    worksPhase, works, context?.manuscriptId ?? manuscriptId, params ? readStudioWorkParam(params) : null,
+    worksPhase, works, context?.manuscriptId ?? manuscriptId, params ? admittedStudioWorkParam(params, h1) : null,
   );
   const work = currentWork(workContext);
   const workTitle = work?.title ?? context?.title ?? 'This Work';

@@ -194,7 +194,9 @@ const code = (rel: string) =>
 describe('surfaces', () => {
   it('House links each living Work through the one doorway builder', () => {
     const house = code('app/house/page.tsx');
-    expect(house).toMatch(/href=\{studioArrivalFromHouse\(work\.id\)\}/);
+    // H1-COHORT-GATE-01: the same builder, reached only through the H1 authority.
+    expect(house).toMatch(/href=\{houseWritingHref\(h1Admitted, work\.id, studioArrivalFromHouse\)\}/);
+    expect(house).toMatch(/const h1Admitted = canUseH1Arrival\(member\.id\);/);
     expect(house).not.toMatch(/href="\/writers-studio"/);
     expect(studioArrivalFromHouse('x')).not.toMatch(/member|intent|thread|title/i);
   });

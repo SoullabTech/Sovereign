@@ -5,14 +5,27 @@
     "target": "es2022",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "lib": ["es2022", "dom"],
-    "types": ["node"],
+    "lib": [
+      "es2022",
+      "dom"
+    ],
+    "types": [
+      "node"
+    ],
     "jsx": "preserve",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": true,
     "baseUrl": ".",
-    "paths": { "@/*": ["./*"] }
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
   },
-  "include": ["tests/constitutional/h1-cohort-gate/**/*.ts"]
+  "include": [
+    "tests/constitutional/h1-cohort-gate/**/*.ts",
+    "app/writers-studio/useH1Arrival.ts",
+    "app/api/writers-studio/h1-arrival/**/*.ts"
+  ]
 }

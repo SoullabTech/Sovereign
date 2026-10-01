@@ -4,9 +4,9 @@
 Class: A programme · R1 read-only census + propagation decision + falsifier design
 Governing law: docs/programme/H1-EXPOSURE_CENSUS_AND_RULINGS_2026-09-30.md (#1544, canonical 71859c3a)
 Census baseline: 71859c3a
-Standing: CENSUS COMPLETE · §3 + §4 RATIFIED (founder, 2026-10-01) · F10 ADDED
-          · FALSIFIER SUITE BUILT · MATRIX LETHAL + DISCRIMINATING (§7)
-          · ⛔ NO RUNTIME CODE · ⛔ NO UI · ⛔ NO PR · implementation awaits founder act
+Standing: IMPLEMENTATION COMPLETE · FALSIFIER-CONFORMANT · ROLLOUT UNOPENED (§8)
+          · falsifier baseline FROZEN @ 61f77602 (H1-CG-03)
+          · ⛔ NO PR · ⛔ NO DEPLOY · cohort NOT configured (closed by default)
 Untouched by this lane: #1539, #1542, production (04005ca7c)
 ```
 
@@ -269,3 +269,123 @@ avoid them would stop it being the error it models.
 - ⛔ Run in this container with no live stack; ⭐ the founder's run of the two commands is the
   evidence of record.
 
+
+## 8 · H1-CG-03 — implementation (founder ruling 2026-10-01)
+
+### 8.1 Ruling
+
+H1-CG-03 OPEN. **Falsifier baseline frozen at `61f77602`.** F1–F10 are constitutional evidence:
+a law is not modified because the implementation finds it hard; any test-law change needs its
+own recorded rationale and a full matrix rerun. Two constraints frozen with the ruling:
+**(A)** `h1Arrival.ts` answers *is this supplied Work context authorized?* and never *which Work
+instead?*; **(B)** transport stays ignorant — Develop/Review query preservation, workspace
+returns, legacy redirects and MAIA `return=` keep carrying `work=`.
+
+### 8.2 What was built, in the ruled order
+
+| # | Unit | Path |
+|---|---|---|
+| 1 | Server authority `canUseH1Arrival(verifiedMemberId, env = process.env)` — `H1_ARRIVAL_ENABLED` must be exactly `true`; one malformed id closes the whole list; no inheritance | `lib/access/h1ArrivalAccess.ts` |
+| 2 | `GET /api/writers-studio/h1-arrival/admission` → `{ admitted }` only, `Cache-Control: no-store`; signed out → 401 `{ admitted: false }`; identity from `getMemberIdFromRequest` | `app/api/writers-studio/h1-arrival/admission/route.ts` |
+| 3 | Client state `{ admitted, resolved }`, starts `H1_UNRESOLVED`; 5 s timeout; every non-2xx, malformed body, network error and timeout settles closed | `app/writers-studio/useH1Arrival.ts` (+ `settleH1Admission` in the seam) |
+| 4 | The F8-governed seam at the frozen path: `admittedStudioWorkParam(search, admission)`, `hasH1Authority`, `houseWritingHref` | `app/writers-studio/h1Arrival.ts` |
+| 5 | Home, Develop, Review, Write/Edit read `work=` only through the seam; `readStudioWorkParam` now has no caller outside `situatedWork.ts`/`h1Arrival.ts` | `app/dev/writers-studio-pc3-live/P4R1{Home,Develop,Review,WriteEdit}Controller.tsx` |
+| 6 | House producer gated **last**: `canUseH1Arrival(member.id)` server-side; non-admitted → exactly `/writers-studio` | `app/house/page.tsx` |
+
+The seam is server-safe (no hooks), so the House imports `houseWritingHref` from it; the hook is a
+separate client module. The House passes `studioArrivalFromHouse` into `houseWritingHref`, so the
+arrival builder is still referenced only from the House (F8(c)).
+
+### 8.3 Instrument changes (recorded per the freeze rule — ⛔ no law in `laws.ts` changed, ⛔ no candidate in `gates.ts` changed)
+
+1. **Canon witness now reads the census baseline from git** (`repositorySourcesAt('71859c3a')`)
+   instead of the working tree. Necessary, not convenient: once the implementation lands the
+   working tree is no longer canon-without-a-gate, and the witness would otherwise *pass* F8 and
+   report that the suite cannot see the defect. `app/`, `components/`, `lib/` are byte-identical
+   between `71859c3a` and `61f77602`, so the witness's meaning is unchanged.
+2. **Stage 4 added**: the real implementation (`implementation.ts` — real authority, endpoint
+   core, settlement, seam and House doorway; only the controllers' choke-point → canon-resolver
+   composition is reproduced) runs all ten laws, F8 over the working tree, and a **controller
+   wiring** check that each of the four controllers takes `const h1 = useH1Arrival();` and feeds
+   `admittedStudioWorkParam(params, h1)` into its canon resolver — so the composition in the gate
+   cannot drift from the shipped controllers silently.
+3. **Lane typecheck widened** to the implementation modules (`lib/access/h1ArrivalAccess.ts`,
+   `app/writers-studio/h1Arrival.ts`, `useH1Arrival.ts`, the route), held to the same strict flag.
+
+**One canon test updated, with rationale**: `studioArrival.test.ts`'s House guard pinned
+`href={studioArrivalFromHouse(work.id)}`, which is the pre-gate House the ratified F7 law changes.
+Its intent (each living Work linked through the one doorway builder) is preserved — it now pins
+`houseWritingHref(h1Admitted, work.id, studioArrivalFromHouse)` and adds that the House computes
+`h1Admitted = canUseH1Arrival(member.id)`. The `no literal href="/writers-studio"` assertion is
+unchanged.
+
+### 8.4 Proof, in the ruled order
+
+| # | Proof | Result |
+|---|---|---|
+| 1 | F1–F10 reference + defeat matrix | reference 10/10 · DC-H1…H10 killed on named laws · canon @ `71859c3a` red on F1, F7, F8 |
+| 2 | F1–F10 against the real implementation | **10/10 + controller wiring** · `✓ … implementation conformant`, exit 0 |
+| 3 | Lane-local strict typecheck | 0 lane diagnostics (9 inherited listed: the 8 Studio TS2322 + `lib/db/postgres.ts` `insertOne`, now reached via the route) |
+| 4 | House crossing (`app/house`, `lib/house`, `app/home`, `studioArrival.test.ts`) | 163/166 — the 3 failures are pre-existing (below) |
+| 5 | Studio Home (`homeState`, `arrivalComposition`, `soullabHomeContinuity`, `p4r1UnifiedHost`, `p4r1CanonicalRoute*`) | 67/67 |
+| 6 | Develop (`developWorkbench`, `p4r1DevelopFocusContinuity`, `workDevelopmentLaw`) | 25/25 |
+| 7 | Review (`p4r1ReviewFocusContinuity`, `wholeManuscriptSurface`) | 25/25 |
+| 8 | #1538 (`multiManuscriptChoice`, `writerChoiceLaw`) | 23/23 |
+| 9 | WS2-03B (`situatedWork`) | 29/29 |
+| 10 | Auth/session + endpoint (`lib/auth`, the route test, `lib/access`) | 260/264 — the 4 failures are pre-existing (below) |
+| 11 | `npm run typecheck` (no-regression gate) | **PASS** — 222 vs baseline 239, 0 new |
+| 12 | `npm run build` | ⏳ running at commit time — result recorded in the follow-up commit |
+
+Breadth: all `app/writers-studio` + `app/dev/writers-studio-pc3-live` suites 80/80 (884 tests).
+
+**Pre-existing failures, not attributable**: 7 tests in `lifeFacetFlowProjection`, `facetFlowLens`,
+`authBoundaryMiddleware`, `journalGuardCoverage`, `handlerGuardCoverage` fail identically at the
+frozen baseline `61f77602` (failing-test name lists diffed: identical). ⛔ Not repaired here.
+
+⚠️ **Caught by step 11, not by the lane check**: the first `H1ArrivalEnv` was a weak type, and
+`process.env` as its default tripped TS2559 under the ship config while the lane-strict check
+passed. Fixed with an index signature. *The ruling's insistence on the ordinary typecheck earned
+its place on the first run.*
+
+**The four live semantics** (`app/writers-studio/__tests__/h1Arrival.test.ts`), asserted as final
+resolver output for Home and for the situated context shared by Develop/Review/Write — never as
+"the seam returned null":
+
+| State + `work=A` | Result |
+|---|---|
+| admitted | A governs: Home → member choice on a multi-manuscript Work; situated → `member_explicit` (both shown to differ from pre-H1, so the test is not vacuous) |
+| non-admitted | `toEqual` canon resolver fed `null`, and `toEqual` the same request without `work=` |
+| unresolved | identical |
+| admission failure (network/timeout · 401 · 500 with an admitting body · malformed · empty) | identical |
+
+The endpoint test runs the **real** `getMemberIdFromRequest` (sessions mocked): signed-out → 401;
+a bare `x-member-id` claim → 401; cookie or `x-session-token` → verdict; an outsider claiming the
+admitted id → not admitted; absent/malformed config → not admitted; body keys exactly `['admitted']`.
+
+### 8.5 Behaviour to know before rollout
+
+- **Everyone is non-admitted until the cohort is configured.** So on deploy the House stops
+  emitting `from=house` and `work=` for every member, and the Studio's House return membrane
+  (shown only on `from=house`) stops appearing. That is F7 as ratified, not a regression — but it
+  is a visible change for all members, and it ships the moment this merges and deploys.
+- **Admitted members see one transient.** While admission is unresolved, Home renders the ordinary
+  pre-H1 resolution, then re-resolves to the Work arrival when `{ admitted: true }` lands (one
+  same-origin fetch). Kept deliberately: holding Home in "Opening…" until admission resolves would
+  have to apply to every member (holding only when `work=` is present would let `work=` change
+  behaviour for non-admitted members, against F1), adding a fetch of latency to everyone. A
+  universal hold is a founder call, not made here.
+- The admission is fetched once per controller mount, not cached across the session, so a sign-out
+  / sign-in in one tab cannot carry a stale verdict.
+
+### 8.6 Debt carried, not hidden
+
+- **Coverage debt — modelled delivery paths.** The Home/Develop/Review query-copying navigations
+  are reproduced in `world.ts`, not imported. Owed after acceptance: a structural assertion tying
+  those real navigation sites to the census, so the model cannot outlive the code it models.
+- 9 inherited strict-flag diagnostics (§8.4 row 3) — outside this lane.
+
+### 8.7 Next act
+
+Founder: PR for the lane (merge = latent deploy authorization); then cohort configuration
+(`H1_ARRIVAL_ENABLED`, `H1_ARRIVAL_MEMBER_IDS`) and H1 admission against the population matrix on
+a recorded origin. ⛔ #1539, #1542, production untouched.

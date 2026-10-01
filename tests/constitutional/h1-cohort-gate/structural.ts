@@ -18,6 +18,7 @@
  * and defeat candidate). Comments are stripped before scanning: a file that
  * documents a rule must never fail for naming it.
  */
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -69,6 +70,26 @@ export function repositorySources(root = process.cwd()): SourceMap {
     }
   };
   for (const top of ['app', 'components', 'lib']) if (fs.existsSync(path.join(root, top))) walk(top);
+  return out;
+}
+
+/**
+ * The same source map, read from a commit instead of the working tree. The
+ * canon witness must be canon AT THE CENSUS BASELINE: once the implementation
+ * lands, the working tree is no longer canon-without-a-gate.
+ */
+export const CENSUS_BASELINE = '71859c3a';
+
+export function repositorySourcesAt(rev: string, root = process.cwd()): SourceMap {
+  const git = (...args: string[]) =>
+    execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  const out: SourceMap = {};
+  const paths = git('ls-tree', '-r', '--name-only', rev, '--', 'app', 'components', 'lib').split('\n');
+  for (const p of paths) {
+    if (!/\.tsx?$/.test(p) || /\.test\.tsx?$/.test(p)) continue;
+    if (p.split('/').some((seg) => seg === 'node_modules' || seg === '__tests__' || seg.startsWith('.'))) continue;
+    out[p] = git('show', `${rev}:${p}`);
+  }
   return out;
 }
 

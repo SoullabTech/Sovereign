@@ -2,7 +2,7 @@
 /**
  * H1-COHORT-GATE-01 typecheck. Runs tsconfig.h1-cohort-gate.json (strict +
  * noUncheckedIndexedAccess) and FAILS on any diagnostic in the lane's own files
- * (tests/constitutional/h1-cohort-gate/**).
+ * (tests/constitutional/h1-cohort-gate/** and the H1-CG-03 implementation modules).
  *
  * The suite imports pure canon functions from app/writers-studio/**, which were
  * not written to noUncheckedIndexedAccess. Their diagnostics are INHERITED: they
@@ -14,8 +14,16 @@ import { spawnSync } from 'node:child_process';
 
 const res = spawnSync('npx', ['tsc', '-p', 'tsconfig.h1-cohort-gate.json', '--pretty', 'false'], { encoding: 'utf8' });
 const lines = (res.stdout + res.stderr).split('\n').filter((l) => /\(\d+,\d+\): error TS\d+/.test(l));
-const lane = lines.filter((l) => l.startsWith('tests/constitutional/h1-cohort-gate/'));
-const inherited = lines.filter((l) => !l.startsWith('tests/constitutional/h1-cohort-gate/'));
+const LANE = [
+  'tests/constitutional/h1-cohort-gate/',
+  'lib/access/h1ArrivalAccess.ts',
+  'app/writers-studio/h1Arrival.ts',
+  'app/writers-studio/useH1Arrival.ts',
+  'app/api/writers-studio/h1-arrival/',
+];
+const isLane = (l) => LANE.some((p) => l.startsWith(p));
+const lane = lines.filter(isLane);
+const inherited = lines.filter((l) => !isLane(l));
 
 if (inherited.length) {
   console.log(`inherited from imported canon (not this lane's; governed by npm run typecheck): ${inherited.length}`);
