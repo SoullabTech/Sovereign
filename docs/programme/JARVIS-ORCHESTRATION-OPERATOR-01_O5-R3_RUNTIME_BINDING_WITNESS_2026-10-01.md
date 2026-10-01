@@ -273,7 +273,7 @@ Expected:
 **Step 5: witness the live binding, before any grant write** (second terminal, Desktop running). *Amended by
 §10 (RB-A1): this is a pre-write baseline, judged with `--phase pre-write`.*
 ```
-cd ~/o5r3-witness-WALK && node scripts/witness/o5-r3-runtime-witness.mjs --phase pre-write > ~/o5r3-step5b.txt; tail -25 ~/o5r3-step5b.txt
+cd ~/o5r3-witness-WALK && node scripts/witness/o5-r3-runtime-witness.mjs --phase pre-write --snapshot ~/o5r3-prewrite.json > ~/o5r3-step5b.txt; tail -25 ~/o5r3-step5b.txt
 ```
 Expect:
 - C1–C5 PASS;
@@ -562,4 +562,76 @@ re-walk.
 - ⛔ O5-R4 untouched;
 - ⛔ not merged;
 - production untouched.
+
+## 11. Founder ruling: close R3, do not expand it (2026-10-01)
+
+### 11.1 Generation 1: three admissible attribution states
+
+The §10.5 probes run exactly as recorded. The ruling then takes one of three states:
+
+| State | Meaning | Effect on the walk |
+|---|---|---|
+| **ATTRIBUTED** | a concrete grant-writing artifact ties generation 1 to a specific writing act, authorized or not | none: a historical note |
+| **BOUNDED BUT UNATTRIBUTED** | evidence shows a real prior write, but not which invocation caused it | none: a historical note, ⛔ not a constitutional defect |
+| **CONTRADICTORY** | generation 1 could not have arisen through any currently understood write path | ⛔ **stops the walk** |
+
+Attribution is evidentiary, not open-ended archaeology. It does not contaminate the fresh witness.
+
+### 11.2 The fresh walk is a new specimen
+
+It runs from a fresh worktree at `9028e47d` or later. There is no repair in place, and the failed `b86079dc`
+worktree is not reused. Admission is decided from this walk alone.
+
+### 11.3 Phrasing discipline
+
+⛔ The pre-write state is never phrased as *"the lease is free"*. `NOT_YET_HELD` and `NOT_YET_HELD_AFTER_RELEASE`
+are different evidence. The second says the home has history, that the history terminates coherently, and that
+this incarnation has not yet entered it.
+
+The distinction is kept because a later safety layer (multiple incarnations, crashes, recoveries, governed
+executors) must not decay into *file exists / file doesn't exist*.
+
+> *Past ownership is history. Present ownership is standing. A release only terminates the immediately preceding
+> generation it actually belongs to.*
+
+### 11.4 Admission rule
+
+The fresh walk must produce:
+- `C6-pre PASS — NOT_YET_HELD_AFTER_RELEASE · generation 2`;
+- exactly one authorized write;
+- C6 PASS (generation 3 held by this pid + incarnation);
+- C7 PASS at generation 3;
+- C8 PASS;
+- `CONSTITUTIONAL PASS — C1–C8`.
+
+On that result the record closes as follows:
+
+> **O5-R3 — ADMITTED.** Runtime binding and execution-lease standing have been witnessed across historical
+> incarnation turnover, with pre-write baseline discrimination, a single authorized acquisition,
+> incarnation-bound current-holder proof, and post-write constitutional closure.
+
+The §9.5 narrow statement still holds within it. Only after admission is O5-R4 opened, against an admitted
+substrate.
+
+### 11.5 ⚠️ A gap between the ruling's C8 and the instrument's C8, surfaced before the walk
+
+The ruling describes C8 as *"compares against the pre-write baseline → only the authorized state transition
+observed"*. The frozen instrument's C8 is narrower: grant ledgers and lease are byte-identical **across the
+refused second-writer attempt** (snapshot taken after the write, before the refusal). As built, it says nothing
+about the shape of the one write itself.
+
+So a C8 PASS today does **not** witness *"only the authorized transition happened between baseline and post-write"*.
+
+**Not changed inside the walk.** Two lawful options, and the choice is a founder act:
+- **(a)** Keep C8 as defined and read the admission statement's *"a single authorized acquisition"* as carried by
+  C6 + C7 plus the operator's own record of the one UI action.
+- **(b)** Add, additively and frozen as its own lineage, a pre-write → post-write delta law. It would require:
+  - the lease directory gains exactly the next generation, held by this incarnation;
+  - grant-ledger changes are append-only (old bytes a prefix);
+  - nothing else changes;
+  - at most one Work Unit's ledger is touched.
+
+**Evidence is preserved either way.** Step 5 now also writes `~/o5r3-prewrite.json`, a pre-write hash snapshot
+taken under `--phase pre-write`, which carries no admission evidence. So option (b) can be judged against this
+walk's actual baseline without re-walking.
 
