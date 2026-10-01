@@ -250,10 +250,10 @@ hides Writer's Studio, Works or manuscripts.
 
 | Label | Fingerprint (sha256[0:12]) | Matches installed |
 |---|---|---|
-| C1 | ⏳ | ⏳ |
-| C2 | ⏳ | ⏳ |
-| C3 | ⏳ | ⏳ |
-| C4 | ⏳ | ⏳ |
+| C1 | `028cdefbcbb1` | installed ✅ · founder private match ⏳ |
+| C2 | `0adf86b4ae12` | installed ✅ · founder private match ⏳ |
+| C3 | `c0694d209906` | installed ✅ · founder private match ⏳ |
+| C4 | `e5e7ddbe5888` | installed ✅ · founder private match ⏳ |
 | Non-cohort witness | (Kelly's account; fingerprint not recorded) | must be **absent** |
 
 ## 9 · Execution log
@@ -261,3 +261,4 @@ hides Writer's Studio, Works or manuscripts.
 | Step | Time / host | Output | Class | Result |
 |---|---|---|---|---|
 | 1 | 2026-10-01 · run from Kelly's Mac Studio → minisforum | `fuser -v ~/MAIA-SOVEREIGN/.deploy.lock` printed nothing (no holder line, no "No such file" error) | WITNESSED | ✅ no deploy in progress |
+| 2 | 2026-10-01T02:42Z · Mac Studio → minisforum / public | `printenv GIT_COMMIT` = `3421a2096`; `Config.Env` `GIT_COMMIT=3421a2096`; container Created `2026-10-01T01:29:10.774822557Z` (matches the #1565 opening backup `…012910Z`); `:3421a2096`/`:current`/`:prod` → `sha256:77192607c953…ce54`; public `/api/health` `ok`, version `3421a2096`, uptime 4357 s; `HOUSE_STUDIO_H1_ENABLED=true`; `EARLY_FIELD_ENABLED=<unset>` (closed: the authority requires exactly `true`); installed cohort fingerprints `028cdefbcbb1` · `0adf86b4ae12` · `c0694d209906` · `e5e7ddbe5888` (count 4); `.env.production` holds 2 `HOUSE_STUDIO_H1_` lines | WITNESSED | ✅ all expectations met · ⏳ private name→fingerprint match owed before T1 |
