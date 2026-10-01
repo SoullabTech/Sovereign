@@ -24,8 +24,8 @@ Kelly's World holds only the operational orientation needed to know what is true
 - content-blind substrate census at that re-baseline: **0 / 4** across the sources used by the experience;
 - explicit MAIA entry gestures: **PRESENT** in the deployed source at that re-baseline;
 - first-entry / empty-field witness: **PRE-WALK GATED — G0 through G7 must all PASS before a member walk**;
-- G1/G2 preflight at `2026-10-01T23:26:53Z`: Cabin mode absent (`exit=1`); Postgres still `started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy`; **PRE-FLIGHT ONLY — not gate PASS before G0**;
-- crisis safety: **G7 REQUIRED** — G7a implementation candidates are #1665 (recognition contract) → #1669 (live ingress), both Class A and awaiting founder/council authority; G7b remains a named disclosed human facilitator as the alternative safety layer;
+- G1/G2 gate captures at `2026-10-01T23:37:15Z`: **G1 PASS** — Cabin mode absent (`exit=1`); **G2 PASS** — Postgres still `started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy`; these passes do **not** override G0 or authorize a walk;
+- crisis safety: **G7 REQUIRED** — #1665/#1669 are preserved as competing/supersession candidates and do not establish the gate. The founder-authorized Option A lane is #1633, but it remains open with live deployment checks owed; until G7a is actually witnessed on the walk runtime, G7b remains the available path: a named, disclosed human facilitator present for the whole walk with an appropriate crisis line ready;
 - populated-field continuity witness: **BLOCKED BY EVIDENCE**;
 - R2: **NOT ADMITTED**;
 - cohort widening: **CLOSED PENDING HUMAN EVIDENCE**.
@@ -36,11 +36,12 @@ No member ids, names, emails, sessions, or private content are carried into this
 
 The next boundary is **not yet the member walk**. First make the canonical gate record pass honestly:
 
-1. land the surviving witness instruments and production custody on canonical (G0);
-2. fill G1–G5 from content-free production evidence, including the current database recreate and start-SHA ancestry/re-baseline;
-3. disclose every observer/channel before the walk (G6);
-4. establish the human safety layer (G7): deployed in-conversation crisis resources on the actual member route, or a named facilitator present for the whole walk with an appropriate crisis line ready;
-5. only then choose one consenting admitted **adult** member. Verify admission server-side and read-only using `decideEarlyField`; nobody opens or borrows the member's session for the check.
+1. bring #1676 through its required Class A founder/council review and canonical admission so G0 can pass;
+2. preserve the already-witnessed **G1 PASS** and **G2 PASS**; do not rerun them merely for motion unless production changes;
+3. complete **G3b**, because the earlier emergency-disable transcript cannot supply the original verbatim captures required for G3a. G3b briefly changes production and therefore requires an explicitly chosen quiet window, cohort handling, and governed lane;
+4. at walk time, complete G4 and G5, then disclose every observer/channel before the walk (G6);
+5. establish G7 using either deployed in-conversation crisis resources witnessed on the actual start SHA or a named facilitator present for the whole walk with an appropriate crisis line ready;
+6. only after G0–G7 all PASS, choose one consenting admitted **adult** member. Verify admission server-side and read-only using `decideEarlyField`; nobody opens or borrows the member's session for the check.
 
 During the walk, the member signs in themselves on their own device, no AI agent is connected to that device, and the production SHA is recorded at both start and end. If those SHAs differ, the walk is **VOID — NO EVIDENCE**. A first-entry PASS still proves nothing about populated-field continuity and does not authorize R2 or cohort widening.
 
