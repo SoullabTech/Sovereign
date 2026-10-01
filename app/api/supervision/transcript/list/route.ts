@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireLabAccess } from '@/lib/access/labAccess';
 import {
   getSession,
   getTranscript,
@@ -32,6 +33,11 @@ interface AddSegmentRequest {
 }
 
 export async function GET(request: NextRequest) {
+  if (!process.env.CAPACITOR_BUILD) {
+    const access = await requireLabAccess();
+    if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
+  }
+
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });

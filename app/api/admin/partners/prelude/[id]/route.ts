@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db/postgres";
+import { deriveVerifiedAccess } from "@/lib/auth/verifiedAccess";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = false;
@@ -10,9 +11,13 @@ export function generateStaticParams() {
 }
 
 export async function GET(
-  _req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const access = await deriveVerifiedAccess(req);
+  if (!access.authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!access.roles.includes('admin')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   const preludeId = params.id;
 
   // Return empty data for static generation placeholder
