@@ -161,6 +161,19 @@
   .needs-kelly b { color:#e4c56e; }
   .inline-check { display:block; color:#888b94; font-size:11px; margin:8px 0; line-height:1.45; }
   .inline-check input { margin-right:7px; }
+  .library-toolbar { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 16px; }
+  .library-toolbar input { flex:1; min-width:240px; }
+  .library-summary { color:#8a8a92; font-size:12px; margin:6px 0 14px; }
+  .library-group { border:1px solid #1c1d20; border-radius:9px; margin-bottom:9px; background:#101113; }
+  .library-group > summary { cursor:pointer; list-style:none; padding:11px 13px; display:flex; justify-content:space-between; gap:12px; color:#d2d2d8; font-weight:600; }
+  .library-group > summary::-webkit-details-marker { display:none; }
+  .library-group[open] > summary { border-bottom:1px solid #1c1d20; }
+  .library-count { color:#666872; font:11px ui-monospace,Menlo,monospace; }
+  .library-items { padding:4px 12px 9px; }
+  .library-item { padding:8px 2px; border-bottom:1px solid #17181b; color:#b4b4bc; }
+  .library-item:last-child { border-bottom:0; }
+  .library-path { color:#555862; font:10px ui-monospace,Menlo,monospace; margin-top:3px; word-break:break-all; }
+  .library-section-title { margin:22px 0 8px; color:#7a7a82; font-size:11px; text-transform:uppercase; letter-spacing:.09em; }
 </style>
 </head>
 <body>
@@ -171,6 +184,7 @@
       <button data-view="work">Work</button>
       <button data-view="system">System</button>
       <button data-view="spiral">Living Spiral</button>
+      <button data-view="library">Field Library</button>
     </nav>
   </header>
   <main id="main"></main>
@@ -182,6 +196,7 @@
   <script src="operator-flow.js"></script>
   <script src="operator-work-unit.js"></script>
   <script src="e1-gesture-separation.js"></script>
+  <script src="field-library-data.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>
