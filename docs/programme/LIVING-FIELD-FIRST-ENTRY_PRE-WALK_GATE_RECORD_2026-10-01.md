@@ -282,9 +282,12 @@ Use this while G7a is not established. It makes the walk possible and keeps the 
 - The facilitator has a crisis line appropriate to the member's location ready before starting: yes / no
 - The facilitator knows they may stop the walk at any time, and that stopping for the member's
   wellbeing is never a protocol failure: yes / no
-- Member is an adult, by the facilitator's direct knowledge: yes / no. Nothing in the schema
-  marks an account as a teen, so this cannot be read from data. **No → STOP. A founder ruling is
-  needed before any minor walks.**
+- Member is an adult: yes / no / unknown. Production does carry `members.birth_date` plus
+  developmental-tier / guardian fields, but those fields are not complete enough to make missing
+  youth markers proof of adulthood. Satisfy this either from the facilitator's direct knowledge or
+  from a server-side, read-only check for the chosen participant that emits only
+  `adult=true|false|unknown` and never the birth date itself. **No or unknown → STOP. A founder
+  ruling is needed before any minor walks.**
 
 Verdict: PASS (G7a / G7b) / FAIL
 
