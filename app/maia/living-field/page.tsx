@@ -123,6 +123,7 @@ export default function LivingFieldPage() {
         activeSpirals={data.active_spirals}
         recentStates={data.recent_states}
         memberId={memberId}
+        fromHouse={fromHouse}
       />
     </LivingFieldFrame>
   )
