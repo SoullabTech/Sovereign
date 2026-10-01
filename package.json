@@ -106,6 +106,7 @@
     "verify:review-custody-migration-binding": "bash scripts/verify-review-custody-migration-binding.sh",
     "verify:deploy-provenance": "bash scripts/verify-deploy-provenance.sh",
     "verify:deploy-ancestry": "bash scripts/verify-deploy-ancestry.sh",
+    "verify:deploy-tag-rollback-point": "bash scripts/verify-deploy-tag-rollback-point.sh",
     "verify:deploy-lock": "bash scripts/verify-deploy-lock-record.sh",
     "verify:migrate-fail-closed": "bash scripts/verify-migrate-fail-closed.sh",
     "verify:s3-runbook": "bash scripts/verify-s3-schema-first-runbook.sh",
