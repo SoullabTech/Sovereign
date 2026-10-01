@@ -6,7 +6,7 @@
 Class: **B** — production deployment / runtime convergence
 Governing authority: founder direction on 2026-10-01 to bring Writer's Studio production together and continue the full JARVIS flow
 Current gate: **P0 — deployment-convergence census**
-Evidence subject: production reader `56d0cd679c247a91dfe5a3592ce59e5a488c1fba`, canonical `a6464dcd1bc6c267c7550a2c2c3fb747dcff8e7b`, and PR #1662
+Evidence subject: production reader `56d0cd679c247a91dfe5a3592ce59e5a488c1fba`, canonical `7973d9eb667c0787296835f865483a9517a09b88`, and PR #1662 head `7d7ed82f93fe7ec413e5b961760758f41e94d584`
 Stop boundary: no production deploy before #1662 is admitted/merged and the exact post-merge canonical SHA passes its own deployment gates
 
 ## Governing question
@@ -32,16 +32,19 @@ return/place custody, Review conversation, manuscript navigation, or the Kelly's
 ## P0 census findings
 
 1. **OBSERVED — live reader:** `56d0cd679`; container healthy; restart count 0.
-2. **OBSERVED — canonical:** `a6464dcd1`; live reader is its ancestor.
+2. **OBSERVED — canonical:** `7973d9eb6`; live reader is its ancestor. Canonical drift since the first census was documentary/evidence work and does not overlap #1662's two changed Writer's Studio files.
 3. **OBSERVED — schema:** no production-pending canonical SQL migrations.
 4. **OBSERVED — admission:** H1 and Early Field enabled for the same four-member cohort.
 5. **OBSERVED — #1662:** bounded shell/navigation correction returning platform-level Studio exit to `/house`
    while preserving Writer's Studio Home and Work-return behavior.
-6. **OBSERVED — #1662 local falsifier/contract evidence:** `modeNavigation.test.ts` 11/11 PASS
-   against an exact package-lock-matched dependency tree.
+6. **OBSERVED — #1662 exact-head falsifier/contract evidence:** `modeNavigation.test.ts` 11/11 PASS
+   on reconciled head `7d7ed82f9`, against an exact package-lock-matched dependency tree.
 7. **STOP correctly exercised:** covenant-gates initially rejected #1662 because classification was absent.
-   The PR is now explicitly Class C; the gate is being rerun rather than bypassed.
-8. **JARVIS provider boundary:** O5-R3 external/local provider execution remains NOT ADMITTED after the
+   The PR is now explicitly Class C and covenant-gates PASS; the gate was repaired rather than bypassed.
+8. **STOP correctly exercised — workstation storage:** a canonical fetch failed with `No space left on device`.
+   No merge or production mutation followed. After recovery the Mac Studio reported 6.8 GiB free, Git transport
+   resumed, canonical was re-fetched as `7973d9eb6`, and decisive #1662 evidence was rerun on the reconciled head.
+9. **JARVIS provider boundary:** O5-R3 external/local provider execution remains NOT ADMITTED after the
    crash witness. This lane will not silently launch Qwen or treat that provider path as available.
 
 ## Exact flow
