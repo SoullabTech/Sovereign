@@ -12,10 +12,10 @@ test('Kellys World safety delivery snapshot is truthful and action-oriented', ()
   assert.equal(s.live_telemetry, false);
   assert.equal(s.standing, 'REPAIR_CANDIDATE');
   assert.match(s.source, /PR #1671/);
-  assert.ok(s.needs_kelly.some(x => /Twilio SMS or Slack webhook/.test(x)));
+  assert.ok(s.needs_kelly.some(x => /SAFETY_ALERT_PHONE/.test(x) && /check:safety-human-delivery/.test(x)));
   assert.ok(s.in_motion.some(x => /PR #1671/.test(x)));
   assert.ok(s.watching.some(x => /witness/i.test(x)));
-  assert.ok(s.unresolved.some(x => /No Twilio or Slack/.test(x)));
+  assert.ok(s.unresolved.some(x => /Twilio transport credentials are present/.test(x) && /SAFETY_ALERT_PHONE/.test(x)));
 });
 
 test('System view renders the safety delivery custody card', () => {
