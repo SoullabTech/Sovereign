@@ -16,6 +16,7 @@ import { useWorkVisual } from '@/app/writers-studio/useWorkVisual';
 import { currentWork } from '@/app/writers-studio/workContext';
 import { resolveSituatedWorkContext } from '@/app/writers-studio/situatedWork';
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
+import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import { hostFactsFrom } from '@/app/writers-studio/rebuild/liveReview';
 import { listChapterReviewManifests, loadChapterReviewManifestById, type ChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import { rehydrateChapterReview } from '@/lib/writersStudio/rebuild/chapterReview';
@@ -58,7 +59,9 @@ type ReadyReview = {
   const requestedSectionId = params?.get('s') ?? null;
   const { id: appearance } = useAtmosphere();
   const { phase: worksPhase, works } = useLivingWorks();
-  const { workId: carriedWorkId } = useHouseStudioH1WorkClaim(params);
+  // H1 · R2: the seam produces the arrival; the hook only supplies the admission fact.
+  const h1 = useHouseStudioH1WorkClaim(h1AdmissionNeeded(params));
+  const { workId: carriedWorkId } = resolveH1Arrival(params, h1);
 
   const [phase, setPhase] = useState<ReviewPhase>('loading');
   const [context, setContext] = useState<ContextReady | null>(null);
