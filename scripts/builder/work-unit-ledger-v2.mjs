@@ -9,6 +9,7 @@
  * - model/verifier output is evidence only
  */
 
+import { createHash } from 'node:crypto';
 import { authorizedCoreSnapshotV2 } from './work-unit-lifecycle-v2.mjs';
 import { activeTransportBindingsV1 } from './work-unit-transport-v1.mjs';
 import { routeDigest } from './routing-route-integrity.mjs';
@@ -24,6 +25,8 @@ const KINDS = Object.freeze([
   'test_result',
   'verifier_result',
   'resulting_commit',
+  'finding',
+  'proposal',
 ]);
 
 const ROUTED_OR_EXECUTING = Object.freeze(['ROUTED', 'EXECUTING']);
@@ -36,7 +39,14 @@ const ALLOWED_STATES = Object.freeze({
   test_result: EXECUTING_ONLY,
   verifier_result: EXECUTING_ONLY,
   resulting_commit: EXECUTING_ONLY,
+  finding: EXECUTING_ONLY,
+  proposal: EXECUTING_ONLY,
 });
+
+const ORDINARY_FINDING_FIELDS = Object.freeze(['kind', 'source_act', 'summary', 'urgency']);
+const CONSEQUENCE_FINDING_FIELDS = Object.freeze(['kind', 'source_act', 'affected_lane', 'reason', 'evidence_refs', 'urgency']);
+const PROPOSAL_FIELDS = Object.freeze(['kind', 'source_act', 'summary', 'proposed_kind']);
+const EVIDENCE_URGENCY = Object.freeze(['low', 'normal', 'high']);
 
 const ENTRY_FIELDS = Object.freeze({
   model_identity: Object.freeze([
@@ -76,6 +86,8 @@ const ENTRY_FIELDS = Object.freeze({
     'evidence_refs',
   ]),
   resulting_commit: Object.freeze(['commit_sha', 'attempt_id']),
+  finding: Object.freeze([...new Set([...ORDINARY_FINDING_FIELDS, ...CONSEQUENCE_FINDING_FIELDS])]),
+  proposal: PROPOSAL_FIELDS,
 });
 
 const MODEL_ATTEMPT_KINDS = Object.freeze([
@@ -135,11 +147,28 @@ function textList(value) {
 }
 function blocker(code, detail, path = null) { return Object.freeze({ code, detail, path }); }
 function stable(value) { return JSON.stringify(value); }
+function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
+}
+function canonicalJson(value) { return JSON.stringify(canonicalize(value)); }
+export function evidenceRecordIdV2(kind, entry) {
+  return 'sha256:' + createHash('sha256').update(kind + '\n' + canonicalJson(entry)).digest('hex');
+}
+const evidenceRecordId = evidenceRecordIdV2;
+
 function validSha(value) { return typeof value === 'string' && /^[0-9a-f]{40}$/i.test(value.trim()); }
 function exactFields(entry, kind) {
   const allowed = ENTRY_FIELDS[kind] ?? [];
   return Object.keys(entry).every((key) => allowed.includes(key));
 }
+function exactFieldSet(entry, fields) {
+  const keys = Object.keys(entry).sort();
+  const expected = [...fields].sort();
+  return keys.length === expected.length && keys.every((key, i) => key === expected[i]);
+}
+
 function nullableText(value) { return value == null ? null : text(value); }
 
 function routeParticipants(workUnit) {
@@ -231,6 +260,12 @@ function entryShapeBlockers(kind, entry) {
   }
   if (!isObject(entry)) {
     return [blocker('LEDGER_ENTRY_REQUIRED', 'W4.v2 requires a structured ledger entry.', 'entry')];
+  }
+  if (kind === 'finding') {
+    if (!exactFieldSet(entry, ORDINARY_FINDING_FIELDS) && !exactFieldSet(entry, CONSEQUENCE_FINDING_FIELDS)) {
+      return [blocker('UNKNOWN_LEDGER_FIELD', 'finding entry must match one closed W4.v2 finding schema exactly.', 'entry')];
+    }
+    return [];
   }
   if (!exactFields(entry, kind)) {
     return [blocker(
@@ -526,6 +561,31 @@ function verifierResultEntryBlockers(workUnit, entry) {
   return blocks;
 }
 
+function proposalEntryBlockers(_workUnit, entry) {
+  const blocks = [];
+  if (entry.kind !== 'proposal') blocks.push(blocker('PROPOSAL_KIND_MISMATCH', 'proposal entry.kind must be proposal.', 'kind'));
+  if (!nonBlank(entry.source_act)) blocks.push(blocker('PROPOSAL_SOURCE_ACT_REQUIRED', 'proposal.source_act is required.', 'source_act'));
+  if (!nonBlank(entry.summary)) blocks.push(blocker('PROPOSAL_SUMMARY_REQUIRED', 'proposal.summary is required.', 'summary'));
+  if (!nonBlank(entry.proposed_kind)) blocks.push(blocker('PROPOSAL_KIND_REQUIRED', 'proposal.proposed_kind is required.', 'proposed_kind'));
+  return blocks;
+}
+function findingEntryBlockers(_workUnit, entry) {
+  const blocks = [];
+  if (entry.kind !== 'finding') blocks.push(blocker('FINDING_KIND_MISMATCH', 'finding entry.kind must be finding.', 'kind'));
+  if (!nonBlank(entry.source_act)) blocks.push(blocker('FINDING_SOURCE_ACT_REQUIRED', 'finding.source_act is required.', 'source_act'));
+  if (!EVIDENCE_URGENCY.includes(entry.urgency)) blocks.push(blocker('FINDING_URGENCY_INVALID', 'finding.urgency must be low, normal, or high.', 'urgency'));
+  if (Object.prototype.hasOwnProperty.call(entry, 'summary')) {
+    if (!nonBlank(entry.summary)) blocks.push(blocker('FINDING_SUMMARY_REQUIRED', 'ordinary finding.summary is required.', 'summary'));
+  } else {
+    if (!nonBlank(entry.affected_lane)) blocks.push(blocker('FINDING_AFFECTED_LANE_REQUIRED', 'consequence finding.affected_lane is required.', 'affected_lane'));
+    if (!nonBlank(entry.reason)) blocks.push(blocker('FINDING_REASON_REQUIRED', 'consequence finding.reason is required.', 'reason'));
+    if (!Array.isArray(entry.evidence_refs) || entry.evidence_refs.length === 0 || entry.evidence_refs.some((ref) => !nonBlank(ref))) {
+      blocks.push(blocker('FINDING_EVIDENCE_REFS_REQUIRED', 'consequence finding.evidence_refs must contain nonblank references.', 'evidence_refs'));
+    }
+  }
+  return blocks;
+}
+
 function commitEntryBlockers(workUnit, entry) {
   const blocks = [...attemptRefBlockers(workUnit, entry.attempt_id)];
   if (!validSha(entry.commit_sha)) {
@@ -542,6 +602,8 @@ function entryBlockers(workUnit, kind, entry) {
   if (kind === 'test_result') return testResultEntryBlockers(workUnit, entry);
   if (kind === 'verifier_result') return verifierResultEntryBlockers(workUnit, entry);
   if (kind === 'resulting_commit') return commitEntryBlockers(workUnit, entry);
+  if (kind === 'finding') return findingEntryBlockers(workUnit, entry);
+  if (kind === 'proposal') return proposalEntryBlockers(workUnit, entry);
   return [];
 }
 
@@ -553,6 +615,8 @@ function ledgerLocation(workUnit, kind) {
   if (kind === 'test_result') return workUnit.execution.test_results;
   if (kind === 'verifier_result') return workUnit.evaluation.verifier_results;
   if (kind === 'resulting_commit') return workUnit.provenance.resulting_commits;
+  if (kind === 'finding') return Array.isArray(workUnit.evaluation?.findings) ? workUnit.evaluation.findings : [];
+  if (kind === 'proposal') return Array.isArray(workUnit.evaluation?.proposals) ? workUnit.evaluation.proposals : [];
   return null;
 }
 
@@ -564,6 +628,7 @@ function recordId(kind, entry) {
   if (kind === 'test_result') return entry.test_result_id;
   if (kind === 'verifier_result') return entry.verifier_result_id;
   if (kind === 'resulting_commit') return entry.commit_sha;
+  if (kind === 'finding' || kind === 'proposal') return evidenceRecordId(kind, entry);
   return null;
 }
 
@@ -657,6 +722,15 @@ function normalizeEntry(kind, entry) {
       attempt_id: text(entry.attempt_id),
     };
   }
+  if (kind === 'proposal') {
+    return { kind: 'proposal', source_act: text(entry.source_act), summary: text(entry.summary), proposed_kind: text(entry.proposed_kind) };
+  }
+  if (kind === 'finding') {
+    if (Object.prototype.hasOwnProperty.call(entry, 'summary')) {
+      return { kind: 'finding', source_act: text(entry.source_act), summary: text(entry.summary), urgency: text(entry.urgency) };
+    }
+    return { kind: 'finding', source_act: text(entry.source_act), affected_lane: text(entry.affected_lane), reason: text(entry.reason), evidence_refs: textList(entry.evidence_refs), urgency: text(entry.urgency) };
+  }
   return clone(entry);
 }
 
@@ -720,6 +794,8 @@ export function appendLedgerRecordV2(envelope, request) {
 
   const before = immutableSurfaceSnapshot(envelope);
   const next = clone(envelope);
+  if (request.kind === 'finding' && !Array.isArray(next.work_unit.evaluation?.findings)) next.work_unit.evaluation.findings = [];
+  if (request.kind === 'proposal' && !Array.isArray(next.work_unit.evaluation?.proposals)) next.work_unit.evaluation.proposals = [];
   const ledger = ledgerLocation(next.work_unit, request.kind);
 
   if (!Array.isArray(ledger)) {

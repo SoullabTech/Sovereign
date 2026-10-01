@@ -42,7 +42,9 @@ These are descriptions of requested outcome, not permissions.
 
 `jarvis-desktop/src/operator-intent-contract.js` produces an `o1.intent.v1` record with:
 
-- `standing`: `CLEAR | AMBIGUOUS | INVALID`;
+- `standing`: `CLEAR | AMBIGUOUS | INVALID | CANDIDATE`;
+  - `compileIntent()` still emits only `CLEAR | AMBIGUOUS | INVALID`;
+  - `CANDIDATE` is reserved for O5-R4 evidence-derived executor proposals and is never treated as operator speech or continuation authority.
 - `raw_utterance`;
 - `objective`;
 - `requested_level`;
@@ -155,3 +157,10 @@ Observed:
 
 This establishes an O1 implementation candidate only.
 Canonical closure still requires Founder adjudication of the exact candidate and a fresh canonical admission.
+
+
+## Evidence-derived candidates (O5-R4)
+
+O5-R4 adds a separate deterministic projection from admitted W4.v2 `proposal` evidence into O1 candidate space. This does **not** feed executor text through `compileIntent()`. The projection carries `standing=CANDIDATE`, `source=executor-proposal`, a stable W4 `source_ref`, and an empty `authority_grants` array.
+
+A `CANDIDATE` is not a prior clear governed intent: `continue` may inherit only `CLEAR` operator intent. Converting proposal evidence into governed intent remains an operator act.
