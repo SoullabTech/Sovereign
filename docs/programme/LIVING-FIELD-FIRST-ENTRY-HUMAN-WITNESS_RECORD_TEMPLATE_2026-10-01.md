@@ -1,6 +1,7 @@
 # Living Field — First-Entry Human Witness Record
 
-**Participant label:** FIRST-ENTRY-___
+**Witness class:** LF-A01 — FIRST-ENTRY / EMPTY-FIELD
+**Participant label:** LF-A01-___
 **Date/time:**
 **Production SHA:**
 **Public health:**

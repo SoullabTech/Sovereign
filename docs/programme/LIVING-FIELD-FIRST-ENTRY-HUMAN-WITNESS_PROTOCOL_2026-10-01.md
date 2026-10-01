@@ -35,21 +35,19 @@ Run only when:
 
 ## 3 · What to tell the member
 
-Before the first attempt:
-
-> You're trying an early way of entering the Living Field. Nothing has been written into your
-> field for this test. You do not have to create anything. Explore whatever draws your attention.
-> If you choose to write something, write only what is genuinely true for you. You can explore
-> without talking with MAIA; MAIA begins only when you explicitly choose a MAIA action — either
-> “Explore with MAIA →” or “Enter this dimension with MAIA.” You may stop at any time.
-
-Then give only this task:
+For the uncoached first pass, give only this task:
 
 > **Start from the House and enter your Living Field. Explore whatever draws your attention.
-> Follow one path if you want to. Do whatever feels natural when you reach a dimension, then
-> return toward the wider field and Home. Say what you are noticing if you are comfortable.**
+> Move into one dimension if you want to. If you see a way to enter that dimension with MAIA,
+> decide for yourself whether you want to use it. Then return toward the wider field and Home
+> in whatever way makes sense to you. Say what you are noticing if you are comfortable.**
 
-Do not ask them to create an expression, choose a particular element, or enter MAIA.
+Do not tell the member that the field is intentionally empty. Do not explain the field hierarchy,
+the intended route, the meaning of the elements, what MAIA is expected to do, or that MAIA consent
+is a test condition. Do not ask them to create an expression, choose a particular element, or enter MAIA.
+
+The member may stop at any time. That safety boundary is available without revealing the hypotheses
+being tested.
 
 ## 4 · Observe
 
@@ -90,7 +88,7 @@ STOP / NOT ADMITTED if:
 - another member's material appears;
 - the empty state makes an unsupported claim about who the member is;
 - opening a dimension begins MAIA before explicit entry;
-- the member reasonably believes MAIA has already interpreted or received material when she has not;
+- the member reasonably believes MAIA has already interpreted or received material when it has not;
 - saving changes material the member did not choose to change;
 - the member cannot safely return to the wider field or Home;
 - any privacy, authentication, authorship, or consent boundary fails.

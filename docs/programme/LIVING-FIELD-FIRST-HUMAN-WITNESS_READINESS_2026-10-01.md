@@ -95,12 +95,21 @@ The readiness check should record only **yes/no and aggregate counts**, never th
 EARLY FIELD COHORT OPEN · 4 MEMBERS
 MACHINE BOUNDARIES GREEN
 AUTHENTIC COHORT LIVING-FIELD SUBSTRATE: 0 / 4
-FIRST-ENTRY HUMAN WITNESS: ELIGIBLE
-POPULATED-FIELD HUMAN WITNESS: BLOCKED BY EVIDENCE
+LF-A01 FIRST-ENTRY HUMAN WITNESS: ELIGIBLE · participant not yet designated
+LF-A02 POPULATED-FIELD HUMAN WITNESS: BLOCKED BY EVIDENCE
 R2 PRESENTATION: NOT ADMITTED
 ```
 
 This is not a failure of the cohort gate. It is a truthful decomposition of two different human questions.
+
+## Absence-of-substrate law
+
+> A member's lack of accumulated material is not evidence against a continuity mechanism that has
+> not yet had authentic material on which to operate. Empty-state evidence may establish encounter,
+> navigation, consent, sovereignty, return, and trust boundaries only. It must not be promoted into
+> evidence of personalized continuity.
+
+No participant is designated by this record. Selection of LF-A01 remains a human/founder boundary.
 
 ## Next valid transitions
 
