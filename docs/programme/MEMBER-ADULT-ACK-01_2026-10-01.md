@@ -1,7 +1,7 @@
 # MEMBER-ADULT-ACK-01: adults only, in each member's own words
 
 **Date:** 2026-10-01
-**Status:** BUILT on `claude/wonderful-newton-ddw3gx` · ⛔ NOT MERGED · ⛔ NOT DEPLOYED · ⛔ migration NOT APPLIED · ⛔ review-custody NOT YET RUN (runs on the final rebased SHA)
+**Status:** BUILT on `fix/member-adult-ack-20261001` · PR #1644 OPEN · ⛔ NOT MERGED · ⛔ NOT DEPLOYED · ⛔ migration NOT APPLIED · ⛔ review-custody NOT YET RUN (runs on the final admitted SHA)
 
 ## Founder rulings
 
@@ -21,10 +21,10 @@
 | `app/api/members/register/route.ts` | Refuses without the confirmation (400, with `code`). This runs **before** invite admission, so a refused attempt spends no invite. The acknowledgment is recorded after the member row exists. |
 | `app/api/members/acknowledgments/route.ts` | GET: what this member still owes. POST: records `adult_18_plus`. The member's identity comes from the verified session only. |
 | `components/members/AdultAcknowledgmentGate.tsx` (mounted in `app/layout.tsx`) | One-time prompt on member surfaces (`/maia`, the studios, `/commons`, `/onboarding`). It never appears on public or sign-in pages. If the check cannot be made, it shows nothing and asks next time. |
-| Registration forms | Checkbox with the exact words "I confirm I'm 18 or older." in `SacredSoulInduction`, `UnifiedAuthModal` and `/join/[token]`. |
+| Registration forms | Canonical checkbox copy is carried by live signup (`UnifiedAuth`), `SacredSoulInduction`, Sync Account, team-invite acceptance, and Now What arrival. OAuth signup buttons are gated by the same confirmation and carry it to the callbacks. |
 | `lib/youth/youthAvailability.ts` + `/onboarding`, `/onboarding/youth` | `YOUTH_PATH_OPEN = false`. Any youth-tier member goes to the holding page. The youth page redirects even when opened by direct URL. |
 
-Tests: `lib/members/__tests__/adultAcknowledgment.test.ts` passed 17/17 in round one, and **34/34** after round two (cache, gate, guest and lint-shape cases; each cache rule was mutation-checked). A rule loosened on purpose (a truthy stand-in for confirmation, and no age floor) fails 3 of them. These ran under a Jest shim in this container, which has no project `node_modules`. An isolated strict `tsc` on the pure modules exits 0. ⚠️ The project `npm run typecheck` was **not** run here; the founder's run is the evidence of record.
+Tests: `lib/members/__tests__/adultAcknowledgment.test.ts` now passes **48/48**, including the generated census of every `app/api` route that inserts a database member, all live registration forms, atomic acknowledgment writes, cache behavior, guest exclusion, and migration shape. The current worktree also passes `npm run typecheck`: 222 errors against a 239-error baseline, **no TypeScript regressions**.
 
 ## Second round (founder rulings, same day)
 
@@ -64,10 +64,10 @@ Tests: `lib/members/__tests__/adultAcknowledgment.test.ts` passed 17/17 in round
 
 ## What this does NOT cover, said plainly
 
-- ~~Other ways to create an account do not ask at creation time.~~ Superseded by the MAIA-route enforcement above; the original text is kept below.
-- **Other ways to create an account do not ask at creation time.** These are: Apple and Google OAuth (four routes), `register-email`, `register-local`, `members/enter`, team-invite register, `now-what/register`, and the cabin local store. Those members are asked by the sign-in prompt the first time they reach a member surface. The prompt is a **client-side ask, not server enforcement**: no API refuses a member who has not acknowledged. Server-side enforcement on member APIs would be a separate, larger change.
-- `UnifiedAuthModal` and `/join/[token]` post to `/api/members/register` **without a passkey**, so they already fail admission today (400). ~~The checkbox keeps them honest.~~ The checkbox edits were reverted in round two; these are dead paths, logged separately.
+- The Cabin local SQLite `members` row is a device-local identity record, not a public server registration path. A later server account creation still crosses one of the governed API routes.
+- `UnifiedAuthModal` and `/join/[token]` remain dead/broken legacy UI paths: they post to `/api/members/register` without the required passkey and already fail admission. Their removal is tracked separately.
 - A member's birth date can still be set later (for example, through the BaZi profile). That never reopens youth onboarding, because routing checks the closed flag first.
+- This lane does not create the future teen entrance, guardian-consent design, or crisis-readiness substrate.
 
 ## Deploy
 
