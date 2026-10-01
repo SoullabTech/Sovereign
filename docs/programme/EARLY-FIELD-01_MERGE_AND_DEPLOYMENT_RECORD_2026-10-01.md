@@ -3,7 +3,7 @@
 **Date:** 2026-10-01 · **Kind:** operational record. This is evidence about **deployment**, not
 part of the certified implementation.
 
-> **Authority (founder ruling, 2026-10-01):** this record is a **convergence / observation record and defers**. Deployment and rollback history: **`PRODUCTION_DEPLOYMENT_HISTORY_2026-09-30.md` (#1561) is authoritative** where the two overlap. H1 production activation: **`H1-COHORT-GATE_PRODUCTION_ROLLOUT_2026-09-30.md` (#1565) is authoritative.** Where this record and those disagree, they govern. Founder ruling: production history around admission is
+> **Authority (founder ruling, 2026-10-01):** this record is a **convergence / observation record and defers**. Deployment and rollback history: **`PRODUCTION_DEPLOYMENT_HISTORY_2026-09-30.md` (#1561) is authoritative** where the two overlap. H1 production activation: **`H1-COHORT-GATE_PRODUCTION_ROLLOUT_2026-09-30.md` (#1565) is authoritative.** Where this record and those disagree, they govern. Later bounded records are not duplicated here: **#1593** records the explicit-MAIA-entry production deployment, **#1590** records the #1539 real-stack closure, **#1587** records H1 R3 runtime convergence, and **#1585** preregisters the first human Living Field witness. **Once canonical, each governs its own subject.** Founder ruling: production history around admission is
 kept out of the candidate (#1547 stayed frozen at its certified head) and recorded here.
 
 > Production history belongs to the operational record. Certified implementation stays
@@ -283,7 +283,7 @@ An operational record for the activation **exists on canonical**. Its existence 
 - **Deployer of `3421a2096` and of the ~01:29Z recreate: not established.** No provenance is manufactured.
 - **§9's owed item is discharged.** R3 (§10) is **open**, against the running `(EARLY_FIELD 0, H1 1)` state, with **no configuration change**. ⛔ H1 is **not** turned off to fill `(0,0)`. *The matrix governs evidence; it does not dictate production churn.* Combinations are witnessed when rollout naturally reaches them.
 - **R3 populations:** (A) one H1 cohort member **other than the #1572 participant**, unless #1572's unprompted first attempt has already happened; (B) one ordinary non-cohort member.
-- **Guard built before R3, as ruled:** `lib/access/__tests__/monotonicIndependentGates.test.ts` on `chore/monotonic-gates-guard-20261001` (`f188aeae0`, no PR). It walks each gate's whole admission path (authority + endpoint + client hook, transitively), so coupling cannot migrate into a route, hook or shared helper unseen. 15/15, with 8 defeat candidates each caught by its intended mechanism. ⚠️ It is **frozen only on merge**. Until then it is a candidate guard on a branch.
+- **Guard built before R3, as ruled, and now canonical:** `lib/access/__tests__/monotonicIndependentGates.test.ts`, merged by **#1584** at `cb208a26a` (PR head `78c5fc5e6`). It walks each gate's whole admission path (authority + endpoint + client hook, transitively), so coupling cannot migrate into a route, hook or shared helper unseen. The suite passed 15/15, with all 8 defeat candidates caught by their intended mechanisms.
 
 On R3 PASS, the matrix in `MONOTONIC-INDEPENDENT-GATES-01_RATIFICATION_2026-10-01.md` updates `(0,1)` → **witnessed**. Every other row stays *not yet witnessed*.
 
@@ -293,8 +293,8 @@ On R3 PASS, the matrix in `MONOTONIC-INDEPENDENT-GATES-01_RATIFICATION_2026-10-0
 
 ### Two separate evidentiary acts
 
-- **Guard PR opened:** [SoullabTech/Sovereign#1584](https://github.com/SoullabTech/Sovereign/pull/1584) (test-only; current with canonical `e28118ba0`; 15/15, access suites 72/72).
-- ⛔ **R3 does not depend on #1584's merge.** The guard proves the shape of the code. R3 witnesses production behaviour. Merging the guard later makes the law durable in CI **without rewriting what R3 meant**.
+- **Guard merged:** [SoullabTech/Sovereign#1584](https://github.com/SoullabTech/Sovereign/pull/1584), test-only, merge `cb208a26a`; the monotonic-independence law is now durable in canonical CI.
+- ⛔ **R3 remains a separate evidentiary act.** The guard proves the shape of the code; R3 witnesses production behaviour. Canonicalizing the guard does not rewrite what an R3 runtime or human witness means.
 
 ### B: gate denial is not feature breakage
 
@@ -360,3 +360,35 @@ The founder's first attempt to deploy `bde0f6590` was **refused by the deploy-la
 ### 13.3 Standing
 
 Production runtime = **`bde0f6590`**, rollback point `68af62fda`. Of the H1 work this includes #1551 and #1578. **R3 now targets `bde0f6590`**, with no configuration change and with H1 left on. The `(0,1)` row stays **RUNNING · R3 OPEN** until R3 passes. ⛔ This deploy witness is not R3 and does not mark any matrix row as witnessed.
+
+---
+
+## 14 · Later bounded standing at reconciliation
+
+This section does **not** rewrite §§1–13. It records later facts and points to the records that
+own them.
+
+At the reconciliation read on 2026-10-01, production reported:
+
+- runtime `GIT_COMMIT=975a208b8`;
+- Docker health `healthy`;
+- `EARLY_FIELD_ENABLED` unset and `EARLY_FIELD_MEMBER_IDS` unset: Early Field closed;
+- `HOUSE_STUDIO_H1_ENABLED=true`;
+- H1 configured cohort count: **4**.
+
+No member ids or names are copied into this record.
+The later bounded evidence remains separated by claim:
+
+- **#1593** owns deployment provenance for the explicit-MAIA-entry repair at `975a208b8`.
+- **#1590** owns the #1539 real-stack, same-origin Living Field closure evidence.
+- **#1587**, canonical at merge `038949a8d`, owns H1 R3 **server/runtime convergence**
+  evidence. It does not establish a human-lived continuity witness.
+- **#1585** owns the preregistered first-human Living Field witness protocol.
+- **#1584** is already canonical and structurally pins independent-gate composition in CI.
+
+Therefore the honest current human-evidence statement is:
+
+> **Machine and runtime boundaries are converging green; first-human Early Field circulation
+> remains a separate, not-yet-performed cohort act.**
+
+No cohort is opened by this record.
