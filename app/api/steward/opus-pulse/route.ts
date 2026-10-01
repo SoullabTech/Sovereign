@@ -11,8 +11,17 @@ import type {
   ValidatorMetrics,
 } from '@/lib/types/opusPulse';
 import { OPUS_AXIOMS } from '@/lib/types/opusPulse';
+import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
 
 export async function GET(request: NextRequest) {
+  if (!process.env.CAPACITOR_BUILD) {
+    const access = await deriveVerifiedAccess(request);
+    if (!access.authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!access.roles.some((role) => role === 'steward' || role === 'admin')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ summary: {}, axiomStats: [], recentRuptures: [] });

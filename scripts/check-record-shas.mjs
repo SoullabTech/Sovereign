@@ -51,6 +51,26 @@ if (git(['rev-parse', '--is-shallow-repository']) === 'true') {
   process.exit(2);
 }
 
+// Markdown evidence may explicitly cite an UNMERGED commit on another repository
+// branch. actions/checkout fetch-depth:0 gives full history for the checked-out
+// ref, but does not materialize every remote branch ref, so a perfectly real
+// commit can look missing. In CI only, fetch advertised heads before judging
+// existence. Local runs stay read-only with respect to remotes and can fetch a
+// needed branch explicitly.
+if (process.env.GITHUB_ACTIONS === 'true') {
+  try {
+    execFileSync(
+      'git',
+      ['fetch', '--no-tags', 'origin', '+refs/heads/*:refs/remotes/origin/*'],
+      { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'ignore', 'pipe'] },
+    );
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error(`CANNOT CHECK: failed to fetch advertised remote heads: ${detail}`);
+    process.exit(2);
+  }
+}
+
 function freezeFiles(dir) {
   const out = [];
   for (const name of readdirSync(dir)) {
