@@ -69,6 +69,14 @@ const nextConfig = {
 
   // Fix workspace root warning - set explicit output file tracing
   outputFileTracingRoot: __dirname,
+  // backups/ holds tracked internal canon + a dangling `latest` symlink. Routes that
+  // join paths onto process.cwd() (e.g. api/supervision/upload) make the tracer pull the
+  // whole tree into .next/standalone. Docker never sees it (.dockerignore), but the
+  // Desktop Cabin build copies standalone into the signed app: the symlink breaks
+  // codesign and the docs would ship to members' machines. Never trace it.
+  outputFileTracingExcludes: {
+    '*': ['backups/**'],
+  },
 
   // Progressive Web App optimizations
   reactStrictMode: false,

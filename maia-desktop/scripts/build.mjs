@@ -33,7 +33,7 @@ const standalonePublic = path.join(repoRoot, 'public');
 
 if (!fs.existsSync(standaloneServer)) {
   throw new Error(
-    'Cabin runtime is not built. Run MAIA_CABIN_MODE=offline next build first so .next/standalone/server.js exists.',
+    'Cabin runtime is not built. Run MAIA_CABIN_MODE=offline npm run build (webpack) from the repo root first so .next/standalone/server.js exists.',
   );
 }
 
