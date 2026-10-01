@@ -19,7 +19,10 @@ export const NOT_MONITORED_ACK_KEY = 'maia_not_monitored_ack_v1';
 
 export const NOT_MONITORED_NOTICE = {
   heading: 'Before you talk with MAIA',
-  body: 'MAIA is an AI. Your conversations are private and are not monitored by a person. No one is watching in real time, and no one will be notified about what you share.',
+  // Founder correction 2026-10-01: "private" overstated it. Conversations are stored
+  // for memory and admins can read the database. A stronger privacy claim waits on
+  // admin-read access logging and per-member encryption at rest.
+  body: 'MAIA is an AI. Your conversations are stored so MAIA can remember context. They are not monitored by a person, and no one will be notified about what you share.',
   crisis: "If you're in crisis or thinking about harming yourself, call or text 988, or text HOME to 741741. If you're in immediate danger, call 911.",
   acknowledge: 'I understand',
 } as const;

@@ -8,6 +8,9 @@ describe('Option A disclosure', () => {
   it('the notice says no person monitors and names 988, 741741 and 911', () => {
     const notice = W('components/safety/NotMonitoredNotice.tsx');
     expect(notice).toContain('not monitored by a person');
+    expect(notice).toContain('stored so MAIA can remember context');
+    // The overstated claim must not return until the architecture supports it.
+    expect(notice).not.toMatch(/conversations are private/i);
     expect(notice).toContain('no one will be notified');
     for (const n of ['988', 'HOME to 741741', '911']) expect(notice).toContain(n);
     // If storage is unavailable the notice must SHOW, never be skipped.
