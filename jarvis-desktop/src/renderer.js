@@ -2426,6 +2426,18 @@ function spInspectEdge(sp, from, to) {
 }
 
 
+function renderRecentPulse(lib) {
+  const recent = (lib.recentItems || []).slice(0, 12);
+  if (!recent.length) return '<div class="hint">No recent programme activity is indexed.</div>';
+  return `<div class="library-summary">Most recently touched programme records</div>
+    ${recent.map(i => `<details class="library-item">
+      <summary>${escapeHtml(i.title)}</summary>
+      ${i.excerpt ? `<div class="library-excerpt">${escapeHtml(i.excerpt)}</div>` : ''}
+      ${i.headings && i.headings.length ? `<div class="library-headings">Inside: ${i.headings.map(escapeHtml).join(' · ')}</div>` : ''}
+      ${i.path ? `<div class="library-path">${escapeHtml(i.path)}</div>` : ''}
+    </details>`).join('')}`;
+}
+
 function renderGrokkerResults(results, query) {
   if (!query.trim()) return '<div class="hint">Ask about a theme, law, programme, room, or idea. Grokker Trace searches the indexed corpus and preserves source standing.</div>';
   if (!results.length) return '<div class="hint">No indexed trace matched this question. That is a retrieval result, not evidence that the work does not exist.</div>';
@@ -2511,6 +2523,11 @@ function renderLibrary() {
         <button class="act" id="library-collapse">Collapse all</button>
       </div>
       <div class="hint">Browse remains a read-only index over canonical records. Grokker Trace below retrieves into that same corpus without inventing a second source of truth.</div>
+    </div>
+    <div class="grokker-box">
+      <h3>Where are we now?</h3>
+      <div class="sentence">A lightweight pulse of the programme records touched most recently. This is orientation, not a claim that recent means important.</div>
+      <div class="library-items">${renderRecentPulse(lib)}</div>
     </div>
     <div class="grokker-box">
       <h3>Grokker · Ask / Trace</h3>

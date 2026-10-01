@@ -100,3 +100,21 @@ The two failures are the already-documented canonical JOP-00 stale negative cont
 Those failures predate this lane and are recorded in `SOULLAB-DESKTOP-UNIFICATION-01_CENSUS_2026-09-30.md`.
 
 No merge or deploy is authorized.
+
+## R3 — Recent field pulse
+
+The Library now opens with **Where are we now?**, showing the most recently touched programme records in Git-history order with generated excerpts and headings.
+
+This pulse is explicitly temporal orientation only:
+- recent does not mean important;
+- touched does not mean active;
+- activity does not create standing.
+
+The result gives Kelly a low-effort re-entry path before Browse or Grokker Trace.
+
+Current interaction sequence:
+1. **Re-enter** — recent field pulse.
+2. **Ask / Trace** — deterministic source-preserving retrieval.
+3. **Browse** — full conceptual map and canonical programme corpus.
+
+**Synthesize remains unopened** until it can bind to actual Grokker reasoning and preserve epistemic standing rather than presenting lexical aggregation as insight.

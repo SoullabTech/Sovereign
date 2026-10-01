@@ -3,9 +3,33 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity is derived from Git history since 2026-09-27",
   "recentItems": [
     {
-      "title": "EARLY-FIELD-01 · COHORT · ADMISSION · 2026-09-30",
-      "path": "docs/programme/EARLY-FIELD-01_COHORT_ADMISSION_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 · Base: canonical 7ec42ce6f (includes #1538, #1539) · Branch: feat/early-field-01-cohort-gate-20260930 · Kind: rollout infrastructure, not Living Field product logic.",
+      "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R1 · SWEEP · 2026-09-30",
+      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R1_SWEEP_2026-09-30.md",
+      "excerpt": "Give Kelly one scrollable place to re-enter the large body of Soullab work without requiring working-memory reconstruction from chats, branches, or programme filenames.",
+      "headings": []
+    },
+    {
+      "title": "H1-FIRST-HUMAN-WITNESS · PROTOCOL · 2026-09-30",
+      "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
+      "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline: 168c37c0d56493f179d644033738ed82d41822da Runtime implementation: 3421a2096c3afcce617a394bca1ffe246171f39f Governing law: H1-EXPOSURECENSUSANDRULINGS2026-09-30.md §4 Admission witness: H1-COHORT-GATEADMISSION2026-09-30.md",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R3 · RUNTIME · BINDING · WITNESS · 2026-10-01",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_RUNTIME_BINDING_WITNESS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Base: ce061073 (O5-R3 implementation + freeze amendment 1). ⛔ Kept frozen. No lease or ledger change. Standing: implementation complete · constitutional suite complete · ⭐ Mac Studio integration witness complete · ⭐ R3-R11 runtime-binding witness complete · O5-R3 admission evidence complete · ⛔ merge still pending",
+      "headings": []
+    },
+    {
+      "title": "H1-COHORT-GATE · PRODUCTION · ROLLOUT · 2026-09-30",
+      "path": "docs/programme/H1-COHORT-GATE_PRODUCTION_ROLLOUT_2026-09-30.md",
+      "excerpt": "Only the H1 experimental crossing is open for the production cohort: explicit Work-context arrival from House into Writer's Studio, and the corresponding Studio-side authority to honour work=.",
+      "headings": []
+    },
+    {
+      "title": "PRODUCTION · DEPLOYMENT · HISTORY · 2026-09-30",
+      "path": "docs/programme/PRODUCTION_DEPLOYMENT_HISTORY_2026-09-30.md",
+      "excerpt": "Kind: operational evidence only. This record does not alter EARLY-FIELD-01, H1, or any runtime law.",
       "headings": []
     },
     {
@@ -21,9 +45,9 @@ window.KELLY_FIELD_LIBRARY = {
       "headings": []
     },
     {
-      "title": "H1-COHORT-GATE · PRODUCTION · ROLLOUT · 2026-09-30",
-      "path": "docs/programme/H1-COHORT-GATE_PRODUCTION_ROLLOUT_2026-09-30.md",
-      "excerpt": "Only the H1 experimental crossing is open for the production cohort: explicit Work-context arrival from House into Writer's Studio, and the corresponding Studio-side authority to honour work=.",
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R3 · WRITER · LEASE · CENSUS · AND · FALSIFIERS · 2026-09-30",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_WRITER_LEASE_CENSUS_AND_FALSIFIERS_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: 2df99c9e (O5-R3 grant-settlement census) · frozen O5-R1 @ af2f0203 · FREEZE INTACT Standing: ⭐ O5-R3 OPENED · rulings R3-R1…R12 (§7, §10) · suite FROZEN @ 3dc118ae, amended once (§12.1) · IMPLEMENTED (§11) · implementation complete · constitutional suite complete · local integration evidence complete · ⛔ admission pending",
       "headings": []
     },
     {
@@ -33,9 +57,9 @@ window.KELLY_FIELD_LIBRARY = {
       "headings": []
     },
     {
-      "title": "H1-FIRST-HUMAN-WITNESS · PROTOCOL · 2026-09-30",
-      "path": "docs/programme/H1-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
-      "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline: 168c37c0d56493f179d644033738ed82d41822da Runtime implementation: 3421a2096c3afcce617a394bca1ffe246171f39f Governing law: H1-EXPOSURECENSUSANDRULINGS2026-09-30.md §4 Admission witness: H1-COHORT-GATEADMISSION2026-09-30.md",
+      "title": "EARLY-FIELD-01 · COHORT · ADMISSION · 2026-09-30",
+      "path": "docs/programme/EARLY-FIELD-01_COHORT_ADMISSION_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 · Base: canonical 7ec42ce6f (includes #1538, #1539) · Branch: feat/early-field-01-cohort-gate-20260930 · Kind: rollout infrastructure, not Living Field product logic.",
       "headings": []
     },
     {
@@ -45,9 +69,9 @@ window.KELLY_FIELD_LIBRARY = {
       "headings": []
     },
     {
-      "title": "JARVIS-LIVING-FIELD-GROKKER-01 · CHARTER · 2026-09-28",
-      "path": "docs/programme/JARVIS-LIVING-FIELD-GROKKER-01_CHARTER_2026-09-28.md",
-      "excerpt": "Opened: 2026-09-28 — founder direction to put the Grokker-inspired Living Field roadmap fully into JARVIS flow. Governing question: How can Soullab turn recursive focus-and-context navigation into a living field for inquiry, meaning, life threads, memory, and synthesis while preserving agency, epistemic standing, consent, spatial orientation, and the distinction between the map and the person?",
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R3 · GRANT · SETTLEMENT · CENSUS · 2026-09-30",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_GRANT_SETTLEMENT_CENSUS_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: 1d5c8c84 (R2F closed) Class: Census, READ-ONLY. ⛔ O5-R3 NOT OPENED · ⛔ no code changed · ⛔ no falsifier authored. Scope (founder-named, carried verbatim): consume failure before/after durable result · abandoned grant locks · CLAIMED + W4 already present · atomicity/order between result persistence, grant settlement and W4",
       "headings": []
     },
     {
@@ -57,27 +81,15 @@ window.KELLY_FIELD_LIBRARY = {
       "headings": []
     },
     {
-      "title": "JARVIS-LIVING-FIELD-GROKKER-01 · ROADMAP · 2026-09-28",
-      "path": "docs/programme/JARVIS-LIVING-FIELD-GROKKER-01_ROADMAP_2026-09-28.md",
-      "excerpt": "Date: 2026-09-28 Programme: JARVIS-LIVING-FIELD-GROKKER-01 Authority: founder direction 2026-09-28 + JARVISINSTRUCTIONALMANUALv1.md + programme charter. Canonical base at opening: 7a096281acc22bc91bfc66799ce9acb841921771. Current gate: R0 custody; R1 first WORLD traversal witness is next. Current member access point: /maia/living-field?from=house.",
+      "title": "R-C-partial",
+      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-C-partial.png",
+      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000z\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
       "headings": []
     },
     {
-      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R1 · OPENING · AND · FALSIFIER · FREEZE · 2026-09-30",
-      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R1_OPENING_AND_FALSIFIER_FREEZE_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 Opening canonical: 04005ca7c65c8cdc1420d482710a50ea0c3b8f68 Instrument commit (freezecommit): af2f0203d38fd3249260aebd0082de90b81b5334 Predecessor: SOULLAB-JARVIS-015ORCHESTRATIONDELEGATIONRECOVERYCROSSWALK2026-09-30.md Class: B — Structural Risk Standing: O5 OPEN · R1 FALSIFIERS FROZEN · ⛔ NO O5 IMPLEMENTATION",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R2 · PATH · B · RECOVERY · SEAM · 2026-09-30",
-      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R2_PATH_B_RECOVERY_SEAM_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 Base: 64ba10ba (O5-R2 census) · frozen O5-R1 suite @ af2f0203 — FREEZE INTACT Class: B — Structural Risk Standing: R2A–R2E BUILT + WITNESSED IN-SESSION · ⛔ NOT MERGED · ⛔ NOT DEPLOYED · ⛔ NOT RUN AGAINST A REAL DESKTOP HOME",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R2 · REAL · HOME · CENSUS · INSTRUMENT · 2026-09-30",
-      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R2_REAL_HOME_CENSUS_INSTRUMENT_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 Base: 6f8511b4 (O5-R2 seam) · frozen O5-R1 @ af2f0203 — FREEZE INTACT Standing: INSTRUMENT BUILT + WITNESSED ON A SYNTHETIC HOME · ⛔ REAL-HOME CENSUS NOT YET RUN · ⛔ NO REAL STATE TOUCHED · ⛔ NOT MERGED",
+      "title": "results-rewalk-2",
+      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/results-rewalk-2.json",
+      "excerpt": "[ { \"name\": \"R-B-failures\", \"fail\": [ \"constellation\", \"flows\", \"detail\" ], \"finalUrl\": \"http://localhost:3000/maia/living-field?from=house\", \"notes\": { \"constellation\": \"Your wider field is unavailable right now. Nothing has been changed.\", \"flows\": \"Threads failed to load. Nothing has been changed. You can try again.\",",
       "headings": []
     },
     {
@@ -87,225 +99,51 @@ window.KELLY_FIELD_LIBRARY = {
       "headings": []
     },
     {
-      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R2 · RUNTIME · RECOVERY · CENSUS · 2026-09-30",
-      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R2_RUNTIME_RECOVERY_CENSUS_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 Base: 4f90085f (O5-R1 freeze on 04005ca7) Class: Census — READ-ONLY. ⛔ No runtime file modified. ⛔ No seam designed. Frozen suite: O5-R1 @ af2f0203, untouched.",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R3 · GRANT · SETTLEMENT · CENSUS · 2026-09-30",
-      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_GRANT_SETTLEMENT_CENSUS_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 Base: 1d5c8c84 (R2F closed) Class: Census, READ-ONLY. ⛔ O5-R3 NOT OPENED · ⛔ no code changed · ⛔ no falsifier authored. Scope (founder-named, carried verbatim): consume failure before/after durable result · abandoned grant locks · CLAIMED + W4 already present · atomicity/order between result persistence, grant settlement and W4",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R3 · RUNTIME · BINDING · WITNESS · 2026-10-01",
-      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_RUNTIME_BINDING_WITNESS_2026-10-01.md",
-      "excerpt": "Date: 2026-10-01 Base: ce061073 (O5-R3 implementation + freeze amendment 1). ⛔ Kept frozen. No lease or ledger change. Standing: implementation complete · constitutional suite complete · ⭐ Mac Studio integration witness complete · ⭐ R3-R11 runtime-binding witness complete · O5-R3 admission evidence complete · ⛔ merge still pending",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R3 · WRITER · LEASE · CENSUS · AND · FALSIFIERS · 2026-09-30",
-      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_WRITER_LEASE_CENSUS_AND_FALSIFIERS_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 Base: 2df99c9e (O5-R3 grant-settlement census) · frozen O5-R1 @ af2f0203 · FREEZE INTACT Standing: ⭐ O5-R3 OPENED · rulings R3-R1…R12 (§7, §10) · suite FROZEN @ 3dc118ae, amended once (§12.1) · IMPLEMENTED (§11) · implementation complete · constitutional suite complete · local integration evidence complete · ⛔ admission pending",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · CHARTER · 2026-09-28",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md",
-      "excerpt": "Opened: 2026-09-28 · founder-authorized in conversation Governing question: Can Soullab become a living visual field in which a person can enter a lived question, move through nested meaning, and return with greater orientation without being reduced by the map? Subject: Living Field recursive visual navigation and its governed integration into Soullab",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · COCKPIT",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_COCKPIT.yaml",
-      "excerpt": "programme: JARVIS-VISUAL-FIELD-01 currentauthority: - docs/programme/JARVIS-VISUAL-FIELD-01CHARTER2026-09-28.md - docs/canon/LIVINGFIELDGROKKERROADMAP.md - docs/canon/LIVINGFIELDMEANINGEVOLUTIONLAWS.md - docs/canon/SOULLABSPATIALNAVIGATIONLAW.md - docs/canon/SOULLABCOHERENCEPORTALMAIALAWS.md - docs/canon/LIVINGFIELDRELATIONGRAMMAR.md",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1R1 · PATH · MEANING · ENRICHED · RETURN · 2026-09-28",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R1_PATH_MEANING_ENRICHED_RETURN_2026-09-28.md",
-      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Reason opened: Founder RETURN at R1 Path witness Base implementation subject: 60916e56e3331610d72267a5e5f7a850d1a088a5 Standing: Arrival threshold and nested WORLD remain accepted enough to preserve; R2 remains closed.",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1R2 · PURPOSE · WAYFINDING · READABILITY · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R2_PURPOSE_WAYFINDING_READABILITY_2026-09-29.md",
-      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Reason opened: Founder RETURN during R1R1 re-witness Current implementation subject: a209bfd10a016e467fa81da0defa87c8cc29d6eb Standing: threshold language, nested elemental WORLD, Journey concept, and enriched-return trace remain available for repair. R2 remains closed.",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1R3 · TRUE · GROKKER · GEOMETRY · RESET · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R3_TRUE_GROKKER_GEOMETRY_RESET_2026-09-29.md",
-      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Reason opened: Founder STOP on the current WORLD interaction grammar Current implementation subject: f82cdf5cbc2f069e85b49fc4b752097b8360608a Standing: Arrival language may be preserved. Current static circle layout, leaf flow, and Journey-led interaction are rejected as the primary navigation grammar. R2 remains closed while the missing Grokker substrate is proven inside R1.",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1R4 · PHYSICS · CONNECTIONS · RESEARCH · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R4_PHYSICS_CONNECTIONS_RESEARCH_2026-09-29.md",
-      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Reason opened: Founder accepts recursive containment direction but identifies missing Obsidian-like physics, visible connections, and cursor-over insight. Current implementation subject: c7715a4aa17d170ff49db50118aa6df67f691217 Standing: R1R3 proves recursive containment + continuous camera zoom. It does not yet prove living relational physics.",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1R5 · PHYSICS · CONNECTIONS · AB · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R5_PHYSICS_CONNECTIONS_AB_2026-09-29.md",
-      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Authority: founder explicitly authorized the R1R5 A/B boundary Research basis: JARVIS-VISUAL-FIELD-01R1R4PHYSICSCONNECTIONSRESEARCH2026-09-29.md Baseline geometry subject: c7715a4aa17d170ff49db50118aa6df67f691217",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1R6R1 · RESTING · METABOLISM · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R6R1_RESTING_METABOLISM_2026-09-29.md",
-      "excerpt": "Parent: R1R6 Cellular Living Field Reason opened: Founder witness: “getting better nothing is active yet” Current cellular subject: 1530f0d61b2959d41686c903b5c7d8d1e7479e26",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1R6R2 · ACTIONABILITY · CURSOR · WAKE · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R6R2_ACTIONABILITY_CURSOR_WAKE_2026-09-29.md",
-      "excerpt": "Parent: R1R6 Cellular Living Field Reason opened: Founder witness: opening shows physics, but nothing else feels actionable and cursor-over effect is not apparent. Current subject: 52ba0ea3fc396d8cef1631d8478329ddab6e7f23",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1R6R2 · POINTER · ACTIONABILITY · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R6R2_POINTER_ACTIONABILITY_2026-09-29.md",
-      "excerpt": "Reason opened: Founder witness: opening physics improved, but cells/worlds were not actionable and cursor-over did not respond. Root cause: global Soullab CSS rule svg { pointer-events: none; } inherited through the Living Field SVG.",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1R6 · CELLULAR · LIVING · FIELD · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R6_CELLULAR_LIVING_FIELD_2026-09-29.md",
-      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Founder decision: HYBRID direction authorized Physics basis: R1R5 A/B comparison Geometry basis: R1R3 recursive Grokker field Standing: local prototype only; merge, deploy, persistence, MAIA, and autonomous relation generation remain closed.",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R1 · FIRST · ENTRY · WORLD · WITNESS · 2026-09-28",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1_FIRST_ENTRY_WORLD_WITNESS_2026-09-28.md",
-      "excerpt": "Date: 2026-09-28 Status: OPEN — founder visual witness pending Subject: first recursive WORLD traversal in the dedicated Visual Field programme lane Base SHA: 956ed92ac36121e0df4cfa64e40cb2d9d1642ebb Branch: feature/jarvis-visual-field-01-20260928 Sealed R1 implementation subject: 60916e56e3331610d72267a5e5f7a850d1a088a5",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R2A · CAMERA · PHYSICS · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2A_CAMERA_PHYSICS_2026-09-29.md",
-      "excerpt": "Base: cd97315aa2605f29702a65a2193b3ce1cac691b1 Branch: feature/jarvis-visual-field-r2a-20260929 Worktree: /private/tmp/jarvis-visual-field-r2a Standing: authorized local prototype only",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R2B · LOD · SOUL · LAB · COHERENCE · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2B_LOD_SOUL_LAB_COHERENCE_2026-09-29.md",
-      "excerpt": "Parent: R2A Camera Physics Founder standing: R2A PASS Branch: feature/jarvis-visual-field-r2b-20260929 Status: Implemented local candidate · founder witness required Candidate: 08731dd277d204692421cac0664d1869df95360c",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R2C · PROGRESSIVE · RELATIONAL · RESOLUTION · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2C_PROGRESSIVE_RELATIONAL_RESOLUTION_2026-09-29.md",
-      "excerpt": "Parent: R2B Level-of-Detail Resolver + Soul Lab Coherence Founder standing: R2B PASS Branch: feature/jarvis-visual-field-r2c-20260929 Status: Implemented local candidate · founder witness required Candidate: 4542413339a859d6a56f776c088c328c2b3a02fd",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R2D1 · BIOLOGICAL · SPATIAL · DYNAMICS · 2026-09-30",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2D1_BIOLOGICAL_SPATIAL_DYNAMICS_2026-09-30.md",
-      "excerpt": "Parent: R2D Focus + Context Founder standing: R2D direction accepted Branch: feature/jarvis-visual-field-r2d1-20260930 Status: Implemented local candidate · founder witness required Candidate: a1feb66fba902729a46b5aa971f6abc6d37c2cc0",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R2D2 · RECURSIVE · OIL · MEMBRANE · 2026-09-30",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2D2_RECURSIVE_OIL_MEMBRANE_2026-09-30.md",
-      "excerpt": "Parent: R2D1 Biological Spatial Dynamics Founder standing: R2D1 PASS · current physics explicitly retained Branch: feature/jarvis-visual-field-r2d2-recursive-membrane-20260930 Implementation candidate: 84d18c5d6cf0b0c7c3bac1e8647840c90a851a9d Status: refined local candidate · founder re-witness required",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R2D · FOCUS · CONTEXT · 2026-09-29",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2D_FOCUS_CONTEXT_2026-09-29.md",
-      "excerpt": "Parent: R2C Progressive Relational Resolution Founder standing: R2C PASS Branch: feature/jarvis-visual-field-r2d-20260929 Status: Implemented local candidate · founder witness required Candidate: e2b34244384d35e7467f341333ee40b1397edb25",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R2E1 · SEMANTIC · CONDENSATION · 2026-09-30",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2E1_SEMANTIC_CONDENSATION_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 Status: local candidate · founder witness required Base: R2D3 complete Soullab room / semantic Illuminator Scope: reversible cross-world relation condensation only",
-      "headings": []
-    },
-    {
-      "title": "JARVIS-VISUAL-FIELD-01 · R2E2 · WHOLE · FIELD · PATTERN · VISIBILITY · 2026-09-30",
-      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2E2_WHOLE_FIELD_PATTERN_VISIBILITY_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 Status: local candidate · founder witness required Base: R2E1 reversible cross-world condensation Scope: outermost whole-field figure/ground only",
-      "headings": []
-    },
-    {
-      "title": "KELLYS-WORLD-LIVING-FIELD-LIBRARY-01 · R1 · SWEEP · 2026-09-30",
-      "path": "docs/programme/KELLYS-WORLD-LIVING-FIELD-LIBRARY-01_R1_SWEEP_2026-09-30.md",
-      "excerpt": "Give Kelly one scrollable place to re-enter the large body of Soullab work without requiring working-memory reconstruction from chats, branches, or programme filenames.",
-      "headings": []
-    },
-    {
-      "title": "MAIA-AIN-INTEGRATION-01R1 · TESTER · RELEASE · MANIFEST · 2026-09-27",
-      "path": "docs/programme/MAIA-AIN-INTEGRATION-01R1_TESTER_RELEASE_MANIFEST_2026-09-27.md",
-      "excerpt": "Date: 2026-09-27 Boundary: RECONCILED TESTER CANDIDATE READY FOR TOMORROW Runtime base: 0dd5be166bdb487eb7b79e14c452fcd0353bd08c Production mutation tonight: NONE",
-      "headings": []
-    },
-    {
-      "title": "PRODUCTION-MIGRATION-CANONICAL-RECONCILIATION-01 · EXACT · REVIEW · PLAN · 2026-09-28",
-      "path": "docs/programme/PRODUCTION-MIGRATION-CANONICAL-RECONCILIATION-01_EXACT_REVIEW_PLAN_2026-09-28.md",
-      "excerpt": "Date: 2026-09-28 Status: BOUNDED REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader: 90abc99a921fe21cc40f6a84ed9c1ff2f3a93215 Canonical parent: f6ae4ab2c5868e70acc2388264c58825bef4b2fa Repaired migration parent: 2934d293d63eec98cbe4c5fa35dc2058b760d924 Reconciliation merge: 900fc63715c3494f4b681a3e9201e06d4fa84d7b",
-      "headings": []
-    },
-    {
-      "title": "PRODUCTION-MIGRATION-CUSTODY-COMPOSITION-01 · WITNESS · 2026-09-28",
-      "path": "docs/programme/PRODUCTION-MIGRATION-CUSTODY-COMPOSITION-01_WITNESS_2026-09-28.md",
-      "excerpt": "Date: 2026-09-28",
-      "headings": []
-    },
-    {
-      "title": "PRODUCTION-MIGRATION-FINAL-PLAN-01 · EXACT · NINE · MIGRATION · REVIEW · PLAN · 2026-09-28",
-      "path": "docs/programme/PRODUCTION-MIGRATION-FINAL-PLAN-01_EXACT_NINE_MIGRATION_REVIEW_PLAN_2026-09-28.md",
-      "excerpt": "Date: 2026-09-28 Status: BOUNDED REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader: 90abc99a921fe21cc40f6a84ed9c1ff2f3a93215 Parent candidate: 742553a897b64fe79bbc43c43f35ed5fc0a2db95",
-      "headings": []
-    },
-    {
-      "title": "PRODUCTION-MIGRATION-PREFIX-REPAIR-01 · REPAIRED · NINE · MIGRATION · REVIEW · PLAN · 2026-09-28",
-      "path": "docs/programme/PRODUCTION-MIGRATION-PREFIX-REPAIR-01_REPAIRED_NINE_MIGRATION_REVIEW_PLAN_2026-09-28.md",
-      "excerpt": "Date: 2026-09-28 Status: BOUNDED REVIEW PLAN · PRIOR NINE-HASH REVIEWS SUPERSEDED Live old reader: 90abc99a921fe21cc40f6a84ed9c1ff2f3a93215 Repair parent: 2f3cc1dbbaf4fe0e8e616205814a7116fbbe35dc",
-      "headings": []
-    },
-    {
-      "title": "PRODUCTION · DEPLOYMENT · HISTORY · 2026-09-30",
-      "path": "docs/programme/PRODUCTION_DEPLOYMENT_HISTORY_2026-09-30.md",
-      "excerpt": "Kind: operational evidence only. This record does not alter EARLY-FIELD-01, H1, or any runtime law.",
-      "headings": []
-    },
-    {
-      "title": "SOULLAB-3597-PRODUCTION-RECONCILIATION-01 · MIGRATION · REVIEW · PLAN · 2026-09-27",
-      "path": "docs/programme/SOULLAB-3597-PRODUCTION-RECONCILIATION-01_MIGRATION_REVIEW_PLAN_2026-09-27.md",
-      "excerpt": "Date: 2026-09-27 Status: BOUNDED REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Old reader: 68ff4c29d76467b0ee2f72166f9304e21d5a01b7",
-      "headings": []
-    },
-    {
-      "title": "SOULLAB-JARVIS-015 · ORCHESTRATION · DELEGATION · RECOVERY · CROSSWALK · 2026-09-30",
-      "path": "docs/programme/SOULLAB-JARVIS-015_ORCHESTRATION_DELEGATION_RECOVERY_CROSSWALK_2026-09-30.md",
-      "excerpt": "Date: 2026-09-30 Base: 04005ca7c65c8cdc1420d482710a50ea0c3b8f68 Class: Census + design candidate — READ-ONLY against runtime code Standing: ⛔ NO IMPLEMENTATION · ⛔ O5 NOT OPENED · ⛔ NO NEW VOCABULARY LANDED",
-      "headings": []
-    },
-    {
       "title": "WRITERS-STUDIO-CONVERGENCE-01 · H1-R2 · PORT · 2026-09-30",
       "path": "docs/programme/WRITERS-STUDIO-CONVERGENCE-01_H1-R2_PORT_2026-09-30.md",
       "excerpt": "claude/beautiful-mayer-mt9jc9 (HOUSE-STUDIO-CONTINUITY-01) are preserved as evidence and design history; neither becomes canonical code. #1533 is closed as superseded. - ⭐ The House is a threshold origin, not a place in the crossing registry. H1 carries House provenance without widening that registry. D-01 as built in #1533 is superseded by this ruling.",
       "headings": []
     },
     {
-      "title": "WRITERS-STUDIO-RELEASE-EVIDENCE-01",
-      "path": "docs/programme/WRITERS-STUDIO-RELEASE-EVIDENCE-01.md",
-      "excerpt": "Programme: WRITERS-STUDIO-STEWARDSHIP-01 Status: implementation contract Primary admin surface: /admin/writers-studio",
+      "title": "R-B-failures",
+      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-B-failures.png",
+      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\u0006\b\u0002\u0000\u0000\u0000u\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
       "headings": []
     },
     {
-      "title": "WRITERS-STUDIO-SMALL-BETA-01 · B4 · DEPLOYMENT · READINESS · 2026-09-29",
-      "path": "docs/programme/WRITERS-STUDIO-SMALL-BETA-01_B4_DEPLOYMENT_READINESS_2026-09-29.md",
-      "excerpt": "Date: 2026-09-29 Status: DEPLOYMENT AUTHORIZED BY FOUNDER · PRODUCTION UNTOUCHED · REVIEW-CUSTODY GATE STILL REQUIRED Exact deploy target: supplied and frozen externally by the admitted Review-Custody record; no self-referential commit SHA is embedded in this document Current canonical incorporated through: 2f5c130373b002de6d2d183dd29f6bcb4ac285db",
+      "title": "R-E-evidence",
+      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-E-evidence.png",
+      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000 0\b\u0002\u0000\u0000\u0000e\u001f\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
       "headings": []
     },
     {
-      "title": "WRITERS-STUDIO-SMALL-BETA-01 · B4 · EXACT · MIGRATION · REVIEW · PLAN · 2026-09-29",
-      "path": "docs/programme/WRITERS-STUDIO-SMALL-BETA-01_B4_EXACT_MIGRATION_REVIEW_PLAN_2026-09-29.md",
-      "excerpt": "Date: 2026-09-29 Status: BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader at plan freeze: 7a096281acc22bc91bfc66799ce9acb841921771 Application-code parent: b7ab784d95f1231c5f25a6c26dba3fa811d0d02d",
+      "title": "R-H-refine-abort",
+      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-H-refine-abort.png",
+      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000 ]\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
+      "headings": []
+    },
+    {
+      "title": "R-I-refine-decline",
+      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-I-refine-decline.png",
+      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000 ]\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
+      "headings": []
+    },
+    {
+      "title": "results-rewalk",
+      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/results-rewalk.json",
+      "excerpt": "[ { \"name\": \"R-B-failures\", \"fail\": [ \"constellation\", \"flows\", \"detail\" ], \"finalUrl\": \"http://localhost:3000/maia/living-field?from=house\", \"notes\": { \"constellation\": \"Your wider field is unavailable right now. Nothing has been changed.\", \"flows\": \"Threads failed to load. Nothing has been changed. You can try again.\",",
+      "headings": []
+    },
+    {
+      "title": "walk-rewalk",
+      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/walk-rewalk.mjs",
+      "excerpt": "// Fixture walk of the MOUNTED Living Field (R1R3) at /maia/living-field?from=house. // Real Next dev server + real page; /api/ answered from fixtures (no DB here). import { chromium } from 'playwright'; import fs from 'node:fs';",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R2 · REAL · HOME · CENSUS · INSTRUMENT · 2026-09-30",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R2_REAL_HOME_CENSUS_INSTRUMENT_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: 6f8511b4 (O5-R2 seam) · frozen O5-R1 @ af2f0203 — FREEZE INTACT Standing: INSTRUMENT BUILT + WITNESSED ON A SYNTHETIC HOME · ⛔ REAL-HOME CENSUS NOT YET RUN · ⛔ NO REAL STATE TOUCHED · ⛔ NOT MERGED",
       "headings": []
     },
     {
@@ -333,63 +171,225 @@ window.KELLY_FIELD_LIBRARY = {
       "headings": []
     },
     {
-      "title": "R-B-failures",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-B-failures.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\u0006\b\u0002\u0000\u0000\u0000u\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "headings": []
-    },
-    {
-      "title": "R-C-partial",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-C-partial.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000z\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "headings": []
-    },
-    {
-      "title": "R-E-evidence",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-E-evidence.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000 0\b\u0002\u0000\u0000\u0000e\u001f\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "headings": []
-    },
-    {
-      "title": "R-H-refine-abort",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-H-refine-abort.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000 ]\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "headings": []
-    },
-    {
-      "title": "R-I-refine-decline",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/R-I-refine-decline.png",
-      "excerpt": "PNG \u001a \u0000\u0000\u0000 IHDR\u0000\u0000\u0005\u0000\u0000\u0000\t\b\u0002\u0000\u0000\u0000 ]\u0000\u0000\u0010\u0000IDATx\t@\u0013W?\u0007LL\u0002\u0012\u0014PC\u0001(\"hA\u0005-\u0007j[lWZv׶V յjz\u0005\u0005\"\u0006D9 \u0004\u0013s\u0012n$\bV4\u00179ޛy\u0019f\t\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000\u0000X\u0001\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000 \b\u0000\u0000\u0000\u0000\u0000\u0000\u0015\u0010\u0001\u0000\u0000\u0000\u0000\u0000 \u0000\u0003\u0000\u0000\u0000\u0000\u0000U@\u0000\u0006\u0000\u0000\u0000\u0000\u0000\u0000\u0000 \u0000\u0000\u0000\u0000\u0000\u0000V\u0001\u0001\u0018\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u00020\u0000\u0000\u0000\u0000\u0000\u0000X\u0005\u0004\u0000\u0000\u0000\u0000\u0000\u0000",
-      "headings": []
-    },
-    {
-      "title": "results-rewalk-2",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/results-rewalk-2.json",
-      "excerpt": "[ { \"name\": \"R-B-failures\", \"fail\": [ \"constellation\", \"flows\", \"detail\" ], \"finalUrl\": \"http://localhost:3000/maia/living-field?from=house\", \"notes\": { \"constellation\": \"Your wider field is unavailable right now. Nothing has been changed.\", \"flows\": \"Threads failed to load. Nothing has been changed. You can try again.\",",
-      "headings": []
-    },
-    {
-      "title": "results-rewalk",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/results-rewalk.json",
-      "excerpt": "[ { \"name\": \"R-B-failures\", \"fail\": [ \"constellation\", \"flows\", \"detail\" ], \"finalUrl\": \"http://localhost:3000/maia/living-field?from=house\", \"notes\": { \"constellation\": \"Your wider field is unavailable right now. Nothing has been changed.\", \"flows\": \"Threads failed to load. Nothing has been changed. You can try again.\",",
-      "headings": []
-    },
-    {
       "title": "results",
       "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/results.json",
       "excerpt": "[ { \"name\": \"A-happy\", \"fail\": [], \"finalUrl\": \"http://localhost:3000/maia/living-field?from=house\", \"notes\": { \"LIVING FIELD\": true, \"Wider field\": true, \"Three spaces. Three different kinds of attention.\": true, \"Enter Living Field\": true, \"what is alive across a life\": true, \"you authored\": true, \"MAIA candidate\": true,",
       "headings": []
     },
     {
-      "title": "walk-rewalk",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/walk-rewalk.mjs",
+      "title": "walk",
+      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/walk.mjs",
       "excerpt": "// Fixture walk of the MOUNTED Living Field (R1R3) at /maia/living-field?from=house. // Real Next dev server + real page; /api/ answered from fixtures (no DB here). import { chromium } from 'playwright'; import fs from 'node:fs';",
       "headings": []
     },
     {
-      "title": "walk",
-      "path": "docs/programme/evidence/living-field-reconcile-walk-2026-09-30/walk.mjs",
-      "excerpt": "// Fixture walk of the MOUNTED Living Field (R1R3) at /maia/living-field?from=house. // Real Next dev server + real page; /api/ answered from fixtures (no DB here). import { chromium } from 'playwright'; import fs from 'node:fs';",
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R2 · PATH · B · RECOVERY · SEAM · 2026-09-30",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R2_PATH_B_RECOVERY_SEAM_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: 64ba10ba (O5-R2 census) · frozen O5-R1 suite @ af2f0203 — FREEZE INTACT Class: B — Structural Risk Standing: R2A–R2E BUILT + WITNESSED IN-SESSION · ⛔ NOT MERGED · ⛔ NOT DEPLOYED · ⛔ NOT RUN AGAINST A REAL DESKTOP HOME",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R1 · OPENING · AND · FALSIFIER · FREEZE · 2026-09-30",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R1_OPENING_AND_FALSIFIER_FREEZE_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Opening canonical: 04005ca7c65c8cdc1420d482710a50ea0c3b8f68 Instrument commit (freezecommit): af2f0203d38fd3249260aebd0082de90b81b5334 Predecessor: SOULLAB-JARVIS-015ORCHESTRATIONDELEGATIONRECOVERYCROSSWALK2026-09-30.md Class: B — Structural Risk Standing: O5 OPEN · R1 FALSIFIERS FROZEN · ⛔ NO O5 IMPLEMENTATION",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 · O5-R2 · RUNTIME · RECOVERY · CENSUS · 2026-09-30",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R2_RUNTIME_RECOVERY_CENSUS_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: 4f90085f (O5-R1 freeze on 04005ca7) Class: Census — READ-ONLY. ⛔ No runtime file modified. ⛔ No seam designed. Frozen suite: O5-R1 @ af2f0203, untouched.",
+      "headings": []
+    },
+    {
+      "title": "SOULLAB-JARVIS-015 · ORCHESTRATION · DELEGATION · RECOVERY · CROSSWALK · 2026-09-30",
+      "path": "docs/programme/SOULLAB-JARVIS-015_ORCHESTRATION_DELEGATION_RECOVERY_CROSSWALK_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Base: 04005ca7c65c8cdc1420d482710a50ea0c3b8f68 Class: Census + design candidate — READ-ONLY against runtime code Standing: ⛔ NO IMPLEMENTATION · ⛔ O5 NOT OPENED · ⛔ NO NEW VOCABULARY LANDED",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · COCKPIT",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_COCKPIT.yaml",
+      "excerpt": "programme: JARVIS-VISUAL-FIELD-01 currentauthority: - docs/programme/JARVIS-VISUAL-FIELD-01CHARTER2026-09-28.md - docs/canon/LIVINGFIELDGROKKERROADMAP.md - docs/canon/LIVINGFIELDMEANINGEVOLUTIONLAWS.md - docs/canon/SOULLABSPATIALNAVIGATIONLAW.md - docs/canon/SOULLABCOHERENCEPORTALMAIALAWS.md - docs/canon/LIVINGFIELDRELATIONGRAMMAR.md",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R2E2 · WHOLE · FIELD · PATTERN · VISIBILITY · 2026-09-30",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2E2_WHOLE_FIELD_PATTERN_VISIBILITY_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Status: local candidate · founder witness required Base: R2E1 reversible cross-world condensation Scope: outermost whole-field figure/ground only",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R2E1 · SEMANTIC · CONDENSATION · 2026-09-30",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2E1_SEMANTIC_CONDENSATION_2026-09-30.md",
+      "excerpt": "Date: 2026-09-30 Status: local candidate · founder witness required Base: R2D3 complete Soullab room / semantic Illuminator Scope: reversible cross-world relation condensation only",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R2D2 · RECURSIVE · OIL · MEMBRANE · 2026-09-30",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2D2_RECURSIVE_OIL_MEMBRANE_2026-09-30.md",
+      "excerpt": "Parent: R2D1 Biological Spatial Dynamics Founder standing: R2D1 PASS · current physics explicitly retained Branch: feature/jarvis-visual-field-r2d2-recursive-membrane-20260930 Implementation candidate: 84d18c5d6cf0b0c7c3bac1e8647840c90a851a9d Status: refined local candidate · founder re-witness required",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R2D1 · BIOLOGICAL · SPATIAL · DYNAMICS · 2026-09-30",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2D1_BIOLOGICAL_SPATIAL_DYNAMICS_2026-09-30.md",
+      "excerpt": "Parent: R2D Focus + Context Founder standing: R2D direction accepted Branch: feature/jarvis-visual-field-r2d1-20260930 Status: Implemented local candidate · founder witness required Candidate: a1feb66fba902729a46b5aa971f6abc6d37c2cc0",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R2D · FOCUS · CONTEXT · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2D_FOCUS_CONTEXT_2026-09-29.md",
+      "excerpt": "Parent: R2C Progressive Relational Resolution Founder standing: R2C PASS Branch: feature/jarvis-visual-field-r2d-20260929 Status: Implemented local candidate · founder witness required Candidate: e2b34244384d35e7467f341333ee40b1397edb25",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R2C · PROGRESSIVE · RELATIONAL · RESOLUTION · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2C_PROGRESSIVE_RELATIONAL_RESOLUTION_2026-09-29.md",
+      "excerpt": "Parent: R2B Level-of-Detail Resolver + Soul Lab Coherence Founder standing: R2B PASS Branch: feature/jarvis-visual-field-r2c-20260929 Status: Implemented local candidate · founder witness required Candidate: 4542413339a859d6a56f776c088c328c2b3a02fd",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R2B · LOD · SOUL · LAB · COHERENCE · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2B_LOD_SOUL_LAB_COHERENCE_2026-09-29.md",
+      "excerpt": "Parent: R2A Camera Physics Founder standing: R2A PASS Branch: feature/jarvis-visual-field-r2b-20260929 Status: Implemented local candidate · founder witness required Candidate: 08731dd277d204692421cac0664d1869df95360c",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R2A · CAMERA · PHYSICS · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R2A_CAMERA_PHYSICS_2026-09-29.md",
+      "excerpt": "Base: cd97315aa2605f29702a65a2193b3ce1cac691b1 Branch: feature/jarvis-visual-field-r2a-20260929 Worktree: /private/tmp/jarvis-visual-field-r2a Standing: authorized local prototype only",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1R6R2 · ACTIONABILITY · CURSOR · WAKE · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R6R2_ACTIONABILITY_CURSOR_WAKE_2026-09-29.md",
+      "excerpt": "Parent: R1R6 Cellular Living Field Reason opened: Founder witness: opening shows physics, but nothing else feels actionable and cursor-over effect is not apparent. Current subject: 52ba0ea3fc396d8cef1631d8478329ddab6e7f23",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1R6R2 · POINTER · ACTIONABILITY · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R6R2_POINTER_ACTIONABILITY_2026-09-29.md",
+      "excerpt": "Reason opened: Founder witness: opening physics improved, but cells/worlds were not actionable and cursor-over did not respond. Root cause: global Soullab CSS rule svg { pointer-events: none; } inherited through the Living Field SVG.",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1R6R1 · RESTING · METABOLISM · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R6R1_RESTING_METABOLISM_2026-09-29.md",
+      "excerpt": "Parent: R1R6 Cellular Living Field Reason opened: Founder witness: “getting better nothing is active yet” Current cellular subject: 1530f0d61b2959d41686c903b5c7d8d1e7479e26",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1R6 · CELLULAR · LIVING · FIELD · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R6_CELLULAR_LIVING_FIELD_2026-09-29.md",
+      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Founder decision: HYBRID direction authorized Physics basis: R1R5 A/B comparison Geometry basis: R1R3 recursive Grokker field Standing: local prototype only; merge, deploy, persistence, MAIA, and autonomous relation generation remain closed.",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1R5 · PHYSICS · CONNECTIONS · AB · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R5_PHYSICS_CONNECTIONS_AB_2026-09-29.md",
+      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Authority: founder explicitly authorized the R1R5 A/B boundary Research basis: JARVIS-VISUAL-FIELD-01R1R4PHYSICSCONNECTIONSRESEARCH2026-09-29.md Baseline geometry subject: c7715a4aa17d170ff49db50118aa6df67f691217",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1R4 · PHYSICS · CONNECTIONS · RESEARCH · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R4_PHYSICS_CONNECTIONS_RESEARCH_2026-09-29.md",
+      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Reason opened: Founder accepts recursive containment direction but identifies missing Obsidian-like physics, visible connections, and cursor-over insight. Current implementation subject: c7715a4aa17d170ff49db50118aa6df67f691217 Standing: R1R3 proves recursive containment + continuous camera zoom. It does not yet prove living relational physics.",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1R3 · TRUE · GROKKER · GEOMETRY · RESET · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R3_TRUE_GROKKER_GEOMETRY_RESET_2026-09-29.md",
+      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Reason opened: Founder STOP on the current WORLD interaction grammar Current implementation subject: f82cdf5cbc2f069e85b49fc4b752097b8360608a Standing: Arrival language may be preserved. Current static circle layout, leaf flow, and Journey-led interaction are rejected as the primary navigation grammar. R2 remains closed while the missing Grokker substrate is proven inside R1.",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1R2 · PURPOSE · WAYFINDING · READABILITY · 2026-09-29",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R2_PURPOSE_WAYFINDING_READABILITY_2026-09-29.md",
+      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Reason opened: Founder RETURN during R1R1 re-witness Current implementation subject: a209bfd10a016e467fa81da0defa87c8cc29d6eb Standing: threshold language, nested elemental WORLD, Journey concept, and enriched-return trace remain available for repair. R2 remains closed.",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1R1 · PATH · MEANING · ENRICHED · RETURN · 2026-09-28",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1R1_PATH_MEANING_ENRICHED_RETURN_2026-09-28.md",
+      "excerpt": "Parent flow: JARVIS-VISUAL-FIELD-01 Reason opened: Founder RETURN at R1 Path witness Base implementation subject: 60916e56e3331610d72267a5e5f7a850d1a088a5 Standing: Arrival threshold and nested WORLD remain accepted enough to preserve; R2 remains closed.",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · R1 · FIRST · ENTRY · WORLD · WITNESS · 2026-09-28",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_R1_FIRST_ENTRY_WORLD_WITNESS_2026-09-28.md",
+      "excerpt": "Date: 2026-09-28 Status: OPEN — founder visual witness pending Subject: first recursive WORLD traversal in the dedicated Visual Field programme lane Base SHA: 956ed92ac36121e0df4cfa64e40cb2d9d1642ebb Branch: feature/jarvis-visual-field-01-20260928 Sealed R1 implementation subject: 60916e56e3331610d72267a5e5f7a850d1a088a5",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-VISUAL-FIELD-01 · CHARTER · 2026-09-28",
+      "path": "docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md",
+      "excerpt": "Opened: 2026-09-28 · founder-authorized in conversation Governing question: Can Soullab become a living visual field in which a person can enter a lived question, move through nested meaning, and return with greater orientation without being reduced by the map? Subject: Living Field recursive visual navigation and its governed integration into Soullab",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-LIVING-FIELD-GROKKER-01 · CHARTER · 2026-09-28",
+      "path": "docs/programme/JARVIS-LIVING-FIELD-GROKKER-01_CHARTER_2026-09-28.md",
+      "excerpt": "Opened: 2026-09-28 — founder direction to put the Grokker-inspired Living Field roadmap fully into JARVIS flow. Governing question: How can Soullab turn recursive focus-and-context navigation into a living field for inquiry, meaning, life threads, memory, and synthesis while preserving agency, epistemic standing, consent, spatial orientation, and the distinction between the map and the person?",
+      "headings": []
+    },
+    {
+      "title": "JARVIS-LIVING-FIELD-GROKKER-01 · ROADMAP · 2026-09-28",
+      "path": "docs/programme/JARVIS-LIVING-FIELD-GROKKER-01_ROADMAP_2026-09-28.md",
+      "excerpt": "Date: 2026-09-28 Programme: JARVIS-LIVING-FIELD-GROKKER-01 Authority: founder direction 2026-09-28 + JARVISINSTRUCTIONALMANUALv1.md + programme charter. Canonical base at opening: 7a096281acc22bc91bfc66799ce9acb841921771. Current gate: R0 custody; R1 first WORLD traversal witness is next. Current member access point: /maia/living-field?from=house.",
+      "headings": []
+    },
+    {
+      "title": "WRITERS-STUDIO-RELEASE-EVIDENCE-01",
+      "path": "docs/programme/WRITERS-STUDIO-RELEASE-EVIDENCE-01.md",
+      "excerpt": "Programme: WRITERS-STUDIO-STEWARDSHIP-01 Status: implementation contract Primary admin surface: /admin/writers-studio",
+      "headings": []
+    },
+    {
+      "title": "WRITERS-STUDIO-SMALL-BETA-01 · B4 · EXACT · MIGRATION · REVIEW · PLAN · 2026-09-29",
+      "path": "docs/programme/WRITERS-STUDIO-SMALL-BETA-01_B4_EXACT_MIGRATION_REVIEW_PLAN_2026-09-29.md",
+      "excerpt": "Date: 2026-09-29 Status: BOUNDED INDEPENDENT REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader at plan freeze: 7a096281acc22bc91bfc66799ce9acb841921771 Application-code parent: b7ab784d95f1231c5f25a6c26dba3fa811d0d02d",
+      "headings": []
+    },
+    {
+      "title": "WRITERS-STUDIO-SMALL-BETA-01 · B4 · DEPLOYMENT · READINESS · 2026-09-29",
+      "path": "docs/programme/WRITERS-STUDIO-SMALL-BETA-01_B4_DEPLOYMENT_READINESS_2026-09-29.md",
+      "excerpt": "Date: 2026-09-29 Status: DEPLOYMENT AUTHORIZED BY FOUNDER · PRODUCTION UNTOUCHED · REVIEW-CUSTODY GATE STILL REQUIRED Exact deploy target: supplied and frozen externally by the admitted Review-Custody record; no self-referential commit SHA is embedded in this document Current canonical incorporated through: 2f5c130373b002de6d2d183dd29f6bcb4ac285db",
+      "headings": []
+    },
+    {
+      "title": "PRODUCTION-MIGRATION-CANONICAL-RECONCILIATION-01 · EXACT · REVIEW · PLAN · 2026-09-28",
+      "path": "docs/programme/PRODUCTION-MIGRATION-CANONICAL-RECONCILIATION-01_EXACT_REVIEW_PLAN_2026-09-28.md",
+      "excerpt": "Date: 2026-09-28 Status: BOUNDED REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader: 90abc99a921fe21cc40f6a84ed9c1ff2f3a93215 Canonical parent: f6ae4ab2c5868e70acc2388264c58825bef4b2fa Repaired migration parent: 2934d293d63eec98cbe4c5fa35dc2058b760d924 Reconciliation merge: 900fc63715c3494f4b681a3e9201e06d4fa84d7b",
+      "headings": []
+    },
+    {
+      "title": "PRODUCTION-MIGRATION-PREFIX-REPAIR-01 · REPAIRED · NINE · MIGRATION · REVIEW · PLAN · 2026-09-28",
+      "path": "docs/programme/PRODUCTION-MIGRATION-PREFIX-REPAIR-01_REPAIRED_NINE_MIGRATION_REVIEW_PLAN_2026-09-28.md",
+      "excerpt": "Date: 2026-09-28 Status: BOUNDED REVIEW PLAN · PRIOR NINE-HASH REVIEWS SUPERSEDED Live old reader: 90abc99a921fe21cc40f6a84ed9c1ff2f3a93215 Repair parent: 2f3cc1dbbaf4fe0e8e616205814a7116fbbe35dc",
+      "headings": []
+    },
+    {
+      "title": "PRODUCTION-MIGRATION-FINAL-PLAN-01 · EXACT · NINE · MIGRATION · REVIEW · PLAN · 2026-09-28",
+      "path": "docs/programme/PRODUCTION-MIGRATION-FINAL-PLAN-01_EXACT_NINE_MIGRATION_REVIEW_PLAN_2026-09-28.md",
+      "excerpt": "Date: 2026-09-28 Status: BOUNDED REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Live old reader: 90abc99a921fe21cc40f6a84ed9c1ff2f3a93215 Parent candidate: 742553a897b64fe79bbc43c43f35ed5fc0a2db95",
+      "headings": []
+    },
+    {
+      "title": "PRODUCTION-MIGRATION-CUSTODY-COMPOSITION-01 · WITNESS · 2026-09-28",
+      "path": "docs/programme/PRODUCTION-MIGRATION-CUSTODY-COMPOSITION-01_WITNESS_2026-09-28.md",
+      "excerpt": "Date: 2026-09-28",
+      "headings": []
+    },
+    {
+      "title": "SOULLAB-3597-PRODUCTION-RECONCILIATION-01 · MIGRATION · REVIEW · PLAN · 2026-09-27",
+      "path": "docs/programme/SOULLAB-3597-PRODUCTION-RECONCILIATION-01_MIGRATION_REVIEW_PLAN_2026-09-27.md",
+      "excerpt": "Date: 2026-09-27 Status: BOUNDED REVIEW PLAN · NO DEPLOYMENT AUTHORITY BY ITSELF Old reader: 68ff4c29d76467b0ee2f72166f9304e21d5a01b7",
+      "headings": []
+    },
+    {
+      "title": "MAIA-AIN-INTEGRATION-01R1 · TESTER · RELEASE · MANIFEST · 2026-09-27",
+      "path": "docs/programme/MAIA-AIN-INTEGRATION-01R1_TESTER_RELEASE_MANIFEST_2026-09-27.md",
+      "excerpt": "Date: 2026-09-27 Boundary: RECONCILED TESTER CANDIDATE READY FOR TOMORROW Runtime base: 0dd5be166bdb487eb7b79e14c452fcd0353bd08c Production mutation tonight: NONE",
       "headings": []
     }
   ],

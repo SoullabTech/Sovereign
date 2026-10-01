@@ -64,7 +64,14 @@ recent_text = subprocess.check_output([
     "git", "-C", str(root), "log", "--since=2026-09-27 00:00",
     "--name-only", "--pretty=format:", "--", "docs/programme"
 ], text=True)
-recent_paths = sorted({line.strip() for line in recent_text.splitlines() if line.strip()})
+recent_paths = []
+seen_recent = set()
+for line in recent_text.splitlines():
+    path = line.strip()
+    if path and path not in seen_recent:
+        seen_recent.add(path)
+        recent_paths.append(path)
+
 recent_items = [
     record_item(root / path)
     for path in recent_paths if (root / path).is_file()
