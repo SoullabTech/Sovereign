@@ -82,3 +82,28 @@ test('SDU-F9 JARVIS durable state is product-name independent', () => {
   assert.match(repoConfig, /configDir\(appSupportDir\)/);
   assert.match(continuity, /'\.jarvis', 'continuity', 'continuity\.sqlite3'/);
 });
+
+test('SDU-F10 JARVIS doorway is server-authorized in MAIN, never role-guessed in renderer', () => {
+  const main = fs.readFileSync(path.join(ROOT, 'maia-desktop/src/main.js'), 'utf8');
+  const renderer = fs.readFileSync(path.join(ROOT, 'maia-desktop/src/renderer.js'), 'utf8');
+  assert.match(main, /authedFetch\('\/api\/admin\/auth'\)/);
+  assert.match(main, /founder.*cto|cto.*founder/s);
+  assert.match(main, /operatorAccess/);
+  assert.doesNotMatch(renderer, /JARVIS|operatorAccess|admin\/auth/);
+});
+
+test('SDU-F11 sign-out revokes the JARVIS realm as well as member surfaces', () => {
+  const main = fs.readFileSync(path.join(ROOT, 'maia-desktop/src/main.js'), 'utf8');
+  assert.match(main, /function closeJarvisRealm\(/);
+  assert.match(main, /teardownMemberState[\s\S]*closeJarvisRealm\(\)/);
+});
+
+test('SDU-F12 one packaged Desktop carries the JARVIS realm source as a resource', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'maia-desktop/package.json'), 'utf8'));
+  const build = fs.readFileSync(path.join(ROOT, 'maia-desktop/scripts/build.mjs'), 'utf8');
+  const resources = pkg.build?.extraResources ?? [];
+  assert.ok(resources.some((entry) =>
+    entry?.from === 'vendor/jarvis-desktop/src' && entry?.to === 'jarvis-desktop/src'));
+  assert.match(build, /jarvis-desktop', 'src'/);
+  assert.match(build, /vendor', 'jarvis-desktop', 'src'/);
+});

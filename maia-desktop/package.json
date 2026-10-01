@@ -31,6 +31,13 @@
       "src/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "vendor/jarvis-desktop/src",
+        "to": "jarvis-desktop/src",
+        "filter": ["**/*"]
+      }
+    ],
     "mac": {
       "category": "public.app-category.lifestyle",
       "icon": "build/icon.icns",

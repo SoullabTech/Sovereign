@@ -280,6 +280,7 @@ function createWindow() {
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.setTitle(PROV.windowTitle(currentProvenance().artifact));
   });
+  return mainWindow;
 }
 
 // ---------------------------------------------------------------------------
