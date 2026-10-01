@@ -65,12 +65,12 @@ PASS requires `exit=1` with no value printed before it (variable absent). `exit=
 variable is set: a value line means it is set to that value, and an empty line means it is
 **set but empty**. Record either as it is and adjudicate it; do not treat it as a pass.
 
-captured_at_utc: `2026-10-01T23:37:15Z`
-production_sha_at_capture: `56d0cd679`
+captured_at_utc: `2026-10-01T23:41:47Z`
+production_sha_at_capture: `298414555`
 
 ```text
-2026-10-01T23:37:15Z
-56d0cd679
+2026-10-01T23:41:47Z
+298414555
 exit=1
 ```
 
@@ -111,12 +111,12 @@ PASS requires all of:
   pass;
 - `status=running` and, when health is present, `health=healthy`.
 
-captured_at_utc: `2026-10-01T23:37:15Z`
-production_sha_at_capture: `56d0cd679`
+captured_at_utc: `2026-10-01T23:41:47Z`
+production_sha_at_capture: `298414555`
 
 ```text
-2026-10-01T23:37:15Z
-56d0cd679
+2026-10-01T23:41:47Z
+298414555
 started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy
 ```
 
