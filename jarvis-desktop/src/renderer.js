@@ -1,7 +1,15 @@
 const $main = document.getElementById('main');
 let currentView = 'home';
 let lastStatus = null;
-const libraryState = { browseQuery: '', grokkerQuery: '', grokkerResults: [], sourcePacket: null };
+const libraryState = {
+  browseQuery: '',
+  grokkerQuery: '',
+  grokkerResults: [],
+  sourcePacket: null,
+  synthesis: null,
+  synthesisError: null,
+  synthesisRunning: false,
+};
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -2426,17 +2434,41 @@ function spInspectEdge(sp, from, to) {
 }
 
 
+function renderLocalSynthesis() {
+  if (libraryState.synthesisRunning) {
+    return '<div class="source-packet"><div class="packet-law">LOCAL C1 SYNTHESIS · working…</div><div class="hint">Using the prepared source packet only.</div></div>';
+  }
+  if (libraryState.synthesisError) {
+    return `<div class="source-packet"><div class="packet-law">SYNTHESIS NOT RUN</div><div class="errors"><div>${escapeHtml(libraryState.synthesisError)}</div></div></div>`;
+  }
+  const s = libraryState.synthesis;
+  if (!s) return '';
+  const errs = s.proposal_check?.errors || [];
+  return `<div class="source-packet">
+    <div class="packet-law">GROKKER LOCAL SYNTHESIS · ${escapeHtml(s.standing)} · ${s.ok ? 'contract-valid' : 'not admitted'}</div>
+    <div class="grokker-why">Model: ${escapeHtml(s.model || 'unreported')} · local execution: ${s.local_execution_verified ? 'verified' : 'unverified'} · citation correctness: ${escapeHtml(s.citation_correctness)}</div>
+    ${s.raw_response ? `<div class="library-excerpt" style="white-space:pre-wrap">${escapeHtml(s.raw_response)}</div>` : ''}
+    ${s.cited_paths?.length ? `<div class="library-headings">Relied-on source descent: ${s.cited_paths.map(escapeHtml).join(' · ')}</div>` : ''}
+    ${errs.length ? `<div class="errors">${errs.map(e => `<div>${escapeHtml(e)}</div>`).join('')}</div>` : ''}
+    <div class="hint" style="margin-top:9px">This remains Grokker-authored candidate orientation. It is not ratified law, source fact, member meaning, or a relation warrant.</div>
+  </div>`;
+}
+
 function renderSourcePacket(packet) {
   if (!packet) return '';
   const check = GrokkerSynthesisContract.validateSourcePacket(packet);
+  const localPlan = GrokkerLocalSynthesis.buildC1Task(packet);
   return `<div class="source-packet">
     <div class="packet-law">${escapeHtml(packet.packet_law)} · ${check.ok ? 'packet valid' : 'packet invalid'}</div>
     ${(packet.sources || []).map(s => `<div class="packet-source">
       <b>${escapeHtml(s.title)}</b>
       <div class="grokker-why">${escapeHtml(s.source_type)} · standing ${escapeHtml(s.standing)} · relation warrant: none</div>
-      ${s.path ? `<div class="grokker-source">${escapeHtml(s.path)}</div>` : ''}
+      ${s.path ? `<div class="grokker-source">${escapeHtml(s.path)}${s.excerpt_start_line ? `:${s.excerpt_start_line}-${s.excerpt_end_line}` : ''}</div>` : ''}
     </div>`).join('')}
-    <div class="hint" style="margin-top:9px">This packet is the maximum material a future synthesis act may rely upon unless a new source is explicitly added and revalidated.</div>
+    <div class="hint" style="margin-top:9px">This packet is the maximum material a synthesis act may rely upon unless a new source is explicitly added and revalidated.</div>
+    ${localPlan.ok
+      ? `<div class="actions"><button class="primary" id="grokker-synthesize-local" ${libraryState.synthesisRunning ? 'disabled' : ''}>Synthesize locally</button></div>`
+      : `<div class="hint">Local synthesis is held: ${escapeHtml(localPlan.errors.join(', '))}</div>`}
   </div>`;
 }
 
@@ -2505,6 +2537,9 @@ function wireLibrary() {
     libraryState.grokkerQuery = ask.value;
     libraryState.grokkerResults = GrokkerLibraryQuery.trace(window.KELLY_FIELD_LIBRARY, ask.value);
     libraryState.sourcePacket = null;
+    libraryState.synthesis = null;
+    libraryState.synthesisError = null;
+    libraryState.synthesisRunning = false;
     renderLibrary();
   };
   if (ask) {
@@ -2516,7 +2551,31 @@ function wireLibrary() {
       libraryState.grokkerQuery,
       libraryState.grokkerResults
     );
+    libraryState.synthesis = null;
+    libraryState.synthesisError = null;
+    libraryState.synthesisRunning = false;
     renderLibrary();
+  });
+  document.getElementById('grokker-synthesize-local')?.addEventListener('click', async () => {
+    const built = GrokkerLocalSynthesis.buildC1Task(libraryState.sourcePacket);
+    if (!built.ok) {
+      libraryState.synthesisError = built.errors.join(', ');
+      renderLibrary();
+      return;
+    }
+    libraryState.synthesisRunning = true;
+    libraryState.synthesis = null;
+    libraryState.synthesisError = null;
+    renderLibrary();
+    try {
+      const response = await window.jarvis.submitTask(built.task);
+      libraryState.synthesis = GrokkerLocalSynthesis.wrapC1Result(libraryState.sourcePacket, response);
+    } catch (e) {
+      libraryState.synthesisError = String(e?.message || e);
+    } finally {
+      libraryState.synthesisRunning = false;
+      renderLibrary();
+    }
   });
   document.getElementById('library-expand')?.addEventListener('click', () => {
     document.querySelectorAll('.library-group').forEach(d => { d.open = true; });
@@ -2561,6 +2620,7 @@ function renderLibrary() {
       <div id="grokker-results">${renderGrokkerResults(libraryState.grokkerResults, gq)}</div>
       ${libraryState.grokkerResults.length ? `<div class="actions"><button class="act" id="grokker-packet">Prepare source packet</button></div>` : ''}
       ${renderSourcePacket(libraryState.sourcePacket)}
+      ${renderLocalSynthesis()}
     </div>
     <div class="library-section-title">Fields and enduring ideas</div>
     ${libraryGroups(lib.conceptGroups, q, 'concept')}
