@@ -27,7 +27,7 @@ const NAV = [
   { href: '/home', label: 'Home', icon: Home },
 ]
 
-export function LivingFieldGrokkerShell() {
+export function LivingFieldGrokkerShell({ belowHouseThreshold = false }: { belowHouseThreshold?: boolean } = {}) {
   const [fieldKey, setFieldKey] = useState('calling')
   const [selectedKey, setSelectedKey] = useState('calling')
   const [navigationRequest, setNavigationRequest] = useState<{ key: string; token: number } | null>(null)
@@ -68,7 +68,7 @@ export function LivingFieldGrokkerShell() {
   }, [])
 
   return (
-    <div className={`grid h-screen min-h-[720px] grid-cols-[74px_minmax(0,1fr)_360px] grid-rows-[58px_minmax(0,1fr)] overflow-hidden ${styles.shell}`}>
+    <div className={`grid ${belowHouseThreshold ? 'h-[calc(100dvh-80px)] min-h-[640px]' : 'h-screen min-h-[720px]'} grid-cols-[74px_minmax(0,1fr)_360px] grid-rows-[58px_minmax(0,1fr)] overflow-hidden ${styles.shell}`}>
       <aside className={`row-span-2 flex flex-col items-center border-r px-2 py-3 ${styles.rail}`}>
         <Link
           href="/home"

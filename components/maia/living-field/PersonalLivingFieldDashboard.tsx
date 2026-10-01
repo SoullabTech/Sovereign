@@ -11,6 +11,9 @@ import { LivingConstellationPanel } from '@/components/maia/living-constellation
 import { LifeFacetFlowPanel } from './LifeFacetFlowPanel'
 import { LivingFieldInstrument } from './LivingFieldInstrument'
 import { useEarlyFieldAdmission } from './useEarlyFieldAdmission'
+import { useLivingFieldR2Admission } from './useLivingFieldR2Admission'
+import { useLivingFieldR2Viewport } from './useLivingFieldR2Viewport'
+import { LivingFieldGrokkerShell } from './physics/LivingFieldGrokkerShell'
 
 const RELATIONAL_PHASE_LABELS: Record<number, string> = {
   1: 'Orientation',
@@ -46,6 +49,20 @@ export function PersonalLivingFieldDashboard({
   const encounterRef = useRef<HTMLDivElement>(null)
   // EARLY-FIELD-01: the server decides; this only reflects it (closed until told).
   const earlyFieldAdmitted = useEarlyFieldAdmission()
+  const livingFieldR2Admission = useLivingFieldR2Admission()
+  const livingFieldR2Viewport = useLivingFieldR2Viewport()
+
+  if (!livingFieldR2Admission.resolved || !livingFieldR2Viewport.resolved) {
+    return (
+      <div className="min-h-[50vh] bg-stone-950 flex items-center justify-center px-6">
+        <p className="text-stone-500 text-sm font-light">Gathering your Living Field…</p>
+      </div>
+    )
+  }
+
+  if (livingFieldR2Admission.admitted && livingFieldR2Viewport.admitted) {
+    return <LivingFieldGrokkerShell belowHouseThreshold />
+  }
 
   function beginMaiaExploration() {
     setTalkOpen(true)
