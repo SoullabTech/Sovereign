@@ -330,6 +330,7 @@ let activeWorkUnitId = sessionStorage.getItem('jarvis:active-work-unit') || null
 let activeWorkUnitStrategy = [];
 let activeExecutionReview = null;
 let activeCanonicalExecutionReview = null;
+let armedCanonicalExecutionGrantId = null;
 let workUnitPollTimer = null;
 let routePreviewGeneration = 0;
 
@@ -849,8 +850,13 @@ function renderCanonicalExecutionBridge(snapshot) {
     } else if (completedAttempt) {
       action = `<span class="stage-pill done">Durable attempt recorded · ${escapeHtml(completedAttempt.attempt_id)}</span>`;
     } else if (grantStanding?.standing === 'ACTIVE') {
-      action = `<button class="primary" data-e1-confirm="${escapeHtml(grantStanding.grant.grant_id)}">Confirm Execute</button>
-        <button class="act" data-e1-revoke="${escapeHtml(grantStanding.grant.grant_id)}">Revoke authorization</button>`;
+      const grantId = grantStanding.grant.grant_id;
+      action = armedCanonicalExecutionGrantId === grantId
+        ? `<button class="primary" data-e1-confirm="${escapeHtml(grantId)}">Confirm Execute</button>
+           <button class="act" data-e1-disarm="${escapeHtml(grantId)}">Cancel execution review</button>
+           <button class="act" data-e1-revoke="${escapeHtml(grantId)}">Revoke authorization</button>`
+        : `<button class="act" data-e1-arm="${escapeHtml(grantId)}">Review authorized execution</button>
+           <button class="act" data-e1-revoke="${escapeHtml(grantId)}">Revoke authorization</button>`;
     } else {
       action = `<button class="act" data-e1-review="${escapeHtml(participant.participant_id)}">Review exact execution</button>`;
     }
@@ -980,8 +986,20 @@ async function prepareCanonicalExecutionTransport(participantId) {
   await refreshActiveWorkUnit();
 }
 
-async function confirmCanonicalExecution(grantId) {
+async function armCanonicalExecution(grantId) {
   if (!activeWorkUnitId || !grantId) return;
+  armedCanonicalExecutionGrantId = grantId;
+  await refreshActiveWorkUnit();
+}
+
+async function disarmCanonicalExecution() {
+  armedCanonicalExecutionGrantId = null;
+  await refreshActiveWorkUnit();
+}
+
+async function confirmCanonicalExecution(grantId) {
+  if (!activeWorkUnitId || !grantId || armedCanonicalExecutionGrantId !== grantId) return;
+  armedCanonicalExecutionGrantId = null;
   const out = await window.jarvis.workUnitAction({
     action: 'canonical-confirm-execute',
     work_unit_id: activeWorkUnitId,
@@ -1058,6 +1076,12 @@ function wireCanonicalExecutionBridge(snapshot) {
   });
   document.querySelectorAll('[data-e1-authorize]').forEach((button) => {
     button.addEventListener('click', () => authorizeCanonicalExecutionOnce(button.dataset.e1Authorize));
+  });
+  document.querySelectorAll('[data-e1-arm]').forEach((button) => {
+    button.addEventListener('click', () => armCanonicalExecution(button.dataset.e1Arm));
+  });
+  document.querySelectorAll('[data-e1-disarm]').forEach((button) => {
+    button.addEventListener('click', () => disarmCanonicalExecution());
   });
   document.querySelectorAll('[data-e1-confirm]').forEach((button) => {
     button.addEventListener('click', () => confirmCanonicalExecution(button.dataset.e1Confirm));

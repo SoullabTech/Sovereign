@@ -740,7 +740,10 @@ test('E1 Desktop keeps authorization, execution, verification, evidence-ready, a
 
   assert.match(renderer, /Authorize this execution once/);
   assert.match(renderer, /Authorize is not Execute/);
+  assert.match(renderer, /Review authorized execution/);
   assert.match(renderer, /Confirm Execute/);
+  assert.match(renderer, /armedCanonicalExecutionGrantId === grantId[\s\S]*data-e1-confirm/);
+  assert.match(renderer, /armedCanonicalExecutionGrantId !== grantId\) return/);
   assert.match(renderer, /Record verifier evidence/);
   assert.match(renderer, /Mark evidence ready/);
   assert.match(renderer, /Routing ≠ authorization ≠ execution ≠ evidence ≠ adjudication/);
