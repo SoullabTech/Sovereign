@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const router = new EmailRouter(identity.practitionerId);
     const result = await router.send(
-      { to: selfEmail, subject, bodyText: body },
+      { to: selfEmail, subject, bodyText: body, replyTo: selfEmail },
       { fromEmail: FROM_EMAIL, fromName: `${identity.practitionerName} via SoulLab` },
     );
 
