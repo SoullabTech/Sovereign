@@ -24,6 +24,7 @@ import {
   saveAccountSettings,
   getAccountSettings,
   DEFAULT_ACCOUNT_SETTINGS,
+  claimDefaultMemoryModeOwnership,
 } from '@/lib/settings/accountSettings';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -46,10 +47,14 @@ beforeEach(() => {
     localStorage: (global as any).localStorage,
     dispatchEvent: (e: any) => { dispatched.push(e); return true; },
   };
+  // Composite contract: defaults are member-scoped before a session may consume them.
+  store.set('beta_user', JSON.stringify({ id: 'test-member' }));
 });
 
-const setDefault = (mode: 'sanctuary' | 'continuity') =>
+const setDefault = (mode: 'sanctuary' | 'continuity') => {
   saveAccountSettings({ ...DEFAULT_ACCOUNT_SETTINGS, defaultMemoryMode: mode } as any);
+  claimDefaultMemoryModeOwnership('test-member');
+};
 
 const liveSanctuary = () => {
   const raw = store.get(LIVE_SESSION_SETTINGS_KEY);
@@ -165,7 +170,7 @@ describe('no second Sanctuary authority was created', () => {
   it('K/L · indicator, Keep and the voice wire still derive from isSanctuary', () => {
     const oc = readFileSync(join(__dirname, '..', 'components/OracleConversation.tsx'), 'utf8');
     expect(oc).toMatch(/\{isSanctuary && \(/);            // indicator
-    expect(oc).toMatch(/sanctuary: isSanctuary/);         // streaming voice wire (F10)
+    expect(oc).toMatch(/sanctuary: effectiveSanctuary/);  // streaming voice wire (current guarded value)
     expect(oc).toMatch(/setIsSanctuary\(event\.detail\.sanctuary\)/); // live listener
   });
 });
