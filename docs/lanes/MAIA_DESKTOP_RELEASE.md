@@ -34,7 +34,7 @@ build only from that exact SHA.
 2. Merge #1616, updated onto canonical after #1619 lands. The merge commit is
    the release SHA.
 3. Mac Studio, from the release SHA on the T7 build volume: root `npm ci` →
-   `MAIA_CABIN_MODE=offline next build` → `maia-desktop` `npm ci` → `npm test`
+   `MAIA_CABIN_MODE=offline next build` → `maia-desktop` `npm ci` → `npm test` (**must report 408/408**, or name any delta from #1619)
    → `npm run dist:mac` → `npm run verify:package`. `verify:package` now
    fails unless `Resources/cabin-runtime/node_modules/next/package.json` exists
    **and** its version equals the root `package.json` pin (16.3.8).
