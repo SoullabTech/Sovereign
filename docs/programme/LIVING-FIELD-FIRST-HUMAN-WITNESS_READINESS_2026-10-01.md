@@ -3,7 +3,7 @@
 **Date:** 2026-10-01
 **Production runtime:** `975a208b8`
 **Canonical base at census:** `dbcdcf786`
-**Standing:** READINESS BLOCKED BY EVIDENCE · cohort remains open · no rollback condition observed
+**Standing:** POPULATED-FIELD WITNESS BLOCKED BY EVIDENCE · FIRST-ENTRY WITNESS ELIGIBLE · cohort remains open · no rollback condition observed
 
 ## Trigger
 
@@ -49,12 +49,13 @@ surfaces.
 
 That does **not** make the product broken and does not require closing the cohort.
 
-It does mean the preregistered human witness cannot yet answer its intended question honestly.
-A person can still inspect and navigate the static R1R3 instrument, but a successful navigation
-walk through an otherwise empty personal field would not establish that the experience feels like
-their own lived world.
+It does mean the preregistered **populated-field** human witness cannot yet answer its intended continuity/ownership question honestly.
+A person can still encounter the empty-field first-entry experience, navigate the R1R3 instrument,
+and decide whether to author anything. That is legitimate human evidence — but it answers a narrower question:
 
-Calling such a walk the “first human Living Field witness” would overclaim the evidence.
+> **Can a first-time member understand the Living Field as an invitation to author their own field, rather than as a system diagnosis or prewritten interpretation?**
+
+A first-entry witness must therefore be preregistered and adjudicated separately from the later populated-field ownership/continuity witness.
 
 ## Ruling
 
@@ -63,12 +64,14 @@ Calling such a walk the “first human Living Field witness” would overclaim t
 No synthetic Living Field expression, journal entry, decision, relationship, Vision thread,
 Practice Field, or crossing should be created merely to satisfy the protocol.
 
-The full human witness becomes eligible only after an admitted member has authentic material
+The populated-field witness becomes eligible only after an admitted member has authentic material
 created through ordinary use or an independently meaningful member act.
 
-A navigation-only observation may occur earlier, but it must be labeled exactly that and may not
-substitute for the preregistered ownership/consent witness.
-## Eligibility condition for the first full human witness
+A **first-entry witness is eligible now** because the empty field is the authentic production state for all four cohort members. It must not require the member to create content. If the member spontaneously chooses to write and save something that is genuinely true for them, that is valid first-entry evidence and becomes authentic substrate; it is not a fixture.
+
+The first-entry witness may establish orientation, non-diagnostic framing, discoverability, authorship invitation, and the explicit MAIA consent boundary. It may not substitute for the later claim that an already-populated Living Field feels like the member's continuing lived world.
+
+## Eligibility condition for the first populated-field human witness
 
 Before the first full witness begins, establish — without copying private content — that the
 participant has at least one authentic member-owned source already available to the experience.
@@ -92,18 +95,28 @@ The readiness check should record only **yes/no and aggregate counts**, never th
 EARLY FIELD COHORT OPEN · 4 MEMBERS
 MACHINE BOUNDARIES GREEN
 AUTHENTIC COHORT LIVING-FIELD SUBSTRATE: 0 / 4
-FIRST FULL HUMAN WITNESS: BLOCKED BY EVIDENCE
+FIRST-ENTRY HUMAN WITNESS: ELIGIBLE
+POPULATED-FIELD HUMAN WITNESS: BLOCKED BY EVIDENCE
 R2 PRESENTATION: NOT ADMITTED
 ```
 
-This is not a failure of the cohort gate. It is a truthful stop at the evidence boundary.
+This is not a failure of the cohort gate. It is a truthful decomposition of two different human questions.
 
-## Next valid transition
+## Next valid transitions
+
+**First-entry path — available now**
+
+An admitted member enters their genuinely empty Living Field under the separate first-entry protocol
+→ observe whether the field is understood as an invitation rather than a diagnosis
+→ content creation remains optional and member-led
+→ FIRST-ENTRY PASS / PASS WITH FRICTION / NOT ADMITTED-STOP.
+
+**Populated-field path — later**
 
 One or more cohort members use Soullab ordinarily and create/confirm authentic material
 → readiness is re-censused without reading content
 → at least one admitted member has real member-owned substrate
-→ that member may be invited into the preregistered human witness
-→ PASS / PASS WITH FRICTION / NOT ADMITTED-STOP
+→ that member may enter the populated-field witness
+→ PASS / PASS WITH FRICTION / NOT ADMITTED-STOP.
 
-No widening follows automatically.
+Neither path authorizes widening automatically.
