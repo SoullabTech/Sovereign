@@ -23,14 +23,12 @@ S1 remains open.
 
 ## S2 — Teen safety alert
 
-Current canonical `OracleConversation.tsx` now contains a live teen-crisis caller. In crisis mode for an identified member it invokes `alertSoullabTeam()`.
+The merged #1671 implementation gives `alertSoullabTeam()` a content-free authenticated server-delivery boundary.
 
-The merged #1671 implementation posts a content-free event to the authenticated human-alert route.
-
-This corrects the prior register statement that no caller existed.
+A current canonical census on 2026-10-02 finds no non-test caller for `alertSoullabTeam`. The delivery substrate is therefore merged, but no live teen producer is established.
 
 Disposition:
-STRUCTURAL REPAIR MERGED · live caller established · production human-delivery witness owed.
+STRUCTURAL REPAIR MERGED · no live caller established.
 
 S2 remains open.
 
@@ -53,11 +51,12 @@ S3 remains open.
 - production witness wrapper requires artifact identity + config readiness + provider acceptance + later human receipt
 
 Read-only production re-witness on 2026-10-02 found:
+- running production SHA `12b461bd8`
+- #1671 merge `15a9175fb917cd9aa84a2735f7b3cf91a964b49b` is not an ancestor of that deployed SHA
 - Twilio transport credentials present
 - dedicated SAFETY_ALERT_PHONE absent
 - safety Slack webhook absent
 - legacy Slack webhook absent
-- production artifact still older than the merged repair at the time of observation
 
 No credential values were recorded.
 
