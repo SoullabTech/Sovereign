@@ -40,6 +40,13 @@ export type WriteChapterView = {
   depth?: 1 | 2 | 3 | null;
 };
 
+export type WriteBlockKind = 'paragraph' | 'epigraph' | 'subhead' | 'list' | 'folio';
+
+export type WriteBlock = {
+  text: string;
+  kind: WriteBlockKind;
+};
+
 export type WriteRoomData = {
   work: string;
   heading: string;
@@ -48,6 +55,8 @@ export type WriteRoomData = {
   place: string;
   title: string;
   paragraphs: ReadonlyArray<string>;
+  /** Presentation-only structure recovered from the manuscript's own whitespace/layout. */
+  blocks?: ReadonlyArray<WriteBlock>;
   heldParagraph?: number;
   activeStatus?: 'conflict' | 'error';
   /** Fixture may name a version; live A1 must omit the internal draft counter. */
@@ -220,6 +229,7 @@ export function WriteRoom({ fixture, copy, canvas, onCanvasChange, onAct, live }
             editorRef={editorRef}
             sectionId={fixture.currentChapterId}
             paragraphs={fixture.paragraphs}
+            blocks={fixture.blocks}
             heldParagraph={fixture.heldParagraph}
             label={copy.editorLabel}
             onEdited={onEdited}
@@ -268,6 +278,7 @@ const Editor = memo(function Editor({
   editorRef,
   sectionId,
   paragraphs,
+  blocks,
   heldParagraph,
   label,
   onEdited,
@@ -275,6 +286,7 @@ const Editor = memo(function Editor({
   editorRef: React.RefObject<HTMLDivElement>;
   sectionId: string;
   paragraphs: ReadonlyArray<string>;
+  blocks?: ReadonlyArray<WriteBlock>;
   heldParagraph?: number;
   label: string;
   onEdited: () => void;
@@ -283,7 +295,11 @@ const Editor = memo(function Editor({
      rerenders from A1 status changes must never rewrite text under the cursor.
      A section change remounts this component via its key and receives that
      section's newest A1 body as the new initial snapshot. */
-  const initial = useRef({ paragraphs, heldParagraph }).current;
+  const [initial] = useState(() => ({
+    paragraphs,
+    blocks: blocks ?? paragraphs.map((text) => ({ text, kind: 'paragraph' as const })),
+    heldParagraph,
+  }));
   return (
     <div
       ref={editorRef}
@@ -299,9 +315,13 @@ const Editor = memo(function Editor({
       spellCheck
       onInput={onEdited}
     >
-      {initial.paragraphs.map((text, i) => (
-        <p key={i} data-held={i === initial.heldParagraph ? '' : undefined}>
-          {text}
+      {initial.blocks.map((block, i) => (
+        <p
+          key={i}
+          data-write-block={block.kind}
+          data-held={i === initial.heldParagraph ? '' : undefined}
+        >
+          {block.text}
         </p>
       ))}
     </div>
