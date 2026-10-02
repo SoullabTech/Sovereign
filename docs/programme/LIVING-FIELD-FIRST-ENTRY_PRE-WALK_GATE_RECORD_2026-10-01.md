@@ -91,7 +91,7 @@ root cause either never passes or gets waived.
 `2026-10-01T14:34:47Z`, and later gate evidence recorded another recreate at
 `2026-10-01T21:41:44.870926604Z`. Production has since moved again.
 
-At `2026-10-02T12:21:35Z`, runtime `d4655e647` reported the current Postgres container as:
+At `2026-10-02T12:23:02Z`, runtime `d4655e647` reported the current Postgres container as:
 
 ```text
 created=2026-10-02T10:11:34.938821629Z
@@ -121,14 +121,13 @@ PASS requires all of:
 - `restarts=0` and `oom=false`;
 - `status=running` and, when health is present, `health=healthy`.
 
-captured_at_utc: `2026-10-02T12:21:35Z`
+captured_at_utc: `2026-10-02T12:23:02Z`
 production_sha_at_capture: `d4655e647`
 
 ```text
-2026-10-02T12:21:35Z
+2026-10-02T12:23:02Z
 d4655e647
-cabin_exit=1
-started=2026-10-02T10:12:07.21786677Z restarts=0 oom=false status=running health=healthy
+created=2026-10-02T10:11:34.938821629Z started=2026-10-02T10:12:07.21786677Z restarts=0 oom=false status=running health=healthy
 ```
 
 Mechanical verdict: **PASS** — the current database container is stable. Final G2 remains OPEN
