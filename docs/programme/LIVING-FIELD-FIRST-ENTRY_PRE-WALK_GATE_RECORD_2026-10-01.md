@@ -1,6 +1,6 @@
 # Living Field First Entry: Pre-Walk Gate Record
 
-**Status:** PARTIAL · G0 TECHNICAL PASS / CLASS A APPROVAL PROVENANCE OPEN · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
+**Status:** PARTIAL · G0 PASS · G1 PASS · G2 PASS · G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
 **Governs:** `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md` (with Amendments 1 and 2)
 **Occasioned by:** a J18 verdict and an emergency-disable PASS that existed only in a session
 transcript and were never committed. Under this programme's rules a probe is not the record.
@@ -53,7 +53,7 @@ canonical_sha: `8aa79ee44587c56617fbe386ea2fb98d48cc4a64`
 
 Technical verdict: **PASS** — both amendments are canonical.
 
-**Class A approval provenance:** OPEN. PR #1676 is canonical, but GitHub records no reviews and no separate founder/council adjudication record is currently discoverable in canonical. Canonical presence must not be treated as proof that the Class A custody requirement was satisfied.
+**Class A approval provenance:** **PASS.** On 2026-10-02 the Founder explicitly approved the Class A protocol in PR #1676 as the governing protocol for this walk. Custody: `LIVING-FIELD-FIRST-ENTRY_FOUNDER-RULING_2026-10-02.md`.
 
 ---
 
@@ -132,8 +132,9 @@ d4655e647
 created=2026-10-02T10:11:34.938821629Z started=2026-10-02T10:12:07.21786677Z restarts=0 oom=false status=running health=healthy
 ```
 
-Mechanical verdict: **PASS** — the current database container is stable. Final G2 remains OPEN
-until the founder explicitly accepts the recorded standby exposure or defers the walk.
+Mechanical verdict: **PASS** — the current database container is stable.
+
+Founder risk verdict: **PASS.** On 2026-10-02 the Founder explicitly accepted the recorded standby exposure for this walk. Custody: `LIVING-FIELD-FIRST-ENTRY_FOUNDER-RULING_2026-10-02.md`.
 
 **Root cause / trigger:** **UNKNOWN**. Do not upgrade inference to fact.
 **Tracked separately, not gating:** the deploy fix (`--no-deps` on the migrate container).
@@ -143,9 +144,9 @@ admitted production witness: the Hetzner standby was offline and requires a fres
 it returns. Off-host backups were verified on the Mac Studio. A member who writes during the walk
 creates real substrate that exists on one host and in off-host backup custody.
 
-Standby exposure accepted for this walk: yes (by whom) / no (walk deferred)
+Standby exposure accepted for this walk: **yes — Founder, 2026-10-02**
 
-Final G2 verdict: PASS / DEFERRED — fill only after the founder's explicit acceptance choice.
+Final G2 verdict: **PASS**
 
 ---
 
@@ -321,9 +322,9 @@ Verdict: PASS (G7a / G7b) / FAIL
 
 | Gate | Verdict |
 |---|---|
-| G0 protocol canonical | **TECHNICAL PASS · Class A approval provenance OPEN** |
+| G0 protocol canonical | **PASS** |
 | G1 cabin mode unset | **PASS** |
-| G2 database stable | OPEN — mechanical PASS; founder standby-exposure choice required |
+| G2 database stable | **PASS** |
 | G3 emergency disable witnessed | OPEN |
 | G4 admission server-side | OPEN |
 | G5 Amendment 1 at start | OPEN — canonical re-baseline present; final SHA/ancestry check is walk-time only |
