@@ -80,3 +80,35 @@ Standing: **R1 Mac-witnessed green at `a9cf45d2` (79/79 record SHAs, TS 5.9.3 ex
 After R1.1: `verify:jarvis-jev-label-01-pilot` **48 checks · 0 failed** (this container), typecheck exit 0.
 
 Next act, once Desktop is not running: real snapshot → content-free manifest + 0600 local index → cut Kelly's P-only sheet → stop for packet-only labelling.
+
+## R1.1 Mac Studio independent witness — 2026-10-02
+
+Independent Mac Studio re-witness at exact head `0860a882c19f3a2ade59968a52a3e8c2ac51c88e`:
+
+- `check:record-shas`: 79/79, exit `0`
+- narrow strict typecheck: exit `0` using TypeScript `5.9.3`
+- PILOT-01 verifier: 48 checks · 0 failed
+- metric reference: 17/17 falsifiers
+- defeat matrix: 18/18 candidates dead on their named falsifier
+- structural guards: 7/7
+- matrix: 0 defects, exit `0`
+- witness worktree: clean
+
+This admits PILOT-01R1.1 for real-data execution when its separate snapshot precondition is satisfied. It does not freeze the instrument, authorize a provider, open INT-04, or create any label.
+
+### Snapshot precondition census — 2026-10-02 11:21 ET
+
+The Desktop-closed precondition remained unsatisfied:
+
+- `/Applications/JARVIS.app` live, PID `770`.
+- O5-R3 development Desktop, PIDs `74332/74333`, user-data dir `jarvis-desktop-dev-o5r3-final-witness`.
+- A second O5-R3 development Desktop, PIDs `90266/90267`, user-data dir `jarvis-desktop-dev-o5r3-final-711668e81`.
+- Delegation-home runtime PID file names `39474`, not live.
+
+(This supersedes the earlier single-family description: there are two distinct O5-R3 Desktop process families.)
+
+**Ruling (founder):** the stronger *Desktop-closed* rule is KEPT; it is not weakened to "no observed writes". No process is stopped for the sake of PILOT-01 — the O5-R3 Desktops belong to separate governed work. The pilot waits for a naturally clean boundary.
+
+Therefore the real snapshot remains HELD solely on the Desktop-closed precondition. No real work unit was read by PILOT-01, no manifest or local index was created from the real delegation home, and no label exists.
+
+Next act after a clean process census: real snapshot → content-free manifest + local-only 0600 index → Kelly P-only sheet → stop for packet-only human labelling.
