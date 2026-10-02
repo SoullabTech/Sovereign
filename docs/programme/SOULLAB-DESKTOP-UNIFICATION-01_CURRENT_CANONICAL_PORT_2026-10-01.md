@@ -147,3 +147,19 @@ That later act must prove the final packaged artifact contains:
 - the exact canonical release SHA.
 
 No release claim is licensed by this port alone.
+
+## 8. Reconciliation to safety-delivery canonical
+
+Canonical advanced to `edf656496450795fa5c8089b4eb6e314ccc7bfd8` via #1663 (SAFETY-DELIVERY-01 S1 reachability).
+
+The unification branch merged that boundary with zero conflicts. The only incoming changes were the safety-delivery record and its non-delivery register update.
+
+Post-merge verification:
+
+- `git diff --check`: PASS
+- JARVIS main syntax: PASS
+- MAIA main syntax: PASS
+- Cabin startup + portability + Soullab Desktop F1–F12: **24/24 PASS**
+- provider governance: PASS; no new OpenAI surface
+
+PR #1695 is classified **Class B** with **revert commit sufficient** as its rollback discipline. This classification is a constitutional gate declaration, not merge authority.
