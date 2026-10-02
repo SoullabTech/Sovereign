@@ -105,7 +105,7 @@ New unit tests establish:
 - state/witness pairs remain consistent
 
 New integration tests establish:
-- the canonical no-service crisis path exposes DELIVERY_UNAVAILABLE
+- the prototype no-service crisis path exposes DELIVERY_UNAVAILABLE
 - the crisis member message does not claim a human was connected
 - the unwired teen-team alert exposes DELIVERY_UNAVAILABLE
 
@@ -125,10 +125,17 @@ This unit does not close S1, S2, or S3.
 
 Next bounded units are:
 
-R1B — wire an actual governed crisis recipient/delivery path for the member-turn constructor.
+R1B — establish whether a live producer should adopt a governed crisis recipient/delivery path; do not promote the prototype constructor into production by assumption.
 
 R1C — adjudicate and wire the teen-safety recipient policy or remove the dead alert abstraction.
 
 R1D — add an independent failure witness for practitioner safety-notification failure.
 
 Only runtime evidence of actual delivery may close the register rows.
+
+
+## Reachability reconciliation
+
+Canonical merge #1663 admitted `SAFETY-DELIVERY-01_S1_REACHABILITY_CENSUS_2026-10-01.md`. That census establishes that `PersonalOracleAgent` is source-marked outside the ship path and no live edge from the canonical `/api/sovereign/app/maia/list` ingress to `MAIASafetyPipeline` was found.
+
+Therefore this R1 code repair is an architectural truth repair for the prototype pipeline and shared alert semantics; it is not evidence that current production member turns traverse that pipeline. S1 remains open under the #1663 closure rule.
