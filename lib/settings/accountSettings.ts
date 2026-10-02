@@ -87,6 +87,55 @@ const STORAGE_KEY = 'maia_account_settings';
 export const ACCOUNT_SETTINGS_STORAGE_KEY = STORAGE_KEY;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Member ownership of the consent-bearing default
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// `defaultMemoryMode` is the only field here with a member-scoped server
+// record (`members_settings.default_memory_mode`). Everything else — voice,
+// prosody, tooltips — has always been device-local and is left exactly as it
+// was (no ownership gate, no discard).
+//
+// The cache was write-through only: updateMaiaSetting PUT it to the server,
+// and nothing ever read it back, so a signed-in member could inherit the
+// previous member's default on a shared device. This stamp records whose
+// default is cached, so an unprovable one is never served as this member's
+// choice. Held in its own key so saveAccountSettings() stays unaware of it.
+
+const OWNER_KEY = 'maia_account_settings_owner';
+
+/**
+ * The signed-in member, by the same reference every surface already uses
+ * (`beta_user.id`, falling back to the passkey). Null when signed out or
+ * unreadable — in which case ownership cannot be proven either way.
+ */
+function currentMemberRef(): string | null {
+  try {
+    const raw = localStorage.getItem('beta_user');
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    return user?.id || user?.passkey || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * True only when the cached `defaultMemoryMode` is provably this member's.
+ * An absent stamp is NOT proof: before this existed the cache was unattributed,
+ * and an unattributed value may be the previous member's.
+ */
+function ownsCachedDefault(): boolean {
+  const me = currentMemberRef();
+  if (!me) return false;
+  return localStorage.getItem(OWNER_KEY) === me;
+}
+
+function stampDefaultOwner(memberRef?: string | null): void {
+  const owner = memberRef || currentMemberRef();
+  if (owner) localStorage.setItem(OWNER_KEY, owner);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Read / Write
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -106,13 +155,23 @@ export function getAccountSettings(): AccountSettings {
 
     const parsed = JSON.parse(stored);
     // Merge with defaults to handle missing fields from older versions
-    return {
+    const merged = {
       ...DEFAULT_ACCOUNT_SETTINGS,
       ...parsed,
       voice: { ...DEFAULT_ACCOUNT_SETTINGS.voice, ...parsed.voice },
       memory: { ...DEFAULT_ACCOUNT_SETTINGS.memory, ...parsed.memory },
       display: { ...DEFAULT_ACCOUNT_SETTINGS.display, ...parsed.display },
     };
+
+    // Ownership gate — the consent-bearing field only. An unowned or foreign
+    // cached default is not this member's choice, so it is not served as one;
+    // they get the documented system default, exactly as a member arriving on
+    // a fresh device would, until hydration establishes their real value.
+    if (!ownsCachedDefault()) {
+      merged.defaultMemoryMode = DEFAULT_ACCOUNT_SETTINGS.defaultMemoryMode;
+    }
+
+    return merged;
   } catch (e) {
     console.error('[AccountSettings] Failed to parse stored settings:', e);
     return DEFAULT_ACCOUNT_SETTINGS;
@@ -165,6 +224,67 @@ export function resetAccountSettings(): AccountSettings {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * The LIVE session settings key. Not a new authority — this is the same
+ * `maia_settings` that Quick Settings already writes and that
+ * OracleConversation already reads into `isSanctuary`. Named here only so the
+ * seeding below and its tests refer to one spelling.
+ */
+export const LIVE_SESSION_SETTINGS_KEY = 'maia_settings';
+
+/**
+ * SANCTUARY-SETTINGS-DISCONNECT-01 — seed the LIVE Sanctuary authority from the
+ * member's account default, at a new-session boundary only.
+ *
+ * THE DEFECT THIS CLOSES. `getInitialSessionSettings()` maps
+ * `defaultMemoryMode === 'sanctuary'` correctly, but Quick Settings consumes
+ * that mapping only when `maia_settings` does not yet exist. Once it exists —
+ * which is to say after the member's first ever visit — a new session inherited
+ * whatever the browser happened to be holding. Intended new-session
+ * initialization, implemented as first-browser-initialization. A member could
+ * set Default Memory Mode to Sanctuary, see it selected in MAIA Settings, and
+ * begin a new session in Continuity.
+ *
+ * WHY ONLY AT THE BOUNDARY. A default has authority over beginnings; a live
+ * setting has authority over the encounter already underway. Continuously
+ * syncing the default into an active session would let a Settings change
+ * silently revoke consent the member gave mid-conversation via Quick Settings
+ * or voice command. Callers must therefore invoke this ONLY when
+ * `getOrCreateMaiaSessionId().isNew === true`.
+ *
+ * WHY ONLY `sanctuary`. The rest of the live settings keep their own semantics
+ * and are deliberately untouched. This writes one field into an authority that
+ * already exists; it does not introduce a second source of truth for whether
+ * Sanctuary is active. The enforcement chain is unchanged:
+ *   account default → (new session only) → maia_settings.sanctuary → isSanctuary
+ *   → turn settings → retrieval / persistence suppression
+ *
+ * Dispatches `maia-settings-changed` so an already-mounted conversation picks
+ * the value up live, exactly as a Quick Settings toggle does.
+ *
+ * @returns the seeded Sanctuary value, or null if it could not be applied.
+ */
+export function seedLiveSanctuaryForNewSession(): boolean | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const sanctuary = getAccountSettings().defaultMemoryMode === 'sanctuary';
+
+    // Preserve whatever else the live settings hold; only the Sanctuary field
+    // is governed by the account default at a session boundary.
+    const stored = localStorage.getItem(LIVE_SESSION_SETTINGS_KEY);
+    const base = stored ? JSON.parse(stored) : getInitialSessionSettings();
+    const next = { ...base, sanctuary };
+
+    localStorage.setItem(LIVE_SESSION_SETTINGS_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: next }));
+    return sanctuary;
+  } catch (e) {
+    console.error('[AccountSettings] Failed to seed session Sanctuary:', e);
+    return null;
+  }
+}
+
+/**
  * Get initial session settings based on account defaults
  * Called when a new chat/session is created
  */
@@ -181,4 +301,182 @@ export function getInitialSessionSettings() {
     archetype: account.archetype,
     conversationMode: account.conversationMode,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Session Sanctuary Flag — the live runtime boundary
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// `maia_account_settings.defaultMemoryMode` is the member's *default*. The live
+// boundary that actually gates retention for the conversation in front of them
+// is `maia_settings.sanctuary` — read by OracleConversation (badge, prompt
+// wire, Keep refusal, continuity-buffer purge), VoiceHUD, the chat inputs and
+// /maia. Those two used to drift: the settings surfaces wrote only the default,
+// so a Sanctuary session entered in-HUD stayed on forever and no settings
+// screen could clear it. Everything that changes the live boundary goes through
+// setSessionSanctuary() so the flag and the `maia-settings-changed` event that
+// every listener depends on can never come apart.
+
+const SESSION_STORAGE_KEY = 'maia_settings';
+
+/**
+ * Provenance only: which canonical session the live `sanctuary` value belongs
+ * to. It never answers *whether* Sanctuary is on — `sanctuary` remains the
+ * single live authority. It answers only whether that authority is this
+ * session's, which is what tells a reload (preserve the member's override)
+ * apart from a genuinely new session (consume the default again).
+ */
+
+/** Read the live session Sanctuary flag. */
+export function getSessionSanctuary(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!saved) return false;
+    return JSON.parse(saved).sanctuary === true;
+  } catch (e) {
+    console.warn('[AccountSettings] Failed to read session sanctuary flag:', e);
+    return false;
+  }
+}
+
+/**
+ * Set the live session Sanctuary flag and notify every listener.
+ *
+ * Turning it ON is always safe — it narrows what is kept. Turning it OFF widens
+ * consent, so callers must only do it on an explicit member act. Nothing here
+ * is retroactive either way: turns taken inside Sanctuary were never persisted,
+ * and leaving Sanctuary cannot reach back for them (Sanctuary invariant 6).
+ *
+ * Read-modify-write, so the session's provenance stamp survives: an override
+ * belongs to the session it was made in, and must not look like a new one.
+ */
+export function setSessionSanctuary(enabled: boolean): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    const settings = saved ? JSON.parse(saved) : {};
+    settings.sanctuary = enabled;
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(settings));
+    window.dispatchEvent(
+      new CustomEvent('maia-settings-changed', { detail: settings })
+    );
+  } catch (e) {
+    console.error('[AccountSettings] Failed to set session sanctuary flag:', e);
+  }
+}
+
+/**
+ * The ONE place a new session consumes the member's default.
+ *
+ * Idempotent by construction: it compares the caller's canonical sessionId
+ * against the provenance stamp rather than asking which component happened to
+ * mint the session first. `getOrCreateMaiaSessionId()` is crossed at three
+ * sites — /maia, the MaiaPresence sheet, /field/talk — and only one of them
+ * ever read `isNew`. Hanging the seed off any single site would stay
+ * timing-dependent; a stamp comparison does not care who arrives first, or how
+ * many times.
+ *
+ * Returns the live Sanctuary value in force for `currentSessionId`.
+ */
+export function ensureSessionSanctuary(currentSessionId: string): boolean {
+  if (typeof window === 'undefined') return false;
+
+  // No canonical session means no boundary to enforce. Report the live value
+  // untouched rather than seeding against an id we cannot stamp.
+  if (!currentSessionId) return getSessionSanctuary();
+
+  try {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    const settings = saved ? JSON.parse(saved) : {};
+
+    // Same session — the member's override stands, reload or not.
+    if (settings.sessionId === currentSessionId) {
+      return settings.sanctuary === true;
+    }
+
+    // Different or absent provenance: whatever `sanctuary` holds is residue
+    // from a previous session (or from before provenance existed) and has no
+    // authority here. Seed from the default in both directions — stale
+    // Sanctuary must not survive a Continuity default any more than stale
+    // Continuity may survive a Sanctuary one.
+    const seeded = getAccountSettings().defaultMemoryMode === 'sanctuary';
+    settings.sanctuary = seeded;
+    settings.sessionId = currentSessionId;
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(settings));
+    window.dispatchEvent(
+      new CustomEvent('maia-settings-changed', { detail: settings })
+    );
+    return seeded;
+  } catch (e) {
+    console.error('[AccountSettings] Failed to establish session sanctuary:', e);
+    return getSessionSanctuary();
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Member-scoped hydration (SANCTUARY-MEMBER-SCOPE-01)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Adopt the authenticated member's server-backed `defaultMemoryMode` as the
+ * local default, and record that it is theirs.
+ *
+ * `serverDefaultMemoryMode` comes from `GET /api/members/settings` →
+ * `maia.defaultMemoryMode`. A missing or unrecognised value means the server
+ * did not answer for this field: the stamp is NOT written, so the ownership
+ * gate keeps returning the system default rather than promoting whatever the
+ * device happens to be holding.
+ *
+ * Touches the one consent-bearing field. Unrelated local settings keep their
+ * existing device-local semantics.
+ */
+export function hydrateAccountSettingsForMember(
+  memberRef: string,
+  serverDefaultMemoryMode: unknown,
+): void {
+  if (typeof window === 'undefined' || !memberRef) return;
+
+  if (serverDefaultMemoryMode !== 'continuity' && serverDefaultMemoryMode !== 'sanctuary') {
+    // Unresolved. Leave the cache unowned — an unproven default must not be
+    // silently adopted as this member's choice.
+    console.warn('[AccountSettings] No server defaultMemoryMode for member; cache stays unowned');
+    return;
+  }
+
+  const current = getAccountSettings(); // already gated, so never leaks a foreign value
+  saveAccountSettings({ ...current, defaultMemoryMode: serverDefaultMemoryMode });
+  stampDefaultOwner(memberRef);
+}
+
+/**
+ * Fetch-and-adopt, for surfaces that do not already hold the settings payload.
+ * Resolves to the member's default in force, and never throws — a failed
+ * hydration leaves the cache unowned and the gate serving the system default.
+ */
+export async function loadMemberDefaultMemoryMode(
+  memberRef: string,
+  fetcher: (url: string) => Promise<Response>,
+): Promise<AccountSettings['defaultMemoryMode']> {
+  try {
+    const res = await fetcher(`/api/members/settings?memberId=${encodeURIComponent(memberRef)}`);
+    if (res.ok) {
+      const data = await res.json();
+      hydrateAccountSettingsForMember(memberRef, data?.maia?.defaultMemoryMode);
+    } else {
+      console.warn('[AccountSettings] Member settings fetch failed:', res.status);
+    }
+  } catch (e) {
+    console.warn('[AccountSettings] Member settings hydration error:', e);
+  }
+  return getAccountSettings().defaultMemoryMode;
+}
+
+/** Record that the current member owns the cached default (they just set it). */
+export function claimDefaultMemoryModeOwnership(memberRef?: string | null): void {
+  if (typeof window === 'undefined') return;
+  stampDefaultOwner(memberRef);
 }
