@@ -18,14 +18,15 @@ No member utterance, crisis transcript, risk score, or personal safety state is 
 
 ## Source state
 
-The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by eight custody surfaces:
+The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by nine custody surfaces:
 
 - PR #1663 — **MERGED / CANONICAL** at `edf656496`: S1 reachability correction;
 - PR #1664 — **MERGED / CANONICAL** at `aa3bc543b`: canonical live crisis-path census;
-- `SAFETY-CRISIS-01` — **MERGED / CANONICAL**: later Founder Option A architecture with server-side `crisisAssessment`, short-lived `crisisCheckIn`, clear/ambiguous tiers, deterministic crisis referral on clear, and no automatic human alert channel;
+- `SAFETY-CRISIS-01` — **MERGED / CANONICAL**: later Founder Option A architecture with server-side `crisisAssessment`, short-lived `crisisCheckIn`, clear/ambiguous tiers, and deterministic crisis referral on clear;
+- PR #1671 — **MERGED / CANONICAL** at `15a9175fb`: separate human-safety delivery membrane with content-free SMS/Slack fallback for specifically governed safety paths; the `/list` crisis classifier does not itself imply a delivery outcome;
 - PR #1665 — **CLOSED / SUPERSEDED**: older `crisisRecognition.ts` contract retained as provenance only; superseded by canonical SAFETY-CRISIS-01;
 - PR #1669 — **CLOSED / SUPERSEDED**: older hard-override `/list` wiring retained as provenance only; superseded by canonical SAFETY-CRISIS-01;
-- PR #1675 — SAFETY-DISCLOSURE-01 authority contract: member act is the only currently executable disclosure basis; imminent/legal/minor-vulnerable-adult exceptions remain review-required;
+- PR #1675 — SAFETY-DISCLOSURE-01 authority contract for future member-initiated disclosure/off-ramp acts; canonical #1671 delivery authority is preserved separately; new imminent/legal/minor-vulnerable-adult exception classes remain review-required inside the off-ramp resolver;
 - PR #1678 — practitioner-field relationship boundary: a member's practitioner-sharing gesture is readable only by the practitioner in that member's active/paused relationship, not by practitioner role globally;
 - PR #1694 — portal-message identity boundary: portal messaging now carries practitioner practice-record identity and practitioner member identity separately so relationship checks, messaging tables, PHI ownership, and safety notification use the correct identity.
 
@@ -33,21 +34,23 @@ These are custody surfaces with mixed standing. Kelly's World must distinguish c
 
 ## Needs Kelly
 
-### Exception policy beyond member act
+### New disclosure authority beyond the canonical membranes
 
-The ordinary disclosure law is now frozen in PR #1675: **a present explicit member act is the only currently executable basis for safety-related disclosure.** A crisis signal, risk class, model judgment, or practitioner relationship does not manufacture permission.
+Canonical #1671 already owns a separate human-safety delivery membrane for specifically governed safety paths. SAFETY-DISCLOSURE-01 does not revoke or reinterpret that authority.
 
-**Needs Kelly only on the narrower question:** does Soullab want to commission and eventually support any separately reviewed exception to that rule?
+For the **future member-controlled off-ramp** governed by PR #1675, a present explicit member act is required before the resolver can return `may_cross`. Crisis severity, model judgment, or practitioner relationship does not manufacture a new off-ramp grant.
 
-The candidate exception classes are:
+**Needs Kelly only on the narrower question:** should Soullab create any **new** disclosure exception or handoff authority beyond the canonical membranes already in force?
+
+Candidate new exception classes remain:
 
 - imminent danger;
 - legal compulsion;
 - minors or vulnerable adults.
 
-PR #1675 represents each as `review_required` with `mayCross: false`. It does not define thresholds, recipients, jurisdiction, retention, or operational duty.
+PR #1675 represents each as `review_required` with `mayCross: false` inside the member-initiated resolver. It does not define thresholds, recipients, jurisdiction, retention, or operational duty.
 
-Current standing: **member-act disclosure has a governed path; automatic or exception-based disclosure remains unauthorized.**
+Current standing: **canonical #1671 remains authoritative for its own delivery membrane; new member-controlled disclosure requires member act; no additional automatic exception has been authorized by #1675.**
 
 ### PHI stage for the future safety-contact off-ramp
 
@@ -75,7 +78,7 @@ member utterance
 → CLEAR: deterministic 988 / Crisis Text Line / emergency referral + safety context for MAIA
 → AMBIGUOUS: safety context for MAIA, with a direct safety check-in rather than a hotline script
 → if MAIA actually asks about safety, a short-lived in-memory check-in flag may let a later affirmative answer such as “yes” escalate to CLEAR
-→ no automatic human alert is implied by crisis classification
+→ crisis classification itself does not determine or assert human-delivery outcome; any human delivery belongs to the separate canonical #1671 membrane
 
 The canonical crisis copy says MAIA is not an emergency service and must not be relied on to contact help for the member.
 

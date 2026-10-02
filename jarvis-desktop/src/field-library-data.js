@@ -3,6 +3,21 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
   "recentItems": [
     {
+      "title": "KELLY'S WORLD — SAFETY-DELIVERY-01 Propagation",
+      "path": "docs/programme/KELLYS-WORLD-SAFETY-DELIVERY-01_PROPAGATION_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Purpose: carry the current SAFETY-DELIVERY-01 state into Kelly's World as founder-facing orientation without copying member material, creating a second safety system, or changing programme authority.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Governing law",
+        "Source state",
+        "Needs Kelly",
+        "New disclosure authority beyond the canonical membranes",
+        "PHI stage for the future safety-contact off-ramp",
+        "In motion"
+      ]
+    },
+    {
       "title": "SAFETY-CRISIS-01: Option A (no human alert channel) and the server-side crisis detector",
       "path": "docs/programme/SAFETY-CRISIS-01_OPTION_A_AND_SERVER_DETECTOR_2026-10-01.md",
       "excerpt": "Date: 2026-10-01 Status: founder ruling RECORDED · detector BUILT on branch fix/server-crisis-detector-20261001 · ⛔ not merged · ⛔ not deployed · disclosure copy ⛔ OWED · teen registration ⛔ not structurally closed (see §6)",
@@ -60,21 +75,6 @@ window.KELLY_FIELD_LIBRARY = {
         "/list",
         "/between",
         "4. Storage rule"
-      ]
-    },
-    {
-      "title": "KELLY'S WORLD — SAFETY-DELIVERY-01 Propagation",
-      "path": "docs/programme/KELLYS-WORLD-SAFETY-DELIVERY-01_PROPAGATION_2026-10-01.md",
-      "excerpt": "Date: 2026-10-01 Purpose: carry the current SAFETY-DELIVERY-01 state into Kelly's World as founder-facing orientation without copying member material, creating a second safety system, or changing programme authority.",
-      "excerpt_start_line": 3,
-      "excerpt_end_line": 4,
-      "headings": [
-        "Governing law",
-        "Source state",
-        "Needs Kelly",
-        "Exception policy beyond member act",
-        "PHI stage for the future safety-contact off-ramp",
-        "In motion"
       ]
     },
     {
@@ -3137,7 +3137,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 139,
       "evidence": "## 7. Owed witnesses, re-run on the composition",
       "last_touched_epoch": 1789510856,
-      "hours_dormant": 396,
+      "hours_dormant": 397,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -14884,7 +14884,7 @@ window.KELLY_FIELD_LIBRARY = {
             "Governing law",
             "Source state",
             "Needs Kelly",
-            "Exception policy beyond member act",
+            "New disclosure authority beyond the canonical membranes",
             "PHI stage for the future safety-contact off-ramp",
             "In motion"
           ]
