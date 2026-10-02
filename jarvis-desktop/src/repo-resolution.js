@@ -31,6 +31,50 @@
 'use strict';
 
 /**
+ * Decide packaged-mode substrate binding without granting authority to a
+ * hard-coded candidate. The candidate may be surfaced as a suggestion only.
+ */
+function resolvePackagedMode({ envRoot, config, defaultCandidate, isValidRepoRoot, RESOLUTION }) {
+  const cfg = config || { present: false, repo_root: null, problem: null };
+  const validEnv = !!envRoot && isValidRepoRoot(envRoot);
+  const validConfig = !!cfg.present && !!cfg.repo_root && isValidRepoRoot(cfg.repo_root);
+  const suggestedRepoRoot = defaultCandidate && isValidRepoRoot(defaultCandidate)
+    ? defaultCandidate
+    : null;
+
+  if (validEnv) {
+    const conflictingConfigRoot = validConfig && cfg.repo_root !== envRoot ? cfg.repo_root : null;
+    const configProblem = conflictingConfigRoot
+      ? `JARVIS_REPO_ROOT is set in the launch environment (${envRoot}) and OVERRIDES your saved choice (${cfg.repo_root}). If it is set at the launchd level, every Finder/Dock launch inherits it. Clear it with:  launchctl unsetenv JARVIS_REPO_ROOT  (then quit and relaunch JARVIS).`
+      : null;
+    return { root: envRoot, resolution: RESOLUTION.ENV, configProblem, conflictingConfigRoot, suggestedRepoRoot: null };
+  }
+
+  const problems = [];
+  if (envRoot) problems.push(`JARVIS_REPO_ROOT does not carry the canonical markers: ${envRoot}`);
+  if (cfg.problem) problems.push(cfg.problem);
+  else if (cfg.present && !validConfig) problems.push(`configured repository no longer carries the canonical markers: ${cfg.repo_root}`);
+
+  if (validConfig) {
+    return {
+      root: cfg.repo_root,
+      resolution: RESOLUTION.CONFIG,
+      configProblem: problems.length ? problems.join(' — and ') : null,
+      conflictingConfigRoot: null,
+      suggestedRepoRoot: null,
+    };
+  }
+
+  return {
+    root: null,
+    resolution: RESOLUTION.NONE,
+    configProblem: problems.length ? problems.join(' — and ') : null,
+    conflictingConfigRoot: null,
+    suggestedRepoRoot,
+  };
+}
+
+/**
  * Decide the dev-mode substrate binding.
  *
  * Every argument is a thunk supplying a source main.js already owns. Nothing is
@@ -66,4 +110,4 @@ function resolveDevMode({ walk, ladder, launchedFrom, RESOLUTION }) {
   };
 }
 
-module.exports = { resolveDevMode };
+module.exports = { resolvePackagedMode, resolveDevMode };
