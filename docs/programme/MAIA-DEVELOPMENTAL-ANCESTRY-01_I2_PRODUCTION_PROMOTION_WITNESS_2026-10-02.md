@@ -116,3 +116,41 @@ Behavioral witness requires a real, non-Sanctuary member exchange after cutover 
 4. does not rely on backfill or heuristic inference.
 
 No synthetic conversation should be created solely to satisfy this witness.
+
+
+## 7. Subsequent production supersession
+
+After the I2 cutover witness above, production advanced again outside this lane.
+
+Observed current runtime:
+
+`d4655e6477fa40b8f94c5f8f91be47198288d2af`
+
+Subject:
+
+`Merge pull request #1727 from SoullabTech/chore/production-canonical-lineage-convergence-20261002`
+
+Observed container:
+- image: `sha256:d8dbc4b2f1226a25a485e9bdbf509f948d20188414246d867328ee19ec2739ab`
+- created: `2026-10-02T12:08:26.421055868Z`
+- restarts: 0
+- health: healthy
+- public `https://soullab.life/`: HTTP 200
+
+This superseding runtime contains both:
+- canonical I1 implementation commit `de7349a88dd6e0b23a6be1879055acee1fccb034`;
+- canonical I1 merge commit `16eff5cc2ec5684f92f1ab6cca6cd042949a7382`.
+
+Direct source inspection of `d4655e647` confirms the I1 `exchangeId → source_exchange_id` wiring remains present.
+
+At the supersession witness:
+- conversation turns created since the original 13a cutover boundary: 0;
+- developmental memories with non-null `source_exchange_id`: 0.
+
+Therefore the historical I2 cutover witness remains true for the 13a promotion event, but `13a0308d7` must not be described as the current live runtime after this supersession.
+
+Current behavioral standing remains:
+
+`DEPLOYED IN CURRENT RUNTIME / HEALTHY / NOT YET BEHAVIORALLY EXERCISED`
+
+No historical lineage has been manufactured.
