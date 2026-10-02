@@ -10,11 +10,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { MaiaCapture, type CaptureSource } from '@/components/maia/MaiaCapture'
+import { apiFetch } from '@/lib/http/apiBase'
 
 interface Props {
   fieldKey: string
   fieldLabel: string
-  memberId: string
   onClose: () => void
 }
 
@@ -32,7 +32,7 @@ const MARK_OPTIONS: { kind: MarkKind; label: string }[] = [
   { kind: 'recovery', label: 'recovered' },
 ]
 
-export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }: Props) {
+export function LivingEncounterView({ fieldKey, fieldLabel, onClose }: Props) {
   const [encounterId, setEncounterId] = useState<string | null>(null)
   const [turns, setTurns] = useState<Turn[]>([])
   const [input, setInput] = useState('')
@@ -50,9 +50,9 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
       setOpening(true)
       setError(null)
       try {
-        const res = await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
+        const res = await apiFetch(`/api/maia/living-field/${fieldKey}/encounter`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'open' }),
         })
         const data = await res.json().catch(() => null)
@@ -88,9 +88,9 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
     setSending(true)
     setError(null)
     try {
-      const res = await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
+      const res = await apiFetch(`/api/maia/living-field/${fieldKey}/encounter`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'turn', encounter_id: encounterId, text: trimmed }),
       })
       const data = await res.json().catch(() => null)
@@ -113,9 +113,9 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
   async function closeEncounter() {
     if (encounterId) {
       try {
-        await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
+        await apiFetch(`/api/maia/living-field/${fieldKey}/encounter`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'close', encounter_id: encounterId }),
         })
       } catch {
@@ -129,9 +129,9 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
     if (!encounterId) return
     setMarkError(null)
     try {
-      const res = await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
+      const res = await apiFetch(`/api/maia/living-field/${fieldKey}/encounter`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ encounter_id: encounterId, mark: kind }),
       })
       if (!res.ok) {
