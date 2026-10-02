@@ -15,8 +15,15 @@ const strip = (s: string) =>
   s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const src = (p: string) => strip(readFileSync(join(ROOT, p), 'utf8'));
 
-/** Canonical as the seam found it, for the untouched plain-text seam pins. */
-const CANONICAL = '7ed38723ee3cbc02a10be57006136d21b4fce7d4';
+/**
+ * Plain-text seam baseline after the founder-accepted SERVING-IDENTITY / R2
+ * amendment. R2 deliberately changed modelService.ts, sovereignRouter.ts and
+ * lib/ai/types.ts to carry live serving truth; claudeClient.ts remained byte-
+ * identical. The completed R2 head was later canonicalized and R2P1 closed
+ * after real cloud/local/fallback witnessing. This pin moves to that governed
+ * R2 state, not to an arbitrary later canonical tip.
+ */
+const CANONICAL = '0ecff4ebacca0d6dd727ddbfe7000e5dbed37f48';
 
 describe('only the adapter may name the vendor', () => {
   it('the neutral types import no SDK', () => {
