@@ -101,7 +101,11 @@ R3 additionally discovered a prerequisite identity defect in the existing portal
 
 R4 freezes the recipient-discovery contract without implementing it: the ordinary authenticated member session is the only root authority; eligible practitioner relationships must be server-derived; effective messaging policy must allow client messages; zero candidates means no off-ramp, one may be named truthfully, and more than one requires member choice rather than inference.
 
-**Standing: design/contract only. No UI wiring, member-send route, portal-token borrowing, recipient inference, or new disclosure authority is authorized by R2/R3/R4.**
+R5 freezes the notification-result vocabulary. Message persistence, safety logging, provider acceptance, practitioner read, and explicit safety acknowledgment are separate states. Provider acceptance is never treated as human receipt; practitioner read is the first human-receipt witness, and explicit acknowledgment is stronger.
+
+The dormant portal confirmation component currently contains stronger language (`Your practitioner has been notified`, `Your message has been delivered`) than the evidence model permits. No live mount was found, so this is dormant copy debt rather than a proven live member-facing misstatement. It must be corrected before that surface is mounted.
+
+**Standing: design/contract + pure result projector only. No UI wiring, member-send route, portal-token borrowing, recipient inference, notification transport change, or new disclosure authority is authorized by R2–R5.**
 
 ## Watching
 
