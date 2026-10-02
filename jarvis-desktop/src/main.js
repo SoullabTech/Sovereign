@@ -983,6 +983,13 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
         actorId: desktopHumanActorId(),
       });
     }
+    if (action === 'canonical-jev-advice') {
+      if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
+      return await CWUV2.consultCanonicalJevV2(root, req.work_unit_id, {
+        env: process.env,
+        actorId: desktopHumanActorId(),
+      });
+    }
     if (action === 'canonical-bind-transport') {
       if (!safeId(req?.work_unit_id)) return { ok: false, status: 'REFUSED', reason: 'Invalid work_unit_id.' };
       if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(String(req?.route_participant_id || ''))) {
