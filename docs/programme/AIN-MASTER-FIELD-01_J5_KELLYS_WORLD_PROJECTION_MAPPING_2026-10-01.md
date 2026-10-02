@@ -157,17 +157,21 @@ High-impact foreground items require intelligible salience provenance.
 
 ## Admission boundary
 
-The founder-workspace B1-B7 recovery lineage must be reconciled before implementation uses it.
+As of governed canonical commit `ac7bfd353128210c5f1e7012e0b71a9256035834` (merge #1682), the founder-workspace B1-B7 recovery lineage and its projector/viewmodel/graph substrate are admitted.
 
-This J5 record authorizes no copy, cherry-pick, UI mutation, or state-store creation.
+This clears the lineage-admission blocker. It does not authorize duplication.
+
+The next gate is zero-duplication mapping: bind this J5 projection contract to the admitted founder-workspace seams and identify only the missing semantics.
+
+This J5 record still authorizes no new state store or parallel projector.
 
 ## J5 verdict
 
-Projection semantics are defined.
+Projection semantics are defined and the existing founder-workspace substrate is admitted.
 
-Implementation remains blocked on:
-1. founder-workspace lineage admission/reconciliation
-2. proof of the existing viewmodel/projector seams
-3. falsifiers demonstrating that the admitted substrate can preserve single reality across all five rooms
+Implementation remains gated on:
+1. exact mapping from J5 semantics onto the admitted viewmodel/projector/graph seams
+2. falsifiers demonstrating that the admitted substrate preserves single reality across all five rooms
+3. explicit residual gaps after that mapping
 
 Next: J6 — falsifier package and implementation eligibility gates.

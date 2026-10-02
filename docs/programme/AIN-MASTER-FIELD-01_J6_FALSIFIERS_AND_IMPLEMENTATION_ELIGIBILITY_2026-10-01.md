@@ -148,10 +148,10 @@ NOT eligible for universal runtime Master executive or salience scorer.
 Eligible only for bounded projection/retrieval defects proven by evidence.
 
 ### Kelly's World
-NOT eligible for duplicate implementation in this lane.
+Eligible for zero-duplication projection reconciliation only.
 
 Reason:
-the B1-B7 founder-workspace recovery substrate remains outside this canonical base. Lineage/admission must be reconciled before implementation.
+canonical `ac7bfd353128210c5f1e7012e0b71a9256035834` admits the B1-B7 founder-workspace recovery substrate via merge #1682. The remaining task is to map J5 semantics onto that existing substrate and prove the residual gaps before any UI/runtime extension.
 
 ## J6 result
 
@@ -161,4 +161,4 @@ J7 may open only concrete bounded work units that pass I1-I10.
 
 The first already-earned J7 candidate is consequence-delivery truth under the existing NON-DELIVERY programme.
 
-Kelly's World remains a lineage-reconciliation candidate before code.
+Kelly's World is now a projection-reconciliation candidate before code; lineage admission is satisfied.

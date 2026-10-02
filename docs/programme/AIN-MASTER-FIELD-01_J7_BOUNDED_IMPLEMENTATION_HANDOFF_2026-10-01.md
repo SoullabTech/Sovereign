@@ -65,30 +65,32 @@ Required reconciliation:
 
 No universal repair engine or trust metric is authorized.
 
-## Blocked lane — Kelly's World implementation
+## Eligible lane 4 — Kelly's World projection reconciliation
 
-Status: BLOCKED ON LINEAGE ADMISSION
+Status: ELIGIBLE FOR ZERO-DUPLICATION RECONCILIATION ONLY
 
-Known external recovery worktree:
-\`/Users/soullab/.claude/worktrees/ain-kellys-world-recovery-r2\`
+Canonical admission:
+`ac7bfd353128210c5f1e7012e0b71a9256035834` merged #1682 and admits the B1-B7 founder-workspace recovery records plus the existing founder-workspace renderer, viewmodel, programme-state projector, instrument registry, and graph join.
 
-Known recovery branch:
-\`fix/kellys-world-founder-workspace-recovery-r2-20261001\`
+Therefore the earlier lineage blocker is cleared.
 
-Observed recovery head during J0:
-\`16e6cfbbdc4f\`
+This programme may now:
+- map J5 semantics onto the admitted projector/viewmodel/graph seams
+- prove where Today/Work/Monitor/System/Graph already satisfy the projection contract
+- identify residual gaps
+- design lethal falsifiers for those specific gaps
 
-This material must be reconciled/admitted before this programme may:
+It may not:
 - create another founder-workspace projector
-- copy B1-B7 mechanisms
-- create new Today/Work/Monitor/System/Graph state stores
-- implement the J5 projection contract
+- create parallel state stores for the five rooms
+- re-copy B1-B7 mechanisms
+- mutate UI before the zero-duplication map proves a real gap
 
 Required next evidence:
-1. branch/head/current-base comparison
-2. list of already-admitted recovery commits, if any
-3. zero-duplication mapping from J5 onto existing substrate
-4. explicit gaps after reconciliation
+1. exact seam map: J5 rule -> admitted implementation path
+2. existing tests covering each mapped seam
+3. missing semantic cases, if any
+4. bounded implementation units only for those missing cases
 
 ## Blocked lane — Temporal field runtime
 
@@ -155,6 +157,6 @@ Proceed with NON-DELIVERY consequence-truth repair as the first implementation l
 In parallel, reconcile:
 1. Identity Ontology / Personhood doctrine
 2. Rupture Playbook / Trust doctrine
-3. Kelly's World B1-B7 recovery lineage
+3. Kelly's World J5 -> admitted B1-B7 zero-duplication projection reconciliation
 
 Do not merge those three into the safety implementation PR.
