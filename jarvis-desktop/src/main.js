@@ -30,6 +30,11 @@ const PRECISION_CONTEXT = require('./founder-precision-context.js');
 const PARTNER_CONTEXT = require('./partner-context.js');
 const GROUNDED_RESPONSE = require('./grounded-response.js');
 
+// SOULLAB-DESKTOP-UNIFICATION-01. Standalone JARVIS owns application lifecycle;
+// when composed by the Soullab host it contributes its governed realm and IPC
+// surface without taking over userData, the single-instance lock, menu, or app events.
+const STANDALONE = require.main === module;
+
 // ---------------------------------------------------------------------------
 // Instance identity.
 //
@@ -46,7 +51,7 @@ const GROUNDED_RESPONSE = require('./grounded-response.js');
 // genuinely different artifacts operating potentially different substrates, so
 // they get genuinely different userData — and therefore different locks. Two
 // packaged copies still collide, which is what F5 actually wanted to prevent.
-if (!app.isPackaged) {
+if (STANDALONE && !app.isPackaged) {
   app.setPath('userData', path.join(app.getPath('appData'), 'jarvis-desktop-dev'));
 }
 
@@ -212,13 +217,15 @@ function currentProvenance() {
 // handlers and a whenReady window — while shutting down. Whatever it did in
 // that window it did silently, which is part of why this exit was so hard to
 // read from the outside.
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-  return;
+if (STANDALONE) {
+  if (!app.requestSingleInstanceLock()) {
+    app.quit();
+    return;
+  }
+  app.on('second-instance', () => {
+    if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
+  });
 }
-app.on('second-instance', () => {
-  if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
-});
 
 let mainWindow;
 function createWindow() {
@@ -239,6 +246,7 @@ function createWindow() {
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.setTitle(PROV.windowTitle(currentProvenance().artifact));
   });
+  return mainWindow;
 }
 
 // ---------------------------------------------------------------------------
@@ -450,13 +458,15 @@ ipcMain.handle('jarvis:clear-repo', async () => {
   return repoConfigState();
 });
 
-app.whenReady().then(async () => {
-  writeRuntimeBinding('startup');
-  buildMenu();
-  createWindow();
-  await ensureBindingOnFirstRun();
-  await runStartupRecovery();
-});
+if (STANDALONE) {
+  app.whenReady().then(async () => {
+    writeRuntimeBinding('startup');
+    buildMenu();
+    createWindow();
+    await ensureBindingOnFirstRun();
+    await runStartupRecovery();
+  });
+}
 
 // ---------------------------------------------------------------------------
 // O5-R2 startup recovery — READ-ONLY (founder ruling 2026-09-30).
@@ -487,17 +497,19 @@ async function runStartupRecovery() {
   } catch (e) { report.path_b = { ok: false, error: String(e?.message || e).slice(0, 300) }; }
   console.log('[JARVIS/O5-R2] startup recovery (read-only)', JSON.stringify(report));
 }
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-// O5-R3: release the grant writer lease, if this process ever became the writer.
-// A crash that skips this leaves the lease to proof-based takeover on next launch.
-app.on('will-quit', () => {
-  try { RB.markTerminated(app.getPath('appData')); } catch (error) { console.error('[jarvis] O5-R3 runtime binding terminate failed', error); }
-  const release = globalThis[Symbol.for('jarvis.o5r3.releaseAllGrantWriterLeases')];
-  if (typeof release === 'function') {
-    try { console.log('[jarvis] O5-R3 grant writer lease release', JSON.stringify(release())); } catch (error) { console.error('[jarvis] O5-R3 lease release failed', error); }
-  }
-});
-app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+if (STANDALONE) {
+  app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+  // O5-R3: release the grant writer lease, if this process ever became the writer.
+  // A crash that skips this leaves the lease to proof-based takeover on next launch.
+  app.on('will-quit', () => {
+    try { RB.markTerminated(app.getPath('appData')); } catch (error) { console.error('[jarvis] O5-R3 runtime binding terminate failed', error); }
+    const release = globalThis[Symbol.for('jarvis.o5r3.releaseAllGrantWriterLeases')];
+    if (typeof release === 'function') {
+      try { console.log('[jarvis] O5-R3 grant writer lease release', JSON.stringify(release())); } catch (error) { console.error('[jarvis] O5-R3 lease release failed', error); }
+    }
+  });
+  app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+}
 
 // ---------------------------------------------------------------------------
 // jarvis:status — HOME + SYSTEM truth states. Every field is either a real
@@ -1480,3 +1492,12 @@ ipcMain.handle('jarvis:governance-action', async (_evt, req) => {
     return { ok: false, ...r, errors: [], invoked: built.argv.join(' ') };
   }
 });
+
+// Embedded Soullab Desktop seam. Requiring this module registers the existing
+// jarvis:* IPC surface, while only the standalone artifact owns app lifecycle.
+module.exports = {
+  createWindow,
+  ensureBindingOnFirstRun,
+  repoConfigState,
+  currentRoot,
+};
