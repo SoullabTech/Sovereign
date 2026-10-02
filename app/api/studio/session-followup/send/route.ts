@@ -80,6 +80,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Resolve a useful Reply-To from authenticated practitioner identity.
+    // If no practitioner/member email is available, replies go to Soullab support
+    // rather than silently returning to updates@soullab.life.
+    const practitionerReplyResult = await query(
+      `SELECT COALESCE(p.email, m.email) AS email
+         FROM members m
+         LEFT JOIN practitioners p ON p.member_id = m.id
+        WHERE m.id = $1
+        LIMIT 1`,
+      [memberId],
+    );
+    const replyTo = practitionerReplyResult.rows[0]?.email || 'support@soullab.life';
+
     // Send email via Resend
     let messageId: string | null = null;
 
@@ -100,6 +113,7 @@ export async function POST(req: NextRequest) {
       const emailResult = await sendEmail({
         purpose: 'practitioner:session-followup',
         from: `${input.practitionerName} via SoulLab <updates@soullab.life>`,
+        replyTo,
         to: input.recipientEmail,
         subject: `Session update for ${input.clientName}`,
         html,

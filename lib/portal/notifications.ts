@@ -229,6 +229,7 @@ export async function sendBookingNotificationToPractitioner(
     const result = await sendEmail({
       purpose: 'portal:booking-notification',
       from: 'Soullab Bookings <bookings@soullab.life>',
+      replyTo: 'support@soullab.life',
       to: practitioner.email,
       subject: `New Booking: ${booking.clientName} - ${booking.sessionType}`,
       html: generatePractitionerBookingHtml(booking, formattedDate),
@@ -375,6 +376,7 @@ export async function sendCancellationNotificationToPractitioner(
     const result = await sendEmail({
       purpose: 'portal:booking-cancellation-practitioner',
       from: 'Soullab Bookings <bookings@soullab.life>',
+      replyTo: 'support@soullab.life',
       to: practitioner.email,
       subject: `Booking Cancelled: ${booking.clientName} - ${booking.sessionType}`,
       html: generateCancellationPractitionerHtml(booking, formattedDate, reason),
@@ -547,6 +549,7 @@ export async function sendRescheduleNotificationToPractitioner(
     const result = await sendEmail({
       purpose: 'portal:booking-reschedule-practitioner',
       from: 'Soullab Bookings <bookings@soullab.life>',
+      replyTo: 'support@soullab.life',
       to: practitioner.email,
       subject: `Booking Rescheduled: ${booking.clientName} - ${booking.sessionType}`,
       html: generateReschedulePractitionerHtml(booking, oldFormatted, newFormatted),
