@@ -169,71 +169,88 @@ function renderHome() {
   if (!s) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
   const v = JarvisLegibility.deriveOperatorView(s);
   const b = v.binding;
-  const group = (title, list) => list.length
-    ? `<div class="card"><h3>${title}</h3>${list.map(organRow).join('')}</div>` : '';
+  const watching = v.capabilities.unverified || [];
+  const allSessions = v.active_work.sessions || [];
+  const liveSessions = allSessions.filter(sess => sess.liveness?.claim_state === 'LIVE');
+  const decisionSessions = allSessions.filter(sess => sess.liveness?.claim_state !== 'LIVE');
 
   $main.innerHTML = `
     <div class="convo-input">
-      <input id="convo" type="text" placeholder="What do you want to happen?">
+      <input id="convo" type="text" placeholder="What do you want JARVIS to help with?">
     </div>
     <div id="convo-answer"></div>
 
     <div class="card">
-      <p class="headline">${v.headline}</p>
-      <p class="sentence">${v.sentence}</p>
-    </div>
-
-    ${renderActiveWorkspace(s.workspace, b)}
-
-    <div class="card">
-      <h3>Needs you ${v.needs_founder.items.length ? `(${v.needs_founder.items.length})` : ''}</h3>
-      ${v.needs_founder.items.length
-        ? v.needs_founder.items.map(h => `<div class="row">
-            <div>
-              <div class="label">${h.unit}${h.id ? ` — ${h.id}` : ''}</div>
-              <div class="why">${h.means}</div>
-              <div class="fix">→ ${h.remediation}</div>
-            </div>
-            <span class="state HELD">${h.claim_state || 'HELD'}</span>
-          </div>`).join('')
-        : `<div class="hint">${v.needs_founder.summary}</div>`}
+      <p class="headline">Here is what matters right now.</p>
+      <p class="sentence">JARVIS keeps the technical state underneath. This view shows what needs you, what is moving, and what is simply being watched.</p>
     </div>
 
     <div class="card">
-      <h3>Active work</h3>
-      <div class="hint">${v.active_work.summary}</div>
-      ${v.active_work.sessions.length ? renderSessionActions(v.active_work.sessions) : ''}
+      <h3>Needs you ${decisionSessions.length ? `(${decisionSessions.length})` : ''}</h3>
+      ${decisionSessions.length
+        ? renderSessionActions(decisionSessions)
+        : '<div class="hint">Nothing needs your decision right now.</div>'}
     </div>
 
-    ${group('Can do now', v.capabilities.available)}
-    ${group('Not working / not verified', v.capabilities.unverified)}
-    ${group('Not authorized', v.capabilities.not_authorized)}
+    <div class="card">
+      <h3>In motion</h3>
+      ${liveSessions.length
+        ? renderSessionActions(liveSessions)
+        : '<div class="hint">Nothing is actively running right now.</div>'}
+    </div>
 
-    ${provenanceRows(s.provenance)}
-    <div class="hint">Observed ${v.observed_at || 'unknown'}</div>
+    <div class="card">
+      <h3>Watching</h3>
+      ${watching.length
+        ? watching.map(o => `<div class="row"><div><div class="label">${o.name}</div><div class="sentence">${o.reason || o.description || 'Not yet observed.'}</div></div><span class="state UNVERIFIED">Watching</span></div>`).join('')
+        : '<div class="hint">Nothing currently needs watching.</div>'}
+    </div>
+
+    <details class="advanced-tools">
+      <summary>Technical details</summary>
+      ${renderActiveWorkspace(s.workspace, b)}
+      ${v.capabilities.available.length ? `<div class="card"><h3>Available capabilities</h3>${v.capabilities.available.map(organRow).join('')}</div>` : ''}
+      ${v.capabilities.not_authorized.length ? `<div class="card"><h3>Not authorized</h3>${v.capabilities.not_authorized.map(organRow).join('')}</div>` : ''}
+      ${provenanceRows(s.provenance)}
+      <div class="hint">Observed ${v.observed_at || 'unknown'}</div>
+    </details>
   `;
   document.getElementById('convo').addEventListener('keydown', onConvoKey);
   wireWorkspaceActions();
-  if (v.active_work.sessions.length) wireSessionActions();
+  if (allSessions.length) wireSessionActions();
 }
 
 // F2 — the acts offered come from the GOVERNOR's own liveness flags. Desktop
 // never invents availability, and never invites an act it knows is refusable.
+function humanSessionActionLabel(action) {
+  return ({ recover: 'Resume', reconcile: 'Resolve ownership', close: 'Release lane' })[action] || action;
+}
+
+function humanSessionState(lv) {
+  if (lv?.claim_state === 'LIVE') return { label: 'Working', cls: 'AVAILABLE', text: 'This work is still reporting back.' };
+  if (lv?.claim_state === 'STALE') return { label: 'Needs decision', cls: 'DEGRADED', text: 'This work stopped reporting back and is still holding a lane.' };
+  return { label: lv?.claim_state || 'Unknown', cls: 'UNVERIFIED', text: 'JARVIS cannot yet summarize this work state in plain language.' };
+}
+
 function renderSessionActions(sessions) {
-  if (!sessions.length) return '<div class="hint">No active claims.</div>';
+  if (!sessions.length) return '<div class="hint">No active work sessions.</div>';
   return sessions.map((sess, i) => {
     const acts = GOV.availableActionsFor(sess);
     const lv = sess.liveness || {};
+    const hs = humanSessionState(lv);
     return `<div class="claim" data-i="${i}">
       <div class="row">
         <div>
-          <div class="label">${sess.session_id} — ${sess.work_unit}</div>
-          <div class="detail">${sess.mode || '?'} · ${sess.branch || '?'} · heartbeat ${lv.heartbeat_age_s ?? '?'}s</div>
+          <div class="label">${escapeHtml(sess.work_unit)}</div>
+          <div class="sentence">${hs.text}</div>
+          <details style="margin-top:5px"><summary class="hint">Technical details</summary>
+            <div class="src">session ${escapeHtml(sess.session_id)} · ${escapeHtml(sess.mode || '?')} · ${escapeHtml(sess.branch || '?')} · last heartbeat ${lv.heartbeat_age_s ?? '?'}s ago</div>
+          </details>
         </div>
-        <span class="state ${lv.claim_state === 'LIVE' ? 'AVAILABLE' : 'HELD'}">${lv.claim_state || '?'}</span>
+        <span class="state ${hs.cls}">${hs.label}</span>
       </div>
       <div class="acts">
-        ${acts.map(a => `<button class="act" data-act="${a}" data-session="${sess.session_id}">${a}</button>`).join('')}
+        ${acts.map(a => `<button class="act" data-act="${a}" data-session="${sess.session_id}">${humanSessionActionLabel(a)}</button>`).join('')}
       </div>
       <div class="act-form" id="act-form-${sess.session_id}"></div>
     </div>`;
@@ -250,12 +267,19 @@ function openActForm(sessionId, action) {
   const host = document.getElementById(`act-form-${sessionId}`);
   if (!host) return;
   const spec = GOV.ACTIONS[action];
+  const humanAction = humanSessionActionLabel(action);
+  const humanHelp = action === 'recover'
+    ? 'Resume stewardship of this stopped work so JARVIS can continue it safely.'
+    : action === 'reconcile'
+      ? 'Resolve which lane owns this work before anything continues.'
+      : 'Release this Builder lane into a clear end state.';
   host.innerHTML = `
     <div class="act-box">
-      <div class="hint">${spec.description}</div>
-      ${spec.needs_reason ? `<input id="act-reason" type="text" placeholder="Reason — this act is audited">` : ''}
+      <div class="sentence">${humanHelp}</div>
+      <details style="margin-top:5px"><summary class="hint">Governance detail</summary><div class="hint">${spec.description}</div></details>
+      ${spec.needs_reason ? `<input id="act-reason" type="text" placeholder="Why are you taking this action?">` : ''}
       ${spec.needs_state ? `<select id="act-state">${GOV.CLOSE_STATES.map(v => `<option value="${v}">${v}</option>`).join('')}</select>` : ''}
-      <div><button class="primary" id="act-confirm">Confirm ${action}</button>
+      <div><button class="primary" id="act-confirm">${humanAction}</button>
       <button class="toggle-adv" id="act-cancel">Cancel</button></div>
       <div id="act-result"></div>
     </div>`;
@@ -272,7 +296,7 @@ function openActForm(sessionId, action) {
     const btn = document.getElementById('act-confirm');
     btn.disabled = true; btn.textContent = 'Asking the governor…';
     const res = await window.jarvis.governanceAction(req);
-    btn.disabled = false; btn.textContent = `Confirm ${action}`;
+    btn.disabled = false; btn.textContent = humanSessionActionLabel(action);
     // The governor's verdict, verbatim. A refusal renders as a refusal.
     out.innerHTML = `
       <div class="row"><span class="label">Governor</span><span class="state ${res.outcome === 'ok' ? 'AVAILABLE' : 'UNAVAILABLE'}">${res.label}</span></div>
@@ -354,11 +378,17 @@ async function loadCapabilities() {
 }
 
 function renderOperatorPlan(plan) {
+  const external = /frontier|nemotron|external/i.test(String(plan.title || '') + ' ' + String(plan.execution || '') + ' ' + String(plan.model || ''));
   return `<div class="run-plan">
-    <div class="plan-title">${escapeHtml(plan.title)}</div>
-    <div class="plan-line"><b>Execution:</b> ${escapeHtml(plan.execution)}</div>
-    <div class="plan-line"><b>Privacy:</b> ${escapeHtml(plan.privacy)}</div>
-    <div class="plan-line"><b>Intelligence:</b> ${escapeHtml(plan.model)}</div>
+    <div class="plan-title">${external ? 'Ready for an external reasoning request' : 'Ready to work locally'}</div>
+    <div class="plan-line">${external
+      ? 'JARVIS will prepare the request, but nothing leaves this Mac until you explicitly approve the external act.'
+      : 'JARVIS will keep this work on this Mac and use the governed local path underneath.'}</div>
+    <details style="margin-top:7px"><summary class="hint">Why this route?</summary>
+      <div class="plan-line"><b>Execution:</b> ${escapeHtml(plan.execution)}</div>
+      <div class="plan-line"><b>Privacy:</b> ${escapeHtml(plan.privacy)}</div>
+      <div class="plan-line"><b>Intelligence:</b> ${escapeHtml(plan.model)}</div>
+    </details>
   </div>`;
 }
 
@@ -1622,8 +1652,10 @@ function renderWork() {
     </div>
     <div id="result"></div>
 
+    <details class="advanced-tools">
+      <summary>Advanced work controls</summary>
     <div class="card">
-      <h3>Canonical Work Unit · Native substrate</h3>
+      <h3>Governed work controls</h3>
       <div class="hint" style="margin:0 0 10px">The Work Unit is the governed nervous system beneath JARVIS Desktop—not the visible limit of the environment. Research, teaching, mentoring, personal-development studios, local files, and richer native experiences can build on this same constitutional substrate.</div>
       <textarea id="wu-objective" rows="3" placeholder="Outcome this Work Unit should produce…">${escapeHtml(draftIntent)}</textarea>
       <div class="work-unit-grid" style="margin-top:8px">
@@ -1695,7 +1727,7 @@ function renderWork() {
             </select>
           </label>
           <label class="hint">Deterministic capability (optional)<br>
-            <input id="wu-capability" type="text" placeholder="registered capability name">
+            <input id="wu-capability" type="text" placeholder="Optional registered capability name">
           </label>
         </div>
 
@@ -1757,6 +1789,7 @@ function renderWork() {
       <div id="wu-errors"></div>
     </div>
     <div id="work-unit-live"></div>
+    </details>
 
     <div class="card">
       <h3>Recall prior work</h3>
@@ -2137,12 +2170,40 @@ function renderResult(res) {
   }
 }
 
+function humanSystemState(raw) {
+  const state = String(raw?.state || 'UNVERIFIED');
+  if (state === 'AVAILABLE' || state === 'READY' || state === 'WORKING') return { label: 'Healthy', cls: 'AVAILABLE' };
+  if (state === 'UNCONFIGURED' || state === 'NOT PROBED' || state === 'UNVERIFIED') return { label: 'Not checked yet', cls: 'UNVERIFIED' };
+  if (state === 'DEGRADED') return { label: 'Needs attention', cls: 'DEGRADED' };
+  if (state === 'BLOCKED' || state === 'FAILED' || state === 'UNREACHABLE') return { label: 'Problem', cls: 'FAILED' };
+  return { label: state.replaceAll('_', ' ').toLowerCase(), cls: state };
+}
+
+function humanSystemRow(label, meaning, raw, action = '') {
+  const h = humanSystemState(raw);
+  return `<div class="row system-human-row"><div><div class="label">${label}</div><div class="sentence">${meaning}</div>${action}</div><span class="state ${h.cls}">${h.label}</span></div>`;
+}
+
 function renderSystem() {
   const s = lastStatus;
   if (!s) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
+  const stale = Array.isArray(s.builder_os?.detail?.sessions) ? s.builder_os.detail.sessions.filter(x => x.claim_state === 'STALE') : [];
   $main.innerHTML = `
     <div class="card">
-      <h3>Truthful system state — no invented green states</h3>
+      <h3>System</h3>
+      <div class="headline">JARVIS carries the complexity. You see what matters.</div>
+      <p class="sentence">A simple view of what is working, what needs attention, and what you can do next.</p>
+      ${humanSystemRow('JARVIS', 'Desktop, Builder, routing, and continuity are available.', s.desktop_runtime)}
+      ${humanSystemRow('MAIA Memory', s.memory_postgres?.state === 'AVAILABLE' ? 'MAIA\'s memory database is reachable.' : 'Check whether MAIA\'s memory database is reachable.', s.memory_postgres, '<div class="acts"><button class="act" id="observe-memory-host">Check MAIA Memory</button></div>')}
+      ${humanSystemRow('Production', s.production?.state === 'AVAILABLE' ? 'soullab.life is running.' : 'Check whether soullab.life is running.', s.production, '<div class="acts"><button class="act" id="observe-production-host">Check Production</button></div>')}
+      ${humanSystemRow('Local AI', 'Qwen and the local model worker are available on this machine.', s.local_worker)}
+      ${humanSystemRow('Frontier AI', 'External reasoning is available when you explicitly approve it.', s.frontier_reasoner || s.claude_lane)}
+      <div id="host-observation-result"></div>
+    </div>
+    ${stale.length ? `<div class="card"><h3>Needs your attention</h3><div class="sentence">${stale.length} old work session${stale.length === 1 ? '' : 's'} are still holding Builder lanes.</div>${stale.map(x => `<div class="row"><div><div class="label">${escapeHtml(x.unit)}</div><div class="detail">Stopped reporting back; decide whether to recover or close it from Home.</div></div><span class="state DEGRADED">Attention</span></div>`).join('')}</div>` : ''}
+    <details class="advanced-tools"><summary>Technical details</summary>
+      <div class="card">
+        <h3>Governed system state</h3>
       ${stateRow('Builder OS', s.builder_os)}
       ${stateRow('Route A', s.route_a)}
       ${stateRow('Local worker', s.local_worker)}
@@ -2157,15 +2218,32 @@ function renderSystem() {
             loudly, it just quietly disagrees with the payload. They now read
             the same fields Home reads. The fallbacks preserve the old text
             for a status shape that predates them. */ ''}
-      ${stateRow('Memory / Postgres', s.memory_postgres || { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one.' })}
-      ${stateRow('Production', s.production || { state: 'NOT PROBED', detail: 'Requires explicit production/SSH authority, which Desktop does not hold. Not probed by design.' })}
+      ${stateRow('Memory / Postgres', s.memory_postgres || { state: 'UNCONFIGURED', detail: 'Desktop stores no database configuration.' })}
+      ${stateRow('Production', s.production || { state: 'NOT PROBED', detail: 'Production requires an explicit one-shot observation.' })}
     </div>
     ${provenanceRows(s.provenance)}
     <div class="card">
       <h3>Builder OS detail</h3>
       <pre>${JSON.stringify(s.builder_os.detail, null, 2)}</pre>
     </div>
+    </details>
   `;
+
+  const runObservation = async (kind, buttonId) => {
+    const button = document.getElementById(buttonId);
+    const out = document.getElementById('host-observation-result');
+    if (!button || !out) return;
+    button.disabled = true;
+    const prior = button.textContent;
+    button.textContent = 'Observing…';
+    const result = await window.jarvis.observeHost(kind);
+    button.disabled = false;
+    button.textContent = prior;
+    out.innerHTML = stateRow(kind === 'memory' ? 'Memory observation' : 'Production observation', result);
+    await refreshStatus();
+  };
+  document.getElementById('observe-memory-host')?.addEventListener('click', () => runObservation('memory', 'observe-memory-host'));
+  document.getElementById('observe-production-host')?.addEventListener('click', () => runObservation('production', 'observe-production-host'));
 }
 
 // ── JOP-02 Living Spiral ─────────────────────────────────────────────────────
@@ -2263,6 +2341,16 @@ function renderSpiral() {
   }).join('');
 
   $main.innerHTML = `
+    <div class="card">
+      <h3>Living field</h3>
+      <p class="headline">A living view of what JARVIS can see right now.</p>
+      <p class="sentence">This is not a score or a progress chart. It is a way of seeing what is present, what needs attention, and what remains unknown.</p>
+      <div class="row"><div><div class="label">Needs attention</div><div class="sentence">${sp.attention.length ? `${sp.attention.length} part${sp.attention.length === 1 ? '' : 's'} of the system need attention.` : 'Nothing currently needs your attention.'}</div></div><span class="state ${sp.attention.length ? 'DEGRADED' : 'AVAILABLE'}">${sp.attention.length ? 'Attention' : 'Clear'}</span></div>
+      <div class="row"><div><div class="label">Still unknown</div><div class="sentence">${sp.apertures.length ? `${sp.apertures.length} thing${sp.apertures.length === 1 ? '' : 's'} are not yet knowable from current evidence.` : 'Nothing is currently hidden by missing observation.'}</div></div><span class="state UNVERIFIED">${sp.apertures.length ? 'Watching' : 'None'}</span></div>
+      <div class="row"><div><div class="label">Known relationships</div><div class="sentence">${sp.edges.length ? `${sp.edges.length} evidenced connection${sp.edges.length === 1 ? '' : 's'} are visible.` : 'No evidenced connections are currently drawn.'}</div></div><span class="state READY">${sp.edges.length}</span></div>
+    </div>
+    <details class="advanced-tools">
+      <summary>Open the field map</summary>
     <div class="spiral-wrap">
       <div>
         <div class="spiral-plate">
@@ -2329,7 +2417,8 @@ function renderSpiral() {
         </div>
       </div>
     </div>
-    <div class="hint">Read at ${sp.observed_at || 'unknown'} · same information as Home, drawn differently</div>`;
+    <div class="hint">Read at ${sp.observed_at || 'unknown'} · same information as Home, drawn differently</div>
+    </details>`;
 
   document.querySelectorAll('.sp-node').forEach(g => {
     const open = () => spInspect(sp, g.dataset.id);

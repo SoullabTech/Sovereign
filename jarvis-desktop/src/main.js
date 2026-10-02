@@ -20,6 +20,7 @@ const FRONTIER = require('./frontier-worker.js');
 const WUC = require('./work-unit-control.js');
 const RB = require('./runtime-binding.js');
 const RECOVERY_B = require('./o5-path-b-recovery.js');
+const HOST_OBS = require('./host-observation.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
 // C1 evidence containment: correctness is decided from canonical evidence, never
@@ -34,6 +35,11 @@ const GROUNDED_RESPONSE = require('./grounded-response.js');
 // when composed by the Soullab host it contributes its governed realm and IPC
 // surface without taking over userData, the single-instance lock, menu, or app events.
 const STANDALONE = require.main === module;
+
+const hostObservationState = {
+  memory: null,
+  production: null,
+};
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -553,11 +559,11 @@ async function readStatus() {
     route_a: { state: 'NOT PROBED', detail: 'depends on a bound execution substrate — none is bound' },
     local_worker: { state: 'NOT PROBED', detail: 'not probed while no execution substrate is bound' },
     // Declared so they are visibly accounted for rather than silently absent.
-    // Neither is probed by Desktop, and neither should be: a status row must
-    // never be the thing that opens a database connection or reaches
-    // production. UNCONFIGURED and NOT PROBED are the honest answers.
-    memory_postgres: { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one. Memory/Postgres state is read from the host, not from this console.' },
-    production: { state: 'NOT PROBED', detail: 'requires explicit production/SSH authority, which Desktop does not hold and does not request. Not probed by design.' },
+    // Status refresh itself never opens a database connection or reaches
+    // production. Only the explicit one-shot observation gesture may do that,
+    // and its last result is held in process memory for this Desktop session.
+    memory_postgres: hostObservationState.memory || { state: 'UNCONFIGURED', detail: 'Desktop stores no database configuration. Use Observe Memory Host for a one-shot, fixed read from the host.' },
+    production: hostObservationState.production || { state: 'NOT PROBED', detail: 'Production is observed only by an explicit one-shot founder gesture. No unattended SSH authority is held.' },
     claude_lane: { state: 'AVAILABLE', detail: 'Router can select C3; routing alone never executes a frontier model.' },
     frontier_reasoner: FRONTIER.status(),
     continuity: CONTINUITY.status(currentRoot()),
@@ -1457,6 +1463,17 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   }
 
   return response;
+});
+
+// One-shot host observation. The renderer may name only one of two fixed reads.
+// MAIN owns the SSH target and the exact remote command; no shell text, host,
+// credential, write verb, deploy verb, or recurring authority crosses IPC.
+ipcMain.handle('jarvis:observe-host', async (_evt, req) => {
+  const kind = req?.kind === 'memory' ? 'memory' : req?.kind === 'production' ? 'production' : null;
+  if (!kind) return { ok: false, state: 'UNVERIFIED', detail: 'Unknown host observation kind refused.' };
+  const result = HOST_OBS.observe(kind);
+  hostObservationState[kind] = result;
+  return result;
 });
 
 // Explicit C3 frontier act. This is intentionally a separate IPC action from
