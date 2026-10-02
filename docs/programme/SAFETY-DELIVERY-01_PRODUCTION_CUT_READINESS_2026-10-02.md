@@ -2,7 +2,7 @@
 
 Date: 2026-10-02
 Status: deployment-order record; no production mutation
-Canonical observed: `5f8d39c7f0ce206be42469e66f366c4ff82dc62e`
+Canonical observed: `d4655e6477fa40b8f94c5f8f91be47198288d2af`
 Production currently witnessed: `13a0308d706c684f21aa53741791cb224334ff82`
 
 ## Purpose
@@ -16,26 +16,20 @@ The current production witness resolves the running container to:
 `GIT_COMMIT=13a0308d7`
 → full commit `13a0308d706c684f21aa53741791cb224334ff82`.
 
-Repository ancestry checks establish that neither #1671 merge
-`15a9175fb917cd9aa84a2735f7b3cf91a964b49b`
-nor #1633 merge
-`5c3d31c2a777ee62780906d8e07ba7b5fff47537`
-is an ancestor of that deployed commit.
+Merged PR #1727 converged that exact live production lineage into canonical ancestry:
 
-Against canonical
-`5f8d39c7f0ce206be42469e66f366c4ff82dc62e`,
-the merge base is
-`298414555bbe7eccdf453b09e026737d4f7f4e29`.
+- #1727 merge commit: `d4655e6477fa40b8f94c5f8f91be47198288d2af`
+- parent 1: canonical Writer's Studio release `5f8d39c7f0ce206be42469e66f366c4ff82dc62e`
+- parent 2: live production `13a0308d706c684f21aa53741791cb224334ff82`
+- merge tree: byte-identical to the canonical parent
+- effective runtime file diff introduced by the convergence act: **zero**
 
-At that witness point:
-- production has **7** commits not in canonical;
-- canonical has **177** commits not in production.
+Therefore the live production SHA is now an ancestor of canonical. The earlier
+7-vs-177 divergent-lineage state is historical evidence, not the current topology.
 
-Therefore safety deployment is NOT licensed as a simple canonical fast-forward.
-
-A production cut must preserve the actual running production projection, establish
-its ancestry to the selected canonical safety commits explicitly, and add only
-governed/admitted safety changes.
+This resolves the ancestry problem only. It does **not** authorize deploying current
+canonical, because canonical contains Class-A safety changes (#1671 and #1633) whose
+post-facto governance disposition is still unresolved.
 
 ## Current safety admission state
 
@@ -88,18 +82,17 @@ Mechanically fail-closes the already-required authoritative adjudication context
 self-authored Class-A PR lacks a governed distinct-human custodian approval. This enforcement
 must land before further Class-A admission is treated as ordinary.
 
-### Production ancestry custody candidate
+### Production ancestry convergence — complete
 
-#1728 — admit live `13a0308d7` ancestry without changing the canonical tree
+#1727 — production/canonical lineage convergence
 
-The candidate establishes the exact live production commit as canonical ancestry while
-resolving its merge tree byte-identically to current canonical. It is **Class A** and therefore
-is not admissible until the custody floor is active and a governed distinct-human custodian
-exists. It does not authorize deployment by itself.
+Merged as an ancestry-only Class-B act. Its merge commit
+`d4655e6477fa40b8f94c5f8f91be47198288d2af` has the live production SHA
+`13a0308d706c684f21aa53741791cb224334ff82` as a parent and a tree byte-identical
+to its canonical parent.
 
-If #1728 is lawfully admitted, the preferred production path may proceed from canonical
-descendants that already contain the live production ancestry. If it is not admitted, G3 must
-continue to build the production cut from the separately witnessed `13a0308d7` lineage.
+This means production ancestry is now canonically represented without changing runtime code.
+PR #1728 is closed as superseded and is not a deployment prerequisite.
 
 ### Evidence reconciliation
 
@@ -143,7 +136,7 @@ Before production projection:
 - #1713 is merged/admitted under the custody floor or explicitly excluded from this cut
 - #1715 remains closed and is not revived as an admission prerequisite
 - selected #1671 / #1633 safety commits have an explicit governed disposition
-- #1728 is explicitly admitted or held/excluded under the custody floor
+- #1727 ancestry convergence remains present in the selected canonical head
 - current canonical head is recorded
 
 No unresolved or unreviewed Class A code enters the production projection.
@@ -166,17 +159,21 @@ Recipient designation is an authority act, not a technical default.
 
 ### G3 — Production projection
 
-Choose the construction path from governed ancestry evidence:
+Because #1727 has already made the witnessed `13a0308d7` production SHA an ancestor of
+canonical, the preferred candidate is now a **canonical descendant that preserves that ancestry**.
 
-- **If #1728 is lawfully admitted:** use a canonical descendant that contains the witnessed `13a0308d7` production ancestry, then select only the governed safety changes intended for the cut.
-- **If #1728 is held or excluded:** create a dedicated production-cut branch from the actual running production lineage (or a later witnessed production anchor), rather than replacing it with canonical wholesale.
+That does not license deploying canonical wholesale before governance disposition. If any
+canonical Class-A safety change is explicitly excluded from the production cut, construct a
+dedicated descendant branch that removes/excludes only that governed-out change while
+preserving the #1727 production ancestry relation.
 
-Whichever path is selected must:
-1. preserve the admitted Writer's Studio production changes;
-2. include only governed/admitted safety commits;
-3. resolve overlaps explicitly;
-4. prove the resulting tree contains every selected safety contract;
-5. identify the exact candidate SHA and its ancestry to the witnessed production anchor.
+The selected candidate must:
+1. descend from the witnessed production anchor through the #1727 canonical ancestry;
+2. preserve the admitted Writer's Studio production changes;
+3. contain only safety changes with resolved governance/admission standing;
+4. resolve any exclusion or overlap explicitly;
+5. prove the resulting tree contains every selected safety contract;
+6. identify the exact candidate SHA and its ancestry to the witnessed production anchor.
 
 ### G4 — Pre-deploy falsifiers
 
@@ -262,7 +259,7 @@ Code substrate: PARTIAL — #1671 and #1633 are canonical but governance-held; #
 
 Governance enforcement: #1716 pending; distinct-human custody is not yet constituted.
 
-Production artifact currently witnessed: `13a0308d706c684f21aa53741791cb224334ff82` · contains neither #1671 nor #1633 merge ancestry. Its merge base with canonical `5f8d39c7f0ce206be42469e66f366c4ff82dc62e` is `298414555bbe7eccdf453b09e026737d4f7f4e29`; production carries 7 unique commits and canonical carries 177 unique commits at that witness point. Projection ancestry must therefore be re-established explicitly.
+Production artifact currently witnessed: `13a0308d706c684f21aa53741791cb224334ff82` · still contains neither #1671 nor #1633 itself, but #1727 has now made this exact production SHA an ancestor of canonical merge `d4655e6477fa40b8f94c5f8f91be47198288d2af` with zero runtime-tree change. Production ancestry is therefore reconciled; governance disposition of the canonical Class-A safety changes remains the blocker.
 
 Safety recipient: NOT DESIGNATED.
 
