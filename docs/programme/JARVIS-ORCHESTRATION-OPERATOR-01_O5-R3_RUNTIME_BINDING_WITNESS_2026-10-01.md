@@ -819,3 +819,106 @@ All are killed on their named rule.
 
 **Standing:** RB-A3 is frozen as additive lineage; earlier frozen blobs remain unchanged. A new fresh walk is
 required from the commit containing RB-A3. O5-R4 remains closed and production remains untouched.
+
+## 14. Fresh walk #3 stopped after the authorized write · execution-boundary incident and recovery (2026-10-01)
+
+### 14.1 Step 5 passed on RB-A3
+
+A fresh detached specimen at `2a6bd1a6e8bc50ac8cdd5627eba7898ee61340df` passed the amended Step 5:
+- readiness `READY`;
+- C1–C5 PASS;
+- C6-pre PASS — `NOT_YET_HELD_AFTER_RELEASE · generation 2`;
+- `PRE-WRITE BASELINE PASS — C1–C5 + C6-pre`.
+
+The saved files are `~/o5r3-w3-prewrite.json` and `~/o5r3-w3-step5.txt`.
+
+### 14.2 The intended grant was issued, then the execution boundary was crossed
+
+The prepared Work Unit was
+`v2-witness-the-o5-r3-single-authorize-muq1l3w5`, primary participant QWEN,
+transport `e1-ready-primary-0990055d798c`.
+
+The real grant ledger records:
+- `ISSUED` at `2026-10-01T21:47:22.074Z`, grant `e1-c5e48bd04800c6b9c2009077a0ff3df0`;
+- `CLAIMED` at `2026-10-01T21:47:25.242Z`.
+
+Lease generation 3 was acquired by the same Desktop incarnation, pid `85599`,
+start `ps-lstart:Thu Oct 1 17:09:38 2026`.
+
+That is a material divergence from the witness stop condition. The Work Unit moved to `EXECUTING`.
+No durable result file was produced and no W4 execution attempt was recorded.
+The founder reported that this path had crashed the system previously. Unified macOS logging around the incident
+shows a burst of many Node processes beginning around 17:47:24, between ISSUED and CLAIMED. No matching
+DiagnosticReports crash file was found. The record therefore does **not** claim that the Node burst caused the
+whole-system crash; it records temporal correlation only.
+
+### 14.3 UI safety defect and interlock
+
+Source review established that Authorize Once and Confirm Execute are separate renderer handlers and separate IPC
+actions. Authorize Once does not itself call Confirm Execute. The unsafe interaction shape was that an ACTIVE grant
+immediately re-rendered the same participant row with a primary **Confirm Execute** button.
+
+Repair commit `11f10ec0dbe550607a64d8f2af211cd43bae15e8` adds a separate, non-executing interaction epoch:
+
+`Authorize this execution once → Review authorized execution → Confirm Execute`
+
+The confirm handler refuses unless the exact grant has first been armed by the review gesture. E1 tests are 11/11
+green. This repair does not change C6A, C8, the grant store or the provider execution mechanism.
+
+### 14.4 Stranded authority classification and retirement
+
+The first post-incident recovery census classified the grant
+`DISPATCHED_WITHOUT_WITNESS_NO_PROBE / BLOCKED_BY_EVIDENCE / no_durable_result`.
+That is outcome **UNKNOWN**: recovery may not replay the provider and may not manufacture a success/failure result.
+
+A dedicated operator-retirement mechanism was built and tested at
+`952748010acc8317642b7e0281237f70b7fb16c2`. Its isolated proof is 4/4:
+- exact census digest required;
+- exact Work Unit + grant required;
+- dead or pid-reused lease holder must be proven;
+- retirement is append-only `CLAIMED → INVALIDATED`;
+- no `CONSUMED`, no W4 result, no provider replay;
+- takeover lease is released afterward.
+
+Before that new command was run on the real home, another concurrent governed lane had already retired the real
+grant. The append-only ledger now carries:
+`INVALIDATED · 2026-10-01T23:30:06.465Z · OPERATOR_RECOVERY_UNKNOWN_EXECUTION_OUTCOME`.
+The new command therefore failed closed at preflight by observing that the census had changed.
+### 14.5 Lease history after recovery
+
+The recovery history is preserved, not normalized away:
+- generation 3: prior Desktop holder, later proven dead;
+- generations 4–6: subsequent proven-dead takeovers by short-lived recovery processes;
+- generation 7: clean release after the operator invalidation;
+- generations 8–12: later real grant-writer activity from other concurrent lanes;
+- generation 13: clean release.
+
+The latest observed standing is therefore
+`NOT_YET_HELD_AFTER_RELEASE · generation 13`.
+
+The admission walk must never hard-code a generation number again. The rule is:
+**saved pre-write latest generation = N; the one authorized acquisition must be exactly N+1**.
+At the time of this record N=13, so the next acquisition would be 14 only if no governed writer changes the home
+before the new Step 5 baseline.
+
+### 14.6 Regression standing and next boundary
+
+On the candidate containing the execution interlock and retirement tooling:
+- RB matrix: LETHAL + DISCRIMINATING · WIRING INTACT;
+- RB-A1 pre-write matrix: LETHAL + DISCRIMINATING · WIRING INTACT;
+- RB-A2 transition matrix: LETHAL + DISCRIMINATING · WIRING INTACT;
+- RB-A3 readiness matrix: LETHAL + DISCRIMINATING · WIRING INTACT;
+- O5-R3 writer proof: 17/17;
+- stranded-retirement proof: 4/4;
+- canonical E1 suite: 11/11.
+
+**Standing:**
+- **IMPLEMENTED + SAFETY-REPAIRED · ⛔ NOT ADMITTED**;
+- generations 1–13 preserved as real history;
+- stranded generation-3 grant retired append-only with outcome UNKNOWN;
+- latest observed lease generation 13 released;
+- a completely fresh witness specimen is required from a commit containing RB-A3 + the execution interlock;
+- Step 5 establishes N; Step 6 must prove exactly N+1 and exactly one grant-ledger append;
+- after authorization the UI must stop at **Review authorized execution**. Confirm Execute is outside this witness;
+- ⛔ O5-R4 remains closed;
+- production untouched.
