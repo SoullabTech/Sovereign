@@ -29,14 +29,23 @@ interface RouteParams {
 }
 
 /**
- * Helper to get practitioner ID from slug
+ * Resolve both practitioner identities from slug.
+ * practitioners.id is the practice record; practitioners.member_id is the person.
  */
-async function getPractitionerIdFromSlug(slug: string): Promise<string | null> {
+async function getPractitionerIdentityFromSlug(
+  slug: string
+): Promise<{ practitionerRecordId: string; practitionerMemberId: string } | null> {
   const result = await db.query(
-    `SELECT id FROM practitioners WHERE slug = $1 AND status = 'active'`,
+    `SELECT id, member_id FROM practitioners
+     WHERE slug = $1 AND status = 'active' AND member_id IS NOT NULL`,
     [slug]
   );
-  return result.rows[0]?.id || null;
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    practitionerRecordId: row.id,
+    practitionerMemberId: row.member_id,
+  };
 }
 
 /**
@@ -68,17 +77,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Verify slug matches the practitioner from token
-    const practitionerId = await getPractitionerIdFromSlug(slug);
-    if (!practitionerId || practitionerId !== access.practitionerId) {
+    // Verify the slug resolves to the same practice record AND member identity
+    // carried by the token-derived relationship.
+    const practitioner = await getPractitionerIdentityFromSlug(slug);
+    if (
+      !practitioner ||
+      practitioner.practitionerRecordId !== access.practitioner.practitionerRecordId ||
+      practitioner.practitionerMemberId !== access.practitioner.practitionerMemberId
+    ) {
       return NextResponse.json(
         { error: 'Portal not found' },
         { status: 404 }
       );
     }
 
-    // Get messaging context
-    const context = await getPortalMessagingContext(access.clientId, access.practitionerId);
+    // Messaging tables are member-owned; relationship checks still retain the practice id.
+    const context = await getPortalMessagingContext(access.clientId, access.practitioner);
 
     if (!context) {
       return NextResponse.json(
@@ -130,9 +144,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Verify slug matches
-    const practitionerId = await getPractitionerIdFromSlug(slug);
-    if (!practitionerId || practitionerId !== access.practitionerId) {
+    // Verify slug matches both identities from the token-derived relationship.
+    const practitioner = await getPractitionerIdentityFromSlug(slug);
+    if (
+      !practitioner ||
+      practitioner.practitionerRecordId !== access.practitioner.practitionerRecordId ||
+      practitioner.practitionerMemberId !== access.practitioner.practitionerMemberId
+    ) {
       return NextResponse.json(
         { error: 'Portal not found' },
         { status: 404 }
@@ -166,7 +184,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Send message
-    const result = await sendClientMessage(access.clientId, access.practitionerId, {
+    const result = await sendClientMessage(access.clientId, access.practitioner, {
       message_type,
       urgency,
       body: messageBody.trim(),
@@ -183,7 +201,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (urgency === 'safety_concern' && result.message) {
       // Step 1: Log safety concern SYNCHRONOUSLY (this is the idempotency gate)
       const logResult = await logSafetyConcern(
-        access.practitionerId,
+        access.practitioner.practitionerMemberId,
         access.clientId,
         result.message.id
       );
@@ -201,7 +219,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         // Pass logId so email status gets tracked in the log
         sendSafetyConcernNotification(
           {
-            practitionerId: access.practitionerId,
+            practitionerId: access.practitioner.practitionerMemberId,
             clientId: access.clientId,
             messageId: result.message.id,
             messageBody: messageBody.trim(),
@@ -224,7 +242,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get the effective policy for confirmation message
-    const context = await getPortalMessagingContext(access.clientId, access.practitionerId);
+    const context = await getPortalMessagingContext(access.clientId, access.practitioner);
 
     return NextResponse.json({
       success: true,
