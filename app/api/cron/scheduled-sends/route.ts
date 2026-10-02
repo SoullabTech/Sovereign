@@ -39,7 +39,7 @@ async function processDue() {
   // The consent gate + due gate live in the query: only consent_confirmed, pending, due rows.
   const due = await db.query(
     `SELECT s.id, s.practitioner_id, s.recipient_email, s.recipient_name, s.subject, s.body, s.attempts,
-            p.name AS practitioner_name
+            p.name AS practitioner_name, p.email AS practitioner_email
        FROM scheduled_sends s
        JOIN practitioners p ON p.id = s.practitioner_id
       WHERE s.status = 'pending' AND s.consent_confirmed = true AND s.scheduled_for <= now()
@@ -60,6 +60,7 @@ async function processDue() {
           toName: row.recipient_name || undefined,
           subject: row.subject,
           bodyText: row.body, // plain text, human-authored — no HTML injection surface
+          replyTo: row.practitioner_email || 'support@soullab.life',
         },
         { fromEmail: FROM_EMAIL, fromName: `${row.practitioner_name} via SoulLab` },
       );
