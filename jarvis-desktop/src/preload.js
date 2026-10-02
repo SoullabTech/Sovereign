@@ -12,6 +12,16 @@ const { contextBridge, ipcRenderer } = require('electron');
 // way a new root enters the system is through a founder's own file dialog.
 contextBridge.exposeInMainWorld('jarvis', {
   getStatus: () => ipcRenderer.invoke('jarvis:status'),
+  // B5: the single Founder Workspace read seam. Optional evidence_ref is not a path grant: MAIN
+  // admits it only when the exact ref already exists in the freshly composed live view-model.
+  getWorkspaceViewModel: (opts = {}) => {
+    const req = typeof opts === 'string' ? { evidence_ref: opts } : (opts && typeof opts === 'object' ? opts : {});
+    return ipcRenderer.invoke('jarvis:workspace-viewmodel', {
+      evidence_ref: typeof req.evidence_ref === 'string' ? req.evidence_ref : undefined,
+      force_refresh: req.force_refresh === true,
+      refresh_instruments: req.refresh_instruments === true,
+    });
+  },
   getCapabilities: () => ipcRenderer.invoke('jarvis:capabilities'),
   searchContinuity: (query, limit = 8) => ipcRenderer.invoke('jarvis:continuity-search', { query, limit }),
   submitTask: (task) => ipcRenderer.invoke('jarvis:submit-task', task),
