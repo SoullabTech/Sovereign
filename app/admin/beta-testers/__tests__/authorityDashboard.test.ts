@@ -12,6 +12,12 @@ describe('authoritative beta tester dashboard', () => {
     expect(page).not.toContain("localStorage.setItem('maia_beta_testers')");
   });
 
+  it('shows each beta signal separately rather than naming one the truth', () => {
+    expect(page).toContain('tester.signals[key]');
+    expect(page).toContain('Pipeline contacts with no member link');
+    expect(page).not.toContain('authority.betaCohort');
+  });
+
   it('states that ordinary platform access and Early Field are separate authorities', () => {
     expect(page).toContain('Beta access and Early Field are separate');
     expect(page).toContain('Subscription does not gate this');

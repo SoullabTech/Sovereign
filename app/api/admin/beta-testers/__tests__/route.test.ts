@@ -26,10 +26,14 @@ beforeEach(() => {
   mockQuery.mockReset();
   mockQuery.mockImplementation(async (sql) => {
     if (sql.includes('INSERT INTO admin_access_log')) return { rows: [] };
-    if (sql.includes('FROM members') && sql.includes('tester = TRUE')) {
+    if (sql.includes('COUNT(*) AS n FROM ops_contacts')) return { rows: [{ n: '3' }] };
+    if (sql.includes('FROM members m')) {
       return {
         rows: [{
           id: '11111111-1111-4111-8111-111111111111',
+          flag: true,
+          has_role: true,
+          has_pipeline: false,
           name: 'Tester One',
           preferred_name: 'One',
           username: 'tester-one',
@@ -55,10 +59,10 @@ describe('GET /api/admin/beta-testers', () => {
   it('fails closed without admin authority', async () => {
     const res = await GET(req());
     expect(res.status).toBe(401);
-    expect(mockQuery.mock.calls.some(([sql]) => String(sql).includes('tester = TRUE'))).toBe(false);
+    expect(mockQuery.mock.calls.some(([sql]) => String(sql).includes('FROM members m'))).toBe(false);
   });
 
-  it('reads members.tester and keeps Early Field separate from platform access', async () => {
+  it('reports every beta signal separately and keeps Early Field separate from platform access', async () => {
     const res = await GET(req(ADMIN_PW));
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -69,20 +73,32 @@ describe('GET /api/admin/beta-testers', () => {
       needsReview: 0,
       earlyField: 1,
       onboarded: 1,
+      bySignal: { flag: 1, role: 1, pipeline: 0 },
+      unlinkedPipelineContacts: 3,
     });
-    expect(body.authority).toEqual({
-      betaCohort: 'members.tester',
-      platformAccess: 'authenticated member; minimum tier free',
-      subscriptionGatesOrdinaryPlatform: false,
-      earlyFieldSeparate: true,
-    });
+    expect(body.authority.platformAccess).toBe('authenticated member; minimum tier free');
+    expect(body.authority.subscriptionGatesOrdinaryPlatform).toBe(false);
+    expect(body.authority.earlyFieldSeparate).toBe(true);
+    expect(body.authority.signals.map((x: { id: string }) => x.id)).toEqual(['flag', 'role', 'pipeline']);
     expect(body.testers[0]).toMatchObject({
       name: 'One',
       signInMethods: ['email-code', 'password'],
       signInReady: true,
       earlyFieldAdmitted: true,
       subscriptionActive: false,
+      signals: { flag: true, role: true, pipeline: false },
     });
     expect(JSON.stringify(body)).not.toContain('secret-hash-never-returned');
+  });
+
+  it('selects the union of signals, not the flag alone, and includes the Early Field cohort', async () => {
+    await GET(req(ADMIN_PW));
+    const sql = String(mockQuery.mock.calls.map(([q]) => String(q)).find((q) => q.includes('FROM members m')));
+    expect(sql).toContain('m.tester = TRUE');
+    expect(sql).toContain("m.roles @> ARRAY['beta_tester']");
+    expect(sql).toContain("c.contact_type = 'beta_tester'");
+    expect(sql).toContain('m.id = ANY($1::uuid[])');
+    const call = mockQuery.mock.calls.find(([q]) => String(q).includes('FROM members m'));
+    expect(call?.[1]).toEqual([['11111111-1111-4111-8111-111111111111']]);
   });
 });
