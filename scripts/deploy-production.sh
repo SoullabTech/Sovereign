@@ -860,15 +860,30 @@ cmd_update() {
 # MIGRATE - Run database migrations only
 # ═══════════════════════════════════════════════════════════════════════════════
 cmd_migrate() {
-    acquire_deploy_lock "deploy-production.sh migrate" "migrations only (no image is built)"
-    log_info "Running database migrations..."
+    local ref="${1:-}"
+    if [ -z "$ref" ]; then
+        log_error "Migration-only production acts require an explicit target SHA."
+        log_error "Usage: ./scripts/deploy-production.sh migrate <SHA>"
+        exit 1
+    fi
+
+    acquire_deploy_lock "deploy-production.sh migrate" "$ref"
+    log_info "Running database migrations for exact target: $ref"
 
     cd "$PROJECT_DIR"
+
+    # ⭐ Migration-only is not a mutable-checkout escape hatch. Materialize the
+    # exact reviewed target so discovery, custody and execution all read the same
+    # immutable bytes as deploy/update.
+    deploy_ctx_assert_and_materialize "$ref" || exit 1
+    deploy_ctx_assert_descends_from_running "deploy-production.sh migrate" || exit 1
 
     # Migration-only production acts are governed by the same bound review.
     review_migration_custody_or_abort "Migration-only run"
 
-    docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate
+    # Re-witness the pending set + old reader at the last possible point and run
+    # migrations from the immutable target context. No candidate reader is swapped.
+    run_migrations_or_abort "Migration-only run"
 
     log_success "Migrations complete!"
 }
@@ -1122,7 +1137,7 @@ case "${1:-help}" in
         cmd_update
         ;;
     migrate)
-        cmd_migrate
+        cmd_migrate "$2"
         ;;
     logs)
         cmd_logs
@@ -1164,7 +1179,7 @@ case "${1:-help}" in
         echo "  update      - Pull latest code, then build the pulled tip as an immutable snapshot"
         echo "  rollback   - Instant rollback to previous deployment"
         echo "  safe-mode  - Toggle safe mode (on/off/status)"
-        echo "  migrate    - Run database migrations"
+        echo "  migrate <SHA> - Run reviewed database migrations from a NAMED immutable commit"
         echo "  logs       - Tail container logs"
         echo "  status     - Show container status"
         echo "  stop       - Stop all containers"
