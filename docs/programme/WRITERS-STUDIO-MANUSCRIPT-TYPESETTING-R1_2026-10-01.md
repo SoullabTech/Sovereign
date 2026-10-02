@@ -1,6 +1,6 @@
 # WRITERS-STUDIO-MANUSCRIPT-TYPESETTING-R1
 
-**Opened:** 2026-10-01 — founder report from the canonical Writer’s Studio Write room.  
+**Opened:** 2026-10-01 — founder report from the canonical Writer’s Studio Write room.
 **Terminal claim:** A writer can open an imported finished manuscript and see professional, book-like typography without Writer’s Studio changing, inventing, deleting, or reordering the author’s words; editing, exact passage selection, saving, and Full Canvas remain intact; the proved canonical merge SHA may then be promoted through the governed production deployment lane for the invited tester cohort.
 
 ## Founder observation
@@ -21,70 +21,70 @@ This is a manuscript-fidelity defect, not a request to rewrite content. The repa
 ## Flow
 
 ### G0 · Reproduce and locate
-**Question:** Is the reported defect real, and which canonical path creates it?  
-**Subject:** `/writers-studio?mode=write` → P4R1 host → live projection → WriteRoom.  
-**Authority:** read-only repository/runtime inspection.  
-**Evidence required:** exact renderer, paragraph projection, and CSS identified.  
-**Falsifier:** screenshot is produced by another route or the stored body already supplies correctly rendered blocks.  
-**PASS opens:** G1.  
+**Question:** Is the reported defect real, and which canonical path creates it?
+**Subject:** `/writers-studio?mode=write` → P4R1 host → live projection → WriteRoom.
+**Authority:** read-only repository/runtime inspection.
+**Evidence required:** exact renderer, paragraph projection, and CSS identified.
+**Falsifier:** screenshot is produced by another route or the stored body already supplies correctly rendered blocks.
+**PASS opens:** G1.
 **Standing:** PASS — canonical route and blank-line-only projection located.
 
 ### G1 · Content-preservation contract
-**Question:** Can professional typesetting be derived without changing the writer’s words or breaking passage coordinates?  
-**Permitted:** pure presentation projection; classification from existing whitespace/layout; CSS.  
-**Forbidden:** model rewriting; source/draft migration; deleting PDF folios; text substitution; selection offsets computed from visually normalized strings.  
-**Evidence required:** tests proving word-sequence conservation and preserved intra-block newlines.  
-**Falsifier:** any lexical delta or selected visible text cannot resolve against canonical text.  
+**Question:** Can professional typesetting be derived without changing the writer’s words or breaking passage coordinates?
+**Permitted:** pure presentation projection; classification from existing whitespace/layout; CSS.
+**Forbidden:** model rewriting; source/draft migration; deleting PDF folios; text substitution; selection offsets computed from visually normalized strings.
+**Evidence required:** tests proving word-sequence conservation and preserved intra-block newlines.
+**Falsifier:** any lexical delta or selected visible text cannot resolve against canonical text.
 **PASS opens:** G2.
 
 ### G2 · Typesetting engine
-**Question:** Does the room recover enough manuscript structure to present finished work professionally?  
-**Required roles:** paragraph · epigraph · subhead · list · folio.  
-**Order:** explicit blank-line blocks first; otherwise high-confidence hard-wrap recovery.  
-**Falsifier:** ordinary prose is arbitrarily fragmented, a folio remains buried in prose, or a real explicit paragraph is collapsed into another.  
+**Question:** Does the room recover enough manuscript structure to present finished work professionally?
+**Required roles:** paragraph · epigraph · subhead · list · folio.
+**Order:** explicit blank-line blocks first; otherwise high-confidence hard-wrap recovery.
+**Falsifier:** ordinary prose is arbitrarily fragmented, a folio remains buried in prose, or a real explicit paragraph is collapsed into another.
 **PASS opens:** G3.
 
 ### G3 · Professional page geometry
-**Question:** Does the Write room read like a professional writing page at rest and in Full Canvas?  
-**Required:** restrained reading measure; balanced chapter title; ~1.7 leading; visible paragraph rhythm; differentiated epigraph/subhead/list/folio; responsive mobile behavior; no cardification of prose.  
-**Falsifier:** long desktop lines dominate the viewport, typography jumps on Full Canvas, or semantic roles look like UI controls.  
+**Question:** Does the Write room read like a professional writing page at rest and in Full Canvas?
+**Required:** restrained reading measure; balanced chapter title; ~1.7 leading; visible paragraph rhythm; differentiated epigraph/subhead/list/folio; responsive mobile behavior; no cardification of prose.
+**Falsifier:** long desktop lines dominate the viewport, typography jumps on Full Canvas, or semantic roles look like UI controls.
 **PASS opens:** G4.
 
 ### G4 · Authorship behavior regression
-**Question:** Did typesetting preserve the working editor?  
-**Required:** edit · autosave · section navigation · selection → held passage · Revise/Discuss affordance · Full Canvas focus/selection continuity.  
-**Falsifier:** render alone marks dirty; typing loses words; selection address drifts; paragraph projection changes section identity.  
+**Question:** Did typesetting preserve the working editor?
+**Required:** edit · autosave · section navigation · selection → held passage · Revise/Discuss affordance · Full Canvas focus/selection continuity.
+**Falsifier:** render alone marks dirty; typing loses words; selection address drifts; paragraph projection changes section identity.
 **PASS opens:** G5.
 
 ### G5 · Automated verification
-**Question:** Is the candidate internally clean?  
-**Required:** targeted typesetting tests; P4R1 Write tests; typehealth no-regression; relevant Writer’s Studio suites; build; `git diff --check`.  
-**Falsifier:** any new failure attributable to the candidate.  
+**Question:** Is the candidate internally clean?
+**Required:** targeted typesetting tests; P4R1 Write tests; typehealth no-regression; relevant Writer’s Studio suites; build; `git diff --check`.
+**Falsifier:** any new failure attributable to the candidate.
 **PASS opens:** G6.
 
 ### G6 · Visual/browser witness
-**Question:** Does the actual room show the intended result, not merely satisfy source assertions?  
-**Required witness:** representative finished-manuscript page in Evening/Night or current tester theme; ordinary paragraphs visibly separated; epigraph/subhead/folio legible; desktop + Full Canvas; no overflow.  
-**Falsifier:** visual bunching remains or editor behavior differs from tests.  
+**Question:** Does the actual room show the intended result, not merely satisfy source assertions?
+**Required witness:** representative finished-manuscript page in Evening/Night or current tester theme; ordinary paragraphs visibly separated; epigraph/subhead/folio legible; desktop + Full Canvas; no overflow.
+**Falsifier:** visual bunching remains or editor behavior differs from tests.
 **PASS opens:** G7.
 
 ### G7 · Review and canonical convergence
-**Question:** Is the exact reviewed tree ready to become canonical without bypassing the existing Writer’s Studio repair stack?  
-**Required:** dedicated branch and PR; upstream Writer’s Studio bases reconciled in order; required checks green; exact merge SHA recorded.  
-**Falsifier:** merge conflict, stale base, red required check, or candidate tree differs from reviewed tree.  
+**Question:** Is the exact reviewed tree ready to become canonical without bypassing the existing Writer’s Studio repair stack?
+**Required:** dedicated branch and PR; upstream Writer’s Studio bases reconciled in order; required checks green; exact merge SHA recorded.
+**Falsifier:** merge conflict, stale base, red required check, or candidate tree differs from reviewed tree.
 **PASS opens:** G8.
 
 ### G8 · Governed deployment
-**Question:** May the canonical merge SHA be promoted for the invited tester cohort?  
-**Authority:** founder request of 2026-10-01 authorizes this feature deployment; repository deployment constitution still governs mechanism and provenance.  
-**Required:** deploy the canonical merge SHA, never an unmerged branch head; run pre-deploy/provenance gates; no pending migration shortcut; preserve deployment lock; health check.  
-**Falsifier:** candidate does not descend from running production, pending migrations require a different lane, provenance mismatch, failed build/health gate, or another deployment owns the lock.  
+**Question:** May the canonical merge SHA be promoted for the invited tester cohort?
+**Authority:** founder request of 2026-10-01 authorizes this feature deployment; repository deployment constitution still governs mechanism and provenance.
+**Required:** deploy the canonical merge SHA, never an unmerged branch head; run pre-deploy/provenance gates; no pending migration shortcut; preserve deployment lock; health check.
+**Falsifier:** candidate does not descend from running production, pending migrations require a different lane, provenance mismatch, failed build/health gate, or another deployment owns the lock.
 **PASS opens:** G9.
 
 ### G9 · Tester witness and closeout
-**Question:** Can tomorrow’s writers enter the Studio and trust the page they see?  
-**Required:** post-deploy Writer’s Studio smoke witness on the exact production SHA; open a finished manuscript; inspect Write + Full Canvas; edit/save one non-destructive tester passage or use a disposable witness manuscript; record observed SHA and health.  
-**Falsifier:** presentation or authorship regression in production.  
+**Question:** Can tomorrow’s writers enter the Studio and trust the page they see?
+**Required:** post-deploy Writer’s Studio smoke witness on the exact production SHA; open a finished manuscript; inspect Write + Full Canvas; edit/save one non-destructive tester passage or use a disposable witness manuscript; record observed SHA and health.
+**Falsifier:** presentation or authorship regression in production.
 **PASS:** close R1 and retain this manuscript as regression custody.
 
 ## Current implementation lane
