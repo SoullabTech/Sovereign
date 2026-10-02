@@ -90,9 +90,10 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'JARVIS resolved — the gesture JOP-04\'s "Home states the workspace before Work has to refuse ' +
       'it" requires. Minimal on four counts, each separately asserted: (1) the preload forwards NO ' +
       'argument and the handler DECLARES no parameter, so the renderer cannot name a path; (2) it ' +
-      'reveals only currentRoot(), and every writer of RESOLVED.root is marker-validated in main ' +
-      '(ENV/CONFIG/DEFAULT via isValidRepoRoot, WALK via the marker walk, bindRepoRoot via ' +
-      'isValidRepoRoot); (3) an unbound root short-circuits to {revealed:false} without touching ' +
+      'reveals only currentRoot(), and every authority-bearing writer of RESOLVED.root is explicit ' +
+      'and marker-validated (ENV/CONFIG via resolvePackagedMode, WALK via the dev marker walk, ' +
+      'bindRepoRoot via isValidRepoRoot). The historical default candidate may be suggested but ' +
+      'never becomes currentRoot(); (3) an unbound root short-circuits to {revealed:false} without touching ' +
       'shell at all; (4) it uses shell.showItemInFolder, which SELECTS an item in the file manager — ' +
       'main.js is separately proven to call neither shell.openPath nor shell.openExternal, so no ' +
       'open-or-execute authority is introduced. It returns no file contents.',

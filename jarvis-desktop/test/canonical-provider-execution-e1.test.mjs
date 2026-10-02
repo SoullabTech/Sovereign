@@ -11,6 +11,11 @@ const WUC = require('../src/work-unit-control.js');
 
 const REPO = path.resolve(import.meta.dirname, '..', '..');
 const SHA = '9580ad382089e8ce2e454d28ff3d97c2aa8efe11';
+const SAFE_LOCAL_CAPACITY = Object.freeze({
+  version: 'E1LC-SAMPLE.v1', platform: 'darwin',
+  total_ram_bytes: 48 * 1024 ** 3, free_ram_bytes: 32 * 1024 ** 3,
+  swap_total_bytes: 8 * 1024 ** 3, swap_free_bytes: 8 * 1024 ** 3,
+});
 
 function tempEnv() {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-desktop-'));
@@ -159,6 +164,7 @@ test('E1 full canonical local flow: Authorize Once != Confirm Execute, DR1/W4 ev
       REPO, id, issued.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async (_root, args) => {
           runnerCalls += 1;
@@ -196,6 +202,7 @@ test('E1 full canonical local flow: Authorize Once != Confirm Execute, DR1/W4 ev
       REPO, id, challengerGrant.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async (_root, args) => {
           runnerCalls += 1;
@@ -256,6 +263,7 @@ test('E1 provider failure consumes grant and DR1/W4 preserve failed attempt with
       REPO, id, issued.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async (_root, args) =>
           stubResult(args, { exitCode: 9, testResults: 'fail' }),
@@ -269,6 +277,7 @@ test('E1 provider failure consumes grant and DR1/W4 preserve failed attempt with
       REPO, id, issued.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async () => {
           throw new Error('must not run');
@@ -317,6 +326,7 @@ test('E1 external preview/Authorize Once do not inspect credentials; Confirm Exe
       REPO, id, primaryGrant.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async (_root, args) => stubResult(args),
       },
@@ -347,6 +357,7 @@ test('E1 external preview/Authorize Once do not inspect credentials; Confirm Exe
       REPO, id, issued.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         keychainProbe,
         executeCanonicalProvider: async (_root, args) => {
@@ -754,6 +765,33 @@ test('E1 Desktop keeps authorization, execution, verification, evidence-ready, a
   assert.notEqual(evidenceReadyAction, adjudicationAction);
 });
 
+test('E1 requires a fresh post-authorization review before Confirm Execute can appear or invoke IPC', () => {
+  const renderer = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/renderer.js'), 'utf8');
+  const gesture = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/e1-gesture-separation.js'), 'utf8');
+
+  const activeGrantBranch = renderer.match(
+    /else if \(primaryAction === 'REVIEW_AUTHORIZED'\) \{([\s\S]*?)\n    \} else \{/,
+  );
+  assert.ok(activeGrantBranch);
+  assert.match(activeGrantBranch[1], /data-e1-review-active/);
+  assert.match(activeGrantBranch[1], /Review authorized execution/);
+  assert.doesNotMatch(activeGrantBranch[1], /data-e1-confirm/);
+
+  assert.match(gesture, /confirmation_review === true/);
+  assert.match(renderer, /Fresh post-authorization review complete/);
+  assert.match(renderer, /Fresh post-authorization review required before Confirm Execute/);
+  assert.match(renderer, /reviewCanonicalAuthorizedExecution/);
+  assert.match(renderer, /data-e1-review-active/);
+
+  const confirmStart = renderer.indexOf('async function confirmCanonicalExecution');
+  const confirmEnd = renderer.indexOf('async function revokeCanonicalExecution', confirmStart);
+  const confirm = renderer.slice(confirmStart, confirmEnd);
+  const armCheck = confirm.indexOf('confirmationArmed');
+  const consumeArm = confirm.indexOf('activeCanonicalExecutionReview = null');
+  const privilegedIpc = confirm.indexOf("action: 'canonical-confirm-execute'");
+  assert.ok(armCheck >= 0 && consumeArm > armCheck && privilegedIpc > consumeArm);
+});
+
 test('M1 MODEL MODE uses exact frozen local realizations and never invokes OpenCode', async () => {
   assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS), true);
   assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS['qwen-local']), true);
@@ -787,6 +825,7 @@ test('M1 MODEL MODE uses exact frozen local realizations and never invokes OpenC
     let openCodeCalls = 0;
     const executionOpts = {
       env,
+      localCapacitySample: SAFE_LOCAL_CAPACITY,
       actorId: 'human:m1-proof',
       localWorkerRun: async ({ prompt, model, host, timeoutMs, temperature }) => {
         calls.push({ model, host, timeoutMs, temperature, prompt_length: prompt.length });
@@ -847,6 +886,57 @@ test('M1 MODEL MODE uses exact frozen local realizations and never invokes OpenC
     assert.equal(final.provenance.attempts[1].adapter_id, 'ollama-direct');
     assert.equal(final.provenance.attempts[0].status, 'completed');
     assert.equal(final.provenance.attempts[1].status, 'completed');
+  } finally {
+    cleanup(home);
+  }
+});
+
+test('E1 local capacity refusal happens before CLAIMED, EXECUTING, or provider launch', async () => {
+  const { home, env } = tempEnv();
+  try {
+    const { id, status } = await routedReady(env, 3900);
+    const primary = status.routing.participants.find((p) => p.participant_id === 'primary');
+    const issued = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, primary.participant_id,
+      { env, actorId: 'human:e1-capacity-proof' },
+    );
+    assert.equal(issued.ok, true);
+    assert.equal(issued.standing, 'ACTIVE');
+
+    let runnerCalls = 0;
+    const held = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, issued.grant.grant_id,
+      {
+        env,
+        actorId: 'human:e1-capacity-proof',
+        localCapacitySample: {
+          version: 'E1LC-SAMPLE.v1',
+          platform: 'darwin',
+          total_ram_bytes: 48 * 1024 ** 3,
+          free_ram_bytes: 5.5 * 1024 ** 3,
+          swap_total_bytes: 8 * 1024 ** 3,
+          swap_free_bytes: 0,
+        },
+        executeCanonicalProvider: async () => {
+          runnerCalls += 1;
+          throw new Error('provider must not launch');
+        },
+      },
+    );
+
+    assert.equal(held.ok, false);
+    assert.equal(held.status, 'HELD_FOR_LOCAL_CAPACITY');
+    assert.equal(held.reason, 'LOCAL_CAPACITY_RAM_HEADROOM');
+    assert.equal(held.grant_standing, 'ACTIVE');
+    assert.equal(runnerCalls, 0);
+
+    const after = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    assert.equal(after.lifecycle.state, 'ROUTED');
+    const standing = after.execution_bridge.grants.find(
+      (entry) => entry.grant.grant_id === issued.grant.grant_id,
+    );
+    assert.equal(standing.standing, 'ACTIVE');
+    assert.equal(after.provenance.attempts.length, 0);
   } finally {
     cleanup(home);
   }
