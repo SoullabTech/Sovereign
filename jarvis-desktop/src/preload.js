@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('jarvis', {
   submitTask: (task) => ipcRenderer.invoke('jarvis:submit-task', task),
   runExternalReasoning: (req) => ipcRenderer.invoke('jarvis:run-external-reasoning', req),
   governanceAction: (req) => ipcRenderer.invoke('jarvis:governance-action', req),
+  observeHost: (kind) => ipcRenderer.invoke('jarvis:observe-host', { kind }),
 
   // Governed Builder work-unit mechanism. `runWorkUnit` carries a packet only —
   // the lane is pinned in main to the single authorized read-only lane and is

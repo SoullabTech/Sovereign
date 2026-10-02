@@ -73,6 +73,15 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'non-zero exit is never rewritten into success.',
   },
   {
+    channel: 'jarvis:observe-host',
+    ratified_in: 'Founder direction 2026-10-02 — JARVIS Desktop host observation',
+    purpose:
+      'One explicit founder gesture runs one of two MAIN-owned, fixed, read-only host probes: ' +
+      'Memory/Postgres readiness or the production container state. The renderer can supply only ' +
+      'the enum memory|production; it cannot supply a host, SSH option, credential, remote command, ' +
+      'write/deploy verb, persistence policy, or recurrence. Results live only in process memory.',
+  },
+  {
     channel: 'jarvis:mechanism-status',
     ratified_in: 'Alpha Floor C0→Builder wire',
     purpose: 'Read whether the bound repo is carrying the Builder execution mechanism. Read-only.',
