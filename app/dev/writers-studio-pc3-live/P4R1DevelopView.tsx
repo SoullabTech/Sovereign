@@ -331,18 +331,43 @@ function ChapterShape({ sections, scope }: {
   const from = sections.findIndex((section) => section.draftSectionId === scope.fromSectionId);
   const to = sections.findIndex((section) => section.draftSectionId === scope.toSectionId);
   if (from < 0 || to < from) return null;
+
   const chapter = sections.slice(from, to + 1);
   const root = chapter[0] ?? null;
   const epigraph = root ? openingEpigraph(root) : null;
-  const outline = chapter.filter((section) => Boolean(section.heading?.trim()));
+  const chapterWords = chapter.reduce((sum, section) => sum + sectionWordCount(section), 0);
+
+  // Only an explicit heading depth is structural evidence. Generic ALL-CAPS
+  // cuts are useful ingestion coordinates, but they are not authored hierarchy.
+  const explicit = chapter
+    .map((section, index) => ({ section, index }))
+    .filter(({ section }) => Boolean(section.heading?.trim()) && section.headingDepth !== null)
+    .filter(({ section }) => section.draftSectionId !== root?.draftSectionId);
+
+  const detectedOnly = chapter
+    .filter((section) => Boolean(section.heading?.trim()) && section.headingDepth === null);
+
+  const wordsInExplicitSpan = (index: number, depth: number): number => {
+    let end = chapter.length;
+    for (let i = index + 1; i < chapter.length; i += 1) {
+      const nextDepth = chapter[i]?.headingDepth;
+      if (nextDepth !== null && nextDepth !== undefined && nextDepth <= depth) {
+        end = i;
+        break;
+      }
+    }
+    return chapter.slice(index, end)
+      .reduce((sum, section) => sum + sectionWordCount(section), 0);
+  };
 
   return (
     <section className="fr-card p4r1-chapter-shape" aria-label="Chapter shape from the manuscript">
       <span className="p4r1-eyebrow">The chapter as it is</span>
       <h3>{scope.label}</h3>
       <p>
-        This is not a MAIA reading. It is the chapter’s own headings, order, opening material, and word counts —
-        a simple map of what is already on the page.
+        {chapterWords.toLocaleString()} words in this chapter span. Writer’s Studio separates structure the
+        manuscript explicitly preserved from headings the import merely detected, so an ingestion cut is never
+        presented as an authored section.
       </p>
       {epigraph ? (
         <blockquote className="p4r1-chapter-epigraph">
@@ -350,14 +375,45 @@ function ChapterShape({ sections, scope }: {
           <p>{epigraph}</p>
         </blockquote>
       ) : null}
-      <ol className="p4r1-chapter-outline">
-        {outline.map((section) => (
-          <li key={section.draftSectionId} data-depth={section.headingDepth ?? undefined}>
-            <span>{section.heading?.trim()}</span>
-            <small>{sectionWordCount(section).toLocaleString()} words</small>
-          </li>
-        ))}
-      </ol>
+
+      {explicit.length > 0 ? (
+        <>
+          <span className="p4r1-eyebrow">Explicit structure preserved by the manuscript</span>
+          <ol className="p4r1-chapter-outline">
+            {explicit.map(({ section, index }) => (
+              <li key={section.draftSectionId} data-depth={section.headingDepth ?? undefined}>
+                <span>{section.heading?.trim()}</span>
+                <small>
+                  {wordsInExplicitSpan(index, section.headingDepth ?? 3).toLocaleString()} words
+                </small>
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        <p>
+          No subchapter hierarchy survived this import with enough evidence to call it authored structure.
+          MAIA should not infer one from storage boundaries.
+        </p>
+      )}
+
+      {detectedOnly.length > 0 ? (
+        <details className="p4r1-chapter-detected" open>
+          <summary>{detectedOnly.length} other headings detected in the imported text</summary>
+          <p>
+            These may be genuine subheads, but their level was not preserved by the import. They remain visible
+            without being promoted to chapters or numbered sections.
+          </p>
+          <ol className="p4r1-chapter-outline">
+            {detectedOnly.map((section) => (
+              <li key={section.draftSectionId}>
+                <span>{section.heading?.trim()}</span>
+                <small>level unconfirmed</small>
+              </li>
+            ))}
+          </ol>
+        </details>
+      ) : null}
     </section>
   );
 }
