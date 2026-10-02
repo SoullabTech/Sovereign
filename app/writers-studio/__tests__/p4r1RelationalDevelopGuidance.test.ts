@@ -80,11 +80,13 @@ describe('Writer Studio relational Develop guidance', () => {
 
   it('shows a facts-only chapter shape before asking MAIA to read Structure', () => {
     expect(develop).toContain("activeField === 'structure' && props.scope.kind === 'chapter'");
-    expect(develop).toContain('<ChapterShape sections={props.sections} scope={props.scope} />');
+    expect(develop).toContain('<ChapterShape manuscriptId={props.manuscriptId} sections={props.sections} scope={props.scope} />');
     expect(develop).toContain('ingestion cut is never');
     expect(develop).toContain('Explicit structure preserved by the manuscript');
-    expect(develop).toContain('other headings detected in the imported text');
+    expect(develop).toContain('Import details');
     expect(develop).toContain('level unconfirmed');
+    expect(develop).toContain('Restore chapter structure');
+    expect(develop).toContain('some of their levels were lost in import');
     expect(reader).toContain('SECTION IDS AND POSITIONS ARE TECHNICAL EVIDENCE COORDINATES, NOT AUTHORSHIP');
     expect(develop).toContain('Opening epigraph');
     expect(develop).toContain('words in this chapter span');

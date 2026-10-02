@@ -18,6 +18,7 @@ import type { DevelopPreparation } from '@/lib/writersStudio/developPreparationC
 import type { WholeManuscriptAttentionMap, AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import type { WriterUnderstanding, WriterUnderstandingDraft } from '@/lib/writersStudio/writerUnderstanding';
 import type { IntellectualLineageOrientation } from '@/lib/writersStudio/intellectualLineageOrientation';
+import { requestStructureReading } from '@/lib/writersStudio/reviewClient';
 import type {
   ChapterLineageCandidate,
   ChapterLineageScan,
@@ -324,10 +325,13 @@ function openingEpigraph(section: RebuildSection): string | null {
   return /^[“"‘']/.test(opening) ? opening : null;
 }
 
-function ChapterShape({ sections, scope }: {
+function ChapterShape({ manuscriptId, sections, scope }: {
+  manuscriptId: string;
   sections: readonly RebuildSection[];
   scope: Extract<DevelopScopeChoice, { kind: 'chapter' }>;
 }) {
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const from = sections.findIndex((section) => section.draftSectionId === scope.fromSectionId);
   const to = sections.findIndex((section) => section.draftSectionId === scope.toSectionId);
   if (from < 0 || to < from) return null;
@@ -398,11 +402,40 @@ function ChapterShape({ sections, scope }: {
       )}
 
       {detectedOnly.length > 0 ? (
-        <details className="p4r1-chapter-detected" open>
-          <summary>{detectedOnly.length} other headings detected in the imported text</summary>
+        <div className="p4r1-structure-recovery" data-structure-recovery>
+          <b>Some of this chapter’s hierarchy was lost in import.</b>
           <p>
-            These may be genuine subheads, but their level was not preserved by the import. They remain visible
-            without being promoted to chapters or numbered sections.
+            Writer’s Studio can see the headings, but some of their levels were lost in import.
+            MAIA can suggest the chapter’s shape. You can correct it before anything changes.
+          </p>
+          <button
+            type="button"
+            disabled={recovering}
+            onClick={async () => {
+              if (recovering) return;
+              setRecovering(true);
+              setRecoveryError(null);
+              const result = await requestStructureReading(manuscriptId);
+              setRecovering(false);
+              if (!result.ok) {
+                setRecoveryError('MAIA could not prepare a structure proposal just now. Nothing changed.');
+                return;
+              }
+              window.location.assign(result.reviewPath);
+            }}
+          >
+            {recovering ? 'Reading the manuscript…' : 'Restore chapter structure'}
+          </button>
+          {recoveryError ? <p role="status">{recoveryError}</p> : null}
+        </div>
+      ) : null}
+
+      {detectedOnly.length > 0 ? (
+        <details className="p4r1-chapter-detected">
+          <summary>Import details</summary>
+          <p>
+            {detectedOnly.length} headings were detected whose level was not preserved. They remain visible
+            without being treated as chapters or numbered sections.
           </p>
           <ol className="p4r1-chapter-outline">
             {detectedOnly.map((section) => (
@@ -2234,7 +2267,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           ) : null}
 
           {activeField === 'structure' && props.scope.kind === 'chapter' ? (
-            <ChapterShape sections={props.sections} scope={props.scope} />
+            <ChapterShape manuscriptId={props.manuscriptId} sections={props.sections} scope={props.scope} />
           ) : null}
 
           {railSelectionId && selectedRailSection && activeField ? (
