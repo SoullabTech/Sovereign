@@ -64,6 +64,26 @@ function invalidRepoPath(value) {
   return p === '.' || p === '..' || p === '/' || p === '*' || p === '**' || p === '**/*'
     || p.startsWith('/') || p.startsWith('../') || p.includes('/../') || p.includes('\\');
 }
+function validEvidenceSelector(value, allowedPaths) {
+  if (!isObject(value) || invalidRepoPath(value.ref)) return false;
+  if (!allowedPaths.includes(value.ref.trim())) return false;
+  const selector = value.selector;
+  if (!isObject(selector) || selector.type !== 'lines') return false;
+  const start = Number(selector.start);
+  const end = Number(selector.end);
+  return Number.isInteger(start) && Number.isInteger(end) && start >= 1 && end >= start;
+}
+function cloneEvidenceSelectors(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((entry) => ({
+    ref: text(entry.ref),
+    selector: {
+      type: 'lines',
+      start: Number(entry.selector.start),
+      end: Number(entry.selector.end),
+    },
+  }));
+}
 
 function coreBlockers(input) {
   const blocks = [];
@@ -119,8 +139,16 @@ function coreBlockers(input) {
     for (const p of textList(scope.forbidden_paths)) {
       if (invalidRepoPath(p)) { blocks.push(blocker('INVALID_FORBIDDEN_PATH', 'Forbidden paths must be bounded repository-relative paths.', 'scope.forbidden_paths')); break; }
     }
-    const allowed = new Set(textList(scope.allowed_paths));
+    const allowedPaths = textList(scope.allowed_paths);
+    const allowed = new Set(allowedPaths);
     if (textList(scope.forbidden_paths).some((p) => allowed.has(p))) blocks.push(blocker('CONFLICTING_PATH_SCOPE', 'A path appears in both allowed and forbidden scope.', 'scope'));
+    if (scope.evidence_selectors != null) {
+      if (!Array.isArray(scope.evidence_selectors) || scope.evidence_selectors.length === 0) {
+        blocks.push(blocker('INVALID_EVIDENCE_SELECTORS', 'scope.evidence_selectors must be a non-empty selector list when present.', 'scope.evidence_selectors'));
+      } else if (scope.evidence_selectors.some((entry) => !validEvidenceSelector(entry, allowedPaths))) {
+        blocks.push(blocker('INVALID_EVIDENCE_SELECTOR', 'Evidence selectors must be bounded line ranges inside scope.allowed_paths.', 'scope.evidence_selectors'));
+      }
+    }
   }
 
   const authority = input.authority;
@@ -204,6 +232,9 @@ export function createWorkUnitDraftV2(input) {
       base_ref: text(input.scope.base_ref),
       allowed_paths: textList(input.scope.allowed_paths),
       forbidden_paths: textList(input.scope.forbidden_paths),
+      ...(Array.isArray(input.scope.evidence_selectors) && input.scope.evidence_selectors.length
+        ? { evidence_selectors: cloneEvidenceSelectors(input.scope.evidence_selectors) }
+        : {}),
     },
     authority: {
       repository_read: input.authority.repository_read,

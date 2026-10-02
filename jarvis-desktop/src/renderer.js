@@ -1,6 +1,51 @@
 const $main = document.getElementById('main');
 let currentView = 'home';
 let lastStatus = null;
+const libraryState = {
+  browseQuery: '',
+  grokkerQuery: '',
+  grokkerResults: [],
+  sourcePacket: null,
+  synthesis: null,
+  synthesisError: null,
+  synthesisRunning: false,
+  deliberativePreview: null,
+  deliberativeWorkUnit: null,
+  deliberativeError: null,
+  deliberativeRunning: false,
+  governedWork: null,
+  governedWorkLoading: false,
+  governedWorkError: null,
+  pins: [],
+  viewState: null,
+};
+
+function currentLibraryViewState() {
+  const open_groups = [
+    ...document.querySelectorAll('details[data-view-key][open], details[data-library-group][open]'),
+  ].map(el => el.dataset.viewKey || el.dataset.libraryGroup).filter(Boolean);
+  return {
+    browse_query: libraryState.browseQuery,
+    grokker_query: libraryState.grokkerQuery,
+    open_groups,
+    scroll_top: currentView === 'library' ? $main.scrollTop : (libraryState.viewState?.scroll_top || 0),
+  };
+}
+
+function saveLibraryViewState() {
+  libraryState.viewState = GrokkerViewState.save(localStorage, currentLibraryViewState());
+}
+
+function applyLibraryViewState() {
+  const state = libraryState.viewState;
+  if (!state) return;
+  const open = new Set(state.open_groups || []);
+  document.querySelectorAll('details[data-view-key], details[data-library-group]').forEach(el => {
+    const key = el.dataset.viewKey || el.dataset.libraryGroup;
+    if (open.size) el.open = open.has(key);
+  });
+  if (Number.isFinite(state.scroll_top)) $main.scrollTop = state.scroll_top;
+}
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -19,6 +64,9 @@ function setView(v) {
   currentView = v;
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
   render();
+  if (v === 'library' && !libraryState.governedWork && !libraryState.governedWorkLoading) {
+    refreshGovernedWork();
+  }
 }
 
 function stateRow(label, s) {
@@ -1154,6 +1202,7 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
   const adjudication = provenance.adjudication || null;
   const closure = provenance.closure || null;
   const actions = snapshot.next_actions || [];
+  const grokkerOrigin = GrokkerWorkUnitOrigin.project(wu);
   const evidenceSourceSha = wu.scope?.base_ref || snapshot.routing?.bound_at_sha || null;
   const runtimeExecutionSha = lastStatus?.provenance?.substrate?.resolved_repo_head || null;
 
@@ -1266,6 +1315,14 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
       <div class="plan-line"><b>Execution bridge:</b> governed separately below — routing ≠ authorization ≠ execution</div>
     </div>
 
+    ${grokkerOrigin ? `<div class="authority-box">
+      <div class="a-title">Grokker origin · Field Library</div>
+      <div class="a-line">Inquiry: <b>${escapeHtml(grokkerOrigin.query)}</b></div>
+      <div class="a-line">Source ranges: <b>${escapeHtml(grokkerOrigin.source_ranges.join(' · ') || 'none')}</b></div>
+      <div class="hint">Derived from canonical Work Unit facts. No separate Grokker packet memory is active here.</div>
+      <button class="act" id="grokker-return-inquiry">Return to Field Library inquiry</button>
+    </div>` : ''}
+
     ${transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : ''}
 
     <div class="authority-box">
@@ -1328,6 +1385,23 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
     </div>
   </div>`;
 
+  document.getElementById('grokker-return-inquiry')?.addEventListener('click', () => {
+    if (!grokkerOrigin) return;
+    libraryState.grokkerQuery = grokkerOrigin.query;
+    libraryState.grokkerResults = GrokkerLibraryQuery.trace(
+      window.KELLY_FIELD_LIBRARY,
+      grokkerOrigin.query,
+    );
+    libraryState.sourcePacket = null;
+    libraryState.synthesis = null;
+    libraryState.synthesisError = null;
+    libraryState.synthesisRunning = false;
+    libraryState.deliberativePreview = null;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    libraryState.deliberativeRunning = false;
+    setView('library');
+  });
   document.getElementById('wu-refresh')?.addEventListener('click', refreshActiveWorkUnit);
   document.querySelectorAll('[data-canonical-action]').forEach((button) => {
     button.addEventListener('click', async () => {
@@ -2137,6 +2211,58 @@ function renderResult(res) {
   }
 }
 
+function renderAccessAuthority() {
+  const a = window.KELLY_FIELD_LIBRARY && window.KELLY_FIELD_LIBRARY.accessAuthority;
+  if (!a) {
+    return `<div class="card"><h3>Member access boundary</h3><div class="hint">No canonical access-authority witness is present in this Field Library build. Kelly’s World does not infer one.</div></div>`;
+  }
+  const yesNo = value => value === true ? 'YES' : value === false ? 'NO' : 'UNWITNESSED';
+  return `<div class="card">
+    <h3>Member access boundary</h3>
+    <div class="hint">Read-only projection of canonical programme evidence. Witness is not authority; Kelly’s World cannot grant, revoke, extend, or narrow access.</div>
+    <div class="row"><span class="label">Beta cohort authority</span><span class="kv">${escapeHtml(a.authority || 'UNWITNESSED')}</span></div>
+    <div class="row"><span class="label">Ordinary platform minimum</span><span class="kv">${escapeHtml(a.ordinary_platform_minimum || 'UNWITNESSED')}</span></div>
+    <div class="row"><span class="label">Subscription gates ordinary platform</span><span class="kv">${yesNo(a.subscription_gates_ordinary_platform)}</span></div>
+    <div class="row"><span class="label">Early Field is separate</span><span class="kv">${yesNo(a.early_field_separate)}</span></div>
+    <div class="row"><span class="label">Beta testers</span><span class="kv">${Number.isInteger(a.beta_testers) ? a.beta_testers : 'UNWITNESSED'}</span></div>
+    <div class="row"><span class="label">Password-capable</span><span class="kv">${Number.isInteger(a.password_capable) ? a.password_capable : 'UNWITNESSED'}</span></div>
+    <div class="row"><span class="label">Email-code capable</span><span class="kv">${Number.isInteger(a.email_code_capable) ? a.email_code_capable : 'UNWITNESSED'}</span></div>
+    <div class="row"><span class="label">Early Field cohort</span><span class="kv">${Number.isInteger(a.early_field) ? a.early_field : 'UNWITNESSED'}</span></div>
+    <div class="row"><span class="label">Production witness</span><span class="kv">${escapeHtml(a.witnessed_running_commit || 'UNWITNESSED')}</span></div>
+    <div class="library-path">${escapeHtml(a.record_path || 'canonical record path unavailable')}</div>
+  </div>`;
+}
+
+function renderSafetyDeliveryCard() {
+  const snapshot = globalThis.KellySafetyDelivery?.snapshot?.();
+  if (!snapshot) {
+    return `<div class="card">
+      <h3>Safety delivery</h3>
+      <div class="why">Safety-delivery custody snapshot is not available in this build.</div>
+    </div>`;
+  }
+
+  const rows = (label, items) => `
+    <div style="margin-top:12px">
+      <div class="label">${escapeHtml(label)}</div>
+      ${items.map(item => `<div class="why" style="margin-top:5px">→ ${escapeHtml(item)}</div>`).join('')}
+    </div>`;
+
+  return `
+    <div class="card">
+      <h3>Safety delivery</h3>
+      <div class="row"><span class="label">Standing</span><span class="state NEEDS_SETUP">${escapeHtml(snapshot.standing)}</span></div>
+      <div class="hint">Custody snapshot as of ${escapeHtml(snapshot.as_of)} · not live telemetry.</div>
+      ${rows('Needs Kelly', snapshot.needs_kelly)}
+      ${rows('In motion', snapshot.in_motion)}
+      ${rows('Watching', snapshot.watching)}
+      <details style="margin-top:12px"><summary>Unresolved boundaries</summary>
+        ${snapshot.unresolved.map(item => `<div class="why" style="margin-top:5px">• ${escapeHtml(item)}</div>`).join('')}
+      </details>
+      <div class="src" style="margin-top:12px">source: ${escapeHtml(snapshot.source)} · canonical base @${escapeHtml(snapshot.canonical_base.slice(0, 12))}</div>
+    </div>`;
+}
+
 function renderSystem() {
   const s = lastStatus;
   if (!s) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
@@ -2160,6 +2286,8 @@ function renderSystem() {
       ${stateRow('Memory / Postgres', s.memory_postgres || { state: 'UNCONFIGURED', detail: 'Desktop holds no database configuration and does not connect to one.' })}
       ${stateRow('Production', s.production || { state: 'NOT PROBED', detail: 'Requires explicit production/SSH authority, which Desktop does not hold. Not probed by design.' })}
     </div>
+    ${renderAccessAuthority()}
+    ${renderSafetyDeliveryCard()}
     ${provenanceRows(s.provenance)}
     <div class="card">
       <h3>Builder OS detail</h3>
@@ -2424,14 +2552,572 @@ function spInspectEdge(sp, from, to) {
   host.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
+
+function renderLocalSynthesis() {
+  if (libraryState.synthesisRunning) {
+    return '<div class="source-packet"><div class="packet-law">LOCAL C1 SYNTHESIS · working…</div><div class="hint">Using the prepared source packet only.</div></div>';
+  }
+  if (libraryState.synthesisError) {
+    return `<div class="source-packet"><div class="packet-law">SYNTHESIS NOT RUN</div><div class="errors"><div>${escapeHtml(libraryState.synthesisError)}</div></div></div>`;
+  }
+  const s = libraryState.synthesis;
+  if (!s) return '';
+  const errs = s.proposal_check?.errors || [];
+  return `<div class="source-packet">
+    <div class="packet-law">GROKKER LOCAL SYNTHESIS · ${escapeHtml(s.standing)} · ${s.ok ? 'contract-valid' : 'not admitted'}</div>
+    <div class="grokker-why">Model: ${escapeHtml(s.model || 'unreported')} · local execution: ${s.local_execution_verified ? 'verified' : 'unverified'} · citation containment: ${escapeHtml(s.citation_containment)} · semantic review: ${escapeHtml(s.semantic_review)}</div>
+    ${s.raw_response ? `<div class="library-excerpt" style="white-space:pre-wrap">${escapeHtml(s.raw_response)}</div>` : ''}
+    ${s.cited_paths?.length ? `<div class="library-headings">Relied-on source descent: ${s.cited_paths.map(escapeHtml).join(' · ')}</div>` : ''}
+    ${errs.length ? `<div class="errors">${errs.map(e => `<div>${escapeHtml(e)}</div>`).join('')}</div>` : ''}
+    <div class="hint" style="margin-top:9px">This remains Grokker-authored candidate orientation. It is not ratified law, source fact, member meaning, or a relation warrant.</div>
+  </div>`;
+}
+
+function renderDeliberativeWorkUnit() {
+  const packet = libraryState.sourcePacket;
+  if (!packet) return '';
+  if (libraryState.deliberativeRunning) {
+    return '<div class="source-packet"><div class="packet-law">DELIBERATIVE WORK UNIT · preparing…</div><div class="hint">No provider execution is authorized by this gesture.</div></div>';
+  }
+  if (libraryState.deliberativeError) {
+    return `<div class="source-packet"><div class="packet-law">DELIBERATIVE WORK UNIT · held</div><div class="errors"><div>${escapeHtml(libraryState.deliberativeError)}</div></div></div>`;
+  }
+  const preview = libraryState.deliberativePreview;
+  const created = libraryState.deliberativeWorkUnit;
+  if (created) {
+    return `<div class="source-packet">
+      <div class="packet-law">DELIBERATIVE WORK UNIT · DRAFT CREATED</div>
+      <div class="grokker-why">Work Unit: ${escapeHtml(created.work_unit_id || 'unknown')} · lifecycle ${escapeHtml(created.lifecycle?.state || created.work_unit?.state?.lifecycle_state || 'DRAFT')}</div>
+      <div class="library-excerpt">The source packet is now held by canonical JARVIS governance with exact evidence selectors. No model has run. No provider execution grant exists. No merge, deploy, production, or write authority was created.</div>
+      <div class="actions"><button class="act" id="grokker-open-draft-work">Open in Work</button></div>
+    </div>`;
+  }
+  if (preview) {
+    const status = preview.ok ? 'preview valid' : 'preview refused';
+    const route = preview.route_record || preview.routing?.route_record || null;
+    return `<div class="source-packet">
+      <div class="packet-law">DELIBERATIVE WORK UNIT · ${escapeHtml(status)}</div>
+      <div class="grokker-why">Prospective only · canonical effect none · task shape EVIDENCE_SYNTHESIS · posture local_only · review pressure high_value_uncertain</div>
+      ${route?.primary ? `<div class="library-headings">Prospective route: ${escapeHtml(route.primary.model_family || route.primary.participant_id || 'primary')} ${(route.challengers || []).length ? '· challenger ' + escapeHtml(route.challengers.map(c => c.model_family || c.participant_id).join(', ')) : ''}</div>` : ''}
+      ${preview.ok ? '<div class="actions"><button class="primary" id="grokker-create-deliberative">Create DRAFT Work Unit</button></div>' : ''}
+      <div class="hint">Creating the DRAFT records governed work only. It does not authorize, route, prepare transport, or execute a provider.</div>
+    </div>`;
+  }
+  return `<div class="actions"><button class="act" id="grokker-preview-deliberative">Inspect deliberative Work Unit</button></div>
+    <div class="hint">For slower, stronger synthesis: inspect the canonical Work Unit before creating it. This path stops at DRAFT.</div>`;
+}
+
+function renderSourcePacket(packet) {
+  if (!packet) return '';
+  const check = GrokkerSynthesisContract.validateSourcePacket(packet);
+  const localPlan = GrokkerLocalSynthesis.buildC1Task(packet);
+  return `<div class="source-packet">
+    <div class="packet-law">${escapeHtml(packet.packet_law)} · ${check.ok ? 'packet valid' : 'packet invalid'}</div>
+    ${(packet.sources || []).map(s => `<div class="packet-source">
+      <b>${escapeHtml(s.title)}</b>
+      <div class="grokker-why">${escapeHtml(s.source_type)} · standing ${escapeHtml(s.standing)} · relation warrant: none</div>
+      ${s.path ? `<div class="grokker-source">${escapeHtml(s.path)}${s.excerpt_start_line ? `:${s.excerpt_start_line}-${s.excerpt_end_line}` : ''}</div>` : ''}
+    </div>`).join('')}
+    <div class="hint" style="margin-top:9px">This packet is the maximum material a synthesis act may rely upon unless a new source is explicitly added and revalidated.</div>
+    ${localPlan.ok
+      ? `<div class="actions"><button class="primary" id="grokker-synthesize-local" ${libraryState.synthesisRunning ? 'disabled' : ''}>Synthesize locally</button></div>`
+      : `<div class="hint">Local synthesis is held: ${escapeHtml(localPlan.errors.join(', '))}</div>`}
+    ${renderDeliberativeWorkUnit()}
+  </div>`;
+}
+
+function renderRecentPulse(lib) {
+  const recent = (lib.recentItems || []).slice(0, 12);
+  if (!recent.length) return '<div class="hint">No recent programme activity is indexed.</div>';
+  return `<div class="library-summary">Most recently touched programme records</div>
+    ${recent.map(i => `<details class="library-item">
+      <summary>${escapeHtml(i.title)}</summary>
+      ${i.excerpt ? `<div class="library-excerpt">${escapeHtml(i.excerpt)}</div>` : ''}
+      ${i.headings && i.headings.length ? `<div class="library-headings">Inside: ${i.headings.map(escapeHtml).join(' · ')}</div>` : ''}
+      ${i.path ? `<div class="library-path">${escapeHtml(i.path)}</div>` : ''}
+    </details>`).join('')}`;
+}
+
+function renderGrokkerResults(results, query) {
+  if (!query.trim()) return '<div class="hint">Ask about a theme, law, programme, room, or idea. Grokker Trace searches the indexed corpus and preserves source standing.</div>';
+  if (!results.length) return '<div class="hint">No indexed trace matched this question. That is a retrieval result, not evidence that the work does not exist.</div>';
+  return `<div class="library-summary">${results.length} strongest traces for “${escapeHtml(query)}” · retrieval only, no synthesized claim</div>
+    ${results.map(r => `<div class="grokker-result">
+      <b>${escapeHtml(r.item.title)}</b>
+      <div class="grokker-why">${escapeHtml(r.kind === 'field' ? 'Field' : r.group)} · matched: ${escapeHtml(r.matched.join(', '))}</div>
+      ${r.item.excerpt ? `<div class="library-excerpt">${escapeHtml(r.item.excerpt)}</div>` : ''}
+      ${r.item.path ? `<div class="grokker-source">${escapeHtml(r.item.path)}</div>` : ''}
+    </div>`).join('')}`;
+}
+
+function pinRef(kind, key, label) {
+  return encodeURIComponent(JSON.stringify({ kind, key, label }));
+}
+function pinButton(kind, key, label) {
+  const pin = { kind, key, label };
+  const pinned = GrokkerFieldPins.has(libraryState.pins, pin);
+  return `<button class="act" data-field-pin="${escapeHtml(pinRef(kind,key,label))}">${pinned ? 'Unpin' : 'Keep in sight'}</button>`;
+}
+
+function orientationItemLine(item, sectionId) {
+  if (sectionId === 'keep_in_sight') {
+    return `<div class="row"><div><div class="label">${escapeHtml(item.label)}</div><div class="why">${escapeHtml(item.why)}</div></div><span class="state ${item.resolved ? 'AVAILABLE' : 'UNVERIFIED'}">${item.resolved ? 'IN SIGHT' : 'UNRESOLVED'}</span></div>`;
+  }
+  if (['needs_kelly','in_motion','watching'].includes(sectionId)) {
+    return `<div class="row"><div><div class="label">${escapeHtml(item.label)}</div><div class="why">${escapeHtml(item.lifecycle)} · ${escapeHtml(item.why)}</div></div><button class="act" data-open-governed-work="${escapeHtml(item.work_unit_id)}">Open</button></div>`;
+  }
+  if (sectionId === 'unfinished') {
+    return `<div class="row"><div><div class="label">${escapeHtml(item.label)}</div><div class="why">${escapeHtml(item.signal)} · ${escapeHtml(item.why)}</div><div class="src">${escapeHtml(item.path)}:${escapeHtml(item.evidence_line)}</div></div><button class="act" data-recovery-trace="${escapeHtml(item.programme_key)}">Trace</button></div>`;
+  }
+  return `<div class="row"><div><div class="label">${escapeHtml(item.label)}</div><div class="why">${escapeHtml(item.why)}</div></div></div>`;
+}
+
+function renderOrientationSummary(lib) {
+  const o = GrokkerOrientation.compose({
+    library: lib,
+    pins: libraryState.pins,
+    governedWork: libraryState.governedWork,
+  });
+  return `<div class="card">
+    <p class="headline">What am I holding?</p>
+    <p class="sentence">One orientation view across the things currently being held in view. This does not rank importance or create authority.</p>
+    <div class="library-summary">${escapeHtml(o.law)} · ${o.total_visible} visible references</div>
+    ${o.sections.map(section => `<details class="library-group" data-view-key="orientation-${section.id}" ${['keep_in_sight','needs_kelly','in_motion','watching'].includes(section.id) ? 'open' : ''}>
+      <summary><span>${escapeHtml(section.label)}</span><span class="library-count">${section.items.length}</span></summary>
+      <div class="library-items">
+        <div class="hint">${escapeHtml(section.meaning)}</div>
+        ${section.items.length ? section.items.map(item => orientationItemLine(item, section.id)).join('') : '<div class="hint">None.</div>'}
+      </div>
+    </details>`).join('')}
+  </div>`;
+}
+
+function renderPinnedShelf(lib) {
+  const resolved = GrokkerFieldPins.resolve(libraryState.pins, lib, libraryState.governedWork);
+  if (!resolved.length) {
+    return `<div class="grokker-box">
+      <h3>Keep in sight</h3>
+      <div class="sentence">Nothing pinned yet. Pinning is Kelly's local attention preference only; it changes no programme standing or authority.</div>
+    </div>`;
+  }
+  return `<div class="grokker-box">
+    <h3>Keep in sight</h3>
+    <div class="sentence">Your local orientation shelf. Pins do not reactivate lanes, alter Work Units, or assert importance beyond your own attention.</div>
+    <div class="library-items">${resolved.map(pin => {
+      if (!pin.resolved) return `<div class="grokker-result">
+        <b>${escapeHtml(pin.label)}</b>
+        <div class="grokker-why">Pinned reference is not currently resolved. Nothing was substituted.</div>
+        <div class="actions">${pinButton(pin.kind,pin.key,pin.label)}</div>
+      </div>`;
+      if (pin.kind === 'recovery') return `<div class="grokker-result">
+        <b>${escapeHtml(pin.label)}</b>
+        <div class="grokker-why">Unfinished-thread recovery candidate · standing ${escapeHtml(pin.source.standing)}</div>
+        <div class="library-excerpt">${escapeHtml(pin.source.evidence)}</div>
+        <div class="grokker-source">${escapeHtml(pin.source.path)}:${escapeHtml(pin.source.evidence_line)}</div>
+        <div class="actions"><button class="act" data-recovery-trace="${escapeHtml(pin.source.programme_key)}">Trace this thread</button>${pinButton(pin.kind,pin.key,pin.label)}</div>
+      </div>`;
+      if (pin.kind === 'work') return `<div class="grokker-result">
+        <b>${escapeHtml(pin.source.grokker_origin?.query || pin.source.objective)}</b>
+        <div class="grokker-why">Governed work · ${escapeHtml(pin.group || '')} · ${escapeHtml(pin.source.lifecycle)}</div>
+        <div class="actions"><button class="act" data-open-governed-work="${escapeHtml(pin.source.work_unit_id)}">Open in Work</button>${pinButton(pin.kind,pin.key,pin.label)}</div>
+      </div>`;
+      return `<div class="grokker-result">
+        <b>${escapeHtml(pin.label)}</b>
+        <div class="grokker-why">Durable field · ${escapeHtml(pin.group || '')}</div>
+        <div class="actions">${pinButton(pin.kind,pin.key,pin.label)}</div>
+      </div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+function libraryGroups(groups, query, prefix) {
+  const q = String(query || '').trim().toLowerCase();
+  return (groups || []).map((g, gi) => {
+    const items = (g.items || []).filter(i => {
+      if (!q) return true;
+      const haystack = [
+        i.title, i.path, i.excerpt, ...(i.headings || []), g.title,
+      ].map(v => String(v || '')).join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+    if (!items.length) return '';
+    return `<details class="library-group" data-library-group="${prefix}-${gi}" ${q ? 'open' : ''}>
+      <summary><span>${escapeHtml(g.title)}</span><span class="library-count">${items.length}</span></summary>
+      <div class="library-items">${items.map(i => {
+        const detail = i.excerpt || (i.headings && i.headings.length) || i.path;
+        if (!detail) return `<div class="library-item">${escapeHtml(i.title)}</div>`;
+        return `<details class="library-item">
+          <summary>${escapeHtml(i.title)}</summary>
+          ${i.excerpt ? `<div class="library-excerpt">${escapeHtml(i.excerpt)}</div>` : ''}
+          ${i.headings && i.headings.length ? `<div class="library-headings">Inside: ${i.headings.map(escapeHtml).join(' · ')}</div>` : ''}
+          ${i.path ? `<div class="library-path">${escapeHtml(i.path)}</div>` : ''}
+          ${prefix === 'concept' ? `<div class="actions">${pinButton('field', g.title + '/' + i.title, i.title)}</div>` : ''}
+        </details>`;
+      }).join('')}</div>
+    </details>`;
+  }).join('');
+}
+
+function wireLibrary() {
+  const search = document.getElementById('library-search');
+  if (search) {
+    search.addEventListener('input', () => {
+      libraryState.browseQuery = search.value;
+      saveLibraryViewState();
+      renderLibrary();
+    });
+  }
+  const ask = document.getElementById('grokker-query');
+  const runTrace = () => {
+    if (!ask) return;
+    libraryState.grokkerQuery = ask.value;
+    saveLibraryViewState();
+    libraryState.grokkerResults = GrokkerLibraryQuery.trace(window.KELLY_FIELD_LIBRARY, ask.value);
+    libraryState.sourcePacket = null;
+    libraryState.synthesis = null;
+    libraryState.synthesisError = null;
+    libraryState.synthesisRunning = false;
+    libraryState.deliberativePreview = null;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    libraryState.deliberativeRunning = false;
+    renderLibrary();
+  };
+  if (ask) {
+    ask.addEventListener('keydown', e => { if (e.key === 'Enter') runTrace(); });
+  }
+  document.getElementById('grokker-trace')?.addEventListener('click', runTrace);
+  document.getElementById('grokker-packet')?.addEventListener('click', () => {
+    libraryState.sourcePacket = GrokkerSynthesisContract.buildSourcePacket(
+      libraryState.grokkerQuery,
+      libraryState.grokkerResults
+    );
+    libraryState.synthesis = null;
+    libraryState.synthesisError = null;
+    libraryState.synthesisRunning = false;
+    libraryState.deliberativePreview = null;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    libraryState.deliberativeRunning = false;
+    renderLibrary();
+  });
+  document.getElementById('grokker-synthesize-local')?.addEventListener('click', async () => {
+    const built = GrokkerLocalSynthesis.buildC1Task(libraryState.sourcePacket);
+    if (!built.ok) {
+      libraryState.synthesisError = built.errors.join(', ');
+      renderLibrary();
+      return;
+    }
+    libraryState.synthesisRunning = true;
+    libraryState.synthesis = null;
+    libraryState.synthesisError = null;
+    renderLibrary();
+    try {
+      const response = await window.jarvis.submitTask(built.task);
+      libraryState.synthesis = GrokkerLocalSynthesis.wrapC1Result(libraryState.sourcePacket, response);
+    } catch (e) {
+      libraryState.synthesisError = String(e?.message || e);
+    } finally {
+      libraryState.synthesisRunning = false;
+      renderLibrary();
+    }
+  });
+  document.getElementById('grokker-preview-deliberative')?.addEventListener('click', async () => {
+    const spec = GrokkerDeliberativeWorkUnit.specForPacket(libraryState.sourcePacket);
+    libraryState.deliberativeRunning = true;
+    libraryState.deliberativePreview = null;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    renderLibrary();
+    try {
+      const out = await window.jarvis.workUnitAction({
+        action: 'preview-route',
+        mode: 'canonical-v2',
+        spec,
+      });
+      libraryState.deliberativePreview = out;
+      if (!out?.ok) {
+        libraryState.deliberativeError = out?.reason
+          || out?.blockers?.map(b => b.code + ': ' + b.detail).join('; ')
+          || 'Canonical deliberative preview refused.';
+      }
+    } catch (e) {
+      libraryState.deliberativeError = String(e?.message || e);
+    } finally {
+      libraryState.deliberativeRunning = false;
+      renderLibrary();
+    }
+  });
+  document.getElementById('grokker-create-deliberative')?.addEventListener('click', async () => {
+    const spec = GrokkerDeliberativeWorkUnit.specForPacket(libraryState.sourcePacket);
+    libraryState.deliberativeRunning = true;
+    libraryState.deliberativeWorkUnit = null;
+    libraryState.deliberativeError = null;
+    renderLibrary();
+    try {
+      const out = await window.jarvis.workUnitAction({
+        action: 'create',
+        mode: 'canonical-v2',
+        spec,
+      });
+      if (!out?.ok) {
+        libraryState.deliberativeError = out?.reason
+          || out?.blockers?.map(b => b.code + ': ' + b.detail).join('; ')
+          || 'Canonical DRAFT creation refused.';
+      } else {
+        libraryState.deliberativeWorkUnit = out;
+      }
+    } catch (e) {
+      libraryState.deliberativeError = String(e?.message || e);
+    } finally {
+      libraryState.deliberativeRunning = false;
+      renderLibrary();
+    }
+  });
+  document.getElementById('grokker-open-draft-work')?.addEventListener('click', () => {
+    const id = libraryState.deliberativeWorkUnit?.work_unit_id;
+    if (!id) return;
+    activeWorkUnitId = id;
+    activeWorkUnitStrategy = [];
+    activeExecutionReview = null;
+    activeCanonicalExecutionReview = null;
+    sessionStorage.setItem('jarvis:active-work-unit', id);
+    setView('work');
+    refreshActiveWorkUnit();
+  });
+  document.querySelectorAll('[data-field-pin]').forEach(button => {
+    button.addEventListener('click', () => {
+      try {
+        const pin = JSON.parse(decodeURIComponent(button.dataset.fieldPin || ''));
+        libraryState.pins = GrokkerFieldPins.toggle(localStorage, libraryState.pins, pin);
+      } catch {}
+      renderLibrary();
+    });
+  });
+  document.querySelectorAll('[data-recovery-trace]').forEach(button => {
+    button.addEventListener('click', () => {
+      const query = button.dataset.recoveryTrace || '';
+      libraryState.grokkerQuery = query;
+      libraryState.grokkerResults = GrokkerLibraryQuery.trace(window.KELLY_FIELD_LIBRARY, query);
+      libraryState.sourcePacket = null;
+      libraryState.synthesis = null;
+      libraryState.synthesisError = null;
+      libraryState.synthesisRunning = false;
+      libraryState.deliberativePreview = null;
+      libraryState.deliberativeWorkUnit = null;
+      libraryState.deliberativeError = null;
+      libraryState.deliberativeRunning = false;
+      renderLibrary();
+    });
+  });
+  document.getElementById('governed-work-refresh')?.addEventListener('click', refreshGovernedWork);
+  document.querySelectorAll('[data-open-governed-work]').forEach(button => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.openGovernedWork;
+      if (!id) return;
+      activeWorkUnitId = id;
+      activeWorkUnitStrategy = [];
+      activeExecutionReview = null;
+      activeCanonicalExecutionReview = null;
+      sessionStorage.setItem('jarvis:active-work-unit', id);
+      setView('work');
+      refreshActiveWorkUnit();
+    });
+  });
+  document.getElementById('library-reset-view')?.addEventListener('click', () => {
+    libraryState.viewState = GrokkerViewState.clear(localStorage);
+    libraryState.browseQuery = '';
+    libraryState.grokkerQuery = '';
+    $main.scrollTop = 0;
+    renderLibrary();
+  });
+  document.querySelectorAll('details[data-view-key], details[data-library-group]').forEach(el => {
+    el.addEventListener('toggle', saveLibraryViewState);
+  });
+  document.getElementById('library-expand')?.addEventListener('click', () => {
+    document.querySelectorAll('.library-group').forEach(d => { d.open = true; });
+  });
+  document.getElementById('library-collapse')?.addEventListener('click', () => {
+    document.querySelectorAll('.library-group').forEach(d => { d.open = false; });
+  });
+}
+
+function humanLifecycle(state) {
+  const labels = {
+    DRAFT: 'Draft',
+    BOUNDED: 'Scope set',
+    AUTHORIZED: 'Authorized',
+    ROUTED: 'Route prepared',
+    EXECUTING: 'In progress',
+    EVIDENCE_READY: 'Ready for your decision',
+    ADJUDICATED: 'Decision recorded',
+    CLOSED: 'Closed',
+    UNREADABLE: 'Unreadable',
+  };
+  return labels[state] || String(state || 'Unknown').replaceAll('_',' ').toLowerCase();
+}
+
+function hoursAgoLabel(hours) {
+  const n = Number(hours || 0);
+  if (n < 48) return 'about ' + Math.max(1, Math.round(n)) + ' hours ago';
+  const days = Math.round(n / 24);
+  return 'about ' + days + ' days ago';
+}
+
+function renderRecoveryCandidates(lib) {
+  const items = lib.recoveryCandidates || [];
+  if (!items.length) {
+    return '<div class="grokker-box"><h3>Unfinished threads · recovery candidates</h3><div class="hint">No structurally warranted dormant candidates are currently indexed.</div></div>';
+  }
+  return `<div class="grokker-box">
+    <h3>Unfinished threads · recovery candidates</h3>
+    <div class="sentence">Older programme lineages carrying explicit unfinished evidence. Dormancy does not create importance; these are invitations to re-check, not claims that the work should resume.</div>
+    <div class="library-summary">${items.length} unfinished threads surfaced for re-checking</div>
+    <div class="library-items">${items.map(item => `<div class="grokker-result">
+      <b>${escapeHtml(item.title)}</b>
+      <div class="grokker-why">Last touched ${escapeHtml(hoursAgoLabel(item.hours_dormant))} · surfaced because the record still names unfinished work</div>
+      <div class="library-excerpt">${escapeHtml(item.evidence)}</div>
+      <div class="grokker-source">${escapeHtml(item.path)}:${escapeHtml(item.evidence_line)}</div>
+      <details class="advanced-tools"><summary>Why Grokker surfaced this</summary><div class="hint">${escapeHtml(item.signal)} · ${escapeHtml(item.standing)} · ${escapeHtml(item.candidate_law)}</div></details>
+      <div class="actions"><button class="act" data-recovery-trace="${escapeHtml(item.programme_key)}">Trace this thread</button>${pinButton('recovery', item.programme_key, item.title)}</div>
+    </div>`).join('')}</div>
+  </div>`;
+}
+
+async function refreshGovernedWork() {
+  libraryState.governedWorkLoading = true;
+  libraryState.governedWorkError = null;
+  if (currentView === 'library') renderLibrary();
+  try {
+    const out = await window.jarvis.workUnitAction({ action: 'canonical-list' });
+    if (!out?.ok) {
+      libraryState.governedWork = null;
+      libraryState.governedWorkError = out?.reason || 'Canonical Work Unit list could not be read.';
+    } else {
+      libraryState.governedWork = GrokkerGovernedWork.project(out);
+    }
+  } catch (e) {
+    libraryState.governedWork = null;
+    libraryState.governedWorkError = String(e?.message || e);
+  } finally {
+    libraryState.governedWorkLoading = false;
+    if (currentView === 'library') renderLibrary();
+  }
+}
+
+function governedWorkRows(items) {
+  if (!items?.length) return '<div class="hint">None.</div>';
+  return items.map(item => {
+    const title = item.grokker_origin?.query || item.objective;
+    const origin = item.grokker_origin ? 'Grokker inquiry' : (item.task_shape || 'canonical work');
+    return `<div class="grokker-result">
+      <b>${escapeHtml(title)}</b>
+      <div class="grokker-why">${escapeHtml(item.grokker_origin ? 'Grokker inquiry' : 'Governed work')} · ${escapeHtml(humanLifecycle(item.lifecycle))} · ${escapeHtml(item.reason)}</div>
+      ${item.grokker_origin?.source_ranges?.length ? `<div class="grokker-source">${item.grokker_origin.source_ranges.map(escapeHtml).join(' · ')}</div>` : ''}
+      <div class="actions"><button class="act" data-open-governed-work="${escapeHtml(item.work_unit_id)}">Open in Work</button>${pinButton('work', item.work_unit_id, title)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderGovernedWork() {
+  if (libraryState.governedWorkLoading) {
+    return '<div class="grokker-box"><h3>Governed work</h3><div class="hint">Reading canonical Work Units…</div></div>';
+  }
+  if (libraryState.governedWorkError) {
+    return `<div class="grokker-box"><h3>Governed work</h3><div class="errors"><div>${escapeHtml(libraryState.governedWorkError)}</div></div><div class="actions"><button class="act" id="governed-work-refresh">Try again</button></div></div>`;
+  }
+  const view = libraryState.governedWork;
+  if (!view) {
+    return '<div class="grokker-box"><h3>Governed work</h3><div class="hint">Canonical Work Units have not been read yet.</div><div class="actions"><button class="act" id="governed-work-refresh">Read governed work</button></div></div>';
+  }
+  const p = view.population || {};
+  return `<div class="grokker-box">
+    <h3>Governed work</h3>
+    <div class="sentence">Work that still has a governed life in JARVIS, grouped so you can see what needs you, what is moving, and what deserves watching.</div>
+    <div class="library-summary">${p.returned || 0} returned of ${p.total || 0}${p.truncated ? ' · list truncated' : ''}${p.unreadable ? ' · ' + p.unreadable + ' unreadable' : ''}</div>
+    <div class="library-section-title">Needs Kelly</div>
+    ${governedWorkRows(view.needs_kelly)}
+    <div class="library-section-title">In motion</div>
+    ${governedWorkRows(view.in_motion)}
+    <div class="library-section-title">Watching</div>
+    ${governedWorkRows(view.watching)}
+    <details class="library-group">
+      <summary><span>Historical</span><span class="library-count">${view.historical.length}</span></summary>
+      <div class="library-items">${governedWorkRows(view.historical)}</div>
+    </details>
+    <div class="actions"><button class="act" id="governed-work-refresh">Refresh governed work</button></div>
+  </div>`;
+}
+
+function renderLibrary() {
+  const lib = window.KELLY_FIELD_LIBRARY;
+  if (!lib) {
+    $main.innerHTML = '<div class="card"><p class="headline">Field Library unavailable.</p><p class="sentence">The generated index was not loaded.</p></div>';
+    return;
+  }
+  const q = String(libraryState.browseQuery || '');
+  const gq = String(libraryState.grokkerQuery || '');
+  $main.innerHTML = `
+    ${renderOrientationSummary(lib)}
+    <div class="card">
+      <p class="headline">Living Field Library</p>
+      <p class="sentence">A scrollable map of the fields, laws, ideas, and programme lanes we have been building. Collapse back to the whole whenever you need orientation.</p>
+      <div class="library-summary">${lib.counts.concepts} durable concepts · ${lib.counts.lanes} canonical programme records · ${lib.counts.recent} touched since September 27 · sweep generated ${escapeHtml(lib.generatedAt)}</div>
+      <div class="library-toolbar">
+        <input id="library-search" type="text" value="${escapeHtml(q)}" placeholder="Search memory, consciousness, Writer's Studio, JARVIS, capture…">
+        <button class="act" id="library-expand">Expand all</button>
+        <button class="act" id="library-collapse">Collapse all</button>
+        <button class="act" id="library-reset-view">Reset view</button>
+      </div>
+      <div class="hint">Browse remains a read-only index over canonical records. Grokker Trace below retrieves into that same corpus without inventing a second source of truth.</div>
+    </div>
+    ${renderPinnedShelf(lib)}
+    <div class="grokker-box">
+      <h3>Where are we now?</h3>
+      <div class="sentence">A lightweight pulse of the programme records touched most recently. This is orientation, not a claim that recent means important.</div>
+      <div class="library-items">${renderRecentPulse(lib)}</div>
+    </div>
+    ${renderRecoveryCandidates(lib)}
+    ${renderGovernedWork()}
+    <div class="grokker-box">
+      <h3>Ask Grokker</h3>
+      <div class="sentence">Ask about anything we’ve worked on. Grokker will gather the strongest traces and show where they came from.</div>
+      <div class="grokker-input">
+        <input id="grokker-query" type="text" value="${escapeHtml(gq)}" placeholder="What have we established about context release?">
+        <button class="primary" id="grokker-trace">Find this</button>
+      </div>
+      <div id="grokker-results">${renderGrokkerResults(libraryState.grokkerResults, gq)}</div>
+      ${libraryState.grokkerResults.length ? `<div class="actions"><button class="act" id="grokker-packet">Prepare source packet</button></div>` : ''}
+      ${renderSourcePacket(libraryState.sourcePacket)}
+      ${renderLocalSynthesis()}
+    </div>
+    <div class="library-section-title">Fields and enduring ideas</div>
+    ${libraryGroups(lib.conceptGroups, q, 'concept')}
+    <div class="library-section-title">Recent activity · since September 27</div>
+    ${libraryGroups([{title:'Recently touched programme records',items:lib.recentItems || []}], q, 'recent')}
+    <div class="library-section-title">Full canonical programme corpus</div>
+    ${libraryGroups(lib.laneGroups, q, 'lane')}
+  `;
+  wireLibrary();
+  applyLibraryViewState();
+}
+
 function render() {
   if (currentView === 'home') renderHome();
   else if (currentView === 'work') renderWork();
   else if (currentView === 'system') renderSystem();
   else if (currentView === 'spiral') renderSpiral();
+  else if (currentView === 'library') renderLibrary();
 }
 
 (async function init() {
+  libraryState.pins = GrokkerFieldPins.load(localStorage);
+  libraryState.viewState = GrokkerViewState.load(localStorage);
+  libraryState.browseQuery = libraryState.viewState.browse_query;
+  libraryState.grokkerQuery = libraryState.viewState.grokker_query;
+  $main.addEventListener('scroll', () => {
+    if (currentView === 'library') saveLibraryViewState();
+  });
   render();
   await Promise.all([refreshStatus(), loadCapabilities()]);
   render();
