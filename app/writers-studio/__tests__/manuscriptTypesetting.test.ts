@@ -33,6 +33,31 @@ describe('Writer Studio manuscript typesetting', () => {
     expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
   });
 
+  it('preserves finished-manuscript paragraph lines before falling back to PDF-wrap inference', () => {
+    const body = [
+      'A finished manuscript paragraph can already arrive as one complete authored line, with its own ending punctuation and no blank-line separator between paragraphs.',
+      'The next authored paragraph is likewise complete and should remain visibly distinct rather than being merged merely because the source is already clean prose.',
+      'A third finished paragraph confirms this is an authored-paragraph profile rather than a sequence of soft PDF wraps that need reconstruction.',
+    ].join('\n');
+    const blocks = typesetManuscriptBody(body);
+    expect(blocks.map((b) => b.kind)).toEqual(['paragraph', 'paragraph', 'paragraph']);
+    expect(blocks).toHaveLength(3);
+    expect(blocks.map((b) => b.text).join('\n')).toBe(body);
+    expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
+  });
+
+  it('keeps a standalone folio structural even when the surrounding source is not PDF-hard-wrapped', () => {
+    const body = [
+      'A short paragraph ends here.',
+      '161',
+      'The following paragraph begins on the next source page.',
+    ].join('\n');
+    const blocks = typesetManuscriptBody(body);
+    expect(blocks.some((b) => b.kind === 'folio' && b.text === '161')).toBe(true);
+    expect(blocks.map((b) => b.text).join('\n')).toBe(body);
+    expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
+  });
+
   it('renders likely PDF folios as their own quiet block instead of burying them in prose', () => {
     const body = [
       'A long typeset line continues across the page with enough characters to establish the normal measure.',
