@@ -474,7 +474,7 @@ export class MAIASafetyPipeline {
         created_at: DateTime.now().toISO(),
       });
 
-      console.log('Crisis alert transport result for user ' + userId + ', alert ID: ' + alertPayload.alert_id + ', state: ' + alertResponse.consequence_state);
+      console.log('Crisis alert transport result:', { state: alertResponse.consequence_state });
       return resultForDeliveryState(alertResponse.consequence_state, alertPayload.alert_id);
     } catch (error) {
       const reason = error instanceof Error ? error.message : 'Unknown crisis delivery error';
@@ -543,7 +543,7 @@ export class MAIASafetyPipeline {
         created_at: DateTime.now().toISO(),
       });
 
-      console.log('High-risk alert transport result for user ' + userId + ', alert ID: ' + alertPayload.alert_id + ', state: ' + alertResponse.consequence_state);
+      console.log('High-risk alert transport result:', { state: alertResponse.consequence_state });
       return resultForDeliveryState(alertResponse.consequence_state, alertPayload.alert_id);
     } catch (error) {
       const reason = error instanceof Error ? error.message : 'Unknown high-risk delivery error';
