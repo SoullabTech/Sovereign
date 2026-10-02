@@ -90,8 +90,9 @@ Documentation/evidence only; they do not themselves grant runtime or deployment 
 
 ## Current production configuration boundary
 
-Read-only presence witness on 2026-10-02:
+Read-only presence/auth witness on 2026-10-02 against running SHA `12b461bd8`:
 
+- Resend credential: present, but authenticated `GET /domains` returns `HTTP 400 · validation_error · API key is invalid`
 - Twilio account credential: present
 - Twilio auth credential: present
 - Twilio sending mechanism: present
@@ -101,7 +102,7 @@ Read-only presence witness on 2026-10-02:
 
 No credential values were copied into this record.
 
-A dedicated human safety recipient therefore has not been intentionally designated in production.
+A dedicated human safety recipient therefore has not been intentionally designated in production, and E1 mail transport remains down independently of the safety-recipient gap.
 
 ## Required deployment order
 
