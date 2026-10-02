@@ -106,6 +106,7 @@ export interface MaiaConsciousnessInput {
   message: string;
   userId: string;
   sessionId: string;
+  exchangeId?: string;
   conversationHistory?: any[];
   meta?: { explorerId?: string; userId?: string; sessionId?: string; [key: string]: any };
   context?: any;
@@ -249,7 +250,7 @@ function analyzeMessageComplexity(message: string, conversationHistory: any[] = 
 class SanctuarySkip extends Error {}
 
 export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<MaiaConsciousnessResponse> {
-  const { message, userId, sessionId, conversationHistory = [], meta = {}, context = {}, originRoute, processingProfileOverride } = input;
+  const { message, userId, sessionId, exchangeId, conversationHistory = [], meta = {}, context = {}, originRoute, processingProfileOverride } = input;
 
   // 📊 Generate traceId for memory audit trail (use existing if provided, else create new)
   const traceId = (meta as any).traceId || randomUUID();
@@ -852,6 +853,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       writebackResult = await MemoryWritebackService.writeBack({
         userId,
         sessionId,
+        exchangeId,
         userMessage: message,
         assistantResponse: maiaResult.text,
         facetCode: elementField?.dominantElement || convElemental?.context?.dominantElement,
