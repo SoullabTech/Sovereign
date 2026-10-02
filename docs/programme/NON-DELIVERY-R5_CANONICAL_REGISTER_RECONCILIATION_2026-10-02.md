@@ -104,12 +104,21 @@ The live Mac Studio monitor is running under launchd and its private monitor con
 - one `ALERT_PHONES` SMS destination
 - one email destination
 
-The available current log contains no DOWN/RECOVERED event, so no independent SMS receipt has been witnessed.
+A controlled `--test` witness was then run on 2026-10-02 at 11:15 UTC while Resend remained unavailable.
+
+Observed:
+- DOWN SMS transport response: HTTP **201**
+- RECOVERED SMS transport response: HTTP **201**
+- DOWN email response through Resend: **401**
+- RECOVERED email response through Resend: **401**
+- monitor verdict: independent channel accepted both alerts
+
+This proves independent provider acceptance while the email transport is unavailable. It does **not** prove that the human recipient saw either SMS.
 
 This monitor configuration is distinct from the production app's `SAFETY_ALERT_PHONE` configuration.
 
 Disposition:
-**OPEN · INDEPENDENT PATH CONFIGURED · DELIVERY UNWITNESSED**
+**OPEN · INDEPENDENT PROVIDER ACCEPTANCE WITNESSED · HUMAN RECEIPT UNCONFIRMED**
 
 ## E6 — Reply-To routing
 
