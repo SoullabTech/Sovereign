@@ -11,9 +11,10 @@
  * Vision Studio field-note route). This is the consented facilitator view.
  */
 
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { mayPractitionerViewMemberField } from '../fieldAccess';
 import Link from 'next/link';
 
 const PHASE_ORDER = [
@@ -100,14 +101,12 @@ export default async function FieldFacilitatorPage({
     );
   }
 
-  // Gate: only active practitioners may view another member's field evidence.
-  const practitionerCheck = await query(
-    `SELECT id FROM practitioners WHERE member_id = $1 AND status = 'active' LIMIT 1`,
-    [session.memberId],
-  );
-  if (practitionerCheck.rows.length === 0) {
-    redirect('/studio');
-  }
+  // PRIVACY-BOUNDARY-01: practitioner role alone is not access to every member.
+  // The authenticated practitioner must hold a live relationship to THIS target
+  // member before any field evidence is read. Fail as not-found so an unrelated
+  // practitioner cannot use this surface to probe which member ids exist.
+  const mayView = await mayPractitionerViewMemberField(session.memberId, params.memberId);
+  if (!mayView) return notFound();
 
   const [threads, member] = await Promise.all([
     getFieldEvidence(params.memberId),
