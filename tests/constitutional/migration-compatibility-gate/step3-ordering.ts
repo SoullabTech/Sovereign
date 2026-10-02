@@ -70,16 +70,18 @@ for(const token of [
   if(!migration.includes(token))throw new Error("migration failure missing: "+token);
 }
 
-if(migrateOnly.includes("run_migrations_or_abort") ||
-   migrateOnly.includes("rewitness_migration_relation_or_abort")){
-  throw new Error("migration-only command was broadened into Step 3 ordering helper");
-}
 requireOrder("migration-only",migrateOnly,[
+  'local ref="${1:-}"',
+  'deploy_ctx_assert_and_materialize "$ref"',
+  'deploy_ctx_assert_descends_from_running "deploy-production.sh migrate"',
   'review_migration_custody_or_abort "Migration-only run"',
-  'docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate',
+  'run_migrations_or_abort "Migration-only run"',
 ]);
+if(migrateOnly.includes('docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate')){
+  throw new Error("migration-only command bypasses immutable context / immediate relation re-witness");
+}
 
 console.log("DEPLOYMENT-SAFETY-03 STEP 3 ORDERING: PASS");
 console.log("  deploy/update: gate -> immediate relation re-witness+migrate -> tags -> swap -> verify");
 console.log("  re-witness: pending set -> old reader -> migrate");
-console.log("  migrate-only: unchanged by ordering act");
+console.log("  migrate-only: named immutable target -> gate -> immediate relation re-witness+migrate");
