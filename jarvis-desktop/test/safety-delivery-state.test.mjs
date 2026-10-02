@@ -15,7 +15,9 @@ test('Kellys World safety delivery snapshot is truthful and action-oriented', ()
   assert.ok(s.needs_kelly.some(x => /second human custodian/.test(x) && /PR #1709/.test(x)));
   assert.ok(s.needs_kelly.some(x => /SAFETY_ALERT_PHONE/.test(x) && /check:safety-human-delivery/.test(x)));
   assert.ok(s.in_motion.some(x => /PR #1671 is merged/.test(x)));
-  assert.match(s.source, /PR #1686 remains open/);
+  assert.match(s.source, /PR #1686 closed unmerged/);
+  assert.match(s.source, /PR #1716 custody floor open/);
+  assert.ok(s.in_motion.some(x => /PR #1716/.test(x) && /Class-A custody floor/.test(x)));
   assert.ok(s.watching.some(x => /witness/i.test(x)));
   assert.ok(s.unresolved.some(x => /Twilio transport credentials are present/.test(x) && /SAFETY_ALERT_PHONE/.test(x)));
 });
