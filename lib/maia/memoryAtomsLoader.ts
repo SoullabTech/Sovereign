@@ -41,6 +41,7 @@
  *   - status IN ('active', 'still_alive')
  *   - NOT 'sacred_protected' = ANY(registers)
  *   - return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+ *   - return_authority = 'member_explicit' (preference value alone is not consent provenance)
  *   - member_response_status IS DISTINCT FROM 'rejected' (declined = released)
  */
 
@@ -73,6 +74,11 @@ export type MemoryAtomReturnPreference =
   | 'member_pulled'
   | 'contextual_doorway'
   | 'ritual_review_opt_in';
+
+export type MemoryAtomReturnAuthority =
+  | 'legacy_ambiguous'
+  | 'default_private'
+  | 'member_explicit';
 
 export type MemoryAtomSourceType =
   | 'idea'
@@ -133,6 +139,7 @@ export interface MemoryAtomSnapshot {
   status: MemoryAtomStatus;
   keptAt: Date;
   returnPreference: MemoryAtomReturnPreference;
+  returnAuthority: MemoryAtomReturnAuthority;
   sourceType: MemoryAtomSourceType;
   /**
    * Member-marked breakthrough. The system NEVER sets this — only the member,
@@ -164,6 +171,7 @@ const SELECT_COLUMNS = `
   status,
   kept_at,
   return_preference,
+  return_authority,
   source_type,
   is_breakthrough,
   marked_breakthrough_at,
@@ -195,6 +203,7 @@ interface AtomRow {
   status: MemoryAtomStatus;
   kept_at: Date;
   return_preference: MemoryAtomReturnPreference;
+  return_authority: MemoryAtomReturnAuthority;
   source_type: MemoryAtomSourceType;
   is_breakthrough: boolean;
   marked_breakthrough_at: Date | null;
@@ -218,6 +227,7 @@ interface AtomRow {
  * Consent filters (all canon-derived, all required):
  *   - status IN ('active', 'still_alive')
  *   - return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+ *   - return_authority = 'member_explicit' (preference value alone is not consent provenance)
  *   - NOT 'sacred_protected' = ANY(registers)
  *
  * Ordering: is_breakthrough DESC, kept_at DESC.
@@ -282,6 +292,7 @@ export async function loadMemberMemoryAtomsForPrompt(
          AND ${scopeWhere}
          AND status IN ('active', 'still_alive')
          AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+         AND return_authority = 'member_explicit'
          AND NOT ('sacred_protected' = ANY(registers))
          AND ${PRACTITIONER_ATTRIBUTION_GUARD}
          AND member_response_status IS DISTINCT FROM 'rejected'
@@ -304,6 +315,7 @@ export async function loadMemberMemoryAtomsForPrompt(
       status: r.status,
       keptAt: r.kept_at,
       returnPreference: r.return_preference,
+      returnAuthority: r.return_authority,
       sourceType: r.source_type,
       isBreakthrough: r.is_breakthrough ?? false,
       markedBreakthroughAt: r.marked_breakthrough_at,
@@ -352,6 +364,7 @@ export async function countMemberMemoryAtomStates(
                 WHERE memory_scope = 'personal'
                   AND status IN ('active', 'still_alive')
                   AND return_preference IN ('contextual_doorway', 'ritual_review_opt_in')
+                  AND return_authority = 'member_explicit'
                   AND NOT ('sacred_protected' = ANY(registers))
                   AND ${PRACTITIONER_ATTRIBUTION_GUARD}
                   AND member_response_status IS DISTINCT FROM 'rejected'
