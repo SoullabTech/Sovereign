@@ -27,6 +27,20 @@ import {
 const DEEP_CONSULTATION_APERTURE = 5;
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
+import { assessCrisis, CRISIS_ADDENDUM, type CrisisAssessment } from '../safety/crisisAssessment';
+
+/**
+ * SAFETY-CRISIS-01: append the server-authored crisis safety context, if this
+ * turn has one, to the system prompt actually sent to the model. Applied at the
+ * send site of every tier that can serve a crisis turn (FAST, CORE, and the CORE
+ * repair regeneration). DEEP is not listed because getMaiaResponse routes a turn
+ * with any crisis signal away from DEEP: the DEEP prompt builder does not carry
+ * addenda (ADDENDA_CHANNEL_DIVERGENCE_2026-05-24 §II.B).
+ */
+function withCrisisSafety(prompt: string, meta: Record<string, unknown>): string {
+  const addendum = meta.crisisSafetyAddendum;
+  return typeof addendum === 'string' && addendum.length > 0 ? `${prompt}\n\n${addendum}` : prompt;
+}
 import {
   degradedNonModelTruth,
   servedNonModelTruth,
@@ -651,6 +665,13 @@ type MaiaRequest = {
    * Absent → getMaiaResponse computes one at the shared boundary.
    */
   orientationContract?: OrientationContract | null;
+  /**
+   * SAFETY-CRISIS-01: the route's crisis assessment for this turn, including an
+   * escalation from a confirmed safety check-in that `input` alone cannot show.
+   * Typed and top-level, never in `meta`, so a client cannot forge it. Absent →
+   * getMaiaResponse assesses `input` itself.
+   */
+  crisisAssessment?: CrisisAssessment;
   /**
    * FOCUS-PRODUCER-01 — the writers_studio canonical participation path.
    *
@@ -1728,7 +1749,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
 
   // Use single model call with complete MAIA intelligence stack
   const { text: response, provider, servingTruth } = await generateText({
-    systemPrompt: baseSystemPrompt,
+    systemPrompt: withCrisisSafety(baseSystemPrompt, meta),
     userInput: contextPrompt,
     meta: {
       ...meta,
@@ -2224,7 +2245,7 @@ The current user has not provided their name. Address them as "friend" or "there
     provider: coreProvider,
     servingTruth: coreServingTruth,
   } = await generateText({
-    systemPrompt: adaptivePrompt,
+    systemPrompt: withCrisisSafety(adaptivePrompt, meta),
     userInput: input,
     meta: {
       ...meta,
@@ -2267,7 +2288,7 @@ The current user has not provided their name. Address them as "friend" or "there
       repairedPrompt = repairedPrompt + '\n\n' + repairPrompt;
 
       const regenerated = await generateText({
-        systemPrompt: repairedPrompt,
+        systemPrompt: withCrisisSafety(repairedPrompt, meta),
         userInput: input,
         meta: {
           ...meta,
@@ -3062,6 +3083,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // H3: the Writer lane carries its already-resolved posture; every other caller
   // resolves its own exactly as before.
   const turnPosture = writerStudio?.posture ?? TurnPosture.resolve(meta);
+  // 🆘 SAFETY-CRISIS-01: assess the member's own words on the server. The result
+  // ALWAYS overwrites `meta.crisisSafetyAddendum`, so a client cannot supply,
+  // suppress or replace safety context through the request body (PBR-001). Pure,
+  // in-memory, content-free: nothing here is logged or persisted.
+  const crisisAssessment = req.crisisAssessment ?? assessCrisis(input);
+  (meta as Record<string, unknown>).crisisSafetyAddendum =
+    crisisAssessment.tier === 'none' ? undefined : CRISIS_ADDENDUM[crisisAssessment.tier];
   if (writerStudio) {
     // The legacy tail reads `meta.sanctuary` directly. Deriving it from the one
     // trusted posture keeps both readings identical; it can only ever make the
@@ -3537,7 +3565,10 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       sessionId: userId ? undefined : sessionId, // Fallback to sessionId if no userId
       // NOTE: atlasContext removed - not yet in router interface (future: elemental routing)
     });
-    const processingProfile = routerResult.profile;
+    // 🆘 SAFETY-CRISIS-01: a turn with any crisis signal is never served by DEEP,
+    // whose prompt builder does not carry the safety context. CORE does.
+    const processingProfile =
+      crisisAssessment.tier !== 'none' && routerResult.profile === 'DEEP' ? 'CORE' : routerResult.profile;
 
     // Attach cognitive profile to meta for downstream services
     if (routerResult.meta?.cognitiveProfile) {
