@@ -19,6 +19,7 @@ const CONTINUITY = require('./continuity.js');
 const FRONTIER = require('./frontier-worker.js');
 const WUC = require('./work-unit-control.js');
 const RB = require('./runtime-binding.js');
+const { resolveDevUserDataName } = require('./dev-instance-key.js');
 const RECOVERY_B = require('./o5-path-b-recovery.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
@@ -44,7 +45,7 @@ const { decideCorrectness } = require('./correctness');
 // they get genuinely different userData — and therefore different locks. Two
 // packaged copies still collide, which is what F5 actually wanted to prevent.
 if (!app.isPackaged) {
-  app.setPath('userData', path.join(app.getPath('appData'), 'jarvis-desktop-dev'));
+  app.setPath('userData', path.join(app.getPath('appData'), resolveDevUserDataName(process.env)));
 }
 
 // ---------------------------------------------------------------------------
