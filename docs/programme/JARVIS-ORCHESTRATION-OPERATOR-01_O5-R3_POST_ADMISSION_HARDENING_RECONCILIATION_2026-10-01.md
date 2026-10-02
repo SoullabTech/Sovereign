@@ -145,4 +145,4 @@ No production or real delegation-home mutation occurred during this reconciliati
 
 ## 10. Reconciled standing
 
-**O5-R3 canonical admission preserved ✅ · A1–A8 post-admission hardening reconciled ✅ · stronger C6A/C6B witness retained ✅ · O5-R4 Evidence Return preserved ✅ · O5-R5A preserved ✅ · O5-R3A9 remains separate follow-on.**
+**O5-R3 canonical admission preserved ✅ · A1–A8 post-admission hardening reconciled ✅ · stronger C6A/C6B witness retained ✅ · O5-R4 Evidence Return preserved ✅ · O5-R5A preserved ✅ · O5-R3A9 integrated on the canonical-reconciliation candidate with its own frozen witness; repository merge remains separate.**
