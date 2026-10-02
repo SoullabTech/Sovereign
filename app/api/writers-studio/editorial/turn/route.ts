@@ -307,12 +307,42 @@ export async function POST(request: NextRequest) {
       || turn.reason === 'sequence_discussion_first'
       || turn.reason === 'proposal_policy_reply_only'
       || turn.reason === 'relationship_scope_unmeasured'
-      || turn.reason === 'relationship_refused';
+      || turn.reason === 'relationship_refused';;
+    /* ⭐ A DISCLOSURE REFUSAL IS ALSO NOT A SERVER FAULT — and not a scope
+       refusal either, so it gets its own name rather than being folded into one.
+       Authorization or accountability for the crossing could not be established,
+       and nothing was sent. ⛔ 502 would blame the provider for a line this
+       system drew before reaching it. */
+    const disclosureRefused = turn.reason === 'disclosure_unavailable';
+    /* ⭐ THE DIAGNOSTIC THAT WAS MISLEADING, CORRECTED.
+     *
+     * `detail` is withheld from the RESPONSE for non-scope refusals, and that is
+     * right: a refusal is not an occasion to disclose provider internals to a
+     * member. ⚠️ But withholding it from the SERVER too left `structured_refused`
+     * arriving as a bare four-value class with the one field that distinguishes
+     * its causes stripped — an operator could not tell a missing key from a
+     * rejected schema from a timeout. ⭐ The record is now written where
+     * operators read and members do not. */
+    if (!scopeRefused && !disclosureRefused) {
+      console.error('[editorial/turn] refused', {
+        reason: turn.reason,
+        detail: turn.detail,
+        dispatch: turn.dispatch ?? 'not_applicable',
+        threadId: parsed.threadId,
+        memberTurnIndex: act.turnIndex,
+      });
+    }
     return NextResponse.json({
       threadId: parsed.threadId,
       memberTurnIndex: act.turnIndex,
       direction: act.direction ? { id: act.direction.id } : null,
       error: turn.reason,
+      /* ⭐ SAFE TO RETURN, and the reason the field exists: it reports whether a
+         request arrived, never what any provider said. ⛔ It is not `detail` by
+         another name. ⚠️ `unknown` is returned as itself — a client that renders
+         it as "nothing was sent" would be inventing the certainty this value
+         exists to deny. */
+      ...(turn.dispatch ? { dispatch: turn.dispatch } : {}),
       ...(turn.voice ? { voice: {
         note: turn.voice.note, unfamiliar: turn.voice.unfamiliar,
         sampleWords: turn.voice.sampleWords,
@@ -340,7 +370,7 @@ export async function POST(request: NextRequest) {
           wouldPassAtLatitude: turn.scope!.wouldPassAtLatitude,
         },
       } : {}),
-    }, { status: scopeRefused ? 409 : 502 });
+    }, { status: scopeRefused || disclosureRefused ? 409 : 502 });
   }
 
   /* ⛔ THIN. No StructuredRequest, no systemPrompt, no EditorialInvocation, no
