@@ -84,6 +84,49 @@ function firstUsefulSentence(text: string): string {
   return (match?.[1] ?? trimmed.slice(0, 240)).trim();
 }
 
+type DiffPart = { kind: 'same' | 'remove' | 'add'; text: string };
+
+function coalesceDiff(parts: DiffPart[]): DiffPart[] {
+  const out: DiffPart[] = [];
+  for (const part of parts) {
+    if (!part.text) continue;
+    const last = out[out.length - 1];
+    if (last?.kind === part.kind) last.text += part.text;
+    else out.push({ ...part });
+  }
+  return out;
+}
+
+function wordDiff(original: string, edited: string): DiffPart[] {
+  if (original === edited) return [{ kind: 'same', text: original }];
+  const a = original.split(/(\s+)/).filter(Boolean);
+  const b = edited.split(/(\s+)/).filter(Boolean);
+  if (a.length * b.length > 160000) {
+    return [
+      { kind: 'remove', text: original },
+      { kind: 'add', text: edited },
+    ];
+  }
+  const dp = Array.from({ length: a.length + 1 }, () => new Uint32Array(b.length + 1));
+  for (let i = a.length - 1; i >= 0; i -= 1) {
+    for (let j = b.length - 1; j >= 0; j -= 1) {
+      dp[i]![j] = a[i] === b[j]
+        ? dp[i + 1]![j + 1]! + 1
+        : Math.max(dp[i + 1]![j]!, dp[i]![j + 1]!);
+    }
+  }
+  const parts: DiffPart[] = [];
+  let i = 0; let j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { parts.push({ kind: 'same', text: a[i]! }); i += 1; j += 1; }
+    else if (dp[i + 1]![j]! >= dp[i]![j + 1]!) { parts.push({ kind: 'remove', text: a[i]! }); i += 1; }
+    else { parts.push({ kind: 'add', text: b[j]! }); j += 1; }
+  }
+  while (i < a.length) { parts.push({ kind: 'remove', text: a[i++]! }); }
+  while (j < b.length) { parts.push({ kind: 'add', text: b[j++]! }); }
+  return coalesceDiff(parts);
+}
+
 type EditorialSummary = {
   preserve: string | null;
   friction: string | null;
@@ -100,14 +143,21 @@ function editorialSummary(text: string): EditorialSummary {
     const hit = lines.find((line) => pattern.test(line));
     return hit ? hit.replace(pattern, '').trim() || null : null;
   };
+  const compact = text.replace(/\s+/g, ' ').trim();
+  const extract = (label: RegExp): string | null => {
+    const labels = '(?:What changed|Why|Reader effect(?: \\(hypothesis only\\))?|What I protected)';
+    const source = label.source.replace(/^\^/, '');
+    const match = compact.match(new RegExp(`${source}\\s*([\\s\\S]*?)(?=\\s+${labels}\\s*:|$)`, 'i'));
+    return match?.[1]?.trim() || null;
+  };
   return {
     preserve: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What I[’']d preserve:\s*/i),
     friction: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?Friction I notice:\s*/i),
     tryNext: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What I[’']d try:\s*/i),
-    changed: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What changed:\s*/i),
-    why: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?Why:\s*/i),
-    readerEffect: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?Reader effect:\s*/i),
-    protected: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What I protected:\s*/i),
+    changed: extract(/What changed:\s*/i),
+    why: extract(/Why:\s*/i),
+    readerEffect: extract(/Reader effect(?: \(hypothesis only\))?:\s*/i),
+    protected: extract(/What I protected:\s*/i),
   };
 }
 
@@ -203,6 +253,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const changeSummary = editorialSummary(props.version?.rationale ?? recommendation?.rationale ?? '');
   const hasChangeSummary = Boolean(
     changeSummary.changed || changeSummary.why || changeSummary.readerEffect || changeSummary.protected,
+  );
+  const changedWords = useMemo(
+    () => wordDiff(props.currentText, props.version?.wording ?? recommendation?.wording ?? props.currentText),
+    [props.currentText, props.version?.wording, recommendation?.wording],
   );
 
   useEffect(() => {
@@ -573,6 +627,16 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <span className="p4r1-eyebrow">Edited</span>
             <p>{props.version?.wording ?? recommendation.wording}</p>
           </div>
+        </div>
+        <div className="p4r1-dance-changed-words" aria-label="Changed words">
+          <span className="p4r1-eyebrow">Changed words</span>
+          <p>
+            {changedWords.map((part, index) => part.kind === 'remove'
+              ? <del key={index}>{part.text}</del>
+              : part.kind === 'add'
+                ? <ins key={index}>{part.text}</ins>
+                : <span key={index}>{part.text}</span>)}
+          </p>
         </div>
         <div className="p4r1-dance-change-reasoning">
           <div><b>What changed</b><p>{changeSummary.changed ?? 'MAIA can explain the exact editorial move behind this version.'}</p></div>

@@ -31,6 +31,10 @@ describe('Writer Studio editorial latitude experience', () => {
   });
 
   it('makes every proposed edit inspectable and adjustable', () => {
+    expect(dance).toContain('Changed words');
+    expect(dance).toContain('wordDiff');
+    expect(dance).toContain('<del key={index}>');
+    expect(dance).toContain('<ins key={index}>');
     expect(dance).toContain('What changed');
     expect(dance).toContain('Reader effect');
     expect(dance).toContain('What I protected');
