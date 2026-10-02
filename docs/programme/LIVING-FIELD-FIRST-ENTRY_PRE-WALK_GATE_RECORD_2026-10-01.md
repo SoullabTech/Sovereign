@@ -1,6 +1,6 @@
 # Living Field First Entry: Pre-Walk Gate Record
 
-**Status:** PARTIAL · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G0/G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
+**Status:** PARTIAL · G0 PASS · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
 **Governs:** `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md` (with Amendments 1 and 2)
 **Occasioned by:** a J18 verdict and an emergency-disable PASS that existed only in a session
 transcript and were never committed. Under this programme's rules a probe is not the record.
@@ -41,14 +41,17 @@ git fetch origin clean-main-no-secrets && git log -1 --format='%H %cI' origin/cl
 
 PASS requires both `## Amendment 1` and `## Amendment 2` lines.
 
-captured_at_utc:
-canonical_sha:
+captured_at_utc: `2026-10-02T12:21:35Z`
+canonical_sha: `8aa79ee44587c56617fbe386ea2fb98d48cc4a64`
 
 ```text
-(paste verbatim)
+2026-10-02T12:21:35Z
+8aa79ee44587c56617fbe386ea2fb98d48cc4a64
+159:## Amendment 1 · 2026-10-01 · before any run (pre-registration amendment)
+171:## Amendment 2 · 2026-10-01 · before any run (founder-directed pre-registration amendment)
 ```
 
-Verdict: PASS / FAIL
+Verdict: **PASS**
 
 ---
 
@@ -65,13 +68,13 @@ PASS requires `exit=1` with no value printed before it (variable absent). `exit=
 variable is set: a value line means it is set to that value, and an empty line means it is
 **set but empty**. Record either as it is and adjudicate it; do not treat it as a pass.
 
-captured_at_utc: `2026-10-01T23:41:47Z`
-production_sha_at_capture: `298414555`
+captured_at_utc: `2026-10-02T12:21:35Z`
+production_sha_at_capture: `d4655e647`
 
 ```text
-2026-10-01T23:41:47Z
-298414555
-exit=1
+2026-10-02T12:21:35Z
+d4655e647
+cabin_exit=1
 ```
 
 Verdict: **PASS**
@@ -81,58 +84,63 @@ Verdict: **PASS**
 ## G2 · Database stable
 
 What matters for a member is that the database is stable now. The question is not settled by
-proving why the old container had drifted, which may be unprovable. Docker's event buffer may not
-reach back that far, and a gate that demands an unprovable root cause either never passes or gets
-waived.
+proving why an older container drifted, which may be unprovable. A gate that demands an unprovable
+root cause either never passes or gets waived.
 
-**Established lineage (cite, do not re-derive):**
-`docs/programme/WS-ADVANCED-RUNTIME-01_RC1_PRODUCTION_WITNESS_2026-10-01.md`, observation 1,
-records the earlier RC1 recreate: `started=2026-10-01T14:34:47Z restarts=0 oom=false`.
+**Established lineage:** the RC1 production witness records the earlier recreate at
+`2026-10-01T14:34:47Z`, and later gate evidence recorded another recreate at
+`2026-10-01T21:41:44.870926604Z`. Production has since moved again.
 
-A later read-only production observation at `2026-10-01T22:14:34Z` supersedes that start-time
-value for this gate. Runtime was `56d0cd679`; `maia-postgres` reported
-`started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy`.
-Docker's journal at `21:41:44Z` shows the prior Postgres task being stopped/deleted and a new
-`maia-postgres` endpoint joining the compose network. This establishes another **recreate, not a
-crash**. The initiating command or actor is **UNKNOWN** and must not be invented.
+At `2026-10-02T12:21:35Z`, runtime `d4655e647` reported the current Postgres container as:
 
-**Required now:**
+```text
+created=2026-10-02T10:11:34.938821629Z
+started=2026-10-02T10:12:07.21786677Z
+restarts=0
+oom=false
+status=running
+health=healthy
+```
+
+The distinct `created=` time establishes a new container object rather than an in-place process
+restart. `restarts=0` and `oom=false` establish that this container has not restarted and was not
+OOM-killed. Docker's retained event query for the 10:11–10:13Z interval returned no events, so the
+initiating command or actor is **UNKNOWN** and must not be invented.
+
+**Required at walk start:**
 
 ```bash
 ssh soullab@minisforum 'date -u +%FT%TZ; docker exec maia-sovereign printenv GIT_COMMIT; \
-  docker inspect maia-postgres --format "started={{.State.StartedAt}} restarts={{.RestartCount}} oom={{.State.OOMKilled}} status={{.State.Status}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}"'
+  docker inspect maia-postgres --format "created={{.Created}} started={{.State.StartedAt}} restarts={{.RestartCount}} oom={{.State.OOMKilled}} status={{.State.Status}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}"'
 ```
 
 PASS requires all of:
 
+- `created=2026-10-02T10:11:34.938821629Z`;
+- `started=2026-10-02T10:12:07.21786677Z`;
 - `restarts=0` and `oom=false`;
-- `started=` still equal to `2026-10-01T21:41:44.870926604Z`. A later value means another recreate
-  or restart has happened since the latest witnessed one and must be bounded before this gate can
-  pass;
 - `status=running` and, when health is present, `health=healthy`.
 
-captured_at_utc: `2026-10-01T23:41:47Z`
-production_sha_at_capture: `298414555`
+captured_at_utc: `2026-10-02T12:21:35Z`
+production_sha_at_capture: `d4655e647`
 
 ```text
-2026-10-01T23:41:47Z
-298414555
-started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy
+2026-10-02T12:21:35Z
+d4655e647
+cabin_exit=1
+started=2026-10-02T10:12:07.21786677Z restarts=0 oom=false status=running health=healthy
 ```
 
-Mechanical verdict: **PASS** — database stability criteria satisfied. Final G2 remains OPEN until the founder explicitly accepts the recorded standby exposure or defers the walk.
+Mechanical verdict: **PASS** — the current database container is stable. Final G2 remains OPEN
+until the founder explicitly accepts the recorded standby exposure or defers the walk.
 
-**Root cause / trigger:** recorded as **UNKNOWN** for both the earlier drift and the 21:41Z
-recreate. The newer daemon journal proves recreate-not-crash, not who or what invoked it. ⛔ Do
-not upgrade inference to fact here.
-**Tracked separately, not gating:** the deploy fix (`--no-deps` on the migrate container, so a
-pending-set read cannot recreate Postgres).
+**Root cause / trigger:** **UNKNOWN**. Do not upgrade inference to fact.
+**Tracked separately, not gating:** the deploy fix (`--no-deps` on the migrate container).
 
-**Recorded, not gating (founder attention):** the witness record also states that **disaster
-recovery is not established**. The Hetzner standby has been offline for 7 days, and it needs a fresh
-base backup when it returns. Off-host backups were verified on the Mac Studio at ~15:25Z. A member
-who writes during the walk creates real substrate that exists on one host and in a nightly backup.
-Accept that exposure explicitly or defer the walk; do not leave it assumed.
+**Recorded, not gating (founder attention):** disaster recovery remains not established in the
+admitted production witness: the Hetzner standby was offline and requires a fresh base backup when
+it returns. Off-host backups were verified on the Mac Studio. A member who writes during the walk
+creates real substrate that exists on one host and in off-host backup custody.
 
 Standby exposure accepted for this walk: yes (by whom) / no (walk deferred)
 
@@ -221,28 +229,28 @@ Verdict: PASS / FAIL
 ## G5 · Amendment 1 conditions at walk start
 
 - Start SHA (repeat at the end in the witness record; any difference → NO EVIDENCE).
-- The currently observed production runtime is `298414555`. Its required source re-baseline is
-  `LIVING-FIELD_WITNESS_REBASELINE_298414555_2026-10-01.md`, currently carried by PR **#1681**.
-  **Until that record is canonical, G5 cannot PASS.** If #1681 lands and the walk still starts on
-  `298414555`, cite that canonical record. If production moves again, create and admit a new named
-  re-baseline before the walk; never carry an older runtime's record forward by analogy.
-- Whether the start SHA is an ancestor of `clean-main-no-secrets`
-  (`git merge-base --is-ancestor <sha> origin/clean-main-no-secrets; echo $?`). Re-run this at walk
-  time against the then-current canonical head; do not carry an earlier ancestry observation
-  forward as a permanent fact.
-- Preconditions 3 and 6: when the start SHA is `298414555` and #1681 is canonical, cite its fresh
-  aggregate content-blind 0/4 substrate census and explicit-MAIA-entry proof. On any other start
-  SHA, re-witness them live using aggregate substrate **counts only** and deployed-source evidence.
+- The currently observed production runtime is `d4655e647`.
+- Its fresh machine/source re-baseline is
+  `LIVING-FIELD_WITNESS_REBASELINE_D4655E647_2026-10-02.md`, carried by PR **#1735**.
+  **Until #1735 is canonical, G5 cannot PASS.**
+- At `2026-10-02T12:21:35Z`, production `d4655e647` was an ancestor of canonical
+  `8aa79ee445` (`git merge-base --is-ancestor` exit 0). Re-run this at walk time.
+- The #1735 record carries the fresh aggregate content-blind 0/4 substrate census and the deployed
+  explicit-MAIA-entry proof. If production moves again, create and admit a new named re-baseline
+  before the walk; never carry this record forward by analogy.
 
-captured_at_utc:
-production_sha_at_capture:
-Re-baseline needed: no / yes (record name):
+captured_at_utc: `2026-10-02T12:21:35Z`
+production_sha_at_capture: `d4655e647`
+Re-baseline needed: **yes until #1735 is canonical**
 
 ```text
-(paste verbatim)
+production=d4655e647
+canonical=8aa79ee44587c56617fbe386ea2fb98d48cc4a64
+production_is_ancestor_of_canonical=0
+rebaseline_pr=#1735
 ```
 
-Verdict: PASS / FAIL
+Verdict: **OPEN — #1735 must land, then recheck production SHA at walk start**
 
 ---
 
@@ -299,6 +307,13 @@ Use this while G7a is not established. It makes the walk possible and keeps the 
   `adult=true|false|unknown` and never the birth date itself. **No or unknown → STOP. A founder
   ruling is needed before any minor walks.**
 
+**Aggregate production age-data check, 2026-10-02 (content-free):**
+`known_teens_13_17=0`, `known_teens_with_any_signin=0`,
+`known_teens_signed_in_30d=0`, `known_under_13=0`, and
+`guardian_required_true=0`; however, `birth_date_missing=67`.
+This does **not** establish that production has no teen accounts. Participant-specific adult
+confirmation remains mandatory for G7b.
+
 Verdict: PASS (G7a / G7b) / FAIL
 
 ---
@@ -307,12 +322,12 @@ Verdict: PASS (G7a / G7b) / FAIL
 
 | Gate | Verdict |
 |---|---|
-| G0 protocol canonical | OPEN |
+| G0 protocol canonical | **PASS** |
 | G1 cabin mode unset | **PASS** |
 | G2 database stable | OPEN — mechanical PASS; founder standby-exposure choice required |
 | G3 emergency disable witnessed | OPEN |
 | G4 admission server-side | OPEN |
-| G5 Amendment 1 at start | OPEN |
+| G5 Amendment 1 at start | OPEN — #1735 must land, then recheck start SHA |
 | G6 observation disclosed | OPEN |
 | G7 human safety layer (a / b) | OPEN |
 
