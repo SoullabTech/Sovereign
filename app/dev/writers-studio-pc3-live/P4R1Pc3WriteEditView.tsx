@@ -423,7 +423,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   const maiaRelationshipCard = props.work && !canvas ? (
     <section
-      className="p4r1-context-card p4r1-maia-relationship"
+      className="p4r1-maia-relationship"
       data-p4r1-maia-relationship
       aria-label="Relationship with MAIA"
     >
@@ -722,6 +722,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             </button>
           </>
         )}
+        {maiaRelationshipCard}
       </div>
       <div className="fr-foot">The manuscript stays primary; support follows your attention.</div>
     </div>
@@ -915,7 +916,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           ) : null}
 
           {contextualActions}
-          {maiaRelationshipCard}
           {editorial}
         </>
       ) : null}
