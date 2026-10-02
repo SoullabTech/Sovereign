@@ -511,6 +511,23 @@ function renderGraph() {
 }
 function nodeLabel(g,id){return graphNode(g,id)?.label||id;}
 
+function jevLevel(stateName) {
+  if (stateName==='ADMITTED') return 'good';
+  if (['DRIFTING','RESTRICTED','UNINTERPRETABLE'].includes(stateName)) return 'warn';
+  return 'neutral';
+}
+
+function jevCalibrationSystem() {
+  const j=state.vm.jev_calibration;
+  if(!j) return '<div class="empty">JEV calibration is not projected by this build.</div>';
+  const shapes=arr(j.shapes);
+  const policy=j.policy||{};
+  const shapeRows=shapes.length?shapes.map(s=>`<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(s.task_shape)}</div><div class="rowPlain">${esc(s.reason||'Calibration evidence is being accumulated for this task shape.')}</div>${technicalDetails([`Evidence: ${s.evidence_state}`,`Cases: ${s.sample_size}`,s.undercall_rate==null?null:`Under-deliberation rate: ${s.undercall_rate}`,s.max_undercall==null?null:`Largest depth undercall: ${s.max_undercall}`,s.abstention_rate==null?null:`Abstention rate: ${s.abstention_rate}`,s.last_evaluated_at?`Last evaluated: ${s.last_evaluated_at}`:null])}</div>${pill(s.state,jevLevel(s.state))}</div></div>`).join(''):'<div class="empty">No task shape has admitted longitudinal evidence yet.</div>';
+  const events=arr(j.recent_events);
+  const eventRows=events.length?events.slice(0,12).map(ev=>`<div class="row"><div class="rowBody"><div class="rowTitle">${esc(ev.kind)}</div><div class="rowPlain">${esc(ev.reason||'Calibration evidence changed.')}</div><div class="rowMeta">${esc(ev.task_shape||'all shapes')}${ev.at?` · ${esc(ev.at)}`:''}${ev.from_state||ev.to_state?` · ${esc(ev.from_state||'—')} → ${esc(ev.to_state||'—')}`:''}</div></div></div>`).join(''):'<div class="empty">No calibration events have been recorded.</div>';
+  return `<div class="grid2"><div class="card"><h3>Current standing</h3><p><b>${esc(j.state)}</b></p><p class="muted">${j.evidence_state==='UNOBSERVED'?'No admitted longitudinal evidence is available yet. JARVIS must not treat JEV as calibrated.':'Standing is derived from the local calibration evidence, not from provider confidence.'}</p></div><div class="card"><h3>Trust law</h3><p>${policy.reduction_requires_admitted_shape?'Cognitive reduction is allowed only inside an admitted task-shape envelope.':'No admitted reduction rule is projected.'}</p><p class="muted">${policy.uncertainty_expands_cognition?'Uncertainty widens cognition. ':''}${policy.self_widening_forbidden?'JEV cannot widen its own envelope. ':''}${policy.provider_activation_authorized?'Provider activation is authorized.':'Provider activation is not authorized here.'}</p></div></div><h3 style="margin-top:18px">Task-shape envelope</h3><div class="list">${shapeRows}</div><details class="secondaryDetails"><summary>Calibration history</summary><div class="detailsBody"><div class="list">${eventRows}</div></div></details>`;
+}
+
 function renderMonitor() {
   const rows=arr(state.vm.monitor), groups=[...new Set(rows.map(r=>r.group))];
   const founderNeeds=arr(state.vm.work?.units).filter(u=>arr(u.needs_founder).length);
@@ -522,8 +539,10 @@ function renderMonitor() {
   }).join(''):'<div class="empty">Nothing is waiting for a decision from you.</div>';
   const watching=[...conflicts.map(p=>programmeRow(p,'Monitor')),...observedAttention.map(m=>monitorAttentionRow(m))];
   const systemHtml=groups.map(g=>`<section class="section"><h2>${esc(g)}</h2><div class="list">${rows.filter(r=>r.group===g).map(m=>monitorRow(m)).join('')}</div></section>`).join('');
+  const jevRows=rows.filter(r=>r.group==='Judgment quality');
   return `<div class="eyebrow">Monitor · what needs watching</div><h1>${founderNeeds.length} need${founderNeeds.length===1?'s':''} you · ${watching.length} ${watching.length===1?'thing needs':'things need'} watching.</h1><p class="lede"><b>Needs attention is not the same as broken.</b> Decisions come first. Uncertainty and observed conditions come next. The full technical observation field stays available underneath.</p>
     <section class="section"><h2>Needs Kelly <span class="muted">explicit decisions</span></h2><div class="list">${needsHtml}</div></section>
+    <section class="section"><h2>Judgment quality <span class="muted">JEV calibration</span></h2><div class="list">${jevRows.length?jevRows.map(m=>monitorRow(m)).join(''):'<div class="empty">No JEV calibration projection is available in this build.</div>'}</div></section>
     <section class="section"><h2>Watching <span class="muted">uncertainty and observed conditions</span></h2><div class="list">${watching.length?watching.join(''):'<div class="empty">Nothing currently needs watching.</div>'}</div></section>
     <details class="secondaryDetails"><summary>System observations</summary><div class="detailsBody"><div class="actions"><button class="btn primary" data-action="refresh-monitor">Refresh observations</button></div>${systemHtml}</div></details>`;
 }
@@ -543,6 +562,7 @@ function renderSystem() {
   const sourceRefs=ctx?.sources?arr(ctx.sources):ctx?.file?[ctx.file]:state.context?.source?[state.context.source]:[];
   return `<div class="eyebrow">System · accountability</div><h1>Why JARVIS believes what it is showing you.</h1><p class="lede"><b>Human world first. Technical truth one layer down.</b> System is where you descend when you want artifact/substrate identity, projected standing, population limits, authority, and exact local evidence.</p>
     <section class="section"><h2>Which JARVIS is this?</h2><div class="grid2"><div class="card"><h3>Running artifact</h3><p>${esc(p.artifact?.app_build_sha||'Build stamp not observed')}</p><p class="muted">${esc(p.artifact?.evidence_state||'UNOBSERVED')}</p></div><div class="card"><h3>Bound substrate</h3><p>${esc(p.substrate?.branch||'branch unobserved')} · <span class="mono">${esc(String(p.substrate?.head||'').slice(0,12)||'head unobserved')}</span></p><p class="muted">${esc(p.substrate?.evidence_state||'UNOBSERVED')}</p></div></div><p class="muted" style="margin-top:8px">${esc(p.rule||'')}</p></section>
+    <section class="section"><h2>JEV calibration <span class="muted">trust earned over time</span></h2>${jevCalibrationSystem()}</section>
     <section class="section"><h2>Current context provenance</h2>${state.context?`<div class="contextCard"><b>${esc(state.context.label)}</b><div class="why">${esc(state.context.kind)} · from ${esc(state.context.origin)}</div><div class="actions">${sourceRefs.slice(0,8).map(s=>evidenceButton(s)).join('')}<button class="btn" data-view-jump="work">Back to Work</button></div></div>`:'<div class="empty">No subject is selected. Choose one from Today, Work, Graph or Monitor.</div>'}</section>
     <section class="section"><h2>Programme state</h2><div class="tableWrap"><table><thead><tr><th>Programme</th><th>Evidence state</th><th>Standing</th><th>Source</th></tr></thead><tbody>${programmes.slice(0,100).map(pr=>{const src=arr(pr.sources)[0]||pr.last_change?.source||'';return `<tr><td><b>${esc(pr.name||pr.id)}</b><br><span class="mono muted">${esc(pr.id)}</span></td><td>${esc(pr.evidence_state)}</td><td>${esc(pr.standing||'—')}</td><td>${src?evidenceButton(src,'Open'):'<span class="muted">none projected</span>'}</td></tr>`}).join('')}</tbody></table></div></section>
     <section class="section"><h2>Population honesty</h2><div class="card"><p>${esc(state.vm.programme_state?.population?.why_not_complete || 'Population reports complete under its deterministic projector.')}</p><div class="rowMeta">projector ${esc(state.vm.programme_state?.projector||'unknown')} · observed against <span class="mono">${esc(String(state.vm.meta?.observed_against||'').slice(0,12))}</span></div><div class="actions"><button class="btn" data-action="reveal-workspace">Reveal bound workspace</button></div></div></section>
