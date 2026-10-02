@@ -119,6 +119,57 @@ let memberSession = null; // member session — survives capture start/stop
 let conversation = null; // one continuity for this run
 let cabinRuntime = null;
 
+// SOULLAB-DESKTOP-UNIFICATION-01 — founder/operator realm custody.
+// The renderer never decides this. MAIN asks the existing server admin gate
+// through the authenticated session and admits only owner roles.
+const OPERATOR_ROLES = new Set(['founder', 'cto']);
+let operatorAccess = false;
+let jarvisWindow = null;
+let jarvisHost = null;
+
+function jarvisHostModulePath() {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'jarvis-desktop', 'src', 'main.js')
+    : path.join(__dirname, '..', '..', 'jarvis-desktop', 'src', 'main.js');
+}
+
+function closeJarvisRealm() {
+  if (jarvisWindow && !jarvisWindow.isDestroyed()) jarvisWindow.close();
+  jarvisWindow = null;
+}
+
+async function refreshOperatorAccess() {
+  operatorAccess = false;
+  if (!memberSession || !memberSession.state().signedIn) {
+    closeJarvisRealm();
+    if (mainWindow) buildMenu();
+    return false;
+  }
+  try {
+    const auth = await memberSession.authedFetch('/api/admin/auth');
+    if (auth.ok && auth.res) {
+      const data = await auth.res.json();
+      operatorAccess = data?.isAdmin === true && OPERATOR_ROLES.has(data?.role);
+    }
+  } catch { operatorAccess = false; }
+  if (!operatorAccess) closeJarvisRealm();
+  if (mainWindow) buildMenu();
+  return operatorAccess;
+}
+
+async function openJarvisRealm() {
+  if (!operatorAccess) return { ok: false, reason: 'OPERATOR_AUTHORITY_REQUIRED' };
+  if (jarvisWindow && !jarvisWindow.isDestroyed()) {
+    jarvisWindow.focus();
+    return { ok: true, reused: true };
+  }
+  jarvisHost = jarvisHost || require(jarvisHostModulePath());
+  jarvisWindow = jarvisHost.createWindow();
+  jarvisWindow.on('closed', () => { jarvisWindow = null; });
+  await jarvisHost.ensureBindingOnFirstRun();
+  return { ok: true, reused: false };
+}
+
 // ── voice session, owned entirely by main ───────────────────────────────────
 let voice = null;
 
@@ -514,6 +565,13 @@ function buildMenu() {
     enabled: d.enabled && (d.id === MAIA || signedIn),
     click: () => { void goTo(d.id); },
   }));
+  if (operatorAccess) {
+    go.push({ type: 'separator' });
+    go.push({
+      label: 'JARVIS · Work',
+      click: () => { void openJarvisRealm(); },
+    });
+  }
 
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
@@ -585,6 +643,8 @@ function teardownMemberState(reason) {
   const cause = (reason && reason.cause) || 'member';
   const via = reason && reason.path ? ` path=${reason.path}` : '';
   console.log(`[Desktop auth] member state torn down — cause=${cause}${via}`);
+  operatorAccess = false;
+  closeJarvisRealm();
 
   // ⭐ FIRST, before anything else falls away. Capture is the one piece of
   // member state that used to outlive its member, and it is the piece that
@@ -631,6 +691,7 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
     // continuity joined, menu rebuilt, canonical MAIA revealed.
     void goTo(MAIA);
     buildMenu();                         // the destinations open for a member
+    void refreshOperatorAccess();        // founder/CTO Work doorway, server-verified
   }
   broadcast('maia:auth', memberSession.state());
   return out;
@@ -778,6 +839,7 @@ app.whenReady().then(async () => {
   createWindow();
   // After the window exists, so the restored thread has somewhere to land.
   if (memberSession.state().signedIn) {
+    void refreshOperatorAccess();
     mainWindow.webContents.once('did-finish-load', () => {
       void continuity.join();
       // ⭐ DESKTOP-ARRIVAL-01. A restored session is still an authenticated

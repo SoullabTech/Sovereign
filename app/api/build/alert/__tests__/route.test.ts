@@ -75,6 +75,26 @@ describe('/api/build/alert dedicated SMTP paging', () => {
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
+  it('still attempts optional Slack when required SMTP is unavailable', async () => {
+    delete process.env.ALERT_SMTP_PASSWORD;
+    process.env.SLACK_WEBHOOK_URL = 'https://hooks.example.invalid/test';
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('ok', { status: 200 })
+    );
+
+    const res = await POST(req());
+
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe('alert_smtp_not_configured');
+    expect(body.channels.email).toBe(false);
+    expect(body.channels.slack).toBe(true);
+    expect(mockSendEmail).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    fetchMock.mockRestore();
+  });
+
   it('uses a dedicated SMTP provider without changing the global member-mail provider', async () => {
     process.env.EMAIL_PROVIDER = 'resend';
 
