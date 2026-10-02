@@ -141,9 +141,46 @@ assert.equal(signature.status, 0, signature.stderr || 'invalid application signa
 const details = run('codesign', ['-dv', '--verbose=4', appPath]);
 const signatureText = `${details.stdout}\n${details.stderr}`;
 const developerId = /Authority=Developer ID Application:/.test(signatureText);
+
+function cabinMachOBinaries(rootDir) {
+  const binaries = [];
+  const dirs = [rootDir];
+  while (dirs.length) {
+    const dir = dirs.pop();
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        dirs.push(full);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const probe = run('/usr/bin/file', ['-b', full]);
+      if (probe.status === 0 && probe.stdout.includes('Mach-O')) binaries.push(full);
+    }
+  }
+  return binaries;
+}
+
+const cabinNative = cabinMachOBinaries(cabinRuntime);
+const cabinNativeTrust = cabinNative.map((binary) => {
+  const verify = run('/usr/bin/codesign', ['--verify', '--strict', binary]);
+  const detail = run('/usr/bin/codesign', ['-dv', '--verbose=4', binary]);
+  const text = `${detail.stdout}\n${detail.stderr}`;
+  return {
+    binary: path.relative(cabinRuntime, binary),
+    signatureValid: verify.status === 0,
+    developerId: /Authority=Developer ID Application:/.test(text),
+    secureTimestamp: /Timestamp=/.test(text),
+    hardenedRuntime: /flags=.*runtime/.test(text),
+  };
+});
+const cabinNativeReady = cabinNativeTrust.every((entry) =>
+  entry.signatureValid && entry.developerId && entry.secureTimestamp && entry.hardenedRuntime
+);
+
 const assessment = run('spctl', ['--assess', '--type', 'execute', '--verbose=4', appPath]);
 const gatekeeperAccepted = assessment.status === 0;
-const externalReady = developerId && gatekeeperAccepted;
+const externalReady = developerId && cabinNativeReady && gatekeeperAccepted;
 
 console.log(JSON.stringify({
   appPath,
@@ -152,10 +189,14 @@ console.log(JSON.stringify({
   cabinNext: packagedNextVersion,
   signatureValid: true,
   developerId,
+  cabinNativeCount: cabinNative.length,
+  cabinNativeReady,
+  cabinNativeTrust,
   gatekeeperAccepted,
   releaseClass: externalReady ? 'EXTERNAL_BETA' : 'LOCAL_BETA_ONLY',
 }, null, 2));
 
 if (process.env.REQUIRE_EXTERNAL_BETA === '1') {
-  assert.ok(externalReady, 'Developer ID signing and Gatekeeper acceptance are required');
+  assert.ok(cabinNativeReady, 'all Cabin Mach-O binaries require Developer ID, secure timestamp, and hardened runtime');
+  assert.ok(externalReady, 'Developer ID signing, nested native trust, and Gatekeeper acceptance are required');
 }
