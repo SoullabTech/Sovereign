@@ -28,6 +28,7 @@ export type MemoryMode = 'ephemeral' | 'continuity' | 'longterm';
 export interface WritebackInput {
   userId: string;
   sessionId: string;
+  exchangeId?: string;
   userMessage: string;
   assistantResponse: string;
   facetCode?: string;
@@ -327,7 +328,7 @@ export const MemoryWritebackService = {
     memoryId?: string;
     reason?: string;
   }> {
-    const { userId, sessionId, userMessage, assistantResponse, memoryMode } = input;
+    const { userId, sessionId, exchangeId, userMessage, assistantResponse, memoryMode } = input;
 
     // Permission gate: check memoryMode
     if (memoryMode === 'ephemeral') {
@@ -369,6 +370,7 @@ export const MemoryWritebackService = {
       const memoryId = await this.writeDevelopmentalMemory({
         userId,
         sessionId,
+        exchangeId,
         userMessage,
         assistantResponse,
         significance,
@@ -559,6 +561,7 @@ export const MemoryWritebackService = {
   async writeDevelopmentalMemory(input: {
     userId: string;
     sessionId: string;
+    exchangeId?: string;
     userMessage: string;
     assistantResponse: string;
     significance: number;
@@ -567,7 +570,7 @@ export const MemoryWritebackService = {
     route?: string;
     timestamp?: Date;
   }): Promise<string> {
-    const { userId, sessionId, userMessage, assistantResponse, significance, capsule, facetCode, route } = input;
+    const { userId, sessionId, exchangeId, userMessage, assistantResponse, significance, capsule, facetCode, route } = input;
 
     // Storage X4 (2026-04-09):
     // Raw exchange is preserved under `trigger_event.raw` so the original substrate
@@ -612,6 +615,7 @@ export const MemoryWritebackService = {
         user_feedback,
         source_beads_task_id,
         source_ain_session_id,
+        source_exchange_id,
         source_consciousness_entry_id,
         content_text,
         recall_count,
@@ -629,8 +633,9 @@ export const MemoryWritebackService = {
         NULL,
         NULL,
         $7,
-        NULL,
         $8,
+        NULL,
+        $9,
         0,
         NULL,
         NOW()
@@ -653,6 +658,7 @@ export const MemoryWritebackService = {
       significance,
       capsule.entities,
       sessionId,
+      exchangeId || null,
       contentText,
     ]);
 
