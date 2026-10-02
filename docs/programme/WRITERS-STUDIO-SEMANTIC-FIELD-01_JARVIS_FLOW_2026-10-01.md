@@ -521,3 +521,23 @@ Tester witness must prove:
 - the manuscript remains visually primary.
 
 If any item threatens tester stability, defer it rather than widening the lane.
+
+
+---
+
+## 18. Founder correction — slow flow is not passive MAIA
+
+Founder walk, 2026-10-02:
+
+> Slow flow governs how much MAIA brings into the writer’s foreground. It does not reduce how deeply MAIA may read or whether she may offer concrete editorial possibilities when invited.
+
+Writer’s Studio must therefore support an explicit **Editorial Pass**:
+- MAIA may read the whole manuscript through the existing governed lenses after the writer asks.
+- She synthesizes those readings into evidenced editing opportunities rather than an analyst dashboard.
+- Intimate pace brings one opportunity at a time; Guided brings a few; Mapped may show the whole field.
+- The primary next act is **Show edit options**.
+- Existing exact-passage verification, Revision latitude, paragraph-removal permission, Read in context, Apply, and Undo remain authoritative.
+- Conversation and explanation remain available, but they are not prerequisites to receiving an editorial option.
+
+Design law:
+> MAIA may work broadly backstage and still meet the writer simply, concretely, and one edit at a time.

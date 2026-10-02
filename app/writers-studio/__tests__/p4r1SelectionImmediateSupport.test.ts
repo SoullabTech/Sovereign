@@ -48,7 +48,10 @@ describe('Writer Studio immediate manuscript-selection support', () => {
     expect(developView).toContain('data-develop-locus=');
     expect(developView).toContain('Chapter selected');
     expect(developView).toContain('Section selected');
-    expect(developView).toContain('without going through the whole-Work material first');
+    expect(developView).toContain('data-develop-locus-support=');
+    expect(developView).toContain('I’m with you in this');
+    expect(developView).toContain('Talk with MAIA');
+    expect(developView).toContain('Nothing is read automatically.');
     expect(developView).toContain('onSection={selectManuscriptLocus}');
   });
 });
