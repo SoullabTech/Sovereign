@@ -417,6 +417,15 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     </div>
   );
 
+  const scopeRecoveryAction = props.scopeRecovery && props.onAcceptScopeRecovery ? (
+    <div className="p4r1-scope-recovery" role="group" aria-label="Revision latitude choice">
+      <button type="button" disabled={props.busy} onClick={props.onAcceptScopeRecovery}>
+        Use {props.scopeRecovery.toLabel} and show revision
+      </button>
+      <span>Your current {props.scopeRecovery.fromLabel} setting stays unchanged unless you choose this.</span>
+    </div>
+  ) : null;
+
   if (!props.thread) {
     return (
       <section className="p4r1-dance p4r1-dance-start" data-editorial-dance>
@@ -446,14 +455,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
           {props.message ? (
             <>
               <p className="p4r1-dance-status" role="status">{props.message}</p>
-              {props.scopeRecovery && props.onAcceptScopeRecovery ? (
-                <div className="p4r1-scope-recovery" role="group" aria-label="Revision latitude choice">
-                  <button type="button" disabled={props.busy} onClick={props.onAcceptScopeRecovery}>
-                    Use {props.scopeRecovery.toLabel} and show revision
-                  </button>
-                  <span>Your current {props.scopeRecovery.fromLabel} setting stays unchanged unless you choose this.</span>
-                </div>
-              ) : null}
+              {scopeRecoveryAction}
             </>
           ) : props.lastMaiaTurn?.body ? (
             <p>{props.lastMaiaTurn.body}</p>
@@ -648,6 +650,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             {localMessage ?? props.message}{props.undoMessage ? ' ' + props.undoMessage : ''}
           </p>
         ) : null}
+        {scopeRecoveryAction}
 
         {props.appliedVersionId && props.onUndo ? (
           <div className="p4r1-dance-applied">
