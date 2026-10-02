@@ -20,7 +20,7 @@ afterEach(() => {
   container.remove();
 });
 
-function renderRoom() {
+function renderRoom(overrides: Partial<React.ComponentProps<typeof IsolatedEditorialRoom>> = {}) {
   act(() => root.render(
     React.createElement(
       IsolatedEditorialRoom,
@@ -30,7 +30,14 @@ function renderRoom() {
         currentText: 'Selected passage.',
         sectionBody: 'Before.\n\nSelected passage.\n\nAfter.',
         busy: false,
+        editingLatitude: 1,
+        onEditingLatitude: jest.fn(),
+        mayRemoveParagraphs: false,
+        onMayRemoveParagraphs: jest.fn(),
+        mayProposeImmediately: false,
+        onMayProposeImmediately: jest.fn(),
         onClose: jest.fn(),
+        ...overrides,
       },
       React.createElement(
         'div',
@@ -52,6 +59,8 @@ test('layout presets, tools, preferences and reset all change only isolated pres
   expect(room.dataset.showDirections).toBe('true');
   expect(room.dataset.showWorking).toBe('true');
   expect(room.dataset.showDepth).toBe('true');
+  expect(container.textContent).toContain('Revision · Touch');
+  expect(container.textContent).toContain('Revision latitude');
 
   const button = (text: string) =>
     Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.trim().startsWith(text))!;
@@ -134,4 +143,25 @@ test('focus layout and presentation choices survive reopening during the same br
   expect(room.dataset.layout).toBe('passage');
   expect(room.dataset.readingSize).toBe('largest');
   expect(room.dataset.showDepth).toBe('false');
+});
+
+
+test('Preferences exposes the author-set revision latitude and paragraph permission', () => {
+  const onEditingLatitude = jest.fn();
+  const onMayRemoveParagraphs = jest.fn();
+  renderRoom({ onEditingLatitude, onMayRemoveParagraphs });
+
+  const slider = container.querySelector('#p4r1-editing-latitude') as HTMLInputElement;
+  expect(slider).toBeTruthy();
+  expect(slider.value).toBe('1');
+  expect(slider.getAttribute('aria-valuetext')).toBe('Touch');
+
+  expect(slider.min).toBe('1');
+  expect(slider.max).toBe('5');
+
+  const paragraph = Array.from(container.querySelectorAll('label'))
+    .find((label) => label.textContent?.includes('Allow paragraph-removal proposals'))
+    ?.querySelector('input') as HTMLInputElement;
+  act(() => paragraph.click());
+  expect(onMayRemoveParagraphs).toHaveBeenCalledWith(true);
 });
