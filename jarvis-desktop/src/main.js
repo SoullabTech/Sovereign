@@ -18,6 +18,7 @@ const MECH = require('./builder-mechanism.js');
 const CONTINUITY = require('./continuity.js');
 const FRONTIER = require('./frontier-worker.js');
 const WUC = require('./work-unit-control.js');
+const RB = require('./runtime-binding.js');
 const RECOVERY_B = require('./o5-path-b-recovery.js');
 const OPWU = require('./operator-work-unit.js');
 const CWUV2 = require('./canonical-work-unit-v2.js');
@@ -25,6 +26,14 @@ const CWUV2 = require('./canonical-work-unit-v2.js');
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
 const { decideCorrectness } = require('./correctness');
+const PRECISION_CONTEXT = require('./founder-precision-context.js');
+const PARTNER_CONTEXT = require('./partner-context.js');
+const GROUNDED_RESPONSE = require('./grounded-response.js');
+
+// SOULLAB-DESKTOP-UNIFICATION-01. Standalone JARVIS owns application lifecycle;
+// when composed by the Soullab host it contributes its governed realm and IPC
+// surface without taking over userData, the single-instance lock, menu, or app events.
+const STANDALONE = require.main === module;
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -42,7 +51,7 @@ const { decideCorrectness } = require('./correctness');
 // genuinely different artifacts operating potentially different substrates, so
 // they get genuinely different userData — and therefore different locks. Two
 // packaged copies still collide, which is what F5 actually wanted to prevent.
-if (!app.isPackaged) {
+if (STANDALONE && !app.isPackaged) {
   app.setPath('userData', path.join(app.getPath('appData'), 'jarvis-desktop-dev'));
 }
 
@@ -79,57 +88,19 @@ function findRepoRootDevMode(start) {
   return null;
 }
 
-// The installed app must find its substrate without Terminal help, so the
-// order below is: what the founder explicitly named (env, then persisted
-// config), and only then the hard-coded candidate — which stays DEGRADED
-// because nobody chose it. Nothing here binds to a Claude worktree: worktrees
-// are development substrates and are expected to disappear.
-//
-// A configured root is RE-VERIFIED on every launch, not trusted because it was
-// once valid. A repo that has been moved or deleted must read as a problem the
-// founder can see and fix, not as a silent fallback to somewhere else.
+// The installed app may bind only to an explicit substrate: a verified
+// JARVIS_REPO_ROOT or a verified persisted Preferences choice. The historical
+// /Users/soullab/MAIA-SOVEREIGN candidate remains discoverable as a suggestion,
+// never as currentRoot(). This is O5-R3A9: an implicit default may inform a human
+// choice but may not silently acquire grant-store authority.
 function findRepoRootPackagedMode() {
-  const cfgForConflict = RepoConfig.readConfig(app.getPath('appData'));
-
-  if (process.env.JARVIS_REPO_ROOT && isValidRepoRoot(process.env.JARVIS_REPO_ROOT)) {
-    // An environment variable outranking a saved choice is defensible — but
-    // only if the founder can SEE it. On macOS this variable can be set at the
-    // launchd level (`launchctl setenv`), in which case every Finder, Dock and
-    // Spotlight launch inherits it invisibly and no Terminal is involved. A
-    // founder who then picks a repository in Preferences would watch the app
-    // keep using a different one, with nothing on screen explaining why. That
-    // is the exact failure this app's provenance discipline exists to prevent,
-    // so the conflict is reported rather than silently resolved.
-    const conflict =
-      cfgForConflict.present && cfgForConflict.repo_root !== process.env.JARVIS_REPO_ROOT
-        ? `JARVIS_REPO_ROOT is set in the launch environment (${process.env.JARVIS_REPO_ROOT}) and OVERRIDES your saved choice (${cfgForConflict.repo_root}). If it is set at the launchd level, every Finder/Dock launch inherits it. Clear it with:  launchctl unsetenv JARVIS_REPO_ROOT  (then quit and relaunch JARVIS).`
-        : null;
-    return {
-      root: process.env.JARVIS_REPO_ROOT,
-      resolution: PROV.RESOLUTION.ENV,
-      configProblem: conflict,
-      // Structured, not just prose: the provenance surface needs the fact, not
-      // the sentence, so it can degrade rather than re-parse a message.
-      conflictingConfigRoot: conflict ? cfgForConflict.repo_root : null,
-    };
-  }
-
-  const cfg = cfgForConflict;
-  if (cfg.present && isValidRepoRoot(cfg.repo_root)) {
-    return { root: cfg.repo_root, resolution: PROV.RESOLUTION.CONFIG, configProblem: null, conflictingConfigRoot: null };
-  }
-  // Distinguish "configured but no longer valid" from "never configured" —
-  // they need different responses and the founder deserves to know which.
-  const configProblem = cfg.problem
-    ? cfg.problem
-    : cfg.present
-      ? `configured repository no longer carries the canonical markers: ${cfg.repo_root}`
-      : null;
-
-  if (isValidRepoRoot('/Users/soullab/MAIA-SOVEREIGN')) {
-    return { root: '/Users/soullab/MAIA-SOVEREIGN', resolution: PROV.RESOLUTION.DEFAULT, configProblem, conflictingConfigRoot: null };
-  }
-  return { root: null, resolution: PROV.RESOLUTION.NONE, configProblem, conflictingConfigRoot: null };
+  return resolvePackagedMode({
+    envRoot: process.env.JARVIS_REPO_ROOT || null,
+    config: RepoConfig.readConfig(app.getPath('appData')),
+    defaultCandidate: '/Users/soullab/MAIA-SOVEREIGN',
+    isValidRepoRoot,
+    RESOLUTION: PROV.RESOLUTION,
+  });
 }
 
 // Dev mode resolves by upward walk FIRST, because running `npm start` from
@@ -145,14 +116,13 @@ function findRepoRootPackagedMode() {
 // a durable resolver, which is backwards: dev is where checkouts move, get
 // rebased onto branches that predate the builder cluster, and lose markers.
 //
-// The walk keeps its precedence; it now falls THROUGH to the same env →
-// config → default ladder instead of off a cliff. No new resolution source is
-// introduced and no fallback is silent — the ladder each step reports is the
-// one packaged mode already reports, so Preferences and the provenance
-// surface explain a dev binding exactly as they explain a packaged one.
-// The ORDER lives in repo-resolution.js so it can be proven without Electron;
-// the SOURCES stay here, so each one still has exactly one implementation.
-const { resolveDevMode } = require('./repo-resolution');
+// The walk keeps its precedence; it now falls THROUGH to the same explicit
+// env → config ladder instead of off a cliff. A verified historical default may
+// be suggested, but a failed dev walk can never promote that suggestion into an
+// authority-bearing root. The ORDER lives in repo-resolution.js so it can be
+// proven without Electron; the SOURCES stay here, so each one still has exactly
+// one implementation.
+const { resolvePackagedMode, resolveDevMode } = require('./repo-resolution');
 
 // Mutable: Preferences can rebind the substrate at runtime. Everything that
 // reads it does so through currentRoot() rather than closing over the value,
@@ -247,13 +217,15 @@ function currentProvenance() {
 // handlers and a whenReady window — while shutting down. Whatever it did in
 // that window it did silently, which is part of why this exit was so hard to
 // read from the outside.
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-  return;
+if (STANDALONE) {
+  if (!app.requestSingleInstanceLock()) {
+    app.quit();
+    return;
+  }
+  app.on('second-instance', () => {
+    if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
+  });
 }
-app.on('second-instance', () => {
-  if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
-});
 
 let mainWindow;
 function createWindow() {
@@ -268,12 +240,13 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'founder-workspace.html'));
   // Re-assert after load: a page-supplied document.title would otherwise
   // replace the artifact identity, which is the one thing this title is for.
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.setTitle(PROV.windowTitle(currentProvenance().artifact));
   });
+  return mainWindow;
 }
 
 // ---------------------------------------------------------------------------
@@ -301,15 +274,38 @@ function repoConfigState() {
     config_set_at: cfg.set_at,
     config_set_by: cfg.set_by,
     problem: RESOLVED.configProblem || cfg.problem || null,
-    // Named so the Preferences surface can explain WHY a root is degraded
-    // rather than just colouring it — the DEFAULT case is the one a founder
-    // most needs to notice and convert into a deliberate choice.
+    suggested_repo_root: RESOLVED.suggestedRepoRoot || null,
+    // Explicitness is authority-bearing. A suggested historical candidate is
+    // intentionally not included here and never becomes currentRoot().
     explicit: RESOLVED.resolution === PROV.RESOLUTION.CONFIG || RESOLVED.resolution === PROV.RESOLUTION.ENV,
     markers: CANONICAL_MARKERS.map((parts) => parts.join('/')),
   };
 }
 
+// O5-R3 runtime binding witness (founder ruling 2026-10-01). Descriptive only: it
+// records the app code and the bound checkout this live process operates under,
+// for an EXTERNAL witness. Nothing reads it for authority; the lease is the only
+// writer authority. Written outside the delegation home. A failure to write is
+// logged, never fatal — an absent witness simply means no admission evidence.
+function writeRuntimeBinding(cause) {
+  try {
+    const rec = RB.captureAndWrite({
+      appSupportDir: app.getPath('appData'),
+      resolved: RESOLVED,
+      app: {
+        mode: app.isPackaged ? 'packaged' : 'development',
+        build: (readBuildInfo() || {}).app_build_sha || null,
+        sourceRoot: app.isPackaged ? process.resourcesPath : path.resolve(__dirname, '..', '..'),
+      },
+    });
+    console.log(`[jarvis] O5-R3 runtime binding (${cause}): ${rec.binding.repoRoot} @ ${rec.binding.head} clean=${rec.binding.clean} via ${rec.binding.selectionSource}`);
+  } catch (error) {
+    console.error('[jarvis] O5-R3 runtime binding write failed', error);
+  }
+}
+
 function broadcastRepoChange() {
+  writeRuntimeBinding('rebind');
   const state = repoConfigState();
   for (const w of BrowserWindow.getAllWindows()) {
     if (!w.isDestroyed()) w.webContents.send('jarvis:repo-changed', state);
@@ -329,7 +325,7 @@ function bindRepoRoot(candidate, setBy) {
     };
   }
   RepoConfig.writeConfig(app.getPath('appData'), candidate, setBy);
-  RESOLVED = { root: candidate, resolution: PROV.RESOLUTION.CONFIG, configProblem: null, conflictingConfigRoot: null };
+  RESOLVED = { root: candidate, resolution: PROV.RESOLUTION.CONFIG, configProblem: null, conflictingConfigRoot: null, suggestedRepoRoot: null };
   broadcastRepoChange();
   return { ok: true, reason: null, candidate };
 }
@@ -339,7 +335,7 @@ async function chooseRepoInteractive(parentWindow) {
     title: 'Choose the Sovereign repository JARVIS should operate against',
     message: 'Select a checkout carrying the canonical Builder OS markers.',
     properties: ['openDirectory'],
-    defaultPath: currentRoot() || app.getPath('home'),
+    defaultPath: currentRoot() || RESOLVED.suggestedRepoRoot || app.getPath('home'),
     buttonLabel: 'Use this repository',
   });
   if (res.canceled || !res.filePaths || !res.filePaths.length) {
@@ -412,27 +408,26 @@ function buildMenu() {
 // its own source tree and does not need a binding.
 async function ensureBindingOnFirstRun() {
   if (!app.isPackaged) return;
-  if (currentRoot() && RESOLVED.resolution !== PROV.RESOLUTION.DEFAULT) return;
-  // Asked once. A founder who declined keeps the fallback and can still bind
-  // it any time from Preferences — the DEGRADED state stays visible there and
-  // on the console, so declining hides nothing.
+  if (currentRoot()) return;
+  // Asked once. Declining leaves JARVIS genuinely unbound; a suggested
+  // checkout remains informational until the founder chooses it explicitly.
   if (RepoConfig.promptSeen(app.getPath('appData'))) return;
 
-  const degraded = RESOLVED.resolution === PROV.RESOLUTION.DEFAULT;
+  const suggested = RESOLVED.suggestedRepoRoot || null;
   const { response } = await dialog.showMessageBox(mainWindow || null, {
-    type: degraded ? 'question' : 'warning',
-    message: degraded
-      ? 'JARVIS has not been told which repository to use'
-      : 'JARVIS could not find a repository to operate against',
+    type: suggested ? 'question' : 'warning',
+    message: suggested
+      ? 'JARVIS found a repository candidate but has not been told to use it'
+      : 'JARVIS could not find an explicitly bound repository',
     detail: [
       RESOLVED.configProblem ? `${RESOLVED.configProblem}\n` : '',
-      degraded
-        ? `It found ${currentRoot()} by falling back to a hard-coded candidate. That checkout was never named by you, so JARVIS is reporting it as DEGRADED rather than treating it as chosen.`
-        : 'No checkout carrying the canonical Builder OS markers was found.',
+      suggested
+        ? `It found ${suggested} as a known candidate. It will remain unbound unless you explicitly choose a repository.`
+        : 'No explicitly selected checkout carrying the canonical Builder OS markers is available.',
       '',
       'Choosing a repository stores it under ~/Library/Application Support/JARVIS/ and it will be remembered on every future launch.',
     ].filter(Boolean).join('\n'),
-    buttons: ['Choose Repository…', 'Continue Without Choosing'],
+    buttons: ['Choose Repository…', 'Continue Unbound'],
     defaultId: 0,
     cancelId: 1,
   });
@@ -463,12 +458,15 @@ ipcMain.handle('jarvis:clear-repo', async () => {
   return repoConfigState();
 });
 
-app.whenReady().then(async () => {
-  buildMenu();
-  createWindow();
-  await ensureBindingOnFirstRun();
-  await runStartupRecovery();
-});
+if (STANDALONE) {
+  app.whenReady().then(async () => {
+    writeRuntimeBinding('startup');
+    buildMenu();
+    createWindow();
+    await ensureBindingOnFirstRun();
+    await runStartupRecovery();
+  });
+}
 
 // ---------------------------------------------------------------------------
 // O5-R2 startup recovery — READ-ONLY (founder ruling 2026-09-30).
@@ -499,23 +497,26 @@ async function runStartupRecovery() {
   } catch (e) { report.path_b = { ok: false, error: String(e?.message || e).slice(0, 300) }; }
   console.log('[JARVIS/O5-R2] startup recovery (read-only)', JSON.stringify(report));
 }
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-// O5-R3: release the grant writer lease, if this process ever became the writer.
-// A crash that skips this leaves the lease to proof-based takeover on next launch.
-app.on('will-quit', () => {
-  const release = globalThis[Symbol.for('jarvis.o5r3.releaseAllGrantWriterLeases')];
-  if (typeof release === 'function') {
-    try { console.log('[jarvis] O5-R3 grant writer lease release', JSON.stringify(release())); } catch (error) { console.error('[jarvis] O5-R3 lease release failed', error); }
-  }
-});
-app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+if (STANDALONE) {
+  app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+  // O5-R3: release the grant writer lease, if this process ever became the writer.
+  // A crash that skips this leaves the lease to proof-based takeover on next launch.
+  app.on('will-quit', () => {
+    try { RB.markTerminated(app.getPath('appData')); } catch (error) { console.error('[jarvis] O5-R3 runtime binding terminate failed', error); }
+    const release = globalThis[Symbol.for('jarvis.o5r3.releaseAllGrantWriterLeases')];
+    if (typeof release === 'function') {
+      try { console.log('[jarvis] O5-R3 grant writer lease release', JSON.stringify(release())); } catch (error) { console.error('[jarvis] O5-R3 lease release failed', error); }
+    }
+  });
+  app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+}
 
 // ---------------------------------------------------------------------------
 // jarvis:status — HOME + SYSTEM truth states. Every field is either a real
 // observation or explicitly UNKNOWN. Nothing is inferred from intended
 // architecture.
 // ---------------------------------------------------------------------------
-ipcMain.handle('jarvis:status', async () => {
+async function readStatus() {
   const result = {
     observed_at: new Date().toISOString(),
     repo_root: currentRoot() || `UNKNOWN (${REPO_ROOT_MODE} mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers`,
@@ -688,6 +689,74 @@ ipcMain.handle('jarvis:status', async () => {
   }
 
   return result;
+}
+ipcMain.handle('jarvis:status', readStatus);
+
+// ---------------------------------------------------------------------------
+// B5 Founder Workspace — ONE new read IPC. The renderer receives only the
+// validated founder-workspace-viewmodel.v1 composed from governed organs. An
+// optional evidence_ref is admitted only if that exact ref is already present
+// in the freshly composed view-model; main never accepts an arbitrary path.
+// This channel is presentation_only / authority_effect:none and exposes no
+// execution, O1 planning, provider, voice, merge, deploy, or production act.
+//
+// Ordinary workspace reads are deliberately QUICK. The two heavyweight B3
+// census scripts have 10-minute ceilings and run only when the founder presses
+// Monitor → Refresh observations (`refresh_instruments:true`). Stored census
+// observations remain visible through the B3 history reader between refreshes.
+// Evidence preview normally reuses a short-lived cached view-model so opening a
+// source never becomes an accidental workstation census.
+// ---------------------------------------------------------------------------
+let founderWorkspaceCache = { root: null, observed_against: null, at: 0, vm: null };
+ipcMain.handle('jarvis:workspace-viewmodel', async (_evt, req) => {
+  const root = currentRoot();
+  if (!root) {
+    return {
+      ok: false,
+      status: 'NO_SUBSTRATE',
+      reason: 'No bound workspace. Choose a repository before opening the Founder Workspace.',
+    };
+  }
+  try {
+    const request = req && typeof req === 'object' ? req : {};
+    const evidenceRef = typeof request.evidence_ref === 'string' ? request.evidence_ref : null;
+    const forceRefresh = request.force_refresh === true || request.refresh_instruments === true;
+    const fullRefresh = request.refresh_instruments === true;
+
+    const status = await readStatus();
+    let observedAgainst = status?.workspace?.head || 'unobserved';
+    try {
+      observedAgainst = execFileSync('git', ['rev-parse', 'origin/clean-main-no-secrets^{commit}'], {
+        cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env,
+      }).trim();
+    } catch { /* local remote-tracking ref unavailable; exact bound HEAD remains visible */ }
+
+    const modulePath = path.join(root, 'scripts', 'builder', 'founder-workspace', 'desktop-viewmodel.mjs');
+    if (!fs.existsSync(modulePath)) {
+      return { ok: false, status: 'B5_MODULE_ABSENT', reason: `Founder Workspace live composer absent at ${modulePath}` };
+    }
+    const mod = await import(`${pathToFileURL(modulePath).href}?b5=${Date.now()}`);
+    const env = childEnv(process.env).env;
+    const cacheUsable = !forceRefresh
+      && founderWorkspaceCache.vm
+      && founderWorkspaceCache.root === root
+      && founderWorkspaceCache.observed_against === observedAgainst
+      && (Date.now() - founderWorkspaceCache.at) < 15000;
+    const governorNode = resolveNodeBinary();
+    const governorExec = governorNode.path
+      ? (_file, args, opts) => execFileSync(governorNode.path, args, opts)
+      : undefined;
+    const vm = cacheUsable
+      ? founderWorkspaceCache.vm
+      : await mod.buildDesktopViewModel({
+          root, status, observedAgainst, env, observeMode: fullRefresh ? 'full' : 'quick', governorExec,
+        });
+    if (!cacheUsable) founderWorkspaceCache = { root, observed_against: observedAgainst, at: Date.now(), vm };
+    if (!evidenceRef) return vm;
+    return { ...vm, evidence_preview: mod.readEvidencePreview(vm, evidenceRef, { root, env, canonicalRef: observedAgainst }) };
+  } catch (e) {
+    return { ok: false, status: 'WORKSPACE_VIEWMODEL_REFUSED', reason: String(e?.message || e).slice(0, 1200) };
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -1171,9 +1240,10 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
 // not overlap, and neither is a route into the other.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
-  if (!currentRoot()) return { status: 'error', reason: 'repo root not found — cannot route' };
-  const routerPath = path.join(currentRoot(), 'scripts', 'builder', 'router.mjs');
-  const detPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
+  const root = currentRoot();
+  if (!root) return { status: 'error', reason: 'repo root not found — cannot route' };
+  const routerPath = path.join(root, 'scripts', 'builder', 'router.mjs');
+  const detPath = path.join(root, 'scripts', 'builder', 'deterministic.mjs');
 
   const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
   const decision = route(task);
@@ -1223,8 +1293,8 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // the planner, the orchestrator and the queue are NEVER invoked from
       // here; jarvis-runtime-pipeline.mjs has no top-level side effects, so
       // importing it for verifyEvidence() does not wake the delegate path.
-      const ctxPath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs');
-      const pipePath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
+      const ctxPath = path.join(root, 'scripts', 'builder', 'jarvis-context.mjs');
+      const pipePath = path.join(root, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
       const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
       const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
 
@@ -1232,37 +1302,118 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       let fragments = [];
       let materialization_error = null;
       if (selectors.length) {
-        // Fail closed: an unresolvable selector must not silently degrade into
-        // "no evidence required". materializeOne throws on any invalid selector.
+        // Legacy C1 selectors remain supported. Fail closed: an unresolvable selector
+        // must not silently degrade into "no evidence required".
         try {
-          fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT);
+          fragments = materializePacket({ context_selectors: selectors }, root);
         } catch (e) {
           materialization_error = e.message;
         }
       }
 
-      // The citation syntax is stated because the verifier enforces an exact
-      // machine-readable form. Asking for "citations" in prose and then scoring
-      // path.ext:NN produces false refusals of correct answers — the defect
-      // recorded as D8 in docs/ops/JARVIS_PLANNER_ROUTER_ALPHA.md.
-      const prompt = fragments.length
-        ? `${renderFragments(fragments)}\n\nAnswer using ONLY the numbered source above. `
-          + `Cite every claim inline in the exact form path/to/file.ext:LINE `
-          + `(colon, no space) — for example scripts/builder/router.mjs:42. `
-          + `Prose such as "on line 42" does not count as a citation. `
-          + `Cite only lines present in the source above.\n\n${task.prompt}`
-        : task.prompt;
+      // B6R1 precision context. The renderer never supplies repository paths.
+      // It supplies only the current field identity + Kelly's objective. Main
+      // resolves that identity against the already-validated Founder view-model,
+      // then materializes evidence from the exact canonical git object named by
+      // vm.meta.observed_against. Dirty development-tree bytes cannot enter here.
+      let precision = { status: 'NOT_REQUESTED', field: { id: null, label: null, resolution: 'none' }, fragments: [], refusals: [] };
+      if (task.founder_workspace_context_request === true) {
+        const cachedVm = founderWorkspaceCache.root === root ? founderWorkspaceCache.vm : null;
+        if (cachedVm) {
+          precision = PRECISION_CONTEXT.buildPrecisionContext({
+            repo: root,
+            vm: cachedVm,
+            explicitContext: task.founder_workspace_context || null,
+            objective: task.founder_workspace_objective || task.prompt || '',
+          });
+          if (Array.isArray(precision.fragments) && precision.fragments.length) {
+            fragments = [...fragments, ...precision.fragments];
+          } else if (precision.status === 'REFUSED') {
+            materialization_error = precision.reason || 'PRECISION_CONTEXT_REFUSED';
+          }
+        } else {
+          precision = { status: 'REFUSED', reason: 'FOUNDER_VIEWMODEL_NOT_CACHED', field: { id: null, label: null, resolution: 'none' }, fragments: [], refusals: [] };
+          materialization_error = 'FOUNDER_VIEWMODEL_NOT_CACHED';
+        }
+      }
 
+      // AI partner handoff is a separate epistemic lane. Handoffs live only in
+      // ~/.jarvis/context-handoffs, pass a strict schema, and are matched to the
+      // current field/objective. They orient JARVIS but are NEVER passed to the
+      // canonical evidence verifier and NEVER grant authority.
+      const partner = task.founder_workspace_context_request === true
+        ? PARTNER_CONTEXT.listPartnerHandoffs({
+            objective: task.founder_workspace_objective || task.prompt || '',
+            fieldLabel: precision?.field?.label || task.founder_workspace_context?.label || '',
+          })
+        : { status: 'NOT_REQUESTED', items: [], refused: [] };
+      const partnerBlock = PARTNER_CONTEXT.renderPartnerOrientation(partner.items || []);
+
+      // B6R1R1: evidence-bearing turns use a structured worker contract. The
+      // worker names fragment + absolute line + an exact quote; main validates
+      // that reference against the fragment bytes, then derives path:LINE itself.
+      // The canonical verifier remains unchanged and sees only the deterministic
+      // rendered answer, never raw model-authored citation text.
+      const evidenceBlock = fragments.length ? renderFragments(fragments) : '';
+      const structuredEvidence = fragments.length > 0;
+      const contextRules = structuredEvidence
+        ? GROUNDED_RESPONSE.workerInstruction(fragments)
+        : partnerBlock
+          ? `No canonical repository evidence was attached. Partner orientation may help you understand Kelly's context, but state clearly when a claim would require repository evidence.`
+          : '';
+      const prompt = [evidenceBlock, partnerBlock, contextRules, task.prompt].filter(Boolean).join('\n\n');
+
+      response.context = {
+        precision: {
+          status: precision.status,
+          canonical_sha: precision.canonical_sha || null,
+          field: precision.field || null,
+          resolved_label: GROUNDED_RESPONSE.humanFieldLabel(precision?.field?.label || task.founder_workspace_context?.label || null),
+          fragment_count: Array.isArray(precision.fragments) ? precision.fragments.length : 0,
+          refusals: Array.isArray(precision.refusals) ? precision.refusals : [],
+        },
+        partners: {
+          status: partner.status,
+          sources: (partner.items || []).map((item) => item.source),
+          handoff_ids: (partner.items || []).map((item) => item.handoff_id),
+          refused: partner.refused || [],
+        },
+      };
+
+      const workerRequest = { model: 'qwen2.5:7b', prompt, stream: false };
+      if (structuredEvidence) workerRequest.format = 'json';
       const res = await fetch('http://127.0.0.1:11434/api/generate', {
         method: 'POST',
-        body: JSON.stringify({ model: 'qwen2.5:7b', prompt, stream: false }),
+        body: JSON.stringify(workerRequest),
         signal: AbortSignal.timeout(30000),
       });
       const body = await res.json();
-      response.result = { response: body.response, model: body.model };
+
+      let renderedResponse = body.response || '';
+      let grounding = null;
+      if (structuredEvidence) {
+        grounding = GROUNDED_RESPONSE.compileGroundedResponse(body.response || '', fragments);
+        renderedResponse = GROUNDED_RESPONSE.renderGroundedResponse(grounding, {
+          fieldLabel: response.context.precision.resolved_label || response.context.precision.field?.label || null,
+          canonicalSha: response.context.precision.canonical_sha,
+          fragmentCount: fragments.length,
+          partnerSources: response.context.partners.sources,
+        });
+      }
+
+      response.result = {
+        response: renderedResponse,
+        model: body.model,
+        grounding: grounding ? {
+          status: grounding.status,
+          supported_count: grounding.supported.length,
+          unsupported_count: grounding.unsupported.length,
+          rejected_count: grounding.rejected.length,
+        } : null,
+      };
       response.status = 'completed';
 
-      const evidence = fragments.length ? verifyEvidence(body.response || '', fragments) : null;
+      const evidence = fragments.length ? verifyEvidence(renderedResponse, fragments) : null;
 
       // Correctness is decided by the canonical verifier alone. Execution
       // success never implies it — that collapse is what let a fabricated
@@ -1347,3 +1498,12 @@ ipcMain.handle('jarvis:governance-action', async (_evt, req) => {
     return { ok: false, ...r, errors: [], invoked: built.argv.join(' ') };
   }
 });
+
+// Embedded Soullab Desktop seam. Requiring this module registers the existing
+// jarvis:* IPC surface, while only the standalone artifact owns app lifecycle.
+module.exports = {
+  createWindow,
+  ensureBindingOnFirstRun,
+  repoConfigState,
+  currentRoot,
+};

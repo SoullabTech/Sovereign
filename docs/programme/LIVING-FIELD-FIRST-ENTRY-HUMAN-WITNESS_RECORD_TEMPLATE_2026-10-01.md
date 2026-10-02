@@ -2,17 +2,64 @@
 
 **Participant label:** FIRST-ENTRY-___
 **Date/time:**
-**Production SHA at start:** (`docker exec maia-sovereign printenv GIT_COMMIT`)
-**Production SHA at end:** (same command, after the walk; if it differs from start → the walk is **NO EVIDENCE**)
-**Public health:**
-**Device/browser:**
-**Early Field admitted:** yes / no
+**Scheduled-against SHA:**
+**Production SHA at start of walk:** (`docker exec maia-sovereign printenv GIT_COMMIT`)
+**Production SHA at end of walk:** (same command, after the walk)
+**Deploy freeze held for the window:** yes / no
+**Public health (start / end):**
+**Device/browser:** (member's own device: yes / no; if no, why and what the member was told)
+**Early Field admitted:** yes / no (server-side read-only check per Amendment 2 §5; paste only the boolean output, never the member UUID or a member session)
+**Observation channels disclosed before the walk:** list each (facilitator / call or screen-share / recording / screenshots / AI agent: absent)
+**Member accepted the disclosed setup:** yes / no (no → the walk does not run)
+**Any observation channel discovered afterwards that was not disclosed:** none / describe (any → **VOID — NO EVIDENCE**)
 **Pre-existing member-owned substrate:** no
 **Facilitator intervention:** none / describe
 **Member chose to write:** yes / no
 **Member saved an expression:** yes / no
 **MAIA entered:** yes / no
 **MAIA request before explicit entry:** yes / no / not observed
+
+> **Validity.** If any of the three SHAs differ, or the freeze did not hold, stop filling this in:
+> mark the record **VOID — NO EVIDENCE** and do not adjudicate it.
+
+## Observation disclosure — before the first-entry script
+
+Adapt only the bracketed setup detail so every sentence remains literally true. If the member declines the disclosed setup, the walk does not run.
+
+> Before we start, I'd like you to know exactly who's with you. It's just me, [here with you /
+> on this call]. Nothing is recording your screen, and no AI is connected to your device or
+> watching what you do. MAIA only joins if you choose her, the way I'll describe in a moment.
+> While you explore, I'll jot a few notes in my own words about what you do
+> and say, but I won't copy anything you write in your field. The notes are kept under a label,
+> not your name. If there's anything you'd rather I leave out, just tell me, now or afterwards.
+> I'm here the whole time, so if anything feels hard, you can say so and we'll stop.
+
+**Observation disclosure spoken with actual setup stated truthfully:** yes / no
+
+## Script — read these words, and only these
+
+Copied verbatim from §3 of `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md`. Do not
+paraphrase, and do not use the task wording from the populated-field packet or protocol.
+
+Before the first attempt:
+
+> You're trying an early way of entering the Living Field. Nothing has been written into your
+> field for this test. You do not have to create anything. Explore whatever draws your attention.
+> If you choose to write something, write only what is genuinely true for you. You can explore
+> without talking with MAIA; MAIA begins only when you explicitly choose a MAIA action — either
+> “Explore with MAIA →” or “Enter this dimension with MAIA.” You may stop at any time.
+
+Then give only this task:
+
+> **Start from the House and enter your Living Field. Explore whatever draws your attention.
+> Follow one path if you want to. Do whatever feels natural when you reach a dimension, then
+> return toward the wider field and Home. Say what you are noticing if you are comfortable.**
+
+Do not ask them to create an expression, choose a particular element, or enter MAIA. Do not
+explain the elements, the field hierarchy, or the intended route, and do not apologize for the
+empty field: how the system presents that absence is part of what is being witnessed.
+
+**Script read verbatim:** yes / no (if no, record what was said instead)
 
 ## Uncoached path
 
@@ -79,6 +126,8 @@ Choose exactly one:
 - [ ] FIRST-ENTRY PASS
 - [ ] FIRST-ENTRY PASS WITH FRICTION
 - [ ] NOT ADMITTED / STOP
+
+(Or, before adjudicating: **VOID — NO EVIDENCE** if the SHA or deploy-freeze check failed.)
 
 Reason:
 

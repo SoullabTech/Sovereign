@@ -373,6 +373,7 @@ const GOV = window.JarvisGovernance;
 const PROV = window.JarvisProvenance;
 const OF = window.JarvisOperatorFlow;
 const OWU = window.JarvisOperatorWorkUnit;
+const E1G = window.JarvisE1Gesture;
 let providerCatalog = [];
 let activeWorkUnitId = sessionStorage.getItem('jarvis:active-work-unit') || null;
 let activeWorkUnitStrategy = [];
@@ -884,6 +885,11 @@ function renderCanonicalExecutionBridge(snapshot) {
       && activeCanonicalExecutionReview?.route_participant_id === participant.participant_id
       ? activeCanonicalExecutionReview
       : null;
+    const activeGrantId = grantStanding?.standing === 'ACTIVE'
+      ? grantStanding.grant?.grant_id || null
+      : null;
+    const confirmationReviewed = E1G.confirmationReviewed(activeGrantId, review);
+    const primaryAction = E1G.activeGrantPrimaryAction(activeGrantId);
 
     let action = '';
     if (!participant.required_for_completion) {
@@ -896,9 +902,9 @@ function renderCanonicalExecutionBridge(snapshot) {
       action = `<span class="stage-pill held">${escapeHtml(binding.readiness?.status || 'NOT READY')}</span>`;
     } else if (completedAttempt) {
       action = `<span class="stage-pill done">Durable attempt recorded · ${escapeHtml(completedAttempt.attempt_id)}</span>`;
-    } else if (grantStanding?.standing === 'ACTIVE') {
-      action = `<button class="primary" data-e1-confirm="${escapeHtml(grantStanding.grant.grant_id)}">Confirm Execute</button>
-        <button class="act" data-e1-revoke="${escapeHtml(grantStanding.grant.grant_id)}">Revoke authorization</button>`;
+    } else if (primaryAction === 'REVIEW_AUTHORIZED') {
+      action = `<button class="act" data-e1-review-active="${escapeHtml(participant.participant_id)}" data-e1-grant="${escapeHtml(activeGrantId)}">Review authorized execution</button>
+        <button class="act" data-e1-revoke="${escapeHtml(activeGrantId)}">Revoke authorization</button>`;
     } else {
       action = `<button class="act" data-e1-review="${escapeHtml(participant.participant_id)}">Review exact execution</button>`;
     }
@@ -925,10 +931,13 @@ function renderCanonicalExecutionBridge(snapshot) {
         <div class="a-line">Route digest: <b>${escapeHtml(review.route_digest || snapshot.routing.route_digest || 'unknown')}</b></div>
         <div class="a-line">Attempt population: <b>${escapeHtml(review.attempt_population_digest || 'unknown')}</b></div>
         ${error ? `<div class="errors"><div>${escapeHtml(error)}</div></div>` : ''}
-        ${review.ok
-          ? `<button class="primary" data-e1-authorize="${escapeHtml(participant.participant_id)}">Authorize this execution once</button>`
-          : ''}
-        <div class="hint" style="margin-top:8px"><b>Authorize is not Execute.</b> Confirm Execute re-reads W2, W3, W3T, the one-shot grant, R4, R5A, and the evidence population before credential presence is consulted.</div>
+        ${review.ok && confirmationReviewed
+          ? `<div class="hint" style="margin:8px 0"><b>Fresh post-authorization review complete.</b> Confirm Execute is now a separate gesture.</div>
+             <button class="primary" data-e1-confirm="${escapeHtml(activeGrantId)}">Confirm Execute</button>`
+          : review.ok && !activeGrantId
+            ? `<button class="primary" data-e1-authorize="${escapeHtml(participant.participant_id)}">Authorize this execution once</button>`
+            : ''}
+        <div class="hint" style="margin-top:8px"><b>Authorize is not Execute.</b> After authorization, a fresh review is required before Confirm Execute can appear. Confirm Execute then re-reads W2, W3, W3T, the one-shot grant, R4, R5A, and the evidence population before credential presence is consulted.</div>
       </div>`;
     }
 
@@ -992,6 +1001,31 @@ async function reviewCanonicalExecution(participantId) {
   await refreshActiveWorkUnit();
 }
 
+async function reviewCanonicalAuthorizedExecution(participantId, grantId) {
+  if (!activeWorkUnitId || !participantId || !grantId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'canonical-execution-auth-preview',
+    work_unit_id: activeWorkUnitId,
+    route_participant_id: participantId,
+  });
+  const matchingGrant = (out?.grants || []).find(
+    (entry) => entry?.standing === 'ACTIVE'
+      && entry?.grant?.grant_id === grantId
+      && entry?.grant?.route_participant_id === participantId,
+  );
+  activeCanonicalExecutionReview = {
+    ...out,
+    work_unit_id: activeWorkUnitId,
+    route_participant_id: participantId,
+    grant_id: grantId,
+    confirmation_review: out?.ok === true && !!matchingGrant,
+    error: out?.ok && matchingGrant
+      ? null
+      : (out?.reason || out?.blockers?.[0]?.code || 'Active grant changed; fresh review required.'),
+  };
+  await refreshActiveWorkUnit();
+}
+
 async function authorizeCanonicalExecutionOnce(participantId) {
   if (!activeWorkUnitId) return;
   const out = await window.jarvis.workUnitAction({
@@ -1031,12 +1065,26 @@ async function prepareCanonicalExecutionTransport(participantId) {
 
 async function confirmCanonicalExecution(grantId) {
   if (!activeWorkUnitId || !grantId) return;
+  const review = activeCanonicalExecutionReview;
+  const confirmationArmed = E1G.confirmArmed(activeWorkUnitId, grantId, review);
+  if (!confirmationArmed) {
+    const snapshot = await window.jarvis.workUnitAction({
+      action: 'status',
+      work_unit_id: activeWorkUnitId,
+    });
+    renderWorkUnitSnapshot(snapshot, {
+      transientError: 'Fresh post-authorization review required before Confirm Execute.',
+    });
+    return;
+  }
+  // Consume the UI arm BEFORE the privileged IPC call. A repeated/double click
+  // on Confirm Execute cannot reuse the same reviewed gesture.
+  activeCanonicalExecutionReview = null;
   const out = await window.jarvis.workUnitAction({
     action: 'canonical-confirm-execute',
     work_unit_id: activeWorkUnitId,
     grant_id: grantId,
   });
-  activeCanonicalExecutionReview = null;
   if (out?.ok) renderWorkUnitSnapshot(out);
   else {
     const snapshot = await window.jarvis.workUnitAction({
@@ -1104,6 +1152,12 @@ function wireCanonicalExecutionBridge(snapshot) {
   });
   document.querySelectorAll('[data-e1-review]').forEach((button) => {
     button.addEventListener('click', () => reviewCanonicalExecution(button.dataset.e1Review));
+  });
+  document.querySelectorAll('[data-e1-review-active]').forEach((button) => {
+    button.addEventListener('click', () => reviewCanonicalAuthorizedExecution(
+      button.dataset.e1ReviewActive,
+      button.dataset.e1Grant,
+    ));
   });
   document.querySelectorAll('[data-e1-authorize]').forEach((button) => {
     button.addEventListener('click', () => authorizeCanonicalExecutionOnce(button.dataset.e1Authorize));
@@ -2161,6 +2215,36 @@ function renderAccessAuthority() {
   </div>`;
 }
 
+function renderSafetyDeliveryCard() {
+  const snapshot = globalThis.KellySafetyDelivery?.snapshot?.();
+  if (!snapshot) {
+    return `<div class="card">
+      <h3>Safety delivery</h3>
+      <div class="why">Safety-delivery custody snapshot is not available in this build.</div>
+    </div>`;
+  }
+
+  const rows = (label, items) => `
+    <div style="margin-top:12px">
+      <div class="label">${escapeHtml(label)}</div>
+      ${items.map(item => `<div class="why" style="margin-top:5px">→ ${escapeHtml(item)}</div>`).join('')}
+    </div>`;
+
+  return `
+    <div class="card">
+      <h3>Safety delivery</h3>
+      <div class="row"><span class="label">Standing</span><span class="state NEEDS_SETUP">${escapeHtml(snapshot.standing)}</span></div>
+      <div class="hint">Custody snapshot as of ${escapeHtml(snapshot.as_of)} · not live telemetry.</div>
+      ${rows('Needs Kelly', snapshot.needs_kelly)}
+      ${rows('In motion', snapshot.in_motion)}
+      ${rows('Watching', snapshot.watching)}
+      <details style="margin-top:12px"><summary>Unresolved boundaries</summary>
+        ${snapshot.unresolved.map(item => `<div class="why" style="margin-top:5px">• ${escapeHtml(item)}</div>`).join('')}
+      </details>
+      <div class="src" style="margin-top:12px">source: ${escapeHtml(snapshot.source)} · canonical base @${escapeHtml(snapshot.canonical_base.slice(0, 12))}</div>
+    </div>`;
+}
+
 function renderSystem() {
   const s = lastStatus;
   if (!s) { $main.innerHTML = '<p class="hint">Loading…</p>'; return; }
@@ -2185,6 +2269,7 @@ function renderSystem() {
       ${stateRow('Production', s.production || { state: 'NOT PROBED', detail: 'Requires explicit production/SSH authority, which Desktop does not hold. Not probed by design.' })}
     </div>
     ${renderAccessAuthority()}
+    ${renderSafetyDeliveryCard()}
     ${provenanceRows(s.provenance)}
     <div class="card">
       <h3>Builder OS detail</h3>
