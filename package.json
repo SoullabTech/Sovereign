@@ -101,6 +101,8 @@
     "test:jarvis-o5-r3": "node scripts/builder/__tests__/o5-r3-grant-writer-proof.mjs",
     "test:jarvis-o5-r3-operator-recovery": "node scripts/builder/__tests__/o5-r3-operator-retirement-proof.mjs",
     "test:jarvis-o5-r3-dead-lease-normalization": "node scripts/builder/__tests__/o5-r3-dead-lease-normalization-proof.mjs",
+    "test:jarvis-o5-r4": "node --test jarvis-desktop/test/repo-authority-o5-r4.test.mjs",
+    "matrix:jarvis-o5-r4": "node tests/constitutional/jarvis-o5-r4-silent-fallback/matrix.mjs",
     "matrix:jarvis-o5-r3-rb": "node tests/constitutional/jarvis-o5-r3-runtime-binding/matrix.mjs",
     "matrix:jarvis-o5-r3-rb-prewrite": "node tests/constitutional/jarvis-o5-r3-runtime-binding/prewrite/matrix.mjs",
     "matrix:jarvis-o5-r3-rb-transition": "node tests/constitutional/jarvis-o5-r3-runtime-binding/transition/matrix.mjs",

@@ -154,6 +154,7 @@ function findRepoRootPackagedMode() {
 // The ORDER lives in repo-resolution.js so it can be proven without Electron;
 // the SOURCES stay here, so each one still has exactly one implementation.
 const { resolveDevMode } = require('./repo-resolution');
+const REPO_AUTH = require('./repo-authority.js');
 
 // Mutable: Preferences can rebind the substrate at runtime. Everything that
 // reads it does so through currentRoot() rather than closing over the value,
@@ -167,6 +168,16 @@ let RESOLVED = app.isPackaged
       RESOLUTION: PROV.RESOLUTION,
     });
 function currentRoot() { return RESOLVED.root; }
+function currentAuthorityBinding() { return REPO_AUTH.authorityBinding(RESOLVED); }
+function authorityRefusal(binding = currentAuthorityBinding()) {
+  return {
+    ok: false,
+    status: binding.status,
+    reason: binding.reason,
+    repository_resolution: binding.resolution,
+    repository_root: binding.root,
+  };
+}
 const REPO_ROOT_MODE = app.isPackaged ? 'packaged' : 'dev';
 
 // --- F3: artifact identity, stamped at package time -----------------------
@@ -782,10 +793,11 @@ ipcMain.handle('jarvis:mechanism-status', async () => MECH.mechanismState(curren
 // mechanism would still refuse anything outside READ_ONLY_LANES.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
-  const root = currentRoot();
-  if (!root) {
-    return { submitted: false, outcome: 'MECHANISM_UNAVAILABLE', reason: 'no execution substrate is bound — bind a repository before submitting work units', mechanism: MECH.mechanismState(null), run: null, events: [] };
+  const binding = currentAuthorityBinding();
+  if (!binding.ok) {
+    return { submitted: false, outcome: binding.status, reason: binding.reason, repository_resolution: binding.resolution, repository_root: binding.root, mechanism: MECH.mechanismState(binding.root), run: null, events: [] };
   }
+  const root = binding.root;
   const packet = {
     ...(req && typeof req === 'object' ? req.packet : null),
     execution_lane: MECH.AUTHORIZED_LANE,
@@ -843,10 +855,34 @@ function desktopHumanActorId() {
 // post-create and derives authority from the stored Work Unit. MAIN owns repository
 // binding, canonical SHA, Work Unit identity, and canonical scripts; the renderer
 // cannot supply a path, shell command, route record, or authority envelope directly.
+const WORK_UNIT_AUTHORITY_ACTIONS = new Set([
+  'create',
+  'canonical-bound',
+  'canonical-authorize',
+  'canonical-route',
+  'canonical-bind-transport',
+  'canonical-prepare-execution-transport',
+  'canonical-authorize-execution-once',
+  'canonical-confirm-execute',
+  'canonical-revoke-execution-grant',
+  'canonical-record-verifier',
+  'canonical-evidence-ready',
+  'canonical-adjudicate',
+  'canonical-close',
+  'authorize-execution-once',
+  'confirm-execute',
+  'revoke-execution-grant',
+  'run-provider',
+]);
+
 ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
   const root = currentRoot();
   if (!root) return { ok: false, status: 'NO_SUBSTRATE', reason: 'No execution substrate is bound.' };
   const action = String(req?.action || '');
+  if (WORK_UNIT_AUTHORITY_ACTIONS.has(action)) {
+    const binding = currentAuthorityBinding();
+    if (!binding.ok) return authorityRefusal(binding);
+  }
   const safeId = (value) => /^[a-z0-9][a-z0-9-]{2,63}$/.test(String(value || ''));
   try {
     if (action === 'providers') {
@@ -1212,9 +1248,11 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   if (decision.status === 'rejected_oversized') return response;
 
   if (decision.execution_lane === 'C0') {
+    const binding = currentAuthorityBinding();
+    if (!binding.ok) return { ...response, status: binding.status, result: { reason: binding.reason, repository_resolution: binding.resolution, repository_root: binding.root } };
     try {
       const { runCapability } = await import(`file://${detPath}?t=${Date.now()}`);
-      const r = runCapability(task.capability, task.args || {}, currentRoot());
+      const r = runCapability(task.capability, task.args || {}, binding.root);
       response.result = r;
       response.status = 'completed';
       // Independent verification: a second, structurally different check —
@@ -1231,6 +1269,8 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       response.result = { error: e.message };
     }
   } else if (decision.execution_lane === 'C1') {
+    const binding = currentAuthorityBinding();
+    if (!binding.ok) return { ...response, status: binding.status, result: { reason: binding.reason, repository_resolution: binding.resolution, repository_root: binding.root } };
     try {
       // ── canonical evidence substrate ───────────────────────────────────────
       // Imported, never reimplemented. materializePacket() builds the ONLY
@@ -1243,8 +1283,8 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // the planner, the orchestrator and the queue are NEVER invoked from
       // here; jarvis-runtime-pipeline.mjs has no top-level side effects, so
       // importing it for verifyEvidence() does not wake the delegate path.
-      const ctxPath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs');
-      const pipePath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
+      const ctxPath = path.join(binding.root, 'scripts', 'builder', 'jarvis-context.mjs');
+      const pipePath = path.join(binding.root, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
       const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
       const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
 
@@ -1255,7 +1295,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         // Fail closed: an unresolvable selector must not silently degrade into
         // "no evidence required". materializeOne throws on any invalid selector.
         try {
-          fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT);
+          fragments = materializePacket({ context_selectors: selectors }, binding.root);
         } catch (e) {
           materialization_error = e.message;
         }
@@ -1344,8 +1384,9 @@ ipcMain.handle('jarvis:run-external-reasoning', async (_evt, req) => {
 // here upgrades an outcome the governor declined, and `--force` is unreachable.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:governance-action', async (_evt, req) => {
-  if (!currentRoot()) {
-    return { ok: false, outcome: 'usage', label: 'NO SUBSTRATE', detail: 'No execution substrate resolved — cannot reach session.mjs.', errors: [] };
+  const binding = currentAuthorityBinding();
+  if (!binding.ok) {
+    return { ok: false, outcome: binding.status, label: binding.status, detail: binding.reason, repository_resolution: binding.resolution, repository_root: binding.root, errors: [] };
   }
   const built = GOV.buildGovernanceArgv(req || {});
   if (!built.ok) {
