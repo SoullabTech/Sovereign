@@ -183,7 +183,11 @@ console.log('\n==================== F3 — dual provenance, never collapsed ====
     diverged.self_binding_satisfied === true);
 
   const mainJs = code('main.js');
-  report('main.js reports HOW the root resolved', mainJs.includes('PROV.RESOLUTION.DEFAULT') && mainJs.includes('PROV.RESOLUTION.ENV'));
+  report('main.js reports HOW the root resolved without authority-bearing DEFAULT',
+    mainJs.includes('PROV.RESOLUTION.ENV')
+      && mainJs.includes('PROV.RESOLUTION.CONFIG')
+      && mainJs.includes('suggested_repo_root: RESOLVED.suggestedRepoRoot || null')
+      && !mainJs.includes("return { root: '/Users/soullab/MAIA-SOVEREIGN'"));
   report('main.js reads the substrate HEAD and dirty state', mainJs.includes("'rev-parse', '--short', 'HEAD'") && mainJs.includes("'status', '--porcelain'"));
   // The stamp is generated OUTSIDE the source tree and shipped as a resource,
   // so packaging cannot leave a file in src/ for a later dev run to read.
@@ -256,20 +260,22 @@ console.log('\n=========== B — repo-root authority: conflict must not read cle
   // constant vocabulary, so it is still selected and still has to declare the
   // field. And the partition below closes the gap the old form left open: no
   // THIRD kind of {root, resolution} literal can now appear unclassified.
-  const rootResolutionLiterals = (mainJs.match(/\{[^{}]*\bresolution:[^{}]*\}/g) || [])
-    .filter(l => /\broot:/.test(l));
-  const resolverLiterals = rootResolutionLiterals.filter(l => /\bresolution:\s*PROV\.RESOLUTION\./.test(l));
-  const consumerLiterals = rootResolutionLiterals.filter(l => /\bresolution:\s*RESOLVED\.resolution\b/.test(l));
-  report('every resolver return declares conflictingConfigRoot',
-    resolverLiterals.length >= 5 && resolverLiterals.every(l => l.includes('conflictingConfigRoot')),
-    `${resolverLiterals.length} resolver literal(s)`);
-  report('every {root, resolution} literal is either a resolver return or a RESOLVED consumer',
-    resolverLiterals.length + consumerLiterals.length === rootResolutionLiterals.length,
-    `${resolverLiterals.length} resolver + ${consumerLiterals.length} consumer / ${rootResolutionLiterals.length} total`);
+  const resolverJs = code('repo-resolution.js');
+  const packagedStart = resolverJs.indexOf('function resolvePackagedMode');
+  const packagedEnd = resolverJs.indexOf('function resolveDevMode');
+  const packagedBody = resolverJs.slice(packagedStart, packagedEnd);
+  const packagedReturns = packagedBody.split('return {').slice(1).map(s => s.split('};')[0]);
+  report('every packaged resolver return declares conflictingConfigRoot',
+    packagedReturns.length === 3 && packagedReturns.every(s => s.includes('conflictingConfigRoot')),
+    `${packagedReturns.length} packaged resolver return(s)`);
+  report('packaged resolver separates suggestion from authority-bearing root',
+    packagedBody.includes('suggestedRepoRoot')
+      && packagedBody.includes('root: null')
+      && !packagedBody.includes('resolution: RESOLUTION.DEFAULT'));
   report('the Preferences surface still carries the conflict as a problem',
     /problem: RESOLVED\.configProblem/.test(mainJs));
-  report('precedence unchanged — env is still tested before saved config',
-    mainJs.indexOf('process.env.JARVIS_REPO_ROOT && isValidRepoRoot') < mainJs.indexOf('cfg.present && isValidRepoRoot(cfg.repo_root)'));
+  report('precedence unchanged — valid env is still tested before valid saved config',
+    resolverJs.indexOf('if (validEnv)') < resolverJs.indexOf('if (validConfig)'));
   report('renderer surfaces the conflict where the substrate is displayed',
     code('renderer.js').includes('p.substrate.conflict'));
 }

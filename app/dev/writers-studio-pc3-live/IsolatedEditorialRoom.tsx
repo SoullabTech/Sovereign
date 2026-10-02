@@ -14,6 +14,22 @@ import {
 import { passageContext } from '@/lib/writersStudio/editorialApproaches';
 import { appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
+import {
+  EDITORIAL_LATITUDES,
+  LATITUDE_BANDS,
+  type EditorialLatitude,
+} from '@/lib/manuscript/editorialScope/contract';
+import {
+  DEFAULT_WORKING_STYLE,
+  EXPLANATION_COPY,
+  EXPLANATION_VALUES,
+  PACE_COPY,
+  PACE_VALUES,
+  readWorkingStyle,
+  writeWorkingStyle,
+  type ExplanationDepth,
+  type WorkingPace,
+} from '@/lib/writersStudio/workingStyle';
 
 type Props = {
   appearance: Appearance;
@@ -21,6 +37,12 @@ type Props = {
   currentText: string;
   sectionBody: string;
   busy: boolean;
+  editingLatitude: EditorialLatitude;
+  onEditingLatitude: (value: EditorialLatitude) => void;
+  mayRemoveParagraphs: boolean;
+  onMayRemoveParagraphs: (value: boolean) => void;
+  mayProposeImmediately: boolean;
+  onMayProposeImmediately: (value: boolean) => void;
   onClose: () => void;
   children: ReactNode;
 };
@@ -104,6 +126,12 @@ export default function IsolatedEditorialRoom({
   currentText,
   sectionBody,
   busy,
+  editingLatitude,
+  onEditingLatitude,
+  mayRemoveParagraphs,
+  onMayRemoveParagraphs,
+  mayProposeImmediately,
+  onMayProposeImmediately,
   onClose,
   children,
 }: Props) {
@@ -114,6 +142,8 @@ export default function IsolatedEditorialRoom({
   const [showDirections, setShowDirections] = useState(DEFAULT_PREFS.showDirections);
   const [showWorkingDraft, setShowWorkingDraft] = useState(DEFAULT_PREFS.showWorkingDraft);
   const [showCraftDepth, setShowCraftDepth] = useState(DEFAULT_PREFS.showCraftDepth);
+  const [workingPace, setWorkingPace] = useState<WorkingPace>(DEFAULT_WORKING_STYLE.pace);
+  const [explanationDepth, setExplanationDepth] = useState<ExplanationDepth>(DEFAULT_WORKING_STYLE.explanation);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const drag = useRef<{ startX: number; startLeft: number; width: number } | null>(null);
@@ -135,6 +165,9 @@ export default function IsolatedEditorialRoom({
       setShowWorkingDraft(saved.showWorkingDraft);
       setShowCraftDepth(saved.showCraftDepth);
     }
+    const working = readWorkingStyle();
+    setWorkingPace(working.pace);
+    setExplanationDepth(working.explanation);
     setPrefsLoaded(true);
   }, []);
 
@@ -164,6 +197,11 @@ export default function IsolatedEditorialRoom({
     showWorkingDraft,
     showCraftDepth,
   ]);
+
+  useEffect(() => {
+    if (!prefsLoaded) return;
+    writeWorkingStyle({ pace: workingPace, explanation: explanationDepth });
+  }, [prefsLoaded, workingPace, explanationDepth]);
 
   const beginDrag = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     if (!shellRef.current) return;
@@ -236,6 +274,8 @@ export default function IsolatedEditorialRoom({
       data-show-directions={showDirections ? 'true' : 'false'}
       data-show-working={showWorkingDraft ? 'true' : 'false'}
       data-show-depth={showCraftDepth ? 'true' : 'false'}
+      data-working-pace={workingPace}
+      data-explanation-depth={explanationDepth}
       aria-label="Isolated passage editor"
     >
       <header className="p4r1-isolated-topbar">
@@ -246,6 +286,9 @@ export default function IsolatedEditorialRoom({
         <div className="p4r1-isolated-controls">
           <span className="p4r1-isolated-balance">
             {layout === 'custom' ? 'Custom · ' : ''}{Math.round(leftPercent)} / {100 - Math.round(leftPercent)}
+          </span>
+          <span className="p4r1-isolated-latitude-status" title={LATITUDE_BANDS[editingLatitude].description}>
+            Revision · {LATITUDE_BANDS[editingLatitude].label}
           </span>
 
           <details className="p4r1-isolated-menu">
@@ -290,8 +333,105 @@ export default function IsolatedEditorialRoom({
 
           <details className="p4r1-isolated-menu">
             <summary>Preferences</summary>
-            <div className="p4r1-isolated-menu-card">
-              <fieldset>
+            <div className="p4r1-isolated-menu-card p4r1-isolated-preferences">
+              <section className="p4r1-working-style" aria-label="Working style">
+                <div className="p4r1-working-style-head">
+                  <strong>Working style</strong>
+                  <span>How MAIA works with your words</span>
+                </div>
+                <label className="p4r1-latitude-label" htmlFor="p4r1-editing-latitude">
+                  <span>Revision latitude</span>
+                  <b>{LATITUDE_BANDS[editingLatitude].label}</b>
+                </label>
+                <input
+                  id="p4r1-editing-latitude"
+                  className="p4r1-latitude-slider"
+                  type="range"
+                  min={EDITORIAL_LATITUDES[0]}
+                  max={EDITORIAL_LATITUDES[EDITORIAL_LATITUDES.length - 1]}
+                  step={1}
+                  value={editingLatitude}
+                  disabled={busy}
+                  aria-valuetext={LATITUDE_BANDS[editingLatitude].label}
+                  onChange={(event) => onEditingLatitude(Number(event.target.value) as EditorialLatitude)}
+                />
+                <div className="p4r1-latitude-scale" aria-hidden="true">
+                  {EDITORIAL_LATITUDES.map((value) => <span key={value}>{LATITUDE_BANDS[value].label}</span>)}
+                </div>
+                <p className="p4r1-latitude-description">{LATITUDE_BANDS[editingLatitude].description}</p>
+                <p className="p4r1-latitude-law">This controls how far a proposed revision may move from your wording. Nothing is applied without you.</p>
+
+                <div className="p4r1-working-axis">
+                  <label className="p4r1-latitude-label" htmlFor="p4r1-working-pace">
+                    <span>How much MAIA shows at once</span>
+                    <b>{PACE_COPY[workingPace].label}</b>
+                  </label>
+                  <input
+                    id="p4r1-working-pace"
+                    className="p4r1-latitude-slider"
+                    type="range"
+                    min={0}
+                    max={PACE_VALUES.length - 1}
+                    step={1}
+                    value={PACE_VALUES.indexOf(workingPace)}
+                    aria-valuetext={PACE_COPY[workingPace].label}
+                    onChange={(event) => setWorkingPace(PACE_VALUES[Number(event.target.value)] ?? DEFAULT_WORKING_STYLE.pace)}
+                  />
+                  <div className="p4r1-latitude-scale p4r1-scale-three" aria-hidden="true">
+                    {PACE_VALUES.map((value) => <span key={value}>{PACE_COPY[value].label}</span>)}
+                  </div>
+                  <p className="p4r1-latitude-description">{PACE_COPY[workingPace].description}</p>
+                </div>
+
+                <div className="p4r1-working-axis">
+                  <label className="p4r1-latitude-label" htmlFor="p4r1-explanation-depth">
+                    <span>How MAIA explains what she sees</span>
+                    <b>{EXPLANATION_COPY[explanationDepth].label}</b>
+                  </label>
+                  <input
+                    id="p4r1-explanation-depth"
+                    className="p4r1-latitude-slider"
+                    type="range"
+                    min={0}
+                    max={EXPLANATION_VALUES.length - 1}
+                    step={1}
+                    value={EXPLANATION_VALUES.indexOf(explanationDepth)}
+                    aria-valuetext={EXPLANATION_COPY[explanationDepth].label}
+                    onChange={(event) => setExplanationDepth(EXPLANATION_VALUES[Number(event.target.value)] ?? DEFAULT_WORKING_STYLE.explanation)}
+                  />
+                  <div className="p4r1-latitude-scale" aria-hidden="true">
+                    {EXPLANATION_VALUES.map((value) => <span key={value}>{EXPLANATION_COPY[value].label}</span>)}
+                  </div>
+                  <p className="p4r1-latitude-description">{EXPLANATION_COPY[explanationDepth].description}</p>
+                  <div className="p4r1-working-preview" aria-live="polite">
+                    <span>MAIA would say</span>
+                    <p>{EXPLANATION_COPY[explanationDepth].preview}</p>
+                  </div>
+                </div>
+
+                <label className="p4r1-working-style-check">
+                  <input
+                    type="checkbox"
+                    checked={mayRemoveParagraphs}
+                    disabled={busy}
+                    onChange={(event) => onMayRemoveParagraphs(event.target.checked)}
+                  />
+                  <span><b>Allow paragraph-removal proposals</b><small>Separate permission; never implied by the slider.</small></span>
+                </label>
+                {editingLatitude === 1 ? (
+                  <label className="p4r1-working-style-check">
+                    <input
+                      type="checkbox"
+                      checked={mayProposeImmediately}
+                      disabled={busy}
+                      onChange={(event) => onMayProposeImmediately(event.target.checked)}
+                    />
+                    <span><b>Suggest wording straight away</b><small>Otherwise MAIA discusses the passage first at Touch.</small></span>
+                  </label>
+                ) : null}
+              </section>
+
+              <fieldset className="p4r1-reading-prefs">
                 <legend>Reading size</legend>
                 {([
                   ['large', 'Large'],
