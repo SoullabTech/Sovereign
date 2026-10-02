@@ -317,9 +317,15 @@ console.log('\n==================== exclusions the ruling required =============
   // These fail if anyone later copies the runtime, pipeline or verifier into
   // jarvis-desktop/, and also if Desktop stops resolving the canonical one.
   const desktopFiles = readdirSync(src);
+  const isForbiddenDesktopImplementationName = (f) =>
+    /(?:^|[-_.])(?:jarvis-runtime-pipeline|jarvis-runtime-store|runtime-pipeline|verify-?evidence)(?:[-_.]|$)/i.test(f);
   report('no Desktop-local runtime/pipeline/verifier implementation file',
-    !desktopFiles.some(f => /(runtime|pipeline|verify-?evidence)/i.test(f)),
+    !desktopFiles.some(isForbiddenDesktopImplementationName),
     desktopFiles.join(', '));
+  report('implementation-name guard distinguishes binding evidence from a copied runtime',
+    !isForbiddenDesktopImplementationName('runtime-binding.js')
+      && isForbiddenDesktopImplementationName('jarvis-runtime-pipeline.js')
+      && isForbiddenDesktopImplementationName('verify-evidence.js'));
   report('no Desktop-local copy of the canonical verifier',
     !/function\s+verifyEvidence|verifyEvidence\s*=\s*(function|\()/.test(all));
   report('Desktop DOES reference the canonical mechanism (a fork would not)',
