@@ -1,6 +1,6 @@
 # Living Field First Entry: Pre-Walk Gate Record
 
-**Status:** PARTIAL · G0 PASS · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
+**Status:** PARTIAL · G0 TECHNICAL PASS / CLASS A APPROVAL PROVENANCE OPEN · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
 **Governs:** `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md` (with Amendments 1 and 2)
 **Occasioned by:** a J18 verdict and an emergency-disable PASS that existed only in a session
 transcript and were never committed. Under this programme's rules a probe is not the record.
@@ -51,7 +51,9 @@ canonical_sha: `8aa79ee44587c56617fbe386ea2fb98d48cc4a64`
 171:## Amendment 2 · 2026-10-01 · before any run (founder-directed pre-registration amendment)
 ```
 
-Verdict: **PASS**
+Technical verdict: **PASS** — both amendments are canonical.
+
+**Class A approval provenance:** OPEN. PR #1676 is canonical, but GitHub records no reviews and no separate founder/council adjudication record is currently discoverable in canonical. Canonical presence must not be treated as proof that the Class A custody requirement was satisfied.
 
 ---
 
@@ -321,7 +323,7 @@ Verdict: PASS (G7a / G7b) / FAIL
 
 | Gate | Verdict |
 |---|---|
-| G0 protocol canonical | **PASS** |
+| G0 protocol canonical | **TECHNICAL PASS · Class A approval provenance OPEN** |
 | G1 cabin mode unset | **PASS** |
 | G2 database stable | OPEN — mechanical PASS; founder standby-exposure choice required |
 | G3 emergency disable witnessed | OPEN |
