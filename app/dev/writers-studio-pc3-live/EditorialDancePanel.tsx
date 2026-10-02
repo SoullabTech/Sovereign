@@ -40,7 +40,7 @@ export interface EditorialDancePanelProps {
   onChooseSessionPosture: (sanctuary: boolean) => void;
 
   onSelectVersion: (id: string) => void;
-  onSend: (text?: string) => void;
+  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean }) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   onUndo?: () => void;
@@ -310,17 +310,25 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       'Preserve my stated intention and voice. Separate meaning changes from style changes.',
       'Treat any reader effect as a hypothesis. Do not invent personal experience, quotations, sources, or unseen evidence.',
       'Nothing is to be applied automatically.',
-    ].join('\n\n'));
+    ].join('\n\n'), { proposalPolicy: 'allow', proposalRequested: true });
   };
 
   const adjustProposal = (instruction: string) => {
+    const selected = props.version?.wording ?? recommendation.wording;
     props.onSend([
       instruction,
-      'Work from my original passage and the currently selected proposal. Do not silently broaden the edit.',
+      'Original passage:',
+      props.currentText,
+      '',
+      'Currently selected proposal:',
+      selected,
+      '',
+      'Work from these exact two texts. Do not silently broaden the edit or substitute a different locus.',
       'Return at most one new proposal. Preserve my voice, intention, subject, and intentional ambiguity.',
+      'The adjusted proposal must differ meaningfully from the currently selected proposal. If no meaningful adjustment in the requested direction is possible, reply without a new proposal and explain why.',
       'In the rationale include: "What changed: …", "Why: …", "Reader effect: …", and "What I protected: …".',
       'Treat reader effect as a hypothesis. Nothing is applied automatically.',
-    ].join('\n\n'));
+    ].join('\n'), { proposalPolicy: 'allow', proposalRequested: true });
   };
 
   const sendTalk = () => {
@@ -580,6 +588,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             {summary.preserve ? <div><b>{EDITORIAL_PACKET_LABELS.preserve}</b><p>{summary.preserve}</p></div> : null}
             {summary.friction ? <div><b>{EDITORIAL_PACKET_LABELS.friction}</b><p>{summary.friction}</p></div> : null}
             {summary.tryNext ? <div><b>{EDITORIAL_PACKET_LABELS.possibility}</b><p>{summary.tryNext}</p></div> : null}
+          </div>
+        ) : props.lastMaiaTurn?.body ? (
+          <div className="p4r1-dance-latest-response" data-editorial-latest-response>
+            <b>MAIA’s latest response</b>
+            <p>{props.lastMaiaTurn.body}</p>
           </div>
         ) : (
           <h3>{firstUsefulSentence(summarySource || 'Here is one direction I would try.')}</h3>

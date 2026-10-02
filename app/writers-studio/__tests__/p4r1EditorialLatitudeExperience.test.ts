@@ -24,7 +24,9 @@ describe('Writer Studio editorial latitude experience', () => {
   });
 
   it('keeps explanation depth separate from proposal scope', () => {
-    expect(controller).toContain("text + '\\n\\n' + editorialDirective(editorialDepth)");
+    expect(controller).toContain('editorialDirective(editorialDepth)');
+    expect(controller).toContain('The writer explicitly requested proposed wording in this turn.');
+    expect(controller).toContain('mayProposeImmediately: mayProposeImmediately || proposalRequested');
     expect(controller).toContain('latitude: editLatitude');
     expect(controller).toContain('mayRemoveParagraphs');
     expect(scope).toContain('judgeProposalScope');
@@ -44,6 +46,15 @@ describe('Writer Studio editorial latitude experience', () => {
     expect(dance).toContain('Another option');
     expect(dance).toContain('Restore a part');
     expect(dance).toContain('Treat reader effect as a hypothesis');
+    expect(dance).toContain('Original passage:');
+    expect(dance).toContain('Currently selected proposal:');
+    expect(dance).toContain('The adjusted proposal must differ meaningfully from the currently selected proposal.');
+    expect(dance).toContain('If no meaningful adjustment in the requested direction is possible, reply without a new proposal and explain why.');
+    expect(dance).toContain('MAIA’s latest response');
+    expect(dance).toContain('data-editorial-latest-response');
+    expect(dance).toContain("{ proposalPolicy: 'allow', proposalRequested: true }");
+    expect(controller).toContain('options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean }');
+    expect(controller).toContain('onSendEditorial={(text, options) => void sendEditorial(text, options)}');
     expect(dance).toContain('{postureGate}');
     expect(dance).toContain('disabled={props.busy || postureBlocksEditorial}');
   });

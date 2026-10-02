@@ -106,7 +106,7 @@ export type P4R1Pc3WriteEditViewProps = {
   canReturnToStartingPassage: boolean;
   onDepth: (depth: EditorialDepth) => void;
   onInstruction: (text: string) => void;
-  onSendEditorial: (text?: string) => void;
+  onSendEditorial: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean }) => void;
   onSelectVersion: (id: string) => void;
   onApply: () => void;
   onUndo?: () => void;

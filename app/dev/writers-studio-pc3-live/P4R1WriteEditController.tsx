@@ -736,7 +736,7 @@ export default function FlagshipWriteEditController() {
 
   const sendEditorial = useCallback(async (
     requestText?: string,
-    options?: { proposalPolicy?: ProposalPolicy },
+    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean },
   ) => {
     const text = (requestText ?? editorialDraft).trim();
     if (!focusId || !text || editorialBusy) return;
@@ -750,7 +750,15 @@ export default function FlagshipWriteEditController() {
       const thread = await resolveEditorialForAct();
       if (!thread) return;
       const posture = await readCurrentSanctuaryPosture();
-      const exactWords = text + '\n\n' + editorialDirective(editorialDepth);
+      const proposalRequested = options?.proposalRequested === true;
+      const actionDirective = proposalRequested
+        ? [
+            'The writer explicitly requested proposed wording in this turn.',
+            'Do not delay that requested proposal by asking what you need before suggesting a change; the writer has already authorized this bounded wording act.',
+            'Keep the requested proposal within the declared revision latitude. If no lawful proposal can satisfy the request, explain that instead of repeating the current proposal.',
+          ].join(' ')
+        : '';
+      const exactWords = [text, editorialDirective(editorialDepth), actionDirective].filter(Boolean).join('\n\n');
       const carry = selectedCarrySource
         && a2Relationship
         && selectedCarrySource.relationshipId === a2Relationship.id
@@ -771,7 +779,7 @@ export default function FlagshipWriteEditController() {
         {
           latitude: editLatitude,
           mayRemoveParagraphs,
-          mayProposeImmediately,
+          mayProposeImmediately: mayProposeImmediately || proposalRequested,
         },
         {
           ...(options ?? {}),
@@ -1243,7 +1251,7 @@ export default function FlagshipWriteEditController() {
             )}
             onDepth={setEditorialDepth}
             onInstruction={setEditorialDraft}
-            onSendEditorial={(text) => void sendEditorial(text)}
+            onSendEditorial={(text, options) => void sendEditorial(text, options)}
             onSelectVersion={(id) => {
               setSuggestedVersionId(id);
               setAdoptionOutcome(null);

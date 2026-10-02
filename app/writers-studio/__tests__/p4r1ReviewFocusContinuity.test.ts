@@ -6,6 +6,7 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 describe('C4 Review finding → Focus continuity', () => {
   const reviewHost = read('app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx');
+  const flagshipReview = read('app/dev/writers-studio-pc3-live/Pc3LiveReviewHost.tsx');
   const reviewRoom = read('app/writers-studio/full-redesign/LiveReviewRoom.tsx');
   const writeController = read('app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx');
   const writeView = read('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
@@ -14,7 +15,7 @@ describe('C4 Review finding → Focus continuity', () => {
     expect(reviewHost).toContain("ref.kind === 'passage' && ref.sectionId === finding.sectionId");
     expect(reviewHost).toContain('canWorkWith ? { ...finding, canWorkWith: true } : finding');
     expect(reviewRoom).toContain('{finding.canWorkWith ? (');
-    expect(reviewRoom).toContain('Work with this');
+    expect(reviewRoom).toContain('Show edit options');
   });
 
   it('keeps Open in manuscript distinct from editorial Focus', () => {
@@ -45,5 +46,37 @@ describe('C4 Review finding → Focus continuity', () => {
     expect(reviewHost).toContain('commissionReviewDiscuss');
     expect(reviewRoom).toContain('Discuss with MAIA');
     expect(reviewHost).toContain('onDiscuss={discussFinding}');
+  });
+
+  it('lets the canonical Review room commission a fresh reread of the chapter', () => {
+    expect(reviewHost).toContain('How does the chapter hold now?');
+    expect(reviewHost).toContain('Quick reread');
+    expect(reviewHost).toContain('not a full multi-lens Review');
+    expect(reviewHost).toContain("'overview'");
+    expect(reviewHost).toContain('data-review-quick-result');
+    expect(reviewHost).toContain('Deep Review');
+    expect(reviewHost).toContain('Run deep Review');
+    expect(reviewHost).toContain('runChapterReview(');
+    expect(reviewHost).toContain('saveChapterReviewManifest');
+    expect(reviewHost).toContain("next.set('reviewRun', kept.run.id)");
+    expect(reviewHost).toContain('What is working now');
+    expect(reviewHost).toContain('What still catches');
+    expect(reviewHost).toContain('Where I would look next');
+    expect(reviewHost).toContain('Save current draft & quick reread');
+    expect(reviewHost).toContain('checkpointServerDraft');
+    expect(reviewHost).toContain('draftRevision');
+    expect(reviewHost).not.toContain('draftRevision: context.version');
+    expect(flagshipReview).toContain('How does the chapter hold now?');
+    expect(flagshipReview).toContain('Reread this chapter');
+    expect(flagshipReview).toContain('runChapterReview(');
+    expect(flagshipReview).toContain('saveChapterReviewManifest');
+    expect(flagshipReview).toContain("q.set('reviewRun', kept.run.id)");
+    expect(flagshipReview).toContain('what improved');
+    expect(flagshipReview).toContain('what stayed strong');
+    expect(flagshipReview).toContain('introduced a new tradeoff');
+    expect(flagshipReview).toContain('Save current draft & reread');
+    expect(flagshipReview).toContain('checkpointServerDraft');
+    expect(flagshipReview).toContain('draftRevision');
+    expect(flagshipReview).not.toContain('draftRevision: context.version');
   });
 });
