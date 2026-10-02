@@ -135,3 +135,68 @@ the complete signed-in path. One real member must still witness:
 
 That walk must be recorded from the member's own experience rather than inferred from green CI, database rows,
 or server-side probes. Until then P6 is **PARTIAL: machine preflight PASS · human experience OPEN**.
+
+## Post-witness reconciliation addendum — 2026-10-01 19:56 ET
+
+### Canonical moved after the Writer's Studio release
+
+Current canonical advanced to `5898fbbf6` through PR #1673 after production converged on `298414555`.
+
+PR #1673 admits `database/migrations/20261001000001_developmental_memory_source_exchange.sql`
+as a **schema candidate only**. Its own governing record explicitly says merge does not authorize migration execution.
+Therefore:
+
+- production correctly remains on `298414555`;
+- no same-SHA redeploy was repeated when the runtime re-witness found that exact target already serving;
+- `5898fbbf6` is **not** silently promoted as the next deploy target;
+- any future deploy containing that migration must first discharge its separate migration-execution authority and review gate.
+
+### Independent post-deploy runtime re-witness
+
+Observed directly against the running container:
+
+- `GIT_COMMIT=298414555`;
+- `DEPLOY_LANE=deploy-lane`;
+- container healthy, restart count 0;
+- internal `/api/health` reports `health=ok`, database OK, safe mode false, version `298414555`;
+- `HOUSE_STUDIO_H1_ENABLED=true`;
+- `EARLY_FIELD_ENABLED=true`;
+- H1 cohort count = 4, unique = 4;
+- Early Field cohort count = 4, unique = 4;
+- the two cohort lists are identical in order;
+- signed-out `/api/house-studio/admission` returns 401;
+- signed-out `/writers-studio` redirects 307 to sign-in.
+
+### Exact deployed-SHA preservation recheck
+
+A detached checkout of exact deployed SHA `298414555` was exercised with a package-lock-identical dependency tree.
+
+Focused bundle result:
+
+- 10 suites PASS;
+- 127 assertions PASS;
+- 1 assertion FAILS in `houseStudioH1Access.test.ts`.
+
+The red assertion is a **stale literal structural expectation**, not a runtime H1 failure. The implementation intentionally uses:
+
+`!cabinOffline && canUseHouseStudioH1(member.id)`
+
+while the old test demanded the pre-offline literal without the guard.
+
+The H1 admission route, monotonic independent-gate suite, A2 relationship return, Review Work conversation,
+selection-immediate-support, situated Work, inline editorial, and mode-navigation suites all passed.
+
+Repair is isolated in **PR #1683**, commit `4e18fc9ba`, Class C, test-only.
+Its focused H1 verification bundle is **43/43 PASS**.
+
+The constitutional H1 matrix confirms the conforming reference and kills all named H1 defeat candidates through
+its live/reference phase. Its historical-baseline reconstruction phase hangs while reading old repository state,
+so no full-matrix PASS is claimed from this re-run. That verifier/tooling defect is separate from the production
+member-path standing.
+
+### P6 standing after reconciliation
+
+**P6 remains PARTIAL: machine/runtime preflight PASS · real signed-in invited-writer experience OPEN.**
+
+No server-side probe, database query, or test account impersonation is accepted as a substitute for the actual
+member journey.
