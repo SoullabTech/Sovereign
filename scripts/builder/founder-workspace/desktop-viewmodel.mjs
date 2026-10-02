@@ -18,6 +18,7 @@ import { readTree, project } from './programme-state-projector.mjs';
 import { buildRegistry, observeAll, readObservationHistory } from './instrument-registry.mjs';
 import { validateViewModel } from './viewmodel-v1.mjs';
 import { buildEvidenceGraph, parseExplicitProgrammeRelation } from './graph-join.mjs';
+import { projectJevCalibration, jevCalibrationMonitorRows } from './jev-calibration.mjs';
 
 const SAFE_EXT = new Set(['.md', '.txt', '.json', '.jsonl', '.mjs', '.js', '.cjs', '.ts', '.tsx', '.html', '.sh', '.yml', '.yaml']);
 const MAX_PREVIEW_BYTES = 64 * 1024;
@@ -134,6 +135,7 @@ export async function buildDesktopViewModel(input) {
     }
   }
 
+  /** @type {any} */
   const vm = composeViewModel({
     status: input.status,
     organs,
@@ -146,6 +148,11 @@ export async function buildDesktopViewModel(input) {
     registry,
     observation_history: history,
   });
+
+  // JEV calibration is presentation-only and fail-conservative. Missing evidence
+  // projects UNASSESSED; it never promotes itself or grants execution authority.
+  vm.jev_calibration = projectJevCalibration({ env, now });
+  vm.monitor.push(...jevCalibrationMonitorRows(vm.jev_calibration));
 
   if (root) {
     const explicitRelations = projectCanonicalProgrammeRelations(root, input.observedAgainst, vm.programme_state);
