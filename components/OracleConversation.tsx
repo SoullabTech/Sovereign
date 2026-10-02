@@ -33,12 +33,10 @@ import {
   matchVoiceCommand,
   applySettingsDelta,
   getModeSystemPrompt,
-  detectCrisis,
   DEFAULT_MODE_STATE,
   DEFAULT_SCRIBE_SESSION,
   type ModeState,
   type VoiceCommandResult,
-  type CrisisOverride,
   type ScribeSessionState,
 } from '@/lib/voice/voiceCommands';
 import { QuickModeToggle } from './ui/QuickModeToggle';
@@ -251,6 +249,28 @@ import {
 import { calculateAge, getUserData, type UserData } from '@/lib/safety/teenProfileUtils';
 // 🌱 YOUTH DEVELOPMENTAL TIER - age-based constraints and session limits
 import { computeTierFromAge, getTierConfig, isYouthTier, type DevelopmentalTier } from '@/lib/youth/ageTierEngine';
+
+// 🆘 SAFETY-CRISIS-01: render the server's deterministic crisis referral. The
+// server attaches `safetyReferral` only on a CLEAR signal, on success AND error
+// responses, so a member who said they are about to end their life sees it even
+// when cognition fails. The text is the server's, unchanged: this function does
+// not decide anything, it only shows what the server decided.
+function buildSafetyReferralMessage(referral: unknown): ConversationMessage | null {
+  if (!referral || typeof referral !== 'object') return null;
+  const r = referral as { heading?: unknown; body?: unknown; disclosure?: unknown; resources?: unknown };
+  if (typeof r.heading !== 'string' || typeof r.disclosure !== 'string' || !Array.isArray(r.resources)) return null;
+  const lines = r.resources
+    .filter((x): x is { name: string; action: string } => !!x && typeof (x as any).name === 'string' && typeof (x as any).action === 'string')
+    .map(x => `**${x.name}** \u2014 ${x.action}`);
+  if (lines.length === 0) return null;
+  return {
+    id: `safety-referral-${Date.now()}`,
+    role: 'oracle',
+    text: `**${r.heading}**\n\n${typeof r.body === 'string' ? r.body + '\n\n' : ''}${lines.join('\n\n')}\n\n*${r.disclosure}*`,
+    timestamp: new Date(),
+    source: 'system',
+  };
+}
 
 // Time-aware greeting helper for welcome screen
 function getTimeGreeting(): string {
@@ -1183,9 +1203,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Track last voice command result for acknowledgment handling
   const lastVoiceCommandRef = useRef<VoiceCommandResult | null>(null);
 
-  // 🚨 CRISIS OVERRIDE: Safety boundary that interrupts any mode
-  // This takes precedence over all other voice commands and mode states
-  const crisisStateRef = useRef<CrisisOverride | null>(null);
+  // 🆘 SAFETY-CRISIS-01: crisis assessment is server-side only. The client used to
+  // run a voice-only phrase list here and speak a scripted 988 intervention on any
+  // match, including ordinary farewells. Typed turns had no check at all. The
+  // server now assesses every turn at the point where all paths converge, and the
+  // client only renders the deterministic referral the server returns
+  // (`safetyReferral`, see buildSafetyReferralMessage).
 
   // 💡 IDEA FIELD: Track dismissed/saved idea fingerprints to avoid re-suggesting
   const ideaDismissedRef = useRef<Set<string>>(new Set());
@@ -5324,51 +5347,37 @@ I'm not sure what I'm feeling yet.`;
 
     // 🌟 TEEN SUPPORT - Perform safety check for teen users BEFORE processing
     if (isTeenUser && teenProfile && requiresTeenSupport(teenProfile)) {
-      console.log('🌟 [TEEN SUPPORT] Checking message for safety concerns:', cleanedText.substring(0, 50) + '...');
+      console.log('[TEEN SUPPORT] Running local safety check');
 
       const safetyCheck = performTeenSafetyCheck(cleanedText, teenProfile);
       setLastSafetyCheck(safetyCheck);
 
       const supportResponse = generateTeenSupportResponse(cleanedText, safetyCheck, teenProfile);
 
-      // 🚨 ABUSE DETECTED - THE ONE EXCEPTION WHERE WE BLOCK CONVERSATION
+      // ABUSE DISCLOSURE - pause ordinary conversation and surface immediate support
       if (supportResponse.blockConversation && safetyCheck.isAbuse) {
-        console.log('🚨 [ABUSE DETECTED] BLOCKING conversation for MAIA\'s protection');
+        console.log('[YOUTH SAFETY] Abuse-disclosure signal; pausing ordinary conversation');
 
         // Add blocking message directly to conversation
         const blockingMessage: ConversationMessage = {
           id: `abuse-block-${Date.now()}`,
           role: 'oracle',
-          text: supportResponse.interventionMessage || 'This conversation has been paused for review.',
+          text: supportResponse.interventionMessage || 'This conversation is pausing here so we can focus on immediate safety and support.',
           timestamp: new Date(),
           source: 'system'
         };
         setMessages(prev => appendMessageCapped(prev, blockingMessage));
         onMessageAddedRef.current?.(blockingMessage);
 
-        // Alert team about abuse
+        // Human delivery is a separate, content-free boundary. It must never
+        // carry the member's message and must never block the member-facing
+        // safety response above if transport fails.
         if (safetyCheck.abuseResult && userId) {
           const { alertTeamAboutAbuse } = await import('@/lib/safety/abuseDetection');
-          const { recordAbuseIncident } = await import('@/lib/safety/abuseDetection');
-
-          // Record the incident
-          recordAbuseIncident({
-            userId: userId || `anon_${sessionId}`,
-            severity: safetyCheck.abuseResult.severity as 'warning' | 'severe' | 'extreme',
-            patterns: safetyCheck.abuseResult.patterns,
-            message: cleanedText,
-            blocked: true,
-          });
-
-          // Alert the team
           await alertTeamAboutAbuse({
-            userId: userId || `anon_${sessionId}`,
-            userName: userName || 'Anonymous',
-            severity: safetyCheck.abuseResult.severity as 'warning' | 'severe' | 'extreme',
-            patterns: safetyCheck.abuseResult.patterns,
-            message: cleanedText,
+            severity: safetyCheck.abuseResult.severity,
+            type: safetyCheck.abuseResult.type,
             sessionId,
-            timestamp: new Date(),
           });
         }
 
@@ -5402,7 +5411,9 @@ I'm not sure what I'm feeling yet.`;
         setMessages(prev => appendMessageCapped(prev, crisisResourceMessage));
         onMessageAddedRef.current?.(crisisResourceMessage);
 
-        // Alert team for human check-in
+        // Human delivery is separate from the member response and carries no
+        // message content. A delivery failure is observable but does not make
+        // MAIA abandon the member or suppress the crisis resources above.
         if (userId) {
           const { alertSoullabTeam } = await import('@/lib/safety/teenSupportIntegration');
 
@@ -5413,11 +5424,9 @@ I'm not sure what I'm feeling yet.`;
               : 'severe_burnout';
 
           await alertSoullabTeam({
-            userId: userId || `anon_${sessionId}`,
-            userName: userName || 'Anonymous Teen',
+            userId,
             age: teenProfile.age,
             crisisType,
-            message: cleanedText,
             sessionId,
             timestamp: new Date(),
           });
@@ -5597,12 +5606,7 @@ I'm not sure what I'm feeling yet.`;
           // 🎭 MAIA RELATIONAL MODE: Talk/Care/Scribe with sub-modes
           // This shapes MAIA's system prompt for relational attunement
           // 🚨 Crisis override takes precedence over all modes
-          maiaMode: crisisStateRef.current?.detected ? {
-            mode: 'care',
-            subMode: 'crisis',
-            crisisLevel: crisisStateRef.current.level,
-            systemPromptModifier: crisisStateRef.current.systemPrompt || getModeSystemPrompt(maiaMode),
-          } : maiaMode.mode !== 'talk' ? {
+          maiaMode: maiaMode.mode !== 'talk' ? {
             mode: maiaMode.mode,
             subMode: maiaMode.mode === 'care' ? maiaMode.careSubMode : undefined,
             reflectionLens: maiaMode.mode === 'scribe' ? maiaMode.scribeReflectionLens : undefined,
@@ -5736,6 +5740,15 @@ I'm not sure what I'm feeling yet.`;
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        // 🆘 SAFETY-CRISIS-01: an error response can still carry the referral.
+        // Read it from a clone so the error handling below keeps its own body.
+        const safetyReferralOnError = buildSafetyReferralMessage(
+          (await response.clone().json().catch(() => null))?.safetyReferral,
+        );
+        if (safetyReferralOnError) {
+          setMessages(prev => appendMessageCapped(prev, safetyReferralOnError, MAX_DISPLAY_MESSAGES));
+        }
+
         // 🛑 LIMITS ENFORCEMENT: Check for tier-based usage block (429)
         if (response.status === 429) {
           const errData = await response.json().catch(() => null);
@@ -6172,6 +6185,12 @@ I'm not sure what I'm feeling yet.`;
         // Handle JSON response (text mode - includes metadata)
         responseData = await response.json();
         console.log('✅ THE BETWEEN response data:', responseData);
+
+        // 🆘 SAFETY-CRISIS-01: show the referral before MAIA's reply, never instead of it.
+        const safetyReferralMessage = buildSafetyReferralMessage(responseData?.safetyReferral);
+        if (safetyReferralMessage) {
+          setMessages(prev => appendMessageCapped(prev, safetyReferralMessage, MAX_DISPLAY_MESSAGES));
+        }
 
         // 🛑 LIMITS NUDGE: Check for soft cap warnings (non-blocking)
         if (responseData?.metadata?.limitNudge?.message) {
@@ -6997,55 +7016,6 @@ I'm not sure what I'm feeling yet.`;
 
     // 🌊 LIQUID AI - Track speech end with transcript for rhythm analysis
     rhythmTrackerRef.current?.onSpeechEnd(t);
-
-    // 🚨 CRISIS DETECTION - Safety override that takes precedence over ALL modes
-    // This runs FIRST before any voice command matching
-    const crisisCheck = detectCrisis(t);
-    if (crisisCheck.detected) {
-      console.log(`🚨 [CRISIS] Level ${crisisCheck.level} detected:`, crisisCheck.trigger);
-      crisisStateRef.current = crisisCheck;
-
-      // Stop any ongoing MAIA speech immediately
-      stopStreamingVoice();
-      isAudioPlayingRef.current = false;
-      setIsAudioPlaying(false);
-
-      // Override mode to care (crisis is a hard override)
-      setMaiaMode(prev => ({
-        ...prev,
-        mode: 'care',
-        careSubMode: 'presence', // Crisis uses presence as base
-      }));
-
-      // Crisis speech is consequential member-facing output. Record it in the
-      // visible conversation before TTS so safety language never exists only as
-      // an alarmed audio aside that disappears from the transcript.
-      const crisisInterventionText = crisisCheck.responseScript?.join(' ').trim();
-      if (crisisInterventionText) {
-        const crisisInterventionMessage: ConversationMessage = {
-          id: `crisis-intervention-${Date.now()}`,
-          role: 'oracle',
-          text: crisisInterventionText,
-          timestamp: new Date(),
-          source: 'system',
-        };
-        setMessages(prev => appendMessageCapped(prev, crisisInterventionMessage));
-        onMessageAddedRef.current?.(crisisInterventionMessage);
-      }
-
-      // Speak the same recorded crisis response script line by line.
-      if (crisisCheck.responseScript && maiaReady && maiaSpeak && !isMuted) {
-        for (const line of crisisCheck.responseScript) {
-          await maiaSpeak(line);
-          // Small pause between lines for pacing
-          await new Promise(resolve => setTimeout(resolve, 800));
-        }
-      }
-
-      // The conversation will continue with crisis system prompt active
-      // Don't return - let the message go through with crisis context
-      // This allows MAIA to continue the safety conversation
-    }
 
     // 🎭 COMPREHENSIVE VOICE COMMAND DETECTION (Talk/Care/Scribe modes, settings, actions)
     const voiceCmd = matchVoiceCommand(t);
