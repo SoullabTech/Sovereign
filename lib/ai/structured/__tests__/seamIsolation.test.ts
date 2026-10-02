@@ -15,8 +15,15 @@ const strip = (s: string) =>
   s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const src = (p: string) => strip(readFileSync(join(ROOT, p), 'utf8'));
 
-/** Canonical as the seam found it, for the untouched plain-text seam pins. */
-const CANONICAL = '7ed38723ee3cbc02a10be57006136d21b4fce7d4';
+/**
+ * Plain-text seam baseline after the founder-accepted SERVING-IDENTITY / R2
+ * amendment. R2 deliberately changed modelService.ts, sovereignRouter.ts and
+ * lib/ai/types.ts to carry live serving truth; claudeClient.ts remained byte-
+ * identical. The completed R2 head was later canonicalized and R2P1 closed
+ * after real cloud/local/fallback witnessing. This pin moves to that governed
+ * R2 state, not to an arbitrary later canonical tip.
+ */
+const CANONICAL = '0ecff4ebacca0d6dd727ddbfe7000e5dbed37f48';
 
 describe('only the adapter may name the vendor', () => {
   it('the neutral types import no SDK', () => {
@@ -118,18 +125,19 @@ describe('the existing plain-text seam is untouched', () => {
 const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
 
 /**
- * The ACTIVE pin. Founder-authorized 2026-09-18 (WS-PASSAGE-CONVERSATION-01).
- * Kelly explicitly approved the concrete shared-inference amendment in PR #1402:
- * optional required schema enforcement and its existing-adapter strict mapping.
- * Policy and router remain unchanged. Prior provenance baseline:
- * 35d0f81d167dca73431ae7640d7fabf4bae86cff (2026-09-08).
+ * The ACTIVE pin. Founder-authorized 2026-10-02 (editorial disclosure repair).
+ * The governed amendment extends the shared structured-inference result with a
+ * dispatch observation and preserves the adapter wrapper that classifies whether
+ * a provider response was observed. The router carries that fact without vendor
+ * imports; policy.ts is unchanged. Prior governed baseline:
+ * c4f96c853ba9246546383a93875b4ae5519e8c1b (2026-09-18).
  *
  * The authorization is narrow and worth stating exactly: **those four seam-file
  * states at this commit** constitute the new governed baseline. The commit also
  * carries witness-side work, and no unrelated file gains constitutional status
  * by having travelled in the same commit — this guard resolves four paths.
  */
-const GOVERNED_SEAM_BASELINE = 'c4f96c853ba9246546383a93875b4ae5519e8c1b';
+const GOVERNED_SEAM_BASELINE = '8ea119d52cbf0d79ab641943930cf0b294bbfbb1';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([
