@@ -1,6 +1,8 @@
 // @ts-nocheck - Safety prototype, not type-checked
 import { DateTime } from 'luxon';
 import { RealTimeAlertService, type AlertPayload, type TherapistContact } from './alerting/real-time-alerts';
+import { deliverHumanSafetyAlert } from './safety/humanSafetyAlert.server';
+import { memberRef } from './privacy/memberRef';
 
 interface RiskAssessment {
   level: 'none' | 'moderate' | 'high' | 'crisis';
@@ -413,6 +415,23 @@ export class MAIASafetyPipeline {
   }
 
   // Crisis and Risk Alert Methods
+  private async deliverTeamFallback(
+    userId: string,
+    sessionId: string,
+    severity: 'high' | 'crisis',
+    crisisType: string
+  ): Promise<boolean> {
+    const result = await deliverHumanSafetyAlert({
+      memberId: userId,
+      source: 'maia_crisis',
+      severity,
+      crisisType,
+      sessionId,
+    });
+
+    return result.delivered;
+  }
+
   private async triggerCrisisAlert(
     userId: string,
     sessionId: string,
@@ -420,7 +439,7 @@ export class MAIASafetyPipeline {
     riskAssessment: RiskAssessment
   ): Promise<void> {
     if (!this.alertService || !this.therapistDb) {
-      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] crisis alert NOT delivered: no alert service / therapist directory configured — no human was notified');
+      await this.deliverTeamFallback(userId, sessionId, 'crisis', 'crisis_language_detected');
       return;
     }
 
@@ -435,7 +454,7 @@ export class MAIASafetyPipeline {
       }
 
       if (!therapist) {
-        console.error('[SAFETY_NOTIFY_NO_RECIPIENT] crisis alert NOT delivered: no assigned or on-call therapist — no human was notified');
+        await this.deliverTeamFallback(userId, sessionId, 'crisis', 'no_practitioner_available');
         return;
       }
 
@@ -464,6 +483,12 @@ export class MAIASafetyPipeline {
 
       // Send alert
       const alertResponse = await this.alertService.sendAlert(therapist, alertPayload);
+      const practitionerDelivered = Object.values(alertResponse.delivery_status)
+        .some(status => status === 'sent');
+
+      if (!practitionerDelivered) {
+        await this.deliverTeamFallback(userId, sessionId, 'crisis', 'practitioner_delivery_failed');
+      }
 
       // Log crisis intervention
       await this.therapistDb.logCrisisIntervention({
@@ -478,9 +503,12 @@ export class MAIASafetyPipeline {
         created_at: DateTime.now().toISO(),
       });
 
-      console.log(`Crisis alert sent for user ${userId}, alert ID: ${alertPayload.alert_id}`);
+      if (practitionerDelivered) {
+        console.log(`Crisis alert delivered for member ${memberRef(userId)}, alert ID: ${alertPayload.alert_id}`);
+      }
     } catch (error) {
       console.error('Failed to send crisis alert:', error);
+      await this.deliverTeamFallback(userId, sessionId, 'crisis', 'practitioner_alert_exception');
     }
   }
 
@@ -491,14 +519,14 @@ export class MAIASafetyPipeline {
     riskAssessment: RiskAssessment
   ): Promise<void> {
     if (!this.alertService || !this.therapistDb) {
-      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] high-risk alert NOT delivered: no alert service / therapist directory configured — no human was notified');
+      await this.deliverTeamFallback(userId, sessionId, 'high', 'high_risk_language_detected');
       return;
     }
 
     try {
       const therapist = await this.therapistDb.getAssignedTherapist(userId);
       if (!therapist) {
-        console.log('No assigned therapist for high-risk alert, logging for review');
+        await this.deliverTeamFallback(userId, sessionId, 'high', 'no_assigned_practitioner');
         return;
       }
 
@@ -523,13 +551,20 @@ export class MAIASafetyPipeline {
         follow_up_required: true,
       };
 
-      // Only send during on-call hours unless it's emergency-level
+      // Only send during on-call hours unless it's emergency-level.
+      // If the assigned practitioner is intentionally deferred, the team fallback still receives the safety summons.
       if (therapist.emergency_only && riskAssessment.confidence < 0.9) {
-        console.log('Therapist marked emergency-only, deferring high-risk alert');
+        await this.deliverTeamFallback(userId, sessionId, 'high', 'practitioner_deferred_high_risk');
         return;
       }
 
       const alertResponse = await this.alertService.sendAlert(therapist, alertPayload);
+      const practitionerDelivered = Object.values(alertResponse.delivery_status)
+        .some(status => status === 'sent');
+
+      if (!practitionerDelivered) {
+        await this.deliverTeamFallback(userId, sessionId, 'high', 'practitioner_delivery_failed');
+      }
 
       await this.therapistDb.logCrisisIntervention({
         user_id: userId,
@@ -543,9 +578,12 @@ export class MAIASafetyPipeline {
         created_at: DateTime.now().toISO(),
       });
 
-      console.log(`High-risk alert sent for user ${userId}, alert ID: ${alertPayload.alert_id}`);
+      if (practitionerDelivered) {
+        console.log(`High-risk alert delivered for member ${memberRef(userId)}, alert ID: ${alertPayload.alert_id}`);
+      }
     } catch (error) {
       console.error('Failed to send high-risk alert:', error);
+      await this.deliverTeamFallback(userId, sessionId, 'high', 'practitioner_alert_exception');
     }
   }
 

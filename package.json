@@ -100,6 +100,7 @@
     "matrix:jarvis-o5-r3": "node tests/constitutional/jarvis-o5-r3/matrix.mjs",
     "verify:jarvis-o5-r3-freeze": "node scripts/verify-jarvis-o5-r3-freeze.mjs",
     "check:record-shas": "node scripts/check-record-shas.mjs",
+    "check:safety-human-delivery": "node scripts/check-safety-human-delivery-config.mjs",
     "test:jarvis-o5-r3": "node scripts/builder/__tests__/o5-r3-grant-writer-proof.mjs",
     "test:jarvis-o5-r3-operator-recovery": "node scripts/builder/__tests__/o5-r3-operator-retirement-proof.mjs",
     "test:jarvis-o5-r3-dead-lease-normalization": "node scripts/builder/__tests__/o5-r3-dead-lease-normalization-proof.mjs",
