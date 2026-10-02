@@ -13,6 +13,7 @@ test('Kellys World safety delivery snapshot is truthful and action-oriented', ()
   assert.equal(s.standing, 'MERGED_WITNESS_OWED');
   assert.match(s.source, /PR #1671 merged/);
   assert.ok(s.needs_kelly.some(x => /second human custodian/.test(x) && /PR #1709/.test(x)));
+  assert.ok(s.needs_kelly.some(x => /PR #1716/.test(x) && /interim safeguard/.test(x) && /Free-plan/.test(x)));
   assert.ok(s.needs_kelly.some(x => /SAFETY_ALERT_PHONE/.test(x) && /check:safety-human-delivery/.test(x)));
   assert.ok(s.in_motion.some(x => /PR #1671 is merged/.test(x)));
   assert.match(s.source, /PR #1686 closed unmerged/);

@@ -13,6 +13,7 @@
     live_telemetry: false,
     needs_kelly: Object.freeze([
       'Constitute the genuinely distinct second human custodian required by canonical Class-A admission law. PR #1709 records the #1671 admission exception; do not treat a second GitHub credential alone as sufficient human custody.',
+      'Adjudicate whether PR #1716 repository-level Axis 1 custody enforcement is accepted as an interim safeguard. The preferred organization-level ruleset placement is unavailable on the current SoullabTech Free-plan entitlement; do not treat the weaker interim floor as final Architecture B without this ruling.',
       'Rotate the invalid production Resend API key. Read-only production witness at running SHA 56d0cd679 returned HTTP 400 · validation_error · API key is invalid.',
       'Designate the independent safety recipient: production Twilio credentials are already live, but SAFETY_ALERT_PHONE is unset. Set that intentionally (or configure a safety Slack webhook), then run npm run check:safety-human-delivery until it reports READY.',
       'Verify the currently published support, privacy, problem, and hello mailboxes with a present-day external delivery witness; repository publication is current, but mailbox reachability is not established.',
