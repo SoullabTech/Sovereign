@@ -69,3 +69,20 @@ test('Artifact verification witnesses the packaged Cabin next at the pinned vers
   assert.match(VERIFY, /packaged cabin-runtime\/node_modules\/next is missing/);
   assert.match(VERIFY, /assert\.equal\(packagedNextVersion, pinnedNext/);
 });
+
+test('Desktop signs every staged Cabin Mach-O before electron-builder finalizes the app', () => {
+  assert.match(BUILD, /find-identity/);
+  assert.match(BUILD, /Developer ID Application:/);
+  assert.match(BUILD, /description\.includes\('Mach-O'\)/);
+  assert.match(BUILD, /'--timestamp'/);
+  assert.match(BUILD, /'--options', 'runtime'/);
+  assert.match(BUILD, /signCabinMachOBinaries\(cabinSource\)/);
+});
+
+test('External-beta verification requires trust on every packaged Cabin Mach-O', () => {
+  assert.match(VERIFY, /cabinMachOBinaries\(cabinRuntime\)/);
+  assert.match(VERIFY, /secureTimestamp: \/Timestamp=\/\.test\(text\)/);
+  assert.match(VERIFY, /hardenedRuntime: \/flags=\.\*runtime\/\.test\(text\)/);
+  assert.match(VERIFY, /const cabinNativeReady = cabinNativeTrust\.every/);
+  assert.match(VERIFY, /all Cabin Mach-O binaries require Developer ID, secure timestamp, and hardened runtime/);
+});
