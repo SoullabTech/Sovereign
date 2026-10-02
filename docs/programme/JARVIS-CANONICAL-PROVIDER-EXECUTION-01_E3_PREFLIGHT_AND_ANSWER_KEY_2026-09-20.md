@@ -184,6 +184,27 @@ Line-numbered log agrees: loads at 13641 / 14120 / 14466 show `65536`, and **the
 
 **One warm-up, one `ollama ps`, run singly — then mint.**
 
+## 14. ✅ PRE-FLIGHT DISCHARGED — all gates clear (2026-09-20)
+
+Authoritative reading, bound to the named model via `ollama ps`:
+```
+qwen3-coder:30b   06c1097efce0   21 GB   100% GPU   CONTEXT 32768   UNTIL 59 minutes from now
+```
+
+| Gate | Reading | Standing |
+|---|---|---|
+| **A1** context window | `CONTEXT 32768` ≥ 32768 | ✅ **PASSED** |
+| **A2** model warm | resident, 100% GPU, 59 min keepalive | ✅ **PASSED** |
+| **A3** output truncation | known: read the full response in the UI | ✅ **MITIGATED** |
+| **§G** witness calibration | `delta = 2805 > 0` on a known inference event | ✅ **CALIBRATED** |
+| 65536 upgrade | three attempts, no gate movement, cannot improve the artifact (§13) | ⛔ **WAIVED** |
+
+**⛔ The §G baseline for the witness is NOT any of these warm-up readings.** Take a fresh `wc -c` immediately before Authorize Once (§0 step 6). These readings establish that the instrument *works*; the witness itself is a different measurement taken at a different moment.
+
+**⏱ Clock**: ~59 minutes of keepalive. Beyond it the model unloads and the first inference pays a cold load against `RUN_TIMEOUT_MS` (10 min). Re-warm if creation and routing overrun.
+
+**Pre-flight is closed. The next act is Phase 2 — mint and route.**
+
 ## 6. Standing
 
 **E3 AUTHORIZED · PRE-FLIGHT ✅ DISCHARGED · SUBSTRATE ✅ VERIFIED AT EXACT SHA · ANSWER KEY ✅ PRE-REGISTERED · ⛔ MEASUREMENT UNSPENT, OWED TO THE BOUND macOS HOST · ⛔ NO PROVIDER ATTEMPT MADE · ⛔ NO GRANT ISSUED · ⛔ NO SOURCE MODIFIED · PRODUCTION UNTOUCHED.**
