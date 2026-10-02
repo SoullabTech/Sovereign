@@ -14,6 +14,10 @@ const review = fs.readFileSync(
   path.join(ROOT, 'app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx'),
   'utf8',
 );
+const liveCss = fs.readFileSync(
+  path.join(ROOT, 'app/dev/writers-studio-p4r1/p4r1-live.css'),
+  'utf8',
+);
 
 describe('P4R1 durable return and MAIA relationship carriage', () => {
   it('restores and persists a member-owned return place without overriding an explicit address', () => {
@@ -31,6 +35,19 @@ describe('P4R1 durable return and MAIA relationship carriage', () => {
     expect(view).toContain('data-p4r1-maia-relationship');
     expect(view).toContain('Begin relationship with MAIA');
     expect(view).toContain('Leave relationship · nothing is deleted');
+  });
+
+  it('keeps the Work-level MAIA relationship inside the MAIA region instead of a fixed overlay', () => {
+    const writeMaiaStart = view.indexOf('const writeMaia =');
+    const writeMaiaEnd = view.indexOf('const blankArrival =', writeMaiaStart);
+    const writeMaia = view.slice(writeMaiaStart, writeMaiaEnd);
+
+    expect(writeMaia).toContain('{maiaRelationshipCard}');
+    expect(view).not.toContain('{contextualActions}\n          {maiaRelationshipCard}');
+    expect(view).toContain('className="p4r1-maia-relationship"');
+    expect(view).not.toContain('className="p4r1-context-card p4r1-maia-relationship"');
+    expect(liveCss).toContain('.p4r1-root .p4r1-maia-relationship{');
+    expect(liveCss).toContain('.p4r1-root .p4r1-maia-relationship .p4r1-context-head{');
   });
 
   it('carries the same selected relationship into Review discussion', () => {
