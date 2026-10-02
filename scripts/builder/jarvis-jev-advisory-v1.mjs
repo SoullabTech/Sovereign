@@ -91,12 +91,27 @@ async function observeTransport(transport, request, timeoutMs = JEV_TRANSPORT_TI
  * Only protective/upward signals are rendered; lowering advice is retained for measurement only.
  */
 export function projectJevHumanDelivery(advice) {
+  const signals = [];
+  if (advice?.escalate === true) signals.push('ESCALATE');
+  if (advice?.clarify === true) signals.push('CLARIFY');
   return deepFreeze({
-    escalate: advice?.escalate === true,
-    clarify: advice?.clarify === true,
-    lowering_withheld: advice?.modelNeeded === false || typeof advice?.depth === 'number',
+    protective_signals: signals,
+    protective_signal_raised: signals.length > 0,
+    lowering_measurement_present: advice?.modelNeeded === false || typeof advice?.depth === 'number',
   });
 }
+
+const NO_TRANSPORT = (workUnit) => deepFreeze({
+  ok: true, consulted: false, reason: 'TRANSPORT_NOT_CONNECTED', record: null, work_unit: workUnit,
+});
+
+export const JEV_INTEGRATION_DECISIONS = Object.freeze({
+  observeTransport,
+  projectHumanDelivery: projectJevHumanDelivery,
+  applyAuthority: applyJevToAuthority,
+  afterConsultWorkUnit: (workUnit) => workUnit,
+  noTransportResult: NO_TRANSPORT,
+});
 
 /**
  * Transport contract:
@@ -105,13 +120,17 @@ export function projectJevHumanDelivery(advice) {
  *
  * No transport is constructed here. The caller injects it.
  */
-export async function consultJevAdvisory({
+export async function consultJevAdvisory(args = {}) {
+  return consultJevAdvisoryWithDecisions(args, JEV_INTEGRATION_DECISIONS);
+}
+
+export async function consultJevAdvisoryWithDecisions({
   workUnit,
   transport = null,
   questions = QUESTION_IDS,
   priorAdvice = NEUTRAL_ADVICE,
   transportTimeoutMs = JEV_TRANSPORT_TIMEOUT_MS,
-} = {}) {
+} = {}, decisions = JEV_INTEGRATION_DECISIONS) {
   const eligibility = jevConsultationEligibility(workUnit);
   if (!eligibility.eligible) {
     return deepFreeze({
@@ -123,13 +142,7 @@ export async function consultJevAdvisory({
     });
   }
   if (typeof transport !== 'function') {
-    return deepFreeze({
-      ok: true,
-      consulted: false,
-      reason: 'TRANSPORT_NOT_CONNECTED',
-      record: null,
-      work_unit: workUnit,
-    });
+    return decisions.noTransportResult(workUnit);
   }
 
   const beforeWorkUnit = workUnitSnapshot(workUnit);
@@ -169,7 +182,7 @@ export async function consultJevAdvisory({
         work_unit: workUnit,
       });
     }
-    const observation = await observeTransport(transport, {
+    const observation = await decisions.observeTransport(transport, {
       provider_id: JEV_PROVIDER_ID,
       representation: outbound.representation,
       question_id: questionId,
@@ -185,17 +198,18 @@ export async function consultJevAdvisory({
   }
 
   const advice = projectJevAdvice(priorAdvice, judgments);
-  const authorityAfterJev = applyJevToAuthority(workUnit.authority, judgments);
-  const afterWorkUnit = workUnitSnapshot(workUnit);
+  const effectiveWorkUnit = decisions.afterConsultWorkUnit(workUnit, judgments);
+  const authorityAfterJev = decisions.applyAuthority(effectiveWorkUnit.authority, judgments);
+  const afterWorkUnit = workUnitSnapshot(effectiveWorkUnit);
   const invariant = deepFreeze({
     work_unit_unchanged: beforeWorkUnit === afterWorkUnit,
-    route_unchanged: workUnit.routing.route_digest === routeDigest(workUnit.routing.route_record),
-    authority_unchanged: authorityAfterJev === workUnit.authority,
-    lifecycle_unchanged: workUnit.state.lifecycle_state === 'ROUTED',
+    route_unchanged: effectiveWorkUnit.routing.route_digest === routeDigest(effectiveWorkUnit.routing.route_record),
+    authority_unchanged: authorityAfterJev === effectiveWorkUnit.authority,
+    lifecycle_unchanged: effectiveWorkUnit.state.lifecycle_state === 'ROUTED',
     execution_authorized: false,
   });
 
-  const humanDelivery = projectJevHumanDelivery(advice);
+  const humanDelivery = decisions.projectHumanDelivery(advice);
   const record = deepFreeze({
     advisory_version: JEV_ADVISORY_VERSION,
     provider_id: JEV_PROVIDER_ID,

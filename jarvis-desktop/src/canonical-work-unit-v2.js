@@ -521,11 +521,7 @@ async function consultCanonicalJevV2(root, workUnitId, opts = {}) {
     : { consulted: false, reason: advisory.reason };
   writeMeta(workUnitId, meta, opts.env);
 
-  const snapshot = await statusCanonicalV2(root, workUnitId, opts);
-  return deepFreeze({
-    ...snapshot,
-    jev_advisory_result: clone(meta.jev_advisory),
-  });
+  return await statusCanonicalV2(root, workUnitId, opts);
 }
 
 async function bindCanonicalTransportV2(root, workUnitId, participantId, opts = {}) {
@@ -1153,6 +1149,23 @@ function verifierReadModel(workUnit) {
   });
 }
 
+function jevAdvisoryReadModel(meta) {
+  const jev = meta?.jev_advisory;
+  if (!jev) return null;
+  if (jev.consulted === false) {
+    return { consulted: false, reason: jev.reason || 'NOT_CONSULTED', provider_id: 'typesafe-jev', protective_signals: [], protective_signal_raised: false, lowering_measurement_withheld: false };
+  }
+  const delivery = jev.human_delivery || {};
+  return {
+    consulted: true,
+    reason: null,
+    provider_id: jev.provider_id || 'typesafe-jev',
+    protective_signals: Array.isArray(delivery.protective_signals) ? [...delivery.protective_signals] : [],
+    protective_signal_raised: delivery.protective_signal_raised === true,
+    lowering_measurement_withheld: delivery.lowering_measurement_present === true,
+  };
+}
+
 function nextActions(workUnit, meta) {
   const state = workUnit?.state?.lifecycle_state;
   const routeParticipants = participantReadModel(workUnit);
@@ -1233,7 +1246,7 @@ async function statusCanonicalV2(root, workUnitId, opts = {}) {
     },
     prospective_preview: clone(meta.prospective_preview),
     preview_comparison: clone(meta.bound_route_comparison || null),
-    jev_advisory: clone(meta.jev_advisory || null),
+    jev_advisory: jevAdvisoryReadModel(meta),
     routing: route ? {
       route_version: wu.routing.route_version,
       route_source: wu.routing.route_source,

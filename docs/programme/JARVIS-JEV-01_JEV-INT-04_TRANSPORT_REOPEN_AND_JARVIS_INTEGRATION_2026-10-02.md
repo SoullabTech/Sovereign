@@ -155,9 +155,9 @@ A real hosted call requires a later compatible wire witness or a separate founde
 
 Founder review of the first INT-04 candidate identified five integration risks. This revision repairs the seam before any real provider call.
 
-### R1.1 · Shared packet projection
+### R1.1 · Projection equivalence pinned to the LABEL-01 pilot
 
-The JARVIS advisory seam now uses `jev-packet-projection-v1.mjs`, matching the LABEL-01 pilot hypothesis:
+The JARVIS advisory seam now uses `jev-packet-projection-v1.mjs`. It is not yet imported by the separate LABEL-01 pilot branch, so this record does not call the code shared. Instead, equivalence is pinned to pilot source blob `d3d5a533703903f6cd25e34a1cb9f7510fec5c6d` and a fixture-set proof requires identical projection output:
 
 - `task_shape` — `IDENTITY`
 - `contains_sensitive` — `AUTHORITY_PROXY`
@@ -209,8 +209,9 @@ Current witness:
 
 ```text
 JARVIS/JEV integration proof    11 / 11 PASS
-INT-04 defeat candidates         6 / 6 killed
-JARVIS Desktop canonical proof  34 / 34 PASS
+INT-04 real decision candidates  6 / 6 killed
+projection equivalence           PASS · 4 fixtures · pilot blob d3d5a533703903f6cd25e34a1cb9f7510fec5c6d
+JARVIS Desktop canonical proof  35 / 35 PASS
 JEV host membrane               26 / 26 PASS
 frozen J1 matrix                63 / 63 · 0 survivors
 ```
@@ -223,7 +224,7 @@ A later live-call act must separately settle:
 
 1. the J1 wire-envelope amendment, including versioned/hashed question wording;
 2. one-question-per-call versus batching as an instrument property;
-3. exact wire-body hashing in every advisory record;
+3. exact wire-body hashing before send and in every advisory record; a timeout is `attempted / crossing unknown`, never evidence that nothing was sent;
 4. native TypeSafe inbound answer/confidence semantics;
 5. LABEL-01 instrument freeze before real-unit shadow evaluation;
 6. provider assignment / disclosure / network / spend / execution authority;

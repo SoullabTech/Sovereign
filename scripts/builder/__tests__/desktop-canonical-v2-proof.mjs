@@ -445,8 +445,12 @@ await checkAsync('F31','ROUTED Desktop exposes JEV advisory and sidecar cannot m
     const after=fs.readFileSync(file,'utf8');
     assert.equal(before,after);
     assert.equal(advised.jev_advisory.provider_id,'typesafe-jev');
-    assert.equal(advised.jev_advisory.advice.depth,0.7);
-    assert.equal(advised.jev_advisory.invariant.authority_unchanged,true);
+    assert.deepEqual(advised.jev_advisory.protective_signals,[]);
+    assert.equal(advised.jev_advisory.protective_signal_raised,false);
+    assert.equal(advised.jev_advisory.lowering_measurement_withheld,true);
+    assert.equal(JSON.stringify(advised).includes('"advice"'),false);
+    assert.equal(JSON.stringify(advised).includes('"depth"'),false);
+    assert.equal(JSON.stringify(advised).includes('"modelNeeded"'),false);
     assert.equal(advised.authority_effect,'none');
   }finally{cleanup(home);}
 });
@@ -459,7 +463,10 @@ await checkAsync('F32','Desktop with no JEV transport records absence, never syn
     const before=fs.readFileSync(file,'utf8');
     const out=await C.consultCanonicalJevV2(REPO,id,{env});
     assert.equal(fs.readFileSync(file,'utf8'),before);
-    assert.deepEqual(out.jev_advisory,{consulted:false,reason:'TRANSPORT_NOT_CONNECTED'});
+    assert.equal(out.jev_advisory.consulted,false);
+    assert.equal(out.jev_advisory.reason,'TRANSPORT_NOT_CONNECTED');
+    assert.deepEqual(out.jev_advisory.protective_signals,[]);
+    assert.equal(out.jev_advisory.protective_signal_raised,false);
     assert.equal(out.next_actions.some(a=>a.action==='canonical-jev-advice'),true);
   }finally{cleanup(home);}
 });
@@ -475,10 +482,26 @@ await checkAsync('F33','deterministic canonical routes do not offer JEV consulta
 
 check('F34','renderer withholds lowering JEV advice from human delivery',()=>{
   const slice=canonicalRendererSlice();
-  assert.match(slice,/Protective signals:/);
-  assert.match(slice,/Lowering advice is retained for measurement but withheld/);
-  assert.doesNotMatch(slice,/jev\.advice\.depth/);
-  assert.doesNotMatch(slice,/jev\.advice\.modelNeeded/);
+  assert.match(slice,/Protective signals raised:/);
+  assert.match(slice,/No protective signal raised — <b>not a clearance<\/b>/);
+  assert.match(slice,/Lowering measurements are retained for calibration but withheld/);
+  assert.doesNotMatch(slice,/jev\.advice/);
+  assert.doesNotMatch(slice,/modelNeeded/);
+});
+
+await checkAsync('F35','all-abstain advisory renders absence without clearance',async()=>{
+  const {home,env}=tempEnv();
+  try{
+    const {id}=await routedFixture(env,2404);
+    const out=await C.consultCanonicalJevV2(REPO,id,{env,transport:createFakeJevTransport({})});
+    assert.equal(out.jev_advisory.consulted,true);
+    assert.deepEqual(out.jev_advisory.protective_signals,[]);
+    assert.equal(out.jev_advisory.protective_signal_raised,false);
+    const serialized=JSON.stringify(out);
+    assert.equal(serialized.includes('"advice"'),false);
+    assert.equal(serialized.includes('"depth"'),false);
+    assert.equal(serialized.includes('"modelNeeded"'),false);
+  }finally{cleanup(home);}
 });
 
 console.log('\n'+passed+' passed · '+failed+' failed');

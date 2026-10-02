@@ -241,9 +241,9 @@ await checkAsync('JEV-9 — integration projection matches LABEL-01 pilot mappin
 await checkAsync('JEV-10 — human delivery is raise-only; lowering advice is withheld', async () => {
   const result = await routeAuthorizedWorkUnitWithJevV1(authorized(), { transport: fake });
   assert.deepEqual(result.advisory.record.human_delivery, {
-    escalate: true,
-    clarify: true,
-    lowering_withheld: true,
+    protective_signals: ['ESCALATE', 'CLARIFY'],
+    protective_signal_raised: true,
+    lowering_measurement_present: true,
   });
   assert.equal('depth' in result.advisory.record.human_delivery, false);
   assert.equal('modelNeeded' in result.advisory.record.human_delivery, false);
