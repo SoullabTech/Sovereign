@@ -3,7 +3,6 @@
 
 import { detectFacetFromInput } from '../utils/facetUtil';
 import { SymbolicTag } from "../types";
-import { v4 as uuidv4 } from "uuid";
 
 export function extractSymbolicTags(
   input: string,

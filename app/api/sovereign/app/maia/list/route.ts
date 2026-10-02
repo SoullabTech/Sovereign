@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { toAudioResponsePayload } from '@/lib/voice/audioResponsePayload';
+import { detectMaiaCommands } from '@/lib/voice/VoiceCommandDetector';
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
@@ -15,6 +16,12 @@ import { getMemberActiveRelationalContext } from '@/lib/relationships/relationsh
 import { formatRelationalContextForPrompt } from '@/lib/relationships/formatRelationalContextForPrompt';
 import { emitSignal } from '@/lib/observation/observationService';
 import { computeInterruptionMetadata } from '@/lib/consciousness/interruptionLedger';
+import { classifyExplicitIdentityInquiry } from '@/lib/consciousness/explicitIdentityInquiryClassifier';
+import {
+  composeResolvedInquiry,
+  renderPilotDescription,
+  resolveExplicitCapabilityInquiry,
+} from '@/lib/maia/explicitCapabilityInquiry';
 import { validatePlaceContext, buildPlaceAddendum } from '@/lib/maia/presence/place';
 import { logAgentRun } from '@/lib/services/corpusCallosumService';
 
@@ -87,6 +94,9 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { assessCrisisWithCheckIn, classifyCheckInAnswer, crisisLogLine, maiaAskedAboutSafety, CRISIS_REFERRAL } from '@/lib/safety/crisisAssessment';
+import { takeSafetyCheckIn, clearSafetyCheckIn, markSafetyCheckIn } from '@/lib/safety/crisisCheckIn';
+import { withoutClientPromptAuthority } from '@/lib/sovereign/clientPromptAuthority';
 import { launchRelationalFieldShadow } from '@/lib/maia/relational-field-shadow/runner';
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
@@ -289,6 +299,14 @@ export async function POST(req: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    return jsonWithCors(req, {
+      error: 'CABIN_COGNITION_NOT_LOCAL',
+      message: 'MAIA cognition is not yet localized to the Cabin data plane.',
+    }, 503);
+  }
+
   const start = Date.now();
   const requestId = randomUUID();
 
@@ -307,9 +325,15 @@ export async function POST(req: NextRequest) {
     }, 503);
   }
 
+  // SAFETY-CRISIS-01: the deterministic referral for a CLEAR crisis signal. Set
+  // once the member's message is known, and attached to EVERY response from that
+  // point on, including error and timeout responses: a member who has said they
+  // are about to end their life must see the referral even if cognition fails.
+  let safetyReferral: typeof CRISIS_REFERRAL | undefined;
+
   try {
     const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
-    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, ...meta } = body as {
+    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, commandOnly, ...meta } = body as {
       sessionId?: string;
       message?: string;
       includeAudio?: boolean;
@@ -322,6 +346,9 @@ export async function POST(req: NextRequest) {
       // client's own later pair write — which then dedupes instead of doubling.
       // Destructured out of `meta` deliberately: it is plumbing, not prompt context.
       exchangeId?: string;
+      // TII-03: client-classified pure interface command. F1 still accepts the
+      // exact authored turn; the route then exits before O8/F2/cognition.
+      commandOnly?: boolean;
       [key: string]: unknown;
     };
 
@@ -441,6 +468,179 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 🆘 SAFETY-CRISIS-01 (founder ruling 2026-10-01, Option A): server-side crisis
+    // assessment of the member's own words. This is the point where typed turns,
+    // web voice, desktop native voice and salvaged drafts all converge, so every
+    // path is assessed once and identically. No human is alerted: we are not the
+    // alert. CLEAR → deterministic 988 / Crisis Text Line referral on the response
+    // (below) + safety context for MAIA (passed to getMaiaResponse as a typed,
+    // server-only field). AMBIGUOUS → safety context for MAIA only. If MAIA's
+    // reply to an AMBIGUOUS turn asked directly about safety, a short-lived
+    // check-in flag lets an affirmative answer ("yes") escalate to CLEAR on the
+    // next turns. The log line is content-free and suppressed under Sanctuary.
+    // Placed after the durable write above, so it cannot widen the loss window.
+    const crisisCheckInKey =
+      acceptedSessionId ?? (isRecognizedUser ? `member:${userId}` : '');
+    const crisisAssessment = assessCrisisWithCheckIn(message, takeSafetyCheckIn(crisisCheckInKey));
+    if (crisisAssessment.tier === 'clear' || classifyCheckInAnswer(message) === 'negative') {
+      clearSafetyCheckIn(crisisCheckInKey);
+    }
+    if (crisisAssessment.tier === 'clear') safetyReferral = CRISIS_REFERRAL;
+    if (crisisAssessment.tier !== 'none' && !isSanctuary) {
+      console.warn(crisisLogLine(crisisAssessment, '/api/sovereign/app/maia/list'));
+    }
+
+    // TII-03 — PURE COMMAND ACCEPTANCE: post-F1, pre-O8/F2/cognition.
+    // The client owns command-intent classification and local state mutation.
+    // This seam exists only so a pure command remains an exact durable member
+    // turn without paying for or fabricating an ordinary MAIA response.
+    const commandOnlyClassification =
+      commandOnly === true ? detectMaiaCommands(message) : null;
+    const isValidatedCommandOnly =
+      commandOnlyClassification?.disposition === 'EXECUTE' &&
+      commandOnlyClassification.onlyCommands === true;
+
+    if (isValidatedCommandOnly) {
+      const commandAcceptanceCanonHeaders = makeCanonHeaders({
+        requestId,
+        pipeline: 'direct',
+        source: 'direct',
+        mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
+        validation: null,
+        repaired: false,
+      });
+
+      return jsonWithCors(
+        req,
+        {
+          commandOnly: true,
+          route: {
+            endpoint: '/api/sovereign/app/maia/list',
+            type: 'Sovereign Consciousness Interface',
+            operational: true,
+            mode: 'command-only-acceptance',
+            safeMode: SAFE_MODE,
+            voiceEnabled: false,
+          },
+          metadata: {
+            processingProfile: 'COMMAND_ONLY_ACCEPTANCE',
+            processingTimeMs: Date.now() - start,
+            tierProcessing: false,
+            voiceRequested: false,
+            memberTurnDurable,
+          },
+        },
+        200,
+        commandAcceptanceCanonHeaders,
+      );
+    }
+
+    // O8R4 — EXPLICIT CAPABILITY INQUIRY: text-only, post-F1 / pre-F2.
+    //
+    // This is deliberately not intent routing. Only the inert O8 resolver may
+    // recognize the three exact founder-approved definitional inquiries.
+    // ABSTAIN contributes nothing and falls through byte-semantically to F2.
+    // Audio-requested turns bypass this pilot completely.
+    if (includeAudio !== true) {
+      let capabilityDescriptionText: string | null = null;
+
+      try {
+        const capabilityInquiry = resolveExplicitCapabilityInquiry(message);
+        const capabilityDescription = composeResolvedInquiry(capabilityInquiry);
+        capabilityDescriptionText = capabilityDescription
+          ? renderPilotDescription(capabilityDescription)
+          : null;
+      } catch {
+        // Resolver/composer failure makes O8 disappear for this turn.
+        capabilityDescriptionText = null;
+      }
+
+      if (capabilityDescriptionText) {
+        // Session infrastructure only. Failure is intentionally NOT caught here:
+        // the route's existing infrastructure error channel remains dominant.
+        await withTimeoutLabeled(
+          'initializeSessionTable:capabilityDescription',
+          initializeSessionTable(),
+          5000,
+          start,
+        );
+        const capabilityDescriptionSession = await withTimeoutLabeled(
+          'ensureSession:capabilityDescription',
+          ensureSession(sessionId),
+          5000,
+          start,
+        );
+
+        // The deterministic description is the assistant half of the already
+        // accepted exchange. Never create an orphan assistant row.
+        if (memberTurnDurable && isRecognizedUser && !isSanctuary) {
+          try {
+            await withTimeoutLabeled(
+              'durableCapabilityDescriptionTurn',
+              TurnsStore.addExchangeTurn(turnPosture, {
+                userId: userId!,
+                sessionId: acceptedSessionId,
+                role: 'assistant',
+                content: capabilityDescriptionText,
+                exchangeId,
+              }),
+              5000,
+              start,
+            );
+          } catch (durabilityErr: any) {
+            // Mirror F1 assistant-turn asymmetry: serve the deterministic words,
+            // keep the durable member half, and do not fall into model generation.
+            console.error(
+              `❌ [MAIA/durability] capability description NOT durable exchange=${exchangeId.slice(0, 8)}:`,
+              durabilityErr?.message ?? durabilityErr,
+            );
+          }
+        }
+
+        const capabilityDescriptionCanonHeaders = makeCanonHeaders({
+          requestId,
+          pipeline: 'direct',
+          source: 'direct',
+          mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
+          validation: null,
+          repaired: false,
+        });
+
+        return jsonWithCors(
+          req,
+          {
+            message: capabilityDescriptionText,
+            route: {
+              endpoint: '/api/sovereign/app/maia',
+              type: 'Sovereign Consciousness Interface',
+              operational: true,
+              mode: 'capability-description',
+              safeMode: SAFE_MODE,
+              voiceEnabled: false,
+            },
+            session: {
+              id: capabilityDescriptionSession.id,
+              turns: capabilityDescriptionSession.turn_count,
+            },
+            metadata: {
+              processingProfile: 'DETERMINISTIC_DESCRIPTION',
+              processingTimeMs: Date.now() - start,
+              tierProcessing: false,
+              voiceRequested: false,
+            },
+          },
+          200,
+          capabilityDescriptionCanonHeaders,
+        );
+      }
+    }
+
+    // F2-IQ runtime classifier: current accepted utterance only.
+    // Request-scoped and intentionally unused downstream in this lane:
+    // no D2/D1 invocation, persistence, logging, response metadata, or disclosure.
+    const explicitIdentityInquiryClassification = classifyExplicitIdentityInquiry(message);
+    void explicitIdentityInquiryClassification;
+
     // ⚡ LATENCY FIX: Parallelize session init with cognitive profile + name change detection.
     // Previously these ran sequentially (~200-500ms each).
     // Session init must complete before ensureSession, but cognitive profile and
@@ -487,6 +687,7 @@ export async function POST(req: NextRequest) {
         return jsonWithCors(req, {
           message: fieldSafety.message,
           elementalNote: fieldSafety.elementalNote,
+          ...(safetyReferral ? { safetyReferral } : {}),
           route: {
             endpoint: '/api/sovereign/app/maia',
             type: 'Sovereign Consciousness Interface',
@@ -1469,6 +1670,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       getMaiaResponse({
         sessionId: session.id,
         input: message,
+        // 🆘 SAFETY-CRISIS-01: the route's assessment (including a confirmed
+        // check-in) is the one cognition uses. Typed and top-level, never meta.
+        crisisAssessment,
         includeAudio: includeAudio || false,
         voiceProfile: voiceProfile,
         // R1 serving-route witness (2026-08-13): declared at the HTTP boundary. Note
@@ -1499,7 +1703,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           //
           // Statically established from source. Production exploitability NOT demonstrated
           // and deliberately not tested.
-          ...meta,
+          // PROMPT-AUTHORITY-02: prompt-bearing client keys are removed; the server
+          // authors every prompt field, below.
+          ...withoutClientPromptAuthority(meta),
           chatType: 'sovereign-interface',
           endpoint: '/api/sovereign/app/maia',
           safeMode: SAFE_MODE,
@@ -1640,6 +1846,12 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Conditions: Care/counsel mode + turn 3+ + meaningful length + no anchor already present + not sanctuary
     // Applied before telemetry so the shape evaluator sees the final anchored text.
     let sovereignText = orchestratorResult.text ?? '';
+
+    // 🆘 SAFETY-CRISIS-01: if this was an AMBIGUOUS turn and MAIA actually asked
+    // the member directly about safety, hold the check-in for the next turns.
+    if (crisisAssessment.tier === 'ambiguous' && maiaAskedAboutSafety(sovereignText)) {
+      markSafetyCheckIn(crisisCheckInKey);
+    }
 
     // 🧱 MAIA TURN DURABLE (F1 — second half of durable turn acceptance)
     //
@@ -1806,6 +2018,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           const result = await MemoryWritebackService.writeBack({
             userId: effectiveUserId,
             sessionId: session.id,
+            exchangeId,
             userMessage: message,
             assistantResponse: sovereignText,
             facetCode: (meta as any)?.element,
@@ -1828,6 +2041,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
       message: sovereignText,  // Uses closing-anchored text for counsel mode turns
+      // 🆘 SAFETY-CRISIS-01: deterministic referral on a CLEAR signal; absent otherwise.
+      ...(safetyReferral ? { safetyReferral } : {}),
       // 🌀 STATE VECTOR: Consciousness state reading (if check-in detected)
       stateVector: orchestratorResult.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing
@@ -1849,7 +2064,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       runtimeContext: formatRuntimeContextForResponse(runtimeContext),
       // 🌀 Cut 2 — spiralOrientation: PARKED (see import + call-site comments above)
       // spiralOrientation,
-      // 🔮 Top-level provider info for easy screenshot verification
+      // R2 machine-readable live serving truth. Facts only; no disclosure decision.
+      servingTruth: orchestratorResult.servingTruth ?? null,
+      // 🔮 Legacy provider info retained for compatibility.
       providerUsed,
       model: modelUsed,
       modeUsed,
@@ -1991,6 +2208,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.error(`🚨 Provider unavailable (pre-generation) after ${duration}ms:`, err.message);
       return jsonWithCors(req, {
         error: 'PROVIDER_UNAVAILABLE',
+        ...(safetyReferral ? { safetyReferral } : {}),
         status: "Something went wrong in my processing layer just now. I'm not retrieving or responding reliably at the moment. Please try again in a moment.",
         route: {
           endpoint: '/api/sovereign/app/maia',
@@ -2012,6 +2230,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.error(`🚨 All providers unavailable after ${duration}ms:`, err.message);
       return jsonWithCors(req, {
         error: 'PROVIDERS_UNAVAILABLE',
+        ...(safetyReferral ? { safetyReferral } : {}),
         status: 'Language providers offline (Claude + Ollama). Check API keys and model availability.',
         route: {
           endpoint: '/api/sovereign/app/maia',
@@ -2031,6 +2250,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.error(`❌ Sovereign MAIA timeout after ${duration}ms`);
       return jsonWithCors(req, {
         error: 'SOVEREIGN_TIMEOUT',
+        ...(safetyReferral ? { safetyReferral } : {}),
         status: 'Request timed out. Try a shorter message or wait a moment.',
         route: {
           endpoint: '/api/sovereign/app/maia',
@@ -2049,6 +2269,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Final fallback - neutral status message, not MAIA-voice
     return jsonWithCors(req, {
       error: 'SYSTEM_ERROR',
+      ...(safetyReferral ? { safetyReferral } : {}),
       status: 'Service temporarily unavailable. Please try again.',
       route: {
         endpoint: '/api/sovereign/app/maia',

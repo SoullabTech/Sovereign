@@ -37,7 +37,7 @@ import {
   requestedManuscriptId,
   resolveManuscript,
 } from '../canvasIdentity';
-import { CANVAS_HREF } from '../studioMap';
+import { REBUILD_HREF } from '../studioMap';
 
 const canvasSource = readFileSync(join(__dirname, '..', 'canvas', 'CanvasClient.tsx'), 'utf8');
 /** The room's comments explain the defect and therefore quote it. Assertions
@@ -55,7 +55,7 @@ describe('Canvas manuscript parameter — one definition, imported by both sides
   });
 
   it('the href Home renders round-trips through the reader the Canvas uses', () => {
-    const href = canvasForManuscript(CANVAS_HREF, 'ms-alchemy');
+    const href = canvasForManuscript(REBUILD_HREF, 'ms-alchemy');
     expect(requestedManuscriptId(href.slice(href.indexOf('?')))).toBe('ms-alchemy');
     expect(href).toContain(`${CANVAS_MANUSCRIPT_PARAM}=ms-alchemy`);
   });

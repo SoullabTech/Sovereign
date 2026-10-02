@@ -43,7 +43,7 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     id: 'maia',
     label: 'MAIA',
     icon: Flame,
-    route: '/maia',
+    route: '/maia/encounter',
     classification: 'world',
     tooltip: 'Return to center field',
   },
@@ -77,7 +77,7 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
   },
   {
     id: 'anchor',
-    label: 'Anchor',
+    label: 'Daily Anchor',
     icon: Compass,
     route: '/maia/anchor',
     classification: 'world',

@@ -1,27 +1,20 @@
 // GET /api/maia/living-field
 // Returns all living fields for the authenticated member.
-// The Living Field is the constitutional center — participants are additive.
+// Living Field is a member-scoped place where relationships can become visible.
+// The member remains the living center; this route is not a master profile.
 
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import { CANONICAL_FIELD_KEYS } from '@/lib/maia/living-field/canonicalFieldKeys'
-import { probeAuthPosture } from '@/lib/auth/authPostureProbe'
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest'
 import { livingFieldAtomGuards } from '@/lib/maia/living-field/atomEligibility'
 
-function getMemberId(request: NextRequest): string | null {
-  return (
-    probeAuthPosture(request) ||
-    request.nextUrl.searchParams.get('memberId') ||
-    null
-  )
-}
-
 export async function GET(request: NextRequest) {
-  const memberId = getMemberId(request)
+  const memberId = await getMemberIdFromRequest(request)
   if (!memberId) {
-    return NextResponse.json({ error: 'memberId required' }, { status: 400 })
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
 
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

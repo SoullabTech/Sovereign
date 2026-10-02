@@ -28,6 +28,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { divinationType } from '@/lib/oracle/divinationTypography';
 
 type SpreadType = 'single' | 'three-card' | 'mind-body-spirit' | 'elemental' | 'spiralogic' | 'relationship' | 'shadow-work' | 'chakra' | 'celtic-cross' | 'year-ahead' | 'decision' | 'career';
 type ReadingPhase = 'question' | 'spread-selection' | 'drawing' | 'reveal' | 'interpretation';
@@ -360,7 +361,7 @@ export default function TarotOraclePage() {
               className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm">Back to Oracle</span>
+              <span className={divinationType.action}>Back to Oracle</span>
             </button>
 
             <div className="flex items-center gap-2">
@@ -412,7 +413,7 @@ export default function TarotOraclePage() {
                   <h2 className="text-4xl font-bold text-white mb-4">
                     Ask Your Question
                   </h2>
-                  <p className="text-[#D4B896]/70 text-lg">
+                  <p className={`${divinationType.support} text-[#D4B896]/80`}>
                     The cards are listening. Speak from your heart.
                   </p>
                 </div>
@@ -422,14 +423,14 @@ export default function TarotOraclePage() {
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What guidance do you seek from the cards?"
-                    className="w-full h-32 px-4 py-3 bg-white/[0.08] border border-[#D4B896]/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4B896]/50 focus:border-[#D4B896] transition-all resize-none"
+                    className={`${divinationType.fieldBody} divination-reading-field w-full h-32 px-4 py-3 bg-white/[0.08] border border-[#D4B896]/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4B896]/50 focus:border-[#D4B896] transition-all resize-none`}
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] disabled:from-[#D4B896]/30 disabled:to-[#B49876]/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className={`${divinationType.action} w-full min-h-12 mt-6 px-6 py-4 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] disabled:from-[#D4B896]/30 disabled:to-[#B49876]/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2`}
                   >
                     <Sparkles className="w-5 h-5" />
                     Continue to Card Selection
@@ -450,7 +451,7 @@ export default function TarotOraclePage() {
                   <h2 className="text-4xl font-bold text-white mb-4">
                     Choose Your Spread
                   </h2>
-                  <p className="text-[#D4B896]/70 text-lg max-w-2xl mx-auto">
+                  <p className={`${divinationType.support} text-[#D4B896]/80 max-w-2xl mx-auto`}>
                     Each spread offers a different perspective on your question
                   </p>
                 </div>
@@ -472,10 +473,10 @@ export default function TarotOraclePage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <Image src="/holoflower-amber.png" alt="Spiralogic" width={20} height={20} className="opacity-80" />
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-[#D4B896]/60">Spiralogic Draw</span>
+                        <span className={`${divinationType.marker} font-semibold text-[#D4B896]/70`}>Spiralogic Draw</span>
                       </div>
-                      <h3 className="text-xl font-semibold text-white mb-2">Five Elements of Transformation</h3>
-                      <p className="text-[#D4B896]/60 text-sm leading-relaxed max-w-lg">
+                      <h3 className={`${divinationType.itemTitle} font-semibold text-white mb-2`}>Five Elements of Transformation</h3>
+                      <p className={`${divinationType.support} text-[#D4B896]/75 max-w-lg`}>
                         Earth · Water · Fire · Air · Aether — each card names a phase of the spiral you are currently moving through.
                       </p>
                     </div>
@@ -488,12 +489,12 @@ export default function TarotOraclePage() {
                           { label: 'A', color: 'bg-sky-400/60' },
                           { label: '✦', color: 'bg-violet-400/60' },
                         ].map(({ label, color }) => (
-                          <div key={label} className={`w-7 h-7 rounded-md ${color} flex items-center justify-center text-white text-[10px] font-bold`}>
+                          <div key={label} className={`w-7 h-7 rounded-md ${color} flex items-center justify-center text-white ${divinationType.marker} font-bold`}>
                             {label}
                           </div>
                         ))}
                       </div>
-                      <span className="text-[#D4B896]/30 text-[10px] mt-1">5 cards</span>
+                      <span className={`${divinationType.metadata} text-[#D4B896]/50 mt-1`}>5 cards</span>
                     </div>
                   </div>
                 </motion.button>
@@ -505,7 +506,7 @@ export default function TarotOraclePage() {
                       <div key={group.key}>
                         <div className={`flex items-center gap-3 mb-4`}>
                           <div className={`h-px flex-1 ${group.borderColor} border-t`} />
-                          <span className={`text-sm font-semibold uppercase tracking-widest ${group.color}`}>
+                          <span className={`${divinationType.marker} font-semibold ${group.color}`}>
                             {group.label}
                           </span>
                           <div className={`h-px flex-1 ${group.borderColor} border-t`} />
@@ -534,18 +535,18 @@ export default function TarotOraclePage() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <h3 className="text-base font-semibold text-white truncate">
+                                      <h3 className={`${divinationType.itemTitle} font-semibold text-white truncate`}>
                                         {spread.name}
                                       </h3>
                                     </div>
-                                    <p className="text-[#D4B896]/60 text-xs mb-2 leading-relaxed">
+                                    <p className={`${divinationType.support} text-[#D4B896]/75 mb-2`}>
                                       {spread.description}
                                     </p>
                                     <div className="flex items-center gap-2">
-                                      <span className={`px-2 py-0.5 text-[10px] rounded-full ${group.badgeColor}`}>
+                                      <span className={`${divinationType.metadata} px-2 py-0.5 rounded-full ${group.badgeColor}`}>
                                         {spread.badge}
                                       </span>
-                                      <span className="text-[#D4B896]/30 text-[10px]">
+                                      <span className={`${divinationType.metadata} text-[#D4B896]/50`}>
                                         {spread.positions} {spread.positions === 1 ? 'card' : 'cards'}
                                       </span>
                                     </div>
@@ -588,7 +589,7 @@ export default function TarotOraclePage() {
                 <h2 className="text-3xl font-bold text-white mb-4">
                   Drawing the Cards...
                 </h2>
-                <p className="text-[#D4B896]/70 text-lg">
+                <p className={`${divinationType.support} text-[#D4B896]/80`}>
                   The oracle speaks through sacred symbols
                 </p>
               </motion.div>
@@ -630,10 +631,10 @@ export default function TarotOraclePage() {
                       >
                         <div className="bg-white/[0.05] backdrop-blur-xl border border-[#D4B896]/30 rounded-xl p-6 min-h-[300px] flex flex-col shadow-xl">
                           <div className="text-center mb-4">
-                            <div className="text-[#D4B896]/50 text-xs uppercase tracking-wider mb-2">
+                            <div className={`${divinationType.metadata} text-[#D4B896]/65 uppercase tracking-wider mb-2`}>
                               {card.position}
                             </div>
-                            <h3 className="text-lg font-bold text-white">
+                            <h3 className={`${divinationType.itemTitle} font-bold text-white`}>
                               {card.name}
                               {card.reversed && <span className="text-red-600 ml-2">(R)</span>}
                             </h3>
@@ -654,7 +655,7 @@ export default function TarotOraclePage() {
                               {card.keywords.slice(0, 3).map((keyword, i) => (
                                 <span
                                   key={i}
-                                  className="px-2 py-1 bg-[#D4B896]/15 text-[#D4B896] text-xs rounded"
+                                  className={`${divinationType.metadata} px-2 py-1 bg-[#D4B896]/15 text-[#D4B896] rounded`}
                                 >
                                   {keyword}
                                 </span>
@@ -677,34 +678,34 @@ export default function TarotOraclePage() {
                   >
                     <div className="flex items-center gap-3 mb-6">
                       <BookOpen className="w-6 h-6 text-[#D4B896]" />
-                      <h3 className="text-2xl font-bold text-white">Oracle's Wisdom</h3>
+                      <h3 className={`${divinationType.sectionTitle} font-bold text-white`}>Oracle's Wisdom</h3>
                     </div>
 
                     <div className="space-y-6">
                       <div>
-                        <h4 className="text-[#D4B896] font-semibold mb-2">Overall Message:</h4>
-                        <p className="text-white/80 leading-relaxed">
+                        <h4 className={`${divinationType.fieldLabel} text-[#D4B896] mb-2`}>Overall Message:</h4>
+                        <p className={`${divinationType.fieldBody} text-white/85`}>
                           {reading.overallMessage}
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="text-[#D4B896] font-semibold mb-2">Guidance:</h4>
-                        <p className="text-white/80 leading-relaxed">
+                        <h4 className={`${divinationType.fieldLabel} text-[#D4B896] mb-2`}>Guidance:</h4>
+                        <p className={`${divinationType.fieldBody} text-white/85`}>
                           {reading.advice}
                         </p>
                       </div>
 
                       {/* Individual Card Interpretations */}
                       <div className="border-t border-[#D4B896]/20 pt-6 mt-6">
-                        <h4 className="text-[#D4B896] font-semibold mb-4">Card Details:</h4>
+                        <h4 className={`${divinationType.fieldLabel} text-[#D4B896] mb-4`}>Card Details:</h4>
                         <div className="space-y-4">
                           {reading.cards.map((card, index) => (
                             <div key={index} className="bg-[#D4B896]/10 rounded-lg p-4">
-                              <h5 className="text-white font-semibold mb-2">
+                              <h5 className={`${divinationType.itemTitle} text-white font-semibold mb-2`}>
                                 {card.name} - {card.position}
                               </h5>
-                              <p className="text-[#D4B896]/70 text-sm">
+                              <p className={`${divinationType.fieldBody} text-[#D4B896]/80`}>
                                 {card.interpretation}
                               </p>
                             </div>
@@ -717,9 +718,9 @@ export default function TarotOraclePage() {
                     <div className="bg-gradient-to-br from-violet-900/30 via-purple-800/20 to-indigo-900/30 backdrop-blur-xl border border-violet-500/30 rounded-xl p-6 mt-8">
                       <div className="flex items-center gap-3 mb-4">
                         <MessageSquare className="w-6 h-6 text-violet-600" />
-                        <h4 className="text-xl font-semibold text-violet-900">Explore with MAIA</h4>
+                        <h4 className={`${divinationType.itemTitle} font-semibold text-violet-100`}>Explore with MAIA</h4>
                       </div>
-                      <p className="text-violet-800/70 text-sm mb-4">
+                      <p className={`${divinationType.support} text-violet-200/80 mb-4`}>
                         Bring this reading into conversation with MAIA to explore its meaning for your specific situation and integrate its wisdom.
                       </p>
                       <button
@@ -737,7 +738,7 @@ export default function TarotOraclePage() {
                           );
                           router.push(`/maia?context=${context}`);
                         }}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                        className={`${divinationType.action} w-full min-h-12 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2`}
                       >
                         <MessageSquare className="w-5 h-5" />
                         Consult with MAIA

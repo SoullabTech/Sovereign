@@ -11,6 +11,11 @@ const WUC = require('../src/work-unit-control.js');
 
 const REPO = path.resolve(import.meta.dirname, '..', '..');
 const SHA = '9580ad382089e8ce2e454d28ff3d97c2aa8efe11';
+const SAFE_LOCAL_CAPACITY = Object.freeze({
+  version: 'E1LC-SAMPLE.v1', platform: 'darwin',
+  total_ram_bytes: 48 * 1024 ** 3, free_ram_bytes: 32 * 1024 ** 3,
+  swap_total_bytes: 8 * 1024 ** 3, swap_free_bytes: 8 * 1024 ** 3,
+});
 
 function tempEnv() {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-desktop-'));
@@ -159,6 +164,7 @@ test('E1 full canonical local flow: Authorize Once != Confirm Execute, DR1/W4 ev
       REPO, id, issued.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async (_root, args) => {
           runnerCalls += 1;
@@ -196,6 +202,7 @@ test('E1 full canonical local flow: Authorize Once != Confirm Execute, DR1/W4 ev
       REPO, id, challengerGrant.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async (_root, args) => {
           runnerCalls += 1;
@@ -256,6 +263,7 @@ test('E1 provider failure consumes grant and DR1/W4 preserve failed attempt with
       REPO, id, issued.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async (_root, args) =>
           stubResult(args, { exitCode: 9, testResults: 'fail' }),
@@ -269,6 +277,7 @@ test('E1 provider failure consumes grant and DR1/W4 preserve failed attempt with
       REPO, id, issued.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async () => {
           throw new Error('must not run');
@@ -317,6 +326,7 @@ test('E1 external preview/Authorize Once do not inspect credentials; Confirm Exe
       REPO, id, primaryGrant.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         executeCanonicalProvider: async (_root, args) => stubResult(args),
       },
@@ -347,6 +357,7 @@ test('E1 external preview/Authorize Once do not inspect credentials; Confirm Exe
       REPO, id, issued.grant.grant_id,
       {
         env,
+        localCapacitySample: SAFE_LOCAL_CAPACITY,
         actorId: 'human:e1-proof',
         keychainProbe,
         executeCanonicalProvider: async (_root, args) => {
@@ -359,6 +370,66 @@ test('E1 external preview/Authorize Once do not inspect credentials; Confirm Exe
     assert.equal(keychainCalls, 1);
     assert.equal(runnerCalls, 1);
   } finally {
+    cleanup(home);
+  }
+});
+
+test('MODEL MODE GPT-OSS remains ollama-direct even when OpenCode ancestor sentinel exists', async () => {
+  const { home } = tempEnv();
+  const probeRuntime = WUC.createCanonicalOpenCodeRuntime();
+  const sentinel = path.join(probeRuntime.neutralRoot, 'opencode.json');
+  fs.rmSync(probeRuntime.runRoot, { recursive: true, force: true });
+  assert.equal(fs.existsSync(sentinel), false, 'neutral root must start sentinel-free');
+  fs.writeFileSync(sentinel, 'MODEL_MODE_MUST_NOT_ENTER_OPENCODE\n');
+
+  let localCalls = 0;
+  let openCodeCalls = 0;
+  try {
+    const out = await WUC.executeCanonicalResolvedProvider(
+      REPO,
+      {
+        workUnitId: 'm1-gpt-oss-sentinel-proof',
+        grantId: 'm1-gpt-oss-sentinel-grant',
+        workUnit: {
+          identity: { objective: 'Prove MODEL MODE remains direct.' },
+          custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
+          scope: {
+            base_ref: SHA,
+            allowed_paths: ['scripts/builder/work-unit-v2.mjs'],
+          },
+          evaluation: { acceptance_conditions: [], stop_conditions: [] },
+        },
+        binding: {
+          route_participant_id: 'local-review-1',
+          transport_binding_id: 'tb-gpt-model-mode',
+          provider_id: 'gpt-oss-local',
+          model_id: 'gpt-oss:20b',
+          adapter_id: 'ollama-direct',
+        },
+        resolved: {
+          execution_adapter: 'ollama-direct',
+          model_ref: 'ollama/gpt-oss:20b',
+          model_id: 'gpt-oss:20b',
+        },
+        sourceEnv: { ...process.env, AIN_DELEGATION_HOME: home },
+      },
+      {
+        localWorkerRun: async ({ model }) => {
+          localCalls += 1;
+          assert.equal(model, 'gpt-oss:20b');
+          return { ok: true, output: 'SYNTHETIC_GPT_OSS_MODEL_MODE_OK' };
+        },
+        execFile: () => {
+          openCodeCalls += 1;
+          throw new Error('MODEL MODE must not launch OpenCode');
+        },
+      },
+    );
+    assert.equal(out.ok, true);
+    assert.equal(localCalls, 1);
+    assert.equal(openCodeCalls, 0);
+  } finally {
+    fs.rmSync(sentinel, { force: true });
     cleanup(home);
   }
 });
@@ -391,6 +462,259 @@ test('legacy R5B/run-provider surfaces still refuse canonical W0.v2 and cannot i
   }
 });
 
+
+
+test('explicit GPT-OSS AGENT MODE helper remains standalone and D1d-contained', async () => {
+  const { home } = tempEnv();
+  const sourceEnv = {
+    ...process.env,
+    AIN_DELEGATION_HOME: home,
+    HOME: '/tmp/leaky-user-home',
+    TMPDIR: '/tmp/leaky-tmp',
+    XDG_CONFIG_HOME: '/tmp/leaky-user-config',
+    XDG_DATA_HOME: '/tmp/leaky-user-data',
+    XDG_CACHE_HOME: '/tmp/leaky-user-cache',
+    XDG_STATE_HOME: '/tmp/leaky-user-state',
+    OPENCODE_CONFIG: '/tmp/leaky-opencode.json',
+    OPENCODE_CONFIG_CONTENT: '{"leak":true}',
+    OPENCODE_CLI_CONFIG_CONTENT: '{"cliLeak":true}',
+    OPENCODE_TEST_HOME: '/tmp/leaky-test-home',
+    OPENCODE_CONFIG_PROJECT_DISABLE: '1',
+    OPENCODE_DISABLE_PROJECT_CONFIG: '1',
+    HTTP_PROXY: 'http://ambient.invalid',
+    HTTPS_PROXY: 'http://ambient.invalid',
+    ALL_PROXY: 'http://ambient.invalid',
+    WS_PROXY: 'ws://ambient.invalid',
+    WSS_PROXY: 'wss://ambient.invalid',
+    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://ambient.invalid/otel',
+    OPENCODE_PTY_BIN: '/tmp/ambient-pty',
+    OPENCODE_TREE_SITTER_WASM_PATH: '/tmp/ambient-wasm',
+    NVIDIA_API_KEY: 'must-not-cross',
+    TINKER_API_KEY: 'must-not-cross',
+    AWS_REGION: 'must-not-cross',
+  };
+  let seen = null;
+  try {
+    const out = await WUC.executeCanonicalResolvedProvider(
+      REPO,
+      {
+        workUnitId: 'e3-v2-gpt-oss-proof',
+        grantId: 'e3-gpt-oss-grant-proof',
+        workUnit: {
+          identity: { objective: 'Prove canonical GPT-OSS v2 D1d containment.' },
+          custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
+          scope: {
+            base_ref: SHA,
+            allowed_paths: ['scripts/builder/work-unit-v2.mjs'],
+          },
+          evaluation: {
+            acceptance_conditions: ['Return bounded evidence only.'],
+            stop_conditions: ['Stop before any write.'],
+          },
+        },
+        binding: {
+          route_participant_id: 'challenger',
+          transport_binding_id: 'tb-gpt-oss-proof',
+          provider_id: 'gpt-oss-local',
+          model_id: 'gpt-oss:20b',
+          adapter_id: 'opencode',
+        },
+        resolved: {
+          execution_adapter: 'opencode',
+          agent: 'jarvis-readonly',
+          model_ref: 'ollama/gpt-oss:20b',
+          model_id: 'gpt-oss:20b',
+        },
+        sourceEnv,
+      },
+      {
+        execFile: (file, args, options, callback) => {
+          const config = JSON.parse(fs.readFileSync(
+            path.join(options.env.OPENCODE_CONFIG_DIR, 'opencode.json'),
+            'utf8',
+          ));
+          seen = {
+            file,
+            args: [...args],
+            cwd: options.cwd,
+            env: { ...options.env },
+            config,
+            projectConfigExists: fs.existsSync(path.join(options.cwd, '.opencode')),
+          };
+          callback(null, 'SYNTHETIC_GPT_OSS_V2_OK', '');
+        },
+      },
+    );
+
+    assert.equal(out.ok, true);
+    assert.equal(out.status, 'COMPLETED');
+    assert.ok(seen);
+    assert.equal(seen.file, 'opencode');
+    assert.deepEqual(seen.args.slice(0, 2), ['run', '--standalone']);
+    assert.equal(seen.args.includes('--pure'), false);
+    assert.equal(seen.args[seen.args.indexOf('--agent') + 1], 'jarvis-readonly');
+    assert.equal(seen.args[seen.args.indexOf('--model') + 1], 'ollama/gpt-oss:20b');
+
+    const env = seen.env;
+    const runRoot = path.dirname(env.HOME);
+    assert.equal(seen.cwd, path.join(runRoot, 'workspace'));
+    assert.equal(env.TMPDIR, path.join(runRoot, 'tmp'));
+    assert.equal(env.XDG_CONFIG_HOME, path.join(runRoot, 'xdg-config'));
+    assert.equal(env.XDG_DATA_HOME, path.join(runRoot, 'xdg-data'));
+    assert.equal(env.XDG_CACHE_HOME, path.join(runRoot, 'xdg-cache'));
+    assert.equal(env.XDG_STATE_HOME, path.join(runRoot, 'xdg-state'));
+    assert.equal(env.OPENCODE_CONFIG_DIR, path.join(runRoot, 'opencode-config'));
+    assert.equal(env.OPENCODE_DISABLE_MODELS_FETCH, '1');
+    assert.equal(env.OPENCODE_DISABLE_AUTOUPDATE, '1');
+    assert.equal(seen.projectConfigExists, false);
+
+    for (const forbidden of [
+      'AIN_DELEGATION_HOME', 'OPENCODE_CONFIG', 'OPENCODE_CONFIG_CONTENT',
+      'OPENCODE_CLI_CONFIG_CONTENT', 'OPENCODE_TEST_HOME',
+      'OPENCODE_CONFIG_PROJECT_DISABLE', 'OPENCODE_DISABLE_PROJECT_CONFIG',
+      'HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'WS_PROXY', 'WSS_PROXY',
+      'OTEL_EXPORTER_OTLP_ENDPOINT', 'OPENCODE_PTY_BIN',
+      'OPENCODE_TREE_SITTER_WASM_PATH', 'NVIDIA_API_KEY', 'TINKER_API_KEY',
+      'AWS_REGION',
+    ]) {
+      assert.equal(env[forbidden], undefined, forbidden + ' leaked into canonical OpenCode');
+    }
+
+    assert.deepEqual(Object.keys(seen.config.provider), ['ollama']);
+    assert.deepEqual(Object.keys(seen.config.provider.ollama.models), ['gpt-oss:20b']);
+    assert.equal(seen.config.provider.ollama.options.baseURL, 'http://127.0.0.1:11434/v1');
+    assert.deepEqual(Object.keys(seen.config.agents), ['jarvis-readonly']);
+    const agent = seen.config.agents['jarvis-readonly'];
+    assert.equal(agent.mode, 'primary');
+    assert.equal(agent.steps, 8);
+    assert.deepEqual(agent.permissions[0], {
+      action: '*', resource: '*', effect: 'deny',
+    });
+    assert.equal(
+      agent.permissions.some(
+        (rule) => rule.action === 'read' && rule.resource === '*' && rule.effect === 'allow',
+      ),
+      true,
+    );
+    assert.equal(JSON.stringify(seen.config).includes('qwen3-coder:30b'), false);
+    assert.equal(JSON.stringify(seen.config).includes('tinker'), false);
+    assert.equal(JSON.stringify(seen.config).includes('nvidia'), false);
+    assert.equal(fs.existsSync(runRoot), false);
+  } finally {
+    cleanup(home);
+  }
+});
+
+test('unreconciled non-local OpenCode refuses before process creation', async () => {
+  let processCalls = 0;
+  const out = await WUC.executeCanonicalResolvedProvider(
+    REPO,
+    {
+      workUnitId: 'e3-v2-nvidia-refusal',
+      grantId: 'e3-nvidia-grant-proof',
+      workUnit: {
+        identity: { objective: 'Refuse unreconciled external OpenCode.' },
+        custody: { evidence_class: 'E0_TASK_TEXT' },
+        scope: { allowed_paths: [] },
+        evaluation: { acceptance_conditions: [], stop_conditions: [] },
+      },
+      binding: {
+        route_participant_id: 'challenger',
+        transport_binding_id: 'tb-nvidia-proof',
+        provider_id: 'nemotron-nvidia',
+        model_id: 'nemotron-3-ultra-550b-a55b',
+        adapter_id: 'opencode',
+      },
+      resolved: {
+        execution_adapter: 'opencode',
+        agent: 'jarvis-readonly',
+        model_ref: 'nvidia/nemotron-3-ultra-550b-a55b',
+        model_id: 'nemotron-3-ultra-550b-a55b',
+      },
+      sourceEnv: { PATH: process.env.PATH },
+    },
+    {
+      execFile: () => {
+        processCalls += 1;
+        throw new Error('must not create provider process');
+      },
+    },
+  );
+  assert.equal(out.ok, false);
+  assert.equal(out.status, 'REFUSED');
+  assert.equal(out.reason, 'CANONICAL_OPENCODE_V2_PROVIDER_NOT_RECONCILED');
+  assert.equal(processCalls, 0);
+});
+
+test('canonical Qwen direct launch reuses Unit 9 native worker with bounded evidence and JARVIS 65K identity', async () => {
+  const { home } = tempEnv();
+  let seen = null;
+  try {
+    const out = await WUC.executeCanonicalResolvedProvider(
+      REPO,
+      {
+        workUnitId: 'e3-direct-qwen-proof',
+        grantId: 'e3-direct-grant-proof',
+        workUnit: {
+          identity: { objective: 'Prove canonical Qwen direct containment.' },
+          custody: { evidence_class: 'E1_REPOSITORY_LOCAL' },
+          scope: {
+            base_ref: SHA,
+            allowed_paths: ['scripts/builder/work-unit-v2.mjs'],
+          },
+          evaluation: {
+            acceptance_conditions: ['Return bounded evidence only.'],
+            stop_conditions: ['Stop before any write.'],
+          },
+        },
+        binding: {
+          route_participant_id: 'primary',
+          transport_binding_id: 'tb-qwen-proof',
+          provider_id: 'qwen-local',
+          model_id: 'qwen3-coder:30b',
+          adapter_id: 'ollama-direct',
+        },
+        resolved: {
+          execution_adapter: 'ollama-direct',
+          model_ref: 'ollama/qwen3-coder:30b',
+          model_id: 'qwen3-coder:30b',
+        },
+        sourceEnv: { ...process.env, AIN_DELEGATION_HOME: home },
+      },
+      {
+        localWorkerRun: async (args) => {
+          seen = args;
+          return {
+            ok: true,
+            transport: 'ollama-native',
+            model: 'jarvis-qwen3-coder:65k',
+            output: 'SYNTHETIC_DIRECT_QWEN_OK',
+            duration_s: 0,
+            prompt_eval_count: 10,
+            eval_count: 2,
+            done_reason: 'stop',
+            failure_class: null,
+          };
+        },
+      },
+    );
+
+    assert.equal(out.ok, true);
+    assert.equal(out.status, 'COMPLETED');
+    assert.equal(out.run.exit_code, 0);
+    assert.equal(out.run.stdout, 'SYNTHETIC_DIRECT_QWEN_OK');
+    assert.ok(seen);
+    assert.equal(seen.model, 'jarvis-qwen3-coder:65k');
+    assert.equal(seen.host, 'http://127.0.0.1:11434');
+    assert.equal(seen.temperature, 0);
+    assert.equal(typeof seen.timeoutMs, 'number');
+    assert.match(seen.prompt, /=== scripts\/builder\/work-unit-v2\.mjs ===/);
+    assert.match(seen.prompt, /createWorkUnitDraftV2/);
+    assert.doesNotMatch(seen.prompt, /jarvis-desktop\/src\/work-unit-control\.js/);
+  } finally {
+    cleanup(home);
+  }
+});
 
 test('E1 reuses one existing Work Unit IPC channel and renderer cannot supply provider/model/raw authority on Confirm Execute', () => {
   const renderer = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/renderer.js'), 'utf8');
@@ -439,4 +763,181 @@ test('E1 Desktop keeps authorization, execution, verification, evidence-ready, a
   assert.ok(evidenceReadyAction >= 0);
   assert.ok(adjudicationAction >= 0);
   assert.notEqual(evidenceReadyAction, adjudicationAction);
+});
+
+test('E1 requires a fresh post-authorization review before Confirm Execute can appear or invoke IPC', () => {
+  const renderer = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/renderer.js'), 'utf8');
+  const gesture = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/e1-gesture-separation.js'), 'utf8');
+
+  const activeGrantBranch = renderer.match(
+    /else if \(primaryAction === 'REVIEW_AUTHORIZED'\) \{([\s\S]*?)\n    \} else \{/,
+  );
+  assert.ok(activeGrantBranch);
+  assert.match(activeGrantBranch[1], /data-e1-review-active/);
+  assert.match(activeGrantBranch[1], /Review authorized execution/);
+  assert.doesNotMatch(activeGrantBranch[1], /data-e1-confirm/);
+
+  assert.match(gesture, /confirmation_review === true/);
+  assert.match(renderer, /Fresh post-authorization review complete/);
+  assert.match(renderer, /Fresh post-authorization review required before Confirm Execute/);
+  assert.match(renderer, /reviewCanonicalAuthorizedExecution/);
+  assert.match(renderer, /data-e1-review-active/);
+
+  const confirmStart = renderer.indexOf('async function confirmCanonicalExecution');
+  const confirmEnd = renderer.indexOf('async function revokeCanonicalExecution', confirmStart);
+  const confirm = renderer.slice(confirmStart, confirmEnd);
+  const armCheck = confirm.indexOf('confirmationArmed');
+  const consumeArm = confirm.indexOf('activeCanonicalExecutionReview = null');
+  const privilegedIpc = confirm.indexOf("action: 'canonical-confirm-execute'");
+  assert.ok(armCheck >= 0 && consumeArm > armCheck && privilegedIpc > consumeArm);
+});
+
+test('M1 MODEL MODE uses exact frozen local realizations and never invokes OpenCode', async () => {
+  assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS), true);
+  assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS['qwen-local']), true);
+  assert.equal(Object.isFrozen(WUC.LOCAL_OLLAMA_DIRECT_REALIZATIONS['gpt-oss-local']), true);
+  assert.deepEqual(
+    WUC.canonicalLocalOllamaDirectRealization({
+      provider_id: 'qwen-local', model_id: 'qwen3-coder:30b', adapter_id: 'ollama-direct',
+    }),
+    { governed_model_id: 'qwen3-coder:30b', runtime_model: 'jarvis-qwen3-coder:65k' },
+  );
+  assert.deepEqual(
+    WUC.canonicalLocalOllamaDirectRealization({
+      provider_id: 'gpt-oss-local', model_id: 'gpt-oss:20b', adapter_id: 'ollama-direct',
+    }),
+    { governed_model_id: 'gpt-oss:20b', runtime_model: 'gpt-oss:20b' },
+  );
+  assert.equal(WUC.canonicalLocalOllamaDirectRealization({
+    provider_id: 'gpt-oss-local', model_id: 'gpt-oss:not-admitted', adapter_id: 'ollama-direct',
+  }), null);
+  assert.equal(WUC.canonicalLocalOllamaDirectRealization({
+    provider_id: 'gpt-oss-local', model_id: 'gpt-oss:20b', adapter_id: 'opencode',
+  }), null);
+  assert.equal(WUC.canonicalLocalOllamaDirectRealization({
+    provider_id: 'unknown-local', model_id: 'gpt-oss:20b', adapter_id: 'ollama-direct',
+  }), null);
+
+  const { home, env } = tempEnv();
+  try {
+    const { id, status } = await routedReady(env, 3150);
+    const calls = [];
+    let openCodeCalls = 0;
+    const executionOpts = {
+      env,
+      localCapacitySample: SAFE_LOCAL_CAPACITY,
+      actorId: 'human:m1-proof',
+      localWorkerRun: async ({ prompt, model, host, timeoutMs, temperature }) => {
+        calls.push({ model, host, timeoutMs, temperature, prompt_length: prompt.length });
+        return { ok: true, output: 'bounded MODEL MODE evidence', model, host };
+      },
+      execFile: () => {
+        openCodeCalls += 1;
+        throw new Error('OpenCode must not run in MODEL MODE');
+      },
+    };
+
+    const primary = status.routing.participants.find((entry) => entry.participant_id === 'primary');
+    assert.ok(primary);
+    const primaryGrant = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, primary.participant_id, { env, actorId: 'human:m1-proof' },
+    );
+    assert.equal(primaryGrant.ok, true, JSON.stringify(primaryGrant.blockers));
+    const primaryResult = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, primaryGrant.grant.grant_id, executionOpts,
+    );
+    assert.equal(primaryResult.ok, true, JSON.stringify(primaryResult.blockers));
+
+    const afterPrimary = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    const challenger = afterPrimary.routing.participants.find(
+      (entry) => entry.participant_id === 'local-review-1',
+    );
+    assert.ok(challenger);
+    const challengerActive = challenger.transport_bindings.find(
+      (binding) => binding.readiness.status === 'READY' && binding.adapter_id === 'ollama-direct',
+    );
+    assert.ok(challengerActive);
+    assert.equal(challengerActive.provider_id, 'gpt-oss-local');
+    assert.equal(challengerActive.model_id, 'gpt-oss:20b');
+
+    const challengerGrant = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, challenger.participant_id, { env, actorId: 'human:m1-proof' },
+    );
+    assert.equal(challengerGrant.ok, true, JSON.stringify(challengerGrant.blockers));
+    const challengerResult = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, challengerGrant.grant.grant_id, executionOpts,
+    );
+    assert.equal(challengerResult.ok, true, JSON.stringify(challengerResult.blockers));
+
+    assert.deepEqual(
+      calls.map(({ model, host, temperature }) => ({ model, host, temperature })),
+      [
+        { model: 'jarvis-qwen3-coder:65k', host: 'http://127.0.0.1:11434', temperature: 0 },
+        { model: 'gpt-oss:20b', host: 'http://127.0.0.1:11434', temperature: 0 },
+      ],
+    );
+    assert.equal(openCodeCalls, 0);
+    assert.ok(calls.every((call) => call.prompt_length > 0));
+
+    const final = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    assert.deepEqual(final.work_unit.authority, status.work_unit.authority);
+    assert.equal(final.provenance.attempts.length, 2);
+    assert.equal(final.provenance.attempts[0].adapter_id, 'ollama-direct');
+    assert.equal(final.provenance.attempts[1].adapter_id, 'ollama-direct');
+    assert.equal(final.provenance.attempts[0].status, 'completed');
+    assert.equal(final.provenance.attempts[1].status, 'completed');
+  } finally {
+    cleanup(home);
+  }
+});
+
+test('E1 local capacity refusal happens before CLAIMED, EXECUTING, or provider launch', async () => {
+  const { home, env } = tempEnv();
+  try {
+    const { id, status } = await routedReady(env, 3900);
+    const primary = status.routing.participants.find((p) => p.participant_id === 'primary');
+    const issued = await WUC.canonicalAuthorizeExecutionOnce(
+      REPO, id, primary.participant_id,
+      { env, actorId: 'human:e1-capacity-proof' },
+    );
+    assert.equal(issued.ok, true);
+    assert.equal(issued.standing, 'ACTIVE');
+
+    let runnerCalls = 0;
+    const held = await WUC.canonicalConfirmAuthorizedExecution(
+      REPO, id, issued.grant.grant_id,
+      {
+        env,
+        actorId: 'human:e1-capacity-proof',
+        localCapacitySample: {
+          version: 'E1LC-SAMPLE.v1',
+          platform: 'darwin',
+          total_ram_bytes: 48 * 1024 ** 3,
+          free_ram_bytes: 5.5 * 1024 ** 3,
+          swap_total_bytes: 8 * 1024 ** 3,
+          swap_free_bytes: 0,
+        },
+        executeCanonicalProvider: async () => {
+          runnerCalls += 1;
+          throw new Error('provider must not launch');
+        },
+      },
+    );
+
+    assert.equal(held.ok, false);
+    assert.equal(held.status, 'HELD_FOR_LOCAL_CAPACITY');
+    assert.equal(held.reason, 'LOCAL_CAPACITY_RAM_HEADROOM');
+    assert.equal(held.grant_standing, 'ACTIVE');
+    assert.equal(runnerCalls, 0);
+
+    const after = await WUC.canonicalExecutionStatus(REPO, id, { env });
+    assert.equal(after.lifecycle.state, 'ROUTED');
+    const standing = after.execution_bridge.grants.find(
+      (entry) => entry.grant.grant_id === issued.grant.grant_id,
+    );
+    assert.equal(standing.standing, 'ACTIVE');
+    assert.equal(after.provenance.attempts.length, 0);
+  } finally {
+    cleanup(home);
+  }
 });

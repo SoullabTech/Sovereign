@@ -1,0 +1,10 @@
+const blob = require('get-blob-duration');
+const nested = require('get-blob-duration/node_modules/@babel/runtime/package.json');
+if (nested.version !== '7.28.6') throw new Error(`nested runtime drift: ${nested.version}`);
+const fn = blob.default ?? blob;
+if (typeof fn !== 'function') throw new Error('get-blob-duration did not load as function');
+require('get-blob-duration/node_modules/@babel/runtime/helpers/asyncToGenerator');
+require('get-blob-duration/node_modules/@babel/runtime/regenerator');
+console.log('VOICE-RECORDER RUNTIME: PASS');
+console.log('  recorder 7.0.6 preserved');
+console.log('  get-blob-duration loads with nested @babel/runtime 7.28.6');

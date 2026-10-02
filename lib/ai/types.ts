@@ -1,3 +1,5 @@
+import type { LiveServingTruth } from './liveServingTruth';
+
 // backend: lib/ai/types.ts
 // Provider tracking for sovereignty auditing
 
@@ -49,4 +51,6 @@ export interface ProviderMeta {
 export interface TextResult {
   text: string;
   provider: ProviderMeta;
+  /** R2 live serving truth: routing intent + actual outcome, facts only. */
+  servingTruth?: LiveServingTruth;
 }

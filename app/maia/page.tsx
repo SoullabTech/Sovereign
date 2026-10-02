@@ -1896,7 +1896,7 @@ function MAIAPageContent() {
                   className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
                 >
                   <Home className="w-5 h-5" />
-                  <span className="text-base">My Portal</span>
+                  <span className="text-base">Home</span>
                 </button>
 
                 {/* Commons */}
@@ -2167,13 +2167,53 @@ function MAIAPageContent() {
   );
 }
 
-// Wrap with Suspense for useSearchParams (Next.js 15 requirement)
-export default function MAIAPage() {
+// The live MAIA encounter remains available as a named component so
+// /maia/encounter can host the full conversation while bare /maia becomes the
+// compatibility threshold into the wider Soullab platform.
+export function MaiaEncounterPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
       <div className="text-[#D4B896] animate-pulse">Loading MAIA...</div>
     </div>}>
       <MAIAPageContent />
     </Suspense>
+  );
+}
+
+export default function MaiaLegacyThreshold() {
+  return (
+    <main className="min-h-screen bg-[#071426] text-white flex items-center justify-center px-6">
+      <div className="w-full max-w-xl text-center">
+        <img
+          src="/holoflower-studio-transparent.png"
+          alt=""
+          className="mx-auto mb-8 h-24 w-24 object-contain opacity-90"
+        />
+        <p className="text-[11px] tracking-[0.32em] uppercase text-white/35 mb-4">MAIA · SOULLAB</p>
+        <h1
+          className="text-4xl sm:text-5xl font-light tracking-wide text-white/95"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          MAIA now lives inside Soullab.
+        </h1>
+        <p className="mt-6 text-base sm:text-lg leading-relaxed text-white/50">
+          Soullab Home is the place to orient, move between facets, and enter MAIA deliberately when you want the conversation.
+        </p>
+        <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/home"
+            className="inline-flex items-center justify-center rounded-xl px-7 py-3.5 bg-maia-spice-500 hover:bg-maia-spice-400 text-black font-semibold transition-colors"
+          >
+            Go to Soullab
+          </Link>
+          <Link
+            href="/maia/encounter"
+            className="inline-flex items-center justify-center rounded-xl px-7 py-3.5 border border-white/15 text-white/65 hover:text-white hover:border-white/30 transition-colors"
+          >
+            Meet MAIA directly
+          </Link>
+        </div>
+      </div>
+    </main>
   );
 }

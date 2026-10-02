@@ -78,6 +78,8 @@ export type DisclosureBoundary =
    * `20260913000002`, one value and nothing else.
    */
   | 'writers_studio.developmental_ask->maia_cognition'
+  /** R2-2 · exact historical Work text crossed for one AS_READ Review Discuss act. */
+  | 'writers_studio.review_discuss->maia_cognition'
   /**
    * ⭐ THE EDITORIAL TURN crossing — passage prose handed to MAIA cognition
    * from the Writer's Studio editorial runtime. A third path into cognition and
@@ -85,7 +87,7 @@ export type DisclosureBoundary =
    * a receipt must name the boundary its disclosure actually crossed.
    *
    * ⚠ THIS UNION IS THE SECOND ENFORCEMENT OF THE SQL CHECK, never a
-   * restatement of it. Mirrors migration `20260921000001`, one value and
+   * restatement of it. Mirrors migration `20261002000001`, one value and
    * nothing else. ⛔ A value present in SQL and absent here (or the reverse) is
    * a defect, not a convenience — the S3 lane recorded exactly that drift.
    */
@@ -108,7 +110,9 @@ export type DisclosureGesture =
    * member's act, never the count of boundaries it caused. Mirrors migration
    * `20260913000003`.
    */
-  | 'authorize_sections';
+  | 'authorize_sections'
+  /** R2-2 · the writer explicitly discusses one exact durable Review finding. */
+  | 'discuss_finding';
 
 export interface ContextDisclosureAttempt {
   /** Unique per attempt; a retry MUST reuse it so evidence cannot be duplicated. */

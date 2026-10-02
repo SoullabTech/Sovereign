@@ -8,7 +8,8 @@
 
 import { mkdir, writeFile, stat, unlink, readdir, rm } from 'fs/promises';
 import { createReadStream, existsSync, statSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { safeId, safeSubdir, safeFilename, containedPath, MediaPathRefused } from './pathContainment';
 import type { Readable } from 'stream';
 import { MIN_DISK_SPACE_BYTES, DEFAULT_MAX_UPLOAD_BYTES } from './types';
 
@@ -28,7 +29,7 @@ export interface StoredFile {
  * Ensure the project directory structure exists.
  */
 export async function ensureProjectDirs(projectId: string): Promise<void> {
-  const base = join(MEDIA_STORAGE_BASE, projectId);
+  const base = containedPath(MEDIA_STORAGE_BASE, safeId('projectId', projectId));
   await mkdir(join(base, 'original'), { recursive: true });
   await mkdir(join(base, 'processed'), { recursive: true });
   await mkdir(join(base, 'exports'), { recursive: true });
@@ -43,10 +44,17 @@ export async function storeFile(
   filename: string,
   data: Buffer
 ): Promise<StoredFile> {
-  const relativePath = join(projectId, subdir, filename);
-  const absolutePath = join(MEDIA_STORAGE_BASE, relativePath);
+  const relativePath = join(
+    safeId('projectId', projectId),
+    safeSubdir(subdir),
+    safeFilename(filename),
+  );
+  const absolutePath = containedPath(MEDIA_STORAGE_BASE, relativePath);
 
-  await mkdir(join(MEDIA_STORAGE_BASE, projectId, subdir), { recursive: true });
+  // Derived from the SAME absolute path the write uses, so the directory created and
+  // the file written can never again refer to different places. That divergence is
+  // what made the original defect reachable, not merely the input that exploited it.
+  await mkdir(dirname(absolutePath), { recursive: true });
   await writeFile(absolutePath, data);
 
   const stats = await stat(absolutePath);
@@ -66,10 +74,17 @@ export async function storeStream(
   filename: string,
   stream: Readable
 ): Promise<StoredFile> {
-  const relativePath = join(projectId, subdir, filename);
-  const absolutePath = join(MEDIA_STORAGE_BASE, relativePath);
+  const relativePath = join(
+    safeId('projectId', projectId),
+    safeSubdir(subdir),
+    safeFilename(filename),
+  );
+  const absolutePath = containedPath(MEDIA_STORAGE_BASE, relativePath);
 
-  await mkdir(join(MEDIA_STORAGE_BASE, projectId, subdir), { recursive: true });
+  // Derived from the SAME absolute path the write uses, so the directory created and
+  // the file written can never again refer to different places. That divergence is
+  // what made the original defect reachable, not merely the input that exploited it.
+  await mkdir(dirname(absolutePath), { recursive: true });
 
   // Collect stream into buffer then write — avoids pipe complexity
   const chunks: Buffer[] = [];
@@ -94,7 +109,7 @@ export function getFileStream(
   relativePath: string,
   options?: { start?: number; end?: number }
 ): Readable {
-  const absolutePath = join(MEDIA_STORAGE_BASE, relativePath);
+  const absolutePath = containedPath(MEDIA_STORAGE_BASE, relativePath);
   return createReadStream(absolutePath, options);
 }
 
@@ -102,7 +117,7 @@ export function getFileStream(
  * Get the absolute filesystem path for a relative storage path.
  */
 export function getAbsolutePath(relativePath: string): string {
-  return join(MEDIA_STORAGE_BASE, relativePath);
+  return containedPath(MEDIA_STORAGE_BASE, relativePath);
 }
 
 /**
@@ -112,7 +127,7 @@ export async function getFileStats(
   relativePath: string
 ): Promise<{ sizeBytes: number; modifiedAt: Date } | null> {
   try {
-    const absolutePath = join(MEDIA_STORAGE_BASE, relativePath);
+    const absolutePath = containedPath(MEDIA_STORAGE_BASE, relativePath);
     const stats = await stat(absolutePath);
     return { sizeBytes: stats.size, modifiedAt: stats.mtime };
   } catch {
@@ -124,21 +139,21 @@ export async function getFileStats(
  * Check if a file exists.
  */
 export function fileExists(relativePath: string): boolean {
-  return existsSync(join(MEDIA_STORAGE_BASE, relativePath));
+  return existsSync(containedPath(MEDIA_STORAGE_BASE, relativePath));
 }
 
 /**
  * Get file size synchronously (for Range header calculations).
  */
 export function getFileSizeSync(relativePath: string): number {
-  return statSync(join(MEDIA_STORAGE_BASE, relativePath)).size;
+  return statSync(containedPath(MEDIA_STORAGE_BASE, relativePath)).size;
 }
 
 /**
  * Delete a single file.
  */
 export async function deleteFile(relativePath: string): Promise<void> {
-  const absolutePath = join(MEDIA_STORAGE_BASE, relativePath);
+  const absolutePath = containedPath(MEDIA_STORAGE_BASE, relativePath);
   try {
     await unlink(absolutePath);
   } catch (err: unknown) {
@@ -150,7 +165,7 @@ export async function deleteFile(relativePath: string): Promise<void> {
  * Delete an entire project directory and all its contents.
  */
 export async function deleteProjectDir(projectId: string): Promise<void> {
-  const projectDir = join(MEDIA_STORAGE_BASE, projectId);
+  const projectDir = containedPath(MEDIA_STORAGE_BASE, safeId('projectId', projectId));
   try {
     await rm(projectDir, { recursive: true, force: true });
   } catch (err: unknown) {
@@ -202,7 +217,10 @@ export async function checkDiskSpace(): Promise<string | null> {
  * Get the chunk staging directory for an upload.
  */
 function getChunkDir(projectId: string, uploadId: string): string {
-  return join(MEDIA_STORAGE_BASE, projectId, 'original', '.chunks', uploadId);
+  return containedPath(
+    MEDIA_STORAGE_BASE,
+    join(safeId('projectId', projectId), 'original', '.chunks', safeId('uploadId', uploadId)),
+  );
 }
 
 /**
@@ -215,8 +233,12 @@ export async function storeChunk(
   data: Buffer
 ): Promise<void> {
   const chunkDir = getChunkDir(projectId, uploadId);
+  // chunkIndex reaches a path too; a non-negative integer is the only admissible shape.
+  if (!Number.isInteger(chunkIndex) || chunkIndex < 0) {
+    throw new MediaPathRefused('MEDIA_ID_REFUSED', 'chunkIndex');
+  }
   await mkdir(chunkDir, { recursive: true });
-  await writeFile(join(chunkDir, `${chunkIndex}`), data);
+  await writeFile(containedPath(chunkDir, String(chunkIndex)), data);
 }
 
 /**

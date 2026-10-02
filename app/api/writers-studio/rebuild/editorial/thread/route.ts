@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import {
   openEditorialRelationshipAtSelection,
   type OpenEditorialRefusal,
@@ -8,7 +9,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
-const BODY_KEYS = ['sectionId', 'range', 'revisionNumber'] as const;
+const BODY_KEYS = ['sectionId', 'range', 'revisionNumber', 'sanctuary'] as const;
 
 function statusFor(reason: OpenEditorialRefusal): number {
   switch (reason) {
@@ -39,6 +40,19 @@ export async function POST(request: NextRequest) {
     (k) => !(BODY_KEYS as readonly string[]).includes(k));
   if (stray.length) {
     return NextResponse.json({ error: `unknown field(s): ${stray.join(', ')}` }, { status: 400 });
+  }
+  /* SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1 — posture first, before anything
+     about the selection is examined and before any durable object exists.
+     Opening a passage relationship writes a proposal chain AND an ask_thread in
+     one transaction; that is durable by construction. An explicit boolean is
+     required — absence or any other shape is an UNRESOLVED posture, refused.
+     ⛔ Never TurnPosture.resolve({}): silence must not be manufactured into
+     ordinary. Contradictory nested signals still fail closed to Sanctuary. */
+  if (typeof body.sanctuary !== 'boolean') {
+    return NextResponse.json({ error: 'posture_required', persisted: false }, { status: 400 });
+  }
+  if (TurnPosture.resolve(body).sanctuary) {
+    return NextResponse.json({ error: 'sanctuary_unavailable', persisted: false }, { status: 409 });
   }
   if (typeof body.sectionId !== 'string' || body.sectionId.length === 0) {
     return NextResponse.json({ error: 'sectionId is required' }, { status: 400 });

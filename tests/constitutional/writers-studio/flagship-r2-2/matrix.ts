@@ -1,0 +1,14 @@
+import { runR22Laws } from './laws';
+const rs=runR22Laws();
+console.log('');
+console.log('── FLAGSHIP-RUNTIME-CONVERGENCE-01 / R2-2 · LIVE REVIEW DISCUSS + FOUNDER TEST ──');
+console.log('');
+for(const r of rs) console.log('  '+(r.ok?'PASS':'FAIL')+'  '+r.id+' — '+r.detail);
+const passed=rs.filter(r=>r.ok).length;
+console.log('');
+console.log('── VERDICT ──────────────────────────────────────────────────────────');
+console.log('  laws       '+passed+'/'+rs.length);
+console.log('  matrix     '+(passed===rs.length?'GREEN':'⛔ RED'));
+console.log('  target     isolated local founder-test only · production untouched');
+console.log('');
+process.exit(passed===rs.length?0:1);

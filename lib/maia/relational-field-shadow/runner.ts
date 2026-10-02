@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { evaluateRelationalFieldEpistemicShadow } from '../../ain/epistemic-join/shadow/relationalField';
 import { renderCurrentTurnBasisEnvelope } from '../../../scripts/research/structural-standing/current-turn-basis-envelope';
 import { StandingEnvelopeRefused } from '../../../scripts/research/structural-standing/standing-envelope';
 import {
@@ -13,6 +14,7 @@ import {
   loadPriorMemberTurns,
 } from './fieldAssembler';
 import { persistRelationalFieldShadowEvidence } from './evidenceStore';
+import { persistEpistemicJoinShadowTelemetry } from './epistemicTelemetryStore';
 import { deterministicShadowSeed, generateRelationalFieldPlan } from './ollamaProvider';
 import {
   PRIMARY_CAPTURE_STAGE,
@@ -168,6 +170,7 @@ export async function runRelationalFieldShadow(
     const started = Date.now();
     const seed = deterministicShadowSeed(input.exchangeId, modelName, RELATIONAL_FIELD_SHADOW_ARCHITECTURE_VERSION);
     let row: ShadowEvidenceRow;
+    let epistemicJoinShadow: ReturnType<typeof evaluateRelationalFieldEpistemicShadow> = null;
     try {
       const generated = await generateRelationalFieldPlan({
         packet,
@@ -178,6 +181,13 @@ export async function runRelationalFieldShadow(
       const rawPlanSha256 = sha256(generated.rawText);
       try {
         const rendered = renderCurrentTurnBasisEnvelope(packet.evidence, generated.rawPlan, packet.currentEvidenceId);
+        epistemicJoinShadow = evaluateRelationalFieldEpistemicShadow({
+          memberId: input.memberId!,
+          modelName,
+          architectureVersion: RELATIONAL_FIELD_SHADOW_ARCHITECTURE_VERSION,
+          packet,
+          plan: generated.rawPlan,
+        });
         row = {
           turnId: input.turnId,
           exchangeId: input.exchangeId,
@@ -249,10 +259,24 @@ export async function runRelationalFieldShadow(
         totalMs: Date.now() - started,
       };
     }
+    let evidencePersisted = false;
     try {
       await persistRelationalFieldShadowEvidence(row);
+      evidencePersisted = true;
     } catch (storeErr) {
       console.warn('[RELATIONAL-FIELD-SHADOW] evidence persist failed', storeErr instanceof Error ? storeErr.name : typeof storeErr);
+    }
+    if (evidencePersisted && epistemicJoinShadow) {
+      try {
+        await persistEpistemicJoinShadowTelemetry({
+          turnId: input.turnId,
+          modelName,
+          architectureVersion: RELATIONAL_FIELD_SHADOW_ARCHITECTURE_VERSION,
+          telemetry: epistemicJoinShadow,
+        });
+      } catch (storeErr) {
+        console.warn('[EPISTEMIC-JOIN-SHADOW] telemetry persist failed', storeErr instanceof Error ? storeErr.name : typeof storeErr);
+      }
     }
   }
 }

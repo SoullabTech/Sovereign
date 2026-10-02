@@ -1,6 +1,6 @@
 import {
   assertStudioMapHonest,
-  CANVAS_HREF,
+  REBUILD_HREF,
   IMPORT_HREF,
   SOURCE_HREF,
   STUDIO_MAP,
@@ -100,7 +100,7 @@ describe('Author Studio map — what a member sees', () => {
   });
 
   it('keeps every one of those routes reachable — placement changed, not existence', () => {
-    expect(CANVAS_HREF).toBe('/writers-studio/rebuild');
+    expect(REBUILD_HREF).toBe('/writers-studio/rebuild');
     expect(WRITE_HREF).toContain('tab=draft');
     expect(SOURCE_HREF).toContain('tab=manuscript');
     expect(IMPORT_HREF).toContain('import=1');

@@ -25,7 +25,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { getNextOnboardingStep } from '@/lib/onboarding/state';
-import { trackOnboarding } from '@/lib/onboarding/telemetry';
+import { trackOnboarding } from '@/lib/onboarding/telemetryClient';
 
 type Phase = 'checking' | 'redirecting' | 'unauthenticated';
 

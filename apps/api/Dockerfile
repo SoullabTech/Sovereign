@@ -8,7 +8,7 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Stage 1: Dependencies
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 
 # Deploy-lane tripwire — same mechanism as the main Dockerfile: refuse
@@ -34,7 +34,7 @@ COPY apps/api/package.json ./
 RUN npm install
 
 # Stage 2: Builder
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copy node_modules from deps
@@ -47,7 +47,7 @@ COPY apps/api/ ./
 RUN npm run build
 
 # Stage 3: Runner (production)
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Add non-root user

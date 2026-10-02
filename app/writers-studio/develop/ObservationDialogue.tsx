@@ -48,13 +48,22 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ask, loadThread, threadsOn, type AskThreadView } from '@/lib/writersStudio/askClient';
+import {
+  askForBody, authorizeSections, loadThread, threadsOn, type AskThreadView,
+} from '@/lib/writersStudio/askClient';
 import {
   resumeDecision, sendMode, threadChoiceLabel, type ResumeDecision,
 } from '@/lib/writersStudio/observationDialogueResume';
 import type { CurrentLocation } from '@/lib/manuscript/development/resolve';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import { PRESS } from '../pressTheme';
+import BodyAuthorizationPanel from './BodyAuthorizationPanel';
+import {
+  initial as machineInitial,
+  step as machineStep,
+  type MachineState,
+} from '@/lib/writersStudio/bodyAuthorizationMachine';
+import { readWorkingStyle } from '@/lib/writersStudio/workingStyle';
 
 const REFUSAL_SAYS: Record<string, string> = {
   unreachable: 'MAIA could not be reached. Nothing was lost — your question is held here.',
@@ -98,7 +107,8 @@ function locationLine(l: CurrentLocation | null): string | null {
 }
 
 export default function ObservationDialogue({
-  manuscriptId, readingId, observationKey, about, superseded, onClose, initialQuestion = '',
+  manuscriptId, readingId, observationKey, about, superseded, onClose,
+  initialQuestion = '', autoSendInitialQuestion = false,
 }: {
   manuscriptId: string;
   readingId: string;
@@ -109,6 +119,10 @@ export default function ObservationDialogue({
   superseded: boolean;
   onClose: () => void;
   initialQuestion?: string;
+  /** The click that supplied initialQuestion is itself the explicit member act.
+   * Sending still waits for thread-resume discovery so duplicate threads cannot
+   * be created during the adopting window. */
+  autoSendInitialQuestion?: boolean;
 }) {
   const [thread, setThread] = useState<AskThreadView | null>(null);
   /* HELD SEPARATELY FROM `thread`. A failed answer still has a threadId — the
@@ -122,6 +136,19 @@ export default function ObservationDialogue({
   /** `null` until the store has answered. Sending is refused until then. */
   const [decision, setDecision] = useState<ResumeDecision | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const autoSent = useRef(false);
+
+  const machine = useRef<MachineState>(machineInitial);
+  const [authView, setAuthView] = useState<MachineState>(machineInitial);
+  const pausedQuestion = useRef('');
+
+  const mintActId = useCallback(() => `act-${crypto.randomUUID()}`, []);
+  const advance = useCallback((event: Parameters<typeof machineStep>[1]) => {
+    const step = machineStep(machine.current, event, mintActId);
+    machine.current = step.state;
+    setAuthView(step.state);
+    return step.effect;
+  }, [mintActId]);
 
   const adopt = useCallback(async (id: string) => {
     const t = await loadThread(manuscriptId, id);
@@ -159,27 +186,104 @@ export default function ObservationDialogue({
     if (!q || busy || mode.kind === 'blocked') return;
     setBusy(true);
     setRefusal(null);
-    const r = await ask({
+
+    const { outcome, ask: r } = await askForBody({
       manuscriptId,
       question: q,
       ...(mode.kind === 'resume'
         ? { threadId: mode.threadId }
         : { anchor: { on: 'observation' as const, readingId, observationKey } }),
+      responseStyle: readWorkingStyle().explanation,
     });
+
+    if (outcome) {
+      pausedQuestion.current = q;
+      advance({ type: 'served', outcome });
+      if (r.threadId) setThreadId(r.threadId);
+      if (r.location) setLocation(r.location);
+      setBusy(false);
+      return;
+    }
+
     if (r.ok) {
       setThreadId(r.threadId);
       setThread(r.thread);
       setLocation(r.location ?? null);
       setDraft('');
     } else {
-      /* THE QUESTION IS NOT CLEARED ON A REFUSAL. The words are the writer's and
-         the room does not eat them because the wire failed. */
       setRefusal(r.refusal);
       if (r.location) setLocation(r.location);
       if (r.threadId) setThreadId(r.threadId);
     }
     setBusy(false);
-  }, [draft, busy, mode, manuscriptId, readingId, observationKey]);
+  }, [draft, busy, mode, manuscriptId, readingId, observationKey, advance]);
+
+  const authorize = useCallback(async () => {
+    const effect = advance({ type: 'press' });
+    if (effect.do !== 'send') return;
+
+    setRefusal(null);
+    setBusy(true);
+    const { outcome, ask: r } = await authorizeSections({
+      manuscriptId,
+      pendingAskRef: effect.pendingAskRef,
+      actId: effect.actId,
+      sectionIds: effect.sectionIds,
+      question: pausedQuestion.current,
+      threadId: threadId ?? undefined,
+      responseStyle: readWorkingStyle().explanation,
+    });
+
+    if (!outcome && !r.ok && r.refusal === 'unreachable') {
+      advance({ type: 'transport_failed' });
+      setBusy(false);
+      return;
+    }
+
+    if (outcome) {
+      advance({ type: 'served', outcome });
+      if (r.threadId) setThreadId(r.threadId);
+      if (r.location) setLocation(r.location);
+      setBusy(false);
+      return;
+    }
+
+    if (r.ok) {
+      advance({ type: 'served', outcome: { kind: 'BODY_AUTHORIZED' } });
+      setThreadId(r.threadId);
+      setThread(r.thread);
+      setLocation(r.location ?? null);
+      setDraft('');
+      pausedQuestion.current = '';
+    } else {
+      setRefusal(r.refusal);
+      if (r.threadId) setThreadId(r.threadId);
+      if (r.location) setLocation(r.location);
+    }
+    setBusy(false);
+  }, [advance, manuscriptId, threadId]);
+
+  const toggleSection = useCallback((sectionId: string) => {
+    const current = machine.current.selectedSectionIds;
+    const selected = current.includes(sectionId)
+      ? current.filter((id) => id !== sectionId)
+      : [...current, sectionId];
+    advance({ type: 'select', sectionIds: selected });
+  }, [advance]);
+
+  const decline = useCallback(() => {
+    advance({ type: 'decline' });
+  }, [advance]);
+
+  /* A button such as "Teach me why" is already the member's explicit act.
+     Auto-send waits until thread discovery/resume is lawfully resolved, then
+     uses the exact same send path as the visible composer. */
+  useEffect(() => {
+    if (!autoSendInitialQuestion || autoSent.current || !initialQuestion.trim()) return;
+    if (decision === null || mode.kind === 'blocked' || busy) return;
+    autoSent.current = true;
+    void send();
+  }, [autoSendInitialQuestion, initialQuestion, decision, mode, busy, send]);
 
   /* Before the first turn the room has no measured location, so it falls back to
      what the reading itself already said. Shown as the reading's claim, not as a
@@ -205,6 +309,17 @@ export default function ObservationDialogue({
         Nothing said here changes your work or her reading. She is talking about what she noticed
         then, and has not reread the work.
       </p>
+
+      {authView.outcome ? (
+        <BodyAuthorizationPanel
+          outcome={authView.outcome}
+          selectedSectionIds={authView.selectedSectionIds}
+          busy={authView.phase === 'authorizing' || busy}
+          onToggleSection={toggleSection}
+          onAuthorize={() => void authorize()}
+          onDecline={decline}
+        />
+      ) : null}
 
       {line && (
         <p className="text-[12px] leading-relaxed opacity-70 mt-2"

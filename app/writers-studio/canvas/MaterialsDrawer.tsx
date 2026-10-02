@@ -37,9 +37,14 @@ export default function MaterialsDrawer({ work, manuscript, manuscripts, onChang
   const titleOf = (materialType: string, id: string) => {
     if (materialType === 'manuscript') return manuscripts.find((m) => m.id === id)?.title ?? 'an unnamed manuscript';
     if (materialType === 'source_upload') return sources.find((s) => s.id === id)?.originalName ?? 'source material';
-    return 'source material';
+    if (materialType === 'idea') return 'Idea';
+    return 'material';
   };
-  const homeOf = (materialType: string) => materialType === 'manuscript' ? 'an import' : 'source material';
+  const homeOf = (materialType: string) =>
+    materialType === 'manuscript' ? 'an import'
+      : materialType === 'idea' ? 'Ideas'
+        : materialType === 'source_upload' ? 'source material'
+          : 'its own place';
 
   const bring = async (materialType: 'manuscript' | 'source_upload', materialId: string) => {
     if (!work) return;
@@ -133,7 +138,14 @@ export default function MaterialsDrawer({ work, manuscript, manuscripts, onChang
                 <p className="text-[12px] opacity-40 mb-1">brought without a note</p>
               )}
               <p className="text-[12.5px] opacity-60">
-                {titleOf(m.materialType, m.materialId)}
+                {m.materialType === 'idea' ? (
+                  <Link
+                    href={`/maia/ideas/${encodeURIComponent(m.materialId)}`}
+                    className="underline underline-offset-4"
+                  >
+                    {titleOf(m.materialType, m.materialId)}
+                  </Link>
+                ) : titleOf(m.materialType, m.materialId)}
                 <span className="opacity-70"> · {homeOf(m.materialType)} · brought {formatWhen(m.declaredAt)}</span>
               </p>
               <button disabled={busy} onClick={() => void unbelong(m.materialType, m.materialId)} className="mt-1.5 text-[11px] opacity-35 hover:opacity-70 underline underline-offset-4">no longer feeds this work</button>

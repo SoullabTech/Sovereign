@@ -181,6 +181,8 @@ describe('WS-EDITORIAL-SCOPE-01 · the law', () => {
     const text = latitudeInstruction(DEFAULT_SCOPE_DECLARATION);
     expect(text).toContain(LATITUDE_BANDS[1].label);
     expect(text).toMatch(/NOT allowed removing whole paragraphs/);
+    expect(text).toMatch(/paragraph removal is off/i);
+    expect(text).toMatch(/turn on paragraph removal/i);
     expect(latitudeInstruction(at(5, true))).toMatch(/has allowed proposals that remove/);
   });
 });

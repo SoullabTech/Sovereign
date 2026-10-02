@@ -16,10 +16,9 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
   BookOpen,
   Brain,
   ChevronDown,
@@ -41,6 +40,8 @@ import { WISDOM_QUOTES, type WisdomQuote } from '@/lib/wisdom/WisdomQuotes';
 import { WISDOM_FACETS } from '@/lib/wisdom/WisdomFacets';
 import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
 import WisdomSubmissionForm from '@/components/wisdom/WisdomSubmissionForm';
+import { ReturnHome } from '@/components/navigation/ReturnHome';
+import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
 
 // ---------------------------------------------------------------------------
 // Icon resolver — maps string icon names from data to Lucide components
@@ -149,6 +150,8 @@ function ActionButton({
 
 export default function WisdomPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromHouse = searchParams?.get('from') === 'house';
   const [query, setQuery] = useState('');
   const [openDomains, setOpenDomains] = useState<Record<string, boolean>>({});
   const [featuredQuotes, setFeaturedQuotes] = useState<WisdomQuote[]>(() => pickRandomQuotes(4));
@@ -178,11 +181,11 @@ export default function WisdomPage() {
       prompt,
       source: 'wisdom-keepers',
       sourceLabel,
-      returnTo: '/wisdom-keepers/wisdom',
+      returnTo: fromHouse ? '/wisdom-keepers/wisdom?from=house' : '/wisdom-keepers/wisdom',
       tone: 'exploratory',
     });
     router.push('/maia');
-  }, [router]);
+  }, [router, fromHouse]);
 
   // Quote actions
   const reflectOnQuote = useCallback((q: WisdomQuote) => {
@@ -221,15 +224,11 @@ export default function WisdomPage() {
     <main className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e] text-[#f6f1e8]">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
 
-        {/* Nav */}
+        {/* Entry context: preserve the room's own identity, but return to the place that opened it. */}
         <div className="mb-8">
-          <Link
-            href="/maia"
-            className="inline-flex items-center gap-2 text-sm text-[#D4B896] transition hover:opacity-80"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Link>
+          {fromHouse
+            ? <HouseRoomThreshold room="WISDOM" />
+            : <ReturnHome className="text-sm text-[#D4B896]" />}
         </div>
 
         {/* ── Layer 1: Orientation ── */}
@@ -440,7 +439,7 @@ export default function WisdomPage() {
         {/* ── Sacred Texts ── */}
         <section className="mt-16 mb-8">
           <Link
-            href="/wisdom-keepers/sacred-texts"
+            href={fromHouse ? '/wisdom-keepers/sacred-texts?from=house' : '/wisdom-keepers/sacred-texts'}
             className="block rounded-2xl border border-amber-900/30 bg-stone-950/40 p-8 backdrop-blur hover:bg-stone-950/60 transition group"
           >
             <div className="flex items-center gap-2 mb-3">

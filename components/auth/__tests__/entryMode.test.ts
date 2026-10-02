@@ -85,7 +85,7 @@ describe('/signup offers no password door', () => {
   it('signup gets a way across to signin instead', () => {
     expect(COMPONENT).toMatch(/mode === 'signup' &&/);
     expect(COMPONENT).toContain('Already a member?');
-    expect(COMPONENT).toContain('href="/signin"');
+    expect(COMPONENT).toContain('/signin?next=');
   });
 });
 
@@ -150,11 +150,12 @@ describe('/signin offers a way out for someone with no account', () => {
     expect(passwordPhase).toContain('New to Soullab?');
   });
 
-  // /begin, not /signup: the onboarding invariant is a single entry point for
-  // new members. Asserted so a later edit cannot quietly reroute it.
-  it('routes them to the canonical entry point', () => {
-    expect(passwordPhase).toContain('href="/begin"');
-    expect(passwordPhase).not.toContain('href="/signup"');
+  // New members now cross into the explicit joining door and preserve the
+  // canonical Home destination rather than bouncing through retired /begin.
+  it('routes them to the canonical joining door', () => {
+    expect(passwordPhase).toContain('/signup?next=');
+    expect(passwordPhase).toContain('Join Soullab');
+    expect(passwordPhase).not.toContain('href="/begin"');
   });
 
   it('is gated to signin — /signup already has its own footer', () => {

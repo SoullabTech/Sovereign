@@ -7,6 +7,16 @@ import { evidenceAtRev1, liveDraft, STRUCTURE } from '../../development/__tests_
 import type { LiveWork } from '../../development/resolve';
 import type { DevelopmentalReading } from '../contract';
 import { assessReading } from '../assess';
+import type { BasisFingerprint, ObservationId } from '../observationIdentity';
+
+/* OBSERVATION-IDENTITY-01 / I1 — an admitted observation carries identity,
+   admission order, a basis witness and a position. These fixtures are FROZEN
+   VALUES, never minted here: `mintObservationId` is called only at the seam.
+   ⭐ `o3` cites only structural evidence, so its position is legitimately null. */
+const OBS_ID_1 = 'dobs_fixture_1' as ObservationId;
+const OBS_ID_2 = 'dobs_fixture_2' as ObservationId;
+const OBS_ID_3 = 'dobs_fixture_3' as ObservationId;
+const FP = 'f'.repeat(64) as BasisFingerprint;
 
 function reading(withStructure = true): DevelopmentalReading {
   const { evidence } = evidenceAtRev1({ withStructure });
@@ -17,9 +27,9 @@ function reading(withStructure = true): DevelopmentalReading {
     provenance: { reader: { provider: 'anthropic', model: 'm', promptHash: 'p', readerVersion: 'DEVELOPMENTAL-READER-01' }, classifier: null, frozenAt: '2026-09-04T00:00:00.000Z' },
     outcome: 'reading',
     observations: [
-      { key: 'o1', lens: 'continuity', phenomenon: 'recurrence', evidenceRefs: [{ kind: 'section', sectionId: 's0' }], observation: 'a', doesNotEstablish: ['author-intent'], structureDependency: { kind: 'independent' } },
-      { key: 'o2', lens: 'continuity', phenomenon: 'movement', evidenceRefs: [{ kind: 'section-run', sectionIds: ['s1', 's2', 's3'] }], observation: 'b', doesNotEstablish: ['chronology'], structureDependency: { kind: 'independent' } },
-      { key: 'o3', lens: 'continuity', phenomenon: 'positional-asymmetry', evidenceRefs: [{ kind: 'structure-unit', unitId: 'u2' }], observation: 'c', doesNotEstablish: ['authored-structure-relation'], structureDependency: { kind: 'authored-structure' } },
+      { key: 'o1', observationId: OBS_ID_1, admissionIndex: 0, basisFingerprint: FP, position: { sectionPosition: 0, codePointStart: 0 }, lens: 'continuity', phenomenon: 'recurrence', evidenceRefs: [{ kind: 'section', sectionId: 's0' }], observation: 'a', doesNotEstablish: ['author-intent'], structureDependency: { kind: 'independent' } },
+      { key: 'o2', observationId: OBS_ID_2, admissionIndex: 1, basisFingerprint: FP, position: { sectionPosition: 1, codePointStart: 0 }, lens: 'continuity', phenomenon: 'movement', evidenceRefs: [{ kind: 'section-run', sectionIds: ['s1', 's2', 's3'] }], observation: 'b', doesNotEstablish: ['chronology'], structureDependency: { kind: 'independent' } },
+      { key: 'o3', observationId: OBS_ID_3, admissionIndex: 2, basisFingerprint: FP, position: null, lens: 'continuity', phenomenon: 'positional-asymmetry', evidenceRefs: [{ kind: 'structure-unit', unitId: 'u2' }], observation: 'c', doesNotEstablish: ['authored-structure-relation'], structureDependency: { kind: 'authored-structure' } },
     ],
   };
 }

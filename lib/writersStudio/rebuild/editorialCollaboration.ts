@@ -1,5 +1,18 @@
 import { apiFetch } from '@/lib/http/apiBase';
 import { occurrences } from '@/lib/manuscript/exactText';
+import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
+import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
+
+/**
+ * SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1 — POSTURE IS CARRIED, NEVER DEFAULTED.
+ *
+ * Opening a relationship and sending a turn are durable acts. Each helper that
+ * performs one takes the member's CURRENT posture as a REQUIRED argument — the
+ * caller reads it at the gesture with `readCurrentSanctuaryPosture()` and hands
+ * it in. An unresolved posture never reaches the network: the helper refuses
+ * with `posture_unresolved` and posts nothing. The server independently
+ * requires the boolean and refuses Sanctuary with `sanctuary_unavailable`.
+ */
 
 export interface RebuildEditorialVersion {
   id: string;
@@ -29,7 +42,7 @@ export interface RebuildEditorialThread {
 
 export type BoundThreadOutcome =
   | { ok: true; thread: RebuildEditorialThread }
-  | { ok: false; reason: 'unavailable' | 'unreadable' | 'locus_mismatch'; detail?: string };
+  | { ok: false; reason: 'unavailable' | 'unreadable' | 'locus_mismatch' | 'posture_unresolved' | 'sanctuary_unavailable'; detail?: string };
 export function threadMatchesVisibleSection(
   thread: Pick<RebuildEditorialThread, 'targetSectionId'>,
   visibleDraftSectionId: string,
@@ -62,13 +75,20 @@ export async function readBoundEditorialThread(
 }
 export async function openBoundEditorialThread(
   visibleDraftSectionId: string,
+  posture: CurrentPostureRead,
 ): Promise<BoundThreadOutcome> {
+  if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
   try {
     const res = await apiFetch('/api/writers-studio/editorial/thread', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sectionId: visibleDraftSectionId }),
+      body: JSON.stringify({ sectionId: visibleDraftSectionId, sanctuary: posture.sanctuary }),
     });
+    if (res.status === 409) {
+      const why = await res.json().catch(() => null);
+      if (why?.error === 'sanctuary_unavailable') return { ok: false, reason: 'sanctuary_unavailable' };
+      return { ok: false, reason: 'unreadable' };
+    }
     if (!res.ok) return { ok: false, reason: res.status === 404 ? 'unavailable' : 'unreadable' };
     const body = await res.json().catch(() => null);
     if (!body || typeof body.threadId !== 'string') return { ok: false, reason: 'unreadable' };
@@ -82,14 +102,19 @@ export async function openBoundEditorialPassage(
   visibleDraftSectionId: string,
   range: { start: number; end: number },
   revisionNumber: number,
+  posture: CurrentPostureRead,
 ): Promise<BoundThreadOutcome & { refusal?: string }> {
+  if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
   try {
     const res = await apiFetch('/api/writers-studio/rebuild/editorial/thread', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sectionId: visibleDraftSectionId, range, revisionNumber }),
+      body: JSON.stringify({ sectionId: visibleDraftSectionId, range, revisionNumber, sanctuary: posture.sanctuary }),
     });
     const body = await res.json().catch(() => null);
+    if (res.status === 409 && body?.error === 'sanctuary_unavailable') {
+      return { ok: false, reason: 'sanctuary_unavailable' };
+    }
     if (!res.ok) {
       return {
         ok: false,
@@ -110,6 +135,11 @@ export interface VoiceNotice {
   note: string; unfamiliar: string[]; sampleWords: number;
 }
 
+export interface EditorialCarrySelection {
+  readonly kind: 'prior_maia_editorial_turn';
+  readonly sourceEpisodeSequence: number;
+}
+
 export type EditorialTurnOutcome =
   | {
       ok: true; thread: RebuildEditorialThread; producedVersionId: string | null;
@@ -118,7 +148,8 @@ export type EditorialTurnOutcome =
     }
   | {
       ok: false;
-      reason: 'unavailable' | 'unreadable' | 'locus_mismatch' | 'turn_refused' | 'scope_refused';
+      reason: 'unavailable' | 'unreadable' | 'locus_mismatch' | 'turn_refused' | 'scope_refused'
+        | 'posture_unresolved' | 'sanctuary_unavailable';
       detail?: string;
       voice?: VoiceNotice;
       /** ⭐ Counts only, present on a scope refusal. ⛔ Never the refused wording. */
@@ -133,6 +164,8 @@ export async function sendBoundEditorialTurn(
   threadId: string,
   visibleDraftSectionId: string,
   text: string,
+  /** E1 — the member's CURRENT posture, read at the gesture. Required. */
+  posture: CurrentPostureRead,
   /**
    * ⭐ THE AUTHOR'S EDITING LATITUDE for this exchange (WS-EDITORIAL-SCOPE-01).
    *
@@ -146,23 +179,52 @@ export async function sendBoundEditorialTurn(
     /** ⭐ The per-Work release of the discuss-first order. ⛔ Default false. */
     mayProposeImmediately?: boolean;
   },
+  options?: {
+    /** Exploratory turns may close the outcome vocabulary to reply_only. */
+    proposalPolicy?: ProposalPolicy;
+    /** Selected durable Work-level editorial relationship, when carrying one. */
+    relationshipId?: string;
+    /** One explicitly selected prior MAIA editorial response from this relationship. */
+    carry?: EditorialCarrySelection;
+  } | string,
 ): Promise<EditorialTurnOutcome> {
+  if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
+  const proposalPolicy = typeof options === 'string' ? undefined : options?.proposalPolicy;
+  const relationshipId = typeof options === 'string' ? options : options?.relationshipId;
+  const carry = typeof options === 'string' ? undefined : options?.carry;
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         threadId, act: { act: 'discourse', text, refersTo: null },
+        sanctuary: posture.sanctuary,
         ...(scope ? { scope } : {}),
+        ...(proposalPolicy ? { proposalPolicy } : {}),
+        ...(relationshipId ? { relationshipId } : {}),
+        ...(carry ? { carry } : {}),
       }),
     });
     const body = await res.json().catch(() => null);
     if (!res.ok) {
+      /* E1 — Sanctuary is a refusal in the member's terms, never a fault. */
+      if (res.status === 409 && body?.error === 'sanctuary_unavailable') {
+        return { ok: false, reason: 'sanctuary_unavailable' };
+      }
       /* ⭐⭐ A SCOPE REFUSAL IS A RESULT, NOT A FAILURE. The server held the
          author's latitude. The surface must say what happened in the author's
          terms — ⛔ never surface `scope_removes_paragraphs` as a raw error
          code, and never imply the request broke. */
-      if (res.status === 409 && (body?.scope || body?.voice)) {
+      if (res.status === 409 && body?.error === 'proposal_policy_reply_only') {
+        return {
+          ok: false,
+          reason: 'turn_refused',
+          detail: typeof body?.detail === 'string'
+            ? body.detail
+            : 'MAIA stayed in exploration. Nothing was added to the revision options.',
+        };
+      }
+      if (res.status === 409 && (body?.scope || body?.voice || body?.error === 'sequence_discussion_first')) {
         return {
           ok: false, reason: 'scope_refused',
           detail: typeof body?.detail === 'string' ? body.detail : undefined,
@@ -190,7 +252,8 @@ export async function sendBoundEditorialTurn(
 }
 
 export interface AdoptionWireOutcome {
-  kind: 'applied' | 'work_moved' | 'system_refusal' | 'legacy_locus' | 'relationship_refusal';
+  kind: 'applied' | 'work_moved' | 'system_refusal' | 'legacy_locus'
+    | 'protected_quotation' | 'relationship_refusal';
   resultingVersion?: number;
   reason?: string;
   byThisGesture?: boolean;

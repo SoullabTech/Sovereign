@@ -28,17 +28,15 @@ import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/Conversat
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
 import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation, detectMaiaCommands, getMaiaCommandConfirmation } from '@/lib/voice/VoiceCommandDetector';
-import type { MaiaCommand } from '@/lib/voice/VoiceCommandDetector';
+import type { MaiaCommand, CommandParseResult } from '@/lib/voice/VoiceCommandDetector';
 import {
   matchVoiceCommand,
   applySettingsDelta,
   getModeSystemPrompt,
-  detectCrisis,
   DEFAULT_MODE_STATE,
   DEFAULT_SCRIBE_SESSION,
   type ModeState,
   type VoiceCommandResult,
-  type CrisisOverride,
   type ScribeSessionState,
 } from '@/lib/voice/voiceCommands';
 import { QuickModeToggle } from './ui/QuickModeToggle';
@@ -233,11 +231,10 @@ import {
 } from '@/lib/session/SessionPersistence';
 // 🧠 BARDIC MEMORY INTEGRATION - McGilchrist's master-emissary pattern
 // Air (contextual wisdom) serves Fire (present emergence)
-import {
-  getConversationMemory,
-  type ConversationContext,
-  type PatternRecognitionResult,
-  type CrystallizationDetection
+import type {
+  ConversationContext,
+  PatternRecognitionResult,
+  CrystallizationDetection
 } from '@/lib/memory/bardic/ConversationMemoryIntegration';
 // 🌟 TEEN SUPPORT SYSTEM - ED-aware & Neurodivergent-affirming safety protocols
 import {
@@ -252,6 +249,28 @@ import {
 import { calculateAge, getUserData, type UserData } from '@/lib/safety/teenProfileUtils';
 // 🌱 YOUTH DEVELOPMENTAL TIER - age-based constraints and session limits
 import { computeTierFromAge, getTierConfig, isYouthTier, type DevelopmentalTier } from '@/lib/youth/ageTierEngine';
+
+// 🆘 SAFETY-CRISIS-01: render the server's deterministic crisis referral. The
+// server attaches `safetyReferral` only on a CLEAR signal, on success AND error
+// responses, so a member who said they are about to end their life sees it even
+// when cognition fails. The text is the server's, unchanged: this function does
+// not decide anything, it only shows what the server decided.
+function buildSafetyReferralMessage(referral: unknown): ConversationMessage | null {
+  if (!referral || typeof referral !== 'object') return null;
+  const r = referral as { heading?: unknown; body?: unknown; disclosure?: unknown; resources?: unknown };
+  if (typeof r.heading !== 'string' || typeof r.disclosure !== 'string' || !Array.isArray(r.resources)) return null;
+  const lines = r.resources
+    .filter((x): x is { name: string; action: string } => !!x && typeof (x as any).name === 'string' && typeof (x as any).action === 'string')
+    .map(x => `**${x.name}** \u2014 ${x.action}`);
+  if (lines.length === 0) return null;
+  return {
+    id: `safety-referral-${Date.now()}`,
+    role: 'oracle',
+    text: `**${r.heading}**\n\n${typeof r.body === 'string' ? r.body + '\n\n' : ''}${lines.join('\n\n')}\n\n*${r.disclosure}*`,
+    timestamp: new Date(),
+    source: 'system',
+  };
+}
 
 // Time-aware greeting helper for welcome screen
 function getTimeGreeting(): string {
@@ -425,6 +444,7 @@ interface OracleConversationProps {
   userId?: string;
   userName?: string;
   userBirthDate?: string; // Birth date for age calculation and teen support
+  includeStoredBirthData?: boolean; // Whether legacy stored birthData may accompany turns (default true). Hosts with explicit context custody can disable it.
   userAge?: number; // Pre-calculated age (optional, will calculate from birthDate if not provided)
   sessionId: string;
   apiEndpoint?: string; // API endpoint to use for conversation (defaults to /api/between/chat)
@@ -649,6 +669,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   userId,
   userName,
   userBirthDate,
+  includeStoredBirthData = true,
   userAge: propUserAge,
   sessionId,
   apiEndpoint = '/api/between/chat', // Default to current behavior
@@ -1182,9 +1203,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Track last voice command result for acknowledgment handling
   const lastVoiceCommandRef = useRef<VoiceCommandResult | null>(null);
 
-  // 🚨 CRISIS OVERRIDE: Safety boundary that interrupts any mode
-  // This takes precedence over all other voice commands and mode states
-  const crisisStateRef = useRef<CrisisOverride | null>(null);
+  // 🆘 SAFETY-CRISIS-01: crisis assessment is server-side only. The client used to
+  // run a voice-only phrase list here and speak a scripted 988 intervention on any
+  // match, including ordinary farewells. Typed turns had no check at all. The
+  // server now assesses every turn at the point where all paths converge, and the
+  // client only renders the deterministic referral the server returns
+  // (`safetyReferral`, see buildSafetyReferralMessage).
 
   // 💡 IDEA FIELD: Track dismissed/saved idea fingerprints to avoid re-suggesting
   const ideaDismissedRef = useRef<Set<string>>(new Set());
@@ -1568,7 +1592,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // 🧠 BARDIC MEMORY - Pattern recognition & crystallization state
   const [patternRecognition, setPatternRecognition] = useState<PatternRecognitionResult | null>(null);
   const [crystallizationState, setCrystallizationState] = useState<CrystallizationDetection | null>(null);
-  const conversationMemory = useRef(getConversationMemory()).current;
 
   // 🌟 TEEN SUPPORT - Safety and support for teen users (ages 13-18)
   const [teenProfile, setTeenProfile] = useState<TeenProfile | undefined>();
@@ -2408,28 +2431,73 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         await new Promise<void>((resolve, reject) => {
           let hasStarted = false;
+          let settled = false;
           let startTimeoutId: NodeJS.Timeout | null = null;
           let playbackTimeoutId: NodeJS.Timeout | null = null;
+          let completionProbeId: NodeJS.Timeout | null = null;
+
+          const cleanupPlayback = () => {
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
+            if (completionProbeId) clearInterval(completionProbeId);
+            audio.onended = null;
+            audio.ontimeupdate = null;
+            audio.onerror = null;
+            stopAudioAnalysis();
+            URL.revokeObjectURL(audioUrl);
+          };
+
+          const resolvePlayback = (reason: 'ended' | 'timeupdate' | 'probe' | 'pause') => {
+            if (settled) return;
+            settled = true;
+            console.log(`🔇 MAIA playback complete (${reason}) - ${audio.currentTime.toFixed(1)}s of ${Number.isFinite(audio.duration) ? audio.duration.toFixed(1) : '?'}s`);
+            cleanupPlayback();
+            resolve();
+          };
+
+          const rejectPlayback = (error: Error) => {
+            if (settled) return;
+            settled = true;
+            cleanupPlayback();
+            reject(error);
+          };
+
+          const isAtPlaybackEnd = () =>
+            hasStarted &&
+            Number.isFinite(audio.duration) &&
+            audio.duration > 0 &&
+            audio.currentTime >= Math.max(0, audio.duration - 0.12);
 
           startTimeoutId = setTimeout(() => {
             if (!hasStarted) {
               audio.pause();
-              stopAudioAnalysis();
-              URL.revokeObjectURL(audioUrl);
-              reject(new Error('Audio failed to start within 5s'));
+              rejectPlayback(new Error('Audio failed to start within 5s'));
             }
           }, 5000);
 
+          const estimatedMp3Seconds = Math.max(2, (audioBlob.size * 8) / 128000);
+          const armPlaybackCeiling = () => {
+            if (playbackTimeoutId) return;
+            const reportedSeconds = Number.isFinite(audio.duration) && audio.duration > 0
+              ? audio.duration
+              : estimatedMp3Seconds;
+            const ceilingMs = (reportedSeconds + 12) * 1000;
+            playbackTimeoutId = setTimeout(() => {
+              // Safari can play the file but never deliver ended, and may report
+              // duration=Infinity. Never strand the conversational floor.
+              if (audio.ended || audio.paused || isAtPlaybackEnd()) {
+                resolvePlayback('probe');
+                return;
+              }
+              console.error(`❌ [AUDIO] Playback ceiling reached at ${audio.currentTime.toFixed(1)}s; reported=${Number.isFinite(audio.duration) ? audio.duration.toFixed(1) : 'non-finite'}s estimated=${estimatedMp3Seconds.toFixed(1)}s`);
+              audio.pause();
+              rejectPlayback(new Error('Audio playback exceeded finite safety ceiling'));
+            }, ceilingMs);
+          };
+
           audio.onloadedmetadata = () => {
             console.log('✅ Audio metadata loaded, duration:', audio.duration, 'seconds');
-            const playbackTimeout = (audio.duration + 30) * 1000;
-            playbackTimeoutId = setTimeout(() => {
-              console.error(`❌ [AUDIO] Playback timeout! Audio at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
-              audio.pause();
-              stopAudioAnalysis();
-              URL.revokeObjectURL(audioUrl);
-              reject(new Error(`Audio playback timeout after ${playbackTimeout/1000}s`));
-            }, playbackTimeout);
+            armPlaybackCeiling();
           };
 
           audio.onplay = () => {
@@ -2438,41 +2506,45 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             if (startTimeoutId) clearTimeout(startTimeoutId);
             setIsAudioPlaying(true);
             startAudioAnalysis(audio);
+            // Metadata can be late or Safari can report duration=Infinity.
+            // Arm a finite byte-derived ceiling as soon as playback begins.
+            armPlaybackCeiling();
+
+            // Safari occasionally fails to deliver `ended` after several voice
+            // turns. Poll actual playback position so completion remains a fact,
+            // not an event-delivery assumption.
+            completionProbeId = setInterval(() => {
+              if (audio.ended || isAtPlaybackEnd()) resolvePlayback('probe');
+            }, 250);
+          };
+
+          audio.ontimeupdate = () => {
+            if (isAtPlaybackEnd()) resolvePlayback('timeupdate');
           };
 
           audio.onpause = () => {
-            if (!audio.ended) {
-              console.warn(`⚠️ [AUDIO] Paused at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+            if (settled) return;
+            if (hasStarted && audio.currentTime > 0.25) {
+              console.warn(`⚠️ [AUDIO] Playback stopped/paused at ${audio.currentTime.toFixed(1)}s; treating floor as released`);
+              resolvePlayback('pause');
+              return;
             }
+            console.warn(`⚠️ [AUDIO] Paused before meaningful playback at ${audio.currentTime.toFixed(1)}s`);
           };
 
-          audio.onended = () => {
-            console.log(`🔇 MAIA finished speaking - ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
-            stopAudioAnalysis();
-            URL.revokeObjectURL(audioUrl);
-            if (startTimeoutId) clearTimeout(startTimeoutId);
-            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-            resolve();
-          };
+          audio.onended = () => resolvePlayback('ended');
 
           audio.onerror = (e) => {
             console.error('❌ Audio playback error:', e);
-            stopAudioAnalysis();
             setIsResponding(false);
             setIsAudioPlaying(false);
             setIsMicrophonePaused(false);
-            URL.revokeObjectURL(audioUrl);
-            if (startTimeoutId) clearTimeout(startTimeoutId);
-            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-            reject(new Error('Audio playback failed'));
+            rejectPlayback(new Error('Audio playback failed'));
           };
 
           audio.play().catch(err => {
             console.error('❌ Audio.play() failed:', err);
-            stopAudioAnalysis();
-            if (startTimeoutId) clearTimeout(startTimeoutId);
-            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-            reject(err);
+            rejectPlayback(err instanceof Error ? err : new Error(String(err)));
           });
         });
       }
@@ -4951,71 +5023,86 @@ I'm not sure what I'm feeling yet.`;
   }, [messages, userName]);
 
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
-  const handleTextMessage = useCallback(async (text: string, attachments?: File[], retryOf?: string) => {
-    console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
+  const handleTextMessage = useCallback(async (
+    text: string,
+    attachments?: File[],
+    retryOf?: string,
+    commandContext?: {
+      parseResult?: CommandParseResult;
+      commandsAlreadyApplied?: boolean;
+      confirmationHandled?: boolean;
+    },
+  ) => {
+    const authoredText = text;
+    console.log('📝 Text message received:', { text: authoredText, isProcessing, isAudioPlaying, isResponding });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
     setHasActivated(true);
 
     // 🎙️ CONSENT BOUNDARY (fix/typed-turn-no-mic-rearm): typed turn — the mic must NOT
-    // auto-re-arm after MAIA's response. Typed input is not voice re-consent.
+    // auto-re-arm after MAIA's response. TII-03 intentionally preserves this
+    // pre-existing behavior; voice liveness is a separate governed lane.
     lastSendWasVoiceRef.current = false;
 
-    if (detectJournalCommand(text)) {
+    if (detectJournalCommand(authoredText)) {
       await handleCaptureSpirit();
       return;
     }
 
-    // 🎯 MAIA COMMAND DETECTION: mode/lens/style switching
-    // Commands change state BEFORE the message is processed.
-    // Command phrases are stripped from the text so they don't become therapeutic content.
-    const { commands: maiaCommands, cleanedText: commandCleanedText, onlyCommands } = detectMaiaCommands(text);
+    // TII-03 — command intent is DERIVED from member authorship; it is never
+    // allowed to replace the authored utterance. Voice may pre-parse the same
+    // turn so it can preserve its existing command acknowledgement behavior.
+    const commandResult = commandContext?.parseResult ?? detectMaiaCommands(authoredText);
+    const { commands: maiaCommands, onlyCommands } = commandResult;
+    const modeCommand = maiaCommands.find(
+      (cmd): cmd is Extract<MaiaCommand, { type: 'mode' }> => cmd.type === 'mode',
+    );
+    const effectiveSanctuary =
+      commandResult.disposition === 'EXECUTE' && modeCommand
+        ? modeCommand.mode === 'sanctuary'
+        : isSanctuary;
 
-    if (maiaCommands.length > 0) {
-      for (const cmd of maiaCommands) {
-        if (cmd.type === 'mode') {
-          // Map MaiaMode → ListeningMode
-          const newListeningMode =
-            cmd.mode === 'talk' ? 'normal' as const :
-            cmd.mode === 'care' ? 'patient' as const :
-            cmd.mode === 'scribe' ? 'session' as const :
-            cmd.mode === 'sanctuary' ? 'normal' as const : // Sanctuary uses talk mode + sanctuary flag
-            'normal' as const;
-          setListeningMode(newListeningMode);
+    if (commandResult.disposition === 'EXECUTE' && maiaCommands.length > 0) {
+      if (!retryOf && !commandContext?.commandsAlreadyApplied) {
+        for (const cmd of maiaCommands) {
+          if (cmd.type === 'mode') {
+            // Map MaiaMode → ListeningMode
+            const newListeningMode =
+              cmd.mode === 'talk' ? 'normal' as const :
+              cmd.mode === 'care' ? 'patient' as const :
+              cmd.mode === 'scribe' ? 'session' as const :
+              cmd.mode === 'sanctuary' ? 'normal' as const :
+              'normal' as const;
+            setListeningMode(newListeningMode);
 
-          // Sanctuary flag
-          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-          else setIsSanctuary(false);
+            // Sanctuary flag
+            if (cmd.mode === 'sanctuary') setIsSanctuary(true);
+            else setIsSanctuary(false);
 
-          console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
-        }
+            console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
+          }
 
-        if (cmd.type === 'lens') {
-          setCounselFramework(cmd.lens);
-          console.log(`🔄 [Command] Lens → ${cmd.lens}`);
-        }
+          if (cmd.type === 'lens') {
+            setCounselFramework(cmd.lens);
+            console.log(`🔄 [Command] Lens → ${cmd.lens}`);
+          }
 
-        if (cmd.type === 'style') {
-          localStorage.setItem('conversation_mode', cmd.style);
-          window.dispatchEvent(new Event('conversationStyleChanged'));
-          console.log(`🔄 [Command] Style → ${cmd.style}`);
+          if (cmd.type === 'style') {
+            localStorage.setItem('conversation_mode', cmd.style);
+            window.dispatchEvent(new Event('conversationStyleChanged'));
+            console.log(`🔄 [Command] Style → ${cmd.style}`);
+          }
         }
       }
 
-      // Show confirmation toast
-      const confirmation = getMaiaCommandConfirmation(maiaCommands);
-      if (confirmation) {
-        toast.success(confirmation);
+      // Command acknowledgement is presentation, not authorship. Voice callers
+      // may already have spoken/toasted it before converging here.
+      if (!retryOf && !commandContext?.confirmationHandled) {
+        const confirmation = getMaiaCommandConfirmation(maiaCommands);
+        if (confirmation) {
+          toast.success(confirmation);
+        }
       }
-
-      // If the message was ONLY commands, acknowledge and return — don't send to API
-      if (onlyCommands) {
-        console.log('✅ [Command] Command-only message, no content to process');
-        return;
-      }
-
-      // Otherwise, continue with the cleaned text (commands stripped)
-      text = commandCleanedText;
     }
 
     // IMMEDIATELY stop microphone to prevent Maia from hearing herself
@@ -5037,13 +5124,14 @@ I'm not sure what I'm feeling yet.`;
       // Don't return - continue processing the text
     }
 
-    // Process attachments first if any
-    let messageText = text;
+    // Process attachments first if any. The member-authored utterance remains
+    // separate from this derived processing payload.
+    let messageText = authoredText;
     let fileContents: string[] = [];
 
     if (attachments && attachments.length > 0) {
       const fileNames = attachments.map(f => f.name).join(', ');
-      messageText = `${text}\n\n[Files attached: ${fileNames}]`;
+      messageText = `${authoredText}\n\n[Files attached: ${fileNames}]`;
 
       // Read text-based file contents
       for (const file of attachments) {
@@ -5073,6 +5161,9 @@ I'm not sure what I'm feeling yet.`;
 
     const startTime = Date.now();
     const cleanedText = cleanMessage(messageText);
+    // For ordinary text/voice turns, this is the exact submitted utterance.
+    // Attachment turns retain their existing derived payload semantics.
+    const canonicalMemberText = attachments?.length ? cleanedText : authoredText;
 
     // Validate message is not empty after cleaning
     if (!cleanedText || cleanedText.trim().length === 0) {
@@ -5112,12 +5203,12 @@ I'm not sure what I'm feeling yet.`;
       // ✅ CRITICAL FIX: Check if message already exists before adding (prevents duplicates)
       const isDuplicate = messages.some(msg =>
         msg.role === 'user' &&
-        msg.text === cleanedText &&
+        msg.text === canonicalMemberText &&
         (Date.now() - new Date(msg.timestamp).getTime()) < 2000
       );
 
       if (isDuplicate) {
-        console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', cleanedText);
+        console.log('🚫 [DEDUP] Blocked duplicate message in handleTextMessage:', canonicalMemberText);
         // Still continue processing - we just don't add it to UI again
         // But we shouldn't call the API either, so return here
         return;
@@ -5127,7 +5218,7 @@ I'm not sure what I'm feeling yet.`;
       userMessage = {
         id: targetMessageId,
         role: 'user',
-        text: cleanedText,
+        text: canonicalMemberText,
         timestamp: new Date(),
         source: 'user',
         // Carried so the later pair write can reuse the same exchange (see above).
@@ -5137,6 +5228,63 @@ I'm not sure what I'm feeling yet.`;
       onMessageAddedRef.current?.(userMessage);
       // The member has spoken. Typed turns and non-streaming voice turns both land here.
       onMemberExpressionRef.current?.();
+    }
+
+    // TII-03 — a pure interface command is still a member-authored turn.
+    // Preserve it in the transcript and, on the live sovereign route, ask F1 to
+    // accept it durably without invoking O8, F2, or ordinary cognition.
+    if (onlyCommands) {
+      if (apiEndpoint === '/api/sovereign/app/maia/list') {
+        const commandSanctuary = effectiveSanctuary;
+
+        setIsProcessing(true);
+        try {
+          const commandAcceptance = await apiFetch(apiEndpoint, {
+            method: 'POST',
+            body: JSON.stringify({
+              message: canonicalMemberText,
+              userId: userId || 'anonymous',
+              userName: userName || 'Friend',
+              sessionId,
+              exchangeId: turnExchangeId,
+              commandOnly: true,
+              sanctuary: commandSanctuary,
+            }),
+          });
+
+          const commandAcceptanceData = await commandAcceptance.json().catch(() => null);
+          const durabilityExpected = !commandSanctuary;
+          const durabilityConfirmed =
+            commandAcceptanceData?.metadata?.memberTurnDurable === true;
+
+          if (!commandAcceptance.ok || (durabilityExpected && !durabilityConfirmed)) {
+            setMessages(prev => markFailed(
+              prev,
+              targetMessageId,
+              commandAcceptance.status === 401 ? 'auth' : 'server',
+            ));
+            setInputSubmitError(
+              'The command changed locally, but the turn was not durably accepted. You can resend.',
+            );
+          }
+        } catch (commandAcceptanceError) {
+          console.error('[TII-03] command-only F1 acceptance failed:', commandAcceptanceError);
+          setMessages(prev => markFailed(prev, targetMessageId, 'network'));
+          setInputSubmitError(
+            'The command changed locally, but the turn could not be durably accepted. You can resend.',
+          );
+        } finally {
+          setIsProcessing(false);
+          setIsResponding(false);
+        }
+      } else {
+        console.warn(
+          '[TII-03] command-only turn preserved locally; this surface is not on the sovereign F1 route',
+          { apiEndpoint },
+        );
+      }
+
+      return;
     }
 
     // On a resend these once-per-turn side-effects already fired on the first
@@ -5159,10 +5307,10 @@ I'm not sure what I'm feeling yet.`;
       }
 
       // Save user message to long-term memory (dual-save to memories + Akashic Records)
-      if (oracleAgentId) {
+      if (oracleAgentId && !effectiveSanctuary) {
         saveConversationMemory({
           oracleAgentId,
-          content: text,
+          content: authoredText,
           memoryType: 'conversation',
           sourceType: 'text',
           sessionId,
@@ -5199,51 +5347,37 @@ I'm not sure what I'm feeling yet.`;
 
     // 🌟 TEEN SUPPORT - Perform safety check for teen users BEFORE processing
     if (isTeenUser && teenProfile && requiresTeenSupport(teenProfile)) {
-      console.log('🌟 [TEEN SUPPORT] Checking message for safety concerns:', cleanedText.substring(0, 50) + '...');
+      console.log('[TEEN SUPPORT] Running local safety check');
 
       const safetyCheck = performTeenSafetyCheck(cleanedText, teenProfile);
       setLastSafetyCheck(safetyCheck);
 
       const supportResponse = generateTeenSupportResponse(cleanedText, safetyCheck, teenProfile);
 
-      // 🚨 ABUSE DETECTED - THE ONE EXCEPTION WHERE WE BLOCK CONVERSATION
+      // ABUSE DISCLOSURE - pause ordinary conversation and surface immediate support
       if (supportResponse.blockConversation && safetyCheck.isAbuse) {
-        console.log('🚨 [ABUSE DETECTED] BLOCKING conversation for MAIA\'s protection');
+        console.log('[YOUTH SAFETY] Abuse-disclosure signal; pausing ordinary conversation');
 
         // Add blocking message directly to conversation
         const blockingMessage: ConversationMessage = {
           id: `abuse-block-${Date.now()}`,
           role: 'oracle',
-          text: supportResponse.interventionMessage || 'This conversation has been paused for review.',
+          text: supportResponse.interventionMessage || 'This conversation is pausing here so we can focus on immediate safety and support.',
           timestamp: new Date(),
           source: 'system'
         };
         setMessages(prev => appendMessageCapped(prev, blockingMessage));
         onMessageAddedRef.current?.(blockingMessage);
 
-        // Alert team about abuse
+        // Human delivery is a separate, content-free boundary. It must never
+        // carry the member's message and must never block the member-facing
+        // safety response above if transport fails.
         if (safetyCheck.abuseResult && userId) {
           const { alertTeamAboutAbuse } = await import('@/lib/safety/abuseDetection');
-          const { recordAbuseIncident } = await import('@/lib/safety/abuseDetection');
-
-          // Record the incident
-          recordAbuseIncident({
-            userId: userId || `anon_${sessionId}`,
-            severity: safetyCheck.abuseResult.severity as 'warning' | 'severe' | 'extreme',
-            patterns: safetyCheck.abuseResult.patterns,
-            message: cleanedText,
-            blocked: true,
-          });
-
-          // Alert the team
           await alertTeamAboutAbuse({
-            userId: userId || `anon_${sessionId}`,
-            userName: userName || 'Anonymous',
-            severity: safetyCheck.abuseResult.severity as 'warning' | 'severe' | 'extreme',
-            patterns: safetyCheck.abuseResult.patterns,
-            message: cleanedText,
+            severity: safetyCheck.abuseResult.severity,
+            type: safetyCheck.abuseResult.type,
             sessionId,
-            timestamp: new Date(),
           });
         }
 
@@ -5277,7 +5411,9 @@ I'm not sure what I'm feeling yet.`;
         setMessages(prev => appendMessageCapped(prev, crisisResourceMessage));
         onMessageAddedRef.current?.(crisisResourceMessage);
 
-        // Alert team for human check-in
+        // Human delivery is separate from the member response and carries no
+        // message content. A delivery failure is observable but does not make
+        // MAIA abandon the member or suppress the crisis resources above.
         if (userId) {
           const { alertSoullabTeam } = await import('@/lib/safety/teenSupportIntegration');
 
@@ -5288,11 +5424,9 @@ I'm not sure what I'm feeling yet.`;
               : 'severe_burnout';
 
           await alertSoullabTeam({
-            userId: userId || `anon_${sessionId}`,
-            userName: userName || 'Anonymous Teen',
+            userId,
             age: teenProfile.age,
             crisisType,
-            message: cleanedText,
             sessionId,
             timestamp: new Date(),
           });
@@ -5446,7 +5580,8 @@ I'm not sure what I'm feeling yet.`;
         response = await apiFetch(apiEndpoint, {
           method: 'POST',
           body: JSON.stringify({
-          message: cleanedText,
+          // TII-03: F1/O8 receive the member-authored utterance, not a command-stripped derivative.
+          message: canonicalMemberText,
           userId: userId || 'anonymous',
           userName: userName || 'Friend',
           sessionId,
@@ -5466,17 +5601,12 @@ I'm not sure what I'm feeling yet.`;
           },
 
           // 🛡️ SANCTUARY MODE: Speaks freely - no memory retention
-          sanctuary: isSanctuary,
+          sanctuary: effectiveSanctuary,
 
           // 🎭 MAIA RELATIONAL MODE: Talk/Care/Scribe with sub-modes
           // This shapes MAIA's system prompt for relational attunement
           // 🚨 Crisis override takes precedence over all modes
-          maiaMode: crisisStateRef.current?.detected ? {
-            mode: 'care',
-            subMode: 'crisis',
-            crisisLevel: crisisStateRef.current.level,
-            systemPromptModifier: crisisStateRef.current.systemPrompt || getModeSystemPrompt(maiaMode),
-          } : maiaMode.mode !== 'talk' ? {
+          maiaMode: maiaMode.mode !== 'talk' ? {
             mode: maiaMode.mode,
             subMode: maiaMode.mode === 'care' ? maiaMode.careSubMode : undefined,
             reflectionLens: maiaMode.mode === 'scribe' ? maiaMode.scribeReflectionLens : undefined,
@@ -5530,7 +5660,7 @@ I'm not sure what I'm feeling yet.`;
           } : undefined,
 
           // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
-          birthData: (() => {
+          birthData: includeStoredBirthData ? (() => {
             if (typeof window === 'undefined') return undefined;
             try {
               const stored = localStorage.getItem('beta_user');
@@ -5540,7 +5670,7 @@ I'm not sure what I'm feeling yet.`;
             } catch {
               return undefined;
             }
-          })(),
+          })() : undefined,
 
           // 📝 SCRIBE SESSION DISCUSSION: Context for scoped session discussions
           // When discussing a past Scribe/Witness session, MAIA has access to the summary and themes
@@ -5610,6 +5740,15 @@ I'm not sure what I'm feeling yet.`;
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        // 🆘 SAFETY-CRISIS-01: an error response can still carry the referral.
+        // Read it from a clone so the error handling below keeps its own body.
+        const safetyReferralOnError = buildSafetyReferralMessage(
+          (await response.clone().json().catch(() => null))?.safetyReferral,
+        );
+        if (safetyReferralOnError) {
+          setMessages(prev => appendMessageCapped(prev, safetyReferralOnError, MAX_DISPLAY_MESSAGES));
+        }
+
         // 🛑 LIMITS ENFORCEMENT: Check for tier-based usage block (429)
         if (response.status === 429) {
           const errData = await response.json().catch(() => null);
@@ -6046,6 +6185,12 @@ I'm not sure what I'm feeling yet.`;
         // Handle JSON response (text mode - includes metadata)
         responseData = await response.json();
         console.log('✅ THE BETWEEN response data:', responseData);
+
+        // 🆘 SAFETY-CRISIS-01: show the referral before MAIA's reply, never instead of it.
+        const safetyReferralMessage = buildSafetyReferralMessage(responseData?.safetyReferral);
+        if (safetyReferralMessage) {
+          setMessages(prev => appendMessageCapped(prev, safetyReferralMessage, MAX_DISPLAY_MESSAGES));
+        }
 
         // 🛑 LIMITS NUDGE: Check for soft cap warnings (non-blocking)
         if (responseData?.metadata?.limitNudge?.message) {
@@ -6596,73 +6741,47 @@ I'm not sure what I'm feeling yet.`;
           setTimeout(() => {
             console.log('✅ [NON-STREAM] Cooldown complete - NOW releasing mic');
 
-            // NOW unpause mic - this allows ContinuousConversation to restart
+            // A completed VOICE turn carries durable hands-free intent unless
+            // the member explicitly exited voice. Child capture recovery is not
+            // allowed to silently downgrade that intent to PUSH_TO_TALK.
+            if (lastSendWasVoiceRef.current) {
+              setIsHandsFreeMode(true);
+              voiceMicRef.current?.setHandsFree(true);
+            }
+
+            // NOW unpause mic - this allows ContinuousConversation to restart.
+            // Hands-free authority is restored synchronously ABOVE before the
+            // speaking->idle transition can trigger the child's restart effect.
             setIsMicrophonePaused(false);
             setIsMuted(false); // Ensure mic is unmuted
             console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
 
-            // 🔥 FIX: Force React to flush state updates before attempting mic restart
-            // Using requestAnimationFrame ensures we're after the React render cycle
+            // Turn-complete truth belongs in refs as well as React state. The
+            // delayed restart runs from an older render, so reading
+            // voiceSession.state.capabilities/phase here can strand hands-free
+            // on a stale snapshot even though playback has finished.
+            setIsProcessing(false);
+            setIsResponding(false);
+            setIsAudioPlaying(false);
+            isProcessingRef.current = false;
+            isRespondingRef.current = false;
+            isAudioPlayingRef.current = false;
+            isMicrophonePausedRef.current = false;
+
+            // Ask the canonical restart authority directly. It re-reads the live
+            // lifecycle refs and applies HANDS_FREE policy; presentation state is
+            // not allowed to decide whether the next turn can begin.
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
-                // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
-                const attemptMicRestart = (attempt: number) => {
-                  if (attempt > 8) {
-                    console.log('⚠️ [NON-STREAM] Mic restart failed after 8 attempts - forcing state reset');
-                    // 🔥 RECOVERY: Force reset all blocking states and try one more time
-                    setIsProcessing(false);
-                    setIsResponding(false);
-                    setIsAudioPlaying(false);
-                    setIsMicrophonePaused(false);
-                    isProcessingRef.current = false;
-                    isRespondingRef.current = false;
-                    isAudioPlayingRef.current = false;
-                    isMicrophonePausedRef.current = false;
-                    // Final attempt after forced reset
-                    setTimeout(() => {
-                      if (voiceSession.state.capabilities.canStartListening) {
-                        console.log('🎤 [NON-STREAM] Final attempt after state reset...');
-                        setIsMuted(false);
-                        if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_final_reset');
-                      }
-                    }, 500);
-                    return;
-                  }
-
-                  if (voiceSession.state.capabilities.canStartListening) {
-                    // Check ALL blocking conditions including mic pause and audio states
-                    const canRestart = !isProcessingRef.current &&
-                                       !isRespondingRef.current &&
-                                       !isAudioPlayingRef.current &&
-                                       !isMicrophonePausedRef.current;
-
-                    console.log(`🔍 [NON-STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
-
-                    if (canRestart) {
-                      console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_restart_attempt');
-                      // Verify mic actually started after a brief delay
-                      setTimeout(() => {
-                        if (voiceSession.state.phase === 'listening') {
-                          console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
-                        } else {
-                          console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
-                          if (attempt < 8) {
-                            setTimeout(() => attemptMicRestart(attempt + 1), 400);
-                          }
-                        }
-                      }, 150);
-                    } else {
-                      console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
-                      setTimeout(() => attemptMicRestart(attempt + 1), 300);
-                    }
-                  } else {
-                    console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
-                  }
-                };
-
-                // Start first attempt immediately after React render cycle
-                attemptMicRestart(1);
+                if (!lastSendWasVoiceRef.current) return;
+                const isHandsFree = voiceMicRef.current?.isHandsFree ?? true;
+                if (!isHandsFree) {
+                  console.log('🎤 [NON-STREAM] Push-to-talk mode - mic idle after playback');
+                  return;
+                }
+                console.log('🎤 [NON-STREAM] Playback cooldown complete - requesting hands-free restart');
+                setIsMuted(false);
+                voiceSession.methods.startListening('non_stream_restart_attempt');
               });
             });
           }, cooldownMs); // Wait for echo suppression cooldown
@@ -6780,7 +6899,7 @@ I'm not sure what I'm feeling yet.`;
 
       setCurrentMotionState('idle');
     }
-  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent, isSanctuary]);
+  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent, isSanctuary, includeStoredBirthData]);
 
   // 🔁 RECOVERY SEAM (Pattern A) — guarded resend of a not-delivered turn.
   // Reuses the member's existing bubble (retryOf); never creates a second turn.
@@ -6897,55 +7016,6 @@ I'm not sure what I'm feeling yet.`;
 
     // 🌊 LIQUID AI - Track speech end with transcript for rhythm analysis
     rhythmTrackerRef.current?.onSpeechEnd(t);
-
-    // 🚨 CRISIS DETECTION - Safety override that takes precedence over ALL modes
-    // This runs FIRST before any voice command matching
-    const crisisCheck = detectCrisis(t);
-    if (crisisCheck.detected) {
-      console.log(`🚨 [CRISIS] Level ${crisisCheck.level} detected:`, crisisCheck.trigger);
-      crisisStateRef.current = crisisCheck;
-
-      // Stop any ongoing MAIA speech immediately
-      stopStreamingVoice();
-      isAudioPlayingRef.current = false;
-      setIsAudioPlaying(false);
-
-      // Override mode to care (crisis is a hard override)
-      setMaiaMode(prev => ({
-        ...prev,
-        mode: 'care',
-        careSubMode: 'presence', // Crisis uses presence as base
-      }));
-
-      // Crisis speech is consequential member-facing output. Record it in the
-      // visible conversation before TTS so safety language never exists only as
-      // an alarmed audio aside that disappears from the transcript.
-      const crisisInterventionText = crisisCheck.responseScript?.join(' ').trim();
-      if (crisisInterventionText) {
-        const crisisInterventionMessage: ConversationMessage = {
-          id: `crisis-intervention-${Date.now()}`,
-          role: 'oracle',
-          text: crisisInterventionText,
-          timestamp: new Date(),
-          source: 'system',
-        };
-        setMessages(prev => appendMessageCapped(prev, crisisInterventionMessage));
-        onMessageAddedRef.current?.(crisisInterventionMessage);
-      }
-
-      // Speak the same recorded crisis response script line by line.
-      if (crisisCheck.responseScript && maiaReady && maiaSpeak && !isMuted) {
-        for (const line of crisisCheck.responseScript) {
-          await maiaSpeak(line);
-          // Small pause between lines for pacing
-          await new Promise(resolve => setTimeout(resolve, 800));
-        }
-      }
-
-      // The conversation will continue with crisis system prompt active
-      // Don't return - let the message go through with crisis context
-      // This allows MAIA to continue the safety conversation
-    }
 
     // 🎭 COMPREHENSIVE VOICE COMMAND DETECTION (Talk/Care/Scribe modes, settings, actions)
     const voiceCmd = matchVoiceCommand(t);
@@ -7258,9 +7328,11 @@ I'm not sure what I'm feeling yet.`;
     }
 
     // 🎯 MAIA COMMAND DETECTION: mode/lens/style switching (voice path)
-    // Uses the same unified detector as the text path.
+    // TII-03 keeps the spoken transcript authoritative. Command intent may
+    // change interface state, but it never replaces the words that proceed to
+    // the canonical conversation turn.
     const voiceMaiaResult = detectMaiaCommands(t);
-    if (voiceMaiaResult.commands.length > 0) {
+    if (voiceMaiaResult.disposition === 'EXECUTE' && voiceMaiaResult.commands.length > 0) {
       for (const cmd of voiceMaiaResult.commands) {
         if (cmd.type === 'mode') {
           const newListeningMode =
@@ -7287,19 +7359,13 @@ I'm not sure what I'm feeling yet.`;
 
       const confirmation = getMaiaCommandConfirmation(voiceMaiaResult.commands);
 
-      // Command-only: acknowledge and return
       if (voiceMaiaResult.onlyCommands) {
-        console.log('✅ [Voice Command] Command-only, no content to process');
+        console.log('✅ [Voice Command] Command-only; preserving authored turn for F1 acceptance');
         if (confirmation && maiaReady && maiaSpeak && !isMuted) {
           await maiaSpeak(confirmation);
         }
-        if (confirmation) toast.success(confirmation);
-        return;
       }
-
-      // Command + content: show confirmation, continue with cleaned text
       if (confirmation) toast.success(confirmation);
-      transcript = voiceMaiaResult.cleanedText;
     }
 
     // FILTER: Ignore empty or punctuation-only transcripts
@@ -7405,8 +7471,10 @@ I'm not sure what I'm feeling yet.`;
     const trackingUserId = userId || `anon_${sessionId}`;
     userTracker.trackActivity(trackingUserId, 'voice');
 
-    // Save user message to long-term memory (dual-save to memories + Akashic Records)
-    if (oracleAgentId) {
+    // Save user message to long-term memory (dual-save to memories + Akashic Records).
+    // Pure interface commands are retained as turns by F1, but are not promoted
+    // into autobiographical/relational memory merely because they changed UI state.
+    if (oracleAgentId && !voiceMaiaResult.onlyCommands) {
       saveConversationMemory({
         oracleAgentId,
         content: cleanedText,
@@ -7477,9 +7545,16 @@ I'm not sure what I'm feeling yet.`;
       // `move_outcome`; both are cognition decisions a transport layer cannot
       // author.
 
-      // ✅ STANDARD FLOW: Browser STT → /api/between/chat → Browser TTS
+      // ✅ STANDARD FLOW: Browser STT → canonical conversation path.
+      // TII-03 carries the exact accepted transcript and the already-applied
+      // command classification so handleTextMessage neither rewrites nor
+      // executes the same command twice.
       console.log('🌀 Routing voice through THE BETWEEN...');
-      await handleTextMessage(cleanedText);
+      await handleTextMessage(t, undefined, undefined, {
+        parseResult: voiceMaiaResult,
+        commandsAlreadyApplied: voiceMaiaResult.disposition === 'EXECUTE',
+        confirmationHandled: voiceMaiaResult.disposition === 'EXECUTE',
+      });
 
       const duration = Date.now() - voiceStartTime;
       trackEvent.voiceResult(userId || 'anonymous', transcript, duration);
@@ -8681,7 +8756,7 @@ I'm not sure what I'm feeling yet.`;
                   // Stop listening - user explicitly exiting voice mode
                   console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
                   setIsMuted(true);
-                  // Note: isHandsFreeMode stays true (default) — ContinuousConversation refs reinitialize on remount
+                  lastSendWasVoiceRef.current = false;
                   voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
                   console.log('✅ Voice stopped successfully (user exit mode)');
                 }
@@ -10537,8 +10612,22 @@ I'm not sure what I'm feeling yet.`;
               // which is why a dead mic used to look exactly like a live one.
               console.warn(`🎙️ [voice-status] ${level} ${cause} (recoverable=${recoverable})`);
               if (level === 'info') return; // expected stand-down: don't interrupt
-              // Truthful UI: listening is over, so stop showing it as running.
+
+              // A bounded automatic reconnect is NOT a user decision to leave
+              // hands-free. The old generic warning handler silently flipped
+              // hands-free OFF here; recovery could then succeed for one turn,
+              // but the next MAIA response had no authority to auto-listen.
+              if (cause === 'VOICE_RECONNECTING_AFTER_GAP' && recoverable) {
+                setIsListening(false);
+                setIsActivating(true);
+                toast(userMessage, { duration: 5000, icon: '🎙️' });
+                return;
+              }
+
+              // Terminal/unrecovered voice failure: stop claiming LISTENING and
+              // fall back to an explicit user-controlled continuation.
               setIsHandsFreeMode(false);
+              setIsActivating(false);
               setIsListening(false);
               toast(userMessage, { duration: 9000, icon: '🎙️' });
             }}
@@ -10702,6 +10791,7 @@ I'm not sure what I'm feeling yet.`;
             if (!isMuted) {
               // Turn mic OFF - user explicitly toggling off
               setIsMuted(true);
+              lastSendWasVoiceRef.current = false;
               voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
               console.log('🔇 Microphone OFF (user toggle)');
             } else {

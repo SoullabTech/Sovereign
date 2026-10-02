@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.ws-flagship.json",
+  "compilerOptions": { "jsx": "react-jsx" },
+  "include": [
+    "tests/constitutional/writers-studio/flagship-c1a/**/*.ts",
+    "tests/constitutional/writers-studio/flagship-c1a/**/*.tsx",
+    "lib/writersStudio/studio/adapters/**/*.ts",
+    "app/writers-studio/flagship/WriteFrame.tsx",
+    "app/writers-studio/rebuild/RebuildAuthoredBody.tsx"
+  ]
+}

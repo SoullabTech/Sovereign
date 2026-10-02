@@ -20,7 +20,24 @@ Every provider sits in exactly one tier, and each tier grants explicit capabilit
 | **Lab** | **no** (never a default) | **no** (only inside an explicit, gated evaluation) | **OpenAI** (benchmark only, *removal in progress*) |
 | **Forbidden** | — | — | *rules, not providers* (below) |
 
-**Capabilities** are the real unit of governance: `member_data`, `member_audio`, `chat`, `embedding`, `tts`, `stt`, `benchmark`. A production provider without `member_data` may still not receive it.
+**Capabilities** are the real unit of governance. They are intentionally split into two kinds so a provider's ability to *perform a function* never silently becomes permission to *receive a data class*.
+
+| Capability | Kind | Meaning |
+|---|---|---|
+| `chat` | function | generative chat/reasoning |
+| `embedding` | function | embedding generation |
+| `tts` | function | text-to-speech |
+| `stt` | function | speech-to-text |
+| `benchmark` | function | bounded evaluation/benchmark use |
+| `member_data` | data | member-authored or member-derived content permitted by the governing product boundary |
+| `member_audio` | data | member audio permitted by the governing voice boundary |
+| `repository_derived_metadata` | data | fixed-schema non-content repository state; closed enums/booleans/bounded numbers/opaque ids only; excludes source, paths, prose, canon, and member content |
+| `repository_source` | data | repository source or structural/content representations such as excerpts, diffs, filenames, paths, symbols, or commit messages |
+| `constitutional_canon` | data | canon, constitutional text, ratification records, founder rulings, or other constitutionally authoritative material |
+
+A provider may receive a data class only when that exact capability is explicitly assigned to it. A functional capability never implies a data capability. A production provider with `chat` but without `member_data` may not receive member data; likewise, `chat` or `benchmark` does not authorize any repository class.
+
+The three repository classes are separate: `repository_derived_metadata` does not imply `repository_source`; neither repository class implies `constitutional_canon`. Adding a class to this vocabulary grants it to no provider. Development-time external disclosure is additionally governed by `DEVELOPMENT_PROVIDER_GOVERNANCE_CANDIDATE_2026-09-22.md` until that candidate is explicitly ratified and admitted as canon.
 
 ### Forbidden rules (target: zero, never allowlisted)
 
@@ -37,6 +54,31 @@ Wired into: **preflight**, **CI**, and the **pre-commit** hook (`scripts/setup-g
 ### Adding / changing a provider
 
 Editing tiers or the allowlist is a governance act, reviewed in PR. Adding a file to `pending_migration` is *migration debt* and should draw pushback. Adding to `quarantine_browser_keys` is not allowed — remove the client-side key instead.
+
+**Repository data-class assignment has an additional canonical prior-authorization gate.** A provider may not receive `repository_derived_metadata`, `repository_source`, or `constitutional_canon` merely because the class is removed from an "unassigned" list in the same edit. The assignment must cite a separately ratified, machine-readable authorization record that was already admitted to the canonical base before the assignment candidate.
+
+The provider policy records that citation as exact:
+
+```text
+authorized_by:
+  record_path
+  record_blob
+  record_commit
+```
+
+The guard verifies that:
+
+1. `record_commit` predates the assignment candidate;
+2. `record_commit` is an ancestor of the exact canonical base under adjudication;
+3. the canonical base still resolves `record_path` to the exact `record_blob`;
+4. the exact `record_blob` also exists at `record_path` in `record_commit`;
+5. the record is `repository-provider-assignment/v1`;
+6. the record status is `ratified`;
+7. its tier, provider, and capability exactly match the assignment.
+
+The authorization record lives under `docs/governance/provider-assignments/*.json`. A same-branch two-commit sequence that has not first admitted the authorization record to canonical is refused. Delisting a class is therefore not sufficient to assign it.
+
+CI supplies the exact PR base SHA as the canonical base and checks out enough history to prove ancestry. If that base or ancestry history is unavailable, the guard returns a distinct **instrument error** rather than mislabelling missing evidence as an authorization failure.
 
 ## OpenAI removal — burn order
 

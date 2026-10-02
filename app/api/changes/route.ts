@@ -14,6 +14,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { randomUUID } from 'crypto';
+import {
+  recordFacetCrossing,
+  validateFacetCrossingSource,
+  type FacetCrossingRef,
+} from '@/lib/house/facetCrossing.server';
 
 const VALID_CHANGE_TYPES = ['dissolution', 'emergence', 'threshold', 'integration', 'upheaval', 'ripening'] as const;
 const VALID_URGENCIES = ['none', 'low', 'medium', 'high', 'acute'] as const;
@@ -125,7 +130,16 @@ export async function POST(request: NextRequest) {
       urgency = 'none',
       emotionalState,
       parentChangeId,
-    } = body;
+      sourceRef,
+    } = body as {
+      title?: string;
+      description?: string;
+      changeType?: string;
+      urgency?: string;
+      emotionalState?: string;
+      parentChangeId?: string;
+      sourceRef?: FacetCrossingRef;
+    };
 
     if (!title?.trim()) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -156,26 +170,51 @@ export async function POST(request: NextRequest) {
       rootChangeId = parentResult.rows[0].root_change_id || parentChangeId;
     }
 
-    const id = randomUUID();
-    const result = await db.query(
-      `INSERT INTO studio_changes
-        (id, member_id, title, description, change_type, urgency, emotional_state, parent_change_id, root_change_id, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'naming')
-       RETURNING *`,
-      [
-        id,
+    if (sourceRef) {
+      const source = await validateFacetCrossingSource({
         memberId,
-        title.trim(),
-        description.trim(),
-        changeType,
-        urgency,
-        emotionalState?.trim() || null,
-        parentChangeId || null,
-        rootChangeId,
-      ]
-    );
+        targetFacet: 'changes',
+        sourceRef,
+      });
+      if (!source) {
+        return NextResponse.json({ error: 'Source not available for this crossing' }, { status: 400 });
+      }
+    }
 
-    const row = result.rows[0];
+    const id = randomUUID();
+    const insertSql = `INSERT INTO studio_changes
+      (id, member_id, title, description, change_type, urgency, emotional_state, parent_change_id, root_change_id, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'naming')
+     RETURNING *`;
+    const insertParams = [
+      id,
+      memberId,
+      title.trim(),
+      description.trim(),
+      changeType,
+      urgency,
+      emotionalState?.trim() || null,
+      parentChangeId || null,
+      rootChangeId,
+    ];
+
+    // Ordinary Change creation keeps its established write path. Only an
+    // explicit cross-facet creation needs the transaction that binds target
+    // creation and provenance relation as one act.
+    const row = sourceRef
+      ? await db.transaction(async (client) => {
+          const result = await client.query(insertSql, insertParams);
+          await recordFacetCrossing(client, {
+            memberId,
+            crossingId: sourceRef.crossingId,
+            sourceFacet: sourceRef.sourceFacet,
+            sourceRefId: sourceRef.sourceRefId,
+            targetFacet: 'changes',
+            targetRefId: id,
+          });
+          return result.rows[0];
+        })
+      : (await db.query(insertSql, insertParams)).rows[0];
     return NextResponse.json({
       change: {
         id: row.id,

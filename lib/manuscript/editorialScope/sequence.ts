@@ -86,8 +86,15 @@ export const ALL_OUTCOME_KINDS = [
 ] as const;
 
 export const DISCUSSION_ONLY_KINDS = ['reply_only', 'reply_with_direction'] as const;
+export const REPLY_ONLY_KINDS = ['reply_only'] as const;
 
-export function availableOutcomeKinds(gated: boolean): readonly string[] {
+export type ProposalPolicy = 'allow' | 'reply_only';
+
+export function availableOutcomeKinds(
+  gated: boolean,
+  proposalPolicy: ProposalPolicy = 'allow',
+): readonly string[] {
+  if (proposalPolicy === 'reply_only') return REPLY_ONLY_KINDS;
   /* ⭐ `reply_with_direction` SURVIVES THE GATE on purpose. Steering the
      exchange — *let me try this less abstractly first* — is discussion, and it
      is the act the first turn most often wants. ⛔ Narrowing to `reply_only`
@@ -121,3 +128,19 @@ export const SEQUENCE_REFUSAL_DETAIL =
   'MAIA offered wording before you had talked about this passage. At your tightest setting '
   + 'she discusses first. Nothing was changed — ask her again, or turn on "suggest wording '
   + 'straight away" for this Work.';
+
+
+export function proposalPolicyInstruction(policy: ProposalPolicy): string | null {
+  if (policy !== 'reply_only') return null;
+  return [
+    'EXPLORATORY TURN — respond without creating candidate wording or a Direction.',
+    'Stay in discussion, teaching, examples, ideas, or analysis only.',
+    'Illustrative wording may appear inside your reply when the writer asked for examples, but it is not a proposal and must not be persisted as one.',
+    '⛔ Only reply_only is available on this turn.',
+  ].join('\n');
+}
+
+export const REPLY_ONLY_REFUSAL_DETAIL =
+  'MAIA returned a proposal or Direction during an exploratory turn. '
+  + 'That turn was opened for discussion, teaching, examples, ideas, or deeper reasoning only. '
+  + 'Nothing was added to the proposal chain.';

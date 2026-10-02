@@ -31,6 +31,7 @@
  * behaviour inside a text box.
  */
 
+import { createHash } from 'node:crypto';
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
 import { splitStoredSection } from './sectionProjection';
 
@@ -47,6 +48,17 @@ export interface SaveResult {
   detail?: string;
   version?: number;
   sectionChars?: number;
+  /**
+   * A1-LS1 · R3 — on success, WHICH precondition admitted the save.
+   * 'version': the draft was still at the client's base version, so nothing
+   * else in the Work had changed and the new version is fully known to it.
+   * 'observed_body': the draft had moved on elsewhere and only THIS section's
+   * body matched — the new version then includes changes the client has not
+   * seen, and it must not adopt that version as its base.
+   */
+  acceptedBy?: 'version' | 'observed_body';
+  /** A1-LS1 · R3 — on success, SHA-256 of the body exactly as saved (the next observed body). */
+  observedBodySha256?: string;
 }
 
 /** One section, as the writing surface needs it. */
@@ -132,9 +144,22 @@ export async function saveSection(
   draftSectionId: string,
   body: string,
   baseVersion: number,
+  observedBodySha256?: string | null,
 ): Promise<SaveResult> {
   return transaction((tx: TransactionClient) =>
-    saveSectionInTransaction(tx, manuscriptId, memberId, draftSectionId, body, baseVersion));
+    saveSectionInTransaction(tx, manuscriptId, memberId, draftSectionId, body, baseVersion, observedBodySha256));
+}
+
+/**
+ * A1-LS1 · R3 — the only digest form accepted as a concurrency precondition:
+ * lowercase hex SHA-256. Anything else is treated as ABSENT, and absence never
+ * weakens protection — the draft-version rule then decides alone.
+ */
+const OBSERVED_DIGEST = /^[0-9a-f]{64}$/;
+
+/** SHA-256 over the exact UTF-8 bytes of a section body. No normalization. */
+export function sectionBodySha256(body: string): string {
+  return createHash('sha256').update(body, 'utf8').digest('hex');
 }
 
 /**
@@ -153,6 +178,12 @@ export async function saveSectionInTransaction(
   draftSectionId: string,
   body: string,
   baseVersion: number,
+  /**
+   * A1-LS1 · R3 — SHA-256 of this section's body exactly as the client last
+   * observed it (as delivered by the context route, or as it last saved it).
+   * A concurrency precondition only: never stored, never shown, not a version.
+   */
+  observedBodySha256?: string | null,
 ): Promise<SaveResult> {
   {
     const draftRes = await tx.query<{
@@ -166,9 +197,22 @@ export async function saveSectionInTransaction(
     if (draft.section_addressable_at === null) {
       return { status: 'refused', refusal: 'not_section_addressable' as const };
     }
-    /* Existing compare-and-advance semantics, unchanged: a save built on a
-       version someone else has already advanced is refused, not merged. */
-    if (Number(draft.version) !== baseVersion) {
+    /* A1-LS1 · R3 — SECTION-LOCAL CONCURRENCY, decided HERE, under the draft
+       row lock taken above, in the same transaction that performs the save.
+       A save is accepted when EITHER the draft is still at the version the
+       client built on, OR the body of THIS section is still byte-for-byte the
+       body the client last observed. The draft version says something
+       changed; the observed-body digest says whether the thing being changed
+       changed. A change elsewhere in the Work therefore cannot make this
+       section conflict — and a change to this section always does.
+
+       Without a valid digest the draft-version rule decides alone, exactly as
+       before, in the same order: a stale version is refused before anything
+       else is read. */
+    const versionMatches = Number(draft.version) === baseVersion;
+    const observed = typeof observedBodySha256 === 'string' && OBSERVED_DIGEST.test(observedBodySha256)
+      ? observedBodySha256 : null;
+    if (!versionMatches && observed === null) {
       return {
         status: 'refused', refusal: 'stale_base' as const,
         detail: `draft is at version ${draft.version}`,
@@ -185,6 +229,13 @@ export async function saveSectionInTransaction(
 
     const split = splitStoredSection(sec.text, sec.heading);
     if (!split) return { status: 'refused', refusal: 'heading_prefix_not_found' as const };
+
+    if (!versionMatches && sectionBodySha256(split.body) !== observed) {
+      return {
+        status: 'refused', refusal: 'stale_base' as const,
+        detail: `draft is at version ${draft.version}`,
+      };
+    }
 
     /* The heading is carried over untouched. In this cut the member cannot
        change it, and the server does not take their word for what it was. */
@@ -210,6 +261,8 @@ export async function saveSectionInTransaction(
       status: 'saved',
       version: Number(updated.rows[0].version),
       sectionChars: newText.length,
+      acceptedBy: versionMatches ? 'version' : 'observed_body',
+      observedBodySha256: sectionBodySha256(body),
     };
   }
 }

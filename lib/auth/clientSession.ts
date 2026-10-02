@@ -24,8 +24,16 @@ interface ClientSessionPayload {
 /**
  * Sign a payload into a session token
  */
+function getClientSessionSecret(): string | null {
+  const secret = process.env.CLIENT_SESSION_SECRET?.trim();
+  return secret ? secret : null;
+}
+
 function sign(payload: ClientSessionPayload): string {
-  const secret = process.env.CLIENT_SESSION_SECRET || process.env.PHI_ENCRYPTION_KEY || 'dev-client-secret';
+  const secret = getClientSessionSecret();
+  if (!secret) {
+    throw new Error('CLIENT_SESSION_SECRET is required for client portal sessions');
+  }
   const json = JSON.stringify(payload);
   const sig = crypto.createHmac('sha256', secret).update(json).digest('hex');
   return Buffer.from(`${json}.${sig}`).toString('base64url');
@@ -36,7 +44,8 @@ function sign(payload: ClientSessionPayload): string {
  */
 function verify(token: string): ClientSessionPayload | null {
   try {
-    const secret = process.env.CLIENT_SESSION_SECRET || process.env.PHI_ENCRYPTION_KEY || 'dev-client-secret';
+    const secret = getClientSessionSecret();
+    if (!secret) return null;
     const raw = Buffer.from(token, 'base64url').toString('utf8');
     const idx = raw.lastIndexOf('.');
     if (idx < 0) return null;

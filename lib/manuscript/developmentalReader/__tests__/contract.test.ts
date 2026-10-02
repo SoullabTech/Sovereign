@@ -82,6 +82,59 @@ describe('F4 · exactly one canonical lens', () => {
 
 /* ── F5 · ceiling ────────────────────────────────────────────────────────── */
 
+describe('D5C1 · Themes carries a governable candidate name without widening other lenses', () => {
+  it('requires themeLabel under Themes, carries it when lawful, and refuses it everywhere else', () => {
+    const themes = request({ lens: 'themes' }).req;
+    const missing = resultFromBlocks([call({ outcome: 'claims', claims: [goodClaim()] })], themes, IDENTITY);
+    expect(missing.outcome === 'refused' ? missing.refusal : missing.outcome).toBe('malformed_output');
+
+    const lawful = resultFromBlocks([call({ outcome: 'claims', claims: [
+      goodClaim({ themeLabel: 'Crossing and return' }),
+    ] })], themes, IDENTITY);
+    expect(lawful.outcome).toBe('claims');
+    if (lawful.outcome === 'claims') {
+      expect(lawful.claims[0].themeLabel).toBe('Crossing and return');
+    }
+
+    const ordinary = request({ lens: 'voice' }).req;
+    const foreign = resultFromBlocks([call({ outcome: 'claims', claims: [
+      goodClaim({ themeLabel: 'Should not be here' }),
+    ] })], ordinary, IDENTITY);
+    expect(foreign.outcome === 'refused' ? foreign.refusal : foreign.outcome).toBe('foreign_field');
+  });
+
+  it('rejects an empty or overlong themeLabel before evidence admission', () => {
+    const themes = request({ lens: 'themes' }).req;
+    for (const themeLabel of ['   ', 'x'.repeat(121)]) {
+      const r = resultFromBlocks([call({ outcome: 'claims', claims: [goodClaim({ themeLabel })] })], themes, IDENTITY);
+      expect(r.outcome === 'refused' ? r.refusal : r.outcome).toBe('malformed_output');
+    }
+  });
+
+  it('states the repeated-evidence law explicitly to the Themes reader', () => {
+    expect(READER_SYSTEM).toContain('TWO DISTINCT BODY-depth sections');
+    expect(READER_SYSTEM).toContain('section-run');
+    expect(READER_SYSTEM).toContain('does NOT establish a repeated theme');
+  });
+
+  it('refuses importance labels and one-location pseudo-themes', () => {
+    const themes = request({ lens: 'themes' }).req;
+    const ranked = resultFromBlocks([call({ outcome: 'claims', claims: [
+      goodClaim({ themeLabel: 'The central theme' }),
+    ] })], themes, IDENTITY);
+    expect(ranked.outcome === 'refused' ? ranked.refusal : ranked.outcome).toBe('claim_unbindable');
+    expect(ranked.outcome === 'refused' ? ranked.detail : '').toContain('importance_label');
+
+    const onePlace = resultFromBlocks([call({ outcome: 'claims', claims: [
+      goodClaim({ themeLabel: 'Crossing', refs: [{ kind: 'section', sectionId: 's0' }] }),
+    ] })], themes, IDENTITY);
+    expect(onePlace.outcome === 'refused' ? onePlace.refusal : onePlace.outcome).toBe('claim_unbindable');
+    expect(onePlace.outcome === 'refused' ? onePlace.detail : '').toContain('insufficient_repeated_evidence');
+  });
+});
+
+/* ── F5 · ceiling ────────────────────────────────────────────────────────── */
+
 describe('F5 · 60,000 code points, refused whole, never trimmed', () => {
   function bigRequest(bodyCodePoints: number) {
     /* Astral on purpose: 😀 is ONE code point and TWO UTF-16 units. */
@@ -292,7 +345,7 @@ describe('F10 · nothing 07C-shaped exists in the schema or survives the parser'
     expect(Object.keys(schema.properties).sort()).toEqual(['claims', 'outcome']);
     const claimSchema = (schema.properties.claims as { items: { properties: Record<string, unknown>; additionalProperties: boolean } }).items;
     expect(claimSchema.additionalProperties).toBe(false);
-    expect(Object.keys(claimSchema.properties).sort()).toEqual(['doesNotEstablish', 'refs', 'text']);
+    expect(Object.keys(claimSchema.properties).sort()).toEqual(['doesNotEstablish', 'refs', 'text', 'themeLabel']);
     const text = JSON.stringify(schema);
     for (const f of FORBIDDEN) expect(text).not.toMatch(new RegExp(`"${f}"\\s*:`));
   });
@@ -424,7 +477,7 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
     expect(perturbedTool).not.toBe(expected);
   });
 
-  it('identity carries DEVELOPMENTAL-READER-05, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
+  it('identity carries DEVELOPMENTAL-READER-07, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
     /* -02 since WS2-07-F1: the lens reached the reader with its ratified meaning
        and the claim boundary moved into the system prompt. -03 since 2026-09-05:
        section ids are confined to the evidence refs and may not appear in claim
@@ -432,8 +485,8 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
        naming "any sections in the sequence", the reading it cost is recorded in
        reader05.test.ts. Readings frozen under any version keep the identity they
        were made with — the version is provenance, never a filter. */
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-05');
-    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-05' });
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-07');
+    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-07' });
     expect(Object.keys(readerIdentity('m-1'))).not.toContain('frozenAt');
   });
 });

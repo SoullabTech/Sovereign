@@ -1,7 +1,12 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
+import {
+  recordFacetCrossing,
+  validateFacetCrossingSource,
+  type FacetCrossingRef,
+} from '@/lib/house/facetCrossing.server';
 import { getAuthenticatedMember } from '@/lib/practitioner/auth';
 import { promptForDate } from '@/lib/maia/dailyAnchor';
 
@@ -21,17 +26,29 @@ export async function GET(request: NextRequest) {
 
   const prompt = promptForDate(date);
 
-  const result = await query<{ response: string }>(
-    `SELECT response FROM member_daily_anchors
-     WHERE member_id = $1 AND anchor_date = $2
-     LIMIT 1`,
+  const result = await query<{
+    id: string;
+    response: string;
+    created_at: string;
+    updated_at: string;
+  }>(
+    `SELECT id::text AS id,
+            response,
+            created_at::text AS created_at,
+            updated_at::text AS updated_at
+       FROM member_daily_anchors
+      WHERE member_id = $1 AND anchor_date = $2
+      LIMIT 1`,
     [member.id, date]
   );
 
   return NextResponse.json({
     date,
     prompt,
+    anchorId: result.rows[0]?.id ?? null,
     response: result.rows[0]?.response ?? null,
+    createdAt: result.rows[0]?.created_at ?? null,
+    updatedAt: result.rows[0]?.updated_at ?? null,
   });
 }
 
@@ -46,7 +63,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'invalid body' }, { status: 400 });
   }
 
-  const { date, response } = body as { date?: string; response?: string };
+  const { date, response, sourceRef } = body as {
+    date?: string;
+    response?: string;
+    sourceRef?: FacetCrossingRef;
+  };
   if (!date || !ISO_DATE.test(date)) {
     return NextResponse.json({ error: 'invalid date' }, { status: 400 });
   }
@@ -57,13 +78,56 @@ export async function POST(request: NextRequest) {
   const trimmed = response.trim().slice(0, 4000);
   const prompt = promptForDate(date);
 
-  await query(
-    `INSERT INTO member_daily_anchors (member_id, anchor_date, prompt_shown, response)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (member_id, anchor_date)
-     DO UPDATE SET response = EXCLUDED.response, updated_at = NOW()`,
-    [member.id, date, prompt, trimmed]
-  );
+  if (sourceRef) {
+    const source = await validateFacetCrossingSource({
+      memberId: member.id,
+      targetFacet: 'anchor',
+      sourceRef,
+    });
+    if (!source) {
+      return NextResponse.json(
+        { error: 'Source not available for this crossing' },
+        { status: 400 },
+      );
+    }
+  }
 
-  return NextResponse.json({ ok: true });
+  const row = await transaction(async (client) => {
+    const result = await client.query<{
+      id: string;
+      created_at: string;
+      updated_at: string;
+    }>(
+      `INSERT INTO member_daily_anchors (member_id, anchor_date, prompt_shown, response)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (member_id, anchor_date)
+       DO UPDATE SET response = EXCLUDED.response, updated_at = NOW()
+       RETURNING id::text AS id,
+                 created_at::text AS created_at,
+                 updated_at::text AS updated_at`,
+      [member.id, date, prompt, trimmed],
+    );
+
+    const anchor = result.rows[0];
+
+    if (sourceRef) {
+      await recordFacetCrossing(client, {
+        memberId: member.id,
+        crossingId: sourceRef.crossingId,
+        sourceFacet: sourceRef.sourceFacet,
+        sourceRefId: sourceRef.sourceRefId,
+        targetFacet: 'anchor',
+        targetRefId: anchor.id,
+      });
+    }
+
+    return anchor;
+  });
+
+  return NextResponse.json({
+    ok: true,
+    anchorId: row.id,
+    createdAt: row.created_at ?? null,
+    updatedAt: row.updated_at ?? null,
+  });
 }

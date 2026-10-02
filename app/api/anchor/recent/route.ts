@@ -25,8 +25,11 @@ export async function GET(request: NextRequest) {
     prompt_shown: string;
     response: string;
     surface_preference: string;
+    created_at: string;
+    updated_at: string;
   }>(
-    `SELECT id, anchor_date::text AS anchor_date, prompt_shown, response, surface_preference
+    `SELECT id, anchor_date::text AS anchor_date, prompt_shown, response, surface_preference,
+            created_at::text AS created_at, updated_at::text AS updated_at
      FROM member_daily_anchors
      WHERE member_id = $1
      ORDER BY anchor_date DESC

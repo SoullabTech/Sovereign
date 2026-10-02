@@ -13,7 +13,7 @@
  * same reason.
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { shouldConfirmCrossing } from '../crossingConfirmation';
 
@@ -140,8 +140,40 @@ describe('F5 · the receipt carries identities, never words', () => {
 
   it('the migration admits that boundary', () => {
     const m = readFileSync(join(ROOT,
-      'database/migrations/20260921000001_disclosure_boundary_editorial_turn.sql'), 'utf8');
+      'database/migrations/20261002000001_disclosure_boundary_editorial_turn.sql'), 'utf8');
     expect(m).toContain("'writers_studio.editorial_turn->maia_cognition'");
+  });
+
+  /* ⭐ THE REGRESSION THE FIRST MIGRATION WOULD HAVE CAUSED. A migration that
+     re-states the whole CHECK drops every value it does not name; canonical's
+     review_discuss widening landed between this lane's two attempts. */
+  it('the migration states the WHOLE vocabulary and is dated after every other widening', () => {
+    const dir = join(ROOT, 'database/migrations');
+    const mine = '20261002000001_disclosure_boundary_editorial_turn.sql';
+    const m = readFileSync(join(dir, mine), 'utf8').replace(/^\s*--.*$/gm, '');
+    const others = readdirSync(dir).filter((f) => f !== mine
+      && /boundary_check/.test(readFileSync(join(dir, f), 'utf8')));
+    expect(others.length).toBeGreaterThan(0);
+    for (const f of others) expect(f < mine).toBe(true);
+    const restated = new Set<string>();
+    for (const f of others) {
+      const body = readFileSync(join(dir, f), 'utf8').replace(/^\s*--.*$/gm, '');
+      for (const v of body.match(/'writers_studio\.[a-z_]+->maia_cognition'/g) ?? []) restated.add(v);
+    }
+    for (const v of restated) expect(m).toContain(v);
+  });
+
+  it('the TypeScript union carries exactly the values the CHECK admits', () => {
+    const sql = readFileSync(join(ROOT,
+      'database/migrations/20261002000001_disclosure_boundary_editorial_turn.sql'), 'utf8')
+      .replace(/^\s*--.*$/gm, '');
+    const check = sql.slice(sql.indexOf('CHECK (boundary IN'), sql.indexOf('));'));
+    const inSql = [...check.matchAll(/'(writers_studio\.[a-z_]+->maia_cognition)'/g)].map((x) => x[1]).sort();
+    const ts = src('lib/disclosure/contextDisclosureReceipt.ts');
+    const union = ts.slice(ts.indexOf('export type DisclosureBoundary'), ts.indexOf('export type DisclosureScopeKind'))
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+    const inTs = [...union.matchAll(/'(writers_studio\.[a-z_]+->maia_cognition)'/g)].map((x) => x[1]).sort();
+    expect(inTs).toEqual(inSql);
   });
 });
 

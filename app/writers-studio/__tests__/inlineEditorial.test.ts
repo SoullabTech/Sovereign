@@ -72,15 +72,66 @@ test('page conversation previews before apply and preserves a draft through disc
   const button=(text:string) => Array.from(container.querySelectorAll('button')).find(b=>b.textContent===text)!;
   expect(button('Use this revision').disabled).toBe(true);
   expect(container.querySelector('.wsi-page-tools')?.hasAttribute('hidden')).toBe(true);
-  act(()=>button('Preview in context').click());
-  expect(onPreview).toHaveBeenLastCalledWith({original:'Original words.',wording:'Quieter words.',changes:false});
+  act(()=>button('Read in context').click());
+  expect(onPreview).toHaveBeenLastCalledWith({original:'Original words.',wording:'Quieter words.',changes:true});
   expect(button('Use this revision').disabled).toBe(false);
-  act(()=>button('Adjust wording').click());
+  act(()=>button('Change it').click());
   const draft=container.querySelector('.wsi-revision') as HTMLTextAreaElement;
   expect(draft.value).toBe('Quieter words.');
   expect(button('Use this revision').disabled).toBe(true);
-  act(()=>button('Send').click());
+  act(()=>button('Talk about it').click());
   expect(onSend.mock.calls[0][0]).toContain('My unsaved working revision (for discussion, do not apply):\nQuieter words.');
   expect(container.querySelector('.wsi-revision')).toBe(draft);
   expect(onApply).not.toHaveBeenCalled();
+});
+
+test('inline applied receipt keeps Undo visible outside the collapsed tools', () => {
+  const onUndo=jest.fn();
+  const version={id:'v1',author:'maia',wording:'Quieter words.',rationale:'A quieter ending',supersedes:null};
+  const thread={threadId:'t1',targetSectionId:'s1',headVersionId:'v1',locusText:'Original words.',legacyLocus:false,versions:[version],turns:[]};
+  act(() => root.render(React.createElement(RevisionDesk, {
+    inline:true, showInspiration:false, manuscriptId:'m1',title:'My chapter',
+    currentText:'Quieter words.',sectionBody:'Before.\n\nQuieter words.\n\nAfter.',
+    thread,version,instruction:'',onInstruction:jest.fn(),onSend:jest.fn(),onApply:jest.fn(),
+    onPreview:jest.fn(),onSelectVersion:jest.fn(),onSaveMember:jest.fn(),onKeep:jest.fn(),
+    busy:false,message:null,response:null,appliedVersionId:'v1',onUndo
+  } as any)));
+  const tools=container.querySelector('.wsi-page-tools');
+  expect(tools?.hasAttribute('hidden')).toBe(true);
+  const undo=Array.from(container.querySelectorAll('button')).find(b=>b.textContent==='Undo this change')!;
+  expect(undo).toBeTruthy();
+  expect(undo.closest('.wsi-page-tools')).toBeNull();
+  act(()=>undo.click());
+  expect(onUndo).toHaveBeenCalledTimes(1);
+});
+
+test('A2-14 inline chooser keeps earlier MAIA context separate, explicit, and removable', () => {
+  const onOpen=jest.fn(), onClose=jest.fn(), onSelect=jest.fn(), onRemove=jest.fn();
+  const source={kind:'prior_maia_editorial_turn' as const,sourceEpisodeSequence:3,sourceScope:'passage' as const,admittedAt:'2026-09-25T12:00:00.000Z',excerpt:'Earlier MAIA words stay separate.',excerptTruncated:false};
+  const thread={threadId:'t1',targetSectionId:'s1',headVersionId:null,locusText:'Original words.',legacyLocus:false,versions:[],turns:[]};
+  const base={
+    inline:true,showInspiration:false,manuscriptId:'m1',title:'My chapter',currentText:'Original words.',sectionBody:'Original words.',
+    thread,version:null,instruction:'My own current words',onInstruction:jest.fn(),onSend:jest.fn(),onApply:jest.fn(),onPreview:jest.fn(),
+    onSelectVersion:jest.fn(),onSaveMember:jest.fn(),onKeep:jest.fn(),busy:false,message:null,response:null,
+    carrySourceAvailable:true,onOpenCarryChooser:onOpen,onCloseCarryChooser:onClose,onSelectCarrySource:onSelect,onRemoveCarrySource:onRemove,
+  };
+  act(()=>root.render(React.createElement(RevisionDesk,{...base,carryChooser:{kind:'closed'},selectedCarrySource:null} as any)));
+  const byText=(text:string)=>Array.from(container.querySelectorAll('button')).find(b=>b.textContent===text)!;
+  expect(byText('Bring an earlier MAIA response')).toBeTruthy();
+  act(()=>byText('Bring an earlier MAIA response').click());
+  expect(onOpen).toHaveBeenCalledTimes(1);
+
+  act(()=>root.render(React.createElement(RevisionDesk,{...base,carryChooser:{kind:'ready',sources:[source]},selectedCarrySource:null} as any)));
+  expect(container.textContent).toContain('Earlier in this relationship');
+  const card=Array.from(container.querySelectorAll('button')).find(b=>b.textContent?.includes('Earlier MAIA words stay separate.'))!;
+  act(()=>card.click());
+  expect(onSelect).toHaveBeenCalledWith(source);
+
+  act(()=>root.render(React.createElement(RevisionDesk,{...base,carryChooser:{kind:'closed'},selectedCarrySource:source} as any)));
+  expect(container.textContent).toContain('Earlier MAIA response');
+  const composer=container.querySelector('textarea[aria-label="Discuss this passage"]') as HTMLTextAreaElement;
+  expect(composer.value).toBe('My own current words');
+  expect(composer.value).not.toContain(source.excerpt);
+  act(()=>byText('Remove').click());
+  expect(onRemove).toHaveBeenCalledTimes(1);
 });

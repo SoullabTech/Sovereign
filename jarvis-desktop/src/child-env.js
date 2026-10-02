@@ -33,6 +33,31 @@ const STRIPPED = [
   'ELECTRON_RUN_AS_NODE',
 ];
 
+// D2R1: strict allowlist for canonical OpenCode provider execution only.
+// Ordinary Desktop/Builder children continue to use childEnv() unchanged.
+const CANONICAL_EXECUTION_ALLOWED = Object.freeze([
+  'PATH',
+  'HOME',
+  'TMPDIR',
+  'USER',
+  'LOGNAME',
+  'SHELL',
+  'LANG',
+  'LC_ALL',
+  'LC_CTYPE',
+  'TERM',
+  'COLORTERM',
+  'NO_COLOR',
+  'TZ',
+  'XDG_CONFIG_HOME',
+  'XDG_DATA_HOME',
+  'XDG_CACHE_HOME',
+  'XDG_STATE_HOME',
+  'OPENCODE_CONFIG_DIR',
+  'OPENCODE_DISABLE_MODELS_FETCH',
+  'OPENCODE_DISABLE_AUTOUPDATE',
+]);
+
 /**
  * Build a child environment with startup-altering variables removed.
  *
@@ -49,6 +74,37 @@ function childEnv(sourceEnv) {
       delete env[key];
     }
   }
+  return { env, removed };
+}
+
+/**
+ * D2R1 canonical provider-execution environment builder.
+ *
+ * Unknown names are absent by construction. Overrides may change only already
+ * allowlisted names, so callers cannot quietly widen the canonical membrane.
+ */
+function allowlistedChildEnv(sourceEnv, options = {}) {
+  const src = sourceEnv || {};
+  const allowedNames = options.allowed || CANONICAL_EXECUTION_ALLOWED;
+  const allowed = new Set(allowedNames);
+  const overrides = options.overrides || {};
+  const env = {};
+  const removed = [];
+
+  for (const [key, value] of Object.entries(src)) {
+    if (value === undefined) continue;
+    if (allowed.has(key)) env[key] = value;
+    else removed.push(key);
+  }
+
+  for (const [key, value] of Object.entries(overrides)) {
+    if (!allowed.has(key)) {
+      throw new Error('CANONICAL_ENV_OVERRIDE_NOT_ALLOWLISTED:' + key);
+    }
+    if (value === undefined || value === null) delete env[key];
+    else env[key] = String(value);
+  }
+
   return { env, removed };
 }
 
@@ -174,4 +230,12 @@ function resolveNodeBinary(deps = {}) {
 /** Test seam. Resolution is cached, and a test must be able to start clean. */
 function _resetNodeCache() { _cachedNode = null; }
 
-module.exports = { STRIPPED, childEnv, resolveNodeBinary, RESOLUTION_SOURCE, _resetNodeCache };
+module.exports = {
+  STRIPPED,
+  CANONICAL_EXECUTION_ALLOWED,
+  childEnv,
+  allowlistedChildEnv,
+  resolveNodeBinary,
+  RESOLUTION_SOURCE,
+  _resetNodeCache,
+};

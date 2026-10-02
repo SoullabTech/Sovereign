@@ -49,7 +49,7 @@ function codes(r){return r.blockers.map(b=>b.code);}
 
 check('QWEN route participant binds exact governed local transport',()=>{
   const env=routed();
-  const r=appendTransportBindingV1(env,req('primary','qwen-local','qwen3-coder:30b','opencode'));
+  const r=appendTransportBindingV1(env,req('primary','qwen-local','qwen3-coder:30b','ollama-direct'));
   assert.equal(r.ok,true);
   assert.equal(r.binding.transport_binding_version,TRANSPORT_BINDING_VERSION);
   assert.equal(r.binding.model_family,'QWEN');
@@ -60,17 +60,38 @@ check('QWEN route participant binds exact governed local transport',()=>{
   });
 });
 
-check('GPT_OSS independent participant has its own governed transport',()=>{
+check('GPT_OSS independent participant has its own governed direct transport',()=>{
   const env=routed();
   const g=governedTransportForParticipantV1(env.work_unit,'local-review-1');
   assert.equal(g.model_family,'GPT_OSS');
   assert.equal(g.provider_id,'gpt-oss-local');
   assert.equal(g.model_id,'gpt-oss:20b');
+  assert.equal(g.adapter_id,'ollama-direct');
+  assert.equal(g.transport_posture,'local');
+  assert.equal(g.execution_mode,'automatic');
+  const r=appendTransportBindingV1(
+    env,
+    req('local-review-1','gpt-oss-local','gpt-oss:20b','ollama-direct'),
+  );
+  assert.equal(r.ok,true,JSON.stringify(r.blockers));
+  assert.deepEqual(r.binding.authority_projection,{
+    repository_read:true,network_external:false,provider_spend:false,external_disclosure:'none',
+  });
+});
+
+check('GPT_OSS cannot fall back to OpenCode once MODEL MODE is canonical',()=>{
+  const env=routed();
+  const r=appendTransportBindingV1(
+    env,
+    req('local-review-1','gpt-oss-local','gpt-oss:20b','opencode'),
+  );
+  assert.equal(r.ok,false);
+  assert.ok(codes(r).includes('TRANSPORT_FAMILY_MISMATCH'));
 });
 
 check('transport binding to absent route participant is refused',()=>{
   const env=routed();
-  const r=appendTransportBindingV1(env,req('missing','qwen-local','qwen3-coder:30b','opencode'));
+  const r=appendTransportBindingV1(env,req('missing','qwen-local','qwen3-coder:30b','ollama-direct'));
   assert.equal(r.ok,false);
   assert.ok(codes(r).includes('ROUTE_PARTICIPANT_NOT_FOUND'));
 });
@@ -134,10 +155,10 @@ check('external exact-bundle binding projects canonical Work Unit authority',()=
 });
 
 check('active binding requires explicit supersession',()=>{
-  const first=appendTransportBindingV1(routed(),req('primary','qwen-local','qwen3-coder:30b','opencode'));
+  const first=appendTransportBindingV1(routed(),req('primary','qwen-local','qwen3-coder:30b','ollama-direct'));
   assert.equal(first.ok,true);
   const second=appendTransportBindingV1(first.envelope,req(
-    'primary','qwen-local','qwen3-coder:30b','opencode','READY',
+    'primary','qwen-local','qwen3-coder:30b','ollama-direct','READY',
     {transport_binding_id:'binding-2'},
   ));
   assert.equal(second.ok,false);
@@ -146,11 +167,11 @@ check('active binding requires explicit supersession',()=>{
 
 check('superseding binding is append-only and becomes sole active binding',()=>{
   const first=appendTransportBindingV1(routed(),req(
-    'primary','qwen-local','qwen3-coder:30b','opencode','HOLD',
+    'primary','qwen-local','qwen3-coder:30b','ollama-direct','HOLD',
     {transport_binding_id:'old'},
   ));
   const second=appendTransportBindingV1(first.envelope,req(
-    'primary','qwen-local','qwen3-coder:30b','opencode','READY',
+    'primary','qwen-local','qwen3-coder:30b','ollama-direct','READY',
     {transport_binding_id:'new',supersedes_binding_id:'old'},
   ));
   assert.equal(second.ok,true);
@@ -183,7 +204,7 @@ check('Nemotron Zen stays MANUAL_ONLY',()=>{
 
 check('deterministic routes reject model transport binding',()=>{
   const env=routed({identity:{capability:'git.rev_parse'}});
-  const r=appendTransportBindingV1(env,req('primary','qwen-local','qwen3-coder:30b','opencode'));
+  const r=appendTransportBindingV1(env,req('primary','qwen-local','qwen3-coder:30b','ollama-direct'));
   assert.equal(r.ok,false);
   assert.ok(codes(r).includes('DETERMINISTIC_ROUTE_HAS_NO_MODEL_TRANSPORT'));
 });
@@ -191,7 +212,7 @@ check('deterministic routes reject model transport binding',()=>{
 check('route digest tamper is refused before transport binding',()=>{
   const env=JSON.parse(JSON.stringify(routed()));
   env.work_unit.routing.route_record.task_shape='ARCHITECTURE_REASONING';
-  const r=appendTransportBindingV1(env,req('primary','qwen-local','qwen3-coder:30b','opencode'));
+  const r=appendTransportBindingV1(env,req('primary','qwen-local','qwen3-coder:30b','ollama-direct'));
   assert.equal(r.ok,false);
   assert.ok(codes(r).includes('ROUTE_DIGEST_MISMATCH'));
 });

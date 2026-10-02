@@ -104,6 +104,8 @@ const TRIAGE: Record<string, 'guarded' | 'pending-inventory'> = {
   '/api/commons/contributions/review-queue': 'pending-inventory',
   '/^\\/api\\/commons\\/contributions\\/[^/]+\\/review$/': 'pending-inventory',
   '/api/admin/beta-testers': 'pending-inventory',
+  '/api/steward/opus-pulse': 'guarded',
+  '/api/admin/partners/prelude/': 'guarded',
 };
 
 describe('access-matrix role-gated routes are triaged', () => {

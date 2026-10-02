@@ -25,6 +25,7 @@ import {
   X
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { readability } from '@/lib/house/readability';
 
 interface Message {
   id: string;
@@ -213,8 +214,8 @@ export function EmbeddedMAIAChat({
       >
         <MessageSquare className="w-6 h-6 text-violet-400" />
         <div className="flex-1 text-left">
-          <h4 className="text-lg font-semibold text-violet-200">Explore with MAIA</h4>
-          <p className="text-violet-300/70 text-sm">
+          <h4 className={`${readability.itemTitle} font-semibold text-violet-100`}>Explore with MAIA</h4>
+          <p className={`${readability.metadata} text-violet-200/75`}>
             {hasStarted
               ? `${messages.length} message${messages.length !== 1 ? 's' : ''} in conversation`
               : 'Discuss this reading\'s meaning for your situation'}
@@ -240,16 +241,16 @@ export function EmbeddedMAIAChat({
           >
             <div className="border-t border-violet-500/20">
               {/* Messages Area */}
-              <div className="h-64 overflow-y-auto p-4 space-y-4">
+              <div className="h-72 sm:h-80 overflow-y-auto p-4 sm:p-5 space-y-5">
                 {!hasStarted ? (
                   <div className="flex flex-col items-center justify-center h-full text-center">
                     <Sparkles className="w-10 h-10 text-violet-400/50 mb-3" />
-                    <p className="text-violet-300/70 text-sm">
+                    <p className={`${readability.body} text-violet-200/75`}>
                       Click to begin exploring your {oracleType} reading with MAIA
                     </p>
                     <button
                       onClick={startConversation}
-                      className="mt-4 px-4 py-2 bg-violet-600/50 hover:bg-violet-600/70 text-violet-100 rounded-lg text-sm transition-colors"
+                      className={`${readability.action} mt-4 min-h-11 px-4 py-2 bg-violet-600/50 hover:bg-violet-600/70 text-violet-100 rounded-lg transition-colors`}
                     >
                       Start Conversation
                     </button>
@@ -262,13 +263,13 @@ export function EmbeddedMAIAChat({
                         className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                          className={`max-w-[88%] rounded-xl px-4 py-3 ${
                             message.role === 'user'
                               ? 'bg-violet-600/50 text-violet-100'
                               : 'bg-black/30 text-violet-200'
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <p className={`${readability.reading} whitespace-pre-wrap`}>{message.content}</p>
                         </div>
                       </div>
                     ))}
@@ -298,12 +299,12 @@ export function EmbeddedMAIAChat({
                       onKeyDown={handleKeyPress}
                       placeholder="Ask about your reading..."
                       disabled={isLoading}
-                      className="flex-1 px-4 py-2 bg-black/30 border border-violet-500/30 rounded-lg text-violet-100 placeholder-violet-400/50 focus:outline-none focus:ring-2 focus:ring-violet-500/50 text-sm disabled:opacity-50"
+                      className={`${readability.body} flex-1 min-h-12 px-4 py-2.5 bg-black/30 border border-violet-500/30 rounded-lg text-violet-100 placeholder-violet-300/45 focus:outline-none focus:ring-2 focus:ring-violet-500/50 disabled:opacity-50`}
                     />
                     <button
                       onClick={sendMessage}
                       disabled={!inputText.trim() || isLoading}
-                      className="px-4 py-2 bg-violet-600/50 hover:bg-violet-600/70 disabled:bg-violet-600/20 disabled:cursor-not-allowed text-violet-100 rounded-lg transition-colors"
+                      className="min-w-12 min-h-12 px-4 py-2 bg-violet-600/50 hover:bg-violet-600/70 disabled:bg-violet-600/20 disabled:cursor-not-allowed text-violet-100 rounded-lg transition-colors flex items-center justify-center"
                     >
                       <Send className="w-5 h-5" />
                     </button>

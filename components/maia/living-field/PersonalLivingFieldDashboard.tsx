@@ -1,13 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { LivingField, PersonalSpiral, PersonalState, SpiralState } from './types'
 import { LivingFieldCard } from './LivingFieldCard'
 import { SpiralSummaryCard } from './SpiralSummaryCard'
 import { PhaseStatePanel } from './PhaseStatePanel'
 import { LivingEncounterView } from './LivingEncounterView'
-import { ReturnToMaia } from '@/components/navigation/ReturnToMaia'
+import { ReturnHome } from '@/components/navigation/ReturnHome'
 import { LivingConstellationPanel } from '@/components/maia/living-constellation/LivingConstellationPanel'
+import { LifeFacetFlowPanel } from './LifeFacetFlowPanel'
+import { LivingFieldInstrument } from './LivingFieldInstrument'
+import { useEarlyFieldAdmission } from './useEarlyFieldAdmission'
 
 const RELATIONAL_PHASE_LABELS: Record<number, string> = {
   1: 'Orientation',
@@ -21,7 +24,7 @@ interface Props {
   spiralState: SpiralState | null
   activeSpirals: PersonalSpiral[]
   recentStates: PersonalState[]
-  memberId: string
+  fromHouse?: boolean
 }
 
 export function PersonalLivingFieldDashboard({
@@ -29,7 +32,7 @@ export function PersonalLivingFieldDashboard({
   spiralState,
   activeSpirals,
   recentStates,
-  memberId,
+  fromHouse = false,
 }: Props) {
   const phase = spiralState?.relational_phase
   const phaseLabel = phase ? RELATIONAL_PHASE_LABELS[phase] : null
@@ -38,6 +41,16 @@ export function PersonalLivingFieldDashboard({
   // (Current Questions: the dimension for what is alive right now), never a
   // navigation away to main MAIA. Closing returns to the constellation.
   const [talkOpen, setTalkOpen] = useState(false)
+  const encounterRef = useRef<HTMLDivElement>(null)
+  // EARLY-FIELD-01: the server decides; this only reflects it (closed until told).
+  const earlyFieldAdmitted = useEarlyFieldAdmission()
+
+  function beginMaiaExploration() {
+    setTalkOpen(true)
+    window.requestAnimationFrame(() => {
+      encounterRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
 
   // Surface aliveness at the top level. A field is "alive" if the member has
   // authored it OR material has gathered into it. Order alive fields first so the
@@ -54,43 +67,73 @@ export function PersonalLivingFieldDashboard({
     <div className="min-h-screen bg-stone-950 text-stone-100">
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
 
-        {/* The way out. The House opens this room with
-            `returnBehavior: 'back-to-maia'`; until this link existed nothing in
-            the page's whole component closure honoured that, so a member who
-            entered had no route home. */}
-        <ReturnToMaia className="text-stone-500 hover:text-stone-300 text-sm" />
+        {/* Outside a House arrival, keep the room's ordinary way home.
+            When `from=house`, HouseRoomThreshold already owns the return gesture;
+            rendering this second link creates two competing exits. */}
+        {!fromHouse && (
+          <ReturnHome className="text-stone-500 hover:text-stone-300 text-sm" />
+        )}
 
         {/* Welcome header */}
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-stone-100">Your Living Field</h1>
-          <p className="text-stone-400 text-sm max-w-xl leading-relaxed">
-            AIN does not ask people to fill in fields. It cultivates Living Fields that grow
-            alongside a life. These dimensions are not a profile — they are a developmental mirror.
-          </p>
+        <div className="space-y-3">
+          <h1 className="text-2xl font-semibold text-stone-100">Living Field</h1>
+          <div className="max-w-2xl space-y-2">
+            <p className="text-stone-300 text-base leading-relaxed">
+              See the different parts of your life together.
+            </p>
+            <p className="text-stone-400 text-sm leading-relaxed">
+              Each dimension is an area of life you may want to notice over time. Open one when
+              something there feels alive, important, changing, or worth returning to.
+            </p>
+            <p className="text-stone-500 text-sm leading-relaxed">
+              As the field grows, connections can begin to appear between different parts of your life.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
+            <span className="text-stone-400 text-sm">Bring what feels alive.</span>
+            <button
+              type="button"
+              onClick={beginMaiaExploration}
+              className="text-amber-500 hover:text-amber-400 text-sm transition-colors"
+            >
+              Explore with MAIA →
+            </button>
+          </div>
           {phaseLabel ? (
             <p className="text-stone-500 text-xs">
               Current life phase: <span className="text-stone-300">{phaseLabel}</span>
             </p>
           ) : (
             <p className="text-stone-600 text-xs">
-              Your spiral state is still forming — it will appear here as patterns emerge.
+              The spiral is beginning to take shape as patterns gather.
             </p>
           )}
           {(gatheringCount > 0 || authoredCount > 0) && (
             <p className="text-teal-300/70 text-xs">
               {authoredCount > 0 && (
-                <span>{authoredCount} dimension{authoredCount !== 1 ? 's' : ''} you've begun to author</span>
+                <span>{authoredCount} dimension{authoredCount !== 1 ? 's' : ''} taking shape</span>
               )}
               {authoredCount > 0 && gatheringCount > 0 && <span className="text-stone-600"> · </span>}
               {gatheringCount > 0 && (
-                <span>{gatheringCount} already gathering from what you've kept</span>
+                <span>{gatheringCount} gathering from saved reflections</span>
               )}
             </p>
           )}
         </div>
 
+        {/* VFE-02R12 / RUNTIME-01: additive first witness. The existing Living Field
+            remains below unchanged while recursive WORLD/PATH navigation is witnessed.
+            EARLY-FIELD-01: shown only to the server-admitted cohort; everyone else
+            keeps the Living Field exactly as it was. */}
+        {earlyFieldAdmitted && <LivingFieldInstrument />}
+
         {/* LC-02: same read-only constellation used across all three rooms. */}
         <LivingConstellationPanel focus="living" />
+
+        {/* LOF-01: only member-explicit crossings. This is factual continuity,
+            not an inferred psychological graph. It sits before developmental
+            readings so authored movement remains primary evidence. */}
+        <LifeFacetFlowPanel />
 
         {/* Active spirals */}
         {activeSpirals.length > 0 && (
@@ -114,29 +157,33 @@ export function PersonalLivingFieldDashboard({
           <PhaseStatePanel
             spiralState={spiralState}
             recentStates={recentStates}
-            memberId={memberId}
           />
         </section>
 
         {/* Living field constellation */}
         <section className="space-y-4">
-          <h2 className="text-stone-500 text-xs uppercase tracking-widest">
-            Living Field Dimensions
-          </h2>
+          <div>
+            <h2 className="text-stone-500 text-xs uppercase tracking-widest">
+              Living Field Dimensions
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-500">
+              These are areas of life Soullab can help you notice over time — not forms you need to complete.
+              Open a dimension to see what has gathered, write what feels true now, or explore it with MAIA.
+            </p>
+          </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {orderedFields.map((field) => (
-              <LivingFieldCard key={field.field_key} field={field} memberId={memberId} />
+              <LivingFieldCard key={field.field_key} field={field} />
             ))}
           </div>
         </section>
 
         {/* Footer invite — stays in the field */}
-        <div className="border-t border-stone-800 pt-6">
+        <div ref={encounterRef} className="border-t border-stone-800 pt-6 scroll-mt-6">
           {talkOpen ? (
             <LivingEncounterView
               fieldKey="current_questions"
               fieldLabel="Current Questions"
-              memberId={memberId}
               onClose={() => setTalkOpen(false)}
             />
           ) : (
@@ -146,7 +193,7 @@ export function PersonalLivingFieldDashboard({
                 onClick={() => setTalkOpen(true)}
                 className="text-amber-500 hover:text-amber-400 text-sm transition-colors"
               >
-                Talk this through with MAIA →
+                Stay with this a little longer →
               </button>
             </div>
           )}

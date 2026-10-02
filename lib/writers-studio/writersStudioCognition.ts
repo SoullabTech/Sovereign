@@ -41,6 +41,7 @@ export interface CognitionPrepareInput {
   scopeKind: 'whole_work' | 'section' | 'passage';
   label?: string;
   focusContext: string;
+  writerIntention?: string;
   sanctuary: boolean;
 }
 
@@ -69,6 +70,7 @@ export async function prepareCanonicalHandoff(
       participation: {
         focus: { workRef: input.workRef, scopeKind: input.scopeKind, label: input.label },
         workContext: input.focusContext,
+        ...(input.writerIntention?.trim() ? { writerIntention: input.writerIntention.trim() } : {}),
       },
     });
 
@@ -110,7 +112,12 @@ export async function prepareCanonicalHandoff(
 export interface CanonicalGeneration {
   /** ⭐ true only if the response-producing call was actually invoked. */
   readonly handoff: Promise<boolean>;
-  readonly result: Promise<{ ok: boolean; response?: string }>;
+  readonly result: Promise<{
+    ok: boolean;
+    response?: string;
+    provider?: unknown;
+    servingTruth?: unknown;
+  }>;
 }
 
 export function beginCanonicalGeneration(
@@ -135,7 +142,12 @@ export function beginCanonicalGeneration(
       onHandoff: () => { signalled = true; settle(true); },
     },
   })
-    .then(r => ({ ok: true, response: r?.text ?? undefined }))
+    .then(r => ({
+      ok: true,
+      response: r?.text ?? undefined,
+      provider: r?.provider,
+      servingTruth: r?.servingTruth,
+    }))
     .catch(err => {
       console.error('[FOCUS] generation failed', {
         crossed: signalled,

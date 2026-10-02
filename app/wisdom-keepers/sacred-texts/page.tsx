@@ -12,7 +12,7 @@
 
 import React, { useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen, Compass } from 'lucide-react';
 import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
@@ -194,6 +194,8 @@ function ComparisonExperience({
 
 export default function SacredTextsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromHouse = searchParams?.get('from') === 'house';
   const passageCounts = TRADITIONS.map(t =>
     SacredTextRegistry.getByTradition(t.id as any).length
   );
@@ -203,11 +205,11 @@ export default function SacredTextsPage() {
       prompt: tradition.prompt,
       source: 'sacred-texts',
       sourceLabel: `Sacred Text: ${tradition.name}`,
-      returnTo: '/wisdom-keepers/sacred-texts',
+      returnTo: fromHouse ? '/wisdom-keepers/sacred-texts?from=house' : '/wisdom-keepers/sacred-texts',
       tone: 'contemplative',
     });
     router.push('/maia');
-  }, [router]);
+  }, [router, fromHouse]);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e] text-[#f6f1e8]">
@@ -216,7 +218,7 @@ export default function SacredTextsPage() {
         {/* Nav */}
         <div className="mb-8">
           <Link
-            href="/wisdom-keepers/wisdom"
+            href={fromHouse ? '/wisdom-keepers/wisdom?from=house' : '/wisdom-keepers/wisdom'}
             className="inline-flex items-center gap-2 text-sm text-[#D4B896] transition hover:opacity-80"
           >
             <ArrowLeft className="h-4 w-4" />

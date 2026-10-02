@@ -139,7 +139,7 @@ export function NextStepBuilder({
     };
 
     // Call backend to schedule/remind
-    let stewardship = null;
+    let stewardship: NextStepResult['stewardship'];
     try {
       const response = await fetch('/api/focus/next-step', {
         method: 'POST',

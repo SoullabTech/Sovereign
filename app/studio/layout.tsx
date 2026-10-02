@@ -77,10 +77,12 @@ const DEFAULT_PERSONAL_NAV_ORDER = ['maia', 'decisions', 'changes', 'tasks', 'ca
 
 function DraggableNavItem({
   mod,
+  href,
   isActive,
   onNavigate,
 }: {
   mod: ModuleDefinition;
+  href: string;
   isActive: boolean;
   onNavigate?: () => void;
 }) {
@@ -94,7 +96,7 @@ function DraggableNavItem({
       className="group relative flex items-center"
     >
       <Link
-        href={mod.href}
+        href={href}
         onClick={onNavigate}
         className={`
           flex-1 flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm
@@ -314,13 +316,14 @@ export default function StudioLayout({
 
   // ─── Nav link renderer (shared by sidebar and drawer) ─────
   const renderNavLink = (mod: ModuleDefinition, onClick?: () => void, collapsed = false) => {
-    const isActive = pathname === mod.href ||
-      (mod.href !== '/studio' && pathname?.startsWith(mod.href));
+    const href = currentMode === 'personal' && mod.slug === 'decisions' ? '/decisions' : mod.href;
+    const isActive = pathname === href ||
+      (href !== '/studio' && pathname?.startsWith(href));
 
     return (
       <Link
-        key={mod.href}
-        href={mod.href}
+        key={href}
+        href={href}
         onClick={onClick}
         title={collapsed ? mod.label : undefined}
         className={`
@@ -356,8 +359,11 @@ export default function StudioLayout({
     //    untouched — this is navigation comfort, not field composition.
     if (currentMode === 'personal') {
       const field = visibleModules.find((m) => m.slug === 'field');
-      const isActive = (mod: ModuleDefinition) =>
-        pathname === mod.href || (mod.href !== '/studio' && (pathname?.startsWith(mod.href) ?? false));
+      const personalHref = (mod: ModuleDefinition) => mod.slug === 'decisions' ? '/decisions' : mod.href;
+      const isActive = (mod: ModuleDefinition) => {
+        const href = personalHref(mod);
+        return pathname === href || (href !== '/studio' && (pathname?.startsWith(href) ?? false));
+      };
       return (
         <>
           {field && renderNavLink(field, onNavigate, collapsed)}
@@ -374,7 +380,7 @@ export default function StudioLayout({
               className="space-y-0.5 mt-0.5"
             >
               {personalMiddle.map((m) => (
-                <DraggableNavItem key={m.slug} mod={m} isActive={isActive(m)} onNavigate={onNavigate} />
+                <DraggableNavItem key={m.slug} mod={m} href={personalHref(m)} isActive={isActive(m)} onNavigate={onNavigate} />
               ))}
             </Reorder.Group>
           )}

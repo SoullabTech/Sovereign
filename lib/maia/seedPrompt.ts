@@ -28,7 +28,7 @@ export interface SeedPayload {
   /** Path to return to after session (e.g., '/maia/guide') */
   returnTo?: string;
   /** Optional tone hint for MAIA's response style */
-  tone?: 'gentle' | 'direct' | 'exploratory' | 'supportive';
+  tone?: 'gentle' | 'direct' | 'exploratory' | 'supportive' | 'contemplative';
   /** Optional context ID for deeper tracking */
   contextId?: string;
 }

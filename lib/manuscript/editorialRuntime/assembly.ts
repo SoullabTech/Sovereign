@@ -37,6 +37,7 @@ import { query } from '@/lib/db/postgres';
 import { surroundOf } from '../editorialScope/surround';
 import { loadProjectedSectionBody } from '../ask/workContext';
 import { readProposalWork } from '../proposalChain/proposalWork';
+import type { LocusScopeKind } from '../proposalChain/contract';
 import {
   editorialCandidates,
   type EditorialCandidateBlock,
@@ -66,10 +67,8 @@ export type EditorialAssemblyResult =
   | {
       readonly ok: true;
       readonly chainId: string;
-      /** ⭐ Identity of the Work this locus belongs to. For the receipt's `sourceRef`. */
-      readonly workId: string;
-      /** ⭐ Identity of the section the locus sits in. ⛔ Never its text. */
-      readonly targetSectionId: string;
+      /** The manuscript identity already bound into the proposal-chain locus. */
+      readonly manuscriptId: string;
       readonly blocks: readonly EditorialCandidateBlock[];
       /** ⭐ The predecessor MAIA is being invoked against. ER-R3 carries it forward. */
       readonly invokedAgainstVersionId: string | null;
@@ -85,6 +84,7 @@ export type EditorialAssemblyResult =
        * arriving through the measurement instead of the write.
        */
       readonly locusText: string;
+      readonly locusScopeKind: LocusScopeKind | null;
       /**
        * ⭐ The writer's own nearby prose, as a VOCABULARY SAMPLE for the voice
        * measurement (WS-EDITORIAL-SCOPE-01 · voice).
@@ -206,16 +206,13 @@ export async function assembleEditorialCognition(
 
   return {
     ok: true, chainId,
-    /* ⭐ THE IDENTITIES THE DISCLOSURE RECEIPT NAMES, from the same locus read
-       that produced the prose — ⛔ never a second lookup that could disagree
-       with it, for the same reason `locusText` is not re-read. */
-    workId: locus.workId,
-    targetSectionId: locus.targetSectionId,
+    manuscriptId: locus.workId,
     blocks: participation.blocks,
     invokedAgainstVersionId: work.work.focused?.id ?? null,
     /* ⭐ THE SAME VALUE THE LOCUS BLOCK CARRIED INTO COGNITION, from the same
        read. ⛔ Not a second lookup that could disagree with it. */
     locusText: locus.expectedText,
+    locusScopeKind: locus.locusScopeKind ?? null,
     authorSample: surround ? `${surround.before}\n${surround.after}` : '',
     /* ⭐ From the history already read — strictly before the current turn. */
     hasPriorMaiaTurn: turns.some((t) => t.author === 'maia'),

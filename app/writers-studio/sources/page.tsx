@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useMemo, useRef, useState } from 'react';
 import { FileText, Image as ImageIcon, Loader2, Upload, CheckCircle2, Trash2 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -204,6 +205,11 @@ function SourceCard({ source, works, onChanged }: { source: StudioSource; works:
 }
 
 export default function WriterSourcesPage() {
+  const searchParams = useSearchParams();
+  const rawReturnTo = searchParams?.get('returnTo') ?? null;
+  const returnTo = rawReturnTo?.startsWith('/dev/writers-studio-p4r1?')
+    ? rawReturnTo
+    : null;
   const inputRef = useRef<HTMLInputElement>(null);
   const { phase, sources, reload } = useStudioSources();
   const { works, reload: reloadWorks } = useLivingWorks();
@@ -250,7 +256,12 @@ export default function WriterSourcesPage() {
   return (
     <main className="min-h-screen px-6 md:px-10 py-10 md:py-14" style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}>
       <div className="max-w-5xl mx-auto">
-        <Link href="/writers-studio" className="text-[12px] opacity-50 hover:opacity-80">← Studio Home</Link>
+        <Link
+          href={returnTo ?? '/writers-studio'}
+          className="text-[12px] opacity-50 hover:opacity-80"
+        >
+          {returnTo ? '← Return to lineage question' : '← Studio Home'}
+        </Link>
         <div className="mt-8 mb-10 max-w-2xl">
           <h1 className="text-[34px] md:text-[42px] leading-tight">Bring source material</h1>
           <p className="mt-4 text-[15px] leading-relaxed opacity-65">

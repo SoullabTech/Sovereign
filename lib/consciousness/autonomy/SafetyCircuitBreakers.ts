@@ -70,14 +70,14 @@ export class SafetyCircuitBreakers {
   private emergencyMode = false;
   private onSafetyTrigger?: (trigger: SafetyTrigger) => void;
   private onIntervention?: (intervention: SafetyIntervention) => void;
-  private onHumanNotification?: (notification: { trigger: SafetyTrigger; intervention: SafetyIntervention }) => void;
+  private onHumanNotification?: (notification: { trigger: SafetyTrigger; intervention: SafetyIntervention }) => boolean | void;
 
   constructor(
     baselineSettings: any = {},
     callbacks: {
       onSafetyTrigger?: (trigger: SafetyTrigger) => void;
       onIntervention?: (intervention: SafetyIntervention) => void;
-      onHumanNotification?: (notification: { trigger: SafetyTrigger; intervention: SafetyIntervention }) => void;
+      onHumanNotification?: (notification: { trigger: SafetyTrigger; intervention: SafetyIntervention }) => boolean | void;
     } = {}
   ) {
     this.baselineSettings = {
@@ -397,18 +397,26 @@ export class SafetyCircuitBreakers {
       recommendedActions: this.generateRecommendedActions(trigger, intervention)
     };
 
-    console.log('📢 Human notification sent:', {
-      severity: trigger.severity,
-      type: trigger.triggerType,
-      interventionType: intervention.interventionType
-    });
-
-    // Mark as notified
-    intervention.humanNotified = true;
-
-    // Call notification callback
+    // humanNotified is a claim that a PERSON was told. It may only become true when a
+    // delivery callback affirmatively confirms delivery (returns true). Invoking a
+    // callback — or logging — is not notifying a human. An audit must never read a
+    // notification that did not happen.
+    let delivered = false;
     if (this.onHumanNotification) {
-      this.onHumanNotification({ trigger, intervention });
+      try {
+        delivered = this.onHumanNotification({ trigger, intervention }) === true;
+      } catch (err) {
+        console.error('[SAFETY_NOTIFY_FAILED] circuit-breaker notification callback threw', err);
+      }
+    }
+    intervention.humanNotified = delivered;
+
+    if (!delivered) {
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] circuit breaker activated; NO human was notified (no delivery channel confirmed)', {
+        severity: trigger.severity,
+        type: trigger.triggerType,
+        interventionType: intervention.interventionType
+      });
     }
   }
 

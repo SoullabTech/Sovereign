@@ -68,6 +68,17 @@ async function memberOwnsMaterial(
     );
     return r.rows.length > 0;
   }
+  if (materialType === 'idea') {
+    /* C5 — an Idea remains an Idea when it begins feeding a Work. This check
+       proves only member ownership. The crossing writes a belonging row; it
+       does not copy blocks, change idea status, or promote any wording into a
+       manuscript. */
+    const r = await query<{ id: string }>(
+      `SELECT id FROM member_ideas WHERE id = $1 AND member_id = $2`,
+      [materialId, memberId]
+    );
+    return r.rows.length > 0;
+  }
   // Openness of the ontology is not openness of this gate: a type this route
   // cannot verify is refused rather than trusted.
   return false;

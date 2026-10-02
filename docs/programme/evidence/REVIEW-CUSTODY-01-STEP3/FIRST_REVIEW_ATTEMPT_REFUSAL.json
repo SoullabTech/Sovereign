@@ -1,0 +1,23 @@
+{
+  "instrument": "review-custody-step3-first-review-attempt/v1",
+  "date": "2026-09-21",
+  "target_sha": "3d6e104084495419bf9c744152b8f6c1aad75200",
+  "migration": "database/migrations/20260916123000_turn_taking_preferences.sql",
+  "trace_id": "726cd526-f923-4229-9d18-f377ec867752",
+  "trace_sha256": "3da172ea172161cab35e15e016b2b46efb262336cff633cae2ff1452adf4a2d7",
+  "review_sha256": "8987b0f214f8ac8361a9e934990dc3c05257aeba4f1510c331cc7fd032e00d74",
+  "review_verdict": "REVISE",
+  "review_findings": {
+    "medium": 2,
+    "low": 1
+  },
+  "coverage_files_attested": 7,
+  "admission_result": {
+    "kind": "refused",
+    "code": "UNWITNESSABLE_READ_CHANNEL",
+    "channel": "StructuredOutput"
+  },
+  "record_approval_after_attempt": null,
+  "finding": "Claude Code --json-schema emits StructuredOutput as a tool event. It is an output formatter, not a repository read channel. STRICT_COVERAGE had not yet classified this observed host event, so fail-closed correctly prevented admission.",
+  "repair_rule": "Classify only the observed StructuredOutput formatter as non-witnessing. Preserve fail-closed treatment of Bash and all unrecognised tools. Rerun the reviewer on the repaired exact SHA; do not staple this trace onto the changed repository."
+}

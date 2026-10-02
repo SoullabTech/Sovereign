@@ -1,0 +1,156 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "I2",
+  "title": "Pure Constitutional Epistemic Join Evaluator",
+  "date": "2026-09-20",
+  "status": "EVIDENCE_READY",
+  "authorized_canonical_base": "981b741b24924af7fc7e82d73a158be58fbff7d3",
+  "actual_candidate_base": "700b6d52470a7a45c825a57be21f2fe422cec6c8",
+  "base_note": "canonical advanced after the authorization was written; 981b741b is an ancestor of 700b6d52; no intervening commit touches lib/ain/ or any epistemic-join path; all four I1/ACT11A/ACT12A artifact blobs are byte-identical at both SHAs",
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "operation_grammar": "REFERENCE -> REPORT/MOVE -> COMPARE/JUXTAPOSE -> HYPOTHESIZE -> WARRANTED JOIN -> PROMOTE/DISCHARGE",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11",
+    "ACT 12",
+    "ACT 11A",
+    "ACT 12A",
+    "I1"
+  ],
+  "authority": "PURE_CONSTITUTIONAL_COMPUTATION_ONLY_NO_PERSISTENCE_NO_REPRESENTATION_NO_RUNTIME_AUTHORITY",
+  "disposition": "CONSTITUTIONAL EPISTEMIC-JOIN LAW IS EXECUTABLE AS A PURE FUNCTION WITHOUT PERSISTENCE, REPRESENTATION, OR RUNTIME AUTHORITY",
+  "module_boundary": "lib/ain/epistemic-join/",
+  "module_files": [
+    "adoption.ts",
+    "composite.ts",
+    "evaluate.ts",
+    "index.ts",
+    "standing.ts",
+    "types.ts"
+  ],
+  "deliberately_absent": {
+    "store.ts": "I3 persistence adapter; absent rather than present-and-disabled",
+    "projection.ts": "I4+ read model; absent rather than present-and-disabled"
+  },
+  "implemented_laws": {
+    "no_join_without_warrant": "fails closed for standing elevation; hypothesis remains admissible at CANDIDATE without warrant",
+    "reference_is_not_reliance": "declared per endpoint and support entry; both error directions refused; only reliance inherits boundaries",
+    "support_set_is_not_composite": "ceiling is max over warrants, never a sum; composite requires all eleven ACT 11A 1.2 fields",
+    "standing_is_derived": "append-only succession chains; claimed standing is a request capped by warrant; no mutable standing field",
+    "adoption_is_component_scoped": "MEMBER_AUTHORITATIVE_KINDS closed; exact component ids; no agent role may adopt",
+    "jurisdiction_is_mandatory": "transfer must be declared by the warrant; no implicit hierarchy",
+    "lower_standing_remains_representable": "ceiling refusals narrow to the licensed standing; defects fail closed to CANDIDATE",
+    "admission_is_not_representation": "downstreamRepresentationAuthorized typed as literal false; representationAuthority literal 'closed'"
+  },
+  "purity": {
+    "deterministic": true,
+    "clock": "NONE",
+    "randomness": "NONE",
+    "network": "NONE",
+    "database": "NONE",
+    "filesystem": "NONE",
+    "environment": "NONE",
+    "provider_model_call": "NONE",
+    "module_level_mutable_state": "NONE",
+    "imports_outside_module": "NONE",
+    "guard_method": "all source scans strip comments first (C21 instrument lesson)"
+  },
+  "evidence": {
+    "module_typecheck": "npm run typecheck:epistemic-join -> EXIT 0 (strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes)",
+    "falsification_suite": "npm run test:epistemic-join -> 100 passed, 0 failed, 3 suites",
+    "lethality_matrix": "34/34 mutations killed, 0 survived",
+    "repository_no_regression_gate": "npm run typecheck -> 229 errors vs baseline 239, 0 regressions, EXIT 0",
+    "ship_gate_coverage_of_module": "NONE - tsconfig.ship.json excludes lib/ain/**; confirmed 0 module files in ship program",
+    "production_call_sites": "NONE",
+    "required_falsification_cases": "16/16 PASS",
+    "act11_invariants": "INV-01..INV-14 witnessed by identity",
+    "act11a_invariants": "A11A-INV-01..A11A-INV-10 witnessed by identity",
+    "act12a": "section 6 human-authority non-regression and section 7 composite double constraint both witnessed",
+    "i1_disposition_criteria": "4,5,6,7,8,9,10 witnessed",
+    "data_class": "SYNTHETIC ONLY - no member, client, clinical, PHI, Sanctuary, production, or private practitioner material"
+  },
+  "preserved_existing_seams": [
+    {
+      "seam": "relational_practice_ledger",
+      "path": "database/migrations/20260120000001_relational_ledger.sql",
+      "blob_sha": "14e0d7cf52c8b2d93f938bb3d83eb2dae62493d2",
+      "identical_to_i1_record": true
+    },
+    {
+      "seam": "wisdom_graph",
+      "path": "database/migrations/20260214100001_wisdom_graph_foundation.sql",
+      "blob_sha": "a60190bc12560b2d294bee9873ef62105d18cecd",
+      "identical_to_i1_record": true
+    },
+    {
+      "seam": "member_memory_atoms",
+      "path": "database/migrations/20260521000001_member_memory_atoms.sql",
+      "blob_sha": "4c15e3a08f3125b22f88416046e26db92ab0acc6",
+      "identical_to_i1_record": true
+    },
+    {
+      "seam": "living_constellation_types",
+      "path": "lib/maia/living-constellation/types.ts",
+      "blob_sha": "8d5142428c617afdcf39ebd923c89531d4b5d69e",
+      "identical_to_i1_record": true
+    },
+    {
+      "seam": "living_constellation_projection",
+      "path": "lib/maia/living-constellation/projection.ts",
+      "blob_sha": "dec478bf3d89ce38bebd027419eb9b46570adecb",
+      "identical_to_i1_record": true
+    },
+    {
+      "seam": "append_only_standing_precedent",
+      "path": "scripts/research/structural-standing/claim-standing.ts",
+      "blob_sha": "f7b3e9e652f18bec3f65ff4b468da369671da4ea",
+      "identical_to_i1_record": true
+    },
+    {
+      "seam": "jarvis_epistemic_ci_ledger",
+      "path": ".ain/epistemic-ledger.jsonl",
+      "blob_sha": "e06fa7c7eac852563126c5b87a883228199a3e0e",
+      "identical_to_i1_record": true
+    }
+  ],
+  "crossing_allowed": "remains BOOLEAN NOT NULL DEFAULT FALSE under CONSTRAINT crossing_must_be_false; untouched",
+  "artifacts": [
+    "docs/programme/JARVIS-KP-01_I2_PURE_CONSTITUTIONAL_EVALUATOR_2026-09-20.md",
+    "docs/programme/JARVIS-KP-01_I2_WORK_UNIT_2026-09-20.json",
+    "docs/programme/evidence/JARVIS-KP-01/I2/LETHALITY_MATRIX_2026-09-20.md"
+  ],
+  "qualifications": [
+    "the law is executable over EXPLICITLY SUPPLIED structure; deriving authorship, jurisdiction, component kind, dependence, and reference/reliance from real material remains unsolved and is not narrowed by I2",
+    "append-only standing is proved in memory only; concurrency and crash behaviour of a real store is I3's burden and this suite is necessary but not sufficient for it",
+    "the lethality matrix is session evidence, not a committed re-runnable instrument; a disposable-candidate instrument in the S3 B-ii/B-iii style is owed if the Founder wants that claim independently re-runnable"
+  ],
+  "forbidden_and_not_done": [
+    "schema change",
+    "migration",
+    "database write",
+    "persistence",
+    "append-only store",
+    "feature-flag activation",
+    "graph-edge creation",
+    "Wisdom Graph semantic authority",
+    "Relational Practice Ledger semantic claim",
+    "Member Memory mutation",
+    "lifting crossing_allowed",
+    "Living Constellation semantic line",
+    "MAIA prompt change",
+    "MAIA behavioural change",
+    "runtime context injection",
+    "automatic adoption",
+    "provider/model call",
+    "routing change",
+    "CI enforcement",
+    "production shadow",
+    "production read or write",
+    "deployment",
+    "production call site",
+    "pull request",
+    "merge",
+    "I3"
+  ],
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_EXACT_I2_CANDIDATE"
+}

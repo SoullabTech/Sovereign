@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { EmbeddedMAIAChat } from '@/components/oracle/EmbeddedMAIAChat';
+import { divinationType } from '@/lib/oracle/divinationTypography';
 
 /**
  * Bagua Symbol - Traditional 8-sided I Ching symbol
@@ -400,7 +401,7 @@ function IChingOracleContent() {
               className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm">{returnLabel}</span>
+              <span className={divinationType.action}>{returnLabel}</span>
             </button>
 
             <div className="flex items-center gap-2">
@@ -440,7 +441,7 @@ function IChingOracleContent() {
                   <h2 className="text-4xl font-bold text-white mb-4">
                     Consult the Book of Changes
                   </h2>
-                  <p className="text-[#D4B896]/70 text-lg">
+                  <p className={`${divinationType.support} text-[#D4B896]/80`}>
                     The ancient wisdom of the I Ching awaits your question
                   </p>
                 </div>
@@ -450,20 +451,20 @@ function IChingOracleContent() {
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What situation requires wisdom and guidance?"
-                    className="w-full h-32 px-4 py-3 bg-white/[0.08] border border-[#D4B896]/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4B896]/50 focus:border-[#D4B896] transition-all resize-none"
+                    className={`${divinationType.fieldBody} divination-reading-field w-full h-32 px-4 py-3 bg-white/[0.08] border border-[#D4B896]/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4B896]/50 focus:border-[#D4B896] transition-all resize-none`}
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] disabled:from-[#D4B896]/30 disabled:to-[#B49876]/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className={`${divinationType.action} w-full min-h-12 mt-6 px-6 py-4 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] disabled:from-[#D4B896]/30 disabled:to-[#B49876]/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2`}
                   >
                     <Sparkles className="w-5 h-5" />
                     Cast the Yarrow Stalks
                   </button>
 
-                  <p className="text-[#D4B896]/50 text-xs text-center mt-4">
+                  <p className={`${divinationType.metadata} text-[#D4B896]/55 text-center mt-4`}>
                     Using the traditional 50 yarrow stalk method
                   </p>
                 </div>
@@ -555,7 +556,7 @@ function IChingOracleContent() {
                     <h3 className="text-2xl text-[#D4B896] mb-1">
                       {reading.hexagram.name}
                     </h3>
-                    <p className="text-[#D4B896]/60 text-lg">
+                    <p className={`${divinationType.itemTitle} text-[#D4B896]/70`}>
                       {reading.hexagram.keyword}
                     </p>
                   </div>
@@ -563,7 +564,7 @@ function IChingOracleContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     {/* Primary Hexagram */}
                     <div className="bg-white/[0.05] backdrop-blur-xl border border-[#D4B896]/30 rounded-xl p-8 shadow-xl">
-                      <h4 className="text-[#D4B896] text-center mb-6 font-semibold">
+                      <h4 className={`${divinationType.fieldLabel} text-[#D4B896] text-center mb-6`}>
                         Present Hexagram
                       </h4>
 
@@ -596,10 +597,10 @@ function IChingOracleContent() {
                       </div>
 
                       <div className="text-center space-y-2">
-                        <div className="text-[#D4B896]/60 text-sm">
+                        <div className={`${divinationType.metadata} text-[#D4B896]/70`}>
                           Upper Trigram: {reading.hexagram.trigrams.upper}
                         </div>
-                        <div className="text-[#D4B896]/60 text-sm">
+                        <div className={`${divinationType.metadata} text-[#D4B896]/70`}>
                           Lower Trigram: {reading.hexagram.trigrams.lower}
                         </div>
                       </div>
@@ -608,7 +609,7 @@ function IChingOracleContent() {
                     {/* Transformed Hexagram (if changing lines exist) */}
                     {reading.hexagram.transformed && (
                       <div className="bg-white/[0.05] backdrop-blur-xl border border-[#D4B896]/30 rounded-xl p-8 shadow-xl">
-                        <h4 className="text-[#D4B896] text-center mb-6 font-semibold">
+                        <h4 className={`${divinationType.fieldLabel} text-[#D4B896] text-center mb-6`}>
                           Future Hexagram
                         </h4>
 
@@ -620,13 +621,13 @@ function IChingOracleContent() {
                           <p className="text-[#D4B896]">
                             {reading.hexagram.transformed.name}
                           </p>
-                          <p className="text-[#D4B896]/50 text-sm">
+                          <p className={`${divinationType.metadata} text-[#D4B896]/65`}>
                             {reading.hexagram.transformed.keyword}
                           </p>
                         </div>
 
                         <div className="mt-6 p-4 bg-[#D4B896]/10 rounded-lg">
-                          <p className="text-[#D4B896]/70 text-sm text-center">
+                          <p className={`${divinationType.support} text-[#D4B896]/80 text-center`}>
                             The changing lines indicate transformation from the present to this future state
                           </p>
                         </div>
@@ -647,35 +648,35 @@ function IChingOracleContent() {
                     <div className="bg-white/[0.03] backdrop-blur-xl border border-[#D4B896]/20 rounded-2xl p-8 shadow-2xl">
                       <div className="flex items-center gap-3 mb-6">
                         <BookOpen className="w-6 h-6 text-[#D4B896]" />
-                        <h3 className="text-2xl font-bold text-white">Oracle's Wisdom</h3>
+                        <h3 className={`${divinationType.sectionTitle} font-bold text-white`}>Oracle's Wisdom</h3>
                       </div>
 
                       <div className="space-y-6">
                         <div>
-                          <h4 className="text-[#D4B896] font-semibold mb-3">Interpretation:</h4>
-                          <p className="text-white/70 leading-relaxed">
+                          <h4 className={`${divinationType.fieldLabel} text-[#D4B896] mb-3`}>Interpretation:</h4>
+                          <p className={`${divinationType.fieldBody} text-white/75`}>
                             {reading.hexagram.interpretation}
                           </p>
                         </div>
 
                         <div>
-                          <h4 className="text-[#D4B896] font-semibold mb-3">Guidance:</h4>
-                          <p className="text-white/70 leading-relaxed">
+                          <h4 className={`${divinationType.fieldLabel} text-[#D4B896] mb-3`}>Guidance:</h4>
+                          <p className={`${divinationType.fieldBody} text-white/75`}>
                             {reading.guidance}
                           </p>
                         </div>
 
                         <div>
-                          <h4 className="text-[#D4B896] font-semibold mb-3">Sacred Timing:</h4>
-                          <p className="text-white/70 leading-relaxed">
+                          <h4 className={`${divinationType.fieldLabel} text-[#D4B896] mb-3`}>Sacred Timing:</h4>
+                          <p className={`${divinationType.fieldBody} text-white/75`}>
                             {reading.sacredTiming}
                           </p>
                         </div>
 
                         {reading.archetypalTheme && (
                           <div>
-                            <h4 className="text-[#D4B896] font-semibold mb-3">Archetypal Theme:</h4>
-                            <p className="text-white/70 leading-relaxed">
+                            <h4 className={`${divinationType.fieldLabel} text-[#D4B896] mb-3`}>Archetypal Theme:</h4>
+                            <p className={`${divinationType.fieldBody} text-white/75`}>
                               {reading.archetypalTheme}
                             </p>
                           </div>
@@ -688,13 +689,13 @@ function IChingOracleContent() {
                       <div className="bg-gradient-to-br from-amber-900/20 via-orange-800/15 to-yellow-900/20 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-8 shadow-2xl">
                         <div className="flex items-center gap-3 mb-6">
                           <Zap className="w-6 h-6 text-amber-500" />
-                          <h3 className="text-2xl font-bold text-amber-100">Changing Lines</h3>
-                          <span className="ml-auto text-amber-400/70 text-sm">
+                          <h3 className={`${divinationType.sectionTitle} font-bold text-amber-100`}>Changing Lines</h3>
+                          <span className={`${divinationType.metadata} ml-auto text-amber-300/80`}>
                             {reading.hexagram.changingLineMeanings.length} line{reading.hexagram.changingLineMeanings.length > 1 ? 's' : ''} in motion
                           </span>
                         </div>
 
-                        <p className="text-amber-200/70 text-sm mb-6 leading-relaxed">
+                        <p className={`${divinationType.support} text-amber-100/80 mb-6`}>
                           The changing lines are the living heart of your reading. They reveal where energy is actively transforming
                           and offer specific guidance for your situation. Click each line to explore its meaning.
                         </p>
@@ -728,7 +729,7 @@ function IChingOracleContent() {
                                     {isOldYang ? (
                                       <>
                                         <div className="w-8 h-2 bg-amber-500 rounded" />
-                                        <span className="text-amber-400 text-xs">→</span>
+                                        <span className={`${divinationType.marker} text-amber-400`}>→</span>
                                         <div className="w-3 h-2 bg-amber-500/50 rounded" />
                                         <div className="w-3 h-2 bg-amber-500/50 rounded" />
                                       </>
@@ -736,7 +737,7 @@ function IChingOracleContent() {
                                       <>
                                         <div className="w-3 h-2 bg-amber-500 rounded" />
                                         <div className="w-3 h-2 bg-amber-500 rounded" />
-                                        <span className="text-amber-400 text-xs">→</span>
+                                        <span className={`${divinationType.marker} text-amber-400`}>→</span>
                                         <div className="w-8 h-2 bg-amber-500/50 rounded" />
                                       </>
                                     ) : null}
@@ -744,7 +745,7 @@ function IChingOracleContent() {
 
                                   {/* Change type label */}
                                   <div className="flex-1">
-                                    <span className="text-amber-300 text-sm">
+                                    <span className={`${divinationType.metadata} text-amber-200`}>
                                       {isOldYang ? 'Yang becoming Yin' : isOldYin ? 'Yin becoming Yang' : 'Changing'}
                                     </span>
                                   </div>
@@ -769,7 +770,7 @@ function IChingOracleContent() {
                                       className="overflow-hidden"
                                     >
                                       <div className="px-4 pb-4 pt-2 border-t border-amber-500/20">
-                                        <p className="text-amber-100/90 leading-relaxed">
+                                        <p className={`${divinationType.fieldBody} text-amber-50/90`}>
                                           {changingLine.meaning}
                                         </p>
                                       </div>
@@ -784,7 +785,7 @@ function IChingOracleContent() {
                         {/* Summary of transformation */}
                         {reading.hexagram.transformed && (
                           <div className="mt-6 pt-6 border-t border-amber-500/20">
-                            <p className="text-amber-200/70 text-sm text-center">
+                            <p className={`${divinationType.support} text-amber-100/80 text-center`}>
                               Through these changes, Hexagram {reading.hexagram.number} ({reading.hexagram.name})
                               transforms into Hexagram {reading.hexagram.transformed.number} ({reading.hexagram.transformed.name})
                             </p>
@@ -796,11 +797,11 @@ function IChingOracleContent() {
                     {/* Ritual Suggestion */}
                     {reading.ritual && (
                       <div className="bg-[#D4B896]/10 backdrop-blur-xl border border-[#D4B896]/15 rounded-xl p-6">
-                        <h4 className="text-[#D4B896] font-semibold mb-3 flex items-center gap-2">
+                        <h4 className={`${divinationType.fieldLabel} text-[#D4B896] mb-3 flex items-center gap-2`}>
                           <Sparkles className="w-5 h-5" />
                           Integration Ritual
                         </h4>
-                        <p className="text-white/60 text-sm leading-relaxed">
+                        <p className={`${divinationType.fieldBody} text-white/70`}>
                           {reading.ritual}
                         </p>
                       </div>
@@ -827,7 +828,7 @@ function IChingOracleContent() {
                     {/* Save Error Display */}
                     {saveError && (
                       <div className="mb-4 p-4 bg-red-900/30 border border-red-600/30 rounded-lg">
-                        <p className="text-red-300 text-sm">{saveError}</p>
+                        <p className={`${divinationType.support} text-red-200`}>{saveError}</p>
                       </div>
                     )}
 
@@ -860,7 +861,7 @@ function IChingOracleContent() {
                         <button
                           onClick={handleBringToField}
                           disabled={isBringing || isBrought}
-                          className={`px-6 py-3 rounded-lg transition-all duration-500 flex items-center justify-center gap-2 text-sm ${
+                          className={`${divinationType.action} min-h-12 px-6 py-3 rounded-lg transition-all duration-500 flex items-center justify-center gap-2 ${
                             isBrought
                               ? 'bg-[#D4B896]/10 text-[#D4B896]/70 cursor-default border border-[#D4B896]/20'
                               : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white/80 border border-white/10 hover:border-[#D4B896]/30'
@@ -881,14 +882,14 @@ function IChingOracleContent() {
                       <div className="flex gap-3">
                         <button
                           onClick={handleNewReading}
-                          className="flex-1 px-6 py-3 bg-[#D4B896]/15 hover:bg-[#D4B896]/25 text-white/80 font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                          className={`${divinationType.action} flex-1 min-h-12 px-6 py-3 bg-[#D4B896]/15 hover:bg-[#D4B896]/25 text-white/80 font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2`}
                         >
                           <RefreshCw className="w-4 h-4" />
                           New Reading
                         </button>
                         <button
                           onClick={() => router.push(returnTo)}
-                          className="flex-1 px-6 py-3 bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white/80 rounded-lg transition-all duration-300 text-sm"
+                          className={`${divinationType.action} flex-1 min-h-12 px-6 py-3 bg-white/[0.04] hover:bg-white/[0.08] text-white/70 hover:text-white/90 rounded-lg transition-all duration-300`}
                         >
                           {returnLabel}
                         </button>

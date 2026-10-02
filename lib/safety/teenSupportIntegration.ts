@@ -459,15 +459,39 @@ export async function alertSoullabTeam(
     : safetyCheck?.isED ? 'ed'
     : 'general';
 
-  // Log alert (production: send via Resend email or webhook)
-  console.warn('[TEEN SAFETY ALERT]', {
-    type: alertType,
-    userId: params.userId,
-    age: params.age,
-    crisisType: params.crisisType || alertType,
-    timestamp: params.timestamp || new Date(),
-    // NEVER log message content in alerts
-  });
+  // Human delivery is server-side so browser code never receives SMS/webhook credentials.
+  // Deliberately omit message content: the human alert is a summons to review, not a PHI transport.
+  try {
+    const response = await fetch('/api/safety/human-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: safetyCheck?.isAbuse ? 'teen_abuse' : 'teen_crisis',
+        severity: safetyCheck?.isCrisis || params.crisisType ? 'crisis' : 'high',
+        crisisType: params.crisisType || alertType,
+        sessionId: params.sessionId,
+        age: params.age,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN SAFETY ALERT] human delivery failed', {
+        type: alertType,
+        userId: params.userId,
+        status: response.status,
+        crisisType: params.crisisType || alertType,
+        // NEVER log message content in alerts
+      });
+    }
+  } catch (error) {
+    console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN SAFETY ALERT] transport failed', {
+      type: alertType,
+      userId: params.userId,
+      crisisType: params.crisisType || alertType,
+      error: error instanceof Error ? error.name : 'unknown',
+      // NEVER log message content in alerts
+    });
+  }
 
   // TODO (Phase 2): Query guardian_links and send guardian notifications
   // TODO (Phase 2): Insert guardian_safety_alerts record

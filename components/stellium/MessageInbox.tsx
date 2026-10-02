@@ -26,7 +26,7 @@ import {
   Shield,
 } from 'lucide-react';
 import type { MessageInboxItem, MessageUrgency } from '@/lib/practitioner/messages';
-import { getUrgencyConfig, getMessageTypeConfig } from '@/lib/practitioner/messages';
+import { getUrgencyConfig, getMessageTypeConfig } from '@/lib/practitioner/messagePresentation';
 
 interface SafetyConcernPreview {
   id: string;

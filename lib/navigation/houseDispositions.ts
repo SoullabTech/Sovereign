@@ -216,6 +216,8 @@ export const DESTINATION_EXCEPTIONS: Record<string, string> = {
     'That requirement governs PLACEMENT only; it does not assert the process the ' +
     '2026-07-05 note was waiting for, and must not be read as claiming one.',
   journal: 'MAIA_WORLDS member world.',
+  dream:
+    'First-class member-owned Dream facet. The canonical Dream object is the member\'s own Journal Dream identity; the House door changes how that object is encountered without creating a second content authority.',
   reflections:
     'Member-owned reflection capsules (/api/capsules, requireMemberId-scoped). Never a ' +
     'rail boundary: the feed only ever existed inside /labtools, which is why members ' +

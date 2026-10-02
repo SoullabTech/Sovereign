@@ -40,6 +40,7 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Landing & Marketing
   { exact: '/', public: true, notes: 'Studio landing page' },
+  { exact: '/home', public: true, notes: 'Soullab canonical entry — signed-out visitors see the Soullab threshold; authenticated members enter Home' },
   { exact: '/enter', public: true, notes: 'Smart routing entry point (MAIA/onboarding)' },
   { exact: '/faq', public: true, notes: 'Public FAQ' },
   { exact: '/downloads', public: true, notes: 'Downloads page' },
@@ -97,6 +98,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // unmapped default served the landing shell at 200 instead of the Studio —
   // the precise failure the explicit-mapping doctrine above exists to prevent.
   { exact: '/writers-studio', minTier: 'free', notes: "Writer's Studio Home (Layer 2) — same member-facing policy as /press/studio, whose address it inherited; unauthenticated visitors are redirected to sign-in before the door" },
+  { prefix: '/writers-studio/', minTier: 'free', notes: "Writer's Studio member corridor — authenticated members of any tier before every Studio subroute; individual proving/lab surfaces may impose a stricter server-side gate after this outer boundary" },
   { exact: '/now-what/welcome', public: true, notes: 'What Now? public landing — additive; /now-what room-as-entry redirect unchanged' },
   // Now What? (Larry Closs program) — room as entry (2026-07-08). /now-what
   // redirects at the edge (next.config redirects(), which run BEFORE middleware)
@@ -245,8 +247,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/field', minTier: 'free', notes: 'Field routes — all authenticated members' },
 
   // MAIA Interface (core) — all depth, open to all
-  { exact: '/maia', minTier: 'free', notes: 'MAIA main interface' },
+  { exact: '/maia', public: true, notes: 'Legacy MAIA threshold — routes people into canonical Soullab Home or explicit MAIA encounter' },
+  { exact: '/maia/encounter', minTier: 'free', notes: 'Direct MAIA encounter — authenticated member destination inside Soullab' },
   { exact: '/maia/reflection', minTier: 'free', notes: 'Developmental reflection — member-only (beta v0)' },
+  { exact: '/maia/vision-studio', minTier: 'free', notes: 'Vision Studio — authenticated member creative room inside Soullab' },
   { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },
   { exact: '/maia/field-dashboard', minTier: 'free', notes: 'Field dashboard' },
@@ -372,6 +376,15 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Journal — the member's Journal room. A real member route (2026-07-28), no
   // longer a redirect into founder-gated /labtools/journal.
+  // HOUSE-PREFERENCES-01: member presentation only; ownership is resolved again in the reader.
+  { exact: '/house', minTier: 'free', notes: 'Member House orientation' },
+  { exact: '/api/house/preferences', minTier: 'free', notes: 'Verified member-owned House presentation preferences' },
+  { exact: '/api/early-field/admission', minTier: 'free', notes: 'EARLY-FIELD-01 — server-side admission to the early Living Field instrument; authenticated members only; answers a boolean from the session, never a client claim' },
+  { exact: '/api/house-studio/admission', minTier: 'free', notes: 'H1 — server-side admission to explicit House → Writer’s Studio Work-context arrival; authenticated members only; session-derived boolean only' },
+  { exact: '/decisions', minTier: 'free', notes: 'Personal Decision Council — member-owned reflection' },
+  { prefix: '/decisions/', minTier: 'free', notes: 'Personal Decision Council detail/new routes' },
+  { exact: '/practices', minTier: 'free', notes: 'Member Practices room — member-ready embodied practices only; Lab Tools remains internal' },
+  { prefix: '/api/studio/decisions', minTier: 'free', notes: 'Decision Council API — ownership membrane enforced in route' },
   { exact: '/journal', minTier: 'free', notes: 'Member Journal — depth (journals always saved)' },
 
   // ─────────────────────────────────────────────────────────────────
@@ -535,6 +548,12 @@ export const ACCESS_RULES: AccessRule[] = [
   // metadata; no PII beyond a 120-char UA. Anon by design.
   { exact: '/api/telemetry/client', public: true, notes: 'Client diagnostic telemetry — reachable in unauthenticated/broken states (signin breaker + voice events). See PR #328.' },
 
+  // Local Cabin runtime — these exact paths must cross the Proxy even when
+  // connected-mode auth is absent. The handlers themselves enforce the
+  // offline-mode boundary and, for /api/cabin/context, the local Cabin session.
+  { exact: '/api/cabin/health', public: true, notes: 'Local Cabin readiness witness — handler is offline-only and reports package custody state' },
+  { exact: '/api/cabin/context', public: true, notes: 'Local Cabin Context Package read surface — handler is offline-only and requires an existing maia_cabin_session' },
+
   // Public API
   { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },
@@ -629,6 +648,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/api/studio', minTier: 'free', notes: 'Studio API' },
 
   // Supervision API - session lifecycle, transcript, insights SSE stream
+  { exact: '/api/steward/opus-pulse', minTier: 'free', rolesAnyOf: ['steward', 'admin'], notes: 'Opus Pulse internal telemetry — steward/admin only; route also verifies authority directly' },
+  { exact: '/api/feedback', public: true, notes: 'Feedback POST is public/member-facing; GET is independently admin-gated in the route handler' },
+  { exact: '/api/supervision/transcript/list', minTier: 'free', notes: 'Supervision transcript transport — authenticated outer gate; GET is independently Lab Tools-gated in the handler' },
+  { prefix: '/api/admin/partners/prelude/', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Partner prelude administration — admin only; route also verifies authority directly' },
   { prefix: '/api/supervision', minTier: 'free', notes: 'Supervision API' },
 
   // Scribe API - session review, summaries
@@ -638,6 +661,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // auth-gated here and cohort-gated server-side via requireCohort (members.tester).
   // Admin prefix MUST precede the cohort prefix (more specific first).
   { prefix: '/api/admin/beta-testers', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Beta tester field admin API — admin role (also enforced in requireAdmin)' },
+  { prefix: '/api/admin/writers-studio', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Writer’s Studio stewardship evidence — admin-only structural release evidence; route also enforces founder-only writes' },
   { prefix: '/api/beta-testers', minTier: 'free', notes: 'Beta tester field API — cohort-gated server-side (members.tester via requireCohort)' },
 
   // Stripe webhooks (system routes, validated by signature)

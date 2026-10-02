@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.ws-flagship-c1a.json",
+  "include": [
+    "tests/constitutional/writers-studio/flagship-r1-1a/**/*.ts",
+    "tests/constitutional/writers-studio/flagship-r1-1a/**/*.tsx",
+    "app/writers-studio/flagship/DevelopReview.tsx",
+    "app/writers-studio/flagship/ReviewPanels.tsx",
+    "app/writers-studio/flagship/DevelopViews.tsx",
+    "scripts/witness/flagship/fixtures.tsx",
+    "scripts/witness/flagship/developData.ts"
+  ]
+}

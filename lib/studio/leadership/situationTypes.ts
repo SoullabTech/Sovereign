@@ -109,12 +109,12 @@ export const SITUATION_CONFIGS: Record<SituationType, SituationConfig> = {
 
   self: {
     label: 'Personal reflection',
-    description: 'Your own process — countertransference, bias, fear, desire, clarity.',
+    description: 'Your own process — bias, fear, desire, clarity, and what may be outside awareness.',
     icon: 'Eye',
     council: 'shadow',
     preferDomains: ['theoretical', 'domain'],
     requireFramings: ['jung-archetypal'],
-    topicHints: ['countertransference', 'self', 'bias', 'regulation', 'shadow'],
+    topicHints: ['self', 'bias', 'agency', 'regulation', 'shadow'],
     maxFramings: 5,
     closingQuestion:
       'What am I not seeing? What patterns might be active in me? What questions should I sit with?',

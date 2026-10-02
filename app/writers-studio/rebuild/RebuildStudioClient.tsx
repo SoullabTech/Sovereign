@@ -1,13 +1,15 @@
  'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import { beginDraft } from '../../press/manuscript/workingDraftClient';
+import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
 import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
 import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
 import { StudioModeBar } from '../studio/StudioModeBar';
-import { SERIF, SANS } from '../studioTheme';
+import { SERIF, SANS, writingFieldLayout } from '../studioTheme';
 import { useLivingWorks } from '../useLivingWorks';
 import { useStudioSources } from '../useStudioSources';
 import { SOURCE_INTAKE_HREF } from '../studioMap';
@@ -18,12 +20,16 @@ import RebuildAuthoredBody from './RebuildAuthoredBody';
 import GoldLine from '../insight/GoldLine';
 import MaiaListen from '../insight/MaiaListen';
 import InlineWorkspace from '../insight/InlineWorkspace';
-import ManuscriptPassage from '../insight/ManuscriptPassage';
+import ManuscriptPassage, { type EditAction, type MarkedEdit } from '../insight/ManuscriptPassage';
+import { editorialSegments, editIds, composeSelected } from '@/lib/writersStudio/editorialDiff';
+import {
+  DEFAULT_EDITORIAL_DEPTH, DEPTH_CHOICES, editorialDirective, type EditorialDepth,
+} from '@/lib/writersStudio/editorialDepth';
 import InsightReadings from '../insight/InsightReadings';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import RevisionDesk, { type MemberRevisionDraft } from '../insight/RevisionDesk';
 import { useEditingLatitude } from '../insight/EditingLatitude';
-import { INSIGHT_READING, INSIGHT_OBSERVATION, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
+import { INSIGHT_READING, INSIGHT_OBSERVATION, loadCanvasInsight, type CanvasInsight, type InsightPassage } from '@/lib/writersStudio/insightCanvas';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { asOutline, chapterSpanFor, isConfirmedChapterRoot, wordCount, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { OutlineNode } from '@/lib/writersStudio/focus/outlineTree';
@@ -33,6 +39,9 @@ import {
   runChapterReview, rehydrateChapterReview, findingsForSection, lensCounts,
   type ChapterReviewBundle,
 } from '@/lib/writersStudio/rebuild/chapterReview';
+import {
+  commissionReviewDiscuss, REVIEW_DISCUSS_COPY, type ReviewDiscussionState,
+} from '@/lib/writersStudio/rebuild/reviewDiscuss';
 import {
   loadChapterReviewManifest, saveChapterReviewManifest,
 } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
@@ -60,6 +69,25 @@ type PassageTab = 'interpret' | 'suggest' | 'explore' | 'ask';
 interface PassageSelection {
   draftSectionId: string; start: number; end: number; text: string; revisionNumber: number;
 }
+
+const REBUILD_LAYOUT_NOTIONAL = 100000;
+const REBUILD_HOST_LAYOUT = writingFieldLayout(
+  REBUILD_LAYOUT_NOTIONAL,
+  ['outlinePanel', 'writingField', 'maiaPanel'],
+);
+const REBUILD_EDITORIAL_LAYOUT = writingFieldLayout(
+  REBUILD_LAYOUT_NOTIONAL,
+  ['outlinePanel', 'writingField'],
+);
+const REBUILD_HOST_GRID = [
+  REBUILD_HOST_LAYOUT.outlinePanel,
+  REBUILD_HOST_LAYOUT.writingField,
+  REBUILD_HOST_LAYOUT.maiaPanel,
+].map((share) => `${share}fr`).join(' ');
+const REBUILD_EDITORIAL_GRID = [
+  REBUILD_EDITORIAL_LAYOUT.outlinePanel,
+  REBUILD_EDITORIAL_LAYOUT.writingField,
+].map((share) => `${share}fr`).join(' ');
 
 const C = {
   shell: 'var(--ws-ground-base, #F2F0EA)',
@@ -93,11 +121,17 @@ function selectionFromThread(
   } : null;
 }
 
+/* A1-LS1 · R3 — the sections holding an unresolved conflict. A marker on the
+   rail node lets the writer find the section from any chapter. It states the
+   condition only; it is not a control and offers no resolution. */
+const NO_CONFLICTS: ReadonlySet<string> = new Set();
+
 function ImportedStructureBranch({
-  node, focusId, onSelect, level = 0,
+  node, focusId, onSelect, level = 0, conflicted = NO_CONFLICTS,
 }: {
   node: OutlineNode; focusId: string | null;
   onSelect: (id: string, role: OutlineNode['role']) => void; level?: number;
+  conflicted?: ReadonlySet<string>;
 }) {
   const containsFocus = node.draftSectionId === focusId || node.children.some((child) => child.draftSectionId === focusId || child.children.some((grand) => grand.draftSectionId === focusId));
   const [expanded, setExpanded] = useState(level === 0 || containsFocus);
@@ -115,13 +149,13 @@ function ImportedStructureBranch({
         <button type="button" onClick={() => onSelect(node.draftSectionId, node.role)}
           style={{ width: '100%', textAlign: 'left', border: 0, borderLeft: node.draftSectionId === focusId ? `3px solid ${C.gold}` : '3px solid transparent', borderRadius: 7, background: node.draftSectionId === focusId ? C.active : 'transparent', color: C.secondary, padding: `7px 8px 7px ${7 + level * 11}px`, cursor: 'pointer' }}>
           <span style={{ display: 'block', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: node.role === 'chapter' ? C.gold : C.quiet, marginBottom: 2 }}>{roleLabel}</span>
-          <span style={{ display: 'block', fontSize: node.role === 'chapter' ? 12.5 : 11.5, fontWeight: node.role === 'chapter' ? 700 : 500, lineHeight: 1.3 }}>{label}</span>
+          <span style={{ display: 'block', fontSize: node.role === 'chapter' ? 12.5 : 11.5, fontWeight: node.role === 'chapter' ? 700 : 500, lineHeight: 1.3 }}>{label}{conflicted.has(node.draftSectionId) && <span data-conflict-marker role="img" aria-label="Needs attention: changed elsewhere" title="Needs attention" style={{ marginLeft: 6, fontSize: 9, color: C.muted, verticalAlign: 'middle' }}>●</span>}</span>
         </button>
       </div>
       {expanded && node.children.length > 0 && (
         <div style={{ marginLeft: 8 }}>
           {node.children.map((child) => (
-            <ImportedStructureBranch key={child.draftSectionId} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} />
+            <ImportedStructureBranch key={child.draftSectionId} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} conflicted={conflicted} />
           ))}
         </div>
       )}
@@ -130,10 +164,11 @@ function ImportedStructureBranch({
 }
 
 function AuthoredStructureBranch({
-  node, focusId, onSelect, level = 0,
+  node, focusId, onSelect, level = 0, conflicted = NO_CONFLICTS,
 }: {
   node: StructureNodeDTO; focusId: string | null;
   onSelect: (sectionId: string) => void; level?: number;
+  conflicted?: ReadonlySet<string>;
 }) {
   const containsFocus = focusId ? node.derivedSectionIds.includes(focusId) : false;
   const firstSection = node.derivedSectionIds[0] ?? node.sectionIds[0] ?? null;
@@ -143,7 +178,7 @@ function AuthoredStructureBranch({
       <span style={{ fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase', color: C.quiet, display: 'block', marginBottom: 2 }}>
         {node.kind ?? 'Division'}
       </span>
-      <span>{label}</span>
+      <span>{label}{node.derivedSectionIds.some((id) => conflicted.has(id)) && <span data-conflict-marker role="img" aria-label="Needs attention: changed elsewhere" title="Needs attention" style={{ marginLeft: 6, fontSize: 9, color: C.muted, verticalAlign: 'middle' }}>●</span>}</span>
     </>
   );
   if (node.children.length === 0) {
@@ -162,14 +197,109 @@ function AuthoredStructureBranch({
       </summary>
       <div style={{ marginLeft: 4 }}>
         {node.children.map((child) => (
-          <AuthoredStructureBranch key={child.id} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} />
+          <AuthoredStructureBranch key={child.id} node={child} focusId={focusId} onSelect={onSelect} level={level + 1} conflicted={conflicted} />
         ))}
       </div>
     </details>
   );
 }
 
-export default function RebuildStudioClient() {
+/**
+ * ⭐⭐ ALL SIX COMMISSION STAGES, PLUS FETCH, PLUS THE UNKNOWN CASE.
+ *
+ * ⚠️ The first version of this mapped three of them, so `read`, `classify` and
+ * `store` still collapsed into the generic sentence — a partial taxonomy that
+ * LOOKED complete, which is worse than none, because it reads as though the
+ * unnamed cases cannot happen.
+ *
+ * ⛔ WHERE the reading was lost, ⛔ never the internals of why: no schema,
+ * provider, constraint or stack ever reaches the page.
+ */
+const FAILED_AT: Record<string, string> = {
+  capture: 'Could not open the Work',
+  recover: 'Could not open the Work',
+  read: 'Could not finish this reading',
+  classify: 'Read, but findings not prepared',
+  freeze: 'Read, but not finalized',
+  store: 'Read, but not recorded',
+  fetch: 'Read, but not loaded back',
+};
+
+const FAILURE_SENTENCE: Record<string, string> = {
+  capture: 'MAIA could not open this part of your Work to read it, so this lens did not run. Nothing was changed.',
+  recover: 'MAIA could not open this part of your Work to read it, so this lens did not run. Nothing was changed.',
+  read: 'MAIA could not finish reading with this lens. Nothing from it was kept, and nothing in your Work changed.',
+  classify: 'MAIA finished reading with this lens, but its findings could not be prepared, so none were kept. Your Work is unchanged.',
+  freeze: 'MAIA finished reading with this lens, but the result could not be finalized, so nothing from it was kept. Your Work is unchanged.',
+  store: 'MAIA finished reading with this lens, but the result could not be recorded, so nothing from it was kept. Your Work is unchanged.',
+  fetch: 'This lens completed, but its reading could not be loaded back. Nothing from it is shown, and nothing in your Work changed.',
+  /* ⛔ The honest floor: we do not know where it was lost, and ⛔ saying so
+     beats naming a stage we did not observe. */
+  '': 'The result of this reading could not be confirmed, so nothing from it was kept. Your Work is unchanged.',
+};
+
+function ReviewFindingDiscussion({
+  state, onSubmit, onClose,
+}: {
+  state: ReviewDiscussionState;
+  onSubmit: (findingId: string, text: string) => void;
+  onClose: () => void;
+}) {
+  if (state.kind === 'composing') {
+    return (
+      <form data-review-discussion="composing" onSubmit={(e) => {
+        e.preventDefault();
+        const data = new FormData(e.currentTarget);
+        onSubmit(state.findingId, String(data.get('ask') ?? ''));
+      }} style={{ marginTop: 10, padding: 10, border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel }}>
+        <textarea name="ask" rows={3} aria-label="Your question about this observation"
+          placeholder="Ask MAIA about this observation…"
+          style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', border: `1px solid ${C.rule}`, borderRadius: 8, background: C.field, color: C.ink, padding: 9, fontFamily: SANS, fontSize: 11.5 }} />
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button type="submit" style={{ border: 0, borderRadius: 7, padding: '7px 10px', background: C.goldFill, color: C.ink, fontWeight: 700, cursor: 'pointer' }}>Ask MAIA</button>
+          <button type="button" onClick={onClose} style={{ border: `1px solid ${C.soft}`, borderRadius: 7, padding: '7px 10px', background: C.field, color: C.secondary, cursor: 'pointer' }}>Close</button>
+        </div>
+      </form>
+    );
+  }
+  if (state.kind === 'pending') {
+    return (
+      <div data-review-discussion="pending" style={{ marginTop: 10, padding: 10, border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel }}>
+        <div style={{ fontSize: 11.5, color: C.secondary }}>{state.ask}</div>
+        <div style={{ marginTop: 7, fontSize: 10.5, color: C.quiet }}>{REVIEW_DISCUSS_COPY.waiting}</div>
+      </div>
+    );
+  }
+  if (state.kind === 'refused') {
+    return (
+      <div data-review-discussion="refused" style={{ marginTop: 10, padding: 10, border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel }}>
+        <div style={{ fontSize: 11.5, color: C.secondary }}>{state.ask}</div>
+        <div style={{ marginTop: 7, fontSize: 10.5, color: C.gold }}>{state.copy}</div>
+        <button type="button" onClick={onClose} style={{ marginTop: 8, border: `1px solid ${C.soft}`, borderRadius: 7, padding: '6px 9px', background: C.field, color: C.secondary, cursor: 'pointer' }}>Close</button>
+      </div>
+    );
+  }
+  return (
+    <div data-review-discussion="answered" data-posture={state.posture}
+      style={{ marginTop: 10, padding: 10, border: `1px solid ${C.soft}`, borderRadius: 9, background: C.panel }}>
+      <div style={{ fontSize: 10.5, color: C.quiet, marginBottom: 6 }}>{state.ask}</div>
+      <MaiaListen text={state.reply} />
+      <div style={{ fontSize: 12, lineHeight: 1.55, color: C.secondary, whiteSpace: 'pre-wrap' }}>{state.reply}</div>
+      <div style={{ marginTop: 8, fontSize: 10, color: C.quiet }}>Discussed as MAIA read it · no change to the reading or your Work.</div>
+      <button type="button" onClick={onClose} style={{ marginTop: 8, border: `1px solid ${C.soft}`, borderRadius: 7, padding: '6px 9px', background: C.field, color: C.secondary, cursor: 'pointer' }}>Close</button>
+    </div>
+  );
+}
+
+export interface RebuildStudioClientProps {
+  readonly reviewDiscussEnabled?: boolean;
+}
+
+/* A1-LS1 · R5 — a pointer on a Full Canvas control must not take focus from
+   the editor: the field changes, the writing stays exactly where it was. */
+const holdEditorFocus = (event: React.MouseEvent) => { event.preventDefault(); };
+
+export default function RebuildStudioClient({ reviewDiscussEnabled = false }: RebuildStudioClientProps) {
   const params = useSearchParams();
   const requested = params?.get('m') ?? null;
   const requestedSection = params?.get(SECTION_PARAM) ?? null;
@@ -180,13 +310,52 @@ export default function RebuildStudioClient() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [maiaMode, setMaiaMode] = useState<MaiaMode>('chapter');
   const [canvasExpanded, setCanvasExpanded] = useState(false);
+  /* A1-LS1 · R5 — FULL CANVAS CONTINUITY. Entering or leaving Full Canvas
+     changes the field, not the writing: the same editor keeps its focus, caret
+     and selection. A pointer on the toggle never takes focus from the editor
+     (see `holdEditorFocus`). Keyboard activation must move focus to the button
+     first, so the editor's exact state at that moment is remembered and put
+     back once the field has changed. */
+  const lastEditorBlur = useRef<{ sectionId: string; start: number; end: number } | null>(null);
+  const [editorRestore, setEditorRestore] = useState<{ sectionId: string; start: number; end: number; nonce: number } | null>(null);
+  const changeCanvas = useCallback((expanded: boolean, trigger: EventTarget | null) => {
+    /* Focus sitting on the control itself means it was activated from the
+       keyboard (a pointer never takes focus from the editor). Only then was the
+       writer's place displaced, and only then is it put back. */
+    const blur = lastEditorBlur.current;
+    if (blur && trigger && typeof document !== 'undefined' && document.activeElement === trigger) {
+      setEditorRestore({ sectionId: blur.sectionId, start: blur.start, end: blur.end, nonce: Date.now() });
+    }
+    setCanvasExpanded(expanded);
+  }, []);
+  /* A pointer landing anywhere other than an editor or a Full Canvas control
+     means the writer has deliberately gone elsewhere: forget the place. */
+  useEffect(() => {
+    const forget = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (target?.closest?.('[data-authored-body], [data-pure-canvas-toggle], .wsr-return-workspace')) return;
+      lastEditorBlur.current = null;
+    };
+    document.addEventListener('pointerdown', forget, true);
+    return () => document.removeEventListener('pointerdown', forget, true);
+  }, []);
   const [writingEpoch, setWritingEpoch] = useState(0);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [editorialAnchor, setEditorialAnchor] = useState<HTMLElement | null>(null);
   const [inlinePreview, setInlinePreview] = useState<{ scopeKey: string; original: string; wording: string; changes: boolean } | null>(null);
   const [workspaceInsight, setWorkspaceInsight] = useState<{ readingId: string; key: string } | null>(null);
+  const [arrivalInsight, setArrivalInsight] = useState<CanvasInsight | null>(null);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
+  /* ⭐⭐ C6R2 — THE WORKING DECISION, HELD AND NOT PERSISTED.
+     Which of MAIA's marks the writer has taken so far. ⛔ Not a version: a new
+     row for every click would fill the history with combinations nobody chose
+     to keep. It becomes a version once, at `Use selected changes`.
+     ⚠️ Held here rather than in RevisionDesk — the desk and the marked page are
+     siblings, and this is the only place that sees both. Same law, the one
+     position that can carry it. */
+  const [selectedEdits, setSelectedEdits] = useState<ReadonlySet<number>>(new Set());
   const workspaceIncoming = useRef<string | null>(null);
+  const autoProposalKey = useRef<string | null>(null);
   const workspaceReturn = useRef<{
     focusId: string | null; selectedPassage: PassageSelection | null;
     thread: RebuildEditorialThread | null; versionId: string | null;
@@ -201,9 +370,19 @@ export default function RebuildStudioClient() {
   const [reviewPhase, setReviewPhase] = useState<'idle' | 'reading' | 'ready' | 'partial'>('idle');
   const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number; lens: string } | null>(null);
   const [reviewNeedsRefresh, setReviewNeedsRefresh] = useState(false);
+  /* ⭐ C — kept beside the member sentence, never folded into it. */
+  /* ⭐ C6R4 — member-declared, per-observation, changeable without ceremony.
+     ⛔ Never assigned, never inferred, and the default is identical for every
+     member rather than chosen from anything about this one. */
+  const [editorialDepth, setEditorialDepth] = useState<EditorialDepth>(DEFAULT_EDITORIAL_DEPTH);
+  /* ⭐ C6R7 — one request from a mark to open the writer's draft. */
+  const [openDraftNonce, setOpenDraftNonce] = useState(0);
+  const [reviewManifestRefusal, setReviewManifestRefusal] = useState<string | null>(null);
   const [reviewContinuityMessage, setReviewContinuityMessage] = useState<string | null>(null);
   const [reviewLens, setReviewLens] = useState<DevelopmentalLens | 'all'>('all');
   const [reviewFindingsOpen, setReviewFindingsOpen] = useState(true);
+  const [reviewDiscussion, setReviewDiscussion] = useState<ReviewDiscussionState | null>(null);
+  const reviewDiscussGen = useRef(0);
   const [maiaAsk, setMaiaAsk] = useState('');
   const [maiaResponse, setMaiaResponse] = useState<string | null>(null);
   const [maiaFailure, setMaiaFailure] = useState<string | null>(null);
@@ -263,22 +442,53 @@ export default function RebuildStudioClient() {
       }
       const resolvedManuscriptId = manuscriptId;
       if (!resolvedManuscriptId) throw new Error('manuscript identity');
-      const res = await apiFetch(`/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(resolvedManuscriptId)}`);
+      const contextUrl = `/api/writers-studio/rebuild/context?manuscriptId=${encodeURIComponent(resolvedManuscriptId)}`;
+      let res = await apiFetch(contextUrl);
       if (res.status === 401) { setPhase('unauthorized'); return; }
       if (!res.ok) throw new Error('context');
-      const body = await res.json() as ContextPayload;
+      let body = await res.json() as ContextPayload;
+      /* A fresh import arrives here with Source sections and NO working draft:
+         import redirects straight to this room, and nothing on that path makes
+         the draft. Begin it with the SAME call the Canvas makes on arrival
+         (`beginDraft` — verbatim from Source, born section-addressable), then
+         re-read. Only `no_draft` is begun; a legacy `continuous` draft is
+         still refused below — conversion is its own act, never a guess. */
+      if (body.state === 'no_draft') {
+        const begun = await beginDraft(apiFetch, resolvedManuscriptId);
+        if (begun.kind === 'unauthorized') { setPhase('unauthorized'); return; }
+        if (begun.kind === 'no-sections') {
+          setPhase('error');
+          setMessage('This manuscript has no text to open yet. Import it again with its content.');
+          return;
+        }
+        if (begun.kind === 'error') throw new Error('begin draft');
+        res = await apiFetch(contextUrl);
+        if (res.status === 401) { setPhase('unauthorized'); return; }
+        if (!res.ok) throw new Error('context');
+        body = await res.json() as ContextPayload;
+      }
       if (body.state !== 'section_aware') {
         setPhase('error');
         setMessage('This manuscript is not section-addressable yet. The rebuild will not guess at its structure.');
         return;
       }
       setContext(body);
+      /* A1-LS1 · R1 — ARRIVAL. A valid explicit place wins. Without one, the
+         Work opens at its first authored section: the least interpretive
+         answer available until durable member place exists. There is no
+         heuristic here — no heading is ever guessed at as a destination.
+         An absent, stale or foreign `?s` is REPAIRED in the address to the
+         section actually opened, so the bar never names a place the room is
+         not showing. The repair writes the address only: it does not scroll,
+         focus or otherwise move the manuscript. */
       const requestedRow = requestedSection
         ? body.sections.find((s) => s.draftSectionId === requestedSection) ?? null
         : null;
-      const chapter10 = body.sections.find((s) => /^Chapter 10\b/i.test(s.heading ?? ''));
-      const initial = requestedRow ?? chapter10 ?? body.sections[0] ?? null;
+      const initial = requestedRow ?? body.sections[0] ?? null;
       setFocusId(initial?.draftSectionId ?? null);
+      if (!requestedRow && initial && typeof window !== 'undefined') {
+        replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, initial.draftSectionId));
+      }
       setMaiaMode(isConfirmedChapterRoot(initial) ? 'chapter' : 'passage');
       setPhase('ready');
     } catch {
@@ -378,6 +588,8 @@ export default function RebuildStudioClient() {
     setReviewProgress(null);
     setReviewNeedsRefresh(false);
     setReviewContinuityMessage(null);
+    reviewDiscussGen.current += 1;
+    setReviewDiscussion(null);
     if (!chapterRootId || !context || !chapter) return () => { cancelled = true; };
 
     void (async () => {
@@ -439,21 +651,46 @@ export default function RebuildStudioClient() {
     return true;
   }, []);
 
-  const runReview = useCallback(async () => {
+  /* ⭐ `lenses` present = the member asked to continue the readings that were
+     never attempted. ⛔ Absent = the ordinary whole-chapter gesture. */
+  const runReview = useCallback(async (lenses?: readonly DevelopmentalLens[]) => {
     if (!chapter || !context || reviewPhase === 'reading') return;
     if (!(await settleWriting())) return;
     const reviewRevision = writingRef.current?.currentRevisionId() ?? context.version;
+    reviewDiscussGen.current += 1;
+    setReviewDiscussion(null);
     setReviewContinuityMessage(null);
-    setReview({ readingIds: [], payloads: [], findings: [], failures: [] });
+    const asked = lenses ?? DEVELOPMENTAL_LENSES;
+    const carried = lenses && review
+      ? { readingIds: [...review.readingIds], payloads: [...review.payloads],
+          findings: [...review.findings], failures: [...review.failures], remaining: [] }
+      : { readingIds: [], payloads: [], findings: [], failures: [], remaining: [] };
+    setReview(carried);
     setReviewLens('all');
     setReviewFindingsOpen(false);
     setReviewPhase('reading');
-    setReviewProgress({ done: 0, total: DEVELOPMENTAL_LENSES.length, lens: DEVELOPMENTAL_LENSES[0]! });
-    const bundle = await runChapterReview(
+    setReviewProgress({ done: 0, total: asked.length, lens: asked[0]! });
+    const fresh = await runChapterReview(
       context.manuscriptId, chapter.sections,
       (done, total, lens) => setReviewProgress({ done, total, lens }),
-      (partial) => setReview(partial),
+      (partial) => setReview({
+        ...partial,
+        readingIds: [...carried.readingIds, ...partial.readingIds],
+        payloads: [...carried.payloads, ...partial.payloads],
+        findings: [...carried.findings, ...partial.findings],
+        failures: [...carried.failures, ...partial.failures],
+      }),
+      asked,
     );
+    /* ⛔ The earlier readings are not re-read and not replaced; a resumed
+       gesture adds to what already completed. */
+    const bundle = {
+      ...fresh,
+      readingIds: [...carried.readingIds, ...fresh.readingIds],
+      payloads: [...carried.payloads, ...fresh.payloads],
+      findings: [...carried.findings, ...fresh.findings],
+      failures: [...carried.failures, ...fresh.failures],
+    };
     setReview(bundle);
     setReviewNeedsRefresh(false);
     setReviewPhase(bundle.failures.length === 0 ? 'ready' : 'partial');
@@ -466,8 +703,62 @@ export default function RebuildStudioClient() {
     });
     if (!kept.ok) {
       setReviewContinuityMessage('The readings are kept, but this chapter review could not be remembered as one set. Reload may not restore it yet.');
+      /* ⭐ C — the member sentence is right and says nothing operational, so
+         the refusal code is kept beside it rather than folded into it. Without
+         this the only way to learn why the manifest save refused was to
+         reconstruct it from the database afterwards. */
+      setReviewManifestRefusal(kept.refusal);
+    } else {
+      setReviewManifestRefusal(null);
     }
-  }, [chapter, context, reviewPhase, settleWriting]);
+  }, [chapter, context, reviewPhase, settleWriting, review]);
+
+  const openReviewDiscussion = useCallback((findingId: string) => {
+    if (!reviewDiscussEnabled || !review || reviewPhase === 'reading') return;
+    if (!review.findings.some((finding) => finding.id === findingId)) return;
+    setReviewDiscussion({ kind: 'composing', findingId });
+  }, [reviewDiscussEnabled, review, reviewPhase]);
+
+  const closeReviewDiscussion = useCallback(() => {
+    reviewDiscussGen.current += 1;
+    setReviewDiscussion(null);
+  }, []);
+
+  const submitReviewDiscussion = useCallback((findingId: string, text: string) => {
+    if (!reviewDiscussEnabled || !review || !context || reviewPhase === 'reading') return;
+    const finding = review.findings.find((candidate) => candidate.id === findingId);
+    const ask = text.trim();
+    if (!finding || ask.length === 0) return;
+
+    const gen = ++reviewDiscussGen.current;
+    setReviewDiscussion({ kind: 'pending', findingId, ask, gen });
+
+    void commissionReviewDiscuss({
+      manuscriptId: context.manuscriptId,
+      readingId: finding.readingId,
+      observationKey: finding.observationKey,
+      question: ask,
+    }, readCurrentSanctuaryPosture()).then((outcome) => {
+      if (gen !== reviewDiscussGen.current) return;
+      if (outcome.ok) {
+        setReviewDiscussion({
+          kind: 'answered',
+          findingId,
+          ask,
+          reply: outcome.reply,
+          threadId: outcome.threadId,
+          posture: outcome.posture,
+        });
+        return;
+      }
+      const copy = outcome.reason === 'posture_unresolved'
+        ? REVIEW_DISCUSS_COPY.posture
+        : outcome.reason === 'sanctuary_unavailable'
+          ? REVIEW_DISCUSS_COPY.sanctuary
+          : REVIEW_DISCUSS_COPY.failed;
+      setReviewDiscussion({ kind: 'refused', findingId, ask, copy });
+    });
+  }, [reviewDiscussEnabled, review, context, reviewPhase]);
 
   const replaceAddress = useCallback((sectionId: string, threadId: string | null) => {
     if (typeof window === 'undefined') return;
@@ -592,7 +883,16 @@ export default function RebuildStudioClient() {
     if (failure.refusal === 'claim_unbindable') {
       return 'MAIA could not bind one or more claims from this lens to the frozen evidence, so this lens was not kept. The other completed readings are unaffected.';
     }
-    return 'This lens could not complete safely, so no findings from it were kept. The other completed readings are unaffected.';
+    /* ⭐⭐ WHERE THE READING WAS LOST IS THE WRITER'S INFORMATION, NOT OURS.
+       `ReviewFailure` has carried `stage` all along and this surface threw it
+       away, so every outcome read as *MAIA could not complete* — and a lens
+       that finished a full read and then failed to RECORD it was
+       indistinguishable from one that failed to think. The writer waited out
+       the whole read, lost it, and was told nothing that would let them tell
+       the two apart or know whether reading again would help.
+       ⛔ Still no schema names, no trigger names, no stack: WHERE it was lost,
+       ⛔ never the internals of why. */
+    return FAILURE_SENTENCE[failure.stage ?? ''] ?? FAILURE_SENTENCE['']!;
   };
   const visibleReviewFindings = review
     ? reviewLens === 'all' ? review.findings : review.findings.filter((finding) => finding.lens === reviewLens)
@@ -706,14 +1006,20 @@ export default function RebuildStudioClient() {
     if (!(await settleWriting())) return null;
     const passage = selectedPassage?.draftSectionId === focusId ? selectedPassage : null;
     const revision = writingRef.current?.currentRevisionId() ?? passage?.revisionNumber ?? context.version;
+    /* E1 — the member's CURRENT Sanctuary posture, read at this gesture. */
+    const posture = readCurrentSanctuaryPosture();
     const opened = passage
       ? await openBoundEditorialPassage(
-          focusId, { start: passage.start, end: passage.end }, revision,
+          focusId, { start: passage.start, end: passage.end }, revision, posture,
         )
-      : await openBoundEditorialThread(focusId);
+      : await openBoundEditorialThread(focusId, posture);
     if (!opened.ok) {
       const refusal = 'refusal' in opened ? opened.refusal : undefined;
-      setEditorialFailure(refusal === 'selection_ambiguous'
+      setEditorialFailure(opened.reason === 'posture_unresolved'
+        ? 'Your Sanctuary setting could not be read on this device, so revision collaboration was not opened. Open MAIA here once, then try again. Nothing was written.'
+        : opened.reason === 'sanctuary_unavailable'
+          ? 'Sanctuary is on. Revision collaboration is durable by construction, so it is unavailable until Sanctuary is off. Nothing was written.'
+          : refusal === 'selection_ambiguous'
         ? 'Those exact words appear more than once in this section. Select a little more context so the Studio can hold the place without guessing.'
         : refusal === 'selection_stale'
           ? 'The Work changed after you selected those words. Reselect the passage you want to work on.'
@@ -778,20 +1084,52 @@ export default function RebuildStudioClient() {
     if (!focusId || !(requestText ?? editorialDraft).trim() || editorialBusy) return;
     setEditorialBusy(true); setEditorialFailure(null); setAdoptionOutcome(null);
     setVoiceNotice(null);
-    const exactWords = requestText ?? editorialDraft;
+    /* ⭐⭐ C6R4 — ONE PLACE, SO NO TURN ESCAPES IT. Threading the directive
+       through each caller would mean one of them eventually forgets, and the
+       writer would get Direct-register prose from whichever path was missed
+       with nothing on screen explaining why this answer reads differently.
+       ⛔ APPENDED, never substituted: it governs the telling, and the
+       substance of the turn above it is untouched. */
+    const exactWords = `${requestText ?? editorialDraft}\n\n${editorialDirective(editorialDepth)}`;
     try {
       if (!(await settleWriting())) return;
       const thread = await resolveEditorialForAct();
       if (!thread) return;
-      const out = await sendBoundEditorialTurn(thread.threadId, focusId, exactWords,
-        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately });
+      const observationContext = arrivalInsight && workspaceInsight?.readingId === arrivalInsight.readingId
+        && workspaceInsight.key === arrivalInsight.observation.key
+        && arrivalInsight.passages.some(p => p.sectionId === focusId)
+        ? 'Developmental observation being discussed (an interpretation, not an instruction):\n'
+          + arrivalInsight.observation.observation + '\n\n'
+        : '';
+      /* ⭐⭐ R2R1 — THE WRITER'S SCOPE TRAVELS WITH THE TURN.
+         The build-health repair resolved the duplicated call by keeping the
+         observation context and dropping the `scope` argument. It compiles, and
+         `sendBoundEditorialTurn` treats an omitted scope as the most protective
+         setting — so this was never an over-permission failure. It was worse to
+         find: `editLatitude`, `mayRemoveParagraphs` and `mayProposeImmediately`
+         stayed live, their controls stayed on screen, and the turn stopped
+         carrying them. ⛔ A control the writer moves that changes nothing is a
+         false control, and WS-EDITORIAL-SCOPE-01 exists so these settings
+         govern what MAIA may propose. */
+      const out = await sendBoundEditorialTurn(
+        thread.threadId,
+        focusId,
+        observationContext + 'My question:\n' + exactWords,
+        /* E1 — posture read at THIS gesture, never at mount. */
+        readCurrentSanctuaryPosture(),
+        { latitude: editLatitude, mayRemoveParagraphs, mayProposeImmediately },
+      );
       if (!out.ok) {
         /* ⭐⭐ THE SCOPE REFUSAL IS REPORTED AS WHAT IT IS: the system held the
            line the writer drew. ⛔ Not "MAIA could not complete" — she could,
            and what she produced went further than the writer allowed. Saying it
            plainly is what lets the writer learn the control. */
         setEditorialFailure(
-          out.reason === 'scope_refused'
+          out.reason === 'posture_unresolved'
+            ? 'Your Sanctuary setting could not be read on this device, so nothing was sent. Open MAIA here once, then try again.'
+            : out.reason === 'sanctuary_unavailable'
+              ? 'Sanctuary is on. This conversation is durable by construction, so it cannot hold your words until Sanctuary is off. Nothing was written.'
+            : out.reason === 'scope_refused'
             ? (out.detail ?? 'That suggestion went beyond your editing latitude. Nothing was changed.')
             : out.reason === 'unavailable'
               ? 'Revision collaboration is not enabled in this build yet. Nothing was written.'
@@ -810,7 +1148,9 @@ export default function RebuildStudioClient() {
     } finally {
       setEditorialBusy(false);
     }
-  }, [focusId, editorialDraft, editorialBusy, resolveEditorialForAct, bindEditorialThread, settleWriting]);
+  }, [editorialDepth, focusId, editorialDraft, editorialBusy, resolveEditorialForAct,
+      bindEditorialThread, settleWriting, arrivalInsight, workspaceInsight,
+      editLatitude, mayRemoveParagraphs, mayProposeImmediately]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -840,9 +1180,10 @@ export default function RebuildStudioClient() {
         return;
       }
       setAdoptionOutcome(out.outcome);
-      setAppliedVersionId(suggestedVersion.id);
-      const reread = await readBoundEditorialThread(editorialThread.threadId, focusId);
-      if (reread.ok) setEditorialThread(reread.thread);
+      /* ⭐ The immediate receipt is local presentation state. ⛔ Only an
+         actually-applied outcome may set it; a moved or refused Work must not
+         render as though this click changed the manuscript. */
+      setAppliedVersionId(out.outcome.kind === 'applied' ? suggestedVersion.id : null);
       if (out.outcome.kind === 'applied' || out.outcome.kind === 'work_moved') {
         if (review) setReviewNeedsRefresh(true);
         const fresh = await refreshContext();
@@ -859,10 +1200,18 @@ export default function RebuildStudioClient() {
           setSelectedPassage(null);
         }
       }
+      /* ⭐⭐ RECOVERY IS READ AFTER THE WORK HAS SETTLED. The application row
+         is the authority for Undo; reading it before the context refresh made
+         the inline desk depend on a race between two post-apply projections. */
+      const reread = await readBoundEditorialThread(editorialThread.threadId, focusId);
+      if (reread.ok) {
+        setEditorialThread(reread.thread);
+        replaceAddress(focusId, reread.thread.threadId);
+      }
     } finally {
       setAdoptionBusy(false);
     }
-  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting]);
+  }, [focusId, editorialThread, suggestedVersion, adoptionBusy, review, refreshContext, settleWriting, replaceAddress]);
 
   const undoSuggested = useCallback(async () => {
     const application = editorialThread?.application;
@@ -948,15 +1297,105 @@ export default function RebuildStudioClient() {
     setWorkspaceOpen(false);
   }, [editorialBusy, adoptionBusy, memberVersionBusy]);
 
+  const incomingSection = requestedSection;
   const incomingReading = params?.get(INSIGHT_READING) ?? null;
   const incomingObservation = params?.get(INSIGHT_OBSERVATION) ?? null;
+  const incomingAction = params?.get('insightAction') ?? null;
   useEffect(() => {
-    if (phase !== 'ready' || !context || !incomingReading || !incomingObservation) return;
-    const key = context.manuscriptId + ':' + incomingReading + ':' + incomingObservation;
-    if (workspaceIncoming.current === key) return;
-    workspaceIncoming.current = key;
-    openWorkspace({ readingId: incomingReading, key: incomingObservation });
-  }, [phase, context, incomingReading, incomingObservation, openWorkspace]);
+    if (phase !== 'ready' || !context?.manuscriptId || !incomingReading || !incomingObservation) {
+      setArrivalInsight(null);
+      return;
+    }
+    let cancelled = false;
+    setArrivalInsight(null);
+    void loadCanvasInsight(context.manuscriptId, incomingReading, incomingObservation).then(insight => {
+      if (cancelled) return;
+      setArrivalInsight(insight);
+      if (!insight) setEditorialFailure('The observation could not be opened. Your manuscript is unchanged.');
+    });
+    return () => { cancelled = true; };
+  }, [phase, context?.manuscriptId, incomingReading, incomingObservation]);
+
+  /* ⭐⭐ C6R1 — ONE MARKED CHANGE, FIVE PLAIN CHOICES.
+     ⛔ None of these invents a mutation path. Every one either starts a
+     conversation on the existing governed turn — and therefore reaches the
+     Teaching bridge — or does nothing at all. `Accept` and `Change it` ask
+     MAIA for a narrower proposal rather than quietly applying a slice of the
+     current one: applying part of a proposal is a DIFFERENT text from the one
+     the member is looking at, and it would arrive with no version of its own
+     to review, adopt or undo. The writer still decides in the desk above. */
+  /* ⭐⭐ C6R2 — THE COMPOSITION, AND ITS PROVENANCE.
+     Three outcomes, and the distinction between them is the history we want:
+
+       none selected  → the writer's own words. ⛔ Nothing to persist.
+       all selected   → MAIA's exact proposal, chosen by the writer. ⛔ Do NOT
+                        mint a duplicate member version that says the writer
+                        wrote what MAIA wrote.
+       a subset       → a text that is neither MAIA's nor the original, so it
+                        is the WRITER'S, and it goes through the member-version
+                        route and carries their authorship.
+
+     ⭐ *MAIA proposed three edits; the writer accepted two; the revision is the
+     writer's* is a true sentence the record can support. */
+  const composition = useMemo(() => {
+    if (!editorialThread || !suggestedVersion) return null;
+    const segs = editorialSegments(editorialThread.locusText, suggestedVersion.wording);
+    const all = editIds(segs);
+    return {
+      text: composeSelected(segs, selectedEdits),
+      taken: selectedEdits.size, total: all.length,
+      everyMark: all.length > 0 && all.every((id) => selectedEdits.has(id)),
+    };
+  }, [editorialThread, suggestedVersion, selectedEdits]);
+
+  /* ⛔ A new proposal is a new set of marks; carrying selections across would
+     let a number chosen against one wording silently mean another. */
+  useEffect(() => { setSelectedEdits(new Set()); }, [suggestedVersionId]);
+
+  const editAction = useCallback((action: EditAction, edit: MarkedEdit) => {
+    const it = edit.from.trim()
+      ? `"${edit.from.trim()}" to "${edit.to.trim()}"`
+      : `adding "${edit.to.trim()}"`;
+    /* ⭐⭐ ACCEPT SELECTS A MARK THAT ALREADY EXISTS. ⛔ It does not call MAIA
+       and ⛔ it does not touch the manuscript. Asking her to re-propose the
+       change she has already proposed is a model turn the writer did not need
+       and cannot tell they are paying for. */
+    if (action === 'accept' || action === 'keep') {
+      setEditorialFailure(null);
+      setSelectedEdits((prev) => {
+        const next = new Set(prev);
+        if (action === 'accept') next.add(edit.id); else next.delete(edit.id);
+        return next;
+      });
+      return;
+    }
+    /* ⭐ Change it opens the CURRENT COMPOSITION as the writer's own draft —
+       what the page is showing them, not MAIA's full proposal, which they may
+       never have taken whole. */
+    /* ⭐⭐ C6R7 — `Change it` OPENS THE WRITER'S DRAFT. It used to scroll toward
+       the desk, which left the only visible editable field the one labelled
+       *Discuss this passage* — so the plain promise *I see this edit → Change
+       it → now I rewrite this edit* was answered by a conversation box, and
+       rewriting still required finding another control.
+       ⭐ It opens the CURRENT COMPOSITION, which is what the page is showing:
+       the marks taken so far, ⛔ not MAIA's whole proposal, which the writer
+       may never have accepted entire.
+       ⛔ Still no model call and ⛔ still no mutation — the draft is the
+       writer's until they save it. */
+    if (action === 'change') {
+      setPassageTab('suggest');
+      setEditorialFailure(null);
+      setOpenDraftNonce((n) => n + 1);
+      requestAnimationFrame(() =>
+        document.querySelector('[data-revision-desk] .wsi-revision')
+          ?.scrollIntoView({ block: 'center' }));
+      return;
+    }
+    const ask = action === 'challenge'
+      ? `Why did you change ${it}? Show me the words in my sentence that led you there, and make the strongest case for keeping mine. Do not propose new wording in this answer.`
+      : `What writing technique is at work in changing ${it}? Describe what it does for a reader, what it may cost, and when my original would be the better choice. Do not test me and do not propose new wording.`;
+    void sendEditorial(ask);
+  }, [sendEditorial]);
 
   const reviseInsightPassage = useCallback((passage: InsightPassage, authorNotes = '') => {
     if (!context || editorialBusy || adoptionBusy || memberVersionBusy || !passage.verified) return;
@@ -979,6 +1418,64 @@ export default function RebuildStudioClient() {
     setPassageTab('suggest');
     requestAnimationFrame(() => document.querySelector('[data-revision-desk]')?.scrollIntoView({ block: 'start' }));
   }, [context, editorialBusy, adoptionBusy, memberVersionBusy, holdPassage, editorialScope, editorialDraft]);
+
+  /* ⭐ C6 null-target ruling — the member goes and chooses an exact passage
+     THEMSELVES, by selecting text in their own manuscript. The existing
+     selection seam (RebuildAuthoredBody -> onSelectPassage -> holdPassage)
+     then binds it, and the desk's conversation runs through the editorial
+     runtime from there.
+     ⛔ This selects nothing, widens nothing and promotes no section reference
+     into a passage — it moves the member to where their own choice is made. */
+  const chooseOwnPassage = useCallback(() => {
+    setPassageTab('suggest');
+    requestAnimationFrame(() =>
+      document.querySelector('[data-authored-body]')?.scrollIntoView({ block: 'start' }));
+  }, []);
+
+  useEffect(() => {
+    if (!arrivalInsight || !context || phase !== 'ready'
+        || incomingReading !== arrivalInsight.readingId
+        || incomingObservation !== arrivalInsight.observation.key) return;
+    const key = arrivalInsight.manuscriptId + ':' + arrivalInsight.readingId + ':'
+      + arrivalInsight.observation.key + ':' + (incomingSection ?? '') + ':'
+      + (requestedEditorialThread ?? 'new');
+    if (workspaceIncoming.current === key) return;
+    workspaceIncoming.current = key;
+    openWorkspace({ readingId: arrivalInsight.readingId, key: arrivalInsight.observation.key });
+    if (requestedEditorialThread) return;
+    const passage = arrivalInsight.passages.find(p => p.sectionId === incomingSection)
+      ?? arrivalInsight.passages.find(p => p.verified && p.editable)
+      ?? arrivalInsight.passages[0];
+    if (passage?.verified && passage.editable) reviseInsightPassage(passage);
+    else setEditorialFailure('This reading no longer identifies verified editable wording here. Read its context before choosing a passage to revise.');
+  }, [arrivalInsight, context, phase, incomingSection, incomingReading, incomingObservation,
+    requestedEditorialThread, openWorkspace, reviseInsightPassage]);
+
+  useEffect(() => {
+    if (incomingAction !== 'try-revision' || !arrivalInsight || !workspaceOpen
+        || !selectedPassage || !focusId || editorialBusy || suggestedVersionId) return;
+    if (workspaceInsight?.readingId !== arrivalInsight.readingId
+        || workspaceInsight.key !== arrivalInsight.observation.key) return;
+    if (selectedPassage.draftSectionId !== focusId) return;
+    const passage = arrivalInsight.passages.find(p => p.sectionId === focusId && p.verified && p.editable);
+    if (!passage) return;
+    const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
+    const exact = Array.from(passage.body).slice(range.start, range.end).join('');
+    if (exact !== selectedPassage.text) return;
+    const key = `${arrivalInsight.readingId}:${arrivalInsight.observation.key}:${focusId}:${exact}`;
+    if (autoProposalKey.current === key) return;
+    autoProposalKey.current = key;
+    void sendEditorial([
+      'Offer one possible revision of this selected passage in response to the developmental observation.',
+      'Preserve my voice, style, subject, and intentional ambiguity.',
+      'Do not assume the noticed pattern is a defect or that revision is improvement.',
+      'Consider the strongest case for keeping the original.',
+      'Treat possible reader effects as hypotheses.',
+      'Begin the rationale with "Editorial purpose: <short descriptive name>".',
+      'Nothing is to be applied automatically.',
+    ].join('\n'));
+  }, [incomingAction, arrivalInsight, workspaceOpen, workspaceInsight, selectedPassage, focusId,
+    editorialBusy, suggestedVersionId, sendEditorial]);
 
   const saveMemberRevision = useCallback(async (draft: MemberRevisionDraft): Promise<boolean> => {
     if (memberVersionBusy || !editorialThread || draft.threadId !== editorialThread.threadId || draft.sectionId !== focusId) return false;
@@ -1005,6 +1502,19 @@ export default function RebuildStudioClient() {
       return false;
     } finally { setMemberVersionBusy(false); }
   }, [memberVersionBusy, editorialThread, focusId]);
+
+  const useSelectedChanges = useCallback(async () => {
+    if (!composition || !editorialThread || !focusId || !suggestedVersion) return;
+    if (composition.taken === 0) return;
+    /* ⛔ Every mark taken IS MAIA's proposal. It is already a version; a second
+       one would only misattribute it. */
+    if (composition.everyMark) { await applySuggested(); return; }
+    await saveMemberRevision({
+      threadId: editorialThread.threadId, sectionId: focusId,
+      supersedes: suggestedVersion.id, text: composition.text,
+    });
+  }, [composition, editorialThread, focusId, suggestedVersion,
+      applySuggested, saveMemberRevision]);
 
   /* The PAGE's variables. The ROOM's arrive from the Studio layout's
      provider and are simply inherited — this room states none of its own.
@@ -1042,11 +1552,19 @@ export default function RebuildStudioClient() {
           ...section, body: writing.bodyOf(section.draftSectionId),
         }));
         const liveChapterWords = wordCount(liveChapterSections);
-        const statuses = liveChapterSections.map((section) => writing.statusOf(section.draftSectionId));
+        /* A1-LS1 · R2 — SAVE TRUTH OVER THE WHOLE DRAFT. `Saved` means the
+           presented draft holds no known local change that its persistence
+           boundary has not acknowledged. It is true on a successful load and
+           after every acknowledged save — and it is computed over EVERY
+           section, not the chapter on screen, so a refusal elsewhere can never
+           sit behind a clean-looking chapter. */
+        const statuses = context.sections.map((section) => writing.statusOf(section.draftSectionId));
+        const conflictedIds: ReadonlySet<string> = new Set(context.sections
+          .filter((_, i) => statuses[i] === 'conflict').map((section) => section.draftSectionId));
         const saveState = statuses.includes('conflict') ? 'Needs attention'
           : statuses.includes('error') ? 'Save unavailable'
             : statuses.includes('dirty') ? 'Unsaved'
-              : statuses.includes('saving') ? 'Saving…' : null;
+              : statuses.includes('saving') ? 'Saving…' : 'Saved';
         return (
     <main data-pure-canvas={canvasExpanded ? 'true' : 'false'} style={{ height: '100vh', overflow: 'hidden', background: C.shell, color: C.ink, fontFamily: SANS } as React.CSSProperties}>
       {!canvasExpanded && (<header className="wsr-header" style={{ height: 58, display: 'grid', gridTemplateColumns: '300px 1fr 300px', alignItems: 'center', padding: '0 20px', borderBottom: `1px solid ${C.soft}`, background: C.field }}>
@@ -1078,7 +1596,7 @@ export default function RebuildStudioClient() {
       </header>)}
       {canvasExpanded && (
         <div className="wsr-pure-exit">
-          <button type="button" className="wsr-return-workspace" onClick={() => setCanvasExpanded(false)} aria-label="Return to Writer’s Studio workspace">
+          <button type="button" className="wsr-return-workspace" onMouseDown={holdEditorFocus} onClick={(event) => changeCanvas(false, event.currentTarget)} aria-label="Return to Writer’s Studio workspace">
             <span aria-hidden="true">←</span> Workspace
           </button>
           <Link className="wsr-return-workbench" href="/writers-studio" aria-label="Return to Writer’s Studio workbench">
@@ -1087,7 +1605,7 @@ export default function RebuildStudioClient() {
         </div>
       )}
 
-      <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : workspaceOpen ? '250px minmax(0, 1fr)' : '286px minmax(520px, 1fr) 390px' }}>
+      <div className={`wsr-grid ${canvasExpanded ? 'wsr-pure-grid' : ''}`} style={{ height: canvasExpanded ? '100vh' : 'calc(100vh - 58px)', display: 'grid', gridTemplateColumns: canvasExpanded ? 'minmax(0, 1fr)' : workspaceOpen ? REBUILD_EDITORIAL_GRID : REBUILD_HOST_GRID }}>
         {!canvasExpanded && (<aside className={`wsr-outline ${mobilePane !== 'outline' ? 'wsr-mobile-hidden' : ''}`} style={{ borderRight: `1px solid ${C.soft}`, background: C.panel, overflowY: 'auto', padding: 16 }}>
           <Link href="/writers-studio" aria-label="Return to all Writer’s Studio works" style={{ display: 'inline-block', color: C.muted, fontSize: 12, padding: '3px 2px 15px', textDecoration: 'none' }}>‹ All Works</Link>
           <div style={{ border: `1px solid ${C.soft}`, borderRadius: 12, background: C.field, padding: 14, marginBottom: 18 }}>
@@ -1122,7 +1640,7 @@ export default function RebuildStudioClient() {
                 <div style={{ fontSize: 10, color: C.quiet, padding: '0 6px 7px' }}>Member-authored structure</div>
                 {authoredStructure.roots.map((node) => (
                   <AuthoredStructureBranch key={node.id} node={node} focusId={focusId}
-                    onSelect={(id) => selectSection(id, 'section')} />
+                    onSelect={(id) => selectSection(id, 'section')} conflicted={conflictedIds} />
                 ))}
                 {authoredStructure.unplacedSectionIds.length > 0 && (
                   <details data-unplaced-structure style={{ marginTop: 8 }}>
@@ -1136,7 +1654,7 @@ export default function RebuildStudioClient() {
                         return (
                           <button key={id} type="button" onClick={() => selectSection(id, 'section')}
                             style={{ width: '100%', textAlign: 'left', border: 0, borderLeft: focusId === id ? `3px solid ${C.gold}` : '3px solid transparent', borderRadius: 6, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>
-                            {section.heading ?? `Section ${section.position + 1}`}
+                            {section.heading ?? `Section ${section.position + 1}`}{conflictedIds.has(id) && <span data-conflict-marker role="img" aria-label="Needs attention: changed elsewhere" title="Needs attention" style={{ marginLeft: 6, fontSize: 9, color: C.muted, verticalAlign: 'middle' }}>●</span>}
                           </button>
                         );
                       })}
@@ -1148,7 +1666,7 @@ export default function RebuildStudioClient() {
               <div data-imported-structure style={{ display: 'grid', gap: 2 }}>
                 <div style={{ fontSize: 10, lineHeight: 1.35, color: C.quiet, padding: '0 6px 7px' }}>Structure carried by the manuscript source</div>
                 {importedStructureTree.map((node) => (
-                  <ImportedStructureBranch key={node.draftSectionId} node={node} focusId={focusId} onSelect={selectSection} />
+                  <ImportedStructureBranch key={node.draftSectionId} node={node} focusId={focusId} onSelect={selectSection} conflicted={conflictedIds} />
                 ))}
               </div>
             ) : (
@@ -1161,7 +1679,7 @@ export default function RebuildStudioClient() {
                       {authoredStructure.unplacedSectionIds.map((id) => {
                         const section = context.sections.find((candidate) => candidate.draftSectionId === id);
                         if (!section) return null;
-                        return <button key={id} type="button" onClick={() => selectSection(id, 'section')} style={{ width: '100%', textAlign: 'left', border: 0, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>{section.heading ?? `Section ${section.position + 1}`}</button>;
+                        return <button key={id} type="button" onClick={() => selectSection(id, 'section')} style={{ width: '100%', textAlign: 'left', border: 0, background: focusId === id ? C.active : 'transparent', color: C.secondary, padding: '6px 8px', fontSize: 11.5, cursor: 'pointer' }}>{section.heading ?? `Section ${section.position + 1}`}{conflictedIds.has(id) && <span data-conflict-marker role="img" aria-label="Needs attention: changed elsewhere" title="Needs attention" style={{ marginLeft: 6, fontSize: 9, color: C.muted, verticalAlign: 'middle' }}>●</span>}</button>;
                       })}
                     </div>
                   </details>
@@ -1230,7 +1748,7 @@ export default function RebuildStudioClient() {
                 style={{ border: `1px solid ${C.rule}`, borderRadius: 999, background: C.panel, padding: '8px 12px', color: C.secondary, fontSize: 11.5, cursor: chapter ? 'pointer' : 'default', opacity: chapter ? 1 : .72 }}>
                 {maiaMode === 'chapter' ? `▣ Reviewing entire chapter` : selectedPassage ? `◎ Focused passage · ${focusName}` : `◎ Focused section · ${focusName}`}{chapter ? ' ⌄' : ''}
               </button>
-              <button type="button" data-pure-canvas-toggle aria-label="Open Pure Canvas" title="Pure Canvas" onClick={() => setCanvasExpanded(true)}
+              <button type="button" data-pure-canvas-toggle aria-label="Open Pure Canvas" title="Pure Canvas" onMouseDown={holdEditorFocus} onClick={(event) => changeCanvas(true, event.currentTarget)}
                 style={{ border: 0, background: 'transparent', color: C.quiet, padding: '7px 5px', fontSize: 16, lineHeight: 1, cursor: 'pointer', opacity: .58 }}>
                 ↗
               </button>
@@ -1282,10 +1800,19 @@ export default function RebuildStudioClient() {
                         <h3 data-canvas-heading-level="unconfirmed" style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.3, fontWeight: 650, letterSpacing: '.025em', margin: '26px 0 11px', color: C.muted }}>{section.heading}</h3>
                       )
                     )}
+                    {/* A1-LS1 · R3 — the conflict belongs to THIS section and is said
+                        here, where the writer is. It states the condition only:
+                        no control, no resolution, nothing to press. */}
+                    {conflictedIds.has(section.draftSectionId) && (
+                      <p data-conflict-marker-section role="note"
+                        style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: C.muted, margin: '0 0 10px', paddingLeft: 10, borderLeft: `2px solid ${C.rule}` }}>
+                        Needs attention — this section was changed elsewhere. What you wrote here is kept on this page and has not been saved.
+                      </p>
+                    )}
                     {workspaceOpen && review && <div className="ws-section-observations" aria-label="Section observations">
                       {findingsForSection(review.findings, section.draftSectionId).map((finding, index) => <button key={finding.id} type="button"
                         disabled={editorialBusy || adoptionBusy || memberVersionBusy}
-                        onClick={() => { focusWritingSection(section.draftSectionId); openWorkspace({ readingId: finding.readingId, key: finding.id.slice(finding.readingId.length + 1) }); }}>
+                        onClick={() => { focusWritingSection(section.draftSectionId); openWorkspace({ readingId: finding.readingId, key: finding.observationKey }); }}>
                         {index + 1} · {reviewLensLabel(finding.lens)}{reviewNeedsRefresh ? ' · earlier reading' : ''}
                       </button>)}
                     </div>}
@@ -1298,9 +1825,27 @@ export default function RebuildStudioClient() {
                       onFocusPlace={() => focusWritingSection(section.draftSectionId)}
                       onCaptureBeforeBlur={(body) => writing.captureForUnmount(section.draftSectionId, body)}
                       onSelectPassage={(start, end, text) => holdPassage(section, start, end, text)}
+                      onEditorBlur={(start, end) => { lastEditorBlur.current = { sectionId: section.draftSectionId, start, end }; }}
+                      restore={editorRestore?.sectionId === section.draftSectionId ? editorRestore : null}
                     /></div>
                     {section.draftSectionId === focusId && <div hidden={!workspaceOpen}>
-                      <ManuscriptPassage body={liveBody} range={held} proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}>
+                      <ManuscriptPassage body={liveBody} range={held}
+                        proposal={inlinePreview?.scopeKey === editorialScope ? inlinePreview : null}
+                        onEditAction={editAction}
+                        selectedEdits={selectedEdits}
+                        proposalRationale={suggestedVersion?.rationale ?? null}>
+                        {composition && composition.total > 0 && <div className="ws-compose-bar" data-compose-bar>
+                          <span>{composition.taken === 0
+                            ? `${composition.total} suggested change${composition.total === 1 ? '' : 's'} · none taken`
+                            : `${composition.taken} of ${composition.total} taken`}</span>
+                          <button type="button" className="wsi-primary"
+                            disabled={composition.taken === 0 || adoptionBusy || memberVersionBusy || editorialBusy}
+                            onClick={() => void useSelectedChanges()}>
+                            {composition.everyMark ? 'Use all of these changes' : 'Use selected changes'}
+                          </button>
+                          {composition.taken > 0 && <button type="button"
+                            onClick={() => setSelectedEdits(new Set())}>Keep all of mine</button>}
+                        </div>}
                         <div ref={setEditorialAnchor} data-inline-editorial-anchor />
                       </ManuscriptPassage>
                     </div>}
@@ -1314,12 +1859,15 @@ export default function RebuildStudioClient() {
           </div>
           {!canvasExpanded ? (
             <footer style={{ height: 44, borderTop: `1px solid ${C.soft}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', fontSize: 11.5, color: C.muted }}>
-              <span>{liveChapterWords.toLocaleString()} words · draft v{writing.currentRevisionId()}{saveState ? ` · ${saveState}` : ''}</span>
+              {/* A1-LS1 · R2 — the draft counter is gone from the surface: it
+                  counts acknowledged writes, not versions a writer kept, and no
+                  other version label takes its place here. */}
+              <span>{liveChapterWords.toLocaleString()} words · <span data-save-state role="status" aria-live="polite">{saveState}</span></span>
               <span>✦ Ask MAIA &nbsp;&nbsp; Aa⌄ &nbsp;&nbsp; ☷</span>
             </footer>
-          ) : saveState ? (
-            <div className="wsr-pure-save-state" role="status">{saveState}</div>
-          ) : null}
+          ) : (
+            <div className="wsr-pure-save-state" data-save-state role="status" aria-live="polite">{saveState}</div>
+          )}
         </section>
 
         {!canvasExpanded && !workspaceOpen && (<aside className={`wsr-maia ${mobilePane !== 'maia' ? 'wsr-mobile-hidden' : ''}`} style={{ borderLeft: `1px solid ${C.soft}`, background: C.panel, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -1359,9 +1907,30 @@ export default function RebuildStudioClient() {
                       : reviewPhase === 'ready'
                         ? `MAIA read all ${chapter?.sections.length ?? 0} sections through ${DEVELOPMENTAL_LENSES.length} developmental lenses. Her frozen findings stay available as you work.`
                         : reviewPhase === 'partial'
-                          ? `MAIA kept every reading that completed. ${review?.failures.length ?? 0} lens${review?.failures.length === 1 ? '' : 'es'} could not complete, so this is not labeled a full review.`
+                          ? ((review?.remaining.length ?? 0) > 0
+                            /* ⭐ *Not attempted* is not *failed*, and the writer
+                               is owed the difference: one says the reading was
+                               refused, the other says it was never asked for
+                               and is theirs to ask for now. */
+                            ? `${review?.readingIds.length ?? 0} of ${DEVELOPMENTAL_LENSES.length} readings completed and are kept. MAIA stopped after a reading could not finish, rather than working through the rest. ${review?.remaining.length} were not attempted.`
+                            : `MAIA kept every reading that completed. ${review?.failures.length ?? 0} lens${review?.failures.length === 1 ? '' : 'es'} could not complete, so this is not labeled a full review.`)
                           : 'MAIA will read this chapter first, then keep her findings available while you move into individual sections.'}
                   </p>
+                  {/* ⭐⭐ A NEW MEMBER GESTURE, ⛔ NOT A HIDDEN RETRY. It
+                      commissions only the lenses that were never asked; a lens
+                      that refused stays refused, because one commission is one
+                      reading. */}
+                  {reviewPhase === 'partial' && (review?.remaining.length ?? 0) > 0 && (
+                    <button type="button" data-continue-remaining
+                      disabled={reviewPhase !== 'partial'}
+                      onClick={() => void runReview(review!.remaining)}
+                      style={{ border: `1px solid ${C.gold}`, borderRadius: 9, background: C.field, padding: '8px 12px', fontSize: 12, color: C.secondary, cursor: 'pointer', margin: '0 0 12px' }}>
+                      Continue the {review!.remaining.length} remaining reading{review!.remaining.length === 1 ? '' : 's'}
+                    </button>
+                  )}
+                  {reviewManifestRefusal && (
+                    <div data-manifest-refusal={reviewManifestRefusal} hidden />
+                  )}
                   {reviewContinuityMessage && (
                     <div role="status" data-review-continuity-message style={{ borderRadius: 9, background: C.panel, padding: '9px 10px', fontSize: 10.5, lineHeight: 1.45, color: C.muted, margin: '-5px 0 12px' }}>
                       {reviewContinuityMessage}
@@ -1384,7 +1953,13 @@ export default function RebuildStudioClient() {
                     const failure = reviewFailureFor(lens);
                     const readingNow = reviewPhase === 'reading' && reviewProgress?.lens === lens;
                     const complete = completedReviewLenses.has(lens);
-                    const status = failure ? 'Could not complete'
+                    /* ⭐ The card is the at-a-glance surface, and three cards all
+                       reading *Could not complete* is the same undifferentiated
+                       state one layer up: the writer must open each one to learn
+                       that they failed in different places. Short here, full
+                       sentence below. */
+                    const failedAt = FAILED_AT[failure?.stage ?? ''] ?? 'Could not be confirmed';
+                    const status = failure ? failedAt
                       : readingNow ? 'Reading…'
                         : complete ? (count === 0 ? 'Complete · no observations' : active ? 'Showing findings from this lens.' : 'Open findings from this lens.')
                           : reviewPhase === 'reading' ? 'Waiting in this review.' : review ? 'No completed reading in this review.' : 'Waiting for MAIA’s chapter reading.';
@@ -1436,14 +2011,30 @@ export default function RebuildStudioClient() {
                                   <span style={{ fontSize: 9.5, color: C.quiet }}>{finding.state}</span>
                                 </div>
                                 <p style={{ fontSize: 12, lineHeight: 1.5, color: C.secondary, margin: '4px 0 0' }}>{finding.observation}</p>
-                                <button type="button" onClick={() => openWorkspace({ readingId: finding.readingId, key: finding.id.slice(finding.readingId.length + 1) })}
-                                  data-review-work-on-canvas={finding.id}
-                                  style={{ border: `1px solid ${C.soft}`, borderRadius: 7, padding: '7px 9px', marginTop: 8, color: C.ink, background: C.panel, cursor: 'pointer' }}>Work on canvas</button>
-                                {target && (
-                                  <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
-                                    style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0 0', fontSize: 10.5, cursor: 'pointer' }}>
-                                    Show in manuscript →
-                                  </button>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                                  <button type="button" onClick={() => openWorkspace({ readingId: finding.readingId, key: finding.observationKey })}
+                                    data-review-work-on-canvas={finding.id}
+                                    style={{ border: `1px solid ${C.soft}`, borderRadius: 7, padding: '7px 9px', color: C.ink, background: C.panel, cursor: 'pointer' }}>Work on canvas</button>
+                                  {reviewDiscussEnabled && (
+                                    <button type="button" onClick={() => openReviewDiscussion(finding.id)}
+                                      data-review-discuss-finding={finding.id}
+                                      style={{ border: `1px solid ${C.soft}`, borderRadius: 7, padding: '7px 9px', color: C.ink, background: C.field, cursor: 'pointer' }}>
+                                      Discuss with MAIA
+                                    </button>
+                                  )}
+                                  {target && (
+                                    <button type="button" onClick={() => openReviewFinding(finding)} data-open-review-finding={finding.id}
+                                      style={{ border: 0, background: 'transparent', color: C.gold, padding: '7px 0', fontSize: 10.5, cursor: 'pointer' }}>
+                                      Show in manuscript →
+                                    </button>
+                                  )}
+                                </div>
+                                {reviewDiscussion?.findingId === finding.id && (
+                                  <ReviewFindingDiscussion
+                                    state={reviewDiscussion}
+                                    onSubmit={submitReviewDiscussion}
+                                    onClose={closeReviewDiscussion}
+                                  />
                                 )}
                               </article>
                             );
@@ -1567,6 +2158,10 @@ export default function RebuildStudioClient() {
                               {adoptionOutcome.kind === 'applied' ? 'Applied to this exact place in the Work.'
                                 : adoptionOutcome.kind === 'work_moved' ? 'You have written here since this suggestion was made. Nothing was changed.'
                                   : adoptionOutcome.kind === 'legacy_locus' ? 'This older suggestion cannot be safely applied. Nothing was changed.'
+                                  /* ⭐ Says what it is in the writer's terms, and says plainly
+                                     that NOTHING was applied — not even the part of the change
+                                     that fell outside the quotation. */
+                                  : adoptionOutcome.kind === 'protected_quotation' ? 'This suggestion would change the words inside a quotation. Nothing was applied. MAIA can shorten it, move it, cut it, or revise your wording around it.'
                                     : 'The Studio could not apply this suggestion. Nothing was changed.'}
                             </div>}
                           </div>
@@ -1635,12 +2230,17 @@ export default function RebuildStudioClient() {
           <button type="button" disabled={editorialBusy || adoptionBusy || memberVersionBusy} onClick={closeWorkspace}>Clean manuscript · Collapse</button>
         </header>
 
-        <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview} scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
+        <RevisionDesk active={workspaceOpen} inline onPreview={showInlinePreview}
+          composedText={composition && composition.taken > 0 ? composition.text : null}
+          depth={editorialDepth} onDepth={setEditorialDepth}
+          openDraftNonce={openDraftNonce}
+          scopeKey={editorialScope} showInspiration={!workspaceInsight} manuscriptId={context.manuscriptId} title={focusName}
           currentText={selectedPassage?.draftSectionId === focusId
             ? Array.from((writingRef.current?.bodyOf(focusId!) ?? focusSection?.body ?? '')).slice(selectedPassage.start, selectedPassage.end).join('')
             : focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
           sectionBody={focusId ? (writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '') : ''}
-          appliedVersionId={editorialThread?.application && !editorialThread.application.undone ? editorialThread.application.versionId : null}
+          appliedVersionId={editorialThread?.application && !editorialThread.application.undone
+            ? editorialThread.application.versionId : appliedVersionId}
           onUndo={editorialThread?.application?.canUndo ? () => void undoSuggested() : undefined}
           undoMessage={undoMessage}
           thread={editorialThread} version={suggestedVersion} instruction={editorialDraft}
@@ -1655,9 +2255,15 @@ export default function RebuildStudioClient() {
           message={editorialFailure ?? (adoptionOutcome && appliedVersionId === suggestedVersion?.id ? adoptionOutcome.kind === 'applied'
             ? null : 'The Work could not accept this revision. Nothing was changed.' : null)}
           onKeep={() => { setSuggestedVersionId(null); setAdoptionOutcome(null); setEditorialFailure('Current wording retained. Your saved alternatives remain in the version list.'); }} />
-        {workspaceInsight && <details className="wsi-related" open><summary>Observation and related passages</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
+        {workspaceInsight && <details className="wsi-related" open={!suggestedVersionId}>
+          {/* ⭐ C6R1 — forced open, this was the second live workspace under the
+              decision. Once MAIA has proposed, it closes and renames itself to
+              what it now is: the reason for the marks on the page. */}
+          <summary>{suggestedVersionId ? 'Reading behind these edits' : 'Observation and related passages'}</summary><InsightReadings key={context.manuscriptId} refreshKey={context.version}
           manuscriptId={context.manuscriptId} readingId={workspaceInsight.readingId} observationKey={workspaceInsight.key}
-          onRevise={reviseInsightPassage} busy={editorialBusy || adoptionBusy || memberVersionBusy} /></details>}
+          onRevise={reviseInsightPassage} onChoosePassage={chooseOwnPassage}
+          proposalActive={Boolean(suggestedVersionId)}
+          busy={editorialBusy || adoptionBusy || memberVersionBusy} /></details>}
         {relationshipChoices.length > 1 && <div className="wsi-bar" aria-label="Choose revision conversation">
           {relationshipChoices.map((choice, i) => <button key={choice.threadId} type="button" disabled={editorialBusy}
             onClick={() => void chooseRelationship(choice.threadId)}>Conversation {i + 1} · {choice.turnCount} turns</button>)}

@@ -1,0 +1,39 @@
+{
+  "instrument": "review-custody-step3r-production-disposition/v1",
+  "date": "2026-09-21",
+  "observation_mode": "read-only production queries + exact deployed-source inspection",
+  "production_running_commit": "1faec4016",
+  "reviewed_migration": {
+    "filename": "20260916123000_turn_taking_preferences.sql",
+    "ledger_present": true,
+    "applied_at": "2026-09-17 02:12:39.929005+00",
+    "checksum_recorded": false
+  },
+  "member_voice_preferences": {
+    "current_row_count": 5,
+    "columns_present": {
+      "conversational_space": {"type": "text", "nullable": false, "default": "'natural'::text"},
+      "floor_control_mode": {"type": "text", "nullable": false, "default": "'automatic'::text"},
+      "learn_turn_rhythm": {"type": "boolean", "nullable": false, "default": "true"}
+    },
+    "reviewed_constraints_present": true
+  },
+  "production_pending_set": {
+    "migration_files_in_running_container": 494,
+    "ledger_entries": 546,
+    "pending_files": []
+  },
+  "deployed_ordering": {
+    "deploy": ["container_swap", "running_provenance_verify", "migrate"],
+    "update": ["container_swap", "running_provenance_verify", "migrate"],
+    "source_commit": "1faec4016"
+  },
+  "disposition": {
+    "specific_migration_risk": "historical",
+    "missing_column_window_for_reviewed_migration": "not live; target columns are present",
+    "generic_ordering_risk_class": "current architecture, dormant today because pending set is empty",
+    "step3c_verdict": "REVISE preserved",
+    "step3_success_condition": "NOT_MET"
+  },
+  "production_mutation": false
+}

@@ -14,9 +14,7 @@ import { Home } from 'lucide-react';
 import { MaiaTopBar } from './MaiaTopBar';
 import { MaiaLeftRail } from './MaiaLeftRail';
 import { MaiaRightPanelHost } from './MaiaRightPanelHost';
-import { MaiaHouseSheet } from './MaiaHouseSheet';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
-import { useSession } from '@/lib/hooks/useSession';
 import { onVoiceNavigate } from '@/lib/maia/voiceNavigationBridge';
 import type { MaiaWorldId, MaiaBehavior } from '@/lib/navigation/types';
 import type { ConversationInsight } from '@/lib/maia/cognitionEvents';
@@ -82,33 +80,20 @@ export function MaiaShell({
   askMode,
   onAskModeChange,
   arrivalMode = false,
-  onReturnToArrival,
-  canReturnToArrival = false,
   children,
 }: MaiaShellProps) {
   const router = useRouter();
-  const { isAdmin, isPractitioner } = useSession();
   const [activeWorld, setActiveWorld] = useState<MaiaWorldId>('maia');
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [userPinnedPanel, setUserPinnedPanel] = useState(false);
-  const [houseOpen, setHouseOpen] = useState(false);
-  // Native (Capacitor) shell? Governs whether the House opens routes in-app or
-  // via the honest web bridge. Client-only; SSR and web render as non-native.
-  const [isNative, setIsNative] = useState(false);
+  // Arrival historically opened MAIA's internal House sheet. Home is now the
+  // canonical Soullab orientation surface, so that doorway returns to /home
+  // instead of recreating a second platform map inside MAIA.
   useEffect(() => {
-    const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
-    setIsNative(!!cap?.isNativePlatform?.());
-  }, []);
-
-  // The Arrival composition renders in a portal outside this tree, so its quiet
-  // base doorway cannot call setHouseOpen directly. It announces the intent and
-  // the shell — which owns the sheet — answers. Without this listener the
-  // arrival doorway dispatches into the void and reads as decorative.
-  useEffect(() => {
-    const openHouse = () => setHouseOpen(true);
-    window.addEventListener('openMaiaHouse', openHouse);
-    return () => window.removeEventListener('openMaiaHouse', openHouse);
-  }, []);
+    const returnHome = () => router.push('/home');
+    window.addEventListener('openMaiaHouse', returnHome);
+    return () => window.removeEventListener('openMaiaHouse', returnHome);
+  }, [router]);
 
   // --- Calm mode ---
   const { isVoiceFlowing, isSanctuary } = useVoiceState();
@@ -303,90 +288,35 @@ export function MaiaShell({
         {children}
       </main>
 
-      {/* The House — THE doorway. Now the only permanent navigation on the
-          conversation surface: MAIA, and one way into the places.
-
-          GEOMETRY IS LOAD-BEARING. This must render at the SAME box as the
-          Arrival composition's doorway, because Arrival and conversation swap
-          beneath a member who should never have to re-find the way out. The
-          container mirrors MaiaArrivalField's header exactly — h-[54px],
-          px-4 md:px-6 — and the button mirrors its button — -ml-1, h-11, px-2,
-          no pill. That yields an identical box in both states:
-
-              desktop  x=20  y=5  114x44
-              mobile   x=12  y=5  114x44
-
-          A previous pass placed this at `left-3 top-14` and asserted in a
-          comment that it matched Arrival. It did not: measured, it sat at
-          (12,56) 124x44 — a 51px jump and a 10px width change every time
-          Arrival gave way to conversation. Do not re-anchor this to the top bar
-          height or to a `top-*` offset; anchor it to the same header box, and
-          verify by measuring the bounding box in both states, not by reading
-          this comment.
-
-          Hidden while Arrival is on screen — Arrival carries its own doorway at
-          these coordinates. One House, one renderer, one doorway. */}
+      {/* Home is the platform return. MAIA is a destination inside Soullab, so
+          the conversation surface carries one quiet way back to canonical /home
+          rather than recreating a second House/navigation system inside MAIA. */}
       {!arrivalMode && (
         <div
           className="pointer-events-none fixed inset-x-0 top-0 z-[85] flex h-[54px] items-center px-4 md:px-6"
-          style={{
-            // Founder device walk 2026-07-27: with no safe-area inset this band
-            // centered the doorway ~27px from the physical top — inside the
-            // status-bar/Dynamic-Island zone, where iOS never delivers touches
-            // to the WebView. The doorway wasn't broken; it was unreachable.
-            // Same expression as MaiaTopBar and as MaiaArrivalField's header
-            // (the box-parity twin below in this comment's sense): the two
-            // doorway renderers must keep identical boxes across the
-            // Arrival ⇄ conversation swap.
-            paddingTop: 'calc(max(env(safe-area-inset-top), 0px) + 6px)',
-          }}
+          style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 0px) + 6px)' }}
         >
           <button
-            onClick={() => setHouseOpen(true)}
+            onClick={() => router.push('/home')}
             className={`
               group pointer-events-auto -ml-1 flex h-11 min-w-[44px] items-center gap-2 rounded-full px-2
               text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none
               ${calmMode && !calmCeiling ? 'opacity-60 hover:opacity-100' : 'opacity-100'}
             `}
-            title="The House — your places and practices"
-            aria-label="Open The House"
+            title="Soullab Home"
+            aria-label="Return to Soullab Home"
           >
             <Home className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
-            {/* The label is revealed, not removed. The icon alone is the resting
-                state — after a few uses a doorway does not need to say its own
-                name, and the permanent label was the widest thing in the bar,
-                which is what crowded MAIA off small screens.
-
-                Revealed on hover AND on keyboard focus: hover-only would hide
-                the name from anyone navigating by keyboard, who needs it most.
-                Width animates rather than the label appearing/disappearing, so
-                nothing beside it jumps. `aria-label` on the button carries the
-                name unconditionally, so screen readers never depend on hover. */}
             <span
               className="max-w-0 overflow-hidden whitespace-nowrap text-[15px] leading-none opacity-0 transition-all duration-300 group-hover:max-w-[8rem] group-hover:opacity-100 group-focus-visible:max-w-[8rem] group-focus-visible:opacity-100"
               style={{ fontFamily: 'Spectral, Georgia, serif' }}
               aria-hidden="true"
             >
-              The House
+              Home
             </span>
           </button>
         </div>
       )}
-
-      <MaiaHouseSheet
-        open={houseOpen}
-        onClose={() => setHouseOpen(false)}
-        isFounder={isAdmin || isPractitioner}
-        isNative={isNative}
-        onOpenHelp={onOpenHelp}
-        onOpenAccount={() => { setHouseOpen(false); onOpenAccount(); }}
-        onOpenChanges={onOpenChanges}
-        onReturnToArrival={
-          canReturnToArrival && onReturnToArrival
-            ? () => { setHouseOpen(false); onReturnToArrival(); }
-            : undefined
-        }
-      />
 
       <MaiaRightPanelHost
         isOpen={rightPanelOpen}

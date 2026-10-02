@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { acquireGrantWriterLeaseV1 } from '../grant-writer-lease-v1.mjs';
 import { routeIntelligence } from '../routing-intelligence.mjs';
 import { routeDigest } from '../routing-route-integrity.mjs';
 import { prepareHumanExecutionAuthorization } from '../human-provider-execution-grant.mjs';
@@ -75,6 +76,8 @@ function preview() {
 }
 
 const home = fs.mkdtempSync(path.join(os.tmpdir(), 'r5b-grant-store-'));
+// O5-R3: grant-ledger mutation requires the process-lifetime writer lease (R3-R3).
+assert.equal(acquireGrantWriterLeaseV1(home).ok, true);
 try {
   const p = preview();
   check('S-B1 — first human grant is appended as ACTIVE', () => {

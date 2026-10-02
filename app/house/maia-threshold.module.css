@@ -1,0 +1,31 @@
+.entry{appearance:none;border:0;background:transparent;color:#e9dfd0;display:flex;align-items:center;gap:8px;padding:0;cursor:pointer;text-align:left}
+.entry span{display:flex;flex-direction:column;gap:3px}
+.entry strong{font:400 15px Georgia,serif}
+.entry small{font:9px Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#9c8e80}
+.crossing{position:fixed;inset:0;z-index:9999;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(91,49,110,.36),rgba(22,15,20,.94) 52%,#100d0d 100%);animation:veil .78s ease-in forwards;display:grid;place-items:center}
+.crossing:before{content:'';position:absolute;inset:-20%;background:radial-gradient(ellipse at 35% 45%,rgba(188,132,68,.22),transparent 38%),radial-gradient(ellipse at 66% 52%,rgba(119,61,143,.28),transparent 40%);animation:field .78s ease-in forwards}
+.bloom{position:relative;animation:wake .78s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes veil{0%{opacity:0}18%{opacity:1}100%{opacity:1}}
+@keyframes field{0%{opacity:.35;transform:scale(.92)}100%{opacity:1;transform:scale(1.08)}}
+@keyframes wake{0%{opacity:.35;transform:scale(.58)}100%{opacity:1;transform:scale(1.05)}}
+@media(prefers-reduced-motion:reduce){.crossing,.crossing:before,.bloom{animation:none}.crossing{background:#100d0d}.bloom{opacity:1;transform:none}}
+
+/* HOUSE-MAIA-INVITATION-01 — a doorway, not an in-House composer. */
+.talkInvitation {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  width:100%; min-height:48px; padding:10px 14px; margin-top:6px;
+  appearance:none; cursor:pointer; text-align:left;
+  border:1px solid rgba(219,190,145,.42); border-radius:9px;
+  color:#f0e4d1; background:linear-gradient(115deg,rgba(166,113,54,.09),rgba(111,68,133,.12));
+  font:400 19px/1.25 'House Crimson',Georgia,serif;
+  transition:border-color .2s ease,background-color .2s ease,box-shadow .2s ease;
+}
+.talkInvitation:hover,.talkInvitation:focus-visible {
+  border-color:#b995c8; background-color:rgba(117,69,142,.12);
+  box-shadow:0 0 16px rgba(144,93,173,.16);
+}
+.talkInvitation:focus-visible { outline:2px solid #e2caa4; outline-offset:4px; }
+.talkInvitation:disabled { cursor:wait; }
+.talkInvitation > span { min-width:0; }
+.voiceMark { width:26px; height:26px; flex:0 0 26px; color:#e8d7ee; }
+@media(prefers-reduced-motion:reduce) { .talkInvitation { transition:none; } }

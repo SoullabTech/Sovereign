@@ -38,6 +38,7 @@ import { query, transaction } from '@/lib/db/postgres';
 import { sweepVaultErasureQueue } from '@/lib/manuscript/source/eraseManuscript';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { refuseTitle } from '@/lib/livingWork/domain';
+import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 const MAX_TITLE_CHARS = 300;
 
@@ -47,6 +48,7 @@ interface WorkRow {
   purpose: string | null;
   form: string | null;
   stage: string | null;
+  manuscript_state: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -62,6 +64,56 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
   const { id } = await ctx.params;
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      const body = (await request.json().catch(() => ({}))) as {
+        title?: unknown;
+        purpose?: unknown;
+        form?: unknown;
+        stage?: unknown;
+        manuscriptState?: unknown;
+      };
+
+      const patch: Record<string, string | null> = {};
+      for (const key of ['title', 'purpose', 'form', 'stage', 'manuscriptState']) {
+        if (Object.prototype.hasOwnProperty.call(body, key)) {
+          const value = body[key as keyof typeof body];
+          if (value !== null && typeof value !== 'string') {
+            return NextResponse.json({ error: key + ' must be text' }, { status: 400 });
+          }
+          patch[key] = value as string | null;
+        }
+      }
+
+      if (Object.keys(patch).length === 0) {
+        return NextResponse.json({ error: 'nothing to change' }, { status: 400 });
+      }
+
+      const work = store.updateWork(member.id, id, patch);
+      if (!work) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+      const response = NextResponse.json({
+        work: {
+          id: work.id,
+          title: work.title,
+          purpose: work.purpose,
+          form: work.form,
+          stage: work.stage,
+          manuscriptState: work.manuscriptState,
+          createdAt: work.createdAt,
+          updatedAt: work.updatedAt,
+        },
+      });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -71,8 +123,9 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       purpose?: unknown;
       form?: unknown;
       stage?: unknown;
+      manuscriptState?: unknown;
     };
-    if (!('title' in body) && !('purpose' in body) && !('form' in body) && !('stage' in body)) {
+    if (!('title' in body) && !('purpose' in body) && !('form' in body) && !('stage' in body) && !('manuscriptState' in body)) {
       return NextResponse.json({ error: 'nothing to change' }, { status: 400 });
     }
 
@@ -145,6 +198,18 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       stage = body.stage;
     }
 
+    const MANUSCRIPT_STATES = ['pre-manuscript', 'partial-manuscript', 'existing-manuscript'] as const;
+    let manuscriptState: string | null = null;
+    if (body.manuscriptState !== null && body.manuscriptState !== undefined) {
+      if (
+        typeof body.manuscriptState !== 'string'
+        || !(MANUSCRIPT_STATES as readonly string[]).includes(body.manuscriptState)
+      ) {
+        return NextResponse.json({ error: 'unknown_manuscript_state' }, { status: 400 });
+      }
+      manuscriptState = body.manuscriptState;
+    }
+
     // Only the fields the member actually addressed change; COALESCE-style
     // partial updates would silently keep a value the member tried to clear.
     const sets: string[] = [];
@@ -165,6 +230,10 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       params.push(stage);
       sets.push(`stage = $${params.length}`);
     }
+    if ('manuscriptState' in body) {
+      params.push(manuscriptState);
+      sets.push(`manuscript_state = $${params.length}`);
+    }
 
     // Member-scoped in the predicate, not after the fact: another member's id
     // cannot reach this row at all.
@@ -172,7 +241,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       `UPDATE living_works
           SET ${sets.join(', ')}, updated_at = now()
         WHERE id = $1 AND member_id = $2
-      RETURNING id, title, purpose, form, stage, created_at, updated_at`,
+      RETURNING id, title, purpose, form, stage, manuscript_state, created_at, updated_at`,
       params
     );
     if (updated.rows.length === 0) {
@@ -186,6 +255,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
         purpose: r.purpose,
         form: r.form,
         stage: r.stage,
+        manuscriptState: r.manuscript_state,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
       },
@@ -200,7 +270,24 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
+
   const { id } = await ctx.params;
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      if (!store.deleteWork(member.id, id)) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      const response = NextResponse.json({ withdrawn: id });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

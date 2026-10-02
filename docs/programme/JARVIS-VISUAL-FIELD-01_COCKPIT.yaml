@@ -1,0 +1,54 @@
+programme: JARVIS-VISUAL-FIELD-01
+current_authority:
+  - docs/programme/JARVIS-VISUAL-FIELD-01_CHARTER_2026-09-28.md
+  - docs/canon/LIVING_FIELD_GROKKER_ROADMAP.md
+  - docs/canon/LIVING_FIELD_MEANING_EVOLUTION_LAWS.md
+  - docs/canon/SOUL_LAB_SPATIAL_NAVIGATION_LAW.md
+  - docs/canon/SOUL_LAB_COHERENCE_PORTAL_MAIA_LAWS.md
+  - docs/canon/LIVING_FIELD_RELATION_GRAMMAR.md
+  - docs/canon/LIVING_FIELD_FOCUS_CONTEXT_LAWS.md
+  - docs/canon/LIVING_FIELD_BIOLOGICAL_SPATIAL_DYNAMICS.md
+  - docs/canon/LIVING_FIELD_SEMANTIC_SCALE_AND_ILLUMINATION.md
+  - docs/canon/LIVING_FIELD_GROKKER_ROOM_CANON.md
+  - docs/programme/JARVIS-VISUAL-FIELD-01_R2E1_SEMANTIC_CONDENSATION_2026-09-30.md
+  - docs/programme/JARVIS-VISUAL-FIELD-01_R2E2_WHOLE_FIELD_PATTERN_VISIBILITY_2026-09-30.md
+  - docs/design/contracts/living-field-grokker.md
+  - docs/programme/JARVIS-VISUAL-FIELD-01_R2D2_RECURSIVE_OIL_MEMBRANE_2026-09-30.md
+current_phase: VERIFY
+current_act: VISUAL-FIELD-RUNTIME-02E2 — Whole-Field Pattern Visibility
+current_subject_sha: 175af0cf0
+current_branch: feature/jarvis-visual-field-r2e2-semantic-condensation-20260930
+worktree: /private/tmp/jarvis-visual-field-r2e2
+runtime: http://localhost:3613/dev/living-field-grokker-r2e
+merge: NOT AUTHORIZED
+deploy: NOT AUTHORIZED
+production_write: NOT AUTHORIZED
+member_facing_change: AUTHORIZED_LOCAL_WITNESS_ONLY
+open_findings:
+  - R2D1 biological physics passed founder witness and remain the chosen Grokker substrate.
+  - R2D2 binds the existing real Living Field hierarchy into that same biological renderer.
+  - Click on a supported bubble yields a containing membrane; surrounding worlds remain present and are physically displaced.
+  - Founder refinement now requires true nested containment: Relationship remains the parent membrane while Grief opens inside it with Continuing Relation / Remembrance / Ritual.
+  - Open-space drag pans the camera in world-space independently of pointer parallax; controlled horizontal pull witness shifts the scene ~231 px with zero browser errors.
+  - Existing nested child material can be entered recursively without page navigation.
+  - Optical scale navigation now returns depth 2 → depth 1 → whole through outward wheel / pinch, with Wider retained as fallback.
+  - Active recursive worlds use stronger foreground veiling and a soft irregular membrane edge rather than a rigid ring.
+  - Outer and recursive cells carry two-layer presence halos; a shader-based plasmic interstitial medium animates ambient between-space without claiming semantic relation.
+  - Controlled Relationship → Grief traversal, optical scale return, Wider return, Whole recovery, nested-containment witness, pan witness, plasmic render witness, and R2D1 physics regression all pass with zero browser errors.
+  - R2D2 proves physical node-to-world recursion only; universal semantic-object recursion remains governed by R2G.
+  - R2D3 wraps that substrate in a Soullab House shell with platform orientation, explicit Context Path, governed field search, semantic Illuminator, and bottom scale instrument.
+  - Calling semantic audit: no fabricated Within children; current Air / Perspective / Identity / Calling path remains explicitly prototype context rather than lineage or ontology authority.
+  - Grief semantic audit: Continuing Relation / Remembrance / Ritual remain true contained children and expose Enter field.
+  - How this became and What this rests on are separate apertures; both fail honest/unbound where exact lineage/source fabric is not yet attached.
+  - Optical magnification and semantic scale are now separated by dead-zone / settled-intent hysteresis before widening.
+  - Live MAIA interpretation, durable memory, full Source Fabric, and autonomous child-ecology generation remain closed.
+founder_stops:
+  - R2E2 founder whole-field pattern witness before navigation continuity or any pattern interpretation.
+  - No fabricated child ecologies.
+  - No claim that R2G universal recursive depth is complete.
+  - No free-roaming orbit camera or semantic meaning from z-position.
+  - No live MAIA interpretation from semantic objects.
+  - No durable relation or shared-meaning persistence.
+  - No merge or deployment.
+next_phase_on_exit: R2E2 PASS opens R2F session-only Navigation Continuity
+last_state_change: 2026-09-30 — R2E2 candidate: pattern view quiets specific relations and non-selected labels while preserving worlds, current locus, bridges, tension and exact reversible membership; founder witness is current gate

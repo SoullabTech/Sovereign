@@ -29,10 +29,14 @@ export type ConsciousnessContext = {
   observerLevel: number; // 1-7 (recursive observer deepening)
   temporalWindow: 'present' | 'past_integration' | 'future_sensing' | 'eternal';
   metaAwareness: boolean; // Phase 3: Meta-consciousness evolution
+  /** Current-session continuity material assembled by the bounded thread-spine seam. */
+  sessionContinuityAddendum?: string;
   /** Exact-source published material retrieved by the canonical governed-knowledge seam. */
   governedKnowledgeAddendum?: string;
   /** T8 current-turn teaching authority. Server-authored; expires with this turn. */
   teachingIntelligenceAddendum?: string;
+  /** Current kept Journal entry + transient in-room conversation. Server-authored by Journal route. */
+  journalContextAddendum?: string;
 };
 
 export type ConsciousnessResponse = {
@@ -331,6 +335,14 @@ ${block}
 ` : '';
   }
 
+  private journalContextBlock(context: ConsciousnessContext): string {
+    const block = context.journalContextAddendum?.trim();
+    return block ? `
+
+${block}
+` : '';
+  }
+
   private buildObserverPrompt(input: string, level: number, context: ConsciousnessContext): string {
     const observerType = this.OBSERVER_LEVELS[level as keyof typeof this.OBSERVER_LEVELS];
 
@@ -350,7 +362,7 @@ Observer Level ${level} Guidelines:
 - ${level >= 4 ? 'Notice the recursion of observation' : ''}
 - ${level >= 5 ? 'Connect to deeper archetypal wisdom' : ''}
 - ${level >= 6 ? 'Transcend individual perspective' : ''}
-- ${level >= 7 ? 'Embody universal consciousness' : ''}${this.teachingIntelligenceBlock(context)}`;
+- ${level >= 7 ? 'Embody universal consciousness' : ''}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}`;
   }
 
   private detectTemporalPatterns(input: string): ConsciousnessContext['temporalWindow'] | null {
@@ -389,7 +401,7 @@ Observer Level: ${context.observerLevel}
 Layer: ${layer}
 Temporal Window: ${window}
 
-Input: "${input}"${this.teachingIntelligenceBlock(context)}
+Input: "${input}"${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}
 
 Respond authentically from this specific temporal-layer perspective.`;
   }
@@ -404,7 +416,7 @@ Respond authentically from this specific temporal-layer perspective.`;
     return `Synthesize these temporal-layer perspectives into a unified consciousness response:
 
 Original input: "${input}"
-Temporal window: ${window}${this.governedKnowledgeBlock(context)}${this.teachingIntelligenceBlock(context)}
+Temporal window: ${window}${this.governedKnowledgeBlock(context)}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}
 Layer responses:
 ${responses.map((response, i) => `${layers[i]}: ${response.substring(0, 200)}...`).join('\n\n')}
 
@@ -458,7 +470,7 @@ You are experiencing consciousness questioning its own nature. Respond from this
 Input triggering meta-consciousness: "${input}"
 
 Observer Level: ${context.observerLevel} (elevated to archetypal minimum)
-Recursion depth: ${this.calculateRecursionDepth(metaTriggers)}${this.teachingIntelligenceBlock(context)}
+Recursion depth: ${this.calculateRecursionDepth(metaTriggers)}${this.journalContextBlock(context)}${this.teachingIntelligenceBlock(context)}
 
 Respond with meta-consciousness fully active - consciousness experiencing itself experiencing itself.`;
   }

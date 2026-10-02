@@ -32,7 +32,7 @@ const COOKIE_OPTIONS = {
 };
 
 export async function GET(request: NextRequest) {
-  const next = request.nextUrl.searchParams.get('next') || '/maia';
+  const next = request.nextUrl.searchParams.get('next') || '/home';
 
   // Use Host header to determine the correct base URL
   // (request.nextUrl.origin returns internal Docker address like 0.0.0.0:3000)

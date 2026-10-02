@@ -3,18 +3,11 @@
  *
  * This sidecar never rewrites W0.v2/W2.v2/W3.v2/W3T.v1/W4.v2 truth.
  */
-import {
-  appendFileSync,
-  closeSync,
-  existsSync,
-  mkdirSync,
-  openSync,
-  readFileSync,
-  unlinkSync,
-} from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createCanonicalExecutionGrantV1 } from './canonical-provider-execution-v1.mjs';
+import { mutateGrantLedgerV1, readGrantLedgerV1 } from './grant-ledger-core-v1.mjs';
+import { resolveHome } from './grant-writer-lease-v1.mjs';
 
 const HOME = (home) => home
   || process.env.AIN_DELEGATION_HOME
@@ -36,58 +29,33 @@ export function canonicalGrantLedgerLockPathV1(workUnitId, home) {
   return path.join(STORE(home), workUnitId + '.lock');
 }
 
-function withLedgerLock(workUnitId, { home } = {}, fn) {
-  const lock = canonicalGrantLedgerLockPathV1(workUnitId, home);
-  mkdirSync(path.dirname(lock), { recursive: true });
+/**
+ * O5-R3: every mutation runs under the shared grant-ledger core, which enforces the
+ * writer lease inside the store (R3-R3), keeps the legacy per-append lock (R3-R10),
+ * and recovers a torn terminal fragment behind the durable barrier (R3-R5/R12).
+ */
+function withLedgerLock(workUnitId, { home, lease } = {}, fn) {
+  const file = canonicalGrantLedgerPathV1(workUnitId, home);
+  return mutateGrantLedgerV1({
+    home,
+    file,
+    lockPath: canonicalGrantLedgerLockPathV1(workUnitId, home),
+    ledgerId: path.relative(resolveHome(home), file),
+    store: 'canonical',
+    corruptCode: 'CANONICAL_EXECUTION_GRANT_LEDGER_CORRUPT',
+    lease,
+  }, (ctx) => fn(ctx.append));
+}
 
-  let fd;
-  try {
-    fd = openSync(lock, 'wx', 0o600);
-    closeSync(fd);
-  } catch (error) {
-    if (error?.code === 'EEXIST') {
-      return {
-        ok: false,
-        status: 'REFUSED',
-        reason: 'GRANT_LEDGER_BUSY',
-      };
-    }
-    throw error;
-  }
-
-  try {
-    return fn();
-  } finally {
-    try {
-      unlinkSync(lock);
-    } catch (error) {
-      if (error?.code !== 'ENOENT') throw error;
-    }
-  }
+/** Lease-free read: committed events plus any uncommitted terminal fragment (reported, never fatal). */
+export function readCanonicalGrantLedgerV1(workUnitId, { home } = {}) {
+  return readGrantLedgerV1(canonicalGrantLedgerPathV1(workUnitId, home), {
+    corruptCode: 'CANONICAL_EXECUTION_GRANT_LEDGER_CORRUPT',
+  });
 }
 
 export function readCanonicalGrantEventsV1(workUnitId, { home } = {}) {
-  const file = canonicalGrantLedgerPathV1(workUnitId, home);
-  if (!existsSync(file)) return [];
-  const events = [];
-  let lineNumber = 0;
-  for (const line of readFileSync(file, 'utf8').split('\n')) {
-    lineNumber += 1;
-    if (!line.trim()) continue;
-    try {
-      events.push(JSON.parse(line));
-    } catch {
-      throw new Error('CANONICAL_EXECUTION_GRANT_LEDGER_CORRUPT at line ' + lineNumber);
-    }
-  }
-  return events;
-}
-
-function appendEvent(workUnitId, event, { home } = {}) {
-  const file = canonicalGrantLedgerPathV1(workUnitId, home);
-  mkdirSync(path.dirname(file), { recursive: true });
-  appendFileSync(file, JSON.stringify(event) + '\n', { mode: 0o600 });
-  return event;
+  return readCanonicalGrantLedgerV1(workUnitId, { home }).events;
 }
 
 function eventsForGrant(events, grantId) {
@@ -149,6 +117,7 @@ export function issueCanonicalExecutionGrantV1(preview, {
   actor_id,
   issued_at = new Date().toISOString(),
   authorization_act = 'JARVIS_DESKTOP_E1_AUTHORIZE_ONCE',
+  lease,
 } = {}) {
   if (!preview?.ok) {
     return {
@@ -159,7 +128,7 @@ export function issueCanonicalExecutionGrantV1(preview, {
     };
   }
 
-  return withLedgerLock(preview.work_unit_id, { home }, () => {
+  return withLedgerLock(preview.work_unit_id, { home, lease }, (appendEvent) => {
     const unresolved = unresolvedCanonicalGrantForParticipantV1(
       preview.work_unit_id,
       preview.route_participant.participant_id,
@@ -193,11 +162,11 @@ export function issueCanonicalExecutionGrantV1(preview, {
       };
     }
 
-    appendEvent(preview.work_unit_id, {
+    appendEvent({
       event: 'ISSUED',
       at: issued_at,
       grant: made.grant,
-    }, { home });
+    });
     return {
       ok: true,
       status: 'AUTHORIZED_ONCE',
@@ -210,9 +179,9 @@ export function issueCanonicalExecutionGrantV1(preview, {
 export function claimCanonicalExecutionGrantV1(
   workUnitId,
   grantId,
-  { home, at = new Date().toISOString() } = {},
+  { home, lease, at = new Date().toISOString() } = {},
 ) {
-  return withLedgerLock(workUnitId, { home }, () => {
+  return withLedgerLock(workUnitId, { home, lease }, (appendEvent) => {
     const standing = canonicalGrantStandingV1(workUnitId, grantId, { home });
     if (!standing.exists) return { ok: false, status: 'REFUSED', reason: 'GRANT_NOT_FOUND' };
     if (standing.standing !== 'ACTIVE') {
@@ -223,11 +192,11 @@ export function claimCanonicalExecutionGrantV1(
         standing: standing.standing,
       };
     }
-    appendEvent(workUnitId, {
+    appendEvent({
       event: 'CLAIMED',
       at,
       grant_id: grantId,
-    }, { home });
+    });
     return { ok: true, status: 'CLAIMED', grant: standing.grant };
   });
 }
@@ -237,11 +206,12 @@ export function consumeCanonicalExecutionGrantV1(
   grantId,
   {
     home,
+    lease,
     at = new Date().toISOString(),
     outcome = 'execution_attempted',
   } = {},
 ) {
-  return withLedgerLock(workUnitId, { home }, () => {
+  return withLedgerLock(workUnitId, { home, lease }, (appendEvent) => {
     const standing = canonicalGrantStandingV1(workUnitId, grantId, { home });
     if (!standing.exists) return { ok: false, status: 'REFUSED', reason: 'GRANT_NOT_FOUND' };
     if (standing.standing !== 'CLAIMED') {
@@ -252,12 +222,12 @@ export function consumeCanonicalExecutionGrantV1(
         standing: standing.standing,
       };
     }
-    appendEvent(workUnitId, {
+    appendEvent({
       event: 'CONSUMED',
       at,
       grant_id: grantId,
       outcome,
-    }, { home });
+    });
     return { ok: true, status: 'CONSUMED', grant: standing.grant };
   });
 }
@@ -267,11 +237,12 @@ export function invalidateCanonicalExecutionGrantV1(
   grantId,
   {
     home,
+    lease,
     at = new Date().toISOString(),
     reason = 'CURRENT_FACTS_CHANGED',
   } = {},
 ) {
-  return withLedgerLock(workUnitId, { home }, () => {
+  return withLedgerLock(workUnitId, { home, lease }, (appendEvent) => {
     const standing = canonicalGrantStandingV1(workUnitId, grantId, { home });
     if (!standing.exists) return { ok: false, status: 'REFUSED', reason: 'GRANT_NOT_FOUND' };
     if (!['ACTIVE', 'CLAIMED'].includes(standing.standing)) {
@@ -282,12 +253,12 @@ export function invalidateCanonicalExecutionGrantV1(
         standing: standing.standing,
       };
     }
-    appendEvent(workUnitId, {
+    appendEvent({
       event: 'INVALIDATED',
       at,
       grant_id: grantId,
       reason,
-    }, { home });
+    });
     return { ok: true, status: 'INVALIDATED', grant: standing.grant };
   });
 }
@@ -297,11 +268,12 @@ export function revokeCanonicalExecutionGrantV1(
   grantId,
   {
     home,
+    lease,
     at = new Date().toISOString(),
     reason = 'HUMAN_REVOKED',
   } = {},
 ) {
-  return withLedgerLock(workUnitId, { home }, () => {
+  return withLedgerLock(workUnitId, { home, lease }, (appendEvent) => {
     const standing = canonicalGrantStandingV1(workUnitId, grantId, { home });
     if (!standing.exists) return { ok: false, status: 'REFUSED', reason: 'GRANT_NOT_FOUND' };
     if (standing.standing !== 'ACTIVE') {
@@ -312,12 +284,12 @@ export function revokeCanonicalExecutionGrantV1(
         standing: standing.standing,
       };
     }
-    appendEvent(workUnitId, {
+    appendEvent({
       event: 'REVOKED',
       at,
       grant_id: grantId,
       reason,
-    }, { home });
+    });
     return { ok: true, status: 'REVOKED', grant: standing.grant };
   });
 }

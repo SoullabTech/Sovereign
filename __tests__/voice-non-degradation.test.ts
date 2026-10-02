@@ -101,9 +101,16 @@ const MAIA_PAGE = read('app/maia/page.tsx');
  *
  * ⚠️ CLASS C AND EGRESS-ADJACENT ENTRIES, pinned so they cannot grow, NOT
  * blessed: `maiaSpeak` (locally-authored command acknowledgement, no model in
- * the path), `detectCrisis`, `apiFetch`, `saveConversationMemory`,
- * `recordVoiceTranscript`, `stopStreamingVoice`. Each belongs to a separately
- * recorded finding, unrepaired by this unit.
+ * the path), `apiFetch`, `saveConversationMemory`, `recordVoiceTranscript`,
+ * `stopStreamingVoice`. Each belongs to a separately recorded finding,
+ * unrepaired by this unit.
+ *
+ * ⭐ SAFETY-CRISIS-01 (2026-10-01) REMOVED four calls from this set:
+ * `detectCrisis`, `crisisCheck.responseScript.join`, its `.trim`, and the
+ * `setTimeout` that paced the scripted lines. The client-side, voice-only crisis
+ * phrase list and its spoken script are retired, and crisis assessment now runs
+ * on the server for every turn. The corridor got smaller, which is the only
+ * direction this pin may move without a ruling.
  *
  * ⚠️ WHY THIS IS THE WHOLE HANDLER AND NOT JUST THE COGNITION TAIL. The tail
  * pin below is narrow and cheap, and it closes the mutation that motivated it —
@@ -136,7 +143,6 @@ const RATIFIED_CALLS = [
   'console.warn',
   'data.actionItems.map',
   'data.actionItems.map(…).join',
-  'detectCrisis',
   'detectMaiaCommands',
   'getMaiaCommandConfirmation',
   'ghostPhrases.some',
@@ -174,7 +180,6 @@ const RATIFIED_CALLS = [
   'setMessages',
   'setScribeSession',
   'setShowCapturePanel',
-  'setTimeout',
   'setTranscriptEnabled',
   'setVoiceSettings',
   'startScribeSession',
@@ -220,6 +225,12 @@ const RATIFIED_COGNITION_TAIL = [
   'console.log',
 ];
 
+const CANONICAL_VOICE_CALL = `await handleTextMessage(t, undefined, undefined, {
+        parseResult: voiceMaiaResult,
+        commandsAlreadyApplied: voiceMaiaResult.disposition === 'EXECUTE',
+        confirmationHandled: voiceMaiaResult.disposition === 'EXECUTE',
+      });`;
+
 /**
  * ⭐ THE RATIFIED ADMISSION PHASE — every explicit return, keyed by its own log
  * marker or enclosing condition (text, not line numbers, so edits above do not
@@ -239,8 +250,8 @@ const RATIFIED_EXITS: ReadonlyArray<{ key: string; calls: string[] }> = [
   { key: '🔇 [Voice Feedback Prevention] Rejecting transcript - MAIA is speaking', calls: ['console.warn'] },
   { key: '⚠️ Duplicate transcript detected (${timeSinceLastProcess}ms ago), igno', calls: ['console.warn'] },
   { key: "if isStandaloneCommand && !voiceCmd.action?.includes('reflect')", calls: [] },
-  // ⚠️ Class C egress site — see the header. Frozen, not blessed.
-  { key: '✅ [Voice Command] Command-only, no content to process', calls: ['console.log', 'maiaSpeak', 'toast.success'] },
+  // TII-03 deliberately removes the second command-only return here: the exact
+  // authored turn must continue to the canonical handler for F1 acceptance.
   { key: '⚠️ Ignoring empty/punctuation-only transcript:', calls: ['console.log'] },
   { key: '👻 Ghost transcript detected (YouTube/video audio):', calls: ['console.warn'] },
   { key: '[Echo Suppressed] Ignoring input during ${remainingMs}ms cooldown', calls: ['console.warn'] },
@@ -317,6 +328,36 @@ function cognitionTail(source: string): string[] {
 /** Every call `handleVoiceTranscript` makes — guarded path and corridor alike. */
 const handlerCalls = (source: string): string[] => callsWithin(handlerFn(source).body);
 
+const RATIFIED_COMMAND_BRANCH_CALLS = [
+  'console.log',
+  'getMaiaCommandConfirmation',
+  'localStorage.setItem',
+  'maiaSpeak',
+  'setCounselFramework',
+  'setIsSanctuary',
+  'setListeningMode',
+  'toast.success',
+  'window.dispatchEvent',
+];
+
+function commandBranchCalls(source: string): string[] {
+  const fn = handlerFn(source);
+  let branch: ts.IfStatement | null = null;
+  const walk = (n: ts.Node): void => {
+    if (
+      ts.isIfStatement(n) &&
+      n.expression.getText().includes("voiceMaiaResult.disposition === 'EXECUTE'")
+    ) {
+      branch = n;
+      return;
+    }
+    ts.forEachChild(n, walk);
+  };
+  walk(fn.body);
+  expect(branch).not.toBeNull();
+  return callsWithin((branch as ts.IfStatement).thenStatement);
+}
+
 /**
  * Every `return` belonging to `handleVoiceTranscript` itself, with the calls its
  * guard branch makes.
@@ -373,6 +414,10 @@ describe('the whole handler is a closed set, not a filtered one', () => {
     expect(cognitionTail(ORACLE)).toEqual(RATIFIED_COGNITION_TAIL);
   });
 
+  it('⭐ command acknowledgement stays inside its explicit command branch', () => {
+    expect(commandBranchCalls(ORACLE)).toEqual(RATIFIED_COMMAND_BRANCH_CALLS);
+  });
+
   it('⭐ handleTextMessage is the sole canonical cognition call, reached once', () => {
     const fn = handlerFn(ORACLE);
     const calls: string[] = [];
@@ -404,8 +449,8 @@ describe('PROBES — the gate must catch what nobody listed', () => {
     // stands on the fall-through corridor: outside every guard, before the
     // canonical call, adding no return.
     const probed = ORACLE.replace(
-      'await handleTextMessage(cleanedText);',
-      'await totallyNewResponder();\n      await handleTextMessage(cleanedText);',
+      CANONICAL_VOICE_CALL,
+      `await totallyNewResponder();\n      ${CANONICAL_VOICE_CALL}`,
     );
     expect(probed).not.toBe(ORACLE);
 
@@ -428,8 +473,8 @@ describe('PROBES — the gate must catch what nobody listed', () => {
     // the handler, so the handler-wide SET is identical; it is merely somewhere
     // it must never be — speaking before MAIA has thought.
     const probed = ORACLE.replace(
-      'await handleTextMessage(cleanedText);',
-      'maiaSpeak("ahead");\n      await handleTextMessage(cleanedText);',
+      CANONICAL_VOICE_CALL,
+      `maiaSpeak("ahead");\n      ${CANONICAL_VOICE_CALL}`,
     );
     expect(probed).not.toBe(ORACLE);
     expect(handlerCalls(probed)).toEqual(RATIFIED_CALLS);              // blind
@@ -454,18 +499,19 @@ describe('PROBES — the gate must catch what nobody listed', () => {
     // changed, and location is the difference between MAIA acknowledging a
     // command and MAIA speaking a local script on every turn.
     const probed = ORACLE.replace(
-      'await handleTextMessage(cleanedText);',
-      'maiaSpeak("moved");\n      await handleTextMessage(cleanedText);',
-    ).replace('maiaSpeak(confirmation)', 'void 0');
+      CANONICAL_VOICE_CALL,
+      `maiaSpeak("moved");\n      ${CANONICAL_VOICE_CALL}`,
+    ).replace('await maiaSpeak(confirmation);', 'void 0;');
     expect(probed).not.toBe(ORACLE);
-    expect(handlerCalls(probed)).toEqual(RATIFIED_CALLS);           // blind
-    expect(enumerateExits(probed)).not.toEqual([...RATIFIED_EXITS]); // not blind
+    expect(handlerCalls(probed)).toEqual(RATIFIED_CALLS); // handler-wide set is blind
+    expect(commandBranchCalls(probed)).not.toEqual(RATIFIED_COMMAND_BRANCH_CALLS);
+    expect(cognitionTail(probed)).not.toEqual(RATIFIED_COGNITION_TAIL);
   });
 
   it('⛔ a GENUINELY UNKNOWN responder on a NEW exit fails too', () => {
     const probed = ORACLE.replace(
-      'await handleTextMessage(cleanedText);',
-      'await totallyNewResponder(); return;\n      await handleTextMessage(cleanedText);',
+      CANONICAL_VOICE_CALL,
+      `await totallyNewResponder(); return;\n      ${CANONICAL_VOICE_CALL}`,
     );
     expect(probed).not.toBe(ORACLE);
     expect(enumerateExits(probed).map((e) => e.key)).not.toEqual(RATIFIED_EXITS.map((e) => e.key));
@@ -473,8 +519,8 @@ describe('PROBES — the gate must catch what nobody listed', () => {
 
   it('⛔ a restored streaming exit fails', () => {
     const probed = ORACLE.replace(
-      'await handleTextMessage(cleanedText);',
-      'await sendStreamingMessage(cleanedText); return;\n      await handleTextMessage(cleanedText);',
+      CANONICAL_VOICE_CALL,
+      `await sendStreamingMessage(t); return;\n      ${CANONICAL_VOICE_CALL}`,
     );
     expect(enumerateExits(probed)).not.toEqual([...RATIFIED_EXITS]);
     expect(handlerCalls(probed)).toContain('sendStreamingMessage');
@@ -484,7 +530,7 @@ describe('PROBES — the gate must catch what nobody listed', () => {
     // Scoped to the handler via AST. An earlier draft sliced from the handler to
     // end-of-file and counted unrelated call sites — a probe that could not fail,
     // which is the same defect as a catalogue that cannot find.
-    const probed = ORACLE.replace('await handleTextMessage(cleanedText);', '');
+    const probed = ORACLE.replace(CANONICAL_VOICE_CALL, '');
     expect(probed).not.toBe(ORACLE);
     expect(handlerCalls(probed)).not.toContain('handleTextMessage');
   });

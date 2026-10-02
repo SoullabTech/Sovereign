@@ -62,8 +62,47 @@ describe('freezeReading', () => {
   it('observation-only v1: no interpretation, questions, possibilities, uncertainty, severity, priority, score, confidence, rank on any observation', () => {
     const f = freezeReading({ manuscriptId: 'm1', request: request(), result: claims('x'), phenomena: ['movement'], reader: READER, classifier: CLASSIFIER });
     if (!f.ok) throw new Error(f.refusal);
+    /* ⭐ The law this guards is UNCHANGED: no interpretation, questions,
+       possibilities, uncertainty, severity, priority, score, confidence or
+       rank. OBSERVATION-IDENTITY-01 / I1 adds four fields and none of them is
+       any of those — identity, admission order, a basis integrity witness and
+       a manuscript position. The list grew; the prohibition did not move. */
     expect(Object.keys(f.value.observations[0]!).sort()).toEqual(
-      ['doesNotEstablish', 'evidenceRefs', 'key', 'lens', 'observation', 'phenomenon', 'structureDependency']);
+      ['admissionIndex', 'basisFingerprint', 'doesNotEstablish', 'evidenceRefs', 'key', 'lens',
+       'observation', 'observationId', 'phenomenon', 'position', 'structureDependency']);
+  });
+
+  it('D5C1 freezes themeLabel only for Themes and refuses a missing or cross-lens label', () => {
+    const themeReq = { ...request(), commissionedLens: 'themes' as const };
+    const themed: DevelopmentalReaderResult = {
+      outcome: 'claims', reader: READER,
+      claims: [{
+        text: 'The crossing returns in two distinct places.',
+        themeLabel: 'Crossing and return',
+        refs: [{ kind: 'section', sectionId: 's0' }, { kind: 'section', sectionId: 's1' }],
+        doesNotEstablish: ['author-intent'],
+      }] as never,
+    };
+    const frozen = freezeReading({ manuscriptId: 'm1', request: themeReq, result: themed,
+      phenomena: ['recurrence'], reader: READER, classifier: CLASSIFIER });
+    expect(frozen.ok).toBe(true);
+    if (frozen.ok) {
+      expect(frozen.value.observations[0]!.themeLabel).toBe('Crossing and return');
+      expect(frozen.value.observations[0]!.lens).toBe('themes');
+    }
+
+    const missing: DevelopmentalReaderResult = {
+      outcome: 'claims', reader: READER,
+      claims: [{ text: 'The crossing returns.', refs: [{ kind: 'section', sectionId: 's0' }],
+        doesNotEstablish: ['author-intent'] }] as never,
+    };
+    const missingFreeze = freezeReading({ manuscriptId: 'm1', request: themeReq, result: missing,
+      phenomena: ['recurrence'], reader: READER, classifier: CLASSIFIER });
+    expect(missingFreeze.ok ? 'ok' : missingFreeze.refusal).toBe('theme_label_mismatch');
+
+    const nonTheme = freezeReading({ manuscriptId: 'm1', request: request(), result: themed,
+      phenomena: ['recurrence'], reader: READER, classifier: CLASSIFIER });
+    expect(nonTheme.ok ? 'ok' : nonTheme.refusal).toBe('theme_label_mismatch');
   });
 
   it('a none result freezes as a complete none reading with full state, coverage and provenance (INV-23/24)', () => {
@@ -183,7 +222,7 @@ describe('WS2-07-F1 · reading contract v2 — the taxonomy may no longer veto a
     expect(f.ok ? 'ok' : f.refusal).toBe('unknown_phenomenon');
   });
 
-  it('every frozen reading carries the v2 contract version; a none reading carries it too', () => {
+  it('every frozen reading carries the current contract version; a none reading carries it too', () => {
     const withClaims = freezeReading({
       manuscriptId: 'm1', request: request(), result: claims('one'),
       phenomena: [undefined], reader: READER, classifier: CLASSIFIER,

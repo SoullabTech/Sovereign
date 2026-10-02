@@ -291,7 +291,7 @@ check('E1-12 — attempt/evidence population change invalidates grant; retry can
     model_family: 'QWEN',
     provider_id: 'qwen-local',
     model_id: 'qwen3-coder:30b',
-    adapter_id: 'opencode',
+    adapter_id: 'ollama-direct',
     role: env.work_unit.routing.route_record.primary.role,
   };
   let appended = appendLedgerRecordV2(env, { kind: 'model_identity', entry: identity });

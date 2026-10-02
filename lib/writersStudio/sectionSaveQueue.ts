@@ -41,6 +41,15 @@ export interface SaveOutcome {
   version?: number;
   /** e.g. 'stale_base'. Present when ok is false. */
   refusal?: string;
+  /**
+   * A1-LS1 · R3 — false when the server admitted the save on this section's
+   * observed body rather than on the draft version: the returned version then
+   * includes changes elsewhere this client has not seen, so the queue keeps
+   * its base. Absent means true (the version rule admitted it).
+   */
+  advancesVersion?: boolean;
+  /** A1-LS1 · R3 — SHA-256 of the body as saved, when the server reports it. */
+  observedBodySha256?: string;
 }
 
 /** The network call. Injected so the queue is testable without a server. */
@@ -206,7 +215,14 @@ export class SectionSaveQueue {
   private async drain(): Promise<void> {
     try {
       for (;;) {
-        const next = [...this.pending.values()].sort((a, b) => a.sequence - b.sequence)[0];
+        /* A1-LS1 · R3 — CONTAINMENT. A conflicted section is held, not re-sent:
+           it waits for a member decision (see takeLocalVersion). It must not
+           stand at the head of the line either — a latched body re-sent ahead
+           of every later edit is how one conflict silently stopped the whole
+           draft from saving. */
+        const next = [...this.pending.values()]
+          .filter((entry) => !this.conflicted.has(entry.sectionId))
+          .sort((a, b) => a.sequence - b.sequence)[0];
         if (!next) return;
         this.pending.delete(next.sectionId);
         this.inFlight = next;
@@ -222,7 +238,11 @@ export class SectionSaveQueue {
 
         this.inFlight = null;
         if (outcome.ok && typeof outcome.version === 'number') {
-          this.version = outcome.version;
+          /* A1-LS1 · R3 — adopt the new version only when the version rule
+             admitted the save. Adopting a version reached through a change
+             elsewhere would let the next save of THAT changed section match
+             the version and pass without its body ever being compared. */
+          if (outcome.advancesVersion !== false) this.version = outcome.version;
         } else {
           /* Refused. The body goes back to pending so it is never lost — and
              a newer edit made while this was open is NOT overwritten by the
@@ -236,8 +256,16 @@ export class SectionSaveQueue {
              outcome does not latch: retrying is safe because the server still
              version-checks, and if the lost save did commit the retry returns
              a conflict, which is then the honest answer. */
-          if (outcome.refusal === 'stale_base') this.conflicted.add(next.sectionId);
-          else this.errored.add(next.sectionId);
+          if (outcome.refusal === 'stale_base') {
+            /* A1-LS1 · R3 — the conflict belongs to THIS section. Latch it and
+               keep serving the rest of the draft: another section is refused
+               only if IT changed elsewhere (the server decides that per
+               section, under its lock). */
+            this.conflicted.add(next.sectionId);
+            this.emit();
+            continue;
+          }
+          this.errored.add(next.sectionId);
           this.emit();
           return;
         }

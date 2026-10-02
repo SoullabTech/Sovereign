@@ -70,6 +70,18 @@ export async function GET(req: NextRequest) {
     });
   }
 
+  const revision = await query<{ revision_number: number }>(
+    `SELECT revision_number
+       FROM working_draft_revisions
+      WHERE draft_id = $1
+      ORDER BY revision_number DESC
+      LIMIT 1`,
+    [d.id],
+  );
+  const draftRevision = revision.rows.length === 1
+    ? Number(revision.rows[0]!.revision_number)
+    : null;
+
   const rows = await query<SectionRow>(
     `SELECT ds.id AS draft_section_id, ds.source_section_id, ds.position, ds.text,
             ms.heading, ms.heading_depth, ms.heading_signal
@@ -97,6 +109,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     state: 'section_aware', manuscriptId, title: manuscript.rows[0].title,
-    version: Number(d.version), updatedAt: d.updated_at.toISOString(), sections,
+    version: Number(d.version), draftRevision,
+    updatedAt: d.updated_at.toISOString(), sections,
   });
 }

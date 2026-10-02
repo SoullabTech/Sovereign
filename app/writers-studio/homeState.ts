@@ -53,8 +53,76 @@ export interface Arrival {
   imported: CurrentManuscript[];
 }
 
+/** Every distinct manuscript expression the member declared in this Work. */
+export function manuscriptIdsOf(work: LivingWork): string[] {
+  return [...new Set(
+    work.expressions
+      .filter((e) => e.expressionType === 'manuscript')
+      .map((e) => e.expressionId),
+  )];
+}
+
+/**
+ * The manuscript identity is singular only when the Work actually has one.
+ * A multi-manuscript Work has no implicit manuscript identity; callers must
+ * surface a member choice instead of selecting the first expression.
+ */
 export function manuscriptIdOf(work: LivingWork): string | null {
-  return work.expressions.find((e) => e.expressionType === 'manuscript')?.expressionId ?? null;
+  const ids = manuscriptIdsOf(work);
+  return ids.length === 1 ? ids[0] : null;
+}
+
+/**
+ * The held manuscripts named by `ids`, in the order of `ids`. ⛔ Never
+ * `manuscripts.filter(m => ids.includes(m.id))`: that keeps the held list's
+ * RECENCY order and silently discards the order the choice was given in.
+ */
+export function manuscriptsInOrder(
+  ids: readonly string[],
+  manuscripts: readonly CurrentManuscript[],
+): CurrentManuscript[] {
+  const byId = new Map(manuscripts.map((m) => [m.id, m]));
+  return ids
+    .map((id) => byId.get(id))
+    .filter((m): m is CurrentManuscript => Boolean(m));
+}
+
+/** Resolve every manuscript a Work declares, preserving declaration order. */
+export function manuscriptsForWork(
+  work: LivingWork,
+  manuscripts: readonly CurrentManuscript[],
+): CurrentManuscript[] {
+  const byId = new Map(manuscripts.map((m) => [m.id, m]));
+  return manuscriptIdsOf(work)
+    .map((id) => byId.get(id))
+    .filter((m): m is CurrentManuscript => Boolean(m));
+}
+
+/**
+ * Where an ordinary mode-bar entry (Write · Develop · Review, no Work carried)
+ * may go without asking.
+ *
+ *   resume Work known  → its manuscripts: one opens, several are the member's choice
+ *   no resume Work     → one manuscript opens; several are the member's choice
+ *   nothing            → nowhere
+ *
+ * ⛔ Never `manuscripts[0]`: that list is ordered by recency, so taking its
+ * head is a guess wearing a default's costume. House arrival is governed
+ * separately by situatedWork.ts and is not routed through here.
+ */
+export type ModeEntryTarget =
+  | { kind: 'none' }
+  | { kind: 'open'; manuscriptId: string }
+  | { kind: 'choose'; manuscriptIds: string[] };
+
+export function modeEntryTarget(
+  resume: LivingWork | null,
+  manuscripts: readonly CurrentManuscript[],
+): ModeEntryTarget {
+  const pool = resume ? manuscriptsForWork(resume, manuscripts) : [...manuscripts];
+  if (pool.length === 0) return { kind: 'none' };
+  if (pool.length === 1) return { kind: 'open', manuscriptId: pool[0]!.id };
+  return { kind: 'choose', manuscriptIds: pool.map((m) => m.id) };
 }
 
 const time = (iso: string | null | undefined): number => {
@@ -90,7 +158,7 @@ export const homeWritingExtent = (
 
 export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]): Arrival {
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
-  const claimed = new Set(works.map(manuscriptIdOf).filter(Boolean) as string[]);
+  const claimed = new Set(works.flatMap(manuscriptIdsOf));
   /* STUDIO-WRITING-PRESENCE-01 · S3 — ranked by `homeWritingExtent`. */
   const unclaimed = [...manuscripts]
     .filter((m) => !claimed.has(m.id))
@@ -126,41 +194,27 @@ export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]
    * The guard below still requires characters, so both failures are closed.
    */
   const writtenAt = (w: LivingWork): number => {
-    const id = manuscriptIdOf(w);
-    if (!id) return 0;
-    const m = byId.get(id);
-    /**
-     * STUDIO-WRITING-PRESENCE-01 · S2, ratified 2026-09-08.
-     *
-     * ⛔ `charCount > 0` was SOURCE extent, which is 0 forever for anything
-     * begun in the Studio — so a Work the member is actively writing could
-     * never be offered back to them. That is the defect this replaces.
-     *
-     * Continuable requires BOTH:
-     *   hasWriting                    there is something to continue, and
-     *   hasCurrentMemberContribution  the member authored it HERE — the current
-     *                                 draft diverges from its revision-1 baseline.
-     *
-     * The conjunction lives here rather than inside either fact, so neither name
-     * secretly carries the other's meaning. It preserves the original CONTINUE
-     * discipline exactly: a touched-but-empty draft fails the first, and a
-     * verbatim seed — including one the member has merely CHECKPOINTED — fails
-     * the second.
+    const members = manuscriptIdsOf(w)
+      .map((id) => byId.get(id))
+      .filter((m): m is CurrentManuscript => Boolean(m));
+
+    /*
+     * A Work may contain several manuscripts. Eligibility asks whether ANY
+     * declared manuscript contains substantive member-authored writing.
+     * This determines whether the Work itself is continuable; it does NOT
+     * select a manuscript for the member.
      */
-    if (!m || !m.hasWriting || !m.hasCurrentMemberContribution) return 0;
-    /**
-     * ⛔ ORDERING ONLY, AMONG WORKS ALREADY PROVEN CONTINUABLE.
-     *
-     * A checkpoint advances this timestamp without changing a character, so it
-     * cannot establish WHEN the member wrote. It can say where they last
-     * engaged — which is a lawful basis for ordering Works that have already
-     * passed the eligibility test above, and is not a basis for any claim about
-     * recency of writing. The surface copy says "Also written", never "recently".
-     *
-     *   eligibility : hasWriting && hasCurrentMemberContribution
-     *   ordering    : latest member draft activity
+    const eligible = members.filter(
+      (m) => m.hasWriting && m.hasCurrentMemberContribution,
+    );
+    if (eligible.length === 0) return 0;
+
+    /*
+     * ORDERING ONLY among Works already proven continuable. If several
+     * manuscripts belong to this Work, the latest eligible activity orders the
+     * Work; no manuscript identity is inferred from that timestamp.
      */
-    return time(m.lastMemberDraftActivityAt);
+    return Math.max(...eligible.map((m) => time(m.lastMemberDraftActivityAt)));
   };
 
   const written = works.filter((w) => writtenAt(w) > 0).sort((a, b) => writtenAt(b) - writtenAt(a));

@@ -27,6 +27,11 @@ import {
   getAxiomSummary
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
+import {
+  propagateServingIdentity,
+  servingDiverged,
+  type ResponseServingIdentity,
+} from '@/lib/consciousness/servingIdentityPropagation';
 import { evaluateEncounter } from '@/lib/wisdom/sacredTexts/SacredEncounterService';
 import { detectToolSuggestions, type ToolSuggestedAction } from '@/lib/consciousness/toolSurfacing';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
@@ -1866,6 +1871,8 @@ export async function POST(request: NextRequest) {
         modelUsed: maiaResponse.providerMetadata.modelUsed,
         usedProviderFallback: maiaResponse.providerMetadata.usedProviderFallback,
         generationTimeMs: maiaResponse.providerMetadata.generationTimeMs,
+        // R1: machine-readable serving truth only. No disclosure decision is made here.
+        serving: maiaResponse.providerMetadata.serving,
         // Legacy field for backwards compatibility (but now truthful)
         model: maiaResponse.providerMetadata.modelUsed,
         architecture: 'MAIA-PAI best practices + MAIA-SOVEREIGN intelligence',
@@ -2238,8 +2245,9 @@ async function generateSpiralogicResponseWithLLM(
   providerMetadata: {
     providerUsed: 'anthropic' | 'ollama' | 'fallback';
     modelUsed: string;
-    usedProviderFallback: boolean;  // true when Claude failed and Ollama took over
+    usedProviderFallback: boolean;  // true only when actual serving diverged from intended serving
     generationTimeMs?: number;
+    serving?: ResponseServingIdentity;
   };
 }> {
   const llmProvider = new MultiLLMProvider();
@@ -2550,8 +2558,9 @@ async function generateSpiralogicResponseWithLLM(
   let coreMessage = '';
   let providerUsed: 'anthropic' | 'ollama' | 'fallback' = 'fallback';
   let modelUsed = 'none';
-  let usedProviderFallback = false;  // true when Claude failed and Ollama took over
+  let usedProviderFallback = false;  // true only when actual serving diverged from intended serving
   let generationTimeMs: number | undefined;
+  let servingIdentity: ResponseServingIdentity | undefined;
 
   try {
     const llmResponse = await llmProvider.generate({
@@ -2561,6 +2570,7 @@ async function generateSpiralogicResponseWithLLM(
       // Claude is now primary by default
     });
     coreMessage = llmResponse.text;
+    servingIdentity = propagateServingIdentity(llmResponse.serving);
 
     // CUT 1 — Canon §V post-generation scrubber. Verb-synonym-complete blocklist
     // catches "I don't carry/hold/retain/keep memory" family — the lexical drift
@@ -2586,7 +2596,7 @@ async function generateSpiralogicResponseWithLLM(
     providerUsed = llmResponse.provider as 'anthropic' | 'ollama';
     modelUsed = llmResponse.model || 'unknown';
     generationTimeMs = llmResponse.metadata?.generationTime;
-    usedProviderFallback = llmResponse.provider !== 'anthropic'; // true when Ollama took over
+    usedProviderFallback = servingDiverged(llmResponse.serving);
 
     console.log('🌀 [MAIA Hybrid LLM Response]', {
       provider: llmResponse.provider,
@@ -2670,7 +2680,8 @@ async function generateSpiralogicResponseWithLLM(
       providerUsed,
       modelUsed,
       usedProviderFallback,
-      generationTimeMs
+      generationTimeMs,
+      serving: servingIdentity
     }
   };
 }

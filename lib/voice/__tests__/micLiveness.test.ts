@@ -17,6 +17,7 @@
 
 import {
   assessCaptureLiveness,
+  assessVoicedRecognitionStall,
   shouldActOnCaptureLiveness,
   shouldAttemptAutomaticCaptureRecovery,
   describeCaptureLoss,
@@ -24,6 +25,8 @@ import {
   CAPTURE_REASON_CODES,
   CAPTURE_SILENT_DEATH_MS,
   CAPTURE_ARMING_SILENT_MS,
+  VOICED_RECOGNITION_STALL_MS,
+  VOICED_RECOGNITION_RECENT_MS,
   EXPLICIT_FLOOR_RECOGNITION_PROBE_MS,
   type CaptureLossCause,
 } from '../micLiveness';
@@ -116,6 +119,46 @@ describe('assessCaptureLiveness', () => {
     const v = assessCaptureLiveness({ ...base, now: T0 - 5_000 });
     expect(v.dead).toBe(false);
     expect(v.silentForMs).toBe(0);
+  });
+});
+
+describe('voiced recognition stall', () => {
+  it('fails fast when local audio keeps hearing voice but recognition returns nothing', () => {
+    const v = assessVoicedRecognitionStall({
+      now: T0 + VOICED_RECOGNITION_STALL_MS,
+      voiceWithoutRecognitionSinceAt: T0,
+      analyserLastVoiceAt: T0 + VOICED_RECOGNITION_STALL_MS,
+      applicable: true,
+    });
+    expect(v.dead).toBe(true);
+    expect(v.cause).toBe('silent_death');
+  });
+
+  it('does not fire before the positive-evidence window', () => {
+    expect(assessVoicedRecognitionStall({
+      now: T0 + VOICED_RECOGNITION_STALL_MS - 1,
+      voiceWithoutRecognitionSinceAt: T0,
+      analyserLastVoiceAt: T0 + VOICED_RECOGNITION_STALL_MS - 1,
+      applicable: true,
+    }).dead).toBe(false);
+  });
+
+  it('does not treat old voice evidence as current speech', () => {
+    expect(assessVoicedRecognitionStall({
+      now: T0 + VOICED_RECOGNITION_STALL_MS + VOICED_RECOGNITION_RECENT_MS + 1,
+      voiceWithoutRecognitionSinceAt: T0,
+      analyserLastVoiceAt: T0 + VOICED_RECOGNITION_STALL_MS,
+      applicable: true,
+    }).dead).toBe(false);
+  });
+
+  it('is inert while capture liveness is not applicable', () => {
+    expect(assessVoicedRecognitionStall({
+      now: T0 + VOICED_RECOGNITION_STALL_MS * 10,
+      voiceWithoutRecognitionSinceAt: T0,
+      analyserLastVoiceAt: T0 + VOICED_RECOGNITION_STALL_MS * 10,
+      applicable: false,
+    }).dead).toBe(false);
   });
 });
 

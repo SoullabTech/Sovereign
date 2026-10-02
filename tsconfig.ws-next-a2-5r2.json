@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true, "strict": true, "noUncheckedIndexedAccess": false, "noImplicitAny": false },
+  "include": [
+    "lib/manuscript/proposalChain/contract.ts",
+    "lib/manuscript/proposalChain/store.ts",
+    "lib/manuscript/editorialRuntime/thread.ts",
+    "lib/writers-studio/relationshipCustody.ts",
+    "tests/constitutional/writers-studio/a2-5r2-scope-identity/**/*.ts",
+    "tests/constitutional/writers-studio/a2-4-custody/**/*.ts"
+  ],
+  "exclude": []
+}

@@ -48,10 +48,10 @@ function routeInput(patch={}) {
 }
 function bindingReq(participant,status='READY',overrides={}) {
   const map={
-    primary:['qwen-local','qwen3-coder:30b','opencode'],
+    primary:['qwen-local','qwen3-coder:30b','ollama-direct'],
     'local-review-1':['gpt-oss-local','gpt-oss:20b','opencode'],
   };
-  const [provider_id,model_id,adapter_id]=map[participant]||['qwen-local','qwen3-coder:30b','opencode'];
+  const [provider_id,model_id,adapter_id]=map[participant]||['qwen-local','qwen3-coder:30b','ollama-direct'];
   return {
     transport_binding_id:overrides.id||('b-'+participant),
     supersedes_binding_id:overrides.supersedes??null,

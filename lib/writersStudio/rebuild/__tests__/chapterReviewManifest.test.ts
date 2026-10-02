@@ -2,6 +2,7 @@ jest.mock('@/lib/http/apiBase', () => ({ apiFetch: jest.fn() }));
 
 import { apiFetch } from '@/lib/http/apiBase';
 import {
+  listChapterReviewManifests,
   loadChapterReviewManifest,
   saveChapterReviewManifest,
 } from '../chapterReviewManifest';
@@ -26,6 +27,20 @@ describe('chapter review manifest client', () => {
 
     mockedFetch.mockResolvedValueOnce(response(503, { refusal: 'unavailable' }));
     await expect(loadChapterReviewManifest('m1', 's1')).resolves.toEqual({ ok: false, refusal: 'unavailable' });
+  });
+
+  it('lists saved runs without selecting one', async () => {
+    const second = { ...run, id: 'run-2', createdAt: '2026-09-17T14:00:00Z' };
+    mockedFetch.mockResolvedValueOnce(response(200, { runs: [second, run] }));
+
+    await expect(listChapterReviewManifests('m1')).resolves.toEqual({
+      ok: true,
+      runs: [second, run],
+    });
+    expect(mockedFetch).toHaveBeenCalledWith(
+      '/api/sovereign/manuscripts/m1/chapter-reviews?list=1',
+      { method: 'GET' },
+    );
   });
 
   it('returns the durable run only after a successful save', async () => {

@@ -5,6 +5,7 @@ human_activity: seeing how my life, developing work, and practitioner field belo
 surfaces:
   - components/maia/living-constellation/**
   - components/maia/living-field/PersonalLivingFieldDashboard.tsx
+  - components/maia/living-field/LivingFieldCard.tsx
   - components/maia/vision-studio/VisionStudioRoom.tsx
   - components/maia/practice-field/PracticeFieldEditor.tsx
 
@@ -77,7 +78,7 @@ The current room receives quiet emphasis. The other two remain visible.
 
 | Gesture | Language used | Why this wording |
 |---|---|---|
-| move to another domain | "open →" beside the room name | Names navigation, not semantic transformation. |
+| move to another domain | whole-card doorway with "Enter [room] →" | Makes navigation explicit while still naming movement, not semantic transformation. |
 | inspect the map | authority label beneath each visible node | Keeps authorship/standing attached to the representation. |
 | encounter an empty domain | "Nothing authored here yet." | Absence is not deficiency and does not imply a hidden score. |
 | encounter partial read | "what is shown is partial" | A source outage must not masquerade as biographical absence. |
@@ -119,3 +120,16 @@ the required pair:
 - living-constellation-practice-mobile.png
 
 The screenshots use synthetic fixture data only.
+
+
+## Clarity amendment — 2026-09-28
+
+The three domain cards are whole-card doorways of equal visual status at desktop.
+Vision Studio must never be compressed into a narrow center column that makes its
+name, purpose, or authored material unreadable. Each card explains what that room
+is for before entry and carries a persistent `Enter [room] →` affordance.
+
+Living Field dimension cards likewise expose `Open dimension →` without hover.
+If the detail request fails, the member receives an explicit retry message rather
+than an inert click. This is a legibility and agency requirement, not a change to
+the underlying Living Field ontology or source authority.

@@ -9,6 +9,7 @@ import { LivingFieldGatheringPanel } from './LivingFieldGatheringPanel'
 import { MaiaCandidatePanel, type MaiaCandidate } from './MaiaCandidatePanel'
 import { LivingEncounterView } from './LivingEncounterView'
 import { MaiaCapture, type CaptureSource } from '@/components/maia/MaiaCapture'
+import { apiFetch } from '@/lib/http/apiBase'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -23,7 +24,6 @@ interface Props {
   versions: FieldVersion[]
   sources: FieldSource[]
   consents: ParticipantConsent[]
-  memberId: string
   onClose: () => void
 }
 
@@ -32,7 +32,6 @@ export function LivingFieldDetailPanel({
   versions,
   sources,
   consents,
-  memberId,
   onClose,
 }: Props) {
   const [expression, setExpression] = useState(field.current_expression ?? '')
@@ -43,10 +42,9 @@ export function LivingFieldDetailPanel({
   const [historyOpen, setHistoryOpen] = useState(false)
   const [captured, setCaptured] = useState<string | null>(null)
   const [refineNote, setRefineNote] = useState<string | null>(null)
-  // Conversation-first: opening a dimension lands the member IN the encounter.
-  // The expression form, gathering panel, and history are below — projections,
-  // not the primary surface.
-  const [encounterOpen, setEncounterOpen] = useState(true)
+  // Opening member-owned field material is not consent to begin an AI encounter.
+  // The dimension opens first; MAIA enters only after the member explicitly chooses it.
+  const [encounterOpen, setEncounterOpen] = useState(false)
 
   // Modal is fixed inset-0 — lock background scroll while it's open, and
   // restore whatever overflow value was there before.
@@ -60,9 +58,9 @@ export function LivingFieldDetailPanel({
 
   async function handleCapture(text: string, source: CaptureSource) {
     // Store as a source (evidence that feeds Refine and provenance) …
-    await fetch(`/api/maia/living-field/${field.field_key}/sources`, {
+    await apiFetch(`/api/maia/living-field/${field.field_key}/sources`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ source_type: source, source_excerpt: text }),
     })
     // … and drop the material into the expression so the member isn't retyping it.
@@ -80,9 +78,9 @@ export function LivingFieldDetailPanel({
     if (!expr || !expr.trim()) return
     setSaving(true)
     try {
-      await fetch(`/api/maia/living-field/${field.field_key}`, {
+      await apiFetch(`/api/maia/living-field/${field.field_key}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ expression: expr }),
       })
       setSaved(true)
@@ -92,14 +90,16 @@ export function LivingFieldDetailPanel({
     }
   }
 
+  // Failure is named as failure; no promise that it is temporary.
+  const REFINE_FAILED = 'MAIA’s draft did not return. Nothing has been changed. You can try again.'
+
   async function refine() {
     setRefining(true)
     setCandidate(null)
     setRefineNote(null)
     try {
-      const res = await fetch(`/api/maia/living-field/${field.field_key}/refine`, {
+      const res = await apiFetch(`/api/maia/living-field/${field.field_key}/refine`, {
         method: 'POST',
-        headers: { 'x-member-id': memberId },
       })
       const drafted = res.ok ? await res.json().catch(() => null) : null
       // A draft is only actionable when MAIA actually returned text. When
@@ -108,9 +108,15 @@ export function LivingFieldDetailPanel({
       // note instead; do not claim "nothing gathered" when Keeps have gathered.
       if (drafted && typeof drafted.candidate_expression === 'string' && drafted.candidate_expression.trim()) {
         setCandidate(drafted)
+      } else if (res.ok && drafted && drafted.candidate_expression === null && typeof drafted.rationale === 'string' && drafted.rationale.trim()) {
+        // Not a failure: the route deliberately declined (e.g. nothing has
+        // gathered yet) and said why. Show its reason rather than a failure.
+        setRefineNote(drafted.rationale)
       } else {
-        setRefineNote('MAIA could not draft a candidate just now. You can write directly, or try again in a moment.')
+        setRefineNote(REFINE_FAILED)
       }
+    } catch {
+      setRefineNote(REFINE_FAILED)
     } finally {
       setRefining(false)
     }
@@ -128,9 +134,9 @@ export function LivingFieldDetailPanel({
   }
 
   async function revokeConsent(consentId: string) {
-    await fetch(`/api/maia/living-field/${field.field_key}/consent`, {
+    await apiFetch(`/api/maia/living-field/${field.field_key}/consent`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ consent_id: consentId }),
     })
   }
@@ -160,7 +166,6 @@ export function LivingFieldDetailPanel({
             <LivingEncounterView
               fieldKey={field.field_key}
               fieldLabel={field.label}
-              memberId={memberId}
               onClose={() => setEncounterOpen(false)}
             />
           )}
@@ -194,7 +199,6 @@ export function LivingFieldDetailPanel({
           <LivingFieldGatheringPanel
             fieldKey={field.field_key}
             fieldLabel={field.label}
-            memberId={memberId}
           />
 
           {/* Candidate panel */}
@@ -273,8 +277,8 @@ export function LivingFieldDetailPanel({
             <h4 className="text-stone-500 text-xs uppercase tracking-widest">Supported By</h4>
             {activeConsents.length === 0 && revokedConsents.length === 0 ? (
               <p className="text-stone-600 text-xs">
-                Your Living Field is complete on its own. You can invite development partners to
-                walk alongside specific dimensions of it.
+                Development partners can be invited to walk alongside particular dimensions
+                of the field.
               </p>
             ) : (
               <ul className="space-y-2">

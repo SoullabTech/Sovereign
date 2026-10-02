@@ -29,6 +29,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { refuseDeclaration } from '@/lib/livingWork/domain';
+import { cabinStore, cabinMemberFromRequest, setCabinSessionCookie } from '@/lib/cabin/request';
 
 /** The one expression type the Studio can currently hold. */
 const DECLARABLE_TYPES = ['manuscript'] as const;
@@ -45,6 +46,56 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
   const { id: livingWorkId } = await ctx.params;
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      const body = (await request.json().catch(() => ({}))) as {
+        expressionType?: unknown;
+        expressionId?: unknown;
+      };
+      const expressionType = typeof body.expressionType === 'string' ? body.expressionType : '';
+      const expressionId = typeof body.expressionId === 'string' ? body.expressionId : '';
+
+      if (expressionType !== 'manuscript') {
+        return NextResponse.json(
+          { error: 'Only a manuscript can be placed in a work for now' },
+          { status: 400 },
+        );
+      }
+
+      try {
+        const expression = store.declareExpression(member.id, {
+          workId: livingWorkId,
+          expressionType,
+          expressionId,
+        });
+        const response = NextResponse.json(
+          {
+            expression: {
+              id: expression.id,
+              expressionType: expression.expressionType,
+              expressionId: expression.expressionId,
+              declaredAt: expression.declaredAt,
+            },
+          },
+          { status: 201 },
+        );
+        setCabinSessionCookie(response, issuedToken);
+        return response;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
+        if (message === 'CABIN_WORK_NOT_FOUND' || message === 'CABIN_EXPRESSION_NOT_OWNED') {
+          return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        }
+        throw error;
+      }
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -130,6 +181,33 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
   const { id: livingWorkId } = await ctx.params;
+
+  if (process.env.MAIA_CABIN_MODE === 'offline') {
+    const store = cabinStore();
+    try {
+      const { member, issuedToken } = cabinMemberFromRequest(store, request);
+      const url = new URL(request.url);
+      const expressionType = url.searchParams.get('expressionType') ?? '';
+      const expressionId = url.searchParams.get('expressionId') ?? '';
+      if (!expressionType || !expressionId) {
+        return NextResponse.json(
+          { error: 'expressionType and expressionId required' },
+          { status: 400 },
+        );
+      }
+
+      if (!store.deleteExpression(member.id, livingWorkId, expressionType, expressionId)) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+
+      const response = NextResponse.json({ withdrawn: expressionId });
+      setCabinSessionCookie(response, issuedToken);
+      return response;
+    } finally {
+      store.close();
+    }
+  }
+
   try {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

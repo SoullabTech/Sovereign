@@ -4,8 +4,9 @@
  * MemoryConsentSection — member-facing right-to-abstain surface for memory layers.
  *
  * Renders consent toggles for each memory layer's recall surface. Currently
- * exposes conversational recall (Phase 2). Future layers (episodic,
- * developmental, somatic) attach here as additional toggles without UI churn.
+ * exposes conversational recall and member-marked episodic recall. Future
+ * layers (developmental, somatic) attach here without inventing a second
+ * consent grammar.
  *
  * Authority chain:
  *   - Wires to /api/members/recall-preferences (the consent endpoint;
@@ -33,6 +34,7 @@ import { apiUrl } from '@/lib/http/apiBase';
 
 type RecallPreferences = {
   conversational_recall_enabled: boolean;
+  episodic_recall_enabled: boolean;
 };
 
 export function MemoryConsentSection() {
@@ -65,11 +67,10 @@ export function MemoryConsentSection() {
     };
   }, []);
 
-  const toggleConversationalRecall = async () => {
+  const toggleRecall = async (key: keyof RecallPreferences) => {
     if (!preferences || saving) return;
-    const next = !preferences.conversational_recall_enabled;
-    // Optimistic update — reverts on PATCH failure below.
-    setPreferences({ ...preferences, conversational_recall_enabled: next });
+    const next = !preferences[key];
+    setPreferences({ ...preferences, [key]: next });
     setSaving(true);
     setError(null);
     try {
@@ -77,16 +78,13 @@ export function MemoryConsentSection() {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversational_recall_enabled: next }),
+        body: JSON.stringify({ [key]: next }),
       });
       if (!res.ok) throw new Error(`Failed to save (${res.status})`);
       const data = (await res.json()) as RecallPreferences;
       setPreferences(data);
     } catch (e) {
-      // Revert optimistic update
-      setPreferences((prev) =>
-        prev ? { ...prev, conversational_recall_enabled: !next } : prev,
-      );
+      setPreferences((prev) => prev ? { ...prev, [key]: !next } : prev);
       setError(e instanceof Error ? e.message : 'Failed to save');
     } finally {
       setSaving(false);
@@ -133,7 +131,7 @@ export function MemoryConsentSection() {
               </div>
             </div>
             <button
-              onClick={toggleConversationalRecall}
+              onClick={() => void toggleRecall('conversational_recall_enabled')}
               disabled={saving}
               role="switch"
               aria-checked={preferences.conversational_recall_enabled}
@@ -148,6 +146,45 @@ export function MemoryConsentSection() {
               <motion.div
                 className="w-5 h-5 rounded-full bg-white shadow-md"
                 animate={{ x: preferences.conversational_recall_enabled ? 20 : 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              />
+            </button>
+          </div>
+
+          <div className="flex items-start justify-between gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400 mt-0.5 shrink-0">
+                <History size={18} />
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="text-sm font-medium text-white">Remembered moments</div>
+                <p className="text-sm text-stone-400">
+                  Lets MAIA bring forward moments you explicitly chose to remember when they may help the current conversation.
+                </p>
+                <p className="text-sm text-stone-400">
+                  Turning this off stops those marked moments from entering MAIA&apos;s prompts. It does not delete them.
+                </p>
+                <p className="text-xs text-stone-500">
+                  Journal entries are not added to remembered moments automatically.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => void toggleRecall('episodic_recall_enabled')}
+              disabled={saving}
+              role="switch"
+              aria-checked={preferences.episodic_recall_enabled}
+              aria-label="Toggle remembered-moment recall"
+              className={`shrink-0 w-11 h-6 rounded-full p-0.5 transition-all duration-150
+                active:scale-95 active:ring-2 active:ring-amber-400/50 disabled:opacity-50 ${
+                  preferences.episodic_recall_enabled
+                    ? 'bg-amber-500 active:bg-amber-400'
+                    : 'bg-white/20 active:bg-white/30'
+                }`}
+            >
+              <motion.div
+                className="w-5 h-5 rounded-full bg-white shadow-md"
+                animate={{ x: preferences.episodic_recall_enabled ? 20 : 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
             </button>

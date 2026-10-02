@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["es2022"],
+    "types": ["node"],
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": true
+  },
+  "include": [
+    "tests/constitutional/review-custody/**/*.ts",
+    "scripts/review-custody-core.ts",
+    "scripts/review-custody-coverage.ts",
+    "scripts/review-custody-migration-gate.ts",
+    "scripts/verify-review-custody-freeze.ts",
+    "scripts/review-custody.ts"
+  ]
+}

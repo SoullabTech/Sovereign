@@ -98,8 +98,8 @@ export async function POST(
   const id = randomUUID();
   await query(
     `INSERT INTO studio_decisions
-       (id, practitioner_id, captured_by_member_id, source_message_id, source_channel_id, title, context, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, 'draft')`,
+       (id, practitioner_id, captured_by_member_id, source_message_id, source_channel_id, decision_scope, title, context, status)
+     VALUES ($1, $2, $3, $4, $5, 'team', $6, $7, 'draft')`,
     [id, practitioner?.practitionerId ?? null, memberId, messageId, channelId, title, context]
   );
 

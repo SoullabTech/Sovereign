@@ -3,6 +3,7 @@
 import { Router, Request, Response } from "express";
 import { retreatOnboardingService } from "../services/retreatOnboardingService";
 import { z } from "zod";
+import crypto from "node:crypto";
 import { logger } from "../utils/logger";
 const router = Router();
 
@@ -428,7 +429,7 @@ async function getFounderQuestionnaireReflection(
 async function assignEnhancedPersonalOracle(participant: any): Promise<any> {
   const element = participant.elementalProfile.dominantElement;
   const archetype = getArchetypeForProfile(participant);
-  const oracleId = participant.personalOracleId || require("uuid").v4();
+  const oracleId = participant.personalOracleId || crypto.randomUUID();
 
   // Update participant
   await supabase

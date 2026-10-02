@@ -175,7 +175,7 @@ describe('provenance moved because the semantic contract moved', () => {
        not move — the phenomenon family is untouched, and the two versions are
        pinned apart precisely so a reader repair cannot drift the classifier. */
     expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-04');
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-05');
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-06');
     expect(promptContractHash()).toHaveLength(64);
   });
 

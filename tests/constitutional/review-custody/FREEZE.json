@@ -1,0 +1,19 @@
+{
+  "instrument": "review-custody-freeze/v1",
+  "frozen_at": "2026-09-20",
+  "freeze_commit": "bbb5ff5c65edf7a7e3851c5a6379e6414e3e3f8d",
+  "authority": "founder act, 2026-09-20 — S3 Class-B precedent",
+  "law": "Implementation fails suite -> repair the implementation. Modifying any RC-F1..RC-F14 expectation, the CustodyDecisions interface, or STRICT requires a formal, named founder act with evidence the LAW or the INSTRUMENT was wrong — never that an implementation was inconvenient.",
+  "additive_law_permitted": "New law may be ADDED at its own address with its own falsifiers and defeat candidates. Adding never edits a frozen file; a frozen file's blob hash is the mechanical test.",
+  "frozen": {
+    "scripts/review-custody-core.ts": "b215072f2df934af38ef52007a72b6a2251800b3",
+    "tests/constitutional/review-custody/falsifiers.ts": "f2b24f38c9952baf08d68eb0fe2a7e3e564b4b82",
+    "tests/constitutional/review-custody/candidates.ts": "7ebe72d80e059a134033e723be78223db942b7db"
+  },
+  "deliberately_not_frozen": {
+    "tests/constitutional/review-custody/matrix.ts": "the instrument that RUNS the law; extending it to run additional suites does not weaken the law it runs",
+    "scripts/review-custody.ts": "the CLI shell; it composes the core and may adopt additional gates",
+    "tsconfig.review-custody.json": "typecheck configuration; widening its include set cannot weaken a falsifier"
+  },
+  "note": "Blob hashes, not a commit diff: they survive history rewriting and say exactly which bytes are law."
+}

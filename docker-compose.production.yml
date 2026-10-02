@@ -702,7 +702,7 @@ services:
   #
   # Deploy: docker compose -p maia-sovereign -f docker-compose.production.yml --env-file .env.production up -d mythic-atlas
   mythic-atlas:
-    image: node:20-alpine
+    image: node:22-alpine
     container_name: maia-mythic-atlas
     restart: unless-stopped
     logging: *default_logging

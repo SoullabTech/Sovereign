@@ -19,7 +19,7 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { CANVAS_HREF, DEVELOP_HREF, modeLocation } from '../studioMap';
+import { REBUILD_HREF, DEVELOP_HREF, modeLocation } from '../studioMap';
 import { canvasForManuscript, CANVAS_MANUSCRIPT_PARAM } from '../canvasIdentity';
 import { SECTION_PARAM, readSectionParam, resolveInitialSection } from '@/lib/writersStudio/placeInWork';
 
@@ -43,23 +43,23 @@ describe('D1-01 · D1-02 — the place survives both legs', () => {
   });
 
   it('Develop → Write carries the Work AND the place', () => {
-    const p = paramsOf(modeLocation(CANVAS_HREF, M, S));
+    const p = paramsOf(modeLocation(REBUILD_HREF, M, S));
     expect(p.get(CANVAS_MANUSCRIPT_PARAM)).toBe(M);
     expect(p.get(SECTION_PARAM)).toBe(S);
   });
 
   it('the round trip is lossless', () => {
     const there = modeLocation(DEVELOP_HREF, M, S);
-    const back = modeLocation(CANVAS_HREF, M, readSectionParam(there));
+    const back = modeLocation(REBUILD_HREF, M, readSectionParam(there));
     expect(paramsOf(back).get(SECTION_PARAM)).toBe(S);
     expect(paramsOf(back).get(CANVAS_MANUSCRIPT_PARAM)).toBe(M);
-    expect(back.startsWith(CANVAS_HREF)).toBe(true);
+    expect(back.startsWith(REBUILD_HREF)).toBe(true);
   });
 });
 
 describe('D1-03 — the Work never changes while switching mode', () => {
   it('the manuscript that goes in is the manuscript that comes out', () => {
-    for (const base of [CANVAS_HREF, DEVELOP_HREF]) {
+    for (const base of [REBUILD_HREF, DEVELOP_HREF]) {
       for (const section of [S, null]) {
         expect(paramsOf(modeLocation(base, M, section)).get(CANVAS_MANUSCRIPT_PARAM)).toBe(M);
       }
@@ -163,7 +163,7 @@ describe('D1-06 — one grammar, one reader, one composer', () => {
 describe('D1-07 · D1-08 — a Work with no place is unharmed', () => {
   it('a null place yields exactly the link that existed before', () => {
     expect(modeLocation(DEVELOP_HREF, M, null)).toBe(canvasForManuscript(DEVELOP_HREF, M));
-    expect(modeLocation(CANVAS_HREF, M, null)).toBe(canvasForManuscript(CANVAS_HREF, M));
+    expect(modeLocation(REBUILD_HREF, M, null)).toBe(canvasForManuscript(REBUILD_HREF, M));
   });
 
   it('⛔ no empty parameter is written', () => {

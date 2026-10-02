@@ -2,8 +2,9 @@
  * BUILD-07B — DEVELOPMENTAL READER · the contract, as types.
  *
  * Source of authority: docs/programme/WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md
- * (founder rulings A1–A7, 2026-09-04; canonical @ 40532a5a5). This file
- * transcribes that contract. It does not extend it. A field that the contract
+ * (founder rulings A1–A7, 2026-09-04; canonical @ 40532a5a5), amended by
+ * WRITERS-STUDIO-FLAGSHIP-ROADMAP-01 / D5C1 on 2026-09-26 to admit Themes as
+ * the eighth governed developmental lens. This file transcribes the current contract. A field that the contract
  * lists as ABSENT BY CONSTRUCTION does not exist here, so it cannot be
  * populated by a caller that forgot to check — the same method BUILD-07A used
  * for "not yet a reading" (readState.ts) and DECIDE used for `none`.
@@ -38,7 +39,7 @@ import type { ReaderIdentity } from '../structure/readerProvenance';
 
 /** A2 — the editorial question a reading is commissioned under. Exactly one. */
 export const DEVELOPMENTAL_LENSES = [
-  'structure', 'development', 'continuity', 'arc', 'voice', 'coherence', 'reader',
+  'structure', 'development', 'continuity', 'arc', 'themes', 'voice', 'coherence', 'reader',
 ] as const;
 export type DevelopmentalLens = (typeof DEVELOPMENTAL_LENSES)[number];
 
@@ -61,6 +62,7 @@ export const LENS_MEANING: Readonly<Record<DevelopmentalLens, string>> = {
   development: 'Which ideas are underdeveloped · sufficiently developed · overexplained · introduced too late · abandoned · repeated without advancing?',
   continuity: 'Prospective language where later has already happened. Requires chronology across the Work, not phrase search.',
   arc: 'What journey does this chapter take the reader through, and what journey has the whole book taken?',
+  themes: 'What recurs, where does it recur, and how does its presence change across the Work?',
   voice: "Where does this depart from the established voice OF THIS WORK - the manuscript itself is the reference, never an external standard.",
   coherence: 'Internally consistent? Has a term changed meaning? Does this contradict an earlier chapter?',
   reader: 'What does the reader already know here? Where might they lose orientation?',
@@ -82,6 +84,7 @@ export const LENS_MEANING: Readonly<Record<DevelopmentalLens, string>> = {
 export const LENS_RIDER: Readonly<Partial<Record<DevelopmentalLens, string>>> = {
   development: 'The word "abandoned" above is an INTERPRETATION and is not available to you. You may notice that something is introduced and not taken up again in what you read; you may not say it was abandoned, or why.',
   arc: 'Arc is scope-sensitive. A bounded passage has a shape whether or not the Work has declared divisions; a claim about THIS DIVISION\'s journey requires the member\'s authored structure; a claim about the whole Work\'s journey requires structure you were given and coverage you actually read.',
+  themes: 'Themes are repeated-presence claims, never importance claims. Every candidate theme must be evidenced at exact places. A proposed theme name is MAIA-authored and remains a candidate until the member accepts or renames it. Do not call a theme key, central, strongest, important, emerging, or significant unless the evidence literally establishes the descriptive fact being named.',
 };
 
 /**
@@ -145,10 +148,10 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  * teaches nothing:
  *
  *       500,000 code points  ≈  125,000 tokens at ~4 chars/token
- *       + 16,000 output budget
+ *       + 32,000 output budget
  *       + 20,000 system prompt · structure context · thread history
  *       ─────────
- *       161,000 of a 200,000 window  →  ~39,000 tokens of margin
+ *       177,000 total request/response allowance
  *
  *     and, on the same assumption, 650,000 was REFUSED as "~198,500 of
  *     200,000, leaving essentially nothing for tokenizer variation".
@@ -159,16 +162,16 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  *
  *     context window      1,000,000 tokens
  *     max output            128,000 tokens
- *     our request            16,000 tokens   ← comfortably inside
+ *     current allowance      32,000 tokens   ← still comfortably inside
  *
  * So the true arithmetic, at the same 500,000 code points:
  *
- *     125,000 read + 16,000 output + 20,000 reserve  =  ~161,000
- *     against 1,000,000                              →  ~839,000 remaining
+ *     125,000 read + 32,000 output + 20,000 reserve  =  ~177,000
+ *     against 1,000,000                              →  ~823,000 remaining
  *
  * ⭐ 500,000 IS THEREFORE A PRODUCT CEILING, NOT A CAPACITY ONE, and calling
  * it derived was the error. Capacity would put the bound at roughly
- * (1,000,000 − 16,000 − 20,000) × 4 ≈ 3,850,000 code points — nearly eight
+ * (1,000,000 − 32,000 − 20,000) × 4 ≈ 3,792,000 code points — more than seven
  * times this. 500,000 is retained deliberately as a CONSERVATIVE BRIDGE: it
  * admits ordinary books whole while hierarchical whole-work reading remains
  * unbuilt, and a bound we can raise on evidence is safer than one we set from
@@ -266,6 +269,13 @@ export interface DevelopmentalReaderRequest {
 export interface ReaderClaimDraft {
   /** Non-empty. What was noticed, in MAIA's words. Not a recommendation. */
   text: string;
+  /**
+   * D5C1 — Themes only. A short MAIA-authored candidate name for the recurrence
+   * described by this claim. It is NOT member-declared standing and may be
+   * renamed/rejected without rewriting the frozen claim. Required for the
+   * Themes lens and absent for every other lens.
+   */
+  themeLabel?: string;
   /** 07A vocabulary. Proven by `bindEvidence` against the request's evidence before a result exists. */
   refs: NonEmptyArray<EvidenceRef>;
   /** A7 — at least one, from the closed vocabulary. */

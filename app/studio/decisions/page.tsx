@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Plus, Scale, Clock, CheckCircle2, AlertTriangle, Sparkles, GitBranch, Compass } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -23,6 +24,9 @@ const EMERGENCE_ICONS: Record<string, string> = {
 };
 
 export default function DecisionsPage() {
+  const pathname = usePathname();
+  const personalLens = pathname?.startsWith('/decisions') ?? false;
+  const basePath = personalLens ? '/decisions' : '/studio/decisions';
   const [decisions, setDecisions] = useState<DecisionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('');
@@ -36,6 +40,7 @@ export default function DecisionsPage() {
     try {
       const params = new URLSearchParams();
       if (filter) params.set('status', filter);
+      if (personalLens) params.set('scope', 'personal');
       const res = await apiFetch(`/api/studio/decisions?${params}`);
       if (res.ok) {
         const data = await res.json();
@@ -57,11 +62,13 @@ export default function DecisionsPage() {
               Decision Council
             </h1>
             <p className="text-sm text-slate-400 mt-1">
-              Multi-perspective reflection for practitioner decisions
+              {personalLens
+                ? 'Multi-perspective reflection for decisions in your life and work'
+                : 'Multi-perspective reflection for practice decisions'}
             </p>
           </div>
           <Link
-            href="/studio/decisions/new"
+            href={`${basePath}/new`}
             className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -97,7 +104,7 @@ export default function DecisionsPage() {
               Capture a decision and run the council for multi-perspective insight.
             </p>
             <Link
-              href="/studio/decisions/new"
+              href={`${basePath}/new`}
               className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" />
@@ -113,7 +120,7 @@ export default function DecisionsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Link href={`/studio/decisions/${d.id}`}>
+                <Link href={`${basePath}/${d.id}`}>
                   <div className="p-4 rounded-lg border border-slate-800/60 bg-slate-900/50 hover:border-amber-800/40 transition-colors group">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -171,7 +178,7 @@ export default function DecisionsPage() {
                         </span>
                       )}
                       {d.questionsForLeader?.length > 0 && (
-                        <span>{d.questionsForLeader.length} questions prepared</span>
+                        <span>{d.questionsForLeader.length} {personalLens ? 'questions to carry' : 'questions prepared'}</span>
                       )}
                       {((d as any).childCount > 0 || (d as any).parentDecisionId) && (
                         <span className="flex items-center gap-1 text-amber-400/50">

@@ -23,8 +23,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'node:fs';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { renderMemberBook, type MemberBookSection } from '@/lib/manuscript/render/renderMemberBook';
-import { UNTITLED_EXPRESSION } from '@/lib/manuscript/untitledExpression';
+import { inspectBookProduction, renderMemberBook } from '@/lib/manuscript/render/renderMemberBook';
+import { loadMemberRenderSource } from '@/lib/manuscript/render/loadMemberRenderSource';
 import { memberRef } from '@/lib/privacy/memberRef';
 
 type Format = 'pdf' | 'epub';
@@ -37,6 +37,33 @@ const MIME: Record<Format, string> = {
 function safeFilename(title: string): string {
   const cleaned = title.replace(/[^\w.\- ]+/g, '').trim().slice(0, 120);
   return cleaned.length > 0 ? cleaned : 'manuscript';
+}
+
+
+export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
+  }
+
+  const memberId = await getMemberIdFromRequest(request);
+  if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { id } = await ctx.params;
+  const source = await loadMemberRenderSource(id, memberId);
+  if (!source.ok) {
+    return NextResponse.json({ error: source.error }, { status: source.status });
+  }
+
+  const issues = inspectBookProduction(source.sections);
+  return NextResponse.json({
+    ready: issues.length === 0,
+    title: source.title,
+    sectionCount: source.sections.length,
+    sourceAuthority: source.sourceAuthority,
+    sourceRevision: source.sourceRevision,
+    issues,
+    publicationBoundary: 'This creates a file from your current writing. It does not publish or distribute it.',
+  });
 }
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -59,117 +86,18 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     return NextResponse.json({ error: "format must be 'pdf' or 'epub'" }, { status: 400 });
   }
 
-  // Ownership gate: the manuscript must belong to the caller. 404 (never leak).
-  let title: string;
-  let author: string | null = null;
-  let sections: MemberBookSection[];
-  let sourceAuthority: 'working_draft' | 'source' = 'source';
-  let sourceRevision: string | null = null;
-  try {
-    const ms = await query<{ title: string | null }>(
-      `SELECT title FROM member_manuscripts WHERE id = $1 AND member_id = $2`,
-      [id, memberId],
-    );
-    if (ms.rows.length === 0) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    }
-    /**
-     * `title` is nullable since 20260802000001 — a member may begin writing
-     * before naming the expression. Resolve the absence HERE, at the boundary
-     * that must hand a string to pandoc, and nowhere earlier.
-     *
-     * Why this is stated rather than inherited: an unnamed manuscript cannot
-     * currently reach this line, because `title IS NULL` implies
-     * `provenance = 'member_written'`, which implies zero `manuscript_sections`
-     * rows, which the check below refuses with a 400. That is a real guard but
-     * an ACCIDENTAL one — it protects the renderer via an unrelated fact about
-     * section counts. The moment written drafts can be produced into output
-     * (the Design/Publish direction this slice is groundwork for), the
-     * coincidence dissolves and `null` would reach pandoc as the literal string
-     * "null", in the member's own book and its filename.
-     *
-     * The fallback is display/export only. Nothing is written back: the column
-     * stays NULL, and the member's naming is still theirs to perform.
-     */
-    title = ms.rows[0].title ?? UNTITLED_EXPRESSION;
-
-    /* HALLMARK BOOK PRODUCTION — render the writing authority, not the import.
-     *
-     * A section-addressable working draft is the manuscript the writer is
-     * actually changing in Writer's Studio. Its text therefore outranks the
-     * immutable source at export time. Source rows still carry the structural
-     * evidence (heading/depth/signal) through `source_section_id`.
-     *
-     * Critical refusal: when an addressable draft exists but its section rows
-     * cannot be read, DO NOT fall back to source. That would quietly hand the
-     * author an older book while claiming to export the current one. */
-    const draft = await query<{ id: string; version: string; section_addressable_at: Date | null }>(
-      `SELECT id, version, section_addressable_at
-         FROM manuscript_working_drafts
-        WHERE manuscript_id = $1 AND member_id = $2`,
-      [id, memberId],
-    );
-    const currentDraft = draft.rows[0] ?? null;
-    if (currentDraft?.section_addressable_at) {
-      sourceAuthority = 'working_draft';
-      sourceRevision = currentDraft.version;
-      const draftRows = await query<{
-        heading: string | null; body: string; heading_depth: number | null; heading_signal: string | null;
-      }>(
-        `SELECT ms.heading, ds.text AS body, ms.heading_depth, ms.heading_signal
-           FROM manuscript_draft_sections ds
-           JOIN manuscript_working_drafts d ON d.id = ds.draft_id
-           LEFT JOIN manuscript_sections ms ON ms.id = ds.source_section_id
-          WHERE d.manuscript_id = $1
-            AND d.member_id = $2
-            AND d.section_addressable_at IS NOT NULL
-          ORDER BY ds.position`,
-        [id, memberId],
-      );
-      if (draftRows.rows.length === 0) {
-        return NextResponse.json(
-          { error: 'The current writing could not be prepared for export. Nothing older was substituted.' },
-          { status: 409 },
-        );
-      }
-      sections = draftRows.rows.map((r) => ({
-        heading: r.heading,
-        body: r.body,
-        headingDepth: r.heading_depth === 1 || r.heading_depth === 2 || r.heading_depth === 3
-          ? r.heading_depth : null,
-        headingSignal: r.heading_signal,
-      }));
-    } else {
-      const secRows = await query<{
-        heading: string | null; body: string; heading_depth: number | null; heading_signal: string | null;
-      }>(
-        `SELECT heading, body, heading_depth, heading_signal
-           FROM manuscript_sections
-          WHERE manuscript_id = $1
-          ORDER BY position`,
-        [id],
-      );
-      if (secRows.rows.length === 0) {
-        return NextResponse.json({ error: 'This manuscript has no sections to render' }, { status: 400 });
-      }
-      sections = secRows.rows.map((r) => ({
-        heading: r.heading,
-        body: r.body,
-        headingDepth: r.heading_depth === 1 || r.heading_depth === 2 || r.heading_depth === 3
-          ? r.heading_depth : null,
-        headingSignal: r.heading_signal,
-      }));
-    }
-
-    const who = await query<{ name: string | null }>(
-      `SELECT name FROM members WHERE id = $1`,
-      [memberId],
-    );
-    author = who.rows[0]?.name ?? null;
-  } catch (err) {
-    console.error('[press/manuscripts/:id/render] load error:', err);
-    return NextResponse.json({ error: 'Failed to load manuscript' }, { status: 500 });
+  const source = await loadMemberRenderSource(id, memberId);
+  if (!source.ok) {
+    return NextResponse.json({ error: source.error }, { status: source.status });
   }
+
+  const {
+    title,
+    author,
+    sections,
+    sourceAuthority,
+    sourceRevision,
+  } = source;
 
   // Render (pandoc → PDF/EPUB). Author's verbatim words only.
   let result;

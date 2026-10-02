@@ -1,0 +1,81 @@
+{
+  "programme": "JARVIS-KP-01",
+  "act": "I3",
+  "title": "Append-only Epistemic Join Persistence",
+  "date": "2026-09-21",
+  "status": "EVIDENCE_READY",
+  "canonical_base": "2eb441edf8577b35b25e63b6e3cc5e8f6aa3738b",
+  "controlling_law": "NO SEMANTIC JOIN WITHOUT A WARRANT.",
+  "immutable_upstream": [
+    "ACT 10",
+    "ACT 11",
+    "ACT 12",
+    "ACT 11A",
+    "ACT 12A",
+    "I1",
+    "I2 canonical @ 2eb441edf8577b35b25e63b6e3cc5e8f6aa3738b"
+  ],
+  "authority": "PERSISTENCE_CANDIDATE_ONLY_DEFAULT_OFF_NO_REPRESENTATION_NO_RUNTIME_AUTHORITY",
+  "disposition": "DURABLE APPEND_ONLY CUSTODY PROVEN LOCALLY WITH FEATURE FLAG DEFAULT OFF",
+  "feature_flag": {
+    "name": "AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED",
+    "on_value": "1",
+    "default": "OFF",
+    "application_call_sites": 0
+  },
+  "migration": "database/migrations/20260921000001_epistemic_join_persistence.sql",
+  "persistence_module": "lib/ain/epistemic-join/persistence/",
+  "tables": [
+    "epistemic_join_records",
+    "epistemic_warrant_records",
+    "epistemic_join_dependencies",
+    "epistemic_standing_acts",
+    "epistemic_adoption_acts",
+    "epistemic_join_admissions"
+  ],
+  "derived_view": "epistemic_join_current_standing",
+  "constitutional_properties": {
+    "member_scoped": true,
+    "append_only_tables": "6/6 structural UPDATE+DELETE refusal",
+    "mutable_current_standing_field": false,
+    "same_join_writer_serialization": "pg_advisory_xact_lock inside transaction",
+    "stale_tip_posture": "FAIL_CLOSED",
+    "standing_branching": "REFUSED",
+    "admission_branching": "REFUSED",
+    "crash_partial_write": "TRANSACTION_ROLLBACK",
+    "representation_authority": "CLOSED_BY_DB_CHECK_AND_I2_RESULT",
+    "i2_pure_core_changed": false,
+    "projection_module": "ABSENT",
+    "read_api": "ABSENT"
+  },
+  "evidence": {
+    "i3_matrix": "18/18 PASS",
+    "epistemic_join_tests": "104/104 PASS",
+    "strict_module_typecheck": "EXIT 0",
+    "repository_typecheck": "229 vs baseline 239; 0 regressions; EXIT 0",
+    "full_blank_db_bootstrap": "PASS before later host disk exhaustion",
+    "focused_db_witness": "PASS",
+    "rollback_reconstruction": "PASS",
+    "data_class": "SYNTHETIC ONLY"
+  },
+  "host_capacity_note": "A later redundant full baseline reload failed with PostgreSQL No space left on device. The earlier full blank bootstrap PASS remains valid; the committed I3 witness uses a minimal empty substrate to avoid duplicating platform bootstrap cost.",
+  "forbidden_and_not_done": [
+    "feature flag activation",
+    "application runtime call site",
+    "projection or representation",
+    "MAIA prompt/context integration",
+    "member memory mutation",
+    "lifting crossing_allowed",
+    "Wisdom Graph semantic edge creation",
+    "Relational Practice Ledger semantic claim",
+    "Living Constellation semantic line",
+    "provider/model/routing change",
+    "production shadow",
+    "production database read or write",
+    "deployment",
+    "I4",
+    "pull request",
+    "merge"
+  ],
+  "next_gate": "SEPARATE_FOUNDER_ADJUDICATION_OF_EXACT_I3_CANDIDATE"
+}

@@ -2,14 +2,12 @@
 
 import { LandingNav } from './LandingNav';
 import { HeroSection } from './HeroSection';
+import { PlatformSection } from './PlatformSection';
 import { MaiaSection } from './MaiaSection';
 import { ResearchSection } from './ResearchSection';
-import { PortfolioSection } from './PortfolioSection';
 import { BookAnnouncement } from './BookAnnouncement';
 import { PastSitesSection } from './PastSitesSection';
-import { AskSection } from './AskSection';
 import { ContactSection } from './ContactSection';
-import { NarrativeSection } from './NarrativeSection';
 import { InquirySection } from './InquirySection';
 import { CovenantSection } from './CovenantSection';
 import { AskWidget } from './AskWidget';
@@ -20,14 +18,12 @@ export function SoullabLanding() {
       <LandingNav />
       <main>
         <HeroSection />
-        <MaiaSection />
+        <PlatformSection />
         <ResearchSection />
-        <NarrativeSection />
+        <MaiaSection />
         <InquirySection />
-        <PortfolioSection />
-        <BookAnnouncement />
-        <AskSection />
         <PastSitesSection />
+        <BookAnnouncement />
         <CovenantSection />
         <ContactSection />
       </main>

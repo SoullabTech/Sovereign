@@ -62,6 +62,21 @@ export interface WriterStudioShellProps {
   workNote?: ReactNode;
   /** Mode-specific header controls, e.g. Write's MAIA toggle and word count. */
   headerRight?: ReactNode;
+  /**
+   * ⭐ WS-CONVERGENCE-01 · C3 — the place the ROOM has resolved.
+   *
+   * `StudioModeBar` already accepts `currentSectionId` and already composes the
+   * return through `modeLocation` (canvasForManuscript + locationForSection).
+   * ⚠️ The shell was never passing it, so the return fell back to reading `?s=`
+   * off the address — correct only while the room keeps the address in sync,
+   * and silently wrong the moment one does not. ⭐ Passing the resolved place
+   * makes the room's own knowledge authoritative over the URL.
+   *
+   * ⛔ Undefined keeps the previous behaviour exactly: the address reader.
+   */
+  placeSectionId?: string | null;
+  /** C3 — the current-place expression, where the room can state one. */
+  place?: ReactNode;
   /** The Studio rail, composed by the mode from its own truthful destinations. */
   rail?: ReactNode;
   /** The lower band, when the mode has one and it is truthful for this Work. */
@@ -75,6 +90,8 @@ export interface WriterStudioShellProps {
 }
 
 export function WriterStudioShell({
+  placeSectionId,
+  place,
   manuscriptId, currentMode, workName, workNamed = true, workNote,
   headerRight, rail, lowerBand, bodyGutter, compact: compactProp, children, style,
 }: WriterStudioShellProps) {
@@ -107,11 +124,15 @@ export function WriterStudioShell({
           background: GROUND.raised, flexShrink: 0,
         }}
       >
-        <Link href="/writers-studio" style={{ textDecoration: 'none' }}>
-          <StudioText role="bandLabel" tone="muted">
-            Soullab · Writer’s Studio
-          </StudioText>
-        </Link>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          <Link href="/house" aria-label="Return to Kelly’s World" style={{ textDecoration: 'none' }}>
+            <StudioText role="bandLabel" tone="muted">Kelly’s World</StudioText>
+          </Link>
+          <StudioText role="bandLabel" tone="muted">·</StudioText>
+          <Link href="/writers-studio" aria-label="Return to Writer’s Studio Home" style={{ textDecoration: 'none' }}>
+            <StudioText role="bandLabel" tone="muted">Writer’s Studio</StudioText>
+          </Link>
+        </div>
         <div style={{ minWidth: 0 }}>
           <StudioText role="workIdentity" style={{ opacity: workNamed ? 1 : 0.7 }}>
             {workName}
@@ -134,6 +155,7 @@ export function WriterStudioShell({
             rendered is not. */}
         <StudioModeBar
           current={currentMode}
+          currentSectionId={placeSectionId}
           manuscriptId={manuscriptId}
           style={
             compact

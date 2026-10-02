@@ -116,3 +116,49 @@ describe('SmtpProvider — TLS is not optional', () => {
     expect((cfg.tls as { minVersion: string }).minVersion).toBe('TLSv1.2');
   });
 });
+
+
+describe('SmtpProvider — explicit isolated configuration', () => {
+  it('uses explicit credentials instead of ambient SMTP_*', async () => {
+    process.env.SMTP_HOST = 'global.example.com';
+    process.env.SMTP_USER = 'global-user';
+    process.env.SMTP_PASSWORD = 'global-pass';
+    mockSendMail.mockResolvedValue({
+      messageId: '<alert@soullab.life>',
+      accepted: ['member@example.com'],
+      rejected: [],
+    });
+
+    const provider = new SmtpProvider({
+      host: 'smtp.protonmail.ch',
+      user: 'messages@soullab.life',
+      password: 'alert-secret',
+      port: 587,
+      secure: false,
+    });
+
+    await provider.send(msg);
+
+    expect(mockCreateTransport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        host: 'smtp.protonmail.ch',
+        port: 587,
+        secure: false,
+        auth: { user: 'messages@soullab.life', pass: 'alert-secret' },
+      })
+    );
+  });
+
+  it('does not backfill a missing explicit credential from global SMTP_*', () => {
+    process.env.SMTP_HOST = 'global.example.com';
+    process.env.SMTP_USER = 'global-user';
+    process.env.SMTP_PASSWORD = 'global-pass';
+
+    const provider = new SmtpProvider({
+      host: 'smtp.protonmail.ch',
+      user: 'messages@soullab.life',
+    });
+
+    expect(provider.isConfigured()).toBe(false);
+  });
+});

@@ -20,9 +20,199 @@ const stage = path.join(stageParent, 'project');
 
 fs.rmSync(stage, { recursive: true, force: true });
 fs.mkdirSync(stage, { recursive: true });
+
 for (const entry of ['package.json', 'src', 'build']) {
   fs.cpSync(path.join(root, entry), path.join(stage, entry), { recursive: true });
 }
+
+const repoRoot = path.join(root, '..');
+const standaloneRoot = path.join(repoRoot, '.next', 'standalone');
+const standaloneServer = path.join(standaloneRoot, 'server.js');
+const standaloneStatic = path.join(repoRoot, '.next', 'static');
+const standalonePublic = path.join(repoRoot, 'public');
+
+function materializeSymlinks(rootDir) {
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      const stat = fs.lstatSync(entryPath);
+      if (stat.isSymbolicLink()) {
+        const resolved = fs.realpathSync(entryPath);
+        const resolvedStat = fs.statSync(resolved);
+        fs.rmSync(entryPath, { recursive: true, force: true });
+        fs.cpSync(resolved, entryPath, {
+          recursive: resolvedStat.isDirectory(),
+          dereference: true,
+        });
+        if (resolvedStat.isDirectory()) visit(entryPath);
+        continue;
+      }
+      if (stat.isDirectory()) visit(entryPath);
+    }
+  };
+  visit(rootDir);
+}
+
+function assertPortableSymlinks(rootDir) {
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      const stat = fs.lstatSync(entryPath);
+      if (stat.isSymbolicLink()) {
+        const target = fs.readlinkSync(entryPath);
+        if (path.isAbsolute(target)) {
+          throw new Error(`Cabin runtime contains absolute symlink: ${entryPath} -> ${target}`);
+        }
+        const resolved = path.resolve(path.dirname(entryPath), target);
+        if (resolved !== rootDir && !resolved.startsWith(`${rootDir}${path.sep}`)) {
+          throw new Error(`Cabin runtime symlink escapes staging root: ${entryPath} -> ${target}`);
+        }
+        continue;
+      }
+      if (stat.isDirectory()) visit(entryPath);
+    }
+  };
+  visit(rootDir);
+}
+
+function developerIdIdentity() {
+  if (process.platform !== 'darwin') return null;
+  try {
+    const out = execFileSync('/usr/bin/security', ['find-identity', '-v', '-p', 'codesigning'], {
+      encoding: 'utf8',
+    });
+    const lines = out.split('\n').filter((line) => line.includes('Developer ID Application:'));
+    const requested = String(process.env.CSC_NAME || '').trim();
+    const line = requested ? lines.find((candidate) => candidate.includes(requested)) : lines[0];
+    const match = line && line.match(/"(Developer ID Application:[^"]+)"/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+function cabinMachOBinaries(rootDir) {
+  const binaries = [];
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      const stat = fs.lstatSync(entryPath);
+      if (stat.isSymbolicLink()) continue;
+      if (stat.isDirectory()) {
+        visit(entryPath);
+        continue;
+      }
+      if (!stat.isFile()) continue;
+      try {
+        const description = execFileSync('/usr/bin/file', ['-b', entryPath], { encoding: 'utf8' });
+        if (description.includes('Mach-O')) binaries.push(entryPath);
+      } catch {
+        // Non-native or unreadable files are irrelevant to codesign.
+      }
+    }
+  };
+  visit(rootDir);
+  return binaries;
+}
+
+function signCabinMachOBinaries(rootDir) {
+  if (process.platform !== 'darwin') return [];
+  const binaries = cabinMachOBinaries(rootDir);
+  const identity = developerIdIdentity();
+  if (!identity) {
+    console.log(`[MAIA Desktop] no Developer ID identity; ${binaries.length} Cabin Mach-O binaries remain local-only`);
+    return binaries;
+  }
+  for (const binary of binaries) {
+    execFileSync('/usr/bin/codesign', [
+      '--force', '--timestamp', '--options', 'runtime', '--sign', identity, binary,
+    ], { stdio: 'inherit' });
+    execFileSync('/usr/bin/codesign', ['--verify', '--strict', binary], { stdio: 'inherit' });
+  }
+  console.log(`[MAIA Desktop] signed ${binaries.length} Cabin Mach-O binaries with ${identity}`);
+  return binaries;
+}
+
+if (!fs.existsSync(standaloneServer)) {
+  throw new Error(
+    'Cabin runtime is not built. Run MAIA_CABIN_MODE=offline next build first so .next/standalone/server.js exists.',
+  );
+}
+
+const cabinSourceParent = process.env.MAIA_DESKTOP_CABIN_STAGING_PARENT ||
+  path.join(os.tmpdir(), 'maia-desktop-cabin-staging');
+const cabinSource = path.join(cabinSourceParent, `cabin-runtime-${sha}`);
+fs.rmSync(cabinSource, { recursive: true, force: true });
+fs.mkdirSync(cabinSourceParent, { recursive: true });
+const shouldCopyCabinRuntimeEntry = (source) => {
+  const relative = path.relative(standaloneRoot, source);
+  const isBackupPayload = relative === 'backups' || relative.startsWith(`backups${path.sep}`);
+  const nextCache = path.join('.next', 'cache');
+  const isNextBuildCache = relative === nextCache || relative.startsWith(`${nextCache}${path.sep}`);
+  return !isBackupPayload && !isNextBuildCache;
+};
+fs.cpSync(standaloneRoot, cabinSource, {
+  recursive: true,
+  filter: shouldCopyCabinRuntimeEntry,
+});
+fs.mkdirSync(path.join(cabinSource, '.next'), { recursive: true });
+fs.cpSync(standaloneStatic, path.join(cabinSource, '.next', 'static'), { recursive: true });
+const cabinPublic = path.join(cabinSource, 'public');
+fs.rmSync(cabinPublic, { recursive: true, force: true });
+fs.cpSync(standalonePublic, cabinPublic, { recursive: true, dereference: true });
+materializeSymlinks(cabinPublic);
+assertPortableSymlinks(cabinSource);
+signCabinMachOBinaries(cabinSource);
+
+const standaloneNextPackage = path.join(cabinSource, 'node_modules', 'next', 'package.json');
+if (!fs.existsSync(standaloneNextPackage)) {
+  throw new Error('Cabin runtime staging missing node_modules/next; refusing to package');
+}
+
+const stagedPackagePath = path.join(stage, 'package.json');
+const stagedPackage = JSON.parse(fs.readFileSync(stagedPackagePath, 'utf8'));
+const cabinResource = stagedPackage.build?.extraResources?.find(
+  (resource) => resource?.to === 'cabin-runtime',
+);
+if (!cabinResource) {
+  throw new Error('Cabin extraResources entry is missing from staged package');
+}
+cabinResource.from = cabinSource;
+const cabinNodeModulesSource = path.join(cabinSource, 'node_modules');
+const cabinNodeModulesDestination = 'cabin-runtime/node_modules';
+if (!fs.existsSync(path.join(cabinNodeModulesSource, 'next', 'package.json'))) {
+  throw new Error('Cabin node_modules source is incomplete; refusing to package');
+}
+stagedPackage.build.extraResources.push({
+  from: cabinNodeModulesSource,
+  to: cabinNodeModulesDestination,
+  filter: ['**/*'],
+});
+
+const stagedNodeModulesResource = stagedPackage.build.extraResources.find(
+  (resource) => resource?.from === cabinNodeModulesSource && resource?.to === cabinNodeModulesDestination,
+);
+if (!stagedNodeModulesResource) {
+  throw new Error('Cabin node_modules extraResources entry was not staged');
+}
+
+fs.writeFileSync(stagedPackagePath, `${JSON.stringify(stagedPackage, null, 2)}\n`, 'utf8');
+
+console.log('[MAIA Desktop] cabin runtime staged outside electron-builder project and staging parent');
+console.log(`[MAIA Desktop] cabin source=${cabinSource}`);
+console.log(`[MAIA Desktop] cabin server=${path.join(cabinSource, 'server.js')}`);
+console.log(`[MAIA Desktop] cabin next=${standaloneNextPackage}`);
+console.log(`[MAIA Desktop] cabin node_modules source=${cabinNodeModulesSource}`);
+console.log(`[MAIA Desktop] cabin node_modules destination=${cabinNodeModulesDestination}`);
+
+// SOULLAB-DESKTOP-UNIFICATION-01 — package the governed JARVIS realm from its
+// canonical source tree. The staged copy is packaging material only; source
+// authority remains jarvis-desktop/src and no second implementation is created.
+const jarvisSource = path.join(root, '..', 'jarvis-desktop', 'src');
+const jarvisStage = path.join(stage, 'vendor', 'jarvis-desktop', 'src');
+fs.mkdirSync(path.dirname(jarvisStage), { recursive: true });
+fs.cpSync(jarvisSource, jarvisStage, { recursive: true });
+
 const args = [
   '--projectDir', stage,
   '--mac',
@@ -43,4 +233,5 @@ try {
   });
 } finally {
   fs.rmSync(stage, { recursive: true, force: true });
+  fs.rmSync(cabinSource, { recursive: true, force: true });
 }

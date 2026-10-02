@@ -251,6 +251,21 @@ describe('journal route correction', () => {
   });
 });
 
+describe('Dream — first-class member room', () => {
+  it('is offered to every member and points at the canonical Dream room', () => {
+    expect(getHouseDestinations(false).map((d) => d.id)).toContain('dream');
+    expect(find('dream').route).toBe('/dream');
+    expect(find('dream').group).toBe('life');
+  });
+
+  it('uses an honest web bridge on native until the Dream route is deliberately bundled', () => {
+    expect(classifyReachability(find('dream'), true)).toBe('web');
+    const h = harness(true);
+    dispatchHouseDestination(find('dream'), h.ctx);
+    expect(h.pushed).toEqual([webBridgePath('/dream')]);
+  });
+});
+
 describe('Reflections — member route, not the lab surface', () => {
   it('is offered to every member', () => {
     const member = getHouseDestinations(false).map((d) => d.id);

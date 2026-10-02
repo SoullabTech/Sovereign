@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Wisdom Keeper Service - Permanent sacred knowledge repository
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID as uuidv4 } from "node:crypto";
 import { logger } from "../utils/logger";
 
 interface WisdomEntry {

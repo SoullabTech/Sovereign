@@ -15,6 +15,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import {
   openEditorialRelationship, readEditorialThread,
 } from '@/lib/manuscript/editorialRuntime/thread';
@@ -44,11 +45,20 @@ export async function POST(request: NextRequest) {
   /* ⛔ CLOSED. `workId`, `draftId`, `chainId`, `expectedText`, `baseVersion` are
      all server facts; a caller that sent one and got 200 would believe it had
      standing. */
-  const stray = Object.keys(b).filter((k) => k !== 'sectionId');
+  const stray = Object.keys(b).filter((k) => k !== 'sectionId' && k !== 'sanctuary');
   if (stray.length) {
     return NextResponse.json({
       error: `unknown field(s): ${stray.join(', ')} — these are derived server-side and carry no standing here`,
     }, { status: 400 });
+  }
+  /* SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1 — posture first. Opening a
+     relationship writes proposal_chain + ask_threads; durable by construction.
+     Explicit boolean required; absence/malformed = unresolved = refused. */
+  if (typeof b.sanctuary !== 'boolean') {
+    return NextResponse.json({ error: 'posture_required', persisted: false }, { status: 400 });
+  }
+  if (TurnPosture.resolve(b).sanctuary) {
+    return NextResponse.json({ error: 'sanctuary_unavailable', persisted: false }, { status: 409 });
   }
   if (typeof b.sectionId !== 'string' || b.sectionId.length === 0) {
     return NextResponse.json({ error: 'sectionId is required' }, { status: 400 });

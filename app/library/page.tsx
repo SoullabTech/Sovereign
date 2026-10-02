@@ -7,28 +7,35 @@
  */
 
 import React, { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { LibrarySearch } from '@/components/community/LibrarySearch';
 import { ArticleViewer } from '@/components/community/ArticleViewer';
 import type { ArticleIndex } from '@/lib/library/types';
 import { ChevronLeft, Plus, X, BookOpen, Mail, Github, MessageCircle, CheckCircle } from 'lucide-react';
+import { ReturnHome } from '@/components/navigation/ReturnHome';
+import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
 
 export default function LibraryPage() {
+  const searchParams = useSearchParams();
+  const fromHouse = searchParams?.get('from') === 'house';
   const [selectedArticle, setSelectedArticle] = useState<ArticleIndex | null>(null);
   const [showContributeModal, setShowContributeModal] = useState(false);
 
   return (
     <main className="min-h-screen font-sans bg-[#1a1a1a]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        {fromHouse && !selectedArticle && (
+          <div className="mb-6">
+            <HouseRoomThreshold room="LIBRARY" />
+          </div>
+        )}
+
         {/* Top Navigation */}
         {!selectedArticle && (
           <div className="flex items-center justify-between mb-8">
-            <a
-              href="/maia"
-              className="inline-flex items-center gap-2 text-white/50 hover:text-white transition-colors group"
-            >
-              <ChevronLeft size={16} className="text-orange-500 group-hover:-translate-x-0.5 transition-transform" />
-              Back to MAIA
-            </a>
+            {fromHouse
+              ? <span aria-hidden="true" />
+              : <ReturnHome className="text-white/50 hover:text-white group" />}
 
             <button
               onClick={() => setShowContributeModal(true)}

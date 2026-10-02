@@ -18,6 +18,9 @@ import type { AskAnchor } from '@/lib/manuscript/ask/anchor';
 import type { StalenessState } from '@/lib/manuscript/ask/staleness';
 import type { CurrentLocation } from '@/lib/manuscript/development/resolve';
 import type { ThreadDiscovery, ThreadSummary } from './observationDialogueResume';
+import { bodyOutcomeFrom } from './bodyProtocolResponse';
+import { authorizeRequest, type BodyProtocolOutcome } from './bodyAuthorization';
+import type { ExplanationDepth } from './workingStyle';
 
 export interface AskTurnView {
   index: number;
@@ -45,6 +48,11 @@ export type AskOutcome =
       location?: CurrentLocation;
     }
   | { ok: false; refusal: string; detail?: string; threadId?: string; location?: CurrentLocation };
+
+export interface AskResult {
+  readonly outcome: BodyProtocolOutcome | null;
+  readonly ask: AskOutcome;
+}
 
 const url = (manuscriptId: string) =>
   `/api/sovereign/manuscripts/${encodeURIComponent(manuscriptId)}/ask`;
@@ -119,6 +127,102 @@ export async function ask(input: {
   }
 }
 
+
+/** Developmental Ask with the body-authorization protocol surfaced explicitly. */
+export async function askForBody(input: {
+  manuscriptId: string;
+  question: string;
+  anchor?: AskAnchor;
+  threadId?: string;
+  sectionId?: string;
+  responseStyle?: ExplanationDepth;
+}): Promise<AskResult> {
+  const raw = await rawPost(input.manuscriptId, {
+    ...(input.threadId ? { threadId: input.threadId } : { anchor: input.anchor }),
+    question: input.question,
+    ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+    ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
+  });
+  return { outcome: raw.outcome, ask: raw.ask };
+}
+
+/** Resume one paused developmental Ask after the member's explicit authorization. */
+export async function authorizeSections(input: {
+  manuscriptId: string;
+  pendingAskRef: string;
+  actId: string;
+  sectionIds: readonly string[];
+  question: string;
+  threadId?: string;
+  responseStyle?: ExplanationDepth;
+}): Promise<AskResult> {
+  const raw = await rawPost(input.manuscriptId, {
+    ...authorizeRequest({
+      pendingAskRef: input.pendingAskRef,
+      actId: input.actId,
+      sectionIds: input.sectionIds,
+      question: input.question,
+      threadId: input.threadId,
+    }),
+    ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
+  });
+  return { outcome: raw.outcome, ask: raw.ask };
+}
+
+/** One POST, interpreted in both ordinary-Ask and body-protocol vocabularies. */
+async function rawPost(
+  manuscriptId: string,
+  body: Record<string, unknown>,
+): Promise<{ outcome: BodyProtocolOutcome | null; ask: AskOutcome }> {
+  try {
+    const res = await apiFetch(url(manuscriptId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const j = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const outcome = bodyOutcomeFrom(res.status, j);
+
+    if (res.status >= 400 || outcome) {
+      return {
+        outcome,
+        ask: {
+          ok: false,
+          refusal: String(j.refusal ?? j.result ?? `http_${res.status}`),
+          detail: j.detail as string | undefined,
+          threadId: j.threadId as string | undefined,
+          location: j.location as CurrentLocation | undefined,
+        },
+      };
+    }
+
+    if (!j.thread || typeof j.threadId !== 'string') {
+      return {
+        outcome: null,
+        ask: {
+          ok: false,
+          refusal: String(j.result ?? 'empty_answer'),
+          threadId: j.threadId as string | undefined,
+          location: j.location as CurrentLocation | undefined,
+        },
+      };
+    }
+
+    return {
+      outcome: null,
+      ask: {
+        ok: true,
+        threadId: j.threadId as string,
+        thread: j.thread as AskThreadView,
+        staleness: j.staleness as StalenessState,
+        location: j.location as CurrentLocation | undefined,
+      },
+    };
+  } catch {
+    return { outcome: null, ask: { ok: false, refusal: 'unreachable' } };
+  }
+}
+
 /**
  * One thread, with its turns — the persisted conversation, not a summary.
  *
@@ -166,6 +270,84 @@ export async function threadsOn(
       return { kind: 'unavailable', reason: 'malformed' };
     }
     return { kind: 'threads', threads: threads as ThreadSummary[] };
+  } catch {
+    return { kind: 'unavailable', reason: 'unreachable' };
+  }
+}
+
+
+/* WORK-FIRST-DEVELOP-01 — same Ask surface before manuscript. */
+const livingWorkAskUrl = (workId: string) =>
+  `/api/sovereign/living-works/${encodeURIComponent(workId)}/ask`;
+
+export async function askLivingWork(input: {
+  workId: string;
+  question: string;
+  threadId?: string;
+}): Promise<AskOutcome> {
+  try {
+    const res = await apiFetch(livingWorkAskUrl(input.workId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: input.question,
+        ...(input.threadId ? { threadId: input.threadId } : {}),
+      }),
+    });
+    const json = await res.json().catch(() => ({} as Record<string, unknown>));
+    if (res.status >= 400) {
+      return {
+        ok: false,
+        refusal: String((json as Record<string, unknown>).refusal ?? `http_${res.status}`),
+        detail: (json as Record<string, unknown>).detail as string | undefined,
+        threadId: (json as Record<string, unknown>).threadId as string | undefined,
+      };
+    }
+    const j = json as Record<string, unknown>;
+    return {
+      ok: true,
+      threadId: j.threadId as string,
+      thread: j.thread as AskThreadView,
+      staleness: j.staleness as StalenessState,
+    };
+  } catch {
+    return { ok: false, refusal: 'unreachable' };
+  }
+}
+
+export async function loadLivingWorkAskThread(
+  workId: string,
+  threadId: string,
+): Promise<AskThreadView | null> {
+  try {
+    const res = await apiFetch(
+      `${livingWorkAskUrl(workId)}?thread=${encodeURIComponent(threadId)}`,
+      { method: 'GET' },
+    );
+    if (!res.ok) return null;
+    const body = await res.json();
+    return (body.thread ?? null) as AskThreadView | null;
+  } catch {
+    return null;
+  }
+}
+
+export async function threadsOnLivingWorkAsk(
+  workId: string,
+): Promise<ThreadDiscovery> {
+  try {
+    const res = await apiFetch(livingWorkAskUrl(workId), { method: 'GET' });
+    if (!res.ok) return { kind: 'unavailable', reason: `http_${res.status}` };
+    const body = await res.json();
+    const threads = Array.isArray(body.threads) ? body.threads : [];
+    return {
+      kind: 'threads',
+      threads: threads.map((thread: any): ThreadSummary => ({
+        id: String(thread.id),
+        openedAt: String(thread.openedAt),
+        turnCount: Number(thread.turnCount),
+      })),
+    };
   } catch {
     return { kind: 'unavailable', reason: 'unreachable' };
   }

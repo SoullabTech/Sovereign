@@ -16,6 +16,7 @@ import { appendAllContextAddenda } from '../maiaVoice';
 import {
   PLATFORM_IDENTITY,
   PLATFORM_AREAS,
+  PLATFORM_FIELD_ATTUNEMENT,
   PLATFORM_ORIENTATION,
   PLATFORM_KNOWLEDGE_LIMITS,
 } from '../platformKnowledge';
@@ -25,9 +26,10 @@ const baseContext: any = { sessionId: 'test-session', summary: '' };
 describe('house knowledge reaches the prompt (CORE/DEEP seam)', () => {
   const out = appendAllContextAddenda({ ...baseContext }, 'BASE_PROMPT');
 
-  it('emits all five authored blocks', () => {
+  it('emits the authored House blocks including Field Attunement', () => {
     expect(out).toContain(PLATFORM_IDENTITY);
     expect(out).toContain(PLATFORM_AREAS);
+    expect(out).toContain(PLATFORM_FIELD_ATTUNEMENT);
     expect(out).toContain(PLATFORM_ORIENTATION);
     expect(out).toContain(PLATFORM_KNOWLEDGE_LIMITS);
   });

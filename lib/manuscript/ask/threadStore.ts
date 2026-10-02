@@ -63,7 +63,22 @@ export interface DevelopmentalReadingIdentity {
   readerProvenance: unknown | null;
 }
 
-export type ReadingIdentity = StructureReadingIdentity | DevelopmentalReadingIdentity;
+/** R2-2 — one persisted Review Discuss act, bound to one reading-local finding. */
+export interface ReviewDiscussReadingIdentity {
+  kind: 'review_discuss_r2_1';
+  readingId: string;
+  observationKey: string;
+  draftId: string;
+  revisionNumber: number;
+  inputFingerprint: string;
+  commissionedLens: string;
+  readerProvenance: unknown | null;
+}
+
+export type ReadingIdentity =
+  | StructureReadingIdentity
+  | DevelopmentalReadingIdentity
+  | ReviewDiscussReadingIdentity;
 
 /**
  * Normalise a stored `reading_identity` into the union.
@@ -77,6 +92,7 @@ export function readIdentity(raw: unknown): ReadingIdentity | null {
   if (raw === null || typeof raw !== 'object') return null;
   const o = raw as Record<string, unknown>;
   if (o.kind === 'developmental') return o as unknown as DevelopmentalReadingIdentity;
+  if (o.kind === 'review_discuss_r2_1') return o as unknown as ReviewDiscussReadingIdentity;
   return { ...(o as unknown as StructureReadingIdentity), kind: 'structure' };
 }
 
@@ -242,6 +258,114 @@ export async function threadsOnAnchor(
       GROUP BY t.id, t.opened_at
       ORDER BY t.opened_at DESC`,
     [manuscriptId, memberId, JSON.stringify(anchor)]);
+  return r.rows.map((x: Record<string, unknown>) => ({
+    id: x.id as string,
+    openedAt: x.opened_at as Date,
+    turnCount: Number(x.turn_count),
+  }));
+}
+
+
+/**
+ * WORK-FIRST-DEVELOP-01 — the SAME durable Ask spine before manuscript.
+ *
+ * A Living Work thread is deliberately narrower than a manuscript thread:
+ *   - subject is exactly { on: 'work' }
+ *   - no frozen reading
+ *   - no proposal chain
+ *   - baseline is the Work-context fingerprint
+ *
+ * It shares ask_turns, ownership, append-only semantics and deletion behavior
+ * with every other Ask relationship.
+ */
+export interface LivingWorkAskThread {
+  id: string;
+  livingWorkId: string;
+  anchor: Extract<AskAnchor, { on: 'work' }>;
+  canonicalAtOpen: string;
+  initiatedBy: 'maia' | 'author';
+  openedAt: Date;
+  turns: AskTurn[];
+}
+
+export async function openLivingWorkThread(input: {
+  livingWorkId: string;
+  memberId: string;
+  canonicalAtOpen: string;
+  initiatedBy: 'maia' | 'author';
+}): Promise<string> {
+  const r = await query(
+    `INSERT INTO ask_threads
+       (living_work_id, member_id, anchor, reading_identity, canonical_at_open, initiated_by)
+     SELECT w.id, w.member_id, '{"on":"work"}'::jsonb, NULL, $3, $4
+       FROM living_works w
+      WHERE w.id = $1 AND w.member_id = $2
+     RETURNING id`,
+    [input.livingWorkId, input.memberId, input.canonicalAtOpen, input.initiatedBy],
+  );
+  if (r.rows.length !== 1) throw new Error('work_not_found');
+  return r.rows[0].id as string;
+}
+
+export async function loadLivingWorkThread(
+  threadId: string,
+  memberId: string,
+): Promise<LivingWorkAskThread | null> {
+  const t = await query(
+    `SELECT id, living_work_id, anchor, canonical_at_open, initiated_by, opened_at
+       FROM ask_threads
+      WHERE id = $1
+        AND member_id = $2
+        AND living_work_id IS NOT NULL
+        AND manuscript_id IS NULL
+      LIMIT 1`,
+    [threadId, memberId],
+  );
+  const row = t.rows[0];
+  if (!row) return null;
+
+  const turns = await query(
+    `SELECT turn_index, speaker, body, staleness, answer_provenance, created_at
+       FROM ask_turns
+      WHERE thread_id = $1
+      ORDER BY turn_index`,
+    [threadId],
+  );
+
+  return {
+    id: row.id as string,
+    livingWorkId: row.living_work_id as string,
+    anchor: row.anchor as Extract<AskAnchor, { on: 'work' }>,
+    canonicalAtOpen: row.canonical_at_open as string,
+    initiatedBy: row.initiated_by as 'maia' | 'author',
+    openedAt: row.opened_at as Date,
+    turns: turns.rows.map((x: Record<string, unknown>) => ({
+      index: Number(x.turn_index),
+      speaker: x.speaker as 'author' | 'maia',
+      body: x.body as string,
+      staleness: x.staleness as StalenessState,
+      answerProvenance: (x.answer_provenance as unknown) ?? null,
+      createdAt: x.created_at as Date,
+    })),
+  };
+}
+
+export async function threadsOnLivingWork(
+  livingWorkId: string,
+  memberId: string,
+): Promise<{ id: string; openedAt: Date; turnCount: number }[]> {
+  const r = await query(
+    `SELECT t.id, t.opened_at, COUNT(u.turn_index)::int AS turn_count
+       FROM ask_threads t
+       LEFT JOIN ask_turns u ON u.thread_id = t.id
+      WHERE t.living_work_id = $1
+        AND t.member_id = $2
+        AND t.manuscript_id IS NULL
+        AND t.anchor = '{"on":"work"}'::jsonb
+      GROUP BY t.id, t.opened_at
+      ORDER BY t.opened_at DESC`,
+    [livingWorkId, memberId],
+  );
   return r.rows.map((x: Record<string, unknown>) => ({
     id: x.id as string,
     openedAt: x.opened_at as Date,

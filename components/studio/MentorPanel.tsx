@@ -19,6 +19,7 @@ import type { MentorReflection, TimePressure } from '@/lib/studio/leadership/typ
 
 interface MentorPanelProps {
   decisionId: string;
+  scope?: 'personal' | 'practice';
   council: ConsultationResult | null;
   situationType: string | null;
   timePressure: TimePressure | null;
@@ -41,6 +42,7 @@ const POSTURE_LABELS: Record<string, string> = {
 
 export default function MentorPanel({
   decisionId,
+  scope = 'practice',
   council,
   situationType,
   timePressure,
@@ -68,7 +70,7 @@ export default function MentorPanel({
     setGenerating(true);
     setGenError(null);
     try {
-      const res = await apiFetch(`/api/studio/decisions/${decisionId}/mentor`, {
+      const res = await apiFetch(`/api/studio/decisions/${decisionId}/mentor${scope === 'personal' ? '?scope=personal' : ''}`, {
         method: 'POST',
       });
       if (res.ok) {
@@ -89,7 +91,7 @@ export default function MentorPanel({
     if (!intention.trim()) return;
     setSavingIntention(true);
     try {
-      await apiFetch(`/api/studio/decisions/${decisionId}`, {
+      await apiFetch(`/api/studio/decisions/${decisionId}${scope === 'personal' ? '?scope=personal' : ''}`, {
         method: 'PUT',
         body: JSON.stringify({ followUpIntention: intention.trim() }),
       });

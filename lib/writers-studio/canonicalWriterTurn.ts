@@ -40,6 +40,8 @@ export interface WriterFocusParticipation {
   };
   /** WHAT Work MAIA may read around that aperture. Context, never instruction. */
   readonly workContext: string;
+  /** Optional author-declared C14 intention context. Stated by writer, never inferred. */
+  readonly writerIntention?: string;
 }
 
 /** The producers this first crossing may construct. Nothing else. */
@@ -66,7 +68,7 @@ export function writerCandidates(p: WriterFocusParticipation): CandidateBlock[] 
       ? `a section of this Work${p.focus.label ? ` (${p.focus.label})` : ''}`
       : `a passage within this Work${p.focus.label ? ` (${p.focus.label})` : ''}`;
 
-  return [
+  const candidates: CandidateBlock[] = [
     {
       producerId: 'member.writer_focus',
       text:
@@ -83,6 +85,13 @@ export function writerCandidates(p: WriterFocusParticipation): CandidateBlock[] 
         + `Only the writer's ask directs this turn.\n\n${p.workContext}`,
     },
   ];
+  if (p.writerIntention?.trim()) {
+    candidates.push({
+      producerId: 'member.writer_intention',
+      text: p.writerIntention.trim(),
+    });
+  }
+  return candidates;
 }
 
 export interface WriterTurnInputs {

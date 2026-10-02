@@ -325,6 +325,7 @@ const GOV = window.JarvisGovernance;
 const PROV = window.JarvisProvenance;
 const OF = window.JarvisOperatorFlow;
 const OWU = window.JarvisOperatorWorkUnit;
+const E1G = window.JarvisE1Gesture;
 let providerCatalog = [];
 let activeWorkUnitId = sessionStorage.getItem('jarvis:active-work-unit') || null;
 let activeWorkUnitStrategy = [];
@@ -836,6 +837,11 @@ function renderCanonicalExecutionBridge(snapshot) {
       && activeCanonicalExecutionReview?.route_participant_id === participant.participant_id
       ? activeCanonicalExecutionReview
       : null;
+    const activeGrantId = grantStanding?.standing === 'ACTIVE'
+      ? grantStanding.grant?.grant_id || null
+      : null;
+    const confirmationReviewed = E1G.confirmationReviewed(activeGrantId, review);
+    const primaryAction = E1G.activeGrantPrimaryAction(activeGrantId);
 
     let action = '';
     if (!participant.required_for_completion) {
@@ -848,9 +854,9 @@ function renderCanonicalExecutionBridge(snapshot) {
       action = `<span class="stage-pill held">${escapeHtml(binding.readiness?.status || 'NOT READY')}</span>`;
     } else if (completedAttempt) {
       action = `<span class="stage-pill done">Durable attempt recorded · ${escapeHtml(completedAttempt.attempt_id)}</span>`;
-    } else if (grantStanding?.standing === 'ACTIVE') {
-      action = `<button class="primary" data-e1-confirm="${escapeHtml(grantStanding.grant.grant_id)}">Confirm Execute</button>
-        <button class="act" data-e1-revoke="${escapeHtml(grantStanding.grant.grant_id)}">Revoke authorization</button>`;
+    } else if (primaryAction === 'REVIEW_AUTHORIZED') {
+      action = `<button class="act" data-e1-review-active="${escapeHtml(participant.participant_id)}" data-e1-grant="${escapeHtml(activeGrantId)}">Review authorized execution</button>
+        <button class="act" data-e1-revoke="${escapeHtml(activeGrantId)}">Revoke authorization</button>`;
     } else {
       action = `<button class="act" data-e1-review="${escapeHtml(participant.participant_id)}">Review exact execution</button>`;
     }
@@ -872,14 +878,18 @@ function renderCanonicalExecutionBridge(snapshot) {
         <div class="a-line">Execution mode: <b>${escapeHtml(b.execution_mode || 'none')}</b> · evidence <b>${escapeHtml(b.evidence_class || 'none')}</b></div>
         <div class="a-line">Readiness: <b>${escapeHtml(b.readiness?.status || 'none')}</b> · ${escapeHtml(b.readiness?.evidence_ref || 'no evidence')}</div>
         <div class="a-line">Response budget: <b>${escapeHtml(b.response_budget_profile_id || p.response_budget_profile_id || 'none')}</b></div>
-        <div class="a-line">Canonical SHA: <b>${escapeHtml(review.canonical_sha || snapshot.routing.bound_at_sha || 'unknown')}</b></div>
+        <div class="a-line">Work Unit evidence/source SHA: <b>${escapeHtml(review.canonical_sha || snapshot.routing.bound_at_sha || 'unknown')}</b></div>
+        <div class="a-line">JARVIS runtime execution SHA: <b>${escapeHtml(runtimeExecutionSha || 'unknown')}</b></div>
         <div class="a-line">Route digest: <b>${escapeHtml(review.route_digest || snapshot.routing.route_digest || 'unknown')}</b></div>
         <div class="a-line">Attempt population: <b>${escapeHtml(review.attempt_population_digest || 'unknown')}</b></div>
         ${error ? `<div class="errors"><div>${escapeHtml(error)}</div></div>` : ''}
-        ${review.ok
-          ? `<button class="primary" data-e1-authorize="${escapeHtml(participant.participant_id)}">Authorize this execution once</button>`
-          : ''}
-        <div class="hint" style="margin-top:8px"><b>Authorize is not Execute.</b> Confirm Execute re-reads W2, W3, W3T, the one-shot grant, R4, R5A, and the evidence population before credential presence is consulted.</div>
+        ${review.ok && confirmationReviewed
+          ? `<div class="hint" style="margin:8px 0"><b>Fresh post-authorization review complete.</b> Confirm Execute is now a separate gesture.</div>
+             <button class="primary" data-e1-confirm="${escapeHtml(activeGrantId)}">Confirm Execute</button>`
+          : review.ok && !activeGrantId
+            ? `<button class="primary" data-e1-authorize="${escapeHtml(participant.participant_id)}">Authorize this execution once</button>`
+            : ''}
+        <div class="hint" style="margin-top:8px"><b>Authorize is not Execute.</b> After authorization, a fresh review is required before Confirm Execute can appear. Confirm Execute then re-reads W2, W3, W3T, the one-shot grant, R4, R5A, and the evidence population before credential presence is consulted.</div>
       </div>`;
     }
 
@@ -943,6 +953,31 @@ async function reviewCanonicalExecution(participantId) {
   await refreshActiveWorkUnit();
 }
 
+async function reviewCanonicalAuthorizedExecution(participantId, grantId) {
+  if (!activeWorkUnitId || !participantId || !grantId) return;
+  const out = await window.jarvis.workUnitAction({
+    action: 'canonical-execution-auth-preview',
+    work_unit_id: activeWorkUnitId,
+    route_participant_id: participantId,
+  });
+  const matchingGrant = (out?.grants || []).find(
+    (entry) => entry?.standing === 'ACTIVE'
+      && entry?.grant?.grant_id === grantId
+      && entry?.grant?.route_participant_id === participantId,
+  );
+  activeCanonicalExecutionReview = {
+    ...out,
+    work_unit_id: activeWorkUnitId,
+    route_participant_id: participantId,
+    grant_id: grantId,
+    confirmation_review: out?.ok === true && !!matchingGrant,
+    error: out?.ok && matchingGrant
+      ? null
+      : (out?.reason || out?.blockers?.[0]?.code || 'Active grant changed; fresh review required.'),
+  };
+  await refreshActiveWorkUnit();
+}
+
 async function authorizeCanonicalExecutionOnce(participantId) {
   if (!activeWorkUnitId) return;
   const out = await window.jarvis.workUnitAction({
@@ -982,12 +1017,26 @@ async function prepareCanonicalExecutionTransport(participantId) {
 
 async function confirmCanonicalExecution(grantId) {
   if (!activeWorkUnitId || !grantId) return;
+  const review = activeCanonicalExecutionReview;
+  const confirmationArmed = E1G.confirmArmed(activeWorkUnitId, grantId, review);
+  if (!confirmationArmed) {
+    const snapshot = await window.jarvis.workUnitAction({
+      action: 'status',
+      work_unit_id: activeWorkUnitId,
+    });
+    renderWorkUnitSnapshot(snapshot, {
+      transientError: 'Fresh post-authorization review required before Confirm Execute.',
+    });
+    return;
+  }
+  // Consume the UI arm BEFORE the privileged IPC call. A repeated/double click
+  // on Confirm Execute cannot reuse the same reviewed gesture.
+  activeCanonicalExecutionReview = null;
   const out = await window.jarvis.workUnitAction({
     action: 'canonical-confirm-execute',
     work_unit_id: activeWorkUnitId,
     grant_id: grantId,
   });
-  activeCanonicalExecutionReview = null;
   if (out?.ok) renderWorkUnitSnapshot(out);
   else {
     const snapshot = await window.jarvis.workUnitAction({
@@ -1056,6 +1105,12 @@ function wireCanonicalExecutionBridge(snapshot) {
   document.querySelectorAll('[data-e1-review]').forEach((button) => {
     button.addEventListener('click', () => reviewCanonicalExecution(button.dataset.e1Review));
   });
+  document.querySelectorAll('[data-e1-review-active]').forEach((button) => {
+    button.addEventListener('click', () => reviewCanonicalAuthorizedExecution(
+      button.dataset.e1ReviewActive,
+      button.dataset.e1Grant,
+    ));
+  });
   document.querySelectorAll('[data-e1-authorize]').forEach((button) => {
     button.addEventListener('click', () => authorizeCanonicalExecutionOnce(button.dataset.e1Authorize));
   });
@@ -1099,10 +1154,13 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
   const adjudication = provenance.adjudication || null;
   const closure = provenance.closure || null;
   const actions = snapshot.next_actions || [];
+  const evidenceSourceSha = wu.scope?.base_ref || snapshot.routing?.bound_at_sha || null;
+  const runtimeExecutionSha = lastStatus?.provenance?.substrate?.resolved_repo_head || null;
 
   const transitionTrace = (lifecycle.transitions || [])
     .map(t => `${t.from} → ${t.to}`)
-    .join(' · ') || 'DRAFT';
+    .join(' · ') || 'none recorded';
+  const w2Gesture = actions.map(a => a.label).join(' · ') || 'none';
 
   const previewStanding = snapshot.preview_comparison?.standing || 'PROSPECTIVE_ONLY';
   const participantHtml = routing?.participants?.length
@@ -1180,7 +1238,7 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
     <div class="row">
       <div>
         <div class="label">Canonical Work Unit · W0.v2</div>
-        <div class="src">${escapeHtml(snapshot.work_unit_id)} · @${escapeHtml(String(wu.scope?.base_ref || '').slice(0, 12))}</div>
+        <div class="src">${escapeHtml(snapshot.work_unit_id)} · evidence source @${escapeHtml(String(evidenceSourceSha || 'unknown').slice(0, 12))} · runtime @${escapeHtml(String(runtimeExecutionSha || 'unknown').slice(0, 12))}</div>
       </div>
       <span class="state AVAILABLE">${escapeHtml(lifecycle.state || 'UNKNOWN')}</span>
     </div>
@@ -1188,8 +1246,10 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
     <div class="run-plan">
       <div class="plan-title">Native canonical substrate</div>
       <div class="plan-line">This Work Unit is the governed nervous system beneath the Desktop experience—not the limit of what the Desktop can become.</div>
-      <div class="plan-line"><b>Lifecycle:</b> ${escapeHtml(transitionTrace)}</div>
-      <div class="plan-line"><b>Next lawful gesture:</b> ${escapeHtml(actions.map(a => a.label).join(' · ') || 'none')}</div>
+      <div class="plan-line"><b>Lifecycle:</b> ${escapeHtml(lifecycle.state || 'UNKNOWN')}</div>
+      <div class="plan-line"><b>W2 transition history:</b> ${escapeHtml(transitionTrace)}</div>
+      <div class="plan-line"><b>Next W2 gesture:</b> ${escapeHtml(w2Gesture)}</div>
+      <div class="plan-line"><b>Execution bridge:</b> governed separately below — routing ≠ authorization ≠ execution</div>
     </div>
 
     ${transientError ? `<div class="errors"><div>${escapeHtml(transientError)}</div></div>` : ''}

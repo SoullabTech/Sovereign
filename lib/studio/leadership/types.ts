@@ -28,6 +28,25 @@ export interface LeadershipProfile {
 export type TimePressure = 'none' | 'low' | 'medium' | 'high' | 'urgent';
 export type DecisionStatus = 'draft' | 'consulting' | 'active' | 'complete' | 'archived';
 
+export type PersonalDecisionChoiceEventType = 'choice_recorded' | 'reopened';
+export type PersonalDecisionResolutionStanding =
+  | 'open'
+  | 'choice_recorded'
+  | 'legacy_complete_without_choice';
+
+export interface PersonalDecisionChoiceEvent {
+  id: string;
+  eventType: PersonalDecisionChoiceEventType;
+  choiceText: string | null;
+  recordedAt: string;
+}
+
+export interface PersonalDecisionCurrentChoice {
+  id: string;
+  choiceText: string;
+  recordedAt: string;
+}
+
 export interface DecisionContext {
   title: string;
   context: string;
@@ -40,9 +59,13 @@ export interface DecisionContext {
   situationType?: string;
 }
 
+export type DecisionScope = 'personal' | 'practice';
+
 export interface DecisionRecord {
   id: string;
-  practitionerId: string;
+  scope: DecisionScope;
+  practitionerId: string | null;
+  personalMemberId?: string | null;
   clientId: string | null;
   clientName?: string;
   teamId: string | null;
@@ -69,6 +92,10 @@ export interface DecisionRecord {
   // Mentor
   mentorReflection: MentorReflection | null;
   followUpIntention: string | null;
+  // Member-authored Personal Decision resolution. Absent for practice decisions.
+  choiceHistory?: PersonalDecisionChoiceEvent[];
+  currentChoice?: PersonalDecisionCurrentChoice | null;
+  resolutionStanding?: PersonalDecisionResolutionStanding;
   // Experiences
   experiences?: DecisionExperience[];
 }

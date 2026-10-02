@@ -1,27 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
+import { cabinReturnPath, isCabinOrigin } from '@/lib/cabin/doorway';
 import { apiFetch } from '@/lib/http/apiBase';
-
-/**
- * Anchor history — the member's own review of past Daily Anchors, and the
- * member-facing control for standing consent to surface.
- *
- * Each anchor carries a surface_preference (see lib/anchor/surfacePreference.ts).
- * The default is 'member_pulled' — private, surfaced only when the member raises
- * it. The toggle here lets the member grant standing consent for MAIA to gently
- * reference an anchor on its own ('contextual_doorway'). This is the member's
- * visible way to manage the eligibility the loader gate enforces — removing
- * ambient surfacing without a way to restore agency would leave consent state
- * unmanageable. No default nudges toward "on"; the choice is the member's.
- *
- * The third preference value ('ritual_review_opt_in') belongs to a review-ritual
- * surface that does not exist yet, so it is not exposed as a control here — only
- * the meaningful choice (private vs. may-reference) is shown. If an anchor already
- * holds an ambient-eligible value, it renders as "on".
- */
+import styles from '../anchor-room.module.css';
 
 type SurfacePreference =
   | 'member_pulled'
@@ -34,41 +18,59 @@ interface Anchor {
   prompt_shown: string;
   response: string;
   surface_preference: SurfacePreference;
+  created_at: string;
+  updated_at: string;
 }
 
-/** Whether a preference makes the anchor eligible to surface ambiently. */
-function isAmbient(p: SurfacePreference): boolean {
-  return p !== 'member_pulled';
+function isAmbient(value: SurfacePreference): boolean {
+  return value !== 'member_pulled';
 }
 
-function formatDate(iso: string): string {
+function dateLabel(iso: string): string {
   if (!iso) return '';
-  const [y, m, d] = iso.split('-').map(Number);
-  const dt = new Date(y, m - 1, d);
-  return dt.toLocaleDateString(undefined, {
+  const parts = iso.split('-').map(Number);
+  const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+  return dt.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
   });
 }
 
+function clockLabel(value: string): string {
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return '';
+  return dt.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function wasRevisited(anchor: Anchor): boolean {
+  const created = new Date(anchor.created_at).getTime();
+  const updated = new Date(anchor.updated_at).getTime();
+  return Number.isFinite(created) && Number.isFinite(updated) && updated - created > 60000;
+}
+
 export default function AnchorHistoryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromCabin = isCabinOrigin(searchParams);
   const [anchors, setAnchors] = useState<Anchor[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [rowError, setRowError] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       try {
         const res = await apiFetch('/api/anchor/recent?limit=30', { method: 'GET' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error('history');
         const data = await res.json();
         setAnchors(Array.isArray(data.anchors) ? data.anchors : []);
       } catch {
-        setError('Could not load.');
+        setError('Earlier anchors could not be opened just now.');
       } finally {
         setLoading(false);
       }
@@ -77,32 +79,29 @@ export default function AnchorHistoryPage() {
 
   const toggle = useCallback(async (anchor: Anchor) => {
     if (savingId) return;
-    const prev = anchor.surface_preference;
-    const next: SurfacePreference = isAmbient(prev) ? 'member_pulled' : 'contextual_doorway';
+    const previous = anchor.surface_preference;
+    const next: SurfacePreference = isAmbient(previous) ? 'member_pulled' : 'contextual_doorway';
 
     setSavingId(anchor.id);
     setRowError(null);
-    // Optimistic update.
     setAnchors((list) =>
-      list.map((x) => (x.id === anchor.id ? { ...x, surface_preference: next } : x)),
+      list.map((item) => item.id === anchor.id ? { ...item, surface_preference: next } : item),
     );
 
     try {
-      const res = await apiFetch(`/api/anchor/${anchor.id}/surface-preference`, {
+      const res = await apiFetch('/api/anchor/' + anchor.id + '/surface-preference', {
         method: 'POST',
         body: JSON.stringify({ preference: next }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error('preference');
       const data = await res.json().catch(() => null);
       const confirmed: SurfacePreference = data?.surface_preference ?? next;
       setAnchors((list) =>
-        list.map((x) => (x.id === anchor.id ? { ...x, surface_preference: confirmed } : x)),
+        list.map((item) => item.id === anchor.id ? { ...item, surface_preference: confirmed } : item),
       );
     } catch {
-      // Revert to the member's prior state; never leave the UI asserting a
-      // consent state the server did not record.
       setAnchors((list) =>
-        list.map((x) => (x.id === anchor.id ? { ...x, surface_preference: prev } : x)),
+        list.map((item) => item.id === anchor.id ? { ...item, surface_preference: previous } : item),
       );
       setRowError(anchor.id);
     } finally {
@@ -111,94 +110,86 @@ export default function AnchorHistoryPage() {
   }, [savingId]);
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: 'linear-gradient(180deg, #f8f7f5 0%, #f4f3f0 50%, #f0efec 100%)' }}
-    >
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#f8f7f5]/80 border-b border-stone-200/40">
-        <div className="max-w-2xl mx-auto px-6 py-5 flex items-center gap-5">
-          {/* Explicit return — deep links and refreshes have no history to go
-              "back" to, so the way home is a real destination, not history. */}
-          <button
-            onClick={() => router.push('/maia/anchor')}
-            className="p-2 -ml-2 flex items-center gap-1.5 text-stone-700 hover:text-stone-900 hover:-translate-x-0.5 transition-all"
-            aria-label="Back to your anchor"
-          >
-            <ArrowLeft className="w-5 h-5" strokeWidth={2} />
-            <span className="text-[13px]">Anchor</span>
-          </button>
-          <div className="h-4 w-px bg-stone-300/60" />
-          <h1 className="text-sm font-medium tracking-wide text-stone-600 uppercase">
-            Earlier
-          </h1>
-        </div>
-      </header>
+    <main className={styles.page}>
+      <HouseRoomThreshold room="DAILY ANCHOR" />
 
-      <main className="max-w-2xl mx-auto px-6 py-16">
-        {loading ? (
-          <div className="text-center text-stone-400 text-sm mt-16">…</div>
-        ) : error ? (
-          <div className="text-center text-stone-500 text-sm mt-16">{error}</div>
-        ) : anchors.length === 0 ? (
-          <div className="text-center text-stone-400 text-sm italic mt-16">nothing held yet</div>
-        ) : (
-          <>
-            <p className="text-[13px] text-stone-500 leading-relaxed mb-12">
-              These are your anchors. You choose which ones MAIA may gently bring
-              forward on its own, when the moment continues the thread. The rest
-              stay private — held here for you, surfaced only when you raise them.
+      <section className={styles.room}>
+        <header className={styles.historyIntro}>
+          <div>
+            <p>EARLIER ANCHORS</p>
+            <h1>A line through<br /><em>your days.</em></h1>
+          </div>
+          <div className={styles.historyOrientation}>
+            <p>
+              Not a streak and not a score. Just the threads you chose to stay connected to.
             </p>
+            <button type="button" onClick={() => router.push(fromCabin ? '/maia/anchor?from=cabin' : '/maia/anchor?from=house')}>
+              Today’s anchor →
+            </button>
+          </div>
+        </header>
 
-            <div className="space-y-12">
-              {anchors.map((a) => {
-                const on = isAmbient(a.surface_preference);
-                const saving = savingId === a.id;
-                return (
-                  <div key={a.id}>
-                    <p className="text-[12px] text-stone-400 mb-2 tracking-wide">
-                      {formatDate(a.anchor_date)}
-                    </p>
-                    <p className="text-[12px] text-stone-400 mb-3 italic">
-                      {a.prompt_shown}
-                    </p>
-                    <p className="text-[14px] text-stone-700 leading-relaxed whitespace-pre-wrap">
-                      {a.response}
-                    </p>
-
-                    <div className="mt-4 flex items-center gap-3">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={on}
-                        aria-label="Let MAIA gently reference this anchor"
-                        disabled={saving}
-                        onClick={() => toggle(a)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                          on ? 'bg-[#5a7a6f]' : 'bg-stone-300'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                            on ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <span className="text-[12px] text-stone-500">
-                        {on
-                          ? 'MAIA may gently reference this'
-                          : 'Private — only when you bring it up'}
-                      </span>
-                      {rowError === a.id && (
-                        <span className="text-[11px] text-stone-400">couldn’t save</span>
-                      )}
-                    </div>
+        {loading ? (
+          <div className={styles.loading} aria-label="Opening earlier anchors"><span /></div>
+        ) : error ? (
+          <div className={styles.unavailable}><p>{error}</p></div>
+        ) : anchors.length === 0 ? (
+          <div className={styles.historyEmpty}>
+            <p>Nothing has been held yet.</p>
+            <button type="button" onClick={() => router.push(fromCabin ? '/maia/anchor?from=cabin' : '/maia/anchor?from=house')}>
+              Begin with today →
+            </button>
+          </div>
+        ) : (
+          <div className={styles.timeline}>
+            {anchors.map((anchor) => {
+              const ambient = isAmbient(anchor.surface_preference);
+              const revisited = wasRevisited(anchor);
+              return (
+                <article className={styles.timelineEntry} key={anchor.id}>
+                  <div className={styles.timelineWhen}>
+                    <time dateTime={anchor.anchor_date}>{dateLabel(anchor.anchor_date)}</time>
+                    <span>Held · {clockLabel(anchor.created_at)}</span>
+                    {revisited ? <span>Revisited · {clockLabel(anchor.updated_at)}</span> : null}
                   </div>
-                );
-              })}
-            </div>
-          </>
+
+                  <div className={styles.timelineBody}>
+                    <p className={styles.timelinePrompt}>{anchor.prompt_shown}</p>
+                    <blockquote>{anchor.response}</blockquote>
+
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={ambient}
+                      disabled={savingId === anchor.id}
+                      onClick={() => void toggle(anchor)}
+                      className={styles.memoryChoice}
+                    >
+                      <span className={styles.memoryDot} data-on={ambient ? 'true' : undefined} aria-hidden="true" />
+                      <span>
+                        {ambient
+                          ? 'MAIA may remember this with me'
+                          : 'For me only'}
+                      </span>
+                    </button>
+
+                    {rowError === anchor.id ? (
+                      <p className={styles.rowError}>That choice did not save. Nothing changed.</p>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         )}
-      </main>
-    </div>
+
+        <footer className={styles.footer}>
+          <span>Nothing here asks you to keep up.</span>
+          <button type="button" onClick={() => router.push(fromCabin ? cabinReturnPath() : '/house')}>
+            {fromCabin ? 'Return to Cabin →' : 'Return to House →'}
+          </button>
+        </footer>
+      </section>
+    </main>
   );
 }

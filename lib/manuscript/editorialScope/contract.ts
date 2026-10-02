@@ -400,7 +400,9 @@ export function latitudeInstruction(declared: EditorialScopeDeclaration): string
     declared.mayRemoveParagraphs
       ? 'The writer has allowed proposals that remove a whole paragraph.'
       : 'The writer has NOT allowed removing whole paragraphs. If you believe one should go, '
-        + 'say so in your reply and let them decide. Do not return wording with it removed.',
+        + 'say so in your reply and let them decide. If they explicitly ask you to remove one, '
+        + 'tell them paragraph removal is off and that they can turn on paragraph removal if '
+        + 'they want you to propose wording with it removed. Do not return wording with it removed.',
     'Work with the writer\'s existing words, rhythm and imagery. Propose the smallest change that '
       + 'answers what they asked. If what you want to do exceeds this latitude, say that in your '
       + 'reply instead of proposing it — a proposal beyond the latitude is refused and the writer '

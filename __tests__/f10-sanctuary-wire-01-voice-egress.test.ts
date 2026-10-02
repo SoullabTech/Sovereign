@@ -198,8 +198,12 @@ const bodyOf = (name: string): string =>
   strip((callbackDecl(name).initializer as ts.CallExpression).arguments[0].getText());
 
 describe('C. the dispatch — Sanctuary crosses on the canonical sender', () => {
-  it('FALSIFIES: the canonical request body carries sanctuary: isSanctuary', () => {
-    expect(bodyOf('handleTextMessage')).toMatch(/\bsanctuary:\s*isSanctuary\b/);
+  it('FALSIFIES: the canonical request body carries the effective Sanctuary posture', () => {
+    const body = bodyOf('handleTextMessage');
+    expect(body).toMatch(/\bconst\s+effectiveSanctuary\s*=/);
+    expect(body).toMatch(/modeCommand\.mode\s*===\s*['"]sanctuary['"]/);
+    expect(body).toMatch(/:\s*isSanctuary\s*;/);
+    expect(body).toMatch(/\bsanctuary:\s*effectiveSanctuary\b/);
   });
 
   it('FALSIFIES: handleTextMessage declares isSanctuary as a dependency', () => {
@@ -236,11 +240,11 @@ describe('C-PROBES — the amended assertions can actually fail', () => {
     expect(mutated).not.toMatch(/\bisSanctuary\b/);
   });
 
-  it('⛔ replacing sanctuary: isSanctuary with sanctuary: false → RED', () => {
+  it('⛔ replacing sanctuary: effectiveSanctuary with sanctuary: false → RED', () => {
     const body = bodyOf('handleTextMessage');
-    const mutated = body.replace(/\bsanctuary:\s*isSanctuary\b/, 'sanctuary: false');
+    const mutated = body.replace(/\bsanctuary:\s*effectiveSanctuary\b/, 'sanctuary: false');
     expect(mutated).not.toBe(body);
-    expect(mutated).not.toMatch(/\bsanctuary:\s*isSanctuary\b/);
+    expect(mutated).not.toMatch(/\bsanctuary:\s*effectiveSanctuary\b/);
     expect(mutated).toMatch(/\bsanctuary:\s*(true|false)\b/); // the forbidden literal form
   });
 });

@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import CompleteWelcomeFlow from '@/components/onboarding/CompleteWelcomeFlow';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiUrl } from '@/lib/http/apiBase';
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedNext = searchParams?.get('next') || '';
+  const afterOnboarding = requestedNext.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : '/home';
   const [userName, setUserName] = useState<string>('Explorer');
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export default function OnboardingPage() {
         }
 
         if (userData.onboarded) {
-          router.push('/maia');
+          router.push(afterOnboarding);
           return;
         }
 
@@ -51,7 +54,7 @@ export default function OnboardingPage() {
         console.error('Error parsing user data:', e);
       }
     }
-  }, [router]);
+  }, [afterOnboarding, router]);
 
   const handleComplete = async () => {
     // Get existing user data - MUST have valid server-assigned ID
@@ -116,7 +119,7 @@ export default function OnboardingPage() {
     users[existingUsername] = updatedUser;
     localStorage.setItem('beta_users', JSON.stringify(users));
 
-    router.push('/choose');
+    router.push(afterOnboarding);
   };
 
   return (

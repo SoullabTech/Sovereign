@@ -1,0 +1,211 @@
+{
+  "base": "http://localhost:3641",
+  "head": "ff57a49fd",
+  "identityTransport": "session cookie; direct matrix requests carry no x-member-id",
+  "passed": 24,
+  "failed": 0,
+  "routeResponses": [
+    {
+      "method": "GET",
+      "path": "/api/maia/living-field/current_questions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/maia/living-field/current_questions/gathering",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/maia/living-field/current_questions/encounter",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/maia/living-field/current_questions/gathering",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/maia/living-field/current_questions/sources",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/maia/living-field/current_questions/refine",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/maia/living-field/current_questions/consent",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/maia/living-field/current_questions/consent",
+      "status": 201
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/maia/living-field/current_questions/consent",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/maia/living-field/states",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/maia/living-field/states",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/maia/living-field/spirals",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/maia/living-field/spirals",
+      "status": 201
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/maia/living-field/current_questions",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/maia/living-field/current_questions/encounter",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/maia/living-field/current_questions/encounter",
+      "status": 200
+    }
+  ],
+  "results": [
+    {
+      "name": "threshold continuity renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Return Home remains present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "member-authored provenance renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "MAIA-candidate provenance renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no auth failure on initial page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no R2 presentation mounted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dimension detail authenticates after proxy sanitization",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "dimension open reaches encounter route",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "dimension opens instead of failure copy",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "opening dimension starts MAIA encounter",
+      "ok": true,
+      "detail": "consent question remains separate"
+    },
+    {
+      "name": "gathering route uses verified session",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "sources route uses verified session",
+      "ok": true,
+      "detail": "status=201"
+    },
+    {
+      "name": "refine route uses verified session",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "consent GET uses verified session",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "consent POST uses verified session",
+      "ok": true,
+      "detail": "status=201"
+    },
+    {
+      "name": "consent DELETE uses verified session",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "states GET uses verified session",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "states POST uses verified session",
+      "ok": true,
+      "detail": "status=201"
+    },
+    {
+      "name": "spirals GET uses verified session",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "spirals POST uses verified session",
+      "ok": true,
+      "detail": "status=201"
+    },
+    {
+      "name": "dimension PATCH uses verified session",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "encounter PATCH uses verified session",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "encounter close uses verified session",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "browser page emitted no JavaScript errors",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

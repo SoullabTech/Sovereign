@@ -4,11 +4,13 @@ export const dynamic = 'force-dynamic';
  * Build Alert Endpoint
  *
  * Sends alerts to developer about build/deployment issues.
- * Supports email (Resend), SMS (Twilio), Slack, and Telegram.
+ * Uses a dedicated SMTP pager transport, plus optional Slack/Telegram channels.
+ * Member mail provider selection is intentionally outside this route.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email/sendEmail";
+import { SmtpProvider } from "@/lib/email/providers/SmtpProvider";
 
 export const runtime = "nodejs";
 
@@ -21,6 +23,42 @@ interface AlertPayload {
 }
 
 const DEV_EMAIL = process.env.DEV_EMAIL || "kelly@soullab.life";
+
+function mailboxOf(from: string): string {
+  const bracketed = from.match(/<([^<>]+)>/);
+  return (bracketed?.[1] ?? from).trim().toLowerCase();
+}
+
+function resolveAlertSmtp():
+  | { provider: SmtpProvider; from: string }
+  | { error: "alert_smtp_not_configured" | "alert_sender_mismatch" } {
+  const host = process.env.ALERT_SMTP_HOST?.trim();
+  const user = process.env.ALERT_SMTP_USER?.trim();
+  const password = process.env.ALERT_SMTP_PASSWORD;
+  const from = process.env.ALERT_FROM?.trim();
+
+  if (!host || !user || !password || !from) {
+    return { error: "alert_smtp_not_configured" };
+  }
+
+  if (mailboxOf(from) !== user.toLowerCase()) {
+    return { error: "alert_sender_mismatch" };
+  }
+
+  const parsedPort = Number(process.env.ALERT_SMTP_PORT ?? 587);
+  const port = Number.isFinite(parsedPort) ? parsedPort : 587;
+  const secure =
+    process.env.ALERT_SMTP_SECURE === "true" ? true :
+    process.env.ALERT_SMTP_SECURE === "false" ? false :
+    port === 465;
+
+  const provider = new SmtpProvider({ host, user, password, port, secure });
+  if (!provider.isConfigured()) {
+    return { error: "alert_smtp_not_configured" };
+  }
+
+  return { provider, from };
+}
 
 export async function POST(req: NextRequest) {
   // Static export: return stub response during pre-rendering
@@ -57,24 +95,37 @@ export async function POST(req: NextRequest) {
 
   const results: Record<string, boolean> = {};
 
-  // 1. Send email
-  if (process.env.RESEND_API_KEY) {
+  // 1. Required pager email uses its own SMTP credentials. Passing the provider
+  // explicitly keeps global EMAIL_PROVIDER/member mail completely untouched,
+  // while sendEmail still supplies classification, logging and delivery-ledger evidence.
+  //
+  // IMPORTANT: missing/broken SMTP must NOT short-circuit optional out-of-band
+  // channels. Email remains required for a 200, but Slack/Telegram still get a
+  // chance to page a human while the required channel is degraded.
+  const alertSmtp = resolveAlertSmtp();
+  let alertSmtpError: "alert_smtp_not_configured" | "alert_sender_mismatch" | null = null;
+
+  if ("error" in alertSmtp) {
+    alertSmtpError = alertSmtp.error;
+    results.email = false;
+    console.error(`[BuildAlert] Required SMTP unavailable: ${alertSmtpError}`);
+  } else {
     try {
       const sent = await sendEmail({
         purpose: "build:alert",
-        from: "MAIA Build Monitor <build@soullab.life>",
+        from: alertSmtp.from,
         to: DEV_EMAIL,
         subject: `[${payload.severity.toUpperCase()}] MAIA Build Alert`,
         html: formatAlertEmail(payload),
         metadata: { severity: payload.severity },
+        triggerType: "route",
+        triggerRef: "/api/build/alert",
+        provider: alertSmtp.provider,
       });
-      // `sent.success` — not `true`. A provider refusal (quota, bad sender) is
-      // reported as a failed channel, so the alert fan-out cannot claim it
-      // reached someone it did not reach.
       results.email = sent.success;
       if (!sent.success) {
         console.error(
-          `[BuildAlert] Email REFUSED failureKind=${sent.failureKind ?? "unclassified"} providerCode=${sent.providerCode ?? "unnamed"}`
+          `[BuildAlert] Email REFUSED provider=${sent.provider ?? "smtp"} failureKind=${sent.failureKind ?? "unclassified"} providerCode=${sent.providerCode ?? "unnamed"}`
         );
       }
     } catch (error) {
@@ -121,7 +172,7 @@ export async function POST(req: NextRequest) {
             ? "#ffaa00"
             : "#44aa44";
 
-      await fetch(process.env.SLACK_WEBHOOK_URL, {
+      const response = await fetch(process.env.SLACK_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -147,7 +198,10 @@ export async function POST(req: NextRequest) {
           ],
         }),
       });
-      results.slack = true;
+      results.slack = response.ok;
+      if (!response.ok) {
+        console.error(`[BuildAlert] Slack REFUSED status=${response.status}`);
+      }
     } catch (error) {
       console.error("[BuildAlert] Slack failed:", error);
       results.slack = false;
@@ -168,7 +222,7 @@ export async function POST(req: NextRequest) {
         payload.commit ? `\n\nCommit: \`${payload.commit}\`` : ""
       }`;
 
-      await fetch(
+      const response = await fetch(
         `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
         {
           method: "POST",
@@ -180,7 +234,10 @@ export async function POST(req: NextRequest) {
           }),
         }
       );
-      results.telegram = true;
+      results.telegram = response.ok;
+      if (!response.ok) {
+        console.error(`[BuildAlert] Telegram REFUSED status=${response.status}`);
+      }
     } catch (error) {
       console.error("[BuildAlert] Telegram failed:", error);
       results.telegram = false;
@@ -193,11 +250,21 @@ export async function POST(req: NextRequest) {
     { results, commit: payload.commit }
   );
 
-  return NextResponse.json({
-    success: true,
-    channels: results,
-    timestamp: new Date().toISOString(),
-  });
+  // Email is the required paging channel for this release. Optional channels
+  // may add redundancy, but may never mask a failed required page.
+  const delivered = results.email === true;
+
+  return NextResponse.json(
+    {
+      success: delivered,
+      ...(delivered
+        ? {}
+        : { error: alertSmtpError || "required_alert_email_not_delivered" }),
+      channels: results,
+      timestamp: new Date().toISOString(),
+    },
+    { status: delivered ? 200 : 503 }
+  );
 }
 
 function formatAlertEmail(payload: AlertPayload): string {

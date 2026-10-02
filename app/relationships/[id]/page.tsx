@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { MessageCircle, Mic, X } from 'lucide-react';
 import FieldToneIndicator from '@/components/relationships/FieldToneIndicator';
@@ -10,6 +10,7 @@ import RelationshipTimeline, { type TimelineEntry } from '@/components/relations
 import RelationshipModeNav, { type RelationshipMode } from '@/components/relationships/RelationshipModeNav';
 import { OracleConversation } from '@/components/OracleConversation';
 import { seedFromSource } from '@/lib/maia/seedPrompt';
+import { cabinReturnPath, isCabinOrigin } from '@/lib/cabin/doorway';
 
 interface RelationshipDetail {
   id: string;
@@ -42,6 +43,8 @@ const MODE_ORDER: Record<RelationshipMode, number> = {
 export default function RelationshipDetailPage() {
   const params = useParams() ?? {};
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromCabin = isCabinOrigin(searchParams);
   const reduceMotion = useReducedMotion();
   const id = params.id as string;
 
@@ -186,10 +189,10 @@ export default function RelationshipDetailPage() {
         <div className="text-center">
           <p className="mb-4 text-[#716d64]">{error || 'Not found'}</p>
           <button
-            onClick={() => router.push('/relationships')}
+            onClick={() => router.push(fromCabin ? cabinReturnPath() : '/relationships')}
             className="text-sm text-[#5e745d] transition-colors hover:text-[#3f5544]"
           >
-            Back to relationships
+            {fromCabin ? 'Back to Cabin' : 'Back to relationships'}
           </button>
         </div>
       </div>
@@ -243,10 +246,10 @@ export default function RelationshipDetailPage() {
 
       <div className="relative mx-auto max-w-5xl px-5 py-9 md:px-8 md:py-12">
         <button
-          onClick={() => router.push('/relationships')}
+          onClick={() => router.push(fromCabin ? cabinReturnPath() : '/relationships')}
           className="mb-8 block text-xs text-[#716d64]/58 transition-colors hover:text-[#5e745d]"
         >
-          ← Relationships
+          ← {fromCabin ? 'Cabin' : 'Relationships'}
         </button>
 
         <motion.header layout className="mx-auto mb-8 max-w-3xl text-center">
@@ -432,6 +435,32 @@ export default function RelationshipDetailPage() {
                               </span>
                             </span>
                           </motion.button>
+
+                          <div className="px-2 pt-4">
+                            <p className="mb-2 text-[10px] uppercase tracking-[0.18em] text-[#716d64]/38">
+                              Carry this forward
+                            </p>
+                            <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-light">
+                              <a
+                                href={`/changes?sourceFacet=relationships&sourceRefId=${encodeURIComponent(id)}&crossingId=relationship-name-change`}
+                                className="text-[#716d64]/58 transition-colors hover:text-[#5e745d]"
+                              >
+                                Something is changing here →
+                              </a>
+                              <a
+                                href={`/decisions/new?sourceFacet=relationships&sourceRefId=${encodeURIComponent(id)}&crossingId=relationship-consider-decision`}
+                                className="text-[#716d64]/58 transition-colors hover:text-[#5e745d]"
+                              >
+                                There is a choice here →
+                              </a>
+                              <a
+                                href={`/journal?sourceFacet=relationships&sourceRefId=${encodeURIComponent(id)}&crossingId=relationship-write-journal`}
+                                className="text-[#716d64]/58 transition-colors hover:text-[#5e745d]"
+                              >
+                                Write about this →
+                              </a>
+                            </div>
+                          </div>
 
                           <button
                             type="button"

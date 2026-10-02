@@ -1,0 +1,84 @@
+.threshold {
+  width: min(1180px, 100%);
+  min-height: 54px;
+  margin: 0 auto 14px;
+  padding: 8px 4px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid rgba(217,187,142,.18);
+  color: #e9dfd0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  color: #eadfce;
+  text-decoration: none;
+  font: 10px/1 Arial, sans-serif;
+  letter-spacing: .23em;
+}
+
+.brand img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.room {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.room span {
+  color: #9f8b70;
+  font: 8px/1.4 Arial, sans-serif;
+  letter-spacing: .28em;
+}
+
+.room b {
+  color: #e9d6b8;
+  font: 400 16px/1.2 Georgia, serif;
+  letter-spacing: .02em;
+}
+
+.brandSpace { display: block; }
+
+.return {
+  justify-self: end;
+  color: #cdb18a;
+  text-decoration: none;
+  font: 12px/1.4 Arial, sans-serif;
+}
+
+.return:hover,
+.brand:hover {
+  color: #f3d8ad;
+}
+
+.threshold :where(a):focus-visible {
+  outline: 2px solid #dec096;
+  outline-offset: 3px;
+}
+
+@media (max-width: 700px) {
+  .threshold {
+    min-height: 48px;
+    margin-bottom: 8px;
+    padding: 8px 14px;
+    grid-template-columns: 1fr auto;
+  }
+
+  .room { display: none; }
+  /* With no mark of its own, the threshold still has room to say where you are. */
+  .threshold[data-mark='destination'] { grid-template-columns: 1fr auto; }
+  .threshold[data-mark='destination'] .brandSpace { display: none; }
+  .threshold[data-mark='destination'] .room { display: flex; }
+  .brand img { width: 24px; height: 24px; }
+  .return { font-size: 11px; }
+}

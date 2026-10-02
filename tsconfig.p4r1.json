@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false, "noEmit": true },
+  "include": [
+    "next-env.d.ts",
+     "app/dev/writers-studio-pc3-live/P4R1HomeController.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1HomeView.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx",
+    "app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx",
+    "app/dev/writers-studio-p4r1/P4R1StudioHost.tsx",
+    "app/dev/writers-studio-p4r1/page.tsx",
+    "app/writers-studio/full-redesign/LiveReviewRoom.tsx",
+    "app/writers-studio/full-redesign/ReviewRoom.tsx",
+    "app/writers-studio/full-redesign/liveReviewAdapter.ts",
+    "app/writers-studio/rebuild/wholeReview.ts",
+    "app/api/sovereign/manuscripts/[id]/themes/route.ts",
+    "app/api/sovereign/manuscripts/[id]/chapter-reviews/route.ts",
+    "lib/writersStudio/themes/client.ts",
+    "lib/writersStudio/themes/liveTypes.ts",
+    "lib/writersStudio/themes/occurrences.ts",
+    "lib/writersStudio/themes/projection.ts",
+    "lib/writersStudio/themes/store.ts",
+    "lib/manuscript/developmentalReader/themes.ts"
+  ],
+  "exclude": ["node_modules","app/api/_backend/**/*","app/api/backend/**/*","**/legacy/**/*","**/__tests__/**/*"]
+}

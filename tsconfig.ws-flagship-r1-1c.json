@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.ws-flagship-c1a.json",
+  "include": [
+    "tests/constitutional/writers-studio/flagship-r1-1c/**/*.ts",
+    "tests/constitutional/writers-studio/flagship-r1-1c/**/*.tsx",
+    "tests/constitutional/writers-studio/flagship-c1b/laws.ts",
+    "tests/constitutional/writers-studio/flagship-c1a/**/*.ts",
+    "tests/constitutional/writers-studio/flagship-c1a/**/*.tsx",
+    "lib/writersStudio/studio/adapters/**/*.ts",
+    "lib/writersStudio/studio/realReview.ts",
+    "app/writers-studio/flagship/WriteFrame.tsx",
+    "app/writers-studio/flagship/DevelopReview.tsx",
+    "app/writers-studio/flagship/StudioChrome.tsx",
+    "app/writers-studio/rebuild/RebuildAuthoredBody.tsx",
+    "app/writers-studio/rebuild/RebuildWritingBoundary.tsx",
+    "app/writers-studio/rebuild/FlagshipWriteHost.tsx",
+    "app/writers-studio/rebuild/DiscussLayer.tsx",
+    "app/writers-studio/rebuild/discussAct.ts",
+    "app/writers-studio/rebuild/liveReview.ts",
+    "app/writers-studio/rebuild/LiveReviewView.tsx",
+    "app/writers-studio/rebuild/reviewNavigation.ts",
+    "app/writers-studio/rebuild/ReviewChooser.tsx",
+    "app/writers-studio/rebuild/page.tsx"
+  ]
+}

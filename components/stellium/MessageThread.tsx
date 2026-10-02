@@ -38,7 +38,7 @@ import {
   getMessageTypeConfig,
   QUICK_RESPONSES,
   formatCheckDays,
-} from '@/lib/practitioner/messages';
+} from '@/lib/practitioner/messagePresentation';
 import type { PractitionerClient } from '@/lib/stellium/types';
 
 interface MessageThreadProps {

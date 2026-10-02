@@ -14,6 +14,7 @@ import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 import {
   assessCaptureLiveness,
+  assessVoicedRecognitionStall,
   shouldActOnCaptureLiveness,
   shouldAttemptAutomaticCaptureRecovery,
   describeCaptureLoss,
@@ -351,6 +352,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const nativeStateListenerRef = useRef<any>(null); // Store listeningState listener handle
   const nativeAudioLevelListenerRef = useRef<any>(null); // Store audioLevel listener handle for UV visualizer
   const nativeSilenceTimerRef = useRef<NodeJS.Timeout | null>(null); // Silence detection timer for auto-submit
+  // VOICE-PREMATURE-COMMIT-01: when the OS recognizer ends its cycle before the
+  // member's chosen pause has elapsed, the turn is held and this timer commits it
+  // only once that pause is actually reached. A new partial cancels it.
+  const nativeStopGraceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const nativeSilenceArmedAtRef = useRef<number>(0);
   const turnTakingPreferencesRef = useRef<TurnTakingPreferences>(turnTakingPreferences);
   const turnRhythmRef = useRef<TurnRhythmState>({ ...EMPTY_TURN_RHYTHM });
@@ -486,6 +491,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const analyserLastTickAtRef = useRef<number>(0);
   /** When the analysed level last crossed the VAD threshold. */
   const analyserLastVoiceAtRef = useRef<number>(0);
+  /**
+   * First local voice sample after the last recognition result. If this keeps
+   * advancing while recognition emits nothing, the member is speaking into a
+   * live microphone but a dead recognizer — the most direct form of "not heard."
+   */
+  const analyserVoiceWithoutRecognitionSinceRef = useRef<number>(0);
   /** Ticks since the loop started. Distinguishes "never ran" from "ran then stopped". */
   const analyserTicksRef = useRef<number>(0);
   /**
@@ -848,6 +859,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       captureArmedAtRef.current = Date.now();
       lastOnStartAtRef.current = captureArmedAtRef.current; // 🔬 forensics
       captureAudioOpenedRef.current = false;
+      analyserVoiceWithoutRecognitionSinceRef.current = 0;
       markCaptureActivity();
       recognitionActiveRef.current = true; // Confirmed live (defensive: start paths also set this)
       setIsRecording(true);
@@ -906,6 +918,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     recognition.onresult = session.guard(gen, (event: any) => {
       markCaptureActivity(true); // 🩺 results are arriving — capture is unambiguously alive
+      analyserVoiceWithoutRecognitionSinceRef.current = 0;
       // TURN-02: a real recognition result is the only proof strong enough to
       // replenish the one-shot silent-death recovery budget.
       selfHealAttemptedRef.current = false;
@@ -1753,6 +1766,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     );
     console.warn('🔬 [forensics]', forensics);
     logVoiceEvent('voice_capture_lost', { cause, reasonCode, ...forensics });
+    const memberVoiceWasArriving =
+      forensics.witness === 'analyser_hearing_voice';
 
     const preserved = salvageTranscript(cause);
 
@@ -1768,6 +1783,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     captureArmedAtRef.current = 0;
     captureAudioOpenedRef.current = false;
     lastCaptureActivityAtRef.current = 0;
+    analyserVoiceWithoutRecognitionSinceRef.current = 0;
     isRestartingRef.current = false;
     restartInFlightRef.current = false;
 
@@ -1788,6 +1804,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // through onstart / audio start / speech start. Only onresult clears it.
       selfHealAttemptedRef.current = true;
       console.warn('🩺 [liveness] One-shot HANDS_FREE capture recovery requested');
+      if (memberVoiceWasArriving) {
+        reportVoiceStatus({
+          level: 'warning',
+          cause: 'VOICE_RECONNECTING_AFTER_GAP',
+          userMessage: preserved
+            ? 'I briefly stopped receiving your voice while you were speaking. I kept what I heard and I’m reconnecting now — please repeat the last few words.'
+            : 'I briefly stopped receiving your voice while you were speaking. I’m reconnecting now — please repeat the last few words.',
+          recoverable: true,
+        });
+      }
       void requestRestartFnRef.current?.('capture_recovery');
       return;
     }
@@ -1889,13 +1915,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         !isRestartingRef.current &&
         recognitionActiveRef.current;
 
-      const verdict = assessCaptureLiveness({
+      const silenceVerdict = assessCaptureLiveness({
         now,
         lastActivityAt: lastCaptureActivityAtRef.current,
         armedAt: captureArmedAtRef.current,
         audioOpened: captureAudioOpenedRef.current,
         applicable,
       });
+      const voicedStallVerdict = assessVoicedRecognitionStall({
+        now,
+        voiceWithoutRecognitionSinceAt: analyserVoiceWithoutRecognitionSinceRef.current,
+        analyserLastVoiceAt: analyserLastVoiceAtRef.current,
+        applicable,
+      });
+      // Positive local voice is stronger evidence than generic event silence:
+      // if the microphone is demonstrably hearing the member while recognition
+      // emits no result, fail fast rather than making them speak into a dead
+      // recognizer for the full 15-second silence window.
+      const verdict = voicedStallVerdict.dead ? voicedStallVerdict : silenceVerdict;
 
       if (!verdict.dead || !verdict.cause) return;
 
@@ -2503,7 +2540,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // below reads these — see lib/voice/captureForensics.ts.
       analyserLastTickAtRef.current = now;
       analyserTicksRef.current++;
-      if (normalizedLevel > vadSensitivity) analyserLastVoiceAtRef.current = now;
+      if (normalizedLevel > vadSensitivity) {
+        analyserLastVoiceAtRef.current = now;
+        if (
+          analyserVoiceWithoutRecognitionSinceRef.current === 0 &&
+          recognitionActiveRef.current &&
+          !isSpeakingRef.current &&
+          !isProcessingRef.current
+        ) {
+          analyserVoiceWithoutRecognitionSinceRef.current = now;
+        }
+      }
       {
         const w = analyserPeakRef.current;
         if (w.startedAt === 0) w.startedAt = now;
@@ -2578,7 +2625,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       } else if (!isSpeakingNow && silenceStartTimeRef.current > 0 && hasSpokenRef.current) {
         // Check if pause has lasted long enough AND we have real content
         const silenceDuration = now - silenceStartTimeRef.current;
-        if (silenceDuration >= adaptiveSilenceThreshold && accumulatedTranscript.current.trim()) {
+        // VOICE-PREMATURE-COMMIT-01: audio level is a weak witness of silence.
+        // AGC / noise suppression / mic distance can hold steady speech below
+        // the VAD threshold while the recognizer is still delivering words, and
+        // this timer is NOT reset by recognition results. So VAD may only end
+        // a turn when (a) the pause also satisfies the member's chosen Space
+        // (never shorter than the base 5s), and (b) the recognizer itself has
+        // heard nothing for that long. While words are still arriving, the
+        // recognizer's own silence timer is the endpoint authority.
+        const vadRequiredSilenceMs = Math.max(adaptiveSilenceThreshold, effectiveSilenceMs());
+        const recognizerQuietMs = lastSpeechTime.current > 0 ? now - lastSpeechTime.current : Infinity;
+        const recognizerStillHearing = recognizerQuietMs < vadRequiredSilenceMs;
+        if (silenceDuration >= adaptiveSilenceThreshold && silenceDuration >= vadRequiredSilenceMs && !recognizerStillHearing && accumulatedTranscript.current.trim()) {
           // TURN-01-RUNTIME-CONFORMANCE-01: audio-level VAD is an automatic
           // endpoint authority too. Explicit floor ownership disables ALL
           // automatic endpoint authorities, not only Web Speech/native timers.
@@ -2600,7 +2658,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           logVoiceEvent('voice_turn_commit_requested', {
             turnCommitId: turnCommitIdRef.current,
             trigger: 'vad',
-            timerDeadlineMs: adaptiveSilenceThreshold,
+            timerDeadlineMs: vadRequiredSilenceMs,
+            recognizerQuietMs: Number.isFinite(recognizerQuietMs) ? recognizerQuietMs : -1,
             ...readTailSnapshot({
               now,
               lastInterimAt: lastInterimAtRef.current,
@@ -2629,7 +2688,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     };
 
     checkAudioLevel();
-  }, [onAudioLevelChange, vadSensitivity, processAccumulatedTranscript]);
+  }, [onAudioLevelChange, vadSensitivity, processAccumulatedTranscript, effectiveSilenceMs]);
 
   // Initialize audio level monitoring
   const initializeAudioMonitoring = useCallback(async () => {
@@ -3115,6 +3174,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             onInterimTranscript?.(accumulatedTranscript.current);
             try { getContinuityBuffer().recordPending(accumulatedTranscript.current); } catch { /* best-effort */ }
 
+            // The member kept speaking across an OS recognizer cycle: the
+            // partial silence timer below now owns the (whole) turn.
+            if (nativeStopGraceTimerRef.current) {
+              clearTimeout(nativeStopGraceTimerRef.current);
+              nativeStopGraceTimerRef.current = null;
+            }
+
             // TURN-01: a new partial after a pending silence timer is direct
             // evidence that the member paused and continued. Learn only patience.
             if (nativeSilenceTimerRef.current) {
@@ -3302,6 +3368,36 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   floorControlMode: 'explicit',
                 });
                 console.log(`🤲 [TURN-01] Native cycle ended; holding ${finalTranscript.length} chars for member`);
+              } else if (
+                // VOICE-PREMATURE-COMMIT-01: the OS recognizer's own endpointing
+                // is not the member's yield. If the member's chosen pause has not
+                // yet elapsed since the last word heard, hold the turn across the
+                // restart; commit only if the pause completes with no new speech.
+                lastSpeechTime.current > 0 &&
+                Date.now() - lastSpeechTime.current < effectiveSilenceMs()
+              ) {
+                const stoppedAt = Date.now();
+                const remainingMs = Math.max(0, effectiveSilenceMs() - (stoppedAt - lastSpeechTime.current));
+                explicitTurnPrefixRef.current = finalTranscript;
+                try { getContinuityBuffer().recordPending(finalTranscript); } catch { /* best-effort */ }
+                logVoiceEvent('voice_floor_held', {
+                  source: 'native_stop_grace',
+                  charsHeld: finalTranscript.length,
+                  remainingMs,
+                  floorControlMode: 'automatic',
+                });
+                if (nativeStopGraceTimerRef.current) clearTimeout(nativeStopGraceTimerRef.current);
+                nativeStopGraceTimerRef.current = setTimeout(() => {
+                  nativeStopGraceTimerRef.current = null;
+                  // Member spoke again: the partial silence timer owns the turn.
+                  if (lastSpeechTime.current > stoppedAt) return;
+                  const heldTurn = accumulatedTranscript.current.trim();
+                  if (heldTurn && !isProcessingRef.current && automaticTurnCommitAllowed()) {
+                    console.log(`⏱️ [Native] Member pause reached after engine stop — committing turn`);
+                    sendTriggerRef.current = 'silence_timer';
+                    processAccumulatedTranscript();
+                  }
+                }, remainingMs);
               } else {
                 console.log('✅ [Native] Final transcript:', finalTranscript);
                 accumulatedTranscript.current = '';
@@ -4092,6 +4188,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           clearTimeout(nativeSilenceTimerRef.current);
           nativeSilenceTimerRef.current = null;
         }
+        if (nativeStopGraceTimerRef.current) {
+          clearTimeout(nativeStopGraceTimerRef.current);
+          nativeStopGraceTimerRef.current = null;
+        }
 
         // Final cleanup - remove any remaining listeners
         await NativeSpeechRecognition.removeAllListeners();
@@ -4223,6 +4323,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
     if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
     if (nativeSilenceTimerRef.current) { clearTimeout(nativeSilenceTimerRef.current); nativeSilenceTimerRef.current = null; }
+    if (nativeStopGraceTimerRef.current) { clearTimeout(nativeStopGraceTimerRef.current); nativeStopGraceTimerRef.current = null; }
     timerArmedAtRef.current = 0;
     nativeSilenceArmedAtRef.current = 0;
     sendTriggerRef.current = 'manual';

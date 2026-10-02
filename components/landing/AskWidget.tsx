@@ -145,7 +145,7 @@ export function AskWidget() {
                     { label: 'Portfolio', href: '#portfolio' },
                     { label: 'Start Project', href: '#contact' },
                     { label: 'Book', href: 'mailto:hello@soullab.life?subject=Conversation%20with%20Soullab' },
-                    { label: 'Enter MAIA', href: '/enter' },
+                    { label: 'Enter Soullab', href: '/home' },
                   ].map(cta => (
                     <a
                       key={cta.label}

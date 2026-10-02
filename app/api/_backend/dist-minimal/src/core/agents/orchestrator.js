@@ -8,7 +8,7 @@ exports.runLangChain = runLangChain;
 exports.triggerPrefectFlow = triggerPrefectFlow;
 const openai_1 = require("@langchain/openai");
 const prompts_1 = require("@langchain/core/prompts");
-const chains_1 = require("langchain/chains");
+const output_parsers_1 = require("@langchain/core/output_parsers");
 const axios_1 = __importDefault(require("axios"));
 const logger_1 = require("../../utils/logger");
 const SafetyModerationService_1 = require("../../services/SafetyModerationService");
@@ -480,13 +480,10 @@ async function runLangChain(query) {
         modelName: "gpt-3.5-turbo",
     });
     const prompt = prompts_1.PromptTemplate.fromTemplate("You are a wise oracle. Provide a poetic and thoughtful response to: {query}");
-    const chain = new chains_1.LLMChain({
-        llm: model,
-        prompt,
-    });
+    const chain = prompt.pipe(model).pipe(new output_parsers_1.StringOutputParser());
     try {
         const result = await chain.invoke({ query });
-        return result.text?.trim() || "🌀 The oracle was silent this time.";
+        return result.trim() || "🌀 The oracle was silent this time.";
     }
     catch (error) {
         console.error("❌ Error in runLangChain:", error);

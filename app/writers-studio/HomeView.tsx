@@ -4,13 +4,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { FilePlus2, FolderInput, Loader2, NotebookPen, Trash2 } from 'lucide-react';
 import { PRESS, SERIF } from './pressTheme';
-import { CANVAS_HREF, IMPORT_HREF, SOURCE_INTAKE_HREF } from './studioMap';
+import { REBUILD_HREF, IMPORT_HREF, SOURCE_INTAKE_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
 import { locationForSection } from '@/lib/writersStudio/placeInWork';
 import { useSectionActivity } from './useSectionActivity';
 import type { SectionActivity } from '@/lib/writersStudio/sectionActivity';
 import { DELETE_WORK_COPY, REMOVE_WORK_COPY, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
-import { arrivalFor, homeWritingExtent, manuscriptIdOf } from './homeState';
+import {
+  arrivalFor,
+  homeWritingExtent,
+  manuscriptIdOf,
+  manuscriptsForWork,
+} from './homeState';
 import type { CurrentManuscript } from './useCurrentManuscript';
 import type { LivingWork } from './useLivingWorks';
 import type { MarkedLine } from './useMarkedLines';
@@ -154,7 +159,7 @@ function returnHref(
   manuscriptId: string | null,
   activity: SectionActivity | null,
 ): string {
-  const base = canvasForManuscript(CANVAS_HREF, manuscriptId);
+  const base = canvasForManuscript(REBUILD_HREF, manuscriptId);
   if (activity?.kind !== 'distinct') return base;
   const cut = base.indexOf('?');
   return locationForSection(
@@ -288,11 +293,15 @@ export default function HomeView({
 
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
   const { kind, resume, alsoWritten, shelf, feature, imported } = arrivalFor(works, manuscripts);
+  const resumeManuscripts = resume ? manuscriptsForWork(resume, manuscripts) : [];
 
   /* RETURN-LOCUS-01 — asked only for the Work in the hero, because that is the
      only link this can make more precise. ⛔ `null` while it loads, and the
-     href is unchanged then, so nothing waits on it. */
-  const resumeActivity = useSectionActivity(resume ? manuscriptIdOf(resume) : null);
+     href is unchanged then, so nothing waits on it. A multi-manuscript Work
+     deliberately has no section identity until the member chooses one. */
+  const resumeActivity = useSectionActivity(
+    resumeManuscripts.length === 1 ? resumeManuscripts[0].id : null,
+  );
 
   /* ── FINDING WHAT IS ALREADY YOURS ──────────────────────────────────────
      Not a feature; a condition of the room staying usable. A writer with
@@ -387,11 +396,17 @@ export default function HomeView({
     itemKey,
     title,
     target,
+    removeOnly = false,
   }: {
     itemKey: string;
     title: string;
     target: DeleteTarget;
-  }) => (
+    removeOnly?: boolean;
+  }) => {
+    const canRemove = Boolean(target.workId && (removeOnly || target.manuscriptId));
+    const canDelete = Boolean(target.manuscriptId || (target.workId && !removeOnly));
+
+    return (
     <div
       className="rounded-[3px] border p-6 min-h-[136px] flex flex-col justify-between"
       style={{ borderColor: PRESS.rule, background: 'rgba(0,0,0,0.22)' }}
@@ -408,13 +423,13 @@ export default function HomeView({
           something that does not exist. */}
       <div>
         <p className="text-[16.5px] leading-[1.3] mb-2">
-          {target.manuscriptId ? REMOVE_WORK_COPY.question(title) : DELETE_WORK_COPY.question(title)}
+          {canRemove ? REMOVE_WORK_COPY.question(title) : DELETE_WORK_COPY.question(title)}
         </p>
         <p className="text-[13px] opacity-55 leading-relaxed">
-          {target.manuscriptId ? REMOVE_WORK_COPY.body : DELETE_WORK_COPY.body}
+          {canRemove ? REMOVE_WORK_COPY.body : DELETE_WORK_COPY.body}
         </p>
       </div>
-      {target.manuscriptId && target.workId ? (
+      {canRemove ? (
         <div className="mt-4">
           <div className="flex items-center gap-3">
             <button
@@ -435,19 +450,21 @@ export default function HomeView({
               {REMOVE_WORK_COPY.cancel}
             </button>
           </div>
-          <div className="mt-4 pt-3 border-t" style={{ borderColor: PRESS.ruleSoft }}>
-            <button
-              type="button"
-              onClick={() => void runDelete(itemKey, target)}
-              disabled={deleting !== null}
-              data-work-delete-everything
-              className="text-[12.5px] underline underline-offset-4 opacity-55 hover:opacity-100 transition-opacity disabled:opacity-30"
-              style={{ color: '#E0A0A0' }}
-            >
-              {DELETE_WORK_COPY.action}
-            </button>
-            <p className="text-[12px] opacity-40 leading-relaxed mt-1">{DELETE_WORK_COPY.hint}</p>
-          </div>
+          {canDelete ? (
+            <div className="mt-4 pt-3 border-t" style={{ borderColor: PRESS.ruleSoft }}>
+              <button
+                type="button"
+                onClick={() => void runDelete(itemKey, target)}
+                disabled={deleting !== null}
+                data-work-delete-everything
+                className="text-[12.5px] underline underline-offset-4 opacity-55 hover:opacity-100 transition-opacity disabled:opacity-30"
+                style={{ color: '#E0A0A0' }}
+              >
+                {DELETE_WORK_COPY.action}
+              </button>
+              <p className="text-[12px] opacity-40 leading-relaxed mt-1">{DELETE_WORK_COPY.hint}</p>
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="flex items-center gap-3 mt-4">
@@ -471,11 +488,13 @@ export default function HomeView({
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   const workMeta = (work: LivingWork): string => {
-    const id = manuscriptIdOf(work);
-    const m = id ? byId.get(id) : undefined;
+    const choices = manuscriptsForWork(work, manuscripts);
+    if (choices.length > 1) return `${choices.length} manuscripts`;
+    const m = choices[0];
     /* FOREGROUNDING LAW — truth grants a line permission to appear, not
        importance. Page counts are true and are the system's accounting of the
        Work, not the Work. They belong inside it, not on the shelf.
@@ -606,6 +625,7 @@ export default function HomeView({
     target,
     visualWorkId,
     makeWorkFrom,
+    manuscriptChoices,
   }: {
     href: string;
     title: string;
@@ -633,58 +653,86 @@ export default function HomeView({
      * same `onMakeWork` the feature slot has always called.
      */
     makeWorkFrom?: CurrentManuscript;
+    /** All manuscripts declared by a Work when it has more than one. */
+    manuscriptChoices?: readonly CurrentManuscript[];
   }) => {
     /* The confirmation REPLACES the card. A destructive question floating over a
        still-clickable card is a question the member can walk past by accident. */
     if (confirming === itemKey) {
-      return <ConfirmPanel itemKey={itemKey} title={title} target={target} />;
+      return (
+        <ConfirmPanel
+          itemKey={itemKey}
+          title={title}
+          target={target}
+          removeOnly={(manuscriptChoices?.length ?? 0) > 1}
+        />
+      );
     }
+
+    const multi = (manuscriptChoices?.length ?? 0) > 1;
+    const cardIdentity = (
+      <>
+        <span
+          aria-hidden="true"
+          className="absolute left-0 top-0 h-full w-[2px] opacity-25 group-hover:opacity-100 transition-opacity"
+          style={{ background: PRESS.accent }}
+        />
+        <span className="flex items-start gap-4">
+          {visualWorkId ? (
+            <CardVisual key={visualEpoch} workId={visualWorkId} title={title} />
+          ) : null}
+          <span className="block min-w-0">
+            <span
+              className="block leading-[1.24] mb-2.5 pr-10"
+              style={{
+                fontSize: title.length > 34 ? '18.5px' : title.length > 22 ? '20px' : '22px',
+                opacity: untitled ? 0.72 : 1,
+              }}
+            >
+              {title}
+            </span>
+            <span className="block text-[13px] opacity-50">{meta}</span>
+          </span>
+        </span>
+      </>
+    );
+
     return (
       <div className="group relative">
-        <Link
-          href={href}
-          className="block rounded-[3px] border p-6 min-h-[136px] overflow-hidden transition-all duration-200 [@media(hover:hover)]:hover:-translate-y-[2px]"
-          style={{
-            borderColor: PRESS.ruleSoft,
-            background:
-              'linear-gradient(158deg, rgba(255,243,222,0.062) 0%, rgba(255,243,222,0.022) 46%, rgba(0,0,0,0.16) 100%)',
-            boxShadow: '0 1px 0 rgba(255,240,214,0.05) inset, 0 12px 26px -18px rgba(0,0,0,0.9)',
-          }}
-        >
-          {/* Always faintly lit, brighter under a pointer — a touch device is
-              never shown less than a mouse. */}
-          <span
-            aria-hidden="true"
-            className="absolute left-0 top-0 h-full w-[2px] opacity-25 group-hover:opacity-100 transition-opacity"
-            style={{ background: PRESS.accent }}
-          />
-          {/* Identity comes from the writing's own facts — how long the title
-              runs, what form it took, how much of it there is, when it was last
-              written — and, when the writer chose one, their own image. Never
-              decoration invented to make cards look different, and never an
-              image the Studio picked. */}
-          <span className="flex items-start gap-4">
-            {visualWorkId ? (
-              <CardVisual key={visualEpoch} workId={visualWorkId} title={title} />
-            ) : null}
-            <span className="block min-w-0">
-              <span
-                className="block leading-[1.24] mb-2.5 pr-10"
-                style={{
-                  fontSize: title.length > 34 ? '18.5px' : title.length > 22 ? '20px' : '22px',
-                  opacity: untitled ? 0.72 : 1,
-                }}
-              >
-                {title}
-              </span>
-              <span className="block text-[13px] opacity-50">{meta}</span>
-            </span>
-          </span>
-        </Link>
+        {multi ? (
+          <div
+            className="block rounded-[3px] border p-6 min-h-[136px] overflow-hidden"
+            style={{
+              borderColor: PRESS.ruleSoft,
+              background:
+                'linear-gradient(158deg, rgba(255,243,222,0.062) 0%, rgba(255,243,222,0.022) 46%, rgba(0,0,0,0.16) 100%)',
+              boxShadow: '0 1px 0 rgba(255,240,214,0.05) inset, 0 12px 26px -18px rgba(0,0,0,0.9)',
+            }}
+          >
+            {cardIdentity}
+            <ManuscriptChooser
+              manuscripts={manuscriptChoices ?? []}
+              hrefFor={(id) => canvasForManuscript(REBUILD_HREF, id)}
+            />
+          </div>
+        ) : (
+          <Link
+            href={href}
+            className="block rounded-[3px] border p-6 min-h-[136px] overflow-hidden transition-all duration-200 [@media(hover:hover)]:hover:-translate-y-[2px]"
+            style={{
+              borderColor: PRESS.ruleSoft,
+              background:
+                'linear-gradient(158deg, rgba(255,243,222,0.062) 0%, rgba(255,243,222,0.022) 46%, rgba(0,0,0,0.16) 100%)',
+              boxShadow: '0 1px 0 rgba(255,240,214,0.05) inset, 0 12px 26px -18px rgba(0,0,0,0.9)',
+            }}
+          >
+            {cardIdentity}
+          </Link>
+        )}
         {/* A sibling of the Link, never a child of it — a button inside an
             anchor is invalid, and would make Delete a way to open the work. */}
         <div className="absolute top-2 right-2">
-          <DeleteButton itemKey={itemKey} label={`Delete ${title}`} />
+          <DeleteButton itemKey={itemKey} label={multi ? `Remove ${title}` : `Delete ${title}`} />
         </div>
         {/* Offered beneath the writing, never in front of it — the same posture
             the feature slot has always taken. A sibling of the Link for the
@@ -787,6 +835,15 @@ export default function HomeView({
       className="min-h-screen px-6 md:px-10 py-10 md:py-16"
       style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
     >
+      <div className="max-w-4xl mx-auto mb-6">
+        <Link
+          href="/home"
+          aria-label="Return to Soullab Home"
+          className="text-[12px] opacity-45 hover:opacity-75 transition-opacity"
+        >
+          ← Soullab Home
+        </Link>
+      </div>
       {!loading ? <Hero /> : null}
 
       <div className="max-w-4xl mx-auto">
@@ -871,11 +928,12 @@ export default function HomeView({
                           key={`w-${w.id}`}
                           itemKey={`work:${w.id}`}
                           target={{ workId: w.id, manuscriptId: manuscriptIdOf(w) }}
-                          href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                          href={canvasForManuscript(REBUILD_HREF, manuscriptIdOf(w))}
                           title={w.title ?? 'Untitled work'}
                           untitled={!w.title}
                           meta={workMeta(w)}
                           visualWorkId={w.id}
+                          manuscriptChoices={manuscriptsForWork(w, manuscripts)}
                         />
                       ))}
                       {foundWriting.map((m) => (
@@ -884,7 +942,7 @@ export default function HomeView({
                           itemKey={`writing:${m.id}`}
                           target={{ workId: null, manuscriptId: m.id }}
                           makeWorkFrom={m}
-                          href={canvasForManuscript(CANVAS_HREF, m.id)}
+                          href={canvasForManuscript(REBUILD_HREF, m.id)}
                           title={m.title ?? 'Untitled'}
                           untitled={!m.title}
                           meta={pagesLabel(m)}
@@ -930,7 +988,8 @@ export default function HomeView({
                     <p className="text-[14.5px] opacity-50 mb-8">{workMeta(resume)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col items-start gap-3">
+                  {resumeManuscripts.length === 1 ? (
                   <Link
                     href={returnHref(manuscriptIdOf(resume), resumeActivity)}
                     className={`${FILLED} w-full sm:w-auto`}
@@ -938,13 +997,24 @@ export default function HomeView({
                   >
                     Return to this work
                   </Link>
+                  ) : (
+                    <ManuscriptChooser
+                      manuscripts={resumeManuscripts}
+                      heading="Choose a manuscript to continue"
+                      hrefFor={(id) => canvasForManuscript(REBUILD_HREF, id)}
+                    />
+                  )}
                   {/* The work in the hero is excluded from the shelf below, so
                       without this the most prominent thing in the room — often
                       the very test import that prompted all this — would be the
                       one thing a member could not remove. */}
                   <DeleteButton
                     itemKey={`work:${resume.id}`}
-                    label={`Delete ${resume.title ?? 'this work'}`}
+                    label={
+                      resumeManuscripts.length > 1
+                        ? `Remove ${resume.title ?? 'this work'}`
+                        : `Delete ${resume.title ?? 'this work'}`
+                    }
                   />
                 </div>
                 {confirming === `work:${resume.id}` ? (
@@ -953,6 +1023,7 @@ export default function HomeView({
                       itemKey={`work:${resume.id}`}
                       title={resume.title ?? 'Your untitled work'}
                       target={{ workId: resume.id, manuscriptId: manuscriptIdOf(resume) }}
+                      removeOnly={resumeManuscripts.length > 1}
                     />
                   </div>
                 ) : null}
@@ -993,11 +1064,12 @@ export default function HomeView({
                           key={w.id}
                           itemKey={`work:${w.id}`}
                           target={{ workId: w.id, manuscriptId: manuscriptIdOf(w) }}
-                          href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                          href={canvasForManuscript(REBUILD_HREF, manuscriptIdOf(w))}
                           title={w.title ?? 'Untitled work'}
                           untitled={!w.title}
                           meta={workMeta(w)}
                           visualWorkId={w.id}
+                          manuscriptChoices={manuscriptsForWork(w, manuscripts)}
                         />
                       ))}
                     </Cards>
@@ -1018,7 +1090,7 @@ export default function HomeView({
                 <p className="text-[14.5px] opacity-50 mb-8">{pagesLabel(feature)}</p>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <Link
-                    href={canvasForManuscript(CANVAS_HREF, feature.id)}
+                    href={canvasForManuscript(REBUILD_HREF, feature.id)}
                     className={`${FILLED} w-full sm:w-auto`}
                     style={{ background: PRESS.accent, color: PRESS.ink }}
                   >
@@ -1187,11 +1259,12 @@ export default function HomeView({
                       key={w.id}
                       itemKey={`work:${w.id}`}
                       target={{ workId: w.id, manuscriptId: manuscriptIdOf(w) }}
-                      href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                      href={canvasForManuscript(REBUILD_HREF, manuscriptIdOf(w))}
                       title={w.title ?? 'Untitled work'}
                       untitled={!w.title}
                       meta={workMeta(w)}
                       visualWorkId={w.id}
+                      manuscriptChoices={manuscriptsForWork(w, manuscripts)}
                     />
                   ))}
                 </Cards>
@@ -1238,7 +1311,7 @@ export default function HomeView({
                       itemKey={`writing:${m.id}`}
                       target={{ workId: null, manuscriptId: m.id }}
                       makeWorkFrom={m}
-                      href={canvasForManuscript(CANVAS_HREF, m.id)}
+                      href={canvasForManuscript(REBUILD_HREF, m.id)}
                       title={m.title ?? 'Untitled'}
                       untitled={!m.title}
                       meta={pagesLabel(m)}
@@ -1280,5 +1353,36 @@ export default function HomeView({
         ) : null}
       </div>
     </main>
+  );
+}
+
+
+function ManuscriptChooser({
+  manuscripts,
+  heading = 'Choose a manuscript',
+  hrefFor,
+}: {
+  manuscripts: readonly CurrentManuscript[];
+  heading?: string;
+  hrefFor: (manuscriptId: string) => string;
+}) {
+  if (manuscripts.length < 2) return null;
+
+  return (
+    <div className="mt-4" data-manuscript-choice="">
+      <p className="text-[13px] opacity-55 mb-2">{heading}</p>
+      <ul className="grid gap-2 max-w-xl" aria-label={heading}>
+        {manuscripts.map((manuscript) => (
+          <li key={manuscript.id}>
+            <Link
+              href={hrefFor(manuscript.id)}
+              className="block w-full text-left px-4 py-3 border border-current rounded-[2px] opacity-75 hover:opacity-100 transition-opacity"
+            >
+              {manuscript.title?.trim() || 'Untitled manuscript'}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

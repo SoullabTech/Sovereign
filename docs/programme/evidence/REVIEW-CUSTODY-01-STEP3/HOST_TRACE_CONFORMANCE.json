@@ -1,0 +1,32 @@
+{
+  "instrument": "review-custody-step3-host-trace-conformance/v1",
+  "date": "2026-09-21",
+  "host": "Kellys-Mac-Studio.local",
+  "claude_code_version": "2.1.273",
+  "reviewer_process": "separate claude -p process",
+  "output_format": "stream-json",
+  "session_id": "7b2691c3-f287-4e2e-b073-338d43ccf0b9",
+  "raw_trace_sha256": "12bb542178f9d0412acc0b1ed87f1068ede76d926a01de46f4bd3fbb3c8006a7",
+  "raw_trace_bytes": 7138,
+  "raw_trace_lines": 7,
+  "system_init": {
+    "stable_session_identity": true,
+    "tools_exposed": ["Glob", "Grep", "Read"],
+    "cwd_present": true
+  },
+  "tool_use_observed": {
+    "type": "tool_use",
+    "name": "Read",
+    "input_field": "file_path",
+    "session_identity_matches": true
+  },
+  "parser_outcome": {
+    "kind": "witnessed",
+    "files": ["TRACE_WITNESS.txt"],
+    "undisclosed": [],
+    "scopes": []
+  },
+  "not_observed": ["NotebookRead in the emitted host tool list"],
+  "stderr_note": "CLI warned that stdin was empty after 3s; run completed successfully and emitted the full trace.",
+  "standing": "PASS — Step 2 parser accepted the real host stream without repair."
+}

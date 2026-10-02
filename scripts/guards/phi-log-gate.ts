@@ -44,11 +44,11 @@ import fs from "node:fs";
 //
 // The predecessor used git pathspecs `app/**`, `lib/**`, `scripts/**` — and git's
 // `**` requires an intervening directory, so every TOP-LEVEL file was silently
-// excluded, along with components/, hooks/ and middleware.ts: 1,162 files, 19.5%
+// excluded, along with components/, hooks/ and the root proxy.ts surface
 // of the surface. Enumeration below is by prefix + extension so it corresponds to
 // the claim above.
 const SOURCE_DIRS = ["app/", "lib/", "components/", "hooks/", "scripts/"];
-const SOURCE_ROOT_FILES = ["middleware.ts"];
+const SOURCE_ROOT_FILES = ["proxy.ts"];
 const SOURCE_EXT = /\.(ts|tsx|js|jsx|mjs)$/;
 const MIGRATION_RE = /^database\/migrations\/.*\.sql$/;
 

@@ -16,6 +16,99 @@ assert.ok(fs.existsSync(plist), `packaged app missing: ${appPath}`);
 assert.ok(fs.existsSync(executable), 'packaged executable is missing');
 assert.ok(fs.existsSync(asar), 'app.asar is missing');
 
+// Cabin runtime: the packaged app must carry the Next standalone server AND its
+// root node_modules (electron-builder's FileMatcher drops a root node_modules —
+// candidates c6102a347, 147815873, e3688fce2 all shipped without it). Existence
+// is not enough: the packaged next must be the version canonical pins.
+const cabinRuntime = path.join(appPath, 'Contents', 'Resources', 'cabin-runtime');
+assert.ok(fs.existsSync(path.join(cabinRuntime, 'server.js')), 'packaged cabin-runtime/server.js is missing');
+const packagedNextManifest = path.join(cabinRuntime, 'node_modules', 'next', 'package.json');
+assert.ok(fs.existsSync(packagedNextManifest), 'packaged cabin-runtime/node_modules/next is missing');
+const packagedNextVersion = JSON.parse(fs.readFileSync(packagedNextManifest, 'utf8')).version;
+
+// External beta containment: fail closed if repo-internal, credential-like, or
+// oversized runtime material ever leaks back into the packaged Cabin. This is
+// deliberately checked on the finished .app, not trusted from build logs.
+const forbiddenCabinEntries = [
+  'backups',
+  'artifacts',
+  'docs',
+  'scripts',
+  'database',
+  'data/ain/source',
+  'data/library-sources',
+  'data/sacred-texts',
+  'data/voice-training',
+  'books',
+  'Community-Commons',
+  'tests',
+  '__tests__',
+  'android',
+  'ios',
+  'desktop-app',
+  'jarvis-desktop',
+  'beta-deployment',
+  'community-pages-temp',
+  'mcp-servers',
+  'compact-companion',
+  'chess-tools',
+  'mobile',
+  '.next/cache',
+];
+for (const entry of forbiddenCabinEntries) {
+  assert.ok(!fs.existsSync(path.join(cabinRuntime, entry)), `forbidden cabin-runtime entry: ${entry}`);
+}
+
+const allowedCabinRootEntries = new Set([
+  '.next',
+  'app',
+  'lib',
+  'maia_notes',
+  'node_modules',
+  'package.json',
+  'pages',
+  'public',
+  'server.js',
+]);
+for (const entry of fs.readdirSync(cabinRuntime)) {
+  assert.ok(allowedCabinRootEntries.has(entry), `unexpected cabin-runtime root entry: ${entry}`);
+}
+
+const forbiddenName = /^(?:\.git|\.env(?:\..*)?|.*\.(?:pem|p8|p12)|maia-android-debug.*\.apk)$/i;
+const stack = [cabinRuntime];
+while (stack.length) {
+  const dir = stack.pop();
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    assert.ok(!forbiddenName.test(entry.name), `forbidden cabin-runtime file: ${path.relative(cabinRuntime, full)}`);
+    if (entry.isDirectory()) stack.push(full);
+  }
+}
+
+function directoryBytes(rootDir) {
+  let total = 0;
+  const dirs = [rootDir];
+  while (dirs.length) {
+    const dir = dirs.pop();
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) dirs.push(full);
+      else if (entry.isFile()) total += fs.statSync(full).size;
+    }
+  }
+  return total;
+}
+const cabinRuntimeBytes = directoryBytes(cabinRuntime);
+const maxCabinRuntimeBytes = 1024 * 1024 * 1024; // 1 GiB hard ceiling for beta.
+assert.ok(
+  cabinRuntimeBytes <= maxCabinRuntimeBytes,
+  `cabin-runtime too large: ${(cabinRuntimeBytes / (1024 * 1024)).toFixed(1)} MiB > 1024 MiB`,
+);
+const rootManifest = JSON.parse(fs.readFileSync(path.join(root, '..', 'package.json'), 'utf8'));
+const pinnedNext = rootManifest.dependencies?.next;
+assert.match(pinnedNext ?? '', /^\d+\.\d+\.\d+$/, `root package.json must pin an exact next version (got ${pinnedNext})`);
+assert.equal(packagedNextVersion, pinnedNext, `packaged next ${packagedNextVersion} != pinned next ${pinnedNext}`);
+
 function run(command, args) {
   return spawnSync(command, args, { encoding: 'utf8' });
 }
@@ -48,20 +141,62 @@ assert.equal(signature.status, 0, signature.stderr || 'invalid application signa
 const details = run('codesign', ['-dv', '--verbose=4', appPath]);
 const signatureText = `${details.stdout}\n${details.stderr}`;
 const developerId = /Authority=Developer ID Application:/.test(signatureText);
+
+function cabinMachOBinaries(rootDir) {
+  const binaries = [];
+  const dirs = [rootDir];
+  while (dirs.length) {
+    const dir = dirs.pop();
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        dirs.push(full);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const probe = run('/usr/bin/file', ['-b', full]);
+      if (probe.status === 0 && probe.stdout.includes('Mach-O')) binaries.push(full);
+    }
+  }
+  return binaries;
+}
+
+const cabinNative = cabinMachOBinaries(cabinRuntime);
+const cabinNativeTrust = cabinNative.map((binary) => {
+  const verify = run('/usr/bin/codesign', ['--verify', '--strict', binary]);
+  const detail = run('/usr/bin/codesign', ['-dv', '--verbose=4', binary]);
+  const text = `${detail.stdout}\n${detail.stderr}`;
+  return {
+    binary: path.relative(cabinRuntime, binary),
+    signatureValid: verify.status === 0,
+    developerId: /Authority=Developer ID Application:/.test(text),
+    secureTimestamp: /Timestamp=/.test(text),
+    hardenedRuntime: /flags=.*runtime/.test(text),
+  };
+});
+const cabinNativeReady = cabinNativeTrust.every((entry) =>
+  entry.signatureValid && entry.developerId && entry.secureTimestamp && entry.hardenedRuntime
+);
+
 const assessment = run('spctl', ['--assess', '--type', 'execute', '--verbose=4', appPath]);
 const gatekeeperAccepted = assessment.status === 0;
-const externalReady = developerId && gatekeeperAccepted;
+const externalReady = developerId && cabinNativeReady && gatekeeperAccepted;
 
 console.log(JSON.stringify({
   appPath,
   version: plistValue('CFBundleShortVersionString'),
   arch: arch.stdout.trim(),
+  cabinNext: packagedNextVersion,
   signatureValid: true,
   developerId,
+  cabinNativeCount: cabinNative.length,
+  cabinNativeReady,
+  cabinNativeTrust,
   gatekeeperAccepted,
   releaseClass: externalReady ? 'EXTERNAL_BETA' : 'LOCAL_BETA_ONLY',
 }, null, 2));
 
 if (process.env.REQUIRE_EXTERNAL_BETA === '1') {
-  assert.ok(externalReady, 'Developer ID signing and Gatekeeper acceptance are required');
+  assert.ok(cabinNativeReady, 'all Cabin Mach-O binaries require Developer ID, secure timestamp, and hardened runtime');
+  assert.ok(externalReady, 'Developer ID signing, nested native trust, and Gatekeeper acceptance are required');
 }

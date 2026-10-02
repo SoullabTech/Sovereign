@@ -73,12 +73,12 @@ function boundEnvelope() {
   let env=routedEnvelope();
   let r=appendTransportBindingV1(env,{
     transport_binding_id:'tb-qwen',supersedes_binding_id:null,route_participant_id:'primary',
-    provider_id:'qwen-local',model_id:'qwen3-coder:30b',adapter_id:'opencode',
+    provider_id:'qwen-local',model_id:'qwen3-coder:30b',adapter_id:'ollama-direct',
     readiness:{status:'READY',evidence_ref:'ready:q'},
   }); assert.equal(r.ok,true,JSON.stringify(r.blockers)); env=r.envelope;
   r=appendTransportBindingV1(env,{
     transport_binding_id:'tb-gpt',supersedes_binding_id:null,route_participant_id:'local-review-1',
-    provider_id:'gpt-oss-local',model_id:'gpt-oss:20b',adapter_id:'opencode',
+    provider_id:'gpt-oss-local',model_id:'gpt-oss:20b',adapter_id:'ollama-direct',
     readiness:{status:'READY',evidence_ref:'ready:g'},
   }); assert.equal(r.ok,true,JSON.stringify(r.blockers)); env=r.envelope;
   r=appendLedgerRecordV2(env,{kind:'model_identity',entry:SYNTHETIC_MODEL_IDENTITIES.qwen}); assert.equal(r.ok,true,JSON.stringify(r.blockers)); env=r.envelope;
@@ -501,7 +501,7 @@ falsifier('F18','route digest mutation after ROUTED is refused',()=>{
     route_participant_id:'primary',
     provider_id:'qwen-local',
     model_id:'qwen3-coder:30b',
-    adapter_id:'opencode',
+    adapter_id:'ollama-direct',
     readiness:{status:'READY',evidence_ref:'mutant:ready'},
   });
   assert.equal(r.ok,false);
@@ -517,7 +517,7 @@ falsifier('F19','transport binding cannot be mutated after execution evidence be
     route_participant_id:'primary',
     provider_id:'qwen-local',
     model_id:'qwen3-coder:30b',
-    adapter_id:'opencode',
+    adapter_id:'ollama-direct',
     readiness:{status:'READY',evidence_ref:'mutant:late'},
   });
   assert.equal(r.ok,false);

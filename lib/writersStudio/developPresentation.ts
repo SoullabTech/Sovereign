@@ -34,11 +34,11 @@ import type { ReadingAssessment } from '../manuscript/developmentalReading/asses
 /**
  * The plain question each lens answers, for the member-facing surface.
  *
- * Founder ruling 2026-09-07: the seven lenses are unchanged as canonical
- * capabilities; only their PRESENTATION leads with a question. The stored
- * value and the API identifier remain `development | structure | continuity |
- * arc | voice | coherence | reader`, and LENS_MEANING below is still the
- * ratified wording.
+ * Founder ruling 2026-09-07 established the original seven; D5C1 (2026-09-26) adds Themes as the eighth governed lens
+ * while preserving the same presentation law: the plain question leads. The stored
+ * value and API identifier now include `themes` alongside `development | structure |
+ * continuity | arc | voice | coherence | reader`, and LENS_MEANING below is the
+ * governed wording.
  *
  *   Canonical vocabulary may govern the system without requiring the writer
  *   to speak system vocabulary.
@@ -52,6 +52,7 @@ export const LENS_QUESTION: Record<DevelopmentalLens, string> = {
   structure: 'How is it shaped?',
   continuity: 'What carries through?',
   arc: 'How does the work move?',
+  themes: 'What keeps returning?',
   voice: 'How does the voice hold?',
   coherence: 'Does it hold together?',
   reader: 'What does the reader meet?',
@@ -62,13 +63,14 @@ export const LENS_MEANING: Readonly<Record<DevelopmentalLens, string>> = {
   development: 'how the work develops across what was read',
   continuity: 'what carries through, and what drops',
   arc: 'the shape of movement across the parts',
+  themes: 'what recurs, where it recurs, and how its presence changes across the Work',
   voice: 'register and voice, and where they shift',
   coherence: 'whether the parts hold together',
   reader: 'what is met, in the order it is met',
 };
 
 export const LENS_ORDER: readonly DevelopmentalLens[] =
-  ['development', 'structure', 'continuity', 'arc', 'voice', 'coherence', 'reader'];
+  ['development', 'structure', 'continuity', 'arc', 'themes', 'voice', 'coherence', 'reader'];
 
 export const phenomenonLabel = (p: DevelopmentalPhenomenon): string => PHENOMENON_LABEL[p];
 

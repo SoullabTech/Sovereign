@@ -2783,7 +2783,7 @@ export function AccountSettings() {
         style={{ paddingTop: 'max(env(safe-area-inset-top), 1.5rem)' }}
       >
         <button
-          onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
+          onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/home'}
           className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
         >
           <ArrowLeft size={20} className="text-amber-400" />
@@ -2809,9 +2809,13 @@ export function AccountSettings() {
         </AnimatePresence>
       </div>
 
-      {/* Content */}
-      <AnimatePresence mode="wait">
-        {!activeSection ? (
+      {/* Content
+          The detail/list transition deliberately does not use AnimatePresence
+          mode="wait". In Safari that exit wait can retain the section list
+          indefinitely after activeSection changes, leaving every detail panel
+          mounted behind an old list that never exits. The state transition is
+          the experience; animation may not block reachability. */}
+      {!activeSection ? (
           /* Section List - Claude style: simple, clean */
           <motion.div
             key="list"
@@ -2900,7 +2904,6 @@ export function AccountSettings() {
             {activeSection === 'data' && renderData()}
           </motion.div>
         )}
-      </AnimatePresence>
 
       {/* Internal: VoiceController Phase 1 smoke test — native only.
           See docs/architecture/MAIA_VOICE_CONTROLLER_DESIGN.md

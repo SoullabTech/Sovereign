@@ -63,6 +63,7 @@
  * caller-named, which is the part of the ruling that carries the weight.
  */
 
+import { altersProtectedText } from '@/lib/writersStudio/editorialDiff';
 import { query } from '@/lib/db/postgres';
 import { authorizeVersion, type AuthorizeRefusal } from '../revisionAuthorization/store';
 import { executeAuthorization, type ExecutionRefusal } from '../revisionAuthorization/execute';
@@ -143,6 +144,13 @@ export type AdoptionOutcome =
   | { readonly kind: 'applied'; readonly permission: AdoptionPermission;
       readonly resultingVersion: number; readonly acceptedAt: string;
       readonly byThisGesture: boolean; readonly facts: AdoptionFacts }
+  /**
+   * ⚠️ THE PROPOSAL WOULD REWRITE A DETECTED SOURCE QUOTATION, so nothing was
+   * authorized and nothing was applied. ⛔ Never reported as the member's
+   * manuscript having moved, and ⛔ never as a system fault: the request was
+   * well formed and the refusal is the rule working.
+   */
+  | { readonly kind: 'protected_quotation'; readonly permission: AdoptionPermission }
   /** ⭐⭐ THE WORK MOVED. ⛔ Do not imply the authorization never happened. */
   | { readonly kind: 'work_moved'; readonly permission: AdoptionPermission;
       readonly reason: WorkMovedReason; readonly facts: AdoptionFacts }
@@ -271,6 +279,40 @@ export async function adoptVersion(input: AdoptVersionInput): Promise<AdoptionOu
      row is written. ⭐ `stale_base` keeps its meaning exactly. */
   if (!locusIsAdoptable(t.rows[0]!.expected_text ?? '', t.rows[0]!.heading)) {
     return { kind: 'legacy_locus', permission: { established: false } };
+  }
+
+  /* ══ ⚠️⚠️ THE DETECTED-QUOTATION GUARD — BEFORE ACT 1, FOR THE SAME REASON
+     THE COMPATIBILITY GUARD IS ═══════════════════════════════════════════════
+
+     ⭐⭐ A BROWSER CHECK IS NOT A GUARD. The page can mark a quotation as
+     protected and decline to offer it as a choice, and none of that survives a
+     request the page did not make. The refusal has to be here, where the named
+     version and the frozen locus are both in hand, and BEFORE `authorizeVersion`
+     — so a proposal that would rewrite a source's words never mints a
+     permission at all. Placing it after would leave an authorization row
+     standing for an act that must never happen.
+
+     ⛔ REFUSED WHOLE, NEVER TRIMMED. Applying the lawful remainder would still
+     publish a quotation the source did not write — shorter, and just as
+     invented. There is no partial application of this refusal.
+
+     ⚠️⚠️ THIS IS DETECTED-QUOTATION SAFETY, ⛔ NOT QUOTE CUSTODY, and it must
+     never be reported as custody. `Block { type: 'quote', content, attribution }`
+     exists in the manuscript model but never reaches this path: ingest flattens
+     a section to body text before any row exists. So there is no preserved
+     quotation identity to enforce — only syntactic detection, which is
+     inference and is incomplete by construction. ⭐ It fails closed in the
+     direction that matters: a false positive refuses a lawful edit, which the
+     member can recover from; a false negative is the defect this guard was
+     written for. Real custody needs member-declared or ingest-preserved spans,
+     and that is a separate lane. */
+  const proposed = await query<{ formulation: string }>(
+    `SELECT formulation FROM proposal_versions WHERE id = $1 AND chain_id = $2`,
+    [input.versionId, chainId]);
+  const wording = proposed.rows[0]?.formulation ?? null;
+  if (wording !== null
+      && altersProtectedText(t.rows[0]!.expected_text ?? '', wording)) {
+    return { kind: 'protected_quotation', permission: { established: false } };
   }
 
   /* ══ ACT 1 · THE PERMISSION ═══════════════════════════════════════════════

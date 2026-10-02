@@ -10,6 +10,13 @@ import { callLocalInference, isLocalHealthy } from './localInferenceClient';
 import { emitDriftEvent } from '@/lib/sovereignty/driftAlarm';
 import type { TextRequest } from './modelService';
 import type { TextResult, InferenceMode, TokenUsage } from './types';
+import {
+  degradedNonModelTruth,
+  intendedDomain,
+  intendedProvider,
+  truthFromProviderMeta,
+  type LiveIntendedTarget,
+} from './liveServingTruth';
 
 // ── Degraded mode copy (exact, per spec) ─────────────────────────────────────
 const DEGRADED_TEXT =
@@ -46,9 +53,28 @@ function logUsageLine(args: {
   }));
 }
 
-// ── Degraded result ───────────────────────────────────────────────────────────
-function degradedResult(t0: number): TextResult {
+// ── Serving-truth helpers (R2; observational only) ───────────────────────────
+function intendedForMode(mode: InferenceMode): LiveIntendedTarget {
+  return mode === 'primary'
+    ? intendedProvider('anthropic')
+    : intendedDomain('local', `routing_contract_${mode}`);
+}
+
+function stampServing(result: TextResult, mode: InferenceMode, reason?: string): TextResult {
   return {
+    ...result,
+    servingTruth: truthFromProviderMeta({
+      routingContract: mode,
+      intended: intendedForMode(mode),
+      provider: result.provider,
+      ...(reason ? { reason } : {}),
+    }),
+  };
+}
+
+// ── Degraded result ───────────────────────────────────────────────────────────
+function degradedResult(t0: number, mode: InferenceMode): TextResult {
+  const result: TextResult = {
     text: DEGRADED_TEXT,
     provider: {
       provider: 'unknown',
@@ -57,6 +83,15 @@ function degradedResult(t0: number): TextResult {
       reason: 'all_providers_unavailable',
       latencyMs: Date.now() - t0,
     },
+  };
+
+  return {
+    ...result,
+    servingTruth: degradedNonModelTruth({
+      routingContract: mode,
+      intended: intendedForMode(mode),
+      reason: 'all_providers_unavailable',
+    }),
   };
 }
 
@@ -74,15 +109,15 @@ async function routeSovereignInference(
     const healthy = await isLocalHealthy();
     if (!healthy) {
       console.warn(`[sovereignRouter] mode=${mode}: local unhealthy — returning degraded`);
-      return degradedResult(t0);
+      return degradedResult(t0, mode);
     }
     try {
       const result = await callLocalInference(req);
       logUsageLine({ provider: 'local_inference', model: result.provider.model, t0, usage: result.provider.usage, mode });
-      return result;
+      return stampServing(result, mode);
     } catch (err) {
       console.error(`[sovereignRouter] mode=${mode}: local call failed — returning degraded:`, err);
-      return degradedResult(t0);
+      return degradedResult(t0, mode);
     }
   }
 
@@ -95,7 +130,7 @@ async function routeSovereignInference(
         meta: req.meta,
       });
       logUsageLine({ provider: 'anthropic', model: result.provider?.model, t0, usage: result.provider?.usage, mode });
-      return result;
+      return stampServing(result, mode);
     } catch (err: any) {
       // Billing/auth: fail fast, no fallback
       if (err?.noFallback || err?.code === 'ANTHROPIC_BILLING_ERROR') throw err;
@@ -114,20 +149,20 @@ async function routeSovereignInference(
     const healthy = await isLocalHealthy();
     if (!healthy) {
       console.warn('[sovereignRouter] mode=primary: local also unhealthy — returning degraded');
-      return degradedResult(t0);
+      return degradedResult(t0, mode);
     }
     try {
       const result = await callLocalInference(req);
       logUsageLine({ provider: 'local_inference', model: result.provider.model, t0, usage: result.provider.usage, mode });
-      return result;
+      return stampServing(result, mode, 'intended_provider_failed');
     } catch (err) {
       console.error('[sovereignRouter] mode=primary: local fallback failed — returning degraded:', err);
-      return degradedResult(t0);
+      return degradedResult(t0, mode);
     }
   }
 
   // Unreachable — mode is validated upstream by the guard
-  return degradedResult(t0);
+  return degradedResult(t0, mode);
 }
 
 // ── Public entry point ────────────────────────────────────────────────────────

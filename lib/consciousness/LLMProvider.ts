@@ -22,6 +22,14 @@
  *   OLLAMA_MODEL_DEEP        — Ollama model for deep tier (default: qwen3:32b)
  *   MAIA_STRICT_503=true     — return 503 on Claude failure instead of Ollama fallback
  *
+ * Serving identity: every LLMResponse and every stream 'done' event carries a
+ * ServingIdentity recording which mind was asked for, which mind answered, and
+ * how they diverged ('none' | 'capability' | 'sovereignty'). Observability only
+ * — no behaviour change, and nothing here reaches a member-facing surface.
+ *
+ *   docker logs maia-sovereign | grep 'llm.capability_degradation'  (cloud → local)
+ *   docker logs maia-sovereign | grep 'llm.sovereignty_fallback'    (local → cloud)
+ *
  * Routes NOT using this provider (intentionally direct Anthropic):
  *   - app/api/anthropic/ping — tests Anthropic connectivity
  *   - app/api/portal/[slug]/chat — requires Anthropic tool_use (booking tools)
@@ -32,7 +40,17 @@ import Anthropic from '@anthropic-ai/sdk';
 import { ConsciousnessLevel } from './ConsciousnessLevelDetector';
 import { ensureUserTerminal } from './messageTerminal';
 
-export type LLMProvider = 'ollama' | 'anthropic';
+import {
+  type LLMProvider,
+  type ServingIdentity,
+  selfServing,
+  classifyDivergence,
+  servingIdentityFor,
+  causeOf,
+} from './servingIdentity';
+
+export type { LLMProvider, ServingIdentity };
+export { selfServing, classifyDivergence, servingIdentityFor, causeOf };
 export type OllamaModel = 'llama3.3:70b' | 'deepseek-r1:latest' | 'deepseek-v3' | 'llama3.1:70b';
 
 /** Route-level model selection — independent of consciousness levels */
@@ -49,6 +67,8 @@ export interface LLMResponse {
   text: string;
   provider: LLMProvider;
   model: string;
+  /** Which mind was asked for, which mind answered, and how they diverged. */
+  serving: ServingIdentity;
   metadata: {
     generationTime: number;
     tokenCount?: number;
@@ -143,7 +163,7 @@ export interface SimpleGenerateParams {
 /** Streaming event types */
 export type StreamEvent =
   | { type: 'text_delta'; text: string }
-  | { type: 'done'; metadata: LLMResponse['metadata'] };
+  | { type: 'done'; metadata: LLMResponse['metadata']; serving: ServingIdentity };
 
 export class MultiLLMProvider {
   private anthropic?: Anthropic;
@@ -215,7 +235,13 @@ export class MultiLLMProvider {
             error,
             startTime,
           });
-          return await this.generateClaude(systemPrompt, userInput, config, startTime, messages);
+          return this.markDivergence(
+            await this.generateClaude(systemPrompt, userInput, config, startTime, messages),
+            'ollama',
+            config.model,
+            causeOf(error),
+            `level=${level}`
+          );
         }
         throw error;
       }
@@ -240,7 +266,13 @@ export class MultiLLMProvider {
         // Graceful degradation: Fallback to Ollama if Claude fails
         console.log('[LLMProvider] Falling back to Ollama...');
         try {
-          return await this.generateOllama(systemPrompt, userInput, config, startTime);
+          return this.markDivergence(
+            await this.generateOllama(systemPrompt, userInput, config, startTime),
+            'anthropic',
+            config.model,
+            causeOf(error),
+            `level=${level}`
+          );
         } catch (ollamaError) {
           console.error('Ollama fallback also failed:', ollamaError);
           throw error; // Throw original Claude error
@@ -250,7 +282,13 @@ export class MultiLLMProvider {
 
     // If Claude not configured, try Ollama
     console.log('Claude not configured, using Ollama...');
-    return await this.generateOllama(systemPrompt, userInput, config, startTime);
+    return this.markDivergence(
+      await this.generateOllama(systemPrompt, userInput, config, startTime),
+      config.provider,
+      config.model,
+      'claude_not_configured',
+      `level=${level}`
+    );
   }
 
   /**
@@ -350,6 +388,7 @@ export class MultiLLMProvider {
       text: text.trim(),
       provider: 'ollama',
       model: config.model,
+      serving: selfServing('ollama', config.model),
       metadata: {
         generationTime,
         tokenCount: evalCount
@@ -428,6 +467,7 @@ export class MultiLLMProvider {
           text: response.text,
           provider: 'anthropic',
           model: claudeModel,
+          serving: selfServing('anthropic', claudeModel),
           metadata: {
             generationTime,
             tokenCount: message.usage.output_tokens,
@@ -470,6 +510,56 @@ export class MultiLLMProvider {
    *
    * Grep in prod:  docker logs maia-sovereign | grep 'llm.sovereignty_fallback'
    */
+  /**
+   * Re-stamp a response that was served by a different mind than the one asked
+   * for, and emit the structured event for the capability direction.
+   *
+   * The sovereignty direction (local → cloud) already has
+   * logSovereigntyFallback and keeps its existing tag, so ops greps do not
+   * break. The capability direction (cloud → local) had no structured event at
+   * all before this: it traced only to a console.log, which meant the exact
+   * substitution the degradation ladder governs was the one substitution
+   * nothing counted.
+   *
+   * Observability only. No behaviour changes, and nothing here reaches a
+   * member-facing surface.
+   */
+  private markDivergence(
+    response: LLMResponse,
+    intendedProvider: LLMProvider,
+    intendedModel: string,
+    reason: string,
+    tierOrLevel: string
+  ): LLMResponse {
+    const divergence = classifyDivergence(intendedProvider, response.provider);
+    if (divergence === 'none') return response;
+
+    if (divergence === 'capability') {
+      console.warn(
+        JSON.stringify({
+          tag: 'llm.capability_degradation',
+          intended_provider: intendedProvider,
+          intended_model: intendedModel,
+          served_provider: response.provider,
+          served_model: response.model,
+          tier_or_level: tierOrLevel,
+          reason,
+        })
+      );
+    }
+
+    return {
+      ...response,
+      serving: servingIdentityFor({
+        intendedProvider,
+        intendedModel,
+        servedProvider: response.provider,
+        servedModel: response.model,
+        reason,
+      }),
+    };
+  }
+
   private logSovereigntyFallback(args: {
     path: 'generate' | 'generateSimple';
     tierOrLevel: string;
@@ -579,7 +669,13 @@ export class MultiLLMProvider {
             error,
             startTime,
           });
-          return await this.generateClaude(systemPrompt, '', config, startTime, messages);
+          return this.markDivergence(
+            await this.generateClaude(systemPrompt, '', config, startTime, messages),
+            'ollama',
+            config.model,
+            causeOf(error),
+            tier
+          );
         }
         throw error;
       }
@@ -601,7 +697,13 @@ export class MultiLLMProvider {
 
         console.log('[LLMProvider] Falling back to Ollama...');
         try {
-          return await this.generateOllama(systemPrompt, messages[messages.length - 1]?.content ?? '', config, startTime);
+          return this.markDivergence(
+            await this.generateOllama(systemPrompt, messages[messages.length - 1]?.content ?? '', config, startTime),
+            'anthropic',
+            config.model,
+            causeOf(error),
+            tier
+          );
         } catch (ollamaError) {
           console.error('Ollama fallback also failed:', ollamaError);
           throw error;
@@ -610,7 +712,13 @@ export class MultiLLMProvider {
     }
 
     console.log('Claude not configured, using Ollama...');
-    return await this.generateOllama(systemPrompt, messages[messages.length - 1]?.content ?? '', config, startTime);
+    return this.markDivergence(
+      await this.generateOllama(systemPrompt, messages[messages.length - 1]?.content ?? '', config, startTime),
+      config.provider,
+      config.model,
+      this.anthropic ? 'claude_not_selected' : 'claude_not_configured',
+      tier
+    );
   }
 
   /**
@@ -628,6 +736,9 @@ export class MultiLLMProvider {
     const startTime = Date.now();
 
     console.info(`[LLMProvider] stream tier=${tier} provider=${config.provider} model=${config.model}`);
+
+    /** Cause of a failed Claude stream, carried into the Ollama fallback's serving identity. */
+    let streamFailure: string | undefined;
 
     if (this.anthropic && config.provider === 'anthropic') {
       try {
@@ -658,22 +769,34 @@ export class MultiLLMProvider {
             generationTime: Date.now() - startTime,
             tokenCount,
           },
+          serving: selfServing('anthropic', config.model),
         };
         return;
       } catch (error) {
         console.error('[LLMProvider] Stream failed, falling back to non-streaming:', error);
+        streamFailure = causeOf(error);
       }
     }
 
-    // Fallback: non-streaming full response yielded as single delta
-    const response = await this.generateOllama(
-      systemPrompt,
-      messages[messages.length - 1]?.content ?? '',
-      config,
-      startTime
+    // Fallback: non-streaming full response yielded as single delta.
+    // When the tier asked for Claude and Ollama answers, that is a capability
+    // degradation and is stamped as one — previously this path yielded a `done`
+    // event carrying no serving identity at all, so a degraded stream was
+    // indistinguishable from a healthy one at the boundary.
+    const response = this.markDivergence(
+      await this.generateOllama(
+        systemPrompt,
+        messages[messages.length - 1]?.content ?? '',
+        config,
+        startTime
+      ),
+      config.provider,
+      config.model,
+      streamFailure ?? (this.anthropic ? 'stream_unavailable' : 'claude_not_configured'),
+      tier
     );
     yield { type: 'text_delta', text: response.text };
-    yield { type: 'done', metadata: response.metadata };
+    yield { type: 'done', metadata: response.metadata, serving: response.serving };
   }
 }
 

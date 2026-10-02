@@ -18,7 +18,7 @@ const TRANSPORTS = Object.freeze({
   QWEN: Object.freeze({
     provider_id: 'qwen-local',
     model_id: 'qwen3-coder:30b',
-    adapter_id: 'opencode',
+    adapter_id: 'ollama-direct',
     transport_posture: 'local',
     execution_mode: 'automatic',
     response_budget_profile_id: 'LOCAL_QWEN_EXISTING_ADAPTER',
@@ -28,7 +28,7 @@ const TRANSPORTS = Object.freeze({
   GPT_OSS: Object.freeze({
     provider_id: 'gpt-oss-local',
     model_id: 'gpt-oss:20b',
-    adapter_id: 'opencode',
+    adapter_id: 'ollama-direct',
     transport_posture: 'local',
     execution_mode: 'automatic',
     response_budget_profile_id: 'LOCAL_GPT_OSS_EXISTING_ADAPTER',

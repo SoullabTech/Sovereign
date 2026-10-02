@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Retreat Support Service - Real-time participant management
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID as uuidv4 } from "node:crypto";
 import { logger } from "../utils/logger";
 import { soullabFounderAgent } from "../core/agents/soullabFounderAgent";
 import { PersonalOracleAgent } from "../core/agents/adjusterAgent";

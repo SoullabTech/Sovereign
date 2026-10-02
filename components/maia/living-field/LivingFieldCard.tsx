@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { apiFetch } from '@/lib/http/apiBase'
 import type { LivingField, FieldVersion, FieldSource, ParticipantConsent } from './types'
 import { LivingFieldDetailPanel } from './LivingFieldDetailPanel'
 
@@ -28,28 +29,31 @@ interface DetailData {
 
 interface Props {
   field: LivingField
-  memberId: string
 }
 
-export function LivingFieldCard({ field, memberId }: Props) {
+export function LivingFieldCard({ field }: Props) {
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<DetailData | null>(null)
   const [loading, setLoading] = useState(false)
+  const [openError, setOpenError] = useState('')
 
   async function openDetail() {
+    if (loading) return
+    setOpenError('')
     if (!detail) {
       setLoading(true)
       try {
-        const res = await fetch(`/api/maia/living-field/${field.field_key}`, {
-          headers: { 'x-member-id': memberId },
-        })
-        if (res.ok) {
-          const data = await res.json()
-          setDetail({ versions: data.versions, sources: data.sources, consents: data.consents })
-        }
+        const res = await apiFetch(`/api/maia/living-field/${field.field_key}`)
+        if (!res.ok) throw new Error('detail unavailable')
+        const data = await res.json()
+        setDetail({ versions: data.versions, sources: data.sources, consents: data.consents })
+        setOpen(true)
+      } catch {
+        setOpenError('Couldn’t open this dimension just now. Try again.')
       } finally {
         setLoading(false)
       }
+      return
     }
     setOpen(true)
   }
@@ -68,8 +72,13 @@ export function LivingFieldCard({ field, memberId }: Props) {
 
   return (
     <>
-      <div className="group relative rounded-xl bg-stone-900 border border-stone-800 hover:border-stone-700 p-4 transition-colors cursor-pointer"
-           onClick={openDetail}>
+      <button
+        type="button"
+        className="group relative w-full min-h-[176px] rounded-xl bg-stone-900 border border-stone-800 hover:border-stone-700 p-4 text-left transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600/60"
+        onClick={() => void openDetail()}
+        aria-label={`Open ${field.label} dimension`}
+        aria-busy={loading}
+      >
         {/* Status dot */}
         <span
           className={`absolute top-3 right-3 w-2 h-2 rounded-full ${dotClass}`}
@@ -86,12 +95,12 @@ export function LivingFieldCard({ field, memberId }: Props) {
           <p className="text-teal-200/70 text-sm leading-relaxed">
             {gathered} {gathered === 1 ? 'reflection has' : 'reflections have'} gathered here.
             <span className="block text-stone-500 text-xs mt-1">
-              Nothing written yet — draft with MAIA when you're ready.
+              Ready to be given words when the time feels right.
             </span>
           </p>
         ) : (
-          <p className="text-stone-600 text-sm italic">
-            Not enough has gathered yet. We can begin.
+          <p className="text-stone-500 text-sm leading-relaxed">
+            This dimension is ready for whatever begins to matter here.
           </p>
         )}
 
@@ -105,18 +114,14 @@ export function LivingFieldCard({ field, memberId }: Props) {
             )}
           </div>
 
-          {/* Hover actions */}
-          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => { e.stopPropagation(); openDetail() }}
-              disabled={loading}
-              className="text-stone-400 hover:text-stone-200 text-xs"
-            >
-              {loading ? '…' : 'Open'}
-            </button>
-          </div>
+          <span className="text-stone-400 group-hover:text-stone-200 text-xs font-medium">
+            {loading ? 'Opening…' : 'Open dimension →'}
+          </span>
         </div>
-      </div>
+        {openError && (
+          <p className="mt-3 text-xs text-amber-400" role="status">{openError}</p>
+        )}
+      </button>
 
       {open && detail && (
         <LivingFieldDetailPanel
@@ -124,7 +129,6 @@ export function LivingFieldCard({ field, memberId }: Props) {
           versions={detail.versions}
           sources={detail.sources}
           consents={detail.consents}
-          memberId={memberId}
           onClose={() => setOpen(false)}
         />
       )}

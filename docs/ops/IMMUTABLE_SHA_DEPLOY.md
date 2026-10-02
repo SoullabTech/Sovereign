@@ -45,7 +45,7 @@ build now passes through it, in four moves that map onto the design options:
 | **resolve**     | The operator names a commit (explicit SHA arg). We verify it is a real commit **object** — `git rev-parse --verify <sha>^{commit}` — independent of what is checked out. | 1 + 2* |
 | **materialize** | `git archive <SHA> \| tar -x` extracts that commit's tree into a fresh isolated dir; that dir becomes the Docker build context (`MAIA_BUILD_CONTEXT`). | 4 (⊇ 3) |
 | **stamp**       | `GIT_COMMIT` is exported from the asserted SHA, never a re-resolution of HEAD. | 5 |
-| **verify**      | After the container swap, assert the running container's baked `GIT_COMMIT` equals the asserted SHA — **fail-closed**: a mismatch aborts the deploy **before migrations/smoke** on every path (`deploy`, `update`, `deploy-maia`) and points at `rollback`. | 5 |
+| **verify**      | Verify the built image before any role-tag promotion, then verify the running container after cutover. The zero-drift quick lane is split into `prepare-maia` (build/freeze only) and separately authorized `cutover-maia` (re-prove custody, move role tags, recreate reader). | 5 |
 
 \* *Option 2 as an **existence assertion**, not a `HEAD == SHA` check. A hard
 "refuse if HEAD differs" would re-couple the deploy to the very checkout we are
@@ -87,11 +87,14 @@ what is being built.
 ## Usage
 
 ```bash
-# Quick maia-only rebuild — name the fetched remote tip (no checkout of the
-# shared working tree at all):
+# Zero-drift reader preparation — build/freeze exact candidate, NO live recreate:
 ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
   && git fetch origin clean-main-no-secrets \
-  && scripts/pre-deploy-gate.sh deploy-maia "$(git rev-parse --short origin/clean-main-no-secrets)"'
+  && scripts/pre-deploy-gate.sh prepare-maia "$(git rev-parse --short origin/clean-main-no-secrets)"'
+
+# Separately authorized cutover of that exact prepared candidate:
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
+  && scripts/pre-deploy-gate.sh cutover-maia "<same-short-SHA>"'
 
 # Full all-services deploy of a named commit:
 scripts/deploy-production.sh deploy <SHA>

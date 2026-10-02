@@ -12,10 +12,11 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Plus, Lightbulb, MessageSquare, CheckCircle2, Wind, Clock, Trash2 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { HouseRoomThreshold } from '@/components/house/HouseRoomThreshold';
 
 interface IdeaListItem {
   id: string;
@@ -33,6 +34,8 @@ interface IdeaListItem {
 
 export default function IdeasListPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnToHouse = searchParams?.get('from') === 'house';
   const [ideas, setIdeas] = useState<IdeaListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -102,7 +105,7 @@ export default function IdeasListPage() {
       if (!res.ok) return;
       const data = await res.json();
       if (data.success && data.idea) {
-        router.push(`/maia/ideas/${data.idea.id}`);
+        router.push(`/maia/ideas/${data.idea.id}${returnToHouse ? '?from=house' : ''}`);
       }
     } catch (err) {
       console.error('[ideas/list] create failed:', err);
@@ -117,16 +120,22 @@ export default function IdeasListPage() {
       className="min-h-screen bg-[#0b0f1c] text-white"
     >
       {/* Return threshold */}
-      <div className="p-6">
-        <button
-          onClick={() => router.push('/maia')}
-          className="text-white/30 hover:text-white/60 transition-colors duration-200 flex items-center gap-2 text-sm"
-          aria-label="Return to MAIA"
-        >
-          <ArrowLeft size={16} />
-          <span>MAIA</span>
-        </button>
-      </div>
+      {returnToHouse ? (
+        <div className="px-6 pt-4">
+          <HouseRoomThreshold room="IDEAS" />
+        </div>
+      ) : (
+        <div className="p-6">
+          <button
+            onClick={() => router.push('/maia')}
+            className="text-white/30 hover:text-white/60 transition-colors duration-200 flex items-center gap-2 text-sm"
+            aria-label="Return to MAIA"
+          >
+            <ArrowLeft size={16} />
+            <span>MAIA</span>
+          </button>
+        </div>
+      )}
 
       {/* Header */}
       <div className="max-w-2xl mx-auto px-6 pb-8">
@@ -212,7 +221,7 @@ export default function IdeasListPage() {
             {ideas.map((idea) => (
               <li key={idea.id} className="relative group">
                 <button
-                  onClick={() => router.push(`/maia/ideas/${idea.id}`)}
+                  onClick={() => router.push(`/maia/ideas/${idea.id}${returnToHouse ? '?from=house' : ''}`)}
                   className="w-full p-4 rounded-xl bg-stone-900/40 hover:bg-stone-900/70 border border-stone-800/50 hover:border-amber-500/30 transition-all text-left"
                 >
                   <div className="flex items-start justify-between gap-4">

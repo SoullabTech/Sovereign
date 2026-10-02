@@ -12,7 +12,7 @@ import { z } from 'zod';
 // ENUMS & CONSTANTS
 // =============================================================================
 
-export const SOURCE_TYPES = ['chat', 'voice', 'transcript', 'note', 'journal'] as const;
+export const SOURCE_TYPES = ['chat', 'voice', 'transcript', 'note', 'journal', 'divination', 'astrology'] as const;
 export type SourceType = (typeof SOURCE_TYPES)[number];
 
 export const ELEMENTS = ['fire', 'water', 'earth', 'air', 'aether'] as const;

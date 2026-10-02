@@ -1,8 +1,8 @@
 import { AccountSettings } from '@/components/account/AccountSettings';
 
 export const metadata = {
-  title: 'Account Settings | MAIA',
-  description: 'Configure your default preferences for MAIA sessions',
+  title: 'Account Settings | Soullab',
+  description: 'Configure your Soullab account and member preferences',
 };
 
 export default function AccountSettingsPage() {

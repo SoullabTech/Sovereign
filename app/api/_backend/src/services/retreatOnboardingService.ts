@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Switzerland Retreat Onboarding Service
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID as uuidv4 } from "node:crypto";
 import { soullabFounderAgent } from "../core/agents/soullabFounderAgent";
 import { PersonalOracleAgent } from "../core/agents/adjusterAgent";
 import {

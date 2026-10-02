@@ -13,6 +13,11 @@ import {
   deriveSessionContinuity,
   formatSessionContinuityForPrompt,
 } from '@/lib/maia/continuity/sessionContinuity';
+import {
+  buildSessionThreadSpine,
+  continuityExcerpt,
+  formatSessionThreadSpine,
+} from '@/lib/maia/continuity/sessionThreadSpine';
 
 /**
  * AIN-CONTEXT-01 · A6 — the DEEP consultation's FINAL history aperture, in exchanges.
@@ -22,6 +27,27 @@ import {
 const DEEP_CONSULTATION_APERTURE = 5;
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
+import { assessCrisis, CRISIS_ADDENDUM, type CrisisAssessment } from '../safety/crisisAssessment';
+
+/**
+ * SAFETY-CRISIS-01: append the server-authored crisis safety context, if this
+ * turn has one, to the system prompt actually sent to the model. Applied at the
+ * send site of every tier that can serve a crisis turn (FAST, CORE, and the CORE
+ * repair regeneration). DEEP is not listed because getMaiaResponse routes a turn
+ * with any crisis signal away from DEEP: the DEEP prompt builder does not carry
+ * addenda (ADDENDA_CHANNEL_DIVERGENCE_2026-05-24 §II.B).
+ */
+function withCrisisSafety(prompt: string, meta: Record<string, unknown>): string {
+  const addendum = meta.crisisSafetyAddendum;
+  return typeof addendum === 'string' && addendum.length > 0 ? `${prompt}\n\n${addendum}` : prompt;
+}
+import {
+  degradedNonModelTruth,
+  servedNonModelTruth,
+  unresolvedIntent,
+  unresolvedServingTruth,
+  type LiveServingTruth,
+} from '../ai/liveServingTruth';
 import { renderTurnForCognition, type CanonicalTurn } from '../maia/canonical-turn';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
@@ -599,7 +625,8 @@ export type MaiaResponse = {
   processingProfile?: ProcessingProfile;
   processingTimeMs?: number;
   audio?: Buffer;
-  provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
+  provider?: ProviderMeta;  // 🔮 Legacy served-provider audit field
+  servingTruth?: LiveServingTruth; // R2: routing intent + actual serving outcome
   stateVector?: StateVector;                  // 🌀 State vector reading from this turn
   practiceRecommendation?: PracticeRecommendation;  // 🌿 Practice recommendation from state vector
   metadata?: {
@@ -638,6 +665,13 @@ type MaiaRequest = {
    * Absent → getMaiaResponse computes one at the shared boundary.
    */
   orientationContract?: OrientationContract | null;
+  /**
+   * SAFETY-CRISIS-01: the route's crisis assessment for this turn, including an
+   * escalation from a confirmed safety check-in that `input` alone cannot show.
+   * Typed and top-level, never in `meta`, so a client cannot forge it. Absent →
+   * getMaiaResponse assesses `input` itself.
+   */
+  crisisAssessment?: CrisisAssessment;
   /**
    * FOCUS-PRODUCER-01 — the writers_studio canonical participation path.
    *
@@ -699,8 +733,16 @@ async function validateAndRepairResponse(
   draftResponse: string,
   meta: Record<string, unknown>,
   processingPath: 'FAST' | 'CORE' | 'DEEP',
-  regenerateFn?: (repairPrompt: string) => Promise<string>
-): Promise<{ response: string; validation: SocraticValidationResult | null; regenerated: boolean }> {
+  regenerateFn?: (repairPrompt: string) => Promise<
+    string | { text: string; provider?: ProviderMeta; servingTruth?: LiveServingTruth }
+  >
+): Promise<{
+  response: string;
+  validation: SocraticValidationResult | null;
+  regenerated: boolean;
+  regeneratedProvider?: ProviderMeta;
+  regeneratedServingTruth?: LiveServingTruth;
+}> {
   try {
     // Extract context for validation
     const atlas = (meta as any).atlasContext as AtlasResult | undefined;
@@ -728,12 +770,21 @@ async function validateAndRepairResponse(
     // If regeneration requested and function provided, attempt repair
     let finalResponse = draftResponse;
     let wasRegenerated = false;
+    let regeneratedProvider: ProviderMeta | undefined;
+    let regeneratedServingTruth: LiveServingTruth | undefined;
 
     if (validation.decision === 'REGENERATE' && validation.repairPrompt && regenerateFn) {
       console.log(`🔧 [Socratic Validator ${processingPath}] Regenerating with repair prompt...`);
 
       try {
-        finalResponse = await regenerateFn(validation.repairPrompt);
+        const regenerated = await regenerateFn(validation.repairPrompt);
+        if (typeof regenerated === 'string') {
+          finalResponse = regenerated;
+        } else {
+          finalResponse = regenerated.text;
+          regeneratedProvider = regenerated.provider;
+          regeneratedServingTruth = regenerated.servingTruth;
+        }
         wasRegenerated = true;
 
         console.log(`✅ [Socratic Validator ${processingPath}] Regeneration complete`);
@@ -775,7 +826,13 @@ async function validateAndRepairResponse(
       }
     })();
 
-    return { response: finalResponse, validation, regenerated: wasRegenerated };
+    return {
+      response: finalResponse,
+      validation,
+      regenerated: wasRegenerated,
+      regeneratedProvider,
+      regeneratedServingTruth,
+    };
   } catch (error) {
     console.error(`❌ [Socratic Validator ${processingPath}] Validation failed:`, error);
     return { response: draftResponse, validation: null, regenerated: false };
@@ -835,7 +892,7 @@ async function fastPathResponse(
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
   allSessionExchanges: readonly DisplacedExchange[] = [],
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; servingTruth?: LiveServingTruth }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
   // 🧬 CONSCIOUSNESS POLICY (lightweight for FAST path)
@@ -898,7 +955,7 @@ async function fastPathResponse(
       const fastAperture = conversationHistory.slice(-3);
       representedCurrentSessionExchanges = fastAperture.length;
       recentContext = fastAperture.map(ex =>
-        `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
+        `User: ${continuityExcerpt(ex.userMessage, 480)}\nMAIA: ${continuityExcerpt(ex.maiaResponse, 480)}`
       ).join('\n');
     }
   } else if (conversationHistory.length > 0) {
@@ -906,7 +963,7 @@ async function fastPathResponse(
     const fastAperture = conversationHistory.slice(-3);
     representedCurrentSessionExchanges = fastAperture.length;
     recentContext = fastAperture.map(ex =>
-      `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
+      `User: ${continuityExcerpt(ex.userMessage, 480)}\nMAIA: ${continuityExcerpt(ex.maiaResponse, 480)}`
     ).join('\n');
   } else if (effectiveUserId) {
     // New session - load cross-session turns for continuity
@@ -1133,8 +1190,17 @@ ${ainKnowledgeContext}\n`
     allSessionExchanges,
     apertureCount: representedCurrentSessionExchanges,
   });
+  const fastSpine = buildSessionThreadSpine({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: representedCurrentSessionExchanges,
+    excludeKeys: new Set(fastRecovery.recovered.map((e) => e.exchangeKey)),
+  });
+  const fastSpineBlock = formatSessionThreadSpine(fastSpine);
   const fastRepresentedTotal =
-    representedCurrentSessionExchanges + fastRecovery.recovered.length;
+    representedCurrentSessionExchanges +
+    fastRecovery.recovered.length +
+    fastSpine.length;
 
   const fastContinuity = deriveSessionContinuity({
     durableCompletedExchanges,
@@ -1142,9 +1208,10 @@ ${ainKnowledgeContext}\n`
   });
   const fastContinuityBlock = formatSessionContinuityForPrompt(fastContinuity);
   const fastRecoveredPrefix = fastRecovery.block ? `${fastRecovery.block}\n\n` : '';
+  const fastSpinePrefix = fastSpineBlock ? `${fastSpineBlock}\n\n` : '';
   const fastContinuityPrefix = fastContinuityBlock
-    ? `${fastContinuityBlock}\n\n${fastRecoveredPrefix}`
-    : fastRecoveredPrefix;
+    ? `${fastContinuityBlock}\n\n${fastRecoveredPrefix}${fastSpinePrefix}`
+    : `${fastRecoveredPrefix}${fastSpinePrefix}`;
   if (fastRecovery.recovered.length > 0) {
     console.log('🧵 [L1/FAST] recovered displaced exchanges', {
       count: fastRecovery.recovered.length,
@@ -1490,6 +1557,14 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🚪 [FAST] Knowledge Gate addendum applied: source well modulation injected`);
   }
 
+  // 📓 JOURNAL ENCOUNTER: current kept entry + transient in-room conversation,
+  // resolved by the Journal server after ownership verification. This is current
+  // member-authored context, not cross-session recall.
+  const journalContextAddendum = (meta as any)?.journalContextAddendum as string | undefined;
+  if (journalContextAddendum) {
+    console.log(`📓 [FAST] Journal encounter context applied (${journalContextAddendum.length} chars)`);
+  }
+
   // 🕸️ MEMBER WEB: Patterns + session summaries + journals — the threads of the web
   const memberWebAddendum = (meta as any)?.memberWebAddendum as string | undefined;
   if (memberWebAddendum) {
@@ -1619,7 +1694,7 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${PLATFORM_KNOWLEDGE_ADDENDUM}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${teachingIntelligenceAddendum ? '\n\n' + teachingIntelligenceAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${divinationIntentAddendum ? '\n\n' + divinationIntentAddendum : ''}${divinationCastAddendum ? '\n\n' + divinationCastAddendum : ''}${divinationInterpretationAddendum ? '\n\n' + divinationInterpretationAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${journalContextAddendum ? '\n\n' + journalContextAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${teachingIntelligenceAddendum ? '\n\n' + teachingIntelligenceAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${divinationIntentAddendum ? '\n\n' + divinationIntentAddendum : ''}${divinationCastAddendum ? '\n\n' + divinationCastAddendum : ''}${divinationInterpretationAddendum ? '\n\n' + divinationInterpretationAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1673,8 +1748,8 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   }
 
   // Use single model call with complete MAIA intelligence stack
-  const { text: response, provider } = await generateText({
-    systemPrompt: baseSystemPrompt,
+  const { text: response, provider, servingTruth } = await generateText({
+    systemPrompt: withCrisisSafety(baseSystemPrompt, meta),
     userInput: contextPrompt,
     meta: {
       ...meta,
@@ -1706,7 +1781,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider };
+  return { response: validatedResponse, provider, servingTruth };
 }
 
 /**
@@ -1725,7 +1800,7 @@ async function corePathResponse(
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
   allSessionExchanges: readonly DisplacedExchange[] = [],
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; servingTruth?: LiveServingTruth }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
 
@@ -1906,19 +1981,25 @@ async function corePathResponse(
     allSessionExchanges,
     apertureCount: coreRepresentedCurrentSession,
   });
+  const coreSpine = buildSessionThreadSpine({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: coreRepresentedCurrentSession,
+    excludeKeys: new Set(coreRecovery.recovered.map((e) => e.exchangeKey)),
+  });
+  const coreSpineBlock = formatSessionThreadSpine(coreSpine);
   const coreRepresentedTotal =
-    coreRepresentedCurrentSession + coreRecovery.recovered.length;
+    coreRepresentedCurrentSession +
+    coreRecovery.recovered.length +
+    coreSpine.length;
 
   const coreContinuity = deriveSessionContinuity({
     durableCompletedExchanges,
     representedExchanges: coreRepresentedTotal,
   });
   const coreContinuityBlockBase = formatSessionContinuityForPrompt(coreContinuity);
-  const coreContinuityBlock = coreRecovery.block
-    ? (coreContinuityBlockBase
-        ? `${coreContinuityBlockBase}\n\n${coreRecovery.block}`
-        : coreRecovery.block)
-    : coreContinuityBlockBase;
+  const coreContinuityParts = [coreContinuityBlockBase, coreRecovery.block, coreSpineBlock].filter(Boolean);
+  const coreContinuityBlock = coreContinuityParts.join('\n\n');
   if (coreRecovery.recovered.length > 0) {
     console.log('🧵 [L1/CORE] recovered displaced exchanges', {
       count: coreRecovery.recovered.length,
@@ -1987,6 +2068,8 @@ async function corePathResponse(
     governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
     // 🎓 T8 current-turn teaching authority
     teachingIntelligenceAddendum: (meta as any)?.teachingIntelligenceAddendum as string | undefined,
+    // 📓 JOURNAL ENCOUNTER: current kept entry + transient conversation context
+    journalContextAddendum: (meta as any)?.journalContextAddendum as string | undefined,
     // 🕸️ MEMBER WEB: Patterns + session summaries + journals
     memberWebAddendum: (meta as any)?.memberWebAddendum as string | undefined,
     // 🌟 ASTROLOGY: Natal chart + cosmic weather context
@@ -2157,8 +2240,12 @@ The current user has not provided their name. Address them as "friend" or "there
     });
   }
 
-  const { text: response, provider: coreProvider } = await generateText({
-    systemPrompt: adaptivePrompt,
+  const {
+    text: response,
+    provider: coreProvider,
+    servingTruth: coreServingTruth,
+  } = await generateText({
+    systemPrompt: withCrisisSafety(adaptivePrompt, meta),
     userInput: input,
     meta: {
       ...meta,
@@ -2175,7 +2262,11 @@ The current user has not provided their name. Address them as "friend" or "there
   }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate with regeneration capability
-  let { response: validatedResponse } = await validateAndRepairResponse(
+  let {
+    response: validatedResponse,
+    regeneratedProvider,
+    regeneratedServingTruth,
+  } = await validateAndRepairResponse(
     sessionId,
     input,
     response,
@@ -2196,8 +2287,8 @@ The current user has not provided their name. Address them as "friend" or "there
 
       repairedPrompt = repairedPrompt + '\n\n' + repairPrompt;
 
-      const { text } = await generateText({
-        systemPrompt: repairedPrompt,
+      const regenerated = await generateText({
+        systemPrompt: withCrisisSafety(repairedPrompt, meta),
         userInput: input,
         meta: {
           ...meta,
@@ -2207,7 +2298,11 @@ The current user has not provided their name. Address them as "friend" or "there
           conversationProfile: conversationContext.profile
         }
       });
-      return text;
+      return {
+        text: regenerated.text,
+        provider: regenerated.provider,
+        servingTruth: regenerated.servingTruth,
+      };
     }
   );
 
@@ -2218,7 +2313,11 @@ The current user has not provided their name. Address them as "friend" or "there
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider: coreProvider };
+  return {
+    response: validatedResponse,
+    provider: regeneratedProvider ?? coreProvider,
+    servingTruth: regeneratedServingTruth ?? coreServingTruth,
+  };
 }
 
 /**
@@ -2236,7 +2335,14 @@ async function deepPathResponse(
   // AIN-CONTEXT-01 · A6 — completed exchanges durably on record for THIS session,
   // in the SAME unit as conversationHistory (both from one pairing). R2.
   durableCompletedExchanges: number = conversationHistory.length,
-): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta }> {
+  allSessionExchanges: readonly DisplacedExchange[] = [],
+): Promise<{
+  response: string;
+  consciousnessData?: any;
+  socraticValidation?: any;
+  provider?: ProviderMeta;
+  servingTruth?: LiveServingTruth;
+}> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
 
   // 🧬 CONSCIOUSNESS POLICY (full depth for DEEP path)
@@ -2500,22 +2606,44 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
   const deepRepresentedCurrentSession = conversationHistory.length > 0
     ? Math.min(DEEP_CONSULTATION_APERTURE, effectiveHistory.length)
     : 0;
+  const deepRecovery = recoverForTier({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: deepRepresentedCurrentSession,
+  });
+  const deepSpine = buildSessionThreadSpine({
+    utterance: input,
+    allSessionExchanges,
+    apertureCount: deepRepresentedCurrentSession,
+    excludeKeys: new Set(deepRecovery.recovered.map((e) => e.exchangeKey)),
+  });
+  const deepSpineBlock = formatSessionThreadSpine(deepSpine);
+  const deepRepresentedTotal =
+    deepRepresentedCurrentSession +
+    deepRecovery.recovered.length +
+    deepSpine.length;
   const deepContinuity = deriveSessionContinuity({
     durableCompletedExchanges,
-    representedExchanges: deepRepresentedCurrentSession,
+    representedExchanges: deepRepresentedTotal,
   });
-  const deepContinuityBlock = formatSessionContinuityForPrompt(deepContinuity);
+  const deepContinuityBlockBase = formatSessionContinuityForPrompt(deepContinuity);
+  const deepContinuityBlock = [deepContinuityBlockBase, deepRecovery.block, deepSpineBlock]
+    .filter(Boolean)
+    .join('\n\n');
   console.log('🧭 [A6/DEEP] session continuity', {
     depth: deepContinuity.depth,
     represented: deepContinuity.represented,
     absent: deepContinuity.absent,
     unit: deepContinuity.unit,
+    recovered: deepRecovery.recovered.length,
+    spine: deepSpine.length,
   });
 
   // Build enhanced consciousness context
   const consciousnessContext: ConsciousnessContext = {
     sessionId,
     userId: userId ?? sessionId,  // prefer real userId, fallback to sessionId only if absent
+    sessionContinuityAddendum: deepContinuityBlock || undefined,
     conversationHistory: effectiveHistory,
     currentDepth: depthFromRelationship(conversationContext.profile.relationshipDepth),
     elementalResonance: elementalTrendToResonance(conversationContext.profile.elementalTrend),
@@ -2524,6 +2652,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     metaAwareness: conversationContext.profile.conversationPhase === 'transcending' || conversationContext.profile.dominantElement === 'aether',
     governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
     teachingIntelligenceAddendum: (meta as any)?.teachingIntelligenceAddendum as string | undefined,
+    journalContextAddendum: (meta as any)?.journalContextAddendum as string | undefined,
   };
 
   // STEP 1: MAIA generates initial response using local consciousness processing
@@ -2595,6 +2724,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // T8 is instruction, not source evidence, so it participates on both local
         // and consultation stages without duplicating source content.
         (meta as any)?.teachingIntelligenceAddendum,
+        (meta as any)?.journalContextAddendum,
         (meta as any)?.conversationalRecallAddendum,
         (meta as any)?.episodicRecallAddendum,
         (meta as any)?.atomsAddendum,
@@ -2679,7 +2809,12 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
   }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate with full regeneration capability
-  const { response: validatedResponse, validation } = await validateAndRepairResponse(
+  const {
+    response: validatedResponse,
+    validation,
+    regeneratedProvider,
+    regeneratedServingTruth,
+  } = await validateAndRepairResponse(
     sessionId,
     input,
     finalResponse,
@@ -2733,6 +2868,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         governedKnowledgeAddendum: (meta as any)?.governedKnowledgeAddendum as string | undefined,
         // 🎓 T8 current-turn teaching authority
         teachingIntelligenceAddendum: (meta as any)?.teachingIntelligenceAddendum as string | undefined,
+        // 📓 JOURNAL ENCOUNTER: current kept entry + transient conversation context
+        journalContextAddendum: (meta as any)?.journalContextAddendum as string | undefined,
         // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
         consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
         // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
@@ -2773,7 +2910,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         }
       }
 
-      const { text } = await generateText({
+      const regenerated = await generateText({
         systemPrompt: repairedPrompt + '\n\n' + repairPrompt,
         userInput: input,
         meta: {
@@ -2785,7 +2922,11 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
           consciousnessDepth: 'full'
         }
       });
-      return text;
+      return {
+        text: regenerated.text,
+        provider: regenerated.provider,
+        servingTruth: regenerated.servingTruth,
+      };
     }
   );
 
@@ -2816,12 +2957,17 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     },
     // DEEP path uses consciousnessWrapper which doesn't yet track provider
     // Explicit placeholder for audit completeness (not undefined)
-    provider: {
+    provider: regeneratedProvider ?? {
       provider: 'unknown',
       model: 'consciousness-wrapper',
       mode: 'full',
       reason: 'provider_not_threaded_in_deep_path',
-    } as ProviderMeta
+    } as ProviderMeta,
+    servingTruth: regeneratedServingTruth ?? unresolvedServingTruth({
+      routingContract: 'deep_wrapper',
+      intended: unresolvedIntent('deep_provider_not_threaded'),
+      reason: 'provider_not_threaded_in_deep_path',
+    }),
   };
 }
 
@@ -2937,6 +3083,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   // H3: the Writer lane carries its already-resolved posture; every other caller
   // resolves its own exactly as before.
   const turnPosture = writerStudio?.posture ?? TurnPosture.resolve(meta);
+  // 🆘 SAFETY-CRISIS-01: assess the member's own words on the server. The result
+  // ALWAYS overwrites `meta.crisisSafetyAddendum`, so a client cannot supply,
+  // suppress or replace safety context through the request body (PBR-001). Pure,
+  // in-memory, content-free: nothing here is logged or persisted.
+  const crisisAssessment = req.crisisAssessment ?? assessCrisis(input);
+  (meta as Record<string, unknown>).crisisSafetyAddendum =
+    crisisAssessment.tier === 'none' ? undefined : CRISIS_ADDENDUM[crisisAssessment.tier];
   if (writerStudio) {
     // The legacy tail reads `meta.sanctuary` directly. Deriving it from the one
     // trusted posture keeps both readings identical; it can only ever make the
@@ -3112,7 +3265,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             return {
               text,
               processingProfile: 'FAST',
-              processingTimeMs: Date.now() - startTime
+              processingTimeMs: Date.now() - startTime,
+              servingTruth: servedNonModelTruth({
+                routingContract: 'unknown',
+                intended: unresolvedIntent('provider_routing_not_entered'),
+                subsystem: 'field_safety',
+                domain: 'local',
+                reason: 'field_safety_refusal',
+              }),
             };
           }
 
@@ -3405,7 +3565,10 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       sessionId: userId ? undefined : sessionId, // Fallback to sessionId if no userId
       // NOTE: atlasContext removed - not yet in router interface (future: elemental routing)
     });
-    const processingProfile = routerResult.profile;
+    // 🆘 SAFETY-CRISIS-01: a turn with any crisis signal is never served by DEEP,
+    // whose prompt builder does not carry the safety context. CORE does.
+    const processingProfile =
+      crisisAssessment.tier !== 'none' && routerResult.profile === 'DEEP' ? 'CORE' : routerResult.profile;
 
     // Attach cognitive profile to meta for downstream services
     if (routerResult.meta?.cognitiveProfile) {
@@ -3419,6 +3582,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     let consciousnessData: any = null;
     // 🔮 Request-local provider tracking (not module-level - safe for serverless concurrency)
     let provider: ProviderMeta | undefined;
+    let servingTruth: LiveServingTruth | undefined;
     // 🧬 RCN tracking
     let rcnResult: MaiaRcnResult | null = null;
 
@@ -3475,6 +3639,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             text: rcnText,
             processingProfile: 'DEEP', // Report as DEEP for client compatibility
             processingTimeMs: Date.now() - startTime,
+            servingTruth: servedNonModelTruth({
+              routingContract: 'unknown',
+              intended: unresolvedIntent('provider_routing_bypassed_by_rcn'),
+              subsystem: 'rcn',
+              domain: 'local',
+              reason: 'high_confidence_rcn',
+            }),
             rcn: {
               used: true,
               intent: rcnResult.intent,
@@ -3564,6 +3735,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           loaded: m.divinationReadingsCount ?? 0,
           injected: !!(m.divinationIntentAddendum || m.divinationCastAddendum || m.divinationInterpretationAddendum),
         },
+        journalCurrent: !!m.journalContextAddendum,
         dreams: false,   // layer not wired
       };
       const evidenceProviders = [
@@ -3572,6 +3744,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         available.astrology && 'astrology',
         available.wuXing && 'wuXing',
         available.memberWeb && 'memberWeb',
+        available.journalCurrent && 'journalCurrent',
         available.knowledgeGate && 'knowledgeGate',
         available.memoryOrchestrator && 'memoryOrchestrator',
         available.episodic && 'episodicRecall',
@@ -3614,9 +3787,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         meta: { ...meta, currentUserMessage: input, canonicalTurnId: writerStudioTurn.turnId },
       });
       writerStudio?.onHandoff?.();
-      const { text: canonicalText, provider: canonicalProvider } = await canonicalGeneration;
+      const {
+        text: canonicalText,
+        provider: canonicalProvider,
+        servingTruth: canonicalServingTruth,
+      } = await canonicalGeneration;
       rawResponse = canonicalText;
       provider = canonicalProvider;
+      servingTruth = canonicalServingTruth;
       console.log(`🖋️ [MAIA/writers-studio] canonical turn ${writerStudioTurn.turnId} rendered at ${rendered.tier}: ${rendered.participantOrder.join(', ')}`);
     } else
     // Route to appropriate processing path (with optional MindContext for PFI integration)
@@ -3625,6 +3803,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
+        servingTruth = fastResult.servingTruth;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
@@ -3636,6 +3815,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
+        servingTruth = coreResult.servingTruth;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'CORE');
@@ -3644,10 +3824,11 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'DEEP': {
-        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges);
+        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
         provider = deepResult.provider; // May be undefined for DEEP path
+        servingTruth = deepResult.servingTruth;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'DEEP');
@@ -3660,6 +3841,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation, durableCompletedExchanges, allSessionExchanges);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
+        servingTruth = fallbackResult.servingTruth;
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
         }
@@ -4299,15 +4481,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           try {
             const rewriteSystem = AIN_NO_MENU_REWRITE_PROMPT;
 
-            const { text: rewritten } = await generateText({
+            const rewriteResult = await generateText({
               systemPrompt: rewriteSystem,
               userInput: `USER INPUT:\n${input}\n\nASSISTANT RESPONSE TO REWRITE:\n${text}`,
               meta: { ...meta, currentUserMessage: input, ainRewritePass: true }
             });
 
-            if (rewritten && rewritten.trim().length > 50) {
+            if (rewriteResult.text && rewriteResult.text.trim().length > 50) {
               console.log('[AIN SHAPE REWRITE] Menu mode response rewritten');
-              text = rewritten.trim();
+              text = rewriteResult.text.trim();
+              provider = rewriteResult.provider;
+              servingTruth = rewriteResult.servingTruth;
               // Recompute shape for accurate telemetry
               shape = assessAINResponseShape(input, text, shapeContext);
             }
@@ -4401,7 +4585,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       processingProfile,
       processingTimeMs,
       audio: audioResponse,
-      provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
+      provider,  // 🔮 Legacy served-provider audit field
+      servingTruth,
       stateVector: parsedStateVector || undefined,
       practiceRecommendation: practiceRec || undefined,
       metadata: hasMetadata ? responseMetadata : undefined
@@ -4417,8 +4602,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       text,
       processingProfile: 'FAST',
       processingTimeMs,
-      // 🔮 Sovereignty: error path has no provider info (don't inherit from previous request)
-      provider: undefined
+      // 🔮 Sovereignty: error path has no model provider service.
+      provider: undefined,
+      servingTruth: degradedNonModelTruth({
+        routingContract: 'unknown',
+        intended: unresolvedIntent('processing_failed_before_service_resolution'),
+        reason: 'maia_processing_failed',
+      }),
     };
   }
 }

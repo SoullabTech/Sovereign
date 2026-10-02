@@ -42,6 +42,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { CapsuleDTO, Element } from '@/lib/capsules/types';
 import DiscussWithMaia from './DiscussWithMaia';
+import { FacetOriginTrail } from '@/components/house/FacetOriginTrail';
 import { useMaiaPlace } from '@/components/maia/presence/MaiaPresence';
 
 // Element icons mapping.
@@ -488,6 +489,13 @@ export default function ReflectionDetail({ id }: ReflectionDetailProps) {
           )}
         </motion.div>
 
+        <FacetOriginTrail
+          targetFacet="reflections"
+          targetRefId={capsule.id}
+          className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm"
+          tone="light"
+        />
+
         {/* Source Excerpt (if available) */}
         {capsule.sourceExcerpt && (
           <motion.div
@@ -504,6 +512,28 @@ export default function ReflectionDetail({ id }: ReflectionDetailProps) {
             </div>
           </motion.div>
         )}
+
+        <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px]">
+          <span className="text-stone-400 uppercase tracking-[0.16em] text-[10px]">Carry this forward</span>
+          <a
+            href={`/changes?sourceFacet=reflections&sourceRefId=${encodeURIComponent(capsule.id)}&crossingId=reflection-name-as-change`}
+            className="text-stone-500 hover:text-[#5a7a6f] transition-colors"
+          >
+            Name a change →
+          </a>
+          <a
+            href={`/decisions/new?sourceFacet=reflections&sourceRefId=${encodeURIComponent(capsule.id)}&crossingId=reflection-consider-decision`}
+            className="text-stone-500 hover:text-[#5a7a6f] transition-colors"
+          >
+            Consider a decision →
+          </a>
+          <a
+            href={`/maia/anchor?from=house&sourceFacet=reflections&sourceRefId=${encodeURIComponent(capsule.id)}&crossingId=reflection-carry-today`}
+            className="text-stone-500 hover:text-[#5a7a6f] transition-colors"
+          >
+            Carry this with me today →
+          </a>
+        </div>
 
         {/* Bring it back into conversation — member act, nothing written */}
         <DiscussWithMaia capsule={capsule} />

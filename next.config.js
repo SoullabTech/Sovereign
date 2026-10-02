@@ -70,6 +70,52 @@ const nextConfig = {
   // Fix workspace root warning - set explicit output file tracing
   outputFileTracingRoot: __dirname,
 
+  // Desktop Cabin is an external-distribution artifact, not a repository
+  // snapshot. Dynamic fs paths can cause @vercel/nft to conservatively trace
+  // unrelated repo material. Keep the web build unchanged; only the explicit
+  // offline Cabin build excludes material that must never cross the package
+  // boundary. Runtime-required files must be moved to an admitted runtime
+  // location rather than widening this list.
+  ...(process.env.MAIA_CABIN_MODE === 'offline' ? {
+    outputFileTracingExcludes: {
+      '/*': [
+        './backups/**/*',
+        './artifacts/**/*',
+        './docs/**/*',
+        './scripts/**/*',
+        './database/**/*',
+        './data/ain/source/**/*',
+        './data/library-sources/**/*',
+        './data/sacred-texts/**/*',
+        './data/voice-training/**/*',
+        './books/**/*',
+        './Community-Commons/**/*',
+        './tests/**/*',
+        './**/__tests__/**/*',
+        './android/**/*',
+        './ios/**/*',
+        './desktop-app/**/*',
+        './jarvis-desktop/**/*',
+        './beta-deployment/**/*',
+        './community-pages-temp/**/*',
+        './mcp-servers/**/*',
+        './compact-companion/**/*',
+        './chess-tools/**/*',
+        './mobile/**/*',
+        './maia-android-debug*.apk',
+        './.git',
+        './.git/**/*',
+        './.env*',
+        './**/.env*',
+        './**/*.pem',
+        './**/*.p8',
+        './**/*.p12',
+        './.next/cache/**/*',
+        './.next/standalone/**/*',
+      ],
+    },
+  } : {}),
+
   // Progressive Web App optimizations
   reactStrictMode: false,
   compress: true,
@@ -359,21 +405,13 @@ const nextConfig = {
   // Experimental features to ensure critical components load first
   experimental: {
     optimizeCss: true,
+    // Next 16 request-body buffer for requests traversing proxy.ts.
+    proxyClientMaxBodySize: 30 * 1024 * 1024,
     // Ensure SacredLabDrawer is in the critical path
     largePageDataBytes: 128 * 1000, // 128KB
     serverActions: {
       bodySizeLimit: '500mb',
     },
-    // Request-body buffer for routes that pass through middleware.
-    // Next's default is 10 MiB. Because middleware.ts matches every API route,
-    // that default silently truncated manuscript uploads: the body was dropped
-    // before the handler ran, request.formData() threw, and the ingest route
-    // reported it as a missing file. Its own MAX_FILE_BYTES (25 MB) was
-    // unreachable. 30 MiB leaves headroom for multipart overhead so the
-    // application's 25 MB contract is the boundary members actually meet.
-    // Note: bodies are buffered in memory per in-flight request.
-    // serverActions.bodySizeLimit above does NOT cover route handlers.
-    middlewareClientMaxBodySize: 30 * 1024 * 1024,
   },
 };
 

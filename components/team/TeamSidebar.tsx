@@ -567,6 +567,12 @@ export function TeamSidebar({ currentMemberId, currentTeamId: initialTeamId }: T
             </Link>
           )}
           <Link
+            href="/house"
+            className="text-xs text-white/25 hover:text-white/50 transition-colors"
+          >
+            ← House
+          </Link>
+          <Link
             href="/studio"
             className="text-xs text-white/25 hover:text-white/50 transition-colors"
           >

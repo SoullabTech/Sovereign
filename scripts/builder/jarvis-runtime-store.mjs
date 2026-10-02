@@ -93,22 +93,75 @@ export function clearRuntimeRecord() {
   try { if (existsSync(RUNTIME_RECORD)) unlinkSync(RUNTIME_RECORD); } catch { /* best effort */ }
 }
 
+/** Liveness of a recorded owner process, on THIS host only. EPERM means it exists. */
+export function ownerProcessAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return null;
+  try { process.kill(pid, 0); return true; }
+  catch (e) { return e?.code === 'EPERM' ? true : e?.code === 'ESRCH' ? false : null; }
+}
+
 /**
- * A stopped runtime that was killed cannot rewrite its own record. Any run left
- * mid-flight by a hard stop is reconciled at next start: an in-flight state is not
- * evidence of a running worker once the owning process is gone.
+ * O5-R2E — Path A orphan VISIBILITY. Not recovery.
+ *
+ * A runtime that was killed cannot rewrite its own record, so a run it owned is
+ * left in an in-flight state forever: dark work. Path A records no per-effect
+ * witness (every effect happens inside one child process), so the only honest
+ * outcome is to STOP VISIBLY: the run becomes terminal FAILED (the one lawful
+ * destination from every in-flight state) with the existing code
+ * RUNTIME_STOPPED_MID_RUN and disposition BLOCKED_BY_EVIDENCE, and records what
+ * MAY have happened. ⛔ It is never resumed, re-dispatched or re-queued.
+ *
+ * A run is reconciled only on PROOF its owner is gone: an owner stamp for THIS
+ * host whose pid no longer exists. Runs with no owner stamp (created before the
+ * stamp existed), another host's owner, or an undeterminable owner are reported
+ * as UNPROVEN and left untouched — absence of evidence is not evidence of death.
  */
-export function reconcileOrphanedRuns(inFlightStates) {
+export function reconcileOrphanedRuns(inFlightStates, {
+  host = os.hostname(),
+  selfPid = process.pid,
+  isAlive = ownerProcessAlive,
+  effectsByState = {},
+  dryRun = false,
+} = {}) {
   const { runs } = listRuns({ limit: 10_000 });
   const reconciled = [];
+  const unproven = [];
   for (const r of runs) {
     if (!inFlightStates.includes(r.state)) continue;
+    const owner = r.owner;
+    let why = null;
+    if (!owner || !Number.isInteger(owner.pid)) why = 'OWNER_UNRECORDED';
+    else if (owner.host !== host) why = 'OWNER_ON_OTHER_HOST';
+    else if (owner.pid === selfPid) why = 'OWNER_IS_THIS_PROCESS';
+    else {
+      const alive = isAlive(owner.pid);
+      if (alive === true) why = 'OWNER_ALIVE';
+      else if (alive !== false) why = 'OWNER_UNDETERMINABLE';
+    }
+    if (why) { unproven.push({ run_id: r.run_id, state: r.state, reason: why, owner: owner ?? null, created_at: r.created_at ?? null, updated_at: r.updated_at ?? null }); continue; }
+    if (dryRun) {
+      // Read-only census: report what WOULD be reconciled, write nothing.
+      reconciled.push({ run_id: r.run_id, state: r.state, owner, created_at: r.created_at ?? null, updated_at: r.updated_at ?? null,
+        effects_possible: effectsByState[r.state] ?? ['unknown'] });
+      continue;
+    }
+    const lastState = r.state;
+    const at = nowISO();
     r.state = 'FAILED';
     r.failure_class = 'RUNTIME_STOPPED_MID_RUN';
-    r.disposition = 'FAILED';
-    r.reconciled_at = nowISO();
+    r.disposition = 'BLOCKED_BY_EVIDENCE';
+    r.failure_detail = `owner pid ${owner.pid} on ${owner.host} is gone; run was interrupted in ${lastState}; effects are of unknown standing`;
+    r.interruption = {
+      last_state: lastState,
+      owner,
+      effects_possible: effectsByState[lastState] ?? ['unknown'],
+      recovery: 'NONE — Path A records no per-effect witness; no resume, re-dispatch or requeue is lawful',
+      reconciled_at: at,
+    };
+    r.reconciled_at = at;
     saveRun(r);
+    appendEvent({ run_id: r.run_id, kind: 'transition', from: lastState, to: 'FAILED', disposition: 'BLOCKED_BY_EVIDENCE', reason: 'O5-R2E orphan reconciliation' });
     reconciled.push(r.run_id);
   }
-  return reconciled;
+  return { dry_run: dryRun, reconciled, unproven };
 }

@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.core.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "app/dev/writers-studio-pc3-live/**/*.ts",
+    "app/dev/writers-studio-pc3-live/**/*.tsx",
+    "app/writers-studio/full-redesign/**/*.ts",
+    "app/writers-studio/full-redesign/**/*.tsx",
+    "app/writers-studio/develop/liveDevelopOverview.ts",
+    "app/api/sovereign/manuscripts/[id]/themes/route.ts",
+    "lib/writersStudio/developClient.ts",
+    "lib/writersStudio/developPresentation.ts",
+    "lib/writersStudio/develop/**/*.ts",
+    "lib/writersStudio/themes/**/*.ts",
+    "lib/writersStudio/studio/**/*.ts",
+    "lib/writersStudio/rebuild/model.ts",
+    "lib/manuscript/developmentalReader/**/*.ts",
+    "lib/manuscript/developmentalReading/**/*.ts"
+  ],
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

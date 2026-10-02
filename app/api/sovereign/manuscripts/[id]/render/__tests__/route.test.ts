@@ -16,16 +16,18 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 jest.mock('@/lib/manuscript/render/renderMemberBook', () => ({
   renderMemberBook: jest.fn(),
+  inspectBookProduction: jest.fn(() => []),
 }));
 
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
-import { renderMemberBook } from '@/lib/manuscript/render/renderMemberBook';
-import { POST } from '../route';
+import { inspectBookProduction, renderMemberBook } from '@/lib/manuscript/render/renderMemberBook';
+import { GET, POST } from '../route';
 
 const mockAuth = getMemberIdFromRequest as jest.Mock;
 const mockQuery = query as jest.Mock;
 const mockRender = renderMemberBook as jest.Mock;
+const mockInspect = inspectBookProduction as jest.Mock;
 
 const MEMBER = '11111111-1111-1111-1111-111111111111';
 
@@ -40,6 +42,74 @@ const ctx = { params: Promise.resolve({ id: 'm1' }) };
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockInspect.mockReturnValue([]);
+});
+
+
+function getReq(): NextRequest {
+  return new NextRequest('http://localhost/api/sovereign/manuscripts/m1/render', {
+    method: 'GET',
+  });
+}
+
+describe('GET /api/sovereign/manuscripts/[id]/render — production preflight', () => {
+  it('uses current working-draft authority and never invokes the renderer', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: 'd1', version: '12', section_addressable_at: new Date() }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Chapter One', body: 'CURRENT EDIT', heading_depth: 1, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 });
+
+    const res = await GET(getReq(), ctx);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      ready: true,
+      title: 'My Book',
+      sectionCount: 1,
+      sourceAuthority: 'working_draft',
+      sourceRevision: '12',
+      issues: [],
+      publicationBoundary: expect.stringContaining('does not publish'),
+    });
+    expect(mockRender).not.toHaveBeenCalled();
+    expect(mockInspect).toHaveBeenCalledWith([
+      { heading: 'Chapter One', body: 'CURRENT EDIT', headingDepth: 1, headingSignal: 'markdown' },
+    ]);
+  });
+
+  it('surfaces production blockers without rendering or mutating anything', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+      .mockResolvedValueOnce({ rows: [{ heading: 'Opening Note', body: 'Copyright © 2026 Ann', heading_depth: 2, heading_signal: 'markdown' }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 });
+    mockInspect.mockReturnValueOnce([{
+      code: 'copyright_not_governed',
+      severity: 'blocker',
+      sectionIndexes: [0],
+      message: 'Copyright language exists, but there is not exactly one explicit governed Copyright object.',
+    }]);
+
+    const res = await GET(getReq(), ctx);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      ready: false,
+      sourceAuthority: 'source',
+      issues: [{ code: 'copyright_not_governed', severity: 'blocker' }],
+    });
+    expect(mockRender).not.toHaveBeenCalled();
+  });
+
+  it('keeps the same ownership silence boundary as render', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+
+    const res = await GET(getReq(), ctx);
+    expect(res.status).toBe(404);
+    expect(mockRender).not.toHaveBeenCalled();
+  });
 });
 
 describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () => {

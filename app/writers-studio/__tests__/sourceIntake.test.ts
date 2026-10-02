@@ -32,6 +32,14 @@ describe('WS-SOURCE-INTAKE-01 — outside material remains source material', () 
     expect(drawer).toContain('bring new source material');
   });
 
+  it('Materials keeps an Idea an Idea after it begins feeding a Work', () => {
+    const drawer = read('canvas', 'MaterialsDrawer.tsx');
+    expect(drawer).toContain("materialType === 'idea'");
+    expect(drawer).toContain("materialType === 'idea' ? 'Ideas'");
+    expect(drawer).toContain("/maia/ideas/${encodeURIComponent(m.materialId)}");
+    expect(drawer).toContain('no longer feeds this work');
+  });
+
   it('the current rebuilt Write room exposes real Work materials', () => {
     const rebuild = read('rebuild', 'RebuildStudioClient.tsx');
     expect(rebuild).toContain('data-work-materials');

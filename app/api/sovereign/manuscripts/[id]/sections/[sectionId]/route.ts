@@ -36,7 +36,7 @@ export async function PUT(
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
 
-  let payload: { body?: unknown; baseVersion?: unknown };
+  let payload: { body?: unknown; baseVersion?: unknown; observedBodySha256?: unknown };
   try {
     payload = await req.json();
   } catch {
@@ -46,7 +46,11 @@ export async function PUT(
     return NextResponse.json({ error: 'body and baseVersion are required' }, { status: 400 });
   }
 
-  const result = await saveSection(id, memberId, sectionId, payload.body, payload.baseVersion);
+  /* A1-LS1 · R3 — optional section-local concurrency precondition. Any value
+     that is not a string is simply absent; saveSection validates the form and
+     falls back to the draft-version rule when it is not a valid digest. */
+  const observedBodySha256 = typeof payload.observedBodySha256 === 'string' ? payload.observedBodySha256 : null;
+  const result = await saveSection(id, memberId, sectionId, payload.body, payload.baseVersion, observedBodySha256);
 
   /* The delay sits AFTER the mutation has committed or been refused. Save
      semantics — locking, version check, derived content, the deferred
@@ -64,6 +68,10 @@ export async function PUT(
       sectionId,
       body: payload.body,
       version: result.version,
+      /* A1-LS1 · R3 — how the save was admitted, and the digest of the body
+         now stored for this section. Concurrency bookkeeping only. */
+      acceptedBy: result.acceptedBy,
+      observedBodySha256: result.observedBodySha256,
     });
   }
 

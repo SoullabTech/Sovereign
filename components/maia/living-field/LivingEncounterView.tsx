@@ -10,11 +10,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { MaiaCapture, type CaptureSource } from '@/components/maia/MaiaCapture'
+import { apiFetch } from '@/lib/http/apiBase'
 
 interface Props {
   fieldKey: string
   fieldLabel: string
-  memberId: string
   onClose: () => void
 }
 
@@ -32,7 +32,7 @@ const MARK_OPTIONS: { kind: MarkKind; label: string }[] = [
   { kind: 'recovery', label: 'recovered' },
 ]
 
-export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }: Props) {
+export function LivingEncounterView({ fieldKey, fieldLabel, onClose }: Props) {
   const [encounterId, setEncounterId] = useState<string | null>(null)
   const [turns, setTurns] = useState<Turn[]>([])
   const [input, setInput] = useState('')
@@ -50,9 +50,9 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
       setOpening(true)
       setError(null)
       try {
-        const res = await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
+        const res = await apiFetch(`/api/maia/living-field/${fieldKey}/encounter`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'open' }),
         })
         const data = await res.json().catch(() => null)
@@ -62,7 +62,7 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
           return
         }
         setEncounterId(data.encounter_id)
-        setTurns([{ role: 'maia', text: data.greeting || `I'm here with you in ${fieldLabel}.` }])
+        setTurns([{ role: 'maia', text: data.greeting || `What is ready to unfold here in ${fieldLabel}?` }])
       } catch {
         if (!cancelled) setError('Could not reach MAIA. Check your connection and try again.')
       } finally {
@@ -88,9 +88,9 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
     setSending(true)
     setError(null)
     try {
-      const res = await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
+      const res = await apiFetch(`/api/maia/living-field/${fieldKey}/encounter`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'turn', encounter_id: encounterId, text: trimmed }),
       })
       const data = await res.json().catch(() => null)
@@ -113,9 +113,9 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
   async function closeEncounter() {
     if (encounterId) {
       try {
-        await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
+        await apiFetch(`/api/maia/living-field/${fieldKey}/encounter`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'close', encounter_id: encounterId }),
         })
       } catch {
@@ -129,9 +129,9 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
     if (!encounterId) return
     setMarkError(null)
     try {
-      const res = await fetch(`/api/maia/living-field/${fieldKey}/encounter`, {
+      const res = await apiFetch(`/api/maia/living-field/${fieldKey}/encounter`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ encounter_id: encounterId, mark: kind }),
       })
       if (!res.ok) {
@@ -238,18 +238,18 @@ export function LivingEncounterView({ fieldKey, fieldLabel, memberId, onClose }:
                     : 'px-3 py-2 rounded bg-stone-900 hover:bg-stone-800 text-stone-400 text-xs border border-stone-800 transition-colors'
                 }
               >
-                {markError === opt.kind ? 'Could not mark — tap to retry' : opt.label}
+                {markError === opt.kind ? 'Try marking again' : opt.label}
               </button>
             ))}
             <button
               onClick={() => setMarkOpen(false)}
               className="text-stone-700 hover:text-stone-500 text-xs px-2 py-1.5"
             >
-              never mind
+              Close
             </button>
           </div>
         )}
-        {markSent && <span className="text-stone-600 text-xs italic">marked.</span>}
+        {markSent && <span className="text-stone-600 text-xs italic">Kept.</span>}
       </div>
     </div>
   )

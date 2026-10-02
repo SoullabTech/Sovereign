@@ -35,7 +35,7 @@ function importsOf(code: string): string[] {
 
 /** What a reader module may import. Anything else is a bypass. */
 const ALLOWED = [
-  /^\.\/(contract|render|validate|parse|read)$/,          // siblings
+  /^\.\/(contract|render|validate|parse|read|themes)$/,   // pure reader siblings; Themes is governed vocabulary/render support
   /^\.\.\/development\/(evidenceRef|readState|resolve)$/,  // the 07A vocabulary + the ONLY prose source
   /^\.\.\/development\/bind$/,                             // host validator only (checked below)
   /^\.\.\/structure\/readerProvenance$/,                   // the identity type, nothing that reads

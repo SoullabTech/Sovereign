@@ -32,7 +32,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
-import { ReturnToMaia } from '@/components/navigation/ReturnToMaia';
+import { ReturnHome } from '@/components/navigation/ReturnHome';
 import { ELEMENTAL_LENS_PROMPTS } from '@/lib/psyche/types';
 import type {
   AtomGesture,
@@ -166,10 +166,10 @@ export default function KeepCapturePage() {
     <main className="min-h-screen bg-stone-50">
       <div className="max-w-3xl mx-auto px-6 py-12">
         {/* The way out. The House opens Keeps with
-            `returnBehavior: 'back-to-maia'`; nothing in this page's component
+            `returnBehavior: 'back-to-home'`; nothing in this page's component
             closure honoured that until now, so a member who entered was
             stranded here. */}
-        <ReturnToMaia className="text-stone-400 hover:text-stone-600 text-sm mb-6" />
+        <ReturnHome className="text-stone-400 hover:text-stone-600 text-sm mb-6" />
 
         <header className="mb-12">
           <h1 className="text-2xl font-light text-stone-800">

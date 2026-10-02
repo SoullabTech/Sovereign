@@ -42,7 +42,7 @@ export function MaiaCandidatePanel({ candidate, onAccept, onEdit, onDismiss }: P
           onClick={onDismiss}
           className="px-3 py-1.5 rounded text-stone-500 hover:text-stone-400 text-xs transition-colors"
         >
-          Not quite — dismiss
+          Let this pass
         </button>
       </div>
     </div>

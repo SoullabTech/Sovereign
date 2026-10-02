@@ -1,0 +1,69 @@
+{
+  "head": "8b2680254",
+  "base": "http://localhost:3642",
+  "passed": 10,
+  "failed": 0,
+  "encounter": [
+    {
+      "phase": "request",
+      "method": "POST"
+    },
+    {
+      "phase": "response",
+      "method": "POST",
+      "status": 200
+    }
+  ],
+  "results": [
+    {
+      "name": "no MAIA encounter exists on room arrival",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "opening the dimension does not start MAIA",
+      "ok": true,
+      "detail": "encounter events=[]"
+    },
+    {
+      "name": "explicit MAIA entry action is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "member field material is visible before MAIA entry",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "development history is available before MAIA entry",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "authorship remains inspectable before MAIA entry",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "inspecting history still does not start MAIA",
+      "ok": true,
+      "detail": "encounter events=[]"
+    },
+    {
+      "name": "explicit member action starts MAIA encounter",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "exactly one encounter starts after explicit action",
+      "ok": true,
+      "detail": "POST requests=1"
+    },
+    {
+      "name": "MAIA encounter is visibly named",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

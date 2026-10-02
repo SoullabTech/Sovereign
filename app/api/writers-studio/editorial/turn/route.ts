@@ -28,10 +28,12 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { persistMemberEditorialAct } from '@/lib/manuscript/editorialRuntime/memberAct';
 import { runEditorialTurn } from '@/lib/manuscript/editorialRuntime/turn';
 import { MEMBER_ACT_KINDS, type MemberActKind } from '@/lib/manuscript/editorialDiscourse/contract';
+import { preflightEditorialRelationshipCarriage, resolvePriorMaiaEditorialCarry, type ResolvedPriorMaiaEditorialCarry } from '@/lib/writers-studio/relationshipCarriage';
 import {
   DEFAULT_SCOPE_DECLARATION, isEditorialLatitude,
   type EditorialScopeDeclaration,
 } from '@/lib/manuscript/editorialScope/contract';
+import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +47,10 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * person to read their code would believe it too. The refusal names the keys so
  * the mistake is legible rather than mysterious.
  */
-const TOP_KEYS = ['threadId', 'act', 'sanctuary', 'scope'] as const;
+const TOP_KEYS = [
+  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry',
+] as const;
+const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
 /**
  * ⭐⭐ THE AUTHOR'S TWO CONTROLS, AND THEY ARE SEPARATE KEYS ON PURPOSE.
@@ -62,8 +67,12 @@ type Parsed =
       act: { act: MemberActKind; text: string; refersTo: string | null };
       sanctuary: boolean;
       scope: EditorialScopeDeclaration;
+      relationshipId: string | null;
+      carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null;
       /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
       mayProposeImmediately: boolean;
+      /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
+      proposalPolicy: ProposalPolicy;
     }
   | { ok: false; error: string };
 
@@ -76,8 +85,39 @@ function parseClosed(body: unknown): Parsed {
   if (strayTop.length) {
     return { ok: false, error: `unknown field(s): ${strayTop.join(', ')} — these are server facts and carry no standing here` };
   }
+  /* SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1 — posture is REQUIRED, and it is
+     checked before the act is examined. A member turn is durable (ask_turns +
+     editorial_turn_bindings); absence or a malformed value is an UNRESOLVED
+     posture, never ordinary. The route maps this to 400 posture_required. */
+  if (typeof b.sanctuary !== 'boolean') {
+    return { ok: false, error: 'posture_required' };
+  }
   if (typeof b.threadId !== 'string' || b.threadId.length === 0) {
     return { ok: false, error: 'threadId is required' };
+  }
+  if (!(b.relationshipId === undefined
+      || (typeof b.relationshipId === 'string' && b.relationshipId.length > 0))) {
+    return { ok: false, error: 'relationshipId must be a non-empty string when provided' };
+  }
+
+  let carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null = null;
+  if (b.carry !== undefined) {
+    if (typeof b.relationshipId !== 'string' || b.relationshipId.length === 0) {
+      return { ok: false, error: 'relationship_required' };
+    }
+    if (typeof b.carry !== 'object' || b.carry === null || Array.isArray(b.carry)) {
+      return { ok: false, error: 'carry must be an object' };
+    }
+    const co = b.carry as Record<string, unknown>;
+    const strayCarry = Object.keys(co).filter((k) => !(CARRY_KEYS as readonly string[]).includes(k));
+    if (strayCarry.length) return { ok: false, error: `unknown carry field(s): ${strayCarry.join(', ')}` };
+    if (co.kind !== 'prior_maia_editorial_turn') {
+      return { ok: false, error: 'carry.kind must be prior_maia_editorial_turn' };
+    }
+    if (!Number.isInteger(co.sourceEpisodeSequence) || Number(co.sourceEpisodeSequence) < 1) {
+      return { ok: false, error: 'carry.sourceEpisodeSequence must be a positive integer' };
+    }
+    carry = { kind: 'prior_maia_editorial_turn', sourceEpisodeSequence: Number(co.sourceEpisodeSequence) };
   }
   const a = b.act;
   if (typeof a !== 'object' || a === null || Array.isArray(a)) {
@@ -96,9 +136,6 @@ function parseClosed(body: unknown): Parsed {
   if (!(ao.refersTo === null || typeof ao.refersTo === 'string')) {
     return { ok: false, error: 'act.refersTo must be a string or null' };
   }
-  if (!(b.sanctuary === undefined || typeof b.sanctuary === 'boolean')) {
-    return { ok: false, error: 'sanctuary must be a boolean' };
-  }
 
   /* ⭐ THE DECLARED LATITUDE. ⛔ Absence is the protective default, never a
      wildcard — and a MALFORMED declaration is refused rather than coerced,
@@ -107,6 +144,13 @@ function parseClosed(body: unknown): Parsed {
   let scope: EditorialScopeDeclaration = DEFAULT_SCOPE_DECLARATION;
   /* ⛔ Absence is not release — the discussion-first order is the default. */
   let mayProposeImmediately = false;
+  let proposalPolicy: ProposalPolicy = 'allow';
+  if (b.proposalPolicy !== undefined) {
+    if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
+      return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
+    }
+    proposalPolicy = b.proposalPolicy;
+  }
   if (b.scope !== undefined) {
     if (typeof b.scope !== 'object' || b.scope === null || Array.isArray(b.scope)) {
       return { ok: false, error: 'scope must be an object' };
@@ -141,9 +185,14 @@ function parseClosed(body: unknown): Parsed {
     threadId: b.threadId,
     /* ⛔ The member's text is carried EXACTLY. No trim, no normalisation. */
     act: { act: ao.act as MemberActKind, text: ao.text, refersTo: ao.refersTo ?? null },
-    sanctuary: b.sanctuary === true,
+    /* ⭐ Validated as a boolean above; minted from the WHOLE body so a
+       contradictory nested affirmative still fails closed to Sanctuary. */
+    sanctuary: TurnPosture.resolve(b).sanctuary,
     scope,
+    relationshipId: typeof b.relationshipId === 'string' ? b.relationshipId : null,
+    carry,
     mayProposeImmediately,
+    proposalPolicy,
   };
 }
 
@@ -161,19 +210,55 @@ export async function POST(request: NextRequest) {
   catch { return NextResponse.json({ error: 'invalid JSON' }, { status: 400 }); }
 
   const parsed = parseClosed(raw);
-  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  if (!parsed.ok) {
+    return NextResponse.json(
+      parsed.error === 'posture_required' ? { error: 'posture_required', persisted: false } : { error: parsed.error },
+      { status: 400 },
+    );
+  }
 
   /* ⛔⛔ BEFORE ANY WRITE. */
   const posture = TurnPosture.resolve({ sanctuary: parsed.sanctuary });
   if (posture.sanctuary) {
     return NextResponse.json({
       error: 'sanctuary_unavailable',
+      persisted: false,
       detail: 'Editorial work is durable by construction, and no ephemeral editorial mode has been ruled. '
         + 'Nothing was written.',
     }, { status: 409 });
   }
 
   const memberId = identity.memberId;
+
+  if (parsed.relationshipId !== null) {
+    const relationship = await preflightEditorialRelationshipCarriage({
+      memberId,
+      relationshipId: parsed.relationshipId,
+      threadId: parsed.threadId,
+    });
+    if (!relationship.ok) {
+      const status = relationship.reason === 'relationship_not_found' ? 404 : 409;
+      return NextResponse.json({ error: relationship.reason, persisted: false }, { status });
+    }
+  }
+
+  let resolvedCarry: ResolvedPriorMaiaEditorialCarry | undefined;
+  if (parsed.carry !== null) {
+    const carry = await resolvePriorMaiaEditorialCarry({
+      memberId,
+      relationshipId: parsed.relationshipId!,
+      receiverThreadId: parsed.threadId,
+      sourceEpisodeSequence: parsed.carry.sourceEpisodeSequence,
+    });
+    if (!carry.ok) {
+      const notFound = carry.reason === 'relationship_not_found'
+        || carry.reason === 'source_episode_not_found'
+        || carry.reason === 'source_thread_invalid'
+        || carry.reason === 'source_turn_not_found';
+      return NextResponse.json({ error: carry.reason, persisted: false }, { status: notFound ? 404 : 409 });
+    }
+    resolvedCarry = carry.carry;
+  }
 
   const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act });
   if (!act.ok) {
@@ -185,6 +270,8 @@ export async function POST(request: NextRequest) {
     /* ⭐ THE SAME MINTED OBJECT. ⛔ No second identity crosses this boundary. */
     identity,
     threadId: parsed.threadId,
+    ...(parsed.relationshipId !== null ? { relationshipId: parsed.relationshipId } : {}),
+    ...(resolvedCarry ? { carry: resolvedCarry } : {}),
     currentTurnIndex: act.turnIndex,
     declaredAct: parsed.act.act,
     currentDirectionId: act.direction?.id ?? null,
@@ -194,6 +281,7 @@ export async function POST(request: NextRequest) {
     /* ⭐ The author's declaration, carried to the one place that enforces it. */
     scope: parsed.scope,
     mayProposeImmediately: parsed.mayProposeImmediately,
+    proposalPolicy: parsed.proposalPolicy,
   });
 
   if (!turn.ok) {
@@ -216,7 +304,10 @@ export async function POST(request: NextRequest) {
     /* ⭐ Scope, voice and sequence are one KIND of outcome: the writer drew a
        line and the system held it. ⛔ None of them is a server fault. */
     const scopeRefused = turn.scope !== undefined || turn.voice !== undefined
-      || turn.reason === 'sequence_discussion_first';
+      || turn.reason === 'sequence_discussion_first'
+      || turn.reason === 'proposal_policy_reply_only'
+      || turn.reason === 'relationship_scope_unmeasured'
+      || turn.reason === 'relationship_refused';;
     /* ⭐ A DISCLOSURE REFUSAL IS ALSO NOT A SERVER FAULT — and not a scope
        refusal either, so it gets its own name rather than being folded into one.
        Authorization or accountability for the crossing could not be established,
@@ -256,11 +347,19 @@ export async function POST(request: NextRequest) {
         note: turn.voice.note, unfamiliar: turn.voice.unfamiliar,
         sampleWords: turn.voice.sampleWords,
       } } : {}),
-      /* ⭐ `detail` travels for the lines this system drew — scope, voice,
-         sequence, and now disclosure — because the writer is entitled to know
-         which boundary held. ⛔ It still does not travel for provider failures,
-         where it would disclose internals rather than a boundary. */
-      ...(scopeRefused || disclosureRefused ? { detail: turn.detail } : {}),
+      /* ⭐ THE REFUSAL NAMES ITSELF, INCLUDING WHEN IT IS NOT A SCOPE REFUSAL.
+       *
+       * `structured_refused` carries the seam's own code as its detail — one of
+       * `invalid_inference_mode` · `structured_inference_unavailable` ·
+       * `not_configured` · `provider_unavailable`. Gating `detail` on
+       * `scopeRefused` discarded exactly the word that distinguishes a
+       * misconfigured deployment from an unreachable provider, and nothing logs
+       * it, so a 502 was unattributable from either side.
+       *
+       * ⛔ Still never content: every detail on this path is a fixed code, a
+       * model name, or the writer-facing refusal sentence. ⛔ No authored prose,
+       * no candidate wording. A refusal is not an occasion to disclose. */
+      ...(turn.detail !== undefined ? { detail: turn.detail } : {}),
       ...(turn.scope ? {
         scope: {
           declared: parsed.scope,

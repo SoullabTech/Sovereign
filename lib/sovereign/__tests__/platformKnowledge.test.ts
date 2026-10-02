@@ -2,6 +2,8 @@ import {
   PLATFORM_IDENTITY,
   PLATFORM_AREAS,
   PLATFORM_RELATIONSHIPS,
+  PLATFORM_FIELD_ATTUNEMENT,
+  PLATFORM_FIELD_ATTUNEMENT_LAST_VERIFIED,
   PLATFORM_ORIENTATION,
   PLATFORM_KNOWLEDGE_LIMITS,
   PLATFORM_KNOWLEDGE_ADDENDUM,
@@ -28,11 +30,19 @@ describe('provenance and versioning', () => {
     expect(PLATFORM_AREAS).toContain(PLATFORM_KNOWLEDGE_LAST_VERIFIED);
   });
 
-  it('addendum composes all five layers in order', () => {
+  it('Field Attunement carries its own later verification date without pretending the area map was re-audited', () => {
+    expect(PLATFORM_FIELD_ATTUNEMENT_LAST_VERIFIED).toBe('2026-09-27');
+    expect(PLATFORM_FIELD_ATTUNEMENT).toContain(PLATFORM_FIELD_ATTUNEMENT_LAST_VERIFIED);
+    expect(PLATFORM_KNOWLEDGE_LAST_VERIFIED).toBe('2026-08-28');
+  });
+
+  it('addendum composes the authored layers in order', () => {
     const idx = [
       'PLATFORM IDENTITY',
       'PLATFORM AREAS',
       'PLATFORM RELATIONSHIPS',
+      'FIELD ATTUNEMENT',
+      'MEMORY CONSTITUTION',
       'PLATFORM ORIENTATION',
       'PLATFORM KNOWLEDGE LIMITS',
     ].map((h) => ALL.indexOf(h));
@@ -243,6 +253,39 @@ describe('Keep is on the map (2026-08-28 — MAIA denied it existed in productio
   it('naming Keep does not license claiming a keep happened', () => {
     expect(lower(PLATFORM_AREAS)).toContain(
       'naming keep is not claiming a keep happened',
+    );
+  });
+});
+
+describe('field attunement — one MAIA, many fields (2026-09-27)', () => {
+  it('keeps identity invariant while allowing posture to change', () => {
+    const f = lower(PLATFORM_FIELD_ATTUNEMENT);
+    expect(f).toContain('there is one maia');
+    expect(f).toContain('the field provides posture');
+    expect(f).toContain('the member provides the subject');
+    expect(f).toContain('you provide relationship');
+    expect(f).toContain('same relationship, different posture');
+  });
+
+  it('keeps the field subject primary', () => {
+    const f = lower(PLATFORM_FIELD_ATTUNEMENT);
+    expect(f).toContain('keep its subject primary');
+    expect(f).toContain('journal is for the member\'s writing');
+    expect(f).toContain('dream is for the dream');
+    expect(f).toContain('decisions is for a human choice');
+    expect(f).toContain('writing is for the work');
+  });
+
+  it('separates identity from persistence and refuses silent durability', () => {
+    const f = lower(PLATFORM_FIELD_ATTUNEMENT);
+    expect(f).toContain('identity and persistence are separate');
+    expect(f).toContain('transient sanctuary encounter');
+    expect(f).toContain('never infer that material should become durable');
+  });
+
+  it('forbids turning constitutional law into an unverified runtime claim', () => {
+    expect(lower(PLATFORM_FIELD_ATTUNEMENT)).toContain(
+      'rather than generalizing this constitutional pattern into a runtime claim',
     );
   });
 });

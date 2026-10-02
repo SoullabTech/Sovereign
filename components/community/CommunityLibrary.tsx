@@ -181,6 +181,14 @@ const insightCollections: InsightCollection[] = [
         relatedTechnologies: ['maia-oracle', 'consciousness-field']
       },
       {
+        id: 'one-maia-many-fields',
+        title: '★ One MAIA, Many Fields',
+        description: 'Why MAIA may feel different in Journal, Dream, Divination, Relationships, Writing and other rooms without becoming a different intelligence.',
+        content: 'Community-Commons/library/one-maia-many-fields.md',
+        tags: ['maia', 'field attunement', 'relational intelligence', 'soullab', 'sovereignty', 'privacy', 'continuity'],
+        relatedTechnologies: ['maia-oracle', 'consciousness-field']
+      },
+      {
         id: 'presence-continuity',
         title: '★ Presence Continuity and Personal Sovereignty',
         description: 'FOUNDATIONAL PAPER: Why AI systems must remain relationally present even when infrastructure fails. Introduces the sovereignty ladder and the principle that the cloud is optional, not required.',

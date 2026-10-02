@@ -11,101 +11,18 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { createCapsule } from '@/lib/capsules/capsuleService';
-import { VectorEmbeddingService } from '@/lib/vector-embeddings';
-import crypto from 'crypto';
-
-// Map quick journal entry types to episodic memory content types
-const JOURNAL_TO_MEMORY_TYPE: Record<string, string> = {
-  dream: 'Dream',
-  day: 'Journal',
-  handwriting: 'Journal',
-};
-
-// Fire-and-forget: write to episodic_memories for resonance search
-async function bridgeToEpisodicMemory(
-  userId: string,
-  entryType: string,
-  content: string
-) {
-  try {
-    const prefix = JOURNAL_TO_MEMORY_TYPE[entryType] || 'Journal';
-    const firstLine = content.trim().split(/[\n.!?]/)[0].slice(0, 80);
-    const title = `${prefix}: ${firstLine}`;
-    const episodeId = `quick-${entryType}-${crypto.randomUUID()}`;
-
-    let semanticVector: number[] | null = null;
-    try {
-      const embedder = new VectorEmbeddingService({
-        dimension: 768,
-      });
-      semanticVector = await embedder.getEmbedding(`${title} ${content}`);
-    } catch {
-      // Non-fatal: text fallback still works for resonance
-    }
-
-    await query(
-      `INSERT INTO episodic_memories
-        (user_id, episode_id, experience_title, experience_description,
-         experience_context, significance, emotional_intensity,
-         semantic_vector, timestamp)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, NOW())`,
-      [
-        userId,
-        episodeId,
-        title,
-        content.trim(),
-        `quick_journal_${entryType}`,
-        entryType === 'dream' ? 7 : 5,
-        0.5,
-        semanticVector ? JSON.stringify(semanticVector) : '[]',
-      ]
-    );
-
-    console.log(`[QuickJournal→Memory] Bridged ${entryType} → ${episodeId}`);
-  } catch (err) {
-    // Non-fatal: journal save already succeeded
-    console.error('[QuickJournal→Memory] Bridge failed (journal still saved):', err);
-  }
-}
-
-// Fire-and-forget: write a minimal capsule so the oracle context layer has this entry.
-// No LLM distillation — just a bridge artifact so MAIA holds the raw record.
-// source_id = journal entry UUID for deduplication if re-run.
-async function bridgeToCapsule(
-  userId: string,
-  entryId: string,
-  entryType: string,
-  content: string
-) {
-  try {
-    const isDream = entryType === 'dream';
-    const firstLine = content.trim().split(/[\n.!?]/)[0].slice(0, 80);
-    const title = isDream
-      ? `Dream: ${firstLine}`
-      : `Journal: ${firstLine}`;
-
-    await createCapsule({
-      userId,
-      sourceType: 'journal',
-      sourceId: entryId,
-      title,
-      summary: content.trim().slice(0, 1200),
-      signals: isDream
-        ? { element: 'water', tone: 'dream' }
-        : { tone: 'reflection' },
-      tags: ['auto-captured', entryType],
-      draft: true,
-    });
-
-    console.log(`[QuickJournal→Capsule] Bridged ${entryType} → capsule for user ${userId}`);
-  } catch (err) {
-    // Non-fatal: journal save already succeeded
-    console.error('[QuickJournal→Capsule] Bridge failed (journal still saved):', err);
-  }
-}
+import {
+  recordFacetCrossing,
+  validateFacetCrossingSource,
+  type FacetCrossingRef,
+} from '@/lib/house/facetCrossing.server';
+// Journal entries remain Journal unless the member explicitly carries them
+// across a governed facet boundary. Historical code wrote every sufficiently
+// long entry into episodic_memories and invented title/significance/intensity
+// metadata. That automatic crossing violated member authorship and the later
+// episodic-mark provenance contract, so Journal no longer writes memory here.
 
 // Skip during static export (Capacitor builds)
 
@@ -123,12 +40,16 @@ interface QuickJournalEntry {
   audio_duration_ms?: number;
   transcript_source?: string;
   transcript_confidence?: number;
-  // OCR metadata (optional - present for handwriting entries)
+  // Entry provenance/context. Handwriting OCR and Journal-room context share
+  // one existing JSONB envelope; every field is optional and member-visible
+  // context must remain member-authored (place is never inferred from GPS).
   meta?: {
     ocrProvider?: string;
     ocrConfidence?: number;
     hasImage?: boolean;
     imageSize?: number;
+    place?: string;
+    fromQuestion?: string;
   };
 }
 
@@ -203,7 +124,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { entryType, content, tags = [], source = 'quick_sheet', meta = null } = body;
+    const {
+      entryType,
+      content,
+      tags = [],
+      source = 'quick_sheet',
+      meta = null,
+      sourceRef,
+    } = body as {
+      entryType?: string;
+      content?: string;
+      tags?: string[];
+      source?: string;
+      meta?: QuickJournalEntry['meta'] | null;
+      sourceRef?: FacetCrossingRef;
+    };
 
     if (!entryType || !['dream', 'day', 'handwriting'].includes(entryType)) {
       return NextResponse.json(
@@ -219,35 +154,60 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure table exists
+    // Ensure table exists before opening the atomic member act.
     await ensureTableExists();
 
-    // Insert entry (with optional meta for handwriting OCR data)
-    const result = await query<QuickJournalEntry>(`
-      INSERT INTO quick_journal_entries (user_id, entry_type, content, tags, source, meta)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `, [userId, entryType, content.trim(), tags, source, meta ? JSON.stringify(meta) : null]);
+    if (sourceRef) {
+      const carried = await validateFacetCrossingSource({
+        memberId: userId,
+        targetFacet: 'journal',
+        sourceRef,
+      });
+      if (!carried) {
+        return NextResponse.json(
+          { success: false, error: 'Source not available for this crossing' },
+          { status: 400 },
+        );
+      }
+    }
 
-    const entry = result.rows[0];
+    // Keeping the Journal entry is the authorship act. If the member arrived
+    // through a governed facet crossing, the entry and the relational fact are
+    // committed together. No copied relationship prose is stored here.
+    const entry = await transaction(async (client) => {
+      const result = await client.query<QuickJournalEntry>(`
+        INSERT INTO quick_journal_entries (user_id, entry_type, content, tags, source, meta)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *
+      `, [userId, entryType, content.trim(), tags, source, meta ? JSON.stringify(meta) : null]);
+
+      const kept = result.rows[0];
+
+      if (sourceRef) {
+        await recordFacetCrossing(client, {
+          memberId: userId,
+          crossingId: sourceRef.crossingId,
+          sourceFacet: sourceRef.sourceFacet,
+          sourceRefId: sourceRef.sourceRefId,
+          targetFacet: 'journal',
+          targetRefId: kept.id,
+        });
+      }
+
+      return kept;
+    });
 
     console.log(`✅ [QuickJournal] ${entryType} entry saved for user ${userId.substring(0, 8)}...`);
 
-    // Bridge to episodic memory for resonance search (fire-and-forget)
-    if (content.trim().length >= 10) {
-      bridgeToEpisodicMemory(userId, entryType, content).catch(() => {});
-    }
-
-    // Bridge to capsule layer so oracle context holds this entry (fire-and-forget)
-    if (content.trim().length >= 10) {
-      bridgeToCapsule(userId, entry.id, entryType, content).catch(() => {});
-    }
-
+    // Reflection is a separate facet. A Journal entry crosses there only
+    // through the member-facing "Keep as a reflection" gesture on the kept
+    // entry, handled by /api/journal/quick/[id]/reflection.
     return NextResponse.json({
       success: true,
       entryId: entry.id,
       entryType: entry.entry_type,
-      createdAt: entry.created_at
+      createdAt: entry.created_at,
+      meta: entry.meta ?? null
     });
 
   } catch (error) {

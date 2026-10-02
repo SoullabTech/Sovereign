@@ -16,12 +16,24 @@ export const dynamic = 'force-dynamic';
  * DOCTRINE: written only by an explicit member gesture; no detector,
  * summarizer, or background job may call this route. No interpretive columns
  * exist to fill. Recognition is not inferred; recognition is enacted.
+ *
+ * SANCTUARY (SANCTUARY-MANUSCRIPT-KEEP-01 / S1): a manuscript Keep is a
+ * secondary durable member-marking object and inherits the Sanctuary
+ * non-persistence boundary. The POST must carry the member's CURRENT posture
+ * as an explicit boolean `sanctuary`. Under Sanctuary the route reads nothing
+ * and writes nothing and answers with a non-content receipt
+ * `{ success: true, sanctuary: true, persisted: false }`. A missing or
+ * malformed posture is NOT ordinary — it is refused `400 posture_required`
+ * before any manuscript read. ⛔ Never `TurnPosture.resolve({})`: absence of a
+ * signal must not be manufactured into an ordinary turn. DELETE is deliberately
+ * NOT gated — removing durable material is a sovereign act, in Sanctuary too.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { TurnPosture, contentWritable } from '@/lib/sanctuary/turnPosture';
 
 /** Whitespace/curly-quote-normalized containment check (mirror of extractQuotes' tolerance). */
 function containsVerbatim(haystack: string, needle: string): boolean {
@@ -49,6 +61,22 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
+
+    // S1 — posture first, before anything about the passage is looked at.
+    // An explicit boolean is required; anything else is an unresolved posture
+    // and fails closed. The posture is minted server-side from the request
+    // (contradictory nested signals still fail closed to Sanctuary).
+    const { sanctuary } = (body ?? {}) as { sanctuary?: unknown };
+    if (typeof sanctuary !== 'boolean') {
+      return NextResponse.json({ error: 'posture_required', persisted: false }, { status: 400 });
+    }
+    const posture = TurnPosture.resolve(body);
+    if (!contentWritable(posture, 'manuscript_keeps')) {
+      // Sanctuary: nothing read, nothing written, nothing echoed. A receipt,
+      // not an error — the member did nothing wrong.
+      return NextResponse.json({ success: true, sanctuary: true, persisted: false });
+    }
+
     const { sectionId, text } = (body ?? {}) as { sectionId?: unknown; text?: unknown };
     if (typeof sectionId !== 'string' || typeof text !== 'string' || text.trim().length === 0) {
       return NextResponse.json({ error: 'sectionId and non-empty text are required' }, { status: 400 });

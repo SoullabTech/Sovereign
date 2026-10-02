@@ -16,7 +16,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 API_BACKUP_DIR="$PROJECT_ROOT/.capacitor-api-backup"
-MIDDLEWARE_BACKUP="$PROJECT_ROOT/.capacitor-middleware-backup"
+PROXY_BACKUP="$PROJECT_ROOT/.capacitor-proxy-backup"
 PAGES_BACKUP_DIR="$PROJECT_ROOT/.capacitor-pages-backup"
 DYNAMIC_PAGES_BACKUP="$PROJECT_ROOT/.capacitor-dynamic-pages-backup"
 DYNAMIC_PAGES_MANIFEST="$PROJECT_ROOT/.capacitor-dynamic-pages.manifest"
@@ -193,51 +193,51 @@ restore_api_routes() {
 
 # Replace middleware with a stub for static export
 # Moving it causes webpack trace errors - stub is safer
-hide_middleware() {
-    log_info "Replacing middleware.ts with static-export stub..."
+hide_proxy() {
+    log_info "Replacing proxy.ts with static-export stub..."
 
-    if [ -f "$PROJECT_ROOT/middleware.ts" ]; then
-        if [ -f "$MIDDLEWARE_BACKUP" ]; then
-            log_warn "Middleware backup already exists, removing stale backup..."
-            rm -f "$MIDDLEWARE_BACKUP"
+    if [ -f "$PROJECT_ROOT/proxy.ts" ]; then
+        if [ -f "$PROXY_BACKUP" ]; then
+            log_warn "Proxy backup already exists, removing stale backup..."
+            rm -f "$PROXY_BACKUP"
         fi
         # Backup original
-        cp "$PROJECT_ROOT/middleware.ts" "$MIDDLEWARE_BACKUP"
+        cp "$PROJECT_ROOT/proxy.ts" "$PROXY_BACKUP"
 
-        # Create stub middleware that does nothing
-        cat > "$PROJECT_ROOT/middleware.ts" << 'STUBEOF'
+        # Create stub proxy that does nothing
+        cat > "$PROJECT_ROOT/proxy.ts" << 'STUBEOF'
 /**
- * Stub middleware for Capacitor static export builds.
- * Real middleware is incompatible with output: 'export'.
+ * Stub proxy for Capacitor static export builds.
+ * Real proxy is incompatible with output: 'export'.
  * This file is auto-generated - do not edit.
  */
 import { NextResponse } from 'next/server';
 
-export function middleware() {
+export function proxy() {
   return NextResponse.next();
 }
 
-// Empty matcher = middleware never runs
+// Empty matcher = proxy never runs
 export const config = {
   matcher: [],
 };
 STUBEOF
-        log_info "Created middleware stub (original backed up)"
+        log_info "Created proxy stub (original backed up)"
     else
-        log_warn "No middleware.ts found"
+        log_warn "No proxy.ts found"
     fi
 }
 
 # Restore original middleware from backup
-restore_middleware() {
-    log_info "Restoring original middleware.ts from backup..."
+restore_proxy() {
+    log_info "Restoring original proxy.ts from backup..."
 
-    if [ -f "$MIDDLEWARE_BACKUP" ]; then
+    if [ -f "$PROXY_BACKUP" ]; then
         # Replace stub with original
-        mv "$MIDDLEWARE_BACKUP" "$PROJECT_ROOT/middleware.ts"
-        log_info "Restored middleware.ts from backup"
+        mv "$PROXY_BACKUP" "$PROJECT_ROOT/proxy.ts"
+        log_info "Restored proxy.ts from backup"
     else
-        log_warn "No middleware backup found at $MIDDLEWARE_BACKUP"
+        log_warn "No proxy backup found at $PROXY_BACKUP"
     fi
 }
 
@@ -673,7 +673,7 @@ case "${1:-}" in
             hide_non_mobile_routes
         fi
         hide_api_routes
-        hide_middleware
+        hide_proxy
         hide_pages_dir
         hide_web_only_routes
         hide_incompatible_pages
@@ -681,7 +681,7 @@ case "${1:-}" in
         ;;
     revert)
         restore_api_routes
-        restore_middleware
+        restore_proxy
         restore_pages_dir
         restore_web_only_routes
         restore_incompatible_pages
@@ -694,7 +694,7 @@ case "${1:-}" in
         echo "Commands:"
         echo "  patch   - Prepare for Capacitor static export builds"
         echo "           - Move app/api out of the way (iOS uses production API)"
-        echo "           - Move middleware.ts out of the way (not compatible with static export)"
+        echo "           - Move proxy.ts out of the way (not compatible with static export)"
         echo "           - Move web-only routes out (mirrors lib/mobile/mobileAllowlist.ts)"
         echo "           - Exclude remaining incompatible dynamic pages"
         echo "           - Add generateStaticParams to remaining dynamic pages"

@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "//": "exclude is narrowed deliberately. The base tsconfig excludes tests/**, which is inherited through extends and would silently drop the two constitutional entry files below from the program — reporting 0 diagnostics for files never checked. Narrowing to node_modules keeps all seven named entry files in scope. include is exact, so nothing else is admitted.",
+  "exclude": ["node_modules"],
+  "include": [
+    "app/writers-studio/insight/InsightReading.tsx",
+    "app/writers-studio/insight/RevisionDesk.tsx",
+    "app/writers-studio/rebuild/RebuildStudioClient.tsx",
+    "app/writers-studio/__tests__/guidedEditorialLoop.test.ts",
+    "app/writers-studio/__tests__/inlineEditorial.test.ts",
+    "tests/constitutional/writers-studio/convergenceC5.ts",
+    "tests/constitutional/writers-studio/convergenceC5Runner.ts"
+  ]
+}

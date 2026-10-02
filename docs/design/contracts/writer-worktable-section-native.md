@@ -10,6 +10,7 @@ surfaces:
   - app/writers-studio/canvas/SectionWritingSurface.tsx
   - app/writers-studio/canvas/SectionWritingSession.tsx
   - app/press/manuscript/WorkingDraftEditor.tsx
+  - app/press/manuscript/page.tsx
 change_class: experiential
 principles:
   - INHABITABLE_ARCHITECTURE — rooms come from human activity, not data models

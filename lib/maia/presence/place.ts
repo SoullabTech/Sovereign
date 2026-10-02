@@ -76,12 +76,12 @@ export interface GoverendRoom {
 export const GOVERNED_ROOMS: readonly GoverendRoom[] = [
   { placeId: 'maia', placeName: 'MAIA', routePrefix: '/maia', purpose: 'The main conversation — the hallway of the house.' },
   // Journal owns its own MAIA threshold: `Reflect with MAIA` is offered only
-  // on a KEPT entry, and that reflection is transient by law (never a thread —
-  // components/journal/room/Reflection.tsx). The ambient House handle broke
-  // that in both directions — before Keep it offered MAIA without the member
-  // crossing the room's threshold; after Keep it put an always-available
-  // canonical conversation beside a deliberately transient one. Suppressed
-  // throughout /journal, not merely on arrival (founder ruling 2026-09-06).
+  // on a KEPT entry. Founder ruling 2026-09-27 superseded the earlier one-shot
+  // reflection law: once explicitly invited, MAIA may stay in a continuous but
+  // transient Journal encounter until the member chooses to stop. The ambient
+  // House handle remains suppressed because it would bypass that threshold
+  // before Keep and create a second relationship grammar after Keep. Suppressed
+  // throughout /journal, not merely on arrival (founder rulings 2026-09-06 + 09-27).
   { placeId: 'journal', placeName: 'Journal', routePrefix: '/journal', purpose: 'A private room for writing and reflection.', handleVisibility: 'none' },
   { placeId: 'ideas', placeName: 'Ideas', routePrefix: '/maia/ideas', purpose: 'A room for capturing and developing emerging thoughts.' },
   { placeId: 'moments', placeName: 'Marked Moments', routePrefix: '/maia/moments', purpose: 'The moments this member chose to keep from conversation.' },
@@ -103,7 +103,7 @@ export const GOVERNED_ROOMS: readonly GoverendRoom[] = [
 ] as const;
 
 /** Full conversation surfaces — the handle/sheet is suppressed here (the page IS the relationship surface). */
-export const FULL_CONVERSATION_ROUTES = ['/maia', '/studio/maia', '/field/talk'] as const;
+export const FULL_CONVERSATION_ROUTES = ['/maia', '/maia/encounter', '/studio/maia', '/field/talk'] as const;
 
 /** Resolve the governed room for a pathname, or null when the route is not governed. Longest prefix wins. */
 export function resolveGovernedRoom(pathname: string): GoverendRoom | null {

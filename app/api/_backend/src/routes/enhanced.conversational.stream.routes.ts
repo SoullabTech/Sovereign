@@ -3,7 +3,7 @@ import { Router, Request, Response } from 'express';
 import { logger } from '../utils/logger';
 import { enhancedOrchestrator, EnhancedConversationalContext } from '../services/EnhancedConversationalOrchestrator';
 import { ConversationThreadingService } from '../services/ConversationThreadingService';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID as uuidv4 } from 'node:crypto';
 
 const router = Router();
 const threadingService = ConversationThreadingService.getInstance();

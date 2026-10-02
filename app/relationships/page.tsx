@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowUpRight, Plus } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import CreateRelationshipModal from '@/components/relationships/CreateRelationshipModal';
+import { cabinReturnPath, isCabinOrigin } from '@/lib/cabin/doorway';
 
 type Realm = 'outer' | 'inner' | 'transpersonal';
 
@@ -121,6 +122,9 @@ function RelationshipPresence({
 
 export default function RelationshipFieldPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromCabin = isCabinOrigin(searchParams);
+  const returnToHouse = searchParams?.get('from') === 'house';
   const reduceMotion = useReducedMotion();
   const [relationships, setRelationships] = useState<RelationshipSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,7 +160,7 @@ export default function RelationshipFieldPage() {
   const handleCreated = (relationship: { id: string; name: string; realm: Realm }) => {
     setShowCreate(false);
     setCreateRealm(undefined);
-    router.push(`/relationships/${relationship.id}`);
+    router.push(`/relationships/${relationship.id}${fromCabin ? '?from=cabin' : ''}`);
   };
 
   const openArrival = (realm?: Realm) => {
@@ -196,11 +200,11 @@ export default function RelationshipFieldPage() {
       <div className="relative mx-auto max-w-6xl px-5 pb-20 pt-8 sm:px-7 md:pt-10 lg:px-10">
         <button
           type="button"
-          onClick={() => router.push('/maia')}
+          onClick={() => router.push(fromCabin ? cabinReturnPath() : returnToHouse ? '/house' : '/maia')}
           className="mb-14 inline-flex items-center gap-2 text-xs font-medium tracking-[0.04em] text-[#716d64] transition-colors hover:text-[#465a49]"
         >
           <span aria-hidden="true">←</span>
-          Back to MAIA
+          {fromCabin ? 'Back to Cabin' : returnToHouse ? 'Back to House' : 'Back to MAIA'}
         </button>
 
         <section className="grid items-end gap-10 lg:grid-cols-[1.3fr_0.7fr] lg:gap-16">
@@ -298,7 +302,7 @@ export default function RelationshipFieldPage() {
                 <RelationshipPresence
                   key={relationship.id}
                   relationship={relationship}
-                  onOpen={() => router.push(`/relationships/${relationship.id}`)}
+                  onOpen={() => router.push(`/relationships/${relationship.id}${fromCabin ? '?from=cabin' : ''}`)}
                 />
               ))}
             </div>
@@ -318,7 +322,7 @@ export default function RelationshipFieldPage() {
               </div>
               <button
                 type="button"
-                onClick={() => router.push(`/relationships/${systemHoldingFields[0].id}`)}
+                onClick={() => router.push(`/relationships/${systemHoldingFields[0].id}${fromCabin ? '?from=cabin' : ''}`)}
                 className="shrink-0 text-sm font-medium text-[#5c705b] transition-colors hover:text-[#354a39]"
               >
                 Look when ready →

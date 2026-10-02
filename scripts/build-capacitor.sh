@@ -13,10 +13,10 @@ if [ -d "app/api" ]; then
   mv app/api /tmp/maia-api-backup-$$
 fi
 
-# Move middleware aside - it's incompatible with static export
-if [ -f "middleware.ts" ]; then
-  echo "📦 Moving middleware aside (incompatible with static export)..."
-  mv middleware.ts /tmp/maia-middleware-backup-$$
+# Move proxy aside - it is incompatible with static export
+if [ -f "proxy.ts" ]; then
+  echo "📦 Moving proxy aside (incompatible with static export)..."
+  mv proxy.ts /tmp/maia-proxy-backup-$$
 fi
 
 # Move dynamic routes that can't be statically exported
@@ -35,9 +35,9 @@ cleanup() {
   if [ -d "/tmp/maia-api-backup-$$" ]; then
     mv /tmp/maia-api-backup-$$ app/api
   fi
-  # Restore middleware
-  if [ -f "/tmp/maia-middleware-backup-$$" ]; then
-    mv /tmp/maia-middleware-backup-$$ middleware.ts
+  # Restore proxy
+  if [ -f "/tmp/maia-proxy-backup-$$" ]; then
+    mv /tmp/maia-proxy-backup-$$ proxy.ts
   fi
   # Restore dynamic routes
   if [ -d "/tmp/maia-dynamic-backup-$$" ]; then

@@ -1,12 +1,12 @@
 /**
- * MAIA-TEACHING-INTELLIGENCE-01 — Teaching Canon Fidelity Contract (tcf-1).
+ * MAIA-TEACHING-INTELLIGENCE-01 — Teaching Canon Fidelity Contract (tcf-2).
  *
  * Bounded remediation produced by the Founder Production Experience Witness.
  * This contract does not create a new teaching architecture, retrieve sources,
  * call a model, persist learner state, or widen T8 authority. It constrains how
  * already-active teaching may represent selected Soullab canon/research domains.
  */
-export const TEACHING_CANON_FIDELITY_VERSION = 'tcf-1' as const;
+export const TEACHING_CANON_FIDELITY_VERSION = 'tcf-2' as const;
 
 export type TeachingCanonFidelityDomain =
   | 'relational_geometry'
@@ -58,6 +58,11 @@ const RGR_REFERENCES: readonly TeachingCanonReference[] = [
   {
     sourceId: 'rgr-05-feasibility-gate',
     locator: 'git:a826d5ae77f52c443ee29693d745275918906ff4',
+    standing: 'soullab_research',
+  },
+  {
+    sourceId: 'rgr-06-confirmatory-implementation-lock',
+    locator: 'git:0a84282d8ea2560e3b2d4a79d37c47b3a2ace099',
     standing: 'soullab_research',
   },
 ];
@@ -117,7 +122,8 @@ export function resolveTeachingCanonFidelity(input: {
     domainKeys.push('relational_geometry');
     references.push(...RGR_REFERENCES);
     laws.push(
-      'RGR RESEARCH STANDING: Relational Geometry Reasoning is an active Soullab research programme. The programme is canonical through RGR-05 pre-materialization feasibility/validator work, but its core relational-transfer hypothesis has NOT yet been empirically established.',
+      'RGR RESEARCH STANDING: Relational Geometry Reasoning is an active Soullab research programme. The programme is canonical through RGR-06 Confirmatory Implementation Lock, but its core relational-transfer hypothesis H-RT1 has NOT yet been empirically established.',
+      'RGR-06 EVIDENCE BOUNDARY: RGR-06 freezes confirmatory implementation machinery; it does not constitute benchmark evidence. No benchmark examples were materialized, no benchmark model training occurred, and TEST and REPLICATION have not executed.',
       'GEOMETRY BOUNDARY: RGR-00 states that relation is the object of inquiry and geometry is a candidate language, not a predetermined answer. Do not teach that human meaning, consciousness, or relationships literally ARE geometry.',
       'FORMALITY BOUNDARY: distance, angle, curvature, topology, invariants, and related geometric terms are candidate formal constructs unless an exact RGR model defines the objects, transformations, metric/topology, measurement rule, and falsification test. Do not present them as already-measured relational quantities.',
       'EVIDENCE BOUNDARY: established findings from network science, systems theory, complexity, psychology, or other fields may motivate or support component ideas; they are not by themselves empirical evidence that RGR is true as a distinct theory.',

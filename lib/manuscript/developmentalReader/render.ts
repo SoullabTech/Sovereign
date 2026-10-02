@@ -82,7 +82,7 @@ import {
  * -03: a reading's identity is the whole of what the model was shown, and the
  * -04 text is not the -05 text. `promptContractHash()` moves with it.
  */
-export const READER_VERSION = 'DEVELOPMENTAL-READER-05';
+export const READER_VERSION = 'DEVELOPMENTAL-READER-07';
 export const TOOL_NAME = 'draft_reader_claims';
 
 /* ── the prompt ──────────────────────────────────────────────────────────── */
@@ -113,7 +113,10 @@ ${VOCABULARY}
 4. Do not interpret, rank, score, grade, recommend, or say what should change. Do not guess the author's intent. Do not assert an effect on a reader. Do not describe a whole-Work pattern from partial coverage without saying so through the vocabulary.
 5. Do not ask for more sections, more context, or another read. What you were given is the whole of what you may read. If the commissioned question cannot be read from it, say so in claims that carry "outside-coverage", or return "none".
 6. Do not invent headings or titles. SECTION AND UNIT IDS BELONG TO THE EVIDENCE REFERENCES AND NOWHERE ELSE: cite them exactly in a claim's refs, and never write one into the claim text. In prose, name a section by its position as it was given to you, or relative to another ("the section immediately before it"), and name a division by the member's own words as given. The section positions shown to you ARE the author-facing section numbers: use them exactly as given. The author reads your prose; they do not hold your keys.
-7. Answer ONLY through the tool. Return outcome "none" when, after reading what you were given, there is nothing worth drafting under this lens - that is a complete answer.`;
+7. Answer ONLY through the tool. Return outcome "none" when, after reading what you were given, there is nothing worth drafting under this lens - that is a complete answer.
+8. HOW YOUR CLAIM TEXT READS. Think as technically as the reading requires; write the claim in plain language a writer who has never studied craft can act on. Translate the noticing; never reduce it. Say the thing itself rather than naming the device: "this paragraph explains the idea and then says it again in different words" rather than "an appositive recapitulation". Use a technical term only where ordinary language would lose something that matters, and then show it happening in the author's own sentence in the same breath. You may let the prose you were given set your register - matching its plainness or its density, its concreteness or its abstraction - but describe only the WRITING. Never describe, classify, rate or infer anything about the AUTHOR: not their skill, experience, education, profession, or what level of help they want. Richer prose lets you speak more richly; it never lets you claim more than the evidence carries. Plain language is not permission to notice less: draft every claim you would have drafted, keep every difficult tradeoff, soften no concern, strengthen none, and change no evidence reference and no non-conclusion in order to read more simply. The burden is yours to make the same sophistication comprehensible.
+9. THEMES LABEL. When and only when the commissioned lens is themes, every claim MUST also carry themeLabel: a short, plain candidate name (1–120 characters) for the repeated thread described by that claim. The label is MAIA-authored, not the member's declaration. It must not contain an importance judgement (key, central, strongest, important, significant) and must remain renameable/rejectable by the member. Under every other lens, OMIT themeLabel entirely.
+10. THEMES REPEATED-EVIDENCE LAW. Under the themes lens, every claim must cite direct textual presence in at least TWO DISTINCT BODY-depth sections. Use separate "section" or "passage" refs for those distinct sections. A "section-run", structure reference, heading, position, or single direct location may support context but does NOT establish a repeated theme. If you cannot bind a candidate theme to two distinct direct textual locations, do not return that claim.`;
 
 /* ── the tool ────────────────────────────────────────────────────────────── */
 
@@ -169,6 +172,8 @@ export function readerTool(): ReaderTool {
             properties: {
               text: { type: 'string', minLength: 1,
                 description: 'What you noticed. Not a recommendation, not a judgement.' },
+              themeLabel: { type: 'string', minLength: 1, maxLength: 120,
+                description: 'Themes lens ONLY: short MAIA-authored candidate theme name. Omit for every other lens.' },
               refs: { type: 'array', minItems: 1, items: REF_SCHEMA,
                 description: 'The evidence this rests on, in the permitted shapes.' },
               doesNotEstablish: { type: 'array', minItems: 1,
