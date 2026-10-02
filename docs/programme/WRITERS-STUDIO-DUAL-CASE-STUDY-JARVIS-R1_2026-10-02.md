@@ -316,3 +316,32 @@ Nothing is applied automatically. Improvement and learning are paired, but teach
 the writer never has to study craft terminology in order to receive useful editorial help.
 
 > **The Studio should help people become better writers by working with their own writing, not by making them endure a writing lesson first.**
+
+## Teachable edit law
+
+Every meaningful proposed edit should be inspectable, explainable, adjustable, and optional.
+
+The writer must be able to see:
+- the original wording;
+- the proposed wording;
+- the exact changed words;
+- what changed and why;
+- a hypothetical reader effect;
+- what MAIA tried to protect.
+
+The writer may ask why, ask to be taught, keep only selected changes, request another direction,
+or adjust the proposal lighter/heavier without applying anything.
+
+### Explicit proposal intent is turn-local authority
+
+Communication depth and action intent are separate axes.
+
+Guided / Learning / Direct govern **how MAIA explains**. They do not cancel an explicit writer
+gesture that asks for wording.
+
+Clicking a proposal action such as **Show edit options**, **Make it lighter**, **Go a little further**,
+or **Another option** authorizes a bounded proposal for that turn only. It does not silently change
+the Work-level standing preference about proposing wording immediately.
+
+Responsiveness does not mean manufacturing change. If no meaningful lighter proposal exists, MAIA
+should say so and explain the underlying choice rather than inventing an inferior alternative.
