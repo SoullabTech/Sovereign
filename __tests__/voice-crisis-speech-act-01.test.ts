@@ -41,6 +41,19 @@ describe('SAFETY-CRISIS-01 server-side crisis assessment', () => {
     expect(takeSafetyCheckIn('', 1)).toBe(false);
   });
 
+  it('continuation state is isolated by session and fails closed when state is lost', () => {
+    __resetSafetyCheckIns();
+
+    markSafetyCheckIn('session-a', 0);
+    expect(takeSafetyCheckIn('session-b', 1000)).toBe(false);
+    expect(takeSafetyCheckIn('session-a', 1000)).toBe(true);
+
+    // Process loss/restart semantics: absence of server state never invents risk.
+    __resetSafetyCheckIns();
+    expect(takeSafetyCheckIn('session-a', 2000)).toBe(false);
+    expect(assessCrisisWithCheckIn('yes, I do', false).tier).toBe('none');
+  });
+
   it('a bare farewell and turn-taking language trigger nothing', () => {
     for (const t of ['goodbye', "I'm done", "I'm done talking for now", 'okay goodbye MAIA, talk tomorrow']) {
       expect(assessCrisis(t)).toEqual({ tier: 'none', signals: [] });
@@ -64,6 +77,9 @@ describe('SAFETY-CRISIS-01 server-side crisis assessment', () => {
   it('the live route attaches the referral to every response after assessment', () => {
     const route = W('app/api/sovereign/app/maia/list/route.ts');
     expect(route.match(/assessCrisisWithCheckIn\(message, takeSafetyCheckIn\(crisisCheckInKey\)\)/g)).toHaveLength(1);
+    // Continuation authority is session-bound; a missing sessionId gets no carry.
+    expect(route).toContain("const crisisCheckInKey = acceptedSessionId ?? '';");
+    expect(route).not.toContain('member:${userId}');
     // Cognition uses the route's assessment, passed as a typed field (never meta).
     expect(route).toMatch(/input: message,\n(?:\s*\/\/.*\n)*\s*crisisAssessment,/);
     // The check-in is held only when MAIA actually asked about safety.
