@@ -60,7 +60,17 @@ export function typesetManuscriptBody(body: string): WriteBlock[] {
     .filter((line) => !FOLIO.test(line) && !ROMAN_SUBHEAD.test(line) && !LIST_LINE.test(line))
     .map((line) => line.length).filter((n) => n >= 25);
   const typical = median(proseLengths);
-  if (typical < 45) {
+  const proseLines = nonempty.map((line) => line.trim())
+    .filter((line) => !FOLIO.test(line) && !ROMAN_SUBHEAD.test(line) && !NUMBERED_SUBHEAD.test(line) && !LIST_LINE.test(line));
+  const sentenceEnded = proseLines.filter((line) => SENTENCE_END.test(line)).length;
+  const authoredParagraphProfile = proseLines.length >= 3
+    && median(proseLines.map((line) => line.length)) >= 70
+    && sentenceEnded / proseLines.length >= 0.7;
+  const hasStandaloneStructure = nonempty.some((line) => {
+    const t = line.trim();
+    return FOLIO.test(t) || ROMAN_SUBHEAD.test(t) || NUMBERED_SUBHEAD.test(t);
+  });
+  if (typical < 45 && !authoredParagraphProfile && !hasStandaloneStructure) {
     const kind = classify(normalized);
     return [{ text: visualText(normalized, kind), kind }];
   }
@@ -77,6 +87,7 @@ export function typesetManuscriptBody(body: string): WriteBlock[] {
     if (standalone) { flush(); pushBlock(out, t); continue; }
 
     current.push(raw);
+    if (authoredParagraphProfile && SENTENCE_END.test(t)) { flush(); continue; }
     const nextRaw = lines[i + 1] ?? '';
     const next = nextRaw.trim();
     if (!next) { flush(); continue; }
