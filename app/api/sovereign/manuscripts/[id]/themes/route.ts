@@ -150,6 +150,7 @@ export async function GET(
       candidates.push({
         readingId: id,
         observationId: observation.observationId,
+        observationKey: observation.key,
         label: observation.themeLabel.trim(),
         observation: observation.observation,
         frozenAt: reading.provenance.frozenAt,
