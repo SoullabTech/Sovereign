@@ -31,6 +31,20 @@ Canonical source reads below are at commit:`cf9624cdf5c12b61cae250f0761b7b793e74
 | S3 | **Stellium practitioner safety notice** (`lib/notifications/safety.ts`) | A practitioner is emailed when a client raises a safety concern | Sent from `Stellium <notifications@soullab.ai>`. Delivery is **currently impossible** (E1), and `soullab.ai`'s Resend verification is unknown. A refusal is logged and recorded as `safety_concern_logs.email_status='failed'`, but **nothing pages anyone on that row.** `safety_concern_logs` had 0 rows ever at the time of the record, so there is no historical exposure. | SOURCE (sender) + RECORD: EMAIL-IDENTITY-01 R2 (below). | unassigned | OPEN · **safety-critical**, latent | E1 closed, `soullab.ai` verified, and a failed row pages a human. |
 | S4 | **Safety circuit breaker** (`lib/consciousness/autonomy/SafetyCircuitBreakers.ts`) | `intervention.humanNotified = true` | A `console.log`. `notifyHumans()` sets the flag whether or not `onHumanNotification` is wired. | SOURCE. ⚠️ Whether this path is reachable in production was **not** checked. | unassigned | OPEN | `humanNotified` is set only after a confirmed or falsifiable delivery, or the field is removed; reachability is established either way. |
 
+#### R1 consequence-truth repair status
+
+A bounded R1 repair now makes the safety delivery states explicit in runtime code:
+
+- no configured crisis recipient -> \`DELIVERY_UNAVAILABLE\`
+- unwired teen-team alert -> \`DELIVERY_UNAVAILABLE\`
+- provider/API acceptance -> \`TRANSPORT_ACCEPTED\`, not human delivery
+- provider refusal/exception -> \`DELIVERY_FAILED\`
+- \`CHANNEL_REACHED\` and \`HUMAN_ACKNOWLEDGED\` require stronger witnesses
+
+The member-facing crisis copy no longer claims that MAIA will connect the member to a human when the runtime cannot prove that.
+
+**S1-S3 remain OPEN.** This repairs consequence truth, not the missing delivery channels or independent failure witness. Closure still requires the conditions in each row.
+
 ### Email transport and its dependants
 
 | # | Mechanism | Claims or records | Actually delivered | Evidence | Owner | Status | Closes when |

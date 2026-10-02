@@ -1,6 +1,7 @@
 // @ts-nocheck - Safety prototype, not type-checked
 import { DateTime } from 'luxon';
 import { RealTimeAlertService, type AlertPayload, type TherapistContact } from './alerting/real-time-alerts';
+import { deliveryFailed, deliveryUnavailable, resultForDeliveryState, type ConsequenceDeliveryResult } from './safety/consequenceDeliveryTruth';
 
 interface RiskAssessment {
   level: 'none' | 'moderate' | 'high' | 'crisis';
@@ -31,6 +32,7 @@ interface SafetyResponse {
     risk_assessment: RiskAssessment;
     session_flags: string[];
     user_trajectory: any;
+    consequence_delivery?: ConsequenceDeliveryResult;
   };
 }
 
@@ -289,18 +291,19 @@ export class MAIASafetyPipeline {
     // 2. Determine primary action based on risk
     let action: SafetyResponse['action'] = 'continue';
     let responseMessage: string | undefined;
+    let consequenceDelivery: ConsequenceDeliveryResult | undefined;
 
     switch (riskAssessment.level) {
       case 'crisis':
         action = 'lock_session';
-        responseMessage = "I'm deeply concerned about what you've shared. Your safety is the most important thing right now. I'm going to pause our conversation and connect you with immediate support.";
-        await this.triggerCrisisAlert(userId, sessionId, message, riskAssessment);
+        responseMessage = "I'm deeply concerned about what you've shared. Your safety is the most important thing right now. I'm going to pause our conversation. I can't confirm that a human has been reached from here, so please contact local emergency services or a trusted person directly now.";
+        consequenceDelivery = await this.triggerCrisisAlert(userId, sessionId, message, riskAssessment);
         break;
 
       case 'high':
         action = 'escalate';
         responseMessage = "I hear that you're in significant pain. Let's focus on your safety and getting you connected with support. You don't have to go through this alone.";
-        await this.triggerHighRiskAlert(userId, sessionId, message, riskAssessment);
+        consequenceDelivery = await this.triggerHighRiskAlert(userId, sessionId, message, riskAssessment);
         break;
 
       case 'moderate':
@@ -323,7 +326,8 @@ export class MAIASafetyPipeline {
     const metadata = {
       risk_assessment: riskAssessment,
       session_flags: this.extractSessionFlags(conversationContext),
-      user_trajectory: await this.getUserTrajectory(userId)
+      user_trajectory: await this.getUserTrajectory(userId),
+      consequence_delivery: consequenceDelivery,
     };
 
     // 5. Log interaction
@@ -408,10 +412,11 @@ export class MAIASafetyPipeline {
     sessionId: string,
     message: string,
     riskAssessment: RiskAssessment
-  ): Promise<void> {
+  ): Promise<ConsequenceDeliveryResult> {
     if (!this.alertService || !this.therapistDb) {
+      const result = deliveryUnavailable('No alert service or therapist directory configured');
       console.error('[SAFETY_NOTIFY_NO_RECIPIENT] crisis alert NOT delivered: no alert service / therapist directory configured — no human was notified');
-      return;
+      return result;
     }
 
     try {
@@ -426,7 +431,7 @@ export class MAIASafetyPipeline {
 
       if (!therapist) {
         console.error('[SAFETY_NOTIFY_NO_RECIPIENT] crisis alert NOT delivered: no assigned or on-call therapist — no human was notified');
-        return;
+        return deliveryUnavailable('No assigned or on-call therapist');
       }
 
       // Get user profile for context
@@ -464,13 +469,17 @@ export class MAIASafetyPipeline {
         risk_assessment: riskAssessment,
         trigger_message: message,
         alert_delivery_status: alertResponse.delivery_status,
+        consequence_delivery_state: alertResponse.consequence_state,
         intervention_type: 'crisis_alert',
         created_at: DateTime.now().toISO(),
       });
 
-      console.log(`Crisis alert sent for user ${userId}, alert ID: ${alertPayload.alert_id}`);
+      console.log('Crisis alert transport result:', { state: alertResponse.consequence_state });
+      return resultForDeliveryState(alertResponse.consequence_state, alertPayload.alert_id);
     } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Unknown crisis delivery error';
       console.error('Failed to send crisis alert:', error);
+      return deliveryFailed(reason);
     }
   }
 
@@ -479,17 +488,17 @@ export class MAIASafetyPipeline {
     sessionId: string,
     message: string,
     riskAssessment: RiskAssessment
-  ): Promise<void> {
+  ): Promise<ConsequenceDeliveryResult> {
     if (!this.alertService || !this.therapistDb) {
       console.error('[SAFETY_NOTIFY_NO_RECIPIENT] high-risk alert NOT delivered: no alert service / therapist directory configured — no human was notified');
-      return;
+      return deliveryUnavailable('No alert service or therapist directory configured');
     }
 
     try {
       const therapist = await this.therapistDb.getAssignedTherapist(userId);
       if (!therapist) {
-        console.log('No assigned therapist for high-risk alert, logging for review');
-        return;
+        console.error('[SAFETY_NOTIFY_NO_RECIPIENT] high-risk alert NOT delivered: no assigned therapist — no human was notified');
+        return deliveryUnavailable('No assigned therapist for high-risk alert');
       }
 
       const userProfile = await this.therapistDb.getUserProfile(userId);
@@ -516,7 +525,7 @@ export class MAIASafetyPipeline {
       // Only send during on-call hours unless it's emergency-level
       if (therapist.emergency_only && riskAssessment.confidence < 0.9) {
         console.log('Therapist marked emergency-only, deferring high-risk alert');
-        return;
+        return deliveryUnavailable('Assigned therapist is emergency-only for this high-risk event');
       }
 
       const alertResponse = await this.alertService.sendAlert(therapist, alertPayload);
@@ -529,13 +538,17 @@ export class MAIASafetyPipeline {
         risk_assessment: riskAssessment,
         trigger_message: message,
         alert_delivery_status: alertResponse.delivery_status,
+        consequence_delivery_state: alertResponse.consequence_state,
         intervention_type: 'high_risk_alert',
         created_at: DateTime.now().toISO(),
       });
 
-      console.log(`High-risk alert sent for user ${userId}, alert ID: ${alertPayload.alert_id}`);
+      console.log('High-risk alert transport result:', { state: alertResponse.consequence_state });
+      return resultForDeliveryState(alertResponse.consequence_state, alertPayload.alert_id);
     } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Unknown high-risk delivery error';
       console.error('Failed to send high-risk alert:', error);
+      return deliveryFailed(reason);
     }
   }
 
