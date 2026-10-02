@@ -2,8 +2,8 @@
 
 Date: 2026-10-02
 Status: deployment-order record; no production mutation
-Canonical observed: `a2681a07772202d19d62595144e50e47574620f0`
-Production observed: `7be140182`
+Canonical observed: `5c3d31c2a777ee62780906d8e07ba7b5fff47537`
+Production observed: `12b461bd8`
 
 ## Purpose
 
@@ -13,27 +13,25 @@ Define the lawful deployment order for the safety-delivery programme without ove
 
 The running production container reports:
 
-`GIT_COMMIT=7be140182`
+`GIT_COMMIT=12b461bd8`
 
-That commit is a Writer's Studio production projection:
+Production-host ancestry checking establishes that #1671 merge
+`15a9175fb917cd9aa84a2735f7b3cf91a964b49b`
+is **not** an ancestor of the deployed SHA.
 
-`feat(writers-studio): restore visible editing latitude preferences`
+The production checkout does not currently possess the latest canonical object
+`5c3d31c2a777ee62780906d8e07ba7b5fff47537`, so this record does **not** infer
+or reuse a common ancestor from an earlier production projection.
 
-It does not contain the merged safety-human-delivery repair from #1671.
+Therefore safety deployment is NOT licensed as a simple canonical fast-forward.
 
-It is also not an ancestor of current `clean-main-no-secrets`.
-
-The common ancestor between production `7be140182` and canonical at the time of the census is:
-
-`298414555`
-
-Therefore safety deployment is NOT a simple canonical fast-forward.
-
-A production cut must preserve the admitted Writer's Studio production projection while adding only admitted safety changes.
+A production cut must preserve the actual running production projection, establish
+its ancestry to the selected canonical safety commits explicitly, and add only
+governed/admitted safety changes.
 
 ## Current safety admission state
 
-### Already canonical
+### Canonical code with unresolved Class-A custody disposition
 
 #1671 — safety-human-delivery-r1
 
@@ -47,23 +45,47 @@ Provides:
 - monitor independent-channel preflight/witness
 - reply-to structural repair
 
-### Class A review boundary
+#1671 is canonical, but its self-authored Class-A merge occurred with zero reviews while the
+standing custody law required fail-closed distinct-human concurrence. Canonical presence is
+therefore **not by itself production authority**. Post-facto disposition remains required.
+
+#1633 — server-side crisis assessment / live crisis composition
+
+Provides the current canonical live server crisis detector and composition seam.
+
+#1633 is also self-authored Class A, merged with zero reviews under the same unresolved
+custody condition. It likewise requires explicit post-facto governance disposition before
+this record may select it into a production cut.
+
+### Pending Class A review boundary
 
 #1713 — current-base S4 circuit-breaker human delivery successor
 
-Not production-admissible until its required review/branch-protection gates complete.
+Not production-admissible until the Class-A custody floor is satisfied and its governed
+review/admission completes.
 
-### Class A review boundary
+### Closed / superseded lane
 
 #1715 — current-base live crisis member-response successor
 
-Not production-admissible until its required review/branch-protection gates complete.
+Closed and no longer a pending production prerequisite. Its intended live-crisis concern is
+now represented by current canonical #1633 and must be governed there rather than revived
+from the closed conflicting lane.
+
+### Governance enforcement prerequisite
+
+#1716 — Class-A custody floor
+
+Mechanically fail-closes the already-required authoritative adjudication context when a
+self-authored Class-A PR lacks a governed distinct-human custodian approval. This enforcement
+must land before further Class-A admission is treated as ordinary.
 
 ### Evidence reconciliation
 
+#1709 — #1671 admission-exception record
 #1714 — post-#1671 register reconciliation
 
-Documentation only; does not gate runtime behavior.
+Documentation/evidence only; they do not themselves grant runtime or deployment authority.
 
 ## Current production configuration boundary
 
@@ -82,14 +104,25 @@ A dedicated human safety recipient therefore has not been intentionally designat
 
 ## Required deployment order
 
+### G0 — Governance floor and post-facto disposition
+
+Before any safety code is selected for production:
+- #1716 Class-A custody-floor enforcement is merged and required in the authoritative adjudication context
+- #1671 receives an explicit post-facto governance disposition on its exact admitted merge
+- #1633 receives an explicit post-facto governance disposition on its exact admitted merge
+- no canonical presence is treated as production authority merely because a merge already occurred
+
+Until those conditions are met, the safety cut is governance-blocked.
+
 ### G1 — Code admission
 
 Before production projection:
-- #1713 is merged/admitted or explicitly excluded from this cut
-- #1715 is merged/admitted or explicitly excluded from this cut
+- #1713 is merged/admitted under the custody floor or explicitly excluded from this cut
+- #1715 remains closed and is not revived as an admission prerequisite
+- selected #1671 / #1633 safety commits have an explicit governed disposition
 - current canonical head is recorded
 
-No unreviewed Class A code enters the production projection.
+No unresolved or unreviewed Class A code enters the production projection.
 
 ### G2 — Recipient authority
 
@@ -180,7 +213,7 @@ After the independent channel is witnessed, exercise bounded synthetic/non-membe
 - S2 live teen crisis producer
 - S3 Stellium failure fallback
 - S4 circuit-breaker producer if #1713 admitted
-- live crisis member-response contract separately for #1715 (no human disclosure)
+- live server crisis member-response contract from governed #1633 disposition (no human disclosure)
 
 S1 remains governed by its own reachability question because the prototype path is not established as live member ingress.
 
@@ -198,14 +231,16 @@ STOP if:
 
 ## Current standing
 
-Code substrate: PARTIAL — #1671 merged; #1713/#1715 under Class A review.
+Code substrate: PARTIAL — #1671 and #1633 are canonical but governance-held; #1713 remains pending Class A; #1715 is closed/superseded.
 
-Production artifact: NOT YET CONTAINS #1671.
+Governance enforcement: #1716 pending; distinct-human custody is not yet constituted.
+
+Production artifact: `12b461bd8` · does NOT contain #1671 merge ancestry; current canonical object is not present in the production checkout, so projection ancestry must be re-established explicitly.
 
 Safety recipient: NOT DESIGNATED.
 
 Independent human delivery: NOT READY FOR WITNESS.
 
-Production cut: BLOCKED ON CLASS A ADMISSION + RECIPIENT AUTHORITY.
+Production cut: BLOCKED ON GOVERNANCE DISPOSITION + CLASS A CUSTODY + RECIPIENT AUTHORITY.
 
 No new transport architecture is warranted at this boundary.
