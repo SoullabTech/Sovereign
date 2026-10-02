@@ -32,6 +32,17 @@ import {
 } from '@/lib/writersStudio/sourceVerification';
 import P4R1WriterUnderstanding from './P4R1WriterUnderstanding';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
+import {
+  DEFAULT_WORKING_STYLE,
+  EXPLANATION_COPY,
+  EXPLANATION_VALUES,
+  PACE_COPY,
+  PACE_VALUES,
+  readWorkingStyle,
+  writeWorkingStyle,
+  type ExplanationDepth,
+  type WorkingPace,
+} from '@/lib/writersStudio/workingStyle';
 
 export const DEVELOP_FIELDS = [
   'overview',
@@ -85,6 +96,49 @@ const QUESTION: Record<Exclude<DevelopField, 'overview'>, string> = {
   continuity: 'What carries through, what drops, and what later has already happened?',
   reader: 'What does the reader already know here, and where might orientation be lost?',
 };
+
+const FRIENDLY_PHENOMENON: Record<string, { title: string; lead: string }> = {
+  recurrence: {
+    title: 'Something is returning here',
+    lead: 'MAIA noticed an idea, image, phrase, or gesture coming back. The useful question is what changes each time it returns — not whether repetition is automatically a problem.',
+  },
+  'unresolved thread': {
+    title: 'Something may still be open',
+    lead: 'MAIA noticed something introduced here that is not yet taken up again in what she read. That can be intentional. It is worth asking whether the openness feels alive or unfinished to you.',
+  },
+  'register shift': {
+    title: 'The way the chapter speaks changes here',
+    lead: 'MAIA noticed a change in voice, distance, tense, or mode of telling. The question is whether the change serves the movement you want.',
+  },
+  'prospective reference': {
+    title: 'The text points forward',
+    lead: 'MAIA noticed language that asks the reader to hold something for later. It may be useful to see whether that promise feels clear and well placed.',
+  },
+  're-explanation / first-mention': {
+    title: 'An idea may be arriving twice',
+    lead: 'MAIA noticed something being introduced or explained in a way that may overlap with an earlier moment. The question is whether the second arrival deepens the idea or simply repeats it.',
+  },
+  movement: {
+    title: 'The chapter changes direction here',
+    lead: 'MAIA noticed a shift in what the section is doing. We can look at what opens, what closes, and whether that movement feels true to the chapter.',
+  },
+  'term drift': {
+    title: 'A word may be changing meaning',
+    lead: 'MAIA noticed a term carrying a different sense here than elsewhere. That may be growth, nuance, or confusion; the manuscript itself has to decide which.',
+  },
+  'positional asymmetry': {
+    title: 'The weight is uneven across the chapter',
+    lead: 'MAIA noticed that something is concentrated in one part of the chapter more than another. That is not a flaw by itself; it may reveal where the chapter is doing its deepest work.',
+  },
+};
+
+function friendlyObservation(phenomenonLabel: string | null | undefined) {
+  const key = (phenomenonLabel ?? '').trim().toLowerCase();
+  return FRIENDLY_PHENOMENON[key] ?? {
+    title: 'There is something here worth looking at together',
+    lead: 'MAIA noticed a pattern in this reading. You do not need to accept it as a verdict. The useful next move is to see whether it helps you understand what this part of the Work is doing.',
+  };
+}
 
 export type DevelopScopeChoice =
   | { kind: 'whole' }
@@ -250,6 +304,64 @@ function SavedReadings({ field, summaries, loading, onReading }: {
   );
 }
 
+function sectionWordCount(section: RebuildSection): number {
+  let body = section.body ?? '';
+  const heading = section.heading?.trim();
+  if (heading && body.trimStart().startsWith(heading)) {
+    body = body.trimStart().slice(heading.length);
+  }
+  return body.trim() ? body.trim().split(/\s+/).length : 0;
+}
+
+function openingEpigraph(section: RebuildSection): string | null {
+  let body = section.body ?? '';
+  const heading = section.heading?.trim();
+  if (heading && body.trimStart().startsWith(heading)) {
+    body = body.trimStart().slice(heading.length);
+  }
+  const opening = body.trim().split(/\n\s*\n+/)[0]?.trim() ?? '';
+  if (!opening || opening.length > 900) return null;
+  return /^[“"‘']/.test(opening) ? opening : null;
+}
+
+function ChapterShape({ sections, scope }: {
+  sections: readonly RebuildSection[];
+  scope: Extract<DevelopScopeChoice, { kind: 'chapter' }>;
+}) {
+  const from = sections.findIndex((section) => section.draftSectionId === scope.fromSectionId);
+  const to = sections.findIndex((section) => section.draftSectionId === scope.toSectionId);
+  if (from < 0 || to < from) return null;
+  const chapter = sections.slice(from, to + 1);
+  const root = chapter[0] ?? null;
+  const epigraph = root ? openingEpigraph(root) : null;
+  const outline = chapter.filter((section) => Boolean(section.heading?.trim()));
+
+  return (
+    <section className="fr-card p4r1-chapter-shape" aria-label="Chapter shape from the manuscript">
+      <span className="p4r1-eyebrow">The chapter as it is</span>
+      <h3>{scope.label}</h3>
+      <p>
+        This is not a MAIA reading. It is the chapter’s own headings, order, opening material, and word counts —
+        a simple map of what is already on the page.
+      </p>
+      {epigraph ? (
+        <blockquote className="p4r1-chapter-epigraph">
+          <span>Opening epigraph</span>
+          <p>{epigraph}</p>
+        </blockquote>
+      ) : null}
+      <ol className="p4r1-chapter-outline">
+        {outline.map((section) => (
+          <li key={section.draftSectionId} data-depth={section.headingDepth ?? undefined}>
+            <span>{section.heading?.trim()}</span>
+            <small>{sectionWordCount(section).toLocaleString()} words</small>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function ScopeChooser({ scope, sections, sectionScope, chapterScope, onScope }: {
   scope: DevelopScopeChoice;
   sections: readonly RebuildSection[];
@@ -367,13 +479,25 @@ function ReadingField({
           </span>
         </div>
 
-        <blockquote>{observation.observation}</blockquote>
+        {(() => {
+          const friendly = friendlyObservation(observation.phenomenonLabel);
+          return (
+            <div className="p4r1-discovery-human">
+              <h4>{friendly.title}</h4>
+              <p>{friendly.lead}</p>
+              <details>
+                <summary>See the saved reading in full</summary>
+                <blockquote>{observation.observation}</blockquote>
+              </details>
+            </div>
+          );
+        })()}
 
         <div className="p4r1-discovery-plain">
-          <b>Why this may be worth looking at</b>
+          <b>You do not have to decide what this means alone</b>
           <p>
-            This is an observation from the exact reading shown above. It is not a grade or a required change.
-            You can follow it into the manuscript, talk it through, or simply move on.
+            MAIA can put the reading into ordinary language, show you the exact places she was responding to,
+            and stay with the question while you decide whether anything here matters for your Work.
           </p>
         </div>
 
@@ -384,7 +508,7 @@ function ReadingField({
               className="p4r1-discovery-primary"
               onClick={() => onWorkWithObservation(reading.id, observation.key, workSectionId)}
             >
-              Work with this
+              Stay with this in Write
             </button>
           ) : null}
           {sectionId ? (
@@ -392,14 +516,14 @@ function ReadingField({
               type="button"
               onClick={() => onGoToObservation(reading.id, observation.key, sectionId)}
             >
-              Show me where
+              Show me in the manuscript
             </button>
           ) : null}
           <button type="button" onClick={() => onTalkObservation(observation.key)}>
-            Talk this through
+            Talk with MAIA
           </button>
           <button type="button" onClick={() => onTeachObservation(observation.key)}>
-            Teach me why
+            Help me understand
           </button>
           <button type="button" onClick={() => onDeepObservation(observation.key)}>
             Go deeper
@@ -441,18 +565,99 @@ function ReadingField({
   );
 }
 
-function ThemeField({ payload, busy, error, onMutation }: {
+function ThemeField({ payload, busy, error, onMutation, onTalkCandidate }: {
   payload: LiveThemesPayload | null | undefined;
   busy: boolean;
   error: string | null;
   onMutation: P4R1DevelopViewProps['onThemeMutation'];
+  onTalkCandidate: (candidate: LiveThemeCandidate) => void;
 }) {
   const [draft, setDraft] = useState('');
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
+  const [pace, setPace] = useState<WorkingPace>(DEFAULT_WORKING_STYLE.pace);
+  const [explanationDepth, setExplanationDepth] = useState<ExplanationDepth>(DEFAULT_WORKING_STYLE.explanation);
+  const [candidateIndex, setCandidateIndex] = useState(0);
+  const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
+  const [rested, setRested] = useState<ReadonlySet<string>>(new Set());
+
+  useEffect(() => {
+    const sync = () => {
+      const style = readWorkingStyle();
+      setPace(style.pace);
+      setExplanationDepth(style.explanation);
+    };
+    sync();
+    window.addEventListener('writers-studio-working-style-changed', sync as EventListener);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('writers-studio-working-style-changed', sync as EventListener);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!payload || typeof window === 'undefined') return;
+    const key = `writers-studio:noticings:${payload.manuscriptId}`;
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { held?: string[]; rested?: string[] };
+      setHeld(new Set(Array.isArray(parsed.held) ? parsed.held : []));
+      setRested(new Set(Array.isArray(parsed.rested) ? parsed.rested : []));
+    } catch {
+      // A presentation preference failure must never block the reading.
+    }
+  }, [payload?.manuscriptId]);
+
   if (payload === undefined) return <p className="p4r1-empty">Opening Themes…</p>;
   if (payload === null) return <p className="p4r1-empty">Themes are unavailable just now. Nothing has changed.</p>;
 
   const selected = payload.themes.find((theme) => theme.id === selectedThemeId) ?? payload.themes[0] ?? null;
+  const updateWorkingStyle = (next: { pace?: WorkingPace; explanation?: ExplanationDepth }) => {
+    writeWorkingStyle({
+      pace: next.pace ?? pace,
+      explanation: next.explanation ?? explanationDepth,
+    });
+  };
+  const noticingKey = (candidate: LiveThemeCandidate) => `${candidate.readingId}:${candidate.observationId}`;
+  const availableCandidates = payload.candidates.filter((candidate) => !rested.has(noticingKey(candidate)));
+  const safeIndex = availableCandidates.length === 0 ? 0 : Math.min(candidateIndex, availableCandidates.length - 1);
+  const shownCandidates = pace === 'mapped'
+    ? availableCandidates
+    : pace === 'guided'
+      ? availableCandidates.slice(0, 3)
+      : availableCandidates.slice(safeIndex, safeIndex + 1);
+
+  const persistNoticings = (nextHeld: ReadonlySet<string>, nextRested: ReadonlySet<string>) => {
+    setHeld(nextHeld);
+    setRested(nextRested);
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(`writers-studio:noticings:${payload.manuscriptId}`, JSON.stringify({
+        held: [...nextHeld], rested: [...nextRested],
+      }));
+    } catch {
+      // Incubation state is supportive UI, never a prerequisite for writing.
+    }
+  };
+
+  const keepNearby = (candidate: LiveThemeCandidate) => {
+    const key = noticingKey(candidate);
+    const nextHeld = new Set(held); nextHeld.add(key);
+    const nextRested = new Set(rested); nextRested.delete(key);
+    persistNoticings(nextHeld, nextRested);
+  };
+
+  const letRest = (candidate: LiveThemeCandidate) => {
+    const key = noticingKey(candidate);
+    const nextHeld = new Set(held); nextHeld.delete(key);
+    const nextRested = new Set(rested); nextRested.add(key);
+    persistNoticings(nextHeld, nextRested);
+    if (pace === 'intimate' && availableCandidates.length > 1) {
+      setCandidateIndex((safeIndex + 1) % Math.max(1, availableCandidates.length - 1));
+    }
+  };
+
   return (
     <>
       <div className="fr-hero" data-landmark="hero">
@@ -460,10 +665,38 @@ function ThemeField({ payload, busy, error, onMutation }: {
       </div>
       <div className="fr-sec-h">
         <div>
-          <h3>Emerging Themes</h3>
-          <p>Governed themes in this Work. MAIA’s candidates stay candidates until you choose.</p>
+          <h3>Themes</h3>
+          <p>Themes you have chosen to carry in this Work. MAIA’s noticings stay provisional until you decide otherwise.</p>
         </div>
       </div>
+
+      <details className="p4r1-theme-working-style">
+        <summary>Working style · {PACE_COPY[pace].label} · {EXPLANATION_COPY[explanationDepth].label}</summary>
+        <div className="p4r1-theme-working-style-body">
+          <label>
+            <span><b>How much MAIA shows at once</b><em>{PACE_COPY[pace].description}</em></span>
+            <input type="range" min={0} max={PACE_VALUES.length - 1} step={1}
+              value={PACE_VALUES.indexOf(pace)} aria-valuetext={PACE_COPY[pace].label}
+              onChange={(event) => updateWorkingStyle({ pace: PACE_VALUES[Number(event.target.value)] ?? DEFAULT_WORKING_STYLE.pace })} />
+          </label>
+          <div className="p4r1-theme-style-scale p4r1-theme-style-scale-three" aria-hidden="true">
+            {PACE_VALUES.map((value) => <span key={value}>{PACE_COPY[value].label}</span>)}
+          </div>
+          <label>
+            <span><b>How MAIA explains what she sees</b><em>{EXPLANATION_COPY[explanationDepth].description}</em></span>
+            <input type="range" min={0} max={EXPLANATION_VALUES.length - 1} step={1}
+              value={EXPLANATION_VALUES.indexOf(explanationDepth)} aria-valuetext={EXPLANATION_COPY[explanationDepth].label}
+              onChange={(event) => updateWorkingStyle({ explanation: EXPLANATION_VALUES[Number(event.target.value)] ?? DEFAULT_WORKING_STYLE.explanation })} />
+          </label>
+          <div className="p4r1-theme-style-scale" aria-hidden="true">
+            {EXPLANATION_VALUES.map((value) => <span key={value}>{EXPLANATION_COPY[value].label}</span>)}
+          </div>
+          <div className="p4r1-theme-style-preview">
+            <span>MAIA would say</span>
+            <p>{EXPLANATION_COPY[explanationDepth].preview}</p>
+          </div>
+        </div>
+      </details>
 
       {error ? <p className="p4r1-error" role="status">{error}</p> : null}
 
@@ -500,19 +733,54 @@ function ThemeField({ payload, busy, error, onMutation }: {
 
       {payload.candidates.length > 0 ? (
         <section className="fr-card p4r1-theme-candidates">
-          <h4>MAIA noticed</h4>
-          <p className="fr-sub">These remain candidates until you decide whether they belong in your Work.</p>
-          {payload.candidates.map((candidate) => (
-            <div key={candidate.readingId + ':' + candidate.observationId} className="p4r1-theme-candidate">
-              <div><b>{candidate.label}</b><p>{candidate.observation}</p></div>
-              <div>
-                <button type="button" disabled={busy}
-                  onClick={() => onMutation({ action: 'accept-candidate', readingId: candidate.readingId, observationId: candidate.observationId })}>Keep as theme</button>
-                <button type="button" disabled={busy}
-                  onClick={() => onMutation({ action: 'reject-candidate', readingId: candidate.readingId, observationId: candidate.observationId })}>Not a theme</button>
+          <h4>Noticings</h4>
+          <p className="fr-sub">Interesting things MAIA sees. You do not need to decide what they mean yet.</p>
+          <p className="p4r1-noticing-pace">
+            {pace === 'intimate'
+              ? 'Showing one at a time.'
+              : pace === 'guided'
+                ? 'Showing a few at a time.'
+                : 'Showing the wider field.'}
+          </p>
+          {shownCandidates.map((candidate) => {
+            const key = noticingKey(candidate);
+            return (
+              <div key={key} className="p4r1-theme-candidate p4r1-noticing">
+                <div>
+                  <div className="p4r1-noticing-title">
+                    <b>{candidate.label}</b>
+                    {held.has(key) ? <span>kept nearby</span> : null}
+                  </div>
+                  <p>{candidate.observation}</p>
+                </div>
+                <div className="p4r1-noticing-actions">
+                  <button type="button" disabled={busy} onClick={() => onTalkCandidate(candidate)}>Talk about this</button>
+                  <button type="button" disabled={busy || held.has(key)} onClick={() => keepNearby(candidate)}>
+                    {held.has(key) ? 'Kept nearby' : 'Keep nearby'}
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => letRest(candidate)}>Let rest</button>
+                  <details>
+                    <summary>More</summary>
+                    <div>
+                      <button type="button" disabled={busy}
+                        onClick={() => onMutation({ action: 'accept-candidate', readingId: candidate.readingId, observationId: candidate.observationId })}>Add to Themes</button>
+                      <button type="button" disabled={busy}
+                        onClick={() => onMutation({ action: 'reject-candidate', readingId: candidate.readingId, observationId: candidate.observationId })}>Dismiss</button>
+                    </div>
+                  </details>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+          {pace === 'intimate' && availableCandidates.length > 1 ? (
+            <button type="button" className="p4r1-noticing-next"
+              onClick={() => setCandidateIndex((safeIndex + 1) % availableCandidates.length)}>
+              See another noticing
+            </button>
+          ) : null}
+          {availableCandidates.length === 0 ? (
+            <p className="p4r1-empty">Nothing else needs your attention here right now.</p>
+          ) : null}
         </section>
       ) : null}
 
@@ -1175,83 +1443,160 @@ function AttentionMapPanel({
   onWork: (itemId: string, sectionId: string) => void;
   onDiscuss: (item: AttentionItem) => void;
 }) {
-  const bands: ReadonlyArray<{ id: AttentionItem['band']; label: string }> = [
-    { id: 'begin-here', label: 'Begin here' },
-    { id: 'next', label: 'Next' },
-    { id: 'later', label: 'Later' },
-    { id: 'watch', label: 'Watch' },
-  ];
+  const [pace, setPace] = useState<WorkingPace>(DEFAULT_WORKING_STYLE.pace);
+  const [cursor, setCursor] = useState(0);
 
   useEffect(() => {
-    if (!map || !selectedItemId || typeof document === 'undefined') return;
-    const node = document.getElementById('attention-' + selectedItemId);
-    window.requestAnimationFrame(() => node?.scrollIntoView({ block: 'center' }));
-  }, [map, selectedItemId]);
+    const sync = () => setPace(readWorkingStyle().pace);
+    sync();
+    window.addEventListener('writers-studio-working-style-changed', sync as EventListener);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('writers-studio-working-style-changed', sync as EventListener);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    setCursor(0);
+  }, [map?.commissionedAt]);
 
   if (!map) {
     return (
-      <section className="fr-card p4r1-attention-map">
-        <span className="p4r1-eyebrow">Whole-manuscript attention</span>
-        <h3>Where would your attention have the most leverage?</h3>
-        <p>MAIA can read the whole current manuscript through all eight developmental lenses, then synthesize the frozen evidence from macro to micro.</p>
-        <button type="button" className="p4r1-commission" disabled={busy} onClick={onCommission}>
-          {busy ? (progress ?? 'MAIA is reviewing the whole manuscript…') : 'Review the whole manuscript'}
+      <section className="fr-card p4r1-attention-map p4r1-editorial-pass" data-editorial-pass="empty">
+        <span className="p4r1-eyebrow">Edit with MAIA</span>
+        <h3>Let MAIA go through the manuscript with you.</h3>
+        <p>
+          MAIA can read the whole current manuscript, find the places where an edit may help,
+          and bring them to you in order. She can offer revision directions and alternate wording.
+          You decide what, if anything, to use.
+        </p>
+        <button type="button" className="p4r1-commission p4r1-editorial-pass-start" disabled={busy} onClick={onCommission}>
+          {busy ? (progress ?? 'MAIA is reading through the manuscript…') : 'Start an editorial pass'}
         </button>
+        <p className="p4r1-editorial-pass-boundary">
+          Nothing is changed or applied while she reads. Your Revision latitude still governs how far any proposed edit may go.
+        </p>
         {error ? <p className="p4r1-error" role="status">{error}</p> : null}
       </section>
     );
   }
 
+  const items = map.items.filter((item) => item.sectionIds.length > 0);
+  const safeCursor = items.length === 0 ? 0 : Math.min(cursor, items.length - 1);
+  const windowSize = pace === 'guided' ? 3 : 1;
+  const shownItems = pace === 'mapped'
+    ? items
+    : items.slice(safeCursor, safeCursor + windowSize);
+  const canAdvance = pace !== 'mapped' && items.length > windowSize;
+
+  const advance = () => {
+    if (items.length === 0) return;
+    const step = pace === 'guided' ? 3 : 1;
+    setCursor((current) => (current + step) % items.length);
+  };
+
   return (
-    <section className="fr-card p4r1-attention-map">
-      <span className="p4r1-eyebrow">Whole-manuscript Attention Map</span>
-      <h3>Macro → micro</h3>
-      <p>Ordered because you explicitly asked where attention may have the most leverage. Every item remains bound to frozen evidence.</p>
-      {bands.map((band) => {
-        const items = map.items.filter((item) => item.band === band.id);
-        if (items.length === 0) return null;
-        return (
-          <div key={band.id} className="p4r1-attention-band">
-            <h4>{band.label}</h4>
-            {items.map((item) => {
-              const sectionId = item.sectionIds[0]!;
-              return (
-                <details
-                  key={item.id}
-                  id={'attention-' + item.id}
-                  className="p4r1-attention-item"
-                  open={selectedItemId === item.id ? true : undefined}
-                  data-attention-item={item.id}
-                  data-attention-return={selectedItemId === item.id ? 'true' : undefined}
-                >
-                  <summary><b>{item.label}</b><span>{item.scale.replace('-', ' ')}</span></summary>
-                  <p>{item.notice}</p>
-                  <p><b>Why it matters:</b> {item.whyItMatters}</p>
-                  {item.uncertainty ? <p><b>Uncertainty:</b> {item.uncertainty}</p> : null}
-                  <div className="p4r1-dance-followup-actions">
-                    <button type="button" onClick={() => onShow(item.id, sectionId)}>Show me where</button>
-                    <button type="button" onClick={() => onDiscuss(item)}>Talk this through</button>
-                    <button type="button" onClick={() => onWork(item.id, sectionId)}>Work with this</button>
+    <section className="fr-card p4r1-attention-map p4r1-editorial-pass" data-editorial-pass="ready">
+      <div className="p4r1-editorial-pass-head">
+        <div>
+          <span className="p4r1-eyebrow">Editorial pass</span>
+          <h3>Work through the manuscript, one edit at a time.</h3>
+          <p>
+            MAIA has read across the current manuscript. Open any suggestion to see the exact passage
+            and ask for edit options. Nothing changes until you explicitly apply a version.
+          </p>
+        </div>
+        <span className="p4r1-editorial-pass-pace">{PACE_COPY[pace].label}</span>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="p4r1-empty">MAIA did not find an evidenced place to bring forward for editing in this pass.</p>
+      ) : (
+        <div className="p4r1-editorial-pass-items">
+          {shownItems.map((item, shownIndex) => {
+            const sectionId = item.sectionIds[0]!;
+            const absoluteIndex = pace === 'mapped' ? items.indexOf(item) : safeCursor + shownIndex;
+            return (
+              <article
+                key={item.id}
+                id={'attention-' + item.id}
+                className="p4r1-editorial-pass-item"
+                data-attention-item={item.id}
+                data-attention-return={selectedItemId === item.id ? 'true' : undefined}
+              >
+                <span className="p4r1-eyebrow">Suggestion {absoluteIndex + 1} of {items.length}</span>
+                <h4>{item.label}</h4>
+                <p>{item.notice}</p>
+                <div className="p4r1-editorial-pass-actions">
+                  <button type="button" className="p4r1-editorial-pass-primary" onClick={() => onWork(item.id, sectionId)}>
+                    Show edit options
+                  </button>
+                  <button type="button" onClick={() => onDiscuss(item)}>Talk first</button>
+                  <button type="button" onClick={() => onShow(item.id, sectionId)}>See in manuscript</button>
+                </div>
+                <details className="p4r1-attention-evidence">
+                  <summary>Why MAIA brought this forward</summary>
+                  <div>
+                    <p>{item.whyItMatters}</p>
+                    {item.uncertainty ? <p><b>What remains uncertain:</b> {item.uncertainty}</p> : null}
+                    <details>
+                      <summary>Evidence · {item.evidence.length}</summary>
+                      <div className="p4r1-attention-evidence-list">
+                        {item.evidence.map((ref) => (
+                          <blockquote key={`${ref.readingId}:${ref.observationKey}`}>
+                            <span>{ref.lens}</span>
+                            <p>{ref.observation}</p>
+                          </blockquote>
+                        ))}
+                      </div>
+                    </details>
                   </div>
-                  <details className="p4r1-attention-evidence">
-                    <summary>
-                      See the evidence · {item.evidence.length} frozen observation{item.evidence.length === 1 ? '' : 's'}
-                    </summary>
-                    <div className="p4r1-attention-evidence-list">
-                      {item.evidence.map((ref) => (
-                        <blockquote key={`${ref.readingId}:${ref.observationKey}`}>
-                          <span>{ref.lens}</span>
-                          <p>{ref.observation}</p>
-                        </blockquote>
-                      ))}
-                    </div>
-                  </details>
                 </details>
-              );
-            })}
-          </div>
-        );
-      })}
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {canAdvance ? (
+        <button type="button" className="p4r1-noticing-next p4r1-editorial-pass-next" onClick={advance}>
+          {pace === 'intimate' ? 'Next edit suggestion' : 'Next suggestions'}
+        </button>
+      ) : null}
+
+      <details className="p4r1-editorial-pass-map">
+        <summary>See the full editorial map</summary>
+        <div>
+          {([
+            ['begin-here', 'Begin here'],
+            ['next', 'Next'],
+            ['later', 'Later'],
+            ['watch', 'Watch'],
+          ] as const).map(([bandId, label]) => {
+            const bandItems = items.filter((item) => item.band === bandId);
+            if (bandItems.length === 0) return null;
+            return (
+              <div key={bandId} className="p4r1-attention-band">
+                <h4>{label}</h4>
+                {bandItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      const index = items.findIndex((candidate) => candidate.id === item.id);
+                      setCursor(Math.max(0, index));
+                    }}
+                  >
+                    <b>{item.label}</b>
+                    <span>{item.scale.replace('-', ' ')}</span>
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </details>
     </section>
   );
 }
@@ -1494,9 +1839,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               </span>
               <h3>{selectedRailLabel}</h3>
               <p>
-                This is the active developmental place now. Choose what you want to understand
-                and MAIA will stay with this chapter or section rather than making you work
-                through the whole-Work dashboard first.
+                I’m with you here. We can begin by talking about what this chapter or section is trying to become,
+                or you can ask me to look through one particular lens. You do not need to translate your question into editorial language first.
               </p>
               <div className="p4r1-locus-actions">
                 <button
@@ -1508,7 +1852,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                     'Help me understand what it is doing, what may be alive or unresolved here, and ask me one useful question before suggesting changes.',
                   ].join('\n\n'))}
                 >
-                  Talk about this
+                  Talk with MAIA
                 </button>
                 <button type="button" onClick={() => props.onMode('write')}>Open in Write</button>
               </div>
@@ -1518,16 +1862,17 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               <span className="p4r1-eyebrow">Look at this place through</span>
               <div className="p4r1-locus-lens-grid">
                 {([
-                  ['structure', 'Structure'],
-                  ['arc', 'Arc'],
-                  ['themes', 'Themes'],
-                  ['voice', 'Voice'],
-                  ['coherence', 'Coherence'],
-                  ['continuity', 'Continuity'],
-                  ['reader', 'Reader'],
-                ] as const).map(([field, label]) => (
+                  ['structure', 'How is this shaped?', 'See how the parts fit, repeat, or may be carrying too much.'],
+                  ['arc', 'Where is this going?', 'Follow the movement of the chapter and what changes as it unfolds.'],
+                  ['themes', 'What keeps returning?', 'Notice recurring ideas, images, questions, or gestures.'],
+                  ['voice', 'How does it sound?', 'Listen for where the voice holds, shifts, or changes distance.'],
+                  ['coherence', 'Does it hold together?', 'Look for places where meaning strengthens, drifts, or contradicts itself.'],
+                  ['continuity', 'What carries through?', 'Notice what is picked up, dropped, promised, or already happened.'],
+                  ['reader', 'How might a reader meet this?', 'Look at orientation, timing, and what the reader knows at each point.'],
+                ] as const).map(([field, label, detail]) => (
                   <button key={field} type="button" onClick={() => props.onField(field)}>
-                    {label}
+                    <b>{label}</b>
+                    <span>{detail}</span>
                   </button>
                 ))}
               </div>
@@ -1546,6 +1891,18 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           </div>
         ) : (
         <div className="p4r1-intent-arrival">
+          <AttentionMapPanel
+            map={props.attentionMap}
+            busy={props.attentionBusy}
+            progress={props.attentionProgress}
+            error={props.attentionError}
+            selectedItemId={props.selectedAttentionItemId}
+            onCommission={props.onCommissionAttentionMap}
+            onShow={props.onShowAttentionItem}
+            onWork={props.onWorkWithAttentionItem}
+            onDiscuss={discussAttentionItem}
+          />
+
           <section className="fr-card p4r1-developmental-orientation" data-developmental-orientation>
             <div className="p4r1-developmental-head">
               <span className="p4r1-eyebrow">The Work in process</span>
@@ -1770,18 +2127,6 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             onDiscussCandidate={discussLineageCandidate}
           />
 
-          <AttentionMapPanel
-            map={props.attentionMap}
-            busy={props.attentionBusy}
-            progress={props.attentionProgress}
-            error={props.attentionError}
-            selectedItemId={props.selectedAttentionItemId}
-            onCommission={props.onCommissionAttentionMap}
-            onShow={props.onShowAttentionItem}
-            onWork={props.onWorkWithAttentionItem}
-            onDiscuss={discussAttentionItem}
-          />
-
           <section className="p4r1-existing-evidence">
             <div>
               <span className="p4r1-eyebrow">What is already here</span>
@@ -1832,6 +2177,40 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             </section>
           ) : null}
 
+          {activeField === 'structure' && props.scope.kind === 'chapter' ? (
+            <ChapterShape sections={props.sections} scope={props.scope} />
+          ) : null}
+
+          {railSelectionId && selectedRailSection && activeField ? (
+            <section className="fr-card p4r1-selected-place">
+              <span className="p4r1-eyebrow">You’re here</span>
+              <h3>{selectedRailLabel}</h3>
+              <p>
+                We can stay with this {props.scope.kind === 'chapter' ? 'chapter' : 'section'} as a whole.
+                Choosing it did not trigger a new reading. If you want MAIA to read it for {LABEL[activeField].toLowerCase()}, ask directly here.
+              </p>
+              <div className="p4r1-selected-place-actions">
+                <button type="button" onClick={() => beginWholeConversation([
+                  `I’m in “${selectedRailLabel}”.`,
+                  `I’m looking at it through ${LABEL[activeField].toLowerCase()}, but I want to begin conversationally.`,
+                  'Help me understand what I am seeing before you turn it into an analysis. Ask me one useful question first.',
+                ].join('\n\n'))}>Talk with MAIA first</button>
+                <button
+                  type="button"
+                  className="p4r1-commission"
+                  disabled={props.commissioning || props.prep?.kind !== 'ready'}
+                  onClick={props.onCommission}
+                >
+                  {props.commissioning
+                    ? 'MAIA is reading…'
+                    : `Read this ${props.scope.kind === 'chapter' ? 'chapter' : 'section'} for ${LABEL[activeField]}`}
+                </button>
+                <button type="button" onClick={() => props.onMode('write')}>Open the text</button>
+              </div>
+              <p className="fr-also">You can change the lens at any time. Nothing is edited by reading.</p>
+            </section>
+          ) : null}
+
           <PreparationNotice
             prep={props.prep}
             error={props.prepError}
@@ -1845,6 +2224,12 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               busy={props.themeBusy}
               error={props.themeError}
               onMutation={props.onThemeMutation}
+              onTalkCandidate={(candidate) => {
+                setSelectedObservationKey(candidate.observationKey);
+                setDialoguePrompt('');
+                setTalking(true);
+                if (props.reading?.id !== candidate.readingId) props.onReading(candidate.readingId);
+              }}
             />
           ) : null}
 
@@ -1940,8 +2325,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <div className="fr-maia-name">
           <h2>MAIA</h2>
           <span>
-            {selectedObservation && talking
-              ? 'In relation to this observation'
+            {selectedObservation
+              ? 'With this observation'
               : railSelectionId && selectedRailSection
                 ? `In relation to ${selectedRailLabel}`
                 : 'In relation to your Work'}
@@ -1982,6 +2367,30 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               }}
             />
           </>
+        ) : selectedObservation && props.reading ? (
+          <div className="p4r1-observation-maia-ready">
+            <span className="p4r1-eyebrow">I’m here with this</span>
+            <h3>{friendlyObservation(selectedObservation.phenomenonLabel).title}</h3>
+            <p>{friendlyObservation(selectedObservation.phenomenonLabel).lead}</p>
+            <div className="p4r1-observation-ready-actions">
+              <button type="button" onClick={() => {
+                setDialoguePrompt('Put this observation into ordinary language for me. Start with what you actually noticed in my writing, why it may matter here, and one question that would help me decide what I think. No technical editorial vocabulary unless I ask for it.');
+                setTalking(true);
+              }}>Explain it plainly</button>
+              <button type="button" onClick={() => {
+                setDialoguePrompt('Stay with this observation with me. Do not turn it into a verdict or a repair task. Help me understand what you saw and ask me what I make of it.');
+                setTalking(true);
+              }}>Talk with me about it</button>
+              <button type="button" onClick={() => {
+                setDialoguePrompt('Teach me the one craft idea most relevant to this observation. Begin in plain language, show it in my own writing, and keep the technical term optional.');
+                setTalking(true);
+              }}>Teach me what is happening</button>
+            </div>
+            <details>
+              <summary>See the saved reading and evidence</summary>
+              <p>{selectedObservation.observation}</p>
+            </details>
+          </div>
         ) : props.work && workTalking ? (
           <div className="p4r1-work-conversation">
             <p className="p4r1-work-conversation-intro">
@@ -2007,26 +2416,29 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             </span>
             <h3>{selectedRailLabel}</h3>
             <p>
-              I’m oriented here now. You can talk about this place, move into a lens,
-              or open it in Write without going through the whole-Work material first.
+              I’m with you in this {props.scope.kind === 'chapter' ? 'chapter' : 'section'} now.
+              We can talk before analyzing anything, or you can choose the kind of attention you want from me.
             </p>
-            <div className="p4r1-locus-actions">
+            <div className="p4r1-locus-actions p4r1-locus-actions--relational">
               <button
                 type="button"
                 className="p4r1-talk"
                 onClick={() => beginWholeConversation([
                   `I selected “${selectedRailLabel}” in Develop.`,
-                  'Stay with this exact place and help me understand it before we move anywhere else.',
-                  'Ask me one useful question first.',
+                  'Stay with this exact place. Help me understand what it is doing before we analyze or change anything.',
+                  'Begin by asking me what I am noticing or wondering here.',
                 ].join('\n\n'))}
               >
-                Talk about this
+                Talk with MAIA
               </button>
-              <button type="button" onClick={() => props.onField('structure')}>Structure</button>
-              <button type="button" onClick={() => props.onField('arc')}>Arc</button>
-              <button type="button" onClick={() => props.onMode('write')}>Open in Write</button>
+              <button type="button" onClick={() => props.onField('structure')}>See how it is shaped</button>
+              <button type="button" onClick={() => props.onField('arc')}>Follow its movement</button>
+              <button type="button" onClick={() => props.onField('themes')}>Notice what returns</button>
+              <button type="button" onClick={() => props.onField('continuity')}>See what carries through</button>
+              <button type="button" onClick={() => props.onField('reader')}>Meet it as a reader</button>
+              <button type="button" onClick={() => props.onMode('write')}>Open the text</button>
             </div>
-            <p className="fr-also">Nothing new is read until you explicitly ask MAIA to read.</p>
+            <p className="fr-also">I do not read anything new until you ask me to.</p>
           </div>
         ) : (
           <>

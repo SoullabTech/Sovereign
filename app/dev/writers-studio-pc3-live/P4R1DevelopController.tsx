@@ -857,7 +857,7 @@ export default function P4R1DevelopController() {
 
   useEffect(() => {
     if (!context || typeof window === 'undefined') return;
-    const key = `writers-studio:attention-map:${context.manuscriptId}`;
+    const key = `writers-studio:editorial-pass:v1:${context.manuscriptId}`;
     const raw = window.sessionStorage.getItem(key);
     if (!raw) return;
     try {
@@ -877,21 +877,21 @@ export default function P4R1DevelopController() {
   const commissionAttentionMap = useCallback(async () => {
     if (!context || attentionBusy) return;
     if (context.draftRevision === null) {
-      setAttentionError('The current working-draft revision could not be established, so MAIA did not begin a whole-manuscript review.');
+      setAttentionError('The current draft could not be established safely, so MAIA did not begin the editorial pass.');
       return;
     }
     if (prep?.kind !== 'ready') {
-      setAttentionError('Prepare this Work for Develop before asking MAIA to review the whole manuscript.');
+      setAttentionError('Prepare this Work for Develop before asking MAIA to make an editorial pass.');
       return;
     }
     setAttentionBusy(true);
     setAttentionError(null);
-    setAttentionProgress('Beginning whole-manuscript review…');
+    setAttentionProgress('MAIA is reading through the manuscript for edit opportunities…');
     try {
       const bundle = await runWholeManuscriptReview(
         context.manuscriptId,
         (done, total, lens) => setAttentionProgress(
-          done >= total ? 'Eight readings complete. Synthesizing…'
+          done >= total ? 'Eight readings complete. Preparing edit suggestions…'
             : `Reading ${done + 1} of ${total}: ${lens}…`,
         ),
         {
@@ -901,22 +901,22 @@ export default function P4R1DevelopController() {
       );
       await loadSummaries();
       if (bundle.failures.length > 0 || bundle.remaining.length > 0 || bundle.readingIds.length !== 8) {
-        setAttentionError('The eight-lens review did not complete, so MAIA did not synthesize an Attention Map. Completed readings remain available.');
+        setAttentionError('MAIA did not finish reading the whole manuscript, so the editorial pass is incomplete. The readings she completed are still available.');
         return;
       }
-      setAttentionProgress('Synthesizing macro → micro attention…');
+      setAttentionProgress('Preparing the editorial pass…');
       const synthesized = await requestAttentionMap(
         context.manuscriptId,
         bundle.readingIds,
-        'Review this whole manuscript from macro to micro. Show me where my attention would have the most leverage, from Begin here through Next, Later, and Watch. Ground every placement in the frozen observations.',
+        'Make an editorial pass through this whole manuscript from macro to micro. Identify the evidenced places where a concrete editorial move may help: clarification, compression, expansion, transition, reordering, repetition, voice, pacing, or another text-level change supported by the frozen readings. Do not rewrite the prose yet. Order the opportunities from Begin here through Next, Later, and Watch. For each item, say plainly what may be worth editing and why, while preserving the author’s intention, voice, subject, and intentional ambiguity. Ground every item in the frozen observations.',
       );
       if (!synthesized.ok) {
-        setAttentionError('The readings completed, but the Attention Map could not be synthesized. The frozen readings remain available.');
+        setAttentionError('MAIA finished the readings, but could not prepare the editorial pass just now. The readings remain available and nothing in the manuscript changed.');
         return;
       }
       setAttentionMap(synthesized.map);
       if (typeof window !== 'undefined') {
-        const key = `writers-studio:attention-map:${context.manuscriptId}`;
+        const key = `writers-studio:editorial-pass:v1:${context.manuscriptId}`;
         window.sessionStorage.setItem(
           key,
           JSON.stringify({ draftRevision: context.draftRevision, map: synthesized.map }),
