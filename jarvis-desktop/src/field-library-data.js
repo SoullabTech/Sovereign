@@ -2226,18 +2226,6 @@ window.KELLY_FIELD_LIBRARY = {
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
     {
-      "programme_key": "S3-B-IV_DESIGN_2026-09",
-      "title": "S3 B-IV · DESIGN — the durable transition substrate",
-      "path": "docs/programme/S3-B-IV_DESIGN_2026-09-13.md",
-      "signal": "OPEN_HEADING",
-      "evidence_line": 222,
-      "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
-      "last_touched_epoch": 1789318246,
-      "hours_dormant": 440,
-      "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
-      "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
-    },
-    {
       "programme_key": "S3-B-IV_DURABLE_TRANSITION_SUBSTRATE_CENSUS_2026-09",
       "title": "S3 B-IV · DURABLE TRANSITION SUBSTRATE CENSUS — READ-ONLY",
       "path": "docs/programme/S3-B-IV_DURABLE_TRANSITION_SUBSTRATE_CENSUS_2026-09-13.md",
@@ -2245,6 +2233,18 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 219,
       "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
       "last_touched_epoch": 1789317901,
+      "hours_dormant": 441,
+      "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
+      "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
+    },
+    {
+      "programme_key": "S3-B-IV_DESIGN_2026-09",
+      "title": "S3 B-IV · DESIGN — the durable transition substrate",
+      "path": "docs/programme/S3-B-IV_DESIGN_2026-09-13.md",
+      "signal": "OPEN_HEADING",
+      "evidence_line": 222,
+      "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
+      "last_touched_epoch": 1789318246,
       "hours_dormant": 440,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"

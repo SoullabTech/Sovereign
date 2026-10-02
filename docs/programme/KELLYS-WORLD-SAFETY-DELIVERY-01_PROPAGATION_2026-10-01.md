@@ -57,6 +57,8 @@ R7 on PR #1675 leaves a separate founder choice open before any `Message my prac
 
 Neither option changes the member-act disclosure law, authorizes automatic disclosure, or opens implementation by itself. The founder choice removes or preserves only the PHI-stage hold.
 
+R8 now makes the cost of Option B concrete: `client_messages` is still Stage A/plaintext-first; the prefer-encrypted accessor has no live caller found; several live portal/practitioner surfaces still read plaintext `body` directly; no canonical backfill-completion witness was found; and encrypted-only DB constraints are not active. Waiting for Phase 2B therefore means a substantive backfill + read-path + write-path + constraint + soak programme, not a flag flip.
+
 ## In motion
 
 ### Canonical member-facing safety floor
