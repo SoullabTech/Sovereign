@@ -798,6 +798,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       currentText={currentText}
       sectionBody={currentBody}
       busy={busy}
+      editingLatitude={props.editLatitude}
+      onEditingLatitude={props.onLatitude}
+      mayRemoveParagraphs={props.mayRemoveParagraphs}
+      onMayRemoveParagraphs={props.onMayRemoveParagraphs}
+      mayProposeImmediately={props.mayProposeImmediately}
+      onMayProposeImmediately={props.onMayProposeImmediately}
       onClose={() => setIsolatedEditorial(false)}
     >
       {props.carriedInsight ? (
