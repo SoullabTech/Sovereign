@@ -106,6 +106,7 @@ import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionMa
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
+import { detectCrisis } from '@/lib/safety/liveCrisisContract';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
@@ -458,6 +459,81 @@ export async function POST(req: NextRequest) {
           durabilityErr?.message ?? durabilityErr
         );
       }
+    }
+
+    // SAFETY-DELIVERY-01 — canonical live crisis contract.
+    //
+    // Placement is deliberate: the member turn has already crossed the durable
+    // acceptance boundary, but no command handling, symbolic/field work, memory
+    // retrieval, or model cognition has begun.
+    //
+    // Recognition + member response are authorized here. Human disclosure is
+    // NOT: this contract does not notify a practitioner, guardian, founder,
+    // emergency service, or any other third party.
+    const liveCrisis = detectCrisis(message);
+    if (liveCrisis.detected && liveCrisis.responseScript?.length) {
+      const crisisResponseText = liveCrisis.responseScript.join(' ').trim();
+
+      if (memberTurnDurable && isRecognizedUser && !isSanctuary) {
+        try {
+          await withTimeoutLabeled(
+            'durableLiveCrisisResponse',
+            TurnsStore.addExchangeTurn(turnPosture, {
+              userId: userId!,
+              sessionId: acceptedSessionId,
+              role: 'assistant',
+              content: crisisResponseText,
+              exchangeId,
+            }),
+            5000,
+            start,
+          );
+        } catch (durabilityErr: any) {
+          console.error(
+            '❌ [MAIA/durability] live crisis response NOT durable exchange=' +
+              exchangeId.slice(0, 8) + ':',
+            durabilityErr?.message ?? durabilityErr,
+          );
+        }
+      }
+
+      const crisisCanonHeaders = makeCanonHeaders({
+        requestId,
+        pipeline: 'direct',
+        source: 'direct',
+        mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
+        validation: null,
+        repaired: false,
+      });
+
+      return jsonWithCors(
+        req,
+        {
+          message: crisisResponseText,
+          route: {
+            endpoint: '/api/sovereign/app/maia/list',
+            type: 'Sovereign Consciousness Interface',
+            operational: true,
+            mode: 'crisis-member-response',
+            safeMode: SAFE_MODE,
+            voiceEnabled: false,
+          },
+          metadata: {
+            processingProfile: 'DETERMINISTIC_CRISIS_RESPONSE',
+            processingTimeMs: Date.now() - start,
+            tierProcessing: false,
+            voiceRequested: false,
+            memberTurnDurable,
+            crisis: {
+              detected: true,
+              level: liveCrisis.level,
+              humanDisclosureAttempted: false,
+            },
+          },
+        },
+        200,
+        crisisCanonHeaders,
+      );
     }
 
     // TII-03 — PURE COMMAND ACCEPTANCE: post-F1, pre-O8/F2/cognition.

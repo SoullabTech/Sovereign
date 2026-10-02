@@ -23,15 +23,34 @@ describe('VOICE-CRISIS-SPEECH-ACT-01', () => {
       'goodbye to that old pattern',
       'okay goodbye for now, talk tomorrow',
       'this is itself a teaching',
+      "what's the point of this exercise?",
+      "I don't want to be here at this meeting",
+      "I'm so tired of this project",
+      "nothing matters in this calculation",
       'this is italian food',
     ]) {
       expect(detectCrisis(transcript)).toEqual({ detected: false });
     }
-    // Stopgap scope only: everything else in the pattern set still fires.
-    expect(detectCrisis('this is goodbye').level).toBe('high');
-    expect(detectCrisis('this is it').level).toBe('high');
-    expect(detectCrisis('I wrote letters').level).toBe('high');
-    expect(detectCrisis("I've just taken").level).toBe('high');
+    // Canonical shared detector also rejects previously overbroad high-risk
+    // fragments that are common in ordinary speech.
+    for (const transcript of [
+      'this is goodbye',
+      'this is it',
+      'I wrote letters',
+      "I've just taken the dog outside",
+      'tonight is the night of the concert',
+      'I have a knife for cooking',
+      "I'm on the roof fixing shingles",
+    ]) {
+      expect(detectCrisis(transcript)).toEqual({ detected: false });
+    }
+
+    // Explicit plan/attempt language still escalates.
+    expect(detectCrisis("I'm going to kill myself").level).toBe('high');
+    expect(detectCrisis("I've already taken the pills").level).toBe('high');
+    expect(detectCrisis('I wrote a suicide note').level).toBe('high');
+    expect(detectCrisis("I have pills and I'm going to use them").level).toBe('high');
+    expect(detectCrisis("I'm on a bridge and I'm going to jump").level).toBe('high');
   });
 
   it('retains unambiguous self-harm and suicide triggers', () => {
