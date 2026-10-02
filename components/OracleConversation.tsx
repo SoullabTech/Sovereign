@@ -5414,22 +5414,22 @@ I'm not sure what I'm feeling yet.`;
         // Human delivery is separate from the member response and carries no
         // message content. A delivery failure is observable but does not make
         // MAIA abandon the member or suppress the crisis resources above.
+        // The page is gated on a CLEAR signal (see teenCrisisPaging): the broad
+        // `crisisMode` above shows resources, but only a clear signal summons a human.
         if (userId) {
-          const { alertSoullabTeam } = await import('@/lib/safety/teenSupportIntegration');
+          const { teenCrisisPageType } = await import('@/lib/safety/teenCrisisPaging');
+          const crisisType = teenCrisisPageType(cleanedText);
 
-          const crisisType = safetyCheck.isCrisis
-            ? 'suicidal_ideation'
-            : safetyCheck.edResult?.severity === 'crisis'
-              ? 'ed_crisis'
-              : 'severe_burnout';
-
-          await alertSoullabTeam({
-            userId,
-            age: teenProfile.age,
-            crisisType,
-            sessionId,
-            timestamp: new Date(),
-          });
+          if (crisisType) {
+            const { alertSoullabTeam } = await import('@/lib/safety/teenSupportIntegration');
+            await alertSoullabTeam({
+              userId,
+              age: teenProfile.age,
+              crisisType,
+              sessionId,
+              timestamp: new Date(),
+            });
+          }
         }
 
         // MAIA continues conversation with crisis context - she does NOT abandon the user
