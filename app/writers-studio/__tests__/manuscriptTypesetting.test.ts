@@ -44,3 +44,14 @@ describe('Writer Studio manuscript typesetting', () => {
     expect(blocks.some((b) => b.kind === 'folio' && b.text === '161')).toBe(true);
   });
 });
+
+describe('line-per-paragraph manuscripts (Living Spiral, as imported)', () => {
+  const para = (n: string) => `${n} ` + 'The same movement occurs across the longer passages of a human life, and old questions return carrying another depth entirely. '.repeat(2).trim();
+  it('keeps each single-newline paragraph separate, with the folio as its own block', () => {
+    const body = [para('One.'), para('Two.'), '161', 'them from another place in ourselves. ' + para('Three.'), para('Four.')].join('\n');
+    const blocks = typesetManuscriptBody(body);
+    expect(blocks.filter((b) => b.kind === 'paragraph')).toHaveLength(4);
+    expect(blocks.some((b) => b.kind === 'folio' && b.text === '161')).toBe(true);
+    expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
+  });
+});

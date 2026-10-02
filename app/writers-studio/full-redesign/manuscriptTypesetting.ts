@@ -4,6 +4,8 @@ const ROMAN_SUBHEAD = /^(?:[IVXLCDM]+\.|[A-Z]\.)\s+\S/;
 const NUMBERED_SUBHEAD = /^\d{1,2}[.)]\s+[A-Z]/;
 const LIST_LINE = /^(?:[-*•]|\d+[.)])\s+/;
 const FOLIO = /^\d{1,4}$/;
+/** Beyond any printed measure: a line this long is a paragraph, not a wrapped line. */
+const LINE_PER_PARAGRAPH_MIN = 140;
 const SENTENCE_END = /[.!?…][”’"']?$/;
 
 function classify(text: string): WriteBlockKind {
@@ -60,6 +62,16 @@ export function typesetManuscriptBody(body: string): WriteBlock[] {
     .filter((line) => !FOLIO.test(line) && !ROMAN_SUBHEAD.test(line) && !LIST_LINE.test(line))
     .map((line) => line.length).filter((n) => n >= 25);
   const typical = median(proseLengths);
+
+  /* Line-per-paragraph profile. A hard-wrapped page tops out near one printed
+     measure (~110 characters). When the typical line is far beyond that, each
+     line is a whole paragraph the source separated with a single newline, and
+     collapsing those newlines would weld the chapter into one wall of text. */
+  if (typical >= LINE_PER_PARAGRAPH_MIN) {
+    const out: WriteBlock[] = [];
+    for (const raw of lines) pushBlock(out, raw);
+    return out.length ? out : [{ text: visualText(normalized, classify(normalized)), kind: classify(normalized) }];
+  }
   if (typical < 45) {
     const kind = classify(normalized);
     return [{ text: visualText(normalized, kind), kind }];
