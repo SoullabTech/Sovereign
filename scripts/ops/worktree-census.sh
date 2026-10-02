@@ -31,6 +31,7 @@ set -u
 REPO="${REPO:-$HOME/MAIA-SOVEREIGN}"
 CANON="${CANON:-clean-main-no-secrets}"
 CENSUS_OUT="${CENSUS_OUT:-}"
+CENSUS_JSON="${CENSUS_JSON:-}"
 CENSUS_FETCH="${CENSUS_FETCH:-0}"
 REGEN_NAMES="node_modules .next .turbo coverage dist"
 
@@ -177,4 +178,40 @@ rm -f "$RAW"
   echo "Nothing was modified by this run."
 } | { if [[ -n "$CENSUS_OUT" ]]; then mkdir -p "$(dirname "$CENSUS_OUT")"; tee "${CENSUS_OUT%.tsv}.txt"; else cat; fi; }
 if [[ -n "$CENSUS_OUT" ]]; then cp "$TSV" "$CENSUS_OUT"; echo "tsv: $CENSUS_OUT  report: ${CENSUS_OUT%.tsv}.txt"; fi
+
+# Optional machine-readable projection for read-only Monitor consumption.
+# It is derived only from the completed TSV; enabling it does not change the
+# census walk, classification, fetch posture, or default stdout.
+if [[ -n "$CENSUS_JSON" ]]; then
+  mkdir -p "$(dirname "$CENSUS_JSON")"
+  if ! awk -F'\t' '
+    function esc(s) {
+      gsub(/\\/, "\\\\", s)
+      gsub(/"/, "\\\"", s)
+      gsub(/\r/, "\\r", s)
+      gsub(/\n/, "\\n", s)
+      gsub(/\t/, "\\t", s)
+      return s
+    }
+    BEGIN { printf "{\"read_only\":true,\"rows\":["; first=1 }
+    NR == 1 { next }
+    {
+      if (!first) printf ","
+      first=0
+      printf "{\"path\":\"%s\",\"volume\":\"%s\",\"branch\":\"%s\",\"head\":\"%s\",\"total_gb\":\"%s\",\"regen_gb\":\"%s\",\"source_gb\":\"%s\",\"modified\":\"%s\",\"untracked\":\"%s\",\"unpushed\":\"%s\",\"merged\":\"%s\",\"class\":\"%s\",\"nested_excluded_gb\":\"%s\"}",
+        esc($1), esc($2), esc($3), esc($4), esc($5), esc($6), esc($7),
+        esc($8), esc($9), esc($10), esc($11), esc($12), esc($13)
+    }
+    END { print "]}" }
+  ' "$TSV" > "$CENSUS_JSON"; then
+    rm -f "$TSV"
+    echo "failed to write CENSUS_JSON sidecar: $CENSUS_JSON" >&2
+    exit 3
+  fi
+  if [[ ! -s "$CENSUS_JSON" ]]; then
+    rm -f "$TSV"
+    echo "empty CENSUS_JSON sidecar: $CENSUS_JSON" >&2
+    exit 3
+  fi
+fi
 rm -f "$TSV"
