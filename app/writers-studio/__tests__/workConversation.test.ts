@@ -324,3 +324,26 @@ describe('Open in MAIA is a choice, not the default', () => {
     expect(surface).toContain('handoffToMaia');
   });
 });
+
+
+describe('MAIA conversation workspace', () => {
+  it('gives the writer a substantial composer rather than a three-line utility slot', () => {
+    expect(surface).toContain('data-maia-composer="true"');
+    expect(surface).toContain('rows={6}');
+    expect(surface).toContain("minHeight: focusMode ? 190 : 132");
+    expect(surface).toContain("resize: 'vertical'");
+  });
+
+  it('lets the writer widen the MAIA relationship space without changing thread identity', () => {
+    expect(surface).toContain('data-maia-focus-toggle="true"');
+    expect(surface).toContain("data-maia-focus={focusMode ? 'true' : 'false'}");
+    expect(surface).toContain("{focusMode ? 'Close focus' : 'Focus'}");
+    expect(surface).not.toContain('focusMode, sectionId');
+  });
+
+  it('keeps the existing durable send path while making Send visually primary', () => {
+    expect(surface).toContain('void send()');
+    expect(surface).toContain('background: MAIA_ACCENT.voice');
+    expect(surface).toContain('Ask MAIA');
+  });
+});
