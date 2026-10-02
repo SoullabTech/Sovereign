@@ -55,4 +55,13 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(css).toContain('.p4r1-root .p4r1-developmental-options button,');
     expect(css).toContain('color:var(--fr-ink)');
   });
+
+  it('shows a facts-only chapter shape before asking MAIA to read Structure', () => {
+    expect(develop).toContain("activeField === 'structure' && props.scope.kind === 'chapter'");
+    expect(develop).toContain('<ChapterShape sections={props.sections} scope={props.scope} />');
+    expect(develop).toContain('This is not a MAIA reading.');
+    expect(develop).toContain('Opening epigraph');
+    expect(develop).toContain('words</small>');
+    expect(css).toContain('.p4r1-root .p4r1-chapter-outline');
+  });
 });

@@ -304,6 +304,64 @@ function SavedReadings({ field, summaries, loading, onReading }: {
   );
 }
 
+function sectionWordCount(section: RebuildSection): number {
+  let body = section.body ?? '';
+  const heading = section.heading?.trim();
+  if (heading && body.trimStart().startsWith(heading)) {
+    body = body.trimStart().slice(heading.length);
+  }
+  return body.trim() ? body.trim().split(/\s+/).length : 0;
+}
+
+function openingEpigraph(section: RebuildSection): string | null {
+  let body = section.body ?? '';
+  const heading = section.heading?.trim();
+  if (heading && body.trimStart().startsWith(heading)) {
+    body = body.trimStart().slice(heading.length);
+  }
+  const opening = body.trim().split(/\n\s*\n+/)[0]?.trim() ?? '';
+  if (!opening || opening.length > 900) return null;
+  return /^[“"‘']/.test(opening) ? opening : null;
+}
+
+function ChapterShape({ sections, scope }: {
+  sections: readonly RebuildSection[];
+  scope: Extract<DevelopScopeChoice, { kind: 'chapter' }>;
+}) {
+  const from = sections.findIndex((section) => section.draftSectionId === scope.fromSectionId);
+  const to = sections.findIndex((section) => section.draftSectionId === scope.toSectionId);
+  if (from < 0 || to < from) return null;
+  const chapter = sections.slice(from, to + 1);
+  const root = chapter[0] ?? null;
+  const epigraph = root ? openingEpigraph(root) : null;
+  const outline = chapter.filter((section) => Boolean(section.heading?.trim()));
+
+  return (
+    <section className="fr-card p4r1-chapter-shape" aria-label="Chapter shape from the manuscript">
+      <span className="p4r1-eyebrow">The chapter as it is</span>
+      <h3>{scope.label}</h3>
+      <p>
+        This is not a MAIA reading. It is the chapter’s own headings, order, opening material, and word counts —
+        a simple map of what is already on the page.
+      </p>
+      {epigraph ? (
+        <blockquote className="p4r1-chapter-epigraph">
+          <span>Opening epigraph</span>
+          <p>{epigraph}</p>
+        </blockquote>
+      ) : null}
+      <ol className="p4r1-chapter-outline">
+        {outline.map((section) => (
+          <li key={section.draftSectionId} data-depth={section.headingDepth ?? undefined}>
+            <span>{section.heading?.trim()}</span>
+            <small>{sectionWordCount(section).toLocaleString()} words</small>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function ScopeChooser({ scope, sections, sectionScope, chapterScope, onScope }: {
   scope: DevelopScopeChoice;
   sections: readonly RebuildSection[];
@@ -2040,6 +2098,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                 </p>
               ) : null}
             </section>
+          ) : null}
+
+          {activeField === 'structure' && props.scope.kind === 'chapter' ? (
+            <ChapterShape sections={props.sections} scope={props.scope} />
           ) : null}
 
           {railSelectionId && selectedRailSection && activeField ? (
