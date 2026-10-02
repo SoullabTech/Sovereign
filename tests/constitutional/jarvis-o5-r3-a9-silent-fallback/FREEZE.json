@@ -1,0 +1,10 @@
+{
+  "version": "O5-R3A9-SF-FREEZE.v1",
+  "frozen_at": "2026-10-01",
+  "standing": "O5-R3A9 silent repository fallback falsifier family",
+  "frozen": {
+    "tests/constitutional/jarvis-o5-r3-a9-silent-fallback/falsifiers.mjs": "85e1300b3dcefd5c35afa13a715344e5cd566fbd",
+    "tests/constitutional/jarvis-o5-r3-a9-silent-fallback/candidates.mjs": "d1a68afcd23a296ab037c9f28e6323eae2c91591",
+    "tests/constitutional/jarvis-o5-r3-a9-silent-fallback/matrix.mjs": "055feb0fa1fbda6ab9ea2e484ba3874236c2ebf6"
+  }
+}
