@@ -35,6 +35,7 @@ import type { StructuredBlock, StructuredMessage } from '../../ai/structured/typ
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
 import { labelsFor, type AuthorFacingLabels } from './developmentalLabels';
 import { editorialDirective } from '@/lib/writersStudio/editorialDepth';
+import { explanationInstruction, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
 
 export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-02';
 
@@ -81,8 +82,9 @@ You may discuss what you noticed then, why that pattern was visible in that evid
 
 You may NOT claim that the observation still describes the Work, that you have checked what is true now, or that current text confirms or refutes it. You have not seen the current text.`;
 
-export function developmentalAskPromptHash(): string {
-  return createHash('sha256').update(`${STANDING}\n${SUPERSEDED_STANDING}`).digest('hex');
+export function developmentalAskPromptHash(responseStyle?: ExplanationDepth): string {
+  const style = responseStyle ? `\n${explanationInstruction(responseStyle)}` : '';
+  return createHash('sha256').update(`${STANDING}\n${SUPERSEDED_STANDING}${style}`).digest('hex');
 }
 
 export interface DevelopmentalAskProvenance {
@@ -180,6 +182,7 @@ function observationSays(ctx: DevelopmentalAskContext): string {
 export interface DevelopmentalAskOptions {
   model?: string;
   maxTokens?: number;
+  responseStyle?: ExplanationDepth;
 }
 
 /**
@@ -195,7 +198,7 @@ export async function askMaiaDevelopmental(
   opts: DevelopmentalAskOptions = {},
 ): Promise<DevelopmentalAskOutcome> {
   const model = opts.model ?? DEFAULT_MODEL;
-  const system = systemFor(ctx);
+  const system = systemFor(ctx, opts.responseStyle);
 
   const messages: StructuredMessage[] = [
     ...history.map((t) => ({
@@ -220,7 +223,7 @@ export async function askMaiaDevelopmental(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: developmentalAskPromptHash(),
+        promptHash: developmentalAskPromptHash(opts.responseStyle),
         askerVersion: DEVELOPMENTAL_ASKER_VERSION,
         answeredAt: new Date().toISOString(),
       },
@@ -239,10 +242,16 @@ export async function askMaiaDevelopmental(
  * could pass a test that never saw it. The test entry point below now returns
  * exactly what is sent.
  */
-function systemFor(ctx: DevelopmentalAskContext): string {
+function systemFor(ctx: DevelopmentalAskContext, responseStyle?: ExplanationDepth): string {
   const labels = labelsFor(ctx.readState);
   return [
     STANDING, '',
+    ...(responseStyle ? [
+      '--- HOW TO SPEAK WITH THIS WRITER ---',
+      explanationInstruction(responseStyle),
+      'Keep the substance, evidence, uncertainty, and limits exactly the same. Change only the explanatory register.',
+      '',
+    ] : []),
     '--- THE OBSERVATION THEY ARE ASKING ABOUT ---', observationSays(ctx), '',
     '--- THE EVIDENCE YOU RECORDED, WHERE IT COULD BE VERIFIED ---',
     ctx.evidence.map((e) => evidenceSays(e, labels)).join('\n'), '',

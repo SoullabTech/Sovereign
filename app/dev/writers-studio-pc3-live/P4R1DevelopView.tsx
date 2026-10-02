@@ -32,6 +32,17 @@ import {
 } from '@/lib/writersStudio/sourceVerification';
 import P4R1WriterUnderstanding from './P4R1WriterUnderstanding';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
+import {
+  DEFAULT_WORKING_STYLE,
+  EXPLANATION_COPY,
+  EXPLANATION_VALUES,
+  PACE_COPY,
+  PACE_VALUES,
+  readWorkingStyle,
+  writeWorkingStyle,
+  type ExplanationDepth,
+  type WorkingPace,
+} from '@/lib/writersStudio/workingStyle';
 
 export const DEVELOP_FIELDS = [
   'overview',
@@ -496,18 +507,99 @@ function ReadingField({
   );
 }
 
-function ThemeField({ payload, busy, error, onMutation }: {
+function ThemeField({ payload, busy, error, onMutation, onTalkCandidate }: {
   payload: LiveThemesPayload | null | undefined;
   busy: boolean;
   error: string | null;
   onMutation: P4R1DevelopViewProps['onThemeMutation'];
+  onTalkCandidate: (candidate: LiveThemeCandidate) => void;
 }) {
   const [draft, setDraft] = useState('');
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
+  const [pace, setPace] = useState<WorkingPace>(DEFAULT_WORKING_STYLE.pace);
+  const [explanationDepth, setExplanationDepth] = useState<ExplanationDepth>(DEFAULT_WORKING_STYLE.explanation);
+  const [candidateIndex, setCandidateIndex] = useState(0);
+  const [held, setHeld] = useState<ReadonlySet<string>>(new Set());
+  const [rested, setRested] = useState<ReadonlySet<string>>(new Set());
+
+  useEffect(() => {
+    const sync = () => {
+      const style = readWorkingStyle();
+      setPace(style.pace);
+      setExplanationDepth(style.explanation);
+    };
+    sync();
+    window.addEventListener('writers-studio-working-style-changed', sync as EventListener);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('writers-studio-working-style-changed', sync as EventListener);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!payload || typeof window === 'undefined') return;
+    const key = `writers-studio:noticings:${payload.manuscriptId}`;
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { held?: string[]; rested?: string[] };
+      setHeld(new Set(Array.isArray(parsed.held) ? parsed.held : []));
+      setRested(new Set(Array.isArray(parsed.rested) ? parsed.rested : []));
+    } catch {
+      // A presentation preference failure must never block the reading.
+    }
+  }, [payload?.manuscriptId]);
+
   if (payload === undefined) return <p className="p4r1-empty">Opening Themes…</p>;
   if (payload === null) return <p className="p4r1-empty">Themes are unavailable just now. Nothing has changed.</p>;
 
   const selected = payload.themes.find((theme) => theme.id === selectedThemeId) ?? payload.themes[0] ?? null;
+  const updateWorkingStyle = (next: { pace?: WorkingPace; explanation?: ExplanationDepth }) => {
+    writeWorkingStyle({
+      pace: next.pace ?? pace,
+      explanation: next.explanation ?? explanationDepth,
+    });
+  };
+  const noticingKey = (candidate: LiveThemeCandidate) => `${candidate.readingId}:${candidate.observationId}`;
+  const availableCandidates = payload.candidates.filter((candidate) => !rested.has(noticingKey(candidate)));
+  const safeIndex = availableCandidates.length === 0 ? 0 : Math.min(candidateIndex, availableCandidates.length - 1);
+  const shownCandidates = pace === 'mapped'
+    ? availableCandidates
+    : pace === 'guided'
+      ? availableCandidates.slice(0, 3)
+      : availableCandidates.slice(safeIndex, safeIndex + 1);
+
+  const persistNoticings = (nextHeld: ReadonlySet<string>, nextRested: ReadonlySet<string>) => {
+    setHeld(nextHeld);
+    setRested(nextRested);
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(`writers-studio:noticings:${payload.manuscriptId}`, JSON.stringify({
+        held: [...nextHeld], rested: [...nextRested],
+      }));
+    } catch {
+      // Incubation state is supportive UI, never a prerequisite for writing.
+    }
+  };
+
+  const keepNearby = (candidate: LiveThemeCandidate) => {
+    const key = noticingKey(candidate);
+    const nextHeld = new Set(held); nextHeld.add(key);
+    const nextRested = new Set(rested); nextRested.delete(key);
+    persistNoticings(nextHeld, nextRested);
+  };
+
+  const letRest = (candidate: LiveThemeCandidate) => {
+    const key = noticingKey(candidate);
+    const nextHeld = new Set(held); nextHeld.delete(key);
+    const nextRested = new Set(rested); nextRested.add(key);
+    persistNoticings(nextHeld, nextRested);
+    if (pace === 'intimate' && availableCandidates.length > 1) {
+      setCandidateIndex((safeIndex + 1) % Math.max(1, availableCandidates.length - 1));
+    }
+  };
+
   return (
     <>
       <div className="fr-hero" data-landmark="hero">
@@ -515,10 +607,38 @@ function ThemeField({ payload, busy, error, onMutation }: {
       </div>
       <div className="fr-sec-h">
         <div>
-          <h3>Emerging Themes</h3>
-          <p>Governed themes in this Work. MAIA’s candidates stay candidates until you choose.</p>
+          <h3>Themes</h3>
+          <p>Themes you have chosen to carry in this Work. MAIA’s noticings stay provisional until you decide otherwise.</p>
         </div>
       </div>
+
+      <details className="p4r1-theme-working-style">
+        <summary>Working style · {PACE_COPY[pace].label} · {EXPLANATION_COPY[explanationDepth].label}</summary>
+        <div className="p4r1-theme-working-style-body">
+          <label>
+            <span><b>How much MAIA shows at once</b><em>{PACE_COPY[pace].description}</em></span>
+            <input type="range" min={0} max={PACE_VALUES.length - 1} step={1}
+              value={PACE_VALUES.indexOf(pace)} aria-valuetext={PACE_COPY[pace].label}
+              onChange={(event) => updateWorkingStyle({ pace: PACE_VALUES[Number(event.target.value)] ?? DEFAULT_WORKING_STYLE.pace })} />
+          </label>
+          <div className="p4r1-theme-style-scale p4r1-theme-style-scale-three" aria-hidden="true">
+            {PACE_VALUES.map((value) => <span key={value}>{PACE_COPY[value].label}</span>)}
+          </div>
+          <label>
+            <span><b>How MAIA explains what she sees</b><em>{EXPLANATION_COPY[explanationDepth].description}</em></span>
+            <input type="range" min={0} max={EXPLANATION_VALUES.length - 1} step={1}
+              value={EXPLANATION_VALUES.indexOf(explanationDepth)} aria-valuetext={EXPLANATION_COPY[explanationDepth].label}
+              onChange={(event) => updateWorkingStyle({ explanation: EXPLANATION_VALUES[Number(event.target.value)] ?? DEFAULT_WORKING_STYLE.explanation })} />
+          </label>
+          <div className="p4r1-theme-style-scale" aria-hidden="true">
+            {EXPLANATION_VALUES.map((value) => <span key={value}>{EXPLANATION_COPY[value].label}</span>)}
+          </div>
+          <div className="p4r1-theme-style-preview">
+            <span>MAIA would say</span>
+            <p>{EXPLANATION_COPY[explanationDepth].preview}</p>
+          </div>
+        </div>
+      </details>
 
       {error ? <p className="p4r1-error" role="status">{error}</p> : null}
 
@@ -555,19 +675,54 @@ function ThemeField({ payload, busy, error, onMutation }: {
 
       {payload.candidates.length > 0 ? (
         <section className="fr-card p4r1-theme-candidates">
-          <h4>MAIA noticed</h4>
-          <p className="fr-sub">These remain candidates until you decide whether they belong in your Work.</p>
-          {payload.candidates.map((candidate) => (
-            <div key={candidate.readingId + ':' + candidate.observationId} className="p4r1-theme-candidate">
-              <div><b>{candidate.label}</b><p>{candidate.observation}</p></div>
-              <div>
-                <button type="button" disabled={busy}
-                  onClick={() => onMutation({ action: 'accept-candidate', readingId: candidate.readingId, observationId: candidate.observationId })}>Keep as theme</button>
-                <button type="button" disabled={busy}
-                  onClick={() => onMutation({ action: 'reject-candidate', readingId: candidate.readingId, observationId: candidate.observationId })}>Not a theme</button>
+          <h4>Noticings</h4>
+          <p className="fr-sub">Interesting things MAIA sees. You do not need to decide what they mean yet.</p>
+          <p className="p4r1-noticing-pace">
+            {pace === 'intimate'
+              ? 'Showing one at a time.'
+              : pace === 'guided'
+                ? 'Showing a few at a time.'
+                : 'Showing the wider field.'}
+          </p>
+          {shownCandidates.map((candidate) => {
+            const key = noticingKey(candidate);
+            return (
+              <div key={key} className="p4r1-theme-candidate p4r1-noticing">
+                <div>
+                  <div className="p4r1-noticing-title">
+                    <b>{candidate.label}</b>
+                    {held.has(key) ? <span>kept nearby</span> : null}
+                  </div>
+                  <p>{candidate.observation}</p>
+                </div>
+                <div className="p4r1-noticing-actions">
+                  <button type="button" disabled={busy} onClick={() => onTalkCandidate(candidate)}>Talk about this</button>
+                  <button type="button" disabled={busy || held.has(key)} onClick={() => keepNearby(candidate)}>
+                    {held.has(key) ? 'Kept nearby' : 'Keep nearby'}
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => letRest(candidate)}>Let rest</button>
+                  <details>
+                    <summary>More</summary>
+                    <div>
+                      <button type="button" disabled={busy}
+                        onClick={() => onMutation({ action: 'accept-candidate', readingId: candidate.readingId, observationId: candidate.observationId })}>Add to Themes</button>
+                      <button type="button" disabled={busy}
+                        onClick={() => onMutation({ action: 'reject-candidate', readingId: candidate.readingId, observationId: candidate.observationId })}>Dismiss</button>
+                    </div>
+                  </details>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+          {pace === 'intimate' && availableCandidates.length > 1 ? (
+            <button type="button" className="p4r1-noticing-next"
+              onClick={() => setCandidateIndex((safeIndex + 1) % availableCandidates.length)}>
+              See another noticing
+            </button>
+          ) : null}
+          {availableCandidates.length === 0 ? (
+            <p className="p4r1-empty">Nothing else needs your attention here right now.</p>
+          ) : null}
         </section>
       ) : null}
 
@@ -1930,6 +2085,12 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               busy={props.themeBusy}
               error={props.themeError}
               onMutation={props.onThemeMutation}
+              onTalkCandidate={(candidate) => {
+                setSelectedObservationKey(candidate.observationKey);
+                setDialoguePrompt('');
+                setTalking(true);
+                if (props.reading?.id !== candidate.readingId) props.onReading(candidate.readingId);
+              }}
             />
           ) : null}
 
