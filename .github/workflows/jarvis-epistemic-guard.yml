@@ -19,6 +19,9 @@ name: JARVIS Epistemic Guard
 on:
   pull_request:
     branches: [clean-main-no-secrets, main]
+    types: [opened, edited, synchronize, reopened, ready_for_review, labeled, unlabeled]
+  pull_request_review:
+    types: [submitted, dismissed, edited]
   # Canonical push: `Axis 1` is branch-protection-required, and a commit that is
   # already canonical is never the head of an open PR. Adding the trigger alone
   # would have been wrong — this gate adjudicates against a BASE commit, and the
@@ -29,6 +32,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   epistemic-admission:
@@ -46,6 +50,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Canonical custody self-proof
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
+        run: node --test scripts/governance/__tests__/canonical-custody-floor-proof.mjs
 
       # The guard must prove itself before it is allowed to judge anything.
       - name: Guard self-proof
@@ -68,7 +76,7 @@ jobs:
           PUSH_BEFORE: ${{ github.event.before }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [ "$EVENT_NAME" = "pull_request" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "pull_request_review" ]; then
             BASE="$PR_BASE"
           else
             BASE="$PUSH_BEFORE"
@@ -86,6 +94,12 @@ jobs:
           echo "Adjudication base for $EVENT_NAME: $BASE"
           echo "base=$BASE" >> "$GITHUB_OUTPUT"
 
+      - name: Enforce Class A canonical custody floor
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/governance/canonical-custody-floor.mjs --base "${{ steps.adjbase.outputs.base }}"
+
       - name: Adjudicate submitted claim records against canonical history
         env:
           JARVIS_BASE_SHA: ${{ steps.adjbase.outputs.base }}
@@ -96,5 +110,5 @@ jobs:
       - name: Explain refusal
         if: failure()
         run: |
-          echo "::error title=Epistemic admission refused::A claim record could not carry the status it requested, or the proposed ledger delta did not match the independently computed result."
-          echo "This is a verdict, not an error. See docs/ops/JARVIS_EPISTEMIC_GUARDRAILS_2026-08-11.md."
+          echo "::error title=Axis 1 admission refused::Required epistemic or canonical-custody evidence was insufficient, stale, malformed, or unavailable."
+          echo "This is a fail-closed admission verdict. See docs/ops/JARVIS_EPISTEMIC_GUARDRAILS_2026-08-11.md and CANONICAL-ADMISSION-ENFORCEMENT-01."
