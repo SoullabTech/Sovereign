@@ -3,9 +3,7 @@
 Date: 2026-10-02
 Status: deployment-order record; no production mutation
 Canonical observed: `5f8d39c7f0ce206be42469e66f366c4ff82dc62e`
-Production last successfully witnessed: `13a0308d706c684f21aa53741791cb224334ff82`
-
-A later read-only SSH re-witness attempt timed out at the workstation transport layer. No production-state inference is made from that timeout.
+Production currently witnessed: `13a0308d706c684f21aa53741791cb224334ff82`
 
 ## Purpose
 
@@ -13,7 +11,7 @@ Define the lawful deployment order for the safety-delivery programme without ove
 
 ## Production lineage finding
 
-The last successful production witness resolved the running container to:
+The current production witness resolves the running container to:
 
 `GIT_COMMIT=13a0308d7`
 → full commit `13a0308d706c684f21aa53741791cb224334ff82`.
@@ -113,7 +111,7 @@ Documentation/evidence only; they do not themselves grant runtime or deployment 
 
 ## Current production configuration boundary
 
-Read-only presence/auth witness on 2026-10-02 against the last successfully witnessed running SHA `13a0308d706c684f21aa53741791cb224334ff82`:
+Read-only presence/auth witness on 2026-10-02 against current running SHA `13a0308d706c684f21aa53741791cb224334ff82`:
 
 - Resend credential: present, but authenticated `GET /domains` returns `HTTP 400 · validation_error · API key is invalid`
 - Twilio account credential: present
@@ -264,7 +262,7 @@ Code substrate: PARTIAL — #1671 and #1633 are canonical but governance-held; #
 
 Governance enforcement: #1716 pending; distinct-human custody is not yet constituted.
 
-Production artifact last successfully witnessed: `13a0308d706c684f21aa53741791cb224334ff82` · contains neither #1671 nor #1633 merge ancestry. Its merge base with canonical `5f8d39c7f0ce206be42469e66f366c4ff82dc62e` is `298414555bbe7eccdf453b09e026737d4f7f4e29`; production carries 7 unique commits and canonical carries 177 unique commits at that witness point. Projection ancestry must therefore be re-established explicitly.
+Production artifact currently witnessed: `13a0308d706c684f21aa53741791cb224334ff82` · contains neither #1671 nor #1633 merge ancestry. Its merge base with canonical `5f8d39c7f0ce206be42469e66f366c4ff82dc62e` is `298414555bbe7eccdf453b09e026737d4f7f4e29`; production carries 7 unique commits and canonical carries 177 unique commits at that witness point. Projection ancestry must therefore be re-established explicitly.
 
 Safety recipient: NOT DESIGNATED.
 
