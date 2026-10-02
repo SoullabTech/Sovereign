@@ -10,12 +10,16 @@ Define the lowest-authority way MAIA may help a member contact their practitione
 
 ## Existing substrate chosen
 
-The existing portal between-session message path is the correct transport model for an active safety contact because:
+The existing portal between-session message **contract** is the correct behavioral model for an active safety contact because:
 
 - the member authors the message;
 - the member selects urgency, including `safety_concern`;
 - the message has an actual practitioner delivery/notification path;
 - it is already distinct from private reflection and from passive field visibility.
+
+**The existing portal route itself is not directly reusable from canonical MAIA.** `/api/portal/[slug]/messages` is token-authenticated, while the canonical MAIA member turn is authenticated through the ordinary member session. R2 therefore reuses the member-authored message semantics, not portal-token authority.
+
+`sendClientMessage()` is an internal persistence/service seam, not an authentication boundary. Any future MAIA off-ramp requires a separately governed authenticated-member resolver that establishes the exact practitioner-client relationship before supplying `clientId` and `practitionerId` to that service.
 
 Now What? practitioner visibility is not used as the safety-contact mechanism. It is a quieter, revocable field-sharing act, not an urgency signal.
 
@@ -117,6 +121,16 @@ The practitioner-field recipient-boundary defect found during R1 is separate fro
 
 Any recipient resolution used here must obey the same identity law: authenticated member identity must resolve through the actual practitioner-client relationship. Generic practitioner role is never sufficient.
 
+## Additional integration hold
+
+Before implementation, R3 must resolve:
+
+- authenticated MAIA-member → exact practitioner-client relationship translation;
+- whether the current message persistence contract is acceptable for safety-adjacent content, including its present plaintext + encrypted-column write behavior;
+- how practitioner notification is invoked without importing portal-token authority;
+- how message policy availability is surfaced before offering the action;
+- multi-practitioner selection when more than one live relationship exists.
+
 ## Standing
 
-**CANDIDATE DESIGN · MEMBER-CONTROLLED OFFER ONLY · EXISTING MESSAGE TRANSPORT REUSED · NO AUTOMATIC DISCLOSURE · NO IMPLEMENTATION AUTHORIZED BY THIS RECORD.**
+**CANDIDATE DESIGN · MEMBER-CONTROLLED OFFER ONLY · MESSAGE CONTRACT REUSED, NOT PORTAL-TOKEN AUTHORITY · NO AUTOMATIC DISCLOSURE · NO IMPLEMENTATION AUTHORIZED BY THIS RECORD.**
