@@ -27,12 +27,20 @@ interface RouteParams {
 /**
  * Helper to get practitioner ID from slug
  */
-async function getPractitionerIdFromSlug(slug: string): Promise<string | null> {
+async function getPractitionerIdentityFromSlug(
+  slug: string
+): Promise<{ practitionerRecordId: string; practitionerMemberId: string } | null> {
   const result = await db.query(
-    `SELECT id FROM practitioners WHERE slug = $1 AND status = 'active'`,
+    `SELECT id, member_id FROM practitioners
+     WHERE slug = $1 AND status = 'active' AND member_id IS NOT NULL`,
     [slug]
   );
-  return result.rows[0]?.id || null;
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    practitionerRecordId: row.id,
+    practitionerMemberId: row.member_id,
+  };
 }
 
 /**
@@ -45,15 +53,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
 
-    const practitionerId = await getPractitionerIdFromSlug(slug);
-    if (!practitionerId) {
+    const practitioner = await getPractitionerIdentityFromSlug(slug);
+    if (!practitioner) {
       return NextResponse.json(
         { error: 'Portal not found' },
         { status: 404 }
       );
     }
 
-    const policy = await getPublicPolicy(practitionerId);
+    const policy = await getPublicPolicy(practitioner.practitionerMemberId);
 
     if (!policy || !policy.is_enabled) {
       return NextResponse.json({
@@ -101,8 +109,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { slug } = await params;
     const body = await request.json();
 
-    const practitionerId = await getPractitionerIdFromSlug(slug);
-    if (!practitionerId) {
+    const practitioner = await getPractitionerIdentityFromSlug(slug);
+    if (!practitioner) {
       return NextResponse.json(
         { error: 'Portal not found' },
         { status: 404 }
@@ -110,7 +118,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if policy is enabled and accepting requests
-    const policy = await getPublicPolicy(practitionerId);
+    const policy = await getPublicPolicy(practitioner.practitionerMemberId);
     if (!policy || !policy.is_enabled) {
       return NextResponse.json(
         { error: 'Sliding scale is not currently available' },
@@ -145,7 +153,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (body.token) {
       // Validate token and get client info
       const access = await validatePortalAccess(body.token);
-      if (access && access.practitionerId === practitionerId) {
+      if (
+        access &&
+        access.practitioner.practitionerRecordId === practitioner.practitionerRecordId &&
+        access.practitioner.practitionerMemberId === practitioner.practitionerMemberId
+      ) {
         clientId = access.clientId;
         // portalTokenId comes from the token itself (not returned from validatePortalAccess)
 
@@ -207,7 +219,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Create the request
-    const slidingRequest = await createRequest(practitionerId, {
+    const slidingRequest = await createRequest(practitioner.practitionerMemberId, {
       client_id: clientId,
       portal_token_id: portalTokenId,
       client_name: clientName,

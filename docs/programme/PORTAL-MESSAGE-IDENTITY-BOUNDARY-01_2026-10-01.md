@@ -19,6 +19,11 @@ Current baseline schema proves the identities are distinct:
 
 The portal route then passed that same value into message policy lookup, message persistence, PHI encryption ownership, safety logging, and safety notification, all of which require the practitioner member id.
 
+The same ambiguous portal-access return also reached two adjacent portal surfaces:
+
+- `app/api/portal/[slug]/messages/policy/route.ts` compared the token practitioner id to `practitioners.id` and then passed that same record id into `getEffectivePolicy()`, whose `message_policies.practitioner_id` is member-owned;
+- `app/api/portal/[slug]/sliding-scale/route.ts` compared token identity to `practitioners.id`, then passed that record id into `sliding_scale_policies` / `sliding_scale_requests`, whose current baseline FKs also reference `members(id)`.
+
 ## Consequence
 
 This is a source-proven identity-contract defect.

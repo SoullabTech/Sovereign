@@ -13,6 +13,14 @@ const portalRoute = readFileSync(
   join(process.cwd(), 'app/api/portal/[slug]/messages/route.ts'),
   'utf8',
 );
+const policyRoute = readFileSync(
+  join(process.cwd(), 'app/api/portal/[slug]/messages/policy/route.ts'),
+  'utf8',
+);
+const slidingScaleRoute = readFileSync(
+  join(process.cwd(), 'app/api/portal/[slug]/sliding-scale/route.ts'),
+  'utf8',
+);
 
 describe('PORTAL-MESSAGE-IDENTITY-BOUNDARY-01', () => {
   it('token validation carries practice-record and member identity separately', () => {
@@ -65,5 +73,22 @@ describe('PORTAL-MESSAGE-IDENTITY-BOUNDARY-01', () => {
     expect(block).toContain('practitionerRecordId');
     expect(block).toContain('practitionerMemberId');
     expect(block).not.toContain('practitionerId: result.practitionerId');
+  });
+
+  it('uses member identity for portal message-policy lookup while matching token on both identities', () => {
+    expect(policyRoute).toContain('SELECT p.id, p.member_id');
+    expect(policyRoute).toContain('access.practitioner.practitionerRecordId === practitioner.practitionerRecordId');
+    expect(policyRoute).toContain('access.practitioner.practitionerMemberId === practitioner.practitionerMemberId');
+    expect(policyRoute).toContain('getEffectivePolicy(practitioner.practitionerMemberId, clientId)');
+    expect(policyRoute).not.toContain('getEffectivePolicy(practitioner.practitionerRecordId');
+  });
+
+  it('uses member identity for sliding-scale policy and request ownership', () => {
+    expect(slidingScaleRoute).toContain('SELECT id, member_id FROM practitioners');
+    expect(slidingScaleRoute).toContain('getPublicPolicy(practitioner.practitionerMemberId)');
+    expect(slidingScaleRoute).toContain('createRequest(practitioner.practitionerMemberId');
+    expect(slidingScaleRoute).toContain('access.practitioner.practitionerRecordId === practitioner.practitionerRecordId');
+    expect(slidingScaleRoute).toContain('access.practitioner.practitionerMemberId === practitioner.practitionerMemberId');
+    expect(slidingScaleRoute).not.toContain('access.practitionerId');
   });
 });
