@@ -117,15 +117,24 @@ If R2 later supports `Use what I just told MAIA`, the only automatically copied 
 
 The relationship resolver and message service must never receive hidden MAIA context, risk classification, model analysis, memory, or conversation history by default.
 
+## Identity prerequisite discovered during R3
+
+The portal messaging path itself contained a pre-existing practitioner identity collapse: `practitioner_clients.practitioner_id` is a `practitioners.id` practice-record id, while `message_policies`, `client_messages`, and `safety_concern_logs` require the practitioner's `members.id`.
+
+PR #1694 (`PORTAL-MESSAGE-IDENTITY-BOUNDARY-01`) repairs this by carrying both identities explicitly and binding each to the tables that own it.
+
+That repair is prerequisite hygiene for any future MAIA handoff. R3 must not reuse the message service until #1694 (or an equivalent superseding repair) is admitted.
+
 ## Required pre-implementation gates
 
-R3 leaves five blockers before any UI/code integration:
+R3 leaves six blockers before any UI/code integration:
 
-1. authenticated-member → relationship resolver design and falsifiers;
-2. message-policy discovery contract;
-3. multi-practitioner recipient-choice contract;
-4. PHI/privacy ruling on the current message persistence shape for safety-adjacent content;
-5. notification-result contract so 'message sent' and 'practitioner notified' cannot be conflated.
+1. admit/supersede the portal messaging identity repair (#1694);
+2. authenticated-member → relationship resolver design and falsifiers;
+3. message-policy discovery contract;
+4. multi-practitioner recipient-choice contract;
+5. PHI/privacy ruling on the current message persistence shape for safety-adjacent content;
+6. notification-result contract so 'message sent' and 'practitioner notified' cannot be conflated.
 
 ## Standing
 
