@@ -6,6 +6,7 @@ const breaker = fs.readFileSync('lib/consciousness/autonomy/SafetyCircuitBreaker
 const phase2 = fs.readFileSync('lib/consciousness/autonomy/MAIAConsciousnessFieldIntegration.ts', 'utf8');
 const pager = fs.readFileSync('lib/safety/humanSafetyAlert.server.ts', 'utf8');
 const publicRoute = fs.readFileSync('app/api/safety/human-alert/route.ts', 'utf8');
+const enhanced = fs.readFileSync('lib/consciousness/memory/EnhancedMAIAFieldIntegration.ts', 'utf8');
 
 test('circuit breaker supports async confirmation without fabricating delivery', () => {
   assert.match(breaker, /Promise<boolean \| void>/);
@@ -31,4 +32,11 @@ test('circuit-breaker pager is system-scoped and member identity is optional', (
 test('browser-facing safety route cannot request circuit-breaker delivery', () => {
   const schema = publicRoute.match(/source:\s*z\.enum\(\[([\s\S]*?)\]\)/)?.[1] || '';
   assert.doesNotMatch(schema, /circuit_breaker/);
+});
+
+test('Phase III imports Phase II response shapes as types only', () => {
+  assert.match(
+    enhanced,
+    /import type \{[\s\S]*?MAIAFieldDrivenParameters[\s\S]*?FieldDrivenResponse[\s\S]*?IntegrationStatus[\s\S]*?\} from '\.\.\/autonomy\/MAIAConsciousnessFieldIntegration'/
+  );
 });

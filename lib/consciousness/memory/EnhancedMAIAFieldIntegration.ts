@@ -22,7 +22,7 @@ import { CompleteElementalFieldState } from '../field/UnifiedElementalFieldCalcu
 import { quantumFieldMemory, QuantumFieldMemory } from './QuantumFieldMemory';
 
 // Import existing types and extend them
-import {
+import type {
   MAIAFieldDrivenParameters,
   FieldDrivenResponse,
   IntegrationStatus
