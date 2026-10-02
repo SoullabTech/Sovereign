@@ -405,6 +405,12 @@ const nextConfig = {
   // Experimental features to ensure critical components load first
   experimental: {
     optimizeCss: true,
+    // A packaged Cabin runtime lives inside a signed macOS app bundle. Next's
+    // default ISR disk cache writes route-cache files under .next/server at
+    // runtime, which mutates sealed resources after launch and invalidates the
+    // Developer ID signature. Offline Cabin therefore keeps ISR cache
+    // in-memory only; web/production behavior remains unchanged.
+    isrFlushToDisk: process.env.MAIA_CABIN_MODE === 'offline' ? false : true,
     // Next 16 request-body buffer for requests traversing proxy.ts.
     proxyClientMaxBodySize: 30 * 1024 * 1024,
     // Ensure SacredLabDrawer is in the critical path
