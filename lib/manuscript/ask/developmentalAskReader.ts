@@ -34,8 +34,9 @@ import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
 import { labelsFor, type AuthorFacingLabels } from './developmentalLabels';
+import { editorialDirective } from '@/lib/writersStudio/editorialDepth';
 
-export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-01';
+export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-02';
 
 const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
 
@@ -64,6 +65,10 @@ Tell them the truth: this conversation has not reread the Work, and you cannot a
 
 RESTRAINT IS A REAL ANSWER
 "I would leave this alone" is a legitimate reply, with reasons. So is "I noticed it; I do not know what it means." Do not manufacture significance to seem useful.
+
+RELATIONAL DELIVERY
+${editorialDirective('guided')}
+Talk with the writer, not at them. Let the observation become a living question between you. Prefer concrete phrases such as "I notice...", "what seems to be happening here...", and "what do you make of that?" over report language such as "structural scaffolding", "operative recurrence", "positional asymmetry", or other taxonomy unless the writer explicitly asks for the technical vocabulary.
 
 Do not use headings, bullets or lists. Write to them in prose. Be brief: a few sentences unless they asked for more.`;
 

@@ -86,6 +86,49 @@ const QUESTION: Record<Exclude<DevelopField, 'overview'>, string> = {
   reader: 'What does the reader already know here, and where might orientation be lost?',
 };
 
+const FRIENDLY_PHENOMENON: Record<string, { title: string; lead: string }> = {
+  recurrence: {
+    title: 'Something is returning here',
+    lead: 'MAIA noticed an idea, image, phrase, or gesture coming back. The useful question is what changes each time it returns — not whether repetition is automatically a problem.',
+  },
+  'unresolved thread': {
+    title: 'Something may still be open',
+    lead: 'MAIA noticed something introduced here that is not yet taken up again in what she read. That can be intentional. It is worth asking whether the openness feels alive or unfinished to you.',
+  },
+  'register shift': {
+    title: 'The way the chapter speaks changes here',
+    lead: 'MAIA noticed a change in voice, distance, tense, or mode of telling. The question is whether the change serves the movement you want.',
+  },
+  'prospective reference': {
+    title: 'The text points forward',
+    lead: 'MAIA noticed language that asks the reader to hold something for later. It may be useful to see whether that promise feels clear and well placed.',
+  },
+  're-explanation / first-mention': {
+    title: 'An idea may be arriving twice',
+    lead: 'MAIA noticed something being introduced or explained in a way that may overlap with an earlier moment. The question is whether the second arrival deepens the idea or simply repeats it.',
+  },
+  movement: {
+    title: 'The chapter changes direction here',
+    lead: 'MAIA noticed a shift in what the section is doing. We can look at what opens, what closes, and whether that movement feels true to the chapter.',
+  },
+  'term drift': {
+    title: 'A word may be changing meaning',
+    lead: 'MAIA noticed a term carrying a different sense here than elsewhere. That may be growth, nuance, or confusion; the manuscript itself has to decide which.',
+  },
+  'positional asymmetry': {
+    title: 'The weight is uneven across the chapter',
+    lead: 'MAIA noticed that something is concentrated in one part of the chapter more than another. That is not a flaw by itself; it may reveal where the chapter is doing its deepest work.',
+  },
+};
+
+function friendlyObservation(phenomenonLabel: string | null | undefined) {
+  const key = (phenomenonLabel ?? '').trim().toLowerCase();
+  return FRIENDLY_PHENOMENON[key] ?? {
+    title: 'There is something here worth looking at together',
+    lead: 'MAIA noticed a pattern in this reading. You do not need to accept it as a verdict. The useful next move is to see whether it helps you understand what this part of the Work is doing.',
+  };
+}
+
 export type DevelopScopeChoice =
   | { kind: 'whole' }
   | { kind: 'section'; sectionId: string; label: string }
@@ -367,13 +410,25 @@ function ReadingField({
           </span>
         </div>
 
-        <blockquote>{observation.observation}</blockquote>
+        {(() => {
+          const friendly = friendlyObservation(observation.phenomenonLabel);
+          return (
+            <div className="p4r1-discovery-human">
+              <h4>{friendly.title}</h4>
+              <p>{friendly.lead}</p>
+              <details>
+                <summary>See the saved reading in full</summary>
+                <blockquote>{observation.observation}</blockquote>
+              </details>
+            </div>
+          );
+        })()}
 
         <div className="p4r1-discovery-plain">
-          <b>Why this may be worth looking at</b>
+          <b>You do not have to decide what this means alone</b>
           <p>
-            This is an observation from the exact reading shown above. It is not a grade or a required change.
-            You can follow it into the manuscript, talk it through, or simply move on.
+            MAIA can put the reading into ordinary language, show you the exact places she was responding to,
+            and stay with the question while you decide whether anything here matters for your Work.
           </p>
         </div>
 
@@ -384,7 +439,7 @@ function ReadingField({
               className="p4r1-discovery-primary"
               onClick={() => onWorkWithObservation(reading.id, observation.key, workSectionId)}
             >
-              Work with this
+              Stay with this in Write
             </button>
           ) : null}
           {sectionId ? (
@@ -392,14 +447,14 @@ function ReadingField({
               type="button"
               onClick={() => onGoToObservation(reading.id, observation.key, sectionId)}
             >
-              Show me where
+              Show me in the manuscript
             </button>
           ) : null}
           <button type="button" onClick={() => onTalkObservation(observation.key)}>
-            Talk this through
+            Talk with MAIA
           </button>
           <button type="button" onClick={() => onTeachObservation(observation.key)}>
-            Teach me why
+            Help me understand
           </button>
           <button type="button" onClick={() => onDeepObservation(observation.key)}>
             Go deeper
@@ -1494,9 +1549,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               </span>
               <h3>{selectedRailLabel}</h3>
               <p>
-                This is the active developmental place now. Choose what you want to understand
-                and MAIA will stay with this chapter or section rather than making you work
-                through the whole-Work dashboard first.
+                I’m with you here. We can begin by talking about what this chapter or section is trying to become,
+                or you can ask me to look through one particular lens. You do not need to translate your question into editorial language first.
               </p>
               <div className="p4r1-locus-actions">
                 <button
@@ -1508,7 +1562,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                     'Help me understand what it is doing, what may be alive or unresolved here, and ask me one useful question before suggesting changes.',
                   ].join('\n\n'))}
                 >
-                  Talk about this
+                  Talk with MAIA
                 </button>
                 <button type="button" onClick={() => props.onMode('write')}>Open in Write</button>
               </div>
@@ -1518,16 +1572,17 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               <span className="p4r1-eyebrow">Look at this place through</span>
               <div className="p4r1-locus-lens-grid">
                 {([
-                  ['structure', 'Structure'],
-                  ['arc', 'Arc'],
-                  ['themes', 'Themes'],
-                  ['voice', 'Voice'],
-                  ['coherence', 'Coherence'],
-                  ['continuity', 'Continuity'],
-                  ['reader', 'Reader'],
-                ] as const).map(([field, label]) => (
+                  ['structure', 'How is this shaped?', 'See how the parts fit, repeat, or may be carrying too much.'],
+                  ['arc', 'Where is this going?', 'Follow the movement of the chapter and what changes as it unfolds.'],
+                  ['themes', 'What keeps returning?', 'Notice recurring ideas, images, questions, or gestures.'],
+                  ['voice', 'How does it sound?', 'Listen for where the voice holds, shifts, or changes distance.'],
+                  ['coherence', 'Does it hold together?', 'Look for places where meaning strengthens, drifts, or contradicts itself.'],
+                  ['continuity', 'What carries through?', 'Notice what is picked up, dropped, promised, or already happened.'],
+                  ['reader', 'How might a reader meet this?', 'Look at orientation, timing, and what the reader knows at each point.'],
+                ] as const).map(([field, label, detail]) => (
                   <button key={field} type="button" onClick={() => props.onField(field)}>
-                    {label}
+                    <b>{label}</b>
+                    <span>{detail}</span>
                   </button>
                 ))}
               </div>
@@ -1546,6 +1601,18 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           </div>
         ) : (
         <div className="p4r1-intent-arrival">
+          <AttentionMapPanel
+            map={props.attentionMap}
+            busy={props.attentionBusy}
+            progress={props.attentionProgress}
+            error={props.attentionError}
+            selectedItemId={props.selectedAttentionItemId}
+            onCommission={props.onCommissionAttentionMap}
+            onShow={props.onShowAttentionItem}
+            onWork={props.onWorkWithAttentionItem}
+            onDiscuss={discussAttentionItem}
+          />
+
           <section className="fr-card p4r1-developmental-orientation" data-developmental-orientation>
             <div className="p4r1-developmental-head">
               <span className="p4r1-eyebrow">The Work in process</span>
@@ -1770,18 +1837,6 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             onDiscussCandidate={discussLineageCandidate}
           />
 
-          <AttentionMapPanel
-            map={props.attentionMap}
-            busy={props.attentionBusy}
-            progress={props.attentionProgress}
-            error={props.attentionError}
-            selectedItemId={props.selectedAttentionItemId}
-            onCommission={props.onCommissionAttentionMap}
-            onShow={props.onShowAttentionItem}
-            onWork={props.onWorkWithAttentionItem}
-            onDiscuss={discussAttentionItem}
-          />
-
           <section className="p4r1-existing-evidence">
             <div>
               <span className="p4r1-eyebrow">What is already here</span>
@@ -1829,6 +1884,36 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                   I don’t have a saved reading for this question yet. You can choose exactly what I may read below.
                 </p>
               ) : null}
+            </section>
+          ) : null}
+
+          {railSelectionId && selectedRailSection && activeField ? (
+            <section className="fr-card p4r1-selected-place">
+              <span className="p4r1-eyebrow">You’re here</span>
+              <h3>{selectedRailLabel}</h3>
+              <p>
+                We can stay with this {props.scope.kind === 'chapter' ? 'chapter' : 'section'} as a whole.
+                Choosing it did not trigger a new reading. If you want MAIA to read it for {LABEL[activeField].toLowerCase()}, ask directly here.
+              </p>
+              <div className="p4r1-selected-place-actions">
+                <button type="button" onClick={() => beginWholeConversation([
+                  `I’m in “${selectedRailLabel}”.`,
+                  `I’m looking at it through ${LABEL[activeField].toLowerCase()}, but I want to begin conversationally.`,
+                  'Help me understand what I am seeing before you turn it into an analysis. Ask me one useful question first.',
+                ].join('\n\n'))}>Talk with MAIA first</button>
+                <button
+                  type="button"
+                  className="p4r1-commission"
+                  disabled={props.commissioning || props.prep?.kind !== 'ready'}
+                  onClick={props.onCommission}
+                >
+                  {props.commissioning
+                    ? 'MAIA is reading…'
+                    : `Read this ${props.scope.kind === 'chapter' ? 'chapter' : 'section'} for ${LABEL[activeField]}`}
+                </button>
+                <button type="button" onClick={() => props.onMode('write')}>Open the text</button>
+              </div>
+              <p className="fr-also">You can change the lens at any time. Nothing is edited by reading.</p>
             </section>
           ) : null}
 
@@ -1940,8 +2025,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <div className="fr-maia-name">
           <h2>MAIA</h2>
           <span>
-            {selectedObservation && talking
-              ? 'In relation to this observation'
+            {selectedObservation
+              ? 'With this observation'
               : railSelectionId && selectedRailSection
                 ? `In relation to ${selectedRailLabel}`
                 : 'In relation to your Work'}
@@ -1982,6 +2067,30 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               }}
             />
           </>
+        ) : selectedObservation && props.reading ? (
+          <div className="p4r1-observation-maia-ready">
+            <span className="p4r1-eyebrow">I’m here with this</span>
+            <h3>{friendlyObservation(selectedObservation.phenomenonLabel).title}</h3>
+            <p>{friendlyObservation(selectedObservation.phenomenonLabel).lead}</p>
+            <div className="p4r1-observation-ready-actions">
+              <button type="button" onClick={() => {
+                setDialoguePrompt('Put this observation into ordinary language for me. Start with what you actually noticed in my writing, why it may matter here, and one question that would help me decide what I think. No technical editorial vocabulary unless I ask for it.');
+                setTalking(true);
+              }}>Explain it plainly</button>
+              <button type="button" onClick={() => {
+                setDialoguePrompt('Stay with this observation with me. Do not turn it into a verdict or a repair task. Help me understand what you saw and ask me what I make of it.');
+                setTalking(true);
+              }}>Talk with me about it</button>
+              <button type="button" onClick={() => {
+                setDialoguePrompt('Teach me the one craft idea most relevant to this observation. Begin in plain language, show it in my own writing, and keep the technical term optional.');
+                setTalking(true);
+              }}>Teach me what is happening</button>
+            </div>
+            <details>
+              <summary>See the saved reading and evidence</summary>
+              <p>{selectedObservation.observation}</p>
+            </details>
+          </div>
         ) : props.work && workTalking ? (
           <div className="p4r1-work-conversation">
             <p className="p4r1-work-conversation-intro">
@@ -2007,26 +2116,29 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             </span>
             <h3>{selectedRailLabel}</h3>
             <p>
-              I’m oriented here now. You can talk about this place, move into a lens,
-              or open it in Write without going through the whole-Work material first.
+              I’m with you in this {props.scope.kind === 'chapter' ? 'chapter' : 'section'} now.
+              We can talk before analyzing anything, or you can choose the kind of attention you want from me.
             </p>
-            <div className="p4r1-locus-actions">
+            <div className="p4r1-locus-actions p4r1-locus-actions--relational">
               <button
                 type="button"
                 className="p4r1-talk"
                 onClick={() => beginWholeConversation([
                   `I selected “${selectedRailLabel}” in Develop.`,
-                  'Stay with this exact place and help me understand it before we move anywhere else.',
-                  'Ask me one useful question first.',
+                  'Stay with this exact place. Help me understand what it is doing before we analyze or change anything.',
+                  'Begin by asking me what I am noticing or wondering here.',
                 ].join('\n\n'))}
               >
-                Talk about this
+                Talk with MAIA
               </button>
-              <button type="button" onClick={() => props.onField('structure')}>Structure</button>
-              <button type="button" onClick={() => props.onField('arc')}>Arc</button>
-              <button type="button" onClick={() => props.onMode('write')}>Open in Write</button>
+              <button type="button" onClick={() => props.onField('structure')}>See how it is shaped</button>
+              <button type="button" onClick={() => props.onField('arc')}>Follow its movement</button>
+              <button type="button" onClick={() => props.onField('themes')}>Notice what returns</button>
+              <button type="button" onClick={() => props.onField('continuity')}>See what carries through</button>
+              <button type="button" onClick={() => props.onField('reader')}>Meet it as a reader</button>
+              <button type="button" onClick={() => props.onMode('write')}>Open the text</button>
             </div>
-            <p className="fr-also">Nothing new is read until you explicitly ask MAIA to read.</p>
+            <p className="fr-also">I do not read anything new until you ask me to.</p>
           </div>
         ) : (
           <>
