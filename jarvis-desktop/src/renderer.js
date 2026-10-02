@@ -1623,7 +1623,7 @@ function renderWork() {
             </select>
           </label>
           <label class="hint">Deterministic capability (optional)<br>
-            <input id="wu-capability" type="text" placeholder="e.g. git.rev_parse">
+            <input id="wu-capability" type="text" placeholder="registered capability name">
           </label>
         </div>
 
