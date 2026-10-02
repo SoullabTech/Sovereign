@@ -226,3 +226,19 @@ The Work Unit still had **0 provider attempts** and the grant ledger still conta
 Two observations are preserved rather than normalized away: the UI simultaneously displayed outer badge **ROUTED** and inner **Lifecycle: DRAFT · Next lawful gesture: none**; and the Work Unit source SHA `b40558cd...` differs from runtime SHA `ce061073...`. Neither weakened the E1 membrane in this walk, but both remain follow-up presentation/provenance items.
 
 **Admission conclusion: O5-R3 ✅ ADMITTED on the Mac Studio.** The live runtime acquired the real grant-writer lease on first mutation; the durable lease matched its exact pid/incarnation; a competing real write pass was refused by that lease; no provider execution occurred; and release advanced the immutable generation sequence. Merge remains a separate repository act.
+
+## 9. Canonical post-admission hardening lineage
+
+Later the same day, a parallel O5-R3 branch continued hardening runtime-binding and grant-transition evidence beyond the admission criterion used above. Canonical reconciliation preserves the admission in §§6–8 exactly and carries those stronger mechanisms as post-admission amendments rather than retroactively changing the admission rule.
+
+The reconciled lineage, crash incident, recovery acts, stronger C6A/C6B witness, and relationship to canonical O5-R4/O5-R5 are recorded in:
+
+`docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_POST_ADMISSION_HARDENING_RECONCILIATION_2026-10-01.md`
+
+The complete parallel source record remains available at Git commit `b19004cd5c1babbc20e83681bb8dad944c22f9bf`.
+
+For any future post-admission runtime-binding witness, RB-A3 keeps the bounded readiness barrier in the Step-5 procedure:
+
+`node scripts/witness/o5-r3-runtime-witness.mjs --phase pre-write --await-current-ms 60000 --snapshot ~/o5r3-prewrite.json`
+
+This procedure note does not alter the earlier §§6–8 admission criterion; it governs later strengthened witnesses.

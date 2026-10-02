@@ -205,6 +205,14 @@ console.log(`[MAIA Desktop] cabin next=${standaloneNextPackage}`);
 console.log(`[MAIA Desktop] cabin node_modules source=${cabinNodeModulesSource}`);
 console.log(`[MAIA Desktop] cabin node_modules destination=${cabinNodeModulesDestination}`);
 
+// SOULLAB-DESKTOP-UNIFICATION-01 — package the governed JARVIS realm from its
+// canonical source tree. The staged copy is packaging material only; source
+// authority remains jarvis-desktop/src and no second implementation is created.
+const jarvisSource = path.join(root, '..', 'jarvis-desktop', 'src');
+const jarvisStage = path.join(stage, 'vendor', 'jarvis-desktop', 'src');
+fs.mkdirSync(path.dirname(jarvisStage), { recursive: true });
+fs.cpSync(jarvisSource, jarvisStage, { recursive: true });
+
 const args = [
   '--projectDir', stage,
   '--mac',

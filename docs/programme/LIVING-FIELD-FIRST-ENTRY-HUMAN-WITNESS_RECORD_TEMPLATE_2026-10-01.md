@@ -7,8 +7,11 @@
 **Production SHA at end of walk:** (same command, after the walk)
 **Deploy freeze held for the window:** yes / no
 **Public health (start / end):**
-**Device/browser:**
-**Early Field admitted:** yes / no
+**Device/browser:** (member's own device: yes / no; if no, why and what the member was told)
+**Early Field admitted:** yes / no (server-side read-only check per Amendment 2 §5; paste only the boolean output, never the member UUID or a member session)
+**Observation channels disclosed before the walk:** list each (facilitator / call or screen-share / recording / screenshots / AI agent: absent)
+**Member accepted the disclosed setup:** yes / no (no → the walk does not run)
+**Any observation channel discovered afterwards that was not disclosed:** none / describe (any → **VOID — NO EVIDENCE**)
 **Pre-existing member-owned substrate:** no
 **Facilitator intervention:** none / describe
 **Member chose to write:** yes / no
@@ -18,6 +21,20 @@
 
 > **Validity.** If any of the three SHAs differ, or the freeze did not hold, stop filling this in:
 > mark the record **VOID — NO EVIDENCE** and do not adjudicate it.
+
+## Observation disclosure — before the first-entry script
+
+Adapt only the bracketed setup detail so every sentence remains literally true. If the member declines the disclosed setup, the walk does not run.
+
+> Before we start, I'd like you to know exactly who's with you. It's just me, [here with you /
+> on this call]. Nothing is recording your screen, and no AI is connected to your device or
+> watching what you do. MAIA only joins if you choose her, the way I'll describe in a moment.
+> While you explore, I'll jot a few notes in my own words about what you do
+> and say, but I won't copy anything you write in your field. The notes are kept under a label,
+> not your name. If there's anything you'd rather I leave out, just tell me, now or afterwards.
+> I'm here the whole time, so if anything feels hard, you can say so and we'll stop.
+
+**Observation disclosure spoken with actual setup stated truthfully:** yes / no
 
 ## Script — read these words, and only these
 

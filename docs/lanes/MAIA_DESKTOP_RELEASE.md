@@ -18,8 +18,8 @@ appended sections.
 
 ## Last updated
 
-2026-10-01 · canonical observed `a999932df7aa`. #1647 merged as `888646afc6de`; its exact-SHA signed artifact passed containment, 16.3.8, offline runtime, and local package verification, then Apple notarization rejected nested unsigned Cabin Mach-O binaries. Release SHA reopened for the nested-native signing repair.
-· evidence: git + Mac Studio artifact/runtime witness + Apple notary submission `2f638ee1-ed5b-43ad-9181-a16c209c458a`.
+2026-10-02 · canonical observed `15a9175fb917`. #1695 merged as `f55b1ead65f2`, admitting the unified Soullab Desktop host (MAIA/member realm + JARVIS/Kelly’s World operator realm). The nested-native signing branch then reconciled current canonical with zero conflicts; combined signing + Cabin + portability + Soullab Desktop F1–F12 verification is 32/32 PASS. Full MAIA Desktop differential: candidate 412 tests / 409 pass / 3 fail versus untouched canonical 410 / 407 / 3, with the same three direct-Node ESM baseline failures and two additive signing tests passing.
+· evidence: git + GitHub #1695 merge/CI + Mac Studio current-canonical merge rehearsal and test output. Apple rejection provenance remains submission `2f638ee1-ed5b-43ad-9181-a16c209c458a`.
 
 ## Release SHA
 
@@ -31,13 +31,14 @@ appended sections.
    migrations are already applied in production).
 2. ✅ Merged #1616 as `ef511f0ef`; that SHA was later **rejected** after its Mac artifact census exposed unsafe repository over-tracing. It is historical provenance, not a release candidate.
 3. ✅ Merged #1618 as `f2346dae11f5`, preserving the Desktop packaging lineage and a copy-stage refusal for `backups/` and `.next/cache`.
-4. ✅ #1647 merged as `888646afc6de`; that exact canonical candidate passed containment and offline runtime witnesses but was rejected by Apple notarization for nested native-code trust. The nested-native repair must merge into current `clean-main-no-secrets`; **that new canonical merge commit becomes the only release SHA.**
-5. Mac Studio, from that exact release SHA on the T7 build volume: clean root install/build → `MAIA_CABIN_MODE=offline npm run build` (webpack) → inspect the actual `.next/standalone` root, forbidden paths, credentials, symlinks, and Next 16.3.8 → `maia-desktop` tests (**at least 413/413; any lower total is a failure unless explicitly explained**) → fresh package → `npm run verify:package`, which must report every Cabin Mach-O as Developer-ID signed with secure timestamp and hardened runtime.
-6. Launch the packaged app offline through the Desktop host and witness `/api/cabin/health` and `/cabin`. The embedded `maiaBuildSha` must equal the release SHA. Record immutable artifact digests; never rename or re-sign a rejected candidate.
-7. Developer ID identity and `MAIA-BETA` notary profile are **present** (see Blockers). Produce the signed hardened-runtime artifact from the exact release SHA, record the signed digest, submit with `notarytool --wait`, and staple.
-8. Run `REQUIRE_EXTERNAL_BETA=1 npm run verify:package` and Gatekeeper assessment on the signed/stapled artifact.
-9. Untouched download accepted by Gatekeeper on a clean second Mac.
-10. Only then: release to the named small cohort (H4.6 contract).
+4. ✅ #1647 merged as `888646afc6de`; that exact canonical candidate passed containment and offline runtime witnesses but was rejected by Apple notarization for nested native-code trust.
+5. ✅ #1695 merged as `f55b1ead65f2`, admitting the unified Soullab Desktop host. The nested-native repair must merge on top of the current unified canonical; **that future canonical merge commit becomes the only release SHA.**
+6. Mac Studio, from that exact release SHA on the T7 build volume: clean root install/build → `MAIA_CABIN_MODE=offline npm run build` (webpack) → inspect the actual `.next/standalone` root, forbidden paths, credentials, symlinks, JARVIS packaged resource, and Next 16.3.8 → run the MAIA Desktop population and require **no failures beyond the exact canonical baseline plus the two additive signing tests passing**; also require the signing/unification targeted suite **32/32 PASS** → fresh package → `npm run verify:package`, which must report every Cabin Mach-O as Developer-ID signed with secure timestamp and hardened runtime.
+7. Launch the packaged app offline through the Desktop host and witness `/api/cabin/health`, `/cabin`, and the packaged JARVIS realm. The embedded `maiaBuildSha` must equal the release SHA. Record immutable artifact digests; never rename or re-sign a rejected candidate.
+8. Developer ID identity and `MAIA-BETA` notary profile are **present** (see Blockers). Produce the signed hardened-runtime artifact from the exact release SHA, record the signed digest, submit with `notarytool --wait`, and staple.
+9. Run `REQUIRE_EXTERNAL_BETA=1 npm run verify:package` and Gatekeeper assessment on the signed/stapled artifact.
+10. Untouched download accepted by Gatekeeper on a clean second Mac.
+11. Only then: release to the named small cohort (H4.6 contract).
 
 ## Rejected (never sign, never ship)
 
@@ -56,15 +57,15 @@ appended sections.
 
 | Gate | State | Evidence |
 |---|---|---|
-| Canonical Desktop packaging lineage | #1618 merged as `f2346dae11f5`; #1647 reconciliation retains its copy-stage refusal for `backups/` and `.next/cache` while adding causal trace containment and package fail-closed guards | git + merge-sensitive tests, 2026-10-01 |
-| Desktop suite on containment lineage | `888646afc6de` exact canonical candidate **411/411 PASS**; nested-native repair branch **413/413 PASS** (two additive signing-verifier tests). Full suite must rerun at the next canonical release SHA. | founder, Mac Studio, 2026-10-01 |
+| Canonical Desktop packaging lineage | #1618 merged as `f2346dae11f5`; #1647 added causal trace containment/package fail-closed guards; #1695 merged as `f55b1ead65f2` and now canonically carries both `cabin-runtime` and the governed JARVIS realm resource. | git + merge-sensitive tests + #1695 CI, 2026-10-02 |
+| Desktop suite on current unified lineage | Current canonical `15a9175fb917`: **410 tests / 407 pass / 3 direct-Node ESM baseline failures**. Reconciled nested-native candidate: **412 / 409 / same 3 failures**. Two additive signing-verifier tests pass; targeted signing + Cabin + portability + SDU F1–F12 suite **32/32 PASS**. Full differential must rerun at the final canonical release SHA. | founder, Mac Studio, 2026-10-02 |
 | Exact final release-SHA standalone build | `888646afc6de` completed and was later rejected only at notarization; **next release SHA OPEN** pending nested-native repair merge and exact-SHA rebuild | Mac Studio, 2026-10-01 |
 | Offline trace containment | **PASS on rejected `888646afc6de` artifact**: packaged root reduced to admitted runtime trees; forbidden credentials/content absent; Next 16.3.8 present. Containment is preserved by the nested-native repair and must be re-witnessed on the next exact canonical artifact. | Mac Studio packaged-app census, 2026-10-01 |
 | Artifact carries Next 16.3.8 | **PASS on rejected `888646afc6de` artifact**; must be re-witnessed on next release SHA | Mac Studio artifact census + `verify:package`, 2026-10-01 |
 | Packaged runtime healthy offline | **PASS on rejected `888646afc6de` artifact**: `/api/cabin/health` ready/offline/build `888646afc`; `/cabin` HTTP 200; embedded `maiaBuildSha=888646afc6de`. Must rerun on next release SHA. | Mac Studio live packaged-app witness, 2026-10-01 |
 | Developer ID Application | **PRESENT**: `32276A3F…55DB48 "Developer ID Application: Kelly Nezat (ZVK2X646Z2)"` | founder, `security find-identity -v -p codesigning`, 2026-10-01 |
 | Notary profile `MAIA-BETA` | **PRESENT**; `xcrun notarytool history --keychain-profile MAIA-BETA` authenticated and returned `No submission history.` | founder, Mac Studio, 2026-10-01 |
-| Nested Cabin Mach-O trust | **REPAIR IN PROGRESS** on `fix/desktop-notary-nested-native-20261001`: build discovers every staged Mach-O and Developer-ID signs it with secure timestamp + hardened runtime; verifier independently requires the same evidence. Suite 413/413 PASS. | Apple rejection log + Mac Studio tests, 2026-10-01 |
+| Nested Cabin Mach-O trust | **REPAIR RECONCILED ON CURRENT UNIFIED CANONICAL; PR #1668 still OPEN.** Build discovers every staged Cabin Mach-O and Developer-ID signs it with secure timestamp + hardened runtime; verifier independently requires the same evidence. Current combined targeted suite 32/32 PASS; full differential adds two passing tests with no new failures. | Apple rejection log + #1668 lineage + Mac Studio current-canonical tests, 2026-10-02 |
 | Notarize / staple | `888646afc6de` submission **INVALID**; next exact canonical artifact must be submitted fresh after nested-native repair. No stapling performed. | Apple submission `2f638ee1-ed5b-43ad-9181-a16c209c458a`, 2026-10-01 |
 | Second-Mac Gatekeeper | NOT YET | — |
 | Tester release | CLOSED | — |

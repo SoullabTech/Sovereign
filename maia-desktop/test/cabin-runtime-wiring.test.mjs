@@ -15,9 +15,10 @@ test('offline mode selects a loopback platform origin before shell policy loads'
   assert.match(MAIN, /require\('\.\/shell-policy'\)/);
 });
 
-test('offline mode starts the supervised runtime before the window is created', () => {
-  const start = MAIN.indexOf('const cabin = await startCabinRuntimeIfNeeded();');
-  const window = MAIN.indexOf('createWindow();');
+test('offline mode starts the supervised runtime before the MAIA window is created', () => {
+  const startup = MAIN.slice(MAIN.indexOf('app.whenReady().then(async () => {'));
+  const start = startup.indexOf('const cabin = await startCabinRuntimeIfNeeded();');
+  const window = startup.indexOf('\n  createWindow();');
   assert.ok(start >= 0);
   assert.ok(window > start);
 });
