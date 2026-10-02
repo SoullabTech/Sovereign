@@ -4,7 +4,7 @@
 **Base:** `ce061073` (O5-R3 implementation + freeze amendment 1). ⛔ **Kept frozen. No lease or ledger change.**
 **Standing:** implementation complete · constitutional suite complete · ⭐ **Mac Studio integration witness complete** ·
 ⭐ rulings taken (§6): **launch mode A first · `runtime-binding.json` approved and built (§7), suite frozen** ·
-⛔ **runtime-binding admission pending the live walk (§8)**
+⭐ **O5-R3 ADMITTED by the successful 2026-10-02 live walk (§15); provider execution remained outside the witness**
 
 > *Source truth and runtime truth are not the same thing.* R3-R11: admission witnesses the exact checkout SHA
 > the participating Desktop/JARVIS process runs.
@@ -611,8 +611,8 @@ On that result the record closes as follows:
 > incarnation turnover, with pre-write baseline discrimination, a single authorized acquisition,
 > incarnation-bound current-holder proof, and post-write constitutional closure.
 
-The §9.5 narrow statement still holds within it. Only after admission is O5-R4 opened, against an admitted
-substrate.
+The §9.5 narrow statement still holds within it. Only after admission may O5-R4 be opened by its own explicit
+act, against an admitted substrate.
 
 ### 11.5 ⚠️ A gap between the ruling's C8 and the instrument's C8, surfaced before the walk
 
@@ -922,3 +922,72 @@ On the candidate containing the execution interlock and retirement tooling:
 - after authorization the UI must stop at **Review authorized execution**. Confirm Execute is outside this witness;
 - ⛔ O5-R4 remains closed;
 - production untouched.
+
+
+## 15. Fresh walk #4 — successful constitutional admission (2026-10-02)
+
+A fresh live witness was completed on the Mac Studio from repaired successor specimen
+`711668e81b646d40ef638d7119c12f852e07ea54` (direct child of `37750a92f`).
+The only successor change isolates explicit development witness instances; the O5-R3 authority stores and
+constitutional witness logic remained the governed substrate.
+
+### 15.1 Pre-write baseline
+
+Step 5 ran against the live development-mode specimen with:
+- checkout `/Users/soullab/o5r3-witness-711668e81`, clean;
+- selection source `dev-walk`;
+- runtime binding readiness `READY`;
+- C1–C5 PASS;
+- C6-pre PASS: `NOT_YET_HELD_AFTER_RELEASE · generation 62`;
+- verdict `PRE-WRITE BASELINE PASS — C1–C5 + C6-pre`, exit 0.
+
+The pre-write snapshot was preserved as `~/o5r3-w711-step5-prewrite.json`.
+No grant authority was held by the witness Desktop at that baseline.
+
+### 15.2 One authorized acquisition
+
+The founder performed only the required Desktop gesture on Work Unit
+`v2-witness-one-o5-r3-authorized-e1-gr-muq7hdkz`, PRIMARY · QWEN:
+`Review exact execution → Authorize this execution once`, then stopped at
+`Review authorized execution`.
+
+The post-write witness recorded:
+- Desktop incarnation pid `17775`, process start `ps-lstart:Fri Oct 2 11:32:16 2026`;
+- lease generation `63`, held by that exact incarnation;
+- C6A PASS: exactly one lawful acquisition and exactly one append-only ledger change;
+- changed ledger:
+  `work-units-v2/execution-grants/v2-witness-one-o5-r3-authorized-e1-gr-muq7hdkz.jsonl`;
+- C6 PASS: `HELD_BY_THIS_DESKTOP`;
+- verdict `CONSTITUTIONAL PARTIAL — C7, C8 pending`.
+
+No provider execution was confirmed. `Review authorized execution` / `Confirm Execute` was not crossed,
+and GPT_OSS was not authorized.
+
+### 15.3 Second-writer refusal and closure
+
+With the witness Desktop still holding generation 63, the governed refusal probe returned:
+- `GRANT_WRITER_LEASE_UNAVAILABLE`;
+- `HOME_LEASE_HELD`;
+- holder pid `17775`, matching process start and generation `63`.
+
+C7 PASS therefore witnessed structural refusal by the current holder.
+C8 PASS witnessed all 88 governed files byte-identical across the refused attempt.
+
+Final verdict:
+`CONSTITUTIONAL PASS — C1–C8 + C6A witnessed`, exit 0.
+
+The Desktop then terminated orderly at `2026-10-02T15:39:57.746Z`.
+The lease history advanced to generation 64 released at `2026-10-02T15:39:57.759Z`.
+Thus the final sequence is preserved as: 62 released baseline → 63 single authorized acquisition →
+63 current-holder refusal proof → 64 clean release.
+
+### 15.4 Admission standing
+
+> **O5-R3 — ADMITTED.** Runtime binding and execution-lease standing have been witnessed across historical
+> incarnation turnover, with pre-write baseline discrimination, a single authorized acquisition,
+> incarnation-bound current-holder proof, second-writer refusal, byte-identical refusal closure,
+> and orderly post-witness release.
+
+This admission does not authorize provider execution, does not adjudicate model output, and does not itself
+open O5-R4. O5-R4 requires its own explicit opening act against this now-admitted substrate.
+Production remains untouched.
