@@ -157,23 +157,55 @@ function generateInterventionMessage(type: string, severity: string): string {
 }
 
 /**
- * Alert the team about abuse detection (logs for now, Phase 2: email + guardian).
+ * Alert the Soullab human-safety boundary about an abuse disclosure.
+ *
+ * This is deliberately content-free: the browser sends only classification
+ * metadata. The authenticated server resolves the member identity and owns
+ * SMS/Slack credentials.
  */
 export async function alertTeamAboutAbuse(details: {
-  userId?: string;
-  type?: string;
   severity?: string;
-  timestamp?: Date;
+  type?: string;
+  sessionId?: string;
 }): Promise<void> {
-  console.warn('[ABUSE ALERT]', {
-    ...details,
-    timestamp: details.timestamp || new Date(),
-    // NEVER log message content
-  });
+  const severity = details.severity === 'critical' || details.severity === 'extreme'
+    ? 'crisis'
+    : 'high';
+
+  try {
+    const response = await fetch('/api/safety/human-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: 'teen_abuse',
+        severity,
+        crisisType: details.type || 'abuse_disclosure',
+        sessionId: details.sessionId,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN ABUSE ALERT] human delivery failed', {
+        severity,
+        type: details.type || 'abuse_disclosure',
+        status: response.status,
+        // NEVER log message content here.
+      });
+    }
+  } catch (error) {
+    console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN ABUSE ALERT] transport failed', {
+      severity,
+      type: details.type || 'abuse_disclosure',
+      error: error instanceof Error ? error.name : 'unknown',
+      // NEVER log message content here.
+    });
+  }
 }
 
 /**
- * Record abuse incident for safety tracking (logs for now, Phase 2: database).
+ * Legacy audit hook retained for compatibility.
+ * It deliberately projects only an allowlisted, content-free shape so callers
+ * cannot smuggle message text into console output via excess object fields.
  */
 export async function recordAbuseIncident(details: {
   userId?: string;
@@ -181,9 +213,10 @@ export async function recordAbuseIncident(details: {
   severity?: string;
   timestamp?: Date;
 }): Promise<void> {
+  const { type, severity, timestamp } = details;
   console.warn('[ABUSE RECORD]', {
-    ...details,
-    timestamp: details.timestamp || new Date(),
-    // NEVER store message content
+    type,
+    severity,
+    timestamp: timestamp || new Date(),
   });
 }
