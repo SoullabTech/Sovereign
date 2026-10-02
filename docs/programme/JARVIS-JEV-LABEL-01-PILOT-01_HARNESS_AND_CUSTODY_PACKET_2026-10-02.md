@@ -127,3 +127,24 @@ The Desktop-closed condition became clean (final census clean) and the snapshot 
 Observation for the pilot (not a finding yet): the 25 selected units carry only two of the six task shapes, so per-stratum agreement cannot be assessed for four shapes in this pilot.
 
 STOP. Next act: Kelly's packet-only P labelling (Label A, human). F/full routed-state access stays closed until those P labels are sealed. Label B unfilled; no provider; INT-04 closed; nothing frozen.
+
+## F rerun custody and instrument finding — 2026-10-02
+
+P custody attribution: **Kelly completed the P pass**; this is not attributed to any other participant. P working state reached 100/100 entries at 12:53:46 ET; P sealed at 12:55:10 ET. The F sheet was cut afterward at 12:55:39 ET, so P-before-F is preserved by chronology and by the F sheet's P-seal digest binding.
+
+The first F working artifact was not recoverable. The original F surface had no per-save server log and no disk read-back before advancing. This is an **instrument finding**, not a label finding: successful interaction was not sufficient evidence that the working artifact remained durably recoverable.
+
+F rerun custody condition: if Kelly elects to re-enter F, record that the rerun follows loss of the first working file; Kelly has seen the full routed states before and may recall earlier answers. If original F values are later recovered, retain them as test-retest evidence and do not overwrite the rerun.
+
+### F rerun instrument pin
+
+Exact SHA-256 hashes of the F collection surface used for the rerun:
+
+- `human-f-ui-server.ts` — `dab5b01705085cd0c7272acf72ab82bd81ade759653a8bebaf55e3258859d0cd`
+- `human-f-ui-model.ts` — `0369f7bbf76256fbe9ba02866b00437f2566403afa208f2e4cd403027d9bc4ca`
+- `human-f-ui-client.js` — `366a49b1855a067803d67e0dfc9352b7ce2bd5d9842cfce630d2378c66ffa613`
+- `human-f-ui.html` — `ce22ef104a280d1cd1113e929b49560da8499db715714019d2b70e8c0007b71b`
+- `human-f-ui.css` — `c721675641c1cefdf75ddeabc0f78765b62ef507b59d712a3cbda8af2aff321c`
+- `human-f-ui-verify.ts` — `f4d5134900948138e5f5a30727c8d91e93bc93aa405c4e2026f0b0e15cb99c07`
+
+The rerun surface advances only after atomic write, disk re-read, and exact sheet verification. The UI reports `N of 25 saved to disk`; each successful POST emits a content-free save event with timestamp and completion count.

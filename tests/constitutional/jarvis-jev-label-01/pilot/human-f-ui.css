@@ -1,0 +1,13 @@
+.fullState { display: grid; gap: 14px; }
+.stateSection { border: 1px solid #e5e0d7; border-radius: 12px; overflow: hidden; }
+.stateSection > h3 { margin: 0; padding: 11px 14px; background: #f7f5f0; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; }
+.stateBody { padding: 12px 14px; display: grid; gap: 9px; }
+.stateRow { display: grid; grid-template-columns: minmax(135px, 190px) 1fr; gap: 12px; align-items: start; }
+.stateKey { color: #706c64; font-size: 13px; word-break: break-word; }
+.stateValue { white-space: pre-wrap; word-break: break-word; line-height: 1.42; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.stateEmpty { color: #8b877e; font-style: italic; }
+.choiceRow.two { grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (max-width:720px) {
+  .stateRow { grid-template-columns: 1fr; gap: 4px; }
+  .choiceRow.two { grid-template-columns: 1fr; }
+}

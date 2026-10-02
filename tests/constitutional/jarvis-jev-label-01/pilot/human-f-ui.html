@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kelly · Full-State Pilot</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div>
+        <div class="eyebrow">JEV PILOT · LABEL A · FULL STATE</div>
+        <h1>Kelly’s full-state pass</h1>
+        <p class="lede">Your packet-only answers are sealed. Now judge the same cases from the routing-time state.</p>
+      </div>
+      <div class="progressBox">
+        <div id="caseLabel">Case — of —</div>
+        <div id="completeLabel">0 of 25 complete</div>
+      </div>
+    </header>
+    <div class="progressTrack"><div id="progressBar"></div></div>
+    <section class="notice">
+      <strong>Your P answers are already locked.</strong>
+      This screen shows routing-time information only. It excludes later execution attempts, outcomes,
+      verifier results, resulting commits, and later lifecycle state.
+    </section>
+
+    <section class="card">
+      <div class="sectionTitle">Routing-time full state</div>
+      <div id="fullState" class="fullState"></div>
+    </section>
+
+    <form id="caseForm" novalidate>
+      <section class="question card" data-q="Q_DEPTH">
+        <h2>1. How much thinking does this task actually require?</h2>
+        <p>Choose the closest level. If none fits perfectly, choose the nearest one and mark it ambiguous.</p>
+        <div id="depthChoices" class="depthChoices"></div>
+        <div class="ambiguity" data-for="Q_DEPTH"></div>
+      </section>
+      <section class="question card" data-q="Q_RISK">
+        <h2>2. Does this require extra caution?</h2>
+        <div class="choiceRow two">
+          <label class="choice"><input type="radio" name="Q_RISK" value="true" /><span><b>Yes</b><small>Extra caution or escalation is warranted.</small></span></label>
+          <label class="choice"><input type="radio" name="Q_RISK" value="false" /><span><b>No</b><small>The routing-time state does not warrant extra caution.</small></span></label>
+        </div>
+        <div class="ambiguity" data-for="Q_RISK"></div>
+      </section>
+
+      <section class="question card" data-q="Q_SUFFICIENT">
+        <h2>3. Is this routing-time state sufficient to proceed?</h2>
+        <div class="choiceRow two">
+          <label class="choice"><input type="radio" name="Q_SUFFICIENT" value="true" /><span><b>Yes</b><small>The state is sufficient for the next step.</small></span></label>
+          <label class="choice"><input type="radio" name="Q_SUFFICIENT" value="false" /><span><b>No</b><small>More information is needed.</small></span></label>
+        </div>
+        <div class="ambiguity" data-for="Q_SUFFICIENT"></div>
+      </section>
+      <section class="question card" data-q="Q_LLM_NEEDED">
+        <h2>4. Does this task need an LLM?</h2>
+        <div class="choiceRow two">
+          <label class="choice"><input type="radio" name="Q_LLM_NEEDED" value="true" /><span><b>Yes</b><small>Generative reasoning is useful or necessary.</small></span></label>
+          <label class="choice"><input type="radio" name="Q_LLM_NEEDED" value="false" /><span><b>No</b><small>This appears mechanically or deterministically solvable.</small></span></label>
+        </div>
+        <div class="ambiguity" data-for="Q_LLM_NEEDED"></div>
+      </section>
+
+      <div id="formError" class="error" role="alert" hidden></div>
+      <nav class="navBar">
+        <button type="button" id="prevBtn" class="secondary">Previous</button>
+        <div class="saveState" id="saveState">Not yet saved</div>
+        <button type="submit" id="nextBtn" class="primary">Save &amp; Next</button>
+      </nav>
+    </form>
+    <section id="finished" class="finished card" hidden>
+      <div class="check">✓</div>
+      <h2>All 25 full-state cases are complete.</h2>
+      <p>Stop here. Come back to ChatGPT and say <b>“F labelling complete.”</b></p>
+      <button type="button" id="reviewLastBtn" class="secondary">Review last case</button>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
