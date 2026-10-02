@@ -94,7 +94,7 @@ R2 on PR #1675 defines the lowest-authority future off-ramp: MAIA may eventually
 
 R3 corrects one implementation assumption: the existing portal POST cannot simply be reused from canonical MAIA because portal authority is token-bound, while the canonical MAIA turn uses the ordinary member session. The generic comms POST is practitioner-side, and `sendClientMessage()` is only a service seam once relationship ids are already lawfully resolved. A new authenticated member handoff seam would therefore be required.
 
-R3 also places an explicit privacy hold on implementation: the current message service writes both plaintext and encrypted body columns. Widening safety-adjacent MAIA content into that substrate requires a separate PHI/privacy ruling before code wiring.
+R3 also clarifies the PHI standing: the current message service's plaintext + encrypted body writes are the repository's sanctioned Stage A dual-write pattern, while Phase 2B encrypted-only enforcement is not structurally active for `client_messages` yet. Before code wiring, stewardship must explicitly choose whether this bounded safety-contact use may enter Stage A or must wait for Phase 2B.
 
 **Standing: design/census only. No UI wiring, member-send route, portal-token borrowing, or new disclosure authority is authorized by R2/R3.**
 

@@ -2197,7 +2197,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 132,
       "evidence": "STATE        BUILT · local gates PASS · PRODUCTION WITNESS PENDING",
       "last_touched_epoch": 1788567104,
-      "hours_dormant": 647,
+      "hours_dormant": 648,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2209,7 +2209,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 22,
       "evidence": "STATE            SOURCE MERGED · NOT CLOSED · NOT DEPLOYED",
       "last_touched_epoch": 1788697516,
-      "hours_dormant": 611,
+      "hours_dormant": 612,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2257,7 +2257,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 139,
       "evidence": "## 7. Owed witnesses, re-run on the composition",
       "last_touched_epoch": 1789510856,
-      "hours_dormant": 385,
+      "hours_dormant": 386,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2293,7 +2293,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 182,
       "evidence": "## Owed, if the candidate instrument is ever wired",
       "last_touched_epoch": 1789917878,
-      "hours_dormant": 272,
+      "hours_dormant": 273,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
