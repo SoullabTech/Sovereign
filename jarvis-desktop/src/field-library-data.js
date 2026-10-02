@@ -2221,7 +2221,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Standing:** REPAIR closed · VERIFY full candidate pass (54/54) · INVOKE open, I0 only.",
       "last_touched_epoch": 1788745887,
-      "hours_dormant": 598,
+      "hours_dormant": 599,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2233,7 +2233,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 222,
       "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
       "last_touched_epoch": 1789318246,
-      "hours_dormant": 439,
+      "hours_dormant": 440,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2245,7 +2245,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 219,
       "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
       "last_touched_epoch": 1789317901,
-      "hours_dormant": 439,
+      "hours_dormant": 440,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2269,7 +2269,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Status:** **AUTOMATIC HANDWRITING OCR HELD · ORIGINAL + MANUAL TRANSCRIPTION OPEN · BLANK-WORK RELEASE INDEPENDENT · PRODUCTION UNTOUCHED.**",
       "last_touched_epoch": 1789602025,
-      "hours_dormant": 360,
+      "hours_dormant": 361,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2281,7 +2281,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 4,
       "evidence": "**Status:** ⚠️ FOUNDER ADJUDICATION OPEN · documentary only",
       "last_touched_epoch": 1789682893,
-      "hours_dormant": 338,
+      "hours_dormant": 339,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2305,7 +2305,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 360,
       "evidence": "## 8 · Owed before A2 can be written",
       "last_touched_epoch": 1790078900,
-      "hours_dormant": 228,
+      "hours_dormant": 229,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     }

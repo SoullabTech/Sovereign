@@ -99,7 +99,9 @@ R3 also clarifies the PHI standing: the current message service's plaintext + en
 
 R3 additionally discovered a prerequisite identity defect in the existing portal message path. PR #1694 separates the practitioner's practice-record id from the practitioner's member id. Until that repair (or an equivalent superseding repair) is admitted, the future MAIA handoff must not reuse the portal message service.
 
-**Standing: design/census only. No UI wiring, member-send route, portal-token borrowing, or new disclosure authority is authorized by R2/R3.**
+R4 freezes the recipient-discovery contract without implementing it: the ordinary authenticated member session is the only root authority; eligible practitioner relationships must be server-derived; effective messaging policy must allow client messages; zero candidates means no off-ramp, one may be named truthfully, and more than one requires member choice rather than inference.
+
+**Standing: design/contract only. No UI wiring, member-send route, portal-token borrowing, recipient inference, or new disclosure authority is authorized by R2/R3/R4.**
 
 ## Watching
 
