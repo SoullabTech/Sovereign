@@ -90,6 +90,19 @@ Mechanically fail-closes the already-required authoritative adjudication context
 self-authored Class-A PR lacks a governed distinct-human custodian approval. This enforcement
 must land before further Class-A admission is treated as ordinary.
 
+### Production ancestry custody candidate
+
+#1728 — admit live `13a0308d7` ancestry without changing the canonical tree
+
+The candidate establishes the exact live production commit as canonical ancestry while
+resolving its merge tree byte-identically to current canonical. It is **Class A** and therefore
+is not admissible until the custody floor is active and a governed distinct-human custodian
+exists. It does not authorize deployment by itself.
+
+If #1728 is lawfully admitted, the preferred production path may proceed from canonical
+descendants that already contain the live production ancestry. If it is not admitted, G3 must
+continue to build the production cut from the separately witnessed `13a0308d7` lineage.
+
 ### Evidence reconciliation
 
 #1709 — #1671 admission-exception record
@@ -132,6 +145,7 @@ Before production projection:
 - #1713 is merged/admitted under the custody floor or explicitly excluded from this cut
 - #1715 remains closed and is not revived as an admission prerequisite
 - selected #1671 / #1633 safety commits have an explicit governed disposition
+- #1728 is explicitly admitted or held/excluded under the custody floor
 - current canonical head is recorded
 
 No unresolved or unreviewed Class A code enters the production projection.
@@ -154,14 +168,17 @@ Recipient designation is an authority act, not a technical default.
 
 ### G3 — Production projection
 
-Create a dedicated production-cut branch from the actual running production lineage (or a later witnessed production anchor), not by replacing it with canonical wholesale.
+Choose the construction path from governed ancestry evidence:
 
-The projection must:
+- **If #1728 is lawfully admitted:** use a canonical descendant that contains the witnessed `13a0308d7` production ancestry, then select only the governed safety changes intended for the cut.
+- **If #1728 is held or excluded:** create a dedicated production-cut branch from the actual running production lineage (or a later witnessed production anchor), rather than replacing it with canonical wholesale.
+
+Whichever path is selected must:
 1. preserve the admitted Writer's Studio production changes;
-2. port only admitted safety commits;
+2. include only governed/admitted safety commits;
 3. resolve overlaps explicitly;
 4. prove the resulting tree contains every selected safety contract;
-5. identify the exact candidate SHA.
+5. identify the exact candidate SHA and its ancestry to the witnessed production anchor.
 
 ### G4 — Pre-deploy falsifiers
 
