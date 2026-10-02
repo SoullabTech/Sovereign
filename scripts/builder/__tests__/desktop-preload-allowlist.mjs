@@ -141,6 +141,17 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'nothing is inferred from intent.',
   },
   {
+    channel: 'jarvis:workspace-viewmodel',
+    ratified_in: 'JARVIS-FOUNDER-WORKSPACE-01 / B5 founder authorization 2026-09-23',
+    purpose:
+      'The single B5 read seam for Today · Work · Graph · Monitor · System. MAIN composes and validates ' +
+      'founder-workspace-viewmodel.v1 from the governed B2/B3/B4 organs; presentation_only=true and ' +
+      'authority_effect=none. An optional evidence_ref never becomes arbitrary path authority: MAIN first ' +
+      'rebuilds the live view-model and admits only an exact ref already present in it, then restricts the ' +
+      'preview to safe text-like files under the bound workspace or local AIN home. No execution, O1 planning, ' +
+      'provider, voice, merge, deploy, production write, openPath, or openExternal authority is introduced.',
+  },
+  {
     channel: 'jarvis:submit-task',
     ratified_in: 'original surface',
     purpose:

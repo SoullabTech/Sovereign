@@ -31,6 +31,9 @@ set -u
 REPO="${REPO:-$HOME/MAIA-SOVEREIGN}"
 CANON="${CANON:-clean-main-no-secrets}"
 CENSUS_OUT="${CENSUS_OUT:-}"
+# FD-4 (P0 adjudication, 2026-09-23): OPTIONAL machine-readable output. CENSUS_JSON=/path/census.json writes the same
+# rows as the TSV as a JSON array. Output only; default behaviour unchanged.
+CENSUS_JSON="${CENSUS_JSON:-}"
 CENSUS_FETCH="${CENSUS_FETCH:-0}"
 REGEN_NAMES="node_modules .next .turbo coverage dist"
 
@@ -177,4 +180,13 @@ rm -f "$RAW"
   echo "Nothing was modified by this run."
 } | { if [[ -n "$CENSUS_OUT" ]]; then mkdir -p "$(dirname "$CENSUS_OUT")"; tee "${CENSUS_OUT%.tsv}.txt"; else cat; fi; }
 if [[ -n "$CENSUS_OUT" ]]; then cp "$TSV" "$CENSUS_OUT"; echo "tsv: $CENSUS_OUT  report: ${CENSUS_OUT%.tsv}.txt"; fi
+if [[ -n "$CENSUS_JSON" ]]; then
+  mkdir -p "$(dirname "$CENSUS_JSON")"
+  awk -F'\t' -v canon="$CANON_REF@$CANON_SHA" -v fetched="$FETCHED" -v at="$(date -u +%FT%TZ)" '
+    function esc(s){ gsub(/\\/,"\\\\",s); gsub(/"/,"\\\"",s); return s }
+    NR==1{ for(i=1;i<=NF;i++) h[i]=$i; printf "{\"instrument\":\"scripts/ops/worktree-census.sh\",\"observed_at\":\"%s\",\"canon\":\"%s\",\"fetched\":\"%s\",\"read_only\":true,\"rows\":[", at, esc(canon), esc(fetched); next }
+    { printf "%s{", (NR>2?",":""); for(i=1;i<=NF;i++) printf "%s\"%s\":\"%s\"", (i>1?",":""), h[i], esc($i); printf "}" }
+    END{ printf "]}\n" }' "$TSV" > "$CENSUS_JSON"
+  echo "json: $CENSUS_JSON"
+fi
 rm -f "$TSV"

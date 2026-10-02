@@ -26,6 +26,9 @@ const CWUV2 = require('./canonical-work-unit-v2.js');
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
 const { decideCorrectness } = require('./correctness');
+const PRECISION_CONTEXT = require('./founder-precision-context.js');
+const PARTNER_CONTEXT = require('./partner-context.js');
+const GROUNDED_RESPONSE = require('./grounded-response.js');
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -230,7 +233,7 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'founder-workspace.html'));
   // Re-assert after load: a page-supplied document.title would otherwise
   // replace the artifact identity, which is the one thing this title is for.
   mainWindow.webContents.on('did-finish-load', () => {
@@ -501,7 +504,7 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) creat
 // observation or explicitly UNKNOWN. Nothing is inferred from intended
 // architecture.
 // ---------------------------------------------------------------------------
-ipcMain.handle('jarvis:status', async () => {
+async function readStatus() {
   const result = {
     observed_at: new Date().toISOString(),
     repo_root: currentRoot() || `UNKNOWN (${REPO_ROOT_MODE} mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers`,
@@ -674,6 +677,74 @@ ipcMain.handle('jarvis:status', async () => {
   }
 
   return result;
+}
+ipcMain.handle('jarvis:status', readStatus);
+
+// ---------------------------------------------------------------------------
+// B5 Founder Workspace — ONE new read IPC. The renderer receives only the
+// validated founder-workspace-viewmodel.v1 composed from governed organs. An
+// optional evidence_ref is admitted only if that exact ref is already present
+// in the freshly composed view-model; main never accepts an arbitrary path.
+// This channel is presentation_only / authority_effect:none and exposes no
+// execution, O1 planning, provider, voice, merge, deploy, or production act.
+//
+// Ordinary workspace reads are deliberately QUICK. The two heavyweight B3
+// census scripts have 10-minute ceilings and run only when the founder presses
+// Monitor → Refresh observations (`refresh_instruments:true`). Stored census
+// observations remain visible through the B3 history reader between refreshes.
+// Evidence preview normally reuses a short-lived cached view-model so opening a
+// source never becomes an accidental workstation census.
+// ---------------------------------------------------------------------------
+let founderWorkspaceCache = { root: null, observed_against: null, at: 0, vm: null };
+ipcMain.handle('jarvis:workspace-viewmodel', async (_evt, req) => {
+  const root = currentRoot();
+  if (!root) {
+    return {
+      ok: false,
+      status: 'NO_SUBSTRATE',
+      reason: 'No bound workspace. Choose a repository before opening the Founder Workspace.',
+    };
+  }
+  try {
+    const request = req && typeof req === 'object' ? req : {};
+    const evidenceRef = typeof request.evidence_ref === 'string' ? request.evidence_ref : null;
+    const forceRefresh = request.force_refresh === true || request.refresh_instruments === true;
+    const fullRefresh = request.refresh_instruments === true;
+
+    const status = await readStatus();
+    let observedAgainst = status?.workspace?.head || 'unobserved';
+    try {
+      observedAgainst = execFileSync('git', ['rev-parse', 'origin/clean-main-no-secrets^{commit}'], {
+        cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv(process.env).env,
+      }).trim();
+    } catch { /* local remote-tracking ref unavailable; exact bound HEAD remains visible */ }
+
+    const modulePath = path.join(root, 'scripts', 'builder', 'founder-workspace', 'desktop-viewmodel.mjs');
+    if (!fs.existsSync(modulePath)) {
+      return { ok: false, status: 'B5_MODULE_ABSENT', reason: `Founder Workspace live composer absent at ${modulePath}` };
+    }
+    const mod = await import(`${pathToFileURL(modulePath).href}?b5=${Date.now()}`);
+    const env = childEnv(process.env).env;
+    const cacheUsable = !forceRefresh
+      && founderWorkspaceCache.vm
+      && founderWorkspaceCache.root === root
+      && founderWorkspaceCache.observed_against === observedAgainst
+      && (Date.now() - founderWorkspaceCache.at) < 15000;
+    const governorNode = resolveNodeBinary();
+    const governorExec = governorNode.path
+      ? (_file, args, opts) => execFileSync(governorNode.path, args, opts)
+      : undefined;
+    const vm = cacheUsable
+      ? founderWorkspaceCache.vm
+      : await mod.buildDesktopViewModel({
+          root, status, observedAgainst, env, observeMode: fullRefresh ? 'full' : 'quick', governorExec,
+        });
+    if (!cacheUsable) founderWorkspaceCache = { root, observed_against: observedAgainst, at: Date.now(), vm };
+    if (!evidenceRef) return vm;
+    return { ...vm, evidence_preview: mod.readEvidencePreview(vm, evidenceRef, { root, env, canonicalRef: observedAgainst }) };
+  } catch (e) {
+    return { ok: false, status: 'WORKSPACE_VIEWMODEL_REFUSED', reason: String(e?.message || e).slice(0, 1200) };
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -1151,9 +1222,10 @@ ipcMain.handle('jarvis:work-unit-action', async (_evt, req) => {
 // not overlap, and neither is a route into the other.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
-  if (!currentRoot()) return { status: 'error', reason: 'repo root not found — cannot route' };
-  const routerPath = path.join(currentRoot(), 'scripts', 'builder', 'router.mjs');
-  const detPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
+  const root = currentRoot();
+  if (!root) return { status: 'error', reason: 'repo root not found — cannot route' };
+  const routerPath = path.join(root, 'scripts', 'builder', 'router.mjs');
+  const detPath = path.join(root, 'scripts', 'builder', 'deterministic.mjs');
 
   const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
   const decision = route(task);
@@ -1203,8 +1275,8 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // the planner, the orchestrator and the queue are NEVER invoked from
       // here; jarvis-runtime-pipeline.mjs has no top-level side effects, so
       // importing it for verifyEvidence() does not wake the delegate path.
-      const ctxPath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs');
-      const pipePath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
+      const ctxPath = path.join(root, 'scripts', 'builder', 'jarvis-context.mjs');
+      const pipePath = path.join(root, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
       const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
       const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
 
@@ -1212,37 +1284,118 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       let fragments = [];
       let materialization_error = null;
       if (selectors.length) {
-        // Fail closed: an unresolvable selector must not silently degrade into
-        // "no evidence required". materializeOne throws on any invalid selector.
+        // Legacy C1 selectors remain supported. Fail closed: an unresolvable selector
+        // must not silently degrade into "no evidence required".
         try {
-          fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT);
+          fragments = materializePacket({ context_selectors: selectors }, root);
         } catch (e) {
           materialization_error = e.message;
         }
       }
 
-      // The citation syntax is stated because the verifier enforces an exact
-      // machine-readable form. Asking for "citations" in prose and then scoring
-      // path.ext:NN produces false refusals of correct answers — the defect
-      // recorded as D8 in docs/ops/JARVIS_PLANNER_ROUTER_ALPHA.md.
-      const prompt = fragments.length
-        ? `${renderFragments(fragments)}\n\nAnswer using ONLY the numbered source above. `
-          + `Cite every claim inline in the exact form path/to/file.ext:LINE `
-          + `(colon, no space) — for example scripts/builder/router.mjs:42. `
-          + `Prose such as "on line 42" does not count as a citation. `
-          + `Cite only lines present in the source above.\n\n${task.prompt}`
-        : task.prompt;
+      // B6R1 precision context. The renderer never supplies repository paths.
+      // It supplies only the current field identity + Kelly's objective. Main
+      // resolves that identity against the already-validated Founder view-model,
+      // then materializes evidence from the exact canonical git object named by
+      // vm.meta.observed_against. Dirty development-tree bytes cannot enter here.
+      let precision = { status: 'NOT_REQUESTED', field: { id: null, label: null, resolution: 'none' }, fragments: [], refusals: [] };
+      if (task.founder_workspace_context_request === true) {
+        const cachedVm = founderWorkspaceCache.root === root ? founderWorkspaceCache.vm : null;
+        if (cachedVm) {
+          precision = PRECISION_CONTEXT.buildPrecisionContext({
+            repo: root,
+            vm: cachedVm,
+            explicitContext: task.founder_workspace_context || null,
+            objective: task.founder_workspace_objective || task.prompt || '',
+          });
+          if (Array.isArray(precision.fragments) && precision.fragments.length) {
+            fragments = [...fragments, ...precision.fragments];
+          } else if (precision.status === 'REFUSED') {
+            materialization_error = precision.reason || 'PRECISION_CONTEXT_REFUSED';
+          }
+        } else {
+          precision = { status: 'REFUSED', reason: 'FOUNDER_VIEWMODEL_NOT_CACHED', field: { id: null, label: null, resolution: 'none' }, fragments: [], refusals: [] };
+          materialization_error = 'FOUNDER_VIEWMODEL_NOT_CACHED';
+        }
+      }
 
+      // AI partner handoff is a separate epistemic lane. Handoffs live only in
+      // ~/.jarvis/context-handoffs, pass a strict schema, and are matched to the
+      // current field/objective. They orient JARVIS but are NEVER passed to the
+      // canonical evidence verifier and NEVER grant authority.
+      const partner = task.founder_workspace_context_request === true
+        ? PARTNER_CONTEXT.listPartnerHandoffs({
+            objective: task.founder_workspace_objective || task.prompt || '',
+            fieldLabel: precision?.field?.label || task.founder_workspace_context?.label || '',
+          })
+        : { status: 'NOT_REQUESTED', items: [], refused: [] };
+      const partnerBlock = PARTNER_CONTEXT.renderPartnerOrientation(partner.items || []);
+
+      // B6R1R1: evidence-bearing turns use a structured worker contract. The
+      // worker names fragment + absolute line + an exact quote; main validates
+      // that reference against the fragment bytes, then derives path:LINE itself.
+      // The canonical verifier remains unchanged and sees only the deterministic
+      // rendered answer, never raw model-authored citation text.
+      const evidenceBlock = fragments.length ? renderFragments(fragments) : '';
+      const structuredEvidence = fragments.length > 0;
+      const contextRules = structuredEvidence
+        ? GROUNDED_RESPONSE.workerInstruction(fragments)
+        : partnerBlock
+          ? `No canonical repository evidence was attached. Partner orientation may help you understand Kelly's context, but state clearly when a claim would require repository evidence.`
+          : '';
+      const prompt = [evidenceBlock, partnerBlock, contextRules, task.prompt].filter(Boolean).join('\n\n');
+
+      response.context = {
+        precision: {
+          status: precision.status,
+          canonical_sha: precision.canonical_sha || null,
+          field: precision.field || null,
+          resolved_label: GROUNDED_RESPONSE.humanFieldLabel(precision?.field?.label || task.founder_workspace_context?.label || null),
+          fragment_count: Array.isArray(precision.fragments) ? precision.fragments.length : 0,
+          refusals: Array.isArray(precision.refusals) ? precision.refusals : [],
+        },
+        partners: {
+          status: partner.status,
+          sources: (partner.items || []).map((item) => item.source),
+          handoff_ids: (partner.items || []).map((item) => item.handoff_id),
+          refused: partner.refused || [],
+        },
+      };
+
+      const workerRequest = { model: 'qwen2.5:7b', prompt, stream: false };
+      if (structuredEvidence) workerRequest.format = 'json';
       const res = await fetch('http://127.0.0.1:11434/api/generate', {
         method: 'POST',
-        body: JSON.stringify({ model: 'qwen2.5:7b', prompt, stream: false }),
+        body: JSON.stringify(workerRequest),
         signal: AbortSignal.timeout(30000),
       });
       const body = await res.json();
-      response.result = { response: body.response, model: body.model };
+
+      let renderedResponse = body.response || '';
+      let grounding = null;
+      if (structuredEvidence) {
+        grounding = GROUNDED_RESPONSE.compileGroundedResponse(body.response || '', fragments);
+        renderedResponse = GROUNDED_RESPONSE.renderGroundedResponse(grounding, {
+          fieldLabel: response.context.precision.resolved_label || response.context.precision.field?.label || null,
+          canonicalSha: response.context.precision.canonical_sha,
+          fragmentCount: fragments.length,
+          partnerSources: response.context.partners.sources,
+        });
+      }
+
+      response.result = {
+        response: renderedResponse,
+        model: body.model,
+        grounding: grounding ? {
+          status: grounding.status,
+          supported_count: grounding.supported.length,
+          unsupported_count: grounding.unsupported.length,
+          rejected_count: grounding.rejected.length,
+        } : null,
+      };
       response.status = 'completed';
 
-      const evidence = fragments.length ? verifyEvidence(body.response || '', fragments) : null;
+      const evidence = fragments.length ? verifyEvidence(renderedResponse, fragments) : null;
 
       // Correctness is decided by the canonical verifier alone. Execution
       // success never implies it — that collapse is what let a fabricated
