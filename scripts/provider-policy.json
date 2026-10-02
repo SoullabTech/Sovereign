@@ -114,6 +114,20 @@
       "path_prefixes": [
         "app/api/_backend/"
       ]
+    },
+
+    "constitutional_defeat_fixtures": {
+      "description": "Exact constitutional test fixtures that intentionally contain a banned provider literal solely as hostile input to prove the governing law refuses it. This is not migration debt. Exceptions are rule-scoped, require an in-file marker, and may never exempt browser API keys.",
+      "entries": [
+        {
+          "file": "tests/constitutional/voice-doorway/matrix.mjs",
+          "allowed_rules": [
+            "openai REST endpoint"
+          ],
+          "marker": "PROVIDER-GOVERNANCE-DEFEAT-FIXTURE: V-F2 hostile non-loopback STT endpoint",
+          "evidence": "JARVIS-VOICE-DOORWAY-01 / V1 V-F2 + DC-V2: renderer-supplied cloud STT endpoint must be rejected; literal exists only as the hostile input under test."
+        }
+      ]
     }
   }
 }
