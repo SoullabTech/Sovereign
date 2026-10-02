@@ -162,6 +162,28 @@ Line-numbered log agrees: loads at 13641 / 14120 / 14466 show `65536`, and **the
 
 **A1 standing**: ✅ **PASSED at 32768**, as ratified. The 65536 upgrade is ⛔ **NOT APPLIED**. Either proceeding at 32768 (within the gate, ~4.4–11.1k output headroom) or completing the relaunch is lawful; the founder chose the upgrade, so it is owed. After any relaunch the model is evicted — **A2 and §G both become VOID and must be re-run.**
 
+## 13. ⭐⭐ RECOMMENDATION — waive the 65536 upgrade, proceed at 32768
+
+**Third attempt, same result: `pgrep` still returns PID `8809`.** The app was never quit, so `launchctl setenv` still has nothing new to apply to. The quit is a **GUI act** (menu bar → Quit) and cannot be pasted — which is why it keeps being skipped in multi-line pastes that the terminal is visibly mangling (`% OR    CONTEXT    UNTIL`).
+
+**⭐ But the upgrade turns out to buy nothing for the evidence of record, and the arithmetic settles it:**
+
+| chars/token | output capacity | in chars | vs `MAX_LOG_CHARS` 12,000 |
+|---|---|---|---|
+| 4.0 | ~11,119 tok | ~44,475 | **cap binds first** |
+| 3.5 | ~8,240 tok | ~28,841 | **cap binds first** |
+| 3.0 (dense) | ~4,402 tok | ~13,207 | **cap binds first** |
+
+**At every tokenization rate, the 12,000-char durable excerpt cap (A3) binds before the 32768 context window does.** The durable result cannot hold more output than 32768 already permits — so ⛔ **the upgrade cannot improve the artifact this act produces.** It would only widen the UI-side read, where ~4,400 tokens is already a substantial answer to eight conditions.
+
+**And each further restart has a real cost**: it evicts the model and **voids A2 and §G**, which must then be re-earned against the new server. Three attempts have produced three rounds of environment churn and zero gate movement.
+
+**⭐ RECOMMENDATION: waive the upgrade. A1 is ✅ PASSED at 32768 as ratified, and 32768 is sufficient for the evidence of record.** ⛔ This is not a gate being relaxed — the gate was `≥ 32768` before any reading was taken, and it is met. *Continuing to optimise a gate that already passed is how a pre-flight turns into its own project.*
+
+**Current environment standing**: `ollama ps` returned **no rows**, so the model is not resident and **A2 is VOID**; `§G delta = 2805 > 0` **passes** liveness, and its small magnitude relative to ~19,000 simply indicates no cold model load occurred in that window — the witness still registered the inference, which is all §G asserts.
+
+**One warm-up, one `ollama ps`, run singly — then mint.**
+
 ## 6. Standing
 
 **E3 AUTHORIZED · PRE-FLIGHT ✅ DISCHARGED · SUBSTRATE ✅ VERIFIED AT EXACT SHA · ANSWER KEY ✅ PRE-REGISTERED · ⛔ MEASUREMENT UNSPENT, OWED TO THE BOUND macOS HOST · ⛔ NO PROVIDER ATTEMPT MADE · ⛔ NO GRANT ISSUED · ⛔ NO SOURCE MODIFIED · PRODUCTION UNTOUCHED.**
