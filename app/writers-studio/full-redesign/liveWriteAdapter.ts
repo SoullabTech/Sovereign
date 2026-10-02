@@ -2,6 +2,7 @@ import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { explicitRole } from '@/lib/writersStudio/focus/outlineTree';
 import type { SectionStatus } from '@/lib/writersStudio/sectionSaveQueue';
 import type { WriteChapterView, WriteRoomData } from './WriteRoom';
+import { typesetManuscriptBody, typesetParagraphs } from './manuscriptTypesetting';
 
 export type Pc3WriteProjection = {
   data: WriteRoomData;
@@ -18,12 +19,7 @@ export function pc3SaveState(statuses: readonly SectionStatus[]): string {
 }
 
 export function pc3Paragraphs(body: string): string[] {
-  if (body.length === 0) return [''];
-  /* Imported prose can carry hard-wrapped single newlines inside a paragraph.
-     Blank lines are the paragraph boundary; the editor's CSS lets the browser
-     reflow the single-newline wraps as ordinary prose instead of preserving
-     an 80-column text-file shape on the writing page. */
-  return body.replace(/\r\n?/g, '\n').split(/\n[ \t]*\n+/);
+  return typesetParagraphs(body);
 }
 function exactDisplay(section: RebuildSection): Pick<WriteChapterView, 'label' | 'title'> {
   const heading = section.heading?.trim();
@@ -95,6 +91,7 @@ export function projectPc3LiveWrite(input: {
       place: place ?? '',
       title: title ?? '',
       paragraphs: pc3Paragraphs(input.bodyOf(active.draftSectionId)),
+      blocks: typesetManuscriptBody(input.bodyOf(active.draftSectionId)),
       ...(rowStatus(input.statusOf(active.draftSectionId)) ? { activeStatus: rowStatus(input.statusOf(active.draftSectionId)) } : {}),
       saveState: pc3SaveState(statuses),
       unsaved: 'Unsaved',

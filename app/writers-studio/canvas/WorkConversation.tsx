@@ -150,6 +150,7 @@ export default function WorkConversation({
   const identity = useMemberIdentity();
   const { keeps } = useManuscriptKeeps(manuscriptId);
   const [showKeeps, setShowKeeps] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
 
   const [decision, setDecision] = useState<ResumeDecision | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
@@ -284,7 +285,11 @@ export default function WorkConversation({
   const turns = thread?.turns ?? [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+    <div
+      data-maia-work-conversation="true"
+      data-maia-focus={focusMode ? 'true' : 'false'}
+      style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}
+    >
       {/* ── The Work this exchange is in, where the member can see it. ── */}
       <div
         data-studio-conversation="situated"
@@ -311,6 +316,20 @@ export default function WorkConversation({
           }}
         >
           <StudioText role="metadata" as="span">Where are we?</StudioText>
+        </button>
+        <button
+          type="button"
+          onClick={() => setFocusMode((v) => !v)}
+          data-maia-focus-toggle="true"
+          aria-pressed={focusMode}
+          style={{
+            background: focusMode ? GROUND.active : 'transparent',
+            border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
+            padding: `${SPACE.hairline}px ${SPACE.tight}px`, cursor: 'pointer',
+            color: INK.secondary,
+          }}
+        >
+          <StudioText role="metadata" as="span">{focusMode ? 'Close focus' : 'Focus'}</StudioText>
         </button>
         <button
           type="button"
@@ -433,7 +452,7 @@ export default function WorkConversation({
                     </select>
                     <textarea
                       aria-label="Your correction"
-                      rows={3}
+                      rows={6}
                       value={correctionDraft}
                       onChange={(e) => setCorrectionDraft(e.target.value)}
                       placeholder="Say what MAIA should understand differently…"
@@ -450,7 +469,7 @@ export default function WorkConversation({
                         onClick={() => void keepCorrection(t.index)}
                         disabled={correctionBusy || !correctionDraft.trim()}
                         style={{
-                          background: GROUND.active, border: `1px solid ${RULE.soft}`,
+                          background: MAIA_ACCENT.voice, border: `1px solid ${MAIA_ACCENT.voice}`,
                           borderRadius: RADIUS.sm, padding: `${SPACE.tight}px ${SPACE.snug}px`,
                           cursor: 'pointer', color: INK.primary,
                           opacity: correctionBusy || !correctionDraft.trim() ? 0.45 : 1,
@@ -543,8 +562,18 @@ export default function WorkConversation({
         </div>
       )}
 
-      {/* ── Composer. Text only; no microphone exists on this surface. ── */}
-      <div style={{ borderTop: `1px solid ${RULE.soft}`, paddingTop: SPACE.base }}>
+      {/* ── Composer. The writer gets a real writing surface, not a utility slot. ── */}
+      <div
+        data-maia-composer="true"
+        style={{
+          borderTop: `1px solid ${RULE.soft}`, paddingTop: SPACE.base,
+          marginTop: SPACE.snug, background: GROUND.raised,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.snug, marginBottom: SPACE.tight }}>
+          <StudioText role="panelLabel" as="span">Ask MAIA</StudioText>
+          <StudioText role="metadata" tone="quiet" as="span">Write naturally · Enter sends · Shift+Enter adds a line</StudioText>
+        </div>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -559,7 +588,8 @@ export default function WorkConversation({
           aria-label="Message MAIA"
           data-send-mode={mode.kind === 'blocked' ? `blocked:${mode.why}` : mode.kind}
           style={{
-            ...typeStyle('maiaReading'), width: '100%', resize: 'none',
+            ...typeStyle('maiaReading'), width: '100%', resize: 'vertical',
+            minHeight: focusMode ? 190 : 132, maxHeight: focusMode ? 360 : 260,
             background: GROUND.base, color: INK.primary,
             border: `1px solid ${RULE.soft}`, borderRadius: RADIUS.sm,
             padding: SPACE.snug, outline: 'none',
