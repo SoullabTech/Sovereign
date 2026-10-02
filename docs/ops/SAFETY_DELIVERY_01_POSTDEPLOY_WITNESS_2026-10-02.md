@@ -118,5 +118,8 @@ This witness establishes that the admitted Class-A state has crossed production 
 - S1: **DEPLOYED DORMANT/PROTOTYPE REPAIR · live reachability not established**
 - S2: **DEPLOYED DORMANT REPAIR · no live caller established**
 - S3: **DEPLOYED REPAIR · independent destination + human witness owed**
+- S4: **OPEN · truthful non-delivery · legacy/dormant population · ordinary member-path reachability not established**
 - E6: **CLOSED structurally**
+- O1: **DEPLOYED REPAIR · config + human witness owed**
+- O2: **OPEN · confirmed standby outage**
 - Governance exception: **OPEN · now crossed production**
