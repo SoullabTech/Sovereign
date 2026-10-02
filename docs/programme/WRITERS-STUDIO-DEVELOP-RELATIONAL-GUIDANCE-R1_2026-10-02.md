@@ -50,3 +50,19 @@ PASS candidate — developmental observation dialogue now composes the existing 
 
 ### G7 · Theme fidelity
 PASS candidate — new Develop cards pin text to Studio color variables so night mode cannot inherit native black.
+
+
+## Founder correction — Develop must lead to editing
+
+Founder walk established that a relational Develop surface is still insufficient if it leaves the writer managing observations instead of helping them revise the Work.
+
+New governing interaction:
+- MAIA may read broadly across the manuscript after an explicit Editorial Pass act.
+- In Intimate pace she brings one evidenced editing opportunity at a time; Guided brings a few; Mapped may show the field.
+- The primary action is **Show edit options**, not taxonomy, ranking, or analysis.
+- Existing exact-passage verification, Revision latitude, paragraph-removal permission, Apply, and Undo remain authoritative.
+- If no exact editable passage can be verified, MAIA may orient the writer to the evidenced section but must not silently invent or widen a locus.
+- Observation, conversation, and craft explanation remain available as supporting paths, not prerequisites to editing.
+
+Product law:
+> Writer's Studio must be able to move from reading the manuscript to offering concrete editorial possibilities without making the writer become an editor first.

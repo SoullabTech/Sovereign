@@ -2823,6 +2823,35 @@
 .p4r1-root .p4r1-attention-evidence blockquote p{margin:4px 0 0;color:var(--fr-ink2);font:12.5px/1.5 var(--fr-serif-stack)}
 .p4r1-root .p4r1-attention-item>.p4r1-dance-followup-actions{padding:0 0 13px}
 
+/* Editorial pass — the whole-manuscript reading becomes an editing companion,
+   not an analyst dashboard. Intimate pace keeps one actionable suggestion in
+   consciousness at a time; deeper evidence remains available behind disclosure. */
+.p4r1-root .p4r1-editorial-pass{gap:16px}
+.p4r1-root .p4r1-editorial-pass-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.p4r1-root .p4r1-editorial-pass-head>div{display:grid;gap:7px;max-width:720px}
+.p4r1-root .p4r1-editorial-pass-head h3,
+.p4r1-root .p4r1-editorial-pass>h3{margin:0;color:var(--fr-title);font:600 24px/1.18 var(--fr-serif-stack)}
+.p4r1-root .p4r1-editorial-pass-head p,
+.p4r1-root .p4r1-editorial-pass>p{margin:0;color:var(--fr-ink2);font:15.5px/1.62 var(--fr-serif-stack)}
+.p4r1-root .p4r1-editorial-pass-pace{padding:5px 9px;border:1px solid var(--fr-line-soft);border-radius:999px;color:var(--fr-muted);font:600 10px/1.2 var(--fr-sans-stack)}
+.p4r1-root .p4r1-editorial-pass-start,
+.p4r1-root .p4r1-editorial-pass-primary{justify-self:start;min-height:38px;padding:8px 13px;border:1px solid var(--fr-action-line);border-radius:8px;background:var(--fr-action-soft);color:var(--fr-title);font:600 12px/1.2 var(--fr-sans-stack);cursor:pointer}
+.p4r1-root .p4r1-editorial-pass-boundary{max-width:760px!important;color:var(--fr-muted)!important;font:12.5px/1.5 var(--fr-sans-stack)!important}
+.p4r1-root .p4r1-editorial-pass-items{display:grid;gap:12px}
+.p4r1-root .p4r1-editorial-pass-item{display:grid;gap:9px;padding:17px 18px;border:1px solid var(--fr-line-soft);border-radius:10px;background:var(--fr-panel)}
+.p4r1-root .p4r1-editorial-pass-item h4{margin:0;color:var(--fr-title);font:600 19px/1.25 var(--fr-serif-stack)}
+.p4r1-root .p4r1-editorial-pass-item>p{margin:0;color:var(--fr-ink2);font:15px/1.58 var(--fr-serif-stack)}
+.p4r1-root .p4r1-editorial-pass-actions{display:flex;gap:8px;flex-wrap:wrap;padding-top:3px}
+.p4r1-root .p4r1-editorial-pass-actions button{min-height:34px;padding:6px 10px;border:1px solid var(--fr-line-soft);border-radius:7px;background:transparent;color:var(--fr-ink);font:600 11px/1.2 var(--fr-sans-stack);cursor:pointer}
+.p4r1-root .p4r1-editorial-pass-actions .p4r1-editorial-pass-primary{border-color:var(--fr-action-line);background:var(--fr-action-soft);color:var(--fr-title)}
+.p4r1-root .p4r1-editorial-pass-item>.p4r1-attention-evidence{margin:3px 0 0}
+.p4r1-root .p4r1-editorial-pass-next{justify-self:start}
+.p4r1-root .p4r1-editorial-pass-map{border-top:1px solid var(--fr-line-soft);padding-top:11px}
+.p4r1-root .p4r1-editorial-pass-map>summary{cursor:pointer;color:var(--fr-muted);font:600 11px/1.3 var(--fr-sans-stack)}
+.p4r1-root .p4r1-editorial-pass-map>div{display:grid;gap:12px;padding-top:12px}
+.p4r1-root .p4r1-editorial-pass-map .p4r1-attention-band button{display:flex;justify-content:space-between;gap:10px;width:100%;padding:8px 10px;border:1px solid var(--fr-line-soft);border-radius:7px;background:transparent;color:var(--fr-ink);text-align:left}
+.p4r1-root .p4r1-editorial-pass-map .p4r1-attention-band button span{color:var(--fr-muted);font:10px var(--fr-sans-stack);text-transform:uppercase}
+
 /* C12 · Whole-manuscript hierarchy: Parts → Chapters → sections. */
 .p4r1-root .fr-write-part-row{margin:16px 12px 5px 0;border-top:1px solid var(--fr-line-soft);padding-top:10px}
 .p4r1-root .fr-write-part-row:first-child{margin-top:0;border-top:0;padding-top:0}

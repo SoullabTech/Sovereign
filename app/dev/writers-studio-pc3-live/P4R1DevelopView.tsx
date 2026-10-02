@@ -1443,83 +1443,160 @@ function AttentionMapPanel({
   onWork: (itemId: string, sectionId: string) => void;
   onDiscuss: (item: AttentionItem) => void;
 }) {
-  const bands: ReadonlyArray<{ id: AttentionItem['band']; label: string }> = [
-    { id: 'begin-here', label: 'Begin here' },
-    { id: 'next', label: 'Next' },
-    { id: 'later', label: 'Later' },
-    { id: 'watch', label: 'Watch' },
-  ];
+  const [pace, setPace] = useState<WorkingPace>(DEFAULT_WORKING_STYLE.pace);
+  const [cursor, setCursor] = useState(0);
 
   useEffect(() => {
-    if (!map || !selectedItemId || typeof document === 'undefined') return;
-    const node = document.getElementById('attention-' + selectedItemId);
-    window.requestAnimationFrame(() => node?.scrollIntoView({ block: 'center' }));
-  }, [map, selectedItemId]);
+    const sync = () => setPace(readWorkingStyle().pace);
+    sync();
+    window.addEventListener('writers-studio-working-style-changed', sync as EventListener);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('writers-studio-working-style-changed', sync as EventListener);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    setCursor(0);
+  }, [map?.commissionedAt]);
 
   if (!map) {
     return (
-      <section className="fr-card p4r1-attention-map">
-        <span className="p4r1-eyebrow">Whole-manuscript attention</span>
-        <h3>Where would your attention have the most leverage?</h3>
-        <p>MAIA can read the whole current manuscript through all eight developmental lenses, then synthesize the frozen evidence from macro to micro.</p>
-        <button type="button" className="p4r1-commission" disabled={busy} onClick={onCommission}>
-          {busy ? (progress ?? 'MAIA is reviewing the whole manuscript…') : 'Review the whole manuscript'}
+      <section className="fr-card p4r1-attention-map p4r1-editorial-pass" data-editorial-pass="empty">
+        <span className="p4r1-eyebrow">Edit with MAIA</span>
+        <h3>Let MAIA go through the manuscript with you.</h3>
+        <p>
+          MAIA can read the whole current manuscript, find the places where an edit may help,
+          and bring them to you in order. She can offer revision directions and alternate wording.
+          You decide what, if anything, to use.
+        </p>
+        <button type="button" className="p4r1-commission p4r1-editorial-pass-start" disabled={busy} onClick={onCommission}>
+          {busy ? (progress ?? 'MAIA is reading through the manuscript…') : 'Start an editorial pass'}
         </button>
+        <p className="p4r1-editorial-pass-boundary">
+          Nothing is changed or applied while she reads. Your Revision latitude still governs how far any proposed edit may go.
+        </p>
         {error ? <p className="p4r1-error" role="status">{error}</p> : null}
       </section>
     );
   }
 
+  const items = map.items.filter((item) => item.sectionIds.length > 0);
+  const safeCursor = items.length === 0 ? 0 : Math.min(cursor, items.length - 1);
+  const windowSize = pace === 'guided' ? 3 : 1;
+  const shownItems = pace === 'mapped'
+    ? items
+    : items.slice(safeCursor, safeCursor + windowSize);
+  const canAdvance = pace !== 'mapped' && items.length > windowSize;
+
+  const advance = () => {
+    if (items.length === 0) return;
+    const step = pace === 'guided' ? 3 : 1;
+    setCursor((current) => (current + step) % items.length);
+  };
+
   return (
-    <section className="fr-card p4r1-attention-map">
-      <span className="p4r1-eyebrow">Whole-manuscript Attention Map</span>
-      <h3>Macro → micro</h3>
-      <p>Ordered because you explicitly asked where attention may have the most leverage. Every item remains bound to frozen evidence.</p>
-      {bands.map((band) => {
-        const items = map.items.filter((item) => item.band === band.id);
-        if (items.length === 0) return null;
-        return (
-          <div key={band.id} className="p4r1-attention-band">
-            <h4>{band.label}</h4>
-            {items.map((item) => {
-              const sectionId = item.sectionIds[0]!;
-              return (
-                <details
-                  key={item.id}
-                  id={'attention-' + item.id}
-                  className="p4r1-attention-item"
-                  open={selectedItemId === item.id ? true : undefined}
-                  data-attention-item={item.id}
-                  data-attention-return={selectedItemId === item.id ? 'true' : undefined}
-                >
-                  <summary><b>{item.label}</b><span>{item.scale.replace('-', ' ')}</span></summary>
-                  <p>{item.notice}</p>
-                  <p><b>Why it matters:</b> {item.whyItMatters}</p>
-                  {item.uncertainty ? <p><b>Uncertainty:</b> {item.uncertainty}</p> : null}
-                  <div className="p4r1-dance-followup-actions">
-                    <button type="button" onClick={() => onShow(item.id, sectionId)}>Show me where</button>
-                    <button type="button" onClick={() => onDiscuss(item)}>Talk this through</button>
-                    <button type="button" onClick={() => onWork(item.id, sectionId)}>Work with this</button>
+    <section className="fr-card p4r1-attention-map p4r1-editorial-pass" data-editorial-pass="ready">
+      <div className="p4r1-editorial-pass-head">
+        <div>
+          <span className="p4r1-eyebrow">Editorial pass</span>
+          <h3>Work through the manuscript, one edit at a time.</h3>
+          <p>
+            MAIA has read across the current manuscript. Open any suggestion to see the exact passage
+            and ask for edit options. Nothing changes until you explicitly apply a version.
+          </p>
+        </div>
+        <span className="p4r1-editorial-pass-pace">{PACE_COPY[pace].label}</span>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="p4r1-empty">MAIA did not find an evidenced place to bring forward for editing in this pass.</p>
+      ) : (
+        <div className="p4r1-editorial-pass-items">
+          {shownItems.map((item, shownIndex) => {
+            const sectionId = item.sectionIds[0]!;
+            const absoluteIndex = pace === 'mapped' ? items.indexOf(item) : safeCursor + shownIndex;
+            return (
+              <article
+                key={item.id}
+                id={'attention-' + item.id}
+                className="p4r1-editorial-pass-item"
+                data-attention-item={item.id}
+                data-attention-return={selectedItemId === item.id ? 'true' : undefined}
+              >
+                <span className="p4r1-eyebrow">Suggestion {absoluteIndex + 1} of {items.length}</span>
+                <h4>{item.label}</h4>
+                <p>{item.notice}</p>
+                <div className="p4r1-editorial-pass-actions">
+                  <button type="button" className="p4r1-editorial-pass-primary" onClick={() => onWork(item.id, sectionId)}>
+                    Show edit options
+                  </button>
+                  <button type="button" onClick={() => onDiscuss(item)}>Talk first</button>
+                  <button type="button" onClick={() => onShow(item.id, sectionId)}>See in manuscript</button>
+                </div>
+                <details className="p4r1-attention-evidence">
+                  <summary>Why MAIA brought this forward</summary>
+                  <div>
+                    <p>{item.whyItMatters}</p>
+                    {item.uncertainty ? <p><b>What remains uncertain:</b> {item.uncertainty}</p> : null}
+                    <details>
+                      <summary>Evidence · {item.evidence.length}</summary>
+                      <div className="p4r1-attention-evidence-list">
+                        {item.evidence.map((ref) => (
+                          <blockquote key={`${ref.readingId}:${ref.observationKey}`}>
+                            <span>{ref.lens}</span>
+                            <p>{ref.observation}</p>
+                          </blockquote>
+                        ))}
+                      </div>
+                    </details>
                   </div>
-                  <details className="p4r1-attention-evidence">
-                    <summary>
-                      See the evidence · {item.evidence.length} frozen observation{item.evidence.length === 1 ? '' : 's'}
-                    </summary>
-                    <div className="p4r1-attention-evidence-list">
-                      {item.evidence.map((ref) => (
-                        <blockquote key={`${ref.readingId}:${ref.observationKey}`}>
-                          <span>{ref.lens}</span>
-                          <p>{ref.observation}</p>
-                        </blockquote>
-                      ))}
-                    </div>
-                  </details>
                 </details>
-              );
-            })}
-          </div>
-        );
-      })}
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {canAdvance ? (
+        <button type="button" className="p4r1-noticing-next p4r1-editorial-pass-next" onClick={advance}>
+          {pace === 'intimate' ? 'Next edit suggestion' : 'Next suggestions'}
+        </button>
+      ) : null}
+
+      <details className="p4r1-editorial-pass-map">
+        <summary>See the full editorial map</summary>
+        <div>
+          {([
+            ['begin-here', 'Begin here'],
+            ['next', 'Next'],
+            ['later', 'Later'],
+            ['watch', 'Watch'],
+          ] as const).map(([bandId, label]) => {
+            const bandItems = items.filter((item) => item.band === bandId);
+            if (bandItems.length === 0) return null;
+            return (
+              <div key={bandId} className="p4r1-attention-band">
+                <h4>{label}</h4>
+                {bandItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      const index = items.findIndex((candidate) => candidate.id === item.id);
+                      setCursor(Math.max(0, index));
+                    }}
+                  >
+                    <b>{item.label}</b>
+                    <span>{item.scale.replace('-', ' ')}</span>
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </details>
     </section>
   );
 }
