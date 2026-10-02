@@ -2173,7 +2173,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 412,
       "evidence": "## 10 · Next act",
       "last_touched_epoch": 1788716166,
-      "hours_dormant": 606,
+      "hours_dormant": 607,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2185,7 +2185,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 12,
       "evidence": "STATE             OPEN · DIAGNOSIS ONLY · no determination made",
       "last_touched_epoch": 1788546913,
-      "hours_dormant": 653,
+      "hours_dormant": 654,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },

@@ -18,14 +18,15 @@ No member utterance, crisis transcript, risk score, or personal safety state is 
 
 ## Source state
 
-The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by six review surfaces:
+The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by seven review surfaces:
 
 - PR #1663 — S1 reachability correction;
 - PR #1664 — canonical live crisis-path census;
 - PR #1665 — minimal deterministic recognition contract;
 - PR #1669 — stacked canonical live wiring, based on #1665;
 - PR #1675 — SAFETY-DISCLOSURE-01 authority contract: member act is the only currently executable disclosure basis; imminent/legal/minor-vulnerable-adult exceptions remain review-required;
-- PR #1678 — practitioner-field relationship boundary: a member's practitioner-sharing gesture is readable only by the practitioner in that member's active/paused relationship, not by practitioner role globally.
+- PR #1678 — practitioner-field relationship boundary: a member's practitioner-sharing gesture is readable only by the practitioner in that member's active/paused relationship, not by practitioner role globally;
+- PR #1694 — portal-message identity boundary: portal messaging now carries practitioner practice-record identity and practitioner member identity separately so relationship checks, messaging tables, PHI ownership, and safety notification use the correct identity.
 
 These are review/merge surfaces. Kelly's World must not present an open PR as canonical merely because it is visible.
 
@@ -95,6 +96,8 @@ R2 on PR #1675 defines the lowest-authority future off-ramp: MAIA may eventually
 R3 corrects one implementation assumption: the existing portal POST cannot simply be reused from canonical MAIA because portal authority is token-bound, while the canonical MAIA turn uses the ordinary member session. The generic comms POST is practitioner-side, and `sendClientMessage()` is only a service seam once relationship ids are already lawfully resolved. A new authenticated member handoff seam would therefore be required.
 
 R3 also clarifies the PHI standing: the current message service's plaintext + encrypted body writes are the repository's sanctioned Stage A dual-write pattern, while Phase 2B encrypted-only enforcement is not structurally active for `client_messages` yet. Before code wiring, stewardship must explicitly choose whether this bounded safety-contact use may enter Stage A or must wait for Phase 2B.
+
+R3 additionally discovered a prerequisite identity defect in the existing portal message path. PR #1694 separates the practitioner's practice-record id from the practitioner's member id. Until that repair (or an equivalent superseding repair) is admitted, the future MAIA handoff must not reuse the portal message service.
 
 **Standing: design/census only. No UI wiring, member-send route, portal-token borrowing, or new disclosure authority is authorized by R2/R3.**
 
