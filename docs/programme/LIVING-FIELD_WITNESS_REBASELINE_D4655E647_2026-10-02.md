@@ -1,5 +1,3 @@
-[Reading 112 lines from start (total: 112 lines, 0 remaining)]
-
 # Living Field — Witness Re-baseline at production `d4655e647`
 
 **Date:** 2026-10-02
@@ -112,5 +110,3 @@ participant-specific at walk time, and G6/G7 require the actual human setup.
 **Current machine-side standing:**
 
 `PRODUCTION d4655e647 · HEALTH GREEN · FOUR-PERSON COHORT PRESERVED · SUBSTRATE 0/4 · EXPLICIT MAIA ENTRY PRESENT · FIRST-ENTRY CLASS PRESERVED · POPULATED-FIELD BLOCKED · NO HUMAN WALK AUTHORIZED`
-
-[executed on device: Kellys-Mac-Studio.local (b4b2914c-b72a-4b09-b98c-689002658094)]
