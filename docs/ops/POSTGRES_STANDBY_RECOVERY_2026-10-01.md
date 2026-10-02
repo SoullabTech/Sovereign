@@ -20,6 +20,27 @@ Read-only production witness on 2026-10-01 established:
 
 Because the standby has been absent far longer than the WAL retention window, recovery must assume a **fresh base backup is required**. A simple service restart is not a valid recovery plan.
 
+### 2026-10-02 read-only revalidation
+
+The current-base successor reran `scripts/witness/postgres-standby-recovery-preflight.sh` without mutation.
+
+Observed:
+
+- running production artifact: `12b461bd8778c148060250c002a54079f4f58221`
+- primary Tailscale bind: `100.119.226.84:5432`
+- `wal_level=replica`
+- `max_wal_senders=10`
+- `wal_keep_size=64MB`
+- `pg_stat_replication` count = **0**
+- SSH to `100.118.111.37:22` still times out
+- preflight exit = **2**, exactly at the host-reachability gate
+
+Current standing therefore remains:
+
+**PREPARED · PRIMARY REPLICATION-READY · STANDBY HOST UNREACHABLE · NO RESEED AUTHORIZED**
+
+This revalidation updates current runtime identity without rewriting the October 1 witness above.
+
 ## Governing rule
 
 Do not touch standby Postgres data until the host itself is reachable and its actual runtime shape has been discovered.
