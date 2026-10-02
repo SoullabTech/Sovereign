@@ -3,8 +3,8 @@
 **Date:** 2026-10-02
 **Standing:** EVIDENCE / WITNESS REFRESH · no new normative authority
 **R1 implementation:** `e4e194c5f0dd586859d28264271ada6e2314335c`
-**Canonical reconciled:** `origin/clean-main-no-secrets @ e95fba2a08b612c9ee472dfd41522d7dc0f45411`
-**Refresh merge:** `419a1757b`
+**Canonical reconciled:** `origin/clean-main-no-secrets @ 5f8d39c7f0ce206be42469e66f366c4ff82dc62e`
+**Refresh merge:** `d30526b70`
 
 ## Purpose
 
