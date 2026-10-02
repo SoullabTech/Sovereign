@@ -285,8 +285,30 @@ export interface Sealed {
   domain: Domain;
   after_p_seal_sha256: string | null;
   labels: HumanLabel[];
-  /** Outside the commitment: ambiguity is a pilot measurement, not label content. */
-  annotations: Array<{ pilot_id: string; target: QuestionId; ambiguous: boolean; note: string | null }>;
+  /**
+   * ⛔ Content-free by construction: COUNTS only. Free-text notes can carry objective text, paths or routed-state
+   * fragments, so they never enter a committable artifact; see `extractAnnotations` (local-only, mode 0600).
+   */
+  ambiguity_counts: Record<QuestionId, number>;
+}
+
+export interface LocalAnnotations {
+  pilot: typeof PILOT_ID;
+  warning: string;
+  manifest_sha256: string;
+  labeller: 'A' | 'B';
+  domain: Domain;
+  entries: Array<{ pilot_id: string; target: QuestionId; ambiguous: boolean; note: string | null }>;
+}
+
+/** The free-text side of a sheet. LOCAL ONLY — never commit, never pass to `report`. */
+export function extractAnnotations(sheet: Sheet): LocalAnnotations {
+  return {
+    pilot: PILOT_ID,
+    warning: 'LOCAL ONLY — free-text notes may contain authored or routed-state material. Never commit.',
+    manifest_sha256: sheet.manifest_sha256, labeller: sheet.labeller, domain: sheet.domain,
+    entries: sheet.entries.filter((e) => e.ambiguous === true || e.note !== null).map((e) => ({ pilot_id: e.pilot_id, target: e.target, ambiguous: e.ambiguous === true, note: e.note })),
+  };
 }
 
 function assertPSealComplete(manifest: Manifest, p: Sealed, labeller: 'A' | 'B'): void {
@@ -313,7 +335,7 @@ export function seal(
   const ids = new Set(manifest.units.map((u) => u.pilot_id));
   const seen = new Set<string>();
   const labels: HumanLabel[] = [];
-  const annotations: Sealed['annotations'] = [];
+  const ambiguity_counts: Record<QuestionId, number> = { Q_DEPTH: 0, Q_RISK: 0, Q_SUFFICIENT: 0, Q_LLM_NEEDED: 0 };
   for (const e of sheet.entries) {
     if (!isQuestionId(e.target)) throw new PilotRefused('AUTHORITY_TARGET', `"${String(e.target)}" is not a J1 question`);
     if (!ids.has(e.pilot_id)) throw new PilotRefused('UNKNOWN_UNIT', e.pilot_id);
@@ -327,11 +349,11 @@ export function seal(
     const base = { unit_id: e.pilot_id, target: e.target, domain: e.domain, labeller: sheet.labeller, labeller_kind: 'human' as const, value: e.value, salt: salter() };
     labels.push({ ...base, committed_seq: seq, commitment: commitmentOf(base) });
     seq += 1;
-    annotations.push({ pilot_id: e.pilot_id, target: e.target, ambiguous: e.ambiguous === true, note: e.note });
+    if (e.ambiguous === true) ambiguity_counts[e.target] += 1;
   }
   return {
     pilot: PILOT_ID, manifest_sha256: manifest.manifest_sha256, labeller: sheet.labeller, domain: sheet.domain,
-    after_p_seal_sha256: sheet.after_p_seal_sha256, labels, annotations,
+    after_p_seal_sha256: sheet.after_p_seal_sha256, labels, ambiguity_counts,
   };
 }
 
@@ -365,8 +387,8 @@ export function report(manifest: Manifest, sealed: Sealed[]): string {
     const per = Object.entries(r.agreement_by_task_shape.F).map(([s, a]) => `${s}:κ=${a.kappa === null ? 'undef' : a.kappa.toFixed(2)}(n=${a.n_pairs})`).join(' ');
     L.push(`  per-stratum F agreement (reported, NOT gated): ${per || 'none'}`);
     L.push(`  disagreements retained: P=${r.disagreements.P.length} F=${r.disagreements.F.length}`);
-    const amb = sealed.flatMap((s) => s.annotations.filter((a) => a.target === q && a.ambiguous).map(() => s.domain));
-    L.push(`  flagged ambiguous: P=${amb.filter((d) => d === 'P').length} F=${amb.filter((d) => d === 'F').length}${q === 'Q_DEPTH' ? ' (anchor ambiguity — the pilot\'s main Q_DEPTH output)' : ''}`);
+    const ambOf = (d: Domain): number => sealed.filter((x) => x.domain === d).reduce((n, x) => n + x.ambiguity_counts[q], 0);
+    L.push(`  flagged ambiguous: P=${ambOf('P')} F=${ambOf('F')}${q === 'Q_DEPTH' ? ' (anchor ambiguity — the pilot\'s main Q_DEPTH output)' : ''}`);
   }
   L.push('', 'Every historical label is HINDSIGHT_RISK. Agreement rule NOT frozen. Q_DEPTH anchors are PILOT_CANDIDATE and floors are settled from this pilot by a later founder act.');
   return L.join('\n') + '\n';

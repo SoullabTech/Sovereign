@@ -2,14 +2,15 @@
  * Usage (run on the Mac Studio, Desktop closed). EVERY command takes --home and refuses an output inside it.
  *   snapshot --home <h> --out <dir>                                  → manifest.json, local-index.json (never commit)
  *   sheet    --home <h> --manifest <f> --labeller A|B --domain P --out <f>
- *   seal     --home <h> --manifest <f> --index <f> --sheet <f> --out <f>                 (P)
+ *   seal     --home <h> --manifest <f> --index <f> --sheet <f> --out <f> --annotations-out <f>   (P)
  *   sheet    --home <h> --manifest <f> --labeller A|B --domain F --sealed-p <f> --out <f>   (only after P is sealed)
- *   seal     --home <h> --manifest <f> --index <f> --sheet <f> --sealed-p <f> --out <f>      (F)
+ *   seal     --home <h> --manifest <f> --index <f> --sheet <f> --sealed-p <f> --out <f> --annotations-out <f>   (F)
+ *   (--annotations-out holds the free-text notes, mode 0600, LOCAL ONLY; the sealed file carries ambiguity COUNTS only)
  *   report   --home <h> --manifest <f> --sealed <f> [--sealed <f> ...] [--out <f>]
  */
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { assertOutsideHome, blankSheet, PilotRefused, report, seal, snapshot, verifySources, writeOutside, type LocalIndex, type Manifest, type Sealed, type Sheet } from './pilot';
+import { assertOutsideHome, blankSheet, extractAnnotations, PilotRefused, report, seal, snapshot, verifySources, writeOutside, type LocalIndex, type Manifest, type Sealed, type Sheet } from './pilot';
 
 const argv = process.argv.slice(2);
 const cmd = argv[0];
@@ -38,7 +39,10 @@ try {
     const manifest = json<Manifest>(one('manifest'));
     verifySources(home, manifest, json<LocalIndex>(one('index')));
     const p = opt('sealed-p');
-    writeOutside(home, one('out'), pretty(seal(manifest, json<Sheet>(one('sheet')), 1, p ? json<Sealed>(p) : undefined)));
+    const sheet = json<Sheet>(one('sheet'));
+    const sealed = seal(manifest, sheet, 1, p ? json<Sealed>(p) : undefined);
+    writeOutside(home, one('annotations-out'), pretty(extractAnnotations(sheet)), 0o600);
+    writeOutside(home, one('out'), pretty(sealed));
   } else if (cmd === 'report') {
     const text = report(json<Manifest>(one('manifest')), all('sealed').map((f) => json<Sealed>(f)));
     const out = opt('out');

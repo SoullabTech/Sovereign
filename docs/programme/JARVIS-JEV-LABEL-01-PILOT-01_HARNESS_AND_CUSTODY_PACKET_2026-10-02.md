@@ -38,11 +38,11 @@ npm run pilot:jarvis-jev-label-01 -- sheet --manifest <dir>/manifest.json --labe
 npm run pilot:jarvis-jev-label-01 -- seal --home ~/.claude/ain-delegation --manifest <dir>/manifest.json --index <dir>/local-index.json --sheet sheetA.json --out sealedA.json
 npm run pilot:jarvis-jev-label-01 -- report --manifest <dir>/manifest.json --sealed sealedA.json [--sealed sealedB.json]
 ```
-Commit `manifest.json`, sealed labels and the report; **never** `local-index.json`.
+Commit `manifest.json`, the sealed files (labels + ambiguity COUNTS only) and the report; **never** `local-index.json` and **never** the `--annotations-out` files (see R1.1).
 
 ## Verification here
 
-`tsc -p tsconfig.jarvis-jev-label-01.json` exit 0 · `verify:jarvis-jev-label-01-pilot` ALL PASS (26 checks, synthetic home) · `matrix:jarvis-jev-label-01` LETHAL + DISCRIMINATING (18/18, 17 falsifiers, 0 defects) unchanged. TypeScript/tsx from a scratchpad (no project `node_modules` here); the founder's run is the evidence of record. `check:record-shas` not runnable in this shallow clone.
+Evidence is stated once, in the R1 and R1.1 sections below, from the runs themselves (the count is printed by `verify.ts`, never quoted from memory). `check:record-shas` is not runnable in a shallow clone; the founder's Mac Studio run is the evidence of record.
 
 ## Not decided / owed
 
@@ -68,4 +68,15 @@ Packet-projection mappings remain a pilot hypothesis, **not canonized**; `requir
 ### Human procedure (replaces the Run section above)
 `snapshot` → `sheet --domain P` → Kelly labels P **from the packet only** → `seal` P → only then `sheet --domain F --sealed-p …` → Kelly labels F from routing-time full state → `seal` F (`--sealed-p`) → `report`. Every command takes `--home`.
 
-Standing: **R1 awaiting Mac Studio re-witness; not admitted for real-data execution until it is green there.** ⛔ Nothing real read. ⛔ Not frozen. ⛔ No provider. INT-04 closed.
+Standing: **R1 Mac-witnessed green at `a9cf45d2` (79/79 record SHAs, TS 5.9.3 exit 0, 44 checks 0 failed, matrix 17/17 · 18/18 · 7/7, tree clean) and admitted; R1.1 below awaits its own re-witness. Real snapshot NOT taken: JARVIS Desktop processes are active.** ⛔ Nothing real read. ⛔ Not frozen. ⛔ No provider. INT-04 closed.
+
+## R1.1 (2026-10-02) — founder review of the `a9cf45d2` witness
+
+- **Snapshot precondition (not a code defect).** The Mac had `/Applications/JARVIS.app` and an O5-R3 development Desktop running, so "Desktop closed" was untrue. Neither was killed and the home was not read. The snapshot waits until those processes are no longer active; closing the O5-R3 witness is separate governed work and is not smuggled into this pilot.
+- **`UNDETERMINABLE` ratified as P-only.** F inability is recorded as `ambiguous: true` + a note while still giving the nearest human judgment, so packet insufficiency and human ambiguity stay distinct.
+- **Stale evidence removed** (the old "26 checks" sentence); one account of the evidence remains.
+- **Notes are local-only.** `ambiguous` counts per question enter the sealed artifact (`ambiguity_counts`), but free-text `note` text can carry objective text, paths or routed-state fragments, so it never enters a committable artifact: `seal` writes it to a separate `--annotations-out` file (mode 0600, refused inside the home) and `report` consumes counts only. Checks: the sealed JSON contains no note text and no `annotations` member; the note survives only in the local file; the report carries none. Canonical evidence can state `Q_DEPTH ambiguity = n/25` without publishing what was written about any unit.
+
+After R1.1: `verify:jarvis-jev-label-01-pilot` **48 checks · 0 failed** (this container), typecheck exit 0.
+
+Next act, once Desktop is not running: real snapshot → content-free manifest + 0600 local index → cut Kelly's P-only sheet → stop for packet-only labelling.

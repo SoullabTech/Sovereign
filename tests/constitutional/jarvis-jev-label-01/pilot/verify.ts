@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, readdirSync, statSync, symlinkSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BANNER } from './config';
-import { assertOutsideHome, blankSheet, derivePacket, DEPTH_ANCHORS, PilotRefused, report, seal, sealDigest, snapshot, verifySources, writeOutside, type Sheet } from './pilot';
+import { assertOutsideHome, blankSheet, derivePacket, DEPTH_ANCHORS, extractAnnotations, PilotRefused, report, seal, sealDigest, snapshot, verifySources, writeOutside, type Sheet } from './pilot';
 
 let fail = 0;
 let total = 0;
@@ -83,8 +83,14 @@ ok('sheet from another manifest refused', refuses(() => seal(manifest, { ...fill
 ok('a domain-mixed sheet is refused', refuses(() => seal(manifest, { ...filledP, entries: filledP.entries.map((e, i) => (i === 0 ? { ...e, domain: 'F' as const } : e)) })) === 'DOMAIN_MIXED');
 const undetP = { ...filledP, entries: filledP.entries.map((e, i) => (i === 0 ? { ...e, value: 'UNDETERMINABLE' as const, ambiguous: true, note: 'packet silent' } : e)) };
 const SA_P = seal(manifest, undetP);
-ok('P allows UNDETERMINABLE and records ambiguity outside the commitment', SA_P.labels[0]!.value === 'UNDETERMINABLE' && SA_P.annotations[0]!.ambiguous === true && SA_P.labels.every((l) => /^[0-9a-f]{64}$/.test(l.commitment)));
+ok('P allows UNDETERMINABLE and counts ambiguity outside the commitment', SA_P.labels[0]!.value === 'UNDETERMINABLE' && SA_P.ambiguity_counts.Q_DEPTH === 1 && SA_P.labels.every((l) => /^[0-9a-f]{64}$/.test(l.commitment)));
 ok('a B seal is not accepted as A\'s P seal', refuses(() => blankSheet(manifest, 'A', 'F', seal(manifest, fill({ ...pA, labeller: 'B' }, 1)))) === 'P_SEAL_MISMATCH');
+ok('the sealed artifact is content-free: no note text anywhere in it', !JSON.stringify(SA_P).includes('packet silent') && !('annotations' in SA_P));
+const ann = extractAnnotations(undetP);
+ok('the note survives only in the local annotations artifact', ann.entries.length === 1 && ann.entries[0]!.note === 'packet silent' && ann.warning.includes('LOCAL ONLY'));
+const annFile = join(mkdtempSync(join(tmpdir(), 'pilot-ann-')), 'ann.json');
+writeOutside(home, annFile, JSON.stringify(ann), 0o600);
+ok('annotations are written 0600 and refused inside the home', (statSync(annFile).mode & 0o777) === 0o600 && refuses(() => writeOutside(home, join(dir, 'ann.json'), 'x', 0o600)) === 'OUTPUT_INSIDE_HOME');
 const half = { ...SA_P, labels: SA_P.labels.slice(0, 10) };
 ok('an incomplete P seal does not unlock F', refuses(() => blankSheet(manifest, 'A', 'F', half)) === 'P_SEAL_INCOMPLETE');
 
@@ -104,6 +110,7 @@ ok('report carries the mandatory banner and no verdict', rep.startsWith(BANNER) 
 ok('report states agreement unfrozen, hindsight and candidate anchors', rep.includes('Agreement rule NOT frozen') && rep.includes('HINDSIGHT_RISK') && rep.includes('PILOT_CANDIDATE'));
 ok('report counts anchor ambiguity', rep.includes('flagged ambiguous: P=1 F=0'));
 ok('report leaks no authored text', !rep.includes(SECRET));
+ok('report carries no note text', !rep.includes('packet silent'));
 ok('report refuses an F seal whose P seal is absent', refuses(() => report(manifest, [SA_F])) === 'F_WITHOUT_PRIOR_P_SEAL');
 ok('report refuses F that does not follow P', refuses(() => report(manifest, [SA_P, { ...SA_F, labels: SA_F.labels.map((l) => ({ ...l, committed_seq: 1 })) }])) === 'F_NOT_AFTER_P');
 ok('report refuses a seal for another manifest', refuses(() => report(manifest, [{ ...SA_P, manifest_sha256: 'x' }])) === 'SEAL_FOR_OTHER_MANIFEST');
