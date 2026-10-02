@@ -36,6 +36,10 @@ import {
 import { useEditingLatitude } from '@/app/writers-studio/insight/EditingLatitude';
 import { DEFAULT_EDITORIAL_DEPTH, editorialDirective, type EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
+import {
+  LATITUDE_BANDS,
+  isEditorialLatitude,
+} from '@/lib/manuscript/editorialScope/contract';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import {
   INSIGHT_OBSERVATION,
@@ -778,8 +782,21 @@ export default function FlagshipWriteEditController() {
 
       if (!outcome.ok) {
         if (outcome.reason === 'scope_refused') {
-          setEditorialFailure(outcome.voice?.note
-            ?? 'That suggestion would exceed the editing latitude you chose. Nothing was changed.');
+          if (outcome.scope?.wholeParagraphsRemoved) {
+            setEditorialFailure(
+              `This revision would remove ${outcome.scope.wholeParagraphsRemoved} whole paragraph${outcome.scope.wholeParagraphsRemoved === 1 ? '' : 's'}. Paragraph-removal proposals are a separate permission in Preferences. Nothing was changed.`,
+            );
+          } else if (isEditorialLatitude(outcome.scope?.wouldPassAtLatitude)) {
+            const current = LATITUDE_BANDS[editLatitude].label;
+            const needed = LATITUDE_BANDS[outcome.scope.wouldPassAtLatitude].label;
+            setEditorialFailure(
+              `This revision goes beyond your current “${current}” latitude. It would fit at “${needed}.” Nothing was changed. You can change Revision latitude in Preferences, then choose Revise from this again.`,
+            );
+          } else {
+            setEditorialFailure(outcome.voice?.note
+              ?? outcome.detail
+              ?? `This revision goes beyond your current “${LATITUDE_BANDS[editLatitude].label}” latitude. Nothing was changed. Review Revision latitude in Preferences before trying again.`);
+          }
         } else if (outcome.reason === 'sanctuary_unavailable') {
           setEditorialFailure('Editorial revision is unavailable in Sanctuary. Nothing was changed.');
         } else {
