@@ -22,6 +22,7 @@
 -- satisfy a superset of their previous vocabulary.
 
 BEGIN;
+SET LOCAL lock_timeout = '5s';
 
 ALTER TABLE context_disclosure_receipts
   DROP CONSTRAINT IF EXISTS context_disclosure_receipts_boundary_check;
