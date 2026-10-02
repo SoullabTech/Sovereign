@@ -261,19 +261,13 @@ export class MAIASafetyPipeline {
   private userSessions = new Map<string, any>();
   private alertService?: RealTimeAlertService;
   private therapistDb?: TherapistDatabase;
-  private deliveryMode: 'member_only' | 'clinician_alert';
 
   constructor(
     alertService?: RealTimeAlertService,
-    therapistDb?: TherapistDatabase,
-    deliveryMode: 'member_only' | 'clinician_alert' = 'member_only'
+    therapistDb?: TherapistDatabase
   ) {
-    if (deliveryMode === 'clinician_alert' && (!alertService || !therapistDb)) {
-      throw new Error('clinician_alert mode requires both alertService and therapistDb');
-    }
     this.alertService = alertService;
     this.therapistDb = therapistDb;
-    this.deliveryMode = deliveryMode;
   }
 
   async processMessage(
@@ -301,18 +295,14 @@ export class MAIASafetyPipeline {
     switch (riskAssessment.level) {
       case 'crisis':
         action = 'lock_session';
-        responseMessage = "I'm deeply concerned about what you've shared. Your safety is the most important thing right now. I'm going to pause our ordinary conversation and point you toward immediate support you can contact now.";
-        if (this.deliveryMode === 'clinician_alert') {
-          await this.triggerCrisisAlert(userId, sessionId, message, riskAssessment);
-        }
+        responseMessage = "I'm deeply concerned about what you've shared. Your safety is the most important thing right now. I'm going to pause our conversation and connect you with immediate support.";
+        await this.triggerCrisisAlert(userId, sessionId, message, riskAssessment);
         break;
 
       case 'high':
         action = 'escalate';
-        responseMessage = "I hear that you're in significant pain. Let's focus on your safety and on support you can contact directly. You don't have to go through this alone.";
-        if (this.deliveryMode === 'clinician_alert') {
-          await this.triggerHighRiskAlert(userId, sessionId, message, riskAssessment);
-        }
+        responseMessage = "I hear that you're in significant pain. Let's focus on your safety and getting you connected with support. You don't have to go through this alone.";
+        await this.triggerHighRiskAlert(userId, sessionId, message, riskAssessment);
         break;
 
       case 'moderate':

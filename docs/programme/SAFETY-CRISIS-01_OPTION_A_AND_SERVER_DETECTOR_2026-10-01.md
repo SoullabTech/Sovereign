@@ -139,3 +139,78 @@ Under the precedent recorded in
 determination resolves the `frontier-check` for **#1633 only**. The labels may
 remain as diagnostic output from the path-based auto-labeler; they do not
 represent an unresolved external-fact dependency for this PR.
+
+## 10. Canonical succession after SAFETY-DELIVERY-01 (#1671)
+
+**This section controls wherever §§1–9 conflict with later canonical safety-delivery work.**
+
+After the original Option A ruling, canonical admitted the independent
+human-safety delivery membrane in PR #1671, merge commit:
+`15a9175fb917cd9aa84a2735f7b3cf91a964b49b`.
+
+That changes the composition, not the crisis classifier.
+
+The current authority boundary is:
+
+1. **Recognition** — #1633 owns deterministic current-turn classification at the
+   canonical `/api/sovereign/app/maia/list` ingress.
+2. **Member response** — #1633 owns the deterministic CLEAR referral and
+   server-authored crisis context supplied to MAIA.
+3. **Human delivery** — a separate governed membrane owns whether a human alert
+   is attempted and whether a provider actually accepted it.
+The live cognition path therefore does **not** assert that a human was notified,
+and it also does **not** assert that nobody was notified. It does not know.
+
+The member-facing referral now says only what this path can prove:
+
+> MAIA is not an emergency service. Do not rely on MAIA to contact help for you.
+
+MAIA's crisis addendum likewise instructs cognition not to claim a human-delivery
+outcome. Delivery status belongs to the delivery membrane, not the model prompt.
+
+### #1671 authority preserved
+
+This PR no longer removes or disables canonical #1671 delivery infrastructure.
+
+In particular it preserves:
+
+- `deliverHumanSafetyAlert()` and the independent SMS / Slack transports;
+- the prototype/practitioner fallback paths that use that delivery service;
+- the authenticated `/api/safety/human-alert` boundary;
+- the teen crisis alert path through that boundary.
+
+The earlier §8 claims that S1, S2 and S4 are retired are **superseded**.
+The canonical non-delivery register remains authoritative for those states.
+### Teen / abuse composition
+
+The dormant teen client path remains separate from the adult-first live crisis
+contract. When reached, it may attempt a content-free human safety alert.
+
+This reconciliation also repairs the abuse alert seam that #1671 had not yet
+connected: `alertTeamAboutAbuse()` now posts only classification metadata to
+`/api/safety/human-alert`. It never sends the member's message.
+
+Human-delivery transport failure is non-blocking to the member safety response:
+resources/support remain visible even if SMS/Slack is absent or refuses.
+
+The legacy abuse audit helper now projects an allowlisted shape before logging,
+so excess runtime object fields cannot smuggle message text into the console.
+
+### Youth admission standing
+
+Known under-18 birth dates are server-refused by `youthAdmissionGate.ts`.
+Age remains optional on some registration paths, so this is not yet a complete
+18+ admission proof. PR #1644 remains the broader adults-first acknowledgment
+and admission-gate lane.
+
+### New falsification law
+
+#1633 now fails if any of the following becomes true:
+
+- crisis cognition asserts a human-delivery result it does not own;
+- the CLEAR referral tells a member that a person was or was not notified;
+- teen/abuse delivery transports member message content;
+- human-delivery failure suppresses the member-facing safety response;
+- #1633 removes or bypasses canonical #1671 delivery infrastructure.
+
+A fresh exact-head witness is required after this succession amendment.

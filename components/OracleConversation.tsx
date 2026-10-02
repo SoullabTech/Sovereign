@@ -5369,8 +5369,17 @@ I'm not sure what I'm feeling yet.`;
         setMessages(prev => appendMessageCapped(prev, blockingMessage));
         onMessageAddedRef.current?.(blockingMessage);
 
-        // Option A: no hidden Soullab-team or guardian notification is attempted.
-        // The member-facing response above is the safety act in this beta.
+        // Human delivery is a separate, content-free boundary. It must never
+        // carry the member's message and must never block the member-facing
+        // safety response above if transport fails.
+        if (safetyCheck.abuseResult && userId) {
+          const { alertTeamAboutAbuse } = await import('@/lib/safety/abuseDetection');
+          await alertTeamAboutAbuse({
+            severity: safetyCheck.abuseResult.severity,
+            type: safetyCheck.abuseResult.type,
+            sessionId,
+          });
+        }
 
         // STOP HERE - do not process normal conversation
         setIsProcessing(false);
@@ -5402,7 +5411,27 @@ I'm not sure what I'm feeling yet.`;
         setMessages(prev => appendMessageCapped(prev, crisisResourceMessage));
         onMessageAddedRef.current?.(crisisResourceMessage);
 
-        // Option A: no hidden Soullab-team or guardian notification is attempted.
+        // Human delivery is separate from the member response and carries no
+        // message content. A delivery failure is observable but does not make
+        // MAIA abandon the member or suppress the crisis resources above.
+        if (userId) {
+          const { alertSoullabTeam } = await import('@/lib/safety/teenSupportIntegration');
+
+          const crisisType = safetyCheck.isCrisis
+            ? 'suicidal_ideation'
+            : safetyCheck.edResult?.severity === 'crisis'
+              ? 'ed_crisis'
+              : 'severe_burnout';
+
+          await alertSoullabTeam({
+            userId,
+            age: teenProfile.age,
+            crisisType,
+            sessionId,
+            timestamp: new Date(),
+          });
+        }
+
         // MAIA continues conversation with crisis context - she does NOT abandon the user
         console.log('🌟 [CRISIS COMPANION] MAIA will respond with crisis-aware compassion');
       }

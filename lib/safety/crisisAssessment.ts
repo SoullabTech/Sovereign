@@ -184,7 +184,7 @@ export const CRISIS_REFERRAL: {
     { name: 'Crisis Text Line', action: 'Text HOME to 741741 (U.S.)', href: 'sms:741741?body=HOME' },
     { name: 'Emergency services', action: 'If you are in immediate danger, call 911 or your local emergency number', href: 'tel:911' },
   ],
-  disclosure: 'Conversations with MAIA are not monitored by a person. No one has been notified.',
+  disclosure: 'MAIA is not an emergency service. Do not rely on MAIA to contact help for you.',
 };
 
 // ─── Server-authored safety context for MAIA ────────────────────────────────
@@ -194,12 +194,12 @@ export const CRISIS_ADDENDUM: Record<Exclude<CrisisTier, 'none'>, string> = {
 The member's message contains language that can signal thoughts of death or self-harm, and it may also be ordinary speech. Do not switch into a script, do not list hotlines, and do not assume a crisis.
 Respond as a skilled, caring practitioner would: stay with what they actually said, and then ask gently and directly whether they are having thoughts of hurting themselves or of ending their life. Ask it as a plain question in your own words. Staying present is not enough on its own: the direct question is what lets them tell you. Leave it out only if the message is plainly a figure of speech, or they have just told you they are not at risk.
 If they confirm such thoughts, take it seriously: stay present, and encourage them to call or text 988 (U.S.) or text HOME to 741741 (Crisis Text Line).
-Never say or imply that a person is watching this conversation or has been notified. No one has.`,
+Do not say whether any human notification occurred. Human delivery is governed separately, and its delivery status is outside this cognition path.`,
   clear: `SAFETY CONTEXT (server-authored, this turn only):
 The member has clearly expressed intent to end their life, a plan or means, or that they have already acted. A referral to the 988 Suicide & Crisis Lifeline and the Crisis Text Line is being shown to them separately, outside your reply.
 Stay with them warmly and plainly. Tell them you are glad they told you and that you want them to stay safe. Ask directly whether they are safe right now and whether someone can be with them.
 In your reply, say the number in plain words: they can call or text 988, right now. Some members only hear you and never see the screen, so the number must be in what you say, not only on the card. If they may be in immediate danger, tell them to call 911 or their local emergency number.
-Do not lecture, moralize, diagnose, or change the subject. Never say or imply that a person is watching this conversation or has been notified. No one has.`,
+Do not lecture, moralize, diagnose, or change the subject. Do not say whether any human notification occurred. Human delivery is governed separately, and its delivery status is outside this cognition path.`,
 };
 
 // ─── Cross-turn confirmation ────────────────────────────────────────────────

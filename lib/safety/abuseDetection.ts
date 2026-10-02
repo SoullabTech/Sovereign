@@ -155,3 +155,68 @@ function generateInterventionMessage(type: string, severity: string): string {
     'You matter, and your safety matters.'
   );
 }
+
+/**
+ * Alert the Soullab human-safety boundary about an abuse disclosure.
+ *
+ * This is deliberately content-free: the browser sends only classification
+ * metadata. The authenticated server resolves the member identity and owns
+ * SMS/Slack credentials.
+ */
+export async function alertTeamAboutAbuse(details: {
+  severity?: string;
+  type?: string;
+  sessionId?: string;
+}): Promise<void> {
+  const severity = details.severity === 'critical' || details.severity === 'extreme'
+    ? 'crisis'
+    : 'high';
+
+  try {
+    const response = await fetch('/api/safety/human-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: 'teen_abuse',
+        severity,
+        crisisType: details.type || 'abuse_disclosure',
+        sessionId: details.sessionId,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN ABUSE ALERT] human delivery failed', {
+        severity,
+        type: details.type || 'abuse_disclosure',
+        status: response.status,
+        // NEVER log message content here.
+      });
+    }
+  } catch (error) {
+    console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN ABUSE ALERT] transport failed', {
+      severity,
+      type: details.type || 'abuse_disclosure',
+      error: error instanceof Error ? error.name : 'unknown',
+      // NEVER log message content here.
+    });
+  }
+}
+
+/**
+ * Legacy audit hook retained for compatibility.
+ * It deliberately projects only an allowlisted, content-free shape so callers
+ * cannot smuggle message text into console output via excess object fields.
+ */
+export async function recordAbuseIncident(details: {
+  userId?: string;
+  type?: string;
+  severity?: string;
+  timestamp?: Date;
+}): Promise<void> {
+  const { type, severity, timestamp } = details;
+  console.warn('[ABUSE RECORD]', {
+    type,
+    severity,
+    timestamp: timestamp || new Date(),
+  });
+}

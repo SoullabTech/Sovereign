@@ -102,20 +102,29 @@ for (const c of ALL_CASES.filter((x) => x.text.length > 0)) {
     console.log(`  ✗ member text leaked into assessment or log line: ${JSON.stringify(c.text)}`);
   }
 }
-// No copy may imply a person was notified, and the referral must say no one was.
-// A sentence that mentions notification or monitoring must be a negation
-// ("No one has been notified", "Never say ... has been notified").
+// Human-delivery truth is owned by a separate governed boundary. The live
+// crisis path must not assert notification status either way; it should direct
+// the member to services they can contact themselves.
 const allCopy = [CRISIS_REFERRAL.heading, CRISIS_REFERRAL.body, CRISIS_REFERRAL.disclosure, CRISIS_ADDENDUM.ambiguous, CRISIS_ADDENDUM.clear].join('\n');
-const affirmsNotification = allCopy
-  .split(/(?<=[.!?])\s+|\n/)
-  .some((s) => /\b(?:notified|alerted|watching|monitor(?:ed|ing)?)\b/i.test(s) && !/\b(?:never|no one|not|nobody)\b/i.test(s));
-if (affirmsNotification) {
+const memberFacingClaimsNotification = [CRISIS_REFERRAL.heading, CRISIS_REFERRAL.body, CRISIS_REFERRAL.disclosure]
+  .join('\n')
+  .match(/\b(?:notified|alerted|watching|monitor(?:ed|ing)?)\b/i);
+if (memberFacingClaimsNotification) {
   failed = true;
-  console.log('  ✗ copy implies a person was notified or is monitoring');
+  console.log('  ✗ member-facing referral claims human notification/monitoring status');
 }
-if (!/not monitored by a person/i.test(CRISIS_REFERRAL.disclosure) || !/no one has been notified/i.test(CRISIS_REFERRAL.disclosure)) {
+if (!/not an emergency service/i.test(CRISIS_REFERRAL.disclosure)
+    || !/do not rely on MAIA to contact help/i.test(CRISIS_REFERRAL.disclosure)) {
   failed = true;
-  console.log('  ✗ referral disclosure must say conversations are not monitored and no one was notified');
+  console.log('  ✗ referral disclosure must state the emergency-service boundary and direct-contact responsibility');
+}
+const cognitionClaimsKnownDelivery = allCopy
+  .split(/(?<=[.!?])\s+|\n/)
+  .some((line) => /\b(?:has|have|was|were|is|are)\s+(?:not\s+)?(?:been\s+)?(?:notified|alerted)\b/i.test(line)
+    && !/\b(?:do not say|never say|do not claim)\b/i.test(line));
+if (cognitionClaimsKnownDelivery) {
+  failed = true;
+  console.log('  ✗ cognition copy claims a known human-delivery outcome');
 }
 if (/988|741741/.test(CRISIS_ADDENDUM.ambiguous.split('If they confirm')[0])) {
   failed = true;

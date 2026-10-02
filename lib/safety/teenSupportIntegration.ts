@@ -69,6 +69,16 @@ export interface TeenSupportResponse {
   contextForAI?: string;
 }
 
+export interface TeamAlertParams {
+  userId: string;
+  userName?: string;
+  age?: number;
+  crisisType?: string;
+  message?: string;
+  sessionId?: string;
+  timestamp?: Date;
+}
+
 // ---------------------------------------------------------------------------
 // Detection patterns (local regex, no external API)
 // ---------------------------------------------------------------------------
@@ -425,4 +435,64 @@ export function getTeenResources(
   );
 
   return resources;
+}
+
+// ---------------------------------------------------------------------------
+// Team alerts
+// ---------------------------------------------------------------------------
+
+/**
+ * Alert the Soullab team about a critical situation.
+ * In Phase 2 (Guardian Mirror), this will also notify linked guardians.
+ */
+export async function alertSoullabTeam(
+  paramsOrUserId: TeamAlertParams | string,
+  safetyCheck?: TeenSafetyCheck,
+  context?: string
+): Promise<void> {
+  const params: TeamAlertParams = typeof paramsOrUserId === 'string'
+    ? { userId: paramsOrUserId }
+    : paramsOrUserId;
+
+  const alertType = safetyCheck?.isCrisis ? 'crisis'
+    : safetyCheck?.isAbuse ? 'abuse'
+    : safetyCheck?.isED ? 'ed'
+    : 'general';
+
+  // Human delivery is server-side so browser code never receives SMS/webhook credentials.
+  // Deliberately omit message content: the human alert is a summons to review, not a PHI transport.
+  try {
+    const response = await fetch('/api/safety/human-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: safetyCheck?.isAbuse ? 'teen_abuse' : 'teen_crisis',
+        severity: safetyCheck?.isCrisis || params.crisisType ? 'crisis' : 'high',
+        crisisType: params.crisisType || alertType,
+        sessionId: params.sessionId,
+        age: params.age,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN SAFETY ALERT] human delivery failed', {
+        type: alertType,
+        userId: params.userId,
+        status: response.status,
+        crisisType: params.crisisType || alertType,
+        // NEVER log message content in alerts
+      });
+    }
+  } catch (error) {
+    console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN SAFETY ALERT] transport failed', {
+      type: alertType,
+      userId: params.userId,
+      crisisType: params.crisisType || alertType,
+      error: error instanceof Error ? error.name : 'unknown',
+      // NEVER log message content in alerts
+    });
+  }
+
+  // TODO (Phase 2): Query guardian_links and send guardian notifications
+  // TODO (Phase 2): Insert guardian_safety_alerts record
 }
