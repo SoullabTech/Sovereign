@@ -3374,3 +3374,14 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
   .p4r1-root .p4r1-locus-arrival{margin-left:0;margin-right:0}
   .p4r1-root .p4r1-locus-actions,.p4r1-root .p4r1-locus-lens-grid{display:grid;grid-template-columns:1fr 1fr}
 }
+
+/* P6-R2 · keep manuscript movement clear of the global signed-in bug launcher.
+   The launcher is fixed at bottom/right 1rem and includes its text at >=640px. */
+.p4r1-root .fr-write-foot{
+  padding-right:156px;
+}
+@media(max-width:639px){
+  .p4r1-root .fr-write-foot{
+    padding-right:72px;
+  }
+}
