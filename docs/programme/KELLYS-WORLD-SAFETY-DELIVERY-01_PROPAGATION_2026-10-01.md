@@ -18,9 +18,9 @@ No member utterance, crisis transcript, risk score, or personal safety state is 
 
 ## Source state
 
-The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by seven review surfaces:
+The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by seven custody surfaces:
 
-- PR #1663 — S1 reachability correction;
+- PR #1663 — **MERGED / CANONICAL** at `edf656496`: S1 reachability correction;
 - PR #1664 — canonical live crisis-path census;
 - PR #1665 — minimal deterministic recognition contract;
 - PR #1669 — stacked canonical live wiring, based on #1665;
@@ -28,7 +28,7 @@ The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by 
 - PR #1678 — practitioner-field relationship boundary: a member's practitioner-sharing gesture is readable only by the practitioner in that member's active/paused relationship, not by practitioner role globally;
 - PR #1694 — portal-message identity boundary: portal messaging now carries practitioner practice-record identity and practitioner member identity separately so relationship checks, messaging tables, PHI ownership, and safety notification use the correct identity.
 
-These are review/merge surfaces. Kelly's World must not present an open PR as canonical merely because it is visible.
+These are custody surfaces with mixed standing. Kelly's World must distinguish canonical merges from open review branches and must never present an open PR as canonical merely because it is visible.
 
 ## Needs Kelly
 

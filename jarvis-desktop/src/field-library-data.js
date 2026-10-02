@@ -2197,7 +2197,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 132,
       "evidence": "STATE        BUILT · local gates PASS · PRODUCTION WITNESS PENDING",
       "last_touched_epoch": 1788567104,
-      "hours_dormant": 648,
+      "hours_dormant": 649,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
