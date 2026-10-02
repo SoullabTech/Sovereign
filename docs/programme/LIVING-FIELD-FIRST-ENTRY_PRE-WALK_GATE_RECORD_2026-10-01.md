@@ -1,6 +1,6 @@
 # Living Field First Entry: Pre-Walk Gate Record
 
-**Status:** PARTIAL · G0 PASS · G1 PASS · G2 PASS · G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
+**Status:** PARTIAL · G0 TECHNICAL PASS / FOUNDER APPROVAL PASS / INDEPENDENT-HUMAN CUSTODY OPEN · G1 PASS · G2 PASS · G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
 **Governs:** `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md` (with Amendments 1 and 2)
 **Occasioned by:** a J18 verdict and an emergency-disable PASS that existed only in a session
 transcript and were never committed. Under this programme's rules a probe is not the record.
@@ -41,19 +41,21 @@ git fetch origin clean-main-no-secrets && git log -1 --format='%H %cI' origin/cl
 
 PASS requires both `## Amendment 1` and `## Amendment 2` lines.
 
-captured_at_utc: `2026-10-02T12:21:35Z`
-canonical_sha: `8aa79ee44587c56617fbe386ea2fb98d48cc4a64`
+captured_at_utc: `2026-10-02T20:15:20Z`
+canonical_sha: `32d5acb38f4c5c9d74b7b67bd01f2a4d4ad3da30`
 
 ```text
-2026-10-02T12:21:35Z
-8aa79ee44587c56617fbe386ea2fb98d48cc4a64
+2026-10-02T20:15:20Z
+32d5acb38f4c5c9d74b7b67bd01f2a4d4ad3da30 2026-10-02T16:08:24-04:00
 159:## Amendment 1 · 2026-10-01 · before any run (pre-registration amendment)
 171:## Amendment 2 · 2026-10-01 · before any run (founder-directed pre-registration amendment)
 ```
 
 Technical verdict: **PASS** — both amendments are canonical.
 
-**Class A approval provenance:** **PASS.** On 2026-10-02 the Founder explicitly approved the Class A protocol in PR #1676 as the governing protocol for this walk. Custody: `LIVING-FIELD-FIRST-ENTRY_FOUNDER-RULING_2026-10-02.md`.
+**Founder approval:** **PASS.** On 2026-10-02 the Founder explicitly approved the Class A protocol in PR #1676 as the governing protocol for this walk. Custody: `LIVING-FIELD-FIRST-ENTRY_FOUNDER-RULING_2026-10-02.md`.
+
+**Independent-human Class A custody concurrence:** **OPEN.** Canonical law requires an APPROVED review from a declared human custodian distinct from the author/head-commit authors. The Founder ruling does not substitute for that concurrence, and PR #1736 entered canonical with zero recorded reviews. Governance exception custody: PR #1755.
 
 ---
 
@@ -70,12 +72,12 @@ PASS requires `exit=1` with no value printed before it (variable absent). `exit=
 variable is set: a value line means it is set to that value, and an empty line means it is
 **set but empty**. Record either as it is and adjudicate it; do not treat it as a pass.
 
-captured_at_utc: `2026-10-02T12:21:35Z`
-production_sha_at_capture: `d4655e647`
+captured_at_utc: `2026-10-02T20:15:01Z`
+production_sha_at_capture: `c9e4f7f7e`
 
 ```text
-2026-10-02T12:21:35Z
-d4655e647
+2026-10-02T20:15:01Z
+c9e4f7f7e
 cabin_exit=1
 ```
 
@@ -93,21 +95,18 @@ root cause either never passes or gets waived.
 `2026-10-01T14:34:47Z`, and later gate evidence recorded another recreate at
 `2026-10-01T21:41:44.870926604Z`. Production has since moved again.
 
-At `2026-10-02T12:23:02Z`, runtime `d4655e647` reported the current Postgres container as:
+At `2026-10-02T20:15:01Z`, runtime `c9e4f7f7e` reported the current Postgres container as:
 
 ```text
-created=2026-10-02T10:11:34.938821629Z
-started=2026-10-02T10:12:07.21786677Z
+created=2026-10-02T13:24:32.412861029Z
+started=2026-10-02T13:24:32.980763622Z
 restarts=0
 oom=false
 status=running
 health=healthy
 ```
 
-The distinct `created=` time establishes a new container object rather than an in-place process
-restart. `restarts=0` and `oom=false` establish that this container has not restarted and was not
-OOM-killed. Docker's retained event query for the 10:11–10:13Z interval returned no events, so the
-initiating command or actor is **UNKNOWN** and must not be invented.
+The distinct `created=` time establishes a newer container object than the d465 witness. `restarts=0` and `oom=false` establish that this container has not restarted and was not OOM-killed. The initiating command or actor remains **UNKNOWN** and must not be invented.
 
 **Required at walk start:**
 
@@ -118,18 +117,18 @@ ssh soullab@minisforum 'date -u +%FT%TZ; docker exec maia-sovereign printenv GIT
 
 PASS requires all of:
 
-- `created=2026-10-02T10:11:34.938821629Z`;
-- `started=2026-10-02T10:12:07.21786677Z`;
+- `created=2026-10-02T13:24:32.412861029Z`;
+- `started=2026-10-02T13:24:32.980763622Z`;
 - `restarts=0` and `oom=false`;
 - `status=running` and, when health is present, `health=healthy`.
 
-captured_at_utc: `2026-10-02T12:23:02Z`
-production_sha_at_capture: `d4655e647`
+captured_at_utc: `2026-10-02T20:15:01Z`
+production_sha_at_capture: `c9e4f7f7e`
 
 ```text
-2026-10-02T12:23:02Z
-d4655e647
-created=2026-10-02T10:11:34.938821629Z started=2026-10-02T10:12:07.21786677Z restarts=0 oom=false status=running health=healthy
+2026-10-02T20:15:01Z
+c9e4f7f7e
+created=2026-10-02T13:24:32.412861029Z started=2026-10-02T13:24:32.980763622Z restarts=0 oom=false status=running health=healthy
 ```
 
 Mechanical verdict: **PASS** — the current database container is stable.
@@ -231,23 +230,23 @@ Verdict: PASS / FAIL
 ## G5 · Amendment 1 conditions at walk start
 
 - Start SHA (repeat at the end in the witness record; any difference → NO EVIDENCE).
-- The currently observed production runtime is `d4655e647`.
+- The currently observed production runtime is `c9e4f7f7e`.
 - Its fresh machine/source re-baseline is
-  `LIVING-FIELD_WITNESS_REBASELINE_D4655E647_2026-10-02.md`, now **canonical via PR #1735** at merge commit `2db5eae59f7aab65f11bde68d6295a231d6e4ab0`.
-- At `2026-10-02T13:50:34Z`, production `d4655e647` remained the live runtime and was an ancestor of canonical `2db5eae59f7aab65f11bde68d6295a231d6e4ab0` (`git merge-base --is-ancestor` exit 0).
-- The canonical #1735 record carries the fresh aggregate content-blind 0/4 substrate census and the deployed explicit-MAIA-entry proof.
+  `LIVING-FIELD_WITNESS_REBASELINE_C9E4F7F7E_2026-10-02.md`, now **canonical via PR #1754** at merge commit `8707daacd33298ecb38763ee7c25d38a3e49aff0`.
+- At `2026-10-02T20:15:01Z`, production `c9e4f7f7e` remained the live runtime and was an ancestor of canonical `32d5acb38f4c5c9d74b7b67bd01f2a4d4ad3da30` (`git merge-base --is-ancestor` exit 0).
+- The canonical #1754 record carries the fresh aggregate content-blind 0/4 substrate census, the four-person Early Field count, and the deployed explicit-MAIA-entry proof.
 - **This does not pre-fill G5.** Re-run the production SHA and ancestry check immediately before the walk. If production moves again, create and admit a new named re-baseline before the walk; never carry this record forward by analogy.
 
-captured_at_utc: `2026-10-02T13:50:34Z`
-production_sha_at_capture: `d4655e647`
-Re-baseline needed: **no while production remains exactly `d4655e647`; re-evaluate at walk start**
+captured_at_utc: `2026-10-02T20:15:01Z`
+production_sha_at_capture: `c9e4f7f7e`
+Re-baseline needed: **no while production remains exactly `c9e4f7f7e`; re-evaluate at walk start**
 
 ```text
-production=d4655e647
-canonical=2db5eae59f7aab65f11bde68d6295a231d6e4ab0
+production=c9e4f7f7e
+canonical=32d5acb38f4c5c9d74b7b67bd01f2a4d4ad3da30
 production_is_ancestor_of_canonical=0
-rebaseline_record=LIVING-FIELD_WITNESS_REBASELINE_D4655E647_2026-10-02.md
-rebaseline_merge=2db5eae59f7aab65f11bde68d6295a231d6e4ab0
+rebaseline_record=LIVING-FIELD_WITNESS_REBASELINE_C9E4F7F7E_2026-10-02.md
+rebaseline_merge=8707daacd33298ecb38763ee7c25d38a3e49aff0
 ```
 
 Verdict: **OPEN — documentary dependency satisfied; final PASS is walk-time only**
@@ -273,8 +272,7 @@ Verdict: PASS / FAIL
 
 ## G7 · A human safety layer for the person in front of MAIA
 
-If MAIA detects a crisis during the walk, nothing currently routes it to a person. This gate makes
-the layer that covers that explicit. Fill **exactly one** of G7a or G7b.
+The deployed `c9e4f7f7e` source contains server-side crisis recognition/referral and human-delivery safety infrastructure, but no admitted post-deploy live witness proves the participant route's actual crisis behavior or any human-delivery outcome. This gate keeps that evidence boundary explicit. Fill **exactly one** of G7a or G7b.
 
 ### G7a · In-conversation crisis resources are live in the deployed build
 
@@ -322,7 +320,7 @@ Verdict: PASS (G7a / G7b) / FAIL
 
 | Gate | Verdict |
 |---|---|
-| G0 protocol canonical | **PASS** |
+| G0 protocol canonical / Class A custody | **TECHNICAL PASS · FOUNDER APPROVAL PASS · independent-human custody OPEN** |
 | G1 cabin mode unset | **PASS** |
 | G2 database stable | **PASS** |
 | G3 emergency disable witnessed | OPEN |
