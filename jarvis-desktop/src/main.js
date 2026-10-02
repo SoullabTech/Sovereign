@@ -83,7 +83,7 @@ function findRepoRootDevMode(start) {
 // The installed app may bind only to an explicit substrate: a verified
 // JARVIS_REPO_ROOT or a verified persisted Preferences choice. The historical
 // /Users/soullab/MAIA-SOVEREIGN candidate remains discoverable as a suggestion,
-// never as currentRoot(). This is O5-R4: an implicit default may inform a human
+// never as currentRoot(). This is O5-R3A9: an implicit default may inform a human
 // choice but may not silently acquire grant-store authority.
 function findRepoRootPackagedMode() {
   return resolvePackagedMode({

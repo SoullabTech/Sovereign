@@ -29,7 +29,7 @@ function row(key, valueNode) {
 const RESOLUTION_COPY = {
   'explicit-config': ['CHOSEN', 'ok', 'You selected this repository; it is stored and reused on every launch.'],
   'explicit-env': ['ENV', 'ok', 'Bound by JARVIS_REPO_ROOT in the launching environment. Explicit, but it lasts only as long as that environment — choose it here to make it durable.'],
-  'implicit-default': ['GUESSED', 'bad', 'Historical state only: O5-R4 forbids an implicit default from becoming an active repository binding.'],
+  'implicit-default': ['GUESSED', 'bad', 'Historical state only: O5-R3A9 forbids an implicit default from becoming an active repository binding.'],
   'dev-walk': ['DEV WALK', 'warn', 'Development mode resolved this by walking up from the running source. The installed app does not use this path.'],
   'unresolved': ['NONE', 'bad', 'No substrate resolved. JARVIS cannot read Builder OS state or route work until a repository is chosen.'],
 };

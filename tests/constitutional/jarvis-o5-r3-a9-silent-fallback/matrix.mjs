@@ -16,7 +16,7 @@ function matches(got, expect) {
   return true;
 }
 
-out('O5-R4 · Silent Repository Fallback · matrix');
+out('O5-R3A9 · Silent Repository Fallback · matrix');
 out('implicit candidate may be suggested; it may never become authority-bearing currentRoot()');
 
 for (const [id, f] of Object.entries(SF_FALSIFIERS)) {

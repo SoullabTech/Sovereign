@@ -1,9 +1,11 @@
-# JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R4 — Silent Repository Fallback
+# JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3A9 — Silent Repository Fallback
 
 **Date:** 2026-10-01  
 **Opened by founder act:** “continue” after O5-R3 admission  
 **Base:** `b19004cd5c1babbc20e83681bb8dad944c22f9bf` · O5-R3 ADMITTED  
 **Standing:** ADMITTED · CLOSED · production untouched
+
+**Lineage correction:** this law was first built and pushed on `fix/jarvis-o5-r4-silent-repository-fallback-20261001`. During reconciliation with then-current canonical, that identifier was found to be already occupied by the admitted O5-R4 Evidence Return programme, with O5-R5 already opened for Execution Binding & Readiness. The first branch is retained as provenance only. No law or implementation semantics changed in this correction; this work is O5-R3 post-admission Amendment A9 because it narrows the runtime/substrate authority boundary admitted by O5-R3.
 
 ## 1. Law
 
@@ -67,7 +69,7 @@ The matrix must kill implementations that:
 
 ## 6. Admission boundary
 
-O5-R4 can close only when:
+O5-R3A9 can close only when:
 
 - pure resolver matrix is lethal and discriminating;
 - real Desktop wiring proves `currentRoot()` cannot receive `implicit-default`;
@@ -75,7 +77,7 @@ O5-R4 can close only when:
 - authority-bearing IPC refuses while unbound;
 - existing O5-R3 runtime-binding and writer-lease freezes remain intact.
 
-No production, provider execution, grant issuance, or delegation-home mutation is authorized by O5-R4.
+No production, provider execution, grant issuance, or delegation-home mutation is authorized by O5-R3A9.
 
 
 ## 7. Implementation
@@ -100,13 +102,13 @@ Both canonical Work Unit IPC and the governed run-work-unit path continue to fai
 ## 8. Evidence
 
 Focused behavior:
-- `npm run test:jarvis-o5-r4` — **14/14 PASS**.
-- `npm run matrix:jarvis-o5-r4` — **LETHAL + DISCRIMINATING · WIRING INTACT**.
+- `npm run test:jarvis-o5-r3-a9` — **14/14 PASS**.
+- `npm run matrix:jarvis-o5-r3-a9` — **LETHAL + DISCRIMINATING · WIRING INTACT**.
 - SF-1…SF-8 all pass against the real resolver.
 - DC-SF1…DC-SF8 are all killed.
 - SF-W1…SF-W10 all pass.
 
-Real-filesystem witness, preserved at `~/o5r4-real-fallback-witness.json`:
+Real-filesystem witness, preserved at `~/o5r3-a9-real-fallback-witness.json`:
 - `/Users/soullab/MAIA-SOVEREIGN` actually carries all canonical markers;
 - no explicit config was supplied to the witness;
 - `active_root = null`;
@@ -114,20 +116,20 @@ Real-filesystem witness, preserved at `~/o5r4-real-fallback-witness.json`:
 - `suggested_repo_root = /Users/soullab/MAIA-SOVEREIGN`;
 - `authority_binding_absent = true`.
 
-The O5-R4 falsifier family is frozen by blob identity in `tests/constitutional/jarvis-o5-r4-silent-fallback/FREEZE.json`.
-`npm run verify:jarvis-o5-r4-freeze` reports **FREEZE INTACT**.
+The O5-R3A9 falsifier family is frozen by blob identity in `tests/constitutional/jarvis-o5-r3-a9-silent-fallback/FREEZE.json`.
+`npm run verify:jarvis-o5-r3-a9-freeze` reports **FREEZE INTACT**.
 
 ## 9. Predecessor regression standing
 
-All O5-R3 writer, recovery, runtime-binding, pre-write, transition, readiness, event-purity, gesture, and local-capacity suites remain green on the O5-R4 implementation.
+All O5-R3 writer, recovery, runtime-binding, pre-write, transition, readiness, event-purity, gesture, and local-capacity suites remain green on the O5-R3A9 implementation.
 
 `verify:jarvis-o5-r3-rb-freeze` remains **FREEZE INTACT**.
 
-The historical Alpha Floor proof is **96 PASS / 1 unrelated stale failure**. The remaining failure is its old exclusion assertion that no Desktop-local runtime/pipeline/verifier implementation files exist; the current admitted Desktop architecture already contains the named governed modules. O5-R4 did not create that debt and does not reinterpret or waive it.
+The historical Alpha Floor proof is **96 PASS / 1 unrelated stale failure**. The remaining failure is its old exclusion assertion that no Desktop-local runtime/pipeline/verifier implementation files exist; the current admitted Desktop architecture already contains the named governed modules. O5-R3A9 did not create that debt and does not reinterpret or waive it.
 
 ## 10. Closure
 
-> **O5-R4 — ADMITTED.** JARVIS Desktop no longer obtains an authority-bearing repository merely because a hard-coded checkout exists. A valid historical candidate may be surfaced to the founder as a suggestion, but the Desktop remains unbound until an explicit environment binding, persisted Preferences choice, or explicit dev launch context establishes the substrate.
+> **O5-R3A9 — ADMITTED.** JARVIS Desktop no longer obtains an authority-bearing repository merely because a hard-coded checkout exists. A valid historical candidate may be surfaced to the founder as a suggestion, but the Desktop remains unbound until an explicit environment binding, persisted Preferences choice, or explicit dev launch context establishes the substrate.
 
 This admission adds no provider, grant, merge, deploy, production, or repository-selection authority. It narrows implicit authority.
 

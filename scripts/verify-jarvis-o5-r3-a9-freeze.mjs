@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const freeze = JSON.parse(readFileSync(
-  path.join(root, 'tests/constitutional/jarvis-o5-r4-silent-fallback/FREEZE.json'),
+  path.join(root, 'tests/constitutional/jarvis-o5-r3-a9-silent-fallback/FREEZE.json'),
   'utf8',
 ));
 let drift = 0;
