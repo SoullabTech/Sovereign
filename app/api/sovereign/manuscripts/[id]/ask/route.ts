@@ -71,6 +71,7 @@ import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/
 import { confirmDisclosureCrossedWithClient } from '@/lib/disclosure/contextDisclosureReceipt';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { transaction } from '@/lib/db/postgres';
+import { isExplanationDepth, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
 import { randomUUID } from 'node:crypto';
 
 /** How long one authorization opportunity stays claimable. Continuity hygiene — ⛔ never authority. */
@@ -259,6 +260,7 @@ export async function POST(
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
   const body = raw as Record<string, unknown>;
+  const responseStyle = isExplanationDepth(body.responseStyle) ? body.responseStyle : undefined;
 
   const question = typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) return NextResponse.json({ refusal: 'malformed', detail: 'question' }, { status: 400 });
@@ -318,6 +320,7 @@ export async function POST(
          receipt. ⛔ Correlation only — it is never act identity. */
       requestId: randomUUID(),
       posture: TurnPosture.resolve(body),
+      responseStyle,
     });
   }
 
@@ -659,10 +662,11 @@ async function developmentalTurn(input: {
   pendingAskRef: string | null;
   requestId: string;
   posture: TurnPosture;
+  responseStyle?: ExplanationDepth;
 }) {
   const {
     manuscriptId, memberId, anchor, existing, question,
-    authorizes, pendingAskRef, requestId, posture,
+    authorizes, pendingAskRef, requestId, posture, responseStyle,
   } = input;
 
   const reading = await loadFrozenDevelopmentalReading(manuscriptId, anchor.readingId, memberId);
@@ -758,7 +762,7 @@ async function developmentalTurn(input: {
   /* ── ACT 1 · no body required. The existing path, and it NEVER loads prose. */
   if (!bodyReq.required && !pendingAskRef) {
     return answerFrom(ctxWithoutBody, {
-      liveThreadId, memberId, staleness, history, question, crossed: [],
+      liveThreadId, memberId, staleness, history, question, crossed: [], responseStyle,
     });
   }
 
@@ -903,7 +907,7 @@ async function developmentalTurn(input: {
   }
 
   return answerFrom(ctx, {
-    liveThreadId, memberId, staleness, history, question, crossed, pendingAskRef,
+    liveThreadId, memberId, staleness, history, question, crossed, pendingAskRef, responseStyle,
   });
 }
 
@@ -951,9 +955,12 @@ async function answerFrom(
     liveThreadId: string; memberId: string; staleness: ReturnType<typeof developmentalStaleness>;
     history: { speaker: 'author' | 'maia'; body: string }[]; question: string;
     crossed: readonly string[]; pendingAskRef?: string;
+    responseStyle?: ExplanationDepth;
   },
 ) {
-  const outcome = await askMaiaDevelopmental(ctx, o.history, o.question);
+  const outcome = await askMaiaDevelopmental(ctx, o.history, o.question, {
+    responseStyle: o.responseStyle,
+  });
 
   if (!outcome.ok) {
     /* The question is already recorded. ⛔ No completion, so a consumed act
