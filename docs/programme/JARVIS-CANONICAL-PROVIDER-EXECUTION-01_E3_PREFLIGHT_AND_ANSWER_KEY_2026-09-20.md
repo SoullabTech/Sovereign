@@ -144,6 +144,24 @@ llama-server --model …sha256-1194192c… --port 64556 -c 65536 -np 1 --context
 
 **⭐⭐ And the reading named the mechanism A1 was gating against.** The llama-server flags include **`--context-shift`** with `--keep 4`. With context shift enabled, a prompt exceeding the window does **not** error — llama.cpp **discards the oldest tokens and proceeds**. *That is the silent truncation A1 exists to prevent, now identified as a concrete runtime behaviour rather than an inferred risk.* At 65536 the ~20–27k-token bundle sits far under the limit, so it will not trigger; at the original 32768 with a dense-tokenizing bundle it was closer than comfortable. ⭐ The gate was correct, and for a more specific reason than when it was written.
 
+## 12. ⚠️ §11 CORRECTED — 65536 was NOT claimed for this model
+
+**The disambiguation settles it against 65536.** `ollama ps`:
+```
+qwen3-coder:30b   06c1097efce0   21 GB   100% GPU   CONTEXT 32768
+```
+Line-numbered log agrees: loads at 13641 / 14120 / 14466 show `65536`, and **the most recent load — 14797 / 14834 — is `32768`.** That is the resident one.
+
+**⛔ My §11 reading was wrong, and the error is instructive.** I cited the live `llama-server … -c 65536` as the strongest evidence for the loaded model. **The blob hash does not match**: that process serves `sha256-1194192c…` while `ollama ps` gives qwen3-coder the id `06c1097efce0`. ⭐ It is a **different model's** server — almost certainly `maia-coder`, which pins `PARAMETER num_ctx 65536` in its own Modelfile and therefore allocates 65536 regardless of server environment. *The same registry fact that corroborated the A1 finding also produced the false positive.*
+
+⭐⭐ **And the mechanism of the failure is the one this lane keeps meeting**: a process argument, read without binding it to the model it serves, returned the hoped-for number for an unrelated reason. **Fourth instance.** The discipline that catches it is the same each time — *bind the reading to the thing it claims to measure.*
+
+**⭐ `ollama ps` CONTEXT is the authoritative reading** for A1 — one column, bound to the named model, unambiguous. The server log and `pgrep` args are both susceptible to cross-model confusion; ⛔ neither should be used to clear A1 again.
+
+**Why 65536 did not take**: `launchctl setenv` affects only processes started **after** it. Server PID `8809` was already running when the setenv executed, so it never inherited the variable, and its subsequent loads used its own default. **The app was not quit and relaunched after the setenv** — step 1 was skipped.
+
+**A1 standing**: ✅ **PASSED at 32768**, as ratified. The 65536 upgrade is ⛔ **NOT APPLIED**. Either proceeding at 32768 (within the gate, ~4.4–11.1k output headroom) or completing the relaunch is lawful; the founder chose the upgrade, so it is owed. After any relaunch the model is evicted — **A2 and §G both become VOID and must be re-run.**
+
 ## 6. Standing
 
 **E3 AUTHORIZED · PRE-FLIGHT ✅ DISCHARGED · SUBSTRATE ✅ VERIFIED AT EXACT SHA · ANSWER KEY ✅ PRE-REGISTERED · ⛔ MEASUREMENT UNSPENT, OWED TO THE BOUND macOS HOST · ⛔ NO PROVIDER ATTEMPT MADE · ⛔ NO GRANT ISSUED · ⛔ NO SOURCE MODIFIED · PRODUCTION UNTOUCHED.**
