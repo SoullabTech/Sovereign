@@ -90,9 +90,10 @@ export const RATIFIED_INVOKE_CHANNELS = [
       'JARVIS resolved — the gesture JOP-04\'s "Home states the workspace before Work has to refuse ' +
       'it" requires. Minimal on four counts, each separately asserted: (1) the preload forwards NO ' +
       'argument and the handler DECLARES no parameter, so the renderer cannot name a path; (2) it ' +
-      'reveals only currentRoot(), and every writer of RESOLVED.root is marker-validated in main ' +
-      '(ENV/CONFIG/DEFAULT via isValidRepoRoot, WALK via the marker walk, bindRepoRoot via ' +
-      'isValidRepoRoot); (3) an unbound root short-circuits to {revealed:false} without touching ' +
+      'reveals only currentRoot(), and every authority-bearing writer of RESOLVED.root is explicit ' +
+      'and marker-validated (ENV/CONFIG via resolvePackagedMode, WALK via the dev marker walk, ' +
+      'bindRepoRoot via isValidRepoRoot). The historical default candidate may be suggested but ' +
+      'never becomes currentRoot(); (3) an unbound root short-circuits to {revealed:false} without touching ' +
       'shell at all; (4) it uses shell.showItemInFolder, which SELECTS an item in the file manager — ' +
       'main.js is separately proven to call neither shell.openPath nor shell.openExternal, so no ' +
       'open-or-execute authority is introduced. It returns no file contents.',
@@ -138,6 +139,17 @@ export const RATIFIED_INVOKE_CHANNELS = [
     purpose:
       'Read HOME + SYSTEM truth states. Every field is a real observation or explicitly UNKNOWN; ' +
       'nothing is inferred from intent.',
+  },
+  {
+    channel: 'jarvis:workspace-viewmodel',
+    ratified_in: 'JARVIS-FOUNDER-WORKSPACE-01 / B5 founder authorization 2026-09-23',
+    purpose:
+      'The single B5 read seam for Today · Work · Graph · Monitor · System. MAIN composes and validates ' +
+      'founder-workspace-viewmodel.v1 from the governed B2/B3/B4 organs; presentation_only=true and ' +
+      'authority_effect=none. An optional evidence_ref never becomes arbitrary path authority: MAIN first ' +
+      'rebuilds the live view-model and admits only an exact ref already present in it, then restricts the ' +
+      'preview to safe text-like files under the bound workspace or local AIN home. No execution, O1 planning, ' +
+      'provider, voice, merge, deploy, production write, openPath, or openExternal authority is introduced.',
   },
   {
     channel: 'jarvis:submit-task',

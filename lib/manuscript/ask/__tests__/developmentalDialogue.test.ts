@@ -409,3 +409,22 @@ describe('Blocker B · the model receives author-facing names, never internal id
     expect(sys.match(UUID_SHAPED) ?? []).toEqual([]);
   });
 });
+
+
+describe('Writer explanation register', () => {
+  const ctx = assembleDevelopmentalContext({
+    reading: readingOf(), observation: readingOf().observations[0],
+    revisionContent: revision.content, now: liveNow,
+  });
+
+  it('changes only how MAIA is asked to explain, not the frozen observation', () => {
+    const plain = __systemForTest(ctx, 'plain');
+    const expert = __systemForTest(ctx, 'expert');
+    expect(plain).toContain('Use everyday language.');
+    expect(expert).toContain('Use compact professional editorial terminology.');
+    expect(plain).toContain('A lantern is introduced in the first movement and returns in the fourth.');
+    expect(expert).toContain('A lantern is introduced in the first movement and returns in the fourth.');
+    expect(plain).toContain('Keep the substance, evidence, uncertainty, and limits exactly the same.');
+    expect(expert).toContain('Keep the substance, evidence, uncertainty, and limits exactly the same.');
+  });
+});

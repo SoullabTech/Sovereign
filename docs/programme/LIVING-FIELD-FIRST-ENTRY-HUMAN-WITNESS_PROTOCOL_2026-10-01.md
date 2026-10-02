@@ -32,6 +32,24 @@ Run only when:
 5. the early-field admission endpoint returns `admitted:true`;
 6. explicit MAIA entry is present in the deployed build;
 7. no session credential, private content, or new telemetry is obtained for the witness.
+8. **production deploys are frozen for the witness window** — no deploy of any kind (`deploy`,
+   `update`, `deploy-maia`, `migrate`, `rollback`, or a container recreation) from the moment the
+   start SHA is recorded until the end SHA is recorded.
+
+The runtime SHA is read **at the start and at the end** of the walk
+(`docker exec maia-sovereign printenv GIT_COMMIT` on minisforum, plus `/api/health`). If the two
+differ, or either differs from the SHA the witness was scheduled against, the record is
+**VOID — NO EVIDENCE**: it is not adjudicated, and it is neither a PASS nor a STOP. A deploy
+landing mid-walk is an instrument failure, never a finding about the Living Field. A PASS that
+cannot be tied to the build it witnessed does not count as a PASS.
+
+**Participant selection (guidance, not a precondition — the choice stays a founder act).** This
+witness tests whether the *interface itself* communicates and keeps the MAIA boundary. A participant
+who already knows the architecture well will fill gaps with what they know, which weakens exactly
+that signal. Prefer the cohort member with the **least prior exposure** among those trusted with an
+unfinished system, and keep architecture insiders for the later populated-field witness. The cost is
+accepted: a less-exposed participant is harder to debrief and more exposed to rough edges, so the
+stop conditions in §6 apply without discount.
 
 ## 3 · What to tell the member
 
@@ -90,7 +108,7 @@ STOP / NOT ADMITTED if:
 - another member's material appears;
 - the empty state makes an unsupported claim about who the member is;
 - opening a dimension begins MAIA before explicit entry;
-- the member reasonably believes MAIA has already interpreted or received material when she has not;
+- the member reasonably believes MAIA has already interpreted or received material when MAIA has not;
 - saving changes material the member did not choose to change;
 - the member cannot safely return to the wider field or Home;
 - any privacy, authentication, authorship, or consent boundary fails.
@@ -150,3 +168,58 @@ which readiness was censused (`975a208b8`). Precondition 4 is tightened. No othe
   intervening change did not touch Living Field surfaces. If it did, re-census readiness first.
   The RC1 re-baseline is `LIVING-FIELD_WITNESS_REBASELINE_RC1_2026-10-01.md`.
 
+## Amendment 2 · 2026-10-01 · before any run (founder-directed pre-registration amendment)
+
+Occasioned by the proposal to verify admission by signing into a cohort account on the Mac Studio,
+a machine whose browser an AI agent session can control. Two acts had been merged into one: checking
+whether a member is admitted, and the member's walk. They are separated here. Precondition 5 is
+replaced, precondition 2 is tightened, §3 gains a disclosure, and precondition 9 is added.
+No other clause changes.
+
+- **5 (replaces).** Admission is verified **server-side and read-only**. Nobody signs into, borrows,
+  or opens the member's account or session to check it. The check runs the same decision function
+  the route uses (`decideEarlyField` in `lib/access/earlyFieldAccess.ts`) against the live container
+  environment, and prints a boolean and nothing else:
+
+  ```bash
+  ssh soullab@minisforum "docker exec -e EF_MEMBER=<member-uuid> maia-sovereign ./node_modules/.bin/tsx -e \"
+    import { decideEarlyField, earlyFieldConfigFromEnv } from './lib/access/earlyFieldAccess';
+    console.log(JSON.stringify({ admitted: decideEarlyField(process.env.EF_MEMBER, earlyFieldConfigFromEnv()) }));\""
+  ```
+
+  The member UUID is an operational input. It is **never written into the witness record**, which
+  uses the participant label only. The command shape was content-free validated on production
+  `56d0cd679` at `2026-10-01T23:22:40Z` with a synthetic non-member UUID and returned only
+  `{"admitted":false}`. That proves the mechanism can run; it is **not** participant admission
+  evidence. The participant-specific run is G4 evidence. If it errors, precondition 5 is unmet;
+  that outcome is not a reason to fall back to a member session.
+- **2 (tightened).** The member signs in **themselves**, on **their own device**, in their ordinary
+  browser. The facilitator never types the member's credentials, and no shared or operator machine
+  is used by default.
+- **9 (new). No undisclosed observer.** Before the walk, every channel through which the walk can be
+  seen is known, and each one is either disclosed to the member and accepted, or absent. This
+  includes the facilitator (in person, or on a call the member chose), screen-share, screen or video
+  recording, screenshots, and **any AI agent session that can read or control the browser or
+  screen** (for example a Desktop Commander or remote-control connection on the device used).
+  An AI agent with that access must not be connected to the member's device. If the walk has to
+  happen on the Mac Studio, the agent connection is closed for the walk, **and** the member is told
+  that the machine is one an AI agent can normally operate and that it has been disconnected.
+  An observer the member was not told about makes the walk **NO EVIDENCE**, whatever it recorded.
+  The consent test cannot pass while its own observation breaks consent.
+
+**§3 addition: say this before the existing text, and adapt it to the actual setup.**
+Written to be spoken. Read it aloud once before using it.
+
+> Before we start, I'd like you to know exactly who's with you. It's just me, [here with you /
+> on this call]. Nothing is recording your screen, and no AI is connected to your device or
+> watching what you do. MAIA only joins if you choose her, the way I'll describe in a moment.
+> While you explore, I'll jot a few notes in my own words about what you do
+> and say, but I won't copy anything you write in your field. The notes are kept under a label,
+> not your name. If there's anything you'd rather I leave out, just tell me, now or afterwards.
+> I'm here the whole time, so if anything feels hard, you can say so and we'll stop.
+
+Then continue with the existing §3 text. Its closing *"You may stop at any time"* now repeats this
+script; say it once, wherever it lands more naturally.
+
+If any bracket is untrue for the actual setup, say what is true instead. If the member declines
+the setup, the walk does not run.
