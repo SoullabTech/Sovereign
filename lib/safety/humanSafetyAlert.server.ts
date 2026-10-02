@@ -8,15 +8,24 @@ export type HumanSafetySource =
   | 'circuit_breaker';
 
 export type HumanSafetySeverity = 'high' | 'crisis';
+export type MemberSafetySource = Exclude<HumanSafetySource, 'circuit_breaker'>;
 
-export interface HumanSafetyAlert {
-  memberId?: string;
-  source: HumanSafetySource;
+interface HumanSafetyAlertBase {
   severity: HumanSafetySeverity;
   crisisType?: string;
   sessionId?: string;
   age?: number;
 }
+
+export type HumanSafetyAlert =
+  | (HumanSafetyAlertBase & {
+      source: 'circuit_breaker';
+      memberId?: never;
+    })
+  | (HumanSafetyAlertBase & {
+      source: MemberSafetySource;
+      memberId: string;
+    });
 
 export interface HumanSafetyDeliveryResult {
   delivered: boolean;

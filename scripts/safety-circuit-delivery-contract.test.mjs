@@ -22,7 +22,8 @@ test('exercised Phase II integration delegates circuit-breaker alerts to the hum
 
 test('circuit-breaker pager is system-scoped and member identity is optional', () => {
   assert.match(pager, /\| 'circuit_breaker'/);
-  assert.match(pager, /memberId\?: string/);
+  assert.match(pager, /source: 'circuit_breaker';[\s\S]*?memberId\?: never/);
+  assert.match(pager, /source: MemberSafetySource;[\s\S]*?memberId: string/);
   assert.match(pager, /if \(alert\.memberId\) parts\.push/);
   assert.match(pager, /No message content included\./);
 });

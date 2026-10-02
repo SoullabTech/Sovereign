@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { requireMemberId } from '@/lib/auth/session';
 import {
   deliverHumanSafetyAlert,
-  type HumanSafetySource,
+  type MemberSafetySource,
   type HumanSafetySeverity,
 } from '@/lib/safety/humanSafetyAlert.server';
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   const result = await deliverHumanSafetyAlert({
     memberId,
-    source: parsed.source as HumanSafetySource,
+    source: parsed.source as MemberSafetySource,
     severity: parsed.severity as HumanSafetySeverity,
     crisisType: parsed.crisisType,
     sessionId: parsed.sessionId,
