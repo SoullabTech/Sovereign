@@ -18,12 +18,12 @@ appended sections.
 
 ## Last updated
 
-2026-10-02 · canonical observed `f1c1f96f8531`. #1695 merged as `f55b1ead65f2`, admitting the unified Soullab Desktop host (MAIA/member realm + JARVIS/Kelly’s World operator realm). Canonical has since advanced through Writer’s Studio, AIN master-field, safety-delivery, crisis-detector, developmental-ancestry and Living Field work, including newer MAIA Desktop packaging/unification code. PR #1680 is reconciled onto that current lineage. Exact combined Desktop suite: **426/426 PASS**; offline immutable-runtime config witness remains `isrFlushToDisk=false` while ordinary web remains `true`.
-· evidence: git + Mac Studio exact combined-tree tests/config witness. Apple rejection provenance remains submission `2f638ee1-ed5b-43ad-9181-a16c209c458a`; separate post-launch strict-codesign witness also proved route-cache mutation invalidated the sealed `888646afc6` app.
+2026-10-02 · canonical observed `4aebf0d87bee845f063f44c38864206a371c9314` (#1680 merged). Exact release-SHA Mac Studio witness completed: clean install, offline webpack build with `isrFlushToDisk=false`, standalone containment/Next 16.3.8 census, **426/426 PASS**, signed package verification, offline runtime health + `/maia` 200, clean shutdown, unchanged strict codesign after first launch, Apple notarization/stapling, Gatekeeper acceptance, and fresh ZIP/DMG extraction/mount checks all passed.
+· evidence: git + Mac Studio exact-SHA commands + Apple notary submissions `8ff8d1e7-7032-4858-ac98-d01d9f88a932` (ZIP) and `5961c41e-ba72-4455-942e-80cc766423cd` (DMG).
 
 ## Release SHA
 
-**OPEN.** `888646afc6de4b40b6d2874355fc33ee0d6a3529` was the first exact canonical post-containment release SHA, but it is rejected for **two independent trust defects**: first launch wrote Next route-cache files into the signed `cabin-runtime`, invalidating sealed resources, and Apple notarization later rejected three nested Mach-O binaries that lacked complete Developer-ID timestamp/hardened-runtime trust. The nested-native signing + verification repair #1668 has now merged canonically as `e95fba2a08b6`; the next release SHA must be the canonical merge commit carrying the remaining immutable-runtime repair #1680 on top of that lineage. No rejected or branch-only artifact may be renamed, re-signed, or called the release.
+**SET.** `4aebf0d87bee845f063f44c38864206a371c9314` is the canonical MAIA Desktop external-beta release SHA. It contains the nested-native signing repair, Soullab Desktop unification lineage, and the offline immutable-runtime repair. The exact-SHA artifact has passed local external-beta admission. Rejected predecessors remain historical provenance only and must never be renamed, re-signed, or represented as this release.
 
 ## Release order
 
@@ -32,13 +32,13 @@ appended sections.
 2. ✅ Merged #1616 as `ef511f0ef`; that SHA was later **rejected** after its Mac artifact census exposed unsafe repository over-tracing. It is historical provenance, not a release candidate.
 3. ✅ Merged #1618 as `f2346dae11f5`, preserving the Desktop packaging lineage and a copy-stage refusal for `backups/` and `.next/cache`.
 4. ✅ #1647 merged as `888646afc6de`; that exact canonical candidate passed containment and offline runtime witnesses but was rejected by Apple notarization for nested native-code trust.
-5. ✅ #1695 merged as `f55b1ead65f2`, admitting the unified Soullab Desktop host. ✅ #1668 merged as `e95fba2a08b6`, admitting nested Cabin Mach-O Developer-ID signing/verification. The remaining immutable-runtime repair #1680 must merge on top of current canonical; **that canonical merge commit becomes the only release SHA.**
-6. Mac Studio, from that exact release SHA on the T7 build volume: clean root install/build → `MAIA_CABIN_MODE=offline npm run build` (webpack) → inspect the actual `.next/standalone` root, forbidden paths, credentials, symlinks, JARVIS packaged resource, and Next 16.3.8 → run the MAIA Desktop population and require **no failures beyond the exact canonical baseline plus the two additive signing tests passing**; also require the signing/unification targeted suite **32/32 PASS** → fresh package → `npm run verify:package`, which must report every Cabin Mach-O as Developer-ID signed with secure timestamp and hardened runtime.
-7. Launch the packaged app offline through the Desktop host and witness `/api/cabin/health`, `/cabin`, and the packaged JARVIS realm. The embedded `maiaBuildSha` must equal the release SHA. Record immutable artifact digests; never rename or re-sign a rejected candidate.
-8. Developer ID identity and `MAIA-BETA` notary profile are **present** (see Blockers). Produce the signed hardened-runtime artifact from the exact release SHA, record the signed digest, submit with `notarytool --wait`, and staple.
-9. Run `REQUIRE_EXTERNAL_BETA=1 npm run verify:package` and Gatekeeper assessment on the signed/stapled artifact.
-10. Untouched download accepted by Gatekeeper on a clean second Mac.
-11. Only then: release to the named small cohort (H4.6 contract).
+5. ✅ #1695 merged as `f55b1ead65f2`, admitting the unified Soullab Desktop host. ✅ #1668 merged as `e95fba2a08b6`, admitting nested Cabin Mach-O Developer-ID signing/verification. ✅ #1680 merged as `4aebf0d87bee845f063f44c38864206a371c9314`; **that merge commit is the release SHA.**
+6. ✅ Mac Studio exact-SHA witness on T7 completed: clean root `npm ci` → offline webpack build → standalone census (`458M`, server present, `.next/cache` absent, forbidden roots/credentials absent, Next `16.3.8`) → MAIA Desktop **426/426 PASS** → fresh signed package → `npm run verify:package` PASS with all 9 Cabin Mach-O binaries Developer-ID signed, securely timestamped and hardened-runtime valid.
+7. ✅ Packaged app launched offline: `/api/cabin/health` returned `ready` / `offline` / build `4aebf0d87`; `/maia` returned HTTP 200; clean quit stopped the Cabin runtime. Post-launch strict codesign remained valid and no `.next/server/route-cache` was created inside the signed bundle. Immutable distributable digests recorded below.
+8. ✅ Developer ID + `MAIA-BETA` trust chain completed. ZIP notarization submission `8ff8d1e7-7032-4858-ac98-d01d9f88a932` **Accepted**; app stapled and validated. Final stapled ZIP SHA-256: `6f8b8069246e85307e74c4992a246dd8e98098bf97f8e98c9b6176cbfc6ec012`. DMG notarization submission `5961c41e-ba72-4455-942e-80cc766423cd` **Accepted**; DMG stapled and validated. Final stapled DMG SHA-256: `2265c203dde4498e7e0c5f7d000df1a8b31da75291ace28a136d49bb04274943`.
+9. ✅ `REQUIRE_EXTERNAL_BETA=1 npm run verify:package` PASS with `releaseClass: EXTERNAL_BETA`; Gatekeeper reports `accepted` / `source=Notarized Developer ID`. Fresh ZIP extraction and read-only DMG mount both preserved strict codesign, staple validation, and Gatekeeper acceptance.
+10. ⏳ Untouched download accepted by Gatekeeper on a clean second Mac — **still required; not yet witnessed**.
+11. Only then: release to the named small cohort (H4.6 contract). Tester release remains closed until step 10 passes.
 
 ## Rejected (never sign, never ship)
 
@@ -57,19 +57,19 @@ appended sections.
 
 | Gate | State | Evidence |
 |---|---|---|
-| Canonical Desktop packaging lineage | #1618 merged as `f2346dae11f5`; #1647 added causal trace containment/package fail-closed guards; #1695 merged as `f55b1ead65f2` and now canonically carries both `cabin-runtime` and the governed JARVIS realm resource. | git + merge-sensitive tests + #1695 CI, 2026-10-02 |
-| Desktop suite on current unified lineage | PR #1680 reconciled onto canonical `f1c1f96f8531`: **426/426 PASS** under the canonical tsx runner, including immutable-runtime, nested-native signing-verifier, and Soullab Desktop unification falsifiers. Final combined suite must rerun at the canonical release SHA. | Mac Studio exact combined-tree run, 2026-10-02 |
-| Exact final release-SHA standalone build | `888646afc6de` completed but is rejected for launch-time seal mutation **and** nested-native notarization trust. #1668 is now canonical; **next release SHA OPEN** pending #1680 merge and exact-SHA rebuild. | Mac Studio + GitHub merge evidence, 2026-10-01/02 |
-| Offline trace containment | **PASS on rejected `888646afc6de` artifact**: packaged root reduced to admitted runtime trees; forbidden credentials/content absent; Next 16.3.8 present. Containment is preserved by the nested-native repair and must be re-witnessed on the next exact canonical artifact. | Mac Studio packaged-app census, 2026-10-01 |
-| Artifact carries Next 16.3.8 | **PASS on rejected `888646afc6de` artifact**; must be re-witnessed on next release SHA | Mac Studio artifact census + `verify:package`, 2026-10-01 |
-| Packaged runtime healthy offline | Runtime health **PASS** on rejected `888646afc6de`, but first launch mutated signed route-cache resources and invalidated the code seal. #1680 disables Next ISR disk flush only in offline Cabin. Final witness must prove health **and** unchanged strict codesign before/after launch. | Mac Studio live runtime + strict codesign witness, 2026-10-01/02 |
+| Canonical Desktop packaging lineage | #1618 merged as `f2346dae11f5`; #1647 added causal trace containment/package fail-closed guards; #1695 merged as `f55b1ead65f2` and carries both `cabin-runtime` and governed JARVIS realm resource; #1668 added nested Cabin Mach-O trust; #1680 merged as release SHA `4aebf0d87bee` and added immutable offline runtime. | git + required CI + exact-SHA Mac witness, 2026-10-02 |
+| Desktop suite on current unified lineage | **426/426 PASS at exact release SHA `4aebf0d87bee`**, including immutable-runtime, nested-native signing-verifier, and Soullab Desktop unification falsifiers. | Mac Studio exact release-SHA run, 2026-10-02 |
+| Exact final release-SHA standalone build | **PASS at `4aebf0d87bee`**: offline webpack exit 0; `isrFlushToDisk=false`; standalone `458M`; server present; `.next/cache` absent; Next `16.3.8`; forbidden roots/credential-like files absent. | Mac Studio exact-SHA build + census, 2026-10-02 |
+| Offline trace containment | **PASS at release SHA `4aebf0d87bee`**: admitted runtime only; forbidden roots/credentials absent; Next `16.3.8`; no runtime disk cache in signed resources. | Mac Studio standalone + packaged-app census, 2026-10-02 |
+| Artifact carries Next 16.3.8 | **PASS at release SHA `4aebf0d87bee`** | Mac Studio `verify:package`, 2026-10-02 |
+| Packaged runtime healthy offline | **PASS at release SHA `4aebf0d87bee`**: health ready/offline, `/maia` 200, clean shutdown, strict codesign unchanged after first launch, no route-cache mutation. | Mac Studio live runtime + pre/post-launch strict codesign, 2026-10-02 |
 | Developer ID Application | **PRESENT**: `32276A3F…55DB48 "Developer ID Application: Kelly Nezat (ZVK2X646Z2)"` | founder, `security find-identity -v -p codesigning`, 2026-10-01 |
-| Notary profile `MAIA-BETA` | **PRESENT AND USED**; Apple submission `2f638ee1-ed5b-43ad-9181-a16c209c458a` authenticated successfully but returned **Invalid** for nested native-code trust. | founder + Apple notary result, 2026-10-01 |
-| Nested Cabin Mach-O trust | **CANONICAL — #1668 merged as `e95fba2a08b6`.** Build discovers every staged Cabin Mach-O and Developer-ID signs it with secure timestamp + hardened runtime; verifier independently requires the same evidence. Current #1680 branch contains that ancestry and its signing tests pass. | Apple rejection log + #1668 merge + Mac Studio 426/426 run, 2026-10-02 |
-| Notarize / staple | `888646afc6de` submission **INVALID**; next exact canonical artifact must be submitted fresh after nested-native repair. No stapling performed. | Apple submission `2f638ee1-ed5b-43ad-9181-a16c209c458a`, 2026-10-01 |
-| Second-Mac Gatekeeper | NOT YET | — |
-| Tester release | CLOSED | — |
+| Notary profile `MAIA-BETA` | **PRESENT AND SUCCESSFULLY USED** for release SHA `4aebf0d87bee`: ZIP submission `8ff8d1e7-7032-4858-ac98-d01d9f88a932` Accepted; DMG submission `5961c41e-ba72-4455-942e-80cc766423cd` Accepted. Earlier invalid submission remains rejection provenance only. | Apple notary results, 2026-10-02 |
+| Nested Cabin Mach-O trust | **PASS at release SHA `4aebf0d87bee`.** #1668 (`e95fba2a08b6`) signs every staged Cabin Mach-O with Developer ID + secure timestamp + hardened runtime; release verifier independently confirmed **9/9** packaged native binaries satisfy that trust. | #1668 merge + exact-SHA `verify:package`, 2026-10-02 |
+| Notarize / staple | **PASS at release SHA `4aebf0d87bee`**. ZIP submission `8ff8d1e7-7032-4858-ac98-d01d9f88a932` Accepted; DMG submission `5961c41e-ba72-4455-942e-80cc766423cd` Accepted; app and DMG stapled/validated. | Apple notary + Mac Studio stapler, 2026-10-02 |
+| Second-Mac Gatekeeper | **PENDING — only remaining admission gate**. Same-Mac fresh ZIP extraction and read-only DMG mount both Gatekeeper-accepted; a clean second Mac has not yet been witnessed. | — |
+| Tester release | **CLOSED pending second-Mac witness** | H4.6 contract |
 
 ## Non-claims
 
-No post-containment external-beta artifact has been admitted, notarized, distributed, or deployed. Rejected and rehearsal artifacts remain non-release evidence only. Public `/cabin` is unchanged. Packaging CI does not build the final signed `.app`; only an exact-release-SHA Mac Studio witness establishes the final artifact rows above.
+The exact release-SHA artifact `4aebf0d87bee` is locally admitted as an **EXTERNAL_BETA** artifact and has been notarized/stapled, but it has **not been distributed or deployed**. Rejected and rehearsal artifacts remain non-release evidence only. Public `/cabin` is unchanged. Tester release remains closed until the clean second-Mac Gatekeeper witness passes.
