@@ -8,7 +8,7 @@
 
 | Instrument | Result |
 |---|---|
-| `npm run matrix:epistemic-join-i3` | **18/18 PASS** |
+| `npm run matrix:epistemic-join-i3` | **21/21 PASS** |
 | `npm run test:epistemic-join` | **104/104 PASS · 4 suites** |
 | `npm run typecheck:epistemic-join` | **EXIT 0** |
 | `npm run typecheck` | **229 vs 239 baseline · 0 regressions · EXIT 0** |
@@ -53,12 +53,28 @@ The I3 matrix proves there is no application/runtime import of
 `projection.ts` remains absent, and the top-level I2 pure module remains the
 same six TypeScript files.
 
-The feature flag is tested OFF for absence, empty string, `0`, and `true`.
-Only literal `1` enables the writer.
+The feature flag is tested OFF for absence, empty string, `false`, `0`, `1`,
+and malformed/unexpected values. Only exact literal `true` enables the writer.
+
+## I3C1 conformance addendum
+
+The post-merge I3C1 witness adds evidence the original I3 record did not
+independently establish:
+
+- exact feature enable token restored to literal `true`;
+- true concurrency observed with two simultaneous advisory-lock waiters;
+- exactly one concurrent successor succeeds and the other stale-refuses;
+- direct persistence reconstruction preserves reference/reliance, authorship,
+  jurisdiction, adoption provenance, requested/admitted standing, and closed
+  representation authority;
+- lawful DISCHARGED standing preserves prior acts and source custody;
+- all original thirty I3 required falsifiers are individually mapped to an
+  instrument and mechanism in
+  `I3C1_30_FALSIFIER_RECONCILIATION_2026-09-21.md`.
 
 ## Standing
 
-> **APPEND-ONLY CUSTODY PROVEN · CRASH/STALE-WRITER FAIL-CLOSED · REPRESENTATION CLOSED**
+> **APPEND-ONLY CUSTODY PROVEN · CRASH/STALE/CONCURRENT-WRITER FAIL-CLOSED · REPRESENTATION CLOSED**
 
 This witness does not establish production suitability, automatic derivation of
 epistemic structure, I4 shadow correctness, or any right to activate the flag.

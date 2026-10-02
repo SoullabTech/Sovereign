@@ -8,9 +8,11 @@ const strip = (s: string) =>
   s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
 
 const migration = read('database/migrations/20260921000001_epistemic_join_persistence.sql');
+const memberAtoms = read('database/migrations/20260521000001_member_memory_atoms.sql');
 const store = strip(read('lib/ain/epistemic-join/persistence/store.ts'));
 const feature = strip(read('lib/ain/epistemic-join/persistence/feature.ts'));
 const purity = read('lib/ain/epistemic-join/__tests__/purity.test.ts');
+const topIndex = strip(read('lib/ain/epistemic-join/index.ts'));
 
 let passed = 0;
 const failures: string[] = [];
@@ -22,8 +24,8 @@ function guard(id: string, law: string, fn: () => boolean): void {
   else failures.push(id);
 }
 
-guard('I3-F01', 'feature flag is literal-1 and therefore default OFF', () =>
-  feature.includes("=== '1'") && feature.includes('AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED'));
+guard('I3-F01', 'feature flag is exact-literal-true and therefore default OFF', () =>
+  feature.includes("=== 'true'") && feature.includes('AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED'));
 guard('I3-F02', 'I2 pure-core inventory guard remains unchanged', () =>
   purity.includes("expect(names).not.toContain('store.ts')"));
 guard('I3-F03', 'persistence lives below the pure-core top-level scan', () =>
@@ -74,8 +76,15 @@ guard('I3-F18', 'no application/runtime surface imports I3 persistence', () => {
   ], { cwd: root, encoding: 'utf8' });
   return rg.status === 1 && rg.stdout.trim() === '';
 });
+guard('I3-F19', 'projection authority remains absent', () =>
+  !fs.existsSync(path.join(root, 'lib/ain/epistemic-join/projection.ts')));
+guard('I3-F20', 'member-memory crossing remains CHECK-closed', () =>
+  memberAtoms.includes('crossing_allowed  BOOLEAN NOT NULL DEFAULT FALSE')
+  && memberAtoms.includes('CONSTRAINT crossing_must_be_false CHECK (crossing_allowed = FALSE)'));
+guard('I3-F21', 'top-level pure-core index does not export persistence', () =>
+  !topIndex.includes('persistence') && !topIndex.includes('store'));
 
-console.log(`\nRESULT: ${passed}/18 PASS`);
+console.log(`\nRESULT: ${passed}/21 PASS`);
 if (failures.length) {
   console.error(`FAILED: ${failures.join(', ')}`);
   process.exit(1);

@@ -19,7 +19,7 @@
   "disposition": "DURABLE APPEND_ONLY CUSTODY PROVEN LOCALLY WITH FEATURE FLAG DEFAULT OFF",
   "feature_flag": {
     "name": "AIN_EPISTEMIC_JOIN_PERSISTENCE_ENABLED",
-    "on_value": "1",
+    "on_value": "true",
     "default": "OFF",
     "application_call_sites": 0
   },
@@ -49,7 +49,10 @@
     "read_api": "ABSENT"
   },
   "evidence": {
-    "i3_matrix": "18/18 PASS",
+    "i3_matrix": "21/21 PASS",
+    "i3c1_original_falsifier_reconciliation": "30/30 PASS",
+    "i3c1_true_concurrency": "PASS — two overlapping advisory-lock waiters; one success; one stale refusal",
+    "i3c1_round_trip": "PASS — request, dependence mode, authorship, jurisdiction, adoption provenance, discharge history",
     "epistemic_join_tests": "104/104 PASS",
     "strict_module_typecheck": "EXIT 0",
     "repository_typecheck": "229 vs baseline 239; 0 regressions; EXIT 0",
