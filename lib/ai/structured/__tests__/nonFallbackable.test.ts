@@ -56,7 +56,12 @@ describe('primary: executed exactly, and never fallen back from', () => {
   it('a provider failure REFUSES — nothing else is called', async () => {
     execute.mockRejectedValue(new Error('529 overloaded'));
     const r = await withMode('primary', () => runStructured(req));
-    expect(r).toEqual({ ok: false, refusal: 'provider_unavailable', detail: '529 overloaded' });
+    /* ⭐ `dispatch: 'unknown'` is the deliberate answer for a failure the adapter
+       did not classify (a bare Error carries no observation). It is the value that
+       does NOT confirm a disclosure crossing — absent is never read as arrived. */
+    expect(r).toEqual({
+      ok: false, refusal: 'provider_unavailable', detail: '529 overloaded', dispatch: 'unknown',
+    });
     expect(execute).toHaveBeenCalledTimes(1);
   });
 
