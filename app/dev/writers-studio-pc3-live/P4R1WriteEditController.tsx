@@ -39,6 +39,7 @@ import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 import {
   LATITUDE_BANDS,
   isEditorialLatitude,
+  type EditorialLatitude,
 } from '@/lib/manuscript/editorialScope/contract';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import {
@@ -151,6 +152,7 @@ export default function FlagshipWriteEditController() {
   const [adoptionBusy, setAdoptionBusy] = useState(false);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
   const [editorialFailure, setEditorialFailure] = useState<string | null>(null);
+  const [scopeRecovery, setScopeRecovery] = useState<{ requestText: string; from: EditorialLatitude; to: EditorialLatitude } | null>(null);
   const [adoptionOutcome, setAdoptionOutcome] = useState<AdoptionWireOutcome | null>(null);
   const [undoMessage, setUndoMessage] = useState<string | null>(null);
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
@@ -736,13 +738,14 @@ export default function FlagshipWriteEditController() {
 
   const sendEditorial = useCallback(async (
     requestText?: string,
-    options?: { proposalPolicy?: ProposalPolicy },
+    options?: { proposalPolicy?: ProposalPolicy; latitude?: EditorialLatitude },
   ) => {
     const text = (requestText ?? editorialDraft).trim();
     if (!focusId || !text || editorialBusy) return;
 
     setEditorialBusy(true);
     setEditorialFailure(null);
+    setScopeRecovery(null);
     setAdoptionOutcome(null);
     setVoiceNotice(null);
 
@@ -763,18 +766,21 @@ export default function FlagshipWriteEditController() {
       if (selectedCarrySource && !carry) setSelectedCarrySource(null);
       if (carry) setSelectedCarrySource(null);
 
+      const requestedLatitude = options?.latitude ?? editLatitude;
+      const turnOptions = options?.proposalPolicy ? { proposalPolicy: options.proposalPolicy } : {};
+
       const outcome = await sendBoundEditorialTurn(
         thread.threadId,
         focusId,
         exactWords,
         posture,
         {
-          latitude: editLatitude,
+          latitude: requestedLatitude,
           mayRemoveParagraphs,
           mayProposeImmediately,
         },
         {
-          ...(options ?? {}),
+          ...turnOptions,
           ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
           ...(carry ? { carry } : {}),
         },
@@ -787,10 +793,12 @@ export default function FlagshipWriteEditController() {
               `This revision would remove ${outcome.scope.wholeParagraphsRemoved} whole paragraph${outcome.scope.wholeParagraphsRemoved === 1 ? '' : 's'}. Paragraph-removal proposals are a separate permission in Preferences. Nothing was changed.`,
             );
           } else if (isEditorialLatitude(outcome.scope?.wouldPassAtLatitude)) {
-            const current = LATITUDE_BANDS[editLatitude].label;
-            const needed = LATITUDE_BANDS[outcome.scope.wouldPassAtLatitude].label;
+            const neededLatitude = outcome.scope.wouldPassAtLatitude;
+            const current = LATITUDE_BANDS[requestedLatitude].label;
+            const needed = LATITUDE_BANDS[neededLatitude].label;
+            setScopeRecovery({ requestText: text, from: requestedLatitude, to: neededLatitude });
             setEditorialFailure(
-              `This revision goes beyond your current “${current}” latitude. It would fit at “${needed}.” Nothing was changed. You can change Revision latitude in Preferences, then choose Revise from this again.`,
+              `This revision goes beyond your current “${current}” latitude. It would fit at “${needed}.” Nothing was changed.`,
             );
           } else {
             setEditorialFailure(outcome.voice?.note
@@ -825,6 +833,14 @@ export default function FlagshipWriteEditController() {
     a2Relationship,
     selectedCarrySource,
   ]);
+
+  const acceptScopeRecovery = useCallback(() => {
+    const recovery = scopeRecovery;
+    if (!recovery || editorialBusy) return;
+    setEditLatitude(recovery.to);
+    setScopeRecovery(null);
+    void sendEditorial(recovery.requestText, { latitude: recovery.to });
+  }, [scopeRecovery, editorialBusy, setEditLatitude, sendEditorial]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -1206,6 +1222,10 @@ export default function FlagshipWriteEditController() {
             adoptionBusy={adoptionBusy}
             memberVersionBusy={memberVersionBusy}
             editorialFailure={editorialFailure}
+            scopeRecovery={scopeRecovery ? {
+              fromLabel: LATITUDE_BANDS[scopeRecovery.from].label,
+              toLabel: LATITUDE_BANDS[scopeRecovery.to].label,
+            } : null}
             adoptionOutcome={adoptionOutcome}
             undoMessage={undoMessage}
             lastMaiaEditorialTurn={lastMaiaEditorialTurn}
@@ -1223,6 +1243,7 @@ export default function FlagshipWriteEditController() {
             onDepth={setEditorialDepth}
             onInstruction={setEditorialDraft}
             onSendEditorial={(text) => void sendEditorial(text)}
+            onAcceptScopeRecovery={acceptScopeRecovery}
             onSelectVersion={(id) => {
               setSuggestedVersionId(id);
               setAdoptionOutcome(null);
