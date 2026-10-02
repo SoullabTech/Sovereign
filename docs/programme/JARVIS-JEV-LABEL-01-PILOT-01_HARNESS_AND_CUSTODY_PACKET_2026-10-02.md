@@ -112,3 +112,18 @@ The Desktop-closed precondition remained unsatisfied:
 Therefore the real snapshot remains HELD solely on the Desktop-closed precondition. No real work unit was read by PILOT-01, no manifest or local index was created from the real delegation home, and no label exists.
 
 Next act after a clean process census: real snapshot → content-free manifest + local-only 0600 index → Kelly P-only sheet → stop for packet-only human labelling.
+
+## Real snapshot taken — 2026-10-02 (Mac Studio, founder-reported)
+
+The Desktop-closed condition became clean (final census clean) and the snapshot was taken from the real delegation home. Facts as reported; this session did not read the home, the manifest, the index or the sheet.
+
+- Source corpus: 30 primary v2 units present; deterministic selection (ascending `sha256(unit_id)`) chose 25.
+- Source-set SHA before and after the snapshot: `8483637c1059bc19904bf451e55954c35825c6ce37cde350c8fb2c7c1201aa73` — source bytes unchanged across the snapshot.
+- Manifest SHA-256: `12758958be8c3eec4a3054491ddfb92efe8b89aa92c3393a88649b7513d8a009`; 25 units; `packet_underivable` = 0; task shapes: `CODE_GROUNDED` 15, `ARCHITECTURE_REASONING` 10.
+- Custody: `local-index.json` mode 0600; no F sheet; no label entered; no seal; no provider call.
+- Kelly's P-only sheet exists on the Mac Studio (100 blank P entries = 25 units × 4 J1 questions; packet projection only; the five `PILOT_CANDIDATE` anchors; `ambiguous` + local note fields; P-only `UNDETERMINABLE`). Structurally verified: 0 objective fields, 0 unit-id fields, 0 v2 slug strings, 0 absolute paths. (An earlier string hit on the word "objective" was the instruction text "Do not open the unit, its objective…", not content.)
+- The temporary code worktree was removed. Files stay on the Mac Studio under `/Users/soullab/jev-label-pilot-01-real-20261002/`; `local-index.json` is never committed.
+
+Observation for the pilot (not a finding yet): the 25 selected units carry only two of the six task shapes, so per-stratum agreement cannot be assessed for four shapes in this pilot.
+
+STOP. Next act: Kelly's packet-only P labelling (Label A, human). F/full routed-state access stays closed until those P labels are sealed. Label B unfilled; no provider; INT-04 closed; nothing frozen.
