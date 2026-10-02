@@ -4,6 +4,7 @@ import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { noContextualReturn, returnPreferenceValue } from '@/lib/psyche/returnAuthority';
 
 type Params = { params: Promise<{ sessionId: string }> };
 
@@ -111,6 +112,36 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       const validLenses = new Set(['fire', 'water', 'earth', 'air', 'aether']);
       const writtenAt = new Date().toISOString();
 
+      // P6 — DOORWAY CONSENT INTEGRITY.
+      //
+      // This write used to hardcode `return_preference: 'contextual_doorway'`,
+      // collapsing three separate authorities into one:
+      //
+      //     facilitator authored something → system stores it → MAIA may
+      //     resurface it into the member's life
+      //
+      // The facilitator has authority to author an attributed observation. That
+      // is not authority to decide when MAIA brings it back to the member.
+      // `facilitatorId` here is the authenticated caller; the subject is
+      // `session.member_id` — a different person — so no member-conferred
+      // return authority exists for this material, and none is invented.
+      //
+      // WHAT IS PRESERVED: the observation is still written, still attributed
+      // (`practitioner_observation`, `facilitator_id`, `provenance`), still
+      // epistemically framed (`observed`), and still visible to the member.
+      // Only the permission nobody was entitled to grant is withheld.
+      //
+      // `member_pulled` is the schema's own documented meaning for this state —
+      // "only when member asks directly (most restrictive)", per migration
+      // 20260521000001 — so nothing is forced into a misleading enum.
+      //
+      // If the member later authorizes contextual return, that changes the
+      // RETURN AUTHORITY and never the authorship: `authored_by = practitioner`
+      // coexists with `return_authorized_by = member`.
+      const practitionerReturnAuthority = noContextualReturn(
+        'practitioner-authored observation about a different member; no member-conferred return authority exists and the doorway-consent gesture is not built',
+      );
+
       for (let i = 0; i < approved.length; i++) {
         const c = approved[i];
         const candidateId = String(c.id ?? i);
@@ -145,7 +176,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
                ($1, 'practitioner_observation', $2,
                 $3, $4, $5,
                 'witnessed', ARRAY['witnessed']::text[], $6::text[],
-                'observed', 'active', 'contextual_doorway',
+                'observed', 'active', $8,
                 false, $7::jsonb,
                 'normal', 'practitioner-observation')
              ON CONFLICT DO NOTHING
@@ -158,6 +189,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
               bodyText,
               lenses,
               JSON.stringify(provenance),
+              returnPreferenceValue(practitionerReturnAuthority),
             ],
           );
           if (atomResult.rows[0]) {
