@@ -533,6 +533,8 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         {recommendation.rationale ? <p className="p4r1-dance-rationale">{recommendation.rationale}</p> : null}
       </div>
 
+      {postureGate}
+
       <div className="p4r1-dance-options" aria-label="Revision directions">
         <button
           type="button"
@@ -581,7 +583,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         {!hasChangeSummary ? (
           <button
             type="button"
-            disabled={props.busy}
+            disabled={props.busy || postureBlocksEditorial}
             onClick={() => props.onSend([
               'Explain the currently selected revision without proposing new wording.',
               'Use exactly four short lines: "What changed: …", "Why: …", "Reader effect: …", and "What I protected: …".',
@@ -595,11 +597,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
 
       <div className="p4r1-dance-adjust" aria-label="Adjust this edit">
         <span>Adjust this edit</span>
-        <button type="button" disabled={props.busy} onClick={() => adjustProposal('Make this revision lighter. Restore more of my original wording and change only what is necessary.')}>Make it lighter</button>
-        <button type="button" disabled={props.busy} onClick={() => adjustProposal('Keep more of my original wording and cadence while preserving the useful editorial gain.')}>Keep more of mine</button>
-        <button type="button" disabled={props.busy} onClick={() => adjustProposal('Go a little further with the same editorial intention, but do not jump to a major rewrite.')}>Go a little further</button>
-        <button type="button" disabled={props.busy} onClick={() => adjustProposal('Show me one genuinely different option for this same passage. Do not rank it against the current one.')}>Another option</button>
-        <button type="button" disabled={props.busy} onClick={() => setTalk('Restore this part of my original: ')}>Restore a part</button>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => adjustProposal('Make this revision lighter. Restore more of my original wording and change only what is necessary.')}>Make it lighter</button>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => adjustProposal('Keep more of my original wording and cadence while preserving the useful editorial gain.')}>Keep more of mine</button>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => adjustProposal('Go a little further with the same editorial intention, but do not jump to a major rewrite.')}>Go a little further</button>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => adjustProposal('Show me one genuinely different option for this same passage. Do not rank it against the current one.')}>Another option</button>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => setTalk('Restore this part of my original: ')}>Restore a part</button>
       </div>
 
       <div className="p4r1-dance-directions">

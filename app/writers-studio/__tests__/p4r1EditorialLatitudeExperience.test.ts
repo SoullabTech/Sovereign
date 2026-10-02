@@ -40,6 +40,8 @@ describe('Writer Studio editorial latitude experience', () => {
     expect(dance).toContain('Another option');
     expect(dance).toContain('Restore a part');
     expect(dance).toContain('Treat reader effect as a hypothesis');
+    expect(dance).toContain('{postureGate}');
+    expect(dance).toContain('disabled={props.busy || postureBlocksEditorial}');
   });
 
   it('fails closed when MAIA proposes beyond the chosen latitude', () => {
