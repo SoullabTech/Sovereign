@@ -63,6 +63,7 @@ import {
   step as machineStep,
   type MachineState,
 } from '@/lib/writersStudio/bodyAuthorizationMachine';
+import { readWorkingStyle } from '@/lib/writersStudio/workingStyle';
 
 const REFUSAL_SAYS: Record<string, string> = {
   unreachable: 'MAIA could not be reached. Nothing was lost — your question is held here.',
@@ -192,6 +193,7 @@ export default function ObservationDialogue({
       ...(mode.kind === 'resume'
         ? { threadId: mode.threadId }
         : { anchor: { on: 'observation' as const, readingId, observationKey } }),
+      responseStyle: readWorkingStyle().explanation,
     });
 
     if (outcome) {
@@ -229,6 +231,7 @@ export default function ObservationDialogue({
       sectionIds: effect.sectionIds,
       question: pausedQuestion.current,
       threadId: threadId ?? undefined,
+      responseStyle: readWorkingStyle().explanation,
     });
 
     if (!outcome && !r.ok && r.refusal === 'unreachable') {
