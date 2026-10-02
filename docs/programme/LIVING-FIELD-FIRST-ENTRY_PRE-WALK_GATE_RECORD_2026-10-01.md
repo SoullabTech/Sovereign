@@ -221,18 +221,18 @@ Verdict: PASS / FAIL
 ## G5 · Amendment 1 conditions at walk start
 
 - Start SHA (repeat at the end in the witness record; any difference → NO EVIDENCE).
-- The latest admitted source re-baseline for the currently observed runtime is
-  `LIVING-FIELD_WITNESS_REBASELINE_56D0CD679_2026-10-01.md` (`56d0cd679`). If the walk starts on
-  that SHA, cite that record. If it starts on any other SHA, a new source re-baseline is required
-  **before** the walk and is named here.
+- The currently observed production runtime is `298414555`. Its required source re-baseline is
+  `LIVING-FIELD_WITNESS_REBASELINE_298414555_2026-10-01.md`, currently carried by PR **#1681**.
+  **Until that record is canonical, G5 cannot PASS.** If #1681 lands and the walk still starts on
+  `298414555`, cite that canonical record. If production moves again, create and admit a new named
+  re-baseline before the walk; never carry an older runtime's record forward by analogy.
 - Whether the start SHA is an ancestor of `clean-main-no-secrets`
-  (`git merge-base --is-ancestor <sha> origin/clean-main-no-secrets; echo $?`). At
-  `2026-10-01T22:13:34Z`, production reported `56d0cd679`, and both `56d0cd679` and the earlier
-  `03f0fd3ab` were ancestors of canonical `a999932df7aa`. Re-run the ancestry check at walk time;
-  do not carry this observation forward as a permanent fact.
-- Preconditions 3 and 6: when the start SHA is `56d0cd679`, cite the 56d0 re-baseline's aggregate
-  content-blind census and explicit-MAIA-entry proof. On any other start SHA, re-witness them live
-  using aggregate substrate **counts only** and deployed-source evidence.
+  (`git merge-base --is-ancestor <sha> origin/clean-main-no-secrets; echo $?`). Re-run this at walk
+  time against the then-current canonical head; do not carry an earlier ancestry observation
+  forward as a permanent fact.
+- Preconditions 3 and 6: when the start SHA is `298414555` and #1681 is canonical, cite its fresh
+  aggregate content-blind 0/4 substrate census and explicit-MAIA-entry proof. On any other start
+  SHA, re-witness them live using aggregate substrate **counts only** and deployed-source evidence.
 
 captured_at_utc:
 production_sha_at_capture:
