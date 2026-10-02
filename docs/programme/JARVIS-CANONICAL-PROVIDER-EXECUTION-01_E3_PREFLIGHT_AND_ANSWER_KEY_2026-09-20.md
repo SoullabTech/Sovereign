@@ -128,6 +128,22 @@ A thorough answer to eight acceptance conditions can approach the low figure. **
 
 **Founder's call, ⛔ not a blocker:** restarting the Ollama server claims the already-configured 65536 and doubles the headroom before the Work Unit exists. Cost: **re-run the §G calibration afterwards**, since a restart may rotate the log handle and the witness must be proven live against the server that will actually serve the run. Proceeding at 32768 is within the ratified gate and defensible.
 
+## 11. Restart executed — 65536 claimed, §G recalibrated (2026-09-20)
+
+**Restart confirmed.** `launchctl setenv OLLAMA_CONTEXT_LENGTH 65536` + relaunch produced a **new server PID `8809`** (was `6227`), app-managed as before — ⛔ no shell-backgrounded process, so hazard **J2 avoided**.
+
+**⭐ Strongest evidence is the live process, not the log.** The running inference subprocess carries the allocation on its own command line:
+```
+llama-server --model …sha256-1194192c… --port 64556 -c 65536 -np 1 --context-shift --keep 4
+```
+`-c 65536` is the actual allocated window for the loaded model.
+
+**§G recalibrated against the new server: ✅ PASS — `delta=18985` bytes.** The witness is live against **the server that will serve the run**, not its predecessor. Hazard **J1 avoided**: the prior log was copied to `server.log.pre-e3-restart` and the restart appended rather than truncated.
+
+**⚠️ One ambiguity, flagged rather than smoothed.** `grep … | tail -3` returned `65536 · 65536 · 32768` — and since the log is append-ordered, the *last* line printed is the most recent match, which reads `32768`. Candidate explanations: a second model load (a different tag) after the qwen load, or interleaving across server generations in one file. ⛔ **Not resolved from this reading**, and the live `-c 65536` is not a substitute for knowing which load was last. Disambiguate with explicit line numbers and residency before Authorize Once.
+
+**⭐⭐ And the reading named the mechanism A1 was gating against.** The llama-server flags include **`--context-shift`** with `--keep 4`. With context shift enabled, a prompt exceeding the window does **not** error — llama.cpp **discards the oldest tokens and proceeds**. *That is the silent truncation A1 exists to prevent, now identified as a concrete runtime behaviour rather than an inferred risk.* At 65536 the ~20–27k-token bundle sits far under the limit, so it will not trigger; at the original 32768 with a dense-tokenizing bundle it was closer than comfortable. ⭐ The gate was correct, and for a more specific reason than when it was written.
+
 ## 6. Standing
 
 **E3 AUTHORIZED · PRE-FLIGHT ✅ DISCHARGED · SUBSTRATE ✅ VERIFIED AT EXACT SHA · ANSWER KEY ✅ PRE-REGISTERED · ⛔ MEASUREMENT UNSPENT, OWED TO THE BOUND macOS HOST · ⛔ NO PROVIDER ATTEMPT MADE · ⛔ NO GRANT ISSUED · ⛔ NO SOURCE MODIFIED · PRODUCTION UNTOUCHED.**
