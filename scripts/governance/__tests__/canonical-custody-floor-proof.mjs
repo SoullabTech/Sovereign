@@ -230,3 +230,37 @@ test('Axis 1 workflow cannot silently drop custody enforcement or review retrigg
   assert.match(workflow, /canonical-custody-floor\.mjs --base/);
   assert.match(workflow, /EVENT_NAME\" = \"pull_request_review\"/);
 });
+
+test('one disqualified custodian does not poison a second independent exact-head approval', () => {
+  const first = record().records[0];
+  const second = {
+    ...first,
+    record_id: 'custodian-r2',
+    custodian_human_name: 'Second Distinct Custodian',
+    github_login: 'SecondCustodian',
+    github_user_id: 555,
+  };
+
+  const result = evaluateCanonicalCustody(fixture({
+    custodianDoc: { schema_version: '1', records: [first, second] },
+    resolvedUsers: {
+      distinctcustodian: { id: 222, login: 'DistinctCustodian', type: 'User' },
+      secondcustodian: { id: 555, login: 'SecondCustodian', type: 'User' },
+    },
+    commits: [{
+      author: { id: 222, login: 'DistinctCustodian' },
+      committer: { id: 444, login: 'web-flow' },
+      commit: { message: 'change' },
+    }],
+    reviews: [{
+      user: { id: 555, login: 'SecondCustodian', type: 'User' },
+      commit_id: HEAD,
+      state: 'APPROVED',
+      submitted_at: '2026-10-02T10:00:00Z',
+    }],
+  }));
+
+  assert.equal(result.ok, true);
+  assert.equal(result.code, 'CLASS_A_CUSTODY_SATISFIED');
+  assert.equal(result.custodian.login, 'SecondCustodian');
+});

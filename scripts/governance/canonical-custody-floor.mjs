@@ -170,6 +170,7 @@ export function evaluateCanonicalCustody({
   }
 
   let eligibleRecordSeen = false;
+  let firstDisqualifier = null;
   for (const record of active.records) {
     const resolved = resolvedUsers[record.github_login.toLowerCase()];
     if (!resolved) {
@@ -190,10 +191,12 @@ export function evaluateCanonicalCustody({
       return { ok: false, kind: 'REFUSAL', code: 'CUSTODIAN_IS_FOUNDER', floor };
     }
     if (resolved.id === prAuthorId) {
-      return { ok: false, kind: 'REFUSAL', code: 'CUSTODIAN_IS_PR_AUTHOR', floor };
+      firstDisqualifier ||= 'CUSTODIAN_IS_PR_AUTHOR';
+      continue;
     }
     if (participantIds.has(resolved.id) || custodianAppearsInCoauthorMetadata(record, commits)) {
-      return { ok: false, kind: 'REFUSAL', code: 'CUSTODIAN_IS_COMMIT_PARTICIPANT', floor };
+      firstDisqualifier ||= 'CUSTODIAN_IS_COMMIT_PARTICIPANT';
+      continue;
     }
 
     eligibleRecordSeen = true;
@@ -215,7 +218,9 @@ export function evaluateCanonicalCustody({
   return {
     ok: false,
     kind: 'REFUSAL',
-    code: eligibleRecordSeen ? 'CUSTODIAN_APPROVAL_MISSING_OR_STALE' : 'CUSTODIAN_RECORD_ABSENT',
+    code: eligibleRecordSeen
+      ? 'CUSTODIAN_APPROVAL_MISSING_OR_STALE'
+      : (firstDisqualifier || 'CUSTODIAN_RECORD_ABSENT'),
     floor,
   };
 }
