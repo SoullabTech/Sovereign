@@ -1,7 +1,7 @@
 # Living Field + Writer's Studio Witnesses — Re-baseline after RC1
 
 **Date:** 2026-10-01
-**Status:** SOURCE RE-BASELINE COMPLETE · ⛔ two live confirmations owed at walk time
+**Status:** SOURCE RE-BASELINE COMPLETE · live check 1 ✅ (cabin mode empty) · per-walk SHA start/end still owed
 **Previous readiness runtime:** `975a208b8c39f99e9b47208ce5139bbec94bd8ac`
 **Current production runtime:** `03f0fd3abce16fcc1132481836b2e6ff8d364cd7` (founder deploy, ~14:35Z)
 
@@ -54,3 +54,90 @@ No Writer's Studio cohort-walk protocol is on record yet. Whoever writes it inhe
 - the walk's subject build is `03f0fd3ab`. Any later deploy before the walk requires a new re-baseline.
 
 The Living Field protocol and its record template were amended to match (protocol Amendment 1, made before any run).
+
+## Live check result (founder-run, 2026-10-01 ~15:3xZ)
+
+```text
+GIT_COMMIT       03f0fd3ab
+MAIA_CABIN_MODE  (empty)
+container        restarts=0 · started 2026-10-01T15:32:50Z · image sha256:a028302c2cfc…
+```
+
+Cabin offline mode is **unset**. RC1's House changes are inert in production, and the re-baseline holds.
+
+⚠️ The container start time moved from 14:47:54Z (earlier check) to 15:32:50Z. `restarts=0` means each move was a *recreation*, not a crash-restart, and it happened twice after the ~14:36Z RC1 swap on the same commit. **Attributed (founder-run image + lock check):** every image since the swap is commit `03f0fd3ab`.
+- `6a1ec88` was built 14:44:42 (container 14:47). It was an in-lane rebuild, but its entry point is unrecorded because the lock file holds only the latest acquisition.
+- `a028302c` was built 15:31:37 (container 15:32) by a **locked `pre-deploy-gate.sh deploy-maia`**, target `03f0fd3ab`, `soullab@soullab`, at 15:30:17Z.
+
+The walk therefore ran on RC1 code, whichever container served it. Residual: the 14:44 image's `GIT_COMMIT` is inferred from its tag lineage, not read.
+
+Side effect found: the same-commit redeploys rotated `:previous` onto an RC1 rebuild, so `rollback` no longer reached pre-RC1. The fix is in #1621.
+
+**Repaired on the host (founder-run, 2026-10-01).** The SHA tag's provenance was read first (`GIT_COMMIT=975a208b8`), then it was retagged. `:previous` is now `96a539353023` (pre-RC1) and `:current` is `a028302c` (RC1), so `rollback` again reaches pre-RC1.
+
+~~⚠️ Until #1621 is merged and pulled into the host checkout, any further same-commit redeploy will rotate `:previous` onto an RC1 rebuild again.~~ **Discharged (founder-run, 2026-10-01).** The host checkout is now on `clean-main-no-secrets` at `b8592e60e`, and both #1621 guards are present in it (grep count 2 each). Tags after the pull: `:current` = `a028302c2cfc` (RC1), `:previous` = `96a539353023` (pre-RC1).
+
+⚠️ The precheck reported the deploy lock as **HELD** when the checkout was switched. It has not yet been confirmed that no deploy was in flight at that moment.
+
+
+## Later deploy: `6d51f1b9e` (founder-run lock and container read, 2026-10-01)
+
+The HELD lock was a **completed** deploy, not one in flight. `fuser` showed no holder.
+
+| Field | Value |
+|---|---|
+| Entry point | `pre-deploy-gate.sh deploy-maia` |
+| Target | `6d51f1b9e` |
+| Started | 16:26:51Z |
+| Container created | 16:33:31Z |
+| Live `GIT_COMMIT` | `6d51f1b9e` |
+
+`6d51f1b9e` is the head of `claude/confident-mayer-kuc4pp` (PR #1629) at the time of the deploy. Its relation to other commits:
+- It descends from `03f0fd3ab`.
+- It sits **beside** canonical, not inside it:
+  - the merge base is the #1619 merge `cf9624cdf`;
+  - it carries 2 commits that canonical lacks;
+  - canonical `b8592e60e` carries #1621, #1622 and #1625, which production lacks.
+
+Its non-documentation diff from `cf9624cdf` touches only three client components: `ContinuousConversation.tsx`, `FeedbackSheet.tsx` and `BugReportButton.tsx`. Crisis detection is byte-identical to canonical, because the detector change was reverted in `6d51f1b9e` itself. No migrations were added.
+
+**Re-baseline:**
+- No Living Field surface changed, and no House surface changed.
+- The source verdict above therefore carries forward to `6d51f1b9e`.
+- The walk's subject build is now `6d51f1b9e`.
+- The start/end SHA rule still applies.
+
+⚠️ **Consequence for the next canonical deploy.** Production is not an ancestor of canonical, so the #1621 ancestry check will **refuse** a deploy of `b8592e60e`. That refusal is correct. It is resolved either by landing `6d51f1b9e` in canonical (through #1629) or by a recorded override.
+
+## Canonical deploy `56d0cd679` (founder-run checks, 2026-10-01)
+
+#1629 merged as `56d0cd679`, which descends from both `6d51f1b9e` and `b8592e60e`. Production has returned to canonical's lineage.
+
+The deploy ran as `prepare-maia` (candidate built 17:27:41Z) followed by `cutover-maia` (container created 18:02:55Z). The combined `deploy-maia` is retired and refuses to run.
+
+**Live state:**
+- `GIT_COMMIT=56d0cd679`
+- `DEPLOY_LANE=deploy-lane`
+- Co-Lab gate: 33 passed · 0 failed · 0 warned
+- `:previous` = `6d51f1b9e`
+
+**Image identity.** The running image and the frozen candidate show different IDs: `90ca62d4…` vs `057049fa…`. They are the **same build**:
+- identical creation timestamp, to the nanosecond;
+- identical layer list (the hash of `RootFS.Layers` is equal);
+- identical environment.
+
+Docker here uses the containerd image store, which gives one image more than one descriptor ID. **Custody holds in substance.**
+
+**Residual gap:** cutover verifies the running image by its `GIT_COMMIT` only. A *different* build of the same commit would pass that check. Comparing the layer list would close the gap. Comparing image IDs would not, because on this store one image can have more than one ID. Proposed, ⛔ not built.
+
+**Attribution:**
+- The lock record shows a second `cutover-maia` at 18:03:11Z, *after* the container existed. It was probably refused, because the live commit had already moved past the prepare baseline.
+- The record of the first cutover was overwritten.
+- No bash history exists for either act, because they ran over non-interactive SSH.
+- No durable deploy log exists either. That gap was first named on 2026-09-07.
+
+**Rollback images, pinned outside prune scope:**
+- `maia-sovereign-pinned:pre-rc1-975a208b8`
+- `maia-sovereign-pinned:rc1-03f0fd3ab`
+
+**Living Field:** no Living Field or House surface changed in `56d0cd679`. The walk's subject build is now `56d0cd679`.

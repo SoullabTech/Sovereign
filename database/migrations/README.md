@@ -5,10 +5,15 @@ Runner: `scripts/run-sql-migrations.sh` (production `migrate` compose service). 
 **Consequences for authors:**
 
 1. **Migrations must be order-independent or same-PR.** Set-membership guarantees *application*, not *ordering* — a migration that depends on a neighbor's schema change may apply before it if both arrive unrecorded. If migration B needs migration A's schema, either make B self-sufficient (guards/`IF EXISTS`) or ship A and B in the same PR so they can never arrive separately.
-2. **Never edit an applied migration.** The checksum ledger will flag it. Write a new migration instead.
+2. **Never edit an applied migration.** Nothing will flag it: the runner skips the file by filename, so the edit is **silently ignored** in production while the repo diverges from applied history (seen 2026-10-01, `5e0ec61f`, reverted by `18dd59c40`). Write a new migration instead.
 3. **Idempotent and self-protecting** — prereq guards and post-create shape checks, per existing practice (see `20260702000004` for the pattern).
 4. **Schema and reader ship together** — a migration and the code that reads its tables belong to the same deploy (full path: `scripts/deploy-production.sh`, which runs migrations and tags rollback images).
 5. **Each migration runs in its OWN transaction** — `psql -v ON_ERROR_STOP=1 -c "BEGIN;" -f "$f" -c "COMMIT;"`, not one transaction for the chain. A later migration cannot roll back an earlier one that already committed. This is why an unsafe migration cannot be neutralized by adding a blocking migration after it (see Retired migrations below).
+6. **Bound lock acquisition** (`npm run check:migration-lock-timeout`, enforced in `ci:sovereignty` and `preflight` since #1622). Every migration timestamped at or after `20261001000000` must open with `BEGIN;` and then `SET LOCAL lock_timeout = '<n>s';` before any DDL. Otherwise a DDL statement queued behind a long reader transaction stalls every later query on that table. Lock *acquisition* is the risk, not table size (RC1 review F2).
+   - **Why `SET LOCAL` after the file's own `BEGIN;`:**
+     - `run-sql-migrations.sh` (production) wraps each file as `-c "BEGIN;" -f file -c "COMMIT;"`.
+     - `apply-migrations.sh` (bootstrap/local) runs every file in **one** psql session via `\i`, with no wrapper. There, plain `SET` leaks into every later file, and `SET LOCAL` outside the file's own `BEGIN;` does nothing. Both behaviours were witnessed on PG16.
+   - ⚠️ **Coupling trap: change the lint and the runner together.** The lint requires files to manage their own transaction (`BEGIN;`…`COMMIT;`). This entrenches a known runner quirk: a file's own `COMMIT` ends the runner's outer transaction early, so the ledger `INSERT` runs separately. If the runner moves to `--single-transaction`, or wraps files so they must *not* open their own transaction, then `scripts/check-migration-lock-timeout.mjs` (the required shape) and this convention **must change in the same PR**. Otherwise the lint will require a shape the runner rejects, or the timeout will silently stop applying.
 
 ---
 
