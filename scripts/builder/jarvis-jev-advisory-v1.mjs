@@ -15,10 +15,12 @@ import {
 } from './jev-judgment-host-v1.mjs';
 import { routeDigest } from './routing-route-integrity.mjs';
 import { bindAuthorizedRouteV2 } from './work-unit-routing-v2.mjs';
+import { deriveJevPacketProjection, JEV_PROJECTION_VERSION } from './jev-packet-projection-v1.mjs';
 
 export const JEV_ADVISORY_VERSION = 'JARVIS-JEV-ADVISORY.v1';
 export const JEV_PROVIDER_ID = 'typesafe-jev';
 export const JEV_TRANSPORT_POSTURE = 'held_wire_incompatible';
+export const JEV_TRANSPORT_TIMEOUT_MS = 5_000;
 
 function deepFreeze(value) {
   if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
@@ -34,47 +36,23 @@ function stable(value) {
   return JSON.stringify(value);
 }
 
-function paths(workUnit) {
-  return Array.isArray(workUnit?.scope?.allowed_paths)
-    ? workUnit.scope.allowed_paths.filter((p) => typeof p === 'string')
-    : [];
-}
-
-function pathLooksAuth(path) {
-  return path.startsWith('lib/auth/')
-    || path.startsWith('app/api/auth/')
-    || path.includes('/auth/');
-}
-
 export function deriveJevState(workUnit) {
-  const allowed = paths(workUnit);
-  const route = workUnit?.routing?.route_record;
+  const projected = deriveJevPacketProjection(workUnit);
+  if (!projected) return null;
   return deepFreeze({
-    taskShape: workUnit?.identity?.task_shape,
-    fileCount: Math.min(allowed.length, 10_000),
-    containsSensitive: workUnit?.custody?.evidence_class === 'E4_SENSITIVE_OR_PRODUCTION',
-    requiresExternalInfo: route?.challenge_mode === 'frontier',
-    migration: allowed.some((p) => p.startsWith('database/migrations/')),
-    auth: allowed.some(pathLooksAuth),
-    production: Boolean(
-      workUnit?.authority?.production_read
-      || workUnit?.authority?.production_write
-      || workUnit?.authority?.deploy
-      || workUnit?.custody?.evidence_class === 'E4_SENSITIVE_OR_PRODUCTION'
-    ),
+    taskShape: projected.task_shape,
+    fileCount: projected.change_scope.file_count,
+    containsSensitive: projected.contains_sensitive,
+    requiresExternalInfo: projected.requires_external_info,
+    migration: projected.change_scope.migration,
+    auth: projected.change_scope.auth,
+    production: projected.change_scope.production,
+    derivation: projected.derivation,
   });
 }
 
-function authoritySnapshot(workUnit) {
-  return stable(workUnit?.authority ?? null);
-}
-
-function lifecycleSnapshot(workUnit) {
-  return stable(workUnit?.state ?? null);
-}
-
-function routeSnapshot(workUnit) {
-  return stable(workUnit?.routing?.route_record ?? null);
+function workUnitSnapshot(workUnit) {
+  return stable(workUnit);
 }
 export function jevConsultationEligibility(workUnit) {
   if (!workUnit || workUnit.work_unit_version !== 'W0.v2') {
@@ -93,6 +71,33 @@ export function jevConsultationEligibility(workUnit) {
   return deepFreeze({ eligible: true, reason: null });
 }
 
+async function observeTransport(transport, request, timeoutMs = JEV_TRANSPORT_TIMEOUT_MS) {
+  let timer;
+  try {
+    const timeout = new Promise((resolve) => {
+      timer = setTimeout(() => resolve({ timedOut: true, local_failure: 'TRANSPORT_TIMEOUT' }), timeoutMs);
+    });
+    const call = Promise.resolve()
+      .then(() => transport(request))
+      .catch((error) => ({ timedOut: true, local_failure: error?.message || 'TRANSPORT_EXCEPTION' }));
+    return await Promise.race([call, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/**
+ * Human delivery is intentionally asymmetric until LABEL-01 produces bounds.
+ * Only protective/upward signals are rendered; lowering advice is retained for measurement only.
+ */
+export function projectJevHumanDelivery(advice) {
+  return deepFreeze({
+    escalate: advice?.escalate === true,
+    clarify: advice?.clarify === true,
+    lowering_withheld: advice?.modelNeeded === false || typeof advice?.depth === 'number',
+  });
+}
+
 /**
  * Transport contract:
  *   async ({ provider_id, representation, question_id }) =>
@@ -105,6 +110,7 @@ export async function consultJevAdvisory({
   transport = null,
   questions = QUESTION_IDS,
   priorAdvice = NEUTRAL_ADVICE,
+  transportTimeoutMs = JEV_TRANSPORT_TIMEOUT_MS,
 } = {}) {
   const eligibility = jevConsultationEligibility(workUnit);
   if (!eligibility.eligible) {
@@ -126,12 +132,17 @@ export async function consultJevAdvisory({
     });
   }
 
-  const before = {
-    route: routeSnapshot(workUnit),
-    authority: authoritySnapshot(workUnit),
-    lifecycle: lifecycleSnapshot(workUnit),
-  };
+  const beforeWorkUnit = workUnitSnapshot(workUnit);
   const state = deriveJevState(workUnit);
+  if (!state) {
+    return deepFreeze({
+      ok: false,
+      consulted: false,
+      reason: 'PACKET_PROJECTION_UNDERIVABLE',
+      record: null,
+      work_unit: workUnit,
+    });
+  }
   const judgments = [];
   const exchanges = [];
 
@@ -158,50 +169,51 @@ export async function consultJevAdvisory({
         work_unit: workUnit,
       });
     }
-    const observation = await transport({
+    const observation = await observeTransport(transport, {
       provider_id: JEV_PROVIDER_ID,
       representation: outbound.representation,
       question_id: questionId,
-    });
+    }, transportTimeoutMs);
     const judgment = admitJevResponse(built.packet, observation);
     judgments.push(judgment);
     exchanges.push(deepFreeze({
       question_id: questionId,
       packet: built.packet,
       judgment,
+      transport_failure: observation?.local_failure ?? null,
     }));
   }
 
   const advice = projectJevAdvice(priorAdvice, judgments);
   const authorityAfterJev = applyJevToAuthority(workUnit.authority, judgments);
-  const after = {
-    route: routeSnapshot(workUnit),
-    authority: authoritySnapshot(workUnit),
-    lifecycle: lifecycleSnapshot(workUnit),
-  };
-
+  const afterWorkUnit = workUnitSnapshot(workUnit);
   const invariant = deepFreeze({
-    route_unchanged: before.route === after.route,
-    authority_unchanged: before.authority === after.authority
-      && authorityAfterJev === workUnit.authority,
-    lifecycle_unchanged: before.lifecycle === after.lifecycle,
+    work_unit_unchanged: beforeWorkUnit === afterWorkUnit,
+    route_unchanged: workUnit.routing.route_digest === routeDigest(workUnit.routing.route_record),
+    authority_unchanged: authorityAfterJev === workUnit.authority,
+    lifecycle_unchanged: workUnit.state.lifecycle_state === 'ROUTED',
     execution_authorized: false,
   });
 
+  const humanDelivery = projectJevHumanDelivery(advice);
   const record = deepFreeze({
     advisory_version: JEV_ADVISORY_VERSION,
     provider_id: JEV_PROVIDER_ID,
     route_digest: workUnit.routing.route_digest,
     task_shape: workUnit.identity.task_shape,
     capability_class: 'repository_derived_metadata',
+    projection_version: JEV_PROJECTION_VERSION,
+    derivation: state.derivation,
     questions: [...questions],
     exchanges,
     advice,
+    human_delivery: humanDelivery,
     invariant,
   });
 
   return deepFreeze({
-    ok: invariant.route_unchanged
+    ok: invariant.work_unit_unchanged
+      && invariant.route_unchanged
       && invariant.authority_unchanged
       && invariant.lifecycle_unchanged,
     consulted: true,

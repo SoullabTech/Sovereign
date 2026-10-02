@@ -150,3 +150,83 @@ This act does not authorize:
 - merge, deployment, or production mutation.
 
 A real hosted call requires a later compatible wire witness or a separate founder amendment of J1.
+
+## 8. R1 review hardening — 2026-10-02
+
+Founder review of the first INT-04 candidate identified five integration risks. This revision repairs the seam before any real provider call.
+
+### R1.1 · Shared packet projection
+
+The JARVIS advisory seam now uses `jev-packet-projection-v1.mjs`, matching the LABEL-01 pilot hypothesis:
+
+- `task_shape` — `IDENTITY`
+- `contains_sensitive` — `AUTHORITY_PROXY`
+- `requires_external_info` — `AUTHORITY_PROXY` from external-network/disclosure authority
+- `file_count` — `DECLARED_SCOPE_PROXY`
+- `migration`, `auth` — `PATH_PATTERN`
+- `production` — `AUTHORITY_PROXY`
+
+The advisory record carries the projection version and derivation map. The pilot remains the authority on whether these proxies are adequate; this integration does not canonize their semantic sufficiency.
+
+### R1.2 · Transport failure is admitted, bounded absence
+
+Transport invocation is bounded. A thrown transport or elapsed timeout is converted to the J1 host-failure path and admitted as `TIMEOUT`; the local failure reason is retained separately as transport provenance.
+
+A hung or failed provider call therefore cannot wedge JARVIS and cannot become a positive/negative judgment.
+
+### R1.3 · Whole-Work-Unit invariant
+
+The integration records a stable snapshot of the entire routed Work Unit before and after consultation. Success requires byte-equivalent structured state, intact route digest, unchanged authority object, unchanged `ROUTED` lifecycle standing, and `execution_authorized: false`.
+
+Desktop proof additionally asserts the persisted canonical Work Unit file is byte-identical across a consultation; only sidecar metadata may change.
+
+### R1.4 · Raise-only human delivery
+
+Until LABEL-01 freezes under-deliberation bounds, human delivery is asymmetric:
+
+- `escalate: true` may be shown;
+- `clarify: true` may be shown;
+- raw depth scores are withheld;
+- `modelNeeded: false` is withheld;
+- no "safe", "sufficient", or "skip model" conclusion is rendered.
+
+Lowering advice remains in sidecar evidence for measurement only.
+
+### R1.5 · Integration lethality
+
+The integration now carries six named defeat candidates:
+
+- route mutation;
+- authority mutation;
+- lifecycle mutation;
+- absence rounded into advice;
+- transport error escaping the abstention path;
+- lowering advice delivered to the human.
+
+All six are killed by their named falsifiers.
+
+Current witness:
+
+```text
+JARVIS/JEV integration proof    11 / 11 PASS
+INT-04 defeat candidates         6 / 6 killed
+JARVIS Desktop canonical proof  34 / 34 PASS
+JEV host membrane               26 / 26 PASS
+frozen J1 matrix                63 / 63 · 0 survivors
+```
+
+No live TypeSafe call was made.
+
+## 9. Preconditions for any later live-call act
+
+A later live-call act must separately settle:
+
+1. the J1 wire-envelope amendment, including versioned/hashed question wording;
+2. one-question-per-call versus batching as an instrument property;
+3. exact wire-body hashing in every advisory record;
+4. native TypeSafe inbound answer/confidence semantics;
+5. LABEL-01 instrument freeze before real-unit shadow evaluation;
+6. provider assignment / disclosure / network / spend / execution authority;
+7. TypeSafe retention, telemetry, DPA and customer-agreement review.
+
+The public TypeSafe privacy policy states that Input is not used to train or fine-tune models, but its customer agreement permits processing/storage for service delivery and specified telemetry/fraud/legal purposes. This is not a zero-retention guarantee and therefore does not discharge the governance gate by itself.

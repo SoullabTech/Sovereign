@@ -1199,7 +1199,8 @@ function renderCanonicalV2Snapshot(snapshot, { transientError = null } = {}) {
         <div class="a-line">Standing: <b>${escapeHtml(jev.consulted === false ? 'NOT CONSULTED' : 'ADVISORY EVIDENCE')}</b></div>
         <div class="a-line">Provider: <b>${escapeHtml(jev.provider_id || 'typesafe-jev')}</b></div>
         <div class="a-line">Reason: <b>${escapeHtml(jev.reason || 'none')}</b></div>
-        ${jev.advice ? `<div class="a-line">Advice: depth <b>${escapeHtml(jev.advice.depth ?? '—')}</b> · escalate <b>${jev.advice.escalate ? 'yes' : 'no'}</b> · clarify <b>${jev.advice.clarify ? 'yes' : 'no'}</b> · model needed <b>${jev.advice.modelNeeded == null ? '—' : jev.advice.modelNeeded ? 'yes' : 'no'}</b></div>` : ''}
+        ${jev.human_delivery ? `<div class="a-line">Protective signals: escalate <b>${jev.human_delivery.escalate ? 'yes' : 'no'}</b> · clarify <b>${jev.human_delivery.clarify ? 'yes' : 'no'}</b></div>` : ''}
+        ${jev.human_delivery?.lowering_withheld ? '<div class="hint">Lowering advice is retained for measurement but withheld from human delivery until LABEL-01 bounds are frozen.</div>' : ''}
         <div class="hint">Advisory only. JEV does not alter route authority, lifecycle standing, or execution permission.</div>
       </div>`
     : '<div class="hint">JEV has not been consulted for this routed Work Unit.</div>';

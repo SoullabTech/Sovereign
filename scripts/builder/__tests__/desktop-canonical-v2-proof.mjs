@@ -473,5 +473,13 @@ await checkAsync('F33','deterministic canonical routes do not offer JEV consulta
   }finally{cleanup(home);}
 });
 
+check('F34','renderer withholds lowering JEV advice from human delivery',()=>{
+  const slice=canonicalRendererSlice();
+  assert.match(slice,/Protective signals:/);
+  assert.match(slice,/Lowering advice is retained for measurement but withheld/);
+  assert.doesNotMatch(slice,/jev\.advice\.depth/);
+  assert.doesNotMatch(slice,/jev\.advice\.modelNeeded/);
+});
+
 console.log('\n'+passed+' passed · '+failed+' failed');
 process.exit(failed===0?0:1);

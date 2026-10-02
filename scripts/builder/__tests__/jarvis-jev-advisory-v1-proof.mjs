@@ -141,6 +141,7 @@ await checkAsync('JEV-2 — advice may rise without changing route, authority, l
     modelNeeded: false,
   });
   assert.deepEqual(result.advisory.record.invariant, {
+    work_unit_unchanged: true,
     route_unchanged: true,
     authority_unchanged: true,
     lifecycle_unchanged: true,
@@ -204,19 +205,62 @@ await checkAsync('JEV-6 — provider sees the exact frozen packet and cannot wid
     'question_id', 'requires_external_info', 'task_shape',
   ]);
 });
-await checkAsync('JEV-7 — current real TypeSafe transport is mechanically held', async () => {
+await checkAsync('JEV-7 — transport exception becomes admitted host abstention, not an escaped fault', async () => {
   const routed = await routeAuthorizedWorkUnitWithJevV1(authorized());
   const transport = createTypeSafeJevTransport();
-  await assert.rejects(
-    () => consultJevAdvisory({ workUnit: routed.envelope.work_unit, transport, questions: ['Q_RISK'] }),
-    /JEV_TYPESAFE_WIRE_INCOMPATIBLE/,
-  );
+  const out = await consultJevAdvisory({ workUnit: routed.envelope.work_unit, transport, questions: ['Q_RISK'] });
+  assert.equal(out.ok, true);
+  assert.equal(out.record.exchanges[0].judgment.reason, 'TIMEOUT');
+  assert.match(out.record.exchanges[0].transport_failure, /JEV_TYPESAFE_WIRE_INCOMPATIBLE/);
 });
 
-check('JEV-8 — advisory integration creates no authority-bearing field on W0/W3', () => {
-  const src = JSON.stringify(input());
-  assert.equal(src.includes('jev_advisory'), false);
-  assert.equal(src.includes('provider.execute:typesafe-jev'), false);
+await checkAsync('JEV-8 — routed W0/W3 envelope contains no JEV authority-bearing field', async () => {
+  const result = await routeAuthorizedWorkUnitWithJevV1(authorized(), { transport: fake });
+  const routed = JSON.stringify(result.envelope.work_unit);
+  assert.equal(routed.includes('jev_advisory'), false);
+  assert.equal(routed.includes('provider.execute:typesafe-jev'), false);
+  assert.equal(routed.includes('typesafe-jev'), false);
+});
+
+await checkAsync('JEV-9 — integration projection matches LABEL-01 pilot mapping', async () => {
+  const result = await routeAuthorizedWorkUnitWithJevV1(authorized({
+    custody: { evidence_class: 'E4_SENSITIVE_OR_PRODUCTION' },
+    scope: { allowed_paths: ['database/migrations/x.sql', 'lib/auth/y.ts'] },
+    authority: { network_external: true, external_disclosure: 'task_text_only', production_read: false, production_write: false, deploy: true },
+  }), { transport: createFakeJevTransport({}), questions: ['Q_RISK'] });
+  const packet = result.advisory.record.exchanges[0].packet;
+  assert.equal(packet.contains_sensitive, true);
+  assert.equal(packet.requires_external_info, true);
+  assert.deepEqual(packet.change_scope, { file_count: 2, migration: true, auth: true, production: true });
+  assert.deepEqual(result.advisory.record.derivation, {
+    task_shape: 'IDENTITY', contains_sensitive: 'AUTHORITY_PROXY', requires_external_info: 'AUTHORITY_PROXY',
+    file_count: 'DECLARED_SCOPE_PROXY', migration: 'PATH_PATTERN', auth: 'PATH_PATTERN', production: 'AUTHORITY_PROXY',
+  });
+});
+
+await checkAsync('JEV-10 — human delivery is raise-only; lowering advice is withheld', async () => {
+  const result = await routeAuthorizedWorkUnitWithJevV1(authorized(), { transport: fake });
+  assert.deepEqual(result.advisory.record.human_delivery, {
+    escalate: true,
+    clarify: true,
+    lowering_withheld: true,
+  });
+  assert.equal('depth' in result.advisory.record.human_delivery, false);
+  assert.equal('modelNeeded' in result.advisory.record.human_delivery, false);
+});
+
+await checkAsync('JEV-11 — hung transport is bounded and admitted as TIMEOUT abstention', async () => {
+  const routed = await routeAuthorizedWorkUnitWithJevV1(authorized());
+  const never = async () => new Promise(() => {});
+  const out = await consultJevAdvisory({
+    workUnit: routed.envelope.work_unit,
+    transport: never,
+    questions: ['Q_RISK'],
+    transportTimeoutMs: 5,
+  });
+  assert.equal(out.ok, true);
+  assert.equal(out.record.exchanges[0].judgment.reason, 'TIMEOUT');
+  assert.equal(out.record.exchanges[0].transport_failure, 'TRANSPORT_TIMEOUT');
 });
 
 console.log('\n' + passed + ' passed · ' + failed + ' failed');
