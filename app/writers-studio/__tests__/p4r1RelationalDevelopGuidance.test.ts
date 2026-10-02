@@ -69,7 +69,7 @@ describe('Writer Studio relational Develop guidance', () => {
   it('makes future saved readings writer-facing instead of taxonomy-facing', () => {
     expect(reader).toContain('Write as MAIA noticing something WITH a writer');
     expect(reader).toContain('The taxonomy belongs in metadata');
-    expect(reader).toContain("READER_VERSION = 'DEVELOPMENTAL-READER-08'");
+    expect(reader).toContain("READER_VERSION = 'DEVELOPMENTAL-READER-09'");
   });
 
   it('pins colors to Studio variables so night mode cannot fall back to native black', () => {
@@ -81,9 +81,13 @@ describe('Writer Studio relational Develop guidance', () => {
   it('shows a facts-only chapter shape before asking MAIA to read Structure', () => {
     expect(develop).toContain("activeField === 'structure' && props.scope.kind === 'chapter'");
     expect(develop).toContain('<ChapterShape sections={props.sections} scope={props.scope} />');
-    expect(develop).toContain('This is not a MAIA reading.');
+    expect(develop).toContain('ingestion cut is never');
+    expect(develop).toContain('Explicit structure preserved by the manuscript');
+    expect(develop).toContain('other headings detected in the imported text');
+    expect(develop).toContain('level unconfirmed');
+    expect(reader).toContain('SECTION IDS AND POSITIONS ARE TECHNICAL EVIDENCE COORDINATES, NOT AUTHORSHIP');
     expect(develop).toContain('Opening epigraph');
-    expect(develop).toContain('words</small>');
+    expect(develop).toContain('words in this chapter span');
     expect(css).toContain('.p4r1-root .p4r1-chapter-outline');
   });
 });
