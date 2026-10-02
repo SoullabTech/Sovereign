@@ -12,14 +12,16 @@ describe('Writer Studio immediate manuscript-selection support', () => {
   const writeRoom = read('app/writers-studio/full-redesign/WriteRoom.tsx');
   const css = read('app/dev/writers-studio-full-redesign-review/full-redesign-review.css');
 
-  it('keeps blank lines as paragraph boundaries while tolerating whitespace-only blank lines', () => {
+  it('keeps blank lines as paragraph boundaries while reflowing PDF hard wraps inside them', () => {
     expect(pc3Paragraphs('first hard\nwrap\n \nsecond')).toEqual(['first hard\nwrap', 'second']);
   });
 
-  it('lets imported hard-wrap newlines reflow as prose while keeping real paragraph spacing', () => {
+  it('typesets prose at a readable measure with visible paragraph rhythm', () => {
     expect(css).toContain('.fr-write-editor {');
     expect(css).toContain('white-space: normal');
-    expect(css).toContain('.fr-write-editor p { margin: 0 0 38px;');
+    expect(css).toContain('.fr-write-editor p { margin: 0 0 30px;');
+    expect(css).toContain("p[data-write-block='epigraph']");
+    expect(css).toContain("p[data-write-block='subhead']");
   });
 
   it('treats a Write rail choice as an attentional act even when it is already open', () => {
