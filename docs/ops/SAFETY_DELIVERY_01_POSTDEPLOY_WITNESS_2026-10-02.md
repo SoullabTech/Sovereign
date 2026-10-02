@@ -43,8 +43,44 @@ Interpretation:
 - Twilio transport credentials are present in production.
 - No designated `SAFETY_ALERT_PHONE` is configured.
 - No safety Slack webhook is configured.
-- The deployed safety-delivery code is present, but no independent human destination is currently complete.
-- Provider/human delivery is therefore **not witnessed** and must not be inferred.
+- The deployed **member-safety pager** code is present, but no independent human destination is currently complete.
+- Provider/human delivery for the member-safety pager is therefore **not witnessed** and must not be inferred.
+
+## Mac Studio uptime monitor — separate E2 transport
+
+The operational uptime monitor is a separate process from the production app safety pager.
+
+Read-only Mac Studio witness:
+
+```text
+launchd label: life.soullab.maia-monitor
+process: running
+config: scripts/.env.monitor
+Twilio account/auth/from: set
+ALERT_PHONES: set
+ALERT_EMAILS: set
+safety-app SAFETY_ALERT_PHONE: unset (not the monitor destination)
+```
+
+Recent live monitor logs show a real outage/recovery sequence:
+
+```text
+2026-10-02T10:23:15Z  DOWN 502
+SMS provider status: 201
+
+2026-10-02T10:28:15Z  RECOVERED 200
+SMS provider status: 201
+```
+
+This establishes:
+
+- the uptime monitor is live under launchd;
+- its independent Twilio destination is configured through `ALERT_PHONES`;
+- Twilio accepted both a DOWN alert and the subsequent RECOVERED alert;
+- **human receipt is not established by this record**.
+
+Do not use the monitor's `ALERT_PHONES` as authority for member-safety paging.
+The production app's safety recipient remains separately unset.
 
 ## Resend transport
 
@@ -114,7 +150,7 @@ This witness establishes that the admitted Class-A state has crossed production 
 
 - #1671 engineering state: **DEPLOYED**
 - E1 Resend: **OPEN · confirmed outage**
-- E2 independent pager: **DEPLOYED MECHANISM · destination config + human witness owed**
+- E2 uptime monitor: **LIVE · independent Twilio transport accepted DOWN + RECOVERED · human receipt unconfirmed**; production app safety pager remains separately **config-blocked**
 - S1: **DEPLOYED DORMANT/PROTOTYPE REPAIR · live reachability not established**
 - S2: **DEPLOYED DORMANT REPAIR · no live caller established**
 - S3: **DEPLOYED REPAIR · independent destination + human witness owed**
