@@ -26,7 +26,7 @@ The current-base successor reran `scripts/witness/postgres-standby-recovery-pref
 
 Observed:
 
-- running production artifact: `12b461bd8778c148060250c002a54079f4f58221`
+- running production artifact: `d4655e6477fa40b8f94c5f8f91be47198288d2af`
 - primary Tailscale bind: `100.119.226.84:5432`
 - `wal_level=replica`
 - `max_wal_senders=10`
