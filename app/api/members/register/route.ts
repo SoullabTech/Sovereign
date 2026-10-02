@@ -17,6 +17,7 @@ import { query } from '@/lib/db/postgres';
 import { resolveAdmission, admissionRefusalMessage } from '@/lib/auth/passkeyAdmission';
 import { createSession } from '@/lib/auth/serverSessions';
 import { hashPassword } from '@/lib/auth/passwordUtils';
+import { checkYouthAdmission } from '@/lib/youth/youthAdmissionGate';
 import {
   checkRateLimit,
   getClientIP,
@@ -111,6 +112,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Passkey, username, and password required' },
         { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // TEEN-CLOSED-01: registration must enforce the same server-side youth
+    // admission boundary as later profile edits. A supplied under-18 birth date
+    // must be refused before invitation lookup, member creation, or session mint.
+    const youthGate = checkYouthAdmission(birthDate);
+    if (!youthGate.ok) {
+      return NextResponse.json(
+        { error: youthGate.error, code: youthGate.code },
+        { status: youthGate.status, headers: corsHeaders }
       );
     }
 
