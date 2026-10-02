@@ -137,6 +137,7 @@ function defaultMeta(id) {
     mode: MODE,
     work_unit_id: id,
     prospective_preview: null,
+    jev_advisory: null,
     adjudications: [],
     closures: [],
   };
@@ -502,6 +503,25 @@ async function bindCanonicalRouteV2(root, workUnitId, opts = {}) {
     transition: bound.transition,
     preview_comparison: meta.bound_route_comparison,
   });
+}
+
+async function consultCanonicalJevV2(root, workUnitId, opts = {}) {
+  const envelope = readEnvelope(workUnitId, opts.env);
+  if (!envelope) return deepFreeze({ ok: false, status: 'REFUSED', reason: 'CANONICAL_V2_WORK_UNIT_NOT_FOUND', blockers: [] });
+
+  const jevMod = await importBound(root, 'scripts/builder/jarvis-jev-advisory-v1.mjs');
+  const advisory = await jevMod.consultJevAdvisory({
+    workUnit: envelope.work_unit,
+    transport: opts.transport ?? null,
+  });
+
+  const meta = readMeta(workUnitId, opts.env);
+  meta.jev_advisory = advisory.consulted
+    ? clone(advisory.record)
+    : { consulted: false, reason: advisory.reason };
+  writeMeta(workUnitId, meta, opts.env);
+
+  return await statusCanonicalV2(root, workUnitId, opts);
 }
 
 async function bindCanonicalTransportV2(root, workUnitId, participantId, opts = {}) {
@@ -1129,6 +1149,23 @@ function verifierReadModel(workUnit) {
   });
 }
 
+function jevAdvisoryReadModel(meta) {
+  const jev = meta?.jev_advisory;
+  if (!jev) return null;
+  if (jev.consulted === false) {
+    return { consulted: false, reason: jev.reason || 'NOT_CONSULTED', provider_id: 'typesafe-jev', protective_signals: [], protective_signal_raised: false, lowering_measurement_withheld: false };
+  }
+  const delivery = jev.human_delivery || {};
+  return {
+    consulted: true,
+    reason: null,
+    provider_id: jev.provider_id || 'typesafe-jev',
+    protective_signals: Array.isArray(delivery.protective_signals) ? [...delivery.protective_signals] : [],
+    protective_signal_raised: delivery.protective_signal_raised === true,
+    lowering_measurement_withheld: delivery.lowering_measurement_present === true,
+  };
+}
+
 function nextActions(workUnit, meta) {
   const state = workUnit?.state?.lifecycle_state;
   const routeParticipants = participantReadModel(workUnit);
@@ -1139,6 +1176,9 @@ function nextActions(workUnit, meta) {
   if (state === 'BOUNDED') actions.push({ action: 'canonical-authorize', label: 'Authorize Work Unit' });
   if (state === 'AUTHORIZED') actions.push({ action: 'canonical-route', label: 'Bind canonical route' });
   if (state === 'ROUTED') {
+    if (workUnit?.routing?.route_record?.deterministic?.selected !== true) {
+      actions.push({ action: 'canonical-jev-advice', label: 'Consult JEV advisory' });
+    }
     for (const participant of unbound) {
       actions.push({
         action: 'canonical-bind-transport',
@@ -1206,6 +1246,7 @@ async function statusCanonicalV2(root, workUnitId, opts = {}) {
     },
     prospective_preview: clone(meta.prospective_preview),
     preview_comparison: clone(meta.bound_route_comparison || null),
+    jev_advisory: jevAdvisoryReadModel(meta),
     routing: route ? {
       route_version: wu.routing.route_version,
       route_source: wu.routing.route_source,
@@ -1256,6 +1297,7 @@ module.exports = {
   createCanonicalV2,
   transitionCanonicalV2,
   bindCanonicalRouteV2,
+  consultCanonicalJevV2,
   bindCanonicalTransportV2,
   readCanonicalExecutionEnvelopeV2,
   prepareCanonicalTransportForExecutionV2,
