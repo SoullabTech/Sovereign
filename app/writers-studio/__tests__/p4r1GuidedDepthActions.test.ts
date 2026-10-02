@@ -12,7 +12,7 @@ describe('P4R1 guided depth actions', () => {
   const revisionLayer = read('app/dev/writers-studio-pc3-live/RevisionManuscriptLayer.tsx');
 
   it('turns Teach me why and Go deeper into explicit auto-sent observation acts', () => {
-    expect(develop).toContain('Teach me why');
+    expect(develop).toContain('Help me understand');
     expect(develop).toContain('Go deeper');
     expect(develop).toContain('autoSendInitialQuestion={Boolean(dialoguePrompt)}');
     expect(develop).toContain("setDialoguePrompt('Teach me the one writing or craft idea");
