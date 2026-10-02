@@ -122,6 +122,19 @@ async function main(): Promise<number> {
       refuses(() => evaluate({ ...small.input, labels: [...small.input.labels, small.input.labels[0]!] }), 'DUPLICATE_LABEL'),
     ],
     ['a verdict licenses nothing', evaluate(small.input).licenses === 'NOTHING' && evaluate(small.input).evidence_class === 'SYNTHETIC'],
+    [
+      'no defaults: an absent required_task_shapes is refused',
+      refuses(() => evaluate({ ...small.input, config: { ...CFG, required_task_shapes: undefined as unknown as string[] } }), 'CONFIG_NOT_FROZEN'),
+    ],
+    [
+      'the instrument can never assert gold: real units are PROSPECTIVE_CANDIDATE, hindsight units PILOT_HINDSIGHT',
+      (() => {
+        const seg = { n: 30, A: 'C' as const, B: 'C' as const, jev: { kind: 'yn' as const, ans: 'C' as const, conf: 0.9 } };
+        const real = evaluate(build([seg], CFG, { origin: 'real' }).input).evidence_class;
+        const hind = evaluate(build([{ ...seg, hindsight: true }], CFG, { origin: 'real' }).input).evidence_class;
+        return real === 'PROSPECTIVE_CANDIDATE' && hind === 'PILOT_HINDSIGHT' && !/gold/i.test(`${real}${hind}`);
+      })(),
+    ],
   ];
   for (const [name, okk] of guards) {
     if (okk) out(`  ✓ ${name}`);

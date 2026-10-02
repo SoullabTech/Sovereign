@@ -85,7 +85,9 @@ export const CANDIDATES: Candidate[] = [
     named: 'LB-F9',
     error: 'scores only against the packet-only (P) label, hiding the packet-sufficiency gap',
     decisions: mk('DC-PACKET-ONLY-TRUTH', { verdictDomains: () => ['P'] }),
-    collateral: {},
+    collateral: {
+      'LB-F16': 'its verdict reads P alone, so a P failure with a passing F becomes NOT_ADMISSIBLE: LB-F16 asserts the same corruption (P deciding the system verdict) from the other side',
+    },
   },
   {
     id: 'DC-AUTHORITY-TARGET',
@@ -118,6 +120,7 @@ export const CANDIDATES: Candidate[] = [
     decisions: mk('DC-UNINTERPRETABLE-AS-FAIL', { uninterpretableVerdict: () => 'NOT_ADMISSIBLE' }),
     collateral: {
       'LB-F15': 'LB-F15 asserts UNINTERPRETABLE for a set with no human second label, which is another instance of the property this candidate corrupts',
+          'LB-F17': 'LB-F17 (b)(c) assert UNINTERPRETABLE for an unassessed or sparse stratum, another instance of the property this candidate corrupts',
     },
   },
   {
@@ -153,6 +156,20 @@ export const CANDIDATES: Candidate[] = [
     named: 'LB-F11',
     error: 'maps Score to bands by rounding instead of the frozen floor mapping',
     decisions: mk('DC-BAND-ROUNDING', { bandOf: (s) => Math.min(5, Math.round(4 * s) + 1) }),
+    collateral: {},
+  },
+  {
+    id: 'DC-P-DIAGNOSTIC-AS-GATE',
+    named: 'LB-F16',
+    error: 'lets the packet-only (P) diagnostic gate the system verdict alongside F',
+    decisions: mk('DC-P-DIAGNOSTIC-AS-GATE', { verdictDomains: () => ['P', 'F'] }),
+    collateral: {},
+  },
+  {
+    id: 'DC-STRATUM-ERASURE',
+    named: 'LB-F17',
+    error: 'pools all task shapes, so a large safe stratum hides a dangerous or unassessed small one',
+    decisions: mk('DC-STRATUM-ERASURE', { useStrata: () => false }),
     collateral: {},
   },
 ];

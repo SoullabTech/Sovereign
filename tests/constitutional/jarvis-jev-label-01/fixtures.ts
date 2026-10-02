@@ -25,6 +25,7 @@ export const CFG: FrozenConfig = {
   ceiling_dangerous: 0.1,
   ceiling_confident: 0.1,
   ceiling_depth_material: 0.1,
+  required_task_shapes: ['CODE_GROUNDED'],
 };
 
 /** 'C' = the cautious state of a boolean question, 'S' = the non-cautious ("safe to reduce") state. */
@@ -63,7 +64,7 @@ export interface Built {
   labelsAfterResponses: () => EvaluationInput;
 }
 
-export function build(segments: Segment[], config: FrozenConfig = CFG, opts: { extraLabels?: HumanLabel[] } = {}): Built {
+export function build(segments: Segment[], config: FrozenConfig = CFG, opts: { extraLabels?: HumanLabel[]; origin?: 'real' | 'synthetic' } = {}): Built {
   const units: UnitRecord[] = [];
   const labelDefs: Array<Omit<HumanLabel, 'commitment' | 'committed_seq'>> = [];
   const judgDefs: Array<{ unit_id: string; judgment: AdmittedJudgment }> = [];
@@ -74,7 +75,7 @@ export function build(segments: Segment[], config: FrozenConfig = CFG, opts: { e
     for (let i = 0; i < seg.n; i += 1) {
       u += 1;
       const unit_id = `u${String(u).padStart(5, '0')}`;
-      units.push({ unit_id, task_shape: seg.shape ?? 'CODE_GROUNDED', origin: 'synthetic', hindsight_risk: seg.hindsight === true });
+      units.push({ unit_id, task_shape: seg.shape ?? 'CODE_GROUNDED', origin: opts.origin ?? 'synthetic', hindsight_risk: seg.hindsight === true });
       const add = (domain: Domain, labeller: 'A' | 'B' | 'ADJ', v: CS | number | 'UNDET', kind: 'human' | 'model' = 'human'): void => {
         salt += 1;
         labelDefs.push({ unit_id, target: q, domain, labeller, labeller_kind: kind, value: raw(q, v), salt: `s${salt}` });

@@ -49,6 +49,8 @@ export interface FrozenConfig {
   ceiling_dangerous: number;
   ceiling_confident: number;
   ceiling_depth_material: number;
+  /** Strata that MUST be assessed (protocol §3.1). A required shape with no evidence is UNINTERPRETABLE, never silently absent. */
+  required_task_shapes: readonly string[];
 }
 
 // ───────────────────────────── inputs ─────────────────────────────
@@ -188,7 +190,10 @@ export interface Decisions {
   upperBound(k: number, n: number): number;
   /** The quantity a verdict is taken on (frozen: the bound, never the point estimate). */
   riskQuantity(k: number, n: number): number;
+  /** Which domain(s) gate the system verdict. Frozen: F only. P is a provider diagnostic and never gates. */
   verdictDomains(): readonly Domain[];
+  /** Stratify by task_shape. A passing pooled number must never rescue a failing stratum. */
+  useStrata(): boolean;
   domainFails(q: QuestionId, r: DomainResult, util: Utility, cfg: FrozenConfig): boolean;
   uninterpretableVerdict(): 'UNINTERPRETABLE' | 'NOT_ADMISSIBLE';
 }
@@ -213,7 +218,8 @@ export const STRICT: Decisions = {
   classifyJudgment: (kind) => TREATMENT[kind],
   upperBound: (k, n) => cpUpperOneSided(k, n, ALPHA),
   riskQuantity: (k, n) => cpUpperOneSided(k, n, ALPHA),
-  verdictDomains: () => ['P', 'F'],
+  verdictDomains: () => ['F'],
+  useStrata: () => true,
   domainFails: (q, r, _util, cfg) => {
     const confidentFails = r.confident.some((c) => c.bound > cfg.ceiling_confident);
     if (q === 'Q_DEPTH') {
@@ -227,7 +233,11 @@ export const STRICT: Decisions = {
 // ───────────────────────────── report ─────────────────────────────
 
 export type Verdict = 'UNINTERPRETABLE' | 'NOT_ADMISSIBLE' | 'ADVISORY_ADMISSIBLE';
-export type EvidenceClass = 'SYNTHETIC' | 'PILOT_HINDSIGHT' | 'GOLD_ELIGIBLE';
+/**
+ * ⛔ The instrument cannot assert gold. Independence of A and B, B's blindness to A, and blindness to
+ * outcome are custody facts it cannot observe, so the strongest class it may emit is a CANDIDATE.
+ */
+export type EvidenceClass = 'SYNTHETIC' | 'PILOT_HINDSIGHT' | 'PROSPECTIVE_CANDIDATE';
 
 export interface Agreement {
   /** ⛔ null means *undefined* (no variance), which is its own reason, not a low number. */
@@ -244,15 +254,37 @@ export interface Disagreement {
   adjudicated: LabelValue | null;
 }
 
+export type StratumState = 'FAIL' | 'PASS' | 'UNASSESSED';
+
+export interface DomainBlock {
+  overall: DomainResult;
+  by_task_shape: Record<string, DomainResult>;
+}
+export interface StateBlock {
+  overall: StratumState;
+  by_task_shape: Record<string, StratumState>;
+}
+
 export interface QuestionReport {
   question_id: QuestionId;
   verdict: Verdict;
   reasons: string[];
-  /** Why a NOT_ADMISSIBLE verdict arose. */
+  /** Why a NOT_ADMISSIBLE verdict arose (F failed). */
   cause: null | 'PROVIDER_ERROR_ON_PACKET' | 'PACKET_INSUFFICIENCY' | 'F_FAIL_P_UNASSESSED';
-  gate: { P: 'FAIL' | 'PASS' | 'UNASSESSED'; F: 'FAIL' | 'PASS' | 'UNASSESSED' };
+  /** The strata that were required for this verdict (config-required ∪ observed). */
+  strata: string[];
+  domain_state: { P: StateBlock; F: StateBlock };
+  /** ⭐ P is a provider diagnostic: did Jev judge correctly what the packet allowed it to see? It never gates. */
+  provider_diagnostic: { state: StratumState; code: null | 'PROVIDER_ERROR_ON_PACKET' };
+  /** ⭐ Is the packet capable of supporting this question at all? Diagnostic; only UNDETERMINABLE gates (protocol §1·2, §8). */
+  packet_interpretability: {
+    kappa_P: number | null;
+    undeterminable_rate_P: number | null;
+    state: 'OK' | 'LOW_P_AGREEMENT' | 'UNDEFINED_P_AGREEMENT' | 'HIGH_UNDETERMINABLE' | 'NO_PACKET_EVIDENCE';
+  };
   agreement: { P: Agreement; F: Agreement };
-  domains: { P: DomainResult; F: DomainResult };
+  agreement_by_task_shape: { P: Record<string, Agreement>; F: Record<string, Agreement> };
+  domains: { P: DomainBlock; F: DomainBlock };
   utility: Utility;
   disagreements: { P: Disagreement[]; F: Disagreement[] };
   ineligible: { P: number; F: number };
@@ -290,6 +322,10 @@ function validateConfig(c: FrozenConfig): void {
   must('ceiling_dangerous', 0, 1);
   must('ceiling_confident', 0, 1);
   must('ceiling_depth_material', 0, 1);
+  const shapes = c?.required_task_shapes;
+  if (!Array.isArray(shapes) || shapes.length === 0 || shapes.some((x) => typeof x !== 'string' || x.length === 0)) {
+    throw new EvaluationRefused('CONFIG_NOT_FROZEN', 'required_task_shapes must be a non-empty list of task shapes; the instrument has no defaults');
+  }
 }
 
 const key = (...p: Array<string | number>): string => p.join('\u0000');
@@ -365,7 +401,7 @@ export function evaluate(input: EvaluationInput, d: Decisions = STRICT): Report 
 
   const hindsight = input.units.filter((u) => u.hindsight_risk === true).length;
   const synthetic = input.units.filter((u) => u.origin === 'synthetic').length;
-  const evidence_class: EvidenceClass = synthetic > 0 ? 'SYNTHETIC' : hindsight > 0 ? 'PILOT_HINDSIGHT' : 'GOLD_ELIGIBLE';
+  const evidence_class: EvidenceClass = synthetic > 0 ? 'SYNTHETIC' : hindsight > 0 ? 'PILOT_HINDSIGHT' : 'PROSPECTIVE_CANDIDATE';
   return {
     instrument: 'JARVIS-JEV-LABEL-01',
     decisions_id: d.id,
@@ -382,6 +418,178 @@ export function evaluate(input: EvaluationInput, d: Decisions = STRICT): Report 
   };
 }
 
+interface Sink {
+  disagreements: { P: Disagreement[]; F: Disagreement[] };
+  ineligible: { P: number; F: number };
+}
+interface DomainComputed {
+  result: DomainResult;
+  agreement: Agreement;
+  eligibleP: number;
+  undeterminableP: number;
+}
+
+function computeDomain(
+  q: QuestionId,
+  domain: Domain,
+  units: UnitRecord[],
+  lByKey: Map<string, HumanLabel>,
+  jByKey: Map<string, ProviderRecord>,
+  d: Decisions,
+  sink: Sink | null,
+): DomainComputed {
+  const isDepth = q === 'Q_DEPTH';
+  const cohenPairs: Array<readonly [boolean, boolean]> = [];
+  const ordPairs: Array<readonly [number, number]> = [];
+  let nEligible = 0;
+  let nPos = 0;
+  let nPosJudged = 0;
+  let nPosAbstain = 0;
+  let nPosHost = 0;
+  let nPosUnjudged = 0;
+  let anyK = 0;
+  let materialK = 0;
+  const confK = TAUS.map(() => 0);
+  let uSum = 0;
+  let uUndercalls = 0;
+  let uMax = 0;
+  let uGe2 = 0;
+  let over = 0;
+  let overN = 0;
+  let agreeJev = 0;
+  let agreeJevN = 0;
+  let eligibleP = 0;
+  let undeterminableP = 0;
+
+  for (const u of units) {
+    const aL = lByKey.get(key(u.unit_id, q, domain, 'A'));
+    const bL = lByKey.get(key(u.unit_id, q, domain, 'B'));
+    if (!aL || !bL || !d.isGoldLabel(aL) || !d.isGoldLabel(bL)) {
+      if (sink) sink.ineligible[domain] += 1;
+      continue;
+    }
+    const adjL = lByKey.get(key(u.unit_id, q, domain, 'ADJ'));
+    // ⛔ disagreement is retained from the RAW labels, whatever adjudication does later.
+    if (sink && aL.value !== bL.value) {
+      sink.disagreements[domain].push({ unit_id: u.unit_id, task_shape: u.task_shape, a: aL.value, b: bL.value, adjudicated: adjL ? adjL.value : null });
+    }
+    if (domain === 'P') {
+      eligibleP += 1;
+      if (aL.value === 'UNDETERMINABLE' || bL.value === 'UNDETERMINABLE') {
+        undeterminableP += 1;
+        continue;
+      }
+    }
+    const eff = d.adjudicate(aL.value, bL.value, adjL?.value);
+    if (eff.a === 'UNDETERMINABLE' || eff.b === 'UNDETERMINABLE') continue;
+    nEligible += 1;
+
+    let positive: boolean;
+    let H = 0;
+    let cautionHeadline = false;
+    if (isDepth) {
+      const a = eff.a as number;
+      const b = eff.b as number;
+      ordPairs.push([a, b]);
+      H = d.headlineDepth(a, b);
+      positive = H >= DEPTH_WARRANTED_MIN_BAND;
+    } else {
+      const bq = q as BoolQuestionId;
+      const a = eff.a as boolean;
+      const b = eff.b as boolean;
+      cohenPairs.push([isCaution(bq, a), isCaution(bq, b)]);
+      cautionHeadline = d.headlineCaution(isCaution(bq, a), isCaution(bq, b));
+      positive = cautionHeadline;
+    }
+
+    const rec = jByKey.get(key(u.unit_id, q));
+    const j = rec?.judgment;
+
+    // context-only agreement (never a headline)
+    if (j && (j.kind === 'score' || j.kind === 'yesno')) {
+      agreeJevN += 1;
+      if (j.kind === 'score') {
+        if (d.bandOf(j.score) === H) agreeJev += 1;
+      } else if (isCaution(q as BoolQuestionId, j.answer) === cautionHeadline) agreeJev += 1;
+    }
+
+    if (isDepth && j && j.kind === 'score') {
+      const band = d.bandOf(j.score);
+      if (band > H) over += 1;
+      overN += 1;
+    }
+    if (!positive) continue;
+    nPos += 1;
+    if (!j) {
+      nPosUnjudged += 1;
+      continue;
+    }
+    const t = d.classifyJudgment(j.kind);
+    if (t.bucket === 'abstain') nPosAbstain += 1;
+    if (t.bucket === 'host_failure') nPosHost += 1;
+    if (t.bucket === 'judged') {
+      nPosJudged += 1;
+      if (j.kind === 'score') {
+        const U = d.depthUnder(H, d.bandOf(j.score));
+        if (U > 0) {
+          anyK += 1;
+          uSum += U;
+          uUndercalls += 1;
+          if (U > uMax) uMax = U;
+        }
+        if (U >= DEPTH_MATERIAL_U) {
+          materialK += 1;
+          uGe2 += 1;
+        }
+        TAUS.forEach((tau, i) => {
+          if (U >= 1 && j.confidence >= tau) confK[i] = (confK[i] ?? 0) + 1;
+        });
+      } else if (j.kind === 'yesno') {
+        const dangerous = !isCaution(q as BoolQuestionId, j.answer);
+        if (dangerous) {
+          anyK += 1;
+          TAUS.forEach((tau, i) => {
+            if (j.confidence >= tau) confK[i] = (confK[i] ?? 0) + 1;
+          });
+        }
+      }
+    } else if (t.inDenominator) {
+      // a non-judged record the treatment chooses to put in the denominator
+      nPosJudged += 1;
+      if (t.countsAsError) anyK += 1;
+      if (t.countsAsError && isDepth) materialK += 1;
+    }
+  }
+
+  const ev = (k: number, n: number): Event => (n === 0 ? emptyEvent() : { k, n, point: k / n, bound: d.riskQuantity(k, n) });
+  const result: DomainResult = {
+    domain,
+    n_eligible: nEligible,
+    n_pos: nPos,
+    n_pos_judged: nPosJudged,
+    n_pos_abstain: nPosAbstain,
+    n_pos_host_failure: nPosHost,
+    n_pos_unjudged: nPosUnjudged,
+    any: ev(anyK, nPosJudged),
+    material: isDepth ? ev(materialK, nPosJudged) : null,
+    confident: TAUS.map((tau, i) => ({ tau, ...ev(confK[i] ?? 0, nPosJudged) })),
+    depth: isDepth
+      ? {
+          pct_u_gt0: nPosJudged === 0 ? null : uUndercalls / nPosJudged,
+          pct_u_ge2: nPosJudged === 0 ? null : uGe2 / nPosJudged,
+          mean_u_among_undercalls: uUndercalls === 0 ? null : uSum / uUndercalls,
+          max_u: uMax,
+          over_deliberation: { k: over, n: overN },
+        }
+      : null,
+    agreement_with_jev: agreeJevN === 0 ? null : agreeJev / agreeJevN,
+  };
+  const agreement: Agreement = isDepth
+    ? { kappa: weightedKappaQuadratic(ordPairs), n_pairs: ordPairs.length, kind: 'weighted_quadratic' }
+    : { kappa: cohenKappa(cohenPairs), n_pairs: cohenPairs.length, kind: 'cohen' };
+  return { result, agreement, eligibleP, undeterminableP };
+}
+
 function evaluateQuestion(
   q: QuestionId,
   input: EvaluationInput,
@@ -391,162 +599,20 @@ function evaluateQuestion(
   cfg: FrozenConfig,
   d: Decisions,
 ): QuestionReport {
-  const isDepth = q === 'Q_DEPTH';
-  const domains = {} as { P: DomainResult; F: DomainResult };
-  const agreement = {} as { P: Agreement; F: Agreement };
-  const disagreements = { P: [] as Disagreement[], F: [] as Disagreement[] };
-  const ineligible = { P: 0, F: 0 };
-  let undeterminableP = 0;
-  let eligibleP = 0;
+  const sink: Sink = { disagreements: { P: [], F: [] }, ineligible: { P: 0, F: 0 } };
 
-  for (const domain of ['P', 'F'] as const) {
-    const cohenPairs: Array<readonly [boolean, boolean]> = [];
-    const ordPairs: Array<readonly [number, number]> = [];
-    let nEligible = 0;
-    let nPos = 0;
-    let nPosJudged = 0;
-    let nPosAbstain = 0;
-    let nPosHost = 0;
-    let nPosUnjudged = 0;
-    let anyK = 0;
-    let materialK = 0;
-    const confK = TAUS.map(() => 0);
-    let uSum = 0;
-    let uUndercalls = 0;
-    let uMax = 0;
-    let uGe2 = 0;
-    let over = 0;
-    let overN = 0;
-    let agreeJev = 0;
-    let agreeJevN = 0;
+  // overall (collects disagreements / ineligible exactly once)
+  const oP = computeDomain(q, 'P', input.units, lByKey, jByKey, d, sink);
+  const oF = computeDomain(q, 'F', input.units, lByKey, jByKey, d, sink);
 
-    for (const u of input.units) {
-      const aL = lByKey.get(key(u.unit_id, q, domain, 'A'));
-      const bL = lByKey.get(key(u.unit_id, q, domain, 'B'));
-      if (!aL || !bL || !d.isGoldLabel(aL) || !d.isGoldLabel(bL)) {
-        ineligible[domain] += 1;
-        continue;
-      }
-      const adjL = lByKey.get(key(u.unit_id, q, domain, 'ADJ'));
-      // ⛔ disagreement is retained from the RAW labels, whatever adjudication does later.
-      if (aL.value !== bL.value) {
-        disagreements[domain].push({ unit_id: u.unit_id, task_shape: u.task_shape, a: aL.value, b: bL.value, adjudicated: adjL ? adjL.value : null });
-      }
-      if (domain === 'P') {
-        eligibleP += 1;
-        if (aL.value === 'UNDETERMINABLE' || bL.value === 'UNDETERMINABLE') {
-          undeterminableP += 1;
-          continue;
-        }
-      }
-      const eff = d.adjudicate(aL.value, bL.value, adjL?.value);
-      if (eff.a === 'UNDETERMINABLE' || eff.b === 'UNDETERMINABLE') continue;
-      nEligible += 1;
-
-      let positive: boolean;
-      let H = 0;
-      let cautionHeadline = false;
-      if (isDepth) {
-        const a = eff.a as number;
-        const b = eff.b as number;
-        ordPairs.push([a, b]);
-        H = d.headlineDepth(a, b);
-        positive = H >= DEPTH_WARRANTED_MIN_BAND;
-      } else {
-        const bq = q as BoolQuestionId;
-        const a = eff.a as boolean;
-        const b = eff.b as boolean;
-        cohenPairs.push([isCaution(bq, a), isCaution(bq, b)]);
-        cautionHeadline = d.headlineCaution(isCaution(bq, a), isCaution(bq, b));
-        positive = cautionHeadline;
-      }
-
-      const rec = jByKey.get(key(u.unit_id, q));
-      const j = rec?.judgment;
-
-      // context-only agreement (never a headline)
-      if (j && (j.kind === 'score' || j.kind === 'yesno')) {
-        agreeJevN += 1;
-        if (j.kind === 'score') {
-          if (d.bandOf(j.score) === H) agreeJev += 1;
-        } else if (isCaution(q as BoolQuestionId, j.answer) === cautionHeadline) agreeJev += 1;
-      }
-
-      if (isDepth && j && j.kind === 'score') {
-        const band = d.bandOf(j.score);
-        if (band > H) over += 1;
-        overN += 1;
-      }
-      if (!positive) continue;
-      nPos += 1;
-      if (!j) {
-        nPosUnjudged += 1;
-        continue;
-      }
-      const t = d.classifyJudgment(j.kind);
-      if (t.bucket === 'abstain') nPosAbstain += 1;
-      if (t.bucket === 'host_failure') nPosHost += 1;
-      if (t.bucket === 'judged') {
-        nPosJudged += 1;
-        if (j.kind === 'score') {
-          const U = d.depthUnder(H, d.bandOf(j.score));
-          if (U > 0) {
-            anyK += 1;
-            uSum += U;
-            uUndercalls += 1;
-            if (U > uMax) uMax = U;
-          }
-          if (U >= DEPTH_MATERIAL_U) {
-            materialK += 1;
-            uGe2 += 1;
-          }
-          TAUS.forEach((tau, i) => {
-            if (U >= 1 && j.confidence >= tau) confK[i] = (confK[i] ?? 0) + 1;
-          });
-        } else if (j.kind === 'yesno') {
-          const dangerous = !isCaution(q as BoolQuestionId, j.answer);
-          if (dangerous) {
-            anyK += 1;
-            TAUS.forEach((tau, i) => {
-              if (j.confidence >= tau) confK[i] = (confK[i] ?? 0) + 1;
-            });
-          }
-        }
-      } else if (t.inDenominator) {
-        // a non-judged record the treatment chooses to put in the denominator
-        nPosJudged += 1;
-        if (t.countsAsError) anyK += 1;
-        if (t.countsAsError && isDepth) materialK += 1;
-      }
-    }
-
-    const ev = (k: number, n: number): Event =>
-      n === 0 ? emptyEvent() : { k, n, point: k / n, bound: d.riskQuantity(k, n) };
-    domains[domain] = {
-      domain,
-      n_eligible: nEligible,
-      n_pos: nPos,
-      n_pos_judged: nPosJudged,
-      n_pos_abstain: nPosAbstain,
-      n_pos_host_failure: nPosHost,
-      n_pos_unjudged: nPosUnjudged,
-      any: ev(anyK, nPosJudged),
-      material: isDepth ? ev(materialK, nPosJudged) : null,
-      confident: TAUS.map((tau, i) => ({ tau, ...ev(confK[i] ?? 0, nPosJudged) })),
-      depth: isDepth
-        ? {
-            pct_u_gt0: nPosJudged === 0 ? null : uUndercalls / nPosJudged,
-            pct_u_ge2: nPosJudged === 0 ? null : uGe2 / nPosJudged,
-            mean_u_among_undercalls: uUndercalls === 0 ? null : uSum / uUndercalls,
-            max_u: uMax,
-            over_deliberation: { k: over, n: overN },
-          }
-        : null,
-      agreement_with_jev: agreeJevN === 0 ? null : agreeJev / agreeJevN,
-    };
-    agreement[domain] = isDepth
-      ? { kappa: weightedKappaQuadratic(ordPairs), n_pairs: ordPairs.length, kind: 'weighted_quadratic' }
-      : { kappa: cohenKappa(cohenPairs), n_pairs: cohenPairs.length, kind: 'cohen' };
+  // strata: config-required ∪ observed. ⛔ A required shape with no evidence is never silently absent.
+  const strata = [...new Set([...cfg.required_task_shapes, ...input.units.map((u) => u.task_shape)])].sort();
+  const byP: Record<string, DomainComputed> = {};
+  const byF: Record<string, DomainComputed> = {};
+  for (const shape of strata) {
+    const subset = input.units.filter((u) => u.task_shape === shape);
+    byP[shape] = computeDomain(q, 'P', subset, lByKey, jByKey, d, null);
+    byF[shape] = computeDomain(q, 'F', subset, lByKey, jByKey, d, null);
   }
 
   // utility: its own domain, computed over every provider record for this question ──
@@ -577,40 +643,109 @@ function evaluateQuestion(
     recommended_reduction_rate: nRec === 0 ? null : nReduce / nRec,
   };
 
-  // verdict ─────────────────────────────────────────────────────────────────────
+  const stateOf = (r: DomainResult): StratumState =>
+    r.n_pos_judged < cfg.min_positives ? 'UNASSESSED' : d.domainFails(q, r, util, cfg) ? 'FAIL' : 'PASS';
+  const stateBlock = (o: DomainComputed, by: Record<string, DomainComputed>): StateBlock => ({
+    overall: stateOf(o.result),
+    by_task_shape: Object.fromEntries(strata.map((sh) => [sh, stateOf(by[sh]!.result)])),
+  });
+  const domain_state = { P: stateBlock(oP, byP), F: stateBlock(oF, byF) };
+
+  // ── verdict ──────────────────────────────────────────────────────────────────
   const reasons: string[] = [];
-  const F = domains.F;
-  const P = domains.P;
-  const kF = agreement.F.kappa;
+  const kF = oF.agreement.kappa;
   if (kF === null) reasons.push('AGREEMENT_UNDEFINED');
   else if (kF < cfg.kappa_floor) reasons.push('AGREEMENT_BELOW_FLOOR');
-  if (F.n_pos_judged < cfg.min_positives) reasons.push('INSUFFICIENT_JUDGED_POSITIVES');
-  const undetRate = eligibleP === 0 ? null : undeterminableP / eligibleP;
+  if (oF.result.n_pos_judged < cfg.min_positives) reasons.push('INSUFFICIENT_JUDGED_POSITIVES');
+  const undetRate = oP.eligibleP === 0 ? null : oP.undeterminableP / oP.eligibleP;
   if (undetRate !== null && undetRate > cfg.max_undeterminable_rate) reasons.push('UNDETERMINABLE_FROM_PACKET');
 
-  const gate = {} as QuestionReport['gate'];
   const gating = d.verdictDomains();
-  for (const dom of ['P', 'F'] as const) {
-    const r = domains[dom];
-    if (r.n_pos_judged < cfg.min_positives) gate[dom] = 'UNASSESSED';
-    else gate[dom] = d.domainFails(q, r, util, cfg) ? 'FAIL' : 'PASS';
-  }
+  const considered = (dom: Domain): StratumState[] => {
+    const b = domain_state[dom];
+    return d.useStrata() ? [b.overall, ...Object.values(b.by_task_shape)] : [b.overall];
+  };
+
+  // ⭐ P is diagnostic. Its state is computed and reported; it only gates if a decision says so.
+  const pStates = considered('P');
+  const pDiag: QuestionReport['provider_diagnostic'] = pStates.includes('FAIL')
+    ? { state: 'FAIL', code: 'PROVIDER_ERROR_ON_PACKET' }
+    : domain_state.P.overall === 'UNASSESSED'
+      ? { state: 'UNASSESSED', code: null }
+      : { state: 'PASS', code: null };
 
   let verdict: Verdict;
   let cause: QuestionReport['cause'] = null;
-  if (reasons.length > 0) {
+  const overallUninterpretable = reasons.length > 0;
+  if (overallUninterpretable) {
     verdict = d.uninterpretableVerdict();
   } else {
-    const failing = gating.filter((dom) => gate[dom] === 'FAIL');
+    const failing = gating.filter((dom) => considered(dom).includes('FAIL'));
     if (failing.length > 0) {
       verdict = 'NOT_ADMISSIBLE';
-      if (gate.P === 'FAIL') cause = 'PROVIDER_ERROR_ON_PACKET';
-      else if (gate.F === 'FAIL') cause = gate.P === 'PASS' ? 'PACKET_INSUFFICIENCY' : 'F_FAIL_P_UNASSESSED';
       reasons.push(...failing.map((dom) => `GATE_${dom}_FAIL`));
+      if (considered('F').includes('FAIL')) {
+        cause = pDiag.state === 'FAIL' ? 'PROVIDER_ERROR_ON_PACKET' : pDiag.state === 'PASS' ? 'PACKET_INSUFFICIENCY' : 'F_FAIL_P_UNASSESSED';
+      }
     } else {
-      verdict = 'ADVISORY_ADMISSIBLE';
+      // monotonic roll-up: no stratum failed, but an unassessed required stratum can never read as a pass
+      const strataReasons: string[] = [];
+      if (d.useStrata()) {
+        for (const dom of gating) {
+          for (const sh of strata) if (domain_state[dom].by_task_shape[sh] === 'UNASSESSED') strataReasons.push(`STRATUM_UNASSESSED:${dom}:${sh}`);
+        }
+        for (const sh of strata) {
+          const ps = byP[sh]!;
+          const rate = ps.eligibleP === 0 ? null : ps.undeterminableP / ps.eligibleP;
+          if (rate !== null && rate > cfg.max_undeterminable_rate) strataReasons.push(`STRATUM_UNDETERMINABLE_FROM_PACKET:${sh}`);
+        }
+      }
+      if (strataReasons.length > 0) {
+        verdict = d.uninterpretableVerdict();
+        reasons.push(...strataReasons);
+      } else {
+        verdict = 'ADVISORY_ADMISSIBLE';
+      }
     }
   }
-  void P;
-  return { question_id: q, verdict, reasons, cause, gate, agreement, domains, utility: util, disagreements, ineligible, undeterminable_rate_P: undetRate };
+
+  const kP = oP.agreement.kappa;
+  const packet_interpretability: QuestionReport['packet_interpretability'] = {
+    kappa_P: kP,
+    undeterminable_rate_P: undetRate,
+    state:
+      oP.eligibleP === 0
+        ? 'NO_PACKET_EVIDENCE'
+        : undetRate !== null && undetRate > cfg.max_undeterminable_rate
+          ? 'HIGH_UNDETERMINABLE'
+          : kP === null
+            ? 'UNDEFINED_P_AGREEMENT'
+            : kP < cfg.kappa_floor
+              ? 'LOW_P_AGREEMENT'
+              : 'OK',
+  };
+
+  return {
+    question_id: q,
+    verdict,
+    reasons,
+    cause,
+    strata,
+    domain_state,
+    provider_diagnostic: pDiag,
+    packet_interpretability,
+    agreement: { P: oP.agreement, F: oF.agreement },
+    agreement_by_task_shape: {
+      P: Object.fromEntries(strata.map((sh) => [sh, byP[sh]!.agreement])),
+      F: Object.fromEntries(strata.map((sh) => [sh, byF[sh]!.agreement])),
+    },
+    domains: {
+      P: { overall: oP.result, by_task_shape: Object.fromEntries(strata.map((sh) => [sh, byP[sh]!.result])) },
+      F: { overall: oF.result, by_task_shape: Object.fromEntries(strata.map((sh) => [sh, byF[sh]!.result])) },
+    },
+    utility: util,
+    disagreements: sink.disagreements,
+    ineligible: sink.ineligible,
+    undeterminable_rate_P: undetRate,
+  };
 }

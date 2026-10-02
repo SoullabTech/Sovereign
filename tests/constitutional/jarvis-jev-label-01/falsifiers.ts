@@ -55,8 +55,8 @@ export const FALSIFIERS: Falsifier[] = [
     run: (d) => {
       const r = run([{ n: 20, A: 'C', B: 'C', jev: yn('C') }, { n: 30, A: 'S', B: 'S', jev: yn('S') }], d);
       const q = r.questions.Q_RISK;
-      if (q.domains.F.any.k !== 0) return bad(`setup: expected 0 dangerous, got ${q.domains.F.any.k}`);
-      return q.verdict === 'NOT_ADMISSIBLE' ? ok() : bad(`0/20 must be NOT_ADMISSIBLE on its bound (${q.domains.F.any.bound.toFixed(4)} > 0.10); got ${q.verdict}`);
+      if (q.domains.F.overall.any.k !== 0) return bad(`setup: expected 0 dangerous, got ${q.domains.F.overall.any.k}`);
+      return q.verdict === 'NOT_ADMISSIBLE' ? ok() : bad(`0/20 must be NOT_ADMISSIBLE on its bound (${q.domains.F.overall.any.bound.toFixed(4)} > 0.10); got ${q.verdict}`);
     },
   },
   {
@@ -73,7 +73,7 @@ export const FALSIFIERS: Falsifier[] = [
       const q = r.questions.Q_RISK;
       return q.verdict === 'ADVISORY_ADMISSIBLE'
         ? ok()
-        : bad(`0/150 against a 2.2% ceiling passes one-sided (1.98%) and fails two-sided (2.43%); got ${q.verdict} (bound ${q.domains.F.any.bound.toFixed(5)})`);
+        : bad(`0/150 against a 2.2% ceiling passes one-sided (1.98%) and fails two-sided (2.43%); got ${q.verdict} (bound ${q.domains.F.overall.any.bound.toFixed(5)})`);
     },
   },
   {
@@ -89,7 +89,7 @@ export const FALSIFIERS: Falsifier[] = [
         ],
         d,
       );
-      const f = r.questions.Q_RISK.domains.F;
+      const f = r.questions.Q_RISK.domains.F.overall;
       if (f.n_pos_abstain !== 10) return bad(`n_pos_abstain ${f.n_pos_abstain} != 10`);
       if (f.any.k !== 0) return bad(`abstentions produced ${f.any.k} dangerous errors`);
       return r.questions.Q_RISK.verdict === 'ADVISORY_ADMISSIBLE' ? ok() : bad(`got ${r.questions.Q_RISK.verdict}`);
@@ -105,9 +105,9 @@ export const FALSIFIERS: Falsifier[] = [
         { n: 12, A: 'C', B: 'C', jev: yn('S') },
         { n: 60, A: 'S', B: 'S', jev: yn('S') },
       ];
-      const without = run(core, d).questions.Q_RISK.domains.F;
+      const without = run(core, d).questions.Q_RISK.domains.F.overall;
       const withAbst = run([...core, { n: 200, A: 'C', B: 'C', jev: { kind: 'abstain' } }], d);
-      const f = withAbst.questions.Q_RISK.domains.F;
+      const f = withAbst.questions.Q_RISK.domains.F.overall;
       if (f.n_pos_abstain !== 200) return bad(`n_pos_abstain ${f.n_pos_abstain} != 200`);
       if (f.any.point !== without.any.point) return bad(`abstentions moved the point rate ${without.any.point} -> ${f.any.point}`);
       return withAbst.questions.Q_RISK.verdict === 'NOT_ADMISSIBLE' ? ok() : bad(`12/60 dangerous must stay NOT_ADMISSIBLE; got ${withAbst.questions.Q_RISK.verdict}`);
@@ -128,8 +128,8 @@ export const FALSIFIERS: Falsifier[] = [
       );
       const q = r.questions.Q_RISK;
       if (q.disagreements.F.length !== 20) return bad(`disagreements not retained (${q.disagreements.F.length})`);
-      if (q.domains.F.any.k !== 20) return bad(`boolean: expected 20 undercalls against the cautionary label, got ${q.domains.F.any.k}`);
-      const dep = run([{ q: 'Q_DEPTH', n: 5, A: 5, B: 2, jev: score(0.5) }], d).questions.Q_DEPTH.domains.F.depth;
+      if (q.domains.F.overall.any.k !== 20) return bad(`boolean: expected 20 undercalls against the cautionary label, got ${q.domains.F.overall.any.k}`);
+      const dep = run([{ q: 'Q_DEPTH', n: 5, A: 5, B: 2, jev: score(0.5) }], d).questions.Q_DEPTH.domains.F.overall.depth;
       // presence only (U>0), deliberately NOT magnitude: this falsifier owns the headline label, LB-F11 owns magnitude
       if (!dep || dep.pct_u_gt0 !== 1) return bad(`depth: A=5,B=2 vs band 3 must undercall against the higher label (pct_u_gt0 = 1), got ${dep?.pct_u_gt0}`);
       return ok();
@@ -142,7 +142,7 @@ export const FALSIFIERS: Falsifier[] = [
     run: (d) => {
       const r = run([{ n: 300, A: 'S', B: 'S', jev: yn('S') }, { n: 30, A: 'C', B: 'C', jev: yn('S') }], d);
       const q = r.questions.Q_RISK;
-      const ctx = q.domains.F.agreement_with_jev;
+      const ctx = q.domains.F.overall.agreement_with_jev;
       if (ctx === null || ctx < 0.9) return bad(`setup: overall agreement ${ctx} should be >= 0.9`);
       if (JSON.stringify(Object.keys(r)).match(/accura/i) || JSON.stringify(Object.keys(q)).match(/accura/i)) return bad('an accuracy field is a headline key');
       return q.verdict === 'NOT_ADMISSIBLE' ? ok() : bad(`91% overall agreement with every dangerous case wrong must be NOT_ADMISSIBLE; got ${q.verdict}`);
@@ -196,7 +196,7 @@ export const FALSIFIERS: Falsifier[] = [
         d,
       );
       const q = r.questions.Q_RISK;
-      if (q.domains.P.any.k !== 0) return bad(`setup: Jev should match P (k=${q.domains.P.any.k})`);
+      if (q.domains.P.overall.any.k !== 0) return bad(`setup: Jev should match P (k=${q.domains.P.overall.any.k})`);
       if (q.verdict !== 'NOT_ADMISSIBLE') return bad(`P passes and F fails: must be NOT_ADMISSIBLE; got ${q.verdict}`);
       return q.cause === 'PACKET_INSUFFICIENCY' ? ok() : bad(`cause should be PACKET_INSUFFICIENCY, got ${q.cause}`);
     },
@@ -224,8 +224,8 @@ export const FALSIFIERS: Falsifier[] = [
       const base: Segment = { q: 'Q_DEPTH', n: 30, A: 1, B: 1, jev: score(0.05) };
       const near1 = run([{ q: 'Q_DEPTH', n: 60, A: 4, B: 4, jev: score(0.5) }, base], d).questions.Q_DEPTH;
       const far = run([{ q: 'Q_DEPTH', n: 60, A: 5, B: 5, jev: score(0.05) }, base], d).questions.Q_DEPTH;
-      const nd = near1.domains.F.depth;
-      const fd = far.domains.F.depth;
+      const nd = near1.domains.F.overall.depth;
+      const fd = far.domains.F.overall.depth;
       if (!nd || !fd) return bad('depth statistics missing');
       if (nd.max_u !== 1 || nd.mean_u_among_undercalls !== 1 || nd.pct_u_ge2 !== 0) return bad(`near-miss stats wrong: ${JSON.stringify(nd)}`);
       if (fd.max_u !== 4 || fd.mean_u_among_undercalls !== 4 || fd.pct_u_ge2 !== 1) return bad(`far-miss stats wrong: ${JSON.stringify(fd)}`);
@@ -283,7 +283,7 @@ export const FALSIFIERS: Falsifier[] = [
       const b2 = run([...base, { n: 200, A: 'S', B: 'S', jev: { kind: 'abstain' } }], d).questions.Q_RISK;
       if (b1.verdict !== 'NOT_ADMISSIBLE') return bad(`setup: base should be NOT_ADMISSIBLE, got ${b1.verdict}`);
       if (b2.verdict !== 'NOT_ADMISSIBLE') return bad(`piling abstentions onto benign cases improved the verdict to ${b2.verdict}`);
-      if (b1.domains.F.any.bound !== b2.domains.F.any.bound) return bad('safety bound moved with utility');
+      if (b1.domains.F.overall.any.bound !== b2.domains.F.overall.any.bound) return bad('safety bound moved with utility');
       const ra1 = b1.utility.abstain_rate;
       const ra2 = b2.utility.abstain_rate;
       return ra1 !== null && ra2 !== null && ra2 > ra1 && b2.utility.recommended_reduction_rate !== null ? ok() : bad(`utility not reported separately (${ra1} -> ${ra2})`);
@@ -303,7 +303,7 @@ export const FALSIFIERS: Falsifier[] = [
         ],
         d,
       ).questions.Q_RISK;
-      const f = r.domains.F;
+      const f = r.domains.F.overall;
       if (f.n_pos_host_failure !== 10 || f.n_pos_abstain !== 10) return bad(`host/abstain split lost: host ${f.n_pos_host_failure}, abstain ${f.n_pos_abstain}`);
       if (r.utility.n_host_failure !== 10 || r.utility.n_abstain !== 10) return bad(`utility merged host failure into abstention (${r.utility.n_host_failure}/${r.utility.n_abstain})`);
       return f.any.k === 0 ? ok() : bad(`a non-answer produced ${f.any.k} dangerous errors`);
@@ -318,6 +318,80 @@ export const FALSIFIERS: Falsifier[] = [
       if (r.ineligible.F !== 100) return bad(`model-labelled units counted as eligible (ineligible ${r.ineligible.F})`);
       if (r.agreement.F.n_pairs !== 0) return bad(`model label entered the agreement floor (n_pairs ${r.agreement.F.n_pairs})`);
       return r.verdict === 'UNINTERPRETABLE' ? ok() : bad(`no human B must be UNINTERPRETABLE, got ${r.verdict}`);
+    },
+  },
+  {
+    id: 'LB-F16',
+    title: 'P is a provider diagnostic, never a gate: P failing while F passes does not make the system verdict NOT_ADMISSIBLE',
+    law: '§8 / §11.3 P diagnostic, F gating',
+    run: (d) => {
+      const r = run(
+        [
+          { n: 40, A: 'C', B: 'C', jev: yn('C') },
+          { n: 60, A: 'S', B: 'S', Ap: 'C', Bp: 'C', jev: yn('S') },
+        ],
+        d,
+      ).questions.Q_RISK;
+      if (r.domains.P.overall.any.k !== 60) return bad(`setup: Jev should err against P on 60 units, got ${r.domains.P.overall.any.k}`);
+      if (r.domains.F.overall.any.k !== 0) return bad(`setup: Jev should be correct against F, got ${r.domains.F.overall.any.k}`);
+      if (r.provider_diagnostic.state !== 'FAIL' || r.provider_diagnostic.code !== 'PROVIDER_ERROR_ON_PACKET') {
+        return bad(`the P failure must be REPORTED as a provider diagnostic, got ${JSON.stringify(r.provider_diagnostic)}`);
+      }
+      return r.verdict === 'ADVISORY_ADMISSIBLE' ? ok() : bad(`P fails but F passes: the system verdict must stay ADVISORY_ADMISSIBLE; got ${r.verdict}`);
+    },
+  },
+  {
+    id: 'LB-F17',
+    title: 'metrics are stratified by task_shape; a passing pooled number never rescues a failing or unassessed stratum',
+    law: '§3.1 / §4 per-stratum, monotonic roll-up',
+    run: (d) => {
+      const ES = 'EVIDENCE_SYNTHESIS';
+      // (a) a large safe stratum hides a small dangerous one when pooled
+      const a = run(
+        [
+          { n: 600, A: 'C', B: 'C', jev: yn('C') },
+          { n: 100, A: 'S', B: 'S', jev: yn('S') },
+          { n: 25, A: 'C', B: 'C', shape: ES, jev: yn('S') },
+          { n: 20, A: 'S', B: 'S', shape: ES, jev: yn('S') },
+        ],
+        d,
+      ).questions.Q_RISK;
+      if (a.domain_state.F.overall !== 'PASS') return bad(`setup: the pooled F figure should pass (got ${a.domain_state.F.overall})`);
+      if (a.domain_state.F.by_task_shape[ES] !== 'FAIL') return bad(`the ${ES} stratum (25/25 dangerous) must be FAIL, got ${a.domain_state.F.by_task_shape[ES]}`);
+      if (a.verdict !== 'NOT_ADMISSIBLE') return bad(`a failing stratum must make the question NOT_ADMISSIBLE despite a passing pool; got ${a.verdict}`);
+      // (b) a required stratum with no evidence is never silently absent
+      const cfgB = { ...CFG, required_task_shapes: ['CODE_GROUNDED', 'FRONTIER_UNKNOWN'] };
+      const b = run([{ n: 40, A: 'C', B: 'C', jev: yn('C') }, { n: 30, A: 'S', B: 'S', jev: yn('S') }], d, cfgB).questions.Q_RISK;
+      // domain-agnostic on purpose: this falsifier owns "a stratum cannot hide", not which domain names it
+      const unassessed = (r: string[], shape: string): boolean => r.some((x) => new RegExp(`^STRATUM_UNASSESSED:[PF]:${shape}$`).test(x));
+      if (b.verdict !== 'UNINTERPRETABLE' || !unassessed(b.reasons, 'FRONTIER_UNKNOWN')) {
+        return bad(`a required stratum with no units must be UNINTERPRETABLE (STRATUM_UNASSESSED), got ${b.verdict} ${JSON.stringify(b.reasons)}`);
+      }
+      // (c) a sparse observed stratum can never read as a pass
+      const c = run(
+        [
+          { n: 60, A: 'C', B: 'C', jev: yn('C') },
+          { n: 40, A: 'S', B: 'S', jev: yn('S') },
+          { n: 10, A: 'C', B: 'C', shape: ES, jev: yn('C') },
+          { n: 10, A: 'S', B: 'S', shape: ES, jev: yn('S') },
+        ],
+        d,
+      ).questions.Q_RISK;
+      if (c.verdict !== 'UNINTERPRETABLE' || !unassessed(c.reasons, ES)) {
+        return bad(`a sparse stratum must be UNINTERPRETABLE, got ${c.verdict} ${JSON.stringify(c.reasons)}`);
+      }
+      // (d) NOT_ADMISSIBLE dominates UNINTERPRETABLE in the roll-up
+      const dd = run(
+        [
+          { n: 30, A: 'C', B: 'C', jev: yn('C') },
+          { n: 10, A: 'C', B: 'C', jev: yn('S') },
+          { n: 40, A: 'S', B: 'S', jev: yn('S') },
+          { n: 10, A: 'C', B: 'C', shape: ES, jev: yn('C') },
+          { n: 10, A: 'S', B: 'S', shape: ES, jev: yn('S') },
+        ],
+        d,
+      ).questions.Q_RISK;
+      return dd.verdict === 'NOT_ADMISSIBLE' ? ok() : bad(`a failing stratum plus an unassessed one must be NOT_ADMISSIBLE, got ${dd.verdict}`);
     },
   },
 ];
