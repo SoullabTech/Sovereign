@@ -31,6 +31,17 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(controller).toContain('The first thing the writer sees must build trust by naming one earned strength');
   });
 
+  it('continues from the first read into book-fit and chapter-movement questions', () => {
+    expect(develop).toContain('How does this chapter fit the book?');
+    expect(develop).toContain('Show me the chapter’s movement');
+    expect(develop).toContain('data-chapter-book-fit');
+    expect(develop).toContain('data-chapter-movement');
+    expect(controller).toContain('The writer has asked how the currently reviewed chapter fits into the whole book.');
+    expect(controller).toContain('Stay inside this chapter and describe its movement as an editor');
+    expect(controller).toContain('What this chapter contributes to the whole book');
+    expect(controller).toContain('strongest movement');
+  });
+
   it('commissions the whole-manuscript synthesis as an editorial pass, not an abstract dashboard', () => {
     expect(controller).toContain('writers-studio:editorial-pass:v1');
     expect(controller).toContain('MAIA is reading through the manuscript for edit opportunities');

@@ -150,6 +150,12 @@ export default function P4R1DevelopController() {
   const [chapterScorecard, setChapterScorecard] = useState<WholeManuscriptAttentionMap | null>(null);
   const [chapterScoreBusy, setChapterScoreBusy] = useState(false);
   const [chapterScoreError, setChapterScoreError] = useState<string | null>(null);
+  const [chapterBookFit, setChapterBookFit] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [chapterBookFitBusy, setChapterBookFitBusy] = useState(false);
+  const [chapterBookFitError, setChapterBookFitError] = useState<string | null>(null);
+  const [chapterMovement, setChapterMovement] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [chapterMovementBusy, setChapterMovementBusy] = useState(false);
+  const [chapterMovementError, setChapterMovementError] = useState<string | null>(null);
 
   const [writerUnderstanding, setWriterUnderstanding] = useState<WriterUnderstanding | null>(null);
   const [writerUnderstandingBusy, setWriterUnderstandingBusy] = useState(false);
@@ -1017,6 +1023,97 @@ export default function P4R1DevelopController() {
     await performChapterRead(revisionNumber);
   }, [context, chapterReviewBusy, performChapterRead]);
 
+  const readChapterInBook = useCallback(async () => {
+    if (!context || !chapterReview || chapterBookFitBusy || context.draftRevision === null) return;
+    setChapterBookFitBusy(true);
+    setChapterBookFitError(null);
+    try {
+      const wholeSectionIds = context.sections.map((section) => section.draftSectionId);
+      let wholeReadingId: string | null = null;
+      for (const summary of summaries.filter((candidate) => candidate.commissionedLens === 'overview')) {
+        const frozen = await fetchReading(context.manuscriptId, summary.id);
+        if (!frozen.ok) continue;
+        const reading = frozen.payload.reading;
+        if (reading.readState.revisionNumber !== context.draftRevision) continue;
+        if (
+          reading.scope.bodyScope.length !== wholeSectionIds.length
+          || !reading.scope.bodyScope.every((id, index) => id === wholeSectionIds[index])
+        ) continue;
+        wholeReadingId = reading.id;
+        break;
+      }
+
+      if (!wholeReadingId) {
+        const whole = await requestDevelopmentalReading(
+          context.manuscriptId,
+          'overview',
+          { kind: 'whole' },
+        );
+        if (!whole.ok) {
+          setChapterBookFitError(
+            whole.refusal === 'revision_not_current'
+              ? 'The book changed since its last reading snapshot. Save the current draft, then ask again.'
+              : 'MAIA could not read enough of the book to place this chapter confidently. Nothing in the manuscript changed.',
+          );
+          return;
+        }
+        wholeReadingId = whole.readingId;
+        await loadSummaries();
+      }
+
+      const out = await requestAttentionMap(
+        context.manuscriptId,
+        [wholeReadingId],
+        [
+          'The writer has asked how the currently reviewed chapter fits into the whole book.',
+          'Respond as a perceptive book editor. Be concise, conversational, specific, and encouraging before naming friction.',
+          'Use exactly four evidenced items, in this order:',
+          'begin-here: What this chapter contributes to the whole book — name its distinctive job and what it makes possible.',
+          'next: Why this placement works — identify the strongest evidence that the reader is prepared for it here.',
+          'later: What the placement asks of the chapter — name any burden, repetition, missing bridge, or integration problem created by what comes before or after.',
+          'watch: What I would protect or change first — one practical macro-level recommendation, not a rewrite.',
+          'Distinguish chapter evidence from whole-book evidence. Do not pretend a placement is wrong merely because another placement is imaginable.',
+        ].join('\n'),
+      );
+      if (!out.ok) {
+        setChapterBookFitError('MAIA read the book context but could not gather the placement reflection just now. Nothing changed.');
+        return;
+      }
+      setChapterBookFit(out.map);
+    } finally {
+      setChapterBookFitBusy(false);
+    }
+  }, [context, chapterReview, chapterBookFitBusy, summaries, loadSummaries]);
+
+  const readChapterMovement = useCallback(async () => {
+    if (!context || !chapterReview || chapterMovementBusy) return;
+    setChapterMovementBusy(true);
+    setChapterMovementError(null);
+    try {
+      const out = await requestAttentionMap(
+        context.manuscriptId,
+        chapterReview.readingIds,
+        [
+          'Stay inside this chapter and describe its movement as an editor helping the writer strengthen what is already here.',
+          'Be conversational and specific. Begin with what is alive and working before naming imbalance.',
+          'Use exactly four evidenced items, in this order:',
+          'begin-here: The chapter\'s strongest movement — where experience, idea, story, or image carries the reader naturally.',
+          'next: The chapter\'s current shape — describe the sequence and proportions in ordinary language.',
+          'later: Where energy or clarity thins — identify repetition, density, abstraction, transition, or imbalance without grading the writing.',
+          'watch: The smallest structural move with the most leverage — one thing to strengthen, compress, move, bridge, or let breathe before touching sentences.',
+          'Pay particular attention to the relation among lived material, examples or story, conceptual explanation, formal architecture, lineage, and integration. Do not rewrite prose.',
+        ].join('\n'),
+      );
+      if (!out.ok) {
+        setChapterMovementError('MAIA could not gather the chapter movement reflection just now. The chapter review is unchanged.');
+        return;
+      }
+      setChapterMovement(out.map);
+    } finally {
+      setChapterMovementBusy(false);
+    }
+  }, [context, chapterReview, chapterMovementBusy]);
+
   const scoreCurrentChapter = useCallback(async () => {
     if (!context || !chapterReview || chapterScoreBusy) return;
     setChapterScoreBusy(true);
@@ -1228,6 +1325,12 @@ export default function P4R1DevelopController() {
       chapterScorecard={chapterScorecard}
       chapterScoreBusy={chapterScoreBusy}
       chapterScoreError={chapterScoreError}
+      chapterBookFit={chapterBookFit}
+      chapterBookFitBusy={chapterBookFitBusy}
+      chapterBookFitError={chapterBookFitError}
+      chapterMovement={chapterMovement}
+      chapterMovementBusy={chapterMovementBusy}
+      chapterMovementError={chapterMovementError}
       writerUnderstanding={writerUnderstanding}
       writerUnderstandingBusy={writerUnderstandingBusy}
       writerUnderstandingError={writerUnderstandingError}
@@ -1257,6 +1360,8 @@ export default function P4R1DevelopController() {
       onCommission={() => void commission()}
       onReadChapter={() => void readCurrentChapter()}
       onCheckpointAndReadChapter={() => void checkpointCurrentChapterAndRead()}
+      onReadChapterInBook={() => void readChapterInBook()}
+      onReadChapterMovement={() => void readChapterMovement()}
       onScoreChapter={() => void scoreCurrentChapter()}
       onCommissionAttentionMap={() => void commissionAttentionMap()}
       onShowAttentionItem={openAttentionSection}

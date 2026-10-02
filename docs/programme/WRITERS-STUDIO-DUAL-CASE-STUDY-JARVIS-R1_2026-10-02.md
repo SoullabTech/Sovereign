@@ -120,3 +120,31 @@ A unit does not close merely because tests pass.
 6. A1–A6 — Medicine Woman emergence journey
 7. B7 — whole-book / foreword readiness
 8. Cross-case regression: both cases must remain natural after all changes.
+
+## J0 / B1 / B2 / B3 witness — 2026-10-02
+
+### J0 — Common arrival and trust
+PASS on the actual Elemental Alchemy Chapter 10 local manuscript. MAIA begins with an earned,
+specific strength before diagnosis and demonstrates that she understood the chapter.
+
+### B1 — Mature chapter first read
+PASS. The chapter review identifies what the chapter is doing, what is working, what may need
+attention, and where MAIA would start. Technical evidence remains secondary.
+
+### B2 — Chapter in the book
+PASS after defeating two invalid execution shapes:
+- eight whole-book lenses were too slow for this conversational question;
+- mixing chapter-scope and whole-book-scope frozen readings in one attention synthesis was correctly refused.
+
+Accepted shape: reuse or commission one current whole-book Overview, then synthesize book placement
+from that single scope while the chapter review remains visibly present. Current exact whole-book
+Overview is reused only after revision and all section IDs are proven current.
+
+Founder witness result: Chapter 10 belongs late. Its job is to make the model finally sayable after
+the reader has lived its elemental parts. The macro recommendation is seeding If / Why / How /
+What / With earlier rather than relocating Chapter 10.
+
+### B3 — Chapter movement
+PASS. MAIA identifies the movement from spiral image → map/rationale → Maya lived illustration →
+formal states/phases → return to practice. Highest-leverage seam: the lived Maya pass followed by
+a second formal pass, plus tension between non-linearity and the illustration's sequential form.

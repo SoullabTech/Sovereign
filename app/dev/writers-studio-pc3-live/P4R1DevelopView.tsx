@@ -181,6 +181,12 @@ export interface P4R1DevelopViewProps {
   chapterScorecard: WholeManuscriptAttentionMap | null;
   chapterScoreBusy: boolean;
   chapterScoreError: string | null;
+  chapterBookFit: WholeManuscriptAttentionMap | null;
+  chapterBookFitBusy: boolean;
+  chapterBookFitError: string | null;
+  chapterMovement: WholeManuscriptAttentionMap | null;
+  chapterMovementBusy: boolean;
+  chapterMovementError: string | null;
   writerUnderstanding: WriterUnderstanding | null;
   writerUnderstandingBusy: boolean;
   writerUnderstandingError: string | null;
@@ -210,6 +216,8 @@ export interface P4R1DevelopViewProps {
   onCommission: () => void;
   onReadChapter: () => void;
   onCheckpointAndReadChapter: () => void;
+  onReadChapterInBook: () => void;
+  onReadChapterMovement: () => void;
   onScoreChapter: () => void;
   onCommissionAttentionMap: () => void;
   onShowAttentionItem: (itemId: string, sectionId: string) => void;
@@ -1536,6 +1544,14 @@ function ChapterReviewPanel({
   scorecard,
   scoreBusy,
   scoreError,
+  bookFit,
+  bookFitBusy,
+  bookFitError,
+  movement,
+  movementBusy,
+  movementError,
+  onBookFit,
+  onMovement,
   onScore,
 }: {
   map: WholeManuscriptAttentionMap | null;
@@ -1551,6 +1567,14 @@ function ChapterReviewPanel({
   scorecard: WholeManuscriptAttentionMap | null;
   scoreBusy: boolean;
   scoreError: string | null;
+  bookFit: WholeManuscriptAttentionMap | null;
+  bookFitBusy: boolean;
+  bookFitError: string | null;
+  movement: WholeManuscriptAttentionMap | null;
+  movementBusy: boolean;
+  movementError: string | null;
+  onBookFit: () => void;
+  onMovement: () => void;
   onScore: () => void;
 }) {
   if (!map) {
@@ -1626,8 +1650,12 @@ function ChapterReviewPanel({
       ) : null}
 
       <div className="p4r1-chapter-review-actions">
-        <button type="button" onClick={() => onField('arc')}>How does this fit the book’s arc?</button>
-        <button type="button" onClick={() => onField('structure')}>Does it belong here?</button>
+        <button type="button" disabled={bookFitBusy} onClick={onBookFit}>
+          {bookFitBusy ? 'Reading the book around this chapter…' : 'How does this chapter fit the book?'}
+        </button>
+        <button type="button" disabled={movementBusy} onClick={onMovement}>
+          {movementBusy ? 'Looking at the chapter’s movement…' : 'Show me the chapter’s movement'}
+        </button>
         <button type="button" onClick={() => onField('development')}>Show me what to strengthen</button>
         {start?.sectionIds[0] ? (
           <button
@@ -1644,6 +1672,34 @@ function ChapterReviewPanel({
           {scoreBusy ? 'Building scorecard…' : (scorecard ? 'Refresh chapter scorecard' : 'Chapter scorecard')}
         </button>
       </div>
+
+      {bookFitError ? <p className="p4r1-error" role="status">{bookFitError}</p> : null}
+      {bookFit ? (
+        <section className="p4r1-chapter-expansion" data-chapter-book-fit>
+          <span className="p4r1-eyebrow">In the book</span>
+          {bookFit.items.map((item) => (
+            <div key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+            </div>
+          ))}
+          <details><summary>Why MAIA thinks this</summary>{bookFit.items.map((item) => <p key={item.id}>{item.whyItMatters}</p>)}</details>
+        </section>
+      ) : null}
+
+      {movementError ? <p className="p4r1-error" role="status">{movementError}</p> : null}
+      {movement ? (
+        <section className="p4r1-chapter-expansion" data-chapter-movement>
+          <span className="p4r1-eyebrow">Inside the chapter</span>
+          {movement.items.map((item) => (
+            <div key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+            </div>
+          ))}
+          <details><summary>Why MAIA thinks this</summary>{movement.items.map((item) => <p key={item.id}>{item.whyItMatters}</p>)}</details>
+        </section>
+      ) : null}
 
       {scoreError ? <p className="p4r1-error" role="status">{scoreError}</p> : null}
       {scorecard ? (() => {
@@ -2183,6 +2239,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             scorecard={props.chapterScorecard}
             scoreBusy={props.chapterScoreBusy}
             scoreError={props.chapterScoreError}
+            bookFit={props.chapterBookFit}
+            bookFitBusy={props.chapterBookFitBusy}
+            bookFitError={props.chapterBookFitError}
+            movement={props.chapterMovement}
+            movementBusy={props.chapterMovementBusy}
+            movementError={props.chapterMovementError}
+            onBookFit={props.onReadChapterInBook}
+            onMovement={props.onReadChapterMovement}
             onScore={props.onScoreChapter}
           />
 
