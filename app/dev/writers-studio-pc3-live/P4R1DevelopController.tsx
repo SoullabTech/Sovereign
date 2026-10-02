@@ -150,6 +150,9 @@ export default function P4R1DevelopController() {
   const [chapterScorecard, setChapterScorecard] = useState<WholeManuscriptAttentionMap | null>(null);
   const [chapterScoreBusy, setChapterScoreBusy] = useState(false);
   const [chapterScoreError, setChapterScoreError] = useState<string | null>(null);
+  const [chapterMinimalPath, setChapterMinimalPath] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [chapterMinimalPathBusy, setChapterMinimalPathBusy] = useState(false);
+  const [chapterMinimalPathError, setChapterMinimalPathError] = useState<string | null>(null);
   const [chapterBookFit, setChapterBookFit] = useState<WholeManuscriptAttentionMap | null>(null);
   const [chapterBookFitBusy, setChapterBookFitBusy] = useState(false);
   const [chapterBookFitError, setChapterBookFitError] = useState<string | null>(null);
@@ -297,6 +300,42 @@ export default function P4R1DevelopController() {
     () => context && currentSectionId ? chapterSpanFor(context.sections, currentSectionId) : null,
     [context, currentSectionId],
   );
+  const currentChapterRootId = currentChapter?.root.draftSectionId ?? null;
+
+  useEffect(() => {
+    if (!context || !currentChapterRootId || typeof window === 'undefined') {
+      setChapterScorecard(null);
+      setChapterMinimalPath(null);
+      return;
+    }
+    const restore = (
+      key: string,
+      setter: (map: WholeManuscriptAttentionMap | null) => void,
+    ) => {
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) { setter(null); return; }
+      try {
+        const cached = JSON.parse(raw) as { draftRevision?: number; map?: WholeManuscriptAttentionMap };
+        if (
+          context.draftRevision !== null
+          && cached.draftRevision === context.draftRevision
+          && cached.map?.manuscriptId === context.manuscriptId
+        ) setter(cached.map);
+        else setter(null);
+      } catch {
+        window.sessionStorage.removeItem(key);
+        setter(null);
+      }
+    };
+    restore(
+      `writers-studio:chapter-scorecard:v1:${context.manuscriptId}:${currentChapterRootId}`,
+      setChapterScorecard,
+    );
+    restore(
+      `writers-studio:chapter-minimal-path:v1:${context.manuscriptId}:${currentChapterRootId}`,
+      setChapterMinimalPath,
+    );
+  }, [context?.manuscriptId, context?.draftRevision, currentChapterRootId]);
 
   useEffect(() => {
     if (!context || !currentSection) return;
@@ -1135,10 +1174,55 @@ export default function P4R1DevelopController() {
         return;
       }
       setChapterScorecard(out.map);
+      if (typeof window !== 'undefined' && context.draftRevision !== null && currentChapterRootId) {
+        window.sessionStorage.setItem(
+          `writers-studio:chapter-scorecard:v1:${context.manuscriptId}:${currentChapterRootId}`,
+          JSON.stringify({ draftRevision: context.draftRevision, map: out.map }),
+        );
+      }
     } finally {
       setChapterScoreBusy(false);
     }
-  }, [context, chapterReview, chapterScoreBusy]);
+  }, [context, chapterReview, chapterScoreBusy, currentChapterRootId]);
+
+  const minimalPathCurrentChapter = useCallback(async () => {
+    if (!context || !chapterReview || !chapterScorecard || chapterMinimalPathBusy) return;
+    setChapterMinimalPathBusy(true);
+    setChapterMinimalPathError(null);
+    try {
+      const scoreSnapshot = chapterScorecard.items
+        .map((item) => `${item.label}: ${item.notice}`)
+        .join('\n');
+      const out = await requestAttentionMap(
+        context.manuscriptId,
+        chapterReview.readingIds,
+        [
+          'Create a writer-facing Minimal path to 5/5 from these same frozen chapter readings and the current optional scorecard. Do not reread the manuscript.',
+          'The goal is not to guarantee perfect scores. Identify the smallest set of high-leverage changes most likely to materially improve the weaker dimensions while protecting what already works.',
+          'Prefer light and moderate edits: compression, clarification, transition, reader signposting, local reordering, or removing unnecessary repetition. A major rewrite is exceptional and must not be proposed while smaller interventions could plausibly solve the issue.',
+          'Return exactly four evidenced items, ordered by leverage, using begin-here, next, later, watch.',
+          'Begin each notice with [Light], [Moderate], or [Heavy]. Use [Heavy] only when the evidence shows a smaller move is insufficient.',
+          'For each item, describe one concrete editorial move without writing replacement prose. In whyItMatters, name which scorecard dimensions the move is likely to help and what must be protected.',
+          'If the chapter appears improvable without a major rewrite, make the watch item explicitly say so.',
+          'Current scorecard:',
+          scoreSnapshot,
+        ].join('\n'),
+      );
+      if (!out.ok) {
+        setChapterMinimalPathError('MAIA could not prepare the minimal path just now. The scorecard and chapter are unchanged.');
+        return;
+      }
+      setChapterMinimalPath(out.map);
+      if (typeof window !== 'undefined' && context.draftRevision !== null && currentChapterRootId) {
+        window.sessionStorage.setItem(
+          `writers-studio:chapter-minimal-path:v1:${context.manuscriptId}:${currentChapterRootId}`,
+          JSON.stringify({ draftRevision: context.draftRevision, map: out.map }),
+        );
+      }
+    } finally {
+      setChapterMinimalPathBusy(false);
+    }
+  }, [context, chapterReview, chapterScorecard, chapterMinimalPathBusy, currentChapterRootId]);
 
   useEffect(() => {
     if (!chapterReadPending || prep?.kind !== 'ready' || chapterReviewBusy) return;
@@ -1225,7 +1309,8 @@ export default function P4R1DevelopController() {
 
   const workWithAttentionItem = useCallback(async (itemId: string, sectionId: string) => {
     const item = attentionMap?.items.find((candidate) => candidate.id === itemId)
-      ?? chapterReview?.items.find((candidate) => candidate.id === itemId);
+      ?? chapterReview?.items.find((candidate) => candidate.id === itemId)
+      ?? chapterMinimalPath?.items.find((candidate) => candidate.id === itemId);
     if (!item || !context) return;
 
     /* C11R2 — use the same verifier that Write/Focus uses. A model-visible
@@ -1257,7 +1342,7 @@ export default function P4R1DevelopController() {
     /* No cited observation can lawfully become an editable locus. Orient to an
        evidenced section and leave passage selection to the writer. */
     openAttentionSection(itemId, sectionId);
-  }, [attentionMap, chapterReview, context, openAttentionSection, updateQuery]);
+  }, [attentionMap, chapterReview, chapterMinimalPath, context, openAttentionSection, updateQuery]);
 
   const sectionScope = useMemo<Extract<DevelopScopeChoice, { kind: 'section' }> | null>(() => {
     if (!currentSection) return null;
@@ -1325,6 +1410,9 @@ export default function P4R1DevelopController() {
       chapterScorecard={chapterScorecard}
       chapterScoreBusy={chapterScoreBusy}
       chapterScoreError={chapterScoreError}
+      chapterMinimalPath={chapterMinimalPath}
+      chapterMinimalPathBusy={chapterMinimalPathBusy}
+      chapterMinimalPathError={chapterMinimalPathError}
       chapterBookFit={chapterBookFit}
       chapterBookFitBusy={chapterBookFitBusy}
       chapterBookFitError={chapterBookFitError}
@@ -1363,6 +1451,7 @@ export default function P4R1DevelopController() {
       onReadChapterInBook={() => void readChapterInBook()}
       onReadChapterMovement={() => void readChapterMovement()}
       onScoreChapter={() => void scoreCurrentChapter()}
+      onMinimalPathChapter={() => void minimalPathCurrentChapter()}
       onCommissionAttentionMap={() => void commissionAttentionMap()}
       onShowAttentionItem={openAttentionSection}
       onWorkWithAttentionItem={workWithAttentionItem}

@@ -181,6 +181,9 @@ export interface P4R1DevelopViewProps {
   chapterScorecard: WholeManuscriptAttentionMap | null;
   chapterScoreBusy: boolean;
   chapterScoreError: string | null;
+  chapterMinimalPath: WholeManuscriptAttentionMap | null;
+  chapterMinimalPathBusy: boolean;
+  chapterMinimalPathError: string | null;
   chapterBookFit: WholeManuscriptAttentionMap | null;
   chapterBookFitBusy: boolean;
   chapterBookFitError: string | null;
@@ -219,6 +222,7 @@ export interface P4R1DevelopViewProps {
   onReadChapterInBook: () => void;
   onReadChapterMovement: () => void;
   onScoreChapter: () => void;
+  onMinimalPathChapter: () => void;
   onCommissionAttentionMap: () => void;
   onShowAttentionItem: (itemId: string, sectionId: string) => void;
   onWorkWithAttentionItem: (itemId: string, sectionId: string) => void;
@@ -1544,6 +1548,9 @@ function ChapterReviewPanel({
   scorecard,
   scoreBusy,
   scoreError,
+  minimalPath,
+  minimalPathBusy,
+  minimalPathError,
   bookFit,
   bookFitBusy,
   bookFitError,
@@ -1553,6 +1560,7 @@ function ChapterReviewPanel({
   onBookFit,
   onMovement,
   onScore,
+  onMinimalPath,
 }: {
   map: WholeManuscriptAttentionMap | null;
   busy: boolean;
@@ -1567,6 +1575,9 @@ function ChapterReviewPanel({
   scorecard: WholeManuscriptAttentionMap | null;
   scoreBusy: boolean;
   scoreError: string | null;
+  minimalPath: WholeManuscriptAttentionMap | null;
+  minimalPathBusy: boolean;
+  minimalPathError: string | null;
   bookFit: WholeManuscriptAttentionMap | null;
   bookFitBusy: boolean;
   bookFitError: string | null;
@@ -1576,6 +1587,7 @@ function ChapterReviewPanel({
   onBookFit: () => void;
   onMovement: () => void;
   onScore: () => void;
+  onMinimalPath: () => void;
 }) {
   if (!map) {
     return (
@@ -1668,9 +1680,16 @@ function ChapterReviewPanel({
         ) : (
           <button type="button" className="p4r1-chapter-review-primary" onClick={onWrite}>Work on the writing</button>
         )}
-        <button type="button" disabled={scoreBusy} onClick={onScore}>
-          {scoreBusy ? 'Building scorecard…' : (scorecard ? 'Refresh chapter scorecard' : 'Chapter scorecard')}
-        </button>
+        {!scorecard ? (
+          <button type="button" disabled={scoreBusy} onClick={onScore}>
+            {scoreBusy ? 'Building scorecard…' : 'Chapter scorecard'}
+          </button>
+        ) : null}
+        {scorecard ? (
+          <button type="button" disabled={minimalPathBusy} onClick={onMinimalPath}>
+            {minimalPathBusy ? 'Finding the smallest high-leverage changes…' : 'Minimal path to 5/5'}
+          </button>
+        ) : null}
       </div>
 
       {bookFitError ? <p className="p4r1-error" role="status">{bookFitError}</p> : null}
@@ -1710,7 +1729,7 @@ function ChapterReviewPanel({
           <div className="p4r1-chapter-scorecard" data-chapter-scorecard>
             <div className="p4r1-chapter-scorecard-head">
               <b>Chapter scorecard</b>
-              <span>Optional craft guide · not a grade</span>
+              <span>Optional craft guide · not a grade · fixed to this chapter revision</span>
             </div>
             {scored.map((item) => {
               const score = item.notice.match(/^([1-5]\/5)\b/)?.[1] ?? '—';
@@ -1740,6 +1759,25 @@ function ChapterReviewPanel({
           </div>
         );
       })() : null}
+
+      {minimalPathError ? <p className="p4r1-error" role="status">{minimalPathError}</p> : null}
+      {minimalPath ? (
+        <section className="p4r1-chapter-expansion p4r1-minimal-path" data-chapter-minimal-path>
+          <span className="p4r1-eyebrow">Minimal path to 5/5</span>
+          <h4>Start with the few changes that do the most work.</h4>
+          <p>Light and moderate edits first. Major rewriting only if a smaller move cannot solve the problem.</p>
+          {minimalPath.items.map((item) => (
+            <article key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+              <small>{item.whyItMatters}</small>
+              {item.sectionIds[0] ? (
+                <button type="button" onClick={() => onEdit(item.id, item.sectionIds[0]!)}>Work on this</button>
+              ) : null}
+            </article>
+          ))}
+        </section>
+      ) : null}
 
       <details className="p4r1-chapter-review-details">
         <summary>Why MAIA thinks this</summary>
@@ -2239,6 +2277,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             scorecard={props.chapterScorecard}
             scoreBusy={props.chapterScoreBusy}
             scoreError={props.chapterScoreError}
+            minimalPath={props.chapterMinimalPath}
+            minimalPathBusy={props.chapterMinimalPathBusy}
+            minimalPathError={props.chapterMinimalPathError}
             bookFit={props.chapterBookFit}
             bookFitBusy={props.chapterBookFitBusy}
             bookFitError={props.chapterBookFitError}
@@ -2248,6 +2289,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             onBookFit={props.onReadChapterInBook}
             onMovement={props.onReadChapterMovement}
             onScore={props.onScoreChapter}
+            onMinimalPath={props.onMinimalPathChapter}
           />
 
           <details className="p4r1-develop-more">

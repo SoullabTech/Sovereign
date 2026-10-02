@@ -31,6 +31,20 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(controller).toContain('The first thing the writer sees must build trust by naming one earned strength');
   });
 
+  it('turns the optional scorecard into a minimal high-leverage revision path', () => {
+    expect(develop).toContain('Minimal path to 5/5');
+    expect(develop).toContain('Start with the few changes that do the most work.');
+    expect(develop).toContain('Light and moderate edits first. Major rewriting only if a smaller move cannot solve the problem.');
+    expect(develop).toContain('Work on this');
+    expect(controller).toContain('Create a writer-facing Minimal path to 5/5');
+    expect(controller).toContain('A major rewrite is exceptional');
+    expect(controller).toContain('Begin each notice with [Light], [Moderate], or [Heavy].');
+    expect(develop).toContain('fixed to this chapter revision');
+    expect(develop).not.toContain('Refresh chapter scorecard');
+    expect(controller).toContain('writers-studio:chapter-scorecard:v1');
+    expect(controller).toContain('cached.draftRevision === context.draftRevision');
+  });
+
   it('continues from the first read into book-fit and chapter-movement questions', () => {
     expect(develop).toContain('How does this chapter fit the book?');
     expect(develop).toContain('Show me the chapter’s movement');

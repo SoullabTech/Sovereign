@@ -1048,8 +1048,29 @@ export default function FlagshipWriteEditController() {
     if (!section) return;
     const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
     const exact = Array.from(passage.body).slice(range.start, range.end).join('');
+
+    /* A Develop → Write focus handoff is one arrival act. Once the carried
+       evidence has been re-verified against the current draft, hold the exact
+       passage and open Focus in the same turn. Waiting for a later effect to
+       observe the held state created a race where the writer arrived in Write
+       with valid evidence but no editorial room. */
+    if (incomingAction === 'focus' && passage.range) {
+      const key = [
+        arrivalInsight.readingId,
+        arrivalInsight.observation.key,
+        section.draftSectionId,
+        passage.range.start,
+        passage.range.end,
+      ].join(':');
+      if (focusInsightConsumed.current === key) return;
+      focusInsightConsumed.current = key;
+      holdPassage(section, range.start, range.end, exact);
+      openWorkspace({ readingId: arrivalInsight.readingId, key: arrivalInsight.observation.key });
+      return;
+    }
+
     holdPassage(section, range.start, range.end, exact);
-  }, [arrivalInsight, context, requestedSection, incomingAction, holdPassage]);
+  }, [arrivalInsight, context, requestedSection, incomingAction, holdPassage, openWorkspace]);
 
   useEffect(() => {
     if (incomingAction !== 'focus' || !arrivalInsight || !selectedPassage || workspaceOpen) return;

@@ -148,3 +148,143 @@ What / With earlier rather than relocating Chapter 10.
 PASS. MAIA identifies the movement from spiral image → map/rationale → Maya lived illustration →
 formal states/phases → return to practice. Highest-leverage seam: the lived Maya pass followed by
 a second formal pass, plus tension between non-linearity and the illustration's sequential form.
+
+## Programme expansion — canonical human journeys
+
+The dual-case programme expands to four canonical creation journeys. These are not separate products;
+they are acceptance lenses on one Writer's Studio.
+
+### Case C — Executive / memoirist
+
+A founder, executive, community leader, public servant, or elder wants to turn a life of decisions,
+relationships, failures, turning points, leadership lessons, family history, and legacy into memoir,
+leadership writing, or a reflective book.
+
+The Studio must help recover narrative shape without turning the book into a business case study.
+Voice, memory, emotional truth, privacy, chronology, and reader trust matter as much as polish.
+
+### Case D — Scholar / dissertation writer
+
+A doctoral or advanced scholar brings research questions, literature, notes, drafts, methods, findings,
+citations, and argument.
+
+The Studio must distinguish scholarly support from authorship. It may help with structure, coherence,
+argument, evidence placement, transitions, literature synthesis, citation completeness, and reader
+orientation while preserving the scholar's intellectual responsibility and institutional requirements.
+
+Academic support must never fabricate sources, evidence, results, quotations, or citations.
+
+## Priority execution lane — Elemental Alchemy handoff
+
+Elemental Alchemy is the first live proving case because the manuscript is already a book and has a
+near-term external handoff.
+
+### EA-1 — Whole-book orientation
+Read the manuscript as a book, not as isolated sections. Establish the reader journey, the role of
+each major movement, repeated concepts, cumulative knowledge, and what Chapter 10 inherits.
+
+### EA-2 — Chapter 10 role
+State what Chapter 10 must accomplish at this point in the book. Test placement, culmination,
+integration, reader readiness, and whether it advances rather than re-teaches earlier material.
+
+### EA-3 — Protect list
+Name the passages, images, stories, arguments, voice qualities, and structural moves that should not
+be lost in revision.
+
+### EA-4 — Minimal path to 5/5
+For each optional scorecard dimension below 5, identify the smallest high-leverage changes likely to
+improve it. Light edits first. Do not prescribe major revision while a smaller move may suffice.
+
+### EA-5 — Passage work
+Move exact loci into Write. Offer 2–4 alternatives. Smallest sufficient move first. Keep the author
+in control of latitude from Light through Heavy.
+
+### EA-6 — Reread and compare
+After edits, reread the chapter. Report what improved, what remained strong, what still resists, and
+whether anything valuable was weakened.
+
+### EA-7 — Whole-book readiness
+Return to whole-book scale. Identify only the remaining issues that materially affect reception,
+coherence, accessibility, or maturity.
+
+### EA-8 — External-reader handoff
+Produce a clean final reading experience for a respected senior reader: coherent, unmistakably
+Kelly's voice, intellectually and spiritually grounded, and free of preventable friction.
+
+## Founder editorial latitude — Elemental Alchemy
+
+For the current Elemental Alchemy refinement pass, useful edits may be distributed throughout the
+manuscript wherever they materially strengthen the reader experience.
+
+Default posture:
+
+> **Light-to-moderate distributed refinement. Major rewrite is exceptional.**
+
+Preferred intervention order:
+
+1. protect what is already strong;
+2. tighten repetition or excess explanation;
+3. clarify meaning where the reader may have to work too hard;
+4. strengthen transitions and reader orientation;
+5. improve rhythm, precision, and sentence-level force;
+6. rebalance local passages when needed;
+7. restructure or substantially recast only when smaller interventions cannot solve the problem.
+
+The manuscript should become more powerful, not more generic.
+
+## Case C JARVIS flow — Executive / memoirist
+
+### C1 — Life-material intake
+Accept interviews, recordings, journals, speeches, correspondence, timelines, anecdotes, leadership
+stories, family material, and remembered scenes. Distinguish lived memory from externally verifiable fact.
+
+### C2 — Narrative identity
+Help the writer discover the recurring questions, turning points, relationships, failures, decisions,
+and values that make this their story. Do not collapse the memoir into résumé chronology.
+
+### C3 — Story architecture
+Offer possible narrative shapes: chronological, thematic, braided, episodic, journey-based, or hybrid.
+MAIA proposes; the writer chooses. Protect ambiguity where memory is genuinely uncertain.
+
+### C4 — Voice and candor
+Preserve the writer's actual speaking voice while helping them move beyond executive abstraction.
+Flag places where corporate language hides the person or where disclosure/privacy deserves a deliberate choice.
+
+### C5 — Reader and legacy
+Test what a reader understands about the person, the era, the decisions, and the human consequences.
+Help distinguish lesson from self-justification without forcing confession or spectacle.
+
+### C6 — Publication refinement
+Run distributed refinement, chapter review, optional scorecards, before/after comparison, and edition readiness.
+
+## Case D JARVIS flow — Dissertation / scholarly work
+
+### D1 — Research orientation
+Establish the research question, disciplinary context, institutional requirements, methodology, claims,
+source corpus, citation style, and current stage. MAIA must distinguish the scholar's own argument from sources.
+
+### D2 — Argument architecture
+Map thesis, chapter functions, claims, warrants, evidence, counterarguments, methods, findings, and conclusion.
+Expose structural gaps without fabricating missing scholarship or pretending a contested claim is settled.
+
+### D3 — Literature synthesis
+Help organize and compare literature, identify schools of thought, disagreements, and conceptual lineage.
+Every factual/source-dependent claim must remain traceable to an actual source supplied or lawfully retrieved.
+
+### D4 — Scholarly writing
+Improve clarity, transitions, paragraph logic, signposting, terminology, and academic voice while preserving
+the scholar's intellectual authorship. Never invent data, quotations, citations, participants, findings, or methods.
+
+### D5 — Committee-reader review
+Read as a demanding but fair committee member: where is the argument unclear, unsupported, repetitive,
+overclaimed, insufficiently situated, or disconnected from the research question?
+
+### D6 — Defense / submission readiness
+Test abstract-to-conclusion coherence, citation completeness, limitations, contribution claims, formatting
+requirements, and likely defense questions. Ratings remain optional transparent rubrics, not institutional predictions.
+
+## Cross-case invariant
+
+The Studio adapts its craft intelligence to the Work, but the human contract remains constant:
+
+> Understand first. Protect what is alive. Improve only what needs improving. Keep authorship with the writer.
