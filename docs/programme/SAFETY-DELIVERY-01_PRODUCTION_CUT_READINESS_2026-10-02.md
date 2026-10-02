@@ -54,8 +54,8 @@ therefore **not by itself production authority**. Post-facto disposition remains
 Provides the current canonical live server crisis detector and composition seam.
 
 #1633 is also self-authored Class A, merged with zero reviews under the same unresolved
-custody condition. It likewise requires explicit post-facto governance disposition before
-this record may select it into a production cut.
+custody condition. PR #1724 records that admission exception. #1633 still requires explicit
+post-facto governance disposition before this record may select it into a production cut.
 
 ### Pending Class A review boundary
 
@@ -84,6 +84,7 @@ must land before further Class-A admission is treated as ordinary.
 
 #1709 — #1671 admission-exception record
 #1714 — post-#1671 register reconciliation
+#1724 — #1633 admission-exception record
 
 Documentation/evidence only; they do not themselves grant runtime or deployment authority.
 
