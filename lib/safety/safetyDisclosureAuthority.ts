@@ -1,12 +1,15 @@
 /**
- * SAFETY-DISCLOSURE-01 — pure disclosure-authority resolver.
+ * SAFETY-DISCLOSURE-01 — pure MEMBER-INITIATED disclosure-authority resolver.
+ *
+ * This module governs only future member-controlled disclosure/off-ramp acts.
+ * It does NOT model, supersede, disable, or authorize the separately canonical
+ * #1671 human-safety delivery membrane.
  *
  * This module does not detect crisis, inspect member content, look up recipients,
  * persist state, send notifications, or perform a disclosure.
  *
- * Law: concern never manufactures authority. The only currently executable basis
- * is a present, explicit member act naming a disclosure target and scope.
- * Candidate exceptions remain REVIEW_REQUIRED until separately ratified.
+ * Law inside this seam: concern never manufactures a NEW member-controlled
+ * disclosure authority. A present, explicit member act is required.
  */
 
 export type SafetyDisclosureRecipient =
@@ -25,19 +28,19 @@ export type SafetyDisclosureReviewBasis =
   | 'legal_compulsion'
   | 'minor_or_vulnerable_adult';
 
-export type SafetyDisclosureMemberAct = {
+export type MemberInitiatedSafetyDisclosureAct = {
   explicit: true;
   presentTurn: true;
   recipient: SafetyDisclosureRecipient;
   scope: SafetyDisclosureScope;
 };
 
-export type SafetyDisclosureAuthorityInput = {
-  memberAct?: SafetyDisclosureMemberAct | null;
+export type MemberInitiatedSafetyDisclosureInput = {
+  memberAct?: MemberInitiatedSafetyDisclosureAct | null;
   reviewBasis?: SafetyDisclosureReviewBasis | null;
 };
 
-export type SafetyDisclosureAuthority =
+export type MemberInitiatedSafetyDisclosureAuthority =
   | {
       kind: 'may_cross';
       basis: 'member_act';
@@ -61,9 +64,9 @@ export type SafetyDisclosureAuthority =
  * callers must establish the repository's disclosure boundary / accountability
  * receipt before any content moves.
  */
-export function resolveSafetyDisclosureAuthority(
-  input: SafetyDisclosureAuthorityInput,
-): SafetyDisclosureAuthority {
+export function resolveMemberInitiatedSafetyDisclosureAuthority(
+  input: MemberInitiatedSafetyDisclosureInput,
+): MemberInitiatedSafetyDisclosureAuthority {
   if (input.memberAct?.explicit === true && input.memberAct.presentTurn === true) {
     return {
       kind: 'may_cross',

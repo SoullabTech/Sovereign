@@ -37,15 +37,17 @@ A crisis recognizer, risk classification, model judgment, practitioner relations
 
 Recognition changes the system's obligation to respond safely to the member. It does not automatically increase authority over the member.
 
-### L2 — Member act is the only currently executable basis
+### L2 — Member act is the only executable basis inside this member-controlled seam
 
-A present explicit member act may authorize a bounded disclosure when it names:
+For the future member-initiated disclosure/off-ramp governed by SAFETY-DISCLOSURE-01, a present explicit member act may authorize a bounded disclosure when it names:
 
 - the recipient class;
 - the scope of content to cross;
 - the present act itself.
 
-The authority resolver returns `may_cross` only for that case.
+The member-initiated authority resolver returns `may_cross` only for that case.
+
+This statement is **not** a claim that the whole platform has no other canonical human-delivery authority. PR #1671 already established a separate human-safety delivery membrane for specifically governed safety paths. This resolver neither models nor revokes that membrane.
 
 `may_cross` is still not the disclosure. The caller must then establish the existing disclosure boundary and accountability receipt before content crosses.
 
@@ -73,15 +75,17 @@ No private reflection reaches a coach, practitioner, family member, trusted cont
 
 `lib/safety/safetyDisclosureAuthority.ts`
 
-The resolver is pure. It:
+The member-initiated resolver is pure. It:
 
+- governs only future member-controlled disclosure/off-ramp acts;
 - does not import the crisis recognizer;
 - does not accept severity or a risk score;
 - performs no recipient lookup;
 - performs no network or database operation;
 - cannot send content;
 - returns `may_cross` only for a present explicit member act;
-- returns `review_required` for unresolved exception classes.
+- returns `review_required` for unresolved exception classes;
+- does not model, authorize, revoke, or supersede canonical #1671 human-delivery authority.
 
 ## Falsifiers
 
@@ -94,13 +98,13 @@ The contract is defeated if any of the following becomes possible:
 5. an imminent-danger, legal, minor, or vulnerable-adult label directly returns permission;
 6. `may_cross` bypasses the repository's disclosure-boundary / receipt discipline.
 
-## Relation to SAFETY-DELIVERY-01
+## Relation to canonical SAFETY-CRISIS-01 and #1671
 
-SAFETY-DELIVERY-01 may recognize explicit active/NSSI/imminent language and provide a deterministic member-facing safety floor.
+Canonical SAFETY-CRISIS-01 owns crisis recognition and member response at the `/list` ingress. Canonical #1671 owns a separate human-delivery membrane for specifically governed safety paths.
 
-That recognition remains independent of this authority resolver.
+This member-initiated resolver is independent of both. Crisis classification cannot create a new off-ramp disclosure grant here, and this resolver cannot cancel or reinterpret authority already established elsewhere in canonical.
 
-`disclosureAuthorized: false` on the safety response is therefore not temporary copy. It expresses the standing law unless and until a separate witnessed authority event exists.
+The cognition path must not infer human-delivery outcome from crisis classification. Human delivery remains separately governed and separately witnessed.
 
 ## Relation to the Now What? reconciliation
 
@@ -123,4 +127,4 @@ SAFETY-DISCLOSURE-01 makes the authority portion of that design mechanically rep
 
 ## Standing
 
-**DEFAULT PRIVATE · MEMBER ACT IS THE ONLY CURRENT EXECUTABLE DISCLOSURE BASIS · EXCEPTIONS REVIEW-REQUIRED · NO DISCLOSURE TRANSPORT ADDED.**
+**DEFAULT PRIVATE FOR NEW MEMBER-CONTROLLED DISCLOSURE · MEMBER ACT IS THE ONLY EXECUTABLE BASIS INSIDE THIS RESOLVER · CANONICAL #1671 DELIVERY AUTHORITY PRESERVED · EXCEPTIONS REVIEW-REQUIRED · NO NEW DISCLOSURE TRANSPORT ADDED.**

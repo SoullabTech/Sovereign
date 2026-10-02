@@ -1,10 +1,10 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { resolveSafetyDisclosureAuthority } from '../safetyDisclosureAuthority';
+import { resolveMemberInitiatedSafetyDisclosureAuthority } from '../safetyDisclosureAuthority';
 
-describe('SAFETY-DISCLOSURE-01 authority law', () => {
+describe('SAFETY-DISCLOSURE-01 member-initiated authority law', () => {
   it('defaults to no disclosure authority', () => {
-    expect(resolveSafetyDisclosureAuthority({})).toEqual({
+    expect(resolveMemberInitiatedSafetyDisclosureAuthority({})).toEqual({
       kind: 'none',
       basis: 'none',
       mayCross: false,
@@ -12,7 +12,7 @@ describe('SAFETY-DISCLOSURE-01 authority law', () => {
   });
 
   it('permits only a present explicit member act as the currently executable basis', () => {
-    expect(resolveSafetyDisclosureAuthority({
+    expect(resolveMemberInitiatedSafetyDisclosureAuthority({
       memberAct: {
         explicit: true,
         presentTurn: true,
@@ -33,14 +33,14 @@ describe('SAFETY-DISCLOSURE-01 authority law', () => {
     'legal_compulsion',
     'minor_or_vulnerable_adult',
   ] as const)('%s is review-required, never executable authority', (reviewBasis) => {
-    expect(resolveSafetyDisclosureAuthority({ reviewBasis })).toEqual({
+    expect(resolveMemberInitiatedSafetyDisclosureAuthority({ reviewBasis })).toEqual({
       kind: 'review_required',
       basis: reviewBasis,
       mayCross: false,
     });
   });
 
-  it('member act is the only path that can return may_cross', () => {
+  it('member act is the only path inside this resolver that can return may_cross', () => {
     const candidates = [
       {},
       { reviewBasis: 'imminent_danger_exception' as const },
@@ -49,7 +49,7 @@ describe('SAFETY-DISCLOSURE-01 authority law', () => {
     ];
 
     for (const candidate of candidates) {
-      expect(resolveSafetyDisclosureAuthority(candidate).kind).not.toBe('may_cross');
+      expect(resolveMemberInitiatedSafetyDisclosureAuthority(candidate).kind).not.toBe('may_cross');
     }
   });
 
@@ -73,5 +73,15 @@ describe('SAFETY-DISCLOSURE-01 authority law', () => {
     expect(src).not.toMatch(/establishDisclosureBoundary\s*\(/);
     expect(src).not.toMatch(/getPractitioner|findPractitioner|guardian|emergencyContact/i);
     expect(src).toContain('requiresDisclosureBoundary: true');
+  });
+
+  it('explicitly preserves canonical #1671 human-delivery authority outside this resolver', () => {
+    const src = readFileSync(
+      join(process.cwd(), 'lib/safety/safetyDisclosureAuthority.ts'),
+      'utf8',
+    );
+
+    expect(src).toContain('#1671 human-safety delivery membrane');
+    expect(src).toContain('does NOT model, supersede, disable, or authorize');
   });
 });
