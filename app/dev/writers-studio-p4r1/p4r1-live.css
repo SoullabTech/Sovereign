@@ -3573,3 +3573,29 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
 .p4r1-root .p4r1-chapter-outline li[data-depth='2']{padding-left:14px}
 .p4r1-root .p4r1-chapter-outline li[data-depth='3']{padding-left:32px}
 .p4r1-root .p4r1-chapter-outline li[data-depth='3'] span{font-size:13px;color:var(--fr-ink2)}
+
+/* WS-DEVELOP-MAIA-COMPOSER-R1 · conversation gets enough physical room to think. */
+@media(min-width:1180px){
+  .p4r1-root .fr-shell:has([data-maia-focus='true']) .fr-room{
+    grid-template-columns:var(--fr-ms-w) minmax(0,1fr) minmax(480px,38vw)
+  }
+}
+.p4r1-root [data-maia-work-conversation='true']{
+  min-height:0
+}
+.p4r1-root [data-maia-composer='true']{
+  position:sticky;bottom:0;z-index:4;padding:12px 0 2px;
+  box-shadow:0 -10px 24px color-mix(in srgb,var(--fr-panel) 88%,transparent)
+}
+.p4r1-root [data-maia-composer='true'] textarea{
+  font-size:15px!important;line-height:1.55!important
+}
+.p4r1-root [data-maia-focus='true'] [data-maia-composer='true'] textarea{
+  font-size:16px!important;line-height:1.6!important
+}
+.p4r1-root [data-maia-focus-toggle='true'][aria-pressed='true']{
+  border-color:var(--fr-action-line)!important;background:var(--fr-action-soft)!important;color:var(--fr-action)!important
+}
+@media(max-width:760px){
+  .p4r1-root [data-maia-composer='true'] textarea{min-height:120px!important}
+}
