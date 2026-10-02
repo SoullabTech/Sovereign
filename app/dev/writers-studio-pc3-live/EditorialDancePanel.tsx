@@ -347,8 +347,8 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
         <header><b>Work on the words</b><span>Stay close to this passage.</span></header>
         <div className="p4r1-dance-start-actions">
           <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(revisePassagePrompt())}>
-            <b>Revise this passage</b>
-            <span>Show me what you’d preserve, where the friction is, and one move you’d try.</span>
+            <b>Show edit options</b>
+            <span>Let MAIA offer a revision direction and other ways this passage could move. Nothing changes until you apply one.</span>
           </button>
           <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(discussPassagePrompt())}>
             <b>Discuss what’s happening</b>
@@ -457,7 +457,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
               'Based on what we just discussed, help me revise this exact passage.',
               revisePassagePrompt(),
             ].join('\n\n'))}>
-              Revise from this
+              Show revision options
             </button>
             <button type="button" disabled={props.busy} onClick={() => begin(examplesPassagePrompt(), 'learning')}>
               Show examples
