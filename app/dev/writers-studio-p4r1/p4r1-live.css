@@ -3628,3 +3628,45 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
 @media(max-width:760px){
   .p4r1-root [data-maia-composer='true'] textarea{min-height:120px!important}
 }
+
+/* WRITE PROSE VIEW — the chapter reads like a book; edit machinery stays one gesture away. */
+.p4r1-root .p4r1-prose-host,.p4r1-root .p4r1-edit-host{position:relative;min-height:0;height:100%}
+.p4r1-root .p4r1-write-view-switch{
+  position:absolute;z-index:6;top:14px;right:22px;display:flex;gap:4px;
+  padding:3px;border:1px solid var(--fr-line-soft);border-radius:999px;background:var(--fr-panel)
+}
+.p4r1-root .p4r1-write-view-switch button{
+  padding:6px 11px;border-radius:999px;color:var(--fr-muted);font:11px/1 var(--fr-sans-stack)
+}
+.p4r1-root .p4r1-write-view-switch button[aria-pressed='true']{
+  background:var(--fr-action-soft);color:var(--fr-action)
+}
+.p4r1-root .p4r1-prose-view{height:100%;overflow:auto;padding:56px 28px 90px}
+.p4r1-root .p4r1-prose-page{
+  width:min(760px,calc(100% - 32px));margin:0 auto;color:var(--fr-ink);
+  font-family:var(--fr-serif-stack);font-size:20px;line-height:1.78
+}
+.p4r1-root .p4r1-prose-page>h1{
+  margin:0 0 42px;color:var(--fr-title);font:500 44px/1.14 var(--fr-serif-stack);letter-spacing:-.012em
+}
+.p4r1-root .p4r1-prose-section{position:relative;margin:0 0 52px}
+.p4r1-root .p4r1-prose-section>h2{margin:58px 0 24px;color:var(--fr-title);font:600 27px/1.25 var(--fr-serif-stack)}
+.p4r1-root .p4r1-prose-section>h3{margin:44px 0 20px;color:var(--fr-title);font:600 22px/1.3 var(--fr-serif-stack)}
+.p4r1-root .p4r1-prose-section>p{margin:0 0 24px}
+.p4r1-root .p4r1-prose-section>blockquote{
+  margin:2px 0 42px;padding-left:26px;border-left:1px solid var(--fr-line);
+  color:var(--fr-ink2);font-style:italic;font-size:.94em;line-height:1.72
+}
+.p4r1-root .p4r1-prose-list{white-space:pre-line;padding-left:16px}
+.p4r1-root .p4r1-prose-edit{
+  opacity:0;margin-top:2px;color:var(--fr-action);font:11px/1.3 var(--fr-sans-stack);
+  transition:opacity .14s ease
+}
+.p4r1-root .p4r1-prose-section:hover .p4r1-prose-edit,
+.p4r1-root .p4r1-prose-edit:focus-visible,
+.p4r1-root .p4r1-prose-section[data-current='true'] .p4r1-prose-edit{opacity:.72}
+@media(max-width:760px){
+  .p4r1-root .p4r1-prose-view{padding:52px 16px 72px}
+  .p4r1-root .p4r1-prose-page{width:100%;font-size:18px}
+  .p4r1-root .p4r1-prose-page>h1{font-size:34px}
+}

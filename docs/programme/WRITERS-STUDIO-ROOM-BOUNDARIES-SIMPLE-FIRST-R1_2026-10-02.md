@@ -100,3 +100,33 @@ At every surface ask:
 > **Can the writer understand what matters and make the next useful choice without opening the advanced layer?**
 
 If not, the surface is too complicated.
+
+## Audience law — wisdom before writing technique
+
+Writer's Studio is for people who may have deep lived, clinical, spiritual, creative, practical, or cultural knowledge without being trained authors.
+
+A struggle with prose, structure, or book-making must never be treated as evidence that the underlying wisdom is weak.
+
+MAIA's job is to help what is within become clear enough to enter the world, and then help what is already on the page become its strongest form for the reader.
+
+The default editorial posture is therefore:
+
+> **Protect what is alive. Clarify what is meant. Improve the form without replacing the source of the wisdom.**
+
+Research, craft theory, editorial taxonomy, cognitive models, pedagogy, and advanced analysis remain backstage intelligence unless the writer asks to see them.
+
+## Prose View law
+
+Write opens on the Work as writing, not on the storage model.
+
+For chapter-scale work, the normal presentation is a continuous professionally typeset chapter:
+
+- chapter title and subheads read as hierarchy, not database rows;
+- epigraphs, lists, and transitions receive appropriate visual treatment;
+- print/PDF folios and storage coordinates are suppressed from the prose presentation;
+- the canonical source text is not rewritten merely to make the display cleaner;
+- exact section identity remains underneath so editing, saving, selection, Apply, and Undo stay precise.
+
+**Prose** is the default reading/writing context. **Edit** is the exact section-working surface.
+
+A Develop handoff to an exact problem may enter Edit directly because the writer has already chosen what they want to work on.

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
-import { WriteManuscriptRail, WriteRoom } from '@/app/writers-studio/full-redesign/WriteRoom';
+import { WriteManuscriptRail, WriteRoom, type WriteBlock } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
 import { WRITE_GEOMETRY, appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 
@@ -19,7 +19,8 @@ import RevisionDesk, { type CarryChooserPresentation, type MemberRevisionDraft }
 import InsightReadings from '@/app/writers-studio/insight/InsightReadings';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
-import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
@@ -140,6 +141,47 @@ function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRec
   return { sectionId, text, rect: range.getBoundingClientRect() };
 }
 
+function cleanProseBlockText(block: WriteBlock): string {
+  const text = block.text.trim();
+  const wrapped = /^(\*|_)([\s\S]+)\1$/.exec(text);
+  return wrapped ? wrapped[2]!.trim() : text;
+}
+
+function ChapterProseSurface({ sections, activeId, bodyOf, onEdit }: {
+  sections: readonly RebuildSection[];
+  activeId: string | null;
+  bodyOf: (sectionId: string) => string;
+  onEdit: (sectionId: string) => void;
+}) {
+  const root = sections[0] ?? null;
+  if (!root) return null;
+  return (
+    <div className="p4r1-prose-view" data-prose-view>
+      <article className="p4r1-prose-page">
+        <h1>{root.heading?.trim() || 'Untitled chapter'}</h1>
+        {sections.map((section, index) => {
+          const blocks = typesetManuscriptBody(bodyOf(section.draftSectionId));
+          const Heading = section.headingDepth === 2 ? 'h2' : 'h3';
+          return (
+            <section key={section.draftSectionId} className="p4r1-prose-section" data-current={section.draftSectionId === activeId ? 'true' : undefined}>
+              {index > 0 && section.heading?.trim() ? <Heading>{section.heading.trim()}</Heading> : null}
+              {blocks.map((block, blockIndex) => {
+                if (block.kind === 'folio') return null;
+                const text = cleanProseBlockText(block);
+                if (block.kind === 'epigraph') return <blockquote key={blockIndex}>{text}</blockquote>;
+                if (block.kind === 'subhead') return <h3 key={blockIndex}>{text}</h3>;
+                if (block.kind === 'list') return <p key={blockIndex} className="p4r1-prose-list">{text}</p>;
+                return <p key={blockIndex}>{text}</p>;
+              })}
+              <button type="button" className="p4r1-prose-edit" onClick={() => onEdit(section.draftSectionId)}>Edit this section</button>
+            </section>
+          );
+        })}
+      </article>
+    </div>
+  );
+}
+
 export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [canvas, setCanvas] = useState(false);
   const [workConversationOpen, setWorkConversationOpen] = useState(false);
@@ -151,9 +193,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
+  const [proseView, setProseView] = useState(() => !props.held && !props.carriedInsight);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (props.held || props.carriedInsight || props.workspaceOpen || isolatedEditorial) setProseView(false);
+  }, [props.held, props.carriedInsight, props.workspaceOpen, isolatedEditorial]);
 
   useEffect(() => {
     setBlankArrivalDismissed(false);
@@ -190,6 +237,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     workTitle: props.work?.title ?? null,
     manuscriptTitle: props.context.title,
   });
+  const proseSections = props.focusId
+    ? (chapterSpanFor(props.context.sections, props.focusId)?.sections
+      ?? props.context.sections.filter((section) => section.draftSectionId === props.focusId))
+    : [];
+  const proseAvailable = proseSections.length > 1;
 
   const go = useCallback((sectionId: string | null) => {
     if (!sectionId) return;
@@ -758,12 +810,41 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     />
   );
 
-  const baseWorkSurface = blankArrival ? (
-    <div className="p4r1-blank-write-host">
+  const modeSwitch = proseAvailable && !canvas ? (
+    <div className="p4r1-write-view-switch" aria-label="Writing view">
+      <button type="button" aria-pressed={proseView} onClick={() => setProseView(true)}>Prose</button>
+      <button type="button" aria-pressed={!proseView} onClick={() => setProseView(false)}>Edit</button>
+    </div>
+  ) : null;
+
+  const proseRoom = proseAvailable ? (
+    <div className="p4r1-prose-host">
+      {modeSwitch}
+      <ChapterProseSurface
+        sections={proseSections}
+        activeId={props.focusId}
+        bodyOf={props.writing.bodyOf}
+        onEdit={(sectionId) => {
+          go(sectionId);
+          setProseView(false);
+        }}
+      />
+    </div>
+  ) : null;
+
+  const exactRoom = (
+    <div className="p4r1-edit-host">
+      {modeSwitch}
       {writeRoom}
+    </div>
+  );
+
+  const baseWorkSurface = proseView && proseRoom ? proseRoom : blankArrival ? (
+    <div className="p4r1-blank-write-host">
+      {exactRoom}
       {blankArrival}
     </div>
-  ) : writeRoom;
+  ) : exactRoom;
 
   const lineageReturnActive = Boolean(
     props.lineageReturnChapterId && props.lineageReturnCandidateId,
