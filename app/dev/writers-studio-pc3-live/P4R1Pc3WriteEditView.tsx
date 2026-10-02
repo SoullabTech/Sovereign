@@ -94,6 +94,7 @@ export type P4R1Pc3WriteEditViewProps = {
   adoptionBusy: boolean;
   memberVersionBusy: boolean;
   editorialFailure: string | null;
+  scopeRecovery: { fromLabel: string; toLabel: string } | null;
   adoptionOutcome: AdoptionWireOutcome | null;
   undoMessage: string | null;
   lastMaiaEditorialTurn: RebuildEditorialThread['turns'][number] | null;
@@ -105,6 +106,7 @@ export type P4R1Pc3WriteEditViewProps = {
   onDepth: (depth: EditorialDepth) => void;
   onInstruction: (text: string) => void;
   onSendEditorial: (text?: string) => void;
+  onAcceptScopeRecovery: () => void;
   onSelectVersion: (id: string) => void;
   onApply: () => void;
   onUndo?: () => void;
@@ -579,6 +581,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
           ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
           : null)}
+        scopeRecovery={props.scopeRecovery}
+        onAcceptScopeRecovery={props.onAcceptScopeRecovery}
         undoMessage={props.undoMessage}
         onSelectVersion={props.onSelectVersion}
         onSend={props.onSendEditorial}
@@ -864,6 +868,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
           ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
           : null)}
+        scopeRecovery={props.scopeRecovery}
+        onAcceptScopeRecovery={props.onAcceptScopeRecovery}
         undoMessage={props.undoMessage}
         onSelectVersion={props.onSelectVersion}
         onSend={props.onSendEditorial}

@@ -35,12 +35,14 @@ export interface EditorialDancePanelProps {
   appliedVersionId: string | null;
   busy: boolean;
   message: string | null;
+  scopeRecovery?: { fromLabel: string; toLabel: string } | null;
   undoMessage: string | null;
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
 
   onSelectVersion: (id: string) => void;
   onSend: (text?: string) => void;
+  onAcceptScopeRecovery?: () => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   onUndo?: () => void;
@@ -442,7 +444,17 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
               ? 'That turn could not be completed.'
               : 'Here’s what I’m seeing.'}</h3>
           {props.message ? (
-            <p className="p4r1-dance-status" role="status">{props.message}</p>
+            <>
+              <p className="p4r1-dance-status" role="status">{props.message}</p>
+              {props.scopeRecovery && props.onAcceptScopeRecovery ? (
+                <div className="p4r1-scope-recovery" role="group" aria-label="Revision latitude choice">
+                  <button type="button" disabled={props.busy} onClick={props.onAcceptScopeRecovery}>
+                    Use {props.scopeRecovery.toLabel} and show revision
+                  </button>
+                  <span>Your current {props.scopeRecovery.fromLabel} setting stays unchanged unless you choose this.</span>
+                </div>
+              ) : null}
+            </>
           ) : props.lastMaiaTurn?.body ? (
             <p>{props.lastMaiaTurn.body}</p>
           ) : (
