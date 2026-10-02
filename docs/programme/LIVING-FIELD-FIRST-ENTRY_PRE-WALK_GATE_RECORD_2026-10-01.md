@@ -232,26 +232,24 @@ Verdict: PASS / FAIL
 - Start SHA (repeat at the end in the witness record; any difference → NO EVIDENCE).
 - The currently observed production runtime is `d4655e647`.
 - Its fresh machine/source re-baseline is
-  `LIVING-FIELD_WITNESS_REBASELINE_D4655E647_2026-10-02.md`, carried by PR **#1735**.
-  **Until #1735 is canonical, G5 cannot PASS.**
-- At `2026-10-02T12:21:35Z`, production `d4655e647` was an ancestor of canonical
-  `8aa79ee445` (`git merge-base --is-ancestor` exit 0). Re-run this at walk time.
-- The #1735 record carries the fresh aggregate content-blind 0/4 substrate census and the deployed
-  explicit-MAIA-entry proof. If production moves again, create and admit a new named re-baseline
-  before the walk; never carry this record forward by analogy.
+  `LIVING-FIELD_WITNESS_REBASELINE_D4655E647_2026-10-02.md`, now **canonical via PR #1735** at merge commit `2db5eae59f7aab65f11bde68d6295a231d6e4ab0`.
+- At `2026-10-02T13:50:34Z`, production `d4655e647` remained the live runtime and was an ancestor of canonical `2db5eae59f7aab65f11bde68d6295a231d6e4ab0` (`git merge-base --is-ancestor` exit 0).
+- The canonical #1735 record carries the fresh aggregate content-blind 0/4 substrate census and the deployed explicit-MAIA-entry proof.
+- **This does not pre-fill G5.** Re-run the production SHA and ancestry check immediately before the walk. If production moves again, create and admit a new named re-baseline before the walk; never carry this record forward by analogy.
 
-captured_at_utc: `2026-10-02T12:21:35Z`
+captured_at_utc: `2026-10-02T13:50:34Z`
 production_sha_at_capture: `d4655e647`
-Re-baseline needed: **yes until #1735 is canonical**
+Re-baseline needed: **no while production remains exactly `d4655e647`; re-evaluate at walk start**
 
 ```text
 production=d4655e647
-canonical=8aa79ee44587c56617fbe386ea2fb98d48cc4a64
+canonical=2db5eae59f7aab65f11bde68d6295a231d6e4ab0
 production_is_ancestor_of_canonical=0
-rebaseline_pr=#1735
+rebaseline_record=LIVING-FIELD_WITNESS_REBASELINE_D4655E647_2026-10-02.md
+rebaseline_merge=2db5eae59f7aab65f11bde68d6295a231d6e4ab0
 ```
 
-Verdict: **OPEN — #1735 must land, then recheck production SHA at walk start**
+Verdict: **OPEN — documentary dependency satisfied; final PASS is walk-time only**
 
 ---
 
@@ -328,7 +326,7 @@ Verdict: PASS (G7a / G7b) / FAIL
 | G2 database stable | OPEN — mechanical PASS; founder standby-exposure choice required |
 | G3 emergency disable witnessed | OPEN |
 | G4 admission server-side | OPEN |
-| G5 Amendment 1 at start | OPEN — #1735 must land, then recheck start SHA |
+| G5 Amendment 1 at start | OPEN — canonical re-baseline present; final SHA/ancestry check is walk-time only |
 | G6 observation disclosed | OPEN |
 | G7 human safety layer (a / b) | OPEN |
 
