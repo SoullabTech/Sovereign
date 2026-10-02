@@ -103,9 +103,10 @@ export async function POST(req: NextRequest) {
   // channels. Email remains required for a 200, but Slack/Telegram still get a
   // chance to page a human while the required channel is degraded.
   const alertSmtp = resolveAlertSmtp();
-  const alertSmtpError = "error" in alertSmtp ? alertSmtp.error : null;
+  let alertSmtpError: "alert_smtp_not_configured" | "alert_sender_mismatch" | null = null;
 
-  if (alertSmtpError) {
+  if ("error" in alertSmtp) {
+    alertSmtpError = alertSmtp.error;
     results.email = false;
     console.error(`[BuildAlert] Required SMTP unavailable: ${alertSmtpError}`);
   } else {
