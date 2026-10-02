@@ -179,6 +179,8 @@ export interface P4R1DevelopViewProps {
   chapterReviewError: string | null;
   chapterReviewProgress: string | null;
   chapterScorecard: WholeManuscriptAttentionMap | null;
+  previousChapterScorecard: WholeManuscriptAttentionMap | null;
+  previousChapterScoreRevision: number | null;
   chapterScoreBusy: boolean;
   chapterScoreError: string | null;
   chapterMinimalPath: WholeManuscriptAttentionMap | null;
@@ -1546,6 +1548,8 @@ function ChapterReviewPanel({
   onWrite,
   onEdit,
   scorecard,
+  previousScorecard,
+  previousScoreRevision,
   scoreBusy,
   scoreError,
   minimalPath,
@@ -1573,6 +1577,8 @@ function ChapterReviewPanel({
   onWrite: () => void;
   onEdit: (itemId: string, sectionId: string) => void;
   scorecard: WholeManuscriptAttentionMap | null;
+  previousScorecard: WholeManuscriptAttentionMap | null;
+  previousScoreRevision: number | null;
   scoreBusy: boolean;
   scoreError: string | null;
   minimalPath: WholeManuscriptAttentionMap | null;
@@ -1755,6 +1761,33 @@ function ChapterReviewPanel({
                   </div>
                 ))}
               </details>
+            ) : null}
+            {previousScorecard ? (
+              <section className="p4r1-score-comparison" data-chapter-score-comparison>
+                <div>
+                  <b>Since the previous saved chapter revision</b>
+                  <span>This is a craft comparison, not a grade{previousScoreRevision !== null ? ` · previous revision ${previousScoreRevision}` : ''}.</span>
+                </div>
+                {dimensions.map((dimension) => {
+                  const currentItem = scorecard.items.find((item) => item.label === dimension);
+                  const previousItem = previousScorecard.items.find((item) => item.label === dimension);
+                  const currentScore = Number(currentItem?.notice.match(/^([1-5])\/5\b/)?.[1] ?? NaN);
+                  const previousScore = Number(previousItem?.notice.match(/^([1-5])\/5\b/)?.[1] ?? NaN);
+                  if (!Number.isFinite(currentScore) || !Number.isFinite(previousScore)) return null;
+                  const movement = currentScore > previousScore
+                    ? 'Moved upward on this rubric.'
+                    : currentScore < previousScore
+                      ? 'Worth another look; the revision may have traded something here.'
+                      : 'Held steady.';
+                  return (
+                    <article key={dimension}>
+                      <b>{dimension}</b>
+                      <span>{previousScore}/5 → {currentScore}/5</span>
+                      <small>{movement}</small>
+                    </article>
+                  );
+                })}
+              </section>
             ) : null}
           </div>
         );
@@ -2275,6 +2308,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             onWrite={() => props.onMode('write')}
             onEdit={props.onWorkWithAttentionItem}
             scorecard={props.chapterScorecard}
+            previousScorecard={props.previousChapterScorecard}
+            previousScoreRevision={props.previousChapterScoreRevision}
             scoreBusy={props.chapterScoreBusy}
             scoreError={props.chapterScoreError}
             minimalPath={props.chapterMinimalPath}

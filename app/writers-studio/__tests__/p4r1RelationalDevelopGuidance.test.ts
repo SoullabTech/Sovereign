@@ -43,6 +43,12 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(develop).not.toContain('Refresh chapter scorecard');
     expect(controller).toContain('writers-studio:chapter-scorecard:v1');
     expect(controller).toContain('cached.draftRevision === context.draftRevision');
+    expect(controller).toContain('chapter-scorecard-previous:v1');
+    expect(develop).toContain('Since the previous saved chapter revision');
+    expect(develop).toContain('This is a craft comparison, not a grade');
+    expect(develop).toContain('Moved upward on this rubric.');
+    expect(develop).toContain('Held steady.');
+    expect(develop).toContain('the revision may have traded something here');
   });
 
   it('continues from the first read into book-fit and chapter-movement questions', () => {

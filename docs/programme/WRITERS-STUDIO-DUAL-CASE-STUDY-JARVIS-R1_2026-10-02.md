@@ -288,3 +288,31 @@ requirements, and likely defense questions. Ratings remain optional transparent 
 The Studio adapts its craft intelligence to the Work, but the human contract remains constant:
 
 > Understand first. Protect what is alive. Improve only what needs improving. Keep authorship with the writer.
+
+## Founder law — editing should teach while it improves
+
+Every meaningful proposed edit should be inspectable before it is applied.
+
+The writer should be able to see:
+
+- the original wording;
+- the proposed wording;
+- the exact changed words;
+- what changed;
+- why MAIA made the move;
+- the possible reader effect, explicitly framed as a hypothesis;
+- what MAIA intentionally protected.
+
+The writer should also be able to adjust the proposal conversationally:
+
+- make it lighter;
+- keep more of my wording or cadence;
+- go a little further;
+- show another unranked option;
+- restore a chosen part;
+- explain or teach the craft move.
+
+Nothing is applied automatically. Improvement and learning are paired, but teaching remains optional:
+the writer never has to study craft terminology in order to receive useful editorial help.
+
+> **The Studio should help people become better writers by working with their own writing, not by making them endure a writing lesson first.**

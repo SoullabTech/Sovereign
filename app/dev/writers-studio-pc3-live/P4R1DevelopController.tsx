@@ -148,6 +148,8 @@ export default function P4R1DevelopController() {
   const [chapterReviewError, setChapterReviewError] = useState<string | null>(null);
   const [chapterReviewProgress, setChapterReviewProgress] = useState<string | null>(null);
   const [chapterScorecard, setChapterScorecard] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [previousChapterScorecard, setPreviousChapterScorecard] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [previousChapterScoreRevision, setPreviousChapterScoreRevision] = useState<number | null>(null);
   const [chapterScoreBusy, setChapterScoreBusy] = useState(false);
   const [chapterScoreError, setChapterScoreError] = useState<string | null>(null);
   const [chapterMinimalPath, setChapterMinimalPath] = useState<WholeManuscriptAttentionMap | null>(null);
@@ -305,35 +307,53 @@ export default function P4R1DevelopController() {
   useEffect(() => {
     if (!context || !currentChapterRootId || typeof window === 'undefined') {
       setChapterScorecard(null);
+      setPreviousChapterScorecard(null);
+      setPreviousChapterScoreRevision(null);
       setChapterMinimalPath(null);
       return;
     }
-    const restore = (
-      key: string,
-      setter: (map: WholeManuscriptAttentionMap | null) => void,
-    ) => {
-      const raw = window.sessionStorage.getItem(key);
-      if (!raw) { setter(null); return; }
+
+    const currentKey = `writers-studio:chapter-scorecard:v1:${context.manuscriptId}:${currentChapterRootId}`;
+    const previousKey = `writers-studio:chapter-scorecard-previous:v1:${context.manuscriptId}:${currentChapterRootId}`;
+    const minimalKey = `writers-studio:chapter-minimal-path:v1:${context.manuscriptId}:${currentChapterRootId}`;
+
+    const parseSnapshot = (raw: string | null) => {
+      if (!raw) return null;
       try {
-        const cached = JSON.parse(raw) as { draftRevision?: number; map?: WholeManuscriptAttentionMap };
-        if (
-          context.draftRevision !== null
-          && cached.draftRevision === context.draftRevision
-          && cached.map?.manuscriptId === context.manuscriptId
-        ) setter(cached.map);
-        else setter(null);
+        const parsed = JSON.parse(raw) as { draftRevision?: number; map?: WholeManuscriptAttentionMap };
+        return Number.isInteger(parsed.draftRevision)
+          && parsed.map?.manuscriptId === context.manuscriptId
+          ? { draftRevision: parsed.draftRevision as number, map: parsed.map }
+          : null;
       } catch {
-        window.sessionStorage.removeItem(key);
-        setter(null);
+        return null;
       }
     };
-    restore(
-      `writers-studio:chapter-scorecard:v1:${context.manuscriptId}:${currentChapterRootId}`,
-      setChapterScorecard,
-    );
-    restore(
-      `writers-studio:chapter-minimal-path:v1:${context.manuscriptId}:${currentChapterRootId}`,
-      setChapterMinimalPath,
+
+    const current = parseSnapshot(window.sessionStorage.getItem(currentKey));
+    const previous = parseSnapshot(window.sessionStorage.getItem(previousKey));
+
+    if (current && context.draftRevision !== null && current.draftRevision === context.draftRevision) {
+      setChapterScorecard(current.map);
+      setPreviousChapterScorecard(previous?.map ?? null);
+      setPreviousChapterScoreRevision(previous?.draftRevision ?? null);
+    } else {
+      if (current && (context.draftRevision === null || current.draftRevision !== context.draftRevision)) {
+        window.sessionStorage.setItem(previousKey, JSON.stringify(current));
+        setPreviousChapterScorecard(current.map);
+        setPreviousChapterScoreRevision(current.draftRevision);
+      } else {
+        setPreviousChapterScorecard(previous?.map ?? null);
+        setPreviousChapterScoreRevision(previous?.draftRevision ?? null);
+      }
+      setChapterScorecard(null);
+    }
+
+    const minimal = parseSnapshot(window.sessionStorage.getItem(minimalKey));
+    setChapterMinimalPath(
+      minimal && context.draftRevision !== null && minimal.draftRevision === context.draftRevision
+        ? minimal.map
+        : null,
     );
   }, [context?.manuscriptId, context?.draftRevision, currentChapterRootId]);
 
@@ -1408,6 +1428,8 @@ export default function P4R1DevelopController() {
       chapterReviewError={chapterReviewError}
       chapterReviewProgress={chapterReviewProgress}
       chapterScorecard={chapterScorecard}
+      previousChapterScorecard={previousChapterScorecard}
+      previousChapterScoreRevision={previousChapterScoreRevision}
       chapterScoreBusy={chapterScoreBusy}
       chapterScoreError={chapterScoreError}
       chapterMinimalPath={chapterMinimalPath}
