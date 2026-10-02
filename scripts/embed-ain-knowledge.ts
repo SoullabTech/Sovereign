@@ -103,8 +103,14 @@ async function main() {
     for (const [domain, count] of Object.entries(byDomain).sort((a, b) => b[1] - a[1])) {
       console.log(`   ${domain}: ${count} chunks`);
     }
-    console.log('\nRun without --dry-run to embed.');
+    console.log('\nGoverned source writes require a subject-specific corpus build act.');
     return;
+  }
+
+  if (chunks.length > 0) {
+    console.error('\n🛑 REFUSED: generic AIN source writes do not carry governed normalization/provenance.');
+    console.error('   Use an approved subject-specific corpus build executor (for Elemental Alchemy: scripts/corpus-build-ea-01.ts).');
+    process.exit(1);
   }
 
   // Connect to database

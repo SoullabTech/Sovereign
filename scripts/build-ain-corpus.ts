@@ -72,10 +72,16 @@ function admitted(candidates: string[]): string[] {
 async function main() {
   console.log('🏗️  Building AIN corpus...');
 
-  await fs.mkdir(OUT_DIR, { recursive: true });
-
   const files = admitted(await listFiles(SRC_DIR));
   console.log(`📂 Found ${files.length} source files`);
+
+  if (files.length > 0) {
+    throw new Error(
+      'generic compiled-corpus writes are retired for governed content; use an approved subject-specific corpus build act',
+    );
+  }
+
+  await fs.mkdir(OUT_DIR, { recursive: true });
 
   // Heuristic ordering: filename sort (stable + predictable)
   files.sort((a, b) => a.localeCompare(b));
