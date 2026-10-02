@@ -98,32 +98,40 @@ export async function POST(req: NextRequest) {
   // 1. Required pager email uses its own SMTP credentials. Passing the provider
   // explicitly keeps global EMAIL_PROVIDER/member mail completely untouched,
   // while sendEmail still supplies classification, logging and delivery-ledger evidence.
+  //
+  // IMPORTANT: missing/broken SMTP must NOT short-circuit optional out-of-band
+  // channels. Email remains required for a 200, but Slack/Telegram still get a
+  // chance to page a human while the required channel is degraded.
   const alertSmtp = resolveAlertSmtp();
-  if ("error" in alertSmtp) {
-    return NextResponse.json({ error: alertSmtp.error }, { status: 503 });
-  }
+  let alertSmtpError: "alert_smtp_not_configured" | "alert_sender_mismatch" | null = null;
 
-  try {
-    const sent = await sendEmail({
-      purpose: "build:alert",
-      from: alertSmtp.from,
-      to: DEV_EMAIL,
-      subject: `[${payload.severity.toUpperCase()}] MAIA Build Alert`,
-      html: formatAlertEmail(payload),
-      metadata: { severity: payload.severity },
-      triggerType: "route",
-      triggerRef: "/api/build/alert",
-      provider: alertSmtp.provider,
-    });
-    results.email = sent.success;
-    if (!sent.success) {
-      console.error(
-        `[BuildAlert] Email REFUSED provider=${sent.provider ?? "smtp"} failureKind=${sent.failureKind ?? "unclassified"} providerCode=${sent.providerCode ?? "unnamed"}`
-      );
-    }
-  } catch (error) {
-    console.error("[BuildAlert] Email failed:", error);
+  if ("error" in alertSmtp) {
+    alertSmtpError = alertSmtp.error;
     results.email = false;
+    console.error(`[BuildAlert] Required SMTP unavailable: ${alertSmtpError}`);
+  } else {
+    try {
+      const sent = await sendEmail({
+        purpose: "build:alert",
+        from: alertSmtp.from,
+        to: DEV_EMAIL,
+        subject: `[${payload.severity.toUpperCase()}] MAIA Build Alert`,
+        html: formatAlertEmail(payload),
+        metadata: { severity: payload.severity },
+        triggerType: "route",
+        triggerRef: "/api/build/alert",
+        provider: alertSmtp.provider,
+      });
+      results.email = sent.success;
+      if (!sent.success) {
+        console.error(
+          `[BuildAlert] Email REFUSED provider=${sent.provider ?? "smtp"} failureKind=${sent.failureKind ?? "unclassified"} providerCode=${sent.providerCode ?? "unnamed"}`
+        );
+      }
+    } catch (error) {
+      console.error("[BuildAlert] Email failed:", error);
+      results.email = false;
+    }
   }
 
   // 2. Send SMS for critical alerts only (Twilio optional - requires `npm install twilio`)
@@ -249,7 +257,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(
     {
       success: delivered,
-      ...(delivered ? {} : { error: "required_alert_email_not_delivered" }),
+      ...(delivered
+        ? {}
+        : { error: alertSmtpError || "required_alert_email_not_delivered" }),
       channels: results,
       timestamp: new Date().toISOString(),
     },

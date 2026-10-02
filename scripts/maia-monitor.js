@@ -57,8 +57,12 @@ const CFG = {
   twilio: {
     sid:    process.env.TWILIO_ACCOUNT_SID || '',
     token:  process.env.TWILIO_AUTH_TOKEN  || '',
-    from:   process.env.TWILIO_FROM        || '',
-    phones: csv(process.env.ALERT_PHONES),
+    from:   process.env.TWILIO_FROM || process.env.TWILIO_FROM_NUMBER || '',
+    phones: csv(process.env.ALERT_PHONES || process.env.SAFETY_ALERT_PHONE),
+  },
+
+  slack: {
+    webhook: process.env.SAFETY_ALERT_SLACK_WEBHOOK_URL || process.env.SLACK_WEBHOOK_URL || '',
   },
 
   resend: {
@@ -155,7 +159,7 @@ function httpsPost(hostname, reqPath, headers, body) {
 
 async function sendSMS(to, body) {
   const { sid, token, from } = CFG.twilio;
-  if (!sid || !token || !from) return;
+  if (!sid || !token || !from) return false;
   const auth = Buffer.from(`${sid}:${token}`).toString('base64');
   const params = new URLSearchParams({ To: to, From: from, Body: body }).toString();
   try {
@@ -165,9 +169,12 @@ async function sendSMS(to, body) {
       { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
       params
     );
+    const accepted = r.status >= 200 && r.status < 300;
     console.log(`  [SMS → ${to}] ${r.status}`);
+    return accepted;
   } catch (err) {
     console.error(`  [SMS → ${to}] error: ${err.message}`);
+    return false;
   }
 }
 
@@ -186,6 +193,25 @@ async function sendEmail(to, subject, text) {
   }
 }
 
+async function sendSlack(body) {
+  if (!CFG.slack.webhook) return false;
+  try {
+    const url = new URL(CFG.slack.webhook);
+    const r = await httpsPost(
+      url.hostname,
+      url.pathname + url.search,
+      { 'Content-Type': 'application/json' },
+      { text: body }
+    );
+    const accepted = r.status >= 200 && r.status < 300;
+    console.log(`  [Slack] ${r.status}`);
+    return accepted;
+  } catch (err) {
+    console.error(`  [Slack] error: ${err.message}`);
+    return false;
+  }
+}
+
 async function sendAlerts(type, result) {
   const text    = alertText(type, result);
   const subject = `MAIA ${type} — ${CFG.source}`;
@@ -193,10 +219,20 @@ async function sendAlerts(type, result) {
   console.log(`\n[ALERT ${type}]`);
   console.log(text.split('\n').map(l => '  ' + l).join('\n'));
 
-  await Promise.all([
-    ...CFG.twilio.phones.map(p  => sendSMS(p, text)),
-    ...CFG.resend.emails.map(e  => sendEmail(e, subject, text)),
-  ]);
+  const smsResults = await Promise.all(CFG.twilio.phones.map(p => sendSMS(p, text)));
+  const slackResult = await sendSlack(text);
+  await Promise.all(CFG.resend.emails.map(e => sendEmail(e, subject, text)));
+
+  const independentDelivered = smsResults.some(Boolean) || slackResult;
+  if (!independentDelivered) {
+    console.error('  [INDEPENDENT ALERT] no SMS or Slack channel accepted this alert');
+  }
+
+  return {
+    independentDelivered,
+    smsDelivered: smsResults.filter(Boolean).length,
+    slackDelivered: slackResult,
+  };
 }
 
 // --- Monitor loop ---
@@ -234,12 +270,17 @@ async function runCheck() {
 
 async function runTest() {
   console.log(`[TEST] Sending test DOWN alert...`);
-  await sendAlerts('DOWN', { status: 'test', latencyMs: 0 });
+  const down = await sendAlerts('DOWN', { status: 'test', latencyMs: 0 });
 
   console.log(`\n[TEST] Sending test RECOVERED alert...`);
-  await sendAlerts('RECOVERED', { status: 'test', latencyMs: 0 });
+  const recovered = await sendAlerts('RECOVERED', { status: 'test', latencyMs: 0 });
 
-  console.log(`\n[TEST] Done. Check that all recipients received both alerts.`);
+  if (!down.independentDelivered || !recovered.independentDelivered) {
+    console.error(`\n[TEST] FAILED: an independent SMS/Slack channel did not accept both alerts.`);
+    process.exit(2);
+  }
+
+  console.log(`\n[TEST] PASS: an independent channel accepted both alerts. Confirm human receipt before closing the witness.`);
   process.exit(0);
 }
 
@@ -252,6 +293,7 @@ console.log(`Source:   ${CFG.source}`);
 console.log(`URL:      ${CFG.checkUrl}`);
 console.log(`Interval: ${CFG.intervalMs / 1000}s  Timeout: ${CFG.timeoutMs / 1000}s  Alert after: ${ALERT_THRESHOLD} failure(s)`);
 console.log(`SMS to:   ${CFG.twilio.phones.join(', ') || '(none configured)'}`);
+console.log(`Slack:    ${CFG.slack.webhook ? 'configured' : '(none configured)'}`);
 console.log(`Email to: ${CFG.resend.emails.join(', ') || '(none configured)'}`);
 console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
 console.log(isTest ? '\nRunning test alerts...' : '\nStarting monitor loop...\n');
