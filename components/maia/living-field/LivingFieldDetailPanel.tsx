@@ -9,6 +9,7 @@ import { LivingFieldGatheringPanel } from './LivingFieldGatheringPanel'
 import { MaiaCandidatePanel, type MaiaCandidate } from './MaiaCandidatePanel'
 import { LivingEncounterView } from './LivingEncounterView'
 import { MaiaCapture, type CaptureSource } from '@/components/maia/MaiaCapture'
+import { apiFetch } from '@/lib/http/apiBase'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -23,7 +24,6 @@ interface Props {
   versions: FieldVersion[]
   sources: FieldSource[]
   consents: ParticipantConsent[]
-  memberId: string
   onClose: () => void
 }
 
@@ -32,7 +32,6 @@ export function LivingFieldDetailPanel({
   versions,
   sources,
   consents,
-  memberId,
   onClose,
 }: Props) {
   const [expression, setExpression] = useState(field.current_expression ?? '')
@@ -59,9 +58,9 @@ export function LivingFieldDetailPanel({
 
   async function handleCapture(text: string, source: CaptureSource) {
     // Store as a source (evidence that feeds Refine and provenance) …
-    await fetch(`/api/maia/living-field/${field.field_key}/sources`, {
+    await apiFetch(`/api/maia/living-field/${field.field_key}/sources`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ source_type: source, source_excerpt: text }),
     })
     // … and drop the material into the expression so the member isn't retyping it.
@@ -79,9 +78,9 @@ export function LivingFieldDetailPanel({
     if (!expr || !expr.trim()) return
     setSaving(true)
     try {
-      await fetch(`/api/maia/living-field/${field.field_key}`, {
+      await apiFetch(`/api/maia/living-field/${field.field_key}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ expression: expr }),
       })
       setSaved(true)
@@ -99,9 +98,8 @@ export function LivingFieldDetailPanel({
     setCandidate(null)
     setRefineNote(null)
     try {
-      const res = await fetch(`/api/maia/living-field/${field.field_key}/refine`, {
+      const res = await apiFetch(`/api/maia/living-field/${field.field_key}/refine`, {
         method: 'POST',
-        headers: { 'x-member-id': memberId },
       })
       const drafted = res.ok ? await res.json().catch(() => null) : null
       // A draft is only actionable when MAIA actually returned text. When
@@ -136,9 +134,9 @@ export function LivingFieldDetailPanel({
   }
 
   async function revokeConsent(consentId: string) {
-    await fetch(`/api/maia/living-field/${field.field_key}/consent`, {
+    await apiFetch(`/api/maia/living-field/${field.field_key}/consent`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ consent_id: consentId }),
     })
   }
@@ -168,7 +166,6 @@ export function LivingFieldDetailPanel({
             <LivingEncounterView
               fieldKey={field.field_key}
               fieldLabel={field.label}
-              memberId={memberId}
               onClose={() => setEncounterOpen(false)}
             />
           )}
@@ -202,7 +199,6 @@ export function LivingFieldDetailPanel({
           <LivingFieldGatheringPanel
             fieldKey={field.field_key}
             fieldLabel={field.label}
-            memberId={memberId}
           />
 
           {/* Candidate panel */}
