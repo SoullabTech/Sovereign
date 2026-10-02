@@ -2,8 +2,10 @@
 
 Date: 2026-10-02
 Status: deployment-order record; no production mutation
-Canonical observed: `5c3d31c2a777ee62780906d8e07ba7b5fff47537`
-Production observed: `12b461bd8`
+Canonical observed: `5f8d39c7f0ce206be42469e66f366c4ff82dc62e`
+Production last successfully witnessed: `13a0308d706c684f21aa53741791cb224334ff82`
+
+A later read-only SSH re-witness attempt timed out at the workstation transport layer. No production-state inference is made from that timeout.
 
 ## Purpose
 
@@ -11,17 +13,25 @@ Define the lawful deployment order for the safety-delivery programme without ove
 
 ## Production lineage finding
 
-The running production container reports:
+The last successful production witness resolved the running container to:
 
-`GIT_COMMIT=12b461bd8`
+`GIT_COMMIT=13a0308d7`
+→ full commit `13a0308d706c684f21aa53741791cb224334ff82`.
 
-Production-host ancestry checking establishes that #1671 merge
+Repository ancestry checks establish that neither #1671 merge
 `15a9175fb917cd9aa84a2735f7b3cf91a964b49b`
-is **not** an ancestor of the deployed SHA.
+nor #1633 merge
+`5c3d31c2a777ee62780906d8e07ba7b5fff47537`
+is an ancestor of that deployed commit.
 
-The production checkout does not currently possess the latest canonical object
-`5c3d31c2a777ee62780906d8e07ba7b5fff47537`, so this record does **not** infer
-or reuse a common ancestor from an earlier production projection.
+Against canonical
+`5f8d39c7f0ce206be42469e66f366c4ff82dc62e`,
+the merge base is
+`298414555bbe7eccdf453b09e026737d4f7f4e29`.
+
+At that witness point:
+- production has **7** commits not in canonical;
+- canonical has **177** commits not in production.
 
 Therefore safety deployment is NOT licensed as a simple canonical fast-forward.
 
@@ -90,7 +100,7 @@ Documentation/evidence only; they do not themselves grant runtime or deployment 
 
 ## Current production configuration boundary
 
-Read-only presence/auth witness on 2026-10-02 against running SHA `12b461bd8`:
+Read-only presence/auth witness on 2026-10-02 against the last successfully witnessed running SHA `13a0308d706c684f21aa53741791cb224334ff82`:
 
 - Resend credential: present, but authenticated `GET /domains` returns `HTTP 400 · validation_error · API key is invalid`
 - Twilio account credential: present
@@ -237,7 +247,7 @@ Code substrate: PARTIAL — #1671 and #1633 are canonical but governance-held; #
 
 Governance enforcement: #1716 pending; distinct-human custody is not yet constituted.
 
-Production artifact: `12b461bd8` · does NOT contain #1671 merge ancestry; current canonical object is not present in the production checkout, so projection ancestry must be re-established explicitly.
+Production artifact last successfully witnessed: `13a0308d706c684f21aa53741791cb224334ff82` · contains neither #1671 nor #1633 merge ancestry. Its merge base with canonical `5f8d39c7f0ce206be42469e66f366c4ff82dc62e` is `298414555bbe7eccdf453b09e026737d4f7f4e29`; production carries 7 unique commits and canonical carries 177 unique commits at that witness point. Projection ancestry must therefore be re-established explicitly.
 
 Safety recipient: NOT DESIGNATED.
 
