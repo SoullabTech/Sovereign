@@ -4,6 +4,8 @@
 
 BEGIN;
 
+SET LOCAL lock_timeout = '5s';
+
 ALTER TABLE developmental_readings
   DROP CONSTRAINT IF EXISTS developmental_readings_commissioned_lens_check;
 
