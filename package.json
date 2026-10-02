@@ -93,6 +93,8 @@
     "review:custody:matrix:coverage": "npx tsx tests/constitutional/review-custody/coverage-witness/matrix.ts",
     "review:custody:migration-gate": "npx tsx scripts/review-custody-migration-gate.ts",
     "typecheck:review-custody": "tsc -p tsconfig.review-custody.json",
+    "typecheck:jarvis-jev-label-01": "tsc -p tsconfig.jarvis-jev-label-01.json",
+    "matrix:jarvis-jev-label-01": "npx tsx tests/constitutional/jarvis-jev-label-01/matrix.ts",
     "verify:review-custody-freeze": "npx tsx scripts/verify-review-custody-freeze.ts",
     "matrix:jarvis-o5-r1": "node tests/constitutional/jarvis-o5-r1/matrix.mjs",
     "verify:jarvis-o5-r1-freeze": "node scripts/verify-jarvis-o5-r1-freeze.mjs",
