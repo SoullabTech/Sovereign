@@ -79,6 +79,27 @@ describe('human safety alert delivery', () => {
     expect(result.slack).toBe('sent');
   });
 
+  it('allows a system circuit-breaker alert without a member id', async () => {
+    process.env.SAFETY_ALERT_SLACK_WEBHOOK_URL = 'https://hooks.example.invalid/safety';
+
+    fetchMock.mockResolvedValueOnce(new Response('ok', { status: 200 }));
+
+    const result = await deliverHumanSafetyAlert({
+      source: 'circuit_breaker',
+      severity: 'crisis',
+      crisisType: 'coherence_drop:critical',
+    });
+
+    expect(result.delivered).toBe(true);
+    expect(result.slack).toBe('sent');
+
+    const [, request] = fetchMock.mock.calls[0];
+    const body = String(request?.body);
+    expect(body).toContain('source=circuit_breaker');
+    expect(body).not.toContain('member=');
+    expect(body).toContain('No message content included.');
+  });
+
   it('does not claim delivery when a configured provider rejects the alert', async () => {
     process.env.TWILIO_ACCOUNT_SID = 'AC-test';
     process.env.TWILIO_AUTH_TOKEN = 'secret';

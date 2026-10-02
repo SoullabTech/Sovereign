@@ -70,14 +70,18 @@ export class SafetyCircuitBreakers {
   private emergencyMode = false;
   private onSafetyTrigger?: (trigger: SafetyTrigger) => void;
   private onIntervention?: (intervention: SafetyIntervention) => void;
-  private onHumanNotification?: (notification: { trigger: SafetyTrigger; intervention: SafetyIntervention }) => boolean | void;
+  private onHumanNotification?: (
+    notification: { trigger: SafetyTrigger; intervention: SafetyIntervention }
+  ) => boolean | void | Promise<boolean | void>;
 
   constructor(
     baselineSettings: any = {},
     callbacks: {
       onSafetyTrigger?: (trigger: SafetyTrigger) => void;
       onIntervention?: (intervention: SafetyIntervention) => void;
-      onHumanNotification?: (notification: { trigger: SafetyTrigger; intervention: SafetyIntervention }) => boolean | void;
+      onHumanNotification?: (
+        notification: { trigger: SafetyTrigger; intervention: SafetyIntervention }
+      ) => boolean | void | Promise<boolean | void>;
     } = {}
   ) {
     this.baselineSettings = {
@@ -398,25 +402,43 @@ export class SafetyCircuitBreakers {
     };
 
     // humanNotified is a claim that a PERSON was told. It may only become true when a
-    // delivery callback affirmatively confirms delivery (returns true). Invoking a
-    // callback — or logging — is not notifying a human. An audit must never read a
-    // notification that did not happen.
-    let delivered = false;
-    if (this.onHumanNotification) {
-      try {
-        delivered = this.onHumanNotification({ trigger, intervention }) === true;
-      } catch (err) {
-        console.error('[SAFETY_NOTIFY_FAILED] circuit-breaker notification callback threw', err);
+    // delivery callback affirmatively confirms delivery. Async callbacks leave the
+    // intervention false while delivery is pending; a Promise resolving true may
+    // advance it later. Logging or merely invoking a callback is never delivery.
+    const recordDelivery = (delivered: boolean) => {
+      intervention.humanNotified = delivered;
+      if (!delivered) {
+        console.error('[SAFETY_NOTIFY_NO_RECIPIENT] circuit breaker activated; NO human was notified (no delivery channel confirmed)', {
+          severity: trigger.severity,
+          type: trigger.triggerType,
+          interventionType: intervention.interventionType
+        });
       }
-    }
-    intervention.humanNotified = delivered;
+    };
 
-    if (!delivered) {
-      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] circuit breaker activated; NO human was notified (no delivery channel confirmed)', {
-        severity: trigger.severity,
-        type: trigger.triggerType,
-        interventionType: intervention.interventionType
-      });
+    if (!this.onHumanNotification) {
+      recordDelivery(false);
+      return;
+    }
+
+    try {
+      const result = this.onHumanNotification({ trigger, intervention });
+
+      if (result instanceof Promise) {
+        intervention.humanNotified = false;
+        void result
+          .then((confirmed) => recordDelivery(confirmed === true))
+          .catch((err) => {
+            console.error('[SAFETY_NOTIFY_FAILED] circuit-breaker async notification callback rejected', err);
+            recordDelivery(false);
+          });
+        return;
+      }
+
+      recordDelivery(result === true);
+    } catch (err) {
+      console.error('[SAFETY_NOTIFY_FAILED] circuit-breaker notification callback threw', err);
+      recordDelivery(false);
     }
   }
 
