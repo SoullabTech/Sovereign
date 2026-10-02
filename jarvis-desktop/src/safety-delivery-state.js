@@ -12,6 +12,7 @@
     canonical_base: '15a9175fb917cd9aa84a2735f7b3cf91a964b49b',
     live_telemetry: false,
     needs_kelly: Object.freeze([
+      'Constitute the genuinely distinct second human custodian required by canonical Class-A admission law. PR #1709 records the #1671 admission exception; do not treat a second GitHub credential alone as sufficient human custody.',
       'Rotate the invalid production Resend API key. Read-only production witness at running SHA 56d0cd679 returned HTTP 400 · validation_error · API key is invalid.',
       'Designate the independent safety recipient: production Twilio credentials are already live, but SAFETY_ALERT_PHONE is unset. Set that intentionally (or configure a safety Slack webhook), then run npm run check:safety-human-delivery until it reports READY.',
       'Verify the currently published support, privacy, problem, and hello mailboxes with a present-day external delivery witness; repository publication is current, but mailbox reachability is not established.',
