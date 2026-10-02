@@ -61,6 +61,12 @@ The material distinction is:
 
 The merge is now historical fact. A later approval cannot make the earlier admission compliant *at the time it occurred*. Post-facto review may determine whether the merged state should remain canonical, be amended, or be reverted, but it does not erase this exception record.
 
+### Deployment standing at the post-merge census
+
+A read-only production witness on 2026-10-02 found `maia-sovereign` running SHA `12b461bd8`. Production-host ancestry checking returned false for #1671 merge `15a9175fb917cd9aa84a2735f7b3cf91a964b49b` as an ancestor of that deployed SHA.
+
+Therefore the exception has crossed **canonical admission**, but had **not crossed production deployment** at that witness. This record grants no deployment authority; deployment eligibility remains a separate governed decision.
+
 ## Remediation
 
 1. **Constitute the second human custodian** under the existing canonical design. The governed record must bind at least:
