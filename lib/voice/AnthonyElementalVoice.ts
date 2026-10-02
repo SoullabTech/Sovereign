@@ -391,7 +391,8 @@ export class AnthonyElementalVoice {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'xi-api-key': process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY!
+          // SOVEREIGNTY (Phase 0): client-exposed provider secret removed; server-only (inert module)
+          'xi-api-key': process.env.ELEVENLABS_API_KEY ?? ''
         },
         body: JSON.stringify({
           text: ssml,
