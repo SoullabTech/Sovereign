@@ -1,5 +1,5 @@
 window.KELLY_FIELD_LIBRARY = {
-  "generatedAt": "2026-10-01",
+  "generatedAt": "2026-10-02",
   "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
   "recentItems": [
     {
@@ -2281,7 +2281,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 4,
       "evidence": "**Status:** ⚠️ FOUNDER ADJUDICATION OPEN · documentary only",
       "last_touched_epoch": 1789682893,
-      "hours_dormant": 337,
+      "hours_dormant": 338,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2305,7 +2305,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 360,
       "evidence": "## 8 · Owed before A2 can be written",
       "last_touched_epoch": 1790078900,
-      "hours_dormant": 227,
+      "hours_dormant": 228,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     }

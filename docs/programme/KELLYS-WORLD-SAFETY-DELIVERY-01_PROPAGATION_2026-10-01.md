@@ -90,9 +90,13 @@ These are not interchangeable. Safety recognition must not silently choose among
 
 ### Member-controlled safety off-ramp — candidate only
 
-R2 on PR #1675 defines the lowest-authority future off-ramp: MAIA may eventually offer `Message my practitioner`, but the action would open the existing composer rather than send anything. The member would still choose the recipient when needed, author/review the content, select urgency, and press Send. A separate optional act could copy only the member's current utterance into the draft; hidden context and MAIA interpretation remain excluded.
+R2 on PR #1675 defines the lowest-authority future off-ramp: MAIA may eventually offer `Message my practitioner`, but the action would open a member-controlled composer rather than send anything. The member would still choose the recipient when needed, author/review the content, select urgency, and press Send. A separate optional act could copy only the member's current utterance into the draft; hidden context and MAIA interpretation remain excluded.
 
-**Standing: design candidate only. No UI wiring or new disclosure authority is authorized by R2.**
+R3 corrects one implementation assumption: the existing portal POST cannot simply be reused from canonical MAIA because portal authority is token-bound, while the canonical MAIA turn uses the ordinary member session. The generic comms POST is practitioner-side, and `sendClientMessage()` is only a service seam once relationship ids are already lawfully resolved. A new authenticated member handoff seam would therefore be required.
+
+R3 also places an explicit privacy hold on implementation: the current message service writes both plaintext and encrypted body columns. Widening safety-adjacent MAIA content into that substrate requires a separate PHI/privacy ruling before code wiring.
+
+**Standing: design/census only. No UI wiring, member-send route, portal-token borrowing, or new disclosure authority is authorized by R2/R3.**
 
 ## Watching
 
