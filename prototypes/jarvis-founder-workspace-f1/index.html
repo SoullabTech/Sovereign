@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JARVIS Founder Workspace</title>
+<style>
+:root{
+  color-scheme: light;
+  --ground:#F2F4F3; --surface:#FFFFFF; --surface-2:#E9EDEB; --line:#D5DBD8; --line-strong:#B9C2BE;
+  --ink:#1B2320; --ink-2:#4A5651; --muted:#71807A;
+  --accent:#8A5A14; --accent-ink:#5E3D0B; --accent-soft:#F6EBD7;
+  --good:#2E6B4A; --good-soft:#E1F0E7;
+  --warn:#9A6A0E; --warn-soft:#F7ECD2;
+  --bad:#A33A2E; --bad-soft:#F6E1DE;
+  --unob:#5E6E7E; --unob-soft:#E4E9EE;
+  --unauth:#5B4B8A; --unauth-soft:#E8E3F2;
+  /* F1-R5: system faces only — this prototype makes no network request of any kind */
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+  --rail:220px; --radius:10px; --shadow:0 1px 2px rgba(20,30,26,.06),0 6px 20px -12px rgba(20,30,26,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --ground:#131816; --surface:#1B211E; --surface-2:#232B27; --line:#2D3733; --line-strong:#3E4A45;
+    --ink:#E9EEEB; --ink-2:#B9C4BE; --muted:#8E9B95;
+    --accent:#D9A24C; --accent-ink:#F0C57C; --accent-soft:#3A2D14;
+    --good:#7FC29B; --good-soft:#1E3328; --warn:#E0B25A; --warn-soft:#3A2F14;
+    --bad:#E88A7C; --bad-soft:#3E211D; --unob:#9FB0C0; --unob-soft:#232C34; --unauth:#B7A6E6; --unauth-soft:#2C2540;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ground:#131816; --surface:#1B211E; --surface-2:#232B27; --line:#2D3733; --line-strong:#3E4A45;
+  --ink:#E9EEEB; --ink-2:#B9C4BE; --muted:#8E9B95;
+  --accent:#D9A24C; --accent-ink:#F0C57C; --accent-soft:#3A2D14;
+  --good:#7FC29B; --good-soft:#1E3328; --warn:#E0B25A; --warn-soft:#3A2F14;
+  --bad:#E88A7C; --bad-soft:#3E211D; --unob:#9FB0C0; --unob-soft:#232C34; --unauth:#B7A6E6; --unauth-soft:#2C2540;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--accent-ink)}
+button{font:inherit;color:inherit}
+h1,h2,h3{margin:0;text-wrap:balance}
+.banner{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--accent-soft);color:var(--accent-ink);border-bottom:1px solid var(--line);padding:8px 16px;font-size:13px;letter-spacing:.01em}
+.banner b{font-weight:600}
+.shell{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);min-height:calc(100% - 37px)}
+.rail{border-right:1px solid var(--line);padding:20px 12px;background:var(--surface);position:sticky;top:37px;height:calc(100vh - 37px);display:flex;flex-direction:column;gap:6px}
+.rail .brand{font-family:var(--serif);font-size:20px;font-weight:600;padding:4px 10px 14px;letter-spacing:.005em}
+.rail .brand small{display:block;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.navbtn{display:flex;align-items:baseline;justify-content:space-between;gap:8px;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:8px;padding:9px 10px;cursor:pointer;color:var(--ink-2)}
+.navbtn:hover{background:var(--surface-2)}
+.navbtn[aria-current="page"]{background:var(--surface-2);color:var(--ink);border-color:var(--line)}
+.navbtn .q{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.navbtn .n{font-weight:600}
+.navbtn .count{font-family:var(--mono);font-size:11px;background:var(--accent-soft);color:var(--accent-ink);padding:1px 6px;border-radius:99px}
+.rail .foot{margin-top:auto;font-size:12px;color:var(--muted);padding:0 10px;font-family:var(--mono);line-height:1.6}
+main{padding-block:28px 64px;padding-inline:32px;max-width:1080px;width:100%}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.headline{font-family:var(--serif);font-size:clamp(24px,3vw,34px);font-weight:500;line-height:1.25;margin:6px 0 4px;max-width:30ch}
+.lede{color:var(--ink-2);max-width:65ch;margin:0 0 24px}
+section.block{margin-top:28px}
+section.block > h2{font-size:15px;font-weight:600;letter-spacing:.02em;margin-bottom:10px;display:flex;align-items:baseline;gap:10px}
+section.block > h2 .hint{font-weight:400;color:var(--muted);font-size:13px}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.row .top{display:flex;gap:12px;align-items:flex-start}
+.row .say{flex:1;min-width:0}
+.row .say .s{font-size:16px}
+.row .say .s b{font-weight:600}
+.row .say .m{color:var(--ink-2);font-size:14px;margin-top:2px}
+.pill{flex:none;font-size:12px;font-weight:600;letter-spacing:.03em;padding:3px 9px;border-radius:99px;border:1px solid transparent;white-space:nowrap;align-self:flex-start;margin-top:2px}
+.pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.failed{background:var(--bad-soft);color:var(--bad)} .pill.unobserved{background:var(--unob-soft);color:var(--unob);border-style:dashed;border-color:var(--unob)}
+.pill.unauthorized{background:var(--unauth-soft);color:var(--unauth)} .pill.needs{background:var(--accent-soft);color:var(--accent-ink)}
+.pill.neutral{background:var(--surface-2);color:var(--ink-2)}
+.pill.historical{background:transparent;color:var(--good);border-color:var(--good);border-style:solid}
+.fresh{display:inline-block;margin-left:6px;font-size:12px;color:var(--muted);font-style:italic}
+details.why{margin-top:8px}
+details.why summary{cursor:pointer;font-size:13px;color:var(--muted);list-style:none;display:inline-flex;gap:6px;align-items:center;user-select:none}
+details.why summary::-webkit-details-marker{display:none}
+details.why summary::before{content:"▸";font-size:11px}
+details.why[open] summary::before{content:"▾"}
+details.why summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.tech{margin-top:8px;background:var(--surface-2);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--ink-2);display:grid;grid-template-columns:max-content minmax(0,1fr);gap:2px 14px;overflow-x:auto}
+.tech .k{color:var(--muted)}
+.tech .v{word-break:break-word}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);color:var(--accent-ink);padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px}
+.callout.slate{border-color:var(--unob);background:var(--unob-soft);color:var(--unob)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.card h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.card p{margin:0;color:var(--ink-2);font-size:14px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:14px}
+.kv .k{color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:13px;color:var(--ink-2);margin:6px 0 14px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:99px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.legend .g{--c:var(--good)} .legend .h{--c:transparent} .legend .h::before{box-shadow:inset 0 0 0 2px var(--good)} .legend .w{--c:var(--warn)} .legend .f{--c:var(--bad)} .legend .u{--c:var(--unob)} .legend .a{--c:var(--unauth)} .legend .n{--c:var(--accent)}
+textarea,input[type=search]{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:10px 12px}
+textarea{min-height:76px;resize:vertical}
+.btn{background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.btn.primary{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;border:1px solid var(--line-strong);border-radius:99px;padding:3px 10px;background:var(--surface);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.timeline{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;font-size:14px}
+.timeline .d{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:3px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.mono{font-family:var(--mono);font-size:12px}
+.muted{color:var(--muted)}
+pre.raw{background:var(--surface-2);border-radius:8px;padding:12px;font:12px/1.5 var(--mono);overflow-x:auto;color:var(--ink-2);max-height:420px}
+.graphwrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.graphwrap svg{display:block;width:100%;height:auto;max-height:70vh}
+.node{cursor:pointer}
+.node rect,.node path{stroke:var(--line-strong);stroke-width:1;fill:var(--surface-2)}
+.node.programme rect{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.4}
+.node.act rect{fill:var(--surface-2)}
+.node.commit rect{fill:var(--surface);stroke-dasharray:0}
+.node.boundary rect{fill:none;stroke-dasharray:4 3;stroke:var(--unob)}
+.node.decision rect{fill:var(--accent-soft);stroke:var(--accent)}
+.node.system rect{fill:var(--surface);stroke:var(--line-strong)}
+.node.unit rect{fill:var(--surface)}
+.node text{fill:var(--ink);font-family:var(--sans);font-size:12px;pointer-events:none}
+.node text.sub{fill:var(--muted);font-size:10.5px}
+.node.commit text.sub,.node.branch text.sub{font-family:var(--mono);font-size:10px}
+.node.dim{opacity:.28}
+.node.sel rect{stroke:var(--accent);stroke-width:2.2}
+.edge{stroke:var(--line-strong);stroke-width:1.2;fill:none;cursor:pointer}
+.edge.hi{stroke:var(--accent);stroke-width:2}
+.edge.dim{opacity:.18}
+.edgelabel{fill:var(--muted);font-size:10px;font-family:var(--sans);pointer-events:none}
+.inspector{margin-top:12px}
+.sr{position:absolute;left:-9999px}
+@media (max-width:760px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;gap:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));border-right:0;border-top:1px solid var(--line);z-index:6}
+  .rail .brand,.rail .foot{display:none}
+  .navbtn{flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-size:12px;border-radius:8px}
+  .navbtn .q{display:none}
+  main{padding-inline:16px;padding-bottom:96px}
+}
+@media (prefers-reduced-motion:no-preference){ .node,.edge{transition:opacity .15s} }
+</style>
+</head>
+<body>
+<div class="banner"><b>Prototype.</b> This uses recorded evidence as of 23 Sep 2026 (canonical b4f73ac4); anything illustrative is marked as such where it appears. Nothing here is live, and nothing you press runs anything.</div>
+<div class="shell">
+  <nav class="rail" aria-label="Workspace">
+    <div class="brand">JARVIS<small>Founder Workspace</small></div>
+    <button class="navbtn" data-go="today"><span><span class="n">Today</span><span class="q">What needs me? What changed?</span></span><span class="count" id="cnt-needs"></span></button>
+    <button class="navbtn" data-go="work"><span><span class="n">Work</span><span class="q">Start, follow, pick up again</span></span></button>
+    <button class="navbtn" data-go="graph"><span><span class="n">Graph</span><span class="q">How the pieces relate</span></span></button>
+    <button class="navbtn" data-go="monitor"><span><span class="n">Monitor</span><span class="q">Is what I depend on observed?</span></span><span class="count" id="cnt-mon"></span></button>
+    <button class="navbtn" data-go="system"><span><span class="n">System</span><span class="q">Why does JARVIS believe that?</span></span></button>
+    <div class="foot" id="foot"></div>
+  </nav>
+  <main id="main" tabindex="-1"></main>
+</div>
+<script src="fixtures.js"></script>
+<script src="vocabulary.js"></script>
+<script>
+(function(){
+  const F = window.JFW_FIXTURES, V = window.JFW_VOCAB;
+  const $ = (s,el=document)=>el.querySelector(s);
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const REC = new Date(F.meta.fixture_recorded_at+'T00:00:00Z');
+  const ageOf = d => { if(!d) return null; const n=Math.round((REC-new Date(d+'T00:00:00Z'))/86400000); return n<=0?'today':n===1?'1 day old':n+' days old'; };
+  const LEVEL = { good:'Observed now · fine', historical:'Observed then · present state unknown', warn:'Observed · needs care', failed:'Failed', unobserved:'Not observed', unauthorized:'Not permitted from here', needs:'Needs you', neutral:'' };
+  // F1-R2: freshness and value are separate axes. A good value observed before the snapshot date is HISTORICAL, never "fine now".
+  const displayLevel = m => (m.level==='good' && m.freshness==='historical') ? 'historical' : m.level;
+  // F1-R1: totals derived from the projection are scoped unless the population is mechanically complete.
+  const POP = F.programme_state.population || {complete:false};
+  const scoped = POP.complete !== true;
+
+  // ---------- helpers ----------
+  function tech(obj){
+    const rows = Object.entries(obj).filter(([,v])=>v!==undefined&&v!==null&&v!=='').map(([k,v])=>`<span class="k">${esc(k)}</span><span class="v">${esc(Array.isArray(v)?v.join(' · '):v)}</span>`).join('');
+    return `<details class="why"><summary>Why does JARVIS believe that?</summary><div class="tech">${rows}</div></details>`;
+  }
+  function row({sentence, more, level, pillText, techObj}){
+    const pill = level ? `<span class="pill ${level}">${esc(pillText||LEVEL[level])}</span>` : '';
+    return `<div class="row"><div class="top"><div class="say"><div class="s">${sentence}</div>${more?`<div class="m">${more}</div>`:''}</div>${pill}</div>${techObj?tech(techObj):''}</div>`;
+  }
+  const PS = F.programme_state.programmes;
+  const needs = PS.flatMap(p=>p.needs_founder.map(n=>({p,n})));
+  const monCounts = F.monitor.reduce((a,m)=>{const l=displayLevel(m);a[l]=(a[l]||0)+1;return a;},{});
+  $('#cnt-needs').textContent = needs.length; $('#cnt-needs').title = scoped ? 'in this snapshot — population not mechanically complete' : 'complete population';
+  $('#cnt-mon').textContent = (monCounts.failed||0)+(monCounts.warn||0);
+  $('#foot').innerHTML = `observed against<br>${esc(F.meta.observed_against.slice(0,12))}<br>F0 ${esc(F.meta.f0_candidate.slice(0,8))}`;
+
+  // ---------- TODAY ----------
+  function today(){
+    const motion = PS.filter(p=>!p.external && !/CLOSED/.test(p.stage.mode) && p.stage.current_act!=='none open');
+    const latest = [...F.events].sort((a,b)=>b.at.localeCompare(a.at))[0];
+    const unob = (monCounts.unobserved||0)+(monCounts.unauthorized||0);
+    return `
+      <div class="eyebrow">Today · ${esc(F.meta.fixture_recorded_at)}</div>
+      <h1 class="headline">${scoped?'In this recorded snapshot, ':''}${needs.length} decisions are waiting on you and ${motion.length} programmes are in motion.${(monCounts.failed||0)?` ${monCounts.failed===1?'One thing':monCounts.failed+' things'} you depend on ${monCounts.failed===1?'is':'are'} broken.`:''}</h1>
+      <p class="lede">The most recent recorded change was ${esc(latest.at)} (${esc(latest.text)}). Of the things you depend on, ${unob} are not observed from this workspace — that is not the same as fine.${scoped?` <span class="muted">These counts cover the ${esc(POP.emitted)} programmes included in this snapshot, out of ${esc(POP.examined)} examined by hand; completeness is not mechanically established, so they are not totals.</span>`:''}</p>
+
+      <section class="block"><h2>Where you are</h2>
+        ${row({sentence:`You are in <b>${esc(F.meta.workspace.repo)}</b> on the Founder Workspace branch, and the working copy is clean.`, more:`Canonical has not moved since the census, so nothing here is stale on that account.`, level:'good', techObj:{branch:F.meta.workspace.branch, head:F.meta.workspace.head, resolved_by:F.meta.workspace.resolved_by, instrument:F.meta.workspace.source, observed_against:F.meta.observed_against, evidence:F.meta.workspace.evidence_state}})}
+      </section>
+
+      <section class="block"><h2>Needs you <span class="hint">${scoped?'visible in this snapshot · ':''}in the order they were recorded, newest first — not ranked</span></h2>
+        <div class="list">${needs.sort((a,b)=>b.p.last_change.date.localeCompare(a.p.last_change.date)).map(({p,n})=>row({sentence:`<b>${esc(p.name)}:</b> ${esc(n.what)}.`, more:esc(n.why), level:'needs', techObj:{programme:p.id, why:n.why, source:n.source, standing:p.standing, last_change:`${p.last_change.date} · ${p.last_change.authority}`, evidence:p.evidence_state}})).join('')}</div>
+        <p class="muted" style="font-size:13px;margin-top:8px">A place for you to answer these here is the future <b>Operator Decision Surface (O7)</b>. It is not open, so nothing here is answerable yet — decisions still happen where they happen today.</p>
+      </section>
+
+      <section class="block"><h2>In motion</h2>
+        <div class="list">${motion.map(p=>row({sentence:`<b>${esc(p.name)}</b> — ${esc(p.question)}`, more:`Now: ${esc(p.stage.current_act)} · ${esc(p.stage.mode)}`, level: p.needs_founder.length?'needs':'neutral', pillText: p.needs_founder.length?'Needs you':esc(p.stage.mode), techObj:{programme:p.id, standing:p.standing, current_act:p.stage.current_act, branch:p.custody.branch, candidate:p.custody.candidate_sha, observed_against:p.custody.observed_against, merge:p.authority.merge, deploy:p.authority.deploy, production_write:p.authority.production_write, sources:(p.sources||[]).concat(p.last_change.source), evidence:p.evidence_state}})).join('')}</div>
+      </section>
+
+      <section class="block"><h2>Changed recently</h2>
+        <div class="card"><div class="timeline">${[...F.events].sort((a,b)=>b.at.localeCompare(a.at)).map(e=>`<div class="d">${esc(e.at)}</div><div>${esc(e.text)} <span class="muted mono">· ${esc(e.kind)} · ${esc(e.source)}</span></div>`).join('')}</div></div>
+      </section>
+
+      <section class="block"><h2>Outside this workspace</h2>
+        ${row({sentence:`<b>Merge Authority</b> is governed elsewhere. Its execution is pending, and this workspace only points at it.`, more:`Externally governed · execution pending · protected from this lane.`, level:'unobserved', pillText:'Externally governed', techObj:{programme:'JARVIS-MERGE-AUTHORITY-01', standing:PS[1].standing, ruling:'F0 adjudication §V (D-01)', evidence:PS[1].evidence_state}})}
+      </section>`;
+  }
+
+  // ---------- WORK ----------
+  function work(){
+    const W = F.work;
+    const stateLevel = s => s==='CLOSED'?'good':s==='HELD_FOR_AUTHORITY'?'unauthorized':s==='DRAFT'?'neutral':'warn';
+    return `
+      <div class="eyebrow">Work</div>
+      <h1 class="headline">Say what you want to happen. JARVIS proposes a bounded piece of work and asks before anything runs.</h1>
+      <p class="lede">You do not choose machinery first. Which model, which route and what permission are worked out underneath and shown to you before you say go.</p>
+
+      <section class="block"><h2>Start something</h2>
+        <div class="card">
+          <label for="intent" class="sr">What do you want to happen?</label>
+          <textarea id="intent" placeholder="${esc(W.intent_examples[0])}"></textarea>
+          <div class="inline" style="margin-top:8px">
+            <button class="btn primary" id="propose">Show me what JARVIS would propose</button>
+            <span class="muted" style="font-size:13px">Nothing is created in this prototype.</span>
+          </div>
+          <div id="proposal" style="margin-top:12px" hidden></div>
+        </div>
+      </section>
+
+      <section class="block"><h2>Current work <span class="hint">illustrative — no recorded Work Unit was visible from the census container</span></h2>
+        <div class="list">${W.units.map(u=>row({sentence:`<b>${esc(u.title)}</b>`, more:esc(u.plain), level:stateLevel(u.state), pillText:esc(u.state_plain), techObj:{id:u.id, state:u.state, work_class:u.work_class, evidence_class:u.evidence_class, routing_posture:u.routing_posture, authority:u.authority, route:u.route, last_event:u.last_event, evidence:u.evidence_state, source:u.source}})).join('')}</div>
+        <div class="callout" style="margin-top:10px">${esc(W.adjudication_note)}</div>
+      </section>
+
+      <div class="grid2" style="margin-top:28px">
+        <section class="card"><h3>History</h3><div class="timeline">${W.history.map(h=>`<div class="d">${esc(h.at)}</div><div>${esc(h.what)} <span class="muted mono">· ${esc(h.sha)}</span></div>`).join('')}</div></section>
+        <section class="card"><h3>Handoffs</h3><div class="timeline">${W.handoffs.map(h=>`<div class="d">${esc(h.at)}</div><div>${esc(h.from)} → ${esc(h.to)}: ${esc(h.what)} <span class="pill neutral">${esc(h.status)}</span></div>`).join('')}</div></section>
+        <section class="card"><h3>Results</h3><div class="timeline">${W.results.map(r=>`<div class="d">${esc(r.kind)}</div><div>${esc(r.title)}<br><span class="muted mono">${esc(r.path)}</span></div>`).join('')}</div></section>
+        <section class="card"><h3>Pick up where you left off</h3><p>“Continue” means: recover the governed state, then do the next lawful act — not resume the last edit. JARVIS can recall prior sessions from this machine only.</p><p class="muted mono" style="margin-top:6px">manual §25 · continuity LOCAL_ONLY</p></section>
+      </div>`;
+  }
+  function proposal(text){
+    const t = text.trim();
+    if(!t) return `<div class="callout slate">Type what you want to happen first.</div>`;
+    return `
+      <div class="row">
+        <div class="say"><div class="s"><b>What JARVIS would do with this</b></div>
+        <div class="m">1. Read it as an intent and check whether it is clear enough to act on (if not, ask you — never guess).<br>2. Propose one bounded piece of work: what will change, where, and what permission it needs.<br>3. Show you the route it would take and hold there. Nothing runs until you say go, and saying "you may" is separate from saying "go".</div></div>
+        ${tech({your_words:t, intent_contract:'O1 (exists, not wired into the console)', plan:'O2 work graph (exists, not wired)', authority_plan:'O3 (exists, not wired)', would_become:'W0.v2 Work Unit → W2 lifecycle → W3 route → your authorization → E1 one-shot execution', prototype:'no Work Unit is created; no route is computed'})}
+      </div>`;
+  }
+
+  // ---------- GRAPH ----------
+  const KINDS = ['programme','act','decision','commit','branch','system','boundary'];
+  const KLABEL = {programme:'Programme',act:'Act',decision:'Decision for you',commit:'Commit',branch:'Branch',system:'System',boundary:'Boundary (outside)'};
+  let gState = { sel:null, hide:new Set(), pos:null };
+  function layout(){
+    const G=F.graph, W=940, H=600, n=G.nodes.length;
+    const P = G.nodes.map((d,i)=>({id:d.id, w:Math.max(96, d.label.length*6.6+22, (d.sub||'').length*5.6+22), x:W/2+Math.cos(i/n*6.283)*220, y:H/2+Math.sin(i/n*6.283)*180, vx:0, vy:0}));
+    const idx = Object.fromEntries(P.map((p,i)=>[p.id,i]));
+    for(let it=0; it<600; it++){
+      for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){ const a=P[i],b=P[j]; let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1; const f=(185*185)/(d*d)*0.9; dx/=d;dy/=d; a.vx-=dx*f;a.vy-=dy*f;b.vx+=dx*f;b.vy+=dy*f; }
+      for(const e of G.edges){ const a=P[idx[e.from]],b=P[idx[e.to]]; let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1; const f=(d-140)*0.02; dx/=d;dy/=d; a.vx+=dx*f;a.vy+=dy*f;b.vx-=dx*f;b.vy-=dy*f; }
+      for(const p of P){ p.vx+=(W/2-p.x)*0.004; p.vy+=(H/2-p.y)*0.004; p.x+=p.vx*0.5; p.y+=p.vy*0.5; p.vx*=0.6; p.vy*=0.6; p.x=Math.max(p.w/2+12,Math.min(W-p.w/2-12,p.x)); p.y=Math.max(30,Math.min(H-30,p.y)); }
+    }
+    return Object.fromEntries(P.map(p=>[p.id,p]));
+  }
+  function graph(){
+    if(!gState.pos) gState.pos = layout();
+    const G=F.graph, pos=gState.pos, byId=Object.fromEntries(G.nodes.map(d=>[d.id,d]));
+    const visible = d => !gState.hide.has(d.kind);
+    const sel = gState.sel;
+    const touching = new Set(sel? G.edges.filter(e=>e.from===sel||e.to===sel).flatMap(e=>[e.from,e.to]):[]);
+    const edges = G.edges.map((e,i)=>{ const a=pos[e.from],b=pos[e.to]; if(!visible(byId[e.from])||!visible(byId[e.to])) return ''; const hi = sel && (e.from===sel||e.to===sel); const dim = sel && !hi; const mx=(a.x+b.x)/2, my=(a.y+b.y)/2; return `<g><path class="edge ${hi?'hi':''} ${dim?'dim':''}" data-edge="${i}" d="M${a.x},${a.y} L${b.x},${b.y}" marker-end="url(#arr)"></path>${hi?`<text class="edgelabel" x="${mx}" y="${my-4}" text-anchor="middle">${esc(e.rel)}</text>`:''}</g>`; }).join('');
+    const nodes = G.nodes.map(d=>{ if(!visible(d)) return ''; const p=pos[d.id]; const w=Math.max(96, d.label.length*6.6+22, (d.sub||'').length*5.6+22), h=36; const dim = sel && sel!==d.id && !touching.has(d.id); return `<g class="node ${d.kind} ${sel===d.id?'sel':''} ${dim?'dim':''}" data-node="${esc(d.id)}" transform="translate(${p.x-w/2},${p.y-h/2})"><rect width="${w}" height="${h}" rx="${d.kind==='act'?18:d.kind==='decision'?6:8}"></rect><text x="${w/2}" y="15" text-anchor="middle">${esc(d.label)}</text><text class="sub" x="${w/2}" y="28" text-anchor="middle">${esc(d.sub)}</text></g>`; }).join('');
+    const svg = `<svg viewBox="0 0 940 600" role="img" aria-label="Evidenced relationships among programmes, acts, decisions, commits, branches and systems"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--line-strong)"></path></marker></defs>${edges}${nodes}</svg>`;
+    let insp = `<div class="callout slate">Select anything to see what it is connected to — and the evidence for each connection. An edge with no evidence is not drawn.</div>`;
+    if(sel){ const d=byId[sel]; const es=G.edges.filter(e=>e.from===sel||e.to===sel);
+      insp = `<div class="row"><div class="top"><div class="say"><div class="s"><b>${esc(d.label)}</b> <span class="muted">· ${esc(KLABEL[d.kind])} · ${esc(d.sub)}</span></div></div><span class="pill neutral">${es.length} connection${es.length===1?'':'s'}</span></div>
+        <div class="list" style="margin-top:10px">${es.map(e=>{ const other = e.from===sel? byId[e.to]: byId[e.from]; const dir = e.from===sel? `→ <i>${esc(e.rel)}</i> → <b>${esc(other.label)}</b>` : `<b>${esc(other.label)}</b> → <i>${esc(e.rel)}</i> → this`; return `<div class="row" style="box-shadow:none"><div class="say"><div class="s" style="font-size:14px">${dir}</div><div class="m mono" style="font-size:12px">evidence · ${esc(e.evidence.kind)} · ${esc(e.evidence.ref)}</div></div></div>`;}).join('')}</div></div>`; }
+    return `
+      <div class="eyebrow">Graph</div>
+      <h1 class="headline">How programmes, decisions, work and systems relate — each line backed by something you can open.</h1>
+      <p class="lede">The Living Spiral remains the visual grammar for standing. This is the relationship view it does not provide: nothing here is inferred from a name, and every edge cites a record, a ruling or git.</p>
+      <div class="chips" style="margin-bottom:10px">${KINDS.map(k=>`<button class="chip" data-kind="${k}" aria-pressed="${!gState.hide.has(k)}">${esc(KLABEL[k])}</button>`).join('')}</div>
+      <div class="graphwrap">${svg}</div>
+      <div class="inspector">${insp}</div>`;
+  }
+
+  // ---------- MONITOR ----------
+  function monitor(){
+    const groups = [...new Set(F.monitor.map(m=>m.group))];
+    const c = monCounts;
+    return `
+      <div class="eyebrow">Monitor · local-first</div>
+      <h1 class="headline">Of ${F.monitor.length} things JARVIS could report on: ${c.good||0} observed now and fine, ${c.historical||0} observed earlier with present state unknown, ${c.warn||0} need care, ${c.failed||0} failed, ${c.unobserved||0} not observed, ${c.unauthorized||0} not permitted from here.</h1>
+      <p class="lede">A count, not a score. Every value names the instrument that produced it and when. A past pass is a past pass: it is shown as observed then, never as fine now. "Not observed" means nobody looked; it is never painted calm.</p>
+      <div class="legend"><span class="g">Observed now · fine</span><span class="h">Observed then · present state unknown</span><span class="w">Observed · needs care</span><span class="f">Failed</span><span class="u">Not observed</span><span class="a">Not permitted from here</span></div>
+      ${groups.map(g=>`<section class="block"><h2>${esc(g)}</h2><div class="list">${F.monitor.filter(m=>m.group===g).map(m=>row({sentence:`<b>${esc(m.subject)}</b> — ${esc(m.plain)}`, more:`${esc(m.value)}${m.observed_at?` <span class="muted">· observed ${esc(ageOf(m.observed_at))}</span>`:''}${m.freshness==='historical'?`<span class="fresh">present state unknown</span>`:''}`, level:displayLevel(m), techObj:{subject:m.subject, axis:m.axis, value:m.value, instrument:m.instrument, observed_at:m.observed_at||'never (for this snapshot)', freshness:m.freshness, evidence:m.evidence_state}})).join('')}</div></section>`).join('')}`;
+  }
+
+  // ---------- SYSTEM ----------
+  function system(){
+    const pv=F.provenance;
+    const vocabRows = V.map(v=>`<tr><td class="mono">${esc(v.term)}</td><td>${esc(v.plain)}${v.confidence==='candidate'?' <span class="pill warn" style="font-size:11px;padding:1px 7px">gloss not yet verified</span>':''}</td><td class="mono muted">${esc(v.source)}</td></tr>`).join('');
+    return `
+      <div class="eyebrow">System</div>
+      <h1 class="headline">The machine-accountability layer: provenance, vocabularies, authority, and the raw records.</h1>
+      <p class="lede">Nothing on the other surfaces is simpler than the truth here; it is the same truth, one layer up.</p>
+
+      <section class="block"><h2>Which JARVIS is this?</h2>
+        <div class="grid2">
+          <div class="card"><h3>The running app</h3><p>${esc(pv.artifact.app_build_sha)}</p><p class="mono muted" style="margin-top:6px">${esc(pv.artifact.evidence_state)} · build/build-info.json</p></div>
+          <div class="card"><h3>The checkout it is bound to</h3><p class="mono">${esc(pv.substrate.branch)} @ ${esc(pv.substrate.head)}</p><p class="mono muted" style="margin-top:6px">${esc(pv.substrate.evidence_state)} · provenance.js</p></div>
+        </div>
+        <p class="muted" style="font-size:13px;margin-top:8px">${esc(pv.rule)}</p>
+      </section>
+
+      <section class="block"><h2>Authority at a glance <span class="hint">four permissions, never implied by one another</span></h2>
+        <div class="tablewrap"><table><thead><tr><th>Programme</th><th>Merge</th><th>Deploy</th><th>Production write</th><th>Member-facing</th></tr></thead><tbody>${PS.map(p=>`<tr><td>${esc(p.name)}<br><span class="mono muted">${esc(p.id)}</span></td><td>${esc(p.authority.merge)}</td><td>${esc(p.authority.deploy)}</td><td>${esc(p.authority.production_write)}</td><td>${esc(p.authority.member_facing)}</td></tr>`).join('')}</tbody></table></div>
+      </section>
+
+      <section class="block"><h2>Six vocabularies, kept six</h2>
+        <div class="grid2">${F.vocabularies.map(v=>`<div class="card"><h3>${esc(v.name)}</h3><div class="chips">${v.values.map(x=>`<span class="chip mono" style="cursor:default">${esc(x)}</span>`).join('')}</div><p class="mono muted" style="margin-top:8px;font-size:12px">${esc(v.owner)}</p></div>`).join('')}</div>
+        <p class="muted" style="font-size:13px;margin-top:8px">The workspace never merges these into one "status". Each stays on its own axis (HU-5).</p>
+      </section>
+
+      <section class="block"><h2>Vocabulary map v1 <span class="hint">internal term → what it means for you → where that comes from</span></h2>
+        <input type="search" id="vsearch" placeholder="Search a term or a word…" aria-label="Search vocabulary">
+        <div class="tablewrap" style="margin-top:8px"><table id="vtable"><thead><tr><th>Term</th><th>In ordinary language</th><th>Source</th></tr></thead><tbody>${vocabRows}</tbody></table></div>
+      </section>
+
+      <section class="block"><h2>Recorded programme state <span class="hint">programme-state.v1 projection fixture</span></h2>
+        <pre class="raw">${esc(JSON.stringify(F.programme_state,null,2))}</pre>
+      </section>`;
+  }
+
+  // ---------- router ----------
+  const VIEWS = {today, work, graph, monitor, system};
+  function go(name, push=true){
+    if(!VIEWS[name]) name='today';
+    if(push && location.hash!=='#'+name) history.replaceState(null,'','#'+name);
+    document.querySelectorAll('.navbtn').forEach(b=>b.setAttribute('aria-current', b.dataset.go===name?'page':'false'));
+    $('#main').innerHTML = VIEWS[name]();
+    try{ localStorage.setItem('jfw:last', name); }catch(e){}
+    wire(name);
+    window.scrollTo({top:0});
+  }
+  function wire(name){
+    if(name==='work'){ $('#propose').addEventListener('click',()=>{ const p=$('#proposal'); p.innerHTML=proposal($('#intent').value); p.hidden=false; }); }
+    if(name==='graph'){
+      document.querySelectorAll('[data-node]').forEach(n=>n.addEventListener('click',()=>{ gState.sel = gState.sel===n.dataset.node? null : n.dataset.node; go('graph',false); }));
+      document.querySelectorAll('[data-edge]').forEach(e=>e.addEventListener('click',()=>{ const ed=F.graph.edges[+e.dataset.edge]; gState.sel = ed.from; go('graph',false); }));
+      document.querySelectorAll('[data-kind]').forEach(c=>c.addEventListener('click',()=>{ const k=c.dataset.kind; gState.hide.has(k)?gState.hide.delete(k):gState.hide.add(k); go('graph',false); }));
+    }
+    if(name==='system'){ $('#vsearch').addEventListener('input',e=>{ const q=e.target.value.toLowerCase(); document.querySelectorAll('#vtable tbody tr').forEach(tr=>{ tr.hidden = q && !tr.textContent.toLowerCase().includes(q); }); }); }
+  }
+  document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+  window.addEventListener('hashchange',()=>go(location.hash.slice(1),false));
+  let start = location.hash.slice(1);
+  if(!start){ try{ start = localStorage.getItem('jfw:last')||'today'; }catch(e){ start='today'; } }
+  go(start);
+})();
+</script>
+</body>
+</html>
