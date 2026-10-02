@@ -14,6 +14,11 @@ import {
 import { passageContext } from '@/lib/writersStudio/editorialApproaches';
 import { appearanceVars } from '@/app/writers-studio/full-redesign/tokens';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
+import {
+  EDITORIAL_LATITUDES,
+  LATITUDE_BANDS,
+  type EditorialLatitude,
+} from '@/lib/manuscript/editorialScope/contract';
 
 type Props = {
   appearance: Appearance;
@@ -21,6 +26,12 @@ type Props = {
   currentText: string;
   sectionBody: string;
   busy: boolean;
+  editingLatitude: EditorialLatitude;
+  onEditingLatitude: (value: EditorialLatitude) => void;
+  mayRemoveParagraphs: boolean;
+  onMayRemoveParagraphs: (value: boolean) => void;
+  mayProposeImmediately: boolean;
+  onMayProposeImmediately: (value: boolean) => void;
   onClose: () => void;
   children: ReactNode;
 };
@@ -104,6 +115,12 @@ export default function IsolatedEditorialRoom({
   currentText,
   sectionBody,
   busy,
+  editingLatitude,
+  onEditingLatitude,
+  mayRemoveParagraphs,
+  onMayRemoveParagraphs,
+  mayProposeImmediately,
+  onMayProposeImmediately,
   onClose,
   children,
 }: Props) {
@@ -247,6 +264,9 @@ export default function IsolatedEditorialRoom({
           <span className="p4r1-isolated-balance">
             {layout === 'custom' ? 'Custom · ' : ''}{Math.round(leftPercent)} / {100 - Math.round(leftPercent)}
           </span>
+          <span className="p4r1-isolated-latitude-status" title={LATITUDE_BANDS[editingLatitude].description}>
+            Revision · {LATITUDE_BANDS[editingLatitude].label}
+          </span>
 
           <details className="p4r1-isolated-menu">
             <summary>Layout</summary>
@@ -290,8 +310,56 @@ export default function IsolatedEditorialRoom({
 
           <details className="p4r1-isolated-menu">
             <summary>Preferences</summary>
-            <div className="p4r1-isolated-menu-card">
-              <fieldset>
+            <div className="p4r1-isolated-menu-card p4r1-isolated-preferences">
+              <section className="p4r1-working-style" aria-label="Working style">
+                <div className="p4r1-working-style-head">
+                  <strong>Working style</strong>
+                  <span>How MAIA works with your words</span>
+                </div>
+                <label className="p4r1-latitude-label" htmlFor="p4r1-editing-latitude">
+                  <span>Revision latitude</span>
+                  <b>{LATITUDE_BANDS[editingLatitude].label}</b>
+                </label>
+                <input
+                  id="p4r1-editing-latitude"
+                  className="p4r1-latitude-slider"
+                  type="range"
+                  min={EDITORIAL_LATITUDES[0]}
+                  max={EDITORIAL_LATITUDES[EDITORIAL_LATITUDES.length - 1]}
+                  step={1}
+                  value={editingLatitude}
+                  disabled={busy}
+                  aria-valuetext={LATITUDE_BANDS[editingLatitude].label}
+                  onChange={(event) => onEditingLatitude(Number(event.target.value) as EditorialLatitude)}
+                />
+                <div className="p4r1-latitude-scale" aria-hidden="true">
+                  {EDITORIAL_LATITUDES.map((value) => <span key={value}>{LATITUDE_BANDS[value].label}</span>)}
+                </div>
+                <p className="p4r1-latitude-description">{LATITUDE_BANDS[editingLatitude].description}</p>
+                <p className="p4r1-latitude-law">This controls how far a proposed revision may move from your wording. Nothing is applied without you.</p>
+                <label className="p4r1-working-style-check">
+                  <input
+                    type="checkbox"
+                    checked={mayRemoveParagraphs}
+                    disabled={busy}
+                    onChange={(event) => onMayRemoveParagraphs(event.target.checked)}
+                  />
+                  <span><b>Allow paragraph-removal proposals</b><small>Separate permission; never implied by the slider.</small></span>
+                </label>
+                {editingLatitude === 1 ? (
+                  <label className="p4r1-working-style-check">
+                    <input
+                      type="checkbox"
+                      checked={mayProposeImmediately}
+                      disabled={busy}
+                      onChange={(event) => onMayProposeImmediately(event.target.checked)}
+                    />
+                    <span><b>Suggest wording straight away</b><small>Otherwise MAIA discusses the passage first at Touch.</small></span>
+                  </label>
+                ) : null}
+              </section>
+
+              <fieldset className="p4r1-reading-prefs">
                 <legend>Reading size</legend>
                 {([
                   ['large', 'Large'],
