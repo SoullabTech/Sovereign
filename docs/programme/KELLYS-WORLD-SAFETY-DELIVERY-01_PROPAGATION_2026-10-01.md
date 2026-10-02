@@ -21,7 +21,7 @@ No member utterance, crisis transcript, risk score, or personal safety state is 
 The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by seven custody surfaces:
 
 - PR #1663 — **MERGED / CANONICAL** at `edf656496`: S1 reachability correction;
-- PR #1664 — canonical live crisis-path census;
+- PR #1664 — **MERGED / CANONICAL** at `aa3bc543b`: canonical live crisis-path census;
 - PR #1665 — minimal deterministic recognition contract;
 - PR #1669 — stacked canonical live wiring, based on #1665;
 - PR #1675 — SAFETY-DISCLOSURE-01 authority contract: member act is the only currently executable disclosure basis; imminent/legal/minor-vulnerable-adult exceptions remain review-required;
