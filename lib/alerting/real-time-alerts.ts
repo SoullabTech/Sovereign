@@ -2,6 +2,7 @@
 import { DateTime } from 'luxon';
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';
+import { summarizeTransportAttempts, type ConsequenceDeliveryState, type TransportAttemptState } from '../safety/consequenceDeliveryTruth';
 
 interface AlertConfig {
   email?: {
@@ -63,14 +64,15 @@ interface AlertPayload {
   follow_up_required: boolean;
 }
 
-interface AlertResponse {
+export interface AlertResponse {
   alert_id: string;
   delivery_status: {
-    email?: 'sent' | 'failed' | 'not_attempted';
-    sms?: 'sent' | 'failed' | 'not_attempted';
-    webhook?: 'sent' | 'failed' | 'not_attempted';
-    slack?: 'sent' | 'failed' | 'not_attempted';
+    email?: TransportAttemptState;
+    sms?: TransportAttemptState;
+    webhook?: TransportAttemptState;
+    slack?: TransportAttemptState;
   };
+  consequence_state: ConsequenceDeliveryState;
   delivery_timestamps: Record<string, string>;
   retry_count: number;
   acknowledged_at?: string;
@@ -119,6 +121,7 @@ export class RealTimeAlertService {
     const response: AlertResponse = {
       alert_id: alertId,
       delivery_status: {},
+      consequence_state: 'DELIVERY_REQUESTED',
       delivery_timestamps: {},
       retry_count: this.deliveryRetries.get(alertId) || 0,
     };
@@ -126,6 +129,7 @@ export class RealTimeAlertService {
     // Check if therapist is on-call (for non-crisis alerts)
     if (payload.risk_level !== 'crisis' && !this.isTherapistOnCall(therapist)) {
       console.log(`Therapist ${therapist.id} is off-call, deferring non-crisis alert`);
+      response.consequence_state = 'DELIVERY_UNAVAILABLE';
       return response;
     }
 
@@ -160,7 +164,12 @@ export class RealTimeAlertService {
     // Execute all delivery methods in parallel
     await Promise.allSettled(deliveryPromises);
 
-    // Log alert delivery
+    response.consequence_state = summarizeTransportAttempts(
+      Object.values(response.delivery_status)
+    ).state;
+
+    // Log what the transports actually proved. Provider/API acceptance is
+    // intentionally not promoted to channel delivery or human acknowledgement.
     await this.logAlertDelivery(response);
 
     return response;
@@ -185,7 +194,7 @@ export class RealTimeAlertService {
         priority: payload.escalation_level === 'immediate' ? 'high' : 'normal',
       });
 
-      response.delivery_status.email = 'sent';
+      response.delivery_status.email = 'transport_accepted';
       response.delivery_timestamps.email = DateTime.now().toISO();
     } catch (error) {
       console.error('Email alert failed:', error);
@@ -213,7 +222,7 @@ export class RealTimeAlertService {
         to: therapist.phone,
       });
 
-      response.delivery_status.sms = 'sent';
+      response.delivery_status.sms = 'transport_accepted';
       response.delivery_timestamps.sms = DateTime.now().toISO();
     } catch (error) {
       console.error('SMS alert failed:', error);
@@ -261,7 +270,7 @@ export class RealTimeAlertService {
       });
 
       if (webhookResponse.ok) {
-        response.delivery_status.webhook = 'sent';
+        response.delivery_status.webhook = 'transport_accepted';
         response.delivery_timestamps.webhook = DateTime.now().toISO();
       } else {
         throw new Error(`Webhook failed: ${webhookResponse.status}`);
@@ -318,7 +327,7 @@ export class RealTimeAlertService {
       });
 
       if (slackResponse.ok) {
-        response.delivery_status.slack = 'sent';
+        response.delivery_status.slack = 'transport_accepted';
         response.delivery_timestamps.slack = DateTime.now().toISO();
       } else {
         throw new Error(`Slack webhook failed: ${slackResponse.status}`);
@@ -457,6 +466,7 @@ export class RealTimeAlertService {
     console.log('Alert delivery logged:', {
       alert_id: response.alert_id,
       delivery_status: response.delivery_status,
+      consequence_state: response.consequence_state,
       retry_count: response.retry_count,
       timestamp: DateTime.now().toISO(),
     });

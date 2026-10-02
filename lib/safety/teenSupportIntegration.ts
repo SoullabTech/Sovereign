@@ -12,6 +12,7 @@
 import { detectEDLanguage, getEDAwareSystemPrompt, ED_RESOURCES } from './edAwareSystem';
 import { detectAbuse } from './abuseDetection';
 import { computeTierFromAge, getTierConfig, type DevelopmentalTier } from '../youth/ageTierEngine';
+import { deliveryUnavailable, type ConsequenceDeliveryResult } from './consequenceDeliveryTruth';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -449,7 +450,7 @@ export async function alertSoullabTeam(
   paramsOrUserId: TeamAlertParams | string,
   safetyCheck?: TeenSafetyCheck,
   context?: string
-): Promise<void> {
+): Promise<ConsequenceDeliveryResult> {
   const params: TeamAlertParams = typeof paramsOrUserId === 'string'
     ? { userId: paramsOrUserId }
     : paramsOrUserId;
@@ -472,4 +473,5 @@ export async function alertSoullabTeam(
 
   // TODO (Phase 2): Query guardian_links and send guardian notifications
   // TODO (Phase 2): Insert guardian_safety_alerts record
+  return deliveryUnavailable('Teen guardian/team notification transport is not implemented');
 }

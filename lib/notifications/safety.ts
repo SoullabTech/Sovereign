@@ -14,6 +14,7 @@
 import { sendEmail } from '@/lib/email/sendEmail';
 import { query } from '@/lib/db/postgres';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import { deliveryFailed, deliveryUnavailable, transportAccepted, type ConsequenceDeliveryResult } from '@/lib/safety/consequenceDeliveryTruth';
 
 // Config: whether to include message preview in email (default: false for privacy)
 const INCLUDE_PREVIEW = process.env.SAFETY_EMAIL_INCLUDE_PREVIEW === 'true';
@@ -229,7 +230,7 @@ export async function updateSafetyLogEmailStatus(
 export async function sendSafetyConcernNotification(
   params: SafetyNotificationParams,
   logId?: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; delivery: ConsequenceDeliveryResult; error?: string }> {
   const { practitionerId, clientId, messageId, messageBody, clientName } = params;
 
   try {
@@ -241,7 +242,7 @@ export async function sendSafetyConcernNotification(
 
     if (!practitionerResult.rows[0]) {
       if (logId) await updateSafetyLogEmailStatus(logId, 'failed', 'Practitioner not found');
-      return { success: false, error: 'Practitioner not found' };
+      return { success: false, delivery: deliveryUnavailable('Practitioner not found'), error: 'Practitioner not found' };
     }
 
     const practitioner = practitionerResult.rows[0];
@@ -251,7 +252,7 @@ export async function sendSafetyConcernNotification(
     if (!practitionerEmail) {
       console.warn(`Practitioner ${practitionerId} has no email - skipping safety notification`);
       if (logId) await updateSafetyLogEmailStatus(logId, 'failed', 'No email address');
-      return { success: false, error: 'Practitioner has no email address' };
+      return { success: false, delivery: deliveryUnavailable('Practitioner has no email address'), error: 'Practitioner has no email address' };
     }
 
     // Build view URL (requires sign-in)
@@ -280,16 +281,16 @@ export async function sendSafetyConcernNotification(
         `Safety notification REFUSED: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
       );
       if (logId) await updateSafetyLogEmailStatus(logId, 'failed', result.error ?? 'Send refused');
-      return { success: false, error: result.error };
+      return { success: false, delivery: deliveryFailed(result.error ?? 'Email transport refused safety notification'), error: result.error };
     }
 
-    console.log(`Safety notification sent for message ${messageId}`);
+    console.log(`Safety notification accepted by email transport for message ${messageId}; human receipt is not yet witnessed`);
     if (logId) await updateSafetyLogEmailStatus(logId, 'sent');
-    return { success: true };
+    return { success: true, delivery: transportAccepted(result.id) };
   } catch (error) {
     console.error('Error sending safety notification:', error);
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
     if (logId) await updateSafetyLogEmailStatus(logId, 'failed', errorMsg);
-    return { success: false, error: errorMsg };
+    return { success: false, delivery: deliveryFailed(errorMsg), error: errorMsg };
   }
 }
