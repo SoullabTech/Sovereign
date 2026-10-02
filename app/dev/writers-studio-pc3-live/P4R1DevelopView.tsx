@@ -173,6 +173,14 @@ export interface P4R1DevelopViewProps {
   attentionError: string | null;
   attentionProgress: string | null;
   selectedAttentionItemId: string | null;
+  chapterReview: WholeManuscriptAttentionMap | null;
+  chapterReviewBusy: boolean;
+  chapterNeedsCheckpoint: boolean;
+  chapterReviewError: string | null;
+  chapterReviewProgress: string | null;
+  chapterScorecard: WholeManuscriptAttentionMap | null;
+  chapterScoreBusy: boolean;
+  chapterScoreError: string | null;
   writerUnderstanding: WriterUnderstanding | null;
   writerUnderstandingBusy: boolean;
   writerUnderstandingError: string | null;
@@ -200,6 +208,9 @@ export interface P4R1DevelopViewProps {
   onReading: (readingId: string) => void;
   onScope: (scope: DevelopScopeChoice) => void;
   onCommission: () => void;
+  onReadChapter: () => void;
+  onCheckpointAndReadChapter: () => void;
+  onScoreChapter: () => void;
   onCommissionAttentionMap: () => void;
   onShowAttentionItem: (itemId: string, sectionId: string) => void;
   onWorkWithAttentionItem: (itemId: string, sectionId: string) => void;
@@ -1511,6 +1522,184 @@ function ChapterLineagePanel({
   );
 }
 
+function ChapterReviewPanel({
+  map,
+  busy,
+  needsCheckpoint,
+  progress,
+  error,
+  onRead,
+  onCheckpointAndRead,
+  onField,
+  onWrite,
+  onEdit,
+  scorecard,
+  scoreBusy,
+  scoreError,
+  onScore,
+}: {
+  map: WholeManuscriptAttentionMap | null;
+  busy: boolean;
+  needsCheckpoint: boolean;
+  progress: string | null;
+  error: string | null;
+  onRead: () => void;
+  onCheckpointAndRead: () => void;
+  onField: (field: DevelopField) => void;
+  onWrite: () => void;
+  onEdit: (itemId: string, sectionId: string) => void;
+  scorecard: WholeManuscriptAttentionMap | null;
+  scoreBusy: boolean;
+  scoreError: string | null;
+  onScore: () => void;
+}) {
+  if (!map) {
+    return (
+      <section className="fr-card p4r1-chapter-review" data-chapter-review="empty">
+        <span className="p4r1-eyebrow">Start here</span>
+        <h3>Let MAIA read this chapter.</h3>
+        <p>
+          She’ll tell you what she thinks the chapter is doing, what is already working,
+          and where she would focus next. No jargon. Nothing changes.
+        </p>
+        {needsCheckpoint ? (
+          <div className="p4r1-chapter-read-snapshot">
+            <p>
+              This chapter has changed since the last reading snapshot. Save the current draft so
+              MAIA reads exactly what is on the page now. Your words will not change.
+            </p>
+            <button
+              type="button"
+              className="p4r1-commission"
+              disabled={busy}
+              onClick={onCheckpointAndRead}
+            >
+              {busy ? (progress ?? 'Saving the current draft…') : 'Save current draft & read'}
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="p4r1-commission" disabled={busy} onClick={onRead}>
+            {busy ? (progress ?? 'MAIA is reading the chapter…') : 'Read this chapter'}
+          </button>
+        )}
+        {error ? <p className="p4r1-error" role="status">{error}</p> : null}
+      </section>
+    );
+  }
+
+  const byBand = (band: string) => map.items.find((item) => item.band === band) ?? null;
+  const strength = byBand('begin-here');
+  const grasp = byBand('next');
+  const friction = byBand('later');
+  const start = byBand('watch');
+
+  return (
+    <section className="fr-card p4r1-chapter-review" data-chapter-review="ready">
+      <span className="p4r1-eyebrow">MAIA read the chapter</span>
+      {strength ? (
+        <div className="p4r1-chapter-review-lead">
+          <h3>{strength.label}</h3>
+          <p>{strength.notice}</p>
+          <small>{strength.whyItMatters}</small>
+        </div>
+      ) : null}
+
+      {grasp ? (
+        <div className="p4r1-chapter-review-point">
+          <b>What I think this chapter is doing</b>
+          <p>{grasp.notice}</p>
+        </div>
+      ) : null}
+
+      {friction ? (
+        <div className="p4r1-chapter-review-point">
+          <b>What may need attention</b>
+          <p>{friction.notice}</p>
+        </div>
+      ) : null}
+
+      {start ? (
+        <div className="p4r1-chapter-review-point">
+          <b>Where I’d start</b>
+          <p>{start.notice}</p>
+        </div>
+      ) : null}
+
+      <div className="p4r1-chapter-review-actions">
+        <button type="button" onClick={() => onField('arc')}>How does this fit the book’s arc?</button>
+        <button type="button" onClick={() => onField('structure')}>Does it belong here?</button>
+        <button type="button" onClick={() => onField('development')}>Show me what to strengthen</button>
+        {start?.sectionIds[0] ? (
+          <button
+            type="button"
+            className="p4r1-chapter-review-primary"
+            onClick={() => onEdit(start.id, start.sectionIds[0]!)}
+          >
+            Show me an edited version
+          </button>
+        ) : (
+          <button type="button" className="p4r1-chapter-review-primary" onClick={onWrite}>Work on the writing</button>
+        )}
+        <button type="button" disabled={scoreBusy} onClick={onScore}>
+          {scoreBusy ? 'Building scorecard…' : (scorecard ? 'Refresh chapter scorecard' : 'Chapter scorecard')}
+        </button>
+      </div>
+
+      {scoreError ? <p className="p4r1-error" role="status">{scoreError}</p> : null}
+      {scorecard ? (() => {
+        const dimensions = ['Clarity', 'Coherence', 'Reader orientation', 'Voice', 'Momentum'];
+        const scored = scorecard.items.filter((item) => dimensions.includes(item.label));
+        const extras = scorecard.items.filter((item) => !dimensions.includes(item.label));
+        return (
+          <div className="p4r1-chapter-scorecard" data-chapter-scorecard>
+            <div className="p4r1-chapter-scorecard-head">
+              <b>Chapter scorecard</b>
+              <span>Optional craft guide · not a grade</span>
+            </div>
+            {scored.map((item) => {
+              const score = item.notice.match(/^([1-5]\/5)\b/)?.[1] ?? '—';
+              return (
+                <details key={item.id}>
+                  <summary>
+                    <b>{item.label}</b>
+                    <span>{score}</span>
+                  </summary>
+                  <p>{item.notice}</p>
+                  <small>{item.whyItMatters}</small>
+                </details>
+              );
+            })}
+            {extras.length > 0 ? (
+              <details className="p4r1-chapter-scorecard-extra">
+                <summary>Other thing MAIA noticed</summary>
+                {extras.map((item) => (
+                  <div key={item.id}>
+                    <b>{item.label}</b>
+                    <p>{item.notice}</p>
+                    <small>{item.whyItMatters}</small>
+                  </div>
+                ))}
+              </details>
+            ) : null}
+          </div>
+        );
+      })() : null}
+
+      <details className="p4r1-chapter-review-details">
+        <summary>Why MAIA thinks this</summary>
+        {map.items.map((item) => (
+          <div key={item.id}>
+            <b>{item.label}</b>
+            <p>{item.whyItMatters}</p>
+          </div>
+        ))}
+      </details>
+
+      {error ? <p className="p4r1-error" role="status">{error}</p> : null}
+    </section>
+  );
+}
+
 function AttentionMapPanel({
   map,
   busy,
@@ -1980,6 +2169,26 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           </div>
         ) : (
         <div className="p4r1-intent-arrival">
+          <ChapterReviewPanel
+            map={props.chapterReview}
+            busy={props.chapterReviewBusy}
+            needsCheckpoint={props.chapterNeedsCheckpoint}
+            progress={props.chapterReviewProgress}
+            error={props.chapterReviewError}
+            onRead={props.onReadChapter}
+            onCheckpointAndRead={props.onCheckpointAndReadChapter}
+            onField={props.onField}
+            onWrite={() => props.onMode('write')}
+            onEdit={props.onWorkWithAttentionItem}
+            scorecard={props.chapterScorecard}
+            scoreBusy={props.chapterScoreBusy}
+            scoreError={props.chapterScoreError}
+            onScore={props.onScoreChapter}
+          />
+
+          <details className="p4r1-develop-more">
+            <summary>More ways to explore</summary>
+            <div className="p4r1-develop-more-body">
           <AttentionMapPanel
             map={props.attentionMap}
             busy={props.attentionBusy}
@@ -2237,6 +2446,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               onReading={props.onReading}
             />
           </section>
+            </div>
+          </details>
         </div>
         )
       ) : (

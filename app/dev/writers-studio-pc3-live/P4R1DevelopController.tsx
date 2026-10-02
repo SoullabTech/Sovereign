@@ -25,7 +25,7 @@ import {
   preparationCopy,
   type DevelopPreparation,
 } from '@/lib/writersStudio/developPreparationClient';
-import { beginDraft } from '@/app/press/manuscript/workingDraftClient';
+import { beginDraft, checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
 import { fetchLiveThemes, mutateTheme } from '@/lib/writersStudio/themes/client';
 import type { LiveThemesPayload, ThemeMutation } from '@/lib/writersStudio/themes/liveTypes';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
@@ -140,6 +140,16 @@ export default function P4R1DevelopController() {
   const [attentionBusy, setAttentionBusy] = useState(false);
   const [attentionError, setAttentionError] = useState<string | null>(null);
   const [attentionProgress, setAttentionProgress] = useState<string | null>(null);
+
+  const [chapterReview, setChapterReview] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [chapterReviewBusy, setChapterReviewBusy] = useState(false);
+  const [chapterReadPending, setChapterReadPending] = useState(false);
+  const [chapterNeedsCheckpoint, setChapterNeedsCheckpoint] = useState(false);
+  const [chapterReviewError, setChapterReviewError] = useState<string | null>(null);
+  const [chapterReviewProgress, setChapterReviewProgress] = useState<string | null>(null);
+  const [chapterScorecard, setChapterScorecard] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [chapterScoreBusy, setChapterScoreBusy] = useState(false);
+  const [chapterScoreError, setChapterScoreError] = useState<string | null>(null);
 
   const [writerUnderstanding, setWriterUnderstanding] = useState<WriterUnderstanding | null>(null);
   const [writerUnderstandingBusy, setWriterUnderstandingBusy] = useState(false);
@@ -874,6 +884,171 @@ export default function P4R1DevelopController() {
     }
   }, [context?.manuscriptId, context?.draftRevision]);
 
+  const performChapterRead = useCallback(async (revisionNumber: number) => {
+    if (!context || !currentChapter?.sections.length || chapterReviewBusy) return;
+    const chapterIds = currentChapter.sections.map((section) => section.draftSectionId);
+    const chapterScope: ReadingScope = {
+      kind: 'range',
+      fromSectionId: chapterIds[0]!,
+      toSectionId: chapterIds[chapterIds.length - 1]!,
+    };
+
+    setChapterReviewBusy(true);
+    setChapterNeedsCheckpoint(false);
+    setChapterReviewError(null);
+    setChapterReviewProgress('MAIA is reading the chapter…');
+    try {
+      let overviewReadingId: string | null = null;
+      for (const summary of summaries) {
+        if (summary.commissionedLens !== 'overview') continue;
+        const fetched = await fetchReading(context.manuscriptId, summary.id);
+        if (!fetched.ok) continue;
+        if (fetched.payload.reading.readState.revisionNumber !== revisionNumber) continue;
+        const frozenScope = fetched.payload.reading.scope.bodyScope;
+        if (frozenScope.length !== chapterIds.length
+          || frozenScope.some((id, index) => id !== chapterIds[index])) continue;
+        overviewReadingId = summary.id;
+        break;
+      }
+
+      if (!overviewReadingId) {
+        const commissioned = await requestDevelopmentalReading(
+          context.manuscriptId,
+          'overview',
+          chapterScope,
+        );
+        await loadSummaries();
+
+        if (!commissioned.ok) {
+          if (commissioned.stage === 'capture' && commissioned.refusal === 'revision_not_current') {
+            setChapterNeedsCheckpoint(true);
+            setChapterReviewProgress(null);
+            return;
+          }
+          setChapterReviewError('MAIA could not finish the chapter reading. Nothing in your writing changed.');
+          setChapterReviewProgress(null);
+          return;
+        }
+        overviewReadingId = commissioned.readingId;
+      }
+
+      setChapterReviewProgress('MAIA has finished reading. Gathering her impressions…');
+      const synthesized = await requestAttentionMap(
+        context.manuscriptId,
+        [overviewReadingId],
+        [
+          'Respond directly to the writer as a perceptive, encouraging editor who has just read this chapter closely. Use "you" and "your"; never refer to them as "the author".',
+          'Be conversational, light, clear, and specific. The first thing the writer sees must build trust by naming one earned strength in the chapter — something genuinely working and worth protecting. Avoid generic praise.',
+          'Keep each item compact: label no more than 8 words, notice no more than 2 short sentences, whyItMatters no more than 2 short sentences. Put examples and quotations in evidence, not in the main response unless one very short phrase is essential.',
+          'Name friction as something worth looking at together, not as an indictment. Avoid adversarial phrasing such as "fails", "denies", "undermines", or "contradicts" unless the textual evidence truly requires that exact claim.',
+          'Return exactly four evidenced items, using the attention bands in this order:',
+          'begin-here: What is working — begin positively and specifically. Show that you understood the writing before you analyze it.',
+          'next: What I think this chapter is doing — a concise grasp of its movement and purpose.',
+          'later: What may need attention — the most useful friction or opportunity, without jargon or grading.',
+          'watch: Where I would start — one clear, manageable next editorial focus.',
+          'Use chapter scale unless a smaller scale is necessary to ground the point. Do not rewrite the prose. Do not use technical editorial vocabulary unless unavoidable.',
+        ].join('\n'),
+      );
+      if (!synthesized.ok) {
+        setChapterReviewError('MAIA read the chapter but could not gather her impressions just now. The reading is saved and your writing is unchanged.');
+        return;
+      }
+      setChapterReview(synthesized.map);
+      setChapterReviewProgress(null);
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(
+          `writers-studio:chapter-review:v1:${context.manuscriptId}:${chapterIds[0]}`,
+          JSON.stringify({ draftRevision: revisionNumber, map: synthesized.map }),
+        );
+      }
+    } finally {
+      setChapterReviewBusy(false);
+    }
+  }, [context, currentChapter, chapterReviewBusy, loadSummaries, summaries]);
+
+  const readCurrentChapter = useCallback(async () => {
+    if (!context || !currentChapter?.sections.length || chapterReviewBusy) return;
+    if (prep?.kind !== 'ready') {
+      const copy = prep ? preparationCopy(prep) : null;
+      if (!copy?.act) {
+        setChapterReviewError('MAIA cannot establish a safe chapter reading yet. Nothing has changed.');
+        return;
+      }
+      setChapterReadPending(true);
+      setChapterReviewProgress('Preparing the chapter for MAIA…');
+      await prepare();
+      return;
+    }
+    if (context.draftRevision === null) {
+      setChapterNeedsCheckpoint(true);
+      setChapterReviewError(null);
+      return;
+    }
+    await performChapterRead(context.draftRevision);
+  }, [context, currentChapter, chapterReviewBusy, prep, prepare, performChapterRead]);
+
+  const checkpointCurrentChapterAndRead = useCallback(async () => {
+    if (!context || chapterReviewBusy) return;
+    setChapterReviewBusy(true);
+    setChapterReviewError(null);
+    setChapterReviewProgress('Saving the current draft for this reading…');
+    const result = await checkpointServerDraft(apiFetch, context.manuscriptId, {
+      baseRevisionId: context.version,
+      idempotencyKey: newIdempotencyKey(),
+    });
+    if (result.kind !== 'ok' || result.revisionCount === null) {
+      setChapterReviewBusy(false);
+      setChapterReviewProgress(null);
+      setChapterReviewError(
+        result.kind === 'conflict'
+          ? 'The draft moved while MAIA was preparing to read it. Reload the chapter, then try again.'
+          : 'The current draft could not be saved for reading just now. Your writing is unchanged.',
+      );
+      return;
+    }
+    const revisionNumber = result.revisionCount;
+    setContext((previous) => previous ? {
+      ...previous,
+      version: result.revisionId ?? previous.version,
+      draftRevision: revisionNumber,
+    } : previous);
+    setChapterNeedsCheckpoint(false);
+    setChapterReviewBusy(false);
+    await performChapterRead(revisionNumber);
+  }, [context, chapterReviewBusy, performChapterRead]);
+
+  const scoreCurrentChapter = useCallback(async () => {
+    if (!context || !chapterReview || chapterScoreBusy) return;
+    setChapterScoreBusy(true);
+    setChapterScoreError(null);
+    try {
+      const out = await requestAttentionMap(
+        context.manuscriptId,
+        chapterReview.readingIds,
+        [
+          'Create an optional writer-facing chapter scorecard from these same frozen chapter readings. Do not reread the manuscript.',
+          'Use exactly five evidenced items: Clarity, Coherence, Reader orientation, Voice, and Momentum.',
+          'For each item, put the score at the start of notice in the form "N/5 — ..." where N is an integer 1 through 5.',
+          'Explain the score in plain language and use whyItMatters to say the smallest concrete change that could improve it by one level.',
+          'Treat this as a transparent craft rubric, not a verdict on the writer or the value of the work. Do not score book-level placement because this reading is chapter-bounded.',
+        ].join('\n'),
+      );
+      if (!out.ok) {
+        setChapterScoreError('MAIA could not prepare the scorecard just now. The chapter review is unchanged.');
+        return;
+      }
+      setChapterScorecard(out.map);
+    } finally {
+      setChapterScoreBusy(false);
+    }
+  }, [context, chapterReview, chapterScoreBusy]);
+
+  useEffect(() => {
+    if (!chapterReadPending || prep?.kind !== 'ready' || chapterReviewBusy) return;
+    setChapterReadPending(false);
+    void readCurrentChapter();
+  }, [chapterReadPending, prep?.kind, chapterReviewBusy, readCurrentChapter]);
+
   const commissionAttentionMap = useCallback(async () => {
     if (!context || attentionBusy) return;
     if (context.draftRevision === null) {
@@ -952,7 +1127,8 @@ export default function P4R1DevelopController() {
   }, [updateQuery]);
 
   const workWithAttentionItem = useCallback(async (itemId: string, sectionId: string) => {
-    const item = attentionMap?.items.find((candidate) => candidate.id === itemId);
+    const item = attentionMap?.items.find((candidate) => candidate.id === itemId)
+      ?? chapterReview?.items.find((candidate) => candidate.id === itemId);
     if (!item || !context) return;
 
     /* C11R2 — use the same verifier that Write/Focus uses. A model-visible
@@ -984,7 +1160,7 @@ export default function P4R1DevelopController() {
     /* No cited observation can lawfully become an editable locus. Orient to an
        evidenced section and leave passage selection to the writer. */
     openAttentionSection(itemId, sectionId);
-  }, [attentionMap, context, openAttentionSection, updateQuery]);
+  }, [attentionMap, chapterReview, context, openAttentionSection, updateQuery]);
 
   const sectionScope = useMemo<Extract<DevelopScopeChoice, { kind: 'section' }> | null>(() => {
     if (!currentSection) return null;
@@ -1044,6 +1220,14 @@ export default function P4R1DevelopController() {
       attentionError={attentionError}
       attentionProgress={attentionProgress}
       selectedAttentionItemId={selectedAttentionItemId}
+      chapterReview={chapterReview}
+      chapterReviewBusy={chapterReviewBusy}
+      chapterNeedsCheckpoint={chapterNeedsCheckpoint}
+      chapterReviewError={chapterReviewError}
+      chapterReviewProgress={chapterReviewProgress}
+      chapterScorecard={chapterScorecard}
+      chapterScoreBusy={chapterScoreBusy}
+      chapterScoreError={chapterScoreError}
       writerUnderstanding={writerUnderstanding}
       writerUnderstandingBusy={writerUnderstandingBusy}
       writerUnderstandingError={writerUnderstandingError}
@@ -1071,6 +1255,9 @@ export default function P4R1DevelopController() {
       onReading={onReading}
       onScope={setScope}
       onCommission={() => void commission()}
+      onReadChapter={() => void readCurrentChapter()}
+      onCheckpointAndReadChapter={() => void checkpointCurrentChapterAndRead()}
+      onScoreChapter={() => void scoreCurrentChapter()}
       onCommissionAttentionMap={() => void commissionAttentionMap()}
       onShowAttentionItem={openAttentionSection}
       onWorkWithAttentionItem={workWithAttentionItem}

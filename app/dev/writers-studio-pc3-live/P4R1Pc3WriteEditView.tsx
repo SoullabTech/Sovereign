@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Shell } from '@/app/writers-studio/full-redesign/Shell';
 import { WriteManuscriptRail, WriteRoom, type WriteBlock } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { WRITE_COPY } from '@/app/writers-studio/full-redesign/fixtures';
@@ -15,6 +15,7 @@ const WRITE_RELATIONAL_GEOMETRY = {
 };
 import { projectPc3LiveWrite } from '@/app/writers-studio/full-redesign/liveWriteAdapter';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
+import { WholeManuscriptSurface, type WholeManuscriptSurfaceHandle } from '@/app/writers-studio/canvas/WholeManuscriptSurface';
 import RevisionDesk, { type CarryChooserPresentation, type MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import InsightReadings from '@/app/writers-studio/insight/InsightReadings';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
@@ -194,6 +195,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [proseView, setProseView] = useState(() => !props.held && !props.carriedInsight);
+  const wholeEditRef = useRef<WholeManuscriptSurfaceHandle | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -242,6 +244,18 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       ?? props.context.sections.filter((section) => section.draftSectionId === props.focusId))
     : [];
   const proseAvailable = proseSections.length > 1;
+  const chapterWriting = useMemo<SectionWriting>(() => {
+    const ids = new Set(proseSections.map((section) => section.draftSectionId));
+    const sections = props.writing.sections.filter((section) => ids.has(section.id));
+    const active = sections.find((section) => section.id === props.writing.activeId) ?? sections[0] ?? null;
+    return {
+      ...props.writing,
+      sections,
+      activeId: active?.id ?? null,
+      active,
+      activeBody: active ? props.writing.bodyOf(active.id) : '',
+    };
+  }, [props.writing, proseSections]);
 
   const go = useCallback((sectionId: string | null) => {
     if (!sectionId) return;
@@ -812,7 +826,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   const modeSwitch = proseAvailable && !canvas ? (
     <div className="p4r1-write-view-switch" aria-label="Writing view">
-      <button type="button" aria-pressed={proseView} onClick={() => setProseView(true)}>Prose</button>
+      <button type="button" aria-pressed={proseView} onClick={() => {
+        wholeEditRef.current?.captureMountedBeforeLeave();
+        setProseView(true);
+      }}>Prose</button>
       <button type="button" aria-pressed={!proseView} onClick={() => setProseView(false)}>Edit</button>
     </div>
   ) : null;
@@ -835,7 +852,16 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const exactRoom = (
     <div className="p4r1-edit-host">
       {modeSwitch}
-      {writeRoom}
+      {proseAvailable ? (
+        <div className="p4r1-chapter-edit" data-chapter-edit>
+          <WholeManuscriptSurface
+            ref={wholeEditRef}
+            writing={chapterWriting}
+            initialOpenAt={props.focusId}
+            showHeadings
+          />
+        </div>
+      ) : writeRoom}
     </div>
   );
 

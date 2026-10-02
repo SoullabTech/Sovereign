@@ -9,6 +9,8 @@ describe('Writer Studio Prose View', () => {
   const css = read('app/dev/writers-studio-p4r1/p4r1-live.css');
   const typesetting = read('app/writers-studio/full-redesign/manuscriptTypesetting.ts');
   const fullCss = read('app/dev/writers-studio-full-redesign-review/full-redesign-review.css');
+  const whole = read('app/writers-studio/canvas/WholeManuscriptSurface.tsx');
+  const focus = read('app/dev/writers-studio-pc3-live/IsolatedEditorialRoom.tsx');
 
   it('makes a continuous chapter the default while retaining exact Edit', () => {
     expect(view).toContain('data-prose-view');
@@ -33,5 +35,20 @@ describe('Writer Studio Prose View', () => {
     expect(css).toContain('.p4r1-prose-page');
     expect(css).toContain('font-family:var(--fr-serif-stack)');
     expect(css).toContain('.p4r1-prose-section>blockquote');
+  });
+
+  it('keeps Edit on the continuous chapter instead of one storage slice', () => {
+    expect(view).toContain('<WholeManuscriptSurface');
+    expect(view).toContain('data-chapter-edit');
+    expect(view).toContain('captureMountedBeforeLeave');
+    expect(whole).toContain('showHeadings?: boolean');
+    expect(whole).toContain('data-whole-manuscript-heading');
+  });
+
+  it('shows a plain Light-to-Heavy edit preference while preserving the five-level law', () => {
+    expect(focus).toContain("1: 'Light'");
+    expect(focus).toContain("5: 'Heavy'");
+    expect(focus).toContain('<span>Edit strength</span>');
+    expect(focus).toContain('Your voice remains the reference');
   });
 });

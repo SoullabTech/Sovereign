@@ -46,11 +46,15 @@ export interface AttentionSynthesisResult {
   items: readonly AttentionSynthesisCandidate[];
 }
 
-export function attentionSynthesisSystem(): string {
+export function attentionSynthesisSystem(mode: 'deep' | 'overview' = 'deep'): string {
   return [
-    'You are synthesizing frozen developmental observations for a writer who explicitly asked where attention would have the most leverage.',
+    mode === 'overview'
+      ? 'You are turning one frozen chapter-overview reading into a brief, humane first impression for the writer.'
+      : 'You are synthesizing frozen developmental observations for a writer who explicitly asked where attention would have the most leverage.',
     'The observations are evidence, not verdicts. Do not rewrite them and do not invent manuscript facts.',
-    'Compare across lenses and scales: whole work, part, chapter, section, passage.',
+    mode === 'overview'
+      ? 'Stay within the chapter scope and the supplied overview observations. Do not claim cross-lens comparison or whole-work coverage.'
+      : 'Compare across lenses and scales: whole work, part, chapter, section, passage.',
     'Organize only by the named attention bands: begin-here, next, later, watch.',
     'Do not emit numeric scores, grades, severity, confidence, priority, percentages, stars, or hidden ranking metrics.',
     'Every item must cite one or more supplied synthesisRef handles such as E1 or E27. Use only handles that appear in the supplied observations. Exact reading identity and manuscript locations are resolved by the system; do not invent identifiers.',

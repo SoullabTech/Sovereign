@@ -3670,3 +3670,100 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
   .p4r1-root .p4r1-prose-page{width:100%;font-size:18px}
   .p4r1-root .p4r1-prose-page>h1{font-size:34px}
 }
+
+/* CHAPTER REVIEW — humane first, machinery second. */
+.p4r1-root .p4r1-chapter-review{
+  display:grid;gap:16px;margin:16px 14px 6px;padding:26px 28px;
+  border-color:color-mix(in srgb,var(--fr-action-line) 55%,var(--fr-line-soft))
+}
+.p4r1-root .p4r1-chapter-review>h3,
+.p4r1-root .p4r1-chapter-review-lead>h3{
+  margin:0;color:var(--fr-title);font:500 27px/1.3 var(--fr-serif-stack)
+}
+.p4r1-root .p4r1-chapter-review>p,
+.p4r1-root .p4r1-chapter-review-lead>p,
+.p4r1-root .p4r1-chapter-review-point>p{
+  margin:0;max-width:760px;color:var(--fr-ink2);font:15px/1.6 var(--fr-serif-stack)
+}
+.p4r1-root .p4r1-chapter-review-point{
+  padding:14px 0;border-top:1px solid var(--fr-line-soft)
+}
+.p4r1-root .p4r1-chapter-review-point>b{
+  display:block;margin-bottom:6px;color:var(--fr-title);font:600 12px/1.3 var(--fr-sans-stack)
+}
+.p4r1-root .p4r1-chapter-review-positive{
+  border-top-color:color-mix(in srgb,var(--fr-action-line) 55%,var(--fr-line-soft))
+}
+.p4r1-root .p4r1-chapter-review-actions{
+  display:flex;flex-wrap:wrap;gap:8px;padding-top:4px
+}
+.p4r1-root .p4r1-chapter-review-actions button{
+  padding:9px 12px;border:1px solid var(--fr-line-soft);border-radius:8px;
+  color:var(--fr-ink2);font:12px/1.3 var(--fr-sans-stack)
+}
+.p4r1-root .p4r1-chapter-review-actions .p4r1-chapter-review-primary{
+  border-color:var(--fr-action-line);color:var(--fr-action);background:var(--fr-action-soft)
+}
+.p4r1-root .p4r1-chapter-review-details{
+  margin-top:4px;color:var(--fr-muted);font:12px/1.5 var(--fr-sans-stack)
+}
+.p4r1-root .p4r1-chapter-review-details summary,
+.p4r1-root .p4r1-develop-more>summary{cursor:pointer}
+.p4r1-root .p4r1-develop-more{
+  margin:8px 14px 4px;border-top:1px solid var(--fr-line-soft);padding-top:12px
+}
+.p4r1-root .p4r1-develop-more>summary{
+  color:var(--fr-muted);font:12px/1.4 var(--fr-sans-stack)
+}
+.p4r1-root .p4r1-develop-more-body{display:grid;gap:14px;padding-top:14px}
+
+/* Continuous Edit — same chapter, section-native editors underneath. */
+.p4r1-root .p4r1-chapter-edit{
+  height:100%;min-height:0;padding:58px 28px 86px;overflow:hidden;
+  color:var(--fr-ink);font-family:var(--fr-serif-stack);font-size:19px;line-height:1.72
+}
+.p4r1-root .p4r1-chapter-edit>[data-whole-manuscript]{
+  width:min(780px,calc(100% - 24px));margin:0 auto;padding-right:10px
+}
+.p4r1-root .p4r1-chapter-edit [data-whole-manuscript-heading]{
+  font-family:var(--fr-serif-stack)!important;color:var(--fr-title)!important;letter-spacing:-.006em
+}
+.p4r1-root .p4r1-chapter-edit textarea{
+  font-family:var(--fr-serif-stack)!important;font-size:19px!important;line-height:1.72!important;
+  color:var(--fr-ink)!important;padding:0!important
+}
+
+.p4r1-root .p4r1-chapter-scorecard{
+  display:grid;gap:6px;margin-top:6px
+}
+.p4r1-root .p4r1-chapter-scorecard-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:2px 0 4px
+}
+.p4r1-root .p4r1-chapter-scorecard-head>b{
+  color:var(--fr-title);font:600 12px/1.3 var(--fr-sans-stack)
+}
+.p4r1-root .p4r1-chapter-scorecard-head>span{
+  color:var(--fr-muted);font:10.5px/1.35 var(--fr-sans-stack)
+}
+.p4r1-root .p4r1-chapter-scorecard>details{
+  border:1px solid var(--fr-line-soft);border-radius:8px;background:var(--fr-panel-soft)
+}
+.p4r1-root .p4r1-chapter-scorecard>details>summary{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:10px 12px;cursor:pointer;list-style:none
+}
+.p4r1-root .p4r1-chapter-scorecard>details>summary::-webkit-details-marker{display:none}
+.p4r1-root .p4r1-chapter-scorecard>details>summary>b{
+  color:var(--fr-title);font:600 11.5px/1.3 var(--fr-sans-stack)
+}
+.p4r1-root .p4r1-chapter-scorecard>details>summary>span{
+  color:var(--fr-action);font:600 12px/1.3 var(--fr-sans-stack)
+}
+.p4r1-root .p4r1-chapter-scorecard>details>p,
+.p4r1-root .p4r1-chapter-scorecard-extra>div{
+  margin:0;padding:0 12px 8px;color:var(--fr-ink2);font:13px/1.5 var(--fr-serif-stack)
+}
+.p4r1-root .p4r1-chapter-scorecard>details>small,
+.p4r1-root .p4r1-chapter-scorecard-extra small{
+  display:block;padding:0 12px 12px;color:var(--fr-muted);font:10.5px/1.45 var(--fr-sans-stack)
+}

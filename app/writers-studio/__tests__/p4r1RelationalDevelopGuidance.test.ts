@@ -12,18 +12,23 @@ describe('Writer Studio relational Develop guidance', () => {
   const dance = read('app/dev/writers-studio-pc3-live/EditorialDancePanel.tsx');
   const controller = read('app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx');
 
-  it('puts the editorial pass at the beginning of whole-Work Develop', () => {
+  it('puts a humane chapter read before advanced Develop machinery', () => {
     const arrival = develop.indexOf('p4r1-intent-arrival');
+    const chapterReview = develop.indexOf('<ChapterReviewPanel', arrival);
+    const more = develop.indexOf('More ways to explore', arrival);
     const attention = develop.indexOf('<AttentionMapPanel', arrival);
-    const developmental = develop.indexOf('p4r1-developmental-orientation', arrival);
-    expect(attention).toBeGreaterThan(arrival);
-    expect(attention).toBeLessThan(developmental);
-    expect(develop).toContain('Let MAIA go through the manuscript with you.');
-    expect(develop).toContain('Start an editorial pass');
-    expect(develop).toContain('Show edit options');
-    expect(develop).toContain('Work through the manuscript, one edit at a time.');
-    expect(develop).toContain("PACE_COPY[pace].label");
-    expect(css).toContain('.p4r1-root .p4r1-editorial-pass');
+    expect(chapterReview).toBeGreaterThan(arrival);
+    expect(more).toBeGreaterThan(chapterReview);
+    expect(attention).toBeGreaterThan(more);
+    expect(develop).toContain('Let MAIA read this chapter.');
+    expect(develop).toContain('Read this chapter');
+    expect(controller).toContain('begin-here: What is working — begin positively and specifically.');
+    expect(develop).toContain('What may need attention');
+    expect(develop).toContain('Where I’d start');
+    expect(develop).toContain('Show me an edited version');
+    expect(develop).toContain('Chapter scorecard');
+    expect(controller).toContain('Respond directly to the writer as a perceptive, encouraging editor');
+    expect(controller).toContain('The first thing the writer sees must build trust by naming one earned strength');
   });
 
   it('commissions the whole-manuscript synthesis as an editorial pass, not an abstract dashboard', () => {

@@ -19,9 +19,9 @@ import { DEVELOPMENTAL_LENSES, type DevelopmentalLens } from '@/lib/manuscript/d
 import type { ChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterReviewManifest';
 import type { LensAvailability } from './reading';
 
-type ReviewDevelopmentalLens = Exclude<DevelopmentalLens, 'themes'>;
+type ReviewDevelopmentalLens = Exclude<DevelopmentalLens, 'overview' | 'themes'>;
 export const REVIEW_DEVELOPMENTAL_LENSES: readonly ReviewDevelopmentalLens[] = DEVELOPMENTAL_LENSES.filter(
-  (lens): lens is ReviewDevelopmentalLens => lens !== 'themes',
+  (lens): lens is ReviewDevelopmentalLens => lens !== 'overview' && lens !== 'themes',
 );
 
 export interface WholeReviewInput {
@@ -133,8 +133,8 @@ export function mapWholeReview(input: WholeReviewInput): WholeReviewOutcome {
     const payload = byId.get(readingId)!;
     const reading = payload.reading;
     const lens = reading.scope.commissionedLens;
-    if (lens === 'themes') {
-      return { kind: 'unavailable', reason: 'reading_unpresentable', detail: 'Themes belongs to Develop, not Review' };
+    if (lens === 'overview' || lens === 'themes') {
+      return { kind: 'unavailable', reason: 'reading_unpresentable', detail: `${lens === 'overview' ? 'Overview' : 'Themes'} belongs to Develop, not Review` };
     }
     if (payloadByLens.has(lens)) {
       return { kind: 'unavailable', reason: 'duplicate_lens', detail: `duplicate completed lens: ${lens}` };
@@ -179,8 +179,8 @@ export function mapWholeReview(input: WholeReviewInput): WholeReviewOutcome {
 
   const failed = new Set<ReviewDevelopmentalLens>();
   for (const failure of manifest.failures) {
-    if (failure.lens === 'themes') {
-      return { kind: 'unavailable', reason: 'reading_mismatch', detail: 'Themes is not a Review lens' };
+    if (failure.lens === 'overview' || failure.lens === 'themes') {
+      return { kind: 'unavailable', reason: 'reading_mismatch', detail: `${failure.lens === 'overview' ? 'Overview' : 'Themes'} is not a Review lens` };
     }
     if (payloadByLens.has(failure.lens) || failed.has(failure.lens)) {
       return { kind: 'unavailable', reason: 'duplicate_lens', detail: `lens accounted more than once: ${failure.lens}` };
@@ -204,8 +204,8 @@ export function mapWholeReview(input: WholeReviewInput): WholeReviewOutcome {
     if (aPos !== bPos) return aPos - bPos;
     const aLensRaw = a.provenance.kind === 'maia-observation' ? a.provenance.lens as DevelopmentalLens : null;
     const bLensRaw = b.provenance.kind === 'maia-observation' ? b.provenance.lens as DevelopmentalLens : null;
-    const aLens: ReviewDevelopmentalLens | null = aLensRaw && aLensRaw !== 'themes' ? aLensRaw : null;
-    const bLens: ReviewDevelopmentalLens | null = bLensRaw && bLensRaw !== 'themes' ? bLensRaw : null;
+    const aLens: ReviewDevelopmentalLens | null = aLensRaw && aLensRaw !== 'overview' && aLensRaw !== 'themes' ? aLensRaw : null;
+    const bLens: ReviewDevelopmentalLens | null = bLensRaw && bLensRaw !== 'overview' && bLensRaw !== 'themes' ? bLensRaw : null;
     return (aLens ? lensOrder.get(aLens) ?? 99 : 99) - (bLens ? lensOrder.get(bLens) ?? 99 : 99);
   });  const when = whenRange(payloads);
   const lenses = REVIEW_DEVELOPMENTAL_LENSES.map((id) => ({
