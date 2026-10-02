@@ -10,6 +10,7 @@ let container: HTMLDivElement;
 
 beforeEach(() => {
   window.sessionStorage.clear();
+  window.localStorage.clear();
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
@@ -164,4 +165,34 @@ test('Preferences exposes the author-set revision latitude and paragraph permiss
     ?.querySelector('input') as HTMLInputElement;
   act(() => paragraph.click());
   expect(onMayRemoveParagraphs).toHaveBeenCalledWith(true);
+});
+
+
+test('Working style exposes pace and explanation sliders with a live plain-language preview', () => {
+  renderRoom();
+  const room = container.querySelector('[data-isolated-editorial]') as HTMLElement;
+  const pace = container.querySelector('#p4r1-working-pace') as HTMLInputElement;
+  const explanation = container.querySelector('#p4r1-explanation-depth') as HTMLInputElement;
+
+  expect(room.dataset.workingPace).toBe('intimate');
+  expect(room.dataset.explanationDepth).toBe('guided');
+  expect(container.textContent).toContain('How much MAIA shows at once');
+  expect(container.textContent).toContain('How MAIA explains what she sees');
+  expect(container.textContent).toContain('MAIA would say');
+
+  act(() => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(explanation, '0');
+    explanation.dispatchEvent(new Event('input', { bubbles: true }));
+    explanation.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  expect(room.dataset.explanationDepth).toBe('plain');
+  expect(container.textContent).toContain('Use everyday language and concrete examples.');
+
+  act(() => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(pace, '2');
+    pace.dispatchEvent(new Event('input', { bubbles: true }));
+    pace.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  expect(room.dataset.workingPace).toBe('mapped');
+  expect(window.localStorage.getItem('writers-studio:working-style:v1')).toContain('"pace":"mapped"');
 });
