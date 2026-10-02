@@ -726,6 +726,52 @@
   margin:0;font:13px/1.47 var(--fr-serif-stack);color:var(--fr-ink2)
 }
 
+.p4r1-root .p4r1-dance-change-card{
+  display:grid;gap:12px;padding:14px 15px;border:1px solid var(--fr-line-soft);
+  border-radius:10px;background:var(--fr-panel)
+}
+.p4r1-root .p4r1-dance-change-compare{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px
+}
+.p4r1-root .p4r1-dance-change-compare>div{
+  padding:11px 12px;border:1px solid var(--fr-line-soft);border-radius:8px;background:var(--fr-field)
+}
+.p4r1-root .p4r1-dance-change-compare p{
+  margin:5px 0 0;font:13.5px/1.52 var(--fr-serif-stack);color:var(--fr-ink2)
+}
+.p4r1-root .p4r1-dance-change-reasoning{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px
+}
+.p4r1-root .p4r1-dance-change-reasoning>div{display:grid;gap:3px}
+.p4r1-root .p4r1-dance-change-reasoning b{
+  font:600 10.5px var(--fr-sans-stack);color:var(--fr-title)
+}
+.p4r1-root .p4r1-dance-change-reasoning p{
+  margin:0;font:12px/1.48 var(--fr-sans-stack);color:var(--fr-muted)
+}
+.p4r1-root .p4r1-dance-change-card>button{
+  justify-self:start;border:1px solid var(--fr-line);border-radius:7px;background:transparent;
+  color:var(--fr-ink2);padding:7px 10px;font:600 10.5px var(--fr-sans-stack);cursor:pointer
+}
+.p4r1-root .p4r1-dance-adjust{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:1px 2px
+}
+.p4r1-root .p4r1-dance-adjust>span{
+  font:11px var(--fr-sans-stack);color:var(--fr-muted);margin-right:2px
+}
+.p4r1-root .p4r1-dance-adjust button{
+  border:1px solid var(--fr-line);border-radius:999px;background:transparent;
+  color:var(--fr-ink2);padding:6px 9px;font:600 10.5px var(--fr-sans-stack);cursor:pointer
+}
+.p4r1-root .p4r1-dance-adjust button:hover,
+.p4r1-root .p4r1-dance-change-card>button:hover{
+  border-color:var(--fr-action-line);background:var(--fr-action-soft);color:var(--fr-action)
+}
+@media(max-width:760px){
+  .p4r1-root .p4r1-dance-change-compare,
+  .p4r1-root .p4r1-dance-change-reasoning{grid-template-columns:1fr}
+}
+
 .p4r1-root .p4r1-dance-directions{
   display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:1px 2px
 }

@@ -88,6 +88,10 @@ type EditorialSummary = {
   preserve: string | null;
   friction: string | null;
   tryNext: string | null;
+  changed: string | null;
+  why: string | null;
+  readerEffect: string | null;
+  protected: string | null;
 };
 
 function editorialSummary(text: string): EditorialSummary {
@@ -100,6 +104,10 @@ function editorialSummary(text: string): EditorialSummary {
     preserve: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What I[’']d preserve:\s*/i),
     friction: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?Friction I notice:\s*/i),
     tryNext: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What I[’']d try:\s*/i),
+    changed: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What changed:\s*/i),
+    why: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?Why:\s*/i),
+    readerEffect: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?Reader effect:\s*/i),
+    protected: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What I protected:\s*/i),
   };
 }
 
@@ -111,7 +119,12 @@ function revisePassagePrompt(): string {
     `"${EDITORIAL_PACKET_LABELS.friction}: …" — support this from the exact words; do not grade or diagnose the writing.`,
     `"${EDITORIAL_PACKET_LABELS.possibility}: …" — name the editorial move and why you would try it.`,
     'Then, if a revision is warranted, offer one possible revision. Preserve my voice, intention, subject, and intentional ambiguity.',
-    'Separate meaning changes from style changes, treat reader effects as hypotheses, and say what could be lost.',
+    'After the revision, add exactly these four short lines:',
+    '"What changed: …"',
+    '"Why: …"',
+    '"Reader effect: …" — treat this as a hypothesis, never a fact about actual readers.',
+    '"What I protected: …"',
+    'Keep the explanation concrete and tied to the exact words. Separate meaning changes from style changes and say what could be lost.',
     'Nothing is to be applied automatically.',
   ].join('\n\n');
 }
@@ -187,6 +200,10 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const summarySource = props.lastMaiaTurn?.body ?? recommendation?.rationale ?? '';
   const summary = editorialSummary(summarySource);
   const hasStructuredSummary = Boolean(summary.preserve || summary.friction || summary.tryNext);
+  const changeSummary = editorialSummary(props.version?.rationale ?? recommendation?.rationale ?? '');
+  const hasChangeSummary = Boolean(
+    changeSummary.changed || changeSummary.why || changeSummary.readerEffect || changeSummary.protected,
+  );
 
   useEffect(() => {
     if (!props.version) return;
@@ -235,9 +252,20 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       approachNote(id),
       'Offer one possible revision of this exact passage in that direction.',
       'Begin the rationale with "Editorial purpose: ' + approach.label + '".',
+      'Then include four short rationale lines: "What changed: …", "Why: …", "Reader effect: …", and "What I protected: …".',
       'Preserve my stated intention and voice. Separate meaning changes from style changes.',
       'Treat any reader effect as a hypothesis. Do not invent personal experience, quotations, sources, or unseen evidence.',
       'Nothing is to be applied automatically.',
+    ].join('\n\n'));
+  };
+
+  const adjustProposal = (instruction: string) => {
+    props.onSend([
+      instruction,
+      'Work from my original passage and the currently selected proposal. Do not silently broaden the edit.',
+      'Return at most one new proposal. Preserve my voice, intention, subject, and intentional ambiguity.',
+      'In the rationale include: "What changed: …", "Why: …", "Reader effect: …", and "What I protected: …".',
+      'Treat reader effect as a hypothesis. Nothing is applied automatically.',
     ].join('\n\n'));
   };
 
@@ -531,6 +559,47 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
               <p>{candidate.wording}</p>
             </button>
           ))}
+      </div>
+
+      <section className="p4r1-dance-change-card" aria-label="What changed in this edit">
+        <div className="p4r1-dance-change-compare">
+          <div>
+            <span className="p4r1-eyebrow">Original</span>
+            <p>{props.currentText}</p>
+          </div>
+          <div>
+            <span className="p4r1-eyebrow">Edited</span>
+            <p>{props.version?.wording ?? recommendation.wording}</p>
+          </div>
+        </div>
+        <div className="p4r1-dance-change-reasoning">
+          <div><b>What changed</b><p>{changeSummary.changed ?? 'MAIA can explain the exact editorial move behind this version.'}</p></div>
+          <div><b>Why</b><p>{changeSummary.why ?? props.version?.rationale ?? recommendation.rationale ?? 'Open the explanation to see the reasoning behind this change.'}</p></div>
+          <div><b>Reader effect</b><p>{changeSummary.readerEffect ?? 'Ask MAIA what this change may make easier, clearer, faster, or more vivid for a reader.'}</p></div>
+          <div><b>What I protected</b><p>{changeSummary.protected ?? summary.preserve ?? 'Your meaning, voice, and intentional ambiguity remain the reference.'}</p></div>
+        </div>
+        {!hasChangeSummary ? (
+          <button
+            type="button"
+            disabled={props.busy}
+            onClick={() => props.onSend([
+              'Explain the currently selected revision without proposing new wording.',
+              'Use exactly four short lines: "What changed: …", "Why: …", "Reader effect: …", and "What I protected: …".',
+              'Tie every statement to the original and proposed wording. Treat reader effect as a hypothesis.',
+            ].join('\n\n'))}
+          >
+            Explain this change
+          </button>
+        ) : null}
+      </section>
+
+      <div className="p4r1-dance-adjust" aria-label="Adjust this edit">
+        <span>Adjust this edit</span>
+        <button type="button" disabled={props.busy} onClick={() => adjustProposal('Make this revision lighter. Restore more of my original wording and change only what is necessary.')}>Make it lighter</button>
+        <button type="button" disabled={props.busy} onClick={() => adjustProposal('Keep more of my original wording and cadence while preserving the useful editorial gain.')}>Keep more of mine</button>
+        <button type="button" disabled={props.busy} onClick={() => adjustProposal('Go a little further with the same editorial intention, but do not jump to a major rewrite.')}>Go a little further</button>
+        <button type="button" disabled={props.busy} onClick={() => adjustProposal('Show me one genuinely different option for this same passage. Do not rank it against the current one.')}>Another option</button>
+        <button type="button" disabled={props.busy} onClick={() => setTalk('Restore this part of my original: ')}>Restore a part</button>
       </div>
 
       <div className="p4r1-dance-directions">

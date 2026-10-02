@@ -6,6 +6,7 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 describe('Writer Studio editorial latitude experience', () => {
   const room = read('app/dev/writers-studio-pc3-live/IsolatedEditorialRoom.tsx');
+  const dance = read('app/dev/writers-studio-pc3-live/EditorialDancePanel.tsx');
   const controller = read('app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx');
   const scope = read('lib/manuscript/editorialScope/contract.ts');
 
@@ -27,6 +28,18 @@ describe('Writer Studio editorial latitude experience', () => {
     expect(controller).toContain('latitude: editLatitude');
     expect(controller).toContain('mayRemoveParagraphs');
     expect(scope).toContain('judgeProposalScope');
+  });
+
+  it('makes every proposed edit inspectable and adjustable', () => {
+    expect(dance).toContain('What changed');
+    expect(dance).toContain('Reader effect');
+    expect(dance).toContain('What I protected');
+    expect(dance).toContain('Make it lighter');
+    expect(dance).toContain('Keep more of mine');
+    expect(dance).toContain('Go a little further');
+    expect(dance).toContain('Another option');
+    expect(dance).toContain('Restore a part');
+    expect(dance).toContain('Treat reader effect as a hypothesis');
   });
 
   it('fails closed when MAIA proposes beyond the chosen latitude', () => {
