@@ -27,6 +27,24 @@ describe('SafetyCircuitBreakers.notifyHumans — no fabricated notification', ()
     const i = fresh(); notify(new SafetyCircuitBreakers(undefined as any, { onHumanNotification: () => true }), i);
     expect(i.humanNotified).toBe(true); expect(flagged()).toBe(false);
   });
+  it('an async delivery callback stays false while pending, then becomes true only after confirmation', async () => {
+    let confirm!: (value: boolean) => void;
+    const pending = new Promise<boolean>((resolve) => { confirm = resolve; });
+    const i = fresh();
+
+    notify(new SafetyCircuitBreakers(undefined as any, {
+      onHumanNotification: () => pending,
+    }), i);
+
+    expect(i.humanNotified).toBe(false);
+    confirm(true);
+    await pending;
+    await Promise.resolve();
+
+    expect(i.humanNotified).toBe(true);
+    expect(flagged()).toBe(false);
+  });
+
   it('a throwing callback → humanNotified false, failure logged, no exception escapes', () => {
     const i = fresh();
     expect(() => notify(new SafetyCircuitBreakers(undefined as any, { onHumanNotification: () => { throw new Error('x'); } }), i)).not.toThrow();

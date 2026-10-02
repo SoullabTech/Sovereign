@@ -4,12 +4,13 @@ export type HumanSafetySource =
   | 'maia_crisis'
   | 'teen_crisis'
   | 'teen_abuse'
-  | 'stellium_safety';
+  | 'stellium_safety'
+  | 'circuit_breaker';
 
 export type HumanSafetySeverity = 'high' | 'crisis';
 
 export interface HumanSafetyAlert {
-  memberId: string;
+  memberId?: string;
   source: HumanSafetySource;
   severity: HumanSafetySeverity;
   crisisType?: string;
@@ -29,8 +30,9 @@ function buildBody(alert: HumanSafetyAlert): string {
     'MAIA SAFETY',
     alert.severity.toUpperCase(),
     `source=${alert.source}`,
-    `member=${alert.memberId}`,
   ];
+
+  if (alert.memberId) parts.push(`member=${alert.memberId}`);
 
   if (alert.crisisType) parts.push(`type=${alert.crisisType}`);
   if (alert.age !== undefined) parts.push(`age=${alert.age}`);
@@ -130,7 +132,7 @@ export async function deliverHumanSafetyAlert(
     console.error('[SAFETY_NOTIFY_NO_RECIPIENT] human safety alert was not delivered', {
       source: alert.source,
       severity: alert.severity,
-      memberRef: memberRef(alert.memberId),
+      ...(alert.memberId ? { memberRef: memberRef(alert.memberId) } : {}),
       sms,
       slack,
       errors,

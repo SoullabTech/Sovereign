@@ -10,6 +10,7 @@ import { AutonomyBufferLayer, AutonomyConfig, AutonomyMetrics, ParameterModulati
 import { AdaptiveConfidenceGate, ConfidenceMetrics, ConfidenceContext, ConfidenceGateResult } from './AdaptiveConfidenceGate';
 import { ReflectiveFeedbackLoop, FieldInfluenceEvent, AutonomyAdjustmentRequest, ReflectiveInsight } from './ReflectiveFeedbackLoop';
 import { SafetyCircuitBreakers, SafetyMetrics, SafetyTrigger, SafetyIntervention } from './SafetyCircuitBreakers';
+import { deliverHumanSafetyAlert } from '@/lib/safety/humanSafetyAlert.server';
 
 // Import consciousness field systems
 import { ElementalFieldIntegration } from '../field/ElementalFieldIntegration';
@@ -520,11 +521,23 @@ export class MAIAConsciousnessFieldIntegration {
     });
   }
 
-  private handleHumanNotification(notification: any): void {
-    console.log('📢 Human notification required:', {
-      severity: notification.trigger.severity,
-      type: notification.trigger.triggerType
+  private async handleHumanNotification(notification: any): Promise<boolean> {
+    const result = await deliverHumanSafetyAlert({
+      source: 'circuit_breaker',
+      severity: 'crisis',
+      crisisType: `${notification.trigger.triggerType}:${notification.trigger.severity}`,
     });
+
+    if (!result.delivered) {
+      console.error('[SAFETY_NOTIFY_NO_RECIPIENT] circuit-breaker human delivery failed', {
+        severity: notification.trigger.severity,
+        type: notification.trigger.triggerType,
+        sms: result.sms,
+        slack: result.slack,
+      });
+    }
+
+    return result.delivered;
   }
 
   // ==============================================================================
