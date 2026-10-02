@@ -20,6 +20,7 @@ Kelly's World holds only the operational orientation needed to know what is true
 
 - production runtime: **`d4655e647`**;
 - database: **RUNNING / HEALTHY**, current container `created=2026-10-02T10:11:34.938821629Z`, `started=2026-10-02T10:12:07.21786677Z`, `restarts=0`, `oom=false`, trigger **UNKNOWN**;
+- recovery posture: **LOCAL BACKUP HEALTHY / DISASTER RECOVERY NOT ESTABLISHED** — the 2026-10-02 02:00 UTC nightly dump passed `gzip -t` and contains one `database dump complete` marker, but `pg_stat_replication=0`, the Hetzner standby is still offline (last seen 8d ago), and no newer off-host Mac copy than the previously witnessed 2026-10-01 copies is established;
 - Early Field cohort: **4 members**, preserved in the fresh d465 capture;
 - content-blind substrate census on `d4655e647`: **0 / 4** across the mounted projection sources;
 - explicit MAIA entry gestures: **PRESENT** in the deployed d465 source;
@@ -27,7 +28,7 @@ Kelly's World holds only the operational orientation needed to know what is true
 - current-runtime source re-baseline: **CANONICAL via PR #1735 / `2db5eae59`** — G5's documentary dependency is satisfied; final PASS remains walk-time only and requires a fresh production SHA + ancestry check;
 - first-entry / empty-field witness: **PRE-WALK GATED — G0 canonicality technically passes, but Class A approval provenance remains OPEN in #1736; G1–G7 still govern before any member walk**;
 - G1/G2 captures on `d4655e647`: **G1 PASS** — Cabin mode absent; **G2 MECHANICAL PASS** — current Postgres container stable; **final G2 remains OPEN pending founder acceptance of the recorded standby/disaster-recovery exposure**;
-- crisis safety: **G7 REQUIRED** — #1665/#1669 are preserved as competing/supersession candidates and do not establish the gate. The founder-authorized Option A lane is #1633, but it remains open with live deployment checks owed; until G7a is actually witnessed on the walk runtime, G7b remains the available path: a named, disclosed human facilitator present for the whole walk with an appropriate crisis line ready;
+- crisis safety: **G7 REQUIRED** — the deployed `d4655e647` ancestry includes #1633 server-side crisis recognition/referral and the later human-delivery safety lineage, but the canonical safety record still marks the required post-deploy production witness as **not witnessed**. Source presence and tests do not satisfy G7a; until a governed live witness is authorized and captured, G7b remains the bounded alternative: a named, disclosed human facilitator present for the whole walk with an appropriate crisis line ready;
 - populated-field continuity witness: **BLOCKED BY EVIDENCE**;
 - R2: **NOT ADMITTED**;
 - cohort widening: **CLOSED PENDING HUMAN EVIDENCE**.
