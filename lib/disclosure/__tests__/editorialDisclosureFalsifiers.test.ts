@@ -75,6 +75,24 @@ describe('F3 · confirmation follows arrival, not success', () => {
     expect(shouldConfirmCrossing({ kind: 'refusal', dispatch: 'response_observed' }))
       .toBe(true);
   });
+
+  it('⛔ a result whose receipt cannot be confirmed cannot reach persistence', () => {
+    const s = src(TURN);
+    const resultConfirm = s.indexOf("if (shouldConfirmCrossing({ kind: 'result' }))");
+    const falseGuard = s.indexOf("if (!confirmed) return { ok: false, reason: 'disclosure_unavailable' };", resultConfirm);
+    const persist = s.indexOf('await persistMaiaEditorialOutcome(', resultConfirm);
+    expect(resultConfirm).toBeGreaterThan(-1);
+    expect(falseGuard).toBeGreaterThan(resultConfirm);
+    expect(persist).toBeGreaterThan(falseGuard);
+  });
+
+  it('the result confirmation boolean is consumed rather than discarded', () => {
+    const s = src(TURN);
+    const resultConfirm = s.indexOf("if (shouldConfirmCrossing({ kind: 'result' }))");
+    const block = s.slice(resultConfirm, s.indexOf('/* 6 ⛔ ADMISSION', resultConfirm));
+    expect(block).toContain('const confirmed = await confirmDisclosureCrossed(disclosureId)');
+    expect(block).toContain('if (!confirmed)');
+  });
 });
 
 /* ── F4 · AMBIGUOUS FAILURE STAYS ATTEMPTED ──────────────────────────────── */

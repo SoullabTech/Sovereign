@@ -428,8 +428,13 @@ export async function runEditorialTurn(
       dispatch: structured.dispatch,
     };
   }
-  /* ⭐ A result came back, so the words demonstrably arrived. */
-  if (shouldConfirmCrossing({ kind: 'result' })) await confirmDisclosureCrossed(disclosureId);
+  /* ⭐ A result came back, so the words demonstrably arrived.
+   * ⛔ Confirmation is part of accountability, not telemetry. A failed receipt
+   * confirmation may never be followed by admission/persistence and a 200. */
+  if (shouldConfirmCrossing({ kind: 'result' })) {
+    const confirmed = await confirmDisclosureCrossed(disclosureId);
+    if (!confirmed) return { ok: false, reason: 'disclosure_unavailable' };
+  }
 
   /* 6 ⛔ ADMISSION. A refusal here reaches no transaction, and prose is never
      inspected afterwards to rescue it. */
