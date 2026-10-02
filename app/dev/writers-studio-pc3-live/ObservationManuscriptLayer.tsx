@@ -190,7 +190,7 @@ export default function ObservationManuscriptLayer({
             <button type="button" onClick={() => setDialoguePrompt('Go deeper on this observation. Use full editorial vocabulary, evidence, provenance, tradeoffs, and uncertainty. Keep every claim within what the evidence supports.')}>
               Go deeper
             </button>
-            <button type="button" onClick={() => { setOpen(false); onRevise(passage); }}>Try a revision</button>
+            <button type="button" onClick={() => { setOpen(false); onRevise(passage); }}>Show edit options</button>
             <button type="button" onClick={() => setOpen(false)}>Keep reading</button>
           </div>
 
