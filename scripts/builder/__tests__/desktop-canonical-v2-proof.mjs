@@ -11,6 +11,7 @@ const REPO = path.resolve(HERE, '..', '..', '..');
 const require = createRequire(import.meta.url);
 const C = require('../../../jarvis-desktop/src/canonical-work-unit-v2.js');
 const WUC = require('../../../jarvis-desktop/src/work-unit-control.js');
+const { createFakeJevTransport } = await import('../jarvis-jev-advisory-v1.mjs');
 
 const renderer = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/renderer.js'), 'utf8');
 const main = fs.readFileSync(path.join(REPO, 'jarvis-desktop/src/main.js'), 'utf8');
@@ -424,6 +425,51 @@ await checkAsync('F30','no I4 canonical action creates provider execution author
     const slice=canonicalRendererSlice();
     assert.doesNotMatch(slice,/confirm-execute/);
     assert.doesNotMatch(slice,/authorize-execution-once/);
+  }finally{cleanup(home);}
+});
+
+await checkAsync('F31','ROUTED Desktop exposes JEV advisory and sidecar cannot mutate canonical Work Unit',async()=>{
+  const {home,env}=tempEnv();
+  try{
+    const {id,out}=await routedFixture(env,2401);
+    assert.equal(out.next_actions.some(a=>a.action==='canonical-jev-advice'),true);
+    const file=C.workUnitPath(id,env);
+    const before=fs.readFileSync(file,'utf8');
+    const fake=createFakeJevTransport({
+      Q_DEPTH:{question_id:'Q_DEPTH',scale:{min:0,max:1},score:0.7,confidence:0.9},
+      Q_RISK:{question_id:'Q_RISK',answer:false,confidence:0.9},
+      Q_SUFFICIENT:{question_id:'Q_SUFFICIENT',answer:true,confidence:0.9},
+      Q_LLM_NEEDED:{question_id:'Q_LLM_NEEDED',answer:true,confidence:0.9},
+    });
+    const advised=await C.consultCanonicalJevV2(REPO,id,{env,transport:fake});
+    const after=fs.readFileSync(file,'utf8');
+    assert.equal(before,after);
+    assert.equal(advised.jev_advisory.provider_id,'typesafe-jev');
+    assert.equal(advised.jev_advisory.advice.depth,0.7);
+    assert.equal(advised.jev_advisory.invariant.authority_unchanged,true);
+    assert.equal(advised.authority_effect,'none');
+  }finally{cleanup(home);}
+});
+
+await checkAsync('F32','Desktop with no JEV transport records absence, never synthetic advice',async()=>{
+  const {home,env}=tempEnv();
+  try{
+    const {id}=await routedFixture(env,2402);
+    const file=C.workUnitPath(id,env);
+    const before=fs.readFileSync(file,'utf8');
+    const out=await C.consultCanonicalJevV2(REPO,id,{env});
+    assert.equal(fs.readFileSync(file,'utf8'),before);
+    assert.deepEqual(out.jev_advisory,{consulted:false,reason:'TRANSPORT_NOT_CONNECTED'});
+    assert.equal(out.next_actions.some(a=>a.action==='canonical-jev-advice'),true);
+  }finally{cleanup(home);}
+});
+
+await checkAsync('F33','deterministic canonical routes do not offer JEV consultation',async()=>{
+  const {home,env}=tempEnv();
+  try{
+    const {out}=await routedFixture(env,2403,spec({capability:'git.rev_parse'}));
+    assert.equal(out.routing.execution_disposition,'deterministic');
+    assert.equal(out.next_actions.some(a=>a.action==='canonical-jev-advice'),false);
   }finally{cleanup(home);}
 });
 
