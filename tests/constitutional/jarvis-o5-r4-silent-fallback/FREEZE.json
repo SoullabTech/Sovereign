@@ -1,0 +1,10 @@
+{
+  "version": "O5-R4-SF-FREEZE.v1",
+  "frozen_at": "2026-10-01",
+  "standing": "O5-R4 silent repository fallback falsifier family",
+  "frozen": {
+    "tests/constitutional/jarvis-o5-r4-silent-fallback/falsifiers.mjs": "85e1300b3dcefd5c35afa13a715344e5cd566fbd",
+    "tests/constitutional/jarvis-o5-r4-silent-fallback/candidates.mjs": "d1a68afcd23a296ab037c9f28e6323eae2c91591",
+    "tests/constitutional/jarvis-o5-r4-silent-fallback/matrix.mjs": "325e6433baf262a74380062438ca09526abd088a"
+  }
+}

@@ -29,7 +29,7 @@ function row(key, valueNode) {
 const RESOLUTION_COPY = {
   'explicit-config': ['CHOSEN', 'ok', 'You selected this repository; it is stored and reused on every launch.'],
   'explicit-env': ['ENV', 'ok', 'Bound by JARVIS_REPO_ROOT in the launching environment. Explicit, but it lasts only as long as that environment — choose it here to make it durable.'],
-  'implicit-default': ['GUESSED', 'warn', 'Reached by a hard-coded fallback candidate. Nobody chose this checkout, so JARVIS reports it as degraded. Choose a repository to make the binding deliberate.'],
+  'implicit-default': ['GUESSED', 'bad', 'Historical state only: O5-R4 forbids an implicit default from becoming an active repository binding.'],
   'dev-walk': ['DEV WALK', 'warn', 'Development mode resolved this by walking up from the running source. The installed app does not use this path.'],
   'unresolved': ['NONE', 'bad', 'No substrate resolved. JARVIS cannot read Builder OS state or route work until a repository is chosen.'],
 };
@@ -41,6 +41,10 @@ function render(state) {
   const card = el('div', 'card');
 
   card.appendChild(row('Active repository', state.active_repo_root || '— none —'));
+  if (state.suggested_repo_root) {
+    card.appendChild(row('Suggested repository', state.suggested_repo_root));
+    card.appendChild(el('p', 'note', 'Suggestion only — JARVIS remains unbound until you choose a repository explicitly.'));
+  }
 
   const validBadge = el('span', `badge ${state.valid ? 'ok' : 'bad'}`, state.valid ? 'VALID' : 'INVALID');
   card.appendChild(row('Status', validBadge));
