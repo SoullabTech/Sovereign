@@ -1,6 +1,6 @@
 # Living Field First Entry: Pre-Walk Gate Record
 
-**Status:** PARTIAL · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G0/G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
+**Status:** PARTIAL · G0 TECHNICAL PASS / CLASS A APPROVAL PROVENANCE OPEN · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS
 **Governs:** `LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md` (with Amendments 1 and 2)
 **Occasioned by:** a J18 verdict and an emergency-disable PASS that existed only in a session
 transcript and were never committed. Under this programme's rules a probe is not the record.
@@ -41,14 +41,19 @@ git fetch origin clean-main-no-secrets && git log -1 --format='%H %cI' origin/cl
 
 PASS requires both `## Amendment 1` and `## Amendment 2` lines.
 
-captured_at_utc:
-canonical_sha:
+captured_at_utc: `2026-10-02T09:57:08Z`
+canonical_sha: `15a9175fb917cd9aa84a2735f7b3cf91a964b49b`
 
 ```text
-(paste verbatim)
+2026-10-02T09:57:08Z
+15a9175fb917cd9aa84a2735f7b3cf91a964b49b 2026-10-02T05:47:07-04:00
+159:## Amendment 1 · 2026-10-01 · before any run (pre-registration amendment)
+171:## Amendment 2 · 2026-10-01 · before any run (founder-directed pre-registration amendment)
 ```
 
-Verdict: PASS / FAIL
+Technical verdict: **PASS** — both amendments are canonical.
+
+**Class A approval provenance:** OPEN. PR #1676 merged via the `SoullabCovenant` account, but GitHub records no reviews and no separate founder/council adjudication record is currently discoverable in canonical. Do not infer governance approval from canonical presence alone.
 
 ---
 
@@ -307,7 +312,7 @@ Verdict: PASS (G7a / G7b) / FAIL
 
 | Gate | Verdict |
 |---|---|
-| G0 protocol canonical | OPEN |
+| G0 protocol canonical | **TECHNICAL PASS · Class A approval provenance OPEN** |
 | G1 cabin mode unset | **PASS** |
 | G2 database stable | OPEN — mechanical PASS; founder standby-exposure choice required |
 | G3 emergency disable witnessed | OPEN |
