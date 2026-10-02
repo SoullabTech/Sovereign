@@ -10,6 +10,7 @@ let container: HTMLDivElement;
 
 beforeEach(() => {
   window.sessionStorage.clear();
+  window.localStorage.clear();
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
@@ -20,7 +21,7 @@ afterEach(() => {
   container.remove();
 });
 
-function renderRoom() {
+function renderRoom(overrides: Partial<React.ComponentProps<typeof IsolatedEditorialRoom>> = {}) {
   act(() => root.render(
     React.createElement(
       IsolatedEditorialRoom,
@@ -30,7 +31,14 @@ function renderRoom() {
         currentText: 'Selected passage.',
         sectionBody: 'Before.\n\nSelected passage.\n\nAfter.',
         busy: false,
+        editingLatitude: 1,
+        onEditingLatitude: jest.fn(),
+        mayRemoveParagraphs: false,
+        onMayRemoveParagraphs: jest.fn(),
+        mayProposeImmediately: false,
+        onMayProposeImmediately: jest.fn(),
         onClose: jest.fn(),
+        ...overrides,
       },
       React.createElement(
         'div',
@@ -52,6 +60,8 @@ test('layout presets, tools, preferences and reset all change only isolated pres
   expect(room.dataset.showDirections).toBe('true');
   expect(room.dataset.showWorking).toBe('true');
   expect(room.dataset.showDepth).toBe('true');
+  expect(container.textContent).toContain('Revision · Touch');
+  expect(container.textContent).toContain('Revision latitude');
 
   const button = (text: string) =>
     Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.trim().startsWith(text))!;
@@ -134,4 +144,55 @@ test('focus layout and presentation choices survive reopening during the same br
   expect(room.dataset.layout).toBe('passage');
   expect(room.dataset.readingSize).toBe('largest');
   expect(room.dataset.showDepth).toBe('false');
+});
+
+
+test('Preferences exposes the author-set revision latitude and paragraph permission', () => {
+  const onEditingLatitude = jest.fn();
+  const onMayRemoveParagraphs = jest.fn();
+  renderRoom({ onEditingLatitude, onMayRemoveParagraphs });
+
+  const slider = container.querySelector('#p4r1-editing-latitude') as HTMLInputElement;
+  expect(slider).toBeTruthy();
+  expect(slider.value).toBe('1');
+  expect(slider.getAttribute('aria-valuetext')).toBe('Touch');
+
+  expect(slider.min).toBe('1');
+  expect(slider.max).toBe('5');
+
+  const paragraph = Array.from(container.querySelectorAll('label'))
+    .find((label) => label.textContent?.includes('Allow paragraph-removal proposals'))
+    ?.querySelector('input') as HTMLInputElement;
+  act(() => paragraph.click());
+  expect(onMayRemoveParagraphs).toHaveBeenCalledWith(true);
+});
+
+
+test('Working style exposes pace and explanation sliders with a live plain-language preview', () => {
+  renderRoom();
+  const room = container.querySelector('[data-isolated-editorial]') as HTMLElement;
+  const pace = container.querySelector('#p4r1-working-pace') as HTMLInputElement;
+  const explanation = container.querySelector('#p4r1-explanation-depth') as HTMLInputElement;
+
+  expect(room.dataset.workingPace).toBe('intimate');
+  expect(room.dataset.explanationDepth).toBe('guided');
+  expect(container.textContent).toContain('How much MAIA shows at once');
+  expect(container.textContent).toContain('How MAIA explains what she sees');
+  expect(container.textContent).toContain('MAIA would say');
+
+  act(() => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(explanation, '0');
+    explanation.dispatchEvent(new Event('input', { bubbles: true }));
+    explanation.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  expect(room.dataset.explanationDepth).toBe('plain');
+  expect(container.textContent).toContain('Use everyday language and concrete examples.');
+
+  act(() => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(pace, '2');
+    pace.dispatchEvent(new Event('input', { bubbles: true }));
+    pace.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  expect(room.dataset.workingPace).toBe('mapped');
+  expect(window.localStorage.getItem('writers-studio:working-style:v1')).toContain('"pace":"mapped"');
 });

@@ -2054,6 +2054,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           const result = await MemoryWritebackService.writeBack({
             userId: effectiveUserId,
             sessionId: session.id,
+            exchangeId,
             userMessage: message,
             assistantResponse: sovereignText,
             facetCode: (meta as any)?.element,

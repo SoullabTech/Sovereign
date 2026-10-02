@@ -36,6 +36,11 @@
         "from": "cabin-runtime",
         "to": "cabin-runtime",
         "filter": ["**/*"]
+      },
+      {
+        "from": "vendor/jarvis-desktop/src",
+        "to": "jarvis-desktop/src",
+        "filter": ["**/*"]
       }
     ],
     "mac": {

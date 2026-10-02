@@ -14,6 +14,7 @@
 import { sendEmail } from '@/lib/email/sendEmail';
 import { query } from '@/lib/db/postgres';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import { deliverHumanSafetyAlert } from '@/lib/safety/humanSafetyAlert.server';
 
 // Config: whether to include message preview in email (default: false for privacy)
 const INCLUDE_PREVIEW = process.env.SAFETY_EMAIL_INCLUDE_PREVIEW === 'true';
@@ -241,6 +242,13 @@ export async function sendSafetyConcernNotification(
 
     if (!practitionerResult.rows[0]) {
       if (logId) await updateSafetyLogEmailStatus(logId, 'failed', 'Practitioner not found');
+      await deliverHumanSafetyAlert({
+        memberId: clientId,
+        source: 'stellium_safety',
+        severity: 'high',
+        crisisType: 'practitioner_not_found',
+        sessionId: messageId,
+      });
       return { success: false, error: 'Practitioner not found' };
     }
 
@@ -251,6 +259,13 @@ export async function sendSafetyConcernNotification(
     if (!practitionerEmail) {
       console.warn(`Practitioner ${practitionerId} has no email - skipping safety notification`);
       if (logId) await updateSafetyLogEmailStatus(logId, 'failed', 'No email address');
+      await deliverHumanSafetyAlert({
+        memberId: clientId,
+        source: 'stellium_safety',
+        severity: 'high',
+        crisisType: 'practitioner_email_missing',
+        sessionId: messageId,
+      });
       return { success: false, error: 'Practitioner has no email address' };
     }
 
@@ -280,6 +295,13 @@ export async function sendSafetyConcernNotification(
         `Safety notification REFUSED: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
       );
       if (logId) await updateSafetyLogEmailStatus(logId, 'failed', result.error ?? 'Send refused');
+      await deliverHumanSafetyAlert({
+        memberId: clientId,
+        source: 'stellium_safety',
+        severity: 'high',
+        crisisType: 'practitioner_email_delivery_failed',
+        sessionId: messageId,
+      });
       return { success: false, error: result.error };
     }
 
@@ -290,6 +312,13 @@ export async function sendSafetyConcernNotification(
     console.error('Error sending safety notification:', error);
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
     if (logId) await updateSafetyLogEmailStatus(logId, 'failed', errorMsg);
+    await deliverHumanSafetyAlert({
+      memberId: clientId,
+      source: 'stellium_safety',
+      severity: 'high',
+      crisisType: 'practitioner_notification_exception',
+      sessionId: messageId,
+    });
     return { success: false, error: errorMsg };
   }
 }

@@ -31,6 +31,12 @@ describe('P4R1 durable return and MAIA relationship carriage', () => {
     expect(view).toContain('data-p4r1-maia-relationship');
     expect(view).toContain('Begin relationship with MAIA');
     expect(view).toContain('Leave relationship · nothing is deleted');
+
+    const writeMaiaStart = view.indexOf('const writeMaia =');
+    const writeMaiaEnd = view.indexOf('const blankArrival =', writeMaiaStart);
+    const writeMaia = view.slice(writeMaiaStart, writeMaiaEnd);
+    expect(writeMaia).toContain('{maiaRelationshipCard}');
+    expect(view.slice(writeMaiaEnd)).not.toContain('{maiaRelationshipCard}');
   });
 
   it('carries the same selected relationship into Review discussion', () => {
