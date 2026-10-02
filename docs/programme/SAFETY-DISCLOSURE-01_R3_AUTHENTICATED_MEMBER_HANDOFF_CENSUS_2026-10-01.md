@@ -102,9 +102,14 @@ A persisted message is not proof that an email notification succeeded.
 
 `sendClientMessage()` currently writes both plaintext `body` and encrypted `body_enc` / `body_enc_meta` columns.
 
-That is existing platform behavior and this census does not adjudicate its current legality or migration standing.
+The repository's binding free-text PHI doctrine identifies this as **Stage A dual-write**, not accidental drift. Client messages are Wave 1, and the doctrine explicitly allows temporary plaintext + encrypted writes during Stage A.
 
-But a new MAIA safety off-ramp would intentionally route highly sensitive safety-adjacent content into this substrate. That is an expansion of use and must not occur without an explicit PHI/privacy review of the current plaintext-plus-encrypted write contract.
+Phase 2B is the planned transition to encrypted-only writes. The current migration corpus does not contain active `prevent_body_plaintext` / `require_body_encrypted` enforcement for `client_messages`; the `body = NULL` / drop-plaintext steps remain commented reference steps. The repository therefore still structurally permits Stage A dual-write today.
+
+A new MAIA safety off-ramp would intentionally widen highly sensitive safety-adjacent content into that transitional substrate. That is not automatically forbidden by Stage A, but it is a new use of the PHI surface and must not occur by implication. Before implementation, stewardship must explicitly rule either:
+
+1. Stage A dual-write is acceptable for this bounded member-authored safety-contact use; or
+2. the off-ramp waits for the relevant Phase 2B encrypted-only enforcement.
 
 ## Member-copy boundary
 
