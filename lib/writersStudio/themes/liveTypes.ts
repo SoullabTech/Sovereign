@@ -53,6 +53,7 @@ export interface LiveThemeCandidateEvidence {
 export interface LiveThemeCandidate {
   readingId: string;
   observationId: string;
+  observationKey: string;
   label: string;
   observation: string;
   frozenAt: string;
