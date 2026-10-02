@@ -105,7 +105,9 @@ R5 freezes the notification-result vocabulary. Message persistence, safety loggi
 
 The dormant portal confirmation component currently contains stronger language (`Your practitioner has been notified`, `Your message has been delivered`) than the evidence model permits. No live mount was found, so this is dormant copy debt rather than a proven live member-facing misstatement. It must be corrected before that surface is mounted.
 
-**Standing: design/contract + pure result projector only. No UI wiring, member-send route, portal-token borrowing, recipient inference, notification transport change, or new disclosure authority is authorized by R2–R5.**
+R6 freezes the copy law for those states: `message_persisted` may only claim the message was saved; `provider_accepted` may only claim provider acceptance; `practitioner_read` may claim the practitioner opened the message; and only `safety_acknowledged` may claim explicit acknowledgment. Failure or uncertainty in notification never suppresses immediate crisis-resource guidance.
+
+**Standing: design/contract + pure result projector only. No UI wiring, member-send route, portal-token borrowing, recipient inference, notification transport change, or new disclosure authority is authorized by R2–R6.**
 
 ## Watching
 
