@@ -28,6 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 type Hit = { file: string; line: number; rule: string; text: string };
+type DefeatFixture = { rules: Set<string>; marker: string };
 
 const POLICY_PATH = path.resolve(__dirname, "provider-policy.json");
 
@@ -306,7 +307,7 @@ function validateDevelopmentBoundary(policy: any): void {
   }
 }
 
-function loadAllowlist(): { files: Set<string>; prefixes: string[] } {
+function loadAllowlist(): { files: Set<string>; prefixes: string[]; defeatFixtures: Map<string, DefeatFixture> } {
   if (!fs.existsSync(POLICY_PATH)) {
     console.error(`❌ provider-policy.json not found at ${POLICY_PATH}`);
     process.exit(2);
@@ -316,13 +317,40 @@ function loadAllowlist(): { files: Set<string>; prefixes: string[] } {
   validateDevelopmentBoundary(policy);
   const files = new Set<string>();
   const prefixes: string[] = [];
+  const defeatFixtures = new Map<string, DefeatFixture>();
   const groups = policy.openai_removal || {};
   for (const key of Object.keys(groups)) {
     const g = groups[key];
     if (g && Array.isArray(g.files)) for (const f of g.files) files.add(f);
     if (g && Array.isArray(g.path_prefixes)) for (const p of g.path_prefixes) prefixes.push(p);
   }
-  return { files, prefixes };
+
+  const fixtureEntries = groups?.constitutional_defeat_fixtures?.entries;
+  if (fixtureEntries !== undefined && !Array.isArray(fixtureEntries)) {
+    policyError('constitutional_defeat_fixtures.entries must be an array.');
+  }
+  const knownRules = new Set(BANNED.map((b) => b.rule));
+  const forbiddenRules = new Set(BANNED.filter((b) => b.forbidden).map((b) => b.rule));
+  for (const entry of fixtureEntries || []) {
+    if (!entry || typeof entry !== 'object') policyError('constitutional defeat fixture entry is malformed.');
+    const file = entry.file;
+    if (typeof file !== 'string' || !file.startsWith('tests/constitutional/')) {
+      policyError('constitutional defeat fixtures must live under tests/constitutional/.');
+    }
+    if (!Array.isArray(entry.allowed_rules) || entry.allowed_rules.length === 0) {
+      policyError(`constitutional defeat fixture ${file} requires non-empty allowed_rules.`);
+    }
+    for (const rule of entry.allowed_rules) {
+      if (!knownRules.has(rule)) policyError(`constitutional defeat fixture ${file} names unknown rule ${String(rule)}.`);
+      if (forbiddenRules.has(rule)) policyError(`constitutional defeat fixture ${file} may not exempt forbidden rule ${String(rule)}.`);
+    }
+    if (typeof entry.marker !== 'string' || entry.marker.trim() === '') {
+      policyError(`constitutional defeat fixture ${file} requires an exact source marker.`);
+    }
+    if (defeatFixtures.has(file)) policyError(`duplicate constitutional defeat fixture ${file}.`);
+    defeatFixtures.set(file, { rules: new Set(entry.allowed_rules), marker: entry.marker });
+  }
+  return { files, prefixes, defeatFixtures };
 }
 
 function trackedFiles(): string[] {
@@ -348,15 +376,31 @@ function scan(file: string): Hit[] {
 
 function main() {
   console.log("🛡️  Provider governance check (OpenAI enforcement)…\n");
-  const { files: allow, prefixes } = loadAllowlist();
+  const { files: allow, prefixes, defeatFixtures } = loadAllowlist();
   const isAllowed = (f: string) => allow.has(f) || prefixes.some(p => f.startsWith(p));
 
   const violations: Hit[] = [];
   let debtFiles = 0;
+  let defeatFixtureFiles = 0;
   for (const f of trackedFiles()) {
     const hits = scan(f);
     if (hits.length === 0) continue;
     if (isAllowed(f)) { debtFiles++; continue; }
+
+    const fixture = defeatFixtures.get(f);
+    if (fixture) {
+      let content = '';
+      try { content = fs.readFileSync(f, 'utf8'); } catch { content = ''; }
+      const markerPresent = content.includes(fixture.marker);
+      const unscoped = hits.filter((h) => !fixture.rules.has(h.rule));
+      if (markerPresent && unscoped.length === 0) {
+        defeatFixtureFiles++;
+        continue;
+      }
+      violations.push(...hits);
+      continue;
+    }
+
     violations.push(...hits);
   }
 
@@ -378,6 +422,7 @@ function main() {
   }
 
   console.log(`✅ No new OpenAI surface. Migration debt on allowlist: ${debtFiles} file(s) tracked toward zero.`);
+  console.log(`   Constitutional defeat fixtures admitted by exact path + rule scope + source marker: ${defeatFixtureFiles}.`);
   console.log("   (Policy: docs/canon/PROVIDER_GOVERNANCE.md — burn order: browser keys → TTS → _backend → deps → key.)\n");
 }
 
