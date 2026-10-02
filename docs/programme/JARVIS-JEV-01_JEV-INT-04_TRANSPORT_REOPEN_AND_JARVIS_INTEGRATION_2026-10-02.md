@@ -209,7 +209,8 @@ Current witness:
 
 ```text
 JARVIS/JEV integration proof    11 / 11 PASS
-INT-04 real decision candidates  6 / 6 killed
+INT-04 reference runs             6 / 6 PASS
+INT-04 real decision candidates   6 / 6 killed · 0 matrix errors
 projection equivalence           PASS · 4 fixtures · pilot blob d3d5a533703903f6cd25e34a1cb9f7510fec5c6d
 JARVIS Desktop canonical proof  35 / 35 PASS
 JEV host membrane               26 / 26 PASS
