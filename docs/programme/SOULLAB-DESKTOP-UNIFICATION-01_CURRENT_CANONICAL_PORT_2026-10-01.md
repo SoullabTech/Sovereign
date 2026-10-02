@@ -179,3 +179,24 @@ Post-merge verification:
 - provider governance: PASS; no new OpenAI surface
 
 This reconciliation does not change Desktop product behavior or authority. It keeps #1695 current with canonical while preserving the previously witnessed unification candidate.
+
+## 9. O5-R3 / A9 canonical conflict reconciliation
+
+Canonical advanced to `e360f9d9058fb8f968a25a3ffbfe81c9e83dd7f5`, carrying the admitted O5-R3 runtime-binding hardening and A9 silent-repository-fallback law.
+
+GitHub correctly reported one merge conflict in `jarvis-desktop/src/main.js`. The conflict was confined to Electron lifecycle ownership.
+
+The resolution preserves both laws:
+
+- standalone JARVIS owns app lifecycle and therefore writes the O5-R3 runtime-binding record at startup, marks it terminated on quit, releases the grant-writer lease, and owns activate/window-close hooks;
+- embedded JARVIS remains lifecycle-suppressed inside Soullab Desktop and therefore does not seize userData, single-instance, startup, quit, or activate authority.
+
+Post-resolution witnesses:
+
+- O5-R3 runtime-binding matrix: **LETHAL + DISCRIMINATING · WIRING INTACT**
+- O5-R3 A9 silent-fallback matrix: **LETHAL + DISCRIMINATING · WIRING INTACT**
+- Soullab Desktop + Cabin boundary: **24/24 PASS**
+- full JARVIS Desktop candidate: **407 tests · 379 pass · 2 fail · 17 cancelled · 9 skipped**
+- untouched canonical `e360f9d90` baseline: **407 tests · 379 pass · 2 fail · 17 cancelled · 9 skipped**
+
+The broad-suite failure/cancellation population is therefore exactly canonical baseline; this reconciliation adds no JARVIS regression.
