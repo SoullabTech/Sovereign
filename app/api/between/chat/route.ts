@@ -897,6 +897,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // One UUID identifies this accepted member↔MAIA exchange across derivation and persistence.
+    // This is distinct from reqId, which is audit correlation only.
+    const exchangeId = crypto.randomUUID();
+
     // 📝 TEXT BANDWIDTH: keep the serving boundary aligned with the composer.
     // Scribe mode retains its existing transcript-friendly unlimited intake.
     // Conversational modes reject oversized payloads explicitly rather than
@@ -1954,6 +1958,7 @@ This user is in guest mode (no authenticated identity).
         message,
         userId: effectiveUserId,
         sessionId: safeSessionId,
+        exchangeId,
         conversationHistory, // ✅ Now loaded from database
         meta: normalizedMeta, // ✅ Normalized identity for downstream persistence
         context: {
@@ -2382,6 +2387,7 @@ This user is in guest mode (no authenticated identity).
         type: 'orchestrator',
         mode: mode || 'dialogue',
         userId: effectiveUserId,
+        exchangeId,
         layers: orchestratorResult.metadata?.consciousnessLayers?.successful || [],
       });
     }

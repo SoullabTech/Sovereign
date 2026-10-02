@@ -459,16 +459,29 @@ export async function alertSoullabTeam(
     : safetyCheck?.isED ? 'ed'
     : 'general';
 
-  // ⚠️ No delivery channel exists yet: this alert reaches NO human (guardian or team).
-  // Logged as an error with a stable code so the gap is visible, never mistaken for delivery.
-  console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN SAFETY ALERT] NOT delivered — guardian/team notification not implemented', {
-    type: alertType,
-    userId: params.userId,
-    age: params.age,
-    crisisType: params.crisisType || alertType,
-    timestamp: params.timestamp || new Date(),
-    // NEVER log message content in alerts
+  // Human delivery is server-side so browser code never receives SMS/webhook credentials.
+  // Deliberately omit message content: the human alert is a summons to review, not a PHI transport.
+  const response = await fetch('/api/safety/human-alert', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      source: safetyCheck?.isAbuse ? 'teen_abuse' : 'teen_crisis',
+      severity: safetyCheck?.isCrisis || params.crisisType ? 'crisis' : 'high',
+      crisisType: params.crisisType || alertType,
+      sessionId: params.sessionId,
+      age: params.age,
+    }),
   });
+
+  if (!response.ok) {
+    console.error('[SAFETY_NOTIFY_NO_RECIPIENT] [TEEN SAFETY ALERT] human delivery failed', {
+      type: alertType,
+      userId: params.userId,
+      status: response.status,
+      crisisType: params.crisisType || alertType,
+      // NEVER log message content in alerts
+    });
+  }
 
   // TODO (Phase 2): Query guardian_links and send guardian notifications
   // TODO (Phase 2): Insert guardian_safety_alerts record
