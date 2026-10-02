@@ -1,9 +1,9 @@
 # WRITERS-STUDIO-CONVERGENCE-01 · H1-R4 — Gate Independence Witness
 
-**Date:** 2026-10-02  
-**Runtime witnessed:** `d4655e6477fa40b8f94c5f8f91be47198288d2af`  
-**Canonical base for this record:** `f1c1f96f8531a1812630311cc8d36559995d5e80`  
-**Class:** production witness record; no runtime mutation in this commit  
+**Date:** 2026-10-02
+**Runtime witnessed:** `d4655e6477fa40b8f94c5f8f91be47198288d2af`
+**Canonical base at record-branch creation:** `f1c1f96f8531a1812630311cc8d36559995d5e80`
+**Class:** production witness record; no runtime mutation in this commit
 **Standing:** R4 PASS · EARLY FIELD OPEN / H1 CLOSED quadrant witnessed · H1 restored before later founder widening
 
 ## 1 · Why R4 existed
