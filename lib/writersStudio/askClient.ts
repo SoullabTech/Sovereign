@@ -20,6 +20,7 @@ import type { CurrentLocation } from '@/lib/manuscript/development/resolve';
 import type { ThreadDiscovery, ThreadSummary } from './observationDialogueResume';
 import { bodyOutcomeFrom } from './bodyProtocolResponse';
 import { authorizeRequest, type BodyProtocolOutcome } from './bodyAuthorization';
+import type { ExplanationDepth } from './workingStyle';
 
 export interface AskTurnView {
   index: number;
@@ -134,11 +135,13 @@ export async function askForBody(input: {
   anchor?: AskAnchor;
   threadId?: string;
   sectionId?: string;
+  responseStyle?: ExplanationDepth;
 }): Promise<AskResult> {
   const raw = await rawPost(input.manuscriptId, {
     ...(input.threadId ? { threadId: input.threadId } : { anchor: input.anchor }),
     question: input.question,
     ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+    ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
   });
   return { outcome: raw.outcome, ask: raw.ask };
 }
@@ -151,14 +154,18 @@ export async function authorizeSections(input: {
   sectionIds: readonly string[];
   question: string;
   threadId?: string;
+  responseStyle?: ExplanationDepth;
 }): Promise<AskResult> {
-  const raw = await rawPost(input.manuscriptId, authorizeRequest({
-    pendingAskRef: input.pendingAskRef,
-    actId: input.actId,
-    sectionIds: input.sectionIds,
-    question: input.question,
-    threadId: input.threadId,
-  }));
+  const raw = await rawPost(input.manuscriptId, {
+    ...authorizeRequest({
+      pendingAskRef: input.pendingAskRef,
+      actId: input.actId,
+      sectionIds: input.sectionIds,
+      question: input.question,
+      threadId: input.threadId,
+    }),
+    ...(input.responseStyle ? { responseStyle: input.responseStyle } : {}),
+  });
   return { outcome: raw.outcome, ask: raw.ask };
 }
 
