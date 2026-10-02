@@ -1,8 +1,8 @@
 # PR #1736 — Class A Admission Exception
 
-**Date:** 2026-10-02  
-**PR:** #1736 — `docs(living-field): refresh G0–G7 pre-walk state on production d4655e647`  
-**Merge commit:** `1aab648ffd28ce77f3da06dc399d27c1354c2611`  
+**Date:** 2026-10-02
+**PR:** #1736 — `docs(living-field): refresh G0–G7 pre-walk state on production d4655e647`
+**Merge commit:** `1aab648ffd28ce77f3da06dc399d27c1354c2611`
 **Standing:** CANONICAL ADMISSION OCCURRED · DISTINCT-HUMAN CUSTODY CONCURRENCE NOT EVIDENCED · FAIL-CLOSED EXCEPTION RECORDED
 
 ## Established facts
