@@ -413,3 +413,37 @@ test('scope refusal offers an explicit one-gesture latitude elevation without ap
   expect(onAcceptScopeRecovery).toHaveBeenCalledTimes(1);
   expect(container.textContent).not.toContain('Apply my version');
 });
+
+test('scope recovery remains reachable when an earlier recommendation is already on the desk', () => {
+  const onAcceptScopeRecovery = jest.fn();
+  const realThread = thread([maiaVersion]);
+  act(() => root.render(React.createElement(EditorialDancePanel, {
+    manuscriptTitle: 'Threshold',
+    currentText: 'Original words.',
+    sectionBody: 'Before.\n\nOriginal words.\n\nAfter.',
+    thread: realThread,
+    version: maiaVersion,
+    lastMaiaTurn: realThread.turns[0],
+    appliedVersionId: null,
+    busy: false,
+    message: 'This revision goes beyond your current “Line” latitude. It would fit at “Passage.” Nothing was changed.',
+    scopeRecovery: { fromLabel: 'Line', toLabel: 'Passage' },
+    undoMessage: null,
+    sessionPosture: { resolved: true, sanctuary: false },
+    onChooseSessionPosture: jest.fn(),
+    onSelectVersion: jest.fn(),
+    onSend: jest.fn(),
+    onAcceptScopeRecovery,
+    onSaveMember: jest.fn(async () => true),
+    onApply: jest.fn(),
+    onUndo: jest.fn(),
+    onKeep: jest.fn(),
+    onDepth: jest.fn(),
+  } as any)));
+
+  const action = Array.from(container.querySelectorAll('button'))
+    .find((button) => button.textContent?.includes('Use Passage and show revision'))!;
+  expect(action).toBeTruthy();
+  act(() => action.click());
+  expect(onAcceptScopeRecovery).toHaveBeenCalledTimes(1);
+});
