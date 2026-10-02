@@ -127,3 +127,35 @@ was stopped rather than misreported as a pass. No new blocker was discovered.
 
 The recovery candidate is therefore preserved with the same standing: core Kelly's World recovery is
 green, while B3 Monitor census compatibility remains a separate successor seam required before admission.
+
+## 8. 2026-10-02 current-canonical reconciliation
+
+The preserved recovery was replayed onto current canonical
+`50e12c53654930d9826fec007959de08a8128370`.
+
+That replay established that most of the formerly missing Kelly's World / Founder Workspace work has
+already arrived in canonical through later governed lanes. Nine replay conflicts were resolved in
+favor of current canonical because those files carry newer runtime-binding, Soullab Desktop
+composition, safety, bounded census, and constitutional-test law. No older recovery blob was allowed
+to roll those surfaces backward.
+
+The old 68-file recovery therefore collapses on this canonical parent to three genuine deltas:
+the historical recovery record itself, two capability-form comment generalizations that remove
+hard-coded capability examples, and the matching Work placeholder wording.
+
+The previously recorded B3 blocker is also superseded on this parent. Current canonical already
+contains the optional `CENSUS_JSON` projection in `worktree-census.sh` and a bounded B3 witness
+using a disposable repository and HOME, so the Mac Studio's historical worktree population is not
+mistaken for a constitutional requirement.
+
+Current-canonical verification:
+- F1, B2, B3, B4, B5, B5R1, B6, B6R1, B6R1R1, and B7R1: PASS; defeat candidates dead.
+- B3 bounded census: default output PASS; JSON sidecar PASS; registry observation PASS; repository byte-identical.
+- Founder Workspace TypeScript: PASS.
+- Desktop C0 Explorer: 52/52 PASS.
+- JARVIS Alpha Floor: 98/98 PASS after repairing its pre-existing filename predicate so
+  `runtime-binding.js` is not confused with a copied runtime/pipeline implementation.
+- `git diff --check`: PASS.
+
+**Updated standing:** CURRENT-CANONICAL RECONCILED · VERIFICATION GREEN · READY FOR INTEGRATION REVIEW.
+This is not a merge, deployment, production mutation, or independent admission claim.
