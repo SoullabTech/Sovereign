@@ -1,10 +1,10 @@
 # JARVIS-JEV-LABEL-01 — Human Ground-Truth & Under-Deliberation Evaluation Protocol
 
-**Status:** ⭐ **RATIFIED IN PRINCIPLE** (review disposition 2026-10-02, §11) · textual precision repairs
-**applied** (§3.1 sourcing sentence · §4.3 interval convention) · ⛔ **final status flip owed** until
-`npm run check:record-shas` is re-run clean on the committed head carrying those repairs.
-Additive. Opened by founder direction 2026-10-02. ⛔ Label B is **UNFILLED**, so the gold-set phase has
-**not begun** (§11.1).
+**Status:** ⭐ **RATIFIED** (2026-10-02). Ratified in principle at review (§11); both textual precision
+repairs applied at `98714792`; the header condition for the final flip is **discharged** by the
+founder-run witness in §11.5. Additive. Opened by founder direction 2026-10-02.
+⛔ Label B is **UNFILLED**, so the gold-set phase has **not begun** (§11.1). Ratification licenses the
+*protocol*; it licenses no provider call, no key, no INT-04, and no runtime use of any kind.
 **Touches:** nothing frozen. J1 (`JARVIS-JEV-01_J1R4_JUDGMENT_CONTRACT`), the J1 suite, the host
 membrane (`scripts/builder/jev-judgment-host-v1.mjs`) and the JEV-INT-01…03 records are read, never
 edited.
@@ -379,8 +379,24 @@ provider could not have known* explains the failure; it does not make the under-
 
 ### 11.4 · Status and next build
 
-`RATIFIED IN PRINCIPLE`. Precision repairs applied (§3.1 sourcing, §4.3 interval). The final status flip
-waits on a clean `npm run check:record-shas` at the committed head. J1 and the host are untouched.
+`RATIFIED IN PRINCIPLE` at review → `RATIFIED` on the §11.5 witness. J1 and the host are untouched.
 
-Next build: the **metric instrument with all ten §9 defeat candidates**. ⛔ INT-04 stays closed; no
-Typesafe key, skill, transport or provider call is needed or authorized.
+Next build: the **metric instrument with all ten §9 defeat candidates**, plus
+`DC-TWO-SIDED-INTERVAL` (a statistically respectable implementation that silently substitutes the
+two-sided interval and could change a verdict). It is built **provider-free, on synthetic fixtures
+only**, as a separate unit from this ratified head; its first job is to prove the measurement
+machinery, not Jev. ⛔ INT-04 stays closed; no Typesafe key, skill, transport or provider call is
+needed or authorized, and no real gold-set labelling begins.
+
+### 11.5 · Witness for the status flip (founder-run, Mac Studio — reported, not run by the authoring session)
+
+```text
+HEAD=987147922abbacb4306c482a0a420471e9a6c986
+npm run check:record-shas
+RECORD SHAS: 79 of 79 present with the claimed type
+CHECK_EXIT=0
+STATUS_AFTER: <clean>
+```
+
+The record carries no commit or blob SHA of its own, so this witness bears on the repository's
+record-SHA custody at that head and on a clean worktree; it is not a claim about the metric instrument.
