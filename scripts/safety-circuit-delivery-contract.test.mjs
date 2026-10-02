@@ -34,6 +34,12 @@ test('browser-facing safety route cannot request circuit-breaker delivery', () =
   assert.doesNotMatch(schema, /circuit_breaker/);
 });
 
+test('reachable Phase III integration also delegates circuit-breaker alerts to the human safety service', () => {
+  assert.match(enhanced, /deliverHumanSafetyAlert/);
+  assert.match(enhanced, /source: 'circuit_breaker'/);
+  assert.match(enhanced, /return result\.delivered/);
+});
+
 test('Phase III imports Phase II response shapes as types only', () => {
   assert.match(
     enhanced,

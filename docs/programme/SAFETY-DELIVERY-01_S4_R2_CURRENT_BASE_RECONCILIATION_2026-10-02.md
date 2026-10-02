@@ -23,16 +23,19 @@ The only cherry-pick conflict was `docs/ops/NON_DELIVERY_REGISTER.md`. It was re
 - `humanNotified` remains false until a callback affirmatively confirms delivery.
 - async delivery leaves the field false while pending.
 - rejected/failed/no-recipient delivery records false.
-- the exercised Phase II integration uses the shared content-free human safety service.
+- both reachable field-integration families use the shared content-free human safety service:
+  - Phase II `MAIAConsciousnessFieldIntegration`
+  - Phase III `EnhancedMAIAFieldIntegration`
 - `circuit_breaker` is server-internal and cannot be requested through the browser-facing member safety route.
-- member-scoped alerts still require member identity.
+- circuit-breaker delivery is system-scoped and carries no member identity or member message content.
+- member-scoped alert sources still require member identity.
 - Phase III imports Phase II response shapes as types only.
 
 ## Local witnesses
 
 `node --test scripts/safety-circuit-delivery-contract.test.mjs`
 
-Result: 5/5 PASS.
+Result: 6/6 PASS.
 
 Changed TypeScript files were transpiled with esbuild: PASS.
 
@@ -47,10 +50,11 @@ This repair still does not close S4.
 Production currently lacks an intentionally configured dedicated `SAFETY_ALERT_PHONE` or safety Slack webhook, and the merged #1671 substrate is not yet the production artifact witnessed earlier.
 
 Closure still requires:
-1. deploy/recreate the merged safety substrate;
-2. intentionally designate a human safety recipient;
-3. exercise a critical/emergency circuit-breaker path;
-4. witness provider acceptance;
-5. confirm the designated human actually received it.
+1. admit this Class-A repair under the canonical custody floor;
+2. deploy/recreate a governed production candidate containing the merged safety substrate and this S4 repair;
+3. intentionally designate a human safety recipient;
+4. exercise each reachable circuit-breaker integration family, or prove a family is no longer live;
+5. witness provider acceptance for each exercised producer;
+6. confirm the designated human actually received the bounded test alert(s).
 
 Configuration is not delivery. Provider acceptance is not human receipt.
