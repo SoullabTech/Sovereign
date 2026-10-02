@@ -12,9 +12,9 @@ window.KELLY_FIELD_LIBRARY = {
         "Governing law",
         "Source state",
         "Needs Kelly",
-        "New disclosure authority beyond the canonical membranes",
-        "PHI stage for the future safety-contact off-ramp",
-        "In motion"
+        "Canonical Class-A custody",
+        "Production delivery authority",
+        "New disclosure authority beyond the canonical membranes"
       ]
     },
     {
@@ -3089,7 +3089,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 22,
       "evidence": "STATE            SOURCE MERGED · NOT CLOSED · NOT DEPLOYED",
       "last_touched_epoch": 1788697516,
-      "hours_dormant": 622,
+      "hours_dormant": 623,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -3173,7 +3173,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 182,
       "evidence": "## Owed, if the candidate instrument is ever wired",
       "last_touched_epoch": 1789917878,
-      "hours_dormant": 283,
+      "hours_dormant": 284,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -14884,9 +14884,9 @@ window.KELLY_FIELD_LIBRARY = {
             "Governing law",
             "Source state",
             "Needs Kelly",
-            "New disclosure authority beyond the canonical membranes",
-            "PHI stage for the future safety-contact off-ramp",
-            "In motion"
+            "Canonical Class-A custody",
+            "Production delivery authority",
+            "New disclosure authority beyond the canonical membranes"
           ]
         },
         {

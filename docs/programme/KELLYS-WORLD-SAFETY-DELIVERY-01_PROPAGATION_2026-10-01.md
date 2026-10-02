@@ -22,8 +22,8 @@ The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by 
 
 - PR #1663 — **MERGED / CANONICAL** at `edf656496`: S1 reachability correction;
 - PR #1664 — **MERGED / CANONICAL** at `aa3bc543b`: canonical live crisis-path census;
-- `SAFETY-CRISIS-01` — **MERGED / CANONICAL**: later Founder Option A architecture with server-side `crisisAssessment`, short-lived `crisisCheckIn`, clear/ambiguous tiers, and deterministic crisis referral on clear;
-- PR #1671 — **MERGED / CANONICAL** at `15a9175fb`: separate human-safety delivery membrane with content-free SMS/Slack fallback for specifically governed safety paths; the `/list` crisis classifier does not itself imply a delivery outcome;
+- PR #1633 / `SAFETY-CRISIS-01` — **MERGED / CANONICAL**, but **governance disposition still open**: server-side `crisisAssessment`, short-lived `crisisCheckIn`, clear/ambiguous tiers, and deterministic crisis referral on clear; #1724 records that this self-authored Class-A admission also had zero reviews, and production `12b461bd8` does not contain its crisis-assessment file or live seam;
+- PR #1671 — **MERGED / CANONICAL** at `15a9175fb`, but **governance disposition still open**: separate human-safety delivery membrane with content-free SMS/Slack fallback; #1709 records that this self-authored Class-A admission had zero reviews under the standing distinct-human custody law; production `12b461bd8` does not contain the #1671 merge;
 - PR #1665 — **CLOSED / SUPERSEDED**: older `crisisRecognition.ts` contract retained as provenance only; superseded by canonical SAFETY-CRISIS-01;
 - PR #1669 — **CLOSED / SUPERSEDED**: older hard-override `/list` wiring retained as provenance only; superseded by canonical SAFETY-CRISIS-01;
 - PR #1675 — SAFETY-DISCLOSURE-01 authority contract for future member-initiated disclosure/off-ramp acts; canonical #1671 delivery authority is preserved separately; new imminent/legal/minor-vulnerable-adult exception classes remain review-required inside the off-ramp resolver;
@@ -33,6 +33,34 @@ The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by 
 These are custody surfaces with mixed standing. Kelly's World must distinguish canonical merges from open review branches and must never present an open PR as canonical merely because it is visible.
 
 ## Needs Kelly
+
+### Canonical Class-A custody
+
+The standing canonical law requires a **genuinely distinct second human custodian** for self-authored Class-A admission. #1671 and #1633 entered canonical with zero reviews before that law was mechanically enforced; #1709 and #1724 preserve those admission exceptions.
+
+PR #1716 is the immediate mechanical repair: it makes the already-required authoritative-adjudication check fail closed when a governed custodian record or exact-head custodian approval is absent. It does **not** choose the human.
+
+**Needs Kelly:** constitute the second human custodian under the existing canon. The governed record must bind the human identity, GitHub login + immutable user id, custody role, explicit distinctness from Founder, authority scope, effective date / Founder act, and revocation path. A second credential controlled by Kelly does not satisfy the law.
+
+Until that act exists, new Class-A PRs such as #1713 should remain red by design.
+
+### Production delivery authority
+
+Current production witness on 2026-10-02:
+
+- running SHA: `12b461bd8`;
+- #1671 and #1633 safety changes are **not** present in the running production artifact;
+- Resend key is present but invalid: `HTTP 400 · validation_error · API key is invalid`;
+- Twilio account/auth/from credentials are present;
+- `SAFETY_ALERT_PHONE` is absent;
+- safety Slack and legacy Slack webhooks are absent.
+
+**Needs Kelly:**
+1. rotate the invalid Resend credential as a credential-only act, preserving the running artifact while the process rereads env;
+2. explicitly designate the human safety recipient via `SAFETY_ALERT_PHONE` or governed safety Slack webhook;
+3. do not infer the recipient from a practitioner/member phone, ordinary monitor destination, historical contact, or convenience.
+
+PR #1718 holds the lawful production-cut order. Canonical presence alone is not treated as deployment authority while #1671/#1633 post-facto governance disposition remains open.
 
 ### New disclosure authority beyond the canonical membranes
 
@@ -65,11 +93,25 @@ R8 now makes the cost of Option B concrete: `client_messages` is still Stage A/p
 
 ## In motion
 
+### Governance remediation and delivery completion
+
+The safety programme now has five bounded successor lanes:
+
+- **#1709** — records the #1671 Class-A admission exception;
+- **#1724** — records the #1633 Class-A admission exception;
+- **#1716** — mechanically fail-closes self-authored Class-A admission when governed distinct-human custody evidence is absent;
+- **#1714** — reconciles the non-delivery register to post-#1671 standing without pretending merge equals human delivery;
+- **#1718** — defines the production-cut order from the actual running projection rather than canonical fast-forward.
+
+PR **#1713** is the remaining Class-A S4 repair. Its technical candidate now routes both reachable circuit-breaker integration families—Phase II and Phase III—to the shared content-free human safety service while keeping `humanNotified=false` until affirmative delivery confirmation. It is intentionally governance-held until #1716 is active and a valid distinct-human custodian exists.
+
+**Current law of motion:** evidence may merge as Class C, enforcement may merge as its governed structural act, but unresolved Class-A safety code does not gain admission or deployment authority from technical readiness alone.
+
 ### Canonical member-facing safety floor
 
-The member-facing crisis floor is now canonical under SAFETY-CRISIS-01 rather than the retired #1665/#1669 stack.
+The member-facing crisis floor is now present in canonical source under #1633 / SAFETY-CRISIS-01 rather than the retired #1665/#1669 stack. **Canonical source standing is not the same as settled Class-A custody or production deployment:** #1724 records the admission exception, and running production `12b461bd8` does not contain the crisis-assessment implementation.
 
-Current invariant:
+Current canonical-source invariant:
 
 member utterance
 → durable acceptance when lawful
@@ -168,9 +210,9 @@ This record belongs in the Living Field Library because it gives Kelly one place
 
 Its orientation should read:
 
-- **Needs Kelly:** only exception policy beyond explicit member-act disclosure;
-- **In motion:** deterministic canonical safety floor, disclosure-authority law, and practitioner-field recipient-boundary repair;
-- **Watching:** false positives, multi-turn privacy, sharing-semantics collapse, and legacy safety/non-delivery seams.
+- **Needs Kelly:** constitute the genuinely distinct Class-A human custodian; rotate the invalid Resend credential; explicitly designate the human safety recipient; separately decide any new disclosure exception or PHI-stage off-ramp authority.
+- **In motion:** #1716 custody enforcement; #1709/#1724 admission-exception evidence; #1714 register reconciliation; #1713 S4 technical candidate under Class-A hold; #1718 governed production-cut readiness; disclosure/relationship/identity prerequisites.
+- **Watching:** production-vs-canonical drift, human-receipt evidence, S1/S2 reachability, false positives, multi-turn privacy, sharing-semantics collapse, and remaining non-delivery/infra seams.
 
 Nothing here authorizes execution, merge, deployment, or disclosure.
 
