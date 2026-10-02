@@ -61,11 +61,19 @@ The material distinction is:
 
 The merge is now historical fact. A later approval cannot make the earlier admission compliant *at the time it occurred*. Post-facto review may determine whether the merged state should remain canonical, be amended, or be reverted, but it does not erase this exception record.
 
-### Deployment standing at the post-merge census
+### Deployment standing
 
-A read-only production witness on 2026-10-02 found `maia-sovereign` running SHA `12b461bd8`. Production-host ancestry checking returned false for #1671 merge `15a9175fb917cd9aa84a2735f7b3cf91a964b49b` as an ancestor of that deployed SHA.
+The earlier post-merge census found production at `12b461bd8`, before #1671 had crossed deployment. That observation was correct at the time but is now superseded by a later read-only witness.
 
-Therefore the exception has crossed **canonical admission**, but had **not crossed production deployment** at that witness. This record grants no deployment authority; deployment eligibility remains a separate governed decision.
+On 2026-10-02, production was witnessed healthy at:
+
+```text
+d4655e6477fa40b8f94c5f8f91be47198288d2af
+```
+
+Repository ancestry checking confirms #1671 merge `15a9175fb917cd9aa84a2735f7b3cf91a964b49b` is an ancestor of that running SHA.
+
+Therefore the exception has now crossed both **canonical admission and production deployment**. This does not cure the custody exception, create retroactive concurrence, or alter the remediation requirement. Detailed runtime evidence is recorded in `docs/ops/SAFETY_DELIVERY_01_POSTDEPLOY_WITNESS_2026-10-02.md`.
 
 ## Remediation
 
