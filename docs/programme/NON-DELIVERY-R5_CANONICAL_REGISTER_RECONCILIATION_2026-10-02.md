@@ -83,7 +83,7 @@ Disposition:
 
 Fresh read-only production witness on 2026-10-02:
 
-- running artifact: commit:`12b461bd8778c148060250c002a54079f4f58221`
+- running artifact: commit:`d4655e6477fa40b8f94c5f8f91be47198288d2af`
 - `RESEND_API_KEY`: present
 - host-level authenticated Resend domains probe: HTTP 400
 - provider response: `validation_error` / API key invalid
@@ -153,7 +153,7 @@ Disposition:
 
 Fresh read-only witness on 2026-10-02:
 
-- production artifact: commit:`12b461bd8778c148060250c002a54079f4f58221`
+- production artifact: commit:`d4655e6477fa40b8f94c5f8f91be47198288d2af`
 - primary bind: `100.119.226.84:5432`
 - `wal_level=replica`
 - `max_wal_senders=10`
@@ -174,7 +174,7 @@ Current truth:
 - S1-S3 have implemented human-delivery mechanisms but no configured production safety recipient and no human-receipt witness.
 - S4 remains a reachable truthful non-delivery; its repair is held at the Class-A custody boundary.
 - E1 remains a confirmed provider-auth outage.
-- E2 has an independent configured monitor path but no DOWN/RECOVERED delivery witness.
+- E2 has an independent monitor path with provider acceptance witnessed for both DOWN and RECOVERED SMS alerts; only human receipt remains unconfirmed.
 - E6 is structurally closed and leaves the register.
 - O1 has merged fallback logic but still lacks production configuration/witness.
 - O2 remains physically unavailable.
