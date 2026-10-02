@@ -41,14 +41,16 @@ git fetch origin clean-main-no-secrets && git log -1 --format='%H %cI' origin/cl
 
 PASS requires both `## Amendment 1` and `## Amendment 2` lines.
 
-captured_at_utc:
-canonical_sha:
+captured_at_utc: `2026-10-02T09:51:51Z`
+canonical_sha: `15a9175fb917cd9aa84a2735f7b3cf91a964b49b`
 
 ```text
-(paste verbatim)
+15a9175fb917cd9aa84a2735f7b3cf91a964b49b 2026-10-02T05:47:07-04:00
+159:## Amendment 1 · 2026-10-01 · before any run (pre-registration amendment)
+171:## Amendment 2 · 2026-10-01 · before any run (founder-directed pre-registration amendment)
 ```
 
-Verdict: PASS / FAIL
+Verdict: **PASS**
 
 ---
 
@@ -65,16 +67,20 @@ PASS requires `exit=1` with no value printed before it (variable absent). `exit=
 variable is set: a value line means it is set to that value, and an empty line means it is
 **set but empty**. Record either as it is and adjudicate it; do not treat it as a pass.
 
-captured_at_utc: `2026-10-01T23:41:47Z`
+captured_at_utc: `2026-10-02T09:50:55Z`
 production_sha_at_capture: `298414555`
 
 ```text
-2026-10-01T23:41:47Z
+2026-10-02T09:50:55Z
 298414555
 exit=1
 ```
 
 Verdict: **PASS**
+
+A stricter cross-check at `2026-10-02T09:50:35Z` also returned
+`present=no` and `printenv_rc=1 bytes=0`, confirming the variable is absent rather than present
+with an empty value.
 
 ---
 
@@ -89,12 +95,19 @@ waived.
 `docs/programme/WS-ADVANCED-RUNTIME-01_RC1_PRODUCTION_WITNESS_2026-10-01.md`, observation 1,
 records the earlier RC1 recreate: `started=2026-10-01T14:34:47Z restarts=0 oom=false`.
 
-A later read-only production observation at `2026-10-01T22:14:34Z` supersedes that start-time
+A later read-only production observation at `2026-10-01T22:14:34Z` superseded that start-time
 value for this gate. Runtime was `56d0cd679`; `maia-postgres` reported
 `started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy`.
-Docker's journal at `21:41:44Z` shows the prior Postgres task being stopped/deleted and a new
-`maia-postgres` endpoint joining the compose network. This establishes another **recreate, not a
-crash**. The initiating command or actor is **UNKNOWN** and must not be invented.
+Docker's journal at `21:41:44Z` showed the prior Postgres task being stopped/deleted and a new
+`maia-postgres` endpoint joining the compose network. This established a **recreate, not a crash**.
+
+A still later read-only production observation at `2026-10-02T09:48:06Z` supersedes that start
+time again. Runtime remains `298414555`; `maia-postgres` now reports
+`started=2026-10-02T00:20:40.052475609Z restarts=0 oom=false status=running health=healthy`.
+The Docker journal around `00:20:40Z` shows task deletion / restart-manager stop immediately
+before a new `maia-postgres` endpoint joins `maia-sovereign_maia-internal`. This again
+establishes **recreate, not crash**. The initiating command or actor remains **UNKNOWN** and must
+not be invented.
 
 **Required now:**
 
@@ -106,33 +119,36 @@ ssh soullab@minisforum 'date -u +%FT%TZ; docker exec maia-sovereign printenv GIT
 PASS requires all of:
 
 - `restarts=0` and `oom=false`;
-- `started=` still equal to `2026-10-01T21:41:44.870926604Z`. A later value means another recreate
+- `started=` still equal to `2026-10-02T00:20:40.052475609Z`. A later value means another recreate
   or restart has happened since the latest witnessed one and must be bounded before this gate can
   pass;
 - `status=running` and, when health is present, `health=healthy`.
 
-captured_at_utc: `2026-10-01T23:41:47Z`
+captured_at_utc: `2026-10-02T09:49:58Z`
 production_sha_at_capture: `298414555`
 
 ```text
-2026-10-01T23:41:47Z
+2026-10-02T09:49:58Z
 298414555
-started=2026-10-01T21:41:44.870926604Z restarts=0 oom=false status=running health=healthy
+started=2026-10-02T00:20:40.052475609Z restarts=0 oom=false status=running health=healthy
 ```
 
-Mechanical verdict: **PASS** — database stability criteria satisfied. Final G2 remains OPEN until the founder explicitly accepts the recorded standby exposure or defers the walk.
+Mechanical verdict: **PASS** — database stability criteria satisfied at this capture. Final G2
+remains OPEN until the founder explicitly accepts the recorded standby exposure or defers the walk.
 
-**Root cause / trigger:** recorded as **UNKNOWN** for both the earlier drift and the 21:41Z
-recreate. The newer daemon journal proves recreate-not-crash, not who or what invoked it. ⛔ Do
+**Root cause / trigger:** recorded as **UNKNOWN** for the earlier drift, the 21:41Z recreate, and
+the 00:20Z recreate. The daemon journal proves recreate-not-crash, not who or what invoked it. ⛔ Do
 not upgrade inference to fact here.
 **Tracked separately, not gating:** the deploy fix (`--no-deps` on the migrate container, so a
 pending-set read cannot recreate Postgres).
 
-**Recorded, not gating (founder attention):** the witness record also states that **disaster
-recovery is not established**. The Hetzner standby has been offline for 7 days, and it needs a fresh
-base backup when it returns. Off-host backups were verified on the Mac Studio at ~15:25Z. A member
-who writes during the walk creates real substrate that exists on one host and in a nightly backup.
-Accept that exposure explicitly or defer the walk; do not leave it assumed.
+**Recorded, not gating mechanically (founder attention):** disaster recovery is still not
+established. At `2026-10-02T09:51:42Z` on production `298414555`,
+`pg_stat_replication` returned `0`, and Tailscale reported `ubuntu-8gb-fsn1-2` offline, last
+seen 7 days ago. The standby therefore remains unavailable and will need a fresh base backup when
+it returns. Off-host backups were previously verified on the Mac Studio. A member who writes during
+the walk creates real substrate on the production host plus the verified backup path, without a live
+streaming standby. Accept that exposure explicitly or defer the walk; do not leave it assumed.
 
 Standby exposure accepted for this walk: yes (by whom) / no (walk deferred)
 
