@@ -3,18 +3,18 @@ window.KELLY_FIELD_LIBRARY = {
   "scope": "Curated field map plus the full canonical programme corpus; recent activity and recovery candidates are derived from Git history and explicit programme evidence",
   "recentItems": [
     {
-      "title": "KELLY'S WORLD — SAFETY-DELIVERY-01 Propagation",
-      "path": "docs/programme/KELLYS-WORLD-SAFETY-DELIVERY-01_PROPAGATION_2026-10-01.md",
-      "excerpt": "Date: 2026-10-01 Purpose: carry the current SAFETY-DELIVERY-01 state into Kelly's World as founder-facing orientation without copying member material, creating a second safety system, or changing programme authority.",
+      "title": "SAFETY-CRISIS-01: Option A (no human alert channel) and the server-side crisis detector",
+      "path": "docs/programme/SAFETY-CRISIS-01_OPTION_A_AND_SERVER_DETECTOR_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: founder ruling RECORDED · detector BUILT on branch fix/server-crisis-detector-20261001 · ⛔ not merged · ⛔ not deployed · disclosure copy ⛔ OWED · teen registration ⛔ not structurally closed (see §6)",
       "excerpt_start_line": 3,
       "excerpt_end_line": 4,
       "headings": [
-        "Governing law",
-        "Source state",
-        "Needs Kelly",
-        "Exception policy beyond member act",
-        "PHI stage for the future safety-contact off-ramp",
-        "In motion"
+        "1. Founder ruling (2026-10-01)",
+        "Why false positives are a safety cost",
+        "2. Census: what existed before this change (canonical `56d0cd679`)",
+        "3. What this change builds",
+        "Tiers",
+        "Defeat candidates (all DEAD)"
       ]
     },
     {
@@ -33,6 +33,900 @@ window.KELLY_FIELD_LIBRARY = {
       ]
     },
     {
+      "title": "WRITER'S STUDIO — SEMANTIC FIELD 01",
+      "path": "docs/programme/WRITERS-STUDIO-SEMANTIC-FIELD-01_JARVIS_FLOW_2026-10-01.md",
+      "excerpt": "Programme ID: WRITERS-STUDIO-SEMANTIC-FIELD-01 Branch: feature/ws-semantic-field-r1-20261001 Base: f250f2953 / feature/ws-working-style-preferences-20261001 Status: PROGRAMME OPENED / IMPLEMENTATION NOT YET CLAIMED COMPLETE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "JARVIS Full Governed Flow",
+        "Founder intent",
+        "0. Non-collision boundary",
+        "1. Experience law",
+        "2. Writer pacing preference",
+        "Intimate"
+      ]
+    },
+    {
+      "title": "MAIA-DEVELOPMENTAL-ANCESTRY-01 — I1 RUNTIME WIRING",
+      "path": "docs/programme/MAIA-DEVELOPMENTAL-ANCESTRY-01_I1_RUNTIME_WIRING_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 / 2026-10-02 UTC Standing: implementation candidate Class: A — memory/consciousness enforcement paths Canonical prerequisite: I0 carrier admitted and I0A custody deviation recorded",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1. Sole job",
+        "2. Identity contract",
+        "3. Route-specific behavior",
+        "/list",
+        "/between",
+        "4. Storage rule"
+      ]
+    },
+    {
+      "title": "KELLY'S WORLD — SAFETY-DELIVERY-01 Propagation",
+      "path": "docs/programme/KELLYS-WORLD-SAFETY-DELIVERY-01_PROPAGATION_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Purpose: carry the current SAFETY-DELIVERY-01 state into Kelly's World as founder-facing orientation without copying member material, creating a second safety system, or changing programme authority.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Governing law",
+        "Source state",
+        "Needs Kelly",
+        "Exception policy beyond member act",
+        "PHI stage for the future safety-contact off-ramp",
+        "In motion"
+      ]
+    },
+    {
+      "title": "SOULLAB-DESKTOP-UNIFICATION-01 — Census · 2026-09-30",
+      "path": "docs/programme/SOULLAB-DESKTOP-UNIFICATION-01_CENSUS_2026-09-30.md",
+      "excerpt": "The product becomes one installed Soullab Desktop while MAIA and JARVIS remain different authority realms inside that product. One applies to product identity, continuity, local runtime, update path, and installation. It does not mean that member-facing MAIA inherits JARVIS repository/shell authority.",
+      "excerpt_start_line": 13,
+      "excerpt_end_line": 16,
+      "headings": [
+        "Governing architecture",
+        "Canonical substrate",
+        "Installed Mac state",
+        "Offline standing",
+        "Baseline",
+        "First implementation boundary"
+      ]
+    },
+    {
+      "title": "SOULLAB-DESKTOP-UNIFICATION-01 — Current Canonical Port",
+      "path": "docs/programme/SOULLAB-DESKTOP-UNIFICATION-01_CURRENT_CANONICAL_PORT_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Class: B — desktop host composition / packaging / authority boundary Canonical base: ac7bfd353128210c5f1e7012e0b71a9256035834 Recovery source lineage: f09efdb36 → 06245252ce → b975472baa Branch: fix/soullab-desktop-unification-current-20261001 Standing: CURRENT-CANONICAL PORT CANDIDATE · no merge/deploy/release authority",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 8,
+      "headings": [
+        "1. Purpose",
+        "2. Complete lawful sequence",
+        "3. Current-canonical reconciliation",
+        "JARVIS lifecycle",
+        "Packaging",
+        "MAIA authority doorway"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 J5R1 — Kelly's World Zero-Duplication Map",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_J5R1_KELLYS_WORLD_ZERO_DUPLICATION_MAP_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Canonical substrate: \\ac7bfd353128210c5f1e7012e0b71a9256035834\\ Programme: AIN-MASTER-FIELD-01",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Purpose",
+        "Admission evidence",
+        "Single reality",
+        "Today — what requires Kelly now?",
+        "Work — what is being carried?",
+        "Monitor — what is happening now?"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 J5 — Kelly's World Projection Mapping",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_J5_KELLYS_WORLD_PROJECTION_MAPPING_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Programme: AIN-MASTER-FIELD-01",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Purpose",
+        "Single-reality rule",
+        "Room mapping",
+        "Today — What requires Kelly now?",
+        "Work — What is being carried?",
+        "Monitor — What is happening now?"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 J6 — Falsifier Package and Implementation Eligibility",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_J6_FALSIFIERS_AND_IMPLEMENTATION_ELIGIBILITY_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Programme: AIN-MASTER-FIELD-01",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Purpose",
+        "Falsifier family A — Standing",
+        "Falsifier family B — Personhood",
+        "Falsifier family C — Relational permission",
+        "Falsifier family D — Rupture and repair",
+        "Falsifier family E — Temporal field"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 J7 — Bounded Implementation Handoff",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_J7_BOUNDED_IMPLEMENTATION_HANDOFF_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Programme: AIN-MASTER-FIELD-01 Status: handoff / implementation boundary",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Purpose",
+        "Eligible lane 1 — NON-DELIVERY / consequence truth",
+        "Eligible lane 2 — Identity Ontology / Personhood canon reconciliation",
+        "Eligible lane 3 — Rupture Playbook / Trust reconciliation",
+        "Eligible lane 4 — Kelly's World projection reconciliation",
+        "Blocked lane — Temporal field runtime"
+      ]
+    },
+    {
+      "title": "MAIA-DEVELOPMENTAL-ANCESTRY-01 — I0A SCHEMA EXECUTION CUSTODY",
+      "path": "docs/programme/MAIA-DEVELOPMENTAL-ANCESTRY-01_I0A_SCHEMA_EXECUTION_CUSTODY_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 / 2026-10-02 UTC Standing: EVIDENCE + custody disposition Authority: founder continuation after I0 admission Runtime/code authority: NONE",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1. What happened",
+        "2. Execution custody",
+        "3. Production shape witness",
+        "4. Classification",
+        "5. Disposition",
+        "6. Boundary from here"
+      ]
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3A9 — Silent Repository Fallback",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_A9_SILENT_REPOSITORY_FALLBACK_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Opened by founder act: “continue” after O5-R3 admission Base: b19004cd5c1babbc20e83681bb8dad944c22f9bf · O5-R3 ADMITTED Standing: ADMITTED · CLOSED · production untouched",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1. Law",
+        "2. Census",
+        "3. Required behavior",
+        "4. Falsifiers",
+        "5. Defeat cases",
+        "6. Admission boundary"
+      ]
+    },
+    {
+      "title": "Living Field First Entry: Pre-Walk Gate Record",
+      "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY_PRE-WALK_GATE_RECORD_2026-10-01.md",
+      "excerpt": "Status: PARTIAL · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G0/G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS Governs: LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESSPROTOCOL2026-10-01.md (with Amendments 1 and 2) Occasioned by: a J18 verdict and an emergency-disable PASS that existed only in a session",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Evidence rule for every slot (read first)",
+        "G0 · The amended protocol is canonical",
+        "G1 · Cabin offline mode is unset in production",
+        "G2 · Database stable",
+        "G3 · J18 rollback gate: emergency disable witnessed",
+        "G3a · Commit the existing witness"
+      ]
+    },
+    {
+      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3 — Runtime Binding Witness (R3-R11)",
+      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_RUNTIME_BINDING_WITNESS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Base: ce061073 (O5-R3 implementation + freeze amendment 1). ⛔ Kept frozen. No lease or ledger change. Standing: implementation complete · constitutional suite complete · ⭐ Mac Studio integration witness complete · ⭐ R3-R11 runtime-binding witness complete · O5-R3 admission evidence complete · ⛔ merge still pending",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1. Mac Studio integration witness: COMPLETE (founder-run)",
+        "2. Runtime situation observed (founder-run census, 2026-10-01)",
+        "3. Step 3: how Desktop selects its runtime code (from source at `ce061073`)",
+        "3.1 Desktop's runtime identity is two things, and only one is a SHA",
+        "3.2 Packaged-mode resolution order (`findRepoRootPackagedMode`)",
+        "3.3 ⭐ The finding: the default path lands on the legacy combination"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — Programme Charter",
+      "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_CHARTER_2026-09-23.md",
+      "excerpt": "Opened: 2026-09-23, by founder act (verbatim opening act preserved in §12). Class: coordinating programme · flow parent · readiness authority. Current act: P0 — FULL-FUNCTIONALITY READINESS MAP + DEPENDENCY GRAPH ONLY (read-only, documentary). Standing at authoring: P0 DELIVERED · ⛔ STOPPED FOR FOUNDER ADJUDICATION · ⛔ P1–P8 NOT OPEN.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Mandatory lane preamble",
+        "Purpose (founder, verbatim intent)",
+        "Anchors (observed, not by name)",
+        "Authority",
+        "Explicit non-authorizations (P0)",
+        "Flow"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Blocker Register",
+      "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_BLOCKER_REGISTER_2026-09-23.md",
+      "excerpt": "Classes per the founder's opening act: A human-experience closure · B runtime defects · C missing live state foundation · D missing live Graph · E missing live Monitor · F daily-use reliability · G canonical admission. Plus H (added by founder direction during P0): voice. Every blocker names an owning programme; ⛔ P0 repairs none. Observed against 840194ba / 9b1c1acf.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": []
+    },
+    {
+      "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Daily Work Coverage Matrix",
+      "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_DAILY_WORK_COVERAGE_MATRIX_2026-09-23.md",
+      "excerpt": "Question: for each family of the founder's actual work running Soullab, AIN and MAIA, can JARVIS carry it today? Classes (founder-defined): READY · PARTIAL · MISSING · REQUIRES CONNECTOR · REQUIRES NEW CAPABILITY. \"Elsewhere\" means a MAIA runtime capability that exists in this repo but has no JARVIS path (no import, no IPC). Observed against 840194ba / 9b1c1acf; census by the P0 reliability/work-coverage sweep, load-",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "Reading the matrix"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Dependency Graph",
+      "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_DEPENDENCY_GRAPH_2026-09-23.md",
+      "excerpt": "Law of this graph (DC-3, carried): an edge exists only if a record, ruling or file asserts it; every edge names its source. Nodes are requirements (R-xx, readiness matrix), acts (B1–B8 from the F2 sequence; P1–P8 from this programme), founder decisions (FD-x from F2, OE-x from the P0 docket), blockers (BL-x, blocker register) and child programmes. Observed against canonical 840194ba · workspace tip 9b1c1acf.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "1 · Critical path (what must happen, in order, for Work to be live)",
+        "2 · Edge table (source named per edge)",
+        "3 · What blocks nothing (can start today, read-only or pure)",
+        "4 · What is NOT on this graph, deliberately"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Execution Sequence",
+      "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_EXECUTION_SEQUENCE_2026-09-23.md",
+      "excerpt": "What this is: the order in which the existing designs get integrated and activated so JARVIS becomes the founder's everyday environment — with voice — each step behind its own founder act. What it is not: authorization. P0 opens nothing. Observed against 840194ba / 9b1c1acf.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "0 · Three lanes run in parallel from day one",
+        "1 · Phases (this programme) mapped to acts (F2) and blockers",
+        "2 · Critical path and the shortest honest route to \"I use it every day\"",
+        "3 · Sequencing laws carried into every phase"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Founder Adjudication (verbatim record)",
+      "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_FOUNDER_ADJUDICATION_2026-09-23.md",
+      "excerpt": "Received: 2026-09-23 · Candidate adjudicated: eb77216b4237ad0685208d949507848fc6535c0e on claude/sharp-cannon-cyrdeb · Canonical: 840194ba859bd5a497fc939c94329ee972ca3f80. Disposition: P0 PASS · READINESS MAP ACCEPTED · DEPENDENCY GRAPH ACCEPTED · DAILY-WORK COVERAGE ACCEPTED · SEQUENCE ACCEPTED WITH FOUNDER RULINGS.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "I · Disposition (founder)",
+        "II · Full-functionality definition accepted",
+        "III · F2 carry-forward rulings",
+        "IV · New P0 docket rulings",
+        "V · Blocker model accepted",
+        "VI · Immediate build authorization"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Founder Decision Docket",
+      "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_FOUNDER_DECISION_DOCKET_2026-09-23.md",
+      "excerpt": "Only decisions actually required before implementation. Carried from F2 without re-argument: FD-1 architecture · FD-2 one read channel vs multiplex · FD-3 projector law · FD-4 ops-script JSON/TSV mode · FD-5 may B1–B4 precede the F1 walk (recommended yes) · FD-6 CSP. New in P0:",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": []
+    },
+    {
+      "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Full-Functionality Readiness Matrix",
+      "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_FULL_FUNCTIONALITY_READINESS_MATRIX_2026-09-23.md",
+      "excerpt": "Act: P0 (read-only, documentary) · Authored: 2026-09-23 · Machine-readable source of record: JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01P0READINESSMATRIX2026-09-23.json (this file is rendered from it; the JSON governs on any divergence). Observed against: canonical 840194ba859bd5a497fc939c94329ee972ca3f80 · Workspace reference tip (founder-stated) 5039fc5e3dc4c19775f553f114c505c6dd61d2a8 · Workspace actual tip 9b1c1acf5f",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "0 · The one-screen answer — *What is stopping Kelly from using JARVIS as her normal working environment today?*",
+        "1 · Ladder summary",
+        "2 · Requirement rows (eleven mandatory fields each)",
+        "R-01 · One doorway: an installed JARVIS that opens, binds to the Sovereign checkout, and tells the truth about its own identity",
+        "R-02 · Understand my day: Today shows what matters, what is happening, what needs me — across programmes, not per repo",
+        "R-03 · Say what I want in ordinary language; JARVIS classifies intent without asking me to name lane, provider, class or evidence class"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 · P0 · READINESS · MATRIX · 2026-09-23",
+      "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_READINESS_MATRIX_2026-09-23.json",
+      "excerpt": "{ \"schema\": \"founder-operating-environment-readiness.v1\", \"programme\": \"JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01\", \"act\": \"P0\", \"authored\": \"2026-09-23\", \"observedagainst\": { \"canonical\": \"840194ba859bd5a497fc939c94329ee972ca3f80\", \"workspacereferencetipfounderstated\": \"5039fc5e3dc4c19775f553f114c505c6dd61d2a8\", \"workspaceactualtip\": \"9b1c1acf5fa473942edd7795213483a5d4a19f64\",",
+      "excerpt_start_line": 1,
+      "excerpt_end_line": 9,
+      "headings": []
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 — B1 + B2 · View-Model Foundation + Read-Organ Composition (evidence)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B1B2_VIEWMODEL_AND_READ_ORGANS_EVIDENCE_2026-09-23.md",
+      "excerpt": "Authorized by: P0 founder adjudication §VI (JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01P0FOUNDERADJUDICATION2026-09-23.md) · Against: canonical 840194ba859bd5a497fc939c94329ee972ca3f80 · F2 contract: 9b1c1acf · P0 record: eb77216b. Standing at authoring: B1 ✅ · B2 ✅ · ⛔ HARD STOP (§VII) — STOPPED FOR EVIDENCE + NEXT-ACT ADJUDICATION.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "1 · What landed (no Desktop file touched)",
+        "2 · Results (this container)",
+        "3 · Laws made structural (and where a defeat candidate proves each)",
+        "4 · Two things the build found, ⛔ routed out, not repaired",
+        "5 · What B1+B2 do not do (§VII, confirmed)",
+        "6 · Next lawful acts (for adjudication, not opened)"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 — B3 · Monitor Instrument Registry + Machine-Readable Census Outputs (evidence)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B3_MONITOR_INSTRUMENT_REGISTRY_EVIDENCE_2026-09-23.md",
+      "excerpt": "Authorized by: founder continuation act 2026-09-23 (B3 · B4 · V1 in parallel) under the P0 adjudication (FD-4 YES additive · OE-4 read-only · D-04 local-first · D-05 no cost). Against: canonical 840194ba · lane tip after B1+B2 44e1a387. Standing: B3 DELIVERED · ⛔ STOP.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "1 · What landed",
+        "2 · Admission result (registry built against this checkout)",
+        "3 · Matrix (this container)",
+        "4 · What the scanner is and is not",
+        "5 · Routed out, ⛔ not repaired",
+        "6 · Not done (§VII hard stop honoured)"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / B4R1R1R1 — Current-Canonical Reconciliation + Reprojection (evidence)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B4R1R1R1_CURRENT_CANONICAL_RECONCILIATION_AND_REPROJECTION_EVIDENCE_2026-09-23.md",
+      "excerpt": "Programme: JARVIS-FOUNDER-WORKSPACE-01 Act: B4R1R1R1 Standing: DELIVERED · EXACT CURRENT-CANONICAL REPROJECTION COMPLETE · B4R1R1 SEMANTICS PRESERVED · MATRIX LETHAL · TYPECHECK GREEN · complete=false HONESTLY · STOP FOR FOUNDER ADJUDICATION Predecessor semantic candidate: B4R1R1 staged over prior Provider Governance compatibility commit bc59efb3facaac9444dfa3d74c3198b202709c78",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1 · Freshness boundary spent",
+        "2 · Canonical advance census",
+        "3 · Same-rule before / after",
+        "4 · Conflict preservation",
+        "5 · Exact current projection",
+        "6 · Mac Studio gates"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / B4R1R1 — Founder-Rule Application + Current-Canonical Reprojection (evidence)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B4R1R1_FOUNDER_RULE_APPLICATION_AND_CURRENT_CANONICAL_REPROJECTION_EVIDENCE_2026-09-23.md",
+      "excerpt": "Programme: JARVIS-FOUNDER-WORKSPACE-01 Act: B4R1R1 Standing: SEMANTIC CANDIDATE PASS · EXACT 6d745a4d… REPROJECTION VALID · MATRIX LETHAL · complete=false PRESERVED · PROVIDER-GOVERNANCE BLOCKER RESOLVED BY PRIOR COMMIT bc59efb3f… · CURRENT CANONICAL ADVANCED TO bb114286… WITH 35 NEW PROGRAMME RECORDS · FRESHNESS REAUTHORIZATION REQUIRED BEFORE ADMISSION/B5",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "1 · Scope spent — and nothing wider",
+        "2 · Founder-rule implementation",
+        "PD-4 — act-shaped ids are not programmes",
+        "PD-5 — founder-named legacy identities",
+        "PD-6 — forward standing discipline",
+        "PD-7 — S3 identity"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 — B4R1 · Programme Identity + Succession Reconciliation (evidence)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B4R1_PROGRAMME_IDENTITY_AND_SUCCESSION_RECONCILIATION_EVIDENCE_2026-09-23.md",
+      "excerpt": "Programme: JARVIS-FOUNDER-WORKSPACE-01 Authorized by: founder act 2026-09-23 — \"B4R1 — PROGRAMME IDENTITY + SUCCESSION RECONCILIATION ONLY: build the governed programme-projection-map.v1; resolve legacy aliases only where evidence supports them; use explicit succession first, Git ancestry second; include governed docs/ops lanes without swallowing the whole ops directory; reduce conflicts/unclassified subjects without",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "1 · What landed",
+        "2 · Matrix (this container)",
+        "3 · The real projection, before and after (observed against `624241b2`)",
+        "4 · Docket (for the adjudication that follows the F1 walk)",
+        "5 · Not done, not authorized"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 — B4 · Deterministic `programme-state.v1` Projector (evidence)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B4_PROGRAMME_STATE_PROJECTOR_EVIDENCE_2026-09-23.md",
+      "excerpt": "Authorized by: founder continuation act 2026-09-23 under FD-3 (projector law) and D-03 (contract + projection, never a second truth store). Against: canonical 840194ba. Standing: B4 DELIVERED · first real projection recorded · ⛔ STOP.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "1 · What landed",
+        "2 · Matrix (this container)",
+        "3 · The first real projection (observed against this checkout)",
+        "4 · Not done"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 · B5R1",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B5R1_KELLY_LANGUAGE_AND_ATTENTION_HIERARCHY_2026-09-24.md",
+      "excerpt": "Date: 2026-09-24 Predecessor: installed B5 acceptance build 32187dd95deab2b2e9439347e78ed0f4d7d86209 Act: B5R1 — KELLY-LANGUAGE + ATTENTION HIERARCHY REPAIR Boundary: presentation/translation only · no B6 conversation · no B7 graph join",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Kelly-language + attention hierarchy repair",
+        "Founder walk finding",
+        "Product law",
+        "Today hierarchy",
+        "Human translation rules",
+        "Monitor hierarchy"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 · B5",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B5_DESKTOP_INTEGRATION_CANDIDATE_EVIDENCE_2026-09-23.md",
+      "excerpt": "Date: 2026-09-23 Disposition: CANDIDATE BUILT · B5-SPECIFIC EVIDENCE GREEN · INSTALLED ACCEPTANCE BLOCKED BY INHERITED C0 PROOF RED",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Real JARVIS Desktop Founder Workspace — candidate evidence",
+        "1 · Exact candidate",
+        "2 · Kelly-world experience now present",
+        "3 · B5-specific witness",
+        "4 · One blocking inherited proof",
+        "5 · Classification of the blocker"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 · B5",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B5_KELLY_WORLD_EXPERIENCE_AMENDMENT_2026-09-23.md",
+      "excerpt": "Date: 2026-09-23 Standing: BINDING B5 EXPERIENCE REQUIREMENT · DOES NOT EXPAND EXECUTION AUTHORITY",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Kelly's World — Founder experience amendment",
+        "1 · Today means active fields",
+        "2 · Work is where Kelly and her AI partners work",
+        "3 · Graph means “how my world connects”",
+        "4 · Monitor means “what needs watching”",
+        "5 · System means “show me the machinery underneath”"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 · B6R1R1",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B6R1R1_GROUNDED_RESPONSE_2026-09-24.md",
+      "excerpt": "Date: 2026-09-24 Predecessor: B6R1 6a77f05fca51a51c28b97b36a4727399cbd255e6 Act: B6R1R1 — CITATION-CONFORMANT EVIDENCE RESPONSE + RESOLVED TURN CONTEXT Standing: BOUNDED IMPLEMENTATION CANDIDATE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Citation-conformant evidence response + resolved turn context",
+        "1 · Response contract",
+        "2 · Fail-closed claim handling",
+        "3 · Resolved turn context",
+        "4 · Epistemic lanes remain separate",
+        "5 · Exact non-authorizations"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 · B6R1",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B6R1_PRECISION_CONTEXT_AND_AI_PARTNER_HANDOFF_2026-09-24.md",
+      "excerpt": "Date: 2026-09-24 Predecessor: installed B6 acceptance build ce83e28058341af15442252804d711cd84be0e0f Act: B6R1 — PRECISION CONTEXT + AI PARTNER HANDOFF Standing: BOUNDED IMPLEMENTATION CANDIDATE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Precision context + AI partner handoff",
+        "1 · Precision context law",
+        "2 · Partner handoff law",
+        "3 · B6R1 V1 boundary",
+        "4 · Founder experience target",
+        "5 · Local B6R1 smoke witness"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 · B6",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B6_WORKING_ROOM_2026-09-24.md",
+      "excerpt": "Date: 2026-09-24 Predecessor: B5R1 401660160ee18d213ede1d3fd8f03e510706c9f9 Act: B6 — WORK BECOMES THE ACTUAL WORKING ROOM Standing: BOUNDED IMPLEMENTATION CANDIDATE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Work becomes the actual working room",
+        "1 · What is already canonical",
+        "2 · Intent is not authority",
+        "3 · Current-field context",
+        "4 · MAIA, ChatGPT and Claude Code partnership",
+        "5 · V1 working-room behavior"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 · B7R1",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B7R1_PURE_EVIDENCED_GRAPH_JOIN_2026-09-24.md",
+      "excerpt": "Date: 2026-09-24 Predecessor: B7 census/design 7ff47ebe4abe28a8c103eb09b441ff91468b4954 Act: B7R1 — PURE EVIDENCED GRAPH JOIN + TRAVERSABLE PARTNER-HANDOFF READ ORGAN ONLY Standing: BOUNDED IMPLEMENTATION CANDIDATE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 7,
+      "headings": [
+        "Pure evidenced graph join + traversable partner-handoff read organ",
+        "1 · Pure graph join",
+        "2 · Live relation families",
+        "3 · Explicit programme relation parser",
+        "4 · Partner-handoff read organ",
+        "5 · Founder experience"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 · B7",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B7_REAL_GRAPH_DESIGN_AND_SUBSTRATE_CENSUS_2026-09-24.md",
+      "excerpt": "Date: 2026-09-24 Predecessor: installed B6R1R1 candidate 6528475966e5588a795ec44adc61f896eedbf90a Canonical observed: e886888416062c7fcbcf899040e3827bc8013835 Act: B7 — REAL GRAPH EVIDENCE-RELATION DESIGN + SUBSTRATE CENSUS ONLY Standing: DOCUMENTARY DESIGN + CENSUS · NO GRAPH JOIN IMPLEMENTED · NO RENDERER CHANGE",
+      "excerpt_start_line": 4,
+      "excerpt_end_line": 8,
+      "headings": [
+        "Real Graph — evidence-relation design + substrate census only",
+        "1 · Inherited law",
+        "2 · Current live census",
+        "3 · A field is a focus, not a second ontology",
+        "4 · Node kinds — admitted, conditional, or held",
+        "5 · Edge admission contract"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 — Programme Charter",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_CHARTER_2026-09-23.md",
+      "excerpt": "Opened: 2026-09-23 — founder direction, same day, explicitly as a new JARVIS lane (⛔ not folded into JARVIS-MERGE-AUTHORITY-01 / M1R1R1, ⛔ not folded into any governance-infrastructure programme). Governing question: How does the existing JARVIS machinery become the one coherent, humane, founder-facing workspace in which the founder does, sees, monitors and understands all work — by composition of organs that already",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Mandatory lane preamble",
+        "Authority",
+        "Existing law",
+        "Explicit non-authorizations",
+        "Freshness discipline (founder direction, binding)",
+        "Flow"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / F0 — Founder Adjudication (2026-09-23)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_FOUNDER_ADJUDICATION_2026-09-23.md",
+      "excerpt": "Disposition: exact F0 candidate 8b8592d9d69e9181484cb6ac9771a1be0c3b1e84 on claude/sharp-cannon-cyrdeb, against exact census canonical b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f → F0 PASS · PRODUCT CENSUS ACCEPTED · FOUNDER EXPERIENCE CONSTITUTION ACCEPTED FOR F1 · NO RUNTIME CAPABILITY RATIFIED · F1 AUTHORIZED. Independent custody: b4f73ac4… → d4efcbfb… → 8b8592d9…, exactly CLAUDE.md (one documentary bullet), the char",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Findings accepted",
+        "Law ratified for F1",
+        "Docket rulings",
+        "F1 — INFORMATION ARCHITECTURE + LIVING PROTOTYPE OVER RECORDED EVIDENCE ONLY"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / F0 — Current-State Product Census + Founder Experience Constitution",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_PRODUCT_CENSUS_AND_FOUNDER_EXPERIENCE_CONSTITUTION_2026-09-23.md",
+      "excerpt": "Lane: JARVIS-FOUNDER-WORKSPACE-01 (charter: JARVIS-FOUNDER-WORKSPACE-01CHARTER2026-09-23.md) Act: F0 · DISCOVER / CENSUS · READ-ONLY · DOCUMENTARY · OBSERVATIONAL Standing: F0 RECORD DELIVERED · ⛔ NOTHING RATIFIED · ⛔ NO CODE CHANGED · STOP FOR FOUNDER ADJUDICATION (docket §11) Date: 2026-09-23",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "0 · Freshness block (binding, per charter)",
+        "1 · Method, population, denominator",
+        "2 · Exact observed substrate (freeze item 1)",
+        "2.1 Founder-facing surfaces — the JARVIS operational console (`jarvis-desktop/`, Electron, `life.soullab.jarvis`)",
+        "2.2 Work graph",
+        "2.3 Continuity path"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1R1 — Founder Adjudication (2026-09-23)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1R1_FOUNDER_ADJUDICATION_2026-09-23.md",
+      "excerpt": "Disposition: exact repaired lineage 8349aa5d8c29b5862dd0861cfc7cb9c51cb9bd2d → 0858331d63cfb85146e7e72dcd5a6b4a25d75b12 → 7a730f16cb85d98a7b6c042b232b499606e8b03d accepted as F1R1 MECHANICAL PASS · ALL AUTHORIZED TRUTHFULNESS REPAIRS PRESENT · CONTAINMENT PRESERVED · EXPERIENTIAL FOUNDER WALK NOT YET SPENT · F1 NOT CLOSED · F2 NOT OPEN.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "Repair findings",
+        "Canonical drift",
+        "Experiential walk standing",
+        "Already accepted (no further conceptual design act)",
+        "Exact remaining F1 gate",
+        "Stop condition"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1R1 — Prototype Truthfulness + Freshness + Human-Label Repair",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1R1_TRUTHFULNESS_REPAIR_2026-09-23.md",
+      "excerpt": "Authorized by: F1 founder adjudication §VII (…F1FOUNDERADJUDICATION2026-09-23.md) against exact candidate 8349aa5d8c29b5862dd0861cfc7cb9c51cb9bd2d. Scope discharged: exactly the seven items. ⛔ No runtime code · no Desktop mutation · no IPC · no projector · no Graph/Monitor implementation · no O7 · no O10 · no F2. Canonical: ⚠️ ADVANCED DURING F1R1. (Superseded text, preserved: \"still b4f73ac4… (re-checked at F1R1 aut",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Repairs, one by one",
+        "Validation rerun",
+        "What this act did not do",
+        "Exit",
+        "Freshness (dated 2026-09-23, after commit `0858331d`)"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1 — Founder Adjudication (2026-09-23)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_FOUNDER_ADJUDICATION_2026-09-23.md",
+      "excerpt": "Disposition: exact F1 candidate 8349aa5d8c29b5862dd0861cfc7cb9c51cb9bd2d on claude/sharp-cannon-cyrdeb, against unchanged canonical b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f → SUBSTANTIVELY PASS · HUMANE PRODUCT ARCHITECTURE ACCEPTED · NARROW TRUTHFULNESS / FRESHNESS / LABEL REPAIR REQUIRED · F1 NOT YET CLOSED · F2 NOT OPEN. No freshness reconciliation owed before the bounded repair. The five-surface architecture Toda",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "Seven exit questions",
+        "Surface rulings",
+        "Five repairs (F1-R1…R5)",
+        "Product finding (founder)",
+        "Next boundary"
+      ]
+    },
+    {
+      "title": "FOUNDER ADJUDICATION — `JARVIS-FOUNDER-WORKSPACE-01 / F1`",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_FOUNDER_EXPERIENTIAL_WALK_ADJUDICATION_2026-09-23.md",
+      "excerpt": "Programme: JARVIS-FOUNDER-WORKSPACE-01 Act: F1 — FOUNDER EXPERIENTIAL WALK Standing: PASS WITH BINDING B5 EXPERIENCE REVISIONS · F1 CLOSED · B5 NEXT BOUNDARY · B5 NOT YET SPENT Date: 2026-09-23 Founder surface: Mac Studio · Safari · exact F1 living prototype from the Founder Workspace lineage",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 7,
+      "headings": [
+        "I. Founder disposition",
+        "II. Human-walk evidence",
+        "III. Case-study battery",
+        "IV. Surface rulings",
+        "Today — KEEP · NEW CAPABILITY REQUIRED",
+        "Work — REVISE · NEW CAPABILITY REQUIRED"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1 — Information Architecture + Living Prototype over Recorded Evidence",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_INFORMATION_ARCHITECTURE_AND_LIVING_PROTOTYPE_2026-09-23.md",
+      "excerpt": "Lane: JARVIS-FOUNDER-WORKSPACE-01 · Act: F1 (opened by F0 founder adjudication §XII, against exact F0 candidate 8b8592d9d69e9181484cb6ac9771a1be0c3b1e84) Standing (amended at F1R1): F1 adjudicated 2026-09-23 as SUBSTANTIVELY PASS with five bounded repairs (…F1FOUNDERADJUDICATION2026-09-23.md); repairs applied in F1R1 (…F1R1TRUTHFULNESSREPAIR2026-09-23.md). ⚠️ The original text below claimed no network; at 8349aa5d th",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "1 · Deliverables",
+        "2 · Information architecture (as built)",
+        "3 · Where unopened acts would appear (D-02, prototyped as places, not capabilities)",
+        "4 · How each binding law is honoured (self-check, design-level — ⛔ not the walk)",
+        "5 · Defeat conditions — how the prototype can still fail, honestly",
+        "6 · Founder walk (the F1 exit — ⛔ not performed by JARVIS)"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1 — `programme-state.v1` Projection Contract (CANDIDATE)",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_PROGRAMME_STATE_V1_CONTRACT_2026-09-23.md",
+      "excerpt": "Authorized by: F0 founder adjudication §VII (D-03): \"F1 is authorized to define programme-state.v1 — projection contract + recorded fixture only.\" Standing: CANDIDATE CONTRACT · recorded fixture delivered · amended at F1R1 (population block + PS-9, founder ruling F1-R1) · ⛔ no projector implemented · ⛔ not ratified. Fixture: prototypes/jarvis-founder-workspace-f1/programme-state.v1.fixture.json (generated from fixtur",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "1 · What it is, and is not",
+        "2 · Shape",
+        "3 · Rules (each is a falsifier for the future projector)",
+        "4 · What the fixture demonstrates",
+        "5 · Owed later (not F1)"
+      ]
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1 — Founder Vocabulary Map v1",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_VOCABULARY_MAP_V1_2026-09-23.md",
+      "excerpt": "Generated from prototypes/jarvis-founder-workspace-f1/vocabulary.js (single source; do not edit this file by hand). Rule: internal term → what it means for the founder in ordinary language → the technical source that grounds the sentence. confidence: candidate = a reasonable gloss not yet checked line-by-line; the prototype renders these with a visible marker, never silently.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": []
+    },
+    {
+      "title": "JARVIS-FOUNDER-WORKSPACE-01 / F2 — Surface Composition Contract + Implementation Sequence",
+      "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F2_SURFACE_COMPOSITION_CONTRACT_AND_IMPLEMENTATION_SEQUENCE_2026-09-23.md",
+      "excerpt": "Opened: 2026-09-23 by founder direction (\"what do we need to do to get it fully functional? lets start a next level Jarvis flow for this and continue\"). ⚠️ Standing at opening, stated plainly: the F1R1 adjudication set STOP AT HUMAN WALK · DO NOT OPEN F2. This record is opened on the founder's later direction, which outranks that stop. The F1 experiential walk remains OWED — it is neither waived nor claimed performed",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "1 · What \"fully functional\" means (the definition of done, testable)",
+        "2 · Composition contract — organ of authority per surface",
+        "3 · Architecture decision (CANDIDATE — founder rules, FD-1)",
+        "4 · `founder-workspace-viewmodel.v1` (contract, from the F1 fixture shape)",
+        "5 · Implementation sequence",
+        "6 · Founder decisions required (docket)"
+      ]
+    },
+    {
+      "title": "JARVIS-VOICE-DOORWAY-01 — Programme Charter",
+      "path": "docs/programme/JARVIS-VOICE-DOORWAY-01_CHARTER_2026-09-23.md",
+      "excerpt": "Opened: 2026-09-23 by founder ruling OE-1 (JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01P0FOUNDERADJUDICATION2026-09-23.md §IV). Parent (flow): JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 (readiness authority). Surface parent: JARVIS-FOUNDER-WORKSPACE-01 (the doorway lands on its Work surface, after B6). Current act: V1 DELIVERED (…V1OPERATORVOICECONTRACTANDFALSIFIERSUITE2026-09-23.md) — contract ratified as test contract, mat",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Mandatory lane preamble",
+        "Purpose (founder, verbatim)",
+        "Law (ratified by OE-1, binding on every act)",
+        "Relationship to MAIA voice",
+        "V0 — the ten questions (founder §VIII)",
+        "Flow"
+      ]
+    },
+    {
+      "title": "JARVIS-VOICE-DOORWAY-01 — V0 · Sovereign Voice Substrate Census + JARVIS Operator Voice Contract",
+      "path": "docs/programme/JARVIS-VOICE-DOORWAY-01_V0_SUBSTRATE_CENSUS_AND_OPERATOR_VOICE_CONTRACT_2026-09-23.md",
+      "excerpt": "Act: V0 (documentary, read-only) · Authorized by: P0 founder adjudication §IV OE-1 / §VIII · Observed against: working tree at eb77216b (= canonical 840194ba + docs-only lineage) · Method: one read-only census sweep (81 tool uses) as input; every claim this record relies on was re-verified in source by the authoring session and is marked (V); claims carried from the sweep without re-verification are marked (S); UNVER",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "0 · Headline",
+        "1 · The ten questions",
+        "2 · JARVIS Operator Voice Contract — `jarvis-operator-voice.v1` (CANDIDATE, for V1 ratification)",
+        "3 · Founder decisions V0 raises (docket)",
+        "4 · Standing"
+      ]
+    },
+    {
+      "title": "JARVIS-VOICE-DOORWAY-01 — V1 · Operator Voice Contract Ratification + Falsifier Suite",
+      "path": "docs/programme/JARVIS-VOICE-DOORWAY-01_V1_OPERATOR_VOICE_CONTRACT_AND_FALSIFIER_SUITE_2026-09-23.md",
+      "excerpt": "Authorized by: founder continuation act 2026-09-23 (\"V1 remains documentary/test-contract work only\"). Direction ratified by the founder in that act: push-to-talk first · local Whisper only at 127.0.0.1:8080 · local Kokoro only at localhost:8880 · speech off by default · no cloud fallback · wake phrase \"Jarvis\" deferred until a genuine local keyword-spotting system is evidenced · the real voice implementation waits f",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 3,
+      "headings": [
+        "1 · What landed",
+        "2 · Laws and results",
+        "3 · What V1 fixes for V2 (binding), and what it does not",
+        "4 · Not done"
+      ]
+    },
+    {
+      "title": "Provider Governance — V1 Constitutional Defeat-Fixture Compatibility",
+      "path": "docs/programme/PROVIDER_GOVERNANCE_V1_CONSTITUTIONAL_DEFEAT_FIXTURE_COMPATIBILITY_2026-09-23.md",
+      "excerpt": "Programme: PROVIDER-GOVERNANCE Act: V1-CONSTITUTIONAL-DEFEAT-FIXTURE-COMPATIBILITY Standing: CANDIDATE COMPLETE · EXACT RULE-SCOPED COMPATIBILITY REPAIR · STOP AFTER ADMISSION Date: 2026-09-23",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Problem",
+        "Repair",
+        "Defeat evidence on Kelly's Mac Studio",
+        "Boundary"
+      ]
+    },
+    {
+      "title": "SOULLAB-DESKTOP-RECOVERY-01 — Kelly's World forward port",
+      "path": "docs/programme/SOULLAB-DESKTOP-RECOVERY-01_KELLYS_WORLD_FORWARD_PORT_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Class: B — Desktop host composition / governed operator surface Canonical base: a6464dcd1bc6c267c7550a2c2c3fb747dcff8e7b Recovery branch: fix/kellys-world-founder-workspace-recovery-20261001 Preserved B7R1 source: c9081e7fe4fbe9eea77ac4a7e42339ae5c0a2ea9 Preserved Soullab Desktop F10–F12 source: b975472baa4cf08ae8068465ca6877eaa8c32a39",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 8,
+      "headings": [
+        "1. Why this recovery exists",
+        "2. Preservation before reconciliation",
+        "3. Blind restoration refused",
+        "4. Forward-port composition",
+        "5. Recovered experiential laws",
+        "6. Current-canonical compatibility repairs"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 J3 — Temporal, Personhood, and Relational Fidelity",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_J3_TEMPORAL_PERSONHOOD_RELATIONAL_FIDELITY_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Canonical base: \\298414555bbe7eccdf453b09e026737d4f7f4e29\\ Programme: AIN-MASTER-FIELD-01",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Purpose",
+        "Fidelity matrix",
+        "Temporal laws",
+        "Personhood laws",
+        "Relational permission vector",
+        "Third-party boundary"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 J4 — Attention and Master-Field Orientation",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_J4_ATTENTION_MASTER_FIELD_ORIENTATION_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Programme: AIN-MASTER-FIELD-01",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Purpose",
+        "Foundational distinction",
+        "Salience classes",
+        "Attention laws",
+        "Salience provenance",
+        "Elemental orientation"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 — Full JARVIS Flow",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_FULL_JARVIS_FLOW_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Branch: \\chore/ain-master-field-full-flow-20261001\\ Canonical base: \\a8020fa3e0c3c568c634d5165710cdccb09b4f82\\ Class: constitutional / governance / projection design Runtime mutation: none Merge authority: not assumed Deploy authority: none",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 9,
+      "headings": [
+        "Purpose",
+        "Master invariant",
+        "Programme sequence",
+        "M0 — Consequence truth",
+        "M1 — Standing conservation",
+        "M2 — Lawful transformation fabric"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 J0 — Canonical Mechanism Census",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_J0_CANONICAL_MECHANISM_CENSUS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Canonical base: \\a8020fa3e0c3c568c634d5165710cdccb09b4f82\\ Method: read-only census of current canonical repository plus the two new programme records on this branch.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Census rule",
+        "1. Memory / consent / standing",
+        "2. Personhood / identity",
+        "3. Relational ethics / trust",
+        "4. Rupture / correction / lineage",
+        "5. Consequence truth / delivery"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 J1 — Standing Seam Matrix",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_J1_STANDING_SEAM_MATRIX_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Canonical base: \\a8020fa3e0c3c568c634d5165710cdccb09b4f82\\",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Matrix",
+        "Detailed rulings",
+        "S1 — conversation -> memory",
+        "S2 — research -> finding",
+        "S3 — finding -> proposal",
+        "S4 — proposal -> ruling"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 J2 — Transformation Adjudication",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_J2_TRANSFORMATION_ADJUDICATION_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: candidate constitutional adjudication record",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 4,
+      "headings": [
+        "Adjudication protocol",
+        "Lawful basis families",
+        "Identity / Personhood adjudication",
+        "Rupture / Trust adjudication",
+        "Temporal / possibility adjudication",
+        "Attention adjudication"
+      ]
+    },
+    {
+      "title": "AIN-MASTER-FIELD-01 — Kelly's World Projection Contract",
+      "path": "docs/programme/AIN-MASTER-FIELD-01_KELLYS_WORLD_PROJECTION_CONTRACT_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: design contract Source programme: AIN-MASTER-FIELD-01 Full JARVIS Flow",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "Core law",
+        "Projection invariants",
+        "Today",
+        "Work",
+        "Monitor",
+        "System"
+      ]
+    },
+    {
+      "title": "Living Field — First-Entry Human Production Witness Protocol",
+      "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Production condition: admitted cohort member with genuinely empty member-owned Living Field substrate Standing: first-entry evidence only · does not substitute for populated-field ownership/continuity evidence",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "1 · Human-only question",
+        "2 · Preconditions",
+        "3 · What to tell the member",
+        "4 · Observe",
+        "5 · Content-creation law",
+        "6 · Stop conditions"
+      ]
+    },
+    {
+      "title": "Living Field — First-Entry Human Witness Record",
+      "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
+      "excerpt": "Participant label: FIRST-ENTRY- Date/time: Scheduled-against SHA: Production SHA at start of walk: (docker exec maia-sovereign printenv GITCOMMIT) Production SHA at end of walk: (same command, after the walk) Deploy freeze held for the window: yes / no Public health (start / end): Device/browser: (member's own device: yes / no; if no, why and what the member was told)",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 10,
+      "headings": [
+        "Observation disclosure — before the first-entry script",
+        "Script — read these words, and only these",
+        "Uncoached path",
+        "First-entry observations",
+        "Post-walk responses",
+        "Findings"
+      ]
+    },
+    {
+      "title": "MAIA-DEVELOPMENTAL-ANCESTRY-01 — I0 SCHEMA ACT",
+      "path": "docs/programme/MAIA-DEVELOPMENTAL-ANCESTRY-01_I0_SCHEMA_ACT_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Status: I0 OPENED · schema/migration candidate only · runtime untouched Authority: founder continuation authorizing the bounded schema act after R0–R2 adjudication.",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 5,
+      "headings": [
+        "1. Sole job",
+        "2. Binding identity ruling",
+        "3. Historical ceiling",
+        "4. Inspection gates",
+        "5. Stop rule"
+      ]
+    },
+    {
+      "title": "SAFETY-DELIVERY-01 — Canonical Live Crisis Census",
+      "path": "docs/programme/SAFETY-DELIVERY-01_CANONICAL_LIVE_CRISIS_CENSUS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Evidence base: commit:a999932df7aa3d4052ee78f044878026aa4f680b Ingress: /api/sovereign/app/maia/list Posture: census only — no notification authority added",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Question",
+        "Finding",
+        "What the live route does have",
+        "Field-safety gate",
+        "Crisis mechanisms found elsewhere",
+        "Reachability adjudication"
+      ]
+    },
+    {
       "title": "KELLY'S WORLD — ACCESS AUTHORITY 01 · 2026-10-01",
       "path": "docs/programme/KELLYS-WORLD-ACCESS-AUTHORITY-01_2026-10-01.md",
       "excerpt": "Carry the production beta-access authority into Kelly's World as a human-readable projection without creating a second roster, changing access, or granting authority.",
@@ -43,6 +937,21 @@ window.KELLY_FIELD_LIBRARY = {
         "Governing distinction",
         "Production witness",
         "Kelly's World standing"
+      ]
+    },
+    {
+      "title": "SAFETY-DELIVERY-01 — S1 Reachability Census",
+      "path": "docs/programme/SAFETY-DELIVERY-01_S1_REACHABILITY_CENSUS_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Evidence base: commit:a999932df7aa3d4052ee78f044878026aa4f680b Scope: S1 only — MAIASafetyPipeline as constructed by lib/agents/PersonalOracleAgent.ts Posture: evidence correction before implementation",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Question",
+        "Finding",
+        "Evidence",
+        "E1 — The defect exists in the prototype",
+        "E2 — The source declares itself outside the ship path",
+        "E3 — Canonical live ingress is a different path"
       ]
     },
     {
@@ -70,6 +979,66 @@ window.KELLY_FIELD_LIBRARY = {
         "Run 2 (~14:48Z, same SHA)",
         "Observations (⛔ not repaired here)",
         "Owed"
+      ]
+    },
+    {
+      "title": "Living Field — First Human Witness Packet",
+      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PACKET_2026-10-01.md",
+      "excerpt": "Use with: LIVING-FIELD-FIRST-HUMAN-WITNESSPROTOCOL2026-09-30.md Standing: facilitator packet · no participant selected · no widening authority",
+      "excerpt_start_line": 10,
+      "excerpt_end_line": 11,
+      "headings": [
+        "Before the member arrives",
+        "What to say",
+        "During the uncoached pass",
+        "Stop immediately if",
+        "After the uncoached pass",
+        "Adjudication reminder"
+      ]
+    },
+    {
+      "title": "Living Field — First Human Production Witness Protocol",
+      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
+      "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline at protocol drafting: 68af62fda Early Field authority: EARLY-FIELD-01COHORTADMISSION2026-09-30.md Layered Admission candidate: docs/canon/LAYEREDADMISSION.md (if admitted) Standing: protocol only · no member added · no environment change · no deployment",
+      "excerpt_start_line": 10,
+      "excerpt_end_line": 15,
+      "headings": [
+        "1 · Human-only question",
+        "2 · What machines establish before a human enters",
+        "3 · Participant and environment preconditions",
+        "4 · Consent and evidence posture",
+        "5 · Participant-facing task",
+        "6 · Observe without interpreting for the member"
+      ]
+    },
+    {
+      "title": "Living Field — First Human Witness Record",
+      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
+      "excerpt": "Participant label: WITNESS- Date/time: Production SHA: Public health: Device/browser: Early Field admitted: yes / no Authentic member-owned substrate present before witness: yes / no Facilitator intervention: none / describe MAIA entered: yes / no MAIA request before explicit entry: yes / no / not observed",
+      "excerpt_start_line": 10,
+      "excerpt_end_line": 19,
+      "headings": [
+        "Uncoached path",
+        "Observed orientation",
+        "MAIA boundary",
+        "Return",
+        "Trust and privacy",
+        "Post-walk responses"
+      ]
+    },
+    {
+      "title": "Living Field — Witness Re-baseline at production `56d0cd679`",
+      "path": "docs/programme/LIVING-FIELD_WITNESS_REBASELINE_56D0CD679_2026-10-01.md",
+      "excerpt": "Date: 2026-10-01 Observed production runtime: 56d0cd679c247a91dfe5a3592ce59e5a488c1fba Prior readiness runtime: 975a208b8 Standing: MACHINE RE-BASELINE PASS · FIRST-ENTRY WITNESS ELIGIBLE SUBJECT TO PARTICIPANT-SESSION ADMISSION CHECK",
+      "excerpt_start_line": 3,
+      "excerpt_end_line": 6,
+      "headings": [
+        "Trigger",
+        "Live facts established",
+        "Source re-baseline",
+        "Fresh aggregate readiness census",
+        "Consequence",
+        "What this record does not claim"
       ]
     },
     {
@@ -410,35 +1379,6 @@ window.KELLY_FIELD_LIBRARY = {
       ]
     },
     {
-      "title": "Living Field — First-Entry Human Production Witness Protocol",
-      "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_PROTOCOL_2026-10-01.md",
-      "excerpt": "Date: 2026-10-01 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Production condition: admitted cohort member with genuinely empty member-owned Living Field substrate Standing: first-entry evidence only · does not substitute for populated-field ownership/continuity evidence",
-      "excerpt_start_line": 3,
-      "excerpt_end_line": 6,
-      "headings": [
-        "1 · Human-only question",
-        "2 · Preconditions",
-        "3 · What to tell the member",
-        "4 · Observe",
-        "5 · Content-creation law",
-        "6 · Stop conditions"
-      ]
-    },
-    {
-      "title": "Living Field — First-Entry Human Witness Record",
-      "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
-      "excerpt": "Participant label: FIRST-ENTRY- Date/time: Production SHA at start: (docker exec maia-sovereign printenv GITCOMMIT) Production SHA at end: (same command, after the walk; if it differs from start → the walk is NO EVIDENCE) Public health: Device/browser: Early Field admitted: yes / no Pre-existing member-owned substrate: no",
-      "excerpt_start_line": 3,
-      "excerpt_end_line": 10,
-      "headings": [
-        "Uncoached path",
-        "First-entry observations",
-        "Post-walk responses",
-        "Findings",
-        "Adjudication"
-      ]
-    },
-    {
       "title": "Living Field + Writer's Studio Witnesses — Re-baseline after RC1",
       "path": "docs/programme/LIVING-FIELD_WITNESS_REBASELINE_RC1_2026-10-01.md",
       "excerpt": "Date: 2026-10-01 Status: SOURCE RE-BASELINE COMPLETE · ⛔ two live confirmations owed at walk time Previous readiness runtime: 975a208b8c39f99e9b47208ce5139bbec94bd8ac Current production runtime: 03f0fd3abce16fcc1132481836b2e6ff8d364cd7 (founder deploy, ~14:35Z)",
@@ -596,36 +1536,6 @@ window.KELLY_FIELD_LIBRARY = {
       ]
     },
     {
-      "title": "Living Field — First Human Witness Packet",
-      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PACKET_2026-10-01.md",
-      "excerpt": "Use with: LIVING-FIELD-FIRST-HUMAN-WITNESSPROTOCOL2026-09-30.md Standing: facilitator packet · no participant selected · no widening authority",
-      "excerpt_start_line": 3,
-      "excerpt_end_line": 4,
-      "headings": [
-        "Before the member arrives",
-        "What to say",
-        "During the uncoached pass",
-        "Stop immediately if",
-        "After the uncoached pass",
-        "Adjudication reminder"
-      ]
-    },
-    {
-      "title": "Living Field — First Human Production Witness Protocol",
-      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
-      "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline at protocol drafting: 68af62fda Early Field authority: EARLY-FIELD-01COHORTADMISSION2026-09-30.md Layered Admission candidate: docs/canon/LAYEREDADMISSION.md (if admitted) Standing: protocol only · no member added · no environment change · no deployment",
-      "excerpt_start_line": 3,
-      "excerpt_end_line": 8,
-      "headings": [
-        "1 · Human-only question",
-        "2 · What machines establish before a human enters",
-        "3 · Participant and environment preconditions",
-        "4 · Consent and evidence posture",
-        "5 · Participant-facing task",
-        "6 · Observe without interpreting for the member"
-      ]
-    },
-    {
       "title": "Living Field — First Human Witness Readiness",
       "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_READINESS_2026-10-01.md",
       "excerpt": "Date: 2026-10-01 Production runtime: 975a208b8 Canonical base at census: dbcdcf786 Standing: POPULATED-FIELD WITNESS BLOCKED BY EVIDENCE · FIRST-ENTRY WITNESS ELIGIBLE · cohort remains open · no rollback condition observed",
@@ -638,21 +1548,6 @@ window.KELLY_FIELD_LIBRARY = {
         "Ruling",
         "Eligibility condition for the first populated-field human witness",
         "Current state"
-      ]
-    },
-    {
-      "title": "Living Field — First Human Witness Record",
-      "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
-      "excerpt": "Participant label: WITNESS- Date/time: Production SHA: Public health: Device/browser: Early Field admitted: yes / no Authentic member-owned substrate present before witness: yes / no Facilitator intervention: none / describe MAIA entered: yes / no MAIA request before explicit entry: yes / no / not observed",
-      "excerpt_start_line": 3,
-      "excerpt_end_line": 12,
-      "headings": [
-        "Uncoached path",
-        "Observed orientation",
-        "MAIA boundary",
-        "Return",
-        "Trust and privacy",
-        "Post-walk responses"
       ]
     },
     {
@@ -1176,21 +2071,6 @@ window.KELLY_FIELD_LIBRARY = {
         "3. Explicit substrate binding",
         "4. Live installed witness",
         "5. Scope discipline"
-      ]
-    },
-    {
-      "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3 — Runtime Binding Witness (R3-R11)",
-      "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_RUNTIME_BINDING_WITNESS_2026-10-01.md",
-      "excerpt": "Date: 2026-10-01 Base: ce061073 (O5-R3 implementation + freeze amendment 1). ⛔ Kept frozen. No lease or ledger change. Standing: implementation complete · constitutional suite complete · ⭐ Mac Studio integration witness complete · ⭐ R3-R11 runtime-binding witness complete · O5-R3 admission evidence complete · ⛔ merge still pending",
-      "excerpt_start_line": 3,
-      "excerpt_end_line": 6,
-      "headings": [
-        "1. Mac Studio integration witness: COMPLETE (founder-run)",
-        "2. Runtime situation observed (founder-run census, 2026-10-01)",
-        "3. Step 3: how Desktop selects its runtime code (from source at `ce061073`)",
-        "3.1 Desktop's runtime identity is two things, and only one is a SHA",
-        "3.2 Packaged-mode resolution order (`findRepoRootPackagedMode`)",
-        "3.3 ⭐ The finding: the default path lands on the legacy combination"
       ]
     },
     {
@@ -2173,7 +3053,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 412,
       "evidence": "## 10 · Next act",
       "last_touched_epoch": 1788716166,
-      "hours_dormant": 608,
+      "hours_dormant": 617,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2185,7 +3065,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 12,
       "evidence": "STATE             OPEN · DIAGNOSIS ONLY · no determination made",
       "last_touched_epoch": 1788546913,
-      "hours_dormant": 655,
+      "hours_dormant": 664,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2197,7 +3077,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 132,
       "evidence": "STATE        BUILT · local gates PASS · PRODUCTION WITNESS PENDING",
       "last_touched_epoch": 1788567104,
-      "hours_dormant": 649,
+      "hours_dormant": 659,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2209,7 +3089,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 22,
       "evidence": "STATE            SOURCE MERGED · NOT CLOSED · NOT DEPLOYED",
       "last_touched_epoch": 1788697516,
-      "hours_dormant": 613,
+      "hours_dormant": 622,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2221,19 +3101,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Standing:** REPAIR closed · VERIFY full candidate pass (54/54) · INVOKE open, I0 only.",
       "last_touched_epoch": 1788745887,
-      "hours_dormant": 599,
-      "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
-      "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
-    },
-    {
-      "programme_key": "S3-B-IV_DURABLE_TRANSITION_SUBSTRATE_CENSUS_2026-09",
-      "title": "S3 B-IV · DURABLE TRANSITION SUBSTRATE CENSUS — READ-ONLY",
-      "path": "docs/programme/S3-B-IV_DURABLE_TRANSITION_SUBSTRATE_CENSUS_2026-09-13.md",
-      "signal": "OPEN_HEADING",
-      "evidence_line": 219,
-      "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
-      "last_touched_epoch": 1789317901,
-      "hours_dormant": 441,
+      "hours_dormant": 609,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2245,7 +3113,19 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 222,
       "evidence": "## 9 · OWED BEFORE MIGRATION — two physical witnesses",
       "last_touched_epoch": 1789318246,
-      "hours_dormant": 440,
+      "hours_dormant": 450,
+      "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
+      "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
+    },
+    {
+      "programme_key": "S3-B-IV_DURABLE_TRANSITION_SUBSTRATE_CENSUS_2026-09",
+      "title": "S3 B-IV · DURABLE TRANSITION SUBSTRATE CENSUS — READ-ONLY",
+      "path": "docs/programme/S3-B-IV_DURABLE_TRANSITION_SUBSTRATE_CENSUS_2026-09-13.md",
+      "signal": "OPEN_HEADING",
+      "evidence_line": 219,
+      "evidence": "## 4 · OWED BY B-iv, NAMED NOW",
+      "last_touched_epoch": 1789317901,
+      "hours_dormant": 450,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2257,7 +3137,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 139,
       "evidence": "## 7. Owed witnesses, re-run on the composition",
       "last_touched_epoch": 1789510856,
-      "hours_dormant": 387,
+      "hours_dormant": 396,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2269,7 +3149,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Status:** **AUTOMATIC HANDWRITING OCR HELD · ORIGINAL + MANUAL TRANSCRIPTION OPEN · BLANK-WORK RELEASE INDEPENDENT · PRODUCTION UNTOUCHED.**",
       "last_touched_epoch": 1789602025,
-      "hours_dormant": 362,
+      "hours_dormant": 371,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2281,7 +3161,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 4,
       "evidence": "**Status:** ⚠️ FOUNDER ADJUDICATION OPEN · documentary only",
       "last_touched_epoch": 1789682893,
-      "hours_dormant": 339,
+      "hours_dormant": 349,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2293,7 +3173,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 182,
       "evidence": "## Owed, if the candidate instrument is ever wired",
       "last_touched_epoch": 1789917878,
-      "hours_dormant": 274,
+      "hours_dormant": 283,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -2305,7 +3185,19 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 360,
       "evidence": "## 8 · Owed before A2 can be written",
       "last_touched_epoch": 1790078900,
-      "hours_dormant": 229,
+      "hours_dormant": 239,
+      "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
+      "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
+    },
+    {
+      "programme_key": "JARVIS-LIVING-FIELD-GROKKER-01",
+      "title": "JARVIS-LIVING-FIELD-GROKKER-01 · R1 custody finding · 2026-09-30",
+      "path": "docs/programme/JARVIS-LIVING-FIELD-GROKKER-01_R1_CUSTODY_FINDING_2026-09-30.md",
+      "signal": "OPEN_HEADING",
+      "evidence_line": 148,
+      "evidence": "## 9 · Owed, replacing §5",
+      "last_touched_epoch": 1790808121,
+      "hours_dormant": 36,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     }
@@ -4117,6 +5009,21 @@ window.KELLY_FIELD_LIBRARY = {
             "Evidence item",
             "Metric snapshot",
             "3. Universal release gates"
+          ]
+        },
+        {
+          "title": "WRITER'S STUDIO — SEMANTIC FIELD 01",
+          "path": "docs/programme/WRITERS-STUDIO-SEMANTIC-FIELD-01_JARVIS_FLOW_2026-10-01.md",
+          "excerpt": "Programme ID: WRITERS-STUDIO-SEMANTIC-FIELD-01 Branch: feature/ws-semantic-field-r1-20261001 Base: f250f2953 / feature/ws-working-style-preferences-20261001 Status: PROGRAMME OPENED / IMPLEMENTATION NOT YET CLAIMED COMPLETE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "JARVIS Full Governed Flow",
+            "Founder intent",
+            "0. Non-collision boundary",
+            "1. Experience law",
+            "2. Writer pacing preference",
+            "Intimate"
           ]
         },
         {
@@ -6205,6 +7112,471 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — Programme Charter",
+          "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_CHARTER_2026-09-23.md",
+          "excerpt": "Opened: 2026-09-23, by founder act (verbatim opening act preserved in §12). Class: coordinating programme · flow parent · readiness authority. Current act: P0 — FULL-FUNCTIONALITY READINESS MAP + DEPENDENCY GRAPH ONLY (read-only, documentary). Standing at authoring: P0 DELIVERED · ⛔ STOPPED FOR FOUNDER ADJUDICATION · ⛔ P1–P8 NOT OPEN.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Mandatory lane preamble",
+            "Purpose (founder, verbatim intent)",
+            "Anchors (observed, not by name)",
+            "Authority",
+            "Explicit non-authorizations (P0)",
+            "Flow"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Blocker Register",
+          "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_BLOCKER_REGISTER_2026-09-23.md",
+          "excerpt": "Classes per the founder's opening act: A human-experience closure · B runtime defects · C missing live state foundation · D missing live Graph · E missing live Monitor · F daily-use reliability · G canonical admission. Plus H (added by founder direction during P0): voice. Every blocker names an owning programme; ⛔ P0 repairs none. Observed against 840194ba / 9b1c1acf.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": []
+        },
+        {
+          "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Daily Work Coverage Matrix",
+          "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_DAILY_WORK_COVERAGE_MATRIX_2026-09-23.md",
+          "excerpt": "Question: for each family of the founder's actual work running Soullab, AIN and MAIA, can JARVIS carry it today? Classes (founder-defined): READY · PARTIAL · MISSING · REQUIRES CONNECTOR · REQUIRES NEW CAPABILITY. \"Elsewhere\" means a MAIA runtime capability that exists in this repo but has no JARVIS path (no import, no IPC). Observed against 840194ba / 9b1c1acf; census by the P0 reliability/work-coverage sweep, load-",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "Reading the matrix"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Dependency Graph",
+          "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_DEPENDENCY_GRAPH_2026-09-23.md",
+          "excerpt": "Law of this graph (DC-3, carried): an edge exists only if a record, ruling or file asserts it; every edge names its source. Nodes are requirements (R-xx, readiness matrix), acts (B1–B8 from the F2 sequence; P1–P8 from this programme), founder decisions (FD-x from F2, OE-x from the P0 docket), blockers (BL-x, blocker register) and child programmes. Observed against canonical 840194ba · workspace tip 9b1c1acf.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "1 · Critical path (what must happen, in order, for Work to be live)",
+            "2 · Edge table (source named per edge)",
+            "3 · What blocks nothing (can start today, read-only or pure)",
+            "4 · What is NOT on this graph, deliberately"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Execution Sequence",
+          "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_EXECUTION_SEQUENCE_2026-09-23.md",
+          "excerpt": "What this is: the order in which the existing designs get integrated and activated so JARVIS becomes the founder's everyday environment — with voice — each step behind its own founder act. What it is not: authorization. P0 opens nothing. Observed against 840194ba / 9b1c1acf.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "0 · Three lanes run in parallel from day one",
+            "1 · Phases (this programme) mapped to acts (F2) and blockers",
+            "2 · Critical path and the shortest honest route to \"I use it every day\"",
+            "3 · Sequencing laws carried into every phase"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Founder Adjudication (verbatim record)",
+          "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_FOUNDER_ADJUDICATION_2026-09-23.md",
+          "excerpt": "Received: 2026-09-23 · Candidate adjudicated: eb77216b4237ad0685208d949507848fc6535c0e on claude/sharp-cannon-cyrdeb · Canonical: 840194ba859bd5a497fc939c94329ee972ca3f80. Disposition: P0 PASS · READINESS MAP ACCEPTED · DEPENDENCY GRAPH ACCEPTED · DAILY-WORK COVERAGE ACCEPTED · SEQUENCE ACCEPTED WITH FOUNDER RULINGS.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "I · Disposition (founder)",
+            "II · Full-functionality definition accepted",
+            "III · F2 carry-forward rulings",
+            "IV · New P0 docket rulings",
+            "V · Blocker model accepted",
+            "VI · Immediate build authorization"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Founder Decision Docket",
+          "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_FOUNDER_DECISION_DOCKET_2026-09-23.md",
+          "excerpt": "Only decisions actually required before implementation. Carried from F2 without re-argument: FD-1 architecture · FD-2 one read channel vs multiplex · FD-3 projector law · FD-4 ops-script JSON/TSV mode · FD-5 may B1–B4 precede the F1 walk (recommended yes) · FD-6 CSP. New in P0:",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": []
+        },
+        {
+          "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 — P0 · Full-Functionality Readiness Matrix",
+          "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_FULL_FUNCTIONALITY_READINESS_MATRIX_2026-09-23.md",
+          "excerpt": "Act: P0 (read-only, documentary) · Authored: 2026-09-23 · Machine-readable source of record: JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01P0READINESSMATRIX2026-09-23.json (this file is rendered from it; the JSON governs on any divergence). Observed against: canonical 840194ba859bd5a497fc939c94329ee972ca3f80 · Workspace reference tip (founder-stated) 5039fc5e3dc4c19775f553f114c505c6dd61d2a8 · Workspace actual tip 9b1c1acf5f",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "0 · The one-screen answer — *What is stopping Kelly from using JARVIS as her normal working environment today?*",
+            "1 · Ladder summary",
+            "2 · Requirement rows (eleven mandatory fields each)",
+            "R-01 · One doorway: an installed JARVIS that opens, binds to the Sovereign checkout, and tells the truth about its own identity",
+            "R-02 · Understand my day: Today shows what matters, what is happening, what needs me — across programmes, not per repo",
+            "R-03 · Say what I want in ordinary language; JARVIS classifies intent without asking me to name lane, provider, class or evidence class"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 · P0 · READINESS · MATRIX · 2026-09-23",
+          "path": "docs/programme/JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01_P0_READINESS_MATRIX_2026-09-23.json",
+          "excerpt": "{ \"schema\": \"founder-operating-environment-readiness.v1\", \"programme\": \"JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01\", \"act\": \"P0\", \"authored\": \"2026-09-23\", \"observedagainst\": { \"canonical\": \"840194ba859bd5a497fc939c94329ee972ca3f80\", \"workspacereferencetipfounderstated\": \"5039fc5e3dc4c19775f553f114c505c6dd61d2a8\", \"workspaceactualtip\": \"9b1c1acf5fa473942edd7795213483a5d4a19f64\",",
+          "excerpt_start_line": 1,
+          "excerpt_end_line": 9,
+          "headings": []
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 — B1 + B2 · View-Model Foundation + Read-Organ Composition (evidence)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B1B2_VIEWMODEL_AND_READ_ORGANS_EVIDENCE_2026-09-23.md",
+          "excerpt": "Authorized by: P0 founder adjudication §VI (JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01P0FOUNDERADJUDICATION2026-09-23.md) · Against: canonical 840194ba859bd5a497fc939c94329ee972ca3f80 · F2 contract: 9b1c1acf · P0 record: eb77216b. Standing at authoring: B1 ✅ · B2 ✅ · ⛔ HARD STOP (§VII) — STOPPED FOR EVIDENCE + NEXT-ACT ADJUDICATION.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "1 · What landed (no Desktop file touched)",
+            "2 · Results (this container)",
+            "3 · Laws made structural (and where a defeat candidate proves each)",
+            "4 · Two things the build found, ⛔ routed out, not repaired",
+            "5 · What B1+B2 do not do (§VII, confirmed)",
+            "6 · Next lawful acts (for adjudication, not opened)"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 — B3 · Monitor Instrument Registry + Machine-Readable Census Outputs (evidence)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B3_MONITOR_INSTRUMENT_REGISTRY_EVIDENCE_2026-09-23.md",
+          "excerpt": "Authorized by: founder continuation act 2026-09-23 (B3 · B4 · V1 in parallel) under the P0 adjudication (FD-4 YES additive · OE-4 read-only · D-04 local-first · D-05 no cost). Against: canonical 840194ba · lane tip after B1+B2 44e1a387. Standing: B3 DELIVERED · ⛔ STOP.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "1 · What landed",
+            "2 · Admission result (registry built against this checkout)",
+            "3 · Matrix (this container)",
+            "4 · What the scanner is and is not",
+            "5 · Routed out, ⛔ not repaired",
+            "6 · Not done (§VII hard stop honoured)"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / B4R1R1R1 — Current-Canonical Reconciliation + Reprojection (evidence)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B4R1R1R1_CURRENT_CANONICAL_RECONCILIATION_AND_REPROJECTION_EVIDENCE_2026-09-23.md",
+          "excerpt": "Programme: JARVIS-FOUNDER-WORKSPACE-01 Act: B4R1R1R1 Standing: DELIVERED · EXACT CURRENT-CANONICAL REPROJECTION COMPLETE · B4R1R1 SEMANTICS PRESERVED · MATRIX LETHAL · TYPECHECK GREEN · complete=false HONESTLY · STOP FOR FOUNDER ADJUDICATION Predecessor semantic candidate: B4R1R1 staged over prior Provider Governance compatibility commit bc59efb3facaac9444dfa3d74c3198b202709c78",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1 · Freshness boundary spent",
+            "2 · Canonical advance census",
+            "3 · Same-rule before / after",
+            "4 · Conflict preservation",
+            "5 · Exact current projection",
+            "6 · Mac Studio gates"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / B4R1R1 — Founder-Rule Application + Current-Canonical Reprojection (evidence)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B4R1R1_FOUNDER_RULE_APPLICATION_AND_CURRENT_CANONICAL_REPROJECTION_EVIDENCE_2026-09-23.md",
+          "excerpt": "Programme: JARVIS-FOUNDER-WORKSPACE-01 Act: B4R1R1 Standing: SEMANTIC CANDIDATE PASS · EXACT 6d745a4d… REPROJECTION VALID · MATRIX LETHAL · complete=false PRESERVED · PROVIDER-GOVERNANCE BLOCKER RESOLVED BY PRIOR COMMIT bc59efb3f… · CURRENT CANONICAL ADVANCED TO bb114286… WITH 35 NEW PROGRAMME RECORDS · FRESHNESS REAUTHORIZATION REQUIRED BEFORE ADMISSION/B5",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "1 · Scope spent — and nothing wider",
+            "2 · Founder-rule implementation",
+            "PD-4 — act-shaped ids are not programmes",
+            "PD-5 — founder-named legacy identities",
+            "PD-6 — forward standing discipline",
+            "PD-7 — S3 identity"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 — B4R1 · Programme Identity + Succession Reconciliation (evidence)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B4R1_PROGRAMME_IDENTITY_AND_SUCCESSION_RECONCILIATION_EVIDENCE_2026-09-23.md",
+          "excerpt": "Programme: JARVIS-FOUNDER-WORKSPACE-01 Authorized by: founder act 2026-09-23 — \"B4R1 — PROGRAMME IDENTITY + SUCCESSION RECONCILIATION ONLY: build the governed programme-projection-map.v1; resolve legacy aliases only where evidence supports them; use explicit succession first, Git ancestry second; include governed docs/ops lanes without swallowing the whole ops directory; reduce conflicts/unclassified subjects without",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "1 · What landed",
+            "2 · Matrix (this container)",
+            "3 · The real projection, before and after (observed against `624241b2`)",
+            "4 · Docket (for the adjudication that follows the F1 walk)",
+            "5 · Not done, not authorized"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 — B4 · Deterministic `programme-state.v1` Projector (evidence)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B4_PROGRAMME_STATE_PROJECTOR_EVIDENCE_2026-09-23.md",
+          "excerpt": "Authorized by: founder continuation act 2026-09-23 under FD-3 (projector law) and D-03 (contract + projection, never a second truth store). Against: canonical 840194ba. Standing: B4 DELIVERED · first real projection recorded · ⛔ STOP.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "1 · What landed",
+            "2 · Matrix (this container)",
+            "3 · The first real projection (observed against this checkout)",
+            "4 · Not done"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 · B5R1",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B5R1_KELLY_LANGUAGE_AND_ATTENTION_HIERARCHY_2026-09-24.md",
+          "excerpt": "Date: 2026-09-24 Predecessor: installed B5 acceptance build 32187dd95deab2b2e9439347e78ed0f4d7d86209 Act: B5R1 — KELLY-LANGUAGE + ATTENTION HIERARCHY REPAIR Boundary: presentation/translation only · no B6 conversation · no B7 graph join",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Kelly-language + attention hierarchy repair",
+            "Founder walk finding",
+            "Product law",
+            "Today hierarchy",
+            "Human translation rules",
+            "Monitor hierarchy"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 · B5",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B5_DESKTOP_INTEGRATION_CANDIDATE_EVIDENCE_2026-09-23.md",
+          "excerpt": "Date: 2026-09-23 Disposition: CANDIDATE BUILT · B5-SPECIFIC EVIDENCE GREEN · INSTALLED ACCEPTANCE BLOCKED BY INHERITED C0 PROOF RED",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Real JARVIS Desktop Founder Workspace — candidate evidence",
+            "1 · Exact candidate",
+            "2 · Kelly-world experience now present",
+            "3 · B5-specific witness",
+            "4 · One blocking inherited proof",
+            "5 · Classification of the blocker"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 · B5",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B5_KELLY_WORLD_EXPERIENCE_AMENDMENT_2026-09-23.md",
+          "excerpt": "Date: 2026-09-23 Standing: BINDING B5 EXPERIENCE REQUIREMENT · DOES NOT EXPAND EXECUTION AUTHORITY",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Kelly's World — Founder experience amendment",
+            "1 · Today means active fields",
+            "2 · Work is where Kelly and her AI partners work",
+            "3 · Graph means “how my world connects”",
+            "4 · Monitor means “what needs watching”",
+            "5 · System means “show me the machinery underneath”"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 · B6R1R1",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B6R1R1_GROUNDED_RESPONSE_2026-09-24.md",
+          "excerpt": "Date: 2026-09-24 Predecessor: B6R1 6a77f05fca51a51c28b97b36a4727399cbd255e6 Act: B6R1R1 — CITATION-CONFORMANT EVIDENCE RESPONSE + RESOLVED TURN CONTEXT Standing: BOUNDED IMPLEMENTATION CANDIDATE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Citation-conformant evidence response + resolved turn context",
+            "1 · Response contract",
+            "2 · Fail-closed claim handling",
+            "3 · Resolved turn context",
+            "4 · Epistemic lanes remain separate",
+            "5 · Exact non-authorizations"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 · B6R1",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B6R1_PRECISION_CONTEXT_AND_AI_PARTNER_HANDOFF_2026-09-24.md",
+          "excerpt": "Date: 2026-09-24 Predecessor: installed B6 acceptance build ce83e28058341af15442252804d711cd84be0e0f Act: B6R1 — PRECISION CONTEXT + AI PARTNER HANDOFF Standing: BOUNDED IMPLEMENTATION CANDIDATE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Precision context + AI partner handoff",
+            "1 · Precision context law",
+            "2 · Partner handoff law",
+            "3 · B6R1 V1 boundary",
+            "4 · Founder experience target",
+            "5 · Local B6R1 smoke witness"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 · B6",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B6_WORKING_ROOM_2026-09-24.md",
+          "excerpt": "Date: 2026-09-24 Predecessor: B5R1 401660160ee18d213ede1d3fd8f03e510706c9f9 Act: B6 — WORK BECOMES THE ACTUAL WORKING ROOM Standing: BOUNDED IMPLEMENTATION CANDIDATE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Work becomes the actual working room",
+            "1 · What is already canonical",
+            "2 · Intent is not authority",
+            "3 · Current-field context",
+            "4 · MAIA, ChatGPT and Claude Code partnership",
+            "5 · V1 working-room behavior"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 · B7R1",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B7R1_PURE_EVIDENCED_GRAPH_JOIN_2026-09-24.md",
+          "excerpt": "Date: 2026-09-24 Predecessor: B7 census/design 7ff47ebe4abe28a8c103eb09b441ff91468b4954 Act: B7R1 — PURE EVIDENCED GRAPH JOIN + TRAVERSABLE PARTNER-HANDOFF READ ORGAN ONLY Standing: BOUNDED IMPLEMENTATION CANDIDATE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 7,
+          "headings": [
+            "Pure evidenced graph join + traversable partner-handoff read organ",
+            "1 · Pure graph join",
+            "2 · Live relation families",
+            "3 · Explicit programme relation parser",
+            "4 · Partner-handoff read organ",
+            "5 · Founder experience"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 · B7",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_B7_REAL_GRAPH_DESIGN_AND_SUBSTRATE_CENSUS_2026-09-24.md",
+          "excerpt": "Date: 2026-09-24 Predecessor: installed B6R1R1 candidate 6528475966e5588a795ec44adc61f896eedbf90a Canonical observed: e886888416062c7fcbcf899040e3827bc8013835 Act: B7 — REAL GRAPH EVIDENCE-RELATION DESIGN + SUBSTRATE CENSUS ONLY Standing: DOCUMENTARY DESIGN + CENSUS · NO GRAPH JOIN IMPLEMENTED · NO RENDERER CHANGE",
+          "excerpt_start_line": 4,
+          "excerpt_end_line": 8,
+          "headings": [
+            "Real Graph — evidence-relation design + substrate census only",
+            "1 · Inherited law",
+            "2 · Current live census",
+            "3 · A field is a focus, not a second ontology",
+            "4 · Node kinds — admitted, conditional, or held",
+            "5 · Edge admission contract"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 — Programme Charter",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_CHARTER_2026-09-23.md",
+          "excerpt": "Opened: 2026-09-23 — founder direction, same day, explicitly as a new JARVIS lane (⛔ not folded into JARVIS-MERGE-AUTHORITY-01 / M1R1R1, ⛔ not folded into any governance-infrastructure programme). Governing question: How does the existing JARVIS machinery become the one coherent, humane, founder-facing workspace in which the founder does, sees, monitors and understands all work — by composition of organs that already",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Mandatory lane preamble",
+            "Authority",
+            "Existing law",
+            "Explicit non-authorizations",
+            "Freshness discipline (founder direction, binding)",
+            "Flow"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / F0 — Founder Adjudication (2026-09-23)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_FOUNDER_ADJUDICATION_2026-09-23.md",
+          "excerpt": "Disposition: exact F0 candidate 8b8592d9d69e9181484cb6ac9771a1be0c3b1e84 on claude/sharp-cannon-cyrdeb, against exact census canonical b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f → F0 PASS · PRODUCT CENSUS ACCEPTED · FOUNDER EXPERIENCE CONSTITUTION ACCEPTED FOR F1 · NO RUNTIME CAPABILITY RATIFIED · F1 AUTHORIZED. Independent custody: b4f73ac4… → d4efcbfb… → 8b8592d9…, exactly CLAUDE.md (one documentary bullet), the char",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Findings accepted",
+            "Law ratified for F1",
+            "Docket rulings",
+            "F1 — INFORMATION ARCHITECTURE + LIVING PROTOTYPE OVER RECORDED EVIDENCE ONLY"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / F0 — Current-State Product Census + Founder Experience Constitution",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F0_PRODUCT_CENSUS_AND_FOUNDER_EXPERIENCE_CONSTITUTION_2026-09-23.md",
+          "excerpt": "Lane: JARVIS-FOUNDER-WORKSPACE-01 (charter: JARVIS-FOUNDER-WORKSPACE-01CHARTER2026-09-23.md) Act: F0 · DISCOVER / CENSUS · READ-ONLY · DOCUMENTARY · OBSERVATIONAL Standing: F0 RECORD DELIVERED · ⛔ NOTHING RATIFIED · ⛔ NO CODE CHANGED · STOP FOR FOUNDER ADJUDICATION (docket §11) Date: 2026-09-23",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "0 · Freshness block (binding, per charter)",
+            "1 · Method, population, denominator",
+            "2 · Exact observed substrate (freeze item 1)",
+            "2.1 Founder-facing surfaces — the JARVIS operational console (`jarvis-desktop/`, Electron, `life.soullab.jarvis`)",
+            "2.2 Work graph",
+            "2.3 Continuity path"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1R1 — Founder Adjudication (2026-09-23)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1R1_FOUNDER_ADJUDICATION_2026-09-23.md",
+          "excerpt": "Disposition: exact repaired lineage 8349aa5d8c29b5862dd0861cfc7cb9c51cb9bd2d → 0858331d63cfb85146e7e72dcd5a6b4a25d75b12 → 7a730f16cb85d98a7b6c042b232b499606e8b03d accepted as F1R1 MECHANICAL PASS · ALL AUTHORIZED TRUTHFULNESS REPAIRS PRESENT · CONTAINMENT PRESERVED · EXPERIENTIAL FOUNDER WALK NOT YET SPENT · F1 NOT CLOSED · F2 NOT OPEN.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "Repair findings",
+            "Canonical drift",
+            "Experiential walk standing",
+            "Already accepted (no further conceptual design act)",
+            "Exact remaining F1 gate",
+            "Stop condition"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1R1 — Prototype Truthfulness + Freshness + Human-Label Repair",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1R1_TRUTHFULNESS_REPAIR_2026-09-23.md",
+          "excerpt": "Authorized by: F1 founder adjudication §VII (…F1FOUNDERADJUDICATION2026-09-23.md) against exact candidate 8349aa5d8c29b5862dd0861cfc7cb9c51cb9bd2d. Scope discharged: exactly the seven items. ⛔ No runtime code · no Desktop mutation · no IPC · no projector · no Graph/Monitor implementation · no O7 · no O10 · no F2. Canonical: ⚠️ ADVANCED DURING F1R1. (Superseded text, preserved: \"still b4f73ac4… (re-checked at F1R1 aut",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Repairs, one by one",
+            "Validation rerun",
+            "What this act did not do",
+            "Exit",
+            "Freshness (dated 2026-09-23, after commit `0858331d`)"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1 — Founder Adjudication (2026-09-23)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_FOUNDER_ADJUDICATION_2026-09-23.md",
+          "excerpt": "Disposition: exact F1 candidate 8349aa5d8c29b5862dd0861cfc7cb9c51cb9bd2d on claude/sharp-cannon-cyrdeb, against unchanged canonical b4f73ac4ccd9cb96e6b2b6dc7b682e689c77771f → SUBSTANTIVELY PASS · HUMANE PRODUCT ARCHITECTURE ACCEPTED · NARROW TRUTHFULNESS / FRESHNESS / LABEL REPAIR REQUIRED · F1 NOT YET CLOSED · F2 NOT OPEN. No freshness reconciliation owed before the bounded repair. The five-surface architecture Toda",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "Seven exit questions",
+            "Surface rulings",
+            "Five repairs (F1-R1…R5)",
+            "Product finding (founder)",
+            "Next boundary"
+          ]
+        },
+        {
+          "title": "FOUNDER ADJUDICATION — `JARVIS-FOUNDER-WORKSPACE-01 / F1`",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_FOUNDER_EXPERIENTIAL_WALK_ADJUDICATION_2026-09-23.md",
+          "excerpt": "Programme: JARVIS-FOUNDER-WORKSPACE-01 Act: F1 — FOUNDER EXPERIENTIAL WALK Standing: PASS WITH BINDING B5 EXPERIENCE REVISIONS · F1 CLOSED · B5 NEXT BOUNDARY · B5 NOT YET SPENT Date: 2026-09-23 Founder surface: Mac Studio · Safari · exact F1 living prototype from the Founder Workspace lineage",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 7,
+          "headings": [
+            "I. Founder disposition",
+            "II. Human-walk evidence",
+            "III. Case-study battery",
+            "IV. Surface rulings",
+            "Today — KEEP · NEW CAPABILITY REQUIRED",
+            "Work — REVISE · NEW CAPABILITY REQUIRED"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1 — Information Architecture + Living Prototype over Recorded Evidence",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_INFORMATION_ARCHITECTURE_AND_LIVING_PROTOTYPE_2026-09-23.md",
+          "excerpt": "Lane: JARVIS-FOUNDER-WORKSPACE-01 · Act: F1 (opened by F0 founder adjudication §XII, against exact F0 candidate 8b8592d9d69e9181484cb6ac9771a1be0c3b1e84) Standing (amended at F1R1): F1 adjudicated 2026-09-23 as SUBSTANTIVELY PASS with five bounded repairs (…F1FOUNDERADJUDICATION2026-09-23.md); repairs applied in F1R1 (…F1R1TRUTHFULNESSREPAIR2026-09-23.md). ⚠️ The original text below claimed no network; at 8349aa5d th",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "1 · Deliverables",
+            "2 · Information architecture (as built)",
+            "3 · Where unopened acts would appear (D-02, prototyped as places, not capabilities)",
+            "4 · How each binding law is honoured (self-check, design-level — ⛔ not the walk)",
+            "5 · Defeat conditions — how the prototype can still fail, honestly",
+            "6 · Founder walk (the F1 exit — ⛔ not performed by JARVIS)"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1 — `programme-state.v1` Projection Contract (CANDIDATE)",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_PROGRAMME_STATE_V1_CONTRACT_2026-09-23.md",
+          "excerpt": "Authorized by: F0 founder adjudication §VII (D-03): \"F1 is authorized to define programme-state.v1 — projection contract + recorded fixture only.\" Standing: CANDIDATE CONTRACT · recorded fixture delivered · amended at F1R1 (population block + PS-9, founder ruling F1-R1) · ⛔ no projector implemented · ⛔ not ratified. Fixture: prototypes/jarvis-founder-workspace-f1/programme-state.v1.fixture.json (generated from fixtur",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "1 · What it is, and is not",
+            "2 · Shape",
+            "3 · Rules (each is a falsifier for the future projector)",
+            "4 · What the fixture demonstrates",
+            "5 · Owed later (not F1)"
+          ]
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / F1 — Founder Vocabulary Map v1",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F1_VOCABULARY_MAP_V1_2026-09-23.md",
+          "excerpt": "Generated from prototypes/jarvis-founder-workspace-f1/vocabulary.js (single source; do not edit this file by hand). Rule: internal term → what it means for the founder in ordinary language → the technical source that grounds the sentence. confidence: candidate = a reasonable gloss not yet checked line-by-line; the prototype renders these with a visible marker, never silently.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": []
+        },
+        {
+          "title": "JARVIS-FOUNDER-WORKSPACE-01 / F2 — Surface Composition Contract + Implementation Sequence",
+          "path": "docs/programme/JARVIS-FOUNDER-WORKSPACE-01_F2_SURFACE_COMPOSITION_CONTRACT_AND_IMPLEMENTATION_SEQUENCE_2026-09-23.md",
+          "excerpt": "Opened: 2026-09-23 by founder direction (\"what do we need to do to get it fully functional? lets start a next level Jarvis flow for this and continue\"). ⚠️ Standing at opening, stated plainly: the F1R1 adjudication set STOP AT HUMAN WALK · DO NOT OPEN F2. This record is opened on the founder's later direction, which outranks that stop. The F1 experiential walk remains OWED — it is neither waived nor claimed performed",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "1 · What \"fully functional\" means (the definition of done, testable)",
+            "2 · Composition contract — organ of authority per surface",
+            "3 · Architecture decision (CANDIDATE — founder rules, FD-1)",
+            "4 · `founder-workspace-viewmodel.v1` (contract, from the F1 fixture shape)",
+            "5 · Implementation sequence",
+            "6 · Founder decisions required (docket)"
+          ]
+        },
+        {
           "title": "JARVIS-GOVERNED-KNOWLEDGE-FLOW-01 — J8 Closure Record",
           "path": "docs/programme/JARVIS-GOVERNED-KNOWLEDGE-FLOW-01_J8_CLOSURE_2026-09-18.md",
           "excerpt": "Date: 2026-09-18 Status: ✅ J8 CLOSED BY FOUNDER ADJUDICATION",
@@ -7390,6 +8762,21 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3A9 — Silent Repository Fallback",
+          "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_A9_SILENT_REPOSITORY_FALLBACK_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Opened by founder act: “continue” after O5-R3 admission Base: b19004cd5c1babbc20e83681bb8dad944c22f9bf · O5-R3 ADMITTED Standing: ADMITTED · CLOSED · production untouched",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1. Law",
+            "2. Census",
+            "3. Required behavior",
+            "4. Falsifiers",
+            "5. Defeat cases",
+            "6. Admission boundary"
+          ]
+        },
+        {
           "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3 — Grant Settlement / Lock Integrity · CENSUS",
           "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_GRANT_SETTLEMENT_CENSUS_2026-09-30.md",
           "excerpt": "Date: 2026-09-30 Base: 1d5c8c84 (R2F closed) Class: Census, READ-ONLY. ⛔ O5-R3 NOT OPENED · ⛔ no code changed · ⛔ no falsifier authored. Scope (founder-named, carried verbatim): consume failure before/after durable result · abandoned grant locks · CLAIMED + W4 already present · atomicity/order between result persistence, grant settlement and W4",
@@ -7416,6 +8803,21 @@ window.KELLY_FIELD_LIBRARY = {
             "3. Explicit substrate binding",
             "4. Live installed witness",
             "5. Scope discipline"
+          ]
+        },
+        {
+          "title": "JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R3 — Post-Admission Hardening Reconciliation",
+          "path": "docs/programme/JARVIS-ORCHESTRATION-OPERATOR-01_O5-R3_POST_ADMISSION_HARDENING_RECONCILIATION_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Canonical base at reconciliation: 5898fbbf6e35407a4004cd60cbbd80837547916b Parallel hardening head: b19004cd5c1babbc20e83681bb8dad944c22f9bf Standing: reconciliation record · canonical O5-R3 admission preserved · stronger post-admission hardening admitted subject to merged regression witness",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1. Why this record exists",
+            "2. Reconciliation ruling",
+            "3. Hardening lineage carried forward",
+            "RB-A1 — pre-write lease standing",
+            "RB-A2 — C6A Authorized Transition Integrity",
+            "RB-A3 — Runtime Binding Readiness"
           ]
         },
         {
@@ -8228,6 +9630,48 @@ window.KELLY_FIELD_LIBRARY = {
             "Why this is not deletion",
             "Mechanical witness",
             "Acceptance"
+          ]
+        },
+        {
+          "title": "JARVIS-VOICE-DOORWAY-01 — Programme Charter",
+          "path": "docs/programme/JARVIS-VOICE-DOORWAY-01_CHARTER_2026-09-23.md",
+          "excerpt": "Opened: 2026-09-23 by founder ruling OE-1 (JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01P0FOUNDERADJUDICATION2026-09-23.md §IV). Parent (flow): JARVIS-FOUNDER-OPERATING-ENVIRONMENT-01 (readiness authority). Surface parent: JARVIS-FOUNDER-WORKSPACE-01 (the doorway lands on its Work surface, after B6). Current act: V1 DELIVERED (…V1OPERATORVOICECONTRACTANDFALSIFIERSUITE2026-09-23.md) — contract ratified as test contract, mat",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Mandatory lane preamble",
+            "Purpose (founder, verbatim)",
+            "Law (ratified by OE-1, binding on every act)",
+            "Relationship to MAIA voice",
+            "V0 — the ten questions (founder §VIII)",
+            "Flow"
+          ]
+        },
+        {
+          "title": "JARVIS-VOICE-DOORWAY-01 — V0 · Sovereign Voice Substrate Census + JARVIS Operator Voice Contract",
+          "path": "docs/programme/JARVIS-VOICE-DOORWAY-01_V0_SUBSTRATE_CENSUS_AND_OPERATOR_VOICE_CONTRACT_2026-09-23.md",
+          "excerpt": "Act: V0 (documentary, read-only) · Authorized by: P0 founder adjudication §IV OE-1 / §VIII · Observed against: working tree at eb77216b (= canonical 840194ba + docs-only lineage) · Method: one read-only census sweep (81 tool uses) as input; every claim this record relies on was re-verified in source by the authoring session and is marked (V); claims carried from the sweep without re-verification are marked (S); UNVER",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "0 · Headline",
+            "1 · The ten questions",
+            "2 · JARVIS Operator Voice Contract — `jarvis-operator-voice.v1` (CANDIDATE, for V1 ratification)",
+            "3 · Founder decisions V0 raises (docket)",
+            "4 · Standing"
+          ]
+        },
+        {
+          "title": "JARVIS-VOICE-DOORWAY-01 — V1 · Operator Voice Contract Ratification + Falsifier Suite",
+          "path": "docs/programme/JARVIS-VOICE-DOORWAY-01_V1_OPERATOR_VOICE_CONTRACT_AND_FALSIFIER_SUITE_2026-09-23.md",
+          "excerpt": "Authorized by: founder continuation act 2026-09-23 (\"V1 remains documentary/test-contract work only\"). Direction ratified by the founder in that act: push-to-talk first · local Whisper only at 127.0.0.1:8080 · local Kokoro only at localhost:8880 · speech off by default · no cloud fallback · wake phrase \"Jarvis\" deferred until a genuine local keyword-spotting system is evidenced · the real voice implementation waits f",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 3,
+          "headings": [
+            "1 · What landed",
+            "2 · Laws and results",
+            "3 · What V1 fixes for V2 (binding), and what it does not",
+            "4 · Not done"
           ]
         },
         {
@@ -9385,6 +10829,171 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "AIN-MASTER-FIELD-01 — Full JARVIS Flow",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_FULL_JARVIS_FLOW_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Branch: \\chore/ain-master-field-full-flow-20261001\\ Canonical base: \\a8020fa3e0c3c568c634d5165710cdccb09b4f82\\ Class: constitutional / governance / projection design Runtime mutation: none Merge authority: not assumed Deploy authority: none",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 9,
+          "headings": [
+            "Purpose",
+            "Master invariant",
+            "Programme sequence",
+            "M0 — Consequence truth",
+            "M1 — Standing conservation",
+            "M2 — Lawful transformation fabric"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 J0 — Canonical Mechanism Census",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_J0_CANONICAL_MECHANISM_CENSUS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Canonical base: \\a8020fa3e0c3c568c634d5165710cdccb09b4f82\\ Method: read-only census of current canonical repository plus the two new programme records on this branch.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Census rule",
+            "1. Memory / consent / standing",
+            "2. Personhood / identity",
+            "3. Relational ethics / trust",
+            "4. Rupture / correction / lineage",
+            "5. Consequence truth / delivery"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 J1 — Standing Seam Matrix",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_J1_STANDING_SEAM_MATRIX_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Canonical base: \\a8020fa3e0c3c568c634d5165710cdccb09b4f82\\",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Matrix",
+            "Detailed rulings",
+            "S1 — conversation -> memory",
+            "S2 — research -> finding",
+            "S3 — finding -> proposal",
+            "S4 — proposal -> ruling"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 J2 — Transformation Adjudication",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_J2_TRANSFORMATION_ADJUDICATION_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: candidate constitutional adjudication record",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Adjudication protocol",
+            "Lawful basis families",
+            "Identity / Personhood adjudication",
+            "Rupture / Trust adjudication",
+            "Temporal / possibility adjudication",
+            "Attention adjudication"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 J3 — Temporal, Personhood, and Relational Fidelity",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_J3_TEMPORAL_PERSONHOOD_RELATIONAL_FIDELITY_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Canonical base: \\298414555bbe7eccdf453b09e026737d4f7f4e29\\ Programme: AIN-MASTER-FIELD-01",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Purpose",
+            "Fidelity matrix",
+            "Temporal laws",
+            "Personhood laws",
+            "Relational permission vector",
+            "Third-party boundary"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 J4 — Attention and Master-Field Orientation",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_J4_ATTENTION_MASTER_FIELD_ORIENTATION_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Programme: AIN-MASTER-FIELD-01",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Purpose",
+            "Foundational distinction",
+            "Salience classes",
+            "Attention laws",
+            "Salience provenance",
+            "Elemental orientation"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 J5R1 — Kelly's World Zero-Duplication Map",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_J5R1_KELLYS_WORLD_ZERO_DUPLICATION_MAP_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Canonical substrate: \\ac7bfd353128210c5f1e7012e0b71a9256035834\\ Programme: AIN-MASTER-FIELD-01",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Purpose",
+            "Admission evidence",
+            "Single reality",
+            "Today — what requires Kelly now?",
+            "Work — what is being carried?",
+            "Monitor — what is happening now?"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 J5 — Kelly's World Projection Mapping",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_J5_KELLYS_WORLD_PROJECTION_MAPPING_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Programme: AIN-MASTER-FIELD-01",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Purpose",
+            "Single-reality rule",
+            "Room mapping",
+            "Today — What requires Kelly now?",
+            "Work — What is being carried?",
+            "Monitor — What is happening now?"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 J6 — Falsifier Package and Implementation Eligibility",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_J6_FALSIFIERS_AND_IMPLEMENTATION_ELIGIBILITY_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Programme: AIN-MASTER-FIELD-01",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "Purpose",
+            "Falsifier family A — Standing",
+            "Falsifier family B — Personhood",
+            "Falsifier family C — Relational permission",
+            "Falsifier family D — Rupture and repair",
+            "Falsifier family E — Temporal field"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 J7 — Bounded Implementation Handoff",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_J7_BOUNDED_IMPLEMENTATION_HANDOFF_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Programme: AIN-MASTER-FIELD-01 Status: handoff / implementation boundary",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Purpose",
+            "Eligible lane 1 — NON-DELIVERY / consequence truth",
+            "Eligible lane 2 — Identity Ontology / Personhood canon reconciliation",
+            "Eligible lane 3 — Rupture Playbook / Trust reconciliation",
+            "Eligible lane 4 — Kelly's World projection reconciliation",
+            "Blocked lane — Temporal field runtime"
+          ]
+        },
+        {
+          "title": "AIN-MASTER-FIELD-01 — Kelly's World Projection Contract",
+          "path": "docs/programme/AIN-MASTER-FIELD-01_KELLYS_WORLD_PROJECTION_CONTRACT_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: design contract Source programme: AIN-MASTER-FIELD-01 Full JARVIS Flow",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Core law",
+            "Projection invariants",
+            "Today",
+            "Work",
+            "Monitor",
+            "System"
+          ]
+        },
+        {
           "title": "AIN-SYSTEMS-INTELLIGENCE-01 / S0 — Systems Intelligence Constitution",
           "path": "docs/programme/AIN-SYSTEMS-INTELLIGENCE-01_S0_SYSTEMS_INTELLIGENCE_CONSTITUTION_2026-09-23.md",
           "excerpt": "Date: 2026-09-23 Status: CANDIDATE — S0 CONSTITUTION READY FOR FOUNDER ADJUDICATION Artifact typology (CLAUDE.md six-category): Cat 1 (preserved direction) carrying Cat 2 candidates (canonical primitives with no runtime authority). Nothing here is Cat 6.",
@@ -9717,6 +11326,50 @@ window.KELLY_FIELD_LIBRARY = {
             "Smallest repair surface",
             "Existing evidence retained",
             "Fresh witness requirement"
+          ]
+        },
+        {
+          "title": "MAIA-DEVELOPMENTAL-ANCESTRY-01 — I0A SCHEMA EXECUTION CUSTODY",
+          "path": "docs/programme/MAIA-DEVELOPMENTAL-ANCESTRY-01_I0A_SCHEMA_EXECUTION_CUSTODY_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 / 2026-10-02 UTC Standing: EVIDENCE + custody disposition Authority: founder continuation after I0 admission Runtime/code authority: NONE",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1. What happened",
+            "2. Execution custody",
+            "3. Production shape witness",
+            "4. Classification",
+            "5. Disposition",
+            "6. Boundary from here"
+          ]
+        },
+        {
+          "title": "MAIA-DEVELOPMENTAL-ANCESTRY-01 — I0 SCHEMA ACT",
+          "path": "docs/programme/MAIA-DEVELOPMENTAL-ANCESTRY-01_I0_SCHEMA_ACT_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: I0 OPENED · schema/migration candidate only · runtime untouched Authority: founder continuation authorizing the bounded schema act after R0–R2 adjudication.",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "1. Sole job",
+            "2. Binding identity ruling",
+            "3. Historical ceiling",
+            "4. Inspection gates",
+            "5. Stop rule"
+          ]
+        },
+        {
+          "title": "MAIA-DEVELOPMENTAL-ANCESTRY-01 — I1 RUNTIME WIRING",
+          "path": "docs/programme/MAIA-DEVELOPMENTAL-ANCESTRY-01_I1_RUNTIME_WIRING_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 / 2026-10-02 UTC Standing: implementation candidate Class: A — memory/consciousness enforcement paths Canonical prerequisite: I0 carrier admitted and I0A custody deviation recorded",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "1. Sole job",
+            "2. Identity contract",
+            "3. Route-specific behavior",
+            "/list",
+            "/between",
+            "4. Storage rule"
           ]
         },
         {
@@ -10291,23 +11944,39 @@ window.KELLY_FIELD_LIBRARY = {
         {
           "title": "Living Field — First-Entry Human Witness Record",
           "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
-          "excerpt": "Participant label: FIRST-ENTRY- Date/time: Production SHA at start: (docker exec maia-sovereign printenv GITCOMMIT) Production SHA at end: (same command, after the walk; if it differs from start → the walk is NO EVIDENCE) Public health: Device/browser: Early Field admitted: yes / no Pre-existing member-owned substrate: no",
+          "excerpt": "Participant label: FIRST-ENTRY- Date/time: Scheduled-against SHA: Production SHA at start of walk: (docker exec maia-sovereign printenv GITCOMMIT) Production SHA at end of walk: (same command, after the walk) Deploy freeze held for the window: yes / no Public health (start / end): Device/browser: (member's own device: yes / no; if no, why and what the member was told)",
           "excerpt_start_line": 3,
           "excerpt_end_line": 10,
           "headings": [
+            "Observation disclosure — before the first-entry script",
+            "Script — read these words, and only these",
             "Uncoached path",
             "First-entry observations",
             "Post-walk responses",
-            "Findings",
-            "Adjudication"
+            "Findings"
+          ]
+        },
+        {
+          "title": "Living Field First Entry: Pre-Walk Gate Record",
+          "path": "docs/programme/LIVING-FIELD-FIRST-ENTRY_PRE-WALK_GATE_RECORD_2026-10-01.md",
+          "excerpt": "Status: PARTIAL · G1 PASS · G2 MECHANICAL PASS / FOUNDER ACCEPTANCE OPEN · G0/G3/G4/G5/G6/G7 OPEN · ⛔ no member walk may start until every gate reads PASS Governs: LIVING-FIELD-FIRST-ENTRY-HUMAN-WITNESSPROTOCOL2026-10-01.md (with Amendments 1 and 2) Occasioned by: a J18 verdict and an emergency-disable PASS that existed only in a session",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 5,
+          "headings": [
+            "Evidence rule for every slot (read first)",
+            "G0 · The amended protocol is canonical",
+            "G1 · Cabin offline mode is unset in production",
+            "G2 · Database stable",
+            "G3 · J18 rollback gate: emergency disable witnessed",
+            "G3a · Commit the existing witness"
           ]
         },
         {
           "title": "Living Field — First Human Witness Packet",
           "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PACKET_2026-10-01.md",
           "excerpt": "Use with: LIVING-FIELD-FIRST-HUMAN-WITNESSPROTOCOL2026-09-30.md Standing: facilitator packet · no participant selected · no widening authority",
-          "excerpt_start_line": 3,
-          "excerpt_end_line": 4,
+          "excerpt_start_line": 10,
+          "excerpt_end_line": 11,
           "headings": [
             "Before the member arrives",
             "What to say",
@@ -10321,8 +11990,8 @@ window.KELLY_FIELD_LIBRARY = {
           "title": "Living Field — First Human Production Witness Protocol",
           "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_PROTOCOL_2026-09-30.md",
           "excerpt": "Programme day: 2026-09-30 Protocol status: PRE-REGISTERED · HUMAN WITNESS NOT YET RUN Canonical baseline at protocol drafting: 68af62fda Early Field authority: EARLY-FIELD-01COHORTADMISSION2026-09-30.md Layered Admission candidate: docs/canon/LAYEREDADMISSION.md (if admitted) Standing: protocol only · no member added · no environment change · no deployment",
-          "excerpt_start_line": 3,
-          "excerpt_end_line": 8,
+          "excerpt_start_line": 10,
+          "excerpt_end_line": 15,
           "headings": [
             "1 · Human-only question",
             "2 · What machines establish before a human enters",
@@ -10351,8 +12020,8 @@ window.KELLY_FIELD_LIBRARY = {
           "title": "Living Field — First Human Witness Record",
           "path": "docs/programme/LIVING-FIELD-FIRST-HUMAN-WITNESS_RECORD_TEMPLATE_2026-10-01.md",
           "excerpt": "Participant label: WITNESS- Date/time: Production SHA: Public health: Device/browser: Early Field admitted: yes / no Authentic member-owned substrate present before witness: yes / no Facilitator intervention: none / describe MAIA entered: yes / no MAIA request before explicit entry: yes / no / not observed",
-          "excerpt_start_line": 3,
-          "excerpt_end_line": 12,
+          "excerpt_start_line": 10,
+          "excerpt_end_line": 19,
           "headings": [
             "Uncoached path",
             "Observed orientation",
@@ -10414,6 +12083,21 @@ window.KELLY_FIELD_LIBRARY = {
             "Trigger",
             "Repair law",
             "Witness"
+          ]
+        },
+        {
+          "title": "Living Field — Witness Re-baseline at production `56d0cd679`",
+          "path": "docs/programme/LIVING-FIELD_WITNESS_REBASELINE_56D0CD679_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Observed production runtime: 56d0cd679c247a91dfe5a3592ce59e5a488c1fba Prior readiness runtime: 975a208b8 Standing: MACHINE RE-BASELINE PASS · FIRST-ENTRY WITNESS ELIGIBLE SUBJECT TO PARTICIPANT-SESSION ADMISSION CHECK",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Trigger",
+            "Live facts established",
+            "Source re-baseline",
+            "Fresh aggregate readiness census",
+            "Consequence",
+            "What this record does not claim"
           ]
         },
         {
@@ -11957,6 +13641,51 @@ window.KELLY_FIELD_LIBRARY = {
             "C1 · `ask_threads` — ⛔ FAILS",
             "C2 · `ask_turns` — ⛔ FAILS, STRUCTURALLY"
           ]
+        },
+        {
+          "title": "SOULLAB-DESKTOP-RECOVERY-01 — Kelly's World forward port",
+          "path": "docs/programme/SOULLAB-DESKTOP-RECOVERY-01_KELLYS_WORLD_FORWARD_PORT_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Class: B — Desktop host composition / governed operator surface Canonical base: a6464dcd1bc6c267c7550a2c2c3fb747dcff8e7b Recovery branch: fix/kellys-world-founder-workspace-recovery-20261001 Preserved B7R1 source: c9081e7fe4fbe9eea77ac4a7e42339ae5c0a2ea9 Preserved Soullab Desktop F10–F12 source: b975472baa4cf08ae8068465ca6877eaa8c32a39",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 8,
+          "headings": [
+            "1. Why this recovery exists",
+            "2. Preservation before reconciliation",
+            "3. Blind restoration refused",
+            "4. Forward-port composition",
+            "5. Recovered experiential laws",
+            "6. Current-canonical compatibility repairs"
+          ]
+        },
+        {
+          "title": "SOULLAB-DESKTOP-UNIFICATION-01 — Census · 2026-09-30",
+          "path": "docs/programme/SOULLAB-DESKTOP-UNIFICATION-01_CENSUS_2026-09-30.md",
+          "excerpt": "The product becomes one installed Soullab Desktop while MAIA and JARVIS remain different authority realms inside that product. One applies to product identity, continuity, local runtime, update path, and installation. It does not mean that member-facing MAIA inherits JARVIS repository/shell authority.",
+          "excerpt_start_line": 13,
+          "excerpt_end_line": 16,
+          "headings": [
+            "Governing architecture",
+            "Canonical substrate",
+            "Installed Mac state",
+            "Offline standing",
+            "Baseline",
+            "First implementation boundary"
+          ]
+        },
+        {
+          "title": "SOULLAB-DESKTOP-UNIFICATION-01 — Current Canonical Port",
+          "path": "docs/programme/SOULLAB-DESKTOP-UNIFICATION-01_CURRENT_CANONICAL_PORT_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Class: B — desktop host composition / packaging / authority boundary Canonical base: ac7bfd353128210c5f1e7012e0b71a9256035834 Recovery source lineage: f09efdb36 → 06245252ce → b975472baa Branch: fix/soullab-desktop-unification-current-20261001 Standing: CURRENT-CANONICAL PORT CANDIDATE · no merge/deploy/release authority",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 8,
+          "headings": [
+            "1. Purpose",
+            "2. Complete lawful sequence",
+            "3. Current-canonical reconciliation",
+            "JARVIS lifecycle",
+            "Packaging",
+            "MAIA authority doorway"
+          ]
         }
       ]
     },
@@ -13399,6 +15128,19 @@ window.KELLY_FIELD_LIBRARY = {
           ]
         },
         {
+          "title": "Provider Governance — V1 Constitutional Defeat-Fixture Compatibility",
+          "path": "docs/programme/PROVIDER_GOVERNANCE_V1_CONSTITUTIONAL_DEFEAT_FIXTURE_COMPATIBILITY_2026-09-23.md",
+          "excerpt": "Programme: PROVIDER-GOVERNANCE Act: V1-CONSTITUTIONAL-DEFEAT-FIXTURE-COMPATIBILITY Standing: CANDIDATE COMPLETE · EXACT RULE-SCOPED COMPATIBILITY REPAIR · STOP AFTER ADMISSION Date: 2026-09-23",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Problem",
+            "Repair",
+            "Defeat evidence on Kelly's Mac Studio",
+            "Boundary"
+          ]
+        },
+        {
           "title": "REFLECTIONS-MAIA-01 · In-place conversation on a kept reflection",
           "path": "docs/programme/REFLECTIONS_MAIA_01_IN_PLACE_CANONICAL_CONVERSATION_2026-09-04.md",
           "excerpt": "/reflections/[id] ships a Discuss this with MAIA section that seeds the existing one-shot prompt channel and navigates to /maia, with a return chip back to the reflection. The full round trip was witnessed on production (cf6ce3ce): payload delivered, chip rendered \"Return to Abundance Meets Resistance\".",
@@ -13484,6 +15226,51 @@ window.KELLY_FIELD_LIBRARY = {
             "Why it is not repaired here",
             "Open questions, ⛔ none answered here",
             "Standing"
+          ]
+        },
+        {
+          "title": "SAFETY-CRISIS-01: Option A (no human alert channel) and the server-side crisis detector",
+          "path": "docs/programme/SAFETY-CRISIS-01_OPTION_A_AND_SERVER_DETECTOR_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Status: founder ruling RECORDED · detector BUILT on branch fix/server-crisis-detector-20261001 · ⛔ not merged · ⛔ not deployed · disclosure copy ⛔ OWED · teen registration ⛔ not structurally closed (see §6)",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 4,
+          "headings": [
+            "1. Founder ruling (2026-10-01)",
+            "Why false positives are a safety cost",
+            "2. Census: what existed before this change (canonical `56d0cd679`)",
+            "3. What this change builds",
+            "Tiers",
+            "Defeat candidates (all DEAD)"
+          ]
+        },
+        {
+          "title": "SAFETY-DELIVERY-01 — Canonical Live Crisis Census",
+          "path": "docs/programme/SAFETY-DELIVERY-01_CANONICAL_LIVE_CRISIS_CENSUS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Evidence base: commit:a999932df7aa3d4052ee78f044878026aa4f680b Ingress: /api/sovereign/app/maia/list Posture: census only — no notification authority added",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Question",
+            "Finding",
+            "What the live route does have",
+            "Field-safety gate",
+            "Crisis mechanisms found elsewhere",
+            "Reachability adjudication"
+          ]
+        },
+        {
+          "title": "SAFETY-DELIVERY-01 — S1 Reachability Census",
+          "path": "docs/programme/SAFETY-DELIVERY-01_S1_REACHABILITY_CENSUS_2026-10-01.md",
+          "excerpt": "Date: 2026-10-01 Evidence base: commit:a999932df7aa3d4052ee78f044878026aa4f680b Scope: S1 only — MAIASafetyPipeline as constructed by lib/agents/PersonalOracleAgent.ts Posture: evidence correction before implementation",
+          "excerpt_start_line": 3,
+          "excerpt_end_line": 6,
+          "headings": [
+            "Question",
+            "Finding",
+            "Evidence",
+            "E1 — The defect exists in the prototype",
+            "E2 — The source declares itself outside the ship path",
+            "E3 — Canonical live ingress is a different path"
           ]
         },
         {
@@ -13751,8 +15538,8 @@ window.KELLY_FIELD_LIBRARY = {
   ],
   "counts": {
     "concepts": 189,
-    "lanes": 739,
-    "recent": 148,
-    "recovery": 12
+    "lanes": 802,
+    "recent": 210,
+    "recovery": 13
   }
 };

@@ -18,12 +18,13 @@ No member utterance, crisis transcript, risk score, or personal safety state is 
 
 ## Source state
 
-The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by seven custody surfaces:
+The current SAFETY-DELIVERY-01 / SAFETY-DISCLOSURE-01 lineage is represented by eight custody surfaces:
 
 - PR #1663 — **MERGED / CANONICAL** at `edf656496`: S1 reachability correction;
 - PR #1664 — **MERGED / CANONICAL** at `aa3bc543b`: canonical live crisis-path census;
-- PR #1665 — minimal deterministic recognition contract;
-- PR #1669 — stacked canonical live wiring, based on #1665;
+- `SAFETY-CRISIS-01` — **MERGED / CANONICAL**: later Founder Option A architecture with server-side `crisisAssessment`, short-lived `crisisCheckIn`, clear/ambiguous tiers, deterministic crisis referral on clear, and no automatic human alert channel;
+- PR #1665 — **CLOSED / SUPERSEDED**: older `crisisRecognition.ts` contract retained as provenance only; superseded by canonical SAFETY-CRISIS-01;
+- PR #1669 — **CLOSED / SUPERSEDED**: older hard-override `/list` wiring retained as provenance only; superseded by canonical SAFETY-CRISIS-01;
 - PR #1675 — SAFETY-DISCLOSURE-01 authority contract: member act is the only currently executable disclosure basis; imminent/legal/minor-vulnerable-adult exceptions remain review-required;
 - PR #1678 — practitioner-field relationship boundary: a member's practitioner-sharing gesture is readable only by the practitioner in that member's active/paused relationship, not by practitioner role globally;
 - PR #1694 — portal-message identity boundary: portal messaging now carries practitioner practice-record identity and practitioner member identity separately so relationship checks, messaging tables, PHI ownership, and safety notification use the correct identity.
@@ -63,32 +64,33 @@ R8 now makes the cost of Option B concrete: `client_messages` is still Stage A/p
 
 ### Canonical member-facing safety floor
 
-The implementation stack is moving toward a deterministic safety floor at the canonical `/api/sovereign/app/maia/list` ingress.
+The member-facing crisis floor is now canonical under SAFETY-CRISIS-01 rather than the retired #1665/#1669 stack.
 
-The intended invariant is:
+Current invariant:
 
 member utterance
 → durable acceptance when lawful
-→ deterministic recognition
-→ hard override for explicit active / NSSI / imminent language
-→ deterministic member-facing safety response
-→ return before ordinary symbolic / teaching / model cognition
+→ server-side `assessCrisisWithCheckIn`
+→ `clear | ambiguous | none`
+→ CLEAR: deterministic 988 / Crisis Text Line / emergency referral + safety context for MAIA
+→ AMBIGUOUS: safety context for MAIA, with a direct safety check-in rather than a hotline script
+→ if MAIA actually asks about safety, a short-lived in-memory check-in flag may let a later affirmative answer such as “yes” escalate to CLEAR
+→ no automatic human alert is implied by crisis classification
 
-The recognition seam carries:
+The canonical crisis copy says MAIA is not an emergency service and must not be relied on to contact help for the member.
 
-`disclosureAuthorized: false`
-
-The live-wiring branch adds no practitioner, guardian, Soullab-team, email, webhook, or emergency-service dispatch.
+The check-in state is process-local, content-free, short-lived, and non-persistent. Restart or instance movement can drop it; that limitation remains visible.
 
 ### Current review order
 
-1. admit/correct the evidence records;
-2. admit the recognition law;
-3. only then admit the stacked live wiring;
-4. admit the disclosure-authority law independently of crisis severity;
-5. admit the practitioner-field relationship repair before treating Now What practitioner visibility as correctly recipient-bounded.
+1. #1663 / #1664 evidence is canonical;
+2. #1665 / #1669 remain closed as superseded provenance;
+3. canonical SAFETY-CRISIS-01 remains the active crisis-response authority;
+4. admit the disclosure-authority law (#1675) independently of crisis severity;
+5. admit the practitioner-field relationship repair (#1678) before treating Now What practitioner visibility as correctly recipient-bounded;
+6. admit the portal practitioner identity repair (#1694) before any future MAIA handoff may reuse portal-message service semantics.
 
-Stack and dependency order matter. A child implementation or UI promise must not make its parent law or privacy repair appear merged.
+Dependency order matters. A later member-contact feature must not revive the retired crisis stack, infer disclosure authority from crisis severity, or bypass the privacy/identity prerequisites.
 
 ### Member-act disclosure substrates
 
