@@ -13,8 +13,8 @@ window.KELLY_FIELD_LIBRARY = {
         "Source state",
         "Needs Kelly",
         "Exception policy beyond member act",
-        "In motion",
-        "Canonical member-facing safety floor"
+        "PHI stage for the future safety-contact off-ramp",
+        "In motion"
       ]
     },
     {
@@ -2269,7 +2269,7 @@ window.KELLY_FIELD_LIBRARY = {
       "evidence_line": 5,
       "evidence": "**Status:** **AUTOMATIC HANDWRITING OCR HELD · ORIGINAL + MANUAL TRANSCRIPTION OPEN · BLANK-WORK RELEASE INDEPENDENT · PRODUCTION UNTOUCHED.**",
       "last_touched_epoch": 1789602025,
-      "hours_dormant": 361,
+      "hours_dormant": 362,
       "standing": "RECOVERY_CANDIDATE_UNREVIEWED",
       "candidate_law": "DORMANCY_DOES_NOT_CREATE_IMPORTANCE"
     },
@@ -13156,8 +13156,8 @@ window.KELLY_FIELD_LIBRARY = {
             "Source state",
             "Needs Kelly",
             "Exception policy beyond member act",
-            "In motion",
-            "Canonical member-facing safety floor"
+            "PHI stage for the future safety-contact off-ramp",
+            "In motion"
           ]
         },
         {

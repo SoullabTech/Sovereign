@@ -48,6 +48,15 @@ PR #1675 represents each as `review_required` with `mayCross: false`. It does no
 
 Current standing: **member-act disclosure has a governed path; automatic or exception-based disclosure remains unauthorized.**
 
+### PHI stage for the future safety-contact off-ramp
+
+R7 on PR #1675 leaves a separate founder choice open before any `Message my practitioner` implementation:
+
+- **A — permit bounded Stage A use:** allow this member-authored, member-sent safety-contact use to enter the current sanctioned `client_messages` dual-write substrate, subject to every R2–R6 boundary and the #1694 identity prerequisite; or
+- **B — wait for Phase 2B:** keep the off-ramp implementation-blocked until encrypted-only `client_messages` handling is structurally active and witnessed.
+
+Neither option changes the member-act disclosure law, authorizes automatic disclosure, or opens implementation by itself. The founder choice removes or preserves only the PHI-stage hold.
+
 ## In motion
 
 ### Canonical member-facing safety floor
