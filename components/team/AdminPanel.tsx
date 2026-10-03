@@ -104,6 +104,9 @@ export function AdminPanel() {
   const [editPromptScaffold, setEditPromptScaffold] = useState('');
   const [channelMembers, setChannelMembers] = useState<Record<string, Array<{ memberId: string; name: string; role: string }>>>({});
   const [expandedMembersChannel, setExpandedMembersChannel] = useState<string | null>(null);
+  const [addMemberSearch, setAddMemberSearch] = useState('');
+  const [savingMember, setSavingMember] = useState<string | null>(null);
+  const [channelMemberError, setChannelMemberError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const [sRes, cRes, mRes, iRes, bRes] = await Promise.all([
@@ -220,6 +223,8 @@ export function AdminPanel() {
   };
 
   const loadChannelMembers = async (channelId: string) => {
+    setAddMemberSearch('');
+    setChannelMemberError(null);
     if (channelMembers[channelId]) {
       setExpandedMembersChannel(prev => prev === channelId ? null : channelId);
       return;
@@ -228,21 +233,69 @@ export function AdminPanel() {
     if (res.ok) {
       const d = await res.json();
       setChannelMembers(prev => ({ ...prev, [channelId]: d.members ?? [] }));
+      setExpandedMembersChannel(channelId);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setChannelMemberError(d.error ?? d.message ?? 'Failed to load members');
     }
-    setExpandedMembersChannel(channelId);
   };
 
-  const removeChannelMemberAdmin = async (channelId: string, memberId: string) => {
-    await fetch(`/api/team/channels/${channelId}/members`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memberId }),
-    });
+  const refreshChannelMembers = async (channelId: string) => {
     const res = await fetch(`/api/team/channels/${channelId}/members`);
     if (res.ok) {
       const d = await res.json();
       setChannelMembers(prev => ({ ...prev, [channelId]: d.members ?? [] }));
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setChannelMemberError(d.error ?? d.message ?? 'Failed to refresh members');
     }
+  };
+
+  const addChannelMemberAdmin = async (channelId: string, memberId: string, role: string = 'member') => {
+    setSavingMember(memberId);
+    setChannelMemberError(null);
+    const res = await fetch(`/api/team/channels/${channelId}/members`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId, role }),
+    });
+    if (res.ok) {
+      await refreshChannelMembers(channelId);
+      setAddMemberSearch('');
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setChannelMemberError(d.error ?? d.message ?? 'Failed to add member');
+    }
+    setSavingMember(null);
+  };
+
+  const removeChannelMemberAdmin = async (channelId: string, memberId: string) => {
+    setSavingMember(memberId);
+    setChannelMemberError(null);
+    const res = await fetch(`/api/team/channels/${channelId}/members`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId }),
+    });
+    if (res.ok) {
+      await refreshChannelMembers(channelId);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setChannelMemberError(d.error ?? d.message ?? 'Failed to remove member');
+    }
+    setSavingMember(null);
+  };
+
+  const channelAddSuggestions = (channelId: string) => {
+    const roster = channelMembers[channelId] ?? [];
+    const inChannel = new Set(roster.map(m => m.memberId));
+    const q = addMemberSearch.toLowerCase();
+    return members.filter(mm =>
+      !inChannel.has(mm.id) &&
+      (mm.name?.toLowerCase().includes(q) ||
+        mm.username?.toLowerCase().includes(q) ||
+        mm.email?.toLowerCase().includes(q))
+    );
   };
 
   const toggleAdmin = async (m: Member) => {
@@ -357,6 +410,17 @@ export function AdminPanel() {
         {/* CHANNELS */}
         {tab === 'channels' && (
           <div className="max-w-2xl space-y-6">
+            {channelMemberError && (
+              <div className="flex items-center justify-between gap-3 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2.5">
+                <p className="text-xs text-red-300/90">{channelMemberError}</p>
+                <button
+                  onClick={() => setChannelMemberError(null)}
+                  className="text-xs text-red-300/60 hover:text-red-300 flex-shrink-0"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
             {/* Active channels */}
             <div>
               <h3 className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">
@@ -514,13 +578,42 @@ export function AdminPanel() {
                             {m.role !== 'owner' && (
                               <button
                                 onClick={() => removeChannelMemberAdmin(ch.id, m.memberId)}
-                                className="text-xs text-white/20 hover:text-red-400/60 transition-colors"
+                                disabled={savingMember === m.memberId}
+                                className="text-xs text-white/20 hover:text-red-400/60 transition-colors disabled:opacity-40"
                               >
-                                Remove
+                                {savingMember === m.memberId ? '…' : 'Remove'}
                               </button>
                             )}
                           </div>
                         ))}
+                      </div>
+
+                      {/* Add member */}
+                      <div className="mt-3 pt-3 border-t border-white/6">
+                        <input
+                          value={addMemberSearch}
+                          onChange={e => setAddMemberSearch(e.target.value)}
+                          placeholder="Add member…"
+                          className="w-full bg-[#1e1e38] border border-white/10 rounded px-2 py-1 text-xs text-white/80 placeholder-white/25 focus:outline-none focus:border-amber-500/40"
+                        />
+                        {addMemberSearch && channelAddSuggestions(ch.id).length > 0 && (
+                          <div className="mt-1 bg-[#1e1e38] border border-white/10 rounded overflow-hidden">
+                            {channelAddSuggestions(ch.id).slice(0, 6).map(mm => (
+                              <button
+                                key={mm.id}
+                                onClick={() => addChannelMemberAdmin(ch.id, mm.id)}
+                                disabled={savingMember === mm.id}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-white/5 transition-colors disabled:opacity-40"
+                              >
+                                <span className="text-xs text-white/70 truncate flex-1">{mm.name || mm.username}</span>
+                                {savingMember === mm.id && <span className="text-xs text-white/30">…</span>}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {addMemberSearch && channelAddSuggestions(ch.id).length === 0 && (
+                          <p className="mt-1 text-xs text-white/25 px-1">No matches</p>
+                        )}
                       </div>
                     </div>
                   )}
