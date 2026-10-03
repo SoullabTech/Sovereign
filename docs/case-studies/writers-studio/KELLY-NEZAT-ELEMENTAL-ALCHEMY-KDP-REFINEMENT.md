@@ -122,3 +122,20 @@ Repeat the governed unit cycle from Chapter 1 through Conclusion.
 
 ### Final
 Only after the manuscript settles: whole-book reread, quotation/permissions audit, KDP production proof, and author declaration of Book holds.
+
+
+## Cross-conversation continuity — 2026-10-03
+
+The “Explore Manuscript Chapters” companion and this JARVIS case are the same refinement case, not competing editorial copies. The October 3 revision-3 companion supplies the later complete architectural read, reader-effect direction, cultivated mastery, reciprocal awe, and sacred-in-the-ordinary clarification. Recover these before commissioning more editorial work.
+
+Current operator records:
+
+- [Whole-book arc and author-direction handoff](kelly-ea-kdp/20-whole-book-arc-continuity-r3.md): a distilled, source-identified companion with every chapter's role, protections, and handoffs; exact author-direction quotations checked against the preserved source. The original provisional compass remains historical evidence.
+- [Bounded author-approval packet](kelly-ea-kdp/21-author-approval-reconciliation-r1.json): EA-C02-01 and EA-C02-02 approved for incorporation, not yet applied; EA-C02-03 withdrawn by editor, retain “faster and.” This is not an executable authorization or stored Studio proposal.
+- [Live continuity and exact-text preview](kelly-ea-kdp/22-live-match-preview-witness-r1.md): 24/24 deterministic checks, actual version-2/177-section baseline continuity, only the two approved spans changed in memory, and no live manuscript mutation.
+
+The source companion was read fully in this continuation; the 177-section architectural read is carried from that source, not claimed as a fresh whole-book read here. Source-cleanup findings, literary approval, production status, and stored Studio reading coverage remain separate. Chapter 2 remains open.
+
+**Next boundary:** Carry the exact two approved candidates into the existing Studio proposal/adoption relationship with preserved origin and fresh context. Do not ask Kelly to re-adjudicate the same wording merely because the conversation changed, but do not manufacture member-authored versions, fake stored approvals, claim Applied without a receipt, or write the draft directly. Re-read and verify the actual result before advancing its application state. No live reader-context wiring is claimed by these documents.
+
+**Repository reconciliation:** Base ef999d4c725d58e6dc8b6c5d89bc44193430bdad; fetched canonical 60d30f9c983524b517c6ca655315ec1e6ee7aded. The branch was 39 commits ahead and 11 behind at inspection; the 11 intervening canonical commits changed none of the case-record paths. No rebase, canonical merge, production deployment, or server restart was performed.

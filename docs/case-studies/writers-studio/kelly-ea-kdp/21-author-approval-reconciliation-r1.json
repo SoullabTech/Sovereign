@@ -1,0 +1,180 @@
+{
+  "schema": "kelly-ea-approved-wording-handoff/v1",
+  "case_id": "KELLY-NEZAT-EA-KDP-REFINEMENT-01",
+  "created_at": "2026-10-03T21:36:03.389Z",
+  "scope": "Documentary exact-text preview; NOT a Studio proposal, adoption receipt, executable authorization, or application command.",
+  "source_companion": {
+    "file_id": "file_0000000069bc81f5852091c7845dbb39",
+    "version": 1,
+    "sha256": "f773ea3a628a80d1bbef9f2a0ed966cf855b2ad73d15f229cf0633a7cd6bf1b6"
+  },
+  "subject": {
+    "manuscript_id": "c81925d1-9df3-46e7-a69c-7e257326f284",
+    "draft_id": "c9f15b86-da47-40ef-8a47-a74b72bc75f1",
+    "version": 2,
+    "revision_count": 2,
+    "section_count": 177,
+    "content_sha256": "b9c124c60f2f24cd4b0dfe9e301eb1baa0706122a53f16d2ac8a68e6ea326c21",
+    "ordered_section_text_sha256": "7c4423110bd0735389506253041bfa0e8688cdf79306a0a6cef40c10fd0d4b72"
+  },
+  "approved_proposals": [
+    {
+      "decision_id": "EA-C02-01",
+      "standing": "approved_for_incorporation",
+      "live_application": "not_performed",
+      "origin": "AI-proposed wording approved by Kelly; not relabeled as member-authored prose",
+      "authority_record": "Kelly: agreed lets continue; carried from Exploration 01 through Compass revision 3",
+      "source_companion_revision": 3,
+      "section_id": "a17c2fcb-5bc8-4a0e-872c-05bd2adc520a",
+      "source_section_id": "16bb46d3-4e81-45c8-b339-793077170510",
+      "position": 21,
+      "expected_stored_section_sha256": "8b6d792d656ee1a50e197b3630259815d56481c2b76aa743b622240808408d38",
+      "expected_original_normalized": "Contemporary science enables us to see ourselves as quantum beings within a mysterious world of spooky effects and energetic entanglement. It is at this level that the fuzzy logic of sacred geometry, the beauty of fractal symmetry, and the holism of toroidal processes reveal an expansive view of who we are as elemental beings.",
+      "expected_original_stored": "Contemporary science enables us to see ourselves as quantum beings\nwithin a mysterious world of spooky effects and energetic entanglement. It is\nat this level that the fuzzy logic of sacred geometry, the beauty of fractal\nsymmetry, and the holism of toroidal processes reveal an expansive view of\nwho we are as elemental beings.",
+      "approved_replacement": "Contemporary science invites us to contemplate a mysterious world of spooky effects and quantum entanglement. For me, the fuzzy logic of sacred geometry, the beauty of fractal symmetry, and the holism of toroidal processes reveal an expansive view of who we are as elemental beings.",
+      "preview_offsets": {
+        "start": 1330,
+        "end": 1658,
+        "coordinate_space": "stored section text; not an adopted runtime locus"
+      },
+      "preview_section_sha256": "1eeac348423d918fce4e6e40ca86bd729daa0bce6b3917f83d928858fddce381",
+      "context_before": "past\nwith advice to help us move forward successfully. It is telling us that we exist\nas integral and ongoing processes of nature and that every action we take as\nindividuals must be considered a part of the whole system of nature. There\nreally is no moving forward—at least in a healthy manner—without\ngrounding ourselves in the past and considering the repercussions of our\nbehavior on the future.\n",
+      "context_after": "\nTibetan Buddhist monks create meaning through artistic expression with\ncolorful sand mandalas that symbolize the elements of life within a contained\n\n30\nwhole. A mandala, in practice, serves as a reminder that everything is\ntransient, relative, and interrelated—part of an elegant whole. Although we\ndream our lives into elaborate and complex forms, eventually they return to\ntheir source and leave "
+    },
+    {
+      "decision_id": "EA-C02-02",
+      "standing": "approved_for_incorporation",
+      "live_application": "not_performed",
+      "origin": "AI-proposed wording approved by Kelly; not relabeled as member-authored prose",
+      "authority_record": "Kelly: I agree; response to Exploration 02, carried through Compass revisions 2 and 3",
+      "source_companion_revision": 3,
+      "section_id": "c7ade4a4-c586-4a01-a93e-192527578909",
+      "source_section_id": "7c6fa096-844c-4d3b-8caa-595f60bf7fb2",
+      "position": 23,
+      "expected_stored_section_sha256": "fe86eb472402f3d364841ce49a2b48496176b4161bfdaa387fcf85f298ef65e6",
+      "expected_original_normalized": "Despite our best-laid plans, life often takes unforeseen directions. We intuitively sense the underlying cycles and patterns that shape our experiences, even when life seems chaotic and random. This awareness allows us to navigate unpredictability with a sense of wonder and discovery.",
+      "expected_original_stored": "Despite our best-laid plans, life often takes unforeseen directions. We\nintuitively sense the underlying cycles and patterns that shape our\nexperiences, even when life seems chaotic and random. This awareness allows\nus to navigate unpredictability with a sense of wonder and discovery.",
+      "approved_replacement": "Despite our best-laid plans, life often takes unforeseen directions.",
+      "preview_offsets": {
+        "start": 389,
+        "end": 674,
+        "coordinate_space": "stored section text; not an adopted runtime locus"
+      },
+      "preview_section_sha256": "a033f3fdea596e7cff6c6584db520ba7a65a059c79cfe29a92bf30854ec00bb8",
+      "context_before": "CHOOSING AN AUTHENTIC PATH\n\n“To thine own self be true.” — William Shakespeare\nLife is full of pivotal decisions that significantly influence our trajectory.\nOften, we find ourselves at crossroads, choosing between a prescribed path\nand an authentic one revealed through deep introspection or powerful\nexperiences. Recognizing and acting upon these moments is crucial for\npersonal growth.\n",
+      "context_after": "\n\n"
+    }
+  ],
+  "withdrawn": {
+    "decision_id": "EA-C02-03",
+    "standing": "withdrawn_by_editor",
+    "disposition": "Keep faster and unchanged; no invented author vote"
+  },
+  "chapter_standing": "open",
+  "holds": [
+    "no live draft writes",
+    "no bulk replacement",
+    "no historical reading edits",
+    "no runtime context injection",
+    "no manufactured member authorship",
+    "no chapter holds declaration"
+  ],
+  "checks": [
+    {
+      "name": "exact-case-identity",
+      "pass": true
+    },
+    {
+      "name": "baseline-content",
+      "pass": true
+    },
+    {
+      "name": "draft-version-and-revision",
+      "pass": true
+    },
+    {
+      "name": "177-sections",
+      "pass": true
+    },
+    {
+      "name": "ordered-section-baseline",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-01-section-position",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-01-unique-original",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-01-outside-passage-preserved",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-01-changed-original-refused",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-01-ambiguous-original-refused",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-01-already-incorporated-original-refused",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-02-section-position",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-02-unique-original",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-02-outside-passage-preserved",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-02-changed-original-refused",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-02-ambiguous-original-refused",
+      "pass": true
+    },
+    {
+      "name": "EA-C02-02-already-incorporated-original-refused",
+      "pass": true
+    },
+    {
+      "name": "only-two-sections-would-change",
+      "pass": true
+    },
+    {
+      "name": "175-other-sections-preserved",
+      "pass": true
+    },
+    {
+      "name": "withdrawn-faster-and-cut-not-reintroduced",
+      "pass": true
+    },
+    {
+      "name": "earlier-pattern-explanation-preserved",
+      "pass": true
+    },
+    {
+      "name": "dream-sections-unchanged",
+      "pass": true
+    },
+    {
+      "name": "live-draft-unchanged-after-preview",
+      "pass": true
+    },
+    {
+      "name": "live-sections-unchanged-after-preview",
+      "pass": true
+    }
+  ]
+}
