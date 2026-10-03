@@ -26,7 +26,8 @@ export function ConstellationArrival() {
     next.delete(CONSTELLATION_AUDIENCE_PARAM);
     next.delete(CONSTELLATION_CAMPAIGN_PARAM);
     const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    const currentPath = pathname ?? '/writers-studio';
+    router.replace(query ? `${currentPath}?${query}` : currentPath, { scroll: false });
   };
 
   return (
