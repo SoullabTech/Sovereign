@@ -58,7 +58,32 @@ export const DOORWAYS: Record<DoorwayId, DoorwayDefinition> = {
     path: '/astrology',
     promise: 'Meet your chart as a living whole rather than a personality report.',
     difference: 'Whole-chart, non-deterministic synthesis held in conversation with MAIA.',
-    audiences: [],
+    audiences: [
+      {
+        id: 'whole-chart',
+        label: 'Whole-chart seekers',
+        longing: 'I want more than placements and fragments. I want to understand how the chart speaks as a whole.',
+        invitation: 'Meet your chart as a living pattern rather than a collection of isolated traits.',
+      },
+      {
+        id: 'symbolic-inquiry',
+        label: 'Symbolic self-inquiry',
+        longing: 'I am interested in astrology, but I do not want an app telling me who I am or what will happen.',
+        invitation: 'Use astrology as a symbolic language for inquiry — suggestive, relational, and never deterministic.',
+      },
+      {
+        id: 'serious-astrology',
+        label: 'Serious astrology learners',
+        longing: 'I want the calculated chart, the tradition behind the symbols, and a conversation sophisticated enough to hold both.',
+        invitation: 'Bring calculation, symbolic tradition, whole-chart synthesis, and your own lived meaning into one conversation.',
+      },
+      {
+        id: 'astrology-practitioner',
+        label: 'Astrology practitioners',
+        longing: 'I want to see what becomes possible when a chart is held conversationally without giving interpretation authority over the person.',
+        invitation: 'Explore a relational astrology environment built to keep the chart, the tradition, and the human being distinct.',
+      },
+    ],
     bridges: ['relationships', 'writers-studio'],
   },
   relationships: {

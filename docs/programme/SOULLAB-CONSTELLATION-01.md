@@ -76,13 +76,13 @@ When a writer returns from auth, Writer's Studio can acknowledge which declared 
 
 The public Elemental Alchemy case-study surface now exposes the governing question, the five-stage evidence method (original → reading → intervention → author choice → whole-book effect), the preservation laws, and an explicit active-study status. Final before/after evidence remains intentionally open until witnessed chapter work can populate it.
 
-### C5 — Relational referral runtime
+### C5 — Relational referral runtime — WRITER'S STUDIO BUILT
 
-Connect the referral law to MAIA's capability awareness. No automatic cross-selling. Every offered bridge must satisfy the relational-ground contract.
+Writer's Studio's governed Ask-MAIA cognition now carries the Constellation referral discipline. MAIA must answer the present writing question first, may mention at most one declared bridge only when the person themselves has clearly opened that subject, and must make staying in the current room equally valid. This does not use the documentary-only Capability Authority Registry and grants no new tool or execution authority.
 
-### C6 — Astrology doorway
+### C6 — Astrology doorway — FOUNDATION BUILT
 
-Build its own audience language and public entry surface while reusing the same Constellation architecture.
+Astrology now has its own public Constellation doorway and audience-specific invitations while remaining one underlying Astrology room. The public experience leads with whole-chart, non-deterministic symbolic inquiry and preserves the distinction between calculated facts, symbolic tradition, synthesis, possible expression, present activation, and the member's own meaning.
 
 ### C7 — Learning loop
 
