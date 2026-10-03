@@ -115,6 +115,10 @@ describe('WS2-05B-8B-02c-2R · StructureReview survives loading → loaded', () 
     expect(hookFaults()).toEqual([]);
     expect(host.querySelector('[data-review-state="loading"]')).toBeNull();
     expect(host.textContent).toContain('the book itself');
+    expect(host.textContent).toContain('Here is the shape MAIA sees');
+    expect(host.textContent).toContain('Nothing changes until you confirm it');
+    expect(host.textContent).toContain('Why MAIA sees it this way');
+    expect(host.querySelector('[data-technical-reading-details]')).not.toBeNull();
 
     const marks = host.querySelectorAll('[data-mark-question]');
     expect(marks.length).toBeGreaterThan(0);

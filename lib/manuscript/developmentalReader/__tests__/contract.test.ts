@@ -412,7 +412,7 @@ describe('F13 · malformed output is refused, never coerced into none', () => {
 
 /* ── F14 · seam refusals surface unchanged ───────────────────────────────── */
 
-describe('F14 · under sovereign mode the seam refuses and no fallback is attempted', () => {
+describe('F14 · sovereign mode stays on the local structured seam with no Anthropic fallback', () => {
   const ADAPTER = '../../../ai/structured/anthropicStructuredAdapter';
   let loaded = false;
   beforeAll(() => {
@@ -420,13 +420,13 @@ describe('F14 · under sovereign mode the seam refuses and no fallback is attemp
   });
   afterAll(() => { jest.dontMock(ADAPTER); });
 
-  it('returns structured_inference_unavailable and never loads the provider', async () => {
+  it('returns the local provider refusal and never loads the Anthropic adapter', async () => {
     const prev = process.env.MAIA_INFERENCE_MODE;
     process.env.MAIA_INFERENCE_MODE = 'sovereign';
     try {
       const { req } = request();
       const r = await readDevelopmentally(req);
-      expect(r.outcome === 'refused' ? r.refusal : r.outcome).toBe('structured_inference_unavailable');
+      expect(r.outcome === 'refused' ? r.refusal : r.outcome).toBe('provider_unavailable');
       expect(loaded).toBe(false);
     } finally {
       if (prev === undefined) delete process.env.MAIA_INFERENCE_MODE; else process.env.MAIA_INFERENCE_MODE = prev;
@@ -477,7 +477,7 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
     expect(perturbedTool).not.toBe(expected);
   });
 
-  it('identity carries DEVELOPMENTAL-READER-08, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
+  it('identity carries DEVELOPMENTAL-READER-09 and the actual provider/model supplied by the seam', () => {
     /* -02 since WS2-07-F1: the lens reached the reader with its ratified meaning
        and the claim boundary moved into the system prompt. -03 since 2026-09-05:
        section ids are confined to the evidence refs and may not appear in claim
@@ -485,8 +485,9 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
        naming "any sections in the sequence", the reading it cost is recorded in
        reader05.test.ts. Readings frozen under any version keep the identity they
        were made with — the version is provenance, never a filter. */
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-08');
-    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-08' });
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-09');
+    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-09' });
+    expect(readerIdentity('qwen3-coder:30b', 'ollama')).toEqual({ provider: 'ollama', model: 'qwen3-coder:30b', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-09' });
     expect(Object.keys(readerIdentity('m-1'))).not.toContain('frozenAt');
   });
 });

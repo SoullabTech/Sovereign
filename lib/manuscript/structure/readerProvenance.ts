@@ -9,8 +9,16 @@
  * without being able to reach the thing that reads.
  */
 
+export const READER_PROVIDERS = ['anthropic', 'ollama'] as const;
+export type ReaderProvider = typeof READER_PROVIDERS[number];
+
+export function isReaderProvider(value: unknown): value is ReaderProvider {
+  return typeof value === 'string' && (READER_PROVIDERS as readonly string[]).includes(value);
+}
+
 export interface ReaderProvenance {
-  provider: 'anthropic';
+  /** The provider that actually served the structured reading. */
+  provider: ReaderProvider;
   /** The resolved model string actually sent, never the default's name. */
   model: string;
   /** SHA-256 over the system prompt and the tool contract, together. */

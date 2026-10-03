@@ -306,6 +306,7 @@ export async function POST(request: NextRequest) {
     const scopeRefused = turn.scope !== undefined || turn.voice !== undefined
       || turn.reason === 'sequence_discussion_first'
       || turn.reason === 'proposal_policy_reply_only'
+      || turn.reason === 'noop_editorial_adjustment'
       || turn.reason === 'relationship_scope_unmeasured'
       || turn.reason === 'relationship_refused';;
     /* ⭐ A DISCLOSURE REFUSAL IS ALSO NOT A SERVER FAULT — and not a scope
