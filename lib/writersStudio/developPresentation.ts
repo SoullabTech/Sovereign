@@ -48,6 +48,7 @@ import type { ReadingAssessment } from '../manuscript/developmentalReading/asses
  * they will meet in the canon is learned rather than hidden.
  */
 export const LENS_QUESTION: Record<DevelopmentalLens, string> = {
+  overview: 'What do you see here?',
   development: 'How is it developing?',
   structure: 'How is it shaped?',
   continuity: 'What carries through?',
@@ -59,6 +60,7 @@ export const LENS_QUESTION: Record<DevelopmentalLens, string> = {
 };
 
 export const LENS_MEANING: Readonly<Record<DevelopmentalLens, string>> = {
+  overview: 'a first whole-chapter impression before choosing a deeper lens',
   structure: 'how the parts are arranged',
   development: 'how the work develops across what was read',
   continuity: 'what carries through, and what drops',
