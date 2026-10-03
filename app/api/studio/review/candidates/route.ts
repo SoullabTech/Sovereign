@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest, verifySessionOwnership } from '@/lib/scribe/scribeAuth';
 import { type ReviewLensId } from '@/lib/studio/reviewLens';
+import { mayProduceRepresentation, type PrivacyMode } from '@/lib/governance/clientRepresentationGuards';
 
 interface PendingCandidateRow {
   id: string;
@@ -59,6 +60,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // SURFACE GATE (Client Representation Governance — read-time backstop). Pending
+    // candidates are MAIA inferences about the session's client. If the client case forbids
+    // representation (private / consent_based without consent), withhold ALL candidates —
+    // their content is never loaded (the candidate query below is skipped). Covers the
+    // residual gap where a case is linked/flipped to private AFTER analyze created them.
+    // Unlinked sessions (no case) proceed.
+    const posture = await query<{ privacy_mode: PrivacyMode | null; consent_captured_at: Date | null }>(
+      `SELECT pc.privacy_mode, pc.consent_captured_at
+         FROM scribe_sessions ss
+         JOIN practitioner_cases pc ON pc.client_id = ss.client_id
+        WHERE ss.id = $1 AND pc.practitioner_id = $2`,
+      [sessionId, practitionerId],
+    );
+    const withheldByGovernance = posture.rows.some(
+      (c) => !mayProduceRepresentation(c.privacy_mode ?? 'private', c.consent_captured_at ?? null),
+    );
+    if (withheldByGovernance) {
+      return NextResponse.json({ sessionId, total: 0, withheld: true, candidates: [], byLens: {} });
+    }
+
     const result = await query<PendingCandidateRow>(
       `SELECT id, lens_id, memory_type, content, significance,
               facet_code, element_tags, evidence_ref, created_at, expires_at
@@ -95,6 +116,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       sessionId,
       total: candidates.length,
+      withheld: false,
       candidates,
       byLens,
     });

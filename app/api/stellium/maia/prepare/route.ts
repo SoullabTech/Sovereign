@@ -16,6 +16,9 @@ import { getPersonaContext, generatePersonaPrompt } from '@/lib/stellium/persona
 import { MaiaSessionPrep } from '@/lib/stellium/types';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { resolveClientDisplayName } from '@/lib/stellium/clients';
+import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
+import { query } from '@/lib/db/postgres';
+import { representationRefusal, type PrivacyMode } from '@/lib/governance/clientRepresentationGuards';
 
 /**
  * POST /api/stellium/maia/prepare
@@ -28,14 +31,34 @@ import { resolveClientDisplayName } from '@/lib/stellium/clients';
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { practitionerId, sessionId, prepType = 'full' } = body;
+    // AUTH: practitioner identity comes from the authenticated session ONLY. A
+    // body-supplied practitionerId is ignored — closing the side door where any caller
+    // could generate/store a client prep for arbitrary IDs.
+    const practitionerId = await getMemberIdFromRequest(request);
+    if (!practitionerId) {
+      return NextResponse.json({ error: 'Authentication required', code: 'AUTH_REQUIRED' }, { status: 401 });
+    }
+    const body = await request.json().catch(() => ({}));
+    const { sessionId, prepType = 'full' } = body;
+    if (!sessionId) {
+      return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
+    }
 
-    if (!practitionerId || !sessionId) {
-      return NextResponse.json(
-        { error: 'Practitioner ID and Session ID required' },
-        { status: 400 }
-      );
+    // GENERATE GATE (Client Representation Governance §2). Resolve the session's client
+    // case and refuse generation if its consent posture does not permit representation
+    // (private ⇒ no representation; consent_based ⇒ requires captured consent).
+    const caseGov = await query<{ privacy_mode: PrivacyMode | null; consent_captured_at: Date | null }>(
+      `SELECT pc.privacy_mode, pc.consent_captured_at
+         FROM practitioner_sessions ps
+         JOIN practitioner_cases pc ON pc.client_id = ps.client_id
+        WHERE ps.id = $1 AND pc.practitioner_id = $2`,
+      [sessionId, practitionerId],
+    );
+    for (const c of caseGov.rows) {
+      const refusal = representationRefusal(c.privacy_mode ?? 'private', c.consent_captured_at ?? null);
+      if (refusal) {
+        return NextResponse.json({ error: refusal.message, code: refusal.code }, { status: 403 });
+      }
     }
 
     // Get session context (includes client history, themes, previous notes)
