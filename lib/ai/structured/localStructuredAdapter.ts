@@ -37,8 +37,9 @@ function ollamaTools(tools: readonly StructuredTool[]) {
 function constrainedTools(req: StructuredRequest): readonly StructuredTool[] | null {
   if (!req.tools?.length || !req.toolChoice) return null;
   if (req.toolChoice.type === 'tool') {
-    const tool = req.tools.find((candidate) => candidate.name === req.toolChoice!.name);
-    if (!tool) throw new Error(`local_structured_forced_tool_missing:${req.toolChoice.name}`);
+    const forcedToolName = req.toolChoice.name;
+    const tool = req.tools.find((candidate) => candidate.name === forcedToolName);
+    if (!tool) throw new Error(`local_structured_forced_tool_missing:${forcedToolName}`);
     return [tool];
   }
   if (req.toolChoice.type === 'any') return req.tools;

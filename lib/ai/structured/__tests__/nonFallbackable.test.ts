@@ -72,16 +72,33 @@ describe('primary: executed exactly, and never fallen back from', () => {
   });
 });
 
-describe('sovereign / local_only: refused before any provider is reached', () => {
-  it.each(['sovereign', 'local_only'])('refuses in %s', async (mode) => {
-    const r = await withMode(mode, () => runStructured(req));
-    expect(r).toEqual({
-      ok: false,
-      refusal: 'structured_inference_unavailable',
-      detail: `mode=${mode}: no local provider can honour a structured contract`,
-    });
-    /* The mode is HONOURED, not merely unserved: the vendor adapter is never
-       reached, so there is no path by which Anthropic answers behind it. */
-    expect(execute).not.toHaveBeenCalled();
+describe('sovereign / local_only: local structured only, never external fallback', () => {
+  it.each(['sovereign', 'local_only'] as const)('routes %s through the local structured provider', async (mode) => {
+    const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        model: 'qwen3-coder:30b',
+        done_reason: 'stop',
+        prompt_eval_count: 3,
+        eval_count: 1,
+        message: { content: 'ok', tool_calls: [] },
+      }),
+    } as Response);
+    try {
+      const r = await withMode(mode, () => runStructured({ ...req, model: 'qwen3-coder:30b' }));
+      expect(r.ok).toBe(true);
+      expect(r.ok && r.result.provenance).toMatchObject({
+        provider: 'ollama',
+        model: 'qwen3-coder:30b',
+        reportedModel: 'qwen3-coder:30b',
+        modelAgreement: 'agreed',
+      });
+      /* The mode is HONOURED: the external adapter is never reached, so there
+         is no path by which Anthropic answers behind sovereign/local policy. */
+      expect(execute).not.toHaveBeenCalled();
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 });
