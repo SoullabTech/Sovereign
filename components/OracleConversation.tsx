@@ -5468,10 +5468,15 @@ I'm not sure what I'm feeling yet.`;
 
     try {
       const controller = new AbortController();
+      // Sovereign local fallback can legitimately take longer than a frontier-provider turn.
+      // Keep the client alive long enough for that fallback to finish instead of falsely
+      // marking an in-flight MAIA response as "Not delivered". Server-side provider
+      // failures still surface normally; this only prevents a premature client abort.
+      const textChatTimeoutMs = 180_000;
       const timeoutId = setTimeout(() => {
-        console.error('⏱️ API request timeout after 60s - aborting');
+        console.error(`⏱️ API request timeout after ${textChatTimeoutMs / 1000}s - aborting`);
         controller.abort();
-      }, 60000); // 60 second timeout - allow time for complex responses with teen support checks
+      }, textChatTimeoutMs);
 
       console.log('📤 Sending text message to API:', { cleanedText, userId, sessionId });
 
