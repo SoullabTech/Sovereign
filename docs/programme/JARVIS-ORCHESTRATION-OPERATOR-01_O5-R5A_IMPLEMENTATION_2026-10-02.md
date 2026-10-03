@@ -1,8 +1,8 @@
 # JARVIS-ORCHESTRATION-OPERATOR-01 / O5-R5A — Current-Reachable Execution Readiness Implementation
 
-**Date:** 2026-10-02  
-**Candidate base:** `32d5acb38f4c`  
-**Predecessor law:** O5-R5 census + corrected frozen instrument  
+**Date:** 2026-10-02
+**Reconciled canonical base:** `fc8d5e19e2e8`
+**Predecessor law:** O5-R5 census + corrected frozen instrument
 **Scope:** pure binding/readiness evidence only · no dispatch
 
 ## What this act implements
