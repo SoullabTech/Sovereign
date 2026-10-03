@@ -1,0 +1,22 @@
+# MAIA Postgres backup — systemd oneshot (alternative to cron)
+#
+# Install as a USER service (no sudo; survives logout only with linger):
+#   mkdir -p ~/.config/systemd/user
+#   cp scripts/systemd/maia-backup.* ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now maia-backup.timer
+#   loginctl enable-linger "$USER"      # so the timer runs while logged out
+#
+# Install as a SYSTEM service (needs sudo): copy to /etc/systemd/system/, add a
+# `User=` line under [Service], then `systemctl daemon-reload && systemctl enable
+# --now maia-backup.timer`.
+[Unit]
+Description=MAIA Postgres backup (pg_dump -> gzip, local)
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/MAIA-SOVEREIGN
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env bash scripts/backup-postgres.sh
