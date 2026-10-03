@@ -2806,13 +2806,26 @@
   cursor:pointer;
 }
 
-/* C11R2 · exact return from whole-manuscript Attention Map. */
+/* C11R2 · exact return from whole-manuscript Attention Map.
+   Keep the return bar inside a definite-height column. Without this bound, the
+   100%-height manuscript scroller expands to the full chapter and wheel input
+   has no overflow target in the right canvas. */
 .p4r1-root .p4r1-attention-write-return{
+  height:100%;
   min-height:0;
   display:flex;
   flex-direction:column;
+  overflow:hidden;
+}
+.p4r1-root .p4r1-attention-write-return>.p4r1-prose-host,
+.p4r1-root .p4r1-attention-write-return>.p4r1-edit-host,
+.p4r1-root .p4r1-attention-write-return>.p4r1-blank-write-host{
+  flex:1 1 auto;
+  height:auto;
+  min-height:0;
 }
 .p4r1-root .p4r1-attention-write-return-bar{
+  flex:0 0 auto;
   display:flex;
   align-items:center;
   justify-content:space-between;

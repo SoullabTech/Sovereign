@@ -45,6 +45,14 @@ describe('Writer Studio Prose View', () => {
     expect(whole).toContain('data-whole-manuscript-heading');
   });
 
+  it('keeps Attention Map returns inside a bounded, wheel-scrollable canvas', () => {
+    expect(css).toMatch(/\.p4r1-attention-write-return\{[^}]*height:100%;[^}]*overflow:hidden;/s);
+    expect(css).toContain('.p4r1-attention-write-return>.p4r1-edit-host');
+    expect(css).toContain('.p4r1-attention-write-return>.p4r1-prose-host');
+    expect(css).toMatch(/\.p4r1-attention-write-return>\.p4r1-edit-host,[\s\S]*?flex:1 1 auto;[\s\S]*?height:auto;[\s\S]*?min-height:0;/);
+    expect(whole).toContain("style={{ position: 'relative', height: '100%', overflowY: 'auto' }}");
+  });
+
   it('shows a plain Light-to-Heavy edit preference while preserving the five-level law', () => {
     expect(focus).toContain("1: 'Light'");
     expect(focus).toContain("5: 'Heavy'");
