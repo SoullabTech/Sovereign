@@ -12,18 +12,54 @@ describe('Writer Studio relational Develop guidance', () => {
   const dance = read('app/dev/writers-studio-pc3-live/EditorialDancePanel.tsx');
   const controller = read('app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx');
 
-  it('puts the editorial pass at the beginning of whole-Work Develop', () => {
+  it('puts a humane chapter read before advanced Develop machinery', () => {
     const arrival = develop.indexOf('p4r1-intent-arrival');
+    const chapterReview = develop.indexOf('<ChapterReviewPanel', arrival);
+    const more = develop.indexOf('More ways to explore', arrival);
     const attention = develop.indexOf('<AttentionMapPanel', arrival);
-    const developmental = develop.indexOf('p4r1-developmental-orientation', arrival);
-    expect(attention).toBeGreaterThan(arrival);
-    expect(attention).toBeLessThan(developmental);
-    expect(develop).toContain('Let MAIA go through the manuscript with you.');
-    expect(develop).toContain('Start an editorial pass');
-    expect(develop).toContain('Show edit options');
-    expect(develop).toContain('Work through the manuscript, one edit at a time.');
-    expect(develop).toContain("PACE_COPY[pace].label");
-    expect(css).toContain('.p4r1-root .p4r1-editorial-pass');
+    expect(chapterReview).toBeGreaterThan(arrival);
+    expect(more).toBeGreaterThan(chapterReview);
+    expect(attention).toBeGreaterThan(more);
+    expect(develop).toContain('Let MAIA read this chapter.');
+    expect(develop).toContain('Read this chapter');
+    expect(controller).toContain('begin-here: What is working — begin positively and specifically.');
+    expect(develop).toContain('What may need attention');
+    expect(develop).toContain('Where I’d start');
+    expect(develop).toContain('Show me an edited version');
+    expect(develop).toContain('Chapter scorecard');
+    expect(controller).toContain('Respond directly to the writer as a perceptive, encouraging editor');
+    expect(controller).toContain('The first thing the writer sees must build trust by naming one earned strength');
+  });
+
+  it('turns the optional scorecard into a minimal high-leverage revision path', () => {
+    expect(develop).toContain('Minimal path to 5/5');
+    expect(develop).toContain('Start with the few changes that do the most work.');
+    expect(develop).toContain('Light and moderate edits first. Major rewriting only if a smaller move cannot solve the problem.');
+    expect(develop).toContain('Work on this');
+    expect(controller).toContain('Create a writer-facing Minimal path to 5/5');
+    expect(controller).toContain('A major rewrite is exceptional');
+    expect(controller).toContain('Begin each notice with [Light], [Moderate], or [Heavy].');
+    expect(develop).toContain('fixed to this chapter revision');
+    expect(develop).not.toContain('Refresh chapter scorecard');
+    expect(controller).toContain('writers-studio:chapter-scorecard:v1');
+    expect(controller).toContain('cached.draftRevision === context.draftRevision');
+    expect(controller).toContain('chapter-scorecard-previous:v1');
+    expect(develop).toContain('Since the previous saved chapter revision');
+    expect(develop).toContain('This is a craft comparison, not a grade');
+    expect(develop).toContain('Moved upward on this rubric.');
+    expect(develop).toContain('Held steady.');
+    expect(develop).toContain('the revision may have traded something here');
+  });
+
+  it('continues from the first read into book-fit and chapter-movement questions', () => {
+    expect(develop).toContain('How does this chapter fit the book?');
+    expect(develop).toContain('Show me the chapter’s movement');
+    expect(develop).toContain('data-chapter-book-fit');
+    expect(develop).toContain('data-chapter-movement');
+    expect(controller).toContain('The writer has asked how the currently reviewed chapter fits into the whole book.');
+    expect(controller).toContain('Stay inside this chapter and describe its movement as an editor');
+    expect(controller).toContain('What this chapter contributes to the whole book');
+    expect(controller).toContain('strongest movement');
   });
 
   it('commissions the whole-manuscript synthesis as an editorial pass, not an abstract dashboard', () => {
@@ -69,7 +105,7 @@ describe('Writer Studio relational Develop guidance', () => {
   it('makes future saved readings writer-facing instead of taxonomy-facing', () => {
     expect(reader).toContain('Write as MAIA noticing something WITH a writer');
     expect(reader).toContain('The taxonomy belongs in metadata');
-    expect(reader).toContain("READER_VERSION = 'DEVELOPMENTAL-READER-08'");
+    expect(reader).toContain("READER_VERSION = 'DEVELOPMENTAL-READER-09'");
   });
 
   it('pins colors to Studio variables so night mode cannot fall back to native black', () => {
@@ -80,10 +116,16 @@ describe('Writer Studio relational Develop guidance', () => {
 
   it('shows a facts-only chapter shape before asking MAIA to read Structure', () => {
     expect(develop).toContain("activeField === 'structure' && props.scope.kind === 'chapter'");
-    expect(develop).toContain('<ChapterShape sections={props.sections} scope={props.scope} />');
-    expect(develop).toContain('This is not a MAIA reading.');
+    expect(develop).toContain('<ChapterShape manuscriptId={props.manuscriptId} sections={props.sections} scope={props.scope} />');
+    expect(develop).toContain('ingestion cut is never');
+    expect(develop).toContain('Explicit structure preserved by the manuscript');
+    expect(develop).toContain('Import details');
+    expect(develop).toContain('level unconfirmed');
+    expect(develop).toContain('Restore chapter structure');
+    expect(develop).toContain('some of their levels were lost in import');
+    expect(reader).toContain('SECTION IDS AND POSITIONS ARE TECHNICAL EVIDENCE COORDINATES, NOT AUTHORSHIP');
     expect(develop).toContain('Opening epigraph');
-    expect(develop).toContain('words</small>');
+    expect(develop).toContain('words in this chapter span');
     expect(css).toContain('.p4r1-root .p4r1-chapter-outline');
   });
 });

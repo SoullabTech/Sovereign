@@ -40,7 +40,7 @@ export interface EditorialDancePanelProps {
   onChooseSessionPosture: (sanctuary: boolean) => void;
 
   onSelectVersion: (id: string) => void;
-  onSend: (text?: string) => void;
+  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean }) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   onUndo?: () => void;
@@ -84,10 +84,57 @@ function firstUsefulSentence(text: string): string {
   return (match?.[1] ?? trimmed.slice(0, 240)).trim();
 }
 
+type DiffPart = { kind: 'same' | 'remove' | 'add'; text: string };
+
+function coalesceDiff(parts: DiffPart[]): DiffPart[] {
+  const out: DiffPart[] = [];
+  for (const part of parts) {
+    if (!part.text) continue;
+    const last = out[out.length - 1];
+    if (last?.kind === part.kind) last.text += part.text;
+    else out.push({ ...part });
+  }
+  return out;
+}
+
+function wordDiff(original: string, edited: string): DiffPart[] {
+  if (original === edited) return [{ kind: 'same', text: original }];
+  const a = original.split(/(\s+)/).filter(Boolean);
+  const b = edited.split(/(\s+)/).filter(Boolean);
+  if (a.length * b.length > 160000) {
+    return [
+      { kind: 'remove', text: original },
+      { kind: 'add', text: edited },
+    ];
+  }
+  const dp = Array.from({ length: a.length + 1 }, () => new Uint32Array(b.length + 1));
+  for (let i = a.length - 1; i >= 0; i -= 1) {
+    for (let j = b.length - 1; j >= 0; j -= 1) {
+      dp[i]![j] = a[i] === b[j]
+        ? dp[i + 1]![j + 1]! + 1
+        : Math.max(dp[i + 1]![j]!, dp[i]![j + 1]!);
+    }
+  }
+  const parts: DiffPart[] = [];
+  let i = 0; let j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { parts.push({ kind: 'same', text: a[i]! }); i += 1; j += 1; }
+    else if (dp[i + 1]![j]! >= dp[i]![j + 1]!) { parts.push({ kind: 'remove', text: a[i]! }); i += 1; }
+    else { parts.push({ kind: 'add', text: b[j]! }); j += 1; }
+  }
+  while (i < a.length) { parts.push({ kind: 'remove', text: a[i++]! }); }
+  while (j < b.length) { parts.push({ kind: 'add', text: b[j++]! }); }
+  return coalesceDiff(parts);
+}
+
 type EditorialSummary = {
   preserve: string | null;
   friction: string | null;
   tryNext: string | null;
+  changed: string | null;
+  why: string | null;
+  readerEffect: string | null;
+  protected: string | null;
 };
 
 function editorialSummary(text: string): EditorialSummary {
@@ -96,10 +143,21 @@ function editorialSummary(text: string): EditorialSummary {
     const hit = lines.find((line) => pattern.test(line));
     return hit ? hit.replace(pattern, '').trim() || null : null;
   };
+  const compact = text.replace(/\s+/g, ' ').trim();
+  const extract = (label: RegExp): string | null => {
+    const labels = '(?:What changed|Why|Reader effect(?: \\(hypothesis only\\))?|What I protected)';
+    const source = label.source.replace(/^\^/, '');
+    const match = compact.match(new RegExp(`${source}\\s*([\\s\\S]*?)(?=\\s+${labels}\\s*:|$)`, 'i'));
+    return match?.[1]?.trim() || null;
+  };
   return {
     preserve: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What I[’']d preserve:\s*/i),
     friction: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?Friction I notice:\s*/i),
     tryNext: pick(/^(?:[-*]\s*)?(?:\d+[.)]\s*)?What I[’']d try:\s*/i),
+    changed: extract(/What changed:\s*/i),
+    why: extract(/Why:\s*/i),
+    readerEffect: extract(/Reader effect(?: \(hypothesis only\))?:\s*/i),
+    protected: extract(/What I protected:\s*/i),
   };
 }
 
@@ -111,7 +169,12 @@ function revisePassagePrompt(): string {
     `"${EDITORIAL_PACKET_LABELS.friction}: …" — support this from the exact words; do not grade or diagnose the writing.`,
     `"${EDITORIAL_PACKET_LABELS.possibility}: …" — name the editorial move and why you would try it.`,
     'Then, if a revision is warranted, offer one possible revision. Preserve my voice, intention, subject, and intentional ambiguity.',
-    'Separate meaning changes from style changes, treat reader effects as hypotheses, and say what could be lost.',
+    'After the revision, add exactly these four short lines:',
+    '"What changed: …"',
+    '"Why: …"',
+    '"Reader effect: …" — treat this as a hypothesis, never a fact about actual readers.',
+    '"What I protected: …"',
+    'Keep the explanation concrete and tied to the exact words. Separate meaning changes from style changes and say what could be lost.',
     'Nothing is to be applied automatically.',
   ].join('\n\n');
 }
@@ -187,6 +250,14 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const summarySource = props.lastMaiaTurn?.body ?? recommendation?.rationale ?? '';
   const summary = editorialSummary(summarySource);
   const hasStructuredSummary = Boolean(summary.preserve || summary.friction || summary.tryNext);
+  const changeSummary = editorialSummary(props.version?.rationale ?? recommendation?.rationale ?? '');
+  const hasChangeSummary = Boolean(
+    changeSummary.changed || changeSummary.why || changeSummary.readerEffect || changeSummary.protected,
+  );
+  const changedWords = useMemo(
+    () => wordDiff(props.currentText, props.version?.wording ?? recommendation?.wording ?? props.currentText),
+    [props.currentText, props.version?.wording, recommendation?.wording],
+  );
 
   useEffect(() => {
     if (!props.version) return;
@@ -235,10 +306,29 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       approachNote(id),
       'Offer one possible revision of this exact passage in that direction.',
       'Begin the rationale with "Editorial purpose: ' + approach.label + '".',
+      'Then include four short rationale lines: "What changed: …", "Why: …", "Reader effect: …", and "What I protected: …".',
       'Preserve my stated intention and voice. Separate meaning changes from style changes.',
       'Treat any reader effect as a hypothesis. Do not invent personal experience, quotations, sources, or unseen evidence.',
       'Nothing is to be applied automatically.',
-    ].join('\n\n'));
+    ].join('\n\n'), { proposalPolicy: 'allow', proposalRequested: true });
+  };
+
+  const adjustProposal = (instruction: string) => {
+    const selected = props.version?.wording ?? recommendation.wording;
+    props.onSend([
+      instruction,
+      'Original passage:',
+      props.currentText,
+      '',
+      'Currently selected proposal:',
+      selected,
+      '',
+      'Work from these exact two texts. Do not silently broaden the edit or substitute a different locus.',
+      'Return at most one new proposal. Preserve my voice, intention, subject, and intentional ambiguity.',
+      'The adjusted proposal must differ meaningfully from the currently selected proposal. If no meaningful adjustment in the requested direction is possible, reply without a new proposal and explain why.',
+      'In the rationale include: "What changed: …", "Why: …", "Reader effect: …", and "What I protected: …".',
+      'Treat reader effect as a hypothesis. Nothing is applied automatically.',
+    ].join('\n'), { proposalPolicy: 'allow', proposalRequested: true });
   };
 
   const sendTalk = () => {
@@ -499,11 +589,18 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             {summary.friction ? <div><b>{EDITORIAL_PACKET_LABELS.friction}</b><p>{summary.friction}</p></div> : null}
             {summary.tryNext ? <div><b>{EDITORIAL_PACKET_LABELS.possibility}</b><p>{summary.tryNext}</p></div> : null}
           </div>
+        ) : props.lastMaiaTurn?.body ? (
+          <div className="p4r1-dance-latest-response" data-editorial-latest-response>
+            <b>MAIA’s latest response</b>
+            <p>{props.lastMaiaTurn.body}</p>
+          </div>
         ) : (
           <h3>{firstUsefulSentence(summarySource || 'Here is one direction I would try.')}</h3>
         )}
         {recommendation.rationale ? <p className="p4r1-dance-rationale">{recommendation.rationale}</p> : null}
       </div>
+
+      {postureGate}
 
       <div className="p4r1-dance-options" aria-label="Revision directions">
         <button
@@ -531,6 +628,57 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
               <p>{candidate.wording}</p>
             </button>
           ))}
+      </div>
+
+      <section className="p4r1-dance-change-card" aria-label="What changed in this edit">
+        <div className="p4r1-dance-change-compare">
+          <div>
+            <span className="p4r1-eyebrow">Original</span>
+            <p>{props.currentText}</p>
+          </div>
+          <div>
+            <span className="p4r1-eyebrow">Edited</span>
+            <p>{props.version?.wording ?? recommendation.wording}</p>
+          </div>
+        </div>
+        <div className="p4r1-dance-changed-words" aria-label="Changed words">
+          <span className="p4r1-eyebrow">Changed words</span>
+          <p>
+            {changedWords.map((part, index) => part.kind === 'remove'
+              ? <del key={index}>{part.text}</del>
+              : part.kind === 'add'
+                ? <ins key={index}>{part.text}</ins>
+                : <span key={index}>{part.text}</span>)}
+          </p>
+        </div>
+        <div className="p4r1-dance-change-reasoning">
+          <div><b>What changed</b><p>{changeSummary.changed ?? 'MAIA can explain the exact editorial move behind this version.'}</p></div>
+          <div><b>Why</b><p>{changeSummary.why ?? props.version?.rationale ?? recommendation.rationale ?? 'Open the explanation to see the reasoning behind this change.'}</p></div>
+          <div><b>Reader effect</b><p>{changeSummary.readerEffect ?? 'Ask MAIA what this change may make easier, clearer, faster, or more vivid for a reader.'}</p></div>
+          <div><b>What I protected</b><p>{changeSummary.protected ?? summary.preserve ?? 'Your meaning, voice, and intentional ambiguity remain the reference.'}</p></div>
+        </div>
+        {!hasChangeSummary ? (
+          <button
+            type="button"
+            disabled={props.busy || postureBlocksEditorial}
+            onClick={() => props.onSend([
+              'Explain the currently selected revision without proposing new wording.',
+              'Use exactly four short lines: "What changed: …", "Why: …", "Reader effect: …", and "What I protected: …".',
+              'Tie every statement to the original and proposed wording. Treat reader effect as a hypothesis.',
+            ].join('\n\n'))}
+          >
+            Explain this change
+          </button>
+        ) : null}
+      </section>
+
+      <div className="p4r1-dance-adjust" aria-label="Adjust this edit">
+        <span>Adjust this edit</span>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => adjustProposal('Make this revision lighter. Restore more of my original wording and change only what is necessary.')}>Make it lighter</button>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => adjustProposal('Keep more of my original wording and cadence while preserving the useful editorial gain.')}>Keep more of mine</button>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => adjustProposal('Go a little further with the same editorial intention, but do not jump to a major rewrite.')}>Go a little further</button>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => adjustProposal('Show me one genuinely different option for this same passage. Do not rank it against the current one.')}>Another option</button>
+        <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => setTalk('Restore this part of my original: ')}>Restore a part</button>
       </div>
 
       <div className="p4r1-dance-directions">

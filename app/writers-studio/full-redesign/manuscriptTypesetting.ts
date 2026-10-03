@@ -8,10 +8,12 @@ const SENTENCE_END = /[.!?…][”’"']?$/;
 
 function classify(text: string): WriteBlockKind {
   const t = text.trim();
-  if (FOLIO.test(t)) return 'folio';
-  if (ROMAN_SUBHEAD.test(t) || NUMBERED_SUBHEAD.test(t)) return 'subhead';
-  if (t.split('\n').every((line) => !line.trim() || LIST_LINE.test(line.trim()))) return 'list';
-  if (/^[“"‘']/.test(t) && (/[”"’']\s*[—–-]\s*\S/.test(t) || /[”"’']$/.test(t))) return 'epigraph';
+  const markdownWrapped = /^(\*|_)([\s\S]+)\1$/.exec(t);
+  const visible = markdownWrapped ? markdownWrapped[2]!.trim() : t;
+  if (FOLIO.test(visible)) return 'folio';
+  if (ROMAN_SUBHEAD.test(visible) || NUMBERED_SUBHEAD.test(visible)) return 'subhead';
+  if (visible.split('\n').every((line) => !line.trim() || LIST_LINE.test(line.trim()))) return 'list';
+  if (/^[“"‘']/.test(visible) && (/[”"’']\s*[—–-]\s*\S/.test(visible) || /[”"’']$/.test(visible))) return 'epigraph';
   return 'paragraph';
 }
 

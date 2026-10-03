@@ -18,6 +18,7 @@ import type { DevelopPreparation } from '@/lib/writersStudio/developPreparationC
 import type { WholeManuscriptAttentionMap, AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import type { WriterUnderstanding, WriterUnderstandingDraft } from '@/lib/writersStudio/writerUnderstanding';
 import type { IntellectualLineageOrientation } from '@/lib/writersStudio/intellectualLineageOrientation';
+import { requestStructureReading } from '@/lib/writersStudio/reviewClient';
 import type {
   ChapterLineageCandidate,
   ChapterLineageScan,
@@ -172,6 +173,25 @@ export interface P4R1DevelopViewProps {
   attentionError: string | null;
   attentionProgress: string | null;
   selectedAttentionItemId: string | null;
+  chapterReview: WholeManuscriptAttentionMap | null;
+  chapterReviewBusy: boolean;
+  chapterNeedsCheckpoint: boolean;
+  chapterReviewError: string | null;
+  chapterReviewProgress: string | null;
+  chapterScorecard: WholeManuscriptAttentionMap | null;
+  previousChapterScorecard: WholeManuscriptAttentionMap | null;
+  previousChapterScoreRevision: number | null;
+  chapterScoreBusy: boolean;
+  chapterScoreError: string | null;
+  chapterMinimalPath: WholeManuscriptAttentionMap | null;
+  chapterMinimalPathBusy: boolean;
+  chapterMinimalPathError: string | null;
+  chapterBookFit: WholeManuscriptAttentionMap | null;
+  chapterBookFitBusy: boolean;
+  chapterBookFitError: string | null;
+  chapterMovement: WholeManuscriptAttentionMap | null;
+  chapterMovementBusy: boolean;
+  chapterMovementError: string | null;
   writerUnderstanding: WriterUnderstanding | null;
   writerUnderstandingBusy: boolean;
   writerUnderstandingError: string | null;
@@ -199,6 +219,12 @@ export interface P4R1DevelopViewProps {
   onReading: (readingId: string) => void;
   onScope: (scope: DevelopScopeChoice) => void;
   onCommission: () => void;
+  onReadChapter: () => void;
+  onCheckpointAndReadChapter: () => void;
+  onReadChapterInBook: () => void;
+  onReadChapterMovement: () => void;
+  onScoreChapter: () => void;
+  onMinimalPathChapter: () => void;
   onCommissionAttentionMap: () => void;
   onShowAttentionItem: (itemId: string, sectionId: string) => void;
   onWorkWithAttentionItem: (itemId: string, sectionId: string) => void;
@@ -324,25 +350,53 @@ function openingEpigraph(section: RebuildSection): string | null {
   return /^[“"‘']/.test(opening) ? opening : null;
 }
 
-function ChapterShape({ sections, scope }: {
+function ChapterShape({ manuscriptId, sections, scope }: {
+  manuscriptId: string;
   sections: readonly RebuildSection[];
   scope: Extract<DevelopScopeChoice, { kind: 'chapter' }>;
 }) {
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const from = sections.findIndex((section) => section.draftSectionId === scope.fromSectionId);
   const to = sections.findIndex((section) => section.draftSectionId === scope.toSectionId);
   if (from < 0 || to < from) return null;
+
   const chapter = sections.slice(from, to + 1);
   const root = chapter[0] ?? null;
   const epigraph = root ? openingEpigraph(root) : null;
-  const outline = chapter.filter((section) => Boolean(section.heading?.trim()));
+  const chapterWords = chapter.reduce((sum, section) => sum + sectionWordCount(section), 0);
+
+  // Only an explicit heading depth is structural evidence. Generic ALL-CAPS
+  // cuts are useful ingestion coordinates, but they are not authored hierarchy.
+  const explicit = chapter
+    .map((section, index) => ({ section, index }))
+    .filter(({ section }) => Boolean(section.heading?.trim()) && section.headingDepth !== null)
+    .filter(({ section }) => section.draftSectionId !== root?.draftSectionId);
+
+  const detectedOnly = chapter
+    .filter((section) => Boolean(section.heading?.trim()) && section.headingDepth === null);
+
+  const wordsInExplicitSpan = (index: number, depth: number): number => {
+    let end = chapter.length;
+    for (let i = index + 1; i < chapter.length; i += 1) {
+      const nextDepth = chapter[i]?.headingDepth;
+      if (nextDepth !== null && nextDepth !== undefined && nextDepth <= depth) {
+        end = i;
+        break;
+      }
+    }
+    return chapter.slice(index, end)
+      .reduce((sum, section) => sum + sectionWordCount(section), 0);
+  };
 
   return (
     <section className="fr-card p4r1-chapter-shape" aria-label="Chapter shape from the manuscript">
       <span className="p4r1-eyebrow">The chapter as it is</span>
       <h3>{scope.label}</h3>
       <p>
-        This is not a MAIA reading. It is the chapter’s own headings, order, opening material, and word counts —
-        a simple map of what is already on the page.
+        {chapterWords.toLocaleString()} words in this chapter span. Writer’s Studio separates structure the
+        manuscript explicitly preserved from headings the import merely detected, so an ingestion cut is never
+        presented as an authored section.
       </p>
       {epigraph ? (
         <blockquote className="p4r1-chapter-epigraph">
@@ -350,14 +404,74 @@ function ChapterShape({ sections, scope }: {
           <p>{epigraph}</p>
         </blockquote>
       ) : null}
-      <ol className="p4r1-chapter-outline">
-        {outline.map((section) => (
-          <li key={section.draftSectionId} data-depth={section.headingDepth ?? undefined}>
-            <span>{section.heading?.trim()}</span>
-            <small>{sectionWordCount(section).toLocaleString()} words</small>
-          </li>
-        ))}
-      </ol>
+
+      {explicit.length > 0 ? (
+        <>
+          <span className="p4r1-eyebrow">Explicit structure preserved by the manuscript</span>
+          <ol className="p4r1-chapter-outline">
+            {explicit.map(({ section, index }) => (
+              <li key={section.draftSectionId} data-depth={section.headingDepth ?? undefined}>
+                <span>{section.heading?.trim()}</span>
+                <small>
+                  {wordsInExplicitSpan(index, section.headingDepth ?? 3).toLocaleString()} words
+                </small>
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        <p>
+          No subchapter hierarchy survived this import with enough evidence to call it authored structure.
+          MAIA should not infer one from storage boundaries.
+        </p>
+      )}
+
+      {detectedOnly.length > 0 ? (
+        <div className="p4r1-structure-recovery" data-structure-recovery>
+          <b>Some of this chapter’s hierarchy was lost in import.</b>
+          <p>
+            Writer’s Studio can see the headings, but some of their levels were lost in import.
+            MAIA can suggest the chapter’s shape. You can correct it before anything changes.
+          </p>
+          <button
+            type="button"
+            disabled={recovering}
+            onClick={async () => {
+              if (recovering) return;
+              setRecovering(true);
+              setRecoveryError(null);
+              const result = await requestStructureReading(manuscriptId);
+              setRecovering(false);
+              if (!result.ok) {
+                setRecoveryError('MAIA could not prepare a structure proposal just now. Nothing changed.');
+                return;
+              }
+              window.location.assign(result.reviewPath);
+            }}
+          >
+            {recovering ? 'Reading the manuscript…' : 'Restore chapter structure'}
+          </button>
+          {recoveryError ? <p role="status">{recoveryError}</p> : null}
+        </div>
+      ) : null}
+
+      {detectedOnly.length > 0 ? (
+        <details className="p4r1-chapter-detected">
+          <summary>Import details</summary>
+          <p>
+            {detectedOnly.length} headings were detected whose level was not preserved. They remain visible
+            without being treated as chapters or numbered sections.
+          </p>
+          <ol className="p4r1-chapter-outline">
+            {detectedOnly.map((section) => (
+              <li key={section.draftSectionId}>
+                <span>{section.heading?.trim()}</span>
+                <small>level unconfirmed</small>
+              </li>
+            ))}
+          </ol>
+        </details>
+      ) : null}
     </section>
   );
 }
@@ -1422,6 +1536,297 @@ function ChapterLineagePanel({
   );
 }
 
+function ChapterReviewPanel({
+  map,
+  busy,
+  needsCheckpoint,
+  progress,
+  error,
+  onRead,
+  onCheckpointAndRead,
+  onField,
+  onWrite,
+  onEdit,
+  scorecard,
+  previousScorecard,
+  previousScoreRevision,
+  scoreBusy,
+  scoreError,
+  minimalPath,
+  minimalPathBusy,
+  minimalPathError,
+  bookFit,
+  bookFitBusy,
+  bookFitError,
+  movement,
+  movementBusy,
+  movementError,
+  onBookFit,
+  onMovement,
+  onScore,
+  onMinimalPath,
+}: {
+  map: WholeManuscriptAttentionMap | null;
+  busy: boolean;
+  needsCheckpoint: boolean;
+  progress: string | null;
+  error: string | null;
+  onRead: () => void;
+  onCheckpointAndRead: () => void;
+  onField: (field: DevelopField) => void;
+  onWrite: () => void;
+  onEdit: (itemId: string, sectionId: string) => void;
+  scorecard: WholeManuscriptAttentionMap | null;
+  previousScorecard: WholeManuscriptAttentionMap | null;
+  previousScoreRevision: number | null;
+  scoreBusy: boolean;
+  scoreError: string | null;
+  minimalPath: WholeManuscriptAttentionMap | null;
+  minimalPathBusy: boolean;
+  minimalPathError: string | null;
+  bookFit: WholeManuscriptAttentionMap | null;
+  bookFitBusy: boolean;
+  bookFitError: string | null;
+  movement: WholeManuscriptAttentionMap | null;
+  movementBusy: boolean;
+  movementError: string | null;
+  onBookFit: () => void;
+  onMovement: () => void;
+  onScore: () => void;
+  onMinimalPath: () => void;
+}) {
+  if (!map) {
+    return (
+      <section className="fr-card p4r1-chapter-review" data-chapter-review="empty">
+        <span className="p4r1-eyebrow">Start here</span>
+        <h3>Let MAIA read this chapter.</h3>
+        <p>
+          She’ll tell you what she thinks the chapter is doing, what is already working,
+          and where she would focus next. No jargon. Nothing changes.
+        </p>
+        {needsCheckpoint ? (
+          <div className="p4r1-chapter-read-snapshot">
+            <p>
+              This chapter has changed since the last reading snapshot. Save the current draft so
+              MAIA reads exactly what is on the page now. Your words will not change.
+            </p>
+            <button
+              type="button"
+              className="p4r1-commission"
+              disabled={busy}
+              onClick={onCheckpointAndRead}
+            >
+              {busy ? (progress ?? 'Saving the current draft…') : 'Save current draft & read'}
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="p4r1-commission" disabled={busy} onClick={onRead}>
+            {busy ? (progress ?? 'MAIA is reading the chapter…') : 'Read this chapter'}
+          </button>
+        )}
+        {error ? <p className="p4r1-error" role="status">{error}</p> : null}
+      </section>
+    );
+  }
+
+  const byBand = (band: string) => map.items.find((item) => item.band === band) ?? null;
+  const strength = byBand('begin-here');
+  const grasp = byBand('next');
+  const friction = byBand('later');
+  const start = byBand('watch');
+
+  return (
+    <section className="fr-card p4r1-chapter-review" data-chapter-review="ready">
+      <span className="p4r1-eyebrow">MAIA read the chapter</span>
+      {strength ? (
+        <div className="p4r1-chapter-review-lead">
+          <h3>{strength.label}</h3>
+          <p>{strength.notice}</p>
+          <small>{strength.whyItMatters}</small>
+        </div>
+      ) : null}
+
+      {grasp ? (
+        <div className="p4r1-chapter-review-point">
+          <b>What I think this chapter is doing</b>
+          <p>{grasp.notice}</p>
+        </div>
+      ) : null}
+
+      {friction ? (
+        <div className="p4r1-chapter-review-point">
+          <b>What may need attention</b>
+          <p>{friction.notice}</p>
+        </div>
+      ) : null}
+
+      {start ? (
+        <div className="p4r1-chapter-review-point">
+          <b>Where I’d start</b>
+          <p>{start.notice}</p>
+        </div>
+      ) : null}
+
+      <div className="p4r1-chapter-review-actions">
+        <button type="button" disabled={bookFitBusy} onClick={onBookFit}>
+          {bookFitBusy ? 'Reading the book around this chapter…' : 'How does this chapter fit the book?'}
+        </button>
+        <button type="button" disabled={movementBusy} onClick={onMovement}>
+          {movementBusy ? 'Looking at the chapter’s movement…' : 'Show me the chapter’s movement'}
+        </button>
+        <button type="button" onClick={() => onField('development')}>Show me what to strengthen</button>
+        {start?.sectionIds[0] ? (
+          <button
+            type="button"
+            className="p4r1-chapter-review-primary"
+            onClick={() => onEdit(start.id, start.sectionIds[0]!)}
+          >
+            Show me an edited version
+          </button>
+        ) : (
+          <button type="button" className="p4r1-chapter-review-primary" onClick={onWrite}>Work on the writing</button>
+        )}
+        {!scorecard ? (
+          <button type="button" disabled={scoreBusy} onClick={onScore}>
+            {scoreBusy ? 'Building scorecard…' : 'Chapter scorecard'}
+          </button>
+        ) : null}
+        {scorecard ? (
+          <button type="button" disabled={minimalPathBusy} onClick={onMinimalPath}>
+            {minimalPathBusy ? 'Finding the smallest high-leverage changes…' : 'Minimal path to 5/5'}
+          </button>
+        ) : null}
+      </div>
+
+      {bookFitError ? <p className="p4r1-error" role="status">{bookFitError}</p> : null}
+      {bookFit ? (
+        <section className="p4r1-chapter-expansion" data-chapter-book-fit>
+          <span className="p4r1-eyebrow">In the book</span>
+          {bookFit.items.map((item) => (
+            <div key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+            </div>
+          ))}
+          <details><summary>Why MAIA thinks this</summary>{bookFit.items.map((item) => <p key={item.id}>{item.whyItMatters}</p>)}</details>
+        </section>
+      ) : null}
+
+      {movementError ? <p className="p4r1-error" role="status">{movementError}</p> : null}
+      {movement ? (
+        <section className="p4r1-chapter-expansion" data-chapter-movement>
+          <span className="p4r1-eyebrow">Inside the chapter</span>
+          {movement.items.map((item) => (
+            <div key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+            </div>
+          ))}
+          <details><summary>Why MAIA thinks this</summary>{movement.items.map((item) => <p key={item.id}>{item.whyItMatters}</p>)}</details>
+        </section>
+      ) : null}
+
+      {scoreError ? <p className="p4r1-error" role="status">{scoreError}</p> : null}
+      {scorecard ? (() => {
+        const dimensions = ['Clarity', 'Coherence', 'Reader orientation', 'Voice', 'Momentum'];
+        const scored = scorecard.items.filter((item) => dimensions.includes(item.label));
+        const extras = scorecard.items.filter((item) => !dimensions.includes(item.label));
+        return (
+          <div className="p4r1-chapter-scorecard" data-chapter-scorecard>
+            <div className="p4r1-chapter-scorecard-head">
+              <b>Chapter scorecard</b>
+              <span>Optional craft guide · not a grade · fixed to this chapter revision</span>
+            </div>
+            {scored.map((item) => {
+              const score = item.notice.match(/^([1-5]\/5)\b/)?.[1] ?? '—';
+              return (
+                <details key={item.id}>
+                  <summary>
+                    <b>{item.label}</b>
+                    <span>{score}</span>
+                  </summary>
+                  <p>{item.notice}</p>
+                  <small>{item.whyItMatters}</small>
+                </details>
+              );
+            })}
+            {extras.length > 0 ? (
+              <details className="p4r1-chapter-scorecard-extra">
+                <summary>Other thing MAIA noticed</summary>
+                {extras.map((item) => (
+                  <div key={item.id}>
+                    <b>{item.label}</b>
+                    <p>{item.notice}</p>
+                    <small>{item.whyItMatters}</small>
+                  </div>
+                ))}
+              </details>
+            ) : null}
+            {previousScorecard ? (
+              <section className="p4r1-score-comparison" data-chapter-score-comparison>
+                <div>
+                  <b>Since the previous saved chapter revision</b>
+                  <span>This is a craft comparison, not a grade{previousScoreRevision !== null ? ` · previous revision ${previousScoreRevision}` : ''}.</span>
+                </div>
+                {dimensions.map((dimension) => {
+                  const currentItem = scorecard.items.find((item) => item.label === dimension);
+                  const previousItem = previousScorecard.items.find((item) => item.label === dimension);
+                  const currentScore = Number(currentItem?.notice.match(/^([1-5])\/5\b/)?.[1] ?? NaN);
+                  const previousScore = Number(previousItem?.notice.match(/^([1-5])\/5\b/)?.[1] ?? NaN);
+                  if (!Number.isFinite(currentScore) || !Number.isFinite(previousScore)) return null;
+                  const movement = currentScore > previousScore
+                    ? 'Moved upward on this rubric.'
+                    : currentScore < previousScore
+                      ? 'Worth another look; the revision may have traded something here.'
+                      : 'Held steady.';
+                  return (
+                    <article key={dimension}>
+                      <b>{dimension}</b>
+                      <span>{previousScore}/5 → {currentScore}/5</span>
+                      <small>{movement}</small>
+                    </article>
+                  );
+                })}
+              </section>
+            ) : null}
+          </div>
+        );
+      })() : null}
+
+      {minimalPathError ? <p className="p4r1-error" role="status">{minimalPathError}</p> : null}
+      {minimalPath ? (
+        <section className="p4r1-chapter-expansion p4r1-minimal-path" data-chapter-minimal-path>
+          <span className="p4r1-eyebrow">Minimal path to 5/5</span>
+          <h4>Start with the few changes that do the most work.</h4>
+          <p>Light and moderate edits first. Major rewriting only if a smaller move cannot solve the problem.</p>
+          {minimalPath.items.map((item) => (
+            <article key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+              <small>{item.whyItMatters}</small>
+              {item.sectionIds[0] ? (
+                <button type="button" onClick={() => onEdit(item.id, item.sectionIds[0]!)}>Work on this</button>
+              ) : null}
+            </article>
+          ))}
+        </section>
+      ) : null}
+
+      <details className="p4r1-chapter-review-details">
+        <summary>Why MAIA thinks this</summary>
+        {map.items.map((item) => (
+          <div key={item.id}>
+            <b>{item.label}</b>
+            <p>{item.whyItMatters}</p>
+          </div>
+        ))}
+      </details>
+
+      {error ? <p className="p4r1-error" role="status">{error}</p> : null}
+    </section>
+  );
+}
+
 function AttentionMapPanel({
   map,
   busy,
@@ -1891,6 +2296,40 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           </div>
         ) : (
         <div className="p4r1-intent-arrival">
+          <ChapterReviewPanel
+            map={props.chapterReview}
+            busy={props.chapterReviewBusy}
+            needsCheckpoint={props.chapterNeedsCheckpoint}
+            progress={props.chapterReviewProgress}
+            error={props.chapterReviewError}
+            onRead={props.onReadChapter}
+            onCheckpointAndRead={props.onCheckpointAndReadChapter}
+            onField={props.onField}
+            onWrite={() => props.onMode('write')}
+            onEdit={props.onWorkWithAttentionItem}
+            scorecard={props.chapterScorecard}
+            previousScorecard={props.previousChapterScorecard}
+            previousScoreRevision={props.previousChapterScoreRevision}
+            scoreBusy={props.chapterScoreBusy}
+            scoreError={props.chapterScoreError}
+            minimalPath={props.chapterMinimalPath}
+            minimalPathBusy={props.chapterMinimalPathBusy}
+            minimalPathError={props.chapterMinimalPathError}
+            bookFit={props.chapterBookFit}
+            bookFitBusy={props.chapterBookFitBusy}
+            bookFitError={props.chapterBookFitError}
+            movement={props.chapterMovement}
+            movementBusy={props.chapterMovementBusy}
+            movementError={props.chapterMovementError}
+            onBookFit={props.onReadChapterInBook}
+            onMovement={props.onReadChapterMovement}
+            onScore={props.onScoreChapter}
+            onMinimalPath={props.onMinimalPathChapter}
+          />
+
+          <details className="p4r1-develop-more">
+            <summary>More ways to explore</summary>
+            <div className="p4r1-develop-more-body">
           <AttentionMapPanel
             map={props.attentionMap}
             busy={props.attentionBusy}
@@ -2148,6 +2587,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               onReading={props.onReading}
             />
           </section>
+            </div>
+          </details>
         </div>
         )
       ) : (
@@ -2178,7 +2619,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
           ) : null}
 
           {activeField === 'structure' && props.scope.kind === 'chapter' ? (
-            <ChapterShape sections={props.sections} scope={props.scope} />
+            <ChapterShape manuscriptId={props.manuscriptId} sections={props.sections} scope={props.scope} />
           ) : null}
 
           {railSelectionId && selectedRailSection && activeField ? (
