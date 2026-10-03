@@ -1,0 +1,51 @@
+{
+  "evidenceClass": "synthetic presentation + real unauthenticated HTTP; NOT an authenticated production report",
+  "results": [
+    {
+      "check": "desktop synthetic render",
+      "status": "PASS",
+      "width": 1440
+    },
+    {
+      "check": "mobile synthetic render",
+      "status": "PASS",
+      "width": 390
+    },
+    {
+      "check": "empty synthetic state",
+      "status": "PASS"
+    },
+    {
+      "check": "withheld synthetic state",
+      "status": "PASS"
+    },
+    {
+      "check": "unavailable synthetic state",
+      "status": "PASS"
+    },
+    {
+      "check": "real local API without a session",
+      "status": "PASS",
+      "http": 401,
+      "feedbackDisclosed": false
+    },
+    {
+      "check": "real local page without a session",
+      "status": "PASS",
+      "feedbackDisclosed": false
+    }
+  ],
+  "programme": "SOULLAB-CONSTELLATION-01",
+  "act": "C7A",
+  "sourceStanding": "Uncommitted C7A candidate on 9724a5f82; code custody recorded by hashes, not a deployment claim.",
+  "sha256": {
+    "lib/constellation/learningReport.ts": "0205cff248c79d104ff06dfc0a487361b598d0002f438066ca8290e625ff961f",
+    "lib/constellation/learningReportServer.ts": "8b124e945ea1a95e1d246432d58c16bd3fee62c5d11b9d5ea2370d3677c50355",
+    "app/api/founder/constellation/route.ts": "9c054a1a9d4153ddcda88be7dd53307208efe359e7ff4fc86208036ec232d104",
+    "app/founder/constellation/page.tsx": "2a443cd1bad6b9cd7a198047285b7ab0882935937a2949610fd1e44b197c6e1d",
+    "app/founder/constellation/LearningReportView.tsx": "d6b6054d661b8bcba6768850ccff68980b42c82f0a16e60f3a6f86dc6fd58033",
+    "app/founder/constellation/learning-report.module.css": "d0d73febbe8ac588696b6c74b0bcf0c6c9455f485538c6a98759ddf0babcbeb5",
+    "docs/design/contracts/screenshots/constellation-learning-desktop.png": "f88fc2f96c4f78f23905b2225da21a96628c8a9e2fafbb5b88006994ba9d8f73",
+    "docs/design/contracts/screenshots/constellation-learning-mobile.png": "6a6eb34549e7f4792bfa2c309caab87f929c60004c3e4800577653d4f947d21e"
+  }
+}

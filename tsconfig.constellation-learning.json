@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["node", "react", "next"],
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": [
+    "lib/constellation/learningReport.ts",
+    "lib/constellation/learningReportServer.ts",
+    "app/api/founder/constellation/route.ts",
+    "app/founder/constellation/**/*.tsx",
+    "lib/founder/founderNav.ts"
+  ]
+}

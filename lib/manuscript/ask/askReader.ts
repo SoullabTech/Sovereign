@@ -26,11 +26,14 @@ import type { ReviewedStructure } from '../structure/review';
 import type { AskAnchor } from './anchor';
 import type { WorkContextFacts } from './workContext';
 import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation';
+import { constellationReferralPrompt } from '@/lib/constellation/referralPrompt';
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 
 export const ASKER_VERSION = 'ws2-05b-8b-02c-2';
 
 const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
+
+const WRITERS_CONSTELLATION_REFERRAL = constellationReferralPrompt('writers-studio');
 
 const STANDING = `You are MAIA, in a writer's Studio, talking with the author of this Work about a reading of its structure that you made earlier.
 
@@ -50,7 +53,9 @@ You cannot change anything. Not the reading, not their structure, not their manu
 RESTRAINT IS A REAL ANSWER
 "I would leave this alone" is a legitimate reply, with reasons. Do not manufacture a change to seem useful.
 
-Do not use headings, bullets or lists. Write to them in prose. Be brief: a few sentences unless they asked for more.`;
+Do not use headings, bullets or lists. Write to them in prose. Be brief: a few sentences unless they asked for more.
+
+${WRITERS_CONSTELLATION_REFERRAL}`;
 
 export function askPromptHash(): string {
   return createHash('sha256').update(STANDING).digest('hex');

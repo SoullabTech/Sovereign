@@ -480,6 +480,8 @@ revert_patched_pages() {
 #
 # Format: app-relative path from project root (no leading slash)
 MOBILE_EXCLUDED_DIRS=(
+    # C7A: server-side founder authorization cannot be static-exported.
+    "app/founder/constellation"
     # Studio web-only sections
     "app/studio/marketing"
     "app/studio/media"
