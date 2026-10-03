@@ -7,6 +7,7 @@
 
 import { motion } from 'framer-motion';
 import { Flame, Droplet, Sprout, Wind } from 'lucide-react';
+import type { DominanceVerdict } from '@/lib/spiralogic/interpretation';
 
 interface ElementalBalance {
   fire: number;
@@ -16,7 +17,19 @@ interface ElementalBalance {
 }
 
 interface ElementalBalanceDisplayProps {
+  /**
+   * Raw element weights in ANY consistent scale (0–1 fractions, 0–100
+   * percentages, or the grammar's raw weights): this component normalizes
+   * to presentation percentages once, at this display boundary.
+   */
   balance: ElementalBalance;
+  /**
+   * The single versioned dominance rule's verdict
+   * (lib/spiralogic/interpretation). This component computes NO dominance
+   * of its own (C-fence). Omit it — or pass a 'none' verdict — and no
+   * dominance is claimed.
+   */
+  verdict?: DominanceVerdict | null;
   className?: string;
 }
 
@@ -51,11 +64,16 @@ const elementConfig = {
   },
 };
 
-export function ElementalBalanceDisplay({ balance, className = '' }: ElementalBalanceDisplayProps) {
-  // Find dominant element
-  const dominant = Object.entries(balance).reduce((a, b) =>
-    b[1] > a[1] ? b : a
-  )[0] as keyof ElementalBalance;
+export function ElementalBalanceDisplay({ balance, verdict, className = '' }: ElementalBalanceDisplayProps) {
+  // Dominance comes ONLY from the versioned rule; the component's former
+  // local reduce-crown is removed (C-fence: no renderer computes its own).
+  const dominant: keyof ElementalBalance | null =
+    verdict && verdict.verdict !== 'none' ? verdict.verdict : null;
+
+  // Unit fix: normalize whatever scale arrived (fractions, percentages, or
+  // raw weights) into presentation percentages exactly once, here.
+  const total = balance.fire + balance.water + balance.earth + balance.air;
+  const toPercent = (value: number) => (total > 0 ? Math.round((value / total) * 100) : 0);
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -74,7 +92,7 @@ export function ElementalBalanceDisplay({ balance, className = '' }: ElementalBa
         {(Object.keys(elementConfig) as Array<keyof typeof elementConfig>).map((element) => {
           const config = elementConfig[element];
           const Icon = config.icon;
-          const percentage = Math.round(balance[element] * 100);
+          const percentage = toPercent(balance[element]);
           const isDominant = element === dominant;
 
           return (
@@ -94,7 +112,8 @@ export function ElementalBalanceDisplay({ balance, className = '' }: ElementalBa
                   </span>
                   {isDominant && (
                     <span className="text-[10px] text-stone-500 italic">
-                      dominant
+                      {/* Graded tag copy is PROPOSED pending review */}
+                      {verdict?.grade === 'leaning' ? 'leaning' : 'dominant'}
                     </span>
                   )}
                 </div>
@@ -132,20 +151,30 @@ export function ElementalBalanceDisplay({ balance, className = '' }: ElementalBa
         })}
       </div>
 
-      {/* Dominant element wisdom */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="p-4 rounded-lg bg-black/20 border border-amber-900/10"
-      >
-        <p className="text-xs text-stone-400 leading-relaxed">
-          <span style={{ color: elementConfig[dominant].color }} className="font-medium">
-            {elementConfig[dominant].label}
-          </span>
-          {' '}energy is strong now, inviting {getElementalPractice(dominant)}.
-        </p>
-      </motion.div>
+      {/* Dominance wisdom — only when the versioned rule produced a verdict.
+          A 'none' verdict is stated honestly (copy PROPOSED pending review);
+          no verdict at all renders nothing. */}
+      {verdict && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="p-4 rounded-lg bg-black/20 border border-amber-900/10"
+        >
+          <p className="text-xs text-stone-400 leading-relaxed">
+            {dominant ? (
+              <>
+                <span style={{ color: elementConfig[dominant].color }} className="font-medium">
+                  {elementConfig[dominant].label}
+                </span>
+                {' '}energy is strong now, inviting {getElementalPractice(dominant)}.
+              </>
+            ) : (
+              <>No single element leads — your chart is genuinely mixed, inviting practice across all four.</>
+            )}
+          </p>
+        </motion.div>
+      )}
     </div>
   );
 }

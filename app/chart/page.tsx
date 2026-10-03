@@ -16,6 +16,11 @@ import Link from 'next/link';
 import { BirthDataForm } from '@/components/astrology/BirthDataForm';
 import { TraditionalHouseWheel } from '@/components/astrology/TraditionalHouseWheel';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
+import {
+  chartPositionsFromSignDegrees,
+  interpretDominance,
+  type DominanceVerdict,
+} from '@/lib/spiralogic/interpretation';
 
 interface PlanetPosition {
   sign: string;
@@ -50,13 +55,6 @@ interface BirthChartData {
   }>;
 }
 
-const signElements: Record<string, string> = {
-  Aries: 'fire', Leo: 'fire', Sagittarius: 'fire',
-  Taurus: 'earth', Virgo: 'earth', Capricorn: 'earth',
-  Gemini: 'air', Libra: 'air', Aquarius: 'air',
-  Cancer: 'water', Scorpio: 'water', Pisces: 'water',
-};
-
 function chartDataToPlanets(chart: BirthChartData) {
   const planetKeys = [
     { key: 'sun', name: 'Sun' },
@@ -87,25 +85,21 @@ function chartDataToPlanets(chart: BirthChartData) {
     .filter(Boolean) as { name: string; sign: string; house: number; degree: number }[];
 }
 
-function calculateElementalBalance(chart: BirthChartData) {
-  const elements = { fire: 0, earth: 0, air: 0, water: 0 };
-  const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn'];
-
-  planets.forEach(planet => {
-    const pos = chart[planet as keyof BirthChartData] as PlanetPosition;
-    if (pos?.sign) {
-      const element = signElements[pos.sign];
-      if (element) elements[element as keyof typeof elements]++;
-    }
-  });
-
-  const total = Object.values(elements).reduce((a, b) => a + b, 0);
-  return {
-    fire: total > 0 ? elements.fire / total : 0.25,
-    earth: total > 0 ? elements.earth / total : 0.25,
-    air: total > 0 ? elements.air / total : 0.25,
-    water: total > 0 ? elements.water / total : 0.25,
-  };
+/**
+ * Distribution + dominance from the ratified substrate: registerChart
+ * (the grammar — ten Q1 bodies, all weights 1.0) via interpretDominance
+ * (the single versioned rule, C-fence). This replaces the page's former
+ * local 7-body count — the fourth independent distribution computation
+ * in the codebase — and its always-crowning display path.
+ */
+function interpretChartDominance(chart: BirthChartData): DominanceVerdict | null {
+  try {
+    return interpretDominance(chartPositionsFromSignDegrees(chart));
+  } catch {
+    // Refuse-not-repair at the UI boundary: an unregistrable chart renders
+    // absence (no bars, no crown), never invented data.
+    return null;
+  }
 }
 
 export default function ChartLandingPage() {
@@ -140,7 +134,10 @@ export default function ChartLandingPage() {
     }
   };
 
-  const elementalBalance = chartData ? calculateElementalBalance(chartData) : null;
+  const dominanceVerdict = chartData ? interpretChartDominance(chartData) : null;
+  // Raw element weights from the grammar's distribution; the display
+  // normalizes to presentation percentages at its boundary.
+  const elementalBalance = dominanceVerdict ? dominanceVerdict.elementWeights : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0d12] via-[#111827] to-[#0f172a]">
@@ -294,7 +291,7 @@ export default function ChartLandingPage() {
               {elementalBalance && (
                 <div className="bg-black/30 rounded-xl p-6 border border-[#D4B896]/20">
                   <h3 className="text-[#D4B896] font-medium mb-4 text-center">Elemental Balance</h3>
-                  <ElementalBalanceDisplay balance={elementalBalance} />
+                  <ElementalBalanceDisplay balance={elementalBalance} verdict={dominanceVerdict} />
                 </div>
               )}
 
