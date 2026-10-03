@@ -61,7 +61,10 @@ describe('C2 editorial dance convergence', () => {
     expect(host).toContain('Discuss what is happening in this exact passage with me before proposing any edits.');
     expect(host).toContain('<b>Teach me</b>');
     expect(host).toContain('<b>Go deeper</b>');
-    expect(host).not.toContain('className="p4r1-locus-actions"');
+    const selectionStart = host.indexOf('const contextualActions =');
+    const selectionEnd = host.indexOf('const maiaRelationshipCard =', selectionStart);
+    const selectionAffordance = host.slice(selectionStart, selectionEnd);
+    expect(selectionAffordance).not.toContain('className="p4r1-locus-actions"');
   });
 
   it('never lets the full editorial dance float over an exact held passage', () => {

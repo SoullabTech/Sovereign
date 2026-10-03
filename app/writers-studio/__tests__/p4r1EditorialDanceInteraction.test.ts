@@ -357,7 +357,93 @@ test('a MAIA response without a proposal stays visible and keeps exploration act
   expect(container.textContent).toContain('Continue from here');
   expect(container.textContent).toContain('Show examples');
   expect(container.textContent).toContain('Give me ideas');
-  expect(container.textContent).toContain('Revise from this');
+  expect(container.textContent).toContain('Show revision options');
   expect(container.querySelector('.p4r1-dance-start-actions')).toBeNull();
   expect(container.textContent).not.toContain('Apply my version');
+});
+
+test('scope refusal offers an explicit one-gesture latitude elevation without applying anything', () => {
+  const onAcceptScopeRecovery = jest.fn();
+  const responseOnlyThread = {
+    threadId: 't-scope',
+    chainId: 'c-scope',
+    targetSectionId: 's1',
+    sectionLabel: 'Threshold',
+    locusText: 'Original words.',
+    legacyLocus: false,
+    turns: [
+      { turnIndex: 0, speaker: 'author' as const, body: 'Revise this.', at: '2026-10-02T10:00:00Z' },
+    ],
+    versions: [],
+    headVersionId: null,
+    application: null,
+  };
+
+  act(() => root.render(React.createElement(EditorialDancePanel, {
+    manuscriptTitle: 'Threshold',
+    currentText: 'Original words.',
+    sectionBody: 'Before.\n\nOriginal words.\n\nAfter.',
+    thread: responseOnlyThread,
+    version: null,
+    lastMaiaTurn: null,
+    appliedVersionId: null,
+    busy: false,
+    message: 'This revision goes beyond your current “Touch” latitude. It would fit at “Shape.” Nothing was changed.',
+    scopeRecovery: { fromLabel: 'Touch', toLabel: 'Shape' },
+    undoMessage: null,
+    sessionPosture: { resolved: true, sanctuary: false },
+    onChooseSessionPosture: jest.fn(),
+    onSelectVersion: jest.fn(),
+    onSend: jest.fn(),
+    onAcceptScopeRecovery,
+    onSaveMember: jest.fn(async () => true),
+    onApply: jest.fn(),
+    onUndo: jest.fn(),
+    onKeep: jest.fn(),
+    onDepth: jest.fn(),
+  } as any)));
+
+  expect(container.textContent).toContain('Use Shape and show revision');
+  expect(container.textContent).toContain('Touch setting stays unchanged unless you choose this');
+  expect(container.textContent).toContain('Nothing was changed');
+
+  const useShape = Array.from(container.querySelectorAll('button'))
+    .find((button) => button.textContent?.includes('Use Shape and show revision'))!;
+  act(() => useShape.click());
+  expect(onAcceptScopeRecovery).toHaveBeenCalledTimes(1);
+  expect(container.textContent).not.toContain('Apply my version');
+});
+
+test('scope recovery remains reachable when an earlier recommendation is already on the desk', () => {
+  const onAcceptScopeRecovery = jest.fn();
+  const realThread = thread([maiaVersion]);
+  act(() => root.render(React.createElement(EditorialDancePanel, {
+    manuscriptTitle: 'Threshold',
+    currentText: 'Original words.',
+    sectionBody: 'Before.\n\nOriginal words.\n\nAfter.',
+    thread: realThread,
+    version: maiaVersion,
+    lastMaiaTurn: realThread.turns[0],
+    appliedVersionId: null,
+    busy: false,
+    message: 'This revision goes beyond your current “Line” latitude. It would fit at “Passage.” Nothing was changed.',
+    scopeRecovery: { fromLabel: 'Line', toLabel: 'Passage' },
+    undoMessage: null,
+    sessionPosture: { resolved: true, sanctuary: false },
+    onChooseSessionPosture: jest.fn(),
+    onSelectVersion: jest.fn(),
+    onSend: jest.fn(),
+    onAcceptScopeRecovery,
+    onSaveMember: jest.fn(async () => true),
+    onApply: jest.fn(),
+    onUndo: jest.fn(),
+    onKeep: jest.fn(),
+    onDepth: jest.fn(),
+  } as any)));
+
+  const action = Array.from(container.querySelectorAll('button'))
+    .find((button) => button.textContent?.includes('Use Passage and show revision'))!;
+  expect(action).toBeTruthy();
+  act(() => action.click());
+  expect(onAcceptScopeRecovery).toHaveBeenCalledTimes(1);
 });
