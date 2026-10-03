@@ -10,6 +10,11 @@ This directory contains all logo and icon assets for the MAIA Sovereign applicat
 | `maia-spiral-logo-alt.png` | 382KB | ⚠️ Legacy — same art as below, but with an **opaque white background baked in**. Do not use on dark surfaces. |
 | `holoflower-studio-transparent.png` | — | **Canonical transparent dark-surface holoflower** (spiral-of-dots, true alpha). Use this for any dark room/studio surface. |
 
+> **Choosing a holoflower asset?** Start from the role-based taxonomy:
+> [`assets/holoflower/ASSETS.md`](./assets/holoflower/ASSETS.md). New code must
+> use the `assets/holoflower/canonical/` paths; everything below is inventory
+> and provenance history.
+
 ### Holoflower asset provenance
 
 Two files carry the identical spiral-of-dots artwork and are easy to confuse:
