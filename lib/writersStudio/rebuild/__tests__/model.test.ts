@@ -34,6 +34,20 @@ describe('rebuild book model', () => {
   });
 
 
+  it('admits Preface as a top-level refinement unit without widening flat lookalikes', () => {
+    const book = [
+      row(5, 'Preface', 1),
+      { ...row(6, 'A VIVID DREAM AND A NEW UNDERSTANDING', 2), headingDepth: null },
+      { ...row(7, 'REFLECTION AND INTERACTION', 2), headingDepth: null },
+      { ...row(8, 'CALL TO ADVENTURE', 2), headingDepth: null },
+      row(9, 'Chapter 1: The Journey Begins', 1),
+    ];
+    expect(isConfirmedChapterRoot(book[0])).toBe(true);
+    const span = chapterSpanFor(book, 'd7');
+    expect(span?.root.draftSectionId).toBe('d5');
+    expect(span?.sections.map((section) => section.position)).toEqual([5, 6, 7, 8]);
+  });
+
   it('does not promote a flat back-matter Chapter label into a chapter', () => {
     const flat: RebuildSection[] = [
       { ...row(171, 'CHAPTER 9: AETHER', 1), headingDepth: null, headingSignal: null, body: 'Young. Nested Time.' },
