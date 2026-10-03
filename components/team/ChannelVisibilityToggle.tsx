@@ -127,7 +127,7 @@ export function ChannelVisibilityToggle({
     <>
       <button
         onClick={openConfirm}
-        className="text-white/25 hover:text-white/60 transition-colors flex items-center gap-1"
+        className="text-white/55 hover:text-white/90 transition-colors flex items-center gap-1"
         title={currentIsPrivate ? 'Make public' : 'Make private'}
         aria-label={currentIsPrivate ? 'Make channel public' : 'Make channel private'}
       >
