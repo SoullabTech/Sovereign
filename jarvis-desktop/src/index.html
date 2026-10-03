@@ -15,19 +15,21 @@
   }
   header {
     padding: 14px 20px; border-bottom: 1px solid #1c1d20; display: flex;
-    align-items: center; gap: 16px; -webkit-app-region: drag;
+    align-items: center; gap: 16px; flex-wrap: wrap; -webkit-app-region: drag;
   }
-  header .brand { font-weight: 600; letter-spacing: 0.04em; color: #d8d8dc; }
-  nav { display: flex; gap: 4px; -webkit-app-region: no-drag; }
+  header .brand { font-weight: 600; letter-spacing: 0.02em; color: #d8d8dc; }
+  nav { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; -webkit-app-region: no-drag; }
   nav button {
     background: none; border: none; color: #8a8a92; padding: 6px 12px;
     border-radius: 6px; cursor: pointer; font-size: 13px;
   }
   nav button.active { background: #1c1d20; color: #fff; }
-  main { flex: 1; overflow-y: auto; padding: 20px; }
-  .row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #16171a; }
+  main { flex: 1; min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 20px; }
+  main > * { width:100%; max-width:1180px; margin-left:auto; margin-right:auto; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; padding: 10px 0; border-bottom: 1px solid #16171a; }
+  .row > div { min-width: 0; }
   .row:last-child { border-bottom: none; }
-  .label { color: #9a9aa2; }
+  .label { color: #9a9aa2; overflow-wrap:anywhere; word-break:break-word; }
   .state { padding: 2px 9px; border-radius: 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; }
   .state.AVAILABLE { background: #10321f; color: #4ade80; }
   .state.DEGRADED { background: #3a2a10; color: #fbbf24; }
@@ -88,9 +90,9 @@
   .sp-legend b { color: #9a9aa2; font-weight: 600; }
   .headline { font-size: 19px; font-weight: 600; margin: 0 0 6px; }
   .sentence { color: #9a9aa2; font-size: 13.5px; line-height: 1.55; margin: 0; }
-  .why { color: #8a8a92; font-size: 12px; margin-top: 4px; }
+  .why { color: #8a8a92; font-size: 12px; margin-top: 4px; overflow-wrap:anywhere; word-break:break-word; }
   .fix { color: #7fb2e0; font-size: 12px; margin-top: 3px; }
-  .src { color: #4a4a52; font-size: 11px; margin-top: 3px; font-family: ui-monospace, Menlo, monospace; }
+  .src { color: #4a4a52; font-size: 11px; margin-top: 3px; font-family: ui-monospace, Menlo, monospace; overflow-wrap:anywhere; word-break:break-word; }
   .detail { color: #6a6a72; font-size: 12px; margin-top: 4px; max-width: 460px; text-align: right; }
   .card { background: #111214; border: 1px solid #1c1d20; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
   .card h3 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #7a7a82; font-weight: 600; }
@@ -149,7 +151,7 @@
   .provider-row .provider-detail { color:#686870; font-size:11px; line-height:1.45; margin-top:3px; }
   .authority-box { background:#0d1420; border:1px solid #1e3554; border-radius:8px; padding:10px 12px; margin-top:10px; }
   .authority-box .a-title { color:#8fb9e8; font-size:11px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
-  .authority-box .a-line { color:#777f89; font-size:11px; line-height:1.55; }
+  .authority-box .a-line { color:#777f89; font-size:11px; line-height:1.55; overflow-wrap:anywhere; word-break:break-word; }
   .stage-list { display:flex; gap:5px; flex-wrap:wrap; margin:10px 0; }
   .stage-pill { border:1px solid #2a2b31; border-radius:999px; padding:4px 9px; font-size:10px; color:#777983; background:#111216; }
   .stage-pill.done { border-color:#1f5f66; color:#6ed7df; }
@@ -161,16 +163,45 @@
   .needs-kelly b { color:#e4c56e; }
   .inline-check { display:block; color:#888b94; font-size:11px; margin:8px 0; line-height:1.45; }
   .inline-check input { margin-right:7px; }
+  .library-toolbar { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 16px; }
+  .library-toolbar input { flex:1; min-width:240px; }
+  .library-summary { color:#8a8a92; font-size:12px; margin:6px 0 14px; overflow-wrap:anywhere; word-break:break-word; }
+  .library-group { border:1px solid #1c1d20; border-radius:9px; margin-bottom:9px; background:#101113; }
+  .library-group > summary { cursor:pointer; list-style:none; padding:11px 13px; display:flex; justify-content:space-between; gap:12px; color:#d2d2d8; font-weight:600; }
+  .library-group > summary::-webkit-details-marker { display:none; }
+  .library-group[open] > summary { border-bottom:1px solid #1c1d20; }
+  .library-count { color:#666872; font:11px ui-monospace,Menlo,monospace; }
+  .library-items { padding:4px 12px 9px; }
+  .library-item { padding:8px 2px; border-bottom:1px solid #17181b; color:#b4b4bc; }
+  .library-item:last-child { border-bottom:0; }
+  .library-item > summary { cursor:pointer; color:#c3c3ca; }
+  .library-excerpt { color:#8d8f98; font-size:12px; line-height:1.55; margin-top:7px; max-width:90ch; overflow-wrap:anywhere; word-break:break-word; }
+  .library-headings { color:#666973; font-size:11px; line-height:1.55; margin-top:6px; }
+  .library-path { color:#555862; font:10px ui-monospace,Menlo,monospace; margin-top:6px; word-break:break-all; }
+  .library-section-title { margin:22px 0 8px; color:#7a7a82; font-size:11px; text-transform:uppercase; letter-spacing:.09em; }
+  .grokker-box { border:1px solid #27364a; background:#0d131c; border-radius:10px; padding:14px; margin:14px 0 18px; }
+  .grokker-box h3 { margin:0 0 6px; color:#91b9df; }
+  .grokker-box .grokker-input { display:flex; gap:8px; flex-wrap:wrap; min-width:0; margin-top:10px; }
+  .grokker-box .grokker-input input { flex:1 1 220px; min-width:0; }
+  .grokker-result { border-left:2px solid #355d82; padding:9px 11px; margin-top:9px; background:#0c1118; border-radius:4px; }
+  .grokker-result b { color:#d4dce6; }
+  .grokker-why { color:#718397; font-size:11px; margin-top:4px; }
+  .grokker-source { color:#555f6c; font:10px ui-monospace,Menlo,monospace; margin-top:4px; word-break:break-all; }
+  .source-packet { border:1px solid #39414d; background:#0b0d10; border-radius:9px; padding:12px; margin-top:12px; }
+  .source-packet .packet-law { color:#8a8f98; font:11px ui-monospace,Menlo,monospace; margin-bottom:9px; }
+  .source-packet .packet-source { padding:7px 0; border-top:1px solid #1c1f24; }
+  .source-packet .packet-source:first-of-type { border-top:0; }
 </style>
 </head>
 <body>
   <header>
-    <span class="brand">JARVIS</span>
+    <span class="brand">Kelly’s World</span>
     <nav>
       <button data-view="home" class="active">Home</button>
       <button data-view="work">Work</button>
       <button data-view="system">System</button>
       <button data-view="spiral">Living Spiral</button>
+      <button data-view="library">Field Library</button>
     </nav>
   </header>
   <main id="main"></main>
@@ -182,6 +213,17 @@
   <script src="operator-flow.js"></script>
   <script src="operator-work-unit.js"></script>
   <script src="e1-gesture-separation.js"></script>
+  <script src="field-library-data.js"></script>
+  <script src="field-library-query.js"></script>
+  <script src="field-library-synthesis-contract.js"></script>
+  <script src="field-library-local-synthesis.js"></script>
+  <script src="field-library-deliberative-work-unit.js"></script>
+  <script src="field-library-work-unit-origin.js"></script>
+  <script src="field-library-governed-work.js"></script>
+  <script src="field-library-pins.js"></script>
+  <script src="field-library-orientation.js"></script>
+  <script src="field-library-view-state.js"></script>
+  <script src="safety-delivery-state.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>
