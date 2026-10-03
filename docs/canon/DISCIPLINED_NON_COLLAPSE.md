@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # Disciplined Non-Collapse
 
 *Phase 0 canon. 2026-05-18.*

@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # MAIA as Mirror Infrastructure
 
 ## Internal Team Paper
