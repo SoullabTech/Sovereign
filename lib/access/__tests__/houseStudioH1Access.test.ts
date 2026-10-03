@@ -72,7 +72,8 @@ describe('H1 cohort authority — structural boundary', () => {
     const src = code(read(HOUSE));
     expect(src).toMatch(/canUseHouseStudioH1\(member\.id\)/);
     // H1 · R2: the same decision, expressed through the governed seam's doorway builder.
-    expect(src).toMatch(/const houseStudioH1Admitted = canUseHouseStudioH1\(member\.id\);/);
+    expect(src).toMatch(/const houseStudioH1Admitted = !cabinOffline && canUseHouseStudioH1\(member\.id\);/);
+    expect(src).toMatch(/const cabinOffline = process\.env\.MAIA_CABIN_MODE === 'offline';/);
     expect(src).toMatch(/houseWritingHref\(houseStudioH1Admitted, work\.id, studioArrivalFromHouse\)/);
     expect(src).toMatch(/houseWritingHref\(houseStudioH1Admitted, null, studioArrivalFromHouse\)/);
   });
