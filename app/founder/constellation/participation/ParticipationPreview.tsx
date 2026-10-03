@@ -121,8 +121,8 @@ export default function ParticipationPreview() {
 
       <footer className={styles.footer}>
         <h2>Before a real pilot</h2>
-        <p>We still need to agree how real reports are kept, withdrawn, and removed—including backup limits—and verify those promises in the actual storage path.</p>
-        <p>The proposed first scope is one experience, no return tracking, and no marketing contact. This page does not activate that study.</p>
+        <p>The one-experience, maximum 30-day scope is approved for building. The real storage, withdrawal, cleanup, and backup promises still need their runtime verification.</p>
+        <p>The approved scope includes no return tracking and no marketing contact. This page remains a rehearsal; it does not activate that study.</p>
         <a href="/founder/constellation">Return to Doorway learning</a>
       </footer>
     </section>

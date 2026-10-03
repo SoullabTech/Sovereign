@@ -99,3 +99,7 @@ C7B1 now provides a founder-only interaction rehearsal at `/founder/constellatio
 ## Delivery distinctions
 
 C2/C3 have constructed routes and temporary Writer's Studio arrival context; a full new-member authentication walk remains separate evidence. Astrology currently returns to `/astrology` without a corresponding post-auth audience welcome. C5 supplies prompt-level instructions in Ask MAIA; it does not enforce every generated referral deterministically or establish successful model behavior. Case Study 001 publishes the method, not yet completed outcome examples. Nothing in these candidate sections asserts production deployment.
+
+## C7B2 — approved build and founder access
+
+Kelly explicitly approved the one-experience/30-day basis on 3 October 2026. The candidate now includes an accessible Growth & AI work entry and a real database lifecycle core, verified only in a disposable cluster. The member-facing route/UI and operational cleanup/backup obligations remain unfulfilled; collection is not live. See `SOULLAB-CONSTELLATION-01_C7B2_FOUNDER_RULING_2026-10-03.md`. The copied working brief is orientation, not automatic delegation.
