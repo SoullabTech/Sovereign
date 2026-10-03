@@ -26,6 +26,7 @@ import {
   adoptBoundEditorialVersion,
   discoverEditorialRelationships,
   exactVersion,
+  returnLocusText,
   locateUniquePassage,
   openBoundEditorialPassage,
   openBoundEditorialThread,
@@ -598,8 +599,9 @@ export default function FlagshipWriteEditController() {
     }
 
     const live = writingRef.current?.bodyOf(focusId) ?? focusSection?.body ?? '';
-    if (thread.locusText !== live) {
-      const located = locateUniquePassage(live, thread.locusText);
+    const returnLocus = returnLocusText(thread);
+    if (returnLocus !== live) {
+      const located = locateUniquePassage(live, returnLocus);
       if (!located) {
         setEditorialFailure('This conversation’s passage is no longer uniquely present here. Nothing was changed.');
         return false;
@@ -608,7 +610,7 @@ export default function FlagshipWriteEditController() {
         draftSectionId: focusId,
         start: located.start,
         end: located.end,
-        text: thread.locusText,
+        text: returnLocus,
         revisionNumber: writingRef.current?.currentRevisionId() ?? context?.version ?? 0,
       });
     }

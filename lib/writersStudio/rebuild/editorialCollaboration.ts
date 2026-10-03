@@ -302,6 +302,25 @@ export function exactVersion(
   return thread.versions.find((v) => v.id === versionId) ?? null;
 }
 
+/**
+ * The wording that may lawfully anchor a resumed editorial relationship.
+ *
+ * The proposal chain's `locusText` remains immutable custody of the words the
+ * relationship began against. After an explicit Apply, those words may no
+ * longer exist in the live Work. While the server still reports that exact
+ * application as undoable, return may orient to the exact applied version
+ * named by the durable receipt. No other version and no inferred wording may
+ * replace the frozen locus.
+ */
+export function returnLocusText(thread: RebuildEditorialThread): string {
+  const application = thread.application;
+  if (application && !application.undone && application.canUndo) {
+    const applied = exactVersion(thread, application.versionId);
+    if (applied) return applied.wording;
+  }
+  return thread.locusText;
+}
+
 export interface ChangeSpan {
   before: string;
   changed: string;
