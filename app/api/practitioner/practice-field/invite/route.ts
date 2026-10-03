@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { getPracticeField, createSnapshot } from '@/lib/practiceField/practiceFieldService';
-import { isContained } from '@/lib/types/practiceField';
+import { classifyInviteRefusal } from '@/lib/types/practiceField';
 import { sendRelationshipInviteEmail } from '@/lib/practiceField/inviteEmail';
 import crypto from 'crypto';
 
@@ -29,35 +29,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'client_email required' }, { status: 400 });
   }
 
-  // Verify Practice Field exists and is LIVE
-  const field = await getPracticeField(memberId);
-  if (!field) {
-    return NextResponse.json(
-      { error: 'Practice Field not found. Complete your Practice Field before inviting clients.' },
-      { status: 422 }
-    );
-  }
-  // GC-2 — the gate is a conjunction: ready AND not contained.
+  // Verify Practice Field exists and is eligible.
   //
-  // The two refusals are deliberately DISTINCT. An incomplete field and a contained field
-  // are different facts: one is work not yet done, the other is a governance decision that
-  // this field may not go live. Rendering them identically is how a hold becomes invisible.
-  if (isContained(field)) {
-    return NextResponse.json(
-      {
-        error: 'This Practice Field is under a governance containment and cannot send invitations.',
-        containment_reason: field.containment_reason,
-        contained_at: field.contained_at,
-        containment_reference: field.containment_reference,
-      },
-      { status: 409 }
-    );
+  // GC-2 — the gate is a conjunction: ready AND not contained. The two refusals are
+  // deliberately DISTINCT — an incomplete field and a contained field are different facts:
+  // one is work not yet done, the other is a governance decision that this field may not go
+  // live. Rendering them identically is how a hold becomes invisible. classifyInviteRefusal
+  // is the single, pure, tested source of this decision — see its own doc comment.
+  const field = await getPracticeField(memberId);
+  const refusal = classifyInviteRefusal(field);
+  if (refusal) {
+    return NextResponse.json(refusal.body, { status: refusal.httpStatus });
   }
-  if (field.status === 'pending') {
-    return NextResponse.json(
-      { error: 'Practice Field is PENDING. Complete the required sections before sending invitations.', status_reason: field.status_reason },
-      { status: 422 }
-    );
+  if (!field) {
+    // classifyInviteRefusal(null) always returns a refusal above, so this is unreachable —
+    // it exists only to carry that guarantee into TypeScript's control-flow narrowing, and to
+    // fail safely rather than silently if that contract ever changes.
+    return NextResponse.json({ error: 'Practice Field not found.' }, { status: 422 });
   }
 
   // Fetch practitioner's display name

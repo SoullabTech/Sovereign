@@ -198,6 +198,62 @@ export function isEffectivelyLive(field: Partial<PracticeField>): boolean {
   return field.status === 'live' && !isContained(field);
 }
 
+/** The two — and only two — reasons Gate 0 may refuse an invitation. */
+export type InviteRefusalKind = 'containment' | 'incomplete';
+
+export interface InviteRefusal {
+  /** GC-2: containment refuses 409; incompleteness refuses 422. Never the other way, never shared. */
+  httpStatus: 409 | 422;
+  kind: InviteRefusalKind;
+  body: Record<string, unknown>;
+}
+
+/**
+ * GC-2's refusal, as a pure decision — the two refusals the design record names, and nothing
+ * else. Extracted from the invite route so the invariant is testable by CALLING it, not by
+ * reading source text: a call-and-assert test cannot be defeated by moving a status number
+ * from one branch to another while leaving the surrounding strings in place, the way a
+ * presence-only source check can.
+ *
+ * Containment is tested BEFORE readiness (GC-1/GC-2 ordering) — a field that is both contained
+ * and incomplete refuses as containment, never incompleteness. The prohibition must not
+ * degrade into "not ready yet."
+ *
+ * Returns null when the field is eligible to invite (the caller proceeds).
+ */
+export function classifyInviteRefusal(field: Partial<PracticeField> | null): InviteRefusal | null {
+  if (!field) {
+    return {
+      httpStatus: 422,
+      kind: 'incomplete',
+      body: { error: 'Practice Field not found. Complete your Practice Field before inviting clients.' },
+    };
+  }
+  if (isContained(field)) {
+    return {
+      httpStatus: 409,
+      kind: 'containment',
+      body: {
+        error: 'This Practice Field is under a governance containment and cannot send invitations.',
+        containment_reason: field.containment_reason,
+        contained_at: field.contained_at,
+        containment_reference: field.containment_reference,
+      },
+    };
+  }
+  if (field.status === 'pending') {
+    return {
+      httpStatus: 422,
+      kind: 'incomplete',
+      body: {
+        error: 'Practice Field is PENDING. Complete the required sections before sending invitations.',
+        status_reason: field.status_reason,
+      },
+    };
+  }
+  return null;
+}
+
 export type HolderReleaseRefusal =
   /** The actor does not hold this field. */
   | 'not_holder'
