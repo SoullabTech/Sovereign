@@ -412,7 +412,7 @@ describe('F13 · malformed output is refused, never coerced into none', () => {
 
 /* ── F14 · seam refusals surface unchanged ───────────────────────────────── */
 
-describe('F14 · sovereign mode stays on the local structured seam with no Anthropic fallback', () => {
+describe('F14 · under sovereign mode the seam refuses and no fallback is attempted', () => {
   const ADAPTER = '../../../ai/structured/anthropicStructuredAdapter';
   let loaded = false;
   beforeAll(() => {
@@ -420,13 +420,13 @@ describe('F14 · sovereign mode stays on the local structured seam with no Anthr
   });
   afterAll(() => { jest.dontMock(ADAPTER); });
 
-  it('returns the local provider refusal and never loads the Anthropic adapter', async () => {
+  it('returns structured_inference_unavailable and never loads the provider', async () => {
     const prev = process.env.MAIA_INFERENCE_MODE;
     process.env.MAIA_INFERENCE_MODE = 'sovereign';
     try {
       const { req } = request();
       const r = await readDevelopmentally(req);
-      expect(r.outcome === 'refused' ? r.refusal : r.outcome).toBe('provider_unavailable');
+      expect(r.outcome === 'refused' ? r.refusal : r.outcome).toBe('structured_inference_unavailable');
       expect(loaded).toBe(false);
     } finally {
       if (prev === undefined) delete process.env.MAIA_INFERENCE_MODE; else process.env.MAIA_INFERENCE_MODE = prev;
@@ -487,7 +487,6 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
        were made with — the version is provenance, never a filter. */
     expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-09');
     expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-09' });
-    expect(readerIdentity('qwen3-coder:30b', 'ollama')).toEqual({ provider: 'ollama', model: 'qwen3-coder:30b', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-09' });
     expect(Object.keys(readerIdentity('m-1'))).not.toContain('frozenAt');
   });
 });

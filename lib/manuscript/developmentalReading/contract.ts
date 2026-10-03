@@ -24,7 +24,7 @@
 import type { EvidenceRef, NonEmptyArray } from '../development/evidenceRef';
 import type { DevelopmentalCoverage, DevelopmentalReadState } from '../development/readState';
 import type { DevelopmentalLens, DevelopmentalNonConclusion } from '../developmentalReader/contract';
-import type { ReaderIdentity, ReaderProvider } from '../structure/readerProvenance';
+import type { ReaderIdentity } from '../structure/readerProvenance';
 import type { BasisFingerprint, ManuscriptPosition, ObservationId } from './observationIdentity';
 
 /* ── phenomenon — UNDERSTAND §4, verbatim; no new taxonomy in implementation ── */
@@ -215,8 +215,7 @@ export interface DevelopmentalObservation {
 /* ── provenance ────────────────────────────────────────────────────────── */
 
 export interface ClassifierIdentity {
-  /** The provider that actually served the structured classification. */
-  provider: ReaderProvider;
+  provider: 'anthropic';
   /** The model actually sent — pinned to the reader's resolved model. */
   model: string;
   promptHash: string;

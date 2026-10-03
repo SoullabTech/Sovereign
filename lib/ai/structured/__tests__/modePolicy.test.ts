@@ -42,30 +42,17 @@ describe('the production API does not accept a mode', () => {
     expect(runStructured.length).toBe(1);
   });
 
-  it('an explicitly sovereign deployment routes to the local structured provider', async () => {
+  it('an explicitly sovereign deployment refuses, without reaching Anthropic', async () => {
     const prev = process.env.MAIA_INFERENCE_MODE;
     process.env.MAIA_INFERENCE_MODE = 'sovereign';
-    const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        model: 'qwen3-coder:30b',
-        done_reason: 'stop',
-        prompt_eval_count: 3,
-        eval_count: 1,
-        message: { content: 'ok', tool_calls: [] },
-      }),
-    } as Response);
     try {
-      const r = await runStructured({ ...req, model: 'qwen3-coder:30b' });
-      expect(r.ok).toBe(true);
-      expect(r.ok && r.result.provenance).toMatchObject({
-        provider: 'ollama',
-        model: 'qwen3-coder:30b',
-        reportedModel: 'qwen3-coder:30b',
-        modelAgreement: 'agreed',
+      const r = await runStructured(req);
+      expect(r).toEqual({
+        ok: false,
+        refusal: 'structured_inference_unavailable',
+        detail: 'mode=sovereign: no local provider can honour a structured contract',
       });
     } finally {
-      fetchSpy.mockRestore();
       if (prev === undefined) delete process.env.MAIA_INFERENCE_MODE;
       else process.env.MAIA_INFERENCE_MODE = prev;
     }

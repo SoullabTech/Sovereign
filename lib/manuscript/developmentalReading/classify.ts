@@ -23,7 +23,6 @@ import { createHash } from 'crypto';
 import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock } from '../../ai/structured/types';
 import type { DevelopmentalLens, DevelopmentalNonConclusion } from '../developmentalReader/contract';
-import { isReaderProvider } from '../structure/readerProvenance';
 import {
   DEVELOPMENTAL_PHENOMENA,
   PHENOMENON_DEFINITION,
@@ -217,7 +216,7 @@ export async function classifyClaims(
   });
   if (!outcome.ok) return { ok: false, refusal: outcome.refusal, detail: outcome.detail ?? outcome.refusal, index: null };
   const { provenance, content } = outcome.result;
-  if (!isReaderProvider(provenance.provider)) {
+  if (provenance.provider !== 'anthropic') {
     return { ok: false, refusal: 'not_configured', detail: `provider ${String(provenance.provider)} cannot be recorded as this classifier's identity`, index: null };
   }
   if (provenance.model !== model) {
@@ -227,7 +226,7 @@ export async function classifyClaims(
   const parsed = parseClassifierBlocks(content, claims.length);
   if (!parsed.ok) return parsed;
   return { ok: true, phenomena: parsed.phenomena, classifier: {
-    provider: provenance.provider, model: provenance.model,
+    provider: 'anthropic', model: provenance.model,
     promptHash: classifierPromptHash(), classifierVersion: CLASSIFIER_VERSION,
   } };
 }
