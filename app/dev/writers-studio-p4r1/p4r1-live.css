@@ -3762,6 +3762,14 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
 .p4r1-root .p4r1-chapter-review-actions .p4r1-chapter-review-primary{
   border-color:var(--fr-action-line);color:var(--fr-action);background:var(--fr-action-soft)
 }
+.p4r1-root .p4r1-minimal-path-action{
+  display:inline-flex;align-items:center;justify-content:center;margin-top:8px;padding:9px 12px;
+  border:1px solid var(--fr-action-line);border-radius:8px;background:var(--fr-action-soft);
+  color:var(--fr-action);font:600 12px/1.3 var(--fr-sans-stack);cursor:pointer
+}
+.p4r1-root .p4r1-minimal-path-action:hover{
+  filter:brightness(1.08)
+}
 .p4r1-root .p4r1-chapter-review-details{
   margin-top:4px;color:var(--fr-muted);font:12px/1.5 var(--fr-sans-stack)
 }

@@ -227,7 +227,7 @@ export interface P4R1DevelopViewProps {
   onMinimalPathChapter: () => void;
   onCommissionAttentionMap: () => void;
   onShowAttentionItem: (itemId: string, sectionId: string) => void;
-  onWorkWithAttentionItem: (itemId: string, sectionId: string) => void;
+  onWorkWithAttentionItem: (itemId: string, sectionId: string, source: 'chapter-review' | 'minimal-path' | 'attention-map') => void;
   onDiscussAttentionItem: (item: AttentionItem) => void;
   onSaveWriterUnderstanding: (draft: WriterUnderstandingDraft) => void;
   onReflectDevelopmentalProcess: () => void;
@@ -1575,7 +1575,7 @@ function ChapterReviewPanel({
   onCheckpointAndRead: () => void;
   onField: (field: DevelopField) => void;
   onWrite: () => void;
-  onEdit: (itemId: string, sectionId: string) => void;
+  onEdit: (itemId: string, sectionId: string, source: 'chapter-review' | 'minimal-path') => void;
   scorecard: WholeManuscriptAttentionMap | null;
   previousScorecard: WholeManuscriptAttentionMap | null;
   previousScoreRevision: number | null;
@@ -1674,12 +1674,14 @@ function ChapterReviewPanel({
         <button type="button" disabled={movementBusy} onClick={onMovement}>
           {movementBusy ? 'Looking at the chapter’s movement…' : 'Show me the chapter’s movement'}
         </button>
-        <button type="button" onClick={() => onField('development')}>Show me what to strengthen</button>
+        <button type="button" disabled={minimalPathBusy} onClick={onMinimalPath}>
+          {minimalPathBusy ? 'Finding the highest-leverage changes…' : 'Show me what to strengthen'}
+        </button>
         {start?.sectionIds[0] ? (
           <button
             type="button"
             className="p4r1-chapter-review-primary"
-            onClick={() => onEdit(start.id, start.sectionIds[0]!)}
+            onClick={() => onEdit(start.id, start.sectionIds[0]!, 'chapter-review')}
           >
             Show me an edited version
           </button>
@@ -1805,7 +1807,13 @@ function ChapterReviewPanel({
               <p>{item.notice}</p>
               <small>{item.whyItMatters}</small>
               {item.sectionIds[0] ? (
-                <button type="button" onClick={() => onEdit(item.id, item.sectionIds[0]!)}>Work on this</button>
+                <button
+                  type="button"
+                  className="p4r1-minimal-path-action"
+                  onClick={() => onEdit(item.id, item.sectionIds[0]!, 'minimal-path')}
+                >
+                  Work on this →
+                </button>
               ) : null}
             </article>
           ))}
@@ -2338,7 +2346,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             selectedItemId={props.selectedAttentionItemId}
             onCommission={props.onCommissionAttentionMap}
             onShow={props.onShowAttentionItem}
-            onWork={props.onWorkWithAttentionItem}
+            onWork={(itemId, sectionId) => props.onWorkWithAttentionItem(itemId, sectionId, 'attention-map')}
             onDiscuss={discussAttentionItem}
           />
 

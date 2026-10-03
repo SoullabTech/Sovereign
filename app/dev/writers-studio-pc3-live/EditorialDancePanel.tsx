@@ -168,7 +168,7 @@ function revisePassagePrompt(): string {
     `"${EDITORIAL_PACKET_LABELS.preserve}: …"`,
     `"${EDITORIAL_PACKET_LABELS.friction}: …" — support this from the exact words; do not grade or diagnose the writing.`,
     `"${EDITORIAL_PACKET_LABELS.possibility}: …" — name the editorial move and why you would try it.`,
-    'Then, if a revision is warranted, offer one possible revision. Preserve my voice, intention, subject, and intentional ambiguity.',
+    'Then offer one concrete possible revision of this exact passage. I have already asked for edit options, so do not ask whether I want a revision and do not defer the proposal to a later turn. Preserve my voice, intention, subject, and intentional ambiguity.',
     'After the revision, add exactly these four short lines:',
     '"What changed: …"',
     '"Why: …"',
@@ -384,9 +384,13 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     ].join('\n');
   };
 
-  const begin = (prompt: string, depth?: EditorialDepth) => {
+  const begin = (
+    prompt: string,
+    depth?: EditorialDepth,
+    options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean },
+  ) => {
     if (depth) props.onDepth(depth);
-    props.onSend(withOrigin(prompt));
+    props.onSend(withOrigin(prompt), options);
   };
 
   const sendOpenPrompt = () => {
@@ -436,7 +440,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Work on the words</b><span>Stay close to this passage.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(revisePassagePrompt())}>
+          <button
+            type="button"
+            disabled={props.busy || postureBlocksEditorial}
+            onClick={() => begin(revisePassagePrompt(), undefined, { proposalPolicy: 'allow', proposalRequested: true })}
+          >
             <b>Show edit options</b>
             <span>Let MAIA offer a revision direction and other ways this passage could move. Nothing changes until you apply one.</span>
           </button>

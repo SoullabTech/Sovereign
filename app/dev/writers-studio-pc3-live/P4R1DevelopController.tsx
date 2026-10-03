@@ -303,6 +303,37 @@ export default function P4R1DevelopController() {
     [context, currentSectionId],
   );
   const currentChapterRootId = currentChapter?.root.draftSectionId ?? null;
+  const currentChapterFirstSectionId = currentChapter?.sections[0]?.draftSectionId ?? null;
+
+  useEffect(() => {
+    if (!context || !currentChapterFirstSectionId || typeof window === 'undefined') {
+      setChapterReview(null);
+      return;
+    }
+    const key = `writers-studio:chapter-review:v1:${context.manuscriptId}:${currentChapterFirstSectionId}`;
+    try {
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) {
+        setChapterReview(null);
+        return;
+      }
+      const cached = JSON.parse(raw) as { draftRevision?: number; map?: WholeManuscriptAttentionMap };
+      if (
+        context.draftRevision !== null
+        && cached.draftRevision === context.draftRevision
+        && cached.map?.manuscriptId === context.manuscriptId
+      ) {
+        setChapterReview(cached.map);
+        setChapterReviewError(null);
+        setChapterReviewProgress(null);
+      } else {
+        setChapterReview(null);
+      }
+    } catch {
+      window.sessionStorage.removeItem(key);
+      setChapterReview(null);
+    }
+  }, [context?.manuscriptId, context?.draftRevision, currentChapterFirstSectionId]);
 
   useEffect(() => {
     if (!context || !currentChapterRootId || typeof window === 'undefined') {
@@ -315,7 +346,7 @@ export default function P4R1DevelopController() {
 
     const currentKey = `writers-studio:chapter-scorecard:v1:${context.manuscriptId}:${currentChapterRootId}`;
     const previousKey = `writers-studio:chapter-scorecard-previous:v1:${context.manuscriptId}:${currentChapterRootId}`;
-    const minimalKey = `writers-studio:chapter-minimal-path:v1:${context.manuscriptId}:${currentChapterRootId}`;
+    const minimalKey = `writers-studio:chapter-minimal-path:v2:${context.manuscriptId}:${currentChapterRootId}`;
 
     const parseSnapshot = (raw: string | null) => {
       if (!raw) return null;
@@ -1206,25 +1237,32 @@ export default function P4R1DevelopController() {
   }, [context, chapterReview, chapterScoreBusy, currentChapterRootId]);
 
   const minimalPathCurrentChapter = useCallback(async () => {
-    if (!context || !chapterReview || !chapterScorecard || chapterMinimalPathBusy) return;
+    if (!context || !chapterReview || chapterMinimalPathBusy) return;
     setChapterMinimalPathBusy(true);
     setChapterMinimalPathError(null);
     try {
-      const scoreSnapshot = chapterScorecard.items
-        .map((item) => `${item.label}: ${item.notice}`)
-        .join('\n');
+      const scoreSnapshot = chapterScorecard
+        ? chapterScorecard.items.map((item) => `${item.label}: ${item.notice}`).join('\n')
+        : 'No scorecard requested. Work directly from the frozen chapter reading.';
       const out = await requestAttentionMap(
         context.manuscriptId,
         chapterReview.readingIds,
         [
-          'Create a writer-facing Minimal path to 5/5 from these same frozen chapter readings and the current optional scorecard. Do not reread the manuscript.',
-          'The goal is not to guarantee perfect scores. Identify the smallest set of high-leverage changes most likely to materially improve the weaker dimensions while protecting what already works.',
+          chapterScorecard
+            ? 'Create a writer-facing Minimal path to 5/5 from these same frozen chapter readings and the current optional scorecard. Do not reread the manuscript.'
+            : 'Create a writer-facing minimal strengthening path from these same frozen chapter readings. Do not reread the manuscript and do not invent a scorecard.',
+          chapterScorecard
+            ? 'The goal is not to guarantee perfect scores. Identify the smallest set of high-leverage changes most likely to materially improve the weaker dimensions while protecting what already works.'
+            : 'Identify the smallest set of high-leverage changes most likely to materially improve the chapter while protecting what already works.',
           'Prefer light and moderate edits: compression, clarification, transition, reader signposting, local reordering, or removing unnecessary repetition. A major rewrite is exceptional and must not be proposed while smaller interventions could plausibly solve the issue.',
           'Return exactly four evidenced items, ordered by leverage, using begin-here, next, later, watch.',
           'Begin each notice with [Light], [Moderate], or [Heavy]. Use [Heavy] only when the evidence shows a smaller move is insufficient.',
-          'For each item, describe one concrete editorial move without writing replacement prose. In whyItMatters, name which scorecard dimensions the move is likely to help and what must be protected.',
+          'For each item, describe one concrete editorial move without writing replacement prose.',
+          chapterScorecard
+            ? 'In whyItMatters, name which current scorecard dimensions the move is likely to help and what must be protected.'
+            : 'In whyItMatters, explain the concrete reader or chapter-level benefit and what must be protected. Do not mention a scorecard or scoring dimensions because none was requested.',
           'If the chapter appears improvable without a major rewrite, make the watch item explicitly say so.',
-          'Current scorecard:',
+          chapterScorecard ? 'Current scorecard:' : 'Scorecard status:',
           scoreSnapshot,
         ].join('\n'),
       );
@@ -1235,7 +1273,7 @@ export default function P4R1DevelopController() {
       setChapterMinimalPath(out.map);
       if (typeof window !== 'undefined' && context.draftRevision !== null && currentChapterRootId) {
         window.sessionStorage.setItem(
-          `writers-studio:chapter-minimal-path:v1:${context.manuscriptId}:${currentChapterRootId}`,
+          `writers-studio:chapter-minimal-path:v2:${context.manuscriptId}:${currentChapterRootId}`,
           JSON.stringify({ draftRevision: context.draftRevision, map: out.map }),
         );
       }
@@ -1327,16 +1365,87 @@ export default function P4R1DevelopController() {
     });
   }, [updateQuery]);
 
-  const workWithAttentionItem = useCallback(async (itemId: string, sectionId: string) => {
-    const item = attentionMap?.items.find((candidate) => candidate.id === itemId)
-      ?? chapterReview?.items.find((candidate) => candidate.id === itemId)
-      ?? chapterMinimalPath?.items.find((candidate) => candidate.id === itemId);
+  const workWithAttentionItem = useCallback(async (
+    itemId: string,
+    sectionId: string,
+    source: 'chapter-review' | 'minimal-path' | 'attention-map',
+  ) => {
+    const sourceMap = source === 'minimal-path'
+      ? chapterMinimalPath
+      : source === 'chapter-review'
+        ? chapterReview
+        : attentionMap;
+    const item = sourceMap?.items.find((candidate) => candidate.id === itemId);
     if (!item || !context) return;
+
+    /* A synthesis can be structurally evidence-bound yet cite the wrong frozen
+       observation for a semantically specific refinement. Before crossing into
+       Write, compare the claim against every frozen observation in the same
+       reading and prefer a clearly stronger textual match. The frozen reading
+       remains the authority; no new model call is used to repair the citation. */
+    const claimTokens = new Set(
+      [item.label, item.notice, item.whyItMatters]
+        .join(' ')
+        .toLowerCase()
+        .match(/[a-z][a-z-]{3,}/g)
+        ?.filter((token) => ![
+          'this','that','with','from','into','than','then','they','them','their',
+          'what','when','where','which','while','would','could','should','about',
+          'chapter','scorecard','dimensions','reader','reading','work','protect',
+          'light','moderate','heavy','edit','edits','improve','improving',
+        ].includes(token)) ?? [],
+    );
+    const normalizeToken = (token: string) => token
+      .replace(/(ing|ed|es|s)$/u, '')
+      .slice(0, 12);
+    const normalizedClaimTokens = [...claimTokens].map(normalizeToken).filter((token) => token.length >= 4);
+    const overlapScore = (text: string) => {
+      const normalizedText = (text.toLowerCase().match(/[a-z][a-z-]{3,}/g) ?? [])
+        .map(normalizeToken);
+      let score = 0;
+      for (const token of normalizedClaimTokens) {
+        if (normalizedText.some((candidate) => candidate === token || candidate.startsWith(token) || token.startsWith(candidate))) {
+          score += 1;
+        }
+      }
+      return score;
+    };
+
+    const evidenceCandidates = [...item.evidence];
+    for (const readingId of [...new Set(item.evidence.map((evidence) => evidence.readingId))]) {
+      const frozen = await fetchReading(context.manuscriptId, readingId);
+      if (!frozen.ok) continue;
+      const ranked = frozen.payload.reading.observations
+        .map((observation) => ({ observation, score: overlapScore(observation.observation) }))
+        .sort((a, b) => b.score - a.score);
+      const best = ranked[0];
+      const citedKeys = new Set(
+        item.evidence.filter((evidence) => evidence.readingId === readingId)
+          .map((evidence) => evidence.observationKey),
+      );
+      const citedScore = ranked
+        .filter(({ observation }) => citedKeys.has(observation.key))
+        .reduce((max, candidate) => Math.max(max, candidate.score), 0);
+      if (best && best.score >= 2 && best.score > citedScore && !citedKeys.has(best.observation.key)) {
+        const recoveredSectionIds = [
+          ...new Set(best.observation.evidenceRefs.flatMap((ref) => sectionIdsOf(ref))),
+        ];
+        if (recoveredSectionIds.length > 0) {
+          evidenceCandidates.unshift({
+            readingId,
+            observationKey: best.observation.key,
+            sectionIds: recoveredSectionIds,
+            lens: best.observation.lens,
+            observation: best.observation.observation,
+          });
+        }
+      }
+    }
 
     /* C11R2 — use the same verifier that Write/Focus uses. A model-visible
        passage ref is not sufficient: it must still resolve CURRENT, VERIFIED,
        EDITABLE and BODY-ADDRESSABLE against the present manuscript. */
-    for (const evidence of item.evidence) {
+    for (const evidence of evidenceCandidates) {
       const insight = await loadCanvasInsight(
         context.manuscriptId,
         evidence.readingId,
@@ -1345,18 +1454,44 @@ export default function P4R1DevelopController() {
       const passage = insight?.passages.find(
         (candidate) => candidate.verified && candidate.editable && candidate.range,
       );
-      if (!passage?.range) continue;
+      if (passage?.range) {
+        updateQuery((query) => {
+          query.set('mode', 'write');
+          query.set(SECTION_PARAM, passage.sectionId);
+          query.set('developField', 'overview');
+          query.set('attentionItem', itemId);
+          query.set('insightReading', evidence.readingId);
+          query.set('insightObservation', evidence.observationKey);
+          query.set('insightAction', 'focus');
+        });
+        return;
+      }
 
-      updateQuery((query) => {
-        query.set('mode', 'write');
-        query.set(SECTION_PARAM, passage.sectionId);
-        query.set('developField', 'overview');
-        query.set('attentionItem', itemId);
-        query.set('insightReading', evidence.readingId);
-        query.set('insightObservation', evidence.observationKey);
-        query.set('insightAction', 'focus');
-      });
-      return;
+      /* If the richer canvas resolver cannot establish an editable range, recover
+         from the frozen reading itself before falling back to synthesized sectionIds.
+         This keeps a Work-on-this handoff tied to the observation MAIA actually
+         cited instead of whichever generic section happened to sort first. */
+      const frozen = await fetchReading(context.manuscriptId, evidence.readingId);
+      if (frozen.ok) {
+        const observation = frozen.payload.reading.observations.find(
+          (candidate) => candidate.key === evidence.observationKey,
+        );
+        const citedSection = observation?.evidenceRefs
+          .flatMap((ref) => sectionIdsOf(ref))
+          .find(Boolean);
+        if (citedSection) {
+          updateQuery((query) => {
+            query.set('mode', 'write');
+            query.set(SECTION_PARAM, citedSection);
+            query.set('developField', 'overview');
+            query.set('attentionItem', itemId);
+            query.set('insightReading', evidence.readingId);
+            query.set('insightObservation', evidence.observationKey);
+            query.delete('insightAction');
+          });
+          return;
+        }
+      }
     }
 
     /* No cited observation can lawfully become an editable locus. Orient to an
