@@ -13,7 +13,7 @@ import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/con
 import type { ReadingView } from '@/lib/writersStudio/developPresentation';
 import type { ReadingSummary } from '@/lib/writersStudio/developClient';
 import type { LiveThemesPayload, LiveGovernedTheme, LiveThemeCandidate } from '@/lib/writersStudio/themes/liveTypes';
-import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
+import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type { DevelopPreparation } from '@/lib/writersStudio/developPreparationClient';
 import type { WholeManuscriptAttentionMap, AttentionItem } from '@/lib/writersStudio/studio/attentionMap';
 import type { WriterUnderstanding, WriterUnderstandingDraft } from '@/lib/writersStudio/writerUnderstanding';
@@ -2046,7 +2046,13 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const selectedRailLabel = selectedRailSection?.heading?.trim() || 'Selected place';
 
   const selectManuscriptLocus = (sectionId: string) => {
-    setRailSelectionId(sectionId);
+    const chapter = chapterSpanFor(props.sections, sectionId);
+    const selectsChapterRoot = chapter?.root.draftSectionId === sectionId;
+
+    /* A chapter root is already a complete Develop subject. Let the canonical
+       ChapterReviewPanel own it so completed analysis is not covered by the
+       generic relational locus overlay. Subsections still use that overlay. */
+    setRailSelectionId(selectsChapterRoot ? null : sectionId);
     setTalking(false);
     setDialoguePrompt('');
     setAttentionConversationDraft('');

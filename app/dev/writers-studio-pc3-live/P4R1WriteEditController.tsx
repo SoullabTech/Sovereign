@@ -205,6 +205,7 @@ export default function FlagshipWriteEditController() {
   } = useEditingLatitude(context?.manuscriptId ?? '');
 
   const focusInsightConsumed = useRef<string | null>(null);
+  const autoProposalKey = useRef<string | null>(null);
   const workspaceReturn = useRef<{
     focusId: string | null;
     selectedPassage: Pc3HeldPassage | null;
@@ -1070,7 +1071,7 @@ export default function FlagshipWriteEditController() {
 
     /* Orientation may legitimately name a whole section, but automatic editorial
        Focus may not. Only an exact passage range may become the held locus. */
-    if (incomingAction === 'focus' && !passage.range) return;
+    if ((incomingAction === 'focus' || incomingAction === 'try-revision') && !passage.range) return;
 
     const section = context.sections.find((candidate) => candidate.draftSectionId === passage.sectionId);
     if (!section) return;
@@ -1082,8 +1083,9 @@ export default function FlagshipWriteEditController() {
        passage and open Focus in the same turn. Waiting for a later effect to
        observe the held state created a race where the writer arrived in Write
        with valid evidence but no editorial room. */
-    if (incomingAction === 'focus' && passage.range) {
+    if ((incomingAction === 'focus' || incomingAction === 'try-revision') && passage.range) {
       const key = [
+        incomingAction,
         arrivalInsight.readingId,
         arrivalInsight.observation.key,
         section.draftSectionId,
@@ -1129,6 +1131,65 @@ export default function FlagshipWriteEditController() {
     selectedPassage,
     workspaceOpen,
     openWorkspace,
+  ]);
+
+  useEffect(() => {
+    if (
+      incomingAction !== 'try-revision'
+      || !arrivalInsight
+      || !workspaceOpen
+      || !selectedPassage
+      || !focusId
+      || editorialBusy
+      || suggestedVersionId
+    ) return;
+    if (
+      workspaceInsight?.readingId !== arrivalInsight.readingId
+      || workspaceInsight.key !== arrivalInsight.observation.key
+      || selectedPassage.draftSectionId !== focusId
+    ) return;
+
+    const passage = arrivalInsight.passages.find((candidate) =>
+      candidate.sectionId === focusId
+      && candidate.verified
+      && candidate.editable
+      && candidate.range,
+    );
+    if (!passage?.range) return;
+    const exact = Array.from(passage.body).slice(passage.range.start, passage.range.end).join('');
+    if (exact !== selectedPassage.text) return;
+
+    const key = [
+      arrivalInsight.readingId,
+      arrivalInsight.observation.key,
+      focusId,
+      passage.range.start,
+      passage.range.end,
+      exact,
+    ].join(':');
+    if (autoProposalKey.current === key) return;
+    autoProposalKey.current = key;
+
+    void sendEditorial([
+      'Offer one possible revision of this selected passage in response to the developmental observation.',
+      'Preserve my voice, style, subject, imagery, cadence, vocabulary, medicine, and intentional ambiguity.',
+      'Use the smallest sufficient intervention. Do not rewrite merely because smoother wording is possible.',
+      'Do not assume the noticed pattern is a defect or that revision is improvement.',
+      'Consider the strongest case for keeping the original unchanged.',
+      'Treat possible reader effects as hypotheses.',
+      'Make clear what changed, why, and what may be lost.',
+      'Nothing is to be applied automatically.',
+    ].join('\n'), { proposalRequested: true });
+  }, [
+    incomingAction,
+    arrivalInsight,
+    workspaceOpen,
+    workspaceInsight,
+    selectedPassage,
+    focusId,
+    editorialBusy,
+    suggestedVersionId,
+    sendEditorial,
   ]);
 
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -304,6 +304,25 @@ export default function P4R1DevelopController() {
   );
   const currentChapterRootId = currentChapter?.root.draftSectionId ?? null;
   const currentChapterFirstSectionId = currentChapter?.sections[0]?.draftSectionId ?? null;
+  const previousChapterRootRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const previous = previousChapterRootRef.current;
+    previousChapterRootRef.current = currentChapterRootId;
+    if (!previous || previous === currentChapterRootId) return;
+
+    /* A chapter is a distinct developmental subject. Never let one chapter's
+       presentation-only expansions or error state masquerade as another's. */
+    setChapterReview(null);
+    setChapterReviewError(null);
+    setChapterReviewProgress(null);
+    setChapterNeedsCheckpoint(false);
+    setChapterReadPending(false);
+    setChapterBookFit(null);
+    setChapterBookFitError(null);
+    setChapterMovement(null);
+    setChapterMovementError(null);
+  }, [currentChapterRootId]);
 
   useEffect(() => {
     if (!context || !currentChapterFirstSectionId || typeof window === 'undefined') {
@@ -312,7 +331,7 @@ export default function P4R1DevelopController() {
     }
     const key = `writers-studio:chapter-review:v1:${context.manuscriptId}:${currentChapterFirstSectionId}`;
     try {
-      const raw = window.sessionStorage.getItem(key);
+      const raw = window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
       if (!raw) {
         setChapterReview(null);
         return;
@@ -326,10 +345,12 @@ export default function P4R1DevelopController() {
         setChapterReview(cached.map);
         setChapterReviewError(null);
         setChapterReviewProgress(null);
+        window.localStorage.setItem(key, raw);
       } else {
         setChapterReview(null);
       }
     } catch {
+      window.localStorage.removeItem(key);
       window.sessionStorage.removeItem(key);
       setChapterReview(null);
     }
@@ -716,7 +737,20 @@ export default function P4R1DevelopController() {
     }
 
     updateQuery((query) => {
+      query.set('mode', 'develop');
       query.set(SECTION_PARAM, sectionId);
+
+      /* Selecting a new manuscript place is a new Develop subject. Return to
+         its Overview rather than inheriting another chapter's lens/read/thread. */
+      query.delete('developField');
+      query.delete('developIntent');
+      query.delete('r');
+      query.delete('attentionItem');
+      query.delete('insightReading');
+      query.delete('insightObservation');
+      query.delete('insightAction');
+      query.delete('editorialThread');
+      query.delete('relationship');
     });
   }, [context, updateQuery]);
 
@@ -1052,7 +1086,7 @@ export default function P4R1DevelopController() {
       setChapterReview(synthesized.map);
       setChapterReviewProgress(null);
       if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem(
+        window.localStorage.setItem(
           `writers-studio:chapter-review:v1:${context.manuscriptId}:${chapterIds[0]}`,
           JSON.stringify({ draftRevision: revisionNumber, map: synthesized.map }),
         );
@@ -1462,7 +1496,7 @@ export default function P4R1DevelopController() {
           query.set('attentionItem', itemId);
           query.set('insightReading', evidence.readingId);
           query.set('insightObservation', evidence.observationKey);
-          query.set('insightAction', 'focus');
+          query.set('insightAction', source === 'chapter-review' ? 'try-revision' : 'focus');
         });
         return;
       }
@@ -1494,8 +1528,18 @@ export default function P4R1DevelopController() {
       }
     }
 
-    /* No cited observation can lawfully become an editable locus. Orient to an
-       evidenced section and leave passage selection to the writer. */
+    /* An action labelled "Show me an edited version" may not silently degrade
+       into a generic section handoff. Without one exact editable passage there
+       is no lawful automatic revision target. */
+    if (source === 'chapter-review') {
+      setChapterReviewError(
+        'This observation does not identify one exact editable passage yet. Choose the wording you want to revise, or open the passage in Write first.',
+      );
+      return;
+    }
+
+    /* Other Work-on-this actions may still orient to an evidenced section and
+       leave exact passage choice to the writer. */
     openAttentionSection(itemId, sectionId);
   }, [attentionMap, chapterReview, chapterMinimalPath, context, openAttentionSection, updateQuery]);
 

@@ -31,6 +31,28 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(controller).toContain('The first thing the writer sees must build trust by naming one earned strength');
   });
 
+  it('keeps saved chapter analysis available beyond the immediate tab', () => {
+    expect(controller).toContain('window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key)');
+    expect(controller).toContain('window.localStorage.setItem(key, raw)');
+    expect(controller).toContain('window.localStorage.setItem(');
+    expect(controller).toContain('writers-studio:chapter-review:v1');
+  });
+
+  it('treats each selected chapter as a distinct developmental subject', () => {
+    expect(controller).toContain('const previousChapterRootRef = useRef<string | null>(null)');
+    expect(controller).toContain('previousChapterRootRef.current = currentChapterRootId');
+    expect(controller).toContain('setChapterReview(null)');
+    expect(controller).toContain('setChapterBookFit(null)');
+    expect(controller).toContain('setChapterMovement(null)');
+  });
+
+  it('lets chapter-root rail selections reveal the chapter review rather than cover it', () => {
+    expect(develop).toContain("import { chapterSpanFor, type RebuildSection }");
+    expect(develop).toContain('const selectsChapterRoot = chapter?.root.draftSectionId === sectionId');
+    expect(develop).toContain('setRailSelectionId(selectsChapterRoot ? null : sectionId)');
+    expect(develop).toContain('ChapterReviewPanel own it');
+  });
+
   it('turns the optional scorecard into a minimal high-leverage revision path', () => {
     expect(develop).toContain('Minimal path to 5/5');
     expect(develop).toContain('Start with the few changes that do the most work.');
