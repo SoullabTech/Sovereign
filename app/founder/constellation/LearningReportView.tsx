@@ -86,6 +86,7 @@ export default function LearningReportView({ report }: { report: LearningReport 
           between an action completing and the person finding it useful.
         </p>
         <p>No campaign is automatically launched, changed, or selected by this report.</p>
+        <a href="/founder/constellation/participation" className={styles.refresh}>Review the participation design</a>
       </section>
 
       <details className={styles.method}>

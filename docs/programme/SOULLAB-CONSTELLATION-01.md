@@ -90,9 +90,11 @@ Astrology now has its own public Constellation doorway and audience-specific inv
 
 A read-only report at `/founder/constellation` uses existing, deliberately submitted Writer's Studio beta signals. It reports submissions, not people or proven usefulness; small groups are withheld, unavailable reads remain unavailable, and campaign/arrival/first-act/return/referral/contribution questions stay explicitly unmeasured. There is no new collection, identity join, or automatic campaign action. The page and API authorize the founder server-side before reading. See `SOULLAB-CONSTELLATION-01_C7_LEARNING_LOOP_2026-10-03.md` for the acceptance contract, evidence, and delivery limits.
 
-### C7B — Prospective doorway-to-usefulness study — NOT BUILT
+### C7B — Prospective doorway-to-usefulness study — REVIEW-ONLY PROTOTYPE
 
 Establish explicit participation, an agreed first act, source provenance, and a way for the person to say whether the work was useful. Do not reconstruct this history from private conversations or equate account creation with value.
+
+C7B1 now provides a founder-only interaction rehearsal at `/founder/constellation/participation`: separate feedback and optional attribution choices, exact review, and complete local clearing. Nothing is submitted, stored, or enrolled. See `SOULLAB-CONSTELLATION-01_C7B_PARTICIPATION_2026-10-03.md`. Real collection remains unbuilt pending pilot custody decisions and a separately verified persistence/withdrawal path.
 
 ## Delivery distinctions
 
