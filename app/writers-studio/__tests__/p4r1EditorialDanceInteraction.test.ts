@@ -176,6 +176,7 @@ test('creative direction buttons request real proposal turns instead of fabricat
   expect(onSend).toHaveBeenCalledTimes(1);
   expect(onSend.mock.calls[0][0]).toContain('Direction I want to explore: Preserve and deepen');
   expect(onSend.mock.calls[0][0]).toContain('Nothing is to be applied automatically.');
+  expect(onSend.mock.calls[0][1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true });
 });
 
 
@@ -265,11 +266,25 @@ test('empty editorial room offers examples and ideas as real MAIA acts', () => {
   expect(onDepth).toHaveBeenCalledWith('learning');
   expect(onSend.mock.calls.at(-1)?.[0]).toContain('clearly labeled illustrative examples');
   expect(onSend.mock.calls.at(-1)?.[0]).toContain('examples, not recommendations');
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
 
   act(() => button('Give me ideas').click());
   expect(onSend.mock.calls.at(-1)?.[0]).toContain('several ideas for where this exact passage could go');
   expect(onSend.mock.calls.at(-1)?.[0]).toContain('distinct creative directions');
   expect(onSend.mock.calls.at(-1)?.[0]).toContain('Do not rank them');
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+
+  act(() => button('Discuss what’s happening').click());
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+
+  act(() => button('Teach me about the writing').click());
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+
+  act(() => button('Go deeper').click());
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+
+  act(() => button('Show edit options').click());
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true });
 });
 
 
@@ -357,7 +372,25 @@ test('a MAIA response without a proposal stays visible and keeps exploration act
   expect(container.textContent).toContain('Continue from here');
   expect(container.textContent).toContain('Show examples');
   expect(container.textContent).toContain('Give me ideas');
-  expect(container.textContent).toContain('Revise from this');
+  expect(container.textContent).toContain('Show revision options');
   expect(container.querySelector('.p4r1-dance-start-actions')).toBeNull();
   expect(container.textContent).not.toContain('Apply my version');
+
+  const followup = (text: string) =>
+    Array.from(container.querySelectorAll('button')).find((button) => button.textContent === text)!;
+
+  act(() => followup('Show examples').click());
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+
+  act(() => followup('Give me ideas').click());
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+
+  act(() => followup('Teach me more').click());
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+
+  act(() => followup('Go deeper').click());
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'reply_only' });
+
+  act(() => followup('Show revision options').click());
+  expect(onSend.mock.calls.at(-1)?.[1]).toEqual({ proposalPolicy: 'allow', proposalRequested: true });
 });

@@ -11,6 +11,8 @@ import { resolveSituatedWorkContext, studioHomeReturnSearch } from '@/app/writer
 import { useHouseStudioH1WorkClaim } from '@/app/writers-studio/useHouseStudioH1WorkClaim';
 import { h1AdmissionNeeded, resolveH1Arrival } from '@/app/writers-studio/h1Arrival';
 import {
+  canvasWithEditorialThread,
+  canvasWithoutEditorialThread,
   canvasWithRelationship,
   canvasWithoutRelationship,
   editorialThreadIdFrom,
@@ -533,6 +535,13 @@ export default function FlagshipWriteEditController() {
 
   const clearEditorial = useCallback(() => {
     setEditorialThread(null);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(
+        null,
+        '',
+        canvasWithoutEditorialThread(window.location.pathname, window.location.search),
+      );
+    }
     setRelationshipChoices([]);
     setSuggestedVersionId(null);
     setAppliedVersionId(null);
@@ -604,6 +613,17 @@ export default function FlagshipWriteEditController() {
     }
 
     setEditorialThread(thread);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(
+        null,
+        '',
+        canvasWithEditorialThread(
+          window.location.pathname,
+          window.location.search,
+          thread.threadId,
+        ),
+      );
+    }
     setSuggestedVersionId(thread.headVersionId);
     setAppliedVersionId(thread.application && !thread.application.undone ? thread.application.versionId : null);
     setRelationshipChoices([]);

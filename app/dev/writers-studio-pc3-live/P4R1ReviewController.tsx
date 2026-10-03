@@ -23,7 +23,7 @@ import { rehydrateChapterReview, runChapterReview } from '@/lib/writersStudio/re
 import { requestDevelopmentalReading } from '@/lib/writersStudio/developClient';
 import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
-import { mapWholeReview } from '@/lib/writersStudio/studio/wholeReview';
+import { mapWholeReview, REVIEW_DEVELOPMENTAL_LENSES } from '@/lib/writersStudio/studio/wholeReview';
 import type { DurableObservationTruth } from '@/lib/writersStudio/studio/realReview';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import {
@@ -85,6 +85,7 @@ type ReadyReview = {
   const [availableRuns, setAvailableRuns] = useState<ChapterReviewManifest[]>([]);
   const [availableRootId, setAvailableRootId] = useState<string | null>(null);
   const [quickReview, setQuickReview] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [quickReviewNone, setQuickReviewNone] = useState(false);
   const [quickReviewBusy, setQuickReviewBusy] = useState(false);
   const [quickReviewNeedsCheckpoint, setQuickReviewNeedsCheckpoint] = useState(false);
   const [quickReviewError, setQuickReviewError] = useState<string | null>(null);
@@ -226,7 +227,7 @@ type ReadyReview = {
           manifest: loaded.run,
           payloads: restored.bundle.payloads,
           host,
-          currentRevision: body.version,
+          currentRevision: body.draftRevision ?? -1,
         });
         if (cancelled) return;
         if (mapped.kind !== 'ready') {
@@ -262,6 +263,7 @@ type ReadyReview = {
     setQuickReviewBusy(true);
     setQuickReviewNeedsCheckpoint(false);
     setQuickReviewError(null);
+    setQuickReviewNone(false);
     try {
       const ids = reviewChapter.sections.map((section) => section.draftSectionId);
       const commissioned = await requestDevelopmentalReading(
@@ -270,11 +272,23 @@ type ReadyReview = {
         { kind: 'range', fromSectionId: ids[0]!, toSectionId: ids[ids.length - 1]! },
       );
       if (!commissioned.ok) {
-        if (commissioned.stage === 'capture' && commissioned.refusal === 'revision_not_current') {
+        if (
+          commissioned.stage === 'capture'
+          && (commissioned.refusal === 'revision_not_current' || commissioned.refusal === 'no_revision')
+        ) {
           setQuickReviewNeedsCheckpoint(true);
           return;
         }
         setQuickReviewError('MAIA could not reread the chapter just now. Nothing in the writing changed.');
+        return;
+      }
+      if (commissioned.outcome === 'none') {
+        /* A completed reading with no observations is not a synthesis failure.
+           It also does not establish that the chapter is finished. Preserve the
+           modest truth of this light pass instead of asking attention-map to
+           fabricate an item from an empty evidence set. */
+        setQuickReview(null);
+        setQuickReviewNone(true);
         return;
       }
       const synthesis = await requestAttentionMap(
@@ -342,10 +356,13 @@ type ReadyReview = {
           done >= total ? 'MAIA has finished rereading. Preparing Review…'
             : `Reading ${done + 1} of ${total}: ${lens}…`,
         ),
+        undefined,
+        REVIEW_DEVELOPMENTAL_LENSES,
       );
       if (bundle.readingIds.length === 0) {
-        const stale = bundle.failures.some((failure) => failure.refusal === 'revision_not_current');
-        if (stale) {
+        const checkpointNeeded = bundle.failures.some((failure) =>
+          failure.refusal === 'revision_not_current' || failure.refusal === 'no_revision');
+        if (checkpointNeeded) {
           setRereadNeedsCheckpoint(true);
           setRereadProgress(null);
           return;
@@ -615,6 +632,16 @@ type ReadyReview = {
                       <p>{item.notice}</p>
                     </article>
                   ))}
+                </div>
+              ) : quickReviewNone ? (
+                <div className="p4r1-review-quick-result" data-review-quick-result>
+                  <article>
+                    <b>Nothing further surfaced in this light reread</b>
+                    <p>
+                      MAIA completed the overview read without an evidenced observation to carry forward.
+                      This light pass does not establish that the chapter is finished and does not replace a full Review.
+                    </p>
+                  </article>
                 </div>
               ) : null}
               <details className="p4r1-review-deep">

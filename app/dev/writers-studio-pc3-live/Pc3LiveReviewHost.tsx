@@ -20,7 +20,7 @@ import { saveChapterReviewManifest } from '@/lib/writersStudio/rebuild/chapterRe
 import { chapterSpanFor } from '@/lib/writersStudio/rebuild/model';
 import { SECTION_PARAM } from '@/lib/writersStudio/placeInWork';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
-import { mapWholeReview } from '@/lib/writersStudio/studio/wholeReview';
+import { mapWholeReview, REVIEW_DEVELOPMENTAL_LENSES } from '@/lib/writersStudio/studio/wholeReview';
 import type { DurableObservationTruth } from '@/lib/writersStudio/studio/realReview';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';import {
   commissionReviewDiscuss, REVIEW_DISCUSS_COPY,
@@ -148,7 +148,7 @@ type ReadyReview = {
           manifest: loaded.run,
           payloads: restored.bundle.payloads,
           host,
-          currentRevision: body.version,
+          currentRevision: body.draftRevision ?? -1,
         });
         if (cancelled) return;
         if (mapped.kind !== 'ready') {
@@ -193,6 +193,8 @@ type ReadyReview = {
           done >= total ? 'MAIA has finished rereading. Preparing Review…'
             : `Reading ${done + 1} of ${total}: ${lens}…`,
         ),
+        undefined,
+        REVIEW_DEVELOPMENTAL_LENSES,
       );
       if (bundle.readingIds.length === 0) {
         const stale = bundle.failures.some((failure) => failure.refusal === 'revision_not_current');
@@ -280,14 +282,38 @@ type ReadyReview = {
   }, [pathname]);
 
   const openFinding = useCallback((finding: Pc3LiveReviewFinding) => {
+    if (!review || typeof window === 'undefined') return;
     setSelectedFindingId(finding.id);
-    if (typeof window !== 'undefined') {
-      const q = new URLSearchParams(window.location.search);
-      q.set('reviewFinding', finding.id);
-      window.history.replaceState(window.history.state, '', pathname + '?' + q.toString());
-    }
-    goWrite(finding.sectionId);
-  }, [goWrite, pathname]);
+    const q = new URLSearchParams(window.location.search);
+    q.set('mode', 'write');
+    q.set('s', finding.sectionId);
+    q.set('reviewRun', review.runId);
+    q.set('reviewFinding', finding.id);
+    q.delete('insightReading');
+    q.delete('insightObservation');
+    q.delete('insightAction');
+    window.location.assign(pathname + '?' + q.toString());
+  }, [pathname, review]);
+
+  const workWithFinding = useCallback((finding: Pc3LiveReviewFinding) => {
+    if (!review || typeof window === 'undefined') return;
+    const truth = review.durable[finding.id];
+    if (!truth) return;
+    const exact = truth.evidenceRefs.find((ref) =>
+      ref.kind === 'passage' && ref.sectionId === finding.sectionId);
+    if (!exact) return;
+
+    setSelectedFindingId(finding.id);
+    const q = new URLSearchParams(window.location.search);
+    q.set('mode', 'write');
+    q.set('s', finding.sectionId);
+    q.set('reviewRun', review.runId);
+    q.set('reviewFinding', finding.id);
+    q.set('insightReading', truth.address.readingId);
+    q.set('insightObservation', truth.address.observationKey);
+    q.set('insightAction', 'focus');
+    window.location.assign(pathname + '?' + q.toString());
+  }, [pathname, review]);
 
   const discussFinding = useCallback((finding: Pc3LiveReviewFinding) => {
     setSelectedFindingId(finding.id);
@@ -329,12 +355,21 @@ type ReadyReview = {
       && review.view.findings.some((finding) => finding.id === selectedFindingId)
       ? { ...review.view, selectedFindingId }
       : review.view;
-    return projectPc3LiveReview({
+    const projected = projectPc3LiveReview({
       view,
       sections: context.sections,
       chapterRootSectionId: review.rootId,
       heroSrc: visual.src,
     });
+    return {
+      ...projected,
+      findings: projected.findings.map((finding) => {
+        const truth = review.durable[finding.id];
+        const canWorkWith = Boolean(truth?.evidenceRefs.some((ref) =>
+          ref.kind === 'passage' && ref.sectionId === finding.sectionId));
+        return canWorkWith ? { ...finding, canWorkWith: true } : finding;
+      }),
+    };
   }, [review, context, selectedFindingId, visual.src]);
 
   if (phase === 'idle' && context && reviewChapter) {
@@ -401,7 +436,7 @@ type ReadyReview = {
           onTab={setTab}
           onBack={() => goWrite(review.rootId)}
           onOpenFinding={openFinding}
-          onWorkWith={openFinding}
+          onWorkWith={workWithFinding}
           onDiscuss={discussFinding}
         />
       }

@@ -36,35 +36,79 @@ async function main() {
     headless: true,
     executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   });
-  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1200 } });
-  await ctx.addCookies([{ name: 'maia_session', value: token, domain: 'localhost', path: '/' }]);
+  const ctx = await browser.newContext({
+    viewport: { width: 1600, height: 1200 },
+    extraHTTPHeaders: { 'x-session-token': token },
+  });
+  await ctx.addCookies([{ name: 'maia_session', value: token, url: BASE }]);
   await ctx.addInitScript(() => localStorage.setItem('maia_settings', JSON.stringify({ sanctuary: false })));
   const page = await ctx.newPage();
-  page.on('response', (response) => {
+  page.on('response', async (response) => {
     const u = response.url();
     if (u.includes('/api/writers-studio/editorial/')) {
       console.log('[EDITORIAL HTTP]', response.request().method(), response.status(), u);
+    }
+    if (response.request().method() !== 'GET'
+      && (u.includes('/develop/preparation') || u.includes('/readings') || u.includes('/attention-map'))) {
+      const body = await response.text().catch(() => '');
+      console.log('[DEVELOP HTTP]', response.request().method(), response.status(), u, body.slice(0, 1600));
     }
   });
   const chapterStart = 'a678dfe4-5f4f-44b1-afd7-552afcb84f79';
   const url = `${BASE}/writers-studio?mode=develop&m=${MANUSCRIPT}&s=${chapterStart}`;
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  /* The button is server-rendered before its React handler is attached. Wait for
+     the live room to hydrate before treating a click as an authored gesture. */
+  await page.waitForTimeout(1500);
 
-  const readButton = page.getByRole('button', { name: /Read this chapter/i }).first();
-  const readyText = page.getByText(/Strong Structural Signposting|MAIA read the chapter/i).first();
+  const readButton = page.getByRole('button', { name: /^Read this chapter$/i }).first();
+  const checkpointRead = page.getByRole('button', { name: /Save current draft & read/i }).first();
+  const readyText = page.getByText(/MAIA read the chapter/i).first();
   await Promise.race([
-    readButton.waitFor({ timeout: 30_000 }).catch(() => null),
-    readyText.waitFor({ timeout: 30_000 }).catch(() => null),
+    readButton.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => null),
+    checkpointRead.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => null),
+    readyText.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => null),
   ]);
-  if (await readButton.isVisible().catch(() => false)) {
-    console.log('EA CASE STUDY · commissioning chapter read');
-    await readButton.click();
-    await readyText.waitFor({ timeout: 120_000 });
+  if (!(await readyText.isVisible().catch(() => false))) {
+    if (await checkpointRead.isVisible().catch(() => false)) {
+      console.log('EA CASE STUDY · checkpointing current chapter before read');
+      await checkpointRead.evaluate((button) => button.click());
+    } else {
+      console.log('EA CASE STUDY · commissioning chapter read');
+      await readButton.evaluate((button) => button.click());
+      await page.waitForTimeout(1500);
+      if (await checkpointRead.isVisible().catch(() => false)) {
+        console.log('EA CASE STUDY · reading requires a current-draft checkpoint');
+        await checkpointRead.evaluate((button) => button.click());
+      }
+    }
+    await readyText.waitFor({ state: 'visible', timeout: 180_000 }).catch(async (error) => {
+      console.log('EA CASE STUDY · chapter-read state=', (await page.locator('body').innerText()).slice(0, 5000));
+      throw error;
+    });
   }
+
+  const runExpansion = async (buttonName, selector, label) => {
+    const button = page.getByRole('button', { name: buttonName }).first();
+    await button.waitFor({ state: 'visible', timeout: 30_000 });
+    await button.evaluate((node) => node.click());
+    const result = page.locator(selector);
+    await result.waitFor({ state: 'visible', timeout: 180_000 }).catch(async (error) => {
+      console.log(`EA CASE STUDY · ${label} state=`, (await page.locator('body').innerText()).slice(0, 7000));
+      throw error;
+    });
+    const text = (await result.innerText()).trim();
+    if (!text) throw new Error(`${label} returned an empty result`);
+    console.log(`EA CASE STUDY · ${label} PASS=`, text.slice(0, 1000));
+  };
+
+  await runExpansion(/How does this chapter fit the book\?/i, '[data-chapter-book-fit]', 'book fit');
+  await runExpansion(/Show me the chapter’s movement/i, '[data-chapter-movement]', 'chapter movement');
+  await runExpansion(/^Chapter scorecard$/i, '[data-chapter-scorecard]', 'chapter scorecard');
 
   const strengthen = page.getByRole('button', { name: /Show me what to strengthen/i }).first();
   await strengthen.waitFor({ timeout: 30_000 });
-  await strengthen.click();
+  await strengthen.evaluate((button) => button.click());
   const repetition = page.getByText(/repeated core ideas|redundant explanations|repetition of core ideas/i).first();
   await repetition.waitFor({ timeout: 120_000 });
   const article = repetition.locator('xpath=ancestor::article[1]');
@@ -77,6 +121,14 @@ async function main() {
   console.log('EA CASE STUDY · passage-focus probe');
   console.log('url=', page.url());
   console.log('posture=', await page.evaluate(() => localStorage.getItem('maia_settings')));
+  const focused = new URL(page.url());
+  if (
+    focused.searchParams.get('insightReading') !== READING
+    || focused.searchParams.get('insightObservation') !== 'o4'
+    || focused.searchParams.get('insightAction') !== 'focus'
+  ) {
+    throw new Error(`strengthening handoff lost its frozen o4 evidence identity: ${focused.search}`);
+  }
 
   const labels = [
     'Show edit options',
@@ -116,20 +168,30 @@ async function main() {
     response.url().includes('/api/writers-studio/editorial/turn')
       && response.request().method() === 'POST',
     { timeout: 120_000 },
-  ).catch(() => null);
+  );
   await discuss.click();
   const turn = await turnResponse;
-  if (turn) console.log('EA CASE STUDY · editorial turn status=', turn.status());
+  console.log('EA CASE STUDY · editorial turn status=', turn.status());
+  if (turn.status() !== 200) {
+    throw new Error(`Discuss what’s happening returned HTTP ${turn.status()}: ${(await turn.text()).slice(0, 1200)}`);
+  }
   await page.waitForFunction(() => {
     const el = document.querySelector('.p4r1-dance-response');
     const text = el?.textContent ?? '';
     return text.length > 0 && !text.includes('MAIA is with the passage');
-  }, undefined, { timeout: 120_000 }).catch(() => {});
+  }, undefined, { timeout: 120_000 });
   await page.waitForTimeout(500);
-  const responseText = await page.locator('.p4r1-dance-response').first().innerText().catch(() => '');
-  const failureText = await page.locator('.p4r1-error').allInnerTexts().catch(() => []);
+  const responseText = (await page.locator('.p4r1-dance-response').first().innerText()).trim();
+  const failureText = await page.locator('.p4r1-error').allInnerTexts();
   console.log('EA CASE STUDY · discussion response=', responseText.slice(0, 1200));
   console.log('EA CASE STUDY · visible errors=', JSON.stringify(failureText));
+  if (responseText.length < 80) throw new Error('Discuss what’s happening rendered no substantive response');
+  if (!/(repet|redundan|spiral|wound|gift)/i.test(responseText)) {
+    throw new Error('Discuss what’s happening lost the repetition/wound-gift editorial subject');
+  }
+  if (failureText.length > 0) {
+    throw new Error(`Discuss what’s happening rendered visible errors: ${failureText.join(' | ')}`);
+  }
 
   await page.screenshot({ path: '/private/tmp/ea-case-study-actions.png', fullPage: false });
 }

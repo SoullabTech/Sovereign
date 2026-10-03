@@ -448,7 +448,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <b>Show edit options</b>
             <span>Let MAIA offer a revision direction and other ways this passage could move. Nothing changes until you apply one.</span>
           </button>
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(discussPassagePrompt())}>
+          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(discussPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
             <b>Discuss what’s happening</b>
             <span>Stay with the passage and help me think about it before editing.</span>
           </button>
@@ -458,11 +458,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Explore possibilities</b><span>Open the field without committing to a revision.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(examplesPassagePrompt(), 'learning')}>
+          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(examplesPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
             <b>Show me examples</b>
             <span>Illustrate possibilities without turning them into recommendations.</span>
           </button>
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(ideasPassagePrompt())}>
+          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
             <b>Give me ideas</b>
             <span>Open several genuinely different directions I could explore.</span>
           </button>
@@ -472,11 +472,11 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
       <section>
         <header><b>Learn from the passage</b><span>Open more craft depth only if you want it.</span></header>
         <div className="p4r1-dance-start-actions">
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(teachPassagePrompt(), 'learning')}>
+          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(teachPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
             <b>Teach me about the writing</b>
             <span>Help me understand the craft already at work in my own words.</span>
           </button>
-          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(deeperPassagePrompt(), 'direct')}>
+          <button type="button" disabled={props.busy || postureBlocksEditorial} onClick={() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' })}>
             <b>Go deeper</b>
             <span>Open the technical craft reasoning, evidence, tradeoffs, and uncertainty.</span>
           </button>
@@ -554,19 +554,19 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <button type="button" disabled={props.busy} onClick={() => begin([
               'Based on what we just discussed, help me revise this exact passage.',
               revisePassagePrompt(),
-            ].join('\n\n'))}>
+            ].join('\n\n'), undefined, { proposalPolicy: 'allow', proposalRequested: true })}>
               Show revision options
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(examplesPassagePrompt(), 'learning')}>
+            <button type="button" disabled={props.busy} onClick={() => begin(examplesPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
               Show examples
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(ideasPassagePrompt())}>
+            <button type="button" disabled={props.busy} onClick={() => begin(ideasPassagePrompt(), undefined, { proposalPolicy: 'reply_only' })}>
               Give me ideas
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(teachPassagePrompt(), 'learning')}>
+            <button type="button" disabled={props.busy} onClick={() => begin(teachPassagePrompt(), 'learning', { proposalPolicy: 'reply_only' })}>
               Teach me more
             </button>
-            <button type="button" disabled={props.busy} onClick={() => begin(deeperPassagePrompt(), 'direct')}>
+            <button type="button" disabled={props.busy} onClick={() => begin(deeperPassagePrompt(), 'direct', { proposalPolicy: 'reply_only' })}>
               Go deeper
             </button>
           </div>

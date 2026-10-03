@@ -224,6 +224,15 @@ export async function sendBoundEditorialTurn(
             : 'MAIA stayed in exploration. Nothing was added to the revision options.',
         };
       }
+      if (res.status === 409 && body?.error === 'noop_editorial_adjustment') {
+        return {
+          ok: false,
+          reason: 'turn_refused',
+          detail: typeof body?.detail === 'string'
+            ? body.detail
+            : 'That adjustment repeated the existing proposal unchanged. Nothing new was added.',
+        };
+      }
       if (res.status === 409 && (body?.scope || body?.voice || body?.error === 'sequence_discussion_first')) {
         return {
           ok: false, reason: 'scope_refused',

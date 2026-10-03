@@ -129,6 +129,23 @@ export type P4R1Pc3WriteEditViewProps = {
 
 function selectionInPc3Editor(): { sectionId: string; text: string; rect: DOMRect } | null {
   if (typeof window === 'undefined') return null;
+
+  /* Whole-chapter Edit uses virtualized textareas rather than the legacy
+     data-write-editor surface. Text-control selections do not appear in
+     window.getSelection(), so read the active textarea directly and preserve
+     its owning section id from the always-mounted manuscript shell. */
+  const active = document.activeElement;
+  if (active instanceof HTMLTextAreaElement) {
+    const shell = active.closest<HTMLElement>('[data-whole-manuscript-section]');
+    const sectionId = shell?.dataset.wholeManuscriptSection;
+    const start = active.selectionStart;
+    const end = active.selectionEnd;
+    const text = start !== end ? active.value.slice(Math.min(start, end), Math.max(start, end)) : '';
+    if (sectionId && text.trim()) {
+      return { sectionId, text, rect: active.getBoundingClientRect() };
+    }
+  }
+
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
   const range = selection.getRangeAt(0);

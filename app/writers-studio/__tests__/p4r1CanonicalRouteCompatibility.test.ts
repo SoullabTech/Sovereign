@@ -95,10 +95,15 @@ describe('C3 canonical route compatibility', () => {
 
   it('unified Write reads exact editorialThread addresses through the existing strict binder', () => {
     const write = read('app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx');
-    expect(write).toContain("import { editorialThreadIdFrom }");
+    expect(write).toContain('editorialThreadIdFrom,');
+    expect(write).toContain('canvasWithEditorialThread,');
+    expect(write).toContain('canvasWithoutEditorialThread,');
     expect(write).toContain('const requestedEditorialThread = params ? editorialThreadIdFrom(params) : null;');
     expect(write).toContain('readBoundEditorialThread(requestedEditorialThread, focusId)');
     expect(write).toContain('bindEditorialThread(out.thread)');
+    expect(write).toContain('canvasWithEditorialThread(');
+    expect(write).toContain('canvasWithoutEditorialThread(');
+    expect(write).toContain('window.history.replaceState(');
     expect(write).toContain('setWorkspaceOpen(true)');
     expect(write).toContain('The revision conversation named by this link could not be resumed at this place.');
   });
