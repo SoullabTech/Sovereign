@@ -146,6 +146,7 @@ export const STUDIO_ROUTES = [
 export const WEB_ONLY_PREFIXES = [
   '/studio/',             // All Studio routes are web-only in the Capacitor build
   '/admin',
+  '/founder/constellation', // Server-authorized, read-only founder feedback report (C7A)
   '/book-studio',         // Desktop authoring environment (manuscript/illustration tools)
   '/team',                // Desktop practitioner collaboration (channels, DMs, admin)
   '/maia/labtools',

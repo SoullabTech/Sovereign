@@ -1,5 +1,7 @@
 # SOULLAB CONSTELLATION 01
 
+**Programme:** SOULLAB-CONSTELLATION-01
+
 ## Purpose
 
 Soullab grows through excellent, specific doorways rather than requiring a newcomer to understand the whole organism before entering it.
@@ -84,6 +86,14 @@ Writer's Studio's governed Ask-MAIA cognition now carries the Constellation refe
 
 Astrology now has its own public Constellation doorway and audience-specific invitations while remaining one underlying Astrology room. The public experience leads with whole-chart, non-deterministic symbolic inquiry and preserves the distinction between calculated facts, symbolic tradition, synthesis, possible expression, present activation, and the member's own meaning.
 
-### C7 — Learning loop
+### C7A — First founder learning report — CANDIDATE
 
-Measure arrival, meaningful first use, return, referral acceptance/decline, and contribution — not mere clicks.
+A read-only report at `/founder/constellation` uses existing, deliberately submitted Writer's Studio beta signals. It reports submissions, not people or proven usefulness; small groups are withheld, unavailable reads remain unavailable, and campaign/arrival/first-act/return/referral/contribution questions stay explicitly unmeasured. There is no new collection, identity join, or automatic campaign action. The page and API authorize the founder server-side before reading. See `SOULLAB-CONSTELLATION-01_C7_LEARNING_LOOP_2026-10-03.md` for the acceptance contract, evidence, and delivery limits.
+
+### C7B — Prospective doorway-to-usefulness study — NOT BUILT
+
+Establish explicit participation, an agreed first act, source provenance, and a way for the person to say whether the work was useful. Do not reconstruct this history from private conversations or equate account creation with value.
+
+## Delivery distinctions
+
+C2/C3 have constructed routes and temporary Writer's Studio arrival context; a full new-member authentication walk remains separate evidence. Astrology currently returns to `/astrology` without a corresponding post-auth audience welcome. C5 supplies prompt-level instructions in Ask MAIA; it does not enforce every generated referral deterministically or establish successful model behavior. Case Study 001 publishes the method, not yet completed outcome examples. Nothing in these candidate sections asserts production deployment.
