@@ -1301,8 +1301,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         //               formatAtomsForPrompt(...); this is what cognition receives.
         //   canonical → each section under its own truthful producer, shadow only.
         // Practitioner observations are practitioner-AUTHORED, not member-placed:
-        // return_preference defaults to 'contextual_doorway' and member_response_status
-        // is an opt-OUT verdict the system never sets, so no member act places them.
+        // their writer starts return_preference at member_pulled unless a later
+        // authenticated member gesture confers return; member_response_status is
+        // a separate verdict axis the system never manufactures.
         const atomSections = projectAtomSections(loadedAtoms);
         const atomsBlock = joinAtomSections(atomSections);
         if (atomsBlock) {
