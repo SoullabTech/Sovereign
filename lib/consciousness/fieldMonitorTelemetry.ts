@@ -80,6 +80,45 @@ export type MemoryLayerHits =
 // ═══════════════════════════════════════════════════════════════
 
 /**
+ * FIELD-MONITOR-ALARM-01 — writer health, so a total failure cannot stay quiet.
+ *
+ * The FIELD-MONITOR-UUID-01 defect went unnoticed for the table's entire
+ * lifetime: every insert failed the `session_id` uuid cast, and every failure
+ * was reported at `warn` with the word "non-critical" attached. Per-turn,
+ * that line is indistinguishable from routine noise; in aggregate it was a
+ * writer that had never once succeeded. The failure rate — not any single
+ * failure — was the signal, and nothing was computing it.
+ *
+ * The distinction this state exists to draw:
+ *
+ *   never succeeded, still failing  → a contract defect. The writer has never
+ *                                     worked; no amount of waiting fixes it.
+ *   succeeded before, now failing   → an outage. Something that worked stopped.
+ *
+ * Only the first was true here, and it is the one a per-turn warn cannot say.
+ *
+ * Deliberately in-process and unpersisted: this is an alarm on the telemetry
+ * writer, so it must not depend on the database the writer is failing to reach.
+ * It resets on restart, which is correct — a contract defect re-alarms
+ * immediately on the next turn, and a transient one is not carried forward.
+ */
+const _writerHealth = {
+  everSucceeded: false,
+  consecutiveFailures: 0,
+  totalFailures: 0,
+};
+
+/** Re-alarm boundaries — loud at first failure, then sparsely, never per-turn. */
+function _isAlarmBoundary(consecutiveFailures: number): boolean {
+  return (
+    consecutiveFailures === 1 ||
+    consecutiveFailures === 10 ||
+    consecutiveFailures === 100 ||
+    (consecutiveFailures > 0 && consecutiveFailures % 1000 === 0)
+  );
+}
+
+/**
  * Record field monitor telemetry for this turn.
  *
  * Returns void (not Promise) to prevent accidental await.
@@ -87,21 +126,68 @@ export type MemoryLayerHits =
  */
 export function fireAndForgetFieldMonitor(params: FieldMonitorParams): void {
   // Run analysis and insert in the background
-  _processAndInsert(params).catch((error) => {
-    // Swallow — field monitor should never break oracle response
-    console.warn('[field-monitor] Telemetry failed (non-critical):', {
-      memberId: params.memberId,
-      route: params.route,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  });
+  _processAndInsert(params).then(
+    (outcome) => {
+      // A skipped turn is not evidence the writer works — only a completed
+      // INSERT clears the alarm. Counting skips as health would let short
+      // responses silently reset a writer that has never persisted a row.
+      if (outcome !== 'inserted') return;
+
+      if (_writerHealth.consecutiveFailures > 0) {
+        console.error(
+          `✅ [field-monitor] WRITER RECOVERED after ${_writerHealth.consecutiveFailures} consecutive failures ` +
+            `(${_writerHealth.totalFailures} total this process).`,
+        );
+      }
+      _writerHealth.everSucceeded = true;
+      _writerHealth.consecutiveFailures = 0;
+    },
+    (error) => {
+      // Still swallowed — field monitor must never break the oracle response.
+      // What changes is that a sustained failure now announces itself.
+      _writerHealth.consecutiveFailures += 1;
+      _writerHealth.totalFailures += 1;
+
+      const detail = {
+        memberId: params.memberId,
+        route: params.route,
+        error: error instanceof Error ? error.message : String(error),
+      };
+
+      if (_isAlarmBoundary(_writerHealth.consecutiveFailures)) {
+        // `error`, not `warn`: this is the level the earlier defect needed and
+        // did not have. The two states are named apart rather than merged into
+        // one "telemetry failed" line that reads the same either way.
+        console.error(
+          _writerHealth.everSucceeded
+            ? `🚨 [field-monitor] WRITER FAILING — ${_writerHealth.consecutiveFailures} consecutive failures ` +
+                `since last success. field_monitor_turns is not recording this route.`
+            : `🚨 [field-monitor] WRITER HAS NEVER SUCCEEDED — ${_writerHealth.consecutiveFailures} consecutive ` +
+                `failures, 0 rows written this process. This is a broken contract, not a transient fault; ` +
+                `field_monitor_turns is silently recording nothing.`,
+          detail,
+        );
+        return;
+      }
+
+      console.warn('[field-monitor] Telemetry failed (non-critical):', detail);
+    },
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
 // 2. Internal Processing
 // ═══════════════════════════════════════════════════════════════
 
-async function _processAndInsert(params: FieldMonitorParams): Promise<void> {
+/**
+ * `'inserted'` means a row reached `field_monitor_turns`; `'skipped'` means this
+ * turn was deliberately not recorded. FIELD-MONITOR-ALARM-01 needs them apart:
+ * a rejection is a failure, but a resolution is only evidence of a working
+ * writer when a row was actually written.
+ */
+type FieldMonitorOutcome = 'inserted' | 'skipped';
+
+async function _processAndInsert(params: FieldMonitorParams): Promise<FieldMonitorOutcome> {
   const {
     memberId,
     sessionId,
@@ -119,7 +205,7 @@ async function _processAndInsert(params: FieldMonitorParams): Promise<void> {
 
   // Skip if no response text to analyze
   if (!responseText || responseText.trim().length < 10) {
-    return;
+    return 'skipped';
   }
 
   // ─── Therapeutic Framework Analysis (activates DORMANT tracker) ───
@@ -291,6 +377,8 @@ async function _processAndInsert(params: FieldMonitorParams): Promise<void> {
     pfiRealm,
     qualityScore,
   });
+
+  return 'inserted';
 }
 
 // ═══════════════════════════════════════════════════════════════
