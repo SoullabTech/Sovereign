@@ -3,7 +3,7 @@
 **Date:** 2026-10-01
 **Base:** `ce061073` (O5-R3 implementation + freeze amendment 1). ⛔ **Kept frozen. No lease or ledger change.**
 **Standing:** implementation complete · constitutional suite complete · ⭐ **Mac Studio integration witness complete** ·
-⭐ **R3-R11 runtime-binding witness complete · O5-R3 admission evidence complete** · ⛔ merge still pending
+⭐ **O5-R3 ADMITTED · post-admission hardened C1–C8 + C6A live witness complete (§10)**
 
 > *Source truth and runtime truth are not the same thing.* R3-R11: admission witnesses the exact checkout SHA
 > the participating Desktop/JARVIS process runs.
@@ -242,3 +242,26 @@ For any future post-admission runtime-binding witness, RB-A3 keeps the bounded r
 `node scripts/witness/o5-r3-runtime-witness.mjs --phase pre-write --await-current-ms 60000 --snapshot ~/o5r3-prewrite.json`
 
 This procedure note does not alter the earlier §§6–8 admission criterion; it governs later strengthened witnesses.
+
+
+## 10. Post-admission hardened live witness (2026-10-02)
+
+A fresh Mac Studio walk exercised the strengthened RB-A1/A2/A3 instrument from repaired successor specimen
+`711668e81b646d40ef638d7119c12f852e07ea54` without crossing the provider-execution boundary.
+
+- Step 5: C1–C5 PASS; C6-pre PASS at `NOT_YET_HELD_AFTER_RELEASE · generation 62`.
+- Founder gesture: `Review exact execution → Authorize this execution once` on
+  `v2-witness-one-o5-r3-authorized-e1-gr-muq7hdkz`, then stop at `Review authorized execution`.
+- C6A PASS: exactly one lawful acquisition and exactly one append-only ledger change.
+- C6 PASS: generation 63 held by the exact live Desktop incarnation, pid `17775`,
+  process start `ps-lstart:Fri Oct 2 11:32:16 2026`.
+- C7 PASS: a second writer was refused `GRANT_WRITER_LEASE_UNAVAILABLE / HOME_LEASE_HELD`
+  against that same generation 63 holder.
+- C8 PASS: all 88 governed files were byte-identical across the refused attempt.
+- Final verdict: `CONSTITUTIONAL PASS — C1–C8 + C6A witnessed`, exit 0.
+- Orderly termination wrote `terminatedAt: 2026-10-02T15:39:57.746Z` and advanced the lease history
+  to generation 64 released at `2026-10-02T15:39:57.759Z`.
+
+No provider execution was confirmed, GPT_OSS was not authorized, and production was untouched.
+This is stronger post-admission evidence; it does not retroactively redefine the §§6–8 admission criterion
+and does not itself open a new operator lane.
