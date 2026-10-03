@@ -1,0 +1,75 @@
+{
+  "scope": "read-only working-tree record projection, not installed Desktop or an execution grant",
+  "row": {
+    "id": "SOULLAB-CONSTELLATION-01",
+    "name": "SOULLAB-CONSTELLATION-01",
+    "kind": "programme",
+    "question": null,
+    "standing": "CANDIDATE BUILT — founder-shell access repair, guarded pilot packet, 163 passing Constellation tests and focused strict typecheck. Real anonymous doorway-to-signup verified. Founder login and authenticated first manuscript act remain unwitnessed. No production deployment, invitations sent, or collection opened.",
+    "stage": null,
+    "needs_founder": [],
+    "last_change": {
+      "date": "2026-10-03",
+      "authority": "programme record",
+      "source": "docs/programme/SOULLAB-CONSTELLATION-01_C8_FIRST_WORKING_CYCLE_2026-10-03.md"
+    },
+    "thread": null,
+    "custody": {
+      "branch": null,
+      "observed_against": "63d8261f5:C8-working-tree-candidate"
+    },
+    "authority": null,
+    "external": false,
+    "evidence_state": "OBSERVED",
+    "precedence": {
+      "tier": 2,
+      "note": null,
+      "conflict": null,
+      "thread_overrides": false,
+      "succession": {
+        "rule": "R-S1 explicit supersession line",
+        "among": [
+          "docs/programme/SOULLAB-CONSTELLATION-01_C7_LEARNING_LOOP_2026-10-03.md",
+          "docs/programme/SOULLAB-CONSTELLATION-01_C7B_PARTICIPATION_2026-10-03.md",
+          "docs/programme/SOULLAB-CONSTELLATION-01_C7B2_FOUNDER_RULING_2026-10-03.md",
+          "docs/programme/SOULLAB-CONSTELLATION-01_C8_FIRST_WORKING_CYCLE_2026-10-03.md"
+        ]
+      }
+    },
+    "sources": [
+      "docs/programme/SOULLAB-CONSTELLATION-01.md",
+      "docs/programme/SOULLAB-CONSTELLATION-01_C7B2_FOUNDER_RULING_2026-10-03.md",
+      "docs/programme/SOULLAB-CONSTELLATION-01_C7B_PARTICIPATION_2026-10-03.md",
+      "docs/programme/SOULLAB-CONSTELLATION-01_C7_LEARNING_LOOP_2026-10-03.md",
+      "docs/programme/SOULLAB-CONSTELLATION-01_C8_FIRST_WORKING_CYCLE_2026-10-03.md"
+    ],
+    "association": [
+      {
+        "path": "docs/programme/SOULLAB-CONSTELLATION-01_C7_LEARNING_LOOP_2026-10-03.md",
+        "rule": "R-A0 declaration",
+        "role": "record"
+      },
+      {
+        "path": "docs/programme/SOULLAB-CONSTELLATION-01_C7B_PARTICIPATION_2026-10-03.md",
+        "rule": "R-A0 declaration",
+        "role": "record"
+      },
+      {
+        "path": "docs/programme/SOULLAB-CONSTELLATION-01_C7B2_FOUNDER_RULING_2026-10-03.md",
+        "rule": "R-A0 declaration",
+        "role": "record"
+      },
+      {
+        "path": "docs/programme/SOULLAB-CONSTELLATION-01_C8_FIRST_WORKING_CYCLE_2026-10-03.md",
+        "rule": "R-A0 declaration",
+        "role": "record"
+      },
+      {
+        "path": "docs/programme/SOULLAB-CONSTELLATION-01.md",
+        "rule": "R-A0 declaration",
+        "role": "record"
+      }
+    ],
+    "thread_sources": []
+  }
+}

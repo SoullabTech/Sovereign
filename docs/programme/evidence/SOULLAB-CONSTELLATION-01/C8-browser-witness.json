@@ -1,0 +1,59 @@
+{
+  "scope": "local component and real anonymous navigation; NOT real founder login, email delivery, registration, saved manuscript work, or production deployment",
+  "checks": [
+    {
+      "name": "desktop actual packet component; labeled draft, layout, exact copy",
+      "status": "PASS",
+      "clipboard": "mocked sink"
+    },
+    {
+      "name": "desktop real inherited founder layout with flag default off",
+      "status": "PASS",
+      "privateControls": false,
+      "signInVisible": true
+    },
+    {
+      "name": "mobile actual packet component; labeled draft, layout, exact copy",
+      "status": "PASS",
+      "clipboard": "mocked sink"
+    },
+    {
+      "name": "mobile real inherited founder layout with flag default off",
+      "status": "PASS",
+      "privateControls": false,
+      "signInVisible": true
+    },
+    {
+      "name": "real public wisdom-carrier doorway \u2192 signup page",
+      "status": "PASS",
+      "nestedReturnPathPreserved": true,
+      "emailEntered": false,
+      "codeSent": false,
+      "accountCreated": false,
+      "authenticatedStudioAct": "NOT TESTED"
+    },
+    {
+      "name": "founder report API remains unauthorized without a session",
+      "status": "PASS",
+      "http": 401
+    }
+  ],
+  "programme": "SOULLAB-CONSTELLATION-01",
+  "act": "C8",
+  "base": "63d8261f5b68e6481d5440574c588ec01fa7b1d1",
+  "sourceStanding": "Uncommitted C8 candidate on named base, not deployed.",
+  "finalVisualCorrection": "Signed-out text initially inherited a dark foreground on a dark shell. Added explicit warm-card background and dark foreground, re-ran both viewport checks and visually inspected the final captures. Release details collapsed; the packet remains a draft.",
+  "sha256": {
+    "app/founder/layout.tsx": "1701760cba154b35b38209e2d1d9c917b243dea02cb6feecb1bfe7579ed60ef6",
+    "app/founder/constellation/layout.tsx": "26af850d1390f80735b244fcee661719e580c73c4d4d4dcf68860bdf1fe5bd46",
+    "app/founder/constellation/pilot/PilotPacket.tsx": "d699697fe78f3e9d7b357a796484285bcd5be4c863d7eec33fb0d3a07399960b",
+    "app/founder/constellation/pilot/page.tsx": "13b2c5a05f6aa03d91c708c805d1fa678d4b222cd720b547c411a77c6d5fa317",
+    "app/founder/constellation/pilot/pilot-packet.module.css": "2980fc8c498abfff7afbb1c1d52fcfd8ec0bddc35ef58d331302f8d54f3f03e4",
+    "lib/constellation/pilotPacket.ts": "a2162f3ead8aee810fb35a825fb823b0fd1614541a75486c01407bffaa2d4da2",
+    "lib/founder/constellationShell.ts": "759fa1bcd17b72a09cafe7d140e7e8bee39a6dd40b3a9e9c9a9853183c3d7678",
+    "docs/design/contracts/screenshots/constellation-pilot-packet-desktop.png": "a4f144c51aac44a4d818ce87383f5ad4c81338924f1c0e0dd9050546b0d43e8c",
+    "docs/design/contracts/screenshots/constellation-pilot-packet-mobile.png": "bcb00861628e4bfe085b6cad3f4963cc8bbc61a6c843a85a9d9409e094998270",
+    "docs/design/contracts/screenshots/constellation-real-signedout-desktop.png": "68acff337c1e89ff6b6c3f7dfc2aed4e204edf9b2efa5f23cce5c0357d2fb1c5",
+    "docs/design/contracts/screenshots/constellation-real-signedout-mobile.png": "82e2d6fe1d17ab803aded52af942b993ca81b5179f2d883a99c6f87ef46a8d79"
+  }
+}

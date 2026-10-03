@@ -103,3 +103,7 @@ C2/C3 have constructed routes and temporary Writer's Studio arrival context; a f
 ## C7B2 — approved build and founder access
 
 Kelly explicitly approved the one-experience/30-day basis on 3 October 2026. The candidate now includes an accessible Growth & AI work entry and a real database lifecycle core, verified only in a disposable cluster. The member-facing route/UI and operational cleanup/backup obligations remain unfulfilled; collection is not live. See `SOULLAB-CONSTELLATION-01_C7B2_FOUNDER_RULING_2026-10-03.md`. The copied working brief is orientation, not automatic delegation.
+
+## C8 — first usable founder cycle
+
+The legacy founder-console flag was hiding Constellation after hydration. A narrow presentation exception and an added server-side subtree guard now make its normal sign-in boundary reachable without opening unrelated founder tools. A source-controlled, unsent Writer's Studio pilot packet is available in the candidate workspace, linked from Growth & AI work. Real anonymous doorway-to-signup navigation is verified; authenticated founder and manuscript use remain separate. See `SOULLAB-CONSTELLATION-01_C8_FIRST_WORKING_CYCLE_2026-10-03.md`.

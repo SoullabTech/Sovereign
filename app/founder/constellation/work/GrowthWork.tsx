@@ -27,7 +27,7 @@ export default function GrowthWork() {
     <nav className={styles.links} aria-label="Growth workspace">
       <a href="/founder/constellation">Doorway learning</a>
       <a href="/founder/constellation/participation">Participation preview</a>
-      <a href="/founder/content">Content drafts</a>
+      <a href="/founder/constellation/pilot">Writer’s Studio pilot packet</a>
     </nav>
     <section className={styles.approval}>
       <p className={styles.eyebrow}>Decision recorded · 3 October 2026</p>
