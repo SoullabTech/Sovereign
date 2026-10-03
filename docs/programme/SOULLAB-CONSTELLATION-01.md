@@ -64,17 +64,17 @@ Can an intelligent editorial environment help an already-published manuscript re
 
 ## Next slices
 
-### C2 — Audience-specific campaign entries
+### C2 — Audience-specific campaign entries — BUILT
 
-Give each declared audience its own truthful invitation while keeping one Writer's Studio underneath. Preserve doorway/campaign attribution across signup.
+Each declared Writer's Studio audience can now have a truthful invitation while keeping one Studio underneath. Doorway/campaign attribution is preserved across signup and returning-member sign-in.
 
-### C3 — First-arrival continuity
+### C3 — First-arrival continuity — BUILT
 
-When a new writer returns from auth, Writer's Studio should know which doorway invitation they accepted and greet them accordingly without trapping them in a persona.
+When a writer returns from auth, Writer's Studio can acknowledge which declared doorway invitation they accepted. The arrival context is explicitly temporary, is never stored as a member persona, and is removed in one act when the writer begins with their work.
 
-### C4 — Case Study 001
+### C4 — Case Study 001 — FOUNDATION BUILT
 
-Create an inspectable Elemental Alchemy case-study surface showing original → reading → proposed intervention → author choice → accepted/rejected result → final manuscript effect.
+The public Elemental Alchemy case-study surface now exposes the governing question, the five-stage evidence method (original → reading → intervention → author choice → whole-book effect), the preservation laws, and an explicit active-study status. Final before/after evidence remains intentionally open until witnessed chapter work can populate it.
 
 ### C5 — Relational referral runtime
 

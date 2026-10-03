@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getDoorway, getDoorwayAudience } from '@/lib/constellation/doorways';
+import { writerStudioArrivalPath } from '@/lib/constellation/arrival';
 import styles from './writers-doorway.module.css';
 
 const doorway = getDoorway('writers-studio');
@@ -21,14 +22,16 @@ const cases = [
 
 export function WriterDoorway({ audienceId }: { audienceId?: string }) {
   const audience = getDoorwayAudience('writers-studio', audienceId);
-  const audienceQuery = audience ? `&audience=${encodeURIComponent(audience.id)}` : '';
-  const signupHref = `/signup?next=%2Fwriters-studio&doorway=writers-studio&campaign=writers-discover${audienceQuery}`;
+  const arrivalPath = writerStudioArrivalPath(audience?.id);
+  const attribution = `doorway=writers-studio&campaign=writers-discover${audience ? `&audience=${encodeURIComponent(audience.id)}` : ''}`;
+  const signupHref = `/signup?next=${encodeURIComponent(arrivalPath)}&${attribution}`;
+  const signinHref = `/signin?next=${encodeURIComponent(arrivalPath)}&${attribution}`;
 
   return (
     <main className={styles.page}>
       <nav className={styles.nav} aria-label="Writer’s Studio">
         <Link href="/home" className={styles.brand}>Soullab</Link>
-        <Link href="/signin?next=%2Fwriters-studio" className={styles.signin}>Already a member</Link>
+        <Link href={signinHref} className={styles.signin}>Already a member</Link>
       </nav>
 
       <section className={styles.hero}>
@@ -87,6 +90,9 @@ export function WriterDoorway({ audienceId }: { audienceId?: string }) {
           whether an intelligent editorial environment can help the book reach its fullest
           expression while preserving the author who made it.
         </p>
+        <Link href="/writers-studio/case-studies/elemental-alchemy" className={styles.secondary}>
+          Follow Case Study 001
+        </Link>
       </section>
 
       <section className={styles.constellation}>
