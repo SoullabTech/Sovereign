@@ -21,7 +21,12 @@ interface TransitAspect {
 }
 
 type NatalPoint = { sign?: string; degree?: number };
-type BirthChartLike = Record<string, NatalPoint | unknown>;
+type BirthChartLike = {
+  sun?: NatalPoint; moon?: NatalPoint; mercury?: NatalPoint; venus?: NatalPoint; mars?: NatalPoint;
+  jupiter?: NatalPoint; saturn?: NatalPoint; uranus?: NatalPoint; neptune?: NatalPoint; pluto?: NatalPoint;
+  chiron?: NatalPoint; northNode?: NatalPoint; southNode?: NatalPoint; lilith?: NatalPoint; ceres?: NatalPoint;
+  pallas?: NatalPoint; juno?: NatalPoint; vesta?: NatalPoint;
+};
 
 export function CurrentTransitsField({
   birthChart,
