@@ -1,0 +1,15 @@
+{
+  "freeze_version": "O5-R6.v0",
+  "date": "2026-10-03",
+  "base": "2eefe1823bc69c02b6931d762f6e592f8af75901",
+  "scope": "Dispatch admission composition only: R5A readiness + active E1 grant + live session admission + ROUTED lifecycle + fresh route/core. Decision grants no authority and performs no dispatch.",
+  "frozen_files": {
+    "tests/constitutional/jarvis-o5-r6/contract.mjs": "afd029f1a8a34c950a9e91d3d511cc8354f0c26cc61121ec419dc612182387b0",
+    "tests/constitutional/jarvis-o5-r6/reference.mjs": "364f8fe7f5609c445ef783d3c263044944e315672b4d23de54625a5aa5dacf74",
+    "tests/constitutional/jarvis-o5-r6/falsifiers.mjs": "514a5e0cfc8a39ea1d18c3a7ce47fe7e9ffd7fa0234a58ebb5732f7a65cb9990",
+    "tests/constitutional/jarvis-o5-r6/candidates.mjs": "2222ee61a55c334e7343f0595f1c84e1fd4495efa6d79cc478a5cdabd304e354"
+  },
+  "unfrozen": [
+    "tests/constitutional/jarvis-o5-r6/matrix.mjs"
+  ]
+}
