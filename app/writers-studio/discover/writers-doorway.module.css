@@ -82,6 +82,15 @@
   color: #5a554e;
 }
 
+.audienceLonging {
+  max-width: 700px;
+  margin: 24px 0 0;
+  color: #746d63;
+  font-size: 1.02rem;
+  line-height: 1.55;
+  font-style: italic;
+}
+
 .actions {
   display: flex;
   gap: 16px;
