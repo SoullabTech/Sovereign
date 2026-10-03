@@ -18,9 +18,17 @@ export interface ChapterSpan {
   sections: RebuildSection[];
 }
 
-/** A chapter claim requires both chapter wording and confirmed top-level structure. */
+/**
+ * A refinement-unit claim requires confirmed top-level structure.
+ * Chapters qualify by explicit Chapter wording. Preface is the one admitted
+ * non-chapter book unit because writers refine it with the same whole-unit
+ * read / passage / Review cycle. Flat bibliography/TOC lookalikes remain
+ * excluded because they are not confirmed depth-1 structure.
+ */
 export function isConfirmedChapterRoot(section: RebuildSection | null | undefined): boolean {
-  return Boolean(section && section.headingDepth === 1 && explicitRole(section.heading) === 'chapter');
+  if (!section || section.headingDepth !== 1) return false;
+  if (explicitRole(section.heading) === 'chapter') return true;
+  return /^preface$/i.test(section.heading?.trim() ?? '');
 }
 
 export function asOutline(sections: readonly RebuildSection[]): OutlineNode[] {

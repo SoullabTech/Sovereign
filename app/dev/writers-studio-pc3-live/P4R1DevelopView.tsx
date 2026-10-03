@@ -174,6 +174,7 @@ export interface P4R1DevelopViewProps {
   attentionProgress: string | null;
   selectedAttentionItemId: string | null;
   chapterReview: WholeManuscriptAttentionMap | null;
+  chapterReviewOutcome: 'reading' | 'none' | null;
   chapterReviewBusy: boolean;
   chapterNeedsCheckpoint: boolean;
   chapterReviewError: string | null;
@@ -1538,6 +1539,8 @@ function ChapterLineagePanel({
 
 function ChapterReviewPanel({
   map,
+  completedWithoutFindings,
+  unitLabel,
   busy,
   needsCheckpoint,
   progress,
@@ -1567,6 +1570,8 @@ function ChapterReviewPanel({
   onMinimalPath,
 }: {
   map: WholeManuscriptAttentionMap | null;
+  completedWithoutFindings: boolean;
+  unitLabel: string | null;
   busy: boolean;
   needsCheckpoint: boolean;
   progress: string | null;
@@ -1595,19 +1600,47 @@ function ChapterReviewPanel({
   onScore: () => void;
   onMinimalPath: () => void;
 }) {
+  const isPreface = /^preface$/i.test(unitLabel?.trim() ?? '');
+  const unitNoun = isPreface ? 'Preface' : 'chapter';
+  const thisUnit = isPreface ? 'the Preface' : 'this chapter';
+  const insideUnit = isPreface ? 'Inside the Preface' : 'Inside the chapter';
+
+  if (!map && completedWithoutFindings) {
+    return (
+      <section
+        className="fr-card p4r1-chapter-review p4r1-chapter-review-positive"
+        data-chapter-review="ready"
+        data-chapter-review-outcome="none"
+      >
+        <span className="p4r1-eyebrow">{isPreface ? 'MAIA read the Preface' : 'MAIA read the chapter'}</span>
+        <h3>Nothing evidenced surfaced in this overview read.</h3>
+        <p>
+          MAIA completed the overview without an observation grounded strongly enough to bring forward.
+          That does not establish that {thisUnit} is finished; it means this light pass did not find a supported issue to name.
+        </p>
+        <div className="p4r1-chapter-review-actions">
+          <button type="button" onClick={() => onField('structure')}>Look at structure</button>
+          <button type="button" onClick={() => onField('reader')}>Meet it as a reader</button>
+          <button type="button" className="p4r1-chapter-review-primary" onClick={onWrite}>Work on the writing</button>
+        </div>
+        {error ? <p className="p4r1-error" role="status">{error}</p> : null}
+      </section>
+    );
+  }
+
   if (!map) {
     return (
       <section className="fr-card p4r1-chapter-review" data-chapter-review="empty">
         <span className="p4r1-eyebrow">Start here</span>
-        <h3>Let MAIA read this chapter.</h3>
+        <h3>{isPreface ? 'Let MAIA read the Preface.' : 'Let MAIA read this chapter.'}</h3>
         <p>
-          She’ll tell you what she thinks the chapter is doing, what is already working,
+          She’ll tell you what she thinks {thisUnit} is doing, what is already working,
           and where she would focus next. No jargon. Nothing changes.
         </p>
         {needsCheckpoint ? (
           <div className="p4r1-chapter-read-snapshot">
             <p>
-              This chapter has changed since the last reading snapshot. Save the current draft so
+              {isPreface ? 'The Preface' : 'This chapter'} has changed since the last reading snapshot. Save the current draft so
               MAIA reads exactly what is on the page now. Your words will not change.
             </p>
             <button
@@ -1621,7 +1654,7 @@ function ChapterReviewPanel({
           </div>
         ) : (
           <button type="button" className="p4r1-commission" disabled={busy} onClick={onRead}>
-            {busy ? (progress ?? 'MAIA is reading the chapter…') : 'Read this chapter'}
+            {busy ? (progress ?? `MAIA is reading the ${unitNoun}…`) : (isPreface ? 'Read the Preface' : 'Read this chapter')}
           </button>
         )}
         {error ? <p className="p4r1-error" role="status">{error}</p> : null}
@@ -1637,7 +1670,7 @@ function ChapterReviewPanel({
 
   return (
     <section className="fr-card p4r1-chapter-review" data-chapter-review="ready">
-      <span className="p4r1-eyebrow">MAIA read the chapter</span>
+      <span className="p4r1-eyebrow">{isPreface ? 'MAIA read the Preface' : 'MAIA read the chapter'}</span>
       {strength ? (
         <div className="p4r1-chapter-review-lead">
           <h3>{strength.label}</h3>
@@ -1648,7 +1681,7 @@ function ChapterReviewPanel({
 
       {grasp ? (
         <div className="p4r1-chapter-review-point">
-          <b>What I think this chapter is doing</b>
+          <b>{isPreface ? 'What I think the Preface is doing' : 'What I think this chapter is doing'}</b>
           <p>{grasp.notice}</p>
         </div>
       ) : null}
@@ -1669,10 +1702,10 @@ function ChapterReviewPanel({
 
       <div className="p4r1-chapter-review-actions">
         <button type="button" disabled={bookFitBusy} onClick={onBookFit}>
-          {bookFitBusy ? 'Reading the book around this chapter…' : 'How does this chapter fit the book?'}
+          {bookFitBusy ? `Reading the book around ${thisUnit}…` : (isPreface ? 'How does the Preface fit the book?' : 'How does this chapter fit the book?')}
         </button>
         <button type="button" disabled={movementBusy} onClick={onMovement}>
-          {movementBusy ? 'Looking at the chapter’s movement…' : 'Show me the chapter’s movement'}
+          {movementBusy ? `Looking at ${thisUnit} movement…` : (isPreface ? 'Show me the Preface’s movement' : 'Show me the chapter’s movement')}
         </button>
         <button type="button" disabled={minimalPathBusy} onClick={onMinimalPath}>
           {minimalPathBusy ? 'Finding the highest-leverage changes…' : 'Show me what to strengthen'}
@@ -1717,7 +1750,7 @@ function ChapterReviewPanel({
       {movementError ? <p className="p4r1-error" role="status">{movementError}</p> : null}
       {movement ? (
         <section className="p4r1-chapter-expansion" data-chapter-movement>
-          <span className="p4r1-eyebrow">Inside the chapter</span>
+          <span className="p4r1-eyebrow">{insideUnit}</span>
           {movement.items.map((item) => (
             <div key={item.id}>
               <b>{item.label}</b>
@@ -2312,6 +2345,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <div className="p4r1-intent-arrival">
           <ChapterReviewPanel
             map={props.chapterReview}
+            completedWithoutFindings={props.chapterReviewOutcome === 'none'}
+            unitLabel={props.chapterScope?.label ?? null}
             busy={props.chapterReviewBusy}
             needsCheckpoint={props.chapterNeedsCheckpoint}
             progress={props.chapterReviewProgress}

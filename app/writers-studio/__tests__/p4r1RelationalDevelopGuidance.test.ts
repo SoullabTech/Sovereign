@@ -38,6 +38,17 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(controller).toContain('writers-studio:chapter-review:v1');
   });
 
+  it('treats Preface as a first-class refinement unit and preserves truthful none outcomes', () => {
+    expect(develop).toContain('Read the Preface');
+    expect(develop).toContain('MAIA read the Preface');
+    expect(develop).toContain('data-chapter-review-outcome="none"');
+    expect(develop).toContain('Nothing evidenced surfaced in this overview read.');
+    expect(controller).toContain("const [chapterReviewOutcome, setChapterReviewOutcome] = useState<'reading' | 'none' | null>(null)");
+    expect(controller).toContain("if (overviewOutcome === 'none')");
+    expect(controller).toContain("setChapterReviewOutcome('none')");
+    expect(controller).toContain("JSON.stringify({ draftRevision: revisionNumber, outcome: 'none' })");
+  });
+
   it('treats each selected chapter as a distinct developmental subject', () => {
     expect(controller).toContain('const previousChapterRootRef = useRef<string | null>(null)');
     expect(controller).toContain('previousChapterRootRef.current = currentChapterRootId');

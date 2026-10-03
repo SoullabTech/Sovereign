@@ -142,6 +142,7 @@ export default function P4R1DevelopController() {
   const [attentionProgress, setAttentionProgress] = useState<string | null>(null);
 
   const [chapterReview, setChapterReview] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [chapterReviewOutcome, setChapterReviewOutcome] = useState<'reading' | 'none' | null>(null);
   const [chapterReviewBusy, setChapterReviewBusy] = useState(false);
   const [chapterReadPending, setChapterReadPending] = useState(false);
   const [chapterNeedsCheckpoint, setChapterNeedsCheckpoint] = useState(false);
@@ -314,6 +315,7 @@ export default function P4R1DevelopController() {
     /* A chapter is a distinct developmental subject. Never let one chapter's
        presentation-only expansions or error state masquerade as another's. */
     setChapterReview(null);
+    setChapterReviewOutcome(null);
     setChapterReviewError(null);
     setChapterReviewProgress(null);
     setChapterNeedsCheckpoint(false);
@@ -327,6 +329,7 @@ export default function P4R1DevelopController() {
   useEffect(() => {
     if (!context || !currentChapterFirstSectionId || typeof window === 'undefined') {
       setChapterReview(null);
+      setChapterReviewOutcome(null);
       return;
     }
     const key = `writers-studio:chapter-review:v1:${context.manuscriptId}:${currentChapterFirstSectionId}`;
@@ -334,25 +337,43 @@ export default function P4R1DevelopController() {
       const raw = window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
       if (!raw) {
         setChapterReview(null);
+        setChapterReviewOutcome(null);
         return;
       }
-      const cached = JSON.parse(raw) as { draftRevision?: number; map?: WholeManuscriptAttentionMap };
+      const cached = JSON.parse(raw) as {
+        draftRevision?: number;
+        map?: WholeManuscriptAttentionMap;
+        outcome?: 'reading' | 'none';
+      };
       if (
+        context.draftRevision !== null
+        && cached.draftRevision === context.draftRevision
+        && cached.outcome === 'none'
+      ) {
+        setChapterReview(null);
+        setChapterReviewOutcome('none');
+        setChapterReviewError(null);
+        setChapterReviewProgress(null);
+        window.localStorage.setItem(key, raw);
+      } else if (
         context.draftRevision !== null
         && cached.draftRevision === context.draftRevision
         && cached.map?.manuscriptId === context.manuscriptId
       ) {
         setChapterReview(cached.map);
+        setChapterReviewOutcome('reading');
         setChapterReviewError(null);
         setChapterReviewProgress(null);
         window.localStorage.setItem(key, raw);
       } else {
         setChapterReview(null);
+        setChapterReviewOutcome(null);
       }
     } catch {
       window.localStorage.removeItem(key);
       window.sessionStorage.removeItem(key);
       setChapterReview(null);
+      setChapterReviewOutcome(null);
     }
   }, [context?.manuscriptId, context?.draftRevision, currentChapterFirstSectionId]);
 
@@ -1029,6 +1050,7 @@ export default function P4R1DevelopController() {
     setChapterReviewProgress('MAIA is reading the chapter…');
     try {
       let overviewReadingId: string | null = null;
+      let overviewOutcome: 'reading' | 'none' | null = null;
       for (const summary of summaries) {
         if (summary.commissionedLens !== 'overview') continue;
         const fetched = await fetchReading(context.manuscriptId, summary.id);
@@ -1038,6 +1060,7 @@ export default function P4R1DevelopController() {
         if (frozenScope.length !== chapterIds.length
           || frozenScope.some((id, index) => id !== chapterIds[index])) continue;
         overviewReadingId = summary.id;
+        overviewOutcome = fetched.payload.reading.outcome;
         break;
       }
 
@@ -1060,6 +1083,20 @@ export default function P4R1DevelopController() {
           return;
         }
         overviewReadingId = commissioned.readingId;
+        overviewOutcome = commissioned.outcome;
+      }
+
+      if (overviewOutcome === 'none') {
+        setChapterReview(null);
+        setChapterReviewOutcome('none');
+        setChapterReviewProgress(null);
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(
+            `writers-studio:chapter-review:v1:${context.manuscriptId}:${chapterIds[0]}`,
+            JSON.stringify({ draftRevision: revisionNumber, outcome: 'none' }),
+          );
+        }
+        return;
       }
 
       setChapterReviewProgress('MAIA has finished reading. Gathering her impressions…');
@@ -1084,11 +1121,12 @@ export default function P4R1DevelopController() {
         return;
       }
       setChapterReview(synthesized.map);
+      setChapterReviewOutcome('reading');
       setChapterReviewProgress(null);
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           `writers-studio:chapter-review:v1:${context.manuscriptId}:${chapterIds[0]}`,
-          JSON.stringify({ draftRevision: revisionNumber, map: synthesized.map }),
+          JSON.stringify({ draftRevision: revisionNumber, outcome: 'reading', map: synthesized.map }),
         );
       }
     } finally {
@@ -1602,6 +1640,7 @@ export default function P4R1DevelopController() {
       attentionProgress={attentionProgress}
       selectedAttentionItemId={selectedAttentionItemId}
       chapterReview={chapterReview}
+      chapterReviewOutcome={chapterReviewOutcome}
       chapterReviewBusy={chapterReviewBusy}
       chapterNeedsCheckpoint={chapterNeedsCheckpoint}
       chapterReviewError={chapterReviewError}
