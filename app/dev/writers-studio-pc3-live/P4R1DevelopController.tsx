@@ -1461,9 +1461,9 @@ export default function P4R1DevelopController() {
         .filter(({ observation }) => citedKeys.has(observation.key))
         .reduce((max, candidate) => Math.max(max, candidate.score), 0);
       if (best && best.score >= 2 && best.score > citedScore && !citedKeys.has(best.observation.key)) {
-        const recoveredSectionIds = [
-          ...new Set(best.observation.evidenceRefs.flatMap((ref) => sectionIdsOf(ref))),
-        ];
+        const recoveredSectionIds: string[] = Array.from(
+          new Set<string>(best.observation.evidenceRefs.flatMap((ref) => [...sectionIdsOf(ref)])),
+        );
         if (recoveredSectionIds.length > 0) {
           evidenceCandidates.unshift({
             readingId,
