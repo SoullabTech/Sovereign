@@ -77,6 +77,7 @@ import {
 } from '../editorialScope/sequence';
 import { assembleEditorialCognition, type AssemblyRefusal } from './assembly';
 import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeResult } from './maiaOutcome';
+import { detectNoopAdjustment, type NoopAdjustmentReason } from './noopProposal';
 
 /** ⭐ The capability owns its model pin. ⛔ Never chosen by HTTP. */
 export const EDITORIAL_MODEL = process.env.MAIA_EDITORIAL_MODEL || 'claude-opus-5';
@@ -174,7 +175,13 @@ export type EditorialTurnRefusal =
    * ⭐⭐ THE PROPOSAL EXCEEDED THE AUTHOR'S DECLARED LATITUDE.
    * ⛔ Nothing was written, and the wording is not shown.
    */
-  | ScopeRefusal;
+  | ScopeRefusal
+  /**
+   * ⭐⭐ THE PROPOSAL REPEATS MAIA'S OWN IMMEDIATELY PRECEDING WORDING,
+   * BYTE-IDENTICAL, AT THE EXACT FROZEN PREDECESSOR THIS TURN WAS INVOKED
+   * AGAINST (EA-NOOP-ADJUSTMENT-01). ⛔ Nothing was written.
+   */
+  | NoopAdjustmentReason;
 
 export type EditorialTurnResult =
   | {
@@ -495,6 +502,26 @@ export async function runEditorialTurn(
   } | null = null;
 
   if (admission.outcome.kind === 'reply_with_proposal') {
+    /* 6a2 ⭐⭐ THE NO-OP LAW — EA-NOOP-ADJUSTMENT-01.
+     *
+     * ⛔ Measured against the EXACT frozen predecessor this turn was invoked
+     * against (`invocation.authoredAgainstVersionId`), re-read fresh through
+     * the reviewed proposal-work model — never the chain's current head,
+     * which may have moved since invocation, and never any other version in
+     * the lineage. ⭐ Exact byte equality only; a member-authored predecessor
+     * with identical wording, or a candidate that merely matches an older,
+     * non-immediate version, is not this law's business.
+     *
+     * ⛔⛔ REFUSES THE WHOLE TURN, same as the scope law below — never
+     * downgraded to `reply_only`, never repaired by keeping `reply` alone.
+     */
+    const noop = await detectNoopAdjustment({
+      memberId, chainId: invocation.chainId,
+      authoredAgainstVersionId: invocation.authoredAgainstVersionId,
+      candidateReplacementText: admission.outcome.proposal.replacementText,
+    });
+    if (noop.isNoop) return { ok: false, reason: noop.reason, detail: noop.detail };
+
     const verdict = judgeProposalScope(
       invocation.locusText, admission.outcome.proposal.replacementText, scope);
     if (!verdict.ok) {

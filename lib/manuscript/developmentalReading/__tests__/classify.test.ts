@@ -105,12 +105,12 @@ describe('provenance and the pinned model', () => {
     expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-04');
   });
 
-  it('under sovereign mode the seam refuses and no fallback is attempted', async () => {
+  it('under sovereign mode the local provider refusal surfaces with no cloud fallback', async () => {
     const prev = process.env.MAIA_INFERENCE_MODE;
     process.env.MAIA_INFERENCE_MODE = 'sovereign';
     try {
       const r = await classifyClaims([{ text: 'x', doesNotEstablish: ['author-intent'] }], 'voice', 'claude-test-model');
-      expect(r.ok ? 'ok' : r.refusal).toBe('structured_inference_unavailable');
+      expect(r.ok ? 'ok' : r.refusal).toBe('provider_unavailable');
     } finally {
       if (prev === undefined) delete process.env.MAIA_INFERENCE_MODE; else process.env.MAIA_INFERENCE_MODE = prev;
     }

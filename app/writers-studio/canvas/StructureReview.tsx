@@ -429,7 +429,7 @@ export default function StructureReview({
   if (!view) {
     return (
       <div data-review-state="loading" style={{ padding: SPACE.comfortable }}>
-        <StudioText role="metadata">{notice ?? 'reading the proposal…'}</StudioText>
+        <StudioText role="metadata">{notice ?? 'MAIA is opening the shape she found…'}</StudioText>
       </div>
     );
   }
@@ -443,6 +443,14 @@ export default function StructureReview({
   return (
     <div data-structure-review data-form={form} style={{ padding: SPACE.comfortable }}>
       <style>{CSS}</style>
+
+      <div data-structure-recovery-intro style={{ maxWidth: MEASURE, marginBottom: SPACE.roomy }}>
+        <StudioText role="bandLabel" style={{ display: 'block' }}>Here is the shape MAIA sees</StudioText>
+        <StudioText role="quiet" style={{ display: 'block', marginTop: SPACE.snug }}>
+          Check whether this feels like the chapter you wrote. Correct anything that does not.
+          Nothing changes until you confirm it.
+        </StudioText>
+      </div>
 
       {/* ── UNDERSTAND ───────────────────────────────────────────────────── */}
       <EditorialLetter
@@ -459,7 +467,14 @@ export default function StructureReview({
               { behavior: 'smooth', block: 'start' })} />
         } />
 
-      <Coverage view={view} />
+      <details data-technical-reading-details style={{ marginBottom: SPACE.base }}>
+        <summary style={{ cursor: 'pointer' }}>
+          <StudioText role="metadata" tone="quiet">Why MAIA sees it this way</StudioText>
+        </summary>
+        <div style={{ marginTop: SPACE.snug }}>
+          <Coverage view={view} />
+        </div>
+      </details>
 
       {notice && (
         <StudioText role="quiet" data-review-notice
@@ -511,7 +526,7 @@ export default function StructureReview({
           style={{ marginTop: SPACE.roomy, paddingTop: SPACE.base,
             borderTop: `1px solid ${RULE.quiet}` }}>
           <StudioText role="bandLabel" style={{ display: 'block' }}>
-            your book&apos;s shape
+            Suggested structure
           </StudioText>
           {anyLabel && (
             <StudioText role="metadata" tone="quiet" data-label-note
@@ -572,7 +587,7 @@ export default function StructureReview({
 /**
  * WS2-06A — where review ends and authorship begins.
  *
- * THE COPY IS THE BOUNDARY, not decoration. "Make this my structure" says whose
+ * THE COPY IS THE BOUNDARY, not decoration. "Use this as my manuscript structure" says whose
  * act it is; the sentence under it says what the act does and, in its own words,
  * that MAIA cannot perform it. A member who reads only the button still learns
  * the two things that matter.
@@ -618,10 +633,10 @@ function AuthorialCrossing({
         borderTop: `1px solid ${RULE.quiet}`, maxWidth: MEASURE }}>
       <button type="button" className="ws2sr-cross" onClick={onCross} disabled={busy}
         data-cross-structure>
-        Make this my structure
+        Yes — this is my structure
       </button>
       <StudioText role="quiet" style={{ display: 'block', marginTop: SPACE.snug }}>
-        This writes the structure you reviewed into your Work. MAIA cannot do this for you.
+        This makes the structure above the chapter’s working structure. Your words do not change.
       </StudioText>
     </div>
   );

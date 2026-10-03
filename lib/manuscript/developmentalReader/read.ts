@@ -27,7 +27,11 @@ import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock } from '../../ai/structured/types';
 import { bindEvidence } from '../development/bind';
 import type { NonEmptyArray } from '../development/evidenceRef';
-import type { ReaderIdentity } from '../structure/readerProvenance';
+import {
+  isReaderProvider,
+  type ReaderIdentity,
+  type ReaderProvider,
+} from '../structure/readerProvenance';
 import {
   CAUSE_UNKNOWN,
   completionOf,
@@ -125,8 +129,11 @@ export function resultFromBlocks(
 }
 
 /** The reader's identity for a given pinned model. `frozenAt` is a store's to stamp — BUILD-07C. */
-export function readerIdentity(model: string): ReaderIdentity {
-  return { provider: 'anthropic', model, promptHash: promptContractHash(), readerVersion: READER_VERSION };
+export function readerIdentity(
+  model: string,
+  provider: ReaderProvider = 'anthropic',
+): ReaderIdentity {
+  return { provider, model, promptHash: promptContractHash(), readerVersion: READER_VERSION };
 }
 
 /**
@@ -166,9 +173,9 @@ export async function readDevelopmentally(
      members of it (structured/types.ts:82-97). They were being dropped here
      either way — `resultFromBlocks` only ever received `content`. */
   const cause = classifyCause(outcome.result);
-  if (provenance.provider !== 'anthropic') {
-    /* `ReaderIdentity.provider` is the literal the store knows. A provider the
-       identity cannot name is a configuration this reader was never ruled for. */
+  if (!isReaderProvider(provenance.provider)) {
+    /* `ReaderIdentity.provider` is a closed provenance vocabulary. A provider
+       the identity cannot name is a configuration this reader was never ruled for. */
     return refused('not_configured',
       `provider ${String(provenance.provider)} cannot be recorded as this reader's identity`,
       null, cause);
@@ -176,8 +183,8 @@ export async function readDevelopmentally(
   return resultFromBlocks(
     outcome.result.content,
     request,
-    /* The model ACTUALLY SENT, from the seam — never the default's name. */
-    readerIdentity(provenance.model),
+    /* The provider and model ACTUALLY SENT, from the seam — never defaults. */
+    readerIdentity(provenance.model, provenance.provider),
     cause,
   );
 }

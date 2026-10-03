@@ -38,6 +38,7 @@
 import type { InferenceMode } from '../types';
 import { resolveStructuredMode } from './policy';
 import { dispatchOf } from './dispatch';
+import { localStructuredProvider } from './localStructuredAdapter';
 import type {
   StructuredOutcome, StructuredProvider, StructuredRequest,
 } from './types';
@@ -51,7 +52,7 @@ const EXTERNAL_AUTHORIZED: readonly InferenceMode[] = ['primary'];
  * Stated as a constant rather than left implicit, so the day one exists this is
  * the single line that changes and the refusal below stops being reachable.
  */
-export const LOCAL_STRUCTURED_PROVIDER: StructuredProvider | null = null;
+export const LOCAL_STRUCTURED_PROVIDER: StructuredProvider = localStructuredProvider();
 
 async function defaultProvider(): Promise<StructuredProvider> {
   /* Lazy so the vendor SDK is never pulled into a graph that will not call it,
@@ -92,16 +93,6 @@ async function route(
   mode: InferenceMode,
 ): Promise<StructuredOutcome> {
   if (!EXTERNAL_AUTHORIZED.includes(mode)) {
-    if (LOCAL_STRUCTURED_PROVIDER === null) {
-      /* NOT a degraded answer, and NOT a quiet call to Anthropic behind the
-         mode's back. The caller is told the operation cannot be performed
-         under this policy, and decides what that means. */
-      return {
-        ok: false,
-        refusal: 'structured_inference_unavailable',
-        detail: `mode=${mode}: no local provider can honour a structured contract`,
-      };
-    }
     return execute(LOCAL_STRUCTURED_PROVIDER, req);
   }
 

@@ -76,11 +76,11 @@ export async function workContextFingerprint(
        FROM living_work_materials m
        LEFT JOIN workbench_uploads u
          ON m.material_type = 'source_upload'
-        AND u.id = m.material_id
+        AND u.id::text = m.material_id
         AND u.arranger_id = $2
        LEFT JOIN member_ideas i
          ON m.material_type = 'idea'
-        AND i.id = m.material_id
+        AND i.id::text = m.material_id
         AND i.member_id = $2
       WHERE m.living_work_id = $1
       ORDER BY m.material_type ASC, m.material_id ASC`,
