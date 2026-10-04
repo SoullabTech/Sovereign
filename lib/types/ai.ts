@@ -73,6 +73,8 @@ export interface MaiaUiAction {
     | 'open_changes'
     | 'enter_patterns'
     | 'enter_journey'
+    | 'open_keep_home'
+    | 'clarify_keep_referent'
     | 'none';
   label?: string;
   leadIn?: string;
