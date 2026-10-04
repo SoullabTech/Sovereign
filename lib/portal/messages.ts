@@ -63,6 +63,11 @@ export interface PortalMessagingContext {
   practitioner_name: string;
 }
 
+export interface PortalPractitionerIdentity {
+  practitionerRecordId: string;
+  practitionerMemberId: string;
+}
+
 // ============================================
 // CLIENT MESSAGE FUNCTIONS
 // ============================================
@@ -73,18 +78,20 @@ export interface PortalMessagingContext {
  */
 export async function getPortalMessagingContext(
   clientId: string,
-  practitionerId: string
+  practitioner: PortalPractitionerIdentity
 ): Promise<PortalMessagingContext | null> {
-  // Get practitioner name
+  const { practitionerMemberId } = practitioner;
+
+  // Messaging tables and practitioner display identity are member-owned.
   const practitionerResult = await query(
     `SELECT name, preferred_name FROM members WHERE id = $1`,
-    [practitionerId]
+    [practitionerMemberId]
   );
   if (!practitionerResult.rows[0]) {
     return null;
   }
-  const practitioner = practitionerResult.rows[0];
-  const practitionerName = resolveMemberDisplayName(practitioner);
+  const practitionerRow = practitionerResult.rows[0];
+  const practitionerName = resolveMemberDisplayName(practitionerRow);
 
   // Get effective policy
   const policyResult = await query(
@@ -94,7 +101,7 @@ export async function getPortalMessagingContext(
        AND is_active = TRUE
      ORDER BY client_id NULLS LAST
      LIMIT 1`,
-    [practitionerId, clientId]
+    [practitionerMemberId, clientId]
   );
 
   // If no policy, messaging might not be set up
@@ -102,7 +109,7 @@ export async function getPortalMessagingContext(
     return {
       policy: {
         id: '',
-        practitioner_id: practitionerId,
+        practitioner_id: practitionerMemberId,
         client_id: null,
         check_days: [],
         check_window_start: '09:00',
@@ -134,7 +141,7 @@ export async function getPortalMessagingContext(
      WHERE client_id = $1 AND practitioner_id = $2
      ORDER BY created_at DESC
      LIMIT 50`,
-    [clientId, practitionerId]
+    [clientId, practitionerMemberId]
   );
 
   const messages: ClientMessageView[] = messagesResult.rows.map(row => ({
@@ -157,14 +164,16 @@ export async function getPortalMessagingContext(
  */
 export async function sendClientMessage(
   clientId: string,
-  practitionerId: string,
+  practitioner: PortalPractitionerIdentity,
   input: CreateMessageInput
 ): Promise<{ success: boolean; message?: ClientMessage; error?: string }> {
-  // Verify client belongs to practitioner
+  const { practitionerRecordId, practitionerMemberId } = practitioner;
+
+  // Relationship table is practice-record-owned.
   const clientCheck = await query(
     `SELECT id FROM practitioner_clients
      WHERE id = $1 AND practitioner_id = $2`,
-    [clientId, practitionerId]
+    [clientId, practitionerRecordId]
   );
   if (!clientCheck.rows[0]) {
     return { success: false, error: 'Client not found' };
@@ -178,7 +187,7 @@ export async function sendClientMessage(
        AND is_active = TRUE
      ORDER BY client_id NULLS LAST
      LIMIT 1`,
-    [practitionerId, clientId]
+    [practitionerMemberId, clientId]
   );
 
   const policy = policyResult.rows[0];
@@ -204,7 +213,7 @@ export async function sendClientMessage(
   // PHI encryption: plaintext + encrypted columns
   const { bodyEnc, bodyEncMeta } = getEncryptedColumnsForInsert(trimmedBody, {
     rowId: messageId,
-    practitionerId,
+    practitionerId: practitionerMemberId,
   });
 
   const result = await query(
@@ -213,11 +222,11 @@ export async function sendClientMessage(
       message_type, urgency, body, body_enc, body_enc_meta
     ) VALUES ($1, $2, $3, 'client_to_practitioner', $4, $5, $6, $7, $8)
     RETURNING *`,
-    [messageId, clientId, practitionerId, message_type || null, urgency, trimmedBody, bodyEnc, bodyEncMeta]
+    [messageId, clientId, practitionerMemberId, message_type || null, urgency, trimmedBody, bodyEnc, bodyEncMeta]
   );
 
   // Background verification
-  verifyEncryptedBody(messageId, practitionerId, trimmedBody).catch(() => {});
+  verifyEncryptedBody(messageId, practitionerMemberId, trimmedBody).catch(() => {});
 
   const message = result.rows[0] as ClientMessage;
 
@@ -262,14 +271,22 @@ export async function getClientMessageHistory(
  */
 export async function validatePortalAccess(
   token: string
-): Promise<{ clientId: string; practitionerId: string } | null> {
+): Promise<{ clientId: string; practitioner: PortalPractitionerIdentity } | null> {
   const result = await validateMessageToken(token);
-  if (!result.valid || !result.clientId || !result.practitionerId) {
+  if (
+    !result.valid ||
+    !result.clientId ||
+    !result.practitionerRecordId ||
+    !result.practitionerMemberId
+  ) {
     return null;
   }
   return {
     clientId: result.clientId,
-    practitionerId: result.practitionerId,
+    practitioner: {
+      practitionerRecordId: result.practitionerRecordId,
+      practitionerMemberId: result.practitionerMemberId,
+    },
   };
 }
 

@@ -27,16 +27,19 @@ interface RouteParams {
 /**
  * Helper to get practitioner ID and name from slug
  */
-async function getPractitionerFromSlug(slug: string): Promise<{ id: string; name: string } | null> {
+async function getPractitionerFromSlug(
+  slug: string
+): Promise<{ practitionerRecordId: string; practitionerMemberId: string; name: string } | null> {
   const result = await db.query(
-    `SELECT p.id, p.name, p.business_name
+    `SELECT p.id, p.member_id, p.name, p.business_name
      FROM practitioners p
-     WHERE p.slug = $1 AND p.status = 'active'`,
+     WHERE p.slug = $1 AND p.status = 'active' AND p.member_id IS NOT NULL`,
     [slug]
   );
   if (!result.rows[0]) return null;
   return {
-    id: result.rows[0].id,
+    practitionerRecordId: result.rows[0].id,
+    practitionerMemberId: result.rows[0].member_id,
     name: result.rows[0].business_name || result.rows[0].name,
   };
 }
@@ -66,13 +69,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     let clientId: string | undefined;
     if (token) {
       const access = await validatePortalAccess(token);
-      if (access && access.practitionerId === practitioner.id) {
+      if (
+        access &&
+        access.practitioner.practitionerRecordId === practitioner.practitionerRecordId &&
+        access.practitioner.practitionerMemberId === practitioner.practitionerMemberId
+      ) {
         clientId = access.clientId;
       }
     }
 
     // Get effective policy
-    const policy = await getEffectivePolicy(practitioner.id, clientId);
+    const policy = await getEffectivePolicy(practitioner.practitionerMemberId, clientId);
 
     if (!policy) {
       return NextResponse.json({

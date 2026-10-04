@@ -1041,14 +1041,24 @@ export async function createMessageToken(
  */
 export async function validateMessageToken(
   token: string
-): Promise<{ valid: boolean; clientId?: string; practitionerId?: string; error?: string }> {
+): Promise<{
+  valid: boolean;
+  clientId?: string;
+  practitionerRecordId?: string;
+  practitionerMemberId?: string;
+  error?: string;
+}> {
   const result = await query(
-    `SELECT t.*, c.practitioner_id
+    `SELECT t.*,
+            c.practitioner_id AS practitioner_record_id,
+            p.member_id AS practitioner_member_id
      FROM client_message_tokens t
      JOIN practitioner_clients c ON t.client_id = c.id
+     JOIN practitioners p ON p.id = c.practitioner_id
      WHERE t.token = $1
        AND t.is_revoked = FALSE
-       AND t.expires_at > NOW()`,
+       AND t.expires_at > NOW()
+       AND p.member_id IS NOT NULL`,
     [token]
   );
 
@@ -1071,7 +1081,8 @@ export async function validateMessageToken(
   return {
     valid: true,
     clientId: tokenRecord.client_id,
-    practitionerId: tokenRecord.practitioner_id,
+    practitionerRecordId: tokenRecord.practitioner_record_id,
+    practitionerMemberId: tokenRecord.practitioner_member_id,
   };
 }
 
