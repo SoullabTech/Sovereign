@@ -477,7 +477,7 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
     expect(perturbedTool).not.toBe(expected);
   });
 
-  it('identity carries DEVELOPMENTAL-READER-08, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
+  it('identity carries DEVELOPMENTAL-READER-09 and the actual provider/model supplied by the seam', () => {
     /* -02 since WS2-07-F1: the lens reached the reader with its ratified meaning
        and the claim boundary moved into the system prompt. -03 since 2026-09-05:
        section ids are confined to the evidence refs and may not appear in claim
@@ -485,8 +485,8 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
        naming "any sections in the sequence", the reading it cost is recorded in
        reader05.test.ts. Readings frozen under any version keep the identity they
        were made with — the version is provenance, never a filter. */
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-08');
-    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-08' });
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-09');
+    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-09' });
     expect(Object.keys(readerIdentity('m-1'))).not.toContain('frozenAt');
   });
 });

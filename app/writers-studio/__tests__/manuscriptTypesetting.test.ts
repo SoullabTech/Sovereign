@@ -58,6 +58,12 @@ describe('Writer Studio manuscript typesetting', () => {
     expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
   });
 
+  it('recognizes markdown-wrapped quotations as epigraphs without changing their source text', () => {
+    const body = '*"To be spiritual means essentially to take responsibility for our inner journey." – Wayne Teasdale*';
+    const blocks = typesetManuscriptBody(body);
+    expect(blocks).toEqual([{ text: body, kind: 'epigraph' }]);
+  });
+
   it('renders likely PDF folios as their own quiet block instead of burying them in prose', () => {
     const body = [
       'A long typeset line continues across the page with enough characters to establish the normal measure.',

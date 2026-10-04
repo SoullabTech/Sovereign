@@ -692,7 +692,7 @@ describe('G · one reply, at most one candidate formulation', () => {
       kind: 'reply_with_direction',
       reply: 'Let me try this less abstractly first.',
       direction: { instruction: 'Work the concrete image before the argument.',
-                   refersTo: 'V1' },
+                   refersTo: '123e4567-e89b-12d3-a456-426614174000' },
     });
     expect(a.ok).toBe(true);
     const plan = maiaOutcomePlan((a as { ok: true; outcome: never }).outcome, INVOCATION);
@@ -703,7 +703,7 @@ describe('G · one reply, at most one candidate formulation', () => {
     /* ⭐ HER OWN WORDS, verbatim — the member-side law, unchanged. */
     expect('instruction' in d && d.instruction)
       .toBe('Work the concrete image before the argument.');
-    expect('refersTo' in d && d.refersTo).toBe('V1');
+    expect('refersTo' in d && d.refersTo).toBe('123e4567-e89b-12d3-a456-426614174000');
     /* ⛔ and NO ProposalVersion */
     expect(JSON.stringify(plan)).not.toContain('append_maia_version');
   });
@@ -742,6 +742,15 @@ describe('G · one reply, at most one candidate formulation', () => {
     expect(admitEditorialToolInput({
       kind: 'reply_with_direction', reply: 'r',
       direction: { instruction: 'i', refersTo: 7 },
+    })).toEqual({ ok: false, reason: 'malformed' });
+    /* ⛔⛔ AND PROSE IN THE REFERENCE FIELD IS REFUSED, NOT NARROWED TO `null`.
+       A sentence is not an identifier; admitting it would record a Direction as
+       being about a formulation nothing can resolve, and narrowing it to `null`
+       would delete the relationship the author did assert. ⭐ The failure is
+       CLOSED either way — this falsifier exists so neither leniency can return. */
+    expect(admitEditorialToolInput({
+      kind: 'reply_with_direction', reply: 'r',
+      direction: { instruction: 'i', refersTo: 'The passage under discussion' },
     })).toEqual({ ok: false, reason: 'malformed' });
   });
 

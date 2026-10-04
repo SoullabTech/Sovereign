@@ -162,7 +162,8 @@ export async function runChapterReview(
     payloads.push(fetched.payload);
     onPartial?.(snapshot(), lens);
   }
-  onProgress?.(LENS_ORDER.length, LENS_ORDER.length, LENS_ORDER[LENS_ORDER.length - 1]!);
+  const finalLens = lenses[lenses.length - 1];
+  if (finalLens) onProgress?.(lenses.length, lenses.length, finalLens);
   return snapshot();
 }
 
