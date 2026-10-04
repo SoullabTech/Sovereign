@@ -36,6 +36,7 @@ import { readA2Relationship, type A2RelationshipSummary } from '@/lib/writersStu
 import { readRelationshipReturnClient } from '@/lib/writersStudio/rebuild/returnStateClient';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
+import P4R1ProofView from './P4R1ProofView';
 
 interface ContextReady {
   state: 'section_aware';
@@ -599,6 +600,21 @@ type ReadyReview = {
             <p className="fr-rev-sub">
               Review opens saved readings. Entering this room does not ask MAIA to read anything again.
             </p>
+            <div className="fr-tabs fr-tabs-rev" role="tablist" aria-label="Review view">
+              <button type="button" role="tab" aria-selected={tab !== 'Proof'} onClick={() => setTab('Overview')}>
+                Review
+              </button>
+              <button type="button" role="tab" aria-selected={tab === 'Proof'} onClick={() => setTab('Proof')}>
+                Proof
+              </button>
+            </div>
+            {tab === 'Proof' ? (
+              <P4R1ProofView
+                manuscriptId={context.manuscriptId}
+                workTitle={work?.title ?? context.title ?? 'This Work'}
+              />
+            ) : (
+              <>
             <section className="fr-card p4r1-review-reread" data-review-reread>
               <span className="p4r1-eyebrow">After revision</span>
               <h2>How does the chapter hold now?</h2>
@@ -696,6 +712,8 @@ type ReadyReview = {
                 </p>
               )}
             </section>
+              </>
+            )}
           </div>
         }
         maia={
@@ -772,6 +790,12 @@ type ReadyReview = {
           onOpenFinding={openFinding}
           onWorkWith={workWithFinding}
           onDiscuss={discussFinding}
+          proof={
+            <P4R1ProofView
+              manuscriptId={context.manuscriptId}
+              workTitle={work?.title ?? context.title ?? 'This Work'}
+            />
+          }
         />
       }
       maia={
