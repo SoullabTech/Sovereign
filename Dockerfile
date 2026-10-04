@@ -53,10 +53,10 @@ ARG SKIP_AETHERIC_CHECK=0
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
 ENV SKIP_AETHERIC_CHECK=${SKIP_AETHERIC_CHECK}
-# Build-time placeholders for Next.js static generation
-ENV OPENAI_API_KEY=dummy-build-key
-ENV ANTHROPIC_API_KEY=dummy-build-key
-ENV MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder
+# Build-time placeholders for Next.js static generation (ARG not ENV — values not baked into image layers)
+ARG OPENAI_API_KEY=dummy-build-key
+ARG ANTHROPIC_API_KEY=dummy-build-key
+ARG MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder
 # Feature flags (NEXT_PUBLIC_* must be set at build time for Next.js inlining)
 ARG NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS=true
 ENV NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS=${NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS}
