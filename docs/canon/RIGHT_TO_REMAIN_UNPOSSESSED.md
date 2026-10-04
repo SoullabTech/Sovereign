@@ -6,6 +6,8 @@
 
 Canon. Articulated 2026-05-19. Third doctrine in the sacredness-canon arc, alongside [Transparent Enchantment] and [Sacredness as Architectural Orientation]. Specifies the *operational consequences* of those two — what the system must refrain from *being*, not just refrain from *doing*.
 
+§7 (non-extractive stewardship — the collection-and-retention layer) made explicit 2026-06-17. Not a new doctrine: it clarifies the data-stack implication already following from [The MAIA Promise] and from the right to remain unpossessed *by memory*.
+
 ## The threshold this canon names
 
 The standard ethical-AI frame asks:
@@ -184,6 +186,44 @@ The corollary of all of the above:
 
 Each pair has a healthy form and a captured form. The discipline is at the *direction-of-movement* layer (per *Transparent Enchantment*).
 
+## 7. Non-extractive stewardship: the collection-and-retention layer
+
+This is not a new doctrine. It makes explicit an implication that already follows from what is named above and from [The MAIA Promise] — *"MAIA serves the person… not a data model"; "without extracting value."* §2 disciplines what the system *infers*; this names the layer beneath it: what the system *collects and keeps at all*.
+
+Possession does not begin at inference. It begins the moment member-derived data is recorded, and it persists for as long as that data is retained. Data the system never collects, and data it releases once its purpose ends, cannot possess. The right to remain unpossessed *by memory* therefore already includes the right not to be collected without cause, and not to be retained past it.
+
+> **Non-extractive stewardship:** the system holds member-derived data only as a steward discharging an identified responsibility — never as an extractor accumulating against possible future use.
+
+The name points at *what is protected* (stewardship over extraction). The mechanisms below — and others that will be derived later (purpose limitation, progressive disclosure, explicit-consent boundaries) — are interchangeable *instruments* operationalizing the one doctrine, not separate doctrines.
+
+### The reviewer instruments
+
+Every place that would record member-derived data — schema column, log line, telemetry event, analytic, presence signal, attention metric, or future AI instrumentation — answers two questions *before it exists*:
+
+| Instrument | Apply by asking |
+|---|---|
+| **Data Minimization** | What present governance responsibility requires *collecting* this? |
+| **Retention Discipline** | Under what condition should this *cease to exist*? |
+
+Together they prevent the two most common forms of drift: collecting information without a present purpose, and keeping information after its purpose has ended.
+
+> **The burden of proof rests with collection, not omission.** The conventional engineering question is *"why not log it?"* The sacred-respecting question is *"why collect it at all?"* A speculative or future-convenience answer defaults to omission — and the omission is itself recorded (in the migration comment / PR) as a governance signal.
+
+### The four-question test for member-derived data
+
+Every field of member-derived data should be able to answer:
+
+1. **Why does it exist?** — the present governance responsibility it serves
+2. **Who is accountable for it?**
+3. **When should it disappear?** — its retention condition
+4. **What constitutional principle justifies its existence?**
+
+If any question cannot be answered, the default is **not to create or retain** the data.
+
+### First precedent
+
+`#489` (channel message deletion) is the first worked precedent demonstrating non-extractive stewardship *through* data minimization: it recorded `deleted_by` (a present accountability need), reserved `deleted_reason` (a named near-term moderation need), and **omitted `deleted_from_ip`** (no present governance need; surveillance-adjacent). The implementation is subordinate to the doctrine — a later precedent may demonstrate the same stewardship through entirely different means.
+
 ## Implementation invariants (concrete consequences)
 
 | Layer | Invariant |
@@ -198,6 +238,7 @@ Each pair has a healthy form and a captured form. The discipline is at the *dire
 | **Practitioner training** | Practitioners must be able to perceive sacred refusal vs system failure in lived contact |
 | **UX defaults** | Opaque by default; legibility granted by member, revocable by member |
 | **Care patterns** | Care does not pursue. Attention does not possess. Memory does not construct. Continuity does not obligate. |
+| **Collection & retention** | Member-derived data is collected only for a present, identified governance responsibility, and its deletion condition is defined at creation. The burden of proof rests with collection, not omission. |
 
 ## Sibling canon
 
@@ -207,6 +248,7 @@ Each pair has a healthy form and a captured form. The discipline is at the *dire
 - [Healthy Disappearance] — the trajectory this canon's non-pursuit enables
 - [Anamnesis as Metric] — the success measure this canon protects (anamnesis cannot survive premature inference)
 - [Continuity Without Coercion] — sibling at the engagement layer; this canon makes that doctrine architecturally enforceable
+- [The MAIA Promise] — the first principle §7 derives from: service to the person, not a data model; clarifying inner life without extracting value from it
 
 ## What this canon refuses
 
@@ -219,6 +261,7 @@ Each pair has a healthy form and a captured form. The discipline is at the *dire
 - Symbolic clarification of formulations the member has not asked to refine
 - Sacred refusal as cover for system dysfunction
 - The implicit assumption that competence creates permission to use that competence
+- Collection of member-derived data without a present governance responsibility, or retention past the purpose that justified it
 
 ## The final test
 
