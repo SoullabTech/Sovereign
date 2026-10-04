@@ -1,3 +1,7 @@
+---
+level: protocol
+---
+
 # Oracle Corpus Design v1.0
 
 **Status:** Canon

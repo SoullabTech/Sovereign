@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # MAIA SOVEREIGNTY INVARIANTS FOR RELATIONSHIP
 
 **Status:** Constitutional — enforceable at the Conductor layer

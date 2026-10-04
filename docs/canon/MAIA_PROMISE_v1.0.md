@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # The MAIA Promise v1.0
 
 **Status:** Public binding document

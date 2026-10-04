@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # Interface Humility
 
 > Perception, language, symbols, body-state, astrology, HRV, dreams, emotional

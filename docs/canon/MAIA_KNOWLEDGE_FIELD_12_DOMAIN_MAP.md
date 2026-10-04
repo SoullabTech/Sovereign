@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # MAIA Knowledge Field
 ## 12-Domain Consciousness Map
 
