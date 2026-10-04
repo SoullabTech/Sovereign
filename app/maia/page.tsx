@@ -16,6 +16,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
 import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { ensureSessionSanctuary, loadMemberDefaultMemoryMode } from '@/lib/settings/accountSettings';
 import { placeFromPathname } from '@/lib/maia/presence/place';
 import { processUltimateMAIAConsciousnessSession } from '@/lib/consciousness-computing/ultimate-consciousness-system';
 import { ClaudeCodePresence } from '@/components/ui/ClaudeCodePresence';
@@ -63,6 +64,7 @@ import {
 } from '@/lib/consciousness/therapeuticFrameworks';
 import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
 import { reportServerIdentityParity } from '@/lib/auth/verifyServerIdentity';
+import { seedLiveSanctuaryForNewSession } from '@/lib/settings/accountSettings';
 
 // Migration version - increment to force re-auth for all users
 const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
@@ -538,6 +540,17 @@ function MAIAPageContent() {
       // (lib/maia/presence/conversationIdentity) — the same module the global
       // MaiaPresence provider uses, so the full page and the presence sheet
       // can never mint competing sessions. Daily rotation semantics unchanged.
+      // SANCTUARY-MEMBER-SCOPE-01 — establish WHOSE default this is before the
+      // session boundary consumes it. The local cache is device-local and was
+      // never hydrated from the server, so on a shared device it can hold the
+      // previous member's default. Awaited deliberately: seeding first and
+      // hydrating after would stamp the session with a default we had not yet
+      // established. Never throws — on failure the ownership gate serves the
+      // documented system default rather than another member's choice.
+      if (initialData?.id) {
+        await loadMemberDefaultMemoryMode(initialData.id, (url) => apiFetch(url));
+      }
+
       const priorSessionId = localStorage.getItem('maia_session_id');
       const identity = getOrCreateMaiaSessionId();
       if (identity && !identity.isNew) {
@@ -555,6 +568,23 @@ function MAIAPageContent() {
         // New day or no session - create fresh session and clear old conversation
         const newSessionId = identity.sessionId;
         setSessionId(newSessionId);
+
+        // SANCTUARY-SETTINGS-DISCONNECT-01 — a new session begins from the
+        // member's standing default, not from browser residue.
+        //
+        // This is the ONLY place the account default may govern the live
+        // Sanctuary authority. `identity.isNew` is the canonical new-session
+        // boundary (conversationIdentity.ts: first visit, cleared identity, or
+        // a new calendar day). The `!isNew` branch above must never seed: a
+        // same-day reload has to preserve an explicit Quick Settings or voice
+        // override, or a Settings change would silently revoke consent the
+        // member gave mid-encounter.
+        //
+        // Before this, `maia_settings` was consumed only when it did not yet
+        // exist, so a stale value from a previous session outranked the
+        // member's current default — Sanctuary could read as selected in
+        // Settings while the session ran in Continuity.
+        seedLiveSanctuaryForNewSession();
 
         // Register session with backend (non-blocking but important for finalize)
         apiFetch('/api/maia/session/start', {

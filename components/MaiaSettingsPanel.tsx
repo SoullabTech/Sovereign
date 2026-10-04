@@ -10,6 +10,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/lib/services/languageService';
 import { useUpdate } from '@/components/providers/UpdateProvider';
 import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
+import { withPreservedSanctuary } from '@/lib/settings/settingsWriteSafety';
 // Voice settings now managed by VoiceSettingsPanel → /api/settings/voice (no localStorage)
 
 interface MaiaSettings {
@@ -46,6 +47,7 @@ interface MaiaSettings {
     debugMode: boolean;
   };
 }
+
 
 const DEFAULT_SETTINGS: MaiaSettings = {
   memory: {
@@ -155,7 +157,8 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
   };
 
   const resetSettings = () => {
-    setSettings(DEFAULT_SETTINGS);
+    // Reset what this panel owns; Sanctuary is not its to revoke.
+    setSettings((prev) => withPreservedSanctuary(DEFAULT_SETTINGS, prev));
   };
 
   const updateSetting = (path: string, value: any) => {
