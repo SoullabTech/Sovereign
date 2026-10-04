@@ -57,11 +57,53 @@ email-code flow: `POST /api/members/email-code` → read the code from the local
 failure still leaves the code readable) → `POST /api/members/email-code/verify` →
 `maia_session` cookie. Cleanup is default-on (`--keep-member` to retain).
 
+## Teardown contract (`lib/teardown.ts`)
+
+The harness claims it cleans up after itself. That claim is now checked rather than asserted:
+
+- **The delete order is read from the live FK graph**, not hardcoded. Only non-cascading
+  constraints (`ON DELETE NO ACTION` / `RESTRICT`) are walked; CASCADE and SET NULL are the
+  engine's job. A child table added by a future migration is handled without editing the
+  harness — which is the only way a hardcoded order stops re-breaking. (It broke on
+  `practice_field_revisions -> practice_fields` on 2026-08-06: teardown aborted on the first
+  statement, the four deletes after it silently never ran, and the run still printed
+  "synthetic records cleaned up".)
+- **Teardown is one transaction on one dedicated connection.** Either the whole fixture goes
+  or none of it does; a half-removed fixture is worse residue than an untouched one, because
+  it no longer looks synthetic. Passing a `pool.query` facade is refused, not silently
+  executed outside the transaction.
+- **It never defeats a guard.** `practice_field_revisions` raises on DELETE by design
+  ("append-only is structural, not policy"). Teardown does not disable triggers, set
+  `session_replication_role`, or drop constraints — it reports the refusal and rolls back.
+  A harness that can defeat the product's immutability guarantees can no longer test them.
+- **It refuses to delete rows the run did not create.** `members` is reachable from itself
+  (`invited_by`) and from `member_guardians`; only the fixture member may ever be removed.
+- **Failure is loud.** An unclean teardown prints its own verdict, is recorded in the report
+  exhibit, and sets **exit code 3** — never a warning under a green probe summary.
+
+Consequence worth knowing before you pick a target database: a run whose probes write a
+practice field **cannot** fully clean up, because the revision that write produces is
+permanent by design. Run those scenarios against a **disposable** database:
+
+```bash
+docker run -d --name maia-preview-db --tmpfs /var/lib/postgresql/data \
+  -e POSTGRES_PASSWORD=preview -p 55432:5432 pgvector/pgvector:pg16
+pg_dump --schema-only "$PROD_DSN" | psql "postgresql://postgres:preview@localhost:55432/postgres"
+```
+
+Verify the teardown logic itself (disposable DB required; the script refuses anything else):
+
+```bash
+TEST_DB_URL=postgresql://soullab@localhost:5432/eval_teardown_test npx tsx scripts/eval/lib/teardown.verify.ts
+```
+
 ## Output
 
 A console run log plus a markdown evidence exhibit in `scripts/eval/reports/`
 (git-ignored; copy a ratified exhibit into an evidence pack deliberately, never by default).
-Exit code 0 = all probes passed; 1 = at least one FAIL; SKIPs are reported, never silent.
+Exit code 0 = all probes passed **and** the fixture was removed; 1 = at least one FAIL;
+3 = probes passed but teardown left synthetic rows behind (see the teardown contract above).
+SKIPs are reported, never silent.
 
 ## Probe induction rule (spec, standing)
 
