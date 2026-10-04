@@ -1,0 +1,29 @@
+{
+  "scope": "Actual GrowthWork component in removed local wrapper; no authenticated production or live AI-worker claim",
+  "checks": [
+    {
+      "name": "desktop layout, links, bounded outcome and copy action",
+      "result": "PASS",
+      "clipboard": "mocked sink; no operating-system clipboard change"
+    },
+    {
+      "name": "mobile layout, links, bounded outcome and copy action",
+      "result": "PASS",
+      "clipboard": "mocked sink; no operating-system clipboard change"
+    },
+    {
+      "name": "real signed-out founder route does not mount work controls",
+      "result": "PASS"
+    }
+  ],
+  "programme": "SOULLAB-CONSTELLATION-01",
+  "act": "C7B2",
+  "sha256": {
+    "app/founder/constellation/work/GrowthWork.tsx": "c1ceeb9320396e702273850985c810b67e9ec58f3ce9c610f96b9ba87b62224d",
+    "app/founder/constellation/work/page.tsx": "487ffc045e2536293efcaa4efd89c54c4dac1a3ab9b1c53a1940a7f60b63035c",
+    "app/founder/constellation/work/growth-work.module.css": "fdf0d4b123d55083a2f7893be475223b92b296e8b2860d3576572ce8009e54b7",
+    "lib/constellation/growthWork.ts": "aa34bf383c246b882c8e7e5200f0e0c2b03a27f47c5ee25b7be714ee3c47876d",
+    "docs/design/contracts/screenshots/constellation-growth-work-desktop.png": "045c038c405a16dd43559ffa3c002af9eee86cce34ac7ce403846e7adce092a8",
+    "docs/design/contracts/screenshots/constellation-growth-work-mobile.png": "717d0a9ce2001165946f2f25bd90e734264341acf9ad1a3cbfa45acf89141a74"
+  }
+}

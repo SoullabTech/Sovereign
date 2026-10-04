@@ -12,6 +12,7 @@ export default function LearningReportView({ report }: { report: LearningReport 
   return (
     <section className={styles.report} aria-label="Constellation learning report">
       <header className={styles.header}>
+        <a href="/founder/constellation/work" className={styles.refresh}>Growth &amp; AI work</a>
         <p className={styles.eyebrow}>Soullab Constellation · Founder</p>
         <h1>Doorway learning</h1>
         <p className={styles.lede}>What people choose to tell us.</p>
@@ -86,6 +87,7 @@ export default function LearningReportView({ report }: { report: LearningReport 
           between an action completing and the person finding it useful.
         </p>
         <p>No campaign is automatically launched, changed, or selected by this report.</p>
+        <a href="/founder/constellation/participation" className={styles.refresh}>Review the participation design</a>
       </section>
 
       <details className={styles.method}>

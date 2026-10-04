@@ -42,8 +42,8 @@ export const FOUNDER_NAV: FounderNavItem[] = [
     description: 'Beta testers and activation',
   },
   {
-    label: 'Doorway learning',
-    href: '/founder/constellation',
+    label: 'Growth & AI work',
+    href: '/founder/constellation/work',
     icon: Activity,
     description: 'What people choose to tell us',
   },
@@ -59,4 +59,11 @@ export const FOUNDER_NAV: FounderNavItem[] = [
     icon: Eye,
     description: 'Pattern detection review',
   },
+];
+
+/** Focused browser work area; does not expose unrelated flag-off founder tools. */
+export const CONSTELLATION_FOUNDER_NAV: FounderNavItem[] = [
+  { label: 'Growth & AI work', href: '/founder/constellation/work', icon: Activity, description: 'One outcome and one working brief' },
+  { label: 'Pilot packet', href: '/founder/constellation/pilot', icon: FileText, description: 'Review the first invitation and experience' },
+  { label: 'Doorway learning', href: '/founder/constellation', icon: Eye, description: 'What people choose to tell us' },
 ];

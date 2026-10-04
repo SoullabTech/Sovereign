@@ -176,6 +176,7 @@ export default function AdminPage() {
               {[
                 { label: 'Monitor', href: '/admin/monitor' },
                 { label: 'Writer’s Studio', href: '/admin/writers-studio' },
+                { label: 'Growth & AI work', href: '/founder/constellation/work' },
                 { label: 'Platform Pulse', href: '/admin/activity-feed' },
                 { label: 'Beta Testers', href: '/admin/beta-testers' },
                 { label: 'Opus Pulse', href: '/admin/opus-pulse' },
@@ -222,6 +223,14 @@ export default function AdminPage() {
             {message}
           </div>
         )}
+
+        {/* Founder workspace entry; destination independently enforces founder authority. */}
+        <a href="/founder/constellation/work"
+          className="block mb-8 rounded-lg border border-teal-300/30 bg-teal-950/50 p-6 text-white focus:outline focus:outline-2 focus:outline-teal-200">
+          <h2 className="text-xl font-semibold">Growth &amp; AI work</h2>
+          <p className="mt-2 text-sm text-teal-100">Open your founder workspace: prepare a working brief, review doorway learning, and inspect the participation flow.</p>
+          <span className="mt-3 inline-block text-sm underline underline-offset-4">Open founder workspace</span>
+        </a>
 
         {/* System Health Monitoring */}
         <div className="mb-8">
