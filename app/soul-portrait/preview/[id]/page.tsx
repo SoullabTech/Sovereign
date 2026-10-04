@@ -6,6 +6,7 @@ import { getOwnedPortrait } from '@/lib/soulPortrait/portraitStore';
 import { isPortraitConsentLive } from '@/lib/soulPortrait/consentAccess';
 import { SoulPortraitRenderer } from '@/components/soulPortrait/SoulPortraitRenderer';
 import { SendPortraitPanel } from '@/components/soulPortrait/SendPortraitPanel';
+import { MinorFlagNotice } from '@/components/soulPortrait/MinorFlagNotice';
 
 /**
  * Private practitioner preview — /soul-portrait/preview/[id]
@@ -48,6 +49,8 @@ export default async function PortraitPreviewPage({ params }: { params: Promise<
 
   const delivered = !!portrait.publishedAt && (await isPortraitConsentLive(portrait.id));
   const subjectName = portrait.immutableText?.person?.name || 'this person';
+  // Same two-place check the send route's refusal uses — either marking means "minor".
+  const markedMinor = portrait.subjectIsMinor || portrait.immutableText?.person?.isMinor === true;
 
   return (
     <div>
@@ -73,6 +76,13 @@ export default async function PortraitPreviewPage({ params }: { params: Promise<
           </a>
         )}
       </div>
+      {markedMinor && (
+        <MinorFlagNotice
+          portraitSlug={portrait.slug}
+          subjectName={subjectName}
+          isPublished={!!portrait.publishedAt}
+        />
+      )}
       <SoulPortraitRenderer portrait={portrait.immutableText} />
       <SendPortraitPanel
         portraitSlug={portrait.slug}
