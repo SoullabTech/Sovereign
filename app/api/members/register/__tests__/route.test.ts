@@ -94,6 +94,26 @@ function mockHappyPath() {
 describe('POST /api/members/register — session mint', () => {
   beforeEach(() => { jest.clearAllMocks(); });
 
+  it('TEEN-CLOSED-01 refuses a supplied under-18 birth date before DB mutation or session mint', async () => {
+    const res = await POST(req({ ...NEW_BODY, birthDate: '2015-06-15' }));
+
+    expect(res.status).toBe(403);
+    const data = await res.json();
+    expect(data.code).toBe('YOUTH_NOT_YET_OPEN');
+    expect(mockQuery).not.toHaveBeenCalled();
+    expect(mockCreateSession).not.toHaveBeenCalled();
+  });
+
+  it('TEEN-CLOSED-01 refuses an invalid supplied birth date before DB mutation', async () => {
+    const res = await POST(req({ ...NEW_BODY, birthDate: 'not-a-date' }));
+
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.code).toBe('INVALID_BIRTH_DATE');
+    expect(mockQuery).not.toHaveBeenCalled();
+    expect(mockCreateSession).not.toHaveBeenCalled();
+  });
+
   it('mints a real session and sets maia_session to the real token + returns it in the body', async () => {
     mockHappyPath();
     const res = await POST(req(NEW_BODY));
