@@ -2305,7 +2305,7 @@ export function SacredHouseWheel({
                               House {hoveredHouse} · {houseState.phase}
                             </h3>
                             <p className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-300'}`}>
-                              {element.toUpperCase()} · {spiralogicData?.phaseLabel}
+                              {element.toUpperCase()} · {spiralogicData?.stageLabel}
                             </p>
                           </div>
                         </div>
@@ -2330,9 +2330,11 @@ export function SacredHouseWheel({
                               <span className="text-sm font-medium" style={{ color }}>{element.toUpperCase()}</span>
                             </div>
                             <div className={`flex items-center gap-2 ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
-                              <span className="text-xs opacity-60">Phase</span>
+                              {/* "Stage" = the ruled display vocabulary (Finding 6);
+                                  "phase" is reserved for the grammar's numeric 1/2/3 */}
+                              <span className="text-xs opacity-60">Stage</span>
                               <div className="flex-1 border-b border-dotted opacity-20"></div>
-                              <span className="text-sm font-medium">{spiralogicData?.phase.toUpperCase()}</span>
+                              <span className="text-sm font-medium">{spiralogicData?.stage.toUpperCase()}</span>
                             </div>
                             <div className={`flex items-center gap-2 ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
                               <span className="text-xs opacity-60">Facet</span>
