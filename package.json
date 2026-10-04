@@ -25,7 +25,7 @@
     "android:bundle": "bash scripts/build-android.sh bundle",
     "ios:build": "bash scripts/build-ios.sh debug",
     "ios:release": "bash scripts/build-ios.sh release",
-    "ios:bundle": "bash -lc 'export CAPACITOR_BUILD=1 CAPACITOR_MODE=beta MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder NODE_OPTIONS=--max-old-space-size=8192; npm run build && npx cap sync ios'",
+    "ios:bundle": "CAPACITOR_MODE=beta MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder bash scripts/build-ios-static.sh build && rm -rf ios/App/build && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios",
     "ios:testflight": "bash scripts/deploy-testflight.sh",
     "version:bump": "bash scripts/version-bump.sh",
     "version:patch": "bash scripts/version-bump.sh auto patch",
