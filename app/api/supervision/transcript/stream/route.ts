@@ -12,6 +12,12 @@ import {
   consumeSkipPromptFlag,
   markContinuityBreak,
 } from '@/lib/supervision/promptContinuityState';
+import {
+  CHANNEL_PROVENANCE_CONFIDENCE,
+  isCaptureChannel,
+  laneKey,
+  speakerLabelForChannel,
+} from '@/lib/studio/audioChannels';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -111,8 +117,21 @@ export async function POST(request: NextRequest) {
     const audioFile = formData.get('audio') as File | null;
     const startMs = parseInt(formData.get('startMs') as string || '0', 10);
     const endMs = parseInt(formData.get('endMs') as string || '0', 10);
-    const speaker = formData.get('speaker') as string || 'unknown';
     const chunkIndex = parseInt(formData.get('chunkIndex') as string ?? '-1', 10);
+
+    // Speaker attribution is derived from the capture channel, never from the
+    // client's assertion and never from inference over the audio. An absent or
+    // unrecognised channel means the uploader could not separate sources, so
+    // the utterance is persisted as Unattributed rather than assigned to
+    // someone. See lib/studio/audioChannels.ts.
+    const rawChannel = formData.get('channel');
+    const channel = isCaptureChannel(rawChannel) ? rawChannel : null;
+    const speaker = speakerLabelForChannel(channel);
+
+    // In-memory per-session state (gate candidate buffer, prompt-continuity
+    // flags) must be scoped to the lane. Two channels sharing one buffer would
+    // splice one speaker's partial sentence onto the other's.
+    const lane = laneKey(sessionId, channel);
 
     if (!sessionId) {
       return NextResponse.json({
@@ -179,10 +198,13 @@ export async function POST(request: NextRequest) {
     // arrives unconditioned by what the user said before the gap.
     // Narrow scope: silence-hallucination only. whisper-no-text is NOT
     // included pending telemetry evidence of fragmentation after no-text.
-    const skipPromptThisChunk = consumeSkipPromptFlag(sessionId);
+    // Lane-scoped: a silence break on the practitioner's mic says nothing
+    // about continuity on the participants' channel, and the tail that anchors
+    // Whisper must come from this speaker's own prior words.
+    const skipPromptThisChunk = consumeSkipPromptFlag(lane);
     const previousTailPromise: Promise<string | null> = skipPromptThisChunk
       ? Promise.resolve(null)
-      : getLastChunkTail(sessionId);
+      : getLastChunkTail(sessionId, channel ? speaker : undefined);
 
     // Prepare audio for Whisper
     const audioBuffer = await audioFile.arrayBuffer();
@@ -287,7 +309,7 @@ export async function POST(request: NextRequest) {
       // Phase A.2 continuity-state reset (2026-05-16): silence resets
       // conversational continuity. Arm the one-shot skip-prompt flag so the
       // NEXT real chunk reaches Whisper without a now-stale previousTail.
-      markContinuityBreak(sessionId);
+      markContinuityBreak(lane);
       return NextResponse.json({
         success: true,
         chunkIndex,
@@ -306,7 +328,7 @@ export async function POST(request: NextRequest) {
       // plausible utterance boundary is detected (silence, sentence terminator,
       // or repetition signal). Chunk cadence is not utterance cadence.
       const decision = evaluateSegmentGate({
-        sessionId,
+        sessionId: lane,
         newText: transcriptText,
         chunkIndex,
         startMs,
@@ -376,7 +398,13 @@ export async function POST(request: NextRequest) {
 
       // Phase A.1 — pre-persistence dedup guard against already-persisted
       // recent segments. Belt protection if the gate buffer drifts.
-      const recentTexts = await getRecentTranscriptTexts(sessionId, 5);
+      // Lane-scoped: two people saying "yeah" seconds apart is conversation,
+      // not duplication. Comparing across lanes would delete a real turn.
+      const recentTexts = await getRecentTranscriptTexts(
+        sessionId,
+        5,
+        channel ? speaker : undefined,
+      );
       if (isLikelyPhantomDuplicate(finalText, recentTexts)) {
         logChunkDecision({
           sessionId,
@@ -407,7 +435,26 @@ export async function POST(request: NextRequest) {
       const segment = await addTranscriptSegment({
         sessionId,
         speaker: finalSpeaker,
-        speakerConfidence: 0.8,
+        // NOTE ON WHAT THIS 1 MEANS — the column is named speakerConfidence,
+        // but under channel-derived attribution it carries PROVENANCE
+        // confidence, not IDENTITY confidence:
+        //
+        //   1 = "this audio certainly arrived on that capture channel"
+        //   1 ≠ "we are certain which person spoke"
+        //
+        // For 'Participants' the system still cannot tell one remote speaker
+        // from another; the certainty is about the wire, never about a human.
+        // Reading this as identity confidence would reintroduce exactly the
+        // false precision this lane exists to remove. The honest schema is
+        // attributionSource='capture_channel' + attributionConfidence, which
+        // needs a migration this branch deliberately avoids (see the
+        // chunk-index striping note in lib/studio/audioChannels.ts).
+        //
+        // Absent a channel the segment is Unattributed — there is no
+        // attribution to be confident about, so the column stays null. The
+        // former hardcoded 0.8 reported confidence in a label nothing had
+        // actually determined.
+        speakerConfidence: channel ? CHANNEL_PROVENANCE_CONFIDENCE : undefined,
         startMs: finalStartMs,
         endMs: finalEndMs,
         text: finalText,
@@ -454,7 +501,7 @@ export async function POST(request: NextRequest) {
     // the next chunk. Telemetry from sentence 5→6 transition showed that
     // without this, previousTail vocabulary biases the next real chunk
     // (e.g. spoken "question" gets transcribed as "sentence").
-    markContinuityBreak(sessionId);
+    markContinuityBreak(lane);
 
     logChunkDecision({
       sessionId,
