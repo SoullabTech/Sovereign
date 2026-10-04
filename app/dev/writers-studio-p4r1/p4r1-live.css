@@ -3495,6 +3495,18 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
 .p4r1-root .p4r1-locus-support{padding:2px 0}
 .p4r1-root .p4r1-locus-support .fr-also{margin-top:14px}
 .p4r1-root .p4r1-write-maia .p4r1-context-card{position:static;inset:auto;width:auto;max-height:none;box-shadow:none}
+/* P6 invited-writer repair: relationship belongs inside MAIA's region, never as a fixed overlay. */
+.p4r1-root .p4r1-maia-relationship{
+  margin-top:18px;padding:14px 0 0;border-top:1px solid var(--fr-line-soft);
+}
+.p4r1-root .p4r1-maia-relationship .p4r1-context-head{
+  position:static;top:auto;z-index:auto;margin:0 0 12px;padding:0;border:0;background:transparent;
+}
+.p4r1-root .p4r1-maia-relationship .p4r1-context-head strong{
+  white-space:normal;overflow:visible;text-overflow:clip;font-size:15px;line-height:1.35;
+}
+.p4r1-root .p4r1-maia-relationship .p4r1-empty{margin:10px 0;}
+.p4r1-root .p4r1-maia-relationship .p4r1-relationships{margin-top:10px;}
 @media(max-width:900px){
   .p4r1-root .p4r1-locus-arrival{margin-left:0;margin-right:0}
   .p4r1-root .p4r1-locus-actions,.p4r1-root .p4r1-locus-lens-grid{display:grid;grid-template-columns:1fr 1fr}
