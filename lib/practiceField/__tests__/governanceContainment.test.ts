@@ -20,6 +20,7 @@ import {
   checkPracticeFieldReadiness,
   isContained,
   isEffectivelyLive,
+  classifyInviteRefusal,
   holderReleaseCheck,
   type PracticeField,
 } from '@/lib/types/practiceField';
@@ -95,6 +96,31 @@ function readyAndContained(): Partial<PracticeField> {
     containment_kind: 'governance_hold',
     containment_reason: 'held pending governance decision',
     contained_at: '2026-08-03T00:00:00Z',
+  };
+}
+
+/** Ready by content, uncontained — the eligible case; classifyInviteRefusal must return null. */
+function readyUncontained(): Partial<PracticeField> {
+  return {
+    welcome_message: 'w',
+    how_we_work_together: 'h',
+    how_maia_supports: 'm',
+    professional_practice: 'p',
+    status: 'live',
+    containment_status: 'none',
+  };
+}
+
+/** Incomplete by content, uncontained — the other refusal, and ONLY the other refusal. */
+function incompleteUncontained(): Partial<PracticeField> {
+  return {
+    welcome_message: null,
+    how_we_work_together: null,
+    how_maia_supports: null,
+    professional_practice: null,
+    status: 'pending',
+    status_reason: null,
+    containment_status: 'none',
   };
 }
 
@@ -196,19 +222,68 @@ describe('GC-3 · containment is written in exactly one place', () => {
 // ── Invariant 4 — every liveness gate reads both ─────────────────────────────
 
 describe('GC-2 · gates require readiness AND absence of containment', () => {
-  it('4. the invite gate tests containment before deciding', () => {
+  it('4. the invite route delegates its refusal decision to classifyInviteRefusal', () => {
+    // The invariant that USED to be "isContained appears before the pending check, by text
+    // position" is now structurally impossible to violate by reordering source lines, because
+    // there is only one call site and the decision is made inside the pure function (tested
+    // behaviorally below, 4d/4e). What the route itself must still guarantee is that it does
+    // not reimplement or shadow the decision.
     const route = read(INVITE_ROUTE);
-    expect(route).toContain('isContained(field)');
-    // Containment is checked before the readiness refusal, so a contained-and-ready field
-    // cannot fall through to a 422 that reads like mere incompleteness.
-    expect(route.indexOf('isContained(field)')).toBeLessThan(route.indexOf("field.status === 'pending'"));
+    expect(route).toContain('classifyInviteRefusal(field)');
+    expect(route).not.toMatch(/isContained\s*\(/); // the route no longer decides this itself
+    // Gate 0's OWN two refusal bodies must not be reimplemented inline in the route — a
+    // second, unrelated 409 exists further down (an already-invited conflict check) and is
+    // legitimately untouched by this assertion, which targets only Gate 0's literal messages.
+    expect(route).not.toContain('This Practice Field is under a governance containment');
+    expect(route).not.toContain('Practice Field is PENDING');
   });
 
-  it('4b. the two refusals are distinguishable — prohibition is not incompleteness', () => {
-    const route = read(INVITE_ROUTE);
-    expect(route).toContain('status: 409'); // contained
-    expect(route).toContain('status: 422'); // incomplete
-    expect(route).toContain('containment_reason');
+  it('4b. the two refusals are WIRED correctly — a call-and-assert test, not a presence check', () => {
+    // This is the exact regression class GC-2's docstring names: "an incomplete field and a
+    // contained field are different facts... rendering them identically is how a hold becomes
+    // invisible." A presence-only check (does '409' appear ANYWHERE in the file?) cannot catch
+    // the status codes being swapped between the two branches. Calling the real function and
+    // asserting on ITS return value can.
+    const contained = classifyInviteRefusal(readyAndContained());
+    expect(contained).not.toBeNull();
+    expect(contained!.kind).toBe('containment');
+    expect(contained!.httpStatus).toBe(409);
+    expect(contained!.body).toMatchObject({
+      containment_reason: expect.any(String),
+      contained_at: expect.any(String),
+    });
+    // The containment refusal must never look like mere incompleteness.
+    expect(contained!.body).not.toHaveProperty('status_reason');
+
+    const incomplete = classifyInviteRefusal(incompleteUncontained());
+    expect(incomplete).not.toBeNull();
+    expect(incomplete!.kind).toBe('incomplete');
+    expect(incomplete!.httpStatus).toBe(422);
+    // The incompleteness refusal must never carry governance provenance — it is not a hold.
+    expect(incomplete!.body).not.toHaveProperty('containment_reason');
+    expect(incomplete!.body).not.toHaveProperty('contained_at');
+    expect(incomplete!.body).not.toHaveProperty('containment_reference');
+  });
+
+  it('4d. eligible fields (ready AND uncontained) produce no refusal at all', () => {
+    expect(classifyInviteRefusal(readyUncontained())).toBeNull();
+  });
+
+  it('4e. contained wins even when the field is ALSO incomplete — order cannot be reordered away', () => {
+    // A field that is both contained AND missing every required section. Prior to the
+    // extraction, this was proven by grep-checking source line order — defeatable by moving
+    // status codes without moving positions. Here it is proven by calling the function on the
+    // exact conflicting input and reading which branch actually won.
+    const both: Partial<PracticeField> = {
+      ...incompleteUncontained(),
+      containment_status: 'contained',
+      containment_kind: 'governance_hold',
+      containment_reason: 'held pending governance decision',
+      contained_at: '2026-08-03T00:00:00Z',
+    };
+    const result = classifyInviteRefusal(both);
+    expect(result!.kind).toBe('containment');
+    expect(result!.httpStatus).toBe(409);
   });
 
   it('4c. isEffectivelyLive is a conjunction', () => {
