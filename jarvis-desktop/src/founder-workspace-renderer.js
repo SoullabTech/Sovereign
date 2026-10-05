@@ -349,6 +349,10 @@ function deriveAttentionDomains(fields) {
   const focusItems=arr(founderFocus.items);
   const memberAttention=vm.work?.member_attention || { visibility:'not-connected', items:[] };
   const memberItems=arr(memberAttention.items);
+  const teamAttention=vm.work?.team_attention || { visibility:'not-connected', items:[] };
+  const teamItems=arr(teamAttention.items);
+  const worldAttention=vm.work?.world_attention || { visibility:'not-connected', items:[] };
+  const worldItems=arr(worldAttention.items);
   const teamObserved=work.length>0;
   const platformObserved=work.length>0 || programmes.length>0 || monitor.length>0;
   return [
@@ -360,11 +364,11 @@ function deriveAttentionDomains(fields) {
       source:memberAttention.source || 'No admitted member-attention organ in founder-workspace-viewmodel.v1.',
     },
     {
-      id:'team', label:'Team', visibility:teamObserved?'partial':'not-connected',
-      plain:teamObserved
-        ? 'Governed JARVIS work is visible here. Human-team requests and other partner channels are not yet joined.'
+      id:'team', label:'Team', visibility:teamAttention.visibility || (teamObserved?'partial':'not-connected'), teamItems,
+      plain:(teamAttention.visibility==='partial' || teamObserved)
+        ? (teamItems.length ? 'AI-partner handoffs and governed JARVIS work are visible. Human-team channels are not yet joined, so this remains partial.' : 'Governed JARVIS work is visible here. Human-team channels are not yet joined.')
         : 'No governed team-work signal is visible in this snapshot.',
-      source:teamObserved?'work.units · governed Work Unit records':'No observed Work Unit rows.',
+      source:teamAttention.source || (teamObserved?'work.units · governed Work Unit records':'No observed Work Unit rows.'),
     },
     {
       id:'platform', label:'Platform', visibility:platformObserved?'observed':'not-connected',
@@ -374,9 +378,16 @@ function deriveAttentionDomains(fields) {
       source:platformObserved?'work.units · programme_state · monitor':'No observed platform rows.',
     },
     {
-      id:'world', label:'World', visibility:'not-connected',
-      plain:'Outreach, partnerships, publishing, GTM, and outside-world signals are not connected to this Founder Workspace yet.',
-      source:'No admitted world-attention organ in founder-workspace-viewmodel.v1.',
+      id:'finance', label:'Finance', visibility:'not-connected',
+      plain:'Cash, revenue, receivables, spending, taxes, runway, pricing, and family-provision signals are not connected yet. JARVIS will not infer financial safety from missing data.',
+      source:'No admitted finance organ in founder-workspace-viewmodel.v1.',
+    },
+    {
+      id:'world', label:'World', visibility:worldAttention.visibility || 'not-connected', worldItems,
+      plain:worldAttention.visibility==='partial'
+        ? (worldItems.length ? 'Due next actions for leads, partners, and press are visible. Campaign performance and the wider market are not yet joined.' : 'Founder Ops is visible and has no due lead/partner/press follow-ups, but campaign and market signals are not yet joined.')
+        : 'Outreach, partnerships, publishing, GTM, and outside-world signals are not connected to this Founder Workspace yet.',
+      source:worldAttention.source || 'No admitted world-attention organ in founder-workspace-viewmodel.v1.',
     },
     {
       id:'your-work', label:'Your Work', visibility:founderFocus.visibility || 'not-connected', items:focusItems,
@@ -395,9 +406,13 @@ function attentionDomainCard(d) {
   const level=d.visibility==='observed'?'good':d.visibility==='partial'?'warn':'unobserved';
   const items=arr(d.items);
   const members=arr(d.memberItems);
+  const team=arr(d.teamItems);
+  const world=arr(d.worldItems);
   const focus=items.length?`<div class="protectedWork">${items.map(x=>`<div class="protectedWorkItem"><b>${esc(x.label)}</b><div>${esc(x.intention)}</div>${x.next_act?`<div class="nextAct"><b>Next act</b> · ${esc(x.next_act)}</div>`:''}</div>`).join('')}</div>`:'';
   const memberRows=members.length?`<div class="protectedWork memberAttention">${members.map(x=>`<div class="protectedWorkItem"><b>${esc(x.name)}</b><div>${esc(x.next_action)}</div><div class="nextAct">${esc(x.relationship)} · ${esc(x.stage)}${x.due_at?` · due ${esc(String(x.due_at).slice(0,10))}`:''}</div></div>`).join('')}</div>`:'';
-  return `<div class="attentionDomain"><div class="attentionDomainTop"><b>${esc(d.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(d.plain)}</div>${memberRows}${focus}${technicalDetails([`Visibility: ${label}`,`Source: ${d.source}`])}</div>`;
+  const teamRows=team.length?`<div class="protectedWork teamAttention">${team.map(x=>`<div class="protectedWorkItem"><b>${esc(x.source)}</b><div>${esc(x.field)}</div><div class="nextAct">${esc(x.summary)}</div></div>`).join('')}</div>`:'';
+  const worldRows=world.length?`<div class="protectedWork worldAttention">${world.map(x=>`<div class="protectedWorkItem"><b>${esc(x.name)}</b><div>${esc(x.next_action)}</div><div class="nextAct">${esc(x.relationship)} · ${esc(x.stage)}${x.due_at?` · due ${esc(String(x.due_at).slice(0,10))}`:''}</div></div>`).join('')}</div>`:'';
+  return `<div class="attentionDomain"><div class="attentionDomainTop"><b>${esc(d.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(d.plain)}</div>${memberRows}${teamRows}${worldRows}${focus}${technicalDetails([`Visibility: ${label}`,`Source: ${d.source}`])}</div>`;
 }
 
 function renderAttentionDomains(fields) {

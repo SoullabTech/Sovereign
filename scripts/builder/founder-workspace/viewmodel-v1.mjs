@@ -107,6 +107,33 @@ export function validateViewModel(vm, opts = {}) {
         });
       }
     }
+    if (m.work.team_attention !== undefined) {
+      const ta=m.work.team_attention;
+      if (!isObj(ta)) fail('VM-0', '$.work.team_attention', 'team_attention must be an object when present');
+      else {
+        if (!['partial','not-connected'].includes(ta.visibility)) fail('VM-0', '$.work.team_attention.visibility', 'team visibility is partial|not-connected until human team channels are joined');
+        if (!Array.isArray(ta.items)) fail('VM-0', '$.work.team_attention.items', 'items must be an array');
+        else ta.items.forEach((row,i)=>{
+          const p=`$.work.team_attention.items[${i}]`;
+          if (!isObj(row) || !nonEmpty(row.id) || !nonEmpty(row.source) || !nonEmpty(row.field)) fail('VM-0',p,'team attention row requires id, source and field');
+          if (row.authority !== 'orientation_only') fail('VM-0',`${p}.authority`,'AI partner handoffs are orientation_only');
+        });
+      }
+    }
+    if (m.work.world_attention !== undefined) {
+      const wa=m.work.world_attention;
+      if (!isObj(wa)) fail('VM-0', '$.work.world_attention', 'world_attention must be an object when present');
+      else {
+        if (!['partial','not-connected'].includes(wa.visibility)) fail('VM-0', '$.work.world_attention.visibility', 'world visibility is partial|not-connected until campaign/market channels are joined');
+        if (!Array.isArray(wa.items)) fail('VM-0', '$.work.world_attention.items', 'items must be an array');
+        else wa.items.forEach((row,i)=>{
+          const p=`$.work.world_attention.items[${i}]`;
+          if (!isObj(row) || !nonEmpty(row.id) || !nonEmpty(row.name) || !nonEmpty(row.next_action)) fail('VM-0',p,'world attention row requires id, name and next_action');
+          if (!['lead','partner','press'].includes(String(row.relationship))) fail('VM-0',`${p}.relationship`,'world attention admits only lead|partner|press in this slice');
+          for (const forbidden of ['email','notes','content','conversation','manuscript']) if (forbidden in row) fail('VM-0', `${p}.${forbidden}`, `${forbidden} is forbidden in the world attention projection`);
+        });
+      }
+    }
   }
   if (!isObj(m.graph) || !Array.isArray(m.graph.nodes) || !Array.isArray(m.graph.edges)) fail('VM-0', '$.graph', 'graph must be {nodes[], edges[]}');
   if (!isObj(m.provenance)) fail('VM-0', '$.provenance', 'provenance must be an object');
