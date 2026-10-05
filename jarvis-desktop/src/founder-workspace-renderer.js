@@ -89,6 +89,26 @@ function humanFounderAsk(u) {
   return `A decision is waiting for you: ${need.what || need.action || 'review this work'}.`;
 }
 
+function founderAttentionGate(u) {
+  const need=arr(u?.needs_founder)[0];
+  if (!need) return null;
+  const adjudication=need.action==='canonical-adjudicate';
+  return {
+    whyKelly: adjudication
+      ? 'Only founder adjudication can advance this governed work.'
+      : 'This work has reached an explicit founder-authority boundary.',
+    whyNow: adjudication
+      ? 'The evidence is ready for a pass, revise, or hold decision.'
+      : `JARVIS is waiting on: ${need.what || need.action || 'your decision'}.`,
+    ifNothing: 'The work stays held. JARVIS does not advance it without your authority.',
+  };
+}
+
+function attentionGateDetails(gate) {
+  if (!gate) return '';
+  return `<div class="attentionGate"><div><b>Why you</b> · ${esc(gate.whyKelly)}</div><div><b>Why now</b> · ${esc(gate.whyNow)}</div><div><b>If you do nothing today</b> · ${esc(gate.ifNothing)}</div></div>`;
+}
+
 function friendlyProgrammeName(p) {
   const id=String(p?.name||p?.id||'Programme');
   if (id==='JOP-04') return 'JARVIS Desktop rules';
@@ -289,7 +309,7 @@ function deriveActiveFields() {
     const ask=humanFounderAsk(u);
     fields.push({
       bucket: ask?'needs':'motion', kind:'work', id:u.id, label:humanWorkSubject(u), source:u.file,
-      what:humanWorkStatus(u), moving:u.state_plain||u.state, needs:ask, changed:u.last_event||null,
+      what:humanWorkStatus(u), moving:u.state_plain||u.state, needs:ask, gate:founderAttentionGate(u), changed:u.last_event||null,
       level:ask?'warn':'neutral', type:ask?'Needs Kelly':'In motion',
       technical:[`Work Unit: ${u.title}`, `State: ${u.state}`, u.route?`Route: ${u.route}`:null, `Evidence: ${u.evidence_state}`, u.file?`Source: ${u.file}`:null],
     });
@@ -317,7 +337,7 @@ function deriveActiveFields() {
 }
 
 function activeFieldRow(f, origin='Today') {
-  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowPlain">${esc(f.what||'Observed field')}</div>${f.needs?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(f.needs)}</div>`:''}${f.changed?`<div class="rowMeta">Changed: ${esc(f.changed)}</div>`:''}${technicalDetails(f.technical)}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
+  return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowPlain">${esc(f.what||'Observed field')}</div>${f.needs?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(f.needs)}</div>`:''}${attentionGateDetails(f.gate)}${f.changed?`<div class="rowMeta">Changed: ${esc(f.changed)}</div>`:''}${technicalDetails(f.technical)}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
 }
 
 function renderToday() {
@@ -334,11 +354,12 @@ function renderToday() {
       : 'Nothing is asking for your attention right now.';
   const listOrEmpty=(xs,msg)=>xs.length?xs.map(f=>activeFieldRow(f)).join(''):`<div class="empty">${esc(msg)}</div>`;
   const recent=events.length?`<div class="card"><div class="timeline">${events.slice(0,14).map(e=>`<div class="date">${esc(String(e.at||'').slice(0,16)||'—')}</div><div>${esc(e.text||e.kind)} <span class="muted mono">· ${esc(e.source||'')}</span>${e.source?` ${evidenceButton(e.source,'Open')}`:''}</div>`).join('')}</div></div>`:`<div class="empty">No recent events are recorded in the local event organ.</div>`;
-  return `<div class="eyebrow">Today · Kelly's world</div><h1>${headline}</h1>
-    <p class="lede">Start with what requires you, then what is already moving, then what only needs watching. Technical truth is still here, one layer down. ${unclassified} source subject${unclassified===1?' is':'s are'} unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
-    <section class="section"><h2>Needs Kelly <span class="muted">decisions waiting for you</span></h2><div class="list">${listOrEmpty(needs,'Nothing is waiting for a decision from you.')}</div></section>
-    <section class="section"><h2>In motion <span class="muted">work already moving</span></h2><div class="list">${listOrEmpty(motion,'No governed work is currently moving.')}</div></section>
-    <section class="section"><h2>Watching <span class="muted">uncertainty and observed conditions</span></h2><div class="list">${listOrEmpty(watching,'Nothing currently needs watching.')}</div></section>
+  return `<div class="eyebrow">Today · Daily check-in</div><h1>${headline}</h1>
+    <p class="lede">JARVIS filters for your attention before showing you the machinery. Start with what only you can decide, then what is already being carried, then what merely needs watching. Technical truth remains one layer down. ${unclassified} source subject${unclassified===1?' is':'s are'} unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
+    <div class="card attentionLaw"><b>Attention law</b><p>Nothing belongs in Needs Kelly merely because it exists. It must require your presence, judgment, authorship, care, or authority. If JARVIS can lawfully carry it, it stays out of your way.</p></div>
+    <section class="section"><h2>Needs Kelly <span class="muted">only work that cannot lawfully move without you</span></h2><div class="list">${listOrEmpty(needs,'Nothing is waiting for a decision from you.')}</div></section>
+    <section class="section"><h2>In motion <span class="muted">already being carried — no action from you</span></h2><div class="list">${listOrEmpty(motion,'No governed work is currently moving.')}</div></section>
+    <section class="section"><h2>Watching <span class="muted">stay aware; do not act unless this changes</span></h2><div class="list">${listOrEmpty(watching,'Nothing currently needs watching.')}</div></section>
     <details class="secondaryDetails"><summary>Everything else</summary><div class="detailsBody"><h2>Changed recently</h2>${recent}${workspaceCard()}</div></details>`;
 }
 
