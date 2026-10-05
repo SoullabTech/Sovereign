@@ -420,6 +420,48 @@ function renderAttentionDomains(fields) {
   return `<section class="section attentionDomains"><h2>Your field <span class="muted">what JARVIS can and cannot see today</span></h2><div class="attentionDomainGrid">${domains.map(attentionDomainCard).join('')}</div></section>`;
 }
 
+function deriveDailySynthesis(fields) {
+  const domains=deriveAttentionDomains(fields);
+  const needs=fields.filter(f=>f.bucket==='needs');
+  const members=domains.find(d=>d.id==='members');
+  const world=domains.find(d=>d.id==='world');
+  const yourWork=domains.find(d=>d.id==='your-work');
+  const due=[...arr(members?.memberItems), ...arr(world?.worldItems)];
+  const protectedItems=arr(yourWork?.items).filter(x=>x.protected!==false);
+  const attention=[];
+  for (const f of needs.slice(0,3)) attention.push({
+    kind:'requires', label:f.label, text:f.needs || f.what, meta:'Requires your authority',
+  });
+  for (const x of due.slice(0,Math.max(0,3-attention.length))) attention.push({
+    kind:'review', label:x.name, text:x.next_action, meta:`${x.relationship} · due follow-up`,
+  });
+  if (attention.length<3 && protectedItems.length) {
+    const x=protectedItems[0];
+    attention.push({ kind:'protect', label:x.label, text:x.next_act || x.intention, meta:'Protected work' });
+  }
+  return {
+    attention,
+    hiddenNeeds:Math.max(0,needs.length-attention.filter(x=>x.kind==='requires').length),
+    coverageGaps:domains.filter(d=>d.visibility==='not-connected').map(d=>d.label),
+  };
+}
+
+function dailyAttentionCard(item) {
+  const label=item.kind==='requires'?'Needs you':item.kind==='review'?'Review':'Protect';
+  const level=item.kind==='requires'?'warn':item.kind==='review'?'neutral':'good';
+  return `<div class="dailyAttentionItem"><div class="dailyAttentionTop"><b>${esc(item.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(item.text)}</div><div class="rowMeta">${esc(item.meta)}</div></div>`;
+}
+
+function renderDailySynthesis(fields) {
+  const s=deriveDailySynthesis(fields);
+  const body=s.attention.length
+    ? s.attention.map(dailyAttentionCard).join('')
+    : `<div class="empty">Nothing currently earns your attention. Protect your own work.</div>`;
+  const more=s.hiddenNeeds?`<div class="rowMeta">${s.hiddenNeeds} additional founder decision${s.hiddenNeeds===1?'':'s'} remain in Needs Kelly below.</div>`:'';
+  const gaps=s.coverageGaps.length?`<div class="coverageNote"><b>Still not visible:</b> ${esc(s.coverageGaps.join(' · '))}. Missing visibility is not an all-clear.</div>`:'';
+  return `<section class="section dailySynthesis"><h2>What deserves you today <span class="muted">JARVIS synthesis</span></h2><div class="dailyAttentionGrid">${body}</div>${more}${gaps}</section>`;
+}
+
 function renderToday() {
   const vm=state.vm, events=arr(vm.events), fields=deriveActiveFields();
   const pop=vm.programme_state?.population || {};
@@ -437,6 +479,7 @@ function renderToday() {
   return `<div class="eyebrow">Today · Daily check-in</div><h1>${headline}</h1>
     <p class="lede">JARVIS filters for your attention before showing you the machinery. Start with what only you can decide, then what is already being carried, then what merely needs watching. Technical truth remains one layer down. ${unclassified} source subject${unclassified===1?' is':'s are'} unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
     <div class="card attentionLaw"><b>Attention law</b><p>Nothing belongs in Needs Kelly merely because it exists. It must require your presence, judgment, authorship, care, or authority. If JARVIS can lawfully carry it, it stays out of your way.</p></div>
+    ${renderDailySynthesis(fields)}
     ${renderAttentionDomains(fields)}
     <section class="section"><h2>Needs Kelly <span class="muted">only work that cannot lawfully move without you</span></h2><div class="list">${listOrEmpty(needs,'Nothing is waiting for a decision from you.')}</div></section>
     <section class="section"><h2>In motion <span class="muted">already being carried — no action from you</span></h2><div class="list">${listOrEmpty(motion,'No governed work is currently moving.')}</div></section>
