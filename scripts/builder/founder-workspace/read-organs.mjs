@@ -43,6 +43,111 @@ export function resolvePartnerHandoffDir(home = os.homedir()) {
   return path.join(home, '.jarvis', 'context-handoffs');
 }
 
+export const FOUNDER_FOCUS_VERSION = 'founder-focus.v1';
+
+/** @param {string} [home] */
+export function resolveFounderFocusFile(home = os.homedir()) {
+  return path.join(home, '.jarvis', 'founder-focus.v1.json');
+}
+
+/**
+ * Read Kelly's explicitly authored protected-work record. This organ never
+ * infers focus from activity and never creates storage merely to discover
+ * that no focus has been declared.
+ * @param {{ home?: string }} [opts]
+ */
+/**
+ * Privacy-minimized Founder Ops attention read. This reads only operational
+ * follow-up fields required to know that a member/beta tester needs founder
+ * attention. It deliberately excludes email, notes, session content, MAIA
+ * conversations, manuscripts, and clinical material.
+ * @param {{ env?: NodeJS.ProcessEnv }} [opts]
+ */
+export async function readFounderOpsAttention(opts = {}) {
+  const env=opts.env || process.env;
+  const observed_at=new Date().toISOString();
+  const connectionString=env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness';
+  let pool;
+  try {
+    const pg=await import('pg');
+    const Pool=pg.Pool || pg.default?.Pool;
+    if (!Pool) return { organ:'founder-ops-attention', present:false, observed_at, items:[], unreadable:[{file:'postgres',error:'pg Pool unavailable',kind:'founder-ops-attention'}] };
+    pool=new Pool({ connectionString, max:1, idleTimeoutMillis:1000, connectionTimeoutMillis:2000 });
+    const [memberResult, worldResult]=await Promise.all([
+      pool.query(`
+        SELECT c.id::text AS id, c.name, c.contact_type, c.pipeline_stage,
+               c.next_action, c.next_action_date
+        FROM ops_contacts c
+        WHERE c.deleted_at IS NULL
+          AND (c.member_id IS NOT NULL OR c.contact_type = 'beta_tester')
+          AND c.next_action IS NOT NULL
+          AND c.next_action_date <= CURRENT_DATE + INTERVAL '1 day'
+        ORDER BY c.next_action_date ASC
+        LIMIT 20`),
+      pool.query(`
+        SELECT c.id::text AS id, c.name, c.contact_type, c.pipeline_stage,
+               c.next_action, c.next_action_date
+        FROM ops_contacts c
+        WHERE c.deleted_at IS NULL
+          AND c.contact_type IN ('lead','partner','press')
+          AND c.next_action IS NOT NULL
+          AND c.next_action_date <= CURRENT_DATE + INTERVAL '1 day'
+        ORDER BY c.next_action_date ASC
+        LIMIT 20`),
+    ]);
+    const mapRows=(rows, fallback) => rows.map((r) => ({
+      id:String(r.id),
+      name:String(r.name||fallback),
+      relationship:String(r.contact_type||'other'),
+      stage:String(r.pipeline_stage||'unknown'),
+      next_action:String(r.next_action||''),
+      due_at:r.next_action_date ? new Date(r.next_action_date).toISOString() : null,
+      evidence_state:'OBSERVED',
+    }));
+    const items=mapRows(memberResult.rows,'Member');
+    const world_items=mapRows(worldResult.rows,'Contact');
+    return { organ:'founder-ops-attention', present:true, observed_at, items, world_items, unreadable:[], source:'ops_contacts:minimized-followups' };
+  } catch (e) {
+    const code=e && typeof e==='object' && 'code' in e ? String(e.code||'') : '';
+    return { organ:'founder-ops-attention', present:false, observed_at, items:[], unreadable:[{file:'postgres',error:`database read unavailable${code?` (${code})`:''}`,kind:'founder-ops-attention'}] };
+  } finally {
+    if (pool) try { await pool.end(); } catch {}
+  }
+}
+
+export function readFounderFocus(opts = {}) {
+  const file=resolveFounderFocusFile(opts.home || os.homedir());
+  const observed_at=new Date().toISOString();
+  /** @type {Unreadable[]} */ const unreadable=[];
+  if (!existsSync(file)) return { organ:'founder-focus', present:false, file, observed_at, focus:[], unreadable };
+  try {
+    const st=lstatSync(file);
+    if (st.isSymbolicLink()) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:'symlink refused',kind:'founder-focus'}] };
+    if (!st.isFile()) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:'not a regular file',kind:'founder-focus'}] };
+    if (st.size > 32*1024) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:'focus record too large',kind:'founder-focus'}] };
+    const r=readJson(file);
+    if (!r.ok) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:r.error,kind:'founder-focus'}] };
+    const doc=r.value || {};
+    const rows=Array.isArray(doc.focus) ? doc.focus : [];
+    const schemaOk=doc.schema===FOUNDER_FOCUS_VERSION && doc.authority==='founder-explicit' && Number.isFinite(Date.parse(doc.updated_at));
+    if (!schemaOk) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:'invalid founder-focus schema',kind:'founder-focus'}] };
+    /** @type {any[]} */ const focus=[];
+    for (const row of rows) {
+      const ok=row && typeof row==='object'
+        && /^[a-z0-9][a-z0-9._-]{1,100}$/i.test(String(row.id||''))
+        && typeof row.label==='string' && row.label.trim().length>0 && row.label.length<=160
+        && typeof row.intention==='string' && row.intention.trim().length>0 && row.intention.length<=1200
+        && (!row.next_act || (typeof row.next_act==='string' && row.next_act.length<=800));
+      if (!ok) { unreadable.push({file,error:`invalid focus row: ${String(row?.id||'unknown')}`,kind:'founder-focus-row'}); continue; }
+      focus.push({ id:row.id, label:row.label.trim(), intention:row.intention.trim(), next_act:typeof row.next_act==='string'?row.next_act.trim():null, protected:row.protected!==false, updated_at:doc.updated_at, authority:'founder-explicit', evidence_state:'OBSERVED' });
+    }
+    return { organ:'founder-focus', present:true, file, observed_at, focus, unreadable };
+  } catch (e) {
+    unreadable.push({file,error:errMsg(e),kind:'founder-focus'});
+    return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable };
+  }
+}
+
 /**
  * B7R1 bounded read organ for AI-partner handoff receipts.
  * It may enumerate only ~/.jarvis/context-handoffs/*.json, refuses symlinks,
@@ -314,5 +419,7 @@ export async function readAllOrgans(opts = {}) {
     governor,
     results: listResults({ env, limit: opts.resultsLimit }),
     partner_handoffs: listPartnerHandoffs({ limit: opts.partnerLimit }),
+    founder_focus: readFounderFocus(),
+    founder_ops_attention: await readFounderOpsAttention({ env }),
   };
 }

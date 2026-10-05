@@ -213,6 +213,59 @@ export function adaptResults(results) {
   return out;
 }
 
+export function adaptFounderFocus(organ) {
+  if (!organ || organ.present !== true) return { visibility:'not-connected', items:[], source:organ?.file || null, observed_at:organ?.observed_at || null, evidence_state:'ABSENT' };
+  if (Array.isArray(organ.unreadable) && organ.unreadable.length) return { visibility:'partial', items:Array.isArray(organ.focus)?organ.focus:[], source:organ.file || null, observed_at:organ.observed_at || null, evidence_state:'PARTIAL' };
+  return { visibility:'observed', items:Array.isArray(organ.focus)?organ.focus:[], source:organ.file || null, observed_at:organ.observed_at || null, evidence_state:'OBSERVED' };
+}
+
+export function adaptMemberAttention(organ) {
+  if (!organ || organ.present !== true) return { visibility:'not-connected', items:[], source:organ?.source || null, observed_at:organ?.observed_at || null, evidence_state:'UNOBSERVED' };
+  const items=Array.isArray(organ.items)?organ.items:[];
+  const partial=Array.isArray(organ.unreadable) && organ.unreadable.length>0;
+  return {
+    // Founder Ops is one lawful member-attention source, not the whole member field.
+    visibility:'partial',
+    items,
+    source:organ.source || 'ops_contacts:minimized-followups',
+    observed_at:organ.observed_at || null,
+    evidence_state:partial?'PARTIAL':'OBSERVED',
+  };
+}
+
+export function adaptTeamAttention(partnerHandoffs, units) {
+  const handoffs=Array.isArray(partnerHandoffs?.handoffs)?partnerHandoffs.handoffs:[];
+  const work=Array.isArray(units)?units:[];
+  const items=handoffs.slice(0,12).map((h) => ({
+    id:String(h.handoff_id||h.file||'handoff'),
+    source:String(h.source||'ai-partner'),
+    field:String(h.field||'Current field'),
+    summary:String(h.summary||''),
+    created_at:h.created_at||null,
+    authority:'orientation_only',
+    evidence_state:'ORIENTATION_ONLY',
+  }));
+  const hasAny=items.length>0 || work.length>0;
+  return {
+    visibility:hasAny?'partial':'not-connected',
+    items,
+    source:'partner handoffs + governed Work Units',
+    evidence_state:hasAny?'PARTIAL':'UNOBSERVED',
+  };
+}
+
+export function adaptWorldAttention(organ) {
+  if (!organ || organ.present !== true) return { visibility:'not-connected', items:[], source:organ?.source || null, observed_at:organ?.observed_at || null, evidence_state:'UNOBSERVED' };
+  const items=Array.isArray(organ.world_items)?organ.world_items:[];
+  return {
+    visibility:'partial',
+    items,
+    source:organ.source || 'ops_contacts:minimized-world-followups',
+    observed_at:organ.observed_at || null,
+    evidence_state:Array.isArray(organ.unreadable)&&organ.unreadable.length?'PARTIAL':'OBSERVED',
+  };
+}
+
 // ── instrument observations (B3) → monitor rows ──────────────────────────────
 
 /**
@@ -297,6 +350,10 @@ export function composeViewModel(input) {
       history: adaptRuns(organs.runs),
       handoffs: adaptSessions(organs.sessions),
       results: adaptResults(organs.results),
+      founder_focus: adaptFounderFocus(organs.founder_focus),
+      member_attention: adaptMemberAttention(organs.founder_ops_attention),
+      team_attention: adaptTeamAttention(organs.partner_handoffs, adaptUnits(organs.units)),
+      world_attention: adaptWorldAttention(organs.founder_ops_attention),
       governor: organs.governor.report ? { ...stripCounts(organs.governor.report), instrument: 'session.mjs report --json', observed_at: organs.governor.observed_at } : null,
       adjudication_note: 'Yes is the only governed gesture (W0.v2 requires decision === accepted). A governed No is owed to JARVIS-WORK-UNIT-01 (OE-2); this workspace does not fabricate it.',
     },

@@ -75,7 +75,66 @@ export function validateViewModel(vm, opts = {}) {
   }
   for (const k of ['monitor', 'vocabularies', 'events']) if (k in m && !Array.isArray(m[k])) fail('VM-0', `$.${k}`, 'must be an array');
   if (!isObj(m.work)) fail('VM-0', '$.work', 'work must be an object');
-  else for (const k of WORK_ARRAYS) if (!Array.isArray(m.work[k])) fail('VM-0', `$.work.${k}`, 'must be an array');
+  else {
+    for (const k of WORK_ARRAYS) if (!Array.isArray(m.work[k])) fail('VM-0', `$.work.${k}`, 'must be an array');
+    if (m.work.founder_focus !== undefined) {
+      const ff=m.work.founder_focus;
+      if (!isObj(ff)) fail('VM-0', '$.work.founder_focus', 'founder_focus must be an object when present');
+      else {
+        if (!['observed','partial','not-connected'].includes(ff.visibility)) fail('VM-0', '$.work.founder_focus.visibility', 'visibility must be observed|partial|not-connected');
+        if (!Array.isArray(ff.items)) fail('VM-0', '$.work.founder_focus.items', 'items must be an array');
+        else ff.items.forEach((row, i) => {
+          const p=`$.work.founder_focus.items[${i}]`;
+          if (!isObj(row)) { fail('VM-0', p, 'focus row must be an object'); return; }
+          if (!nonEmpty(row.id) || !nonEmpty(row.label) || !nonEmpty(row.intention)) fail('VM-0', p, 'focus row requires id, label and intention');
+          if (row.authority !== 'founder-explicit') fail('VM-0', `${p}.authority`, 'focus authority must be founder-explicit');
+          if (row.evidence_state !== 'OBSERVED') fail('VM-0', `${p}.evidence_state`, 'focus row must be observed from the explicit founder record');
+        });
+      }
+    }
+    if (m.work.member_attention !== undefined) {
+      const ma=m.work.member_attention;
+      if (!isObj(ma)) fail('VM-0', '$.work.member_attention', 'member_attention must be an object when present');
+      else {
+        if (!['observed','partial','not-connected'].includes(ma.visibility)) fail('VM-0', '$.work.member_attention.visibility', 'visibility must be observed|partial|not-connected');
+        if (!Array.isArray(ma.items)) fail('VM-0', '$.work.member_attention.items', 'items must be an array');
+        else ma.items.forEach((row, i) => {
+          const p=`$.work.member_attention.items[${i}]`;
+          if (!isObj(row)) { fail('VM-0', p, 'member attention row must be an object'); return; }
+          if (!nonEmpty(row.id) || !nonEmpty(row.name) || !nonEmpty(row.next_action)) fail('VM-0', p, 'member attention row requires id, name and next_action');
+          if (row.evidence_state !== 'OBSERVED') fail('VM-0', `${p}.evidence_state`, 'member attention row must be observed from the minimized ops projection');
+          for (const forbidden of ['email','notes','content','conversation','manuscript']) if (forbidden in row) fail('VM-0', `${p}.${forbidden}`, `${forbidden} is forbidden in the member attention projection`);
+        });
+      }
+    }
+    if (m.work.team_attention !== undefined) {
+      const ta=m.work.team_attention;
+      if (!isObj(ta)) fail('VM-0', '$.work.team_attention', 'team_attention must be an object when present');
+      else {
+        if (!['partial','not-connected'].includes(ta.visibility)) fail('VM-0', '$.work.team_attention.visibility', 'team visibility is partial|not-connected until human team channels are joined');
+        if (!Array.isArray(ta.items)) fail('VM-0', '$.work.team_attention.items', 'items must be an array');
+        else ta.items.forEach((row,i)=>{
+          const p=`$.work.team_attention.items[${i}]`;
+          if (!isObj(row) || !nonEmpty(row.id) || !nonEmpty(row.source) || !nonEmpty(row.field)) fail('VM-0',p,'team attention row requires id, source and field');
+          if (row.authority !== 'orientation_only') fail('VM-0',`${p}.authority`,'AI partner handoffs are orientation_only');
+        });
+      }
+    }
+    if (m.work.world_attention !== undefined) {
+      const wa=m.work.world_attention;
+      if (!isObj(wa)) fail('VM-0', '$.work.world_attention', 'world_attention must be an object when present');
+      else {
+        if (!['partial','not-connected'].includes(wa.visibility)) fail('VM-0', '$.work.world_attention.visibility', 'world visibility is partial|not-connected until campaign/market channels are joined');
+        if (!Array.isArray(wa.items)) fail('VM-0', '$.work.world_attention.items', 'items must be an array');
+        else wa.items.forEach((row,i)=>{
+          const p=`$.work.world_attention.items[${i}]`;
+          if (!isObj(row) || !nonEmpty(row.id) || !nonEmpty(row.name) || !nonEmpty(row.next_action)) fail('VM-0',p,'world attention row requires id, name and next_action');
+          if (!['lead','partner','press'].includes(String(row.relationship))) fail('VM-0',`${p}.relationship`,'world attention admits only lead|partner|press in this slice');
+          for (const forbidden of ['email','notes','content','conversation','manuscript']) if (forbidden in row) fail('VM-0', `${p}.${forbidden}`, `${forbidden} is forbidden in the world attention projection`);
+        });
+      }
+    }
+  }
   if (!isObj(m.graph) || !Array.isArray(m.graph.nodes) || !Array.isArray(m.graph.edges)) fail('VM-0', '$.graph', 'graph must be {nodes[], edges[]}');
   if (!isObj(m.provenance)) fail('VM-0', '$.provenance', 'provenance must be an object');
   if (m.presentation_only !== undefined && m.presentation_only !== true) fail('VM-0', '$.presentation_only', 'if present must be true');
