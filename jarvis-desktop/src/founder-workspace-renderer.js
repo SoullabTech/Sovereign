@@ -340,6 +340,57 @@ function activeFieldRow(f, origin='Today') {
   return `<div class="row"><div class="rowTop"><div class="rowBody"><div class="rowTitle">${esc(f.label)}</div><div class="rowPlain">${esc(f.what||'Observed field')}</div>${f.needs?`<div class="rowPlain"><b>Needs Kelly:</b> ${esc(f.needs)}</div>`:''}${attentionGateDetails(f.gate)}${f.changed?`<div class="rowMeta">Changed: ${esc(f.changed)}</div>`:''}${technicalDetails(f.technical)}<div class="actions">${contextButton(f.kind,f.id,f.label,origin,f.source,'Enter field')}${f.source?evidenceButton(f.source):''}</div></div>${pill(f.type,f.level)}</div></div>`;
 }
 
+function deriveAttentionDomains(fields) {
+  const vm=state.vm;
+  const work=arr(vm.work?.units);
+  const programmes=arr(vm.programme_state?.programmes);
+  const monitor=arr(vm.monitor);
+  const teamObserved=work.length>0;
+  const platformObserved=work.length>0 || programmes.length>0 || monitor.length>0;
+  return [
+    {
+      id:'members', label:'Members', visibility:'not-connected',
+      plain:'Member relationship signals are not connected to this Founder Workspace yet. JARVIS will not interpret silence as nobody needing you.',
+      source:'No admitted member-attention organ in founder-workspace-viewmodel.v1.',
+    },
+    {
+      id:'team', label:'Team', visibility:teamObserved?'partial':'not-connected',
+      plain:teamObserved
+        ? 'Governed JARVIS work is visible here. Human-team requests and other partner channels are not yet joined.'
+        : 'No governed team-work signal is visible in this snapshot.',
+      source:teamObserved?'work.units · governed Work Unit records':'No observed Work Unit rows.',
+    },
+    {
+      id:'platform', label:'Platform', visibility:platformObserved?'observed':'not-connected',
+      plain:platformObserved
+        ? 'Platform work, programme standing, and admitted observations can contribute to Today.'
+        : 'Platform state has not been observed in this snapshot.',
+      source:platformObserved?'work.units · programme_state · monitor':'No observed platform rows.',
+    },
+    {
+      id:'world', label:'World', visibility:'not-connected',
+      plain:'Outreach, partnerships, publishing, GTM, and outside-world signals are not connected to this Founder Workspace yet.',
+      source:'No admitted world-attention organ in founder-workspace-viewmodel.v1.',
+    },
+    {
+      id:'your-work', label:'Your Work', visibility:'not-connected',
+      plain:'Protected creative work is not yet connected as a governed attention source. Today will not guess what your deepest work should be.',
+      source:'No admitted founder-creative-work organ in founder-workspace-viewmodel.v1.',
+    },
+  ];
+}
+
+function attentionDomainCard(d) {
+  const label=d.visibility==='observed'?'Observed':d.visibility==='partial'?'Partial':'Not connected';
+  const level=d.visibility==='observed'?'good':d.visibility==='partial'?'warn':'unobserved';
+  return `<div class="attentionDomain"><div class="attentionDomainTop"><b>${esc(d.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(d.plain)}</div>${technicalDetails([`Visibility: ${label}`,`Source: ${d.source}`])}</div>`;
+}
+
+function renderAttentionDomains(fields) {
+  const domains=deriveAttentionDomains(fields);
+  return `<section class="section attentionDomains"><h2>Your field <span class="muted">what JARVIS can and cannot see today</span></h2><div class="attentionDomainGrid">${domains.map(attentionDomainCard).join('')}</div></section>`;
+}
+
 function renderToday() {
   const vm=state.vm, events=arr(vm.events), fields=deriveActiveFields();
   const pop=vm.programme_state?.population || {};
@@ -357,6 +408,7 @@ function renderToday() {
   return `<div class="eyebrow">Today · Daily check-in</div><h1>${headline}</h1>
     <p class="lede">JARVIS filters for your attention before showing you the machinery. Start with what only you can decide, then what is already being carried, then what merely needs watching. Technical truth remains one layer down. ${unclassified} source subject${unclassified===1?' is':'s are'} unclassified${unreadable?`; ${unreadable} are unreadable`:''}.</p>
     <div class="card attentionLaw"><b>Attention law</b><p>Nothing belongs in Needs Kelly merely because it exists. It must require your presence, judgment, authorship, care, or authority. If JARVIS can lawfully carry it, it stays out of your way.</p></div>
+    ${renderAttentionDomains(fields)}
     <section class="section"><h2>Needs Kelly <span class="muted">only work that cannot lawfully move without you</span></h2><div class="list">${listOrEmpty(needs,'Nothing is waiting for a decision from you.')}</div></section>
     <section class="section"><h2>In motion <span class="muted">already being carried — no action from you</span></h2><div class="list">${listOrEmpty(motion,'No governed work is currently moving.')}</div></section>
     <section class="section"><h2>Watching <span class="muted">stay aware; do not act unless this changes</span></h2><div class="list">${listOrEmpty(watching,'Nothing currently needs watching.')}</div></section>
