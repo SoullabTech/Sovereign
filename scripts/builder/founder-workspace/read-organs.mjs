@@ -43,6 +43,52 @@ export function resolvePartnerHandoffDir(home = os.homedir()) {
   return path.join(home, '.jarvis', 'context-handoffs');
 }
 
+export const FOUNDER_FOCUS_VERSION = 'founder-focus.v1';
+
+/** @param {string} [home] */
+export function resolveFounderFocusFile(home = os.homedir()) {
+  return path.join(home, '.jarvis', 'founder-focus.v1.json');
+}
+
+/**
+ * Read Kelly's explicitly authored protected-work record. This organ never
+ * infers focus from activity and never creates storage merely to discover
+ * that no focus has been declared.
+ * @param {{ home?: string }} [opts]
+ */
+export function readFounderFocus(opts = {}) {
+  const file=resolveFounderFocusFile(opts.home || os.homedir());
+  const observed_at=new Date().toISOString();
+  /** @type {Unreadable[]} */ const unreadable=[];
+  if (!existsSync(file)) return { organ:'founder-focus', present:false, file, observed_at, focus:[], unreadable };
+  try {
+    const st=lstatSync(file);
+    if (st.isSymbolicLink()) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:'symlink refused',kind:'founder-focus'}] };
+    if (!st.isFile()) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:'not a regular file',kind:'founder-focus'}] };
+    if (st.size > 32*1024) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:'focus record too large',kind:'founder-focus'}] };
+    const r=readJson(file);
+    if (!r.ok) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:r.error,kind:'founder-focus'}] };
+    const doc=r.value || {};
+    const rows=Array.isArray(doc.focus) ? doc.focus : [];
+    const schemaOk=doc.schema===FOUNDER_FOCUS_VERSION && doc.authority==='founder-explicit' && Number.isFinite(Date.parse(doc.updated_at));
+    if (!schemaOk) return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable:[{file,error:'invalid founder-focus schema',kind:'founder-focus'}] };
+    /** @type {any[]} */ const focus=[];
+    for (const row of rows) {
+      const ok=row && typeof row==='object'
+        && /^[a-z0-9][a-z0-9._-]{1,100}$/i.test(String(row.id||''))
+        && typeof row.label==='string' && row.label.trim().length>0 && row.label.length<=160
+        && typeof row.intention==='string' && row.intention.trim().length>0 && row.intention.length<=1200
+        && (!row.next_act || (typeof row.next_act==='string' && row.next_act.length<=800));
+      if (!ok) { unreadable.push({file,error:`invalid focus row: ${String(row?.id||'unknown')}`,kind:'founder-focus-row'}); continue; }
+      focus.push({ id:row.id, label:row.label.trim(), intention:row.intention.trim(), next_act:typeof row.next_act==='string'?row.next_act.trim():null, protected:row.protected!==false, updated_at:doc.updated_at, authority:'founder-explicit', evidence_state:'OBSERVED' });
+    }
+    return { organ:'founder-focus', present:true, file, observed_at, focus, unreadable };
+  } catch (e) {
+    unreadable.push({file,error:errMsg(e),kind:'founder-focus'});
+    return { organ:'founder-focus', present:true, file, observed_at, focus:[], unreadable };
+  }
+}
+
 /**
  * B7R1 bounded read organ for AI-partner handoff receipts.
  * It may enumerate only ~/.jarvis/context-handoffs/*.json, refuses symlinks,
@@ -314,5 +360,6 @@ export async function readAllOrgans(opts = {}) {
     governor,
     results: listResults({ env, limit: opts.resultsLimit }),
     partner_handoffs: listPartnerHandoffs({ limit: opts.partnerLimit }),
+    founder_focus: readFounderFocus(),
   };
 }

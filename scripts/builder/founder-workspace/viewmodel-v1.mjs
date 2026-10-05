@@ -75,7 +75,24 @@ export function validateViewModel(vm, opts = {}) {
   }
   for (const k of ['monitor', 'vocabularies', 'events']) if (k in m && !Array.isArray(m[k])) fail('VM-0', `$.${k}`, 'must be an array');
   if (!isObj(m.work)) fail('VM-0', '$.work', 'work must be an object');
-  else for (const k of WORK_ARRAYS) if (!Array.isArray(m.work[k])) fail('VM-0', `$.work.${k}`, 'must be an array');
+  else {
+    for (const k of WORK_ARRAYS) if (!Array.isArray(m.work[k])) fail('VM-0', `$.work.${k}`, 'must be an array');
+    if (m.work.founder_focus !== undefined) {
+      const ff=m.work.founder_focus;
+      if (!isObj(ff)) fail('VM-0', '$.work.founder_focus', 'founder_focus must be an object when present');
+      else {
+        if (!['observed','partial','not-connected'].includes(ff.visibility)) fail('VM-0', '$.work.founder_focus.visibility', 'visibility must be observed|partial|not-connected');
+        if (!Array.isArray(ff.items)) fail('VM-0', '$.work.founder_focus.items', 'items must be an array');
+        else ff.items.forEach((row, i) => {
+          const p=`$.work.founder_focus.items[${i}]`;
+          if (!isObj(row)) { fail('VM-0', p, 'focus row must be an object'); return; }
+          if (!nonEmpty(row.id) || !nonEmpty(row.label) || !nonEmpty(row.intention)) fail('VM-0', p, 'focus row requires id, label and intention');
+          if (row.authority !== 'founder-explicit') fail('VM-0', `${p}.authority`, 'focus authority must be founder-explicit');
+          if (row.evidence_state !== 'OBSERVED') fail('VM-0', `${p}.evidence_state`, 'focus row must be observed from the explicit founder record');
+        });
+      }
+    }
+  }
   if (!isObj(m.graph) || !Array.isArray(m.graph.nodes) || !Array.isArray(m.graph.edges)) fail('VM-0', '$.graph', 'graph must be {nodes[], edges[]}');
   if (!isObj(m.provenance)) fail('VM-0', '$.provenance', 'provenance must be an object');
   if (m.presentation_only !== undefined && m.presentation_only !== true) fail('VM-0', '$.presentation_only', 'if present must be true');

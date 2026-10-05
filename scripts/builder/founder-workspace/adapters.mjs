@@ -213,6 +213,12 @@ export function adaptResults(results) {
   return out;
 }
 
+export function adaptFounderFocus(organ) {
+  if (!organ || organ.present !== true) return { visibility:'not-connected', items:[], source:organ?.file || null, observed_at:organ?.observed_at || null, evidence_state:'ABSENT' };
+  if (Array.isArray(organ.unreadable) && organ.unreadable.length) return { visibility:'partial', items:Array.isArray(organ.focus)?organ.focus:[], source:organ.file || null, observed_at:organ.observed_at || null, evidence_state:'PARTIAL' };
+  return { visibility:'observed', items:Array.isArray(organ.focus)?organ.focus:[], source:organ.file || null, observed_at:organ.observed_at || null, evidence_state:'OBSERVED' };
+}
+
 // ── instrument observations (B3) → monitor rows ──────────────────────────────
 
 /**
@@ -297,6 +303,7 @@ export function composeViewModel(input) {
       history: adaptRuns(organs.runs),
       handoffs: adaptSessions(organs.sessions),
       results: adaptResults(organs.results),
+      founder_focus: adaptFounderFocus(organs.founder_focus),
       governor: organs.governor.report ? { ...stripCounts(organs.governor.report), instrument: 'session.mjs report --json', observed_at: organs.governor.observed_at } : null,
       adjudication_note: 'Yes is the only governed gesture (W0.v2 requires decision === accepted). A governed No is owed to JARVIS-WORK-UNIT-01 (OE-2); this workspace does not fabricate it.',
     },

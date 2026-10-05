@@ -345,6 +345,8 @@ function deriveAttentionDomains(fields) {
   const work=arr(vm.work?.units);
   const programmes=arr(vm.programme_state?.programmes);
   const monitor=arr(vm.monitor);
+  const founderFocus=vm.work?.founder_focus || { visibility:'not-connected', items:[] };
+  const focusItems=arr(founderFocus.items);
   const teamObserved=work.length>0;
   const platformObserved=work.length>0 || programmes.length>0 || monitor.length>0;
   return [
@@ -373,9 +375,13 @@ function deriveAttentionDomains(fields) {
       source:'No admitted world-attention organ in founder-workspace-viewmodel.v1.',
     },
     {
-      id:'your-work', label:'Your Work', visibility:'not-connected',
-      plain:'Protected creative work is not yet connected as a governed attention source. Today will not guess what your deepest work should be.',
-      source:'No admitted founder-creative-work organ in founder-workspace-viewmodel.v1.',
+      id:'your-work', label:'Your Work', visibility:founderFocus.visibility || 'not-connected', items:focusItems,
+      plain:founderFocus.visibility==='observed'
+        ? (focusItems.length ? 'Your protected work is explicitly named by you and held apart from operational noise.' : 'Your focus organ is connected, but you have not named protected work yet.')
+        : founderFocus.visibility==='partial'
+          ? 'Your protected-work record was only partly readable. JARVIS will not fill the gaps.'
+          : 'Protected creative work is not yet connected as a governed attention source. Today will not guess what your deepest work should be.',
+      source:founderFocus.source || 'No admitted founder-focus organ in founder-workspace-viewmodel.v1.',
     },
   ];
 }
@@ -383,7 +389,9 @@ function deriveAttentionDomains(fields) {
 function attentionDomainCard(d) {
   const label=d.visibility==='observed'?'Observed':d.visibility==='partial'?'Partial':'Not connected';
   const level=d.visibility==='observed'?'good':d.visibility==='partial'?'warn':'unobserved';
-  return `<div class="attentionDomain"><div class="attentionDomainTop"><b>${esc(d.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(d.plain)}</div>${technicalDetails([`Visibility: ${label}`,`Source: ${d.source}`])}</div>`;
+  const items=arr(d.items);
+  const focus=items.length?`<div class="protectedWork">${items.map(x=>`<div class="protectedWorkItem"><b>${esc(x.label)}</b><div>${esc(x.intention)}</div>${x.next_act?`<div class="nextAct"><b>Next act</b> · ${esc(x.next_act)}</div>`:''}</div>`).join('')}</div>`:'';
+  return `<div class="attentionDomain"><div class="attentionDomainTop"><b>${esc(d.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(d.plain)}</div>${focus}${technicalDetails([`Visibility: ${label}`,`Source: ${d.source}`])}</div>`;
 }
 
 function renderAttentionDomains(fields) {
