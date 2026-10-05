@@ -219,6 +219,20 @@ export function adaptFounderFocus(organ) {
   return { visibility:'observed', items:Array.isArray(organ.focus)?organ.focus:[], source:organ.file || null, observed_at:organ.observed_at || null, evidence_state:'OBSERVED' };
 }
 
+export function adaptMemberAttention(organ) {
+  if (!organ || organ.present !== true) return { visibility:'not-connected', items:[], source:organ?.source || null, observed_at:organ?.observed_at || null, evidence_state:'UNOBSERVED' };
+  const items=Array.isArray(organ.items)?organ.items:[];
+  const partial=Array.isArray(organ.unreadable) && organ.unreadable.length>0;
+  return {
+    // Founder Ops is one lawful member-attention source, not the whole member field.
+    visibility:'partial',
+    items,
+    source:organ.source || 'ops_contacts:minimized-followups',
+    observed_at:organ.observed_at || null,
+    evidence_state:partial?'PARTIAL':'OBSERVED',
+  };
+}
+
 // ── instrument observations (B3) → monitor rows ──────────────────────────────
 
 /**
@@ -304,6 +318,7 @@ export function composeViewModel(input) {
       handoffs: adaptSessions(organs.sessions),
       results: adaptResults(organs.results),
       founder_focus: adaptFounderFocus(organs.founder_focus),
+      member_attention: adaptMemberAttention(organs.founder_ops_attention),
       governor: organs.governor.report ? { ...stripCounts(organs.governor.report), instrument: 'session.mjs report --json', observed_at: organs.governor.observed_at } : null,
       adjudication_note: 'Yes is the only governed gesture (W0.v2 requires decision === accepted). A governed No is owed to JARVIS-WORK-UNIT-01 (OE-2); this workspace does not fabricate it.',
     },

@@ -347,13 +347,17 @@ function deriveAttentionDomains(fields) {
   const monitor=arr(vm.monitor);
   const founderFocus=vm.work?.founder_focus || { visibility:'not-connected', items:[] };
   const focusItems=arr(founderFocus.items);
+  const memberAttention=vm.work?.member_attention || { visibility:'not-connected', items:[] };
+  const memberItems=arr(memberAttention.items);
   const teamObserved=work.length>0;
   const platformObserved=work.length>0 || programmes.length>0 || monitor.length>0;
   return [
     {
-      id:'members', label:'Members', visibility:'not-connected',
-      plain:'Member relationship signals are not connected to this Founder Workspace yet. JARVIS will not interpret silence as nobody needing you.',
-      source:'No admitted member-attention organ in founder-workspace-viewmodel.v1.',
+      id:'members', label:'Members', visibility:memberAttention.visibility || 'not-connected', memberItems,
+      plain:memberAttention.visibility==='partial'
+        ? (memberItems.length ? 'Founder follow-up signals are visible here. Other member signals are not yet joined, so this is not a complete all-clear.' : 'Founder Ops is visible and has no due member/beta follow-ups, but other member signals are not yet joined.')
+        : 'Member relationship signals are not connected to this Founder Workspace yet. JARVIS will not interpret silence as nobody needing you.',
+      source:memberAttention.source || 'No admitted member-attention organ in founder-workspace-viewmodel.v1.',
     },
     {
       id:'team', label:'Team', visibility:teamObserved?'partial':'not-connected',
@@ -390,8 +394,10 @@ function attentionDomainCard(d) {
   const label=d.visibility==='observed'?'Observed':d.visibility==='partial'?'Partial':'Not connected';
   const level=d.visibility==='observed'?'good':d.visibility==='partial'?'warn':'unobserved';
   const items=arr(d.items);
+  const members=arr(d.memberItems);
   const focus=items.length?`<div class="protectedWork">${items.map(x=>`<div class="protectedWorkItem"><b>${esc(x.label)}</b><div>${esc(x.intention)}</div>${x.next_act?`<div class="nextAct"><b>Next act</b> · ${esc(x.next_act)}</div>`:''}</div>`).join('')}</div>`:'';
-  return `<div class="attentionDomain"><div class="attentionDomainTop"><b>${esc(d.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(d.plain)}</div>${focus}${technicalDetails([`Visibility: ${label}`,`Source: ${d.source}`])}</div>`;
+  const memberRows=members.length?`<div class="protectedWork memberAttention">${members.map(x=>`<div class="protectedWorkItem"><b>${esc(x.name)}</b><div>${esc(x.next_action)}</div><div class="nextAct">${esc(x.relationship)} · ${esc(x.stage)}${x.due_at?` · due ${esc(String(x.due_at).slice(0,10))}`:''}</div></div>`).join('')}</div>`:'';
+  return `<div class="attentionDomain"><div class="attentionDomainTop"><b>${esc(d.label)}</b>${pill(label,level)}</div><div class="rowPlain">${esc(d.plain)}</div>${memberRows}${focus}${technicalDetails([`Visibility: ${label}`,`Source: ${d.source}`])}</div>`;
 }
 
 function renderAttentionDomains(fields) {

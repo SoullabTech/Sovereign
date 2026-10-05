@@ -92,6 +92,21 @@ export function validateViewModel(vm, opts = {}) {
         });
       }
     }
+    if (m.work.member_attention !== undefined) {
+      const ma=m.work.member_attention;
+      if (!isObj(ma)) fail('VM-0', '$.work.member_attention', 'member_attention must be an object when present');
+      else {
+        if (!['observed','partial','not-connected'].includes(ma.visibility)) fail('VM-0', '$.work.member_attention.visibility', 'visibility must be observed|partial|not-connected');
+        if (!Array.isArray(ma.items)) fail('VM-0', '$.work.member_attention.items', 'items must be an array');
+        else ma.items.forEach((row, i) => {
+          const p=`$.work.member_attention.items[${i}]`;
+          if (!isObj(row)) { fail('VM-0', p, 'member attention row must be an object'); return; }
+          if (!nonEmpty(row.id) || !nonEmpty(row.name) || !nonEmpty(row.next_action)) fail('VM-0', p, 'member attention row requires id, name and next_action');
+          if (row.evidence_state !== 'OBSERVED') fail('VM-0', `${p}.evidence_state`, 'member attention row must be observed from the minimized ops projection');
+          for (const forbidden of ['email','notes','content','conversation','manuscript']) if (forbidden in row) fail('VM-0', `${p}.${forbidden}`, `${forbidden} is forbidden in the member attention projection`);
+        });
+      }
+    }
   }
   if (!isObj(m.graph) || !Array.isArray(m.graph.nodes) || !Array.isArray(m.graph.edges)) fail('VM-0', '$.graph', 'graph must be {nodes[], edges[]}');
   if (!isObj(m.provenance)) fail('VM-0', '$.provenance', 'provenance must be an object');

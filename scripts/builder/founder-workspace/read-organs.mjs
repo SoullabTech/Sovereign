@@ -56,6 +56,51 @@ export function resolveFounderFocusFile(home = os.homedir()) {
  * that no focus has been declared.
  * @param {{ home?: string }} [opts]
  */
+/**
+ * Privacy-minimized Founder Ops attention read. This reads only operational
+ * follow-up fields required to know that a member/beta tester needs founder
+ * attention. It deliberately excludes email, notes, session content, MAIA
+ * conversations, manuscripts, and clinical material.
+ * @param {{ env?: NodeJS.ProcessEnv }} [opts]
+ */
+export async function readFounderOpsAttention(opts = {}) {
+  const env=opts.env || process.env;
+  const observed_at=new Date().toISOString();
+  const connectionString=env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness';
+  let pool;
+  try {
+    const pg=await import('pg');
+    const Pool=pg.Pool || pg.default?.Pool;
+    if (!Pool) return { organ:'founder-ops-attention', present:false, observed_at, items:[], unreadable:[{file:'postgres',error:'pg Pool unavailable',kind:'founder-ops-attention'}] };
+    pool=new Pool({ connectionString, max:1, idleTimeoutMillis:1000, connectionTimeoutMillis:2000 });
+    const result=await pool.query(`
+      SELECT c.id::text AS id, c.name, c.contact_type, c.pipeline_stage,
+             c.next_action, c.next_action_date
+      FROM ops_contacts c
+      WHERE c.deleted_at IS NULL
+        AND (c.member_id IS NOT NULL OR c.contact_type = 'beta_tester')
+        AND c.next_action IS NOT NULL
+        AND c.next_action_date <= CURRENT_DATE + INTERVAL '1 day'
+      ORDER BY c.next_action_date ASC
+      LIMIT 20`);
+    const items=result.rows.map((r) => ({
+      id:String(r.id),
+      name:String(r.name||'Member'),
+      relationship:String(r.contact_type||'member'),
+      stage:String(r.pipeline_stage||'unknown'),
+      next_action:String(r.next_action||''),
+      due_at:r.next_action_date ? new Date(r.next_action_date).toISOString() : null,
+      evidence_state:'OBSERVED',
+    }));
+    return { organ:'founder-ops-attention', present:true, observed_at, items, unreadable:[], source:'ops_contacts:minimized-followups' };
+  } catch (e) {
+    const code=e && typeof e==='object' && 'code' in e ? String(e.code||'') : '';
+    return { organ:'founder-ops-attention', present:false, observed_at, items:[], unreadable:[{file:'postgres',error:`database read unavailable${code?` (${code})`:''}`,kind:'founder-ops-attention'}] };
+  } finally {
+    if (pool) try { await pool.end(); } catch {}
+  }
+}
+
 export function readFounderFocus(opts = {}) {
   const file=resolveFounderFocusFile(opts.home || os.homedir());
   const observed_at=new Date().toISOString();
@@ -361,5 +406,6 @@ export async function readAllOrgans(opts = {}) {
     results: listResults({ env, limit: opts.resultsLimit }),
     partner_handoffs: listPartnerHandoffs({ limit: opts.partnerLimit }),
     founder_focus: readFounderFocus(),
+    founder_ops_attention: await readFounderOpsAttention({ env }),
   };
 }
