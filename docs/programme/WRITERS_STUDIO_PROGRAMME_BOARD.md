@@ -53,7 +53,11 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R8B–R8E recovery: **IMPLEMENTED CANDIDATE** — no permanent MAIA rail at rest; contextual resizable conversation; server-verified whole-Work-aware Chapter Conversation Context; Chapter Review stripped back to relationship-first simple-first; passage handoff appears only after a real MAIA reply.
 - R8B–R8E record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8B-E_GOLDEN_SLICE_RECOVERY_2026-10-06.md`
 - Focused witness: **78 / 78 PASS · flagship typecheck PASS · diff-check PASS.** This is engineering evidence only.
-- **Next act: founder Chapter 10 re-witness on localhost:3738.** R8M-T1 tester-study build remains closed until that human witness passes G2–G3 and the conversation→passage handoff.
+- Founder re-witness update: Chapter 10 MAIA response judged substantively useful; remaining immediate UI failure was readability — font too small/dense and the response presented as a solid field of text.
+- R8F founder law ratified in conversation: **once writer and MAIA reach enough shared understanding to act, the Studio carries that understanding forward automatically; the writer never translates conversation into software operations.**
+- R8F record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8F_RELATIONAL_CARRY_HUMANE_READING_2026-10-06.md`
+- R8F readability candidate implemented: larger MAIA turn type, wider line spacing, readable measure, visual paragraph breathing room, and pacing prompts that ask for short paragraphs. Persisted turns remain unchanged.
+- **Next act: continue founder Chapter 10 re-witness on localhost:3738.** R8M-T1 tester-study build remains closed until G2–G3, conversation→passage, and relational carry are human-witnessed.
 - Founder direction added: **R8M — MAIA Editorial/Relational Model Qualification + Governed Council.** Change models when another engine demonstrably fits a faculty better, and use a governed primary/challenger council for high-value uncertain acts.
 - R8M record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M_MODEL_QUALIFICATION_AND_COUNCIL_2026-10-06.md`
 - R8M context packet: **PASS candidate** — read-only `r8m-chapter-context-v1` establishes final-chapter position, chapter reading, prior book readings, and writer-established intention as distinct source classes.

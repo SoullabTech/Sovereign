@@ -4414,3 +4414,55 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   opacity:.78;
   border-style:dashed!important;
 }
+
+/* R8F — humane conversational reading. A MAIA turn should read like a page,
+   not a compressed inspector log. */
+.p4r1-root .p4r1-chapter-conversation [data-turn]{
+  margin-bottom:24px!important;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--fr-line-soft);
+}
+.p4r1-root .p4r1-chapter-conversation [data-turn]:last-of-type{
+  border-bottom:0;
+}
+.p4r1-root .p4r1-chapter-conversation [data-turn-body='true']{
+  max-width:64ch;
+}
+.p4r1-root .p4r1-chapter-conversation [data-speaker='maia'] [data-turn-body='true']{
+  font-size:17.5px!important;
+  line-height:1.82!important;
+  letter-spacing:.002em;
+}
+.p4r1-root .p4r1-chapter-conversation [data-speaker='author'] [data-turn-body='true']{
+  font-size:16px!important;
+  line-height:1.72!important;
+}
+.p4r1-root .p4r1-chapter-conversation [data-speaker='maia'] [data-turn-body='true']{
+  text-wrap:pretty;
+}
+.p4r1-root .p4r1-chapter-conversation [data-maia-composer='true'] textarea{
+  font-size:16.5px!important;
+  line-height:1.7!important;
+  min-height:148px!important;
+}
+@media(min-width:1500px){
+  .p4r1-root .p4r1-chapter-conversation [data-speaker='maia'] [data-turn-body='true']{
+    font-size:18px!important;
+  }
+}
+.p4r1-root .p4r1-chapter-conversation [data-readable-turn='maia'] [data-turn-paragraph='true']{
+  max-width:64ch;
+  margin:0 0 15px!important;
+  font-size:17.5px!important;
+  line-height:1.82!important;
+  letter-spacing:.002em;
+  text-wrap:pretty;
+}
+.p4r1-root .p4r1-chapter-conversation [data-readable-turn='maia'] [data-turn-paragraph='true']:last-child{
+  margin-bottom:0!important;
+}
+@media(min-width:1500px){
+  .p4r1-root .p4r1-chapter-conversation [data-readable-turn='maia'] [data-turn-paragraph='true']{
+    font-size:18px!important;
+  }
+}

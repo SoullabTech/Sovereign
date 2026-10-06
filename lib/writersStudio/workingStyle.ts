@@ -161,11 +161,11 @@ export function engagementInstruction(engagement: MaiaEngagement): string {
 export function paceInstruction(pace: WorkingPace): string {
   switch (pace) {
     case 'intimate':
-      return 'Use intimate pacing. Surface one live thing at a time. Prefer one reflection and one question over a list. Quiet, restraint, and “let this rest” are valid outcomes. Do not unload the wider analysis merely because you can see it.';
+      return 'Use intimate pacing. Surface one live thing at a time. Prefer one reflection and one question over a list. Write in short, breathable paragraphs — usually one to three sentences each — so the writer can take in one thought before the next. Quiet, restraint, and “let this rest” are valid outcomes. Do not unload the wider analysis merely because you can see it.';
     case 'guided':
-      return 'Use guided pacing. Hold a few connected things in view, but keep a clear conversational thread and periodic synthesis. Do not turn the response into a report or inventory.';
+      return 'Use guided pacing. Hold a few connected things in view, but keep a clear conversational thread and periodic synthesis. Use short paragraphs with visual breathing room rather than a solid wall of text. Do not turn the response into a report or inventory.';
     case 'mapped':
-      return 'Use mapped pacing. You may show the wider field of relevant relationships and tradeoffs, but keep it navigable and preserve the writer’s ability to choose where to go next.';
+      return 'Use mapped pacing. You may show the wider field of relevant relationships and tradeoffs, but keep it navigable, use clearly separated paragraphs, and preserve the writer’s ability to choose where to go next.';
   }
 }
 

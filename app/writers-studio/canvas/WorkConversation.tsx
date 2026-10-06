@@ -130,6 +130,32 @@ const when = (iso: string) => {
   return Number.isNaN(d.getTime()) ? 'earlier' : d.toLocaleDateString();
 };
 
+/**
+ * R8F — presentation-only breathing room for long MAIA turns.
+ *
+ * Existing paragraph breaks are preserved. If a model returned one very long
+ * paragraph, group its sentences into short visual paragraphs without changing
+ * the stored turn or manuscript content. This is typography, not a rewrite.
+ */
+export function readableMaiaParagraphs(body: string): readonly string[] {
+  const trimmed = body.trim();
+  if (!trimmed) return [];
+  const authoredParagraphs = trimmed.split(/\n\s*\n+/).map((part) => part.trim()).filter(Boolean);
+  if (authoredParagraphs.length > 1 || trimmed.length < 420) return authoredParagraphs;
+  try {
+    const segmenter = new Intl.Segmenter('en', { granularity: 'sentence' });
+    const sentences = Array.from(segmenter.segment(trimmed), (part) => part.segment.trim()).filter(Boolean);
+    if (sentences.length < 3) return [trimmed];
+    const paragraphs: string[] = [];
+    for (let i = 0; i < sentences.length; i += 2) {
+      paragraphs.push(sentences.slice(i, i + 2).join(' '));
+    }
+    return paragraphs;
+  } catch {
+    return [trimmed];
+  }
+}
+
 export interface WorkConversationProps {
   work: LivingWork;
   /** Null before a manuscript exists; the conversation then belongs directly to the Living Work. */
@@ -418,16 +444,38 @@ export default function WorkConversation({
         )}
 
         {turns.map((t) => (
-          <div key={t.index} style={{ marginBottom: SPACE.base }} data-turn={t.index}>
+          <div
+            key={t.index}
+            style={{ marginBottom: SPACE.base }}
+            data-turn={t.index}
+            data-speaker={t.speaker}
+          >
             <StudioText role="metadata" tone="quiet" style={{ marginBottom: SPACE.hairline }}>
               {t.speaker === 'maia' ? 'MAIA' : 'You'}
             </StudioText>
-            <StudioText
-              role="maiaReading"
-              style={t.speaker === 'maia' ? { color: MAIA_ACCENT.voice } : { color: INK.secondary }}
-            >
-              {t.body}
-            </StudioText>
+            {t.speaker === 'maia' ? (
+              <div data-turn-body="true" data-readable-turn="maia">
+                {readableMaiaParagraphs(t.body).map((paragraph, paragraphIndex) => (
+                  <StudioText
+                    key={paragraphIndex}
+                    role="maiaReading"
+                    as="p"
+                    data-turn-paragraph="true"
+                    style={{ color: MAIA_ACCENT.voice, whiteSpace: 'pre-wrap' }}
+                  >
+                    {paragraph}
+                  </StudioText>
+                ))}
+              </div>
+            ) : (
+              <StudioText
+                role="maiaReading"
+                data-turn-body="true"
+                style={{ color: INK.secondary, whiteSpace: 'pre-wrap' }}
+              >
+                {t.body}
+              </StudioText>
+            )}
             {t.speaker === 'maia' && threadId ? (
               <div style={{ marginTop: SPACE.tight }} data-maia-correction={t.index}>
                 {correctingTurn !== t.index ? (

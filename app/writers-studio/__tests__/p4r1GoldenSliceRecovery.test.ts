@@ -52,4 +52,18 @@ describe('R8B–R8E Chapter 10 golden-slice recovery', () => {
     expect(develop).toContain('When you’re ready · choose a passage to work on →');
     expect(develop).toContain("'chapter-review'");
   });
+
+  it('renders MAIA conversation as breathable reading rather than a wall of text', () => {
+    const workConversation = read('app/writers-studio/canvas/WorkConversation.tsx');
+    const workingStyle = read('lib/writersStudio/workingStyle.ts');
+    const css = read('app/dev/writers-studio-p4r1/p4r1-live.css');
+    expect(workConversation).toContain('readableMaiaParagraphs');
+    expect(workConversation).toContain('data-readable-turn="maia"');
+    expect(workConversation).toContain('data-turn-paragraph="true"');
+    expect(workingStyle).toContain('short, breathable paragraphs');
+    expect(css).toContain("[data-readable-turn='maia'] [data-turn-paragraph='true']");
+    expect(css).toContain('font-size:17.5px!important');
+    expect(css).toContain('line-height:1.82!important');
+    expect(css).toContain('max-width:64ch');
+  });
 });
