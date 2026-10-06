@@ -45,9 +45,24 @@ export function typesetManuscriptBody(body: string): WriteBlock[] {
 
   const explicit = normalized.split(/\n[ \t]*\n+/).filter((part) => part.trim());
   if (explicit.length > 1) {
-    return explicit.map((raw) => {
+    /*
+     * A blank line is strong paragraph evidence, but imported print/PDF text can
+     * also contain structural lines inside one such chunk: a page folio, a Roman
+     * subhead, or an epigraph immediately followed by a subhead. If we classify
+     * the whole chunk at once, an opening quotation can incorrectly turn several
+     * pages of prose into one epigraph and a folio can be buried in body text.
+     *
+     * Re-run only those structurally mixed chunks through the hard-wrap
+     * recovery path. Ordinary explicit author paragraphs remain untouched.
+     */
+    return explicit.flatMap((raw) => {
+      const hasInternalStructure = raw.split('\n').some((line) => {
+        const t = line.trim();
+        return FOLIO.test(t) || ROMAN_SUBHEAD.test(t) || NUMBERED_SUBHEAD.test(t);
+      });
+      if (hasInternalStructure) return typesetManuscriptBody(raw);
       const kind = classify(raw);
-      return { text: visualText(raw, kind), kind };
+      return [{ text: visualText(raw, kind), kind }];
     });
   }
 

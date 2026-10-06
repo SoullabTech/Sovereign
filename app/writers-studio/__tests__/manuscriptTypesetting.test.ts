@@ -58,6 +58,32 @@ describe('Writer Studio manuscript typesetting', () => {
     expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
   });
 
+
+  it('recovers structure inside blank-separated imported page chunks without styling prose as an epigraph', () => {
+    const body = [
+      [
+        '“To be spiritual means essentially to take responsibility for our inner journey while',
+        'using all the resources from all the traditions available to us.” — Wayne Teasdale',
+        'I. The Living Spiral',
+        'To be human is to move through cycles. Morning turns to midday, midday leads toward dusk, dusk',
+        'gives way to nightfall, and night eventually finds its way back to the light of day.',
+        'These cycles are not simply happening around us. They are part of us.',
+      ].join('\n'),
+      [
+        '161',
+        'Them from another place in ourselves. Being alive means participating in these cycles',
+        'rather than somehow standing outside them.',
+      ].join('\n'),
+    ].join('\n\n');
+
+    const blocks = typesetManuscriptBody(body);
+    expect(blocks[0]?.kind).toBe('epigraph');
+    expect(blocks.some((b) => b.kind === 'subhead' && b.text === 'I. The Living Spiral')).toBe(true);
+    expect(blocks.some((b) => b.kind === 'folio' && b.text === '161')).toBe(true);
+    expect(blocks.filter((b) => b.kind === 'paragraph').length).toBeGreaterThanOrEqual(2);
+    expect(words(blocks.map((b) => b.text).join(' '))).toBe(words(body));
+  });
+
   it('recognizes markdown-wrapped quotations as epigraphs without changing their source text', () => {
     const body = '*"To be spiritual means essentially to take responsibility for our inner journey." – Wayne Teasdale*';
     const blocks = typesetManuscriptBody(body);
