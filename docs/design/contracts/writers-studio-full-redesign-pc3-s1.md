@@ -15,6 +15,10 @@ surfaces:
   # reading, interpretation, or edit authority.
   - app/dev/writers-studio-pc3-live/P4R1ReviewController.tsx
   - app/dev/writers-studio-pc3-live/P4R1ProofView.tsx
+  - app/dev/writers-studio-pc3-live/P4R1CompletionChecks.tsx
+  # EA-COMPLETION-01 — completion lives inside Review. Ready the Work is a
+  # Review state, not a fourth primary Studio destination.
+  - app/writers-studio/rebuild/ReadyWorkPanel.tsx
   - app/dev/writers-studio-p4r1/p4r1-live.css
   - app/api/sovereign/manuscripts/[id]/render/route.ts
 

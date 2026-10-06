@@ -30,6 +30,8 @@ import { execFileSync } from 'node:child_process';
 import { renderHtmlToPdf } from '@/lib/manuscript/render/pagedPdf';
 
 export interface MemberBookSection {
+  /** Stable manuscript/draft section identity for rendered-page return addressing. */
+  sourceId?: string | null;
   heading: string | null;
   body: string;
   /** Structural evidence carried by the manuscript source. Null means unknown. */
@@ -121,6 +123,8 @@ export interface MemberBookResult {
   pageCount?: number;
   /** sha256 over the source sections — provenance / version of this render. */
   sourceHash: string;
+  /** First rendered page for each stable source section id, when available. */
+  sectionFirstPages?: Record<string, number>;
   sectionCount: number;
   /** Versioned physical-composition rules used to make this artifact. */
   productionProfile: string;
@@ -188,6 +192,10 @@ export function buildHallmarkPrintStyles(baseCss: string): HallmarkPrintStyles {
 export function assembleManuscriptMarkdown(sections: MemberBookSection[]): string {
   const parts: string[] = [];
   for (const s of sections) {
+    if (s.sourceId) {
+      parts.push(`::: {.manuscript-section data-section-id="${s.sourceId}"}`);
+      parts.push('');
+    }
     const heading = s.heading?.trim();
     if (heading) {
       const depth = s.headingDepth === 1 || s.headingDepth === 2 || s.headingDepth === 3
@@ -199,6 +207,10 @@ export function assembleManuscriptMarkdown(sections: MemberBookSection[]): strin
     }
     parts.push(s.body);
     parts.push('');
+    if (s.sourceId) {
+      parts.push(':::');
+      parts.push('');
+    }
   }
   return parts.join('\n');
 }
@@ -256,7 +268,7 @@ function metadataArgs(opts: RenderMemberBookOptions): string[] {
 async function renderPdf(
   markdown: string,
   opts: RenderMemberBookOptions,
-): Promise<{ filePath: string; sizeBytes: number; pageCount?: number }> {
+): Promise<{ filePath: string; sizeBytes: number; pageCount?: number; sectionFirstPages?: Record<string, number> }> {
   // pandoc: markdown (stdin) → standalone HTML5. No lua filters, no plates.
   const pandocStdout = execFileSync(
     'pandoc',
@@ -285,12 +297,13 @@ ${bodyHtml}
 </html>`;
 
   const filePath = path.join(os.tmpdir(), `press-book-${randomUUID()}.pdf`);
-  await renderHtmlToPdf(html, {
+  const paged = await renderHtmlToPdf(html, {
     outputPath: filePath,
     width: '6in',
     height: '9in',
     timeoutMs: 240_000,
     assertPagedPageSize: true,
+    captureSectionPages: true,
   });
 
   const stat = await fs.stat(filePath);
@@ -309,7 +322,7 @@ ${bodyHtml}
     // Page count is a nicety, not load-bearing — the PDF still rendered.
   }
 
-  return { filePath, sizeBytes: stat.size, pageCount };
+  return { filePath, sizeBytes: stat.size, pageCount, sectionFirstPages: paged.sectionFirstPages };
 }
 
 async function renderEpub(
@@ -365,8 +378,8 @@ export async function renderMemberBook(
   const sectionCount = sections.length;
 
   if (opts.format === 'pdf') {
-    const { filePath, sizeBytes, pageCount } = await renderPdf(markdown, opts);
-    return { filePath, sizeBytes, pageCount, sourceHash, sectionCount, productionProfile: HALLMARK_PRODUCTION_PROFILE };
+    const { filePath, sizeBytes, pageCount, sectionFirstPages } = await renderPdf(markdown, opts);
+    return { filePath, sizeBytes, pageCount, sectionFirstPages, sourceHash, sectionCount, productionProfile: HALLMARK_PRODUCTION_PROFILE };
   }
   const { filePath, sizeBytes } = await renderEpub(markdown, opts);
   return { filePath, sizeBytes, sourceHash, sectionCount, productionProfile: HALLMARK_PRODUCTION_PROFILE };

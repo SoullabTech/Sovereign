@@ -128,6 +128,15 @@ Real-case acceptance: Studio should have surfaced the stronger earlier healer/pr
 
 # 6 — Complete Whole-Work Review
 
+Status: IMPLEMENTED AS CONVERGED REVIEW CHECKS; founder/real-Work witness still required.
+
+Implemented in the current P4R1 Review path:
+- existing literary/developmental saved Review lenses remain intact;
+- Recovery remains a bounded separate Review tab;
+- Completeness is a bounded evidence-first Work check that looks for promises, counterpart structures, lists, appendices, and back-matter mismatch without treating symmetry as authorial law;
+- Sources is a bounded quotation/provenance Work check that distinguishes verification, translation/edition dependence, adaptation/paraphrase, and unresolved attribution while keeping permissions distinct;
+- both checks enter the ordinary durable Work conversation and cannot mutate manuscript prose by themselves.
+
 Required Review lenses:
 - Literary / reader experience
 - Continuity
@@ -141,6 +150,16 @@ Develop continues to hold exploratory developmental intelligence; Review tests t
 Real-case acceptance: detect Four Scales with Water/Earth/Air but no Fire and ask for author adjudication.
 
 # 7 — Bind rendered pages back to the Work
+
+Status: ADDRESSABLE PAGE-RETURN SLICE IMPLEMENTED; automatic visual interpretation remains explicitly out of scope for this slice.
+
+Implemented:
+- stable source/draft section identity is carried into the rendered HTML as section markers;
+- after Paged.js pagination, Studio captures each section's first rendered page;
+- the PDF response carries the page→section return map with the exact render source hash/revision;
+- Proof lets the writer record a page number and page-form observation and carries render identity plus nearest manuscript return address into MAIA Work conversation;
+- the UI explicitly says the page issue is the writer's observation, not a claim that MAIA visually inspected the PDF;
+- no OCR or page-derived mutation can overwrite semantic manuscript text.
 
 Upgrade the existing Reading Proof from PDF-in-an-iframe to addressable reader-experience evidence.
 
@@ -156,6 +175,27 @@ Text remains semantic authority. No OCR-derived manuscript mutation.
 Real-case acceptance: duplicate folios, blank gaps, model too small/high, and illustration-placement defects become native Review findings.
 
 # 8 — Build Ready the Work inside Review
+
+Status: IMPLEMENTED IN THE CURRENT P4R1 REVIEW PATH; durable schema migration included; real-Work adjudication still required.
+
+Implemented dimensions:
+- editorial integrity
+- continuity
+- recovery / Lost Gold
+- source provenance
+- permissions & rights
+- page proof
+- front/back matter
+- publication target
+
+Implemented states:
+- IN_PROGRESS
+- EDITORIALLY_SETTLED
+- REVIEW_COPY_READY
+- PUBLICATION_READY
+- BLOCKED
+
+No missing check is inferred green. Every standing is an explicit writer adjudication, append-only on the durable substrate. Ready the Work is reachable before or inside a saved Review and remains part of Review rather than a new primary mode.
 
 One quiet completion state, not a new primary mode.
 

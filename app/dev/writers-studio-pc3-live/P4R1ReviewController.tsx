@@ -38,6 +38,8 @@ import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
 import P4R1ProofView from './P4R1ProofView';
 import P4R1RecoveryView from './P4R1RecoveryView';
+import { ReadyWorkPanel } from '@/app/writers-studio/rebuild/ReadyWorkPanel';
+import { P4R1CompletenessView, P4R1SourceAuditView } from './P4R1CompletionChecks';
 
 interface ContextReady {
   state: 'section_aware';
@@ -603,18 +605,27 @@ type ReadyReview = {
               Review opens saved readings. Entering this room does not ask MAIA to read anything again.
             </p>
             <div className="fr-tabs fr-tabs-rev" role="tablist" aria-label="Review view">
-              <button type="button" role="tab" aria-selected={tab !== 'Proof'} onClick={() => setTab('Overview')}>
+              <button type="button" role="tab" aria-selected={tab !== 'Proof' && tab !== 'Ready the Work'} onClick={() => setTab('Overview')}>
                 Review
               </button>
               <button type="button" role="tab" aria-selected={tab === 'Proof'} onClick={() => setTab('Proof')}>
                 Proof
+              </button>
+              <button type="button" role="tab" aria-selected={tab === 'Ready the Work'} onClick={() => setTab('Ready the Work')}>
+                Ready the Work
               </button>
             </div>
             {tab === 'Proof' ? (
               <P4R1ProofView
                 manuscriptId={context.manuscriptId}
                 workTitle={work?.title ?? context.title ?? 'This Work'}
+                onDiscuss={(draft) => {
+                  setWorkDraft(draft);
+                  setWorkTalking(true);
+                }}
               />
+            ) : tab === 'Ready the Work' ? (
+              <ReadyWorkPanel manuscriptId={context.manuscriptId} />
             ) : (
               <>
             <section className="fr-card p4r1-review-reread" data-review-reread>
@@ -803,12 +814,33 @@ type ReadyReview = {
               }}
             />
           }
+          completeness={
+            <P4R1CompletenessView
+              onDiscuss={(draft) => {
+                setWorkDraft(draft);
+                setWorkTalking(true);
+              }}
+            />
+          }
+          sources={
+            <P4R1SourceAuditView
+              onDiscuss={(draft) => {
+                setWorkDraft(draft);
+                setWorkTalking(true);
+              }}
+            />
+          }
           proof={
             <P4R1ProofView
               manuscriptId={context.manuscriptId}
               workTitle={work?.title ?? context.title ?? 'This Work'}
+              onDiscuss={(draft) => {
+                setWorkDraft(draft);
+                setWorkTalking(true);
+              }}
             />
           }
+          ready={<ReadyWorkPanel manuscriptId={context.manuscriptId} />}
         />
       }
       maia={

@@ -150,7 +150,7 @@ function LensPanel({
     </div>
   );
 }export function LiveReviewChapter({
-  data, filter, onFilter, tab, onTab, onBack, onOpenFinding, onWorkWith, onDiscuss, proof, recovery,
+  data, filter, onFilter, tab, onTab, onBack, onOpenFinding, onWorkWith, onDiscuss, proof, recovery, completeness, sources, ready,
 }: {
   data: Pc3LiveReviewData;
   filter: string;
@@ -165,12 +165,21 @@ function LensPanel({
   proof?: ReactNode;
   /** Earlier-version comparison. Surfaces possible Lost Gold without restoring anything. */
   recovery?: ReactNode;
+  /** Whole-Work structural completeness check. */
+  completeness?: ReactNode;
+  /** Whole-Work quotation/source provenance check. */
+  sources?: ReactNode;
+  /** Explicit completion ledger. Distinguishes editorial, review-copy, and publication readiness. */
+  ready?: ReactNode;
 }) {
   const tabs = [
     'Overview',
     ...data.lenses.map((lens) => lens.label),
     ...(recovery ? ['Recovery'] : []),
+    ...(completeness ? ['Completeness'] : []),
+    ...(sources ? ['Sources'] : []),
     ...(proof ? ['Proof'] : []),
+    ...(ready ? ['Ready the Work'] : []),
   ];
   const shown = filter === 'All' ? data.findings
     : data.findings.filter((finding) => finding.lensLabel === filter);
@@ -196,7 +205,7 @@ function LensPanel({
             {t}
           </button>
         ))}
-      </div>      {tab === 'Recovery' && recovery ? recovery : tab === 'Proof' && proof ? proof : tab !== 'Overview' ? (
+      </div>      {tab === 'Recovery' && recovery ? recovery : tab === 'Completeness' && completeness ? completeness : tab === 'Sources' && sources ? sources : tab === 'Proof' && proof ? proof : tab === 'Ready the Work' && ready ? ready : tab !== 'Overview' ? (
         <LensPanel data={data} tab={tab} onOpenFinding={onOpenFinding} onWorkWith={onWorkWith} onDiscuss={onDiscuss} />
       ) : (
         <>

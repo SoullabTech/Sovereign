@@ -165,6 +165,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       'X-Soullab-Source-Revision': sourceRevision ?? '',
       'X-Soullab-Section-Count': String(result.sectionCount),
       'X-Soullab-Page-Count': String(result.pageCount ?? ''),
+      'X-Soullab-Section-First-Pages': result.sectionFirstPages ? JSON.stringify(result.sectionFirstPages) : '',
       'X-Soullab-Production-Profile': result.productionProfile,
     },
   });

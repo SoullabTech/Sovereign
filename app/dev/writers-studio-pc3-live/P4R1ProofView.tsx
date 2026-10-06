@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 
 type Preflight = {
@@ -20,6 +20,7 @@ type ProofMeta = {
   sectionCount: string;
   pageCount: string;
   productionProfile: string;
+  sectionFirstPages: Record<string, number>;
 };
 
 const shortHash = (value: string) => value ? value.slice(0, 12) : 'unavailable';
@@ -27,9 +28,11 @@ const shortHash = (value: string) => value ? value.slice(0, 12) : 'unavailable';
 export default function P4R1ProofView({
   manuscriptId,
   workTitle,
+  onDiscuss,
 }: {
   manuscriptId: string;
   workTitle: string;
+  onDiscuss?: (draft: string) => void;
 }) {
   const [preflight, setPreflight] = useState<Preflight | null>(null);
   const [preflightError, setPreflightError] = useState<string | null>(null);
@@ -37,6 +40,8 @@ export default function P4R1ProofView({
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [proofMeta, setProofMeta] = useState<ProofMeta | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [pageNumber, setPageNumber] = useState('');
+  const [pageIssue, setPageIssue] = useState('');
 
   useEffect(() => {
     let live = true;
@@ -90,6 +95,18 @@ export default function P4R1ProofView({
         if (previous) URL.revokeObjectURL(previous);
         return next;
       });
+      const rawSectionPages = response.headers.get('x-soullab-section-first-pages') ?? '';
+      let sectionFirstPages: Record<string, number> = {};
+      try {
+        const parsed = rawSectionPages ? JSON.parse(rawSectionPages) as Record<string, unknown> : {};
+        sectionFirstPages = Object.fromEntries(
+          Object.entries(parsed).filter((entry): entry is [string, number] =>
+            typeof entry[1] === 'number' && Number.isInteger(entry[1]) && entry[1] > 0,
+          ),
+        );
+      } catch {
+        sectionFirstPages = {};
+      }
       setProofMeta({
         sourceHash: response.headers.get('x-soullab-source-hash') ?? '',
         sourceAuthority: response.headers.get('x-soullab-source-authority') ?? '',
@@ -97,12 +114,40 @@ export default function P4R1ProofView({
         sectionCount: response.headers.get('x-soullab-section-count') ?? '',
         pageCount: response.headers.get('x-soullab-page-count') ?? '',
         productionProfile: response.headers.get('x-soullab-production-profile') ?? '',
+        sectionFirstPages,
       });
     } catch {
       setRenderError('The current manuscript could not be rendered as pages. Nothing about your Work changed.');
     } finally {
       setBusy(false);
     }
+  };
+
+  const pageLocus = useMemo(() => {
+    const page = Number(pageNumber);
+    if (!proofMeta || !Number.isInteger(page) || page < 1) return null;
+    const candidates = Object.entries(proofMeta.sectionFirstPages)
+      .filter(([, firstPage]) => firstPage <= page)
+      .sort((a, b) => b[1] - a[1]);
+    const hit = candidates[0];
+    return hit ? { sectionId: hit[0], firstPage: hit[1] } : null;
+  }, [pageNumber, proofMeta]);
+
+  const discussPageIssue = () => {
+    if (!onDiscuss || !proofMeta || !pageIssue.trim()) return;
+    const page = Number(pageNumber);
+    if (!Number.isInteger(page) || page < 1) return;
+    onDiscuss([
+      `I noticed a page-form issue on rendered page ${page} of this Work.`,
+      `Rendered source: ${shortHash(proofMeta.sourceHash)} · ${proofMeta.sourceAuthority}${proofMeta.sourceRevision ? ` · revision ${proofMeta.sourceRevision}` : ''}.`,
+      pageLocus
+        ? `The proof map places this page at or after manuscript section ${pageLocus.sectionId}, whose first rendered page is ${pageLocus.firstPage}.`
+        : 'No exact manuscript section could be resolved from the current proof map.',
+      `What I noticed: ${pageIssue.trim()}`,
+      '',
+      'Treat the page issue as my observation, not as something you visually witnessed.',
+      'Help me return to the most likely manuscript locus and propose the smallest useful correction. Do not change the Work unless I explicitly ask.',
+    ].join('\n'));
   };
 
   return (
@@ -191,10 +236,53 @@ export default function P4R1ProofView({
             <span>{proofMeta?.sourceAuthority || 'source authority unavailable'}</span>
             {proofMeta?.sourceRevision ? <span>revision {proofMeta.sourceRevision}</span> : null}
             {proofMeta?.sectionCount ? <span>{proofMeta.sectionCount} sections</span> : null}
+            <span>{Object.keys(proofMeta?.sectionFirstPages ?? {}).length} page-addressed sections</span>
           </div>
+          {onDiscuss ? (
+            <section className="p4r1-proof-issue" data-proof-page-issue>
+              <h3>Work on something you noticed on the page</h3>
+              <p>
+                Name the rendered page and what you noticed. Studio will carry the render identity
+                and nearest manuscript section into the Work conversation.
+              </p>
+              <div>
+                <label>
+                  Page
+                  <input
+                    type="number"
+                    min="1"
+                    max={proofMeta?.pageCount ? Number(proofMeta.pageCount) : undefined}
+                    value={pageNumber}
+                    onChange={(event) => setPageNumber(event.target.value)}
+                  />
+                </label>
+                <label>
+                  What did you notice?
+                  <textarea
+                    rows={3}
+                    value={pageIssue}
+                    onChange={(event) => setPageIssue(event.target.value)}
+                    placeholder="For example: the image is too small and sits too high on the page."
+                  />
+                </label>
+                {pageLocus ? (
+                  <p className="p4r1-proof-next">
+                    Likely manuscript return address: section {pageLocus.sectionId.slice(0, 8)}… · begins on page {pageLocus.firstPage}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={!pageIssue.trim() || !Number.isInteger(Number(pageNumber)) || Number(pageNumber) < 1}
+                  onClick={discussPageIssue}
+                >
+                  Work on this with MAIA
+                </button>
+              </div>
+            </section>
+          ) : null}
           <p className="p4r1-proof-next">
-            MAIA is not visually interpreting these pages in this first slice. Page-aware observations
-            come only after rendered-page identity can be tied back to exact manuscript sections.
+            MAIA is not silently visually interpreting these pages. Page-form issues remain your observation
+            until a governed visual-reading capability is explicitly added. The proof map only returns you to manuscript identity.
           </p>
         </>
       )}

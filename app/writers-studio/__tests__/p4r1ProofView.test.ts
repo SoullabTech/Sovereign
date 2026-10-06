@@ -50,9 +50,12 @@ describe('Writer’s Studio Review Proof view', () => {
     expect(proof).toContain('data-proof-provenance');
   });
 
-  it('states the epistemic boundary before page-aware MAIA exists', () => {
+  it('keeps page evidence honest while returning observed issues to manuscript identity', () => {
     expect(proof).toContain('Text remains the semantic source');
-    expect(proof).toContain('MAIA is not visually interpreting these pages in this first slice');
-    expect(proof).toContain('rendered-page identity can be tied back to exact manuscript sections');
+    expect(proof).toContain('MAIA is not silently visually interpreting these pages');
+    expect(proof).toContain('Treat the page issue as my observation, not as something you visually witnessed.');
+    expect(proof).toContain('x-soullab-section-first-pages');
+    expect(proof).toContain('Likely manuscript return address');
+    expect(route).toContain("'X-Soullab-Section-First-Pages'");
   });
 });

@@ -62,12 +62,13 @@ export async function loadMemberRenderSource(
       sourceRevision = currentDraft.version;
 
       const draftRows = await query<{
+        source_id: string;
         heading: string | null;
         body: string;
         heading_depth: number | null;
         heading_signal: string | null;
       }>(
-        `SELECT ms.heading, ds.text AS body, ms.heading_depth, ms.heading_signal
+        `SELECT ds.id AS source_id, ms.heading, ds.text AS body, ms.heading_depth, ms.heading_signal
            FROM manuscript_draft_sections ds
            JOIN manuscript_working_drafts d ON d.id = ds.draft_id
            LEFT JOIN manuscript_sections ms ON ms.id = ds.source_section_id
@@ -87,6 +88,7 @@ export async function loadMemberRenderSource(
       }
 
       sections = draftRows.rows.map((row) => ({
+        sourceId: row.source_id,
         heading: row.heading,
         body: row.body,
         headingDepth:
@@ -97,12 +99,13 @@ export async function loadMemberRenderSource(
       }));
     } else {
       const secRows = await query<{
+        source_id: string;
         heading: string | null;
         body: string;
         heading_depth: number | null;
         heading_signal: string | null;
       }>(
-        `SELECT heading, body, heading_depth, heading_signal
+        `SELECT id AS source_id, heading, body, heading_depth, heading_signal
            FROM manuscript_sections
           WHERE manuscript_id = $1
           ORDER BY position`,
@@ -114,6 +117,7 @@ export async function loadMemberRenderSource(
       }
 
       sections = secRows.rows.map((row) => ({
+        sourceId: row.source_id,
         heading: row.heading,
         body: row.body,
         headingDepth:

@@ -48,12 +48,18 @@ export interface RenderPdfOptions {
    * CSS/parser regression cannot crop Letter pagination into a 6x9 wrapper.
    */
   assertPagedPageSize?: boolean;
+  /** Capture the first rendered page carrying each data-section-id marker. */
+  captureSectionPages?: boolean;
+}
+
+export interface RenderPdfDomInfo {
+  sectionFirstPages?: Record<string, number>;
 }
 
 export async function renderHtmlToPdf(
   html: string,
   options: RenderPdfOptions,
-): Promise<void> {
+): Promise<RenderPdfDomInfo> {
   const pagedJsPath =
     options.pagedJsScriptPath ??
     path.resolve(process.cwd(), 'node_modules/pagedjs/dist/paged.polyfill.js');
@@ -158,6 +164,20 @@ export async function renderHtmlToPdf(
       }
     }
 
+    const sectionFirstPages = options.captureSectionPages
+      ? await page.evaluate(() => {
+          const first: Record<string, number> = {};
+          const pages = Array.from(document.querySelectorAll('.pagedjs_page'));
+          pages.forEach((pageEl, index) => {
+            pageEl.querySelectorAll<HTMLElement>('[data-section-id]').forEach((section) => {
+              const id = section.dataset.sectionId;
+              if (id && first[id] === undefined) first[id] = index + 1;
+            });
+          });
+          return first;
+        })
+      : undefined;
+
     await page.pdf({
       path: options.outputPath,
       width,
@@ -167,6 +187,7 @@ export async function renderHtmlToPdf(
       margin: { top: '0', right: '0', bottom: '0', left: '0' },
       preferCSSPageSize: true,
     });
+    return sectionFirstPages ? { sectionFirstPages } : {};
   } finally {
     await browser.close();
     // Best-effort cleanup; surfacing the unlink failure would mask any
