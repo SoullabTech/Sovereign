@@ -53,7 +53,11 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - **R8 STOPPED under R6.** Chapter Conversation Context + contextual/expandable MAIA geometry remain required before the live golden journey resumes.
 - Founder direction added: **R8M — MAIA Editorial/Relational Model Qualification + Governed Council.** Change models when another engine demonstrably fits a faculty better, and use a governed primary/challenger council for high-value uncertain acts.
 - R8M record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M_MODEL_QUALIFICATION_AND_COUNCIL_2026-10-06.md`
-- R8M current act: build one lawful fixed Chapter 10 context packet, run blinded local candidates against it, then adjudicate faculty standing before any production model change.
+- R8M context packet: **PASS candidate** — read-only `r8m-chapter-context-v1` establishes final-chapter position, chapter reading, prior book readings, and writer-established intention as distinct source classes.
+- R8M local blind round: **COMPLETE** — four local candidates, identical two-turn Chapter 10 fixture; founder blind qualitative adjudication pending.
+- R8M local witness: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M-L1_LOCAL_BLIND_WITNESS_2026-10-06.md`
+- Strong reference calibration: **HELD** — R&D shell had no resolved Anthropic auth; no request was substituted to another provider.
+- R8M current act: founder reviews Candidates A–D blind; identities open only after qualitative judgment, then faculty standings are assigned before any production model change.
 - No passage descent or broader Studio propagation until founder re-witness passes G2–G3.
 
 This entry supersedes the 2026-10-05 lane only for current execution priority. It does not rewrite the case-study record or discard its valid implementation evidence.
