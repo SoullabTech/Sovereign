@@ -36,7 +36,7 @@ describe('Ollama structured adapter', () => {
   it('preserves the pinned model, ordered roles, tools and token ceiling', () => {
     const params = toOllamaParams(req);
     expect(params.model).toBe('qwen3-coder:30b');
-    expect(params.stream).toBe(false);
+    expect(params.stream).toBe(true);
     expect(params.messages).toEqual([
       { role: 'system', content: 'SYSTEM' },
       { role: 'user', content: 'first' },
@@ -46,6 +46,32 @@ describe('Ollama structured adapter', () => {
     expect(params.options).toEqual({ num_predict: 8000, num_ctx: 131072 });
     expect(params.format).toEqual(req.tools![0]!.inputSchema);
     expect('tools' in params).toBe(false);
+  });
+
+  it('keeps ordinary structured calls non-streaming', () => {
+    const params = toOllamaParams({ ...req, execution: { completion: 'ordinary' } });
+    expect(params.stream).toBe(false);
+    expect(params.options).toEqual({ num_predict: 8000 });
+  });
+
+  it('merges streamed JSON-schema chunks into one neutral required-tool result', async () => {
+    const ndjson = [
+      JSON.stringify({ model: 'qwen3-coder:30b', message: { role: 'assistant', content: '{\"version\"' }, done: false }),
+      JSON.stringify({ model: 'qwen3-coder:30b', message: { role: 'assistant', content: ':\"v1\"}' }, done: false }),
+      JSON.stringify({ model: 'qwen3-coder:30b', message: { role: 'assistant', content: '' }, done: true, done_reason: 'stop', prompt_eval_count: 111, eval_count: 22 }),
+      '',
+    ].join('\n');
+    const fetchImpl = (async () => new Response(ndjson, {
+      status: 200,
+      headers: { 'content-type': 'application/x-ndjson' },
+    })) as typeof fetch;
+
+    const result = await ollamaStructuredProvider({ fetchImpl, timeoutMs: 2000 }).execute(req);
+    expect(result.content).toEqual([{
+      type: 'tool_use', id: 'ollama-required-tool', name: 'return_attention_map', input: { version: 'v1' },
+    }]);
+    expect(result.usage).toEqual({ inputTokens: 111, outputTokens: 22 });
+    expect(result.stopReason).toBe('end_turn');
   });
 
   it('returns Ollama tool calls as neutral tool_use blocks with exact provenance', async () => {

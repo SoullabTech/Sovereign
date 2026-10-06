@@ -88,7 +88,12 @@ export function toOllamaParams(req: StructuredRequest): Record<string, unknown> 
   if (req.execution?.completion === 'long-running') options.num_ctx = longContext;
   const params: Record<string, unknown> = {
     model: req.model,
-    stream: false,
+    /* Long-running is a semantic execution requirement, not a request for a
+       different answer. Ollama's non-streaming /api/chat path has a documented
+       history of hard 5-minute failures on long generations. Streaming is the
+       provider-specific transport that keeps the operation alive while we still
+       return one completed neutral StructuredResult to the caller. */
+    stream: req.execution?.completion === 'long-running',
     messages: [
       { role: 'system', content: req.system },
       ...req.messages.map((m) => ({ role: m.role, content: m.content })),
@@ -115,6 +120,37 @@ export function toOllamaParams(req: StructuredRequest): Record<string, unknown> 
     }));
   }
   return params;
+}
+
+async function readOllamaBody(
+  response: Response,
+  streaming: boolean,
+): Promise<OllamaChatResponse> {
+  if (!streaming) return await response.json() as OllamaChatResponse;
+
+  const text = await response.text();
+  const merged: OllamaChatResponse = { message: { content: '', tool_calls: [] } };
+  const toolCalls: unknown[] = [];
+  let content = '';
+
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const chunk = JSON.parse(trimmed) as OllamaChatResponse & { error?: unknown };
+    if (typeof chunk.error === 'string' && chunk.error) throw new Error(chunk.error);
+    if (typeof chunk.model === 'string') merged.model = chunk.model;
+    if (typeof chunk.message?.content === 'string') content += chunk.message.content;
+    if (Array.isArray(chunk.message?.tool_calls)) toolCalls.push(...chunk.message.tool_calls);
+    if (chunk.done_reason !== undefined) merged.done_reason = chunk.done_reason;
+    if (typeof chunk.prompt_eval_count === 'number') merged.prompt_eval_count = chunk.prompt_eval_count;
+    if (typeof chunk.eval_count === 'number') merged.eval_count = chunk.eval_count;
+  }
+
+  merged.message = {
+    content,
+    ...(toolCalls.length ? { tool_calls: toolCalls } : {}),
+  };
+  return merged;
 }
 
 function normalizeArguments(value: unknown): unknown {
@@ -224,7 +260,7 @@ export function ollamaStructuredProvider(
         }
         let body: OllamaChatResponse;
         try {
-          body = await response.json() as OllamaChatResponse;
+          body = await readOllamaBody(response, params.stream === true);
         } catch (err) {
           throw new StructuredDispatchError('response_observed', err);
         }

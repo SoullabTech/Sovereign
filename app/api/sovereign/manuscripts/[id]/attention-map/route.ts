@@ -103,8 +103,8 @@ export async function POST(
   }
   const readingIds = [...new Set(body.readingIds)];
   const deepLenses = DEVELOPMENTAL_LENSES.filter((lens) => lens !== 'overview');
-  if (readingIds.length !== 1 && readingIds.length !== deepLenses.length) {
-    return NextResponse.json({ error: 'overview_or_complete_eight_lens_set_required' }, { status: 409 });
+  if (readingIds.length < 1) {
+    return NextResponse.json({ error: 'reading_set_required' }, { status: 409 });
   }
 
   const current = await query<{ revision_number: number }>(
@@ -131,18 +131,18 @@ export async function POST(
   }
 
   const lenses = new Set(readings.map((r) => r.scope.commissionedLens));
-  const overviewMode = readings.length === 1 && readings[0]!.scope.commissionedLens === 'overview';
+  const overviewMode = readings.every((reading) => reading.scope.commissionedLens === 'overview');
   const deepMode = readings.length === deepLenses.length
     && deepLenses.every((lens) => lenses.has(lens));
   if (!overviewMode && !deepMode) {
-    return NextResponse.json({ error: 'overview_or_complete_eight_lens_set_required' }, { status: 409 });
+    return NextResponse.json({ error: 'overview_set_or_complete_eight_lens_set_required' }, { status: 409 });
   }
   if (readings.some((r) => r.readState.revisionNumber !== revisionNumber)) {
     return NextResponse.json({ error: 'current_revision_moved' }, { status: 409 });
   }
 
   const firstScope = JSON.stringify(readings[0]!.scope.bodyScope);
-  if (readings.some((r) => JSON.stringify(r.scope.bodyScope) !== firstScope)) {
+  if (deepMode && readings.some((r) => JSON.stringify(r.scope.bodyScope) !== firstScope)) {
     return NextResponse.json({ error: 'scope_mismatch' }, { status: 409 });
   }
   const sectionRows = await query<{ id: string }>(
@@ -156,6 +156,24 @@ export async function POST(
   const wholeScope = sectionRows.rows.map((row) => row.id);
   if (deepMode && JSON.stringify(readings[0]!.scope.bodyScope) !== JSON.stringify(wholeScope)) {
     return NextResponse.json({ error: 'whole_manuscript_scope_required' }, { status: 409 });
+  }
+  if (overviewMode && readings.length > 1) {
+    const currentIds = new Set(wholeScope);
+    const seen = new Set<string>();
+    for (const reading of readings) {
+      if (reading.scope.bodyScope.length === 0) {
+        return NextResponse.json({ error: 'overview_segment_empty' }, { status: 409 });
+      }
+      for (const sectionId of reading.scope.bodyScope) {
+        if (!currentIds.has(sectionId)) {
+          return NextResponse.json({ error: 'overview_segment_not_current' }, { status: 409 });
+        }
+        if (seen.has(sectionId)) {
+          return NextResponse.json({ error: 'overview_segments_overlap' }, { status: 409 });
+        }
+        seen.add(sectionId);
+      }
+    }
   }
 
   const observations: FrozenAttentionObservation[] = [];

@@ -78,6 +78,7 @@ describe('Writer Studio relational Develop guidance', () => {
   });
 
   it('continues from the first read into book-fit and chapter-movement questions', () => {
+    const attentionRoute = read('app/api/sovereign/manuscripts/[id]/attention-map/route.ts');
     expect(develop).toContain('How does this chapter fit the book?');
     expect(develop).toContain('Show me the chapter’s movement');
     expect(develop).toContain('data-chapter-book-fit');
@@ -86,6 +87,11 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(controller).toContain('Stay inside this chapter and describe its movement as an editor');
     expect(controller).toContain('What this chapter contributes to the whole book');
     expect(controller).toContain('strongest movement');
+    expect(controller).toContain('Book placement is a hierarchical read, not a 100k-token monolith.');
+    expect(controller).toContain('topLevelBookSegments(context.sections)');
+    expect(controller).toContain('chapter-scale Overview readings across the authored top-level movements');
+    expect(attentionRoute).toContain("readings.every((reading) => reading.scope.commissionedLens === 'overview')");
+    expect(attentionRoute).toContain("error: 'overview_segments_overlap'");
   });
 
   it('shows one chapter exploration at a time instead of stacking an editorial dashboard', () => {
@@ -143,7 +149,7 @@ describe('Writer Studio relational Develop guidance', () => {
   it('makes future saved readings writer-facing instead of taxonomy-facing', () => {
     expect(reader).toContain('Write as MAIA noticing something WITH a writer');
     expect(reader).toContain('The taxonomy belongs in metadata');
-    expect(reader).toContain("READER_VERSION = 'DEVELOPMENTAL-READER-10'");
+    expect(reader).toContain("READER_VERSION = 'DEVELOPMENTAL-READER-11'");
   });
 
   it('pins colors to Studio variables so night mode cannot fall back to native black', () => {

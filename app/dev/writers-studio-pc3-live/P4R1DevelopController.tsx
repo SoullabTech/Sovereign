@@ -97,6 +97,16 @@ function sectionLabel(section: RebuildSection | undefined, index = 0): string {
   return section?.heading?.trim() || `Section ${index + 1}`;
 }
 
+function topLevelBookSegments(sections: readonly RebuildSection[]): RebuildSection[][] {
+  const ordered = [...sections].sort((a, b) => a.position - b.position);
+  const roots = ordered.map((section, index) => ({ section, index }))
+    .filter(({ section }) => section.headingDepth === 1);
+  return roots.map(({ index }, rootIndex) => {
+    const end = roots[rootIndex + 1]?.index ?? ordered.length;
+    return ordered.slice(index, end);
+  }).filter((segment) => segment.length > 0);
+}
+
 const CHAPTER_SCORE_DIMENSIONS = ['Clarity', 'Coherence', 'Reader orientation', 'Voice', 'Momentum'] as const;
 function completeChapterScorecard(map: WholeManuscriptAttentionMap): boolean {
   const labels = new Set(map.items.map((item) => item.label));
@@ -1185,51 +1195,77 @@ export default function P4R1DevelopController() {
     setChapterBookFitBusy(true);
     setChapterBookFitError(null);
     try {
-      const wholeSectionIds = context.sections.map((section) => section.draftSectionId);
-      let wholeReadingId: string | null = null;
-      for (const summary of summaries.filter((candidate) => candidate.commissionedLens === 'overview')) {
-        const frozen = await fetchReading(context.manuscriptId, summary.id);
-        if (!frozen.ok) continue;
-        const reading = frozen.payload.reading;
-        if (reading.readState.revisionNumber !== context.draftRevision) continue;
-        if (
-          reading.scope.bodyScope.length !== wholeSectionIds.length
-          || !reading.scope.bodyScope.every((id, index) => id === wholeSectionIds[index])
-        ) continue;
-        wholeReadingId = reading.id;
-        break;
+      /*
+       * Book placement is a hierarchical read, not a 100k-token monolith.
+       * Reuse one current Overview per authored top-level segment (Preface,
+       * chapters, Conclusion), commissioning only the missing segments. The
+       * synthesis then sees the book as a sequence of chapter-scale readings.
+       * This is both more faithful to the case-study design and dramatically
+       * more workable on the sovereign local model.
+       */
+      const segments = topLevelBookSegments(context.sections);
+      if (segments.length < 2) {
+        setChapterBookFitError('MAIA could not establish the book’s major movements safely. Nothing changed.');
+        return;
       }
 
-      if (!wholeReadingId) {
-        const whole = await requestDevelopmentalReading(
-          context.manuscriptId,
-          'overview',
-          { kind: 'whole' },
-        );
-        if (!whole.ok) {
-          setChapterBookFitError(
-            whole.refusal === 'revision_not_current'
-              ? 'The book changed since its last reading snapshot. Save the current draft, then ask again.'
-              : 'MAIA could not read enough of the book to place this chapter confidently. Nothing in the manuscript changed.',
-          );
-          return;
+      const overviewSummaries = summaries.filter((candidate) => candidate.commissionedLens === 'overview');
+      const readingIds: string[] = [];
+      for (const segment of segments) {
+        const segmentIds = segment.map((section) => section.draftSectionId);
+        let readingId: string | null = null;
+
+        for (const summary of overviewSummaries) {
+          const frozen = await fetchReading(context.manuscriptId, summary.id);
+          if (!frozen.ok) continue;
+          const reading = frozen.payload.reading;
+          if (reading.readState.revisionNumber !== context.draftRevision) continue;
+          if (
+            reading.scope.bodyScope.length === segmentIds.length
+            && reading.scope.bodyScope.every((id, index) => id === segmentIds[index])
+          ) {
+            readingId = reading.id;
+            break;
+          }
         }
-        wholeReadingId = whole.readingId;
-        await loadSummaries();
+
+        if (!readingId) {
+          const first = segment[0]!;
+          const last = segment[segment.length - 1]!;
+          const commissioned = await requestDevelopmentalReading(
+            context.manuscriptId,
+            'overview',
+            segment.length === 1
+              ? { kind: 'section', sectionId: first.draftSectionId }
+              : { kind: 'range', fromSectionId: first.draftSectionId, toSectionId: last.draftSectionId },
+          );
+          if (!commissioned.ok) {
+            setChapterBookFitError(
+              commissioned.refusal === 'revision_not_current'
+                ? 'The book changed since its last reading snapshot. Save the current draft, then ask again.'
+                : 'MAIA could not complete the book-level chapter readings just now. Nothing in the manuscript changed.',
+            );
+            return;
+          }
+          readingId = commissioned.readingId;
+        }
+        readingIds.push(readingId);
       }
+      await loadSummaries();
 
       const out = await requestAttentionMap(
         context.manuscriptId,
-        [wholeReadingId],
+        readingIds,
         [
           'The writer has asked how the currently reviewed chapter fits into the whole book.',
+          'You are receiving current chapter-scale Overview readings across the authored top-level movements of the book. Treat them as one ordered book context; do not pretend you reread prose that is not present in the frozen observations.',
           'Respond as a perceptive book editor. Be concise, conversational, specific, and encouraging before naming friction.',
           'Use exactly four evidenced items, in this order:',
           'begin-here: What this chapter contributes to the whole book — name its distinctive job and what it makes possible.',
           'next: Why this placement works — identify the strongest evidence that the reader is prepared for it here.',
           'later: What the placement asks of the chapter — name any burden, repetition, missing bridge, or integration problem created by what comes before or after.',
           'watch: What I would protect or change first — one practical macro-level recommendation, not a rewrite.',
-          'Distinguish chapter evidence from whole-book evidence. Do not pretend a placement is wrong merely because another placement is imaginable.',
+          'Distinguish chapter evidence from book-context evidence. Do not pretend a placement is wrong merely because another placement is imaginable.',
         ].join('\n'),
         { itemCount: 4 },
       );

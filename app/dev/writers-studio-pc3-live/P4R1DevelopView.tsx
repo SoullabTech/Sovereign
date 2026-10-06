@@ -1540,7 +1540,7 @@ function ChapterLineagePanel({
   );
 }
 
-function ChapterReviewPanel({
+export function ChapterReviewPanel({
   map,
   busy,
   needsCheckpoint,
@@ -1608,6 +1608,12 @@ function ChapterReviewPanel({
   onMinimalPath: () => void;
 }) {
   const [activeExpansion, setActiveExpansion] = useState<'book-fit' | 'protect' | 'movement' | 'scorecard' | 'minimal-path' | null>(null);
+
+  useEffect(() => {
+    /* A new chapter reading is a new subject. Never leave a controller looking
+       selected because a previous chapter had that exploration open. */
+    setActiveExpansion(null);
+  }, [map?.manuscriptId, map?.revisionNumber, map?.commissionedAt]);
 
   const openBookFit = () => {
     if (activeExpansion === 'book-fit') {
