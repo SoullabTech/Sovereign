@@ -28,6 +28,26 @@
 > presence, importer count, live route — never by what a document says should be true. Update it
 > in the same commit as the work that changes it.
 
+## 2026-10-06 — R&D recovery / experience freeze
+
+Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness showed that several days of technically successful implementation had not produced an experience proportionate to the accepted Writer–MAIA R&D.
+
+- Programme: `docs/programme/JARVIS-WS-RD-RECOVERY-01_CHARTER_2026-10-06.md`
+- Trigger: implementation had become the easiest source of product intent; relational R&D was distributed across older programme docs, case-study evidence, and founder conversations.
+- Immediate ruling: **no broad Writer's Studio feature expansion until R7 founder adjudication of the recovered constitution + Chapter 10 golden journey.**
+- Allowed during freeze: crash/data-loss/security repair; defects blocking the recovery witness; R&D census/reconciliation; bounded golden-journey prototype after founder ratification.
+- Elemental Alchemy completion work is **paused as execution priority, not cancelled**. Valid substrate remains admissible evidence.
+- R1 R&D census: drafted.
+- R2 drift ledger: drafted.
+- R3 relational constitution candidate: drafted.
+- R4 state model + scenario matrix: drafted.
+- R5 Chapter 10 golden journey: drafted.
+- R6 experience-custody contract: drafted.
+- R7 adjudication packet: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R7_FOUNDER_ADJUDICATION_PACKET_2026-10-06.md`
+- Next act: **R7 founder adjudication.**
+
+This entry supersedes the 2026-10-05 lane only for current execution priority. It does not rewrite the case-study record or discard its valid implementation evidence.
+
 ## 2026-10-05 — Elemental Alchemy completion lane
 
 Founder opened JARVIS-WRITERS-STUDIO-EA-COMPLETION-01 as the live case-study-to-product completion lane.
