@@ -139,7 +139,7 @@ const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
  * carries caller-side wiring, and no unrelated file gains constitutional status
  * by having travelled in the same commit — this guard resolves five paths.
  */
-const GOVERNED_SEAM_BASELINE = '62fdad60cdaa69ea6384a02a704bc136af2e5732';
+const GOVERNED_SEAM_BASELINE = '186d1d900';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([

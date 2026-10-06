@@ -148,3 +148,65 @@ Develop → Chapter 10 → Read this chapter
 ```
 
 Pass condition: the existing evidence-bearing chapter reading synthesizes into a four-item Attention Map through Ollama and renders in Develop with `provider=ollama`, exact model agreement, no Anthropic authentication attempt, and no manuscript mutation.
+
+
+## Founder witness repair — multiple native tool calls
+
+The first real Chapter 10 local Attention Map witness reached Ollama successfully but still returned HTTP 502.
+
+Direct reproduction through the same production structured router established the exact cause:
+
+```text
+provider: ollama
+model: qwen3-coder:30b
+modelAgreement: agreed
+required tool name: return_attention_map
+tool calls returned: 4
+```
+
+Qwen/Ollama used the same required function four times, once per requested attention item. The neutral caller contract and the Attention Map route require one completed named-tool call containing the complete result.
+
+This was not treated as permission to merge four calls after the fact. That would invent a new response at the adapter boundary.
+
+### Repair
+
+Commit:
+
+`186d1d900 — fix(ai): enforce single local structured result`
+
+For an explicitly named required tool, the Ollama adapter now uses Ollama's JSON-schema `format` mechanism as the provider-specific enforcement mechanism:
+
+- the named tool's input schema is sent as `format`;
+- Ollama returns one schema-bound JSON object;
+- the adapter validates that object;
+- the adapter wraps that exact object as one neutral `tool_use` block for the named tool;
+- no synthetic merge of multiple tool calls occurs.
+
+Native Ollama tool calling remains available for `toolChoice: any`.
+
+For chapter-overview Attention Maps, the schema now also carries the UI's actual contract: exactly four items, not merely a prompt asking for four.
+
+### Real Chapter 10 reproduction after repair
+
+The same frozen Chapter 10 overview reading was synthesized through the production `runStructured` path with `qwen3-coder:30b`.
+
+Result:
+
+```text
+provider: ollama
+requested model: qwen3-coder:30b
+reported model: qwen3-coder:30b
+model agreement: agreed
+tool calls: 1
+items: 4
+bands: begin-here · next · later · watch
+scales: chapter · chapter · chapter · chapter
+buildAttentionMap: PASS
+validateAttentionMap: PASS
+```
+
+This directly reproduces the previously failing Attention Map operation without Anthropic authentication and without manuscript mutation.
+
+Active governed seam baseline after this repair:
+
+`186d1d900`
