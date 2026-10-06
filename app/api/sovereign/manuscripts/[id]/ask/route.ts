@@ -71,7 +71,7 @@ import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/
 import { confirmDisclosureCrossedWithClient } from '@/lib/disclosure/contextDisclosureReceipt';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { transaction } from '@/lib/db/postgres';
-import { workingStyleFrom, isExplanationDepth, type ExplanationDepth, type MaiaEngagement } from '@/lib/writersStudio/workingStyle';
+import { workingStyleFrom, isExplanationDepth, type ExplanationDepth, type MaiaEngagement, type WorkingPace } from '@/lib/writersStudio/workingStyle';
 import { randomUUID } from 'node:crypto';
 
 /** How long one authorization opportunity stays claimable. Continuity hygiene — ⛔ never authority. */
@@ -263,6 +263,7 @@ export async function POST(
   const workingStyle = workingStyleFrom(body.workingStyle);
   const responseStyle = isExplanationDepth(body.responseStyle) ? body.responseStyle : workingStyle.explanation;
   const engagement = workingStyle.engagement;
+  const pace = workingStyle.pace;
 
   const question = typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) return NextResponse.json({ refusal: 'malformed', detail: 'question' }, { status: 400 });
@@ -324,6 +325,7 @@ export async function POST(
       posture: TurnPosture.resolve(body),
       responseStyle,
       engagement,
+      pace,
     });
   }
 
@@ -395,7 +397,7 @@ export async function POST(
      ══════════════════════════════════════════════════════════════════════════ */
   if (check.anchor.on === 'work') {
     return workTurn({ manuscriptId: id, memberId, anchor: check.anchor, existing,
-                      question, sectionId: bodySectionId, responseStyle, engagement });
+                      question, sectionId: bodySectionId, responseStyle, engagement, pace });
   }
 
   if (!reading) {
@@ -495,7 +497,7 @@ export async function POST(
     /* The held turn is dropped from history because `question` carries it. */
     historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question),
     question,
-    { engagement, responseStyle },
+    { engagement, responseStyle, pace },
   );
 
   if (!outcome.ok) {
@@ -558,8 +560,9 @@ async function workTurn(input: {
   sectionId: string | null;
   responseStyle: ExplanationDepth;
   engagement: MaiaEngagement;
+  pace: WorkingPace;
 }): Promise<NextResponse> {
-  const { manuscriptId, memberId, anchor, existing, question, sectionId, responseStyle, engagement } = input;
+  const { manuscriptId, memberId, anchor, existing, question, sectionId, responseStyle, engagement, pace } = input;
 
   /* ⛔ NO FABRICATED BASELINE, the same law the structure lane holds: a thread
      that cannot establish its BEFORE does not open. */
@@ -619,7 +622,7 @@ async function workTurn(input: {
     { kind: 'work', anchor, facts: built.facts, staleness },
     historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question),
     question,
-    { engagement, responseStyle },
+    { engagement, responseStyle, pace },
   );
   if (!outcome.ok) {
     /* The question is already recorded. A failed answer is reported as a
@@ -671,10 +674,11 @@ async function developmentalTurn(input: {
   posture: TurnPosture;
   responseStyle?: ExplanationDepth;
   engagement: MaiaEngagement;
+  pace: WorkingPace;
 }) {
   const {
     manuscriptId, memberId, anchor, existing, question,
-    authorizes, pendingAskRef, requestId, posture, responseStyle, engagement,
+    authorizes, pendingAskRef, requestId, posture, responseStyle, engagement, pace,
   } = input;
 
   const reading = await loadFrozenDevelopmentalReading(manuscriptId, anchor.readingId, memberId);
@@ -770,7 +774,7 @@ async function developmentalTurn(input: {
   /* ── ACT 1 · no body required. The existing path, and it NEVER loads prose. */
   if (!bodyReq.required && !pendingAskRef) {
     return answerFrom(ctxWithoutBody, {
-      liveThreadId, memberId, staleness, history, question, crossed: [], responseStyle, engagement,
+      liveThreadId, memberId, staleness, history, question, crossed: [], responseStyle, engagement, pace,
     });
   }
 
@@ -915,7 +919,7 @@ async function developmentalTurn(input: {
   }
 
   return answerFrom(ctx, {
-    liveThreadId, memberId, staleness, history, question, crossed, pendingAskRef, responseStyle, engagement,
+    liveThreadId, memberId, staleness, history, question, crossed, pendingAskRef, responseStyle, engagement, pace,
   });
 }
 
@@ -965,11 +969,13 @@ async function answerFrom(
     crossed: readonly string[]; pendingAskRef?: string;
     responseStyle?: ExplanationDepth;
     engagement: MaiaEngagement;
+    pace: WorkingPace;
   },
 ) {
   const outcome = await askMaiaDevelopmental(ctx, o.history, o.question, {
     responseStyle: o.responseStyle,
     engagement: o.engagement,
+    pace: o.pace,
   });
 
   if (!outcome.ok) {

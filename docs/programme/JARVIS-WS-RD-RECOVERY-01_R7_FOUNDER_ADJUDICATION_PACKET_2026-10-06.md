@@ -176,3 +176,21 @@ to:
 `R8 Chapter 10 golden-slice implementation + founder witness`
 
 No other Writer's Studio feature lane becomes primary until the golden slice passes.
+
+## Founder adjudication — APPROVED · 2026-10-06
+
+Founder act:
+
+> **APPROVE R7 recovery packet as written. Proceed with the Chapter 10 golden-slice implementation and stop on any experience-custody failure.**
+
+Standing:
+
+- R7-A relational constitution C1–C15: **APPROVED**.
+- R7-B Witness / Guide / Collaborator as the current simple member-facing relational posture: **APPROVED**.
+- R7-C Silence as a valid relational outcome rather than an additional top-level mode: **APPROVED**.
+- R7-D intervention ladder as an internal executable ceiling, without adding another visible slider now: **APPROVED**.
+- R7-E five-axis model (R / I / S / P / E): **APPROVED**.
+- R7-F Chapter 10 G1–G11 golden vertical slice: **APPROVED**.
+- R7-G R6 Experience Custody anti-drift contract: **APPROVED**.
+
+This founder act opens **R8 Chapter 10 golden-slice implementation + founder witness** and authorizes no broader Writer's Studio propagation until the golden slice passes.

@@ -37,10 +37,13 @@ import { labelsFor, type AuthorFacingLabels } from './developmentalLabels';
 import { editorialDirective } from '@/lib/writersStudio/editorialDepth';
 import {
   RELATIONSHIP_FIRST_DIRECTIVE,
+  RELATIONAL_UPDATE_DIRECTIVE,
   engagementInstruction,
   explanationInstruction,
+  paceInstruction,
   type ExplanationDepth,
   type MaiaEngagement,
+  type WorkingPace,
 } from '@/lib/writersStudio/workingStyle';
 
 export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-02';
@@ -96,10 +99,13 @@ You may NOT claim that the observation still describes the Work, that you have c
 export function developmentalAskPromptHash(
   responseStyle?: ExplanationDepth,
   engagement?: MaiaEngagement,
+  pace?: WorkingPace,
 ): string {
   const style = [
     engagement ? engagementInstruction(engagement) : '',
+    pace ? paceInstruction(pace) : '',
     responseStyle ? explanationInstruction(responseStyle) : '',
+    RELATIONAL_UPDATE_DIRECTIVE,
   ].filter(Boolean).join('\n');
   return createHash('sha256').update(`${STANDING}\n${SUPERSEDED_STANDING}${style ? `\n${style}` : ''}`).digest('hex');
 }
@@ -201,6 +207,7 @@ export interface DevelopmentalAskOptions {
   maxTokens?: number;
   responseStyle?: ExplanationDepth;
   engagement?: MaiaEngagement;
+  pace?: WorkingPace;
 }
 
 /**
@@ -216,7 +223,7 @@ export async function askMaiaDevelopmental(
   opts: DevelopmentalAskOptions = {},
 ): Promise<DevelopmentalAskOutcome> {
   const model = opts.model ?? DEFAULT_MODEL;
-  const system = systemFor(ctx, opts.responseStyle, opts.engagement);
+  const system = systemFor(ctx, opts.responseStyle, opts.engagement, opts.pace);
 
   const messages: StructuredMessage[] = [
     ...history.map((t) => ({
@@ -241,7 +248,7 @@ export async function askMaiaDevelopmental(
       provenance: {
         provider: outcome.result.provenance.provider === 'ollama' ? 'ollama' : 'anthropic',
         model: outcome.result.provenance.model,
-        promptHash: developmentalAskPromptHash(opts.responseStyle, opts.engagement),
+        promptHash: developmentalAskPromptHash(opts.responseStyle, opts.engagement, opts.pace),
         askerVersion: DEVELOPMENTAL_ASKER_VERSION,
         answeredAt: new Date().toISOString(),
       },
@@ -264,15 +271,18 @@ function systemFor(
   ctx: DevelopmentalAskContext,
   responseStyle?: ExplanationDepth,
   engagement?: MaiaEngagement,
+  pace?: WorkingPace,
 ): string {
   const labels = labelsFor(ctx.readState);
   return [
     STANDING, '',
-    ...(engagement || responseStyle ? [
+    ...(engagement || responseStyle || pace ? [
       '--- HOW TO SPEAK WITH THIS WRITER ---',
       ...(engagement ? [engagementInstruction(engagement)] : []),
+      ...(pace ? [paceInstruction(pace)] : []),
       ...(responseStyle ? [explanationInstruction(responseStyle)] : []),
-      'Keep the substance, evidence, uncertainty, and limits exactly the same. Change only the relational and explanatory register.',
+      RELATIONAL_UPDATE_DIRECTIVE,
+      'Keep the substance, evidence, uncertainty, and limits exactly the same. Change only the relational, pacing, and explanatory register.',
       '',
     ] : []),
     '--- THE OBSERVATION THEY ARE ASKING ABOUT ---', observationSays(ctx), '',

@@ -29,10 +29,13 @@ import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation'
 import { constellationReferralPrompt } from '@/lib/constellation/referralPrompt';
 import {
   RELATIONSHIP_FIRST_DIRECTIVE,
+  RELATIONAL_UPDATE_DIRECTIVE,
   engagementInstruction,
   explanationInstruction,
+  paceInstruction,
   type ExplanationDepth,
   type MaiaEngagement,
+  type WorkingPace,
 } from '@/lib/writersStudio/workingStyle';
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 
@@ -72,10 +75,13 @@ ${WRITERS_CONSTELLATION_REFERRAL}`;
 export function askPromptHash(
   engagement?: MaiaEngagement,
   responseStyle?: ExplanationDepth,
+  pace?: WorkingPace,
 ): string {
   const style = [
     engagement ? engagementInstruction(engagement) : '',
+    pace ? paceInstruction(pace) : '',
     responseStyle ? explanationInstruction(responseStyle) : '',
+    RELATIONAL_UPDATE_DIRECTIVE,
   ].filter(Boolean).join('\n');
   return createHash('sha256').update(`${STANDING}${style ? `\n${style}` : ''}`).digest('hex');
 }
@@ -342,6 +348,7 @@ export interface AskOptions {
   maxTokens?: number;
   engagement?: MaiaEngagement;
   responseStyle?: ExplanationDepth;
+  pace?: WorkingPace;
 }
 
 /**
@@ -359,7 +366,9 @@ export async function askMaia(
   const model = opts.model ?? DEFAULT_MODEL;
   const relationalStyle = [
     opts.engagement ? engagementInstruction(opts.engagement) : '',
+    opts.pace ? paceInstruction(opts.pace) : '',
     opts.responseStyle ? explanationInstruction(opts.responseStyle) : '',
+    RELATIONAL_UPDATE_DIRECTIVE,
   ].filter(Boolean).join('\n');
 
   /* ⭐⭐ THE HEADINGS FOLLOW THE KIND, and that is not cosmetic. Rendering a
@@ -418,7 +427,7 @@ export async function askMaia(
       provenance: {
         provider: outcome.result.provenance.provider === 'ollama' ? 'ollama' : 'anthropic',
         model: outcome.result.provenance.model,
-        promptHash: askPromptHash(opts.engagement, opts.responseStyle),
+        promptHash: askPromptHash(opts.engagement, opts.responseStyle, opts.pace),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
       },

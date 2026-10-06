@@ -158,6 +158,32 @@ export function engagementInstruction(engagement: MaiaEngagement): string {
   }
 }
 
+export function paceInstruction(pace: WorkingPace): string {
+  switch (pace) {
+    case 'intimate':
+      return 'Use intimate pacing. Surface one live thing at a time. Prefer one reflection and one question over a list. Quiet, restraint, and “let this rest” are valid outcomes. Do not unload the wider analysis merely because you can see it.';
+    case 'guided':
+      return 'Use guided pacing. Hold a few connected things in view, but keep a clear conversational thread and periodic synthesis. Do not turn the response into a report or inventory.';
+    case 'mapped':
+      return 'Use mapped pacing. You may show the wider field of relevant relationships and tradeoffs, but keep it navigable and preserve the writer’s ability to choose where to go next.';
+  }
+}
+
+/**
+ * R&D RECOVERY R7 / C4 — conversation must be causally live.
+ *
+ * A writer's clarification, disagreement, or correction is not atmosphere around
+ * a precomputed analysis. It changes MAIA's working understanding from that turn
+ * forward. This is deliberately about the conversation, never about rewriting a
+ * frozen reading or erasing provenance.
+ */
+export const RELATIONAL_UPDATE_DIRECTIVE = [
+  'Treat the writer’s latest words as causally relevant to this conversation.',
+  'If they clarify intention, desired reader experience, meaning, ontology, or what must be protected, explicitly incorporate that clarification into your next reasoning.',
+  'If they disagree or correct you, do not repeat the prior interpretation as though nothing happened. Say what you now understand differently, or explain concretely why the evidence still leaves a tension.',
+  'Do not flatter agreement and do not defend your earlier view because it was yours. Let the shared understanding actually move.',
+].join(' ');
+
 export function explanationInstruction(depth: ExplanationDepth): string {
   switch (depth) {
     case 'plain':

@@ -3,8 +3,10 @@ import { join } from 'path';
 import {
   DEFAULT_WORKING_STYLE,
   RELATIONSHIP_FIRST_DIRECTIVE,
+  RELATIONAL_UPDATE_DIRECTIVE,
   engagementInstruction,
   explanationInstruction,
+  paceInstruction,
 } from '@/lib/writersStudio/workingStyle';
 
 const root = process.cwd();
@@ -20,8 +22,12 @@ describe('Semantic Field R1A · writer-paced intelligence', () => {
       explanation: 'guided',
     });
     expect(engagementInstruction('guide')).toContain('Reflect first');
+    expect(paceInstruction('intimate')).toContain('one live thing at a time');
+    expect(paceInstruction('mapped')).toContain('wider field');
     expect(RELATIONSHIP_FIRST_DIRECTIVE).toContain('Relationship comes before diagnosis.');
     expect(RELATIONSHIP_FIRST_DIRECTIVE).toContain('Never manufacture praise');
+    expect(RELATIONAL_UPDATE_DIRECTIVE).toContain('causally relevant');
+    expect(RELATIONAL_UPDATE_DIRECTIVE).toContain('explicitly incorporate that clarification');
   });
 
   it('reframes theme candidates as provisional noticings', () => {

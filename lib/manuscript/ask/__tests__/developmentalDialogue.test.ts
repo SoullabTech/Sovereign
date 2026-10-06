@@ -427,4 +427,30 @@ describe('Writer explanation register', () => {
     expect(plain).toContain('Keep the substance, evidence, uncertainty, and limits exactly the same.');
     expect(expert).toContain('Keep the substance, evidence, uncertainty, and limits exactly the same.');
   });
+
+  it('makes Witness, Guide and Collaborator materially different without changing the evidence', () => {
+    const witness = __systemForTest(ctx, 'guided', 'witness', 'intimate');
+    const guide = __systemForTest(ctx, 'guided', 'guide', 'intimate');
+    const collaborator = __systemForTest(ctx, 'guided', 'collaborator', 'intimate');
+    expect(witness).toContain('Take a witnessing posture.');
+    expect(witness).toContain('Do not rush to direction, advice, or proposals');
+    expect(guide).toContain('Take a guiding posture.');
+    expect(guide).toContain('one manageable next step');
+    expect(collaborator).toContain('Take an active collaborative posture.');
+    expect(collaborator).toContain('concrete directions the writer may want to test');
+    for (const prompt of [witness, guide, collaborator]) {
+      expect(prompt).toContain('A lantern is introduced in the first movement and returns in the fourth.');
+    }
+  });
+
+  it('makes pace alter disclosure while preserving the observation and requires writer clarification to affect the next turn', () => {
+    const intimate = __systemForTest(ctx, 'plain', 'guide', 'intimate');
+    const mapped = __systemForTest(ctx, 'plain', 'guide', 'mapped');
+    expect(intimate).toContain('Surface one live thing at a time.');
+    expect(mapped).toContain('show the wider field');
+    expect(intimate).toContain('A lantern is introduced in the first movement and returns in the fourth.');
+    expect(mapped).toContain('A lantern is introduced in the first movement and returns in the fourth.');
+    expect(intimate).toContain('Treat the writer’s latest words as causally relevant');
+    expect(intimate).toContain('explicitly incorporate that clarification into your next reasoning');
+  });
 });

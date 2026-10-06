@@ -44,7 +44,11 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R5 Chapter 10 golden journey: drafted.
 - R6 experience-custody contract: drafted.
 - R7 adjudication packet: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R7_FOUNDER_ADJUDICATION_PACKET_2026-10-06.md`
-- Next act: **R7 founder adjudication.**
+- R7 founder adjudication: **APPROVED 2026-10-06** — full packet as written.
+- Current act: **R8 Chapter 10 golden-slice implementation + founder witness.**
+- R8A relational turn custody: **IMPLEMENTED CANDIDATE** — Witness/Guide/Collaborator + Intimate/Guided/Mapped + Plain→Expert now govern the next live conversational turn; causal writer-clarification directive wired. Founder live witness still required.
+- R8A record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8A_RELATIONAL_TURN_CUSTODY_2026-10-06.md`
+- Stop rule: stop immediately on any R6 experience-custody failure; no broader Studio propagation before founder PASS.
 
 This entry supersedes the 2026-10-05 lane only for current execution priority. It does not rewrite the case-study record or discard its valid implementation evidence.
 
