@@ -28,6 +28,20 @@
 > presence, importer count, live route — never by what a document says should be true. Update it
 > in the same commit as the work that changes it.
 
+## 2026-10-05 — Elemental Alchemy completion lane
+
+Founder opened JARVIS-WRITERS-STUDIO-EA-COMPLETION-01 as the live case-study-to-product completion lane.
+
+- Bound opening canonical: f05a2e689331e06c35b490eea0a48b607a694a67
+- Case: KELLY-NEZAT-EA-KDP-REFINEMENT-01
+- Programme: docs/programme/JARVIS-WRITERS-STUDIO-EA-COMPLETION-01.md
+- Acts 1–2: census complete.
+- Act 3: completion contract admitted by founder authorization.
+- Next act: 4A — Decision + Protection Ledger substrate census and smallest vertical slice.
+- Production deployment is not authorized by this lane opening.
+
+This entry supersedes stale “current unit” language below only for present execution priority; historical stage records remain evidence and are not rewritten.
+
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
