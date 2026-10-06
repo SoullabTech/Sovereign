@@ -1,4 +1,4 @@
-import { typesetManuscriptBody, typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
+import { editableManuscriptProjection, typesetManuscriptBody, typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 
 const words = (s: string) => s.replace(/\s+/g, ' ').trim();
 
@@ -149,6 +149,43 @@ describe('Elemental Alchemy imported-page reconstruction', () => {
   });
 });
 
+
+describe('Edit View imported-manuscript projection', () => {
+  it('restores paragraph breathing room and removes a print folio without changing prose words', () => {
+    const body = [
+      'We are elemental beings. Spirit, emotion, body, mind, relationship, and consciousness continually',
+      'shape and inform one another. Our strengths can support us when we find ourselves out of our element.',
+      'The Spiralogic Process offers a structured yet flexible way of noticing these movements and bringing',
+      'them into relationship. In one sense, it is a knowledge management system for the soul.',
+      '',
+      '185',
+      '',
+      'Yet even this description remains only a map. The deeper invitation is simpler: we are nature. We burn,',
+      'flow, root, breathe, enter relationship, return to stillness, and begin again.',
+    ].join('\n');
+
+    const projection = editableManuscriptProjection(body);
+    expect(projection.projected).toBe(true);
+    expect(projection.text).not.toContain('\n185\n');
+    expect(projection.text).toContain('our element.\n\nThe Spiralogic Process');
+    expect(projection.text).toContain('for the soul.\n\nYet even this description');
+    expect(words(projection.text)).toBe(words(body.replace(/\n185\n/, '\n')));
+  });
+
+  it('leaves already-authored clean paragraphs alone', () => {
+    const body = [
+      'A complete paragraph already exists on one authored line and ends exactly where the writer put it.',
+      '',
+      'A second complete paragraph is already separated by an intentional blank line.',
+    ].join('\n');
+    expect(editableManuscriptProjection(body)).toEqual({ text: body, projected: false });
+  });
+
+  it('does not reflow short-line material such as verse', () => {
+    const body = ['Burn slowly', 'Flow home', 'Root here', 'Breathe again'].join('\n');
+    expect(editableManuscriptProjection(body)).toEqual({ text: body, projected: false });
+  });
+});
 
 describe('Prose View page-boundary recovery', () => {
   it('collapses a printed folio that interrupts one paragraph', () => {

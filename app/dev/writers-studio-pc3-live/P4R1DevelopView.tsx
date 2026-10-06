@@ -1683,7 +1683,7 @@ function ChapterReviewPanel({
             className="p4r1-chapter-review-primary"
             onClick={() => onEdit(start.id, start.sectionIds[0]!, 'chapter-review')}
           >
-            Show me an edited version
+            Try a revision
           </button>
         ) : (
           <button type="button" className="p4r1-chapter-review-primary" onClick={onWrite}>Work on the writing</button>

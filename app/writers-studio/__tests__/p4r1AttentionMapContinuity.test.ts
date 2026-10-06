@@ -16,9 +16,12 @@ const writeView = fs.readFileSync(
 );
 
 describe('C11R2 Attention Map continuity', () => {
-  it('carries the exact attention item into both manuscript and Focus descents', () => {
+  it('carries the attention item into exact Focus or writer-chosen revision passage descents', () => {
     expect(controller).toContain("query.set('attentionItem', itemId)");
     expect(controller).toContain("query.set('insightAction', 'focus')");
+    expect(controller).toContain("query.set('insightAction', 'choose-revision-passage')");
+    expect(writeController).toContain("attentionReturnRequiresSelection={incomingAction === 'choose-revision-passage'}");
+    expect(writeView).toContain('this observation names the section, not one exact passage');
   });
 
   it('preserves the attention item when returning to Develop and drops it elsewhere', () => {

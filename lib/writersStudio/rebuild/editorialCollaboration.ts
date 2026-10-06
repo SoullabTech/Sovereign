@@ -390,3 +390,84 @@ export function locateUniquePassage(
   const start = [...body.slice(0, unitIndex)].length;
   return { start, end: start + [...expected].length };
 }
+
+const PRINT_FOLIO_LINE = /^\d{1,4}$/;
+
+function comparablePoints(text: string): string[] {
+  const out: string[] = [];
+  let pendingSpace = false;
+  for (const point of Array.from(text.trim())) {
+    if (/\s/u.test(point)) {
+      pendingSpace = true;
+      continue;
+    }
+    if (pendingSpace && out.length > 0) out.push(' ');
+    out.push(point);
+    pendingSpace = false;
+  }
+  return out;
+}
+
+function bodyComparable(body: string): { points: string[]; rawOffsets: number[] } {
+  const points: string[] = [];
+  const rawOffsets: number[] = [];
+  const lines = body.replace(/\r\n?/g, '\n').split('\n');
+  let rawOffset = 0;
+  let pendingSpace = false;
+
+  for (const line of lines) {
+    const linePoints = Array.from(line);
+    if (!PRINT_FOLIO_LINE.test(line.trim())) {
+      for (let i = 0; i < linePoints.length; i += 1) {
+        const point = linePoints[i]!;
+        if (/\s/u.test(point)) {
+          pendingSpace = true;
+          continue;
+        }
+        if (pendingSpace && points.length > 0) {
+          points.push(' ');
+          rawOffsets.push(rawOffset + i);
+        }
+        points.push(point);
+        rawOffsets.push(rawOffset + i);
+        pendingSpace = false;
+      }
+      pendingSpace = true; // a source line break is semantic whitespace
+    }
+    rawOffset += linePoints.length + 1; // + source newline
+  }
+  return { points, rawOffsets };
+}
+
+/**
+ * Locate text selected from the semantic Edit projection back in the canonical
+ * section body. It collapses extraction whitespace and skips standalone print
+ * folios in the comparison space, but still requires ONE unique match and
+ * returns canonical code-point coordinates. No fuzzy wording match is allowed.
+ */
+export function locateUniquePresentationPassage(
+  body: string,
+  expected: string,
+): { start: number; end: number } | null {
+  /* Uniqueness is judged in the same whitespace/folio-collapsed space the
+     writer is looking at. An exact raw occurrence is not enough when another
+     visually identical occurrence exists only because one is soft-wrapped. */
+  const needle = comparablePoints(expected);
+  if (needle.length === 0) return null;
+  const comparable = bodyComparable(body);
+  const hits: number[] = [];
+  for (let start = 0; start <= comparable.points.length - needle.length; start += 1) {
+    let match = true;
+    for (let j = 0; j < needle.length; j += 1) {
+      if (comparable.points[start + j] !== needle[j]) { match = false; break; }
+    }
+    if (match) hits.push(start);
+    if (hits.length > 1) return null;
+  }
+  if (hits.length !== 1) return null;
+  const startIndex = hits[0]!;
+  const rawStart = comparable.rawOffsets[startIndex];
+  const rawEndPoint = comparable.rawOffsets[startIndex + needle.length - 1];
+  if (rawStart === undefined || rawEndPoint === undefined) return null;
+  return { start: rawStart, end: rawEndPoint + 1 };
+}

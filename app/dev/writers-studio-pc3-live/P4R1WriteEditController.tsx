@@ -1077,6 +1077,17 @@ export default function FlagshipWriteEditController() {
 
     const section = context.sections.find((candidate) => candidate.draftSectionId === passage.sectionId);
     if (!section) return;
+
+    /* A section-level Attention Map observation is truthful orientation, not an
+       exact revision locus. Bring the writer to the evidenced section and wait
+       for their own passage selection before opening Focus or asking MAIA for a
+       proposal. */
+    if (incomingAction === 'choose-revision-passage') {
+      setSelectedPassage(null);
+      setWorkspaceOpen(false);
+      return;
+    }
+
     const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
     const exact = Array.from(passage.body).slice(range.start, range.end).join('');
 
@@ -1137,7 +1148,36 @@ export default function FlagshipWriteEditController() {
 
   useEffect(() => {
     if (
-      incomingAction !== 'try-revision'
+      incomingAction !== 'choose-revision-passage'
+      || !arrivalInsight
+      || !selectedPassage
+      || workspaceOpen
+    ) return;
+    if (requestedSection && selectedPassage.draftSectionId !== requestedSection) return;
+
+    const key = [
+      'chosen-revision-passage',
+      arrivalInsight.readingId,
+      arrivalInsight.observation.key,
+      selectedPassage.draftSectionId,
+      selectedPassage.start,
+      selectedPassage.end,
+    ].join(':');
+    if (focusInsightConsumed.current === key) return;
+    focusInsightConsumed.current = key;
+    openWorkspace({ readingId: arrivalInsight.readingId, key: arrivalInsight.observation.key });
+  }, [
+    incomingAction,
+    arrivalInsight,
+    selectedPassage,
+    workspaceOpen,
+    requestedSection,
+    openWorkspace,
+  ]);
+
+  useEffect(() => {
+    if (
+      (incomingAction !== 'try-revision' && incomingAction !== 'choose-revision-passage')
       || !arrivalInsight
       || !workspaceOpen
       || !selectedPassage
@@ -1151,23 +1191,27 @@ export default function FlagshipWriteEditController() {
       || selectedPassage.draftSectionId !== focusId
     ) return;
 
-    const passage = arrivalInsight.passages.find((candidate) =>
-      candidate.sectionId === focusId
-      && candidate.verified
-      && candidate.editable
-      && candidate.range,
-    );
-    if (!passage?.range) return;
-    const exact = Array.from(passage.body).slice(passage.range.start, passage.range.end).join('');
-    if (exact !== selectedPassage.text) return;
+    if (incomingAction === 'try-revision') {
+      const passage = arrivalInsight.passages.find((candidate) =>
+        candidate.sectionId === focusId
+        && candidate.verified
+        && candidate.editable
+        && candidate.range,
+      );
+      if (!passage?.range) return;
+      const exact = Array.from(passage.body).slice(passage.range.start, passage.range.end).join('');
+      if (exact !== selectedPassage.text) return;
+    }
 
+    /* For a section-level observation, the writer's manual selection is the
+       exact locus. The model did not choose it; the writer did. */
     const key = [
       arrivalInsight.readingId,
       arrivalInsight.observation.key,
       focusId,
-      passage.range.start,
-      passage.range.end,
-      exact,
+      selectedPassage.start,
+      selectedPassage.end,
+      selectedPassage.text,
     ].join(':');
     if (autoProposalKey.current === key) return;
     autoProposalKey.current = key;
@@ -1287,6 +1331,7 @@ export default function FlagshipWriteEditController() {
             carriedInsight={arrivalInsight}
             carriedInsightReturnMode={carriedInsightReturnMode}
             attentionReturnItemId={attentionReturnItemId}
+            attentionReturnRequiresSelection={incomingAction === 'choose-revision-passage'}
             lineageReturnChapterId={lineageReturnChapterId}
             lineageReturnCandidateId={lineageReturnCandidateId}
             workspaceInsight={workspaceInsight}

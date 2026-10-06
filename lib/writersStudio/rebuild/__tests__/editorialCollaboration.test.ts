@@ -9,6 +9,7 @@ import {
   changedSpan,
   exactVersion,
   readBoundEditorialThread,
+  locateUniquePresentationPassage,
   returnLocusText,
   sendBoundEditorialTurn,
   threadMatchesVisibleSection,
@@ -80,6 +81,30 @@ describe('revision collaboration binding', () => {
       .toBe('original wording');
     expect(returnLocusText({ ...applied, application: { ...applied.application!, versionId: 'missing' } }))
       .toBe('original wording');
+  });
+
+  it('maps a selection from semantic Edit view back across PDF soft wraps', () => {
+    const body = 'The Spiralogic Process offers a structured yet flexible way of noticing these\nmovements and bringing them into relationship.';
+    const picked = 'The Spiralogic Process offers a structured yet flexible way of noticing these movements';
+    const located = locateUniquePresentationPassage(body, picked);
+    expect(located).not.toBeNull();
+    const raw = Array.from(body).slice(located!.start, located!.end).join('');
+    expect(raw).toBe('The Spiralogic Process offers a structured yet flexible way of noticing these\nmovements');
+  });
+
+  it('maps a selection across a hidden print folio without treating the folio as prose', () => {
+    const body = 'within what\n\n185\n\nlarger field our experience can enter relationship.';
+    const picked = 'within what larger field our experience can enter relationship.';
+    const located = locateUniquePresentationPassage(body, picked);
+    expect(located).not.toBeNull();
+    const raw = Array.from(body).slice(located!.start, located!.end).join('');
+    expect(raw).toContain('185');
+    expect(raw).toContain('larger field');
+  });
+
+  it('refuses a normalized selection when it is not unique', () => {
+    const body = 'one\nphrase\n\n185\n\none phrase';
+    expect(locateUniquePresentationPassage(body, 'one phrase')).toBeNull();
   });
 
   it('marks only the changed middle when prefix and suffix are shared', () => {

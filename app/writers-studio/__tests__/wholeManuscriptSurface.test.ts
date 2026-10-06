@@ -43,13 +43,25 @@ describe('capture precedes the window state change', () => {
   it('reads the LIVE editor value, never component state', () => {
     /* State may already have moved on; the node still holds what the writer
        can see. */
-    expect(SRC).toMatch(/writing\.captureForUnmount\(section\.id, field\.value\)/);
+    expect(SRC).toContain('writing.captureForUnmount(section.id, captureValue(section.id, field))');
+    expect(SRC).toContain('presentationDirty.current.has(sectionId)');
+    expect(SRC).toContain('rawBodies.current.get(sectionId) ?? field.value');
   });
 
   it('does not satisfy the invariant with an unmount cleanup', () => {
     /* A cleanup runs when React has already decided. There must be no
        useEffect whose return captures. */
     expect(SRC).not.toMatch(/return \(\) => \{[\s\S]{0,200}captureForUnmount/);
+  });
+});
+
+describe('semantic Edit projection never mutates by merely being viewed', () => {
+  it('renders the projection but captures raw source until the writer types', () => {
+    expect(SRC).toContain('editableManuscriptProjection(body)');
+    expect(SRC).toContain("data-manuscript-edit-projection={editProjection?.projected ? 'semantic' : 'verbatim'}");
+    expect(SRC).toContain('rawBodies.current.set(section.id, body)');
+    expect(SRC).toContain('presentationDirty.current.add(section.id)');
+    expect(SRC).toContain('presentationDirty.current.has(sectionId)');
   });
 });
 
@@ -114,9 +126,9 @@ describe('the third way an editor can disappear: the surface itself leaves', () 
     /* Eviction and blur are handled inside. Switching back to Section view
        unmounts all of them at once, and there is no scroll or blur to catch
        it — so the parent needs something to call, by name, before it goes. */
-    const cap = block(SRC, 'const captureMountedBeforeLeave =', '}, [writing]);');
+    const cap = block(SRC, 'const captureMountedBeforeLeave =', '}, [captureValue, writing]);');
     expect(cap).toContain('for (const [sectionId, field] of fields.current)');
-    expect(cap).toContain('writing.captureForUnmount(sectionId, field.value)');
+    expect(cap).toContain('writing.captureForUnmount(sectionId, captureValue(sectionId, field))');
     expect(SRC).toContain('useImperativeHandle(handleRef, () => ({ captureMountedBeforeLeave })');
   });
 

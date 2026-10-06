@@ -188,6 +188,56 @@ export function typesetParagraphs(body: string): string[] {
   return typesetManuscriptBody(body).map((block) => block.text);
 }
 
+function looksLikeImportedHardWrap(body: string): boolean {
+  const normalized = body.replace(/\r\n?/g, '\n');
+  const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
+  if (lines.some((line) => FOLIO.test(line))) return true;
+
+  const prose = lines.filter((line) =>
+    !ROMAN_SUBHEAD.test(line)
+    && !NUMBERED_SUBHEAD.test(line)
+    && !ALL_CAPS_SUBHEAD.test(line)
+    && !LIST_LINE.test(line)
+  );
+  if (prose.length < 4) return false;
+  const typical = median(prose.map((line) => line.length));
+  const sentenceEnded = prose.filter((line) => SENTENCE_END.test(line)).length;
+  return typical >= 45 && sentenceEnded / prose.length < 0.6;
+}
+
+function reflowBlockForEditing(block: WriteBlock): string {
+  if (block.kind === 'list') {
+    return block.text.split('\n').map((line) => line.trim()).filter(Boolean).join('\n');
+  }
+  return block.text.split('\n').map((line) => line.trim()).filter(Boolean).join(' ');
+}
+
+export interface EditableManuscriptProjection {
+  text: string;
+  projected: boolean;
+}
+
+/**
+ * Editing projection for imported print/PDF prose.
+ *
+ * This is presentation-only UNTIL the writer types. It removes extraction-only
+ * folios, collapses soft line-wraps, and restores paragraph breathing room so
+ * Edit does not become a wall of PDF lines. A clean authored section is returned
+ * byte-for-byte (apart from CRLF normalization) and poetry/short-line material
+ * is deliberately left alone.
+ */
+export function editableManuscriptProjection(body: string): EditableManuscriptProjection {
+  const normalized = body.replace(/\r\n?/g, '\n');
+  if (!looksLikeImportedHardWrap(normalized)) return { text: normalized, projected: false };
+
+  const blocks = typesetProseBlocks(normalized);
+  const text = blocks
+    .map(reflowBlockForEditing)
+    .filter(Boolean)
+    .join('\n\n');
+  return { text, projected: text !== normalized };
+}
+
 
 /**
  * Reader-facing projection of manuscript blocks.

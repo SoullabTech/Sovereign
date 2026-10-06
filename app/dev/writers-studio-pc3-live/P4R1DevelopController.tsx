@@ -1528,16 +1528,17 @@ export default function P4R1DevelopController() {
             query.set('attentionItem', itemId);
             query.set('insightReading', evidence.readingId);
             query.set('insightObservation', evidence.observationKey);
-            query.delete('insightAction');
+            if (source === 'chapter-review') query.set('insightAction', 'choose-revision-passage');
+            else query.delete('insightAction');
           });
           return;
         }
       }
     }
 
-    /* An action labelled "Show me an edited version" may not silently degrade
-       into a generic section handoff. Without one exact editable passage there
-       is no lawful automatic revision target. */
+    /* A revision request may not silently invent a passage. When the frozen
+       observation names only a section we hand passage choice to the writer;
+       if even that section cannot be established, the revision stops here. */
     if (source === 'chapter-review') {
       setChapterReviewError(
         'This observation does not identify one exact editable passage yet. Choose the wording you want to revise, or open the passage in Write first.',

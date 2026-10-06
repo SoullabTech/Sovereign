@@ -50,6 +50,7 @@ import {
 import { BOUNDARY_NOTE, isBoundaryGesture } from '@/lib/writersStudio/sectionBoundary';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
+import { editableManuscriptProjection } from '../full-redesign/manuscriptTypesetting';
 
 /** Sections kept alive beyond each edge of the viewport. */
 const OVERSCAN = 3;
@@ -142,6 +143,17 @@ export const WholeManuscriptSurface = forwardRef<
   /* Live editor values, by section id. Read at capture time so the text is the
      text on screen — never state, which may already have moved on. */
   const fields = useRef(new Map<string, HTMLTextAreaElement>());
+  /* Imported PDF prose may have a cleaner presentation value than its stored
+     extraction text. Keep the authoritative raw body beside the field so
+     merely scrolling or blurring can never persist a presentation projection.
+     The projected text becomes manuscript text only after the writer actually
+     types in that section. */
+  const rawBodies = useRef(new Map<string, string>());
+  const presentationDirty = useRef(new Set<string>());
+  const captureValue = useCallback((sectionId: string, field: HTMLTextAreaElement): string =>
+    presentationDirty.current.has(sectionId)
+      ? field.value
+      : (rawBodies.current.get(sectionId) ?? field.value), []);
   /**
    * ⭐ A SHELL FOR EVERY SECTION, MOUNTED OR NOT. Only the EDITOR is
    * virtualized; the shell that holds its place always exists.
@@ -201,8 +213,9 @@ export const WholeManuscriptSurface = forwardRef<
       const section = sections[i];
       if (!section) continue;
       const field = fields.current.get(section.id);
-      /* The live value, from the node that still exists. */
-      if (field) writing.captureForUnmount(section.id, field.value);
+      /* The live value, from the node that still exists. A presentation-only
+         PDF projection is never captured unless the writer actually typed. */
+      if (field) writing.captureForUnmount(section.id, captureValue(section.id, field));
       /* Then its height, while the editor is still laid out. Measured after the
          capture, because the capture is the part that matters and must not be
          behind anything that could throw. */
@@ -212,7 +225,7 @@ export const WholeManuscriptSurface = forwardRef<
     }
     if (nextFocus !== undefined) setFocusedIndex(nextFocus);
     setVisible(next);
-  }, [focusedIndex, mounted, sections, windowInput, writing]);
+  }, [captureValue, focusedIndex, mounted, sections, windowInput, writing]);
 
   /* Which sections the viewport covers. Observed rather than computed from
      heights: sections differ in length, and guessing their geometry is how a
@@ -295,9 +308,9 @@ export const WholeManuscriptSurface = forwardRef<
      parent can call before it takes this surface away. */
   const captureMountedBeforeLeave = useCallback(() => {
     for (const [sectionId, field] of fields.current) {
-      writing.captureForUnmount(sectionId, field.value);
+      writing.captureForUnmount(sectionId, captureValue(sectionId, field));
     }
-  }, [writing]);
+  }, [captureValue, writing]);
 
   useImperativeHandle(handleRef, () => ({ captureMountedBeforeLeave }), [captureMountedBeforeLeave]);
 
@@ -338,6 +351,11 @@ export const WholeManuscriptSurface = forwardRef<
       {sections.map((section, i) => {
         const isMounted = mounted.has(i);
         const body = isMounted ? writing.bodyOf(section.id) : '';
+        if (isMounted) rawBodies.current.set(section.id, body);
+        const editProjection = isMounted && section.editable
+          ? editableManuscriptProjection(body)
+          : null;
+        const editorBody = editProjection?.text ?? body;
         return (
           <div
             key={section.id}
@@ -385,8 +403,12 @@ export const WholeManuscriptSurface = forwardRef<
             {!isMounted ? null : section.editable ? (
               <textarea
                 ref={(n) => { if (n) fields.current.set(section.id, n); }}
-                value={body}
-                onChange={(e) => writing.editSection(section.id, e.target.value)}
+                value={editorBody}
+                data-manuscript-edit-projection={editProjection?.projected ? 'semantic' : 'verbatim'}
+                onChange={(e) => {
+                  presentationDirty.current.add(section.id);
+                  writing.editSection(section.id, e.target.value);
+                }}
                 onKeyDown={onKeyDown}
                 onFocus={() => setFocusedIndex(i)}
                 onBlur={() => {
@@ -394,12 +416,12 @@ export const WholeManuscriptSurface = forwardRef<
                      here, and a section that loses focus far from the viewport
                      becomes evictable on the very next scroll. */
                   const field = fields.current.get(section.id);
-                  if (field) writing.captureForUnmount(section.id, field.value);
+                  if (field) writing.captureForUnmount(section.id, captureValue(section.id, field));
                   setFocusedIndex((cur) => (cur === i ? null : cur));
                 }}
                 spellCheck
                 aria-label={section.heading ?? `Section ${section.position + 1}`}
-                rows={Math.max(3, Math.ceil(body.length / 70))}
+                rows={Math.max(3, Math.ceil(editorBody.length / 70) + editorBody.split('\n\n').length - 1)}
                 style={{
                   width: '100%', resize: 'none', border: 'none', outline: 'none',
                   background: 'transparent', font: 'inherit', lineHeight: 1.7,

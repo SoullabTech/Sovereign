@@ -25,7 +25,7 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(controller).toContain('begin-here: What is working — begin positively and specifically.');
     expect(develop).toContain('What may need attention');
     expect(develop).toContain('Where I’d start');
-    expect(develop).toContain('Show me an edited version');
+    expect(develop).toContain('Try a revision');
     expect(develop).toContain('Chapter scorecard');
     expect(controller).toContain('Respond directly to the writer as a perceptive, encouraging editor');
     expect(controller).toContain('Relationship comes first. Before any problem, friction, or recommendation');

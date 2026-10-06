@@ -22,7 +22,7 @@ import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { typesetManuscriptBody, typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
-import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
+import { locateUniquePassage, locateUniquePresentationPassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
 import EditorialDancePanel from './EditorialDancePanel';
@@ -69,6 +69,7 @@ export type P4R1Pc3WriteEditViewProps = {
   carriedInsight: CanvasInsight | null;
   carriedInsightReturnMode: 'develop' | 'review' | null;
   attentionReturnItemId: string | null;
+  attentionReturnRequiresSelection: boolean;
   lineageReturnChapterId: string | null;
   lineageReturnCandidateId: string | null;
   workspaceInsight: { readingId: string; key: string } | null;
@@ -295,13 +296,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       }
       const section = props.context.sections.find((candidate) => candidate.draftSectionId === picked.sectionId);
       const live = section ? props.writing.bodyOf(section.draftSectionId) : '';
-      const located = locateUniquePassage(live, picked.text);
+      const located = locateUniquePresentationPassage(live, picked.text);
       if (!section || !located) {
         setSelectionRect(null);
         setSelectionMenuOpen(false);
         return;
       }
-      props.onHoldPassage(section, located.start, located.end, picked.text);
+      const canonicalText = Array.from(live).slice(located.start, located.end).join('');
+      props.onHoldPassage(section, located.start, located.end, canonicalText);
       setSelectionRect(picked.rect);
     };
 
@@ -901,7 +903,11 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <div className="p4r1-attention-write-return-bar">
         {props.attentionReturnItemId ? (
           <>
-            <span><b>From Attention Map</b> · this is one exact place behind the synthesis.</span>
+            <span>
+              <b>From Attention Map</b> · {props.attentionReturnRequiresSelection && !props.held
+                ? 'this observation names the section, not one exact passage. Select the words you want MAIA to revise.'
+                : 'this exact passage is the place you chose to work with.'}
+            </span>
             <button type="button" onClick={() => props.onMode('develop')}>Return to Attention Map</button>
           </>
         ) : (
