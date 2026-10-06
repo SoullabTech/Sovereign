@@ -605,8 +605,17 @@ type ReadyReview = {
               Review opens saved readings. Entering this room does not ask MAIA to read anything again.
             </p>
             <div className="fr-tabs fr-tabs-rev" role="tablist" aria-label="Review view">
-              <button type="button" role="tab" aria-selected={tab !== 'Proof' && tab !== 'Ready the Work'} onClick={() => setTab('Overview')}>
+              <button type="button" role="tab" aria-selected={tab === 'Overview'} onClick={() => setTab('Overview')}>
                 Review
+              </button>
+              <button type="button" role="tab" aria-selected={tab === 'Recovery'} onClick={() => setTab('Recovery')}>
+                Recovery
+              </button>
+              <button type="button" role="tab" aria-selected={tab === 'Completeness'} onClick={() => setTab('Completeness')}>
+                Completeness
+              </button>
+              <button type="button" role="tab" aria-selected={tab === 'Sources'} onClick={() => setTab('Sources')}>
+                Sources
               </button>
               <button type="button" role="tab" aria-selected={tab === 'Proof'} onClick={() => setTab('Proof')}>
                 Proof
@@ -619,6 +628,29 @@ type ReadyReview = {
               <P4R1ProofView
                 manuscriptId={context.manuscriptId}
                 workTitle={work?.title ?? context.title ?? 'This Work'}
+                onDiscuss={(draft) => {
+                  setWorkDraft(draft);
+                  setWorkTalking(true);
+                }}
+              />
+            ) : tab === 'Recovery' ? (
+              <P4R1RecoveryView
+                manuscriptId={context.manuscriptId}
+                sectionId={null}
+                onDiscuss={(draft) => {
+                  setWorkDraft(draft);
+                  setWorkTalking(true);
+                }}
+              />
+            ) : tab === 'Completeness' ? (
+              <P4R1CompletenessView
+                onDiscuss={(draft) => {
+                  setWorkDraft(draft);
+                  setWorkTalking(true);
+                }}
+              />
+            ) : tab === 'Sources' ? (
+              <P4R1SourceAuditView
                 onDiscuss={(draft) => {
                   setWorkDraft(draft);
                   setWorkTalking(true);
