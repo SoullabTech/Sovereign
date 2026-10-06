@@ -132,12 +132,14 @@ const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
  * imports; policy.ts is unchanged. Prior governed baseline:
  * c4f96c853ba9246546383a93875b4ae5519e8c1b (2026-09-18).
  *
- * The authorization is narrow and worth stating exactly: **those four seam-file
+ * Founder-authorized 2026-10-06: WS-STRUCTURED-LOCAL-01 adds a first-class
+ * Ollama structured adapter while preserving the non-fallbackable contract.
+ * The authorization is narrow and worth stating exactly: **these five seam-file
  * states at this commit** constitute the new governed baseline. The commit also
- * carries witness-side work, and no unrelated file gains constitutional status
- * by having travelled in the same commit — this guard resolves four paths.
+ * carries caller-side wiring, and no unrelated file gains constitutional status
+ * by having travelled in the same commit — this guard resolves five paths.
  */
-const GOVERNED_SEAM_BASELINE = '8ea119d52cbf0d79ab641943930cf0b294bbfbb1';
+const GOVERNED_SEAM_BASELINE = '62fdad60cdaa69ea6384a02a704bc136af2e5732';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([
@@ -145,6 +147,7 @@ describe('callers bend to the seam, never the seam to a caller', () => {
     'lib/ai/structured/policy.ts',
     'lib/ai/structured/router.ts',
     'lib/ai/structured/anthropicStructuredAdapter.ts',
+    'lib/ai/structured/ollamaStructuredAdapter.ts',
   ])('%s is byte-identical to the governed seam baseline', (p) => {
     const now = execSync(`git hash-object ${JSON.stringify(p)}`, { cwd: ROOT }).toString().trim();
     const was = execSync(`git rev-parse ${GOVERNED_SEAM_BASELINE}:${JSON.stringify(p)}`, { cwd: ROOT })
