@@ -1,23 +1,22 @@
 /**
  * AIN-STRUCTURED-INFERENCE-SEAM-01 — routing a structured request.
  *
- * THE RULING: STRUCTURED INFERENCE v1 IS NON-FALLBACKABLE.
+ * THE RULING: STRUCTURED INFERENCE IS NON-FALLBACKABLE.
  *
  * A structured call means *this exact model, under this exact message and tool
- * contract, produced this result*. If the authorized provider is unavailable, a
- * local text model that cannot honour the contract is not a fallback — it is a
- * different operation, and letting it answer would make `readerProvenance` a
- * record of something that did not happen. So failure REFUSES.
+ * contract, produced this result*. The local Ollama adapter is therefore not a
+ * fallback for an external model. It is a first-class structured provider that
+ * may execute only when the deployment configured it and the request is routed
+ * to it without changing the caller's pinned model. Any provider failure still
+ * REFUSES; nothing silently tries a second provider.
  *
- * NON-FALLBACKABLE IS NOT A LICENCE TO BYPASS SOVEREIGNTY. The direct SDK
- * imports this seam replaces answered to no inference mode at all; keeping that
- * bypass merely because it is existing behaviour would make the guard
- * decorative. So `sovereign` and `local_only` are honoured here, and honoured by
- * REFUSING rather than by quietly reaching past the mode to Anthropic.
+ * NON-FALLBACKABLE IS NOT A LICENCE TO BYPASS SOVEREIGNTY. The platform owns
+ * the mode and the configured local structured model. Cognitive callers cannot
+ * choose their own route.
  *
- *   primary                → pinned model, executed exactly, no fallback
- *   sovereign / local_only → structured_inference_unavailable, until a local
- *                            provider exists that can honour the same contract
+ *   primary                → configured local model runs locally; otherwise the
+ *                            pinned external model runs externally; no fallback
+ *   sovereign / local_only → configured local provider only; otherwise refuse
  *
  * THE CALLER DOES NOT NAME THE MODE, AND HAS NO SECOND DOOR. `runStructured`
  * takes the request and nothing else; the mode is resolved from platform
@@ -38,6 +37,7 @@
 import type { InferenceMode } from '../types';
 import { resolveStructuredMode } from './policy';
 import { dispatchOf } from './dispatch';
+import { ollamaStructuredProvider } from './ollamaStructuredAdapter';
 import type {
   StructuredOutcome, StructuredProvider, StructuredRequest,
 } from './types';
@@ -46,12 +46,14 @@ import type {
 const EXTERNAL_AUTHORIZED: readonly InferenceMode[] = ['primary'];
 
 /**
- * There is no local structured provider today.
- *
- * Stated as a constant rather than left implicit, so the day one exists this is
- * the single line that changes and the refusal below stops being reachable.
+ * Local structured inference is opt-in by deployment configuration. The model
+ * string is still pinned by the caller; this only establishes which local
+ * provider is authorized to execute that exact request.
  */
-export const LOCAL_STRUCTURED_PROVIDER: StructuredProvider | null = null;
+const LOCAL_STRUCTURED_MODEL = (process.env.MAIA_LOCAL_STRUCTURED_MODEL ?? '').trim();
+export const LOCAL_STRUCTURED_PROVIDER: StructuredProvider | null = LOCAL_STRUCTURED_MODEL
+  ? ollamaStructuredProvider()
+  : null;
 
 async function defaultProvider(): Promise<StructuredProvider> {
   /* Lazy so the vendor SDK is never pulled into a graph that will not call it,
@@ -102,6 +104,13 @@ async function route(
         detail: `mode=${mode}: no local provider can honour a structured contract`,
       };
     }
+    return execute(LOCAL_STRUCTURED_PROVIDER, req);
+  }
+
+  /* Primary mode remains non-fallbackable. A caller may explicitly pin the
+     deployment's configured local structured model; that exact model is then
+     executed locally rather than being mis-sent to an external adapter. */
+  if (LOCAL_STRUCTURED_PROVIDER !== null && req.model === LOCAL_STRUCTURED_MODEL) {
     return execute(LOCAL_STRUCTURED_PROVIDER, req);
   }
 
