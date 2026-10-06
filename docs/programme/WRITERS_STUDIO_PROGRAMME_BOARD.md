@@ -46,9 +46,11 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R7 adjudication packet: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R7_FOUNDER_ADJUDICATION_PACKET_2026-10-06.md`
 - R7 founder adjudication: **APPROVED 2026-10-06** — full packet as written.
 - Current act: **R8 Chapter 10 golden-slice implementation + founder witness.**
-- R8A relational turn custody: **IMPLEMENTED CANDIDATE** — Witness/Guide/Collaborator + Intimate/Guided/Mapped + Plain→Expert now govern the next live conversational turn; causal writer-clarification directive wired. Founder live witness still required.
-- R8A record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8A_RELATIONAL_TURN_CUSTODY_2026-10-06.md`
-- Stop rule: stop immediately on any R6 experience-custody failure; no broader Studio propagation before founder PASS.
+- R8A relational turn custody: **IMPLEMENTED CANDIDATE, FOUNDER WITNESS FAIL** — relational settings reached the turn, but the golden slice failed before admission.
+- R8A failures: (1) serious conversation forced into a narrow permanent MAIA rail; (2) Chapter 10 dialogue was starved to one frozen observation and therefore did not know the whole-book context / chapter role.
+- R8A implementation record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8A_RELATIONAL_TURN_CUSTODY_2026-10-06.md`
+- R8A founder failure record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8A_FOUNDER_WITNESS_FAIL_2026-10-06.md`
+- **R8 STOPPED under R6.** Next act is bounded recovery design for Chapter Conversation Context + contextual/expandable MAIA geometry. No passage descent or broader Studio propagation until founder re-witness passes G2–G3.
 
 This entry supersedes the 2026-10-05 lane only for current execution priority. It does not rewrite the case-study record or discard its valid implementation evidence.
 
