@@ -714,3 +714,86 @@
 .fr-review-live-hero-copy small { font-family: var(--fr-sans-stack); color: var(--fr-muted); }
 .fr-review-live-hero-copy strong { font-family: var(--fr-serif-stack); font-size: 26px; font-weight: 500; }
 .fr-review-live-hero-copy span { font-family: var(--fr-sans-stack); font-size: 12px; color: var(--fr-ink2); }
+
+/* R8B — when a real MAIA conversation is open, it is a working space rather
+   than a fixed utility rail. The divider is presentation-only and persists only
+   the member's session width preference. */
+@media (min-width: 1180px) {
+  .fr-room[data-resizable-maia='true'] {
+    grid-template-columns:
+      var(--fr-ms-w)
+      minmax(0, var(--fr-live-work-fr, 56fr))
+      10px
+      minmax(360px, var(--fr-live-maia-fr, 44fr));
+  }
+}
+.fr-maia-divider {
+  position: relative;
+  width: 10px;
+  min-width: 10px;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+.fr-maia-divider::before {
+  content: '';
+  position: absolute;
+  inset: 0 3px;
+  background: var(--fr-line);
+  transition: background .15s ease, inset .15s ease;
+}
+.fr-maia-divider:hover::before,
+.fr-maia-divider:focus-visible::before {
+  inset: 0 2px;
+  background: var(--fr-action);
+}
+.fr-maia-divider span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fr-panel) 88%, transparent);
+  border: 1px solid var(--fr-line);
+  box-shadow: 0 2px 10px rgba(0,0,0,.14);
+}
+.fr-maia-divider span::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  border-left: 1px solid var(--fr-muted);
+  border-right: 1px solid var(--fr-muted);
+}
+@media (max-width: 1179px) {
+  .fr-maia-divider { display: none; }
+}
+
+/* R8B — with no active MAIA conversation, Develop does not reserve an empty
+   permanent MAIA content rail. */
+.fr-room.fr-room-no-maia {
+  grid-template-columns: var(--fr-ms-w) minmax(0, 1fr);
+}
+@media (max-width: 1023px) {
+  .fr-room.fr-room-no-maia {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .fr-room.fr-room-no-maia .fr-manuscript {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .fr-room.fr-room-no-maia .fr-work {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}

@@ -4397,3 +4397,20 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   display:block;margin:0 0 6px;color:var(--fr-action);
   font:700 9px/1.2 var(--fr-sans-stack);letter-spacing:.13em;text-transform:uppercase
 }
+
+/* R8E — the conversation, not the report, opens the path toward an exact passage. */
+.p4r1-root .p4r1-conversation-next{
+  width:100%;
+  padding:11px 14px;
+  border:1px solid var(--fr-action-line);
+  border-radius:9px;
+  background:var(--fr-action-soft);
+  color:var(--fr-action-deep);
+  text-align:left;
+  font:600 12px/1.35 var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-conversation-next:hover{filter:brightness(1.03)}
+.p4r1-root .p4r1-chapter-review-secondary-write{
+  opacity:.78;
+  border-style:dashed!important;
+}

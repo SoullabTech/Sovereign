@@ -27,8 +27,9 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(develop).toContain('Talk with MAIA about the movement');
     expect(develop).toContain('Talk with MAIA about what to protect');
     expect(develop).toContain('Talk with MAIA about what may need strengthening');
-    expect(develop).toContain('Try a revision');
-    expect(develop).toContain('Chapter scorecard');
+    expect(develop).not.toContain('Try a revision');
+    expect(develop).not.toContain('Chapter scorecard');
+    expect(develop).toContain('Open this chapter in Write');
     expect(controller).toContain('Respond directly to the writer as a perceptive, encouraging editor');
     expect(controller).toContain('Relationship comes first. Before any problem, friction, or recommendation');
     expect(controller).toContain('what you genuinely appreciate');
@@ -59,12 +60,13 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(develop).toContain('ChapterReviewPanel own it');
   });
 
-  it('keeps grading and book-fit tools secondary to the conversation', () => {
+  it('keeps book-fit secondary and removes scorecard grading from the relational chapter surface', () => {
     expect(develop).toContain('More ways to look');
-    expect(develop).toContain('Chapter scorecard');
     expect(develop).toContain('How does this chapter fit the book?');
-    expect(develop).toContain('Optional craft guide · not a grade');
+    expect(develop).not.toContain('Chapter scorecard');
+    expect(develop).not.toContain('Optional craft guide · not a grade');
     expect(develop).not.toContain('Start with the few changes that do the most work.');
+    /* The old substrate may remain for custody/history; it is not rendered in the chapter experience. */
     expect(controller).toContain('writers-studio:chapter-scorecard:v1');
     expect(controller).toContain('chapter-scorecard-previous:v1');
   });
@@ -85,15 +87,17 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(attentionRoute).toContain("error: 'overview_segments_overlap'");
   });
 
-  it('uses the MAIA field for chapter exploration instead of stacking report panels', () => {
-    expect(develop).toContain("useState<'book-fit' | 'scorecard' | null>(null)");
+  it('uses a whole-Work-aware MAIA conversation instead of stacking report panels', () => {
+    expect(develop).toContain("useState<'book-fit' | null>(null)");
     expect(develop).toContain("activeExpansion === 'book-fit' && bookFit");
-    expect(develop).toContain("activeExpansion === 'scorecard' && scorecard");
+    expect(develop).not.toContain("activeExpansion === 'scorecard' && scorecard");
     expect(develop).not.toContain("activeExpansion === 'protect' && protect");
     expect(develop).not.toContain("activeExpansion === 'movement' && movement");
     expect(develop).not.toContain("activeExpansion === 'minimal-path' && minimalPath");
     expect(develop).toContain('const beginChapterDialogue = (item: AttentionItem, kind: ChapterDialogueKind)');
-    expect(develop).toContain('autoSendInitialQuestion');
+    expect(develop).toContain('data-chapter-context="whole-work-aware"');
+    expect(develop).toContain('chapterReadingId={chapterDialogue.readingId}');
+    expect(develop).toContain('autoSendInitialDraft');
     expect(develop).toContain('Please make this a conversation, not a report or checklist.');
     expect(develop).toContain('Let my Working with MAIA setting govern how active you are.');
   });

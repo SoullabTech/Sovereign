@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { isCabinOrigin, cabinReturnPath } from '@/lib/cabin/doorway';
 import { appearanceVars, geometryVars } from './tokens';
@@ -37,6 +37,14 @@ export type ShellProps = {
   /** Optional words set above the MAIA region (#23). */
   maiaAbove?: ReactNode;
   /**
+   * R8B — serious MAIA conversation may become a resizable workspace instead
+   * of being trapped in the fixed utility rail. This changes presentation only;
+   * the manuscript/Work/MAIA identities and their authority are untouched.
+   */
+  maiaResizable?: boolean;
+  /** Initial share of the Work+MAIA conversation area given to MAIA. */
+  maiaDefaultShare?: number;
+  /**
    * PC3-S3 Full Canvas. A presentation state of the SAME room: the product bar
    * and the manuscript context recede; the Work region — and whatever editor it
    * holds — stays exactly where it is in the tree, so nothing inside it remounts.
@@ -52,6 +60,75 @@ export function Shell(props: ShellProps) {
   const oneRoom = props.manuscript === undefined && props.maia === undefined;
   const canvas = props.canvas === true;
   const style = { ...appearanceVars(appearance), ...geometryVars(geometry) } as React.CSSProperties;
+  const resizableMaia = props.maiaResizable === true && props.maia !== undefined && !canvas;
+  const clampMaiaShare = useCallback((value: number) => Math.min(62, Math.max(28, value)), []);
+  const [maiaShare, setMaiaShare] = useState(() => clampMaiaShare(props.maiaDefaultShare ?? 44));
+  const roomRef = useRef<HTMLDivElement | null>(null);
+  const maiaDrag = useRef<{ startX: number; startShare: number; width: number } | null>(null);
+
+  useEffect(() => {
+    if (!resizableMaia || typeof window === 'undefined') return;
+    const key = `writers-studio:${mode}:maia-share`;
+    const raw = window.sessionStorage.getItem(key);
+    if (raw !== null) {
+      const parsed = Number(raw);
+      if (Number.isFinite(parsed)) setMaiaShare(clampMaiaShare(parsed));
+    }
+  }, [mode, resizableMaia, clampMaiaShare]);
+
+  useEffect(() => {
+    if (!resizableMaia || typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem(`writers-studio:${mode}:maia-share`, String(maiaShare));
+    } catch {
+      // Presentation preference failure must never block the writing room.
+    }
+  }, [mode, resizableMaia, maiaShare]);
+
+  const beginMaiaResize = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!roomRef.current) return;
+    maiaDrag.current = {
+      startX: event.clientX,
+      startShare: maiaShare,
+      width: roomRef.current.getBoundingClientRect().width,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, [maiaShare]);
+
+  const moveMaiaResize = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!maiaDrag.current) return;
+    const delta = event.clientX - maiaDrag.current.startX;
+    const next = maiaDrag.current.startShare - (delta / maiaDrag.current.width) * 100;
+    setMaiaShare(clampMaiaShare(next));
+  }, [clampMaiaShare]);
+
+  const endMaiaResize = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    maiaDrag.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+
+  const keyMaiaResize = useCallback((event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      setMaiaShare((value) => clampMaiaShare(value + 3));
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      setMaiaShare((value) => clampMaiaShare(value - 3));
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      setMaiaShare(62);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      setMaiaShare(28);
+    }
+  }, [clampMaiaShare]);
+
+  const roomStyle = resizableMaia ? {
+    '--fr-live-work-fr': `${100 - maiaShare}fr`,
+    '--fr-live-maia-fr': `${maiaShare}fr`,
+  } as React.CSSProperties : undefined;
 
   return (
     <div
@@ -106,7 +183,16 @@ export function Shell(props: ShellProps) {
         </header>
       )}
 
-      <div className={oneRoom ? 'fr-room fr-room-single' : 'fr-room'}>
+      <div
+        ref={roomRef}
+        className={oneRoom
+          ? 'fr-room fr-room-single'
+          : props.maia === undefined
+            ? 'fr-room fr-room-no-maia'
+            : 'fr-room'}
+        data-resizable-maia={resizableMaia ? 'true' : undefined}
+        style={roomStyle}
+      >
         {oneRoom || canvas ? null : (
           <aside className="fr-region fr-panel fr-manuscript" data-region="manuscript" aria-label="Manuscript">
             {props.manuscript}
@@ -115,6 +201,26 @@ export function Shell(props: ShellProps) {
         <main className="fr-region fr-work" data-region="work" aria-label="The Work">
           {props.work}
         </main>
+        {resizableMaia ? (
+          <button
+            type="button"
+            className="fr-maia-divider"
+            role="separator"
+            aria-label="Resize Work and MAIA conversation"
+            aria-valuemin={28}
+            aria-valuemax={62}
+            aria-valuenow={Math.round(maiaShare)}
+            onPointerDown={beginMaiaResize}
+            onPointerMove={moveMaiaResize}
+            onPointerUp={endMaiaResize}
+            onPointerCancel={endMaiaResize}
+            onDoubleClick={() => setMaiaShare(clampMaiaShare(props.maiaDefaultShare ?? 44))}
+            onKeyDown={keyMaiaResize}
+            title="Drag to resize · double-click to balance"
+          >
+            <span aria-hidden="true" />
+          </button>
+        ) : null}
         {oneRoom || props.maia === undefined ? null : (
           <aside className="fr-region fr-panel fr-maia" data-region="maia" aria-label="MAIA">
             {props.maiaAbove ? <div className="fr-maia-above">{props.maiaAbove}</div> : null}

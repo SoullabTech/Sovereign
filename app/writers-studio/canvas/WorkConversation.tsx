@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText, typeStyle } from '../studio/StudioType';
@@ -139,13 +139,20 @@ export interface WorkConversationProps {
    * it is handed to the server on each turn and it is not part of the anchor.
    */
   sectionId: string | null;
-  /** Optional member-facing starter held in the composer. Never auto-sent. */
+  /** Optional server-verified Overview reading used to orient this Work conversation to one current chapter. */
+  chapterReadingId?: string | null;
+  /** Optional member-facing starter held in the composer. */
   initialDraft?: string;
+  /** Used only when the writer's preceding gesture explicitly began this conversation. */
+  autoSendInitialDraft?: boolean;
+  /** Optional relational next act, shown only after MAIA has actually replied. */
+  afterMaiaTurn?: ReactNode;
   onClose: () => void;
 }
 
 export default function WorkConversation({
-  work, manuscriptId, sectionId, initialDraft = '', onClose,
+  work, manuscriptId, sectionId, chapterReadingId = null,
+  initialDraft = '', autoSendInitialDraft = false, afterMaiaTurn, onClose,
 }: WorkConversationProps) {
   const identity = useMemberIdentity();
   const { keeps } = useManuscriptKeeps(manuscriptId);
@@ -165,6 +172,7 @@ export default function WorkConversation({
   const [correctionBusy, setCorrectionBusy] = useState(false);
   const [correctionStatus, setCorrectionStatus] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const autoSentInitial = useRef(false);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
@@ -243,6 +251,7 @@ export default function WorkConversation({
           question,
           ...(mode.kind === 'resume' ? { threadId: mode.threadId } : { anchor: WORK_ANCHOR }),
           ...(sectionId ? { sectionId } : {}),
+          ...(chapterReadingId ? { chapterReadingId } : {}),
         })
       : await askLivingWork({
           workId: work.id,
@@ -261,6 +270,16 @@ export default function WorkConversation({
     if (r.threadId) { setThreadId(r.threadId); void adopt(r.threadId); }
     setRefusal(REFUSAL_SAYS[r.refusal] ?? REFUSAL_SAYS.unreachable);
   };
+
+  useEffect(() => {
+    if (!autoSendInitialDraft || autoSentInitial.current) return;
+    if (decision === null || mode.kind === 'blocked' || pending !== null) return;
+    if (!draft.trim()) return;
+    autoSentInitial.current = true;
+    void send();
+  // The send act is deliberately keyed to discovery + the explicit starter.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSendInitialDraft, decision, mode.kind, pending, draft]);
 
   if (identity.phase === 'loading') {
     return <StudioText role="metadata">opening…</StudioText>;
@@ -512,6 +531,12 @@ export default function WorkConversation({
         {refusal && <StudioText role="metadata">{refusal}</StudioText>}
         <div ref={endRef} />
       </div>
+
+      {afterMaiaTurn && pending === null && turns.some((turn) => turn.speaker === 'maia') ? (
+        <div data-after-maia-turn="true" style={{ margin: `${SPACE.snug}px 0`, paddingTop: SPACE.snug, borderTop: `1px solid ${RULE.soft}` }}>
+          {afterMaiaTurn}
+        </div>
+      ) : null}
 
       {/* ── The member's kept passages, offered rather than inserted. ── */}
       {manuscriptId && showKeeps && (

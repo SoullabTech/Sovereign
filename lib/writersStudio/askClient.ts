@@ -90,6 +90,8 @@ export async function ask(input: {
    * the anchor of a resumed thread.
    */
   sectionId?: string;
+  /** R8C server-verified current Overview reading for the active chapter. */
+  chapterReadingId?: string;
 }): Promise<AskOutcome> {
   try {
     const res = await apiFetch(url(input.manuscriptId), {
@@ -102,6 +104,7 @@ export async function ask(input: {
         question: input.question,
         workingStyle: readWorkingStyle(),
         ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+        ...(input.chapterReadingId ? { chapterReadingId: input.chapterReadingId } : {}),
       }),
     });
     const json = await res.json().catch(() => ({} as Record<string, unknown>));

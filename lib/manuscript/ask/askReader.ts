@@ -26,6 +26,7 @@ import type { ReviewedStructure } from '../structure/review';
 import type { AskAnchor } from './anchor';
 import type { WorkContextFacts } from './workContext';
 import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation';
+import { renderChapterConversationContext } from '@/lib/writersStudio/qualification/chapterConversationContext';
 import { constellationReferralPrompt } from '@/lib/constellation/referralPrompt';
 import {
   RELATIONSHIP_FIRST_DIRECTIVE,
@@ -191,7 +192,10 @@ function workAnchorSays(ctx: WorkContext): string {
  * the member appears at all.
  */
 function workSays(ctx: WorkContext): string {
-  const { work, sections, locus, writerUnderstanding, writerCorrections, workDirectives, continuity } = ctx.facts;
+  const {
+    work, sections, locus, writerUnderstanding, writerCorrections,
+    workDirectives, chapterConversation, continuity,
+  } = ctx.facts;
   const parts = [
     /* ⭐ The ratified formatter, verbatim — the member's own words and no others. */
     formatWorkSituationForPrompt(work) ?? 'They have not said anything about this Work yet.',
@@ -217,6 +221,13 @@ function workSays(ctx: WorkContext): string {
     parts.push([
       workDirectives,
       'These are writer-authored editorial directions for the Work. Keep their authority distinct from manuscript prose and from your own observations.',
+    ].join('\n'));
+  }
+  if (chapterConversation) {
+    parts.push([
+      renderChapterConversationContext(chapterConversation),
+      'This packet carries frozen developmental observations and current authored structure, not a fresh reread of manuscript prose.',
+      'Use it to stay oriented to the chapter in the whole Work. Do not collapse its source classes into one undifferentiated claim that you "read the book."',
     ].join('\n'));
   }
   if (!locus) {

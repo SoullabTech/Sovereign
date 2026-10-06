@@ -294,6 +294,8 @@ export async function POST(
      passage to another changes this and nothing else. */
   const bodySectionId = typeof body.sectionId === 'string' && body.sectionId.length > 0
     ? body.sectionId : null;
+  const chapterReadingId = typeof body.chapterReadingId === 'string' && body.chapterReadingId.length > 0
+    ? body.chapterReadingId : null;
 
   const threadId = typeof body.threadId === 'string' ? body.threadId : null;
   const anchor = threadId ? null : parseAnyAnchor(body.anchor);
@@ -397,7 +399,7 @@ export async function POST(
      ══════════════════════════════════════════════════════════════════════════ */
   if (check.anchor.on === 'work') {
     return workTurn({ manuscriptId: id, memberId, anchor: check.anchor, existing,
-                      question, sectionId: bodySectionId, responseStyle, engagement, pace });
+                      question, sectionId: bodySectionId, chapterReadingId, responseStyle, engagement, pace });
   }
 
   if (!reading) {
@@ -558,11 +560,15 @@ async function workTurn(input: {
   existing: Awaited<ReturnType<typeof loadThread>>;
   question: string;
   sectionId: string | null;
+  chapterReadingId: string | null;
   responseStyle: ExplanationDepth;
   engagement: MaiaEngagement;
   pace: WorkingPace;
 }): Promise<NextResponse> {
-  const { manuscriptId, memberId, anchor, existing, question, sectionId, responseStyle, engagement, pace } = input;
+  const {
+    manuscriptId, memberId, anchor, existing, question, sectionId, chapterReadingId,
+    responseStyle, engagement, pace,
+  } = input;
 
   /* ⛔ NO FABRICATED BASELINE, the same law the structure lane holds: a thread
      that cannot establish its BEFORE does not open. */
@@ -594,7 +600,13 @@ async function workTurn(input: {
   };
 
   /* ⭐⭐ THE PROOF, BEFORE THE EVIDENCE. */
-  const built = await buildWorkContext({ manuscriptId, memberId, sectionId, continuity });
+  const built = await buildWorkContext({
+    manuscriptId,
+    memberId,
+    sectionId,
+    chapterReadingId,
+    continuity,
+  });
   if (!built.ok) {
     /* ⛔ Zero threads, zero turns. This is B1's law arriving at the case that
        made it necessary — and the first case in which it is reachable at all. */

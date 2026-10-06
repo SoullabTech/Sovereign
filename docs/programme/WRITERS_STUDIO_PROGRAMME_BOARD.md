@@ -50,15 +50,18 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R8A failures: (1) serious conversation forced into a narrow permanent MAIA rail; (2) Chapter 10 dialogue was starved to one frozen observation and therefore did not know the whole-book context / chapter role.
 - R8A implementation record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8A_RELATIONAL_TURN_CUSTODY_2026-10-06.md`
 - R8A founder failure record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8A_FOUNDER_WITNESS_FAIL_2026-10-06.md`
-- **R8 STOPPED under R6.** Chapter Conversation Context + contextual/expandable MAIA geometry remain required before the live golden journey resumes.
+- R8B–R8E recovery: **IMPLEMENTED CANDIDATE** — no permanent MAIA rail at rest; contextual resizable conversation; server-verified whole-Work-aware Chapter Conversation Context; Chapter Review stripped back to relationship-first simple-first; passage handoff appears only after a real MAIA reply.
+- R8B–R8E record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8B-E_GOLDEN_SLICE_RECOVERY_2026-10-06.md`
+- Focused witness: **78 / 78 PASS · flagship typecheck PASS · diff-check PASS.** This is engineering evidence only.
+- **Next act: founder Chapter 10 re-witness on localhost:3738.** R8M-T1 tester-study build remains closed until that human witness passes G2–G3 and the conversation→passage handoff.
 - Founder direction added: **R8M — MAIA Editorial/Relational Model Qualification + Governed Council.** Change models when another engine demonstrably fits a faculty better, and use a governed primary/challenger council for high-value uncertain acts.
 - R8M record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M_MODEL_QUALIFICATION_AND_COUNCIL_2026-10-06.md`
 - R8M context packet: **PASS candidate** — read-only `r8m-chapter-context-v1` establishes final-chapter position, chapter reading, prior book readings, and writer-established intention as distinct source classes.
 - R8M local blind round: **COMPLETE** — four local candidates, identical two-turn Chapter 10 fixture; founder blind qualitative adjudication pending.
 - R8M local witness: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M-L1_LOCAL_BLIND_WITNESS_2026-10-06.md`
 - Strong reference calibration: **HELD** — R&D shell had no resolved Anthropic auth; no request was substituted to another provider.
-- R8M current act: founder reviews Candidates A–D blind; identities open only after qualitative judgment, then faculty standings are assigned before any production model change.
-- No passage descent or broader Studio propagation until founder re-witness passes G2–G3.
+- R8M local evidence is held intact; identities remain sealed until blind qualitative judgment. **No production model change is authorized.**
+- No tester-study build, beta deployment, or broader Studio propagation until founder re-witness passes G2–G3 and the conversation→passage handoff.
 
 This entry supersedes the 2026-10-05 lane only for current execution priority. It does not rewrite the case-study record or discard its valid implementation evidence.
 

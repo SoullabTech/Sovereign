@@ -1609,7 +1609,7 @@ export function ChapterReviewPanel({
   onMinimalPath: () => void;
   onTalkAbout: (item: AttentionItem, kind: 'protect' | 'movement' | 'strengthen') => void;
 }) {
-  const [activeExpansion, setActiveExpansion] = useState<'book-fit' | 'scorecard' | null>(null);
+  const [activeExpansion, setActiveExpansion] = useState<'book-fit' | null>(null);
 
   useEffect(() => {
     /* A new chapter reading is a new subject. Never leave a controller looking
@@ -1625,15 +1625,6 @@ export function ChapterReviewPanel({
     setActiveExpansion('book-fit');
     if (!bookFit && !bookFitBusy) onBookFit();
   };
-  const openScorecard = () => {
-    if (activeExpansion === 'scorecard') {
-      setActiveExpansion(null);
-      return;
-    }
-    setActiveExpansion('scorecard');
-    if (!scorecard && !scoreBusy) onScore();
-  };
-
   if (!map) {
     return (
       <section className="fr-card p4r1-chapter-review" data-chapter-review="empty">
@@ -1671,7 +1662,6 @@ export function ChapterReviewPanel({
   const strength = byBand('begin-here');
   const grasp = byBand('next');
   const friction = byBand('later');
-  const start = byBand('watch');
 
   return (
     <section className="fr-card p4r1-chapter-review" data-chapter-review="ready">
@@ -1711,17 +1701,7 @@ export function ChapterReviewPanel({
             Talk with MAIA about what may need strengthening
           </button>
         ) : null}
-        {start?.sectionIds[0] ? (
-          <button
-            type="button"
-            className="p4r1-chapter-review-primary"
-            onClick={() => onEdit(start.id, start.sectionIds[0]!, 'chapter-review')}
-          >
-            Try a revision
-          </button>
-        ) : (
-          <button type="button" className="p4r1-chapter-review-primary" onClick={onWrite}>Work on the writing</button>
-        )}
+        <button type="button" className="p4r1-chapter-review-secondary-write" onClick={onWrite}>Open this chapter in Write</button>
       </div>
 
       <details className="p4r1-chapter-review-secondary">
@@ -1729,9 +1709,6 @@ export function ChapterReviewPanel({
         <div className="p4r1-chapter-review-secondary-actions">
           <button type="button" disabled={bookFitBusy} aria-pressed={activeExpansion === 'book-fit'} onClick={openBookFit}>
             {bookFitBusy ? 'Reading the book around this chapter…' : 'How does this chapter fit the book?'}
-          </button>
-          <button type="button" disabled={scoreBusy} aria-pressed={activeExpansion === 'scorecard'} onClick={openScorecard}>
-            {scoreBusy ? 'Building scorecard…' : 'Chapter scorecard'}
           </button>
         </div>
       </details>
@@ -1749,73 +1726,6 @@ export function ChapterReviewPanel({
           <details><summary>Why MAIA thinks this</summary>{bookFit.items.map((item) => <p key={item.id}>{item.whyItMatters}</p>)}</details>
         </section>
       ) : null}
-
-      {activeExpansion === 'scorecard' && scoreError ? <p className="p4r1-error" role="status">{scoreError}</p> : null}
-      {activeExpansion === 'scorecard' && scorecard ? (() => {
-        const dimensions = ['Clarity', 'Coherence', 'Reader orientation', 'Voice', 'Momentum'];
-        const scored = scorecard.items.filter((item) => dimensions.includes(item.label));
-        const extras = scorecard.items.filter((item) => !dimensions.includes(item.label));
-        return (
-          <div className="p4r1-chapter-scorecard" data-chapter-scorecard>
-            <div className="p4r1-chapter-scorecard-head">
-              <b>Chapter scorecard</b>
-              <span>Optional craft guide · not a grade · fixed to this chapter revision</span>
-            </div>
-            {scored.map((item) => {
-              const score = item.notice.match(/^([1-5]\/5)\b/)?.[1] ?? '—';
-              return (
-                <details key={item.id}>
-                  <summary>
-                    <b>{item.label}</b>
-                    <span>{score}</span>
-                  </summary>
-                  <p>{item.notice}</p>
-                  <small>{item.whyItMatters}</small>
-                </details>
-              );
-            })}
-            {extras.length > 0 ? (
-              <details className="p4r1-chapter-scorecard-extra">
-                <summary>Other thing MAIA noticed</summary>
-                {extras.map((item) => (
-                  <div key={item.id}>
-                    <b>{item.label}</b>
-                    <p>{item.notice}</p>
-                    <small>{item.whyItMatters}</small>
-                  </div>
-                ))}
-              </details>
-            ) : null}
-            {previousScorecard ? (
-              <section className="p4r1-score-comparison" data-chapter-score-comparison>
-                <div>
-                  <b>Since the previous saved chapter revision</b>
-                  <span>This is a craft comparison, not a grade{previousScoreRevision !== null ? ` · previous revision ${previousScoreRevision}` : ''}.</span>
-                </div>
-                {dimensions.map((dimension) => {
-                  const currentItem = scorecard.items.find((item) => item.label === dimension);
-                  const previousItem = previousScorecard.items.find((item) => item.label === dimension);
-                  const currentScore = Number(currentItem?.notice.match(/^([1-5])\/5\b/)?.[1] ?? NaN);
-                  const previousScore = Number(previousItem?.notice.match(/^([1-5])\/5\b/)?.[1] ?? NaN);
-                  if (!Number.isFinite(currentScore) || !Number.isFinite(previousScore)) return null;
-                  const movement = currentScore > previousScore
-                    ? 'Moved upward on this rubric.'
-                    : currentScore < previousScore
-                      ? 'Worth another look; the revision may have traded something here.'
-                      : 'Held steady.';
-                  return (
-                    <article key={dimension}>
-                      <b>{dimension}</b>
-                      <span>{previousScore}/5 → {currentScore}/5</span>
-                      <small>{movement}</small>
-                    </article>
-                  );
-                })}
-              </section>
-            ) : null}
-          </div>
-        );
-      })() : null}
 
       {activeExpansion === null ? (
         <details className="p4r1-chapter-review-details">
@@ -2020,6 +1930,9 @@ interface ChapterDialogueSeed {
   observationKey: string;
   about: string;
   initialQuestion: string;
+  kind: ChapterDialogueKind;
+  itemId: string;
+  sectionId: string | null;
 }
 
 export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
@@ -2035,7 +1948,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const [talking, setTalking] = useState(false);
   const [dialoguePrompt, setDialoguePrompt] = useState('');
   const [chapterDialogue, setChapterDialogue] = useState<ChapterDialogueSeed | null>(null);
-  const [workTalking, setWorkTalking] = useState(true);
+  const [workTalking, setWorkTalking] = useState(false);
   const [attentionConversationDraft, setAttentionConversationDraft] = useState('');
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
 
@@ -2155,6 +2068,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       observationKey: evidence.observationKey,
       about: evidence.observation,
       initialQuestion,
+      kind,
+      itemId: item.id,
+      sectionId: item.sectionIds[0] ?? null,
     });
     setAttentionConversationDraft('');
     setTalking(false);
@@ -2845,17 +2761,34 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody p4r1-develop-maia">
-        {chapterDialogue ? (
-          <div className="p4r1-chapter-conversation" data-chapter-conversation>
-            <ObservationDialogue
-              key={`${chapterDialogue.readingId}:${chapterDialogue.observationKey}:${chapterDialogue.initialQuestion}`}
+        {chapterDialogue && props.work ? (
+          <div className="p4r1-chapter-conversation" data-chapter-conversation data-chapter-context="whole-work-aware">
+            <div className="p4r1-observation-conversation-anchor">
+              <span className="p4r1-eyebrow">Beginning from this noticing</span>
+              <p>{chapterDialogue.about}</p>
+              <small>MAIA is also carrying this chapter’s verified place in the Work, prior book readings, and your declared writing context.</small>
+            </div>
+            <WorkConversation
+              key={`${chapterDialogue.readingId}:${chapterDialogue.initialQuestion}`}
+              work={props.work}
               manuscriptId={props.manuscriptId}
-              readingId={chapterDialogue.readingId}
-              observationKey={chapterDialogue.observationKey}
-              about={chapterDialogue.about}
-              superseded={false}
-              initialQuestion={chapterDialogue.initialQuestion}
-              autoSendInitialQuestion
+              sectionId={props.currentSectionId}
+              chapterReadingId={chapterDialogue.readingId}
+              initialDraft={chapterDialogue.initialQuestion}
+              autoSendInitialDraft
+              afterMaiaTurn={chapterDialogue.kind === 'strengthen' && chapterDialogue.sectionId ? (
+                <button
+                  type="button"
+                  className="p4r1-conversation-next"
+                  onClick={() => props.onWorkWithAttentionItem(
+                    chapterDialogue.itemId,
+                    chapterDialogue.sectionId!,
+                    'chapter-review',
+                  )}
+                >
+                  When you’re ready · choose a passage to work on →
+                </button>
+              ) : undefined}
               onClose={() => setChapterDialogue(null)}
             />
           </div>
@@ -2986,6 +2919,8 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     </div>
   );
 
+  const maiaConversationActive = chapterDialogue !== null || talking || workTalking;
+
   return (
     <Shell
       mode="develop"
@@ -2996,7 +2931,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       onSelectMode={props.onMode}
       manuscript={<ManuscriptRail sections={props.sections} currentSectionId={props.currentSectionId} onSection={selectManuscriptLocus} />}
       work={center}
-      maia={maia}
+      maia={maiaConversationActive ? maia : undefined}
+      maiaResizable={maiaConversationActive}
+      maiaDefaultShare={46}
     />
   );
 }

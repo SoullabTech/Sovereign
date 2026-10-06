@@ -61,6 +61,11 @@ import {
 } from '@/lib/writersStudio/writerUnderstandingServer';
 import { writerCorrectionContextForWork } from '@/lib/writersStudio/writerCorrectionsServer';
 import { workDirectiveContextForWork } from '@/lib/writersStudio/workDirectivesServer';
+import {
+  buildChapterConversationContext,
+  type ChapterConversationContextRefusal,
+} from '@/lib/writersStudio/chapterConversationContextServer';
+import type { ChapterConversationContext } from '@/lib/writersStudio/qualification/chapterConversationContext';
 
 /**
  * ⭐ THE ONE READ THAT DID NOT EXIST: the canonical projected body of ONE
@@ -127,12 +132,18 @@ export interface WorkContextFacts {
   readonly writerCorrections: string;
   /** Member-authored Work-level protections, decisions, and open questions. */
   readonly workDirectives: string;
+  /**
+   * R8C — optional chapter-scale context assembled server-side from already
+   * authorized/frozen readings and current authored structure. Never client prose.
+   */
+  readonly chapterConversation: ChapterConversationContext | null;
   readonly continuity: Continuity;
 }
 
 export type WorkContextRefusal =
   /** ⛔ Not this member's Work, or no Work declared over this manuscript. */
-  | 'work_unresolved';
+  | 'work_unresolved'
+  | ChapterConversationContextRefusal;
 
 export type WorkContextResult =
   | { readonly ok: true; readonly facts: WorkContextFacts }
@@ -160,9 +171,11 @@ export async function buildWorkContext(input: {
   readonly memberId: string;
   /** ⛔ An identifier, never a fact. The body is read from the row. */
   readonly sectionId?: string | null;
+  /** Optional frozen Overview reading whose exact current chapter scope is verified server-side. */
+  readonly chapterReadingId?: string | null;
   readonly continuity: Continuity;
 }): Promise<WorkContextResult> {
-  const { manuscriptId, memberId, sectionId, continuity } = input;
+  const { manuscriptId, memberId, sectionId, chapterReadingId, continuity } = input;
 
   /* ⭐ The Work the member DECLARED over this manuscript — their own act, in
      `living_work_expressions`. ⛔ Not inferred, and not the manuscript row
@@ -200,6 +213,16 @@ export async function buildWorkContext(input: {
   );
   const writerCorrections = await writerCorrectionContextForWork(memberId, work.id);
   const workDirectives = await workDirectiveContextForWork(memberId, work.id);
+  let chapterConversation: ChapterConversationContext | null = null;
+  if (chapterReadingId) {
+    const chapterContext = await buildChapterConversationContext({
+      memberId,
+      manuscriptId,
+      readingId: chapterReadingId,
+    });
+    if (!chapterContext.ok) return { ok: false, reason: chapterContext.refusal };
+    chapterConversation = chapterContext.context;
+  }
 
   return {
     ok: true,
@@ -215,6 +238,7 @@ export async function buildWorkContext(input: {
       writerUnderstanding,
       writerCorrections,
       workDirectives,
+      chapterConversation,
       continuity,
     },
   };
@@ -253,6 +277,7 @@ export async function buildLivingWorkOnlyContext(input: {
       writerUnderstanding,
       writerCorrections,
       workDirectives,
+      chapterConversation: null,
       continuity: input.continuity,
     },
   };
