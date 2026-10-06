@@ -36,7 +36,7 @@ function oneTool(blocks: readonly StructuredBlock[]): unknown | null {
   );
   return calls.length === 1 ? calls[0]!.input : null;
 }
-function inputSchemaFor(evidenceRefs: readonly string[]) {
+function inputSchemaFor(evidenceRefs: readonly string[], overviewMode: boolean) {
   return {
     type: 'object',
     additionalProperties: false,
@@ -45,8 +45,8 @@ function inputSchemaFor(evidenceRefs: readonly string[]) {
       version: { type: 'string', enum: [ATTENTION_SYNTHESIS_VERSION] },
       items: {
         type: 'array',
-        minItems: 1,
-        maxItems: 24,
+        minItems: overviewMode ? 4 : 1,
+        maxItems: overviewMode ? 4 : 24,
         items: {
           type: 'object',
           additionalProperties: false,
@@ -206,7 +206,7 @@ export async function POST(
     maxTokens: 8000,
     tools: [{
       name: TOOL,
-      inputSchema: inputSchemaFor(observations.map((observation) => observation.synthesisRef)),
+      inputSchema: inputSchemaFor(observations.map((observation) => observation.synthesisRef), overviewMode),
       description: 'Return the evidence-bound whole-manuscript attention map.',
     }],
     toolChoice: { type: 'tool', name: TOOL },

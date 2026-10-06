@@ -44,14 +44,8 @@ describe('Ollama structured adapter', () => {
       { role: 'user', content: 'third' },
     ]);
     expect(params.options).toEqual({ num_predict: 8000 });
-    expect(params.tools).toEqual([{
-      type: 'function',
-      function: {
-        name: 'return_attention_map',
-        description: 'Return the map',
-        parameters: req.tools![0]!.inputSchema,
-      },
-    }]);
+    expect(params.format).toEqual(req.tools![0]!.inputSchema);
+    expect('tools' in params).toBe(false);
   });
 
   it('returns Ollama tool calls as neutral tool_use blocks with exact provenance', async () => {
@@ -62,14 +56,7 @@ describe('Ollama structured adapter', () => {
         model: 'qwen3-coder:30b',
         message: {
           role: 'assistant',
-          content: '',
-          tool_calls: [{
-            id: 'call_1',
-            function: {
-              name: 'return_attention_map',
-              arguments: { version: 'v1' },
-            },
-          }],
+          content: JSON.stringify({ version: 'v1' }),
         },
         done: true,
         done_reason: 'stop',
@@ -82,7 +69,7 @@ describe('Ollama structured adapter', () => {
     expect(seen).toHaveLength(1);
     expect(result.content).toEqual([{
       type: 'tool_use',
-      id: 'call_1',
+      id: 'ollama-required-tool',
       name: 'return_attention_map',
       input: { version: 'v1' },
     }]);
@@ -97,7 +84,7 @@ describe('Ollama structured adapter', () => {
   it('refuses a response that ignores a required tool', async () => {
     const fetchImpl = (async () => response({
       model: 'qwen3-coder:30b',
-      message: { role: 'assistant', content: 'plain prose' },
+      message: { role: 'assistant', content: JSON.stringify({ wrong: true }) },
       done: true,
       done_reason: 'stop',
     })) as typeof fetch;
@@ -107,7 +94,7 @@ describe('Ollama structured adapter', () => {
     ).rejects.toMatchObject({
       name: 'StructuredDispatchError',
       dispatch: 'response_observed',
-      message: 'ollama_required_tool_missing:return_attention_map',
+      message: 'ollama_tool_schema_violation:return_attention_map',
     } satisfies Partial<StructuredDispatchError>);
   });
 
@@ -123,10 +110,7 @@ describe('Ollama structured adapter', () => {
       model: 'qwen3-coder:30b',
       message: {
         role: 'assistant',
-        content: '',
-        tool_calls: [{
-          function: { name: 'return_attention_map', arguments: { wrong: true } },
-        }],
+        content: JSON.stringify({ wrong: true }),
       },
       done_reason: 'stop',
     })) as typeof fetch;

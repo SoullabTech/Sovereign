@@ -82,7 +82,16 @@ export function toOllamaParams(req: StructuredRequest): Record<string, unknown> 
     ],
     options: { num_predict: req.maxTokens },
   };
-  if (tools !== undefined) {
+  if (req.toolChoice?.type === 'tool') {
+    const required = tools?.[0];
+    if (!required) throw new Error(`required_tool_not_declared:${req.toolChoice.name}`);
+    /* Ollama's native tool-choice surface can emit the same required function
+       more than once. A named neutral tool choice means ONE completed call.
+       JSON-schema format gives the local adapter an equivalent provider
+       mechanism: one schema-bound object, which is wrapped back into one
+       neutral tool_use block after validation. */
+    params.format = required.inputSchema;
+  } else if (tools !== undefined) {
     params.tools = tools.map((tool) => ({
       type: 'function',
       function: {
@@ -104,9 +113,19 @@ function normalizeArguments(value: unknown): unknown {
   }
 }
 
-function toBlocks(body: OllamaChatResponse): StructuredBlock[] {
-  const out: StructuredBlock[] = [];
+function toBlocks(body: OllamaChatResponse, req: StructuredRequest): StructuredBlock[] {
   const content = body.message?.content;
+  if (req.toolChoice?.type === 'tool') {
+    if (typeof content !== 'string' || !content.trim()) return [];
+    return [{
+      type: 'tool_use',
+      id: 'ollama-required-tool',
+      name: req.toolChoice.name,
+      input: normalizeArguments(content),
+    }];
+  }
+
+  const out: StructuredBlock[] = [];
   if (typeof content === 'string' && content.length > 0) {
     out.push({ type: 'text', text: content });
   }
@@ -132,7 +151,7 @@ function enforceToolChoice(req: StructuredRequest, blocks: readonly StructuredBl
     if (calls.length === 0) throw new Error('ollama_required_tool_missing');
     return;
   }
-  if (calls.length === 0 || calls.some((call) => call.name !== req.toolChoice!.name)) {
+  if (calls.length !== 1 || calls[0]?.name !== req.toolChoice.name) {
     throw new Error(`ollama_required_tool_missing:${req.toolChoice.name}`);
   }
 }
@@ -140,7 +159,10 @@ function enforceToolChoice(req: StructuredRequest, blocks: readonly StructuredBl
 function enforceRequiredSchemas(req: StructuredRequest, blocks: readonly StructuredBlock[]): void {
   const required = new Map(
     (req.tools ?? [])
-      .filter((tool) => tool.schemaEnforcement === 'required')
+      .filter((tool) =>
+        tool.schemaEnforcement === 'required'
+        || (req.toolChoice?.type === 'tool' && req.toolChoice.name === tool.name)
+      )
       .map((tool) => [tool.name, tool]),
   );
   if (required.size === 0) return;
@@ -193,8 +215,9 @@ export function ollamaStructuredProvider(
         } catch (err) {
           throw new StructuredDispatchError('response_observed', err);
         }
-        const blocks = toBlocks(body);
+        let blocks: StructuredBlock[];
         try {
+          blocks = toBlocks(body, req);
           enforceToolChoice(req, blocks);
           enforceRequiredSchemas(req, blocks);
         } catch (err) {
