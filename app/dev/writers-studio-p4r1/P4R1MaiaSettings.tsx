@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DEFAULT_WORKING_STYLE,
   ENGAGEMENT_COPY,
@@ -13,10 +14,12 @@ import {
   writeWorkingStyle,
   type WriterWorkingStyle,
 } from '@/lib/writersStudio/workingStyle';
+import { useStudioTopbarAccessoriesHost } from './useStudioTopbarAccessoriesHost';
 
 export default function P4R1MaiaSettings() {
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<WriterWorkingStyle>(DEFAULT_WORKING_STYLE);
+  const topbarHost = useStudioTopbarAccessoriesHost();
 
   useEffect(() => {
     const sync = () => setStyle(readWorkingStyle());
@@ -34,7 +37,9 @@ export default function P4R1MaiaSettings() {
     setStyle(readWorkingStyle());
   };
 
-  return (
+  if (!topbarHost) return null;
+
+  return createPortal(
     <div className="p4r1-maia-settings" data-p4r1-maia-settings>
       <button
         type="button"
@@ -137,6 +142,7 @@ export default function P4R1MaiaSettings() {
           </footer>
         </section>
       ) : null}
-    </div>
+    </div>,
+    topbarHost,
   );
 }

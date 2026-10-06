@@ -3266,22 +3266,20 @@
 }
 
 /* P4R1 appearance continuity: member-chosen Studio themes restored.
-   The switcher lives OUTSIDE .fr-shell, so it must use the Studio-wide --ws-*
-   atmosphere variables supplied by StudioAtmosphere. Using --fr-* here makes
-   the declarations invalid before the shell exists and leaves a transparent,
-   unreadable menu floating over the Work. */
+   Theme and MAIA relationship controls portal into the Shell's topbar accessory
+   slot so they participate in layout instead of floating over the Work picker.
+   They still use Studio-wide --ws-* atmosphere variables because the controls
+   are mounted by the P4R1 layer rather than owned by Shell appearance tokens. */
 .p4r1-root .p4r1-theme-menu{
-  position:fixed;
-  right:16px;
-  top:11px;
+  position:relative;
+  right:auto;
+  top:auto;
   z-index:120;
   font-family:var(--fr-sans-stack,Inter,system-ui,sans-serif);
 }
-/* HOUSE-STUDIO-CIRCULATION-01R1 · H1: when the Studio is entered from the House,
-   the House band (60px + 14px gap) sits above the Studio bar. The fixed pill keeps
-   its existing relationship to the Studio bar instead of covering the band's
-   "Return Home →". Measured in the signed-in witness, 2026-09-30. */
-body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
+/* HOUSE-STUDIO-CIRCULATION-01R1 · H1: portal placement inherits the Studio bar's
+   real position, including House entry. No fixed vertical compensation remains. */
+body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:auto}
 .p4r1-root .p4r1-theme-trigger{
   min-height:34px;
   max-width:164px;
@@ -3360,9 +3358,9 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
   box-shadow:inset 2px 0 0 var(--ws-gold,#C9A227);
 }
 @media (max-width:720px){
-  .p4r1-root .p4r1-theme-menu{right:10px;top:10px}
+  .p4r1-root .p4r1-theme-menu{right:auto;top:auto}
   /* H1: with the House band above (54px band + 8px gap), keep the pill on the Studio bar. */
-  body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:73px}
+  body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:auto}
   .p4r1-root .p4r1-theme-trigger{max-width:132px;padding-inline:9px}
   .p4r1-root .p4r1-theme-popover{width:min(224px,calc(100vw - 20px));top:40px}
 }
@@ -4174,13 +4172,13 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
    switcher in Write, Develop, and Review and reads the same persisted settings
    used by contextual surfaces. */
 .p4r1-root .p4r1-maia-settings{
-  position:fixed;
-  right:188px;
-  top:11px;
+  position:relative;
+  right:auto;
+  top:auto;
   z-index:121;
   font-family:var(--fr-sans-stack,Inter,system-ui,sans-serif);
 }
-body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:85px}
+body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
 .p4r1-root .p4r1-maia-settings-trigger{
   min-height:34px;
   border:1px solid var(--ws-rule,#4A4238);
@@ -4356,12 +4354,12 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:85px}
   font:10.5px/1.5 var(--fr-sans-stack,Inter,system-ui,sans-serif);
 }
 @media(max-width:980px){
-  .p4r1-root .p4r1-maia-settings{right:154px}
+  .p4r1-root .p4r1-maia-settings{right:auto}
   .p4r1-root .p4r1-maia-settings-trigger>span:not(.p4r1-maia-settings-orb){display:none}
 }
 @media(max-width:720px){
-  .p4r1-root .p4r1-maia-settings{right:142px;top:10px}
-  body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:73px}
+  .p4r1-root .p4r1-maia-settings{right:auto;top:auto}
+  body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   .p4r1-root .p4r1-maia-settings-trigger{padding-inline:9px}
   .p4r1-root .p4r1-maia-settings-popover{
     position:fixed;

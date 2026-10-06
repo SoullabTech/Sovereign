@@ -11,7 +11,10 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 describe('Writer Studio relationship-first shell', () => {
   const host = read('app/dev/writers-studio-p4r1/P4R1StudioHost.tsx');
+  const shell = read('app/writers-studio/full-redesign/Shell.tsx');
+  const themeMenu = read('app/dev/writers-studio-p4r1/P4R1ThemeMenu.tsx');
   const settings = read('app/dev/writers-studio-p4r1/P4R1MaiaSettings.tsx');
+  const topbarPortal = read('app/dev/writers-studio-p4r1/useStudioTopbarAccessoriesHost.ts');
   const client = read('lib/writersStudio/attentionMapClient.ts');
   const attentionRoute = read('app/api/sovereign/manuscripts/[id]/attention-map/route.ts');
   const askClient = read('lib/writersStudio/askClient.ts');
@@ -28,6 +31,15 @@ describe('Writer Studio relationship-first shell', () => {
     expect(settings).toContain('How actively MAIA joins you');
     expect(settings).toContain('How much MAIA shows at once');
     expect(settings).toContain('How MAIA explains what she sees');
+  });
+
+  it('keeps relationship and theme controls in real topbar layout instead of overlapping the Work picker', () => {
+    expect(shell).toContain('data-studio-topbar-accessories');
+    expect(settings).toContain('createPortal');
+    expect(settings).toContain('useStudioTopbarAccessoriesHost');
+    expect(themeMenu).toContain('createPortal');
+    expect(themeMenu).toContain('useStudioTopbarAccessoriesHost');
+    expect(topbarPortal).toContain("document.querySelector<HTMLElement>('[data-studio-topbar-accessories]')");
   });
 
   it('keeps engagement, pace, and explanatory depth as separate axes', () => {

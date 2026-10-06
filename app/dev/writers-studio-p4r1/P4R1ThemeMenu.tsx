@@ -1,14 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ATMOSPHERE_LIST } from '@/app/writers-studio/atmosphere/atmospheres';
 import { useAtmosphere } from '@/app/writers-studio/atmosphere/StudioAtmosphere';
+import { useStudioTopbarAccessoriesHost } from './useStudioTopbarAccessoriesHost';
 
 export default function P4R1ThemeMenu() {
   const { id, choose } = useAtmosphere();
   const [open, setOpen] = useState(false);
+  const topbarHost = useStudioTopbarAccessoriesHost();
   const selected = ATMOSPHERE_LIST.find((item) => item.id === id);
-  return (
+  if (!topbarHost) return null;
+  return createPortal(
     <div className="p4r1-theme-menu" data-p4r1-theme-menu>
       <button type="button" className="p4r1-theme-trigger" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         <span className="p4r1-theme-swatch" style={{ background: selected?.ground.field, borderColor: selected?.gold.base }} />
@@ -33,6 +37,7 @@ export default function P4R1ThemeMenu() {
           ))}
         </div>
       ) : null}
-    </div>
+    </div>,
+    topbarHost,
   );
 }

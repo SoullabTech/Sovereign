@@ -38,8 +38,8 @@ export default function P4R1StudioHost({
 
   return (
     <>
-      <P4R1ThemeMenu />
       {mode === 'write' || mode === 'develop' || mode === 'review' ? <P4R1MaiaSettings /> : null}
+      <P4R1ThemeMenu />
       <P4R1BetaFeedback mode={mode} />
       {mode === 'home' && <ConstellationArrival />}
       {room}
