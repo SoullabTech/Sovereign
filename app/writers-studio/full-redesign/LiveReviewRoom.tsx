@@ -150,7 +150,7 @@ function LensPanel({
     </div>
   );
 }export function LiveReviewChapter({
-  data, filter, onFilter, tab, onTab, onBack, onOpenFinding, onWorkWith, onDiscuss, proof,
+  data, filter, onFilter, tab, onTab, onBack, onOpenFinding, onWorkWith, onDiscuss, proof, recovery,
 }: {
   data: Pc3LiveReviewData;
   filter: string;
@@ -163,8 +163,15 @@ function LensPanel({
   onDiscuss: (finding: Pc3LiveReviewFinding) => void;
   /** Page-form witness of this same Work. Not a developmental lens and not an edit surface. */
   proof?: ReactNode;
+  /** Earlier-version comparison. Surfaces possible Lost Gold without restoring anything. */
+  recovery?: ReactNode;
 }) {
-  const tabs = ['Overview', ...data.lenses.map((lens) => lens.label), ...(proof ? ['Proof'] : [])];
+  const tabs = [
+    'Overview',
+    ...data.lenses.map((lens) => lens.label),
+    ...(recovery ? ['Recovery'] : []),
+    ...(proof ? ['Proof'] : []),
+  ];
   const shown = filter === 'All' ? data.findings
     : data.findings.filter((finding) => finding.lensLabel === filter);
   const completed = data.lenses.filter((lens) =>
@@ -189,7 +196,7 @@ function LensPanel({
             {t}
           </button>
         ))}
-      </div>      {tab === 'Proof' && proof ? proof : tab !== 'Overview' ? (
+      </div>      {tab === 'Recovery' && recovery ? recovery : tab === 'Proof' && proof ? proof : tab !== 'Overview' ? (
         <LensPanel data={data} tab={tab} onOpenFinding={onOpenFinding} onWorkWith={onWorkWith} onDiscuss={onDiscuss} />
       ) : (
         <>

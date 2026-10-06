@@ -4066,3 +4066,104 @@ body:has([data-house-return]) .p4r1-root .p4r1-theme-menu{top:85px}
   display: grid;
   gap: 7px;
 }
+
+/* EA-COMPLETION-01 · Recovery / Lost Gold */
+.p4r1-root .p4r1-recovery {
+  padding: 22px 4px 40px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.p4r1-root .p4r1-recovery > header h2 {
+  margin: 3px 0 7px;
+  font: 500 24px/1.15 var(--fr-serif, Georgia, serif);
+}
+.p4r1-root .p4r1-recovery > header > p:last-child {
+  max-width: 720px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  opacity: .66;
+}
+.p4r1-root .p4r1-recovery-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(190px, .7fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin: 20px 0 14px;
+}
+.p4r1-root .p4r1-recovery-controls label {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.p4r1-root .p4r1-recovery-controls select {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  padding: 8px 9px;
+}
+.p4r1-root .p4r1-recovery-controls button,
+.p4r1-root .p4r1-recovery-actions button {
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.p4r1-root .p4r1-recovery-method,
+.p4r1-root .p4r1-recovery-empty {
+  padding: 12px 14px;
+  border-left: 2px solid color-mix(in srgb, currentColor 26%, transparent);
+  background: color-mix(in srgb, currentColor 3%, transparent);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.p4r1-root .p4r1-recovery-method p {
+  margin: 5px 0 0;
+}
+.p4r1-root .p4r1-recovery-candidates {
+  display: grid;
+  gap: 12px;
+  margin-top: 15px;
+}
+.p4r1-root .p4r1-recovery-candidates article {
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, currentColor 13%, transparent);
+  border-radius: 10px;
+}
+.p4r1-root .p4r1-recovery-candidate-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: baseline;
+}
+.p4r1-root .p4r1-recovery-candidate-head span {
+  font-size: 12px;
+  font-weight: 600;
+}
+.p4r1-root .p4r1-recovery-candidate-head small {
+  font-size: 10px;
+  opacity: .5;
+}
+.p4r1-root .p4r1-recovery-candidates blockquote {
+  margin: 12px 0;
+  padding: 0 0 0 14px;
+  border-left: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  font: 400 14px/1.65 var(--fr-serif, Georgia, serif);
+}
+.p4r1-root .p4r1-recovery-actions {
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 760px) {
+  .p4r1-root .p4r1-recovery-controls {
+    grid-template-columns: 1fr;
+  }
+  .p4r1-root .p4r1-recovery-candidate-head {
+    display: grid;
+  }
+}

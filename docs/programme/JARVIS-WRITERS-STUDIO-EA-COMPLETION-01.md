@@ -99,6 +99,18 @@ Real-case acceptance: preserve the Elemental Alchemy laws (soul first; direct sp
 
 # 5 — Build Recovery / Lost Gold
 
+Status: FIRST BOUNDED SLICE IMPLEMENTED; semantic adjudication remains a writer/MAIA act, never an automatic restore.
+
+Implemented:
+- Recovery appears inside Review rather than as a new primary mode;
+- only manuscripts the writer declared into the same Living Work can be selected as earlier sources;
+- the writer explicitly states whether the selected source is merely an earlier version or a root voice reference for the comparison;
+- a deterministic lexical-difference pass surfaces possible Lost Gold without claiming it is better, meaningful, or accidentally removed;
+- source text crosses into MAIA only when the writer clicks Discuss;
+- the discussion draft explicitly asks MAIA to distinguish recover / adapt / keep current / leave out and forbids automatic editing or restoration;
+- current manuscript mutation is structurally absent from the comparison route;
+- focused Recovery tests and Writer's Studio flagship typecheck are green.
+
 Objective: compare prior authorial versions with the current Work without treating newer as automatically superior.
 
 Required:

@@ -37,6 +37,7 @@ import { readRelationshipReturnClient } from '@/lib/writersStudio/rebuild/return
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
 import P4R1ProofView from './P4R1ProofView';
+import P4R1RecoveryView from './P4R1RecoveryView';
 
 interface ContextReady {
   state: 'section_aware';
@@ -83,6 +84,7 @@ type ReadyReview = {
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(requestedFindingId);
   const [discussion, setDiscussion] = useState<ReviewDiscussionState | null>(null);
   const [workTalking, setWorkTalking] = useState(false);
+  const [workDraft, setWorkDraft] = useState('');
   const [availableRuns, setAvailableRuns] = useState<ChapterReviewManifest[]>([]);
   const [availableRootId, setAvailableRootId] = useState<string | null>(null);
   const [quickReview, setQuickReview] = useState<WholeManuscriptAttentionMap | null>(null);
@@ -728,6 +730,7 @@ type ReadyReview = {
                   work={work}
                   manuscriptId={context.manuscriptId}
                   sectionId={availableRootId}
+                  initialDraft={workDraft}
                   onClose={() => setWorkTalking(false)}
                 />
               </div>
@@ -743,7 +746,7 @@ type ReadyReview = {
                   <p>I’ll stay with what has already been read here. Opening Review does not commission a new reading.</p>
                 </div>
                 {work ? (
-                  <button type="button" className="fr-open" data-action="talk-work" onClick={() => setWorkTalking(true)}>
+                  <button type="button" className="fr-open" data-action="talk-work" onClick={() => { setWorkDraft(''); setWorkTalking(true); }}>
                     Talk about the larger Work
                   </button>
                 ) : null}
@@ -790,6 +793,16 @@ type ReadyReview = {
           onOpenFinding={openFinding}
           onWorkWith={workWithFinding}
           onDiscuss={discussFinding}
+          recovery={
+            <P4R1RecoveryView
+              manuscriptId={context.manuscriptId}
+              sectionId={review.rootId}
+              onDiscuss={(draft) => {
+                setWorkDraft(draft);
+                setWorkTalking(true);
+              }}
+            />
+          }
           proof={
             <P4R1ProofView
               manuscriptId={context.manuscriptId}
@@ -810,6 +823,7 @@ type ReadyReview = {
                 work={work}
                 manuscriptId={context.manuscriptId}
                 sectionId={selectedFinding?.sectionId ?? review.rootId}
+                initialDraft={workDraft}
                 onClose={() => setWorkTalking(false)}
               />
             </div>
@@ -821,7 +835,7 @@ type ReadyReview = {
             discussion={discussion}
             onSubmit={submitDiscussion}
             onClose={closeDiscussion}
-            onTalkWork={work ? () => setWorkTalking(true) : undefined}
+            onTalkWork={work ? () => { setWorkDraft(''); setWorkTalking(true); } : undefined}
           />
         )
       }
