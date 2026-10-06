@@ -97,6 +97,12 @@ function sectionLabel(section: RebuildSection | undefined, index = 0): string {
   return section?.heading?.trim() || `Section ${index + 1}`;
 }
 
+const CHAPTER_SCORE_DIMENSIONS = ['Clarity', 'Coherence', 'Reader orientation', 'Voice', 'Momentum'] as const;
+function completeChapterScorecard(map: WholeManuscriptAttentionMap): boolean {
+  const labels = new Set(map.items.map((item) => item.label));
+  return CHAPTER_SCORE_DIMENSIONS.every((dimension) => labels.has(dimension));
+}
+
 export default function P4R1DevelopController() {
   const params = useSearchParams();
   const router = useRouter();
@@ -382,8 +388,16 @@ export default function P4R1DevelopController() {
       }
     };
 
-    const current = parseSnapshot(window.sessionStorage.getItem(currentKey));
+    const rawCurrent = parseSnapshot(window.sessionStorage.getItem(currentKey));
+    const current = rawCurrent && completeChapterScorecard(rawCurrent.map) ? rawCurrent : null;
     const previous = parseSnapshot(window.sessionStorage.getItem(previousKey));
+    if (rawCurrent && !current) {
+      /* A prior local schema accidentally capped overview syntheses at four
+         items, which could persist a scorecard with Momentum missing. Do not
+         carry that partial rubric forward as if it were complete. */
+      window.sessionStorage.removeItem(currentKey);
+      window.sessionStorage.removeItem(minimalKey);
+    }
 
     if (current && context.draftRevision !== null && current.draftRevision === context.draftRevision) {
       setChapterScorecard(current.map);
@@ -1085,6 +1099,7 @@ export default function P4R1DevelopController() {
           'watch: Where I would start — one clear, manageable next editorial focus.',
           'Use chapter scale unless a smaller scale is necessary to ground the point. Do not rewrite the prose. Do not use technical editorial vocabulary unless unavoidable.',
         ].join('\n'),
+        { itemCount: 4 },
       );
       if (!synthesized.ok) {
         setChapterReviewError('MAIA read the chapter but could not gather her impressions just now. The reading is saved and your writing is unchanged.');
@@ -1205,6 +1220,7 @@ export default function P4R1DevelopController() {
           'watch: What I would protect or change first — one practical macro-level recommendation, not a rewrite.',
           'Distinguish chapter evidence from whole-book evidence. Do not pretend a placement is wrong merely because another placement is imaginable.',
         ].join('\n'),
+        { itemCount: 4 },
       );
       if (!out.ok) {
         setChapterBookFitError('MAIA read the book context but could not gather the placement reflection just now. Nothing changed.');
@@ -1234,6 +1250,7 @@ export default function P4R1DevelopController() {
           'watch: The smallest structural move with the most leverage — one thing to strengthen, compress, move, bridge, or let breathe before touching sentences.',
           'Pay particular attention to the relation among lived material, examples or story, conceptual explanation, formal architecture, lineage, and integration. Do not rewrite prose.',
         ].join('\n'),
+        { itemCount: 4 },
       );
       if (!out.ok) {
         setChapterMovementError('MAIA could not gather the chapter movement reflection just now. The chapter review is unchanged.');
@@ -1260,9 +1277,14 @@ export default function P4R1DevelopController() {
           'Explain the score in plain language and use whyItMatters to say the smallest concrete change that could improve it by one level.',
           'Treat this as a transparent craft rubric, not a verdict on the writer or the value of the work. Do not score book-level placement because this reading is chapter-bounded.',
         ].join('\n'),
+        { itemCount: 5 },
       );
       if (!out.ok) {
         setChapterScoreError('MAIA could not prepare the scorecard just now. The chapter review is unchanged.');
+        return;
+      }
+      if (!completeChapterScorecard(out.map)) {
+        setChapterScoreError('MAIA did not complete all five scorecard dimensions, so the Studio did not present a partial scorecard. Nothing changed.');
         return;
       }
       setChapterScorecard(out.map);
@@ -1306,6 +1328,7 @@ export default function P4R1DevelopController() {
           chapterScorecard ? 'Current scorecard:' : 'Scorecard status:',
           scoreSnapshot,
         ].join('\n'),
+        { itemCount: 4 },
       );
       if (!out.ok) {
         setChapterMinimalPathError('MAIA could not prepare the minimal path just now. The scorecard and chapter are unchanged.');
@@ -1503,7 +1526,9 @@ export default function P4R1DevelopController() {
           query.set('attentionItem', itemId);
           query.set('insightReading', evidence.readingId);
           query.set('insightObservation', evidence.observationKey);
-          query.set('insightAction', source === 'chapter-review' ? 'try-revision' : 'focus');
+          /* “Work on this” is an editorial handoff, not merely navigation.
+             Once an exact passage is proven, enter the revision relationship. */
+          query.set('insightAction', 'try-revision');
         });
         return;
       }
@@ -1528,28 +1553,38 @@ export default function P4R1DevelopController() {
             query.set('attentionItem', itemId);
             query.set('insightReading', evidence.readingId);
             query.set('insightObservation', evidence.observationKey);
-            if (source === 'chapter-review') query.set('insightAction', 'choose-revision-passage');
-            else query.delete('insightAction');
+            /* Section evidence is enough to orient the writer, but not enough
+               for MAIA to invent an edit locus. Enter Write in passage-choice
+               mode; the writer's selection becomes the exact revision locus. */
+            query.set('insightAction', 'choose-revision-passage');
           });
           return;
         }
       }
     }
 
-    /* A revision request may not silently invent a passage. When the frozen
-       observation names only a section we hand passage choice to the writer;
-       if even that section cannot be established, the revision stops here. */
-    if (source === 'chapter-review') {
-      setChapterReviewError(
-        'This observation does not identify one exact editable passage yet. Choose the wording you want to revise, or open the passage in Write first.',
-      );
+    /* Last lawful handoff: the synthesis itself still names an evidenced,
+       current section even when the richer passage resolver could not recover a
+       narrower locus. Do not degrade “Work on this” into plain canvas
+       navigation. Let the writer choose the exact words in Write. */
+    const fallbackEvidence = item.evidence[0];
+    if (fallbackEvidence && context.sections.some((candidate) => candidate.draftSectionId === sectionId)) {
+      updateQuery((query) => {
+        query.set('mode', 'write');
+        query.set(SECTION_PARAM, sectionId);
+        query.set('developField', 'overview');
+        query.set('attentionItem', itemId);
+        query.set('insightReading', fallbackEvidence.readingId);
+        query.set('insightObservation', fallbackEvidence.observationKey);
+        query.set('insightAction', 'choose-revision-passage');
+      });
       return;
     }
 
-    /* Other Work-on-this actions may still orient to an evidenced section and
-       leave exact passage choice to the writer. */
-    openAttentionSection(itemId, sectionId);
-  }, [attentionMap, chapterReview, chapterMinimalPath, context, openAttentionSection, updateQuery]);
+    setChapterReviewError(
+      'MAIA could not establish a safe editable place for this suggestion. Nothing changed.',
+    );
+  }, [attentionMap, chapterReview, chapterMinimalPath, context, updateQuery]);
 
   const sectionScope = useMemo<Extract<DevelopScopeChoice, { kind: 'section' }> | null>(() => {
     if (!currentSection) return null;

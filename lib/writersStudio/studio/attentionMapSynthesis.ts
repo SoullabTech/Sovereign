@@ -57,7 +57,8 @@ export function attentionSynthesisSystem(mode: 'deep' | 'overview' = 'deep'): st
       : 'Compare across lenses and scales: whole work, part, chapter, section, passage.',
     'Organize only by the named attention bands: begin-here, next, later, watch.',
     'Do not emit numeric scores, grades, severity, confidence, priority, percentages, stars, or hidden ranking metrics.',
-    'Every item must cite one or more supplied synthesisRef handles such as E1 or E27. Use only handles that appear in the supplied observations. Exact reading identity and manuscript locations are resolved by the system; do not invent identifiers.',
+    'Every item must cite one or more supplied synthesisRef handles such as E1 or E27 in evidenceRefs. Use only handles that appear in the supplied observations. Exact reading identity and manuscript locations are resolved by the system; do not invent identifiers.',
+    'Those synthesis handles and internal section numbers are metadata only. Never write E1/E27, UUIDs, storage section numbers, or internal evidence coordinates into label, notice, whyItMatters, or uncertainty. Speak in the writer’s manuscript language instead.',
     'Say why the item matters to the manuscript, and name uncertainty or disagreement when present.',
     'Do not propose replacement prose. Do not mutate or apply anything.',
   ].join('\n');

@@ -340,10 +340,19 @@ describe('F10 · nothing 07C-shaped exists in the schema or survives the parser'
     'uncertainty', 'severity', 'priority', 'score', 'confidence', 'rank', 'lens'];
 
   it('the tool schema names none of them and closes additional properties at every level', () => {
-    const schema = readerTool().input_schema as { properties: Record<string, unknown>; additionalProperties: boolean };
-    expect(schema.additionalProperties).toBe(false);
-    expect(Object.keys(schema.properties).sort()).toEqual(['claims', 'outcome']);
-    const claimSchema = (schema.properties.claims as { items: { properties: Record<string, unknown>; additionalProperties: boolean } }).items;
+    const schema = readerTool().input_schema as {
+      oneOf: Array<{ properties: Record<string, unknown>; additionalProperties: boolean; required: string[] }>;
+    };
+    expect(schema.oneOf).toHaveLength(2);
+    const claimsEnvelope = schema.oneOf.find((branch) => Object.hasOwn(branch.properties, 'claims'))!;
+    const noneEnvelope = schema.oneOf.find((branch) => !Object.hasOwn(branch.properties, 'claims'))!;
+    expect(claimsEnvelope.additionalProperties).toBe(false);
+    expect(noneEnvelope.additionalProperties).toBe(false);
+    expect(Object.keys(claimsEnvelope.properties).sort()).toEqual(['claims', 'outcome']);
+    expect(Object.keys(noneEnvelope.properties)).toEqual(['outcome']);
+    expect(claimsEnvelope.required).toEqual(['outcome', 'claims']);
+    expect(noneEnvelope.required).toEqual(['outcome']);
+    const claimSchema = (claimsEnvelope.properties.claims as { items: { properties: Record<string, unknown>; additionalProperties: boolean } }).items;
     expect(claimSchema.additionalProperties).toBe(false);
     expect(Object.keys(claimSchema.properties).sort()).toEqual(['doesNotEstablish', 'refs', 'text', 'themeLabel']);
     const text = JSON.stringify(schema);
@@ -477,7 +486,7 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
     expect(perturbedTool).not.toBe(expected);
   });
 
-  it('identity carries DEVELOPMENTAL-READER-09 and the actual provider/model supplied by the seam', () => {
+  it('identity carries DEVELOPMENTAL-READER-10 and the actual provider/model supplied by the seam', () => {
     /* -02 since WS2-07-F1: the lens reached the reader with its ratified meaning
        and the claim boundary moved into the system prompt. -03 since 2026-09-05:
        section ids are confined to the evidence refs and may not appear in claim
@@ -485,8 +494,8 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
        naming "any sections in the sequence", the reading it cost is recorded in
        reader05.test.ts. Readings frozen under any version keep the identity they
        were made with — the version is provenance, never a filter. */
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-09');
-    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-09' });
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-10');
+    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-10' });
     expect(Object.keys(readerIdentity('m-1'))).not.toContain('frozenAt');
   });
 });

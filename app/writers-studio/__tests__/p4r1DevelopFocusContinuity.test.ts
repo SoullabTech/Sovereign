@@ -24,7 +24,7 @@ describe('C3 Develop → Focus continuity', () => {
     expect(developView).toContain('{sectionId ? (');
     expect(developView).toContain('Show me where');
     expect(developView).toContain('Try a revision');
-    expect(developView).toContain('Work on this →');
+    expect(developView).toContain('Work on this in Write →');
   });
 
   it('carries the exact Develop observation into Write with an explicit focus action', () => {
@@ -34,10 +34,10 @@ describe('C3 Develop → Focus continuity', () => {
     expect(developController).toContain('Keep developField / developIntent / r as the exact return address.');
   });
 
-  it('turns chapter-review revision into exact try-revision or writer-chosen passage selection', () => {
-    expect(developController).toContain("query.set('insightAction', source === 'chapter-review' ? 'try-revision' : 'focus')");
+  it('turns every explicit Work-on-this handoff into revision work rather than plain canvas navigation', () => {
+    expect(developController).toContain("query.set('insightAction', 'try-revision')");
     expect(developController).toContain("query.set('insightAction', 'choose-revision-passage')");
-    expect(developController).toContain("if (source === 'chapter-review')");
+    expect(developController).toContain('Do not degrade “Work on this” into plain canvas');
     expect(writeController).toContain("incomingAction === 'try-revision'");
     expect(writeController).toContain("incomingAction !== 'choose-revision-passage'");
     expect(writeController).toContain("For a section-level observation, the writer's manual selection is the");

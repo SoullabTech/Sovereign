@@ -216,7 +216,7 @@ export async function classifyClaims(
   });
   if (!outcome.ok) return { ok: false, refusal: outcome.refusal, detail: outcome.detail ?? outcome.refusal, index: null };
   const { provenance, content } = outcome.result;
-  if (provenance.provider !== 'anthropic') {
+  if (!(provenance.provider === 'anthropic' || provenance.provider === 'ollama')) {
     return { ok: false, refusal: 'not_configured', detail: `provider ${String(provenance.provider)} cannot be recorded as this classifier's identity`, index: null };
   }
   if (provenance.model !== model) {
@@ -226,7 +226,7 @@ export async function classifyClaims(
   const parsed = parseClassifierBlocks(content, claims.length);
   if (!parsed.ok) return parsed;
   return { ok: true, phenomena: parsed.phenomena, classifier: {
-    provider: 'anthropic', model: provenance.model,
+    provider: provenance.provider, model: provenance.model,
     promptHash: classifierPromptHash(), classifierVersion: CLASSIFIER_VERSION,
   } };
 }

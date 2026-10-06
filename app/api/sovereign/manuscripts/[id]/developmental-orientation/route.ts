@@ -19,6 +19,7 @@ export const dynamic = 'force-dynamic';
 
 const TOOL = 'return_developmental_orientation';
 const MODEL = process.env.MAIA_DEVELOPMENTAL_ORIENTATION_MODEL
+  || process.env.MAIA_LOCAL_STRUCTURED_MODEL
   || process.env.MAIA_ATTENTION_MAP_MODEL
   || 'claude-opus-5';
 

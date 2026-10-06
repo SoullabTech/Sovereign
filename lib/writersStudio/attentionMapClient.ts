@@ -10,6 +10,7 @@ export async function requestAttentionMap(
   manuscriptId: string,
   readingIds: readonly string[],
   request: string,
+  options: { itemCount?: number } = {},
 ): Promise<AttentionMapOutcome> {
   try {
     const res = await apiFetch(
@@ -17,7 +18,12 @@ export async function requestAttentionMap(
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ readingIds, request, workingStyle: readWorkingStyle() }),
+        body: JSON.stringify({
+          readingIds,
+          request,
+          workingStyle: readWorkingStyle(),
+          ...(options.itemCount !== undefined ? { itemCount: options.itemCount } : {}),
+        }),
       },
     );
     const body = await res.json().catch(() => null);

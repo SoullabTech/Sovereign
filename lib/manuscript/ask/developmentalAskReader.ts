@@ -45,7 +45,9 @@ import {
 
 export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-02';
 
-const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
+const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL
+  || process.env.MAIA_LOCAL_STRUCTURED_MODEL
+  || 'claude-opus-5';
 
 const STANDING = `You are MAIA, in a writer's Studio, talking with the author of this Work about ONE thing you noticed when you read it developmentally, earlier.
 
@@ -103,7 +105,7 @@ export function developmentalAskPromptHash(
 }
 
 export interface DevelopmentalAskProvenance {
-  provider: 'anthropic';
+  provider: 'anthropic' | 'ollama';
   model: string;
   promptHash: string;
   askerVersion: string;
@@ -237,8 +239,8 @@ export async function askMaiaDevelopmental(
       ok: true,
       answer: text,
       provenance: {
-        provider: 'anthropic',
-        model,
+        provider: outcome.result.provenance.provider === 'ollama' ? 'ollama' : 'anthropic',
+        model: outcome.result.provenance.model,
         promptHash: developmentalAskPromptHash(opts.responseStyle, opts.engagement),
         askerVersion: DEVELOPMENTAL_ASKER_VERSION,
         answeredAt: new Date().toISOString(),

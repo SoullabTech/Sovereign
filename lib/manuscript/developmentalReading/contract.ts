@@ -215,7 +215,7 @@ export interface DevelopmentalObservation {
 /* ── provenance ────────────────────────────────────────────────────────── */
 
 export interface ClassifierIdentity {
-  provider: 'anthropic';
+  provider: 'anthropic' | 'ollama';
   /** The model actually sent — pinned to the reader's resolved model. */
   model: string;
   promptHash: string;

@@ -48,7 +48,9 @@ export interface ReadOptions {
   maxTokens?: number;
 }
 
-const DEFAULT_MODEL = process.env.MAIA_DEVELOPMENTAL_READER_MODEL || 'claude-opus-5';
+const DEFAULT_MODEL = process.env.MAIA_DEVELOPMENTAL_READER_MODEL
+  || process.env.MAIA_LOCAL_STRUCTURED_MODEL
+  || 'claude-opus-5';
 /* C11R2 · Whole-work Structure on Elemental Alchemy exhausted the former
    16k allowance while the response was still structurally valid in intent.
    Refusing truncation remains the law; the repair is to give the governed
@@ -125,8 +127,15 @@ export function resultFromBlocks(
 }
 
 /** The reader's identity for a given pinned model. `frozenAt` is a store's to stamp — BUILD-07C. */
-export function readerIdentity(model: string): ReaderIdentity {
-  return { provider: 'anthropic', model, promptHash: promptContractHash(), readerVersion: READER_VERSION };
+export function readerIdentity(model: string): ReaderIdentity;
+export function readerIdentity(provider: 'anthropic' | 'ollama', model: string): ReaderIdentity;
+export function readerIdentity(
+  providerOrModel: 'anthropic' | 'ollama' | string,
+  maybeModel?: string,
+): ReaderIdentity {
+  const provider = maybeModel === undefined ? 'anthropic' : providerOrModel as 'anthropic' | 'ollama';
+  const model = maybeModel ?? providerOrModel;
+  return { provider, model, promptHash: promptContractHash(), readerVersion: READER_VERSION };
 }
 
 /**
@@ -148,9 +157,17 @@ export async function readDevelopmentally(
     model,
     maxTokens,
     system: READER_SYSTEM,
-    tools: [{ name: tool.name, description: tool.description, inputSchema: tool.input_schema }],
-    /* She must answer THROUGH the tool. Prose in a text block is not a reading. */
-    toolChoice: { type: 'any' },
+    tools: [{
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.input_schema,
+      schemaEnforcement: 'required',
+    }],
+    /* She must answer THROUGH this one named contract. This is semantically the
+       same single reader tool on every provider and lets local structured
+       inference enforce one complete schema-bound result rather than several
+       partial calls. */
+    toolChoice: { type: 'tool', name: tool.name },
     messages: [{ role: 'user', content: renderRequest(request) }],
     execution: { completion: 'long-running' },
   });
@@ -166,9 +183,7 @@ export async function readDevelopmentally(
      members of it (structured/types.ts:82-97). They were being dropped here
      either way — `resultFromBlocks` only ever received `content`. */
   const cause = classifyCause(outcome.result);
-  if (provenance.provider !== 'anthropic') {
-    /* `ReaderIdentity.provider` is the literal the store knows. A provider the
-       identity cannot name is a configuration this reader was never ruled for. */
+  if (!(provenance.provider === 'anthropic' || provenance.provider === 'ollama')) {
     return refused('not_configured',
       `provider ${String(provenance.provider)} cannot be recorded as this reader's identity`,
       null, cause);
@@ -176,8 +191,9 @@ export async function readDevelopmentally(
   return resultFromBlocks(
     outcome.result.content,
     request,
-    /* The model ACTUALLY SENT, from the seam — never the default's name. */
-    readerIdentity(provenance.model),
+    /* The provider and model ACTUALLY USED, from the seam — never inferred from
+       a deployment default. */
+    readerIdentity(provenance.provider, provenance.model),
     cause,
   );
 }

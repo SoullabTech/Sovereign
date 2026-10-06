@@ -10,7 +10,7 @@
  */
 
 export interface ReaderProvenance {
-  provider: 'anthropic';
+  provider: 'anthropic' | 'ollama';
   /** The resolved model string actually sent, never the default's name. */
   model: string;
   /** SHA-256 over the system prompt and the tool contract, together. */

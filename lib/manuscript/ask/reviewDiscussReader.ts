@@ -11,7 +11,9 @@ import {
 } from '@/lib/writersStudio/workingStyle';
 
 export const REVIEW_DISCUSS_READER_VERSION = 'review-discuss-r2-2-v2';
-const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
+const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL
+  || process.env.MAIA_LOCAL_STRUCTURED_MODEL
+  || 'claude-opus-5';
 
 function evidenceText(e: EvidenceView): string | null {
   if (e.kind !== 'verified') return null;

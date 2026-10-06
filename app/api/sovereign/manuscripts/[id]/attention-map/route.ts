@@ -42,7 +42,7 @@ function oneTool(blocks: readonly StructuredBlock[]): unknown | null {
   );
   return calls.length === 1 ? calls[0]!.input : null;
 }
-function inputSchemaFor(evidenceRefs: readonly string[], overviewMode: boolean) {
+function inputSchemaFor(evidenceRefs: readonly string[], itemCount: number | null) {
   return {
     type: 'object',
     additionalProperties: false,
@@ -51,8 +51,8 @@ function inputSchemaFor(evidenceRefs: readonly string[], overviewMode: boolean) 
       version: { type: 'string', enum: [ATTENTION_SYNTHESIS_VERSION] },
       items: {
         type: 'array',
-        minItems: overviewMode ? 4 : 1,
-        maxItems: overviewMode ? 4 : 24,
+        minItems: itemCount ?? 1,
+        maxItems: itemCount ?? 24,
         items: {
           type: 'object',
           additionalProperties: false,
@@ -93,6 +93,14 @@ export async function POST(
     return NextResponse.json({ error: 'readingIds_and_request_required' }, { status: 400 });
   }
   const workingStyle = workingStyleFrom(body.workingStyle);
+  const itemCount = body.itemCount === undefined
+    ? null
+    : (Number.isInteger(body.itemCount) && Number(body.itemCount) >= 1 && Number(body.itemCount) <= 24
+        ? Number(body.itemCount)
+        : NaN);
+  if (Number.isNaN(itemCount)) {
+    return NextResponse.json({ error: 'invalid_item_count' }, { status: 400 });
+  }
   const readingIds = [...new Set(body.readingIds)];
   const deepLenses = DEVELOPMENTAL_LENSES.filter((lens) => lens !== 'overview');
   if (readingIds.length !== 1 && readingIds.length !== deepLenses.length) {
@@ -216,7 +224,7 @@ export async function POST(
     maxTokens: 8000,
     tools: [{
       name: TOOL,
-      inputSchema: inputSchemaFor(observations.map((observation) => observation.synthesisRef), overviewMode),
+      inputSchema: inputSchemaFor(observations.map((observation) => observation.synthesisRef), itemCount),
       description: 'Return the evidence-bound whole-manuscript attention map.',
     }],
     toolChoice: { type: 'tool', name: TOOL },

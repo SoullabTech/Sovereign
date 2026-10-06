@@ -16,6 +16,7 @@ export const dynamic = 'force-dynamic';
 
 const TOOL = 'return_lineage_scan';
 const MODEL = process.env.MAIA_LINEAGE_MODEL
+  || process.env.MAIA_LOCAL_STRUCTURED_MODEL
   || process.env.MAIA_DEVELOPMENTAL_READER_MODEL
   || 'claude-opus-5';
 

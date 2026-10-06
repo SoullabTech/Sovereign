@@ -131,7 +131,7 @@ describe('Writer Studio relational Develop guidance', () => {
   it('makes future saved readings writer-facing instead of taxonomy-facing', () => {
     expect(reader).toContain('Write as MAIA noticing something WITH a writer');
     expect(reader).toContain('The taxonomy belongs in metadata');
-    expect(reader).toContain("READER_VERSION = 'DEVELOPMENTAL-READER-09'");
+    expect(reader).toContain("READER_VERSION = 'DEVELOPMENTAL-READER-10'");
   });
 
   it('pins colors to Studio variables so night mode cannot fall back to native black', () => {

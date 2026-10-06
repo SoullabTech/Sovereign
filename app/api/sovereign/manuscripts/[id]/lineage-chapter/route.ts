@@ -17,7 +17,9 @@ import type { BibliographyEntry } from '@/lib/writersStudio/intellectualLineageS
 export const dynamic = 'force-dynamic';
 
 const TOOL = 'return_chapter_lineage';
-const MODEL = process.env.MAIA_LINEAGE_CHAPTER_MODEL || 'claude-opus-5';
+const MODEL = process.env.MAIA_LINEAGE_CHAPTER_MODEL
+  || process.env.MAIA_LOCAL_STRUCTURED_MODEL
+  || 'claude-opus-5';
 
 type SectionRow = {
   id: string;

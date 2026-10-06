@@ -1812,7 +1812,7 @@ function ChapterReviewPanel({
                   className="p4r1-minimal-path-action"
                   onClick={() => onEdit(item.id, item.sectionIds[0]!, 'minimal-path')}
                 >
-                  Work on this →
+                  Work on this in Write →
                 </button>
               ) : null}
             </article>

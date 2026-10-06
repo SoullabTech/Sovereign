@@ -28,6 +28,13 @@ const provider = 'ollama' as const;
 const DEFAULT_BASE_URL = 'http://127.0.0.1:11434';
 const ORDINARY_TIMEOUT_MS = 180_000;
 const LONG_TIMEOUT_MS = 600_000;
+/* Long manuscript reads need provider context as well as wall-clock time. Ollama
+   otherwise defaults this model to 32k even when the installed model advertises
+   a much larger window, silently truncating a whole-book developmental read.
+   196608 leaves headroom beneath qwen3-coder:30b's installed 262144 context
+   while accommodating the current Elemental Alchemy book plus its structured
+   completion. Operators can override it explicitly. */
+const LONG_CONTEXT_TOKENS = 196_608;
 
 type FetchLike = typeof fetch;
 
@@ -73,6 +80,12 @@ function selectedTools(req: StructuredRequest): StructuredTool[] | undefined {
 
 export function toOllamaParams(req: StructuredRequest): Record<string, unknown> {
   const tools = selectedTools(req);
+  const configuredLongContext = Number(process.env.MAIA_STRUCTURED_OLLAMA_LONG_CONTEXT || 0);
+  const longContext = Number.isInteger(configuredLongContext) && configuredLongContext > 0
+    ? configuredLongContext
+    : LONG_CONTEXT_TOKENS;
+  const options: Record<string, number> = { num_predict: req.maxTokens };
+  if (req.execution?.completion === 'long-running') options.num_ctx = longContext;
   const params: Record<string, unknown> = {
     model: req.model,
     stream: false,
@@ -80,7 +93,7 @@ export function toOllamaParams(req: StructuredRequest): Record<string, unknown> 
       { role: 'system', content: req.system },
       ...req.messages.map((m) => ({ role: m.role, content: m.content })),
     ],
-    options: { num_predict: req.maxTokens },
+    options,
   };
   if (req.toolChoice?.type === 'tool') {
     const required = tools?.[0];

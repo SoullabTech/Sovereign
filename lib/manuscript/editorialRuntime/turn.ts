@@ -88,7 +88,9 @@ import { persistMaiaEditorialOutcome, type MaiaOutcomeRefusal, type MaiaOutcomeR
 import { detectNoopAdjustment, type NoopAdjustmentReason } from './noopProposal';
 
 /** ⭐ The capability owns its model pin. ⛔ Never chosen by HTTP. */
-export const EDITORIAL_MODEL = process.env.MAIA_EDITORIAL_MODEL || 'claude-opus-5';
+export const EDITORIAL_MODEL = process.env.MAIA_EDITORIAL_MODEL
+  || process.env.MAIA_LOCAL_STRUCTURED_MODEL
+  || 'claude-opus-5';
 const MAX_TOKENS = 4096;
 
 /** ⛔ VERIFIED ONLY. An editorial act has no anonymous or guest form. */

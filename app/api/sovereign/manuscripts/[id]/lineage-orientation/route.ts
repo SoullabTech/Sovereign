@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic';
 
 const TOOL = 'return_lineage_orientation';
 const MODEL = process.env.MAIA_LINEAGE_ORIENTATION_MODEL
+  || process.env.MAIA_LOCAL_STRUCTURED_MODEL
   || 'claude-sonnet-5';
 
 type SectionRow = {

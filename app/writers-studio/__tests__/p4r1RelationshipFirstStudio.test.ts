@@ -23,6 +23,9 @@ describe('Writer Studio relationship-first shell', () => {
   const editorialRuntime = read('lib/manuscript/editorialRuntime/turn.ts');
   const reviewDiscussClient = read('lib/writersStudio/rebuild/reviewDiscuss.ts');
   const reviewDiscussReader = read('lib/manuscript/ask/reviewDiscussReader.ts');
+  const askReader = read('lib/manuscript/ask/askReader.ts');
+  const developmentalAskReader = read('lib/manuscript/ask/developmentalAskReader.ts');
+  const developmentalReader = read('lib/manuscript/developmentalReader/read.ts');
 
   it('restores Working with MAIA as a persistent Write · Develop · Review control', () => {
     expect(host).toContain("mode === 'write' || mode === 'develop' || mode === 'review'");
@@ -80,6 +83,12 @@ describe('Writer Studio relationship-first shell', () => {
     expect(askClient).toContain('workingStyle: readWorkingStyle()');
     expect(askRoute).toContain('const workingStyle = workingStyleFrom(body.workingStyle)');
     expect(askRoute).toContain('const engagement = workingStyle.engagement');
+  });
+
+  it('keeps the local structured model available across the relationship, not only in Attention Map', () => {
+    for (const source of [askReader, developmentalAskReader, reviewDiscussReader, developmentalReader, editorialRuntime]) {
+      expect(source).toContain('process.env.MAIA_LOCAL_STRUCTURED_MODEL');
+    }
   });
 
   it('carries relationship-first through Write editorial and Review Discuss too', () => {

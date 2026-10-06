@@ -82,7 +82,7 @@ import {
  * -03: a reading's identity is the whole of what the model was shown, and the
  * -04 text is not the -05 text. `promptContractHash()` moves with it.
  */
-export const READER_VERSION = 'DEVELOPMENTAL-READER-09';
+export const READER_VERSION = 'DEVELOPMENTAL-READER-10';
 export const TOOL_NAME = 'draft_reader_claims';
 
 /* ── the prompt ──────────────────────────────────────────────────────────── */
@@ -150,39 +150,55 @@ const REF_SCHEMA = {
 } as const;
 
 export function readerTool(): ReaderTool {
+  const claim = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['text', 'refs', 'doesNotEstablish'],
+    properties: {
+      text: { type: 'string', minLength: 1,
+        description: 'What you noticed. Not a recommendation, not a judgement.' },
+      themeLabel: { type: 'string', minLength: 1, maxLength: 120,
+        description: 'Themes lens ONLY: short MAIA-authored candidate theme name. Omit for every other lens.' },
+      refs: { type: 'array', minItems: 1, items: REF_SCHEMA,
+        description: 'The evidence this rests on, in the permitted shapes.' },
+      doesNotEstablish: { type: 'array', minItems: 1,
+        items: { type: 'string', enum: [...DEVELOPMENTAL_NON_CONCLUSIONS] },
+        description: 'What this noticing does NOT establish. At least one.' },
+    },
+  } as const;
+
+  /* READER-10. `claims` used to be optional at the JSON-schema layer even when
+     outcome was `none`; the parser correctly refused the contradictory shape,
+     but a provider could still be guided into generating it. Make the two legal
+     envelopes disjoint at provider-side schema enforcement: either claims with
+     a non-empty claims array, OR none with no claims field at all. */
   return {
     name: TOOL_NAME,
     description: 'Draft what you noticed under the commissioned lens, each draft bound to '
       + 'evidence references and to what it does not establish. Use outcome "none" when '
       + 'there is nothing worth drafting - that is a complete answer.',
     input_schema: {
-      type: 'object',
-      additionalProperties: false,
-      required: ['outcome'],
-      properties: {
-        outcome: { type: 'string', enum: ['claims', 'none'] },
-        claims: {
-          type: 'array',
-          minItems: 1,
-          description: 'For outcome "claims" ONLY. Omit entirely for "none".',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            required: ['text', 'refs', 'doesNotEstablish'],
-            properties: {
-              text: { type: 'string', minLength: 1,
-                description: 'What you noticed. Not a recommendation, not a judgement.' },
-              themeLabel: { type: 'string', minLength: 1, maxLength: 120,
-                description: 'Themes lens ONLY: short MAIA-authored candidate theme name. Omit for every other lens.' },
-              refs: { type: 'array', minItems: 1, items: REF_SCHEMA,
-                description: 'The evidence this rests on, in the permitted shapes.' },
-              doesNotEstablish: { type: 'array', minItems: 1,
-                items: { type: 'string', enum: [...DEVELOPMENTAL_NON_CONCLUSIONS] },
-                description: 'What this noticing does NOT establish. At least one.' },
+      oneOf: [
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['outcome', 'claims'],
+          properties: {
+            outcome: { const: 'claims' },
+            claims: {
+              type: 'array',
+              minItems: 1,
+              items: claim,
             },
           },
         },
-      },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['outcome'],
+          properties: { outcome: { const: 'none' } },
+        },
+      ],
     },
   };
 }

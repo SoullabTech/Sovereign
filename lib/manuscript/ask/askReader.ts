@@ -38,7 +38,9 @@ import { type StalenessState, isCurrent, mustNotAssertCurrent } from './stalenes
 
 export const ASKER_VERSION = 'ws2-05b-8b-02c-2';
 
-const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
+const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL
+  || process.env.MAIA_LOCAL_STRUCTURED_MODEL
+  || 'claude-opus-5';
 
 const WRITERS_CONSTELLATION_REFERRAL = constellationReferralPrompt('writers-studio');
 
@@ -79,7 +81,7 @@ export function askPromptHash(
 }
 
 export interface AskAnswerProvenance {
-  provider: 'anthropic';
+  provider: 'anthropic' | 'ollama';
   /** The resolved model string actually sent, never the default's name. */
   model: string;
   promptHash: string;
@@ -414,8 +416,8 @@ export async function askMaia(
       ok: true,
       answer: text,
       provenance: {
-        provider: 'anthropic',
-        model,
+        provider: outcome.result.provenance.provider === 'ollama' ? 'ollama' : 'anthropic',
+        model: outcome.result.provenance.model,
         promptHash: askPromptHash(opts.engagement, opts.responseStyle),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
