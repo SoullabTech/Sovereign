@@ -43,7 +43,7 @@ describe('Ollama structured adapter', () => {
       { role: 'assistant', content: 'second' },
       { role: 'user', content: 'third' },
     ]);
-    expect(params.options).toEqual({ num_predict: 8000, num_ctx: 196608 });
+    expect(params.options).toEqual({ num_predict: 8000, num_ctx: 131072 });
     expect(params.format).toEqual(req.tools![0]!.inputSchema);
     expect('tools' in params).toBe(false);
   });

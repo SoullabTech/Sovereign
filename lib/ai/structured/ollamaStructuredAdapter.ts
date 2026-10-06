@@ -31,10 +31,10 @@ const LONG_TIMEOUT_MS = 600_000;
 /* Long manuscript reads need provider context as well as wall-clock time. Ollama
    otherwise defaults this model to 32k even when the installed model advertises
    a much larger window, silently truncating a whole-book developmental read.
-   196608 leaves headroom beneath qwen3-coder:30b's installed 262144 context
-   while accommodating the current Elemental Alchemy book plus its structured
-   completion. Operators can override it explicitly. */
-const LONG_CONTEXT_TOKENS = 196_608;
+   131072 is large enough for the current Elemental Alchemy manuscript while
+   leaving substantially more unified-memory headroom than a near-maximal
+   context on the founder workstation. Operators can override it explicitly. */
+const LONG_CONTEXT_TOKENS = 131_072;
 
 type FetchLike = typeof fetch;
 

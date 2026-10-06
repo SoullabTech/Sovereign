@@ -88,6 +88,18 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(controller).toContain('strongest movement');
   });
 
+  it('shows one chapter exploration at a time instead of stacking an editorial dashboard', () => {
+    expect(develop).toContain("useState<'book-fit' | 'protect' | 'movement' | 'scorecard' | 'minimal-path' | null>(null)");
+    expect(develop).toContain("activeExpansion === 'book-fit' && bookFit");
+    expect(develop).toContain("activeExpansion === 'protect' && protect");
+    expect(develop).toContain("activeExpansion === 'movement' && movement");
+    expect(develop).toContain("activeExpansion === 'scorecard' && scorecard");
+    expect(develop).toContain("activeExpansion === 'minimal-path' && minimalPath");
+    expect(develop).toContain('What would you protect?');
+    expect(develop).toContain('These are not compliments to get through before critique.');
+    expect(controller).toContain('Before revising this chapter, make a writer-facing protect list');
+  });
+
   it('commissions the whole-manuscript synthesis as an editorial pass, not an abstract dashboard', () => {
     expect(controller).toContain('writers-studio:editorial-pass:v1');
     expect(controller).toContain('MAIA is reading through the manuscript for edit opportunities');

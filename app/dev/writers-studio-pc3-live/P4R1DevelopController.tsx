@@ -153,6 +153,9 @@ export default function P4R1DevelopController() {
   const [chapterNeedsCheckpoint, setChapterNeedsCheckpoint] = useState(false);
   const [chapterReviewError, setChapterReviewError] = useState<string | null>(null);
   const [chapterReviewProgress, setChapterReviewProgress] = useState<string | null>(null);
+  const [chapterProtect, setChapterProtect] = useState<WholeManuscriptAttentionMap | null>(null);
+  const [chapterProtectBusy, setChapterProtectBusy] = useState(false);
+  const [chapterProtectError, setChapterProtectError] = useState<string | null>(null);
   const [chapterScorecard, setChapterScorecard] = useState<WholeManuscriptAttentionMap | null>(null);
   const [previousChapterScorecard, setPreviousChapterScorecard] = useState<WholeManuscriptAttentionMap | null>(null);
   const [previousChapterScoreRevision, setPreviousChapterScoreRevision] = useState<number | null>(null);
@@ -324,6 +327,8 @@ export default function P4R1DevelopController() {
     setChapterReviewProgress(null);
     setChapterNeedsCheckpoint(false);
     setChapterReadPending(false);
+    setChapterProtect(null);
+    setChapterProtectError(null);
     setChapterBookFit(null);
     setChapterBookFitError(null);
     setChapterMovement(null);
@@ -1040,6 +1045,12 @@ export default function P4R1DevelopController() {
     setChapterReviewBusy(true);
     setChapterNeedsCheckpoint(false);
     setChapterReviewError(null);
+    setChapterProtect(null);
+    setChapterProtectError(null);
+    setChapterBookFit(null);
+    setChapterBookFitError(null);
+    setChapterMovement(null);
+    setChapterMovementError(null);
     setChapterReviewProgress('MAIA is reading the chapter…');
     try {
       let overviewReadingId: string | null = null;
@@ -1231,6 +1242,34 @@ export default function P4R1DevelopController() {
       setChapterBookFitBusy(false);
     }
   }, [context, chapterReview, chapterBookFitBusy, summaries, loadSummaries]);
+
+  const protectCurrentChapter = useCallback(async () => {
+    if (!context || !chapterReview || chapterProtectBusy) return;
+    setChapterProtectBusy(true);
+    setChapterProtectError(null);
+    try {
+      const out = await requestAttentionMap(
+        context.manuscriptId,
+        chapterReview.readingIds,
+        [
+          'Before revising this chapter, make a writer-facing protect list from the same frozen chapter reading.',
+          'Relationship first: identify what should not be lost merely because the chapter is being improved. Be specific and earned, never flattering.',
+          'Return exactly four evidenced items. Use begin-here, next, later, watch only as presentation order, not as priority or criticism.',
+          'Look across story or lived material, images or metaphors, arguments or insights, voice and rhythm, and structural moves. Do not force one item from every category when the evidence does not support it.',
+          'Each item should name something alive, distinctive, generative, moving, clear, original, or unusually effective in this chapter and say why it matters to the reader or the chapter’s identity.',
+          'Do not recommend changes here. This is the list MAIA should actively protect while later helping the writer revise.',
+        ].join('\n'),
+        { itemCount: 4 },
+      );
+      if (!out.ok) {
+        setChapterProtectError('MAIA could not gather the protect list just now. The chapter and its saved reading are unchanged.');
+        return;
+      }
+      setChapterProtect(out.map);
+    } finally {
+      setChapterProtectBusy(false);
+    }
+  }, [context, chapterReview, chapterProtectBusy]);
 
   const readChapterMovement = useCallback(async () => {
     if (!context || !chapterReview || chapterMovementBusy) return;
@@ -1649,6 +1688,9 @@ export default function P4R1DevelopController() {
       chapterNeedsCheckpoint={chapterNeedsCheckpoint}
       chapterReviewError={chapterReviewError}
       chapterReviewProgress={chapterReviewProgress}
+      chapterProtect={chapterProtect}
+      chapterProtectBusy={chapterProtectBusy}
+      chapterProtectError={chapterProtectError}
       chapterScorecard={chapterScorecard}
       previousChapterScorecard={previousChapterScorecard}
       previousChapterScoreRevision={previousChapterScoreRevision}
@@ -1693,6 +1735,7 @@ export default function P4R1DevelopController() {
       onReadChapter={() => void readCurrentChapter()}
       onCheckpointAndReadChapter={() => void checkpointCurrentChapterAndRead()}
       onReadChapterInBook={() => void readChapterInBook()}
+      onProtectChapter={() => void protectCurrentChapter()}
       onReadChapterMovement={() => void readChapterMovement()}
       onScoreChapter={() => void scoreCurrentChapter()}
       onMinimalPathChapter={() => void minimalPathCurrentChapter()}

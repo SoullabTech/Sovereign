@@ -178,6 +178,9 @@ export interface P4R1DevelopViewProps {
   chapterNeedsCheckpoint: boolean;
   chapterReviewError: string | null;
   chapterReviewProgress: string | null;
+  chapterProtect: WholeManuscriptAttentionMap | null;
+  chapterProtectBusy: boolean;
+  chapterProtectError: string | null;
   chapterScorecard: WholeManuscriptAttentionMap | null;
   previousChapterScorecard: WholeManuscriptAttentionMap | null;
   previousChapterScoreRevision: number | null;
@@ -222,6 +225,7 @@ export interface P4R1DevelopViewProps {
   onReadChapter: () => void;
   onCheckpointAndReadChapter: () => void;
   onReadChapterInBook: () => void;
+  onProtectChapter: () => void;
   onReadChapterMovement: () => void;
   onScoreChapter: () => void;
   onMinimalPathChapter: () => void;
@@ -1547,6 +1551,9 @@ function ChapterReviewPanel({
   onField,
   onWrite,
   onEdit,
+  protect,
+  protectBusy,
+  protectError,
   scorecard,
   previousScorecard,
   previousScoreRevision,
@@ -1562,6 +1569,7 @@ function ChapterReviewPanel({
   movementBusy,
   movementError,
   onBookFit,
+  onProtect,
   onMovement,
   onScore,
   onMinimalPath,
@@ -1576,6 +1584,9 @@ function ChapterReviewPanel({
   onField: (field: DevelopField) => void;
   onWrite: () => void;
   onEdit: (itemId: string, sectionId: string, source: 'chapter-review' | 'minimal-path') => void;
+  protect: WholeManuscriptAttentionMap | null;
+  protectBusy: boolean;
+  protectError: string | null;
   scorecard: WholeManuscriptAttentionMap | null;
   previousScorecard: WholeManuscriptAttentionMap | null;
   previousScoreRevision: number | null;
@@ -1591,10 +1602,54 @@ function ChapterReviewPanel({
   movementBusy: boolean;
   movementError: string | null;
   onBookFit: () => void;
+  onProtect: () => void;
   onMovement: () => void;
   onScore: () => void;
   onMinimalPath: () => void;
 }) {
+  const [activeExpansion, setActiveExpansion] = useState<'book-fit' | 'protect' | 'movement' | 'scorecard' | 'minimal-path' | null>(null);
+
+  const openBookFit = () => {
+    if (activeExpansion === 'book-fit') {
+      setActiveExpansion(null);
+      return;
+    }
+    setActiveExpansion('book-fit');
+    if (!bookFit && !bookFitBusy) onBookFit();
+  };
+  const openProtect = () => {
+    if (activeExpansion === 'protect') {
+      setActiveExpansion(null);
+      return;
+    }
+    setActiveExpansion('protect');
+    if (!protect && !protectBusy) onProtect();
+  };
+  const openMovement = () => {
+    if (activeExpansion === 'movement') {
+      setActiveExpansion(null);
+      return;
+    }
+    setActiveExpansion('movement');
+    if (!movement && !movementBusy) onMovement();
+  };
+  const openScorecard = () => {
+    if (activeExpansion === 'scorecard') {
+      setActiveExpansion(null);
+      return;
+    }
+    setActiveExpansion('scorecard');
+    if (!scorecard && !scoreBusy) onScore();
+  };
+  const openMinimalPath = () => {
+    if (activeExpansion === 'minimal-path') {
+      setActiveExpansion(null);
+      return;
+    }
+    setActiveExpansion('minimal-path');
+    if (!minimalPath && !minimalPathBusy) onMinimalPath();
+  };
+
   if (!map) {
     return (
       <section className="fr-card p4r1-chapter-review" data-chapter-review="empty">
@@ -1668,14 +1723,19 @@ function ChapterReviewPanel({
       ) : null}
 
       <div className="p4r1-chapter-review-actions">
-        <button type="button" disabled={bookFitBusy} onClick={onBookFit}>
+        <button type="button" disabled={bookFitBusy} aria-pressed={activeExpansion === 'book-fit'} onClick={openBookFit}>
           {bookFitBusy ? 'Reading the book around this chapter…' : 'How does this chapter fit the book?'}
         </button>
-        <button type="button" disabled={movementBusy} onClick={onMovement}>
+        <button type="button" disabled={movementBusy} aria-pressed={activeExpansion === 'movement'} onClick={openMovement}>
           {movementBusy ? 'Looking at the chapter’s movement…' : 'Show me the chapter’s movement'}
         </button>
-        <button type="button" disabled={minimalPathBusy} onClick={onMinimalPath}>
-          {minimalPathBusy ? 'Finding the highest-leverage changes…' : 'Show me what to strengthen'}
+        <button type="button" disabled={protectBusy} aria-pressed={activeExpansion === 'protect'} onClick={openProtect}>
+          {protectBusy ? 'Gathering what should stay intact…' : 'What would you protect?'}
+        </button>
+        <button type="button" disabled={minimalPathBusy} aria-pressed={activeExpansion === 'minimal-path'} onClick={openMinimalPath}>
+          {minimalPathBusy
+            ? 'Finding the highest-leverage changes…'
+            : scorecard ? 'Minimal path to 5/5' : 'Show me what to strengthen'}
         </button>
         {start?.sectionIds[0] ? (
           <button
@@ -1688,20 +1748,13 @@ function ChapterReviewPanel({
         ) : (
           <button type="button" className="p4r1-chapter-review-primary" onClick={onWrite}>Work on the writing</button>
         )}
-        {!scorecard ? (
-          <button type="button" disabled={scoreBusy} onClick={onScore}>
-            {scoreBusy ? 'Building scorecard…' : 'Chapter scorecard'}
-          </button>
-        ) : null}
-        {scorecard ? (
-          <button type="button" disabled={minimalPathBusy} onClick={onMinimalPath}>
-            {minimalPathBusy ? 'Finding the smallest high-leverage changes…' : 'Minimal path to 5/5'}
-          </button>
-        ) : null}
+        <button type="button" disabled={scoreBusy} aria-pressed={activeExpansion === 'scorecard'} onClick={openScorecard}>
+          {scoreBusy ? 'Building scorecard…' : 'Chapter scorecard'}
+        </button>
       </div>
 
-      {bookFitError ? <p className="p4r1-error" role="status">{bookFitError}</p> : null}
-      {bookFit ? (
+      {activeExpansion === 'book-fit' && bookFitError ? <p className="p4r1-error" role="status">{bookFitError}</p> : null}
+      {activeExpansion === 'book-fit' && bookFit ? (
         <section className="p4r1-chapter-expansion" data-chapter-book-fit>
           <span className="p4r1-eyebrow">In the book</span>
           {bookFit.items.map((item) => (
@@ -1714,8 +1767,24 @@ function ChapterReviewPanel({
         </section>
       ) : null}
 
-      {movementError ? <p className="p4r1-error" role="status">{movementError}</p> : null}
-      {movement ? (
+      {activeExpansion === 'protect' && protectError ? <p className="p4r1-error" role="status">{protectError}</p> : null}
+      {activeExpansion === 'protect' && protect ? (
+        <section className="p4r1-chapter-expansion p4r1-protect-list" data-chapter-protect>
+          <span className="p4r1-eyebrow">Protect before revising</span>
+          <h4>What I would keep alive</h4>
+          <p>These are not compliments to get through before critique. Keep them visible as you decide what, if anything, deserves revision.</p>
+          {protect.items.map((item) => (
+            <article key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.notice}</p>
+              <small>{item.whyItMatters}</small>
+            </article>
+          ))}
+        </section>
+      ) : null}
+
+      {activeExpansion === 'movement' && movementError ? <p className="p4r1-error" role="status">{movementError}</p> : null}
+      {activeExpansion === 'movement' && movement ? (
         <section className="p4r1-chapter-expansion" data-chapter-movement>
           <span className="p4r1-eyebrow">Inside the chapter</span>
           {movement.items.map((item) => (
@@ -1728,8 +1797,8 @@ function ChapterReviewPanel({
         </section>
       ) : null}
 
-      {scoreError ? <p className="p4r1-error" role="status">{scoreError}</p> : null}
-      {scorecard ? (() => {
+      {activeExpansion === 'scorecard' && scoreError ? <p className="p4r1-error" role="status">{scoreError}</p> : null}
+      {activeExpansion === 'scorecard' && scorecard ? (() => {
         const dimensions = ['Clarity', 'Coherence', 'Reader orientation', 'Voice', 'Momentum'];
         const scored = scorecard.items.filter((item) => dimensions.includes(item.label));
         const extras = scorecard.items.filter((item) => !dimensions.includes(item.label));
@@ -1795,8 +1864,8 @@ function ChapterReviewPanel({
         );
       })() : null}
 
-      {minimalPathError ? <p className="p4r1-error" role="status">{minimalPathError}</p> : null}
-      {minimalPath ? (
+      {activeExpansion === 'minimal-path' && minimalPathError ? <p className="p4r1-error" role="status">{minimalPathError}</p> : null}
+      {activeExpansion === 'minimal-path' && minimalPath ? (
         <section className="p4r1-chapter-expansion p4r1-minimal-path" data-chapter-minimal-path>
           <span className="p4r1-eyebrow">Minimal path to 5/5</span>
           <h4>Start with the few changes that do the most work.</h4>
@@ -1820,15 +1889,17 @@ function ChapterReviewPanel({
         </section>
       ) : null}
 
-      <details className="p4r1-chapter-review-details">
-        <summary>Why MAIA thinks this</summary>
-        {map.items.map((item) => (
-          <div key={item.id}>
-            <b>{item.label}</b>
-            <p>{item.whyItMatters}</p>
-          </div>
-        ))}
-      </details>
+      {activeExpansion === null ? (
+        <details className="p4r1-chapter-review-details">
+          <summary>Why MAIA thinks this</summary>
+          {map.items.map((item) => (
+            <div key={item.id}>
+              <b>{item.label}</b>
+              <p>{item.whyItMatters}</p>
+            </div>
+          ))}
+        </details>
+      ) : null}
 
       {error ? <p className="p4r1-error" role="status">{error}</p> : null}
     </section>
@@ -2321,6 +2392,9 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             onField={props.onField}
             onWrite={() => props.onMode('write')}
             onEdit={props.onWorkWithAttentionItem}
+            protect={props.chapterProtect}
+            protectBusy={props.chapterProtectBusy}
+            protectError={props.chapterProtectError}
             scorecard={props.chapterScorecard}
             previousScorecard={props.previousChapterScorecard}
             previousScoreRevision={props.previousChapterScoreRevision}
@@ -2336,6 +2410,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             movementBusy={props.chapterMovementBusy}
             movementError={props.chapterMovementError}
             onBookFit={props.onReadChapterInBook}
+            onProtect={props.onProtectChapter}
             onMovement={props.onReadChapterMovement}
             onScore={props.onScoreChapter}
             onMinimalPath={props.onMinimalPathChapter}
