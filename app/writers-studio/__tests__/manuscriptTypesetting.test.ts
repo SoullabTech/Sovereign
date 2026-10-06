@@ -101,3 +101,50 @@ describe('Writer Studio manuscript typesetting', () => {
     expect(blocks.some((b) => b.kind === 'folio' && b.text === '161')).toBe(true);
   });
 });
+
+describe('Elemental Alchemy imported-page reconstruction', () => {
+  it('separates all-caps subsection headings from following prose', () => {
+    const body = [
+      'The prior paragraph ends here.',
+      'GATHERING THE FIRE — MAYA’S “IF”',
+      'Fire begins by illuminating possibility. Sometimes this arrives as inspiration: a vision, an intuition,',
+      'a sudden sense that something new wants to happen.',
+    ].join('\n');
+    const blocks = typesetManuscriptBody(body);
+    expect(blocks.some((b) => b.kind === 'subhead' && b.text === 'GATHERING THE FIRE — MAYA’S “IF”')).toBe(true);
+    const headingIndex = blocks.findIndex((b) => b.text === 'GATHERING THE FIRE — MAYA’S “IF”');
+    expect(blocks[headingIndex + 1]?.kind).toBe('paragraph');
+    expect(blocks[headingIndex + 1]?.text).toContain('Fire begins by illuminating possibility.');
+  });
+
+  it('does not invent a paragraph break at a folio inside a sentence', () => {
+    const body = [
+      'The situation in front of her was real, but so was the history moving through her response',
+      'to it. She was beginning to distinguish between what was happening and what was being awakened.',
+      'This did not immediately solve anything, but it gave her another place from which to look. Fire',
+      'opens the question of If. Water carries us toward Why. Earth asks How. Air clarifies what has been',
+      'learned and opens it into With—with whom, with what community, and within what',
+      '',
+      '171',
+      '',
+      'larger field our experience can enter relationship. Aether holds the movement as a whole.',
+    ].join('\n');
+    const blocks = typesetManuscriptBody(body);
+    const prose = blocks.filter((b) => b.kind === 'paragraph').map((b) => b.text);
+    expect(prose.join(' ')).toContain('within what\nlarger field our experience can enter relationship');
+    expect(blocks.some((b) => b.kind === 'folio' && b.text === '171')).toBe(true);
+  });
+
+  it('rejoins a Roman heading split by a print line break', () => {
+    const body = [
+      'IV. The Architecture Beneath the',
+      'Experience',
+      'Maya’s journey gives us a way of seeing the Spiralogic Process from inside a life. Having experienced',
+      'the process through her, we can now look more closely at the architecture beneath it.',
+    ].join('\n');
+    const blocks = typesetManuscriptBody(body);
+    expect(blocks[0]).toEqual({ text: 'IV. The Architecture Beneath the Experience', kind: 'subhead' });
+    expect(blocks[1]?.kind).toBe('paragraph');
+    expect(blocks[1]?.text).toContain('Maya’s journey');
+  });
+});
