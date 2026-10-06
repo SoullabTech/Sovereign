@@ -34,6 +34,7 @@ import {
   type EditorialScopeDeclaration,
 } from '@/lib/manuscript/editorialScope/contract';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
+import { workingStyleFrom, type WriterWorkingStyle } from '@/lib/writersStudio/workingStyle';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * the mistake is legible rather than mysterious.
  */
 const TOP_KEYS = [
-  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry',
+  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry', 'workingStyle',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -73,6 +74,7 @@ type Parsed =
       mayProposeImmediately: boolean;
       /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
       proposalPolicy: ProposalPolicy;
+      workingStyle: WriterWorkingStyle;
     }
   | { ok: false; error: string };
 
@@ -193,6 +195,7 @@ function parseClosed(body: unknown): Parsed {
     carry,
     mayProposeImmediately,
     proposalPolicy,
+    workingStyle: workingStyleFrom(b.workingStyle),
   };
 }
 
@@ -282,6 +285,8 @@ export async function POST(request: NextRequest) {
     scope: parsed.scope,
     mayProposeImmediately: parsed.mayProposeImmediately,
     proposalPolicy: parsed.proposalPolicy,
+    engagement: parsed.workingStyle.engagement,
+    responseStyle: parsed.workingStyle.explanation,
   });
 
   if (!turn.ok) {

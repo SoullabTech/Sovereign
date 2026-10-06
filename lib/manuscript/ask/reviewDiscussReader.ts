@@ -1,8 +1,16 @@
 import { runStructured } from '@/lib/ai/structured/router';
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
+import {
+  DEFAULT_WORKING_STYLE,
+  RELATIONSHIP_FIRST_DIRECTIVE,
+  engagementInstruction,
+  explanationInstruction,
+  type ExplanationDepth,
+  type MaiaEngagement,
+} from '@/lib/writersStudio/workingStyle';
 
-export const REVIEW_DISCUSS_READER_VERSION = 'review-discuss-r2-2-v1';
+export const REVIEW_DISCUSS_READER_VERSION = 'review-discuss-r2-2-v2';
 const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
 
 function evidenceText(e: EvidenceView): string | null {
@@ -13,7 +21,11 @@ function evidenceText(e: EvidenceView): string | null {
   return `[verified authored structure: ${r.units.length} unit(s)]`;
 }
 
-function systemFor(ctx: DevelopmentalAskContext): string {
+function systemFor(
+  ctx: DevelopmentalAskContext,
+  engagement: MaiaEngagement = DEFAULT_WORKING_STYLE.engagement,
+  responseStyle: ExplanationDepth = DEFAULT_WORKING_STYLE.explanation,
+): string {
   const evidence = ctx.evidence.map(evidenceText).filter((x): x is string => !!x);
   const location = ctx.location.state === 'current'
     ? 'The material this observation rests on is measured current.'
@@ -27,6 +39,11 @@ function systemFor(ctx: DevelopmentalAskContext): string {
     'Do not claim that current text was checked. Do not reread, reassess, commission a new reading, or silently compare THEN with NOW.',
     'Do not alter, delete, supersede, or change the standing of the durable reading. Agreement or disagreement in this conversation has no durable effect.',
     'You may say the earlier observation may have been mistaken if the historical evidence warrants that, but that is conversational only and does not revise the reading.',
+    '',
+    'RELATIONSHIP FIRST:',
+    RELATIONSHIP_FIRST_DIRECTIVE,
+    engagementInstruction(engagement),
+    explanationInstruction(responseStyle),
     '',
     'DURABLE OBSERVATION:',
     ctx.observation.text,
@@ -60,11 +77,16 @@ export type ReviewDiscussReaderOutcome =
 export async function runReviewDiscuss(
   ctx: DevelopmentalAskContext,
   question: string,
+  opts: { engagement?: MaiaEngagement; responseStyle?: ExplanationDepth } = {},
 ): Promise<ReviewDiscussReaderOutcome> {
   const outcome = await runStructured({
     model: DEFAULT_MODEL,
     maxTokens: 1200,
-    system: systemFor(ctx),
+    system: systemFor(
+      ctx,
+      opts.engagement ?? DEFAULT_WORKING_STYLE.engagement,
+      opts.responseStyle ?? DEFAULT_WORKING_STYLE.explanation,
+    ),
     messages: [{ role: 'user', content: question }],
   });
   if (!outcome.ok) return { ok: false, refusal: 'unreachable' };

@@ -17,6 +17,12 @@ import {
 } from '@/lib/writersStudio/studio/attentionMapSynthesis';
 import { validateAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
+import {
+  RELATIONSHIP_FIRST_DIRECTIVE,
+  engagementInstruction,
+  explanationInstruction,
+  workingStyleFrom,
+} from '@/lib/writersStudio/workingStyle';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,6 +92,7 @@ export async function POST(
   if (!strings(body.readingIds) || typeof body.request !== 'string') {
     return NextResponse.json({ error: 'readingIds_and_request_required' }, { status: 400 });
   }
+  const workingStyle = workingStyleFrom(body.workingStyle);
   const readingIds = [...new Set(body.readingIds)];
   const deepLenses = DEVELOPMENTAL_LENSES.filter((lens) => lens !== 'overview');
   if (readingIds.length !== 1 && readingIds.length !== deepLenses.length) {
@@ -184,6 +191,9 @@ export async function POST(
     model: MODEL,
     system: [
       attentionSynthesisSystem(overviewMode ? 'overview' : 'deep'),
+      RELATIONSHIP_FIRST_DIRECTIVE,
+      engagementInstruction(workingStyle.engagement),
+      explanationInstruction(workingStyle.explanation),
       authorContext
         ? [
             authorContext,

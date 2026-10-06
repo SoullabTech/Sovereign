@@ -36,6 +36,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import EditingLatitude, { useEditingLatitude } from '../insight/EditingLatitude';
 import { apiFetch } from '@/lib/http/apiBase';
 import { readCurrentSanctuaryPosture } from '@/lib/sanctuary/currentClientPosture';
+import { readWorkingStyle } from '@/lib/writersStudio/workingStyle';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText, typeStyle } from '../studio/StudioType';
 
@@ -281,6 +282,7 @@ export default function EditorialConversation({ threadId }: EditorialConversatio
           sanctuary: posture.sanctuary,
           /* ⭐ The writer's declared editing latitude for this exchange. */
           scope: { latitude, mayRemoveParagraphs, mayProposeImmediately },
+          workingStyle: readWorkingStyle(),
         }),
       });
       /* ⭐ Reload either way: on a MAIA-side failure the member's turn STILL

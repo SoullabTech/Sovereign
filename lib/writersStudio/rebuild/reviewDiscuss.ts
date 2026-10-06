@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/http/apiBase';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
+import { readWorkingStyle } from '@/lib/writersStudio/workingStyle';
 
 export type ReviewDiscussionState =
   | { readonly kind: 'composing'; readonly findingId: string }
@@ -42,6 +43,7 @@ export async function commissionReviewDiscuss(
           observationKey: input.observationKey,
           question: input.question,
           sanctuary: posture.sanctuary,
+          workingStyle: readWorkingStyle(),
           ...(input.relationshipId ? { relationshipId: input.relationshipId } : {}),
         }),
       },

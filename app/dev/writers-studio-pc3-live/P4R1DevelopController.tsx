@@ -1074,8 +1074,9 @@ export default function P4R1DevelopController() {
         [overviewReadingId],
         [
           'Respond directly to the writer as a perceptive, encouraging editor who has just read this chapter closely. Use "you" and "your"; never refer to them as "the author".',
-          'Be conversational, light, clear, and specific. The first thing the writer sees must build trust by naming one earned strength in the chapter — something genuinely working and worth protecting. Avoid generic praise.',
-          'Keep each item compact: label no more than 8 words, notice no more than 2 short sentences, whyItMatters no more than 2 short sentences. Put examples and quotations in evidence, not in the main response unless one very short phrase is essential.',
+          'Relationship comes first. Before any problem, friction, or recommendation, let the writer feel accurately seen in the living intelligence of the chapter. Name what is working and worth protecting; what you genuinely appreciate; what feels inspiring, generative, original, or full of possibility; and, only if the evidence truly earns it, what is unusually brilliant or genius. Never flatter and never manufacture praise.',
+          'The opening reflection may carry several connected strengths when that is what the chapter earns. Be conversational, warm without gush, clear, and specific. Problems come only after this reflection has established that you understand and value the Work.',
+          'Keep each item compact: label no more than 8 words, notice no more than 3 short sentences, whyItMatters no more than 2 short sentences. Put examples and quotations in evidence, not in the main response unless one very short phrase is essential.',
           'Name friction as something worth looking at together, not as an indictment. Avoid adversarial phrasing such as "fails", "denies", "undermines", or "contradicts" unless the textual evidence truly requires that exact claim.',
           'Return exactly four evidenced items, using the attention bands in this order:',
           'begin-here: What is working — begin positively and specifically. Show that you understood the writing before you analyze it.',

@@ -28,7 +28,11 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(develop).toContain('Show me an edited version');
     expect(develop).toContain('Chapter scorecard');
     expect(controller).toContain('Respond directly to the writer as a perceptive, encouraging editor');
-    expect(controller).toContain('The first thing the writer sees must build trust by naming one earned strength');
+    expect(controller).toContain('Relationship comes first. Before any problem, friction, or recommendation');
+    expect(controller).toContain('what you genuinely appreciate');
+    expect(controller).toContain('brilliant or genius');
+    expect(controller).toContain('Never flatter and never manufacture praise');
+    expect(develop).toContain('What feels alive here');
   });
 
   it('keeps saved chapter analysis available beyond the immediate tab', () => {

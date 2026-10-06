@@ -51,6 +51,14 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
 import { constructEditorialWriterTurn, renderEditorialTurn } from '@/lib/writers-studio/canonicalWriterTurn';
 import { writerUnderstandingContextForManuscript } from '@/lib/writersStudio/writerUnderstandingServer';
+import {
+  DEFAULT_WORKING_STYLE,
+  RELATIONSHIP_FIRST_DIRECTIVE,
+  engagementInstruction,
+  explanationInstruction,
+  type ExplanationDepth,
+  type MaiaEngagement,
+} from '@/lib/writersStudio/workingStyle';
 import type { CandidateBlock, MemberIdentity, TierStrategy } from '@/lib/maia/canonical-turn';
 import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeBridge';
 import {
@@ -133,6 +141,10 @@ export interface EditorialTurnInput {
   /** Turn-local outcome permission. ⛔ Defaults to allow; exploratory surfaces
    * may close the proposal/direction vocabulary to reply_only. */
   readonly proposalPolicy?: ProposalPolicy;
+  /** Relational posture changes how MAIA arrives, never what she may do. */
+  readonly engagement?: MaiaEngagement;
+  /** Explanatory register changes language, never evidence or authority. */
+  readonly responseStyle?: ExplanationDepth;
 }
 
 export type EditorialTurnRefusal =
@@ -396,6 +408,9 @@ export async function runEditorialTurn(
        back, and deleting this line would not change what is permitted. */
     system: [
       proof.systemPrompt,
+      RELATIONSHIP_FIRST_DIRECTIVE,
+      engagementInstruction(input.engagement ?? DEFAULT_WORKING_STYLE.engagement),
+      explanationInstruction(input.responseStyle ?? DEFAULT_WORKING_STYLE.explanation),
       latitudeInstruction(scope),
       sequenceInstruction(gated),
       proposalPolicyInstruction(proposalPolicy),

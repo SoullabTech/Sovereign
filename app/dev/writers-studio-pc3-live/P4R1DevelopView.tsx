@@ -1601,8 +1601,7 @@ function ChapterReviewPanel({
         <span className="p4r1-eyebrow">Start here</span>
         <h3>Let MAIA read this chapter.</h3>
         <p>
-          She’ll tell you what she thinks the chapter is doing, what is already working,
-          and where she would focus next. No jargon. Nothing changes.
+          She’ll begin by reflecting what she sees working, alive, inspiring, and worth protecting — then, only after that, where she thinks attention could help. Nothing changes.
         </p>
         {needsCheckpoint ? (
           <div className="p4r1-chapter-read-snapshot">
@@ -1640,6 +1639,7 @@ function ChapterReviewPanel({
       <span className="p4r1-eyebrow">MAIA read the chapter</span>
       {strength ? (
         <div className="p4r1-chapter-review-lead">
+          <span className="p4r1-chapter-review-reflection-label">What feels alive here</span>
           <h3>{strength.label}</h3>
           <p>{strength.notice}</p>
           <small>{strength.whyItMatters}</small>

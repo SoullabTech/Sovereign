@@ -22,6 +22,7 @@ import {
   appendReviewDiscussEpisodeWithClient, prepareRelationshipForAppendWithClient,
   RelationshipCustodyRefused,
 } from '@/lib/writers-studio/relationshipCustody';
+import { workingStyleFrom } from '@/lib/writersStudio/workingStyle';
 
 export const dynamic = 'force-dynamic';
 const MAX_QUESTION = 4000;
@@ -56,12 +57,13 @@ export async function POST(
   const body = raw as Record<string, unknown>;
   const keys = Object.keys(body).sort().join(',');
   if (
-    keys !== 'observationKey,question,readingId,sanctuary'
-    && keys !== 'observationKey,question,readingId,relationshipId,sanctuary'
+    keys !== 'observationKey,question,readingId,sanctuary,workingStyle'
+    && keys !== 'observationKey,question,readingId,relationshipId,sanctuary,workingStyle'
   ) {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
 
+  const workingStyle = workingStyleFrom(body.workingStyle);
   const readingId = typeof body.readingId === 'string' && body.readingId.length > 0 ? body.readingId : null;
   const observationKey = typeof body.observationKey === 'string' && body.observationKey.length > 0 ? body.observationKey : null;
   const question = typeof body.question === 'string' ? body.question.trim() : '';
@@ -265,7 +267,10 @@ export async function POST(
     question,
   });
 
-  const outcome = await runReviewDiscuss(ctx, question);
+  const outcome = await runReviewDiscuss(ctx, question, {
+    engagement: workingStyle.engagement,
+    responseStyle: workingStyle.explanation,
+  });
   if (!outcome.ok) {
     return NextResponse.json(
       { refusal: outcome.refusal, threadId, posture: 'AS_READ', location: ctx.location },

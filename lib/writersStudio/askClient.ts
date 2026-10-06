@@ -20,7 +20,7 @@ import type { CurrentLocation } from '@/lib/manuscript/development/resolve';
 import type { ThreadDiscovery, ThreadSummary } from './observationDialogueResume';
 import { bodyOutcomeFrom } from './bodyProtocolResponse';
 import { authorizeRequest, type BodyProtocolOutcome } from './bodyAuthorization';
-import type { ExplanationDepth } from './workingStyle';
+import { readWorkingStyle, type ExplanationDepth } from './workingStyle';
 
 export interface AskTurnView {
   index: number;
@@ -100,6 +100,7 @@ export async function ask(input: {
           ? { threadId: input.threadId }
           : { anchor: input.anchor }),
         question: input.question,
+        workingStyle: readWorkingStyle(),
         ...(input.sectionId ? { sectionId: input.sectionId } : {}),
       }),
     });
@@ -178,7 +179,7 @@ async function rawPost(
     const res = await apiFetch(url(manuscriptId), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, workingStyle: readWorkingStyle() }),
     });
     const j = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     const outcome = bodyOutcomeFrom(res.status, j);
@@ -291,6 +292,7 @@ export async function askLivingWork(input: {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         question: input.question,
+        workingStyle: readWorkingStyle(),
         ...(input.threadId ? { threadId: input.threadId } : {}),
       }),
     });

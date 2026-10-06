@@ -1,13 +1,16 @@
 /**
- * Writer's Studio — how intelligence arrives.
+ * Writer's Studio — how intelligence arrives in relationship.
  *
- * These preferences govern PRESENTATION only. They never widen editorial
- * authority, evidence scope, disclosure authority, or theme governance.
+ * These preferences govern PRESENTATION and RELATIONAL POSTURE only. They never
+ * widen editorial authority, evidence scope, disclosure authority, theme
+ * governance, or permission to change the writer's Work.
  */
+export type MaiaEngagement = 'witness' | 'guide' | 'collaborator';
 export type WorkingPace = 'intimate' | 'guided' | 'mapped';
 export type ExplanationDepth = 'plain' | 'guided' | 'craft' | 'deep' | 'expert';
 
 export interface WriterWorkingStyle {
+  engagement: MaiaEngagement;
   pace: WorkingPace;
   explanation: ExplanationDepth;
 }
@@ -15,12 +18,36 @@ export interface WriterWorkingStyle {
 export const WORKING_STYLE_STORAGE_KEY = 'writers-studio:working-style:v1';
 
 export const DEFAULT_WORKING_STYLE: WriterWorkingStyle = {
+  engagement: 'guide',
   pace: 'intimate',
   explanation: 'guided',
 };
 
+export const ENGAGEMENT_VALUES: readonly MaiaEngagement[] = ['witness', 'guide', 'collaborator'];
 export const PACE_VALUES: readonly WorkingPace[] = ['intimate', 'guided', 'mapped'];
 export const EXPLANATION_VALUES: readonly ExplanationDepth[] = ['plain', 'guided', 'craft', 'deep', 'expert'];
+
+export const ENGAGEMENT_COPY: Record<MaiaEngagement, {
+  label: string;
+  description: string;
+  preview: string;
+}> = {
+  witness: {
+    label: 'Witness',
+    description: 'Reflect first and stay close. Wait for invitation before directing the work.',
+    preview: 'I want to make sure I am seeing what is alive here before I suggest anything.',
+  },
+  guide: {
+    label: 'Guide',
+    description: 'Reflect first, then offer connections and a useful next step when it helps.',
+    preview: 'Here is what I think is already working, and one place I would look with you next.',
+  },
+  collaborator: {
+    label: 'Collaborator',
+    description: 'Stay actively engaged: surface possibilities, connections, and proposals while you remain the author.',
+    preview: 'I see several live possibilities here. I can help you test them without taking the work away from you.',
+  },
+};
 
 export const PACE_COPY: Record<WorkingPace, { label: string; description: string }> = {
   intimate: { label: 'Intimate', description: 'One useful thing at a time. Stay close to the work.' },
@@ -56,6 +83,10 @@ export const EXPLANATION_COPY: Record<ExplanationDepth, { label: string; descrip
   },
 };
 
+export function isMaiaEngagement(value: unknown): value is MaiaEngagement {
+  return ENGAGEMENT_VALUES.includes(value as MaiaEngagement);
+}
+
 export function isWorkingPace(value: unknown): value is WorkingPace {
   return PACE_VALUES.includes(value as WorkingPace);
 }
@@ -64,30 +95,66 @@ export function isExplanationDepth(value: unknown): value is ExplanationDepth {
   return EXPLANATION_VALUES.includes(value as ExplanationDepth);
 }
 
+export function workingStyleFrom(value: unknown): WriterWorkingStyle {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return DEFAULT_WORKING_STYLE;
+  const parsed = value as Partial<WriterWorkingStyle>;
+  return {
+    engagement: isMaiaEngagement(parsed.engagement) ? parsed.engagement : DEFAULT_WORKING_STYLE.engagement,
+    pace: isWorkingPace(parsed.pace) ? parsed.pace : DEFAULT_WORKING_STYLE.pace,
+    explanation: isExplanationDepth(parsed.explanation) ? parsed.explanation : DEFAULT_WORKING_STYLE.explanation,
+  };
+}
+
 export function parseWorkingStyle(raw: string | null): WriterWorkingStyle {
   if (!raw) return DEFAULT_WORKING_STYLE;
   try {
-    const value = JSON.parse(raw) as Partial<WriterWorkingStyle>;
-    return {
-      pace: isWorkingPace(value.pace) ? value.pace : DEFAULT_WORKING_STYLE.pace,
-      explanation: isExplanationDepth(value.explanation) ? value.explanation : DEFAULT_WORKING_STYLE.explanation,
-    };
+    return workingStyleFrom(JSON.parse(raw));
   } catch {
     return DEFAULT_WORKING_STYLE;
   }
 }
+
 export function readWorkingStyle(): WriterWorkingStyle {
   if (typeof window === 'undefined') return DEFAULT_WORKING_STYLE;
   return parseWorkingStyle(window.localStorage.getItem(WORKING_STYLE_STORAGE_KEY));
 }
 
-export function writeWorkingStyle(style: WriterWorkingStyle): void {
+export function writeWorkingStyle(style: Partial<WriterWorkingStyle>): void {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(WORKING_STYLE_STORAGE_KEY, JSON.stringify(style));
-    window.dispatchEvent(new CustomEvent('writers-studio-working-style-changed', { detail: style }));
+    const next = workingStyleFrom({ ...readWorkingStyle(), ...style });
+    window.localStorage.setItem(WORKING_STYLE_STORAGE_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('writers-studio-working-style-changed', { detail: next }));
   } catch {
-    // Presentation preference failure must never block writing.
+    // A relationship/presentation preference failure must never block writing.
+  }
+}
+
+/**
+ * Writer's Studio law: relationship before diagnosis.
+ *
+ * The point is not compulsory praise. MAIA must first demonstrate that she has
+ * actually met the writer and the living intelligence of the Work. Admiration
+ * must be earned and specific; friction follows recognition rather than
+ * replacing it.
+ */
+export const RELATIONSHIP_FIRST_DIRECTIVE = [
+  'Relationship comes before diagnosis.',
+  'Before naming problems, friction, deficits, or what should change, reflect the writer back to themselves through what is genuinely alive and working in the Work.',
+  'Name specific strengths you appreciate; what feels inspiring, generative, original, or full of possibility; and, only when the evidence truly warrants it, what is unusually brilliant or genius.',
+  'Never manufacture praise, flatter, or use superlatives as reassurance. If something is not earned by the supplied evidence, do not say it.',
+  'Let the writer feel accurately seen before you ask them to improve anything.',
+  'Relate as a perceptive collaborator in service of the writer, never as an evaluator standing above the Work.',
+].join(' ');
+
+export function engagementInstruction(engagement: MaiaEngagement): string {
+  switch (engagement) {
+    case 'witness':
+      return 'Take a witnessing posture. Reflect accurately and spaciously. Do not rush to direction, advice, or proposals; offer them only when the writer explicitly asks or when a next step is necessary to answer the question.';
+    case 'guide':
+      return 'Take a guiding posture. Reflect first, then name useful connections, possibilities, and one manageable next step when it would genuinely help. Do not overwhelm the writer with options.';
+    case 'collaborator':
+      return 'Take an active collaborative posture. After reflecting what is alive and worth protecting, surface meaningful connections, possibilities, tensions, and concrete directions the writer may want to test. Stay in service of their authorship: proposals are invitations, never decisions.';
   }
 }
 

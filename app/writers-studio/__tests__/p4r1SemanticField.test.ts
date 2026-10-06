@@ -1,6 +1,11 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { DEFAULT_WORKING_STYLE, explanationInstruction } from '@/lib/writersStudio/workingStyle';
+import {
+  DEFAULT_WORKING_STYLE,
+  RELATIONSHIP_FIRST_DIRECTIVE,
+  engagementInstruction,
+  explanationInstruction,
+} from '@/lib/writersStudio/workingStyle';
 
 const root = process.cwd();
 const develop = readFileSync(join(root, 'app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx'), 'utf8');
@@ -8,8 +13,15 @@ const dialogue = readFileSync(join(root, 'app/writers-studio/develop/Observation
 const reader = readFileSync(join(root, 'lib/manuscript/ask/developmentalAskReader.ts'), 'utf8');
 
 describe('Semantic Field R1A · writer-paced intelligence', () => {
-  it('defaults to intimate pacing and guided explanation', () => {
-    expect(DEFAULT_WORKING_STYLE).toEqual({ pace: 'intimate', explanation: 'guided' });
+  it('defaults to a guiding relationship, intimate pacing, and guided explanation', () => {
+    expect(DEFAULT_WORKING_STYLE).toEqual({
+      engagement: 'guide',
+      pace: 'intimate',
+      explanation: 'guided',
+    });
+    expect(engagementInstruction('guide')).toContain('Reflect first');
+    expect(RELATIONSHIP_FIRST_DIRECTIVE).toContain('Relationship comes before diagnosis.');
+    expect(RELATIONSHIP_FIRST_DIRECTIVE).toContain('Never manufacture praise');
   });
 
   it('reframes theme candidates as provisional noticings', () => {

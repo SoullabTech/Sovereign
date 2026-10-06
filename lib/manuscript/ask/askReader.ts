@@ -27,6 +27,13 @@ import type { AskAnchor } from './anchor';
 import type { WorkContextFacts } from './workContext';
 import { formatWorkSituationForPrompt } from '@/lib/writersStudio/workSituation';
 import { constellationReferralPrompt } from '@/lib/constellation/referralPrompt';
+import {
+  RELATIONSHIP_FIRST_DIRECTIVE,
+  engagementInstruction,
+  explanationInstruction,
+  type ExplanationDepth,
+  type MaiaEngagement,
+} from '@/lib/writersStudio/workingStyle';
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 
 export const ASKER_VERSION = 'ws2-05b-8b-02c-2';
@@ -39,6 +46,9 @@ const STANDING = `You are MAIA, in a writer's Studio, talking with the author of
 
 WHAT YOU ARE DOING
 The author has pointed at something in that reading and asked about it. Answer as an editor talking to the person who wrote the book: plainly, in your own words, about their material.
+
+RELATIONSHIP FIRST
+${RELATIONSHIP_FIRST_DIRECTIVE}
 
 WHAT YOU MAY DRAW ON
 The frozen reading below, and nothing else. You do not have the manuscript prose in front of you — only its headings, your own account, and the evidence you recorded at the time. If the question cannot be answered honestly from that, SAY SO and say what you would need to read. Do not reconstruct prose you cannot see, and do not infer content from a heading.
@@ -57,8 +67,15 @@ Do not use headings, bullets or lists. Write to them in prose. Be brief: a few s
 
 ${WRITERS_CONSTELLATION_REFERRAL}`;
 
-export function askPromptHash(): string {
-  return createHash('sha256').update(STANDING).digest('hex');
+export function askPromptHash(
+  engagement?: MaiaEngagement,
+  responseStyle?: ExplanationDepth,
+): string {
+  const style = [
+    engagement ? engagementInstruction(engagement) : '',
+    responseStyle ? explanationInstruction(responseStyle) : '',
+  ].filter(Boolean).join('\n');
+  return createHash('sha256').update(`${STANDING}${style ? `\n${style}` : ''}`).digest('hex');
 }
 
 export interface AskAnswerProvenance {
@@ -321,6 +338,8 @@ export interface AskOptions {
      to name. */
   model?: string;
   maxTokens?: number;
+  engagement?: MaiaEngagement;
+  responseStyle?: ExplanationDepth;
 }
 
 /**
@@ -336,6 +355,10 @@ export async function askMaia(
   opts: AskOptions = {},
 ): Promise<AskOutcome> {
   const model = opts.model ?? DEFAULT_MODEL;
+  const relationalStyle = [
+    opts.engagement ? engagementInstruction(opts.engagement) : '',
+    opts.responseStyle ? explanationInstruction(opts.responseStyle) : '',
+  ].filter(Boolean).join('\n');
 
   /* ⭐⭐ THE HEADINGS FOLLOW THE KIND, and that is not cosmetic. Rendering a
      Work context under "THE READING YOU MADE" would tell MAIA she had made a
@@ -354,12 +377,12 @@ export async function askMaia(
      the type. ⛔ A new shape earns the new branch; it is never inherited by
      absence. */
   const system = ctx.kind === 'work'
-    ? [STANDING, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
+    ? [STANDING, relationalStyle, '', '--- THE WORK YOU ARE SPEAKING WITH ---', workSays(ctx), '',
        '--- WHERE THEY ARE IN IT ---', workAnchorSays(ctx), '',
-       '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness)].join('\n')
-    : [STANDING, '', '--- THE READING YOU MADE ---', readingSays(ctx), '',
+       '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness)].filter(Boolean).join('\n')
+    : [STANDING, relationalStyle, '', '--- THE READING YOU MADE ---', readingSays(ctx), '',
        '--- WHAT THEY ARE POINTING AT ---', anchorSays(ctx), '',
-       '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness)].join('\n');
+       '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness)].filter(Boolean).join('\n');
 
   const messages: StructuredMessage[] = [
     ...history.map((t) => ({
@@ -393,7 +416,7 @@ export async function askMaia(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: askPromptHash(),
+        promptHash: askPromptHash(opts.engagement, opts.responseStyle),
         askerVersion: ASKER_VERSION,
         answeredAt: new Date().toISOString(),
       },

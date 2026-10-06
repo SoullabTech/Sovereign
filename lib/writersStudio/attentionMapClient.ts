@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/http/apiBase';
+import { readWorkingStyle } from './workingStyle';
 import type { WholeManuscriptAttentionMap } from './studio/attentionMap';
 
 export type AttentionMapOutcome =
@@ -16,7 +17,7 @@ export async function requestAttentionMap(
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ readingIds, request }),
+        body: JSON.stringify({ readingIds, request, workingStyle: readWorkingStyle() }),
       },
     );
     const body = await res.json().catch(() => null);

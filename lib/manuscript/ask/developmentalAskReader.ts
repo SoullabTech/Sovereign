@@ -35,7 +35,13 @@ import type { StructuredBlock, StructuredMessage } from '../../ai/structured/typ
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
 import { labelsFor, type AuthorFacingLabels } from './developmentalLabels';
 import { editorialDirective } from '@/lib/writersStudio/editorialDepth';
-import { explanationInstruction, type ExplanationDepth } from '@/lib/writersStudio/workingStyle';
+import {
+  RELATIONSHIP_FIRST_DIRECTIVE,
+  engagementInstruction,
+  explanationInstruction,
+  type ExplanationDepth,
+  type MaiaEngagement,
+} from '@/lib/writersStudio/workingStyle';
 
 export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-02';
 
@@ -67,6 +73,9 @@ Tell them the truth: this conversation has not reread the Work, and you cannot a
 RESTRAINT IS A REAL ANSWER
 "I would leave this alone" is a legitimate reply, with reasons. So is "I noticed it; I do not know what it means." Do not manufacture significance to seem useful.
 
+RELATIONSHIP FIRST
+${RELATIONSHIP_FIRST_DIRECTIVE}
+
 RELATIONAL DELIVERY
 ${editorialDirective('guided')}
 Talk with the writer, not at them. Let the observation become a living question between you. Prefer concrete phrases such as "I notice...", "what seems to be happening here...", and "what do you make of that?" over report language such as "structural scaffolding", "operative recurrence", "positional asymmetry", or other taxonomy unless the writer explicitly asks for the technical vocabulary.
@@ -82,9 +91,15 @@ You may discuss what you noticed then, why that pattern was visible in that evid
 
 You may NOT claim that the observation still describes the Work, that you have checked what is true now, or that current text confirms or refutes it. You have not seen the current text.`;
 
-export function developmentalAskPromptHash(responseStyle?: ExplanationDepth): string {
-  const style = responseStyle ? `\n${explanationInstruction(responseStyle)}` : '';
-  return createHash('sha256').update(`${STANDING}\n${SUPERSEDED_STANDING}${style}`).digest('hex');
+export function developmentalAskPromptHash(
+  responseStyle?: ExplanationDepth,
+  engagement?: MaiaEngagement,
+): string {
+  const style = [
+    engagement ? engagementInstruction(engagement) : '',
+    responseStyle ? explanationInstruction(responseStyle) : '',
+  ].filter(Boolean).join('\n');
+  return createHash('sha256').update(`${STANDING}\n${SUPERSEDED_STANDING}${style ? `\n${style}` : ''}`).digest('hex');
 }
 
 export interface DevelopmentalAskProvenance {
@@ -183,6 +198,7 @@ export interface DevelopmentalAskOptions {
   model?: string;
   maxTokens?: number;
   responseStyle?: ExplanationDepth;
+  engagement?: MaiaEngagement;
 }
 
 /**
@@ -198,7 +214,7 @@ export async function askMaiaDevelopmental(
   opts: DevelopmentalAskOptions = {},
 ): Promise<DevelopmentalAskOutcome> {
   const model = opts.model ?? DEFAULT_MODEL;
-  const system = systemFor(ctx, opts.responseStyle);
+  const system = systemFor(ctx, opts.responseStyle, opts.engagement);
 
   const messages: StructuredMessage[] = [
     ...history.map((t) => ({
@@ -223,7 +239,7 @@ export async function askMaiaDevelopmental(
       provenance: {
         provider: 'anthropic',
         model,
-        promptHash: developmentalAskPromptHash(opts.responseStyle),
+        promptHash: developmentalAskPromptHash(opts.responseStyle, opts.engagement),
         askerVersion: DEVELOPMENTAL_ASKER_VERSION,
         answeredAt: new Date().toISOString(),
       },
@@ -242,14 +258,19 @@ export async function askMaiaDevelopmental(
  * could pass a test that never saw it. The test entry point below now returns
  * exactly what is sent.
  */
-function systemFor(ctx: DevelopmentalAskContext, responseStyle?: ExplanationDepth): string {
+function systemFor(
+  ctx: DevelopmentalAskContext,
+  responseStyle?: ExplanationDepth,
+  engagement?: MaiaEngagement,
+): string {
   const labels = labelsFor(ctx.readState);
   return [
     STANDING, '',
-    ...(responseStyle ? [
+    ...(engagement || responseStyle ? [
       '--- HOW TO SPEAK WITH THIS WRITER ---',
-      explanationInstruction(responseStyle),
-      'Keep the substance, evidence, uncertainty, and limits exactly the same. Change only the explanatory register.',
+      ...(engagement ? [engagementInstruction(engagement)] : []),
+      ...(responseStyle ? [explanationInstruction(responseStyle)] : []),
+      'Keep the substance, evidence, uncertainty, and limits exactly the same. Change only the relational and explanatory register.',
       '',
     ] : []),
     '--- THE OBSERVATION THEY ARE ASKING ABOUT ---', observationSays(ctx), '',

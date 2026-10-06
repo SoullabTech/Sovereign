@@ -64,25 +64,27 @@ function ok(content: unknown[], stopReason = 'tool_use') {
   };
 }
 
-/* ── the prompts themselves did not move ──────────────────────────────────── */
+/* ── prompt identity and governed amendments ─────────────────────────────── */
 
 /**
- * These two hashes are the provenance of every reading and every answer already
- * made. They are pinned as literals, computed from `b9a84619` BEFORE this
- * migration and verified identical after it. A prompt edit, a tool-description
- * edit, or a rename of `input_schema` to the seam's neutral `inputSchema` would
- * each move a hash and fail here — which is the point: a provider migration that
- * quietly re-identified the reader would not be a provider migration.
+ * The reader contract remains pinned to the provider-seam migration baseline.
+ * Ask was later amended by explicit founder ruling (2026-10-06): Writer's Studio
+ * is relationship-first, so MAIA must meet the writer and what is alive in the
+ * Work before leading with diagnosis or correction. The historical Ask hash is
+ * retained below beside the admitted replacement; a prompt identity may move
+ * only by naming the amendment rather than disguising it as provider work.
  */
-describe('the migration changed the provider and nothing MAIA is', () => {
+describe('provider migration invariants and admitted prompt identity', () => {
   it('leaves the reader prompt contract hash exactly where it was', () => {
     expect(promptContractHash())
       .toBe('a1825a7c2f5003f172c907097e234491fa27e0e57963b2e0e4508e8b4dfb77dd');
   });
 
-  it('leaves the ask prompt hash exactly where it was', () => {
-    expect(askPromptHash())
-      .toBe('8d41b6160d41fdec8b1d7b1455b7669f5369611f11aed2f6c76fbecc632a1dc7');
+  it('records the founder-authorized relationship-first Ask prompt amendment explicitly', () => {
+    const preRelationshipFirstHash = '8d41b6160d41fdec8b1d7b1455b7669f5369611f11aed2f6c76fbecc632a1dc7';
+    const relationshipFirstHash = '79d7b719c2fa077512e5a332346a40e23ce4a3ebb358914afc17a2f451371a10';
+    expect(relationshipFirstHash).not.toBe(preRelationshipFirstHash);
+    expect(askPromptHash()).toBe(relationshipFirstHash);
   });
 });
 

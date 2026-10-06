@@ -6,6 +6,7 @@ import P4R1WriteEditController from '../writers-studio-pc3-live/P4R1WriteEditCon
 import P4R1DevelopController from '../writers-studio-pc3-live/P4R1DevelopController';
 import P4R1ReviewController from '../writers-studio-pc3-live/P4R1ReviewController';
 import P4R1ThemeMenu from './P4R1ThemeMenu';
+import P4R1MaiaSettings from './P4R1MaiaSettings';
 import P4R1BetaFeedback from './P4R1BetaFeedback';
 import { ConstellationArrival } from '../../writers-studio/ConstellationArrival';
 
@@ -38,6 +39,7 @@ export default function P4R1StudioHost({
   return (
     <>
       <P4R1ThemeMenu />
+      {mode === 'write' || mode === 'develop' || mode === 'review' ? <P4R1MaiaSettings /> : null}
       <P4R1BetaFeedback mode={mode} />
       {mode === 'home' && <ConstellationArrival />}
       {room}

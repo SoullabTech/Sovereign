@@ -2,6 +2,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { occurrences } from '@/lib/manuscript/exactText';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
+import { readWorkingStyle } from '@/lib/writersStudio/workingStyle';
 
 /**
  * SANCTUARY-EDITORIAL-PERSISTENCE-01 / E1 — POSTURE IS CARRIED, NEVER DEFAULTED.
@@ -199,6 +200,7 @@ export async function sendBoundEditorialTurn(
       body: JSON.stringify({
         threadId, act: { act: 'discourse', text, refersTo: null },
         sanctuary: posture.sanctuary,
+        workingStyle: readWorkingStyle(),
         ...(scope ? { scope } : {}),
         ...(proposalPolicy ? { proposalPolicy } : {}),
         ...(relationshipId ? { relationshipId } : {}),

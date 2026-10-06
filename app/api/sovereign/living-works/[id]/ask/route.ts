@@ -21,6 +21,7 @@ import { askMaia } from '@/lib/manuscript/ask/askReader';
 import { buildLivingWorkOnlyContext } from '@/lib/manuscript/ask/workContext';
 import { isHeldRetry, historyFor } from '@/lib/manuscript/ask/retry';
 import { workContextFingerprint } from '@/lib/writersStudio/workContextFingerprint';
+import { workingStyleFrom } from '@/lib/writersStudio/workingStyle';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,11 +74,12 @@ export async function POST(
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
   const body = raw as Record<string, unknown>;
-  const allowed = new Set(['question', 'threadId']);
+  const allowed = new Set(['question', 'threadId', 'workingStyle']);
   if (Object.keys(body).some((key) => !allowed.has(key))) {
     return NextResponse.json({ refusal: 'malformed', detail: 'unknown field' }, { status: 400 });
   }
 
+  const workingStyle = workingStyleFrom(body.workingStyle);
   const question = typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) {
     return NextResponse.json({ refusal: 'malformed', detail: 'question' }, { status: 400 });
@@ -146,6 +148,7 @@ export async function POST(
       question,
     ),
     question,
+    { engagement: workingStyle.engagement, responseStyle: workingStyle.explanation },
   );
 
   if (!outcome.ok) {
