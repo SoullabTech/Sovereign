@@ -50,7 +50,11 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R8A failures: (1) serious conversation forced into a narrow permanent MAIA rail; (2) Chapter 10 dialogue was starved to one frozen observation and therefore did not know the whole-book context / chapter role.
 - R8A implementation record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8A_RELATIONAL_TURN_CUSTODY_2026-10-06.md`
 - R8A founder failure record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8A_FOUNDER_WITNESS_FAIL_2026-10-06.md`
-- **R8 STOPPED under R6.** Next act is bounded recovery design for Chapter Conversation Context + contextual/expandable MAIA geometry. No passage descent or broader Studio propagation until founder re-witness passes G2–G3.
+- **R8 STOPPED under R6.** Chapter Conversation Context + contextual/expandable MAIA geometry remain required before the live golden journey resumes.
+- Founder direction added: **R8M — MAIA Editorial/Relational Model Qualification + Governed Council.** Change models when another engine demonstrably fits a faculty better, and use a governed primary/challenger council for high-value uncertain acts.
+- R8M record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M_MODEL_QUALIFICATION_AND_COUNCIL_2026-10-06.md`
+- R8M current act: build one lawful fixed Chapter 10 context packet, run blinded local candidates against it, then adjudicate faculty standing before any production model change.
+- No passage descent or broader Studio propagation until founder re-witness passes G2–G3.
 
 This entry supersedes the 2026-10-05 lane only for current execution priority. It does not rewrite the case-study record or discard its valid implementation evidence.
 
