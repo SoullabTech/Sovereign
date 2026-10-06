@@ -1060,6 +1060,11 @@ export default function P4R1DevelopController() {
           setChapterReviewProgress(null);
           return;
         }
+        if (commissioned.outcome === 'none') {
+          setChapterReviewError('MAIA completed the chapter reading but returned no usable observations. Nothing in your writing changed. Please try the reading again.');
+          setChapterReviewProgress(null);
+          return;
+        }
         overviewReadingId = commissioned.readingId;
       }
 
