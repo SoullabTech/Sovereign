@@ -73,6 +73,17 @@ Do not add a fourth primary Produce mode. Publication preparation remains a cont
 
 # 4 — Build the Work Decision + Protection Ledger
 
+Status: IMPLEMENTED as a bounded v1 vertical slice; local schema witness still required before admission.
+
+Implemented:
+- additive Work-level directive identity;
+- member-authored-only protect, decision, and open_question vocabulary;
+- append-only revise / retire / restore succession;
+- direct UPDATE / pruning DELETE / TRUNCATE refusal with lawful Work custody cascade retained;
+- returning-Work Editorial compass surface with Add / Revise / Retire;
+- active directives threaded into MAIA Work context as editorial guidance, explicitly not manuscript prose or edit authority;
+- focused tests green; Writer's Studio flagship typecheck green; migration lock-timeout gate green.
+
 Objective: make settled editorial understanding durable.
 
 A Work must be able to carry protected voice / ontology / terms / metaphors / passages; author-recognized intentions; author decisions; accepted / rejected / unresolved observations; provenance to the reading or conversation that led to the decision; scope at Work / structural-unit / passage level; and current effect distinct from historical act.
@@ -185,8 +196,8 @@ This 1–10 programme does not itself authorize production deployment. The found
 
 # Current next act
 
-ACT 4A — Decision + Protection Ledger substrate census and smallest vertical slice.
+ACT 4B — Local schema + real UI witness for the Decision + Protection Ledger.
 
-Reuse existing Studio History, developmental readings, theme standing, editorial adoption receipts, and Work identity before adding persistence.
+Then proceed directly to ACT 5A — Recovery / Lost Gold source-version contract and smallest comparison slice.
 
-Do not create schema until the census proves existing durable stores cannot carry the minimum lawful object.
+The substrate census is closed: Studio History is historical-only; writer corrections require a specific MAIA turn; themes are theme-specific; editorial relationship custody is deliberately content-free; Living Work title/purpose must not be overloaded. A new additive Writer’s Studio-specific Work directive substrate is therefore justified.

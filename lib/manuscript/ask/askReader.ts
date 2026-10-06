@@ -166,7 +166,7 @@ function workAnchorSays(ctx: WorkContext): string {
  * the member appears at all.
  */
 function workSays(ctx: WorkContext): string {
-  const { work, sections, locus, writerUnderstanding, writerCorrections, continuity } = ctx.facts;
+  const { work, sections, locus, writerUnderstanding, writerCorrections, workDirectives, continuity } = ctx.facts;
   const parts = [
     /* ⭐ The ratified formatter, verbatim — the member's own words and no others. */
     formatWorkSituationForPrompt(work) ?? 'They have not said anything about this Work yet.',
@@ -186,6 +186,12 @@ function workSays(ctx: WorkContext): string {
       writerCorrections,
       'A correction changes your current working understanding; it does not erase what you said earlier.',
       'Do not reassert the superseded interpretation as though the correction never happened.',
+    ].join('\n'));
+  }
+  if (workDirectives) {
+    parts.push([
+      workDirectives,
+      'These are writer-authored editorial directions for the Work. Keep their authority distinct from manuscript prose and from your own observations.',
     ].join('\n'));
   }
   if (!locus) {

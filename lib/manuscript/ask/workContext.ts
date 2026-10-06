@@ -60,6 +60,7 @@ import {
   writerUnderstandingContextForWork,
 } from '@/lib/writersStudio/writerUnderstandingServer';
 import { writerCorrectionContextForWork } from '@/lib/writersStudio/writerCorrectionsServer';
+import { workDirectiveContextForWork } from '@/lib/writersStudio/workDirectivesServer';
 
 /**
  * ⭐ THE ONE READ THAT DID NOT EXIST: the canonical projected body of ONE
@@ -124,6 +125,8 @@ export interface WorkContextFacts {
   readonly writerUnderstanding: string;
   /** Current writer corrections of MAIA interpretation. Historical turns remain untouched. */
   readonly writerCorrections: string;
+  /** Member-authored Work-level protections, decisions, and open questions. */
+  readonly workDirectives: string;
   readonly continuity: Continuity;
 }
 
@@ -196,6 +199,7 @@ export async function buildWorkContext(input: {
     manuscriptId,
   );
   const writerCorrections = await writerCorrectionContextForWork(memberId, work.id);
+  const workDirectives = await workDirectiveContextForWork(memberId, work.id);
 
   return {
     ok: true,
@@ -210,6 +214,7 @@ export async function buildWorkContext(input: {
       locus,
       writerUnderstanding,
       writerCorrections,
+      workDirectives,
       continuity,
     },
   };
@@ -236,6 +241,7 @@ export async function buildLivingWorkOnlyContext(input: {
     input.workId,
   );
   const writerCorrections = await writerCorrectionContextForWork(input.memberId, input.workId);
+  const workDirectives = await workDirectiveContextForWork(input.memberId, input.workId);
 
   return {
     ok: true,
@@ -246,6 +252,7 @@ export async function buildLivingWorkOnlyContext(input: {
       locus: null,
       writerUnderstanding,
       writerCorrections,
+      workDirectives,
       continuity: input.continuity,
     },
   };

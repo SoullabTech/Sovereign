@@ -19,6 +19,7 @@ import type { MarkedLine } from '@/app/writers-studio/useMarkedLines';
 import type { StudioAct } from '@/app/writers-studio/studioHistory';
 import { sentenceFor } from '@/app/writers-studio/studioHistory';
 import P4R1WorkMaterialsSummary from './P4R1WorkMaterialsSummary';
+import P4R1WorkDirectives from './P4R1WorkDirectives';
 import P4R1ProducePanel from './P4R1ProducePanel';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 
@@ -146,6 +147,7 @@ function WorkAnchor({ work, manuscripts, activity, onOpen, onStartWriting, busy 
           ) : null}
         </div>
       </div>
+      <P4R1WorkDirectives workId={work.id} />
       <P4R1WorkMaterialsSummary work={work} />
     </section>
   );
