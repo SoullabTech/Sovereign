@@ -1573,6 +1573,7 @@ export function ChapterReviewPanel({
   onMovement,
   onScore,
   onMinimalPath,
+  onTalkAbout,
 }: {
   map: WholeManuscriptAttentionMap | null;
   busy: boolean;
@@ -1606,8 +1607,9 @@ export function ChapterReviewPanel({
   onMovement: () => void;
   onScore: () => void;
   onMinimalPath: () => void;
+  onTalkAbout: (item: AttentionItem, kind: 'protect' | 'movement' | 'strengthen') => void;
 }) {
-  const [activeExpansion, setActiveExpansion] = useState<'book-fit' | 'protect' | 'movement' | 'scorecard' | 'minimal-path' | null>(null);
+  const [activeExpansion, setActiveExpansion] = useState<'book-fit' | 'scorecard' | null>(null);
 
   useEffect(() => {
     /* A new chapter reading is a new subject. Never leave a controller looking
@@ -1623,22 +1625,6 @@ export function ChapterReviewPanel({
     setActiveExpansion('book-fit');
     if (!bookFit && !bookFitBusy) onBookFit();
   };
-  const openProtect = () => {
-    if (activeExpansion === 'protect') {
-      setActiveExpansion(null);
-      return;
-    }
-    setActiveExpansion('protect');
-    if (!protect && !protectBusy) onProtect();
-  };
-  const openMovement = () => {
-    if (activeExpansion === 'movement') {
-      setActiveExpansion(null);
-      return;
-    }
-    setActiveExpansion('movement');
-    if (!movement && !movementBusy) onMovement();
-  };
   const openScorecard = () => {
     if (activeExpansion === 'scorecard') {
       setActiveExpansion(null);
@@ -1646,14 +1632,6 @@ export function ChapterReviewPanel({
     }
     setActiveExpansion('scorecard');
     if (!scorecard && !scoreBusy) onScore();
-  };
-  const openMinimalPath = () => {
-    if (activeExpansion === 'minimal-path') {
-      setActiveExpansion(null);
-      return;
-    }
-    setActiveExpansion('minimal-path');
-    if (!minimalPath && !minimalPathBusy) onMinimalPath();
   };
 
   if (!map) {
@@ -1714,35 +1692,25 @@ export function ChapterReviewPanel({
         </div>
       ) : null}
 
-      {friction ? (
-        <div className="p4r1-chapter-review-point">
-          <b>What may need attention</b>
-          <p>{friction.notice}</p>
-        </div>
-      ) : null}
-
-      {start ? (
-        <div className="p4r1-chapter-review-point">
-          <b>Where I’d start</b>
-          <p>{start.notice}</p>
-        </div>
-      ) : null}
-
-      <div className="p4r1-chapter-review-actions">
-        <button type="button" disabled={bookFitBusy} aria-pressed={activeExpansion === 'book-fit'} onClick={openBookFit}>
-          {bookFitBusy ? 'Reading the book around this chapter…' : 'How does this chapter fit the book?'}
-        </button>
-        <button type="button" disabled={movementBusy} aria-pressed={activeExpansion === 'movement'} onClick={openMovement}>
-          {movementBusy ? 'Looking at the chapter’s movement…' : 'Show me the chapter’s movement'}
-        </button>
-        <button type="button" disabled={protectBusy} aria-pressed={activeExpansion === 'protect'} onClick={openProtect}>
-          {protectBusy ? 'Gathering what should stay intact…' : 'What would you protect?'}
-        </button>
-        <button type="button" disabled={minimalPathBusy} aria-pressed={activeExpansion === 'minimal-path'} onClick={openMinimalPath}>
-          {minimalPathBusy
-            ? 'Finding the highest-leverage changes…'
-            : scorecard ? 'Minimal path to 5/5' : 'Show me what to strengthen'}
-        </button>
+      <p className="p4r1-chapter-review-invitation">
+        These are places to begin a conversation, not conclusions. Choose one and MAIA will meet you in the field at right.
+      </p>
+      <div className="p4r1-chapter-review-actions" data-chapter-conversation-starters>
+        {grasp ? (
+          <button type="button" onClick={() => onTalkAbout(grasp, 'movement')}>
+            Talk with MAIA about the movement
+          </button>
+        ) : null}
+        {strength ? (
+          <button type="button" onClick={() => onTalkAbout(strength, 'protect')}>
+            Talk with MAIA about what to protect
+          </button>
+        ) : null}
+        {friction ? (
+          <button type="button" onClick={() => onTalkAbout(friction, 'strengthen')}>
+            Talk with MAIA about what may need strengthening
+          </button>
+        ) : null}
         {start?.sectionIds[0] ? (
           <button
             type="button"
@@ -1754,10 +1722,19 @@ export function ChapterReviewPanel({
         ) : (
           <button type="button" className="p4r1-chapter-review-primary" onClick={onWrite}>Work on the writing</button>
         )}
-        <button type="button" disabled={scoreBusy} aria-pressed={activeExpansion === 'scorecard'} onClick={openScorecard}>
-          {scoreBusy ? 'Building scorecard…' : 'Chapter scorecard'}
-        </button>
       </div>
+
+      <details className="p4r1-chapter-review-secondary">
+        <summary>More ways to look</summary>
+        <div className="p4r1-chapter-review-secondary-actions">
+          <button type="button" disabled={bookFitBusy} aria-pressed={activeExpansion === 'book-fit'} onClick={openBookFit}>
+            {bookFitBusy ? 'Reading the book around this chapter…' : 'How does this chapter fit the book?'}
+          </button>
+          <button type="button" disabled={scoreBusy} aria-pressed={activeExpansion === 'scorecard'} onClick={openScorecard}>
+            {scoreBusy ? 'Building scorecard…' : 'Chapter scorecard'}
+          </button>
+        </div>
+      </details>
 
       {activeExpansion === 'book-fit' && bookFitError ? <p className="p4r1-error" role="status">{bookFitError}</p> : null}
       {activeExpansion === 'book-fit' && bookFit ? (
@@ -1770,36 +1747,6 @@ export function ChapterReviewPanel({
             </div>
           ))}
           <details><summary>Why MAIA thinks this</summary>{bookFit.items.map((item) => <p key={item.id}>{item.whyItMatters}</p>)}</details>
-        </section>
-      ) : null}
-
-      {activeExpansion === 'protect' && protectError ? <p className="p4r1-error" role="status">{protectError}</p> : null}
-      {activeExpansion === 'protect' && protect ? (
-        <section className="p4r1-chapter-expansion p4r1-protect-list" data-chapter-protect>
-          <span className="p4r1-eyebrow">Protect before revising</span>
-          <h4>What I would keep alive</h4>
-          <p>These are not compliments to get through before critique. Keep them visible as you decide what, if anything, deserves revision.</p>
-          {protect.items.map((item) => (
-            <article key={item.id}>
-              <b>{item.label}</b>
-              <p>{item.notice}</p>
-              <small>{item.whyItMatters}</small>
-            </article>
-          ))}
-        </section>
-      ) : null}
-
-      {activeExpansion === 'movement' && movementError ? <p className="p4r1-error" role="status">{movementError}</p> : null}
-      {activeExpansion === 'movement' && movement ? (
-        <section className="p4r1-chapter-expansion" data-chapter-movement>
-          <span className="p4r1-eyebrow">Inside the chapter</span>
-          {movement.items.map((item) => (
-            <div key={item.id}>
-              <b>{item.label}</b>
-              <p>{item.notice}</p>
-            </div>
-          ))}
-          <details><summary>Why MAIA thinks this</summary>{movement.items.map((item) => <p key={item.id}>{item.whyItMatters}</p>)}</details>
         </section>
       ) : null}
 
@@ -1869,31 +1816,6 @@ export function ChapterReviewPanel({
           </div>
         );
       })() : null}
-
-      {activeExpansion === 'minimal-path' && minimalPathError ? <p className="p4r1-error" role="status">{minimalPathError}</p> : null}
-      {activeExpansion === 'minimal-path' && minimalPath ? (
-        <section className="p4r1-chapter-expansion p4r1-minimal-path" data-chapter-minimal-path>
-          <span className="p4r1-eyebrow">Minimal path to 5/5</span>
-          <h4>Start with the few changes that do the most work.</h4>
-          <p>Light and moderate edits first. Major rewriting only if a smaller move cannot solve the problem.</p>
-          {minimalPath.items.map((item) => (
-            <article key={item.id}>
-              <b>{item.label}</b>
-              <p>{item.notice}</p>
-              <small>{item.whyItMatters}</small>
-              {item.sectionIds[0] ? (
-                <button
-                  type="button"
-                  className="p4r1-minimal-path-action"
-                  onClick={() => onEdit(item.id, item.sectionIds[0]!, 'minimal-path')}
-                >
-                  Work on this in Write →
-                </button>
-              ) : null}
-            </article>
-          ))}
-        </section>
-      ) : null}
 
       {activeExpansion === null ? (
         <details className="p4r1-chapter-review-details">
@@ -2091,6 +2013,15 @@ function AttentionMapPanel({
   );
 }
 
+type ChapterDialogueKind = 'protect' | 'movement' | 'strengthen';
+
+interface ChapterDialogueSeed {
+  readingId: string;
+  observationKey: string;
+  about: string;
+  initialQuestion: string;
+}
+
 export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   const livePathname = usePathname() ?? '/dev/writers-studio-p4r1';
   const liveSearchParams = useSearchParams();
@@ -2103,6 +2034,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
   );
   const [talking, setTalking] = useState(false);
   const [dialoguePrompt, setDialoguePrompt] = useState('');
+  const [chapterDialogue, setChapterDialogue] = useState<ChapterDialogueSeed | null>(null);
   const [workTalking, setWorkTalking] = useState(true);
   const [attentionConversationDraft, setAttentionConversationDraft] = useState('');
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
@@ -2111,6 +2043,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     setSelectedObservationKey(props.reading?.observations[0]?.key ?? null);
     setTalking(false);
     setDialoguePrompt('');
+    setChapterDialogue(null);
   }, [props.reading?.id]);
 
   const selectedObservation = props.reading?.observations.find(
@@ -2132,6 +2065,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
     setRailSelectionId(selectsChapterRoot ? null : sectionId);
     setTalking(false);
     setDialoguePrompt('');
+    setChapterDialogue(null);
     setAttentionConversationDraft('');
     /* The rail selection itself should visibly orient Develop. Conversation
        remains one more explicit act; the writer should not have to read a
@@ -2186,9 +2120,46 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
       : 'No manuscript prose is present yet';
 
   const beginWholeConversation = (prompt: string) => {
+    setChapterDialogue(null);
     setAttentionConversationDraft(prompt);
     setTalking(false);
     setWorkTalking(true);
+  };
+
+  const beginChapterDialogue = (item: AttentionItem, kind: ChapterDialogueKind) => {
+    const evidence = item.evidence[0];
+    if (!evidence) {
+      beginWholeConversation('I want to talk with you about this chapter. Stay relational and help me understand what you see before suggesting anything.');
+      return;
+    }
+    const initialQuestion = kind === 'protect'
+      ? [
+          'I want to stay with what is alive and worth protecting in this chapter before we revise anything.',
+          'Reflect what you genuinely see here, then ask me what feels essential to preserve.',
+          'Please make this a conversation, not a report or checklist. Let my Working with MAIA setting govern how actively you move toward suggestions.',
+        ].join('\n\n')
+      : kind === 'movement'
+        ? [
+            'Talk with me about the movement of this chapter rather than giving me a structural report.',
+            'Begin in ordinary language with what you see happening, then ask me what experience I want the reader to have.',
+            'Let my Working with MAIA setting govern how active you are after that.',
+          ].join('\n\n')
+        : [
+            'I want to think with you about what may need strengthening here.',
+            'Begin by reflecting what is already carrying the chapter, then ask me one question about my intention before suggesting changes.',
+            'Please do not give me a checklist. Let my Working with MAIA setting govern how active you are.',
+          ].join('\n\n');
+
+    setChapterDialogue({
+      readingId: evidence.readingId,
+      observationKey: evidence.observationKey,
+      about: evidence.observation,
+      initialQuestion,
+    });
+    setAttentionConversationDraft('');
+    setTalking(false);
+    setDialoguePrompt('');
+    setWorkTalking(false);
   };
 
   const handleGuidedMove = (move: WriterNextMove) => {
@@ -2420,6 +2391,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
             onMovement={props.onReadChapterMovement}
             onScore={props.onScoreChapter}
             onMinimalPath={props.onMinimalPathChapter}
+            onTalkAbout={beginChapterDialogue}
           />
 
           <details className="p4r1-develop-more">
@@ -2861,9 +2833,11 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <div className="fr-maia-name">
           <h2>MAIA</h2>
           <span>
-            {selectedObservation
-              ? 'With this observation'
-              : railSelectionId && selectedRailSection
+            {chapterDialogue
+              ? 'With this chapter question'
+              : selectedObservation
+                ? 'With this observation'
+                : railSelectionId && selectedRailSection
                 ? `In relation to ${selectedRailLabel}`
                 : 'In relation to your Work'}
           </span>
@@ -2871,7 +2845,21 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
         <span className="fr-dots" aria-hidden="true">•••</span>
       </div>
       <div className="fr-mbody p4r1-develop-maia">
-        {selectedObservation && props.reading && talking ? (
+        {chapterDialogue ? (
+          <div className="p4r1-chapter-conversation" data-chapter-conversation>
+            <ObservationDialogue
+              key={`${chapterDialogue.readingId}:${chapterDialogue.observationKey}:${chapterDialogue.initialQuestion}`}
+              manuscriptId={props.manuscriptId}
+              readingId={chapterDialogue.readingId}
+              observationKey={chapterDialogue.observationKey}
+              about={chapterDialogue.about}
+              superseded={false}
+              initialQuestion={chapterDialogue.initialQuestion}
+              autoSendInitialQuestion
+              onClose={() => setChapterDialogue(null)}
+            />
+          </div>
+        ) : selectedObservation && props.reading && talking ? (
           <>
             <div className="p4r1-observation-conversation-anchor">
               <span className="p4r1-eyebrow">We’re talking about</span>

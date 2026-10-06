@@ -139,6 +139,7 @@ export default function P4R1MaiaSettings() {
           <footer>
             MAIA reflects what is alive and worth protecting before she names friction.
             Praise stays specific and earned; problems never get to be the first relationship.
+            Changes here shape MAIA’s next turn in the conversation; they do not rewrite something she already said.
           </footer>
         </section>
       ) : null}

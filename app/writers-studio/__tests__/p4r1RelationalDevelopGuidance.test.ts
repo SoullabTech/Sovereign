@@ -23,8 +23,10 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(develop).toContain('Let MAIA read this chapter.');
     expect(develop).toContain('Read this chapter');
     expect(controller).toContain('begin-here: What is working — begin positively and specifically.');
-    expect(develop).toContain('What may need attention');
-    expect(develop).toContain('Where I’d start');
+    expect(develop).toContain('These are places to begin a conversation, not conclusions.');
+    expect(develop).toContain('Talk with MAIA about the movement');
+    expect(develop).toContain('Talk with MAIA about what to protect');
+    expect(develop).toContain('Talk with MAIA about what may need strengthening');
     expect(develop).toContain('Try a revision');
     expect(develop).toContain('Chapter scorecard');
     expect(controller).toContain('Respond directly to the writer as a perceptive, encouraging editor');
@@ -57,34 +59,23 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(develop).toContain('ChapterReviewPanel own it');
   });
 
-  it('turns the optional scorecard into a minimal high-leverage revision path', () => {
-    expect(develop).toContain('Minimal path to 5/5');
-    expect(develop).toContain('Start with the few changes that do the most work.');
-    expect(develop).toContain('Light and moderate edits first. Major rewriting only if a smaller move cannot solve the problem.');
-    expect(develop).toContain('Work on this');
-    expect(controller).toContain('Create a writer-facing Minimal path to 5/5');
-    expect(controller).toContain('A major rewrite is exceptional');
-    expect(controller).toContain('Begin each notice with [Light], [Moderate], or [Heavy].');
-    expect(develop).toContain('fixed to this chapter revision');
-    expect(develop).not.toContain('Refresh chapter scorecard');
+  it('keeps grading and book-fit tools secondary to the conversation', () => {
+    expect(develop).toContain('More ways to look');
+    expect(develop).toContain('Chapter scorecard');
+    expect(develop).toContain('How does this chapter fit the book?');
+    expect(develop).toContain('Optional craft guide · not a grade');
+    expect(develop).not.toContain('Start with the few changes that do the most work.');
     expect(controller).toContain('writers-studio:chapter-scorecard:v1');
-    expect(controller).toContain('cached.draftRevision === context.draftRevision');
     expect(controller).toContain('chapter-scorecard-previous:v1');
-    expect(develop).toContain('Since the previous saved chapter revision');
-    expect(develop).toContain('This is a craft comparison, not a grade');
-    expect(develop).toContain('Moved upward on this rubric.');
-    expect(develop).toContain('Held steady.');
-    expect(develop).toContain('the revision may have traded something here');
   });
 
   it('continues from the first read into book-fit and chapter-movement questions', () => {
     const attentionRoute = read('app/api/sovereign/manuscripts/[id]/attention-map/route.ts');
     expect(develop).toContain('How does this chapter fit the book?');
-    expect(develop).toContain('Show me the chapter’s movement');
+    expect(develop).toContain('Talk with MAIA about the movement');
     expect(develop).toContain('data-chapter-book-fit');
-    expect(develop).toContain('data-chapter-movement');
+    expect(develop).toContain('data-chapter-conversation');
     expect(controller).toContain('The writer has asked how the currently reviewed chapter fits into the whole book.');
-    expect(controller).toContain('Stay inside this chapter and describe its movement as an editor');
     expect(controller).toContain('What this chapter contributes to the whole book');
     expect(controller).toContain('strongest movement');
     expect(controller).toContain('Book placement is a hierarchical read, not a 100k-token monolith.');
@@ -94,16 +85,17 @@ describe('Writer Studio relational Develop guidance', () => {
     expect(attentionRoute).toContain("error: 'overview_segments_overlap'");
   });
 
-  it('shows one chapter exploration at a time instead of stacking an editorial dashboard', () => {
-    expect(develop).toContain("useState<'book-fit' | 'protect' | 'movement' | 'scorecard' | 'minimal-path' | null>(null)");
+  it('uses the MAIA field for chapter exploration instead of stacking report panels', () => {
+    expect(develop).toContain("useState<'book-fit' | 'scorecard' | null>(null)");
     expect(develop).toContain("activeExpansion === 'book-fit' && bookFit");
-    expect(develop).toContain("activeExpansion === 'protect' && protect");
-    expect(develop).toContain("activeExpansion === 'movement' && movement");
     expect(develop).toContain("activeExpansion === 'scorecard' && scorecard");
-    expect(develop).toContain("activeExpansion === 'minimal-path' && minimalPath");
-    expect(develop).toContain('What would you protect?');
-    expect(develop).toContain('These are not compliments to get through before critique.');
-    expect(controller).toContain('Before revising this chapter, make a writer-facing protect list');
+    expect(develop).not.toContain("activeExpansion === 'protect' && protect");
+    expect(develop).not.toContain("activeExpansion === 'movement' && movement");
+    expect(develop).not.toContain("activeExpansion === 'minimal-path' && minimalPath");
+    expect(develop).toContain('const beginChapterDialogue = (item: AttentionItem, kind: ChapterDialogueKind)');
+    expect(develop).toContain('autoSendInitialQuestion');
+    expect(develop).toContain('Please make this a conversation, not a report or checklist.');
+    expect(develop).toContain('Let my Working with MAIA setting govern how active you are.');
   });
 
   it('commissions the whole-manuscript synthesis as an editorial pass, not an abstract dashboard', () => {

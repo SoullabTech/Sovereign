@@ -24,7 +24,7 @@ describe('C3 Develop → Focus continuity', () => {
     expect(developView).toContain('{sectionId ? (');
     expect(developView).toContain('Show me where');
     expect(developView).toContain('Try a revision');
-    expect(developView).toContain('Work on this in Write →');
+    expect(developView).toContain('Talk with MAIA about what may need strengthening');
   });
 
   it('carries the exact Develop observation into Write with an explicit focus action', () => {
