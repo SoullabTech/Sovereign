@@ -44,6 +44,8 @@ const RULED_ADMIT = [
   'retrieved.writer_editorial_surround',
   'system.writer_editorial_history',
   'system.writer_relationship_prior_editorial_turn',
+  'member.writer_prior_work_conversation',
+  'system.writer_prior_work_conversation',
   // the room's own evidence
   'computed.writer_structure',
   'floor.writer_role_boundary',

@@ -48,8 +48,8 @@ describe('R8B–R8E Chapter 10 golden-slice recovery', () => {
 
   it('opens passage work only after MAIA has replied in the chapter conversation', () => {
     const workConversation = read('app/writers-studio/canvas/WorkConversation.tsx');
-    expect(workConversation).toContain('afterMaiaTurn && pending === null && turns.some');
-    expect(develop).toContain('When you’re ready · choose a passage to work on →');
+    expect(workConversation).toContain('afterMaiaTurnNode && pending === null');
+    expect(develop).toContain('Work this into the writing →');
     expect(develop).toContain("'chapter-review'");
   });
 

@@ -369,7 +369,7 @@ describe('C1 · editorial participation partitions by authorship', () => {
    * ⛔ The replacement is STRICTLY STRONGER: it pins the frozen axes, the room,
    * and the requirement flags — an inversion alone would have admitted the four
    * ids registered with any axes at all. */
-  it('⭐⭐ ER-R2 + A2-11 · the exact SIX are registered, with the frozen axes', () => {
+  it('⭐⭐ ER-R2 + A2-11 + R8G · the exact EIGHT are registered, with the frozen axes', () => {
     const FROZEN = {
       'retrieved.writer_editorial_locus':  ['member', 'retrieved', 'situate'],
       /* ⭐ WS-EDITORIAL-SCOPE-01 · the surround shares the locus's axes because
@@ -379,9 +379,11 @@ describe('C1 · editorial participation partitions by authorship', () => {
       'member.writer_editorial_history':   ['member', 'retrieved', 'situate'],
       'system.writer_editorial_history':   ['system', 'retrieved', 'situate'],
       'system.writer_relationship_prior_editorial_turn': ['system', 'retrieved', 'situate'],
+      'member.writer_prior_work_conversation': ['member', 'retrieved', 'situate'],
+      'system.writer_prior_work_conversation': ['system', 'retrieved', 'situate'],
       'member.writer_editorial_act':       ['member', 'declared',  'situate'],
     } as const;
-    /* the declared set and the registered set are the SAME six */
+    /* the declared set and the registered set are the SAME eight */
     expect([...EDITORIAL_PRODUCER_IDS].sort()).toEqual(Object.keys(FROZEN).sort());
     for (const [id, axes] of Object.entries(FROZEN)) {
       expect(PRODUCER_IDS as readonly string[]).toContain(id);
@@ -393,7 +395,7 @@ describe('C1 · editorial participation partitions by authorship', () => {
     }
   });
 
-  it('⛔ ER-R2 + A2-11 · none of the six is registered outside writers_studio', () => {
+  it('⛔ ER-R2 + A2-11 + R8G · none of the eight is registered outside writers_studio', () => {
     for (const id of EDITORIAL_PRODUCER_IDS) {
       const spec = PRODUCER_REGISTRY[id as keyof typeof PRODUCER_REGISTRY];
       expect(spec.rooms).toEqual(['writers_studio']);

@@ -31,7 +31,7 @@ import type { LiveThemesPayload, ThemeMutation } from '@/lib/writersStudio/theme
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
-import { loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
+import { CRAFT_SOURCE_MAIA_TURN, CRAFT_SOURCE_THREAD, loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
 import { runWholeManuscriptReview } from '@/lib/writersStudio/studio/wholeManuscriptReview';
 import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { AttentionItem, WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
@@ -1508,6 +1508,7 @@ export default function P4R1DevelopController() {
     itemId: string,
     sectionId: string,
     source: 'chapter-review' | 'minimal-path' | 'attention-map',
+    craftFromConversation?: { sourceThreadId: string; sourceMaiaTurnIndex: number },
   ) => {
     const sourceMap = source === 'minimal-path'
       ? chapterMinimalPath
@@ -1516,6 +1517,15 @@ export default function P4R1DevelopController() {
         : attentionMap;
     const item = sourceMap?.items.find((candidate) => candidate.id === itemId);
     if (!item || !context) return;
+    const setCraftAddress = (query: URLSearchParams) => {
+      if (craftFromConversation) {
+        query.set(CRAFT_SOURCE_THREAD, craftFromConversation.sourceThreadId);
+        query.set(CRAFT_SOURCE_MAIA_TURN, String(craftFromConversation.sourceMaiaTurnIndex));
+      } else {
+        query.delete(CRAFT_SOURCE_THREAD);
+        query.delete(CRAFT_SOURCE_MAIA_TURN);
+      }
+    };
 
     /* A synthesis can be structurally evidence-bound yet cite the wrong frozen
        observation for a semantically specific refinement. Before crossing into
@@ -1603,7 +1613,8 @@ export default function P4R1DevelopController() {
           query.set('insightObservation', evidence.observationKey);
           /* “Work on this” is an editorial handoff, not merely navigation.
              Once an exact passage is proven, enter the revision relationship. */
-          query.set('insightAction', 'try-revision');
+          query.set('insightAction', craftFromConversation ? 'craft-passage' : 'try-revision');
+          setCraftAddress(query);
         });
         return;
       }
@@ -1631,7 +1642,8 @@ export default function P4R1DevelopController() {
             /* Section evidence is enough to orient the writer, but not enough
                for MAIA to invent an edit locus. Enter Write in passage-choice
                mode; the writer's selection becomes the exact revision locus. */
-            query.set('insightAction', 'choose-revision-passage');
+            query.set('insightAction', craftFromConversation ? 'choose-craft-passage' : 'choose-revision-passage');
+            setCraftAddress(query);
           });
           return;
         }
@@ -1651,7 +1663,8 @@ export default function P4R1DevelopController() {
         query.set('attentionItem', itemId);
         query.set('insightReading', fallbackEvidence.readingId);
         query.set('insightObservation', fallbackEvidence.observationKey);
-        query.set('insightAction', 'choose-revision-passage');
+        query.set('insightAction', craftFromConversation ? 'choose-craft-passage' : 'choose-revision-passage');
+        setCraftAddress(query);
       });
       return;
     }

@@ -29,6 +29,7 @@ import { persistMemberEditorialAct } from '@/lib/manuscript/editorialRuntime/mem
 import { runEditorialTurn } from '@/lib/manuscript/editorialRuntime/turn';
 import { MEMBER_ACT_KINDS, type MemberActKind } from '@/lib/manuscript/editorialDiscourse/contract';
 import { preflightEditorialRelationshipCarriage, resolvePriorMaiaEditorialCarry, type ResolvedPriorMaiaEditorialCarry } from '@/lib/writers-studio/relationshipCarriage';
+import { resolveWorkConversationCraftCarry, type ResolvedWorkConversationCraftCarry } from '@/lib/writers-studio/workConversationCraftCarry';
 import {
   DEFAULT_SCOPE_DECLARATION, isEditorialLatitude,
   type EditorialScopeDeclaration,
@@ -49,7 +50,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * the mistake is legible rather than mysterious.
  */
 const TOP_KEYS = [
-  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry', 'workingStyle',
+  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry', 'workConversationThreadId', 'workConversationMaiaTurnIndex', 'workingStyle',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -70,6 +71,8 @@ type Parsed =
       scope: EditorialScopeDeclaration;
       relationshipId: string | null;
       carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null;
+      workConversationThreadId: string | null;
+      workConversationMaiaTurnIndex: number | null;
       /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
       mayProposeImmediately: boolean;
       /** Turn-local outcome vocabulary. ⛔ Defaults to allow. */
@@ -121,6 +124,26 @@ function parseClosed(body: unknown): Parsed {
     }
     carry = { kind: 'prior_maia_editorial_turn', sourceEpisodeSequence: Number(co.sourceEpisodeSequence) };
   }
+  const workConversationThreadId = b.workConversationThreadId === undefined
+    ? null
+    : typeof b.workConversationThreadId === 'string' && b.workConversationThreadId.length > 0
+      ? b.workConversationThreadId
+      : null;
+  if (b.workConversationThreadId !== undefined && workConversationThreadId === null) {
+    return { ok: false, error: 'workConversationThreadId must be a non-empty string when provided' };
+  }
+  const workConversationMaiaTurnIndex = b.workConversationMaiaTurnIndex === undefined
+    ? null
+    : Number.isInteger(b.workConversationMaiaTurnIndex) && Number(b.workConversationMaiaTurnIndex) >= 0
+      ? Number(b.workConversationMaiaTurnIndex)
+      : null;
+  if (b.workConversationMaiaTurnIndex !== undefined && workConversationMaiaTurnIndex === null) {
+    return { ok: false, error: 'workConversationMaiaTurnIndex must be a non-negative integer when provided' };
+  }
+  if ((workConversationThreadId === null) !== (workConversationMaiaTurnIndex === null)) {
+    return { ok: false, error: 'workConversationThreadId and workConversationMaiaTurnIndex must be provided together' };
+  }
+
   const a = b.act;
   if (typeof a !== 'object' || a === null || Array.isArray(a)) {
     return { ok: false, error: 'act is required' };
@@ -193,6 +216,8 @@ function parseClosed(body: unknown): Parsed {
     scope,
     relationshipId: typeof b.relationshipId === 'string' ? b.relationshipId : null,
     carry,
+    workConversationThreadId,
+    workConversationMaiaTurnIndex,
     mayProposeImmediately,
     proposalPolicy,
     workingStyle: workingStyleFrom(b.workingStyle),
@@ -263,6 +288,21 @@ export async function POST(request: NextRequest) {
     resolvedCarry = carry.carry;
   }
 
+  let resolvedWorkConversationCarry: ResolvedWorkConversationCraftCarry | undefined;
+  if (parsed.workConversationThreadId !== null) {
+    const craftCarry = await resolveWorkConversationCraftCarry({
+      memberId,
+      receiverThreadId: parsed.threadId,
+      sourceThreadId: parsed.workConversationThreadId,
+      sourceMaiaTurnIndex: parsed.workConversationMaiaTurnIndex!,
+    });
+    if (!craftCarry.ok) {
+      const status = craftCarry.reason === 'source_thread_not_found' ? 404 : 409;
+      return NextResponse.json({ error: craftCarry.reason, persisted: false }, { status });
+    }
+    resolvedWorkConversationCarry = craftCarry.carry;
+  }
+
   const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act });
   if (!act.ok) {
     const status = act.reason === 'thread_not_found' ? 404 : 400;
@@ -275,6 +315,7 @@ export async function POST(request: NextRequest) {
     threadId: parsed.threadId,
     ...(parsed.relationshipId !== null ? { relationshipId: parsed.relationshipId } : {}),
     ...(resolvedCarry ? { carry: resolvedCarry } : {}),
+    ...(resolvedWorkConversationCarry ? { workConversationCarry: resolvedWorkConversationCarry } : {}),
     currentTurnIndex: act.turnIndex,
     declaredAct: parsed.act.act,
     currentDirectionId: act.direction?.id ?? null,

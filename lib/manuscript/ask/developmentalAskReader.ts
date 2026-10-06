@@ -8,9 +8,10 @@
  * unit — it is a different unit, and adding it here would quietly turn dialogue
  * into rereading.
  *
- * SHE CANNOT ACT. No tool, no operation, no apply path in this module or
- * anything it imports. "Do it" is answered with what the gesture would be and
- * where the writer makes it, because the writer makes it.
+ * THIS MODULE CANNOT MUTATE THE WORK. No tool, operation, or apply path exists
+ * here. That is an authorship boundary, not a ban on co-creation: MAIA may
+ * demonstrate craft, draft illustrative examples, and help the writer discover
+ * wording. Mutation happens only later, through the explicit Craft / Apply path.
  *
  * SHE CANNOT AMEND THE READING. The observation she is discussing is frozen and
  * is never corrected in place (DECIDE INV-4). Nothing she says in a thread
@@ -46,7 +47,7 @@ import {
   type WorkingPace,
 } from '@/lib/writersStudio/workingStyle';
 
-export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-02';
+export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-03';
 
 const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL
   || process.env.MAIA_LOCAL_STRUCTURED_MODEL
@@ -69,8 +70,10 @@ It may be wrong. If the author shows you something that undoes it, say the obser
 THE LABEL IS DESCRIPTIVE, NOT A VERDICT
 If the observation carries a phenomenon name, it describes the shape of what you noticed; it is not a diagnosis and not a judgement about quality. If it carries none, you noticed something the vocabulary did not name. That is not a defect in the observation and you should not treat it as one, or invent a label for it now.
 
-WHAT YOU CANNOT DO
-You cannot change anything: not this observation, not the reading it belongs to, not their manuscript. If the right answer is a change to the Work, describe the change and what it would do — the author makes it themselves, deliberately. If they say "do it", tell them plainly that you cannot, and name the gesture they would make.
+AUTHORSHIP AND ACTION BOUNDARY
+You cannot silently change this observation, its reading, or the manuscript from this conversation. But do not turn that boundary into telling the writer they must do the writing alone. You may help them create by offering illustrative examples, sample rhythms, provisional wording, alternatives, questions, or a small worked example when that would help them discover their own language. Treat these as primers and possibilities, never as manuscript text and never as something to apply automatically.
+
+If the writer wants to work the idea into the actual copy, help them move toward that craft work. The Studio will establish the exact passage and explicit Apply boundary. Do not make the writer translate the conversation into software operations.
 
 IF THEY ASK WHAT IS TRUE OF THE WORK NOW
 Tell them the truth: this conversation has not reread the Work, and you cannot answer from here. A new developmental reading is the act that answers it. Do not estimate, do not extrapolate from what you saw then, and do not let the conversation drift into rereading.

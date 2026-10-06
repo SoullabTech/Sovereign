@@ -26,6 +26,9 @@ export interface CanvasInsight {
 }
 export const INSIGHT_READING = 'insightReading';
 export const INSIGHT_OBSERVATION = 'insightObservation';
+/** R8G — source Work conversation that led into Craft. Identity only; transcript is server-resolved. */
+export const CRAFT_SOURCE_THREAD = 'craftThread';
+export const CRAFT_SOURCE_MAIA_TURN = 'craftMaiaTurn';
 
 export function insightWriteHref(manuscriptId: string, readingId: string, observationKey: string, sectionId: string): string {
   const query = new URLSearchParams({ m: manuscriptId, [SECTION_PARAM]: sectionId,

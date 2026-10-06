@@ -33,6 +33,8 @@ import {
 
 type Props = {
   appearance: Appearance;
+  /** R8G — this passage is in the active making state, not only isolated focus. */
+  craftMode?: boolean;
   title: string;
   currentText: string;
   sectionBody: string;
@@ -129,6 +131,7 @@ function nearbyContext(text: string, side: 'before' | 'after'): string {
 
 export default function IsolatedEditorialRoom({
   appearance,
+  craftMode = false,
   title,
   currentText,
   sectionBody,
@@ -283,11 +286,12 @@ export default function IsolatedEditorialRoom({
       data-show-depth={showCraftDepth ? 'true' : 'false'}
       data-working-pace={workingPace}
       data-explanation-depth={explanationDepth}
-      aria-label="Isolated passage editor"
+      data-craft-canvas={craftMode ? 'true' : undefined}
+      aria-label={craftMode ? 'Craft Canvas' : 'Isolated passage editor'}
     >
       <header className="p4r1-isolated-topbar">
         <div>
-          <span className="p4r1-eyebrow">Passage focus</span>
+          <span className="p4r1-eyebrow">{craftMode ? 'Craft Canvas · See · Talk · Make' : 'Passage focus'}</span>
           <strong>{title}</strong>
         </div>
         <div className="p4r1-isolated-controls">

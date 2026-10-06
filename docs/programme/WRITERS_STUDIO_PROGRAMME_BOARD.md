@@ -59,7 +59,14 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R8F readability candidate implemented: larger MAIA turn type, wider line spacing, readable measure, visual paragraph breathing room, and pacing prompts that ask for short paragraphs. Persisted turns remain unchanged.
 - Founder re-witness presentation gate: **PASS 2026-10-06** — contextual resizable conversation + larger/breathable MAIA prose received founder response: “this is perfect start!” Geometry/readability are no longer blocking G2–G3.
 - G3 causal relationship: **FOUNDER PASS 2026-10-06** — after the founder clarified that the chapter should move readers from conceptual understanding into lived participation, MAIA materially reframed the editorial question around explanatory distance vs experiential embodiment and explicitly incorporated the sacred-in-ordinary-life / participation intention.
-- **Next act: witness conversation→passage handoff** — open “Talk with MAIA about what may need strengthening,” let MAIA respond once, then confirm the post-response “When you’re ready · choose a passage to work on →” handoff preserves the shared understanding without making the writer restate it. R8M-T1 remains closed until this handoff and relational carry are human-witnessed.
+- Founder finding: the binary **insight/information ↔ MAIA conversation** is still incomplete. A third **Craft / Craftsman Guide** state is required where those fields converge into an interactive making canvas.
+- R8G Craft Canvas / Craftsman Guide: **IMPLEMENTED CANDIDATE 2026-10-06** — examples are primers, not paste-ready answers; writer-authored wording becomes authority; MAIA then helps with craft/copy/conventions; explicit Apply remains the manuscript boundary.
+- R8G record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8G_CRAFT_CANVAS_CRAFTSMAN_GUIDE_2026-10-06.md`
+- Existing `IsolatedEditorialRoom` has been promoted/recomposed as the Craft Canvas rather than adding a third permanent column.
+- R8G continuity: Work-conversation thread + selected MAIA turn are carried only as identifiers; the server re-resolves exact turns and preserves writer/MAIA authorship as separate canonical producers before editorial cognition.
+- R8G making path: **Work this into the writing → exact/author-chosen passage → Craft Canvas · See · Talk · Make → Craftsman examples → Your working version → Work it through → Read in context → Save → Apply.**
+- R8G focused engineering witness: **13 suites · 192 tests PASS · flagship typecheck PASS.** Founder experiential witness remains required.
+- **Next act: founder witness of conversation → Craft Canvas → writer-authored version on localhost:3738.** R8M-T1 remains closed until this making loop and relational carry pass in lived use.
 - Founder direction added: **R8M — MAIA Editorial/Relational Model Qualification + Governed Council.** Change models when another engine demonstrably fits a faculty better, and use a governed primary/challenger council for high-value uncertain acts.
 - R8M record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M_MODEL_QUALIFICATION_AND_COUNCIL_2026-10-06.md`
 - R8M context packet: **PASS candidate** — read-only `r8m-chapter-context-v1` establishes final-chapter position, chapter reading, prior book readings, and writer-established intention as distinct source classes.
@@ -67,7 +74,7 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R8M local witness: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M-L1_LOCAL_BLIND_WITNESS_2026-10-06.md`
 - Strong reference calibration: **HELD** — R&D shell had no resolved Anthropic auth; no request was substituted to another provider.
 - R8M local evidence is held intact; identities remain sealed until blind qualitative judgment. **No production model change is authorized.**
-- No tester-study build, beta deployment, or broader Studio propagation until founder re-witness passes G2–G3 and the conversation→passage handoff.
+- No tester-study build, beta deployment, or broader Studio propagation until the founder passes the R8G making loop: conversation → Craft Canvas → writer-authored version → explicit Apply.
 
 This entry supersedes the 2026-10-05 lane only for current execution priority. It does not rewrite the case-study record or discard its valid implementation evidence.
 

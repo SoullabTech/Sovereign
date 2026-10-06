@@ -515,6 +515,28 @@ export const PRODUCER_REGISTRY = {
     reason: 'cross-episode relational continuity; an earlier MAIA Editorial response returned as context, never current-thread history or instruction',
   },
 
+  /** R8G — writer-authored Work-conversation turns carried into Craft. */
+  'member.writer_prior_work_conversation': {
+    authoredBy: 'member', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'R8G source Work thread id → owned ask_threads row → exact ask_turn rows speaker=author',
+    consentBasis: 'member explicitly chose to move this Work conversation into Craft',
+    requires: { identity: 'verified', notSanctuary: false }, rooms: WRITERS_ONLY,
+    mandatory: false, scope: 'route',
+    registeredAt: '2026-10-06', registeredBy: 'JARVIS-WS-RD-RECOVERY-01 · R8G',
+    reason: 'preserve the writer’s own clarified intention across the conversation-to-craft transition without asking them to restate it',
+  },
+
+  /** R8G — MAIA-authored Work-conversation turns carried into Craft. */
+  'system.writer_prior_work_conversation': {
+    authoredBy: 'system', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'R8G source Work thread id → owned ask_threads row → exact ask_turn rows speaker=maia',
+    consentBasis: 'member explicitly chose to move this Work conversation into Craft',
+    requires: { identity: 'verified', notSanctuary: false }, rooms: WRITERS_ONLY,
+    mandatory: false, scope: 'route',
+    registeredAt: '2026-10-06', registeredBy: 'JARVIS-WS-RD-RECOVERY-01 · R8G',
+    reason: 'carry MAIA’s prior craft insight as context while preserving that it is MAIA-authored, not writer intention or current manuscript fact',
+  },
+
   /**
    * ⭐⭐ THE DECLARED KIND OF THE CURRENT ACT, AND ONLY THAT.
    * ⛔ Never a second copy of the member's words — those are `encounter.input`.

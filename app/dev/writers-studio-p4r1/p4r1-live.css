@@ -4466,3 +4466,41 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
     font-size:18px!important;
   }
 }
+
+/* R8G — Craft Canvas: insight and conversation converge into making. */
+.p4r1-root [data-craft-canvas='true'] .p4r1-isolated-topbar{
+  border-bottom-color:color-mix(in srgb,var(--fr-action-line) 65%,var(--fr-line));
+}
+.p4r1-root .p4r1-craft-carry{
+  border-color:color-mix(in srgb,var(--fr-action-line) 70%,var(--fr-line-soft))!important;
+  background:color-mix(in srgb,var(--fr-action-soft) 38%,var(--fr-panel))!important;
+}
+.p4r1-root .p4r1-craft-carry>p{
+  max-width:68ch;
+  font-size:15px;
+  line-height:1.68;
+}
+.p4r1-root .p4r1-dance-response>p{
+  white-space:pre-wrap;
+  font-size:16px;
+  line-height:1.72;
+  max-width:70ch;
+}
+.p4r1-root .p4r1-craft-working{
+  margin-top:18px;
+  padding:18px;
+  border:1px solid color-mix(in srgb,var(--fr-action-line) 62%,var(--fr-line-soft));
+  border-radius:12px;
+  background:color-mix(in srgb,var(--fr-panel) 96%,var(--fr-action-soft));
+}
+.p4r1-root .p4r1-craft-working textarea{
+  min-height:250px;
+  font-family:var(--fr-serif-stack);
+  font-size:18px;
+  line-height:1.72;
+}
+.p4r1-root .p4r1-craft-working .p4r1-dance-ownership{
+  max-width:68ch;
+  font-size:13px;
+  line-height:1.55;
+}

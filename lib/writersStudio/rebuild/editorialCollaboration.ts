@@ -187,12 +187,17 @@ export async function sendBoundEditorialTurn(
     relationshipId?: string;
     /** One explicitly selected prior MAIA editorial response from this relationship. */
     carry?: EditorialCarrySelection;
+    /** R8G — source Work conversation to carry into the Craft turn; server re-resolves exact turns. */
+    workConversationThreadId?: string;
+    workConversationMaiaTurnIndex?: number;
   } | string,
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
   const proposalPolicy = typeof options === 'string' ? undefined : options?.proposalPolicy;
   const relationshipId = typeof options === 'string' ? options : options?.relationshipId;
   const carry = typeof options === 'string' ? undefined : options?.carry;
+  const workConversationThreadId = typeof options === 'string' ? undefined : options?.workConversationThreadId;
+  const workConversationMaiaTurnIndex = typeof options === 'string' ? undefined : options?.workConversationMaiaTurnIndex;
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
       method: 'POST',
@@ -205,6 +210,8 @@ export async function sendBoundEditorialTurn(
         ...(proposalPolicy ? { proposalPolicy } : {}),
         ...(relationshipId ? { relationshipId } : {}),
         ...(carry ? { carry } : {}),
+        ...(workConversationThreadId ? { workConversationThreadId } : {}),
+        ...(workConversationMaiaTurnIndex !== undefined ? { workConversationMaiaTurnIndex } : {}),
       }),
     });
     const body = await res.json().catch(() => null);

@@ -231,7 +231,12 @@ export interface P4R1DevelopViewProps {
   onMinimalPathChapter: () => void;
   onCommissionAttentionMap: () => void;
   onShowAttentionItem: (itemId: string, sectionId: string) => void;
-  onWorkWithAttentionItem: (itemId: string, sectionId: string, source: 'chapter-review' | 'minimal-path' | 'attention-map') => void;
+  onWorkWithAttentionItem: (
+    itemId: string,
+    sectionId: string,
+    source: 'chapter-review' | 'minimal-path' | 'attention-map',
+    craftFromConversation?: { sourceThreadId: string; sourceMaiaTurnIndex: number },
+  ) => void;
   onDiscussAttentionItem: (item: AttentionItem) => void;
   onSaveWriterUnderstanding: (draft: WriterUnderstandingDraft) => void;
   onReflectDevelopmentalProcess: () => void;
@@ -2776,7 +2781,7 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               chapterReadingId={chapterDialogue.readingId}
               initialDraft={chapterDialogue.initialQuestion}
               autoSendInitialDraft
-              afterMaiaTurn={chapterDialogue.kind === 'strengthen' && chapterDialogue.sectionId ? (
+              afterMaiaTurn={chapterDialogue.sectionId ? ({ threadId, lastMaiaTurnIndex }) => (
                 <button
                   type="button"
                   className="p4r1-conversation-next"
@@ -2784,9 +2789,10 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                     chapterDialogue.itemId,
                     chapterDialogue.sectionId!,
                     'chapter-review',
+                    { sourceThreadId: threadId, sourceMaiaTurnIndex: lastMaiaTurnIndex },
                   )}
                 >
-                  When you’re ready · choose a passage to work on →
+                  Work this into the writing →
                 </button>
               ) : undefined}
               onClose={() => setChapterDialogue(null)}

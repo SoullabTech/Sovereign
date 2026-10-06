@@ -44,7 +44,10 @@ import {
   isEditorialLatitude,
 } from '@/lib/manuscript/editorialScope/contract';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
+import { craftPrimerPrompt } from '@/lib/writersStudio/craftCanvas';
 import {
+  CRAFT_SOURCE_MAIA_TURN,
+  CRAFT_SOURCE_THREAD,
   INSIGHT_OBSERVATION,
   INSIGHT_READING,
   loadCanvasInsight,
@@ -102,6 +105,16 @@ export default function FlagshipWriteEditController() {
   const requestedEditorialThread = params ? editorialThreadIdFrom(params) : null;
   const requestedRelationship = params ? relationshipIdFrom(params) : null;
   const incomingAction = params?.get('insightAction') ?? null;
+  const craftSourceThreadId = params?.get(CRAFT_SOURCE_THREAD) ?? null;
+  const craftSourceMaiaTurnRaw = params?.get(CRAFT_SOURCE_MAIA_TURN) ?? null;
+  const craftSourceMaiaTurnIndex = craftSourceMaiaTurnRaw !== null && Number.isInteger(Number(craftSourceMaiaTurnRaw))
+    ? Number(craftSourceMaiaTurnRaw)
+    : null;
+  const craftArrival = Boolean(
+    craftSourceThreadId
+    && craftSourceMaiaTurnIndex !== null
+    && (incomingAction === 'craft-passage' || incomingAction === 'choose-craft-passage')
+  );
   const attentionReturnItemId = params?.get('attentionItem') ?? null;
   const lineageReturnChapterId = params?.get('lineageChapter') ?? null;
   const lineageReturnCandidateId = params?.get('lineageCandidate') ?? null;
@@ -207,6 +220,7 @@ export default function FlagshipWriteEditController() {
 
   const focusInsightConsumed = useRef<string | null>(null);
   const autoProposalKey = useRef<string | null>(null);
+  const autoCraftKey = useRef<string | null>(null);
   const workspaceReturn = useRef<{
     focusId: string | null;
     selectedPassage: Pc3HeldPassage | null;
@@ -808,6 +822,10 @@ export default function FlagshipWriteEditController() {
           ...(options ?? {}),
           ...(a2Relationship ? { relationshipId: a2Relationship.id } : {}),
           ...(carry ? { carry } : {}),
+          ...(craftArrival && craftSourceThreadId && craftSourceMaiaTurnIndex !== null ? {
+            workConversationThreadId: craftSourceThreadId,
+            workConversationMaiaTurnIndex: craftSourceMaiaTurnIndex,
+          } : {}),
         },
       );
 
@@ -855,6 +873,9 @@ export default function FlagshipWriteEditController() {
     mayProposeImmediately,
     a2Relationship,
     selectedCarrySource,
+    craftArrival,
+    craftSourceThreadId,
+    craftSourceMaiaTurnIndex,
   ]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
@@ -1073,7 +1094,7 @@ export default function FlagshipWriteEditController() {
 
     /* Orientation may legitimately name a whole section, but automatic editorial
        Focus may not. Only an exact passage range may become the held locus. */
-    if ((incomingAction === 'focus' || incomingAction === 'try-revision') && !passage.range) return;
+    if ((incomingAction === 'focus' || incomingAction === 'try-revision' || incomingAction === 'craft-passage') && !passage.range) return;
 
     const section = context.sections.find((candidate) => candidate.draftSectionId === passage.sectionId);
     if (!section) return;
@@ -1082,7 +1103,7 @@ export default function FlagshipWriteEditController() {
        exact revision locus. Bring the writer to the evidenced section and wait
        for their own passage selection before opening Focus or asking MAIA for a
        proposal. */
-    if (incomingAction === 'choose-revision-passage') {
+    if (incomingAction === 'choose-revision-passage' || incomingAction === 'choose-craft-passage') {
       setSelectedPassage(null);
       setWorkspaceOpen(false);
       return;
@@ -1096,7 +1117,7 @@ export default function FlagshipWriteEditController() {
        passage and open Focus in the same turn. Waiting for a later effect to
        observe the held state created a race where the writer arrived in Write
        with valid evidence but no editorial room. */
-    if ((incomingAction === 'focus' || incomingAction === 'try-revision') && passage.range) {
+    if ((incomingAction === 'focus' || incomingAction === 'try-revision' || incomingAction === 'craft-passage') && passage.range) {
       const key = [
         incomingAction,
         arrivalInsight.readingId,
@@ -1148,7 +1169,7 @@ export default function FlagshipWriteEditController() {
 
   useEffect(() => {
     if (
-      incomingAction !== 'choose-revision-passage'
+      (incomingAction !== 'choose-revision-passage' && incomingAction !== 'choose-craft-passage')
       || !arrivalInsight
       || !selectedPassage
       || workspaceOpen
@@ -1156,7 +1177,7 @@ export default function FlagshipWriteEditController() {
     if (requestedSection && selectedPassage.draftSectionId !== requestedSection) return;
 
     const key = [
-      'chosen-revision-passage',
+      incomingAction === 'choose-craft-passage' ? 'chosen-craft-passage' : 'chosen-revision-passage',
       arrivalInsight.readingId,
       arrivalInsight.observation.key,
       selectedPassage.draftSectionId,
@@ -1240,6 +1261,65 @@ export default function FlagshipWriteEditController() {
 
 
 
+  useEffect(() => {
+    if (
+      (incomingAction !== 'craft-passage' && incomingAction !== 'choose-craft-passage')
+      || !craftArrival
+      || !craftSourceThreadId
+      || !arrivalInsight
+      || !workspaceOpen
+      || !selectedPassage
+      || !focusId
+      || editorialBusy
+    ) return;
+    if (
+      workspaceInsight?.readingId !== arrivalInsight.readingId
+      || workspaceInsight.key !== arrivalInsight.observation.key
+      || selectedPassage.draftSectionId !== focusId
+    ) return;
+
+    if (incomingAction === 'craft-passage') {
+      const passage = arrivalInsight.passages.find((candidate) =>
+        candidate.sectionId === focusId
+        && candidate.verified
+        && candidate.editable
+        && candidate.range,
+      );
+      if (!passage?.range) return;
+      const exact = Array.from(passage.body).slice(passage.range.start, passage.range.end).join('');
+      if (exact !== selectedPassage.text) return;
+    }
+
+    const key = [
+      'craft-primer',
+      craftSourceThreadId,
+      arrivalInsight.readingId,
+      arrivalInsight.observation.key,
+      focusId,
+      selectedPassage.start,
+      selectedPassage.end,
+      selectedPassage.text,
+    ].join(':');
+    if (autoCraftKey.current === key) return;
+    autoCraftKey.current = key;
+
+    void sendEditorial(craftPrimerPrompt(), {
+      proposalPolicy: 'reply_only',
+      proposalRequested: false,
+    });
+  }, [
+    incomingAction,
+    craftArrival,
+    craftSourceThreadId,
+    arrivalInsight,
+    workspaceOpen,
+    workspaceInsight,
+    selectedPassage,
+    focusId,
+    editorialBusy,
+    sendEditorial,
+  ]);
+
   const makeThisAWork = useCallback(async () => {
     if (!context || workContext.kind !== 'none') return;
     try {
@@ -1279,6 +1359,8 @@ export default function FlagshipWriteEditController() {
     next.delete('insightReading');
     next.delete('insightObservation');
     next.delete('insightAction');
+    next.delete(CRAFT_SOURCE_THREAD);
+    next.delete(CRAFT_SOURCE_MAIA_TURN);
     if (mode !== 'develop') {
       next.delete('developField');
       next.delete('r');
@@ -1328,10 +1410,11 @@ export default function FlagshipWriteEditController() {
             onHoldPassage={holdPassage}
             onMode={onMode}
             workspaceOpen={workspaceOpen}
+            craftMode={craftArrival}
             carriedInsight={arrivalInsight}
             carriedInsightReturnMode={carriedInsightReturnMode}
             attentionReturnItemId={attentionReturnItemId}
-            attentionReturnRequiresSelection={incomingAction === 'choose-revision-passage'}
+            attentionReturnRequiresSelection={incomingAction === 'choose-revision-passage' || incomingAction === 'choose-craft-passage'}
             lineageReturnChapterId={lineageReturnChapterId}
             lineageReturnCandidateId={lineageReturnCandidateId}
             workspaceInsight={workspaceInsight}

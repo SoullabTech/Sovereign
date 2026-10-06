@@ -64,9 +64,11 @@ import { buildTeachingRuntimeBridge } from '@/lib/maia/teaching/TeachingRuntimeB
 import {
   admitEditorialToolEnvelope, EDITORIAL_TOOL_NAME, editorialToolSchemaForKinds,
   editorialTurnIdentity, priorRelationshipMaiaEditorialTurnCandidate,
+  priorWorkConversationCraftCandidates,
   type EditorialInvocation, type MemberActKind, type OutcomeRefusal,
 } from '../editorialDiscourse/contract';
 import type { ResolvedPriorMaiaEditorialCarry } from '@/lib/writers-studio/relationshipCarriage';
+import type { ResolvedWorkConversationCraftCarry } from '@/lib/writers-studio/workConversationCraftCarry';
 import {
   DEFAULT_SCOPE_DECLARATION, LATITUDE_BANDS, judgeProposalScope, latitudeInstruction,
   type EditorialScopeDeclaration, type ScopeRefusal, type ScopeMeasure,
@@ -120,6 +122,8 @@ export interface EditorialTurnInput {
   readonly relationshipId?: string;
   /** A2-11 server-resolved carry only. Raw HTTP carry requests never cross here. */
   readonly carry?: ResolvedPriorMaiaEditorialCarry;
+  /** R8G server-resolved Work-conversation carry. Raw transcript never crosses HTTP. */
+  readonly workConversationCarry?: ResolvedWorkConversationCraftCarry;
   /** The turn ER-R1 just persisted. ⛔ Its BODY is read from the database, not passed. */
   readonly currentTurnIndex: number;
   readonly declaredAct: MemberActKind;
@@ -351,10 +355,17 @@ export async function runEditorialTurn(
         body: input.carry.sourceBody,
       })]
     : [];
+  const workConversationBlocks: CandidateBlock[] = input.workConversationCarry
+    ? priorWorkConversationCraftCandidates({
+        memberTurns: input.workConversationCarry.memberTurns,
+        maiaTurns: input.workConversationCarry.maiaTurns,
+      })
+    : [];
   const cognitionBlocks: CandidateBlock[] = [
     ...assembly.blocks,
     ...intentionBlocks,
     ...carryBlocks,
+    ...workConversationBlocks,
     ...teachingBlocks,
   ];
 

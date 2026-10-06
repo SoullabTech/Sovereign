@@ -139,7 +139,7 @@ describe('Writer Studio relational Develop guidance', () => {
   it('routes observation dialogue through the guided MAIA translation law', () => {
     expect(ask).toContain("editorialDirective('guided')");
     expect(ask).toContain('Talk with the writer, not at them.');
-    expect(ask).toContain("DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-02'");
+    expect(ask).toContain("DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-03'");
   });
 
   it('makes future saved readings writer-facing instead of taxonomy-facing', () => {

@@ -25,7 +25,7 @@ describe('C3 Develop → Focus continuity', () => {
     expect(developView).toContain('Show me where');
     expect(developView).not.toContain('Try a revision');
     expect(developView).toContain('Talk with MAIA about what may need strengthening');
-    expect(developView).toContain('When you’re ready · choose a passage to work on →');
+    expect(developView).toContain('Work this into the writing →');
   });
 
   it('carries the exact Develop observation into Write with an explicit focus action', () => {
@@ -36,11 +36,11 @@ describe('C3 Develop → Focus continuity', () => {
   });
 
   it('turns every explicit Work-on-this handoff into revision work rather than plain canvas navigation', () => {
-    expect(developController).toContain("query.set('insightAction', 'try-revision')");
-    expect(developController).toContain("query.set('insightAction', 'choose-revision-passage')");
+    expect(developController).toContain("craftFromConversation ? 'craft-passage' : 'try-revision'");
+    expect(developController).toContain("craftFromConversation ? 'choose-craft-passage' : 'choose-revision-passage'");
     expect(developController).toContain('Do not degrade “Work on this” into plain canvas');
     expect(writeController).toContain("incomingAction === 'try-revision'");
-    expect(writeController).toContain("incomingAction !== 'choose-revision-passage'");
+    expect(writeController).toContain("incomingAction !== 'choose-revision-passage' && incomingAction !== 'choose-craft-passage'");
     expect(writeController).toContain("For a section-level observation, the writer's manual selection is the");
     expect(writeController).toContain('const autoProposalKey = useRef<string | null>(null)');
     expect(writeController).toContain('Offer one possible revision of this selected passage');
@@ -64,9 +64,9 @@ describe('C3 Develop → Focus continuity', () => {
   });
 
   it('refuses model-chosen automatic Focus without an exact passage while allowing writer-chosen revision loci', () => {
-    expect(writeController).toContain("if ((incomingAction === 'focus' || incomingAction === 'try-revision') && !passage.range) return;");
+    expect(writeController).toContain("incomingAction === 'craft-passage') && !passage.range) return;");
     expect(writeController).toContain("if (incomingAction !== 'focus' || !arrivalInsight || !selectedPassage || workspaceOpen) return;");
-    expect(writeController).toContain("incomingAction !== 'choose-revision-passage'");
+    expect(writeController).toContain("incomingAction !== 'choose-revision-passage' && incomingAction !== 'choose-craft-passage'");
     expect(writeController).toContain('&& candidate.range,');
     expect(writeController).toContain('if (exact !== selectedPassage.text) return;');
   });

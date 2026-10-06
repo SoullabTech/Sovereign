@@ -66,6 +66,8 @@ export type P4R1Pc3WriteEditViewProps = {
   onMode: (mode: 'home' | 'write' | 'develop' | 'review') => void;
 
   workspaceOpen: boolean;
+  /** R8G — conversation has crossed into active making. */
+  craftMode: boolean;
   carriedInsight: CanvasInsight | null;
   carriedInsightReturnMode: 'develop' | 'review' | null;
   attentionReturnItemId: string | null;
@@ -651,6 +653,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       </header>
 
       <EditorialDancePanel
+        craftMode={props.craftMode}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         currentText={currentText}
         sectionBody={currentBody}
@@ -904,11 +907,15 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         {props.attentionReturnItemId ? (
           <>
             <span>
-              <b>From Attention Map</b> · {props.attentionReturnRequiresSelection && !props.held
-                ? 'this observation names the section, not one exact passage. Select the words you want MAIA to revise.'
-                : 'this exact passage is the place you chose to work with.'}
+              <b>{props.craftMode ? 'From your conversation with MAIA' : 'From Attention Map'}</b> · {props.attentionReturnRequiresSelection && !props.held
+                ? props.craftMode
+                  ? 'the conversation has reached the writing, but not one exact passage. Select the words you want to shape together.'
+                  : 'this observation names the section, not one exact passage. Select the words you want MAIA to revise.'
+                : props.craftMode
+                  ? 'this is the passage where the conversation becomes craft.'
+                  : 'this exact passage is the place you chose to work with.'}
             </span>
-            <button type="button" onClick={() => props.onMode('develop')}>Return to Attention Map</button>
+            <button type="button" onClick={() => props.onMode('develop')}>{props.craftMode ? 'Return to conversation' : 'Return to Attention Map'}</button>
           </>
         ) : (
           <>
@@ -924,6 +931,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const isolatedRoom = props.workspaceOpen && isolatedEditorial ? (
     <IsolatedEditorialRoom
       appearance={props.appearance}
+      craftMode={props.craftMode}
       title={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}
       currentText={currentText}
       sectionBody={currentBody}
@@ -936,7 +944,19 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onMayProposeImmediately={props.onMayProposeImmediately}
       onClose={() => setIsolatedEditorial(false)}
     >
-      {props.carriedInsight ? (
+      {props.craftMode ? (
+        <section className="p4r1-focus-origin p4r1-craft-carry" data-craft-carry>
+          <div>
+            <span className="p4r1-eyebrow">Carried with you</span>
+            <b>Your conversation has become craft</b>
+          </div>
+          <p>The conversation that brought you here is carried into this canvas. You do not need to restate what you meant. MAIA’s examples are primers; your wording becomes the version.</p>
+          <footer>
+            <span>See · Talk · Make</span>
+            <button type="button" disabled={busy} onClick={() => props.onMode('develop')}>Return to conversation</button>
+          </footer>
+        </section>
+      ) : props.carriedInsight ? (
         <section className="p4r1-focus-origin" data-focus-origin>
           <div>
             <span className="p4r1-eyebrow">
@@ -973,6 +993,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       />
 
       <EditorialDancePanel
+        craftMode={props.craftMode}
         manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
         showOriginal={false}
         origin={props.carriedInsight && props.carriedInsightReturnMode ? {

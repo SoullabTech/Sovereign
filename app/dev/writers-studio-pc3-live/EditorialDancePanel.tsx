@@ -15,11 +15,14 @@ import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionD
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import { EDITORIAL_PACKET_LABELS } from '@/lib/writersStudio/editorialIntelligence';
+import { craftRefinementPrompt } from '@/lib/writersStudio/craftCanvas';
 import P4R1VoiceCapture from './P4R1VoiceCapture';
 
 export interface EditorialDancePanelProps {
   manuscriptTitle: string;
   showOriginal?: boolean;
+  /** R8G — the passage arrived from a Work conversation into the Craft Canvas. */
+  craftMode?: boolean;
   origin?: {
     source: 'develop' | 'review';
     label: string;
@@ -236,12 +239,13 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
 
   const versions = props.thread?.versions ?? [];
   const maiaVersions = useMemo(() => latestMaiaVersions(props.thread), [props.thread]);
+  const latestMemberVersion = [...versions].reverse().find((version) => version.author === 'member') ?? null;
   const selectedIndex = props.version
     ? versions.findIndex((candidate) => candidate.id === props.version!.id)
     : -1;
   const selectedLabel = props.version
     ? purposeOf(props.version, Math.max(selectedIndex, 0))
-    : 'MAIA’s recommendation';
+    : props.craftMode ? 'My version' : 'MAIA’s recommendation';
 
   const context = passageContext(props.sectionBody, props.currentText);
   const recommendation = props.version?.author === 'maia'
@@ -260,6 +264,18 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   );
 
   useEffect(() => {
+    if (props.craftMode && props.thread && !props.version) {
+      const craftKey = `craft:${props.thread.threadId}:${props.currentText}`;
+      if (workingFromVersionId !== craftKey) {
+        setWorkingFromVersionId(craftKey);
+        setWorkingText(props.currentText);
+        setPurpose('My version');
+        setReviewedText(null);
+        setShowContext(false);
+        setLocalMessage(null);
+      }
+      return;
+    }
     if (!props.version) return;
     if (workingFromVersionId === props.version.id) return;
 
@@ -334,28 +350,31 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const sendTalk = () => {
     const q = talk.trim();
     if (!q || !props.thread) return;
-    props.onSend([
-      'My working revision (not applied):',
-      workingText,
-      '',
-      'What I want from you:',
-      q,
-      '',
-      'Treat my working revision as the wording I am shaping now. Do not silently restore your earlier proposal.',
-      'Respond to my intention first. If you suggest wording, explain what it changes and what might be lost. Nothing is to be applied automatically.',
-    ].join('\n'));
+    props.onSend(props.craftMode
+      ? craftRefinementPrompt(workingText, q)
+      : [
+          'My working revision (not applied):',
+          workingText,
+          '',
+          'What I want from you:',
+          q,
+          '',
+          'Treat my working revision as the wording I am shaping now. Do not silently restore your earlier proposal.',
+          'Respond to my intention first. If you suggest wording, explain what it changes and what might be lost. Nothing is to be applied automatically.',
+        ].join('\n'));
     setTalk('');
   };
 
   const saveMemberVersion = async () => {
-    if (!props.thread?.targetSectionId || !props.version || saving) return;
+    const baseVersion = props.version ?? latestMemberVersion;
+    if (!props.thread?.targetSectionId || !baseVersion || saving) return;
     setSaving(true);
     setLocalMessage(null);
     try {
       const ok = await props.onSaveMember({
         threadId: props.thread.threadId,
         sectionId: props.thread.targetSectionId,
-        supersedes: props.version.id,
+        supersedes: baseVersion.id,
         text: workingText,
         ...(purpose.trim() ? { purpose: purpose.trim() } : {}),
       });
@@ -533,12 +552,12 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
     return (
       <section className="p4r1-dance p4r1-dance-explore" data-editorial-dance>
         <div className="p4r1-dance-response">
-          <span className="p4r1-eyebrow">MAIA</span>
+          <span className="p4r1-eyebrow">{props.craftMode ? 'MAIA · Craftsman Guide' : 'MAIA'}</span>
           <h3>{props.busy
-            ? 'MAIA is with the passage…'
+            ? props.craftMode ? 'MAIA is shaping examples with this passage…' : 'MAIA is with the passage…'
             : props.message
               ? 'That turn could not be completed.'
-              : 'Here’s what I’m seeing.'}</h3>
+              : props.craftMode ? 'Examples to spark your own version' : 'Here’s what I’m seeing.'}</h3>
           {props.message ? (
             <p className="p4r1-dance-status" role="status">{props.message}</p>
           ) : props.lastMaiaTurn?.body ? (
@@ -547,6 +566,105 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
             <p>I’m staying with the passage and your question. Nothing has been revised or applied.</p>
           )}
         </div>
+
+        {props.craftMode ? (
+          <div className="p4r1-dance-working p4r1-craft-working" data-craft-working>
+            <div>
+              <span className="p4r1-eyebrow">Your working version</span>
+              <h4>{selectedLabel}</h4>
+            </div>
+            <textarea
+              value={workingText}
+              disabled={props.busy || saving}
+              onChange={(event) => {
+                setWorkingText(event.target.value);
+                setReviewedText(null);
+                setShowContext(false);
+                setLocalMessage(null);
+              }}
+              aria-label="Write your version"
+            />
+            <p className="p4r1-dance-ownership">
+              MAIA’s examples are primers, not answers. Borrow the move, reject it, combine it, or write something entirely your own.
+            </p>
+
+            <div className="p4r1-dance-talk">
+              <input
+                value={talk}
+                disabled={props.busy}
+                onChange={(event) => setTalk(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendTalk();
+                  }
+                }}
+                placeholder="Help me keep the rhythm… does this say what I mean?… copyedit this version…"
+                aria-label="Ask MAIA to help shape your working version"
+              />
+              <button type="button" disabled={props.busy || !talk.trim()} onClick={sendTalk}>Work it through</button>
+            </div>
+
+            <label className="p4r1-dance-name">
+              <span>Name this version</span>
+              <input
+                value={purpose}
+                maxLength={80}
+                disabled={props.busy || saving}
+                onChange={(event) => setPurpose(event.target.value)}
+                placeholder="More embodied · More like me · Cleaner copy"
+              />
+            </label>
+
+            <div className="p4r1-dance-actions">
+              <button
+                type="button"
+                disabled={!context || props.busy}
+                onClick={() => {
+                  setReviewedText(workingText);
+                  setShowContext(true);
+                }}
+              >
+                Read my version in context
+              </button>
+              <button
+                type="button"
+                disabled={props.busy || saving || !workingText.trim() || workingText === props.currentText}
+                onClick={() => void saveMemberVersion()}
+              >
+                {saving ? 'Saving…' : memberVersionMatchingDraft ? 'Saved as my version' : 'Save my version'}
+              </button>
+              <button
+                type="button"
+                className="p4r1-dance-primary"
+                disabled={props.busy || !applyReady}
+                onClick={props.onApply}
+              >
+                Apply my version
+              </button>
+            </div>
+
+            {showContext && context ? (
+              <div className="p4r1-dance-context">
+                <span className="p4r1-eyebrow">In context · not applied</span>
+                <p>{context.before}<mark>{workingText}</mark>{context.after}</p>
+              </div>
+            ) : null}
+
+            {(localMessage || props.message || props.undoMessage) ? (
+              <p className="p4r1-dance-status" role="status">
+                {localMessage ?? props.message}{props.undoMessage ? ' ' + props.undoMessage : ''}
+              </p>
+            ) : null}
+
+            {props.appliedVersionId && props.onUndo ? (
+              <div className="p4r1-dance-applied">
+                <span>Applied to the manuscript.</span>
+                <button type="button" disabled={props.busy} onClick={props.onUndo}>Undo this change</button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="p4r1-dance-continue">
           <span className="p4r1-eyebrow">Continue from here</span>
