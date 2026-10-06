@@ -1033,6 +1033,7 @@ export default function P4R1DevelopController() {
         if (summary.commissionedLens !== 'overview') continue;
         const fetched = await fetchReading(context.manuscriptId, summary.id);
         if (!fetched.ok) continue;
+        if (fetched.payload.reading.outcome !== 'reading') continue;
         if (fetched.payload.reading.readState.revisionNumber !== revisionNumber) continue;
         const frozenScope = fetched.payload.reading.scope.bodyScope;
         if (frozenScope.length !== chapterIds.length
