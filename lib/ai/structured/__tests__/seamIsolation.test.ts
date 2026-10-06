@@ -138,8 +138,16 @@ const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
  * states at this commit** constitute the new governed baseline. The commit also
  * carries caller-side wiring, and no unrelated file gains constitutional status
  * by having travelled in the same commit — this guard resolves five paths.
+ *
+ * Founder-authorized 2026-10-06 restoration of the Elemental Alchemy case-study
+ * flow exposed one provider-level omission in that local seam: `long-running`
+ * governed wall-clock timeout but did not enlarge Ollama's context window, so a
+ * whole-book developmental read still entered a 32k local context despite the
+ * installed qwen3-coder model advertising 262144. The amendment at d0bbbf666
+ * maps the already-neutral long-running requirement to a bounded local context
+ * window; it does not select a model, add fallback, or alter caller semantics.
  */
-const GOVERNED_SEAM_BASELINE = '186d1d900';
+const GOVERNED_SEAM_BASELINE = 'd0bbbf666e9964169922a752b1e80f4c99cc3bf3';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([

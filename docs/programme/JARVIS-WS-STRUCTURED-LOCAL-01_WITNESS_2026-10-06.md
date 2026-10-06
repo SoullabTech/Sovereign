@@ -210,3 +210,47 @@ This directly reproduces the previously failing Attention Map operation without 
 Active governed seam baseline after this repair:
 
 `186d1d900`
+
+
+## Case-study restoration amendment — whole-book local context
+
+Founder direction on 2026-10-06 to continue the Writer's Studio / Elemental Alchemy case-study restoration exposed a second local structured-inference boundary defect.
+
+### Witnessed defect
+
+Chapter-level Attention Map synthesis was local and green, but **How does this chapter fit the book?** still commissioned a whole-book developmental reading through the developmental reader's old external-model default. On localhost, that produced:
+
+```text
+[structured] provider_unavailable
+Could not resolve authentication method...
+POST /api/sovereign/manuscripts/.../readings 422
+```
+
+After routing the developmental reader locally, a real whole-book reproduction showed that the neutral `long-running` execution requirement governed timeout only. Ollama still loaded `qwen3-coder:30b` with a 32768-token context even though the installed model advertises 262144. The Elemental Alchemy manuscript is larger than that local default.
+
+### Governed repair
+
+Implementation baseline:
+
+`d0bbbf666e9964169922a752b1e80f4c99cc3bf3`
+
+The local structured adapter now maps `execution.completion = long-running` to a bounded Ollama context window of **196608 tokens**, overridable by `MAIA_STRUCTURED_OLLAMA_LONG_CONTEXT`.
+
+This amendment does **not**:
+- select a different model;
+- introduce fallback;
+- widen the caller's semantic contract;
+- change the external Anthropic adapter;
+- change the plain-text seam.
+
+It only lets the configured local provider satisfy the already-declared long-running structured request without silently truncating its context to Ollama's default.
+
+The same restoration commit also:
+- admits Ollama provenance for developmental reader + classifier;
+- uses provider-side schema enforcement for the single developmental-reader tool;
+- separates the legal `claims` and `none` output envelopes;
+- makes Writer's Studio Ask, Review Discuss, Editorial, lineage, and developmental-orientation paths honor `MAIA_LOCAL_STRUCTURED_MODEL`;
+- restores explicit **Work on this in Write** handoff semantics;
+- prevents a section-level Work-on-this action from degrading into plain canvas navigation;
+- makes scorecard item count explicit so a five-dimension scorecard cannot be silently capped at four;
+- removes internal evidence handles from writer-facing Attention Map prose by prompt contract.
