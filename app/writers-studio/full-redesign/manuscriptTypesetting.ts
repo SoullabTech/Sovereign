@@ -56,7 +56,9 @@ export function typesetManuscriptBody(body: string): WriteBlock[] {
           const t = line.trim();
           return FOLIO.test(t) || ROMAN_SUBHEAD.test(t) || NUMBERED_SUBHEAD.test(t) || ALL_CAPS_SUBHEAD.test(t);
         });
-        if (hasInternalStructure) return typesetManuscriptBody(raw);
+        const nonemptyLines = raw.split('\n').filter((line) => line.trim());
+        const looksHardWrapped = nonemptyLines.length >= 3;
+        if (hasInternalStructure || looksHardWrapped) return typesetManuscriptBody(raw);
         const kind = classify(raw);
         return [{ text: visualText(raw, kind), kind }];
       });
@@ -171,9 +173,9 @@ export function typesetManuscriptBody(body: string): WriteBlock[] {
 
     /* In a hard-wrapped typeset page, a paragraph's last line is usually
        shorter than the prevailing line measure and ends with sentence
-       punctuation. 0.98 is deliberately paired with BOTH signals: length
+       punctuation. 1.05 is deliberately paired with BOTH signals: length
        alone is never enough to invent a paragraph boundary. */
-    const shortLastLine = t.length <= typical * 0.98;
+    const shortLastLine = t.length <= typical * 1.05;
     const nextIndented = /^\s{2,}\S/.test(nextRaw);
     const listBoundary = LIST_LINE.test(next) !== LIST_LINE.test(t);
     if ((shortLastLine && SENTENCE_END.test(t)) || nextIndented || listBoundary) flush();
