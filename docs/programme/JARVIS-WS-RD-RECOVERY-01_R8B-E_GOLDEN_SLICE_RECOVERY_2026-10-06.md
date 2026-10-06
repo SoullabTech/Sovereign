@@ -144,3 +144,23 @@ Standing:
 > **R8B geometry / R8F presentation — FOUNDER PASS.**
 
 This does **not** yet pass G3 causal relationship. The next test is whether the founder’s natural clarification materially changes MAIA’s next turn.
+
+## G3 causal relationship founder witness — PASS · 2026-10-06
+
+Founder clarified, in his own words, that Chapter 10 should move the reader from conceptual understanding into lived participation: familiar life movements returning with new consciousness and choice, with the sacred becoming visible in ordinary embodied life.
+
+MAIA's next turn materially changed its working understanding. It explicitly reframed the chapter around:
+
+- the shift from understanding to participation;
+- the tension between explanatory material and experiential embodiment;
+- Maya's story as a bridge from framework to lived experience;
+- the sacred becoming visible in ordinary life;
+- the question of where explanation may keep the reader at arm's length.
+
+This is sufficient evidence that the founder's clarification altered MAIA's subsequent reasoning rather than being acknowledged decoratively.
+
+Standing:
+
+> **G3 causal relationship — FOUNDER PASS.**
+
+One product note remains: in Witness posture, MAIA appropriately asked the writer another meaning/experience question rather than prescribing a fix. This is not a failure. The next gate is whether, once the writer chooses to act, the shared understanding carries into passage work without restatement.
