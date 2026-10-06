@@ -60,13 +60,30 @@ async function writePlaceReturnClient(scope: ReturnScopeClient, draftSectionId: 
 }
 
 const placeQueues = new Map<string, Promise<boolean>>();
+const placeTargets = new Map<string, string>();
 
-/** Serialize writes per Work/manuscript so an older request cannot finish after a newer one. */
+/**
+ * Serialize writes per Work/manuscript so an older request cannot finish after
+ * a newer one, and coalesce repeated requests for the SAME place.
+ *
+ * Selectionchange and controlled-editor rerenders can legitimately report the
+ * same section more than once. Durable return state is idempotent; turning
+ * those reports into an unbounded stream of PUTs is not. A failed write clears
+ * the remembered target so a later gesture can retry.
+ */
 export function persistPlaceReturnOrdered(scope: ReturnScopeClient, draftSectionId: string): Promise<boolean> {
   const key = `${scope.livingWorkId}:${scope.manuscriptId}`;
-  const previous = placeQueues.get(key) ?? Promise.resolve(true);
+  const inFlight = placeQueues.get(key);
+  if (placeTargets.get(key) === draftSectionId) return inFlight ?? Promise.resolve(true);
+
+  placeTargets.set(key, draftSectionId);
+  const previous = inFlight ?? Promise.resolve(true);
   const next = previous.catch(() => false).then(() => writePlaceReturnClient(scope, draftSectionId));
   placeQueues.set(key, next);
-  void next.finally(() => { if (placeQueues.get(key) === next) placeQueues.delete(key); });
+  void next.then((ok) => {
+    if (!ok && placeTargets.get(key) === draftSectionId) placeTargets.delete(key);
+  }).finally(() => {
+    if (placeQueues.get(key) === next) placeQueues.delete(key);
+  });
   return next;
 }
