@@ -57,7 +57,8 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R8F founder law ratified in conversation: **once writer and MAIA reach enough shared understanding to act, the Studio carries that understanding forward automatically; the writer never translates conversation into software operations.**
 - R8F record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8F_RELATIONAL_CARRY_HUMANE_READING_2026-10-06.md`
 - R8F readability candidate implemented: larger MAIA turn type, wider line spacing, readable measure, visual paragraph breathing room, and pacing prompts that ask for short paragraphs. Persisted turns remain unchanged.
-- **Next act: continue founder Chapter 10 re-witness on localhost:3738.** R8M-T1 tester-study build remains closed until G2–G3, conversation→passage, and relational carry are human-witnessed.
+- Founder re-witness presentation gate: **PASS 2026-10-06** — contextual resizable conversation + larger/breathable MAIA prose received founder response: “this is perfect start!” Geometry/readability are no longer blocking G2–G3.
+- **Next act: test G3 causal relationship on localhost:3738** — founder answers MAIA’s chapter-movement question in his own words; the next MAIA turn must visibly change its working understanding before passage handoff continues. R8M-T1 remains closed until G3, conversation→passage, and relational carry are human-witnessed.
 - Founder direction added: **R8M — MAIA Editorial/Relational Model Qualification + Governed Council.** Change models when another engine demonstrably fits a faculty better, and use a governed primary/challenger council for high-value uncertain acts.
 - R8M record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M_MODEL_QUALIFICATION_AND_COUNCIL_2026-10-06.md`
 - R8M context packet: **PASS candidate** — read-only `r8m-chapter-context-v1` establishes final-chapter position, chapter reading, prior book readings, and writer-established intention as distinct source classes.

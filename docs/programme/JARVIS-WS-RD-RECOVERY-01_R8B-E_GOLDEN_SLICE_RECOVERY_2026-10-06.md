@@ -125,3 +125,22 @@ Founder re-witness on localhost:
 Any failure stops R8 under R6.
 
 Only a founder PASS reopens the sequence toward R8M-T1.
+
+## Founder presentation re-witness — PASS · 2026-10-06
+
+After R8B geometry + R8F humane-reading repairs, founder opened the Chapter 10 movement conversation on localhost:3738 and responded:
+
+> **“this is perfect start!”**
+
+Observed human-visible conditions:
+
+- MAIA conversation opened as a substantial resizable working field rather than a narrow inspector rail;
+- manuscript/Develop remained visible and primary enough to stay oriented;
+- MAIA response rendered with larger type, wider line spacing, readable measure, and separated paragraphs;
+- the response itself was judged a useful beginning rather than a UI obstruction.
+
+Standing:
+
+> **R8B geometry / R8F presentation — FOUNDER PASS.**
+
+This does **not** yet pass G3 causal relationship. The next test is whether the founder’s natural clarification materially changes MAIA’s next turn.
