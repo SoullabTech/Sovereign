@@ -254,3 +254,39 @@ The same restoration commit also:
 - prevents a section-level Work-on-this action from degrading into plain canvas navigation;
 - makes scorecard item count explicit so a five-dimension scorecard cannot be silently capped at four;
 - removes internal evidence handles from writer-facing Attention Map prose by prompt contract.
+
+## Case-study restoration amendment — streamed long local structured reads
+
+The next real whole-book witness exposed a transport limit after the context repair: Ollama accepted the 131072-token local context and processed the manuscript, but a non-streaming `/api/chat` request returned HTTP 500 at approximately five minutes while prompt ingestion was still in progress.
+
+The structured caller's contract is still one completed result. For `execution.completion = long-running`, the Ollama adapter now uses streaming only as a provider transport and assembles the stream back into one neutral `StructuredResult`. Ordinary structured calls remain non-streaming.
+
+Real witness after the transport repair:
+
+```text
+qwen3-coder:30b
+context: 131072
+prompt: 103013 tokens
+completion: 2864 tokens
+provider request: HTTP 200
+provider wall time: 3m46s
+neutral result: one completed structured response
+```
+
+The whole-book developmental read completed locally without Anthropic and froze under Ollama provenance. Its `overview` outcome was `none`, which revealed a separate product truth: book placement should not depend on asking one model call to rediscover an entire 177-section book at once.
+
+Writer's Studio therefore restores the case-study's intended hierarchical shape for **How does this chapter fit the book?**:
+
+- reuse one current Overview reading per authored top-level movement;
+- commission only missing chapter-scale Overview readings;
+- synthesize those current chapter-scale readings into one book-placement reflection;
+- permit multiple disjoint Overview scopes in the Attention Map route while refusing overlaps;
+- preserve the same revision and evidence-binding rules.
+
+Implementation baseline:
+
+`1b8a15786 — fix(writers-studio): restore hierarchical case-study flow`
+
+Active governed structured seam baseline:
+
+`1b8a15786`
