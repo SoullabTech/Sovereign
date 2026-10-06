@@ -185,3 +185,36 @@ export function typesetManuscriptBody(body: string): WriteBlock[] {
 export function typesetParagraphs(body: string): string[] {
   return typesetManuscriptBody(body).map((block) => block.text);
 }
+
+
+/**
+ * Reader-facing projection of manuscript blocks.
+ * Printed folios are not authored content. When a folio interrupts a paragraph
+ * mid-sentence, collapse the two prose fragments back into one paragraph for
+ * Prose View while leaving stored manuscript text untouched.
+ */
+export function typesetProseBlocks(body: string): WriteBlock[] {
+  const blocks = typesetManuscriptBody(body);
+  const out: WriteBlock[] = [];
+
+  for (let i = 0; i < blocks.length; i += 1) {
+    const block = blocks[i]!;
+    if (
+      block.kind === 'paragraph'
+      && blocks[i + 1]?.kind === 'folio'
+      && blocks[i + 2]?.kind === 'paragraph'
+      && !SENTENCE_END.test(block.text.trim())
+    ) {
+      const continuation = blocks[i + 2]!;
+      out.push({
+        kind: 'paragraph',
+        text: block.text.trimEnd() + '\n' + continuation.text.trimStart(),
+      });
+      i += 2;
+      continue;
+    }
+    if (block.kind !== 'folio') out.push(block);
+  }
+
+  return out.length ? out : [{ text: '', kind: 'paragraph' }];
+}

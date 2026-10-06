@@ -21,7 +21,7 @@ import InsightReadings from '@/app/writers-studio/insight/InsightReadings';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import { chapterSpanFor, type RebuildSection } from '@/lib/writersStudio/rebuild/model';
-import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
+import { typesetManuscriptBody, typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 import { locateUniquePassage, type AdoptionWireOutcome, type RebuildEditorialRelationship, type RebuildEditorialThread } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
@@ -178,7 +178,7 @@ function ChapterProseSurface({ sections, activeId, bodyOf, onEdit }: {
       <article className="p4r1-prose-page">
         <h1>{root.heading?.trim() || 'Untitled chapter'}</h1>
         {sections.map((section, index) => {
-          const blocks = typesetManuscriptBody(bodyOf(section.draftSectionId));
+          const blocks = typesetProseBlocks(bodyOf(section.draftSectionId));
           const Heading = section.headingDepth === 2 ? 'h2' : 'h3';
           return (
             <section key={section.draftSectionId} className="p4r1-prose-section" data-current={section.draftSectionId === activeId ? 'true' : undefined}>

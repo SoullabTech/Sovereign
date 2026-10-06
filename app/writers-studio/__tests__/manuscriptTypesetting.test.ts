@@ -1,4 +1,4 @@
-import { typesetManuscriptBody } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
+import { typesetManuscriptBody, typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 
 const words = (s: string) => s.replace(/\s+/g, ' ').trim();
 
@@ -146,5 +146,24 @@ describe('Elemental Alchemy imported-page reconstruction', () => {
     expect(blocks[0]).toEqual({ text: 'IV. The Architecture Beneath the Experience', kind: 'subhead' });
     expect(blocks[1]?.kind).toBe('paragraph');
     expect(blocks[1]?.text).toContain('Maya’s journey');
+  });
+});
+
+
+describe('Prose View page-boundary recovery', () => {
+  it('collapses a printed folio that interrupts one paragraph', () => {
+    const body = [
+      'Air clarifies what has been learned and opens it into With—with whom, with what community, and within what',
+      '',
+      '167',
+      '',
+      'larger field our experience can enter relationship. Aether holds the movement as a whole.',
+    ].join('\n');
+
+    const blocks = typesetProseBlocks(body);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]?.kind).toBe('paragraph');
+    expect(blocks[0]?.text).toContain('within what\nlarger field our experience can enter relationship.');
+    expect(blocks.some((b) => b.kind === 'folio')).toBe(false);
   });
 });
