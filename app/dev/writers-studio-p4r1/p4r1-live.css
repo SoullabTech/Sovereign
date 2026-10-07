@@ -4898,3 +4898,56 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
     padding-right:16px;
   }
 }
+
+
+/* R8N — KISS: Hermes is conversation, the manuscript is the craftsman's table. */
+.p4r1-root .p4r1-hermes-compose-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.p4r1-root .p4r1-hermes-compose-actions>button:last-child{
+  border:1px solid var(--fr-action);
+  border-radius:999px;
+  background:var(--fr-action);
+  color:#fff;
+  padding:8px 12px;
+  font:600 11px var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-hermes-compose-actions>.p4r1-hermes-more{
+  border:0;
+  background:none;
+  color:var(--fr-muted);
+  padding:5px 0;
+  font:600 10.5px var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-hermes-quiet-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  padding:0 22px 14px;
+}
+.p4r1-root .p4r1-hermes-quiet-options button{
+  border:0;
+  border-bottom:1px solid var(--fr-line);
+  background:none;
+  color:var(--fr-muted);
+  padding:5px 1px;
+  font:600 10.5px var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-hermes-quiet-options button:hover{
+  color:var(--fr-action);
+  border-bottom-color:var(--fr-action-line);
+}
+.p4r1-root .p4r1-hermes-quiet-options button:disabled,
+.p4r1-root .p4r1-hermes-compose-actions button:disabled{
+  opacity:.42;
+  cursor:default;
+}
+.p4r1-root .p4r1-hermes-craft .p4r1-hermes-moves{
+  display:none!important;
+}
