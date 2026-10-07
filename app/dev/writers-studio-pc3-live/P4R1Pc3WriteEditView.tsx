@@ -412,15 +412,19 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     && !canvas,
   );
 
-  const proposalMarkable = Boolean(
-    props.editorialThread
+  const craftBoundVersion = props.editorialThread
     && props.suggestedVersion
     && props.held
     && props.focusId
     && props.held.draftSectionId === props.focusId
     && props.editorialThread.targetSectionId === props.focusId
     && props.editorialThread.locusText === props.held.text
-    && props.suggestedVersion.wording !== props.held.text
+    ? props.suggestedVersion
+    : null;
+  const proposalMarkable = Boolean(
+    craftBoundVersion
+    && props.held
+    && craftBoundVersion.wording !== props.held.text
   );
 
   const toggleRevisionEdit = (editId: number) => {
@@ -1020,7 +1024,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       bodyOf={props.writing.bodyOf}
       held={props.held}
       thread={props.editorialThread}
-      version={proposalMarkable && props.suggestedVersion ? props.suggestedVersion : null}
+      version={craftBoundVersion}
       busy={busy}
       onSend={props.onSendEditorial}
       onSaveMember={props.onSaveMember}
@@ -1075,7 +1079,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         ?? props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading
         ?? 'Selected passage'}
       thread={props.editorialThread}
-      version={proposalMarkable && props.suggestedVersion ? props.suggestedVersion : null}
+      version={craftBoundVersion}
       lastMaiaTurn={props.lastMaiaEditorialTurn}
       busy={busy}
       message={editorialMessage}

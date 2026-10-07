@@ -1,4 +1,5 @@
 import {
+  craftProposalRequested,
   craftReadingScope,
   craftZoomLabel,
   detectCraftRereadIntent,
@@ -61,5 +62,18 @@ describe("Craftsman's Table governed zoom", () => {
   it('keeps passage requests local to the editorial relationship', () => {
     expect(craftReadingScope('passage', sections, 'c1-a')).toBeNull();
     expect(craftZoomLabel('passage')).toBe('passage');
+  });
+
+  it('treats natural-language wording requests as explicit proposal authorization', () => {
+    expect(craftProposalRequested('Can you revise this sentence?')).toBe(true);
+    expect(craftProposalRequested('Show me another version.')).toBe(true);
+    expect(craftProposalRequested('How would you phrase this?')).toBe(true);
+    expect(craftProposalRequested('Talk with me about what is happening here first.')).toBe(false);
+  });
+
+  it('keeps scale and wording authorization independent', () => {
+    const request = 'Look at this chapter as a whole and give me two wording alternatives.';
+    expect(detectCraftRereadIntent(request)?.zoom).toBe('chapter');
+    expect(craftProposalRequested(request)).toBe(true);
   });
 });

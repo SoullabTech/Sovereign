@@ -17,6 +17,7 @@ import {
 } from '@/lib/writersStudio/craftWorkingCopy';
 import { professionalMarkFor } from '@/lib/writersStudio/craftProfessionalMarks';
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
+import { typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 
 export type CraftHeldPassage = {
   draftSectionId: string;
@@ -58,6 +59,62 @@ function decisionFor(
   id: number,
 ): CraftDecision {
   return decisions.get(id) ?? { mode: 'original' };
+}
+
+function visibleBlockText(text: string): string {
+  const trimmed = text.trim();
+  const wrapped = /^(\*|_)([\s\S]+)\1$/.exec(trimmed);
+  return wrapped ? wrapped[2]!.trim() : trimmed;
+}
+
+function CraftContextBlocks({ text, muted = false }: { text: string; muted?: boolean }) {
+  if (!text.trim()) return null;
+  const blocks = typesetProseBlocks(text);
+  return (
+    <div className={muted ? 'p4r1-craft-r1-context p4r1-craft-r1-context-muted' : 'p4r1-craft-r1-context'}>
+      {blocks.map((block, index) => {
+        const shown = visibleBlockText(block.text);
+        if (!shown) return null;
+        if (block.kind === 'epigraph') {
+          return <blockquote key={index}>{shown}</blockquote>;
+        }
+        if (block.kind === 'subhead') {
+          return <h4 key={index}>{shown}</h4>;
+        }
+        if (block.kind === 'list') {
+          return (
+            <div key={index} className="p4r1-craft-r1-list">
+              {shown.split('\n').filter(Boolean).map((line, lineIndex) => <p key={lineIndex}>{line}</p>)}
+            </div>
+          );
+        }
+        return <p key={index}>{shown}</p>;
+      })}
+    </div>
+  );
+}
+
+function splitActiveParagraph(before: string, after: string) {
+  const breaks = /\n[ \t]*\n+/g;
+  let prefixStart = 0;
+  for (const match of before.matchAll(breaks)) {
+    prefixStart = (match.index ?? 0) + match[0].length;
+  }
+  const next = /\n[ \t]*\n+/.exec(after);
+  const suffixEnd = next?.index ?? after.length;
+  const trailingStart = next ? suffixEnd + next[0].length : after.length;
+  return {
+    leading: before.slice(0, prefixStart),
+    prefix: before.slice(prefixStart),
+    suffix: after.slice(0, suffixEnd),
+    trailing: after.slice(trailingStart),
+  };
+}
+
+function compactRationale(text: string | null | undefined): string | null {
+  const clean = text?.replace(/\s+/g, ' ').trim() ?? '';
+  if (!clean) return null;
+  return clean.length <= 360 ? clean : clean.slice(0, 357).trimEnd() + '…';
 }
 
 export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
@@ -343,9 +400,9 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
 
             if (!active || !props.held) {
               return (
-                <section key={section.draftSectionId} className="p4r1-craft-r1-section">
+                <section key={section.draftSectionId} className="p4r1-craft-r1-section p4r1-craft-r1-context-section">
                   {section.heading?.trim() ? <Heading>{section.heading.trim()}</Heading> : null}
-                  <div className="p4r1-craft-r1-prose">{body}</div>
+                  <CraftContextBlocks text={body} muted />
                 </section>
               );
             }
@@ -355,6 +412,8 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
             const exact = points.slice(props.held.start, props.held.end).join('');
             const after = points.slice(props.held.end).join('');
             const authoritative = exact === props.held.text;
+            const activeContext = splitActiveParagraph(before, after);
+            const marginRationale = compactRationale(props.version?.rationale);
 
             return (
               <section
@@ -363,163 +422,185 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                 data-craft-active-section
               >
                 {section.heading?.trim() ? <Heading>{section.heading.trim()}</Heading> : null}
-                <div className="p4r1-craft-r1-prose">
-                  {before}
-                  <span
-                    ref={locusRef}
-                    className="p4r1-craft-r1-locus"
-                    data-craft-authoritative={authoritative ? 'true' : 'false'}
-                  >
-                    {directEditing ? (
-                      <textarea
-                        className="p4r1-craft-r1-direct"
-                        value={directDraft}
-                        autoFocus
-                        rows={Math.max(4, Math.min(14, directDraft.split('\n').length + 2))}
-                        aria-label="Edit your working passage"
-                        onChange={(event) => setDirectDraft(event.target.value)}
-                      />
-                    ) : view === 'preview' ? (
-                      <span className="p4r1-craft-r1-preview">{workingText || exact}</span>
-                    ) : displaySegments.length > 0 && displayText !== original ? (
-                      displaySegments.map((segment, index) => {
-                        if (segment.kind === 'same') return <span key={index}>{segment.text}</span>;
-                        if (segment.editId === null) return <span key={index}>{segment.text}</span>;
+                <div className="p4r1-craft-r1-workrow">
+                  <div className="p4r1-craft-r1-worktext">
+                    <CraftContextBlocks text={activeContext.leading} muted />
 
-                        const decision = decisionFor(displayDecisions, segment.editId);
-                        const chosen = decision.mode !== 'original';
-                        const edit = displayEdits.find((candidate) => candidate.id === segment.editId) ?? null;
-                        const proof = edit ? professionalMarkFor(edit, displayEdits, decision) : null;
-                        const proofMark = notation === 'professional'
-                          && proof
-                          && firstChangeIndex.get(segment.editId) === index
-                          ? <sup className="p4r1-craft-r1-proofmark" title={proof.label}>{proof.symbol}</sup>
-                          : null;
-                        const common = {
-                          'data-edit-id': segment.editId,
-                          'data-selected': chosen ? 'true' : undefined,
-                          'data-decision': decision.mode,
-                          onClick: () => setActiveEditId(segment.editId),
-                          title: `Change ${segment.editId} · click to work with this mark`,
-                        };
+                    <div className="p4r1-craft-r1-active-paragraph">
+                      {activeContext.prefix}
+                      <span
+                        ref={locusRef}
+                        className="p4r1-craft-r1-locus"
+                        data-craft-authoritative={authoritative ? 'true' : 'false'}
+                      >
+                        {directEditing ? (
+                          <textarea
+                            className="p4r1-craft-r1-direct"
+                            value={directDraft}
+                            autoFocus
+                            rows={Math.max(4, Math.min(14, directDraft.split('\n').length + 2))}
+                            aria-label="Edit your working passage"
+                            onChange={(event) => setDirectDraft(event.target.value)}
+                          />
+                        ) : view === 'preview' ? (
+                          <span className="p4r1-craft-r1-preview">{workingText || exact}</span>
+                        ) : displaySegments.length > 0 && displayText !== original ? (
+                          displaySegments.map((segment, index) => {
+                            if (segment.kind === 'same') return <span key={index}>{segment.text}</span>;
+                            if (segment.editId === null) return <span key={index}>{segment.text}</span>;
 
-                        if (segment.kind === 'del') {
-                          const customWithoutInsertion = decision.mode === 'custom'
-                            && edit
-                            && !edit.to
-                            && decision.text;
-                          return (
-                            <span key={index} className="p4r1-craft-r1-mark-unit">
-                              {proofMark}
-                              <del {...common}>{segment.text}</del>
-                              {customWithoutInsertion ? (
-                                <ins {...common} className="p4r1-craft-r1-custom">{decision.text}</ins>
-                              ) : null}
-                            </span>
-                          );
-                        }
+                            const decision = decisionFor(displayDecisions, segment.editId);
+                            const chosen = decision.mode !== 'original';
+                            const edit = displayEdits.find((candidate) => candidate.id === segment.editId) ?? null;
+                            const proof = edit ? professionalMarkFor(edit, displayEdits, decision) : null;
+                            const proofMark = notation === 'professional'
+                              && proof
+                              && firstChangeIndex.get(segment.editId) === index
+                              ? <sup className="p4r1-craft-r1-proofmark" title={proof.label}>{proof.symbol}</sup>
+                              : null;
+                            const common = {
+                              'data-edit-id': segment.editId,
+                              'data-selected': chosen ? 'true' : undefined,
+                              'data-decision': decision.mode,
+                              onClick: () => setActiveEditId(segment.editId),
+                              title: `Change ${segment.editId} · click to work with this mark`,
+                            };
 
-                        const displayed = decision.mode === 'custom'
-                          ? insertionIndex.get(segment.editId) === index
-                            ? decision.text
-                            : ''
-                          : segment.text;
-                        return displayed ? (
-                          <span key={index} className="p4r1-craft-r1-mark-unit">
-                            {proofMark}
-                            <ins {...common}>{displayed}</ins>
-                          </span>
-                        ) : proofMark ? <span key={index}>{proofMark}</span> : null;
-                      })
-                    ) : (
-                      <span className="p4r1-craft-r1-held">{exact}</span>
-                    )}
-                  </span>
-                  {after}
-                </div>
+                            if (segment.kind === 'del') {
+                              const customWithoutInsertion = decision.mode === 'custom'
+                                && edit
+                                && !edit.to
+                                && decision.text;
+                              return (
+                                <span key={index} className="p4r1-craft-r1-mark-unit">
+                                  {proofMark}
+                                  <del {...common}>{segment.text}</del>
+                                  {customWithoutInsertion ? (
+                                    <ins {...common} className="p4r1-craft-r1-custom">{decision.text}</ins>
+                                  ) : null}
+                                </span>
+                              );
+                            }
 
-                {directEditing ? (
-                  <div className="p4r1-craft-r1-direct-actions">
-                    <button type="button" onClick={commitDirectComposition}>Use this as my working copy</button>
-                    <button type="button" onClick={() => {
-                      setDirectEditing(false);
-                      setDirectDraft('');
-                    }}>Cancel</button>
-                  </div>
-                ) : null}
-
-                {!authoritative ? (
-                  <p className="p4r1-craft-r1-warning" role="status">
-                    This passage changed after Craft opened. Re-anchor before making wording decisions.
-                  </p>
-                ) : null}
-
-                {view === 'markup' && activeEdit ? (
-                  <div className="p4r1-craft-r1-local" data-craft-local-edit={activeEdit.id}>
-                    <div>
-                      <span>
-                        Change {activeEdit.id} · {editKind(activeEdit)}
-                        {notation === 'professional'
-                          ? ` · ${professionalMarkFor(activeEdit, displayEdits, decisionFor(displayDecisions, activeEdit.id)).symbol}`
-                          : ''}
+                            const displayed = decision.mode === 'custom'
+                              ? insertionIndex.get(segment.editId) === index
+                                ? decision.text
+                                : ''
+                              : segment.text;
+                            return displayed ? (
+                              <span key={index} className="p4r1-craft-r1-mark-unit">
+                                {proofMark}
+                                <ins {...common}>{displayed}</ins>
+                              </span>
+                            ) : proofMark ? <span key={index}>{proofMark}</span> : null;
+                          })
+                        ) : (
+                          <span className="p4r1-craft-r1-held">{exact}</span>
+                        )}
                       </span>
-                      <p>
-                        {activeEdit.from ? <del>{activeEdit.from.trim()}</del> : null}
-                        {activeEdit.from && activeEdit.to ? <span aria-hidden="true"> → </span> : null}
-                        {activeEdit.to ? <ins>{activeEdit.to.trim()}</ins> : null}
-                      </p>
+                      {activeContext.suffix}
                     </div>
 
-                    {customEditId === activeEdit.id ? (
-                      <div className="p4r1-craft-r1-own-wording">
-                        <label>
-                          <span>Your wording</span>
-                          <textarea
-                            value={customDraft}
-                            autoFocus
-                            rows={3}
-                            onChange={(event) => setCustomDraft(event.target.value)}
-                            aria-label="Write your wording for this edit"
-                          />
-                        </label>
-                        <div>
-                          <button type="button" onClick={() => commitCustom(activeEdit)}>Use my wording</button>
-                          <button type="button" onClick={() => {
-                            setCustomEditId(null);
-                            setCustomDraft('');
-                          }}>Cancel</button>
-                        </div>
+                    <CraftContextBlocks text={activeContext.trailing} muted />
+
+                    {directEditing ? (
+                      <div className="p4r1-craft-r1-direct-actions">
+                        <button type="button" onClick={commitDirectComposition}>Use this as my working copy</button>
+                        <button type="button" onClick={() => {
+                          setDirectEditing(false);
+                          setDirectDraft('');
+                        }}>Cancel</button>
+                      </div>
+                    ) : null}
+
+                    {!authoritative ? (
+                      <p className="p4r1-craft-r1-warning" role="status">
+                        This passage changed after Craft opened. Re-anchor before making wording decisions.
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <aside className="p4r1-craft-r1-margin" aria-label="Editorial margin">
+                    {marginRationale ? (
+                      <div className="p4r1-craft-r1-margin-note">
+                        <span>{props.version?.author === 'maia' ? 'MAIA · craft note' : 'Working version'}</span>
+                        <p>{marginRationale}</p>
                       </div>
                     ) : (
-                      <div>
-                        <button
-                          type="button"
-                          aria-pressed={decisionFor(displayDecisions, activeEdit.id).mode === 'proposal'}
-                          onClick={() => applyDisplayDecision(activeEdit.id, { mode: 'proposal' })}
-                        >
-                          Use this
-                        </button>
-                        <button
-                          type="button"
-                          aria-pressed={decisionFor(displayDecisions, activeEdit.id).mode === 'original'}
-                          onClick={() => applyDisplayDecision(activeEdit.id, { mode: 'original' })}
-                        >
-                          {notation === 'professional' ? 'Stet · Keep mine' : 'Keep mine'}
-                        </button>
-                        <button
-                          type="button"
-                          aria-pressed={decisionFor(displayDecisions, activeEdit.id).mode === 'custom'}
-                          onClick={() => beginCustom(activeEdit)}
-                        >
-                          Write it
-                        </button>
-                        <button type="button" disabled={props.busy} onClick={() => askAbout(activeEdit, 'another')}>Another way</button>
-                        <button type="button" disabled={props.busy} onClick={() => askAbout(activeEdit, 'why')}>Why?</button>
-                        <button type="button" disabled={props.busy} onClick={() => askAbout(activeEdit, 'teach')}>Teach me</button>
+                      <div className="p4r1-craft-r1-margin-guide">
+                        <span>On the table</span>
+                        <p>Red leaves. Blue enters. Click any mark to work with that exact change.</p>
                       </div>
                     )}
-                  </div>
-                ) : null}
+
+                    {view === 'markup' && activeEdit ? (
+                      <div className="p4r1-craft-r1-local" data-craft-local-edit={activeEdit.id}>
+                        <div>
+                          <span>
+                            Change {activeEdit.id} · {editKind(activeEdit)}
+                            {notation === 'professional'
+                              ? ` · ${professionalMarkFor(activeEdit, displayEdits, decisionFor(displayDecisions, activeEdit.id)).symbol}`
+                              : ''}
+                          </span>
+                          <p>
+                            {activeEdit.from ? <del>{activeEdit.from.trim()}</del> : null}
+                            {activeEdit.from && activeEdit.to ? <span aria-hidden="true"> → </span> : null}
+                            {activeEdit.to ? <ins>{activeEdit.to.trim()}</ins> : null}
+                          </p>
+                        </div>
+
+                        {customEditId === activeEdit.id ? (
+                          <div className="p4r1-craft-r1-own-wording">
+                            <label>
+                              <span>Your wording</span>
+                              <textarea
+                                value={customDraft}
+                                autoFocus
+                                rows={3}
+                                onChange={(event) => setCustomDraft(event.target.value)}
+                                aria-label="Write your wording for this edit"
+                              />
+                            </label>
+                            <div>
+                              <button type="button" onClick={() => commitCustom(activeEdit)}>Use my wording</button>
+                              <button type="button" onClick={() => {
+                                setCustomEditId(null);
+                                setCustomDraft('');
+                              }}>Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <button
+                              type="button"
+                              aria-pressed={decisionFor(displayDecisions, activeEdit.id).mode === 'proposal'}
+                              onClick={() => applyDisplayDecision(activeEdit.id, { mode: 'proposal' })}
+                            >
+                              Use this
+                            </button>
+                            <button
+                              type="button"
+                              aria-pressed={decisionFor(displayDecisions, activeEdit.id).mode === 'original'}
+                              onClick={() => applyDisplayDecision(activeEdit.id, { mode: 'original' })}
+                            >
+                              {notation === 'professional' ? 'Stet · Keep mine' : 'Keep mine'}
+                            </button>
+                            <button
+                              type="button"
+                              aria-pressed={decisionFor(displayDecisions, activeEdit.id).mode === 'custom'}
+                              onClick={() => beginCustom(activeEdit)}
+                            >
+                              Write it
+                            </button>
+                            <button type="button" disabled={props.busy} onClick={() => askAbout(activeEdit, 'another')}>Another way</button>
+                            <button type="button" disabled={props.busy} onClick={() => askAbout(activeEdit, 'why')}>Why?</button>
+                            <button type="button" disabled={props.busy} onClick={() => askAbout(activeEdit, 'teach')}>Teach me</button>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </aside>
+                </div>
               </section>
             );
           })}

@@ -50,6 +50,18 @@ describe("Craftsman's Table R1", () => {
     expect(css).toContain('#4c86cf');
   });
 
+  it('uses professional manuscript geometry rather than a developer text pane', () => {
+    expect(table).toContain('typesetProseBlocks');
+    expect(table).toContain('CraftContextBlocks');
+    expect(table).toContain('splitActiveParagraph');
+    expect(table).toContain('p4r1-craft-r1-workrow');
+    expect(table).toContain('p4r1-craft-r1-margin');
+    expect(table).toContain('MAIA · craft note');
+    expect(css).toContain('R1 manuscript geometry');
+    expect(css).toContain('grid-template-columns:minmax(0,720px) minmax(170px,210px)');
+    expect(css).toContain('.p4r1-craft-r1-margin');
+  });
+
   it('keeps individual edits separable and writer-governed', () => {
     for (const action of ['Use this', 'Keep mine', 'Write it', 'Another way', 'Why?', 'Teach me']) {
       expect(table).toContain(action);
@@ -59,6 +71,12 @@ describe("Craftsman's Table R1", () => {
     expect(table).toContain('Save my version');
     expect(table).toContain('Apply my version');
     expect(table).toContain('Undo');
+  });
+
+  it('keeps the exact bound editorial relationship available even before MAIA changes wording', () => {
+    expect(host).toContain('const craftBoundVersion = props.editorialThread');
+    expect(host).toContain('version={craftBoundVersion}');
+    expect(host).toContain('craftBoundVersion.wording !== props.held.text');
   });
 
   it('supports primer, MAIA-edit, and hybrid composition on the manuscript itself', () => {
@@ -94,6 +112,13 @@ describe("Craftsman's Table R1", () => {
     }
     expect(maia).not.toContain('RevisionDesk');
     expect(maia).not.toContain('More editorial controls');
+  });
+
+  it('treats natural writer language as explicit wording authorization without changing the standing preference', () => {
+    expect(scope).toContain('craftProposalRequested');
+    expect(controller).toContain('craftProposalRequested(text)');
+    expect(controller).toContain("proposalPolicy: 'allow' as const");
+    expect(controller).toContain('proposalRequested: true');
   });
 
   it('keeps proactive wording under the writer setting rather than MAIA choice', () => {

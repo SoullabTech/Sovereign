@@ -76,6 +76,7 @@ import { P4R1Pc3WriteEditView, type Pc3HeldPassage } from './P4R1Pc3WriteEditVie
 import { fetchReading, requestDevelopmentalReading } from '@/lib/writersStudio/developClient';
 import { readingView } from '@/lib/writersStudio/developPresentation';
 import {
+  craftProposalRequested,
   craftReadingContext,
   craftReadingScope,
   craftZoomLabel,
@@ -942,10 +943,14 @@ export default function FlagshipWriteEditController({
           'Treat this as the wording the writer is shaping now. Do not silently restore an earlier MAIA proposal.',
         ].join('\n')
       : text;
+    const explicitProposal = options?.proposalRequested === true || craftProposalRequested(text);
+    const effectiveOptions = explicitProposal
+      ? { ...options, proposalPolicy: 'allow' as const, proposalRequested: true }
+      : options;
 
     const intent = detectCraftRereadIntent(text);
     if (!intent || intent.zoom === 'passage') {
-      await sendEditorial(localPrompt, options);
+      await sendEditorial(localPrompt, effectiveOptions);
       return;
     }
 
@@ -1030,7 +1035,7 @@ export default function FlagshipWriteEditController({
       ].join('\n');
 
       setCraftActivity(null);
-      await sendEditorial(prompt, options);
+      await sendEditorial(prompt, effectiveOptions);
     } finally {
       setCraftActivity(null);
     }

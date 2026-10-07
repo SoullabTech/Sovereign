@@ -5068,8 +5068,13 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   padding:38px 28px 120px;
 }
 .p4r1-root .p4r1-craft-r1-page{
-  width:min(820px,calc(100% - 12px));
+  width:min(1060px,calc(100% - 12px));
   margin:0 auto;
+  padding:42px 48px 84px;
+  box-sizing:border-box;
+  border:1px solid color-mix(in srgb,var(--fr-line) 72%,transparent);
+  background:color-mix(in srgb,var(--fr-panel) 97%,var(--fr-bg));
+  box-shadow:0 18px 42px rgba(7,18,45,.10);
   font-family:var(--fr-serif-stack);
   font-size:19px;
   line-height:1.76;
@@ -5677,4 +5682,150 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
 .p4r1-root .p4r1-maia-craft-r1-strength small{
   color:var(--fr-muted);
   font:10px/1.4 var(--fr-sans-stack);
+}
+
+
+/* R1 manuscript geometry — professional page, working text, editorial margin. */
+.p4r1-root .p4r1-craft-r1-context-section{
+  width:min(720px,100%);
+  margin:0 auto 58px;
+}
+.p4r1-root [data-craft-active-section]{
+  margin-bottom:64px;
+}
+.p4r1-root [data-craft-active-section]>h1,
+.p4r1-root [data-craft-active-section]>h2,
+.p4r1-root [data-craft-active-section]>h3{
+  width:min(720px,100%);
+  margin-left:auto;
+  margin-right:auto;
+}
+.p4r1-root .p4r1-craft-r1-context{
+  width:min(720px,100%);
+}
+.p4r1-root .p4r1-craft-r1-context p{
+  margin:0 0 1.02em;
+}
+.p4r1-root .p4r1-craft-r1-context p:last-child{
+  margin-bottom:0;
+}
+.p4r1-root .p4r1-craft-r1-context blockquote{
+  margin:1.15em 8% 1.5em;
+  color:var(--fr-muted);
+  font-style:italic;
+  line-height:1.62;
+}
+.p4r1-root .p4r1-craft-r1-context h4{
+  margin:1.8em 0 .65em;
+  color:var(--fr-title);
+  font:600 15px/1.3 var(--fr-sans-stack);
+  letter-spacing:.055em;
+  text-transform:uppercase;
+}
+.p4r1-root .p4r1-craft-r1-list{
+  display:grid;
+  gap:.35em;
+  margin:1em 0 1.3em 1.35em;
+}
+.p4r1-root .p4r1-craft-r1-list p{
+  margin:0;
+}
+.p4r1-root .p4r1-craft-r1-context-muted{
+  color:color-mix(in srgb,var(--fr-ink) 82%,var(--fr-muted));
+}
+.p4r1-root .p4r1-craft-r1-workrow{
+  display:grid;
+  grid-template-columns:minmax(0,720px) minmax(170px,210px);
+  gap:30px;
+  align-items:start;
+  justify-content:center;
+}
+.p4r1-root .p4r1-craft-r1-worktext{
+  min-width:0;
+}
+.p4r1-root .p4r1-craft-r1-active-paragraph{
+  margin:1.05em 0;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  color:var(--fr-title);
+  font-size:19.5px;
+  line-height:1.8;
+}
+.p4r1-root .p4r1-craft-r1-margin{
+  position:sticky;
+  top:18px;
+  align-self:start;
+  display:grid;
+  gap:10px;
+  min-width:0;
+  padding-top:2px;
+  font-family:var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-craft-r1-margin-note,
+.p4r1-root .p4r1-craft-r1-margin-guide{
+  padding:10px 0 10px 12px;
+  border-left:2px solid var(--fr-action-line);
+}
+.p4r1-root .p4r1-craft-r1-margin-note>span,
+.p4r1-root .p4r1-craft-r1-margin-guide>span{
+  display:block;
+  margin-bottom:5px;
+  color:var(--fr-action);
+  font:700 9.5px/1.2 var(--fr-sans-stack);
+  letter-spacing:.075em;
+  text-transform:uppercase;
+}
+.p4r1-root .p4r1-craft-r1-margin-note p,
+.p4r1-root .p4r1-craft-r1-margin-guide p{
+  margin:0;
+  color:var(--fr-muted);
+  font:11px/1.48 var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-craft-r1-margin .p4r1-craft-r1-local{
+  margin:0;
+  padding:11px;
+  border-radius:8px;
+  box-shadow:0 7px 18px rgba(7,18,45,.09);
+}
+.p4r1-root .p4r1-craft-r1-margin .p4r1-craft-r1-local p{
+  font-size:13px;
+  line-height:1.45;
+}
+.p4r1-root .p4r1-craft-r1-margin .p4r1-craft-r1-local>div:last-child{
+  display:grid;
+  grid-template-columns:1fr;
+}
+.p4r1-root .p4r1-craft-r1-margin .p4r1-craft-r1-local button{
+  width:100%;
+  text-align:left;
+  justify-content:flex-start;
+}
+.p4r1-root .p4r1-craft-r1-margin .p4r1-craft-r1-own-wording textarea{
+  min-height:92px;
+  font-size:13px;
+}
+@media(max-width:1280px){
+  .p4r1-root .p4r1-craft-r1-page{
+    width:min(900px,calc(100% - 8px));
+    padding:36px 34px 76px;
+  }
+  .p4r1-root .p4r1-craft-r1-workrow{
+    grid-template-columns:minmax(0,1fr) 180px;
+    gap:20px;
+  }
+}
+@media(max-width:1050px){
+  .p4r1-root .p4r1-craft-r1-workrow{
+    grid-template-columns:minmax(0,1fr);
+  }
+  .p4r1-root .p4r1-craft-r1-margin{
+    position:static;
+    width:min(720px,100%);
+    margin:8px auto 0;
+    grid-template-columns:1fr;
+  }
+  .p4r1-root .p4r1-craft-r1-page{
+    padding-left:24px;
+    padding-right:24px;
+  }
 }
