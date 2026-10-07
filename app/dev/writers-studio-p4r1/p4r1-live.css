@@ -4504,3 +4504,146 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   font-size:13px;
   line-height:1.55;
 }
+
+
+/* R8H — Develop Craft is the marked manuscript field, not the clean Write room. */
+.p4r1-root .p4r1-craft-viewbar{
+  position:sticky;
+  top:0;
+  z-index:24;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin:0 0 22px;
+  padding:14px 16px;
+  border:1px solid var(--fr-line-soft);
+  border-radius:12px;
+  background:color-mix(in srgb,var(--fr-panel) 96%,transparent);
+  box-shadow:0 8px 24px rgba(7,18,45,.08);
+  backdrop-filter:blur(10px);
+}
+.p4r1-root .p4r1-craft-viewbar>div:first-child{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.p4r1-root .p4r1-craft-viewbar strong{
+  font:500 17px/1.25 var(--fr-serif-stack);
+  color:var(--fr-title);
+}
+.p4r1-root .p4r1-craft-viewbar small{
+  font:11.5px/1.45 var(--fr-sans-stack);
+  color:var(--fr-muted);
+}
+.p4r1-root .p4r1-craft-viewbar p{
+  margin:6px 0 0;
+  max-width:72ch;
+  font:12.5px/1.5 var(--fr-sans-stack);
+  color:var(--fr-ink2);
+}
+.p4r1-root .p4r1-craft-view-switch{
+  flex:0 0 auto;
+  display:flex;
+  padding:3px;
+  border:1px solid var(--fr-line);
+  border-radius:999px;
+  background:var(--fr-field);
+}
+.p4r1-root .p4r1-craft-view-switch button{
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:var(--fr-muted);
+  padding:7px 13px;
+  font:600 11.5px var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-craft-view-switch button[aria-pressed='true']{
+  background:var(--fr-panel);
+  color:var(--fr-title);
+  box-shadow:0 2px 8px rgba(7,18,45,.10);
+}
+.p4r1-root [data-develop-craft-canvas='true'] [data-write-editor]{
+  cursor:text;
+  user-select:text;
+}
+.p4r1-root [data-develop-craft-canvas='true'][data-craft-view='preview'] [data-write-editor]{
+  cursor:default;
+}
+.p4r1-root [data-develop-craft-canvas='true'][data-craft-view='preview'] .p4r1-chapter-edit{
+  background:color-mix(in srgb,var(--fr-panel) 16%,transparent);
+}
+
+/* Traditional editorial language: red marks what leaves; blue shows what may enter. */
+.p4r1-root .p4r1-revision-ink span[data-delete='true']:not(.p4r1-revision-inline-insert){
+  box-sizing:border-box;
+  border-left:2px solid #b54b4b;
+  border-right:2px solid #b54b4b;
+  border-radius:2px;
+  background:rgba(181,75,75,.055);
+  box-shadow:none;
+}
+.p4r1-root .p4r1-revision-ink span[data-delete='true']:not(.p4r1-revision-inline-insert)::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:50%;
+  border-top:1.5px solid rgba(181,75,75,.92);
+}
+.p4r1-root .p4r1-revision-ink span[data-delete='true'][data-selected='true']:not(.p4r1-revision-inline-insert){
+  background:rgba(181,75,75,.10);
+  border-color:#923838;
+}
+.p4r1-root .p4r1-revision-inline-insert{
+  position:fixed!important;
+  z-index:27;
+  width:max-content!important;
+  max-width:min(330px,42vw);
+  height:auto!important;
+  padding:4px 7px 5px 10px;
+  border:0!important;
+  border-left:2px solid #3b72b9!important;
+  border-radius:3px!important;
+  background:color-mix(in srgb,var(--fr-panel) 94%,#dfeeff 6%)!important;
+  color:#3568aa;
+  box-shadow:0 3px 12px rgba(31,75,128,.12)!important;
+  white-space:normal;
+  font:500 13px/1.35 var(--fr-serif-stack);
+}
+.p4r1-root .p4r1-revision-inline-insert::before{
+  content:'+';
+  position:absolute;
+  left:-12px;
+  top:1px;
+  color:#3568aa;
+  font:700 12px var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-revision-inline-insert[data-selected='true']{
+  background:color-mix(in srgb,var(--fr-panel) 82%,#dfeeff 18%)!important;
+  border-left-color:#245995!important;
+  color:#245995;
+}
+.p4r1-root [data-develop-craft-canvas='true'] .p4r1-revision-marker{
+  border-color:color-mix(in srgb,#b54b4b 55%,var(--fr-line));
+  color:#9b4141;
+}
+.p4r1-root [data-develop-craft-canvas='true'] .p4r1-revision-marker[data-selected='true']{
+  background:#3568aa;
+  border-color:#3568aa;
+  color:#fff;
+}
+
+@media(max-width:760px){
+  .p4r1-root .p4r1-craft-viewbar{
+    position:relative;
+    display:grid;
+  }
+  .p4r1-root .p4r1-craft-view-switch{
+    justify-self:start;
+  }
+  .p4r1-root .p4r1-revision-inline-insert{
+    max-width:68vw;
+  }
+}

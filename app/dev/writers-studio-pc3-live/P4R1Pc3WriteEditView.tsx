@@ -66,6 +66,8 @@ export type P4R1Pc3WriteEditViewProps = {
   onMode: (mode: 'home' | 'write' | 'develop' | 'review') => void;
 
   workspaceOpen: boolean;
+  /** Write is clean authorship; Develop Craft is the marked editorial field. */
+  surfaceMode: 'write' | 'develop-craft';
   /** R8G — conversation has crossed into active making. */
   craftMode: boolean;
   carriedInsight: CanvasInsight | null;
@@ -214,6 +216,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
+  const [craftView, setCraftView] = useState<'markup' | 'preview'>('markup');
   const [proseView, setProseView] = useState(() => !props.held && !props.carriedInsight);
   const wholeEditRef = useRef<WholeManuscriptSurfaceHandle | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -234,12 +237,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       setIsolatedEditorial(false);
       return;
     }
-    /* A substantial editorial act on an exact held passage owns the Focus room.
-       Never let the full editorial dance float over the manuscript. */
-    if (props.workspaceOpen && props.held && !isolatedEditorial) {
+    /* Ordinary Write isolates a substantial editorial act. Develop Craft is
+       deliberately the opposite: the manuscript itself remains the craft field,
+       with editorial marks and MAIA alongside it. */
+    if (props.surfaceMode !== 'develop-craft' && props.workspaceOpen && props.held && !isolatedEditorial) {
       setIsolatedEditorial(true);
     }
-  }, [props.workspaceOpen, props.held, isolatedEditorial]);
+  }, [props.workspaceOpen, props.held, props.surfaceMode, isolatedEditorial]);
 
   useEffect(() => {
     setSelectedRevisionEdits(new Set());
@@ -332,6 +336,37 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const currentText = props.held?.draftSectionId === props.focusId
     ? props.held.text
     : currentBody;
+  const craftPreviewPassage = props.held && props.suggestedVersion
+    ? props.suggestedVersion.author === 'member'
+      ? props.suggestedVersion.wording
+      : composeSelected(
+          editorialSegments(props.held.text, props.suggestedVersion.wording),
+          selectedRevisionEdits,
+        )
+    : props.held?.text ?? '';
+  const craftPreviewBodyOf = (sectionId: string) => {
+    const body = props.writing.bodyOf(sectionId);
+    if (
+      props.surfaceMode !== 'develop-craft'
+      || craftView !== 'preview'
+      || !props.held
+      || sectionId !== props.held.draftSectionId
+      || !props.suggestedVersion
+    ) return body;
+    const points = Array.from(body);
+    return [
+      ...points.slice(0, props.held.start),
+      craftPreviewPassage,
+      ...points.slice(props.held.end),
+    ].join('');
+  };
+  const craftWriting: SectionWriting = props.surfaceMode === 'develop-craft' && craftView === 'preview'
+    ? {
+        ...chapterWriting,
+        bodyOf: craftPreviewBodyOf,
+        activeBody: chapterWriting.activeId ? craftPreviewBodyOf(chapterWriting.activeId) : '',
+      }
+    : chapterWriting;
 
   const focusRealEditor = () => {
     setBlankArrivalDismissed(true);
@@ -636,7 +671,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : null;
 
-  const editorial = props.workspaceOpen && !isolatedEditorial && !props.held ? (
+  const editorial = props.workspaceOpen
+    && !isolatedEditorial
+    && (!props.held || props.surfaceMode === 'develop-craft') ? (
     <div className="p4r1-context-card p4r1-editorial" data-p4r1-editorial>
       <header className="p4r1-context-head">
         <div>
@@ -644,7 +681,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           <strong>{props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}</strong>
         </div>
         <div>
-          <button type="button" disabled={busy} onClick={() => setIsolatedEditorial(true)}>Isolate passage</button>
+          {props.surfaceMode !== 'develop-craft' ? (
+            <button type="button" disabled={busy} onClick={() => setIsolatedEditorial(true)}>Isolate passage</button>
+          ) : null}
           {props.canReturnToStartingPassage ? (
             <button type="button" disabled={busy} onClick={props.onReturnToStartingPassage}>Return</button>
           ) : null}
@@ -846,13 +885,36 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     />
   );
 
-  const modeSwitch = proseAvailable && !canvas ? (
+  const modeSwitch = props.surfaceMode !== 'develop-craft' && proseAvailable && !canvas ? (
     <div className="p4r1-write-view-switch" aria-label="Writing view">
       <button type="button" aria-pressed={proseView} onClick={() => {
         wholeEditRef.current?.captureMountedBeforeLeave();
         setProseView(true);
       }}>Prose</button>
       <button type="button" aria-pressed={!proseView} onClick={() => setProseView(false)}>Edit</button>
+    </div>
+  ) : null;
+
+  const craftViewSwitch = props.surfaceMode === 'develop-craft' && !canvas ? (
+    <div className="p4r1-craft-viewbar" data-craft-viewbar>
+      <div>
+        <span className="p4r1-eyebrow">Develop · Craft Canvas</span>
+        <strong>Editor’s eye ↔ Reader’s eye</strong>
+        <small>What you and MAIA discovered comes with you. Nothing changes until Apply.</small>
+        {props.attentionReturnRequiresSelection && !props.held ? (
+          <p data-craft-selection-needed>Select the exact words you want to shape. The conversation is already here; you do not need to explain it again.</p>
+        ) : props.held ? (
+          <p data-craft-selection-held>This passage is now the active craft locus.</p>
+        ) : null}
+      </div>
+      <div className="p4r1-craft-view-switch" role="group" aria-label="Craft canvas view">
+        <button type="button" aria-pressed={craftView === 'markup'} onClick={() => setCraftView('markup')}>
+          Markup
+        </button>
+        <button type="button" aria-pressed={craftView === 'preview'} onClick={() => setCraftView('preview')}>
+          Preview
+        </button>
+      </div>
     </div>
   ) : null;
 
@@ -872,22 +934,28 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   ) : null;
 
   const exactRoom = (
-    <div className="p4r1-edit-host">
+    <div
+      className="p4r1-edit-host"
+      data-develop-craft-canvas={props.surfaceMode === 'develop-craft' ? 'true' : undefined}
+      data-craft-view={props.surfaceMode === 'develop-craft' ? craftView : undefined}
+    >
+      {craftViewSwitch}
       {modeSwitch}
-      {proseAvailable ? (
+      {props.surfaceMode === 'develop-craft' || proseAvailable ? (
         <div className="p4r1-chapter-edit" data-chapter-edit>
           <WholeManuscriptSurface
             ref={wholeEditRef}
-            writing={chapterWriting}
+            writing={props.surfaceMode === 'develop-craft' ? craftWriting : chapterWriting}
             initialOpenAt={props.focusId}
             showHeadings
+            readOnly={props.surfaceMode === 'develop-craft'}
           />
         </div>
       ) : writeRoom}
     </div>
   );
 
-  const baseWorkSurface = proseView && proseRoom ? proseRoom : blankArrival ? (
+  const baseWorkSurface = props.surfaceMode !== 'develop-craft' && proseView && proseRoom ? proseRoom : blankArrival ? (
     <div className="p4r1-blank-write-host">
       {exactRoom}
       {blankArrival}
@@ -1030,7 +1098,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   return (
     <>
       <Shell
-          mode="write"
+          mode={props.surfaceMode === 'develop-craft' ? 'develop' : 'write'}
           appearance={props.appearance}
           geometry={railSelectionId || workConversationOpen ? WRITE_RELATIONAL_GEOMETRY : WRITE_GEOMETRY}
           workTitle={props.work?.title ?? undefined}
@@ -1055,7 +1123,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             />
           ) : null}
 
-          {proposalMarkable && props.held && props.suggestedVersion ? (
+          {proposalMarkable
+            && props.held
+            && props.suggestedVersion
+            && (props.surfaceMode !== 'develop-craft' || craftView === 'markup') ? (
             <RevisionManuscriptLayer
               sectionId={props.held.draftSectionId}
               passageStart={props.held.start}

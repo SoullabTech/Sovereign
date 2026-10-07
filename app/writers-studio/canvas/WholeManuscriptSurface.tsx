@@ -109,6 +109,8 @@ export interface WholeManuscriptSurfaceProps {
   showHeadings?: boolean;
   /** Exact frozen passage to illuminate in a read-only manuscript. Never used for editing. */
   readOnlyHighlight?: { sectionId: string; range: CodePointRange } | null;
+  /** Develop/Craft presents canonical prose for selection and markup, not direct mutation. */
+  readOnly?: boolean;
 }
 
 
@@ -131,7 +133,7 @@ export interface WholeManuscriptSurfaceHandle {
 export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
-  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, showHeadings = false, readOnlyHighlight = null,
+  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, showHeadings = false, readOnlyHighlight = null, readOnly = false,
 }, handleRef) {
   const sections = writing.sections;
   const indexOfId = useMemo(() => {
@@ -401,33 +403,53 @@ export const WholeManuscriptSurface = forwardRef<
               </h2>
             ) : null}
             {!isMounted ? null : section.editable ? (
-              <textarea
-                ref={(n) => { if (n) fields.current.set(section.id, n); }}
-                value={editorBody}
-                data-manuscript-edit-projection={editProjection?.projected ? 'semantic' : 'verbatim'}
-                onChange={(e) => {
-                  presentationDirty.current.add(section.id);
-                  writing.editSection(section.id, e.target.value);
-                }}
-                onKeyDown={onKeyDown}
-                onFocus={() => setFocusedIndex(i)}
-                onBlur={() => {
-                  /* Capture on blur as well as on eviction: the pin releases
-                     here, and a section that loses focus far from the viewport
-                     becomes evictable on the very next scroll. */
-                  const field = fields.current.get(section.id);
-                  if (field) writing.captureForUnmount(section.id, captureValue(section.id, field));
-                  setFocusedIndex((cur) => (cur === i ? null : cur));
-                }}
-                spellCheck
-                aria-label={section.heading ?? `Section ${section.position + 1}`}
-                rows={Math.max(3, Math.ceil(editorBody.length / 70) + editorBody.split('\n\n').length - 1)}
-                style={{
-                  width: '100%', resize: 'none', border: 'none', outline: 'none',
-                  background: 'transparent', font: 'inherit', lineHeight: 1.7,
-                  color: 'inherit', overflow: 'hidden',
-                }}
-              />
+              readOnly ? (
+                <div
+                  data-write-editor
+                  data-section-id={section.id}
+                  data-manuscript-edit-projection={editProjection?.projected ? 'semantic' : 'verbatim'}
+                  role="textbox"
+                  aria-readonly="true"
+                  aria-label={section.heading ?? `Section ${section.position + 1}`}
+                  style={{
+                    width: '100%', border: 'none', outline: 'none',
+                    background: 'transparent', font: 'inherit', lineHeight: 1.7,
+                    color: 'inherit', whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {editorBody}
+                </div>
+              ) : (
+                <textarea
+                  ref={(n) => { if (n) fields.current.set(section.id, n); }}
+                  value={editorBody}
+                  data-write-editor
+                  data-section-id={section.id}
+                  data-manuscript-edit-projection={editProjection?.projected ? 'semantic' : 'verbatim'}
+                  onChange={(e) => {
+                    presentationDirty.current.add(section.id);
+                    writing.editSection(section.id, e.target.value);
+                  }}
+                  onKeyDown={onKeyDown}
+                  onFocus={() => setFocusedIndex(i)}
+                  onBlur={() => {
+                    /* Capture on blur as well as on eviction: the pin releases
+                       here, and a section that loses focus far from the viewport
+                       becomes evictable on the very next scroll. */
+                    const field = fields.current.get(section.id);
+                    if (field) writing.captureForUnmount(section.id, captureValue(section.id, field));
+                    setFocusedIndex((cur) => (cur === i ? null : cur));
+                  }}
+                  spellCheck
+                  aria-label={section.heading ?? `Section ${section.position + 1}`}
+                  rows={Math.max(3, Math.ceil(editorBody.length / 70) + editorBody.split('\n\n').length - 1)}
+                  style={{
+                    width: '100%', resize: 'none', border: 'none', outline: 'none',
+                    background: 'transparent', font: 'inherit', lineHeight: 1.7,
+                    color: 'inherit', overflow: 'hidden',
+                  }}
+                />
+              )
             ) : (() => {
               const exact = readOnlyHighlight?.sectionId === section.id
                 ? splitCodePointRange(body, readOnlyHighlight.range)

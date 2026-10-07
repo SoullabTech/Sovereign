@@ -28,11 +28,13 @@ describe('C3 Develop → Focus continuity', () => {
     expect(developView).toContain('Work this into the writing →');
   });
 
-  it('carries the exact Develop observation into Write with an explicit focus action', () => {
+  it('carries the exact Develop observation into the Develop Craft canvas with an explicit focus action', () => {
+    expect(developController).toContain("query.set('mode', 'develop')");
+    expect(developController).toContain("query.set('developCraft', '1')");
     expect(developController).toContain("query.set('insightReading', readingId)");
     expect(developController).toContain("query.set('insightObservation', observationKey)");
     expect(developController).toContain("query.set('insightAction', 'focus')");
-    expect(developController).toContain('Keep developField / developIntent / r as the exact return address.');
+    expect(developController).toContain('Develop owns craft. Write remains the clean authorship surface.');
   });
 
   it('turns every explicit Work-on-this handoff into revision work rather than plain canvas navigation', () => {
@@ -71,10 +73,11 @@ describe('C3 Develop → Focus continuity', () => {
     expect(writeController).toContain('if (exact !== selectedPassage.text) return;');
   });
 
-  it('opens the existing workspace seam rather than inventing another editor state', () => {
+  it('opens the existing workspace seam while Develop Craft keeps the manuscript visible', () => {
     expect(writeController).toContain("openWorkspace({ readingId: arrivalInsight.readingId, key: arrivalInsight.observation.key });");
-    expect(writeView).toContain('if (props.workspaceOpen && props.held && !isolatedEditorial)');
-    expect(writeView).toContain('setIsolatedEditorial(true)');
+    expect(writeView).toContain("props.surfaceMode !== 'develop-craft' && props.workspaceOpen && props.held && !isolatedEditorial");
+    expect(writeView).toContain("(!props.held || props.surfaceMode === 'develop-craft')");
+    expect(writeView).toContain("data-develop-craft-canvas={props.surfaceMode === 'develop-craft' ? 'true' : undefined}");
   });
 
   it('keeps the Develop observation visible inside Focus and offers a real return path', () => {

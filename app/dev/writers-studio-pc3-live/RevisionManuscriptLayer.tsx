@@ -203,11 +203,34 @@ export default function RevisionManuscriptLayer({
           (rectMap.get(edit.id) ?? []).map((rect, index) => (
             <span
               key={`${edit.id}:${index}`}
+              data-edit-id={edit.id}
+              data-delete={edit.from ? 'true' : undefined}
+              data-insert={edit.to ? 'true' : undefined}
               data-selected={selected.has(edit.id) ? 'true' : undefined}
               style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
             />
           )),
         )}
+        {edits.map((edit) => {
+          if (!edit.to.trim()) return null;
+          const rects = rectMap.get(edit.id) ?? [];
+          const anchor = rects[rects.length - 1];
+          if (!anchor) return null;
+          return (
+            <span
+              key={`insert:${edit.id}`}
+              className="p4r1-revision-inline-insert"
+              data-edit-id={edit.id}
+              data-selected={selected.has(edit.id) ? 'true' : undefined}
+              style={{
+                left: Math.min(window.innerWidth - 340, anchor.left + anchor.width + 7),
+                top: anchor.top + anchor.height + 2,
+              }}
+            >
+              {edit.to.trim()}
+            </span>
+          );
+        })}
       </div>
 
       {edits.map((edit) => {

@@ -30,9 +30,11 @@ export default function P4R1StudioHost({
 }) {
   const params = useSearchParams();
   const mode = unifiedModeFrom(params?.get('mode'), defaultMode);
+  const developCraft = mode === 'develop' && params?.get('developCraft') === '1';
 
   const room = mode === 'home' ? <P4R1HomeController />
-    : mode === 'develop' ? <P4R1DevelopController />
+    : mode === 'develop'
+      ? (developCraft ? <P4R1WriteEditController surfaceMode="develop-craft" /> : <P4R1DevelopController />)
       : mode === 'review' ? <P4R1ReviewController />
         : <P4R1WriteEditController />;
 

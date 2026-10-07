@@ -934,12 +934,13 @@ export default function P4R1DevelopController() {
     sectionId: string,
   ) => {
     updateQuery((query) => {
-      query.set('mode', 'write');
+      query.set('mode', 'develop');
+      query.set('developCraft', '1');
       query.set(SECTION_PARAM, sectionId);
       query.set('insightReading', readingId);
       query.set('insightObservation', observationKey);
       query.set('insightAction', 'focus');
-      /* Keep developField / developIntent / r as the exact return address. */
+      /* Develop owns craft. Write remains the clean authorship surface. */
     });
   }, [updateQuery]);
 
@@ -1605,7 +1606,8 @@ export default function P4R1DevelopController() {
       );
       if (passage?.range) {
         updateQuery((query) => {
-          query.set('mode', 'write');
+          query.set('mode', 'develop');
+          query.set('developCraft', '1');
           query.set(SECTION_PARAM, passage.sectionId);
           query.set('developField', 'overview');
           query.set('attentionItem', itemId);
@@ -1633,14 +1635,15 @@ export default function P4R1DevelopController() {
           .find(Boolean);
         if (citedSection) {
           updateQuery((query) => {
-            query.set('mode', 'write');
+            query.set('mode', 'develop');
+            query.set('developCraft', '1');
             query.set(SECTION_PARAM, citedSection);
             query.set('developField', 'overview');
             query.set('attentionItem', itemId);
             query.set('insightReading', evidence.readingId);
             query.set('insightObservation', evidence.observationKey);
             /* Section evidence is enough to orient the writer, but not enough
-               for MAIA to invent an edit locus. Enter Write in passage-choice
+               for MAIA to invent an edit locus. Enter Develop Craft in passage-choice
                mode; the writer's selection becomes the exact revision locus. */
             query.set('insightAction', craftFromConversation ? 'choose-craft-passage' : 'choose-revision-passage');
             setCraftAddress(query);
@@ -1653,11 +1656,12 @@ export default function P4R1DevelopController() {
     /* Last lawful handoff: the synthesis itself still names an evidenced,
        current section even when the richer passage resolver could not recover a
        narrower locus. Do not degrade “Work on this” into plain canvas
-       navigation. Let the writer choose the exact words in Write. */
+       navigation. Let the writer choose the exact words in Develop Craft. */
     const fallbackEvidence = item.evidence[0];
     if (fallbackEvidence && context.sections.some((candidate) => candidate.draftSectionId === sectionId)) {
       updateQuery((query) => {
-        query.set('mode', 'write');
+        query.set('mode', 'develop');
+        query.set('developCraft', '1');
         query.set(SECTION_PARAM, sectionId);
         query.set('developField', 'overview');
         query.set('attentionItem', itemId);
@@ -1673,6 +1677,24 @@ export default function P4R1DevelopController() {
       'MAIA could not establish a safe editable place for this suggestion. Nothing changed.',
     );
   }, [attentionMap, chapterReview, chapterMinimalPath, context, updateQuery]);
+
+  const craftFromConversation = useCallback((
+    sectionId: string,
+    carry: { sourceThreadId: string; sourceMaiaTurnIndex: number },
+  ) => {
+    if (!context?.sections.some((section) => section.draftSectionId === sectionId)) return;
+    updateQuery((query) => {
+      query.set('mode', 'develop');
+      query.set('developCraft', '1');
+      query.set(SECTION_PARAM, sectionId);
+      query.set('insightAction', 'choose-craft-passage');
+      query.set(CRAFT_SOURCE_THREAD, carry.sourceThreadId);
+      query.set(CRAFT_SOURCE_MAIA_TURN, String(carry.sourceMaiaTurnIndex));
+      query.delete('insightReading');
+      query.delete('insightObservation');
+      query.delete('attentionItem');
+    });
+  }, [context, updateQuery]);
 
   const sectionScope = useMemo<Extract<DevelopScopeChoice, { kind: 'section' }> | null>(() => {
     if (!currentSection) return null;
@@ -1791,6 +1813,7 @@ export default function P4R1DevelopController() {
       onCommissionAttentionMap={() => void commissionAttentionMap()}
       onShowAttentionItem={openAttentionSection}
       onWorkWithAttentionItem={workWithAttentionItem}
+      onCraftFromConversation={craftFromConversation}
       onDiscussAttentionItem={discussAttentionItem}
       onSaveWriterUnderstanding={(draft) => void saveUnderstanding(draft)}
       onReflectDevelopmentalProcess={() => void reflectDevelopmentalProcess()}

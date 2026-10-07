@@ -66,7 +66,14 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R8G continuity: Work-conversation thread + selected MAIA turn are carried only as identifiers; the server re-resolves exact turns and preserves writer/MAIA authorship as separate canonical producers before editorial cognition.
 - R8G making path: **Work this into the writing → exact/author-chosen passage → Craft Canvas · See · Talk · Make → Craftsman examples → Your working version → Work it through → Read in context → Save → Apply.**
 - R8G focused engineering witness: **13 suites · 192 tests PASS · flagship typecheck PASS.** Founder experiential witness remains required.
-- **Next act: founder witness of conversation → Craft Canvas → writer-authored version on localhost:3738.** R8M-T1 remains closed until this making loop and relational carry pass in lived use.
+- R8H founder ruling: **Write = clean authorship; Develop = craftsmanship. Craft belongs to Develop.** The manuscript page itself, not a detached textarea, is the primary Craft Canvas.
+- R8H Hermes continuity: **Orientation → Seeing → Dialogue → Craft.** Hermes is the crossing law: *what writer and MAIA discover comes with them; the writer does not explain it again.*
+- R8H marked-manuscript candidate: Develop Craft keeps canonical prose central and non-destructive; red deletion/replacement marks + blue proposed insertions are interactive editorial notation. Each change can be used, challenged, taught, redirected, or left alone.
+- R8H **Markup ↔ Preview**: Markup is the editor’s eye; Preview is the reader’s eye and renders only the writer’s currently chosen changes (or the writer-authored head version). Neither mutates the manuscript.
+- R8H conversation crossing no longer disappears when MAIA has only chapter/section evidence: **Work this into the writing → Develop Craft → writer selects exact words if needed.**
+- R8H record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8H_HERMES_DEVELOP_CRAFT_CANVAS_2026-10-06.md`
+- R8H focused engineering witness: **8 suites · 51 tests PASS · flagship typecheck PASS · diff-check PASS · localhost:3738 HTTP 200.** Founder visual/experiential witness remains required.
+- **Next act: founder witness of Chapter 10 conversation → Hermes → Develop Craft Markup ↔ Preview → explicit Apply on localhost:3738.** R8M-T1 remains closed until this making loop and relational carry pass in lived use.
 - Founder direction added: **R8M — MAIA Editorial/Relational Model Qualification + Governed Council.** Change models when another engine demonstrably fits a faculty better, and use a governed primary/challenger council for high-value uncertain acts.
 - R8M record: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M_MODEL_QUALIFICATION_AND_COUNCIL_2026-10-06.md`
 - R8M context packet: **PASS candidate** — read-only `r8m-chapter-context-v1` establishes final-chapter position, chapter reading, prior book readings, and writer-established intention as distinct source classes.
@@ -74,7 +81,7 @@ Founder opened **JARVIS-WS-RD-RECOVERY-01** after a live Writer's Studio witness
 - R8M local witness: `docs/programme/JARVIS-WS-RD-RECOVERY-01_R8M-L1_LOCAL_BLIND_WITNESS_2026-10-06.md`
 - Strong reference calibration: **HELD** — R&D shell had no resolved Anthropic auth; no request was substituted to another provider.
 - R8M local evidence is held intact; identities remain sealed until blind qualitative judgment. **No production model change is authorized.**
-- No tester-study build, beta deployment, or broader Studio propagation until the founder passes the R8G making loop: conversation → Craft Canvas → writer-authored version → explicit Apply.
+- No tester-study build, beta deployment, or broader Studio propagation until the founder passes the R8H making loop: conversation → Hermes → Develop Craft Markup ↔ Preview → writer-authored version → explicit Apply.
 
 This entry supersedes the 2026-10-05 lane only for current execution priority. It does not rewrite the case-study record or discard its valid implementation evidence.
 

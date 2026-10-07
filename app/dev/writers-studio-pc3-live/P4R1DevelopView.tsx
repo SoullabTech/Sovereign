@@ -237,6 +237,10 @@ export interface P4R1DevelopViewProps {
     source: 'chapter-review' | 'minimal-path' | 'attention-map',
     craftFromConversation?: { sourceThreadId: string; sourceMaiaTurnIndex: number },
   ) => void;
+  onCraftFromConversation: (
+    sectionId: string,
+    carry: { sourceThreadId: string; sourceMaiaTurnIndex: number },
+  ) => void;
   onDiscussAttentionItem: (item: AttentionItem) => void;
   onSaveWriterUnderstanding: (draft: WriterUnderstandingDraft) => void;
   onReflectDevelopmentalProcess: () => void;
@@ -2781,20 +2785,27 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               chapterReadingId={chapterDialogue.readingId}
               initialDraft={chapterDialogue.initialQuestion}
               autoSendInitialDraft
-              afterMaiaTurn={chapterDialogue.sectionId ? ({ threadId, lastMaiaTurnIndex }) => (
-                <button
-                  type="button"
-                  className="p4r1-conversation-next"
-                  onClick={() => props.onWorkWithAttentionItem(
-                    chapterDialogue.itemId,
-                    chapterDialogue.sectionId!,
-                    'chapter-review',
-                    { sourceThreadId: threadId, sourceMaiaTurnIndex: lastMaiaTurnIndex },
-                  )}
-                >
-                  Work this into the writing →
-                </button>
-              ) : undefined}
+              afterMaiaTurn={({ threadId, lastMaiaTurnIndex }) => {
+                const sectionId = chapterDialogue.sectionId ?? props.currentSectionId;
+                if (!sectionId) return null;
+                const carry = { sourceThreadId: threadId, sourceMaiaTurnIndex: lastMaiaTurnIndex };
+                return (
+                  <button
+                    type="button"
+                    className="p4r1-conversation-next"
+                    onClick={() => chapterDialogue.sectionId
+                      ? props.onWorkWithAttentionItem(
+                          chapterDialogue.itemId,
+                          chapterDialogue.sectionId,
+                          'chapter-review',
+                          carry,
+                        )
+                      : props.onCraftFromConversation(sectionId, carry)}
+                  >
+                    Work this into the writing →
+                  </button>
+                );
+              }}
               onClose={() => setChapterDialogue(null)}
             />
           </div>
@@ -2866,6 +2877,18 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               manuscriptId={props.manuscriptId}
               sectionId={props.currentSectionId}
               initialDraft={attentionConversationDraft}
+              afterMaiaTurn={props.currentSectionId ? ({ threadId, lastMaiaTurnIndex }) => (
+                <button
+                  type="button"
+                  className="p4r1-conversation-next"
+                  onClick={() => props.onCraftFromConversation(props.currentSectionId!, {
+                    sourceThreadId: threadId,
+                    sourceMaiaTurnIndex: lastMaiaTurnIndex,
+                  })}
+                >
+                  Work this into the writing →
+                </button>
+              ) : undefined}
               onClose={() => {
                 setAttentionConversationDraft('');
                 setWorkTalking(false);

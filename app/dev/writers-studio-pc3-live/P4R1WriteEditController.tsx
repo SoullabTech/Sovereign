@@ -94,7 +94,11 @@ type SelectedCarrySource = EligibleCarrySource & {
   readonly receiverThreadId: string;
 };
 
-export default function FlagshipWriteEditController() {
+export default function FlagshipWriteEditController({
+  surfaceMode = 'write',
+}: {
+  surfaceMode?: 'write' | 'develop-craft';
+} = {}) {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname() ?? '/dev/writers-studio-p4r1';
@@ -115,6 +119,8 @@ export default function FlagshipWriteEditController() {
     && craftSourceMaiaTurnIndex !== null
     && (incomingAction === 'craft-passage' || incomingAction === 'choose-craft-passage')
   );
+  const developCraft = surfaceMode === 'develop-craft' || params?.get('developCraft') === '1';
+  const craftMode = craftArrival || developCraft;
   const attentionReturnItemId = params?.get('attentionItem') ?? null;
   const lineageReturnChapterId = params?.get('lineageChapter') ?? null;
   const lineageReturnCandidateId = params?.get('lineageCandidate') ?? null;
@@ -1112,10 +1118,10 @@ export default function FlagshipWriteEditController() {
     const range = passage.range ?? { start: 0, end: Array.from(passage.body).length };
     const exact = Array.from(passage.body).slice(range.start, range.end).join('');
 
-    /* A Develop → Write focus handoff is one arrival act. Once the carried
+    /* A Develop → Craft focus handoff is one arrival act. Once the carried
        evidence has been re-verified against the current draft, hold the exact
-       passage and open Focus in the same turn. Waiting for a later effect to
-       observe the held state created a race where the writer arrived in Write
+       passage and open the craft field in the same turn. Waiting for a later
+       effect to observe the held state created a race where the writer arrived
        with valid evidence but no editorial room. */
     if ((incomingAction === 'focus' || incomingAction === 'try-revision' || incomingAction === 'craft-passage') && passage.range) {
       const key = [
@@ -1198,6 +1204,39 @@ export default function FlagshipWriteEditController() {
 
   useEffect(() => {
     if (
+      incomingAction !== 'choose-craft-passage'
+      || !craftArrival
+      || arrivalInsight
+      || !selectedPassage
+      || workspaceOpen
+    ) return;
+    if (requestedSection && selectedPassage.draftSectionId !== requestedSection) return;
+
+    const key = [
+      'chosen-conversation-craft-passage',
+      craftSourceThreadId ?? 'no-thread',
+      String(craftSourceMaiaTurnIndex ?? -1),
+      selectedPassage.draftSectionId,
+      selectedPassage.start,
+      selectedPassage.end,
+    ].join(':');
+    if (focusInsightConsumed.current === key) return;
+    focusInsightConsumed.current = key;
+    openWorkspace();
+  }, [
+    incomingAction,
+    craftArrival,
+    arrivalInsight,
+    selectedPassage,
+    workspaceOpen,
+    requestedSection,
+    craftSourceThreadId,
+    craftSourceMaiaTurnIndex,
+    openWorkspace,
+  ]);
+
+  useEffect(() => {
+    if (
       (incomingAction !== 'try-revision' && incomingAction !== 'choose-revision-passage')
       || !arrivalInsight
       || !workspaceOpen
@@ -1266,35 +1305,39 @@ export default function FlagshipWriteEditController() {
       (incomingAction !== 'craft-passage' && incomingAction !== 'choose-craft-passage')
       || !craftArrival
       || !craftSourceThreadId
-      || !arrivalInsight
       || !workspaceOpen
       || !selectedPassage
       || !focusId
       || editorialBusy
     ) return;
-    if (
-      workspaceInsight?.readingId !== arrivalInsight.readingId
-      || workspaceInsight.key !== arrivalInsight.observation.key
-      || selectedPassage.draftSectionId !== focusId
-    ) return;
+    if (selectedPassage.draftSectionId !== focusId) return;
 
-    if (incomingAction === 'craft-passage') {
-      const passage = arrivalInsight.passages.find((candidate) =>
-        candidate.sectionId === focusId
-        && candidate.verified
-        && candidate.editable
-        && candidate.range,
-      );
-      if (!passage?.range) return;
-      const exact = Array.from(passage.body).slice(passage.range.start, passage.range.end).join('');
-      if (exact !== selectedPassage.text) return;
+    if (arrivalInsight) {
+      if (
+        workspaceInsight?.readingId !== arrivalInsight.readingId
+        || workspaceInsight.key !== arrivalInsight.observation.key
+      ) return;
+
+      if (incomingAction === 'craft-passage') {
+        const passage = arrivalInsight.passages.find((candidate) =>
+          candidate.sectionId === focusId
+          && candidate.verified
+          && candidate.editable
+          && candidate.range,
+        );
+        if (!passage?.range) return;
+        const exact = Array.from(passage.body).slice(passage.range.start, passage.range.end).join('');
+        if (exact !== selectedPassage.text) return;
+      }
+    } else if (incomingAction === 'craft-passage') {
+      return;
     }
 
     const key = [
       'craft-primer',
       craftSourceThreadId,
-      arrivalInsight.readingId,
-      arrivalInsight.observation.key,
+      arrivalInsight?.readingId ?? 'conversation-only',
+      arrivalInsight?.observation.key ?? String(craftSourceMaiaTurnIndex ?? -1),
       focusId,
       selectedPassage.start,
       selectedPassage.end,
@@ -1311,6 +1354,7 @@ export default function FlagshipWriteEditController() {
     incomingAction,
     craftArrival,
     craftSourceThreadId,
+    craftSourceMaiaTurnIndex,
     arrivalInsight,
     workspaceOpen,
     workspaceInsight,
@@ -1356,6 +1400,7 @@ export default function FlagshipWriteEditController() {
     }
     const next = new URLSearchParams(params?.toString() ?? '');
     next.set('mode', mode);
+    next.delete('developCraft');
     next.delete('insightReading');
     next.delete('insightObservation');
     next.delete('insightAction');
@@ -1410,7 +1455,8 @@ export default function FlagshipWriteEditController() {
             onHoldPassage={holdPassage}
             onMode={onMode}
             workspaceOpen={workspaceOpen}
-            craftMode={craftArrival}
+            surfaceMode={developCraft ? 'develop-craft' : 'write'}
+            craftMode={craftMode}
             carriedInsight={arrivalInsight}
             carriedInsightReturnMode={carriedInsightReturnMode}
             attentionReturnItemId={attentionReturnItemId}
