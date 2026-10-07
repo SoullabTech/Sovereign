@@ -7,25 +7,27 @@ import type { RebuildSection } from '../rebuild/model';
 
 const section = (
   id: string,
+  heading: string,
   position: number,
   headingDepth: 1 | 2 | 3,
 ): RebuildSection => ({
   draftSectionId: id,
   sourceSectionId: id,
   position,
-  heading: id,
+  heading,
   headingDepth,
+  headingSignal: null,
   body: id + ' body',
   editable: true,
 });
 
 describe("Craftsman's Table governed zoom", () => {
   const sections = [
-    section('chapter-1', 0, 1),
-    section('c1-a', 1, 2),
-    section('c1-b', 2, 2),
-    section('chapter-2', 3, 1),
-    section('c2-a', 4, 2),
+    section('chapter-1', 'Chapter 1: Beginning', 0, 1),
+    section('c1-a', 'First movement', 1, 2),
+    section('c1-b', 'Second movement', 2, 2),
+    section('chapter-2', 'Chapter 2: Return', 3, 1),
+    section('c2-a', 'Another movement', 4, 2),
   ];
 
   it('never widens an ordinary craft request by guess', () => {
