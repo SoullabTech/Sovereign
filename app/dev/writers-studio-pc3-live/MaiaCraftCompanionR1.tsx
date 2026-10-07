@@ -20,6 +20,8 @@ export type MaiaCraftCompanionR1Props = {
   lastMaiaTurn: RebuildEditorialThread['turns'][number] | null;
   busy: boolean;
   message: string | null;
+  /** Writer-owned current state: original + chosen MAIA moves + local wording. */
+  workingText: string;
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
   onSend: (text?: string, options?: SendOptions) => void;
@@ -40,7 +42,17 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
   ) => {
     if (!ordinary || props.busy) return;
     if (depth) props.onDepth(depth);
-    props.onSend(text, options);
+    const withWorkingState = props.workingText.trim()
+      ? [
+          text,
+          '',
+          'Current writer-owned working passage:',
+          props.workingText,
+          '',
+          'Treat this working passage as current Craft state. Do not silently restore an earlier MAIA proposal.',
+        ].join('\n')
+      : text;
+    props.onSend(withWorkingState, options);
   };
 
   const sendDraft = () => {
@@ -54,6 +66,10 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
       '',
       'Respond to my intention first. If wording would help, offer a bounded craft move directly against this passage.',
       'Preserve my voice, meaning, cadence, imagery, worldview, and intentional ambiguity unless I explicitly ask to change one of them.',
+      '',
+      'My current working passage — treat this as the wording I am shaping now:',
+      props.workingText,
+      '',
       'Nothing is applied automatically.',
     ].join('\n'));
     setDraft('');
@@ -98,7 +114,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
             ) : (
               <p>
                 Tell me what you want this passage to do. I can help you see it, try wording,
-                compare possibilities, or refine a move already on the page.
+                compare possibilities, or refine the version you are actually shaping on the page.
               </p>
             )}
             {props.message ? <small role="status">{props.message}</small> : null}
