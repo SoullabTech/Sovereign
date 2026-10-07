@@ -1,0 +1,43 @@
+{"command": ["/Users/soullab/.nvm/versions/node/v22.22.3/bin/node", "scripts/builder/__tests__/jev-judgment-host-v1-proof.mjs"], "cwd": "/Users/soullab/jev-wire-stop-review-20261007", "head": "9fb068beed0fb2171fc68eb47b5b9ad251fb8de7", "name": "J1-host", "started_at": "2026-10-07T18:10:50.374462+00:00"}
+=== purity / standing ===
+PASS  H-PURE-01 — source imports only J5 vocabulary and has no I/O/transport/provider seam
+PASS  H-STAND-01 — descriptor pins ratified J1/J5 and creates zero execution authority
+
+=== packet membrane ===
+PASS  H-PKT-01 — packet is exactly the ratified six-member representation
+PASS  H-PKT-02 — host-local workUnitId never crosses the representation
+PASS  H-PKT-03 — unknown TaskShape refuses construction
+PASS  H-PKT-04 — non-boolean state refuses instead of coercing
+PASS  H-PKT-05 — count overflow refuses instead of clamping/bucketing
+PASS  H-PKT-06 — undeclared question refuses construction
+PASS  H-PKT-07 — outbound representation is packet identity, never a wrapper
+PASS  H-PKT-08 — an extra top-level member cannot be normalized away
+PASS  H-PKT-09 — an extra nested change_scope member cannot be normalized away
+PASS  H-PKT-10 — construction refusal has zero side effects and is not abstention
+PASS  H-CLASS-01 — capability grammar allows bounded metadata shapes but not prose
+
+=== response admission ===
+PASS  H-ADM-01 — host failure precedence is timeout > empty > parse > shape
+PASS  H-ADM-02 — mismatched question outranks closed-record exactness
+PASS  H-ADM-03 — provider abstention is exact and may not carry confidence
+PASS  H-ADM-04 — provider cannot forge a host failure reason
+PASS  H-ADM-05 — Q_DEPTH admits only closed Score with exact Scale
+PASS  H-ADM-06 — question-to-shape binding is enforced
+PASS  H-ADM-07 — NaN / Infinity / out-of-range confidence are refused
+
+=== advice / authority non-collapse ===
+PASS  H-ADV-01 — low depth never lowers prior depth
+PASS  H-ADV-02 — risk false lowers nothing; risk true may raise escalation
+PASS  H-ADV-03 — sufficient true discharges nothing; false may raise clarification
+PASS  H-ADV-04 — LLM_NEEDED false may avoid optional model; true creates nothing
+PASS  H-ADV-05 — abstention is advice-neutral
+PASS  H-AUTH-01 — Jev judgment is identity on authority object
+
+=== verdict ===
+passes: 26
+failures: 0
+JEV-INT-02H HOST MEMBRANE — PASS
+
+EXIT_CODE=0
+FINISHED_AT=2026-10-07T18:10:50.413732+00:00
+EXECUTION_ERROR=None

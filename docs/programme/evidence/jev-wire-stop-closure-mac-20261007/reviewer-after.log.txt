@@ -1,0 +1,13 @@
+{"command": ["/Users/soullab/.nvm/versions/node/v22.22.3/bin/node", "/Users/soullab/jev-wire-repair-review-20261007/docs/programme/evidence/jev-wire-repair-mac-20261007/schema-stop-witness-portable.mjs", "/Users/soullab/jev-wire-stop-review-20261007", "/Users/soullab/jev-wire-repair-review-20261007/docs/programme/evidence/jev-wire-repair-mac-20261007/typesafe-openapi.json"], "cwd": "/Users/soullab/jev-wire-stop-review-20261007", "head": "9fb068beed0fb2171fc68eb47b5b9ad251fb8de7", "name": "reviewer-after", "started_at": "2026-10-07T18:08:25.696497+00:00"}
+{"mode":"transport-error","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","settled"],"halted_before_restart":true,"unresolved_before_restart":[],"next_attempt_sent":false,"next_fake_sends":0,"stop_invariant_holds":true}
+{"mode":"malformed-response","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","settled"],"halted_before_restart":true,"unresolved_before_restart":[],"next_attempt_sent":false,"next_fake_sends":0,"stop_invariant_holds":true}
+{"mode":"model-drift","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","observed","settled"],"halted_before_restart":true,"unresolved_before_restart":[],"next_attempt_sent":false,"next_fake_sends":0,"stop_invariant_holds":true}
+{"mode":"unexpected-usage","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","observed","settled"],"halted_before_restart":true,"unresolved_before_restart":[],"next_attempt_sent":false,"next_fake_sends":0,"stop_invariant_holds":true}
+SAFE_INTEGER_CHECK={"unsafe_output_tokens":9007199254740992,"accepted":false}
+RECEIPT_PATH=/tmp/jev-schema-stop-witness-SYNTHETIC-nZ7tRB/schema-and-stop-window.json
+RECEIPT_SHA256=2d65dbf32d0fe89e629a51653f221bee9fc3bc38c76dc06d361e50ff299ed2a3
+WITNESS_COMPLETED: exit 0 means measurements completed; inspect stop_invariant_holds, not a green acceptance verdict.
+
+EXIT_CODE=0
+FINISHED_AT=2026-10-07T18:08:25.922451+00:00
+EXECUTION_ERROR=None

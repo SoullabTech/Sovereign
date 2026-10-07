@@ -1,0 +1,13 @@
+{"command": ["/Users/soullab/.nvm/versions/node/v22.22.3/bin/node", "/Users/soullab/jev-wire-repair-review-20261007/docs/programme/evidence/jev-wire-repair-mac-20261007/schema-stop-witness-portable.mjs", "/Users/soullab/jev-wire-repair-review-20261007", "/Users/soullab/jev-wire-repair-review-20261007/docs/programme/evidence/jev-wire-repair-mac-20261007/typesafe-openapi.json"], "cwd": "/Users/soullab/jev-wire-stop-review-20261007", "head": "9fb068beed0fb2171fc68eb47b5b9ad251fb8de7", "name": "reviewer-before", "started_at": "2026-10-07T18:08:25.328397+00:00"}
+{"mode":"transport-error","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","settled"],"halted_before_restart":false,"unresolved_before_restart":[],"next_attempt_sent":true,"next_fake_sends":1,"stop_invariant_holds":false}
+{"mode":"malformed-response","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","settled"],"halted_before_restart":false,"unresolved_before_restart":[],"next_attempt_sent":true,"next_fake_sends":1,"stop_invariant_holds":false}
+{"mode":"model-drift","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","observed","settled"],"halted_before_restart":false,"unresolved_before_restart":[],"next_attempt_sent":true,"next_fake_sends":1,"stop_invariant_holds":false}
+{"mode":"unexpected-usage","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","observed","settled"],"halted_before_restart":false,"unresolved_before_restart":[],"next_attempt_sent":true,"next_fake_sends":1,"stop_invariant_holds":false}
+SAFE_INTEGER_CHECK={"unsafe_output_tokens":9007199254740992,"accepted":true}
+RECEIPT_PATH=/tmp/jev-schema-stop-witness-SYNTHETIC-UitZnb/schema-and-stop-window.json
+RECEIPT_SHA256=0d5571f1800db36f850acee72baaf407460112e708928ae406a73fe03390f838
+WITNESS_COMPLETED: exit 0 means measurements completed; inspect stop_invariant_holds, not a green acceptance verdict.
+
+EXIT_CODE=0
+FINISHED_AT=2026-10-07T18:08:25.614803+00:00
+EXECUTION_ERROR=None

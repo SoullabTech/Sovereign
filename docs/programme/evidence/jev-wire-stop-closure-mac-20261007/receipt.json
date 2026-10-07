@@ -1,0 +1,314 @@
+{
+  "reviewed_head": "9fb068beed0fb2171fc68eb47b5b9ad251fb8de7",
+  "runtime_commit": "7ae0fdbeda0a15c93705db265042257628e00a80",
+  "started_at": "2026-10-07T18:08:25.318824+00:00",
+  "checkout": "/Users/soullab/jev-wire-stop-review-20261007",
+  "all_transports_fake": true,
+  "provider_calls": 0,
+  "credentials_accessed": false,
+  "schema_sha256": "a191f8a7df6bd6fedced8120dd0fd106f88575d1d1c8360d08900a6c7c0360d5",
+  "witness_sha256": "d2ed3d2ad038aae5a4bc6453d329ff437e4fd5e17fef7812eb0ac3cfd0149a0d",
+  "toolchain": {
+    "node": "v22.22.3",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "@types/node": "25.0.9"
+  },
+  "checks": [
+    {
+      "name": "reviewer-before",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "/Users/soullab/jev-wire-repair-review-20261007/docs/programme/evidence/jev-wire-repair-mac-20261007/schema-stop-witness-portable.mjs",
+        "/Users/soullab/jev-wire-repair-review-20261007",
+        "/Users/soullab/jev-wire-repair-review-20261007/docs/programme/evidence/jev-wire-repair-mac-20261007/typesafe-openapi.json"
+      ],
+      "started_at": "2026-10-07T18:08:25.328397+00:00",
+      "finished_at": "2026-10-07T18:08:25.614803+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "reviewer-before.log.txt",
+      "log_sha256": "23f9bd27ef820e43824729b7effd84000de439aff00b09de346304baef234f73"
+    },
+    {
+      "name": "reviewer-after",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "/Users/soullab/jev-wire-repair-review-20261007/docs/programme/evidence/jev-wire-repair-mac-20261007/schema-stop-witness-portable.mjs",
+        "/Users/soullab/jev-wire-stop-review-20261007",
+        "/Users/soullab/jev-wire-repair-review-20261007/docs/programme/evidence/jev-wire-repair-mac-20261007/typesafe-openapi.json"
+      ],
+      "started_at": "2026-10-07T18:08:25.696497+00:00",
+      "finished_at": "2026-10-07T18:08:25.922451+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "reviewer-after.log.txt",
+      "log_sha256": "762bf109519a1f698ba4a8c25b6e9c0ede4469c8fa8e23f971e73fae20d3319f"
+    },
+    {
+      "name": "findings-old",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "old"
+      ],
+      "started_at": "2026-10-07T18:08:26.002801+00:00",
+      "finished_at": "2026-10-07T18:08:27.532268+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "findings-old.log.txt",
+      "log_sha256": "ac451be44494e70df0417e26f3424d817f4b3282b4e6882cb6c2762fbac67edc"
+    },
+    {
+      "name": "findings-new",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "new"
+      ],
+      "started_at": "2026-10-07T18:08:27.649716+00:00",
+      "finished_at": "2026-10-07T18:08:28.528691+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "findings-new.log.txt",
+      "log_sha256": "22f47a690a33f2e81572f2d0b72a10f518c9ff35679acd77f01c5cb540e6bf74"
+    },
+    {
+      "name": "wire-proof",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T18:08:28.634212+00:00",
+      "finished_at": "2026-10-07T18:08:31.895899+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "wire-proof.log.txt",
+      "log_sha256": "f506198668e80a851afe1cb61b9c1a1e281efca865855bd9c9a3ce71958d2693"
+    },
+    {
+      "name": "wire-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-matrix.mjs"
+      ],
+      "started_at": "2026-10-07T18:08:31.985800+00:00",
+      "finished_at": "2026-10-07T18:10:50.010217+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "wire-matrix.log.txt",
+      "log_sha256": "3b9370bac925d55466d5c8ce4d42bd727acbcfb0cc1aeaadc0904f38b51f9f8b"
+    },
+    {
+      "name": "J1-freeze",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/verify-jarvis-jev-j1-freeze.mjs"
+      ],
+      "started_at": "2026-10-07T18:10:50.110552+00:00",
+      "finished_at": "2026-10-07T18:10:50.292061+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "J1-freeze.log.txt",
+      "log_sha256": "5bac75964bdcedccf8c36861ca23be8e237dfb33a71dc784f5b7eb13bcfc49fb"
+    },
+    {
+      "name": "J1-host",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-judgment-host-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T18:10:50.374462+00:00",
+      "finished_at": "2026-10-07T18:10:50.413732+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "J1-host.log.txt",
+      "log_sha256": "80e2b2cad8d5ad8e63df4b6cc0f7c4d8219053484417b4ffa65f0a4c67bc3dbe"
+    },
+    {
+      "name": "J1-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "/Users/soullab/MAIA-SOVEREIGN/node_modules/tsx/dist/cli.mjs",
+        "tests/constitutional/jarvis-jev-j1/matrix.ts"
+      ],
+      "started_at": "2026-10-07T18:10:50.496587+00:00",
+      "finished_at": "2026-10-07T18:10:50.779822+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "J1-matrix.log.txt",
+      "log_sha256": "e35eef67b683f9f7e596213c80ca835a9399f4f5acbb58e454d5c1458e0b35db"
+    },
+    {
+      "name": "J1-typecheck",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "/Users/soullab/MAIA-SOVEREIGN/node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.jarvis-jev-j1.json"
+      ],
+      "started_at": "2026-10-07T18:10:50.860700+00:00",
+      "finished_at": "2026-10-07T18:10:51.313879+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log_name": "J1-typecheck.log.txt",
+      "log_sha256": "5f3369f63470dd92a4f9ec649017767bc61c6300349041e1b2a722c9a9b742f4"
+    }
+  ],
+  "reviewer-before": {
+    "head": "1d0c76a369605cb82e12c56a0d4b86af8a1b6012",
+    "schema_sha256": "a191f8a7df6bd6fedced8120dd0fd106f88575d1d1c8360d08900a6c7c0360d5",
+    "descriptor_fields_match_captured_schema": true,
+    "extra_top_level_fields_listed_in_schema": [],
+    "additionalProperties_false_in_vendor_schema": false,
+    "committed_witnessed_flag": false,
+    "committed_gate_sends": 0,
+    "all_transports_fake": true,
+    "committed_module_unchanged": true,
+    "stop_window_findings": [
+      {
+        "mode": "transport-error",
+        "child_exit": 47,
+        "crash_boundary": "after durable settled append, before halted append",
+        "kinds_before_restart": [
+          "init",
+          "reserved",
+          "settled"
+        ],
+        "halted_before_restart": false,
+        "unresolved_before_restart": [],
+        "next_attempt_sent": true,
+        "next_fake_sends": 1,
+        "stop_invariant_holds": false
+      },
+      {
+        "mode": "malformed-response",
+        "child_exit": 47,
+        "crash_boundary": "after durable settled append, before halted append",
+        "kinds_before_restart": [
+          "init",
+          "reserved",
+          "settled"
+        ],
+        "halted_before_restart": false,
+        "unresolved_before_restart": [],
+        "next_attempt_sent": true,
+        "next_fake_sends": 1,
+        "stop_invariant_holds": false
+      },
+      {
+        "mode": "model-drift",
+        "child_exit": 47,
+        "crash_boundary": "after durable settled append, before halted append",
+        "kinds_before_restart": [
+          "init",
+          "reserved",
+          "observed",
+          "settled"
+        ],
+        "halted_before_restart": false,
+        "unresolved_before_restart": [],
+        "next_attempt_sent": true,
+        "next_fake_sends": 1,
+        "stop_invariant_holds": false
+      },
+      {
+        "mode": "unexpected-usage",
+        "child_exit": 47,
+        "crash_boundary": "after durable settled append, before halted append",
+        "kinds_before_restart": [
+          "init",
+          "reserved",
+          "observed",
+          "settled"
+        ],
+        "halted_before_restart": false,
+        "unresolved_before_restart": [],
+        "next_attempt_sent": true,
+        "next_fake_sends": 1,
+        "stop_invariant_holds": false
+      }
+    ],
+    "unsafe_token_integer_accepted": true
+  },
+  "clean_after": true,
+  "reviewer-after": {
+    "head": "9fb068beed0fb2171fc68eb47b5b9ad251fb8de7",
+    "schema_sha256": "a191f8a7df6bd6fedced8120dd0fd106f88575d1d1c8360d08900a6c7c0360d5",
+    "descriptor_fields_match_captured_schema": true,
+    "extra_top_level_fields_listed_in_schema": [],
+    "additionalProperties_false_in_vendor_schema": false,
+    "committed_witnessed_flag": false,
+    "committed_gate_sends": 0,
+    "all_transports_fake": true,
+    "committed_module_unchanged": true,
+    "stop_window_findings": [
+      {
+        "mode": "transport-error",
+        "child_exit": 47,
+        "crash_boundary": "after durable settled append, before halted append",
+        "kinds_before_restart": [
+          "init",
+          "reserved",
+          "settled"
+        ],
+        "halted_before_restart": true,
+        "unresolved_before_restart": [],
+        "next_attempt_sent": false,
+        "next_fake_sends": 0,
+        "stop_invariant_holds": true
+      },
+      {
+        "mode": "malformed-response",
+        "child_exit": 47,
+        "crash_boundary": "after durable settled append, before halted append",
+        "kinds_before_restart": [
+          "init",
+          "reserved",
+          "settled"
+        ],
+        "halted_before_restart": true,
+        "unresolved_before_restart": [],
+        "next_attempt_sent": false,
+        "next_fake_sends": 0,
+        "stop_invariant_holds": true
+      },
+      {
+        "mode": "model-drift",
+        "child_exit": 47,
+        "crash_boundary": "after durable settled append, before halted append",
+        "kinds_before_restart": [
+          "init",
+          "reserved",
+          "observed",
+          "settled"
+        ],
+        "halted_before_restart": true,
+        "unresolved_before_restart": [],
+        "next_attempt_sent": false,
+        "next_fake_sends": 0,
+        "stop_invariant_holds": true
+      },
+      {
+        "mode": "unexpected-usage",
+        "child_exit": 47,
+        "crash_boundary": "after durable settled append, before halted append",
+        "kinds_before_restart": [
+          "init",
+          "reserved",
+          "observed",
+          "settled"
+        ],
+        "halted_before_restart": true,
+        "unresolved_before_restart": [],
+        "next_attempt_sent": false,
+        "next_fake_sends": 0,
+        "stop_invariant_holds": true
+      }
+    ],
+    "unsafe_token_integer_accepted": false
+  },
+  "finished_at": "2026-10-07T18:10:51.393509+00:00",
+  "runtime_blob": "6d8aadb09c6c3801a902ba4c448cdc9347fa2ca9",
+  "all_exit_zero": true
+}
