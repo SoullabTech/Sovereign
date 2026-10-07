@@ -26,6 +26,7 @@ import { locateUniquePassage, locateUniquePresentationPassage, type AdoptionWire
 import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
 import EditorialDancePanel from './EditorialDancePanel';
+import HermesCraftPanel from './HermesCraftPanel';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
@@ -474,7 +475,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     }
   };
 
-  const contextualActions = selectionRect && props.held && !isolatedEditorial ? (
+  const contextualActions = props.surfaceMode !== 'develop-craft'
+    && selectionRect
+    && props.held
+    && !isolatedEditorial ? (
     <div
       className="p4r1-selection-affordance"
       style={{
@@ -688,128 +692,153 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : null;
 
+  const editorialMessage = props.editorialFailure
+    ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
+      ? props.adoptionOutcome.kind === 'applied'
+        ? null
+        : 'The Work could not accept this revision. Nothing was changed.'
+      : null);
+
   const editorial = props.workspaceOpen
     && (props.surfaceMode === 'develop-craft' || !isolatedEditorial)
     && (!props.held || props.surfaceMode === 'develop-craft') ? (
-    <div className="p4r1-context-card p4r1-editorial" data-p4r1-editorial>
-      <header className="p4r1-context-head">
-        <div>
-          <span>In relation to this passage</span>
-          <strong>{props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}</strong>
-        </div>
-        <div>
-          {props.surfaceMode !== 'develop-craft' ? (
-            <button type="button" disabled={busy} onClick={() => setIsolatedEditorial(true)}>Isolate passage</button>
-          ) : null}
-          {props.canReturnToStartingPassage ? (
-            <button type="button" disabled={busy} onClick={props.onReturnToStartingPassage}>Return</button>
-          ) : null}
-          <button type="button" disabled={busy} onClick={props.onCloseWorkspace}>Close</button>
-        </div>
-      </header>
-
-      <EditorialDancePanel
-        craftMode={props.craftMode}
-        manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
-        currentText={currentText}
-        sectionBody={currentBody}
-        thread={props.editorialThread}
-        version={props.suggestedVersion}
-        lastMaiaTurn={props.lastMaiaEditorialTurn}
-        appliedVersionId={props.appliedVersionId}
-        busy={busy}
-        sessionPosture={props.sessionPosture}
-        onChooseSessionPosture={props.onChooseSessionPosture}
-        message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
-          ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
-          : null)}
-        undoMessage={props.undoMessage}
-        onSelectVersion={props.onSelectVersion}
-        onSend={props.onSendEditorial}
-        onSaveMember={props.onSaveMember}
-        onApply={props.onApply}
-        onUndo={props.onUndo}
-        onKeep={props.onKeep}
-        onDepth={props.onDepth}
-      />
-
-      <details className="p4r1-editorial-deeper">
-        <summary>More editorial controls</summary>
-        <RevisionDesk
-          active
-          inline={false}
-          depth={props.editorialDepth}
-          onDepth={props.onDepth}
-          showInspiration={!props.workspaceInsight}
-          scopeKey={JSON.stringify([props.context.manuscriptId, props.focusId, currentText])}
-          manuscriptId={props.context.manuscriptId}
-          title={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
-          currentText={currentText}
-          sectionBody={currentBody}
+    <div
+      className={`p4r1-context-card p4r1-editorial${props.surfaceMode === 'develop-craft' ? ' p4r1-hermes-host' : ''}`}
+      data-p4r1-editorial
+    >
+      {props.surfaceMode === 'develop-craft' ? (
+        <HermesCraftPanel
+          title={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}
           thread={props.editorialThread}
           version={props.suggestedVersion}
-          instruction={props.editorialDraft}
-          onInstruction={props.onInstruction}
-          onSend={props.onSendEditorial}
-          onSelectVersion={props.onSelectVersion}
-          onApply={props.onApply}
-          onSaveMember={props.onSaveMember}
-          busy={busy}
-          message={props.editorialFailure ?? (props.adoptionOutcome && props.appliedVersionId === props.suggestedVersion?.id
-            ? props.adoptionOutcome.kind === 'applied' ? null : 'The Work could not accept this revision. Nothing was changed.'
-            : null)}
-          response={props.lastMaiaEditorialTurn?.body ?? null}
-          onKeep={props.onKeep}
+          lastMaiaTurn={props.lastMaiaEditorialTurn}
           appliedVersionId={props.appliedVersionId}
+          busy={busy}
+          message={editorialMessage}
+          sessionPosture={props.sessionPosture}
+          onChooseSessionPosture={props.onChooseSessionPosture}
+          onSend={props.onSendEditorial}
+          onDepth={props.onDepth}
+          onKeep={props.onKeep}
+          onApply={props.onApply}
           onUndo={props.onUndo}
-          undoMessage={props.undoMessage}
-          latitude={props.editLatitude}
-          onLatitude={props.onLatitude}
-          mayRemoveParagraphs={props.mayRemoveParagraphs}
-          onMayRemoveParagraphs={props.onMayRemoveParagraphs}
-          mayProposeImmediately={props.mayProposeImmediately}
-          onMayProposeImmediately={props.onMayProposeImmediately}
-          voiceNotice={props.voiceNotice}
-          carrySourceAvailable={props.carrySourceAvailable}
-          carryChooser={props.carryChooser}
-          selectedCarrySource={props.selectedCarrySource}
-          onOpenCarryChooser={props.onOpenCarryChooser}
-          onCloseCarryChooser={props.onCloseCarryChooser}
-          onSelectCarrySource={props.onSelectCarrySource}
-          onRemoveCarrySource={props.onRemoveCarrySource}
+          onReturn={() => props.onMode('develop')}
         />
-      </details>
+      ) : (
+        <>
+          <header className="p4r1-context-head">
+            <div>
+              <span>In relation to this passage</span>
+              <strong>{props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'Selected passage'}</strong>
+            </div>
+            <div>
+              <button type="button" disabled={busy} onClick={() => setIsolatedEditorial(true)}>Isolate passage</button>
+              {props.canReturnToStartingPassage ? (
+                <button type="button" disabled={busy} onClick={props.onReturnToStartingPassage}>Return</button>
+              ) : null}
+              <button type="button" disabled={busy} onClick={props.onCloseWorkspace}>Close</button>
+            </div>
+          </header>
 
-      {props.workspaceInsight ? (
-        <details className="p4r1-related" open={!props.suggestedVersion}>
-          <summary>{props.suggestedVersion ? 'Reading behind these edits' : 'Observation and related passages'}</summary>
-          <InsightReadings
-            key={props.context.manuscriptId}
-            refreshKey={props.context.version}
-            manuscriptId={props.context.manuscriptId}
-            readingId={props.workspaceInsight.readingId}
-            observationKey={props.workspaceInsight.key}
-            onRevise={props.onReviseInsight}
-            onChoosePassage={props.onChoosePassage}
-            proposalActive={Boolean(props.suggestedVersion)}
+          <EditorialDancePanel
+            craftMode={false}
+            manuscriptTitle={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
+            currentText={currentText}
+            sectionBody={currentBody}
+            thread={props.editorialThread}
+            version={props.suggestedVersion}
+            lastMaiaTurn={props.lastMaiaEditorialTurn}
+            appliedVersionId={props.appliedVersionId}
             busy={busy}
+            sessionPosture={props.sessionPosture}
+            onChooseSessionPosture={props.onChooseSessionPosture}
+            message={editorialMessage}
+            undoMessage={props.undoMessage}
+            onSelectVersion={props.onSelectVersion}
+            onSend={props.onSendEditorial}
+            onSaveMember={props.onSaveMember}
+            onApply={props.onApply}
+            onUndo={props.onUndo}
+            onKeep={props.onKeep}
+            onDepth={props.onDepth}
           />
-        </details>
-      ) : null}
 
-      {props.relationshipChoices.length > 1 ? (
-        <div className="p4r1-relationships" aria-label="Choose revision conversation">
-          {props.relationshipChoices.map((choice, index) => (
-            <button key={choice.threadId} type="button" disabled={props.editorialBusy}
-              onClick={() => props.onChooseRelationship(choice.threadId)}>
-              Conversation {index + 1} · {choice.turnCount} turns
-            </button>
-          ))}
-        </div>
-      ) : null}
+          <details className="p4r1-editorial-deeper">
+            <summary>More editorial controls</summary>
+            <RevisionDesk
+              active
+              inline={false}
+              depth={props.editorialDepth}
+              onDepth={props.onDepth}
+              showInspiration={!props.workspaceInsight}
+              scopeKey={JSON.stringify([props.context.manuscriptId, props.focusId, currentText])}
+              manuscriptId={props.context.manuscriptId}
+              title={props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading ?? 'this passage'}
+              currentText={currentText}
+              sectionBody={currentBody}
+              thread={props.editorialThread}
+              version={props.suggestedVersion}
+              instruction={props.editorialDraft}
+              onInstruction={props.onInstruction}
+              onSend={props.onSendEditorial}
+              onSelectVersion={props.onSelectVersion}
+              onApply={props.onApply}
+              onSaveMember={props.onSaveMember}
+              busy={busy}
+              message={editorialMessage}
+              response={props.lastMaiaEditorialTurn?.body ?? null}
+              onKeep={props.onKeep}
+              appliedVersionId={props.appliedVersionId}
+              onUndo={props.onUndo}
+              undoMessage={props.undoMessage}
+              latitude={props.editLatitude}
+              onLatitude={props.onLatitude}
+              mayRemoveParagraphs={props.mayRemoveParagraphs}
+              onMayRemoveParagraphs={props.onMayRemoveParagraphs}
+              mayProposeImmediately={props.mayProposeImmediately}
+              onMayProposeImmediately={props.onMayProposeImmediately}
+              voiceNotice={props.voiceNotice}
+              carrySourceAvailable={props.carrySourceAvailable}
+              carryChooser={props.carryChooser}
+              selectedCarrySource={props.selectedCarrySource}
+              onOpenCarryChooser={props.onOpenCarryChooser}
+              onCloseCarryChooser={props.onCloseCarryChooser}
+              onSelectCarrySource={props.onSelectCarrySource}
+              onRemoveCarrySource={props.onRemoveCarrySource}
+            />
+          </details>
+
+          {props.workspaceInsight ? (
+            <details className="p4r1-related" open={!props.suggestedVersion}>
+              <summary>{props.suggestedVersion ? 'Reading behind these edits' : 'Observation and related passages'}</summary>
+              <InsightReadings
+                key={props.context.manuscriptId}
+                refreshKey={props.context.version}
+                manuscriptId={props.context.manuscriptId}
+                readingId={props.workspaceInsight.readingId}
+                observationKey={props.workspaceInsight.key}
+                onRevise={props.onReviseInsight}
+                onChoosePassage={props.onChoosePassage}
+                proposalActive={Boolean(props.suggestedVersion)}
+                busy={busy}
+              />
+            </details>
+          ) : null}
+
+          {props.relationshipChoices.length > 1 ? (
+            <div className="p4r1-relationships" aria-label="Choose revision conversation">
+              {props.relationshipChoices.map((choice, index) => (
+                <button key={choice.threadId} type="button" disabled={props.editorialBusy}
+                  onClick={() => props.onChooseRelationship(choice.threadId)}>
+                  Conversation {index + 1} · {choice.turnCount} turns
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </>
+      )}
     </div>
   ) : null;
-
   const railSection = props.context.sections.find(
     (section) => section.draftSectionId === (railSelectionId ?? props.focusId),
   ) ?? null;
@@ -915,18 +944,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const craftViewSwitch = props.surfaceMode === 'develop-craft' && !canvas ? (
     <div className="p4r1-craft-viewbar" data-craft-viewbar>
       <div>
-        <span className="p4r1-eyebrow">Develop · Craft Canvas</span>
-        <strong>Editor’s eye ↔ Reader’s eye</strong>
-        <small>What you and MAIA discovered comes with you. Nothing changes until Apply.</small>
+        <span className="p4r1-eyebrow">Hermes · Craft</span>
+        <strong>Work directly in the writing</strong>
+        <small>The conversation comes with you. Nothing changes until you choose to apply your version.</small>
         {props.attentionReturnRequiresSelection && !props.held ? (
-          <p data-craft-selection-needed>Select the exact words you want to shape. The conversation is already here; you do not need to explain it again.</p>
+          <p data-craft-selection-needed>Select the exact words you want to shape. You do not need to explain the conversation again.</p>
         ) : props.held ? (
-          <p data-craft-selection-held>
-            This passage is now the active craft locus.
-            {!props.suggestedVersion
-              ? ' MAIA is preparing the first marked demonstration here.'
-              : ' The red/blue marks below are provisional craft choices, not applied changes.'}
-          </p>
+          <p data-craft-selection-held>This passage is active. Hermes stays with you while you shape it.</p>
         ) : null}
       </div>
       <div className="p4r1-craft-view-switch" role="group" aria-label="Craft canvas view">
@@ -987,7 +1011,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const lineageReturnActive = Boolean(
     props.lineageReturnChapterId && props.lineageReturnCandidateId,
   );
-  const workSurface = (props.attentionReturnItemId || lineageReturnActive) && !canvas ? (
+  const workSurface = props.surfaceMode !== 'develop-craft'
+    && (props.attentionReturnItemId || lineageReturnActive)
+    && !canvas ? (
     <div
       className="p4r1-attention-write-return"
       data-attention-return={props.attentionReturnItemId ?? undefined}
