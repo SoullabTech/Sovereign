@@ -16,6 +16,7 @@ import {
   type CraftWorkingEdit,
 } from '@/lib/writersStudio/craftWorkingCopy';
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
+import { professionalMarkFor } from '@/lib/writersStudio/craftProfessionalMarks';
 
 export type CraftHeldPassage = {
   draftSectionId: string;
@@ -61,6 +62,7 @@ function decisionFor(
 
 export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
   const [view, setView] = useState<'markup' | 'preview'>('markup');
+  const [notation, setNotation] = useState<'guided' | 'professional'>('guided');
   const [decisions, setDecisions] = useState<ReadonlyMap<number, CraftDecision>>(new Map());
   const [activeEditId, setActiveEditId] = useState<number | null>(null);
   const [customEditId, setCustomEditId] = useState<number | null>(null);
@@ -234,6 +236,16 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     return first;
   }, [segments]);
 
+  const firstChangeIndex = useMemo(() => {
+    const first = new Map<number, number>();
+    segments.forEach((segment, index) => {
+      if (segment.kind !== 'same' && segment.editId !== null && !first.has(segment.editId)) {
+        first.set(segment.editId, index);
+      }
+    });
+    return first;
+  }, [segments]);
+
   const applied = Boolean(
     props.version?.author === 'member'
     && props.appliedVersionId === props.version.id,
@@ -247,9 +259,18 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
           <strong>The writing is the workbench.</strong>
           <small>Red leaves. Blue enters. Nothing changes until your version is applied.</small>
         </div>
-        <div className="p4r1-craft-r1-view" role="group" aria-label="Craft view">
-          <button type="button" aria-pressed={view === 'markup'} onClick={() => setView('markup')}>Markup</button>
-          <button type="button" aria-pressed={view === 'preview'} onClick={() => setView('preview')}>Preview</button>
+        <div className="p4r1-craft-r1-controls">
+          <div className="p4r1-craft-r1-view" role="group" aria-label="Craft view">
+            <button type="button" aria-pressed={view === 'markup'} onClick={() => setView('markup')}>Markup</button>
+            <button type="button" aria-pressed={view === 'preview'} onClick={() => setView('preview')}>Preview</button>
+          </div>
+          <details className="p4r1-craft-r1-notation">
+            <summary>{notation === 'professional' ? 'Pro marks' : 'Marks'}</summary>
+            <div>
+              <button type="button" aria-pressed={notation === 'guided'} onClick={() => setNotation('guided')}>Guided</button>
+              <button type="button" aria-pressed={notation === 'professional'} onClick={() => setNotation('professional')}>Professional</button>
+            </div>
+          </details>
         </div>
       </header>
 
@@ -298,6 +319,13 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
 
                         const decision = decisionFor(decisions, segment.editId);
                         const chosen = decision.mode !== 'original';
+                        const edit = edits.find((candidate) => candidate.id === segment.editId) ?? null;
+                        const proof = edit ? professionalMarkFor(edit, edits, decision) : null;
+                        const proofMark = notation === 'professional'
+                          && proof
+                          && firstChangeIndex.get(segment.editId) === index
+                          ? <sup className="p4r1-craft-r1-proofmark" title={proof.label}>{proof.symbol}</sup>
+                          : null;
                         const common = {
                           'data-edit-id': segment.editId,
                           'data-selected': chosen ? 'true' : undefined,
@@ -307,13 +335,13 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                         };
 
                         if (segment.kind === 'del') {
-                          const edit = edits.find((candidate) => candidate.id === segment.editId);
                           const customWithoutInsertion = decision.mode === 'custom'
                             && edit
                             && !edit.to
                             && decision.text;
                           return (
-                            <span key={index}>
+                            <span key={index} className="p4r1-craft-r1-mark-unit">
+                              {proofMark}
                               <del {...common}>{segment.text}</del>
                               {customWithoutInsertion ? (
                                 <ins {...common} className="p4r1-craft-r1-custom">{decision.text}</ins>
@@ -327,7 +355,12 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                             ? decision.text
                             : ''
                           : segment.text;
-                        return displayed ? <ins key={index} {...common}>{displayed}</ins> : null;
+                        return displayed ? (
+                          <span key={index} className="p4r1-craft-r1-mark-unit">
+                            {proofMark}
+                            <ins {...common}>{displayed}</ins>
+                          </span>
+                        ) : proofMark ? <span key={index}>{proofMark}</span> : null;
                       })
                     ) : (
                       <span className="p4r1-craft-r1-held">{exact}</span>
@@ -345,7 +378,12 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                 {view === 'markup' && activeEdit ? (
                   <div className="p4r1-craft-r1-local" data-craft-local-edit={activeEdit.id}>
                     <div>
-                      <span>Change {activeEdit.id} · {editKind(activeEdit)}</span>
+                      <span>
+                        Change {activeEdit.id} · {editKind(activeEdit)}
+                        {notation === 'professional'
+                          ? ` · ${professionalMarkFor(activeEdit, edits, decisionFor(decisions, activeEdit.id)).symbol}`
+                          : ''}
+                      </span>
                       <p>
                         {activeEdit.from ? <del>{activeEdit.from.trim()}</del> : null}
                         {activeEdit.from && activeEdit.to ? <span aria-hidden="true"> → </span> : null}
@@ -387,7 +425,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                           aria-pressed={decisionFor(decisions, activeEdit.id).mode === 'original'}
                           onClick={() => setDecision(activeEdit.id, { mode: 'original' })}
                         >
-                          Keep mine · Stet
+                          {notation === 'professional' ? 'Stet · Keep mine' : 'Keep mine'}
                         </button>
                         <button
                           type="button"
