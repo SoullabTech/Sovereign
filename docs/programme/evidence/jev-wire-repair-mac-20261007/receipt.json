@@ -1,0 +1,128 @@
+{
+  "head": "765c236e1228f09b939a8eee87edc71635040af5",
+  "runtime_node": "v22.22.3",
+  "source_clean_after": true,
+  "checks": [
+    {
+      "check": "findings-old",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "old"
+      ],
+      "cwd": "/Users/soullab/jev-wire-repair-review-20261007",
+      "head": "765c236e1228f09b939a8eee87edc71635040af5",
+      "started_at": "2026-10-07T16:17:41.301803+00:00",
+      "finished_at": "2026-10-07T16:17:42.808455+00:00",
+      "exit_code": 0,
+      "log_path": "/Users/soullab/jev-wire-repair-evidence-20261007/findings-old.log",
+      "log_sha256": "5a2a82fb5d11f0ccfbdec4f428aaf78681f90620ffff111b0396fb4f6696a4c0"
+    },
+    {
+      "check": "findings-new",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "new"
+      ],
+      "cwd": "/Users/soullab/jev-wire-repair-review-20261007",
+      "head": "765c236e1228f09b939a8eee87edc71635040af5",
+      "started_at": "2026-10-07T16:17:42.808839+00:00",
+      "finished_at": "2026-10-07T16:17:43.626976+00:00",
+      "exit_code": 0,
+      "log_path": "/Users/soullab/jev-wire-repair-evidence-20261007/findings-new.log",
+      "log_sha256": "f80aacd9e31f5bfcff6bde1f65cc8f3ff7ec4f2bb5b8815d862f6a80cdc957a0"
+    },
+    {
+      "check": "wire-proof",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-proof.mjs"
+      ],
+      "cwd": "/Users/soullab/jev-wire-repair-review-20261007",
+      "head": "765c236e1228f09b939a8eee87edc71635040af5",
+      "started_at": "2026-10-07T16:17:43.627227+00:00",
+      "finished_at": "2026-10-07T16:17:46.082901+00:00",
+      "exit_code": 0,
+      "log_path": "/Users/soullab/jev-wire-repair-evidence-20261007/wire-proof.log",
+      "log_sha256": "c72ea179c112c9b0a69c77b1e7aad6bd1e0518d4726697193c25f32f48e1f488"
+    },
+    {
+      "check": "wire-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-matrix.mjs"
+      ],
+      "cwd": "/Users/soullab/jev-wire-repair-review-20261007",
+      "head": "765c236e1228f09b939a8eee87edc71635040af5",
+      "started_at": "2026-10-07T16:17:46.083171+00:00",
+      "finished_at": "2026-10-07T16:19:24.282897+00:00",
+      "exit_code": 0,
+      "log_path": "/Users/soullab/jev-wire-repair-evidence-20261007/wire-matrix.log",
+      "log_sha256": "9e6331be858d296b1c2e8d2281e58fec7e0d3383a0d9613b7bdf69bc060b7193"
+    },
+    {
+      "check": "J1-freeze",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/verify-jarvis-jev-j1-freeze.mjs"
+      ],
+      "cwd": "/Users/soullab/jev-wire-repair-review-20261007",
+      "head": "765c236e1228f09b939a8eee87edc71635040af5",
+      "started_at": "2026-10-07T16:19:24.283233+00:00",
+      "finished_at": "2026-10-07T16:19:24.433929+00:00",
+      "exit_code": 0,
+      "log_path": "/Users/soullab/jev-wire-repair-evidence-20261007/J1-freeze.log",
+      "log_sha256": "ccf40ef47c1dcabd42252627d91613c409b14d286590362adc29da1fe03bd29d"
+    },
+    {
+      "check": "J1-host",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-judgment-host-v1-proof.mjs"
+      ],
+      "cwd": "/Users/soullab/jev-wire-repair-review-20261007",
+      "head": "765c236e1228f09b939a8eee87edc71635040af5",
+      "started_at": "2026-10-07T16:19:24.434199+00:00",
+      "finished_at": "2026-10-07T16:19:24.455423+00:00",
+      "exit_code": 0,
+      "log_path": "/Users/soullab/jev-wire-repair-evidence-20261007/J1-host.log",
+      "log_sha256": "a3c43764a7a9aa93a5db267094f7ea0f90761a05fd4168cdfe7cc08be35ba34a"
+    },
+    {
+      "check": "J1-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "/Users/soullab/jev-wire-repair-review-20261007/node_modules/tsx/dist/cli.mjs",
+        "tests/constitutional/jarvis-jev-j1/matrix.ts"
+      ],
+      "cwd": "/Users/soullab/jev-wire-repair-review-20261007",
+      "head": "765c236e1228f09b939a8eee87edc71635040af5",
+      "started_at": "2026-10-07T16:19:24.455682+00:00",
+      "finished_at": "2026-10-07T16:19:24.714546+00:00",
+      "exit_code": 0,
+      "log_path": "/Users/soullab/jev-wire-repair-evidence-20261007/J1-matrix.log",
+      "log_sha256": "4b1e4d523327adaf45ee8661c10fa440337a7b077b2bdc99046bd6359b942f9e"
+    },
+    {
+      "check": "J1-typecheck",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "/Users/soullab/jev-wire-repair-review-20261007/node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.jarvis-jev-j1.json"
+      ],
+      "cwd": "/Users/soullab/jev-wire-repair-review-20261007",
+      "head": "765c236e1228f09b939a8eee87edc71635040af5",
+      "started_at": "2026-10-07T16:19:24.714840+00:00",
+      "finished_at": "2026-10-07T16:19:25.125721+00:00",
+      "exit_code": 0,
+      "log_path": "/Users/soullab/jev-wire-repair-evidence-20261007/J1-typecheck.log",
+      "log_sha256": "47eb706e84f50a98a5fd2a25751ccfb73d48ff496afab842afd78a2573c35d9a"
+    }
+  ],
+  "all_pass": true,
+  "transports": "fake only; test copies only",
+  "inference_calls": 0,
+  "credential_access": false
+}

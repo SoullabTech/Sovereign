@@ -1,0 +1,16 @@
+{"check": "findings-new", "command": ["/Users/soullab/.nvm/versions/node/v22.22.3/bin/node", "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs", "new"], "cwd": "/Users/soullab/jev-wire-repair-review-20261007", "exit_code": 0, "finished_at": "2026-10-07T16:17:43.626976+00:00", "head": "765c236e1228f09b939a8eee87edc71635040af5", "started_at": "2026-10-07T16:17:42.808839+00:00"}
+--- OUTPUT ---
+not reproduced  S1-documented-answer-envelope  documented `answers` response refused
+not reproduced  S2-nonclosed-response-parser  extra root / extra answer / confidence accepted
+not reproduced  D1-observation-not-persisted  returned ok; probability absent from disk
+not reproduced  D2-resume-after-ambiguous-crash  next attempt sent=false reason=UNRESOLVED_ATTEMPT
+not reproduced  D3-valid-json-invalid-ledger  invalid event ignored; send proceeded
+not reproduced  D4-missing-ledger-allows-replay  same attempt sent 1×
+not reproduced  D5-two-process-same-attempt-race  1 send(s) from 2 processes
+not reproduced  T1-never-settling-transport  returned crossing_unknown
+
+new: 0/8 findings reproduce
+EXPECTATION MET (repair fails none)
+
+--- EXECUTION RECEIPT ---
+EXIT_CODE=0

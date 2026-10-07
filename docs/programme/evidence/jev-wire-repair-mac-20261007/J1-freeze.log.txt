@@ -1,0 +1,17 @@
+{"check": "J1-freeze", "command": ["/Users/soullab/.nvm/versions/node/v22.22.3/bin/node", "scripts/verify-jarvis-jev-j1-freeze.mjs"], "cwd": "/Users/soullab/jev-wire-repair-review-20261007", "exit_code": 0, "finished_at": "2026-10-07T16:19:24.433929+00:00", "head": "765c236e1228f09b939a8eee87edc71635040af5", "started_at": "2026-10-07T16:19:24.283233+00:00"}
+--- OUTPUT ---
+JARVIS-JEV-01 / J1-FRZ1 — FREEZE INTEGRITY
+identity: git blob hashes
+GOVERNING OK  j0  494cd61973ed02c4453067716657631f3f9143e9
+GOVERNING OK  j5  e840d705c9c1059667379d321cc7b5c802045754
+GOVERNING OK  j1  98eb6cf16223b83b4768e46e1ae253e7881ae5f5
+GOVERNING OK  rat1  a76299c1706de594201a88ee21655f9d8a16788b
+FROZEN OK     tests/constitutional/jarvis-jev-j1/contract-model.ts  05272f073f3e6fde84f9b68afdf18457dc837cd6
+FROZEN OK     tests/constitutional/jarvis-jev-j1/falsifiers.ts  c47d8d504bd3943452e8304a6156796845a7866f
+FROZEN OK     tests/constitutional/jarvis-jev-j1/candidates.ts  281218384db65e296b68cc41c71689118dfed5be
+FROZEN OK     tests/constitutional/jarvis-jev-j1/matrix.ts  b19441299d6a4199608304bcd813d148478b6b6d
+FROZEN OK     tsconfig.jarvis-jev-j1.json  2fd52a305287392c7b7c706c5ba941a73af3e538
+0 FREEZE INTACT
+
+--- EXECUTION RECEIPT ---
+EXIT_CODE=0

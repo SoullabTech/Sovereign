@@ -1,0 +1,31 @@
+{
+  "retrieved_at": "2026-10-07T15:44:01.885949+00:00",
+  "requested_url": "https://api.typesafe.ai/openapi.json",
+  "final_url": "https://api.typesafe.ai/openapi.json",
+  "http_status": 200,
+  "bytes": 14158,
+  "sha256": "a191f8a7df6bd6fedced8120dd0fd106f88575d1d1c8360d08900a6c7c0360d5",
+  "path": "/Users/soullab/jev-wire-review-evidence-20261007/typesafe-openapi.json",
+  "authenticated": false,
+  "inference_call": false,
+  "openapi_version": "3.1.0",
+  "api_version": "0.2.0",
+  "request_required": [
+    "model",
+    "questions",
+    "state"
+  ],
+  "response_required": [
+    "model",
+    "answers",
+    "usage"
+  ],
+  "noul_required": [
+    "noul",
+    "type"
+  ],
+  "usage_required": [
+    "input_tokens",
+    "output_tokens"
+  ]
+}

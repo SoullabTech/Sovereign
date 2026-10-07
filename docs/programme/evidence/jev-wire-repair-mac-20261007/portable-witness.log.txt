@@ -1,0 +1,8 @@
+{"mode":"transport-error","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","settled"],"halted_before_restart":false,"unresolved_before_restart":[],"next_attempt_sent":true,"next_fake_sends":1,"stop_invariant_holds":false}
+{"mode":"malformed-response","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","settled"],"halted_before_restart":false,"unresolved_before_restart":[],"next_attempt_sent":true,"next_fake_sends":1,"stop_invariant_holds":false}
+{"mode":"model-drift","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","observed","settled"],"halted_before_restart":false,"unresolved_before_restart":[],"next_attempt_sent":true,"next_fake_sends":1,"stop_invariant_holds":false}
+{"mode":"unexpected-usage","child_exit":47,"crash_boundary":"after durable settled append, before halted append","kinds_before_restart":["init","reserved","observed","settled"],"halted_before_restart":false,"unresolved_before_restart":[],"next_attempt_sent":true,"next_fake_sends":1,"stop_invariant_holds":false}
+SAFE_INTEGER_CHECK={"unsafe_output_tokens":9007199254740992,"accepted":true}
+RECEIPT_PATH=/tmp/jev-schema-stop-witness-SYNTHETIC-ZnhOg6/schema-and-stop-window.json
+RECEIPT_SHA256=dd9123c34cd1d9cf180bc3cff8b687e412bbace9f7e9aa81fde645f9660a1571
+WITNESS_COMPLETED: exit 0 means measurements completed; inspect stop_invariant_holds, not a green acceptance verdict.

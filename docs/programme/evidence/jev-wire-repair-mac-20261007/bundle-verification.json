@@ -1,0 +1,20 @@
+{
+  "verified_in": "ChatGPT working container; not the Claude container",
+  "archive_sha256": "ac9173c160540ce46c70291af07669c891f235b74da0e38213619d3c278398ff",
+  "original_review_archive_sha256": "13735d9b4bfdf48db4f53b94f2e0dc6d881717fc13f68564c3571aff26de1479",
+  "eight_original_checksums_pass": true,
+  "eight_original_bytes_equal": true,
+  "ten_handoff_checksums_pass": true,
+  "standalone_instruction_byte_equal": true,
+  "verified_original_files": {
+    "README.md": "8bd79115fce5af955fffc1ed394ffbc7e8e69146c22ff93212c1982c137eefa8",
+    "independent-probes.mjs": "89f80e49fbd987c8d2819dba94989c2e1d54ff8b4ff9d226653e562c0f51e8da",
+    "independent-findings.json": "eb6569edfc11c1290798b33316f9adc776b31179089fa8a6d942bcd052ace83f",
+    "baseline-summary.json": "43236af280a157a0e335e996bedd37b5366d80a767df703852ee617935197b3e",
+    "schema-receipt.json": "f03c5ca808aeaf121f8803c62cac45d4b868dda8df045cf85159b90fd94526d8",
+    "typesafe-openapi.json": "a191f8a7df6bd6fedced8120dd0fd106f88575d1d1c8360d08900a6c7c0360d5",
+    "typesafe-schema-subset.json": "4dc33a880c97f779aaa85e2d3501a07465b40bda30e432622664ec23f8e87efb",
+    "documented-response.SYNTHETIC.json": "28cb268ab821cacce1ef930328d9ce70a30c00e240fb3f80352f3800e994795c"
+  },
+  "caveat": "The entire ZIP is not copied to this branch. The exact schema, original schema receipt, and new executable Mac evidence are available here. This check does not retroactively mean Claude inspected the ZIP."
+}
