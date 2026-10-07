@@ -49,6 +49,8 @@ const MUTATIONS: Mutation[] = [
     edits: [["if (!ins.lastSaveEvent || ins.lastSaveEvent.working_sha256 !== workingSha) refuse(", "if (false) refuse("]], mustFail: 'final event-log hash' },
   { id: 'M14-finish-skips-expected-p-seal', file: 'human-f-finish.ts',
     edits: [["if (sealDigest(sealedP) !== o.expectPSeal) refuse(", "if (false) refuse("]], mustFail: 'wrong EXPECTED P seal' },
+  { id: 'M15-live-torn-tail-ignored', file: 'human-f-durability.ts',
+    edits: [["    if (tornTailBytes > 0) {\n      throw new DurabilityRefused('EVENT_LOG_TORN_TAIL',\n        'the event log has an unterminated tail; custody is not verified');\n    }\n", ""]], mustFail: 'live torn event-log tail is refused by verify without retrying a save' },
 ];
 
 function runSuite(dir: string): { code: number; failedLines: string[]; out: string } {

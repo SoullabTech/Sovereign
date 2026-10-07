@@ -31,7 +31,9 @@
       (c.rolling_sha256 && c.rolling_sha256 === c.working_sha256 ? 'matches' : (c.working_exists ? 'MISSING' : 'n/a yet')) +
       ' · ' + c.generation_count + ' generation(s) · ledger event ' + c.event_seq +
       (c.repaired && c.repaired.length ? ' · repaired: ' + c.repaired.join(', ') : '') +
-      ' · checked ' + new Date().toLocaleTimeString();
+      ' · checked ' + new Date().toLocaleTimeString() + ' · path: ' + c.working_path;
+    el.title = 'Working SHA-256: ' + (c.working_sha256 || 'not yet created') +
+      '\nRolling SHA-256: ' + (c.rolling_sha256 || 'not yet created');
   }
   function custodyFailed(e) {
     const el = byId('custody');

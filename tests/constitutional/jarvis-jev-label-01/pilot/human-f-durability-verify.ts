@@ -193,6 +193,25 @@ const gens = (e: Env): string[] => (existsSync(join(e.backup, 'generations')) ? 
   rmSync(e.root, { recursive: true, force: true });
 }
 
+// ── live torn-tail refusal (Mac HTTP witness: restart-only coverage was insufficient) ──
+{
+  const e = mk();
+  const c = e.custody(); c.start();
+  const a = ids(e)[0] as string;
+  c.save(fillCase(e.fBlank, a), a);
+  const eventPath = join(e.backup, 'events.jsonl');
+  appendFileSync(eventPath, '{"torn":');
+  const beforeLog = readFileSync(eventPath);
+  const beforeWorking = readFileSync(e.working);
+  const beforeRolling = readFileSync(join(e.backup, 'rolling-latest.json'));
+  ok('live torn event-log tail is refused by verify without retrying a save',
+    refusedWith(() => c.verify(), 'EVENT_LOG_TORN_TAIL'));
+  ok('live torn-tail inspection preserves the exact log and working/rolling bytes',
+    readFileSync(eventPath).equals(beforeLog) && readFileSync(e.working).equals(beforeWorking)
+    && readFileSync(join(e.backup, 'rolling-latest.json')).equals(beforeRolling));
+  rmSync(e.root, { recursive: true, force: true });
+}
+
 // ── crash windows ──
 {
   const e = mk();
@@ -325,6 +344,35 @@ function finishOpts(e: Env, sealedPDigest = sealDigest(e.sealedP)) {
     return names.indexOf('F_PRESEAL_BACKUP') > -1 && names.indexOf('F_SEALED') > names.indexOf('F_PRESEAL_BACKUP');
   })());
   ok('re-running finish refuses to overwrite sealed output', refusedWith(() => finishF(finishOpts(e)), 'OUTPUT_EXISTS'));
+  chmodSync(pre.path, 0o600);
+  rmSync(e.root, { recursive: true, force: true });
+}
+
+// ── exact real-pilot scale, still entirely synthetic: 25 cases / 100 judgments ──
+{
+  const e = mk(25);
+  const c = e.custody(); c.start();
+  const complete = fillAll(e.fBlank);
+  ok('25-case synthetic fixture has exactly 100 judgments',
+    e.manifest.units.length === 25 && complete.entries.length === 100);
+  const partial = structuredClone(complete);
+  partial.entries[99]!.value = null;
+  const lastId = ids(e)[24] as string;
+  c.save(partial, lastId);
+  ok('99 of 100 F judgments refuse before pre-seal or output creation',
+    refusedWith(() => finishF(finishOpts(e)), 'INCOMPLETE_F')
+    && !existsSync(join(e.root, 'preseal')) && !existsSync(join(e.root, 'out')));
+  c.save(complete, lastId);
+  const r = finishF(finishOpts(e));
+  const sealedF = JSON.parse(readFileSync(r.artifacts[2]!.path, 'utf8')) as Sealed;
+  ok('100 of 100 F judgments seal exactly 25 cases bound to the expected P seal',
+    sealedF.labels.length === 100 && sealedF.after_p_seal_sha256 === sealDigest(e.sealedP)
+    && sealedF.domain === 'F' && sealedF.labeller === 'A');
+  const pre = r.artifacts[4]!;
+  ok('full-scale pre-seal bytes match working bytes and the report remains NOT PRODUCED',
+    readFileSync(pre.path).equals(readFileSync(e.working))
+    && r.presealBackupSha256 === sha256Hex(readFileSync(e.working))
+    && mode(pre.path) === 0o400 && /verdict: NOT PRODUCED/.test(r.reportText));
   chmodSync(pre.path, 0o600);
   rmSync(e.root, { recursive: true, force: true });
 }

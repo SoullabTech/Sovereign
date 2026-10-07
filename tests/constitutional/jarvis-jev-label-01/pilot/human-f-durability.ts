@@ -271,7 +271,11 @@ export class Custody {
     const { workingPath } = this.cfg;
     const { gens } = this.scanGenerations();
     const latest = gens[gens.length - 1] ?? null;
-    const { events } = readEvents(this.eventPath);
+    const { events, tornTailBytes } = readEvents(this.eventPath);
+    if (tornTailBytes > 0) {
+      throw new DurabilityRefused('EVENT_LOG_TORN_TAIL',
+        'the event log has an unterminated tail; custody is not verified');
+    }
     const lastSaveEv = [...events].reverse().find((e) => typeof e.working_sha256 === 'string');
 
     const wText = this.readText(workingPath);
