@@ -24,7 +24,7 @@ import { query, transaction } from '@/lib/db/postgres';
 import { splitStoredSection } from '@/lib/manuscript/sections/sectionProjection';
 import { projectEditorialSelection, type EditorialSelectionRange } from './selection';
 import { locusIsAdoptable } from '../proposalChain/legacyLocus';
-import { openChainWithExecutor } from '../proposalChain/store';
+import { openChainWithExecutor, type SqlExecutor } from '../proposalChain/store';
 import { readProposalWork } from '../proposalChain/proposalWork';
 import type { VersionAuthor } from '../proposalChain/contract';
 import type { VerifiedIdentity } from './turn';
@@ -105,63 +105,76 @@ async function openEditorialRelationshipResolved(
   input: OpenEditorialInput,
   selection: { readonly range: EditorialSelectionRange; readonly revisionNumber: number } | null,
 ): Promise<OpenEditorialResult> {
+  return transaction(tx => openEditorialOnExecutor(tx, input, selection));
+}
+
+/** Same owned selection door inside an atomic writer-first Save. No second
+ * constructor, no model call, and no manuscript mutation. */
+export async function openEditorialSelectionWithExecutor(
+  tx: SqlExecutor, input: OpenEditorialSelectionInput,
+): Promise<OpenEditorialResult> {
+  return openEditorialOnExecutor(tx, input, { range: input.range, revisionNumber: input.revisionNumber });
+}
+
+async function openEditorialOnExecutor(
+  tx: SqlExecutor, input: OpenEditorialInput,
+  selection: { readonly range: EditorialSelectionRange; readonly revisionNumber: number } | null,
+): Promise<OpenEditorialResult> {
   const memberId = input.identity.memberId;
   try {
-    return await transaction(async (tx) => {
-      const s = await tx.query<{
-        draft_id: string; manuscript_id: string; revision_count: number; draft_version: string;
-        text: string; heading: string | null;
-      }>(
-        `SELECT s.draft_id, d.manuscript_id, d.revision_count, d.version AS draft_version,
-                s.text, ms.heading
-           FROM manuscript_draft_sections s
-           JOIN manuscript_working_drafts d ON d.id = s.draft_id
-           LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
-          WHERE s.id = $1 AND d.member_id = $2`,
-        [input.sectionId, memberId]);
-      if (s.rows.length === 0) throw new OpenRefused('section_not_found');
-      const row = s.rows[0]!;
+    const s = await tx.query<{
+      draft_id: string; manuscript_id: string; revision_count: number; draft_version: string;
+      text: string; heading: string | null;
+    }>(
+      `SELECT s.draft_id, d.manuscript_id, d.revision_count, d.version AS draft_version,
+              s.text, ms.heading
+         FROM manuscript_draft_sections s
+         JOIN manuscript_working_drafts d ON d.id = s.draft_id
+         LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
+        WHERE s.id = $1 AND d.member_id = $2 FOR SHARE OF s, d`,
+      [input.sectionId, memberId]);
+    if (s.rows.length === 0) throw new OpenRefused('section_not_found');
+    const row = s.rows[0]!;
 
-      const split = splitStoredSection(row.text, row.heading);
-      if (!split) throw new OpenRefused('section_unprojectable');
-      if (split.body.length === 0) throw new OpenRefused('section_has_no_body');
+    const split = splitStoredSection(row.text, row.heading);
+    if (!split) throw new OpenRefused('section_unprojectable');
+    if (split.body.length === 0) throw new OpenRefused('section_has_no_body');
 
-      let expectedText = split.body;
-      if (selection) {
-        if (!Number.isInteger(selection.revisionNumber)
-            || Number(row.draft_version) !== selection.revisionNumber) {
-          throw new OpenRefused('selection_stale');
-        }
-        const projected = projectEditorialSelection(split.body, selection.range);
-        if (!projected.ok) {
-          const reason = projected.reason === 'selection_ambiguous'
-            ? 'selection_ambiguous' : 'selection_invalid';
-          throw new OpenRefused(reason);
-        }
-        expectedText = projected.text;
+    let expectedText = split.body;
+    if (selection) {
+      if (!Number.isInteger(selection.revisionNumber)
+          || Number(row.draft_version) !== selection.revisionNumber) {
+        throw new OpenRefused('selection_stale');
       }
+      const projected = projectEditorialSelection(split.body, selection.range);
+      if (!projected.ok) {
+        const reason = projected.reason === 'selection_ambiguous'
+          ? 'selection_ambiguous' : 'selection_invalid';
+        throw new OpenRefused(reason);
+      }
+      expectedText = projected.text;
+    }
 
-      const chain = await openChainWithExecutor(tx, memberId, {
-        locus: {
-          workId: row.manuscript_id,
-          draftId: row.draft_id,
-          baseVersion: Number(row.revision_count),
-          targetSectionId: input.sectionId,
-          locusScopeKind: selection === null ? 'section' : 'passage',
-          expectedText,
-        },
-      });
-
-      const t = await tx.query<{ id: string }>(
-        `INSERT INTO ask_threads
-           (manuscript_id, member_id, anchor, reading_identity,
-            canonical_at_open, initiated_by, proposal_chain_id)
-         VALUES ($1, $2, NULL, NULL, $3, 'author', $4)
-         RETURNING id`,
-        [row.manuscript_id, memberId, `draft:${row.draft_id}@${row.revision_count}`, chain.id]);
-
-      return { ok: true as const, threadId: t.rows[0]!.id, chainId: chain.id };
+    const chain = await openChainWithExecutor(tx, memberId, {
+      locus: {
+        workId: row.manuscript_id,
+        draftId: row.draft_id,
+        baseVersion: Number(row.revision_count),
+        targetSectionId: input.sectionId,
+        locusScopeKind: selection === null ? 'section' : 'passage',
+        expectedText,
+      },
     });
+
+    const t = await tx.query<{ id: string }>(
+      `INSERT INTO ask_threads
+         (manuscript_id, member_id, anchor, reading_identity,
+          canonical_at_open, initiated_by, proposal_chain_id)
+       VALUES ($1, $2, NULL, NULL, $3, 'author', $4)
+       RETURNING id`,
+      [row.manuscript_id, memberId, `draft:${row.draft_id}@${row.revision_count}`, chain.id]);
+
+    return { ok: true as const, threadId: t.rows[0]!.id, chainId: chain.id };
   } catch (e) {
     if (e instanceof OpenRefused) return { ok: false, reason: e.reason, detail: e.detail };
     throw e;

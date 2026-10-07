@@ -1,10 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { SavedCraftVersionReference } from '@/lib/writersStudio/craftSaveContractR1';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import { makeCraftTarget, paragraphTargets, adjacentCraftTarget, type CraftFocusTarget } from '@/lib/writersStudio/craftFocusR1';
 
 export interface CraftFocusToolsR1Props {
+  savedVersions?: readonly SavedCraftVersionReference[];
+  savedVersionsUnavailable?: boolean;
+  onResumeSaved?: (saved: SavedCraftVersionReference) => void;
   sections: readonly RebuildSection[];
   bodyOf: (id: string) => string;
   revisionNumber: number;
@@ -115,6 +119,14 @@ export default function CraftFocusToolsR1(props: CraftFocusToolsR1Props) {
               <button type="button" disabled={props.busy} onClick={() => move(target)}>Return here</button>
             </div>)}
           </div> : null}
+          {props.savedVersionsUnavailable ? <p role="status">Saved versions could not be checked. This is not an empty history.</p> : null}
+          {props.savedVersions?.length ? <details aria-label="Saved working versions">
+            <summary>Saved working versions · {props.savedVersions.length}</summary>
+            <div className="p4r1-craft-focus-passages">{props.savedVersions.map(saved => <div key={saved.versionId}>
+              <span><b>{props.sections.find(s => s.draftSectionId === saved.sectionId)?.heading || 'Saved passage'}</b><br />{saved.excerpt || '(Empty working passage)'}</span>
+              <button type="button" disabled={props.busy} onClick={() => { props.onResumeSaved?.(saved); setOpen(false); }}>Open saved version</button>
+            </div>)}</div>
+          </details> : null}
           <label>Section
             <select value={sectionId} onChange={event => setSectionId(event.target.value)}>
               {props.sections.map(s => <option key={s.draftSectionId} value={s.draftSectionId}>{s.heading || 'Untitled section'}</option>)}

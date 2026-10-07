@@ -56,6 +56,8 @@ import {
   type CanvasInsight,
   type InsightPassage,
 } from '@/lib/writersStudio/insightCanvas';
+import { saveCraftWorkingCopy, listSavedCraftVersions, savedCraftSnapshot, hasUnsavedCraftWork } from '@/lib/writersStudio/craftSaveR1';
+import type { CraftWorkingSaveDraft, SavedCraftVersionReference } from '@/lib/writersStudio/craftSaveContractR1';
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import {
   createA2Relationship,
@@ -223,6 +225,11 @@ export default function FlagshipWriteEditController({
   const pendingCraftContinuation = useRef<{ text: string; options: CraftSendOptions; focusKey?: string } | null>(null);
   const [adoptionBusy, setAdoptionBusy] = useState(false);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
+  const craftSaveInFlight = useRef(false);
+  const savedLoadGeneration = useRef(0);
+  const [savedCraftVersions, setSavedCraftVersions] = useState<readonly SavedCraftVersionReference[]>([]);
+  const [savedCraftUnavailable, setSavedCraftUnavailable] = useState(false);
+
   const [editorialFailure, setEditorialFailure] = useState<string | null>(null);
   const [adoptionOutcome, setAdoptionOutcome] = useState<AdoptionWireOutcome | null>(null);
   const [undoMessage, setUndoMessage] = useState<string | null>(null);
@@ -754,7 +761,7 @@ export default function FlagshipWriteEditController({
       else url.searchParams.delete('editorialThread');
       window.history.replaceState(null, '', url.pathname + url.search);
     }
-    const heldDraft = current && (current.workingText !== current.original || current.directEditing || current.customEditId !== null);
+    const heldDraft = current && hasUnsavedCraftWork(current);
     receiveCraftReceipt({ ok: true, message: `Focus moved to ${target.label}. No wording changed.`
       + (heldDraft ? ' Previous working draft held on this page, not saved or applied.' : '')
       + (returning ? ' Your earlier working copy is restored.' : '') });
@@ -785,7 +792,7 @@ export default function FlagshipWriteEditController({
       const snapshots = [...craftFocusDrafts.current.values()].map(entry => entry.snapshot);
       const active = craftTablePort.current?.snapshot();
       if (active) snapshots.push(active);
-      if (snapshots.some(s => s.workingText !== s.original || s.directEditing || s.customEditId !== null)) {
+      if (snapshots.some(hasUnsavedCraftWork)) {
         event.preventDefault(); event.returnValue = '';
       }
     };
@@ -1434,6 +1441,90 @@ export default function FlagshipWriteEditController({
     editorialScope,
   ]);
 
+  const reloadSavedCraftVersions = useCallback(async () => {
+    if (!context?.manuscriptId || !developCraft) return;
+    const generation = ++savedLoadGeneration.current;
+    const result = await listSavedCraftVersions(context.manuscriptId);
+    if (!craftMounted.current || generation !== savedLoadGeneration.current) return;
+    setSavedCraftUnavailable(!result.ok);
+    if (result.ok) setSavedCraftVersions(result.versions);
+  }, [context?.manuscriptId, developCraft]);
+
+  useEffect(() => {
+    setSavedCraftVersions([]); setSavedCraftUnavailable(false);
+    void reloadSavedCraftVersions();
+    return () => { savedLoadGeneration.current += 1; };
+  }, [reloadSavedCraftVersions]);
+
+  const saveCraftWorkingDraft = useCallback(async (draft: CraftWorkingSaveDraft): Promise<boolean> => {
+    if (craftSaveInFlight.current || memberVersionBusy || editorialBusy || craftActivity || adoptionBusy || !context) return false;
+    const snapshot = craftTablePort.current?.snapshot();
+    const key = craftTargetKey({ sectionId: draft.held.draftSectionId, ...draft.held });
+    const body = writingRef.current?.bodyOf(draft.held.draftSectionId)
+      ?? context.sections.find(s => s.draftSectionId === draft.held.draftSectionId)?.body ?? '';
+    const revision = writingRef.current?.currentRevisionId() ?? context.version;
+    if (!snapshot || snapshot.key !== key || snapshot.workingText !== draft.text || snapshot.directEditing
+      || snapshot.customEditId !== null || revision !== draft.held.revisionNumber
+      || Array.from(body).slice(draft.held.start, draft.held.end).join('') !== draft.held.text
+      || draft.threadId !== (editorialThread?.threadId ?? null)) {
+      setEditorialFailure('The passage changed before Save. Your wording remains here; nothing was applied.');
+      return false;
+    }
+    craftSaveInFlight.current = true;
+    setMemberVersionBusy(true); setEditorialFailure(null);
+    const stillCurrent = () => {
+      const live = craftTablePort.current?.snapshot();
+      return craftMounted.current && live?.key === key && live.workingText === draft.text;
+    };
+    try {
+      const outcome = await saveCraftWorkingCopy(draft, stillCurrent);
+      if (!outcome.ok) { if (craftMounted.current) setEditorialFailure(outcome.message); return false; }
+      setEditorialThread(outcome.thread);
+      setSuggestedVersionId(outcome.version.id);
+      // The URL points to the durable version history, not transient browser storage.
+      const url = new URL(window.location.href);
+      url.searchParams.set('editorialThread', outcome.thread.threadId);
+      window.history.replaceState(null, '', url.pathname + url.search);
+      return true;
+    } finally {
+      craftSaveInFlight.current = false;
+      if (craftMounted.current) { setMemberVersionBusy(false); void reloadSavedCraftVersions(); }
+    }
+  }, [context, editorialThread, memberVersionBusy, editorialBusy, craftActivity, adoptionBusy, reloadSavedCraftVersions]);
+
+  const resumeSavedCraftVersion = useCallback(async (saved: SavedCraftVersionReference) => {
+    if (!context || craftSaveInFlight.current || memberVersionBusy || editorialBusy || craftActivity || adoptionBusy) return;
+    const identity = craftLiveIdentity.current;
+    craftSaveInFlight.current = true; setMemberVersionBusy(true);
+    try {
+      const result = await readBoundEditorialThread(saved.threadId, saved.sectionId);
+      if (!craftMounted.current || craftLiveIdentity.current !== identity) return;
+      const version = result.ok ? result.thread.versions.find(v => v.id === saved.versionId && v.author === 'member') : null;
+      const section = context.sections.find(s => s.draftSectionId === saved.sectionId);
+      const body = writingRef.current?.bodyOf(saved.sectionId) ?? section?.body ?? '';
+      const revision = writingRef.current?.currentRevisionId() ?? context.version;
+      const target = section && result.ok ? makeCraftTarget(section, body, result.thread.locusText, revision, 'writer') : null;
+      if (!result.ok || result.thread.threadId !== saved.threadId || !version || !target) {
+        receiveCraftReceipt({ ok: false, message: 'That saved passage could not be matched to the current manuscript. Nothing was replaced.' }); return;
+      }
+      const key = craftTargetKey(target);
+      const active = craftTablePort.current?.snapshot();
+      const existing = active?.key === key ? active : craftFocusDrafts.current.get(key)?.snapshot;
+      if (existing && hasUnsavedCraftWork(existing)) {
+        receiveCraftReceipt({ ok: false, message: 'There is unfinished wording at that passage. Return to it and save or cancel it before opening a saved version.' }); return;
+      }
+      if (!moveCraftFocus(target)) return;
+      const held = { draftSectionId: target.sectionId, start: target.start, end: target.end,
+        text: target.text, revisionNumber: target.revisionNumber };
+      setCraftRestoreSnapshot(savedCraftSnapshot(held, version));
+      setEditorialThread(result.thread); setSuggestedVersionId(version.id);
+      setCraftWorkingText(version.wording); setEditorialFailure(null);
+      const url = new URL(window.location.href); url.searchParams.set('editorialThread', saved.threadId);
+      window.history.replaceState(null, '', url.pathname + url.search);
+      receiveCraftReceipt({ ok: true, message: 'Your saved working version is restored. Not applied to the manuscript.' });
+    } finally { craftSaveInFlight.current = false; if (craftMounted.current) setMemberVersionBusy(false); }
+  }, [context, memberVersionBusy, editorialBusy, craftActivity, adoptionBusy, moveCraftFocus, receiveCraftReceipt]);
+
   const chooseOwnPassage = useCallback(() => {
     setWorkspaceOpen(false);
   }, []);
@@ -1852,6 +1943,8 @@ export default function FlagshipWriteEditController({
                 sectionLabel: focusSection?.heading ?? 'Current section', source: 'writer',
               } : null,
               restoreSnapshot: craftRestoreSnapshot,
+              savedVersions: savedCraftVersions, savedVersionsUnavailable: savedCraftUnavailable,
+              onResumeSaved: saved => void resumeSavedCraftVersion(saved),
               earlier: [...craftFocusDrafts.current.values()].map(entry => entry.target)
                 .filter(t => !selectedPassage || t.sectionId !== selectedPassage.draftSectionId || t.start !== selectedPassage.start || t.end !== selectedPassage.end),
               receipt: craftActionReceipt,
@@ -1907,6 +2000,7 @@ export default function FlagshipWriteEditController({
             onApply={() => void applySuggested()}
             onUndo={editorialThread?.application?.canUndo ? () => void undoSuggested() : undefined}
             onSaveMember={saveMemberRevision}
+            onSaveCraftWorking={saveCraftWorkingDraft}
             onKeep={() => {
               setSuggestedVersionId(null);
               setAdoptionOutcome(null);

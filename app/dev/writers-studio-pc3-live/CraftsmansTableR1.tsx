@@ -16,6 +16,7 @@ import {
   type CraftWorkingEdit,
 } from '@/lib/writersStudio/craftWorkingCopy';
 import { professionalMarkFor } from '@/lib/writersStudio/craftProfessionalMarks';
+import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import { typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 import type { CraftSendOptions } from '@/lib/writersStudio/craftDialogueR1';
@@ -41,6 +42,7 @@ export type CraftsmansTableR1Props = {
   busy: boolean;
   onSend: (text?: string, options?: CraftSendOptions) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
+  onSaveWorking?: (draft: CraftWorkingSaveDraft) => Promise<boolean>;
   onApply: () => void;
   appliedVersionId: string | null;
   onUndo?: () => void;
@@ -239,6 +241,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     props.held?.start,
     props.held?.end,
     original,
+    props.restoreSnapshot,
   ]);
 
   useEffect(() => {
@@ -332,7 +335,8 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     && (!props.thread || (props.thread.targetSectionId === props.held.draftSectionId
       && props.thread.locusText === original)));
   const pendingComposition = directEditing || customEditId !== null;
-  const canSave = canonicalAligned && Boolean(props.thread && props.version) && hasWriterChange && !pendingComposition && !props.busy && !saving;
+  const savedWorking = !pendingComposition && candidateVersion?.author === 'member' && candidateVersion.wording === workingText;
+  const canSave = canonicalAligned && Boolean(props.onSaveWorking || (props.thread && candidateVersion)) && hasWriterChange && !savedWorking && !pendingComposition && !props.busy && !saving;
   const canApply = canonicalAligned && Boolean(props.thread && props.version) && !pendingComposition && !props.busy && !saving
     && props.version?.author === 'member' && props.version.wording === workingText;
 
@@ -485,24 +489,26 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
 
   const saveWorkingVersion = async () => {
     if (
-      !props.thread
-      || !props.held
-      || !props.version
+      !props.held
+      || (!props.onSaveWorking && (!props.thread || !candidateVersion))
       || !canSave
     ) return;
     setSaving(true);
     setLocalMessage(null);
     try {
-      const ok = await props.onSaveMember({
-        threadId: props.thread.threadId,
+      const ok = props.onSaveWorking ? await props.onSaveWorking({
+        held: { ...props.held }, threadId: props.thread?.threadId ?? null,
+        supersedes: candidateVersion?.id ?? null, text: workingText,
+      }) : await props.onSaveMember({
+        threadId: props.thread!.threadId,
         sectionId: props.held.draftSectionId,
-        supersedes: props.version.id,
+        supersedes: candidateVersion!.id,
         text: workingText,
         purpose: 'Writer-shaped Craft version',
       });
-      setLocalMessage(ok
-        ? 'Saved as your version. The manuscript is still unchanged.'
-        : 'Your version could not be saved just now. Your wording and choices remain here.');
+      announce({ ok, message: ok
+        ? 'Your working version is saved. Not applied to the manuscript.'
+        : 'Your save could not be confirmed. Your wording and choices remain here.' });
     } finally {
       setSaving(false);
     }
@@ -892,6 +898,8 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
           <span>
             {pendingComposition
               ? 'Editing a local draft. Not applied to the manuscript.'
+              : savedWorking
+              ? 'Your working version is saved. Not applied to the manuscript.'
               : manualText !== null
               ? 'You are shaping your own working copy. Not applied to the manuscript.'
               : proposalChosenCount === 0

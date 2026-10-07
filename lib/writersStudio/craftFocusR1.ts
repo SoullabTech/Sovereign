@@ -1,3 +1,4 @@
+import type { SavedCraftVersionReference } from './craftSaveContractR1';
 import type { RebuildSection } from './rebuild/model';
 import type { RebuildEditorialVersion } from './rebuild/editorialCollaboration';
 import { locateUniquePresentationPassage } from './rebuild/editorialCollaboration';
@@ -196,6 +197,9 @@ export function parseCraftCanvasCommand(request: string): CraftCanvasCommand | n
 }
 
 export interface CraftFocusBinding {
+  savedVersions?: readonly SavedCraftVersionReference[];
+  savedVersionsUnavailable?: boolean;
+  onResumeSaved?: (saved: SavedCraftVersionReference) => void;
   current: CraftFocusTarget | null;
   restoreSnapshot: CraftTableSnapshot | null;
   receipt: string | null;

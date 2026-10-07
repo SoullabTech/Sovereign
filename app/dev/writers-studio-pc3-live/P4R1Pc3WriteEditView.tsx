@@ -16,6 +16,7 @@ const WRITE_RELATIONAL_GEOMETRY = {
 import { projectPc3LiveWrite } from '@/app/writers-studio/full-redesign/liveWriteAdapter';
 import WorkConversation from '@/app/writers-studio/canvas/WorkConversation';
 import { WholeManuscriptSurface, type WholeManuscriptSurfaceHandle } from '@/app/writers-studio/canvas/WholeManuscriptSurface';
+import type { CraftWorkingSaveDraft } from '@/lib/writersStudio/craftSaveContractR1';
 import RevisionDesk, { type CarryChooserPresentation, type MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import InsightReadings from '@/app/writers-studio/insight/InsightReadings';
 import type { LivingWork } from '@/app/writers-studio/useLivingWorks';
@@ -128,6 +129,7 @@ export type P4R1Pc3WriteEditViewProps = {
   onApply: () => void;
   onUndo?: () => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
+  onSaveCraftWorking?: (draft: CraftWorkingSaveDraft) => Promise<boolean>;
   onKeep: () => void;
   onLatitude: (v: EditorialLatitude) => void;
   onMayRemoveParagraphs: (v: boolean) => void;
@@ -1039,6 +1041,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       held={props.held}
       thread={props.editorialThread}
       version={craftBoundVersion}
+      onSaveWorking={props.onSaveCraftWorking}
       busy={busy}
       onSend={props.onSendEditorial}
       onSaveMember={props.onSaveMember}
@@ -1052,6 +1055,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       focusTools={props.craftFocus ? <CraftFocusToolsR1
         sections={proseSections} bodyOf={props.writing.bodyOf}
         revisionNumber={props.writing.currentRevisionId() ?? props.context.version}
+        savedVersions={props.craftFocus.savedVersions} savedVersionsUnavailable={props.craftFocus.savedVersionsUnavailable}
+        onResumeSaved={props.craftFocus.onResumeSaved}
         current={props.craftFocus.current} earlier={props.craftFocus.earlier} busy={busy} receipt={props.craftFocus.receipt}
         onMove={props.craftFocus.onMove} onMoveAndSuggest={props.craftFocus.onMoveAndSuggest} onStay={props.craftFocus.onStay} onAsk={props.craftFocus.onAsk}
       /> : null}
