@@ -15,8 +15,8 @@ import {
   type CraftDecision,
   type CraftWorkingEdit,
 } from '@/lib/writersStudio/craftWorkingCopy';
-import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import { professionalMarkFor } from '@/lib/writersStudio/craftProfessionalMarks';
+import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 
 export type CraftHeldPassage = {
   draftSectionId: string;
@@ -64,6 +64,10 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
   const [view, setView] = useState<'markup' | 'preview'>('markup');
   const [notation, setNotation] = useState<'guided' | 'professional'>('guided');
   const [decisions, setDecisions] = useState<ReadonlyMap<number, CraftDecision>>(new Map());
+  const [manualText, setManualText] = useState<string | null>(null);
+  const [manualFromVersionId, setManualFromVersionId] = useState<string | null>(null);
+  const [directDraft, setDirectDraft] = useState('');
+  const [directEditing, setDirectEditing] = useState(false);
   const [activeEditId, setActiveEditId] = useState<number | null>(null);
   const [customEditId, setCustomEditId] = useState<number | null>(null);
   const [customDraft, setCustomDraft] = useState('');
@@ -73,17 +77,17 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
 
   const original = props.held?.text ?? '';
   const proposal = props.version?.wording ?? original;
-  const segments = useMemo(
-    () => editorialSegments(original, proposal),
-    [original, proposal],
-  );
-  const edits = useMemo(
+  const proposalEdits = useMemo(
     () => craftWorkingEdits(original, proposal),
     [original, proposal],
   );
 
   useEffect(() => {
-    setDecisions(initialCraftDecisions(edits, props.version?.author ?? null));
+    setDecisions(initialCraftDecisions(proposalEdits, props.version?.author ?? null));
+    setManualText(null);
+    setManualFromVersionId(null);
+    setDirectDraft('');
+    setDirectEditing(false);
     setActiveEditId(null);
     setCustomEditId(null);
     setCustomDraft('');
@@ -92,20 +96,55 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     props.held?.draftSectionId,
     props.held?.start,
     props.held?.end,
-    props.version?.id,
-    props.version?.author,
     original,
-    proposal,
   ]);
 
-  const workingText = useMemo(
-    () => composeCraftWorkingCopy(original, edits, decisions),
-    [original, edits, decisions],
+  /* A new MAIA proposal must never erase wording the writer is already shaping.
+     When no writer-owned manual state exists, it can become the new candidate
+     set. Once the writer has composed, MAIA's later proposal remains an
+     alternative rather than becoming the working copy. */
+  useEffect(() => {
+    if (manualText !== null) {
+      if (props.version?.author === 'member' && props.version.wording === manualText) {
+        setManualText(null);
+        setManualFromVersionId(null);
+        setDecisions(initialCraftDecisions(proposalEdits, 'member'));
+      }
+      return;
+    }
+    setDecisions(initialCraftDecisions(proposalEdits, props.version?.author ?? null));
+    setActiveEditId(null);
+    setCustomEditId(null);
+    setCustomDraft('');
+  }, [props.version?.id, props.version?.author, proposal]);
+
+  const selectedProposalText = useMemo(
+    () => composeCraftWorkingCopy(original, proposalEdits, decisions),
+    [original, proposalEdits, decisions],
   );
-  const chosenCount = useMemo(
-    () => decisionCount(edits, decisions),
-    [edits, decisions],
+
+  const workingText = manualText ?? selectedProposalText;
+  const displayText = manualText ?? proposal;
+  const displaySegments = useMemo(
+    () => editorialSegments(original, displayText),
+    [original, displayText],
   );
+  const displayEdits = useMemo(
+    () => craftWorkingEdits(original, displayText),
+    [original, displayText],
+  );
+  const displayDecisions = useMemo(
+    () => manualText !== null
+      ? initialCraftDecisions(displayEdits, 'member')
+      : decisions,
+    [manualText, displayEdits, decisions],
+  );
+
+  const proposalChosenCount = useMemo(
+    () => decisionCount(proposalEdits, decisions),
+    [proposalEdits, decisions],
+  );
+  const hasWriterChange = workingText !== original;
 
   useEffect(() => {
     props.onWorkingTextChange?.(workingText);
@@ -121,19 +160,26 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
 
   const activeEdit = activeEditId === null
     ? null
-    : edits.find((edit) => edit.id === activeEditId) ?? null;
+    : displayEdits.find((edit) => edit.id === activeEditId) ?? null;
 
-  const setDecision = (id: number, decision: CraftDecision) => {
-    setDecisions((current) => {
-      const next = new Map(current);
+  const applyDisplayDecision = (id: number, decision: CraftDecision) => {
+    if (manualText === null) {
+      setDecisions((current) => {
+        const next = new Map(current);
+        next.set(id, decision);
+        return next;
+      });
+    } else {
+      const next = new Map(initialCraftDecisions(displayEdits, 'member'));
       next.set(id, decision);
-      return next;
-    });
+      setManualText(composeCraftWorkingCopy(original, displayEdits, next));
+      setManualFromVersionId(props.version?.id ?? manualFromVersionId);
+    }
     setLocalMessage(null);
   };
 
   const beginCustom = (edit: CraftWorkingEdit) => {
-    const current = decisionFor(decisions, edit.id);
+    const current = decisionFor(displayDecisions, edit.id);
     setCustomEditId(edit.id);
     setCustomDraft(
       current.mode === 'custom'
@@ -143,12 +189,26 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
   };
 
   const commitCustom = (edit: CraftWorkingEdit) => {
-    const text = customDraft;
-    setDecision(edit.id, text.length > 0
-      ? { mode: 'custom', text }
+    applyDisplayDecision(edit.id, customDraft.length > 0
+      ? { mode: 'custom', text: customDraft }
       : { mode: 'original' });
     setCustomEditId(null);
     setCustomDraft('');
+  };
+
+  const beginDirectComposition = (seed: string, versionId: string | null) => {
+    setDirectDraft(seed);
+    setDirectEditing(true);
+    setManualFromVersionId(versionId);
+    setView('preview');
+    setLocalMessage(null);
+  };
+
+  const commitDirectComposition = () => {
+    setManualText(directDraft);
+    setDirectEditing(false);
+    setActiveEditId(null);
+    setLocalMessage('This is now your working copy. It is not yet saved or applied.');
   };
 
   const saveWorkingVersion = async () => {
@@ -156,7 +216,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
       !props.thread
       || !props.held
       || !props.version
-      || chosenCount === 0
+      || !hasWriterChange
       || saving
     ) return;
     setSaving(true);
@@ -181,38 +241,31 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     edit: CraftWorkingEdit,
     kind: 'another' | 'why' | 'teach',
   ) => {
-    const decision = decisionFor(decisions, edit.id);
-    const localWorking = decision.mode === 'custom'
-      ? ` My current wording here is "${decision.text.trim()}".`
-      : decision.mode === 'proposal'
-        ? ' I currently have this proposed move in my working version.'
-        : ' I am currently keeping my original here.';
+    const localWorking = manualText !== null
+      ? ' This mark is part of the writer’s own current working copy.'
+      : decisionFor(decisions, edit.id).mode === 'proposal'
+        ? ' The writer currently has this proposed move in the working copy.'
+        : ' The writer is currently keeping the original here.';
 
     const subject = !edit.from
-      ? `the proposed insertion "${edit.to.trim()}"`
+      ? `the insertion "${edit.to.trim()}"`
       : !edit.to
-        ? `the proposed deletion "${edit.from.trim()}"`
-        : `the proposed change from "${edit.from.trim()}" to "${edit.to.trim()}"`;
+        ? `the deletion "${edit.from.trim()}"`
+        : `the change from "${edit.from.trim()}" to "${edit.to.trim()}"`;
 
     if (kind === 'another') {
       props.onSend([
         `Show me one genuinely different way to handle ${subject}.${localWorking}`,
         'Stay inside this exact local edit. Preserve my intention, voice, cadence, imagery, worldview, and intentional ambiguity.',
         'Do not broaden the rewrite. Return one bounded alternative and explain its tradeoff briefly.',
-        '',
-        'My current working passage:',
-        workingText,
       ].join('\n'), { proposalPolicy: 'allow', proposalRequested: true });
       return;
     }
     if (kind === 'why') {
       props.onSend([
-        `Explain why you proposed ${subject}.${localWorking}`,
-        'Use evidence from my exact words. Tell me what the change may gain and what it could cost.',
-        'Make the strongest case for keeping my original too. Do not propose new wording in this answer.',
-        '',
-        'My current working passage:',
-        workingText,
+        `Explain ${subject}.${localWorking}`,
+        'Use evidence from my exact words. Tell me what the move may gain and what it could cost.',
+        'Make the strongest case for my original too. Do not propose new wording in this answer.',
       ].join('\n'), { proposalPolicy: 'reply_only' });
       return;
     }
@@ -220,35 +273,39 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
       `Teach me the craft involved in ${subject}.${localWorking}`,
       'Use my sentence as the example. Plain language first, then professional terminology if useful.',
       'Do not propose new wording unless I ask.',
-      '',
-      'My current working passage:',
-      workingText,
     ].join('\n'), { proposalPolicy: 'reply_only' });
   };
 
   const insertionIndex = useMemo(() => {
     const first = new Map<number, number>();
-    segments.forEach((segment, index) => {
+    displaySegments.forEach((segment, index) => {
       if (segment.kind === 'ins' && segment.editId !== null && !first.has(segment.editId)) {
         first.set(segment.editId, index);
       }
     });
     return first;
-  }, [segments]);
+  }, [displaySegments]);
 
   const firstChangeIndex = useMemo(() => {
     const first = new Map<number, number>();
-    segments.forEach((segment, index) => {
+    displaySegments.forEach((segment, index) => {
       if (segment.kind !== 'same' && segment.editId !== null && !first.has(segment.editId)) {
         first.set(segment.editId, index);
       }
     });
     return first;
-  }, [segments]);
+  }, [displaySegments]);
 
   const applied = Boolean(
     props.version?.author === 'member'
     && props.appliedVersionId === props.version.id,
+  );
+
+  const newerMaiaAlternative = Boolean(
+    manualText !== null
+    && props.version?.author === 'maia'
+    && props.version.id !== manualFromVersionId
+    && props.version.wording !== manualText,
   );
 
   return (
@@ -261,7 +318,10 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
         </div>
         <div className="p4r1-craft-r1-controls">
           <div className="p4r1-craft-r1-view" role="group" aria-label="Craft view">
-            <button type="button" aria-pressed={view === 'markup'} onClick={() => setView('markup')}>Markup</button>
+            <button type="button" aria-pressed={view === 'markup'} onClick={() => {
+              setDirectEditing(false);
+              setView('markup');
+            }}>Markup</button>
             <button type="button" aria-pressed={view === 'preview'} onClick={() => setView('preview')}>Preview</button>
           </div>
           <details className="p4r1-craft-r1-notation">
@@ -310,17 +370,26 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                     className="p4r1-craft-r1-locus"
                     data-craft-authoritative={authoritative ? 'true' : 'false'}
                   >
-                    {view === 'preview' ? (
+                    {directEditing ? (
+                      <textarea
+                        className="p4r1-craft-r1-direct"
+                        value={directDraft}
+                        autoFocus
+                        rows={Math.max(4, Math.min(14, directDraft.split('\n').length + 2))}
+                        aria-label="Edit your working passage"
+                        onChange={(event) => setDirectDraft(event.target.value)}
+                      />
+                    ) : view === 'preview' ? (
                       <span className="p4r1-craft-r1-preview">{workingText || exact}</span>
-                    ) : segments.length > 0 && props.version ? (
-                      segments.map((segment, index) => {
+                    ) : displaySegments.length > 0 && displayText !== original ? (
+                      displaySegments.map((segment, index) => {
                         if (segment.kind === 'same') return <span key={index}>{segment.text}</span>;
                         if (segment.editId === null) return <span key={index}>{segment.text}</span>;
 
-                        const decision = decisionFor(decisions, segment.editId);
+                        const decision = decisionFor(displayDecisions, segment.editId);
                         const chosen = decision.mode !== 'original';
-                        const edit = edits.find((candidate) => candidate.id === segment.editId) ?? null;
-                        const proof = edit ? professionalMarkFor(edit, edits, decision) : null;
+                        const edit = displayEdits.find((candidate) => candidate.id === segment.editId) ?? null;
+                        const proof = edit ? professionalMarkFor(edit, displayEdits, decision) : null;
                         const proofMark = notation === 'professional'
                           && proof
                           && firstChangeIndex.get(segment.editId) === index
@@ -369,6 +438,16 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                   {after}
                 </div>
 
+                {directEditing ? (
+                  <div className="p4r1-craft-r1-direct-actions">
+                    <button type="button" onClick={commitDirectComposition}>Use this as my working copy</button>
+                    <button type="button" onClick={() => {
+                      setDirectEditing(false);
+                      setDirectDraft('');
+                    }}>Cancel</button>
+                  </div>
+                ) : null}
+
                 {!authoritative ? (
                   <p className="p4r1-craft-r1-warning" role="status">
                     This passage changed after Craft opened. Re-anchor before making wording decisions.
@@ -381,7 +460,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                       <span>
                         Change {activeEdit.id} · {editKind(activeEdit)}
                         {notation === 'professional'
-                          ? ` · ${professionalMarkFor(activeEdit, edits, decisionFor(decisions, activeEdit.id)).symbol}`
+                          ? ` · ${professionalMarkFor(activeEdit, displayEdits, decisionFor(displayDecisions, activeEdit.id)).symbol}`
                           : ''}
                       </span>
                       <p>
@@ -415,21 +494,21 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                       <div>
                         <button
                           type="button"
-                          aria-pressed={decisionFor(decisions, activeEdit.id).mode === 'proposal'}
-                          onClick={() => setDecision(activeEdit.id, { mode: 'proposal' })}
+                          aria-pressed={decisionFor(displayDecisions, activeEdit.id).mode === 'proposal'}
+                          onClick={() => applyDisplayDecision(activeEdit.id, { mode: 'proposal' })}
                         >
                           Use this
                         </button>
                         <button
                           type="button"
-                          aria-pressed={decisionFor(decisions, activeEdit.id).mode === 'original'}
-                          onClick={() => setDecision(activeEdit.id, { mode: 'original' })}
+                          aria-pressed={decisionFor(displayDecisions, activeEdit.id).mode === 'original'}
+                          onClick={() => applyDisplayDecision(activeEdit.id, { mode: 'original' })}
                         >
                           {notation === 'professional' ? 'Stet · Keep mine' : 'Keep mine'}
                         </button>
                         <button
                           type="button"
-                          aria-pressed={decisionFor(decisions, activeEdit.id).mode === 'custom'}
+                          aria-pressed={decisionFor(displayDecisions, activeEdit.id).mode === 'custom'}
                           onClick={() => beginCustom(activeEdit)}
                         >
                           Write it
@@ -447,15 +526,34 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
         </article>
       </div>
 
-      {props.held && props.version && edits.length > 0 ? (
+      {props.held && props.version ? (
         <footer className="p4r1-craft-r1-footer">
           <span>
-            {chosenCount === 0
-              ? 'Your original is still the working version.'
-              : `${chosenCount} of ${edits.filter((edit) => !edit.protectedSpan).length} craft change${edits.filter((edit) => !edit.protectedSpan).length === 1 ? '' : 's'} in your working version.`}
+            {manualText !== null
+              ? 'You are shaping your own working copy.'
+              : proposalChosenCount === 0
+                ? 'Your original is still the working version.'
+                : `${proposalChosenCount} MAIA move${proposalChosenCount === 1 ? '' : 's'} are in your working version.`}
+            {newerMaiaAlternative ? ' MAIA has also offered a newer alternative; your wording has not been replaced.' : ''}
           </span>
-          <div>
-            {chosenCount > 0 ? (
+          <div className="p4r1-craft-r1-footer-actions">
+            <details className="p4r1-craft-r1-compose-menu">
+              <summary>Compose</summary>
+              <div>
+                <button type="button" onClick={() => beginDirectComposition(original, props.version?.id ?? null)}>
+                  Write from mine
+                </button>
+                <button type="button" onClick={() => beginDirectComposition(workingText, props.version?.id ?? null)}>
+                  Edit current hybrid
+                </button>
+                {props.version.author === 'maia' && proposal !== original ? (
+                  <button type="button" onClick={() => beginDirectComposition(proposal, props.version?.id ?? null)}>
+                    Start from MAIA
+                  </button>
+                ) : null}
+              </div>
+            </details>
+            {hasWriterChange ? (
               <button type="button" disabled={props.busy || saving} onClick={() => void saveWorkingVersion()}>
                 {saving ? 'Saving…' : 'Save my version'}
               </button>
