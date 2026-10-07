@@ -12,8 +12,35 @@
   async function api(path, options) {
     const res = await fetch(path, Object.assign({ credentials: 'same-origin' }, options || {}));
     const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.detail || data.error || 'Request failed');
+    if (!res.ok || !data.ok) {
+      const err = new Error(data.detail || data.error || 'Request failed');
+      err.code = data.error || null;
+      err.status = res.status;
+      throw err;
+    }
     return data;
+  }
+
+  function renderCustody(c) {
+    const el = byId('custody');
+    if (!c) return;
+    const short = (h) => (h ? h.slice(0, 12) : 'none yet');
+    el.className = 'custody';
+    el.textContent = 'DISK VERIFIED · ' + c.completed_cases_from_disk + ' of ' + c.total_cases +
+      ' read back from disk · working file ' + short(c.working_sha256) + '… · rolling copy ' +
+      (c.rolling_sha256 && c.rolling_sha256 === c.working_sha256 ? 'matches' : (c.working_exists ? 'MISSING' : 'n/a yet')) +
+      ' · ' + c.generation_count + ' generation(s) · ledger event ' + c.event_seq +
+      (c.repaired && c.repaired.length ? ' · repaired: ' + c.repaired.join(', ') : '') +
+      ' · checked ' + new Date().toLocaleTimeString();
+  }
+  function custodyFailed(e) {
+    const el = byId('custody');
+    el.className = 'custody bad';
+    el.textContent = 'DISK NOT VERIFIED — stop labelling and tell your assistant. ' + (e.code ? e.code + ': ' : '') + e.message;
+  }
+  async function pollCustody() {
+    try { renderCustody((await api('/api/custody')).custody); }
+    catch (e) { custodyFailed(e); }
   }
 
   function titleFor(k) {
@@ -163,10 +190,12 @@
         body: JSON.stringify({ pilot_id: c.pilot_id, answers })
       });
       state = data.state;
+      renderCustody(data.custody);
       byId('saveState').textContent = 'Saved to disk';
       byId('formError').hidden = true;
       return true;
     } catch (e) {
+      if (e.status === 409) custodyFailed(e);
       byId('formError').textContent = 'Could not save: ' + e.message;
       byId('formError').hidden = false;
       byId('saveState').textContent = 'Not saved';
@@ -226,6 +255,8 @@
     try {
       const data = await api('/api/state');
       state = data.state;
+      renderCustody(data.custody);
+      setInterval(pollCustody, 30000);
       buildDepthChoices();
       const firstIncomplete = state.cases.findIndex((c) => !c.complete);
       index = firstIncomplete >= 0 ? firstIncomplete : state.total_cases - 1;

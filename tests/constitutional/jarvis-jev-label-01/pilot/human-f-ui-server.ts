@@ -1,19 +1,24 @@
 /**
  * Local-only Kelly F-pass server.
  * Reads frozen manifest/index + source units only after P is sealed.
- * Writes only a 0600 F working sheet outside delegation home.
+ * Writes only 0600 files outside the delegation home.
+ *
+ * R1 durability: the server keeps NO sheet in memory. Every /api/state re-reads and verifies the disk (working file,
+ * rolling copy, write-once generation ledger, hash-chained content-free event log) and repairs any single-copy loss.
+ * "N of 25 saved to disk" is the count read BACK from disk, never a counter. See human-f-durability.ts.
  */
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { assertOutsideHome, type LocalIndex, type Manifest } from './pilot';
+import { assertOutsideHome, type LocalIndex, type Manifest, type Sheet } from './pilot';
 import {
   applyHumanFCase,
+  assertHumanFSheet,
   humanFUiState,
   loadRoutingStates,
-  readWorkingFSheet,
-  writeAndVerifyWorkingFSheet,
 } from './human-f-ui-model';
+import { Custody, DurabilityRefused, sha256Hex } from './human-f-durability';
 import { HumanUiRefused, type HumanAnswer } from './human-ui-model';
 import type { QuestionId } from '../core';
 
@@ -30,6 +35,8 @@ const manifestPath = one('manifest');
 const indexPath = one('index');
 const sourcePath = one('sheet');
 const workingPath = all('working')[0] ?? join(dirname(sourcePath), 'kelly-F-sheet-working.json');
+// Placement of the safety copies is a deliberate act: required, never defaulted next to the working file.
+const backupDir = one('backup-dir');
 const port = Number(all('port')[0] ?? '3762');
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('invalid --port');
 assertOutsideHome(home, workingPath);
@@ -37,7 +44,41 @@ assertOutsideHome(home, workingPath);
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as Manifest;
 const index = JSON.parse(readFileSync(indexPath, 'utf8')) as LocalIndex;
 const fullStates = loadRoutingStates(home, manifest, index);
-let sheet = readWorkingFSheet(sourcePath, workingPath);
+
+/** Content-free identity of the code actually running: hashes of every file the surface is built from, plus git state. */
+function codeIdentity(): Record<string, unknown> {
+  const names = [
+    'human-f-ui-server.ts', 'human-f-ui-model.ts', 'human-f-ui-client.js', 'human-f-ui.html', 'human-f-ui.css',
+    'human-f-durability.ts', 'human-f-finish.ts', 'human-ui-model.ts', 'human-ui.css', 'pilot.ts',
+  ];
+  const files: Record<string, string> = {};
+  for (const n of names) {
+    const p = join(__dirname, n);
+    files[n] = existsSync(p) ? sha256Hex(readFileSync(p)) : 'MISSING';
+  }
+  let head: string | null = null;
+  let dirtyPaths: number | null = null;
+  try {
+    head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: __dirname, encoding: 'utf8' }).trim();
+    dirtyPaths = execFileSync('git', ['status', '--porcelain', '--', '.'], { cwd: __dirname, encoding: 'utf8' })
+      .split('\n').filter(Boolean).length;
+  } catch { /* not a git checkout: recorded as null */ }
+  return { git_head: head, git_dirty_paths_in_pilot_dir: dirtyPaths, files, node: process.version };
+}
+
+const custody = new Custody({
+  home,
+  sourcePath,
+  workingPath,
+  backupDir,
+  parse: (text: string): Sheet => {
+    const s = JSON.parse(text) as Sheet;
+    assertHumanFSheet(s);
+    return s;
+  },
+  identity: codeIdentity,
+});
+const startReport = custody.start();
 
 const asset = (name: string): string => readFileSync(join(__dirname, name), 'utf8');
 const html = asset('human-f-ui.html');
@@ -98,12 +139,19 @@ const server = createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && url.pathname === '/api/state') {
+      const v = custody.verify();
       return reply(
         res,
         200,
         'application/json',
-        JSON.stringify({ ok: true, state: humanFUiState(sheet, fullStates) }) + '\n',
+        JSON.stringify({ ok: true, state: humanFUiState(v.sheet, fullStates), custody: v.report }) + '\n',
       );
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/custody') {
+      // Lightweight disk verification for the UI's periodic check (no routing states, no answers).
+      const v = custody.verify();
+      return reply(res, 200, 'application/json', JSON.stringify({ ok: true, custody: v.report }) + '\n');
     }
 
     if (req.method === 'POST' && url.pathname === '/api/save') {
@@ -114,9 +162,10 @@ const server = createServer(async (req, res) => {
       if (typeof b.pilot_id !== 'string' || !b.answers || typeof b.answers !== 'object') {
         throw new HumanUiRefused('INVALID_SAVE', 'pilot_id and answers required');
       }
-      const candidate = applyHumanFCase(sheet, b.pilot_id, b.answers);
-      sheet = writeAndVerifyWorkingFSheet(sourcePath, workingPath, candidate);
-      const persistedState = humanFUiState(sheet, fullStates);
+      const current = custody.verify();
+      const candidate = applyHumanFCase(current.sheet, b.pilot_id, b.answers);
+      const saved = custody.save(candidate, b.pilot_id);
+      const persistedState = humanFUiState(saved.sheet, fullStates);
       process.stdout.write(
         JSON.stringify({
           event: 'F_CASE_SAVED_TO_DISK',
@@ -124,23 +173,26 @@ const server = createServer(async (req, res) => {
           pilot_id: b.pilot_id,
           completed_cases: persistedState.completed_cases,
           total_cases: persistedState.total_cases,
+          working_sha256: saved.report.working_sha256,
+          rolling_sha256: saved.report.rolling_sha256,
+          event_seq: saved.report.event_seq,
         }) + '\n',
       );
       return reply(
         res,
         200,
         'application/json',
-        JSON.stringify({ ok: true, state: persistedState }) + '\n',
+        JSON.stringify({ ok: true, state: persistedState, custody: saved.report }) + '\n',
       );
     }
 
     return reply(res, 404, 'application/json', '{"ok":false,"error":"not found"}\n');
   } catch (e) {
-    const code = e instanceof HumanUiRefused ? e.code : 'SERVER_ERROR';
+    const code = e instanceof HumanUiRefused || e instanceof DurabilityRefused ? e.code : 'SERVER_ERROR';
     const detail = e instanceof Error ? e.message : String(e);
     return reply(
       res,
-      400,
+      e instanceof DurabilityRefused ? 409 : 400,
       'application/json',
       JSON.stringify({ ok: false, error: code, detail }) + '\n',
     );
@@ -152,6 +204,11 @@ server.listen(port, '127.0.0.1', () => {
     'URL=http://127.0.0.1:' + port,
     'SOURCE=' + sourcePath,
     'WORKING=' + workingPath,
+    'BACKUP_DIR=' + backupDir,
+    'ROLLING=' + custody.rollingPath,
+    'GENERATIONS=' + custody.genDir,
+    'EVENT_LOG=' + custody.eventPath,
+    'COMPLETED_AT_START=' + startReport.completed_cases_from_disk + ' of ' + startReport.total_cases,
     'BOUNDARY=F_ONLY · LABEL_A_KELLY · LOCAL_ONLY · P_SEALED',
     '',
   ].join('\n'));
