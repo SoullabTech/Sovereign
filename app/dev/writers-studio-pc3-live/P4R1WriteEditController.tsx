@@ -706,9 +706,13 @@ export default function FlagshipWriteEditController({
       : await openBoundEditorialThread(focusId, posture);
 
     if (!opened.ok) {
-      setEditorialFailure(opened.reason === 'sanctuary_unavailable'
-        ? 'Editorial revision is unavailable in Sanctuary. Nothing was changed.'
-        : 'The revision relationship could not be opened just now. Nothing was changed.');
+      setEditorialFailure(
+        opened.reason === 'sanctuary_unavailable'
+          ? 'Editorial revision is unavailable in Sanctuary. Nothing was changed.'
+          : opened.reason === 'posture_unresolved'
+            ? 'Choose Ordinary or Sanctuary above before opening a persistent editorial relationship. Your Craft request is still held here.'
+            : 'The revision relationship could not be opened just now. Nothing was changed.',
+      );
       return null;
     }
 
@@ -1370,6 +1374,8 @@ export default function FlagshipWriteEditController({
       || !selectedPassage
       || !focusId
       || editorialBusy
+      || !sessionPosture.resolved
+      || sessionPosture.sanctuary
     ) return;
     if (selectedPassage.draftSectionId !== focusId) return;
 
@@ -1427,6 +1433,7 @@ export default function FlagshipWriteEditController({
     selectedPassage,
     focusId,
     editorialBusy,
+    sessionPosture,
     sendEditorial,
   ]);
 
