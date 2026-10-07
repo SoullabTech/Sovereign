@@ -7,6 +7,11 @@ import type {
 } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
+import {
+  EDITORIAL_LATITUDES,
+  LATITUDE_BANDS,
+  type EditorialLatitude,
+} from '@/lib/manuscript/editorialScope/contract';
 
 type SendOptions = {
   proposalPolicy?: 'allow' | 'reply_only';
@@ -21,6 +26,10 @@ export type MaiaCraftCompanionR1Props = {
   busy: boolean;
   message: string | null;
   activity: string | null;
+  editLatitude: EditorialLatitude;
+  onEditLatitude: (value: EditorialLatitude) => void;
+  mayRemoveParagraphs: boolean;
+  onMayRemoveParagraphs: (value: boolean) => void;
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
   onSend: (text?: string, options?: SendOptions) => void;
@@ -248,6 +257,41 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                 >
                   Go deeper
                 </button>
+                <details className="p4r1-maia-craft-r1-strength">
+                  <summary>
+                    Edit strength · {LATITUDE_BANDS[props.editLatitude].label}
+                  </summary>
+                  <div>
+                    <label>
+                      <span>How much may one suggestion change?</span>
+                      <input
+                        type="range"
+                        min={EDITORIAL_LATITUDES[0]}
+                        max={EDITORIAL_LATITUDES[EDITORIAL_LATITUDES.length - 1]}
+                        step={1}
+                        value={props.editLatitude}
+                        aria-valuetext={LATITUDE_BANDS[props.editLatitude].label}
+                        onChange={(event) => props.onEditLatitude(Number(event.target.value) as EditorialLatitude)}
+                      />
+                    </label>
+                    <p>
+                      <b>{LATITUDE_BANDS[props.editLatitude].label}</b> · {LATITUDE_BANDS[props.editLatitude].description}
+                    </p>
+                    <label className="p4r1-maia-craft-r1-paragraphs">
+                      <input
+                        type="checkbox"
+                        checked={props.mayRemoveParagraphs}
+                        onChange={(event) => props.onMayRemoveParagraphs(event.target.checked)}
+                      />
+                      MAIA may suggest removing a whole paragraph
+                    </label>
+                    <small>
+                      {props.mayRemoveParagraphs
+                        ? 'Whole-paragraph removal is allowed in proposals for this visit. You still decide.'
+                        : 'Even at Open, MAIA may discuss removing a paragraph but cannot arrive with it already gone.'}
+                    </small>
+                  </div>
+                </details>
               </div>
             ) : null}
           </div>
