@@ -1008,6 +1008,8 @@ export default function FlagshipWriteEditController({
         '',
         `You just completed a fresh governed reread of the ${zoomLabel} before answering this Craft question.`,
         'Use that broader reread as context, not as an edit instruction or verdict.',
+        'The governed reread reflects the canonical manuscript state. It does NOT contain the unsaved writer-owned working passage unless that wording was already applied.',
+        'Compare the writer-owned working passage below against that broader context explicitly; do not imply the broader reread already included it.',
         'The exact active passage and the writer-owned working passage below remain the authority for any wording change.',
         '',
         governedContext,
