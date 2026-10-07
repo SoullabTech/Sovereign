@@ -77,3 +77,24 @@ Evidence directory: `/Users/soullab/jev-pilot-mac-evidence-20261007T095156` (070
 - Real F completion, verification of its artifacts, sealing, the real P-vs-F report, human anchor/floor choices, freeze and admission are not produced by these synthetic tests.
 
 A clean committed-source checkout witness will be added below when observed; the passing working-tree runs above are not mislabeled as that witness.
+
+## Clean committed-source proof — completed on the Mac
+
+Witnessed code commit: `08b86b8c77eadbf132de6c16cc94cf93da0234e6`.
+
+Fresh detached checkout: `/Users/soullab/jev-label-pilot-cleanproof-20261007`. It was created from that exact commit, not populated from the original working tree. All six formerly untracked source files are tracked and match the source-capture SHA-256s. No stand-ins or untracked source were used. The declared local node_modules link is the only external toolchain supply.
+
+The complete suite was run again: strict pilot typecheck exit 0; pilot 48/48; P 14/14; F 13/13; durability/finish 61/61; mutation witness 15/15 named kills with reference green; real HTTP 11/11; real browser 10/10. Final source status was CLEAN.
+
+| Clean-checkout log | SHA-256 |
+|---|---|
+| `clean-typecheck.log` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| `clean-pilot-verify.log` | `86135c9024375d77c85b1ead965315a77dd69da0c4a93dfc3799a7f2fa1ff191` |
+| `clean-P-real-model.log` | `2cb62332afe5ee452a4f92bba61e321489fc4882884ac4903a0529c378f6b982` |
+| `clean-F-real-model.log` | `ee827a54c7f32d60902bc0f41f2236369897d1561e0e84a90af9719386973f62` |
+| `clean-durability.log` | `034b57fe2d865670bad974a65867b11ca64965c8cb46b523ccc07f61fb3e47ff` |
+| `clean-mutations.log` | `b7c0f33ab1f6915fad4d8430964ec33362f110b8fc477edcb8622a3ac2905076` |
+| `clean-HTTP-real-model.log` | `fa28559715b0a57c7c5ec3e7086f2100c8e31db28ce92c1bba45f41eac7c9499` |
+| `clean-browser-readiness.log` | `42baffb861ad3e2bf24a443ee9eb50f04f197cac337af4b20461f17c73963fb5` |
+
+The proof closes the clean-source/dependency and stand-in witness gaps for this candidate. It does not retroactively establish historical P/F runtime provenance, diagnose the earlier loss, or authorize a real relabel/seal.
