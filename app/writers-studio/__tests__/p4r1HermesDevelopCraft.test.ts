@@ -11,6 +11,7 @@ describe('R8H Hermes Develop Craft canvas', () => {
   const developController = read('app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx');
   const craftController = read('app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx');
   const canvas = read('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
+  const hermes = read('app/dev/writers-studio-pc3-live/HermesCraftPanel.tsx');
   const manuscript = read('app/writers-studio/canvas/WholeManuscriptSurface.tsx');
   const marks = read('app/dev/writers-studio-pc3-live/RevisionManuscriptLayer.tsx');
   const css = read('app/dev/writers-studio-p4r1/p4r1-live.css');
@@ -63,6 +64,24 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(craftEffect.indexOf('autoCraftKey.current = key')).toBeGreaterThan(craftEffect.indexOf('!sessionPosture.resolved'));
   });
 
+  it('makes Hermes the only visible Craft relationship instead of exposing the editorial dashboard', () => {
+    expect(canvas).toContain("import HermesCraftPanel from './HermesCraftPanel'");
+    expect(canvas).toContain('<HermesCraftPanel');
+    expect(canvas).toContain("props.surfaceMode !== 'develop-craft'\n    && selectionRect");
+    expect(canvas).toContain("const isolatedRoom = props.surfaceMode !== 'develop-craft'");
+    expect(canvas).toContain("props.surfaceMode !== 'develop-craft'\n    && (props.attentionReturnItemId || lineageReturnActive)");
+    expect(hermes).toContain('Hermes · with MAIA');
+    expect(hermes).toContain('What you discovered comes with you.');
+    expect(hermes).toContain('Another way');
+    expect(hermes).toContain('Lighter');
+    expect(hermes).toContain('More embodied');
+    expect(hermes).toContain('Teach me');
+    expect(hermes).toContain('Go deeper');
+    expect(hermes).toContain('Tell Hermes what you want the writing to do');
+    expect(hermes).not.toContain('RevisionDesk');
+    expect(hermes).not.toContain('More editorial controls');
+  });
+
   it('docks the Craftsman relationship beside the manuscript instead of floating over it', () => {
     expect(canvas).toContain("const craftEditorialInShell = props.surfaceMode === 'develop-craft' && editorial");
     expect(canvas).toContain('maia={shellMaia}');
@@ -83,7 +102,7 @@ describe('R8H Hermes Develop Craft canvas', () => {
 
   it('provides Markup and Preview as two views of the same chosen revision state', () => {
     expect(canvas).toContain("useState<'markup' | 'preview'>('markup')");
-    expect(canvas).toContain('Editor’s eye ↔ Reader’s eye');
+    expect(canvas).toContain('Work directly in the writing');
     expect(canvas).toContain('Markup');
     expect(canvas).toContain('Preview');
     expect(canvas).toContain("props.suggestedVersion?.author === 'member'");
@@ -109,7 +128,8 @@ describe('R8H Hermes Develop Craft canvas', () => {
   });
 
   it('keeps Apply as the mutation boundary', () => {
-    expect(canvas).toContain('Nothing changes until Apply.');
+    expect(canvas).toContain('Nothing changes until you choose to apply your version.');
+    expect(hermes).toContain('Apply my version');
     expect(canvas).toContain('onApply={props.onApply}');
     expect(marks).toContain('Save these as my version');
   });
