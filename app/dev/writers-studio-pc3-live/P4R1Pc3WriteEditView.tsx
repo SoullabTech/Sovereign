@@ -27,6 +27,8 @@ import ObservationManuscriptLayer from './ObservationManuscriptLayer';
 import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscriptLayer';
 import EditorialDancePanel from './EditorialDancePanel';
 import HermesCraftPanel from './HermesCraftPanel';
+import CraftsmansTableR1 from './CraftsmansTableR1';
+import MaiaCraftCompanionR1 from './MaiaCraftCompanionR1';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
@@ -1008,12 +1010,29 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : exactRoom;
 
+  /* Craftsman's Table R1 — Develop Craft no longer reuses the Write room or
+     fixed revision overlays. The current chapter remains visible, the exact
+     held locus is stable, and all edit choices are rendered in manuscript flow. */
+  const craftR1Surface = props.surfaceMode === 'develop-craft' ? (
+    <CraftsmansTableR1
+      sections={proseSections}
+      bodyOf={props.writing.bodyOf}
+      held={props.held}
+      thread={props.editorialThread}
+      version={proposalMarkable && props.suggestedVersion ? props.suggestedVersion : null}
+      busy={busy}
+      onSend={props.onSendEditorial}
+      onSaveMember={props.onSaveMember}
+      onApply={props.onApply}
+      appliedVersionId={props.appliedVersionId}
+      onUndo={props.onUndo}
+    />
+  ) : null;
+
   const lineageReturnActive = Boolean(
     props.lineageReturnChapterId && props.lineageReturnCandidateId,
   );
-  const workSurface = props.surfaceMode !== 'develop-craft'
-    && (props.attentionReturnItemId || lineageReturnActive)
-    && !canvas ? (
+  const legacyWorkSurface = (props.attentionReturnItemId || lineageReturnActive) && !canvas ? (
     <div
       className="p4r1-attention-write-return"
       data-attention-return={props.attentionReturnItemId ?? undefined}
@@ -1044,16 +1063,32 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : baseWorkSurface;
 
-  /* R8K — Develop Craft is a true three-region room. The editorial relationship
-     belongs in Shell's MAIA region, where it takes layout space beside the
-     manuscript. Rendering the same card as a fixed overlay makes manuscript
-     prose and craft controls occupy the same pixels. */
-  const craftEditorialInShell = props.surfaceMode === 'develop-craft' && editorial
-    ? editorial
-    : null;
-  const shellMaia = craftEditorialInShell
-    ?? (railSelectionId || workConversationOpen ? writeMaia : undefined);
-  const shellHasCraftEditorial = craftEditorialInShell !== null;
+  const workSurface = props.surfaceMode === 'develop-craft'
+    ? craftR1Surface
+    : legacyWorkSurface;
+
+  const craftR1Maia = props.surfaceMode === 'develop-craft' ? (
+    <MaiaCraftCompanionR1
+      title={props.context.sections.find((s) => s.draftSectionId === props.held?.draftSectionId)?.heading
+        ?? props.context.sections.find((s) => s.draftSectionId === props.focusId)?.heading
+        ?? 'Selected passage'}
+      thread={props.editorialThread}
+      version={proposalMarkable && props.suggestedVersion ? props.suggestedVersion : null}
+      lastMaiaTurn={props.lastMaiaEditorialTurn}
+      busy={busy}
+      message={editorialMessage}
+      sessionPosture={props.sessionPosture}
+      onChooseSessionPosture={props.onChooseSessionPosture}
+      onSend={props.onSendEditorial}
+      onDepth={props.onDepth}
+      onReturn={() => props.onMode('develop')}
+    />
+  ) : null;
+
+  const shellMaia = props.surfaceMode === 'develop-craft'
+    ? craftR1Maia
+    : (railSelectionId || workConversationOpen ? writeMaia : undefined);
+  const shellHasCraftEditorial = props.surfaceMode === 'develop-craft' && craftR1Maia !== null;
 
   const isolatedRoom = props.surfaceMode !== 'develop-craft'
     && props.workspaceOpen
@@ -1175,7 +1210,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
       {isolatedRoom}
 
-      {mounted && !canvas && !isolatedEditorial ? (
+      {props.surfaceMode !== 'develop-craft' && mounted && !canvas && !isolatedEditorial ? (
         <>
           {props.carriedInsight && !props.workspaceOpen ? (
             <ObservationManuscriptLayer
