@@ -58,5 +58,492 @@
     "tests/research/rgr_flow/test_reference.py": "9eaaa779bb51215e9de265bc4bb6f4d8ff01ef22e0655c3c80779744659a729a",
     "scripts/research/rgr_flow/reference.py": "ef8b3c8b876f45cc0f00fcfcf127e1cfe0c05f3d45db8c78a595befaa040abae",
     "scripts/research/rgr_flow/feasibility.py": "8c16a388a65534740a40efa0d3b7d3bdf01177d57545a237274fb0b43e2bbbb3"
+  },
+  "result": {
+    "standing": "EVIDENCE_READY_DESIGN_FEASIBILITY_FAILED",
+    "status": "DESIGN_INFEASIBLE_UNDER_FROZEN_BUDGET",
+    "implementation_commit": "f134e19d5b41f08d3cd80fca48c04d64447551d1",
+    "started_at": "2026-10-07T16:07:24.376583+00:00",
+    "ended_at": "2026-10-07T16:09:49.453291+00:00",
+    "roots": {
+      "A": {
+        "status": "ROOT_QUOTAS_MET",
+        "raw_graph_draws": 10566,
+        "valid_candidates": 4345,
+        "unique_roots_seen": 4266,
+        "selected_counts": {
+          "VALIDATION": 250,
+          "TRAIN": 1000,
+          "TEST": 500,
+          "REPLICATION": 500
+        },
+        "required_counts": {
+          "TRAIN": 1000,
+          "VALIDATION": 250,
+          "TEST": 500,
+          "REPLICATION": 500
+        },
+        "rng_counter": 285282,
+        "root_file_sha256": "a3205a9c5c03a38220bfb60a1c9e3b4682273bde0629560128d2b3e55b60f4c7"
+      },
+      "B": {
+        "status": "ROOT_QUOTAS_MET",
+        "raw_graph_draws": 56956,
+        "valid_candidates": 4743,
+        "unique_roots_seen": 4743,
+        "selected_counts": {
+          "TRAIN": 1000,
+          "TEST": 500,
+          "VALIDATION": 250,
+          "REPLICATION": 500
+        },
+        "required_counts": {
+          "TRAIN": 1000,
+          "VALIDATION": 250,
+          "TEST": 500,
+          "REPLICATION": 500
+        },
+        "rng_counter": 1537812,
+        "root_file_sha256": "4c035ab47ca6f60631020319a3e15540f1bbf2589315734f062d58bc62ee21e1"
+      }
+    },
+    "controls": {
+      "A": {
+        "task": "A",
+        "kind": "DIAGNOSTIC_NOT_PREREGISTERED_CHALLENGE_POPULATION",
+        "draws": 12000,
+        "outcome_counts": {
+          "CF-1": {
+            "00": 69,
+            "01": 13,
+            "10": 9,
+            "11": 5
+          },
+          "CF-2": {
+            "00": 9684,
+            "11": 2229,
+            "01": 87
+          },
+          "CF-3": {
+            "00": 69,
+            "01": 12,
+            "10": 11,
+            "11": 4
+          }
+        },
+        "invariance_checks": {
+          "CF-4_pass": 96,
+          "CF-5_pass": 96,
+          "CF-7_pass": 96
+        },
+        "three_way_exact_agreements": 96,
+        "conservation_ticks_checked": 1056,
+        "full_C_N_quotas_checked": false,
+        "no_model_trained": true
+      },
+      "B": {
+        "task": "B",
+        "kind": "DIAGNOSTIC_NOT_PREREGISTERED_CHALLENGE_POPULATION",
+        "draws": 12000,
+        "outcome_counts": {
+          "CF-1": {
+            "00": 77,
+            "10": 9,
+            "01": 7,
+            "11": 3
+          },
+          "CF-2": {
+            "00": 10950,
+            "11": 1035,
+            "01": 15
+          },
+          "CF-3": {
+            "00": 81,
+            "01": 5,
+            "10": 7,
+            "11": 3
+          },
+          "CF-6": {
+            "00": 83,
+            "10": 7,
+            "11": 3,
+            "01": 3
+          }
+        },
+        "invariance_checks": {
+          "CF-4_pass": 96,
+          "CF-5_pass": 96,
+          "CF-7_pass": 96
+        },
+        "three_way_exact_agreements": 96,
+        "conservation_ticks_checked": 1824,
+        "full_C_N_quotas_checked": false,
+        "no_model_trained": true
+      }
+    },
+    "ordinary": {
+      "A": {
+        "task": "A",
+        "status": "INCOMPLETE_OPERATIONAL_CAP",
+        "complete_roots": 622,
+        "required_roots": 2250,
+        "raw_attribute_draws": 400000,
+        "accepted_instances": 12452,
+        "accepted_by_split": {
+          "VALIDATION": 1752,
+          "TRAIN": 7100,
+          "TEST": 2180,
+          "REPLICATION": 1420
+        },
+        "elapsed_seconds": 63.773,
+        "operational_seconds_cap": 120,
+        "operational_total_draw_cap": 400000,
+        "frozen_per_root_draw_cap": 100000,
+        "stopping_root": {
+          "root": "A0001111000000001010000000000000000000000001010000110000000000000",
+          "split": "VALIDATION",
+          "raw_draws": 3709,
+          "raw_labels": {
+            "0": 3707,
+            "1": 2
+          },
+          "kept": {
+            "0": 10,
+            "1": 2
+          },
+          "duplicate_rejections": 0,
+          "attributes_counter": 37090,
+          "carrier_counter": 3709,
+          "pulse_counter": 3709
+        },
+        "retained_prefix_not_training_authority": true
+      },
+      "B": {
+        "task": "B",
+        "status": "DESIGN_INFEASIBLE_UNDER_FROZEN_BUDGET",
+        "complete_roots": 34,
+        "required_roots": 2250,
+        "raw_attribute_draws": 197205,
+        "accepted_instances": 696,
+        "accepted_by_split": {
+          "TRAIN": 376,
+          "TEST": 120,
+          "VALIDATION": 160,
+          "REPLICATION": 40
+        },
+        "elapsed_seconds": 60.4,
+        "operational_seconds_cap": 120,
+        "operational_total_draw_cap": 400000,
+        "frozen_per_root_draw_cap": 100000,
+        "stopping_root": {
+          "root": "B00000110000000010000100101001010010000000001000000000000000000000000000000001000100000000010000000000010000000001001010001100100",
+          "split": "TRAIN",
+          "raw_draws": 100000,
+          "raw_labels": {
+            "0": 99994,
+            "1": 6
+          },
+          "kept": {
+            "0": 10,
+            "1": 6
+          },
+          "duplicate_rejections": 0,
+          "attributes_counter": 2000000,
+          "carrier_counter": 100000,
+          "pulse_counter": 100000
+        },
+        "retained_prefix_not_training_authority": true
+      }
+    },
+    "failing_root_replay": {
+      "draws": 100000,
+      "label_counts": [
+        99994,
+        6
+      ],
+      "three_way_cross_checks": 108,
+      "all_six_positives_cross_checked": true,
+      "raw_root_record": {
+        "encounter": 34,
+        "raw_graph_draw": 450,
+        "root": "B00000110000000010000100101001010010000000001000000000000000000000000000000001000100000000010000000000010000000001001010001100100",
+        "split": "TRAIN",
+        "world": {
+          "carrier": 0,
+          "n": 8,
+          "outbound": [
+            [
+              0,
+              1,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              0,
+              4,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              1,
+              3,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              2,
+              5,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              2,
+              7,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              3,
+              4,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              3,
+              5,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              3,
+              6,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              5,
+              6,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              6,
+              7,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ]
+          ],
+          "pulse": 0,
+          "returning": [
+            [
+              2,
+              0,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              3,
+              2,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              4,
+              0,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              4,
+              1,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              4,
+              3,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              5,
+              4,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              6,
+              5,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              7,
+              1,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              7,
+              2,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ],
+            [
+              7,
+              6,
+              "1",
+              "1",
+              "1",
+              "0",
+              "1"
+            ]
+          ],
+          "sink": 7,
+          "source": 0,
+          "task": "B"
+        }
+      }
+    },
+    "hand_constructed_rhythm_certificates": [
+      {
+        "task": "A",
+        "kind": "HAND_CONSTRUCTED_EXISTENCE_CERTIFICATE_NOT_SAMPLED_QUOTA_DATA",
+        "qualified_graph": true,
+        "P4": "7/10",
+        "P5": "2/5",
+        "labels": "10",
+        "root_key": "A0000111100000000000000010010000000000010001100000100000000000000",
+        "three_exact_methods_agree": true,
+        "inserted_into_generated_population": false
+      },
+      {
+        "task": "B",
+        "kind": "HAND_CONSTRUCTED_EXISTENCE_CERTIFICATE_NOT_SAMPLED_QUOTA_DATA",
+        "qualified_graph": true,
+        "P4": "9/20",
+        "P5": "3/20",
+        "labels": "10",
+        "root_key": "B00000111000000010000100000100010010000000001001000000000000000000000000000001000000100000000010000100000000000001100000011001010",
+        "three_exact_methods_agree": true,
+        "inserted_into_generated_population": false
+      }
+    ],
+    "unit_test_cases_passed": 27,
+    "full_preregistered_C_N_quotas_completed": false,
+    "neural_training": false,
+    "member_data": false,
+    "MAIA_integration": false,
+    "merge": false,
+    "deploy": false,
+    "evidence_directory": "/Users/soullab/.maia-evidence/rgr-05b-reference-feasibility-run-20261007-v1",
+    "evidence_index": {
+      "ordinary-feasibility-B.json": {
+        "bytes": 16931,
+        "sha256": "eb52267052c4f66690265606b9416b007cdcd3d1edb3f6ea60b41d5bb93746fc"
+      },
+      "roots-A.json": {
+        "bytes": 1102452,
+        "sha256": "a3205a9c5c03a38220bfb60a1c9e3b4682273bde0629560128d2b3e55b60f4c7"
+      },
+      "ordinary-prefix-A.jsonl": {
+        "bytes": 7568553,
+        "sha256": "b1a91ebb157d509b8d30138ea251dfe67715f73975fb58f7cde472ae077b656a"
+      },
+      "control-probe-A.json": {
+        "bytes": 6124,
+        "sha256": "7888973b793739bfddd702f5bfdb5ccc2d50a84949ddd1de2fed4e8f8186c7f6"
+      },
+      "ordinary-prefix-B.jsonl": {
+        "bytes": 683110,
+        "sha256": "2d64ded5d9e4463b1e2cb63776cd974feedd2e501952aa1f16b1281c76dfaff6"
+      },
+      "analytic_rhythm_witnesses.json": {
+        "bytes": 4786,
+        "sha256": "9de78041c17b21a7ca177c019f287025cc88c4d3cd795f6c33bdc97d9adfb20c"
+      },
+      "feasibility.json": {
+        "bytes": 329031,
+        "sha256": "913179eabf7b7102dcae5d3f5c059064e6c82bb919e0560ef34dac1c5adf52e1"
+      },
+      "manifest.json": {
+        "bytes": 1394,
+        "sha256": "3357570caaa08b55fa5b9ada102b9813975e0c86873605bab96280c8d8b595dd"
+      },
+      "failure-replay-B.json": {
+        "bytes": 24945,
+        "sha256": "0c45ee2777440feb2d2c8f669ec369e68a9637d8099f19ed290bf4f114fc3efe"
+      },
+      "control-probe-B.json": {
+        "bytes": 10781,
+        "sha256": "2821d29dac080221dbf34179e0d3e810f41fb0f521cb22ea8b8408b690b400dd"
+      },
+      "roots-B.json": {
+        "bytes": 1830982,
+        "sha256": "4c035ab47ca6f60631020319a3e15540f1bbf2589315734f062d58bc62ee21e1"
+      },
+      "ordinary-feasibility-A.json": {
+        "bytes": 243418,
+        "sha256": "cb01891e01d3c999b4e3d4a1299c7f54193364a5f694c6503aad10afda94594b"
+      }
+    },
+    "interpretation": "Failure of this recorded R1 deterministic sampler under its frozen per-root draw cap, not impossibility for every possible seed or transport system. Task A remained incomplete under a smaller operational cap. Both target rhythm orientations have valid existence examples; full conditional sampling quotas are unverified."
   }
 }
