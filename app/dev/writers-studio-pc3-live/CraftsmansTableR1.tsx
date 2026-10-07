@@ -349,7 +349,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     return () => window.cancelAnimationFrame(frame);
   }, [props.held?.draftSectionId, props.held?.start, props.held?.end]);
 
-  const keepOriginal = (word: string): CraftCanvasReceipt => {
+  const keepOriginal = (word: string, action: 'keep' | 'restore' = 'keep'): CraftCanvasReceipt => {
     if (!canonicalAligned || props.busy || saving || customEditId !== null) return announce({ ok: false,
       message: 'Finish the current wording action before settling this choice. Nothing was applied.' });
     const span = locateUniquePresentationPassage(original, word);
@@ -363,12 +363,17 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     const text = Array.from(original).slice(span.start, span.end).join('');
     const settled = { ...span, text };
     setWriterHasActed(true);
-    setManualText(composeCraftWorkingCopy(original, currentEdits, nextDecisions));
+    const restoredText = composeCraftWorkingCopy(original, currentEdits, nextDecisions);
+    setManualText(restoredText);
     setManualFromVersionId(candidateVersion?.id ?? null);
     setDirectEditing(false);
     setActiveEditId(null);
     setKept(current => [...current.filter(k => k.start !== span.start || k.end !== span.end), settled]);
-    return announce({ ok: true, settled, message: `“${text}” kept for this pass. Manuscript unchanged.` });
+    return announce({ ok: true, settled, message: action === 'restore'
+      ? restoredText !== workingText
+        ? `“${text}” restored in your working copy and kept for this pass. Not applied to the manuscript.`
+        : `“${text}” is already in your working copy; kept for this pass. Manuscript unchanged.`
+      : `“${text}” kept for this pass. Manuscript unchanged.` });
   };
 
   const replaceWorking = (from: string, to: string): CraftCanvasReceipt => {

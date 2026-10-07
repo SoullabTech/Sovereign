@@ -1134,7 +1134,8 @@ export default function FlagshipWriteEditController({
           pendingCraftContinuation.current = { text, options: { ...options, skipCanvasCommands: true, suppressWriterEcho: true } };
           setCraftContinuationTick(n => n + 1);
         }
-      } else if (command.kind === 'replace') port.replaceWorking(command.from, command.to);
+      } else if (command.kind === 'restore') port.keepOriginal(command.word, 'restore');
+      else if (command.kind === 'replace') port.replaceWorking(command.from, command.to);
       else if (command.kind === 'view') port.setView(command.view);
       else if (command.kind === 'stay') receiveCraftReceipt({ ok: true, message: 'Staying with this passage. No wording changed.' });
       else {

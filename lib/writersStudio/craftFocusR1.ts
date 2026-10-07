@@ -44,7 +44,7 @@ export interface CraftCanvasReceipt {
 }
 export interface CraftTablePort {
   snapshot: () => CraftTableSnapshot | null;
-  keepOriginal: (word: string) => CraftCanvasReceipt;
+  keepOriginal: (word: string, action?: 'keep' | 'restore') => CraftCanvasReceipt;
   replaceWorking: (from: string, to: string) => CraftCanvasReceipt;
   setView: (view: 'markup' | 'preview') => CraftCanvasReceipt;
 }
@@ -150,6 +150,7 @@ export function adjacentCraftTarget(
 
 export type CraftCanvasCommand =
   | { kind: 'keep'; word: string; remainder: string }
+  | { kind: 'restore'; word: string }
   | { kind: 'replace'; from: string; to: string }
   | { kind: 'focus'; name: string }
   | { kind: 'step'; direction: 'previous' | 'next'; unit: 'passage' | 'section' }
@@ -160,6 +161,19 @@ export type CraftCanvasCommand =
  * internal prompt. Apply/Save are intentionally absent from this vocabulary. */
 export function parseCraftCanvasCommand(request: string): CraftCanvasCommand | null {
   const text = request.trim().replace(/^please\s+/iu, '');
+  // Restoring named original words is the same bounded writer-owned operation
+  // as Keep mine, not permission for a fresh AI proposal. Bare yes/it/that,
+  // questions, future conditions and additional operations are not commands.
+  const restoreText = text.replace(/^yes(?:,\s*|\s+)/iu, '').replace(/^please\s+/iu, '');
+  const namedWords = String.raw`(?:"([^"\n]{1,160})"|“([^”\n]{1,160})”|'([^'\n]{1,160})'|‘([^’\n]{1,160})’|([\p{L}\p{M}\p{N}_]+(?:[-’'][\p{L}\p{M}\p{N}_]+)*))`;
+  const restoreEnd = String.raw`(?:\s+in\s+(?:my|the)\s+working\s+copy)?(?:\s+and\s+leave\s+(?:the\s+)?rest\s+as\s+it\s+is)?[.!]?$`;
+  const restore = new RegExp(String.raw`^put\s+${namedWords}\s+back${restoreEnd}`, 'iu').exec(restoreText)
+    ?? new RegExp(String.raw`^restore\s+${namedWords}${restoreEnd}`, 'iu').exec(restoreText);
+  if (restore) {
+    const word = restore.slice(1).find(value => value !== undefined)?.trim();
+    if (!word || (restore[5] !== undefined && /^(?:it|this|that|them|everything|all)$/iu.test(word))) return null;
+    return { kind: 'restore', word };
+  }
   const keep = /^keep\s+[“"']([^”"'\n]{1,160})[”"'](?:\s+(?:and\s+)?(?:treat\s+(?:that|this)\s+choice\s+as\s+settled\s+for\s+this\s+pass|settle\s+(?:it|this)(?:\s+for\s+this\s+pass)?))?[.!]?\s*/iu.exec(text);
   if (keep) {
     const suffix = text.slice(keep[0].length).trim();
