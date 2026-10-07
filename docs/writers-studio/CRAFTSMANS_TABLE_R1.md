@@ -187,6 +187,33 @@ Natural-language requests may invoke any capability:
 
 The writer should not have to translate intention into product commands.
 
+## 8. Suggestion posture and writer-owned synthesis
+
+MAIA's ability to bring wording proactively is governed by the writer's own Studio setting.
+
+### Wait-first
+If proactive suggestions are off:
+- MAIA discusses, reflects, teaches, and asks;
+- wording appears only when the writer explicitly requests it.
+
+### Suggest-first
+If proactive suggestions are on:
+- MAIA may place a bounded provisional suggestion directly on the table when useful;
+- the suggestion is still a primer, never an answer and never an application.
+
+### Three lawful writer responses
+A MAIA suggestion may become raw material in three ways:
+
+1. **Primer** — the writer sees the move and writes something different.
+2. **Edit MAIA** — the writer directly changes MAIA's suggested wording.
+3. **Hybrid** — the writer combines original language, selected MAIA moves, and new language of their own.
+
+All three produce one **writer-owned working copy**.
+
+From that point forward, MAIA must treat the writer-owned working copy as the current authority. She may help refine it, compare it, or suggest bounded alternatives, but she may not silently restore her earlier proposal.
+
+This is the interaction model established in the Elemental Alchemy case study: MAIA offers material; the writer authors the synthesis; MAIA then helps integrate and refine the writer's actual version.
+
 ## 8. Full capability set — available, not permanently displayed
 
 ### Understand
