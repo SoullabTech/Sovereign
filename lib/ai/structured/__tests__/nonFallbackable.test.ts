@@ -9,6 +9,7 @@
  */
 
 import type { StructuredProvider, StructuredRequest } from '../types';
+import { StructuredDispatchError } from '../dispatch';
 
 const execute = jest.fn();
 jest.mock('../anthropicStructuredAdapter', () => ({
@@ -63,6 +64,15 @@ describe('primary: executed exactly, and never fallen back from', () => {
       ok: false, refusal: 'provider_unavailable', detail: '529 overloaded', dispatch: 'unknown',
     });
     expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports insufficient API credits without retrying or switching providers', async () => {
+    const error = Object.assign(new Error('Your credit balance is too low to access the Anthropic API.'), { status: 400 });
+    execute.mockRejectedValue(new StructuredDispatchError('response_observed', error));
+    const result = await withMode('primary', () => runStructured(req));
+    expect(result).toMatchObject({ ok: false, refusal: 'provider_billing_required', dispatch: 'response_observed' });
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect('result' in result).toBe(false);
   });
 
   it('refuses rather than returning a degraded or templated answer', async () => {

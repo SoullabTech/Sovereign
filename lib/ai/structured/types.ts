@@ -157,6 +157,8 @@ export type StructuredRefusal =
   | 'structured_inference_unavailable'
   /** The authorized provider failed. NOT a cue to try something else. */
   | 'provider_unavailable'
+  /** Provider explicitly reported insufficient API credit. Never retry or change providers automatically. */
+  | 'provider_billing_required'
   /**
    * The deployment's inference mode is not a mode. Refused rather than defaulted,
    * because defaulting a typo would silently pick the most permissive policy and

@@ -6029,3 +6029,115 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
 .p4r1-root .p4r1-craft-focus-references p { margin: 6px 0 9px; font: 14px/1.55 var(--fr-serif-stack); }
 .p4r1-root .p4r1-maia-craft-r1-turn[data-speaker='action'] { border-left: 2px solid var(--fr-action); padding: 7px 10px; margin: 10px 0; background: var(--fr-action-soft); }
 .p4r1-root .p4r1-maia-craft-r1-turn[data-speaker='action'] p { font: 12px/1.5 var(--fr-sans-stack); color: var(--fr-ink); margin-top: 4px; }
+
+/* R1 focus typography: selecting attention must not turn prose into PDF lines.
+   The bracket indicates scope; only actual del/ins nodes indicate edits. */
+.p4r1-root .p4r1-craft-r1 {
+  container-type: inline-size;
+  container-name: craft-table;
+}
+.p4r1-root .p4r1-craft-r1-workrow[data-editorial-margin='false'] {
+  grid-template-columns: minmax(0, 720px);
+}
+.p4r1-root .p4r1-craft-r1-active-paragraph {
+  position: relative;
+  margin: 1.05em 0;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  font-size: inherit;
+  line-height: inherit;
+}
+.p4r1-root .p4r1-craft-r1-active-paragraph[data-prose-reflow='true'] {
+  white-space: normal;
+}
+.p4r1-root [data-craft-focus-bracket]::before {
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  border-left: 2px solid #b54b4b;
+  border-top: 2px solid #b54b4b;
+  border-bottom: 2px solid #b54b4b;
+  border-radius: 2px 0 0 2px;
+  pointer-events: none;
+}
+.p4r1-root .p4r1-craft-r1-locus,
+.p4r1-root .p4r1-craft-r1-held,
+.p4r1-root .p4r1-craft-r1-preview {
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
+  box-decoration-break: slice;
+  -webkit-box-decoration-break: slice;
+}
+.p4r1-root .p4r1-craft-r1-paragraph-break {
+  display: block;
+  height: 1.02em;
+  line-height: 0;
+  font-size: inherit;
+  color: transparent;
+  overflow: hidden;
+  white-space: normal;
+  pointer-events: none;
+}
+.p4r1-root .p4r1-craft-r1-focus-actions {
+  margin: 12px 0 1.35em;
+  padding: 10px 0;
+  border-top: 1px solid var(--fr-line-soft);
+  border-bottom: 1px solid var(--fr-line-soft);
+  font: 12px/1.5 var(--fr-sans-stack);
+  color: var(--fr-muted);
+}
+.p4r1-root .p4r1-craft-r1-focus-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 7px;
+}
+.p4r1-root .p4r1-craft-r1-focus-actions button {
+  border: 1px solid var(--fr-line);
+  border-radius: 999px;
+  background: var(--fr-field);
+  color: var(--fr-title);
+  padding: 7px 12px;
+  font: 600 12px/1.25 var(--fr-sans-stack);
+  cursor: pointer;
+}
+.p4r1-root .p4r1-craft-r1-focus-actions button:first-child {
+  border-color: var(--fr-action-line);
+  color: var(--fr-action);
+}
+.p4r1-root .p4r1-craft-r1-focus-actions button:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+@container craft-table (max-width: 1140px) {
+  .p4r1-root .p4r1-craft-r1-scroll { padding: 28px 12px 100px; }
+  .p4r1-root .p4r1-craft-r1-page {
+    width: calc(100% - 4px);
+    padding: 30px 28px 76px;
+  }
+  .p4r1-root .p4r1-craft-r1-workrow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .p4r1-root .p4r1-craft-r1-margin {
+    position: static;
+    width: 100%;
+    margin: 0;
+  }
+}
+
+/* Service failure is an actionable notice, never a cryptic status token. */
+.p4r1-root .p4r1-maia-craft-r1-failure {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-left: 2px solid var(--fr-action);
+  border-radius: 0 6px 6px 0;
+  background: var(--fr-action-soft);
+  color: var(--fr-ink);
+  font: 13px/1.6 var(--fr-sans-stack);
+}

@@ -37,6 +37,7 @@
 import type { InferenceMode } from '../types';
 import { resolveStructuredMode } from './policy';
 import { dispatchOf } from './dispatch';
+import { originalStructuredError, structuredProviderRefusal } from './providerFailure';
 import { ollamaStructuredProvider } from './ollamaStructuredAdapter';
 import type {
   StructuredOutcome, StructuredProvider, StructuredRequest,
@@ -133,32 +134,22 @@ async function execute(
   try {
     return { ok: true, result: await provider.execute(req) };
   } catch (err) {
-    /* ⭐ CLASSIFY, SERVER-SIDE ONLY. `provider_unavailable` covers four
-     * different worlds — a key that never resolved, a socket that never
-     * opened, a provider that refused, a tool contract that was rejected —
-     * and callers upstream keep only the refusal word, so from outside they
-     * are indistinguishable. This names the world without changing routing,
-     * authorization, fallback, or what is returned.
-     *
-     * ⛔⛔ THE MESSAGE IS LOGGED ONLY WHEN THE REQUEST NEVER REACHED THE WIRE.
-     * A pre-flight throw (no `status`) cannot carry provider output and cannot
-     * echo the request, so its message is safe and is the only thing that
-     * distinguishes, say, an unresolved credential from a bad base URL. Once a
-     * status exists the request DID go up, and a provider's error body may
-     * quote the field that offended it — which on this path is a tool schema
-     * carrying the writer's own sentence. So after the wire: shape only. */
-    const e = err as { name?: unknown; status?: unknown; code?: unknown;
-      cause?: { code?: unknown }; error?: { type?: unknown } };
-    const reachedWire = typeof e.status === 'number';
+    // The dispatch wrapper retains the original HTTP error. Read its shape,
+    // not the wrapper's missing status; never log provider response prose.
+    const original = originalStructuredError(err);
+    const e = (original && typeof original === 'object' ? original : {}) as {
+      name?: unknown; status?: unknown; code?: unknown;
+      cause?: { code?: unknown }; error?: { type?: unknown };
+    };
+    const refusal = structuredProviderRefusal(err);
     console.error('[structured] provider_unavailable', {
+      refusal,
       name: typeof e.name === 'string' ? e.name : 'unknown',
-      status: reachedWire ? e.status : null,
+      status: typeof e.status === 'number' ? e.status : null,
       providerErrorType: typeof e.error?.type === 'string' ? e.error.type : null,
       code: (typeof e.code === 'string' ? e.code : null)
         ?? (typeof e.cause?.code === 'string' ? e.cause.code : null),
-      ...(reachedWire ? {} : {
-        preflightMessage: err instanceof Error ? err.message : String(err),
-      }),
+      dispatch: dispatchOf(err),
     });
 
     /* THE FAILURE STOPS HERE. No second provider, no local text path, no
@@ -166,7 +157,7 @@ async function execute(
        was not served. */
     return {
       ok: false,
-      refusal: 'provider_unavailable',
+      refusal,
       detail: err instanceof Error ? err.message : String(err),
       /* ⭐ THE ONE FACT ADDED HERE, and the reason this seam changed at all: a
          disclosure receipt must distinguish a request that demonstrably arrived

@@ -19,6 +19,8 @@ import { professionalMarkFor } from '@/lib/writersStudio/craftProfessionalMarks'
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import { typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 import type { CraftSendOptions } from '@/lib/writersStudio/craftDialogueR1';
+import { splitActiveParagraph, craftProseBlocks, craftProseBreaks, craftTypographyChunks, craftInsertedBreaks, type CraftProseBreak } from '@/lib/writersStudio/craftProseLayoutR1';
+import type { WriteBlock } from '@/app/writers-studio/full-redesign/WriteRoom';
 import { craftTargetKey, type CraftTableSnapshot, type CraftTablePort, type CraftKeptSpan, type CraftCanvasReceipt } from '@/lib/writersStudio/craftFocusR1';
 import { locateUniquePresentationPassage } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 
@@ -69,9 +71,9 @@ function visibleBlockText(text: string): string {
   return wrapped ? wrapped[2]!.trim() : trimmed;
 }
 
-function CraftContextBlocks({ text, muted = false }: { text: string; muted?: boolean }) {
-  if (!text.trim()) return null;
-  const blocks = typesetProseBlocks(text);
+function CraftContextBlocks({ text = '', blocks: suppliedBlocks, muted = false }: { text?: string; blocks?: readonly WriteBlock[]; muted?: boolean }) {
+  if (!text.trim() && !suppliedBlocks?.length) return null;
+  const blocks = suppliedBlocks ?? typesetProseBlocks(text);
   return (
     <div className={muted ? 'p4r1-craft-r1-context p4r1-craft-r1-context-muted' : 'p4r1-craft-r1-context'}>
       {blocks.map((block, index) => {
@@ -96,21 +98,12 @@ function CraftContextBlocks({ text, muted = false }: { text: string; muted?: boo
   );
 }
 
-function splitActiveParagraph(before: string, after: string) {
-  const breaks = /\n[ \t]*\n+/g;
-  let prefixStart = 0;
-  for (const match of before.matchAll(breaks)) {
-    prefixStart = (match.index ?? 0) + match[0].length;
-  }
-  const next = /\n[ \t]*\n+/.exec(after);
-  const suffixEnd = next?.index ?? after.length;
-  const trailingStart = next ? suffixEnd + next[0].length : after.length;
-  return {
-    leading: before.slice(0, prefixStart),
-    prefix: before.slice(prefixStart),
-    suffix: after.slice(0, suffixEnd),
-    trailing: after.slice(trailingStart),
-  };
+function CraftTypography({ text, breaks, offset = 0 }: { text: string; breaks: readonly CraftProseBreak[]; offset?: number }) {
+  return <>{craftTypographyChunks(text, breaks, offset).map((chunk, index) =>
+    chunk.paragraphBreak
+      ? <span key={index} className="p4r1-craft-r1-paragraph-break" data-craft-paragraph-break aria-hidden="true">{chunk.text}</span>
+      : <span key={index}>{chunk.text}</span>
+  )}</>;
 }
 
 function compactRationale(text: string | null | undefined): string | null {
@@ -547,7 +540,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
         <div>
           <span className="p4r1-eyebrow">Develop · Craftsman's Table</span>
           <strong>The writing is the workbench.</strong>
-          <small>Red leaves. Blue enters. Nothing changes until your version is applied.</small>
+          <small>Bracket: focused passage. Red strikeouts and blue inserts: proposed edits. Apply remains your choice.</small>
         </div>
         <div className="p4r1-craft-r1-controls">
           <div className="p4r1-craft-r1-view" role="group" aria-label="Craft view">
@@ -597,12 +590,15 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
             }
 
             const points = Array.from(body);
-            const before = points.slice(0, props.held.start).join('');
             const exact = points.slice(props.held.start, props.held.end).join('');
-            const after = points.slice(props.held.end).join('');
             const authoritative = exact === props.held.text;
-            const activeContext = splitActiveParagraph(before, after);
-            const marginRationale = manualText === null ? compactRationale(candidateVersion?.rationale) : null;
+            const activeContext = splitActiveParagraph(body, props.held.start, props.held.end);
+            const openEdits = displayEdits.filter(edit => !kept.some(k => k.start === edit.start && k.end === edit.end && k.text === edit.from));
+            const marginRationale = manualText === null && openEdits.length ? compactRationale(candidateVersion?.rationale) : null;
+            const hasMargin = Boolean(marginRationale || (view === 'markup' && activeEdit));
+            const previewBreaks = workingText === original
+              ? activeContext.breaks : craftProseBreaks(craftProseBlocks(workingText));
+            let sourceOffset = 0;
 
             return (
               <section
@@ -612,11 +608,11 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                 data-craft-section-id={section.draftSectionId}
               >
                 {section.heading?.trim() ? <Heading>{section.heading.trim()}</Heading> : null}
-                <div className="p4r1-craft-r1-workrow">
+                <div className="p4r1-craft-r1-workrow" data-editorial-margin={hasMargin ? 'true' : 'false'}>
                   <div className="p4r1-craft-r1-worktext">
-                    <CraftContextBlocks text={activeContext.leading} muted />
+                    <CraftContextBlocks blocks={activeContext.leadingBlocks} muted />
 
-                    <div className="p4r1-craft-r1-active-paragraph">
+                    <div className="p4r1-craft-r1-active-paragraph" data-craft-focus-bracket data-prose-reflow={activeContext.reflow ? 'true' : 'false'}>
                       {activeContext.prefix}
                       <span
                         ref={locusRef}
@@ -633,18 +629,21 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                             onChange={(event) => setDirectDraft(event.target.value)}
                           />
                         ) : view === 'preview' ? (
-                          <span className="p4r1-craft-r1-preview">{authoritative ? workingText : exact}</span>
+                          <span className="p4r1-craft-r1-preview"><CraftTypography text={authoritative ? workingText : exact} breaks={authoritative ? previewBreaks : activeContext.breaks} /></span>
                         ) : authoritative && displaySegments.length > 0 && displayText !== original ? (
                           displaySegments.map((segment, index) => {
-                            if (segment.kind === 'same') return <span key={index}>{segment.text}</span>;
-                            if (segment.editId === null) return <span key={index}>{segment.text}</span>;
+                            const offset = sourceOffset;
+                            if (segment.kind !== 'ins') sourceOffset += Array.from(segment.text).length;
+                            const typeset = <CraftTypography text={segment.text} breaks={activeContext.breaks} offset={offset} />;
+                            if (segment.kind === 'same') return <span key={index}>{typeset}</span>;
+                            if (segment.editId === null) return <span key={index}>{typeset}</span>;
 
                             const decision = decisionFor(displayDecisions, segment.editId);
                             const chosen = decision.mode !== 'original';
                             const edit = displayEdits.find((candidate) => candidate.id === segment.editId) ?? null;
                             const settled = edit && kept.some(k => k.start === edit.start && k.end === edit.end && k.text === edit.from);
                             if (settled) return segment.kind === 'del'
-                              ? <span key={index} data-craft-settled title="Kept for this pass">{segment.text}</span>
+                              ? <span key={index} data-craft-settled title="Kept for this pass">{typeset}</span>
                               : null;
                             const proof = edit ? professionalMarkFor(edit, displayEdits, decision) : null;
                             const proofMark = notation === 'professional'
@@ -668,9 +667,9 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                               return (
                                 <span key={index} className="p4r1-craft-r1-mark-unit">
                                   {proofMark}
-                                  <del {...common}>{segment.text}</del>
+                                  <del {...common}>{typeset}</del>
                                   {customWithoutInsertion ? (
-                                    <ins {...common} className="p4r1-craft-r1-custom">{decision.text}</ins>
+                                    <ins {...common} className="p4r1-craft-r1-custom"><CraftTypography text={decision.text} breaks={craftInsertedBreaks(decision.text)} /></ins>
                                   ) : null}
                                 </span>
                               );
@@ -684,12 +683,12 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                             return displayed ? (
                               <span key={index} className="p4r1-craft-r1-mark-unit">
                                 {proofMark}
-                                <ins {...common}>{displayed}</ins>
+                                <ins {...common}><CraftTypography text={displayed} breaks={craftInsertedBreaks(displayed)} /></ins>
                               </span>
                             ) : proofMark ? <span key={index}>{proofMark}</span> : null;
                           })
                         ) : (
-                          <span className="p4r1-craft-r1-held">{exact}</span>
+                          <span className="p4r1-craft-r1-held"><CraftTypography text={exact} breaks={activeContext.breaks} /></span>
                         )}
                       </span>
                       {activeContext.suffix}
@@ -705,9 +704,28 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                       </div>
                     ) : null}
 
-                    <CraftContextBlocks text={activeContext.trailing} muted />
+                    {!directEditing ? (
+                      <div className="p4r1-craft-r1-focus-actions" data-craft-focus-actions>
+                        <span>{props.busy ? 'Working with this passage…' : openEdits.length
+                          ? 'Edit marks show proposed or chosen wording. Nothing is applied.'
+                          : hasWriterChange ? 'Your working copy. Not applied to the manuscript.'
+                          : 'Passage selected · no proposed edits yet.'}</span>
+                        <div role="group" aria-label="Work with the focused passage">
+                          <button type="button" disabled={props.busy || !canonicalAligned} onClick={() => props.onSend([
+                            'Use our carried conversation and the writer-owned current working copy.',
+                            'Show one small, useful edit to this exact focused passage directly in the marked copy.',
+                            'Preserve the writer’s voice, meaning, imagery, cadence and settled choices. Explain the move briefly. Do not apply anything.',
+                          ].join('\n'), { proposalPolicy: 'require', proposalRequested: true, displayText: 'Suggest one small edit to this focused passage.' })}>Suggest an edit</button>
+                          <button type="button" disabled={props.busy || !canonicalAligned} onClick={() => props.onSend(
+                            'Discuss this exact focused passage in light of our conversation. What is it doing, and what is the most useful question to consider? Do not draft or change any wording.',
+                            { proposalPolicy: 'reply_only', displayText: 'Discuss this focused passage without changing the wording.' },
+                          )}>Discuss</button>
+                          <button type="button" disabled={props.busy || !canonicalAligned} onClick={() => beginDirectComposition(workingText, candidateVersion?.id ?? null)}>Write here</button>
+                        </div>
+                      </div>
+                    ) : null}
 
-
+                    <CraftContextBlocks blocks={activeContext.trailingBlocks} muted />
 
                     {!authoritative ? (
                       <p className="p4r1-craft-r1-warning" role="status">
@@ -716,18 +734,13 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                     ) : null}
                   </div>
 
-                  <aside className="p4r1-craft-r1-margin" aria-label="Editorial margin">
+                  {hasMargin ? <aside className="p4r1-craft-r1-margin" aria-label="Editorial margin">
                     {marginRationale ? (
                       <div className="p4r1-craft-r1-margin-note">
                         <span>{candidateVersion?.author === 'maia' ? 'MAIA · craft note' : 'Working version'}</span>
                         <p>{marginRationale}</p>
                       </div>
-                    ) : (
-                      <div className="p4r1-craft-r1-margin-guide">
-                        <span>On the table</span>
-                        <p>Red leaves. Blue enters. Click any mark to work with that exact change.</p>
-                      </div>
-                    )}
+                    ) : null}
 
                     {view === 'markup' && activeEdit ? (
                       <div className="p4r1-craft-r1-local" data-craft-local-edit={activeEdit.id}>
@@ -795,7 +808,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                         )}
                       </div>
                     ) : null}
-                  </aside>
+                  </aside> : null}
                 </div>
               </section>
             );

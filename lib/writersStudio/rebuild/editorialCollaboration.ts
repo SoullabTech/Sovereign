@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/http/apiBase';
+import { editorialServiceFailureMessage } from '../editorialServiceFailure';
 import { occurrences } from '@/lib/manuscript/exactText';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
@@ -221,6 +222,8 @@ export async function sendBoundEditorialTurn(
     });
     const body = await res.json().catch(() => null);
     if (!res.ok) {
+      const serviceMessage = editorialServiceFailureMessage(body?.error, body?.detail);
+      if (serviceMessage) return { ok: false, reason: 'turn_refused', detail: serviceMessage };
       /* E1 — Sanctuary is a refusal in the member's terms, never a fault. */
       if (res.status === 409 && body?.error === 'sanctuary_unavailable') {
         return { ok: false, reason: 'sanctuary_unavailable' };

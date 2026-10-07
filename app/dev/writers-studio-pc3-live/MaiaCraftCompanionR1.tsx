@@ -5,6 +5,7 @@ import type {
   RebuildEditorialThread,
   RebuildEditorialVersion,
 } from '@/lib/writersStudio/rebuild/editorialCollaboration';
+import { editorialServiceFailureMessage } from '@/lib/writersStudio/editorialServiceFailure';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { CraftDialogueTurn, CraftSendOptions } from '@/lib/writersStudio/craftDialogueR1';
@@ -161,7 +162,11 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
               </div>
             ) : null}
             {props.readingNotice ? <small role="status" data-craft-reading-coverage>{props.readingNotice}</small> : null}
-            {props.message ? <small role="status">{props.message}</small> : null}
+            {props.message ? (
+              <div className="p4r1-maia-craft-r1-failure" role="alert">
+                {editorialServiceFailureMessage(props.message) ?? props.message}
+              </div>
+            ) : null}
           </div>
 
           <div className="p4r1-maia-craft-r1-compose">
