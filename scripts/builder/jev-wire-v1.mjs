@@ -219,6 +219,7 @@ function validateRecords(records, identity) {
       case 'observed':
         if (!isStr(r.attempt_id) || !reserved.has(r.attempt_id) || observed.has(r.attempt_id) || settled.has(r.attempt_id)) fail('LEDGER_CORRUPT');
         if (!r.observation || typeof r.observation !== 'object' || !isStr(r.response_sha256) || !isStr(r.response_canonical)) fail('LEDGER_CORRUPT');
+        if (!isStr(r.observation.model_returned) || !Number.isSafeInteger(r.observation.billable_input_tokens) || r.observation.billable_input_tokens < 0) fail('LEDGER_CORRUPT');
         observed.add(r.attempt_id);
         break;
       case 'settled':
@@ -239,6 +240,17 @@ function summarize(records) {
   const reserved = records.filter((r) => r.kind === 'reserved');
   const settled = new Map(records.filter((r) => r.kind === 'settled').map((r) => [r.attempt_id, r]));
   let usd = 0; const unresolved = [];
+  // The stop status is DERIVED from the durable outcome itself, never from a separately written halt
+  // record: a process lost between "settled" and "halted" must not re-open dispatch.
+  const stopReasons = [];
+  for (const r of records) {
+    if (r.kind === 'halted') stopReasons.push(r.reason);
+    else if (r.kind === 'settled' && r.outcome !== 'ok') stopReasons.push('OUTCOME_' + r.outcome);
+    else if (r.kind === 'observed') {
+      if (r.observation.model_returned !== QUESTION_TABLE.model) stopReasons.push('MODEL_DRIFT');
+      if (r.observation.billable_input_tokens * BUDGET.usd_per_input_token > BUDGET.reserve_usd) stopReasons.push('UNEXPECTED_USAGE');
+    }
+  }
   for (const r of reserved) {
     const st = settled.get(r.attempt_id);
     if (!st) unresolved.push(r.attempt_id);
@@ -247,7 +259,8 @@ function summarize(records) {
   return {
     attempts: reserved.length,
     usd,
-    halted: records.some((r) => r.kind === 'halted'),
+    halted: stopReasons.length > 0,
+    stop_reasons: stopReasons,
     unresolved,
     used: new Set(reserved.map((r) => r.attempt_id)),
     head: records.length ? records[records.length - 1].hash : null,
@@ -322,7 +335,7 @@ export function parseNativeResponse(raw, questionId) {
   if (typeof model !== 'string' || model === '') return REFUSE('RESPONSE_MODEL_MISSING');
   const usage = raw.usage;
   if (!isPlain(usage) || !sameKeys(usage, S.usage_keys)) return REFUSE('RESPONSE_USAGE_MISSING');
-  if (!S.usage_keys.every((k) => Number.isInteger(usage[k]) && usage[k] >= 0)) return REFUSE('RESPONSE_USAGE_MISSING');
+  if (!S.usage_keys.every((k) => Number.isSafeInteger(usage[k]) && usage[k] >= 0)) return REFUSE('RESPONSE_USAGE_MISSING');
   const answers = raw[S.answers_key];
   if (!isPlain(answers) || !sameKeys(answers, [questionId])) return REFUSE('RESPONSE_ANSWERS_UNEXPECTED');
   const answer = answers[questionId];

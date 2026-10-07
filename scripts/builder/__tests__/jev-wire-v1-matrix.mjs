@@ -42,7 +42,11 @@ const CANDIDATES = [
     ["      writeRecord(records, record);\n      return { ok: true };", "      return { ok: true };"],
     ["  const questionId = plan.body.state.question_id;\n",
      "  try { ledger.append({ kind: 'reserved', attempt_id: attemptId, wire_body_hash: plan.bodyHash, reserve_usd: BUDGET.reserve_usd }); } catch { /* late */ }\n  const questionId = plan.body.state.question_id;\n"]]],
-  ['DC-CROSSING-UNKNOWN-NOT-HALTED', 'W12', [["kind: 'halted', reason: 'CROSSING_UNKNOWN'", "kind: 'noted', reason: 'CROSSING_UNKNOWN'"]]],
+  // the stop itself is now derived from the settled outcome; the explicit halt record is a log entry whose shape W11 pins
+  ['DC-HALT-LOG-RECORD-NOT-WRITTEN', 'W11', [["kind: 'halted', reason: 'CROSSING_UNKNOWN'", "kind: 'noted', reason: 'CROSSING_UNKNOWN'"]]],
+  ['DC-CROSSING-UNKNOWN-NOT-STOPPING', 'W12', [
+    ["kind: 'halted', reason: 'CROSSING_UNKNOWN'", "kind: 'noted', reason: 'CROSSING_UNKNOWN'"],
+    ["    else if (r.kind === 'settled' && r.outcome !== 'ok') stopReasons.push('OUTCOME_' + r.outcome);\n", '']]],
   ['DC-AUTO-RETRY', 'W12', [[
     'raw = await Promise.race([sending, deadline]);',
     'raw = await Promise.race([sending.catch(() => transport.send(plan.bodyJson, { signal: controller.signal })), deadline]);']]],
@@ -51,7 +55,9 @@ const CANDIDATES = [
   ['DC-CAP-120', 'W14', [['max_attempts: 31', 'max_attempts: 120']]],
   ['DC-CEILING-OFF', 'W15', [["      if (s.usd + BUDGET.reserve_usd > BUDGET.ceiling_usd) return 'BUDGET_CEILING';\n", '']]],
   ['DC-DUPLICATE-ATTEMPT-ALLOWED', 'W16', [["      if (s.used.has(attemptId)) return 'ATTEMPT_ALREADY_USED';\n", '']]],
-  ['DC-MODEL-DRIFT-TOLERATED', 'W17', [['parsed.model !== QUESTION_TABLE.model', 'false']]],
+  ['DC-MODEL-DRIFT-TOLERATED', 'W17', [
+    ['parsed.model !== QUESTION_TABLE.model', 'false'],
+    ["      if (r.observation.model_returned !== QUESTION_TABLE.model) stopReasons.push('MODEL_DRIFT');\n", '']]],
   ['DC-OBSERVATION-BECOMES-ADVICE', 'W18', [[
     'provider_confidence_supplied: false,\n  });\n  const cost', 'provider_confidence_supplied: false, answer: parsed.p_yes >= 0.5, confidence: 1,\n  });\n  const cost']]],
   ['DC-ADMISSION-PATH-IMPORTED', 'W19', [[
@@ -62,7 +68,9 @@ const CANDIDATES = [
     "  if (!RESPONSE_SHAPE.witnessed) return refused('RESPONSE_SHAPE_UNWITNESSED');\n", '']]],
   ['DC-RESPONSE-NOT-VALIDATED', 'W22', [[
     "typeof answer.noul !== 'number' || !(answer.noul >= 0 && answer.noul <= 1)", "typeof answer.noul !== 'number'"]]],
-  ['DC-USAGE-ANOMALY-IGNORED', 'W23', [['} else if (cost > BUDGET.reserve_usd) {', '} else if (false) {']]],
+  ['DC-USAGE-ANOMALY-IGNORED', 'W23', [
+    ['} else if (cost > BUDGET.reserve_usd) {', '} else if (false) {'],
+    ["      if (r.observation.billable_input_tokens * BUDGET.usd_per_input_token > BUDGET.reserve_usd) stopReasons.push('UNEXPECTED_USAGE');\n", '']]],
   ['DC-AMBIGUOUS-LEDGER-TAIL-TOLERATED', 'W24', [
     ["const text = readFileSync(path, 'utf8');", "let text = readFileSync(path, 'utf8');"],
     ["    if (text === '' || !text.endsWith('\\n')) fail('LEDGER_CORRUPT');\n", "    if (text === '') fail('LEDGER_CORRUPT');\n    if (!text.endsWith('\\n')) text += '\\n';\n"]]],
@@ -100,6 +108,16 @@ const CANDIDATES = [
   ['DC-BINDING-UNCHECKED', 'W32', [[
     "        if (r.experiment_id !== identity.experiment_id || r.table_hash !== identity.table_hash\n          || r.fixture_list_hash !== identity.fixture_list_hash || r.schema_sha256 !== identity.schema_sha256) {\n          fail('LEDGER_BINDING_MISMATCH');\n        }\n", '']]],
   ['DC-NO-CROSS-PROCESS-LOCK', 'W33', [["fd = openSync(lockPath, 'wx');", "fd = openSync(lockPath, 'a');"]]],
+  // ── restart-safe stop semantics ──
+  ['DC-HALT-ONLY-IF-RECORD-WRITTEN', 'W35', [['halted: stopReasons.length > 0,', "halted: records.some((r) => r.kind === 'halted'),"]]],
+  ['DC-OUTCOME-STOP-NOT-DERIVED', 'W35', [["    else if (r.kind === 'settled' && r.outcome !== 'ok') stopReasons.push('OUTCOME_' + r.outcome);\n", '']]],
+  ['DC-DRIFT-STOP-NOT-DERIVED', 'W35', [["      if (r.observation.model_returned !== QUESTION_TABLE.model) stopReasons.push('MODEL_DRIFT');\n", '']]],
+  ['DC-USAGE-STOP-NOT-DERIVED', 'W35', [["      if (r.observation.billable_input_tokens * BUDGET.usd_per_input_token > BUDGET.reserve_usd) stopReasons.push('UNEXPECTED_USAGE');\n", '']]],
+  ['DC-SETTLEMENT-FAILURE-REPORTED-OK', 'W36', [[
+    "    return Object.freeze({ sent: true, outcome: 'observation_persisted_settlement_incomplete', observation });",
+    "    return Object.freeze({ sent: true, outcome: 'ok', observation });"]]],
+  ['DC-UNSAFE-TOKEN-ACCEPTED', 'W37', [['Number.isSafeInteger(usage[k])', 'Number.isInteger(usage[k])']]],
+  ['DC-UNSAFE-LEDGER-TOKEN-ACCEPTED', 'W37', [['!Number.isSafeInteger(r.observation.billable_input_tokens) || ', '']]],
 ];
 
 function run(edits) {

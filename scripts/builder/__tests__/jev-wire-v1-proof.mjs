@@ -511,5 +511,72 @@ await check('W34-schema-provenance-recorded', () => {
   assert.equal(G.RESPONSE_SHAPE.witnessed, false);
 });
 
+// ── restart-safe stop semantics (Mac review 1d0c76a3): settled-before-halt window; safe integers ────────
+
+const CHILD_STOP = `
+const [url, path, condition] = process.argv.slice(1);
+const W = await import(url);
+const ledger = W.createLedger(path);
+const realAppend = ledger.append;
+ledger.append = (rec) => { const out = realAppend(rec); if (rec.kind === 'settled') process.exit(47); return out; };  // process loss right after the REAL settled write
+const ok = (over = {}) => ({ model: 'jev-1.13.0', usage: { input_tokens: 300, output_tokens: 5 }, answers: { Q_RISK: { type: 'noul', noul: 0.25 } }, ...over });
+const behave = {
+  transport_error: async () => { throw new Error('socket hang up'); },
+  malformed: async () => ({ junk: true }),
+  model_drift: async () => ok({ model: 'jev-9.9.9' }),
+  usage: async () => ok({ usage: { input_tokens: 200000, output_tokens: 1 } }),
+  ok: async () => ok(),
+}[condition];
+await W.runAttempt({ attemptId: 'F01', ledger, transport: { send: behave } });
+`;
+
+await check('W35-stop-survives-process-loss-between-settled-and-halted', async () => {
+  for (const condition of ['transport_error', 'malformed', 'model_drift', 'usage']) {
+    const dir = scratch(); const path = join(dir, 'l.jsonl');
+    W.createLedger(path).initialize();
+    const c = await childRun(CHILD_STOP, [fnVariant.url, path, condition]);
+    assert.equal(c.status, 47, `${condition}: child did not stop at the boundary`);
+    const kinds = W.createLedger(path).read().map((x) => x.kind);
+    assert.equal(kinds.includes('halted'), false, `${condition}: no halt record was written (the window under test)`);
+    assert.ok(kinds.includes('settled'), `${condition}: settled was written`);
+    const t = fakeTransport(() => okResponse());
+    const r = await W.runAttempt({ attemptId: 'F02', ledger: W.createLedger(path), transport: t });
+    assert.equal(r.sent, false, `${condition}: next dispatch was allowed`);
+    assert.equal(r.reason, 'HALTED', condition);
+    assert.equal(t.calls.length, 0);
+  }
+  // control: a clean success interrupted at the same boundary does NOT block (no over-blocking)
+  const dir = scratch(); const path = join(dir, 'l.jsonl');
+  W.createLedger(path).initialize();
+  assert.equal((await childRun(CHILD_STOP, [fnVariant.url, path, 'ok'])).status, 47);
+  const t2 = fakeTransport(() => okResponse());
+  assert.equal((await W.runAttempt({ attemptId: 'F02', ledger: W.createLedger(path), transport: t2 })).outcome, 'ok');
+});
+
+await check('W36-persistence-failure-at-the-settlement-boundary-also-stops', async () => {
+  for (const [label, handler] of [['transport error', () => { throw new Error('x'); }], ['ok', () => okResponse()]]) {
+    const base = newLedger();
+    const failing = { ...base, append: (rec) => { if (rec.kind === 'settled' || rec.kind === 'halted') throw new Error('disk full'); return base.append(rec); } };
+    const r = await W.runAttempt({ attemptId: 'F01', ledger: failing, transport: fakeTransport(handler) });
+    assert.notEqual(r.outcome === 'ok', true, label + ': success reported although settlement was not recorded');
+    const t = fakeTransport(() => okResponse());
+    const next = await W.runAttempt({ attemptId: 'F02', ledger: base, transport: t });
+    assert.equal(next.sent, false, label); assert.equal(t.calls.length, 0, label);
+  }
+});
+
+await check('W37-token-counts-are-nonnegative-safe-integers', () => {
+  const tok = (a, b) => okResponse({ usage: { input_tokens: a, output_tokens: b } });
+  assert.equal(W.parseNativeResponse(tok(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER), 'Q_RISK').ok, true);
+  for (const bad of [2 ** 53, 9007199254740992, -1, 1.5, 1e300]) {
+    assert.equal(W.parseNativeResponse(tok(bad, 1), 'Q_RISK').ok, false, 'input ' + bad);
+    assert.equal(W.parseNativeResponse(tok(1, bad), 'Q_RISK').ok, false, 'output ' + bad);
+  }
+  const l = newLedger();
+  l.append({ kind: 'reserved', attempt_id: 'F01', wire_body_hash: 'h', reserve_usd: 0.005 });
+  assert.throws(() => l.append({ kind: 'observed', attempt_id: 'F01', response_sha256: 'a', response_canonical: '{}',
+    observation: { model_returned: 'jev-1.13.0', billable_input_tokens: 2 ** 53 } }), /LEDGER_CORRUPT/);
+});
+
 console.log(`\n${pass} passed · ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
