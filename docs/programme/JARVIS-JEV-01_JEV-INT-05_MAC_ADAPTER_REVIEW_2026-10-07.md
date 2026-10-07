@@ -20,7 +20,7 @@ No TypeSafe request, external inference, real credential lookup, provider regist
 
 Clean detached checkout before review documentation, installed dependency tree symlinked: Node v22.22.3, TypeScript 5.9.3, tsx 4.21.0, @types/node 25.0.9. Strict **J1** typecheck, not full-application typechecking. Up to three isolated test commands ran concurrently; each used its own temporary data and ephemeral loopback server where applicable.
 
-- Adapter proof: **15/15, three consecutive submitted runs** (all three pass).
+- Adapter proof: **15/15, three independent runs** (all three pass).
 - Adapter matrix: **18/18 caught on named checks**.
 - Checkpoint proof: **16/16 across three runs**; matrix **28/28**.
 - Wire proof/matrix: **37/37 and 49/49**.
