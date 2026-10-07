@@ -111,7 +111,7 @@
       "authorized_core_snapshot": "Benchmark constitution/design only; no materialization or execution authority."
     }
   },
-  "standing": "OPEN_BY_FOUNDER_AUTHORIZATION",
+  "standing": "R1_DESIGN_ACCEPTED_BY_FOUNDER_REFERENCE_FEASIBILITY_AUTHORIZED",
   "execution_note": "RGR-05B designs the benchmark only. Materialization, model training, benchmark execution, MAIA integration, member data, schema/migration, and deployment remain unauthorized.",
   "repair_r1": {
     "version": "R1",
@@ -597,5 +597,24 @@
         }
       ]
     }
+  },
+  "founder_design_adjudication": {
+    "record_version": "RGR-05B-FOUNDER-ACT-1",
+    "recorded_at": "2026-10-07T15:51:35.656478+00:00",
+    "accepted_design_commit": "f6f9c7cb02bfa47a36cc4b143b66a99f1d441ebf",
+    "accepted_document_sha256": "16df2b04c769e94adff6147c81177c9698a5d6a1878b29920181aeb36fde1567",
+    "accepted_contract_sha256": "1f3d376d5b360817bfd441b160fcfbb894aeb9104ea09619da1540ff72e14d92",
+    "act_verbatim": "Accept RGR-05B-R1 at design commit `f6f9c7cb02bfa47a36cc4b143b66a99f1d441ebf`. Authorize bounded reference-generator implementation and feasibility testing only. Preserve all frozen thresholds, controls, and failure conditions. Neural training, member data, MAIA integration, merging, and deployment remain unauthorized.",
+    "design_disposition": "ACCEPTED",
+    "successor_scope": "bounded reference-generator implementation and feasibility testing only",
+    "forbidden": [
+      "neural training",
+      "member data",
+      "MAIA integration",
+      "merging",
+      "deployment"
+    ],
+    "preservation": "Specification, machine contract, prior reviews and previous documentary lifecycle envelope remain unchanged. Acceptance is a Founder design act, not a canonical merge or scientific result.",
+    "mechanical_W2_transition_claimed": false
   }
 }
