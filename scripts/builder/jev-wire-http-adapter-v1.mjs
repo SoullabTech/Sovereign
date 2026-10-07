@@ -47,13 +47,15 @@ export function createJevHttpTransport({
   if (typeof credential !== 'string' && typeof credential !== 'function') throw fail('ADAPTER_CREDENTIAL_INVALID');
   if (typeof credential === 'string' && !/^[\x21-\x7e]+$/.test(credential)) throw fail('ADAPTER_CREDENTIAL_INVALID');
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) throw fail('ADAPTER_CONFIG_INVALID');
+  if (!Number.isSafeInteger(maxResponseBytes) || maxResponseBytes <= 0) throw fail('ADAPTER_CONFIG_INVALID');   // NaN / Infinity / non-integers would disable the bound
   const client = url.protocol === 'https:' ? https : http;
 
   function attempt(bodyJson, { signal, bodyHash } = {}) {
     if (typeof bodyJson !== 'string' || bodyJson === '') return Promise.reject(fail('ADAPTER_BODY_INVALID'));
     if (bodyHash !== undefined && sha256(bodyJson) !== bodyHash) return Promise.reject(fail('ADAPTER_BODY_HASH_MISMATCH'));
-    if (signal && signal.aborted) return Promise.reject(fail('ADAPTER_ABORTED'));
-    const key = typeof credential === 'function' ? credential() : credential;
+    if (signal && signal.aborted) return Promise.reject(fail('ADAPTER_ABORTED'));   // before any work
+    let key; try { key = typeof credential === 'function' ? credential() : credential; } catch { return Promise.reject(fail('ADAPTER_CREDENTIAL_ERROR')); }
+    if (signal && signal.aborted) return Promise.reject(fail('ADAPTER_ABORTED'));   // re-check: the credential callback may have cancelled
     if (typeof key !== 'string' || !/^[\x21-\x7e]+$/.test(key)) return Promise.reject(fail('ADAPTER_CREDENTIAL_INVALID'));
     const bytes = Buffer.from(bodyJson, 'utf8');
 

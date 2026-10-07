@@ -7,6 +7,7 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -18,7 +19,11 @@ const adEdits = process.env.JEV_AD_EDITS ? JSON.parse(process.env.JEV_AD_EDITS) 
 const WV = makeVariant([], { witnessed: true });
 const GV = makeVariant([], { witnessed: false });
 const CV = makeVariant([], { from: join(HERE, '..', 'jev-wire-checkpoint-v1.mjs') });
-const AV = makeVariant(adEdits, { from: join(HERE, '..', 'jev-wire-http-adapter-v1.mjs') });
+// JEV_AD_SOURCE_COMMIT=<sha> runs this same proof against the adapter AS COMMITTED THERE (used to show the reviewed defects reproduce on the old code)
+const adSource = process.env.JEV_AD_SOURCE_COMMIT
+  ? execFileSync('git', ['show', `${process.env.JEV_AD_SOURCE_COMMIT}:scripts/builder/jev-wire-http-adapter-v1.mjs`], { cwd: join(HERE, '..', '..', '..'), encoding: 'utf8' })
+  : null;
+const AV = makeVariant(adEdits, { from: join(HERE, '..', 'jev-wire-http-adapter-v1.mjs'), source: adSource });
 const W = await import(WV.url); const G = await import(GV.url); const CK = await import(CV.url); const AD = await import(AV.url);
 
 let pass = 0; let fail = 0;
@@ -318,11 +323,64 @@ await check('A14-static-no-environment-no-files-no-logging-no-retry-no-live-acti
     assert.equal(code.includes(banned), false, 'banned token ' + banned);
   }
   const repoRoot = join(HERE, '..', '..', '..');
-  const { execFileSync } = await import('node:child_process');
   let out = '';
   try { out = execFileSync('git', ['grep', '-l', 'allowRemote: true', '--', 'scripts', 'lib', 'app', 'components'], { cwd: repoRoot, encoding: 'utf8' }); } catch { /* exit 1 = no match */ }
   const hits = out.split('\n').filter(Boolean).filter((f) => !f.includes('__tests__'));
   assert.deepEqual(hits, [], 'nothing in the product tree activates the remote endpoint');
+});
+
+// ── Mac review ba12a237: credential callback (E1/E2) and response-limit configuration (E3) ──────────────────
+
+await check('A15-credential-callback-failures-are-sanitized-and-open-no-connection', async () => {
+  const m = await startMock(); const p = plan('F01'); const MARK = 'callback-secret-MARKER-' + DUMMY;
+  const send = (cb, opts = {}) => AD.createJevHttpTransport({ endpoint: m.url, credential: cb, timeoutMs: 2000 }).send(p.bodyJson, { bodyHash: p.bodyHash, ...opts });
+  // a throwing callback: send() must not throw synchronously and its error must carry nothing from the original
+  let pending;
+  assert.doesNotThrow(() => { pending = send(() => { const e = new Error(MARK); e.cause = new Error(MARK); throw e; }); });
+  const e = await codeOf(pending);
+  assert.equal(e.message, 'ADAPTER_CREDENTIAL_ERROR');
+  const dump = [e.message, JSON.stringify(e), String(e.stack), String(e.cause)].join('\n');
+  assert.equal(dump.includes('MARKER'), false); assert.equal(dump.includes(DUMMY), false);
+  assert.equal(e.cause, undefined);
+  // a callback returning a promise or a non-string is invalid, not trusted
+  assert.equal((await codeOf(send(() => Promise.resolve(DUMMY)))).message, 'ADAPTER_CREDENTIAL_INVALID');
+  assert.equal(m.requests.length, 0, 'no connection was opened by any failing callback');
+  // control: a well-behaved callback still sends exactly once
+  const out = await send(() => DUMMY);
+  assert.deepEqual(out, REPLY); assert.equal(m.requests.length, 1);
+  assert.equal(m.requests[0].headers.authorization, 'Bearer ' + DUMMY);
+  await m.close();
+});
+
+await check('A16-cancellation-during-the-credential-callback-is-honoured-at-dispatch', async () => {
+  const m = await startMock(); const p = plan('F01');
+  const ac = new AbortController();
+  const t = AD.createJevHttpTransport({ endpoint: m.url, credential: () => { ac.abort(); return DUMMY; }, timeoutMs: 2000 });
+  const e = await codeOf(t.send(p.bodyJson, { signal: ac.signal, bodyHash: p.bodyHash }));
+  assert.equal(e.message, 'ADAPTER_ABORTED');
+  assert.equal(m.requests.length, 0, 'a call cancelled inside the callback sends nothing');
+  // controls: not aborted → one request; plain pre-abort → none (A7 pins the asynchronous case)
+  const ok = AD.createJevHttpTransport({ endpoint: m.url, credential: () => DUMMY, timeoutMs: 2000 });
+  await ok.send(p.bodyJson, { signal: new AbortController().signal, bodyHash: p.bodyHash });
+  assert.equal(m.requests.length, 1);
+  await m.close();
+});
+
+await check('A17-response-limit-must-be-a-finite-positive-safe-integer', async () => {
+  const m = await startMock(); const p = plan('F01');
+  for (const bad of [NaN, Infinity, -Infinity, 0, -1, 1.5, '100', null, 2 ** 53, {}]) {
+    assert.throws(() => AD.createJevHttpTransport({ endpoint: m.url, credential: DUMMY, maxResponseBytes: bad }), /ADAPTER_CONFIG_INVALID/, String(bad));
+  }
+  assert.equal(m.requests.length, 0, 'invalid configuration never opens a connection');
+  // controls: default limit refuses a large body; a valid finite override both tightens and loosens
+  m.mode = 'huge';
+  assert.equal((await codeOf(mkTransport(m).send(p.bodyJson, { bodyHash: p.bodyHash }))).message, 'ADAPTER_RESPONSE_TOO_LARGE');
+  assert.equal((await codeOf(mkTransport(m, { maxResponseBytes: 1000 }).send(p.bodyJson, { bodyHash: p.bodyHash }))).message, 'ADAPTER_RESPONSE_TOO_LARGE');
+  const loose = await mkTransport(m, { maxResponseBytes: 1_000_000 }).send(p.bodyJson, { bodyHash: p.bodyHash });
+  assert.equal(typeof loose.pad, 'string');
+  m.mode = 'ok';
+  await mkTransport(m, { maxResponseBytes: undefined }).send(p.bodyJson, { bodyHash: p.bodyHash });   // omitted → default
+  await m.close();
 });
 
 console.log(`\n${pass} passed · ${fail} failed`);

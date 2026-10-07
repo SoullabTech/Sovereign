@@ -33,6 +33,18 @@ const CANDIDATES = [
   ['DC-AD-IGNORES-ABORT-SIGNAL', 'A7', [["      if (signal) signal.addEventListener('abort', onAbort, { once: true });\n", "      void onAbort;\n"]]],
   ['DC-AD-LOGS-CREDENTIAL', 'A9', [["      const bail = (code, extra) => {\n", "      const bail = (code, extra) => {\n        console.error('failed with Authorization: Bearer ' + key);\n"]]],
   ['DC-AD-READS-ENVIRONMENT', 'A14', [["export const PINNED_REMOTE", "const _k = process.env.JEV_KEY;\nexport const PINNED_REMOTE"]]],
+  // ── Mac review ba12a237 ──
+  ['DC-AD-CALLBACK-ERROR-ESCAPES', 'A15', [[
+    "    let key; try { key = typeof credential === 'function' ? credential() : credential; } catch { return Promise.reject(fail('ADAPTER_CREDENTIAL_ERROR')); }\n",
+    "    const key = typeof credential === 'function' ? credential() : credential;\n"]]],
+  ['DC-AD-CALLBACK-ERROR-CAUSE-KEPT', 'A15', [[
+    "catch { return Promise.reject(fail('ADAPTER_CREDENTIAL_ERROR')); }", "catch (err) { return Promise.reject(fail('ADAPTER_CREDENTIAL_ERROR', { cause: err })); }"]]],
+  ['DC-AD-CANCEL-NOT-RECHECKED', 'A16', [[
+    "    if (signal && signal.aborted) return Promise.reject(fail('ADAPTER_ABORTED'));   // re-check: the credential callback may have cancelled\n", '']]],
+  ['DC-AD-LIMIT-UNVALIDATED', 'A17', [[
+    "  if (!Number.isSafeInteger(maxResponseBytes) || maxResponseBytes <= 0) throw fail('ADAPTER_CONFIG_INVALID');", "  void 0;"]]],
+  ['DC-AD-LIMIT-ONLY-SIGN-CHECKED', 'A17', [[
+    "!Number.isSafeInteger(maxResponseBytes) || maxResponseBytes <= 0", "typeof maxResponseBytes !== 'number' || maxResponseBytes <= 0"]]],
 ];
 
 function run(edits) {
