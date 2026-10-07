@@ -1086,6 +1086,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onEditLatitude={props.onLatitude}
       mayRemoveParagraphs={props.mayRemoveParagraphs}
       onMayRemoveParagraphs={props.onMayRemoveParagraphs}
+      mayProposeImmediately={props.mayProposeImmediately}
+      onMayProposeImmediately={props.onMayProposeImmediately}
       sessionPosture={props.sessionPosture}
       onChooseSessionPosture={props.onChooseSessionPosture}
       onSend={props.onSendEditorial}
