@@ -1,0 +1,116 @@
+{
+  "work_unit_envelope": {
+    "work_unit": {
+      "work_unit_version": "W0.v1",
+      "identity": {
+        "id": "rgr-05b-synthetic-flow-representation-benchmark-20261007",
+        "programme": "RELATIONAL-GEOMETRY-REASONING",
+        "parent_work_unit": "rgr-05-flow-primitive-challenge-20261007",
+        "objective": "Design and preregister a synthetic benchmark that tests whether explicit FLOW_D representation adds held-out compositional-transfer and counterfactual value over matched same-information generic alternatives.",
+        "work_class": "RESEARCH",
+        "task_shape": "benchmark_design"
+      },
+      "context": {
+        "context_refs": [
+          "RGR-05A CLOSED by Founder adjudication",
+          "FLOW_D accepted as first-class derived dynamical object",
+          "RGR-02 ten-heading formal vocabulary preserved"
+        ],
+        "evidence_refs": [
+          "RGR-05A formal source grounding",
+          "RGR-04 benchmark-governance precedent"
+        ],
+        "assumptions": [
+          "Primitive #11 is not under test in RGR-05B.",
+          "Elemental labels are quarantined from the benchmark.",
+          "Same-information comparison is required for any claim of Flow-specific computational advantage."
+        ],
+        "unknowns": [
+          "Whether explicit FLOW_D inductive structure improves compositional transfer.",
+          "Whether generic same-information models are sufficient.",
+          "Whether return/completion requires distinct representational support."
+        ]
+      },
+      "scope": {
+        "repository": "SoullabTech/Sovereign",
+        "base_ref": "6eb1396912162501982a26d8a105ed165a5f96bd",
+        "allowed_paths": [
+          "docs/programme/RGR-05B_SYNTHETIC_FLOW_REPRESENTATION_BENCHMARK_2026-10-07.md",
+          "docs/programme/RGR-05B_BENCHMARK_DESIGN_RATIONALE_2026-10-07.md",
+          "docs/programme/RGR-05B_WORK_UNIT_2026-10-07.json",
+          "tests/constitutional/rgr-flow-05b/matrix.mjs"
+        ],
+        "forbidden_paths": [
+          "app",
+          "lib",
+          "components",
+          "database",
+          "prisma",
+          "jarvis-desktop"
+        ]
+      },
+      "authority": {
+        "repository_read": true,
+        "repository_write": "worktree",
+        "shell": "bounded_write",
+        "network_external": false,
+        "provider_spend": false,
+        "external_disclosure": "none",
+        "merge": false,
+        "deploy": false,
+        "production_read": false,
+        "production_write": false
+      },
+      "evaluation": {
+        "acceptance_conditions": [
+          "Primary benchmark is entirely synthetic.",
+          "F_G and F_F receive identical raw dynamic information.",
+          "Strong counterfactual family preserves topology and full edge-attribute multiset.",
+          "Carrier and node relabeling invariance are explicit.",
+          "Task A delivery and Task B return are separately scored.",
+          "Elemental and human data remain quarantined.",
+          "No materialization, training, runtime, schema, migration, or deployment occurs."
+        ],
+        "falsification_conditions": [
+          "FLOW_D model receives privileged target information.",
+          "Generic comparator is denied raw information available to FLOW_D model.",
+          "Counterfactual pairs differ in undeclared shortcuts.",
+          "Elemental labels enter the generator or target.",
+          "Task A success is allowed to stand in for return/completion.",
+          "The benchmark design silently authorizes execution."
+        ],
+        "stop_conditions": [
+          "A fair same-information comparator cannot be defined.",
+          "Counterfactual families cannot be generated with exact declared invariants.",
+          "Human/private data becomes necessary.",
+          "Runtime or production mutation becomes necessary."
+        ],
+        "verifier_results": []
+      },
+      "provenance": {
+        "creator": "ChatGPT/JARVIS-assist RGR-05B",
+        "authorizing_act": "founder:rgr05b-open-20261007",
+        "source_commits": [
+          "6eb1396912162501982a26d8a105ed165a5f96bd"
+        ],
+        "resulting_commits": [],
+        "timestamps": [
+          "2026-10-07"
+        ]
+      },
+      "state": {
+        "lifecycle_state": "AUTHORIZED",
+        "disposition": "open_benchmark_design",
+        "supersedes": null
+      }
+    },
+    "guard": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-05b-synthetic-flow-representation-benchmark-20261007",
+      "current_state": "AUTHORIZED",
+      "authorized_core_snapshot": "Benchmark constitution/design only; no materialization or execution authority."
+    }
+  },
+  "standing": "OPEN_BY_FOUNDER_AUTHORIZATION",
+  "execution_note": "RGR-05B designs the benchmark only. Materialization, model training, benchmark execution, MAIA integration, member data, schema/migration, and deployment remain unauthorized."
+}
