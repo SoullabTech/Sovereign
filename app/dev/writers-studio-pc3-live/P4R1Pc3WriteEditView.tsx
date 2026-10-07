@@ -1081,7 +1081,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       lastMaiaTurn={props.lastMaiaEditorialTurn}
       busy={busy}
       message={editorialMessage}
-      workingText={props.craftWorkingText || props.held?.text || ''}
       activity={props.craftActivity}
       sessionPosture={props.sessionPosture}
       onChooseSessionPosture={props.onChooseSessionPosture}
