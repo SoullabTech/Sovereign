@@ -13,8 +13,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const WIRE_PATH = join(HERE, '..', 'jev-wire-v1.mjs');
 const BUILDER_URL = pathToFileURL(join(HERE, '..') + '/').href;
 
-export function makeVariant(edits = [], { witnessed = false, source = null } = {}) {
-  let text = source ?? readFileSync(WIRE_PATH, 'utf8');
+export function makeVariant(edits = [], { witnessed = false, source = null, from = WIRE_PATH } = {}) {
+  let text = source ?? readFileSync(from, 'utf8');
   const all = witnessed ? [['  witnessed: false,', '  witnessed: true,'], ...edits] : edits;
   for (const [from, to] of all) {
     const count = text.split(from).length - 1;

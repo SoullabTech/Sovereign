@@ -382,7 +382,7 @@ export async function runAttempt({ attemptId, ledger, transport, now = () => Dat
       return null;
     });
   } catch (e) {
-    return refused(CODES.includes(e.message) ? e.message : 'LEDGER_UNREADABLE');
+    return refused(CODES.includes(e.message) || /^PAIR_/.test(e.message) ? e.message : 'LEDGER_UNREADABLE');
   }
   if (!reservation.ok) return refused(reservation.reason);
 
@@ -440,9 +440,11 @@ export async function runAttempt({ attemptId, ledger, transport, now = () => Dat
       kind: 'observed', attempt_id: attemptId, observation,
       response_sha256: sha256Hex(parsed.response_canonical), response_canonical: parsed.response_canonical, at: now(),
     });
-  } catch {
+  } catch (e) {
     try { ledger.append({ kind: 'halted', reason: 'OBSERVATION_NOT_PERSISTED', attempt_id: attemptId, at: now() }); } catch { /* see restart rule */ }
-    return Object.freeze({ sent: true, outcome: 'observation_not_persisted', wire_body_hash: plan.bodyHash });
+    // a checkpoint failure AFTER the ledger write means the observation is on disk but not yet anchored
+    const anchored = e && /^PAIR_/.test(e.message);
+    return Object.freeze({ sent: true, outcome: anchored ? 'observation_persisted_checkpoint_failed' : 'observation_not_persisted', wire_body_hash: plan.bodyHash });
   }
   // 2) then the settlement
   let head = null;
