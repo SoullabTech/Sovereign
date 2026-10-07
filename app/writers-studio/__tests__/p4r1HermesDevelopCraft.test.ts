@@ -23,15 +23,19 @@ describe('R8H Hermes Develop Craft canvas', () => {
   });
 
   it('uses originating chapter evidence first, with conversation-only passage choice as the fallback', () => {
-    expect(develop).toContain('afterMaiaTurn={({ threadId, lastMaiaTurnIndex }) => {');
+    expect(develop).toContain('afterMaiaTurn={({ threadId, lastMaiaTurnIndex, lastMaiaTurnBody }) => {');
     expect(develop).toContain('chapterDialogue.sectionId ?? props.currentSectionId');
+    expect(develop).toContain('sourceMaiaTurnBody: lastMaiaTurnBody');
     expect(develop).toContain('props.onWorkWithAttentionItem(');
     expect(develop).toContain('chapterDialogue.itemId');
     expect(develop).toContain('chapterDialogue.sectionId ?? sectionId');
     expect(develop).toContain('props.onCraftFromConversation(props.currentSectionId!');
-    expect(developController).toContain("query.set('insightAction', 'choose-craft-passage')");
+    expect(developController).toContain('resolveCraftLocusHint(craftFromConversation.sourceMaiaTurnBody, context.sections)');
+    expect(developController).toContain("query.set('insightAction', 'craft-passage')");
+    expect(developController).toContain('query.set(CRAFT_HINT_START, String(hint.start))');
+    expect(developController).toContain('query.set(CRAFT_HINT_END, String(hint.end))');
     expect(developController).toContain('query.set(CRAFT_SOURCE_THREAD, carry.sourceThreadId)');
-    expect(craftController).toContain('chosen-conversation-craft-passage');
+    expect(craftController).toContain('resolved-craft-hint');
     expect(craftController).toContain("arrivalInsight?.readingId ?? 'conversation-only'");
   });
 

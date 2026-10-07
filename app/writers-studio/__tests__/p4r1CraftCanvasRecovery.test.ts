@@ -19,9 +19,11 @@ describe('R8G Craft Canvas / Craftsman Guide recovery', () => {
 
   it('lets a live MAIA turn become an explicit craft handoff without copying the transcript into the URL', () => {
     expect(conversation).toContain('lastMaiaTurnIndex');
+    expect(conversation).toContain('lastMaiaTurnBody: lastMaiaTurn.body');
     expect(develop).toContain('Work this into the writing →');
     expect(develop).toContain('sourceThreadId: threadId');
     expect(develop).toContain('sourceMaiaTurnIndex: lastMaiaTurnIndex');
+    expect(develop).toContain('sourceMaiaTurnBody: lastMaiaTurnBody');
     expect(developController).toContain('CRAFT_SOURCE_THREAD');
     expect(developController).toContain('CRAFT_SOURCE_MAIA_TURN');
     expect(developController).not.toContain('query.set(CRAFT_SOURCE_THREAD, chapterDialogue');

@@ -31,7 +31,14 @@ import type { LiveThemesPayload, ThemeMutation } from '@/lib/writersStudio/theme
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
-import { CRAFT_SOURCE_MAIA_TURN, CRAFT_SOURCE_THREAD, loadCanvasInsight } from '@/lib/writersStudio/insightCanvas';
+import {
+  CRAFT_HINT_END,
+  CRAFT_HINT_START,
+  CRAFT_SOURCE_MAIA_TURN,
+  CRAFT_SOURCE_THREAD,
+  loadCanvasInsight,
+} from '@/lib/writersStudio/insightCanvas';
+import { resolveCraftLocusHint } from '@/lib/writersStudio/craftLocus';
 import { runWholeManuscriptReview } from '@/lib/writersStudio/studio/wholeManuscriptReview';
 import { requestAttentionMap } from '@/lib/writersStudio/attentionMapClient';
 import type { AttentionItem, WholeManuscriptAttentionMap } from '@/lib/writersStudio/studio/attentionMap';
@@ -1509,7 +1516,11 @@ export default function P4R1DevelopController() {
     itemId: string,
     sectionId: string,
     source: 'chapter-review' | 'minimal-path' | 'attention-map',
-    craftFromConversation?: { sourceThreadId: string; sourceMaiaTurnIndex: number },
+    craftFromConversation?: {
+      sourceThreadId: string;
+      sourceMaiaTurnIndex: number;
+      sourceMaiaTurnBody: string;
+    },
   ) => {
     const sourceMap = source === 'minimal-path'
       ? chapterMinimalPath
@@ -1518,15 +1529,51 @@ export default function P4R1DevelopController() {
         : attentionMap;
     const item = sourceMap?.items.find((candidate) => candidate.id === itemId);
     if (!item || !context) return;
-    const setCraftAddress = (query: URLSearchParams) => {
+    const setCraftAddress = (
+      query: URLSearchParams,
+      hint?: { start: number; end: number },
+    ) => {
       if (craftFromConversation) {
         query.set(CRAFT_SOURCE_THREAD, craftFromConversation.sourceThreadId);
         query.set(CRAFT_SOURCE_MAIA_TURN, String(craftFromConversation.sourceMaiaTurnIndex));
+        if (hint) {
+          query.set(CRAFT_HINT_START, String(hint.start));
+          query.set(CRAFT_HINT_END, String(hint.end));
+        } else {
+          query.delete(CRAFT_HINT_START);
+          query.delete(CRAFT_HINT_END);
+        }
       } else {
         query.delete(CRAFT_SOURCE_THREAD);
         query.delete(CRAFT_SOURCE_MAIA_TURN);
+        query.delete(CRAFT_HINT_START);
+        query.delete(CRAFT_HINT_END);
       }
     };
+
+    /* R8I — HERMES SHOULD BRING THE WRITER SOMEWHERE.
+       A visible MAIA turn may orient the interface when it names a problem-bearing
+       phrase that uniquely matches a current manuscript heading. This creates no
+       editorial authority: only section id + code-point offsets cross the URL,
+       the conversation is still re-resolved server-side, and the editorial open
+       path independently verifies the current manuscript selection. */
+    const craftHint = craftFromConversation
+      ? resolveCraftLocusHint(craftFromConversation.sourceMaiaTurnBody, context.sections)
+      : null;
+    if (craftFromConversation && craftHint) {
+      updateQuery((query) => {
+        query.set('mode', 'develop');
+        query.set('developCraft', '1');
+        query.set(SECTION_PARAM, craftHint.sectionId);
+        query.set('developField', 'overview');
+        query.set('attentionItem', itemId);
+        query.delete('insightReading');
+        query.delete('insightObservation');
+        query.set('insightAction', 'craft-passage');
+        setCraftAddress(query, craftHint);
+      });
+      return;
+    }
 
     /* A synthesis can be structurally evidence-bound yet cite the wrong frozen
        observation for a semantically specific refinement. Before crossing into
@@ -1680,16 +1727,28 @@ export default function P4R1DevelopController() {
 
   const craftFromConversation = useCallback((
     sectionId: string,
-    carry: { sourceThreadId: string; sourceMaiaTurnIndex: number },
+    carry: {
+      sourceThreadId: string;
+      sourceMaiaTurnIndex: number;
+      sourceMaiaTurnBody: string;
+    },
   ) => {
     if (!context?.sections.some((section) => section.draftSectionId === sectionId)) return;
+    const hint = resolveCraftLocusHint(carry.sourceMaiaTurnBody, context.sections);
     updateQuery((query) => {
       query.set('mode', 'develop');
       query.set('developCraft', '1');
-      query.set(SECTION_PARAM, sectionId);
-      query.set('insightAction', 'choose-craft-passage');
+      query.set(SECTION_PARAM, hint?.sectionId ?? sectionId);
+      query.set('insightAction', hint ? 'craft-passage' : 'choose-craft-passage');
       query.set(CRAFT_SOURCE_THREAD, carry.sourceThreadId);
       query.set(CRAFT_SOURCE_MAIA_TURN, String(carry.sourceMaiaTurnIndex));
+      if (hint) {
+        query.set(CRAFT_HINT_START, String(hint.start));
+        query.set(CRAFT_HINT_END, String(hint.end));
+      } else {
+        query.delete(CRAFT_HINT_START);
+        query.delete(CRAFT_HINT_END);
+      }
       query.delete('insightReading');
       query.delete('insightObservation');
       query.delete('attentionItem');

@@ -46,6 +46,8 @@ import {
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import { craftPrimerPrompt } from '@/lib/writersStudio/craftCanvas';
 import {
+  CRAFT_HINT_END,
+  CRAFT_HINT_START,
   CRAFT_SOURCE_MAIA_TURN,
   CRAFT_SOURCE_THREAD,
   INSIGHT_OBSERVATION,
@@ -113,6 +115,20 @@ export default function FlagshipWriteEditController({
   const craftSourceMaiaTurnRaw = params?.get(CRAFT_SOURCE_MAIA_TURN) ?? null;
   const craftSourceMaiaTurnIndex = craftSourceMaiaTurnRaw !== null && Number.isInteger(Number(craftSourceMaiaTurnRaw))
     ? Number(craftSourceMaiaTurnRaw)
+    : null;
+  const craftHintStartRaw = params?.get(CRAFT_HINT_START) ?? null;
+  const craftHintEndRaw = params?.get(CRAFT_HINT_END) ?? null;
+  const craftHintStart = craftHintStartRaw !== null && Number.isInteger(Number(craftHintStartRaw))
+    ? Number(craftHintStartRaw)
+    : null;
+  const craftHintEnd = craftHintEndRaw !== null && Number.isInteger(Number(craftHintEndRaw))
+    ? Number(craftHintEndRaw)
+    : null;
+  const craftHintRange = craftHintStart !== null
+    && craftHintEnd !== null
+    && craftHintStart >= 0
+    && craftHintEnd > craftHintStart
+    ? { start: craftHintStart, end: craftHintEnd }
     : null;
   const craftArrival = Boolean(
     craftSourceThreadId
@@ -1075,6 +1091,51 @@ export default function FlagshipWriteEditController({
   }, []);
 
   useEffect(() => {
+    if (
+      incomingAction !== 'craft-passage'
+      || !craftArrival
+      || arrivalInsight
+      || !craftHintRange
+      || !requestedSection
+      || !context
+      || workspaceOpen
+    ) return;
+    const section = context.sections.find(
+      (candidate) => candidate.draftSectionId === requestedSection,
+    );
+    if (!section?.editable) return;
+    const points = Array.from(section.body);
+    if (craftHintRange.end > points.length) return;
+    const exact = points.slice(craftHintRange.start, craftHintRange.end).join('');
+    if (!exact.trim()) return;
+
+    const key = [
+      'resolved-craft-hint',
+      craftSourceThreadId ?? 'no-thread',
+      String(craftSourceMaiaTurnIndex ?? -1),
+      requestedSection,
+      craftHintRange.start,
+      craftHintRange.end,
+    ].join(':');
+    if (focusInsightConsumed.current === key) return;
+    focusInsightConsumed.current = key;
+    holdPassage(section, craftHintRange.start, craftHintRange.end, exact);
+    openWorkspace();
+  }, [
+    incomingAction,
+    craftArrival,
+    arrivalInsight,
+    craftHintRange,
+    requestedSection,
+    context,
+    workspaceOpen,
+    craftSourceThreadId,
+    craftSourceMaiaTurnIndex,
+    holdPassage,
+    openWorkspace,
+  ]);
+
+  useEffect(() => {
     if (!context?.manuscriptId || !incomingReading || !incomingObservation) {
       setArrivalInsight(null);
       return;
@@ -1330,7 +1391,11 @@ export default function FlagshipWriteEditController({
         if (exact !== selectedPassage.text) return;
       }
     } else if (incomingAction === 'craft-passage') {
-      return;
+      if (
+        !craftHintRange
+        || selectedPassage.start !== craftHintRange.start
+        || selectedPassage.end !== craftHintRange.end
+      ) return;
     }
 
     const key = [
@@ -1355,6 +1420,7 @@ export default function FlagshipWriteEditController({
     craftArrival,
     craftSourceThreadId,
     craftSourceMaiaTurnIndex,
+    craftHintRange,
     arrivalInsight,
     workspaceOpen,
     workspaceInsight,
@@ -1406,6 +1472,8 @@ export default function FlagshipWriteEditController({
     next.delete('insightAction');
     next.delete(CRAFT_SOURCE_THREAD);
     next.delete(CRAFT_SOURCE_MAIA_TURN);
+    next.delete(CRAFT_HINT_START);
+    next.delete(CRAFT_HINT_END);
     if (mode !== 'develop') {
       next.delete('developField');
       next.delete('r');

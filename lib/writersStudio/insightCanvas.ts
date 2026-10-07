@@ -29,6 +29,9 @@ export const INSIGHT_OBSERVATION = 'insightObservation';
 /** R8G — source Work conversation that led into Craft. Identity only; transcript is server-resolved. */
 export const CRAFT_SOURCE_THREAD = 'craftThread';
 export const CRAFT_SOURCE_MAIA_TURN = 'craftMaiaTurn';
+/** R8I — exact current-manuscript orientation resolved from a visible MAIA craft anchor. */
+export const CRAFT_HINT_START = 'craftStart';
+export const CRAFT_HINT_END = 'craftEnd';
 
 export function insightWriteHref(manuscriptId: string, readingId: string, observationKey: string, sectionId: string): string {
   const query = new URLSearchParams({ m: manuscriptId, [SECTION_PARAM]: sectionId,

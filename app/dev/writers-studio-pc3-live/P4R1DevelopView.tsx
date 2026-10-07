@@ -235,11 +235,19 @@ export interface P4R1DevelopViewProps {
     itemId: string,
     sectionId: string,
     source: 'chapter-review' | 'minimal-path' | 'attention-map',
-    craftFromConversation?: { sourceThreadId: string; sourceMaiaTurnIndex: number },
+    craftFromConversation?: {
+      sourceThreadId: string;
+      sourceMaiaTurnIndex: number;
+      sourceMaiaTurnBody: string;
+    },
   ) => void;
   onCraftFromConversation: (
     sectionId: string,
-    carry: { sourceThreadId: string; sourceMaiaTurnIndex: number },
+    carry: {
+      sourceThreadId: string;
+      sourceMaiaTurnIndex: number;
+      sourceMaiaTurnBody: string;
+    },
   ) => void;
   onDiscussAttentionItem: (item: AttentionItem) => void;
   onSaveWriterUnderstanding: (draft: WriterUnderstandingDraft) => void;
@@ -2785,10 +2793,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               chapterReadingId={chapterDialogue.readingId}
               initialDraft={chapterDialogue.initialQuestion}
               autoSendInitialDraft
-              afterMaiaTurn={({ threadId, lastMaiaTurnIndex }) => {
+              afterMaiaTurn={({ threadId, lastMaiaTurnIndex, lastMaiaTurnBody }) => {
                 const sectionId = chapterDialogue.sectionId ?? props.currentSectionId;
                 if (!sectionId) return null;
-                const carry = { sourceThreadId: threadId, sourceMaiaTurnIndex: lastMaiaTurnIndex };
+                const carry = {
+                  sourceThreadId: threadId,
+                  sourceMaiaTurnIndex: lastMaiaTurnIndex,
+                  sourceMaiaTurnBody: lastMaiaTurnBody,
+                };
                 return (
                   <button
                     type="button"
@@ -2875,13 +2887,14 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               manuscriptId={props.manuscriptId}
               sectionId={props.currentSectionId}
               initialDraft={attentionConversationDraft}
-              afterMaiaTurn={props.currentSectionId ? ({ threadId, lastMaiaTurnIndex }) => (
+              afterMaiaTurn={props.currentSectionId ? ({ threadId, lastMaiaTurnIndex, lastMaiaTurnBody }) => (
                 <button
                   type="button"
                   className="p4r1-conversation-next"
                   onClick={() => props.onCraftFromConversation(props.currentSectionId!, {
                     sourceThreadId: threadId,
                     sourceMaiaTurnIndex: lastMaiaTurnIndex,
+                    sourceMaiaTurnBody: lastMaiaTurnBody,
                   })}
                 >
                   Work this into the writing →

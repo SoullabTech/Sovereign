@@ -172,7 +172,11 @@ export interface WorkConversationProps {
   /** Used only when the writer's preceding gesture explicitly began this conversation. */
   autoSendInitialDraft?: boolean;
   /** Optional relational next act, shown only after MAIA has actually replied. */
-  afterMaiaTurn?: ReactNode | ((context: { threadId: string; lastMaiaTurnIndex: number }) => ReactNode);
+  afterMaiaTurn?: ReactNode | ((context: {
+    threadId: string;
+    lastMaiaTurnIndex: number;
+    lastMaiaTurnBody: string;
+  }) => ReactNode);
   onClose: () => void;
 }
 
@@ -331,7 +335,11 @@ export default function WorkConversation({
   const lastMaiaTurn = [...turns].reverse().find((turn) => turn.speaker === 'maia') ?? null;
   const afterMaiaTurnNode = afterMaiaTurn && threadId && lastMaiaTurn
     ? typeof afterMaiaTurn === 'function'
-      ? afterMaiaTurn({ threadId, lastMaiaTurnIndex: lastMaiaTurn.index })
+      ? afterMaiaTurn({
+          threadId,
+          lastMaiaTurnIndex: lastMaiaTurn.index,
+          lastMaiaTurnBody: lastMaiaTurn.body,
+        })
       : afterMaiaTurn
     : null;
 
