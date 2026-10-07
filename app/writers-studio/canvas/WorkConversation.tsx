@@ -317,6 +317,14 @@ export default function WorkConversation({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSendInitialDraft, decision, mode.kind, pending, draft]);
 
+  /* R8K — a resumed relationship should not leave its old one-click starter
+     sitting in the composer. Clear only the untouched starter; if the writer
+     has changed even one character, their new draft wins. */
+  useEffect(() => {
+    if (!autoSendInitialDraft || decision === null || mode.kind !== 'resume') return;
+    setDraft((current) => current === initialDraft ? '' : current);
+  }, [autoSendInitialDraft, decision, mode.kind, initialDraft]);
+
   if (identity.phase === 'loading') {
     return <StudioText role="metadata">opening…</StudioText>;
   }
