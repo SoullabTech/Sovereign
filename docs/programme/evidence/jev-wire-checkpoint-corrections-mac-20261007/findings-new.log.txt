@@ -1,0 +1,19 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs new
+HEAD=c12dc965241c2be69b4481dbb88c4536e1e0933f
+CWD=/Users/soullab/jev-wire-checkpoint-corrections-review-20261007
+STARTED_AT=2026-10-07T19:32:31.968206+00:00
+not reproduced  S1-documented-answer-envelope  documented `answers` response refused
+not reproduced  S2-nonclosed-response-parser  extra root / extra answer / confidence accepted
+not reproduced  D1-observation-not-persisted  returned ok; probability absent from disk
+not reproduced  D2-resume-after-ambiguous-crash  next attempt sent=false reason=UNRESOLVED_ATTEMPT
+not reproduced  D3-valid-json-invalid-ledger  invalid event ignored; send proceeded
+not reproduced  D4-missing-ledger-allows-replay  same attempt sent 1×
+not reproduced  D5-two-process-same-attempt-race  1 send(s) from 2 processes
+not reproduced  T1-never-settling-transport  returned crossing_unknown
+
+new: 0/8 findings reproduce
+EXPECTATION MET (repair fails none)
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-07T19:32:32.854588+00:00

@@ -1,0 +1,130 @@
+{
+  "head": "c12dc965241c2be69b4481dbb88c4536e1e0933f",
+  "created_at": "2026-10-07T19:33:57.136Z",
+  "synthetic_root": "/tmp/jev-C2-ALIAS-SYNTHETIC-7cdXgd",
+  "transport_calls": 0,
+  "source_edited": false,
+  "rows": [
+    {
+      "name": "exact",
+      "phase": "construction",
+      "error": "PAIR_PATH_COLLISION",
+      "returned_success": false,
+      "tree_unchanged": true,
+      "ledger_exists": false,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_NOT_INITIALIZED",
+      "no_clobber_refusal": true
+    },
+    {
+      "name": "temp-is-ledger",
+      "phase": "construction",
+      "error": "PAIR_PATH_COLLISION",
+      "returned_success": false,
+      "tree_unchanged": true,
+      "ledger_exists": false,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_NOT_INITIALIZED",
+      "no_clobber_refusal": true
+    },
+    {
+      "name": "checkpoint-is-lock",
+      "phase": "construction",
+      "error": "PAIR_PATH_COLLISION",
+      "returned_success": false,
+      "tree_unchanged": true,
+      "ledger_exists": false,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_NOT_INITIALIZED",
+      "no_clobber_refusal": true
+    },
+    {
+      "name": "checkpoint-is-pair-lock",
+      "phase": "construction",
+      "error": "PAIR_PATH_COLLISION",
+      "returned_success": false,
+      "tree_unchanged": true,
+      "ledger_exists": false,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_NOT_INITIALIZED",
+      "no_clobber_refusal": true
+    },
+    {
+      "name": "symlink-parent",
+      "phase": "construction",
+      "error": "PAIR_PATH_COLLISION",
+      "returned_success": false,
+      "tree_unchanged": true,
+      "ledger_exists": false,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_NOT_INITIALIZED",
+      "no_clobber_refusal": true
+    },
+    {
+      "name": "file-symlink",
+      "phase": "construction",
+      "error": "PAIR_PATH_COLLISION",
+      "returned_success": false,
+      "tree_unchanged": true,
+      "ledger_exists": true,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_CORRUPT",
+      "no_clobber_refusal": true
+    },
+    {
+      "name": "hard-link",
+      "phase": "construction",
+      "error": "PAIR_PATH_COLLISION",
+      "returned_success": false,
+      "tree_unchanged": true,
+      "ledger_exists": true,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_CORRUPT",
+      "no_clobber_refusal": true
+    },
+    {
+      "name": "case-alias",
+      "phase": "construction",
+      "error": "PAIR_PATH_COLLISION",
+      "returned_success": false,
+      "tree_unchanged": true,
+      "ledger_exists": false,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_NOT_INITIALIZED",
+      "no_clobber_refusal": true
+    },
+    {
+      "name": "dangling-temp-to-future-ledger",
+      "phase": "initialization",
+      "error": null,
+      "returned_success": true,
+      "tree_unchanged": false,
+      "ledger_exists": true,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_CORRUPT",
+      "no_clobber_refusal": false
+    },
+    {
+      "name": "dangling-ledger-to-future-temp",
+      "phase": "initialization",
+      "error": null,
+      "returned_success": true,
+      "tree_unchanged": false,
+      "ledger_exists": false,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_NOT_INITIALIZED",
+      "no_clobber_refusal": false
+    },
+    {
+      "name": "collision-added-after-construction",
+      "phase": "initialization",
+      "error": "PAIR_PATH_COLLISION",
+      "returned_success": false,
+      "tree_unchanged": true,
+      "ledger_exists": true,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_CORRUPT",
+      "no_clobber_refusal": true
+    }
+  ]
+}

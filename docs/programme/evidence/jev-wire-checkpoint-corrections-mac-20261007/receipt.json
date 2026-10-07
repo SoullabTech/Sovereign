@@ -1,0 +1,173 @@
+{
+  "head": "c12dc965241c2be69b4481dbb88c4536e1e0933f",
+  "code_test_commit": "3b7b25ecf2012d057c56c96bbcfcfb2a2d514de4",
+  "cwd": "/Users/soullab/jev-wire-checkpoint-corrections-review-20261007",
+  "all_transports_fake": true,
+  "credentials_accessed": false,
+  "provider_calls": 0,
+  "checks": [
+    {
+      "name": "checkpoint-proof-1",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T19:31:49.854321+00:00",
+      "finished_at": "2026-10-07T19:31:51.453428+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/checkpoint-proof-1.log",
+      "sha256": "c7d337b307cd847d387bf3b2a51043b302a9c336f01dfaaa42a731c8873161b2"
+    },
+    {
+      "name": "checkpoint-proof-2",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T19:31:51.582352+00:00",
+      "finished_at": "2026-10-07T19:31:53.171734+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/checkpoint-proof-2.log",
+      "sha256": "65a3ddb50b3014bab853aada6c8f2eaad021ee396ae2e19be37d2262ca32ce80"
+    },
+    {
+      "name": "checkpoint-proof-3",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T19:31:53.305061+00:00",
+      "finished_at": "2026-10-07T19:31:54.829615+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/checkpoint-proof-3.log",
+      "sha256": "6204c6f907d9682af13ca4e3e34d7cc0f2eba65f7a551af78ce996776dbc1345"
+    },
+    {
+      "name": "checkpoint-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-matrix.mjs"
+      ],
+      "started_at": "2026-10-07T19:31:54.937585+00:00",
+      "finished_at": "2026-10-07T19:32:30.146503+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/checkpoint-matrix.log",
+      "sha256": "4c1a26e500493aa9aeeae6b99a162efcbbcc3ed8a7cfc8c8188df05d9ee49ad6"
+    },
+    {
+      "name": "findings-old",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "old"
+      ],
+      "started_at": "2026-10-07T19:32:30.258066+00:00",
+      "finished_at": "2026-10-07T19:32:31.829529+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/findings-old.log",
+      "sha256": "2e02ac450f0215b0890bfefd08e5e599abae82ae5bf8a7b2827c5902ed81a0e4"
+    },
+    {
+      "name": "findings-new",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "new"
+      ],
+      "started_at": "2026-10-07T19:32:31.968206+00:00",
+      "finished_at": "2026-10-07T19:32:32.854588+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/findings-new.log",
+      "sha256": "de64b689d6f5f25acfebfe5c103d8b6d2421a758c303d455c0cb46d89d2525db"
+    },
+    {
+      "name": "wire-proof",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T19:32:33.000530+00:00",
+      "finished_at": "2026-10-07T19:32:36.294487+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/wire-proof.log",
+      "sha256": "c19e8115bad8912ff79ad5bdfb3ab144b2c852542568f6d21c20ca04a98d80e9"
+    },
+    {
+      "name": "wire-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-matrix.mjs"
+      ],
+      "started_at": "2026-10-07T19:32:36.394294+00:00",
+      "finished_at": "2026-10-07T19:35:06.757951+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/wire-matrix.log",
+      "sha256": "09aa8d95e6cdd7d53154b0ef5ee0e03aa162ec8d5ba35805ca69f44b4882b630"
+    },
+    {
+      "name": "J1-freeze",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/verify-jarvis-jev-j1-freeze.mjs"
+      ],
+      "started_at": "2026-10-07T19:35:06.858985+00:00",
+      "finished_at": "2026-10-07T19:35:07.033823+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/J1-freeze.log",
+      "sha256": "255c515ed5e4851030d96cb8e5058e105b488a414bbc6520149b5fd6864dcdf0"
+    },
+    {
+      "name": "J1-host",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-judgment-host-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T19:35:07.114747+00:00",
+      "finished_at": "2026-10-07T19:35:07.154561+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/J1-host.log",
+      "sha256": "18a3f2e6f266005d20d97a7db1f5ea76c0f42950e0e14fa4fd43fb5837ba2bd8"
+    },
+    {
+      "name": "J1-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/tsx/dist/cli.mjs",
+        "tests/constitutional/jarvis-jev-j1/matrix.ts"
+      ],
+      "started_at": "2026-10-07T19:35:07.240139+00:00",
+      "finished_at": "2026-10-07T19:35:07.531928+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/J1-matrix.log",
+      "sha256": "2d5d27f66a39ea0a55eb349558498b7c2f0316db70178128e8cd3e375ab4255e"
+    },
+    {
+      "name": "J1-typecheck",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.jarvis-jev-j1.json"
+      ],
+      "started_at": "2026-10-07T19:35:07.617614+00:00",
+      "finished_at": "2026-10-07T19:35:08.072777+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-checkpoint-corrections-evidence-20261007/J1-typecheck.log",
+      "sha256": "24eb10a450c01b6d9f861ad7fe0a0f041253fcbbb35faba88c804c6ea68d5e28"
+    }
+  ],
+  "source_clean": true,
+  "all_pass": true
+}

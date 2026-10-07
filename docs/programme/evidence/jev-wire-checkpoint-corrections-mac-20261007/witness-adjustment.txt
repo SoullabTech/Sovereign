@@ -1,0 +1,1 @@
+Copied reviewer witness from 352b840cb; only changes put wrapper construction inside the error capture and report before/after scratch-file hashes. The candidate is not changed. Both old and new candidates use this same adjusted measurement script.
