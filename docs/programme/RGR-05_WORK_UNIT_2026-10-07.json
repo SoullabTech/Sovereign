@@ -1,0 +1,116 @@
+{
+  "work_unit_envelope": {
+    "work_unit": {
+      "work_unit_version": "W0.v1",
+      "identity": {
+        "id": "rgr-05-flow-primitive-challenge-20261007",
+        "programme": "RELATIONAL-GEOMETRY-REASONING",
+        "parent_work_unit": null,
+        "objective": "Challenge whether Flow is reducible to the ten accepted RGR headings or earns consideration as an additional formal primitive, while preserving epistemic standing and zero runtime authority.",
+        "work_class": "RESEARCH",
+        "task_shape": "deep_reasoning"
+      },
+      "context": {
+        "context_refs": [
+          "RGR-00 through RGR-04 canonical/closed records",
+          "AIN-MASTER-FIELD-01 standing and personhood laws",
+          "Founder authorization 2026-10-07"
+        ],
+        "evidence_refs": [
+          "Burger/Stone Esoteric Anatomy lineage supplied by Founder",
+          "CSF / respiration material supplied by Founder",
+          "Elemental Alchemy / Spiralogic originating architecture"
+        ],
+        "assumptions": [
+          "The ten RGR-02 primitive headings remain canonical during the challenge.",
+          "Flow as primitive #11 begins CANDIDATE_UNESTABLISHED.",
+          "Cross-domain resemblance does not establish shared mechanism or ontology."
+        ],
+        "unknowns": [
+          "Whether Flow is formally irreducible.",
+          "Whether explicit Flow structure adds predictive or transfer value beyond matched dynamic alternatives.",
+          "Whether Weather is best represented as context, field modulation, dynamical regime, or no additional structure.",
+          "Whether Elemental operator families add value beyond non-elemental alternatives."
+        ]
+      },
+      "scope": {
+        "repository": "SoullabTech/Sovereign",
+        "base_ref": "f05a2e689331e06c35b490eea0a48b607a694a67",
+        "allowed_paths": [
+          "docs/programme/RGR-05_FLOW_PRIMITIVE_CHALLENGE_2026-10-07.md",
+          "docs/programme/AIN-OS-FLOW-INTEGRATION-CONTRACT_2026-10-07.md",
+          "docs/programme/RGR-05_WORK_UNIT_2026-10-07.json",
+          "tests/constitutional/rgr-flow/matrix.mjs"
+        ],
+        "forbidden_paths": [
+          "app",
+          "lib",
+          "components",
+          "database",
+          "prisma",
+          "jarvis-desktop"
+        ]
+      },
+      "authority": {
+        "repository_read": true,
+        "repository_write": "worktree",
+        "shell": "bounded_write",
+        "network_external": false,
+        "provider_spend": false,
+        "external_disclosure": "none",
+        "merge": false,
+        "deploy": false,
+        "production_read": false,
+        "production_write": false
+      },
+      "evaluation": {
+        "acceptance_conditions": [
+          "RGR-02 ten-heading vocabulary remains unmodified.",
+          "Flow primitive standing remains CANDIDATE_UNESTABLISHED until challenge evidence and later Founder adjudication.",
+          "The derived-Flow model M0 is given a fair opportunity to defeat M1.",
+          "Weather and Elemental operator hypotheses remain separately typed and non-circular.",
+          "Burger/Stone, physiology, Elemental Alchemy, and first-person experience retain separate source standing.",
+          "No MAIA runtime, member memory, schema, migration, or deployment change occurs."
+        ],
+        "falsification_conditions": [
+          "Flow is promoted by rhetoric rather than irreducibility evidence.",
+          "M0 is handicapped by denying matched dynamic representational capacity.",
+          "Elemental labels define the primary Flow benchmark.",
+          "Esoteric and physiological flow are treated as one established mechanism.",
+          "A runtime change appears before separate Founder authorization."
+        ],
+        "stop_conditions": [
+          "Member/private/PHI data becomes necessary for Stage 05A.",
+          "Production runtime alteration becomes necessary.",
+          "Schema or migration becomes necessary.",
+          "The challenge cannot distinguish Flow from ordinary dynamic-system variables without circular definitions."
+        ],
+        "verifier_results": []
+      },
+      "provenance": {
+        "creator": "ChatGPT/JARVIS-assist RGR-05",
+        "authorizing_act": "founder:rgr05-flow-primitive-challenge-20261007",
+        "source_commits": [
+          "f05a2e689331e06c35b490eea0a48b607a694a67"
+        ],
+        "resulting_commits": [],
+        "timestamps": [
+          "2026-10-07"
+        ]
+      },
+      "state": {
+        "lifecycle_state": "AUTHORIZED",
+        "disposition": "open",
+        "supersedes": null
+      }
+    },
+    "guard": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-05-flow-primitive-challenge-20261007",
+      "current_state": "AUTHORIZED",
+      "authorized_core_snapshot": "RGR-05 bounded documentary/formal challenge; no runtime or member-facing authority."
+    }
+  },
+  "standing": "OPEN_BY_FOUNDER_AUTHORIZATION",
+  "execution_note": "Stage 05A only. No RGR-02 rewrite, runtime integration, persistence, schema, migration, deployment, or member-facing Flow inference is authorized."
+}
