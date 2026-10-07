@@ -34,12 +34,12 @@ const REPLY = { model: 'jev-1.13.0', usage: { input_tokens: 300, output_tokens: 
 
 /** Loopback mock of the hosted service. Records everything it is sent. */
 async function startMock() {
-  const m = { requests: [], other: 0, mode: 'ok', reply: () => REPLY, clientGone: 0, lateWrites: [], sockets: new Set() };
+  const m = { requests: [], other: 0, mode: 'ok', reply: () => REPLY, clientGone: 0, socketsClosed: 0, lateWrites: [], sockets: new Set() };
   const server = http.createServer((req, res) => {
     if (req.url === '/other') { m.other += 1; res.writeHead(200, { 'content-type': 'application/json' }); return res.end('{}'); }
     const chunks = [];
     req.on('data', (c) => chunks.push(c));
-    req.on('close', () => { m.clientGone += 1; });
+    
     req.on('end', () => {
       const rec = { method: req.method, url: req.url, headers: req.headers, body: Buffer.concat(chunks) };
       m.requests.push(rec);
@@ -58,7 +58,7 @@ async function startMock() {
       if (mode === 'truncated') { res.writeHead(200, { ...json, 'content-length': '1000' }); res.write('{"a"'); setTimeout(() => req.socket.destroy(), 20); return; }
     });
   });
-  server.on('connection', (s) => { m.sockets.add(s); s.on('close', () => m.sockets.delete(s)); });
+  server.on('connection', (s) => { m.sockets.add(s); s.on('close', () => { m.sockets.delete(s); m.socketsClosed += 1; }); });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   m.port = server.address().port; m.url = `http://127.0.0.1:${m.port}/v1/systemone`;
   m.close = () => new Promise((r) => { server.closeAllConnections(); server.close(r); });
@@ -169,25 +169,25 @@ await check('A5-redirects-are-refused-not-followed', async () => {
 await check('A6-deadline-covers-connection-headers-AND-the-whole-response-body', async () => {
   const m = await startMock(); const p = plan('F01');
   for (const mode of ['stall-headers', 'stall-body', 'trickle']) {
-    m.mode = mode; const gone = m.clientGone; const t0 = Date.now();
+    m.mode = mode; const gone = m.socketsClosed; const t0 = Date.now();
     const e = await bounded(codeOf(mkTransport(m, { timeoutMs: 250 }).send(p.bodyJson, { bodyHash: p.bodyHash })));
     const dt = Date.now() - t0;
     assert.notEqual(e, 'HUNG', mode + ': the call outlived its deadline');
     assert.equal(e.message, 'ADAPTER_TIMEOUT', mode); assert.ok(dt >= 230 && dt < 1500, `${mode}: ${dt}ms`);
-    await sleep(80); assert.ok(m.clientGone > gone, mode + ': socket destroyed, server saw the client leave');
+    await sleep(80); assert.ok(m.socketsClosed > gone, mode + ': socket destroyed, server saw the connection close');
   }
   await m.close();
 });
 
 await check('A7-runner-abort-signal-destroys-the-request', async () => {
   const m = await startMock(); const p = plan('F01'); m.mode = 'stall-body';
-  const ac = new AbortController(); const gone = m.clientGone;
+  const ac = new AbortController(); const gone = m.socketsClosed;
   const pending = codeOf(mkTransport(m, { timeoutMs: 30_000 }).send(p.bodyJson, { signal: ac.signal, bodyHash: p.bodyHash }));
   await sleep(120); ac.abort();
   const settled = await bounded(pending);
   assert.notEqual(settled, 'HUNG', 'the abort signal was ignored');
   assert.equal(settled.message, 'ADAPTER_ABORTED');
-  await sleep(80); assert.ok(m.clientGone > gone);
+  await sleep(80); assert.ok(m.socketsClosed > gone, 'abort closed the connection');
   const before = m.requests.length;
   const pre = new AbortController(); pre.abort();
   assert.equal((await codeOf(mkTransport(m).send(p.bodyJson, { signal: pre.signal }))).message, 'ADAPTER_ABORTED');
@@ -286,11 +286,11 @@ await check('A11-every-failure-mode-stops-the-experiment-without-a-duplicate-req
 
 await check('A12-runner-deadline-aborts-a-slow-adapter-and-leaves-no-late-arrival', async () => {
   const m = await startMock(); const s = stores(); m.mode = 'late:500';
-  const gone = m.clientGone;
+  const gone = m.socketsClosed;
   const r = await run(s.pair, 'F01', mkTransport(m, { timeoutMs: 30_000 }), { timeoutMs: 120 });   // the RUNNER's deadline fires first
   assert.equal(r.outcome, 'crossing_unknown'); assert.equal(r.reason, 'TIMEOUT');
   await sleep(700);
-  assert.ok(m.clientGone > gone); assert.equal(m.lateWrites[0].destroyed, true);
+  assert.ok(m.socketsClosed > gone); assert.equal(m.lateWrites[0].destroyed, true);
   const kinds = W.createLedger(s.ledgerPath).read().map((x) => x.kind);
   assert.deepEqual(kinds, ['init', 'reserved', 'settled', 'halted']);                              // the late answer was never recorded
   assert.equal(m.requests.length, 1);
