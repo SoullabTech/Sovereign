@@ -6,8 +6,8 @@
  *    substitutes that body. If the runner passes the recorded pre-send hash, bytes that do not hash to it are refused
  *    before any connection exists.
  *  - Remote endpoints are refused unless `allowRemote === true` AND the endpoint is exactly the pinned production
- *    one (https, api.typesafe.ai, /v1/systemone, no port/credentials/query). No code in this repository passes
- *    `allowRemote: true`; the runner's committed `RESPONSE_SHAPE.witnessed === false` independently refuses every send.
+ *    one (https, api.typesafe.ai, /v1/systemone, no port/credentials/query). No code in this repository enables
+ *    the remote option; the runner's committed `RESPONSE_SHAPE.witnessed === false` independently refuses every send.
  *  - No environment reads, no file reads, no logging. The credential is supplied by the caller (a string or a function),
  *    lives only in a closure, appears only in the Authorization header, and is never placed in an error.
  *  - One request per call: no retries, no redirects (3xx is refused, not followed), response size capped, and ONE
