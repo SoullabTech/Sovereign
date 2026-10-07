@@ -100,6 +100,20 @@ function reply(
   });
   res.end(body);
 }
+/** Reject rebinding hostnames before any route or custody read/repair.
+ * Inspect raw headers: Node may discard duplicate Host values in req.headers.
+ * This is a loopback-origin boundary, not authentication of local processes.
+ */
+function allowedHost(req: IncomingMessage): boolean {
+  const hosts: string[] = [];
+  for (let i = 0; i < req.rawHeaders.length; i += 2) {
+    if (req.rawHeaders[i]?.toLowerCase() === 'host') hosts.push(req.rawHeaders[i + 1] ?? '');
+  }
+  return hosts.length === 1 && (
+    hosts[0]?.toLowerCase() === 'localhost:' + port || hosts[0] === '127.0.0.1:' + port
+  );
+}
+
 function sameOrigin(req: IncomingMessage): boolean {
   const origin = req.headers.origin;
   if (!origin) return true;
@@ -117,6 +131,9 @@ async function bodyJson(req: IncomingMessage): Promise<unknown> {
 
 const server = createServer(async (req, res) => {
   try {
+    if (!allowedHost(req)) {
+      return reply(res, 403, 'application/json', '{"ok":false,"error":"INVALID_HOST"}\n');
+    }
     const url = new URL(req.url ?? '/', 'http://127.0.0.1:' + port);
     if (req.method === 'GET' && url.pathname === '/') {
       return reply(res, 200, 'text/html; charset=utf-8', html, {

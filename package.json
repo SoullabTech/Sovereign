@@ -101,6 +101,8 @@
     "matrix:jarvis-jev-label-01-f-durability": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/human-f-durability-mutations.ts",
     "smoke:jarvis-jev-label-01-f-ui": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/human-f-ui-server-smoke.ts",
     "verify:jarvis-jev-label-01-f-mac-readiness": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/human-f-mac-readiness-verify.ts",
+    "verify:jarvis-jev-label-01-f-host": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/human-f-host-verify.ts",
+    "matrix:jarvis-jev-label-01-f-host": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/human-f-host-mutations.ts",
     "pilot:jarvis-jev-label-01:human-ui": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/human-ui-server.ts",
     "verify:jarvis-jev-label-01-human-ui": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/human-ui-verify.ts",
     "verify:review-custody-freeze": "npx tsx scripts/verify-review-custody-freeze.ts",
