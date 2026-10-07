@@ -30,6 +30,8 @@ export type MaiaCraftCompanionR1Props = {
   onEditLatitude: (value: EditorialLatitude) => void;
   mayRemoveParagraphs: boolean;
   onMayRemoveParagraphs: (value: boolean) => void;
+  mayProposeImmediately: boolean;
+  onMayProposeImmediately: (value: boolean) => void;
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
   onSend: (text?: string, options?: SendOptions) => void;
@@ -289,6 +291,19 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                       {props.mayRemoveParagraphs
                         ? 'Whole-paragraph removal is allowed in proposals for this visit. You still decide.'
                         : 'Even at Open, MAIA may discuss removing a paragraph but cannot arrive with it already gone.'}
+                    </small>
+                    <label className="p4r1-maia-craft-r1-paragraphs">
+                      <input
+                        type="checkbox"
+                        checked={props.mayProposeImmediately}
+                        onChange={(event) => props.onMayProposeImmediately(event.target.checked)}
+                      />
+                      MAIA may offer wording without waiting for me to ask
+                    </label>
+                    <small>
+                      {props.mayProposeImmediately
+                        ? 'MAIA may bring a bounded wording suggestion when it would help. It remains craft material, never an automatic edit.'
+                        : 'MAIA discusses first. She offers wording when you explicitly ask for it.'}
                     </small>
                   </div>
                 </details>
