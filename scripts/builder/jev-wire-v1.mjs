@@ -399,7 +399,7 @@ export async function runAttempt({ attemptId, ledger, transport, now = () => Dat
   const controller = new AbortController();
   let timer; let raw;
   try {
-    const sending = Promise.resolve().then(() => transport.send(plan.bodyJson, { signal: controller.signal }));
+    const sending = Promise.resolve().then(() => transport.send(plan.bodyJson, { signal: controller.signal, bodyHash: plan.bodyHash }));
     sending.catch(() => {});                                  // a late rejection must not escape
     const deadline = new Promise((_, reject) => {
       timer = setTimeout(() => { controller.abort(); reject(new Error('TIMEOUT')); }, timeoutMs);
