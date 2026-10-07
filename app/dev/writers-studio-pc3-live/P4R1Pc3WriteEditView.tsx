@@ -233,13 +233,18 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   }, [props.focusId]);
 
   useEffect(() => {
+    /* R8L — Develop Craft has ONE room: manuscript + Craftsman. A stale
+       isolation state from Write must not survive the crossing or be able to
+       hide the docked Craft relationship. */
+    if (props.surfaceMode === 'develop-craft' && isolatedEditorial) {
+      setIsolatedEditorial(false);
+      return;
+    }
     if (!props.workspaceOpen && isolatedEditorial) {
       setIsolatedEditorial(false);
       return;
     }
-    /* Ordinary Write isolates a substantial editorial act. Develop Craft is
-       deliberately the opposite: the manuscript itself remains the craft field,
-       with editorial marks and MAIA alongside it. */
+    /* Ordinary Write may still isolate a substantial editorial act. */
     if (props.surfaceMode !== 'develop-craft' && props.workspaceOpen && props.held && !isolatedEditorial) {
       setIsolatedEditorial(true);
     }
@@ -461,6 +466,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     if (ok) setSelectedRevisionEdits(new Set());
   };
 
+  const openPassageWorkspace = (isolateInWrite: boolean) => {
+    setSelectionMenuOpen(false);
+    props.onOpenWorkspace();
+    if (isolateInWrite && props.surfaceMode !== 'develop-craft') {
+      setIsolatedEditorial(true);
+    }
+  };
+
   const contextualActions = selectionRect && props.held && !isolatedEditorial ? (
     <div
       className="p4r1-selection-affordance"
@@ -484,18 +497,16 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       {selectionMenuOpen ? (
         <div className="p4r1-selection-menu" role="menu">
           <button type="button" role="menuitem" className="p4r1-selection-menu-primary" onClick={() => {
-            setSelectionMenuOpen(false);
-            props.onOpenWorkspace();
-            setIsolatedEditorial(true);
+            openPassageWorkspace(true);
           }}>
-            <b>Focus</b>
-            <span>Open the passage in the dedicated editorial room.</span>
+            <b>{props.surfaceMode === 'develop-craft' ? 'Work here' : 'Focus'}</b>
+            <span>{props.surfaceMode === 'develop-craft'
+              ? 'Keep this passage in the Craft canvas with MAIA beside it.'
+              : 'Open the passage in the dedicated editorial room.'}</span>
           </button>
 
           <button type="button" role="menuitem" onClick={() => {
-            setSelectionMenuOpen(false);
-            props.onOpenWorkspace();
-            setIsolatedEditorial(true);
+            openPassageWorkspace(true);
             props.onSendEditorial([
               'Help me revise this exact passage.',
               'Start with exactly these three short lines in plain language:',
@@ -678,7 +689,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   ) : null;
 
   const editorial = props.workspaceOpen
-    && !isolatedEditorial
+    && (props.surfaceMode === 'develop-craft' || !isolatedEditorial)
     && (!props.held || props.surfaceMode === 'develop-craft') ? (
     <div className="p4r1-context-card p4r1-editorial" data-p4r1-editorial>
       <header className="p4r1-context-head">
@@ -1018,7 +1029,9 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     ?? (railSelectionId || workConversationOpen ? writeMaia : undefined);
   const shellHasCraftEditorial = craftEditorialInShell !== null;
 
-  const isolatedRoom = props.workspaceOpen && isolatedEditorial ? (
+  const isolatedRoom = props.surfaceMode !== 'develop-craft'
+    && props.workspaceOpen
+    && isolatedEditorial ? (
     <IsolatedEditorialRoom
       appearance={props.appearance}
       craftMode={props.craftMode}
