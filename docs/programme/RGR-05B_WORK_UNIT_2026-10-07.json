@@ -112,5 +112,280 @@
     }
   },
   "standing": "OPEN_BY_FOUNDER_AUTHORIZATION",
-  "execution_note": "RGR-05B designs the benchmark only. Materialization, model training, benchmark execution, MAIA integration, member data, schema/migration, and deployment remain unauthorized."
+  "execution_note": "RGR-05B designs the benchmark only. Materialization, model training, benchmark execution, MAIA integration, member data, schema/migration, and deployment remain unauthorized.",
+  "repair_r1": {
+    "version": "R1",
+    "standing": "REPAIR_CANDIDATE_NOT_FOUNDER_ADJUDICATED",
+    "original_reviewed_commit": "7f00d4ee2ba174a0e7245dd11dc9c64f16701a4d",
+    "original_document_sha256": "56a9ad9930c90bb6e114a3905394b2c02510454ca668d41e627e976d2f45069b",
+    "authorizing_context": "User continue after bounded RGR-05B repair next step; no benchmark execution or production authority",
+    "protected_sources": [
+      "docs/programme/RGR-02_FORMAL_VOCABULARY_CANDIDATE_STRUCTURES_2026-09-18.md",
+      "docs/programme/RGR-05A_FLOW_REDUCIBILITY_RESULT_2026-10-07.md",
+      "docs/programme/RGR-05A_WORK_UNIT_2026-10-07.json"
+    ],
+    "document_sha256": "16df2b04c769e94adff6147c81177c9698a5d6a1878b29920181aeb36fde1567",
+    "rationale_sha256": "cbcb1a0cecaa95dc4ba06e17a75a244ea97951a942f8877c11ccb42d43acd3fd",
+    "contract": {
+      "version": "RGR-FLOW-SFRB-01-R1",
+      "hypothesis": "H-GT1_declared_graph_temporal_inductive_bias",
+      "uniqueFlowAlgorithmClaim": false,
+      "separateConductanceResistanceClaim": false,
+      "scopeBase": "6eb1396912162501982a26d8a105ed165a5f96bd",
+      "allowedPaths": [
+        "docs/programme/RGR-05B_SYNTHETIC_FLOW_REPRESENTATION_BENCHMARK_2026-10-07.md",
+        "docs/programme/RGR-05B_BENCHMARK_DESIGN_RATIONALE_2026-10-07.md",
+        "docs/programme/RGR-05B_WORK_UNIT_2026-10-07.json",
+        "tests/constitutional/rgr-flow-05b/matrix.mjs"
+      ],
+      "executionAuthority": {
+        "generateBenchmark": false,
+        "implementSimulator": false,
+        "trainModels": false,
+        "evaluateBenchmark": false,
+        "readMemberData": false,
+        "changeMAIA": false,
+        "migrateSchema": false,
+        "merge": false,
+        "deploy": false
+      },
+      "pulses": {
+        "P0": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "P1": [
+          0.5,
+          0.5,
+          0,
+          0
+        ],
+        "P2": [
+          0.5,
+          0,
+          0.5,
+          0
+        ],
+        "P3": [
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "P4": [
+          0.5,
+          0,
+          0,
+          0.5
+        ],
+        "P5": [
+          0,
+          0.5,
+          0.5,
+          0
+        ]
+      },
+      "confirmatoryRhythm": [
+        "P4",
+        "P5"
+      ],
+      "rootGrouping": "query_marked_topology_all_descendants",
+      "buckets": {
+        "TRAIN": [
+          0,
+          59
+        ],
+        "VALIDATION": [
+          60,
+          74
+        ],
+        "TEST": [
+          75,
+          89
+        ],
+        "REPLICATION": [
+          90,
+          99
+        ]
+      },
+      "roots": {
+        "TRAIN": 1000,
+        "VALIDATION": 250,
+        "TEST": 500,
+        "REPLICATION": 500
+      },
+      "ordinary": {
+        "TRAIN": 20000,
+        "VALIDATION": 5000,
+        "TEST": 10000,
+        "REPLICATION": 10000
+      },
+      "oppositePairsPerFamily": {
+        "TRAIN": 2000,
+        "VALIDATION": 500,
+        "TEST": 1000,
+        "REPLICATION": 1000
+      },
+      "sameLabelPairsPerFamily": {
+        "TRAIN": 1000,
+        "VALIDATION": 250,
+        "TEST": 500,
+        "REPLICATION": 500
+      },
+      "primaryMetricPopulation": "ordinary_only",
+      "graphDrawCap": 20000000,
+      "ordinaryDrawCap": 100000,
+      "pairDrawCap": 2000000,
+      "rawViews": {
+        "F_G": [
+          "node_ids",
+          "ordered_endpoints",
+          "layer_roles",
+          "p0",
+          "p1",
+          "c",
+          "r",
+          "delay",
+          "carrier",
+          "pulse_values_and_times",
+          "source_sink",
+          "horizon",
+          "turnaround_coefficient"
+        ],
+        "F_F": [
+          "node_ids",
+          "ordered_endpoints",
+          "layer_roles",
+          "p0",
+          "p1",
+          "c",
+          "r",
+          "delay",
+          "carrier",
+          "pulse_values_and_times",
+          "source_sink",
+          "horizon",
+          "turnaround_coefficient"
+        ]
+      },
+      "tasks": {
+        "A": {
+          "horizon": 10,
+          "threshold": 0.6,
+          "families": [
+            "CF-1",
+            "CF-2",
+            "CF-3"
+          ]
+        },
+        "B": {
+          "horizon": 18,
+          "threshold": 0.3,
+          "families": [
+            "CF-1",
+            "CF-2",
+            "CF-3",
+            "CF-6"
+          ]
+        }
+      },
+      "turnaround": 0.75,
+      "invariantFamilies": [
+        "CF-4",
+        "CF-5",
+        "CF-7"
+      ],
+      "training": {
+        "searchConfigurationsPerDynamicFamily": 12,
+        "searchSeeds": [
+          1101,
+          1102
+        ],
+        "confirmationSeeds": [
+          2101,
+          2102,
+          2103,
+          2104,
+          2105,
+          2106,
+          2107,
+          2108,
+          2109,
+          2110
+        ],
+        "replicationSeeds": [
+          3101,
+          3102,
+          3103,
+          3104,
+          3105,
+          3106,
+          3107,
+          3108,
+          3109,
+          3110
+        ],
+        "maxEpochs": 100,
+        "batchSize": 128,
+        "patience": 10,
+        "loss": "binary_cross_entropy_with_logits",
+        "optimizer": "AdamW",
+        "learningRates": [
+          0.001,
+          0.0003
+        ],
+        "weightDecay": [
+          0,
+          0.0001
+        ]
+      },
+      "bootstrap": {
+        "replicates": 10000,
+        "commonRootDrawAcrossModels": true,
+        "independentFamilySeedDraws": true,
+        "coverageValidated": false,
+        "percentiles": [
+          2.5,
+          97.5
+        ],
+        "invalidRedrawCap": 100
+      },
+      "seeds": {
+        "GRAPH": 5107001,
+        "ATTRIBUTES": 5107002,
+        "PRESENTATION": 5107003,
+        "PAIR": 5107004,
+        "TRAIN_ORDER": 5107005,
+        "LABEL_CONTROL": 5107006,
+        "BOOTSTRAP": 5107007
+      },
+      "thresholds": {
+        "competenceMean": 0.85,
+        "competenceRunsMin": 8,
+        "absoluteBA": 0.8,
+        "staticGap": 0.1,
+        "superiorityMargin": 0.05,
+        "equivalenceMargin": 0.05,
+        "invarianceEquivalenceMargin": 0.02,
+        "pairCorrect": 0.75,
+        "invarianceAgreement": 0.95,
+        "invarianceAccuracy": 0.8,
+        "rhythmShortcutPairCeiling": 0.6,
+        "labelControlBAMax": 0.52
+      },
+      "remainingGates": [
+        "exact_repaired_byte_review",
+        "founder_design_adjudication",
+        "reference_generator_feasibility",
+        "source_and_environment_freeze",
+        "evaluator_calibration",
+        "separate_training_authority"
+      ]
+    },
+    "review_status": "NOT_YET_REVIEWED",
+    "toolchain_evidence": "/Users/soullab/.maia-evidence/rgr05b-pinned-governance-0lj1v1u0/toolchain-evidence.json",
+    "legacy_envelope_notice": "The pre-existing guard is documentary, not a computed W2 authorization snapshot; no mechanical lifecycle transition is asserted."
+  }
 }
