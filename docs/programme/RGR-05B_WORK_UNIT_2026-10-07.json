@@ -384,7 +384,7 @@
         "separate_training_authority"
       ]
     },
-    "review_status": "REVIEW_INCOMPLETE_SECOND_REVIEW_TIMEOUT",
+    "review_status": "LOCAL_SOURCE_REVIEW_COMPLETE_PENDING_FOUNDER_ADJUDICATION",
     "toolchain_evidence": "/Users/soullab/.maia-evidence/rgr05b-pinned-governance-0lj1v1u0/toolchain-evidence.json",
     "legacy_envelope_notice": "The pre-existing guard is documentary, not a computed W2 authorization snapshot; no mechanical lifecycle transition is asserted.",
     "review_evidence": {
@@ -466,6 +466,135 @@
         "Founder adjudication of the design",
         "separately authorized generator feasibility and evaluator calibration",
         "implementation/environment freeze before training"
+      ]
+    },
+    "review_completion": {
+      "status": "LOCAL_SOURCE_REVIEW_COMPLETE_PENDING_FOUNDER_ADJUDICATION",
+      "reviewed_design_commit": "f6f9c7cb02bfa47a36cc4b143b66a99f1d441ebf",
+      "record_base_commit": "93e86af81bf84c8b447f3cdc0e16c775f1c6c2e1",
+      "document_sha256": "16df2b04c769e94adff6147c81177c9698a5d6a1878b29920181aeb36fde1567",
+      "contract_sha256": "1f3d376d5b360817bfd441b160fcfbb894aeb9104ea09619da1540ff72e14d92",
+      "prompt_sha256": "0c9804237eee0fb5b00d0f6755b92b2d1b5f98cd31dd3e25fdde4b505880743e",
+      "contract_file_sha256": "02995c63bdf131589be0e1b1c7ee7da45a794fac11717249ed9e26ca60653cc7",
+      "contract_digest_definition": "SHA256 of JSON.stringify(contract,null,2), the exact no-final-newline contract embedded in preserved prompt",
+      "attempt_id": "gptoss-r1-retry-02",
+      "previous_timeout_preserved": true,
+      "previous_review_record_retained": true,
+      "retry_execution_change": {
+        "timeout_ms": {
+          "before": 180000,
+          "now": 600000
+        }
+      },
+      "model": "gpt-oss:20b",
+      "model_digest": "17052f91a42e97930aa6e28a6c6c06a983e6a58dbb00434885a0cf5313e376f7",
+      "raw_verdict": "RETURN",
+      "completion": "stop",
+      "duration_s": 111,
+      "prompt_eval_count": 9668,
+      "eval_count": 6980,
+      "output_sha256": "38067c4646cfa5b7dc732af04e3539563db69bc5cdcb451ba86baf2332505c0c",
+      "finished_at": "2026-10-07T15:40:27.329Z",
+      "evidence_directory": "/Users/soullab/.maia-evidence/rgr-05b-r1-second-review-retry-rrtnrQ",
+      "builder_source_grounding": [
+        {
+          "id": "G1",
+          "reviewer_claim": "No binary label definition",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "source_lines": [
+            37,
+            39,
+            68
+          ],
+          "reason": "Section 2 specifies D_A >= 3/5 at inclusive H_A=10 and D_B >=3/10 at H_B=18. Section 3 expressly assigns threshold equality to class one and defines absorbing counters. Positive and negative strata refer to these task targets. Removing the quantity thresholds in favor of mere reachability would change the benchmark rather than repair it."
+        },
+        {
+          "id": "G2",
+          "reviewer_claim": "kappa is undefined because transport tokens carry no carrier",
+          "disposition": "REJECTED_FALSE_PER_TOKEN_PREMISE",
+          "source_lines": [
+            41,
+            44,
+            49,
+            122,
+            140,
+            162
+          ],
+          "reason": "One queried carrier is drawn per instance (section 5), with values K0/K1 (section 2); CF-1 changes that query while holding the whole world fixed. All dispatches in that instance use the selected channel. The specified scalar-stock system does not posit mixed-carrier tokens requiring separate token labels. Independent reference code must bind that same query explicitly."
+        },
+        {
+          "id": "G3",
+          "reviewer_claim": "query carrier has no definition",
+          "disposition": "REJECTED_REPEATS_G2",
+          "source_lines": [
+            41,
+            122,
+            140,
+            162
+          ],
+          "reason": "The query is the per-instance carrier selected for the outcome and supplied to both raw views. CF-1 is operationally query K0 versus K1 in the same graph. No new carrier ontology or per-node default is needed."
+        },
+        {
+          "id": "G4",
+          "reviewer_claim": "node embeddings cannot use carrier because nodes do not own carrier",
+          "disposition": "REJECTED_CONDITIONING_VERSUS_OWNERSHIP_CONFUSION",
+          "source_lines": [
+            162,
+            182
+          ],
+          "reason": "The model conditions each node state on the shared input query; it does not assert that nodes possess a physical carrier attribute. The same query is available to F_G. Adding a per-node carrier or deleting conditioning would change the declared comparison without a demonstrated error."
+        },
+        {
+          "id": "G5",
+          "reviewer_claim": "CF-7 preserving two effective channels requires p(K0)=p(K1)",
+          "disposition": "REJECTED_COMPONENTWISE_EQUALITY_CONFUSION",
+          "source_lines": [
+            44,
+            49,
+            52,
+            148
+          ],
+          "reason": "CF-7 compares each channel before versus after tuple replacement, not K0 versus K1 within a tuple. At delay 2, tuples (p0=1/2,p1=1,c=1/2,r=0) and (p0=1/2,p1=1,c=1,r=1/2) both yield (a0=1/4,a1=1/2). Permeabilities differ and the distinct tuples preserve both channels. This analytic equality refutes the impossibility claim; it does not prove full dataset eligibility or quota feasibility."
+        }
+      ],
+      "local_critique_collection_complete": true,
+      "independent_human_review": false,
+      "reviewer_acceptance": false,
+      "surviving_new_blockers_identified_by_builder": [],
+      "design_assessment": "Ready for Founder design adjudication on the preserved R1 specification, with explicit unexecuted feasibility, implementation and uncertainty-validation gates. This is the builder source-grounding recommendation, not a model ACCEPT or a proof of validity.",
+      "limitations": [
+        "Both completed raw local-model verdicts remain RETURN; critiques are rejected/narrowed against exact source and arithmetic, not converted into reviewer approval.",
+        "The reviewers may miss other defects; no independent human assessment has been performed.",
+        "Only simple attribute arithmetic was checked; no transport world was generated or simulated.",
+        "Dataset/root/quota feasibility, simulator correctness, model-input parity, interval calibration and training performance remain unestablished.",
+        "RGR-05A closure remains a Founder programme act, not evidence that its PR was canonically merged."
+      ],
+      "remaining_gates": [
+        "Founder adjudication of exact R1 design",
+        "separately authorized reference-generator feasibility",
+        "model source and environment freeze before materialization",
+        "separately authorized evaluator calibration",
+        "separate training authority",
+        "separate MAIA/runtime integration authority"
+      ],
+      "document_unchanged": true,
+      "contract_unchanged": true,
+      "founder_adjudication": false,
+      "benchmark_materialized": false,
+      "simulator_run": false,
+      "training_run": false,
+      "member_data_used": false,
+      "merge": false,
+      "deploy": false,
+      "methodology_checked": [
+        {
+          "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html",
+          "scope": "Paired sample resampling uses common observation indices; supports the prior Q6 source-grounding, not calibration of this crossed-root/model-seed interval rule."
+        },
+        {
+          "url": "https://arxiv.org/abs/1806.01261",
+          "scope": "Ordinary relational inductive biases; supports retaining the bounded graph-temporal architecture claim, not novel FLOW_D algorithm or performance."
+        }
       ]
     }
   }
