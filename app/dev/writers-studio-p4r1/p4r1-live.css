@@ -5425,3 +5425,109 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   .p4r1-root .p4r1-craft-r1-bar{padding:12px 14px}
   .p4r1-root .p4r1-craft-r1-footer{bottom:10px;width:calc(100% - 20px)}
 }
+
+
+/* R1 professional notation — hidden by default, revealed from one Marks control. */
+.p4r1-root .p4r1-craft-r1-controls{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  flex:0 0 auto;
+}
+.p4r1-root .p4r1-craft-r1-notation{
+  position:relative;
+}
+.p4r1-root .p4r1-craft-r1-notation>summary{
+  list-style:none;
+  cursor:pointer;
+  border:1px solid var(--fr-line);
+  border-radius:999px;
+  background:var(--fr-field);
+  color:var(--fr-muted);
+  padding:7px 10px;
+  font:600 10.5px/1 var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-craft-r1-notation>summary::-webkit-details-marker{
+  display:none;
+}
+.p4r1-root .p4r1-craft-r1-notation[open]>summary{
+  color:var(--fr-action);
+  border-color:var(--fr-action-line);
+}
+.p4r1-root .p4r1-craft-r1-notation>div{
+  position:absolute;
+  right:0;
+  top:calc(100% + 7px);
+  z-index:10;
+  min-width:160px;
+  display:grid;
+  gap:4px;
+  padding:7px;
+  border:1px solid var(--fr-line);
+  border-radius:10px;
+  background:var(--fr-panel);
+  box-shadow:0 12px 28px rgba(7,18,45,.15);
+}
+.p4r1-root .p4r1-craft-r1-notation button{
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:var(--fr-ink2);
+  padding:7px 8px;
+  text-align:left;
+  font:600 10.5px/1.2 var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-craft-r1-notation button[aria-pressed='true']{
+  background:var(--fr-action-soft);
+  color:var(--fr-action);
+}
+.p4r1-root .p4r1-craft-r1-mark-unit{
+  position:relative;
+}
+.p4r1-root .p4r1-craft-r1-proofmark{
+  position:relative;
+  top:-.62em;
+  margin:0 3px 0 1px;
+  color:var(--fr-action);
+  font:700 8.5px/1 var(--fr-sans-stack);
+  letter-spacing:.03em;
+  text-transform:none;
+  white-space:nowrap;
+  cursor:help;
+}
+.p4r1-root .p4r1-craft-r1-own-wording{
+  display:grid!important;
+  gap:9px!important;
+}
+.p4r1-root .p4r1-craft-r1-own-wording label{
+  display:grid;
+  gap:5px;
+}
+.p4r1-root .p4r1-craft-r1-own-wording label>span{
+  color:var(--fr-muted);
+  font:600 9.5px/1.2 var(--fr-sans-stack);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.p4r1-root .p4r1-craft-r1-own-wording textarea{
+  width:100%;
+  min-height:76px;
+  resize:vertical;
+  border:1px solid var(--fr-line);
+  border-radius:8px;
+  background:var(--fr-field);
+  color:var(--fr-title);
+  padding:9px 10px;
+  outline:none;
+  font:15px/1.5 var(--fr-serif-stack);
+}
+.p4r1-root .p4r1-craft-r1-own-wording textarea:focus{
+  border-color:var(--fr-action-line);
+  box-shadow:0 0 0 2px var(--fr-action-soft);
+}
+.p4r1-root .p4r1-craft-r1-own-wording>div{
+  display:flex;
+  gap:6px;
+  justify-content:flex-end;
+}
