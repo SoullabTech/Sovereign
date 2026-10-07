@@ -11,3 +11,7 @@
   .stateRow { grid-template-columns: 1fr; gap: 4px; }
   .choiceRow.two { grid-template-columns: 1fr; }
 }
+
+.custody { margin: 10px 0 14px; padding: 9px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.45;
+  background: #eef5ee; border: 1px solid #b9d3bb; color: #264a2a; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+.custody.bad { background: #fbeceb; border-color: #d99a93; color: #7a231b; font-weight: 600; }
