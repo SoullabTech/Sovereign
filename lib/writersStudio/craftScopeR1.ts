@@ -8,25 +8,26 @@ export type CraftZoom = 'passage' | 'section' | 'chapter' | 'whole';
 
 export interface CraftRereadIntent {
   readonly zoom: CraftZoom;
-  readonly lens: DevelopmentalLens;
+  /** null means the writer asked for a broad look, so the governed multi-lens review is appropriate. */
+  readonly lens: DevelopmentalLens | null;
   readonly explicit: true;
 }
 
-const wholePattern = /(?:wholes+(?:book|manuscript|work)|acrosss+(?:thes+)?(?:book|manuscript|work)|books+ass+as+whole|largers+(?:book|work))/i;
-const chapterPattern = /(?:thiss+chapter|wholes+chapter|chapters+ass+as+whole|acrosss+(?:thes+)?chapter)/i;
-const sectionPattern = /(?:thiss+section|wholes+section|sections+ass+as+whole)/i;
-const passagePattern = /(?:thiss+passage|thiss+paragraph|thiss+sentence|theses+words|thiss+phrase)/i;
+const wholePattern = /\b(?:whole\s+(?:book|manuscript|work)|across\s+(?:the\s+)?(?:book|manuscript|work)|book\s+as\s+a\s+whole|larger\s+(?:book|work))\b/i;
+const chapterPattern = /\b(?:this\s+chapter|whole\s+chapter|chapter\s+as\s+a\s+whole|across\s+(?:the\s+)?chapter)\b/i;
+const sectionPattern = /\b(?:this\s+section|whole\s+section|section\s+as\s+a\s+whole)\b/i;
+const passagePattern = /\b(?:this\s+passage|this\s+paragraph|this\s+sentence|these\s+words|this\s+phrase)\b/i;
 
-function lensFrom(text: string): DevelopmentalLens {
-  if (/(?:arc|journey|movements+ofs+(?:thes+)?(?:chapter|book|work))/i.test(text)) return 'arc';
-  if (/(?:structure|sequence|order|belongs?s+here|shape(?:d)?)/i.test(text)) return 'structure';
-  if (/(?:theme|motif|recurs?|returning)/i.test(text)) return 'themes';
-  if (/(?:voice|register|sounds?s+likes+me|tone)/i.test(text)) return 'voice';
-  if (/(?:continuity|carrys+through|earlier|later|setup|payoff)/i.test(text)) return 'continuity';
-  if (/(?:coherence|consistent|contradict|holds?s+together)/i.test(text)) return 'coherence';
-  if (/(?:reader|orientation|confus|follow|experience)/i.test(text)) return 'reader';
-  if (/(?:develop|overexpl|underdevelop|repeat|repetition|thin|dense)/i.test(text)) return 'development';
-  return 'overview';
+function explicitLensFrom(text: string): DevelopmentalLens | null {
+  if (/\b(?:arc|journey|movement\s+of\s+(?:the\s+)?(?:chapter|book|work))\b/i.test(text)) return 'arc';
+  if (/\b(?:structure|sequence|order|belongs?\s+here|shape(?:d)?)\b/i.test(text)) return 'structure';
+  if (/\b(?:theme|motif|recurs?|returning)\b/i.test(text)) return 'themes';
+  if (/\b(?:voice|register|sounds?\s+like\s+me|tone)\b/i.test(text)) return 'voice';
+  if (/\b(?:continuity|carry\s+through|setup|payoff)\b/i.test(text)) return 'continuity';
+  if (/\b(?:coherence|consistent|contradict|holds?\s+together)\b/i.test(text)) return 'coherence';
+  if (/\b(?:reader|orientation|confus|follow|reader\s+experience)\b/i.test(text)) return 'reader';
+  if (/\b(?:development|developing|overexpl|underdevelop|repeat|repetition|thin|dense)\b/i.test(text)) return 'development';
+  return null;
 }
 
 /**
@@ -42,7 +43,7 @@ export function detectCraftRereadIntent(text: string): CraftRereadIntent | null 
           : passagePattern.test(text) ? 'passage'
             : null;
   if (!zoom) return null;
-  return { zoom, lens: lensFrom(text), explicit: true };
+  return { zoom, lens: explicitLensFrom(text), explicit: true };
 }
 
 export function craftReadingScope(
