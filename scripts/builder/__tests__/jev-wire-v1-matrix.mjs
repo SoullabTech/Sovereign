@@ -11,13 +11,13 @@ import { dirname, join } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PROOF = join(HERE, 'jev-wire-v1-proof.mjs');
 
-const RESERVE_BLOCK = `  ledger.append({
-    kind: 'reserved', attempt_id: attemptId, wire_body_hash: plan.bodyHash,
-    table_version: QUESTION_TABLE.table_version, reserve_usd: BUDGET.reserve_usd, at: now(),
-  });
-`;
+const OBSERVED_APPEND = `    ledger.append({
+      kind: 'observed', attempt_id: attemptId, observation,
+      response_sha256: sha256Hex(parsed.response_canonical), response_canonical: parsed.response_canonical, at: now(),
+    });`;
 
 const CANDIDATES = [
+  // ── wire body ──
   ['DC-ARRAY-QUESTIONS', 'W1', [[
     "questions: { [packet.question_id]: { type: entry.type, instructions: entry.instructions } },",
     "questions: [{ id: packet.question_id, type: entry.type, instructions: entry.instructions }],"]]],
@@ -33,36 +33,73 @@ const CANDIDATES = [
     "  if (body.model !== QUESTION_TABLE.model) return REFUSE('MODEL_NOT_PINNED');\n", '']]],
   ['DC-NONCANONICAL-HASH', 'W6', [['const bodyJson = canonicalJson(body);', 'const bodyJson = JSON.stringify(body);']]],
   ['DC-ALLOWLIST-BYPASS', 'W9', [['return ALLOWED_HASHES.has(sha256Hex(canonicalJson(body)));', 'return true;']]],
-  ['DC-NO-RESERVATION-BEFORE-SEND', 'W10', [[RESERVE_BLOCK, '']]],
+  ['DC-FIXTURE-DRIFT', 'W7', [["f.push(['F10', st({ requiresExternalInfo: true })]);", "f.push(['F10', st({ requiresExternalInfo: true, fileCount: 2 })]);"]]],
+  ['DC-TABLE-DRIFT', 'W25', [["instructions: 'Does this appear to cross a structural-risk boundary?',", "instructions: 'Does this appear to be risky?',"]]],
+  // ── send discipline ──
+  ['DC-NO-RESERVATION-BEFORE-SEND', 'W10', [[
+    "      writeRecord(records, record);\n      return { ok: true };", "      return { ok: true };"]]],
   ['DC-RESERVE-AFTER-SEND', 'W11', [
-    [RESERVE_BLOCK, ''],
-    ["  const questionId = plan.body.state.question_id;\n", RESERVE_BLOCK + "  const questionId = plan.body.state.question_id;\n"]]],
+    ["      writeRecord(records, record);\n      return { ok: true };", "      return { ok: true };"],
+    ["  const questionId = plan.body.state.question_id;\n",
+     "  try { ledger.append({ kind: 'reserved', attempt_id: attemptId, wire_body_hash: plan.bodyHash, reserve_usd: BUDGET.reserve_usd }); } catch { /* late */ }\n  const questionId = plan.body.state.question_id;\n"]]],
   ['DC-CROSSING-UNKNOWN-NOT-HALTED', 'W12', [["kind: 'halted', reason: 'CROSSING_UNKNOWN'", "kind: 'noted', reason: 'CROSSING_UNKNOWN'"]]],
   ['DC-AUTO-RETRY', 'W12', [[
-    'raw = await transport.send(plan.bodyJson);',
-    'try { raw = await transport.send(plan.bodyJson); } catch { raw = await transport.send(plan.bodyJson); }']]],
+    'raw = await Promise.race([sending, deadline]);',
+    'raw = await Promise.race([sending.catch(() => transport.send(plan.bodyJson, { signal: controller.signal })), deadline]);']]],
   ['DC-UNKNOWN-USAGE-RELEASED', 'W13', [[
-    's && s.cost_known ? s.cost_usd : BUDGET.reserve_usd', 's && s.cost_known ? s.cost_usd : (s ? 0 : BUDGET.reserve_usd)']]],
+    'usd += st && st.cost_known ? st.cost_usd : BUDGET.reserve_usd;', 'usd += st && st.cost_known ? st.cost_usd : (st ? 0 : BUDGET.reserve_usd);']]],
   ['DC-CAP-120', 'W14', [['max_attempts: 31', 'max_attempts: 120']]],
-  ['DC-CEILING-OFF', 'W15', [['if (s.usd + BUDGET.reserve_usd > BUDGET.ceiling_usd)', 'if (false)']]],
-  ['DC-DUPLICATE-ATTEMPT-ALLOWED', 'W16', [["  if (s.used.has(attemptId)) return refused('ATTEMPT_ALREADY_USED');\n", '']]],
+  ['DC-CEILING-OFF', 'W15', [["      if (s.usd + BUDGET.reserve_usd > BUDGET.ceiling_usd) return 'BUDGET_CEILING';\n", '']]],
+  ['DC-DUPLICATE-ATTEMPT-ALLOWED', 'W16', [["      if (s.used.has(attemptId)) return 'ATTEMPT_ALREADY_USED';\n", '']]],
   ['DC-MODEL-DRIFT-TOLERATED', 'W17', [['parsed.model !== QUESTION_TABLE.model', 'false']]],
   ['DC-OBSERVATION-BECOMES-ADVICE', 'W18', [[
-    'provider_confidence_supplied: false,', 'provider_confidence_supplied: false, answer: parsed.p_yes >= 0.5, confidence: 1,']]],
+    'provider_confidence_supplied: false,\n  });\n  const cost', 'provider_confidence_supplied: false, answer: parsed.p_yes >= 0.5, confidence: 1,\n  });\n  const cost']]],
   ['DC-ADMISSION-PATH-IMPORTED', 'W19', [[
     "import { constructJevPacket, packetIsExact } from './jev-judgment-host-v1.mjs';",
     "import { constructJevPacket, packetIsExact, admitJevResponse } from './jev-judgment-host-v1.mjs';"]]],
-  ['DC-NETWORK-CLIENT-EMBEDDED', 'W19', [[
-    'export const WIRE_VERSION', "const _egress = (u) => fetch(u);\nexport const WIRE_VERSION"]]],
+  ['DC-NETWORK-CLIENT-EMBEDDED', 'W19', [['export const WIRE_VERSION', "const _egress = (u) => fetch(u);\nexport const WIRE_VERSION"]]],
   ['DC-UNWITNESSED-SHAPE-SENDS', 'W20', [[
     "  if (!RESPONSE_SHAPE.witnessed) return refused('RESPONSE_SHAPE_UNWITNESSED');\n", '']]],
-  ['DC-RESPONSE-NOT-VALIDATED', 'W22', [['!(p >= 0 && p <= 1)', 'false']]],
+  ['DC-RESPONSE-NOT-VALIDATED', 'W22', [[
+    "typeof answer.noul !== 'number' || !(answer.noul >= 0 && answer.noul <= 1)", "typeof answer.noul !== 'number'"]]],
   ['DC-USAGE-ANOMALY-IGNORED', 'W23', [['} else if (cost > BUDGET.reserve_usd) {', '} else if (false) {']]],
   ['DC-AMBIGUOUS-LEDGER-TAIL-TOLERATED', 'W24', [
     ["const text = readFileSync(path, 'utf8');", "let text = readFileSync(path, 'utf8');"],
-    ["    if (!text.endsWith('\\n')) throw new Error('LEDGER_CORRUPT');\n", "    if (!text.endsWith('\\n')) text += '\\n';\n"]]],
-  ['DC-TABLE-DRIFT', 'W25', [['instructions: \'Does this appear to cross a structural-risk boundary?\',', 'instructions: \'Does this appear to be risky?\',']]],
-  ['DC-FIXTURE-DRIFT', 'W7', [["f.push(['F10', st({ requiresExternalInfo: true })]);", "f.push(['F10', st({ requiresExternalInfo: true, fileCount: 2 })]);"]]],
+    ["    if (text === '' || !text.endsWith('\\n')) fail('LEDGER_CORRUPT');\n", "    if (text === '') fail('LEDGER_CORRUPT');\n    if (!text.endsWith('\\n')) text += '\\n';\n"]]],
+  // ── repair pass: response parser ──
+  ['DC-OLD-RESPONSE-ENVELOPE', 'W27', [
+    ["top_level: Object.freeze(['model', 'usage', 'answers']),", "top_level: Object.freeze(['model', 'usage', 'questions']),"],
+    ["answers_key: 'answers',", "answers_key: 'questions',"]]],
+  ['DC-EXTRA-ROOT-ACCEPTED', 'W27', [[" || !sameKeys(raw, S.top_level)", ""]]],
+  ['DC-EXTRA-USAGE-ACCEPTED', 'W27', [[" || !sameKeys(usage, S.usage_keys)", ""]]],
+  ['DC-EXTRA-ANSWER-ACCEPTED', 'W27', [["!sameKeys(answers, [questionId])", "!Object.hasOwn(answers, questionId)"]]],
+  ['DC-CONFIDENCE-FIELD-ACCEPTED', 'W27', [[" || !sameKeys(answer, S.answer_keys)", ""]]],
+  // ── repair pass: observation persistence ──
+  ['DC-OBSERVATION-NOT-PERSISTED', 'W28', [[OBSERVED_APPEND, '    void 0;']]],
+  ['DC-OK-ON-PERSIST-FAILURE', 'W28', [[
+    "return Object.freeze({ sent: true, outcome: 'observation_not_persisted', wire_body_hash: plan.bodyHash });",
+    "return Object.freeze({ sent: true, outcome: 'ok', observation });"]]],
+  // ── repair pass: deadline, restart ──
+  ['DC-NO-DEADLINE', 'W29', [
+    ['raw = await Promise.race([sending, deadline]);', 'raw = await sending;'],
+    ["timer = setTimeout(() => { controller.abort(); reject(new Error('TIMEOUT')); }, timeoutMs);", 'timer = 0; void reject;']]],
+  ['DC-UNRESOLVED-ATTEMPT-IGNORED', 'W30', [["      if (s.unresolved.length > 0) return 'UNRESOLVED_ATTEMPT';\n", '']]],
+  // ── repair pass: ledger ──
+  ['DC-UNKNOWN-EVENT-IGNORED', 'W31', [
+    ["    if (!LEDGER_KINDS.includes(r.kind)) fail('LEDGER_CORRUPT');\n", ''],
+    ["      default: fail('LEDGER_CORRUPT');", "      default: break;"]]],
+  ['DC-TRANSITIONS-UNCHECKED', 'W31', [[
+    "if (!isStr(r.attempt_id) || !reserved.has(r.attempt_id) || settled.has(r.attempt_id)) fail('LEDGER_CORRUPT');",
+    "if (!isStr(r.attempt_id)) fail('LEDGER_CORRUPT');"]]],
+  ['DC-CHAIN-UNCHECKED', 'W31', [[
+    "if (r.seq !== i || r.prev !== prev || r.hash !== recordHash(r)) fail('LEDGER_CORRUPT');", "if (false) fail('LEDGER_CORRUPT');"]]],
+  ['DC-MISSING-LEDGER-AUTO-INITIALIZED', 'W32', [
+    ["import { closeSync, existsSync,", "import { writeFileSync, closeSync, existsSync,"],
+    ["    if (!existsSync(path)) fail('LEDGER_NOT_INITIALIZED');\n",
+     "    if (!existsSync(path)) { const b = { kind: 'init', ...identity, at: 0, seq: 0, prev: 'GENESIS' }; writeFileSync(path, JSON.stringify({ ...b, hash: sha256Hex(canonicalJson(b)) }) + '\\n'); }\n"]]],
+  ['DC-BINDING-UNCHECKED', 'W32', [[
+    "        if (r.experiment_id !== identity.experiment_id || r.table_hash !== identity.table_hash\n          || r.fixture_list_hash !== identity.fixture_list_hash || r.schema_sha256 !== identity.schema_sha256) {\n          fail('LEDGER_BINDING_MISMATCH');\n        }\n", '']]],
+  ['DC-NO-CROSS-PROCESS-LOCK', 'W33', [["fd = openSync(lockPath, 'wx');", "fd = openSync(lockPath, 'a');"]]],
 ];
 
 function run(edits) {

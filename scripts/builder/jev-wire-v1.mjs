@@ -12,24 +12,34 @@
  * Record: docs/programme/JARVIS-JEV-01_JEV-INT-05_WIRE_AMENDMENT_AND_SYNTHETIC_CONNECTION_TEST_PROPOSAL_2026-10-07.md
  */
 import { createHash } from 'node:crypto';
-import { closeSync, existsSync, fsyncSync, openSync, readFileSync, writeSync } from 'node:fs';
+import { closeSync, existsSync, fsyncSync, openSync, readFileSync, unlinkSync, writeSync } from 'node:fs';
 import { TASK_SHAPES } from './routing-intelligence-j5-v1.mjs';
 import { constructJevPacket, packetIsExact } from './jev-judgment-host-v1.mjs';
 
 export const WIRE_VERSION = 'JEV-WIRE.v1';
 export const MODEL_ID = 'jev-1.13.0';
 
-/** ⛔ UNWITNESSED. Paths are assumptions to be replaced by a real schema witness. */
+/**
+ * Response-shape descriptor. ⛔ `witnessed` stays false until a founder act sets it.
+ * Paths were corrected after independent review against the public OpenAPI snapshot
+ * (sha256 below): responses carry `answers` (not `questions`) and `usage.input_tokens` +
+ * `usage.output_tokens`. ⚠️ The location of the model identity (`model`) was NOT stated in the
+ * review message and is UNCONFIRMED here: a wrong path fails closed (response refused, experiment
+ * halts); it is never guessed around. Any additional top-level member the schema lists must be added
+ * to `top_level` at witness time; unlisted members are refused.
+ */
 export const RESPONSE_SHAPE = Object.freeze({
   witnessed: false,
-  model: Object.freeze(['model']),
-  input_tokens: Object.freeze(['usage', 'input_tokens']),
-  answer_type: Object.freeze(['questions', '$Q', 'type']),
-  answer_noul: Object.freeze(['questions', '$Q', 'noul']),
+  schema_sha256: 'a191f8a7df6bd6fedced8120dd0fd106f88575d1d1c8360d08900a6c7c0360d5',
+  top_level: Object.freeze(['model', 'usage', 'answers']),
+  model_key: 'model',
+  usage_keys: Object.freeze(['input_tokens', 'output_tokens']),
+  answers_key: 'answers',
+  answer_keys: Object.freeze(['type', 'noul']),
 });
 
 export const QUESTION_TABLE = deepFreeze({
-  table_version: 'jev-wire-q1',
+  table_version: 'jev-wire-q2',
   model: MODEL_ID,
   questions: {
     Q_RISK: {
@@ -44,6 +54,7 @@ export const BUDGET = Object.freeze({
   ceiling_usd: 1.0,
   max_attempts: 31,
   reserve_usd: 0.005,
+  timeout_ms: 30_000,
   usd_per_input_token: 0.042 / 1_000_000,
 });
 
@@ -162,66 +173,178 @@ export function planAttempt(attemptId) {
   return hit ? hit.wire : REFUSE('NOT_IN_ALLOWLIST');
 }
 
-// ── Durable ledger: reservation is persisted BEFORE send ──────────────────
+// ── Durable ledger: bound, validated, hash-chained, single-writer ──────────
+//
+// Legal events: init · reserved · observed · settled · halted.
+// Rules: exactly one init, first, bound to this experiment (table, fixtures, schema) · every record
+// carries seq/prev/hash so edits and mid-file removals are detected · reserved/observed/settled follow
+// their legal transitions · a missing file is NOT a fresh experiment (it must be initialized
+// explicitly) · every write happens under an exclusive lock so reserve-once holds across processes.
+// Residual (declared, not solved): truncation to a valid prefix, or deliberate deletion of the file
+// plus re-initialization, needs an external anchor; `head` is returned so an operator can keep one.
 
-export function createLedger(path) {
-  const read = () => {
-    if (!existsSync(path)) return [];
-    const text = readFileSync(path, 'utf8');
-    if (text === '') return [];
-    if (!text.endsWith('\n')) throw new Error('LEDGER_CORRUPT');
-    return text.slice(0, -1).split('\n').map((line) => {
-      try { return JSON.parse(line); } catch { throw new Error('LEDGER_CORRUPT'); }
-    });
-  };
-  const append = (record) => {
-    const fd = openSync(path, 'a');
-    try { writeSync(fd, JSON.stringify(record) + '\n'); fsyncSync(fd); } finally { closeSync(fd); }
-  };
-  const state = () => {
-    const records = read();
-    const reserved = records.filter((r) => r.kind === 'reserved');
-    const settled = new Map(records.filter((r) => r.kind === 'settled').map((r) => [r.attempt_id, r]));
-    let usd = 0;
-    for (const r of reserved) {
-      const s = settled.get(r.attempt_id);
-      usd += s && s.cost_known ? s.cost_usd : BUDGET.reserve_usd;
-    }
-    return {
-      attempts: reserved.length,
-      usd,
-      halted: records.some((r) => r.kind === 'halted'),
-      used: new Set(reserved.map((r) => r.attempt_id)),
-    };
-  };
-  return { read, append, state };
+const LEDGER_KINDS = Object.freeze(['init', 'reserved', 'observed', 'settled', 'halted']);
+const isStr = (v) => typeof v === 'string' && v.length > 0;
+const isNum = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+const fail = (code) => { throw new Error(code); };
+
+function recordHash(record) {
+  const { hash: _omit, ...rest } = record;
+  return sha256Hex(canonicalJson(rest));
 }
 
-// ── Native response parsing (shape descriptor is UNWITNESSED) ──────────────
+function validateRecords(records, identity) {
+  const reserved = new Set(); const observed = new Set(); const settled = new Set();
+  let prev = 'GENESIS';
+  records.forEach((r, i) => {
+    if (!r || typeof r !== 'object' || Array.isArray(r)) fail('LEDGER_CORRUPT');
+    if (!LEDGER_KINDS.includes(r.kind)) fail('LEDGER_CORRUPT');
+    if (r.seq !== i || r.prev !== prev || r.hash !== recordHash(r)) fail('LEDGER_CORRUPT');
+    prev = r.hash;
+    if (i === 0 && r.kind !== 'init') fail('LEDGER_CORRUPT');
+    if (i > 0 && r.kind === 'init') fail('LEDGER_CORRUPT');
+    switch (r.kind) {
+      case 'init':
+        if (![r.experiment_id, r.table_hash, r.fixture_list_hash, r.schema_sha256].every(isStr)) fail('LEDGER_CORRUPT');
+        if (r.experiment_id !== identity.experiment_id || r.table_hash !== identity.table_hash
+          || r.fixture_list_hash !== identity.fixture_list_hash || r.schema_sha256 !== identity.schema_sha256) {
+          fail('LEDGER_BINDING_MISMATCH');
+        }
+        break;
+      case 'reserved':
+        if (!isStr(r.attempt_id) || !isStr(r.wire_body_hash) || !isNum(r.reserve_usd)) fail('LEDGER_CORRUPT');
+        if (reserved.has(r.attempt_id)) fail('LEDGER_CORRUPT');
+        reserved.add(r.attempt_id);
+        break;
+      case 'observed':
+        if (!isStr(r.attempt_id) || !reserved.has(r.attempt_id) || observed.has(r.attempt_id) || settled.has(r.attempt_id)) fail('LEDGER_CORRUPT');
+        if (!r.observation || typeof r.observation !== 'object' || !isStr(r.response_sha256) || !isStr(r.response_canonical)) fail('LEDGER_CORRUPT');
+        observed.add(r.attempt_id);
+        break;
+      case 'settled':
+        if (!isStr(r.attempt_id) || !reserved.has(r.attempt_id) || settled.has(r.attempt_id)) fail('LEDGER_CORRUPT');
+        if (typeof r.cost_known !== 'boolean' || !isStr(r.outcome)) fail('LEDGER_CORRUPT');
+        if (r.cost_known && !isNum(r.cost_usd)) fail('LEDGER_CORRUPT');
+        settled.add(r.attempt_id);
+        break;
+      case 'halted':
+        if (!isStr(r.reason)) fail('LEDGER_CORRUPT');
+        break;
+      default: fail('LEDGER_CORRUPT');
+    }
+  });
+}
 
-const pick = (value, path, q) => path.reduce((acc, key) =>
-  (acc && typeof acc === 'object' ? acc[key === '$Q' ? q : key] : undefined), value);
+function summarize(records) {
+  const reserved = records.filter((r) => r.kind === 'reserved');
+  const settled = new Map(records.filter((r) => r.kind === 'settled').map((r) => [r.attempt_id, r]));
+  let usd = 0; const unresolved = [];
+  for (const r of reserved) {
+    const st = settled.get(r.attempt_id);
+    if (!st) unresolved.push(r.attempt_id);
+    usd += st && st.cost_known ? st.cost_usd : BUDGET.reserve_usd;
+  }
+  return {
+    attempts: reserved.length,
+    usd,
+    halted: records.some((r) => r.kind === 'halted'),
+    unresolved,
+    used: new Set(reserved.map((r) => r.attempt_id)),
+    head: records.length ? records[records.length - 1].hash : null,
+  };
+}
+
+export function createLedger(path, binding = {}) {
+  const lockPath = path + '.lock';
+  const identity = {
+    experiment_id: binding.experiment_id ?? 'JEV-INT-05-SYNTHETIC-Q_RISK-1',
+    table_hash: questionTableHash(),
+    fixture_list_hash: fixtureListHash(),
+    schema_sha256: RESPONSE_SHAPE.schema_sha256,
+  };
+
+  const readRaw = () => {
+    if (!existsSync(path)) fail('LEDGER_NOT_INITIALIZED');
+    const text = readFileSync(path, 'utf8');
+    if (text === '' || !text.endsWith('\n')) fail('LEDGER_CORRUPT');
+    return text.slice(0, -1).split('\n').map((line) => {
+      try { return JSON.parse(line); } catch { return fail('LEDGER_CORRUPT'); }
+    });
+  };
+  const read = () => { const recs = readRaw(); validateRecords(recs, identity); return recs; };
+
+  const withLock = (fn) => {
+    let fd;
+    try { fd = openSync(lockPath, 'wx'); } catch { return fail('LOCK_HELD'); }
+    try { writeSync(fd, String(process.pid)); return fn(); }
+    finally { closeSync(fd); try { unlinkSync(lockPath); } catch { /* lock already gone */ } }
+  };
+
+  const writeRecord = (records, record) => {
+    const body = { ...record, seq: records.length, prev: records.length ? records[records.length - 1].hash : 'GENESIS' };
+    const full = { ...body, hash: sha256Hex(canonicalJson(body)) };
+    validateRecords([...records, full], identity);          // illegal transitions never reach disk
+    const fd = openSync(path, 'a');
+    try { writeSync(fd, JSON.stringify(full) + '\n'); fsyncSync(fd); } finally { closeSync(fd); }
+    return full;
+  };
+
+  return {
+    path,
+    identity,
+    read,
+    state: () => summarize(read()),
+    initialize: () => withLock(() => {
+      if (existsSync(path)) fail('LEDGER_EXISTS');
+      return writeRecord([], { kind: 'init', ...identity, at: Date.now() });
+    }),
+    append: (record) => withLock(() => writeRecord(read(), record)),
+    /** Atomic across processes: evaluate the gate and persist the reservation under one lock. */
+    reserveIfAllowed: (record, gate) => withLock(() => {
+      const records = read();
+      const refusal = gate(summarize(records));
+      if (refusal) return { ok: false, reason: refusal };
+      writeRecord(records, record);
+      return { ok: true };
+    }),
+  };
+}
+
+// ── Native response parsing: the experiment's permitted shape, enforced exactly ──
+
+const isPlain = (v) => v && typeof v === 'object' && !Array.isArray(v);
+const sameKeys = (obj, keys) => Object.keys(obj).length === keys.length && keys.every((k) => Object.hasOwn(obj, k));
 
 export function parseNativeResponse(raw, questionId) {
-  const model = pick(raw, RESPONSE_SHAPE.model, questionId);
-  const tokens = pick(raw, RESPONSE_SHAPE.input_tokens, questionId);
-  const type = pick(raw, RESPONSE_SHAPE.answer_type, questionId);
-  const p = pick(raw, RESPONSE_SHAPE.answer_noul, questionId);
-  if (typeof model !== 'string') return REFUSE('RESPONSE_MODEL_MISSING');
-  if (!Number.isInteger(tokens) || tokens < 0) return REFUSE('RESPONSE_USAGE_MISSING');
-  if (type !== 'noul') return REFUSE('RESPONSE_TYPE');
-  if (typeof p !== 'number' || !(p >= 0 && p <= 1)) return REFUSE('RESPONSE_PROBABILITY');
-  return Object.freeze({ ok: true, model, input_tokens: tokens, p_yes: p });
+  const S = RESPONSE_SHAPE;
+  if (!isPlain(raw) || !sameKeys(raw, S.top_level)) return REFUSE('RESPONSE_SHAPE_UNEXPECTED');
+  const model = raw[S.model_key];
+  if (typeof model !== 'string' || model === '') return REFUSE('RESPONSE_MODEL_MISSING');
+  const usage = raw.usage;
+  if (!isPlain(usage) || !sameKeys(usage, S.usage_keys)) return REFUSE('RESPONSE_USAGE_MISSING');
+  if (!S.usage_keys.every((k) => Number.isInteger(usage[k]) && usage[k] >= 0)) return REFUSE('RESPONSE_USAGE_MISSING');
+  const answers = raw[S.answers_key];
+  if (!isPlain(answers) || !sameKeys(answers, [questionId])) return REFUSE('RESPONSE_ANSWERS_UNEXPECTED');
+  const answer = answers[questionId];
+  if (!isPlain(answer) || !sameKeys(answer, S.answer_keys)) return REFUSE('RESPONSE_ANSWER_SHAPE');
+  if (answer.type !== 'noul') return REFUSE('RESPONSE_TYPE');
+  if (typeof answer.noul !== 'number' || !(answer.noul >= 0 && answer.noul <= 1)) return REFUSE('RESPONSE_PROBABILITY');
+  return Object.freeze({
+    ok: true, model, input_tokens: usage.input_tokens, output_tokens: usage.output_tokens, p_yes: answer.noul,
+    response_canonical: canonicalJson(raw),
+  });
 }
 
 // ── The experiment runner ──────────────────────────────────────────────────
 
 /**
  * Run ONE frozen attempt. Returns a NativeObservation (never an admitted judgment).
- * `transport.send(bodyJson)` is injected; no network client exists in this module.
+ * `transport.send(bodyJson, { signal })` is injected; no network client exists in this module.
+ * An observation is returned as `ok` ONLY after it has been durably recorded.
  */
-export async function runAttempt({ attemptId, ledger, transport, now = () => Date.now() }) {
+export async function runAttempt({ attemptId, ledger, transport, now = () => Date.now(), timeoutMs = BUDGET.timeout_ms }) {
   const refused = (reason) => Object.freeze({ sent: false, reason });
+  const CODES = ['LEDGER_NOT_INITIALIZED', 'LEDGER_BINDING_MISMATCH', 'LOCK_HELD'];
 
   if (!transport || typeof transport.send !== 'function') return refused('TRANSPORT_NOT_CONNECTED');
   if (!RESPONSE_SHAPE.witnessed) return refused('RESPONSE_SHAPE_UNWITNESSED');
@@ -231,58 +354,96 @@ export async function runAttempt({ attemptId, ledger, transport, now = () => Dat
   if (!verifyWireBody(plan.body).ok) return refused('WIRE_VERIFY_FAILED');
   if (!isAllowlistedBody(plan.body)) return refused('NOT_IN_ALLOWLIST');
 
-  let s;
-  try { s = ledger.state(); } catch { return refused('LEDGER_UNREADABLE'); }
-  if (s.halted) return refused('HALTED');
-  if (s.used.has(attemptId)) return refused('ATTEMPT_ALREADY_USED');
-  if (s.attempts >= BUDGET.max_attempts) return refused('ATTEMPT_CAP');
-  if (s.usd + BUDGET.reserve_usd > BUDGET.ceiling_usd) return refused('BUDGET_CEILING');
-
-  // hash and reservation are durable BEFORE anything is sent
-  ledger.append({
-    kind: 'reserved', attempt_id: attemptId, wire_body_hash: plan.bodyHash,
-    table_version: QUESTION_TABLE.table_version, reserve_usd: BUDGET.reserve_usd, at: now(),
-  });
+  // hash and reservation are durable BEFORE anything is sent; the gate and the write share one lock
+  let reservation;
+  try {
+    reservation = ledger.reserveIfAllowed({
+      kind: 'reserved', attempt_id: attemptId, wire_body_hash: plan.bodyHash,
+      table_version: QUESTION_TABLE.table_version, reserve_usd: BUDGET.reserve_usd, at: now(),
+    }, (s) => {
+      if (s.halted) return 'HALTED';
+      if (s.unresolved.length > 0) return 'UNRESOLVED_ATTEMPT';
+      if (s.used.has(attemptId)) return 'ATTEMPT_ALREADY_USED';
+      if (s.attempts >= BUDGET.max_attempts) return 'ATTEMPT_CAP';
+      if (s.usd + BUDGET.reserve_usd > BUDGET.ceiling_usd) return 'BUDGET_CEILING';
+      return null;
+    });
+  } catch (e) {
+    return refused(CODES.includes(e.message) ? e.message : 'LEDGER_UNREADABLE');
+  }
+  if (!reservation.ok) return refused(reservation.reason);
 
   const started = now();
-  let raw;
+  const crossingUnknown = (reason) => {
+    try {
+      ledger.append({ kind: 'settled', attempt_id: attemptId, cost_known: false, outcome: 'crossing_unknown', reason, at: now() });
+      ledger.append({ kind: 'halted', reason: 'CROSSING_UNKNOWN', attempt_id: attemptId, at: now() });
+    } catch { /* restart rule covers this: a reservation with no settlement is unresolved and blocks all sends */ }
+    return Object.freeze({ sent: true, outcome: 'crossing_unknown', reason, wire_body_hash: plan.bodyHash });
+  };
+
+  // owned deadline: a transport that never resolves ends as crossing-unknown, not as a hang
+  const controller = new AbortController();
+  let timer; let raw;
   try {
-    raw = await transport.send(plan.bodyJson);
-  } catch {
-    // attempted / crossing unknown — reservation retained, experiment halts, no retry
-    ledger.append({ kind: 'settled', attempt_id: attemptId, cost_known: false, outcome: 'crossing_unknown', at: now() });
-    ledger.append({ kind: 'halted', reason: 'CROSSING_UNKNOWN', attempt_id: attemptId, at: now() });
-    return Object.freeze({ sent: true, outcome: 'crossing_unknown', wire_body_hash: plan.bodyHash });
+    const sending = Promise.resolve().then(() => transport.send(plan.bodyJson, { signal: controller.signal }));
+    sending.catch(() => {});                                  // a late rejection must not escape
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => { controller.abort(); reject(new Error('TIMEOUT')); }, timeoutMs);
+    });
+    raw = await Promise.race([sending, deadline]);
+  } catch (e) {
+    return crossingUnknown(e && e.message === 'TIMEOUT' ? 'TIMEOUT' : 'TRANSPORT_ERROR');
+  } finally {
+    clearTimeout(timer);
   }
 
   const questionId = plan.body.state.question_id;
   const parsed = parseNativeResponse(raw, questionId);
   if (!parsed.ok) {
-    ledger.append({ kind: 'settled', attempt_id: attemptId, cost_known: false, outcome: parsed.reason, at: now() });
-    ledger.append({ kind: 'halted', reason: parsed.reason, attempt_id: attemptId, at: now() });
+    try {
+      ledger.append({ kind: 'settled', attempt_id: attemptId, cost_known: false, outcome: parsed.reason, at: now() });
+      ledger.append({ kind: 'halted', reason: parsed.reason, attempt_id: attemptId, at: now() });
+    } catch { /* unresolved reservation blocks further sends on restart */ }
     return Object.freeze({ sent: true, outcome: 'response_refused', reason: parsed.reason, wire_body_hash: plan.bodyHash });
   }
 
+  const observation = Object.freeze({
+    wire_body_hash: plan.bodyHash,
+    table_version: QUESTION_TABLE.table_version,
+    model_requested: QUESTION_TABLE.model,
+    model_returned: parsed.model,
+    p_yes: parsed.p_yes,
+    billable_input_tokens: parsed.input_tokens,
+    output_tokens: parsed.output_tokens,
+    latency_ms: now() - started,
+    provider_confidence_supplied: false,
+  });
   const cost = parsed.input_tokens * BUDGET.usd_per_input_token;
-  ledger.append({ kind: 'settled', attempt_id: attemptId, cost_known: true, cost_usd: cost, outcome: 'ok', at: now() });
-  if (parsed.model !== QUESTION_TABLE.model) {
-    ledger.append({ kind: 'halted', reason: 'MODEL_DRIFT', attempt_id: attemptId, at: now() });
-  } else if (cost > BUDGET.reserve_usd) {
-    ledger.append({ kind: 'halted', reason: 'UNEXPECTED_USAGE', attempt_id: attemptId, at: now() });
+
+  // 1) the observation is persisted FIRST; "ok" is never returned for an unsaved result
+  try {
+    ledger.append({
+      kind: 'observed', attempt_id: attemptId, observation,
+      response_sha256: sha256Hex(parsed.response_canonical), response_canonical: parsed.response_canonical, at: now(),
+    });
+  } catch {
+    try { ledger.append({ kind: 'halted', reason: 'OBSERVATION_NOT_PERSISTED', attempt_id: attemptId, at: now() }); } catch { /* see restart rule */ }
+    return Object.freeze({ sent: true, outcome: 'observation_not_persisted', wire_body_hash: plan.bodyHash });
+  }
+  // 2) then the settlement
+  let head = null;
+  try {
+    ledger.append({ kind: 'settled', attempt_id: attemptId, cost_known: true, cost_usd: cost, outcome: 'ok', at: now() });
+    if (parsed.model !== QUESTION_TABLE.model) {
+      ledger.append({ kind: 'halted', reason: 'MODEL_DRIFT', attempt_id: attemptId, at: now() });
+    } else if (cost > BUDGET.reserve_usd) {
+      ledger.append({ kind: 'halted', reason: 'UNEXPECTED_USAGE', attempt_id: attemptId, at: now() });
+    }
+    head = ledger.state().head;
+  } catch {
+    return Object.freeze({ sent: true, outcome: 'observation_persisted_settlement_incomplete', observation });
   }
 
-  return Object.freeze({
-    sent: true,
-    outcome: 'ok',
-    observation: Object.freeze({
-      wire_body_hash: plan.bodyHash,
-      table_version: QUESTION_TABLE.table_version,
-      model_requested: QUESTION_TABLE.model,
-      model_returned: parsed.model,
-      p_yes: parsed.p_yes,
-      billable_input_tokens: parsed.input_tokens,
-      latency_ms: now() - started,
-      provider_confidence_supplied: false,
-    }),
-  });
+  return Object.freeze({ sent: true, outcome: 'ok', observation, ledger_head: head });
 }
