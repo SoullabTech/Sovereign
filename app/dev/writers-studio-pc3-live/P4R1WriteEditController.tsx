@@ -922,9 +922,21 @@ export default function FlagshipWriteEditController({
     const text = (requestText ?? editorialDraft).trim();
     if (!text || !context || !focusId || editorialBusy || craftActivity) return;
 
+    const currentWorking = craftWorkingText || selectedPassage?.text || '';
+    const localPrompt = currentWorking.trim()
+      ? [
+          text,
+          '',
+          'Writer-owned current working passage:',
+          currentWorking,
+          '',
+          'Treat this as the wording the writer is shaping now. Do not silently restore an earlier MAIA proposal.',
+        ].join('\n')
+      : text;
+
     const intent = detectCraftRereadIntent(text);
     if (!intent || intent.zoom === 'passage') {
-      await sendEditorial(text, options);
+      await sendEditorial(localPrompt, options);
       return;
     }
 
@@ -1001,7 +1013,7 @@ export default function FlagshipWriteEditController({
         governedContext,
         '',
         'Writer-owned current working passage:',
-        craftWorkingText || selectedPassage?.text || '',
+        currentWorking,
         '',
         'Return to the writer’s actual question. If a wording change is useful, keep it bounded to the active locus unless the writer explicitly asks to move elsewhere.',
       ].join('\n');
