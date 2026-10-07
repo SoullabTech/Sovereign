@@ -20,8 +20,6 @@ export type MaiaCraftCompanionR1Props = {
   lastMaiaTurn: RebuildEditorialThread['turns'][number] | null;
   busy: boolean;
   message: string | null;
-  /** Writer-owned current state: original + chosen MAIA moves + local wording. */
-  workingText: string;
   activity: string | null;
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
