@@ -10,16 +10,19 @@ const sources = readFileSync(resolve(root, 'docs/programme/RGR-05A_SOURCE_GROUND
 
 assert.ok(parent.includes('Flow as primitive #11: CANDIDATE_UNESTABLISHED'));
 assert.ok(result.includes('M0 SURVIVES. M1 HAS NOT EARNED PRIMITIVE STATUS.'));
+assert.ok(result.includes('**RGR-05A standing: CLOSED.**'));
 assert.ok(result.includes('Flow should be treated as a first-class derived dynamical object'));
 assert.ok(result.includes('FLOW: NOT EARNED'));
 assert.ok(result.includes('FLOW: STRONGLY SUPPORTED AS A FIRST-CLASS DERIVED OBJECT'));
 assert.ok(result.includes('Runtime status'));
+assert.ok(result.includes('RGR-05B:'));
+assert.ok(result.includes('OPEN BY FOUNDER ACT'));
 assert.ok(result.includes('NOT AUTHORIZED'));
 assert.ok(sources.includes('Only class 1 is used to decide whether Flow currently requires universal primitive status.'));
 assert.ok(sources.includes('FORMAL PRIMITIVE #11: NOT EARNED'));
 assert.ok(sources.includes('FIRST-CLASS DERIVED AIN OBJECT: RECOMMENDED'));
 
-const porcelain = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: root, encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+const porcelain = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: root, encoding: 'utf8' }).split('\n').filter((line) => line.trim().length > 0);
 const allowed = new Set([
   'docs/programme/RGR-05A_FLOW_REDUCIBILITY_RESULT_2026-10-07.md',
   'docs/programme/RGR-05A_SOURCE_GROUNDING_2026-10-07.md',

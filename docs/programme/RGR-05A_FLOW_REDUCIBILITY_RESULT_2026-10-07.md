@@ -3,7 +3,7 @@
 **Programme:** RELATIONAL-GEOMETRY-REASONING
 **Parent:** RGR-05 — Flow Primitive Challenge
 **Date:** 2026-10-07
-**Status:** EVIDENCE READY · FORMAL REDUCIBILITY RESULT · NOT FOUNDER ADJUDICATED
+**Status:** CLOSED · FOUNDER ADJUDICATED · FLOW_D PRESERVED
 **Base:** 92666ba2aae419b6b9b30d8955f6142128ecdaf3
 **Runtime authority:** NONE
 
@@ -31,7 +31,7 @@ RGR-05A is designed to favor neither candidate.
 
 # I · Result
 
-## PROVISIONAL VERDICT
+## ACCEPTED VERDICT
 
 > **M0 SURVIVES. M1 HAS NOT EARNED PRIMITIVE STATUS.**
 
@@ -536,4 +536,68 @@ No member data is needed.
 
 No Elemental labels belong in the primary test.
 
-RGR-05A remains EVIDENCE READY pending Founder adjudication.
+RGR-05A is CLOSED by Founder adjudication.
+
+---
+
+# XV · Founder adjudication — RGR-05A closure
+
+**Founder act:** 2026-10-07
+
+The Founder accepts RGR-05A with the following ruling:
+
+> **Flow is architecturally primary and formally derived; primitive #11 is not presently earned. Preserve Flow as a first-class dynamical object in AIN OS. Preserve Weather as candidate field modulation and the Elements as candidate operators on Flow. Open RGR-05B, the Synthetic Flow Representation Benchmark.**
+
+## Accepted standing
+
+~~~text
+M0 — derived Flow:
+ACCEPTED / SURVIVES
+
+M1 — Flow as primitive #11:
+NOT EARNED
+
+FLOW_D:
+PRESERVED AS FIRST-CLASS DERIVED DYNAMICAL OBJECT
+
+Weather:
+PRESERVED AS CANDIDATE FIELD / CONTEXT MODULATION
+
+Fire / Water / Earth / Air / Aether:
+PRESERVED AS CANDIDATE OPERATORS ON FLOW
+
+RGR-05B:
+OPEN BY FOUNDER ACT
+
+RGR-05C Elemental operator comparison:
+CLOSED
+
+RGR-05D AIN Flow Witness shadow:
+CLOSED
+
+MAIA runtime change:
+NOT AUTHORIZED
+
+member-facing Flow inference:
+NOT AUTHORIZED
+
+memory / schema / migration:
+NOT AUTHORIZED
+
+deployment:
+NOT AUTHORIZED
+~~~
+
+## Lifecycle closure
+
+~~~text
+EVIDENCE_READY
+→ ADJUDICATED
+→ CLOSED
+~~~
+
+The accepted result does not rewrite RGR-02. The ten canonical primitive headings remain unchanged.
+
+The accepted result does not establish that Flow is metaphysically fundamental, that Elemental operators are natural laws, or that different carrier domains share one mechanism.
+
+**RGR-05A standing: CLOSED.**

@@ -19,7 +19,7 @@
         "evidence_refs": [
           "Encyclopedia of Mathematics: Flow (continuous-time dynamical system)",
           "Stanford/Cornell network-flow definitions",
-          "Holme & Saramäki: Temporal Networks",
+          "Holme & Saram\u00e4ki: Temporal Networks",
           "Baez & Pollard: A Compositional Framework for Reaction Networks",
           "Fong & Spivak: An Invitation to Applied Category Theory"
         ],
@@ -97,19 +97,19 @@
         ]
       },
       "state": {
-        "lifecycle_state": "EVIDENCE_READY",
-        "disposition": "candidate_result",
+        "lifecycle_state": "CLOSED",
+        "disposition": "closed",
         "supersedes": null
       }
     },
     "guard": {
       "lifecycle_version": "W2.v1",
       "work_unit_id": "rgr-05a-flow-reducibility-20261007",
-      "current_state": "EVIDENCE_READY",
+      "current_state": "CLOSED",
       "authorized_core_snapshot": "Formal reducibility challenge only; Flow primitive status may be rejected; no runtime/member authority."
     }
   },
-  "standing": "EVIDENCE_READY_PENDING_FOUNDER_ADJUDICATION",
+  "standing": "CLOSED_BY_FOUNDER_ADJUDICATION",
   "candidate_disposition": {
     "m0_derived_flow": "SURVIVES",
     "m1_primitive_flow": "NOT_EARNED",
@@ -117,5 +117,40 @@
     "weather": "HYPOTHESIS_AS_CONTEXT_FIELD_MODULATION",
     "elemental_operators": "HYPOTHESIS_ONLY",
     "runtime": "NOT_AUTHORIZED"
+  },
+  "founder_adjudication": {
+    "date": "2026-10-07",
+    "act": "Accept RGR-05A. Flow is architecturally primary and formally derived; primitive #11 is not presently earned. Preserve Flow as a first-class dynamical object in AIN OS. Preserve Weather as candidate field modulation and the Elements as candidate operators on Flow. Open RGR-05B, the Synthetic Flow Representation Benchmark.",
+    "accepted_disposition": {
+      "m0_derived_flow": "ACCEPTED_SURVIVES",
+      "m1_primitive_flow": "NOT_EARNED",
+      "flow_d": "FIRST_CLASS_DERIVED_DYNAMICAL_OBJECT",
+      "weather": "CANDIDATE_FIELD_MODULATION",
+      "elemental_operators": "CANDIDATE_ONLY"
+    },
+    "successor_authority": {
+      "rgr_05b_synthetic_flow_representation_benchmark": "OPEN",
+      "rgr_05c_elemental_operator_comparison": "CLOSED",
+      "rgr_05d_ain_flow_witness_shadow": "CLOSED",
+      "maia_runtime_change": "NOT_AUTHORIZED",
+      "member_facing_flow_inference": "NOT_AUTHORIZED",
+      "memory_schema_migration": "NOT_AUTHORIZED",
+      "deployment": "NOT_AUTHORIZED"
+    },
+    "lifecycle_transitions": [
+      {
+        "from": "EVIDENCE_READY",
+        "to": "ADJUDICATED",
+        "evidence_ref": "founder:rgr05a-adjudication-20261007",
+        "reason_code": "RGR05A_FOUNDER_ADJUDICATED",
+        "adjudication": "accepted"
+      },
+      {
+        "from": "ADJUDICATED",
+        "to": "CLOSED",
+        "evidence_ref": "founder:rgr05a-closure-20261007",
+        "reason_code": "RGR05A_FOUNDER_CLOSED"
+      }
+    ]
   }
 }
