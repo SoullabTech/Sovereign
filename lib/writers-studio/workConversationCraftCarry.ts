@@ -11,6 +11,8 @@ export interface ResolvedWorkConversationCraftCarry {
   readonly sourceThreadId: string;
   readonly sourceMaiaTurnIndex: number;
   readonly manuscriptId: string;
+  /** The Develop conversation may be Work-anchored or observation-anchored. */
+  readonly sourceAnchorKind: 'work' | 'observation';
   readonly memberTurns: readonly WorkConversationCarryTurn[];
   readonly maiaTurns: readonly WorkConversationCarryTurn[];
   readonly sourceTurnCount: number;
@@ -49,9 +51,13 @@ function bounded(turns: readonly WorkConversationCarryTurn[]): WorkConversationC
 }
 
 /**
- * R8G — resolve one prior Work conversation into authorship-separated craft
+ * R8J — resolve one prior Develop conversation into authorship-separated craft
  * context. The browser supplies only the source thread id. Ownership,
- * manuscript identity, Work anchor and exact turns are re-derived here.
+ * manuscript identity, source anchor kind and exact turns are re-derived here.
+ *
+ * A body-authorized observation conversation is still a conversation about this
+ * Work. Permission changes what MAIA may read for that turn; it must not sever
+ * the relational thread when the writer crosses into Craft.
  */
 export async function resolveWorkConversationCraftCarry(input: {
   memberId: string;
@@ -72,7 +78,7 @@ export async function resolveWorkConversationCraftCarry(input: {
   if (thread.manuscriptId !== receiver.rows[0]!.manuscript_id) {
     return { ok: false, reason: 'source_thread_mismatch' };
   }
-  if (thread.anchor.on !== 'work') {
+  if (thread.anchor.on !== 'work' && thread.anchor.on !== 'observation') {
     return { ok: false, reason: 'source_not_work_conversation' };
   }
   const boundary = thread.turns.find((turn) => turn.index === input.sourceMaiaTurnIndex);
@@ -106,6 +112,7 @@ export async function resolveWorkConversationCraftCarry(input: {
       sourceThreadId: thread.id,
       sourceMaiaTurnIndex: input.sourceMaiaTurnIndex,
       manuscriptId: thread.manuscriptId,
+      sourceAnchorKind: thread.anchor.on,
       memberTurns,
       maiaTurns,
       sourceTurnCount: recent.length,
