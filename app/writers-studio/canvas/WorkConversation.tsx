@@ -303,7 +303,13 @@ export default function WorkConversation({
 
   useEffect(() => {
     if (!autoSendInitialDraft || autoSentInitial.current) return;
-    if (decision === null || mode.kind === 'blocked' || pending !== null) return;
+    if (decision === null || pending !== null) return;
+    /* A starter belongs only to a NEW relationship. Reopening/resuming an
+       existing Work conversation must be silent: its history is already the
+       continuity. Auto-sending the starter into a resumed thread duplicates
+       the writer's words and can move the latest-MAIA boundary away from the
+       exchange the writer actually meant to carry into Craft. */
+    if (mode.kind !== 'open') return;
     if (!draft.trim()) return;
     autoSentInitial.current = true;
     void send();
