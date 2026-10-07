@@ -6175,3 +6175,10 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
     width: auto;
   }
 }
+
+/* Craft flow: clear pending selection and one-step navigation, not a dashboard. */
+.p4r1-root .p4r1-craft-selected { flex-wrap: wrap; }
+.p4r1-root .p4r1-craft-selected > span { flex-basis: 230px; }
+.p4r1-root .p4r1-craft-selected small { display: block; margin-top: 4px; color: var(--fr-muted); }
+.p4r1-root [data-maia-current-focus] { color: var(--fr-action); }
+.p4r1-root .p4r1-craft-focus-references button + button { margin-left: 6px; margin-top: 5px; }

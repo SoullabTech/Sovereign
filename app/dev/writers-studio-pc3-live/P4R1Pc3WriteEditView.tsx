@@ -1053,7 +1053,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         sections={proseSections} bodyOf={props.writing.bodyOf}
         revisionNumber={props.writing.currentRevisionId() ?? props.context.version}
         current={props.craftFocus.current} earlier={props.craftFocus.earlier} busy={busy} receipt={props.craftFocus.receipt}
-        onMove={props.craftFocus.onMove} onStay={props.craftFocus.onStay} onAsk={props.craftFocus.onAsk}
+        onMove={props.craftFocus.onMove} onMoveAndSuggest={props.craftFocus.onMoveAndSuggest} onStay={props.craftFocus.onStay} onAsk={props.craftFocus.onAsk}
       /> : null}
     />
   ) : null;
@@ -1107,8 +1107,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       busy={busy}
       message={editorialMessage}
       activity={props.craftActivity}
+      currentFocus={props.craftFocus?.current}
       focusSuggestions={props.craftFocus?.suggestions}
       onMoveFocus={props.craftFocus?.onMove}
+      onMoveFocusAndSuggest={props.craftFocus?.onMoveAndSuggest}
       readingNotice={props.craftReadNotice}
       dialogue={props.craftDialogue}
       editLatitude={props.editLatitude}

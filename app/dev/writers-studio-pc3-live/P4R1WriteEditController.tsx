@@ -76,7 +76,7 @@ import { P4R1Pc3WriteEditView, type Pc3HeldPassage } from './P4R1Pc3WriteEditVie
 import { runCraftReread } from '@/lib/writersStudio/craftRereadR1';
 import {
   craftTargetKey, craftParagraphLabel, paragraphTargets, referencedCraftTargets,
-  targetStillMatches, parseCraftCanvasCommand, resolveNamedCraftTarget,
+  targetStillMatches, parseCraftCanvasCommand, resolveNamedCraftTarget, adjacentCraftTarget, makeCraftTarget,
   type CraftFocusTarget, type CraftTablePort, type CraftTableSnapshot, type CraftCanvasReceipt,
 } from '@/lib/writersStudio/craftFocusR1';
 import {
@@ -148,6 +148,10 @@ export default function FlagshipWriteEditController({
     && (incomingAction === 'craft-passage' || incomingAction === 'choose-craft-passage')
   );
   const developCraft = surfaceMode === 'develop-craft' || params?.get('developCraft') === '1';
+  const arrivalSectionRef = useRef(requestedSection);
+  arrivalSectionRef.current = requestedSection;
+  // Craft already has the chapter on the table. Section moves must not reload it.
+  const contextLoadSection = developCraft ? null : requestedSection;
   const craftMode = craftArrival || developCraft;
   const attentionReturnItemId = params?.get('attentionItem') ?? null;
   const lineageReturnChapterId = params?.get('lineageChapter') ?? null;
@@ -216,7 +220,7 @@ export default function FlagshipWriteEditController({
   const craftPriorThread = useRef<{ threadId: string; turnIndex: number } | null>(null);
   const ignoredCraftThread = useRef<string | null>(null);
   const craftSettledChoices = useRef(new Map<string, string>());
-  const pendingCraftContinuation = useRef<{ text: string; options: CraftSendOptions } | null>(null);
+  const pendingCraftContinuation = useRef<{ text: string; options: CraftSendOptions; focusKey?: string } | null>(null);
   const [adoptionBusy, setAdoptionBusy] = useState(false);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
   const [editorialFailure, setEditorialFailure] = useState<string | null>(null);
@@ -238,14 +242,8 @@ export default function FlagshipWriteEditController({
     return () => { craftMounted.current = false; };
   }, []);
 
-  useEffect(() => {
-    setCraftWorkingText(selectedPassage?.text ?? null);
-  }, [
-    selectedPassage?.draftSectionId,
-    selectedPassage?.start,
-    selectedPassage?.end,
-    selectedPassage?.text,
-  ]);
+  // The table publishes the writer-owned copy. Never overwrite a restored
+  // draft with the canonical locus merely because focus changed.
 
   useEffect(() => {
     let recovered: readonly CraftDialogueTurn[] = [];
@@ -394,7 +392,7 @@ export default function FlagshipWriteEditController({
         return;
       }
       setContext(body);
-      const place = resolveInitialSection(requestedSection, body.sections.map((s) => s.draftSectionId));
+      const place = resolveInitialSection(arrivalSectionRef.current, body.sections.map((s) => s.draftSectionId));
       setFocusId(place.sectionId);
       if (place.rewriteLocation && typeof window !== 'undefined') {
         replacePlaceAddress(locationForSection(window.location.pathname, window.location.search, place.sectionId));
@@ -404,7 +402,7 @@ export default function FlagshipWriteEditController({
       setPhase('error');
       setMessage('The Writer’s Studio could not read this manuscript just now. Nothing has changed.');
     }
-  }, [requested, requestedSection]);
+  }, [requested, contextLoadSection]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -704,6 +702,9 @@ export default function FlagshipWriteEditController({
       receiveCraftReceipt({ ok: false, message: 'Those words changed since this focus was offered. Select them again; nothing was moved.' });
       return false;
     }
+    // A later navigation supersedes a queued focus-and-suggest gesture. It
+    // must never fire unexpectedly when the writer returns to an old target.
+    pendingCraftContinuation.current = null;
     const current = craftTablePort.current?.snapshot();
     const targetKey = craftTargetKey(target);
     if (selectedPassage && !current) {
@@ -760,6 +761,23 @@ export default function FlagshipWriteEditController({
     return true;
   }, [context, editorialBusy, craftActivity, adoptionBusy, memberVersionBusy,
     editorialThread, selectedPassage, requestedEditorialThread, clearEditorial, receiveCraftReceipt, craftFocusLabel]);
+
+  // External in-Work addresses use the same protected handoff, not a Work reload.
+  useEffect(() => {
+    if (!developCraft || phase !== 'ready' || !context || !requestedSection
+      || requestedSection === focusId || (requested && context.manuscriptId !== requested)) return;
+    // Ignore a render with the old search params during our own replaceState.
+    if (new URL(window.location.href).searchParams.get(SECTION_PARAM) !== requestedSection) return;
+    const section = context.sections.find(s => s.draftSectionId === requestedSection);
+    if (!section) return;
+    const body = writingRef.current?.bodyOf(requestedSection) ?? section.body;
+    const revision = writingRef.current?.currentRevisionId() ?? context.version;
+    const range = craftHintRange;
+    const text = range ? Array.from(body).slice(range.start, range.end).join('') : body;
+    const target = makeCraftTarget(section, body, text, revision, 'writer');
+    if (target && (!range || (target.start === range.start && target.end === range.end))) moveCraftFocus(target);
+  }, [developCraft, phase, context, requested, requestedSection, focusId,
+    craftHintStart, craftHintEnd, moveCraftFocus]);
 
   // Leaving the page must not silently lose drafts held while visiting another focus.
   useEffect(() => {
@@ -1123,7 +1141,10 @@ export default function FlagshipWriteEditController({
         const sections = chapterSpanFor(context.sections, focusId)?.sections ?? [focusSection!].filter(Boolean);
         const targets = paragraphTargets(sections, id => writingRef.current?.bodyOf(id)
           ?? context.sections.find(s => s.draftSectionId === id)?.body ?? '', writingRef.current?.currentRevisionId() ?? context.version);
-        const target = resolveNamedCraftTarget(targets, command.name);
+        const current = selectedPassage ? { ...selectedPassage, sectionId: selectedPassage.draftSectionId, label: craftFocusLabel ?? '', sectionLabel: focusSection?.heading ?? '', source: 'writer' as const } : null;
+        const target = command.kind === 'step'
+          ? adjacentCraftTarget(targets, current, command.direction, command.unit)
+          : resolveNamedCraftTarget(targets, command.name);
         if (target) moveCraftFocus(target);
         else receiveCraftReceipt({ ok: false, message: 'That focus is not unique. Select its words or choose a paragraph with Work here.' });
       }
@@ -1177,6 +1198,8 @@ export default function FlagshipWriteEditController({
         ].join('\n'),
         'Writer-owned choices explicitly settled on this page (keep these; do not reopen unless the writer asks):',
         JSON.stringify([...craftSettledChoices.current.values()]),
+        'CURRENT EDITING FOCUS (earlier passages in the conversation are historical):',
+        `${focusSection?.heading ?? 'Current section'} — ${craftFocusLabel ?? craftParagraphLabel(selectedPassage?.text ?? '')}`,
         'Writer-owned current working passage:', currentWorking,
         'Treat this as the wording the writer is shaping now. An empty working passage is intentional, not missing context. Do not silently restore an earlier MAIA proposal.',
         'Broader reading informs discussion; it does not authorize a wider rewrite or Apply. Any proposed wording stays inside the active locus.',
@@ -1192,15 +1215,37 @@ export default function FlagshipWriteEditController({
   }, [
     editorialDraft, context, focusId, editorialBusy, craftActivity, editingSettingsResolved,
     mayProposeImmediately, sendEditorial, craftWorkingText, selectedPassage?.text,
-    receiveCraftReceipt, moveCraftFocus, focusSection,
+    receiveCraftReceipt, moveCraftFocus, focusSection, craftFocusLabel, selectedPassage,
   ]);
 
   useEffect(() => {
     const pending = pendingCraftContinuation.current;
     if (!pending || editorialBusy || craftActivity || craftRequestInFlight.current) return;
+    if (pending.focusKey) {
+      const snapshot = craftTablePort.current?.snapshot();
+      if (!snapshot || snapshot.key !== pending.focusKey || snapshot.workingText !== craftWorkingText) return;
+    }
     pendingCraftContinuation.current = null;
     void sendCraftEditorial(pending.text, pending.options);
   }, [craftWorkingText, editorialBusy, craftActivity, sendCraftEditorial, craftContinuationTick]);
+
+  const moveCraftFocusAndSuggest = useCallback((target: CraftFocusTarget): boolean => {
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved || posture.sanctuary) {
+      receiveCraftReceipt({ ok: false, message: 'Choose the session privacy setting before asking MAIA for an edit. Nothing moved.' });
+      return false;
+    }
+    if (!moveCraftFocus(target)) return false;
+    // One explicit gesture: wait for the new table snapshot before dispatch.
+    pendingCraftContinuation.current = {
+      focusKey: craftTargetKey(target),
+      text: 'Work from the newly focused passage and our carried conversation. Show one small, useful edit directly in marked copy. Preserve the writer-owned working version, voice and settled choices. Do not apply anything.',
+      options: { proposalPolicy: 'require', proposalRequested: true,
+        displayText: `Suggest one small edit to ${target.label}.` },
+    };
+    setCraftContinuationTick(n => n + 1);
+    return true;
+  }, [moveCraftFocus, receiveCraftReceipt]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
@@ -1817,10 +1862,11 @@ export default function FlagshipWriteEditController({
               ).filter(t => !selectedPassage || t.sectionId !== selectedPassage.draftSectionId
                 || t.end <= selectedPassage.start || t.start >= selectedPassage.end) : [],
               onMove: moveCraftFocus,
+              onMoveAndSuggest: moveCraftFocusAndSuggest,
               onStay: () => receiveCraftReceipt({ ok: true, message: 'Staying with this passage. No wording changed.' }),
               onAsk: () => void sendCraftEditorial(
-                'Read this section. Point to another useful place to work, quoting its exact words. Respect the choices I have settled. Do not change or draft wording yet.',
-                { proposalPolicy: 'reply_only', displayText: 'Read this section and show me where we could work next. Do not change anything yet.' },
+                'Read this chapter for reader experience. Identify one or two useful passages outside the current focus, quoting exact words from the verified reading. Respect settled choices. Do not propose replacement wording yet. A next passage will be selected separately.',
+                { proposalPolicy: 'reply_only', displayText: 'Read this chapter for reader experience and show me where we could work next. Do not change anything yet.' },
               ),
               onConnect: connectCraftTable,
               onReceipt: receiveCraftReceipt,

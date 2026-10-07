@@ -341,11 +341,16 @@ describe('F10 · nothing 07C-shaped exists in the schema or survives the parser'
 
   it('the tool schema names none of them and closes additional properties at every level', () => {
     const schema = readerTool().input_schema as {
-      oneOf: Array<{ properties: Record<string, unknown>; additionalProperties: boolean; required: string[] }>;
+      type: string; additionalProperties: boolean; required: string[];
+      properties: { result: { anyOf: Array<{ properties: Record<string, unknown>; additionalProperties: boolean; required: string[] }> } };
     };
-    expect(schema.oneOf).toHaveLength(2);
-    const claimsEnvelope = schema.oneOf.find((branch) => Object.hasOwn(branch.properties, 'claims'))!;
-    const noneEnvelope = schema.oneOf.find((branch) => !Object.hasOwn(branch.properties, 'claims'))!;
+    expect(schema.type).toBe('object');
+    expect(schema.additionalProperties).toBe(false);
+    expect(schema.required).toEqual(['result']);
+    const alternatives = schema.properties.result.anyOf;
+    expect(alternatives).toHaveLength(2);
+    const claimsEnvelope = alternatives.find((branch) => Object.hasOwn(branch.properties, 'claims'))!;
+    const noneEnvelope = alternatives.find((branch) => !Object.hasOwn(branch.properties, 'claims'))!;
     expect(claimsEnvelope.additionalProperties).toBe(false);
     expect(noneEnvelope.additionalProperties).toBe(false);
     expect(Object.keys(claimsEnvelope.properties).sort()).toEqual(['claims', 'outcome']);

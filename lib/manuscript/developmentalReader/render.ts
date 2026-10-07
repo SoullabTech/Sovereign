@@ -127,17 +127,20 @@ export interface ReaderTool {
   input_schema: Record<string, unknown>;
 }
 
-const id = { type: 'string', minLength: 1 } as const;
+// Length and nonnegative-range checks remain mandatory in parsing/binding.
+// They are not expressible in the provider's supported strict-schema dialect.
+const id = { type: 'string', description: 'A nonempty evidence identity.' } as const;
 const idList = { type: 'array', minItems: 1, items: id } as const;
 
+// Distinct kind discriminators make these anyOf branches mutually exclusive.
 const REF_SCHEMA = {
-  oneOf: [
+  anyOf: [
     { type: 'object', additionalProperties: false, required: ['kind', 'sectionId'],
       properties: { kind: { const: 'section' }, sectionId: id } },
     { type: 'object', additionalProperties: false, required: ['kind', 'sectionId', 'range'],
       properties: { kind: { const: 'passage' }, sectionId: id,
         range: { type: 'object', additionalProperties: false, required: ['start', 'end'],
-          properties: { start: { type: 'integer', minimum: 0 }, end: { type: 'integer', minimum: 0 } } } } },
+          properties: { start: { type: 'integer', description: 'Nonnegative code-point offset; verified by the evidence binder.' }, end: { type: 'integer', description: 'Nonnegative code-point offset; verified by the evidence binder.' } } } } },
     { type: 'object', additionalProperties: false, required: ['kind', 'sectionIds'],
       properties: { kind: { const: 'section-run' }, sectionIds: idList } },
     { type: 'object', additionalProperties: false, required: ['kind', 'unitId'],
@@ -155,9 +158,9 @@ export function readerTool(): ReaderTool {
     additionalProperties: false,
     required: ['text', 'refs', 'doesNotEstablish'],
     properties: {
-      text: { type: 'string', minLength: 1,
+      text: { type: 'string',
         description: 'What you noticed. Not a recommendation, not a judgement.' },
-      themeLabel: { type: 'string', minLength: 1, maxLength: 120,
+      themeLabel: { type: 'string',
         description: 'Themes lens ONLY: short MAIA-authored candidate theme name. Omit for every other lens.' },
       refs: { type: 'array', minItems: 1, items: REF_SCHEMA,
         description: 'The evidence this rests on, in the permitted shapes.' },
@@ -178,27 +181,36 @@ export function readerTool(): ReaderTool {
       + 'evidence references and to what it does not establish. Use outcome "none" when '
       + 'there is nothing worth drafting - that is a complete answer.',
     input_schema: {
-      oneOf: [
-        {
-          type: 'object',
-          additionalProperties: false,
-          required: ['outcome', 'claims'],
-          properties: {
-            outcome: { const: 'claims' },
-            claims: {
-              type: 'array',
-              minItems: 1,
-              items: claim,
+      // Keep the disjoint claims/none contract nested: the tool transport
+      // requires a root object and does not permit a top-level union.
+      type: 'object',
+      additionalProperties: false,
+      required: ['result'],
+      properties: {
+        result: {
+          anyOf: [
+            {
+              type: 'object',
+              additionalProperties: false,
+              required: ['outcome', 'claims'],
+              properties: {
+                outcome: { const: 'claims' },
+                claims: {
+                  type: 'array',
+                  minItems: 1,
+                  items: claim,
+                },
+              },
             },
-          },
+            {
+              type: 'object',
+              additionalProperties: false,
+              required: ['outcome'],
+              properties: { outcome: { const: 'none' } },
+            },
+          ],
         },
-        {
-          type: 'object',
-          additionalProperties: false,
-          required: ['outcome'],
-          properties: { outcome: { const: 'none' } },
-        },
-      ],
+      },
     },
   };
 }

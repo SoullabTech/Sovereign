@@ -34,6 +34,7 @@ function unquotedRequest(text: string): string {
 // understanding. An uncertain sentence stays local and may be clarified in
 // conversation. Only affirmative present requests can spend a wider reading.
 const requestedAct = /^(?:(?:please|now|just|then|also)\s+)*(?:(?:can|could|would|will)\s+you\s+(?:please\s+)?|i\s+(?:want|would\s+like)\s+you\s+to\s+)?(?:re-?read|read|review|look\s+at|examine|check|compare|evaluate|assess|help\s+with)\b/i;
+const requestedAttention = /^(?:(?:please|now|just|then|also)\s+)*(?:(?:can|could|would|will)\s+you\s+(?:please\s+)?|i\s+(?:want|would\s+like)\s+you\s+to\s+)?(?:find|identify|show\s+me)\s+(?:(?:other|the\s+next|next|another|any|some)\s+)?(?:areas?|places?|passages?|sections?|paragraphs?)\b/i;
 const deferred = /\b(?:later|tomorrow|not\s+yet|not\s+now|next\s+(?:week|time)|if\s+(?:necessary|needed)|when\s+i\s+finish)\b/i;
 const refusal = /\b(?:do\s+not|don't|never|avoid|stop|no\s+need|not\s+(?:the|this|a|my|any)|without\s+(?:reading|reviewing))\b/i;
 
@@ -65,7 +66,9 @@ export function detectCraftRereadIntent(text: string): CraftRereadIntent | null 
   }
   const candidates: CraftRereadIntent[] = [];
   for (const clause of clauses) {
-    const act = requestedAct.exec(clause);
+    const attention = requestedAttention.exec(clause);
+    if (attention && /\b(?:if|unless|when|only\s+after)\b/i.test(clause)) continue;
+    const act = requestedAct.exec(clause) ?? attention;
     if (!act) continue;
     const end = clause.search(refusal);
     const affirmative = end >= 0 ? clause.slice(0, end) : clause;
@@ -74,7 +77,7 @@ export function detectCraftRereadIntent(text: string): CraftRereadIntent | null 
       .filter(scope => scope.match !== null)
       .sort((a, b) => a.match!.index - b.match!.index)[0];
     if (!target || prohibited.has(target.zoom)) continue;
-    candidates.push({ zoom: target.zoom, lens: explicitLensFrom(affirmative), explicit: true });
+    candidates.push({ zoom: target.zoom, lens: explicitLensFrom(affirmative) ?? (attention ? 'reader' : null), explicit: true });
   }
   // A later explicitly requested focus governs the next act. Never take the
   // widest phrase found anywhere in the writer's message.

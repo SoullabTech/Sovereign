@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
-import { makeCraftTarget, paragraphTargets, type CraftFocusTarget } from '@/lib/writersStudio/craftFocusR1';
+import { makeCraftTarget, paragraphTargets, adjacentCraftTarget, type CraftFocusTarget } from '@/lib/writersStudio/craftFocusR1';
 
 export interface CraftFocusToolsR1Props {
   sections: readonly RebuildSection[];
@@ -13,6 +13,7 @@ export interface CraftFocusToolsR1Props {
   busy: boolean;
   receipt: string | null;
   onMove: (target: CraftFocusTarget) => boolean;
+  onMoveAndSuggest?: (target: CraftFocusTarget) => boolean;
   onStay: () => void;
   onAsk: () => void;
 }
@@ -27,6 +28,8 @@ export default function CraftFocusToolsR1(props: CraftFocusToolsR1Props) {
   const targets = useMemo(() => paragraphTargets(props.sections, props.bodyOf, props.revisionNumber),
     [props.sections, props.bodyOf, props.revisionNumber]);
   const choices = targets.filter(t => t.sectionId === sectionId);
+  const previous = adjacentCraftTarget(targets, props.current, 'previous');
+  const next = adjacentCraftTarget(targets, props.current, 'next');
 
   useEffect(() => {
     setSelected(null);
@@ -58,6 +61,10 @@ export default function CraftFocusToolsR1(props: CraftFocusToolsR1Props) {
       if (!section) return;
       const target = makeCraftTarget(section, props.bodyOf(section.draftSectionId), selection.toString(), props.revisionNumber, 'writer');
       setSelected(target);
+      if (target) {
+        setSectionId(target.sectionId);
+        setOpen(false);
+      }
       setSelectionNotice(target ? null : 'These words are not a unique original passage. Choose a paragraph instead.');
     };
     document.addEventListener('selectionchange', inspect);
@@ -79,6 +86,8 @@ export default function CraftFocusToolsR1(props: CraftFocusToolsR1Props) {
       <div className="p4r1-craft-focus-line">
         <span><b>Focus</b> · {props.current?.label ?? 'Choose words on the page'}</span>
         <div>
+          <button type="button" disabled={props.busy || !previous} title={previous ? `Previous: ${previous.label}` : 'First passage in this chapter'} onClick={() => previous && move(previous)}>Previous passage</button>
+          <button type="button" disabled={props.busy || !next} title={next ? `Next: ${next.label}` : 'Last passage in this chapter'} onClick={() => next && move(next)}>Next passage</button>
           <button type="button" disabled={props.busy} onClick={props.onStay}>Stay here</button>
           <button type="button" disabled={props.busy} aria-expanded={open} onClick={() => setOpen(value => !value)}>Choose passage</button>
           <button type="button" disabled={props.busy} onClick={props.onAsk}>Ask MAIA where next</button>
@@ -87,8 +96,13 @@ export default function CraftFocusToolsR1(props: CraftFocusToolsR1Props) {
       {props.receipt ? <p role="status" data-craft-action-receipt>{props.receipt}</p> : null}
       {selected ? (
         <div className="p4r1-craft-selected" data-craft-selection-candidate>
-          <span>Selected words · {selected.text.replace(/\s+/g, ' ').slice(0,105)}</span>
+          <span><b>Selected in {selected.sectionLabel}</b><br />{selected.text.replace(/\s+/g, ' ').slice(0,105)}{selected.text.length > 105 ? '…' : ''}<small>Not the active focus yet. Choose Work here to switch.</small></span>
           <button type="button" disabled={props.busy} onClick={() => move(selected)}>Work here</button>
+          {props.onMoveAndSuggest ? <button type="button" disabled={props.busy} onClick={() => {
+            if (props.onMoveAndSuggest?.(selected)) {
+              setOpen(false); setSelected(null); window.getSelection()?.removeAllRanges();
+            }
+          }}>Work here &amp; suggest an edit</button> : null}
         </div>
       ) : selectionNotice ? <p role="status">{selectionNotice}</p> : null}
       {open ? (

@@ -30,6 +30,8 @@ export function appendCraftDialogue(
   limit = 24,
 ): readonly CraftDialogueTurn[] {
   if (!turn.body.trim()) return turns;
+  const last = turns.at(-1);
+  if (turn.speaker === 'action' && last?.speaker === 'action' && last.body === turn.body) return turns;
   if (turns.some((candidate) => candidate.key === turn.key)) return turns;
   const next = [...turns, turn];
   return next.length > limit ? next.slice(next.length - limit) : next;

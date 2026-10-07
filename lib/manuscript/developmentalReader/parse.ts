@@ -66,7 +66,14 @@ export function parseReaderBlocks(blocks: readonly StructuredBlock[]): ParsedOut
     return refuse('malformed_output', `${calls.length} tool calls; exactly one is the contract`);
   }
 
-  const input = calls[0].input;
+  let input = calls[0].input;
+  // New transport envelope; retain exact flat historical outputs for replay.
+  // Mixed or extended wrappers are refused, never silently stripped.
+  if (input && typeof input === 'object' && !Array.isArray(input)
+    && Object.prototype.hasOwnProperty.call(input, 'result')) {
+    if (Object.keys(input).length !== 1) return refuse('foreign_field', 'result envelope carries extra fields');
+    input = (input as Record<string, unknown>).result;
+  }
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     return refuse('malformed_output', 'tool input is not an object');
   }

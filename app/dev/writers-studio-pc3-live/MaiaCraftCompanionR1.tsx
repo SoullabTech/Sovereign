@@ -25,8 +25,10 @@ export type MaiaCraftCompanionR1Props = {
   message: string | null;
   activity: string | null;
   readingNotice?: string | null;
+  currentFocus?: CraftFocusTarget | null;
   focusSuggestions?: readonly CraftFocusTarget[];
   onMoveFocus?: (target: CraftFocusTarget) => boolean;
+  onMoveFocusAndSuggest?: (target: CraftFocusTarget) => boolean;
   dialogue: readonly CraftDialogueTurn[];
   editLatitude: EditorialLatitude;
   onEditLatitude: (value: EditorialLatitude) => void;
@@ -74,7 +76,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
     const request = draft.trim();
     if (!request) return;
     send([
-      'Stay with the exact passage on the Craftsman\'s Table and keep the conversation that brought us here in view.',
+      'Keep our conversation in view. Follow the writer’s requested reading scope; keep any wording proposal inside the active editing passage. Wider reading does not itself move focus or authorize Apply.',
       '',
       'What I want the writing to do:',
       request,
@@ -92,6 +94,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
         <div>
           <span className="p4r1-eyebrow">MAIA</span>
           <h3>{props.title}</h3>
+          {props.currentFocus ? <p data-maia-current-focus><b>Working on: {props.currentFocus.label}</b></p> : null}
           <p>We are still in the same conversation. The manuscript beside us is where we make it real.</p>
         </div>
         <button type="button" onClick={props.onReturn}>Back</button>
@@ -158,6 +161,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                   <b>{target.label}</b>
                   <p>“{target.quote}”</p>
                   <button type="button" disabled={props.busy} onClick={() => props.onMoveFocus?.(target)}>Work here →</button>
+                  {props.onMoveFocusAndSuggest ? <button type="button" disabled={props.busy} onClick={() => props.onMoveFocusAndSuggest?.(target)}>Work here &amp; suggest an edit</button> : null}
                 </div>)}
               </div>
             ) : null}

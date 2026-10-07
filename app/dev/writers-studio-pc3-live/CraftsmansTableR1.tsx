@@ -177,6 +177,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
 
   const original = props.held?.text ?? '';
   const focusKey = props.held ? craftTargetKey({ sectionId: props.held.draftSectionId, ...props.held }) : '';
+  const [stateFocusKey, setStateFocusKey] = useState(focusKey);
   const announce = (receipt: CraftCanvasReceipt): CraftCanvasReceipt => {
     setLocalMessage(receipt.message);
     props.onReceipt?.(receipt);
@@ -204,6 +205,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     setCustomDraft('');
     setLocalMessage(null);
     setKept([]);
+    setStateFocusKey(focusKey);
     let restored = props.restoreSnapshot;
     // One-use recovery of the actual open draft across this candidate's HMR.
     // Never a server write, never an inferred proposal acceptance.
@@ -323,7 +325,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
   );
   const hasWriterChange = workingText !== original;
   const liveBody = props.held ? props.bodyOf(props.held.draftSectionId) : '';
-  const canonicalAligned = Boolean(props.held
+  const canonicalAligned = Boolean(stateFocusKey === focusKey && props.held
     && props.held.start >= 0 && props.held.end >= props.held.start
     && props.held.end <= Array.from(liveBody).length
     && Array.from(liveBody).slice(props.held.start, props.held.end).join('') === original
@@ -335,8 +337,9 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     && props.version?.author === 'member' && props.version.wording === workingText;
 
   useEffect(() => {
-    props.onWorkingTextChange?.(workingText);
-  }, [workingText, props.onWorkingTextChange]);
+    // Do not publish the previous passage's draft under the new focus identity.
+    if (stateFocusKey === focusKey) props.onWorkingTextChange?.(workingText);
+  }, [workingText, stateFocusKey, focusKey, props.onWorkingTextChange]);
 
   useEffect(() => {
     if (!props.held || !locusRef.current) return;
@@ -385,6 +388,10 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
 
   useEffect(() => {
     if (!props.onConnect) return;
+    if (stateFocusKey !== focusKey) {
+      props.onConnect(null);
+      return;
+    }
     props.onConnect({
       snapshot: () => props.held ? ({ key: focusKey, candidateVersion, decisions: [...decisions],
         manualText, manualFromVersionId, directDraft, directEditing, customDraft, customEditId,

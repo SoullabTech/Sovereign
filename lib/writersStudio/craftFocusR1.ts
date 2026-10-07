@@ -132,10 +132,27 @@ export function resolveNamedCraftTarget(
   return quoted.length === 1 ? quoted[0]! : null;
 }
 
+/** Manuscript-order navigation is independent of model recommendations. A
+ * partial selection advances beyond its containing paragraph, not into it. */
+export function adjacentCraftTarget(
+  targets: readonly CraftFocusTarget[], current: CraftFocusTarget | null,
+  direction: 'previous' | 'next', unit: 'passage' | 'section' = 'passage',
+): CraftFocusTarget | null {
+  if (!current) return null;
+  const indices = targets.map((target, index) => ({ target, index }))
+    .filter(({ target }) => target.sectionId === current.sectionId
+      && (unit === 'section' || (target.start < current.end && target.end > current.start)))
+    .map(({ index }) => index);
+  if (!indices.length) return null;
+  const index = direction === 'next' ? indices[indices.length - 1]! + 1 : indices[0]! - 1;
+  return targets[index] ?? null;
+}
+
 export type CraftCanvasCommand =
   | { kind: 'keep'; word: string; remainder: string }
   | { kind: 'replace'; from: string; to: string }
   | { kind: 'focus'; name: string }
+  | { kind: 'step'; direction: 'previous' | 'next'; unit: 'passage' | 'section' }
   | { kind: 'stay' }
   | { kind: 'view'; view: 'markup' | 'preview' };
 
@@ -154,6 +171,8 @@ export function parseCraftCanvasCommand(request: string): CraftCanvasCommand | n
   }
   const replace = /^replace\s+[“"']([^”"'\n]+)[”"']\s+with\s+[“"']([^”"'\n]*)[”"']\s+in\s+(?:my|the)\s+working\s+copy[.!]?$/iu.exec(text);
   if (replace) return { kind: 'replace', from: replace[1]!, to: replace[2]! };
+  const step = /^(?:(?:go|move)(?:\s+us)?\s+to\s+(?:the\s+)?|let['’]s\s+)?(next|previous)\s+(passage|paragraph|section)[.!]?$/iu.exec(text);
+  if (step) return { kind: 'step', direction: step[1]!.toLowerCase() as 'previous' | 'next', unit: step[2]!.toLowerCase() === 'section' ? 'section' : 'passage' };
   const move = /^(?:move\s+(?:us\s+)?to|focus\s+on|work\s+on|let['’]s\s+work\s+on)\s+([^\n.!?]+)[.!]?$/iu.exec(text);
   if (move) return { kind: 'focus', name: move[1]! };
   if (/^(?:let['’]s\s+)?(?:stay\s+here|keep\s+working\s+here)[.!]?$/iu.test(text)) return { kind: 'stay' };
@@ -169,6 +188,7 @@ export interface CraftFocusBinding {
   suggestions: readonly CraftFocusTarget[];
   earlier: readonly CraftFocusTarget[];
   onMove: (target: CraftFocusTarget) => boolean;
+  onMoveAndSuggest?: (target: CraftFocusTarget) => boolean;
   onStay: () => void;
   onAsk: () => void;
   onConnect: (port: CraftTablePort | null) => void;
