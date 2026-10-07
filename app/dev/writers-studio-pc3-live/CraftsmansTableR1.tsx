@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type {
   RebuildEditorialThread,
@@ -131,6 +131,49 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
   const [localMessage, setLocalMessage] = useState<string | null>(null);
   const [kept, setKept] = useState<readonly CraftKeptSpan[]>([]);
   const locusRef = useRef<HTMLSpanElement | null>(null);
+  const editControlsRef = useRef<HTMLDivElement | null>(null);
+  const editTriggerRef = useRef<HTMLElement | null>(null);
+  const editControlsId = useId();
+  const [editRevealRequest, setEditRevealRequest] = useState(0);
+
+  // Opening a mark reveals choices. It never chooses, saves, or applies wording.
+  // Increment even for the same mark: the writer may have scrolled away since
+  // opening it, and a second click must not become an invisible React no-op.
+  const openEditControls = (id: number, trigger: HTMLElement) => {
+    editTriggerRef.current = trigger;
+    setActiveEditId(id);
+    setEditRevealRequest(value => value + 1);
+  };
+  const closeEditControls = () => {
+    setActiveEditId(null);
+    editTriggerRef.current?.focus({ preventScroll: true });
+  };
+
+  useLayoutEffect(() => {
+    const controls = editControlsRef.current;
+    const scroll = controls?.closest<HTMLElement>('.p4r1-craft-r1-scroll');
+    if (!controls || !scroll || activeEditId === null || view !== 'markup') return;
+    const bounds = scroll.getBoundingClientRect();
+    const panel = controls.getBoundingClientRect();
+    const footer = scroll.closest('[data-craftsmans-table-r1]')
+      ?.querySelector('.p4r1-craft-r1-footer')?.getBoundingClientRect();
+    const top = Math.max(0, bounds.top) + 12;
+    const bottom = Math.min(window.innerHeight, bounds.bottom,
+      footer && footer.top > top ? footer.top : bounds.bottom) - 12;
+    if (bottom > top) {
+      const delta = panel.height > bottom - top || panel.top < top
+        ? panel.top - top
+        : panel.bottom > bottom ? panel.bottom - bottom : 0;
+      if (delta !== 0) {
+        // Scroll only the manuscript pane, never the outer page or MAIA.
+        const previous = scroll.style.scrollBehavior;
+        scroll.style.scrollBehavior = 'auto';
+        scroll.scrollTop += delta;
+        scroll.style.scrollBehavior = previous;
+      }
+    }
+    if (customEditId === null) controls.focus({ preventScroll: true });
+  }, [activeEditId, editRevealRequest, view, customEditId]);
 
   const original = props.held?.text ?? '';
   const focusKey = props.held ? craftTargetKey({ sectionId: props.held.draftSectionId, ...props.held }) : '';
@@ -608,10 +651,9 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                 data-craft-section-id={section.draftSectionId}
               >
                 {section.heading?.trim() ? <Heading>{section.heading.trim()}</Heading> : null}
+                <CraftContextBlocks blocks={activeContext.leadingBlocks} muted />
                 <div className="p4r1-craft-r1-workrow" data-editorial-margin={hasMargin ? 'true' : 'false'}>
                   <div className="p4r1-craft-r1-worktext">
-                    <CraftContextBlocks blocks={activeContext.leadingBlocks} muted />
-
                     <div className="p4r1-craft-r1-active-paragraph" data-craft-focus-bracket data-prose-reflow={activeContext.reflow ? 'true' : 'false'}>
                       {activeContext.prefix}
                       <span
@@ -655,7 +697,17 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                               'data-edit-id': segment.editId,
                               'data-selected': chosen ? 'true' : undefined,
                               'data-decision': decision.mode,
-                              onClick: () => setActiveEditId(segment.editId),
+                              role: 'button',
+                              tabIndex: 0,
+                              'aria-expanded': activeEditId === segment.editId,
+                              'aria-controls': editControlsId,
+                              'aria-label': `Change ${segment.editId} · ${segment.kind === 'del' ? 'deletion' : 'insertion'}: ${segment.text.trim() || 'spacing'}. Open edit options`,
+                              onClick: (event: ReactMouseEvent<HTMLElement>) => openEditControls(segment.editId!, event.currentTarget),
+                              onKeyDown: (event: ReactKeyboardEvent<HTMLElement>) => {
+                                if (event.key !== 'Enter' && event.key !== ' ') return;
+                                event.preventDefault();
+                                openEditControls(segment.editId!, event.currentTarget);
+                              },
                               title: `Change ${segment.editId} · click to work with this mark`,
                             };
 
@@ -704,7 +756,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                       </div>
                     ) : null}
 
-                    {!directEditing ? (
+                    {!directEditing && !(view === 'markup' && activeEdit) ? (
                       <div className="p4r1-craft-r1-focus-actions" data-craft-focus-actions>
                         <span>{props.busy ? 'Working with this passage…' : openEdits.length
                           ? 'Edit marks show proposed or chosen wording. Nothing is applied.'
@@ -725,8 +777,6 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                       </div>
                     ) : null}
 
-                    <CraftContextBlocks blocks={activeContext.trailingBlocks} muted />
-
                     {!authoritative ? (
                       <p className="p4r1-craft-r1-warning" role="status">
                         This passage changed after Craft opened. Re-anchor before making wording decisions.
@@ -735,16 +785,17 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                   </div>
 
                   {hasMargin ? <aside className="p4r1-craft-r1-margin" aria-label="Editorial margin">
-                    {marginRationale ? (
-                      <div className="p4r1-craft-r1-margin-note">
-                        <span>{candidateVersion?.author === 'maia' ? 'MAIA · craft note' : 'Working version'}</span>
-                        <p>{marginRationale}</p>
-                      </div>
-                    ) : null}
-
                     {view === 'markup' && activeEdit ? (
-                      <div className="p4r1-craft-r1-local" data-craft-local-edit={activeEdit.id}>
+                      <div className="p4r1-craft-r1-local" data-craft-local-edit={activeEdit.id}
+                        ref={editControlsRef} id={editControlsId} tabIndex={-1}
+                        role="group" aria-label={`Edit options for change ${activeEdit.id}`}
+                        onKeyDown={event => {
+                          if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeEditControls(); }
+                        }}
+                      >
                         <div>
+                          <button type="button" className="p4r1-craft-r1-local-close"
+                            aria-label="Close edit options" onClick={closeEditControls}>Close</button>
                           <span>
                             Change {activeEdit.id} · {editKind(activeEdit)}
                             {notation === 'professional'
@@ -808,8 +859,16 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                         )}
                       </div>
                     ) : null}
+                    {marginRationale ? (
+                      <div className="p4r1-craft-r1-margin-note">
+                        <span>{candidateVersion?.author === 'maia' ? 'MAIA · craft note' : 'Working version'}</span>
+                        <p>{marginRationale}</p>
+                      </div>
+                    ) : null}
+
                   </aside> : null}
                 </div>
+                <CraftContextBlocks blocks={activeContext.trailingBlocks} muted />
               </section>
             );
           })}

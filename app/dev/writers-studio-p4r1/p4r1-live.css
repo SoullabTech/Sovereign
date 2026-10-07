@@ -6141,3 +6141,37 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   color: var(--fr-ink);
   font: 13px/1.6 var(--fr-sans-stack);
 }
+
+/* A mark opens decision controls next to its focused paragraph, not after the
+   section. Narrow writing panes keep compact controls in manuscript flow. */
+.p4r1-root .p4r1-craft-r1-section > .p4r1-craft-r1-context {
+  margin-inline: auto;
+}
+.p4r1-root .p4r1-craft-r1-local {
+  position: relative;
+  scroll-margin-block: 12px;
+}
+.p4r1-root .p4r1-craft-r1-local > div:first-child > span {
+  padding-right: 48px;
+}
+.p4r1-root .p4r1-craft-r1-local .p4r1-craft-r1-local-close {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: auto;
+  padding: 5px 8px;
+}
+.p4r1-root .p4r1-craft-r1-local:focus-visible,
+.p4r1-root .p4r1-craft-r1-locus [data-edit-id]:focus-visible {
+  outline: 2px solid var(--fr-action);
+  outline-offset: 3px;
+}
+@container craft-table (max-width: 880px) {
+  .p4r1-root .p4r1-craft-r1-margin .p4r1-craft-r1-local > div:last-child {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .p4r1-root .p4r1-craft-r1-margin .p4r1-craft-r1-local button {
+    width: auto;
+  }
+}
