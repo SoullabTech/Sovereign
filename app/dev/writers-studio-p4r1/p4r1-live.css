@@ -5874,3 +5874,112 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   color:var(--fr-muted);
   font:600 10.5px/1.4 var(--fr-sans-stack);
 }
+
+
+/* CRAFTSMAN'S TABLE R1 · adjustable room geometry
+   The manuscript rail and MAIA are presentation widths only. Resizing never
+   remounts the workbench, changes the active locus, or changes manuscript data. */
+@media (min-width: 1180px) {
+  .p4r1-root .fr-room[data-resizable-manuscript='true'][data-resizable-maia='true'] {
+    grid-template-columns:
+      var(--fr-live-ms-w, var(--fr-ms-w))
+      10px
+      minmax(0, var(--fr-live-work-fr, 58fr))
+      10px
+      minmax(340px, var(--fr-live-maia-fr, 42fr)) !important;
+    column-gap: 0;
+  }
+
+  .p4r1-root .fr-room[data-resizable-manuscript='true']:not([data-resizable-maia='true']) {
+    grid-template-columns:
+      var(--fr-live-ms-w, var(--fr-ms-w))
+      10px
+      minmax(0, 1fr)
+      var(--fr-maia-w) !important;
+    column-gap: 0;
+  }
+
+  .p4r1-root .fr-room[data-resizable-maia='true']:not([data-resizable-manuscript='true']) {
+    grid-template-columns:
+      var(--fr-ms-w)
+      minmax(0, var(--fr-live-work-fr, 56fr))
+      10px
+      minmax(340px, var(--fr-live-maia-fr, 44fr)) !important;
+    column-gap: 0;
+  }
+
+  .p4r1-root .fr-room[data-resizable-manuscript='true'] .fr-work,
+  .p4r1-root .fr-room[data-resizable-maia='true'] .fr-work {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.p4r1-root .fr-manuscript-divider,
+.p4r1-root .fr-maia-divider {
+  position: relative;
+  width: 10px;
+  min-width: 10px;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+  z-index: 6;
+}
+.p4r1-root .fr-manuscript-divider::before,
+.p4r1-root .fr-maia-divider::before {
+  content: '';
+  position: absolute;
+  inset: 0 4px;
+  background: var(--fr-line);
+  transition: background .15s ease, inset .15s ease;
+}
+.p4r1-root .fr-manuscript-divider:hover::before,
+.p4r1-root .fr-manuscript-divider:focus-visible::before,
+.p4r1-root .fr-maia-divider:hover::before,
+.p4r1-root .fr-maia-divider:focus-visible::before {
+  inset: 0 3px;
+  background: var(--fr-action);
+}
+.p4r1-root .fr-manuscript-divider span,
+.p4r1-root .fr-maia-divider span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 48px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fr-panel) 92%, transparent);
+  border: 1px solid var(--fr-line);
+  box-shadow: 0 2px 10px rgba(0,0,0,.16);
+}
+.p4r1-root .fr-manuscript-divider span::after {
+  content: '‹';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--fr-muted);
+  font: 700 13px/1 var(--fr-sans-stack);
+}
+.p4r1-root .fr-room[data-manuscript-collapsed='true'] .fr-manuscript {
+  visibility: hidden;
+  pointer-events: none;
+}
+.p4r1-root .fr-room[data-manuscript-collapsed='true'] .fr-manuscript-divider {
+  cursor: e-resize;
+}
+.p4r1-root .fr-room[data-manuscript-collapsed='true'] .fr-manuscript-divider span::after {
+  content: '›';
+  color: var(--fr-action);
+}
+@media (max-width: 1179px) {
+  .p4r1-root .fr-manuscript-divider,
+  .p4r1-root .fr-maia-divider {
+    display: none;
+  }
+}

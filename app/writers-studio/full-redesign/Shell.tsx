@@ -45,6 +45,13 @@ export type ShellProps = {
   /** Initial share of the Work+MAIA conversation area given to MAIA. */
   maiaDefaultShare?: number;
   /**
+   * The manuscript rail may be widened, narrowed, or collapsed without
+   * remounting the Work. Presentation only; manuscript authority is unchanged.
+   */
+  manuscriptResizable?: boolean;
+  /** Initial open width of the manuscript rail in pixels. */
+  manuscriptDefaultWidth?: number;
+  /**
    * PC3-S3 Full Canvas. A presentation state of the SAME room: the product bar
    * and the manuscript context recede; the Work region — and whatever editor it
    * holds — stays exactly where it is in the tree, so nothing inside it remounts.
@@ -61,29 +68,72 @@ export function Shell(props: ShellProps) {
   const canvas = props.canvas === true;
   const style = { ...appearanceVars(appearance), ...geometryVars(geometry) } as React.CSSProperties;
   const resizableMaia = props.maiaResizable === true && props.maia !== undefined && !canvas;
+  const resizableManuscript = props.manuscriptResizable === true && props.manuscript !== undefined && !canvas;
   const clampMaiaShare = useCallback((value: number) => Math.min(62, Math.max(28, value)), []);
+  const clampManuscriptWidth = useCallback((value: number) => Math.min(480, Math.max(180, value)), []);
   const [maiaShare, setMaiaShare] = useState(() => clampMaiaShare(props.maiaDefaultShare ?? 44));
+  const [maiaSizingHydrated, setMaiaSizingHydrated] = useState(false);
+  const [manuscriptWidth, setManuscriptWidth] = useState(() =>
+    clampManuscriptWidth(props.manuscriptDefaultWidth ?? geometry.manuscriptWidth ?? 300));
+  const [manuscriptCollapsed, setManuscriptCollapsed] = useState(false);
+  const [manuscriptSizingHydrated, setManuscriptSizingHydrated] = useState(false);
+  const lastOpenManuscriptWidth = useRef(manuscriptWidth);
   const roomRef = useRef<HTMLDivElement | null>(null);
   const maiaDrag = useRef<{ startX: number; startShare: number; width: number } | null>(null);
+  const manuscriptDrag = useRef<{ startX: number; startWidth: number; moved: boolean } | null>(null);
 
   useEffect(() => {
-    if (!resizableMaia || typeof window === 'undefined') return;
+    if (!resizableMaia || typeof window === 'undefined') {
+      setMaiaSizingHydrated(false);
+      return;
+    }
     const key = `writers-studio:${mode}:maia-share`;
     const raw = window.sessionStorage.getItem(key);
     if (raw !== null) {
       const parsed = Number(raw);
       if (Number.isFinite(parsed)) setMaiaShare(clampMaiaShare(parsed));
     }
+    setMaiaSizingHydrated(true);
   }, [mode, resizableMaia, clampMaiaShare]);
 
   useEffect(() => {
-    if (!resizableMaia || typeof window === 'undefined') return;
+    if (!resizableMaia || !maiaSizingHydrated || typeof window === 'undefined') return;
     try {
       window.sessionStorage.setItem(`writers-studio:${mode}:maia-share`, String(maiaShare));
     } catch {
       // Presentation preference failure must never block the writing room.
     }
-  }, [mode, resizableMaia, maiaShare]);
+  }, [mode, resizableMaia, maiaSizingHydrated, maiaShare]);
+
+  useEffect(() => {
+    if (!resizableManuscript || typeof window === 'undefined') {
+      setManuscriptSizingHydrated(false);
+      return;
+    }
+    const widthKey = `writers-studio:${mode}:manuscript-width`;
+    const collapsedKey = `writers-studio:${mode}:manuscript-collapsed`;
+    const rawWidth = window.sessionStorage.getItem(widthKey);
+    if (rawWidth !== null) {
+      const parsed = Number(rawWidth);
+      if (Number.isFinite(parsed)) {
+        const next = clampManuscriptWidth(parsed);
+        setManuscriptWidth(next);
+        lastOpenManuscriptWidth.current = next;
+      }
+    }
+    setManuscriptCollapsed(window.sessionStorage.getItem(collapsedKey) === '1');
+    setManuscriptSizingHydrated(true);
+  }, [mode, resizableManuscript, clampManuscriptWidth]);
+
+  useEffect(() => {
+    if (!resizableManuscript || !manuscriptSizingHydrated || typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem(`writers-studio:${mode}:manuscript-width`, String(manuscriptWidth));
+      window.sessionStorage.setItem(`writers-studio:${mode}:manuscript-collapsed`, manuscriptCollapsed ? '1' : '0');
+    } catch {
+      // Presentation preference failure must never block the writing room.
+    }
+  }, [mode, resizableManuscript, manuscriptSizingHydrated, manuscriptWidth, manuscriptCollapsed]);
 
   const beginMaiaResize = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     if (!roomRef.current) return;
@@ -125,9 +175,87 @@ export function Shell(props: ShellProps) {
     }
   }, [clampMaiaShare]);
 
-  const roomStyle = resizableMaia ? {
-    '--fr-live-work-fr': `${100 - maiaShare}fr`,
-    '--fr-live-maia-fr': `${maiaShare}fr`,
+  const toggleManuscript = useCallback(() => {
+    setManuscriptCollapsed((collapsed) => {
+      if (collapsed) {
+        setManuscriptWidth(clampManuscriptWidth(lastOpenManuscriptWidth.current));
+        return false;
+      }
+      lastOpenManuscriptWidth.current = manuscriptWidth;
+      return true;
+    });
+  }, [clampManuscriptWidth, manuscriptWidth]);
+
+  const beginManuscriptResize = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    manuscriptDrag.current = {
+      startX: event.clientX,
+      startWidth: manuscriptCollapsed ? 0 : manuscriptWidth,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, [manuscriptCollapsed, manuscriptWidth]);
+
+  const moveManuscriptResize = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = manuscriptDrag.current;
+    if (!drag) return;
+    const delta = event.clientX - drag.startX;
+    if (Math.abs(delta) > 3) drag.moved = true;
+    if (!drag.moved) return;
+    const raw = drag.startWidth + delta;
+    if (raw < 90) {
+      setManuscriptCollapsed(true);
+      return;
+    }
+    const next = clampManuscriptWidth(raw);
+    lastOpenManuscriptWidth.current = next;
+    setManuscriptWidth(next);
+    setManuscriptCollapsed(false);
+  }, [clampManuscriptWidth]);
+
+  const endManuscriptResize = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = manuscriptDrag.current;
+    manuscriptDrag.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (drag && !drag.moved) toggleManuscript();
+  }, [toggleManuscript]);
+
+  const keyManuscriptResize = useCallback((event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleManuscript();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      if (manuscriptCollapsed) return;
+      const next = manuscriptWidth - 24;
+      if (next < 180) setManuscriptCollapsed(true);
+      else setManuscriptWidth(clampManuscriptWidth(next));
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      const next = clampManuscriptWidth((manuscriptCollapsed ? lastOpenManuscriptWidth.current : manuscriptWidth) + 24);
+      lastOpenManuscriptWidth.current = next;
+      setManuscriptWidth(next);
+      setManuscriptCollapsed(false);
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      setManuscriptCollapsed(true);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      lastOpenManuscriptWidth.current = 480;
+      setManuscriptWidth(480);
+      setManuscriptCollapsed(false);
+    }
+  }, [clampManuscriptWidth, manuscriptCollapsed, manuscriptWidth, toggleManuscript]);
+
+  const roomStyle = (resizableMaia || resizableManuscript) ? {
+    ...(resizableMaia ? {
+      '--fr-live-work-fr': `${100 - maiaShare}fr`,
+      '--fr-live-maia-fr': `${maiaShare}fr`,
+    } : {}),
+    ...(resizableManuscript ? {
+      '--fr-live-ms-w': manuscriptCollapsed ? '0px' : `${manuscriptWidth}px`,
+    } : {}),
   } as React.CSSProperties : undefined;
 
   return (
@@ -191,6 +319,8 @@ export function Shell(props: ShellProps) {
             ? 'fr-room fr-room-no-maia'
             : 'fr-room'}
         data-resizable-maia={resizableMaia ? 'true' : undefined}
+        data-resizable-manuscript={resizableManuscript ? 'true' : undefined}
+        data-manuscript-collapsed={resizableManuscript && manuscriptCollapsed ? 'true' : undefined}
         style={roomStyle}
       >
         {oneRoom || canvas ? null : (
@@ -198,6 +328,29 @@ export function Shell(props: ShellProps) {
             {props.manuscript}
           </aside>
         )}
+        {resizableManuscript ? (
+          <button
+            type="button"
+            className="fr-manuscript-divider"
+            role="separator"
+            aria-label={manuscriptCollapsed ? 'Expand manuscript rail' : 'Resize or collapse manuscript rail'}
+            aria-valuemin={0}
+            aria-valuemax={480}
+            aria-valuenow={manuscriptCollapsed ? 0 : Math.round(manuscriptWidth)}
+            aria-expanded={!manuscriptCollapsed}
+            onPointerDown={beginManuscriptResize}
+            onPointerMove={moveManuscriptResize}
+            onPointerUp={endManuscriptResize}
+            onPointerCancel={endManuscriptResize}
+            onDoubleClick={toggleManuscript}
+            onKeyDown={keyManuscriptResize}
+            title={manuscriptCollapsed
+              ? 'Click or press Enter to reopen manuscript'
+              : 'Drag to resize · click to hide manuscript'}
+          >
+            <span aria-hidden="true" />
+          </button>
+        ) : null}
         <main className="fr-region fr-work" data-region="work" aria-label="The Work">
           {props.work}
         </main>

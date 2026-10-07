@@ -1222,6 +1222,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           manuscript={<WriteManuscriptRail fixture={projection.data} onOpenChapter={go} />}
           work={workSurface}
           maia={shellMaia}
+          manuscriptResizable={props.surfaceMode === 'develop-craft'}
+          manuscriptDefaultWidth={280}
           maiaResizable={shellHasCraftEditorial}
           maiaDefaultShare={42}
         />
