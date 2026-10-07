@@ -353,6 +353,8 @@ describe('chapter-starter auto-send is a fresh-conversation act only', () => {
   it('never re-sends the starter when an existing Work thread is resumed', () => {
     expect(surface).toContain("if (mode.kind !== 'open') return");
     expect(surface).toContain('autoSentInitial.current = true');
+    expect(surface).toContain("mode.kind !== 'resume'");
+    expect(surface).toContain("current === initialDraft ? '' : current");
     expect(surface).not.toContain("mode.kind === 'resume' && autoSendInitialDraft");
   });
 });
