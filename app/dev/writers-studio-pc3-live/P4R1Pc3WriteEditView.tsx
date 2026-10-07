@@ -29,7 +29,7 @@ import EditorialDancePanel from './EditorialDancePanel';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
 import P4R1BlankWritingArrival from './P4R1BlankWritingArrival';
-import { composeSelected, editorialSegments } from '@/lib/writersStudio/editorialDiff';
+import { composeSelected, editIds, editorialSegments } from '@/lib/writersStudio/editorialDiff';
 import type { CanvasInsight } from '@/lib/writersStudio/insightCanvas';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract';
@@ -246,9 +246,17 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   }, [props.workspaceOpen, props.held, props.surfaceMode, isolatedEditorial]);
 
   useEffect(() => {
+    if (props.suggestedVersion?.author === 'member' && props.held) {
+      setSelectedRevisionEdits(new Set(
+        editIds(editorialSegments(props.held.text, props.suggestedVersion.wording)),
+      ));
+      return;
+    }
     setSelectedRevisionEdits(new Set());
   }, [
     props.suggestedVersion?.id,
+    props.suggestedVersion?.author,
+    props.suggestedVersion?.wording,
     props.held?.draftSectionId,
     props.held?.start,
     props.held?.end,
@@ -337,12 +345,10 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     ? props.held.text
     : currentBody;
   const craftPreviewPassage = props.held && props.suggestedVersion
-    ? props.suggestedVersion.author === 'member'
-      ? props.suggestedVersion.wording
-      : composeSelected(
-          editorialSegments(props.held.text, props.suggestedVersion.wording),
-          selectedRevisionEdits,
-        )
+    ? composeSelected(
+        editorialSegments(props.held.text, props.suggestedVersion.wording),
+        selectedRevisionEdits,
+      )
     : props.held?.text ?? '';
   const craftPreviewBodyOf = (sectionId: string) => {
     const body = props.writing.bodyOf(sectionId);

@@ -45,8 +45,8 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(canvas).toContain('Editor’s eye ↔ Reader’s eye');
     expect(canvas).toContain('Markup');
     expect(canvas).toContain('Preview');
-    expect(canvas).toContain("props.suggestedVersion.author === 'member'");
-    expect(canvas).toContain('props.suggestedVersion.wording');
+    expect(canvas).toContain("props.suggestedVersion?.author === 'member'");
+    expect(canvas).toContain('editIds(editorialSegments(props.held.text, props.suggestedVersion.wording))');
     expect(canvas).toContain('composeSelected(');
     expect(canvas).toContain('selectedRevisionEdits');
     expect(canvas).toContain("craftView !== 'preview'");
