@@ -1,0 +1,67 @@
+{
+  "head": "bea5996cdc4dd69085e75d3be2c9e54254b27e86",
+  "all_fake": true,
+  "rows": [
+    {
+      "name": "DC-LINK-INSPECTION-REMOVED",
+      "expected": "K16",
+      "exit_code": 1,
+      "signal": null,
+      "error": null,
+      "checks_completed": 16,
+      "complete": true,
+      "namedFailure": true,
+      "accepted": true,
+      "log_sha256": "08e7d3bab0be419874b2e14a23d5117bdcdc7d6c259f4fb4b6eba228d6d40809"
+    },
+    {
+      "name": "DC-LEDGER-SIDE-LINKS-NOT-INSPECTED",
+      "expected": "K16",
+      "exit_code": 1,
+      "signal": null,
+      "error": null,
+      "checks_completed": 16,
+      "complete": true,
+      "namedFailure": true,
+      "accepted": true,
+      "log_sha256": "9939db073026ecbc857d8b434b4ebcefd1a782535d780d2f1de6bf9c6c4dbed1"
+    },
+    {
+      "name": "DC-TEMP-AND-LOCK-LINKS-ALLOWED",
+      "expected": "K16",
+      "exit_code": 1,
+      "signal": null,
+      "error": null,
+      "checks_completed": 16,
+      "complete": true,
+      "namedFailure": true,
+      "accepted": true,
+      "log_sha256": "bc9cc9537b5131a8a4fc686b9f8f5917315eba010990879fd36c447bee6972d6"
+    },
+    {
+      "name": "DC-DANGLING-LINK-ALLOWED",
+      "expected": "K16",
+      "exit_code": 1,
+      "signal": null,
+      "error": null,
+      "checks_completed": 16,
+      "complete": true,
+      "namedFailure": true,
+      "accepted": true,
+      "log_sha256": "cf1905c5cfcdfdb70d7959af5c94e8d794fc3ac998c50d54a02eb65909fa4128"
+    },
+    {
+      "name": "DC-WRITE-FOLLOWS-LINKS",
+      "expected": "K16",
+      "exit_code": 1,
+      "signal": null,
+      "error": null,
+      "checks_completed": 16,
+      "complete": true,
+      "namedFailure": true,
+      "accepted": true,
+      "log_sha256": "2538f672b0ebfc751f00ba99091ebeaf1da2545abf09b60a9358117dda041da5"
+    }
+  ],
+  "all_pass": true
+}

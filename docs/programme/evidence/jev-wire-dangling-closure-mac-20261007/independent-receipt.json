@@ -1,0 +1,63 @@
+{
+  "observed_at": "2026-10-07T20:15:49.814389+00:00",
+  "checks": [
+    {
+      "name": "path-before",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "/Users/soullab/jev-wire-dangling-evidence-20261007/path-alias-witness.mjs",
+        "/Users/soullab/jev-wire-checkpoint-corrections-review-20261007",
+        "/Users/soullab/jev-wire-dangling-evidence-20261007/path-before"
+      ],
+      "exit_code": 0,
+      "log_sha256": "a506879b21d17a5e07b0f8c3023e9b83ba5793db557c6a83eaa0eb4eb74e0f9c",
+      "script_sha256": "c64182fd36ac232b0e25e5e983dbfffb02bece351cf1a70d2a56d1178ccb74ad"
+    },
+    {
+      "name": "path-after",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "/Users/soullab/jev-wire-dangling-evidence-20261007/path-alias-witness.mjs",
+        "/Users/soullab/jev-wire-dangling-review-20261007",
+        "/Users/soullab/jev-wire-dangling-evidence-20261007/path-after"
+      ],
+      "exit_code": 0,
+      "log_sha256": "63c259ec5c818aa35b60b58cd6d24f61ce5ad0589d31c3cd232998aee02786c0",
+      "script_sha256": "c64182fd36ac232b0e25e5e983dbfffb02bece351cf1a70d2a56d1178ccb74ad"
+    },
+    {
+      "name": "two-volume-after",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "/Users/soullab/jev-wire-dangling-evidence-20261007/independent-corrections-witness.mjs",
+        "/Users/soullab/jev-wire-dangling-review-20261007",
+        "/Users/soullab/jev-wire-dangling-evidence-20261007/two-volume-after",
+        "/Volumes/T7 Shield",
+        "--require-distinct-devices"
+      ],
+      "exit_code": 0,
+      "log_sha256": "27bfb5fd84da5fb385ce6f6d3a28288f284f05a143f652aab0557093ad9430cd",
+      "script_sha256": "bafac03a00af6fe1e0c8d00b03eaa5e4a814f5901b757bca7b7da4a9cee37f88"
+    }
+  ],
+  "volumes": [
+    {
+      "path": "/System/Volumes/Data",
+      "filesystem": "apfs",
+      "device": "disk3s5",
+      "volume_uuid": "23E031E4-DE18-4D52-A74E-40A28A2A8B7C",
+      "mount_point": "/System/Volumes/Data"
+    },
+    {
+      "path": "/Volumes/T7 Shield",
+      "filesystem": "apfs",
+      "device": "disk7s1",
+      "volume_uuid": "BB2BAE4B-602D-4AF9-B30D-E30B94ACC043",
+      "mount_point": "/Volumes/T7 Shield"
+    }
+  ],
+  "all_transports_fake": true,
+  "credentials_accessed": false,
+  "provider_calls": 0,
+  "actual_volume_unmounts": 0
+}

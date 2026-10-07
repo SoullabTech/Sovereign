@@ -1,0 +1,26 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs
+HEAD=bea5996cdc4dd69085e75d3be2c9e54254b27e86
+CWD=/Users/soullab/jev-wire-dangling-review-20261007
+STARTED_AT=2026-10-07T20:15:14.282468+00:00
+PASS  K1-lifecycle-reservation-and-outcomes-are-anchored-before-they-matter
+PASS  K2-checkpoint-is-bound-to-this-initialization-and-experiment
+PASS  K3-missing-checkpoint-never-resets-history-or-permissions
+PASS  K4-truncated-ledger-is-refused
+PASS  K5-replaced-reinitialized-and-repeat-initialization-are-refused
+PASS  K6-ledger-diverging-at-the-anchor-is-refused
+PASS  K7-corrupt-or-mismatched-checkpoint-is-refused
+PASS  K8-unavailable-checkpoint-storage-means-zero-sends
+PASS  K9-process-loss-between-the-two-stores-is-never-reconciled-silently
+PASS  K10-resume-is-explicit-idempotent-and-refuses-over-inconsistency
+PASS  K11-stale-locks-are-refusals-never-deleted-never-bypassed
+PASS  K12-checkpoint-failure-after-the-outcome-write-is-not-completion
+PASS  K13-static-no-network-no-credential-no-lock-deletion-but-its-own
+PASS  K14-persistence-is-established-by-the-ledger-not-by-the-error-name
+PASS  K15-colliding-storage-paths-are-rejected-before-any-mutation
+PASS  K16-dangling-symlinks-are-refused-before-any-lock-or-store-mutation
+
+16 passed · 0 failed
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-07T20:15:15.994767+00:00
