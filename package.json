@@ -97,6 +97,8 @@
     "matrix:jarvis-jev-label-01": "npx tsx tests/constitutional/jarvis-jev-label-01/matrix.ts",
     "verify:jarvis-jev-label-01-pilot": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/verify.ts",
     "pilot:jarvis-jev-label-01": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/cli.ts",
+    "pilot:jarvis-jev-label-01:human-ui": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/human-ui-server.ts",
+    "verify:jarvis-jev-label-01-human-ui": "npx tsx tests/constitutional/jarvis-jev-label-01/pilot/human-ui-verify.ts",
     "verify:review-custody-freeze": "npx tsx scripts/verify-review-custody-freeze.ts",
     "matrix:jarvis-o5-r1": "node tests/constitutional/jarvis-o5-r1/matrix.mjs",
     "verify:jarvis-o5-r1-freeze": "node scripts/verify-jarvis-o5-r1-freeze.mjs",

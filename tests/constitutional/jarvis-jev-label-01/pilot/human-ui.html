@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kelly · Packet-Only Pilot</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div>
+        <div class="eyebrow">JEV PILOT · LABEL A · PACKET ONLY</div>
+        <h1>Kelly’s judgment pass</h1>
+        <p class="lede">Judge only from the small summary shown here. Don’t try to reconstruct the original task.</p>
+      </div>
+      <div class="progressBox">
+        <div id="caseLabel">Case — of —</div>
+        <div id="completeLabel">0 of 25 complete</div>
+      </div>
+    </header>
+
+    <div class="progressTrack" aria-hidden="true"><div id="progressBar"></div></div>
+
+    <section class="notice">
+      <strong>This is not a test of you.</strong>
+      We’re testing whether this small packet gives enough information to make a responsible judgment.
+      “Can’t tell from this packet” is a valid and useful answer.
+    </section>
+
+    <section class="card packetCard">
+      <div class="sectionTitle">What you are allowed to see</div>
+      <div class="packetGrid">
+        <div><span>Task type</span><strong id="taskShape">—</strong></div>
+        <div><span>Sensitive material</span><strong id="sensitive">—</strong></div>
+        <div><span>Outside information</span><strong id="externalInfo">—</strong></div>
+        <div><span>Declared scope</span><strong id="fileCount">—</strong></div>
+        <div><span>Migration-related</span><strong id="migration">—</strong></div>
+        <div><span>Authentication-related</span><strong id="auth">—</strong></div>
+        <div><span>Production-related</span><strong id="production">—</strong></div>
+      </div>
+      <p class="proxyNote">These are packet-level proxy fields, not the full task.</p>
+    </section>
+
+    <form id="caseForm" novalidate>
+      <section class="question card" data-q="Q_DEPTH">
+        <h2>1. How much thinking does this task seem to need?</h2>
+        <p>Choose the closest level from the information shown above.</p>
+        <div id="depthChoices" class="depthChoices"></div>
+        <label class="choice cantTell">
+          <input type="radio" name="Q_DEPTH" value="UNDETERMINABLE" />
+          <span><b>Can’t tell from this packet</b><small>The summary doesn’t support a responsible depth judgment.</small></span>
+        </label>
+        <div class="ambiguity" data-for="Q_DEPTH"></div>
+      </section>
+
+      <section class="question card" data-q="Q_RISK">
+        <h2>2. Does this look risky enough to require extra caution?</h2>
+        <div class="choiceRow">
+          <label class="choice"><input type="radio" name="Q_RISK" value="true" /><span><b>Yes</b><small>Extra caution or escalation seems warranted.</small></span></label>
+          <label class="choice"><input type="radio" name="Q_RISK" value="false" /><span><b>No</b><small>Nothing shown suggests extra caution.</small></span></label>
+          <label class="choice cantTell"><input type="radio" name="Q_RISK" value="UNDETERMINABLE" /><span><b>Can’t tell</b><small>The packet is insufficient.</small></span></label>
+        </div>
+        <div class="ambiguity" data-for="Q_RISK"></div>
+      </section>
+
+      <section class="question card" data-q="Q_SUFFICIENT">
+        <h2>3. Is the information shown sufficient to proceed?</h2>
+        <div class="choiceRow">
+          <label class="choice"><input type="radio" name="Q_SUFFICIENT" value="true" /><span><b>Yes</b><small>This looks sufficient for the next step.</small></span></label>
+          <label class="choice"><input type="radio" name="Q_SUFFICIENT" value="false" /><span><b>No</b><small>More information is needed.</small></span></label>
+          <label class="choice cantTell"><input type="radio" name="Q_SUFFICIENT" value="UNDETERMINABLE" /><span><b>Can’t tell</b><small>The packet itself doesn’t let me decide.</small></span></label>
+        </div>
+        <div class="ambiguity" data-for="Q_SUFFICIENT"></div>
+      </section>
+
+      <section class="question card" data-q="Q_LLM_NEEDED">
+        <h2>4. Does this task need an LLM at all?</h2>
+        <div class="choiceRow">
+          <label class="choice"><input type="radio" name="Q_LLM_NEEDED" value="true" /><span><b>Yes</b><small>Generative reasoning appears useful or necessary.</small></span></label>
+          <label class="choice"><input type="radio" name="Q_LLM_NEEDED" value="false" /><span><b>No</b><small>This appears mechanical or deterministically solvable.</small></span></label>
+          <label class="choice cantTell"><input type="radio" name="Q_LLM_NEEDED" value="UNDETERMINABLE" /><span><b>Can’t tell</b><small>The packet is insufficient.</small></span></label>
+        </div>
+        <div class="ambiguity" data-for="Q_LLM_NEEDED"></div>
+      </section>
+
+      <div id="formError" class="error" role="alert" hidden></div>
+
+      <nav class="navBar">
+        <button type="button" id="prevBtn" class="secondary">Previous</button>
+        <div class="saveState" id="saveState">Not yet saved</div>
+        <button type="submit" id="nextBtn" class="primary">Save &amp; Next</button>
+      </nav>
+    </form>
+
+    <section id="finished" class="finished card" hidden>
+      <div class="check">✓</div>
+      <h2>All 25 packet-only cases are complete.</h2>
+      <p>Stop here. Don’t open the original tasks. Come back to ChatGPT and say <b>“P labelling complete.”</b></p>
+      <button type="button" id="reviewLastBtn" class="secondary">Review last case</button>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
