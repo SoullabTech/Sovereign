@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, linkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -311,6 +311,71 @@ await check('K13-static-no-network-no-credential-no-lock-deletion-but-its-own', 
   }
   assert.equal((code.match(/unlinkSync\(/g) || []).length, 1, 'only the pair lock may be unlinked, and only by its holder');
   assert.ok(code.includes('unlinkSync(pairLockPath)'));
+});
+
+// ── Mac review 352b840c: C1 persistence classification · C2 colliding storage paths ───────────────────────────
+
+await check('K14-persistence-is-established-by-the-ledger-not-by-the-error-name', async () => {
+  const scenarios = {
+    'checkpoint missing at response time': (s) => rmSync(s.cpPath),
+    'checkpoint volume unavailable at response time': (s) => renameSync(s.cpDir, s.cpDir + '.away'),
+    'pair lock held at response time': (s) => writeFileSync(s.ledgerPath + '.pair.lock', '99999'),
+  };
+  for (const [label, disturb] of Object.entries(scenarios)) {
+    const s = stores(); s.pair.initialize();
+    const r = await run(s.pair, 'F01', fake(() => { disturb(s); return okResponse(); }));
+    assert.equal(r.sent, true, label); assert.notEqual(r.outcome, 'ok', label);
+    assert.equal(r.outcome, 'observation_not_persisted', `${label}: must not claim the answer is stored`);
+    assert.equal(r.observation, undefined, label);
+    const kinds = W.createLedger(s.ledgerPath).read().map((x) => x.kind);
+    assert.deepEqual(kinds, ['init', 'reserved'], `${label}: ledger holds no observation`);
+  }
+  // counterpart: written, then anchoring fails → persisted-but-unanchored (K12 pins the same boundary)
+  const p = stores(); p.pair.initialize();
+  const hooked = p.open({ hooks: { afterLedgerAppend: (k) => { if (k === 'observed') renameSync(p.cpDir, p.cpDir + '.gone'); } } });
+  assert.equal((await run(hooked, 'F01', fake())).outcome, 'observation_persisted_checkpoint_failed');
+  // the ledger itself cannot be read to settle the question → say so, never guess
+  const u = stores(); u.pair.initialize();
+  const blind = { ...u.pair, append: (rec) => { if (rec.kind === 'observed') throw new Error('PAIR_CHECKPOINT_UNAVAILABLE'); return u.pair.append(rec); },
+    read: () => { throw new Error('LEDGER_CORRUPT'); } };
+  assert.equal((await run(blind, 'F01', fake())).outcome, 'observation_persistence_unverified');
+});
+
+await check('K15-colliding-storage-paths-are-rejected-before-any-mutation', async () => {
+  const mk = () => { const root = scratch(); mkdirSync(join(root, 'a')); mkdirSync(join(root, 'b')); return root; };
+  const build = (l, c) => () => CK.createCheckpointedLedger(W.createLedger(l), c);
+  const snapshot = (root) => JSON.stringify([readdirSync(root).sort(), readdirSync(join(root, 'a')).sort(), readdirSync(join(root, 'b')).sort()]);
+  const cases = (root) => ({
+    'identical paths': [join(root, 'a', 'x'), join(root, 'a', 'x')],
+    'ledger equals checkpoint temp path': [join(root, 'a', 'x.tmp'), join(root, 'a', 'x')],
+    'checkpoint equals ledger lock': [join(root, 'a', 'x'), join(root, 'a', 'x.lock')],
+    'checkpoint equals pair lock': [join(root, 'a', 'x'), join(root, 'a', 'x.pair.lock')],
+    'checkpoint temp equals ledger lock': [join(root, 'a', 'x.lock'), join(root, 'a', 'x.lock.tmp').replace(/\.tmp$/, '')],
+    'dot-segment alias of the same file': [join(root, 'a', 'x'), join(root, 'a', 'b', '..', 'x')],
+  });
+  for (const [label, [l, c]] of Object.entries(cases(mk()))) {
+    const root = dirname(dirname(l)); mkdirSync(join(dirname(l), 'b'), { recursive: true });
+    const before = snapshot(root);
+    assert.throws(build(l, c), /PAIR_PATH_COLLISION/, label);
+    assert.equal(snapshot(root), before, label + ': nothing created or changed');
+  }
+  // symlinked directory resolving to the ledger's directory
+  { const root = mk(); symlinkSync(join(root, 'a'), join(root, 'b', 'link'), 'dir');
+    assert.throws(build(join(root, 'a', 'x'), join(root, 'b', 'link', 'x')), /PAIR_PATH_COLLISION/, 'symlinked directory'); }
+  // existing files that are the same inode (hard link, file symlink)
+  { const root = mk(); const l = join(root, 'a', 'x'); writeFileSync(l, 'ledger');
+    linkSync(l, join(root, 'b', 'h')); assert.throws(build(l, join(root, 'b', 'h')), /PAIR_PATH_COLLISION/, 'hard link');
+    symlinkSync(l, join(root, 'b', 's')); assert.throws(build(l, join(root, 'b', 's')), /PAIR_PATH_COLLISION/, 'file symlink');
+    assert.equal(readFileSync(l, 'utf8'), 'ledger'); }
+  // initialize() on a collision never reports success or touches the ledger path
+  { const root = mk(); const p = join(root, 'a', 'x'); let threw = false;
+    try { CK.createCheckpointedLedger(W.createLedger(p), p).initialize(); } catch { threw = true; }
+    assert.equal(threw, true); assert.equal(existsSync(p), false); }
+  // valid layouts are untouched: separate volumes' directories, and the same directory with distinct names
+  { const root = mk(); const ok1 = CK.createCheckpointedLedger(W.createLedger(join(root, 'a', 'l.jsonl')), join(root, 'b', 'anchor.json'));
+    ok1.initialize(); assert.equal(ok1.verify().consistent, true);
+    const ok2 = CK.createCheckpointedLedger(W.createLedger(join(root, 'a', 'l2.jsonl')), join(root, 'a', 'anchor2.json'));
+    ok2.initialize(); assert.equal(ok2.verify().consistent, true); }
 });
 
 console.log(`\n${pass} passed · ${fail} failed`);

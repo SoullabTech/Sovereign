@@ -53,7 +53,20 @@ const CANDIDATES = [
     "try { fd = openSync(pairLockPath, 'wx'); } catch { throw err('PAIR_LOCK_HELD'); }",
     "try { fd = openSync(pairLockPath, 'wx'); } catch { try { unlinkSync(pairLockPath); fd = openSync(pairLockPath, 'wx'); } catch { throw err('PAIR_LOCK_HELD'); } }"]]],
   ['DC-CHECKPOINT-FAILURE-REPORTED-OK', 'K12', 'wire', [[
-    "outcome: anchored ? 'observation_persisted_checkpoint_failed' : 'observation_not_persisted'", "outcome: 'ok'"]]],
+    "outcome = stored ? 'observation_persisted_checkpoint_failed' : 'observation_not_persisted';", "outcome = 'ok';"]]],
+  ['DC-PERSISTED-ASSUMED-FROM-ERROR-NAME', 'K14', 'wire', [[
+    "const stored = ledger.read().some((r) => r.kind === 'observed' && r.attempt_id === attemptId);", "const stored = true;"]]],
+  ['DC-UNVERIFIABLE-REPORTED-AS-NOT-PERSISTED', 'K14', 'wire', [[
+    "outcome = 'observation_persistence_unverified';", "outcome = 'observation_not_persisted';"]]],
+  ['DC-PATH-COLLISION-UNCHECKED', 'K15', 'ck', [
+    ["  assertDistinctStores(base.path, checkpointPath);\n  const pairLockPath", "  const pairLockPath"],
+    ["    assertDistinctStores(base.path, checkpointPath);        // before the lock file (itself a mutation) exists\n", '']]],
+  ['DC-ONLY-EXACT-EQUALITY-CHECKED', 'K15', 'ck', [[
+    "    for (const b of checkpointOwned.map(canonical)) if (a === b) throw err('PAIR_PATH_COLLISION');",
+    "    if (a === canonical(checkpointPath)) throw err('PAIR_PATH_COLLISION');"]]],
+  ['DC-ALIASES-NOT-RESOLVED', 'K15', 'ck', [
+    ["  let dir = dirname(abs);\n  try { dir = realpathSync(dir); } catch { /* parent not present: compare lexically */ }", "  const dir = dirname(abs);"],
+    ["if (ids[i] && ids[i] === ids[j]) throw err('PAIR_PATH_COLLISION');", "if (false) throw err('PAIR_PATH_COLLISION');"]]],
   ['DC-NETWORK-IN-CHECKPOINT-MODULE', 'K13', 'ck', [["export const CHECKPOINT_FORMAT", "const _egress = (u) => fetch(u);\nexport const CHECKPOINT_FORMAT"]]],
 ];
 

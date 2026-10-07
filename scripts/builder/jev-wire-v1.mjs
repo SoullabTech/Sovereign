@@ -440,11 +440,18 @@ export async function runAttempt({ attemptId, ledger, transport, now = () => Dat
       kind: 'observed', attempt_id: attemptId, observation,
       response_sha256: sha256Hex(parsed.response_canonical), response_canonical: parsed.response_canonical, at: now(),
     });
-  } catch (e) {
+  } catch {
     try { ledger.append({ kind: 'halted', reason: 'OBSERVATION_NOT_PERSISTED', attempt_id: attemptId, at: now() }); } catch { /* see restart rule */ }
-    // a checkpoint failure AFTER the ledger write means the observation is on disk but not yet anchored
-    const anchored = e && /^PAIR_/.test(e.message);
-    return Object.freeze({ sent: true, outcome: anchored ? 'observation_persisted_checkpoint_failed' : 'observation_not_persisted', wire_body_hash: plan.bodyHash });
+    // Persistence is established ONLY by finding the observation in the validated ledger — never by the
+    // error's name: a missing/unavailable checkpoint or a held lock can fail BEFORE anything is written.
+    let outcome;
+    try {
+      const stored = ledger.read().some((r) => r.kind === 'observed' && r.attempt_id === attemptId);
+      outcome = stored ? 'observation_persisted_checkpoint_failed' : 'observation_not_persisted';
+    } catch {
+      outcome = 'observation_persistence_unverified';
+    }
+    return Object.freeze({ sent: true, outcome, wire_body_hash: plan.bodyHash });
   }
   // 2) then the settlement
   let head = null;

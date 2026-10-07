@@ -23,20 +23,55 @@
  * Residual (declared): both stores rolled back together, or both replaced by someone who can write both,
  * cannot be detected by any local mechanism. A separate volume reduces common-mode loss only.
  */
-import { closeSync, existsSync, fsyncSync, openSync, readFileSync, renameSync, statSync, unlinkSync, writeSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { closeSync, existsSync, fsyncSync, openSync, readFileSync, realpathSync, renameSync, statSync, unlinkSync, writeSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 import { BUDGET, canonicalJson, sha256Hex } from './jev-wire-v1.mjs';
 
 export const CHECKPOINT_FORMAT = 'jev-wire-checkpoint/v1';
 const err = (code) => new Error(code);
 const isStr = (v) => typeof v === 'string' && v.length > 0;
 
+/** Canonical form of a path whose file may not exist yet: real parent directory + basename. */
+function canonical(path) {
+  const abs = resolve(path);
+  let dir = dirname(abs);
+  try { dir = realpathSync(dir); } catch { /* parent not present: compare lexically */ }
+  const full = join(dir, basename(abs));
+  return process.platform === 'darwin' || process.platform === 'win32' ? full.toLowerCase() : full;
+}
+const identityOf = (path) => { try { const st = statSync(path); return st.dev + ':' + st.ino; } catch { return null; } };
+
+/**
+ * Every file either store may create or replace, grouped by owner. The two owners must not share ANY of them:
+ *   ledger owns      L · L.lock · L.pair.lock
+ *   checkpoint owns  C · C.tmp
+ * Equal, aliased (symlink / hard link / case-folded) or derived-name collisions are refused BEFORE either store
+ * is created, read for repair, or changed — a mis-pointed path must never overwrite the other store.
+ */
+export function assertDistinctStores(ledgerPath, checkpointPath) {
+  const ledgerOwned = [ledgerPath, ledgerPath + '.lock', ledgerPath + '.pair.lock'];
+  const checkpointOwned = [checkpointPath, checkpointPath + '.tmp'];
+  const all = [...ledgerOwned, ...checkpointOwned];
+  const keys = all.map(canonical);
+  for (const a of ledgerOwned.map(canonical)) {
+    for (const b of checkpointOwned.map(canonical)) if (a === b) throw err('PAIR_PATH_COLLISION');
+  }
+  if (new Set(keys.slice(0, 3)).size !== 3 || new Set(keys.slice(3)).size !== 2) throw err('PAIR_PATH_COLLISION');
+  // aliases of files that already exist (hard links / symlink farms)
+  const ids = all.map(identityOf);
+  for (let i = 0; i < ledgerOwned.length; i += 1) {
+    for (let j = ledgerOwned.length; j < all.length; j += 1) if (ids[i] && ids[i] === ids[j]) throw err('PAIR_PATH_COLLISION');
+  }
+}
+
 export function createCheckpointedLedger(base, checkpointPath, { hooks = {} } = {}) {
+  assertDistinctStores(base.path, checkpointPath);
   const pairLockPath = base.path + '.pair.lock';
   const caps = { max_attempts: BUDGET.max_attempts, ceiling_usd: BUDGET.ceiling_usd, reserve_usd: BUDGET.reserve_usd };
   const expectedBinding = () => ({ ...base.identity, caps });
 
   const withPairLock = (fn) => {
+    assertDistinctStores(base.path, checkpointPath);        // before the lock file (itself a mutation) exists
     let fd;
     try { fd = openSync(pairLockPath, 'wx'); } catch { throw err('PAIR_LOCK_HELD'); }
     try { writeSync(fd, String(process.pid)); return fn(); }
