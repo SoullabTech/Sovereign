@@ -286,10 +286,19 @@ export default function ObservationDialogue({
      uses the exact same send path as the visible composer. */
   useEffect(() => {
     if (!autoSendInitialQuestion || autoSent.current || !initialQuestion.trim()) return;
-    if (decision === null || mode.kind === 'blocked' || busy) return;
+    if (decision === null || busy) return;
+    /* The one-click starter belongs only to a fresh observation relationship.
+       Resuming must be silent; otherwise reopening can append the starter again
+       and shift the permission boundary away from the writer's real question. */
+    if (mode.kind !== 'open') return;
     autoSent.current = true;
     void send();
-  }, [autoSendInitialQuestion, initialQuestion, decision, mode, busy, send]);
+  }, [autoSendInitialQuestion, initialQuestion, decision, mode.kind, busy, send]);
+
+  useEffect(() => {
+    if (!autoSendInitialQuestion || decision === null || mode.kind !== 'resume') return;
+    setDraft((current) => current === initialQuestion ? '' : current);
+  }, [autoSendInitialQuestion, decision, mode.kind, initialQuestion]);
 
   /* Before the first turn the room has no measured location, so it falls back to
      what the reading itself already said. Shown as the reading's claim, not as a
