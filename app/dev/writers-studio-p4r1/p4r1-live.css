@@ -4676,3 +4676,30 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
   text-transform:uppercase;
   box-shadow:0 3px 10px rgba(7,18,45,.10);
 }
+
+
+/* R8K — in Develop Craft the editorial relationship is a real Shell region,
+   not the legacy floating context card. This keeps manuscript and Craftsman
+   controls in separate layout columns while preserving the same component. */
+.p4r1-root .fr-maia > .p4r1-context-card.p4r1-editorial{
+  position:relative;
+  inset:auto;
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+  z-index:auto;
+  width:100%;
+  height:100%;
+  max-height:none;
+  box-sizing:border-box;
+  overflow:auto;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent;
+  padding:20px 22px 28px;
+}
+.p4r1-root .fr-maia > .p4r1-context-card.p4r1-editorial .p4r1-context-head{
+  top:-20px;
+}
