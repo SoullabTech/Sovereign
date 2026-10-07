@@ -1,22 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type {
   RebuildEditorialThread,
   RebuildEditorialVersion,
 } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
+import type { CraftDialogueTurn, CraftSendOptions } from '@/lib/writersStudio/craftDialogueR1';
 import {
   EDITORIAL_LATITUDES,
   LATITUDE_BANDS,
   type EditorialLatitude,
 } from '@/lib/manuscript/editorialScope/contract';
-
-type SendOptions = {
-  proposalPolicy?: 'allow' | 'reply_only';
-  proposalRequested?: boolean;
-};
 
 export type MaiaCraftCompanionR1Props = {
   title: string;
@@ -26,6 +22,7 @@ export type MaiaCraftCompanionR1Props = {
   busy: boolean;
   message: string | null;
   activity: string | null;
+  dialogue: readonly CraftDialogueTurn[];
   editLatitude: EditorialLatitude;
   onEditLatitude: (value: EditorialLatitude) => void;
   mayRemoveParagraphs: boolean;
@@ -34,7 +31,7 @@ export type MaiaCraftCompanionR1Props = {
   onMayProposeImmediately: (value: boolean) => void;
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
-  onSend: (text?: string, options?: SendOptions) => void;
+  onSend: (text?: string, options?: CraftSendOptions) => void;
   onDepth: (depth: EditorialDepth) => void;
   onReturn: () => void;
 };
@@ -42,17 +39,25 @@ export type MaiaCraftCompanionR1Props = {
 export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
   const [draft, setDraft] = useState('');
   const [toolsOpen, setToolsOpen] = useState(false);
+  const transcriptRef = useRef<HTMLDivElement | null>(null);
 
   const ordinary = props.sessionPosture.resolved && !props.sessionPosture.sanctuary;
+
+  useEffect(() => {
+    const node = transcriptRef.current;
+    if (!node) return;
+    node.scrollTop = node.scrollHeight;
+  }, [props.dialogue.length, props.activity, props.busy]);
 
   const send = (
     text: string,
     depth?: EditorialDepth,
-    options?: SendOptions,
+    options?: CraftSendOptions,
+    displayText?: string,
   ) => {
     if (!ordinary || props.busy) return;
     if (depth) props.onDepth(depth);
-    props.onSend(text, options);
+    props.onSend(text, displayText ? { ...options, displayText } : options);
   };
 
   const sendDraft = () => {
@@ -67,7 +72,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
       'Respond to my intention first. If wording would help, offer a bounded craft move directly against this passage.',
       'Preserve my voice, meaning, cadence, imagery, worldview, and intentional ambiguity unless I explicitly ask to change one of them.',
       'Nothing is applied automatically.',
-    ].join('\n'));
+    ].join('\n'), undefined, { displayText: request });
     setDraft('');
   };
 
@@ -100,13 +105,27 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
 
       {ordinary ? (
         <>
-          <div className="p4r1-maia-craft-r1-response">
-            {props.activity ? (
-              <p>{props.activity}</p>
-            ) : props.busy ? (
-              <p>Working with the passage…</p>
+          <div className="p4r1-maia-craft-r1-response" ref={transcriptRef}>
+            {props.dialogue.length > 0 ? (
+              <div className="p4r1-maia-craft-r1-transcript" aria-label="Craft conversation">
+                {props.dialogue.map((turn) => (
+                  <div
+                    key={turn.key}
+                    className="p4r1-maia-craft-r1-turn"
+                    data-speaker={turn.speaker}
+                  >
+                    <span>{turn.speaker === 'writer' ? 'You' : 'MAIA'}</span>
+                    <p>{turn.body}</p>
+                  </div>
+                ))}
+              </div>
             ) : props.lastMaiaTurn?.body ? (
-              <p>{props.lastMaiaTurn.body}</p>
+              <div className="p4r1-maia-craft-r1-transcript">
+                <div className="p4r1-maia-craft-r1-turn" data-speaker="maia">
+                  <span>MAIA</span>
+                  <p>{props.lastMaiaTurn.body}</p>
+                </div>
+              </div>
             ) : props.version?.author === 'maia' ? (
               <p>I have placed one provisional craft move on the table. Treat it as something to work with, not an answer.</p>
             ) : (
@@ -115,6 +134,13 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                 compare possibilities, or refine the version you are actually shaping on the page.
               </p>
             )}
+
+            {props.activity ? (
+              <div className="p4r1-maia-craft-r1-activity" role="status">{props.activity}</div>
+            ) : props.busy ? (
+              <div className="p4r1-maia-craft-r1-activity" role="status">Working with the passage…</div>
+            ) : null}
+
             {props.message ? <small role="status">{props.message}</small> : null}
           </div>
 
@@ -156,6 +182,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Talk with me about what is happening in this exact passage before changing it. Reflect what you notice and ask me one useful question.',
                     undefined,
                     { proposalPolicy: 'reply_only' },
+                    'Discuss this with me.',
                   )}
                 >
                   Discuss
@@ -167,6 +194,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Show me one bounded wording possibility for this exact passage. Keep it close to my voice and explain the move briefly.',
                     undefined,
                     { proposalPolicy: 'allow', proposalRequested: true },
+                    'Try wording here.',
                   )}
                 >
                   Try wording
@@ -178,6 +206,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Show me two or three clearly different examples of how the craft move we are discussing could work here. Treat them as primers, not recommendations.',
                     'learning',
                     { proposalPolicy: 'reply_only' },
+                    'Show me examples.',
                   )}
                 >
                   Examples
@@ -189,6 +218,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Give me several genuinely different craft directions for this passage. Describe the intention of each before any wording and do not rank them.',
                     undefined,
                     { proposalPolicy: 'reply_only' },
+                    'Give me some different ideas.',
                   )}
                 >
                   Ideas
@@ -200,6 +230,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Make the current proposed move lighter. Restore more of my original wording and cadence while keeping only the useful gain.',
                     undefined,
                     { proposalPolicy: 'allow', proposalRequested: true },
+                    'Make this lighter.',
                   )}
                 >
                   Lighter
@@ -211,6 +242,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Keep more of my original wording, rhythm, and imagery while preserving the useful part of the current move.',
                     undefined,
                     { proposalPolicy: 'allow', proposalRequested: true },
+                    'Keep more of my wording.',
                   )}
                 >
                   Keep more of mine
@@ -222,6 +254,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Show me one genuinely different option for this same local problem. Do not broaden the locus.',
                     undefined,
                     { proposalPolicy: 'allow', proposalRequested: true },
+                    'Show me another option.',
                   )}
                 >
                   Another option
@@ -233,6 +266,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Explain the current proposed move without changing the wording. Tell me what it changes, why, what it may do for a reader, and what it protects. Make the strongest case for my original too.',
                     undefined,
                     { proposalPolicy: 'reply_only' },
+                    'Why this?',
                   )}
                 >
                   Why this?
@@ -244,6 +278,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Teach me the craft already at work in this passage using my own words as the example. Plain language first; professional terminology second.',
                     'learning',
                     { proposalPolicy: 'reply_only' },
+                    'Teach me what is happening here.',
                   )}
                 >
                   Teach me
@@ -255,6 +290,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     'Go deeper on this exact passage. Separate meaning from style, evidence from interpretation, reader-effect hypotheses from facts, and show the tradeoffs.',
                     'direct',
                     { proposalPolicy: 'reply_only' },
+                    'Go deeper.',
                   )}
                 >
                   Go deeper

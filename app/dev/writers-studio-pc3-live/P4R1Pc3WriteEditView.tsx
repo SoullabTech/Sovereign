@@ -39,6 +39,7 @@ import type { EditorialLatitude } from '@/lib/manuscript/editorialScope/contract
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { Appearance } from '@/app/writers-studio/full-redesign/types';
 import type { A2RelationshipSummary, EligibleCarrySource } from '@/lib/writersStudio/rebuild/relationshipOrchestration';
+import type { CraftDialogueTurn, CraftSendOptions } from '@/lib/writersStudio/craftDialogueR1';
 
 export type Pc3HeldPassage = {
   draftSectionId: string;
@@ -104,6 +105,7 @@ export type P4R1Pc3WriteEditViewProps = {
   craftWorkingText: string;
   onCraftWorkingTextChange: (text: string) => void;
   craftActivity: string | null;
+  craftDialogue: readonly CraftDialogueTurn[];
   adoptionBusy: boolean;
   memberVersionBusy: boolean;
   editorialFailure: string | null;
@@ -117,7 +119,7 @@ export type P4R1Pc3WriteEditViewProps = {
   canReturnToStartingPassage: boolean;
   onDepth: (depth: EditorialDepth) => void;
   onInstruction: (text: string) => void;
-  onSendEditorial: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean }) => void;
+  onSendEditorial: (text?: string, options?: CraftSendOptions) => void;
   onSelectVersion: (id: string) => void;
   onApply: () => void;
   onUndo?: () => void;
@@ -1084,6 +1086,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       busy={busy}
       message={editorialMessage}
       activity={props.craftActivity}
+      dialogue={props.craftDialogue}
       editLatitude={props.editLatitude}
       onEditLatitude={props.onLatitude}
       mayRemoveParagraphs={props.mayRemoveParagraphs}

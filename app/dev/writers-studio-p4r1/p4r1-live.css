@@ -5829,3 +5829,48 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
     padding-right:24px;
   }
 }
+
+
+/* R1 Craft dialogue — only visible writer intent + MAIA replies, never prompt plumbing. */
+.p4r1-root .p4r1-maia-craft-r1-transcript{
+  display:grid;
+  gap:18px;
+}
+.p4r1-root .p4r1-maia-craft-r1-turn{
+  display:grid;
+  gap:5px;
+}
+.p4r1-root .p4r1-maia-craft-r1-turn>span{
+  color:var(--fr-muted);
+  font:700 9px/1.2 var(--fr-sans-stack);
+  letter-spacing:.075em;
+  text-transform:uppercase;
+}
+.p4r1-root .p4r1-maia-craft-r1-turn>p{
+  margin:0;
+  white-space:pre-wrap;
+}
+.p4r1-root .p4r1-maia-craft-r1-turn[data-speaker='writer']{
+  margin-left:22px;
+  padding:9px 11px;
+  border-radius:9px;
+  background:color-mix(in srgb,var(--fr-field) 82%,transparent);
+}
+.p4r1-root .p4r1-maia-craft-r1-turn[data-speaker='writer']>p{
+  color:var(--fr-ink2);
+  font:12.5px/1.5 var(--fr-sans-stack);
+}
+.p4r1-root .p4r1-maia-craft-r1-turn[data-speaker='maia']>span{
+  color:var(--fr-action);
+}
+.p4r1-root .p4r1-maia-craft-r1-turn[data-speaker='maia']>p{
+  color:var(--fr-title);
+  font:16px/1.65 var(--fr-serif-stack);
+}
+.p4r1-root .p4r1-maia-craft-r1-activity{
+  margin-top:16px;
+  padding-top:11px;
+  border-top:1px solid var(--fr-line-soft);
+  color:var(--fr-muted);
+  font:600 10.5px/1.4 var(--fr-sans-stack);
+}

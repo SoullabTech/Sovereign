@@ -18,6 +18,7 @@ import {
 import { professionalMarkFor } from '@/lib/writersStudio/craftProfessionalMarks';
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import { typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
+import type { CraftSendOptions } from '@/lib/writersStudio/craftDialogueR1';
 
 export type CraftHeldPassage = {
   draftSectionId: string;
@@ -27,11 +28,6 @@ export type CraftHeldPassage = {
   revisionNumber: number;
 };
 
-type SendOptions = {
-  proposalPolicy?: 'allow' | 'reply_only';
-  proposalRequested?: boolean;
-};
-
 export type CraftsmansTableR1Props = {
   sections: readonly RebuildSection[];
   bodyOf: (sectionId: string) => string;
@@ -39,7 +35,7 @@ export type CraftsmansTableR1Props = {
   thread: RebuildEditorialThread | null;
   version: RebuildEditorialVersion | null;
   busy: boolean;
-  onSend: (text?: string, options?: SendOptions) => void;
+  onSend: (text?: string, options?: CraftSendOptions) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   appliedVersionId: string | null;
@@ -315,7 +311,11 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
         `Show me one genuinely different way to handle ${subject}.${localWorking}`,
         'Stay inside this exact local edit. Preserve my intention, voice, cadence, imagery, worldview, and intentional ambiguity.',
         'Do not broaden the rewrite. Return one bounded alternative and explain its tradeoff briefly.',
-      ].join('\n'), { proposalPolicy: 'allow', proposalRequested: true });
+      ].join('\n'), {
+        proposalPolicy: 'allow',
+        proposalRequested: true,
+        displayText: 'Show me another way for this change.',
+      });
       return;
     }
     if (kind === 'why') {
@@ -323,14 +323,20 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
         `Explain ${subject}.${localWorking}`,
         'Use evidence from my exact words. Tell me what the move may gain and what it could cost.',
         'Make the strongest case for my original too. Do not propose new wording in this answer.',
-      ].join('\n'), { proposalPolicy: 'reply_only' });
+      ].join('\n'), {
+        proposalPolicy: 'reply_only',
+        displayText: 'Why this change?',
+      });
       return;
     }
     props.onSend([
       `Teach me the craft involved in ${subject}.${localWorking}`,
       'Use my sentence as the example. Plain language first, then professional terminology if useful.',
       'Do not propose new wording unless I ask.',
-    ].join('\n'), { proposalPolicy: 'reply_only' });
+    ].join('\n'), {
+      proposalPolicy: 'reply_only',
+      displayText: 'Teach me what is happening in this change.',
+    });
   };
 
   const insertionIndex = useMemo(() => {

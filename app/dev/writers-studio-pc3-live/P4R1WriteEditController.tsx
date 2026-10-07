@@ -83,6 +83,11 @@ import {
   detectCraftRereadIntent,
 } from '@/lib/writersStudio/craftScopeR1';
 import { runWholeManuscriptReview } from '@/lib/writersStudio/studio/wholeManuscriptReview';
+import {
+  appendCraftDialogue,
+  type CraftDialogueTurn,
+  type CraftSendOptions,
+} from '@/lib/writersStudio/craftDialogueR1';
 
 interface ContextReady {
   state: 'section_aware';
@@ -198,6 +203,9 @@ export default function FlagshipWriteEditController({
   const [editorialBusy, setEditorialBusy] = useState(false);
   const [craftWorkingText, setCraftWorkingText] = useState('');
   const [craftActivity, setCraftActivity] = useState<string | null>(null);
+  const [craftDialogue, setCraftDialogue] = useState<readonly CraftDialogueTurn[]>([]);
+  const craftDialogueSeq = useRef(0);
+  const seenCraftMaiaTurn = useRef<string | null>(null);
   const [adoptionBusy, setAdoptionBusy] = useState(false);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
   const [editorialFailure, setEditorialFailure] = useState<string | null>(null);
@@ -216,6 +224,16 @@ export default function FlagshipWriteEditController({
     selectedPassage?.start,
     selectedPassage?.end,
     selectedPassage?.text,
+  ]);
+
+  useEffect(() => {
+    setCraftDialogue([]);
+    craftDialogueSeq.current = 0;
+    seenCraftMaiaTurn.current = null;
+  }, [
+    selectedPassage?.draftSectionId,
+    selectedPassage?.start,
+    selectedPassage?.end,
   ]);
 
   useEffect(() => {
@@ -565,6 +583,22 @@ export default function FlagshipWriteEditController({
     ? [...editorialThread.turns].reverse().find((turn) => turn.speaker === 'maia') ?? null
     : null;
 
+  useEffect(() => {
+    if (!developCraft || !editorialThread || !lastMaiaEditorialTurn) return;
+    const key = `maia:${editorialThread.threadId}:${lastMaiaEditorialTurn.index}`;
+    if (seenCraftMaiaTurn.current === key) return;
+    seenCraftMaiaTurn.current = key;
+    setCraftDialogue((current) => appendCraftDialogue(current, {
+      key,
+      speaker: 'maia',
+      body: lastMaiaEditorialTurn.body,
+    }));
+  }, [
+    developCraft,
+    editorialThread?.threadId,
+    lastMaiaEditorialTurn?.index,
+    lastMaiaEditorialTurn?.body,
+  ]);
 
   const settleWriting = useCallback(async (): Promise<boolean> => {
     const writing = writingRef.current;
@@ -927,10 +961,20 @@ export default function FlagshipWriteEditController({
 
   const sendCraftEditorial = useCallback(async (
     requestText?: string,
-    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean },
+    options?: CraftSendOptions,
   ) => {
     const text = (requestText ?? editorialDraft).trim();
     if (!text || !context || !focusId || editorialBusy || craftActivity) return;
+
+    const displayText = options?.displayText?.trim() ?? '';
+    if (displayText) {
+      const key = `writer:${++craftDialogueSeq.current}`;
+      setCraftDialogue((current) => appendCraftDialogue(current, {
+        key,
+        speaker: 'writer',
+        body: displayText,
+      }));
+    }
 
     const currentWorking = craftWorkingText || selectedPassage?.text || '';
     const localPrompt = currentWorking.trim()
@@ -944,9 +988,15 @@ export default function FlagshipWriteEditController({
         ].join('\n')
       : text;
     const explicitProposal = options?.proposalRequested === true || craftProposalRequested(text);
+    const wireOptions = options
+      ? {
+          ...(options.proposalPolicy ? { proposalPolicy: options.proposalPolicy } : {}),
+          ...(options.proposalRequested !== undefined ? { proposalRequested: options.proposalRequested } : {}),
+        }
+      : undefined;
     const effectiveOptions = explicitProposal
-      ? { ...options, proposalPolicy: 'allow' as const, proposalRequested: true }
-      : options;
+      ? { ...wireOptions, proposalPolicy: 'allow' as const, proposalRequested: true }
+      : wireOptions;
 
     const intent = detectCraftRereadIntent(text);
     if (!intent || intent.zoom === 'passage') {
@@ -1713,6 +1763,7 @@ export default function FlagshipWriteEditController({
             craftWorkingText={craftWorkingText}
             onCraftWorkingTextChange={setCraftWorkingText}
             craftActivity={craftActivity}
+            craftDialogue={craftDialogue}
             adoptionBusy={adoptionBusy}
             memberVersionBusy={memberVersionBusy}
             editorialFailure={editorialFailure}

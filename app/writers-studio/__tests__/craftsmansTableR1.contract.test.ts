@@ -121,6 +121,20 @@ describe("Craftsman's Table R1", () => {
     expect(controller).toContain('proposalRequested: true');
   });
 
+  it('presents a clean Craft conversation without exposing orchestration prompts', () => {
+    expect(controller).toContain('craftDialogue');
+    expect(controller).toContain('options?.displayText');
+    expect(controller).toContain("speaker: 'writer'");
+    expect(controller).toContain("speaker: 'maia'");
+    expect(host).toContain('craftDialogue: readonly CraftDialogueTurn[]');
+    expect(maia).toContain('Craft conversation');
+    expect(maia).toContain("data-speaker={turn.speaker}");
+    expect(maia).toContain("displayText: request");
+    expect(css).toContain('R1 Craft dialogue');
+    expect(css).toContain(".p4r1-maia-craft-r1-turn[data-speaker='writer']");
+    expect(css).toContain(".p4r1-maia-craft-r1-turn[data-speaker='maia']");
+  });
+
   it('keeps proactive wording under the writer setting rather than MAIA choice', () => {
     expect(contract).toContain('Suggestion posture and writer-owned synthesis');
     expect(contract).toContain('Wait-first');
