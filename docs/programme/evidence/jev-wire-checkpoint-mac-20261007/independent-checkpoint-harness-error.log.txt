@@ -1,0 +1,35 @@
+{"id":"APFS-two-volume-normal-control","pass":true,"sends_fake":31,"reservations_verified_before_send":31,"outcomes_verified_after":31,"replay_reason":"ATTEMPT_ALREADY_USED","ledger_device":16777230,"checkpoint_device":16777244}
+{"id":"APFS-reservation-outage","pass":true,"initial_reason":"PAIR_CHECKPOINT_UNAVAILABLE","next_reason":"UNRESOLVED_ATTEMPT","fake_sends":0,"rename_simulation_not_volume_unmount":true}
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: file:///Users/soullab/.cache/desktop-commander-npm/_npx/4b4c857f6efdfb61/node_modules/@wonderwhy-er/desktop-commander/dist/[eval1]:6
+ appendFileSync("/tmp/jev-checkpoint-independent-SYNTHETIC-0qLMVD/stop-transport-error/fake-send.txt",'F01 fake
+                                                                                                      ^^^^^^^^^
+
+SyntaxError: Invalid or unexpected token
+    at compileSourceTextModule (node:internal/modules/esm/utils:346:16)
+    at ModuleLoader.createModuleWrap (node:internal/modules/esm/loader:266:12)
+    at ModuleLoader.eval (node:internal/modules/esm/loader:306:23)
+    at node:internal/process/execution:73:24
+    at asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:11)
+    at Object.runEntryPointWithESMLoader (node:internal/modules/run_main:139:19)
+    at evalModuleEntryPoint (node:internal/process/execution:72:47)
+    at node:internal/main/eval_string:38:3
+
+Node.js v22.22.3
+
+
+1 !== 47
+
+    at file:///Users/soullab/jev-wire-checkpoint-review-evidence-20261007/independent-checkpoint-witness.mjs:65:119 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 47,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.22.3

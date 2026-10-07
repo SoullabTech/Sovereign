@@ -1,0 +1,8 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node node_modules/typescript/bin/tsc -p tsconfig.jarvis-jev-j1.json
+HEAD=380b29a4aebdc6ec8d9d9bd1d6dcbeef47d30d5b
+CWD=/Users/soullab/jev-wire-checkpoint-review-20261007
+STARTED_AT=2026-10-07T19:10:05.759100+00:00
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-07T19:10:06.212238+00:00

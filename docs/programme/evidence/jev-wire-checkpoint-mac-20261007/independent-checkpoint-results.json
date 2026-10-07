@@ -1,0 +1,134 @@
+{
+  "observed_at": "2026-10-07T19:10:19.016Z",
+  "head": "380b29a4aebdc6ec8d9d9bd1d6dcbeef47d30d5b",
+  "all_transports_fake": true,
+  "paid_calls": 0,
+  "credentials_accessed": false,
+  "committed_gate_sends": 0,
+  "committed_gate_reason": "RESPONSE_SHAPE_UNWITNESSED",
+  "committed_source_unchanged": true,
+  "source_sha256": {
+    "scripts/builder/jev-wire-v1.mjs": "4905f7a5b290e98413771dbf15f4121e39b3e25db5fe44e51e22c08412c5eb73",
+    "scripts/builder/jev-wire-checkpoint-v1.mjs": "517849f8f8a88864ae5d307909b6fd56c566ac926d9a097dc159a2f65b956504"
+  },
+  "synthetic_local_root": "/tmp/jev-checkpoint-independent-SYNTHETIC-CoIbEA",
+  "synthetic_checkpoint_root": "/Volumes/T7 Shield/jev-checkpoint-independent-SYNTHETIC-Tfmd5l",
+  "distinct_devices": true,
+  "require_separate_devices": true,
+  "witness_script_sha256": "539fddb67ef39e9b68da2f6778b7d3816d809cc75d2ecde8707cf0a4b19bd39e",
+  "rows": [
+    {
+      "id": "APFS-two-volume-normal-control",
+      "pass": true,
+      "sends_fake": 31,
+      "reservations_verified_before_send": 31,
+      "outcomes_verified_after": 31,
+      "replay_reason": "ATTEMPT_ALREADY_USED",
+      "ledger_device": 16777230,
+      "checkpoint_device": 16777244
+    },
+    {
+      "id": "APFS-reservation-outage",
+      "pass": true,
+      "initial_reason": "PAIR_CHECKPOINT_UNAVAILABLE",
+      "next_reason": "UNRESOLVED_ATTEMPT",
+      "fake_sends": 0,
+      "rename_simulation_not_volume_unmount": true
+    },
+    {
+      "id": "APFS-checkpoint-stop-transport-error",
+      "pass": true,
+      "child_exit": 47,
+      "first_refusal": "PAIR_LOCK_HELD",
+      "after_test_only_lock_clearance": "PAIR_CHECKPOINT_BEHIND",
+      "after_explicit_resume": "HALTED",
+      "next_fake_sends": 0
+    },
+    {
+      "id": "APFS-checkpoint-stop-malformed",
+      "pass": true,
+      "child_exit": 47,
+      "first_refusal": "PAIR_LOCK_HELD",
+      "after_test_only_lock_clearance": "PAIR_CHECKPOINT_BEHIND",
+      "after_explicit_resume": "HALTED",
+      "next_fake_sends": 0
+    },
+    {
+      "id": "APFS-checkpoint-stop-model-drift",
+      "pass": true,
+      "child_exit": 47,
+      "first_refusal": "PAIR_LOCK_HELD",
+      "after_test_only_lock_clearance": "PAIR_CHECKPOINT_BEHIND",
+      "after_explicit_resume": "HALTED",
+      "next_fake_sends": 0
+    },
+    {
+      "id": "APFS-checkpoint-stop-excess-usage",
+      "pass": true,
+      "child_exit": 47,
+      "first_refusal": "PAIR_LOCK_HELD",
+      "after_test_only_lock_clearance": "PAIR_CHECKPOINT_BEHIND",
+      "after_explicit_resume": "HALTED",
+      "next_fake_sends": 0
+    },
+    {
+      "id": "observation-before-write-checkpoint-missing",
+      "returned_outcome": "observation_persisted_checkpoint_failed",
+      "ledger_kinds": [
+        "init",
+        "reserved"
+      ],
+      "observed_records": 0,
+      "misclassified_as_persisted": true,
+      "next_fake_sends": 0,
+      "next_reason": "PAIR_CHECKPOINT_MISSING",
+      "all_original_synthetic_bytes_preserved": true
+    },
+    {
+      "id": "observation-before-write-checkpoint-storage-unavailable",
+      "returned_outcome": "observation_persisted_checkpoint_failed",
+      "ledger_kinds": [
+        "init",
+        "reserved"
+      ],
+      "observed_records": 0,
+      "misclassified_as_persisted": true,
+      "next_fake_sends": 0,
+      "next_reason": "PAIR_CHECKPOINT_UNAVAILABLE",
+      "all_original_synthetic_bytes_preserved": true
+    },
+    {
+      "id": "observation-before-write-pair-lock-held",
+      "returned_outcome": "observation_persisted_checkpoint_failed",
+      "ledger_kinds": [
+        "init",
+        "reserved"
+      ],
+      "observed_records": 0,
+      "misclassified_as_persisted": true,
+      "next_fake_sends": 0,
+      "next_reason": "PAIR_LOCK_HELD",
+      "all_original_synthetic_bytes_preserved": true
+    },
+    {
+      "id": "placement-same-file",
+      "initialize_error": null,
+      "initialization_returned_success": true,
+      "ledger_exists": true,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_CORRUPT",
+      "cp_exists": true,
+      "unsafe_initialization_accepted": true
+    },
+    {
+      "id": "placement-checkpoint-temp-is-ledger",
+      "initialize_error": null,
+      "initialization_returned_success": true,
+      "ledger_exists": false,
+      "ledger_valid": false,
+      "ledger_error": "LEDGER_NOT_INITIALIZED",
+      "cp_exists": true,
+      "unsafe_initialization_accepted": true
+    }
+  ]
+}

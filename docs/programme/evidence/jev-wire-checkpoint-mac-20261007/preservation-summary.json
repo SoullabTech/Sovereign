@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-10-07T19:09:42.397791+00:00",
+  "head": "380b29a4aebdc6ec8d9d9bd1d6dcbeef47d30d5b",
+  "source_clean": true,
+  "runtime_changed_since_review_start": false,
+  "source_blobs": {
+    "scripts/builder/jev-wire-checkpoint-v1.mjs": "0a94513694c6945ccf4c120036dd4a9eeb507648",
+    "scripts/builder/jev-wire-v1.mjs": "fdc350310c4ac166f664952e8b5d0395150dab77",
+    "scripts/builder/jev-judgment-host-v1.mjs": "8138beeb387b1264ce386163ea7468108f2d7451"
+  },
+  "independent_control_passes": 6,
+  "false_persisted_claims": 3,
+  "unsafe_initializations": 2,
+  "inference_calls": 0,
+  "credentials_accessed": false,
+  "PILOT_01_touched": false,
+  "actual_disk_unmounts": 0
+}
