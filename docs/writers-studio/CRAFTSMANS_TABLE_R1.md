@@ -59,9 +59,10 @@ That gesture means:
 3. open the manuscript at that locus;
 4. carry what was discovered without requiring restatement;
 5. keep MAIA present beside the manuscript;
-6. never open a second dashboard or revision room.
+6. never open a second dashboard or revision room;
+7. never manufacture or persist an invisible author turn merely because the writer crossed into Craft.
 
-Hermes has no separate room and does not need a separate persona. It is experienced as continuity.
+Hermes has no separate room and does not need a separate persona. It is experienced as continuity. The crossing carries context; it does not pretend the writer said something they did not say.
 
 ### Making
 The manuscript becomes the working surface. MAIA may demonstrate a bounded craft move directly in the copy using professional editorial notation. Nothing applies automatically.
@@ -198,7 +199,8 @@ If proactive suggestions are off:
 
 ### Suggest-first
 If proactive suggestions are on:
-- MAIA may place a bounded provisional suggestion directly on the table when useful;
+- MAIA may place a bounded provisional suggestion directly on the table during a visible Craft exchange when useful;
+- entering Craft by itself never persists a hidden author prompt to cause that suggestion;
 - the suggestion is still a primer, never an answer and never an application.
 
 ### Three lawful writer responses
@@ -368,8 +370,8 @@ Correct Studio behavior:
    - MAIA understanding;
    - what must be protected;
    - relevant chapter context.
-3. Table opens at the Fire passage.
-4. MAIA makes one small provisional demonstration directly in the manuscript.
+3. Table opens at the Fire passage without manufacturing an invisible writer turn.
+4. If wording is explicitly requested — or the writer's proactive-suggestion setting permits it during a visible exchange — MAIA makes one small provisional demonstration directly in the manuscript.
 5. Writer sees exact red/blue marks.
 6. Writer may keep original, accept one change, reject another, ask why, ask to keep cadence, request more embodied but less overwritten, or create a hybrid version.
 7. Preview shows selected craft state in clean prose.

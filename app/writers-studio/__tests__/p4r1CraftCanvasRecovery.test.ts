@@ -34,9 +34,9 @@ describe('R8G Craft Canvas / Craftsman Guide recovery', () => {
     expect(developController).toContain("craftFromConversation ? 'choose-craft-passage' : 'choose-revision-passage'");
     expect(writeController).toContain("incomingAction === 'choose-craft-passage'");
     expect(writeController).toContain("incomingAction === 'craft-passage'");
-    expect(writeController).toContain('craftPrimerPrompt()');
-    expect(writeController).toContain("proposalPolicy: 'allow'");
-    expect(writeController).toContain('proposalRequested: true');
+    expect(writeController).toContain('resolveCraftSuggestionPolicy({');
+    expect(writeController).not.toContain('craftPrimerPrompt');
+    expect(writeController).toContain('Hermes carries context into Craft without manufacturing an invisible author');
   });
 
   it('re-resolves conversation context server-side before editorial cognition', () => {
@@ -56,7 +56,6 @@ describe('R8G Craft Canvas / Craftsman Guide recovery', () => {
   });
 
   it('keeps examples as primers while authoring one provisional demonstration for the marked manuscript', () => {
-    expect(craft).toContain('brief craft primer');
     expect(craft).toContain('ONE provisional demonstration version');
     expect(craft).toContain('example, not a recommendation and not finished prose');
     expect(dance).toContain('Examples to spark your own version');

@@ -34,7 +34,6 @@ describe("Develop → Hermes → Craftsman's Table R1", () => {
     expect(developController).toContain('query.set(CRAFT_HINT_END, String(hint.end))');
     expect(developController).toContain('query.set(CRAFT_SOURCE_THREAD, carry.sourceThreadId)');
     expect(craftController).toContain('resolved-craft-hint');
-    expect(craftController).toContain("arrivalInsight?.readingId ?? 'conversation-only'");
   });
 
   it('keeps relational continuity across permission-to-read', () => {
@@ -48,14 +47,12 @@ describe("Develop → Hermes → Craftsman's Table R1", () => {
     expect(develop).toContain('sourceMaiaTurnBody: lastMaiaTurnBody');
   });
 
-  it('waits for explicit privacy posture without consuming the held Craft act', () => {
-    expect(craftController).toContain('!sessionPosture.resolved');
-    expect(craftController).toContain('sessionPosture.sanctuary');
+  it('carries Craft across privacy posture without manufacturing a hidden author turn', () => {
+    expect(craftController).toContain('if (!posture.resolved || posture.sanctuary)');
     expect(craftController).toContain('Your Craft request is still held here.');
-    const primerAt = craftController.indexOf("const key = [\n      'craft-primer'");
-    const effectAt = craftController.lastIndexOf('useEffect(() => {', primerAt);
-    const craftEffect = craftController.slice(effectAt, craftController.indexOf('  const makeThisAWork', primerAt));
-    expect(craftEffect.indexOf('autoCraftKey.current = key')).toBeGreaterThan(craftEffect.indexOf('!sessionPosture.resolved'));
+    expect(craftController).toContain('Hermes carries context into Craft without manufacturing an invisible author');
+    expect(craftController).not.toContain('craftPrimerPrompt');
+    expect(craftController).not.toContain('autoCraftKey');
   });
 
   it('routes Develop Craft through the manuscript-native R1 workbench', () => {

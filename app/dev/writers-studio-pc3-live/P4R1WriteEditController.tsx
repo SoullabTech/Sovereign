@@ -44,8 +44,7 @@ import {
   isEditorialLatitude,
 } from '@/lib/manuscript/editorialScope/contract';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
-import { craftPrimerPrompt } from '@/lib/writersStudio/craftCanvas';
-import { craftArrivalPolicy, resolveCraftSuggestionPolicy } from '@/lib/writersStudio/craftSuggestionPolicyR1';
+import { resolveCraftSuggestionPolicy } from '@/lib/writersStudio/craftSuggestionPolicyR1';
 import {
   CRAFT_HINT_END,
   CRAFT_HINT_START,
@@ -289,7 +288,6 @@ export default function FlagshipWriteEditController({
 
   const focusInsightConsumed = useRef<string | null>(null);
   const autoProposalKey = useRef<string | null>(null);
-  const autoCraftKey = useRef<string | null>(null);
   const workspaceReturn = useRef<{
     focusId: string | null;
     selectedPassage: Pc3HeldPassage | null;
@@ -1498,82 +1496,11 @@ export default function FlagshipWriteEditController({
 
 
 
-  useEffect(() => {
-    if (
-      (incomingAction !== 'craft-passage' && incomingAction !== 'choose-craft-passage')
-      || !craftArrival
-      || !craftSourceThreadId
-      || !workspaceOpen
-      || !selectedPassage
-      || !focusId
-      || editorialBusy
-      || !editingSettingsResolved
-      || !sessionPosture.resolved
-      || sessionPosture.sanctuary
-    ) return;
-    if (selectedPassage.draftSectionId !== focusId) return;
+  /* Hermes carries context into Craft without manufacturing an invisible author
+     turn. Proactive wording remains available on the writer's NEXT visible turn
+     through resolveCraftSuggestionPolicy(); entering the room itself is not a
+     persisted editorial act. */
 
-    if (arrivalInsight) {
-      if (
-        workspaceInsight?.readingId !== arrivalInsight.readingId
-        || workspaceInsight.key !== arrivalInsight.observation.key
-      ) return;
-
-      if (incomingAction === 'craft-passage') {
-        const passage = arrivalInsight.passages.find((candidate) =>
-          candidate.sectionId === focusId
-          && candidate.verified
-          && candidate.editable
-          && candidate.range,
-        );
-        if (!passage?.range) return;
-        const exact = Array.from(passage.body).slice(passage.range.start, passage.range.end).join('');
-        if (exact !== selectedPassage.text) return;
-      }
-    } else if (incomingAction === 'craft-passage') {
-      if (
-        !craftHintRange
-        || selectedPassage.start !== craftHintRange.start
-        || selectedPassage.end !== craftHintRange.end
-      ) return;
-    }
-
-    const key = [
-      'craft-primer',
-      craftSourceThreadId,
-      arrivalInsight?.readingId ?? 'conversation-only',
-      arrivalInsight?.observation.key ?? String(craftSourceMaiaTurnIndex ?? -1),
-      focusId,
-      selectedPassage.start,
-      selectedPassage.end,
-      selectedPassage.text,
-    ].join(':');
-    if (autoCraftKey.current === key) return;
-    autoCraftKey.current = key;
-
-    const arrivalPolicy = craftArrivalPolicy({
-      resolved: editingSettingsResolved,
-      proactive: mayProposeImmediately,
-    });
-    if (!arrivalPolicy) return;
-    void sendEditorial(craftPrimerPrompt(mayProposeImmediately), arrivalPolicy);
-  }, [
-    incomingAction,
-    craftArrival,
-    craftSourceThreadId,
-    craftSourceMaiaTurnIndex,
-    craftHintRange,
-    arrivalInsight,
-    workspaceOpen,
-    workspaceInsight,
-    selectedPassage,
-    focusId,
-    editorialBusy,
-    sessionPosture,
-    editingSettingsResolved,
-    mayProposeImmediately,
-    sendEditorial,
-  ]);
 
   const makeThisAWork = useCallback(async () => {
     if (!context || workContext.kind !== 'none') return;

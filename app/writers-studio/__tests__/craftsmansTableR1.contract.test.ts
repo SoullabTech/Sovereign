@@ -122,8 +122,8 @@ describe("Craftsman's Table R1", () => {
     expect(controller).toContain('proactive: mayProposeImmediately');
     expect(controller).toContain('proposalPolicy: options?.proposalPolicy');
     expect(controller).toContain('proposalRequested: options?.proposalRequested');
-    expect(controller).toContain('craftPrimerPrompt(mayProposeImmediately), arrivalPolicy');
-    expect(controller).toContain('|| !editingSettingsResolved');
+    expect(controller).toContain('Hermes carries context into Craft without manufacturing an invisible author');
+    expect(controller).not.toContain('craftPrimerPrompt');
   });
 
   it('presents a clean Craft conversation without exposing orchestration prompts', () => {
@@ -147,7 +147,8 @@ describe("Craftsman's Table R1", () => {
     expect(maia).toContain('MAIA may offer wording without waiting for me to ask');
     expect(maia).toContain('mayProposeImmediately');
     expect(controller).toContain('mayProposeImmediately');
-    expect(craft).toContain('The demonstration is an example, not a recommendation');
+    expect(controller).toContain('resolveCraftSuggestionPolicy({');
+    expect(controller).not.toContain('craftPrimerPrompt');
   });
 
   it('keeps advanced capability available without turning it into default chrome', () => {
