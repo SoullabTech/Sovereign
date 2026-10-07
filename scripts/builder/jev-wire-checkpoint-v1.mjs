@@ -23,7 +23,7 @@
  * Residual (declared): both stores rolled back together, or both replaced by someone who can write both,
  * cannot be detected by any local mechanism. A separate volume reduces common-mode loss only.
  */
-import { closeSync, existsSync, fsyncSync, openSync, readFileSync, realpathSync, renameSync, statSync, unlinkSync, writeSync } from 'node:fs';
+import { closeSync, constants as fsConstants, existsSync, fsyncSync, lstatSync, openSync, readFileSync, readlinkSync, realpathSync, renameSync, statSync, unlinkSync, writeSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { BUDGET, canonicalJson, sha256Hex } from './jev-wire-v1.mjs';
 
@@ -41,6 +41,29 @@ function canonical(path) {
 }
 const identityOf = (path) => { try { const st = statSync(path); return st.dev + ':' + st.ino; } catch { return null; } };
 
+const isLink = (path) => { try { return lstatSync(path).isSymbolicLink(); } catch { return false; } };
+
+/**
+ * Symbolic links are inspected as OBJECTS (lstat), not through what they currently resolve to: a dangling link has
+ * no identity yet, but creating its target later would make a write through it land on the other store.
+ *   - lock files and the checkpoint temp file are never legitimately links → any link there is refused;
+ *   - a store path that is a link is refused when dangling (conservative: an unresolved alias is never permission)
+ *     and when its target is any path owned by the OTHER store.
+ */
+function inspectLinks(ledgerOwned, checkpointOwned) {
+  const lockOrTemp = [ledgerOwned[1], ledgerOwned[2], checkpointOwned[1]];
+  for (const p of lockOrTemp) if (isLink(p)) throw err('PAIR_PATH_COLLISION');
+  const sides = [[ledgerOwned[0], checkpointOwned], [checkpointOwned[0], ledgerOwned]];
+  for (const [store, others] of sides) {
+    if (!isLink(store)) continue;
+    let target;
+    try { target = resolve(dirname(resolve(store)), readlinkSync(store)); } catch { throw err('PAIR_PATH_COLLISION'); }
+    if (!existsSync(target)) throw err('PAIR_PATH_COLLISION');                // dangling
+    const t = canonical(target);
+    if (others.map(canonical).includes(t)) throw err('PAIR_PATH_COLLISION');
+  }
+}
+
 /**
  * Every file either store may create or replace, grouped by owner. The two owners must not share ANY of them:
  *   ledger owns      L · L.lock · L.pair.lock
@@ -57,6 +80,7 @@ export function assertDistinctStores(ledgerPath, checkpointPath) {
     for (const b of checkpointOwned.map(canonical)) if (a === b) throw err('PAIR_PATH_COLLISION');
   }
   if (new Set(keys.slice(0, 3)).size !== 3 || new Set(keys.slice(3)).size !== 2) throw err('PAIR_PATH_COLLISION');
+  inspectLinks(ledgerOwned, checkpointOwned);
   // aliases of files that already exist (hard links / symlink farms)
   const ids = all.map(identityOf);
   for (let i = 0; i < ledgerOwned.length; i += 1) {
@@ -108,7 +132,7 @@ export function createCheckpointedLedger(base, checkpointPath, { hooks = {} } = 
     const full = { ...body, checkpoint_hash: sha256Hex(canonicalJson(body)) };
     const tmp = checkpointPath + '.tmp';
     try {
-      const fd = openSync(tmp, 'w');
+      const fd = openSync(tmp, fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_TRUNC | (fsConstants.O_NOFOLLOW || 0), 0o644);   // never write through a link
       try { writeSync(fd, JSON.stringify(full) + '\n'); fsyncSync(fd); } finally { closeSync(fd); }
       renameSync(tmp, checkpointPath);
       const dfd = openSync(dirname(checkpointPath), 'r');

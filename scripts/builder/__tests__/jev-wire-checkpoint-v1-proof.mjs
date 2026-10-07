@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { existsSync, linkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, linkSync, mkdirSync, mkdtempSync, lstatSync, readdirSync, readFileSync, readlinkSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -376,6 +376,52 @@ await check('K15-colliding-storage-paths-are-rejected-before-any-mutation', asyn
     ok1.initialize(); assert.equal(ok1.verify().consistent, true);
     const ok2 = CK.createCheckpointedLedger(W.createLedger(join(root, 'a', 'l2.jsonl')), join(root, 'a', 'anchor2.json'));
     ok2.initialize(); assert.equal(ok2.verify().consistent, true); }
+});
+
+// ── Mac review 04e3a2db: dangling symbolic links are inspected as objects ─────────────────────────────────
+
+/** Everything observable about a tree: names, kinds, regular-file bytes, link targets. */
+function treeState(root) {
+  const out = [];
+  const walk = (dir) => {
+    for (const name of readdirSync(dir).sort()) {
+      const full = join(dir, name); const st = lstatSync(full);
+      if (st.isSymbolicLink()) out.push([full.slice(root.length), 'link', readlinkSync(full)]);
+      else if (st.isDirectory()) { out.push([full.slice(root.length), 'dir']); walk(full); }
+      else out.push([full.slice(root.length), 'file', readFileSync(full, 'utf8')]);
+    }
+  };
+  walk(root);
+  return JSON.stringify(out);
+}
+
+await check('K16-dangling-symlinks-are-refused-before-any-lock-or-store-mutation', async () => {
+  const layout = () => { const root = scratch(); mkdirSync(join(root, 'a')); mkdirSync(join(root, 'b'));
+    return { root, L: join(root, 'a', 'ledger.jsonl'), C: join(root, 'b', 'anchor.json') }; };
+  const refuse = (label, { root, L, C }) => {
+    const before = treeState(root);
+    let init = false;
+    assert.throws(() => { const pair = CK.createCheckpointedLedger(W.createLedger(L), C); init = true; pair.initialize(); }, /PAIR_PATH_COLLISION/, label);
+    assert.equal(init, false, label + ': refused at construction, before any operation');
+    assert.equal(treeState(root), before, label + ': bytes, entries and link targets unchanged');
+  };
+  { const x = layout(); symlinkSync(x.L, x.C + '.tmp'); refuse('checkpoint temp -> not-yet-created ledger', x); }
+  { const x = layout(); symlinkSync(x.C + '.tmp', x.L); refuse('ledger -> not-yet-created checkpoint temp', x); }
+  // neighbours of the same family: links where only plain files may exist, and dangling store links
+  { const x = layout(); symlinkSync(join(x.root, 'nowhere'), x.L + '.pair.lock'); refuse('pair lock is a link', x); }
+  { const x = layout(); symlinkSync(join(x.root, 'nowhere'), x.L + '.lock'); refuse('ledger lock is a link', x); }
+  { const x = layout(); symlinkSync(join(x.root, 'nowhere'), x.C); refuse('checkpoint is a dangling link', x); }
+  { const x = layout(); symlinkSync(join(x.root, 'nowhere'), x.L); refuse('ledger is a dangling link', x); }
+  { const x = layout(); writeFileSync(join(x.root, 'sentinel'), 'keep me'); symlinkSync(join(x.root, 'sentinel'), x.C + '.tmp'); refuse('checkpoint temp -> unrelated existing file', x); }
+  { const x = layout(); symlinkSync(x.C, x.L); writeFileSync(x.C, 'x'); refuse('ledger -> existing checkpoint', x); }
+  // the non-clobbering guarantee also holds if a link appears AFTER the preflight (between ledger write and anchor write)
+  { const x = layout(); const sentinel = join(x.root, 'sentinel'); writeFileSync(sentinel, 'keep me');
+    const racy = CK.createCheckpointedLedger(W.createLedger(x.L), x.C, { hooks: { afterLedgerAppend: (k) => { if (k === 'init') symlinkSync(sentinel, x.C + '.tmp'); } } });
+    assert.throws(() => racy.initialize(), /PAIR_CHECKPOINT_UNAVAILABLE/);
+    assert.equal(readFileSync(sentinel, 'utf8'), 'keep me', 'the write did not follow the link'); }
+  // controls: plain stale temp file and the two valid layouts are unaffected
+  { const x = layout(); writeFileSync(x.C + '.tmp', 'stale'); const ok = CK.createCheckpointedLedger(W.createLedger(x.L), x.C);
+    ok.initialize(); assert.equal(ok.verify().consistent, true); }
 });
 
 console.log(`\n${pass} passed · ${fail} failed`);

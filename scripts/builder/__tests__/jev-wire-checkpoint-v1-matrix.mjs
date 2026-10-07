@@ -68,6 +68,16 @@ const CANDIDATES = [
     ["  let dir = dirname(abs);\n  try { dir = realpathSync(dir); } catch { /* parent not present: compare lexically */ }", "  const dir = dirname(abs);"],
     ["if (ids[i] && ids[i] === ids[j]) throw err('PAIR_PATH_COLLISION');", "if (false) throw err('PAIR_PATH_COLLISION');"]]],
   ['DC-NETWORK-IN-CHECKPOINT-MODULE', 'K13', 'ck', [["export const CHECKPOINT_FORMAT", "const _egress = (u) => fetch(u);\nexport const CHECKPOINT_FORMAT"]]],
+  // ── dangling-link family (Mac review 04e3a2db) — each orientation has an independent lethal candidate ──
+  ['DC-LINK-INSPECTION-REMOVED', 'K16', 'ck', [["  inspectLinks(ledgerOwned, checkpointOwned);\n", '']]],
+  ['DC-LEDGER-SIDE-LINKS-NOT-INSPECTED', 'K16', 'ck', [[
+    "  const sides = [[ledgerOwned[0], checkpointOwned], [checkpointOwned[0], ledgerOwned]];", "  const sides = [[checkpointOwned[0], ledgerOwned]];"]]],
+  ['DC-TEMP-AND-LOCK-LINKS-ALLOWED', 'K16', 'ck', [[
+    "  for (const p of lockOrTemp) if (isLink(p)) throw err('PAIR_PATH_COLLISION');\n", '']]],
+  ['DC-DANGLING-LINK-ALLOWED', 'K16', 'ck', [[
+    "    if (!existsSync(target)) throw err('PAIR_PATH_COLLISION');                // dangling\n", ''],
+    ["    if (others.map(canonical).includes(t)) throw err('PAIR_PATH_COLLISION');", "    if (false) throw err('PAIR_PATH_COLLISION');"]]],
+  ['DC-WRITE-FOLLOWS-LINKS', 'K16', 'ck', [[" | (fsConstants.O_NOFOLLOW || 0), 0o644);", ", 0o644);"]]],
 ];
 
 function run(scope, edits) {
