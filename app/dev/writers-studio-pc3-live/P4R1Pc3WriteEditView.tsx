@@ -1007,6 +1007,17 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     </div>
   ) : baseWorkSurface;
 
+  /* R8K — Develop Craft is a true three-region room. The editorial relationship
+     belongs in Shell's MAIA region, where it takes layout space beside the
+     manuscript. Rendering the same card as a fixed overlay makes manuscript
+     prose and craft controls occupy the same pixels. */
+  const craftEditorialInShell = props.surfaceMode === 'develop-craft' && editorial
+    ? editorial
+    : null;
+  const shellMaia = craftEditorialInShell
+    ?? (railSelectionId || workConversationOpen ? writeMaia : undefined);
+  const shellHasCraftEditorial = craftEditorialInShell !== null;
+
   const isolatedRoom = props.workspaceOpen && isolatedEditorial ? (
     <IsolatedEditorialRoom
       appearance={props.appearance}
@@ -1111,14 +1122,16 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       <Shell
           mode={props.surfaceMode === 'develop-craft' ? 'develop' : 'write'}
           appearance={props.appearance}
-          geometry={railSelectionId || workConversationOpen ? WRITE_RELATIONAL_GEOMETRY : WRITE_GEOMETRY}
+          geometry={shellHasCraftEditorial || railSelectionId || workConversationOpen ? WRITE_RELATIONAL_GEOMETRY : WRITE_GEOMETRY}
           workTitle={props.work?.title ?? undefined}
           memberInitial=""
           onSelectMode={props.onMode}
           canvas={canvas}
           manuscript={<WriteManuscriptRail fixture={projection.data} onOpenChapter={go} />}
           work={workSurface}
-          maia={railSelectionId || workConversationOpen ? writeMaia : undefined}
+          maia={shellMaia}
+          maiaResizable={shellHasCraftEditorial}
+          maiaDefaultShare={42}
         />
 
       {isolatedRoom}
@@ -1160,7 +1173,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           ) : null}
 
           {contextualActions}
-          {editorial}
+          {props.surfaceMode === 'develop-craft' ? null : editorial}
         </>
       ) : null}
     </>
