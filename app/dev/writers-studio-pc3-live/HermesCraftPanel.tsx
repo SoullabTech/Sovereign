@@ -168,6 +168,83 @@ export default function HermesCraftPanel(props: HermesCraftPanelProps) {
                 type="button"
                 disabled={props.busy}
                 onClick={() => send(
+                  'Show me two or three illustrative examples of how this craft move could work in this exact passage. Treat them as primers, not recommendations.',
+                  'learning',
+                  { proposalPolicy: 'reply_only' },
+                )}
+              >
+                Examples
+              </button>
+              <button
+                type="button"
+                disabled={props.busy}
+                onClick={() => send(
+                  'Give me several genuinely different directions this exact passage could take. Describe the intention of each before showing wording. Do not rank them.',
+                  undefined,
+                  { proposalPolicy: 'reply_only' },
+                )}
+              >
+                Ideas
+              </button>
+              <button
+                type="button"
+                disabled={props.busy}
+                onClick={() => send(
+                  'Make the current craft move lighter. Restore more of my original wording, cadence, and imagery while keeping only the useful gain.',
+                  undefined,
+                  { proposalPolicy: 'allow', proposalRequested: true },
+                )}
+              >
+                Lighter
+              </button>
+              <button
+                type="button"
+                disabled={props.busy}
+                onClick={() => send(
+                  'Keep more of my original wording and rhythm while preserving the useful part of the current craft move.',
+                  undefined,
+                  { proposalPolicy: 'allow', proposalRequested: true },
+                )}
+              >
+                Keep more of mine
+              </button>
+              <button
+                type="button"
+                disabled={props.busy}
+                onClick={() => send(
+                  'Go a little further with the same intention, but do not turn this into a major rewrite.',
+                  undefined,
+                  { proposalPolicy: 'allow', proposalRequested: true },
+                )}
+              >
+                Go further
+              </button>
+              <button
+                type="button"
+                disabled={props.busy}
+                onClick={() => send(
+                  'Show me one genuinely different option for this same passage. Keep the same intention but take another craft path.',
+                  undefined,
+                  { proposalPolicy: 'allow', proposalRequested: true },
+                )}
+              >
+                Another option
+              </button>
+              <button
+                type="button"
+                disabled={props.busy}
+                onClick={() => send(
+                  'Explain the current craft move without proposing new wording. Tell me what changed, why, what it may do for a reader, and what it protects.',
+                  undefined,
+                  { proposalPolicy: 'reply_only' },
+                )}
+              >
+                Why this?
+              </button>
+              <button
+                type="button"
+                disabled={props.busy}
+                onClick={() => send(
                   'Teach me the craft already at work in this exact passage using my own words as the example. Plain language first.',
                   'learning',
                   { proposalPolicy: 'reply_only' },
@@ -179,7 +256,7 @@ export default function HermesCraftPanel(props: HermesCraftPanelProps) {
                 type="button"
                 disabled={props.busy}
                 onClick={() => send(
-                  'Go deeper on this exact passage. Separate meaning from style, evidence from interpretation, and tradeoffs from preferences.',
+                  'Go deeper on this exact passage. Separate meaning from style, evidence from interpretation, reader-effect hypotheses from facts, and show the tradeoffs.',
                   'direct',
                   { proposalPolicy: 'reply_only' },
                 )}
@@ -188,6 +265,7 @@ export default function HermesCraftPanel(props: HermesCraftPanelProps) {
               </button>
             </div>
           ) : null}
+
 
           {memberVersion ? (
             <div className="p4r1-hermes-version">
