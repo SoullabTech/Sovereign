@@ -209,6 +209,15 @@ export default function FlagshipWriteEditController({
   });
 
   useEffect(() => {
+    setCraftWorkingText(selectedPassage?.text ?? '');
+  }, [
+    selectedPassage?.draftSectionId,
+    selectedPassage?.start,
+    selectedPassage?.end,
+    selectedPassage?.text,
+  ]);
+
+  useEffect(() => {
     const sync = () => setSessionPosture(readCurrentSanctuaryPosture());
     sync();
     window.addEventListener('maia-settings-changed', sync as EventListener);
