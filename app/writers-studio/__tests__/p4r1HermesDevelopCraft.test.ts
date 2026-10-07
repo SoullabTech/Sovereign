@@ -57,8 +57,10 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(craftController).toContain('sessionPosture.sanctuary');
     expect(craftController).toContain('sessionPosture,');
     expect(craftController).toContain('Your Craft request is still held here.');
-    const primer = craftController.slice(craftController.indexOf("const key = [\n      'craft-primer'"));
-    expect(primer.indexOf('autoCraftKey.current = key')).toBeGreaterThan(primer.indexOf('!sessionPosture.resolved'));
+    const primerAt = craftController.indexOf("const key = [\n      'craft-primer'");
+    const effectAt = craftController.lastIndexOf('useEffect(() => {', primerAt);
+    const craftEffect = craftController.slice(effectAt, craftController.indexOf('  const makeThisAWork', primerAt));
+    expect(craftEffect.indexOf('autoCraftKey.current = key')).toBeGreaterThan(craftEffect.indexOf('!sessionPosture.resolved'));
   });
 
   it('docks the Craftsman relationship beside the manuscript instead of floating over it', () => {
