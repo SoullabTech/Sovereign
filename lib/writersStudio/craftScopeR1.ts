@@ -13,10 +13,29 @@ export interface CraftRereadIntent {
   readonly explicit: true;
 }
 
-const wholePattern = /\b(?:whole\s+(?:book|manuscript|work)|across\s+(?:the\s+)?(?:book|manuscript|work)|book\s+as\s+a\s+whole|larger\s+(?:book|work))\b/i;
-const chapterPattern = /\b(?:this\s+chapter|whole\s+chapter|chapter\s+as\s+a\s+whole|across\s+(?:the\s+)?chapter)\b/i;
-const sectionPattern = /\b(?:this\s+section|whole\s+section|section\s+as\s+a\s+whole)\b/i;
-const passagePattern = /\b(?:this\s+passage|this\s+paragraph|this\s+sentence|these\s+words|this\s+phrase)\b/i;
+const scopes: readonly { zoom: CraftZoom; pattern: RegExp }[] = [
+  { zoom: 'whole', pattern: /\b(?:(?:the\s+)?(?:whole|entire)\s+(?:book|manuscript|work)|(?:book|manuscript|work)\s+as\s+a\s+whole|across\s+(?:the\s+)?(?:book|manuscript|work))\b/i },
+  { zoom: 'chapter', pattern: /\b(?:(?:this|the|whole|entire)\s+chapter|chapter\s+as\s+a\s+whole)\b/i },
+  { zoom: 'section', pattern: /\b(?:(?:this|the|whole|entire)\s+section|section\s+as\s+a\s+whole)\b/i },
+  { zoom: 'passage', pattern: /\b(?:this\s+(?:passage|paragraph|sentence|phrase)|these\s+words)\b/i },
+];
+
+function unquotedRequest(text: string): string {
+  return text
+    .replace(/```[\s\S]*?(?:```|$)/g, ' ')
+    .replace(/^\s*>.*$/gm, ' ')
+    .replace(/`[^`]*(?:`|$)/g, ' ')
+    .replace(/"[^"\n]*"|“[^”\n]*”|‘[^’\n]*’/g, ' ')
+    .replace(/(^|[\s(:])'[^'\n]*'(?=[\s).,!?;:]|$)/g, '$1 ')
+    .replace(/’/g, "'");
+}
+
+// This is a conservative command grammar, not a claim to general intent
+// understanding. An uncertain sentence stays local and may be clarified in
+// conversation. Only affirmative present requests can spend a wider reading.
+const requestedAct = /^(?:(?:please|now|just|then|also)\s+)*(?:(?:can|could|would|will)\s+you\s+(?:please\s+)?|i\s+(?:want|would\s+like)\s+you\s+to\s+)?(?:re-?read|read|review|look\s+at|examine|check|compare|evaluate|assess|help\s+with)\b/i;
+const deferred = /\b(?:later|tomorrow|not\s+yet|not\s+now|next\s+(?:week|time)|if\s+(?:necessary|needed)|when\s+i\s+finish)\b/i;
+const refusal = /\b(?:do\s+not|don't|never|avoid|stop|no\s+need|not\s+(?:the|this|a|my|any)|without\s+(?:reading|reviewing))\b/i;
 
 function explicitLensFrom(text: string): DevelopmentalLens | null {
   if (/\b(?:arc|journey|movement\s+of\s+(?:the\s+)?(?:chapter|book|work))\b/i.test(text)) return 'arc';
@@ -30,20 +49,36 @@ function explicitLensFrom(text: string): DevelopmentalLens | null {
   return null;
 }
 
-/**
- * Only explicit scale language widens the read. Ordinary craft language remains
- * passage-local; the system never guesses that "make this better" means "read
- * my whole book".
- */
+/** A scope mention is never, by itself, a request to read that scope. */
 export function detectCraftRereadIntent(text: string): CraftRereadIntent | null {
-  const zoom: CraftZoom | null =
-    wholePattern.test(text) ? 'whole'
-      : chapterPattern.test(text) ? 'chapter'
-        : sectionPattern.test(text) ? 'section'
-          : passagePattern.test(text) ? 'passage'
-            : null;
-  if (!zoom) return null;
-  return { zoom, lens: explicitLensFrom(text), explicit: true };
+  const request = unquotedRequest(text);
+  if (deferred.test(request)) return null;
+  const clauses = request.split(/[.!?;\n]+|\b(?:but|and\s+then|then)\b/i)
+    .map(clause => clause.trim()).filter(Boolean);
+  const prohibited = new Set<CraftZoom>();
+  for (const clause of clauses) {
+    const at = clause.search(refusal);
+    if (at >= 0) {
+      const denied = clause.slice(at);
+      for (const scope of scopes) if (scope.pattern.test(denied)) prohibited.add(scope.zoom);
+    }
+  }
+  const candidates: CraftRereadIntent[] = [];
+  for (const clause of clauses) {
+    const act = requestedAct.exec(clause);
+    if (!act) continue;
+    const end = clause.search(refusal);
+    const affirmative = end >= 0 ? clause.slice(0, end) : clause;
+    const object = affirmative.slice(act[0].length);
+    const target = scopes.map(scope => ({ ...scope, match: scope.pattern.exec(object) }))
+      .filter(scope => scope.match !== null)
+      .sort((a, b) => a.match!.index - b.match!.index)[0];
+    if (!target || prohibited.has(target.zoom)) continue;
+    candidates.push({ zoom: target.zoom, lens: explicitLensFrom(affirmative), explicit: true });
+  }
+  // A later explicitly requested focus governs the next act. Never take the
+  // widest phrase found anywhere in the writer's message.
+  return candidates.at(-1) ?? null;
 }
 
 /**

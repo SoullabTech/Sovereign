@@ -105,6 +105,7 @@ export type P4R1Pc3WriteEditViewProps = {
   craftWorkingText: string | null;
   onCraftWorkingTextChange: (text: string) => void;
   craftActivity: string | null;
+  craftReadNotice: string | null;
   craftDialogue: readonly CraftDialogueTurn[];
   adoptionBusy: boolean;
   memberVersionBusy: boolean;
@@ -1086,6 +1087,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       busy={busy}
       message={editorialMessage}
       activity={props.craftActivity}
+      readingNotice={props.craftReadNotice}
       dialogue={props.craftDialogue}
       editLatitude={props.editLatitude}
       onEditLatitude={props.onLatitude}

@@ -74,15 +74,7 @@ import {
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
 import { P4R1Pc3WriteEditView, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
-import { fetchReading, requestDevelopmentalReading } from '@/lib/writersStudio/developClient';
-import { readingView } from '@/lib/writersStudio/developPresentation';
-import {
-  craftReadingContext,
-  craftReadingScope,
-  craftZoomLabel,
-  detectCraftRereadIntent,
-} from '@/lib/writersStudio/craftScopeR1';
-import { runWholeManuscriptReview } from '@/lib/writersStudio/studio/wholeManuscriptReview';
+import { runCraftReread } from '@/lib/writersStudio/craftRereadR1';
 import {
   appendCraftDialogue,
   type CraftDialogueTurn,
@@ -203,6 +195,10 @@ export default function FlagshipWriteEditController({
   const [editorialBusy, setEditorialBusy] = useState(false);
   const [craftWorkingText, setCraftWorkingText] = useState<string | null>(null);
   const [craftActivity, setCraftActivity] = useState<string | null>(null);
+  const [craftReadNotice, setCraftReadNotice] = useState<string | null>(null);
+  const craftRequestInFlight = useRef(false);
+  const craftMounted = useRef(true);
+  const craftLiveIdentity = useRef('');
   const [craftDialogue, setCraftDialogue] = useState<readonly CraftDialogueTurn[]>([]);
   const craftDialogueSeq = useRef(0);
   const seenCraftMaiaTurn = useRef<string | null>(null);
@@ -217,6 +213,16 @@ export default function FlagshipWriteEditController({
     reason: 'no_live_settings',
   });
 
+  craftLiveIdentity.current = JSON.stringify([
+    requested, context?.manuscriptId, context?.version, focusId, developCraft,
+    selectedPassage?.draftSectionId, selectedPassage?.start, selectedPassage?.end,
+    selectedPassage?.text, craftWorkingText,
+  ]);
+  useEffect(() => {
+    craftMounted.current = true;
+    return () => { craftMounted.current = false; };
+  }, []);
+
   useEffect(() => {
     setCraftWorkingText(selectedPassage?.text ?? null);
   }, [
@@ -228,6 +234,7 @@ export default function FlagshipWriteEditController({
 
   useEffect(() => {
     setCraftDialogue([]);
+    setCraftReadNotice(null);
     craftDialogueSeq.current = 0;
     seenCraftMaiaTurn.current = null;
   }, [
@@ -965,140 +972,69 @@ export default function FlagshipWriteEditController({
     options?: CraftSendOptions,
   ) => {
     const text = (requestText ?? editorialDraft).trim();
-    if (!text || !context || !focusId || editorialBusy || craftActivity || !editingSettingsResolved) return;
-
-    const displayText = options?.displayText?.trim() ?? '';
-    if (displayText) {
-      const key = `writer:${++craftDialogueSeq.current}`;
-      setCraftDialogue((current) => appendCraftDialogue(current, {
-        key,
-        speaker: 'writer',
-        body: displayText,
-      }));
-    }
-
-    const currentWorking = craftWorkingText ?? selectedPassage?.text ?? '';
-    const localPrompt = craftWorkingText !== null || selectedPassage !== null
-      ? [
-          text,
-          '',
-          'Writer-owned current working passage:',
-          currentWorking,
-          '',
-          'Treat this as the wording the writer is shaping now. An empty working passage is intentional, not missing context. Do not silently restore an earlier MAIA proposal.',
-        ].join('\n')
-      : text;
-    // Intent comes from the writer's words, not the prompt scaffold or quoted copy.
-    const intentText = options?.displayText ?? text;
-    const effectiveOptions = resolveCraftSuggestionPolicy({
-      request: intentText,
-      proactive: mayProposeImmediately,
-      proposalPolicy: options?.proposalPolicy,
-      proposalRequested: options?.proposalRequested,
-    });
-
-    const intent = detectCraftRereadIntent(intentText);
-    if (!intent || intent.zoom === 'passage') {
-      await sendEditorial(localPrompt, effectiveOptions);
+    if (!text || !context || !focusId || editorialBusy || craftActivity
+      || !editingSettingsResolved || craftRequestInFlight.current) return;
+    const posture = readCurrentSanctuaryPosture();
+    if (!posture.resolved || posture.sanctuary) {
+      setEditorialFailure('Choose how this session is held before asking MAIA to read or retain a Craft reply. Nothing was sent.');
       return;
     }
-
-    const scope = craftReadingScope(intent.zoom, context.sections, focusId);
-    if (!scope) {
-      setEditorialFailure('MAIA could not establish the requested reading scope from this place. Nothing was changed.');
-      return;
-    }
-
-    const zoomLabel = craftZoomLabel(intent.zoom);
-    setEditorialFailure(null);
-    setCraftActivity(`Reading the ${zoomLabel}…`);
-
+    craftRequestInFlight.current = true;
+    const identity = craftLiveIdentity.current;
+    const revisionNumber = writingRef.current?.currentRevisionId() ?? context.version;
+    const stillCurrent = () => {
+      const livePosture = readCurrentSanctuaryPosture();
+      return craftMounted.current && craftLiveIdentity.current === identity
+        && (writingRef.current?.currentRevisionId() ?? context.version) === revisionNumber
+        && livePosture.resolved && !livePosture.sanctuary;
+    };
     try {
-      let governedContext = '';
-
-      if (intent.lens) {
-        setCraftActivity(`Reading the ${zoomLabel} through ${intent.lens}…`);
-        const commissioned = await requestDevelopmentalReading(
-          context.manuscriptId,
-          intent.lens,
-          scope,
-        );
-        if (!commissioned.ok) {
-          setEditorialFailure(
-            `MAIA could not complete the ${zoomLabel} reread (${commissioned.refusal}). The manuscript is unchanged.`,
-          );
-          return;
-        }
-        const fetched = await fetchReading(context.manuscriptId, commissioned.readingId);
-        if (!fetched.ok) {
-          setEditorialFailure(
-            `The fresh ${zoomLabel} reread could not be reopened (${fetched.refusal}). The manuscript is unchanged.`,
-          );
-          return;
-        }
-        governedContext = craftReadingContext(readingView(
-          fetched.payload.reading,
-          fetched.payload.assessment,
-          fetched.payload.sections,
-        ));
-      } else {
-        const bundle = await runWholeManuscriptReview(
-          context.manuscriptId,
-          (done, total, lens) => {
-            setCraftActivity(`Reading the ${zoomLabel} · ${Math.min(done + 1, total)}/${total} · ${lens}…`);
-          },
-          undefined,
-          scope,
-        );
-        if (bundle.payloads.length === 0) {
-          const refusal = bundle.failures[0]?.refusal ?? 'no_reading';
-          setEditorialFailure(
-            `MAIA could not complete the broad ${zoomLabel} reread (${refusal}). The manuscript is unchanged.`,
-          );
-          return;
-        }
-        governedContext = bundle.payloads.map((payload) => craftReadingContext(readingView(
-          payload.reading,
-          payload.assessment,
-          payload.sections,
-        ))).join('\n\n---\n\n');
+      const displayText = options?.displayText?.trim() ?? '';
+      if (displayText) {
+        setCraftDialogue(current => appendCraftDialogue(current, {
+          key: `writer:${++craftDialogueSeq.current}`, speaker: 'writer', body: displayText,
+        }));
       }
-
-      setCraftActivity(`Relating the ${zoomLabel} reread back to this passage…`);
-
+      const currentWorking = craftWorkingText ?? selectedPassage?.text ?? '';
+      const intentText = options?.displayText ?? text;
+      const effectiveOptions = resolveCraftSuggestionPolicy({
+        request: intentText, proactive: mayProposeImmediately,
+        proposalPolicy: options?.proposalPolicy, proposalRequested: options?.proposalRequested,
+      });
+      setCraftReadNotice(null);
+      const read = await runCraftReread({
+        request: intentText, manuscriptId: context.manuscriptId,
+        sections: context.sections, activeSectionId: focusId, revisionNumber, stillCurrent,
+        onProgress: activity => { if (stillCurrent()) setCraftActivity(activity); },
+      });
+      if (!stillCurrent()) return;
+      if (read.kind === 'stopped') {
+        setCraftReadNotice(read.notice);
+        return;
+      }
+      if (read.kind === 'read') setCraftReadNotice(read.notice);
       const prompt = [
         text,
-        '',
-        `You just completed a fresh governed reread of the ${zoomLabel} before answering this Craft question.`,
-        'Use that broader reread as context, not as an edit instruction or verdict.',
-        'The governed reread reflects the canonical manuscript state. It does NOT contain the unsaved writer-owned working passage unless that wording was already applied.',
-        'Compare the writer-owned working passage below against that broader context explicitly; do not imply the broader reread already included it.',
-        'The exact active passage and the writer-owned working passage below remain the authority for any wording change.',
-        '',
-        governedContext,
-        '',
-        'Writer-owned current working passage:',
-        currentWorking,
-        '',
-        'Return to the writer’s actual question. If a wording change is useful, keep it bounded to the active locus unless the writer explicitly asks to move elsewhere.',
-      ].join('\n');
-
+        read.kind === 'read' ? read.context : [
+          read.notice,
+          'Answer only from the active passage and evidence actually supplied. Do not claim a fresh chapter or whole-book reading.',
+          'A broader-scope mention, quotation, negative request or uncertain instruction is not a reading commission. Clarify the requested scope if it is necessary to answer.',
+        ].join('\n'),
+        'Writer-owned current working passage:', currentWorking,
+        'Treat this as the wording the writer is shaping now. An empty working passage is intentional, not missing context. Do not silently restore an earlier MAIA proposal.',
+        'Broader reading informs discussion; it does not authorize a wider rewrite or Apply. Any proposed wording stays inside the active locus.',
+      ].join('\n\n');
       setCraftActivity(null);
       await sendEditorial(prompt, effectiveOptions);
+    } catch {
+      if (stillCurrent()) setEditorialFailure('That Craft request was interrupted. No retry was made and your manuscript is unchanged.');
     } finally {
-      setCraftActivity(null);
+      craftRequestInFlight.current = false;
+      if (craftMounted.current) setCraftActivity(null);
     }
   }, [
-    editorialDraft,
-    context,
-    focusId,
-    editorialBusy,
-    craftActivity,
-    editingSettingsResolved,
-    mayProposeImmediately,
-    sendEditorial,
-    craftWorkingText,
-    selectedPassage?.text,
+    editorialDraft, context, focusId, editorialBusy, craftActivity, editingSettingsResolved,
+    mayProposeImmediately, sendEditorial, craftWorkingText, selectedPassage?.text,
   ]);
 
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
@@ -1769,6 +1705,7 @@ export default function FlagshipWriteEditController({
             craftWorkingText={craftWorkingText}
             onCraftWorkingTextChange={setCraftWorkingText}
             craftActivity={craftActivity}
+            craftReadNotice={craftReadNotice}
             craftDialogue={craftDialogue}
             adoptionBusy={adoptionBusy}
             memberVersionBusy={memberVersionBusy}

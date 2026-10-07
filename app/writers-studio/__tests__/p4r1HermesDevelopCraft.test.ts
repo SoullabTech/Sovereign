@@ -10,6 +10,7 @@ describe("Develop → Hermes → Craftsman's Table R1", () => {
   const observationDialogue = read('app/writers-studio/develop/ObservationDialogue.tsx');
   const developController = read('app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx');
   const craftController = read('app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx');
+  const reread = read('lib/writersStudio/craftRereadR1.ts');
   const canvas = read('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
   const table = read('app/dev/writers-studio-pc3-live/CraftsmansTableR1.tsx');
   const maia = read('app/dev/writers-studio-pc3-live/MaiaCraftCompanionR1.tsx');
@@ -111,10 +112,12 @@ describe("Develop → Hermes → Craftsman's Table R1", () => {
 
   it('grounds every Craft turn in the writer current working copy and can widen scope explicitly', () => {
     expect(craftController).toContain('Writer-owned current working passage:');
-    expect(craftController).toContain('detectCraftRereadIntent(intentText)');
+    expect(craftController).toContain('runCraftReread({');
+    expect(craftController).toContain('request: intentText');
+    expect(reread).toContain('detectCraftRereadIntent(input.request)');
     expect(craftController).toContain('const intentText = options?.displayText ?? text;');
-    expect(craftController).toContain('requestDevelopmentalReading(');
-    expect(craftController).toContain('runWholeManuscriptReview(');
-    expect(craftController).toContain('The governed reread reflects the canonical manuscript state.');
+    expect(reread).toContain('commission: requestDevelopmentalReading');
+    expect(reread).toContain('LENS_ORDER');
+    expect(reread).toContain('The governed reread reflects the canonical manuscript state.');
   });
 });

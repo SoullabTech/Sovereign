@@ -14,6 +14,7 @@ describe("Craftsman's Table R1", () => {
   const working = read('lib/writersStudio/craftWorkingCopy.ts');
   const proMarks = read('lib/writersStudio/craftProfessionalMarks.ts');
   const scope = read('lib/writersStudio/craftScopeR1.ts');
+  const reread = read('lib/writersStudio/craftRereadR1.ts');
   const css = read('app/dev/writers-studio-p4r1/p4r1-live.css');
 
   it('freezes the manuscript-first product law and Elemental Alchemy witness', () => {
@@ -163,9 +164,13 @@ describe("Craftsman's Table R1", () => {
     expect(contract).toContain('Whole ↔ part intelligence');
     expect(scope).toContain('detectCraftRereadIntent');
     expect(scope).toContain('craftReadingScope');
-    expect(controller).toContain('requestDevelopmentalReading(');
-    expect(controller).toContain('runWholeManuscriptReview(');
-    expect(controller).toContain('The governed reread reflects the canonical manuscript state.');
-    expect(controller).toContain('Compare the writer-owned working passage below against that broader context explicitly');
+    expect(controller).toContain('runCraftReread({');
+    expect(controller).toContain('request: intentText');
+    expect(reread).toContain('commission: requestDevelopmentalReading');
+    expect(reread).toContain('LENS_ORDER');
+    expect(reread).toContain('The governed reread reflects the canonical manuscript state.');
+    expect(reread).toContain("coverage: complete ? 'complete' : 'partial'");
+    expect(maia).toContain('data-craft-reading-coverage');
+    expect(reread).toContain('Compare the current working copy separately.');
   });
 });

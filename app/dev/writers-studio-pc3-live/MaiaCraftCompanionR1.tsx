@@ -22,6 +22,7 @@ export type MaiaCraftCompanionR1Props = {
   busy: boolean;
   message: string | null;
   activity: string | null;
+  readingNotice?: string | null;
   dialogue: readonly CraftDialogueTurn[];
   editLatitude: EditorialLatitude;
   onEditLatitude: (value: EditorialLatitude) => void;
@@ -141,6 +142,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
               <div className="p4r1-maia-craft-r1-activity" role="status">Working with the passage…</div>
             ) : null}
 
+            {props.readingNotice ? <small role="status" data-craft-reading-coverage>{props.readingNotice}</small> : null}
             {props.message ? <small role="status">{props.message}</small> : null}
           </div>
 
