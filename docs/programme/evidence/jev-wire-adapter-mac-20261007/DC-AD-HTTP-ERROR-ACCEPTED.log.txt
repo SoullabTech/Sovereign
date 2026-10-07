@@ -1,0 +1,27 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-http-adapter-v1-proof.mjs
+HEAD=76fe39b2300a1e7d18bc953893c80f42c195c15c
+STARTED_AT=2026-10-07T21:38:07.104Z
+PASS  A1-endpoint-and-credential-policy-fail-closed
+PASS  A1b-function-credential-is-validated-at-send-and-opens-no-connection-when-bad
+PASS  A2-sends-the-exact-bytes-with-a-bearer-and-verifies-the-recorded-hash
+PASS  A3-malformed-and-non-json-replies-are-refused
+FAIL  A4-http-errors-are-single-shot-and-carry-only-a-status
+      Cannot read properties of null (reading 'message')
+PASS  A5-redirects-are-refused-not-followed
+PASS  A6-deadline-covers-connection-headers-AND-the-whole-response-body
+PASS  A7-runner-abort-signal-destroys-the-request
+PASS  A8-late-responses-cannot-arrive-after-settlement
+FAIL  A9-credential-never-appears-in-errors-or-output
+      Cannot read properties of null (reading 'message')
+PASS  A10-composes-with-runner-and-checkpoint-for-all-31-approved-attempts
+PASS  A11-every-failure-mode-stops-the-experiment-without-a-duplicate-request
+PASS  A12-runner-deadline-aborts-a-slow-adapter-and-leaves-no-late-arrival
+PASS  A13-adapter-stays-inactive-behind-the-committed-gate
+PASS  A14-static-no-environment-no-files-no-logging-no-retry-no-live-activation
+
+13 passed · 2 failed
+
+EXIT_CODE=1
+SIGNAL=null
+TIMED_OUT=false
+FINISHED_AT=2026-10-07T21:38:14.972Z

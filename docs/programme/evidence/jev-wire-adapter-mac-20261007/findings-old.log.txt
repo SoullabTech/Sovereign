@@ -1,0 +1,19 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs old
+HEAD=76fe39b2300a1e7d18bc953893c80f42c195c15c
+CWD=/Users/soullab/jev-wire-adapter-review-20261007
+STARTED_AT=2026-10-07T21:36:37.639496+00:00
+REPRODUCED      S1-documented-answer-envelope  documented `answers` response refused
+REPRODUCED      S2-nonclosed-response-parser  extra root / extra answer / confidence accepted
+REPRODUCED      D1-observation-not-persisted  returned ok; probability absent from disk
+REPRODUCED      D2-resume-after-ambiguous-crash  next attempt sent=true
+REPRODUCED      D3-valid-json-invalid-ledger  invalid event ignored; send proceeded
+REPRODUCED      D4-missing-ledger-allows-replay  same attempt sent 2×
+REPRODUCED      D5-two-process-same-attempt-race  2 send(s) from 2 processes
+REPRODUCED      T1-never-settling-transport  runner still waiting after 800 ms
+
+old: 8/8 findings reproduce
+EXPECTATION MET (old candidate fails all eight)
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-07T21:36:39.306951+00:00

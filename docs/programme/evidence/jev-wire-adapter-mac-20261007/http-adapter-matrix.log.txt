@@ -1,0 +1,30 @@
+COMMAND=/Users/soullab/.nvm/versions/node/v22.22.3/bin/node scripts/builder/__tests__/jev-wire-http-adapter-v1-matrix.mjs
+HEAD=76fe39b2300a1e7d18bc953893c80f42c195c15c
+CWD=/Users/soullab/jev-wire-adapter-review-20261007
+STARTED_AT=2026-10-07T21:35:22.548237+00:00
+REFERENCE  clean (0 failed)
+
+KILLED  DC-AD-REMOTE-BY-DEFAULT  on A1
+KILLED  DC-AD-HOST-NOT-PINNED  on A1
+KILLED  DC-AD-CONSTRUCTION-CREDENTIAL-UNCHECKED  on A1
+KILLED  DC-AD-SEND-CREDENTIAL-UNCHECKED  on A1b
+KILLED  DC-AD-REBUILDS-BODY  on A2   collateral: A10-composes-with-runner-and-checkpoint-for-all-31-approved-attempts
+KILLED  DC-AD-HASH-NOT-CHECKED  on A2
+KILLED  DC-AD-NO-CONTENT-TYPE-CHECK  on A3   collateral: A9-credential-never-appears-in-errors-or-output, A11-every-failure-mode-stops-the-experiment-without-a-duplicate-request
+KILLED  DC-AD-NO-SIZE-CAP  on A3
+KILLED  DC-AD-INCOMPLETE-BODY-ACCEPTED  on A3
+KILLED  DC-AD-HTTP-ERROR-ACCEPTED  on A4   collateral: A9-credential-never-appears-in-errors-or-output
+KILLED  DC-AD-RETRIES  on A4   collateral: A5-redirects-are-refused-not-followed, A8-late-responses-cannot-arrive-after-settlement, A11-every-failure-mode-stops-the-experiment-without-a-duplicate-request
+KILLED  DC-AD-FOLLOWS-REDIRECTS  on A5
+KILLED  DC-AD-DEADLINE-ENDS-AT-HEADERS  on A6
+KILLED  DC-AD-IDLE-ONLY-DEADLINE  on A6
+KILLED  DC-AD-SOCKET-LEFT-OPEN  on A6   collateral: A7-runner-abort-signal-destroys-the-request, A8-late-responses-cannot-arrive-after-settlement, A12-runner-deadline-aborts-a-slow-adapter-and-leaves-no-late-arrival
+KILLED  DC-AD-IGNORES-ABORT-SIGNAL  on A7   collateral: A12-runner-deadline-aborts-a-slow-adapter-and-leaves-no-late-arrival
+KILLED  DC-AD-LOGS-CREDENTIAL  on A9   collateral: A14-static-no-environment-no-files-no-logging-no-retry-no-live-activation
+KILLED  DC-AD-READS-ENVIRONMENT  on A14
+
+18/18 candidates killed on their named check · 0 problems
+
+EXIT_CODE=0
+EXECUTION_ERROR=None
+FINISHED_AT=2026-10-07T21:38:09.323886+00:00

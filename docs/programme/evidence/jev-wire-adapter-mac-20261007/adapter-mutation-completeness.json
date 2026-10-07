@@ -1,0 +1,371 @@
+{
+  "head": "76fe39b2300a1e7d18bc953893c80f42c195c15c",
+  "expected_candidates": 18,
+  "all_complete_and_named": true,
+  "results": [
+    {
+      "name": "DC-AD-REMOTE-BY-DEFAULT",
+      "expected": "A1",
+      "edits": [
+        [
+          "  if (allowRemote !== true) throw fail('ADAPTER_REMOTE_NOT_ALLOWED');\n",
+          ""
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:37:35.266Z",
+      "finished_at": "2026-10-07T21:37:46.367Z",
+      "log_sha256": "8a8b7fe67151f5132d4468164343da0d79dcde034a3b02c4e8ca5da7b998e9bc"
+    },
+    {
+      "name": "DC-AD-HOST-NOT-PINNED",
+      "expected": "A1",
+      "edits": [
+        [
+          "u.hostname !== PINNED_REMOTE.hostname",
+          "false"
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:37:35.267Z",
+      "finished_at": "2026-10-07T21:37:46.365Z",
+      "log_sha256": "f1d302c328843cf8450cf8ac20592c18c90f00fd6dbba31d72edf1a38fb3eb95"
+    },
+    {
+      "name": "DC-AD-CONSTRUCTION-CREDENTIAL-UNCHECKED",
+      "expected": "A1",
+      "edits": [
+        [
+          "  if (typeof credential === 'string' && !/^[\\x21-\\x7e]+$/.test(credential)) throw fail('ADAPTER_CREDENTIAL_INVALID');\n",
+          ""
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:37:35.268Z",
+      "finished_at": "2026-10-07T21:37:46.370Z",
+      "log_sha256": "a51534ccbb7fe1556e7a55b7e39bc5743f0e2b368242cfd588212df68939b13a"
+    },
+    {
+      "name": "DC-AD-SEND-CREDENTIAL-UNCHECKED",
+      "expected": "A1b",
+      "edits": [
+        [
+          "    if (typeof key !== 'string' || !/^[\\x21-\\x7e]+$/.test(key)) return Promise.reject(fail('ADAPTER_CREDENTIAL_INVALID'));\n",
+          ""
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:37:46.366Z",
+      "finished_at": "2026-10-07T21:37:57.647Z",
+      "log_sha256": "e3a3cfa3b926ecc2d3a0d5516752d26d32f45a5a877973ddd6da9952eec9c959"
+    },
+    {
+      "name": "DC-AD-REBUILDS-BODY",
+      "expected": "A2",
+      "edits": [
+        [
+          "const bytes = Buffer.from(bodyJson, 'utf8');",
+          "const bytes = Buffer.from(JSON.stringify(JSON.parse(bodyJson), null, 1), 'utf8');"
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:37:46.370Z",
+      "finished_at": "2026-10-07T21:37:57.631Z",
+      "log_sha256": "7c2211f78496ab524da0bcd824c30ddc590b943156d7039e5c9804e05832cc81"
+    },
+    {
+      "name": "DC-AD-HASH-NOT-CHECKED",
+      "expected": "A2",
+      "edits": [
+        [
+          "    if (bodyHash !== undefined && sha256(bodyJson) !== bodyHash) return Promise.reject(fail('ADAPTER_BODY_HASH_MISMATCH'));\n",
+          ""
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:37:46.370Z",
+      "finished_at": "2026-10-07T21:37:57.509Z",
+      "log_sha256": "8960ef905e28160753355ecd51ca1fb0bb9ba0a96dcb879c4c1f73869130b4d7"
+    },
+    {
+      "name": "DC-AD-NO-CONTENT-TYPE-CHECK",
+      "expected": "A3",
+      "edits": [
+        [
+          "        if (!/^application\\/json\\b/i.test(String(res.headers['content-type'] || ''))) return bail('ADAPTER_CONTENT_TYPE', { status });\n",
+          ""
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:37:57.513Z",
+      "finished_at": "2026-10-07T21:38:07.099Z",
+      "log_sha256": "22bf1aa486cb5604448d1311d2597c9bb0cad70a253217d2d0c9cbda39656a91"
+    },
+    {
+      "name": "DC-AD-NO-SIZE-CAP",
+      "expected": "A3",
+      "edits": [
+        [
+          "          if (size > maxResponseBytes) return bail('ADAPTER_RESPONSE_TOO_LARGE');\n",
+          ""
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:37:57.634Z",
+      "finished_at": "2026-10-07T21:38:08.705Z",
+      "log_sha256": "bf799fecaa49697e0d193188a3a26b0fb9018868e54ae7234f5f5f30e7e35a2b"
+    },
+    {
+      "name": "DC-AD-INCOMPLETE-BODY-ACCEPTED",
+      "expected": "A3",
+      "edits": [
+        [
+          "        res.on('close', () => { if (!res.complete) bail('ADAPTER_RESPONSE_INCOMPLETE'); });\n",
+          ""
+        ],
+        [
+          "        res.on('error', () => bail('ADAPTER_RESPONSE_INCOMPLETE'));\n",
+          ""
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:37:57.647Z",
+      "finished_at": "2026-10-07T21:38:12.763Z",
+      "log_sha256": "5f76bbde72c129dfeb678bf31688f2a230c1c2309d699a306d8ff9ed7ebe1108"
+    },
+    {
+      "name": "DC-AD-HTTP-ERROR-ACCEPTED",
+      "expected": "A4",
+      "edits": [
+        [
+          "        if (status < 200 || status >= 300) return bail('ADAPTER_HTTP_ERROR', { status });\n",
+          ""
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:38:07.104Z",
+      "finished_at": "2026-10-07T21:38:14.972Z",
+      "log_sha256": "d17bd2baecc67eb0f8ab5996262a738a9907a4f9bfac6bbd62ea5a529b56cecb"
+    },
+    {
+      "name": "DC-AD-RETRIES",
+      "expected": "A4",
+      "edits": [
+        [
+          "send: (bodyJson, opts) => attempt(bodyJson, opts)",
+          "send: (bodyJson, opts) => attempt(bodyJson, opts).catch(() => attempt(bodyJson, opts))"
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:38:08.706Z",
+      "finished_at": "2026-10-07T21:38:15.582Z",
+      "log_sha256": "bfff4e8844224eda593329e24068cec9ac61409d989a8e184bf5ca03f4168a1a"
+    },
+    {
+      "name": "DC-AD-FOLLOWS-REDIRECTS",
+      "expected": "A5",
+      "edits": [
+        [
+          "if (status >= 300 && status < 400) return bail('ADAPTER_REDIRECT_REFUSED', { status });",
+          "if (status >= 300 && status < 400) { http.get(res.headers.location, (r2) => { r2.resume(); }).on('error', () => {}); return bail('ADAPTER_REDIRECT_REFUSED', { status }); }"
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:38:12.765Z",
+      "finished_at": "2026-10-07T21:38:19.596Z",
+      "log_sha256": "bf63db026f8b13c0803013af9ed1ddc66967c2c82a7532517b899bd321d6335e"
+    },
+    {
+      "name": "DC-AD-DEADLINE-ENDS-AT-HEADERS",
+      "expected": "A6",
+      "edits": [
+        [
+          "        response = res;\n",
+          "        response = res; clearTimeout(timer);\n"
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:38:14.976Z",
+      "finished_at": "2026-10-07T21:38:29.456Z",
+      "log_sha256": "a974bcb15fb46416aae2a0ffa8f28e5f7b38efafa522f3495a97e4fd2fe4219e"
+    },
+    {
+      "name": "DC-AD-IDLE-ONLY-DEADLINE",
+      "expected": "A6",
+      "edits": [
+        [
+          "        res.on('data', (chunk) => {\n          size += chunk.length;",
+          "        res.on('data', (chunk) => {\n          arm(); size += chunk.length;"
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:38:15.582Z",
+      "finished_at": "2026-10-07T21:38:28.490Z",
+      "log_sha256": "61bfbfcb6c456de7f927db2f08e770b6491e13b1e2609326ed2c35f6a72ce0b0"
+    },
+    {
+      "name": "DC-AD-SOCKET-LEFT-OPEN",
+      "expected": "A6",
+      "edits": [
+        [
+          "        try { if (response) response.destroy(); } catch { /* already closed */ }\n        try { if (req) req.destroy(); } catch { /* already closed */ }\n",
+          ""
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:38:19.598Z",
+      "finished_at": "2026-10-07T21:38:27.617Z",
+      "log_sha256": "d7f9c748d17c07658aa35338f50fb66cbd8483c7d66c046b761aa85b78807d6d"
+    },
+    {
+      "name": "DC-AD-IGNORES-ABORT-SIGNAL",
+      "expected": "A7",
+      "edits": [
+        [
+          "      if (signal) signal.addEventListener('abort', onAbort, { once: true });\n",
+          "      void onAbort;\n"
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:38:27.621Z",
+      "finished_at": "2026-10-07T21:38:39.868Z",
+      "log_sha256": "ef17d0b667c2d12a2ad59c603f88780b4fa9dc3f792fc0dcd6b93d061d22dbb3"
+    },
+    {
+      "name": "DC-AD-LOGS-CREDENTIAL",
+      "expected": "A9",
+      "edits": [
+        [
+          "      const bail = (code, extra) => {\n",
+          "      const bail = (code, extra) => {\n        console.error('failed with Authorization: Bearer ' + key);\n"
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:38:28.491Z",
+      "finished_at": "2026-10-07T21:38:37.826Z",
+      "log_sha256": "2acb6687bbb20f7977f8e7b9d4eac9a3eb0453894c23b6d9d28a0805ebb8c977"
+    },
+    {
+      "name": "DC-AD-READS-ENVIRONMENT",
+      "expected": "A14",
+      "edits": [
+        [
+          "export const PINNED_REMOTE",
+          "const _k = process.env.JEV_KEY;\nexport const PINNED_REMOTE"
+        ]
+      ],
+      "exit_code": 1,
+      "signal": null,
+      "timed_out": false,
+      "checks_completed": 15,
+      "complete": true,
+      "named_failure": true,
+      "accepted": true,
+      "started_at": "2026-10-07T21:38:29.457Z",
+      "finished_at": "2026-10-07T21:38:39.068Z",
+      "log_sha256": "e663febc6976dac1219d26c32eff15b680ff1976d738ccd19b5bd70cfb332e35"
+    }
+  ]
+}

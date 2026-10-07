@@ -1,0 +1,225 @@
+{
+  "head": "76fe39b2300a1e7d18bc953893c80f42c195c15c",
+  "code_test_commit": "0dadf2f8a3567a653a8d644a2a1a26afad57289b",
+  "cwd": "/Users/soullab/jev-wire-adapter-review-20261007",
+  "tests": "loopback mock and fake transports only",
+  "credential": "dummy only; test environment allowlisted",
+  "new_packages_installed": false,
+  "checks": [
+    {
+      "name": "http-adapter-proof-1",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:13.131669+00:00",
+      "finished_at": "2026-10-07T21:35:22.590871+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/http-adapter-proof-1.log",
+      "sha256": "f7485a40f345db5131cf31364477523cca374f40840f602b7aaf1525918d3497"
+    },
+    {
+      "name": "http-adapter-proof-2",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:13.131839+00:00",
+      "finished_at": "2026-10-07T21:35:22.592444+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/http-adapter-proof-2.log",
+      "sha256": "d154a686429e971c0b570d932e2a346a23e7aecad6d6044b0db1b36e7f7999f5"
+    },
+    {
+      "name": "http-adapter-proof-3",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:13.131947+00:00",
+      "finished_at": "2026-10-07T21:35:22.547792+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/http-adapter-proof-3.log",
+      "sha256": "dcd982a15e5e18f9091d087384d4e9862801150654b59c9fa9d27bf32e584a67"
+    },
+    {
+      "name": "http-adapter-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-http-adapter-v1-matrix.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:22.548237+00:00",
+      "finished_at": "2026-10-07T21:38:09.323886+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/http-adapter-matrix.log",
+      "sha256": "f3815fc381d1d3f3bf4e6f9339805e66252437c1c9bb5ba88365321b556e85c6"
+    },
+    {
+      "name": "checkpoint-proof-1",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:22.591179+00:00",
+      "finished_at": "2026-10-07T21:35:25.633207+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/checkpoint-proof-1.log",
+      "sha256": "c3a6cb8b8781f42c188d2585e2b1e96ab0813da5a215af2f985fedb80f2d0397"
+    },
+    {
+      "name": "checkpoint-proof-2",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:22.592570+00:00",
+      "finished_at": "2026-10-07T21:35:25.675487+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/checkpoint-proof-2.log",
+      "sha256": "a7351442460c41e0c06c2687343ceb47db7e6bfabc2f196a2886a3f33772a468"
+    },
+    {
+      "name": "checkpoint-proof-3",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:25.637085+00:00",
+      "finished_at": "2026-10-07T21:35:29.491745+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/checkpoint-proof-3.log",
+      "sha256": "d983602e60b38d054ea2bbfe723b97a3893bf76da18ea7c20ac157fbff2ec2f0"
+    },
+    {
+      "name": "checkpoint-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-checkpoint-v1-matrix.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:25.679024+00:00",
+      "finished_at": "2026-10-07T21:36:37.637281+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/checkpoint-matrix.log",
+      "sha256": "eafeb5e197297f22d523c40fdb6b80667851385583f02a2569ce0ceb2ded2ff2"
+    },
+    {
+      "name": "wire-proof",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:29.495162+00:00",
+      "finished_at": "2026-10-07T21:35:33.456136+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/wire-proof.log",
+      "sha256": "e903961dcda3fe7cf49858b7aed21680788267727040ad46ed91723c89b8daaf"
+    },
+    {
+      "name": "wire-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-matrix.mjs"
+      ],
+      "started_at": "2026-10-07T21:35:33.456468+00:00",
+      "finished_at": "2026-10-07T21:38:54.285633+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/wire-matrix.log",
+      "sha256": "a83968bf5e582ecd08774f0e482b0251d88ba5f291ffe0c97af6c5645e7afb44"
+    },
+    {
+      "name": "findings-old",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "old"
+      ],
+      "started_at": "2026-10-07T21:36:37.639496+00:00",
+      "finished_at": "2026-10-07T21:36:39.306951+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/findings-old.log",
+      "sha256": "30272970c9083a150319fa6a8b3b352a239765f4bb9998b06fb5f8796fed677d"
+    },
+    {
+      "name": "findings-new",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-wire-v1-findings-repro.mjs",
+        "new"
+      ],
+      "started_at": "2026-10-07T21:36:39.308025+00:00",
+      "finished_at": "2026-10-07T21:36:40.353645+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/findings-new.log",
+      "sha256": "a6513a7ee7840695122966b0085663e3fd60f59d3c9e88164935440c5563cab9"
+    },
+    {
+      "name": "J1-freeze",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/verify-jarvis-jev-j1-freeze.mjs"
+      ],
+      "started_at": "2026-10-07T21:36:40.356814+00:00",
+      "finished_at": "2026-10-07T21:36:40.648150+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/J1-freeze.log",
+      "sha256": "10ee78b8f2c04a2c886e0022760862563bdeb492e1e38aec85d85615f63679f3"
+    },
+    {
+      "name": "J1-host",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "scripts/builder/__tests__/jev-judgment-host-v1-proof.mjs"
+      ],
+      "started_at": "2026-10-07T21:36:40.649953+00:00",
+      "finished_at": "2026-10-07T21:36:40.729432+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/J1-host.log",
+      "sha256": "3bb9f810726484b79396374d51e79fd4b82e772953d15928e89043cee520af15"
+    },
+    {
+      "name": "J1-matrix",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/tsx/dist/cli.mjs",
+        "tests/constitutional/jarvis-jev-j1/matrix.ts"
+      ],
+      "started_at": "2026-10-07T21:36:40.730565+00:00",
+      "finished_at": "2026-10-07T21:36:41.139193+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/J1-matrix.log",
+      "sha256": "d1b870c53561110ad2bce4fb19b20300684a9a018807edad29aa4a5aa3d951db"
+    },
+    {
+      "name": "J1-typecheck",
+      "command": [
+        "/Users/soullab/.nvm/versions/node/v22.22.3/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.jarvis-jev-j1.json"
+      ],
+      "started_at": "2026-10-07T21:36:41.141687+00:00",
+      "finished_at": "2026-10-07T21:36:41.643170+00:00",
+      "exit_code": 0,
+      "error": null,
+      "log": "/Users/soullab/jev-wire-adapter-review-evidence-20261007/J1-typecheck.log",
+      "sha256": "ade72812509fb0c1f6d3427647f14846fc854c95fc427674ae58306fd7fccf0b"
+    }
+  ],
+  "all_pass": true,
+  "source_clean": true
+}

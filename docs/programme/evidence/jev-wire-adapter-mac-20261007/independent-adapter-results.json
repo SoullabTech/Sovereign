@@ -1,0 +1,79 @@
+{
+  "observed_at": "2026-10-07T21:37:10.121Z",
+  "head": "76fe39b2300a1e7d18bc953893c80f42c195c15c",
+  "code_unchanged": true,
+  "source_sha256": {
+    "scripts/builder/jev-wire-http-adapter-v1.mjs": "f357a33c90f67678f688fffb9950d3a1ea3b09c2ff3cee100a752c1907f3ec9c",
+    "scripts/builder/jev-wire-v1.mjs": "16ba1e3bcec8fd5bc8a68077ab634a6faedd39877c58b98f206d1e3bcc7904f0",
+    "scripts/builder/jev-wire-checkpoint-v1.mjs": "e03c37c5cf663c1d68b610f5dfda728d9d96ff227ea289fbe657254322c5e704"
+  },
+  "credential": "dummy only",
+  "external_inference_requests": 0,
+  "local_root": "/tmp/jev-adapter-independent-SYNTHETIC-IjirNU",
+  "checkpoint_root": "/Volumes/T7 Shield/jev-adapter-independent-SYNTHETIC-ojf5jO",
+  "rows": [
+    {
+      "id": "E1-throwing-credential-callback",
+      "synchronous_throw": true,
+      "closed_adapter_error": false,
+      "dummy_credential_in_error": true,
+      "requests": 0,
+      "connections": 0
+    },
+    {
+      "id": "E2-abort-during-credential-acquisition",
+      "signal_aborted": true,
+      "requests": 1,
+      "connections": 1,
+      "response_returned": true,
+      "error": null
+    },
+    {
+      "id": "E3-invalid-response-limit-NaN",
+      "configured_limit": "NaN",
+      "requests": 1,
+      "response_bytes": 70118,
+      "accepted": true,
+      "error": null,
+      "scope": "explicit invalid configuration; default limit tested separately"
+    },
+    {
+      "id": "E3-invalid-response-limit-Infinity",
+      "configured_limit": "Infinity",
+      "requests": 1,
+      "response_bytes": 70118,
+      "accepted": true,
+      "error": null,
+      "scope": "explicit invalid configuration; default limit tested separately"
+    },
+    {
+      "id": "CONTROL-default-size-cap",
+      "pass": true,
+      "code": "ADAPTER_RESPONSE_TOO_LARGE",
+      "requests": 1
+    },
+    {
+      "id": "CONTROL-31-local-http-Mac-T7",
+      "pass": true,
+      "requests": 31,
+      "anchored_and_hash_equal_at_server": 31,
+      "anchored_completions": 31,
+      "observations": 31,
+      "replay_reason": "ATTEMPT_ALREADY_USED",
+      "off_reason": "RESPONSE_SHAPE_UNWITNESSED",
+      "requests_through_committed_gate": 0,
+      "simulated_cost": 0.0003905999999999999,
+      "ledger_device": 16777230,
+      "checkpoint_device": 16777244
+    },
+    {
+      "id": "CONTROL-default-30000ms-deadline",
+      "pass": true,
+      "elapsed_ms": 30002,
+      "code": "ADAPTER_TIMEOUT",
+      "requests": 1,
+      "server_sockets_after_grace": 0,
+      "scope": "loopback headers stall, not DNS or TLS handshake"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+/** Exercise the documented read-only command on a synthetic copy only. */
+import {mkdtempSync,mkdirSync,readFileSync,copyFileSync,writeFileSync,readdirSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join,resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
+const repo=resolve(process.argv[2]),out=resolve(process.argv[3]);
+const W=await import(pathToFileURL(join(repo,'scripts/builder/jev-wire-v1.mjs')));
+const CK=await import(pathToFileURL(join(repo,'scripts/builder/jev-wire-checkpoint-v1.mjs')));
+const root=mkdtempSync(join(tmpdir(),'jev-runbook-SYNTHETIC-'));for(const n of ['ledger','anchor','copy-ledger','copy-anchor'])mkdirSync(join(root,n));
+const L=join(root,'ledger','ledger.jsonl'),C=join(root,'anchor','anchor.json');
+const pair=CK.createCheckpointedLedger(W.createLedger(L),C);pair.initialize();
+pair.reserveIfAllowed({kind:'reserved',attempt_id:'F01',wire_body_hash:W.planAttempt('F01').bodyHash,table_version:W.QUESTION_TABLE.table_version,reserve_usd:W.BUDGET.reserve_usd,at:Date.now()},()=>null);
+const a=join(root,'copy-ledger','ledger.jsonl'),b=join(root,'copy-anchor','anchor.json');copyFileSync(L,a);copyFileSync(C,b);
+const hash=p=>createHash('sha256').update(readFileSync(p)).digest('hex');const originals=[hash(L),hash(C)];const copies=[hash(a),hash(b)];
+const command="import('./scripts/builder/jev-wire-v1.mjs').then(m=>{const l=m.createLedger(process.argv[1]);console.log(JSON.stringify(l.state(),(k,v)=>v instanceof Set?[...v]:v,1))})";
+const child=spawnSync(process.execPath,['-e',command,a],{cwd:repo,encoding:'utf8',timeout:5000});assert.equal(child.status,0,child.stderr);const state=JSON.parse(child.stdout);assert.deepEqual(state.unresolved,['F01']);
+const paired=CK.createCheckpointedLedger(W.createLedger(a),b).verify();assert.equal(paired.consistent,true);
+assert.deepEqual([hash(L),hash(C)],originals);assert.deepEqual([hash(a),hash(b)],copies);
+const result={head:'76fe39b2300a1e7d18bc953893c80f42c195c15c',node:process.version,command,exit_code:child.status,unresolved:state.unresolved,attempts:state.attempts,consistent:paired.consistent,original_bytes_unchanged:true,copy_bytes_unchanged:true,copy_directory_files:readdirSync(join(root,'copy-ledger')).sort(),scope:'state() command read-only; pair.verify() creates/removes its own lock on the disposable copy',no_network:true};
+writeFileSync(join(out,'runbook-triage-result.json'),JSON.stringify(result,null,2)+'\n',{mode:0o600});console.log(JSON.stringify(result));

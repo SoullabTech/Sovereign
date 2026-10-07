@@ -1,0 +1,18 @@
+{
+  "head": "76fe39b2300a1e7d18bc953893c80f42c195c15c",
+  "node": "v22.22.3",
+  "command": "import('./scripts/builder/jev-wire-v1.mjs').then(m=>{const l=m.createLedger(process.argv[1]);console.log(JSON.stringify(l.state(),(k,v)=>v instanceof Set?[...v]:v,1))})",
+  "exit_code": 0,
+  "unresolved": [
+    "F01"
+  ],
+  "attempts": 1,
+  "consistent": true,
+  "original_bytes_unchanged": true,
+  "copy_bytes_unchanged": true,
+  "copy_directory_files": [
+    "ledger.jsonl"
+  ],
+  "scope": "state() command read-only; pair.verify() creates/removes its own lock on the disposable copy",
+  "no_network": true
+}
