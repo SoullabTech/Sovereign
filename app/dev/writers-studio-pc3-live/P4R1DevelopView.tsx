@@ -2845,6 +2845,24 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
               superseded={selectedObservation.state === 'superseded'}
               initialQuestion={dialoguePrompt}
               autoSendInitialQuestion={Boolean(dialoguePrompt)}
+              afterMaiaTurn={({ threadId, lastMaiaTurnIndex, lastMaiaTurnBody }) => {
+                const sectionId = props.observationWorkTargets[selectedObservation.key]
+                  ?? props.currentSectionId;
+                if (!sectionId) return null;
+                return (
+                  <button
+                    type="button"
+                    className="p4r1-conversation-next"
+                    onClick={() => props.onCraftFromConversation(sectionId, {
+                      sourceThreadId: threadId,
+                      sourceMaiaTurnIndex: lastMaiaTurnIndex,
+                      sourceMaiaTurnBody: lastMaiaTurnBody,
+                    })}
+                  >
+                    Work this into the writing →
+                  </button>
+                );
+              }}
               onClose={() => {
                 setTalking(false);
                 setDialoguePrompt('');
