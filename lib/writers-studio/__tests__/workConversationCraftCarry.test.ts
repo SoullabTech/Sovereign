@@ -45,6 +45,7 @@ describe('R8G Work conversation → Craft carry', () => {
     expect(out.ok).toBe(true);
     if (!out.ok) return;
     expect(out.carry.sourceMaiaTurnIndex).toBe(3);
+    expect(out.carry.sourceAnchorKind).toBe('work');
     expect(out.carry.memberTurns.map((t) => t.turnIndex)).toEqual([0, 2]);
     expect(out.carry.maiaTurns.map((t) => t.turnIndex)).toEqual([1, 3]);
     expect(out.carry.memberTurns.map((t) => t.body).join(' ')).not.toContain('Later words after the handoff');
@@ -52,6 +53,34 @@ describe('R8G Work conversation → Craft carry', () => {
       'member.writer_prior_work_conversation',
       'system.writer_prior_work_conversation',
     ]);
+  });
+
+  it('carries a body-authorized observation dialogue without collapsing authorship', async () => {
+    loadThreadMock.mockResolvedValue({
+      id: 'observation-thread-1',
+      manuscriptId: 'ms-1',
+      anchor: { on: 'observation', readingId: 'reading-1', observationKey: 'o1' },
+      reading: null,
+      canonicalAtOpen: 'c1',
+      initiatedBy: 'author',
+      openedAt: new Date(),
+      turns,
+    });
+
+    const out = await resolveWorkConversationCraftCarry({
+      memberId: 'member-1',
+      receiverThreadId: 'editorial-thread-1',
+      sourceThreadId: 'observation-thread-1',
+      sourceMaiaTurnIndex: 3,
+    });
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.carry.sourceAnchorKind).toBe('observation');
+    expect(out.carry.memberTurns.map((t) => t.body)).toEqual([
+      'I want the reader to feel this.',
+      'The spiral should feel lived, not taught.',
+    ]);
+    expect(out.carry.maiaTurns.at(-1)?.body).toContain('explanation keeps the reader at a distance');
   });
 
   it('refuses a browser-named boundary that is not a MAIA turn', async () => {
