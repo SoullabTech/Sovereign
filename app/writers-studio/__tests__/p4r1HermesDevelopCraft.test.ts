@@ -7,6 +7,7 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 describe('R8H Hermes Develop Craft canvas', () => {
   const host = read('app/dev/writers-studio-p4r1/P4R1StudioHost.tsx');
   const develop = read('app/dev/writers-studio-pc3-live/P4R1DevelopView.tsx');
+  const observationDialogue = read('app/writers-studio/develop/ObservationDialogue.tsx');
   const developController = read('app/dev/writers-studio-pc3-live/P4R1DevelopController.tsx');
   const craftController = read('app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx');
   const canvas = read('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
@@ -37,6 +38,16 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(developController).toContain('query.set(CRAFT_SOURCE_THREAD, carry.sourceThreadId)');
     expect(craftController).toContain('resolved-craft-hint');
     expect(craftController).toContain("arrivalInsight?.readingId ?? 'conversation-only'");
+  });
+
+  it('keeps Hermes intact across a permission-to-read observation dialogue', () => {
+    expect(observationDialogue).toContain('afterMaiaTurn?: ReactNode');
+    expect(observationDialogue).toContain("lastTurn?.speaker === 'maia'");
+    expect(observationDialogue).toContain('data-observation-after-maia-turn');
+    expect(observationDialogue).toContain('question: pausedQuestion.current');
+    expect(develop).toContain('props.observationWorkTargets[selectedObservation.key]');
+    expect(develop).toContain('Work this into the writing →');
+    expect(develop).toContain('sourceMaiaTurnBody: lastMaiaTurnBody');
   });
 
   it('makes the manuscript non-destructive and selectable in Develop Craft', () => {
