@@ -73,6 +73,15 @@ import {
   writeRelationshipReturnClient,
 } from '@/lib/writersStudio/rebuild/returnStateClient';
 import { P4R1Pc3WriteEditView, type Pc3HeldPassage } from './P4R1Pc3WriteEditView';
+import { fetchReading, requestDevelopmentalReading } from '@/lib/writersStudio/developClient';
+import { readingView } from '@/lib/writersStudio/developPresentation';
+import {
+  craftReadingContext,
+  craftReadingScope,
+  craftZoomLabel,
+  detectCraftRereadIntent,
+} from '@/lib/writersStudio/craftScopeR1';
+import { runWholeManuscriptReview } from '@/lib/writersStudio/studio/wholeManuscriptReview';
 
 interface ContextReady {
   state: 'section_aware';
@@ -186,6 +195,8 @@ export default function FlagshipWriteEditController({
   const [suggestedVersionId, setSuggestedVersionId] = useState<string | null>(null);
   const [appliedVersionId, setAppliedVersionId] = useState<string | null>(null);
   const [editorialBusy, setEditorialBusy] = useState(false);
+  const [craftWorkingText, setCraftWorkingText] = useState('');
+  const [craftActivity, setCraftActivity] = useState<string | null>(null);
   const [adoptionBusy, setAdoptionBusy] = useState(false);
   const [memberVersionBusy, setMemberVersionBusy] = useState(false);
   const [editorialFailure, setEditorialFailure] = useState<string | null>(null);
@@ -904,6 +915,113 @@ export default function FlagshipWriteEditController({
     craftSourceMaiaTurnIndex,
   ]);
 
+  const sendCraftEditorial = useCallback(async (
+    requestText?: string,
+    options?: { proposalPolicy?: ProposalPolicy; proposalRequested?: boolean },
+  ) => {
+    const text = (requestText ?? editorialDraft).trim();
+    if (!text || !context || !focusId || editorialBusy || craftActivity) return;
+
+    const intent = detectCraftRereadIntent(text);
+    if (!intent || intent.zoom === 'passage') {
+      await sendEditorial(text, options);
+      return;
+    }
+
+    const scope = craftReadingScope(intent.zoom, context.sections, focusId);
+    if (!scope) {
+      setEditorialFailure('MAIA could not establish the requested reading scope from this place. Nothing was changed.');
+      return;
+    }
+
+    const zoomLabel = craftZoomLabel(intent.zoom);
+    setEditorialFailure(null);
+    setCraftActivity(`Reading the ${zoomLabel}…`);
+
+    try {
+      let governedContext = '';
+
+      if (intent.lens) {
+        setCraftActivity(`Reading the ${zoomLabel} through ${intent.lens}…`);
+        const commissioned = await requestDevelopmentalReading(
+          context.manuscriptId,
+          intent.lens,
+          scope,
+        );
+        if (!commissioned.ok) {
+          setEditorialFailure(
+            `MAIA could not complete the ${zoomLabel} reread (${commissioned.refusal}). The manuscript is unchanged.`,
+          );
+          return;
+        }
+        const fetched = await fetchReading(context.manuscriptId, commissioned.readingId);
+        if (!fetched.ok) {
+          setEditorialFailure(
+            `The fresh ${zoomLabel} reread could not be reopened (${fetched.refusal}). The manuscript is unchanged.`,
+          );
+          return;
+        }
+        governedContext = craftReadingContext(readingView(
+          fetched.payload.reading,
+          fetched.payload.assessment,
+          fetched.payload.sections,
+        ));
+      } else {
+        const bundle = await runWholeManuscriptReview(
+          context.manuscriptId,
+          (done, total, lens) => {
+            setCraftActivity(`Reading the ${zoomLabel} · ${Math.min(done + 1, total)}/${total} · ${lens}…`);
+          },
+          undefined,
+          scope,
+        );
+        if (bundle.payloads.length === 0) {
+          const refusal = bundle.failures[0]?.refusal ?? 'no_reading';
+          setEditorialFailure(
+            `MAIA could not complete the broad ${zoomLabel} reread (${refusal}). The manuscript is unchanged.`,
+          );
+          return;
+        }
+        governedContext = bundle.payloads.map((payload) => craftReadingContext(readingView(
+          payload.reading,
+          payload.assessment,
+          payload.sections,
+        ))).join('\n\n---\n\n');
+      }
+
+      setCraftActivity(`Relating the ${zoomLabel} reread back to this passage…`);
+
+      const prompt = [
+        text,
+        '',
+        `You just completed a fresh governed reread of the ${zoomLabel} before answering this Craft question.`,
+        'Use that broader reread as context, not as an edit instruction or verdict.',
+        'The exact active passage and the writer-owned working passage below remain the authority for any wording change.',
+        '',
+        governedContext,
+        '',
+        'Writer-owned current working passage:',
+        craftWorkingText || selectedPassage?.text || '',
+        '',
+        'Return to the writer’s actual question. If a wording change is useful, keep it bounded to the active locus unless the writer explicitly asks to move elsewhere.',
+      ].join('\n');
+
+      setCraftActivity(null);
+      await sendEditorial(prompt, options);
+    } finally {
+      setCraftActivity(null);
+    }
+  }, [
+    editorialDraft,
+    context,
+    focusId,
+    editorialBusy,
+    craftActivity,
+    sendEditorial,
+    craftWorkingText,
+    selectedPassage?.text,
+  ]);
+
   const refreshContext = useCallback(async (): Promise<ContextReady | null> => {
     if (!context) return null;
     const response = await apiFetch(
@@ -1564,6 +1682,9 @@ export default function FlagshipWriteEditController({
             sessionPosture={sessionPosture}
             onChooseSessionPosture={chooseSessionPosture}
             editorialBusy={editorialBusy}
+            craftWorkingText={craftWorkingText}
+            onCraftWorkingTextChange={setCraftWorkingText}
+            craftActivity={craftActivity}
             adoptionBusy={adoptionBusy}
             memberVersionBusy={memberVersionBusy}
             editorialFailure={editorialFailure}
@@ -1583,7 +1704,11 @@ export default function FlagshipWriteEditController({
             )}
             onDepth={setEditorialDepth}
             onInstruction={setEditorialDraft}
-            onSendEditorial={(text, options) => void sendEditorial(text, options)}
+            onSendEditorial={(text, options) => void (
+              developCraft
+                ? sendCraftEditorial(text, options)
+                : sendEditorial(text, options)
+            )}
             onSelectVersion={(id) => {
               setSuggestedVersionId(id);
               setAdoptionOutcome(null);
