@@ -1,0 +1,156 @@
+{
+  "work_unit_envelope": {
+    "work_unit": {
+      "work_unit_version": "W0.v1",
+      "identity": {
+        "id": "rgr-05a-flow-reducibility-20261007",
+        "programme": "RELATIONAL-GEOMETRY-REASONING",
+        "parent_work_unit": "rgr-05-flow-primitive-challenge-20261007",
+        "objective": "Test whether Flow requires primitive status or is faithfully representable as a first-class derived dynamical object over the ten RGR-02 headings.",
+        "work_class": "RESEARCH",
+        "task_shape": "deep_reasoning"
+      },
+      "context": {
+        "context_refs": [
+          "RGR-05 Flow Primitive Challenge",
+          "RGR-02 closed ten-heading formal vocabulary",
+          "AIN OS Flow Integration Contract"
+        ],
+        "evidence_refs": [
+          "Encyclopedia of Mathematics: Flow (continuous-time dynamical system)",
+          "Stanford/Cornell network-flow definitions",
+          "Holme & Saram\u00e4ki: Temporal Networks",
+          "Baez & Pollard: A Compositional Framework for Reaction Networks",
+          "Fong & Spivak: An Invitation to Applied Category Theory"
+        ],
+        "assumptions": [
+          "M0 and M1 receive equal conceptual standing at challenge entry.",
+          "No human/clinical/Elemental data is required to decide formal reducibility.",
+          "Architectural usefulness does not imply primitive status."
+        ],
+        "unknowns": [
+          "Whether any candidate Flow property resists representation by the ten-heading scaffold.",
+          "Whether future empirical 05B evidence will show advantages for an explicit derived Flow object."
+        ]
+      },
+      "scope": {
+        "repository": "SoullabTech/Sovereign",
+        "base_ref": "92666ba2aae419b6b9b30d8955f6142128ecdaf3",
+        "allowed_paths": [
+          "docs/programme/RGR-05A_FLOW_REDUCIBILITY_RESULT_2026-10-07.md",
+          "docs/programme/RGR-05A_SOURCE_GROUNDING_2026-10-07.md",
+          "docs/programme/RGR-05A_WORK_UNIT_2026-10-07.json",
+          "tests/constitutional/rgr-flow-05a/matrix.mjs"
+        ],
+        "forbidden_paths": [
+          "app",
+          "lib",
+          "components",
+          "database",
+          "prisma",
+          "jarvis-desktop"
+        ]
+      },
+      "authority": {
+        "repository_read": true,
+        "repository_write": "worktree",
+        "shell": "bounded_write",
+        "network_external": true,
+        "provider_spend": false,
+        "external_disclosure": "public-source-query-only",
+        "merge": false,
+        "deploy": false,
+        "production_read": false,
+        "production_write": false
+      },
+      "evaluation": {
+        "acceptance_conditions": [
+          "Attempt genuine M0 reduction across all candidate Flow fields.",
+          "Use independent formal sources from multiple mathematical traditions.",
+          "Do not use Burger, CSF spiritual interpretation, or Elemental Alchemy to decide primitive status.",
+          "Preserve RGR-02 without modification.",
+          "Return NOT EARNED if Flow is representable without hidden variables.",
+          "Keep runtime and member-facing authority closed."
+        ],
+        "falsification_conditions": [
+          "A candidate Flow field is declared irreducible without showing why existing RGR roles cannot express it.",
+          "The result confuses centrality with formal primitiveness.",
+          "The result relies on Elemental labels or metaphysical claims.",
+          "A runtime implementation is smuggled into the formal challenge."
+        ],
+        "stop_conditions": [
+          "Formal source grounding cannot distinguish definition from analogy.",
+          "Member/private data becomes necessary.",
+          "Any runtime/schema/migration/deployment change becomes necessary."
+        ],
+        "verifier_results": []
+      },
+      "provenance": {
+        "creator": "ChatGPT/JARVIS-assist RGR-05A",
+        "authorizing_act": "founder:rgr05-flow-primitive-challenge-20261007",
+        "source_commits": [
+          "92666ba2aae419b6b9b30d8955f6142128ecdaf3"
+        ],
+        "resulting_commits": [],
+        "timestamps": [
+          "2026-10-07"
+        ]
+      },
+      "state": {
+        "lifecycle_state": "CLOSED",
+        "disposition": "closed",
+        "supersedes": null
+      }
+    },
+    "guard": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-05a-flow-reducibility-20261007",
+      "current_state": "CLOSED",
+      "authorized_core_snapshot": "Formal reducibility challenge only; Flow primitive status may be rejected; no runtime/member authority."
+    }
+  },
+  "standing": "CLOSED_BY_FOUNDER_ADJUDICATION",
+  "candidate_disposition": {
+    "m0_derived_flow": "SURVIVES",
+    "m1_primitive_flow": "NOT_EARNED",
+    "ain_architectural_flow": "RECOMMEND_FIRST_CLASS_DERIVED_OBJECT",
+    "weather": "HYPOTHESIS_AS_CONTEXT_FIELD_MODULATION",
+    "elemental_operators": "HYPOTHESIS_ONLY",
+    "runtime": "NOT_AUTHORIZED"
+  },
+  "founder_adjudication": {
+    "date": "2026-10-07",
+    "act": "Accept RGR-05A. Flow is architecturally primary and formally derived; primitive #11 is not presently earned. Preserve Flow as a first-class dynamical object in AIN OS. Preserve Weather as candidate field modulation and the Elements as candidate operators on Flow. Open RGR-05B, the Synthetic Flow Representation Benchmark.",
+    "accepted_disposition": {
+      "m0_derived_flow": "ACCEPTED_SURVIVES",
+      "m1_primitive_flow": "NOT_EARNED",
+      "flow_d": "FIRST_CLASS_DERIVED_DYNAMICAL_OBJECT",
+      "weather": "CANDIDATE_FIELD_MODULATION",
+      "elemental_operators": "CANDIDATE_ONLY"
+    },
+    "successor_authority": {
+      "rgr_05b_synthetic_flow_representation_benchmark": "OPEN",
+      "rgr_05c_elemental_operator_comparison": "CLOSED",
+      "rgr_05d_ain_flow_witness_shadow": "CLOSED",
+      "maia_runtime_change": "NOT_AUTHORIZED",
+      "member_facing_flow_inference": "NOT_AUTHORIZED",
+      "memory_schema_migration": "NOT_AUTHORIZED",
+      "deployment": "NOT_AUTHORIZED"
+    },
+    "lifecycle_transitions": [
+      {
+        "from": "EVIDENCE_READY",
+        "to": "ADJUDICATED",
+        "evidence_ref": "founder:rgr05a-adjudication-20261007",
+        "reason_code": "RGR05A_FOUNDER_ADJUDICATED",
+        "adjudication": "accepted"
+      },
+      {
+        "from": "ADJUDICATED",
+        "to": "CLOSED",
+        "evidence_ref": "founder:rgr05a-closure-20261007",
+        "reason_code": "RGR05A_FOUNDER_CLOSED"
+      }
+    ]
+  }
+}
