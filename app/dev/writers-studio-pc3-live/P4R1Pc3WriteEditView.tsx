@@ -101,6 +101,9 @@ export type P4R1Pc3WriteEditViewProps = {
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
   editorialBusy: boolean;
+  craftWorkingText: string;
+  onCraftWorkingTextChange: (text: string) => void;
+  craftActivity: string | null;
   adoptionBusy: boolean;
   memberVersionBusy: boolean;
   editorialFailure: string | null;
@@ -220,7 +223,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [craftView, setCraftView] = useState<'markup' | 'preview'>('markup');
-  const [craftWorkingText, setCraftWorkingText] = useState('');
   const [proseView, setProseView] = useState(() => !props.held && !props.carriedInsight);
   const wholeEditRef = useRef<WholeManuscriptSurfaceHandle | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -235,15 +237,6 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     setBlankArrivalDismissed(false);
     setWorkConversationStarter('');
   }, [props.focusId]);
-
-  useEffect(() => {
-    setCraftWorkingText(props.held?.text ?? '');
-  }, [
-    props.held?.draftSectionId,
-    props.held?.start,
-    props.held?.end,
-    props.held?.text,
-  ]);
 
   useEffect(() => {
     /* R8L — Develop Craft has ONE room: manuscript + Craftsman. A stale
@@ -357,7 +350,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     return <main className="fr-root"><div style={{ padding: 32 }}>This manuscript has no editable place to open.</div></main>;
   }
 
-  const busy = props.editorialBusy || props.adoptionBusy || props.memberVersionBusy;
+  const busy = props.editorialBusy || Boolean(props.craftActivity) || props.adoptionBusy || props.memberVersionBusy;
   const currentBody = props.focusId ? props.writing.bodyOf(props.focusId) : '';
   const currentText = props.held?.draftSectionId === props.focusId
     ? props.held.text
@@ -1036,7 +1029,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onApply={props.onApply}
       appliedVersionId={props.appliedVersionId}
       onUndo={props.onUndo}
-      onWorkingTextChange={setCraftWorkingText}
+      onWorkingTextChange={props.onCraftWorkingTextChange}
     />
   ) : null;
 
@@ -1088,7 +1081,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       lastMaiaTurn={props.lastMaiaEditorialTurn}
       busy={busy}
       message={editorialMessage}
-      workingText={craftWorkingText || props.held?.text || ''}
+      workingText={props.craftWorkingText || props.held?.text || ''}
+      activity={props.craftActivity}
       sessionPosture={props.sessionPosture}
       onChooseSessionPosture={props.onChooseSessionPosture}
       onSend={props.onSendEditorial}
