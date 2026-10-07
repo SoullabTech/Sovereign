@@ -220,6 +220,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
   const [isolatedEditorial, setIsolatedEditorial] = useState(false);
   const [railSelectionId, setRailSelectionId] = useState<string | null>(null);
   const [craftView, setCraftView] = useState<'markup' | 'preview'>('markup');
+  const [craftWorkingText, setCraftWorkingText] = useState('');
   const [proseView, setProseView] = useState(() => !props.held && !props.carriedInsight);
   const wholeEditRef = useRef<WholeManuscriptSurfaceHandle | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -234,6 +235,15 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
     setBlankArrivalDismissed(false);
     setWorkConversationStarter('');
   }, [props.focusId]);
+
+  useEffect(() => {
+    setCraftWorkingText(props.held?.text ?? '');
+  }, [
+    props.held?.draftSectionId,
+    props.held?.start,
+    props.held?.end,
+    props.held?.text,
+  ]);
 
   useEffect(() => {
     /* R8L — Develop Craft has ONE room: manuscript + Craftsman. A stale
@@ -1026,6 +1036,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       onApply={props.onApply}
       appliedVersionId={props.appliedVersionId}
       onUndo={props.onUndo}
+      onWorkingTextChange={setCraftWorkingText}
     />
   ) : null;
 
@@ -1077,6 +1088,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       lastMaiaTurn={props.lastMaiaEditorialTurn}
       busy={busy}
       message={editorialMessage}
+      workingText={craftWorkingText || props.held?.text || ''}
       sessionPosture={props.sessionPosture}
       onChooseSessionPosture={props.onChooseSessionPosture}
       onSend={props.onSendEditorial}
