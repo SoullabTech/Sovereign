@@ -85,8 +85,7 @@ const CANDIDATES = [
   // ── repair pass: observation persistence ──
   ['DC-OBSERVATION-NOT-PERSISTED', 'W28', [[OBSERVED_APPEND, '    void 0;']]],
   ['DC-OK-ON-PERSIST-FAILURE', 'W28', [[
-    "return Object.freeze({ sent: true, outcome: 'observation_not_persisted', wire_body_hash: plan.bodyHash });",
-    "return Object.freeze({ sent: true, outcome: 'ok', observation });"]]],
+    "outcome: anchored ? 'observation_persisted_checkpoint_failed' : 'observation_not_persisted'", "outcome: 'ok'"]]],
   // ── repair pass: deadline, restart ──
   ['DC-NO-DEADLINE', 'W29', [
     ['raw = await Promise.race([sending, deadline]);', 'raw = await sending;'],
