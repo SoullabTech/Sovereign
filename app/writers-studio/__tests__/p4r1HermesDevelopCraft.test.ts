@@ -111,7 +111,8 @@ describe("Develop → Hermes → Craftsman's Table R1", () => {
 
   it('grounds every Craft turn in the writer current working copy and can widen scope explicitly', () => {
     expect(craftController).toContain('Writer-owned current working passage:');
-    expect(craftController).toContain('detectCraftRereadIntent(text)');
+    expect(craftController).toContain('detectCraftRereadIntent(intentText)');
+    expect(craftController).toContain('const intentText = options?.displayText ?? text;');
     expect(craftController).toContain('requestDevelopmentalReading(');
     expect(craftController).toContain('runWholeManuscriptReview(');
     expect(craftController).toContain('The governed reread reflects the canonical manuscript state.');

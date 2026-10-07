@@ -26,50 +26,53 @@ export function craftWorkingEdits(
   proposed: string,
 ): readonly CraftWorkingEdit[] {
   const segments = editorialSegments(original, proposed);
-  const byId = new Map<number, {
+  const source = points(original);
+  const target = points(proposed);
+  const spans = new Map<number, {
     id: number;
     start: number;
     end: number;
-    from: string;
-    to: string;
+    targetStart: number;
+    targetEnd: number;
     protectedSpan: boolean;
-    firstSeen: number;
   }>();
-  let cursor = 0;
-  let order = 0;
+  let sourceCursor = 0;
+  let targetCursor = 0;
 
   for (const segment of segments) {
+    const length = points(segment.text).length;
     if (segment.kind === 'same') {
-      cursor += points(segment.text).length;
+      sourceCursor += length;
+      targetCursor += length;
       continue;
     }
     if (segment.editId === null) continue;
-
-    const existing = byId.get(segment.editId) ?? {
+    const span = spans.get(segment.editId) ?? {
       id: segment.editId,
-      start: cursor,
-      end: cursor,
-      from: '',
-      to: '',
+      start: sourceCursor,
+      end: sourceCursor,
+      targetStart: targetCursor,
+      targetEnd: targetCursor,
       protectedSpan: false,
-      firstSeen: order++,
     };
-
-    if (segment.kind === 'del') {
-      if (!existing.from) existing.start = cursor;
-      existing.from += segment.text;
-      cursor += points(segment.text).length;
-      existing.end = cursor;
-    } else {
-      existing.to += segment.text;
-    }
-    existing.protectedSpan = existing.protectedSpan || segment.protectedSpan;
-    byId.set(segment.editId, existing);
+    if (segment.kind === 'del') sourceCursor += length;
+    if (segment.kind === 'ins') targetCursor += length;
+    span.end = sourceCursor;
+    span.targetEnd = targetCursor;
+    span.protectedSpan ||= segment.protectedSpan;
+    spans.set(segment.editId, span);
   }
 
-  return [...byId.values()]
-    .sort((a, b) => a.start - b.start || a.firstSeen - b.firstSeen)
-    .map(({ firstSeen: _firstSeen, ...edit }) => edit);
+  // One edit can span unchanged whitespace between changed words. Slice both
+  // exact source intervals: concatenating only del/ins tokens loses those spaces.
+  return [...spans.values()].map((span) => ({
+    id: span.id,
+    start: span.start,
+    end: span.end,
+    from: source.slice(span.start, span.end).join(''),
+    to: target.slice(span.targetStart, span.targetEnd).join(''),
+    protectedSpan: span.protectedSpan,
+  }));
 }
 
 export function initialCraftDecisions(

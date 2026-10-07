@@ -32,6 +32,7 @@ export function useEditingLatitude(workId = '') {
   const [mayRemoveParagraphs, setMayRemoveParagraphs] = useState(false);
   /** ⭐ The writer's per-Work release of the discuss-first order. */
   const [mayProposeImmediately, setMayProposeState] = useState(false);
+  const [resolvedWorkId, setResolvedWorkId] = useState<string | null>(null);
 
   /* ⛔ Restored in an effect, not in the initializer: `window` does not exist
      during server render, and the protective default is the correct first
@@ -40,6 +41,7 @@ export function useEditingLatitude(workId = '') {
     const restored = readStoredLatitude();
     setLatitudeState(restored.latitude);
     setMayProposeState(readSequenceOverride(workId));
+    setResolvedWorkId(workId);
     /* ⛔ `restored.mayRemoveParagraphs` is always false by construction — see
        `restoreDeclaration`. Not read here, so this surface cannot become the
        place the asymmetry is quietly undone. */
@@ -56,6 +58,7 @@ export function useEditingLatitude(workId = '') {
   }, []);
 
   return {
+    resolved: resolvedWorkId === workId,
     latitude, setLatitude, mayRemoveParagraphs, setMayRemoveParagraphs,
     mayProposeImmediately, setMayProposeImmediately,
   };

@@ -51,9 +51,7 @@ export function detectCraftRereadIntent(text: string): CraftRereadIntent | null 
  * bounded wording proposal. This is independent of the standing preference
  * that lets MAIA volunteer wording without being asked.
  */
-export function craftProposalRequested(text: string): boolean {
-  return /\b(?:revise|rewrite|reword|rephrase|edit\s+(?:this|these|the\s+(?:sentence|paragraph|passage|words?))|show\s+me\s+(?:(?:a|an|another|two|three)\s+)?(?:wording|version|revision|rewrite|alternative)|give\s+me\s+(?:(?:a|an|another|two|three)\s+)?(?:wording|version|revision|alternative)|how\s+would\s+you\s+(?:write|word|phrase)|try\s+(?:(?:some|a)\s+)?(?:wording|revision|rewrite)|offer\s+(?:(?:an?|some)\s+)?(?:edit|wording)\s+(?:option|suggestion)s?)\b/i.test(text);
-}
+export { craftProposalRequested } from './craftSuggestionPolicyR1';
 
 export function craftReadingScope(
   zoom: CraftZoom,

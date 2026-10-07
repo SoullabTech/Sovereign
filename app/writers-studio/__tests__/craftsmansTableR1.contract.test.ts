@@ -116,9 +116,13 @@ describe("Craftsman's Table R1", () => {
 
   it('treats natural writer language as explicit wording authorization without changing the standing preference', () => {
     expect(scope).toContain('craftProposalRequested');
-    expect(controller).toContain('craftProposalRequested(text)');
-    expect(controller).toContain("proposalPolicy: 'allow' as const");
-    expect(controller).toContain('proposalRequested: true');
+    expect(controller).toContain('resolveCraftSuggestionPolicy({');
+    expect(controller).toContain('request: intentText');
+    expect(controller).toContain('proactive: mayProposeImmediately');
+    expect(controller).toContain('proposalPolicy: options?.proposalPolicy');
+    expect(controller).toContain('proposalRequested: options?.proposalRequested');
+    expect(controller).toContain('craftPrimerPrompt(mayProposeImmediately), arrivalPolicy');
+    expect(controller).toContain('|| !editingSettingsResolved');
   });
 
   it('presents a clean Craft conversation without exposing orchestration prompts', () => {

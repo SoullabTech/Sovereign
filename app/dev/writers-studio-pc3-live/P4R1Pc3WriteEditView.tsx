@@ -102,7 +102,7 @@ export type P4R1Pc3WriteEditViewProps = {
   sessionPosture: CurrentPostureRead;
   onChooseSessionPosture: (sanctuary: boolean) => void;
   editorialBusy: boolean;
-  craftWorkingText: string;
+  craftWorkingText: string | null;
   onCraftWorkingTextChange: (text: string) => void;
   craftActivity: string | null;
   craftDialogue: readonly CraftDialogueTurn[];

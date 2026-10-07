@@ -45,6 +45,7 @@ import {
 } from '@/lib/manuscript/editorialScope/contract';
 import { appendEditorialNote } from '@/lib/writersStudio/editorialApproaches';
 import { craftPrimerPrompt } from '@/lib/writersStudio/craftCanvas';
+import { craftArrivalPolicy, resolveCraftSuggestionPolicy } from '@/lib/writersStudio/craftSuggestionPolicyR1';
 import {
   CRAFT_HINT_END,
   CRAFT_HINT_START,
@@ -76,7 +77,6 @@ import { P4R1Pc3WriteEditView, type Pc3HeldPassage } from './P4R1Pc3WriteEditVie
 import { fetchReading, requestDevelopmentalReading } from '@/lib/writersStudio/developClient';
 import { readingView } from '@/lib/writersStudio/developPresentation';
 import {
-  craftProposalRequested,
   craftReadingContext,
   craftReadingScope,
   craftZoomLabel,
@@ -201,7 +201,7 @@ export default function FlagshipWriteEditController({
   const [suggestedVersionId, setSuggestedVersionId] = useState<string | null>(null);
   const [appliedVersionId, setAppliedVersionId] = useState<string | null>(null);
   const [editorialBusy, setEditorialBusy] = useState(false);
-  const [craftWorkingText, setCraftWorkingText] = useState('');
+  const [craftWorkingText, setCraftWorkingText] = useState<string | null>(null);
   const [craftActivity, setCraftActivity] = useState<string | null>(null);
   const [craftDialogue, setCraftDialogue] = useState<readonly CraftDialogueTurn[]>([]);
   const craftDialogueSeq = useRef(0);
@@ -218,7 +218,7 @@ export default function FlagshipWriteEditController({
   });
 
   useEffect(() => {
-    setCraftWorkingText(selectedPassage?.text ?? '');
+    setCraftWorkingText(selectedPassage?.text ?? null);
   }, [
     selectedPassage?.draftSectionId,
     selectedPassage?.start,
@@ -277,6 +277,7 @@ export default function FlagshipWriteEditController({
     latitude: editLatitude, setLatitude: setEditLatitude,
     mayRemoveParagraphs, setMayRemoveParagraphs,
     mayProposeImmediately, setMayProposeImmediately,
+    resolved: editingSettingsResolved,
   } = useEditingLatitude(context?.manuscriptId ?? '');
 
   const focusInsightConsumed = useRef<string | null>(null);
@@ -964,7 +965,7 @@ export default function FlagshipWriteEditController({
     options?: CraftSendOptions,
   ) => {
     const text = (requestText ?? editorialDraft).trim();
-    if (!text || !context || !focusId || editorialBusy || craftActivity) return;
+    if (!text || !context || !focusId || editorialBusy || craftActivity || !editingSettingsResolved) return;
 
     const displayText = options?.displayText?.trim() ?? '';
     if (displayText) {
@@ -976,29 +977,27 @@ export default function FlagshipWriteEditController({
       }));
     }
 
-    const currentWorking = craftWorkingText || selectedPassage?.text || '';
-    const localPrompt = currentWorking.trim()
+    const currentWorking = craftWorkingText ?? selectedPassage?.text ?? '';
+    const localPrompt = craftWorkingText !== null || selectedPassage !== null
       ? [
           text,
           '',
           'Writer-owned current working passage:',
           currentWorking,
           '',
-          'Treat this as the wording the writer is shaping now. Do not silently restore an earlier MAIA proposal.',
+          'Treat this as the wording the writer is shaping now. An empty working passage is intentional, not missing context. Do not silently restore an earlier MAIA proposal.',
         ].join('\n')
       : text;
-    const explicitProposal = options?.proposalRequested === true || craftProposalRequested(text);
-    const wireOptions = options
-      ? {
-          ...(options.proposalPolicy ? { proposalPolicy: options.proposalPolicy } : {}),
-          ...(options.proposalRequested !== undefined ? { proposalRequested: options.proposalRequested } : {}),
-        }
-      : undefined;
-    const effectiveOptions = explicitProposal
-      ? { ...wireOptions, proposalPolicy: 'allow' as const, proposalRequested: true }
-      : wireOptions;
+    // Intent comes from the writer's words, not the prompt scaffold or quoted copy.
+    const intentText = options?.displayText ?? text;
+    const effectiveOptions = resolveCraftSuggestionPolicy({
+      request: intentText,
+      proactive: mayProposeImmediately,
+      proposalPolicy: options?.proposalPolicy,
+      proposalRequested: options?.proposalRequested,
+    });
 
-    const intent = detectCraftRereadIntent(text);
+    const intent = detectCraftRereadIntent(intentText);
     if (!intent || intent.zoom === 'passage') {
       await sendEditorial(localPrompt, effectiveOptions);
       return;
@@ -1095,6 +1094,8 @@ export default function FlagshipWriteEditController({
     focusId,
     editorialBusy,
     craftActivity,
+    editingSettingsResolved,
+    mayProposeImmediately,
     sendEditorial,
     craftWorkingText,
     selectedPassage?.text,
@@ -1570,6 +1571,7 @@ export default function FlagshipWriteEditController({
       || !selectedPassage
       || !focusId
       || editorialBusy
+      || !editingSettingsResolved
       || !sessionPosture.resolved
       || sessionPosture.sanctuary
     ) return;
@@ -1613,10 +1615,12 @@ export default function FlagshipWriteEditController({
     if (autoCraftKey.current === key) return;
     autoCraftKey.current = key;
 
-    void sendEditorial(craftPrimerPrompt(), {
-      proposalPolicy: 'allow',
-      proposalRequested: true,
+    const arrivalPolicy = craftArrivalPolicy({
+      resolved: editingSettingsResolved,
+      proactive: mayProposeImmediately,
     });
+    if (!arrivalPolicy) return;
+    void sendEditorial(craftPrimerPrompt(mayProposeImmediately), arrivalPolicy);
   }, [
     incomingAction,
     craftArrival,
@@ -1630,6 +1634,8 @@ export default function FlagshipWriteEditController({
     focusId,
     editorialBusy,
     sessionPosture,
+    editingSettingsResolved,
+    mayProposeImmediately,
     sendEditorial,
   ]);
 

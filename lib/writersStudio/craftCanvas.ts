@@ -13,7 +13,16 @@ export const CRAFT_CANVAS_ACTIONS = {
  * small field of possibilities, and demonstrate one bounded move in the copy.
  * The demonstration teaches craft; it does not replace authorship.
  */
-export function craftPrimerPrompt(): string {
+export function craftPrimerPrompt(suggestWording = true): string {
+  if (!suggestWording) {
+    return [
+      'We have arrived at the exact passage from our conversation.',
+      'Keep the carried writer intention, question, and protected language in view; do not ask the writer to explain them again.',
+      'The writer has chosen to receive wording suggestions only when requested.',
+      'Briefly connect the passage to what we just discovered and describe one useful craft move in ordinary language, without supplying replacement wording.',
+      'Stay ready to help the writer compose, request examples, or ask for a suggestion here. Nothing is applied automatically.',
+    ].join('\n');
+  }
   return [
     'We are moving from understanding into making on the Craftsman’s Table.',
     'Use the carried conversation as context for what the writer is trying to accomplish. Do not make the writer explain it again.',
