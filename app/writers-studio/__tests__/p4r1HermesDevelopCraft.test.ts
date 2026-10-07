@@ -45,9 +45,21 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(observationDialogue).toContain("lastTurn?.speaker === 'maia'");
     expect(observationDialogue).toContain('data-observation-after-maia-turn');
     expect(observationDialogue).toContain('question: pausedQuestion.current');
+    expect(observationDialogue).toContain("if (mode.kind !== 'open') return");
+    expect(observationDialogue).toContain("mode.kind !== 'resume'");
     expect(develop).toContain('props.observationWorkTargets[selectedObservation.key]');
     expect(develop).toContain('Work this into the writing →');
     expect(develop).toContain('sourceMaiaTurnBody: lastMaiaTurnBody');
+  });
+
+  it('docks the Craftsman relationship beside the manuscript instead of floating over it', () => {
+    expect(canvas).toContain("const craftEditorialInShell = props.surfaceMode === 'develop-craft' && editorial");
+    expect(canvas).toContain('maia={shellMaia}');
+    expect(canvas).toContain('maiaResizable={shellHasCraftEditorial}');
+    expect(canvas).toContain("props.surfaceMode === 'develop-craft' ? null : editorial");
+    expect(css).toContain('.fr-maia > .p4r1-context-card.p4r1-editorial');
+    expect(css).toContain('position:relative;');
+    expect(css).toContain('width:100%;');
   });
 
   it('makes the manuscript non-destructive and selectable in Develop Craft', () => {
