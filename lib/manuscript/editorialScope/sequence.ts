@@ -87,14 +87,22 @@ export const ALL_OUTCOME_KINDS = [
 
 export const DISCUSSION_ONLY_KINDS = ['reply_only', 'reply_with_direction'] as const;
 export const REPLY_ONLY_KINDS = ['reply_only'] as const;
+export const PROPOSAL_REQUIRED_KINDS = ['reply_with_proposal'] as const;
 
-export type ProposalPolicy = 'allow' | 'reply_only';
+/**
+ * allow      — wording is available but MAIA may decide discussion is better.
+ * reply_only — this turn is exploratory; candidate wording is unavailable.
+ * require    — the writer explicitly asked for candidate wording in this turn.
+ *              A successful turn must therefore carry one bounded proposal.
+ */
+export type ProposalPolicy = 'allow' | 'reply_only' | 'require';
 
 export function availableOutcomeKinds(
   gated: boolean,
   proposalPolicy: ProposalPolicy = 'allow',
 ): readonly string[] {
   if (proposalPolicy === 'reply_only') return REPLY_ONLY_KINDS;
+  if (proposalPolicy === 'require') return PROPOSAL_REQUIRED_KINDS;
   /* ⭐ `reply_with_direction` SURVIVES THE GATE on purpose. Steering the
      exchange — *let me try this less abstractly first* — is discussion, and it
      is the act the first turn most often wants. ⛔ Narrowing to `reply_only`
@@ -131,16 +139,31 @@ export const SEQUENCE_REFUSAL_DETAIL =
 
 
 export function proposalPolicyInstruction(policy: ProposalPolicy): string | null {
-  if (policy !== 'reply_only') return null;
-  return [
-    'EXPLORATORY TURN — respond without creating candidate wording or a Direction.',
-    'Stay in discussion, teaching, examples, ideas, or analysis only.',
-    'Illustrative wording may appear inside your reply when the writer asked for examples, but it is not a proposal and must not be persisted as one.',
-    '⛔ Only reply_only is available on this turn.',
-  ].join('\n');
+  if (policy === 'reply_only') {
+    return [
+      'EXPLORATORY TURN — respond without creating candidate wording or a Direction.',
+      'Stay in discussion, teaching, examples, ideas, or analysis only.',
+      'Illustrative wording may appear inside your reply when the writer asked for examples, but it is not a proposal and must not be persisted as one.',
+      '⛔ Only reply_only is available on this turn.',
+    ].join('\n');
+  }
+  if (policy === 'require') {
+    return [
+      'EXPLICIT WORDING REQUEST — the writer asked you to put a bounded suggestion into the marked copy in this turn.',
+      'A successful answer MUST therefore return reply_with_proposal.',
+      'Keep the proposal inside the exact active locus and inside the writer’s declared revision latitude.',
+      'The reply may explain the move, protect what already works, and name tradeoffs, but it may not substitute another round of discussion for the requested craft act.',
+      '⛔ Only reply_with_proposal is available on this turn. Nothing is applied automatically.',
+    ].join('\n');
+  }
+  return null;
 }
 
 export const REPLY_ONLY_REFUSAL_DETAIL =
   'MAIA returned a proposal or Direction during an exploratory turn. '
   + 'That turn was opened for discussion, teaching, examples, ideas, or deeper reasoning only. '
   + 'Nothing was added to the proposal chain.';
+
+export const PROPOSAL_REQUIRED_REFUSAL_DETAIL =
+  'You explicitly asked MAIA for wording in this turn, but the response did not contain a bounded proposal. '
+  + 'Nothing was added to the marked copy.';

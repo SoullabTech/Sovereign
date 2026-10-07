@@ -1,7 +1,7 @@
 export type CraftDialogueSpeaker = 'writer' | 'maia';
 
 export interface CraftSendOptions {
-  readonly proposalPolicy?: 'allow' | 'reply_only';
+  readonly proposalPolicy?: 'allow' | 'reply_only' | 'require';
   readonly proposalRequested?: boolean;
   /** What the writer should see in the Craft conversation, never prompt scaffolding. */
   readonly displayText?: string;

@@ -77,6 +77,7 @@ import {
   UNFAMILIAR_BOUND, measureVoiceIntrusion, voiceNote,
 } from '../editorialScope/voice';
 import {
+  PROPOSAL_REQUIRED_REFUSAL_DETAIL,
   REPLY_ONLY_REFUSAL_DETAIL,
   SEQUENCE_REFUSAL_DETAIL,
   availableOutcomeKinds,
@@ -189,6 +190,8 @@ export type EditorialTurnRefusal =
   | 'sequence_discussion_first'
   /** ⛔ Exploratory reply-only turn returned a Direction or proposal anyway. */
   | 'proposal_policy_reply_only'
+  /** ⛔ Explicit wording request returned no bounded proposal. */
+  | 'proposal_policy_requires_proposal'
   /**
    * ⭐⭐ THE PROPOSAL EXCEEDED THE AUTHOR'S DECLARED LATITUDE.
    * ⛔ Nothing was written, and the wording is not shown.
@@ -380,13 +383,15 @@ export async function runEditorialTurn(
      there, MAIA discusses before offering wording — unless the writer has
      flipped it for this Work. Resolved ONCE, like the scope, so the schema she
      is given and the backstop she is judged by cannot disagree. */
-  const gated = sequenceGateActive({
-    declaration: {
-      latitude: scope.latitude,
-      mayProposeImmediately: input.mayProposeImmediately === true,
-    },
-    hasPriorMaiaTurn: assembly.hasPriorMaiaTurn,
-  });
+  const gated = proposalPolicy === 'require'
+    ? false
+    : sequenceGateActive({
+        declaration: {
+          latitude: scope.latitude,
+          mayProposeImmediately: input.mayProposeImmediately === true,
+        },
+        hasPriorMaiaTurn: assembly.hasPriorMaiaTurn,
+      });
 
   /* 3 ⭐⭐ FREEZE. Everything after this uses THIS object. */
   const invocation: EditorialInvocation = {
@@ -519,6 +524,14 @@ export async function runEditorialTurn(
      which is why this lane narrows the vocabulary instead of refusing. */
   if (proposalPolicy === 'reply_only' && admission.outcome.kind !== 'reply_only') {
     return { ok: false, reason: 'proposal_policy_reply_only', detail: REPLY_ONLY_REFUSAL_DETAIL };
+  }
+
+  if (proposalPolicy === 'require' && admission.outcome.kind !== 'reply_with_proposal') {
+    return {
+      ok: false,
+      reason: 'proposal_policy_requires_proposal',
+      detail: PROPOSAL_REQUIRED_REFUSAL_DETAIL,
+    };
   }
 
   if (gated && admission.outcome.kind === 'reply_with_proposal') {

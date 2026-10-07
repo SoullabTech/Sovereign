@@ -77,6 +77,14 @@ describe('R8G Work conversation → Craft editorial ingress', () => {
     }));
   });
 
+  it('carries an explicit required-proposal policy to the runtime', async () => {
+    const res = await POST(request({ ...base, proposalPolicy: 'require' }));
+    expect(res.status).toBe(502);
+    expect(runTurn).toHaveBeenCalledWith(expect.objectContaining({
+      proposalPolicy: 'require',
+    }));
+  });
+
   it('requires source thread and boundary turn together', async () => {
     const { workConversationMaiaTurnIndex: _drop, ...missingTurn } = base;
     const res = await POST(request(missingTurn));

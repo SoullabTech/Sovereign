@@ -43,7 +43,7 @@ export interface EditorialDancePanelProps {
   onChooseSessionPosture: (sanctuary: boolean) => void;
 
   onSelectVersion: (id: string) => void;
-  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean }) => void;
+  onSend: (text?: string, options?: { proposalPolicy?: 'allow' | 'reply_only' | 'require'; proposalRequested?: boolean }) => void;
   onSaveMember: (draft: MemberRevisionDraft) => Promise<boolean>;
   onApply: () => void;
   onUndo?: () => void;
@@ -406,7 +406,7 @@ export default function EditorialDancePanel(props: EditorialDancePanelProps) {
   const begin = (
     prompt: string,
     depth?: EditorialDepth,
-    options?: { proposalPolicy?: 'allow' | 'reply_only'; proposalRequested?: boolean },
+    options?: { proposalPolicy?: 'allow' | 'reply_only' | 'require'; proposalRequested?: boolean },
   ) => {
     if (depth) props.onDepth(depth);
     props.onSend(withOrigin(prompt), options);

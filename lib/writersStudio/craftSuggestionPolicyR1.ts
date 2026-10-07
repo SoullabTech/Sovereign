@@ -21,9 +21,10 @@ export function craftProposalRequested(text: string): boolean {
   if (craftWordingWithheld(text)) return false;
   const request = requestLanguage(text);
   const start = '(?:^|[.!?;,\\n]\\s*|\\b(?:and|then)\\s+)\\s*(?:(?:please|now|then)\\s+)*(?:(?:can|could|would|will)\\s+you\\s+(?:please\\s+)?)?';
-  const act = '(?:revise|rewrite|reword|rephrase|copyedit|line[ -]edit|edit\\s+(?:this|these|the\\s+(?:sentence|paragraph|passage|words?))|(?:show|give)\\s+me\\s+(?:(?:a|an|another|two|three|some)\\s+)?(?:wording|versions?|revisions?|rewrites?|alternatives?)|try\\s+(?:(?:some|a)\\s+)?(?:wording|revision|rewrite)|offer\\s+(?:(?:an?|some)\\s+)?(?:edit|wording)\\s+(?:options?|suggestions?))\\b';
+  const act = '(?:revise|rewrite|reword|rephrase|copyedit|line[ -]edit|edit\\s+(?:this|these|the\\s+(?:sentence|paragraph|passage|words?))|(?:show|give)\\s+me\\s+(?:(?:a|an|another|one|two|three|some)\\s+)?(?:(?:small|light|bounded|specific)\\s+)?(?:change|edit|suggestion|wording|version|revision|rewrite|alternative)s?|try\\s+(?:(?:some|a)\\s+)?(?:wording|revision|rewrite)|offer\\s+(?:(?:an?|some)\\s+)?(?:edit|wording)\\s+(?:options?|suggestions?))\\b';
   return new RegExp(start + act, 'i').test(request)
-    || /(?:^|[.!?;\n]\s*)\s*how\s+would\s+you\s+(?:write|word|phrase)\b/i.test(request);
+    || /(?:^|[.!?;\n]\s*)\s*how\s+would\s+you\s+(?:write|word|phrase)\b/i.test(request)
+    || /\bput\s+(?:the|your|a)\s+(?:suggestion|change|edit|wording)\s+directly\s+in(?:to)?\s+(?:the\s+)?(?:marked\s+)?copy\b/i.test(request);
 }
 
 export interface CraftSuggestionChoice {
@@ -46,7 +47,7 @@ export function resolveCraftSuggestionPolicy(choice: CraftSuggestionChoice): {
   }
   const requested = choice.proposalRequested === true || craftProposalRequested(choice.request);
   return {
-    proposalPolicy: requested || choice.proactive ? 'allow' : 'reply_only',
+    proposalPolicy: requested ? 'require' : choice.proactive ? 'allow' : 'reply_only',
     proposalRequested: requested,
   };
 }

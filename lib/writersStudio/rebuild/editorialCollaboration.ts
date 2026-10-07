@@ -233,6 +233,15 @@ export async function sendBoundEditorialTurn(
             : 'MAIA stayed in exploration. Nothing was added to the revision options.',
         };
       }
+      if (res.status === 409 && body?.error === 'proposal_policy_requires_proposal') {
+        return {
+          ok: false,
+          reason: 'turn_refused',
+          detail: typeof body?.detail === 'string'
+            ? body.detail
+            : 'You asked for wording, but MAIA did not return a bounded proposal. Nothing was added to the marked copy.',
+        };
+      }
       if (res.status === 409 && body?.error === 'noop_editorial_adjustment') {
         return {
           ok: false,

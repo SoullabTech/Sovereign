@@ -9,7 +9,7 @@ import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 
 type SendOptions = {
-  proposalPolicy?: 'allow' | 'reply_only';
+  proposalPolicy?: 'allow' | 'reply_only' | 'require';
   proposalRequested?: boolean;
 };
 

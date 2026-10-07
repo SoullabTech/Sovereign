@@ -14,11 +14,18 @@ describe('Craft R1 writer-selected suggestion posture', () => {
     }
   }
 
-  it('allows a requested suggestion without changing the standing setting', () => {
+  it('requires a requested suggestion without changing the standing setting', () => {
     const choice = { request: 'Show me two alternatives.', proactive: false };
-    expect(resolveCraftSuggestionPolicy(choice)).toEqual({ proposalPolicy: 'allow', proposalRequested: true });
+    expect(resolveCraftSuggestionPolicy(choice)).toEqual({ proposalPolicy: 'require', proposalRequested: true });
     expect(choice.proactive).toBe(false);
     expect(resolveCraftSuggestionPolicy({ ...choice, request: 'What works here?' }).proposalPolicy).toBe('reply_only');
+  });
+
+  it('recognizes the founder Chapter 10 marked-copy request as an explicit proposal act', () => {
+    const request = 'Using what we already discussed, show me one small change that helps the reader experience the spiral bodily and relationally. Keep Activating, Amplifying, Actualizing intact, preserve my cadence, and avoid making it over-written. Put the suggestion directly in the marked copy.';
+    expect(resolveCraftSuggestionPolicy({ request, proactive: false })).toEqual({
+      proposalPolicy: 'require', proposalRequested: true,
+    });
   });
 
   it('allows volunteering when the writer enabled it, without inventing an explicit request', () => {

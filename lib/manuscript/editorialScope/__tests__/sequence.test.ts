@@ -6,7 +6,7 @@
  */
 
 import {
-  ALL_OUTCOME_KINDS, DISCUSSION_ONLY_KINDS, SEQUENCE_REFUSAL_DETAIL,
+  ALL_OUTCOME_KINDS, DISCUSSION_ONLY_KINDS, PROPOSAL_REQUIRED_KINDS, SEQUENCE_REFUSAL_DETAIL,
   availableOutcomeKinds, sequenceGateActive, sequenceInstruction,
 } from '../sequence';
 import type { EditorialLatitude } from '../contract';
@@ -53,6 +53,12 @@ describe('WS-EDITORIAL-SCOPE-01 · sequence', () => {
 
   it('Q8 · ungated turns offer every kind', () => {
     expect(availableOutcomeKinds(false)).toContain('reply_with_proposal');
+  });
+
+  it('Q8a · an explicit wording request requires a proposal even where discussion-first would otherwise gate', () => {
+    expect(availableOutcomeKinds(true, 'require')).toEqual(PROPOSAL_REQUIRED_KINDS);
+    expect(availableOutcomeKinds(true, 'require')).toEqual(['reply_with_proposal']);
+    expect(availableOutcomeKinds(false, 'require')).toEqual(['reply_with_proposal']);
   });
 
   it('Q9 · the instruction exists only when the gate is on', () => {

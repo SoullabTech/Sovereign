@@ -171,8 +171,10 @@ function parseClosed(body: unknown): Parsed {
   let mayProposeImmediately = false;
   let proposalPolicy: ProposalPolicy = 'allow';
   if (b.proposalPolicy !== undefined) {
-    if (!(b.proposalPolicy === 'allow' || b.proposalPolicy === 'reply_only')) {
-      return { ok: false, error: 'proposalPolicy must be allow or reply_only' };
+    if (!(b.proposalPolicy === 'allow'
+      || b.proposalPolicy === 'reply_only'
+      || b.proposalPolicy === 'require')) {
+      return { ok: false, error: 'proposalPolicy must be allow, reply_only, or require' };
     }
     proposalPolicy = b.proposalPolicy;
   }
@@ -352,6 +354,7 @@ export async function POST(request: NextRequest) {
     const scopeRefused = turn.scope !== undefined || turn.voice !== undefined
       || turn.reason === 'sequence_discussion_first'
       || turn.reason === 'proposal_policy_reply_only'
+      || turn.reason === 'proposal_policy_requires_proposal'
       || turn.reason === 'noop_editorial_adjustment'
       || turn.reason === 'relationship_scope_unmeasured'
       || turn.reason === 'relationship_refused';;
