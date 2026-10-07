@@ -47,7 +47,7 @@
  * one of those is safe to act on.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   askForBody, authorizeSections, loadThread, threadsOn, type AskThreadView,
 } from '@/lib/writersStudio/askClient';
@@ -108,7 +108,7 @@ function locationLine(l: CurrentLocation | null): string | null {
 
 export default function ObservationDialogue({
   manuscriptId, readingId, observationKey, about, superseded, onClose,
-  initialQuestion = '', autoSendInitialQuestion = false,
+  initialQuestion = '', autoSendInitialQuestion = false, afterMaiaTurn,
 }: {
   manuscriptId: string;
   readingId: string;
@@ -123,6 +123,12 @@ export default function ObservationDialogue({
    * Sending still waits for thread-resume discovery so duplicate threads cannot
    * be created during the adopting window. */
   autoSendInitialQuestion?: boolean;
+  /** Hermes crossing: offered only when the latest persisted turn is MAIA's. */
+  afterMaiaTurn?: ReactNode | ((context: {
+    threadId: string;
+    lastMaiaTurnIndex: number;
+    lastMaiaTurnBody: string;
+  }) => ReactNode);
 }) {
   const [thread, setThread] = useState<AskThreadView | null>(null);
   /* HELD SEPARATELY FROM `thread`. A failed answer still has a threadId — the
@@ -293,6 +299,23 @@ export default function ObservationDialogue({
       ? 'This observation was made against an earlier state of the work. You can still talk about it; she has not reread the work.'
       : null);
 
+  /* R8J — a permission crossing does not end the relationship. The threshold is
+     tied to the latest persisted turn, not merely "some MAIA turn exists", so an
+     older response cannot become the Craft boundary while a writer question is
+     paused awaiting authority. */
+  const lastTurn = thread?.turns[thread.turns.length - 1] ?? null;
+  const afterMaiaTurnNode = afterMaiaTurn
+    && threadId
+    && lastTurn?.speaker === 'maia'
+    ? typeof afterMaiaTurn === 'function'
+      ? afterMaiaTurn({
+          threadId,
+          lastMaiaTurnIndex: lastTurn.index,
+          lastMaiaTurnBody: lastTurn.body,
+        })
+      : afterMaiaTurn
+    : null;
+
   return (
     <div
       data-observation-dialogue={observationKey}
@@ -384,6 +407,12 @@ export default function ObservationDialogue({
           ))}
         </div>
       )}
+
+      {afterMaiaTurnNode && !busy ? (
+        <div className="mt-3 pt-3 border-t" style={{ borderColor: PRESS.ruleSoft }} data-observation-after-maia-turn>
+          {afterMaiaTurnNode}
+        </div>
+      ) : null}
 
       {refusal && (
         <p className="text-[12px] leading-relaxed mt-3 opacity-80" data-dialogue-refusal>
