@@ -651,8 +651,22 @@ export default function WorkConversation({
       >
         <div style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.snug, marginBottom: SPACE.tight }}>
           <StudioText role="panelLabel" as="span">Ask MAIA</StudioText>
-          <StudioText role="metadata" tone="quiet" as="span">Write naturally · Enter sends · Shift+Enter adds a line</StudioText>
+          <StudioText role="metadata" tone="quiet" as="span">
+            {pending !== null
+              ? 'MAIA is still answering the previous turn · your draft is safe here'
+              : 'Write naturally · Enter sends · Shift+Enter adds a line'}
+          </StudioText>
         </div>
+        {pending !== null ? (
+          <StudioText
+            role="metadata"
+            tone="secondary"
+            data-maia-pending-notice="true"
+            style={{ marginBottom: SPACE.tight }}
+          >
+            You can keep writing while MAIA responds. Send will unlock when her answer returns.
+          </StudioText>
+        ) : null}
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -718,7 +732,7 @@ export default function WorkConversation({
               color: INK.primary,
             }}
           >
-            <StudioText role="metadata" as="span">Send</StudioText>
+            <StudioText role="metadata" as="span">{pending !== null ? 'Waiting…' : 'Send'}</StudioText>
           </button>
         </div>
       </div>
