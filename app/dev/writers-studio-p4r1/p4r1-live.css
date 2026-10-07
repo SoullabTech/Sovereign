@@ -4951,3 +4951,47 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
 .p4r1-root .p4r1-hermes-craft .p4r1-hermes-moves{
   display:none!important;
 }
+
+
+/* R8O — full capability, zero dashboard. "Ways to work" is a transient Hermes
+   menu; opening it must not displace or compete with the manuscript workbench. */
+.p4r1-root .p4r1-hermes-compose{
+  position:relative;
+}
+.p4r1-root .p4r1-hermes-quiet-options{
+  position:absolute;
+  left:22px;
+  right:22px;
+  bottom:132px;
+  z-index:12;
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px 11px;
+  padding:12px 14px;
+  border:1px solid var(--fr-line);
+  border-radius:10px;
+  background:color-mix(in srgb,var(--fr-panel) 97%,transparent);
+  box-shadow:0 14px 34px rgba(7,18,45,.16);
+  backdrop-filter:blur(12px);
+}
+.p4r1-root .p4r1-hermes-quiet-options button{
+  border:0;
+  border-bottom:1px solid transparent;
+  border-radius:0;
+  background:none;
+  color:var(--fr-ink2);
+  padding:5px 1px;
+  font:600 10.5px/1.2 var(--fr-sans-stack);
+  cursor:pointer;
+}
+.p4r1-root .p4r1-hermes-quiet-options button:hover{
+  color:var(--fr-action);
+  border-bottom-color:var(--fr-action-line);
+}
+@media(max-width:900px){
+  .p4r1-root .p4r1-hermes-quiet-options{
+    left:16px;
+    right:16px;
+    bottom:126px;
+  }
+}
