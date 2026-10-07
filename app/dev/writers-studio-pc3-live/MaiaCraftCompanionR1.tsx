@@ -8,6 +8,7 @@ import type {
 import type { EditorialDepth } from '@/lib/writersStudio/editorialDepth';
 import type { CurrentPostureRead } from '@/lib/sanctuary/currentClientPosture';
 import type { CraftDialogueTurn, CraftSendOptions } from '@/lib/writersStudio/craftDialogueR1';
+import { craftTargetKey, type CraftFocusTarget } from '@/lib/writersStudio/craftFocusR1';
 import {
   EDITORIAL_LATITUDES,
   LATITUDE_BANDS,
@@ -23,6 +24,8 @@ export type MaiaCraftCompanionR1Props = {
   message: string | null;
   activity: string | null;
   readingNotice?: string | null;
+  focusSuggestions?: readonly CraftFocusTarget[];
+  onMoveFocus?: (target: CraftFocusTarget) => boolean;
   dialogue: readonly CraftDialogueTurn[];
   editLatitude: EditorialLatitude;
   onEditLatitude: (value: EditorialLatitude) => void;
@@ -38,7 +41,12 @@ export type MaiaCraftCompanionR1Props = {
 };
 
 export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(() => {
+    try {
+      const key = 'ws-craft-composer-recovery:' + new URL(window.location.href).searchParams.get('m');
+      return window.sessionStorage.getItem(key) ?? '';
+    } catch { return ''; }
+  });
   const [toolsOpen, setToolsOpen] = useState(false);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
 
@@ -115,7 +123,7 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
                     className="p4r1-maia-craft-r1-turn"
                     data-speaker={turn.speaker}
                   >
-                    <span>{turn.speaker === 'writer' ? 'You' : 'MAIA'}</span>
+                    <span>{turn.speaker === 'writer' ? 'You' : turn.speaker === 'action' ? 'Canvas' : 'MAIA'}</span>
                     <p>{turn.body}</p>
                   </div>
                 ))}
@@ -142,6 +150,16 @@ export default function MaiaCraftCompanionR1(props: MaiaCraftCompanionR1Props) {
               <div className="p4r1-maia-craft-r1-activity" role="status">Working with the passage…</div>
             ) : null}
 
+            {props.focusSuggestions?.length && props.onMoveFocus ? (
+              <div className="p4r1-craft-focus-references" aria-label="Passages referenced by MAIA">
+                <small>From MAIA’s reading · choose a place to work</small>
+                {props.focusSuggestions.map(target => <div key={craftTargetKey(target)}>
+                  <b>{target.label}</b>
+                  <p>“{target.quote}”</p>
+                  <button type="button" disabled={props.busy} onClick={() => props.onMoveFocus?.(target)}>Work here →</button>
+                </div>)}
+              </div>
+            ) : null}
             {props.readingNotice ? <small role="status" data-craft-reading-coverage>{props.readingNotice}</small> : null}
             {props.message ? <small role="status">{props.message}</small> : null}
           </div>

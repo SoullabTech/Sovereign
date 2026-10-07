@@ -36,6 +36,7 @@ import {
 } from '@/lib/manuscript/editorialScope/contract';
 import type { ProposalPolicy } from '@/lib/manuscript/editorialScope/sequence';
 import { workingStyleFrom, type WriterWorkingStyle } from '@/lib/writersStudio/workingStyle';
+import { resolveCraftPassCarry, type ResolvedCraftPassCarry } from '@/lib/writers-studio/craftPassCarry';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,7 @@ const enabled = () => process.env.WRITERS_STUDIO_EDITORIAL_ENABLED === '1';
  * the mistake is legible rather than mysterious.
  */
 const TOP_KEYS = [
-  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry', 'workConversationThreadId', 'workConversationMaiaTurnIndex', 'workingStyle',
+  'threadId', 'act', 'sanctuary', 'scope', 'proposalPolicy', 'relationshipId', 'carry', 'workConversationThreadId', 'workConversationMaiaTurnIndex', 'workingStyle', 'craftPassThreadId', 'craftPassTurnIndex',
 ] as const;
 const CARRY_KEYS = ['kind', 'sourceEpisodeSequence'] as const;
 const ACT_KEYS = ['act', 'text', 'refersTo'] as const;
@@ -71,6 +72,8 @@ type Parsed =
       scope: EditorialScopeDeclaration;
       relationshipId: string | null;
       carry: { kind: 'prior_maia_editorial_turn'; sourceEpisodeSequence: number } | null;
+      craftPassThreadId: string | null;
+      craftPassTurnIndex: number | null;
       workConversationThreadId: string | null;
       workConversationMaiaTurnIndex: number | null;
       /** ⭐ The writer's PER-WORK release of the sequence gate. ⛔ Default false. */
@@ -142,6 +145,14 @@ function parseClosed(body: unknown): Parsed {
   }
   if ((workConversationThreadId === null) !== (workConversationMaiaTurnIndex === null)) {
     return { ok: false, error: 'workConversationThreadId and workConversationMaiaTurnIndex must be provided together' };
+  }
+
+  const craftPassThreadId = b.craftPassThreadId === undefined ? null : b.craftPassThreadId;
+  const craftPassTurnIndex = b.craftPassTurnIndex === undefined ? null : b.craftPassTurnIndex;
+  if ((craftPassThreadId === null) !== (craftPassTurnIndex === null)
+    || (craftPassThreadId !== null && (typeof craftPassThreadId !== 'string' || !craftPassThreadId
+      || !Number.isSafeInteger(craftPassTurnIndex) || Number(craftPassTurnIndex) < 0))) {
+    return { ok: false, error: 'craftPassThreadId and craftPassTurnIndex must name one prior editorial boundary' };
   }
 
   const a = b.act;
@@ -220,6 +231,8 @@ function parseClosed(body: unknown): Parsed {
     carry,
     workConversationThreadId,
     workConversationMaiaTurnIndex,
+    craftPassThreadId: craftPassThreadId as string | null,
+    craftPassTurnIndex: craftPassTurnIndex as number | null,
     mayProposeImmediately,
     proposalPolicy,
     workingStyle: workingStyleFrom(b.workingStyle),
@@ -305,6 +318,14 @@ export async function POST(request: NextRequest) {
     resolvedWorkConversationCarry = craftCarry.carry;
   }
 
+  let resolvedCraftPassCarry: ResolvedCraftPassCarry | undefined;
+  if (parsed.craftPassThreadId !== null) {
+    const prior = await resolveCraftPassCarry({ memberId, receiverThreadId: parsed.threadId,
+      sourceThreadId: parsed.craftPassThreadId, sourceTurnIndex: parsed.craftPassTurnIndex! });
+    if (!prior.ok) return NextResponse.json({ error: prior.reason, persisted: false }, { status: 409 });
+    resolvedCraftPassCarry = prior.carry;
+  }
+
   const act = await persistMemberEditorialAct({ memberId, threadId: parsed.threadId, act: parsed.act });
   if (!act.ok) {
     const status = act.reason === 'thread_not_found' ? 404 : 400;
@@ -318,6 +339,7 @@ export async function POST(request: NextRequest) {
     ...(parsed.relationshipId !== null ? { relationshipId: parsed.relationshipId } : {}),
     ...(resolvedCarry ? { carry: resolvedCarry } : {}),
     ...(resolvedWorkConversationCarry ? { workConversationCarry: resolvedWorkConversationCarry } : {}),
+    ...(resolvedCraftPassCarry ? { craftPassCarry: resolvedCraftPassCarry } : {}),
     currentTurnIndex: act.turnIndex,
     declaredAct: parsed.act.act,
     currentDirectionId: act.direction?.id ?? null,

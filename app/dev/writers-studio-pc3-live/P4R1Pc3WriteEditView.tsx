@@ -28,6 +28,8 @@ import RevisionManuscriptLayer, { type RevisionEdit } from './RevisionManuscript
 import EditorialDancePanel from './EditorialDancePanel';
 import HermesCraftPanel from './HermesCraftPanel';
 import CraftsmansTableR1 from './CraftsmansTableR1';
+import CraftFocusToolsR1 from './CraftFocusToolsR1';
+import { makeCraftTarget, type CraftFocusBinding } from '@/lib/writersStudio/craftFocusR1';
 import MaiaCraftCompanionR1 from './MaiaCraftCompanionR1';
 import IsolatedEditorialRoom from './IsolatedEditorialRoom';
 import P4R1FocusMaterials from './P4R1FocusMaterials';
@@ -104,6 +106,7 @@ export type P4R1Pc3WriteEditViewProps = {
   editorialBusy: boolean;
   craftWorkingText: string | null;
   onCraftWorkingTextChange: (text: string) => void;
+  craftFocus?: CraftFocusBinding;
   craftActivity: string | null;
   craftReadNotice: string | null;
   craftDialogue: readonly CraftDialogueTurn[];
@@ -305,6 +308,14 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
 
   const go = useCallback((sectionId: string | null) => {
     if (!sectionId) return;
+    if (props.surfaceMode === 'develop-craft' && props.craftFocus) {
+      const section = props.context.sections.find(s => s.draftSectionId === sectionId);
+      if (!section) return;
+      const body = props.writing.bodyOf(sectionId);
+      const target = makeCraftTarget(section, body, body, props.writing.currentRevisionId() ?? props.context.version, 'writer');
+      if (target) props.craftFocus.onMove({ ...target, label: section.heading || 'Whole section' });
+      return;
+    }
     /* A manuscript-rail choice is a meaningful attentional gesture even when
        the writer clicks the place already open. Keep it visible to the right
        hand support field instead of treating same-place selection as a no-op. */
@@ -1035,6 +1046,15 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       appliedVersionId={props.appliedVersionId}
       onUndo={props.onUndo}
       onWorkingTextChange={props.onCraftWorkingTextChange}
+      restoreSnapshot={props.craftFocus?.restoreSnapshot}
+      onConnect={props.craftFocus?.onConnect}
+      onReceipt={props.craftFocus?.onReceipt}
+      focusTools={props.craftFocus ? <CraftFocusToolsR1
+        sections={proseSections} bodyOf={props.writing.bodyOf}
+        revisionNumber={props.writing.currentRevisionId() ?? props.context.version}
+        current={props.craftFocus.current} earlier={props.craftFocus.earlier} busy={busy} receipt={props.craftFocus.receipt}
+        onMove={props.craftFocus.onMove} onStay={props.craftFocus.onStay} onAsk={props.craftFocus.onAsk}
+      /> : null}
     />
   ) : null;
 
@@ -1087,6 +1107,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
       busy={busy}
       message={editorialMessage}
       activity={props.craftActivity}
+      focusSuggestions={props.craftFocus?.suggestions}
+      onMoveFocus={props.craftFocus?.onMove}
       readingNotice={props.craftReadNotice}
       dialogue={props.craftDialogue}
       editLatitude={props.editLatitude}

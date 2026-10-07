@@ -1,10 +1,14 @@
-export type CraftDialogueSpeaker = 'writer' | 'maia';
+import type { RebuildEditorialThread } from './rebuild/editorialCollaboration';
+
+export type CraftDialogueSpeaker = 'writer' | 'maia' | 'action';
 
 export interface CraftSendOptions {
   readonly proposalPolicy?: 'allow' | 'reply_only' | 'require';
   readonly proposalRequested?: boolean;
   /** What the writer should see in the Craft conversation, never prompt scaffolding. */
   readonly displayText?: string;
+  readonly skipCanvasCommands?: boolean;
+  readonly suppressWriterEcho?: boolean;
 }
 
 export interface CraftDialogueTurn {
@@ -29,4 +33,20 @@ export function appendCraftDialogue(
   if (turns.some((candidate) => candidate.key === turn.key)) return turns;
   const next = [...turns, turn];
   return next.length > limit ? next.slice(next.length - limit) : next;
+}
+
+/** Use the persisted wire turn identity, never a render/list index. A reply-only
+ * turn has no proposal/version ID but must still reach the conversation. */
+export function craftMaiaDialogueTurn(
+  threadId: string,
+  turn: RebuildEditorialThread['turns'][number] | null | undefined,
+): CraftDialogueTurn | null {
+  if (!threadId || !turn || turn.speaker !== 'maia'
+    || !Number.isSafeInteger(turn.turnIndex) || turn.turnIndex < 0
+    || !turn.body.trim()) return null;
+  return {
+    key: `maia:${threadId}:${turn.turnIndex}`,
+    speaker: 'maia',
+    body: turn.body,
+  };
 }

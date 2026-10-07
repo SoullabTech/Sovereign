@@ -190,6 +190,8 @@ export async function sendBoundEditorialTurn(
     /** R8G — source Work conversation to carry into the Craft turn; server re-resolves exact turns. */
     workConversationThreadId?: string;
     workConversationMaiaTurnIndex?: number;
+    craftPassThreadId?: string;
+    craftPassTurnIndex?: number;
   } | string,
 ): Promise<EditorialTurnOutcome> {
   if (!posture.resolved) return { ok: false, reason: 'posture_unresolved' };
@@ -197,6 +199,8 @@ export async function sendBoundEditorialTurn(
   const relationshipId = typeof options === 'string' ? options : options?.relationshipId;
   const carry = typeof options === 'string' ? undefined : options?.carry;
   const workConversationThreadId = typeof options === 'string' ? undefined : options?.workConversationThreadId;
+  const craftPassThreadId = typeof options === 'string' ? undefined : options?.craftPassThreadId;
+  const craftPassTurnIndex = typeof options === 'string' ? undefined : options?.craftPassTurnIndex;
   const workConversationMaiaTurnIndex = typeof options === 'string' ? undefined : options?.workConversationMaiaTurnIndex;
   try {
     const res = await apiFetch('/api/writers-studio/editorial/turn', {
@@ -211,6 +215,7 @@ export async function sendBoundEditorialTurn(
         ...(relationshipId ? { relationshipId } : {}),
         ...(carry ? { carry } : {}),
         ...(workConversationThreadId ? { workConversationThreadId } : {}),
+        ...(craftPassThreadId ? { craftPassThreadId, craftPassTurnIndex } : {}),
         ...(workConversationMaiaTurnIndex !== undefined ? { workConversationMaiaTurnIndex } : {}),
       }),
     });

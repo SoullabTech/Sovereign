@@ -130,7 +130,7 @@ describe("Craftsman's Table R1", () => {
     expect(controller).toContain('craftDialogue');
     expect(controller).toContain('options?.displayText');
     expect(controller).toContain("speaker: 'writer'");
-    expect(controller).toContain("speaker: 'maia'");
+    expect(controller).toContain("craftMaiaDialogueTurn(editorialThread.threadId, lastMaiaEditorialTurn)");
     expect(host).toContain('craftDialogue: readonly CraftDialogueTurn[]');
     expect(maia).toContain('Craft conversation');
     expect(maia).toContain("data-speaker={turn.speaker}");

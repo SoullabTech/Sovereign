@@ -4,6 +4,7 @@ const runTurn = jest.fn();
 const preflightRelationship = jest.fn();
 const resolvePriorCarry = jest.fn();
 const resolveWorkCarry = jest.fn();
+const resolvePassCarry = jest.fn();
 
 jest.mock('@/lib/maia/canonical-turn', () => ({
   resolveCanonicalIdentity: (...a: unknown[]) => resolveIdentity(...a),
@@ -20,6 +21,10 @@ jest.mock('@/lib/writers-studio/relationshipCarriage', () => ({
 }));
 jest.mock('@/lib/writers-studio/workConversationCraftCarry', () => ({
   resolveWorkConversationCraftCarry: (...a: unknown[]) => resolveWorkCarry(...a),
+}));
+
+jest.mock('@/lib/writers-studio/craftPassCarry', () => ({
+  resolveCraftPassCarry: (...a: unknown[]) => resolvePassCarry(...a),
 }));
 
 import { POST } from '../route';
@@ -110,5 +115,41 @@ describe('R8G Work conversation → Craft editorial ingress', () => {
     expect(res.status).toBe(409);
     expect(resolveWorkCarry).not.toHaveBeenCalled();
     expect(persistAct).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('Craft focus carry ingress', () => {
+  const requestBody = { threadId: 'new-editorial', sanctuary: false,
+    act: { act: 'discourse', text: 'Discuss this new focus.', refersTo: null },
+    proposalPolicy: 'reply_only', craftPassThreadId: 'old-editorial', craftPassTurnIndex: 7 };
+  it('resolves historical ownership and exact boundary before persisting a new visible turn', async () => {
+    const carry = { sourceThreadId: 'old-editorial', sourceTurnIndex: 7, omittedTurnCount: 2,
+      memberTurns: [{turnIndex: 6, body: 'Keep my word.'}], maiaTurns: [{turnIndex: 7, body: 'Consider the next paragraph.'}] };
+    resolvePassCarry.mockResolvedValue({ ok: true, carry });
+    const res = await POST(request(requestBody));
+    expect(res.status).toBe(502); // Provider is deliberately mocked unavailable.
+    expect(resolvePassCarry).toHaveBeenCalledWith({ memberId: 'member-1', receiverThreadId: 'new-editorial', sourceThreadId: 'old-editorial', sourceTurnIndex: 7 });
+    expect(resolvePassCarry.mock.invocationCallOrder[0]).toBeLessThan(persistAct.mock.invocationCallOrder[0]);
+    expect(runTurn).toHaveBeenCalledWith(expect.objectContaining({ craftPassCarry: carry }));
+  });
+  it('refuses a foreign or unavailable source before any write', async () => {
+    resolvePassCarry.mockResolvedValue({ ok: false, reason: 'craft_pass_source_unavailable' });
+    const res = await POST(request(requestBody));
+    expect(res.status).toBe(409);
+    expect(persistAct).not.toHaveBeenCalled(); expect(runTurn).not.toHaveBeenCalled();
+  });
+  it('requires both prior source and historical boundary', async () => {
+    const { craftPassTurnIndex, ...incomplete } = requestBody;
+    expect((await POST(request(incomplete))).status).toBe(400);
+    expect(resolvePassCarry).not.toHaveBeenCalled(); expect(persistAct).not.toHaveBeenCalled();
+  });
+  it('does not accept client-supplied historical transcript as carry', async () => {
+    expect((await POST(request({ ...requestBody, craftPassTranscript: 'invented' }))).status).toBe(400);
+    expect(resolvePassCarry).not.toHaveBeenCalled(); expect(persistAct).not.toHaveBeenCalled();
+  });
+  it('refuses Sanctuary before resolving or persisting historical conversation', async () => {
+    expect((await POST(request({ ...requestBody, sanctuary: true }))).status).toBe(409);
+    expect(resolvePassCarry).not.toHaveBeenCalled(); expect(persistAct).not.toHaveBeenCalled();
   });
 });

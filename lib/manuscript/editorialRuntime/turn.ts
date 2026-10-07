@@ -69,6 +69,7 @@ import {
 } from '../editorialDiscourse/contract';
 import type { ResolvedPriorMaiaEditorialCarry } from '@/lib/writers-studio/relationshipCarriage';
 import type { ResolvedWorkConversationCraftCarry } from '@/lib/writers-studio/workConversationCraftCarry';
+import { craftPassCandidates, type ResolvedCraftPassCarry } from '@/lib/writers-studio/craftPassCarry';
 import {
   DEFAULT_SCOPE_DECLARATION, LATITUDE_BANDS, judgeProposalScope, latitudeInstruction,
   type EditorialScopeDeclaration, type ScopeRefusal, type ScopeMeasure,
@@ -125,6 +126,7 @@ export interface EditorialTurnInput {
   readonly carry?: ResolvedPriorMaiaEditorialCarry;
   /** R8G server-resolved Work-conversation carry. Raw transcript never crosses HTTP. */
   readonly workConversationCarry?: ResolvedWorkConversationCraftCarry;
+  readonly craftPassCarry?: ResolvedCraftPassCarry;
   /** The turn ER-R1 just persisted. ⛔ Its BODY is read from the database, not passed. */
   readonly currentTurnIndex: number;
   readonly declaredAct: MemberActKind;
@@ -365,6 +367,7 @@ export async function runEditorialTurn(
       })
     : [];
   const cognitionBlocks: CandidateBlock[] = [
+    ...(input.craftPassCarry ? craftPassCandidates(input.craftPassCarry) : []),
     ...assembly.blocks,
     ...intentionBlocks,
     ...carryBlocks,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { RebuildSection } from '@/lib/writersStudio/rebuild/model';
 import type {
   RebuildEditorialThread,
@@ -19,6 +19,8 @@ import { professionalMarkFor } from '@/lib/writersStudio/craftProfessionalMarks'
 import type { MemberRevisionDraft } from '@/app/writers-studio/insight/RevisionDesk';
 import { typesetProseBlocks } from '@/app/writers-studio/full-redesign/manuscriptTypesetting';
 import type { CraftSendOptions } from '@/lib/writersStudio/craftDialogueR1';
+import { craftTargetKey, type CraftTableSnapshot, type CraftTablePort, type CraftKeptSpan, type CraftCanvasReceipt } from '@/lib/writersStudio/craftFocusR1';
+import { locateUniquePresentationPassage } from '@/lib/writersStudio/rebuild/editorialCollaboration';
 
 export type CraftHeldPassage = {
   draftSectionId: string;
@@ -42,6 +44,10 @@ export type CraftsmansTableR1Props = {
   onUndo?: () => void;
   /** The exact writer-owned working state, before Save or Apply. */
   onWorkingTextChange?: (text: string) => void;
+  focusTools?: ReactNode;
+  restoreSnapshot?: CraftTableSnapshot | null;
+  onConnect?: (port: CraftTablePort | null) => void;
+  onReceipt?: (receipt: CraftCanvasReceipt) => void;
 };
 
 function editKind(edit: CraftWorkingEdit): 'Insert' | 'Delete' | 'Replace' {
@@ -130,9 +136,16 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
   const [customDraft, setCustomDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [localMessage, setLocalMessage] = useState<string | null>(null);
+  const [kept, setKept] = useState<readonly CraftKeptSpan[]>([]);
   const locusRef = useRef<HTMLSpanElement | null>(null);
 
   const original = props.held?.text ?? '';
+  const focusKey = props.held ? craftTargetKey({ sectionId: props.held.draftSectionId, ...props.held }) : '';
+  const announce = (receipt: CraftCanvasReceipt): CraftCanvasReceipt => {
+    setLocalMessage(receipt.message);
+    props.onReceipt?.(receipt);
+    return receipt;
+  };
   const proposal = candidateVersion?.wording ?? original;
   const proposalEdits = useMemo(
     () => craftWorkingEdits(original, proposal),
@@ -154,6 +167,35 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     setCustomEditId(null);
     setCustomDraft('');
     setLocalMessage(null);
+    setKept([]);
+    let restored = props.restoreSnapshot;
+    // One-use recovery of the actual open draft across this candidate's HMR.
+    // Never a server write, never an inferred proposal acceptance.
+    if (!restored && props.thread && typeof window !== 'undefined') {
+      try {
+        const key = 'ws-craft-focus-recovery:' + props.thread.threadId;
+        const raw = window.sessionStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw) as CraftTableSnapshot;
+          if (parsed.key === focusKey) { restored = parsed; window.sessionStorage.removeItem(key); }
+        }
+      } catch { /* A recovery failure does not invent a working version. */ }
+    }
+    if (restored?.key === focusKey && restored.original === original) {
+      setCandidateVersion(restored.candidateVersion);
+      setWriterHasActed(restored.writerHasActed);
+      setDecisions(new Map(restored.decisions));
+      setManualText(restored.manualText);
+      setManualFromVersionId(restored.manualFromVersionId);
+      setDirectDraft(restored.directDraft);
+      setDirectEditing(restored.directEditing);
+      setActiveEditId(restored.activeEditId);
+      setCustomEditId(restored.customEditId);
+      setCustomDraft(restored.customDraft);
+      setView(restored.view);
+      setNotation(restored.notation);
+      setKept(restored.kept);
+    }
   }, [
     props.held?.draftSectionId,
     props.held?.start,
@@ -161,9 +203,40 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     original,
   ]);
 
+  useEffect(() => {
+    if (!props.thread || !focusKey || writerHasActed || props.restoreSnapshot) return;
+    try {
+      const key = 'ws-craft-focus-recovery:' + props.thread.threadId;
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) return;
+      const copy = JSON.parse(raw) as CraftTableSnapshot;
+      if (copy.key !== focusKey || copy.original !== original) return;
+      setCandidateVersion(copy.candidateVersion);
+      setWriterHasActed(copy.writerHasActed);
+      setDecisions(new Map(copy.decisions));
+      setManualText(copy.manualText);
+      setManualFromVersionId(copy.manualFromVersionId);
+      setDirectDraft(copy.directDraft);
+      setDirectEditing(copy.directEditing);
+      setCustomDraft(copy.customDraft);
+      setCustomEditId(copy.customEditId);
+      setActiveEditId(copy.activeEditId);
+      setView(copy.view);
+      setNotation(copy.notation);
+      setKept(copy.kept);
+      window.sessionStorage.removeItem(key);
+    } catch { /* No recovery claim on an unreadable snapshot. */ }
+  }, [props.thread?.threadId, focusKey]);
+
   /* An arriving version is an alternative until the writer chooses it. A Save
      acknowledgement may change version identity only for identical working text. */
   useEffect(() => {
+    // The focus-restoration effect above owns this render. An incoming thread
+    // version must not reset its restored choices using the previous focus's
+    // render-time writerHasActed value.
+    if (props.restoreSnapshot?.key === focusKey
+      && props.restoreSnapshot.original === original
+      && props.restoreSnapshot.writerHasActed && !writerHasActed) return;
     if (props.version?.id === candidateVersion?.id
       && props.version?.wording === candidateVersion?.wording) return;
     const heldCopy = manualText ?? composeCraftWorkingCopy(original, proposalEdits, decisions);
@@ -218,11 +291,11 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     && props.held.start >= 0 && props.held.end >= props.held.start
     && props.held.end <= Array.from(liveBody).length
     && Array.from(liveBody).slice(props.held.start, props.held.end).join('') === original
-    && props.thread?.targetSectionId === props.held.draftSectionId
-    && props.thread.locusText === original);
+    && (!props.thread || (props.thread.targetSectionId === props.held.draftSectionId
+      && props.thread.locusText === original)));
   const pendingComposition = directEditing || customEditId !== null;
-  const canSave = canonicalAligned && hasWriterChange && !pendingComposition && !props.busy && !saving;
-  const canApply = canonicalAligned && !pendingComposition && !props.busy && !saving
+  const canSave = canonicalAligned && Boolean(props.thread && props.version) && hasWriterChange && !pendingComposition && !props.busy && !saving;
+  const canApply = canonicalAligned && Boolean(props.thread && props.version) && !pendingComposition && !props.busy && !saving
     && props.version?.author === 'member' && props.version.wording === workingText;
 
   useEffect(() => {
@@ -237,6 +310,62 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     return () => window.cancelAnimationFrame(frame);
   }, [props.held?.draftSectionId, props.held?.start, props.held?.end]);
 
+  const keepOriginal = (word: string): CraftCanvasReceipt => {
+    if (!canonicalAligned || props.busy || saving || customEditId !== null) return announce({ ok: false,
+      message: 'Finish the current wording action before settling this choice. Nothing was applied.' });
+    const span = locateUniquePresentationPassage(original, word);
+    if (!span) return announce({ ok: false, message: 'Select the exact original words to keep; this reference is not unique. Nothing changed.' });
+    const currentEdits = craftWorkingEdits(original, workingText);
+    const overlaps = currentEdits.filter(e => e.start < span.end && e.end > span.start);
+    if (overlaps.some(e => e.start < span.start || e.end > span.end || e.protectedSpan)) return announce({ ok: false,
+      message: 'Those words are part of a larger draft change. Choose that marked change before settling it.' });
+    const nextDecisions = new Map(initialCraftDecisions(currentEdits, 'member'));
+    overlaps.forEach(e => nextDecisions.set(e.id, { mode: 'original' }));
+    const text = Array.from(original).slice(span.start, span.end).join('');
+    const settled = { ...span, text };
+    setWriterHasActed(true);
+    setManualText(composeCraftWorkingCopy(original, currentEdits, nextDecisions));
+    setManualFromVersionId(candidateVersion?.id ?? null);
+    setDirectEditing(false);
+    setActiveEditId(null);
+    setKept(current => [...current.filter(k => k.start !== span.start || k.end !== span.end), settled]);
+    return announce({ ok: true, settled, message: `“${text}” kept for this pass. Manuscript unchanged.` });
+  };
+
+  const replaceWorking = (from: string, to: string): CraftCanvasReceipt => {
+    if (!canonicalAligned || props.busy || saving || customEditId !== null) return announce({ ok: false,
+      message: 'Finish the current wording action first. Nothing changed.' });
+    const first = workingText.indexOf(from);
+    if (!from || first < 0 || workingText.indexOf(from, first + 1) >= 0) return announce({ ok: false,
+      message: 'That wording is missing or occurs more than once. Select the exact place first.' });
+    if (kept.some(k => from.includes(k.text))) return announce({ ok: false,
+      message: 'That choice is settled for this pass. Reopen it on the table before changing it.' });
+    setWriterHasActed(true);
+    setManualText(workingText.slice(0, first) + to + workingText.slice(first + from.length));
+    setDirectEditing(false);
+    setActiveEditId(null);
+    return announce({ ok: true, message: 'Working copy updated. Not applied to the manuscript.' });
+  };
+
+  useEffect(() => {
+    if (!props.onConnect) return;
+    props.onConnect({
+      snapshot: () => props.held ? ({ key: focusKey, candidateVersion, decisions: [...decisions],
+        manualText, manualFromVersionId, directDraft, directEditing, customDraft, customEditId,
+        writerHasActed, activeEditId, view, notation, kept, workingText, original }) : null,
+      keepOriginal,
+      replaceWorking,
+      setView: next => {
+        if (directEditing) { setManualText(directDraft); setDirectEditing(false); }
+        setView(next);
+        return announce({ ok: true, message: next === 'preview'
+          ? 'Preview shows your working copy. Manuscript unchanged.'
+          : 'Markup shows proposed and chosen changes. Manuscript unchanged.' });
+      },
+    });
+    return () => props.onConnect?.(null);
+  });
+
   const activeEdit = activeEditId === null
     ? null
     : displayEdits.find((edit) => edit.id === activeEditId) ?? null;
@@ -244,7 +373,19 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
   const applyDisplayDecision = (id: number, decision: CraftDecision) => {
     const edit = displayEdits.find((candidate) => candidate.id === id);
     if (!canonicalAligned || props.busy || !edit || edit.protectedSpan) return;
+    if (decision.mode !== 'original' && kept.some(k => k.start < edit.end && k.end > edit.start)) {
+      announce({ ok: false, message: 'This choice is settled. Reopen it before revising it.' });
+      return;
+    }
     setWriterHasActed(true);
+    if (decision.mode === 'original') {
+      const settled = { start: edit.start, end: edit.end, text: edit.from };
+      setKept(current => [...current.filter(k => k.start !== edit.start || k.end !== edit.end), settled]);
+      setActiveEditId(null);
+      announce({ ok: true, settled, message: edit.from.trim()
+        ? `“${edit.from.trim()}” kept for this pass. Manuscript unchanged.`
+        : 'Original spacing kept for this pass. Manuscript unchanged.' });
+    }
     const next = new Map(manualText === null ? decisions : initialCraftDecisions(displayEdits, 'member'));
     next.set(id, decision);
     if (manualText === null && decision.mode !== 'custom') {
@@ -256,7 +397,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
       setManualFromVersionId(candidateVersion?.id ?? manualFromVersionId);
       setActiveEditId(null);
     }
-    setLocalMessage(null);
+    if (decision.mode !== 'original') announce({ ok: true, message: 'Working copy updated. Not applied to the manuscript.' });
   };
 
   const beginCustom = (edit: CraftWorkingEdit) => {
@@ -291,7 +432,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
     setManualText(directDraft);
     setDirectEditing(false);
     setActiveEditId(null);
-    setLocalMessage('This is now your working copy. It is not yet saved or applied.');
+    announce({ ok: true, message: 'Working copy updated. Not applied to the manuscript.' });
   };
 
   const saveWorkingVersion = async () => {
@@ -429,6 +570,15 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
           </details>
         </div>
       </header>
+      {props.focusTools}
+      {kept.length > 0 ? <div className="p4r1-craft-kept" data-craft-settled-choices>
+        {kept.map(k => <span key={`${k.start}:${k.end}`}>Kept: {k.text.trim() || 'spacing'}
+          <button type="button" onClick={() => {
+            setKept(current => current.filter(x => x !== k));
+            announce({ ok: true, reopened: k, message: 'Choice reopened for this pass. No wording changed.' });
+          }}>Reopen</button>
+        </span>)}
+      </div> : null}
 
       <div className="p4r1-craft-r1-scroll">
         <article className="p4r1-craft-r1-page">
@@ -439,7 +589,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
 
             if (!active || !props.held) {
               return (
-                <section key={section.draftSectionId} className="p4r1-craft-r1-section p4r1-craft-r1-context-section">
+                <section key={section.draftSectionId} className="p4r1-craft-r1-section p4r1-craft-r1-context-section" data-craft-section-id={section.draftSectionId}>
                   {section.heading?.trim() ? <Heading>{section.heading.trim()}</Heading> : null}
                   <CraftContextBlocks text={body} muted />
                 </section>
@@ -459,6 +609,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                 key={section.draftSectionId}
                 className="p4r1-craft-r1-section"
                 data-craft-active-section
+                data-craft-section-id={section.draftSectionId}
               >
                 {section.heading?.trim() ? <Heading>{section.heading.trim()}</Heading> : null}
                 <div className="p4r1-craft-r1-workrow">
@@ -491,6 +642,10 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                             const decision = decisionFor(displayDecisions, segment.editId);
                             const chosen = decision.mode !== 'original';
                             const edit = displayEdits.find((candidate) => candidate.id === segment.editId) ?? null;
+                            const settled = edit && kept.some(k => k.start === edit.start && k.end === edit.end && k.text === edit.from);
+                            if (settled) return segment.kind === 'del'
+                              ? <span key={index} data-craft-settled title="Kept for this pass">{segment.text}</span>
+                              : null;
                             const proof = edit ? professionalMarkFor(edit, displayEdits, decision) : null;
                             const proofMark = notation === 'professional'
                               && proof
@@ -540,8 +695,6 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                       {activeContext.suffix}
                     </div>
 
-                    <CraftContextBlocks text={activeContext.trailing} muted />
-
                     {directEditing ? (
                       <div className="p4r1-craft-r1-direct-actions">
                         <button type="button" onClick={commitDirectComposition}>Use this as my working copy</button>
@@ -551,6 +704,10 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                         }}>Cancel</button>
                       </div>
                     ) : null}
+
+                    <CraftContextBlocks text={activeContext.trailing} muted />
+
+
 
                     {!authoritative ? (
                       <p className="p4r1-craft-r1-warning" role="status">
@@ -646,11 +803,13 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
         </article>
       </div>
 
-      {props.held && props.version ? (
+      {props.held ? (
         <footer className="p4r1-craft-r1-footer">
           <span>
-            {manualText !== null
-              ? 'You are shaping your own working copy.'
+            {pendingComposition
+              ? 'Editing a local draft. Not applied to the manuscript.'
+              : manualText !== null
+              ? 'You are shaping your own working copy. Not applied to the manuscript.'
               : proposalChosenCount === 0
                 ? 'Your original is still the working version.'
                 : `${proposalChosenCount} MAIA move${proposalChosenCount === 1 ? '' : 's'} are in your working version.`}
@@ -666,7 +825,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                 <button type="button" onClick={() => beginDirectComposition(workingText, props.version?.id ?? null)}>
                   Edit current hybrid
                 </button>
-                {props.version.author === 'maia' && props.version.wording !== original ? (
+                {props.version?.author === 'maia' && props.version.wording !== original ? (
                   <button type="button" onClick={() => beginDirectComposition(props.version!.wording, props.version?.id ?? null)}>
                     Start from MAIA
                   </button>
@@ -678,7 +837,7 @@ export default function CraftsmansTableR1(props: CraftsmansTableR1Props) {
                 {saving ? 'Saving…' : 'Save my version'}
               </button>
             ) : null}
-            {props.version.author === 'member' && !applied ? (
+            {props.version?.author === 'member' && !applied ? (
               <button type="button" className="p4r1-craft-r1-primary" disabled={!canApply} onClick={() => { if (canApply) props.onApply(); }}>
                 Apply my version
               </button>
