@@ -1,0 +1,62 @@
+{
+  "version": "RGR-05B-REFERENCE-FEASIBILITY-1",
+  "scope_base": "b999f9cf47abbddfd58bfa911115d7b6a0c9a633",
+  "accepted_design_commit": "f6f9c7cb02bfa47a36cc4b143b66a99f1d441ebf",
+  "authorizing_act": "User exact design acceptance and bounded reference-generator implementation/feasibility testing, 2026-10-07",
+  "specification_sha256": "16df2b04c769e94adff6147c81177c9698a5d6a1878b29920181aeb36fde1567",
+  "contract_sha256": "1f3d376d5b360817bfd441b160fcfbb894aeb9104ea09619da1540ff72e14d92",
+  "allowed_paths": [
+    "tests/research/rgr_flow/test_reference.py",
+    "scripts/research/rgr_flow/reference.py",
+    "scripts/research/rgr_flow/feasibility.py",
+    "docs/programme/RGR-05B_REFERENCE_FEASIBILITY_2026-10-07.json",
+    "docs/programme/RGR-05B_REFERENCE_FEASIBILITY_RESULT_2026-10-07.md"
+  ],
+  "authority": {
+    "implement_reference": true,
+    "generate_synthetic_feasibility_examples": true,
+    "run_feasibility": true,
+    "neural_training": false,
+    "member_data": false,
+    "MAIA_integration": false,
+    "evaluator_calibration": false,
+    "merge": false,
+    "deploy": false
+  },
+  "run_limits": {
+    "raw_graph_budget_per_task": 200000,
+    "control_diagnostic_draws_per_task": 12000,
+    "ordinary_seconds_per_task": 120,
+    "ordinary_draws_per_task": 400000
+  },
+  "frozen_design_limits_unchanged": {
+    "graph_draw_cap_per_task": 20000000,
+    "ordinary_draw_cap_per_root": 100000,
+    "root_counts": {
+      "TRAIN": 1000,
+      "VALIDATION": 250,
+      "TEST": 500,
+      "REPLICATION": 500
+    },
+    "ordinary_labels_per_root": {
+      "negative": 10,
+      "positive": 10
+    }
+  },
+  "operational_cap_rule": "Early resource stop is INCOMPLETE_OPERATIONAL_CAP, never a false frozen-budget infeasibility result. Exact per-root rejection exhaustion retains DESIGN_INFEASIBLE_UNDER_FROZEN_BUDGET.",
+  "implementation_choices_before_run": {
+    "root_key": "literal A/B prefix plus lexicographically minimum 64/128 adjacency bits under role-fixed simultaneous permutations",
+    "graph_stream": "seed 5107001, task A/B, GRAPH, empty split/root before topology selection; B layers drawn sequentially",
+    "attribute_streams": "5107002 for ATTRIBUTES, CARRIER and PULSE with disjoint names, frozen split and canonical root",
+    "control_streams": "explicit DIAGNOSTIC namespace, not preregistered C/N population; no adaptive extra draws",
+    "target_arithmetic": "Fractions reference queue, independent DAG-first Fraction series, algebraically equivalent integer common-denominator solver; no float decisions",
+    "dependencies": "Python 3.9+ standard library only",
+    "topology_canonicalization": "exact source-row lexicographic pruning, independently tested against exhaustive role-fixed permutations"
+  },
+  "validation_limits": "Finite unit tests and synthetic feasibility only; no claim of full C/N quota completion, statistical interval calibration, model skill, human applicability, or application deployment.",
+  "source_hashes": {
+    "tests/research/rgr_flow/test_reference.py": "9eaaa779bb51215e9de265bc4bb6f4d8ff01ef22e0655c3c80779744659a729a",
+    "scripts/research/rgr_flow/reference.py": "ef8b3c8b876f45cc0f00fcfcf127e1cfe0c05f3d45db8c78a595befaa040abae",
+    "scripts/research/rgr_flow/feasibility.py": "8c16a388a65534740a40efa0d3b7d3bdf01177d57545a237274fb0b43e2bbbb3"
+  }
+}
