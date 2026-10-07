@@ -52,6 +52,15 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(develop).toContain('sourceMaiaTurnBody: lastMaiaTurnBody');
   });
 
+  it('waits for explicit privacy posture without consuming the automatic Craft act', () => {
+    expect(craftController).toContain('!sessionPosture.resolved');
+    expect(craftController).toContain('sessionPosture.sanctuary');
+    expect(craftController).toContain('sessionPosture,');
+    expect(craftController).toContain('Your Craft request is still held here.');
+    const primer = craftController.slice(craftController.indexOf("const key = [\n      'craft-primer'"));
+    expect(primer.indexOf('autoCraftKey.current = key')).toBeGreaterThan(primer.indexOf('!sessionPosture.resolved'));
+  });
+
   it('docks the Craftsman relationship beside the manuscript instead of floating over it', () => {
     expect(canvas).toContain("const craftEditorialInShell = props.surfaceMode === 'develop-craft' && editorial");
     expect(canvas).toContain('maia={shellMaia}');
