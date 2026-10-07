@@ -384,8 +384,89 @@
         "separate_training_authority"
       ]
     },
-    "review_status": "NOT_YET_REVIEWED",
+    "review_status": "REVIEW_INCOMPLETE_SECOND_REVIEW_TIMEOUT",
     "toolchain_evidence": "/Users/soullab/.maia-evidence/rgr05b-pinned-governance-0lj1v1u0/toolchain-evidence.json",
-    "legacy_envelope_notice": "The pre-existing guard is documentary, not a computed W2 authorization snapshot; no mechanical lifecycle transition is asserted."
+    "legacy_envelope_notice": "The pre-existing guard is documentary, not a computed W2 authorization snapshot; no mechanical lifecycle transition is asserted.",
+    "review_evidence": {
+      "status": "REVIEW_INCOMPLETE_SECOND_REVIEW_TIMEOUT",
+      "reviewed_commit": "f6f9c7cb02bfa47a36cc4b143b66a99f1d441ebf",
+      "document_sha256": "16df2b04c769e94adff6147c81177c9698a5d6a1878b29920181aeb36fde1567",
+      "contract_sha256": "1f3d376d5b360817bfd441b160fcfbb894aeb9104ea09619da1540ff72e14d92",
+      "prompt_sha256": "0c9804237eee0fb5b00d0f6755b92b2d1b5f98cd31dd3e25fdde4b505880743e",
+      "scope": "separate local model document reviews, not independent human review or benchmark execution",
+      "reviewer_results": [
+        {
+          "model": "qwen3-coder:30b",
+          "raw_verdict": "RETURN",
+          "completion": "stop",
+          "duration_s": 49,
+          "prompt_eval_count": 10084,
+          "eval_count": 1329,
+          "output_sha256": "6520890a4fc648a436385322def070f8f05ac50d2a91f2496601eb9c0d3f10a8"
+        },
+        {
+          "model": "gpt-oss:20b",
+          "raw_verdict": null,
+          "completion": "WORKER_TIMEOUT",
+          "duration_s": 180,
+          "usable_output": false,
+          "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "builder_source_grounding": [
+        {
+          "id": "Q1",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "section": "3",
+          "reason": "Conservation is explicitly checked after each completed tick. Terminal arrivals are removed from queues before entering counters; dispatch moves snapshot stock to future queues. The suggested counterexample counts departure as delivery, contrary to the stated clock."
+        },
+        {
+          "id": "Q2",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "section": "4-5",
+          "reason": "Canonical-root hash fixes one split before attribute draws. Quota failure is a stop, not reassignment or replacement. A uniform distribution over topological isomorphism classes is not claimed."
+        },
+        {
+          "id": "Q3",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "section": "6",
+          "reason": "Tuple alternatives are explicitly in cyclic lexicographic order, so the last wraps to the first. Nontrivial eligibility and shortfall disposition are already required."
+        },
+        {
+          "id": "Q4",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "section": "5-6",
+          "reason": "Opposite-label orientation balance is explicit per family and split, with P4 the base for CF-2. Same-label strata are also balanced. No per-root balance is asserted; inability to fill quotas is a feasibility stop."
+        },
+        {
+          "id": "Q5",
+          "disposition": "NO_NEW_DESIGN_BLOCKER_IMPLEMENTATION_OBLIGATION_RETAINED",
+          "section": "7-8",
+          "reason": "Both views explicitly contain layer roles, source/sink, horizon and turnaround coefficient. The learned return bridge is the declared architectural bias under the narrowed hypothesis, not extra observation. Raw-view parity still requires later implementation verification."
+        },
+        {
+          "id": "Q6",
+          "disposition": "REJECTED_METHODOLOGICAL_MISREADING",
+          "section": "10",
+          "reason": "Resampling roots with replacement is the stated clustered bootstrap. Common root draws preserve shared-data covariance across model contrasts. Models are not retrained in bootstrap replicates; family initialization draws are independent. Statistical calibration remains a separate uncompleted gate."
+        }
+      ],
+      "limitation": "The builder rejects or narrows the six Qwen objections by the cited specification; this is not a reviewer ACCEPT. The second review produced no usable verdict. No claim of completed review or empirical validation is made.",
+      "evidence_directory": "/Users/soullab/.maia-evidence/rgr-05b-r1-review-20261007-f6f9c7cb0",
+      "raw_evidence_preserved": true,
+      "source_bytes_unchanged": true,
+      "contract_bytes_unchanged": true,
+      "founder_adjudication": false,
+      "benchmark_materialized": false,
+      "training_run": false,
+      "merge": false,
+      "deploy": false,
+      "remaining_gates": [
+        "completed second source-grounded review",
+        "Founder adjudication of the design",
+        "separately authorized generator feasibility and evaluator calibration",
+        "implementation/environment freeze before training"
+      ]
+    }
   }
 }
