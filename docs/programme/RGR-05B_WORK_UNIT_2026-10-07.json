@@ -1,0 +1,620 @@
+{
+  "work_unit_envelope": {
+    "work_unit": {
+      "work_unit_version": "W0.v1",
+      "identity": {
+        "id": "rgr-05b-synthetic-flow-representation-benchmark-20261007",
+        "programme": "RELATIONAL-GEOMETRY-REASONING",
+        "parent_work_unit": "rgr-05-flow-primitive-challenge-20261007",
+        "objective": "Design and preregister a synthetic benchmark that tests whether explicit FLOW_D representation adds held-out compositional-transfer and counterfactual value over matched same-information generic alternatives.",
+        "work_class": "RESEARCH",
+        "task_shape": "benchmark_design"
+      },
+      "context": {
+        "context_refs": [
+          "RGR-05A CLOSED by Founder adjudication",
+          "FLOW_D accepted as first-class derived dynamical object",
+          "RGR-02 ten-heading formal vocabulary preserved"
+        ],
+        "evidence_refs": [
+          "RGR-05A formal source grounding",
+          "RGR-04 benchmark-governance precedent"
+        ],
+        "assumptions": [
+          "Primitive #11 is not under test in RGR-05B.",
+          "Elemental labels are quarantined from the benchmark.",
+          "Same-information comparison is required for any claim of Flow-specific computational advantage."
+        ],
+        "unknowns": [
+          "Whether explicit FLOW_D inductive structure improves compositional transfer.",
+          "Whether generic same-information models are sufficient.",
+          "Whether return/completion requires distinct representational support."
+        ]
+      },
+      "scope": {
+        "repository": "SoullabTech/Sovereign",
+        "base_ref": "6eb1396912162501982a26d8a105ed165a5f96bd",
+        "allowed_paths": [
+          "docs/programme/RGR-05B_SYNTHETIC_FLOW_REPRESENTATION_BENCHMARK_2026-10-07.md",
+          "docs/programme/RGR-05B_BENCHMARK_DESIGN_RATIONALE_2026-10-07.md",
+          "docs/programme/RGR-05B_WORK_UNIT_2026-10-07.json",
+          "tests/constitutional/rgr-flow-05b/matrix.mjs"
+        ],
+        "forbidden_paths": [
+          "app",
+          "lib",
+          "components",
+          "database",
+          "prisma",
+          "jarvis-desktop"
+        ]
+      },
+      "authority": {
+        "repository_read": true,
+        "repository_write": "worktree",
+        "shell": "bounded_write",
+        "network_external": false,
+        "provider_spend": false,
+        "external_disclosure": "none",
+        "merge": false,
+        "deploy": false,
+        "production_read": false,
+        "production_write": false
+      },
+      "evaluation": {
+        "acceptance_conditions": [
+          "Primary benchmark is entirely synthetic.",
+          "F_G and F_F receive identical raw dynamic information.",
+          "Strong counterfactual family preserves topology and full edge-attribute multiset.",
+          "Carrier and node relabeling invariance are explicit.",
+          "Task A delivery and Task B return are separately scored.",
+          "Elemental and human data remain quarantined.",
+          "No materialization, training, runtime, schema, migration, or deployment occurs."
+        ],
+        "falsification_conditions": [
+          "FLOW_D model receives privileged target information.",
+          "Generic comparator is denied raw information available to FLOW_D model.",
+          "Counterfactual pairs differ in undeclared shortcuts.",
+          "Elemental labels enter the generator or target.",
+          "Task A success is allowed to stand in for return/completion.",
+          "The benchmark design silently authorizes execution."
+        ],
+        "stop_conditions": [
+          "A fair same-information comparator cannot be defined.",
+          "Counterfactual families cannot be generated with exact declared invariants.",
+          "Human/private data becomes necessary.",
+          "Runtime or production mutation becomes necessary."
+        ],
+        "verifier_results": []
+      },
+      "provenance": {
+        "creator": "ChatGPT/JARVIS-assist RGR-05B",
+        "authorizing_act": "founder:rgr05b-open-20261007",
+        "source_commits": [
+          "6eb1396912162501982a26d8a105ed165a5f96bd"
+        ],
+        "resulting_commits": [],
+        "timestamps": [
+          "2026-10-07"
+        ]
+      },
+      "state": {
+        "lifecycle_state": "AUTHORIZED",
+        "disposition": "open_benchmark_design",
+        "supersedes": null
+      }
+    },
+    "guard": {
+      "lifecycle_version": "W2.v1",
+      "work_unit_id": "rgr-05b-synthetic-flow-representation-benchmark-20261007",
+      "current_state": "AUTHORIZED",
+      "authorized_core_snapshot": "Benchmark constitution/design only; no materialization or execution authority."
+    }
+  },
+  "standing": "R1_DESIGN_ACCEPTED_BY_FOUNDER_REFERENCE_FEASIBILITY_AUTHORIZED",
+  "execution_note": "RGR-05B designs the benchmark only. Materialization, model training, benchmark execution, MAIA integration, member data, schema/migration, and deployment remain unauthorized.",
+  "repair_r1": {
+    "version": "R1",
+    "standing": "REPAIR_CANDIDATE_NOT_FOUNDER_ADJUDICATED",
+    "original_reviewed_commit": "7f00d4ee2ba174a0e7245dd11dc9c64f16701a4d",
+    "original_document_sha256": "56a9ad9930c90bb6e114a3905394b2c02510454ca668d41e627e976d2f45069b",
+    "authorizing_context": "User continue after bounded RGR-05B repair next step; no benchmark execution or production authority",
+    "protected_sources": [
+      "docs/programme/RGR-02_FORMAL_VOCABULARY_CANDIDATE_STRUCTURES_2026-09-18.md",
+      "docs/programme/RGR-05A_FLOW_REDUCIBILITY_RESULT_2026-10-07.md",
+      "docs/programme/RGR-05A_WORK_UNIT_2026-10-07.json"
+    ],
+    "document_sha256": "16df2b04c769e94adff6147c81177c9698a5d6a1878b29920181aeb36fde1567",
+    "rationale_sha256": "cbcb1a0cecaa95dc4ba06e17a75a244ea97951a942f8877c11ccb42d43acd3fd",
+    "contract": {
+      "version": "RGR-FLOW-SFRB-01-R1",
+      "hypothesis": "H-GT1_declared_graph_temporal_inductive_bias",
+      "uniqueFlowAlgorithmClaim": false,
+      "separateConductanceResistanceClaim": false,
+      "scopeBase": "6eb1396912162501982a26d8a105ed165a5f96bd",
+      "allowedPaths": [
+        "docs/programme/RGR-05B_SYNTHETIC_FLOW_REPRESENTATION_BENCHMARK_2026-10-07.md",
+        "docs/programme/RGR-05B_BENCHMARK_DESIGN_RATIONALE_2026-10-07.md",
+        "docs/programme/RGR-05B_WORK_UNIT_2026-10-07.json",
+        "tests/constitutional/rgr-flow-05b/matrix.mjs"
+      ],
+      "executionAuthority": {
+        "generateBenchmark": false,
+        "implementSimulator": false,
+        "trainModels": false,
+        "evaluateBenchmark": false,
+        "readMemberData": false,
+        "changeMAIA": false,
+        "migrateSchema": false,
+        "merge": false,
+        "deploy": false
+      },
+      "pulses": {
+        "P0": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "P1": [
+          0.5,
+          0.5,
+          0,
+          0
+        ],
+        "P2": [
+          0.5,
+          0,
+          0.5,
+          0
+        ],
+        "P3": [
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "P4": [
+          0.5,
+          0,
+          0,
+          0.5
+        ],
+        "P5": [
+          0,
+          0.5,
+          0.5,
+          0
+        ]
+      },
+      "confirmatoryRhythm": [
+        "P4",
+        "P5"
+      ],
+      "rootGrouping": "query_marked_topology_all_descendants",
+      "buckets": {
+        "TRAIN": [
+          0,
+          59
+        ],
+        "VALIDATION": [
+          60,
+          74
+        ],
+        "TEST": [
+          75,
+          89
+        ],
+        "REPLICATION": [
+          90,
+          99
+        ]
+      },
+      "roots": {
+        "TRAIN": 1000,
+        "VALIDATION": 250,
+        "TEST": 500,
+        "REPLICATION": 500
+      },
+      "ordinary": {
+        "TRAIN": 20000,
+        "VALIDATION": 5000,
+        "TEST": 10000,
+        "REPLICATION": 10000
+      },
+      "oppositePairsPerFamily": {
+        "TRAIN": 2000,
+        "VALIDATION": 500,
+        "TEST": 1000,
+        "REPLICATION": 1000
+      },
+      "sameLabelPairsPerFamily": {
+        "TRAIN": 1000,
+        "VALIDATION": 250,
+        "TEST": 500,
+        "REPLICATION": 500
+      },
+      "primaryMetricPopulation": "ordinary_only",
+      "graphDrawCap": 20000000,
+      "ordinaryDrawCap": 100000,
+      "pairDrawCap": 2000000,
+      "rawViews": {
+        "F_G": [
+          "node_ids",
+          "ordered_endpoints",
+          "layer_roles",
+          "p0",
+          "p1",
+          "c",
+          "r",
+          "delay",
+          "carrier",
+          "pulse_values_and_times",
+          "source_sink",
+          "horizon",
+          "turnaround_coefficient"
+        ],
+        "F_F": [
+          "node_ids",
+          "ordered_endpoints",
+          "layer_roles",
+          "p0",
+          "p1",
+          "c",
+          "r",
+          "delay",
+          "carrier",
+          "pulse_values_and_times",
+          "source_sink",
+          "horizon",
+          "turnaround_coefficient"
+        ]
+      },
+      "tasks": {
+        "A": {
+          "horizon": 10,
+          "threshold": 0.6,
+          "families": [
+            "CF-1",
+            "CF-2",
+            "CF-3"
+          ]
+        },
+        "B": {
+          "horizon": 18,
+          "threshold": 0.3,
+          "families": [
+            "CF-1",
+            "CF-2",
+            "CF-3",
+            "CF-6"
+          ]
+        }
+      },
+      "turnaround": 0.75,
+      "invariantFamilies": [
+        "CF-4",
+        "CF-5",
+        "CF-7"
+      ],
+      "training": {
+        "searchConfigurationsPerDynamicFamily": 12,
+        "searchSeeds": [
+          1101,
+          1102
+        ],
+        "confirmationSeeds": [
+          2101,
+          2102,
+          2103,
+          2104,
+          2105,
+          2106,
+          2107,
+          2108,
+          2109,
+          2110
+        ],
+        "replicationSeeds": [
+          3101,
+          3102,
+          3103,
+          3104,
+          3105,
+          3106,
+          3107,
+          3108,
+          3109,
+          3110
+        ],
+        "maxEpochs": 100,
+        "batchSize": 128,
+        "patience": 10,
+        "loss": "binary_cross_entropy_with_logits",
+        "optimizer": "AdamW",
+        "learningRates": [
+          0.001,
+          0.0003
+        ],
+        "weightDecay": [
+          0,
+          0.0001
+        ]
+      },
+      "bootstrap": {
+        "replicates": 10000,
+        "commonRootDrawAcrossModels": true,
+        "independentFamilySeedDraws": true,
+        "coverageValidated": false,
+        "percentiles": [
+          2.5,
+          97.5
+        ],
+        "invalidRedrawCap": 100
+      },
+      "seeds": {
+        "GRAPH": 5107001,
+        "ATTRIBUTES": 5107002,
+        "PRESENTATION": 5107003,
+        "PAIR": 5107004,
+        "TRAIN_ORDER": 5107005,
+        "LABEL_CONTROL": 5107006,
+        "BOOTSTRAP": 5107007
+      },
+      "thresholds": {
+        "competenceMean": 0.85,
+        "competenceRunsMin": 8,
+        "absoluteBA": 0.8,
+        "staticGap": 0.1,
+        "superiorityMargin": 0.05,
+        "equivalenceMargin": 0.05,
+        "invarianceEquivalenceMargin": 0.02,
+        "pairCorrect": 0.75,
+        "invarianceAgreement": 0.95,
+        "invarianceAccuracy": 0.8,
+        "rhythmShortcutPairCeiling": 0.6,
+        "labelControlBAMax": 0.52
+      },
+      "remainingGates": [
+        "exact_repaired_byte_review",
+        "founder_design_adjudication",
+        "reference_generator_feasibility",
+        "source_and_environment_freeze",
+        "evaluator_calibration",
+        "separate_training_authority"
+      ]
+    },
+    "review_status": "LOCAL_SOURCE_REVIEW_COMPLETE_PENDING_FOUNDER_ADJUDICATION",
+    "toolchain_evidence": "/Users/soullab/.maia-evidence/rgr05b-pinned-governance-0lj1v1u0/toolchain-evidence.json",
+    "legacy_envelope_notice": "The pre-existing guard is documentary, not a computed W2 authorization snapshot; no mechanical lifecycle transition is asserted.",
+    "review_evidence": {
+      "status": "REVIEW_INCOMPLETE_SECOND_REVIEW_TIMEOUT",
+      "reviewed_commit": "f6f9c7cb02bfa47a36cc4b143b66a99f1d441ebf",
+      "document_sha256": "16df2b04c769e94adff6147c81177c9698a5d6a1878b29920181aeb36fde1567",
+      "contract_sha256": "1f3d376d5b360817bfd441b160fcfbb894aeb9104ea09619da1540ff72e14d92",
+      "prompt_sha256": "0c9804237eee0fb5b00d0f6755b92b2d1b5f98cd31dd3e25fdde4b505880743e",
+      "scope": "separate local model document reviews, not independent human review or benchmark execution",
+      "reviewer_results": [
+        {
+          "model": "qwen3-coder:30b",
+          "raw_verdict": "RETURN",
+          "completion": "stop",
+          "duration_s": 49,
+          "prompt_eval_count": 10084,
+          "eval_count": 1329,
+          "output_sha256": "6520890a4fc648a436385322def070f8f05ac50d2a91f2496601eb9c0d3f10a8"
+        },
+        {
+          "model": "gpt-oss:20b",
+          "raw_verdict": null,
+          "completion": "WORKER_TIMEOUT",
+          "duration_s": 180,
+          "usable_output": false,
+          "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "builder_source_grounding": [
+        {
+          "id": "Q1",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "section": "3",
+          "reason": "Conservation is explicitly checked after each completed tick. Terminal arrivals are removed from queues before entering counters; dispatch moves snapshot stock to future queues. The suggested counterexample counts departure as delivery, contrary to the stated clock."
+        },
+        {
+          "id": "Q2",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "section": "4-5",
+          "reason": "Canonical-root hash fixes one split before attribute draws. Quota failure is a stop, not reassignment or replacement. A uniform distribution over topological isomorphism classes is not claimed."
+        },
+        {
+          "id": "Q3",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "section": "6",
+          "reason": "Tuple alternatives are explicitly in cyclic lexicographic order, so the last wraps to the first. Nontrivial eligibility and shortfall disposition are already required."
+        },
+        {
+          "id": "Q4",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "section": "5-6",
+          "reason": "Opposite-label orientation balance is explicit per family and split, with P4 the base for CF-2. Same-label strata are also balanced. No per-root balance is asserted; inability to fill quotas is a feasibility stop."
+        },
+        {
+          "id": "Q5",
+          "disposition": "NO_NEW_DESIGN_BLOCKER_IMPLEMENTATION_OBLIGATION_RETAINED",
+          "section": "7-8",
+          "reason": "Both views explicitly contain layer roles, source/sink, horizon and turnaround coefficient. The learned return bridge is the declared architectural bias under the narrowed hypothesis, not extra observation. Raw-view parity still requires later implementation verification."
+        },
+        {
+          "id": "Q6",
+          "disposition": "REJECTED_METHODOLOGICAL_MISREADING",
+          "section": "10",
+          "reason": "Resampling roots with replacement is the stated clustered bootstrap. Common root draws preserve shared-data covariance across model contrasts. Models are not retrained in bootstrap replicates; family initialization draws are independent. Statistical calibration remains a separate uncompleted gate."
+        }
+      ],
+      "limitation": "The builder rejects or narrows the six Qwen objections by the cited specification; this is not a reviewer ACCEPT. The second review produced no usable verdict. No claim of completed review or empirical validation is made.",
+      "evidence_directory": "/Users/soullab/.maia-evidence/rgr-05b-r1-review-20261007-f6f9c7cb0",
+      "raw_evidence_preserved": true,
+      "source_bytes_unchanged": true,
+      "contract_bytes_unchanged": true,
+      "founder_adjudication": false,
+      "benchmark_materialized": false,
+      "training_run": false,
+      "merge": false,
+      "deploy": false,
+      "remaining_gates": [
+        "completed second source-grounded review",
+        "Founder adjudication of the design",
+        "separately authorized generator feasibility and evaluator calibration",
+        "implementation/environment freeze before training"
+      ]
+    },
+    "review_completion": {
+      "status": "LOCAL_SOURCE_REVIEW_COMPLETE_PENDING_FOUNDER_ADJUDICATION",
+      "reviewed_design_commit": "f6f9c7cb02bfa47a36cc4b143b66a99f1d441ebf",
+      "record_base_commit": "93e86af81bf84c8b447f3cdc0e16c775f1c6c2e1",
+      "document_sha256": "16df2b04c769e94adff6147c81177c9698a5d6a1878b29920181aeb36fde1567",
+      "contract_sha256": "1f3d376d5b360817bfd441b160fcfbb894aeb9104ea09619da1540ff72e14d92",
+      "prompt_sha256": "0c9804237eee0fb5b00d0f6755b92b2d1b5f98cd31dd3e25fdde4b505880743e",
+      "contract_file_sha256": "02995c63bdf131589be0e1b1c7ee7da45a794fac11717249ed9e26ca60653cc7",
+      "contract_digest_definition": "SHA256 of JSON.stringify(contract,null,2), the exact no-final-newline contract embedded in preserved prompt",
+      "attempt_id": "gptoss-r1-retry-02",
+      "previous_timeout_preserved": true,
+      "previous_review_record_retained": true,
+      "retry_execution_change": {
+        "timeout_ms": {
+          "before": 180000,
+          "now": 600000
+        }
+      },
+      "model": "gpt-oss:20b",
+      "model_digest": "17052f91a42e97930aa6e28a6c6c06a983e6a58dbb00434885a0cf5313e376f7",
+      "raw_verdict": "RETURN",
+      "completion": "stop",
+      "duration_s": 111,
+      "prompt_eval_count": 9668,
+      "eval_count": 6980,
+      "output_sha256": "38067c4646cfa5b7dc732af04e3539563db69bc5cdcb451ba86baf2332505c0c",
+      "finished_at": "2026-10-07T15:40:27.329Z",
+      "evidence_directory": "/Users/soullab/.maia-evidence/rgr-05b-r1-second-review-retry-rrtnrQ",
+      "builder_source_grounding": [
+        {
+          "id": "G1",
+          "reviewer_claim": "No binary label definition",
+          "disposition": "REJECTED_SOURCE_CONTRADICTS_OBJECTION",
+          "source_lines": [
+            37,
+            39,
+            68
+          ],
+          "reason": "Section 2 specifies D_A >= 3/5 at inclusive H_A=10 and D_B >=3/10 at H_B=18. Section 3 expressly assigns threshold equality to class one and defines absorbing counters. Positive and negative strata refer to these task targets. Removing the quantity thresholds in favor of mere reachability would change the benchmark rather than repair it."
+        },
+        {
+          "id": "G2",
+          "reviewer_claim": "kappa is undefined because transport tokens carry no carrier",
+          "disposition": "REJECTED_FALSE_PER_TOKEN_PREMISE",
+          "source_lines": [
+            41,
+            44,
+            49,
+            122,
+            140,
+            162
+          ],
+          "reason": "One queried carrier is drawn per instance (section 5), with values K0/K1 (section 2); CF-1 changes that query while holding the whole world fixed. All dispatches in that instance use the selected channel. The specified scalar-stock system does not posit mixed-carrier tokens requiring separate token labels. Independent reference code must bind that same query explicitly."
+        },
+        {
+          "id": "G3",
+          "reviewer_claim": "query carrier has no definition",
+          "disposition": "REJECTED_REPEATS_G2",
+          "source_lines": [
+            41,
+            122,
+            140,
+            162
+          ],
+          "reason": "The query is the per-instance carrier selected for the outcome and supplied to both raw views. CF-1 is operationally query K0 versus K1 in the same graph. No new carrier ontology or per-node default is needed."
+        },
+        {
+          "id": "G4",
+          "reviewer_claim": "node embeddings cannot use carrier because nodes do not own carrier",
+          "disposition": "REJECTED_CONDITIONING_VERSUS_OWNERSHIP_CONFUSION",
+          "source_lines": [
+            162,
+            182
+          ],
+          "reason": "The model conditions each node state on the shared input query; it does not assert that nodes possess a physical carrier attribute. The same query is available to F_G. Adding a per-node carrier or deleting conditioning would change the declared comparison without a demonstrated error."
+        },
+        {
+          "id": "G5",
+          "reviewer_claim": "CF-7 preserving two effective channels requires p(K0)=p(K1)",
+          "disposition": "REJECTED_COMPONENTWISE_EQUALITY_CONFUSION",
+          "source_lines": [
+            44,
+            49,
+            52,
+            148
+          ],
+          "reason": "CF-7 compares each channel before versus after tuple replacement, not K0 versus K1 within a tuple. At delay 2, tuples (p0=1/2,p1=1,c=1/2,r=0) and (p0=1/2,p1=1,c=1,r=1/2) both yield (a0=1/4,a1=1/2). Permeabilities differ and the distinct tuples preserve both channels. This analytic equality refutes the impossibility claim; it does not prove full dataset eligibility or quota feasibility."
+        }
+      ],
+      "local_critique_collection_complete": true,
+      "independent_human_review": false,
+      "reviewer_acceptance": false,
+      "surviving_new_blockers_identified_by_builder": [],
+      "design_assessment": "Ready for Founder design adjudication on the preserved R1 specification, with explicit unexecuted feasibility, implementation and uncertainty-validation gates. This is the builder source-grounding recommendation, not a model ACCEPT or a proof of validity.",
+      "limitations": [
+        "Both completed raw local-model verdicts remain RETURN; critiques are rejected/narrowed against exact source and arithmetic, not converted into reviewer approval.",
+        "The reviewers may miss other defects; no independent human assessment has been performed.",
+        "Only simple attribute arithmetic was checked; no transport world was generated or simulated.",
+        "Dataset/root/quota feasibility, simulator correctness, model-input parity, interval calibration and training performance remain unestablished.",
+        "RGR-05A closure remains a Founder programme act, not evidence that its PR was canonically merged."
+      ],
+      "remaining_gates": [
+        "Founder adjudication of exact R1 design",
+        "separately authorized reference-generator feasibility",
+        "model source and environment freeze before materialization",
+        "separately authorized evaluator calibration",
+        "separate training authority",
+        "separate MAIA/runtime integration authority"
+      ],
+      "document_unchanged": true,
+      "contract_unchanged": true,
+      "founder_adjudication": false,
+      "benchmark_materialized": false,
+      "simulator_run": false,
+      "training_run": false,
+      "member_data_used": false,
+      "merge": false,
+      "deploy": false,
+      "methodology_checked": [
+        {
+          "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html",
+          "scope": "Paired sample resampling uses common observation indices; supports the prior Q6 source-grounding, not calibration of this crossed-root/model-seed interval rule."
+        },
+        {
+          "url": "https://arxiv.org/abs/1806.01261",
+          "scope": "Ordinary relational inductive biases; supports retaining the bounded graph-temporal architecture claim, not novel FLOW_D algorithm or performance."
+        }
+      ]
+    }
+  },
+  "founder_design_adjudication": {
+    "record_version": "RGR-05B-FOUNDER-ACT-1",
+    "recorded_at": "2026-10-07T15:51:35.656478+00:00",
+    "accepted_design_commit": "f6f9c7cb02bfa47a36cc4b143b66a99f1d441ebf",
+    "accepted_document_sha256": "16df2b04c769e94adff6147c81177c9698a5d6a1878b29920181aeb36fde1567",
+    "accepted_contract_sha256": "1f3d376d5b360817bfd441b160fcfbb894aeb9104ea09619da1540ff72e14d92",
+    "act_verbatim": "Accept RGR-05B-R1 at design commit `f6f9c7cb02bfa47a36cc4b143b66a99f1d441ebf`. Authorize bounded reference-generator implementation and feasibility testing only. Preserve all frozen thresholds, controls, and failure conditions. Neural training, member data, MAIA integration, merging, and deployment remain unauthorized.",
+    "design_disposition": "ACCEPTED",
+    "successor_scope": "bounded reference-generator implementation and feasibility testing only",
+    "forbidden": [
+      "neural training",
+      "member data",
+      "MAIA integration",
+      "merging",
+      "deployment"
+    ],
+    "preservation": "Specification, machine contract, prior reviews and previous documentary lifecycle envelope remain unchanged. Acceptance is a Founder design act, not a canonical merge or scientific result.",
+    "mechanical_W2_transition_claimed": false
+  }
+}
