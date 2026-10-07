@@ -508,10 +508,8 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
           <button type="button" role="menuitem" className="p4r1-selection-menu-primary" onClick={() => {
             openPassageWorkspace(true);
           }}>
-            <b>{props.surfaceMode === 'develop-craft' ? 'Work here' : 'Focus'}</b>
-            <span>{props.surfaceMode === 'develop-craft'
-              ? 'Keep this passage in the Craft canvas with MAIA beside it.'
-              : 'Open the passage in the dedicated editorial room.'}</span>
+            <b>Focus</b>
+            <span>Open the passage in the dedicated editorial room.</span>
           </button>
 
           <button type="button" role="menuitem" onClick={() => {
@@ -1232,20 +1230,13 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             />
           ) : null}
 
-          {props.held
-            && (props.surfaceMode === 'develop-craft'
-              ? craftView === 'markup'
-              : Boolean(proposalMarkable && props.suggestedVersion)) ? (
+          {props.held && Boolean(proposalMarkable && props.suggestedVersion) ? (
             <RevisionManuscriptLayer
               sectionId={props.held.draftSectionId}
               passageStart={props.held.start}
               original={props.held.text}
-              proposed={proposalMarkable && props.suggestedVersion
-                ? props.suggestedVersion.wording
-                : props.held.text}
-              rationale={proposalMarkable && props.suggestedVersion
-                ? props.suggestedVersion.rationale
-                : null}
+              proposed={props.suggestedVersion!.wording}
+              rationale={props.suggestedVersion!.rationale}
               selected={selectedRevisionEdits}
               busy={busy}
               onToggle={toggleRevisionEdit}
@@ -1253,12 +1244,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               onTeach={teachRevisionEdit}
               onChange={changeRevisionEdit}
               onSaveSelected={() => void saveSelectedRevision()}
-              showLocus={props.surfaceMode === 'develop-craft'}
+              showLocus={false}
             />
           ) : null}
 
           {contextualActions}
-          {props.surfaceMode === 'develop-craft' ? null : editorial}
+          {editorial}
         </>
       ) : null}
     </>

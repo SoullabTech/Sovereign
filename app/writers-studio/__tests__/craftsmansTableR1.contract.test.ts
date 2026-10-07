@@ -7,8 +7,13 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 describe("Craftsman's Table R1", () => {
   const contract = read('docs/writers-studio/CRAFTSMANS_TABLE_R1.md');
   const host = read('app/dev/writers-studio-pc3-live/P4R1Pc3WriteEditView.tsx');
+  const controller = read('app/dev/writers-studio-pc3-live/P4R1WriteEditController.tsx');
   const table = read('app/dev/writers-studio-pc3-live/CraftsmansTableR1.tsx');
   const maia = read('app/dev/writers-studio-pc3-live/MaiaCraftCompanionR1.tsx');
+  const craft = read('lib/writersStudio/craftCanvas.ts');
+  const working = read('lib/writersStudio/craftWorkingCopy.ts');
+  const proMarks = read('lib/writersStudio/craftProfessionalMarks.ts');
+  const scope = read('lib/writersStudio/craftScopeR1.ts');
   const css = read('app/dev/writers-studio-p4r1/p4r1-live.css');
 
   it('freezes the manuscript-first product law and Elemental Alchemy witness', () => {
@@ -17,7 +22,7 @@ describe("Craftsman's Table R1", () => {
     expect(contract).toContain('Hermes is the invisible continuity');
     expect(contract).toContain('Activating, Amplifying, Actualizing');
     expect(contract).toContain('bodily and relationally');
-    expect(contract).toContain('no editorial dashboard');
+    expect(contract).toContain("Writer's Studio is not an AI editorial dashboard.");
   });
 
   it('routes Develop Craft through the dedicated R1 workbench instead of the legacy overlay', () => {
@@ -31,10 +36,14 @@ describe("Craftsman's Table R1", () => {
   it('renders professional inline editorial conventions on the actual manuscript', () => {
     expect(table).toContain('<del');
     expect(table).toContain('<ins');
-    expect(table).toContain("kind: 'insert' | 'delete' | 'replace'");
     expect(table).toContain('data-craftsmans-table-r1');
     expect(table).toContain('data-craft-active-section');
     expect(table).toContain('data-craft-authoritative');
+    expect(table).toContain('professionalMarkFor');
+    expect(proMarks).toContain("symbol: 'DEL'");
+    expect(proMarks).toContain("symbol: 'INS'");
+    expect(proMarks).toContain("symbol: 'STET'");
+    expect(proMarks).toContain("symbol: '¶'");
     expect(css).toContain('.p4r1-craft-r1-locus del');
     expect(css).toContain('.p4r1-craft-r1-locus ins');
     expect(css).toContain('#b54b4b');
@@ -42,20 +51,34 @@ describe("Craftsman's Table R1", () => {
   });
 
   it('keeps individual edits separable and writer-governed', () => {
-    for (const action of ['Use this', 'Keep mine', 'Another way', 'Why?', 'Teach me']) {
+    for (const action of ['Use this', 'Keep mine', 'Write it', 'Another way', 'Why?', 'Teach me']) {
       expect(table).toContain(action);
     }
-    expect(table).toContain('composeSelected');
+    expect(table).toContain('composeCraftWorkingCopy');
+    expect(working).toContain('composeCraftWorkingCopy');
     expect(table).toContain('Save my version');
     expect(table).toContain('Apply my version');
     expect(table).toContain('Undo');
+  });
+
+  it('supports primer, MAIA-edit, and hybrid composition on the manuscript itself', () => {
+    expect(contract).toContain('Primer');
+    expect(contract).toContain('Edit MAIA');
+    expect(contract).toContain('Hybrid');
+    expect(table).toContain('Write from mine');
+    expect(table).toContain('Edit current hybrid');
+    expect(table).toContain('Start from MAIA');
+    expect(table).toContain('Use this as my working copy');
+    expect(table).toContain('p4r1-craft-r1-direct');
+    expect(table).toContain('newerMaiaAlternative');
   });
 
   it('keeps Markup and Preview as two views of one working state', () => {
     expect(table).toContain("useState<'markup' | 'preview'>('markup')");
     expect(table).toContain('Markup');
     expect(table).toContain('Preview');
-    expect(table).toContain('composeSelected(segments, selected)');
+    expect(table).toContain('workingText');
+    expect(table).toContain('composeCraftWorkingCopy');
   });
 
   it('keeps MAIA conversational and capabilities behind progressive disclosure', () => {
@@ -73,21 +96,33 @@ describe("Craftsman's Table R1", () => {
     expect(maia).not.toContain('More editorial controls');
   });
 
-  it('keeps advanced capability in the contract without turning it into default chrome', () => {
+  it('keeps proactive wording under the writer setting rather than MAIA choice', () => {
+    expect(contract).toContain('Suggestion posture and writer-owned synthesis');
+    expect(contract).toContain('Wait-first');
+    expect(contract).toContain('Suggest-first');
+    expect(maia).toContain('MAIA may offer wording without waiting for me to ask');
+    expect(maia).toContain('mayProposeImmediately');
+    expect(controller).toContain('mayProposeImmediately');
+    expect(craft).toContain('The demonstration is an example, not a recommendation');
+  });
+
+  it('keeps advanced capability available without turning it into default chrome', () => {
     expect(contract).toContain('Guided default');
     expect(contract).toContain('Professional depth');
     expect(contract).toContain('Plain ↔ Expert');
     expect(contract).toContain('Light ↔ Heavy');
-    expect(contract).toContain('stet');
-    expect(contract).toContain('transpose');
-    expect(contract).toContain('copyedit');
-    expect(contract).toContain('line edit');
+    expect(maia).toContain('Edit strength');
+    expect(maia).toContain('mayRemoveParagraphs');
+    expect(table).toContain("notation === 'professional'");
   });
 
-  it('keeps whole-to-part intelligence as a real R1 milestone', () => {
+  it('supports governed whole-to-part rereading without pretending unsaved copy was read broadly', () => {
     expect(contract).toContain('Whole ↔ part intelligence');
-    expect(contract).toContain('Larger scope tells us where and why');
-    expect(contract).toContain('passage, section, chapter, whole');
-    expect(contract).toContain('R1-D · Scale');
+    expect(scope).toContain('detectCraftRereadIntent');
+    expect(scope).toContain('craftReadingScope');
+    expect(controller).toContain('requestDevelopmentalReading(');
+    expect(controller).toContain('runWholeManuscriptReview(');
+    expect(controller).toContain('The governed reread reflects the canonical manuscript state.');
+    expect(controller).toContain('Compare the writer-owned working passage below against that broader context explicitly');
   });
 });
