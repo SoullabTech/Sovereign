@@ -72,14 +72,17 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(canvas).toContain("props.surfaceMode !== 'develop-craft'\n    && (props.attentionReturnItemId || lineageReturnActive)");
     expect(hermes).toContain('Hermes · with MAIA');
     expect(hermes).toContain('What you discovered comes with you.');
-    expect(hermes).toContain('Another way');
-    expect(hermes).toContain('Lighter');
-    expect(hermes).toContain('More embodied');
+    expect(hermes).toContain('The manuscript is the workbench.');
+    expect(hermes).toContain('What do you want the writing to do?');
+    expect(hermes).toContain('Ways to work');
+    expect(hermes).toContain('Discuss');
+    expect(hermes).toContain('Try wording');
     expect(hermes).toContain('Teach me');
     expect(hermes).toContain('Go deeper');
-    expect(hermes).toContain('Tell Hermes what you want the writing to do');
     expect(hermes).not.toContain('RevisionDesk');
     expect(hermes).not.toContain('More editorial controls');
+    expect(hermes).not.toContain('Another way');
+    expect(hermes).not.toContain('More embodied');
   });
 
   it('docks the Craftsman relationship beside the manuscript instead of floating over it', () => {
@@ -125,6 +128,8 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(css).toContain('#b54b4b');
     expect(css).toContain('#3568aa');
     expect(css).toContain('.p4r1-craft-view-switch');
+    expect(css).toContain('KISS: Hermes is conversation');
+    expect(css).toContain('.p4r1-hermes-quiet-options');
   });
 
   it('keeps Apply as the mutation boundary', () => {
