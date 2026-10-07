@@ -2793,14 +2793,12 @@ export default function P4R1DevelopView(props: P4R1DevelopViewProps) {
                   <button
                     type="button"
                     className="p4r1-conversation-next"
-                    onClick={() => chapterDialogue.sectionId
-                      ? props.onWorkWithAttentionItem(
-                          chapterDialogue.itemId,
-                          chapterDialogue.sectionId,
-                          'chapter-review',
-                          carry,
-                        )
-                      : props.onCraftFromConversation(sectionId, carry)}
+                    onClick={() => props.onWorkWithAttentionItem(
+                    chapterDialogue.itemId,
+                    chapterDialogue.sectionId ?? sectionId,
+                    'chapter-review',
+                    carry,
+                  )}
                   >
                     Work this into the writing →
                   </button>

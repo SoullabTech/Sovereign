@@ -1347,8 +1347,8 @@ export default function FlagshipWriteEditController({
     autoCraftKey.current = key;
 
     void sendEditorial(craftPrimerPrompt(), {
-      proposalPolicy: 'reply_only',
-      proposalRequested: false,
+      proposalPolicy: 'allow',
+      proposalRequested: true,
     });
   }, [
     incomingAction,

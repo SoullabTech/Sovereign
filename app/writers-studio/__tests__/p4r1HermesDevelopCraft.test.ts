@@ -22,10 +22,13 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(developController).toContain("query.set('developCraft', '1')");
   });
 
-  it('lets any chapter conversation cross through Hermes even without an exact prior passage citation', () => {
+  it('uses originating chapter evidence first, with conversation-only passage choice as the fallback', () => {
     expect(develop).toContain('afterMaiaTurn={({ threadId, lastMaiaTurnIndex }) => {');
     expect(develop).toContain('chapterDialogue.sectionId ?? props.currentSectionId');
-    expect(develop).toContain('props.onCraftFromConversation(sectionId, carry)');
+    expect(develop).toContain('props.onWorkWithAttentionItem(');
+    expect(develop).toContain('chapterDialogue.itemId');
+    expect(develop).toContain('chapterDialogue.sectionId ?? sectionId');
+    expect(develop).toContain('props.onCraftFromConversation(props.currentSectionId!');
     expect(developController).toContain("query.set('insightAction', 'choose-craft-passage')");
     expect(developController).toContain('query.set(CRAFT_SOURCE_THREAD, carry.sourceThreadId)');
     expect(craftController).toContain('chosen-conversation-craft-passage');
@@ -53,10 +56,14 @@ describe('R8H Hermes Develop Craft canvas', () => {
     expect(canvas).toContain("craftView === 'markup'");
   });
 
-  it('uses conventional in-page edit marks rather than a loose textarea-only craft surface', () => {
+  it('marks the craft locus immediately, then uses conventional red/blue edit notation', () => {
+    expect(marks).toContain('showLocus = false');
+    expect(marks).toContain('p4r1-craft-locus-ink');
+    expect(canvas).toContain("showLocus={props.surfaceMode === 'develop-craft'}");
     expect(marks).toContain("data-delete={edit.from ? 'true' : undefined}");
     expect(marks).toContain("data-insert={edit.to ? 'true' : undefined}");
     expect(marks).toContain('p4r1-revision-inline-insert');
+    expect(css).toContain('.p4r1-craft-locus-ink');
     expect(css).toContain("span[data-delete='true']");
     expect(css).toContain('#b54b4b');
     expect(css).toContain('#3568aa');

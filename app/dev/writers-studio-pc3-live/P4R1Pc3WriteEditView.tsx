@@ -910,7 +910,12 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
         {props.attentionReturnRequiresSelection && !props.held ? (
           <p data-craft-selection-needed>Select the exact words you want to shape. The conversation is already here; you do not need to explain it again.</p>
         ) : props.held ? (
-          <p data-craft-selection-held>This passage is now the active craft locus.</p>
+          <p data-craft-selection-held>
+            This passage is now the active craft locus.
+            {!props.suggestedVersion
+              ? ' MAIA is preparing the first marked demonstration here.'
+              : ' The red/blue marks below are provisional craft choices, not applied changes.'}
+          </p>
         ) : null}
       </div>
       <div className="p4r1-craft-view-switch" role="group" aria-label="Craft canvas view">
@@ -1129,16 +1134,20 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
             />
           ) : null}
 
-          {proposalMarkable
-            && props.held
-            && props.suggestedVersion
-            && (props.surfaceMode !== 'develop-craft' || craftView === 'markup') ? (
+          {props.held
+            && (props.surfaceMode === 'develop-craft'
+              ? craftView === 'markup'
+              : Boolean(proposalMarkable && props.suggestedVersion)) ? (
             <RevisionManuscriptLayer
               sectionId={props.held.draftSectionId}
               passageStart={props.held.start}
               original={props.held.text}
-              proposed={props.suggestedVersion.wording}
-              rationale={props.suggestedVersion.rationale}
+              proposed={proposalMarkable && props.suggestedVersion
+                ? props.suggestedVersion.wording
+                : props.held.text}
+              rationale={proposalMarkable && props.suggestedVersion
+                ? props.suggestedVersion.rationale
+                : null}
               selected={selectedRevisionEdits}
               busy={busy}
               onToggle={toggleRevisionEdit}
@@ -1146,6 +1155,7 @@ export function P4R1Pc3WriteEditView(props: P4R1Pc3WriteEditViewProps) {
               onTeach={teachRevisionEdit}
               onChange={changeRevisionEdit}
               onSaveSelected={() => void saveSelectedRevision()}
+              showLocus={props.surfaceMode === 'develop-craft'}
             />
           ) : null}
 

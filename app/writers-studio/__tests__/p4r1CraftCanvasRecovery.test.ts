@@ -27,13 +27,14 @@ describe('R8G Craft Canvas / Craftsman Guide recovery', () => {
     expect(developController).not.toContain('query.set(CRAFT_SOURCE_THREAD, chapterDialogue');
   });
 
-  it('distinguishes craft from direct revision and requires writer passage choice when the evidence is only section-level', () => {
+  it('distinguishes craft from direct revision, using exact evidence first and writer passage choice only as fallback', () => {
     expect(developController).toContain("craftFromConversation ? 'craft-passage' : 'try-revision'");
     expect(developController).toContain("craftFromConversation ? 'choose-craft-passage' : 'choose-revision-passage'");
     expect(writeController).toContain("incomingAction === 'choose-craft-passage'");
     expect(writeController).toContain("incomingAction === 'craft-passage'");
     expect(writeController).toContain('craftPrimerPrompt()');
-    expect(writeController).toContain("proposalPolicy: 'reply_only'");
+    expect(writeController).toContain("proposalPolicy: 'allow'");
+    expect(writeController).toContain('proposalRequested: true');
   });
 
   it('re-resolves conversation context server-side before editorial cognition', () => {
@@ -52,9 +53,10 @@ describe('R8G Craft Canvas / Craftsman Guide recovery', () => {
     expect(writeView).toContain('You do not need to restate what you meant');
   });
 
-  it('treats examples as primers and exposes a writer-owned working version before any proposal', () => {
-    expect(craft).toContain('examples to spark my own version');
-    expect(craft).toContain('not recommendations, not finished prose');
+  it('keeps examples as primers while authoring one provisional demonstration for the marked manuscript', () => {
+    expect(craft).toContain('brief craft primer');
+    expect(craft).toContain('ONE provisional demonstration version');
+    expect(craft).toContain('example, not a recommendation and not finished prose');
     expect(dance).toContain('Examples to spark your own version');
     expect(dance).toContain('data-craft-working');
     expect(dance).toContain('MAIA’s examples are primers, not answers');

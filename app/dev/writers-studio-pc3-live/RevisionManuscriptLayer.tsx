@@ -27,6 +27,8 @@ export type RevisionManuscriptLayerProps = {
   onTeach: (edit: RevisionEdit) => void;
   onChange: (edit: RevisionEdit) => void;
   onSaveSelected: () => void;
+  /** Develop Craft always marks the active passage, even before a proposal exists. */
+  showLocus?: boolean;
 };
 
 function textNodes(root: Node): Text[] {
@@ -148,9 +150,11 @@ export default function RevisionManuscriptLayer({
   onTeach,
   onChange,
   onSaveSelected,
+  showLocus = false,
 }: RevisionManuscriptLayerProps) {
   const edits = useMemo(() => changes(original, proposed), [original, proposed]);
   const [rectMap, setRectMap] = useState<Map<number, Rect[]>>(new Map());
+  const [locusRects, setLocusRects] = useState<Rect[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -163,6 +167,7 @@ export default function RevisionManuscriptLayer({
         );
         if (!editor) {
           setRectMap(new Map());
+          setLocusRects([]);
           return;
         }
         const next = new Map<number, Rect[]>();
@@ -171,6 +176,19 @@ export default function RevisionManuscriptLayer({
           if (rects.length > 0) next.set(edit.id, rects);
         }
         setRectMap(next);
+
+        if (showLocus) {
+          const end = passageStart + Array.from(original).length;
+          const locusRange = locateRange(editor, passageStart, end);
+          const nextLocus = locusRange
+            ? Array.from(locusRange.getClientRects())
+                .filter((rect) => rect.width > 0 && rect.height > 0)
+                .map((rect) => ({ left: rect.left, top: rect.top, width: rect.width, height: rect.height }))
+            : [];
+          setLocusRects(nextLocus);
+        } else {
+          setLocusRects([]);
+        }
       });
     };
 
@@ -188,9 +206,9 @@ export default function RevisionManuscriptLayer({
       window.removeEventListener('scroll', measure, true);
       observer.disconnect();
     };
-  }, [sectionId, passageStart, edits]);
+  }, [sectionId, passageStart, original, edits, showLocus]);
 
-  if (edits.length === 0) return null;
+  if (edits.length === 0 && !showLocus) return null;
 
   const open = openId === null ? null : edits.find((edit) => edit.id === openId) ?? null;
   const openRects = open ? rectMap.get(open.id) ?? [] : [];
@@ -198,6 +216,25 @@ export default function RevisionManuscriptLayer({
 
   return (
     <>
+      {showLocus && locusRects.length > 0 ? (
+        <div className="p4r1-craft-locus-ink" aria-hidden="true">
+          {locusRects.map((rect, index) => (
+            <span
+              key={`locus:${index}`}
+              style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
+            />
+          ))}
+          <b
+            style={{
+              left: Math.max(8, locusRects[0]!.left - 42),
+              top: Math.max(66, locusRects[0]!.top - 2),
+            }}
+          >
+            Craft
+          </b>
+        </div>
+      ) : null}
+
       <div className="p4r1-revision-ink" aria-hidden="true">
         {edits.flatMap((edit) =>
           (rectMap.get(edit.id) ?? []).map((rect, index) => (

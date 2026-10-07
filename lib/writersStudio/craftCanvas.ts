@@ -9,11 +9,11 @@ export function craftPrimerPrompt(): string {
   return [
     'We are moving from understanding into making.',
     'Use the carried Work conversation as context for what the writer is trying to accomplish.',
-    'Show me two or three illustrative ways the craft move we discussed could work in this exact passage.',
-    'Treat these as examples to spark my own version — not recommendations, not finished prose, and not something to apply.',
-    'Make each example genuinely different in craft approach, and explain briefly what it demonstrates.',
-    'Stay close to my voice, meaning, imagery, rhythm, and writer-established intentions.',
-    'Do not silently turn an example into a proposal. I will write or choose the actual wording.',
+    'Begin with a brief craft primer: name two or three genuinely different ways the move we discussed could work in this exact passage.',
+    'Then create ONE provisional demonstration version of this exact passage so the writer can see the craft move directly on the marked manuscript.',
+    'The demonstration is an example, not a recommendation and not finished prose. Say that plainly in the reply.',
+    'Keep the demonstration close to the writer’s voice, meaning, imagery, rhythm, and established intentions. Use the smallest sufficient intervention.',
+    'Do not apply anything. The writer may take some changes, reject all of them, alter them, or write something entirely different.',
   ].join('\n');
 }
 

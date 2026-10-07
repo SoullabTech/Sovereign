@@ -4647,3 +4647,32 @@ body:has([data-house-return]) .p4r1-root .p4r1-maia-settings{top:auto}
     max-width:68vw;
   }
 }
+
+
+/* R8I — the active craft locus is visible before MAIA authors any demonstration. */
+.p4r1-root .p4r1-craft-locus-ink{
+  position:fixed;
+  inset:0;
+  z-index:23;
+  pointer-events:none;
+}
+.p4r1-root .p4r1-craft-locus-ink span{
+  position:fixed;
+  box-sizing:border-box;
+  border-left:2px solid color-mix(in srgb,var(--fr-action) 78%,transparent);
+  border-right:2px solid color-mix(in srgb,var(--fr-action) 78%,transparent);
+  background:color-mix(in srgb,var(--fr-action-soft) 30%,transparent);
+  border-radius:2px;
+}
+.p4r1-root .p4r1-craft-locus-ink b{
+  position:fixed;
+  padding:3px 5px;
+  border-radius:5px;
+  background:var(--fr-panel);
+  border:1px solid var(--fr-action-line);
+  color:var(--fr-action);
+  font:700 9px/1 var(--fr-sans-stack);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  box-shadow:0 3px 10px rgba(7,18,45,.10);
+}
