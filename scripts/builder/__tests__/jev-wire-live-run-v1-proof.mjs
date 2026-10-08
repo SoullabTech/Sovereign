@@ -28,6 +28,7 @@ const W = await import(WV.url); const R = await import(LR.url); const C = await 
 
 let pass = 0; let fail = 0;
 async function check(name, fn) {
+  if (process.env.JEV_LR_ONLY_CHECK && name.split('-')[0] !== process.env.JEV_LR_ONLY_CHECK) return;
   try { await fn(); pass += 1; console.log('PASS  ' + name); }
   catch (e) { fail += 1; console.log('FAIL  ' + name); console.log('      ' + String(e.message).split('\n')[0]); }
 }

@@ -59,24 +59,53 @@ const CANDIDATES = [
   ['DC-LR-FREE-FLOOR-NOT-ENFORCED', 'L16', [["Number.isSafeInteger(minFreeBytes) && minFreeBytes >= MIN_FREE_BYTES\n", "true\n"]]],
 ];
 
-function run(edits) {
+function run(edits, onlyCheck = null) {
   const env = { ...process.env };
   if (edits.length) env.JEV_LR_EDITS = JSON.stringify(edits); else delete env.JEV_LR_EDITS;
-  const r = spawnSync(process.execPath, [PROOF], { encoding: 'utf8', env, timeout: 280000 });
+  if (onlyCheck) env.JEV_LR_ONLY_CHECK = onlyCheck; else delete env.JEV_LR_ONLY_CHECK;
+  const r = spawnSync(process.execPath, [PROOF], { encoding: 'utf8', env, timeout: 60000 });
   const fails = [...(r.stdout || '').matchAll(/^FAIL  (\S+)/gm)].map((m) => m[1]);
-  return { status: r.status, fails, tail: (((r.stderr || '') + '') + ((r.stdout || '').slice(-200))).split('\n').slice(0, 3).join(' | ') };
+  const summary = (r.stdout || '').match(/(\d+) passed · (\d+) failed/);
+  return { status: r.status, signal: r.signal, spawnError: r.error?.code || r.error?.message || null, fails,
+    summary: summary ? { pass: Number(summary[1]), fail: Number(summary[2]) } : null,
+    tail: (((r.stderr || '') + '') + ((r.stdout || '').slice(-200))).split('\n').slice(0, 3).join(' | ') };
 }
 
+function validNamedKill(out, expected) {
+  const onName = out.fails.some((f) => f.startsWith(expected + '-'));
+  return onName && out.status === 1 && !out.signal && !out.spawnError && !!out.summary
+    && out.summary.pass === 0 && out.summary.fail === 1 && out.fails.length === 1;
+}
+
+// Regression fixtures for the defeat-classifier itself. A named FAIL line alone
+// is insufficient: timeout, signal, spawn error, or incomplete proof output is an invalid kill.
+const HARNESS_CLASSIFIER_CASES = [
+  ['normal named assertion failure', { status: 1, signal: null, spawnError: null, fails: ['L2-example'], summary: { pass: 0, fail: 1 } }, true],
+  ['timeout after named failure', { status: null, signal: 'SIGTERM', spawnError: 'ETIMEDOUT', fails: ['L2-example'], summary: { pass: 0, fail: 1 } }, false],
+  ['signal after named failure', { status: null, signal: 'SIGTERM', spawnError: null, fails: ['L2-example'], summary: { pass: 0, fail: 1 } }, false],
+  ['spawn error after named failure text', { status: null, signal: null, spawnError: 'ENOENT', fails: ['L2-example'], summary: { pass: 0, fail: 1 } }, false],
+  ['incomplete proof output', { status: 1, signal: null, spawnError: null, fails: ['L2-example'], summary: null }, false],
+];
+let harnessGuardPass = 0;
+for (const [name, sample, expected] of HARNESS_CLASSIFIER_CASES) {
+  if (validNamedKill(sample, 'L2') !== expected) { console.log(`HARNESS-GUARD-FAIL  ${name}`); process.exit(3); }
+  harnessGuardPass += 1;
+}
+console.log(`HARNESS-GUARD  ${harnessGuardPass}/${HARNESS_CLASSIFIER_CASES.length} classifier regressions pass\n`);
+
 const ref = run([]);
-if (ref.status !== 0 || ref.fails.length) { console.log('REFERENCE NOT CLEAN', ref); process.exit(2); }
+if (ref.status !== 0 || ref.signal || ref.spawnError || ref.fails.length || ref.summary?.pass !== 16 || ref.summary?.fail !== 0) {
+  console.log('REFERENCE NOT CLEAN', ref); process.exit(2);
+}
 console.log('REFERENCE  clean (0 failed)\n');
 let killed = 0; let problems = 0;
 for (const [name, expected, edits] of CANDIDATES) {
-  const out = run(edits);
-  const onName = out.fails.some((f) => f.startsWith(expected + '-'));
+  const out = run(edits, expected);
   const collateral = out.fails.filter((f) => !f.startsWith(expected + '-'));
   if (out.status === 0) { problems += 1; console.log(`SURVIVED  ${name}  (expected ${expected})`); continue; }
-  if (!onName) { problems += 1; console.log(`WRONG-DEATH  ${name}  expected ${expected}, got [${out.fails.join(', ') || out.tail}]`); continue; }
+  if (!validNamedKill(out, expected)) {
+    problems += 1; console.log(`WRONG-DEATH  ${name}  expected ${expected}, got [${out.fails.join(', ') || out.tail}]`); continue;
+  }
   killed += 1;
   console.log(`KILLED  ${name}  on ${expected}` + (collateral.length ? `   collateral: ${collateral.join(', ')}` : ''));
 }
