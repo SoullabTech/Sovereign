@@ -6,8 +6,9 @@
  */
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, symlinkSync, writeFileSync, rmSync, lstatSync, readlinkSync } from 'node:fs';
+import { existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, symlinkSync, writeFileSync, rmSync, lstatSync, readlinkSync, renameSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,19 +18,27 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const lrEdits = process.env.JEV_LR_EDITS ? JSON.parse(process.env.JEV_LR_EDITS) : [];
 const WV = makeVariant([], { witnessed: true });                 // open switch (test copy)
 const GV = makeVariant([], { witnessed: false });                // as committed: closed
-const LR = makeVariant(lrEdits, { from: join(HERE, '..', 'jev-wire-live-run-v1.mjs'), importMap: { './jev-wire-v1.mjs': WV.url } });
-const LC = makeVariant(lrEdits, { from: join(HERE, '..', 'jev-wire-live-run-v1.mjs'), importMap: { './jev-wire-v1.mjs': GV.url } });
+const priorSource = process.env.JEV_LR_SOURCE_COMMIT
+  ? execFileSync('git', ['show', process.env.JEV_LR_SOURCE_COMMIT + ':scripts/builder/jev-wire-live-run-v1.mjs'],
+      { cwd: join(HERE, '..', '..', '..'), encoding: 'utf8' })
+  : null;
+const LR = makeVariant(lrEdits, { from: join(HERE, '..', 'jev-wire-live-run-v1.mjs'), source: priorSource,
+  importMap: { './jev-wire-v1.mjs': WV.url } });
+const LC = makeVariant(lrEdits, { from: join(HERE, '..', 'jev-wire-live-run-v1.mjs'), source: priorSource,
+  importMap: { './jev-wire-v1.mjs': GV.url } });
 const W = await import(WV.url); const R = await import(LR.url); const C = await import(LC.url);
 
 let pass = 0; let fail = 0;
 async function check(name, fn) {
+  if (process.env.JEV_LR_ONLY_CHECK && name.split('-')[0] !== process.env.JEV_LR_ONLY_CHECK) return;
   try { await fn(); pass += 1; console.log('PASS  ' + name); }
   catch (e) { fail += 1; console.log('FAIL  ' + name); console.log('      ' + String(e.message).split('\n')[0]); }
 }
 const DUMMY = 'dummy-credential-DO-NOT-USE-0123456789';
 const REPLY = { model: 'jev-1.13.0', usage: { input_tokens: 300, output_tokens: 5 }, answers: { Q_RISK: { type: 'noul', noul: 0.25 } } };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const HAVE_SHM = existsSync('/dev/shm') && (await import('node:fs')).statSync('/dev/shm').dev !== (await import('node:fs')).statSync('/dev').dev;
+const SECOND_DEVICE_ROOT = process.env.JEV_TEST_SECOND_DEVICE_ROOT ?? '/dev/shm';
+const HAVE_SHM = existsSync(SECOND_DEVICE_ROOT) && (await import('node:fs')).statSync(SECOND_DEVICE_ROOT).dev !== (await import('node:fs')).statSync(tmpdir()).dev;
 
 async function startMock() {
   const m = { requests: [], mode: 'ok', onRequest: null };
@@ -58,9 +67,9 @@ function tree(root) {
 function layout({ distinct = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'jev-lr-')); mkdirSync(join(root, 'ledger'));
   let cpRoot = root; let cpDir;
-  if (distinct) { cpRoot = mkdtempSync('/dev/shm/jev-lr-'); cpDir = join(cpRoot, 'anchor'); } else cpDir = join(root, 'anchor');
+  if (distinct) { cpRoot = mkdtempSync(join(SECOND_DEVICE_ROOT, 'jev-lr-')); cpDir = join(cpRoot, 'anchor'); } else cpDir = join(root, 'anchor');
   mkdirSync(cpDir);
-  return { root, cpRoot, ledgerPath: join(root, 'ledger', 'ledger.jsonl'), checkpointPath: join(cpDir, 'anchor.json'), checkpointMountPoint: distinct ? '/dev/shm' : undefined };
+  return { root, cpRoot, ledgerPath: join(root, 'ledger', 'ledger.jsonl'), checkpointPath: join(cpDir, 'anchor.json'), checkpointMountPoint: distinct ? SECOND_DEVICE_ROOT : undefined };
 }
 const iso = (ms) => new Date(ms).toISOString();
 const grantFor = (mod, mock, over = {}) => ({
@@ -133,7 +142,7 @@ await check('L3-storage-preflight-refuses-unsafe-layouts-without-creating-anythi
   { const l = layout(); writeFileSync(join(l.root, 'afile'), 'x'); refuse('checkpoint dir is a file', { ...config(l, grant), checkpointPath: join(l.root, 'afile', 'a.json'), __root: l.root }, 'CHECKPOINT_DIR'); }
   { const l = layout(); refuse('identical paths', { ...config(l, grant), checkpointPath: l.ledgerPath, __root: l.root }, 'PATHS_DISTINCT'); }
   { const l = layout(); refuse('checkpoint = ledger lock', { ...config(l, grant), checkpointPath: l.ledgerPath + '.lock', __root: l.root }, 'PATHS_DISTINCT'); }
-  { const l = layout(); refuse('no free space', { ...config(l, grant), minFreeBytes: 2 ** 60, __root: l.root }, 'LEDGER_SPACE'); }
+  { const l = layout(); refuse('no free space', { ...config(l, grant), minFreeBytes: Number.MAX_SAFE_INTEGER, __root: l.root }, 'LEDGER_SPACE'); }
   { const l = layout(); writeFileSync(l.ledgerPath + '.pair.lock', '1'); refuse('stale pair lock', { ...config(l, grant), __root: l.root }, 'NO_LOCKS'); }
   { const l = layout(); writeFileSync(l.ledgerPath + '.lock', '1'); refuse('stale ledger lock', { ...config(l, grant), __root: l.root }, 'NO_LOCKS'); }
   // real-run layouts: distinct devices + a verified mount point
@@ -143,8 +152,8 @@ await check('L3-storage-preflight-refuses-unsafe-layouts-without-creating-anythi
   { const l = layout({ distinct: true }); refuse('no mount point named', { ...config(l, dg), checkpointMountPoint: undefined, __root: l.root }, 'CHECKPOINT_MOUNTED');
     refuse('mount point is a plain directory (unmounted-volume shadow)', { ...config(l, dg), checkpointMountPoint: l.cpRoot, __root: l.root }, 'CHECKPOINT_MOUNTED');
     refuse('checkpoint outside the named mount point', { ...config(l, dg), checkpointMountPoint: '/dev', __root: l.root }, 'CHECKPOINT_MOUNTED');
-    refuse('mount point does not exist', { ...config(l, dg), checkpointMountPoint: '/Volumes/T7 Shield', __root: l.root }, 'CHECKPOINT_MOUNTED');
-    assert.equal(R.preflight({ ...config(l, dg), checkpointMountPoint: '/dev/shm' }).ok, true, 'control: genuine mount point on a second device passes'); }
+    refuse('mount point does not exist', { ...config(l, dg), checkpointMountPoint: '/Volumes/JEV-NOT-MOUNTED-TEST-ONLY', __root: l.root }, 'CHECKPOINT_MOUNTED');
+    assert.equal(R.preflight({ ...config(l, dg), checkpointMountPoint: SECOND_DEVICE_ROOT }).ok, true, 'control: genuine mount point on a second device passes'); }
   await m.close();
 });
 
@@ -246,23 +255,34 @@ await check('L9-credential-is-only-requested-at-send-and-never-surfaces', async 
 });
 
 await check('L10-remote-option-follows-the-grant-and-the-pinned-endpoint-only', async () => {
-  if (!HAVE_SHM) throw new Error('NOT RUN: no second device for the distinct-device run');
+  if (!HAVE_SHM) throw new Error('NOT RUN: no second-device test root');
   const calls = [];
   const spy = (opts) => { calls.push({ endpoint: opts.endpoint, allowRemote: opts.allowRemote, hasCredentialFn: typeof opts.credential === 'function' });
-    return { send: async () => REPLY }; };                                        // a spy: no network exists in this test
+    return { send: async () => REPLY }; };
   const l = layout({ distinct: true });
-  const pinned = grantFor(W, { url: 'https://api.typesafe.ai/v1/systemone' }, { network: 'EXTERNAL_PINNED', volume_policy: 'DISTINCT_DEVICES', max_attempts: 1 });
-  const out = await R.executeLiveRun(config(l, pinned), { credential: spyCredential().fn, createTransport: spy });
-  assert.equal(out.ran, true); assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0], { endpoint: 'https://api.typesafe.ai/v1/systemone', allowRemote: true, hasCredentialFn: true });
+  const pinned = grantFor(W, { url: 'https://api.typesafe.ai/v1/systemone' }, {
+    network: 'EXTERNAL_PINNED', volume_policy: 'DISTINCT_DEVICES', max_attempts: 1,
+  });
+  // A fake transport is NEVER a valid way to witness a remote response.
+  const denied = await R.executeLiveRun(config(l, pinned), { createTransport: spy });
+  assert.equal(denied.ran, false); assert.equal(denied.refusal, 'REMOTE_TRANSPORT_OVERRIDE_FORBIDDEN');
+  assert.equal(calls.length, 0); assert.equal(existsSync(l.ledgerPath), false);
+  // No credential: real adapter construction fails before a network call or ledger write.
+  // If the remote option were improperly false, this would refuse as ADAPTER_REMOTE_NOT_ALLOWED instead.
+  const noCredential = await R.executeLiveRun(config(l, pinned));
+  assert.equal(noCredential.ran, false); assert.equal(noCredential.refusal, 'ADAPTER_CREDENTIAL_INVALID');
+  assert.equal(existsSync(l.ledgerPath), false);
   rmSync(l.cpRoot, { recursive: true, force: true });
-  const m = await startMock(); const l2 = layout(); calls.length = 0;
-  await R.executeLiveRun(config(l2, grantFor(W, m, { max_attempts: 1 })), { credential: spyCredential().fn, createTransport: spy });
-  assert.deepEqual(calls[0].allowRemote, false, 'a loopback grant never enables the remote option');
-  // the same pinned grant is refused outright under the committed (closed) switch
+
+  const m = await startMock(); const l2 = layout();
+  await R.executeLiveRun(config(l2, grantFor(W, m, { max_attempts: 1 })), {
+    credential: spyCredential().fn, createTransport: spy,
+  });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].allowRemote, false, 'a loopback grant never enables remote');
+  // The same pinned grant is refused under the COMMITTED closed switch.
   const l3 = layout({ distinct: true }); calls.length = 0;
-  const closed = grantFor(W, { url: 'https://api.typesafe.ai/v1/systemone' }, { network: 'EXTERNAL_PINNED', volume_policy: 'DISTINCT_DEVICES' });
-  const refused = await C.executeLiveRun(config(l3, closed), { credential: spyCredential().fn, createTransport: spy });
+  const refused = await C.executeLiveRun(config(l3, pinned), { createTransport: spy });
   assert.equal(refused.refusal, 'OFF_SWITCH_CLOSED'); assert.equal(calls.length, 0);
   rmSync(l3.cpRoot, { recursive: true, force: true }); await m.close();
 });
@@ -284,6 +304,113 @@ await check('L12-summary-is-content-free', async () => {
   for (const banned of ['Bearer', DUMMY, '"state"', 'instructions', 'structural-risk']) assert.equal(text.includes(banned), false, banned);
   assert.deepEqual(Object.keys(out).sort(), ['attempts', 'checks', 'completed', 'grant_sha256', 'halted', 'ledger_head', 'ran', 'refusal', 'stopped_reason', 'usd']);
   await m.close();
+});
+
+// ── Mac review 8e04f8006: four live-wrapper boundaries; all transports local/mock ─────────────
+
+await check('L13-external-grants-never-accept-injected-transport-or-test-clock', async () => {
+  const l = layout({ distinct: true }); const cred = spyCredential();
+  const g = grantFor(W, { url: 'https://api.typesafe.ai/v1/systemone' }, {
+    network: 'EXTERNAL_PINNED', volume_policy: 'DISTINCT_DEVICES', max_attempts: 1,
+  });
+  const before = tree(l.root); let injectedFactories = 0, mockedSends = 0;
+  const maliciousFake = () => { injectedFactories++; return { send: async () => { mockedSends++; return REPLY; } }; };
+  const denied = await R.executeLiveRun(config(l, g), { createTransport: maliciousFake });
+  assert.equal(denied.ran, false); assert.equal(denied.refusal, 'REMOTE_TRANSPORT_OVERRIDE_FORBIDDEN');
+  assert.equal(injectedFactories, 0); assert.equal(mockedSends, 0); assert.equal(cred.calls, 0);
+  // Prototype-carried hooks cannot override the real provider transport.
+  const inherited = Object.create({ createTransport: maliciousFake });
+  const inheritedDenied = await R.executeLiveRun(config(l, g), inherited);
+  assert.equal(inheritedDenied.refusal, 'REMOTE_TRANSPORT_OVERRIDE_FORBIDDEN');
+  assert.equal(injectedFactories, 0);
+  assert.equal(tree(l.root), before); assert.equal(existsSync(l.ledgerPath), false);
+  // An injected fake clock is also not a real-world expiry or spending witness.
+  const deniedTime = await R.executeLiveRun(config(l, g), { now: () => Date.now() });
+  assert.equal(deniedTime.ran, false); assert.equal(deniedTime.refusal, 'REMOTE_TEST_CLOCK_FORBIDDEN');
+  // With no override and no credential, constructing the real adapter fails closed BEFORE any store.
+  const refused = await R.executeLiveRun(config(l, g));
+  assert.equal(refused.ran, false); assert.equal(refused.refusal, 'ADAPTER_CREDENTIAL_INVALID');
+  assert.equal(existsSync(l.ledgerPath), false);
+  rmSync(l.cpRoot, { recursive: true, force: true });
+});
+
+await check('L14-vanished-ledger-after-request-gives-structured-unknown-stop', async () => {
+  const m = await startMock(); const l = layout(); const g = grantFor(W, m, { max_attempts: 2 });
+  try {
+    m.onRequest = () => renameSync(l.ledgerPath, l.ledgerPath + '.preserved');
+    const out = await R.executeLiveRun(config(l, g), { credential: spyCredential().fn });
+    assert.equal(out.ran, true); assert.equal(out.stopped_reason, 'HISTORY_UNAVAILABLE');
+    assert.equal(out.completed, false); assert.equal(out.ledger_head, null);
+    assert.equal(out.usd, null); assert.equal(out.halted, true);
+    assert.equal(m.requests.length, 1);
+    assert.equal(out.attempts.length, 1);
+    assert.equal(out.attempts[0].id, 'F01');
+    assert.equal(out.attempts[0].outcome, 'observation_persistence_unverified');
+    assert.equal(existsSync(l.ledgerPath), false);
+    assert.equal(existsSync(l.ledgerPath + '.preserved'), true);
+    assert.equal(JSON.stringify(out).includes(DUMMY), false);
+  } finally { await m.close(); }
+});
+
+await check('L15-physical-mount-drift-stops-before-second-attempt-and-before-first-dispatch', async () => {
+  async function runDrift(point) {
+    const m = await startMock(); const l = layout({ distinct: true }); const cred = spyCredential();
+    const g = grantFor(W, m, { volume_policy: 'DISTINCT_DEVICES', max_attempts: 2 });
+    const cpDir = dirname(l.checkpointPath); const shadow = join(l.root, 'shadow');
+    mkdirSync(shadow);
+    let changed = false;
+    const now = () => {
+      if (!changed && existsSync(l.ledgerPath) && existsSync(l.checkpointPath)) {
+        let recs = [];
+        try { recs = W.createLedger(l.ledgerPath, { experiment_id: g.experiment_id }).read(); } catch {}
+        const settled = recs.filter((r) => r.kind === 'settled').length;
+        const reserved = recs.filter((r) => r.kind === 'reserved').length;
+        const observed = recs.filter((r) => r.kind === 'observed').length;
+        const trigger = point === 'after-first-settlement'
+          ? settled === 1 : reserved === 1 && observed === 0;
+        if (trigger) {
+          copyFileSync(l.checkpointPath, join(shadow, 'anchor.json'));
+          renameSync(cpDir, cpDir + '.preserved');
+          symlinkSync(shadow, cpDir, 'dir');
+          changed = true;
+        }
+      }
+      return Date.now();
+    };
+    try {
+      const out = await R.executeLiveRun(config(l, g), { credential: cred.fn, now });
+      assert.equal(changed, true, point + ': fixture failed to remap checkpoint');
+      assert.equal(m.requests.length, point === 'after-first-settlement' ? 1 : 0, point);
+      assert.equal(out.completed, false);
+      assert.notEqual(out.stopped_reason, null, point);
+      if (point === 'after-first-settlement') assert.equal(out.stopped_reason, 'STORAGE_CHECKPOINT_DIR');
+      return out;
+    } finally {
+      if (changed) { rmSync(cpDir); renameSync(cpDir + '.preserved', cpDir); }
+      rmSync(l.cpRoot, { recursive: true, force: true }); await m.close();
+    }
+  }
+  await runDrift('after-first-settlement');
+  await runDrift('after-reservation-before-send');
+});
+
+await check('L16-free-space-floor-is-not-lowerable-by-config', async () => {
+  const l = layout(); const m = await startMock(); const g = grantFor(W, m);
+  try {
+    for (const bad of [0, -1, NaN, Infinity, null, '0', 2 ** 53, R.MIN_FREE_BYTES - 1]) {
+      const result = R.checkStorage({ ledgerPath: l.ledgerPath, checkpointPath: l.checkpointPath,
+        volumePolicy: 'SAME_DEVICE_MOCK_ONLY', minFreeBytes: bad });
+      assert.equal(result.find((x) => !x.ok)?.id, 'MIN_FREE_SPACE_CONFIG', String(bad));
+      const pf = R.preflight(config(l, g, { minFreeBytes: bad }));
+      assert.equal(pf.refusal, 'MIN_FREE_SPACE_CONFIG', String(bad));
+    }
+    const valid = R.checkStorage({ ledgerPath: l.ledgerPath, checkpointPath: l.checkpointPath,
+      volumePolicy: 'SAME_DEVICE_MOCK_ONLY', minFreeBytes: R.MIN_FREE_BYTES });
+    assert.equal(valid.every((x) => x.ok), true);
+    const tight = R.checkStorage({ ledgerPath: l.ledgerPath, checkpointPath: l.checkpointPath,
+      volumePolicy: 'SAME_DEVICE_MOCK_ONLY', minFreeBytes: Number.MAX_SAFE_INTEGER });
+    assert.equal(tight.find((x) => !x.ok)?.id, 'LEDGER_SPACE');
+  } finally { await m.close(); }
 });
 
 console.log(`\n${pass} passed · ${fail} failed`);

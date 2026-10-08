@@ -89,6 +89,10 @@ const dirOk = (path) => {
 export function checkStorage({ ledgerPath, checkpointPath, volumePolicy, checkpointMountPoint, minFreeBytes = MIN_FREE_BYTES }) {
   const checks = [];
   const push = (c) => { checks.push(c); return c.ok; };
+  // The 64 MiB floor is a minimum, not a caller-overridable safety setting.
+  if (!push(Number.isSafeInteger(minFreeBytes) && minFreeBytes >= MIN_FREE_BYTES
+    ? ok('MIN_FREE_SPACE_CONFIG')
+    : no('MIN_FREE_SPACE_CONFIG', 'the minimum must be a safe integer at least 64 MiB'))) return checks;
   const ledgerDir = dirname(resolve(ledgerPath)); const cpDir = dirname(resolve(checkpointPath));
   if (!push(dirOk(ledgerDir) ? ok('LEDGER_DIR') : no('LEDGER_DIR', 'must be an existing directory, not a link'))) return checks;
   if (!push(dirOk(cpDir) ? ok('CHECKPOINT_DIR') : no('CHECKPOINT_DIR', 'must be an existing directory, not a link'))) return checks;
@@ -167,40 +171,140 @@ export async function executeLiveRun(config, deps = {}) {
   const now = deps.now ?? (() => Date.now());
   const report = preflight(config, { now });
   if (!report.ok) return Object.freeze({ ran: false, refusal: report.refusal, checks: report.checks, attempts: [] });
-  const { grant, ledgerPath, checkpointPath, mode } = config;
-  const makeTransport = deps.createTransport ?? createJevHttpTransport;
-  let transport;
-  try {                                           // built BEFORE any store exists, so a configuration fault leaves nothing behind
-    transport = makeTransport({ endpoint: grant.endpoint, credential: deps.credential, allowRemote: grant.network === 'EXTERNAL_PINNED' });
-  } catch (e) {
-    return Object.freeze({ ran: false, refusal: /^ADAPTER_/.test(String(e && e.message)) ? e.message : 'TRANSPORT_CONSTRUCTION', checks: report.checks, attempts: [] });
+  const { grant, ledgerPath, checkpointPath, checkpointMountPoint, minFreeBytes, mode } = config;
+
+  // A mocked transport or clock is lawful only for a loopback test. A remote grant must
+  // use the reviewed adapter itself, not an injected stand-in that can fabricate observations.
+  if (grant.network === 'EXTERNAL_PINNED' && deps.createTransport !== undefined)
+    return Object.freeze({ ran: false, refusal: 'REMOTE_TRANSPORT_OVERRIDE_FORBIDDEN', checks: report.checks, attempts: [] });
+  if (grant.network === 'EXTERNAL_PINNED' && deps.now !== undefined)
+    return Object.freeze({ ran: false, refusal: 'REMOTE_TEST_CLOCK_FORBIDDEN', checks: report.checks, attempts: [] });
+
+  // Pin the device IDs observed on admission. Merely finding two distinct devices later
+  // is not enough if one of the stores was remounted onto an unexpected replacement.
+  let admittedDevices;
+  try {
+    admittedDevices = {
+      ledger: statSync(dirname(resolve(ledgerPath))).dev,
+      checkpoint: statSync(dirname(resolve(checkpointPath))).dev,
+    };
+  } catch {
+    return Object.freeze({ ran: false, refusal: 'STORAGE_UNAVAILABLE', checks: report.checks, attempts: [] });
   }
-  const base = createLedger(ledgerPath, { experiment_id: grant.experiment_id });
-  const pair = createCheckpointedLedger(base, checkpointPath);
-  if (mode === 'initialize') {
-    try { pair.initialize(); } catch (e) {
-      return Object.freeze({ ran: false, refusal: /^(PAIR_|LEDGER_|LOCK_)/.test(String(e && e.message)) ? e.message : 'INITIALIZE_FAILED', checks: report.checks, attempts: [] });
+
+  // Storage preflight is not a one-time certificate. A volume may be unmounted, remapped,
+  // or replaced after initialization, including between the durable reservation and send.
+  const storageRefusal = () => {
+    try {
+      const bad = checkStorage({
+        ledgerPath, checkpointPath, volumePolicy: grant.volume_policy,
+        checkpointMountPoint, minFreeBytes,
+      }).find((c) => !c.ok);
+      if (bad) return 'STORAGE_' + bad.id;
+      if (statSync(dirname(resolve(ledgerPath))).dev !== admittedDevices.ledger ||
+          statSync(dirname(resolve(checkpointPath))).dev !== admittedDevices.checkpoint)
+        return 'STORAGE_DEVICE_CHANGED';
+      return null;
+    } catch { return 'STORAGE_UNAVAILABLE'; }
+  };
+
+  // The credential remains lazy; recheck storage after the callback and before the HTTP
+  // adapter can create a request. This is an additional fence, never authorization.
+  const credential = typeof deps.credential === 'function'
+    ? () => {
+      const key = deps.credential();
+      if (storageRefusal()) throw new Error('STORAGE_CHANGED');
+      return key;
     }
+    : deps.credential;
+
+  const makeTransport = grant.network === 'EXTERNAL_PINNED'
+    ? createJevHttpTransport : (deps.createTransport ?? createJevHttpTransport);
+  let transport;
+  try {                                           // bad configuration leaves no stores behind
+    transport = makeTransport({ endpoint: grant.endpoint, credential, allowRemote: grant.network === 'EXTERNAL_PINNED' });
+  } catch (e) {
+    return Object.freeze({
+      ran: false, refusal: /^ADAPTER_/.test(String(e && e.message)) ? e.message : 'TRANSPORT_CONSTRUCTION',
+      checks: report.checks, attempts: [],
+    });
+  }
+
+  let pair;
+  try {
+    const base = createLedger(ledgerPath, { experiment_id: grant.experiment_id });
+    pair = createCheckpointedLedger(base, checkpointPath);
+    if (mode === 'initialize') pair.initialize();
+  } catch (e) {
+    return Object.freeze({
+      ran: false,
+      refusal: /^(PAIR_|LEDGER_|LOCK_)/.test(String(e && e.message)) ? e.message : 'INITIALIZE_FAILED',
+      checks: report.checks, attempts: [],
+    });
   }
 
   const attempts = []; let stopped = null;
   const toRun = fixtureAttemptIds();
   for (const id of toRun) {
-    const before = pair.state();
+    const storageBefore = storageRefusal();
+    if (storageBefore) { stopped = storageBefore; break; }
+
+    let before;
+    try { before = pair.state(); }
+    catch { stopped = 'HISTORY_UNAVAILABLE'; break; }
     if (before.used.has(id)) continue;
     if (before.attempts >= grant.max_attempts) { stopped = 'GRANT_ATTEMPT_CAP'; break; }
     if (before.usd + BUDGET.reserve_usd > grant.ceiling_usd) { stopped = 'GRANT_SPEND_CAP'; break; }
     if (now() >= Date.parse(grant.expires_at)) { stopped = 'GRANT_EXPIRED'; break; }
-    const r = await runAttempt({ attemptId: id, ledger: pair, transport, now });
+
+    // Check again after clock/credential activity and immediately before reserving.
+    const justBeforeReservation = storageRefusal();
+    if (justBeforeReservation) { stopped = justBeforeReservation; break; }
+
+    const guardedTransport = {
+      send: (bodyJson, opts) => {
+        const onBoundary = storageRefusal();
+        if (onBoundary) throw new Error(onBoundary);
+        const agreement = pair.verify();
+        if (!agreement.consistent) throw new Error('STORES_DISAGREE');
+        return transport.send(bodyJson, opts);
+      },
+    };
+
+    let r;
+    try { r = await runAttempt({ attemptId: id, ledger: pair, transport: guardedTransport, now }); }
+    catch {
+      // The request may already have crossed the network. Never claim it was not sent,
+      // recover its response by retry, or silently create a new ledger.
+      attempts.push(Object.freeze({ id, sent: null, outcome: 'unverified', reason: 'HISTORY_UNAVAILABLE' }));
+      stopped = 'HISTORY_UNAVAILABLE';
+      break;
+    }
     attempts.push(Object.freeze({ id, sent: r.sent, outcome: r.outcome ?? null, reason: r.reason ?? null }));
     if (r.outcome !== 'ok') { stopped = r.reason ?? r.outcome ?? 'NOT_SENT'; break; }
-    let consistent = false; try { consistent = pair.verify().consistent; } catch { consistent = false; }
+
+    const after = storageRefusal();
+    if (after) { stopped = after; break; }
+    let consistent = false;
+    try { consistent = pair.verify().consistent; } catch { consistent = false; }
     if (!consistent) { stopped = 'STORES_DISAGREE'; break; }
   }
-  const final = pair.state();
+
+  let final;
+  try { final = pair.state(); }
+  catch {
+    // A missing/unreadable ledger after crossing is NOT a successful completion.
+    // Return an explicitly unverifiable, content-free stop; never send a successor.
+    return Object.freeze({
+      ran: true, refusal: null, checks: report.checks, grant_sha256: report.grant_sha256, attempts,
+      stopped_reason: 'HISTORY_UNAVAILABLE', completed: false,
+      ledger_head: null, usd: null, halted: true,
+    });
+  }
   return Object.freeze({
     ran: true, refusal: null, checks: report.checks, grant_sha256: report.grant_sha256, attempts,
-    stopped_reason: stopped, completed: final.used.size === toRun.length && !final.halted && final.unresolved.length === 0,
+    stopped_reason: stopped,
+    completed: stopped === null && final.used.size === toRun.length && !final.halted && final.unresolved.length === 0,
     ledger_head: final.head, usd: final.usd, halted: final.halted,
   });
 }
